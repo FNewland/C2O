@@ -1,0 +1,231 @@
+# Transponder / Radio Knowledge Base
+# Sources: manufacturer datasheets, publicly available specifications
+# Costs are estimates where not publicly listed
+# data_rate_bps is maximum achievable downlink rate
+
+components:
+  # --- S-Band ---
+  - id: txrx-isis-trxvu
+    name: TRXVU
+    manufacturer: ISIS (Innovative Solutions in Space)
+    category: transponder
+    frequency_band: UHF/VHF
+    mass_kg: 0.085
+    power_w: 3.5
+    cost_keur: 12
+    trl: 9
+    heritage_missions:
+      - Delfi-C3
+      - QB50 constellation
+    performance:
+      data_rate_bps: 9600
+      tx_power_w: 0.5
+      rx_sensitivity_dbm: -116
+      modulation: GMSK
+    notes: UHF/VHF CubeSat transceiver, widely used for TT&C
+
+  - id: txrx-endurosat-s-band-tx
+    name: S-Band Transmitter
+    manufacturer: EnduroSat
+    category: transponder
+    frequency_band: S-band
+    mass_kg: 0.140
+    power_w: 8.0
+    cost_keur: 28
+    trl: 9
+    heritage_missions:
+      - EnduroSat One
+    performance:
+      data_rate_bps: 2_000_000
+      tx_power_w: 2.0
+      rx_sensitivity_dbm: null
+      modulation: QPSK
+    notes: CubeSat S-band downlink transmitter
+
+  - id: txrx-caes-sdr400
+    name: SDR-400
+    manufacturer: CAES (Cobham Advanced)
+    category: transponder
+    frequency_band: S-band
+    mass_kg: 1.5
+    power_w: 15.0
+    cost_keur: 120
+    trl: 9
+    heritage_missions:
+      - LADEE
+      - CYGNSS
+    performance:
+      data_rate_bps: 6_000_000
+      tx_power_w: 5.0
+      rx_sensitivity_dbm: -120
+      modulation: OQPSK
+    notes: Software-defined radio for SmallSat S-band missions
+
+  - id: txrx-syrlinks-hdr-s
+    name: HDR-S
+    manufacturer: Syrlinks
+    category: transponder
+    frequency_band: S-band
+    mass_kg: 0.400
+    power_w: 12.0
+    cost_keur: 65
+    trl: 9
+    heritage_missions:
+      - CNES Kineis
+      - ANGELS
+    performance:
+      data_rate_bps: 5_000_000
+      tx_power_w: 2.0
+      rx_sensitivity_dbm: -118
+      modulation: QPSK
+    notes: French S-band transceiver for CNES missions
+
+  # --- X-Band ---
+  - id: txrx-syrlinks-elt-x
+    name: EWC27-X
+    manufacturer: Syrlinks
+    category: transponder
+    frequency_band: X-band
+    mass_kg: 0.350
+    power_w: 18.0
+    cost_keur: 80
+    trl: 9
+    heritage_missions:
+      - CNES microsatellites
+      - ANGELS
+    performance:
+      data_rate_bps: 50_000_000
+      tx_power_w: 2.0
+      rx_sensitivity_dbm: null
+      modulation: QPSK
+    notes: Compact X-band transmitter for high-rate imaging downlink
+
+  - id: txrx-caes-frontier-x
+    name: Frontier-X SDR
+    manufacturer: CAES
+    category: transponder
+    frequency_band: X-band
+    mass_kg: 3.2
+    power_w: 35.0
+    cost_keur: 220
+    trl: 9
+    heritage_missions:
+      - Landsat 9
+      - ICESat-2
+    performance:
+      data_rate_bps: 150_000_000
+      tx_power_w: 8.0
+      rx_sensitivity_dbm: -122
+      modulation: 8PSK
+    notes: High-rate X-band SDR for NASA science missions
+
+  - id: txrx-thales-xlink
+    name: X-Link
+    manufacturer: Thales Alenia Space
+    category: transponder
+    frequency_band: X-band
+    mass_kg: 5.5
+    power_w: 65.0
+    cost_keur: 450
+    trl: 9
+    heritage_missions:
+      - COSMO-SkyMed SG
+      - Sentinel-1
+    performance:
+      data_rate_bps: 300_000_000
+      tx_power_w: 20.0
+      rx_sensitivity_dbm: -120
+      modulation: 8PSK
+    notes: High-power X-band transmitter for SAR data downlink
+
+  - id: txrx-innoflight-sctx4
+    name: SCT-X4
+    manufacturer: Innoflight
+    category: transponder
+    frequency_band: X-band
+    mass_kg: 0.650
+    power_w: 22.0
+    cost_keur: 95
+    trl: 9
+    heritage_missions:
+      - ICEYE constellation
+    performance:
+      data_rate_bps: 100_000_000
+      tx_power_w: 4.0
+      rx_sensitivity_dbm: null
+      modulation: QPSK
+    notes: SmallSat X-band transmitter optimised for SAR constellations
+
+  # --- Ka-Band ---
+  - id: txrx-kongsberg-sdp-ka
+    name: SDPT-KA
+    manufacturer: Kongsberg Satellite Services
+    category: transponder
+    frequency_band: Ka-band
+    mass_kg: 2.5
+    power_w: 40.0
+    cost_keur: 250
+    trl: 8
+    heritage_missions:
+      - NorSat-TD
+    performance:
+      data_rate_bps: 500_000_000
+      tx_power_w: 5.0
+      rx_sensitivity_dbm: null
+      modulation: DVB-S2
+    notes: Ka-band transmitter for high-throughput LEO downlink
+
+  - id: txrx-gd-ka-hdt
+    name: Ka-Band HDT
+    manufacturer: General Dynamics Mission Systems
+    category: transponder
+    frequency_band: Ka-band
+    mass_kg: 6.0
+    power_w: 80.0
+    cost_keur: 600
+    trl: 9
+    heritage_missions:
+      - TDRSS
+      - GOES-R
+    performance:
+      data_rate_bps: 1_200_000_000
+      tx_power_w: 40.0
+      rx_sensitivity_dbm: -124
+      modulation: 8PSK
+    notes: High-data-rate Ka-band transponder for GEO relay
+
+  - id: txrx-mynaric-condor
+    name: CONDOR Mk3
+    manufacturer: Mynaric
+    category: transponder
+    frequency_band: optical (1550nm)
+    mass_kg: 8.0
+    power_w: 50.0
+    cost_keur: 400
+    trl: 8
+    heritage_missions:
+      - SDA Tranche 1 (planned)
+    performance:
+      data_rate_bps: 10_000_000_000
+      tx_power_w: 2.0
+      rx_sensitivity_dbm: null
+      modulation: DPSK
+    notes: Free-space optical inter-satellite link terminal
+
+  - id: txrx-tesat-cubelct
+    name: CubeLCT
+    manufacturer: Tesat-Spacecom
+    category: transponder
+    frequency_band: optical (1064nm)
+    mass_kg: 0.350
+    power_w: 8.0
+    cost_keur: 180
+    trl: 8
+    heritage_missions:
+      - PIXL-1 (DLR)
+    performance:
+      data_rate_bps: 100_000_000
+      tx_power_w: 0.5
+      rx_sensitivity_dbm: null
+      modulation: OOK
+    notes: CubeSat laser communication terminal for LEO-to-ground

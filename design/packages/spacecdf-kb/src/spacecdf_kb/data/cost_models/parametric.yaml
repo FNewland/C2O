@@ -1,0 +1,224 @@
+# Parametric Cost Model Knowledge Base
+# Sources: SMAD (Space Mission Analysis & Design), NASA/Air Force Cost Model (NAFCOM),
+#          ESA parametric models, published CER data
+# CER form: Cost = A * (Mass_kg)^B * Complexity_Factor
+# Costs in kEUR (FY2024 equivalent)
+# These are rough parametric estimates for early-phase trade studies
+
+cost_estimation_relationships:
+
+  # === Spacecraft Bus Subsystems ===
+  structure:
+    description: Primary and secondary structure
+    cer_form: "Cost_kEUR = A * mass_kg^B"
+    coefficients:
+      small_satellite:  # <500 kg
+        A: 1.2
+        B: 0.85
+        mass_range_kg: [1, 500]
+      medium_satellite:  # 500-3000 kg
+        A: 2.5
+        B: 0.78
+        mass_range_kg: [500, 3000]
+      large_satellite:  # >3000 kg
+        A: 4.0
+        B: 0.72
+        mass_range_kg: [3000, 10000]
+    complexity_factors:
+      standard_aluminium: 1.0
+      composite_cfrp: 1.35
+      deployable: 1.5
+      pressurised: 2.0
+
+  thermal:
+    description: Thermal control subsystem
+    cer_form: "Cost_kEUR = A * mass_kg^B"
+    coefficients:
+      small_satellite:
+        A: 3.0
+        B: 0.70
+        mass_range_kg: [0.5, 50]
+      medium_satellite:
+        A: 5.5
+        B: 0.65
+        mass_range_kg: [50, 200]
+      large_satellite:
+        A: 8.0
+        B: 0.60
+        mass_range_kg: [200, 500]
+    complexity_factors:
+      passive_only: 1.0
+      active_louvers: 1.3
+      heat_pipes: 1.2
+      cryo_cooling: 3.0
+      two_phase_loop: 2.0
+
+  eps:
+    description: Electrical power subsystem (solar array + battery + PCDU)
+    cer_form: "Cost_kEUR = A * power_w^B"
+    coefficients:
+      small_satellite:
+        A: 0.5
+        B: 0.90
+        power_range_w: [5, 500]
+      medium_satellite:
+        A: 0.8
+        B: 0.85
+        power_range_w: [500, 5000]
+      large_satellite:
+        A: 1.2
+        B: 0.80
+        power_range_w: [5000, 30000]
+    complexity_factors:
+      body_mounted: 1.0
+      single_wing_fixed: 1.2
+      dual_wing_tracking: 1.5
+      flexible_rollout: 1.8
+
+  adcs:
+    description: Attitude determination and control subsystem
+    cer_form: "Cost_kEUR = A * pointing_accuracy_factor^B"
+    coefficients:
+      small_satellite:
+        A: 45.0
+        B: 0.95
+        note: "pointing_accuracy_factor = 1/(pointing_deg) normalized"
+      medium_satellite:
+        A: 120.0
+        B: 0.90
+      large_satellite:
+        A: 350.0
+        B: 0.85
+    complexity_factors:
+      magnetorquer_only: 0.3
+      reaction_wheels: 1.0
+      cmg: 2.5
+      star_tracker_required: 1.0
+      high_agility: 1.5
+
+  propulsion:
+    description: Propulsion subsystem
+    cer_form: "Cost_kEUR = A * delta_v_ms^B"
+    coefficients:
+      cold_gas:
+        A: 0.15
+        B: 0.80
+        delta_v_range_ms: [1, 50]
+      monopropellant:
+        A: 0.45
+        B: 0.75
+        delta_v_range_ms: [10, 500]
+      bipropellant:
+        A: 1.2
+        B: 0.70
+        delta_v_range_ms: [100, 3000]
+      electric:
+        A: 2.0
+        B: 0.65
+        delta_v_range_ms: [100, 10000]
+    complexity_factors:
+      single_thruster: 1.0
+      redundant_system: 1.4
+      multi_thruster_array: 1.6
+      pressurisation_regulated: 1.2
+
+  cdh:
+    description: Command and data handling
+    cer_form: "Cost_kEUR = A * data_rate_mbps^B"
+    coefficients:
+      small_satellite:
+        A: 15.0
+        B: 0.50
+        data_rate_range_mbps: [0.001, 10]
+      medium_satellite:
+        A: 40.0
+        B: 0.45
+        data_rate_range_mbps: [10, 500]
+      large_satellite:
+        A: 80.0
+        B: 0.40
+        data_rate_range_mbps: [500, 5000]
+    complexity_factors:
+      cots_processor: 1.0
+      rad_hard_processor: 2.5
+      redundant: 1.4
+      autonomous_operations: 1.3
+
+  comms:
+    description: Communication subsystem
+    cer_form: "Cost_kEUR = A * data_rate_mbps^B"
+    coefficients:
+      small_satellite:
+        A: 8.0
+        B: 0.55
+        data_rate_range_mbps: [0.001, 10]
+      medium_satellite:
+        A: 25.0
+        B: 0.50
+        data_rate_range_mbps: [10, 500]
+      large_satellite:
+        A: 60.0
+        B: 0.45
+        data_rate_range_mbps: [500, 5000]
+    complexity_factors:
+      uhf_vhf: 0.5
+      s_band: 1.0
+      x_band: 1.5
+      ka_band: 2.5
+      optical: 4.0
+
+  # === System-Level Costs ===
+  system_level:
+    ait:
+      description: Assembly, integration and test
+      cer_form: "fraction of hardware cost"
+      fraction_of_hw:
+        cubesat: 0.15
+        small_satellite: 0.20
+        medium_satellite: 0.25
+        large_satellite: 0.30
+      notes: Includes clean room, MGSE, EGSE, environmental testing
+
+    program_management:
+      description: Project management and systems engineering
+      cer_form: "fraction of total hardware + AIT cost"
+      fraction:
+        cubesat: 0.10
+        small_satellite: 0.15
+        medium_satellite: 0.20
+        large_satellite: 0.25
+
+    launch:
+      description: Launch cost estimation
+      cer_form: "Cost_kEUR = rate_per_kg * mass_kg (rideshare) or fixed (dedicated)"
+      typical_rates_keur_per_kg:
+        rideshare_sso: 5.0
+        rideshare_leo: 4.0
+        dedicated_small: 25.0
+        dedicated_medium: 4.0
+        gto: 15.0
+
+    ground_segment:
+      description: Ground segment development and operations
+      cer_form: "fraction of spacecraft cost + annual ops"
+      development_fraction: 0.10
+      annual_operations_fraction: 0.03
+      notes: Per year of nominal operations
+
+    insurance:
+      description: Launch and in-orbit insurance
+      typical_rates:
+        launch_insurance_percent: 5.0
+        in_orbit_insurance_percent: 2.0
+        notes: Percentage of insured value per year
+
+  # === Learning Curve for Constellations ===
+  learning_curve:
+    description: Cost reduction for production runs
+    model: "Unit_N_cost = First_Unit_Cost * N^(log2(learning_rate))"
+    typical_rates:
+      cubesat_constellation: 0.85
+      small_satellite_constellation: 0.88
+      medium_satellite_constellation: 0.90
+      large_satellite_limited_production: 0.95
+    notes: Learning rate of 0.85 means 85% cost for each doubling of quantity

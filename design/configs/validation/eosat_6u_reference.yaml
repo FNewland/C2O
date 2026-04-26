@@ -1,0 +1,57 @@
+# EOSAT-1-class 6U Earth Observation CubeSat — reference design point
+#
+# Purpose: Anchor the SpaceCDF validation harness against published design
+# heuristics + the SpaceMissionSimulation EOSAT-1 reference model that this
+# project's 6u_eo_cubesat template was derived from.
+#
+# Each entry gives:
+#   - reference_value: the expected converged value
+#   - tolerance_percent: allowable delta (absolute percent of reference)
+#   - citation: rule-of-thumb / SMAD / EOSAT-1 reference used to justify it
+#
+# These tolerances are generous (10-30%) because the reference is
+# deterministic-per-seed but the design is parametric. Tighten once a
+# formally-replicated CDF study (e.g. an ESA GSP study report) is wired in.
+#
+# Cited texts (shorthand):
+#   SMAD4      Wertz, Everett & Puschell, Space Mission Engineering: The New SMAD, 4th ed.
+#   Fortescue  Fortescue, Stark & Swinerd, Spacecraft Systems Engineering, 4th ed.
+#   SMO-EOSAT  SpaceMissionSimulation EOSAT-1 reference configuration
+
+template_id: 6u_eo_cubesat
+description: "6U EO CubeSat @ 450 km SSO, multispectral imager, 3-year mission"
+
+parameters:
+  mass.dry_mass_kg:
+    reference_value: 11.5
+    tolerance_percent: 30.0
+    citation: "SMO-EOSAT reference; 6U CubeSat dry mass 10-12 kg typical (SMAD4 Table 14-1)"
+
+  mass.wet_mass_kg:
+    reference_value: 11.5
+    tolerance_percent: 30.0
+    citation: "No primary propulsion; wet ≈ dry for body-mounted EP / no prop"
+
+  power.total_sunlight_w:
+    reference_value: 30.0
+    tolerance_percent: 40.0
+    citation: "Payload 20 W + bus 10 W typical for 6U EO (SMO-EOSAT)"
+
+  power.sa_power_eol_w:
+    reference_value: 60.0
+    tolerance_percent: 40.0
+    citation: >
+      SMAD4 §11.3 — SA must cover sunlight load PLUS battery recharge.
+      For 30 W sunlight demand + 35% eclipse fraction + 90% charge efficiency
+      the EOL-sized array lands at ~60 W. 40% tolerance covers the range from
+      recharge-only-sizing (~45 W) to full-eclipse-platform-sizing (~75 W).
+
+  link.downlink_margin_db:
+    reference_value: 6.0
+    tolerance_percent: 80.0
+    citation: "Typical design margin 3-10 dB at minimum elevation (SMAD4 Table 16-11)"
+
+  cost.total_meur:
+    reference_value: 5.0
+    tolerance_percent: 60.0
+    citation: "6U EO CubeSat commercial ballpark 3-8 MEUR (SMO-EOSAT target)"

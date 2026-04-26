@@ -1,0 +1,39 @@
+# SpaceCDF Example Study: EOSAT-1 (6U Earth Observation CubeSat)
+# Based on SpaceMissionSimulation reference design for validation
+
+name: "EOSAT-1 Multispectral Imager"
+mission_type: earth_observation
+spacecraft_class: nano
+
+orbit:
+  orbit_type: sso
+  altitude_km: 450.0
+  inclination_deg: 97.4
+  eccentricity: 0.0
+  ltan: "10:30"
+  mission_duration_years: 3.0
+  deorbit_required: true
+
+payloads:
+  - name: "Multispectral Imager"
+    type: optical_imager
+    mass_kg: 1.5
+    power_w: 20.0
+    power_peak_w: 45.0
+    data_rate_mbps: 100.0
+    data_volume_per_day_gb: 2.0
+    pointing_accuracy_deg: 0.1
+    pointing_stability_deg_s: 0.01
+    temperature_range_c: [-20.0, 40.0]
+    fov_deg: 5.0
+    duty_cycle_percent: 25.0
+    description: "4-band ocean colour imager (443, 560, 665, 865 nm)"
+
+design_lifetime_years: 3.0
+reliability_target: 0.9
+target_mass_kg: 12.0
+target_cost_meur: 5.0
+num_spacecraft: 1
+ground_stations:
+  - "KSAT Svalbard"
+  - "KSAT Troll"

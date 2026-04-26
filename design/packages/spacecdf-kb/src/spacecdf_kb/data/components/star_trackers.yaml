@@ -1,0 +1,180 @@
+# Star Tracker Knowledge Base
+# Sources: manufacturer datasheets, publicly available specifications
+# Costs are estimates where not publicly listed
+
+components:
+  - id: st-berlin-space-nst1
+    name: NST-1
+    manufacturer: Berlin Space Technologies
+    category: star_tracker
+    mass_kg: 0.034
+    power_w: 0.5
+    cost_keur: 35
+    trl: 9
+    heritage_missions:
+      - TechnoSat
+      - BEESAT-9
+    performance:
+      accuracy_arcsec: 30.0
+      fov_deg: 14.0
+      update_rate_hz: 4.0
+      tracking_stars: 5
+      sensitivity_mv: 5.5
+    notes: Extremely compact nano star tracker for CubeSats
+
+  - id: st-hyperion-sagitta
+    name: Sagitta
+    manufacturer: Hyperion Technologies
+    category: star_tracker
+    mass_kg: 0.035
+    power_w: 0.5
+    cost_keur: 40
+    trl: 9
+    heritage_missions:
+      - GOMX-4B
+      - NorSat-TD
+    performance:
+      accuracy_arcsec: 20.0
+      fov_deg: 15.0
+      update_rate_hz: 4.0
+      tracking_stars: 8
+      sensitivity_mv: 5.0
+    notes: Miniature star tracker with proven CubeSat heritage
+
+  - id: st-bct-nst
+    name: Nano Star Tracker
+    manufacturer: Blue Canyon Technologies
+    category: star_tracker
+    mass_kg: 0.350
+    power_w: 1.5
+    cost_keur: 80
+    trl: 9
+    heritage_missions:
+      - CYGNSS
+      - LunaH-Map
+    performance:
+      accuracy_arcsec: 6.0
+      fov_deg: 10.0
+      update_rate_hz: 5.0
+      tracking_stars: 12
+      sensitivity_mv: 6.0
+    notes: Widely used SmallSat star tracker
+
+  - id: st-terma-hest
+    name: HE-5AS
+    manufacturer: Terma
+    category: star_tracker
+    mass_kg: 0.900
+    power_w: 5.0
+    cost_keur: 180
+    trl: 9
+    heritage_missions:
+      - Copernicus Sentinel-1
+      - Sentinel-2
+      - LISA Pathfinder
+    performance:
+      accuracy_arcsec: 2.0
+      fov_deg: 16.4
+      update_rate_hz: 4.0
+      tracking_stars: 20
+      sensitivity_mv: 7.5
+    notes: ESA workhorse star tracker with extensive European heritage
+
+  - id: st-sodern-hydra
+    name: Hydra
+    manufacturer: Sodern (ArianeGroup)
+    category: star_tracker
+    mass_kg: 2.5
+    power_w: 10.0
+    cost_keur: 280
+    trl: 9
+    heritage_missions:
+      - Spot-6
+      - MetOp
+      - Pleiades
+    performance:
+      accuracy_arcsec: 1.5
+      fov_deg: 16.0
+      update_rate_hz: 10.0
+      tracking_stars: 30
+      sensitivity_mv: 7.0
+    notes: Three-head autonomous star tracker for high-accuracy missions
+
+  - id: st-ball-ct2020
+    name: CT-2020
+    manufacturer: Ball Aerospace
+    category: star_tracker
+    mass_kg: 3.0
+    power_w: 8.0
+    cost_keur: 350
+    trl: 9
+    heritage_missions:
+      - JWST
+      - WorldView-3
+      - GPM
+    performance:
+      accuracy_arcsec: 0.8
+      fov_deg: 8.0
+      update_rate_hz: 10.0
+      tracking_stars: 50
+      sensitivity_mv: 8.0
+    notes: High-accuracy tracker for flagship science and defence missions
+
+  - id: st-jena-astroaps
+    name: ASTRO APS
+    manufacturer: Jena-Optronik
+    category: star_tracker
+    mass_kg: 2.2
+    power_w: 8.0
+    cost_keur: 250
+    trl: 9
+    heritage_missions:
+      - TerraSAR-X
+      - TanDEM-X
+      - EnMAP
+    performance:
+      accuracy_arcsec: 1.0
+      fov_deg: 14.0
+      update_rate_hz: 10.0
+      tracking_stars: 25
+      sensitivity_mv: 7.5
+    notes: High-performance European tracker with DLR heritage
+
+  - id: st-leonardo-aa-str
+    name: AA-STR
+    manufacturer: Leonardo
+    category: star_tracker
+    mass_kg: 4.5
+    power_w: 12.0
+    cost_keur: 400
+    trl: 9
+    heritage_missions:
+      - Galileo constellation
+      - COSMO-SkyMed
+      - BepiColombo
+    performance:
+      accuracy_arcsec: 0.5
+      fov_deg: 16.0
+      update_rate_hz: 10.0
+      tracking_stars: 40
+      sensitivity_mv: 8.5
+    notes: Autonomous star tracker with cold redundancy and radiation hardening
+
+  - id: st-sinclair-st16rt2
+    name: ST-16RT2
+    manufacturer: Sinclair Interplanetary (Rocket Lab)
+    category: star_tracker
+    mass_kg: 0.180
+    power_w: 1.0
+    cost_keur: 55
+    trl: 9
+    heritage_missions:
+      - GHGSat-D
+      - NEMO-HD
+    performance:
+      accuracy_arcsec: 8.0
+      fov_deg: 12.0
+      update_rate_hz: 2.0
+      tracking_stars: 10
+      sensitivity_mv: 5.5
+    notes: Compact tracker with Canadian heritage, acquired by Rocket Lab

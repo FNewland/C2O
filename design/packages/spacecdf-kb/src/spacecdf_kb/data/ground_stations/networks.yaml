@@ -1,0 +1,237 @@
+# Ground Station Network Knowledge Base
+# Sources: publicly available ground station specifications, ITU filings
+# Costs are estimates based on industry averages
+# g_over_t_db_k is system figure of merit (higher is better)
+
+stations:
+  # --- KSAT (Kongsberg Satellite Services) ---
+  - id: gs-ksat-svalbard
+    name: SvalSat
+    operator: KSAT
+    location: Svalbard, Norway
+    lat_deg: 78.23
+    lon_deg: 15.39
+    altitude_m: 500
+    antenna_diameter_m: 13.0
+    frequency_bands: [S-band, X-band, Ka-band]
+    g_over_t_db_k: 28.5
+    eirp_dbw: 65.0
+    cost_per_pass_eur: 600
+    notes: Unique polar location enables every LEO orbit pass; largest ground station in the Arctic
+
+  - id: gs-ksat-tromso
+    name: TrollSat
+    operator: KSAT
+    location: Troll Station, Antarctica
+    lat_deg: -72.01
+    lon_deg: 2.53
+    altitude_m: 1270
+    antenna_diameter_m: 7.3
+    frequency_bands: [S-band, X-band]
+    g_over_t_db_k: 22.0
+    eirp_dbw: 58.0
+    cost_per_pass_eur: 800
+    notes: Antarctic complement to SvalSat for polar orbit coverage
+
+  - id: gs-ksat-grimstad
+    name: Grimstad
+    operator: KSAT
+    location: Grimstad, Norway
+    lat_deg: 58.33
+    lon_deg: 8.59
+    altitude_m: 50
+    antenna_diameter_m: 3.7
+    frequency_bands: [S-band, X-band]
+    g_over_t_db_k: 18.0
+    eirp_dbw: 52.0
+    cost_per_pass_eur: 400
+    notes: Mid-latitude European station
+
+  # --- SSC (Swedish Space Corporation) ---
+  - id: gs-ssc-esrange
+    name: Esrange
+    operator: SSC
+    location: Kiruna, Sweden
+    lat_deg: 67.88
+    lon_deg: 21.06
+    altitude_m: 341
+    antenna_diameter_m: 13.0
+    frequency_bands: [S-band, X-band, Ka-band]
+    g_over_t_db_k: 29.0
+    eirp_dbw: 66.0
+    cost_per_pass_eur: 550
+    notes: Major European polar ground station with ESA heritage
+
+  - id: gs-ssc-santiago
+    name: Santiago
+    operator: SSC
+    location: Santiago, Chile
+    lat_deg: -33.15
+    lon_deg: -70.67
+    altitude_m: 500
+    antenna_diameter_m: 9.0
+    frequency_bands: [S-band, X-band]
+    g_over_t_db_k: 24.0
+    eirp_dbw: 60.0
+    cost_per_pass_eur: 500
+    notes: Southern hemisphere mid-latitude station
+
+  # --- AWS Ground Station ---
+  - id: gs-aws-ohio
+    name: AWS GS US-East (Ohio)
+    operator: AWS Ground Station
+    location: Ohio, USA
+    lat_deg: 40.00
+    lon_deg: -82.87
+    altitude_m: 300
+    antenna_diameter_m: 5.4
+    frequency_bands: [S-band, X-band]
+    g_over_t_db_k: 20.0
+    eirp_dbw: 55.0
+    cost_per_pass_eur: 350
+    notes: Cloud-native ground station with direct S3 data delivery
+
+  - id: gs-aws-oregon
+    name: AWS GS US-West (Oregon)
+    operator: AWS Ground Station
+    location: Oregon, USA
+    lat_deg: 44.05
+    lon_deg: -121.30
+    altitude_m: 1100
+    antenna_diameter_m: 5.4
+    frequency_bands: [S-band, X-band]
+    g_over_t_db_k: 20.0
+    eirp_dbw: 55.0
+    cost_per_pass_eur: 350
+    notes: US West Coast AWS ground station
+
+  # --- ATLAS Space Operations ---
+  - id: gs-atlas-punta-arenas
+    name: Punta Arenas
+    operator: ATLAS Space Operations
+    location: Punta Arenas, Chile
+    lat_deg: -53.16
+    lon_deg: -70.91
+    altitude_m: 20
+    antenna_diameter_m: 7.3
+    frequency_bands: [S-band, X-band]
+    g_over_t_db_k: 22.0
+    eirp_dbw: 58.0
+    cost_per_pass_eur: 500
+    notes: High-latitude southern station for polar orbits
+
+  # --- ESA ESTRACK ---
+  - id: gs-esa-cebreros
+    name: Cebreros
+    operator: ESA ESTRACK
+    location: Cebreros, Spain
+    lat_deg: 40.45
+    lon_deg: -4.37
+    altitude_m: 795
+    antenna_diameter_m: 35.0
+    frequency_bands: [S-band, X-band, Ka-band]
+    g_over_t_db_k: 38.0
+    eirp_dbw: 80.0
+    cost_per_pass_eur: 3000
+    notes: ESA deep-space station; used for Mars Express, Rosetta, BepiColombo
+
+  - id: gs-esa-new-norcia
+    name: New Norcia (DSA-1)
+    operator: ESA ESTRACK
+    location: New Norcia, Australia
+    lat_deg: -31.05
+    lon_deg: 116.19
+    altitude_m: 252
+    antenna_diameter_m: 35.0
+    frequency_bands: [S-band, X-band, Ka-band]
+    g_over_t_db_k: 38.0
+    eirp_dbw: 80.0
+    cost_per_pass_eur: 3000
+    notes: ESA deep-space antenna in southern hemisphere
+
+  - id: gs-esa-redu
+    name: Redu
+    operator: ESA ESTRACK
+    location: Redu, Belgium
+    lat_deg: 50.00
+    lon_deg: 5.15
+    altitude_m: 380
+    antenna_diameter_m: 15.0
+    frequency_bands: [S-band, X-band, L-band]
+    g_over_t_db_k: 30.0
+    eirp_dbw: 68.0
+    cost_per_pass_eur: 1200
+    notes: ESA LEO operations and LEOP support
+
+  # --- NASA DSN ---
+  - id: gs-nasa-goldstone
+    name: Goldstone DSS-14
+    operator: NASA DSN
+    location: Goldstone, California, USA
+    lat_deg: 35.43
+    lon_deg: -116.89
+    altitude_m: 1001
+    antenna_diameter_m: 70.0
+    frequency_bands: [S-band, X-band, Ka-band]
+    g_over_t_db_k: 48.0
+    eirp_dbw: 95.0
+    cost_per_pass_eur: 8000
+    notes: Largest steerable DSN dish; used for Voyager, Mars missions
+
+  - id: gs-nasa-canberra
+    name: Canberra DSS-43
+    operator: NASA DSN
+    location: Tidbinbilla, Australia
+    lat_deg: -35.40
+    lon_deg: 148.98
+    altitude_m: 680
+    antenna_diameter_m: 70.0
+    frequency_bands: [S-band, X-band, Ka-band]
+    g_over_t_db_k: 48.0
+    eirp_dbw: 95.0
+    cost_per_pass_eur: 8000
+    notes: Southern hemisphere DSN complex; only antenna that can command Voyager 2
+
+  - id: gs-nasa-madrid
+    name: Madrid DSS-63
+    operator: NASA DSN
+    location: Robledo de Chavela, Spain
+    lat_deg: 40.43
+    lon_deg: -4.25
+    altitude_m: 830
+    antenna_diameter_m: 70.0
+    frequency_bands: [S-band, X-band, Ka-band]
+    g_over_t_db_k: 48.0
+    eirp_dbw: 95.0
+    cost_per_pass_eur: 8000
+    notes: European DSN complex; 120-degree spacing with Goldstone and Canberra
+
+  # --- Leaf Space ---
+  - id: gs-leaf-matera
+    name: Matera
+    operator: Leaf Space
+    location: Matera, Italy
+    lat_deg: 40.65
+    lon_deg: 16.70
+    altitude_m: 400
+    antenna_diameter_m: 3.7
+    frequency_bands: [S-band, X-band, UHF]
+    g_over_t_db_k: 16.0
+    eirp_dbw: 50.0
+    cost_per_pass_eur: 250
+    notes: European NewSpace ground station provider; pay-per-pass model
+
+  # --- RBC Signals ---
+  - id: gs-rbc-paumalu
+    name: Paumalu (Hawaii)
+    operator: RBC Signals
+    location: North Shore, Oahu, Hawaii, USA
+    lat_deg: 21.69
+    lon_deg: -158.04
+    altitude_m: 120
+    antenna_diameter_m: 11.0
+    frequency_bands: [S-band, X-band, Ka-band]
+    g_over_t_db_k: 25.0
+    eirp_dbw: 62.0
+    cost_per_pass_eur: 500
+    notes: Pacific coverage station; formerly Intelsat teleport

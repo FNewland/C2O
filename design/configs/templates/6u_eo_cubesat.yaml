@@ -1,0 +1,74 @@
+id: 6u_eo_cubesat
+name: "6U Earth Observation CubeSat"
+archetype: cubesat_eo
+description: >
+  6U CubeSat carrying a multispectral imager on a Sun-synchronous orbit.
+  Pointing performance tight enough for 5-10 m GSD, 3-year design lifetime,
+  data downlink via S-band or X-band. Based on the EOSAT-1 reference design.
+
+typical_use_cases:
+  - Ocean colour / land monitoring
+  - Precursor / gap-filler for larger EO constellations
+  - University-led science mission
+
+tags: [cubesat, sso, earth_observation, 6u, imager]
+
+target_phase: phase_a
+margin_policy_percent: 20.0
+
+applicable_ecss:
+  - ECSS-E-ST-10C Rev.1
+  - ECSS-E-ST-10-02C Rev.1     # Verification
+  - ECSS-E-ST-10-06C
+  - ECSS-E-ST-10-04C Rev.1
+  - ECSS-E-ST-10-24C Rev.1     # Interface management (IRD/ICD/IDD)
+  - ECSS-E-ST-50C Rev.2        # Communications
+  - ECSS-E-ST-60-30C           # AOCS
+  - ECSS-E-AS-11C
+  - ECSS-M-ST-10C Rev.1
+  - ECSS-M-ST-80C              # Risk management
+  - ECSS-Q-ST-30-02C           # FMECA
+  - ECSS-U-AS-10C Rev.2
+
+requirements:
+  name: "EOSAT-1 Multispectral Imager"
+  mission_type: earth_observation
+  spacecraft_class: nano
+  orbit:
+    orbit_type: sso
+    altitude_km: 450.0
+    inclination_deg: 97.4
+    eccentricity: 0.0
+    ltan: "10:30"
+    mission_duration_years: 3.0
+    deorbit_required: true
+  payloads:
+    - name: "Multispectral Imager"
+      type: optical_imager
+      mass_kg: 1.5
+      power_w: 20.0
+      power_peak_w: 45.0
+      data_rate_mbps: 100.0
+      data_volume_per_day_gb: 2.0
+      pointing_accuracy_deg: 0.1
+      pointing_stability_deg_s: 0.01
+      temperature_range_c: [-20.0, 40.0]
+      fov_deg: 5.0
+      duty_cycle_percent: 25.0
+      description: "4-band ocean colour imager (443, 560, 665, 865 nm)"
+  design_lifetime_years: 3.0
+  reliability_target: 0.9
+  target_mass_kg: 12.0
+  target_cost_meur: 5.0
+  num_spacecraft: 1
+  ground_stations:
+    - "KSAT Svalbard"
+    - "KSAT Troll"
+
+equipment_hints:
+  - category: reaction_wheels
+    rationale: "4x small reaction wheels required for 0.1° pointing accuracy"
+  - category: star_trackers
+    rationale: "Single star tracker + MEMS gyro hybrid"
+  - category: solar_cells
+    rationale: "Deployable 2-wing solar array, ~60 W EOL"

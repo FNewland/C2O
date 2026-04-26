@@ -1,0 +1,457 @@
+# Launch Vehicle Knowledge Base
+# Sources: publicly available user guides, launch service provider websites
+# Costs are estimates based on publicly available contract data and industry analysis
+# Performance values are approximate and depend on specific trajectory parameters
+
+vehicles:
+  # --- Small Launch Vehicles ---
+  - id: lv-rocketlab-electron
+    name: Electron
+    manufacturer: Rocket Lab
+    country: USA/NZ
+    status: active
+    first_flight: 2017
+    performance_kg:
+      LEO: 300
+      SSO: 200
+      GTO: null
+    fairing_diameter_m: 1.2
+    fairing_height_m: 2.5
+    cost_musd: 7.5
+    rideshare_available: false
+    rideshare_cost_keur_per_kg: null
+    launch_sites:
+      - Mahia Peninsula LC-1 (New Zealand)
+      - Wallops Island LC-2 (Virginia, USA)
+    reliability: 0.94
+    notes: Dedicated small-launch vehicle with Rutherford electric pump engines
+
+  - id: lv-abl-rs1
+    name: RS1
+    manufacturer: ABL Space Systems
+    country: USA
+    status: development
+    first_flight: null
+    performance_kg:
+      LEO: 1350
+      SSO: 1000
+      GTO: null
+    fairing_diameter_m: 2.0
+    fairing_height_m: 4.0
+    cost_musd: 12
+    rideshare_available: false
+    rideshare_cost_keur_per_kg: null
+    launch_sites:
+      - Kodiak (Alaska, USA)
+      - Cape Canaveral (Florida, USA)
+    reliability: null
+    notes: Containerised small launcher for rapid deployment
+
+  - id: lv-firefly-alpha
+    name: Alpha
+    manufacturer: Firefly Aerospace
+    country: USA
+    status: active
+    first_flight: 2022
+    performance_kg:
+      LEO: 1030
+      SSO: 630
+      GTO: null
+    fairing_diameter_m: 2.0
+    fairing_height_m: 3.4
+    cost_musd: 15
+    rideshare_available: false
+    rideshare_cost_keur_per_kg: null
+    launch_sites:
+      - Vandenberg SLC-2 (California, USA)
+    reliability: 0.67
+    notes: Small launcher entering regular cadence
+
+  - id: lv-isar-spectrum
+    name: Spectrum
+    manufacturer: Isar Aerospace
+    country: Germany
+    status: development
+    first_flight: null
+    performance_kg:
+      LEO: 1000
+      SSO: 700
+      GTO: null
+    fairing_diameter_m: 2.5
+    fairing_height_m: 5.5
+    cost_musd: 12
+    rideshare_available: false
+    rideshare_cost_keur_per_kg: null
+    launch_sites:
+      - Andoya (Norway)
+    reliability: null
+    notes: European small launcher targeting sovereign access to space
+
+  # --- Medium Launch Vehicles ---
+  - id: lv-spacex-falcon9
+    name: Falcon 9
+    manufacturer: SpaceX
+    country: USA
+    status: active
+    first_flight: 2010
+    performance_kg:
+      LEO: 22800
+      SSO: 15600
+      GTO: 8300
+    fairing_diameter_m: 5.2
+    fairing_height_m: 13.1
+    cost_musd: 67
+    rideshare_available: true
+    rideshare_cost_keur_per_kg: 5.0
+    launch_sites:
+      - KSC LC-39A (Florida, USA)
+      - CCSFS SLC-40 (Florida, USA)
+      - Vandenberg SLC-4E (California, USA)
+    reliability: 0.99
+    notes: Most-flown operational rocket; reusable first stage
+
+  - id: lv-spacex-transporter
+    name: Falcon 9 Transporter (Rideshare)
+    manufacturer: SpaceX
+    country: USA
+    status: active
+    first_flight: 2021
+    performance_kg:
+      LEO: null
+      SSO: 15600
+      GTO: null
+    fairing_diameter_m: 5.2
+    fairing_height_m: 13.1
+    cost_musd: null
+    rideshare_available: true
+    rideshare_cost_keur_per_kg: 5.0
+    launch_sites:
+      - Vandenberg SLC-4E (California, USA)
+      - CCSFS SLC-40 (Florida, USA)
+    reliability: 0.99
+    notes: Dedicated SSO rideshare missions, ~$275k per 50 kg slot
+
+  - id: lv-spacex-falconheavy
+    name: Falcon Heavy
+    manufacturer: SpaceX
+    country: USA
+    status: active
+    first_flight: 2018
+    performance_kg:
+      LEO: 63800
+      SSO: null
+      GTO: 26700
+    fairing_diameter_m: 5.2
+    fairing_height_m: 13.1
+    cost_musd: 97
+    rideshare_available: false
+    rideshare_cost_keur_per_kg: null
+    launch_sites:
+      - KSC LC-39A (Florida, USA)
+    reliability: 1.0
+    notes: Heavy-lift vehicle, three Falcon 9 cores
+
+  - id: lv-arianespace-vega-c
+    name: Vega-C
+    manufacturer: Arianespace / Avio
+    country: Europe (Italy)
+    status: active
+    first_flight: 2022
+    performance_kg:
+      LEO: 2300
+      SSO: 1500
+      GTO: null
+    fairing_diameter_m: 3.3
+    fairing_height_m: 7.9
+    cost_musd: 40
+    rideshare_available: true
+    rideshare_cost_keur_per_kg: 25.0
+    launch_sites:
+      - CSG ELV (Kourou, French Guiana)
+    reliability: 0.50
+    notes: European small/medium launcher; SSMS dispenser for rideshare
+
+  - id: lv-arianespace-ariane6-62
+    name: Ariane 6 (A62)
+    manufacturer: ArianeGroup / Arianespace
+    country: Europe
+    status: active
+    first_flight: 2024
+    performance_kg:
+      LEO: 10350
+      SSO: 6400
+      GTO: 4500
+    fairing_diameter_m: 5.4
+    fairing_height_m: 14.0
+    cost_musd: 80
+    rideshare_available: true
+    rideshare_cost_keur_per_kg: 10.0
+    launch_sites:
+      - CSG ELA-4 (Kourou, French Guiana)
+    reliability: null
+    notes: Two-booster configuration of Ariane 6
+
+  - id: lv-arianespace-ariane6-64
+    name: Ariane 6 (A64)
+    manufacturer: ArianeGroup / Arianespace
+    country: Europe
+    status: active
+    first_flight: 2024
+    performance_kg:
+      LEO: 21650
+      SSO: null
+      GTO: 11500
+    fairing_diameter_m: 5.4
+    fairing_height_m: 14.0
+    cost_musd: 130
+    rideshare_available: true
+    rideshare_cost_keur_per_kg: 8.0
+    launch_sites:
+      - CSG ELA-4 (Kourou, French Guiana)
+    reliability: null
+    notes: Four-booster configuration for heavy GTO payloads
+
+  - id: lv-roscosmos-soyuz2-1b
+    name: Soyuz-2.1b
+    manufacturer: TsSKB-Progress
+    country: Russia
+    status: active
+    first_flight: 2006
+    performance_kg:
+      LEO: 8200
+      SSO: 4850
+      GTO: 3250
+    fairing_diameter_m: 4.1
+    fairing_height_m: 11.4
+    cost_musd: 50
+    rideshare_available: true
+    rideshare_cost_keur_per_kg: 12.0
+    launch_sites:
+      - Baikonur (Kazakhstan)
+      - Plesetsk (Russia)
+      - Vostochny (Russia)
+    reliability: 0.97
+    notes: Venerable launcher; Fregat upper stage enables diverse orbit injection
+
+  - id: lv-isro-pslv-xl
+    name: PSLV-XL
+    manufacturer: ISRO
+    country: India
+    status: active
+    first_flight: 2008
+    performance_kg:
+      LEO: 3800
+      SSO: 1750
+      GTO: 1425
+    fairing_diameter_m: 3.2
+    fairing_height_m: 8.3
+    cost_musd: 28
+    rideshare_available: true
+    rideshare_cost_keur_per_kg: 15.0
+    launch_sites:
+      - Sriharikota SDSC (India)
+    reliability: 0.96
+    notes: Cost-effective Indian workhorse with strong rideshare record
+
+  - id: lv-isro-gslv-mk3
+    name: LVM3 (GSLV Mk III)
+    manufacturer: ISRO
+    country: India
+    status: active
+    first_flight: 2017
+    performance_kg:
+      LEO: 10000
+      SSO: null
+      GTO: 4000
+    fairing_diameter_m: 5.0
+    fairing_height_m: 10.0
+    cost_musd: 50
+    rideshare_available: false
+    rideshare_cost_keur_per_kg: null
+    launch_sites:
+      - Sriharikota SDSC (India)
+    reliability: 1.0
+    notes: Indian heavy-lift vehicle used for Chandrayaan-3
+
+  - id: lv-mitsubishi-h3-30
+    name: H3-30
+    manufacturer: Mitsubishi Heavy Industries
+    country: Japan
+    status: active
+    first_flight: 2024
+    performance_kg:
+      LEO: 13000
+      SSO: null
+      GTO: 6500
+    fairing_diameter_m: 5.2
+    fairing_height_m: 16.0
+    cost_musd: 55
+    rideshare_available: false
+    rideshare_cost_keur_per_kg: null
+    launch_sites:
+      - Tanegashima Y-2 (Japan)
+    reliability: null
+    notes: Next-generation Japanese launcher replacing H-IIA
+
+  - id: lv-ula-vulcan
+    name: Vulcan Centaur
+    manufacturer: United Launch Alliance
+    country: USA
+    status: active
+    first_flight: 2024
+    performance_kg:
+      LEO: 27200
+      SSO: null
+      GTO: 13500
+    fairing_diameter_m: 5.4
+    fairing_height_m: 15.5
+    cost_musd: 110
+    rideshare_available: false
+    rideshare_cost_keur_per_kg: null
+    launch_sites:
+      - CCSFS SLC-41 (Florida, USA)
+    reliability: null
+    notes: Replacement for Atlas V and Delta IV; BE-4 engines
+
+  - id: lv-casc-cz2d
+    name: Long March 2D
+    manufacturer: CASC / SAST
+    country: China
+    status: active
+    first_flight: 1992
+    performance_kg:
+      LEO: 3500
+      SSO: 1300
+      GTO: null
+    fairing_diameter_m: 3.35
+    fairing_height_m: 6.9
+    cost_musd: 25
+    rideshare_available: true
+    rideshare_cost_keur_per_kg: 10.0
+    launch_sites:
+      - Jiuquan (China)
+      - Xichang (China)
+    reliability: 0.98
+    notes: Reliable Chinese workhorse for LEO and SSO missions
+
+  - id: lv-casc-cz5
+    name: Long March 5
+    manufacturer: CASC / CALT
+    country: China
+    status: active
+    first_flight: 2016
+    performance_kg:
+      LEO: 25000
+      SSO: null
+      GTO: 14000
+    fairing_diameter_m: 5.2
+    fairing_height_m: 12.2
+    cost_musd: 85
+    rideshare_available: false
+    rideshare_cost_keur_per_kg: null
+    launch_sites:
+      - Wenchang (China)
+    reliability: 0.83
+    notes: Chinese heavy-lift vehicle for Tiangong and planetary missions
+
+  # --- Heavy / Super-Heavy ---
+  - id: lv-spacex-starship
+    name: Starship
+    manufacturer: SpaceX
+    country: USA
+    status: development
+    first_flight: 2023
+    performance_kg:
+      LEO: 150000
+      SSO: null
+      GTO: 50000
+    fairing_diameter_m: 8.0
+    fairing_height_m: 18.0
+    cost_musd: 30
+    rideshare_available: false
+    rideshare_cost_keur_per_kg: null
+    launch_sites:
+      - Boca Chica Starbase (Texas, USA)
+      - KSC LC-39A (Florida, USA)
+    reliability: null
+    notes: Fully reusable super-heavy lift vehicle in active test program
+
+  - id: lv-nasa-sls-1b
+    name: SLS Block 1B
+    manufacturer: Boeing / Northrop Grumman
+    country: USA
+    status: active
+    first_flight: 2022
+    performance_kg:
+      LEO: 95000
+      SSO: null
+      GTO: 37000
+    fairing_diameter_m: 5.1
+    fairing_height_m: 19.0
+    cost_musd: 2200
+    rideshare_available: false
+    rideshare_cost_keur_per_kg: null
+    launch_sites:
+      - KSC LC-39B (Florida, USA)
+    reliability: 1.0
+    notes: NASA super-heavy lift vehicle for Artemis lunar missions
+
+  - id: lv-blueorigin-newglenn
+    name: New Glenn
+    manufacturer: Blue Origin
+    country: USA
+    status: active
+    first_flight: 2025
+    performance_kg:
+      LEO: 45000
+      SSO: null
+      GTO: 13000
+    fairing_diameter_m: 7.0
+    fairing_height_m: 21.9
+    cost_musd: 70
+    rideshare_available: false
+    rideshare_cost_keur_per_kg: null
+    launch_sites:
+      - CCSFS LC-36 (Florida, USA)
+    reliability: null
+    notes: Heavy-lift vehicle with reusable first stage; BE-4 engines
+
+  - id: lv-relativity-terran-r
+    name: Terran R
+    manufacturer: Relativity Space
+    country: USA
+    status: development
+    first_flight: null
+    performance_kg:
+      LEO: 20000
+      SSO: null
+      GTO: 6500
+    fairing_diameter_m: 5.0
+    fairing_height_m: 15.0
+    cost_musd: 55
+    rideshare_available: false
+    rideshare_cost_keur_per_kg: null
+    launch_sites:
+      - CCSFS LC-16 (Florida, USA)
+    reliability: null
+    notes: 3D-printed reusable medium-heavy launcher
+
+  - id: lv-exolaunch-reliant
+    name: Reliant (deployment service)
+    manufacturer: Exolaunch
+    country: Germany
+    status: active
+    first_flight: 2019
+    performance_kg:
+      LEO: null
+      SSO: null
+      GTO: null
+    fairing_diameter_m: null
+    fairing_height_m: null
+    cost_musd: null
+    rideshare_available: true
+    rideshare_cost_keur_per_kg: 5.5
+    launch_sites:
+      - Multiple (rideshare aggregator)
+    reliability: 1.0
+    notes: European rideshare and deployment service provider, not a launch vehicle per se

@@ -1,0 +1,312 @@
+# Thruster Knowledge Base
+# Sources: manufacturer datasheets, publicly available specifications
+# Costs are estimates where not publicly listed
+
+components:
+  # --- Cold Gas ---
+  - id: thr-vacco-mips
+    name: MiPS (Micro Propulsion System)
+    manufacturer: VACCO Industries
+    category: thruster
+    type: cold_gas
+    mass_kg: 0.480
+    power_w: 1.0
+    cost_keur: 35
+    trl: 9
+    heritage_missions:
+      - MarCO A/B
+    performance:
+      isp_s: 40
+      thrust_n: 0.025
+      total_impulse_ns: 43
+      propellant: R-236fa
+    notes: First CubeSat propulsion system used in deep space
+
+  - id: thr-gom-nanoprop3u
+    name: NanoProp 3U
+    manufacturer: GomSpace
+    category: thruster
+    type: cold_gas
+    mass_kg: 0.310
+    power_w: 2.0
+    cost_keur: 30
+    trl: 9
+    heritage_missions:
+      - GOMX-4B
+    performance:
+      isp_s: 60
+      thrust_n: 0.001
+      total_impulse_ns: 40
+      propellant: butane
+    notes: Four-thruster butane cold gas system for CubeSats
+
+  - id: thr-bradford-hpgp01
+    name: HPGP-01
+    manufacturer: Bradford Space
+    category: thruster
+    type: cold_gas
+    mass_kg: 1.2
+    power_w: 5.0
+    cost_keur: 75
+    trl: 8
+    heritage_missions:
+      - PRISMA
+    performance:
+      isp_s: 65
+      thrust_n: 0.010
+      total_impulse_ns: 120
+      propellant: nitrogen
+    notes: SmallSat cold-gas thruster
+
+  # --- Monopropellant ---
+  - id: thr-aerojet-mr103
+    name: MR-103G
+    manufacturer: Aerojet Rocketdyne
+    category: thruster
+    type: monopropellant
+    mass_kg: 0.33
+    power_w: 12.0
+    cost_keur: 80
+    trl: 9
+    heritage_missions:
+      - Cassini
+      - New Horizons
+      - Dawn
+    performance:
+      isp_s: 224
+      thrust_n: 1.0
+      total_impulse_ns: 50000
+      propellant: hydrazine
+    notes: Deep-space heritage thruster, 1 N class
+
+  - id: thr-aerojet-mr111
+    name: MR-111G
+    manufacturer: Aerojet Rocketdyne
+    category: thruster
+    type: monopropellant
+    mass_kg: 0.37
+    power_w: 13.0
+    cost_keur: 85
+    trl: 9
+    heritage_missions:
+      - Mars Odyssey
+      - MESSENGER
+    performance:
+      isp_s: 229
+      thrust_n: 4.5
+      total_impulse_ns: 150000
+      propellant: hydrazine
+    notes: Widely used 4 N class monoprop thruster
+
+  - id: thr-nammo-lmp103s-1n
+    name: 1N HPGP
+    manufacturer: Bradford Space (Nammo heritage)
+    category: thruster
+    type: monopropellant
+    mass_kg: 0.42
+    power_w: 15.0
+    cost_keur: 95
+    trl: 9
+    heritage_missions:
+      - PRISMA
+      - SkySat constellation
+    performance:
+      isp_s: 235
+      thrust_n: 1.0
+      total_impulse_ns: 65000
+      propellant: LMP-103S (ADN-based)
+    notes: Green monopropellant, higher Isp than hydrazine, non-toxic
+
+  - id: thr-moog-monarc-22
+    name: MONARC-22
+    manufacturer: Moog
+    category: thruster
+    type: monopropellant
+    mass_kg: 0.70
+    power_w: 14.0
+    cost_keur: 110
+    trl: 9
+    heritage_missions:
+      - ICESat-2
+      - Aqua
+    performance:
+      isp_s: 228
+      thrust_n: 22.0
+      total_impulse_ns: 500000
+      propellant: hydrazine
+    notes: Standard 22 N monoprop for orbit maintenance
+
+  # --- Bipropellant ---
+  - id: thr-aerojet-r4d
+    name: R-4D-11
+    manufacturer: Aerojet Rocketdyne
+    category: thruster
+    type: bipropellant
+    mass_kg: 3.63
+    power_w: 0.0
+    cost_keur: 350
+    trl: 9
+    heritage_missions:
+      - Apollo (Service Module)
+      - GOES
+      - Intelsat
+    performance:
+      isp_s: 312
+      thrust_n: 490
+      total_impulse_ns: 2000000
+      propellant: MMH/NTO
+    notes: Heritage apogee engine dating to Apollo era
+
+  - id: thr-airbus-s400-15
+    name: S400-15
+    manufacturer: Airbus Defence and Space
+    category: thruster
+    type: bipropellant
+    mass_kg: 3.6
+    power_w: 0.0
+    cost_keur: 380
+    trl: 9
+    heritage_missions:
+      - Eurostar 3000
+      - SES-12
+    performance:
+      isp_s: 321
+      thrust_n: 400
+      total_impulse_ns: 2300000
+      propellant: MMH/MON
+    notes: European GEO apogee motor
+
+  # --- Electric (Hall Effect) ---
+  - id: thr-enpulsion-nano
+    name: NANO R3
+    manufacturer: Enpulsion
+    category: thruster
+    type: electric_field_emission
+    mass_kg: 0.670
+    power_w: 40.0
+    cost_keur: 60
+    trl: 9
+    heritage_missions:
+      - Kepler constellation
+      - ESA IOD
+    performance:
+      isp_s: 6000
+      thrust_n: 0.000350
+      total_impulse_ns: 5000
+      propellant: indium (FEEP)
+    notes: Field emission electric propulsion for CubeSats, very high Isp
+
+  - id: thr-exotrail-exohall-s
+    name: ExoHall-S (ExoMG-S)
+    manufacturer: Exotrail
+    category: thruster
+    type: electric_hall
+    mass_kg: 5.3
+    power_w: 300
+    cost_keur: 150
+    trl: 9
+    heritage_missions:
+      - Eutelsat ELO
+    performance:
+      isp_s: 1100
+      thrust_n: 0.015
+      total_impulse_ns: 40000
+      propellant: xenon
+    notes: SmallSat Hall-effect thruster designed for constellation deployment
+
+  - id: thr-busek-bht200
+    name: BHT-200
+    manufacturer: Busek
+    category: thruster
+    type: electric_hall
+    mass_kg: 1.0
+    power_w: 200
+    cost_keur: 80
+    trl: 9
+    heritage_missions:
+      - FalconSAT-5
+      - FalconSAT-6
+    performance:
+      isp_s: 1390
+      thrust_n: 0.013
+      total_impulse_ns: 55000
+      propellant: xenon
+    notes: Small Hall-effect thruster with USAF heritage
+
+  - id: thr-safran-pps1350
+    name: PPS-1350-G
+    manufacturer: Safran Aircraft Engines
+    category: thruster
+    type: electric_hall
+    mass_kg: 5.3
+    power_w: 1500
+    cost_keur: 400
+    trl: 9
+    heritage_missions:
+      - SMART-1
+      - Alphabus
+      - Eutelsat 172B
+    performance:
+      isp_s: 1660
+      thrust_n: 0.088
+      total_impulse_ns: 2500000
+      propellant: xenon
+    notes: European heritage Hall thruster for GEO station-keeping and orbit raising
+
+  - id: thr-aerojet-xr5
+    name: XR-5 (BPT-4000)
+    manufacturer: Aerojet Rocketdyne
+    category: thruster
+    type: electric_hall
+    mass_kg: 12.5
+    power_w: 4500
+    cost_keur: 800
+    trl: 9
+    heritage_missions:
+      - AEHF
+      - Viasat-3
+      - GPS IIIF (planned)
+    performance:
+      isp_s: 2000
+      thrust_n: 0.290
+      total_impulse_ns: 7500000
+      propellant: xenon
+    notes: High-power Hall thruster for large GEO platforms
+
+  # --- Electric (Ion / Gridded) ---
+  - id: thr-qinetiq-t5
+    name: T5 Ion Thruster
+    manufacturer: QinetiQ
+    category: thruster
+    type: electric_gridded_ion
+    mass_kg: 1.8
+    power_w: 600
+    cost_keur: 300
+    trl: 9
+    heritage_missions:
+      - GOCE
+      - TechDemoSat-1
+    performance:
+      isp_s: 3500
+      thrust_n: 0.020
+      total_impulse_ns: 1200000
+      propellant: xenon
+    notes: European gridded ion thruster for drag compensation
+
+  - id: thr-nasa-next-c
+    name: NEXT-C
+    manufacturer: Aerojet Rocketdyne (NASA GRC design)
+    category: thruster
+    type: electric_gridded_ion
+    mass_kg: 13.5
+    power_w: 6900
+    cost_keur: 1200
+    trl: 8
+    heritage_missions:
+      - DART (planned follow-on)
+    performance:
+      isp_s: 4190
+      thrust_n: 0.236
+      total_impulse_ns: 17000000
+      propellant: xenon
+    notes: Next-generation NASA ion engine, successor to NSTAR

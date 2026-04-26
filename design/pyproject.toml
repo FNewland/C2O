@@ -1,0 +1,18 @@
+[project]
+name = "spacecdf"
+version = "0.1.0"
+description = "AI-Supported Concurrent Design Facility for Space Missions"
+requires-python = ">=3.11"
+license = "MIT"
+readme = "README.md"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build]
+skip-excluded-dirs = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

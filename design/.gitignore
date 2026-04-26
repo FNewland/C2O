@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.venv/
+*.egg
+
+# Environment
+.env
+.env.local
+
+# Database
+*.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node
+node_modules/
+frontend/dist/
+
+# Pytest
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ECSS PDFs (large binary assets — track separately or via Git LFS)
+Active ECSS Standards_PDF-files (10Oct2025)/
+ECSS-Handbooks_(zip-file_October2023)/

@@ -1,0 +1,35 @@
+# SpaceCDF Example Study: Medium Communications Satellite
+
+name: "CommSat-X Regional Broadband"
+mission_type: communications
+spacecraft_class: medium
+
+orbit:
+  orbit_type: geo
+  altitude_km: 35786.0
+  inclination_deg: 0.0
+  eccentricity: 0.0
+  mission_duration_years: 15.0
+  deorbit_required: false
+
+payloads:
+  - name: "Ka-band Transponder Payload"
+    type: comms_payload
+    mass_kg: 200.0
+    power_w: 3000.0
+    power_peak_w: 3500.0
+    data_rate_mbps: 10000.0
+    pointing_accuracy_deg: 0.05
+    pointing_stability_deg_s: 0.005
+    temperature_range_c: [-10.0, 55.0]
+    duty_cycle_percent: 100.0
+    description: "Multi-beam Ka-band payload, 100 Gbps total throughput"
+
+design_lifetime_years: 15.0
+reliability_target: 0.95
+target_mass_kg: 3500.0
+target_cost_meur: 250.0
+num_spacecraft: 1
+ground_stations:
+  - "Fucino"
+  - "Redu"

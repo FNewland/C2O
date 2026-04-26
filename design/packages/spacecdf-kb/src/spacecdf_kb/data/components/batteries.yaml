@@ -1,0 +1,204 @@
+# Battery Knowledge Base
+# Sources: manufacturer datasheets, publicly available specifications
+# Costs are estimates where not publicly listed
+
+components:
+  - id: bat-gom-nanopow-p31u
+    name: NanoPower P31u
+    manufacturer: GomSpace
+    category: battery
+    chemistry: Li-ion (18650)
+    mass_kg: 0.065
+    cost_keur: 5
+    trl: 9
+    heritage_missions:
+      - GOMX-3
+      - GOMX-4B
+    performance:
+      capacity_wh: 19.0
+      specific_energy_wh_kg: 292
+      cycle_life: 5000
+      voltage_v:
+        nominal: 7.4
+        min: 6.0
+        max: 8.4
+      operating_temp_c: [-20, 50]
+    notes: Standard CubeSat battery, 2S configuration
+
+  - id: bat-gom-nanopow-bpx
+    name: NanoPower BPX
+    manufacturer: GomSpace
+    category: battery
+    chemistry: Li-ion (pouch)
+    mass_kg: 0.200
+    cost_keur: 10
+    trl: 9
+    heritage_missions:
+      - ESAIL
+      - Arctic Weather Satellite
+    performance:
+      capacity_wh: 77.0
+      specific_energy_wh_kg: 385
+      cycle_life: 2000
+      voltage_v:
+        nominal: 14.8
+        min: 12.0
+        max: 16.8
+      operating_temp_c: [-10, 45]
+    notes: High-density CubeSat battery, 4S configuration
+
+  - id: bat-clyde-3g-optimus
+    name: 3rd Gen Optimus
+    manufacturer: AAC Clyde Space
+    category: battery
+    chemistry: Li-ion (pouch)
+    mass_kg: 0.150
+    cost_keur: 8
+    trl: 9
+    heritage_missions:
+      - UKube-1
+      - Carbonite-2
+    performance:
+      capacity_wh: 40.0
+      specific_energy_wh_kg: 267
+      cycle_life: 3000
+      voltage_v:
+        nominal: 7.6
+        min: 6.0
+        max: 8.4
+      operating_temp_c: [-20, 50]
+    notes: Popular European CubeSat battery with Clyde heritage
+
+  - id: bat-enpersion-ep2000
+    name: EP-2000
+    manufacturer: Enpersion
+    category: battery
+    chemistry: Li-ion (pouch)
+    mass_kg: 0.530
+    cost_keur: 18
+    trl: 8
+    heritage_missions:
+      - Satellite Vu
+    performance:
+      capacity_wh: 160.0
+      specific_energy_wh_kg: 302
+      cycle_life: 4000
+      voltage_v:
+        nominal: 14.8
+        min: 12.0
+        max: 16.8
+      operating_temp_c: [-20, 60]
+    notes: Modular SmallSat battery pack
+
+  - id: bat-saft-vl48e
+    name: VL48E
+    manufacturer: Saft
+    category: battery
+    chemistry: Li-ion (cylindrical)
+    mass_kg: 1.04
+    cost_keur: 45
+    trl: 9
+    heritage_missions:
+      - Spot-7
+      - Pleiades Neo
+      - CSO
+    performance:
+      capacity_wh: 170.0
+      specific_energy_wh_kg: 163
+      cycle_life: 40000
+      voltage_v:
+        nominal: 3.65
+        min: 2.7
+        max: 4.1
+      operating_temp_c: [-20, 60]
+    notes: Extremely long cycle life; single cell, configured into packs
+
+  - id: bat-saft-vl51es
+    name: VL51ES
+    manufacturer: Saft
+    category: battery
+    chemistry: Li-ion (cylindrical)
+    mass_kg: 1.10
+    cost_keur: 50
+    trl: 9
+    heritage_missions:
+      - Sentinel-1
+      - MetOp-SG
+    performance:
+      capacity_wh: 185.0
+      specific_energy_wh_kg: 168
+      cycle_life: 60000
+      voltage_v:
+        nominal: 3.65
+        min: 2.7
+        max: 4.1
+      operating_temp_c: [-20, 60]
+    notes: LEO-optimised cell for 15+ year missions
+
+  - id: bat-eaglepicher-sahm-10
+    name: SAR 10198
+    manufacturer: EaglePicher Technologies
+    category: battery
+    chemistry: Li-ion
+    mass_kg: 4.5
+    cost_keur: 120
+    trl: 9
+    heritage_missions:
+      - Mars Reconnaissance Orbiter
+      - Juno
+    performance:
+      capacity_wh: 540.0
+      specific_energy_wh_kg: 120
+      cycle_life: 30000
+      voltage_v:
+        nominal: 28.0
+        min: 22.0
+        max: 32.8
+      operating_temp_c: [-20, 40]
+    notes: Radiation-hardened deep-space battery module
+
+  - id: bat-gs-yuasa-lsb50
+    name: LSB-50
+    manufacturer: GS Yuasa
+    category: battery
+    chemistry: Li-ion (prismatic)
+    mass_kg: 1.35
+    cost_keur: 55
+    trl: 9
+    heritage_missions:
+      - ISS (Japanese module)
+      - ALOS-2
+      - GPM (JAXA)
+    performance:
+      capacity_wh: 185.0
+      specific_energy_wh_kg: 137
+      cycle_life: 50000
+      voltage_v:
+        nominal: 3.7
+        min: 2.75
+        max: 4.1
+      operating_temp_c: [-10, 45]
+    notes: Japanese heritage cell, ISS-qualified
+
+  - id: bat-enersys-absl-18650hc
+    name: ABSL 18650HC
+    manufacturer: EnerSys (ABSL)
+    category: battery
+    chemistry: Li-ion (18650)
+    mass_kg: 0.045
+    cost_keur: 3
+    trl: 9
+    heritage_missions:
+      - Mars Express
+      - Rosetta
+      - ExoMars TGO
+    performance:
+      capacity_wh: 10.5
+      specific_energy_wh_kg: 233
+      cycle_life: 10000
+      voltage_v:
+        nominal: 3.6
+        min: 2.7
+        max: 4.1
+      operating_temp_c: [-20, 60]
+    notes: Single cell; widely used in ESA mission battery packs

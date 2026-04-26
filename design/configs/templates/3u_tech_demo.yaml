@@ -1,0 +1,77 @@
+id: 3u_tech_demo
+name: "3U Technology Demonstration CubeSat"
+archetype: cubesat_tech_demo
+description: >
+  Low-cost 3U CubeSat platform suitable for in-orbit demonstration of a single
+  new technology (sensor, propulsion component, comm terminal, SDR payload).
+  LEO, 1-year nominal mission, no propulsion, passive attitude or simple
+  reaction-wheel stack. Class: nano.
+
+typical_use_cases:
+  - Technology maturation from TRL 5 to TRL 7
+  - University / early-career demonstrator
+  - Precursor to larger follow-on mission
+  - Rideshare launch opportunity
+
+tags: [cubesat, leo, tech_demo, low_cost, 3u]
+
+target_phase: phase_0
+margin_policy_percent: 20.0
+
+# ECSS standards typically applicable at Phase 0 for a 3U tech demo
+# (tailored per ECSS-S-ST-00-02 — many clauses of heavier standards omitted)
+applicable_ecss:
+  - ECSS-E-ST-10C Rev.1          # SE general requirements
+  - ECSS-E-ST-10-06C             # Technical requirements specification
+  - ECSS-E-ST-10-04C Rev.1       # Space environment
+  - ECSS-E-AS-11C                # TRL (core of the mission rationale)
+  - ECSS-M-ST-10C Rev.1          # Project planning
+  - ECSS-U-AS-10C Rev.2          # Space debris mitigation (25-year rule)
+  - ECSS-S-ST-00-02C-DRAFT1      # Tailoring
+
+requirements:
+  name: "3U Tech Demo"
+  mission_type: technology_demo
+  spacecraft_class: nano
+  orbit:
+    orbit_type: sso
+    altitude_km: 500.0
+    inclination_deg: 97.4
+    eccentricity: 0.0
+    ltan: "10:30"
+    mission_duration_years: 1.0
+    deorbit_required: true
+  payloads:
+    - name: "Technology Payload"
+      type: tech_demo
+      mass_kg: 1.0
+      power_w: 10.0
+      power_peak_w: 20.0
+      data_rate_mbps: 10.0
+      data_volume_per_day_gb: 0.2
+      pointing_accuracy_deg: 1.0
+      pointing_stability_deg_s: 0.1
+      temperature_range_c: [-20.0, 50.0]
+      fov_deg: 10.0
+      duty_cycle_percent: 20.0
+      description: "Generic technology demonstration payload (sized for 1 kg / 10 W)"
+  design_lifetime_years: 1.0
+  reliability_target: 0.8
+  target_mass_kg: 5.0
+  target_cost_meur: 1.5
+  num_spacecraft: 1
+  ground_stations:
+    - "University GS"
+
+equipment_hints:
+  - category: solar_cells
+    rationale: "Deployable panels not required for 3U; body-mounted triple-junction typical"
+  - category: batteries
+    rationale: "Single Li-ion string, ~40 Wh"
+  - category: transponders
+    rationale: "UHF/S-band amateur class — sufficient for 0.2 GB/day"
+
+notes: |
+  Tailoring: full ECSS Q-branch (dependability/safety/PA) typically reduced for
+  CubeSats per institution policy. Retain ECSS-U-AS-10C Rev.2 compliance
+  (debris mitigation) as non-negotiable.
