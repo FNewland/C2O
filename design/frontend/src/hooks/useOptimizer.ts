@@ -29,6 +29,11 @@ export interface OptimizerConfigResponse {
   default_variables: DefaultVariable[]
 }
 
+export interface ParetoPoint {
+  x: Record<string, number>
+  objectives: Record<string, number>
+}
+
 export interface OptimizeRun {
   id: number
   session_id: string
@@ -40,6 +45,7 @@ export interface OptimizeRun {
   num_evals: number
   best_x: Record<string, number>
   best_y: number | null
+  pareto_front: ParetoPoint[]
   duration_ms: number
   error: string | null
   created_at: string
@@ -59,20 +65,26 @@ export function useStartOptimization() {
   return useMutation({
     mutationFn: (args: {
       sessionId: string
-      objective: string
+      objective?: string
+      objectives?: string[]
       variables: string[]
       bounds: [number, number][]
       max_evals: number
       seed?: number
+      pop_size?: number
+      n_generations?: number
     }) =>
       api<{ run_id: number }>(`/optimize/sessions/${args.sessionId}`, {
         method: 'POST',
         body: JSON.stringify({
-          objective: args.objective,
+          objective: args.objective ?? '',
+          objectives: args.objectives ?? [],
           variables: args.variables,
           bounds: args.bounds,
           max_evals: args.max_evals,
           seed: args.seed ?? 42,
+          pop_size: args.pop_size ?? 40,
+          n_generations: args.n_generations ?? 30,
         }),
       }),
   })

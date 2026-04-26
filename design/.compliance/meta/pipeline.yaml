@@ -1,0 +1,61 @@
+# SpaceCDF Compliance Artefact Pipeline
+#
+# Describes which ECSS deliverables SpaceCDF can auto-generate, the service
+# that produces them, and the output location.
+#
+# Phase 5C deliverable.
+
+version: "0.1.0"
+
+artefacts:
+  - id: verification_plan
+    name: "Verification Plan (VP)"
+    standard: "ECSS-E-ST-10-02C Rev.1 Annex A"
+    description: >
+      Maps each auto-generated requirement to a verification method,
+      responsible position, success criterion, and verification phase.
+      Produced from the live design state and requirement model.
+    service: "spacecdf_server.services.compliance_generator.generate_verification_plan"
+    api_endpoint: "GET /api/compliance/{study_id}/verification"
+    output_format: json
+    inputs:
+      - requirements (auto-generated from MissionRequirements)
+      - verifications (from verify_requirements against converged state)
+      - phase_id (from study)
+    review_gates: [PRR, SRR, PDR, CDR]
+
+  - id: tailoring_matrix
+    name: "ECSS Tailoring Matrix"
+    standard: "ECSS-S-ST-00-02C"
+    description: >
+      Lists every ECSS standard in the catalogue and states applicability
+      (full / partial / tailored out) with rationale based on the study's
+      archetype, active domains, and declared applicable standards.
+    service: "spacecdf_server.services.compliance_generator.generate_tailoring_matrix"
+    api_endpoint: "GET /api/compliance/{study_id}/tailoring"
+    output_format: json
+    inputs:
+      - applicable_ecss (from MissionTemplate)
+      - phase_id (from study)
+      - domains_active (derived from converged parameter IDs)
+    review_gates: [PRR, SRR]
+
+  - id: compliance_package
+    name: "Full Compliance Package"
+    description: >
+      Combined VP + Tailoring Matrix + review-gate DRD summary in a single
+      response. Convenience endpoint for the frontend compliance panel.
+    service: "spacecdf_server.services.compliance_generator.generate_compliance_package"
+    api_endpoint: "GET /api/compliance/{study_id}"
+    output_format: json
+    review_gates: [MDR, PRR, SRR]
+
+pipeline_status:
+  produced:
+    - verification_plan
+    - tailoring_matrix
+    - compliance_package
+  planned:
+    - interface_requirements_document  # IRD — ECSS-E-ST-10-24C Rev.1
+    - risk_register_formal             # Full risk register beyond design conflicts
+    - system_architecture_description  # SysML-level formality

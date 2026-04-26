@@ -2,7 +2,7 @@
 
 SpaceCDF is a research tool for rapid, collaborative space mission design. It combines an agent-based design loop (convergence in 3–12 ms on a reference 6U CubeSat design) with real-time multi-user collaboration, NASA CEH-aligned cost estimation, requirement verification, equipment selection from a component knowledge base, and exports to simulator configs, design review documents, and flight software scaffolding.
 
-**Status: Phase 4 complete.** 14 design agents (9 compute + 5 analysis including cross-domain conflict detection), 10 engineering positions, 106 components + 22 launch vehicles + 16 ground stations in the KB, WebSocket live collaboration, SQLite persistence, Monte Carlo cost risk, sensitivity analysis, EOL degradation, equipment browser, compliance matrix, cost breakdown, trade studies, and end-to-end exports (SMO config, docx/xlsx design review package, FSW C scaffolding).
+**Status: Phase 5 in progress.** Phase 4 foundation (14 design agents, 10 positions, 106+ KB components, WebSocket collaboration, SQLite persistence, Monte Carlo cost, compliance matrix, trade studies) plus Phase 5 additions: single-objective design optimiser (differential evolution), multi-objective Pareto optimiser (NSGA-II), MBSE export (ECSS-E-TM-10-25A-style JSON for SysML import), template gallery (4 mission archetypes), ECSS review-gate DRD tracking (MDR/PRR/SRR), named design snapshots with compare/restore, compliance artefact pipeline (Verification Plan + Tailoring Matrix auto-generation), validation harness against reference designs, and in-app user manual.
 
 ---
 
@@ -39,8 +39,11 @@ frontend/               React + TypeScript + Zustand + @tanstack/react-query
                         CostBreakdown, TradeStudyPanel, LiveEditToast,
                         HistoryDrawer, PositionPanel, ConflictsPanel,
                         InsightsPanel, ExportPanel, DesignWorkspace,
-                        RequirementsPanel
-  src/hooks/            useSession (react-query), useSessionSocket (WebSocket)
+                        RequirementsPanel, OptimizerPanel,
+                        TemplateGallery, EcssCompliancePanel,
+                        SnapshotsPanel, UserManual
+  src/hooks/            useSession, useSessionSocket, useOptimizer,
+                        useSnapshots, useTemplates
   src/stores/           designStore, sessionStore
 
 packages/
@@ -49,11 +52,14 @@ packages/
                         propulsion, structure), agent base ABC
   spacecdf-agents/      14 agents (9 Tier 1 compute + 5 Tier 2 analysis),
                         orchestrator with Kahn's topological sort,
-                        exporters (smo/, docs/ with Jinja2 + docx + xlsx, fsw/)
-  spacecdf-server/      FastAPI with 36 endpoints + /ws/session/{id}
+                        exporters (smo/, docs/ with Jinja2 + docx + xlsx,
+                        fsw/, mbse/ ECSS-E-TM-10-25A-style JSON)
+  spacecdf-server/      FastAPI with 40+ endpoints + /ws/session/{id}
                         db/ (SQLAlchemy async + SQLite), services/
                         (session_manager, reconvergence, equipment,
-                         cost_engine, verification, analysis)
+                         cost_engine, verification, analysis, optimizer,
+                         evaluator, ecss_gates, snapshots, template_library,
+                         compliance_generator)
   spacecdf-kb/          YAML knowledge base — components/, launch_vehicles/,
                         ground_stations/, cost_models/, standards/, positions/
 ```
@@ -135,6 +141,45 @@ pytest tests/ -v
 # Latency benchmark
 python3 scripts/bench_phase4.py
 ```
+
+---
+
+## Phase 5 features
+
+### Design optimiser (Phase 5B)
+
+Single-objective optimisation via `scipy.optimize.differential_evolution` and multi-objective Pareto via NSGA-II. Runs in a background task with real-time progress over WebSocket. The UI (`OptimizerPanel`) lets you pick an objective (min mass, min cost, max link margin), select design variables with bounds, and watch convergence live. Pareto runs populate the `pareto_front_json` column and render a 2D scatter in the panel.
+
+```bash
+# API
+POST /api/optimize/sessions/{session_id}   # kick off single- or multi-objective run
+GET  /api/optimize/runs/{run_id}            # poll status + history
+GET  /api/optimize/config                   # available objectives + default variables
+```
+
+### MBSE export
+
+`POST /api/exports/mbse/{study_id}` generates an ECSS-E-TM-10-25A-style JSON model: site directory, engineering model with blocks (subsystems), parameters, requirements, trace links, and applicable standards. Consumable by Cameo / Capella via a downstream converter and diff-friendly for version control.
+
+### Template gallery
+
+Four mission archetypes seeded from the knowledge base: 3U tech demo, 6U EO CubeSat, 100 kg SmallSat EO, and Lunar Orbiter. The `TemplateGallery` UI lets you browse, preview, and instantiate a new study from any template. Templates live in `configs/templates/` as YAML.
+
+### ECSS review-gate tracking
+
+`configs/ecss_review_gates.yaml` maps ECSS phases (0/A/B1) to their expected DRDs and tracks which SpaceCDF auto-produces (`spacecdf`), partially covers (`partial`), plans to cover (`planned`), or leaves external. The `EcssCompliancePanel` surfaces this per-study.
+
+### Compliance artefact pipeline
+
+The `.compliance/` directory and `services/compliance_generator.py` auto-generate planned ECSS deliverables — currently the Verification Plan (VP) and ECSS Tailoring Matrix — from the live design state and review-gate config. These transition DRDs from `planned` to `spacecdf` status.
+
+### Named snapshots
+
+Named design-state snapshots with tags, parent lineage, and compare/restore. The `SnapshotsPanel` lets engineers bookmark design points, diff two snapshots, and restore a previous state.
+
+### Validation harness
+
+`scripts/validate_template.py` converges a template through the full design loop and checks key parameters against published reference values (SMAD, Fortescue, SMO-EOSAT). Reference configs live in `configs/validation/`.
 
 ---
 

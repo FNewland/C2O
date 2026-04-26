@@ -87,7 +87,8 @@ phases:
         name: "Verification Plan (draft)"
         standard: ECSS-E-ST-10-02C Rev.1
         annex: "A"
-        produced_by: planned
+        produced_by: spacecdf
+        spacecdf_source: "GET /api/compliance/{study_id}/verification"
       - id: RMP
         name: "Risk Management Plan"
         standard: ECSS-M-ST-80C
@@ -101,9 +102,10 @@ phases:
         spacecdf_source: "ConflictsPanel — design conflicts only, not full risk register"
       - id: TAILORING_MATRIX
         name: "ECSS Tailoring Matrix"
-        standard: ECSS-S-ST-00-02C-DRAFT1
+        standard: ECSS-S-ST-00-02C
         annex: "—"
-        produced_by: planned
+        produced_by: spacecdf
+        spacecdf_source: "GET /api/compliance/{study_id}/tailoring"
       - id: TECH_BUDGET
         name: "Technical budgets (mass, power, data, link, Δv, pointing)"
         standard: ECSS-E-ST-10C Rev.1

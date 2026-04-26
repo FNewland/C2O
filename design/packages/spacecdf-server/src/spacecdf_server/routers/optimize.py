@@ -24,8 +24,10 @@ from ..db.models import OptimizationRunRow
 from ..services.optimizer import (
     DEFAULT_DESIGN_VARIABLES,
     OBJECTIVES,
+    MultiObjectiveConfig,
     OptimizeConfig,
     OptimizeProgress,
+    run_multi_objective,
     run_single_objective,
 )
 from ..services.session_manager import get_session_manager
@@ -40,12 +42,16 @@ _run_cache: dict[int, dict] = {}
 
 
 class OptimizeBody(BaseModel):
-    objective: str = Field(description="Objective key, e.g. 'min_mass' or 'min_cost'")
+    objective: str = Field(default="", description="Objective key for single-objective, e.g. 'min_mass'")
+    objectives: list[str] = Field(default_factory=list, description="Objective keys for multi-objective (2+)")
     variables: list[str] = Field(description="Parameter IDs to vary")
     bounds: list[list[float]] = Field(description="[[lo, hi], ...] parallel to variables")
     max_evals: int = 200
     algo: str = "differential_evolution"
     seed: int | None = 42
+    # NSGA-II specific
+    pop_size: int = 40
+    n_generations: int = 30
 
 
 @router.get("/config")
@@ -140,22 +146,40 @@ async def _execute_run(
         except Exception:
             pass
 
-    config = OptimizeConfig(
-        variables=list(body.variables),
-        bounds=[tuple(b) for b in body.bounds],
-        objective=body.objective,
-        algo=body.algo,
-        max_evals=body.max_evals,
-        seed=body.seed,
-    )
+    is_multi = len(body.objectives) >= 2
 
-    result = await run_single_objective(
-        run_id=run_id,
-        session_id=session_id,
-        base_state=base_state,
-        config=config,
-        progress_cb=progress_cb,
-    )
+    if is_multi:
+        mo_config = MultiObjectiveConfig(
+            variables=list(body.variables),
+            bounds=[tuple(b) for b in body.bounds],
+            objectives=list(body.objectives),
+            pop_size=body.pop_size,
+            n_generations=body.n_generations,
+            seed=body.seed,
+        )
+        result = await run_multi_objective(
+            run_id=run_id,
+            session_id=session_id,
+            base_state=base_state,
+            config=mo_config,
+            progress_cb=progress_cb,
+        )
+    else:
+        config = OptimizeConfig(
+            variables=list(body.variables),
+            bounds=[tuple(b) for b in body.bounds],
+            objective=body.objective,
+            algo=body.algo,
+            max_evals=body.max_evals,
+            seed=body.seed,
+        )
+        result = await run_single_objective(
+            run_id=run_id,
+            session_id=session_id,
+            base_state=base_state,
+            config=config,
+            progress_cb=progress_cb,
+        )
 
     # Persist terminal state
     await _update_run(
@@ -164,13 +188,14 @@ async def _execute_run(
         num_evals=result.num_evals,
         best_x_json=dict(result.best_x or {}),
         best_y=(float(result.best_y) if result.best_y is not None else None),
+        pareto_front_json=result.pareto_front,
         duration_ms=float(result.duration_ms),
         error_message=result.error,
         finished_at=datetime.now(timezone.utc),
     )
 
     # Final WS event + cache update
-    _run_cache[run_id] = {
+    complete_payload = {
         "type": "optimize.complete",
         "run_id": run_id,
         "status": result.status,
@@ -178,19 +203,12 @@ async def _execute_run(
         "best_y": result.best_y,
         "num_evals": result.num_evals,
         "duration_ms": result.duration_ms,
-        "history": result.history,
+        "pareto_front": result.pareto_front,
         "error": result.error,
     }
+    _run_cache[run_id] = {**complete_payload, "history": result.history}
     try:
-        await _broadcast(session_id, {
-            "type": "optimize.complete",
-            "run_id": run_id,
-            "status": result.status,
-            "best_x": result.best_x,
-            "best_y": result.best_y,
-            "num_evals": result.num_evals,
-            "duration_ms": result.duration_ms,
-        })
+        await _broadcast(session_id, complete_payload)
     except Exception:
         pass
 
@@ -207,8 +225,16 @@ async def kick_off_run(
     if sess is None:
         raise HTTPException(status_code=404, detail=f"Session {session_id} not found")
 
-    if body.objective not in OBJECTIVES:
-        raise HTTPException(status_code=400, detail=f"Unknown objective {body.objective}")
+    is_multi = len(body.objectives) >= 2
+    if is_multi:
+        for obj in body.objectives:
+            if obj not in OBJECTIVES:
+                raise HTTPException(status_code=400, detail=f"Unknown objective {obj}")
+    else:
+        if not body.objective:
+            raise HTTPException(status_code=400, detail="Must provide 'objective' for single-objective or 'objectives' (2+) for Pareto")
+        if body.objective not in OBJECTIVES:
+            raise HTTPException(status_code=400, detail=f"Unknown objective {body.objective}")
     if len(body.variables) != len(body.bounds):
         raise HTTPException(status_code=400, detail="variables and bounds must be same length")
     for var in body.variables:
@@ -247,6 +273,7 @@ async def get_run(run_id: int) -> dict:
             "num_evals": row.num_evals,
             "best_x": dict(row.best_x_json or {}),
             "best_y": row.best_y,
+            "pareto_front": list(row.pareto_front_json or []),
             "duration_ms": row.duration_ms,
             "error": row.error_message,
             "created_at": (row.created_at or datetime.now(timezone.utc)).isoformat(),
