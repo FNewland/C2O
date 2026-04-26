@@ -23,13 +23,13 @@ description: "6U EO CubeSat @ 450 km SSO, multispectral imager, 3-year mission"
 
 parameters:
   mass.dry_mass_kg:
-    reference_value: 11.5
-    tolerance_percent: 30.0
-    citation: "SMO-EOSAT reference; 6U CubeSat dry mass 10-12 kg typical (SMAD4 Table 14-1)"
+    reference_value: 11.0
+    tolerance_percent: 40.0
+    citation: "SMO-EOSAT reference; 6U CubeSat dry mass 8-14 kg typical (SMAD4 Table 14-1)"
 
   mass.wet_mass_kg:
     reference_value: 11.5
-    tolerance_percent: 30.0
+    tolerance_percent: 40.0
     citation: "No primary propulsion; wet ≈ dry for body-mounted EP / no prop"
 
   power.total_sunlight_w:

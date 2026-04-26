@@ -162,21 +162,32 @@ def generate_tailoring_matrix(
     applicable_set = set(applicable_ecss or [])
     active_domains = set(domains_active or [])
 
+    # "systems" and "risk" are project-level domains — always considered active
+    _UNIVERSAL_DOMAINS = {"systems", "risk"}
+
     entries: list[dict[str, Any]] = []
     for std_id, title, domains, default_app in _ECSS_CATALOGUE:
         # Determine applicability
-        domain_relevant = not active_domains or bool(set(domains) & active_domains)
+        std_domains = set(domains)
+        is_universal = bool(std_domains & _UNIVERSAL_DOMAINS)
+        domain_relevant = is_universal or not active_domains or bool(std_domains & active_domains)
         explicitly_listed = std_id in applicable_set
 
         if explicitly_listed:
             applicability = "full"
             rationale = "Explicitly listed in study applicable standards"
+        elif is_universal and default_app == "full":
+            applicability = "full"
+            rationale = f"Project-level standard (applies to all missions)"
         elif domain_relevant and default_app == "full":
             applicability = "full"
-            rationale = f"Standard covers active domain(s): {', '.join(set(domains) & active_domains) if active_domains else ', '.join(domains)}"
+            rationale = f"Standard covers active domain(s): {', '.join(std_domains & active_domains) if active_domains else ', '.join(domains)}"
+        elif is_universal and default_app == "partial":
+            applicability = "partial"
+            rationale = f"Project-level standard (partially applicable)"
         elif domain_relevant and default_app == "partial":
             applicability = "partial"
-            rationale = f"Partially applicable to active domain(s): {', '.join(set(domains) & active_domains) if active_domains else ', '.join(domains)}"
+            rationale = f"Partially applicable to active domain(s): {', '.join(std_domains & active_domains) if active_domains else ', '.join(domains)}"
         else:
             applicability = "tailored_out"
             rationale = f"Domain(s) {', '.join(domains)} not active in this design"

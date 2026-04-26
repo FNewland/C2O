@@ -41,11 +41,30 @@ class LinkAgent(DesignAgent):
 
         alt = state.get("orbit.altitude_km", 500.0)
         contact_s = state.get("orbit.contact_time_per_day_s", 1200.0) or 1200.0
+        orbit_type = state.get_requirement("orbit.orbit_type")
+
+        # Deep-space missions: slant range is Earth-body distance, not orbital altitude.
+        # Override altitude_km so the link budget uses the correct free-space loss.
+        _DEEP_SPACE_DISTANCE_KM = {
+            "lunar": 384_400.0,
+            "mars": 225_000_000.0,        # mean opposition
+            "lagrange": 1_500_000.0,       # L2
+            "interplanetary": 225_000_000.0,
+        }
+        is_deep_space = orbit_type in _DEEP_SPACE_DISTANCE_KM
+        link_altitude_km = _DEEP_SPACE_DISTANCE_KM.get(orbit_type, alt) if is_deep_space else alt
+
+        # Deep-space missions also get DSN-class ground station and longer contact
+        if is_deep_space:
+            contact_s = max(contact_s, 8 * 3600)  # 8-hour DSN pass minimum
 
         sc_class = state.get_requirement("spacecraft_class", "small")
         payload_data_rate_mbps = state.get("payload.0.data_rate_mbps", 0) or 0
-        # Band selection driven by class + data-rate need
-        if sc_class == "nano" and payload_data_rate_mbps < 1:
+        # Band selection driven by class + data-rate need + deep space
+        if is_deep_space:
+            # Deep-space: X-band with high-gain antenna + DSN 34m or 70m
+            freq_ghz, tx_power, gs_diam, tx_gain = 8.4, 15.0, 34.0, 30.0
+        elif sc_class == "nano" and payload_data_rate_mbps < 1:
             freq_ghz, tx_power, gs_diam, tx_gain = 0.4, 1.0, 13.0, 2.0   # UHF simple nanosat
         elif sc_class in ("nano", "micro"):
             freq_ghz, tx_power, gs_diam, tx_gain = 8.2, 2.0, 13.0, 6.0   # X-band nanosat
@@ -66,14 +85,14 @@ class LinkAgent(DesignAgent):
             required_rate_bps = payload_data_rate_mbps * 1e6 if payload_data_rate_mbps > 0 else 0
 
         lb = compute_link_budget(
-            altitude_km=alt,
+            altitude_km=link_altitude_km,
             tx_power_w=tx_power,
             tx_antenna_gain_dbi=tx_gain,
             frequency_ghz=freq_ghz,
             gs_antenna_diameter_m=gs_diam,
             contact_time_per_day_s=contact_s,
             required_data_rate_bps=required_rate_bps,
-            # Clear-sky design point by default — caller can override for worst-case
+            # Deep-space: no atmospheric rain (direct-to-Earth); LEO: clear-sky default
             rain_rate_mm_hr=0.0,
         )
 

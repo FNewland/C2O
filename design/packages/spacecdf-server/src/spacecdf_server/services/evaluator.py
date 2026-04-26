@@ -159,6 +159,7 @@ class CandidateEvaluator:
 def _default_output_params() -> list[str]:
     """Canonical output parameters for trade studies / optimisation."""
     return [
+        # Tier 1 — core design budgets
         "mass.dry_mass_kg",
         "mass.wet_mass_kg",
         "power.total_sunlight_w",
@@ -167,12 +168,26 @@ def _default_output_params() -> list[str]:
         "link.downlink_margin_db",
         "cost.total_meur",
         "cost.total_with_margin_meur",
-        "orbit.delta_v_insertion_ms",
+        "orbit.delta_v_total_ms",
         "orbit.delta_v_deorbit_ms",
         "aocs.pointing_accuracy_deg",
         "thermal.max_temp_c",
         "data.generated_per_day_gb",
         "data.downlinked_per_day_gb",
+        "propulsion.delta_v_total_ms",
+        "propulsion.total_impulse_ns",
+        "propulsion.propellant_mass_kg",
+        # Tier 2 — analysis outputs
+        "conflicts.count",
+        "conflicts.critical",
+        "conflicts.major",
+        "risk.risk_score",
+        "risk.high_risks",
+        "risk.total_risks",
+        "systems.health_score",
+        "systems.mass_margin_percent",
+        "systems.power_margin_percent",
+        "trl.innovation_count",
     ]
 
 

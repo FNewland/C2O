@@ -68,7 +68,15 @@ def estimate_structure_mass(
         base_fraction += 0.03
 
     result.structure_fraction = base_fraction
-    total_structure = spacecraft_dry_mass_kg * base_fraction
+
+    # Solve the circular dependency: if f is the structure fraction of total
+    # dry mass, then m_struct = f * m_total = f * (m_non_struct + m_struct),
+    # so m_struct = m_non_struct * f / (1 - f).
+    # spacecraft_dry_mass_kg is the current estimate (may include structure
+    # from a previous iteration). Use it directly but cap the fraction to
+    # avoid runaway on first iterations.
+    capped_fraction = min(base_fraction, 0.35)
+    total_structure = spacecraft_dry_mass_kg * capped_fraction / (1.0 + capped_fraction)
 
     # Breakdown
     result.primary_structure_mass_kg = total_structure * 0.60  # Bus, panels

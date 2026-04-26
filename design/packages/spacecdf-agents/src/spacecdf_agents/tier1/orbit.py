@@ -46,7 +46,14 @@ class OrbitAgent(DesignAgent):
         orbit_type = state.get_requirement("orbit.orbit_type")
         mission_years = state.get("mission.duration_years", 3.0)
 
-        # Auto-compute SSO inclination if needed
+        # Determine central body from orbit type
+        body = "earth"
+        if orbit_type in ("lunar",):
+            body = "moon"
+        elif orbit_type in ("mars",):
+            body = "mars"
+
+        # Auto-compute SSO inclination if needed (Earth only)
         if orbit_type == "sso" and (inc is None or inc == 0):
             inc = sso_inclination(alt)
             result.log(f"Computed SSO inclination: {inc:.2f} deg for {alt:.0f} km")
@@ -54,7 +61,7 @@ class OrbitAgent(DesignAgent):
             inc = 97.4  # Default SSO
 
         # Compute orbital parameters
-        params = compute_orbit_params(alt, inc)
+        params = compute_orbit_params(alt, inc, body=body)
 
         result.add_param("orbit.period_s", "Orbital Period", params.period_s, "s",
                          rationale=f"Kepler period at {alt:.0f} km altitude")

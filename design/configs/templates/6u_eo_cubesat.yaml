@@ -58,8 +58,8 @@ requirements:
       description: "4-band ocean colour imager (443, 560, 665, 865 nm)"
   design_lifetime_years: 3.0
   reliability_target: 0.9
-  target_mass_kg: 12.0
-  target_cost_meur: 5.0
+  target_mass_kg: 16.0
+  target_cost_meur: 10.0
   num_spacecraft: 1
   ground_stations:
     - "KSAT Svalbard"

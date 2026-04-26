@@ -22,6 +22,13 @@ SOLAR_FLUX = 1361.0  # W/m^2 at 1 AU
 DEG = math.pi / 180.0
 C_LIGHT = 299792458.0  # m/s
 
+# Celestial body parameters: (mu [m³/s²], radius [m], J2, has_atmosphere)
+BODIES: dict[str, dict] = {
+    "earth": {"mu": 3.986004418e14, "radius": 6371.0e3, "j2": 1.08263e-3, "has_atmosphere": True},
+    "moon":  {"mu": 4.9048695e12,   "radius": 1737.4e3, "j2": 2.034e-4,   "has_atmosphere": False},
+    "mars":  {"mu": 4.282837e13,    "radius": 3389.5e3, "j2": 1.96045e-3,  "has_atmosphere": True},
+}
+
 
 @dataclass
 class OrbitDesignParams:
@@ -52,23 +59,30 @@ def compute_orbit_params(
     inclination_deg: float,
     eccentricity: float = 0.0,
     beta_angle_deg: float = 0.0,
+    body: str = "earth",
 ) -> OrbitDesignParams:
     """Compute design-point orbital parameters for a (near-)circular orbit.
 
     Args:
-        altitude_km: Orbital altitude above Earth surface.
+        altitude_km: Orbital altitude above body surface.
         inclination_deg: Orbital inclination in degrees.
         eccentricity: Orbital eccentricity (0 for circular).
         beta_angle_deg: Sun beta angle in degrees (affects eclipse fraction).
+        body: Central body — "earth", "moon", or "mars".
     """
-    a = (R_EARTH + altitude_km * 1e3)  # semi-major axis in metres
-    n = math.sqrt(MU_EARTH / a**3)  # mean motion (rad/s)
+    bdata = BODIES.get(body, BODIES["earth"])
+    mu = bdata["mu"]
+    r_body = bdata["radius"]
+    j2 = bdata["j2"]
+
+    a = (r_body + altitude_km * 1e3)  # semi-major axis in metres
+    n = math.sqrt(mu / a**3)  # mean motion (rad/s)
     period_s = 2 * math.pi / n
-    velocity = math.sqrt(MU_EARTH / a)
+    velocity = math.sqrt(mu / a)
 
     # Eclipse fraction for circular orbit
     beta_rad = beta_angle_deg * DEG
-    rho = math.asin(R_EARTH / a)  # Earth angular radius from orbit
+    rho = math.asin(r_body / a)  # Body angular radius from orbit
     cos_beta = math.cos(beta_rad)
 
     if abs(beta_angle_deg) >= (90 - math.degrees(rho)):
@@ -76,23 +90,23 @@ def compute_orbit_params(
     else:
         # Cylindrical shadow approximation
         eclipse_half_angle = math.acos(math.sqrt(
-            max(0, a**2 * cos_beta**2 - R_EARTH**2)
+            max(0, a**2 * cos_beta**2 - r_body**2)
         ) / (a * abs(cos_beta) + 1e-9))
         eclipse_fraction = eclipse_half_angle / math.pi
-        eclipse_fraction = min(eclipse_fraction, 0.5)  # Can't be in eclipse more than half
+        eclipse_fraction = min(eclipse_fraction, 0.5)
 
     # J2 perturbation rates
     inc_rad = inclination_deg * DEG
     p = a * (1 - eccentricity**2)
-    raan_drift = -1.5 * n * J2 * (R_EARTH / p)**2 * math.cos(inc_rad)
-    arg_p_drift = 0.75 * n * J2 * (R_EARTH / p)**2 * (5 * math.cos(inc_rad)**2 - 1)
+    raan_drift = -1.5 * n * j2 * (r_body / p)**2 * math.cos(inc_rad)
+    arg_p_drift = 0.75 * n * j2 * (r_body / p)**2 * (5 * math.cos(inc_rad)**2 - 1)
 
     # Footprint / coverage
-    earth_angle = math.acos(R_EARTH / a)
-    footprint_radius = R_EARTH * earth_angle / 1e3  # km
+    body_angle = math.acos(r_body / a)
+    footprint_radius = r_body * body_angle / 1e3  # km
 
-    # Ground speed (for SSO-like orbits)
-    ground_speed = velocity * R_EARTH / a / 1e3  # km/s
+    # Ground speed
+    ground_speed = velocity * r_body / a / 1e3  # km/s
 
     return OrbitDesignParams(
         altitude_km=altitude_km,
@@ -108,7 +122,7 @@ def compute_orbit_params(
         orbits_per_day=86400.0 / period_s,
         raan_drift_deg_day=math.degrees(raan_drift) * 86400.0,
         arg_perigee_drift_deg_day=math.degrees(arg_p_drift) * 86400.0,
-        max_earth_angle_deg=math.degrees(earth_angle),
+        max_earth_angle_deg=math.degrees(body_angle),
         footprint_radius_km=footprint_radius,
         ground_speed_km_s=ground_speed,
     )
@@ -127,18 +141,21 @@ def sso_inclination(altitude_km: float) -> float:
     return math.degrees(math.acos(cos_i))
 
 
-def delta_v_hohmann(r1_km: float, r2_km: float) -> tuple[float, float]:
+def delta_v_hohmann(r1_km: float, r2_km: float, body: str = "earth") -> tuple[float, float]:
     """Hohmann transfer delta-V between two circular orbits.
 
     Returns (dv1, dv2) in m/s.
     """
-    r1 = (R_EARTH + r1_km * 1e3)
-    r2 = (R_EARTH + r2_km * 1e3)
+    bdata = BODIES.get(body, BODIES["earth"])
+    mu = bdata["mu"]
+    r_body = bdata["radius"]
+    r1 = (r_body + r1_km * 1e3)
+    r2 = (r_body + r2_km * 1e3)
     a_t = (r1 + r2) / 2
-    v1_circ = math.sqrt(MU_EARTH / r1)
-    v2_circ = math.sqrt(MU_EARTH / r2)
-    v1_trans = math.sqrt(MU_EARTH * (2 / r1 - 1 / a_t))
-    v2_trans = math.sqrt(MU_EARTH * (2 / r2 - 1 / a_t))
+    v1_circ = math.sqrt(mu / r1)
+    v2_circ = math.sqrt(mu / r2)
+    v1_trans = math.sqrt(mu * (2 / r1 - 1 / a_t))
+    v2_trans = math.sqrt(mu * (2 / r2 - 1 / a_t))
     return abs(v1_trans - v1_circ), abs(v2_circ - v2_trans)
 
 
@@ -147,9 +164,9 @@ def delta_v_plane_change(velocity_ms: float, angle_deg: float) -> float:
     return 2 * velocity_ms * math.sin(angle_deg * DEG / 2)
 
 
-def delta_v_deorbit(altitude_km: float, target_perigee_km: float = 200.0) -> float:
+def delta_v_deorbit(altitude_km: float, target_perigee_km: float = 200.0, body: str = "earth") -> float:
     """Delta-V to lower perigee for deorbit (circular to elliptical)."""
-    dv1, _ = delta_v_hohmann(altitude_km, target_perigee_km)
+    dv1, _ = delta_v_hohmann(altitude_km, target_perigee_km, body=body)
     return dv1
 
 

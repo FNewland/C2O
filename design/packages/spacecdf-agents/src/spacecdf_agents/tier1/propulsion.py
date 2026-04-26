@@ -25,6 +25,7 @@ class PropulsionAgent(DesignAgent):
         return [
             "propulsion.total_mass_kg", "propulsion.propellant_mass_kg",
             "propulsion.type", "propulsion.isp_s", "propulsion.cost_keur",
+            "propulsion.delta_v_total_ms", "propulsion.total_impulse_ns",
         ]
 
     def dependencies(self) -> list[str]:
@@ -51,6 +52,12 @@ class PropulsionAgent(DesignAgent):
         result.add_param("propulsion.isp_s", "Specific Impulse", prop.isp_s, "s")
         result.add_param("propulsion.cost_keur", "Propulsion Cost",
                          round(prop.propulsion_cost_keur, 0), "kEUR")
+        result.add_param("propulsion.delta_v_total_ms", "Total Delta-V",
+                         round(prop.total_delta_v_ms, 1), "m/s")
+        # Total impulse: propellant_mass * Isp * g0
+        total_impulse = prop.propellant_mass_kg * prop.isp_s * 9.80665 if prop.isp_s > 0 else 0.0
+        result.add_param("propulsion.total_impulse_ns", "Total Impulse",
+                         round(total_impulse, 1), "Ns")
 
         result.warnings.extend(prop.warnings)
         result.confidence = 0.80

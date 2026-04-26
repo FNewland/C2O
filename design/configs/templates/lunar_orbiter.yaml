@@ -79,7 +79,7 @@ requirements:
       description: "1-3 um spectrometer for mineral composition"
   design_lifetime_years: 2.0
   reliability_target: 0.9
-  target_mass_kg: 300.0
+  target_mass_kg: 450.0
   target_cost_meur: 80.0
   num_spacecraft: 1
   ground_stations:
