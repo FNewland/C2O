@@ -29,6 +29,7 @@ export type SendEditFn = (
 interface SessionState {
   sessionId: string | null
   positionId: string | null
+  positionIds: string[]           // All claimed positions (multi-role support)
   displayName: string
   activePositions: string[]
   parameters: Record<string, DesignParam>
@@ -37,7 +38,7 @@ interface SessionState {
   lastConvergence: ConvergenceInfo | null
   sendEdit: SendEditFn | null
 
-  setSession: (sessionId: string, positionId: string, displayName?: string) => void
+  setSession: (sessionId: string, positionId: string, displayName?: string, positionIds?: string[]) => void
   clearSession: () => void
   setStateSnapshot: (params: Record<string, any>, activePositions: string[]) => void
   applyStateUpdate: (updates: Record<string, any>) => void
@@ -64,6 +65,7 @@ function toDesignParam(raw: any): DesignParam {
 export const useSessionStore = create<SessionState>((set, get) => ({
   sessionId: null,
   positionId: null,
+  positionIds: [],
   displayName: '',
   activePositions: [],
   parameters: {},
@@ -74,11 +76,15 @@ export const useSessionStore = create<SessionState>((set, get) => ({
 
   setSendEdit: (fn) => set({ sendEdit: fn }),
 
-  setSession: (sessionId, positionId, displayName = '') =>
-    set({ sessionId, positionId, displayName, parameters: {}, activePositions: [], toasts: [], pendingEdits: new Map() }),
+  setSession: (sessionId, positionId, displayName = '', positionIds) =>
+    set({
+      sessionId, positionId, displayName,
+      positionIds: positionIds || [positionId],
+      parameters: {}, activePositions: [], toasts: [], pendingEdits: new Map(),
+    }),
 
   clearSession: () =>
-    set({ sessionId: null, positionId: null, displayName: '', activePositions: [], parameters: {}, toasts: [], pendingEdits: new Map() }),
+    set({ sessionId: null, positionId: null, positionIds: [], displayName: '', activePositions: [], parameters: {}, toasts: [], pendingEdits: new Map() }),
 
   setStateSnapshot: (params, activePositions) => {
     const parameters: Record<string, DesignParam> = {}

@@ -49,7 +49,19 @@ class SessionManager:
         self._session_states: dict[str, DesignState] = {}
         self._position_patterns: dict[str, list[dict]] = {}  # position_id -> [{param_pattern, role}]
         self._edit_counters: dict[str, int] = {}  # session_id -> edit count for snapshot cadence
+        self._locks: dict[str, asyncio.Lock] = {}  # per-session lock for concurrent edit safety
         self._load_position_ownership()
+
+    def _get_lock(self, session_id: str) -> asyncio.Lock:
+        """Get or create a per-session asyncio.Lock.
+
+        Serialises state mutations (apply_edit + run_convergence) within a
+        session to prevent race conditions when multiple positions edit
+        simultaneously. Different sessions remain fully concurrent.
+        """
+        if session_id not in self._locks:
+            self._locks[session_id] = asyncio.Lock()
+        return self._locks[session_id]
 
     def _load_position_ownership(self) -> None:
         """Load position parameter ownership patterns for edit scoping."""
@@ -168,7 +180,27 @@ class SessionManager:
 
         Validates ownership, records the edit, updates the design state,
         and returns the edit record for WebSocket broadcast.
+
+        Thread-safe via per-session asyncio.Lock — serialises concurrent
+        edits from multiple positions within the same session.
         """
+        async with self._get_lock(session_id):
+            return await self._apply_edit_inner(
+                session_id, position_id, parameter_id, new_value,
+                rationale, edit_type, equipment_id,
+            )
+
+    async def _apply_edit_inner(
+        self,
+        session_id: str,
+        position_id: str,
+        parameter_id: str,
+        new_value: float | str | bool,
+        rationale: str = "",
+        edit_type: str = "override",
+        equipment_id: str | None = None,
+    ) -> ParameterEdit | None:
+        """Inner implementation of apply_edit (called under lock)."""
         session = self._sessions.get(session_id)
         if not session or session.state not in (SessionState.ACTIVE, SessionState.LOBBY):
             return None
@@ -316,7 +348,13 @@ class SessionManager:
         """Run selective re-convergence for the session's design state.
 
         Called after edits to propagate changes through the agent network.
+        Serialised via per-session lock to prevent overlapping convergence runs.
         """
+        async with self._get_lock(session_id):
+            return await self._run_convergence_inner(session_id)
+
+    async def _run_convergence_inner(self, session_id: str) -> dict:
+        """Inner convergence implementation (called under lock)."""
         session = self._sessions.get(session_id)
         state = self._session_states.get(session_id)
         if not session or not state:

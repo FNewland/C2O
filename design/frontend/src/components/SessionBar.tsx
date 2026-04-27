@@ -35,6 +35,7 @@ export function SessionBar({ wsStatus, onStartSession, onLeaveSession }: {
 }) {
   const sessionId = useSessionStore(s => s.sessionId)
   const positionId = useSessionStore(s => s.positionId)
+  const positionIds = useSessionStore(s => s.positionIds)
   const activePositions = useSessionStore(s => s.activePositions)
   const lastConvergence = useSessionStore(s => s.lastConvergence)
   const dot = statusDot(wsStatus)
@@ -73,15 +74,18 @@ export function SessionBar({ wsStatus, onStartSession, onLeaveSession }: {
         Session <strong style={{ color: 'var(--text-primary, #f3f4f6)', fontFamily: 'monospace' }}>{sessionId}</strong>
       </div>
 
-      {positionId && (
-        <div style={{ color: 'var(--text-secondary, #9ca3af)' }}>
-          You: <span style={{
-            display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
-            padding: '0.15rem 0.5rem', borderRadius: '4px',
-            background: `${POSITION_COLOR[positionId] || '#6b7280'}22`,
-            color: POSITION_COLOR[positionId] || '#9ca3af',
-            fontWeight: 600,
-          }}>{positionId.replace(/_/g, ' ')}</span>
+      {positionIds.length > 0 && (
+        <div style={{ color: 'var(--text-secondary, #9ca3af)', display: 'flex', alignItems: 'center', gap: '0.3rem', flexWrap: 'wrap' }}>
+          <span>You:</span>
+          {positionIds.map(pid => (
+            <span key={pid} style={{
+              display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
+              padding: '0.1rem 0.45rem', borderRadius: '4px', fontSize: '0.75rem',
+              background: `${POSITION_COLOR[pid] || '#6b7280'}22`,
+              color: POSITION_COLOR[pid] || '#9ca3af',
+              fontWeight: 600,
+            }}>{pid.replace(/_/g, ' ')}</span>
+          ))}
         </div>
       )}
 

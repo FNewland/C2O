@@ -81,14 +81,14 @@ function AppContent() {
 
   const handleLeaveSession = () => clearSession()
 
-  const handleSessionConfirm = async (pos: string, name: string) => {
+  const handleSessionConfirm = async (pos: string, name: string, positionIds: string[]) => {
     // Ensure study exists
     let sid = studyId
     if (!sid) sid = await createStudy()
     if (!sid) return
     // Create session
     const data = await createSession.mutateAsync({ study_id: sid, name: `${name || pos} session` })
-    setSession(data.id, pos, name || pos)
+    setSession(data.id, pos, name || pos, positionIds)
     setShowSessionStarter(false)
   }
 
@@ -300,12 +300,25 @@ function AppContent() {
 function SessionStarterModal({
   onConfirm, onCancel, isLoading,
 }: {
-  onConfirm: (positionId: string, displayName: string) => void
+  onConfirm: (positionId: string, displayName: string, positionIds: string[]) => void
   onCancel: () => void
   isLoading: boolean
 }) {
-  const [position, setPosition] = useState('systems_engineer')
+  const [selected, setSelected] = useState<string[]>(['systems_engineer'])
   const [name, setName] = useState('')
+
+  const toggle = (id: string) => {
+    setSelected(prev =>
+      prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]
+    )
+  }
+
+  const ROLE_COLORS: Record<string, string> = {
+    systems_engineer: '#3b82f6', mission_analyst: '#8b5cf6', payload_lead: '#10b981',
+    power_engineer: '#f59e0b', aocs_engineer: '#06b6d4', thermal_engineer: '#ef4444',
+    comms_engineer: '#ec4899', propulsion_engineer: '#f97316', structures_engineer: '#84cc16',
+    cost_engineer: '#a855f7',
+  }
 
   return (
     <div style={{
@@ -314,25 +327,38 @@ function SessionStarterModal({
     }} onClick={onCancel}>
       <div style={{
         background: 'var(--bg-primary, #111827)', border: '1px solid var(--border, #374151)',
-        borderRadius: '8px', padding: '1.5rem', maxWidth: '420px', width: '90%',
+        borderRadius: '8px', padding: '1.5rem', maxWidth: '480px', width: '90%',
       }} onClick={e => e.stopPropagation()}>
         <h2>Join a Design Session</h2>
-        <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary, #9ca3af)', marginBottom: '1rem' }}>
-          Each engineer joins as a position. You can only edit parameters owned by your position.
+        <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary, #9ca3af)', marginBottom: '0.75rem' }}>
+          Select one or more positions. Small teams can claim multiple roles.
+          You can edit parameters owned by any of your positions.
         </p>
-        <div className="form-group">
-          <label>Position</label>
-          <select className="select" value={position} onChange={e => setPosition(e.target.value)}>
-            {POSITION_OPTIONS.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
-          </select>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginBottom: '1rem' }}>
+          {POSITION_OPTIONS.map(p => {
+            const active = selected.includes(p.id)
+            return (
+              <label key={p.id} style={{
+                display: 'flex', alignItems: 'center', gap: '0.3rem',
+                fontSize: '0.78rem', padding: '0.25rem 0.6rem', borderRadius: '4px', cursor: 'pointer',
+                background: active ? `${ROLE_COLORS[p.id] || '#3b82f6'}22` : 'transparent',
+                border: `1px solid ${active ? (ROLE_COLORS[p.id] || '#3b82f6') : 'var(--border, #374151)'}`,
+                color: active ? (ROLE_COLORS[p.id] || '#3b82f6') : 'var(--text-secondary, #9ca3af)',
+              }}>
+                <input type="checkbox" checked={active} onChange={() => toggle(p.id)}
+                  style={{ width: 14, height: 14 }} />
+                {p.label}
+              </label>
+            )
+          })}
         </div>
         <div className="form-group">
           <label>Display name (optional)</label>
           <input className="input" value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Alice" />
         </div>
         <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
-          <button className="btn" onClick={() => onConfirm(position, name)} disabled={isLoading}>
-            {isLoading ? 'Creating…' : 'Join Session'}
+          <button className="btn" onClick={() => onConfirm(selected[0], name, selected)} disabled={isLoading || selected.length === 0}>
+            {isLoading ? 'Creating...' : `Join as ${selected.length} position${selected.length !== 1 ? 's' : ''}`}
           </button>
           <button className="btn btn-sm" onClick={onCancel} style={{ background: 'var(--border, #374151)' }}>
             Cancel

@@ -1,6 +1,11 @@
 import { useDesignStore, type DesignParam } from '../stores/designStore'
+import { MissionDashboard } from './MissionDashboard'
 
-const DOMAIN_ORDER = ['orbit', 'payload', 'power', 'aocs', 'thermal', 'link', 'data', 'propulsion', 'structure', 'mass', 'cost', 'systems', 'risk', 'trl']
+const DOMAIN_ORDER = [
+  'orbit', 'payload', 'power', 'aocs', 'thermal', 'link', 'data',
+  'propulsion', 'structure', 'mass', 'cost', 'systems', 'risk', 'trl',
+  'debris', 'sustainability', 'radiation', 'volume', 'reliability', 'community',
+]
 
 function formatValue(value: number | string | boolean): string {
   if (typeof value === 'number') {
@@ -106,23 +111,5 @@ export function DesignWorkspace() {
     )
   }
 
-  return (
-    <div style={{ padding: '1rem' }}>
-      {/* Budget gauges */}
-      <h2>System Budgets</h2>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '0.75rem', marginBottom: '1.5rem' }}>
-        {Object.entries(result.budgets).map(([name, budget]) => (
-          <BudgetGauge key={name} name={name} budget={budget} />
-        ))}
-      </div>
-
-      {/* Parameters by domain */}
-      <h2>Design Parameters</h2>
-      <div className="card" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
-        {DOMAIN_ORDER.map((domain) => (
-          <ParamTable key={domain} params={result.parameters} domain={domain} />
-        ))}
-      </div>
-    </div>
-  )
+  return <MissionDashboard />
 }

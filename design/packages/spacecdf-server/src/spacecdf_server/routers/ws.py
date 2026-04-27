@@ -70,12 +70,14 @@ async def _send(ws: WebSocket, message: dict) -> None:
 async def websocket_session(
     websocket: WebSocket,
     session_id: str,
-    position_id: str = Query(...),
+    position_id: str = Query(default=""),
+    position_ids: str = Query(default=""),
     display_name: str = Query(default=""),
 ):
     """WebSocket endpoint for real-time concurrent design collaboration.
 
     Connect: ws://host/ws/session/{session_id}?position_id=power_engineer&display_name=Alice
+    Multi-role: ws://host/ws/session/{session_id}?position_ids=systems_engineer,power_engineer&display_name=Alice
     """
     mgr = get_session_manager()
     session = mgr.get_session(session_id)
@@ -83,23 +85,37 @@ async def websocket_session(
         await websocket.close(code=4004, reason="Session not found")
         return
 
+    # Parse position list: prefer position_ids (comma-separated), fallback to position_id
+    if position_ids:
+        positions = [p.strip() for p in position_ids.split(",") if p.strip()]
+    elif position_id:
+        positions = [position_id]
+    else:
+        await websocket.close(code=4003, reason="No position specified")
+        return
+
+    # Primary position for backward compatibility
+    position_id = positions[0]
+
     await websocket.accept()
 
-    # Register connection
+    # Register connection for each claimed position
     if session_id not in _connections:
         _connections[session_id] = {}
-    _connections[session_id][position_id] = websocket
+    for pid in positions:
+        _connections[session_id][pid] = websocket
 
-    # Join session
-    participant = mgr.join_session(session_id, position_id, display_name)
-    if not participant:
-        await websocket.close(code=4003, reason="Could not join session")
-        return
+    # Join session for each position
+    for pid in positions:
+        participant = mgr.join_session(session_id, pid, display_name)
+        if not participant:
+            logger.warning("Could not join session %s as %s", session_id, pid)
 
     # Notify others
     await _broadcast(session_id, {
         "type": "participant_joined",
         "position_id": position_id,
+        "positions": positions,
         "display_name": display_name or position_id,
         "active_positions": session.active_positions,
         "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -158,11 +174,15 @@ async def websocket_session(
                     })
                     continue
 
-                # Apply edit
-                edit = await mgr.apply_edit(
-                    session_id, position_id, param_id, new_value,
-                    rationale=rationale, edit_type=edit_type, equipment_id=equipment_id,
-                )
+                # Apply edit — try each claimed position until one has scope
+                edit = None
+                for try_pos in positions:
+                    edit = await mgr.apply_edit(
+                        session_id, try_pos, param_id, new_value,
+                        rationale=rationale, edit_type=edit_type, equipment_id=equipment_id,
+                    )
+                    if edit:
+                        break
 
                 if edit:
                     # Broadcast to all positions
@@ -229,14 +249,17 @@ async def websocket_session(
     except Exception as e:
         logger.error("WebSocket error for %s in %s: %s", position_id, session_id, e)
     finally:
-        # Cleanup
-        _connections.get(session_id, {}).pop(position_id, None)
-        mgr.leave_session(session_id, position_id)
+        # Cleanup — remove all claimed positions for this connection
+        conns = _connections.get(session_id, {})
+        for pid in positions:
+            conns.pop(pid, None)
+            mgr.leave_session(session_id, pid)
 
         # Notify others
         await _broadcast(session_id, {
             "type": "participant_left",
             "position_id": position_id,
+            "positions": positions,
             "active_positions": session.active_positions,
             "timestamp": datetime.now(timezone.utc).isoformat(),
         })
