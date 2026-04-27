@@ -136,57 +136,79 @@ def compute_aocs_design(
     result.aerodynamic_torque_nm = torques["aerodynamic"]
     result.total_disturbance_torque_nm = torques["total"]
 
-    # Reaction wheel sizing
-    # Torque: must exceed disturbance torque by factor 5-10 for control authority
-    control_authority_factor = 10.0
-    result.reaction_wheel_torque_nm = torques["total"] * control_authority_factor
+    # Determine AOCS mode: magnetorquer-only for loose pointing (>2°), else reaction wheels
+    magnetorquer_only = required_pointing_deg >= 2.0
 
-    # Slew torque (may dominate)
-    # I ~ m * L^2 / 12 (simplified)
-    inertia = spacecraft_mass_kg * max_dimension_m**2 / 12
-    slew_torque = 4 * inertia * (slew_rate_deg_s * math.pi / 180) / max_slew_angle_deg
-    result.reaction_wheel_torque_nm = max(result.reaction_wheel_torque_nm, slew_torque)
+    if magnetorquer_only:
+        # Magnetorquer-only AOCS — suitable for tech demos, IoT sats, etc.
+        result.reaction_wheel_torque_nm = 0.0
+        result.reaction_wheel_momentum_nms = 0.0
+        result.num_reaction_wheels = 0
 
-    # Momentum storage: must store accumulated disturbance over half orbit
-    result.reaction_wheel_momentum_nms = torques["total"] * orbit_period_s / 2
+        # Magnetorquer dipole sized to overcome disturbances
+        b_field = 3e-5 * (R_EARTH / (R_EARTH + altitude_km * 1e3))**3
+        result.magnetorquer_dipole_am2 = max(0.2, torques["total"] / max(b_field, 1e-12) * 2.0)
 
-    # Wheel configuration
-    result.num_reaction_wheels = 4  # Tetrahedron for redundancy
+        result.sensors = _select_sensors(required_pointing_deg)
+        result.pointing_accuracy_deg = required_pointing_deg
+        result.pointing_knowledge_deg = required_pointing_deg * 0.5
+        result.pointing_stability_deg_s = required_stability_deg_s
 
-    # Magnetorquer for desaturation
-    b_field = 3e-5 * (R_EARTH / (R_EARTH + altitude_km * 1e3))**3
-    if b_field > 0:
-        result.magnetorquer_dipole_am2 = result.reaction_wheel_momentum_nms / (b_field * orbit_period_s * 0.1)
+        # Mass: magnetorquers + sensors + electronics
+        mtq_mass = result.magnetorquer_dipole_am2 * 0.08  # ~80g per Am²
+        sensor_mass = _sensor_mass(result.sensors)
+        electronics_mass = 0.3 if spacecraft_mass_kg < 20 else 0.8
+        result.aocs_mass_kg = mtq_mass * 3 + sensor_mass + electronics_mass
+
+        # Power: magnetorquers are low-power
+        result.aocs_power_w = 2.0 + 1.0  # MTQ + sensors
     else:
-        result.magnetorquer_dipole_am2 = 1.0
+        # Reaction wheel AOCS
+        # Torque: must exceed disturbance torque by factor 5-10
+        control_authority_factor = 10.0
+        result.reaction_wheel_torque_nm = torques["total"] * control_authority_factor
 
-    # Sensor selection based on pointing requirement
-    result.sensors = _select_sensors(required_pointing_deg)
+        # Slew torque (may dominate)
+        inertia = spacecraft_mass_kg * max_dimension_m**2 / 12
+        slew_torque = 4 * inertia * (slew_rate_deg_s * math.pi / 180) / max(max_slew_angle_deg, 1.0)
+        result.reaction_wheel_torque_nm = max(result.reaction_wheel_torque_nm, slew_torque)
 
-    # Pointing budget (simplified)
-    result.pointing_accuracy_deg = required_pointing_deg
-    result.pointing_knowledge_deg = required_pointing_deg * 0.3  # Knowledge typically 3x better
-    result.pointing_stability_deg_s = required_stability_deg_s
+        # Momentum storage: accumulated disturbance over quarter orbit (desaturation twice per orbit)
+        result.reaction_wheel_momentum_nms = torques["total"] * orbit_period_s / 4
 
-    # Mass estimate
-    wheel_mass = _wheel_mass(result.reaction_wheel_momentum_nms)
-    sensor_mass = _sensor_mass(result.sensors)
-    mtq_mass = result.magnetorquer_dipole_am2 * 0.1  # ~0.1 kg per Am²
-    electronics_mass = 1.0  # AOCS computer/electronics
-    result.aocs_mass_kg = (
-        wheel_mass * result.num_reaction_wheels
-        + sensor_mass
-        + mtq_mass * 3  # 3-axis magnetorquer
-        + electronics_mass
-    )
+        result.num_reaction_wheels = 4  # Tetrahedron for redundancy
 
-    # Power estimate
-    result.aocs_power_w = (
-        result.num_reaction_wheels * 2.0  # ~2W per wheel nominal
-        + 3.0  # Star tracker
-        + 1.0  # Magnetorquer (intermittent)
-        + 3.0  # AOCS computer
-    )
+        # Magnetorquer for desaturation
+        b_field = 3e-5 * (R_EARTH / (R_EARTH + altitude_km * 1e3))**3
+        if b_field > 0:
+            result.magnetorquer_dipole_am2 = result.reaction_wheel_momentum_nms / (b_field * orbit_period_s * 0.1)
+        else:
+            result.magnetorquer_dipole_am2 = 1.0
+
+        result.sensors = _select_sensors(required_pointing_deg)
+        result.pointing_accuracy_deg = required_pointing_deg
+        result.pointing_knowledge_deg = required_pointing_deg * 0.3
+        result.pointing_stability_deg_s = required_stability_deg_s
+
+        # Mass estimate
+        wheel_mass = _wheel_mass(result.reaction_wheel_momentum_nms)
+        sensor_mass = _sensor_mass(result.sensors)
+        mtq_mass = result.magnetorquer_dipole_am2 * 0.08
+        electronics_mass = 0.8 if spacecraft_mass_kg < 50 else 1.5
+        result.aocs_mass_kg = (
+            wheel_mass * result.num_reaction_wheels
+            + sensor_mass
+            + mtq_mass * 3
+            + electronics_mass
+        )
+
+        # Power
+        result.aocs_power_w = (
+            result.num_reaction_wheels * 2.0
+            + 3.0  # Star tracker
+            + 1.0  # Magnetorquer (intermittent)
+            + 3.0  # AOCS computer
+        )
 
     # Cost
     result.aocs_cost_keur = result.aocs_mass_kg * 100  # ~100 kEUR/kg for AOCS

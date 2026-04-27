@@ -1,0 +1,141 @@
+# LADEE — detailed validation reference
+#
+# Published data from Elphic et al. (SSR 2014), NASA LADEE Press Kit (2013),
+# Hine et al. (IEEE Aerospace 2010), NASA Ames technical documentation.
+#
+# LADEE is the deepest-space case study — validates multi-body orbit,
+# bipropellant propulsion sizing, and deep-space link budgets.
+
+template_id: ladee
+description: "LADEE lunar orbiter — 50 km LLO, 248 kg dry, 383 kg launch, biprop"
+
+parameters:
+  # --- Mass budget ---
+  mass.dry_mass_kg:
+    reference_value: 248.0
+    tolerance_percent: 20.0
+    citation: "NASA LADEE Press Kit: 248.2 kg dry mass"
+
+  mass.wet_mass_kg:
+    reference_value: 383.0
+    tolerance_percent: 15.0
+    citation: "NASA LADEE Press Kit: 383 kg total launch mass"
+
+  mass.payload_kg:
+    reference_value: 17.5
+    tolerance_percent: 15.0
+    citation: "NMS 10kg + UVS 4kg + LDEX 3.5kg = 17.5 kg (Elphic et al.)"
+
+  mass.propellant_kg:
+    reference_value: 135.0
+    tolerance_percent: 15.0
+    citation: "383 - 248 = 135 kg propellant (Hine et al.)"
+
+  # --- Orbit ---
+  orbit.period_s:
+    reference_value: 6779.0
+    tolerance_percent: 3.0
+    citation: "50 km LLO: T = 2π√((1787.4 km)³/μ_moon) ≈ 6779 s (113 min)"
+
+  orbit.eclipse_fraction:
+    reference_value: 0.38
+    tolerance_percent: 20.0
+    citation: "Lunar shadow geometry at 50 km, varies with season"
+
+  orbit.delta_v_total_ms:
+    reference_value: 1100.0
+    tolerance_percent: 15.0
+    citation: "~900 m/s LOI + ~200 m/s maintenance/orbit-raising (NASA docs)"
+
+  # --- Power ---
+  power.total_sunlight_w:
+    reference_value: 75.0
+    tolerance_percent: 30.0
+    citation: "Bus ~40W + science ~35W nominal mode (Hine et al.)"
+
+  power.sa_power_eol_w:
+    reference_value: 280.0
+    tolerance_percent: 25.0
+    citation: "LADEE SA: ~295W BOL, ~280W at end of 6-month mission"
+
+  power.sa_power_bol_w:
+    reference_value: 295.0
+    tolerance_percent: 20.0
+    citation: "LADEE: 295W BOL from body-mounted panels on octagonal bus (NASA)"
+
+  power.battery_capacity_wh:
+    reference_value: 360.0
+    tolerance_percent: 30.0
+    citation: "LADEE: Li-ion, ~45 min eclipse → ~360 Wh estimated from power × eclipse"
+
+  power.eps_mass_kg:
+    reference_value: 20.0
+    tolerance_percent: 30.0
+    citation: "SA + battery + PCDU for small class: ~15-25 kg (SMAD4 §11.6)"
+
+  # --- Communications ---
+  link.downlink_margin_db:
+    reference_value: 6.0
+    tolerance_percent: 80.0
+    citation: "S-band ~128 kbps to DSN 34m; design margin ~3-8 dB at lunar distance"
+
+  link.ttc_mass_kg:
+    reference_value: 5.0
+    tolerance_percent: 30.0
+    citation: "S-band transponder + LGA + MGA + LLCD terminal: ~4-6 kg (ex LLCD)"
+
+  # --- AOCS ---
+  aocs.pointing_accuracy_deg:
+    reference_value: 0.5
+    tolerance_percent: 50.0
+    citation: "LADEE: ±0.5° pointing accuracy (Hine et al.)"
+
+  aocs.mass_kg:
+    reference_value: 8.0
+    tolerance_percent: 30.0
+    citation: "4x RW + 2x ST + sun sensors + IMU: ~7-10 kg for small class"
+
+  # --- Propulsion ---
+  propulsion.propellant_mass_kg:
+    reference_value: 135.0
+    tolerance_percent: 15.0
+    citation: "383 - 248 = 135 kg propellant"
+
+  propulsion.isp_s:
+    reference_value: 310.0
+    tolerance_percent: 10.0
+    citation: "Bipropellant (N2O4/MMH), Isp ~310 s (Hine et al.)"
+
+  propulsion.total_mass_kg:
+    reference_value: 155.0
+    tolerance_percent: 20.0
+    citation: "Propellant 135 kg + tanks/engine/feed ~20 kg"
+
+  propulsion.delta_v_total_ms:
+    reference_value: 1100.0
+    tolerance_percent: 15.0
+    citation: "~900 m/s LOI + ~200 m/s maintenance"
+
+  # --- Thermal ---
+  thermal.tcs_mass_kg:
+    reference_value: 8.0
+    tolerance_percent: 40.0
+    citation: "Lunar thermal environment harsh: ~6-10 kg TCS for small class"
+
+  # --- Structure ---
+  structure.mass_kg:
+    reference_value: 35.0
+    tolerance_percent: 30.0
+    citation: "Octagonal modular bus structure: ~14% of dry mass = ~35 kg"
+
+  # --- Data ---
+  data.generated_per_day_gb:
+    reference_value: 0.27
+    tolerance_percent: 30.0
+    citation: "NMS 0.2 + UVS 0.05 + LDEX 0.02 = 0.27 GB/day"
+
+  # --- Cost ---
+  cost.total_meur:
+    reference_value: 200.0
+    tolerance_percent: 40.0
+    citation: "LADEE total mission cost ~280M USD ≈ 200 MEUR (including launch)"

@@ -1,0 +1,89 @@
+# OPS-SAT — ESA 3U CubeSat for in-orbit software experimentation
+#
+# Launched: 18 Dec 2019 on Soyuz VS-23 (rideshare)
+# Built by: TU Graz (Austria) with ESA/ESOC
+# Bus: GomSpace 3U platform
+# Purpose: In-orbit demonstration of new mission control concepts and
+#          onboard software — the "flying laboratory"
+#
+# Published sources:
+#   - Evans et al., "OPS-SAT: Operational Concept" (SpaceOps 2014)
+#   - Koller et al., "OPS-SAT: An ESA nanosatellite for operational concept
+#     demonstration" (IAC 2016)
+#   - ESA OPS-SAT Fact Sheet (esa.int/missions/ops-sat)
+#   - GomSpace NanoMind/NanoPower/NanoCom product datasheets
+
+id: ops_sat
+name: "OPS-SAT (ESA 3U CubeSat)"
+archetype: cubesat_tech_demo
+description: >
+  Replication of ESA's OPS-SAT: a 3U CubeSat at ~515 km SSO carrying a
+  powerful processing payload (ARM + FPGA + GPU) for in-orbit software
+  experimentation. Minimal science — the "payload" is the OBC itself.
+  UHF uplink, S-band downlink, no propulsion.
+
+typical_use_cases:
+  - In-orbit software experimentation
+  - Mission control concept demonstration
+  - University-led technology demonstrator
+
+tags: [cubesat, leo, tech_demo, 3u, esa, ops_sat, case_study]
+
+target_phase: phase_a
+margin_policy_percent: 20.0
+
+applicable_ecss:
+  - ECSS-E-ST-10C Rev.1
+  - ECSS-E-ST-10-06C
+  - ECSS-E-ST-10-04C Rev.1
+  - ECSS-M-ST-10C Rev.1
+  - ECSS-U-AS-10C Rev.2
+
+requirements:
+  name: "OPS-SAT"
+  mission_type: technology_demo
+  spacecraft_class: nano
+  orbit:
+    orbit_type: sso
+    altitude_km: 515.0
+    inclination_deg: 97.5
+    eccentricity: 0.0
+    ltan: "10:00"
+    mission_duration_years: 2.0
+    deorbit_required: true
+  payloads:
+    - name: "Processing Payload (ARM+FPGA+GPU)"
+      type: tech_demo
+      mass_kg: 0.6
+      power_w: 10.0
+      power_peak_w: 25.0
+      data_rate_mbps: 50.0
+      data_volume_per_day_gb: 0.5
+      pointing_accuracy_deg: 5.0
+      pointing_stability_deg_s: 1.0
+      temperature_range_c: [-20.0, 60.0]
+      fov_deg: 180.0
+      duty_cycle_percent: 30.0
+      description: "Dual-core ARM Cortex-A9 + Xilinx Artix-7 FPGA + Myriad 2 GPU"
+  design_lifetime_years: 2.0
+  reliability_target: 0.8
+  target_mass_kg: 7.0
+  target_cost_meur: 5.0
+  num_spacecraft: 1
+  ground_stations:
+    - "ESOC Darmstadt"
+
+equipment_hints:
+  - category: solar_cells
+    rationale: "Body-mounted triple-junction cells on 3U panels; ~7-8W orbit-average"
+  - category: batteries
+    rationale: "GomSpace NanoPower BP4 pack, ~38.5 Wh (2x 2600 mAh @ 7.4V)"
+  - category: transponders
+    rationale: "GomSpace NanoCom AX100 UHF + NanoCom SR2000 S-band"
+
+notes: |
+  OPS-SAT case study for SpaceCDF validation. Key characteristics:
+  - Very relaxed pointing (5°) — magnetorquer-only AOCS
+  - S-band 1 Mbps downlink via ESOC Darmstadt + KSAT Svalbard
+  - No propulsion — relies on natural decay (515 km altitude, <25 yr)
+  - Unusually powerful OBC for a 3U (dedicated processing payload card)

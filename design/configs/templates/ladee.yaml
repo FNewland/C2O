@@ -1,0 +1,129 @@
+# LADEE — NASA Lunar Atmosphere and Dust Environment Explorer
+#
+# Launched: 7 Sep 2013 on Minotaur V from Wallops
+# Built by: NASA Ames Research Center (modular common bus)
+# Purpose: Study tenuous lunar exosphere and dust environment
+#
+# Published sources:
+#   - Elphic et al., "The Lunar Atmosphere and Dust Environment Explorer"
+#     (Space Science Reviews, 2014)
+#   - Delory et al., "The Lunar Atmosphere and Dust Environment Explorer
+#     (LADEE): Initial Science Results" (AGU 2014)
+#   - NASA LADEE Press Kit (2013)
+#   - Hine et al., "LADEE — The Modular Common Spacecraft Bus" (IEEE Aero 2010)
+#   - NASA Ames fact sheet: 383 kg launch, 248 kg dry
+
+id: ladee
+name: "LADEE (NASA Lunar Orbiter)"
+archetype: lunar_orbiter
+description: >
+  Replication of NASA's LADEE: a ~248 kg dry mass lunar orbiter studying
+  the tenuous lunar atmosphere from ~50 km altitude. First mission on
+  NASA Ames Modular Common Bus. Biprop propulsion for lunar orbit insertion.
+  Included LLCD laser comm technology demonstration.
+
+typical_use_cases:
+  - Lunar exosphere science
+  - Dust environment characterisation
+  - Technology pathfinder (modular bus + laser comm)
+
+tags: [lunar, deep_space, orbiter, science, nasa, ladee, case_study]
+
+target_phase: phase_a
+margin_policy_percent: 25.0
+
+applicable_ecss:
+  - ECSS-E-ST-10C Rev.1
+  - ECSS-E-ST-10-02C Rev.1
+  - ECSS-E-ST-10-04C Rev.1
+  - ECSS-E-ST-10-06C
+  - ECSS-E-ST-10-09C
+  - ECSS-E-ST-10-24C Rev.1
+  - ECSS-E-ST-31C
+  - ECSS-E-ST-32C Rev.1
+  - ECSS-E-ST-35C Rev.1
+  - ECSS-E-ST-50C Rev.2
+  - ECSS-E-ST-60-30C
+  - ECSS-M-ST-10C Rev.1
+  - ECSS-M-ST-80C
+  - ECSS-Q-ST-30-02C
+
+requirements:
+  name: "LADEE Lunar Explorer"
+  mission_type: lunar
+  spacecraft_class: small
+  orbit:
+    orbit_type: lunar
+    altitude_km: 50.0
+    inclination_deg: 157.0
+    eccentricity: 0.0
+    delta_v_insertion_ms: 900.0
+    delta_v_maintenance_ms: 200.0
+    mission_duration_years: 0.5
+    deorbit_required: false
+  payloads:
+    - name: "NMS (Neutral Mass Spectrometer)"
+      type: spectrometer
+      mass_kg: 10.0
+      power_w: 22.0
+      power_peak_w: 30.0
+      data_rate_mbps: 0.5
+      data_volume_per_day_gb: 0.2
+      pointing_accuracy_deg: 1.0
+      pointing_stability_deg_s: 0.1
+      temperature_range_c: [-20.0, 40.0]
+      fov_deg: 2.0
+      duty_cycle_percent: 50.0
+      description: "Neutral Mass Spectrometer — measures lunar exosphere composition"
+    - name: "UVS (Ultraviolet-Visible Spectrometer)"
+      type: spectrometer
+      mass_kg: 4.0
+      power_w: 6.0
+      power_peak_w: 10.0
+      data_rate_mbps: 0.1
+      data_volume_per_day_gb: 0.05
+      pointing_accuracy_deg: 1.0
+      pointing_stability_deg_s: 0.1
+      temperature_range_c: [-20.0, 40.0]
+      fov_deg: 5.0
+      duty_cycle_percent: 50.0
+      description: "UV-Vis spectrometer — limb and occultation observations"
+    - name: "LDEX (Lunar Dust Experiment)"
+      type: particle_detector
+      mass_kg: 3.5
+      power_w: 7.0
+      power_peak_w: 10.0
+      data_rate_mbps: 0.05
+      data_volume_per_day_gb: 0.02
+      pointing_accuracy_deg: 5.0
+      pointing_stability_deg_s: 1.0
+      temperature_range_c: [-40.0, 50.0]
+      fov_deg: 68.0
+      duty_cycle_percent: 90.0
+      description: "Impact ionisation dust detector — measures dust environment"
+  design_lifetime_years: 0.5
+  reliability_target: 0.9
+  target_mass_kg: 400.0
+  target_cost_meur: 200.0
+  num_spacecraft: 1
+  ground_stations:
+    - "NASA DSN Goldstone"
+    - "NASA DSN Madrid"
+    - "NASA DSN Canberra"
+
+equipment_hints:
+  - category: thrusters
+    rationale: "Bipropellant main engine for LOI + 4x monoprop RCS for attitude"
+  - category: star_trackers
+    rationale: "2x star trackers + sun sensors + IMU"
+  - category: solar_cells
+    rationale: "Body-mounted GaAs panels on octagonal bus (~295W BOL)"
+
+notes: |
+  LADEE case study for SpaceCDF validation. Key characteristics:
+  - Low lunar orbit (50 km) — short orbital lifetime without stationkeeping
+  - ~135 kg propellant (biprop, Isp ~310 s)
+  - ~248 kg dry mass, 383 kg launch mass
+  - S-band 2-way + LLCD laser comm demo (622 Mbps down, not modelled)
+  - Modular common bus (octagonal, 2.37m × 1.85m)
+  - Total mission cost ~280M USD including launch

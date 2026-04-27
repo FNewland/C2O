@@ -310,17 +310,35 @@ def compute_link_budget(
 
 
 def _estimate_ttc_mass(freq_ghz: float, tx_power_w: float, gs_diameter_m: float) -> float:
-    """Estimate TTC subsystem mass from key parameters."""
-    if freq_ghz < 3:       # S-band / UHF
+    """Estimate TTC subsystem mass from key parameters.
+
+    Updated model with CubeSat-scale floors: GomSpace NanoCom class
+    transponders are 50-150g, not the 1+ kg that traditional parametric
+    models assume. The mass scales with TX power (PA mass) and frequency
+    (antenna complexity).
+    """
+    if tx_power_w <= 2.0 and freq_ghz < 12:
+        # CubeSat-class: miniaturised COTS transponders
+        # GomSpace NanoCom AX100 (UHF): ~50g, SR2000 (S-band): ~100g
+        transponder_mass = 0.1 + tx_power_w * 0.05
+        antenna_mass = 0.1
+        harness_mass = 0.1
+    elif freq_ghz < 3:       # S-band / UHF — conventional
         transponder_mass = 0.5 + tx_power_w * 0.05
+        antenna_mass = 0.3
+        harness_mass = 0.3
     elif freq_ghz < 12:    # X-band
         transponder_mass = 1.0 + tx_power_w * 0.08
+        antenna_mass = 0.5
+        harness_mass = 0.4
     elif freq_ghz < 30:    # Ka-band
         transponder_mass = 1.5 + tx_power_w * 0.1
+        antenna_mass = 1.0
+        harness_mass = 0.5
     else:
         transponder_mass = 2.0 + tx_power_w * 0.12
-    antenna_mass = 0.3 if freq_ghz < 12 else 1.0
-    harness_mass = 0.5
+        antenna_mass = 1.5
+        harness_mass = 0.5
     return transponder_mass + antenna_mass + harness_mass
 
 

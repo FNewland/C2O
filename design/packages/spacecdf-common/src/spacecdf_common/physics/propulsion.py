@@ -136,7 +136,15 @@ def compute_propulsion_budget(
 
     result.propellant_mass_kg = prop_mass
     result.tank_mass_kg = tank_mass
-    result.thruster_mass_kg = 0.5 + result.thrust_n * 0.01  # Empirical
+    # Thruster mass: small thrusters (CubeSat EP) are ~0.1 kg; biprop engines
+    # (e.g. 22N Aerojet MR-106) are ~0.3-1.5 kg, not 0.01×thrust.
+    # Clamp to reasonable range based on type.
+    if propulsion_type.startswith("electric"):
+        result.thruster_mass_kg = 0.1 + result.thrust_n * 2.0  # EP thrusters are light but include PPU
+    elif propulsion_type == "biprop":
+        result.thruster_mass_kg = min(3.0, 0.5 + result.thrust_n * 0.0001)  # Biprop engines are compact
+    else:
+        result.thruster_mass_kg = min(2.0, 0.3 + result.thrust_n * 0.005)
     result.feed_system_mass_kg = 0.3 + prop_mass * 0.02  # Valves, piping
 
     result.total_propulsion_mass_kg = (

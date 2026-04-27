@@ -1,0 +1,101 @@
+# PROBA-V — ESA vegetation monitoring microsatellite
+#
+# Launched: 7 May 2013 on Vega VV02 (main passenger)
+# Built by: QinetiQ Space (now Redwire Space Belgium)
+# Bus: PROBA platform heritage (PROBA-1, PROBA-2)
+# Purpose: Continue 1 km global vegetation monitoring from SPOT-VGT
+#
+# Published sources:
+#   - Dierckx et al., "PROBA-V Mission and Performance Overview" (RSE 2014)
+#   - Francois et al., "The PROBA-V Mission" (ESA Living Planet 2013)
+#   - ESA PROBA-V Fact Sheet (esa.int/missions/proba-v)
+#   - Sterckx et al., "PROBA-V products and algorithms" (JARS 2014)
+
+id: proba_v
+name: "PROBA-V (ESA Vegetation Satellite)"
+archetype: smallsat_eo
+description: >
+  Replication of ESA's PROBA-V: a ~140 kg microsatellite at 820 km SSO
+  carrying the VEGETATION instrument for daily global land monitoring at
+  100 m to 1 km resolution. X-band high-rate downlink, 5+ year lifetime.
+  PROBA platform heritage with 3-axis stabilisation.
+
+typical_use_cases:
+  - Global vegetation monitoring
+  - Land cover change detection
+  - Agricultural monitoring
+  - Follow-on to SPOT-VEGETATION
+
+tags: [smallsat, sso, earth_observation, vegetation, esa, proba, case_study]
+
+target_phase: phase_a
+margin_policy_percent: 15.0
+
+applicable_ecss:
+  - ECSS-E-ST-10C Rev.1
+  - ECSS-E-ST-10-02C Rev.1
+  - ECSS-E-ST-10-06C
+  - ECSS-E-ST-10-04C Rev.1
+  - ECSS-E-ST-10-24C Rev.1
+  - ECSS-E-ST-31C
+  - ECSS-E-ST-32C Rev.1
+  - ECSS-E-ST-50C Rev.2
+  - ECSS-E-ST-60-30C
+  - ECSS-M-ST-10C Rev.1
+  - ECSS-M-ST-40C Rev.1
+  - ECSS-M-ST-80C
+  - ECSS-Q-ST-30-02C
+  - ECSS-U-AS-10C Rev.2
+
+requirements:
+  name: "PROBA-V Vegetation Monitor"
+  mission_type: earth_observation
+  spacecraft_class: micro
+  orbit:
+    orbit_type: sso
+    altitude_km: 820.0
+    inclination_deg: 98.7
+    eccentricity: 0.0
+    ltan: "10:45"
+    mission_duration_years: 5.0
+    deorbit_required: false      # 820 km, above natural decay threshold
+  payloads:
+    - name: "VEGETATION Instrument"
+      type: optical_imager
+      mass_kg: 32.0
+      power_w: 48.0
+      power_peak_w: 65.0
+      data_rate_mbps: 36.0
+      data_volume_per_day_gb: 15.0
+      pointing_accuracy_deg: 0.05
+      pointing_stability_deg_s: 0.003
+      temperature_range_c: [-15.0, 30.0]
+      fov_deg: 102.0
+      duty_cycle_percent: 40.0
+      description: >
+        3 spectral bands (VNIR) at 100m centre + 1 SWIR at 200m centre;
+        2250 km swath for daily global coverage. TDI line-scan detector.
+  design_lifetime_years: 5.0
+  reliability_target: 0.95
+  target_mass_kg: 140.0
+  target_cost_meur: 55.0
+  num_spacecraft: 1
+  ground_stations:
+    - "ESEC Redu (Belgium)"
+    - "KSAT Svalbard"
+
+equipment_hints:
+  - category: reaction_wheels
+    rationale: "4x miniature wheels for 0.05° pointing; PROBA heritage"
+  - category: star_trackers
+    rationale: "2x star trackers (hot redundant) + 3-axis MEMS gyro"
+  - category: solar_cells
+    rationale: "Body-mounted + deployable wing; GaAs triple-junction"
+
+notes: |
+  PROBA-V case study for SpaceCDF validation. Key characteristics:
+  - Very wide FOV (102°) pushes pointing requirements
+  - 820 km altitude means near-zero drag — no orbit maintenance
+  - No propulsion system
+  - X-band 36 Mbps to ESEC Redu (13.5m antenna)
+  - ~138 kg total mass, compact PROBA bus

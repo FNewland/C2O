@@ -66,8 +66,10 @@ class LinkAgent(DesignAgent):
             freq_ghz, tx_power, gs_diam, tx_gain = 8.4, 15.0, 34.0, 30.0
         elif sc_class == "nano" and payload_data_rate_mbps < 1:
             freq_ghz, tx_power, gs_diam, tx_gain = 0.4, 1.0, 13.0, 2.0   # UHF simple nanosat
-        elif sc_class in ("nano", "micro"):
+        elif sc_class == "nano":
             freq_ghz, tx_power, gs_diam, tx_gain = 8.2, 2.0, 13.0, 6.0   # X-band nanosat
+        elif sc_class == "micro":
+            freq_ghz, tx_power, gs_diam, tx_gain = 8.2, 8.0, 13.0, 10.0  # X-band microsat (e.g. PROBA-V)
         elif sc_class == "small":
             freq_ghz, tx_power, gs_diam, tx_gain = 8.2, 5.0, 13.0, 10.0  # X-band smallsat
         elif sc_class == "medium":

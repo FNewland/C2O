@@ -130,9 +130,23 @@ def compute_power_budget(
     # Solar array cost
     result.eps_cost_keur = result.sa_area_m2 * sa_cost_keur_per_m2 + result.battery_capacity_wh / 1000 * battery_cost_keur_per_kwh
 
-    # Total EPS mass (SA + battery + harness + PCU)
-    harness_fraction = 0.15  # 15% of total EPS for harness + PCU
-    result.eps_mass_kg = (result.sa_mass_kg + result.battery_mass_kg) * (1 + harness_fraction)
+    # Total EPS mass (SA + battery + PCDU + harness)
+    # The PCDU/harness overhead scales with spacecraft complexity, not just
+    # SA+battery mass. For CubeSats it's ~15% (integrated EPS boards). For
+    # larger spacecraft with dedicated PCDUs, harness, and regulation it's
+    # a significant fixed mass + ~30-50% of generation mass.
+    # Reference: SMAD4 §11.6 — EPS mass typically 8-12% of S/C dry mass.
+    sa_batt_mass = result.sa_mass_kg + result.battery_mass_kg
+    if sa_batt_mass < 2.0:
+        # CubeSat/nanosat: integrated EPS boards
+        harness_overhead_kg = sa_batt_mass * 0.15
+    elif sa_batt_mass < 10.0:
+        # Microsat: small PCDU + harness
+        harness_overhead_kg = 1.5 + sa_batt_mass * 0.25
+    else:
+        # Small+: dedicated PCDU, battery management, harness, solar array drive
+        harness_overhead_kg = 3.0 + sa_batt_mass * 0.40
+    result.eps_mass_kg = sa_batt_mass + harness_overhead_kg
 
     # Warnings
     if result.battery_dod_percent > 40:

@@ -1,0 +1,120 @@
+# OPS-SAT — detailed validation reference
+#
+# Published data from ESA fact sheets, Koller et al. (IAC 2016),
+# GomSpace product datasheets, and TU Graz documentation.
+#
+# Where exact published values are available, tolerance is tight (10-20%).
+# Where only class-range estimates exist, tolerance is wider (30-50%).
+
+template_id: ops_sat
+description: "OPS-SAT 3U CubeSat — ESA in-orbit software lab, 515 km SSO"
+
+parameters:
+  # --- Mass budget ---
+  mass.dry_mass_kg:
+    reference_value: 7.0
+    tolerance_percent: 40.0
+    citation: "ESA OPS-SAT fact sheet: ~7 kg total (no propulsion, dry ≈ wet)"
+
+  mass.wet_mass_kg:
+    reference_value: 7.0
+    tolerance_percent: 40.0
+    citation: "No propulsion; wet = dry"
+
+  mass.payload_kg:
+    reference_value: 0.6
+    tolerance_percent: 30.0
+    citation: "Processing payload card ~600g (Koller et al. IAC 2016)"
+
+  # --- Orbit ---
+  orbit.period_s:
+    reference_value: 5700.0
+    tolerance_percent: 3.0
+    citation: "515 km SSO: T = 2π√((6886 km)³/μ) ≈ 5700 s (95 min)"
+
+  orbit.eclipse_fraction:
+    reference_value: 0.37
+    tolerance_percent: 15.0
+    citation: "~35-38% eclipse for 515 km SSO (SMAD4 Table 10-9)"
+
+  orbit.delta_v_total_ms:
+    reference_value: 0.0
+    tolerance_percent: 100.0
+    citation: "No propulsion system; relies on natural orbital decay"
+
+  # --- Power ---
+  power.total_sunlight_w:
+    reference_value: 25.0
+    tolerance_percent: 50.0
+    citation: "Bus ~8W + OBC payload 10W + TTC ~5W (GomSpace NanoPower docs)"
+
+  power.sa_power_eol_w:
+    reference_value: 36.0
+    tolerance_percent: 40.0
+    citation: "Body-mounted GaAs cells on 3U long faces: ~7-8W orbit avg, ~36W peak sunlit"
+
+  power.battery_capacity_wh:
+    reference_value: 38.5
+    tolerance_percent: 30.0
+    citation: "GomSpace NanoPower BP4: 2×2600 mAh @ 7.4V = 38.5 Wh"
+
+  power.battery_mass_kg:
+    reference_value: 0.25
+    tolerance_percent: 40.0
+    citation: "GomSpace BP4 battery pack ~250g"
+
+  power.eps_mass_kg:
+    reference_value: 0.8
+    tolerance_percent: 40.0
+    citation: "SA+battery+EPS board: ~0.4kg SA + 0.25kg battery + 0.15kg EPS PCB"
+
+  power.sa_mass_kg:
+    reference_value: 0.4
+    tolerance_percent: 40.0
+    citation: "3U body-mounted panels ~400g (GomSpace NanoPower P-series)"
+
+  # --- Communications ---
+  link.downlink_margin_db:
+    reference_value: 10.0
+    tolerance_percent: 80.0
+    citation: "S-band ~1 Mbps to ESOC 15m dish; comfortable margin for low-rate CubeSat"
+
+  link.ttc_mass_kg:
+    reference_value: 0.4
+    tolerance_percent: 50.0
+    citation: "NanoCom SR2000 S-band ~150g + AX100 UHF ~50g + antenna ~100g"
+
+  # --- AOCS ---
+  aocs.pointing_accuracy_deg:
+    reference_value: 5.0
+    tolerance_percent: 50.0
+    citation: "Magnetorquer-only AOCS, ~5-10° pointing (Koller et al.)"
+
+  aocs.mass_kg:
+    reference_value: 0.5
+    tolerance_percent: 60.0
+    citation: "3-axis magnetorquers + magnetometer: ~300-500g total (GomSpace)"
+
+  # --- Thermal ---
+  thermal.tcs_mass_kg:
+    reference_value: 0.2
+    tolerance_percent: 60.0
+    citation: "Passive thermal control + small heaters/thermistors ~150-250g"
+
+  # --- Structure ---
+  structure.mass_kg:
+    reference_value: 1.5
+    tolerance_percent: 40.0
+    citation: "3U CubeSat structure ~1.0-1.8 kg (ISIS, GomSpace catalogue)"
+
+  # --- Data ---
+  data.generated_per_day_gb:
+    reference_value: 0.5
+    tolerance_percent: 40.0
+    citation: "Experiment-dependent; ~0.5 GB/day typical (ESA OPS-SAT User Manual)"
+
+  # --- Cost ---
+  cost.total_meur:
+    reference_value: 5.0
+    tolerance_percent: 60.0
+    citation: "ESA CubeSat-class mission: ~5 MEUR including operations (ESA estimate)"
