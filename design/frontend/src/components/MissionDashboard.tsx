@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { useDesignStore, type DesignParam } from '../stores/designStore'
+import { useSessionStore } from '../stores/sessionStore'
+import { useActiveParameters, useCanEditParameter, useHasActiveSession } from '../hooks/useActiveParameters'
 import { MassWaterfall } from './MassWaterfall'
 import { PowerProfile } from './PowerProfile'
 import { SustainabilityCard } from './SustainabilityCard'
@@ -131,9 +133,70 @@ function VolumeReliabilityCard({ parameters: p }: { parameters: Record<string, D
   )
 }
 
+// --- Editable parameter row ---
+function EditableParamRow({ pid, param }: { pid: string; param: DesignParam }) {
+  const canEdit = useCanEditParameter(pid)
+  const sendEdit = useSessionStore(s => s.sendEdit)
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState('')
+
+  const startEdit = () => {
+    if (!canEdit || !sendEdit) return
+    setDraft(param.value === null || param.value === undefined ? '' : String(param.value))
+    setEditing(true)
+  }
+
+  const commit = () => {
+    setEditing(false)
+    if (!sendEdit || draft === String(param.value)) return
+    const n = Number(draft)
+    sendEdit(pid, isNaN(n) ? draft : n, {
+      rationale: 'Inline edit from dashboard',
+      editType: 'override',
+    })
+  }
+
+  const label = pid.split('.').slice(1).join(' ').replace(/_/g, ' ')
+
+  return (
+    <div style={{
+      display: 'flex', justifyContent: 'space-between', padding: '0.1rem 0.3rem', fontSize: '0.75rem',
+      cursor: canEdit ? 'pointer' : 'default',
+      background: editing ? 'rgba(59,130,246,0.1)' : 'transparent',
+      borderRadius: '3px',
+    }}
+      onDoubleClick={startEdit}
+    >
+      <span style={{ color: '#9ca3af', flex: 1 }}>{label}</span>
+      {editing ? (
+        <input
+          autoFocus
+          value={draft}
+          onChange={e => setDraft(e.target.value)}
+          onBlur={commit}
+          onKeyDown={e => { if (e.key === 'Enter') commit(); if (e.key === 'Escape') setEditing(false) }}
+          style={{
+            width: '100px', fontFamily: 'monospace', fontSize: '0.75rem', fontWeight: 600,
+            background: 'var(--bg-primary, #111827)', color: '#f3f4f6',
+            border: '1px solid var(--accent, #3b82f6)', borderRadius: '3px',
+            padding: '0 0.25rem', textAlign: 'right',
+          }}
+        />
+      ) : (
+        <span>
+          <span style={{ fontFamily: 'monospace', fontWeight: 600, color: canEdit ? '#f3f4f6' : undefined }}>{formatValue(param.value)}</span>
+          {param.unit && <span style={{ color: '#6b7280', marginLeft: '0.25rem', fontSize: '0.65rem' }}>{param.unit}</span>}
+          {canEdit && <span style={{ color: '#3b82f6', fontSize: '0.6rem', marginLeft: '0.3rem', opacity: 0.5 }}>edit</span>}
+        </span>
+      )}
+    </div>
+  )
+}
+
 // --- Collapsible parameters section ---
 function AllParameters({ parameters }: { parameters: Record<string, DesignParam> }) {
   const [open, setOpen] = useState(false)
+  const hasSession = useHasActiveSession()
 
   return (
     <div style={{ marginTop: '1rem' }}>
@@ -146,6 +209,7 @@ function AllParameters({ parameters }: { parameters: Record<string, DesignParam>
       >
         <span style={{ transform: open ? 'rotate(90deg)' : 'rotate(0)', display: 'inline-block', transition: 'transform 0.15s' }}>&#9654;</span>
         All Parameters ({Object.keys(parameters).length})
+        {hasSession && <span style={{ fontSize: '0.65rem', color: '#3b82f6', marginLeft: '0.5rem' }}>double-click to edit</span>}
       </button>
       {open && (
         <div style={{ maxHeight: '50vh', overflowY: 'auto', marginTop: '0.5rem', background: 'var(--bg-secondary, #1f2937)', borderRadius: '6px', padding: '0.5rem', border: '1px solid var(--border, #374151)' }}>
@@ -158,13 +222,7 @@ function AllParameters({ parameters }: { parameters: Record<string, DesignParam>
                   {domain}
                 </div>
                 {domainParams.map(([pid, p]) => (
-                  <div key={pid} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.1rem 0.3rem', fontSize: '0.75rem' }}>
-                    <span style={{ color: '#9ca3af' }}>{pid.split('.').slice(1).join(' ').replace(/_/g, ' ')}</span>
-                    <span>
-                      <span style={{ fontFamily: 'monospace', fontWeight: 600 }}>{formatValue(p.value)}</span>
-                      {p.unit && <span style={{ color: '#6b7280', marginLeft: '0.25rem', fontSize: '0.65rem' }}>{p.unit}</span>}
-                    </span>
-                  </div>
+                  <EditableParamRow key={pid} pid={pid} param={p} />
                 ))}
               </div>
             )
@@ -216,9 +274,13 @@ function CommunityCard({ parameters: p }: { parameters: Record<string, DesignPar
 // === MAIN DASHBOARD ===
 export function MissionDashboard() {
   const { result } = useDesignStore()
-  if (!result) return null
+  const activeParams = useActiveParameters()
 
-  const p = result.parameters as Record<string, DesignParam>
+  // Show dashboard if we have parameters from either store
+  const hasParams = Object.keys(activeParams).length > 0
+  if (!result && !hasParams) return null
+
+  const p = hasParams ? activeParams : (result?.parameters as Record<string, DesignParam>) || {}
   const get = (id: string) => { const v = p[id]; return v && typeof v.value === 'number' ? v.value : 0 }
   const getStr = (id: string) => { const v = p[id]; return v ? String(v.value) : '—' }
 

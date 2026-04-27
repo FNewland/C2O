@@ -152,9 +152,51 @@ async def get_session(session_id: str) -> dict:
 
 @router.get("/{session_id}/history")
 async def get_session_history(session_id: str) -> dict:
-    """Return the full persisted edit history for a session."""
-    edits = await db_repo.list_edits(session_id)
-    return {"session_id": session_id, "edits": edits, "count": len(edits)}
+    """Return edit history — in-memory first, then persisted DB edits.
+
+    In-memory edits take priority (they're the freshest); DB edits fill
+    in older history that has been flushed by the write queue.
+    """
+    mgr = get_session_manager()
+    session = mgr.get_session(session_id)
+
+    # In-memory edits (from the live session)
+    in_memory_edits = []
+    in_memory_ids: set[str] = set()
+    if session:
+        for e in session.edits:
+            edit_dict = {
+                "id": e.id,
+                "parameter_id": e.parameter_id,
+                "old_value": e.old_value,
+                "new_value": e.new_value,
+                "edited_by": e.edited_by,
+                "display_name": getattr(e, "display_name", e.edited_by),
+                "timestamp": e.timestamp.isoformat(),
+                "rationale": getattr(e, "rationale", ""),
+                "edit_type": getattr(e, "edit_type", "override"),
+                "equipment_id": getattr(e, "equipment_id", None),
+                "source": "live",
+            }
+            in_memory_edits.append(edit_dict)
+            in_memory_ids.add(e.id)
+
+    # Persisted edits (from DB) — only add those not already in memory
+    try:
+        db_edits = await db_repo.list_edits(session_id)
+    except Exception:
+        db_edits = []
+
+    for e in db_edits:
+        eid = e.get("id", "")
+        if eid not in in_memory_ids:
+            e["source"] = "persisted"
+            in_memory_edits.append(e)
+
+    # Sort by timestamp descending (newest first)
+    in_memory_edits.sort(key=lambda e: e.get("timestamp", ""), reverse=True)
+
+    return {"session_id": session_id, "edits": in_memory_edits, "count": len(in_memory_edits)}
 
 
 @router.post("/{session_id}/resume")

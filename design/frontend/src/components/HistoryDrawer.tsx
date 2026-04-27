@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSessionHistory } from '../hooks/useSession'
+import { useSessionStore } from '../stores/sessionStore'
 
 const POSITION_COLOR: Record<string, string> = {
   systems_engineer: '#8b5cf6',
@@ -17,10 +18,31 @@ const POSITION_COLOR: Record<string, string> = {
 export function HistoryDrawer({ sessionId }: { sessionId: string | null }) {
   const [isOpen, setIsOpen] = useState(false)
   const { data, isLoading, refetch } = useSessionHistory(sessionId)
+  const toasts = useSessionStore(s => s.toasts)
+
+  // Auto-refetch when new toasts arrive (indicating edits happened)
+  const toastCount = toasts.length
+  useEffect(() => {
+    if (isOpen && sessionId) refetch()
+  }, [toastCount, isOpen, sessionId])
 
   if (!sessionId) return null
 
-  const edits: any[] = (data as any)?.edits || []
+  // Normalise edit records from backend (handles both DB field names and in-memory names)
+  const rawEdits: any[] = (data as any)?.edits || []
+  const edits = rawEdits.map(e => ({
+    id: e.id || '',
+    paramId: e.parameter_id || e.param_path || '',
+    oldValue: e.old_value,
+    newValue: e.new_value,
+    editedBy: e.edited_by || e.position_id || e.actor_label || 'unknown',
+    displayName: e.display_name || e.actor_label || e.edited_by || 'unknown',
+    timestamp: e.timestamp || e.created_at || '',
+    rationale: e.rationale || '',
+    editType: e.edit_type || 'override',
+    equipmentId: e.equipment_id || null,
+    source: e.source || 'persisted',
+  }))
 
   return (
     <>
@@ -34,8 +56,12 @@ export function HistoryDrawer({ sessionId }: { sessionId: string | null }) {
           display: 'flex', alignItems: 'center', gap: '0.4rem',
         }}
       >
-        <span>📜</span>
-        <span>History ({edits.length || '—'})</span>
+        <span>History</span>
+        <span style={{
+          background: edits.length > 0 ? 'var(--accent, #3b82f6)' : '#374151',
+          color: 'white', borderRadius: '10px', padding: '0 0.4rem',
+          fontSize: '0.65rem', fontWeight: 700, minWidth: '18px', textAlign: 'center',
+        }}>{edits.length}</span>
       </button>
 
       {isOpen && (
@@ -50,25 +76,29 @@ export function HistoryDrawer({ sessionId }: { sessionId: string | null }) {
             display: 'flex', alignItems: 'center',
           }}>
             <h2 style={{ margin: 0, fontSize: '1rem' }}>Edit History</h2>
-            <span style={{ marginLeft: '0.5rem', fontSize: '0.75rem', color: 'var(--text-secondary, #9ca3af)' }}>
-              {edits.length} edits
+            <span style={{ marginLeft: '0.5rem', fontSize: '0.75rem', color: '#9ca3af' }}>
+              {edits.length} edit{edits.length !== 1 ? 's' : ''}
             </span>
             <div style={{ flex: 1 }} />
+            <button className="btn btn-sm" onClick={() => refetch()} style={{ marginRight: '0.5rem', fontSize: '0.7rem' }}>
+              Refresh
+            </button>
             <button className="btn btn-sm" onClick={() => setIsOpen(false)}>Close</button>
           </div>
 
           <div style={{ flex: 1, overflow: 'auto', padding: '0.5rem' }}>
             {isLoading && <div className="loading"><div className="spinner" /> Loading...</div>}
             {edits.length === 0 && !isLoading && (
-              <div style={{ padding: '1rem', fontSize: '0.85rem', color: 'var(--text-secondary, #9ca3af)' }}>
-                No edits recorded yet. Join a session and start editing to see changes here.
+              <div style={{ padding: '1rem', fontSize: '0.85rem', color: '#9ca3af' }}>
+                No edits recorded yet. Edit a parameter to see changes here.
               </div>
             )}
-            {[...edits].reverse().map((e: any) => {
-              const color = POSITION_COLOR[e.position_id] || '#6b7280'
-              const initials = (e.position_id || '?').split('_').map((p: string) => p[0]).join('').toUpperCase().slice(0, 2)
+            {edits.map((e) => {
+              const posId = e.editedBy
+              const color = POSITION_COLOR[posId] || '#6b7280'
+              const initials = posId.split('_').map((p: string) => p[0]).join('').toUpperCase().slice(0, 2)
               return (
-                <div key={e.id} style={{
+                <div key={e.id + e.timestamp} style={{
                   padding: '0.5rem 0.75rem', borderLeft: `3px solid ${color}`,
                   background: 'var(--bg-primary, #111827)', borderRadius: '0 4px 4px 0',
                   marginBottom: '0.4rem',
@@ -81,21 +111,24 @@ export function HistoryDrawer({ sessionId }: { sessionId: string | null }) {
                       display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                     }}>{initials}</span>
                     <strong style={{ fontSize: '0.8rem', color }}>
-                      {(e.actor_label || e.position_id || 'unknown').replace(/_/g, ' ')}
+                      {posId.replace(/_/g, ' ')}
                     </strong>
-                    <span style={{ marginLeft: 'auto', fontSize: '0.7rem', color: 'var(--text-secondary, #9ca3af)' }}>
-                      {formatTime(e.created_at)}
+                    {e.source === 'live' && (
+                      <span style={{ fontSize: '0.6rem', background: 'rgba(16,185,129,0.2)', color: '#10b981', padding: '0 0.3rem', borderRadius: '3px' }}>live</span>
+                    )}
+                    <span style={{ marginLeft: 'auto', fontSize: '0.7rem', color: '#9ca3af' }}>
+                      {formatTime(e.timestamp)}
                     </span>
                   </div>
                   <div style={{ fontSize: '0.75rem', marginLeft: '1.6rem' }}>
-                    set <code style={{ fontSize: '0.7rem' }}>{e.param_path}</code>
+                    set <code style={{ fontSize: '0.7rem' }}>{e.paramId}</code>
                   </div>
-                  <div style={{ fontSize: '0.75rem', marginLeft: '1.6rem', color: 'var(--text-secondary, #9ca3af)' }}>
-                    {formatValue(e.old_value)} → <strong style={{ color: 'var(--text-primary, #f3f4f6)' }}>{formatValue(e.new_value)}</strong>
-                    {e.equipment_id && <span style={{ marginLeft: '0.4rem', color: 'var(--accent, #3b82f6)' }}>[{e.equipment_id}]</span>}
+                  <div style={{ fontSize: '0.75rem', marginLeft: '1.6rem', color: '#9ca3af' }}>
+                    {formatValue(e.oldValue)} → <strong style={{ color: '#f3f4f6' }}>{formatValue(e.newValue)}</strong>
+                    {e.equipmentId && <span style={{ marginLeft: '0.4rem', color: '#3b82f6' }}>[{e.equipmentId}]</span>}
                   </div>
                   {e.rationale && (
-                    <div style={{ fontSize: '0.7rem', marginLeft: '1.6rem', marginTop: '0.2rem', fontStyle: 'italic', color: 'var(--text-secondary, #9ca3af)' }}>
+                    <div style={{ fontSize: '0.7rem', marginLeft: '1.6rem', marginTop: '0.2rem', fontStyle: 'italic', color: '#9ca3af' }}>
                       "{e.rationale}"
                     </div>
                   )}
@@ -111,20 +144,16 @@ export function HistoryDrawer({ sessionId }: { sessionId: string | null }) {
 
 function formatValue(v: any): string {
   if (v === null || v === undefined) return 'N/A'
-  if (typeof v === 'string') {
-    // Values are stored as strings in DB; try to parse as number
-    const n = Number(v)
-    if (!isNaN(n)) {
-      if (Math.abs(n) >= 100) return n.toFixed(1)
-      if (Math.abs(n) >= 1) return n.toFixed(3)
-      return n.toPrecision(3)
-    }
-    return v
-  }
   if (typeof v === 'number') {
     if (Math.abs(v) >= 100) return v.toFixed(1)
     if (Math.abs(v) >= 1) return v.toFixed(3)
     return v.toPrecision(3)
+  }
+  const n = Number(v)
+  if (!isNaN(n) && v !== '') {
+    if (Math.abs(n) >= 100) return n.toFixed(1)
+    if (Math.abs(n) >= 1) return n.toFixed(3)
+    return n.toPrecision(3)
   }
   return String(v)
 }
@@ -132,7 +161,6 @@ function formatValue(v: any): string {
 function formatTime(iso: string | undefined): string {
   if (!iso) return ''
   try {
-    const d = new Date(iso)
-    return d.toLocaleTimeString()
+    return new Date(iso).toLocaleTimeString()
   } catch { return iso }
 }

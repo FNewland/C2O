@@ -48,7 +48,7 @@ const POSITION_OPTIONS = [
 ]
 
 function AppContent() {
-  const { result, studyId, createStudy, setStudyId } = useDesignStore()
+  const { result, studyId, createStudy, setStudyId, runDesign } = useDesignStore()
   const [centerTab, setCenterTab] = useState<CenterTab>('design')
   const [rightTab, setRightTab] = useState<RightTab>('insights')
   const [showEquipmentBrowser, setShowEquipmentBrowser] = useState(false)
@@ -86,10 +86,13 @@ function AppContent() {
     let sid = studyId
     if (!sid) sid = await createStudy()
     if (!sid) return
-    // Create session
+    // Create session (backend runs initial convergence)
     const data = await createSession.mutateAsync({ study_id: sid, name: `${name || pos} session` })
     setSession(data.id, pos, name || pos, positionIds)
     setShowSessionStarter(false)
+    // Also run design on frontend so designStore.result is populated immediately
+    // (gives dashboard data while WebSocket bootstraps the live state)
+    runDesign()
   }
 
   const handleEquipmentSelect = (category: string, component: any) => {

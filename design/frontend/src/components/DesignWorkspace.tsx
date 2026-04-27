@@ -1,4 +1,5 @@
 import { useDesignStore, type DesignParam } from '../stores/designStore'
+import { useSessionStore } from '../stores/sessionStore'
 import { MissionDashboard } from './MissionDashboard'
 
 const DOMAIN_ORDER = [
@@ -75,6 +76,12 @@ function ParamTable({ params, domain }: { params: Record<string, DesignParam>; d
 
 export function DesignWorkspace() {
   const { result, isRunning, error } = useDesignStore()
+  const sessionParams = useSessionStore(s => s.parameters)
+  const sessionId = useSessionStore(s => s.sessionId)
+
+  // Has data from either store?
+  const hasSessionData = sessionId && Object.keys(sessionParams).length > 0
+  const hasData = !!result || hasSessionData
 
   if (error) {
     return (
@@ -99,13 +106,13 @@ export function DesignWorkspace() {
     )
   }
 
-  if (!result) {
+  if (!hasData) {
     return (
       <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
         <h2 style={{ marginBottom: '0.5rem', color: 'var(--text-primary)' }}>SpaceCDF Design Workspace</h2>
         <p>Configure mission requirements and click "Run Design" to start the AI concurrent design loop.</p>
         <p style={{ marginTop: '1rem', fontSize: '0.8rem' }}>
-          The system will automatically size all subsystems, compute budgets, and identify technology innovation opportunities.
+          Or click <strong>New from Template</strong> to start from a mission archetype, then <strong>Start Session</strong> to collaborate.
         </p>
       </div>
     )
