@@ -5,6 +5,7 @@ Computes power budget, solar array sizing, and battery sizing.
 from __future__ import annotations
 
 from spacecdf_common.agents.base import AgentResult, DesignAgent, DesignState
+from spacecdf_common.physics.heritage_mass import calibrate_mass
 from spacecdf_common.physics.power import compute_power_budget
 
 
@@ -99,7 +100,9 @@ class PowerAgent(DesignAgent):
         result.add_param("power.battery_mass_kg", "Battery Mass", round(pb.battery_mass_kg, 2), "kg")
         result.add_param("power.total_sunlight_w", "Total Power (Sunlight)", round(pb.total_power_sunlight_w, 1), "W")
         result.add_param("power.total_eclipse_w", "Total Power (Eclipse)", round(pb.total_power_eclipse_w, 1), "W")
-        result.add_param("power.eps_mass_kg", "EPS Total Mass", round(pb.eps_mass_kg, 2), "kg", margin_percent=20)
+        dry_est = state.get("mass.dry_mass_estimate_kg", 100.0) or 100.0
+        eps_mass = calibrate_mass("eps", pb.eps_mass_kg, dry_est, sc_class)
+        result.add_param("power.eps_mass_kg", "EPS Total Mass", round(eps_mass, 2), "kg", margin_percent=20)
         result.add_param("power.eps_cost_keur", "EPS Cost", round(pb.eps_cost_keur, 0), "kEUR")
 
         result.warnings.extend(pb.warnings)

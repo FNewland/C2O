@@ -72,25 +72,9 @@ class MassAgent(DesignAgent):
         prop_system = state.get("propulsion.total_mass_kg", 0) or 0
         prop_dry_hw = prop_system - prop_mass  # Dry propulsion hardware (tanks, engine, feed)
 
-        # Platform mass floor: empirical minimum based on heritage data.
-        # Parametric models underestimate harness, brackets, connectors, MLI,
-        # separation system, and integration overhead for micro+ class.
-        # Sources: SMAD4 Table 10-8, ESA CDF heritage, SSTL platform data.
-        #
-        # The floor represents the minimum plausible platform mass for a
-        # spacecraft of this class, independent of what the subsystem models
-        # compute. It accounts for the "missing mass" that parametric sizing
-        # systematically omits.
-        _PLATFORM_FLOOR: dict[str, float] = {
-            "nano":     0.0,   # CubeSats: COTS boards, no missing overhead
-            "micro":    35.0,  # PROBA-class: harness+PCDU+brackets+sep ~35 kg min
-            "small":    55.0,  # 100-500 kg class: ~55 kg platform minimum
-            "medium":  120.0,  # 500-2000 kg: ~120 kg
-            "large":   250.0,  # 2000+ kg
-            "flagship": 500.0,
-        }
-        platform_floor = _PLATFORM_FLOOR.get(sc_class, 0.0)
-        platform_mass = max(platform_mass_raw, platform_floor)
+        # Heritage calibration is now applied in each subsystem agent via
+        # calibrate_mass(), so no platform-level floor is needed here.
+        platform_mass = platform_mass_raw
 
         dry_mass = payload_mass + platform_mass + prop_dry_hw
         wet_mass = dry_mass + prop_mass

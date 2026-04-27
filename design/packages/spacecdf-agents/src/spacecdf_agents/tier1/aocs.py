@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from spacecdf_common.agents.base import AgentResult, DesignAgent, DesignState
 from spacecdf_common.physics.aocs import compute_aocs_design
+from spacecdf_common.physics.heritage_mass import calibrate_mass
 
 
 class AOCSAgent(DesignAgent):
@@ -63,7 +64,9 @@ class AOCSAgent(DesignAgent):
             body=body,
         )
 
-        result.add_param("aocs.mass_kg", "AOCS Mass", round(aocs.aocs_mass_kg, 2), "kg", margin_percent=20)
+        dry_est = state.get("mass.dry_mass_estimate_kg", 100.0) or 100.0
+        aocs_mass = calibrate_mass("aocs", aocs.aocs_mass_kg, dry_est, sc_class)
+        result.add_param("aocs.mass_kg", "AOCS Mass", round(aocs_mass, 2), "kg", margin_percent=20)
         result.add_param("aocs.power_w", "AOCS Power", round(aocs.aocs_power_w, 1), "W")
         result.add_param("aocs.cost_keur", "AOCS Cost", round(aocs.aocs_cost_keur, 0), "kEUR")
         result.add_param("aocs.wheel_momentum_nms", "Wheel Momentum", round(aocs.reaction_wheel_momentum_nms, 3), "Nms")

@@ -5,6 +5,7 @@ Computes communication link budgets, antenna sizing, and data throughput.
 from __future__ import annotations
 
 from spacecdf_common.agents.base import AgentResult, DesignAgent, DesignState
+from spacecdf_common.physics.heritage_mass import calibrate_mass
 from spacecdf_common.physics.link_budget import compute_link_budget
 
 
@@ -101,7 +102,9 @@ class LinkAgent(DesignAgent):
         result.add_param("link.downlink_margin_db", "Downlink Margin", round(lb.downlink_margin_db, 1), "dB")
         result.add_param("link.downlink_rate_bps", "Downlink Data Rate", round(lb.downlink_data_rate_bps, 0), "bps")
         result.add_param("link.data_per_day_gb", "Data Downlinked/Day", round(lb.data_downlinked_per_day_gb, 2), "GB")
-        result.add_param("link.ttc_mass_kg", "TTC Mass", round(lb.ttc_mass_kg, 2), "kg", margin_percent=10)
+        dry_est = state.get("mass.dry_mass_estimate_kg", 100.0) or 100.0
+        ttc_mass = calibrate_mass("ttc", lb.ttc_mass_kg, dry_est, sc_class)
+        result.add_param("link.ttc_mass_kg", "TTC Mass", round(ttc_mass, 2), "kg", margin_percent=10)
         result.add_param("link.ttc_power_w", "TTC Power", round(lb.ttc_power_w, 1), "W")
         result.add_param("link.ttc_cost_keur", "TTC Cost", round(lb.ttc_cost_keur, 0), "kEUR")
 

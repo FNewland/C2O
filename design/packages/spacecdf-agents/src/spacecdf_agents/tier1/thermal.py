@@ -5,6 +5,7 @@ Computes thermal balance, radiator sizing, and heater power requirements.
 from __future__ import annotations
 
 from spacecdf_common.agents.base import AgentResult, DesignAgent, DesignState
+from spacecdf_common.physics.heritage_mass import calibrate_mass
 from spacecdf_common.physics.thermal import compute_thermal_balance, spacecraft_surface_area
 
 
@@ -67,6 +68,7 @@ class ThermalAgent(DesignAgent):
         result.add_param("thermal.radiator_area_m2", "Radiator Area", round(tb.radiator_area_m2, 3), "m²")
         result.add_param("thermal.radiator_mass_kg", "Radiator Mass", round(radiator_mass, 2), "kg")
         result.add_param("thermal.heater_power_w", "Eclipse Heater Power", round(tb.tcs_heater_power_w, 1), "W")
+        tcs_mass = calibrate_mass("tcs", tcs_mass, dry_mass, sc_class)
         result.add_param("thermal.tcs_mass_kg", "TCS Total Mass", round(tcs_mass, 2), "kg", margin_percent=20)
         result.add_param("thermal.tcs_cost_keur", "TCS Cost", round(tcs_mass * 15, 0), "kEUR")
 

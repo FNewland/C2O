@@ -36,6 +36,12 @@ def _register_builtins() -> None:
         "risk": "spacecdf_agents.tier2.risk.RiskAgent",
         "trl": "spacecdf_agents.tier2.trl.TRLAgent",
         "conflicts": "spacecdf_agents.tier2.conflicts.ConflictDetectionAgent",
+        "debris": "spacecdf_agents.tier2.debris.DebrisComplianceAgent",
+        "sustainability": "spacecdf_agents.tier2.sustainability.SustainabilityAgent",
+        "radiation": "spacecdf_agents.tier2.radiation.RadiationAgent",
+        "volume": "spacecdf_agents.tier2.volume.VolumeAgent",
+        "reliability": "spacecdf_agents.tier2.reliability.ReliabilityAgent",
+        "community": "spacecdf_agents.tier2.community.CommunityImpactAgent",
     }
     for name, qualname in builtins.items():
         module_path, class_name = qualname.rsplit(".", 1)
