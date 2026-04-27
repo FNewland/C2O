@@ -13,6 +13,14 @@ R_EARTH = 6371.0e3         # m
 SOLAR_FLUX = 1361.0        # W/m^2
 C_LIGHT = 299792458.0      # m/s
 
+# Celestial body parameters for disturbance torque calculations
+# (mu [m³/s²], radius [m], dipole_moment [T·m³], has_strong_field)
+_BODY_PARAMS: dict[str, dict] = {
+    "earth": {"mu": 3.986004418e14, "radius": 6371.0e3, "dipole_T": 3e-5, "has_atmo": True},
+    "moon":  {"mu": 4.9048695e12,   "radius": 1737.4e3, "dipole_T": 0.0,  "has_atmo": False},
+    "mars":  {"mu": 4.282837e13,    "radius": 3389.5e3, "dipole_T": 0.0,  "has_atmo": True},
+}
+
 
 @dataclass
 class AOCSDesignResult:
@@ -61,33 +69,43 @@ def compute_disturbance_torques(
     residual_dipole_am2: float = 0.1,
     cg_cp_offset_m: float = 0.01,
     inertia_ratio: float = 0.1,
+    body: str = "earth",
 ) -> dict[str, float]:
     """Compute environmental disturbance torques on the spacecraft.
 
-    Returns dict of individual and total torques in N⋅m.
+    Args:
+        body: Central body — "earth", "moon", or "mars". Affects gravity
+              gradient (mu), magnetic torque (dipole), and aerodynamic drag.
+
+    Returns dict of individual and total torques in N·m.
     """
-    a = R_EARTH + altitude_km * 1e3
+    bp = _BODY_PARAMS.get(body, _BODY_PARAMS["earth"])
+    mu = bp["mu"]
+    r_body = bp["radius"]
+    b0 = bp["dipole_T"]
+    has_atmo = bp["has_atmo"]
+
+    a = r_body + altitude_km * 1e3
 
     # Gravity gradient torque
-    # T_gg = 3 * mu / (2 * r^3) * |Iz - Iy| * sin(2*theta)
-    # Worst case: theta = 45 deg, sin(2*45) = 1
     Iz_minus_Iy = spacecraft_mass_kg * max_dimension_m**2 * inertia_ratio / 12
-    t_gg = 3 * MU_EARTH / (2 * a**3) * abs(Iz_minus_Iy)
+    t_gg = 3 * mu / (2 * a**3) * abs(Iz_minus_Iy)
 
-    # Solar radiation pressure torque
-    # T_srp = (F_solar / c) * A * cg_cp_offset * (1 + reflectivity)
+    # Solar radiation pressure torque (body-independent)
     reflectivity = 0.5
     f_solar = SOLAR_FLUX / C_LIGHT * spacecraft_area_m2 * (1 + reflectivity)
     t_srp = f_solar * cg_cp_offset_m
 
-    # Magnetic torque (interaction with Earth's field)
-    # B field at orbit ~ B0 * (Re/r)^3, B0 ~ 3e-5 T
-    b_field = 3e-5 * (R_EARTH / a)**3
-    t_mag = residual_dipole_am2 * b_field
+    # Magnetic torque — Moon and Mars have negligible global dipole fields
+    if b0 > 0:
+        b_field = b0 * (r_body / a)**3
+        t_mag = residual_dipole_am2 * b_field
+    else:
+        t_mag = 0.0
 
-    # Aerodynamic torque (significant only below ~600 km)
-    if altitude_km < 600:
-        # Simplified atmospheric density
+    # Aerodynamic torque — only for bodies with atmosphere, at low altitude
+    t_aero = 0.0
+    if has_atmo and body == "earth" and altitude_km < 600:
         h = altitude_km
         if h < 300:
             rho = 2.53e-10 * math.exp(-(h - 200) / 58.5)
@@ -95,12 +113,10 @@ def compute_disturbance_torques(
             rho = 6.24e-12 * math.exp(-(h - 300) / 53.6)
         else:
             rho = 1.95e-13 * math.exp(-(h - 400) / 53.3)
-        v = math.sqrt(MU_EARTH / a)
+        v = math.sqrt(mu / a)
         cd = 2.2
         f_aero = 0.5 * rho * v**2 * cd * spacecraft_area_m2
         t_aero = f_aero * cg_cp_offset_m
-    else:
-        t_aero = 0.0
 
     return {
         "gravity_gradient": t_gg,
@@ -121,14 +137,16 @@ def compute_aocs_design(
     slew_rate_deg_s: float = 1.0,
     max_slew_angle_deg: float = 30.0,
     orbit_period_s: float = 5700.0,
+    body: str = "earth",
 ) -> AOCSDesignResult:
     """Size the AOCS subsystem based on requirements and disturbance environment."""
 
     result = AOCSDesignResult()
 
-    # Compute disturbances
+    # Compute disturbances using the correct body's mu and field
     torques = compute_disturbance_torques(
-        altitude_km, spacecraft_mass_kg, spacecraft_area_m2, max_dimension_m
+        altitude_km, spacecraft_mass_kg, spacecraft_area_m2, max_dimension_m,
+        body=body,
     )
     result.gravity_gradient_torque_nm = torques["gravity_gradient"]
     result.solar_pressure_torque_nm = torques["solar_pressure"]

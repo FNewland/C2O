@@ -51,6 +51,7 @@ class MassAgent(DesignAgent):
             i += 1
 
         # Sum subsystem masses
+        sc_class = state.get_requirement("spacecraft_class", "small")
         eps_mass = state.get("power.eps_mass_kg", 0) or 0
         tcs_mass = state.get("thermal.tcs_mass_kg", 0) or 0
         ttc_mass = state.get("link.ttc_mass_kg", 0) or 0
@@ -59,21 +60,39 @@ class MassAgent(DesignAgent):
         # Prefer data agent's class-aware OBDH estimate over a hard-coded value.
         obdh_mass = state.get("data.obdh_mass_kg")
         if obdh_mass is None:
-            # Class-aware fallback if data agent hasn't converged yet
-            sc_class = state.get_requirement("spacecraft_class", "small")
             obdh_mass = {
                 "nano": 0.2, "micro": 0.5, "small": 1.5,
                 "medium": 2.5, "large": 4.0, "flagship": 6.5,
             }.get(sc_class, 1.5)
 
-        platform_mass = eps_mass + tcs_mass + ttc_mass + aocs_mass + struct_mass + obdh_mass
-        dry_mass = payload_mass + platform_mass
+        platform_mass_raw = eps_mass + tcs_mass + ttc_mass + aocs_mass + struct_mass + obdh_mass
 
-        # Propellant
+        # Propellant and dry propulsion hardware
         prop_mass = state.get("propulsion.propellant_mass_kg", 0) or 0
         prop_system = state.get("propulsion.total_mass_kg", 0) or 0
-        dry_mass += prop_system - prop_mass  # Add dry propulsion hardware
+        prop_dry_hw = prop_system - prop_mass  # Dry propulsion hardware (tanks, engine, feed)
 
+        # Platform mass floor: empirical minimum based on heritage data.
+        # Parametric models underestimate harness, brackets, connectors, MLI,
+        # separation system, and integration overhead for micro+ class.
+        # Sources: SMAD4 Table 10-8, ESA CDF heritage, SSTL platform data.
+        #
+        # The floor represents the minimum plausible platform mass for a
+        # spacecraft of this class, independent of what the subsystem models
+        # compute. It accounts for the "missing mass" that parametric sizing
+        # systematically omits.
+        _PLATFORM_FLOOR: dict[str, float] = {
+            "nano":     0.0,   # CubeSats: COTS boards, no missing overhead
+            "micro":    35.0,  # PROBA-class: harness+PCDU+brackets+sep ~35 kg min
+            "small":    55.0,  # 100-500 kg class: ~55 kg platform minimum
+            "medium":  120.0,  # 500-2000 kg: ~120 kg
+            "large":   250.0,  # 2000+ kg
+            "flagship": 500.0,
+        }
+        platform_floor = _PLATFORM_FLOOR.get(sc_class, 0.0)
+        platform_mass = max(platform_mass_raw, platform_floor)
+
+        dry_mass = payload_mass + platform_mass + prop_dry_hw
         wet_mass = dry_mass + prop_mass
 
         result.add_param("mass.payload_kg", "Payload Mass", round(payload_mass, 2), "kg",

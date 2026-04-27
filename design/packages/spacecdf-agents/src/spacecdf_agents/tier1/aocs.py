@@ -45,6 +45,14 @@ class AOCSAgent(DesignAgent):
         max_dim = {"nano": 0.3, "micro": 0.5, "small": 1.0, "medium": 2.0, "large": 3.0, "flagship": 5.0}
         dim = max_dim.get(sc_class, 1.0)
 
+        # Determine central body for disturbance torques
+        orbit_type = state.get_requirement("orbit.orbit_type")
+        body = "earth"
+        if orbit_type in ("lunar",):
+            body = "moon"
+        elif orbit_type in ("mars",):
+            body = "mars"
+
         aocs = compute_aocs_design(
             altitude_km=alt,
             spacecraft_mass_kg=sc_mass,
@@ -52,6 +60,7 @@ class AOCSAgent(DesignAgent):
             max_dimension_m=dim,
             required_pointing_deg=pointing_req,
             orbit_period_s=period,
+            body=body,
         )
 
         result.add_param("aocs.mass_kg", "AOCS Mass", round(aocs.aocs_mass_kg, 2), "kg", margin_percent=20)

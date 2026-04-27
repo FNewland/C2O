@@ -80,12 +80,21 @@ def compute_power_budget(
     """
     result = PowerBudgetResult()
 
-    # Average payload power accounting for duty cycle
+    # --- Multi-mode power analysis ---
+    # Mode 1: Nominal sunlight (platform + payload at duty cycle)
     avg_payload_power = payload_power_w * payload_duty_cycle
-
-    # Power demand
-    p_eclipse = platform_power_w + heater_power_eclipse_w
     p_sunlight = platform_power_w + avg_payload_power
+
+    # Mode 2: Eclipse (platform + heaters, no payload)
+    p_eclipse = platform_power_w + heater_power_eclipse_w
+
+    # Mode 3: Safe mode (essential bus only — AOCS in coarse mode, no payload,
+    # heaters at full). Typically 50-70% of nominal bus power + full heaters.
+    p_safe_mode = platform_power_w * 0.6 + heater_power_eclipse_w * 1.5
+
+    # Mode 4: Peak (simultaneous imaging + downlink + slew — short duration)
+    p_peak = platform_power_w + payload_power_w  # Full payload, no duty cycle discount
+
     result.total_power_eclipse_w = p_eclipse
     result.total_power_sunlight_w = p_sunlight
 
@@ -93,11 +102,13 @@ def compute_power_budget(
     eclipse_time_s = eclipse_fraction * orbit_period_s
     sunlight_time_s = sunlight_fraction * orbit_period_s
     e_eclipse_wh = p_eclipse * (eclipse_time_s / 3600.0)
-    e_sunlight_wh = p_sunlight * (sunlight_time_s / 3600.0)
 
-    # Battery sizing (must supply eclipse energy)
+    # Battery sizing: worst case of (eclipse energy) and (safe mode through full eclipse)
+    e_safe_eclipse_wh = p_safe_mode * (eclipse_time_s / 3600.0)
+    e_battery_design_wh = max(e_eclipse_wh, e_safe_eclipse_wh)
+
     result.battery_dod_percent = battery_max_dod * 100
-    result.battery_capacity_wh = e_eclipse_wh / battery_max_dod if battery_max_dod > 0 else e_eclipse_wh
+    result.battery_capacity_wh = e_battery_design_wh / battery_max_dod if battery_max_dod > 0 else e_battery_design_wh
     result.battery_mass_kg = result.battery_capacity_wh / battery_specific_energy_wh_kg
     result.num_eclipse_cycles = mission_duration_years * 365.25 * 86400 / orbit_period_s
 

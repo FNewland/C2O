@@ -255,11 +255,14 @@ def estimate_cost(state: DesignState) -> CostEstimate:
 
     # --- X.08 Launch ---
     wet_mass = state.get("mass.wet_mass_kg", 100) or 100
-    est.launch_keur = _estimate_launch_cost(wet_mass, sc_class)
+    mission_type = state.get_requirement("mission_type") or ""
+    if not isinstance(mission_type, str):
+        mission_type = str(mission_type)
+    est.launch_keur = _estimate_launch_cost(wet_mass, sc_class, mission_type)
     est.wbs.append(WBSElement(wbs_id="X.08", name="Launch Vehicle/Services", total_keur=round(est.launch_keur, 0)))
 
     # --- X.09 Ground System ---
-    est.ground_keur = _estimate_ground_cost(sc_class)
+    est.ground_keur = _estimate_ground_cost(sc_class, mission_type)
     est.wbs.append(WBSElement(wbs_id="X.09", name="Ground System", total_keur=round(est.ground_keur, 0)))
 
     # --- X.07 Mission Operations (MOCET-style) ---
@@ -272,6 +275,18 @@ def estimate_cost(state: DesignState) -> CostEstimate:
     ops_prime = ops_block[1] * prime_years
     ops_extended = ops_block[2] * extended_years
     est.operations_keur = ops_commissioning + ops_prime + ops_extended
+
+    # Deep-space missions add DSN / ESTRACK network fees + navigation team
+    is_deep_space = mission_type in ("lunar", "mars", "deep_space", "lagrange",
+                                      "science_planetary", "interplanetary")
+    if is_deep_space:
+        dsn_fee_per_year_keur = 8000  # ~$8-12M/yr for DSN tracking
+        nav_team_per_year_keur = 3000  # Navigation + flight dynamics team
+        est.operations_keur += (dsn_fee_per_year_keur + nav_team_per_year_keur) * mission_years
+        est.wbs.append(WBSElement(
+            wbs_id="X.07.DS", name="Deep-Space Network Fees",
+            total_keur=round(dsn_fee_per_year_keur * mission_years, 0),
+        ))
     est.wbs.append(WBSElement(
         wbs_id="X.07", name="Mission Operations",
         total_keur=round(est.operations_keur, 0),
@@ -390,12 +405,28 @@ def _get_subsystem_trl(state: DesignState, subsys: str) -> int:
     return 7  # Default assumption
 
 
-def _estimate_launch_cost(wet_mass_kg: float, sc_class: str) -> float:
-    """Estimate launch cost from wet mass and spacecraft class."""
+def _estimate_launch_cost(wet_mass_kg: float, sc_class: str, mission_type: str = "") -> float:
+    """Estimate launch cost from wet mass, spacecraft class, and destination.
+
+    Deep-space missions require dedicated launchers with upper stages,
+    which cost significantly more than LEO rideshare regardless of mass.
+    """
+    # Deep-space missions always need dedicated launch + upper stage
+    is_deep_space = mission_type in ("lunar", "mars", "deep_space", "lagrange",
+                                      "science_planetary", "interplanetary")
+    if is_deep_space:
+        if wet_mass_kg < 500:
+            return 50000   # Dedicated small launcher + kick stage (Minotaur V class)
+        elif wet_mass_kg < 2000:
+            return 80000   # Medium launcher (Falcon 9 + star-48 class)
+        else:
+            return 150000  # Large launcher (Atlas V / Ariane 6 class)
+
+    # LEO / GEO missions
     if wet_mass_kg < 50:
-        return 800   # Rideshare
+        return 800   # Rideshare (CubeSat deployer)
     elif wet_mass_kg < 300:
-        return 2500  # Dedicated small launcher
+        return 2500  # Dedicated small launcher or premium rideshare
     elif wet_mass_kg < 2000:
         return 8000  # Rideshare on medium launcher
     elif wet_mass_kg < 5000:
@@ -404,10 +435,16 @@ def _estimate_launch_cost(wet_mass_kg: float, sc_class: str) -> float:
         return 70000  # Large launcher
 
 
-def _estimate_ground_cost(sc_class: str) -> float:
+def _estimate_ground_cost(sc_class: str, mission_type: str = "") -> float:
     """Estimate ground system development cost."""
     costs = {"nano": 500, "micro": 1000, "small": 3000, "medium": 8000, "large": 20000, "flagship": 50000}
-    return costs.get(sc_class, 3000)
+    base = costs.get(sc_class, 3000)
+    # Deep-space ground segment is substantially more complex (nav, planning, DSN interface)
+    is_deep_space = mission_type in ("lunar", "mars", "deep_space", "lagrange",
+                                      "science_planetary", "interplanetary")
+    if is_deep_space:
+        base = max(base, 8000) * 2.0  # At least 16 MEUR for deep-space ground segment
+    return base
 
 
 def _monte_carlo_risk(est: CostEstimate, n_samples: int = 1000) -> tuple[float, float, float]:
