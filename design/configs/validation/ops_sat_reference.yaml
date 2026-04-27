@@ -12,14 +12,14 @@ description: "OPS-SAT 3U CubeSat — ESA in-orbit software lab, 515 km SSO"
 parameters:
   # --- Mass budget ---
   mass.dry_mass_kg:
-    reference_value: 7.0
+    reference_value: 5.4
     tolerance_percent: 40.0
-    citation: "ESA OPS-SAT fact sheet: ~7 kg total (no propulsion, dry ≈ wet)"
+    citation: "ESA/eoPortal/GomSpace: spacecraft mass ~5.4 kg (no propulsion, dry=wet)"
 
   mass.wet_mass_kg:
-    reference_value: 7.0
+    reference_value: 5.4
     tolerance_percent: 40.0
-    citation: "No propulsion; wet = dry"
+    citation: "No propulsion; wet = dry = 5.4 kg"
 
   mass.payload_kg:
     reference_value: 0.6
@@ -49,14 +49,14 @@ parameters:
     citation: "Bus ~8W + OBC payload 10W + TTC ~5W (GomSpace NanoPower docs)"
 
   power.sa_power_eol_w:
-    reference_value: 36.0
+    reference_value: 28.0
     tolerance_percent: 40.0
-    citation: "Body-mounted GaAs cells on 3U long faces: ~7-8W orbit avg, ~36W peak sunlit"
+    citation: "30W peak BOL (eoPortal); ~28W EOL after 2-year degradation"
 
   power.battery_capacity_wh:
-    reference_value: 38.5
+    reference_value: 76.0
     tolerance_percent: 30.0
-    citation: "GomSpace NanoPower BP4: 2×2600 mAh @ 7.4V = 38.5 Wh"
+    citation: "GomSpace NanoPower BP-X 8-cell: ~76 Wh (eoPortal/GomSpace)"
 
   power.battery_mass_kg:
     reference_value: 0.25
@@ -86,9 +86,9 @@ parameters:
 
   # --- AOCS ---
   aocs.pointing_accuracy_deg:
-    reference_value: 5.0
-    tolerance_percent: 50.0
-    citation: "Magnetorquer-only AOCS, ~5-10° pointing (Koller et al.)"
+    reference_value: 1.0
+    tolerance_percent: 80.0
+    citation: "iADCS-100 fine ADCS with star tracker + 3 RWs: <1° (eoPortal/BST); coarse bus: magnetorquers only"
 
   aocs.mass_kg:
     reference_value: 0.5

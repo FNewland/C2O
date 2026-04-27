@@ -22,9 +22,9 @@ parameters:
     citation: "NASA LADEE Press Kit: 383 kg total launch mass"
 
   mass.payload_kg:
-    reference_value: 17.5
+    reference_value: 18.9
     tolerance_percent: 15.0
-    citation: "NMS 10kg + UVS 4kg + LDEX 3.5kg = 17.5 kg (Elphic et al.)"
+    citation: "NMS 11.3kg + UVS 4kg + LDEX 3.6kg = 18.9 kg (Mahaffy/Horanyi et al. SSR 2014)"
 
   mass.propellant_kg:
     reference_value: 135.0
@@ -49,9 +49,9 @@ parameters:
 
   # --- Power ---
   power.total_sunlight_w:
-    reference_value: 75.0
-    tolerance_percent: 30.0
-    citation: "Bus ~40W + science ~35W nominal mode (Hine et al.)"
+    reference_value: 60.0
+    tolerance_percent: 40.0
+    citation: "NSSDC: ~60W nominal science ops (NMS 34.4W + LDEX 3.8W + bus ~22W)"
 
   power.sa_power_eol_w:
     reference_value: 280.0
@@ -64,9 +64,9 @@ parameters:
     citation: "LADEE: 295W BOL from body-mounted panels on octagonal bus (NASA)"
 
   power.battery_capacity_wh:
-    reference_value: 360.0
-    tolerance_percent: 30.0
-    citation: "LADEE: Li-ion, ~45 min eclipse → ~360 Wh estimated from power × eclipse"
+    reference_value: 672.0
+    tolerance_percent: 25.0
+    citation: "LADEE: 1x Li-ion 24 Ah @ 28V = 672 Wh (Wikipedia/eoPortal)"
 
   power.eps_mass_kg:
     reference_value: 20.0
@@ -102,9 +102,9 @@ parameters:
     citation: "383 - 248 = 135 kg propellant"
 
   propulsion.isp_s:
-    reference_value: 310.0
+    reference_value: 325.0
     tolerance_percent: 10.0
-    citation: "Bipropellant (N2O4/MMH), Isp ~310 s (Hine et al.)"
+    citation: "Bipropellant MMH/MON-3 with HiPAT 455N engine, Isp ~323-328 s (Aerojet datasheet)"
 
   propulsion.total_mass_kg:
     reference_value: 155.0

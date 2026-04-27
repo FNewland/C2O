@@ -59,15 +59,15 @@ requirements:
       power_peak_w: 25.0
       data_rate_mbps: 50.0
       data_volume_per_day_gb: 0.5
-      pointing_accuracy_deg: 5.0
-      pointing_stability_deg_s: 1.0
+      pointing_accuracy_deg: 1.0
+      pointing_stability_deg_s: 0.1
       temperature_range_c: [-20.0, 60.0]
       fov_deg: 180.0
       duty_cycle_percent: 30.0
       description: "Dual-core ARM Cortex-A9 + Xilinx Artix-7 FPGA + Myriad 2 GPU"
   design_lifetime_years: 2.0
   reliability_target: 0.8
-  target_mass_kg: 7.0
+  target_mass_kg: 6.0
   target_cost_meur: 5.0
   num_spacecraft: 1
   ground_stations:

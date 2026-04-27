@@ -64,8 +64,8 @@ requirements:
   payloads:
     - name: "NMS (Neutral Mass Spectrometer)"
       type: spectrometer
-      mass_kg: 10.0
-      power_w: 22.0
+      mass_kg: 11.3
+      power_w: 34.4
       power_peak_w: 30.0
       data_rate_mbps: 0.5
       data_volume_per_day_gb: 0.2
@@ -90,8 +90,8 @@ requirements:
       description: "UV-Vis spectrometer — limb and occultation observations"
     - name: "LDEX (Lunar Dust Experiment)"
       type: particle_detector
-      mass_kg: 3.5
-      power_w: 7.0
+      mass_kg: 3.6
+      power_w: 3.8
       power_peak_w: 10.0
       data_rate_mbps: 0.05
       data_volume_per_day_gb: 0.02
