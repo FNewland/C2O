@@ -93,33 +93,61 @@ function AppContent() {
   }
 
   const handleEquipmentSelect = (category: string, component: any) => {
-    // Map category to a param id to edit
-    const paramMap: Record<string, string> = {
-      batteries: 'power.battery_capacity_wh',
-      solar_cells: 'power.sa_power_eol_w',
-      reaction_wheels: 'aocs.mass_kg',
-      star_trackers: 'aocs.mass_kg',
-      transponders: 'link.ttc_mass_kg',
-      thrusters: 'propulsion.total_mass_kg',
+    // Rich parameter mapping: each category can produce multiple parameter edits
+    const EFFECTS: Record<string, { paramId: string; extract: (c: any) => number | null }[]> = {
+      batteries: [
+        { paramId: 'power.battery_capacity_wh', extract: c => c.performance?.capacity_wh ?? null },
+        { paramId: 'power.battery_mass_kg', extract: c => c.mass_kg ?? null },
+      ],
+      solar_cells: [
+        { paramId: 'power.sa_power_eol_w', extract: c => c.performance?.power_w ?? null },
+        { paramId: 'power.sa_mass_kg', extract: c => c.mass_kg ?? null },
+      ],
+      reaction_wheels: [
+        { paramId: 'aocs.mass_kg', extract: c => c.mass_kg ? c.mass_kg * 4 : null },
+        { paramId: 'aocs.wheel_momentum_nms', extract: c => c.performance?.momentum_nms ?? null },
+      ],
+      star_trackers: [
+        { paramId: 'aocs.pointing_accuracy_deg', extract: c => c.performance?.accuracy_arcsec ? c.performance.accuracy_arcsec / 3600 : null },
+      ],
+      transponders: [
+        { paramId: 'link.ttc_mass_kg', extract: c => c.mass_kg ?? null },
+        { paramId: 'link.ttc_power_w', extract: c => c.power_w ?? null },
+      ],
+      thrusters: [
+        { paramId: 'propulsion.isp_s', extract: c => c.performance?.isp_s ?? null },
+        { paramId: 'propulsion.total_mass_kg', extract: c => c.mass_kg ?? null },
+      ],
     }
-    const paramId = paramMap[category]
-    if (!paramId) {
-      alert(`No param mapping for ${category}`)
-      return
-    }
-    // Use performance field if available, else mass
-    const perf = component.performance || {}
-    const value = category === 'batteries' ? (perf.capacity_wh ?? component.mass_kg)
-      : category === 'solar_cells' ? (perf.power_w ?? 50)
-      : component.mass_kg ?? 1
 
-    const ok = sendEdit(paramId, value, {
-      rationale: `Selected ${component.name} from ${component.manufacturer || 'KB'}`,
-      equipmentId: component.id,
-      editType: 'equipment_selection',
-    })
-    if (!ok) alert('WebSocket not connected. Join a session first.')
-    else setShowEquipmentBrowser(false)
+    const effects = EFFECTS[category] || []
+    let anyOk = false
+    for (const eff of effects) {
+      const value = eff.extract(component)
+      if (value !== null) {
+        const ok = sendEdit(eff.paramId, value, {
+          rationale: `Selected ${component.name} from ${component.manufacturer || 'KB'}`,
+          equipmentId: component.id,
+          editType: 'equipment_selection',
+        })
+        if (ok) anyOk = true
+      }
+    }
+
+    // Fallback: if no effects matched, try mass as the primary param
+    if (!anyOk && effects.length === 0 && component.mass_kg) {
+      sendEdit(`${category}.mass_kg`, component.mass_kg, {
+        rationale: `Selected ${component.name}`,
+        equipmentId: component.id,
+        editType: 'equipment_selection',
+      })
+    }
+
+    if (!anyOk && effects.length > 0) {
+      // WebSocket not connected
+      alert('WebSocket not connected. Join a session first.')
+    }
+    // Don't close the browser — let user continue selecting from other categories
   }
 
   const centerTabs: { id: CenterTab; label: string }[] = useMemo(() => [
