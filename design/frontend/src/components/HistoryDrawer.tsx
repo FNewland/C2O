@@ -1,19 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useSessionHistory } from '../hooks/useSession'
 import { useSessionStore } from '../stores/sessionStore'
-
-const POSITION_COLOR: Record<string, string> = {
-  systems_engineer: '#8b5cf6',
-  mission_analyst: '#3b82f6',
-  payload_lead: '#10b981',
-  power_engineer: '#f59e0b',
-  aocs_engineer: '#06b6d4',
-  thermal_engineer: '#ef4444',
-  comms_engineer: '#ec4899',
-  propulsion_engineer: '#f97316',
-  structures_engineer: '#84cc16',
-  cost_engineer: '#a855f7',
-}
+import { POSITION_COLOR } from '../constants'
 
 export function HistoryDrawer({ sessionId }: { sessionId: string | null }) {
   const [isOpen, setIsOpen] = useState(false)

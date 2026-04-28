@@ -5,6 +5,7 @@ import { useDesignStore } from './stores/designStore'
 import { useSessionStore } from './stores/sessionStore'
 import { useSessionSocket } from './hooks/useSessionSocket'
 import { useCreateSession } from './hooks/useSession'
+import { POSITION_OPTIONS, POSITION_COLOR } from './constants'
 
 import { RequirementsPanel } from './components/RequirementsPanel'
 import { DesignWorkspace } from './components/DesignWorkspace'
@@ -33,19 +34,6 @@ const queryClient = new QueryClient({
 
 type CenterTab = 'design' | 'positions' | 'compliance' | 'ecss' | 'cost' | 'trade' | 'snapshots' | 'optimizer' | 'help'
 type RightTab = 'insights' | 'conflicts' | 'exports'
-
-const POSITION_OPTIONS = [
-  { id: 'systems_engineer', label: 'Systems Engineer' },
-  { id: 'mission_analyst', label: 'Mission Analyst' },
-  { id: 'payload_lead', label: 'Payload Lead' },
-  { id: 'power_engineer', label: 'Power Engineer' },
-  { id: 'aocs_engineer', label: 'AOCS Engineer' },
-  { id: 'thermal_engineer', label: 'Thermal Engineer' },
-  { id: 'comms_engineer', label: 'Comms Engineer' },
-  { id: 'propulsion_engineer', label: 'Propulsion Engineer' },
-  { id: 'structures_engineer', label: 'Structures Engineer' },
-  { id: 'cost_engineer', label: 'Cost Engineer' },
-]
 
 function AppContent() {
   const { result, studyId, createStudy, setStudyId, runDesign } = useDesignStore()
@@ -96,6 +84,13 @@ function AppContent() {
   }
 
   const handleEquipmentSelect = (category: string, component: any) => {
+    // Read sendEdit from the session store (not the closure) — always current
+    const storeSendEdit = useSessionStore.getState().sendEdit
+    if (!storeSendEdit) {
+      alert('WebSocket not connected. Join a session first, then try again.')
+      return
+    }
+
     // Rich parameter mapping: each category can produce multiple parameter edits
     const EFFECTS: Record<string, { paramId: string; extract: (c: any) => number | null }[]> = {
       batteries: [
@@ -124,33 +119,25 @@ function AppContent() {
     }
 
     const effects = EFFECTS[category] || []
-    let anyOk = false
     for (const eff of effects) {
       const value = eff.extract(component)
       if (value !== null) {
-        const ok = sendEdit(eff.paramId, value, {
+        storeSendEdit(eff.paramId, value, {
           rationale: `Selected ${component.name} from ${component.manufacturer || 'KB'}`,
           equipmentId: component.id,
           editType: 'equipment_selection',
         })
-        if (ok) anyOk = true
       }
     }
 
     // Fallback: if no effects matched, try mass as the primary param
-    if (!anyOk && effects.length === 0 && component.mass_kg) {
-      sendEdit(`${category}.mass_kg`, component.mass_kg, {
+    if (effects.length === 0 && component.mass_kg) {
+      storeSendEdit(`${category}.mass_kg`, component.mass_kg, {
         rationale: `Selected ${component.name}`,
         equipmentId: component.id,
         editType: 'equipment_selection',
       })
     }
-
-    if (!anyOk && effects.length > 0) {
-      // WebSocket not connected
-      alert('WebSocket not connected. Join a session first.')
-    }
-    // Don't close the browser — let user continue selecting from other categories
   }
 
   const centerTabs: { id: CenterTab; label: string }[] = useMemo(() => [
@@ -344,13 +331,6 @@ function SessionStarterModal({
     )
   }
 
-  const ROLE_COLORS: Record<string, string> = {
-    systems_engineer: '#3b82f6', mission_analyst: '#8b5cf6', payload_lead: '#10b981',
-    power_engineer: '#f59e0b', aocs_engineer: '#06b6d4', thermal_engineer: '#ef4444',
-    comms_engineer: '#ec4899', propulsion_engineer: '#f97316', structures_engineer: '#84cc16',
-    cost_engineer: '#a855f7',
-  }
-
   return (
     <div style={{
       position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)',
@@ -368,13 +348,14 @@ function SessionStarterModal({
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginBottom: '1rem' }}>
           {POSITION_OPTIONS.map(p => {
             const active = selected.includes(p.id)
+            const c = POSITION_COLOR[p.id] || '#3b82f6'
             return (
               <label key={p.id} style={{
                 display: 'flex', alignItems: 'center', gap: '0.3rem',
                 fontSize: '0.78rem', padding: '0.25rem 0.6rem', borderRadius: '4px', cursor: 'pointer',
-                background: active ? `${ROLE_COLORS[p.id] || '#3b82f6'}22` : 'transparent',
-                border: `1px solid ${active ? (ROLE_COLORS[p.id] || '#3b82f6') : 'var(--border, #374151)'}`,
-                color: active ? (ROLE_COLORS[p.id] || '#3b82f6') : 'var(--text-secondary, #9ca3af)',
+                background: active ? `${c}22` : 'transparent',
+                border: `1px solid ${active ? c : 'var(--border, #374151)'}`,
+                color: active ? c : 'var(--text-secondary, #9ca3af)',
               }}>
                 <input type="checkbox" checked={active} onChange={() => toggle(p.id)}
                   style={{ width: 14, height: 14 }} />
@@ -400,12 +381,10 @@ function SessionStarterModal({
   )
 }
 
-function App() {
+export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AppContent />
     </QueryClientProvider>
   )
 }
-
-export default App

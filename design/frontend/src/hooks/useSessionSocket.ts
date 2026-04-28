@@ -101,7 +101,10 @@ export function useSessionSocket(sessionId: string | null, positionId: string | 
 
       const host = window.location.host.replace(/:\d+$/, ':8000')
       const proto = window.location.protocol === 'https:' ? 'wss' : 'ws'
-      const url = `${proto}://${host}/ws/session/${sessionId}?position_id=${encodeURIComponent(positionId)}&display_name=${encodeURIComponent(displayName)}`
+      // Send all claimed positions as comma-separated position_ids for multi-role support
+      const allPositions = useSessionStore.getState().positionIds
+      const posIds = allPositions.length > 0 ? allPositions.join(',') : positionId
+      const url = `${proto}://${host}/ws/session/${sessionId}?position_id=${encodeURIComponent(positionId!)}&position_ids=${encodeURIComponent(posIds)}&display_name=${encodeURIComponent(displayName)}`
 
       try {
         const ws = new WebSocket(url)
