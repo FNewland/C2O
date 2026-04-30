@@ -11,6 +11,10 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 from .mission_need import MissionNeed
+from .conops import ConceptOfOperations
+from .functions import FunctionalDecomposition
+from .interfaces import InterfaceMatrix
+from .conflicts import DecisionRecord
 
 
 class StudyPhase(str, Enum):
@@ -144,6 +148,10 @@ class Study(BaseModel):
     phase: StudyPhase = StudyPhase.PHASE_0
     created: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     mission_need: MissionNeed = Field(default_factory=MissionNeed)
+    conops: ConceptOfOperations = Field(default_factory=ConceptOfOperations)
+    functional_decomposition: FunctionalDecomposition = Field(default_factory=FunctionalDecomposition)
+    interface_matrix: InterfaceMatrix = Field(default_factory=InterfaceMatrix)
+    decision_records: list[DecisionRecord] = Field(default_factory=list)
     requirements: MissionRequirements = Field(default_factory=MissionRequirements)
     spacecraft: SpacecraftDesign = Field(default_factory=SpacecraftDesign)
     iterations: list[DesignIteration] = Field(default_factory=list)

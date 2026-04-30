@@ -27,6 +27,9 @@ import { OptimizerPanel } from './components/OptimizerPanel'
 import { UserManual } from './components/UserManual'
 import { GateReviewPanel } from './components/GateReviewPanel'
 import { PositionAnswersPanel } from './components/PositionAnswersPanel'
+import { ConOpsEditor } from './components/ConOpsEditor'
+import { FunctionTreeView } from './components/FunctionTreeView'
+import { InterfaceMatrixView } from './components/InterfaceMatrixView'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -34,7 +37,7 @@ const queryClient = new QueryClient({
   },
 })
 
-type CenterTab = 'design' | 'positions' | 'answers' | 'gate' | 'compliance' | 'ecss' | 'cost' | 'trade' | 'snapshots' | 'optimizer' | 'help'
+type CenterTab = 'design' | 'conops' | 'functions' | 'interfaces' | 'positions' | 'answers' | 'gate' | 'compliance' | 'ecss' | 'cost' | 'trade' | 'snapshots' | 'optimizer' | 'help'
 type RightTab = 'insights' | 'conflicts' | 'exports'
 
 function AppContent() {
@@ -144,14 +147,15 @@ function AppContent() {
 
   const centerTabs: { id: CenterTab; label: string }[] = useMemo(() => [
     { id: 'design', label: 'Dashboard' },
+    { id: 'conops', label: 'ConOps' },
+    { id: 'functions', label: 'Functions' },
+    { id: 'interfaces', label: 'Interfaces' },
     { id: 'positions', label: 'Positions' },
     { id: 'answers', label: 'Q&A' },
     { id: 'gate', label: 'Gate Review' },
     { id: 'compliance', label: 'Compliance' },
-    { id: 'ecss', label: 'ECSS' },
     { id: 'cost', label: 'Cost' },
     { id: 'trade', label: 'Trade Studies' },
-    { id: 'snapshots', label: 'Snapshots' },
     { id: 'optimizer', label: 'Optimizer' },
     { id: 'help', label: 'Help' },
   ], [])
@@ -230,6 +234,9 @@ function AppContent() {
             ))}
           </div>
           {centerTab === 'design' && <DesignWorkspace />}
+          {centerTab === 'conops' && <ConOpsEditor />}
+          {centerTab === 'functions' && <FunctionTreeView />}
+          {centerTab === 'interfaces' && <InterfaceMatrixView />}
           {centerTab === 'positions' && <PositionPanel />}
           {centerTab === 'answers' && <PositionAnswersPanel />}
           {centerTab === 'gate' && <GateReviewPanel studyId={studyId} />}

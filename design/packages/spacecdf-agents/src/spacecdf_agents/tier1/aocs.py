@@ -40,7 +40,13 @@ class AOCSAgent(DesignAgent):
         period = state.get("orbit.period_s", 5700.0)
         sc_mass = state.get("mass.dry_mass_estimate_kg", 100.0) or 100.0
 
-        pointing_req = state.get("payload.0.pointing_deg", 0.1) or 0.1
+        # ConOps-driven: use tightest pointing mode if available
+        conops = state.conops
+        if conops and hasattr(conops, 'tightest_pointing_mode') and conops.tightest_pointing_mode:
+            pointing_req = conops.tightest_pointing_mode.pointing_requirement_deg
+            result.log(f"AOCS: using ConOps tightest pointing mode ({conops.tightest_pointing_mode.name}, {pointing_req} deg)")
+        else:
+            pointing_req = state.get("payload.0.pointing_deg", 0.1) or 0.1
 
         sc_class = state.get_requirement("spacecraft_class", "small")
         max_dim = {"nano": 0.3, "micro": 0.5, "small": 1.0, "medium": 2.0, "large": 3.0, "flagship": 5.0}

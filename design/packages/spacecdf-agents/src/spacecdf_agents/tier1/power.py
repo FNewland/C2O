@@ -46,26 +46,45 @@ class PowerAgent(DesignAgent):
         period_s = state.get("orbit.period_s", 5700.0)
         mission_years = state.get("mission.duration_years", 3.0)
 
-        # Sum payload power
-        payload_power = 0.0
-        payload_duty = 0.25
-        i = 0
-        while True:
-            pp = state.get(f"payload.{i}.power_w")
-            if pp is None:
-                break
-            payload_power += pp
-            pd = state.get(f"payload.{i}.duty_cycle", 0.25)
-            payload_duty = max(payload_duty, pd)
-            i += 1
+        # --- ConOps-driven power budget (if modes are defined) ---
+        conops = state.conops
+        has_modes = conops and hasattr(conops, 'modes') and len(conops.modes) > 0
 
-        heater_power = state.get("thermal.heater_power_w", 10.0) or 10.0
+        if has_modes:
+            # Use ConOps modes for physically-driven sizing
+            worst_sun = conops.worst_case_power_mode
+            worst_eclipse = conops.worst_case_eclipse_mode
 
-        # Estimate platform power from subsystem agents
-        aocs_power = state.get("aocs.power_w", 15.0) or 15.0
-        ttc_power = state.get("link.ttc_power_w", 20.0) or 20.0
-        obdh_power = 10.0  # Estimate
-        platform_power = aocs_power + ttc_power + obdh_power
+            # Sunlight demand = worst-case sunlight mode power
+            payload_power = worst_sun.payload_power_w if worst_sun else 0
+            platform_power_sun = worst_sun.platform_power_w if worst_sun else 30
+            heater_power = worst_eclipse.heater_power_w if worst_eclipse else 10
+
+            # Platform power from mode definition (more accurate than summing agent outputs)
+            platform_power = platform_power_sun
+            payload_duty = worst_sun.duty_cycle_percent / 100 if worst_sun else 0.25
+
+            result.log(f"ConOps-driven: worst sunlight mode = {worst_sun.name if worst_sun else '?'} ({worst_sun.power_w if worst_sun else 0}W)")
+            result.log(f"ConOps-driven: worst eclipse mode = {worst_eclipse.name if worst_eclipse else '?'} ({worst_eclipse.power_w if worst_eclipse else 0}W)")
+        else:
+            # Fallback: estimate from payload specs + subsystem agents (original logic)
+            payload_power = 0.0
+            payload_duty = 0.25
+            i = 0
+            while True:
+                pp = state.get(f"payload.{i}.power_w")
+                if pp is None:
+                    break
+                payload_power += pp
+                pd = state.get(f"payload.{i}.duty_cycle", 0.25)
+                payload_duty = max(payload_duty, pd)
+                i += 1
+
+            heater_power = state.get("thermal.heater_power_w", 10.0) or 10.0
+            aocs_power = state.get("aocs.power_w", 15.0) or 15.0
+            ttc_power = state.get("link.ttc_power_w", 20.0) or 20.0
+            obdh_power = 10.0
+            platform_power = aocs_power + ttc_power + obdh_power
 
         # Determine cell efficiency by spacecraft class
         sc_class = state.get_requirement("spacecraft_class", "small")

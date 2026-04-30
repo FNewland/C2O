@@ -329,3 +329,112 @@ def verify_requirements(
         verifications.append(verification)
 
     return verifications
+
+
+# --- Requirements generation from functional decomposition ---
+
+def generate_requirements_from_functions(
+    functions: list[dict],
+    objectives: list[dict] | None = None,
+) -> list[Requirement]:
+    """Generate requirements from functional decomposition leaf nodes.
+
+    Each leaf function with performance criteria generates one or more
+    formal requirements. This provides the System-V traceability:
+    Objective → Function → Requirement.
+
+    Falls back to generate_requirements() for mission-level requirements
+    that don't come from the decomposition (mass, cost, deorbit).
+    """
+    reqs: list[Requirement] = []
+    counter = 0
+    objectives = objectives or []
+
+    # Build objective lookup
+    obj_map = {o.get("id", ""): o for o in objectives}
+
+    for func in functions:
+        # Only leaf functions generate requirements
+        if not func.get("is_leaf", True):
+            continue
+        if not func.get("performance_criteria"):
+            continue
+
+        domain = func.get("allocated_to", "")
+        obj_ids = func.get("objective_ids", [])
+
+        for criterion in func.get("performance_criteria", []):
+            counter += 1
+            prefix = domain.upper()[:4] if domain else "SYS"
+            req_id = f"REQ-{prefix}-F{counter:03d}"
+
+            # Parse criterion for threshold (simple heuristic)
+            threshold, operator, unit = _parse_criterion(criterion)
+
+            # Build rationale from objective chain
+            rationale_parts = [f"Derived from function: {func.get('name', '')}"]
+            for oid in obj_ids:
+                obj = obj_map.get(oid)
+                if obj:
+                    rationale_parts.append(f"Serves objective: {obj.get('text', oid)}")
+
+            req = Requirement(
+                id=req_id,
+                text=f"The {domain or 'system'} shall {criterion}",
+                req_type=RequirementType.PERFORMANCE,
+                parameter_ids=_infer_parameter_ids(domain, criterion),
+                threshold=threshold,
+                operator=operator,
+                unit=unit,
+                domain=domain,
+                rationale="; ".join(rationale_parts),
+                mission_need_id=obj_ids[0] if obj_ids else None,
+                objective_id=obj_ids[0] if obj_ids else None,
+            )
+            reqs.append(req)
+
+    return reqs
+
+
+def _parse_criterion(criterion: str) -> tuple[float, str, str]:
+    """Simple heuristic to extract threshold/operator/unit from a criterion string.
+
+    e.g. 'GSD <= 10m' → (10.0, '<=', 'm')
+         'pointing <= 0.1 deg' → (0.1, '<=', 'deg')
+    """
+    import re
+    # Look for patterns like "<= 10m", ">= 3 dB", "= 450 km"
+    match = re.search(r'([<>]=?|=)\s*([\d.]+)\s*(\w*)', criterion)
+    if match:
+        op = match.group(1)
+        val = float(match.group(2))
+        unit = match.group(3) or ""
+        return val, op, unit
+    return 0.0, ">=", ""
+
+
+def _infer_parameter_ids(domain: str, criterion: str) -> list[str]:
+    """Heuristic: infer parameter IDs from domain + criterion keywords."""
+    criterion_lower = criterion.lower()
+    ids: list[str] = []
+
+    keyword_map = {
+        "mass": f"{domain}.mass_kg" if domain else "mass.dry_mass_kg",
+        "power": f"{domain}.power_w" if domain else "power.total_sunlight_w",
+        "pointing": "aocs.pointing_accuracy_deg",
+        "gsd": "payload.0.gsd_m",
+        "data rate": "link.downlink_rate_bps",
+        "margin": f"link.downlink_margin_db",
+        "temperature": f"thermal.max_temp_c",
+        "lifetime": "mission.duration_years",
+        "altitude": "orbit.altitude_km",
+    }
+
+    for keyword, pid in keyword_map.items():
+        if keyword in criterion_lower:
+            ids.append(pid)
+
+    if not ids and domain:
+        ids.append(f"{domain}.primary")  # Placeholder
+
+    return ids

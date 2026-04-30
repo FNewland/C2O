@@ -39,8 +39,15 @@ class ThermalAgent(DesignAgent):
         result = AgentResult(domain=self.domain)
 
         eclipse_frac = state.get("orbit.eclipse_fraction", 0.35)
-        internal_power = state.get("power.total_sunlight_w", 50.0) or 50.0
         dry_mass = state.get("mass.dry_mass_estimate_kg", 100.0) or 100.0
+
+        # ConOps-driven: use worst-case hot mode power for radiator sizing
+        conops = state.conops
+        if conops and hasattr(conops, 'worst_case_power_mode') and conops.worst_case_power_mode:
+            internal_power = conops.worst_case_power_mode.power_w
+            result.log(f"Thermal: using ConOps hot case ({conops.worst_case_power_mode.name}, {internal_power}W)")
+        else:
+            internal_power = state.get("power.total_sunlight_w", 50.0) or 50.0
 
         sc_class = state.get_requirement("spacecraft_class", "small")
         form = "cubesat" if sc_class in ("nano", "micro") else "box"

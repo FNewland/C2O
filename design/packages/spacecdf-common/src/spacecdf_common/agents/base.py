@@ -83,10 +83,16 @@ class DesignState:
         parameters: dict[str, ParameterValue] | None = None,
         requirements: dict[str, Any] | None = None,
         knowledge_base: Any = None,
+        conops: Any = None,
+        functional_decomposition: Any = None,
+        interface_matrix: Any = None,
     ):
         self._parameters = parameters or {}
         self._requirements = requirements or {}
         self._kb = knowledge_base
+        self._conops = conops
+        self._functional_decomposition = functional_decomposition
+        self._interface_matrix = interface_matrix
 
     def get(self, param_id: str, default: float | None = None) -> float | None:
         """Get a parameter value by ID."""
@@ -123,6 +129,25 @@ class DesignState:
     @property
     def kb(self) -> Any:
         return self._kb
+
+    @property
+    def conops(self) -> Any:
+        """ConceptOfOperations model, if provided. Agents use this for multi-mode sizing."""
+        return self._conops
+
+    @property
+    def functional_decomposition(self) -> Any:
+        return self._functional_decomposition
+
+    @property
+    def interface_matrix(self) -> Any:
+        return self._interface_matrix
+
+    def get_mode(self, mode_id: str) -> Any:
+        """Get a specific ConOps operational mode by ID."""
+        if self._conops and hasattr(self._conops, 'get_mode'):
+            return self._conops.get_mode(mode_id)
+        return None
 
     def update(self, result: AgentResult) -> set[str]:
         """Merge agent results into the design state. Returns set of changed parameter IDs.
