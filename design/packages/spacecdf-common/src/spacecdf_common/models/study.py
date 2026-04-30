@@ -10,6 +10,8 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
+from .mission_need import MissionNeed
+
 
 class StudyPhase(str, Enum):
     PHASE_0 = "phase_0"       # Mission analysis / feasibility
@@ -141,6 +143,7 @@ class Study(BaseModel):
     name: str = "New Study"
     phase: StudyPhase = StudyPhase.PHASE_0
     created: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    mission_need: MissionNeed = Field(default_factory=MissionNeed)
     requirements: MissionRequirements = Field(default_factory=MissionRequirements)
     spacecraft: SpacecraftDesign = Field(default_factory=SpacecraftDesign)
     iterations: list[DesignIteration] = Field(default_factory=list)

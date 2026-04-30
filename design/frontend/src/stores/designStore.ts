@@ -86,13 +86,31 @@ export interface MissionRequirements {
   ground_stations: string[]
 }
 
+export interface MissionNeedState {
+  problem_statement: string
+  operational_context: string
+  stakeholders: Array<{ id: string; name: string; role: string; needs: string[]; constraints: string[]; priority: string }>
+  objectives: Array<{ id: string; text: string; priority: string; type: string; measurable_criterion: string; status: string }>
+  success_criteria: string[]
+  alternatives: Array<{
+    id: string; name: string; type: string; description: string
+    pros: string[]; cons: string[]; feasibility_score: number
+    decision: string; decision_rationale: string
+  }>
+  selected_alternative_id: string | null
+  selection_rationale: string
+  conops_summary: string
+}
+
 interface DesignStore {
+  missionNeed: MissionNeedState
   requirements: MissionRequirements
   result: DesignResult | null
   isRunning: boolean
   error: string | null
   studyId: string | null
 
+  setMissionNeed: (need: Partial<MissionNeedState>) => void
   setRequirements: (req: Partial<MissionRequirements>) => void
   setOrbit: (orbit: Partial<MissionRequirements['orbit']>) => void
   setStudyId: (id: string | null) => void
@@ -127,12 +145,29 @@ const defaultRequirements: MissionRequirements = {
 
 const API_BASE = '/api'
 
+const defaultMissionNeed: MissionNeedState = {
+  problem_statement: '',
+  operational_context: '',
+  stakeholders: [],
+  objectives: [],
+  success_criteria: [],
+  alternatives: [],
+  selected_alternative_id: null,
+  selection_rationale: '',
+  conops_summary: '',
+}
+
 export const useDesignStore = create<DesignStore>((set, get) => ({
+  missionNeed: defaultMissionNeed,
   requirements: defaultRequirements,
   result: null,
   isRunning: false,
   error: null,
   studyId: null,
+
+  setMissionNeed: (need) => set((s) => ({
+    missionNeed: { ...s.missionNeed, ...need }
+  })),
 
   setRequirements: (req) => set((s) => ({
     requirements: { ...s.requirements, ...req }

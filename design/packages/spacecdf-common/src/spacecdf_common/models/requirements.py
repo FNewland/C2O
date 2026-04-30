@@ -55,6 +55,9 @@ class Requirement(BaseModel):
     domain: str = Field(default="", description="Engineering domain this requirement belongs to")
     position: str = Field(default="", description="Position responsible for verification")
     rationale: str = Field(default="", description="Why this requirement exists")
+    # System-V traceability — links to MissionNeed hierarchy
+    mission_need_id: str | None = Field(default=None, description="Traces to the mission need this derives from")
+    objective_id: str | None = Field(default=None, description="Traces to the objective this implements")
 
 
 class RequirementVerification(BaseModel):

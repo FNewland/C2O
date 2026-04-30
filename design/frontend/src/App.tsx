@@ -7,7 +7,7 @@ import { useSessionSocket } from './hooks/useSessionSocket'
 import { useCreateSession } from './hooks/useSession'
 import { POSITION_OPTIONS, POSITION_COLOR } from './constants'
 
-import { RequirementsPanel } from './components/RequirementsPanel'
+import { StudyStepper } from './components/StudyStepper'
 import { DesignWorkspace } from './components/DesignWorkspace'
 import { InsightsPanel } from './components/InsightsPanel'
 import { ConflictsPanel } from './components/ConflictsPanel'
@@ -25,6 +25,8 @@ import { EcssCompliancePanel } from './components/EcssCompliancePanel'
 import { SnapshotsPanel } from './components/SnapshotsPanel'
 import { OptimizerPanel } from './components/OptimizerPanel'
 import { UserManual } from './components/UserManual'
+import { GateReviewPanel } from './components/GateReviewPanel'
+import { PositionAnswersPanel } from './components/PositionAnswersPanel'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -32,7 +34,7 @@ const queryClient = new QueryClient({
   },
 })
 
-type CenterTab = 'design' | 'positions' | 'compliance' | 'ecss' | 'cost' | 'trade' | 'snapshots' | 'optimizer' | 'help'
+type CenterTab = 'design' | 'positions' | 'answers' | 'gate' | 'compliance' | 'ecss' | 'cost' | 'trade' | 'snapshots' | 'optimizer' | 'help'
 type RightTab = 'insights' | 'conflicts' | 'exports'
 
 function AppContent() {
@@ -141,10 +143,12 @@ function AppContent() {
   }
 
   const centerTabs: { id: CenterTab; label: string }[] = useMemo(() => [
-    { id: 'design', label: 'Design' },
+    { id: 'design', label: 'Dashboard' },
     { id: 'positions', label: 'Positions' },
+    { id: 'answers', label: 'Q&A' },
+    { id: 'gate', label: 'Gate Review' },
     { id: 'compliance', label: 'Compliance' },
-    { id: 'ecss', label: 'ECSS Gate' },
+    { id: 'ecss', label: 'ECSS' },
     { id: 'cost', label: 'Cost' },
     { id: 'trade', label: 'Trade Studies' },
     { id: 'snapshots', label: 'Snapshots' },
@@ -199,7 +203,7 @@ function AppContent() {
 
       <main className="main">
         <div className="panel">
-          <RequirementsPanel />
+          <StudyStepper />
         </div>
 
         <div className="panel" style={{ background: 'var(--bg-primary)', borderRight: '1px solid var(--border)' }}>
@@ -227,6 +231,8 @@ function AppContent() {
           </div>
           {centerTab === 'design' && <DesignWorkspace />}
           {centerTab === 'positions' && <PositionPanel />}
+          {centerTab === 'answers' && <PositionAnswersPanel />}
+          {centerTab === 'gate' && <GateReviewPanel studyId={studyId} />}
           {centerTab === 'compliance' && <ComplianceMatrix studyId={studyId} />}
           {centerTab === 'ecss' && <EcssCompliancePanel studyId={studyId} />}
           {centerTab === 'cost' && <CostBreakdown studyId={studyId} />}
