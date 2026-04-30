@@ -95,3 +95,17 @@ components:
     interfaces: [analog, H-bridge]
     operating_temp_c: [-40, 85]
     notes: South African heritage magnetorquer rod
+
+  - id: mtq-gom-gst600
+    name: NanoTorque GST-600
+    manufacturer: GomSpace
+    category: magnetorquer
+    mass_kg: 0.156
+    cost_keur: 10
+    trl: 9
+    performance:
+      dipole_moment_am2: 0.3
+      axes: 3
+    power_w: 1.0
+    interfaces: [I2C, SPI]
+    notes: 1 air-torquer + 2 rods, for 6U+ CubeSats

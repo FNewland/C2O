@@ -310,3 +310,153 @@ components:
       total_impulse_ns: 17000000
       propellant: xenon
     notes: Next-generation NASA ion engine, successor to NSTAR
+
+  - id: thr-enpulsion-nano-r3
+    name: ENPULSION NANO R3
+    manufacturer: Enpulsion
+    category: thruster
+    type: feep_ion
+    mass_kg: 0.670
+    wet_mass_kg: 0.900
+    cost_keur: 65
+    trl: 9
+    heritage_missions: [Multiple commercial, IOD 2018]
+    performance:
+      thrust_n: 0.000350
+      isp_s: 4000
+      total_impulse_ns: 5500
+      propellant: indium
+      propellant_mass_kg: 0.230
+    power_w: 40
+    interfaces: [I2C, UART]
+    operating_temp_c: [-20, 60]
+    notes: FEEP ion thruster, 0.5U form factor, no moving parts, solid propellant
+
+  - id: thr-thrustme-npt30-1u
+    name: NPT30-I2 1U
+    manufacturer: ThrustMe
+    category: thruster
+    type: gridded_ion
+    mass_kg: 1.200
+    wet_mass_kg: 1.300
+    cost_keur: 55
+    trl: 9
+    heritage_missions: [Beihangkongshi-1 (first iodine EP in space, 2020)]
+    performance:
+      thrust_n: 0.0011
+      isp_s: 2450
+      total_impulse_ns: 5500
+      propellant: iodine_solid
+      propellant_mass_kg: 0.100
+    power_w: 50
+    interfaces: [UART, RS485]
+    operating_temp_c: [-20, 60]
+    notes: Iodine electric prop, 1U form factor, non-pressurised solid propellant
+
+  - id: thr-thrustme-npt30-1-5u
+    name: NPT30-I2 1.5U
+    manufacturer: ThrustMe
+    category: thruster
+    type: gridded_ion
+    mass_kg: 1.500
+    wet_mass_kg: 1.700
+    cost_keur: 65
+    trl: 9
+    heritage_missions: [NorSat-TD]
+    performance:
+      thrust_n: 0.0011
+      isp_s: 2450
+      total_impulse_ns: 9500
+      propellant: iodine_solid
+      propellant_mass_kg: 0.200
+    power_w: 50
+    interfaces: [UART, RS485]
+    operating_temp_c: [-20, 60]
+    notes: Higher delta-V version, 1.5U form factor
+
+  - id: thr-nanoavionics-epss
+    name: EPSS Green Monopropellant
+    manufacturer: NanoAvionics
+    category: thruster
+    type: monoprop_green
+    mass_kg: 0.800
+    wet_mass_kg: 1.200
+    cost_keur: 45
+    trl: 9
+    heritage_missions: [M6P bus missions, 2019 IOD]
+    performance:
+      thrust_n: 0.300
+      isp_s: 252
+      total_impulse_ns: 2500
+      propellant: adn_green
+      propellant_mass_kg: 0.400
+    power_w: 15
+    interfaces: [CAN, I2C]
+    operating_temp_c: [-20, 60]
+    notes: ADN-based green monoprop, 6% higher Isp than hydrazine, non-toxic
+
+  - id: thr-enpulsion-nano-r3
+    name: ENPULSION NANO R3
+    manufacturer: Enpulsion
+    category: thruster
+    type: feep_ion
+    mass_kg: 0.670
+    cost_keur: 65
+    trl: 9
+    performance:
+      thrust_n: 0.000350
+      isp_s: 4000
+      total_impulse_ns: 5500
+      propellant: indium
+    power_w: 40
+    notes: FEEP ion, 0.5U, no moving parts, solid propellant
+
+  - id: thr-thrustme-npt30-1u
+    name: NPT30-I2 1U
+    manufacturer: ThrustMe
+    category: thruster
+    type: gridded_ion
+    mass_kg: 1.200
+    cost_keur: 55
+    trl: 9
+    heritage_missions: [Beihangkongshi-1 (first iodine EP in space)]
+    performance:
+      thrust_n: 0.0011
+      isp_s: 2450
+      total_impulse_ns: 5500
+      propellant: iodine_solid
+    power_w: 50
+    notes: Iodine, 1U, non-pressurised solid propellant
+
+  - id: thr-thrustme-npt30-1-5u
+    name: NPT30-I2 1.5U
+    manufacturer: ThrustMe
+    category: thruster
+    type: gridded_ion
+    mass_kg: 1.500
+    cost_keur: 65
+    trl: 9
+    heritage_missions: [NorSat-TD]
+    performance:
+      thrust_n: 0.0011
+      isp_s: 2450
+      total_impulse_ns: 9500
+      propellant: iodine_solid
+    power_w: 50
+
+  - id: thr-nanoavionics-epss
+    name: EPSS Green Monopropellant
+    manufacturer: NanoAvionics
+    category: thruster
+    type: monoprop_green
+    mass_kg: 0.800
+    cost_keur: 45
+    trl: 9
+    heritage_missions: [M6P bus, 2019 IOD]
+    performance:
+      thrust_n: 0.300
+      isp_s: 252
+      total_impulse_ns: 2500
+      propellant: adn_green
+    power_w: 15
+    notes: ADN-based green monoprop, non-toxic

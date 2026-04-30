@@ -202,3 +202,60 @@ components:
         max: 4.1
       operating_temp_c: [-20, 60]
     notes: Single cell; widely used in ESA mission battery packs
+
+  - id: bat-gom-nanopow-bp4
+    name: NanoPower BP4
+    manufacturer: GomSpace
+    category: battery
+    chemistry: Li-ion (18650)
+    mass_kg: 0.258
+    dimensions_mm: [94, 84, 23]
+    cost_keur: 8
+    trl: 9
+    heritage_missions: [GOMX-3, GOMX-4, numerous CubeSats]
+    performance:
+      capacity_wh: 38.5
+      specific_energy_wh_kg: 149
+      cycle_life: 5000
+      voltage_v: {nominal: 14.4, min: 12.0, max: 16.8}
+      operating_temp_c: [-20, 50]
+    interfaces: [I2C]
+    notes: 4S1P configuration, ISS-approved ground breaker
+
+  - id: bat-gom-nanopow-bp8
+    name: NanoPower BP8
+    manufacturer: GomSpace
+    category: battery
+    chemistry: Li-ion (18650)
+    mass_kg: 0.564
+    dimensions_mm: [94, 84, 40]
+    cost_keur: 15
+    trl: 9
+    heritage_missions: [GomSpace 6U+ missions]
+    performance:
+      capacity_wh: 100.0
+      specific_energy_wh_kg: 177
+      cycle_life: 5000
+      voltage_v: {nominal: 28.8, min: 24.0, max: 33.6}
+      operating_temp_c: [-20, 50]
+    interfaces: [I2C]
+    notes: 8S1P for 28V bus, cell balancing, heating system
+
+  - id: bat-gom-nanopow-bpx100
+    name: NanoPower BPX 100Wh
+    manufacturer: GomSpace
+    category: battery
+    chemistry: Li-ion (high-density)
+    mass_kg: 0.500
+    dimensions_mm: [93, 86, 41]
+    cost_keur: 20
+    trl: 9
+    heritage_missions: [GomSpace advanced missions]
+    performance:
+      capacity_wh: 100.0
+      specific_energy_wh_kg: 200
+      cycle_life: 3000
+      voltage_v: {nominal: 28.8, min: 24.0, max: 33.6}
+      operating_temp_c: [-20, 50]
+    interfaces: [I2C]
+    notes: Built-in heater, parallelable

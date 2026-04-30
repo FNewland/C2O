@@ -98,3 +98,20 @@ components:
     interfaces: [I2C, UART]
     operating_temp_c: [-40, 85]
     notes: Combined sun + nadir (Earth) sensor in one unit
+
+  - id: ss-gom-nanosense-fss
+    name: NanoSense FSS
+    manufacturer: GomSpace
+    category: sun_sensor
+    mass_kg: 0.002
+    dimensions_mm: [22, 11, 5]
+    cost_keur: 3
+    trl: 9
+    heritage_missions: [GOMX-3, GOMX-4]
+    performance:
+      type: fine_digital
+      fov_deg: 120
+      accuracy_deg: 0.5
+      update_rate_hz: 10
+    power_w: 0.01
+    interfaces: [I2C]

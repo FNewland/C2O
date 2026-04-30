@@ -135,3 +135,40 @@ components:
     interfaces: [I2C, SPI, UART, CAN, Ethernet, PC/104]
     operating_temp_c: [-40, 85]
     notes: Part of M6P multi-mission bus platform
+
+  - id: obc-gom-nanomind-hp-mk3
+    name: NanoMind HP MK3
+    manufacturer: GomSpace
+    category: obc
+    mass_kg: 0.240
+    dimensions_mm: [95, 95, 31.5]
+    cost_keur: 45
+    trl: 9
+    performance:
+      processor: Xilinx Zynq 7045 (dual ARM Cortex-A9)
+      clock_mhz: 800
+      ram_mb: 1024
+      flash_mb: 256
+      storage_gb: 303
+      os: Linux
+      rad_tolerance_krad: 20
+    power_w: 5.0
+    interfaces: [SpaceWire, USB, LVDS, RS485]
+
+  - id: obc-endurosat-type-i
+    name: OBC Type I
+    manufacturer: Endurosat
+    category: obc
+    mass_kg: 0.058
+    form_factor: PC/104
+    cost_keur: 10
+    trl: 9
+    performance:
+      processor: ARM Cortex-M7
+      clock_mhz: 216
+      ram_mb: 2
+      flash_mb: 2
+      storage_gb: 32
+      os: FreeRTOS
+    power_w: 0.5
+    interfaces: [CAN, RS422, RS485, SPI, I2C, UART, Ethernet]

@@ -86,3 +86,19 @@ components:
     interfaces: [UART, I2C, SPI]
     operating_temp_c: [-40, 85]
     notes: Ultra-low-cost COTS. COCOM limited (80km/500m/s). Needs radiation testing for space use.
+
+  - id: gps-gom-nanosense-gpskit
+    name: NanoSense GPS Kit
+    manufacturer: GomSpace
+    category: gps_receiver
+    mass_kg: 0.085
+    cost_keur: 20
+    trl: 9
+    performance:
+      position_accuracy_m: 1.5
+      velocity_accuracy_ms: 0.03
+      max_altitude_km: 2000
+      constellations: [GPS, GLONASS, Galileo, BeiDou]
+    power_w: 1.3
+    interfaces: [UART]
+    notes: NovAtel OEM719 + antenna, no COCOM limits

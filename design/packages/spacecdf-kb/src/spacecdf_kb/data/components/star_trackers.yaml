@@ -178,3 +178,20 @@ components:
       tracking_stars: 10
       sensitivity_mv: 5.5
     notes: Compact tracker with Canadian heritage, acquired by Rocket Lab
+
+  - id: st-cubespace-cubestar
+    name: CubeStar
+    manufacturer: CubeSpace
+    category: star_tracker
+    mass_kg: 0.040
+    cost_keur: 18
+    trl: 9
+    heritage_missions: [ZACube-2, nSight-1, EIRSAT-1, 100+ in orbit]
+    performance:
+      accuracy_arcsec: 20
+      fov_deg: [58, 47]
+      update_rate_hz: 5
+      lost_in_space: true
+      sun_exclusion_deg: 30
+    power_w: 0.7
+    interfaces: [I2C, UART, CAN]

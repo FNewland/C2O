@@ -229,3 +229,134 @@ components:
       rx_sensitivity_dbm: null
       modulation: OOK
     notes: CubeSat laser communication terminal for LEO-to-ground
+
+  - id: txr-gom-ax100
+    name: NanoCom AX100
+    manufacturer: GomSpace
+    category: transponder
+    mass_kg: 0.025
+    dimensions_mm: [65, 40, 6.5]
+    cost_keur: 5
+    trl: 9
+    heritage_missions: [GOMX-1, GOMX-3, OPS-SAT, 100+ missions]
+    performance:
+      frequency_mhz: 437
+      band: UHF
+      data_rate_bps: 38400
+      tx_power_dbm: 30
+      modulation: [GFSK, GMSK]
+    power_w: 3.0
+    interfaces: [I2C, UART, CAN]
+    operating_temp_c: [-40, 85]
+    notes: Most widely used CubeSat UHF transceiver
+
+  - id: txr-gom-link-s
+    name: NanoCom Link S
+    manufacturer: GomSpace
+    category: transponder
+    mass_kg: 0.112
+    cost_keur: 25
+    trl: 9
+    performance:
+      frequency_mhz: 2250
+      band: S
+      data_rate_bps: 7500000
+      tx_power_dbm: 30
+    power_w: 15.0
+    interfaces: [CAN, I2C]
+
+  - id: txr-gom-link-x
+    name: NanoCom Link X
+    manufacturer: GomSpace
+    category: transponder
+    mass_kg: 0.150
+    cost_keur: 40
+    trl: 9
+    performance:
+      frequency_mhz: 8200
+      band: X
+      data_rate_bps: 210000000
+      tx_power_dbm: 33
+    power_w: 23.0
+    interfaces: [CAN, I2C, LVDS]
+    notes: Up to 210 Mbps, integrated X-band antenna
+
+  - id: txr-isis-trxvu
+    name: TRXVU VHF/UHF
+    manufacturer: ISISPACE
+    category: transponder
+    mass_kg: 0.080
+    form_factor: PC/104
+    cost_keur: 10
+    trl: 9
+    heritage_missions: [Delfi-C3, QB50, 75+ missions]
+    performance:
+      frequency_mhz: 437
+      band: UHF
+      data_rate_bps: 9600
+      tx_power_dbm: 27
+      duplex: full
+    power_w: 4.8
+    interfaces: [I2C]
+
+  - id: txr-isis-txs
+    name: TxS S-Band Transmitter
+    manufacturer: ISISPACE
+    category: transponder
+    mass_kg: 0.200
+    form_factor: PC/104
+    cost_keur: 15
+    trl: 9
+    performance:
+      frequency_mhz: 2400
+      band: S
+      data_rate_bps: 4300000
+      tx_power_dbm: 27
+    power_w: 5.0
+    interfaces: [I2C, LVDS]
+
+  - id: txr-endurosat-uhf-ii
+    name: UHF Transceiver II
+    manufacturer: Endurosat
+    category: transponder
+    mass_kg: 0.200
+    cost_keur: 8
+    trl: 9
+    performance:
+      frequency_mhz: 437
+      band: UHF
+      data_rate_bps: 19600
+      tx_power_dbm: 33
+    power_w: 8.0
+    interfaces: [CAN]
+
+  - id: txr-endurosat-sband
+    name: S-Band Transceiver
+    manufacturer: Endurosat
+    category: transponder
+    mass_kg: 0.246
+    cost_keur: 20
+    trl: 9
+    performance:
+      frequency_mhz: 2200
+      band: S
+      data_rate_bps: 125000
+      tx_power_dbm: 33
+    power_w: 12.0
+    interfaces: [CAN]
+
+  - id: txr-endurosat-xband
+    name: X-Band Transmitter
+    manufacturer: Endurosat
+    category: transponder
+    mass_kg: 0.270
+    cost_keur: 30
+    trl: 9
+    performance:
+      frequency_mhz: 8200
+      band: X
+      data_rate_bps: 150000000
+      tx_power_dbm: 33
+    power_w: 12.0
+    interfaces: [UART, RS485, LVDS]
+    notes: Up to 150 Mbps, DVB-S2

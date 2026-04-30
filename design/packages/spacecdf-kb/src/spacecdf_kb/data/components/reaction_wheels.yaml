@@ -225,3 +225,65 @@ components:
       max_torque_nm: 13.0
       max_speed_rpm: 4200
     notes: CMG provides much higher torque than equivalent RW; used for agile imaging platforms
+
+  - id: rw-cubespace-cubewheel-small
+    name: CubeWheel Small
+    manufacturer: CubeSpace
+    category: reaction_wheel
+    mass_kg: 0.060
+    dimensions_mm: [28, 31, 26]
+    cost_keur: 8
+    trl: 9
+    heritage_missions: [ZACube-2, nSight-1, 80+ in orbit]
+    performance:
+      momentum_nms: 0.00177
+      max_torque_nm: 0.00023
+      max_speed_rpm: 8000
+    power_w: 0.6
+    interfaces: [I2C, UART, CAN]
+
+  - id: rw-cubespace-cubewheel-medium
+    name: CubeWheel Medium
+    manufacturer: CubeSpace
+    category: reaction_wheel
+    mass_kg: 0.120
+    dimensions_mm: [46, 46, 31.5]
+    cost_keur: 12
+    trl: 9
+    performance:
+      momentum_nms: 0.010
+      max_torque_nm: 0.001
+      max_speed_rpm: 8000
+    power_w: 1.0
+    interfaces: [I2C, UART, CAN]
+
+  - id: rw-cubespace-cubewheel-large
+    name: CubeWheel Large
+    manufacturer: CubeSpace
+    category: reaction_wheel
+    mass_kg: 0.200
+    dimensions_mm: [50, 50, 40]
+    cost_keur: 18
+    trl: 9
+    performance:
+      momentum_nms: 0.0162
+      max_torque_nm: 0.007
+      max_speed_rpm: 6000
+    power_w: 2.0
+    interfaces: [I2C, UART, CAN]
+
+  - id: rw-gom-gsw600
+    name: NanoTorque GSW-600
+    manufacturer: GomSpace
+    category: reaction_wheel
+    mass_kg: 0.235
+    dimensions_mm: [95, 95, 62]
+    cost_keur: 20
+    trl: 9
+    performance:
+      momentum_nms: 0.019
+      max_torque_nm: 0.002
+      max_speed_rpm: 6000
+    power_w: 2.5
+    interfaces: [SPI, I2C]
+    notes: 4-wheel pyramid = 940g total
