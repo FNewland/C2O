@@ -1,0 +1,88 @@
+# GPS/GNSS Receiver Knowledge Base
+# Space-grade GPS/GNSS receivers for orbit determination
+# Sources: manufacturer datasheets, satsearch.co
+
+components:
+  - id: gps-skyfox-picostar
+    name: picoStar
+    manufacturer: SkyFox Labs
+    category: gps_receiver
+    mass_kg: 0.020
+    dimensions_mm: [45, 30, 8]
+    cost_keur: 15
+    trl: 8
+    heritage_missions: [FSSCat, ESAIL]
+    performance:
+      position_accuracy_m: 10
+      velocity_accuracy_ms: 0.1
+      max_altitude_km: 600
+      max_velocity_ms: 12000
+      cold_start_s: 60
+      constellations: [GPS, GLONASS]
+    power_w: 0.8
+    interfaces: [UART, SPI]
+    operating_temp_c: [-40, 85]
+    notes: CubeSat-class GPS receiver, COCOM-unlimited
+
+  - id: gps-surrey-sgr-05u
+    name: SGR-05U
+    manufacturer: SSTL (Surrey)
+    category: gps_receiver
+    mass_kg: 0.020
+    dimensions_mm: [72, 46, 11]
+    cost_keur: 25
+    trl: 9
+    heritage_missions: [TechDemoSat-1, RemoveDEBRIS, NovaSAR]
+    performance:
+      position_accuracy_m: 10
+      velocity_accuracy_ms: 0.25
+      max_altitude_km: 1200
+      max_velocity_ms: 15000
+      cold_start_s: 45
+      constellations: [GPS]
+    power_w: 1.0
+    interfaces: [UART, RS422]
+    operating_temp_c: [-20, 50]
+    notes: Extensive heritage, Surrey space GPS family
+
+  - id: gps-novatel-oem719
+    name: OEM719
+    manufacturer: NovAtel
+    category: gps_receiver
+    mass_kg: 0.048
+    dimensions_mm: [60, 100, 9]
+    cost_keur: 10
+    trl: 7
+    heritage_missions: [various CubeSats]
+    performance:
+      position_accuracy_m: 1.5
+      velocity_accuracy_ms: 0.03
+      max_altitude_km: 2000
+      max_velocity_ms: 15000
+      cold_start_s: 30
+      constellations: [GPS, GLONASS, Galileo, BeiDou]
+    power_w: 1.8
+    interfaces: [UART, USB]
+    operating_temp_c: [-40, 85]
+    notes: Multi-constellation GNSS, highest accuracy but needs space qualification
+
+  - id: gps-ublox-max-m10s
+    name: MAX-M10S
+    manufacturer: u-blox
+    category: gps_receiver
+    mass_kg: 0.002
+    dimensions_mm: [10, 10, 2]
+    cost_keur: 0.5
+    trl: 5
+    heritage_missions: []
+    performance:
+      position_accuracy_m: 2.5
+      velocity_accuracy_ms: 0.05
+      max_altitude_km: 80
+      max_velocity_ms: 500
+      cold_start_s: 25
+      constellations: [GPS, GLONASS, Galileo, BeiDou]
+    power_w: 0.03
+    interfaces: [UART, I2C, SPI]
+    operating_temp_c: [-40, 85]
+    notes: Ultra-low-cost COTS. COCOM limited (80km/500m/s). Needs radiation testing for space use.

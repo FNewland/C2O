@@ -1,0 +1,146 @@
+# CubeSat Structure Knowledge Base
+# Standard CubeSat frames and deployment mechanisms
+# Per Cal Poly CubeSat Design Specification (CDS)
+# Sources: manufacturer catalogues, cubesatshop.com
+
+components:
+  - id: struct-isis-1u
+    name: 1U CubeSat Structure
+    manufacturer: ISISPACE
+    category: cubesat_structure
+    mass_kg: 0.200
+    dimensions_mm: [100, 100, 113.5]
+    form_factor: 1U
+    cost_keur: 5
+    trl: 9
+    heritage_missions: [Delfi-C3, BRIK-II, TRITON-2]
+    performance:
+      volume_cm3: 1000
+      material: Al-7075-T6
+      rails: CDS_compliant
+      deployment_switches: 4
+      pc104_slots: 4
+    interfaces: [CDS rail, PC/104 stack]
+    operating_temp_c: [-40, 85]
+    notes: Standard 1U frame per Cal Poly CDS Rev 14
+
+  - id: struct-isis-2u
+    name: 2U CubeSat Structure
+    manufacturer: ISISPACE
+    category: cubesat_structure
+    mass_kg: 0.300
+    dimensions_mm: [100, 100, 227]
+    form_factor: 2U
+    cost_keur: 6
+    trl: 9
+    heritage_missions: [Various]
+    performance:
+      volume_cm3: 2000
+      material: Al-7075-T6
+      rails: CDS_compliant
+      deployment_switches: 4
+      pc104_slots: 8
+
+  - id: struct-isis-3u
+    name: 3U CubeSat Structure
+    manufacturer: ISISPACE
+    category: cubesat_structure
+    mass_kg: 0.380
+    dimensions_mm: [100, 100, 340.5]
+    form_factor: 3U
+    cost_keur: 7
+    trl: 9
+    heritage_missions: [OPS-SAT, many university missions]
+    performance:
+      volume_cm3: 3000
+      material: Al-7075-T6
+      rails: CDS_compliant
+      deployment_switches: 4
+      pc104_slots: 12
+
+  - id: struct-isis-6u
+    name: 6U CubeSat Structure
+    manufacturer: ISISPACE
+    category: cubesat_structure
+    mass_kg: 0.700
+    dimensions_mm: [226.3, 100, 340.5]
+    form_factor: 6U
+    cost_keur: 10
+    trl: 9
+    heritage_missions: [Various commercial]
+    performance:
+      volume_cm3: 6000
+      material: Al-7075-T6
+      rails: CDS_compliant
+      deployment_switches: 4
+      pc104_slots: 12
+
+  - id: struct-endurosat-1u
+    name: 1U CubeSat Structure
+    manufacturer: Endurosat
+    category: cubesat_structure
+    mass_kg: 0.180
+    dimensions_mm: [100, 100, 113.5]
+    form_factor: 1U
+    cost_keur: 4
+    trl: 9
+    heritage_missions: [EnduroSat One]
+    performance:
+      volume_cm3: 1000
+      material: Al-6082-T6
+      rails: CDS_compliant
+      deployment_switches: 4
+      pc104_slots: 4
+
+  - id: struct-endurosat-3u
+    name: 3U CubeSat Structure
+    manufacturer: Endurosat
+    category: cubesat_structure
+    mass_kg: 0.350
+    dimensions_mm: [100, 100, 340.5]
+    form_factor: 3U
+    cost_keur: 6
+    trl: 9
+    heritage_missions: [EnduroSat One]
+    performance:
+      volume_cm3: 3000
+      material: Al-6082-T6
+      rails: CDS_compliant
+      deployment_switches: 4
+      pc104_slots: 12
+
+  - id: struct-endurosat-6u
+    name: 6U CubeSat Structure
+    manufacturer: Endurosat
+    category: cubesat_structure
+    mass_kg: 0.650
+    dimensions_mm: [226.3, 100, 340.5]
+    form_factor: 6U
+    cost_keur: 8
+    trl: 9
+    heritage_missions: []
+    performance:
+      volume_cm3: 6000
+      material: Al-6082-T6
+      rails: CDS_compliant
+      deployment_switches: 4
+      pc104_slots: 12
+
+  - id: struct-pumpkin-supernova-6u
+    name: Supernova 6U
+    manufacturer: Pumpkin
+    category: cubesat_structure
+    mass_kg: 0.900
+    dimensions_mm: [226.3, 100, 340.5]
+    form_factor: 6U
+    cost_keur: 12
+    trl: 9
+    heritage_missions: [RAVAN, CIRAS, HaloSat]
+    performance:
+      volume_cm3: 6000
+      material: Al-7075-T6
+      rails: CDS_compliant
+      deployment_switches: 4
+      pc104_slots: 12
+      integrated_solar_panel_mounting: true
+    notes: US-made, includes integrated deployment hardware

@@ -1,0 +1,110 @@
+# Antenna Knowledge Base
+# CubeSat antennas for TTC and payload downlink
+# Sources: manufacturer datasheets, cubesatshop.com
+
+components:
+  - id: ant-endurosat-uhf-dipole
+    name: UHF Dipole Antenna
+    manufacturer: Endurosat
+    category: antenna
+    mass_kg: 0.040
+    dimensions_mm: [98, 98, 7]
+    cost_keur: 2
+    trl: 9
+    heritage_missions: [EnduroSat One]
+    performance:
+      frequency_mhz: 435
+      band: UHF
+      gain_dbi: 2.0
+      polarisation: linear
+      type: dipole_deployable
+      deployment: tape_spring
+    operating_temp_c: [-40, 85]
+    notes: Standard CubeSat UHF antenna, 4x deployable tape springs
+
+  - id: ant-endurosat-sband-patch
+    name: S-Band Patch Antenna
+    manufacturer: Endurosat
+    category: antenna
+    mass_kg: 0.045
+    dimensions_mm: [98, 98, 5]
+    cost_keur: 3
+    trl: 9
+    heritage_missions: [EnduroSat One]
+    performance:
+      frequency_mhz: 2400
+      band: S
+      gain_dbi: 6.0
+      polarisation: RHCP
+      type: patch
+      deployment: body_mounted
+
+  - id: ant-endurosat-xband-patch
+    name: X-Band Patch Antenna
+    manufacturer: Endurosat
+    category: antenna
+    mass_kg: 0.050
+    dimensions_mm: [98, 98, 6]
+    cost_keur: 5
+    trl: 8
+    heritage_missions: []
+    performance:
+      frequency_mhz: 8200
+      band: X
+      gain_dbi: 8.0
+      polarisation: RHCP
+      type: patch_array
+      deployment: body_mounted
+
+  - id: ant-isis-uhf-deploy
+    name: UHF Deployable Antenna System
+    manufacturer: ISISPACE
+    category: antenna
+    mass_kg: 0.055
+    dimensions_mm: [98, 98, 7]
+    cost_keur: 3
+    trl: 9
+    heritage_missions: [Delfi-C3, QB50, many CubeSats]
+    performance:
+      frequency_mhz: 435
+      band: UHF
+      gain_dbi: 2.0
+      polarisation: linear
+      type: turnstile_deployable
+      deployment: burn_wire
+    notes: Most widely used CubeSat UHF antenna system
+
+  - id: ant-anywaves-sband
+    name: CubeSat S-Band Antenna
+    manufacturer: Anywaves
+    category: antenna
+    mass_kg: 0.030
+    dimensions_mm: [80, 80, 5]
+    cost_keur: 4
+    trl: 9
+    heritage_missions: [ANGELS, EyeSat]
+    performance:
+      frequency_mhz: 2200
+      band: S
+      gain_dbi: 5.5
+      polarisation: RHCP
+      type: patch
+      deployment: body_mounted
+
+  - id: ant-anywaves-xband
+    name: CubeSat X-Band Antenna
+    manufacturer: Anywaves
+    category: antenna
+    mass_kg: 0.060
+    dimensions_mm: [80, 80, 8]
+    cost_keur: 8
+    trl: 9
+    heritage_missions: [ANGELS]
+    performance:
+      frequency_mhz: 8200
+      band: X
+      gain_dbi: 10.0
+      polarisation: RHCP
+      type: patch_array
+      deployment: body_mounted
+    notes: French space heritage, ESA-funded development

@@ -1,0 +1,97 @@
+# Magnetorquer Knowledge Base
+# Magnetic torque rods and coils for CubeSat attitude control
+# Sources: manufacturer datasheets, satsearch.co
+
+components:
+  - id: mtq-zarm-mt0-1
+    name: MT0.1-1
+    manufacturer: ZARM Technik
+    category: magnetorquer
+    mass_kg: 0.028
+    dimensions_mm: [70, 9, 9]
+    cost_keur: 3
+    trl: 9
+    heritage_missions: [UWE-3, BEESAT-1, MOVE-II]
+    performance:
+      dipole_moment_am2: 0.1
+      residual_dipole_am2: 0.002
+      axes: 1
+    power_w: 0.2
+    interfaces: [analog, H-bridge]
+    operating_temp_c: [-40, 80]
+    notes: CubeSat standard magnetorquer rod. Use 3x for 3-axis control.
+
+  - id: mtq-zarm-mt0-2
+    name: MT0.2-1
+    manufacturer: ZARM Technik
+    category: magnetorquer
+    mass_kg: 0.050
+    dimensions_mm: [70, 9, 9]
+    cost_keur: 4
+    trl: 9
+    heritage_missions: [UWE-4, MOVE-II]
+    performance:
+      dipole_moment_am2: 0.2
+      residual_dipole_am2: 0.003
+      axes: 1
+    power_w: 0.5
+    interfaces: [analog, H-bridge]
+    operating_temp_c: [-40, 80]
+    notes: Higher-moment rod for larger CubeSats (6U+)
+
+  - id: mtq-cubespace-cubetorquer
+    name: CubeTorquer
+    manufacturer: CubeSpace
+    category: magnetorquer
+    mass_kg: 0.090
+    dimensions_mm: [96, 90, 8]
+    form_factor: PC/104
+    cost_keur: 5
+    trl: 9
+    heritage_missions: [ZACube-2, nSight-1]
+    performance:
+      dipole_moment_am2: 0.2
+      residual_dipole_am2: 0.003
+      axes: 3
+    power_w: 0.6
+    interfaces: [I2C, PC/104]
+    operating_temp_c: [-40, 85]
+    notes: 3-axis integrated magnetorquer on PC/104 board
+
+  - id: mtq-isis-imtq
+    name: iMTQ
+    manufacturer: ISISPACE
+    category: magnetorquer
+    mass_kg: 0.196
+    dimensions_mm: [96, 90, 18]
+    form_factor: PC/104
+    cost_keur: 8
+    trl: 9
+    heritage_missions: [Delfi-C3, BRIK-II, TRITON-2]
+    performance:
+      dipole_moment_am2: 0.2
+      residual_dipole_am2: 0.005
+      axes: 3
+      includes_magnetometer: true
+    power_w: 1.0
+    interfaces: [I2C, PC/104]
+    operating_temp_c: [-40, 85]
+    notes: 3-axis magnetorquer with integrated 3-axis magnetometer
+
+  - id: mtq-newspace-nctr-m012
+    name: NCTR-M012
+    manufacturer: NewSpace Systems
+    category: magnetorquer
+    mass_kg: 0.030
+    dimensions_mm: [70, 9, 9]
+    cost_keur: 3
+    trl: 9
+    heritage_missions: [ZACube-1, SUNSAT]
+    performance:
+      dipole_moment_am2: 0.12
+      residual_dipole_am2: 0.002
+      axes: 1
+    power_w: 0.2
+    interfaces: [analog, H-bridge]
+    operating_temp_c: [-40, 85]
+    notes: South African heritage magnetorquer rod
