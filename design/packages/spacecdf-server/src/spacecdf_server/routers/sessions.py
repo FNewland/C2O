@@ -94,8 +94,8 @@ async def create_session(req: CreateSessionRequest) -> dict:
     mgr = get_session_manager()
     session = mgr.create_session(req.study_id, req.name)
 
-    # Run initial convergence
-    await mgr.initialise_session_state(session.id, study.requirements)
+    # Run initial convergence — pass ConOps so agents use operational modes
+    await mgr.initialise_session_state(session.id, study.requirements, conops=study.conops)
 
     return {
         "id": session.id,

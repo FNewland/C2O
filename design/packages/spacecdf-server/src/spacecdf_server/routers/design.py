@@ -1,17 +1,21 @@
 """SpaceCDF — Design Execution API.
 
 Runs the design convergence loop and returns results.
+Now accepts full V-model input: requirements + mission_need → auto-generates
+ConOps modes that are passed to DesignState so agents use them.
 """
 from __future__ import annotations
 
+from typing import Any
+
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from spacecdf_common.agents.base import DesignState
 from spacecdf_common.models.study import MissionRequirements
 from spacecdf_agents import DesignLoopOrchestrator, ConvergenceConfig
 
-from .studies import get_study_store
+from .studies import get_study_store, _generate_default_conops
 
 router = APIRouter()
 
@@ -50,7 +54,7 @@ async def run_design_loop(study_id: str, request: DesignRunRequest | None = None
     orchestrator = DesignLoopOrchestrator(config=config)
     orchestrator.initialise_agents()
 
-    loop_result = await orchestrator.run(study.requirements)
+    loop_result = await orchestrator.run(study.requirements, conops=study.conops)
 
     # Update study with results
     study.iterations = loop_result.iterations
@@ -92,12 +96,38 @@ async def run_design_loop(study_id: str, request: DesignRunRequest | None = None
     )
 
 
+class QuickDesignRequest(BaseModel):
+    """Accepts requirements + optional mission_need for full V-model flow."""
+    requirements: MissionRequirements | None = None
+    mission_need: dict[str, Any] | None = None
+    # Backward compat: if sent as flat MissionRequirements, parse at validation
+    name: str | None = None
+    mission_type: str | None = None
+
+
 @router.post("/quick-design")
-async def quick_design(requirements: MissionRequirements) -> DesignRunResponse:
-    """One-shot design: create study + run loop in a single call."""
+async def quick_design(body: QuickDesignRequest | MissionRequirements) -> DesignRunResponse:
+    """One-shot design: create study + run loop in a single call.
+
+    Accepts either {requirements, mission_need} or flat MissionRequirements
+    for backward compatibility. When mission_need is provided, auto-generates
+    ConOps modes that drive multi-mode power/thermal/AOCS sizing.
+    """
+    # Parse input — handle both new format and legacy flat requirements
+    if isinstance(body, MissionRequirements):
+        requirements = body
+        conops = _generate_default_conops(requirements)
+    elif body.requirements:
+        requirements = body.requirements
+        conops = _generate_default_conops(requirements)
+    else:
+        # Legacy: body might be flat MissionRequirements fields
+        requirements = MissionRequirements(**body.model_dump(exclude_none=True))
+        conops = _generate_default_conops(requirements)
+
     orchestrator = DesignLoopOrchestrator()
     orchestrator.initialise_agents()
-    loop_result = await orchestrator.run(requirements)
+    loop_result = await orchestrator.run(requirements, conops=conops)
 
     params = {}
     if loop_result.final_state:

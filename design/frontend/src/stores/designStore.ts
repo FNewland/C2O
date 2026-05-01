@@ -184,10 +184,14 @@ export const useDesignStore = create<DesignStore>((set, get) => ({
 
   createStudy: async () => {
     try {
+      const { requirements, missionNeed } = get()
       const res = await fetch(`${API_BASE}/studies/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(get().requirements),
+        body: JSON.stringify({
+          requirements,
+          mission_need: missionNeed,
+        }),
       })
       if (!res.ok) throw new Error(`${res.status}`)
       const data = await res.json()
@@ -202,10 +206,14 @@ export const useDesignStore = create<DesignStore>((set, get) => ({
   runDesign: async () => {
     set({ isRunning: true, error: null })
     try {
+      const { requirements, missionNeed } = get()
       const res = await fetch(`${API_BASE}/design/quick-design`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(get().requirements),
+        body: JSON.stringify({
+          requirements,
+          mission_need: missionNeed,
+        }),
       })
       if (!res.ok) {
         throw new Error(`Server error: ${res.status}`)

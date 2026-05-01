@@ -129,6 +129,7 @@ class DesignLoopOrchestrator:
         requirements: MissionRequirements,
         initial_state: DesignState | None = None,
         knowledge_base: object | None = None,
+        conops: object | None = None,
     ) -> DesignLoopResult:
         """Execute the full design convergence loop.
 
@@ -136,6 +137,8 @@ class DesignLoopOrchestrator:
             requirements: Mission requirements driving the design.
             initial_state: Optional pre-populated design state.
             knowledge_base: Knowledge base for component lookups.
+            conops: ConceptOfOperations with operational modes (drives
+                    multi-mode power/thermal/AOCS sizing when provided).
 
         Returns:
             DesignLoopResult with converged design and budgets.
@@ -147,10 +150,11 @@ class DesignLoopOrchestrator:
         if not self._agents:
             self.initialise_agents()
 
-        # Initialise design state
+        # Initialise design state with ConOps (for multi-mode agent sizing)
         state = initial_state or DesignState(
             requirements=requirements.model_dump(),
             knowledge_base=knowledge_base,
+            conops=conops,
         )
 
         # Seed state from requirements

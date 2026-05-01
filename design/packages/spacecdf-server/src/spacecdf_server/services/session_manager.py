@@ -389,11 +389,16 @@ class SessionManager:
         self,
         session_id: str,
         requirements: MissionRequirements,
+        conops: object | None = None,
     ) -> None:
-        """Run initial full convergence to seed the session design state."""
+        """Run initial full convergence to seed the session design state.
+
+        When conops is provided, passes it to the orchestrator so agents
+        use operational mode profiles for multi-mode sizing.
+        """
         orchestrator = DesignLoopOrchestrator()
         orchestrator.initialise_agents()
-        loop_result = await orchestrator.run(requirements)
+        loop_result = await orchestrator.run(requirements, conops=conops)
         if loop_result.final_state:
             self._session_states[session_id] = loop_result.final_state
 
