@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useDesignStore } from '../stores/designStore'
 import { MissionNeedPanel } from './MissionNeedPanel'
+import { MissionTradeView } from './MissionTradeView'
 import { RequirementsPanel } from './RequirementsPanel'
 
 type Step = 'need' | 'concept' | 'requirements' | 'design'
@@ -70,7 +71,7 @@ export function StudyStepper() {
           <MissionNeedPanel onNext={() => setActiveStep('concept')} />
         )}
         {activeStep === 'concept' && (
-          <MissionNeedPanel section="concept" onNext={() => setActiveStep('requirements')} />
+          <MissionTradeView onConceptSelected={() => setActiveStep('requirements')} />
         )}
         {activeStep === 'requirements' && (
           <RequirementsPanel />

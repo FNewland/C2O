@@ -245,15 +245,17 @@ def _compute_orbit_properties(
     # Swath width (assuming 5000 pixel detector)
     c.swath_km = 5000 * c.achievable_gsd_m / 1000
 
-    # Revisit time (simplified — depends on swath and orbit repeat)
-    earth_circumference_km = 2 * math.pi * R_EARTH_KM * math.cos(math.radians(sum(lat_band) / 2))
-    if c.swath_km > 0:
-        strips_per_day = c.orbits_per_day
-        coverage_per_day_km = strips_per_day * c.swath_km
-        if coverage_per_day_km > 0:
-            c.revisit_days = max(1, earth_circumference_km / coverage_per_day_km)
-        else:
-            c.revisit_days = 999
+    # Revisit time (for a single satellite in polar/SSO orbit)
+    # Each orbit, the ground track shifts west by (360° / orbits_per_day) × cos(inclination).
+    # At the equator, the inter-orbit spacing is Earth_circumference / orbits_per_day.
+    # Revisit = inter_orbit_spacing / swath_width (number of days to fill the gap).
+    # At higher latitudes, tracks converge so revisit improves.
+    target_lat = (lat_band[0] + lat_band[1]) / 2
+    lat_circumference_km = 2 * math.pi * R_EARTH_KM * math.cos(math.radians(target_lat))
+    inter_orbit_km = lat_circumference_km / max(c.orbits_per_day, 1)
+
+    if c.swath_km > 0 and inter_orbit_km > 0:
+        c.revisit_days = max(1.0, inter_orbit_km / c.swath_km)
     else:
         c.revisit_days = 999
 

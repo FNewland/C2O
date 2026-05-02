@@ -26,6 +26,7 @@ from ..services.orbit_trade import compute_orbit_trade
 from ..services.class_advisor import advise_mission_class
 from ..services.traceability import trace_budget_to_need
 from ..services.session_guidance import recommend_next_session
+from ..services.mission_trade import compute_mission_trade
 
 router = APIRouter()
 
@@ -347,3 +348,35 @@ async def session_guidance_endpoint(study_id: str) -> dict:
         "components_selected": 0,
         "orbit_decided": study.requirements.orbit.altitude_km != 500,  # Default = not decided
     })
+
+
+# --- Mission Trade (Space vs Non-Space) ---
+
+class MissionTradeRequest(BaseModel):
+    target_gsd_m: float = 10.0
+    target_revisit_days: float = 3.0
+    target_coverage: str = "regional"
+    target_latency_hours: float = 24.0
+    target_bands: list[str] | None = None
+    require_data_ownership: bool = False
+    require_scheduling_control: bool = False
+    max_annual_budget_keur: float = 500.0
+
+@router.post("/mission-trade")
+async def mission_trade_endpoint(req: MissionTradeRequest) -> dict:
+    """Compute space vs non-space mission trade analysis.
+
+    Should be called BEFORE committing to building a satellite.
+    Returns scored alternatives including existing data, commercial,
+    aerial, ground, and new satellite options.
+    """
+    return compute_mission_trade(
+        target_gsd_m=req.target_gsd_m,
+        target_revisit_days=req.target_revisit_days,
+        target_coverage=req.target_coverage,
+        target_latency_hours=req.target_latency_hours,
+        target_bands=req.target_bands,
+        require_data_ownership=req.require_data_ownership,
+        require_scheduling_control=req.require_scheduling_control,
+        max_annual_budget_keur=req.max_annual_budget_keur,
+    )
