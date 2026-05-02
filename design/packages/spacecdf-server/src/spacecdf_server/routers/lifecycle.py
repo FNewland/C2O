@@ -22,6 +22,10 @@ from ..services.launch_planner import check_launch_compatibility, generate_campa
 from ..services.bom_generator import generate_bom
 from ..services.fit_gap_analysis import analyze_component_fit, analyze_category
 from ..services.ground_segment_trade import compute_ground_segment_trade
+from ..services.orbit_trade import compute_orbit_trade
+from ..services.class_advisor import advise_mission_class
+from ..services.traceability import trace_budget_to_need
+from ..services.session_guidance import recommend_next_session
 
 router = APIRouter()
 
@@ -203,3 +207,143 @@ async def engineering_budgets_endpoint(study_id: str) -> dict:
         },
         "requirement_impacts": impacts,
     }
+
+
+# --- Orbit Trade ---
+
+@router.get("/orbit-trade/{study_id}")
+async def orbit_trade_endpoint(study_id: str) -> dict:
+    """Compute orbit trade study from study objectives."""
+    store = get_study_store()
+    study = store.get(study_id)
+    if not study:
+        raise HTTPException(404)
+    # Extract parameters from objectives or requirements
+    gsd = 10.0
+    revisit = 3.0
+    aperture = 0.15
+    if study.requirements.payloads:
+        pl = study.requirements.payloads[0]
+        gsd = getattr(pl, 'gsd_m', 10.0) or 10.0  # Default 10m if not specified
+        aperture = 0.15  # Default 15cm aperture
+    return compute_orbit_trade(
+        target_gsd_m=gsd, target_revisit_days=revisit, aperture_m=aperture,
+        max_mass_kg=study.requirements.target_mass_kg or 12,
+        max_cost_meur=study.requirements.target_cost_meur or 10,
+        min_lifetime_years=study.requirements.design_lifetime_years,
+    )
+
+
+class OrbitTradeRequest(BaseModel):
+    target_gsd_m: float = 10.0
+    target_revisit_days: float = 3.0
+    target_latitude_band: list[float] = [-30.0, 30.0]
+    aperture_m: float = 0.15
+    max_mass_kg: float = 12.0
+    max_cost_meur: float = 10.0
+    min_lifetime_years: float = 2.0
+
+@router.post("/orbit-trade")
+async def orbit_trade_custom(req: OrbitTradeRequest) -> dict:
+    """Compute orbit trade with custom parameters."""
+    return compute_orbit_trade(
+        target_gsd_m=req.target_gsd_m, target_revisit_days=req.target_revisit_days,
+        target_latitude_band=tuple(req.target_latitude_band[:2]),
+        aperture_m=req.aperture_m, max_mass_kg=req.max_mass_kg,
+        max_cost_meur=req.max_cost_meur, min_lifetime_years=req.min_lifetime_years,
+    )
+
+
+# --- Mission Class Advisor ---
+
+class ClassAdvisorRequest(BaseModel):
+    target_gsd_m: float | None = None
+    target_revisit_days: float | None = None
+    target_lifetime_years: float | None = None
+    max_budget_meur: float | None = None
+    max_schedule_months: int | None = None
+    target_pointing_deg: float | None = None
+    target_data_rate_mbps: float | None = None
+
+@router.post("/class-advisor")
+async def class_advisor_endpoint(req: ClassAdvisorRequest) -> dict:
+    """Advise which spacecraft class fits the mission objectives."""
+    return advise_mission_class(
+        target_gsd_m=req.target_gsd_m, target_revisit_days=req.target_revisit_days,
+        target_lifetime_years=req.target_lifetime_years, max_budget_meur=req.max_budget_meur,
+        max_schedule_months=req.max_schedule_months, target_pointing_deg=req.target_pointing_deg,
+        target_data_rate_mbps=req.target_data_rate_mbps,
+    )
+
+@router.get("/class-advisor/{study_id}")
+async def class_advisor_from_study(study_id: str) -> dict:
+    """Advise mission class from a study's requirements."""
+    store = get_study_store()
+    study = store.get(study_id)
+    if not study:
+        raise HTTPException(404)
+    pointing = min((p.pointing_accuracy_deg for p in study.requirements.payloads), default=None)
+    data_rate = max((p.data_rate_mbps for p in study.requirements.payloads), default=None)
+    return advise_mission_class(
+        target_lifetime_years=study.requirements.design_lifetime_years,
+        max_budget_meur=study.requirements.target_cost_meur,
+        target_pointing_deg=pointing, target_data_rate_mbps=data_rate,
+    )
+
+
+# --- Traceability ---
+
+@router.get("/traceability/{study_id}/{budget_name}")
+async def traceability_endpoint(study_id: str, budget_name: str) -> dict:
+    """Trace a budget to stakeholder impact."""
+    from spacecdf_common.models.budgets import compute_engineering_budgets
+    from spacecdf_common.models.requirements import generate_requirements
+    state, _, _ = await _run_design_for_study(study_id)
+    store = get_study_store()
+    study = store.get(study_id)
+    if not study:
+        raise HTTPException(404)
+
+    budgets = compute_engineering_budgets(state.parameters, study.requirements.model_dump(),
+        spacecraft_class=study.requirements.spacecraft_class)
+    budget = budgets.get(budget_name)
+    if not budget:
+        raise HTTPException(404, f"Budget {budget_name} not found")
+
+    reqs = generate_requirements(study.requirements.model_dump())
+    funcs = [f.model_dump() for f in study.functional_decomposition.functions] if study.functional_decomposition else []
+    objs = [o.model_dump() for o in study.mission_need.objectives] if study.mission_need else []
+    shs = [s.model_dump() for s in study.mission_need.stakeholders] if study.mission_need else []
+
+    report = trace_budget_to_need(
+        budget_name=budget_name, budget_status=budget.status.value,
+        budget_margin_percent=budget.margin_percent,
+        parameters=state.parameters,
+        requirements=[r.model_dump() for r in reqs],
+        functions=funcs, objectives=objs, stakeholders=shs,
+    )
+    return {
+        "trigger": report.trigger,
+        "severity": report.severity,
+        "chain": [{"level": l.level, "id": l.id, "text": l.text, "status": l.status} for l in report.chain],
+        "recovery_options": [{"description": o.description, "subsystem": o.subsystem, "impact": o.impact,
+                              "feasibility": o.feasibility, "trade_off": o.trade_off} for o in report.recovery_options],
+        "stakeholder_impact": report.stakeholder_impact,
+    }
+
+
+# --- Session Guidance ---
+
+@router.get("/session-guidance/{study_id}")
+async def session_guidance_endpoint(study_id: str) -> dict:
+    """Recommend what session to run next based on study maturity."""
+    store = get_study_store()
+    study = store.get(study_id)
+    if not study:
+        raise HTTPException(404)
+    return recommend_next_session({
+        "mission_need": study.mission_need.model_dump() if study.mission_need else {},
+        "has_design_result": False,  # Would check design state in production
+        "components_selected": 0,
+        "orbit_decided": study.requirements.orbit.altitude_km != 500,  # Default = not decided
+    })
