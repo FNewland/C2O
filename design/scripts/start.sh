@@ -31,7 +31,8 @@ case "${1:-both}" in
         ;;
     frontend)
         echo "Starting SpaceCDF frontend on http://localhost:5173"
-        cd frontend && npm run dev
+        echo "  Remote access: http://$(tailscale ip -4 2>/dev/null || echo 'your-ip'):5173"
+        cd frontend && npm run dev -- --host 0.0.0.0
         ;;
     design)
         echo "Running design loop..."
@@ -46,7 +47,7 @@ case "${1:-both}" in
         uvicorn spacecdf_server.app:app --reload --host 0.0.0.0 --port 8000 &
         BACKEND_PID=$!
         # Start frontend
-        cd frontend && npm run dev &
+        cd frontend && npm run dev -- --host 0.0.0.0 &
         FRONTEND_PID=$!
         # Wait for either to exit
         trap "kill $BACKEND_PID $FRONTEND_PID 2>/dev/null" EXIT

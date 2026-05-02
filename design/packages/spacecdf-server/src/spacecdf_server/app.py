@@ -12,7 +12,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from .routers import studies, design, agents, kb, exports, positions, engineering, sessions, ws, templates, ecss, snapshots, optimize, compliance, lifecycle
+from .routers import studies, design, agents, kb, exports, positions, engineering, sessions, ws, templates, ecss, snapshots, optimize, compliance, lifecycle, ai
 from .db.engine import DATABASE_URL, dispose_engine, get_engine
 from .db.write_queue import start_worker, stop_worker
 
@@ -112,6 +112,7 @@ app.include_router(snapshots.router, prefix="/api/snapshots", tags=["Snapshots"]
 app.include_router(optimize.router, prefix="/api/optimize", tags=["Optimize"])
 app.include_router(compliance.router, prefix="/api/compliance", tags=["Compliance"])
 app.include_router(lifecycle.router, prefix="/api/lifecycle", tags=["Lifecycle"])
+app.include_router(ai.router, prefix="/api/ai", tags=["AI Advisor"])
 app.include_router(ws.router, tags=["WebSocket"])
 
 
