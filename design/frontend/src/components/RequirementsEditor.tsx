@@ -13,6 +13,8 @@ interface SuggestedReq {
   threshold: number; operator: string; unit: string
   verification_method: string; objective_id: string; function_id: string
   rationale: string; status: string
+  level: string  // "mission" | "system" | "subsystem"
+  parent_id: string | null
 }
 
 interface SMARTResult {
@@ -91,6 +93,9 @@ export function RequirementsEditor({ studyId }: { studyId: string | null }) {
   const suggested = requirements.filter(r => r.status === 'suggested')
   const rejected = requirements.filter(r => r.status === 'rejected')
 
+  const [levelFilter, setLevelFilter] = useState<string>('all')
+  const LEVELS = ['all', 'mission', 'system', 'subsystem']
+
   return (
     <div style={{ padding: '1rem', overflowY: 'auto', height: '100%' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
@@ -106,6 +111,21 @@ export function RequirementsEditor({ studyId }: { studyId: string | null }) {
           </button>
         </div>
       </div>
+
+      {/* Level filter */}
+      {requirements.length > 0 && (
+        <div style={{ display: 'flex', gap: '0.3rem', marginBottom: '0.75rem' }}>
+          {LEVELS.map(l => (
+            <button key={l} onClick={() => setLevelFilter(l)} style={{
+              padding: '0.2rem 0.5rem', fontSize: '0.72rem', borderRadius: '3px', cursor: 'pointer',
+              background: levelFilter === l ? (TYPE_COLORS[l] || '#3b82f6') + '22' : 'transparent',
+              border: `1px solid ${levelFilter === l ? TYPE_COLORS[l] || '#3b82f6' : '#374151'}`,
+              color: levelFilter === l ? TYPE_COLORS[l] || '#3b82f6' : '#6b7280',
+              textTransform: 'capitalize',
+            }}>{l === 'all' ? 'All Levels' : l}</button>
+          ))}
+        </div>
+      )}
 
       {!studyId && (
         <div style={{ color: '#6b7280', fontSize: '0.85rem', padding: '2rem', textAlign: 'center' }}>
