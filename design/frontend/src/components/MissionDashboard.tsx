@@ -5,6 +5,7 @@ import { useActiveParameters, useCanEditParameter, useHasActiveSession } from '.
 import { MassWaterfall } from './MassWaterfall'
 import { PowerProfile } from './PowerProfile'
 import { SustainabilityCard } from './SustainabilityCard'
+import { BudgetComparison } from './BudgetComparison'
 
 // Extended domain order including all 20 agent domains
 const DOMAIN_ORDER = [
@@ -318,7 +319,10 @@ export function MissionDashboard() {
         <VolumeReliabilityCard parameters={p} />
       </div>
 
-      {/* Row 4: Community */}
+      {/* Row 4: Budget Breakdown */}
+      <BudgetComparison />
+
+      {/* Row 5: Community */}
       <CommunityCard parameters={p} />
 
       {/* Row 5: Collapsible all parameters */}

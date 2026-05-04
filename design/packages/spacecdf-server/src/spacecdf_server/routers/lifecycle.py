@@ -582,3 +582,61 @@ async def run_consistency_check_endpoint(study_id: str) -> dict:
             for i in report.issues
         ],
     }
+
+
+# --- Spectrum & Licensing ---
+
+@router.get("/spectrum/bands")
+async def get_spectrum_bands(
+    mission_type: str = "earth_observation",
+    license_type: str = "commercial",
+    data_rate_mbps: float = 10.0,
+) -> dict:
+    """Get available frequency bands filtered by mission type and license."""
+    from ..services.spectrum import get_bands_for_mission
+    bands = get_bands_for_mission(mission_type, license_type, data_rate_mbps)
+    return {"bands": bands, "count": len(bands)}
+
+
+@router.post("/spectrum/itu-api-template")
+async def generate_itu_template(body: dict[str, Any]) -> dict:
+    """Generate ITU Advance Publication Information filing template."""
+    from ..services.spectrum import generate_itu_api_template
+    return generate_itu_api_template(**body)
+
+
+@router.post("/spectrum/iaru-template")
+async def generate_iaru_template(body: dict[str, Any]) -> dict:
+    """Generate IARU amateur satellite coordination request template."""
+    from ..services.spectrum import generate_iaru_coordination_template
+    return generate_iaru_coordination_template(**body)
+
+
+# --- Regulatory Paperwork ---
+
+@router.post("/regulatory/rsssa")
+async def generate_rsssa(body: dict[str, Any]) -> dict:
+    """Generate Canadian RSSSA filing template."""
+    from ..services.regulatory import generate_rsssa_template
+    return generate_rsssa_template(**body)
+
+
+@router.post("/regulatory/export-assessment")
+async def generate_export(body: dict[str, Any]) -> dict:
+    """Generate export control classification assessment."""
+    from ..services.regulatory import generate_export_assessment
+    return generate_export_assessment(**body)
+
+
+@router.post("/regulatory/copuos-registration")
+async def generate_copuos(body: dict[str, Any]) -> dict:
+    """Generate UN COPUOS registration template."""
+    from ..services.regulatory import generate_copuos_registration
+    return generate_copuos_registration(**body)
+
+
+@router.post("/regulatory/eol-report")
+async def generate_eol(body: dict[str, Any]) -> dict:
+    """Generate end-of-life analysis report."""
+    from ..services.regulatory import generate_eol_report
+    return generate_eol_report(**body)
