@@ -33,6 +33,7 @@ import { DesignStateBar } from './components/DesignStateBar'
 import { ConflictReviewModal } from './components/ConflictReviewModal'
 import { ChangeAuditPanel } from './components/ChangeAuditPanel'
 import { ParametricEditor } from './components/ParametricEditor'
+import { LinkBudgetTool } from './components/LinkBudgetTool'
 import { GateReviewPanel } from './components/GateReviewPanel'
 import { PositionAnswersPanel } from './components/PositionAnswersPanel'
 import { ConOpsEditor } from './components/ConOpsEditor'
@@ -46,7 +47,7 @@ const queryClient = new QueryClient({
   },
 })
 
-type CenterTab = 'need' | 'concept' | 'requirements' | 'design' | 'conops' | 'functions' | 'interfaces' | 'reqs' | 'positions' | 'answers' | 'gate' | 'compliance' | 'ecss' | 'cost' | 'trade' | 'snapshots' | 'optimizer' | 'exports' | 'parametric' | 'audit' | 'help'
+type CenterTab = 'need' | 'concept' | 'requirements' | 'design' | 'conops' | 'functions' | 'interfaces' | 'reqs' | 'positions' | 'answers' | 'gate' | 'compliance' | 'ecss' | 'cost' | 'trade' | 'snapshots' | 'optimizer' | 'linkbudget' | 'exports' | 'parametric' | 'audit' | 'help'
 type RightTab = 'insights' | 'conflicts' | 'exports'
 
 function AppContent() {
@@ -195,6 +196,7 @@ function AppContent() {
     { id: 'cost', label: 'Cost' },
     { id: 'trade', label: 'Trade Studies' },
     { id: 'optimizer', label: 'Optimizer' },
+    { id: 'linkbudget', label: 'Link Budget' },
     { id: 'exports', label: 'Exports' },
     { id: 'parametric', label: 'Parametric' },
     { id: 'audit', label: 'Changes' },
@@ -309,6 +311,7 @@ function AppContent() {
                 {centerTab === 'snapshots' && <SnapshotsPanel sessionId={sessionId} />}
                 {centerTab === 'optimizer' && <OptimizerPanel sessionId={sessionId} />}
                 {centerTab === 'exports' && <ExportsPanel studyId={studyId} />}
+                {centerTab === 'linkbudget' && <LinkBudgetTool />}
                 {centerTab === 'parametric' && <ParametricEditor />}
                 {centerTab === 'audit' && <ChangeAuditPanel />}
                 {centerTab === 'help' && <UserManual />}

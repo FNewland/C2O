@@ -9,7 +9,7 @@
 - [x] Functions show multispectral for comms → FIXED (mission-type-aware)
 - [ ] Position Q&A answers not persisted to backend
 - [ ] "operate at 500km" auto-generated requirement not user-approved
-- [ ] Optimizer UI doesn't pass mission_type to config endpoint for relevance filtering
+- [x] Optimizer UI passes mission_type → auto-enables relevant variables, disables propulsion for non-prop missions
 
 ## Tier 2: Missing Wiring (backend exists, no interactive UI)
 
@@ -26,7 +26,7 @@
 
 - [ ] System-V requirement hierarchy (mission → system → subsystem with parent/child links)
 - [ ] Per-subsystem engineering budgets (mass/power/cost breakdown per subsystem)
-- [ ] Interactive link budget calculator
+- [x] Interactive link budget calculator → LinkBudgetTool tab with full cascade (TX, path, RX, margin)
 - [ ] Pointing budget (RSS error tree)
 - [ ] Data budget (generation → storage → downlink → processing pipeline)
 - [ ] Timing budget (mode durations, transition times)
