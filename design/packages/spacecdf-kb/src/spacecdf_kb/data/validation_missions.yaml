@@ -1,0 +1,201 @@
+# CubeSat Mission Validation Cases
+# Used to verify SpaceCDF sizing models against real missions.
+# Sources: eoPortal, NASA, ESA, published conference papers.
+
+missions:
+  - id: planet-superdove
+    name: Planet SuperDove (Flock)
+    type: earth_observation
+    form_factor: 3U
+    orbit:
+      altitude_km: 525
+      inclination_deg: 98
+      type: sso
+    mass:
+      total_kg: 5.2
+      payload_kg: 1.5  # estimated
+    power:
+      generation_w: 18  # estimated with deployable panels
+      payload_power_w: 8
+    payload:
+      type: optical_imager
+      gsd_m: 3.7
+      bands: 8
+      data_rate_mbps: 220  # HSD X-band
+    comms:
+      ttc_band: UHF
+      ttc_data_rate_bps: 3600
+      payload_band: X
+      payload_data_rate_mbps: 220
+    aocs:
+      type: 3-axis
+      pointing_accuracy_deg: 0.5  # estimated
+      actuators: [reaction_wheels, magnetorquers]
+      sensors: [magnetometer, gyro, photodiodes]
+    propulsion: none
+    license: commercial
+    validation_notes: Baseline 3U EO. Verify mass/power budgets and X-band link sizing.
+
+  - id: marco
+    name: MarCO (Mars Cube One)
+    type: technology_demo
+    form_factor: 6U
+    orbit:
+      altitude_km: 0  # interplanetary
+      type: interplanetary
+    mass:
+      total_kg: 14
+      propulsion_wet_kg: 3.49
+    power:
+      generation_w: 35  # at 1 AU
+      generation_at_mars_w: 17
+    payload:
+      type: rf_relay
+      data_rate_mbps: 0.008  # 8 kbps
+    comms:
+      ttc_band: X
+      payload_band: X
+      tx_power_w: 4
+      antenna_gain_dbi: 29.2
+      ground_station: DSN
+    aocs:
+      type: 3-axis
+      pointing_accuracy_deg: 0.2
+      actuators: [reaction_wheels]
+      sensors: [star_tracker, gyro, sun_sensors]
+    propulsion:
+      type: cold_gas
+      propellant: R-236FA
+      delta_v_ms: 40
+      total_impulse_ns: 755
+    license: government
+    validation_notes: First deep-space CubeSat. Verify power at distance, DSN link, propulsion budget.
+
+  - id: spire-lemur2
+    name: Spire LEMUR-2
+    type: ais
+    form_factor: 3U
+    orbit:
+      altitude_km: 500
+      inclination_deg: 97
+      type: sso
+    mass:
+      total_kg: 4.6
+    power:
+      generation_w: 9  # estimated
+    payload:
+      type: ais
+      secondary: gnss_ro
+    comms:
+      ttc_band: UHF
+      payload_band: S
+      secondary_band: X
+    aocs:
+      type: 3-axis
+    propulsion: none
+    license: commercial
+    validation_notes: Multi-payload 3U. Verify AIS receiver sizing and multi-band comms.
+
+  - id: capstone
+    name: CAPSTONE
+    type: lunar
+    form_factor: 12U
+    orbit:
+      altitude_km: 70000  # NRHO apoapsis
+      type: lunar
+    mass:
+      total_kg: 25
+    power:
+      generation_w: 30  # estimated
+    payload:
+      type: technology_demo
+    comms:
+      ttc_band: X
+      secondary_band: S
+      ground_station: DSN
+    aocs:
+      type: 3-axis
+      actuators: [reaction_wheels, thrusters]
+      sensors: [star_tracker, gyro, sun_sensors]
+    propulsion:
+      type: hydrazine_mono
+      delta_v_ms: 200
+      thrusters: 8
+    license: government
+    validation_notes: First CubeSat in lunar orbit. Verify propulsion budget, DSN link at lunar distance.
+
+  - id: astrocast
+    name: Astrocast
+    type: communications
+    form_factor: 3U
+    orbit:
+      altitude_km: 500
+      inclination_deg: 97
+      type: sso
+    mass:
+      total_kg: 4
+    power:
+      generation_w: 8  # estimated
+    payload:
+      type: rf_relay
+      data_rate_mbps: 0.01  # Low-rate IoT
+    comms:
+      service_band: L
+    aocs:
+      type: 3-axis
+    propulsion: none
+    license: commercial
+    validation_notes: IoT constellation 3U. Verify L-band link and minimal bus power.
+
+  - id: norsat1
+    name: NorSat-1
+    type: ais
+    form_factor: custom_micro
+    orbit:
+      altitude_km: 600
+      inclination_deg: 98
+      type: sso
+    mass:
+      total_kg: 16
+    power:
+      generation_w: 40
+    payload:
+      type: ais
+      secondary: radiometer
+    comms:
+      ttc_band: S
+      ttc_data_rate_kbps: 2048
+      ais_band: VHF
+    aocs:
+      type: 3-axis
+      pointing_accuracy_deg: 0.4
+      actuators: [reaction_wheels, magnetorquers]
+    propulsion: none
+    license: government
+    validation_notes: AIS microsatellite. Verify AIS receiver + S-band sizing for 16 kg platform.
+
+  - id: iceye
+    name: ICEYE-X1
+    type: sar
+    form_factor: custom_micro
+    orbit:
+      inclination_deg: 97.7
+      type: sso
+    mass:
+      total_kg: 85
+    power:
+      peak_power_w: 3200
+    payload:
+      type: sar
+      frequency_ghz: 9.65
+      resolution_m: 1
+      antenna_length_m: 3.25
+    comms:
+      payload_band: X
+      payload_data_rate_mbps: 140
+    aocs:
+      type: 3-axis
+    propulsion:
+      type: ion
+    license: commercial
+    validation_notes: SAR microsatellite. Verify SAR power budget and antenna sizing (not CubeSat).

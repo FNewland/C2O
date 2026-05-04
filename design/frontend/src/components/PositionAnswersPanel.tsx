@@ -21,6 +21,21 @@ const KEY_QUESTIONS: { id: string; position: string; question: string; category:
   { id: 'cost-1', position: 'cost_engineer', question: 'Is the total mission cost within the programmatic ceiling?', category: 'verification' },
   { id: 'mission-1', position: 'mission_analyst', question: 'Does the orbit selection satisfy all coverage and revisit requirements?', category: 'sizing' },
   { id: 'payload-1', position: 'payload_lead', question: 'Can the payload achieve the required GSD/sensitivity from this orbit?', category: 'verification' },
+  // New positions
+  { id: 'comp-1', position: 'compliance_engineer', question: 'Are all frequency allocations properly licensed (amateur/experimental/commercial)?', category: 'verification' },
+  { id: 'comp-2', position: 'compliance_engineer', question: 'Is the export control classification complete for all components?', category: 'verification' },
+  { id: 'comp-3', position: 'compliance_engineer', question: 'Is the RSSSA filing prepared (if remote sensing)?', category: 'verification' },
+  { id: 'comp-4', position: 'compliance_engineer', question: 'Does the end-of-life plan meet current debris mitigation regulations (FCC 5yr / IADC 25yr)?', category: 'compliance' },
+  { id: 'user-1', position: 'user_representative', question: 'Does the data product meet end-user needs (format, latency, accuracy)?', category: 'verification' },
+  { id: 'user-2', position: 'user_representative', question: 'Is the data delivery mechanism suitable for the user community?', category: 'trade' },
+  { id: 'user-3', position: 'user_representative', question: 'Are there accessibility considerations for the mission data?', category: 'trade' },
+  { id: 'ops-1', position: 'mission_ops', question: 'Is the ground segment capable of supporting all mission phases?', category: 'verification' },
+  { id: 'ops-2', position: 'mission_ops', question: 'Are automated operations procedures defined for nominal and contingency?', category: 'verification' },
+  { id: 'ops-3', position: 'mission_ops', question: 'Is the staffing model sustainable for the mission duration?', category: 'sizing' },
+  { id: 'gnd-1', position: 'ground_segment', question: 'Are ground station contacts sufficient for commanding and data download?', category: 'sizing' },
+  { id: 'gnd-2', position: 'ground_segment', question: 'Is the ground data processing pipeline defined and resourced?', category: 'verification' },
+  { id: 'sw-1', position: 'software_engineer', question: 'Is the flight software architecture defined with FDIR modes?', category: 'verification' },
+  { id: 'sw-2', position: 'software_engineer', question: 'Are all telecommand/telemetry interfaces documented?', category: 'verification' },
 ]
 
 interface Answer {

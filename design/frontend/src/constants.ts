@@ -11,6 +11,11 @@ export const POSITION_COLOR: Record<string, string> = {
   propulsion_engineer: '#f97316',
   structures_engineer: '#84cc16',
   cost_engineer: '#a855f7',
+  compliance_engineer: '#14b8a6',
+  user_representative: '#fb923c',
+  mission_ops: '#64748b',
+  ground_segment: '#0ea5e9',
+  software_engineer: '#d946ef',
 }
 
 export const POSITION_OPTIONS = [
@@ -24,4 +29,9 @@ export const POSITION_OPTIONS = [
   { id: 'propulsion_engineer', label: 'Propulsion Engineer' },
   { id: 'structures_engineer', label: 'Structures Engineer' },
   { id: 'cost_engineer', label: 'Cost Engineer' },
+  { id: 'compliance_engineer', label: 'Compliance / Regulatory' },
+  { id: 'user_representative', label: 'User Representative' },
+  { id: 'mission_ops', label: 'Mission Operations' },
+  { id: 'ground_segment', label: 'Ground Segment' },
+  { id: 'software_engineer', label: 'Software Engineer' },
 ] as const

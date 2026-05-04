@@ -640,3 +640,137 @@ async def generate_eol(body: dict[str, Any]) -> dict:
     """Generate end-of-life analysis report."""
     from ..services.regulatory import generate_eol_report
     return generate_eol_report(**body)
+
+
+# --- Tabular Trade Studies ---
+
+@router.get("/trade-templates")
+async def get_trade_templates() -> dict:
+    """Get pre-built trade study templates."""
+    from ..services.tabular_trade import get_trade_templates
+    return {"templates": get_trade_templates()}
+
+
+@router.post("/trade-study")
+async def run_trade_study(body: dict[str, Any]) -> dict:
+    """Run a tabular trade study with criteria, weightings, and options."""
+    from ..services.tabular_trade import run_tabular_trade
+
+    result = run_tabular_trade(
+        name=body.get("name", "Trade Study"),
+        criteria=body.get("criteria", []),
+        options=body.get("options", []),
+    )
+
+    return {
+        "name": result.name,
+        "recommendation": result.recommendation,
+        "criteria": [{"id": c.id, "name": c.name, "weight": c.weight, "direction": c.direction, "unit": c.unit, "category": c.category} for c in result.criteria],
+        "results": [
+            {
+                "rank": r.rank,
+                "option_id": r.option_id,
+                "option_name": r.option_name,
+                "total_score": r.total_score,
+                "all_thresholds_met": r.all_thresholds_met,
+                "normalised_scores": r.normalised_scores,
+                "weighted_scores": r.weighted_scores,
+                "threshold_pass": r.threshold_pass,
+            }
+            for r in result.results
+        ],
+        "sensitivity": result.sensitivity,
+    }
+
+
+# --- Constellation Design ---
+
+@router.post("/constellation/design")
+async def design_constellation(body: dict[str, Any]) -> dict:
+    """Design Walker delta constellation for coverage targets."""
+    from spacecdf_common.physics.constellation import design_walker_constellation, compute_coverage, compute_constellation_budget
+
+    candidates = design_walker_constellation(
+        coverage_target_percent=body.get("coverage_target_percent", 95),
+        max_revisit_hours=body.get("max_revisit_hours", 6),
+        altitude_km=body.get("altitude_km", 500),
+        inclination_deg=body.get("inclination_deg", 97.4),
+    )
+
+    results = []
+    for design in candidates:
+        cov = compute_coverage(design)
+        budget = compute_constellation_budget(
+            design.total_satellites,
+            per_satellite_mass_kg=body.get("per_satellite_mass_kg", 5),
+            per_satellite_cost_meur=body.get("per_satellite_cost_meur", 0.5),
+        )
+        results.append({
+            "total_satellites": design.total_satellites,
+            "num_planes": design.num_planes,
+            "sats_per_plane": design.sats_per_plane,
+            "walker_notation": f"{design.total_satellites}/{design.num_planes}/{design.phasing_parameter}",
+            "coverage_percent": cov.coverage_percent,
+            "max_revisit_hours": cov.max_revisit_hours,
+            "mean_revisit_hours": cov.mean_revisit_hours,
+            "total_mass_kg": budget.total_mass_kg,
+            "total_cost_meur": budget.total_cost_meur,
+            "launch_cost_meur": budget.launch_cost_meur,
+            "spares": budget.spare_satellites,
+            "learning_curve": budget.learning_curve_factor,
+        })
+
+    return {"candidates": results, "count": len(results)}
+
+
+# --- Beyond-LEO Orbits ---
+
+@router.get("/beyond-leo/orbits")
+async def list_beyond_leo_orbits() -> dict:
+    """List available beyond-LEO orbit options with environment data."""
+    from spacecdf_common.physics.beyond_leo import BEYOND_LEO_ORBITS
+    return {
+        "orbits": [
+            {
+                "name": o.name,
+                "type": o.orbit_type,
+                "altitude_km": o.altitude_km,
+                "perigee_km": o.perigee_km,
+                "inclination_deg": o.inclination_deg,
+                "period_hours": o.period_hours,
+                "radiation_krad_per_year": o.radiation_dose_krad_per_year,
+                "eclipse_fraction": o.eclipse_fraction,
+                "solar_flux_w_m2": o.solar_flux_w_m2,
+                "max_range_km": o.max_range_km,
+            }
+            for o in BEYOND_LEO_ORBITS
+        ],
+    }
+
+
+@router.post("/beyond-leo/transfer")
+async def compute_transfer(body: dict[str, Any]) -> dict:
+    """Compute transfer orbit delta-V from LEO to target orbit."""
+    from spacecdf_common.physics.beyond_leo import BEYOND_LEO_ORBITS, compute_transfer_delta_v
+
+    target_name = body.get("target_orbit", "GEO (35786 km)")
+    from_alt = body.get("from_altitude_km", 500)
+
+    target = next((o for o in BEYOND_LEO_ORBITS if o.name == target_name), None)
+    if not target:
+        return {"error": f"Unknown orbit: {target_name}"}
+
+    transfer = compute_transfer_delta_v(from_alt, target)
+    return {
+        "target": target_name,
+        "delta_v_ms": transfer.delta_v_ms,
+        "transfer_time_days": transfer.transfer_time_days,
+        "transfer_type": transfer.type,
+    }
+
+
+@router.post("/beyond-leo/dsn-link")
+async def dsn_link_budget(body: dict[str, Any]) -> dict:
+    """Compute deep-space link budget for DSN communication."""
+    from spacecdf_common.physics.beyond_leo import compute_dsn_link_budget
+    return compute_dsn_link_budget(**body)
