@@ -25,10 +25,15 @@ interface SelectedArch {
   connections: { from: string; to: string; label: string }[]
 }
 
-const SUBSYSTEM_LABELS: Record<string, { name: string; color: string; icon: string }> = {
-  eps: { name: 'Electrical Power System', color: '#f59e0b', icon: 'Zap' },
-  aocs: { name: 'Attitude & Orbit Control', color: '#06b6d4', icon: 'Compass' },
-  ttc: { name: 'Telemetry, Tracking & Command', color: '#ec4899', icon: 'Radio' },
+const SUBSYSTEM_LABELS: Record<string, { name: string; color: string }> = {
+  eps: { name: 'Power (EPS)', color: '#f59e0b' },
+  aocs: { name: 'AOCS', color: '#06b6d4' },
+  ttc: { name: 'Comms (TTC)', color: '#ec4899' },
+  thermal: { name: 'Thermal', color: '#ef4444' },
+  structure: { name: 'Structure', color: '#84cc16' },
+  propulsion: { name: 'Propulsion', color: '#f97316' },
+  obc: { name: 'OBC / C&DH', color: '#8b5cf6' },
+  ground: { name: 'Ground Segment', color: '#0ea5e9' },
 }
 
 export function SystemArchitectureEditor() {

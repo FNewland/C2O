@@ -326,11 +326,344 @@ TTC_OPTIONS = [
     ),
 ]
 
+THERMAL_OPTIONS = [
+    ArchitectureOption(
+        id="tcs-passive-coatings", subsystem="thermal",
+        name="Passive only (surface coatings)",
+        description="Thermal control through surface finishes only. No heaters, no MLI. Suitable for low-power LEO missions.",
+        mass_kg_typical=0.01, power_w_typical=0.0, cost_keur_typical=2, trl=9,
+        pros=["Zero power", "Zero mass", "No failure modes", "Simplest possible"],
+        cons=["No cold case protection", "Limited to benign orbits", "No active temperature control"],
+        derived_requirements=[
+            {"id": "SR-TCS-001", "level": "system", "text": "All external surfaces shall have thermal coatings selected for equilibrium temperature within component limits"},
+        ],
+        blocks=[{"id": "coat", "name": "Surface Coatings (alpha/epsilon)", "type": "passive"}],
+        connections=[],
+    ),
+    ArchitectureOption(
+        id="tcs-passive-heaters", subsystem="thermal",
+        name="Passive + heaters",
+        description="Surface coatings plus thermostatically controlled heaters for eclipse cold case. Standard CubeSat approach.",
+        mass_kg_typical=0.05, power_w_typical=2.0, cost_keur_typical=5, trl=9,
+        pros=["Eclipse protection", "Simple control", "Low mass", "Well proven"],
+        cons=["Heater power from battery during eclipse", "Limited hot case control"],
+        derived_requirements=[
+            {"id": "SR-TCS-001", "level": "system", "text": "The TCS shall maintain all components within operating range [-20C, +50C]"},
+            {"id": "SR-TCS-002", "level": "system", "text": "The TCS shall provide survival heating during eclipse"},
+            {"id": "SSR-TCS-001", "level": "subsystem", "text": "Eclipse heater power shall not exceed 3W total"},
+        ],
+        blocks=[
+            {"id": "coat", "name": "Surface Coatings", "type": "passive"},
+            {"id": "htr", "name": "Kapton Heaters", "type": "active"},
+            {"id": "therm", "name": "Thermistors", "type": "sensor"},
+            {"id": "ctrl", "name": "Thermostat Control", "type": "processor"},
+        ],
+        connections=[
+            {"from": "therm", "to": "ctrl", "label": "Temperature"},
+            {"from": "ctrl", "to": "htr", "label": "On/Off"},
+        ],
+    ),
+    ArchitectureOption(
+        id="tcs-active-mli", subsystem="thermal",
+        name="Passive + heaters + MLI",
+        description="Full passive thermal control with MLI blankets for insulation. For missions with larger thermal excursions.",
+        mass_kg_typical=0.15, power_w_typical=3.0, cost_keur_typical=8, trl=9,
+        pros=["Good insulation", "Reduces heater power need", "Protects sensitive components"],
+        cons=["MLI mass", "Installation complexity", "Outgassing concerns"],
+        derived_requirements=[
+            {"id": "SR-TCS-001", "level": "system", "text": "The TCS shall maintain all components within operating range [-20C, +50C]"},
+            {"id": "SR-TCS-002", "level": "system", "text": "The TCS shall provide MLI insulation on spacecraft surfaces not used as radiators"},
+            {"id": "SSR-TCS-001", "level": "subsystem", "text": "MLI effective emittance shall be <=0.02"},
+        ],
+        blocks=[
+            {"id": "mli", "name": "MLI Blankets", "type": "passive"},
+            {"id": "rad", "name": "Radiator Surface", "type": "passive"},
+            {"id": "htr", "name": "Heaters", "type": "active"},
+            {"id": "therm", "name": "Thermistors", "type": "sensor"},
+        ],
+        connections=[
+            {"from": "therm", "to": "htr", "label": "Control"},
+        ],
+    ),
+]
+
+STRUCTURE_OPTIONS = [
+    ArchitectureOption(
+        id="str-3u", subsystem="structure",
+        name="3U CubeSat (10x10x34 cm)",
+        description="Standard 3U frame per CDS Rev 14.1. 3000 cm3 internal volume. 6 kg mass limit.",
+        mass_kg_typical=0.35, power_w_typical=0.0, cost_keur_typical=8, trl=9,
+        pros=["Most common form factor", "Widest deployer compatibility", "Lowest cost"],
+        cons=["Limited volume (3000 cm3)", "6 kg mass limit", "Tight for complex missions"],
+        derived_requirements=[
+            {"id": "SR-STR-001", "level": "system", "text": "The spacecraft shall comply with CDS Rev 14.1 for 3U form factor"},
+            {"id": "SR-STR-002", "level": "system", "text": "The structure shall survive qualification launch loads with MoS >=0"},
+            {"id": "SR-STR-003", "level": "system", "text": "The first natural frequency shall be >=40 Hz"},
+            {"id": "SSR-STR-001", "level": "subsystem", "text": "CDS rail dimensions shall be 8.5x8.5 mm anodised aluminium"},
+            {"id": "SSR-STR-002", "level": "subsystem", "text": "Deployment switches shall be provided on +X and -X rail faces"},
+            {"id": "SSR-STR-003", "level": "subsystem", "text": "RBF pin shall deactivate all power when inserted"},
+        ],
+        blocks=[
+            {"id": "frame", "name": "3U Frame + Rails", "type": "structure"},
+            {"id": "stack", "name": "PC/104 Stack", "type": "integration"},
+            {"id": "sw", "name": "Deploy Switches", "type": "mechanism"},
+            {"id": "rbf", "name": "RBF Pin", "type": "mechanism"},
+        ],
+        connections=[],
+    ),
+    ArchitectureOption(
+        id="str-6u", subsystem="structure",
+        name="6U CubeSat (10x22.6x34 cm)",
+        description="Standard 6U frame. 6000 cm3 internal volume. 12 kg mass limit. More room for payload.",
+        mass_kg_typical=0.70, power_w_typical=0.0, cost_keur_typical=10, trl=9,
+        pros=["Double the volume of 3U", "12 kg mass limit", "Room for larger payloads"],
+        cons=["Fewer deployer options", "Higher launch cost", "Larger thermal surface"],
+        derived_requirements=[
+            {"id": "SR-STR-001", "level": "system", "text": "The spacecraft shall comply with CDS Rev 14.1 for 6U form factor"},
+            {"id": "SR-STR-002", "level": "system", "text": "The structure shall survive qualification launch loads with MoS >=0"},
+            {"id": "SR-STR-003", "level": "system", "text": "Total mass shall not exceed 12 kg"},
+        ],
+        blocks=[
+            {"id": "frame", "name": "6U Frame + Rails", "type": "structure"},
+            {"id": "stack", "name": "PC/104 Stack (2-wide)", "type": "integration"},
+            {"id": "pl_bay", "name": "Payload Bay", "type": "structure"},
+            {"id": "sw", "name": "Deploy Switches", "type": "mechanism"},
+        ],
+        connections=[],
+    ),
+    ArchitectureOption(
+        id="str-12u", subsystem="structure",
+        name="12U CubeSat (22.6x22.6x34 cm)",
+        description="Large CubeSat. 12000 cm3. 24 kg. Enables complex missions (SAR, propulsion, deep space).",
+        mass_kg_typical=1.20, power_w_typical=0.0, cost_keur_typical=15, trl=8,
+        pros=["Large volume for complex payloads", "24 kg allows propulsion", "Room for redundancy"],
+        cons=["Higher cost", "Fewer launch options", "Thermal management more complex"],
+        derived_requirements=[
+            {"id": "SR-STR-001", "level": "system", "text": "The spacecraft shall comply with CDS Rev 14.1 for 12U form factor"},
+            {"id": "SR-STR-002", "level": "system", "text": "Total mass shall not exceed 24 kg"},
+        ],
+        blocks=[
+            {"id": "frame", "name": "12U Frame", "type": "structure"},
+            {"id": "stack", "name": "Avionics Stack", "type": "integration"},
+            {"id": "pl_bay", "name": "Payload Bay", "type": "structure"},
+            {"id": "prop_bay", "name": "Propulsion Bay", "type": "structure"},
+        ],
+        connections=[],
+    ),
+]
+
+PROPULSION_OPTIONS = [
+    ArchitectureOption(
+        id="prop-none", subsystem="propulsion",
+        name="No propulsion",
+        description="No propulsion system. Natural orbital decay for deorbit. Suitable for alt <500 km.",
+        mass_kg_typical=0.0, power_w_typical=0.0, cost_keur_typical=0, trl=9,
+        pros=["Zero mass", "Zero cost", "Zero complexity", "No propellant safety concerns"],
+        cons=["No orbit maintenance", "No collision avoidance", "Must rely on natural decay"],
+        derived_requirements=[
+            {"id": "SR-PROP-001", "level": "system", "text": "The spacecraft shall deorbit naturally within 5 years of end of mission (FCC rule)"},
+        ],
+        blocks=[],
+        connections=[],
+    ),
+    ArchitectureOption(
+        id="prop-drag-sail", subsystem="propulsion",
+        name="Drag augmentation sail",
+        description="Deployable drag sail for accelerated deorbit. No active manoeuvring capability.",
+        mass_kg_typical=0.3, power_w_typical=0.0, cost_keur_typical=15, trl=7,
+        pros=["Low mass", "No propellant", "Passive after deployment", "Addresses FCC 5yr rule"],
+        cons=["No orbit maintenance", "No collision avoidance", "Deployment risk", "Changes ballistic coefficient"],
+        derived_requirements=[
+            {"id": "SR-PROP-001", "level": "system", "text": "The drag sail shall reduce post-mission orbital lifetime to <=5 years"},
+            {"id": "SSR-PROP-001", "level": "subsystem", "text": "The sail shall deploy to >=1 m2 effective area"},
+        ],
+        blocks=[
+            {"id": "sail", "name": "Drag Sail (stowed)", "type": "mechanism"},
+            {"id": "deploy", "name": "Deployment Mechanism", "type": "mechanism"},
+        ],
+        connections=[{"from": "deploy", "to": "sail", "label": "Deploy cmd"}],
+    ),
+    ArchitectureOption(
+        id="prop-cold-gas", subsystem="propulsion",
+        name="Cold gas propulsion",
+        description="Simplest active propulsion. Stored gas (N2 or R-236FA) expelled through thrusters.",
+        mass_kg_typical=0.7, power_w_typical=1.0, cost_keur_typical=30, trl=9,
+        pros=["Simple", "Safe propellant", "Fast response", "Proven on CubeSats"],
+        cons=["Low Isp (40-80s)", "Limited delta-V (10-30 m/s)", "Tank volume"],
+        derived_requirements=[
+            {"id": "SR-PROP-001", "level": "system", "text": "The propulsion system shall provide >=20 m/s total delta-V"},
+            {"id": "SR-PROP-002", "level": "system", "text": "The propulsion system shall be passivatable at end of life"},
+            {"id": "SSR-PROP-001", "level": "subsystem", "text": "Propellant tank shall withstand 1.5x MEOP"},
+        ],
+        blocks=[
+            {"id": "tank", "name": "Propellant Tank", "type": "storage"},
+            {"id": "valve", "name": "Isolation Valve", "type": "mechanism"},
+            {"id": "thr", "name": "Thrusters (x4-8)", "type": "actuator"},
+            {"id": "ctrl", "name": "Thrust Controller", "type": "processor"},
+        ],
+        connections=[
+            {"from": "tank", "to": "valve", "label": "Propellant"},
+            {"from": "valve", "to": "thr", "label": "Gas flow"},
+            {"from": "ctrl", "to": "valve", "label": "Open/Close"},
+        ],
+    ),
+    ArchitectureOption(
+        id="prop-electric", subsystem="propulsion",
+        name="Electric propulsion (electrospray/Hall)",
+        description="High-Isp electric propulsion. Electrospray or miniature Hall-effect thruster.",
+        mass_kg_typical=1.0, power_w_typical=20.0, cost_keur_typical=80, trl=7,
+        pros=["High Isp (500-1500s)", "Large delta-V (50-200 m/s)", "Compact propellant"],
+        cons=["High power demand", "Low thrust (slow manoeuvres)", "Higher cost", "Lower TRL"],
+        derived_requirements=[
+            {"id": "SR-PROP-001", "level": "system", "text": "The propulsion system shall provide >=100 m/s total delta-V"},
+            {"id": "SR-PROP-002", "level": "system", "text": "The EPS shall provide >=20W dedicated propulsion power"},
+            {"id": "SSR-PROP-001", "level": "subsystem", "text": "The thruster shall provide >=500s specific impulse"},
+        ],
+        blocks=[
+            {"id": "ppu", "name": "Power Processing Unit", "type": "processor"},
+            {"id": "tank", "name": "Propellant Reservoir", "type": "storage"},
+            {"id": "thr", "name": "Electric Thruster", "type": "actuator"},
+            {"id": "ctrl", "name": "Thrust Controller", "type": "processor"},
+        ],
+        connections=[
+            {"from": "ppu", "to": "thr", "label": "High voltage"},
+            {"from": "tank", "to": "thr", "label": "Propellant"},
+            {"from": "ctrl", "to": "ppu", "label": "Command"},
+        ],
+    ),
+]
+
+OBC_OPTIONS = [
+    ArchitectureOption(
+        id="obc-single", subsystem="obc",
+        name="Single OBC (no redundancy)",
+        description="Single flight computer. Standard for most CubeSats. Watchdog timer for recovery.",
+        mass_kg_typical=0.08, power_w_typical=1.5, cost_keur_typical=10, trl=9,
+        pros=["Low mass", "Low power", "Simple", "Sufficient for most missions"],
+        cons=["Single point of failure", "No redundancy", "Relies on watchdog for recovery"],
+        derived_requirements=[
+            {"id": "SR-OBC-001", "level": "system", "text": "The OBC shall provide autonomous FDIR with watchdog timer recovery"},
+            {"id": "SR-OBC-002", "level": "system", "text": "The OBC shall support time-tagged command execution"},
+            {"id": "SSR-OBC-001", "level": "subsystem", "text": "The OBC shall provide >=4 GB non-volatile storage"},
+        ],
+        blocks=[
+            {"id": "cpu", "name": "Processor (ARM/LEON)", "type": "processor"},
+            {"id": "mem", "name": "NVM Storage", "type": "storage"},
+            {"id": "wd", "name": "Watchdog Timer", "type": "processor"},
+            {"id": "if", "name": "I2C/SPI/UART/CAN", "type": "interface"},
+        ],
+        connections=[
+            {"from": "cpu", "to": "mem", "label": "Data"},
+            {"from": "wd", "to": "cpu", "label": "Reset"},
+            {"from": "cpu", "to": "if", "label": "Bus"},
+        ],
+    ),
+    ArchitectureOption(
+        id="obc-redundant", subsystem="obc",
+        name="Redundant OBC (cold standby)",
+        description="Primary + backup OBC. Automatic switchover on primary failure.",
+        mass_kg_typical=0.16, power_w_typical=2.0, cost_keur_typical=20, trl=8,
+        pros=["Fault tolerance", "Higher mission reliability", "Automatic failover"],
+        cons=["Double mass", "Higher cost", "Switchover logic complexity"],
+        derived_requirements=[
+            {"id": "SR-OBC-001", "level": "system", "text": "The C&DH shall provide redundant processing with automatic failover"},
+            {"id": "SR-OBC-002", "level": "system", "text": "The backup OBC shall maintain mission-critical state synchronisation"},
+            {"id": "SSR-OBC-001", "level": "subsystem", "text": "Failover shall complete within 60 seconds of primary failure detection"},
+        ],
+        blocks=[
+            {"id": "obc_a", "name": "OBC Primary", "type": "processor"},
+            {"id": "obc_b", "name": "OBC Backup", "type": "processor"},
+            {"id": "sw", "name": "Switchover Logic", "type": "processor"},
+            {"id": "mem", "name": "Shared NVM", "type": "storage"},
+        ],
+        connections=[
+            {"from": "obc_a", "to": "sw", "label": "Heartbeat"},
+            {"from": "obc_b", "to": "sw", "label": "Ready"},
+            {"from": "sw", "to": "mem", "label": "State sync"},
+        ],
+    ),
+]
+
+GROUND_OPTIONS = [
+    ArchitectureOption(
+        id="gnd-own-station", subsystem="ground",
+        name="Own ground station",
+        description="University or organisation-owned antenna. Full control but limited passes.",
+        mass_kg_typical=0.0, power_w_typical=0.0, cost_keur_typical=50, trl=9,
+        pros=["Full control", "No per-pass fees", "Educational value", "Available 24/7"],
+        cons=["Single location = limited contacts", "Maintenance burden", "Weather dependent"],
+        derived_requirements=[
+            {"id": "SR-GND-001", "level": "system", "text": "The ground station shall provide >=2 passes per day at >=10deg elevation"},
+            {"id": "SR-GND-002", "level": "system", "text": "The ground station shall support the selected TTC frequency bands"},
+        ],
+        blocks=[
+            {"id": "ant", "name": "Tracking Antenna", "type": "antenna"},
+            {"id": "fe", "name": "RF Front-End", "type": "receiver"},
+            {"id": "mcs", "name": "Mission Control SW", "type": "processor"},
+            {"id": "db", "name": "Data Archive", "type": "storage"},
+        ],
+        connections=[
+            {"from": "ant", "to": "fe", "label": "RF"},
+            {"from": "fe", "to": "mcs", "label": "TM/TC"},
+            {"from": "mcs", "to": "db", "label": "Archive"},
+        ],
+    ),
+    ArchitectureOption(
+        id="gnd-ksat", subsystem="ground",
+        name="KSAT commercial network",
+        description="Kongsberg Satellite Services global network. Professional, high availability, per-pass pricing.",
+        mass_kg_typical=0.0, power_w_typical=0.0, cost_keur_typical=200, trl=9,
+        pros=["Global coverage", "High availability (>99%)", "Professional operations", "Multi-band support"],
+        cons=["High cost (per-pass fees)", "Scheduling required", "Shared infrastructure"],
+        derived_requirements=[
+            {"id": "SR-GND-001", "level": "system", "text": "The ground network shall provide >=6 passes per day with global coverage"},
+            {"id": "SR-GND-002", "level": "system", "text": "The ground network shall provide >=99% service availability"},
+        ],
+        blocks=[
+            {"id": "net", "name": "KSAT Network (20+ stations)", "type": "network"},
+            {"id": "scc", "name": "Satellite Control Centre", "type": "processor"},
+            {"id": "pipe", "name": "Data Pipeline", "type": "processor"},
+            {"id": "api", "name": "User API/Portal", "type": "interface"},
+        ],
+        connections=[
+            {"from": "net", "to": "scc", "label": "TM/TC"},
+            {"from": "scc", "to": "pipe", "label": "Data"},
+            {"from": "pipe", "to": "api", "label": "Products"},
+        ],
+    ),
+    ArchitectureOption(
+        id="gnd-satnogs", subsystem="ground",
+        name="SatNOGS community network",
+        description="Open-source global ground station network. Free for amateur missions. Community operated.",
+        mass_kg_typical=0.0, power_w_typical=0.0, cost_keur_typical=5, trl=8,
+        pros=["Free/very low cost", "Global volunteer network", "Open source", "Good for educational missions"],
+        cons=["No guaranteed availability", "Volunteer-dependent", "UHF/VHF only typically", "No SLA"],
+        derived_requirements=[
+            {"id": "SR-GND-001", "level": "system", "text": "The ground segment shall utilise SatNOGS network for UHF telemetry reception"},
+            {"id": "SR-GND-002", "level": "system", "text": "The spacecraft shall transmit AX.25 compatible telemetry for community reception"},
+        ],
+        blocks=[
+            {"id": "net", "name": "SatNOGS Network (global)", "type": "network"},
+            {"id": "db", "name": "SatNOGS DB", "type": "storage"},
+            {"id": "own", "name": "Own Command Station", "type": "processor"},
+        ],
+        connections=[
+            {"from": "net", "to": "db", "label": "TM observations"},
+            {"from": "own", "to": "net", "label": "TC (own station only)"},
+        ],
+    ),
+]
+
 # Complete catalogue indexed by subsystem
 ARCHITECTURE_CATALOGUE: dict[str, list[ArchitectureOption]] = {
     "eps": EPS_OPTIONS,
     "aocs": AOCS_OPTIONS,
     "ttc": TTC_OPTIONS,
+    "thermal": THERMAL_OPTIONS,
+    "structure": STRUCTURE_OPTIONS,
+    "propulsion": PROPULSION_OPTIONS,
+    "obc": OBC_OPTIONS,
+    "ground": GROUND_OPTIONS,
 }
 
 
