@@ -51,6 +51,13 @@ function AppContent() {
   const [showSessionStarter, setShowSessionStarter] = useState(false)
   const [showTemplateGallery, setShowTemplateGallery] = useState(false)
 
+  // Auto-navigate to Design tab when design run completes
+  useEffect(() => {
+    if (result && centerTab === 'requirements') {
+      setCenterTab('design')
+    }
+  }, [result])
+
   // Session state
   const sessionId = useSessionStore(s => s.sessionId)
   const positionId = useSessionStore(s => s.positionId)

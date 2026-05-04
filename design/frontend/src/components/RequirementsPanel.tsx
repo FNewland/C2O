@@ -4,6 +4,13 @@ import { useDesignStore } from '../stores/designStore'
 function OrbitTradeAdvisor({ onSelect }: { onSelect: (alt: number, inc: number) => void }) {
   const [result, setResult] = useState<any>(null)
   const [loading, setLoading] = useState(false)
+  const [gsd, setGsd] = useState(10)
+  const [revisit, setRevisit] = useState(3)
+  const [lifetime, setLifetime] = useState(3)
+  const [latMin, setLatMin] = useState(-30)
+  const [latMax, setLatMax] = useState(30)
+  const [maxCost, setMaxCost] = useState(10)
+  const [aperture, setAperture] = useState(0.15)
 
   const runTrade = async () => {
     setLoading(true)
@@ -11,7 +18,12 @@ function OrbitTradeAdvisor({ onSelect }: { onSelect: (alt: number, inc: number) 
       const res = await fetch('/api/lifecycle/orbit-trade', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ target_gsd_m: 10, target_revisit_days: 3, min_lifetime_years: 3 }),
+        body: JSON.stringify({
+          target_gsd_m: gsd, target_revisit_days: revisit,
+          min_lifetime_years: lifetime, max_cost_meur: maxCost,
+          aperture_m: aperture,
+          target_latitude_band: [latMin, latMax],
+        }),
       })
       if (res.ok) setResult(await res.json())
     } catch {}
@@ -20,53 +32,100 @@ function OrbitTradeAdvisor({ onSelect }: { onSelect: (alt: number, inc: number) 
 
   return (
     <div className="card" style={{ borderLeft: '3px solid #8b5cf6' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <h3 style={{ fontSize: '0.85rem', margin: 0 }}>Orbit Selection Advisor</h3>
-        <button className="btn btn-sm" onClick={runTrade} disabled={loading}
-          style={{ fontSize: '0.7rem' }}>
-          {loading ? 'Computing...' : result ? 'Recompute' : 'Show orbit options'}
-        </button>
+      <h3 style={{ fontSize: '0.9rem', marginBottom: '0.5rem' }}>Orbit Selection Advisor</h3>
+      <p style={{ fontSize: '0.75rem', color: '#9ca3af', marginBottom: '0.75rem' }}>
+        Set your performance needs. The advisor computes candidate orbits with coverage,
+        resolution, lifetime, debris compliance, and launch cost for each.
+      </p>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.5rem', marginBottom: '0.75rem' }}>
+        <div className="form-group" style={{ margin: 0 }}>
+          <label>GSD target (m)</label>
+          <input className="input" type="number" min={0.1} step={1} value={gsd} onChange={e => setGsd(Number(e.target.value) || 10)} />
+        </div>
+        <div className="form-group" style={{ margin: 0 }}>
+          <label>Revisit (days)</label>
+          <input className="input" type="number" min={0.1} step={1} value={revisit} onChange={e => setRevisit(Number(e.target.value) || 3)} />
+        </div>
+        <div className="form-group" style={{ margin: 0 }}>
+          <label>Min lifetime (years)</label>
+          <input className="input" type="number" min={0.5} step={0.5} value={lifetime} onChange={e => setLifetime(Number(e.target.value) || 3)} />
+        </div>
+        <div className="form-group" style={{ margin: 0 }}>
+          <label>Aperture (m)</label>
+          <input className="input" type="number" min={0.01} step={0.01} value={aperture} onChange={e => setAperture(Number(e.target.value) || 0.15)} />
+        </div>
+        <div className="form-group" style={{ margin: 0 }}>
+          <label>Target latitude (°)</label>
+          <div style={{ display: 'flex', gap: '0.25rem' }}>
+            <input className="input" type="number" min={-90} max={90} value={latMin} onChange={e => setLatMin(Number(e.target.value))} style={{ width: '50%' }} placeholder="min" />
+            <input className="input" type="number" min={-90} max={90} value={latMax} onChange={e => setLatMax(Number(e.target.value))} style={{ width: '50%' }} placeholder="max" />
+          </div>
+        </div>
+        <div className="form-group" style={{ margin: 0 }}>
+          <label>Max budget (MEUR)</label>
+          <input className="input" type="number" min={1} step={1} value={maxCost} onChange={e => setMaxCost(Number(e.target.value) || 10)} />
+        </div>
       </div>
-      {!result && (
-        <p style={{ fontSize: '0.75rem', color: '#9ca3af', margin: '0.3rem 0 0' }}>
-          Click to compute orbit options based on your GSD, revisit, and lifetime needs.
-          Results will pre-populate the orbit fields below.
-        </p>
-      )}
+      <button className="btn btn-sm" onClick={runTrade} disabled={loading} style={{ marginBottom: '0.5rem' }}>
+        {loading ? 'Computing...' : 'Compute Orbit Options'}
+      </button>
       {result && (
-        <div style={{ marginTop: '0.4rem' }}>
-          <div style={{ fontSize: '0.72rem', color: '#d1d5db', marginBottom: '0.3rem' }}>
-            {result.recommendation?.split('.')[0]}.
+        <div>
+          <div style={{ fontSize: '0.78rem', color: '#d1d5db', marginBottom: '0.4rem' }}>
+            {result.recommendation?.split('.').slice(0, 2).join('.')}.
           </div>
-          <div style={{ maxHeight: '150px', overflowY: 'auto' }}>
-            {result.candidates?.slice(0, 5).map((c: any) => (
-              <div key={c.name} style={{
-                display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.2rem 0.3rem',
-                fontSize: '0.72rem', borderRadius: '3px', marginBottom: '0.15rem',
-                background: c.rank === 1 ? 'rgba(139,92,246,0.1)' : 'transparent',
-              }}>
-                <span style={{ color: '#6b7280', width: 18 }}>#{c.rank}</span>
-                <span style={{ flex: 1, fontWeight: c.rank === 1 ? 600 : 400 }}>{c.name}</span>
-                <span style={{ color: c.meets_gsd ? '#10b981' : '#ef4444', fontSize: '0.65rem' }}>{c.achievable_gsd_m}m</span>
-                <span style={{ color: c.meets_revisit ? '#10b981' : '#ef4444', fontSize: '0.65rem' }}>{c.revisit_days}d</span>
-                <span style={{ fontFamily: 'monospace', fontSize: '0.65rem', color: '#8b5cf6' }}>{(c.total_score * 100).toFixed(0)}%</span>
-                <button onClick={() => onSelect(c.altitude_km, c.inclination_deg)}
-                  style={{
-                    background: 'none', border: '1px solid #374151', borderRadius: '3px',
-                    color: '#3b82f6', cursor: 'pointer', fontSize: '0.6rem', padding: '0.1rem 0.3rem',
-                  }}>Use</button>
-              </div>
-            ))}
-          </div>
+          <table style={{ width: '100%', fontSize: '0.75rem', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr style={{ color: '#9ca3af', textAlign: 'left', fontSize: '0.68rem', textTransform: 'uppercase' }}>
+                <th style={{ padding: '0.25rem' }}>#</th>
+                <th style={{ padding: '0.25rem' }}>Orbit</th>
+                <th style={{ padding: '0.25rem' }}>GSD</th>
+                <th style={{ padding: '0.25rem' }}>Revisit</th>
+                <th style={{ padding: '0.25rem' }}>Lifetime</th>
+                <th style={{ padding: '0.25rem' }}>5yr rule</th>
+                <th style={{ padding: '0.25rem' }}>Contact</th>
+                <th style={{ padding: '0.25rem' }}>Launch</th>
+                <th style={{ padding: '0.25rem' }}>Score</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {result.candidates?.slice(0, 8).map((c: any) => (
+                <tr key={c.name} style={{ borderTop: '1px solid #374151' }}>
+                  <td style={{ padding: '0.25rem', color: '#6b7280' }}>{c.rank}</td>
+                  <td style={{ padding: '0.25rem', fontWeight: c.rank <= 3 ? 600 : 400 }}>{c.name}</td>
+                  <td style={{ padding: '0.25rem', color: c.meets_gsd ? '#10b981' : '#ef4444' }}>{c.achievable_gsd_m}m</td>
+                  <td style={{ padding: '0.25rem', color: c.meets_revisit ? '#10b981' : '#ef4444' }}>{c.revisit_days}d</td>
+                  <td style={{ padding: '0.25rem' }}>{c.natural_lifetime_years > 1000 ? '>1000yr' : c.natural_lifetime_years + 'yr'}</td>
+                  <td style={{ padding: '0.25rem', color: c.compliant_5yr ? '#10b981' : '#ef4444' }}>{c.compliant_5yr ? 'Yes' : 'No'}</td>
+                  <td style={{ padding: '0.25rem' }}>{c.contact_min_per_day}min</td>
+                  <td style={{ padding: '0.25rem' }}>{c.launch_cost_keur}k</td>
+                  <td style={{ padding: '0.25rem', fontFamily: 'monospace', color: '#8b5cf6' }}>{(c.total_score * 100).toFixed(0)}%</td>
+                  <td style={{ padding: '0.25rem' }}>
+                    <button onClick={() => onSelect(c.altitude_km, c.inclination_deg)}
+                      style={{ background: 'none', border: '1px solid #374151', borderRadius: '3px', color: '#3b82f6', cursor: 'pointer', fontSize: '0.65rem', padding: '0.1rem 0.4rem' }}>
+                      Use
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </div>
   )
 }
 
-function ClassAdvisor({ onSelect }: { onSelect: (cls: string) => void }) {
+function ClassAdvisor({ onSelect }: { onSelect: (cls: string, massRange: number[], costRange: number[]) => void }) {
   const [result, setResult] = useState<any>(null)
   const [loading, setLoading] = useState(false)
+  const [gsd, setGsd] = useState<number | undefined>(10)
+  const [lifetime, setLifetime] = useState<number | undefined>(3)
+  const [budget, setBudget] = useState<number | undefined>(10)
+  const [schedule, setSchedule] = useState<number | undefined>(18)
+  const [pointing, setPointing] = useState<number | undefined>(0.1)
+  const [dataRate, setDataRate] = useState<number | undefined>(100)
 
   const runAdvisor = async () => {
     setLoading(true)
@@ -74,7 +133,11 @@ function ClassAdvisor({ onSelect }: { onSelect: (cls: string) => void }) {
       const res = await fetch('/api/lifecycle/class-advisor', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ target_gsd_m: 10, target_lifetime_years: 3, max_budget_meur: 10 }),
+        body: JSON.stringify({
+          target_gsd_m: gsd, target_lifetime_years: lifetime,
+          max_budget_meur: budget, max_schedule_months: schedule,
+          target_pointing_deg: pointing, target_data_rate_mbps: dataRate,
+        }),
       })
       if (res.ok) setResult(await res.json())
     } catch {}
@@ -83,32 +146,69 @@ function ClassAdvisor({ onSelect }: { onSelect: (cls: string) => void }) {
 
   return (
     <div className="card" style={{ borderLeft: '3px solid #06b6d4' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <h3 style={{ fontSize: '0.85rem', margin: 0 }}>Mission Class Advisor</h3>
-        <button className="btn btn-sm" onClick={runAdvisor} disabled={loading}
-          style={{ fontSize: '0.7rem' }}>
-          {loading ? 'Computing...' : result ? 'Recompute' : 'What class fits?'}
-        </button>
+      <h3 style={{ fontSize: '0.9rem', marginBottom: '0.5rem' }}>Mission Class Advisor</h3>
+      <p style={{ fontSize: '0.75rem', color: '#9ca3af', marginBottom: '0.75rem' }}>
+        Set your performance and programmatic targets. The advisor recommends
+        which spacecraft class fits and sets realistic mass/cost targets.
+      </p>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.5rem', marginBottom: '0.75rem' }}>
+        <div className="form-group" style={{ margin: 0 }}>
+          <label>GSD target (m)</label>
+          <input className="input" type="number" min={0.1} step={1} value={gsd ?? ''} onChange={e => setGsd(e.target.value ? Number(e.target.value) : undefined)} />
+        </div>
+        <div className="form-group" style={{ margin: 0 }}>
+          <label>Lifetime (years)</label>
+          <input className="input" type="number" min={0.5} step={0.5} value={lifetime ?? ''} onChange={e => setLifetime(e.target.value ? Number(e.target.value) : undefined)} />
+        </div>
+        <div className="form-group" style={{ margin: 0 }}>
+          <label>Max budget (MEUR)</label>
+          <input className="input" type="number" min={0.5} step={1} value={budget ?? ''} onChange={e => setBudget(e.target.value ? Number(e.target.value) : undefined)} />
+        </div>
+        <div className="form-group" style={{ margin: 0 }}>
+          <label>Schedule (months)</label>
+          <input className="input" type="number" min={3} step={3} value={schedule ?? ''} onChange={e => setSchedule(e.target.value ? Number(e.target.value) : undefined)} />
+        </div>
+        <div className="form-group" style={{ margin: 0 }}>
+          <label>Pointing (deg)</label>
+          <input className="input" type="number" min={0.001} step={0.01} value={pointing ?? ''} onChange={e => setPointing(e.target.value ? Number(e.target.value) : undefined)} />
+        </div>
+        <div className="form-group" style={{ margin: 0 }}>
+          <label>Data rate (Mbps)</label>
+          <input className="input" type="number" min={0.1} step={10} value={dataRate ?? ''} onChange={e => setDataRate(e.target.value ? Number(e.target.value) : undefined)} />
+        </div>
       </div>
+      <button className="btn btn-sm" onClick={runAdvisor} disabled={loading} style={{ marginBottom: '0.5rem' }}>
+        {loading ? 'Computing...' : 'Compute Class Recommendation'}
+      </button>
       {result && (
-        <div style={{ marginTop: '0.3rem' }}>
-          <div style={{ fontSize: '0.72rem', color: '#d1d5db', marginBottom: '0.3rem' }}>
+        <div>
+          <div style={{ fontSize: '0.78rem', color: '#d1d5db', marginBottom: '0.4rem' }}>
             {result.recommendation?.split('.')[0]}.
           </div>
-          {result.classes?.slice(0, 3).map((c: any) => (
-            <div key={c.class} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.72rem', marginBottom: '0.1rem' }}>
+          {result.classes?.slice(0, 4).map((c: any) => (
+            <div key={c.class} style={{
+              display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.3rem',
+              fontSize: '0.78rem', marginBottom: '0.2rem', borderRadius: '4px',
+              background: c.fit_percent >= 80 ? 'rgba(16,185,129,0.05)' : 'transparent',
+            }}>
               <span style={{ fontWeight: 600, flex: 1 }}>{c.name}</span>
-              <span style={{ color: c.fit_percent >= 80 ? '#10b981' : c.fit_percent >= 50 ? '#f59e0b' : '#ef4444' }}>
-                {c.fit_percent}% fit
+              <span style={{ color: c.fit_percent >= 80 ? '#10b981' : c.fit_percent >= 50 ? '#f59e0b' : '#ef4444', fontWeight: 600 }}>
+                {c.fit_percent}%
               </span>
-              <span style={{ color: '#6b7280', fontSize: '0.65rem' }}>{c.cost_range_meur[0]}-{c.cost_range_meur[1]} MEUR</span>
-              <button onClick={() => onSelect(c.class)}
-                style={{
-                  background: 'none', border: '1px solid #374151', borderRadius: '3px',
-                  color: '#3b82f6', cursor: 'pointer', fontSize: '0.6rem', padding: '0.1rem 0.3rem',
-                }}>Use</button>
+              <span style={{ color: '#6b7280', fontSize: '0.7rem' }}>{c.mass_range_kg[0]}-{c.mass_range_kg[1]}kg</span>
+              <span style={{ color: '#6b7280', fontSize: '0.7rem' }}>{c.cost_range_meur[0]}-{c.cost_range_meur[1]}M</span>
+              <span style={{ color: '#6b7280', fontSize: '0.7rem' }}>{c.schedule_range_months[0]}-{c.schedule_range_months[1]}mo</span>
+              <button onClick={() => onSelect(c.class, c.mass_range_kg, c.cost_range_meur)}
+                style={{ background: 'none', border: '1px solid #374151', borderRadius: '3px', color: '#3b82f6', cursor: 'pointer', fontSize: '0.65rem', padding: '0.1rem 0.4rem' }}>
+                Use
+              </button>
             </div>
           ))}
+          {result.classes?.[0]?.gaps?.length > 0 && (
+            <div style={{ fontSize: '0.72rem', color: '#f59e0b', marginTop: '0.3rem' }}>
+              Gaps: {result.classes[0].gaps.join('; ')}
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -122,8 +222,13 @@ export function RequirementsPanel() {
     setOrbit({ altitude_km: alt, inclination_deg: inc, orbit_type: 'sso' as any })
   }
 
-  const handleClassSelect = (cls: string) => {
-    setRequirements({ spacecraft_class: cls })
+  const handleClassSelect = (cls: string, massRange: number[], costRange: number[]) => {
+    // Set class AND realistic targets from the class profile
+    setRequirements({
+      spacecraft_class: cls,
+      target_mass_kg: massRange[1],  // Upper end of class range as target
+      target_cost_meur: costRange[1], // Upper end as ceiling
+    })
   }
 
   return (
