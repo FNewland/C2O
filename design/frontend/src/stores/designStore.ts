@@ -102,6 +102,14 @@ export interface MissionNeedState {
   conops_summary: string
 }
 
+interface ChangeRecord {
+  timestamp: number
+  source: string  // which tab/component made the change
+  paramId: string
+  oldValue: any
+  newValue: any
+}
+
 interface DesignStore {
   missionNeed: MissionNeedState
   requirements: MissionRequirements
@@ -110,10 +118,18 @@ interface DesignStore {
   error: string | null
   studyId: string | null
 
+  // Reactive state
+  designStale: boolean  // true when requirements changed since last design run
+  lastChangeSource: string  // which tab made the last change
+  changeHistory: ChangeRecord[]  // recent changes for audit trail
+  pendingConflicts: string[]  // conflicts detected from latest change
+
   setMissionNeed: (need: Partial<MissionNeedState>) => void
   setRequirements: (req: Partial<MissionRequirements>) => void
   setOrbit: (orbit: Partial<MissionRequirements['orbit']>) => void
   setStudyId: (id: string | null) => void
+  markStale: (source: string) => void
+  applyConvergenceResult: (params: Record<string, DesignParam>, conflicts: CrossDomainConflict[]) => void
   runDesign: () => Promise<void>
   createStudy: () => Promise<string | null>
 }
@@ -164,23 +180,44 @@ export const useDesignStore = create<DesignStore>((set, get) => ({
   isRunning: false,
   error: null,
   studyId: null,
+  designStale: false,
+  lastChangeSource: '',
+  changeHistory: [],
+  pendingConflicts: [],
 
   setMissionNeed: (need) => set((s) => ({
-    missionNeed: { ...s.missionNeed, ...need }
+    missionNeed: { ...s.missionNeed, ...need },
+    designStale: true,
+    lastChangeSource: 'mission_need',
   })),
 
   setRequirements: (req) => set((s) => ({
-    requirements: { ...s.requirements, ...req }
+    requirements: { ...s.requirements, ...req },
+    designStale: true,
+    lastChangeSource: 'requirements',
   })),
 
   setOrbit: (orbit) => set((s) => ({
     requirements: {
       ...s.requirements,
       orbit: { ...s.requirements.orbit, ...orbit }
-    }
+    },
+    designStale: true,
+    lastChangeSource: 'orbit',
   })),
 
   setStudyId: (id) => set({ studyId: id }),
+
+  markStale: (source) => set({ designStale: true, lastChangeSource: source }),
+
+  applyConvergenceResult: (params, conflicts) => set((s) => {
+    // Merge convergence results back into the design result
+    if (!s.result) return {}
+    const merged = { ...s.result }
+    merged.parameters = { ...merged.parameters, ...params }
+    merged.conflicts = conflicts
+    return { result: merged, pendingConflicts: conflicts.map(c => c.title) }
+  }),
 
   createStudy: async () => {
     try {
@@ -233,7 +270,10 @@ export const useDesignStore = create<DesignStore>((set, get) => ({
         throw new Error(`Server error: ${res.status}`)
       }
       const data: DesignResult = await res.json()
-      set({ result: data, isRunning: false })
+      set({
+        result: data, isRunning: false, designStale: false,
+        pendingConflicts: (data.conflicts || []).map(c => c.title),
+      })
     } catch (err) {
       set({ error: String(err), isRunning: false })
     }

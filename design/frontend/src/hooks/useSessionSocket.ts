@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useSessionStore } from '../stores/sessionStore'
+import { useDesignStore } from '../stores/designStore'
 
 // WebSocket client with auto-reconnect for SpaceCDF concurrent design sessions.
 // Backs SessionBar, LiveEditToast, PositionPanel presence, and live parameter updates.
@@ -53,6 +54,13 @@ export function useSessionSocket(sessionId: string | null, positionId: string | 
           break
         case 'state_update':
           applyStateUpdate(msg.updates || {})
+          // Cross-store sync: propagate convergence results to design store
+          if (msg.updates) {
+            useDesignStore.getState().applyConvergenceResult(
+              msg.updates,
+              msg.conflicts || [],
+            )
+          }
           break
         case 'convergence_complete':
           setConvergenceInfo({

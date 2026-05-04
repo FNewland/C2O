@@ -29,6 +29,7 @@ import { SnapshotsPanel } from './components/SnapshotsPanel'
 import { OptimizerPanel } from './components/OptimizerPanel'
 import { UserManual } from './components/UserManual'
 import { ExportsPanel } from './components/ExportsPanel'
+import { DesignStateBar } from './components/DesignStateBar'
 import { GateReviewPanel } from './components/GateReviewPanel'
 import { PositionAnswersPanel } from './components/PositionAnswersPanel'
 import { ConOpsEditor } from './components/ConOpsEditor'
@@ -265,6 +266,7 @@ function AppContent() {
                   >{tab.label}</button>
                 ))}
               </div>
+              <DesignStateBar />
               <div style={{ padding: '0 1rem', overflow: 'auto', flex: 1 }}>
                 {centerTab === 'design' && <DesignWorkspace />}
                 {centerTab === 'conops' && <ConOpsEditor />}
