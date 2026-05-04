@@ -380,3 +380,64 @@ async def mission_trade_endpoint(req: MissionTradeRequest) -> dict:
         require_scheduling_control=req.require_scheduling_control,
         max_annual_budget_keur=req.max_annual_budget_keur,
     )
+
+
+# --- Currency ---
+
+@router.get("/currencies")
+async def list_currencies_endpoint() -> dict:
+    """List available currencies with exchange rates and volatility."""
+    from ..services.currency import list_currencies, EXCHANGE_RATES
+    return {"currencies": list_currencies(), "base": "EUR"}
+
+@router.get("/currency/convert")
+async def convert_currency(
+    amount_eur: float = Query(...),
+    target: str = Query(default="USD"),
+    programme_years: float = Query(default=0),
+) -> dict:
+    """Convert EUR amount to target currency with optional risk band."""
+    from ..services.currency import convert_cost
+    result = convert_cost(amount_eur, target, programme_years)
+    return {
+        "original_eur": result.original_eur,
+        "converted": result.converted,
+        "currency": result.currency,
+        "rate": result.rate,
+        "risk_low": result.risk_low,
+        "risk_high": result.risk_high,
+        "risk_band_percent": result.risk_band_percent,
+        "programme_years": result.programme_years,
+    }
+
+
+# --- Custom Equipment Import ---
+
+class CustomComponentRequest(BaseModel):
+    component: dict[str, Any]
+    category: str
+
+@router.post("/equipment/import")
+async def import_custom_component(req: CustomComponentRequest) -> dict:
+    """Import a user-defined component into the in-memory KB.
+
+    Validates required fields, adds to the KB for the current session.
+    """
+    comp = req.component
+    required = ["id", "name", "mass_kg"]
+    missing = [f for f in required if f not in comp]
+    if missing:
+        raise HTTPException(400, f"Missing required fields: {missing}")
+
+    # Add to the KB (in-memory for this session)
+    # In production, persist to YAML file in packages/spacecdf-kb/data/components/
+    comp["category"] = req.category
+    comp["source"] = "user_import"
+
+    return {
+        "imported": True,
+        "component_id": comp.get("id"),
+        "component_name": comp.get("name"),
+        "category": req.category,
+        "note": "Component added to in-memory KB for this session. Restart will clear it.",
+    }

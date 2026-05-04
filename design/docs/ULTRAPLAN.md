@@ -192,3 +192,16 @@ Start with Phase 1 (quick wins) — immediate visible improvement.
 Then Phase 2 (requirements) — foundational for everything else.
 Phases 3-6 can be partially parallelised.
 Phase 7 last — it validates everything above.
+
+---
+
+## Additional Issues (added 2026-05-04)
+
+### Category H: Data & Configuration
+
+| # | Issue | Severity | Effort | Status |
+|---|-------|----------|--------|--------|
+| H1 | Equipment DB update via web search (cubesatshop, satsearch) | MED | 6h | TODO |
+| H2 | User-supplied equipment data import (CSV/YAML/JSON) | MED | 3h | TODO |
+| H3 | All parametric data visible and editable (physics constants, agent params) | MED | 4h | TODO |
+| H4 | Currency selectable in UI with risk band in cost budget | HIGH | 2h | TODO |
