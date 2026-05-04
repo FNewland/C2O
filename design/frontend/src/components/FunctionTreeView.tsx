@@ -1,27 +1,61 @@
 import { useState, useMemo } from 'react'
+import { useDesignStore } from '../stores/designStore'
 import { POSITION_COLOR } from '../constants'
 
 interface FunctionNode {
   id: string; name: string; function_type: string
   parent_function_id: string | null
   objective_ids: string[]; derived_requirement_ids: string[]
-  allocated_to: string; performance_criteria: string[]
+  allocated_to: string[]; performance_criteria: string[]
   level: number
 }
 
-// Starter decomposition for demo — in production loaded from backend
-const DEMO_FUNCTIONS: FunctionNode[] = [
-  { id: 'F-001', name: 'Acquire multispectral imagery', function_type: 'observe', parent_function_id: null, objective_ids: ['obj-1'], derived_requirement_ids: ['REQ-PL-001'], allocated_to: 'payload', performance_criteria: ['GSD <= 10m at nadir', 'SNR >= 100:1'], level: 0 },
-  { id: 'F-002', name: 'Point instrument at target', function_type: 'point', parent_function_id: 'F-001', objective_ids: ['obj-1'], derived_requirement_ids: ['REQ-AOCS-001'], allocated_to: 'aocs', performance_criteria: ['pointing <= 0.1 deg'], level: 1 },
-  { id: 'F-003', name: 'Store acquired data onboard', function_type: 'store', parent_function_id: 'F-001', objective_ids: ['obj-1'], derived_requirement_ids: [], allocated_to: 'data', performance_criteria: ['storage >= 2x daily volume'], level: 1 },
-  { id: 'F-004', name: 'Downlink data to ground station', function_type: 'communicate', parent_function_id: 'F-001', objective_ids: ['obj-1'], derived_requirement_ids: ['REQ-TTC-001'], allocated_to: 'link', performance_criteria: ['link margin >= 3 dB', 'daily downlink >= daily generation'], level: 1 },
-  { id: 'F-005', name: 'Generate electrical power', function_type: 'power', parent_function_id: null, objective_ids: [], derived_requirement_ids: ['REQ-PWR-001'], allocated_to: 'power', performance_criteria: ['positive power margin in all modes'], level: 0 },
-  { id: 'F-006', name: 'Maintain orbit', function_type: 'navigate', parent_function_id: null, objective_ids: [], derived_requirement_ids: [], allocated_to: 'propulsion', performance_criteria: ['delta-V >= total budget'], level: 0 },
-  { id: 'F-007', name: 'Maintain thermal environment', function_type: 'protect', parent_function_id: null, objective_ids: [], derived_requirement_ids: [], allocated_to: 'thermal', performance_criteria: ['all components within operating range'], level: 0 },
-  { id: 'F-008', name: 'Survive launch environment', function_type: 'launch', parent_function_id: null, objective_ids: [], derived_requirement_ids: [], allocated_to: 'structure', performance_criteria: ['first natural freq > 45 Hz', 'positive MoS under launch loads'], level: 0 },
-  { id: 'F-009', name: 'Communicate with ground (TTC)', function_type: 'command', parent_function_id: null, objective_ids: [], derived_requirement_ids: [], allocated_to: 'link', performance_criteria: [], level: 0 },
-  { id: 'F-010', name: 'Dispose of spacecraft at end of life', function_type: 'dispose', parent_function_id: null, objective_ids: [], derived_requirement_ids: [], allocated_to: 'propulsion', performance_criteria: ['comply with 25-year rule'], level: 0 },
-]
+// Mission-type-aware starter functions
+function getDemoFunctions(missionType: string): FunctionNode[] {
+  // Universal functions (all missions)
+  const universal: FunctionNode[] = [
+    { id: 'F-005', name: 'Generate electrical power', function_type: 'power', parent_function_id: null, objective_ids: [], derived_requirement_ids: ['REQ-PWR-001'], allocated_to: ['power'], performance_criteria: ['positive power margin in all modes'], level: 0 },
+    { id: 'F-007', name: 'Maintain thermal environment', function_type: 'protect', parent_function_id: null, objective_ids: [], derived_requirement_ids: [], allocated_to: ['thermal'], performance_criteria: ['all components within operating range'], level: 0 },
+    { id: 'F-008', name: 'Survive launch environment', function_type: 'launch', parent_function_id: null, objective_ids: [], derived_requirement_ids: [], allocated_to: ['structure'], performance_criteria: ['first natural freq > 45 Hz'], level: 0 },
+    { id: 'F-009', name: 'Communicate with ground (TTC)', function_type: 'command', parent_function_id: null, objective_ids: [], derived_requirement_ids: [], allocated_to: ['link'], performance_criteria: [], level: 0 },
+    { id: 'F-010', name: 'Dispose of spacecraft at end of life', function_type: 'dispose', parent_function_id: null, objective_ids: [], derived_requirement_ids: [], allocated_to: ['structure'], performance_criteria: ['comply with debris mitigation rules'], level: 0 },
+  ]
+
+  // Mission-specific primary function
+  if (missionType === 'earth_observation' || missionType === 'science_planetary') {
+    return [
+      { id: 'F-001', name: 'Acquire imagery of target', function_type: 'observe', parent_function_id: null, objective_ids: ['obj-1'], derived_requirement_ids: ['REQ-PL-001'], allocated_to: ['payload'], performance_criteria: ['GSD meets requirement', 'SNR >= threshold'], level: 0 },
+      { id: 'F-002', name: 'Point instrument at target', function_type: 'point', parent_function_id: 'F-001', objective_ids: ['obj-1'], derived_requirement_ids: ['REQ-AOCS-001'], allocated_to: ['aocs'], performance_criteria: ['pointing meets requirement'], level: 1 },
+      { id: 'F-003', name: 'Store acquired data onboard', function_type: 'store', parent_function_id: 'F-001', objective_ids: ['obj-1'], derived_requirement_ids: [], allocated_to: ['data'], performance_criteria: ['storage >= 2x daily volume'], level: 1 },
+      { id: 'F-004', name: 'Downlink data to ground station', function_type: 'communicate', parent_function_id: 'F-001', objective_ids: ['obj-1'], derived_requirement_ids: ['REQ-TTC-001'], allocated_to: ['link'], performance_criteria: ['link margin >= 3 dB'], level: 1 },
+      ...universal,
+    ]
+  } else if (missionType === 'communications' || missionType === 'rf_relay') {
+    return [
+      { id: 'F-001', name: 'Relay communications between users', function_type: 'communicate', parent_function_id: null, objective_ids: ['obj-1'], derived_requirement_ids: ['REQ-PL-001'], allocated_to: ['payload', 'link'], performance_criteria: ['data rate meets requirement', 'latency meets requirement'], level: 0 },
+      { id: 'F-002', name: 'Receive uplink signal', function_type: 'communicate', parent_function_id: 'F-001', objective_ids: ['obj-1'], derived_requirement_ids: [], allocated_to: ['payload'], performance_criteria: ['receiver sensitivity meets requirement'], level: 1 },
+      { id: 'F-003', name: 'Process and route data', function_type: 'store', parent_function_id: 'F-001', objective_ids: ['obj-1'], derived_requirement_ids: [], allocated_to: ['data'], performance_criteria: ['processing latency < threshold'], level: 1 },
+      { id: 'F-004', name: 'Transmit downlink signal', function_type: 'communicate', parent_function_id: 'F-001', objective_ids: ['obj-1'], derived_requirement_ids: [], allocated_to: ['link'], performance_criteria: ['EIRP meets link budget'], level: 1 },
+      ...universal,
+    ]
+  } else if (missionType === 'sar') {
+    return [
+      { id: 'F-001', name: 'Acquire SAR imagery', function_type: 'observe', parent_function_id: null, objective_ids: ['obj-1'], derived_requirement_ids: ['REQ-PL-001'], allocated_to: ['payload'], performance_criteria: ['resolution meets requirement', 'swath meets requirement'], level: 0 },
+      { id: 'F-002', name: 'Point antenna at target', function_type: 'point', parent_function_id: 'F-001', objective_ids: ['obj-1'], derived_requirement_ids: [], allocated_to: ['aocs'], performance_criteria: ['pointing meets SAR geometry'], level: 1 },
+      { id: 'F-003', name: 'Store SAR data onboard', function_type: 'store', parent_function_id: 'F-001', objective_ids: ['obj-1'], derived_requirement_ids: [], allocated_to: ['data'], performance_criteria: ['storage >= daily SAR volume'], level: 1 },
+      { id: 'F-004', name: 'Downlink SAR data', function_type: 'communicate', parent_function_id: 'F-001', objective_ids: ['obj-1'], derived_requirement_ids: [], allocated_to: ['link'], performance_criteria: ['X-band link margin >= 3 dB'], level: 1 },
+      ...universal,
+    ]
+  } else {
+    // Technology demo, AIS, generic
+    return [
+      { id: 'F-001', name: 'Operate mission payload', function_type: 'observe', parent_function_id: null, objective_ids: ['obj-1'], derived_requirement_ids: ['REQ-PL-001'], allocated_to: ['payload'], performance_criteria: ['payload performance meets requirement'], level: 0 },
+      { id: 'F-003', name: 'Store mission data onboard', function_type: 'store', parent_function_id: 'F-001', objective_ids: ['obj-1'], derived_requirement_ids: [], allocated_to: ['data'], performance_criteria: ['storage sufficient'], level: 1 },
+      { id: 'F-004', name: 'Downlink data to ground', function_type: 'communicate', parent_function_id: 'F-001', objective_ids: ['obj-1'], derived_requirement_ids: [], allocated_to: ['link'], performance_criteria: ['link margin >= 3 dB'], level: 1 },
+      ...universal,
+    ]
+  }
+}
 
 const SUBSYSTEM_COLORS: Record<string, string> = {
   payload: '#10b981', power: '#f59e0b', aocs: '#06b6d4',
@@ -37,7 +71,8 @@ const DOMAIN_OPTIONS = [
 ]
 
 export function FunctionTreeView() {
-  const [functions, setFunctions] = useState<FunctionNode[]>(DEMO_FUNCTIONS)
+  const missionType = useDesignStore(s => s.requirements.mission_type)
+  const [functions, setFunctions] = useState<FunctionNode[]>(() => getDemoFunctions(missionType))
   const [expanded, setExpanded] = useState<Set<string>>(new Set(DEMO_FUNCTIONS.map(f => f.id)))
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editName, setEditName] = useState('')
@@ -49,7 +84,7 @@ export function FunctionTreeView() {
     setFunctions(prev => [...prev, {
       id: newId, name: 'New function', function_type: 'observe',
       parent_function_id: parentId, objective_ids: [],
-      derived_requirement_ids: [], allocated_to: '',
+      derived_requirement_ids: [], allocated_to: [],
       performance_criteria: [], level: parentId ? 1 : 0,
     }])
     setExpanded(prev => new Set([...prev, newId]))
@@ -62,14 +97,14 @@ export function FunctionTreeView() {
   const startEdit = (f: FunctionNode) => {
     setEditingId(f.id)
     setEditName(f.name)
-    setEditDomain(f.allocated_to)
+    setEditDomain(Array.isArray(f.allocated_to) ? f.allocated_to.join(', ') : f.allocated_to)
     setEditCriteria(f.performance_criteria.join('; '))
   }
 
   const saveEdit = () => {
     if (!editingId) return
     setFunctions(prev => prev.map(f => f.id === editingId ? {
-      ...f, name: editName, allocated_to: editDomain,
+      ...f, name: editName, allocated_to: editDomain.split(',').map(s => s.trim()).filter(Boolean),
       performance_criteria: editCriteria.split(';').map(c => c.trim()).filter(Boolean),
     } : f))
     setEditingId(null)
@@ -91,7 +126,7 @@ export function FunctionTreeView() {
   // Stats
   const leaves = functions.filter(f => !functions.some(c => c.parent_function_id === f.id))
   const uncovered = leaves.filter(f => f.derived_requirement_ids.length === 0)
-  const unallocated = functions.filter(f => !f.allocated_to)
+  const unallocated = functions.filter(f => !f.allocated_to || (Array.isArray(f.allocated_to) && f.allocated_to.length === 0))
 
   return (
     <div style={{ padding: '1rem', overflowY: 'auto', height: '100%' }}>
@@ -146,7 +181,8 @@ function FunctionNodeView({ node, depth, getChildren, expanded, toggleExpand, al
   const isExpanded = expanded.has(node.id)
   const isLeaf = !hasChildren
   const hasCoverage = node.derived_requirement_ids.length > 0
-  const color = SUBSYSTEM_COLORS[node.allocated_to] || '#6b7280'
+  const allocList = Array.isArray(node.allocated_to) ? node.allocated_to : [node.allocated_to].filter(Boolean)
+  const color = SUBSYSTEM_COLORS[allocList[0]] || '#6b7280'
 
   return (
     <div style={{ marginLeft: depth * 16 }}>
@@ -169,11 +205,13 @@ function FunctionNodeView({ node, depth, getChildren, expanded, toggleExpand, al
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', flexWrap: 'wrap' }}>
             <span style={{ fontSize: '0.8rem', fontWeight: 500 }}>{node.name}</span>
-            {node.allocated_to && (
-              <span style={{
+            {allocList.length > 0 && allocList.map(domain => (
+              <span key={domain} style={{
                 fontSize: '0.6rem', padding: '0 0.3rem', borderRadius: '3px',
-                background: `${color}22`, color, fontWeight: 600,
-              }}>{node.allocated_to}</span>
+                background: `${SUBSYSTEM_COLORS[domain] || '#6b7280'}22`,
+                color: SUBSYSTEM_COLORS[domain] || '#6b7280', fontWeight: 600,
+              }}>{domain}</span>
+            ))
             )}
             {isLeaf && !hasCoverage && (
               <span style={{ fontSize: '0.6rem', padding: '0 0.3rem', borderRadius: '3px', background: 'rgba(245,158,11,0.2)', color: '#f59e0b' }}>

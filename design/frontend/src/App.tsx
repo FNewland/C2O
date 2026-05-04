@@ -28,6 +28,7 @@ import { EcssCompliancePanel } from './components/EcssCompliancePanel'
 import { SnapshotsPanel } from './components/SnapshotsPanel'
 import { OptimizerPanel } from './components/OptimizerPanel'
 import { UserManual } from './components/UserManual'
+import { ExportsPanel } from './components/ExportsPanel'
 import { GateReviewPanel } from './components/GateReviewPanel'
 import { PositionAnswersPanel } from './components/PositionAnswersPanel'
 import { ConOpsEditor } from './components/ConOpsEditor'
@@ -41,7 +42,7 @@ const queryClient = new QueryClient({
   },
 })
 
-type CenterTab = 'need' | 'concept' | 'requirements' | 'design' | 'conops' | 'functions' | 'interfaces' | 'reqs' | 'positions' | 'answers' | 'gate' | 'compliance' | 'ecss' | 'cost' | 'trade' | 'snapshots' | 'optimizer' | 'help'
+type CenterTab = 'need' | 'concept' | 'requirements' | 'design' | 'conops' | 'functions' | 'interfaces' | 'reqs' | 'positions' | 'answers' | 'gate' | 'compliance' | 'ecss' | 'cost' | 'trade' | 'snapshots' | 'optimizer' | 'exports' | 'help'
 type RightTab = 'insights' | 'conflicts' | 'exports'
 
 function AppContent() {
@@ -169,6 +170,7 @@ function AppContent() {
     { id: 'cost', label: 'Cost' },
     { id: 'trade', label: 'Trade Studies' },
     { id: 'optimizer', label: 'Optimizer' },
+    { id: 'exports', label: 'Exports' },
     { id: 'help', label: 'Help' },
   ], [])
 
@@ -278,6 +280,7 @@ function AppContent() {
                 {centerTab === 'trade' && <TradeStudyPanel studyId={studyId} />}
                 {centerTab === 'snapshots' && <SnapshotsPanel sessionId={sessionId} />}
                 {centerTab === 'optimizer' && <OptimizerPanel sessionId={sessionId} />}
+                {centerTab === 'exports' && <ExportsPanel studyId={studyId} />}
                 {centerTab === 'help' && <UserManual />}
               </div>
             </>
