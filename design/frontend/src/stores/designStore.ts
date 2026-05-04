@@ -138,7 +138,7 @@ interface DesignStore {
 const defaultRequirements: MissionRequirements = {
   name: 'New Mission',
   mission_type: 'earth_observation',
-  spacecraft_class: 'small',
+  spacecraft_class: 'nano',
   orbit: {
     orbit_type: 'sso',
     altitude_km: 500,

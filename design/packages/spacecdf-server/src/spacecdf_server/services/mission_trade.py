@@ -291,24 +291,77 @@ def compute_mission_trade(
     require_data_ownership: bool = False,
     require_scheduling_control: bool = False,
     max_annual_budget_keur: float = 500.0,
+    mission_type: str = "earth_observation",
+    num_spacecraft: int = 1,
 ) -> dict[str, Any]:
     """Compute space vs non-space mission trade study.
 
     Scores each alternative against mission objectives and returns
     a ranked comparison with rationale for why space is or isn't needed.
+    Filters alternatives to match mission_type (no optical for comms, etc.).
     """
     alts = _get_alternatives(target_gsd_m, target_revisit_days, target_bands)
 
-    # Score criteria (weights)
-    weights = {
-        "resolution": 0.20,
-        "revisit": 0.20,
-        "coverage": 0.15,
-        "latency": 0.10,
-        "cost": 0.15,
-        "control": 0.10,
-        "longevity": 0.10,
-    }
+    # Filter alternatives by mission type — don't show optical for comms missions
+    is_optical = mission_type in ("earth_observation", "optical_imager", "science_planetary")
+    is_comms = mission_type in ("communications", "rf_relay", "iot")
+    is_sar = mission_type == "sar"
+
+    filtered_alts = []
+    for alt in alts:
+        # Skip optical EO satellites for non-optical missions
+        if not is_optical and alt.category == "existing_satellite" and alt.gsd_m > 0:
+            # Only keep if the existing service matches the mission need
+            name_lower = alt.name.lower()
+            if is_comms and not any(k in name_lower for k in ["iridium", "astrocast", "spire"]):
+                continue
+            if is_sar and "iceye" not in name_lower and "sar" not in name_lower:
+                continue
+        # Skip ground imagery alternatives for comms/SAR missions
+        if not is_optical and alt.category in ("aerial", "ground_sensor") and alt.gsd_m > 0:
+            continue
+        filtered_alts.append(alt)
+
+    # Add constellation option if num_spacecraft > 1 or coverage is global
+    if num_spacecraft > 1 or target_coverage == "global":
+        filtered_alts.append(MissionAlternative(
+            name=f"CubeSat Constellation ({num_spacecraft}+ satellites)",
+            category="new_satellite",
+            description=f"Constellation of {max(num_spacecraft, 4)} CubeSats for global coverage "
+                        f"with {target_revisit_days}-day revisit. Walker delta configuration.",
+            coverage="global", revisit_days=max(1, target_revisit_days),
+            gsd_m=target_gsd_m if is_optical else 0,
+            latency_hours=min(target_latency_hours, 2),
+            spectral_bands=target_bands or [],
+            operational_lifetime_years=5,
+            cost_type="capital", annual_cost_keur=500,
+            capital_cost_keur=max(num_spacecraft, 4) * 800,
+            total_3yr_cost_keur=max(num_spacecraft, 4) * 800 + 1500,
+            data_ownership="full", scheduling_control="full", customisation="full",
+            pros=["Global coverage", "Short revisit", "Redundancy (no single point of failure)",
+                  "Full control", "Scalable"],
+            cons=["Higher total cost", "Complex operations", "Constellation management needed",
+                  "Multiple launches", "Regulatory complexity (spectrum for fleet)"],
+        ))
+
+    alts = filtered_alts
+
+    # Score criteria — weights adapt to mission type
+    if is_comms:
+        weights = {
+            "latency": 0.25, "coverage": 0.20, "cost": 0.20,
+            "control": 0.15, "longevity": 0.10, "revisit": 0.10,
+        }
+    elif is_sar:
+        weights = {
+            "resolution": 0.20, "revisit": 0.20, "coverage": 0.15,
+            "latency": 0.10, "cost": 0.15, "control": 0.10, "longevity": 0.10,
+        }
+    else:
+        weights = {
+            "resolution": 0.20, "revisit": 0.20, "coverage": 0.15,
+            "latency": 0.10, "cost": 0.15, "control": 0.10, "longevity": 0.10,
+        }
 
     coverage_map = {"global": 3, "regional": 2, "local": 1, "point": 0.5,
                     "global + local validation": 2.5}

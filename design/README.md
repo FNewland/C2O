@@ -1,194 +1,105 @@
-# SpaceCDF — AI-Supported Concurrent Design Facility
+# SpaceCDF — AI-Assisted Concurrent Design Facility for Space Missions
 
-SpaceCDF is a research tool for rapid, collaborative space mission design. It combines an agent-based design loop (convergence in 3–12 ms on a reference 6U CubeSat design) with real-time multi-user collaboration, NASA CEH-aligned cost estimation, requirement verification, equipment selection from a component knowledge base, and exports to simulator configs, design review documents, and flight software scaffolding.
+SpaceCDF is an open-source web tool for collaborative spacecraft mission design, following the System-V model from NASA SEH and ECSS standards. A team walks in with a problem and walks out with a complete, buildable CubeSat design.
 
-**Status: Phase 5 in progress.** Phase 4 foundation (14 design agents, 10 positions, 68 components + 22 launch vehicles, WebSocket collaboration, SQLite persistence, Monte Carlo cost, compliance matrix, trade studies) plus Phase 5 additions: single-objective design optimiser (differential evolution), multi-objective Pareto optimiser (NSGA-II), MBSE export (ECSS-E-TM-10-25A-style JSON for SysML import), template gallery (4 mission archetypes), ECSS review-gate DRD tracking (MDR/PRR/SRR), named design snapshots with compare/restore, compliance artefact pipeline (Verification Plan + Tailoring Matrix auto-generation), validation harness against reference designs, and in-app user manual.
+## What It Does
 
----
-
-## Quick start (local dev)
-
-```bash
-# One-off setup
-cd SpaceCDF
-python3 -m venv .venv
-source .venv/bin/activate
-pip install fastapi 'uvicorn[standard]' pydantic pyyaml numpy scipy sgp4 jinja2 python-docx \
-            'sqlalchemy[asyncio]>=2.0' aiosqlite openpyxl pytest pytest-asyncio
-
-cd frontend && npm install && cd ..
-
-# Start both servers (backend :8000, frontend :5173)
-./scripts/start.sh
-
-# Or individually
-./scripts/start.sh backend    # uvicorn on :8000
-./scripts/start.sh frontend   # vite on :5173
-./scripts/start.sh design configs/examples/6u_eo_cubesat.yaml  # headless single-design run
-```
-
-Open `http://localhost:5173` in a browser. Left panel: requirements. Center tabs: Design / Positions / Compliance / Cost / Trade Studies. Right tabs: Insights / Conflicts / Exports. Top-left: SessionBar (click Start Session to collaborate).
-
----
+- **Mission Definition**: Problem statement, stakeholders, objectives, space vs non-space trade analysis (mission-type-aware, constellation options)
+- **Requirements Engineering**: SMART requirements generation, traceability to objectives, suggest-then-approve workflow
+- **Concept of Operations**: Mission architecture diagrams, phases, operational modes, data flow
+- **Functional Decomposition**: Mission-type-aware function trees (comms/SAR/EO/generic) with multi-subsystem allocation
+- **Design Sizing**: 20 parametric design agents (power, mass, AOCS, thermal, link, propulsion, cost, etc.) with CubeSat-calibrated mass/power fractions
+- **Equipment Selection**: 18 component categories (150+ COTS components), RF compatibility checking, live budget tracking, multiple selections per category
+- **Engineering Budgets**: Mass, power, cost, link, pointing — per-subsystem breakdown with ECSS margin enforcement
+- **Trade Studies**: Tabular multi-criteria trades with weightings, thresholds, sensitivity analysis, plus parametric sweeps
+- **Multi-Objective Optimizer**: NSGA-II Pareto with 10 objectives, 12 design variables, Morris screening sensitivity analysis
+- **Constellation Design**: Walker delta configurations with coverage analysis and learning-curve costing
+- **Beyond-LEO**: MEO, GEO, HEO, Lunar (NRHO), interplanetary with DSN link budgets and transfer ΔV
+- **RF Spectrum & Licensing**: Amateur/experimental/commercial band database, ITU/IARU filing templates
+- **Regulatory Paperwork**: RSSSA, export control (ITAR/EAR/CGP), COPUOS registration, end-of-life analysis
+- **ECSS Document Generation**: MRD, TS, IRD, SEMP, RMP, ConOps, VP, VCD, Test Plan, Tailoring Matrix
+- **Gate Reviews**: MCR exit criteria with "Go fix" navigation
+- **Concurrent Design Sessions**: WebSocket real-time collaboration with 15 engineering positions
+- **Cross-Tool Reactivity**: Stale detection, auto-reconverge, conflict review modal, impact preview, change audit with undo
 
 ## Architecture
 
 ```
-frontend/               React + TypeScript + Zustand + @tanstack/react-query
-  src/components/       SessionBar, EquipmentBrowser, ComplianceMatrix,
-                        CostBreakdown, TradeStudyPanel, LiveEditToast,
-                        HistoryDrawer, PositionPanel, ConflictsPanel,
-                        InsightsPanel, ExportPanel, DesignWorkspace,
-                        RequirementsPanel, OptimizerPanel,
-                        TemplateGallery, EcssCompliancePanel,
-                        SnapshotsPanel, UserManual
-  src/hooks/            useSession, useSessionSocket, useOptimizer,
-                        useSnapshots, useTemplates
-  src/stores/           designStore, sessionStore
-
+frontend/          React + TypeScript + Zustand + Vite
 packages/
-  spacecdf-common/      Models (ParameterValue, Study, Requirement, Session),
-                        physics engines (orbit, power, thermal, link, aocs,
-                        propulsion, structure), agent base ABC
-  spacecdf-agents/      14 agents (9 Tier 1 compute + 5 Tier 2 analysis),
-                        orchestrator with Kahn's topological sort,
-                        exporters (smo/, docs/ with Jinja2 + docx + xlsx,
-                        fsw/, mbse/ ECSS-E-TM-10-25A-style JSON)
-  spacecdf-server/      FastAPI with 40+ endpoints + /ws/session/{id}
-                        db/ (SQLAlchemy async + SQLite), services/
-                        (session_manager, reconvergence, equipment,
-                         cost_engine, verification, analysis, optimizer,
-                         evaluator, ecss_gates, snapshots, template_library,
-                         compliance_generator)
-  spacecdf-kb/          YAML knowledge base — components/, launch_vehicles/,
-                        ground_stations/, cost_models/, standards/, positions/
+  spacecdf-common/ Shared models, physics engines (orbit, power, thermal, debris, payload sizing)
+  spacecdf-agents/ 20 design agents (9 Tier 1 sizing + 11 Tier 2 analysis)
+  spacecdf-server/ FastAPI backend (105 API endpoints, 17 routers)
+  spacecdf-kb/     Knowledge base (18 component categories, 150+ COTS, launch providers, validation missions)
+configs/           ECSS standards, margin data, review gates, positions
+docs/              Ultraplans, redesign architecture, validation results
+scripts/           Mission validation harness
 ```
 
----
+## Quick Start
 
-## Key concepts
+### Prerequisites
+- Python 3.11+
+- Node.js 18+
 
-**Sticky parameters.** Parameters with `source = KB_COMPONENT` or `POSITION_OVERRIDE` or `REQUIREMENT` are never overwritten by agents during re-convergence. Agents compute *around* human selections. This invariant is enforced in `DesignState.update()` via `ParameterSource.is_sticky` and regression-tested in `tests/test_phase4_invariants.py`.
-
-**Selective re-convergence.** When a single parameter changes (e.g. engineer selects a battery), only affected downstream agents re-run. Reverse dependency index built from agent `input_parameters()`/`dependencies()` declarations. Typical: 0.14 ms p50, 0.30 ms p95.
-
-**Position-scoped editing.** Each of 10 engineering positions (Systems, Mission, Payload, Power, AOCS, Thermal, Comms, Propulsion, Structures, Cost) owns parameters via `fnmatch` patterns declared in `packages/spacecdf-kb/src/spacecdf_kb/data/positions/positions.yaml`. The WebSocket router validates ownership before accepting edits. Systems engineer can edit anything (arbitration fallback).
-
-**Write-through persistence.** Parameter edits flow to an `asyncio.Queue`; a background worker drains and persists to SQLite (or Postgres via `DATABASE_URL`). The hot convergence path never awaits the DB.
-
----
-
-## Performance (bench_phase4.py, Apple M-series)
-
-| Capability | p50 | p95 | Budget |
-|------------|-----|-----|--------|
-| Full convergence | 3.0 ms | 4.3 ms | 100 ms |
-| Selective re-convergence | 0.14 ms | 0.30 ms | 50 ms |
-| Monte Carlo cost (n=1000) | 0.50 ms | 0.59 ms | 100 ms |
-| Sensitivity sweep (7 points) | 23 ms | 25 ms | 500 ms |
-| Compliance matrix build | 0.03 ms | 0.06 ms | 100 ms |
-
-Run `python3 scripts/bench_phase4.py` to reproduce.
-
----
-
-## Collaboration (Phase 4D)
-
-1. Click **Start Session** in SessionBar → pick a position → session created, WebSocket connects.
-2. Open another browser tab → **Start Session** → pick a different position → both see each other's avatars in SessionBar.
-3. Edits are auto-broadcast. Engineer A selects a battery → Engineer B sees:
-   - Toast: "Alice set power.battery_capacity_wh: ... → 77.0 [bat-gom-nanopow-bpx]"
-   - Updated parameter values in all views
-   - Convergence info in SessionBar: "Last reconv: 3 rounds, 0.4 ms, 16 params"
-4. Click the **History** button bottom-left to open HistoryDrawer and see the audit trail of all edits (survives server restart).
-5. Out-of-scope edits rejected at the server: Power engineer trying to set `aocs.mass_kg` → "Edit rejected" toast.
-
----
-
-## Persistence (Phase 4C)
-
-Sessions, studies, parameter edits, and periodic state snapshots are persisted to `spacecdf.db` (SQLite) by default. Override with `DATABASE_URL`:
+### Install & Run
 
 ```bash
-export DATABASE_URL='postgresql+asyncpg://user:pass@localhost/spacecdf'
+git clone https://github.com/FNewland/SpaceCDF.git
+cd SpaceCDF
+
+# Backend
+pip install -e packages/spacecdf-common
+pip install -e packages/spacecdf-agents
+pip install -e packages/spacecdf-kb
+pip install -e packages/spacecdf-server
+uvicorn spacecdf_server.app:app --reload --port 8000
+
+# Frontend (separate terminal)
+cd frontend
+npm install
+npm run dev
 ```
 
-Schema is created via `Base.metadata.create_all` at startup (no Alembic migrations required). Snapshot cadence: every 10 edits.
+Open http://localhost:5173
 
-Kill the server and restart — `GET /api/sessions/` shows persisted sessions with `persisted: true`. `POST /api/sessions/{id}/resume` rehydrates.
+### Connect to Remote Instance
+Edit `frontend/vite.config.ts` proxy target to point to the remote backend URL. For Tailscale access, see `docs/REMOTE_ACCESS.md`.
 
----
+## Workflow
 
-## Exports
+1. **Mission Need** (Step 1): Define problem, stakeholders, objectives
+2. **Concept Exploration** (Step 2): Mission trade analysis — is space the right answer?
+3. **Requirements** (Step 3): Orbit/class advisors, payload parameters
+4. **Design** (Step 4): "Run Design" — 20 agents converge in seconds
+5. **Iterate**: Equipment selection, trade studies, optimization, conflict resolution
+6. **Export**: ECSS documents, regulatory filings, BOM, simulator configs
 
-- `POST /api/exports/smo/{study_id}` — ~20 YAML files for the SpaceMissionSimulation platform.
-- `POST /api/exports/docs/{study_id}?review=srr|pdr|cdr` — zip containing Markdown + `.docx` (Word) + `master_budget.xlsx`.
-- `POST /api/exports/fsw/{study_id}` — cFS-style C scaffolding driven by selected equipment.
+## Editing Parametric Data
 
-All three are exposed via the **Exports** tab in the UI.
+View/edit via **Exports** tab → **Design Data** → **Parametric Model Data**, or API: `GET /api/lifecycle/parametric-data`. Returns mass fractions, cost fractions, power duty cycles, SA power tables — all editable. Source: `packages/spacecdf-common/src/spacecdf_common/physics/heritage_mass.py`.
 
----
+## Updating Equipment Database
 
-## Testing
+YAML files in `packages/spacecdf-kb/src/spacecdf_kb/data/components/`. Also supports CSV/JSON import: `POST /api/lifecycle/equipment/import`.
 
-```bash
-# Full Phase 4 invariants suite
-pytest tests/test_phase4_invariants.py -v
+## Validation
 
-# All tests
-pytest tests/ -v
+Validated against 5 real missions (Spire LEMUR-2 Δ12%, Astrocast Δ6%, CAPSTONE Δ12%). Run: `python scripts/validate_missions.py`
 
-# Latency benchmark
-python3 scripts/bench_phase4.py
-```
+## Standards
 
----
+34 ECSS standards referenced, 12 fully implemented. See `docs/ULTRAPLAN2.md` for complete cross-reference.
 
-## Phase 5 features
+## Current Status & Known Issues
 
-### Design optimiser (Phase 5B)
+See `docs/REDESIGN.md` for the architecture redesign plan addressing:
+- System-V hierarchy (mission → system → subsystem requirements)
+- Per-level engineering budgets (link, pointing, timing, data)
+- Workflow-driven navigation (6 phases instead of 20+ tabs)
+- Spectrum/licensing as design constraints
+- Full V&V matrix with verification phases
 
-Single-objective optimisation via `scipy.optimize.differential_evolution` and multi-objective Pareto via NSGA-II. Runs in a background task with real-time progress over WebSocket. The UI (`OptimizerPanel`) lets you pick an objective (min mass, min cost, max link margin), select design variables with bounds, and watch convergence live. Pareto runs populate the `pareto_front_json` column and render a 2D scatter in the panel.
+## License
 
-```bash
-# API
-POST /api/optimize/sessions/{session_id}   # kick off single- or multi-objective run
-GET  /api/optimize/runs/{run_id}            # poll status + history
-GET  /api/optimize/config                   # available objectives + default variables
-```
-
-### MBSE export
-
-`POST /api/exports/mbse/{study_id}` generates an ECSS-E-TM-10-25A-style JSON model: site directory, engineering model with blocks (subsystems), parameters, requirements, trace links, and applicable standards. Consumable by Cameo / Capella via a downstream converter and diff-friendly for version control.
-
-### Template gallery
-
-Four mission archetypes seeded from the knowledge base: 3U tech demo, 6U EO CubeSat, 100 kg SmallSat EO, and Lunar Orbiter. The `TemplateGallery` UI lets you browse, preview, and instantiate a new study from any template. Templates live in `configs/templates/` as YAML.
-
-### ECSS review-gate tracking
-
-`configs/ecss_review_gates.yaml` maps ECSS phases (0/A/B1) to their expected DRDs and tracks which SpaceCDF auto-produces (`spacecdf`), partially covers (`partial`), plans to cover (`planned`), or leaves external. The `EcssCompliancePanel` surfaces this per-study.
-
-### Compliance artefact pipeline
-
-The `.compliance/` directory and `services/compliance_generator.py` auto-generate planned ECSS deliverables — currently the Verification Plan (VP) and ECSS Tailoring Matrix — from the live design state and review-gate config. These transition DRDs from `planned` to `spacecdf` status.
-
-### Named snapshots
-
-Named design-state snapshots with tags, parent lineage, and compare/restore. The `SnapshotsPanel` lets engineers bookmark design points, diff two snapshots, and restore a previous state.
-
-### Validation harness
-
-`scripts/validate_template.py` converges a template through the full design loop and checks key parameters against published reference values (SMAD, Fortescue, SMO-EOSAT). Reference configs live in `configs/validation/`.
-
----
-
-## Extending
-
-**New agent.** Subclass `DesignAgent` in `packages/spacecdf-agents/src/spacecdf_agents/tier1/` or `tier2/`, declare `input_parameters()` and `output_parameters()`, add to `packages/spacecdf-agents/src/spacecdf_agents/registry.py` builtins dict.
-
-**New position.** Add a block to `packages/spacecdf-kb/src/spacecdf_kb/data/positions/positions.yaml` with `key_questions` and `parameters` (owns patterns).
-
-**New KB component category.** Add YAML file under `packages/spacecdf-kb/src/spacecdf_kb/data/components/`. The `/api/kb/components/{category}` endpoint auto-discovers them.
-
-**New requirement type.** Extend `RequirementType` enum in `packages/spacecdf-common/src/spacecdf_common/models/requirements.py` and add generation logic to `generate_requirements()`.
+MIT

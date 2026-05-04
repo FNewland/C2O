@@ -363,14 +363,17 @@ class MissionTradeRequest(BaseModel):
     require_data_ownership: bool = False
     require_scheduling_control: bool = False
     max_annual_budget_keur: float = 500.0
+    mission_type: str = "earth_observation"
+    num_spacecraft: int = 1
 
 @router.post("/mission-trade")
 async def mission_trade_endpoint(req: MissionTradeRequest) -> dict:
     """Compute space vs non-space mission trade analysis.
 
     Should be called BEFORE committing to building a satellite.
-    Returns scored alternatives including existing data, commercial,
-    aerial, ground, and new satellite options.
+    Returns scored alternatives filtered by mission_type — comms missions
+    don't see optical EO satellites, etc. Constellation option included
+    when num_spacecraft > 1 or coverage is global.
     """
     return compute_mission_trade(
         target_gsd_m=req.target_gsd_m,
@@ -381,6 +384,8 @@ async def mission_trade_endpoint(req: MissionTradeRequest) -> dict:
         require_data_ownership=req.require_data_ownership,
         require_scheduling_control=req.require_scheduling_control,
         max_annual_budget_keur=req.max_annual_budget_keur,
+        mission_type=req.mission_type,
+        num_spacecraft=req.num_spacecraft,
     )
 
 
