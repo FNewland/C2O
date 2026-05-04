@@ -38,8 +38,11 @@ export function SpectrumSelector() {
       .finally(() => setLoading(false))
   }, [missionType, licenseType, dataRate])
 
+  const setRfBand = useDesignStore(s => (s as any).setRfBand)
   const handleSelectBand = (bandName: string) => {
     setSelectedBand(bandName)
+    // Store in designStore so EquipmentBrowser can filter
+    useDesignStore.setState({ selectedRfBand: bandName, selectedLicenseType: licenseType })
     markStale('spectrum')
   }
 

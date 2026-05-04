@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useEquipmentSearch } from '../hooks/useSession'
+import { useDesignStore } from '../stores/designStore'
 
 // All KB component categories, grouped by domain
 const CATEGORIES = [
@@ -153,7 +154,19 @@ export function EquipmentBrowser({ studyId, onClose, onSelect }: Props) {
   const { data, isLoading, error } = useEquipmentSearch(activeDomain, studyId)
 
   const categories: Record<string, any[]> = (data as any)?.categories || {}
-  const activeRows = categories[activeCategory] || []
+  const selectedRfBand = useDesignStore(s => s.selectedRfBand)
+
+  // Filter transponders/antennas by selected RF band if set
+  let activeRows = categories[activeCategory] || []
+  if (selectedRfBand && (activeCategory === 'transponders' || activeCategory === 'antennas')) {
+    activeRows = activeRows.filter((row: any) => {
+      const c = row.component || row
+      const name = (c.name || '').toUpperCase()
+      const band = (c.frequency_band || c.band || '').toUpperCase()
+      const bandLabel = selectedRfBand.toUpperCase()
+      return band.includes(bandLabel) || name.includes(bandLabel + '-BAND') || name.includes(bandLabel + ' BAND') || !band // Show if band unknown
+    })
+  }
 
   const sortRows = (rows: any[]) => {
     return [...rows].sort((a, b) => {

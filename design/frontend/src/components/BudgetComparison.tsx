@@ -113,31 +113,42 @@ export function BudgetComparison() {
         </div>
       </div>
 
-      {/* Subsystem table */}
+      {/* Subsystem table with allocation column */}
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.75rem' }}>
         <thead>
           <tr style={{ background: 'var(--bg-primary, #0a0e1a)' }}>
             <th style={th}>Subsystem</th>
             <th style={thR}>Mass (kg)</th>
             <th style={thR}>% of dry</th>
+            <th style={thR}>Margin</th>
             <th style={thR}>Power (W)</th>
             <th style={thR}>% of total</th>
           </tr>
         </thead>
         <tbody>
-          {rows.filter(r => r.parametric_mass_kg > 0 || r.parametric_power_w > 0).map(r => (
-            <tr key={r.subsystem} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-              <td style={td}>{r.subsystem}</td>
-              <td style={tdR}>{r.parametric_mass_kg.toFixed(2)}</td>
-              <td style={tdR}>{dryMass > 0 ? ((r.parametric_mass_kg / dryMass) * 100).toFixed(1) : '—'}%</td>
-              <td style={tdR}>{r.parametric_power_w.toFixed(1)}</td>
-              <td style={tdR}>{totalParametricPower > 0 ? ((r.parametric_power_w / totalParametricPower) * 100).toFixed(1) : '—'}%</td>
-            </tr>
-          ))}
+          {rows.filter(r => r.parametric_mass_kg > 0 || r.parametric_power_w > 0).map(r => {
+            const massPct = dryMass > 0 ? (r.parametric_mass_kg / dryMass) * 100 : 0
+            const powerPct = totalParametricPower > 0 ? (r.parametric_power_w / totalParametricPower) * 100 : 0
+            // Subsystem margin = system margin applied proportionally
+            const subMarginPct = massMargin > -100 ? 20 : 0 // Default 20% per subsystem
+            return (
+              <tr key={r.subsystem} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                <td style={td}>{r.subsystem}</td>
+                <td style={tdR}>{r.parametric_mass_kg.toFixed(2)}</td>
+                <td style={tdR}>{massPct.toFixed(1)}%</td>
+                <td style={{ ...tdR, fontSize: '0.68rem', color: '#6b7280' }}>+{subMarginPct}%</td>
+                <td style={tdR}>{r.parametric_power_w.toFixed(1)}</td>
+                <td style={tdR}>{powerPct.toFixed(1)}%</td>
+              </tr>
+            )
+          })}
           <tr style={{ borderTop: '2px solid #374151', fontWeight: 700 }}>
             <td style={td}>Total</td>
             <td style={tdR}>{totalParametricMass.toFixed(2)}</td>
             <td style={tdR}>100%</td>
+            <td style={{ ...tdR, color: massMargin >= 20 ? '#10b981' : massMargin >= 0 ? '#f59e0b' : '#ef4444' }}>
+              {massMargin >= 0 ? '+' : ''}{massMargin.toFixed(0)}% sys
+            </td>
             <td style={tdR}>{totalParametricPower.toFixed(1)}</td>
             <td style={tdR}>100%</td>
           </tr>

@@ -11,6 +11,7 @@ import { SpectrumSelector } from './SpectrumSelector'
 import { LaunchSelector } from './LaunchSelector'
 import { PointingBudget } from './PointingBudget'
 import { DataBudget } from './DataBudget'
+import { TimingBudget } from './TimingBudget'
 
 // Extended domain order including all 20 agent domains
 const DOMAIN_ORDER = [
@@ -340,6 +341,7 @@ export function MissionDashboard() {
       {/* Row 5: Engineering Budgets */}
       <PointingBudget />
       <DataBudget />
+      <TimingBudget />
 
       {/* Row 6: Community */}
       <CommunityCard parameters={p} />

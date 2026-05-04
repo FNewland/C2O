@@ -29,10 +29,10 @@
 - [x] Interactive link budget calculator → LinkBudgetTool tab with full cascade (TX, path, RX, margin)
 - [x] Pointing budget → PointingBudget on dashboard (7 error sources, RSS, editable, margin vs requirement)
 - [x] Data budget → DataBudget on dashboard (generation→storage→downlink→user flow, balance check)
-- [ ] Timing budget (mode durations, transition times)
+- [x] Timing budget → TimingBudget on dashboard (orbit timeline with mode segments, transitions, energy per mode)
 - [x] V&V matrix → VerificationMatrix tab (per-req ATRI method, phase, level, status, responsible)
-- [ ] Spectrum selection as design constraint (band choice filters transponders)
-- [ ] Launch selection as design constraint (sets mass allocation, vibration levels)
+- [x] Spectrum selection → EquipmentBrowser filters transponders/antennas by selectedRfBand from SpectrumSelector
+- [ ] Launch selection as design constraint (selector exists, mass allocation not yet auto-set)
 - [ ] Consolidate duplicate exports (right panel ExportPanel vs center ExportsPanel)
 - [ ] Mission type auto-set from mission need objectives
 

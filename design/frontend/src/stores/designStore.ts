@@ -124,6 +124,11 @@ interface DesignStore {
   changeHistory: ChangeRecord[]  // recent changes for audit trail
   pendingConflicts: string[]  // conflicts detected from latest change
 
+  // Design constraints from selections
+  selectedRfBand: string | null  // constrains transponder/antenna selection
+  selectedLaunchProvider: string | null  // constrains mass allocation
+  selectedLicenseType: string  // amateur/experimental/commercial
+
   setMissionNeed: (need: Partial<MissionNeedState>) => void
   setRequirements: (req: Partial<MissionRequirements>) => void
   setOrbit: (orbit: Partial<MissionRequirements['orbit']>) => void
@@ -185,6 +190,9 @@ export const useDesignStore = create<DesignStore>((set, get) => ({
   lastChangeSource: '',
   changeHistory: [],
   pendingConflicts: [],
+  selectedRfBand: null,
+  selectedLaunchProvider: null,
+  selectedLicenseType: 'commercial',
 
   setMissionNeed: (need) => set((s) => {
     const record: ChangeRecord = {
