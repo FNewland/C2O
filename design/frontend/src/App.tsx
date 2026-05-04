@@ -268,10 +268,10 @@ function AppContent() {
                 {centerTab === 'conops' && <ConOpsEditor />}
                 {centerTab === 'functions' && <FunctionTreeView />}
                 {centerTab === 'reqs' && <RequirementsEditor studyId={studyId} />}
-                {centerTab === 'interfaces' && <InterfaceMatrixView />}
+                {centerTab === 'interfaces' && <InterfaceMatrixView onNavigate={(tab) => setCenterTab(tab as CenterTab)} />}
                 {centerTab === 'positions' && <PositionPanel />}
                 {centerTab === 'answers' && <PositionAnswersPanel />}
-                {centerTab === 'gate' && <GateReviewPanel studyId={studyId} />}
+                {centerTab === 'gate' && <GateReviewPanel studyId={studyId} onNavigate={(tab) => setCenterTab(tab as CenterTab)} />}
                 {centerTab === 'compliance' && <ComplianceMatrix studyId={studyId} />}
                 {centerTab === 'ecss' && <EcssCompliancePanel studyId={studyId} />}
                 {centerTab === 'cost' && <CostBreakdown studyId={studyId} />}

@@ -13,6 +13,7 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException
 
 from ..services.ecss_gates import compliance_summary, list_phases
+from ..services.did_generator import list_available_dids, DID_TYPES
 from .studies import get_study_store
 
 router = APIRouter()
@@ -51,3 +52,66 @@ async def get_study_compliance(study_id: str) -> dict:
     summary["study_id"] = study_id
     summary["study_name"] = study.name
     return summary
+
+
+@router.get("/dids")
+async def get_available_dids() -> list[dict]:
+    """List all available DID (Document Item Description) templates."""
+    return list_available_dids()
+
+
+@router.post("/dids/{did_type}/generate")
+async def generate_did(did_type: str, study_id: str | None = None) -> dict:
+    """Generate an ECSS DID document from the current study state."""
+    if did_type not in DID_TYPES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unknown DID type: {did_type}. Available: {list(DID_TYPES.keys())}",
+        )
+
+    store = get_study_store()
+    study = None
+    study_name = "Unnamed Mission"
+    phase_id = "phase_a"
+    mission_need: dict = {}
+    requirements: list[dict] = []
+    design_params: dict = {}
+    interfaces: list[dict] = []
+    conops: dict = {}
+
+    if study_id:
+        study = store.get(study_id)
+        if study:
+            study_name = study.name
+            phase_id = study.phase.value if hasattr(study.phase, "value") else str(study.phase)
+            if hasattr(study, "mission_need") and study.mission_need:
+                mn = study.mission_need
+                mission_need = {
+                    "problem_statement": getattr(mn, "problem_statement", ""),
+                    "objectives": [{"text": o.text, "priority": o.priority, "measurable_criterion": getattr(o, "measurable_criterion", "")} for o in getattr(mn, "objectives", [])],
+                    "stakeholders": [{"name": s.name, "role": getattr(s, "role", "")} for s in getattr(mn, "stakeholders", [])],
+                }
+            requirements = [
+                {"id": r.id, "text": r.text, "domain": r.domain, "category": getattr(r, "category", ""), "verification_method": r.verification_method.value}
+                for r in getattr(study, "requirements", [])
+            ]
+
+    # Generate based on type
+    _, gen_fn = DID_TYPES[did_type]
+
+    if did_type == "mrd":
+        return gen_fn(study_name=study_name, mission_need=mission_need, requirements=requirements, phase_id=phase_id)
+    elif did_type == "ts":
+        return gen_fn(study_name=study_name, requirements=requirements, design_params=design_params, phase_id=phase_id)
+    elif did_type == "ird":
+        return gen_fn(study_name=study_name, interfaces=interfaces, phase_id=phase_id)
+    elif did_type == "semp":
+        return gen_fn(study_name=study_name, phase_id=phase_id)
+    elif did_type == "rmp":
+        return gen_fn(study_name=study_name, phase_id=phase_id)
+    elif did_type == "conops":
+        return gen_fn(study_name=study_name, mission_need=mission_need, conops=conops, phase_id=phase_id)
+    elif did_type == "test_plan":
+        return gen_fn(study_name=study_name, requirements=requirements, phase_id=phase_id)
+    else:
+        raise HTTPException(status_code=400, detail=f"Generator not implemented for {did_type}")

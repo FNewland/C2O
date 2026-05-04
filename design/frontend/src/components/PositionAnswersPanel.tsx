@@ -62,20 +62,65 @@ export function PositionAnswersPanel() {
     setEditingId(null)
   }
 
-  // Detect conflicts: find pairs of answers that mention opposing parameters
+  // Detect conflicts using multiple heuristics
   const allAnswered = Array.from(answers.values())
-  const conflicts: string[] = []
+  const tensions: { description: string; positions: string[]; severity: 'high' | 'medium' | 'low'; action: string }[] = []
+
+  // Known cross-domain tension patterns
+  const TENSION_PATTERNS = [
+    { keywords: ['mass', 'heavy', 'weight', 'overweight'], domain: 'mass', action: 'Review mass budget' },
+    { keywords: ['power', 'watt', 'energy', 'deficit'], domain: 'power', action: 'Review power budget' },
+    { keywords: ['margin', 'tight', 'insufficient', 'negative'], domain: 'margin', action: 'Review system margins' },
+    { keywords: ['pointing', 'jitter', 'accuracy', 'vibration'], domain: 'pointing', action: 'Review AOCS performance' },
+    { keywords: ['thermal', 'temperature', 'hot', 'cold', 'radiator'], domain: 'thermal', action: 'Review thermal analysis' },
+    { keywords: ['cost', 'budget', 'expensive', 'over budget'], domain: 'cost', action: 'Review cost estimate' },
+  ]
+
   for (let i = 0; i < allAnswered.length; i++) {
     for (let j = i + 1; j < allAnswered.length; j++) {
       const a = allAnswered[i], b = allAnswered[j]
-      if (a.positionId !== b.positionId && a.confidence !== 'high' && b.confidence !== 'high') {
-        // Heuristic: if both mention uncertainty, flag as potential tension
-        if (a.text.toLowerCase().includes('margin') && b.text.toLowerCase().includes('margin')) {
-          conflicts.push(`${a.positionId.replace(/_/g, ' ')} and ${b.positionId.replace(/_/g, ' ')} both report margin concerns`)
+      if (a.positionId === b.positionId) continue
+
+      const aLower = a.text.toLowerCase()
+      const bLower = b.text.toLowerCase()
+
+      // Check for low-confidence cross-position concerns
+      if (a.confidence !== 'high' && b.confidence !== 'high') {
+        for (const pattern of TENSION_PATTERNS) {
+          const aHit = pattern.keywords.some(k => aLower.includes(k))
+          const bHit = pattern.keywords.some(k => bLower.includes(k))
+          if (aHit && bHit) {
+            tensions.push({
+              description: `${a.positionId.replace(/_/g, ' ')} and ${b.positionId.replace(/_/g, ' ')} both flag ${pattern.domain} concerns`,
+              positions: [a.positionId, b.positionId],
+              severity: a.confidence === 'low' || b.confidence === 'low' ? 'high' : 'medium',
+              action: pattern.action,
+            })
+          }
+        }
+      }
+
+      // Check for opposing confidence (one high, one low on related topic)
+      if (a.confidence === 'high' && b.confidence === 'low' || a.confidence === 'low' && b.confidence === 'high') {
+        for (const pattern of TENSION_PATTERNS) {
+          const aHit = pattern.keywords.some(k => aLower.includes(k))
+          const bHit = pattern.keywords.some(k => bLower.includes(k))
+          if (aHit && bHit) {
+            tensions.push({
+              description: `Conflicting confidence on ${pattern.domain}: ${a.positionId.replace(/_/g, ' ')} (${a.confidence}) vs ${b.positionId.replace(/_/g, ' ')} (${b.confidence})`,
+              positions: [a.positionId, b.positionId],
+              severity: 'high',
+              action: `Reconcile ${pattern.domain} assessment between positions`,
+            })
+          }
         }
       }
     }
   }
+
+  // Deduplicate by description
+  const seenDescs = new Set<string>()
+  const conflicts = tensions.filter(t => { if (seenDescs.has(t.description)) return false; seenDescs.add(t.description); return true })
 
   if (!sessionId) {
     return (
@@ -103,15 +148,27 @@ export function PositionAnswersPanel() {
         )}
       </div>
 
-      {/* Conflicts */}
+      {/* Tensions */}
       {conflicts.length > 0 && (
         <div style={{
           padding: '0.5rem 0.75rem', borderRadius: '6px', marginBottom: '1rem',
           background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)',
         }}>
-          <div style={{ fontSize: '0.78rem', fontWeight: 600, color: '#f59e0b', marginBottom: '0.3rem' }}>Design Tensions</div>
-          {conflicts.map((c, i) => (
-            <div key={i} style={{ fontSize: '0.72rem', color: '#9ca3af' }}>{c}</div>
+          <div style={{ fontSize: '0.78rem', fontWeight: 600, color: '#f59e0b', marginBottom: '0.3rem' }}>
+            Design Tensions ({conflicts.length})
+          </div>
+          {conflicts.map((t, i) => (
+            <div key={i} style={{
+              display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.2rem 0',
+              borderTop: i > 0 ? '1px solid rgba(245,158,11,0.15)' : 'none',
+            }}>
+              <span style={{
+                width: 6, height: 6, borderRadius: '50%', flexShrink: 0,
+                background: t.severity === 'high' ? '#ef4444' : t.severity === 'medium' ? '#f59e0b' : '#3b82f6',
+              }} />
+              <span style={{ fontSize: '0.72rem', color: '#d1d5db', flex: 1 }}>{t.description}</span>
+              <span style={{ fontSize: '0.65rem', color: '#6b7280', whiteSpace: 'nowrap' }}>{t.action}</span>
+            </div>
           ))}
         </div>
       )}

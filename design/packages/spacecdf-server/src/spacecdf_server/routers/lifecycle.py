@@ -511,3 +511,72 @@ async def check_compliance_endpoint(body: dict[str, Any]) -> dict:
         achieved_value=body.get("achieved_value"),
         margin_percent=body.get("margin_percent"),
     )
+
+
+# --- Consistency Checking ---
+
+@router.get("/consistency/{study_id}")
+async def run_consistency_check_endpoint(study_id: str) -> dict:
+    """Run full consistency check on a study.
+
+    Validates requirements traceability, function coverage, interface
+    completeness, budget margins, ConOps coverage, and equipment compatibility.
+    """
+    from ..services.consistency_engine import run_consistency_check
+
+    store = get_study_store()
+    study = store.get(study_id)
+    if not study:
+        raise HTTPException(404, detail=f"Study {study_id} not found")
+
+    # Extract data from study
+    mn = {}
+    if study.mission_need:
+        mn = {
+            "problem_statement": getattr(study.mission_need, "problem_statement", ""),
+            "objectives": [{"text": o.text, "priority": o.priority, "measurable_criterion": getattr(o, "measurable_criterion", "")}
+                           for o in getattr(study.mission_need, "objectives", [])],
+        }
+
+    reqs = [{"id": r.id, "text": r.text, "domain": r.domain,
+             "objective_id": getattr(r, "objective_id", None),
+             "function_id": getattr(r, "function_id", None)}
+            for r in getattr(study, "requirements", []) if hasattr(study, "requirements")]
+
+    funcs = []
+    if hasattr(study, "functional_decomposition") and study.functional_decomposition:
+        funcs = [{"id": f.id, "name": f.name, "parent_function_id": f.parent_function_id,
+                  "allocated_to": f.allocated_to, "derived_requirement_ids": f.derived_requirement_ids}
+                 for f in getattr(study.functional_decomposition, "functions", [])]
+
+    phase_id = study.phase.value if hasattr(study.phase, "value") else str(study.phase)
+
+    report = run_consistency_check(
+        mission_need=mn,
+        requirements=reqs,
+        functions=funcs,
+        phase_id=phase_id,
+    )
+
+    return {
+        "study_id": study_id,
+        "checked_at": report.checked_at,
+        "total_checks": report.total_checks,
+        "pass_count": report.pass_count,
+        "fail_count": report.fail_count,
+        "health_score": round(report.health_score, 1),
+        "critical_count": report.critical_count,
+        "major_count": report.major_count,
+        "issues": [
+            {
+                "id": i.id,
+                "severity": i.severity,
+                "category": i.category,
+                "title": i.title,
+                "description": i.description,
+                "affected_items": i.affected_items,
+                "suggested_fix": i.suggested_fix,
+            }
+            for i in report.issues
+        ],
+    }

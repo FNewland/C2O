@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useEcssCompliance, type DrdEntry } from '../hooks/useTemplates'
 
 interface Props {
@@ -149,6 +149,9 @@ export function EcssCompliancePanel({ studyId }: Props) {
         )
       })}
 
+      {/* DID Document Generator */}
+      <DidGenerator studyId={studyId} />
+
       <div style={{
         marginTop: '1.5rem',
         padding: '0.6rem',
@@ -160,6 +163,112 @@ export function EcssCompliancePanel({ studyId }: Props) {
         ECSS-M-ST-10C Rev.1 phase/review structure. Tailoring per ECSS-S-ST-00-02
         may reduce the set for CubeSat / small-mission projects.
       </div>
+    </div>
+  )
+}
+
+const DID_TYPES = [
+  { id: 'mrd', name: 'Mission Requirements Document', standard: 'ECSS-E-ST-10C Annex A' },
+  { id: 'ts', name: 'Technical Specification', standard: 'ECSS-E-ST-10-06C' },
+  { id: 'ird', name: 'Interface Requirements Document', standard: 'ECSS-E-ST-10-24C' },
+  { id: 'semp', name: 'SE Management Plan', standard: 'NASA SEH App J / ECSS-M-ST-10C' },
+  { id: 'rmp', name: 'Risk Management Plan', standard: 'ECSS-M-ST-80C' },
+  { id: 'conops', name: 'Concept of Operations', standard: 'NASA SEH Appendix S' },
+  { id: 'test_plan', name: 'Test Plan', standard: 'ECSS-E-ST-10-03C' },
+]
+
+function DidGenerator({ studyId }: { studyId: string | null }) {
+  const [generating, setGenerating] = useState<string | null>(null)
+  const [generatedDoc, setGeneratedDoc] = useState<any>(null)
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set())
+
+  const generateDid = async (didType: string) => {
+    setGenerating(didType)
+    setGeneratedDoc(null)
+    try {
+      const res = await fetch(`/api/ecss/dids/${didType}/generate${studyId ? `?study_id=${studyId}` : ''}`, { method: 'POST' })
+      if (res.ok) {
+        const doc = await res.json()
+        setGeneratedDoc(doc)
+        setExpandedSections(new Set())
+      }
+    } catch {}
+    setGenerating(null)
+  }
+
+  const toggleSection = (num: string) => {
+    setExpandedSections(prev => {
+      const next = new Set(prev)
+      if (next.has(num)) next.delete(num)
+      else next.add(num)
+      return next
+    })
+  }
+
+  return (
+    <div style={{ marginTop: '1.5rem', borderTop: '1px solid var(--border, #374151)', paddingTop: '1rem' }}>
+      <h3 style={{ fontSize: '0.95rem', marginBottom: '0.4rem' }}>Document Generator (DIDs)</h3>
+      <p style={{ fontSize: '0.72rem', color: '#9ca3af', marginBottom: '0.75rem' }}>
+        Generate ECSS/NASA document templates populated from the current design state.
+      </p>
+
+      <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap', marginBottom: '0.75rem' }}>
+        {DID_TYPES.map(d => (
+          <button key={d.id} className="btn btn-sm" onClick={() => generateDid(d.id)}
+            disabled={generating !== null}
+            style={{
+              fontSize: '0.7rem',
+              background: generatedDoc?.document?.toLowerCase().includes(d.name.toLowerCase().split(' ')[0]) ? '#10b981' : undefined,
+            }}>
+            {generating === d.id ? 'Generating...' : d.name}
+          </button>
+        ))}
+      </div>
+
+      {/* Generated document viewer */}
+      {generatedDoc && (
+        <div style={{
+          padding: '0.75rem', borderRadius: '6px',
+          background: 'var(--bg-primary, #0a0e1a)', border: '1px solid var(--border, #374151)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+            <span style={{ fontWeight: 700, fontSize: '0.9rem' }}>{generatedDoc.document}</span>
+            <span style={{ fontSize: '0.68rem', color: '#6b7280', fontFamily: 'monospace' }}>{generatedDoc.standard}</span>
+          </div>
+          <div style={{ fontSize: '0.68rem', color: '#6b7280', marginBottom: '0.5rem' }}>
+            Study: {generatedDoc.study_name} | Phase: {generatedDoc.phase} | Generated: {new Date(generatedDoc.generated).toLocaleString()}
+          </div>
+
+          {/* Document outline */}
+          {generatedDoc.sections?.map((section: any) => (
+            <div key={section.number} style={{ marginBottom: '0.3rem' }}>
+              <button onClick={() => toggleSection(section.number)} style={{
+                background: 'none', border: 'none', cursor: 'pointer', width: '100%', textAlign: 'left',
+                padding: '0.3rem 0.5rem', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '0.3rem',
+                color: '#d1d5db', fontSize: '0.82rem', fontWeight: 600,
+              }}>
+                <span style={{ color: '#6b7280', fontSize: '0.7rem', width: 14 }}>
+                  {expandedSections.has(section.number) ? '\u25BC' : '\u25B6'}
+                </span>
+                {section.number}. {section.title}
+              </button>
+              {expandedSections.has(section.number) && section.subsections?.map((sub: any) => (
+                <div key={sub.number} style={{
+                  marginLeft: '1.5rem', padding: '0.3rem 0.5rem', borderLeft: '2px solid #374151',
+                  marginBottom: '0.2rem',
+                }}>
+                  <div style={{ fontSize: '0.78rem', fontWeight: 500, color: '#9ca3af' }}>
+                    {sub.number} {sub.title}
+                  </div>
+                  <div style={{ fontSize: '0.72rem', color: '#6b7280', whiteSpace: 'pre-wrap', marginTop: '0.1rem' }}>
+                    {sub.content}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

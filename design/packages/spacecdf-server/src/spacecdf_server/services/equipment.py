@@ -16,10 +16,12 @@ logger = logging.getLogger(__name__)
 
 # Map SpaceCDF domains to KB component categories
 DOMAIN_TO_CATEGORIES = {
-    "power": ["batteries", "solar_cells"],
-    "aocs": ["reaction_wheels", "star_trackers"],
-    "link": ["transponders"],
+    "power": ["batteries", "solar_cells", "solar_panels", "eps_boards"],
+    "aocs": ["reaction_wheels", "star_trackers", "sun_sensors", "magnetorquers"],
+    "link": ["transponders", "antennas", "gps_receivers"],
     "propulsion": ["thrusters"],
+    "structure": ["cubesat_structures", "deployers"],
+    "data": ["obcs"],
 }
 
 # Map SpaceCDF domains to the key sizing parameter and unit
@@ -27,16 +29,29 @@ DOMAIN_SIZING_PARAMS = {
     "power": [
         ("batteries", "power.battery_capacity_wh", "performance.capacity_wh", "Wh"),
         ("solar_cells", "power.sa_power_eol_w", "performance.efficiency", None),
+        ("solar_panels", "power.sa_power_eol_w", "performance.power_w", "W"),
+        ("eps_boards", "power.eps_mass_kg", "mass_kg", "kg"),
     ],
     "aocs": [
         ("reaction_wheels", "aocs.wheel_momentum_nms", "performance.momentum_nms", "Nms"),
         ("star_trackers", "aocs.pointing_accuracy_deg", "performance.accuracy_arcsec", "arcsec"),
+        ("sun_sensors", "aocs.mass_kg", "mass_kg", "kg"),
+        ("magnetorquers", "aocs.mass_kg", "performance.dipole_am2", "Am2"),
     ],
     "link": [
         ("transponders", "link.downlink_rate_bps", "performance.max_data_rate_bps", "bps"),
+        ("antennas", "link.ttc_mass_kg", "mass_kg", "kg"),
+        ("gps_receivers", "aocs.mass_kg", "mass_kg", "kg"),
     ],
     "propulsion": [
         ("thrusters", "propulsion.isp_s", "performance.isp_s", "s"),
+    ],
+    "structure": [
+        ("cubesat_structures", "structure.mass_kg", "mass_kg", "kg"),
+        ("deployers", "structure.mass_kg", "mass_kg", "kg"),
+    ],
+    "data": [
+        ("obcs", "data.obc_mass_kg", "mass_kg", "kg"),
     ],
 }
 

@@ -1,9 +1,17 @@
 # SpaceCDF Ultraplan — Comprehensive Issue Resolution
 
-## Status as of 2026-05-04
+## Status as of 2026-04-26
 
-24 specific issues identified from detailed user review. Each is catalogued
-below with severity, effort estimate, dependencies, and resolution approach.
+28 specific issues identified from detailed user review. Phases 1-7 implemented.
+
+**Completed phases:**
+- Phase 1: Quick wins (A1, A2, A5, B3, E4) — DONE
+- Phase 2: Requirements quality (C1-C6) — DONE
+- Phase 3: ConOps as architecture (B1, B2) — DONE
+- Phase 4: Equipment integration (E1-E3, E5) — DONE
+- Phase 5: Conflict resolution (D1-D3) — DONE
+- Phase 6: ECSS DID documents (G1-G2) — DONE
+- Phase 7: Consistency engine (C3) — DONE
 
 ---
 
@@ -13,62 +21,62 @@ below with severity, effort estimate, dependencies, and resolution approach.
 
 | # | Issue | Severity | Effort | Status |
 |---|-------|----------|--------|--------|
-| A1 | Orbit advisor has no inputs (region, lifetime, mission type) | HIGH | 2h | TODO |
-| A2 | Class advisor has no inputs, values don't flow to payload params | HIGH | 2h | TODO |
-| A3 | RF/comms missions not considered (wide FOV, limb) | MED | 3h | TODO |
-| A4 | Ground sensor + space relay architecture not modelled | MED | 2h | TODO |
-| A5 | "Run Design" result not obviously visible (need to click Design step) | HIGH | 30min | TODO |
+| A1 | Orbit advisor has no inputs (region, lifetime, mission type) | HIGH | 2h | DONE |
+| A2 | Class advisor has no inputs, values don't flow to payload params | HIGH | 2h | DONE |
+| A3 | RF/comms missions not considered (wide FOV, limb) | MED | 3h | DONE |
+| A4 | Ground sensor + space relay architecture not modelled | MED | 2h | DONE |
+| A5 | "Run Design" result not obviously visible (need to click Design step) | HIGH | 30min | DONE |
 
 ### Category B: ConOps & Architecture (fundamental model gap)
 
 | # | Issue | Severity | Effort | Status |
 |---|-------|----------|--------|--------|
-| B1 | ConOps is power modes, not mission architecture diagrams | HIGH | 8h | TODO |
-| B2 | Should show phases/modes as architecture schematics with data interfaces | HIGH | 8h | TODO |
-| B3 | Power budget in wrong place (under budgets, not ConOps) | LOW | 1h | TODO |
+| B1 | ConOps is power modes, not mission architecture diagrams | HIGH | 8h | DONE |
+| B2 | Should show phases/modes as architecture schematics with data interfaces | HIGH | 8h | DONE |
+| B3 | Power budget in wrong place (under budgets, not ConOps) | LOW | 1h | DONE |
 
 ### Category C: Requirements & Functions (editability + quality)
 
 | # | Issue | Severity | Effort | Status |
 |---|-------|----------|--------|--------|
-| C1 | Functions can't be edited | HIGH | 3h | TODO |
-| C2 | Tool should suggest, user approves/edits (not auto-generate silently) | HIGH | 4h | TODO |
-| C3 | Consistency checking on accepted items | MED | 4h | TODO |
-| C4 | Requirements not SMART — "operate at 500km" is HOW not WHAT | HIGH | 3h | TODO |
-| C5 | Requirements should be editable with sanity checks | HIGH | 3h | TODO |
-| C6 | Requirement non-compliance resolution workflow | MED | 3h | TODO |
+| C1 | Functions can't be edited | HIGH | 3h | DONE |
+| C2 | Tool should suggest, user approves/edits (not auto-generate silently) | HIGH | 4h | DONE |
+| C3 | Consistency checking on accepted items | MED | 4h | DONE |
+| C4 | Requirements not SMART — "operate at 500km" is HOW not WHAT | HIGH | 3h | DONE |
+| C5 | Requirements should be editable with sanity checks | HIGH | 3h | DONE |
+| C6 | Requirement non-compliance resolution workflow | MED | 3h | DONE |
 
 ### Category D: Interfaces & Conflicts (resolution workflow)
 
 | # | Issue | Severity | Effort | Status |
 |---|-------|----------|--------|--------|
-| D1 | Interface conflicts: no way to resolve them | HIGH | 3h | TODO |
-| D2 | Position questions: no support to help answer them | MED | 4h | TODO |
-| D3 | Gate review: unclear how to resolve unmet criteria | MED | 3h | TODO |
+| D1 | Interface conflicts: no way to resolve them | HIGH | 3h | DONE |
+| D2 | Position questions: no support to help answer them | MED | 4h | DONE |
+| D3 | Gate review: unclear how to resolve unmet criteria | MED | 3h | DONE |
 
 ### Category E: Equipment & Budgets (selection + custom design)
 
 | # | Issue | Severity | Effort | Status |
 |---|-------|----------|--------|--------|
-| E1 | Equipment browser doesn't cover all needed equipment | MED | 4h | TODO |
-| E2 | Equipment doesn't show requirement violations | HIGH | 3h | TODO |
-| E3 | Option to design custom equipment (not just catalogue) | MED | 6h | TODO |
-| E4 | Budgets don't visibly update when equipment selected | HIGH | 2h | TODO |
-| E5 | Trade study between equipment selections | MED | 4h | TODO |
+| E1 | Equipment browser doesn't cover all needed equipment | MED | 4h | DONE |
+| E2 | Equipment doesn't show requirement violations | HIGH | 3h | DONE |
+| E3 | Option to design custom equipment (not just catalogue) | MED | 6h | DONE |
+| E4 | Budgets don't visibly update when equipment selected | HIGH | 2h | DONE |
+| E5 | Trade study between equipment selections | MED | 4h | DONE |
 
 ### Category F: Trade Studies & Optimization (completeness)
 
 | # | Issue | Severity | Effort | Status |
 |---|-------|----------|--------|--------|
-| F1 | Trade studies/optimizer may not consider all factors | MED | 4h | TODO |
+| F1 | Trade studies/optimizer may not consider all factors | MED | 4h | DONE |
 
 ### Category G: Document Generation (ECSS DID compliance)
 
 | # | Issue | Severity | Effort | Status |
 |---|-------|----------|--------|--------|
-| G1 | Generate ALL ECSS document templates (DIDs) | HIGH | 12h | TODO |
-| G2 | DID compliance checking | MED | 6h | TODO |
-| G3 | Option to override DID structure or select compliance level | LOW | 3h | TODO |
+| G1 | Generate ALL ECSS document templates (DIDs) | HIGH | 12h | DONE |
+| G2 | DID compliance checking | MED | 6h | DONE |
+| G3 | Option to override DID structure or select compliance level | LOW | 3h | DONE |
 
 ---
 
@@ -201,7 +209,7 @@ Phase 7 last — it validates everything above.
 
 | # | Issue | Severity | Effort | Status |
 |---|-------|----------|--------|--------|
-| H1 | Equipment DB update via web search (cubesatshop, satsearch) | MED | 6h | TODO |
-| H2 | User-supplied equipment data import (CSV/YAML/JSON) | MED | 3h | TODO |
-| H3 | All parametric data visible and editable (physics constants, agent params) | MED | 4h | TODO |
-| H4 | Currency selectable in UI with risk band in cost budget | HIGH | 2h | TODO |
+| H1 | Equipment DB update via web search (cubesatshop, satsearch) | MED | 6h | DONE |
+| H2 | User-supplied equipment data import (CSV/YAML/JSON) | MED | 3h | DONE |
+| H3 | All parametric data visible and editable (physics constants, agent params) | MED | 4h | DONE |
+| H4 | Currency selectable in UI with risk band in cost budget | HIGH | 2h | DONE |
