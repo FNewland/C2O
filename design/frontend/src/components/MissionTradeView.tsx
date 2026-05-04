@@ -52,8 +52,12 @@ export function MissionTradeView({ onConceptSelected }: { onConceptSelected?: ()
   const [loading, setLoading] = useState(false)
   const [expanded, setExpanded] = useState<number | null>(null)
 
+  const { requirements } = useDesignStore()
+  const missionType = requirements.mission_type
+
   // Explicit inputs — pre-populated from objectives where possible, editable
   const objectives = missionNeed.objectives
+  const isOptical = missionType === 'earth_observation' || missionType === 'science_planetary'
   const [gsd, setGsd] = useState(_extractGSD(objectives) || 10)
   const [revisit, setRevisit] = useState(_extractRevisit(objectives) || 3)
   const [coverage, setCoverage] = useState('regional')
@@ -61,6 +65,7 @@ export function MissionTradeView({ onConceptSelected }: { onConceptSelected?: ()
   const [budget, setBudget] = useState(500)
   const [needOwnership, setNeedOwnership] = useState(false)
   const [needControl, setNeedControl] = useState(false)
+  const [numSpacecraft, setNumSpacecraft] = useState(1)
 
   const runTrade = async () => {
     setLoading(true)
@@ -69,13 +74,15 @@ export function MissionTradeView({ onConceptSelected }: { onConceptSelected?: ()
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          target_gsd_m: gsd,
+          target_gsd_m: isOptical ? gsd : 0,
           target_revisit_days: revisit,
           target_coverage: coverage,
           target_latency_hours: latency,
           max_annual_budget_keur: budget,
           require_data_ownership: needOwnership,
           require_scheduling_control: needControl,
+          mission_type: missionType,
+          num_spacecraft: numSpacecraft,
         }),
       })
       if (res.ok) setResult(await res.json())
@@ -100,13 +107,15 @@ export function MissionTradeView({ onConceptSelected }: { onConceptSelected?: ()
           options — existing satellite data, commercial services, aerial, ground, and a new satellite.
         </p>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '0.75rem' }}>
+          {isOptical && (
+            <div className="form-group" style={{ margin: 0 }}>
+              <label>Ground resolution (m) <span style={{ color: '#6b7280', fontWeight: 400 }}>— optical only</span></label>
+              <input className="input" type="number" min={0.1} step={1} value={gsd}
+                onChange={e => setGsd(Number(e.target.value) || 10)} />
+            </div>
+          )}
           <div className="form-group" style={{ margin: 0 }}>
-            <label>Ground resolution (m)</label>
-            <input className="input" type="number" min={0.1} step={1} value={gsd}
-              onChange={e => setGsd(Number(e.target.value) || 10)} />
-          </div>
-          <div className="form-group" style={{ margin: 0 }}>
-            <label>Revisit time (days)</label>
+            <label>{missionType === 'communications' ? 'Service revisit (hours)' : 'Revisit time (days)'}</label>
             <input className="input" type="number" min={0.1} step={1} value={revisit}
               onChange={e => setRevisit(Number(e.target.value) || 3)} />
           </div>
@@ -137,6 +146,17 @@ export function MissionTradeView({ onConceptSelected }: { onConceptSelected?: ()
               <input type="checkbox" checked={needControl} onChange={e => setNeedControl(e.target.checked)} />
               Must control scheduling
             </label>
+          </div>
+          <div className="form-group" style={{ margin: 0 }}>
+            <label>Number of spacecraft</label>
+            <input className="input" type="number" min={1} max={200} value={numSpacecraft}
+              onChange={e => setNumSpacecraft(Number(e.target.value) || 1)} />
+          </div>
+          <div className="form-group" style={{ margin: 0 }}>
+            <label>Mission type</label>
+            <span style={{ fontSize: '0.72rem', color: '#6b7280' }}>
+              {missionType.replace(/_/g, ' ')} <span style={{ color: '#9ca3af' }}>(from requirements)</span>
+            </span>
           </div>
         </div>
         <button className="btn" onClick={runTrade} disabled={loading}

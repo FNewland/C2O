@@ -85,7 +85,7 @@ def search_compatible_equipment(
 
         for comp in components:
             match = _score_component(comp, domain, category, state)
-            if match.fit_score > 0.1:  # Minimum threshold
+            if match.fit_score > 0.01:  # Low threshold to show all components
                 matches.append(match)
 
         matches.sort(key=lambda m: m.fit_score, reverse=True)

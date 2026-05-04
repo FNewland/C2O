@@ -380,10 +380,12 @@ export function RequirementsPanel() {
                 value={(requirements as any).num_planes || 4}
                 onChange={(e) => setRequirements({ num_planes: Number(e.target.value) } as any)} />
             </div>
-            <p style={{ fontSize: '0.72rem', color: '#9ca3af' }}>
-              Coverage analysis available via Trade Studies → constellation design endpoint.
-              Total constellation cost estimated with learning curve in Cost tab.
-            </p>
+            <ConstellationSizer
+              altitude={requirements.orbit.altitude_km}
+              inclination={requirements.orbit.inclination_deg}
+              numSats={(requirements as any).num_spacecraft || 4}
+              massPer={requirements.payloads?.[0]?.mass_kg || 5}
+            />
           </>
         )}
       </div>
@@ -489,6 +491,69 @@ export function RequirementsPanel() {
           </p>
         </div>
       </div>
+    </div>
+  )
+}
+
+
+function ConstellationSizer({ altitude, inclination, numSats, massPer }: {
+  altitude: number; inclination: number; numSats: number; massPer: number
+}) {
+  const [result, setResult] = useState<any>(null)
+  const [loading, setLoading] = useState(false)
+
+  const runSizing = async () => {
+    setLoading(true)
+    try {
+      const res = await fetch('/api/lifecycle/constellation/design', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          coverage_target_percent: 95,
+          max_revisit_hours: 6,
+          altitude_km: altitude,
+          inclination_deg: inclination,
+          per_satellite_mass_kg: massPer,
+          per_satellite_cost_meur: 0.5,
+        }),
+      })
+      if (res.ok) setResult(await res.json())
+    } catch {}
+    setLoading(false)
+  }
+
+  return (
+    <div style={{ marginTop: '0.5rem' }}>
+      <button className="btn btn-sm" onClick={runSizing} disabled={loading}
+        style={{ fontSize: '0.72rem', marginBottom: '0.4rem' }}>
+        {loading ? 'Computing...' : 'Size Constellation for 95% Coverage'}
+      </button>
+      {result?.candidates?.length > 0 && (
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.72rem' }}>
+          <thead>
+            <tr style={{ background: 'var(--bg-secondary, #1f2937)' }}>
+              <th style={{ padding: '0.2rem 0.4rem', textAlign: 'left', fontSize: '0.65rem', color: '#9ca3af' }}>Config</th>
+              <th style={{ padding: '0.2rem 0.4rem', textAlign: 'right', fontSize: '0.65rem', color: '#9ca3af' }}>Sats</th>
+              <th style={{ padding: '0.2rem 0.4rem', textAlign: 'right', fontSize: '0.65rem', color: '#9ca3af' }}>Planes</th>
+              <th style={{ padding: '0.2rem 0.4rem', textAlign: 'right', fontSize: '0.65rem', color: '#9ca3af' }}>Coverage</th>
+              <th style={{ padding: '0.2rem 0.4rem', textAlign: 'right', fontSize: '0.65rem', color: '#9ca3af' }}>Revisit</th>
+              <th style={{ padding: '0.2rem 0.4rem', textAlign: 'right', fontSize: '0.65rem', color: '#9ca3af' }}>Cost (MEUR)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {result.candidates.slice(0, 5).map((c: any, i: number) => (
+              <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                <td style={{ padding: '0.2rem 0.4rem', fontWeight: 500 }}>{c.walker_notation}</td>
+                <td style={{ padding: '0.2rem 0.4rem', textAlign: 'right' }}>{c.total_satellites}</td>
+                <td style={{ padding: '0.2rem 0.4rem', textAlign: 'right' }}>{c.num_planes}</td>
+                <td style={{ padding: '0.2rem 0.4rem', textAlign: 'right' }}>{c.coverage_percent}%</td>
+                <td style={{ padding: '0.2rem 0.4rem', textAlign: 'right' }}>{c.max_revisit_hours}h</td>
+                <td style={{ padding: '0.2rem 0.4rem', textAlign: 'right', fontFamily: 'monospace' }}>{c.total_cost_meur}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </div>
   )
 }

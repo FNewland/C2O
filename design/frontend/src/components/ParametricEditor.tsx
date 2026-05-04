@@ -155,7 +155,16 @@ function FractionTable({ title, data, highlight, onEdit }: {
                   color: c === highlight ? '#d1d5db' : '#6b7280',
                   fontWeight: c === highlight ? 600 : 400,
                 }}>
-                  {values[c] !== undefined ? `${(values[c] * 100).toFixed(1)}%` : '—'}
+                  {c === highlight && values[c] !== undefined ? (
+                    <input className="input" type="number" step={0.1} min={0} max={100}
+                      value={(values[c] * 100).toFixed(1)}
+                      onChange={() => onEdit()}
+                      style={{ width: '55px', fontSize: '0.72rem', textAlign: 'right', background: 'rgba(59,130,246,0.1)', border: '1px solid #3b82f640' }}
+                      title="Edit this value to override the parametric model"
+                    />
+                  ) : (
+                    values[c] !== undefined ? `${(values[c] * 100).toFixed(1)}%` : '—'
+                  )}
                 </td>
               ))}
             </tr>
