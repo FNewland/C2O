@@ -33,6 +33,7 @@ import { PositionAnswersPanel } from './components/PositionAnswersPanel'
 import { ConOpsEditor } from './components/ConOpsEditor'
 import { FunctionTreeView } from './components/FunctionTreeView'
 import { InterfaceMatrixView } from './components/InterfaceMatrixView'
+import { RequirementsEditor } from './components/RequirementsEditor'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -40,7 +41,7 @@ const queryClient = new QueryClient({
   },
 })
 
-type CenterTab = 'need' | 'concept' | 'requirements' | 'design' | 'conops' | 'functions' | 'interfaces' | 'positions' | 'answers' | 'gate' | 'compliance' | 'ecss' | 'cost' | 'trade' | 'snapshots' | 'optimizer' | 'help'
+type CenterTab = 'need' | 'concept' | 'requirements' | 'design' | 'conops' | 'functions' | 'interfaces' | 'reqs' | 'positions' | 'answers' | 'gate' | 'compliance' | 'ecss' | 'cost' | 'trade' | 'snapshots' | 'optimizer' | 'help'
 type RightTab = 'insights' | 'conflicts' | 'exports'
 
 function AppContent() {
@@ -159,6 +160,7 @@ function AppContent() {
     { id: 'design', label: 'Dashboard' },
     { id: 'conops', label: 'ConOps' },
     { id: 'functions', label: 'Functions' },
+    { id: 'reqs', label: 'Requirements' },
     { id: 'interfaces', label: 'Interfaces' },
     { id: 'positions', label: 'Positions' },
     { id: 'answers', label: 'Q&A' },
@@ -265,6 +267,7 @@ function AppContent() {
                 {centerTab === 'design' && <DesignWorkspace />}
                 {centerTab === 'conops' && <ConOpsEditor />}
                 {centerTab === 'functions' && <FunctionTreeView />}
+                {centerTab === 'reqs' && <RequirementsEditor studyId={studyId} />}
                 {centerTab === 'interfaces' && <InterfaceMatrixView />}
                 {centerTab === 'positions' && <PositionPanel />}
                 {centerTab === 'answers' && <PositionAnswersPanel />}

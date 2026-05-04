@@ -29,9 +29,46 @@ const SUBSYSTEM_COLORS: Record<string, string> = {
   propulsion: '#f97316', data: '#8b5cf6',
 }
 
+const DOMAIN_OPTIONS = ['payload', 'power', 'aocs', 'link', 'thermal', 'structure', 'propulsion', 'data', 'systems', '']
+
 export function FunctionTreeView() {
-  const [functions] = useState<FunctionNode[]>(DEMO_FUNCTIONS)
-  const [expanded, setExpanded] = useState<Set<string>>(new Set(functions.map(f => f.id)))
+  const [functions, setFunctions] = useState<FunctionNode[]>(DEMO_FUNCTIONS)
+  const [expanded, setExpanded] = useState<Set<string>>(new Set(DEMO_FUNCTIONS.map(f => f.id)))
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editName, setEditName] = useState('')
+  const [editDomain, setEditDomain] = useState('')
+  const [editCriteria, setEditCriteria] = useState('')
+
+  const addFunction = (parentId: string | null) => {
+    const newId = `F-${Date.now()}`
+    setFunctions(prev => [...prev, {
+      id: newId, name: 'New function', function_type: 'observe',
+      parent_function_id: parentId, objective_ids: [],
+      derived_requirement_ids: [], allocated_to: '',
+      performance_criteria: [], level: parentId ? 1 : 0,
+    }])
+    setExpanded(prev => new Set([...prev, newId]))
+  }
+
+  const removeFunction = (id: string) => {
+    setFunctions(prev => prev.filter(f => f.id !== id && f.parent_function_id !== id))
+  }
+
+  const startEdit = (f: FunctionNode) => {
+    setEditingId(f.id)
+    setEditName(f.name)
+    setEditDomain(f.allocated_to)
+    setEditCriteria(f.performance_criteria.join('; '))
+  }
+
+  const saveEdit = () => {
+    if (!editingId) return
+    setFunctions(prev => prev.map(f => f.id === editingId ? {
+      ...f, name: editName, allocated_to: editDomain,
+      performance_criteria: editCriteria.split(';').map(c => c.trim()).filter(Boolean),
+    } : f))
+    setEditingId(null)
+  }
 
   const roots = useMemo(() => functions.filter(f => !f.parent_function_id), [functions])
 
@@ -59,30 +96,45 @@ export function FunctionTreeView() {
       </p>
 
       {/* Stats bar */}
-      <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem', fontSize: '0.75rem' }}>
+      <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem', fontSize: '0.75rem', alignItems: 'center' }}>
         <span>{functions.length} functions</span>
         <span>{leaves.length} leaves</span>
         <span style={{ color: uncovered.length > 0 ? '#f59e0b' : '#10b981' }}>
           {uncovered.length} uncovered {uncovered.length > 0 && '(need requirements)'}
         </span>
         {unallocated.length > 0 && <span style={{ color: '#ef4444' }}>{unallocated.length} unallocated</span>}
+        <span style={{ flex: 1 }} />
+        <button className="btn btn-sm" onClick={() => addFunction(null)} style={{ fontSize: '0.7rem' }}>+ Add Function</button>
       </div>
 
       {/* Tree */}
       {roots.map(root => (
         <FunctionNodeView key={root.id} node={root} depth={0}
           getChildren={getChildren} expanded={expanded} toggleExpand={toggleExpand}
-          allFunctions={functions} />
+          allFunctions={functions}
+          editingId={editingId} editName={editName} editDomain={editDomain} editCriteria={editCriteria}
+          onStartEdit={startEdit} onSaveEdit={saveEdit} onCancelEdit={() => setEditingId(null)}
+          onEditName={setEditName} onEditDomain={setEditDomain} onEditCriteria={setEditCriteria}
+          onAddChild={(parentId) => addFunction(parentId)} onRemove={removeFunction}
+        />
       ))}
     </div>
   )
 }
 
-function FunctionNodeView({ node, depth, getChildren, expanded, toggleExpand, allFunctions }: {
+function FunctionNodeView({ node, depth, getChildren, expanded, toggleExpand, allFunctions,
+  editingId, editName, editDomain, editCriteria,
+  onStartEdit, onSaveEdit, onCancelEdit, onEditName, onEditDomain, onEditCriteria,
+  onAddChild, onRemove,
+}: {
   node: FunctionNode; depth: number
   getChildren: (id: string) => FunctionNode[]
   expanded: Set<string>; toggleExpand: (id: string) => void
   allFunctions: FunctionNode[]
+  editingId?: string | null; editName?: string; editDomain?: string; editCriteria?: string
+  onStartEdit?: (f: FunctionNode) => void; onSaveEdit?: () => void; onCancelEdit?: () => void
+  onEditName?: (n: string) => void; onEditDomain?: (d: string) => void; onEditCriteria?: (c: string) => void
+  onAddChild?: (parentId: string) => void; onRemove?: (id: string) => void
 }) {
   const children = getChildren(node.id)
   const hasChildren = children.length > 0
@@ -136,11 +188,52 @@ function FunctionNodeView({ node, depth, getChildren, expanded, toggleExpand, al
           )}
         </div>
         <span style={{ fontSize: '0.6rem', color: '#6b7280', fontFamily: 'monospace', flexShrink: 0 }}>{node.id}</span>
+        {/* Edit/delete buttons */}
+        {onStartEdit && editingId !== node.id && (
+          <div style={{ display: 'flex', gap: '0.2rem', flexShrink: 0 }}>
+            <button onClick={(e) => { e.stopPropagation(); onStartEdit(node) }}
+              style={{ background: 'none', border: 'none', color: '#3b82f6', cursor: 'pointer', fontSize: '0.6rem' }}>edit</button>
+            {onAddChild && (
+              <button onClick={(e) => { e.stopPropagation(); onAddChild(node.id) }}
+                style={{ background: 'none', border: 'none', color: '#10b981', cursor: 'pointer', fontSize: '0.6rem' }}>+sub</button>
+            )}
+            {onRemove && (
+              <button onClick={(e) => { e.stopPropagation(); onRemove(node.id) }}
+                style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '0.6rem' }}>x</button>
+            )}
+          </div>
+        )}
       </div>
+      {/* Inline edit form */}
+      {editingId === node.id && onEditName && onEditDomain && onEditCriteria && (
+        <div style={{ marginLeft: depth * 16 + 20, padding: '0.4rem', background: 'rgba(59,130,246,0.08)', borderRadius: '4px', marginBottom: '0.2rem', border: '1px solid rgba(59,130,246,0.3)' }}>
+          <div style={{ display: 'flex', gap: '0.3rem', marginBottom: '0.3rem' }}>
+            <input className="input" value={editName} onChange={e => onEditName(e.target.value)}
+              placeholder="Function name (verb-noun)" style={{ flex: 1, fontSize: '0.78rem' }} />
+            <select className="select" value={editDomain} onChange={e => onEditDomain(e.target.value)}
+              style={{ width: '120px', fontSize: '0.75rem' }}>
+              <option value="">Unallocated</option>
+              {DOMAIN_OPTIONS.filter(Boolean).map(d => <option key={d} value={d}>{d}</option>)}
+            </select>
+          </div>
+          <input className="input" value={editCriteria} onChange={e => onEditCriteria(e.target.value)}
+            placeholder="Performance criteria (semicolon-separated, e.g. GSD <= 10m; SNR >= 100)"
+            style={{ width: '100%', fontSize: '0.72rem', marginBottom: '0.3rem' }} />
+          <div style={{ display: 'flex', gap: '0.3rem' }}>
+            <button className="btn btn-sm" onClick={onSaveEdit} style={{ fontSize: '0.68rem', background: '#10b981' }}>Save</button>
+            <button className="btn btn-sm" onClick={onCancelEdit} style={{ fontSize: '0.68rem', background: '#374151' }}>Cancel</button>
+          </div>
+        </div>
+      )}
       {isExpanded && children.map(child => (
         <FunctionNodeView key={child.id} node={child} depth={depth + 1}
           getChildren={getChildren} expanded={expanded} toggleExpand={toggleExpand}
-          allFunctions={allFunctions} />
+          allFunctions={allFunctions}
+          editingId={editingId} editName={editName} editDomain={editDomain} editCriteria={editCriteria}
+          onStartEdit={onStartEdit} onSaveEdit={onSaveEdit} onCancelEdit={onCancelEdit}
+          onEditName={onEditName} onEditDomain={onEditDomain} onEditCriteria={onEditCriteria}
+          onAddChild={onAddChild} onRemove={onRemove}
+        />
       ))}
     </div>
   )
