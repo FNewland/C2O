@@ -212,7 +212,7 @@ export function SystemArchitectureEditor() {
                       color: '#d1d5db',
                     }}>{block.name}</span>
                     {i < currentSelection.blocks.length - 1 && (
-                      <span style={{ color: '#6b7280', fontSize: '0.8rem' }}>-></span>
+                      <span style={{ color: '#6b7280', fontSize: '0.8rem' }}>{'->'}</span>
                     )}
                   </span>
                 ))}
