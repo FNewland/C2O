@@ -292,6 +292,10 @@ export function MissionDashboard() {
   const sustainGrade = getStr('sustainability.grade')
   const reliability = get('reliability.mission_reliability')
 
+  const conflicts = result?.conflicts || []
+  const conflictCount = conflicts.length
+  const criticalCount = conflicts.filter(c => c.severity === 'critical').length
+
   const marginStatus = (v: number): 'green' | 'amber' | 'red' => v > 20 ? 'green' : v > 0 ? 'amber' : 'red'
 
   return (
@@ -304,6 +308,7 @@ export function MissionDashboard() {
         <KpiCard label="Cost" value={cost.toFixed(1)} unit="MEUR" status="blue" />
         <KpiCard label="Sustainability" value={sustainGrade} status={sustainGrade === 'A' || sustainGrade === 'B' ? 'green' : sustainGrade === 'C' ? 'amber' : 'red'} />
         <KpiCard label="Reliability" value={`${(reliability * 100).toFixed(1)}%`} status={reliability >= 0.9 ? 'green' : reliability >= 0.7 ? 'amber' : 'red'} />
+        <KpiCard label="Conflicts" value={`${conflictCount}`} status={conflictCount === 0 ? 'green' : criticalCount > 0 ? 'red' : 'amber'} />
       </div>
 
       {/* Row 2: Charts */}
