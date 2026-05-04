@@ -211,8 +211,7 @@ function FunctionNodeView({ node, depth, getChildren, expanded, toggleExpand, al
                 background: `${SUBSYSTEM_COLORS[domain] || '#6b7280'}22`,
                 color: SUBSYSTEM_COLORS[domain] || '#6b7280', fontWeight: 600,
               }}>{domain}</span>
-            ))
-            )}
+            ))}
             {isLeaf && !hasCoverage && (
               <span style={{ fontSize: '0.6rem', padding: '0 0.3rem', borderRadius: '3px', background: 'rgba(245,158,11,0.2)', color: '#f59e0b' }}>
                 no requirements
