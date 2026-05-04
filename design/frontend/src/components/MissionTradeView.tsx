@@ -65,7 +65,6 @@ export function MissionTradeView({ onConceptSelected }: { onConceptSelected?: ()
   const [budget, setBudget] = useState(500)
   const [needOwnership, setNeedOwnership] = useState(false)
   const [needControl, setNeedControl] = useState(false)
-  const [numSpacecraft, setNumSpacecraft] = useState(1)
 
   const runTrade = async () => {
     setLoading(true)
@@ -82,7 +81,7 @@ export function MissionTradeView({ onConceptSelected }: { onConceptSelected?: ()
           require_data_ownership: needOwnership,
           require_scheduling_control: needControl,
           mission_type: missionType,
-          num_spacecraft: numSpacecraft,
+          num_spacecraft: coverage === 'global' ? 4 : 1,  // Auto-suggest constellation for global
         }),
       })
       if (res.ok) setResult(await res.json())
@@ -148,15 +147,9 @@ export function MissionTradeView({ onConceptSelected }: { onConceptSelected?: ()
             </label>
           </div>
           <div className="form-group" style={{ margin: 0 }}>
-            <label>Number of spacecraft</label>
-            <input className="input" type="number" min={1} max={200} value={numSpacecraft}
-              onChange={e => setNumSpacecraft(Number(e.target.value) || 1)} />
-          </div>
-          <div className="form-group" style={{ margin: 0 }}>
-            <label>Mission type</label>
-            <span style={{ fontSize: '0.72rem', color: '#6b7280' }}>
-              {missionType.replace(/_/g, ' ')} <span style={{ color: '#9ca3af' }}>(from requirements)</span>
-            </span>
+            <label style={{ fontSize: '0.68rem', color: '#6b7280' }}>
+              Mission type: {missionType.replace(/_/g, ' ')} (from Step 3)
+            </label>
           </div>
         </div>
         <button className="btn" onClick={runTrade} disabled={loading}

@@ -244,7 +244,7 @@ function AppContent() {
           <button className="btn btn-sm" onClick={() => setShowTemplateGallery(true)}>
             New from Template
           </button>
-          {sessionId && (
+          {(sessionId || result) && (
             <button className="btn btn-sm" onClick={() => setShowEquipmentBrowser(true)}>
               Browse Equipment
             </button>

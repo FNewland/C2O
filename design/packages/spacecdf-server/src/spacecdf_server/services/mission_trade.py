@@ -367,19 +367,23 @@ def compute_mission_trade(
                     "global + local validation": 2.5}
 
     for alt in alts:
-        # Resolution score
-        if alt.gsd_m == 0:  # Ground sensor
+        # Resolution score (skip for non-optical missions where target_gsd_m = 0)
+        if target_gsd_m <= 0 or "resolution" not in weights:
+            alt.scores["resolution"] = 0.5  # Neutral score when not applicable
+        elif alt.gsd_m == 0:
             alt.scores["resolution"] = 0.1
         elif alt.gsd_m <= target_gsd_m:
             alt.scores["resolution"] = 1.0
         else:
-            alt.scores["resolution"] = max(0, 1.0 - (alt.gsd_m - target_gsd_m) / (target_gsd_m * 3))
+            alt.scores["resolution"] = max(0, 1.0 - (alt.gsd_m - target_gsd_m) / max(target_gsd_m * 3, 0.1))
 
         # Revisit score
-        if alt.revisit_days <= target_revisit_days:
+        if target_revisit_days <= 0:
+            alt.scores["revisit"] = 0.5
+        elif alt.revisit_days <= target_revisit_days:
             alt.scores["revisit"] = 1.0
         else:
-            alt.scores["revisit"] = max(0, 1.0 - (alt.revisit_days - target_revisit_days) / (target_revisit_days * 5))
+            alt.scores["revisit"] = max(0, 1.0 - (alt.revisit_days - target_revisit_days) / max(target_revisit_days * 5, 0.01))
 
         # Coverage score
         target_cov_val = coverage_map.get(target_coverage, 2)
