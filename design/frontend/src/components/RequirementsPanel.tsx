@@ -405,8 +405,32 @@ export function RequirementsPanel() {
       </div>
 
       <button className="btn" onClick={runDesign} disabled={isRunning} style={{ width: '100%' }}>
-        {isRunning ? 'Running Design Loop...' : 'Run Design'}
+        {isRunning ? 'Running Design Loop...' : 'Run Design (solo)'}
       </button>
+
+      {/* Session guidance */}
+      <div className="card" style={{ marginTop: '1rem', borderLeft: '3px solid #f59e0b' }}>
+        <h3 style={{ fontSize: '0.85rem', color: '#f59e0b', marginBottom: '0.3rem' }}>When do I need a session?</h3>
+        <div style={{ fontSize: '0.78rem', color: '#d1d5db', lineHeight: 1.5 }}>
+          <p style={{ marginBottom: '0.4rem' }}>
+            <strong>Solo design (no session needed):</strong> Click "Run Design" above to converge the design
+            on your own. Good for initial exploration and concept sizing.
+          </p>
+          <p style={{ marginBottom: '0.4rem' }}>
+            <strong>Collaborative session (start a session):</strong> Use the "Start Session" button in the
+            header bar when you want to:
+          </p>
+          <ul style={{ paddingLeft: '1.2rem', marginBottom: '0.4rem', color: '#9ca3af' }}>
+            <li>Invite team members to edit parameters in real-time</li>
+            <li>Select equipment from the component browser (requires session for edits)</li>
+            <li>Have multiple engineers working on different subsystems simultaneously</li>
+            <li>Record an audit trail of who changed what and why</li>
+          </ul>
+          <p style={{ fontSize: '0.72rem', color: '#6b7280' }}>
+            You can run the design solo first, then start a session to refine it with the team.
+          </p>
+        </div>
+      </div>
     </div>
   )
 }
