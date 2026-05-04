@@ -781,6 +781,43 @@ async def dsn_link_budget(body: dict[str, Any]) -> dict:
     return compute_dsn_link_budget(**body)
 
 
+# --- System Architecture ---
+
+@router.get("/architecture/subsystems")
+async def list_architecture_subsystems() -> dict:
+    """List all subsystems that have architecture options."""
+    from spacecdf_common.models.architecture import get_all_subsystems
+    return {"subsystems": get_all_subsystems()}
+
+
+@router.get("/architecture/options/{subsystem}")
+async def get_architecture_options(subsystem: str) -> dict:
+    """Get available architecture options for a subsystem."""
+    from spacecdf_common.models.architecture import get_options
+    options = get_options(subsystem)
+    return {
+        "subsystem": subsystem,
+        "options": [
+            {
+                "id": o.id, "name": o.name, "description": o.description,
+                "mass_kg": o.mass_kg_typical, "power_w": o.power_w_typical,
+                "cost_keur": o.cost_keur_typical, "trl": o.trl,
+                "pointing_deg": o.pointing_deg, "data_rate_mbps": o.data_rate_mbps,
+                "pros": o.pros, "cons": o.cons,
+                "num_derived_requirements": len(o.derived_requirements),
+            }
+            for o in options
+        ],
+    }
+
+
+@router.post("/architecture/select")
+async def select_architecture_option(body: dict[str, Any]) -> dict:
+    """Select an architecture option and get derived requirements + block diagram."""
+    from spacecdf_common.models.architecture import select_architecture
+    return select_architecture(body.get("subsystem", ""), body.get("option_id", ""))
+
+
 # --- Parametric Model Data (user-editable) ---
 
 @router.get("/parametric-data")

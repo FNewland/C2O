@@ -32,6 +32,7 @@ import { ExportsPanel } from './components/ExportsPanel'
 import { DesignStateBar } from './components/DesignStateBar'
 import { ConflictReviewModal } from './components/ConflictReviewModal'
 import { ChangeAuditPanel } from './components/ChangeAuditPanel'
+import { SystemArchitectureEditor } from './components/SystemArchitectureEditor'
 import { ParametricEditor } from './components/ParametricEditor'
 import { LinkBudgetTool } from './components/LinkBudgetTool'
 import { PointingBudget } from './components/PointingBudget'
@@ -50,7 +51,7 @@ const queryClient = new QueryClient({
   },
 })
 
-type CenterTab = 'need' | 'concept' | 'requirements' | 'design' | 'conops' | 'functions' | 'interfaces' | 'reqs' | 'positions' | 'answers' | 'gate' | 'compliance' | 'ecss' | 'cost' | 'trade' | 'snapshots' | 'optimizer' | 'linkbudget' | 'verification' | 'exports' | 'parametric' | 'audit' | 'help'
+type CenterTab = 'need' | 'concept' | 'requirements' | 'design' | 'conops' | 'functions' | 'architecture' | 'interfaces' | 'reqs' | 'positions' | 'answers' | 'gate' | 'compliance' | 'ecss' | 'cost' | 'trade' | 'snapshots' | 'optimizer' | 'linkbudget' | 'verification' | 'exports' | 'parametric' | 'audit' | 'help'
 type RightTab = 'insights' | 'conflicts' | 'exports'
 
 function AppContent() {
@@ -193,6 +194,7 @@ function AppContent() {
     { id: 'conops', label: 'ConOps' },
     { id: 'functions', label: 'Functions' },
     { id: 'reqs', label: 'Requirements' },
+    { id: 'architecture', label: 'Architecture' },
     { id: 'interfaces', label: 'Interfaces' },
     // Analysis
     { id: 'linkbudget', label: 'Link Budget', group: 'Analysis' },
@@ -317,6 +319,7 @@ function AppContent() {
                 {centerTab === 'conops' && <ConOpsEditor />}
                 {centerTab === 'functions' && <FunctionTreeView />}
                 {centerTab === 'reqs' && <RequirementsEditor studyId={studyId} />}
+                {centerTab === 'architecture' && <SystemArchitectureEditor />}
                 {centerTab === 'interfaces' && <InterfaceMatrixView onNavigate={(tab) => setCenterTab(tab as CenterTab)} />}
                 {centerTab === 'positions' && <PositionPanel />}
                 {centerTab === 'answers' && <PositionAnswersPanel />}
