@@ -32,6 +32,7 @@ import { ExportsPanel } from './components/ExportsPanel'
 import { DesignStateBar } from './components/DesignStateBar'
 import { ConflictReviewModal } from './components/ConflictReviewModal'
 import { ChangeAuditPanel } from './components/ChangeAuditPanel'
+import { ParametricEditor } from './components/ParametricEditor'
 import { GateReviewPanel } from './components/GateReviewPanel'
 import { PositionAnswersPanel } from './components/PositionAnswersPanel'
 import { ConOpsEditor } from './components/ConOpsEditor'
@@ -45,7 +46,7 @@ const queryClient = new QueryClient({
   },
 })
 
-type CenterTab = 'need' | 'concept' | 'requirements' | 'design' | 'conops' | 'functions' | 'interfaces' | 'reqs' | 'positions' | 'answers' | 'gate' | 'compliance' | 'ecss' | 'cost' | 'trade' | 'snapshots' | 'optimizer' | 'exports' | 'audit' | 'help'
+type CenterTab = 'need' | 'concept' | 'requirements' | 'design' | 'conops' | 'functions' | 'interfaces' | 'reqs' | 'positions' | 'answers' | 'gate' | 'compliance' | 'ecss' | 'cost' | 'trade' | 'snapshots' | 'optimizer' | 'exports' | 'parametric' | 'audit' | 'help'
 type RightTab = 'insights' | 'conflicts' | 'exports'
 
 function AppContent() {
@@ -195,6 +196,7 @@ function AppContent() {
     { id: 'trade', label: 'Trade Studies' },
     { id: 'optimizer', label: 'Optimizer' },
     { id: 'exports', label: 'Exports' },
+    { id: 'parametric', label: 'Parametric' },
     { id: 'audit', label: 'Changes' },
     { id: 'help', label: 'Help' },
   ], [])
@@ -307,6 +309,7 @@ function AppContent() {
                 {centerTab === 'snapshots' && <SnapshotsPanel sessionId={sessionId} />}
                 {centerTab === 'optimizer' && <OptimizerPanel sessionId={sessionId} />}
                 {centerTab === 'exports' && <ExportsPanel studyId={studyId} />}
+                {centerTab === 'parametric' && <ParametricEditor />}
                 {centerTab === 'audit' && <ChangeAuditPanel />}
                 {centerTab === 'help' && <UserManual />}
               </div>

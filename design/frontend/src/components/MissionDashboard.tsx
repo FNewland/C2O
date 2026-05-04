@@ -6,6 +6,8 @@ import { MassWaterfall } from './MassWaterfall'
 import { PowerProfile } from './PowerProfile'
 import { SustainabilityCard } from './SustainabilityCard'
 import { BudgetComparison } from './BudgetComparison'
+import { MarginEnforcement } from './MarginEnforcement'
+import { SpectrumSelector } from './SpectrumSelector'
 
 // Extended domain order including all 20 agent domains
 const DOMAIN_ORDER = [
@@ -274,7 +276,7 @@ function CommunityCard({ parameters: p }: { parameters: Record<string, DesignPar
 
 // === MAIN DASHBOARD ===
 export function MissionDashboard() {
-  const { result } = useDesignStore()
+  const { result, studyId } = useDesignStore()
   const activeParams = useActiveParameters()
 
   // Show dashboard if we have parameters from either store
@@ -324,8 +326,12 @@ export function MissionDashboard() {
         <VolumeReliabilityCard parameters={p} />
       </div>
 
-      {/* Row 4: Budget Breakdown */}
+      {/* Row 4: Budget Breakdown + Margins */}
       <BudgetComparison />
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '0.75rem', marginBottom: '0.75rem' }}>
+        <MarginEnforcement studyId={studyId} />
+        <SpectrumSelector />
+      </div>
 
       {/* Row 5: Community */}
       <CommunityCard parameters={p} />

@@ -15,12 +15,12 @@
 
 - [x] Tabular trade studies → WIRED (TradeStudyPanel with templates, criteria, options)
 - [x] Conflict count on dashboard → WIRED (KPI badge)
-- [ ] Spectrum bands as interactive design constraint (affects transponder filtering)
-- [ ] Parametric data interactive editor (mass/cost fractions, duty cycles as editable tables)
-- [ ] Duty cycle display in power section of dashboard
-- [ ] ECSS margin enforcement display (per-domain margin vs policy table)
-- [ ] Equipment needs analysis driving browser category filtering
-- [ ] Launch provider interactive selector (not just data download)
+- [x] Spectrum bands as interactive design constraint → SpectrumSelector on dashboard
+- [x] Parametric data interactive editor → ParametricEditor tab (mass/cost/power/SA tables)
+- [x] Duty cycle display → in ParametricEditor power tab
+- [x] ECSS margin enforcement display → MarginEnforcement on dashboard
+- [ ] Equipment needs analysis driving browser category filtering (backend exists, UI filtering not yet connected)
+- [ ] Launch provider interactive selector (backend exists, UI not yet built as standalone selector)
 
 ## Tier 3: Architecture Gaps (need new code)
 
