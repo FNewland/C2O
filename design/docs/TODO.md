@@ -33,7 +33,7 @@
 - [x] V&V matrix → VerificationMatrix tab (per-req ATRI method, phase, level, status, responsible)
 - [x] Spectrum selection → EquipmentBrowser filters transponders/antennas by selectedRfBand from SpectrumSelector
 - [x] Launch selection → auto-sets target_mass_kg from provider capacity (85% usable)
-- [ ] Consolidate duplicate exports (right panel ExportPanel vs center ExportsPanel — low priority, both functional)
+- [x] Consolidate duplicate exports → right panel now links to center Exports tab for ECSS/regulatory/spectrum documents
 - [x] Mission type auto-set → inferred from objective text keywords (comms/relay→communications, imagery/GSD→EO, SAR→sar, lunar/mars→planetary, tech demo)
 
 ## Tier 4: Deepening (improve existing features)
@@ -42,7 +42,7 @@
 - [x] Deep-space AOCS → simplified model for interplanetary (no gravity gradient, MarCO 41% vs 162%)
 - [x] Cost CERs → CubeSat COTS flat pricing (EPS €15k, AOCS €40k instead of per-kg SSCM)
 - [x] Navigation redesign → tabs grouped into 5 workflow phases (Design, Analysis, Verify, Team, Data) with group labels
-- [ ] System/subsystem boundary definition tool
+- [x] System/subsystem boundary definition → FunctionTreeView multi-allocation defines boundaries; InterfaceMatrixView manages boundary interfaces
 - [x] Per-requirement V&V method and phase assignment → VerificationMatrix tab with ATRI, phase, level, status
 - [x] Constellation fields in requirements form (num_spacecraft, constellation_type, num_planes)
 - [x] Beyond-LEO orbits in orbit form (HEO, NRHO added)
@@ -50,9 +50,13 @@
 ## Course Materials
 
 - [x] Course plan (40 hours, 5 days, 20 sessions) → docs/course/COURSE_PLAN.md
-- [ ] Facilitator's Book (~400 pages) — full content, solutions, diagrams, formulae, index
-- [ ] Learner's Workbook (~150 pages) — condensed content, 20 worksheets, tool guides
-- [ ] PDF generation pipeline
+- [x] Facilitator's Book — 20 session guides written (~320 pages), 65 claims verified
+- [x] Learner's Workbook — 20 worksheets written (~80 pages)
+- [x] 3-week programme syllabus (Canadian landscape + CDF + mission ops)
+- [x] Verification appendix (5 records, 65 claims, 7 corrections)
+- [ ] Position appendices (A-M) — 13 position-specific deep dives
+- [ ] PDF compilation with front matter, index, diagrams
+- [ ] Diagrams (V-model, orbit geometry, link budget waterfall, etc.)
 
 ## Documentation
 

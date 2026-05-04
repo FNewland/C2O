@@ -366,7 +366,15 @@ function AppContent() {
             </div>
             {rightTab === 'insights' && <InsightsPanel />}
             {rightTab === 'conflicts' && <><h2>Cross-Domain Conflicts</h2><ConflictsPanel /></>}
-            {rightTab === 'exports' && <ExportPanel studyId={studyId} />}
+            {rightTab === 'exports' && (
+              <>
+                <ExportPanel studyId={studyId} />
+                <div style={{ padding: '0.5rem', borderTop: '1px solid var(--border)', fontSize: '0.72rem', color: '#9ca3af' }}>
+                  For ECSS documents, regulatory filings, spectrum, and design data exports,
+                  use the <button onClick={() => setCenterTab('exports')} style={{ background: 'none', border: 'none', color: '#3b82f6', cursor: 'pointer', fontSize: '0.72rem', textDecoration: 'underline' }}>Exports tab</button> in the center panel.
+                </div>
+              </>
+            )}
           </div>
         )}
       </main>
