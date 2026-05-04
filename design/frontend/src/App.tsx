@@ -186,22 +186,28 @@ function AppContent() {
     }
   }
 
-  const centerTabs: { id: CenterTab; label: string }[] = useMemo(() => [
-    { id: 'design', label: 'Dashboard' },
+  // Tabs organized by workflow phase
+  const centerTabs: { id: CenterTab; label: string; group?: string }[] = useMemo(() => [
+    // Architecture
+    { id: 'design', label: 'Dashboard', group: 'Design' },
     { id: 'conops', label: 'ConOps' },
     { id: 'functions', label: 'Functions' },
     { id: 'reqs', label: 'Requirements' },
     { id: 'interfaces', label: 'Interfaces' },
-    { id: 'positions', label: 'Positions' },
-    { id: 'answers', label: 'Q&A' },
-    { id: 'gate', label: 'Gate Review' },
-    { id: 'compliance', label: 'Compliance' },
-    { id: 'cost', label: 'Cost' },
+    // Analysis
+    { id: 'linkbudget', label: 'Link Budget', group: 'Analysis' },
     { id: 'trade', label: 'Trade Studies' },
     { id: 'optimizer', label: 'Optimizer' },
-    { id: 'linkbudget', label: 'Link Budget' },
+    { id: 'cost', label: 'Cost' },
+    // Verification
+    { id: 'compliance', label: 'Compliance', group: 'Verify' },
     { id: 'verification', label: 'V&V Matrix' },
-    { id: 'exports', label: 'Exports' },
+    { id: 'gate', label: 'Gate Review' },
+    // Team
+    { id: 'positions', label: 'Positions', group: 'Team' },
+    { id: 'answers', label: 'Q&A' },
+    // Data
+    { id: 'exports', label: 'Exports', group: 'Data' },
     { id: 'parametric', label: 'Parametric' },
     { id: 'audit', label: 'Changes' },
     { id: 'help', label: 'Help' },
@@ -283,19 +289,26 @@ function AppContent() {
           {/* Design phase: tabbed content */}
           {!['need', 'concept', 'requirements'].includes(centerTab) && (
             <>
-              <div style={{ display: 'flex', gap: '0.25rem', padding: '0.5rem 1rem', borderBottom: '1px solid var(--border)', flexWrap: 'wrap' }}>
-                {centerTabs.map(tab => (
-                  <button
-                    key={tab.id}
-                    onClick={() => setCenterTab(tab.id)}
-                    style={{
-                      background: centerTab === tab.id ? 'var(--accent)' : 'transparent',
-                      color: centerTab === tab.id ? 'white' : 'var(--text-secondary)',
-                      border: 'none', padding: '0.35rem 0.75rem', borderRadius: '4px',
-                      cursor: 'pointer', fontSize: '0.75rem', fontWeight: 600,
-                      textTransform: 'uppercase', letterSpacing: '0.03em',
-                    }}
-                  >{tab.label}</button>
+              <div style={{ display: 'flex', gap: '0.2rem', padding: '0.4rem 1rem', borderBottom: '1px solid var(--border)', flexWrap: 'wrap', alignItems: 'center' }}>
+                {centerTabs.map((tab, i) => (
+                  <span key={tab.id} style={{ display: 'contents' }}>
+                    {tab.group && (
+                      <span style={{
+                        fontSize: '0.55rem', color: '#6b7280', textTransform: 'uppercase',
+                        letterSpacing: '0.08em', marginLeft: i > 0 ? '0.5rem' : 0,
+                        marginRight: '0.15rem', fontWeight: 700,
+                      }}>{tab.group}</span>
+                    )}
+                    <button
+                      onClick={() => setCenterTab(tab.id)}
+                      style={{
+                        background: centerTab === tab.id ? 'var(--accent)' : 'transparent',
+                        color: centerTab === tab.id ? 'white' : 'var(--text-secondary)',
+                        border: 'none', padding: '0.25rem 0.55rem', borderRadius: '4px',
+                        cursor: 'pointer', fontSize: '0.68rem', fontWeight: 500,
+                      }}
+                    >{tab.label}</button>
+                  </span>
                 ))}
               </div>
               <DesignStateBar autoReconverge={autoReconverge} onToggleAuto={() => setAutoReconverge(a => !a)} />

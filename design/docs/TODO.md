@@ -38,12 +38,12 @@
 
 ## Tier 4: Deepening (improve existing features)
 
-- [ ] Structure CER too high for CubeSats (need COTS-anchored mass)
-- [ ] Deep-space AOCS model broken (MarCO validation fails 162%)
-- [ ] Cost CERs too high for CubeSats (need COMPACT-like model)
+- [x] Structure CER → COTS frame mass lookup for CubeSats (3U=0.35kg instead of 2.7kg)
+- [x] Deep-space AOCS → simplified model for interplanetary (no gravity gradient, MarCO 41% vs 162%)
+- [x] Cost CERs → CubeSat COTS flat pricing (EPS €15k, AOCS €40k instead of per-kg SSCM)
 - [ ] Navigation redesign (6 workflow phases instead of 20+ tabs)
 - [ ] System/subsystem boundary definition tool
-- [ ] Per-requirement V&V method and phase assignment
+- [ ] Per-requirement V&V method and phase assignment (V&V matrix exists but not linked to requirements editor)
 - [ ] Constellation integrated into design loop (not just mission trade)
 - [ ] Beyond-LEO orbits in orbit form selector
 

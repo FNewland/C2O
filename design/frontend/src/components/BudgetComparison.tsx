@@ -4,7 +4,7 @@
  * Displays side-by-side: agent-computed parametric values and COTS-selected
  * actual values, with margin percentages and volume fit assessment.
  */
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useDesignStore, type DesignParam } from '../stores/designStore'
 import { useActiveParameters } from '../hooks/useActiveParameters'
 
@@ -34,6 +34,9 @@ interface BudgetRow {
 export function BudgetComparison() {
   const params = useActiveParameters()
   const { requirements } = useDesignStore()
+  const markStale = useDesignStore(s => s.markStale)
+  const [editMode, setEditMode] = useState(false)
+  const [allocations, setAllocations] = useState<Record<string, number>>({})
 
   const get = (id: string): number => {
     const p = params[id]
@@ -79,9 +82,16 @@ export function BudgetComparison() {
 
   return (
     <div className="card">
-      <h3 style={{ fontSize: '0.9rem', marginBottom: '0.5rem' }}>Budget Breakdown: Parametric vs Selected</h3>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+        <h3 style={{ fontSize: '0.9rem', margin: 0 }}>Budget Breakdown</h3>
+        <button className="btn btn-sm" onClick={() => setEditMode(!editMode)}
+          style={{ fontSize: '0.68rem', background: editMode ? '#f59e0b' : undefined }}>
+          {editMode ? 'Done Editing' : 'Edit Allocations'}
+        </button>
+      </div>
       <p style={{ fontSize: '0.72rem', color: '#9ca3af', marginBottom: '0.5rem' }}>
-        Parametric estimates from design agents. Replace with actual COTS values via Equipment Browser.
+        {editMode ? 'Set mass allocations per subsystem. Margins computed against allocations.'
+          : 'Parametric estimates from design agents. Click "Edit Allocations" to set subsystem budgets.'}
       </p>
 
       {/* Summary bar */}
@@ -120,6 +130,7 @@ export function BudgetComparison() {
             <th style={th}>Subsystem</th>
             <th style={thR}>Mass (kg)</th>
             <th style={thR}>% of dry</th>
+            {editMode && <th style={thR}>Allocation (kg)</th>}
             <th style={thR}>Margin</th>
             <th style={thR}>Power (W)</th>
             <th style={thR}>% of total</th>
@@ -136,6 +147,17 @@ export function BudgetComparison() {
                 <td style={td}>{r.subsystem}</td>
                 <td style={tdR}>{r.parametric_mass_kg.toFixed(2)}</td>
                 <td style={tdR}>{massPct.toFixed(1)}%</td>
+                {editMode && (
+                  <td style={tdR}>
+                    <input className="input" type="number" step={0.1}
+                      value={allocations[r.subsystem] ?? r.parametric_mass_kg * 1.2}
+                      onChange={e => {
+                        setAllocations(prev => ({ ...prev, [r.subsystem]: Number(e.target.value) }))
+                        markStale('budget_allocation')
+                      }}
+                      style={{ width: '60px', fontSize: '0.72rem', textAlign: 'right' }} />
+                  </td>
+                )}
                 <td style={{ ...tdR, fontSize: '0.68rem', color: '#6b7280' }}>+{subMarginPct}%</td>
                 <td style={tdR}>{r.parametric_power_w.toFixed(1)}</td>
                 <td style={tdR}>{powerPct.toFixed(1)}%</td>

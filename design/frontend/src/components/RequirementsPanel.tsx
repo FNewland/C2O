@@ -303,11 +303,13 @@ export function RequirementsPanel() {
             value={requirements.orbit.orbit_type}
             onChange={(e) => { setOrbit({ orbit_type: e.target.value }); setOrbitSelected(false) }}
           >
-            <option value="leo">LEO</option>
-            <option value="sso">SSO</option>
-            <option value="meo">MEO</option>
-            <option value="geo">GEO</option>
-            <option value="lunar">Lunar</option>
+            <option value="leo">LEO (Low Earth Orbit)</option>
+            <option value="sso">SSO (Sun-Synchronous)</option>
+            <option value="meo">MEO (Medium Earth Orbit)</option>
+            <option value="geo">GEO (Geostationary)</option>
+            <option value="heo">HEO (Highly Elliptical)</option>
+            <option value="lunar">Lunar Orbit</option>
+            <option value="nrho">NRHO (Near-Rectilinear Halo)</option>
             <option value="interplanetary">Interplanetary</option>
           </select>
         </div>
@@ -340,6 +342,50 @@ export function RequirementsPanel() {
             onChange={(e) => setOrbit({ mission_duration_years: Number(e.target.value) })}
           />
         </div>
+        <div className="form-group">
+          <label>Orbit maintenance required?</label>
+          <select className="select"
+            value={requirements.orbit.deorbit_required ? 'yes' : 'no'}
+            onChange={(e) => setOrbit({ deorbit_required: e.target.value === 'yes' })}>
+            <option value="yes">Yes (includes deorbit ΔV)</option>
+            <option value="no">No (natural decay or no deorbit)</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Constellation */}
+      <div className="card">
+        <h3>Constellation</h3>
+        <div className="form-group">
+          <label>Number of Spacecraft</label>
+          <input className="input" type="number" min={1} max={200}
+            value={(requirements as any).num_spacecraft || 1}
+            onChange={(e) => setRequirements({ num_spacecraft: Number(e.target.value) } as any)} />
+        </div>
+        {((requirements as any).num_spacecraft || 1) > 1 && (
+          <>
+            <div className="form-group">
+              <label>Constellation Type</label>
+              <select className="select"
+                value={(requirements as any).constellation_type || 'walker_delta'}
+                onChange={(e) => setRequirements({ constellation_type: e.target.value } as any)}>
+                <option value="walker_delta">Walker Delta</option>
+                <option value="walker_star">Walker Star</option>
+                <option value="custom">Custom</option>
+              </select>
+            </div>
+            <div className="form-group">
+              <label>Number of Orbital Planes</label>
+              <input className="input" type="number" min={1} max={20}
+                value={(requirements as any).num_planes || 4}
+                onChange={(e) => setRequirements({ num_planes: Number(e.target.value) } as any)} />
+            </div>
+            <p style={{ fontSize: '0.72rem', color: '#9ca3af' }}>
+              Coverage analysis available via Trade Studies → constellation design endpoint.
+              Total constellation cost estimated with learning curve in Cost tab.
+            </p>
+          </>
+        )}
       </div>
 
       <div className="card">
