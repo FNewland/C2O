@@ -81,9 +81,21 @@ class PowerAgent(DesignAgent):
                 i += 1
 
             heater_power = state.get("thermal.heater_power_w", 10.0) or 10.0
-            aocs_power = state.get("aocs.power_w", 15.0) or 15.0
-            ttc_power = state.get("link.ttc_power_w", 20.0) or 20.0
-            obdh_power = 10.0
+            aocs_power = state.get("aocs.power_w") or 0
+            ttc_power = state.get("link.ttc_power_w") or 0
+            obdh_power = state.get("data.obc_power_w") or 0
+
+            # Scale default platform power by spacecraft class when agents haven't computed yet
+            sc_class_pwr = state.get_requirement("spacecraft_class", "nano")
+            if aocs_power == 0 and ttc_power == 0:
+                # Use class-appropriate defaults (not medium-sat defaults)
+                if sc_class_pwr in ("nano",):
+                    aocs_power, ttc_power, obdh_power = 2.0, 3.0, 2.0  # ~7W platform for 3U
+                elif sc_class_pwr in ("micro",):
+                    aocs_power, ttc_power, obdh_power = 5.0, 8.0, 5.0  # ~18W platform
+                else:
+                    aocs_power, ttc_power, obdh_power = 15.0, 20.0, 10.0
+
             platform_power = aocs_power + ttc_power + obdh_power
 
         # Determine cell efficiency by spacecraft class
