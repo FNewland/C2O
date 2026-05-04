@@ -774,3 +774,50 @@ async def dsn_link_budget(body: dict[str, Any]) -> dict:
     """Compute deep-space link budget for DSN communication."""
     from spacecdf_common.physics.beyond_leo import compute_dsn_link_budget
     return compute_dsn_link_budget(**body)
+
+
+# --- Parametric Model Data (user-editable) ---
+
+@router.get("/parametric-data")
+async def get_parametric_data() -> dict:
+    """Return all parametric model data for user viewing and editing.
+
+    Exposes mass fractions, cost fractions, power duty cycles, and SA power
+    tables. Users can override any value via the design parameters.
+    """
+    from spacecdf_common.physics.heritage_mass import get_all_parametric_data
+    return get_all_parametric_data()
+
+
+@router.post("/duty-cycles")
+async def estimate_duty_cycles_endpoint(body: dict[str, Any]) -> dict:
+    """Estimate power duty cycles for a mission configuration.
+
+    Returns per-mode power draw, duty cycle %, orbit-average power,
+    and recommended SA power generation.
+    """
+    from spacecdf_common.physics.heritage_mass import estimate_duty_cycles, estimate_sa_power_needed
+
+    modes = estimate_duty_cycles(
+        spacecraft_class=body.get("spacecraft_class", "nano"),
+        mission_type=body.get("mission_type", "earth_observation"),
+        comms_band=body.get("comms_band", "S"),
+        eclipse_fraction=body.get("eclipse_fraction", 0.35),
+    )
+
+    sa_needed = estimate_sa_power_needed(
+        spacecraft_class=body.get("spacecraft_class", "nano"),
+        mission_type=body.get("mission_type", "earth_observation"),
+        comms_band=body.get("comms_band", "S"),
+        eclipse_fraction=body.get("eclipse_fraction", 0.35),
+    )
+
+    total_avg = sum(m["orbit_avg_w"] for m in modes)
+
+    return {
+        "modes": modes,
+        "orbit_average_power_w": round(total_avg, 1),
+        "sa_power_needed_w": sa_needed,
+        "notes": "SA power accounts for duty cycling — not all modes run simultaneously. "
+                 "This is typically 30-50% lower than summing all subsystem peak powers.",
+    }

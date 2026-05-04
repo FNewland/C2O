@@ -5,7 +5,7 @@ Computes power budget, solar array sizing, and battery sizing.
 from __future__ import annotations
 
 from spacecdf_common.agents.base import AgentResult, DesignAgent, DesignState
-from spacecdf_common.physics.heritage_mass import calibrate_mass
+from spacecdf_common.physics.heritage_mass import calibrate_mass, estimate_sa_power_needed
 from spacecdf_common.physics.power import compute_power_budget
 
 
@@ -135,6 +135,32 @@ class PowerAgent(DesignAgent):
         eps_mass = calibrate_mass("eps", pb.eps_mass_kg, dry_est, sc_class)
         result.add_param("power.eps_mass_kg", "EPS Total Mass", round(eps_mass, 2), "kg", margin_percent=20)
         result.add_param("power.eps_cost_keur", "EPS Cost", round(pb.eps_cost_keur, 0), "kEUR")
+
+        # Cross-check: duty-cycle-aware SA estimate for CubeSats
+        # The standard power budget sums simultaneous loads, but real CubeSats
+        # duty-cycle heavily. Use the lower estimate for nano/micro class.
+        if sc_class in ("nano", "micro"):
+            mission_type = state.get_requirement("mission_type", "earth_observation")
+            duty_sa = estimate_sa_power_needed(
+                spacecraft_class=sc_class,
+                mission_type=mission_type,
+                comms_band="S",
+                eclipse_fraction=eclipse_frac,
+            )
+            if duty_sa < pb.sa_power_eol_w * 0.85 and duty_sa > 3.0:
+                result.log(f"Duty-cycle SA estimate {duty_sa:.1f}W is significantly less than "
+                           f"peak-sum estimate {pb.sa_power_eol_w:.1f}W — using duty-cycle value for CubeSat")
+                # Scale down SA to duty-cycle estimate
+                scale = duty_sa / max(pb.sa_power_eol_w, 1)
+                pb.sa_power_eol_w = duty_sa
+                pb.sa_power_bol_w = duty_sa / max((1 - 0.025) ** mission_years, 0.5)
+                pb.sa_area_m2 *= scale
+                pb.sa_mass_kg *= scale
+                # Re-set the parameters
+                result.add_param("power.sa_area_m2", "Solar Array Area", round(pb.sa_area_m2, 3), "m²")
+                result.add_param("power.sa_power_bol_w", "SA Power BOL", round(pb.sa_power_bol_w, 1), "W")
+                result.add_param("power.sa_power_eol_w", "SA Power EOL", round(pb.sa_power_eol_w, 1), "W")
+                result.add_param("power.sa_mass_kg", "Solar Array Mass", round(pb.sa_mass_kg, 2), "kg")
 
         result.warnings.extend(pb.warnings)
         result.confidence = 0.85
