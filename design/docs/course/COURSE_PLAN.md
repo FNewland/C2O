@@ -1,4 +1,4 @@
-# SpaceCDF Mission Design Course — 40-Hour Programme
+# SpaceCDF Mission Design Course -- 40-Hour Programme
 
 ## Course Title
 **Collaborative Space Mission Design: From Problem to Flight-Ready CubeSat**
@@ -58,7 +58,7 @@ but engineering background assumed.
 ### Session 1.4: Concept of Operations (2 hrs)
 - NASA SEH Appendix S: ConOps structure
 - Mission architecture: space, ground, user segments
-- Mission phases (LEOP → commissioning → nominal → disposal)
+- Mission phases (LEOP -> commissioning -> nominal -> disposal)
 - Operational modes and duty cycling
 - Data flow pipeline design
 - Ground segment architecture options
@@ -73,14 +73,14 @@ but engineering background assumed.
 - NASA SEH Process 2: Technical Requirements Definition
 - SMART requirements (Specific, Measurable, Achievable, Relevant, Traceable)
 - WHAT not HOW: requirements vs design choices
-- Requirement hierarchy: mission → system → subsystem
+- Requirement hierarchy: mission -> system -> subsystem
 - NASA SEH Appendix C: How to Write a Good Requirement
 - **Exercise**: Generate requirements from objectives in SpaceCDF
 - **Worksheet**: Requirements quality checklist (Appendix C)
 
 ### Session 2.2: Functional Decomposition (2 hrs)
 - NASA SEH Process 3: Logical Decomposition
-- Function trees: objective → function → subfunction
+- Function trees: objective -> function -> subfunction
 - Allocation to subsystems (system boundary definition)
 - Derived requirements from functions
 - Performance criteria definition
@@ -90,7 +90,7 @@ but engineering background assumed.
 ### Session 2.3: Interface Management (2 hrs)
 - NASA SEH Process 12: Interface Management
 - ECSS-E-ST-10-24C: Interface requirements
-- N² interface matrix methodology
+- N^2 interface matrix methodology
 - Interface types: mechanical, electrical, thermal, data, RF, optical
 - Conflict identification and resolution
 - **Exercise**: Review interface matrix in SpaceCDF
@@ -100,7 +100,7 @@ but engineering background assumed.
 - Mass budget methodology (ECSS-E-HB-10-02A)
 - Power budget methodology (ECSS-E-ST-20C)
 - Margin philosophy by project phase
-- Budget roll-up: component → subsystem → system
+- Budget roll-up: component -> subsystem -> system
 - Cost estimation approaches (parametric, analogy, bottom-up)
 - **Exercise**: Review parametric budgets in SpaceCDF dashboard
 - **Worksheet**: Mass budget template with margin policy
@@ -119,9 +119,9 @@ but engineering background assumed.
 - **Worksheet**: Orbit selection trade matrix
 
 ### Session 3.2: Payload & Communications (2 hrs)
-- Optical payload sizing (GSD → aperture → mass → power)
-- RF payload sizing (link budget → antenna → power)
-- SAR fundamentals (resolution → antenna area → power)
+- Optical payload sizing (GSD -> aperture -> mass -> power)
+- RF payload sizing (link budget -> antenna -> power)
+- SAR fundamentals (resolution -> antenna area -> power)
 - Link budget methodology (ECSS-E-ST-50-05C)
 - Frequency band selection and licensing
 - Amateur vs experimental vs commercial licensing
@@ -164,7 +164,7 @@ but engineering background assumed.
 - NASA SEH Processes 7-8: Verification & Validation
 - ECSS-E-ST-10-02C: Verification methods (ATRI)
 - Verification matrix structure
-- Test levels: unit → subsystem → system → acceptance → qual
+- Test levels: unit -> subsystem -> system -> acceptance -> qual
 - Environmental testing (vibration, thermal-vac, EMC)
 - **Exercise**: Review compliance matrix in SpaceCDF
 - **Worksheet**: V&V matrix for 10 key requirements
@@ -201,7 +201,7 @@ but engineering background assumed.
 
 ### Session 5.2: Regulatory & Licensing (2 hrs)
 - Frequency licensing (ITU, IARU, national)
-- ITU filing process (API → coordination → notification)
+- ITU filing process (API -> coordination -> notification)
 - Canadian RSSSA for remote sensing
 - Export control (ITAR/EAR/CGP)
 - UN Registration Convention (COPUOS)

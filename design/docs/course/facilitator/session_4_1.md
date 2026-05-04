@@ -10,7 +10,7 @@
 
 By the end of this session, participants will be able to:
 1. Select COTS components that meet subsystem requirements
-2. Verify RF chain compatibility (transponder ↔ antenna band matching)
+2. Verify RF chain compatibility (transponder <-> antenna band matching)
 3. Verify electrical interface compatibility (bus voltage, data protocols)
 4. Track cumulative mass/power/cost against budgets during selection
 5. Perform a component-level trade study for a contested subsystem
@@ -25,21 +25,21 @@ Component selection bridges parametric sizing (Day 3) and physical hardware. The
 
 ```
 Parametric estimate (agent output)
-  → Requirement derived from sizing
-    → Search KB for candidates meeting requirement
-      → Score candidates (fit, mass, power, cost, TRL, heritage)
-        → Trade study if multiple viable candidates
-          → Select, verify compatibility, update budgets
+  -> Requirement derived from sizing
+    -> Search KB for candidates meeting requirement
+      -> Score candidates (fit, mass, power, cost, TRL, heritage)
+        -> Trade study if multiple viable candidates
+          -> Select, verify compatibility, update budgets
 ```
 
 ### Selection Criteria Hierarchy
 
 | Priority | Criterion | Rationale |
 |----------|----------|-----------|
-| 1 | **Meets performance requirement** | Must-have — non-negotiable |
+| 1 | **Meets performance requirement** | Must-have -- non-negotiable |
 | 2 | **Interface compatible** | Must physically connect (voltage, protocol, band) |
 | 3 | **Fits within envelope** | Mass, power, volume within subsystem allocation |
-| 4 | **TRL ≥ 6** | Flight-demonstrated technology preferred |
+| 4 | **TRL >= 6** | Flight-demonstrated technology preferred |
 | 5 | **Heritage** | Flown on similar missions = lower risk |
 | 6 | **Cost** | Within budget; consider NRE for custom items |
 | 7 | **Procurement** | Available within schedule; lead time acceptable |
@@ -47,9 +47,9 @@ Parametric estimate (agent output)
 ### The "No Perfect Component" Reality
 
 In practice, no component is perfect. Every selection involves trade-offs:
-- Lighter → more expensive
-- Higher TRL → possibly older technology with less performance
-- Best performance → highest power consumption
+- Lighter -> more expensive
+- Higher TRL -> possibly older technology with less performance
+- Best performance -> highest power consumption
 
 This is why trade studies are essential at the component level.
 
@@ -59,23 +59,23 @@ This is why trade studies are essential at the component level.
 
 ### Teaching Notes
 
-The RF chain (transponder → cable → antenna) must be frequency-matched. This is the most common equipment incompatibility for CubeSat newcomers.
+The RF chain (transponder -> cable -> antenna) must be frequency-matched. This is the most common equipment incompatibility for CubeSat newcomers.
 
 ### Compatibility Rules
 
 | Rule | Correct Example | Incorrect Example |
 |------|----------------|-------------------|
 | **Band match** | S-band transponder + S-band patch antenna | S-band transponder + X-band horn |
-| **Impedance match** | 50Ω transponder + 50Ω cable + 50Ω antenna | Mixed impedances cause reflections |
+| **Impedance match** | 50? transponder + 50? cable + 50? antenna | Mixed impedances cause reflections |
 | **Connector match** | SMA on transponder + SMA-SMA cable + SMA on antenna | SMA to N-type needs adapter |
-| **Polarisation** | RHCP antenna + RHCP ground station | RHCP to LHCP → 20+ dB loss |
+| **Polarisation** | RHCP antenna + RHCP ground station | RHCP to LHCP -> 20+ dB loss |
 
 ### SpaceCDF RF Compatibility Check
 
 When selecting a transponder or antenna in the Equipment Browser:
-1. If you've already selected a transponder and then select an antenna in a different band → **warning dialog** appears
+1. If you've already selected a transponder and then select an antenna in a different band -> **warning dialog** appears
 2. The dialog shows: band mismatch, affected components, and asks for confirmation
-3. If the spectrum selector has a band chosen → only matching components shown
+3. If the spectrum selector has a band chosen -> only matching components shown
 
 ### Dual-Band Missions
 
@@ -89,7 +89,7 @@ This requires:
 - 2 RF cables
 - Diplexer or separate feed if using shared antenna
 
-SpaceCDF supports **multiple selections per category** — select both an S-band and X-band transponder.
+SpaceCDF supports **multiple selections per category** -- select both an S-band and X-band transponder.
 
 ---
 
@@ -113,8 +113,8 @@ Components communicate via standard protocols. Verify all components on the same
 
 | Protocol | Speed | Use Case | Wiring |
 |----------|-------|----------|--------|
-| **I²C** | 100-400 kbps | Sensors, magnetorquers, EPS | 2 wires (SDA, SCL) + GND |
-| **SPI** | 1-50 Mbps | OBC ↔ fast peripherals, payload | 4 wires (MOSI, MISO, CLK, CS) |
+| **I^2C** | 100-400 kbps | Sensors, magnetorquers, EPS | 2 wires (SDA, SCL) + GND |
+| **SPI** | 1-50 Mbps | OBC <-> fast peripherals, payload | 4 wires (MOSI, MISO, CLK, CS) |
 | **UART** | 9600-115200 bps | Debug, GPS, simple telemetry | 2 wires (TX, RX) |
 | **CAN** | 1 Mbps | Distributed bus (multiple nodes) | 2 wires (CAN_H, CAN_L) |
 | **RS-422** | Up to 10 Mbps | Point-to-point, longer runs | 4 wires (differential) |
@@ -124,7 +124,7 @@ Components communicate via standard protocols. Verify all components on the same
 After selecting all components, check total volume against structure:
 
 ```
-Total_volume = Σ (component_volume × quantity)
+Total_volume = ? (component_volume × quantity)
 Available_volume = CDS_internal_volume - structure_walls - mounting_overhead
 ```
 
@@ -142,15 +142,15 @@ As components are selected, the **live budget bar** in the Equipment Browser sho
 Selected equipment mass:      2.85 kg
 Parametric estimate:          3.68 kg
 Launcher allocation:          6.00 kg
-────────────────────────────────────
-Margin remaining:             3.15 kg (52.5%) → GREEN
+????????????????????????????????????
+Margin remaining:             3.15 kg (52.5%) -> GREEN
 ```
 
 ### What to Watch For
 
 | Indicator | Meaning | Action |
 |-----------|---------|--------|
-| Selected < parametric | COTS lighter than CER predicted | Margin increases — good |
+| Selected < parametric | COTS lighter than CER predicted | Margin increases -- good |
 | Selected > parametric | COTS heavier than predicted | Re-evaluate; may need lighter alternative |
 | Selected > allocation | **Budget exceeded** | Must change component or increase allocation |
 | Power exceeds SA | Not enough power generated | Reduce duty cycle or increase SA |
@@ -159,9 +159,9 @@ Margin remaining:             3.15 kg (52.5%) → GREEN
 ### Suggest-Then-Approve Pattern
 
 SpaceCDF's Equipment Browser annotates each category with **need status**:
-- 🔵 Required — mission needs this component
-- ⭕ Optional — nice-to-have
-- Dimmed — not needed for this mission
+- ? Required -- mission needs this component
+- ? Optional -- nice-to-have
+- Dimmed -- not needed for this mission
 
 This prevents selecting unnecessary hardware (e.g., thrusters for a mission that doesn't need propulsion).
 
@@ -178,7 +178,7 @@ This prevents selecting unnecessary hardware (e.g., thrusters for a mission that
    - Start with EPS (batteries + solar panels + EPS board)
    - Then OBC, AOCS sensors/actuators, TTC, structure
    - Use quantity selectors (e.g., ×4 for reaction wheels, ×3 for magnetorquers)
-3. Watch the **live budget bar** as you select — keep mass under allocation
+3. Watch the **live budget bar** as you select -- keep mass under allocation
 4. When selecting TTC: check that the spectrum band matches your earlier selection
 5. After all selections, review the **Budget Breakdown** on the Dashboard
 
@@ -189,13 +189,13 @@ This prevents selecting unnecessary hardware (e.g., thrusters for a mission that
 3. Load the "Component Selection Trade" template
 4. Enter your candidates as options
 5. Score each on: mass, power, cost, TRL, heritage, performance
-6. Run the trade — document the winner and rationale
+6. Run the trade -- document the winner and rationale
 7. Update your equipment selection if needed
 
 ### Worksheet 4.1 Tasks
 
 1. Complete equipment selection table: component, manufacturer, mass, power, cost, TRL
-2. Total selected mass vs parametric estimate vs allocation — compute margin
+2. Total selected mass vs parametric estimate vs allocation -- compute margin
 3. Identify any compatibility issues found and how resolved
 4. Document one component trade study with scored alternatives
 
@@ -205,7 +205,7 @@ This prevents selecting unnecessary hardware (e.g., thrusters for a mission that
 
 | Topic | Key Takeaway |
 |-------|-------------|
-| Selection method | Performance → compatibility → envelope → TRL → heritage → cost |
+| Selection method | Performance -> compatibility -> envelope -> TRL -> heritage -> cost |
 | RF compatibility | Band, impedance, connector, polarisation must all match |
 | Electrical | Bus voltage and data protocol compatibility verified per component |
 | Volume | Check total against CDS form factor; >85% utilisation = consider upsizing |

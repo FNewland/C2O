@@ -1,5 +1,5 @@
 # Space Mission Design & Operations Programme
-## 3-Week Intensive (Monday–Friday, 9:00–16:00)
+## 3-Week Intensive (Monday-Friday, 9:00-16:00)
 
 **Audience:** Industry professionals, graduate students, upper-year undergraduates
 **Capacity:** 20-30 participants in teams of 4-5
@@ -17,7 +17,7 @@
 | **Thu** | **Mission Needs & Opportunities** | Identifying mission needs in the Canadian context (Arctic monitoring, maritime surveillance, agriculture, resource management, connectivity). Stakeholder analysis for Canadian missions. Indigenous community engagement and UNDRIP considerations. Problem statement workshop. |
 | **Fri** | **Space vs Non-Space Trade & Concept** | Trade study methodology (criteria, weightings, scoring). Evaluating existing services (Radarsat, Sentinel, Planet) vs new missions. Constellation economics and business cases. Teams form, select a mission need, and run initial trade analysis in SpaceCDF. |
 
-### WEEK 2: Concurrent Design Facility — Designing a Mission
+### WEEK 2: Concurrent Design Facility -- Designing a Mission
 
 | Day | Topic | Activities |
 |-----|-------|-----------|

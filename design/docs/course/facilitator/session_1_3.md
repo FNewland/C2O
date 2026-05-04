@@ -1,4 +1,4 @@
-# Session 1.3: Mission Trade Analysis — Is Space the Right Answer?
+# Session 1.3: Mission Trade Analysis -- Is Space the Right Answer?
 
 **Duration:** 2 hours
 **Prerequisites:** Session 1.2 (problem statement and objectives defined)
@@ -49,21 +49,21 @@ A rigorous trade study has 5 elements:
 |------|-------------|---------|
 | **Quantitative** | Numeric value normalised 0-1 | Mass: 5kg scores 0.8, 10kg scores 0.4 |
 | **Qualitative** | Verbal rating mapped to numbers | "Excellent" = 1.0, "Good" = 0.75, "Fair" = 0.5, "Poor" = 0.25 |
-| **Threshold** | Pass/fail gate | TRL ≥ 6 required → below threshold eliminated |
+| **Threshold** | Pass/fail gate | TRL >= 6 required -> below threshold eliminated |
 
 ### Weighted Score Calculation
 
 For each alternative *a* and criterion *c*:
 
 ```
-Total_Score(a) = Σ [ Weight(c) × NormalisedScore(a,c) ] / Σ Weight(c)
+Total_Score(a) = ? [ Weight(c) × NormalisedScore(a,c) ] / ? Weight(c)
 ```
 
 Where normalised score maps the raw value to 0-1 range:
 - For "higher is better": NormScore = (value - min) / (max - min)
 - For "lower is better": NormScore = 1 - (value - min) / (max - min)
 
-**Exercise:** *Practice scoring 3 lunch options using 4 criteria (taste, cost, healthiness, speed) — a non-space example to build the skill.*
+**Exercise:** *Practice scoring 3 lunch options using 4 criteria (taste, cost, healthiness, speed) -- a non-space example to build the skill.*
 
 ---
 
@@ -107,7 +107,7 @@ For missions requiring global coverage or short revisit:
 - Single satellite at 500 km SSO: revisit ~3-15 days depending on swath
 - 4-satellite constellation: revisit ~1-3 days
 - 20+ satellite constellation: revisit <6 hours
-- Cost scales with learning curve: 95% for ≤5 units, 90% for ≤50
+- Cost scales with learning curve: 95% for <=5 units, 90% for <=50
 
 **Discussion prompt:** *For your team's mission need, which alternatives should be considered? Is there an existing service that might already meet the need?*
 
@@ -140,7 +140,7 @@ The tool returns:
 ### Critical Thinking Points
 
 The tool's recommendation is a **starting point for discussion**, not a final answer. Teams should:
-- Challenge the weightings — do they reflect YOUR mission's priorities?
+- Challenge the weightings -- do they reflect YOUR mission's priorities?
 - Consider alternatives the tool may not include (hybrid approaches, partnerships)
 - Check whether the top-scoring existing service ACTUALLY provides the specific measurement needed (e.g., Sentinel-2 doesn't do SAR)
 
@@ -193,8 +193,8 @@ This documentation is required at every review gate. NASA SEH Process 17 require
 
 | Topic | Key Takeaway |
 |-------|-------------|
-| Trade study structure | Criteria + weights + scoring → ranked alternatives |
-| Space vs non-space | Existing services may already meet the need — check first |
+| Trade study structure | Criteria + weights + scoring -> ranked alternatives |
+| Space vs non-space | Existing services may already meet the need -- check first |
 | Constellation | Cost scales sub-linearly; consider for global/frequent coverage |
 | Documentation | Every decision must have auditable rationale |
 | Tool usage | Mission trade in Step 2; tabular trades in Trade Studies tab |

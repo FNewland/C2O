@@ -4,13 +4,13 @@
 
 ---
 
-## Part A: Payload Sizing (Optical missions — skip if non-optical)
+## Part A: Payload Sizing (Optical missions -- skip if non-optical)
 
-**GSD requirement:** ____ m  **Altitude:** ____ km  **Wavelength:** 0.55 μm
+**GSD requirement:** ____ m  **Altitude:** ____ km  **Wavelength:** 0.55 mum
 
-1. Diffraction-limited GSD: GSD_diff = 1.22 × λ × h / D = _____ m (for D = ____ m)
+1. Diffraction-limited GSD: GSD_diff = 1.22 × lambda × h / D = _____ m (for D = ____ m)
 
-2. Required aperture for target GSD: D ≥ 1.22 × λ × h / GSD = _____ m
+2. Required aperture for target GSD: D >= 1.22 × lambda × h / GSD = _____ m
 
 3. Payload mass estimate: M = 20 × D^1.5 + 2 = _____ kg
 
@@ -33,14 +33,14 @@ Complete the link budget for your mission's primary downlink:
 | 7 | Pointing Loss | | dB |
 | 8 | RX Antenna Gain | | dBi |
 | 9 | System G/T | | dB/K |
-| 10 | C/N₀ | | dBHz |
-| 11 | Data Rate (10log₁₀) | | dBbps |
-| 12 | Eb/N₀ available | | dB |
-| 13 | Eb/N₀ required | | dB |
+| 10 | C/N0 | | dBHz |
+| 11 | Data Rate (10log10) | | dBbps |
+| 12 | Eb/N0 available | | dB |
+| 13 | Eb/N0 required | | dB |
 | 14 | Implementation margin | | dB |
 | 15 | **LINK MARGIN** | | dB |
 
-**Does the link close (≥ 3 dB)?** Y / N
+**Does the link close (>= 3 dB)?** Y / N
 
 ---
 

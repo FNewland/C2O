@@ -25,10 +25,10 @@ By the end of this session, participants will be able to:
 
 ### Four Steps
 
-1. **Identify** — What can go wrong?
-2. **Assess** — How likely is it? How bad is it?
-3. **Mitigate** — What can we do about it?
-4. **Monitor** — Is it getting better or worse?
+1. **Identify** -- What can go wrong?
+2. **Assess** -- How likely is it? How bad is it?
+3. **Mitigate** -- What can we do about it?
+4. **Monitor** -- Is it getting better or worse?
 
 ### Risk Sources for CubeSats
 
@@ -115,9 +115,9 @@ For each critical component, assess:
 A single-point failure is any single component whose failure causes mission loss.
 
 CubeSat typical SPFs:
-- OBC (usually only one) → mitigate with watchdog + safe mode
-- Battery (usually one pack) → mitigate with balanced cell monitoring
-- Antenna (if single non-deployable) → mitigate with redundant deployment
+- OBC (usually only one) -> mitigate with watchdog + safe mode
+- Battery (usually one pack) -> mitigate with balanced cell monitoring
+- Antenna (if single non-deployable) -> mitigate with redundant deployment
 
 **Discussion prompt:** *List the single-point failures in your design. Which ones are acceptable? Which need mitigation?*
 
@@ -137,10 +137,10 @@ CubeSat typical SPFs:
 ### Decision Framework
 
 ```
-Is the risk score ≤ 4? → Accept (monitor)
-Is the risk score 5-9? → Mitigate if cost-effective; accept if not
-Is the risk score 10-15? → Must mitigate (active plan required)
-Is the risk score 16-25? → Redesign, descope, or don't proceed
+Is the risk score <= 4? -> Accept (monitor)
+Is the risk score 5-9? -> Mitigate if cost-effective; accept if not
+Is the risk score 10-15? -> Must mitigate (active plan required)
+Is the risk score 16-25? -> Redesign, descope, or don't proceed
 ```
 
 ---
@@ -149,14 +149,14 @@ Is the risk score 16-25? → Redesign, descope, or don't proceed
 
 ### Instructions
 
-1. Review the **Dashboard** — check reliability score and conflict count
-2. Go to the **Q&A** tab — answer the risk-related questions for your position:
+1. Review the **Dashboard** -- check reliability score and conflict count
+2. Go to the **Q&A** tab -- answer the risk-related questions for your position:
    - Systems: "Are there unresolved cross-domain conflicts?"
    - Each subsystem: "Is [budget] closing with adequate margin?"
 3. Create a **risk register** (Worksheet 4.3):
    - Identify 5 risks for your mission design
    - Score each (Likelihood × Consequence)
-   - Define mitigation for any scoring ≥ 10
+   - Define mitigation for any scoring >= 10
 4. Identify **single-point failures** in your design
 5. For each SPF, determine: is it acceptable? If not, what redundancy is needed?
 
@@ -181,9 +181,9 @@ Single-point failures identified:
 
 | Topic | Key Takeaway |
 |-------|-------------|
-| Process | Identify → Assess → Mitigate → Monitor (continuous) |
+| Process | Identify -> Assess -> Mitigate -> Monitor (continuous) |
 | 5×5 matrix | Likelihood × Consequence = Risk Score (1-25) |
-| CubeSat risks | Deployment, comms loss, ADCS, power — most common |
-| FMECA | Failure mode → effect → criticality → detection → mitigation |
+| CubeSat risks | Deployment, comms loss, ADCS, power -- most common |
+| FMECA | Failure mode -> effect -> criticality -> detection -> mitigation |
 | SPF | Single-point failures must be identified and accepted or mitigated |
-| Strategies | Accept / Mitigate / Transfer / Avoid — cost-benefit decision |
+| Strategies | Accept / Mitigate / Transfer / Avoid -- cost-benefit decision |

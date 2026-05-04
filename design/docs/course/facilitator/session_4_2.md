@@ -11,7 +11,7 @@
 By the end of this session, participants will be able to:
 1. Distinguish between verification (meets requirements) and validation (meets needs)
 2. Assign appropriate verification methods (ATRI) to each requirement
-3. Define verification phases and levels (unit → subsystem → system)
+3. Define verification phases and levels (unit -> subsystem -> system)
 4. Specify environmental test requirements from launch vehicle ICD
 5. Use SpaceCDF's V&V Matrix to plan verification
 
@@ -33,11 +33,11 @@ By the end of this session, participants will be able to:
 
 ### Example
 
-- **Requirement:** "The system shall achieve GSD ≤ 10 m"
-- **Verification:** Calibration target imagery → measured GSD = 9.2 m → **requirement verified** ✓
-- **Validation:** Users confirm imagery is adequate for crop assessment → **need validated** ✓
+- **Requirement:** "The system shall achieve GSD <= 10 m"
+- **Verification:** Calibration target imagery -> measured GSD = 9.2 m -> **requirement verified** Y
+- **Validation:** Users confirm imagery is adequate for crop assessment -> **need validated** Y
 
-A system can be verified (meets every requirement) but still fail validation (doesn't actually solve the user's problem) — this happens when requirements were written incorrectly.
+A system can be verified (meets every requirement) but still fail validation (doesn't actually solve the user's problem) -- this happens when requirements were written incorrectly.
 
 ---
 
@@ -45,7 +45,7 @@ A system can be verified (meets every requirement) but still fail validation (do
 
 ### Teaching Notes
 
-*[Source: ECSS-E-ST-10-02C Rev.1 §5.3 — verified in Session 2.1]*
+*[Source: ECSS-E-ST-10-02C Rev.1 §5.3 -- verified in Session 2.1]*
 
 ### Analysis (A)
 
@@ -60,10 +60,10 @@ A system can be verified (meets every requirement) but still fail validation (do
 **Evidence produced:** Analysis report with model description, inputs, results, uncertainty assessment.
 
 **Examples:**
-- Orbital mechanics analysis → demonstrates revisit requirement met
-- Thermal model → demonstrates temperature within limits
-- Link budget → demonstrates margin ≥ 3 dB
-- Structural FEA → demonstrates positive MoS under launch loads
+- Orbital mechanics analysis -> demonstrates revisit requirement met
+- Thermal model -> demonstrates temperature within limits
+- Link budget -> demonstrates margin >= 3 dB
+- Structural FEA -> demonstrates positive MoS under launch loads
 
 ### Test (T)
 
@@ -83,7 +83,7 @@ A system can be verified (meets every requirement) but still fail validation (do
 | **Acceptance** | Prove flight hardware is defect-free | System | D |
 | **Proto-flight** | Combined qual+acceptance (for CubeSats) | System | C/D |
 
-**Proto-flight approach:** CubeSats typically use proto-flight testing — the flight unit is tested to qualification levels (but qualification duration) because building a separate qualification unit is too expensive.
+**Proto-flight approach:** CubeSats typically use proto-flight testing -- the flight unit is tested to qualification levels (but qualification duration) because building a separate qualification unit is too expensive.
 
 ### Review of Design (R)
 
@@ -95,9 +95,9 @@ A system can be verified (meets every requirement) but still fail validation (do
 - Requirements verifiable by examining the design itself
 
 **Examples:**
-- Operations manual review → demonstrates ops procedures defined
-- Software architecture review → demonstrates FDIR implemented
-- ICD review → demonstrates interfaces defined
+- Operations manual review -> demonstrates ops procedures defined
+- Software architecture review -> demonstrates FDIR implemented
+- ICD review -> demonstrates interfaces defined
 
 ### Inspection (I)
 
@@ -109,9 +109,9 @@ A system can be verified (meets every requirement) but still fail validation (do
 - Markings and identification
 
 **Examples:**
-- Measure mass on scale → demonstrates mass ≤ requirement
-- Measure dimensions with caliper → demonstrates CDS compliance
-- Visual inspection of thermal blankets → demonstrates proper installation
+- Measure mass on scale -> demonstrates mass <= requirement
+- Measure dimensions with caliper -> demonstrates CDS compliance
+- Visual inspection of thermal blankets -> demonstrates proper installation
 
 ---
 
@@ -142,7 +142,7 @@ Derived from launch vehicle ICD (Payload User's Guide). Typical for Falcon 9 Tra
 
 **Random vibration (per axis, 1 minute qualification duration):**
 
-| Frequency (Hz) | PSD Level (g²/Hz) |
+| Frequency (Hz) | PSD Level (g^2/Hz) |
 |---------------|--------------------|
 | 20-50 | +3 dB/oct ramp |
 | 50-800 | 0.04 |
@@ -162,8 +162,8 @@ Derived from launch vehicle ICD (Payload User's Guide). Typical for Falcon 9 Tra
 | Hot case | Predicted max + 10°C | Qualification margin |
 | Cold case | Predicted min - 10°C | Qualification margin |
 | Cycles | 4 minimum | Start/end at hot; functional at each extreme |
-| Vacuum | < 10⁻⁵ mbar | Space-representative |
-| Dwell time | ≥ 1 hour at each extreme | Thermal stabilisation |
+| Vacuum | < 10?? mbar | Space-representative |
+| Dwell time | >= 1 hour at each extreme | Thermal stabilisation |
 
 ### EMC Testing
 
@@ -186,20 +186,20 @@ The V&V Matrix assigns a verification method, phase, level, and responsible posi
 
 ```
 Is it a physical property (mass, dimensions)?
-  → Inspection (I), Phase D
+  -> Inspection (I), Phase D
 Can it only be proven by operating the hardware?
-  → Test (T), Phase C/D
+  -> Test (T), Phase C/D
 Can it be demonstrated by analysis with acceptable confidence?
-  → Analysis (A), Phase B/C
+  -> Analysis (A), Phase B/C
 Is it a process, document, or plan?
-  → Review (R), Phase B
+  -> Review (R), Phase B
 ```
 
 ### Multiple Methods
 
 Some requirements need **both** analysis (early confidence) and test (final proof):
-- "Structure shall survive launch loads" → Analysis (Phase B FEA) + Test (Phase C vibration)
-- "Pointing shall be ≤ 0.1°" → Analysis (Phase B error budget) + Test (Phase D on-orbit calibration)
+- "Structure shall survive launch loads" -> Analysis (Phase B FEA) + Test (Phase C vibration)
+- "Pointing shall be <= 0.1°" -> Analysis (Phase B error budget) + Test (Phase D on-orbit calibration)
 
 In the V&V matrix, list the primary method for Phase B/C and note "confirmed by test" for Phase D.
 
@@ -237,6 +237,6 @@ In the V&V matrix, list the primary method for Phase B/C and note "confirmed by 
 | V vs V | Verification = meets requirements; Validation = meets needs |
 | ATRI | Analysis (models), Test (hardware), Review (documents), Inspection (physical) |
 | Proto-flight | CubeSats: single flight unit tested to qualification levels |
-| Environmental | Vibration → TVAC → EMC → mass → fit check sequence |
+| Environmental | Vibration -> TVAC -> EMC -> mass -> fit check sequence |
 | Test levels | Derived from launch vehicle ICD (PUG); 7 gRMS random typical |
 | V&V matrix | Per-requirement: method + phase + level + responsible + status |

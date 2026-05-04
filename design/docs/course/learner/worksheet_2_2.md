@@ -10,9 +10,9 @@ Draw your mission's function tree (minimum 3 levels). Use the format:
 
 ```
 F-001: [Primary mission function]
-  ├── F-002: [Subfunction 1]
-  ├── F-003: [Subfunction 2]
-  └── F-004: [Subfunction 3]
+  ??? F-002: [Subfunction 1]
+  ??? F-003: [Subfunction 2]
+  ??? F-004: [Subfunction 3]
 F-005: [Universal function 1]
 F-006: [Universal function 2]
 ...

@@ -74,7 +74,7 @@ _______________________________________________________________
 
 ---
 
-## Part D: MoE → MoP → TPM Chain
+## Part D: MoE -> MoP -> TPM Chain
 
 For one of your objectives, trace the measurement hierarchy:
 

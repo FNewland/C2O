@@ -29,22 +29,22 @@ The most common mistake in mission design is jumping to a solution ("we need a 6
 
 A problem statement should answer:
 
-1. **What is the problem?** — The capability gap
-2. **Who is affected?** — Stakeholders and end users
-3. **What is the impact?** — Consequence of not solving it
-4. **What constraints exist?** — Budget, schedule, political, regulatory
+1. **What is the problem?** -- The capability gap
+2. **Who is affected?** -- Stakeholders and end users
+3. **What is the impact?** -- Consequence of not solving it
+4. **What constraints exist?** -- Budget, schedule, political, regulatory
 
-**Example — GOOD:**
-> "Agricultural monitoring agencies in sub-Saharan Africa lack timely, affordable access to multispectral imagery at sufficient resolution (≤10m) and revisit rate (≤5 days) to support crop yield prediction and food security planning. Current Sentinel-2 data has 10m resolution but only 5-day revisit at the equator, and cloud cover reduces usable observations to ~60%. The consequence is delayed or inaccurate crop assessments affecting food aid allocation for 300M people. Budget constraint: <€10M total mission cost."
+**Example -- GOOD:**
+> "Agricultural monitoring agencies in sub-Saharan Africa lack timely, affordable access to multispectral imagery at sufficient resolution (<=10m) and revisit rate (<=5 days) to support crop yield prediction and food security planning. Current Sentinel-2 data has 10m resolution but only 5-day revisit at the equator, and cloud cover reduces usable observations to ~60%. The consequence is delayed or inaccurate crop assessments affecting food aid allocation for 300M people. Budget constraint: <?10M total mission cost."
 
-**Example — BAD:**
+**Example -- BAD:**
 > "We need a 6U CubeSat with a multispectral imager at 500 km SSO."
 
 The bad example is a solution statement, not a problem statement. It skips the "why" entirely.
 
 ### Key Principle: WHAT Not HOW
 
-*[Source: NASA SEH Appendix C — How to Write a Good Requirement]*
+*[Source: NASA SEH Appendix C -- How to Write a Good Requirement]*
 
 At the mission need level, everything should describe **WHAT** is needed, not **HOW** to achieve it:
 
@@ -53,7 +53,7 @@ At the mission need level, everything should describe **WHAT** is needed, not **
 | "10m resolution imagery" | "Use a 15cm aperture telescope" |
 | "Daily revisit at equator" | "Deploy a Walker delta constellation" |
 | "Data within 6 hours of acquisition" | "Use X-band downlink at 150 Mbps" |
-| "Total cost under €10M" | "Use COTS components exclusively" |
+| "Total cost under ?10M" | "Use COTS components exclusively" |
 
 **Discussion prompt:** *Why is it harmful to specify HOW at this stage? What options does it close off?*
 
@@ -100,29 +100,29 @@ Objectives translate the problem statement into specific, testable goals. Each o
 
 1. **Text**: Clear statement of what the mission will achieve
 2. **Priority**: Primary (mission fails without it) or secondary (desirable but not essential)
-3. **Measurable criterion**: How you know the objective is met — with a number and a unit
+3. **Measurable criterion**: How you know the objective is met -- with a number and a unit
 4. **Type**: Observation, communication, navigation, science, technology demonstration
 
 ### MoE / MoP / TPM Hierarchy
 
-*[Source: NASA SEH §4.1.4, §4.2.4, §6.7.3 — verified, see Appendix N]*
+*[Source: NASA SEH §4.1.4, §4.2.4, §6.7.3 -- verified, see Appendix N]*
 
 | Measure | What It Measures | Example | Set By |
 |---------|-----------------|---------|--------|
 | **MoE** (Measure of Effectiveness) | How well the system satisfies operational need | "% of crop assessments delivered within 5 days" | Users/stakeholders |
-| **MoP** (Measure of Performance) | Technical performance of the system | "GSD ≤ 10m at nadir" | Systems engineer |
+| **MoP** (Measure of Performance) | Technical performance of the system | "GSD <= 10m at nadir" | Systems engineer |
 | **TPM** (Technical Performance Measure) | Design parameter tracked over time | "Current mass estimate vs allocation" | Design team |
 
 The hierarchy flows:
 ```
-Stakeholder Need → MoE → Objective → MoP → Requirement → TPM
+Stakeholder Need -> MoE -> Objective -> MoP -> Requirement -> TPM
 ```
 
 ### Writing Good Objectives
 
 | Good Objective | Why It's Good |
 |---------------|--------------|
-| "Provide 10m GSD multispectral imagery with 4+ bands for the target region between 30°S-30°N, with ≤5 day revisit and ≤24h data latency" | Specific, measurable (10m, 4 bands, 5 days, 24h), relevant to agriculture, achievable with CubeSat |
+| "Provide 10m GSD multispectral imagery with 4+ bands for the target region between 30°S-30°N, with <=5 day revisit and <=24h data latency" | Specific, measurable (10m, 4 bands, 5 days, 24h), relevant to agriculture, achievable with CubeSat |
 | "Achieve 99.5% AIS ship detection rate in the North Atlantic within 30 minutes of ship transmission" | Specific (AIS, North Atlantic), measurable (99.5%, 30 min), relevant to maritime safety |
 
 | Bad Objective | Why It's Bad |
@@ -139,23 +139,23 @@ Stakeholder Need → MoE → Objective → MoP → Requirement → TPM
 
 ### Teaching Notes
 
-Show how the mission need flows through to design decisions — but the need itself does NOT prescribe design:
+Show how the mission need flows through to design decisions -- but the need itself does NOT prescribe design:
 
 ```
-Problem: "Need 10m imagery, 5-day revisit, <€10M"
-   ↓ (objectives)
+Problem: "Need 10m imagery, 5-day revisit, <?10M"
+   ? (objectives)
 Objective: "Provide 10m GSD multispectral imagery..."
-   ↓ (mission trade — is space the right answer?)
-Decision: "Yes, dedicated CubeSat — existing services don't meet revisit need"
-   ↓ (requirements)
-Requirement: "The system shall achieve GSD ≤ 10m"
-   ↓ (orbit trade)
+   ? (mission trade -- is space the right answer?)
+Decision: "Yes, dedicated CubeSat -- existing services don't meet revisit need"
+   ? (requirements)
+Requirement: "The system shall achieve GSD <= 10m"
+   ? (orbit trade)
 Design choice: "SSO 500 km gives 10m GSD with 15cm aperture"
-   ↓ (subsystem design)
+   ? (subsystem design)
 Equipment: "Selected: XYZ Telescope, 15cm aperture, 1.5 kg, 8W"
 ```
 
-At each level, the tool helps with decision support — but the team decides.
+At each level, the tool helps with decision support -- but the team decides.
 
 ---
 
@@ -169,7 +169,7 @@ At each level, the tool helps with decision support — but the team decides.
    - At least 2 stakeholders with roles and needs
    - At least 2 objectives with measurable criteria, one primary and one secondary
 3. Observe: Does the tool suggest a mission type from your objective text?
-4. Navigate to **Step 2 (Concept)** — we'll use this in the next session
+4. Navigate to **Step 2 (Concept)** -- we'll use this in the next session
 
 **Checkpoint:** Each team should have a problem statement, 2+ stakeholders, and 2+ objectives entered before moving on.
 
@@ -183,4 +183,4 @@ At each level, the tool helps with decision support — but the team decides.
 | Stakeholders | Identify all parties with legitimate interest; capture needs and constraints |
 | Objectives | Must be specific, measurable, and traceable to stakeholder needs |
 | MoE/MoP/TPM | Hierarchy from operational effectiveness to tracked design parameters |
-| Flow | Need → objectives → trade → requirements → design → equipment |
+| Flow | Need -> objectives -> trade -> requirements -> design -> equipment |

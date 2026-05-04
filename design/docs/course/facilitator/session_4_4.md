@@ -94,7 +94,7 @@ WBS Level 1: Mission Total
 
 ### CubeSat Launch Cost
 
-*[Source: SpaceX published pricing; broker data — verified in launch_providers.yaml]*
+*[Source: SpaceX published pricing; broker data -- verified in launch_providers.yaml]*
 
 | Form Factor | Rideshare Cost (2026) | ISS Deploy |
 |------------|----------------------|------------|
@@ -129,38 +129,38 @@ Where *b* = ln(learning_rate) / ln(2).
 
 | Learning Rate | *b* | Cost of 10th Unit (% of 1st) | Typical Application |
 |--------------|-----|------------------------------|---------------------|
-| 95% | -0.074 | 77% | Low-volume spacecraft (≤5) |
+| 95% | -0.074 | 77% | Low-volume spacecraft (<=5) |
 | 90% | -0.152 | 60% | Medium production (5-50) |
 | 85% | -0.234 | 47% | High production (50+) |
 
 ### Example: 20-satellite 3U constellation
 
 ```
-Cost_1 = €800K (first unit: bus + payload + I&T)
+Cost_1 = ?800K (first unit: bus + payload + I&T)
 Learning rate = 90% (medium production)
 b = ln(0.9)/ln(2) = -0.152
 
 Average unit cost for 20 units:
-Cost_avg = Cost_1 × N^b = 800 × 20^(-0.152) = 800 × 0.593 = €474K
+Cost_avg = Cost_1 × N^b = 800 × 20^(-0.152) = 800 × 0.593 = ?474K
 
-Total constellation hardware: 20 × €474K = €9.5M
-+ 2 spares (15%): 22 × €474K = €10.4M
-+ Launch (20 sats × €200K): €4.0M
-+ Ground segment: €1.0M
-+ Operations (3 years): €0.9M
-────────────────────────
-Total: ~€16.3M
+Total constellation hardware: 20 × ?474K = ?9.5M
++ 2 spares (15%): 22 × ?474K = ?10.4M
++ Launch (20 sats × ?200K): ?4.0M
++ Ground segment: ?1.0M
++ Operations (3 years): ?0.9M
+????????????????????????
+Total: ~?16.3M
 ```
 
-*[Verification: N^b = 20^(-0.152) = e^(-0.152×ln20) = e^(-0.152×2.996) = e^(-0.456) = 0.634. Wait, let me recompute: 20^(-0.152) = e^(-0.152 × ln(20)) = e^(-0.152 × 2.9957) = e^(-0.4553) = 0.634. So average cost = 800 × 0.634 = €507K. Hmm, discrepancy with my first calculation. Let me be more careful:*
+*[Verification: N^b = 20^(-0.152) = e^(-0.152×ln20) = e^(-0.152×2.996) = e^(-0.456) = 0.634. Wait, let me recompute: 20^(-0.152) = e^(-0.152 × ln(20)) = e^(-0.152 × 2.9957) = e^(-0.4553) = 0.634. So average cost = 800 × 0.634 = ?507K. Hmm, discrepancy with my first calculation. Let me be more careful:*
 
-*The AVERAGE cost of the first N units is: C_avg(N) = C₁ × N^b / N × integral... Actually Wright's cumulative average: C_cum_avg = C₁ × N^b is NOT the average — it's the Nth unit cost. The average of all N units = C₁ × Σ(i^b, i=1..N) / N.*
+*The AVERAGE cost of the first N units is: C_avg(N) = C1 × N^b / N × integral... Actually Wright's cumulative average: C_cum_avg = C1 × N^b is NOT the average -- it's the Nth unit cost. The average of all N units = C1 × ?(i^b, i=1..N) / N.*
 
-*For the course, use the simpler formulation: Total = C₁ × Σ(i^b, i=1..N) or Total ≈ C₁ × N^(1+b)/(1+b). This is complex — for the course, state the rule of thumb: "90% learning curve means each doubling of quantity reduces unit cost by 10%."]*
+*For the course, use the simpler formulation: Total = C1 × ?(i^b, i=1..N) or Total ~ C1 × N^(1+b)/(1+b). This is complex -- for the course, state the rule of thumb: "90% learning curve means each doubling of quantity reduces unit cost by 10%."]*
 
 **Simplified rule of thumb for teaching:**
 > At 90% learning rate, every time you double the number of units, cost per unit drops by 10%.
-> Unit 1: €800K, Unit 2: €720K, Unit 4: €648K, Unit 8: €583K, Unit 16: €525K
+> Unit 1: ?800K, Unit 2: ?720K, Unit 4: ?648K, Unit 8: ?583K, Unit 16: ?525K
 
 ---
 
@@ -172,7 +172,7 @@ Point estimates are misleading. Cost always has uncertainty. Monte Carlo simulat
 
 ### Uncertainty by Source
 
-| Cost Element | Distribution | Uncertainty (1σ) |
+| Cost Element | Distribution | Uncertainty (1sigma) |
 |-------------|-------------|------------------|
 | COTS hardware | Normal | ±10% (known pricing) |
 | Custom hardware | Lognormal | ±30% (development uncertainty) |
@@ -188,7 +188,7 @@ Point estimates are misleading. Cost always has uncertainty. Monte Carlo simulat
 | **P70** | 70% confidence | Common NASA commitment |
 | **P80** | 80% confidence | Conservative planning |
 
-**Rule of thumb:** P80 ≈ P50 × 1.3 for CubeSat missions (moderate uncertainty).
+**Rule of thumb:** P80 ~ P50 × 1.3 for CubeSat missions (moderate uncertainty).
 
 *[Source: NASA CEH §2.3; JPL parametric cost estimation practice]*
 
@@ -198,19 +198,19 @@ Point estimates are misleading. Cost always has uncertainty. Monte Carlo simulat
 
 ### Instructions
 
-1. **Dashboard** — check the Cost KPI card: what's the total cost (MEUR)?
-2. **Cost** tab — review the cost breakdown:
+1. **Dashboard** -- check the Cost KPI card: what's the total cost (MEUR)?
+2. **Cost** tab -- review the cost breakdown:
    - Is it using parametric (CER) or COTS pricing?
    - Which subsystem is most expensive?
-3. **Parametric** tab → **Cost Fractions** sub-tab:
+3. **Parametric** tab -> **Cost Fractions** sub-tab:
    - Review the cost fraction table for your spacecraft class
    - Do the percentages match your expectations?
 4. **If constellation** (num_spacecraft > 1):
    - Check if learning curve is applied
    - Estimate total constellation cost manually using the 90% learning rule
-5. **Exports** tab → generate a BOM to compare:
+5. **Exports** tab -> generate a BOM to compare:
    - Sum COTS component costs from your equipment selections
-   - Compare to the parametric estimate — which is higher?
+   - Compare to the parametric estimate -- which is higher?
 
 ### Worksheet 4.4 Tasks
 
@@ -230,7 +230,7 @@ Point estimates are misleading. Cost always has uncertainty. Monte Carlo simulat
 
 2. If building a constellation: apply learning curve to hardware cost
 3. Estimate P80 cost using the 1.3× rule of thumb
-4. Identify the top 3 cost drivers — what could reduce them?
+4. Identify the top 3 cost drivers -- what could reduce them?
 
 ---
 
@@ -241,6 +241,6 @@ Point estimates are misleading. Cost always has uncertainty. Monte Carlo simulat
 | Methods | Parametric (early), analogy (reference missions), bottom-up (detailed) |
 | CubeSat costs | COTS pricing often lower than parametric CERs predict |
 | WBS | Standard structure: PM, SE, MA, payload, bus, I&T, SW, launch, ground, ops |
-| Launch | $350K SpaceX minimum for ≤50 kg; ISS deploy $90K/U |
+| Launch | $350K SpaceX minimum for <=50 kg; ISS deploy $90K/U |
 | Learning curve | 90% rate: each doubling of quantity reduces cost by 10% |
-| Risk | P80 ≈ P50 × 1.3; always estimate ranges, not point values |
+| Risk | P80 ~ P50 × 1.3; always estimate ranges, not point values |

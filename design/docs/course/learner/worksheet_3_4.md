@@ -29,8 +29,8 @@
 
 **Decision:** Propulsion / No propulsion
 
-**If propulsion:** Type: _________  Isp: _____ s  ΔV needed: _____ m/s
-Propellant mass: m = m_dry × (e^(ΔV/(Isp×9.81)) - 1) = _____ kg
+**If propulsion:** Type: _________  Isp: _____ s  ?V needed: _____ m/s
+Propellant mass: m = m_dry × (e^(?V/(Isp×9.81)) - 1) = _____ kg
 
 ---
 

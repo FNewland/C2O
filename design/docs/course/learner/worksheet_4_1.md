@@ -24,10 +24,10 @@ After all selections, record the live budget bar values:
 - Total selected mass: _____ kg
 - Total selected power: _____ W  
 - Total selected cost: _____ kEUR
-- Mass allocation: _____ kg → Margin: _____ kg ( _____ %)
+- Mass allocation: _____ kg -> Margin: _____ kg ( _____ %)
 - Volume utilisation: _____ % of ___U form factor
 
-**Does everything fit?** Y / N — If not, what would you change?
+**Does everything fit?** Y / N -- If not, what would you change?
 
 _______________________________________________
 

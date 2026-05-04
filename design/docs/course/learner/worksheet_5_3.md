@@ -16,7 +16,7 @@ From SpaceCDF Launch Selector, record top 3 options:
 
 **Selected:** _________  **Rationale:** _______________________________________________
 
-**Mass allocation from provider:** _____ kg → **Mass margin:** _____ kg ( _____ %)
+**Mass allocation from provider:** _____ kg -> **Mass margin:** _____ kg ( _____ %)
 
 ---
 
@@ -30,7 +30,7 @@ From SpaceCDF Launch Selector, record top 3 options:
 | 2+ deployment switches on rails | | | |
 | RBF pin provided | | | |
 | No protrusions beyond rails (stowed) | | | |
-| Battery ≤ 50% SoC at delivery | | | |
+| Battery <= 50% SoC at delivery | | | |
 | No RF emissions in deployer | | | |
 | Antennas stowed clear of deployer | | | |
 

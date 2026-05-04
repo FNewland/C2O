@@ -1,12 +1,12 @@
-# Verification Record — Day 4: Sessions 4.1-4.4
+# Verification Record -- Day 4: Sessions 4.1-4.4
 
 ## Verification Date: 2026-05-04
 
 ### Session 4.1 Verifications
 
 #### 1. PC/104 Impedance Standard
-**Claim:** 50Ω standard impedance for RF chains.
-**Verification:** CONFIRMED. CubeSat RF systems universally use 50Ω characteristic impedance for cables, connectors (SMA), and antenna/transponder ports. This is the standard per MIL-STD-348.
+**Claim:** 50? standard impedance for RF chains.
+**Verification:** CONFIRMED. CubeSat RF systems universally use 50? characteristic impedance for cables, connectors (SMA), and antenna/transponder ports. This is the standard per MIL-STD-348.
 **Source:** MIL-STD-348 (RF connector standard); vendor datasheets
 **Confidence:** HIGH
 
@@ -62,7 +62,7 @@
 #### 9. Learning Curve: 90% Rate
 **Claim:** 90% learning rate means each doubling reduces unit cost by 10%.
 **Verification:** CONFIRMED by definition. Wright's learning curve: a "90% learning curve" means the cumulative average cost decreases to 90% of the previous level each time production quantity doubles. This is the standard definition.
-Numerical check: b = ln(0.9)/ln(2) = -0.1520. Unit 2 cost = Unit 1 × 2^(-0.152) = Unit 1 × 0.9 = 90%. ✓
+Numerical check: b = ln(0.9)/ln(2) = -0.1520. Unit 2 cost = Unit 1 × 2^(-0.152) = Unit 1 × 0.9 = 90%. Y
 **Source:** SMAD4 §20.3; Wright (1936) "Factors Affecting the Cost of Airplanes"
 **Confidence:** HIGH
 
@@ -72,9 +72,9 @@ Numerical check: b = ln(0.9)/ln(2) = -0.1520. Unit 2 cost = Unit 1 × 2^(-0.152)
 **Source:** SpaceX website; NewSpaceEconomy.ca rideshare pricing analysis (Feb 2026)
 **Confidence:** HIGH
 
-#### 11. P80 ≈ P50 × 1.3 Rule of Thumb
+#### 11. P80 ~ P50 × 1.3 Rule of Thumb
 **Claim:** P80 estimate is approximately 1.3× the P50 for CubeSat missions.
-**Verification:** APPROXIMATELY CONFIRMED. For lognormal cost distributions with σ = 0.25 (moderate uncertainty), P80/P50 = e^(0.84×0.25) = e^0.21 = 1.23. For σ = 0.35 (higher uncertainty), P80/P50 = e^(0.84×0.35) = e^0.294 = 1.34. The 1.3× figure is a reasonable middle ground.
+**Verification:** APPROXIMATELY CONFIRMED. For lognormal cost distributions with sigma = 0.25 (moderate uncertainty), P80/P50 = e^(0.84×0.25) = e^0.21 = 1.23. For sigma = 0.35 (higher uncertainty), P80/P50 = e^(0.84×0.35) = e^0.294 = 1.34. The 1.3× figure is a reasonable middle ground.
 **Source:** Statistical derivation from lognormal; consistent with NASA CEH practice
 **Confidence:** MEDIUM-HIGH (rule of thumb)
 

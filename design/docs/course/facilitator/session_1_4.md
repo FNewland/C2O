@@ -29,10 +29,10 @@ Every space mission has three segments that must be designed together:
 - **Communications**: TT&C for commanding + payload data downlink
 
 ### Ground Segment
-This is NOT a single entity — it typically has two distinct functions:
+This is NOT a single entity -- it typically has two distinct functions:
 
 - **Ground Operations** (GS + MCC): Commanding, telemetry monitoring, orbit determination, anomaly response
-- **Payload Data Centre**: Data reception, processing (L0→L1→L2→L3), archival, distribution
+- **Payload Data Centre**: Data reception, processing (L0->L1->L2->L3), archival, distribution
 
 For CubeSat missions, these may be combined, but the functions are still distinct.
 
@@ -45,10 +45,10 @@ For CubeSat missions, these may be combined, but the functions are still distinc
 
 | Interface | Direction | Type | Example |
 |-----------|-----------|------|---------|
-| TM/TC (S-band) | Space ↔ Ground Ops | RF uplink/downlink | Housekeeping telemetry, commands |
-| Payload data (X-band) | Space → Data Centre | RF downlink | Science/imagery data |
-| Orbit/TLE | Ground Ops → Data Centre | Network | Geolocation metadata |
-| Data products | Data Centre → Users | Internet/API | L2/L3 processed imagery |
+| TM/TC (S-band) | Space <-> Ground Ops | RF uplink/downlink | Housekeeping telemetry, commands |
+| Payload data (X-band) | Space -> Data Centre | RF downlink | Science/imagery data |
+| Orbit/TLE | Ground Ops -> Data Centre | Network | Geolocation metadata |
+| Data products | Data Centre -> Users | Internet/API | L2/L3 processed imagery |
 
 ### Additional Architecture Options
 
@@ -61,18 +61,18 @@ For CubeSat missions, these may be combined, but the functions are still distinc
 
 ### Formula: Ground Station Coverage
 
-The maximum slant range *R* from a ground station at elevation angle *ε* above the horizon:
+The maximum slant range *R* from a ground station at elevation angle *?* above the horizon:
 
 ```
-R = R_E × [ √( (h/R_E + 1)² - cos²(ε) ) - sin(ε) ]
+R = R_E × [ ?( (h/R_E + 1)^2 - cos^2(?) ) - sin(?) ]
 ```
 
-Where *R_E* = 6371 km (Earth radius), *h* = orbit altitude (km), *ε* = minimum elevation angle.
+Where *R_E* = 6371 km (Earth radius), *h* = orbit altitude (km), *?* = minimum elevation angle.
 
-The fraction of each orbit visible from a single ground station at latitude *φ_gs*:
+The fraction of each orbit visible from a single ground station at latitude *?_gs*:
 
 ```
-contact_fraction ≈ (2 × arccos(cos(ε_max) / cos(φ_gs - i))) / 360°
+contact_fraction ~ (2 × arccos(cos(?_max) / cos(?_gs - i))) / 360°
 ```
 
 This is a rough estimate; actual contact geometry depends on orbit propagation.
@@ -118,8 +118,8 @@ Every mission goes through these operational phases:
 - **Duration:** Days to weeks for active deorbit; years for natural decay
 - **Activities:** Passivation (battery discharge, RF shutdown, wheel spin-down), deorbit manoeuvre (if propulsive)
 - **Regulations:** 
-  - IADC: post-mission orbital lifetime ≤ 25 years
-  - FCC (2024+): post-mission orbital lifetime ≤ 5 years
+  - IADC: post-mission orbital lifetime <= 25 years
+  - FCC (2024+): post-mission orbital lifetime <= 5 years
   - ECSS-U-AS-10C Rev.2: debris mitigation compliance
 
 ---
@@ -134,14 +134,14 @@ Each operational mode defines which subsystems are active, the pointing mode, po
 
 | Mode | Subsystems Active | Pointing | Power | Data Flow |
 |------|-------------------|----------|-------|-----------|
-| **Safe** | EPS, OBC, TTC (beacon), AOCS (coarse) | Sun-pointing | Minimum (~1-2 W) | Beacon only → ground |
+| **Safe** | EPS, OBC, TTC (beacon), AOCS (coarse) | Sun-pointing | Minimum (~1-2 W) | Beacon only -> ground |
 | **Idle/Housekeeping** | EPS, OBC, AOCS (standby), TTC (beacon) | Inertial hold | Low (~2 W) | Health TM periodically |
-| **Science/Imaging** | + Payload, AOCS (fine) | Nadir/target | Medium (~6 W) | Instrument → OBDH storage |
-| **Downlink** | + TTC (full TX) | Ground station | High (~8 W) | OBDH → TX → GS |
+| **Science/Imaging** | + Payload, AOCS (fine) | Nadir/target | Medium (~6 W) | Instrument -> OBDH storage |
+| **Downlink** | + TTC (full TX) | Ground station | High (~8 W) | OBDH -> TX -> GS |
 | **Eclipse** | EPS (battery), OBC, TCS (heaters), AOCS (coarse) | Inertial hold | Battery only (~3 W) | None |
 | **Orbit Maintenance** | + Propulsion | Thrust direction | High | Manoeuvre TM |
 
-### Duty Cycling — The Key to CubeSat Power Management
+### Duty Cycling -- The Key to CubeSat Power Management
 
 CubeSats have limited power (7-25 W for a 3U with deployable panels). Not all modes run simultaneously. The orbit timeline determines what can happen when:
 
@@ -155,7 +155,7 @@ CubeSats have limited power (7-25 W for a 3U with deployable panels). Not all mo
 ### Formula: Orbit-Average Power
 
 ```
-P_avg = Σ (P_mode × duty_cycle_mode)
+P_avg = ? (P_mode × duty_cycle_mode)
 ```
 
 The solar array must provide enough power during sunlight to:
@@ -163,10 +163,10 @@ The solar array must provide enough power during sunlight to:
 2. Recharge the battery for eclipse loads
 
 ```
-P_SA = P_max_sunlight_mode + (P_eclipse × t_eclipse) / (t_sunlight × η_charge)
+P_SA = P_max_sunlight_mode + (P_eclipse × t_eclipse) / (t_sunlight × eta_charge)
 ```
 
-Where *η_charge* ≈ 0.9 (battery charge efficiency).
+Where *eta_charge* ~ 0.9 (battery charge efficiency).
 
 *[Verified: this formula is consistent with SMAD4 §11.4 and ECSS-E-ST-20C power budget methodology]*
 
@@ -181,8 +181,8 @@ Where *η_charge* ≈ 0.9 (battery charge efficiency).
 The data pipeline determines end-to-end latency and drives the comms architecture:
 
 ```
-Instrument → Onboard Storage → Downlink → Ground Reception
-  → Processing (L0→L1→L2) → Archive → User Delivery
+Instrument -> Onboard Storage -> Downlink -> Ground Reception
+  -> Processing (L0->L1->L2) -> Archive -> User Delivery
 ```
 
 ### Pipeline Sizing
@@ -190,7 +190,7 @@ Instrument → Onboard Storage → Downlink → Ground Reception
 | Stage | Key Parameter | Driven By |
 |-------|--------------|-----------|
 | Generation | GB/day | Payload data rate × duty cycle |
-| Storage | GB | Must hold ≥1 day of data (2× for margin) |
+| Storage | GB | Must hold >=1 day of data (2× for margin) |
 | Downlink | GB/pass | Link data rate × contact time per pass |
 | Processing | hours | Algorithm complexity, compute resources |
 | Delivery | hours | Archive system, API, network bandwidth |
@@ -200,7 +200,7 @@ Instrument → Onboard Storage → Downlink → Ground Reception
 For the system to be sustainable:
 
 ```
-Daily_Downlink_Capacity ≥ Daily_Data_Generation
+Daily_Downlink_Capacity >= Daily_Data_Generation
 ```
 
 If downlink < generation, data accumulates on board and eventually the storage fills. Solutions:
@@ -217,7 +217,7 @@ If downlink < generation, data accumulates on board and eventually the storage f
 ### Instructions
 
 1. Navigate to the **ConOps** tab in SpaceCDF
-2. Review the mission architecture diagram — identify each segment
+2. Review the mission architecture diagram -- identify each segment
 3. Edit the **mission phases**: adjust durations for your mission
 4. Review the **operational modes**: are the right modes defined for your mission type?
 5. Check the **data flow pipeline**: does it match your architecture?
@@ -231,8 +231,8 @@ If downlink < generation, data accumulates on board and eventually the storage f
 | Topic | Key Takeaway |
 |-------|-------------|
 | Architecture | Three segments (space, ground, user) with distinct interfaces |
-| Ground segment | Separate ops station from data processing — different functions |
-| Phases | LEOP → commissioning → nominal → disposal (each with distinct risks) |
+| Ground segment | Separate ops station from data processing -- different functions |
+| Phases | LEOP -> commissioning -> nominal -> disposal (each with distinct risks) |
 | Modes | Duty cycling is critical for CubeSat power management |
 | Data pipeline | Downlink capacity must exceed data generation rate |
 | Disposal | FCC 5-year rule (2024+) affects orbit selection |

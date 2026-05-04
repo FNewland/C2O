@@ -12,11 +12,11 @@ Compute (show working):
 
 1. **Semi-major axis:** a = R_E + h = 6371 + ____ = ____ km = ____ m
 
-2. **Orbital period:** T = 2π√(a³/μ) = _____ s = _____ min
+2. **Orbital period:** T = 2pi?(a^3/mu) = _____ s = _____ min
 
-3. **Orbital velocity:** v = √(μ/a) = _____ m/s
+3. **Orbital velocity:** v = ?(mu/a) = _____ m/s
 
-4. **Eclipse fraction:** f = (1/π)×arccos(√(1-(R_E/a)²)) = _____
+4. **Eclipse fraction:** f = (1/pi)×arccos(?(1-(R_E/a)^2)) = _____
 
 5. **Sunlight time per orbit:** t_sun = T × (1-f) = _____ min
 
@@ -45,7 +45,7 @@ For your selected orbit:
 - FCC 5-year compliant? Y / N
 - IADC 25-year compliant? Y / N
 - Propulsion needed for deorbit? Y / N
-- If yes, estimated deorbit ΔV: ____ m/s
+- If yes, estimated deorbit ?V: ____ m/s
 
 ---
 

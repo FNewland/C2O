@@ -41,7 +41,7 @@ If margin is negative, the design **does not close**. The team must either:
 | **Mass** | Launcher capacity | Sum of all subsystem masses | ECSS-E-HB-10-02A |
 | **Power** | Solar array EOL output | Sum of all mode demands | ECSS-E-ST-20C |
 | **Cost** | Programme budget ceiling | Sum of all cost elements | ECSS-M-ST-60C |
-| **ΔV** | Propulsion capacity | Sum of all manoeuvre needs | ECSS-E-ST-35C |
+| **?V** | Propulsion capacity | Sum of all manoeuvre needs | ECSS-E-ST-35C |
 | **Link** | TX power + antenna gain | Path loss + noise + threshold | ECSS-E-ST-50-05C |
 | **Pointing** | Sensor + actuator capability | RSS of all error sources | Subsystem-specific |
 | **Data** | Downlink capacity per day | Data generation per day | Mission-specific |
@@ -58,25 +58,25 @@ If margin is negative, the design **does not close**. The team must either:
 
 ```
 Mass Budget:
-  Payload:        1.50 kg  ← from payload specification
-  EPS:            0.75 kg  ← SA + battery + EPS board
-  AOCS:           0.55 kg  ← RW + MTQ + ST + sun sensors
-  TTC:            0.25 kg  ← transponder + antenna
-  OBC:            0.08 kg  ← flight computer
-  Thermal:        0.05 kg  ← heaters + MLI
-  Structure:      0.35 kg  ← frame + fasteners
-  Harness:        0.15 kg  ← cables + connectors
-  ────────────────────────
-  Dry Mass (CBE): 3.68 kg  ← Current Best Estimate
+  Payload:        1.50 kg  ? from payload specification
+  EPS:            0.75 kg  ? SA + battery + EPS board
+  AOCS:           0.55 kg  ? RW + MTQ + ST + sun sensors
+  TTC:            0.25 kg  ? transponder + antenna
+  OBC:            0.08 kg  ? flight computer
+  Thermal:        0.05 kg  ? heaters + MLI
+  Structure:      0.35 kg  ? frame + fasteners
+  Harness:        0.15 kg  ? cables + connectors
+  ????????????????????????
+  Dry Mass (CBE): 3.68 kg  ? Current Best Estimate
   + System Margin (20%): 0.74 kg
-  ────────────────────────
-  Dry Mass (MEV): 4.42 kg  ← Maximum Expected Value
+  ????????????????????????
+  Dry Mass (MEV): 4.42 kg  ? Maximum Expected Value
   + Propellant:   0.00 kg
-  ────────────────────────
+  ????????????????????????
   Wet Mass:       4.42 kg
   
   Launcher Allocation: 6.00 kg (3U CubeSat limit)
-  Mass Margin:    1.58 kg (26.4%) → GREEN
+  Mass Margin:    1.58 kg (26.4%) -> GREEN
 ```
 
 ### Key Terms
@@ -98,7 +98,7 @@ Green: >20% | Amber: 10-20% | Red: <10% | Exceeded: <0%
 
 ### ECSS Margin Policy by Phase
 
-*[Source: ECSS-E-HB-10-02A §5.2 — Verified, see Session 1.3-1.4 verification]*
+*[Source: ECSS-E-HB-10-02A §5.2 -- Verified, see Session 1.3-1.4 verification]*
 
 | Phase | Equipment Margin | System Margin | Compound |
 |-------|-----------------|---------------|----------|
@@ -136,7 +136,7 @@ The power budget is computed **per operational mode** because not all subsystems
 Not all modes run for the full orbit. Use duty cycling:
 
 ```
-P_orbit_avg = Σ (P_mode × duty_cycle_mode)
+P_orbit_avg = ? (P_mode × duty_cycle_mode)
 ```
 
 **Example for 95-min orbit (60 min sun, 35 min eclipse):**
@@ -156,46 +156,46 @@ The SA must provide power for:
 2. Battery recharge for eclipse energy
 
 ```
-P_SA_required = P_peak_sunlight + (P_eclipse × t_eclipse) / (t_sunlight × η_charge)
+P_SA_required = P_peak_sunlight + (P_eclipse × t_eclipse) / (t_sunlight × eta_charge)
 ```
 
-*[Verified: SMAD4 §11.4, ECSS-E-ST-20C — see Session 1.4 verification]*
+*[Verified: SMAD4 §11.4, ECSS-E-ST-20C -- see Session 1.4 verification]*
 
 **Numerical example:**
 - P_peak_sunlight = 10 W (imaging mode)
-- P_eclipse = 3.5 W, t_eclipse = 35 min, t_sunlight = 60 min, η_charge = 0.9
+- P_eclipse = 3.5 W, t_eclipse = 35 min, t_sunlight = 60 min, eta_charge = 0.9
 - P_recharge = (3.5 × 35) / (60 × 0.9) = 2.27 W
 - **P_SA_required = 10.0 + 2.27 = 12.3 W** (before degradation margin)
-- With 3-year EOL degradation (2.5%/yr): P_SA_BOL = 12.3 / (1-0.025)³ = **13.2 W**
+- With 3-year EOL degradation (2.5%/yr): P_SA_BOL = 12.3 / (1-0.025)^3 = **13.2 W**
 
 ### Battery Sizing
 
 ```
-Battery_Capacity = (P_eclipse × t_eclipse) / (DoD_max × η_discharge)
+Battery_Capacity = (P_eclipse × t_eclipse) / (DoD_max × eta_discharge)
 ```
 
-Where DoD_max ≈ 0.3 (30% depth of discharge for long cycle life)
+Where DoD_max ~ 0.3 (30% depth of discharge for long cycle life)
 
 **Example:**
 - Energy per eclipse = 3.5 W × 35/60 h = 2.04 Wh
 - Battery = 2.04 / (0.3 × 0.95) = **7.2 Wh** minimum
-- With margin: specify ≥ **10 Wh** battery
+- With margin: specify >= **10 Wh** battery
 
 ---
 
 ## 4. Other Budget Types (20 min)
 
-### Link Budget (brief — full session in Day 3)
+### Link Budget (brief -- full session in Day 3)
 
 Key equation (decibels):
 ```
-Margin = EIRP - FSPL + G/T - k - 10·log₁₀(R_b) - Eb/N₀_required - Implementation_Loss
+Margin = EIRP - FSPL + G/T - k - 10·log10(R_b) - Eb/N0_required - Implementation_Loss
 ```
 
 Where:
 - EIRP = TX power (dBW) + TX antenna gain (dBi) - TX losses (dB)
-- FSPL = 20·log₁₀(4πd/λ) — Free Space Path Loss
-- G/T = RX antenna gain (dBi) - 10·log₁₀(T_sys) — Ground station figure of merit
+- FSPL = 20·log10(4pid/lambda) -- Free Space Path Loss
+- G/T = RX antenna gain (dBi) - 10·log10(T_sys) -- Ground station figure of merit
 - k = -228.6 dBW/K/Hz (Boltzmann constant)
 - R_b = data rate (bps)
 
@@ -206,7 +206,7 @@ Where:
 Root-Sum-Square of independent error sources:
 
 ```
-θ_total = √(θ_sensor² + θ_actuator² + θ_alignment² + θ_thermal² + θ_jitter²)
+theta_total = ?(theta_sensor^2 + theta_actuator^2 + theta_alignment^2 + theta_thermal^2 + theta_jitter^2)
 ```
 
 Must be less than the pointing requirement.
@@ -217,7 +217,7 @@ Must be less than the pointing requirement.
 Daily Generation = Data_rate × Duty_cycle × Orbits_per_day × Time_per_pass
 Daily Downlink = DL_rate × Contact_time_per_day
 
-Balance: Daily Downlink ≥ Daily Generation
+Balance: Daily Downlink >= Daily Generation
 ```
 
 ---
@@ -227,11 +227,11 @@ Balance: Daily Downlink ≥ Daily Generation
 ### Instructions
 
 1. Run the design in SpaceCDF if not already done
-2. Review the **Dashboard** — examine each KPI card (mass, power, link, cost margins)
-3. Open the **Budget Breakdown** section — examine per-subsystem mass and power
-4. Check the **Pointing Budget** — is the RSS total within the requirement?
-5. Check the **Data Budget** — does downlink balance with generation?
-6. Check the **Timing Budget** — review mode durations in one orbit
+2. Review the **Dashboard** -- examine each KPI card (mass, power, link, cost margins)
+3. Open the **Budget Breakdown** section -- examine per-subsystem mass and power
+4. Check the **Pointing Budget** -- is the RSS total within the requirement?
+5. Check the **Data Budget** -- does downlink balance with generation?
+6. Check the **Timing Budget** -- review mode durations in one orbit
 7. Open the **Parametric** tab to see the mass/cost/power fractions used by the tool
 
 ### Discussion
@@ -249,6 +249,6 @@ Balance: Daily Downlink ≥ Daily Generation
 | Budgets | Allocation - Demand = Margin; negative margin means design doesn't close |
 | Mass budget | CBE + equipment margin + system margin = MEV; compare to launcher allocation |
 | Power budget | Mode-based; duty cycling determines orbit-average; SA must cover peak + recharge |
-| ECSS margins | Decrease with maturity: 44% in Phase 0/A → 13% in Phase C/D |
-| Other budgets | Link (dB), pointing (RSS), data (GB/day), ΔV (m/s) |
+| ECSS margins | Decrease with maturity: 44% in Phase 0/A -> 13% in Phase C/D |
+| Other budgets | Link (dB), pointing (RSS), data (GB/day), ?V (m/s) |
 | SpaceCDF | Dashboard KPIs + Budget Breakdown + Pointing + Data + Timing |

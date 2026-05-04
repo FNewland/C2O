@@ -13,8 +13,8 @@ common pitfalls, and references.
 **Key Parameters Owned:** Mass margin, power margin, system-level cost, composite TRL, health score.
 
 **Key Activities:**
-- Maintain all engineering budgets (mass, power, cost, ΔV, data, pointing)
-- Apply ECSS margin policy by project phase (44% Phase A → 13% Phase C/D)
+- Maintain all engineering budgets (mass, power, cost, ?V, data, pointing)
+- Apply ECSS margin policy by project phase (44% Phase A -> 13% Phase C/D)
 - Resolve cross-domain conflicts (convene affected positions, facilitate trade)
 - Prepare gate review evidence packages
 - Own the requirements baseline and traceability matrix
@@ -46,10 +46,10 @@ common pitfalls, and references.
 - For constellations: Walker delta design, phasing, coverage optimisation
 
 **Key Formulae:**
-- Period: T = 2π√(a³/μ)
-- Eclipse fraction: f = (1/π)arccos(√(1-(R_E/a)²))
-- SSO inclination: cos(i) = f(a, J₂)
-- Hohmann ΔV: from vis-viva equation
+- Period: T = 2pi?(a^3/mu)
+- Eclipse fraction: f = (1/pi)arccos(?(1-(R_E/a)^2))
+- SSO inclination: cos(i) = f(a, J2)
+- Hohmann ?V: from vis-viva equation
 - Coverage radius: from ground station elevation geometry
 
 **References:** SMAD4 Ch.5-7; Vallado §2-9; ECSS-U-AS-10C Rev.2
@@ -63,17 +63,17 @@ common pitfalls, and references.
 **Key Parameters Owned:** GSD (or equivalent MoP), data rate, pointing requirement, payload mass, power, duty cycle, FOV.
 
 **Key Activities:**
-- Size the payload from performance requirements (GSD → aperture for optical; data rate → antenna for comms; resolution → antenna area for SAR)
+- Size the payload from performance requirements (GSD -> aperture for optical; data rate -> antenna for comms; resolution -> antenna area for SAR)
 - Define payload data volume and duty cycle
 - Specify thermal environment needs (detector cooling, operational temperature)
 - Coordinate with AOCS for pointing and stability requirements
 - Coordinate with comms for downlink capacity matching data generation
 
 **Key Formulae:**
-- Optical: GSD = max(1.22λh/D, ph/f)
-- Payload mass: M ≈ 20D^1.5 + 2 (heritage CER)
+- Optical: GSD = max(1.22lambdah/D, ph/f)
+- Payload mass: M ~ 20D^1.5 + 2 (heritage CER)
 - Data rate: R = N_pixels × N_bands × bit_depth × line_rate
-- SAR: antenna_length ≥ 2 × resolution
+- SAR: antenna_length >= 2 × resolution
 
 **References:** SMAD4 Ch.9; ECSS-E-ST-10-06C; specific instrument handbooks
 
@@ -94,10 +94,10 @@ common pitfalls, and references.
 - Coordinate with thermal on SA/radiator area competition
 
 **Key Formulae:**
-- P_SA = P_peak_sun + (P_eclipse × t_ecl)/(t_sun × η_charge)
+- P_SA = P_peak_sun + (P_eclipse × t_ecl)/(t_sun × eta_charge)
 - P_SA_BOL = P_SA_EOL / (1 - degradation)^years
-- A_SA = P_BOL / (η_cell × S × cos(θ) × η_pack)
-- C_bat = (P_ecl × t_ecl) / (DoD × η_discharge)
+- A_SA = P_BOL / (eta_cell × S × cos(theta) × eta_pack)
+- C_bat = (P_ecl × t_ecl) / (DoD × eta_discharge)
 
 **References:** SMAD4 Ch.11.4; ECSS-E-ST-20C; vendor datasheets (GomSpace NanoPower)
 
@@ -110,7 +110,7 @@ common pitfalls, and references.
 **Key Parameters Owned:** Pointing accuracy, stability, slew rate, wheel momentum, actuator mass/power.
 
 **Key Activities:**
-- Select AOCS architecture (passive magnetic → MTQ → RW → RW+ST) based on pointing requirement
+- Select AOCS architecture (passive magnetic -> MTQ -> RW -> RW+ST) based on pointing requirement
 - Construct pointing error budget (RSS of all sources)
 - Size reaction wheels for momentum storage and torque
 - Size magnetorquers for momentum dumping
@@ -118,8 +118,8 @@ common pitfalls, and references.
 - Assess disturbance torques (gravity gradient, magnetic, SRP, aero drag)
 
 **Key Formulae:**
-- RSS pointing: θ = √(Σ θᵢ²)
-- Gravity gradient torque: T = (3μ/2R³) × (I_z - I_x) × sin(2θ)
+- RSS pointing: theta = ?(? theta?^2)
+- Gravity gradient torque: T = (3mu/2R^3) × (I_z - I_x) × sin(2theta)
 - Magnetic torque: T = m × B (dipole moment × field)
 - Wheel momentum: H = T × t_accumulation
 
@@ -135,16 +135,16 @@ common pitfalls, and references.
 
 **Key Activities:**
 - Define hot case (max solar + internal dissipation) and cold case (eclipse, min power)
-- Select thermal control approach (passive coatings → MLI → heaters → heat pipes)
+- Select thermal control approach (passive coatings -> MLI -> heaters -> heat pipes)
 - Size radiators to reject waste heat in hot case
 - Size heaters to maintain minimum temperature in cold case (eclipse)
 - Verify ECSS thermal margins (±5°C operating, ±10°C acceptance, ±15°C qualification)
 - Coordinate with power on heater power budget and with structure on radiator mounting
 
 **Key Formulae:**
-- Stefan-Boltzmann: Q = εσAT⁴ (radiative heat transfer)
+- Stefan-Boltzmann: Q = ?sigmaAT? (radiative heat transfer)
 - Equilibrium: Q_absorbed + Q_internal = Q_radiated
-- Solar absorptance/emittance ratio (α/ε) determines equilibrium temperature
+- Solar absorptance/emittance ratio (?/?) determines equilibrium temperature
 
 **References:** SMAD4 Ch.11.5; ECSS-E-ST-31C; Gilmore, Spacecraft Thermal Control Handbook
 
@@ -157,7 +157,7 @@ common pitfalls, and references.
 **Key Parameters Owned:** Link margin, data rate, frequency band, EIRP, antenna gain, modulation/coding.
 
 **Key Activities:**
-- Construct complete link budget (EIRP, FSPL, G/T, C/N₀, Eb/N₀, margin)
+- Construct complete link budget (EIRP, FSPL, G/T, C/N0, Eb/N0, margin)
 - Select frequency band based on data rate need and licensing constraints
 - Select transponder and antenna (RF chain compatibility: band, impedance, polarisation)
 - Coordinate with AOCS on antenna pointing accuracy
@@ -165,9 +165,9 @@ common pitfalls, and references.
 - Manage frequency licensing process (IARU/ISED/ITU as appropriate)
 
 **Key Formulae:**
-- FSPL = 20log₁₀(4πd/λ) dB
+- FSPL = 20log10(4pid/lambda) dB
 - EIRP = P_TX + G_TX - L_TX dBW
-- Link margin = Eb/N₀_avail - Eb/N₀_req - L_impl dB
+- Link margin = Eb/N0_avail - Eb/N0_req - L_impl dB
 
 **References:** SMAD4 Ch.13; ECSS-E-ST-50-05C; ITU Radio Regulations; CCSDS 131.0-B
 
@@ -175,21 +175,21 @@ common pitfalls, and references.
 
 ## Appendix H: Propulsion Engineer
 
-**Responsibility:** ΔV budget, propulsion system selection, propellant management.
+**Responsibility:** ?V budget, propulsion system selection, propellant management.
 
-**Key Parameters Owned:** Total ΔV, Isp, propellant mass, thrust level, total impulse.
+**Key Parameters Owned:** Total ?V, Isp, propellant mass, thrust level, total impulse.
 
 **Key Activities:**
-- Construct ΔV budget (orbit insertion, maintenance, collision avoidance, deorbit)
-- Select propulsion technology (cold gas, electric, chemical) based on ΔV and power
+- Construct ?V budget (orbit insertion, maintenance, collision avoidance, deorbit)
+- Select propulsion technology (cold gas, electric, chemical) based on ?V and power
 - Size propellant mass using Tsiolkovsky equation
 - Coordinate with structure on tank mounting and plume impingement
 - Assess debris compliance (deorbit capability vs natural lifetime)
 
 **Key Formulae:**
-- Tsiolkovsky: ΔV = Isp × g₀ × ln(m_initial/m_final)
-- Propellant mass: m_p = m_dry × (e^(ΔV/(Isp·g₀)) - 1)
-- Total impulse: I_total = m_p × Isp × g₀
+- Tsiolkovsky: ?V = Isp × g0 × ln(m_initial/m_final)
+- Propellant mass: m_p = m_dry × (e^(?V/(Isp·g0)) - 1)
+- Total impulse: I_total = m_p × Isp × g0
 
 **References:** SMAD4 Ch.17; Sutton & Biblarz, Rocket Propulsion Elements; vendor data
 
@@ -207,11 +207,11 @@ common pitfalls, and references.
 - Analyse launch loads (quasi-static, random vibration, shock)
 - Compute structural margin of safety (MoS)
 - Design deployment mechanisms (antenna, solar panels, payload)
-- Plan integration sequence (component → board → stack → structure → deployer)
+- Plan integration sequence (component -> board -> stack -> structure -> deployer)
 
 **Key Formulae:**
 - MoS = (Allowable / (Design × FoS)) - 1
-- Natural frequency: f = (1/2π)√(k/m)
+- Natural frequency: f = (1/2pi)?(k/m)
 
 **References:** CDS Rev 14.1; SMAD4 Ch.11.3; ECSS-E-ST-32C Rev.1; NASA GEVS
 
@@ -262,7 +262,7 @@ common pitfalls, and references.
 **Key Activities:**
 - Select ground station network (own station, KSAT, SatNOGS, DSN)
 - Define MCS architecture (COSMOS, OpenMCT, Yamcs)
-- Design data processing pipeline (L0 → L1 → L2 → archive → distribution)
+- Design data processing pipeline (L0 -> L1 -> L2 -> archive -> distribution)
 - Plan operations concept (staffing, automation level, anomaly response)
 - Coordinate with comms engineer on frequency bands and antenna requirements
 

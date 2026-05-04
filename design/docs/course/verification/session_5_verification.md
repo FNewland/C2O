@@ -1,4 +1,4 @@
-# Verification Record — Day 5: Sessions 5.1-5.4
+# Verification Record -- Day 5: Sessions 5.1-5.4
 
 ## Verification Date: 2026-05-04
 
@@ -45,8 +45,8 @@
 **Source:** CDS Rev 14.1 §3.1.4; NanoRacks NRCSD IDD §4.2; ISIPOD IDD
 **Confidence:** HIGH (with deployer ICD attribution)
 
-#### 7. Battery State at Delivery: ≤50% SoC
-**Claim:** Batteries must be at ≤50% state of charge at delivery to integration facility.
+#### 7. Battery State at Delivery: <=50% SoC
+**Claim:** Batteries must be at <=50% state of charge at delivery to integration facility.
 **Verification:** CONFIRMED. Most launch provider ICDs require batteries to be in a "safe state" with SoC between 30-50% at delivery. SpaceX Rideshare PUG and NanoRacks NRCSD IDD both specify this. The exact limit varies by provider.
 **Source:** SpaceX Rideshare PUG; NanoRacks NRCSD IDD §4.3
 **Confidence:** HIGH
@@ -60,14 +60,14 @@
 **Confidence:** HIGH
 
 #### 9. Morris Screening Method
-**Claim:** Morris method uses elementary effects (μ* and σ) to rank variable importance.
-**Verification:** CONFIRMED. Morris (1991) "Factorial Sampling Plans for Preliminary Computational Experiments" introduced the one-at-a-time (OAT) screening method. μ* (mean of absolute elementary effects) measures overall importance; σ (standard deviation) measures non-linearity/interaction effects. This is the standard interpretation.
+**Claim:** Morris method uses elementary effects (mu* and sigma) to rank variable importance.
+**Verification:** CONFIRMED. Morris (1991) "Factorial Sampling Plans for Preliminary Computational Experiments" introduced the one-at-a-time (OAT) screening method. mu* (mean of absolute elementary effects) measures overall importance; sigma (standard deviation) measures non-linearity/interaction effects. This is the standard interpretation.
 **Source:** Morris (1991); Campolongo et al. (2007) "An effective screening design for sensitivity analysis of large models"
 **Confidence:** HIGH
 
 #### 10. NSGA-II Algorithm
 **Claim:** SpaceCDF uses NSGA-II for multi-objective Pareto optimisation.
-**Verification:** CONFIRMED. NSGA-II (Deb et al., 2002) uses non-dominated sorting and crowding distance for diversity preservation. The SpaceCDF implementation includes SBX crossover (η=20), polynomial mutation (η=20), and tournament selection — standard NSGA-II operators.
+**Verification:** CONFIRMED. NSGA-II (Deb et al., 2002) uses non-dominated sorting and crowding distance for diversity preservation. The SpaceCDF implementation includes SBX crossover (eta=20), polynomial mutation (eta=20), and tournament selection -- standard NSGA-II operators.
 **Source:** Deb et al. (2002) "A fast and elitist multiobjective genetic algorithm: NSGA-II"
 **Confidence:** HIGH
 

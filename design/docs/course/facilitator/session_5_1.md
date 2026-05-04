@@ -37,10 +37,10 @@ The review board evaluates evidence against predefined **exit criteria**. The ou
 
 | Review | Phase Exit | Key Question |
 |--------|-----------|-------------|
-| **MCR** | Pre-A → A | Is the mission need justified? Is space the right answer? |
-| **SRR** | A → B | Are requirements complete, consistent, and traceable? |
-| **PDR** | B → C | Does the preliminary design meet requirements with margin? |
-| **CDR** | C → D | Is the design complete and ready for build? |
+| **MCR** | Pre-A -> A | Is the mission need justified? Is space the right answer? |
+| **SRR** | A -> B | Are requirements complete, consistent, and traceable? |
+| **PDR** | B -> C | Does the preliminary design meet requirements with margin? |
+| **CDR** | C -> D | Is the design complete and ready for build? |
 | **TRR** | Pre-test | Is the system ready for formal testing? |
 | **FRR** | Pre-launch | Is everything ready for launch? |
 
@@ -59,9 +59,9 @@ SpaceCDF evaluates MCR criteria automatically where possible, with manual review
 | # | Criterion | Priority | How Evaluated | Evidence |
 |---|-----------|----------|---------------|----------|
 | EC-01 | Mission need clearly defined and justified | Must pass | Problem statement not empty | Mission Need step |
-| EC-02 | Key stakeholders identified | Must pass | ≥ 1 stakeholder defined | Stakeholder list |
-| EC-03 | Objectives defined with measurable criteria | Must pass | ≥ 1 primary objective with criterion | Objectives with MoPs |
-| EC-04 | Alternatives considered including non-space | Must pass | ≥ 2 alternatives, including non-space | Mission trade results |
+| EC-02 | Key stakeholders identified | Must pass | >= 1 stakeholder defined | Stakeholder list |
+| EC-03 | Objectives defined with measurable criteria | Must pass | >= 1 primary objective with criterion | Objectives with MoPs |
+| EC-04 | Alternatives considered including non-space | Must pass | >= 2 alternatives, including non-space | Mission trade results |
 | EC-05 | Selected concept justified | Must pass | Alternative selected with rationale | Decision rationale |
 | EC-06 | Preliminary ConOps documented | Should pass | ConOps summary not empty | ConOps tab |
 | EC-07 | Feasible system concept identified | Must pass | Mass margin > -50% | Design run results |
@@ -126,7 +126,7 @@ A gate review presentation should cover:
 | Problem statement | Step 1: Mission Need |
 | Stakeholder matrix | Step 1: Mission Need |
 | Objectives with criteria | Step 1: Mission Need |
-| Mission trade results | Step 2: Concept → Mission Trade |
+| Mission trade results | Step 2: Concept -> Mission Trade |
 | ConOps architecture | ConOps tab |
 | Mass/power/cost budgets | Dashboard |
 | Pointing/data budgets | Dashboard budget cards |

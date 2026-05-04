@@ -8,7 +8,7 @@
 
 From SpaceCDF Optimizer (or Trade Studies), identify which parameters most influence your design:
 
-| Variable | μ* (importance) | σ (non-linearity) | Classification |
+| Variable | mu* (importance) | sigma (non-linearity) | Classification |
 |----------|----------------|-------------------|----------------|
 | | | | Key driver / Negligible / Investigate |
 | | | | |

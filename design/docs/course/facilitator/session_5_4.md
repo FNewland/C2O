@@ -33,7 +33,7 @@ Real design has competing objectives:
 - Maximise link margin (better comms but heavier/more power)
 - Maximise reliability (more redundancy but more mass)
 
-**No single design is best on all objectives.** Instead, there's a **Pareto front** of non-dominated designs — where improving one objective necessarily worsens another.
+**No single design is best on all objectives.** Instead, there's a **Pareto front** of non-dominated designs -- where improving one objective necessarily worsens another.
 
 ### SpaceCDF Optimizer
 
@@ -43,19 +43,19 @@ Navigate to the **Optimizer** tab (in the Analysis group):
 - Select one objective (e.g., "Minimise dry mass")
 - Select variables to vary (e.g., orbit altitude, payload duty cycle)
 - Set bounds per variable
-- Run → returns the best design point for that objective
+- Run -> returns the best design point for that objective
 
 **Pareto mode (NSGA-II):**
 - Select 2+ objectives (e.g., minimise mass AND minimise cost)
 - Same variable selection
-- Run → returns a set of Pareto-optimal designs
+- Run -> returns a set of Pareto-optimal designs
 - Each point on the front represents a different trade-off between objectives
 
 ### Interpreting Results
 
-The Pareto front shows the "efficient frontier" — all designs where you can't improve one objective without worsening another. The team must then **choose** which point on the front to use, based on mission priorities.
+The Pareto front shows the "efficient frontier" -- all designs where you can't improve one objective without worsening another. The team must then **choose** which point on the front to use, based on mission priorities.
 
-**Discussion prompt:** *Looking at the Pareto front between mass and cost — where would you choose? What non-quantitative factors influence this choice?*
+**Discussion prompt:** *Looking at the Pareto front between mass and cost -- where would you choose? What non-quantitative factors influence this choice?*
 
 ---
 
@@ -68,23 +68,23 @@ The Pareto front shows the "efficient frontier" — all designs where you can't 
 SpaceCDF provides Morris screening sensitivity analysis (POST /api/optimize/sensitivity):
 - Perturbs each design variable independently
 - Measures the **elementary effect** (change in objective per unit change in variable)
-- Reports **μ**** (mean of absolute effects) — importance ranking
-- Reports **σ** (standard deviation of effects) — linearity indicator
+- Reports **mu**** (mean of absolute effects) -- importance ranking
+- Reports **sigma** (standard deviation of effects) -- linearity indicator
 
 ### Interpreting Sensitivity Results
 
-| Variable | μ* | σ | Interpretation |
+| Variable | mu* | sigma | Interpretation |
 |----------|-----|---|---------------|
-| High μ*, low σ | Important, linear | **Key driver** — small change has proportional effect |
-| High μ*, high σ | Important, non-linear | **Critical** — effect depends on other variables (interactions) |
-| Low μ*, low σ | Unimportant | **Freeze** — don't spend effort optimising this |
-| Low μ*, high σ | Seems unimportant on average | **Investigate** — may be important in specific regions |
+| High mu*, low sigma | Important, linear | **Key driver** -- small change has proportional effect |
+| High mu*, high sigma | Important, non-linear | **Critical** -- effect depends on other variables (interactions) |
+| Low mu*, low sigma | Unimportant | **Freeze** -- don't spend effort optimising this |
+| Low mu*, high sigma | Seems unimportant on average | **Investigate** -- may be important in specific regions |
 
 ### What to Do With Results
 
-1. **Focus trade studies** on high-μ* variables (they drive the design)
-2. **Freeze** low-μ* variables at nominal values (save effort)
-3. **Add constraints** if high-μ* variables hit physical limits
+1. **Focus trade studies** on high-mu* variables (they drive the design)
+2. **Freeze** low-mu* variables at nominal values (save effort)
+3. **Add constraints** if high-mu* variables hit physical limits
 4. **Report** which parameters most influence the final design (for review boards)
 
 ---
@@ -95,23 +95,23 @@ SpaceCDF provides Morris screening sensitivity analysis (POST /api/optimize/sens
 
 After optimisation and sensitivity analysis, the team selects a final design point. This involves:
 
-1. **Review the Pareto front** — identify the region that best balances objectives
-2. **Check all budgets** — mass, power, cost, link, pointing, data all have positive margin
-3. **Check all constraints** — debris compliance, CDS compliance, V&V feasibility
-4. **Resolve remaining conflicts** — any red items in Interface Matrix?
-5. **Freeze the design** — create a snapshot (Snapshots tab) as the "baseline"
+1. **Review the Pareto front** -- identify the region that best balances objectives
+2. **Check all budgets** -- mass, power, cost, link, pointing, data all have positive margin
+3. **Check all constraints** -- debris compliance, CDS compliance, V&V feasibility
+4. **Resolve remaining conflicts** -- any red items in Interface Matrix?
+5. **Freeze the design** -- create a snapshot (Snapshots tab) as the "baseline"
 
 ### Document Generation
 
 Generate all ECSS documents from the frozen design:
-1. **Exports** tab → ECSS Documents:
+1. **Exports** tab -> ECSS Documents:
    - MRD (Mission Requirements Document)
    - TS (Technical Specification)
    - VP (Verification Plan)
    - ConOps
-2. **Exports** tab → Regulatory:
+2. **Exports** tab -> Regulatory:
    - All applicable filings (ITU, RSSSA, export, COPUOS, EOL)
-3. **Exports** tab → Design Data:
+3. **Exports** tab -> Design Data:
    - BOM (Bill of Materials from equipment selections)
    - Parametric model data (for traceability)
 
@@ -182,8 +182,8 @@ Each team presents their complete mission design (10-12 minutes per team + 3 min
 4. **Concurrent design** resolves conflicts in real-time
 5. **Trade studies** require rigour: criteria, weights, scores, rationale
 6. **Verification** must be planned alongside design (not an afterthought)
-7. **Regulatory** is on the critical path — start filings early
-8. **Iteration** is normal and expected — the design will change
+7. **Regulatory** is on the critical path -- start filings early
+8. **Iteration** is normal and expected -- the design will change
 
 ### Next Steps for Participants
 
@@ -207,8 +207,8 @@ Course evaluation form. Key questions:
 | Topic | Key Takeaway |
 |-------|-------------|
 | Optimisation | Pareto front shows efficient trade-offs; team chooses based on priorities |
-| Sensitivity | Morris μ* ranks variable importance; focus effort on high-μ* parameters |
+| Sensitivity | Morris mu* ranks variable importance; focus effort on high-mu* parameters |
 | Design freeze | All budgets positive, conflicts resolved, snapshot created |
 | Documentation | Generate all ECSS + regulatory + BOM from SpaceCDF before review |
 | Presentation | 6 sections: need, justification, design, V&V, regulatory, lessons |
-| Course | Problem → Requirements → Design → Verify → Review (the V-model in action) |
+| Course | Problem -> Requirements -> Design -> Verify -> Review (the V-model in action) |

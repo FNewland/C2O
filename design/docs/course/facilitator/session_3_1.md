@@ -30,9 +30,9 @@ Six parameters fully describe a satellite's orbit:
 | Semi-major axis | *a* | Size of the orbit (km) | 6671-42164 km (LEO-GEO) |
 | Eccentricity | *e* | Shape (0 = circle, <1 = ellipse) | 0-0.001 for LEO |
 | Inclination | *i* | Tilt of orbit plane from equator (°) | 0-180° |
-| RAAN | *Ω* | Orientation of ascending node (°) | 0-360° |
-| Argument of perigee | *ω* | Orientation of ellipse in orbit plane (°) | 0-360° |
-| True anomaly | *ν* | Position of satellite in orbit (°) | 0-360° |
+| RAAN | *?* | Orientation of ascending node (°) | 0-360° |
+| Argument of perigee | *?* | Orientation of ellipse in orbit plane (°) | 0-360° |
+| True anomaly | *?* | Position of satellite in orbit (°) | 0-360° |
 
 For circular LEO, the key parameters reduce to: **altitude** (*h*), **inclination** (*i*), and **LTAN** (local time of ascending node for SSO).
 
@@ -40,53 +40,53 @@ For circular LEO, the key parameters reduce to: **altitude** (*h*), **inclinatio
 
 **Orbital period:**
 ```
-T = 2π √(a³/μ)
+T = 2pi ?(a^3/mu)
 ```
-Where *a* = R_E + h (semi-major axis), μ = 3.986 × 10¹⁴ m³/s² (Earth gravitational parameter).
+Where *a* = R_E + h (semi-major axis), mu = 3.986 × 10¹? m^3/s^2 (Earth gravitational parameter).
 
-*Example: h = 500 km → a = 6871 km → T = 5693 s = 94.9 min*
+*Example: h = 500 km -> a = 6871 km -> T = 5693 s = 94.9 min*
 
 **Orbital velocity (circular):**
 ```
-v = √(μ/a)
+v = ?(mu/a)
 ```
-*Example: h = 500 km → v = 7613 m/s = 7.61 km/s*
+*Example: h = 500 km -> v = 7613 m/s = 7.61 km/s*
 
 **Eclipse fraction** (maximum, circular orbit):
 ```
-f_eclipse = (1/π) × arccos(√(1 - (R_E/a)²))
+f_eclipse = (1/pi) × arccos(?(1 - (R_E/a)^2))
 ```
-*Example: h = 500 km → f = 0.376 = 37.6% maximum*
+*Example: h = 500 km -> f = 0.376 = 37.6% maximum*
 
-*[Verified: T computed = 94.9 min ✓; f computed = 37.6% ✓ — see Session 1.4 verification]*
+*[Verified: T computed = 94.9 min Y; f computed = 37.6% Y -- see Session 1.4 verification]*
 
-**Sun-synchronous inclination** (J₂ precession = 360°/year):
+**Sun-synchronous inclination** (J2 precession = 360°/year):
 ```
-cos(i) = -a^(7/2) × Ω̇_req / (1.5 × R_E² × J₂ × √μ)
+cos(i) = -a^(7/2) × ??_req / (1.5 × R_E^2 × J2 × ?mu)
 ```
-Where J₂ = 1.0826 × 10⁻³, Ω̇_req = 2π / (365.25 × 86400) rad/s.
+Where J2 = 1.0826 × 10?^3, ??_req = 2pi / (365.25 × 86400) rad/s.
 
-*Example: h = 500 km → i = 97.4°*
+*Example: h = 500 km -> i = 97.4°*
 
-**Hohmann transfer ΔV** (circular to circular):
+**Hohmann transfer ?V** (circular to circular):
 ```
-ΔV₁ = √(μ/r₁) × (√(2r₂/(r₁+r₂)) - 1)
-ΔV₂ = √(μ/r₂) × (1 - √(2r₁/(r₁+r₂)))
-ΔV_total = |ΔV₁| + |ΔV₂|
+?V1 = ?(mu/r1) × (?(2r2/(r1+r2)) - 1)
+?V2 = ?(mu/r2) × (1 - ?(2r1/(r1+r2)))
+?V_total = |?V1| + |?V2|
 ```
-*Example: 500 km → 200 km deorbit: ΔV = 89 m/s*
+*Example: 500 km -> 200 km deorbit: ?V = 89 m/s*
 
 ### Ground Track and Revisit
 
-**Swath width** for nadir-pointing sensor with half-angle *θ*:
+**Swath width** for nadir-pointing sensor with half-angle *theta*:
 ```
-Swath = 2h × tan(θ)
+Swath = 2h × tan(theta)
 ```
 
 **Revisit time** depends on number of ground tracks that cover a latitude band. For a single satellite in SSO:
 - 400 km, 20° swath: ~7 day revisit at equator
 - 500 km, 20° swath: ~5 day revisit at equator
-- Constellation of N satellites: revisit ≈ single/N (approximately)
+- Constellation of N satellites: revisit ~ single/N (approximately)
 
 ---
 
@@ -124,8 +124,8 @@ The orbit is the single most impactful early design decision. It affects nearly 
 
 | Rule | Requirement | Applies To |
 |------|------------|-----------|
-| **IADC guideline** | Post-mission lifetime ≤ 25 years | International (voluntary but expected) |
-| **FCC rule (2024+)** | Post-mission lifetime ≤ 5 years | All FCC-licensed satellites in LEO |
+| **IADC guideline** | Post-mission lifetime <= 25 years | International (voluntary but expected) |
+| **FCC rule (2024+)** | Post-mission lifetime <= 5 years | All FCC-licensed satellites in LEO |
 | **ECSS-U-AS-10C** | Compliance with IADC + additional ESA requirements | ESA missions |
 | **ISED (Canada)** | Currently 25-year rule; tightening under review | Canadian-licensed satellites |
 
@@ -133,7 +133,7 @@ The orbit is the single most impactful early design decision. It affects nearly 
 - < 500 km: Natural deorbit within ~5-15 years (FCC-compliant without propulsion)
 - 500-600 km: Natural deorbit ~10-40 years (may need drag augmentation for FCC)
 - > 600 km: Likely needs active deorbit (propulsion or drag sail)
-- > 700 km: ESA Zero Debris zone — additional scrutiny
+- > 700 km: ESA Zero Debris zone -- additional scrutiny
 
 *[Source: IADC-02-01 Rev 3 (2021) §5.3.2; FCC 22-74; ECSS-U-AS-10C Rev.2]*
 
@@ -172,7 +172,7 @@ The orbit is the single most impactful early design decision. It affects nearly 
 
 ### Instructions
 
-1. Navigate to **Step 3 (Requirements)** → **Orbit Trade Advisor**
+1. Navigate to **Step 3 (Requirements)** -> **Orbit Trade Advisor**
 2. Enter your mission parameters:
    - GSD target (optical missions) or leave default for non-optical
    - Revisit target (days)
@@ -212,7 +212,7 @@ The orbit selection cascades to every subsystem:
 | Lifetime | Debris compliance, propulsion need | <5yr orbit avoids FCC propulsion need |
 | Radiation | Electronics class, shielding mass | Higher orbit = more shielding |
 
-After selecting an orbit, the design loop will re-converge all subsystems based on the new parameters. This is why the orbit trade is done early — it's the highest-leverage decision.
+After selecting an orbit, the design loop will re-converge all subsystems based on the new parameters. This is why the orbit trade is done early -- it's the highest-leverage decision.
 
 ---
 
@@ -221,8 +221,8 @@ After selecting an orbit, the design loop will re-converge all subsystems based 
 | Topic | Key Takeaway |
 |-------|-------------|
 | Keplerian elements | 6 parameters define the orbit; key for LEO: altitude + inclination |
-| Key formulae | T = 2π√(a³/μ); v = √(μ/a); eclipse fraction from geometry |
+| Key formulae | T = 2pi?(a^3/mu); v = ?(mu/a); eclipse fraction from geometry |
 | Trade-offs | Lower altitude = better GSD/link but shorter lifetime |
 | Debris rules | FCC 5-year, IADC 25-year; above 600 km needs active deorbit |
 | Radiation | Below 600 km: COTS OK; above: rad-tolerant/hard needed |
-| Cascade | Orbit choice affects every subsystem — highest-leverage decision |
+| Cascade | Orbit choice affects every subsystem -- highest-leverage decision |

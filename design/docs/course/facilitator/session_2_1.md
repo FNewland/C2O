@@ -41,15 +41,15 @@ This is testable: you can measure GSD from calibration imagery and verify it mee
 
 | Requirement (WHAT) | Design Choice (HOW) |
 |--------------------|--------------------|
-| "The system shall achieve GSD ≤ 10 m" | "Use a 15 cm aperture telescope" |
+| "The system shall achieve GSD <= 10 m" | "Use a 15 cm aperture telescope" |
 | "The system shall survive launch loads" | "Use aluminium 7075-T6 structure" |
-| "The system shall provide ≥ 3 dB link margin" | "Use S-band with 2W transmitter" |
+| "The system shall provide >= 3 dB link margin" | "Use S-band with 2W transmitter" |
 | "The system shall deorbit within 5 years of EOL" | "Include cold gas propulsion system" |
-| "The system shall operate for ≥ 3 years" | "Use rad-tolerant components" |
+| "The system shall operate for >= 3 years" | "Use rad-tolerant components" |
 
 **Key principle:** Requirements constrain the solution space without specifying the solution. This preserves design freedom for trade studies.
 
-*[Source: NASA SEH Appendix C — "Requirements should state WHAT is needed, not HOW to provide it"]*
+*[Source: NASA SEH Appendix C -- "Requirements should state WHAT is needed, not HOW to provide it"]*
 
 ---
 
@@ -69,18 +69,18 @@ While NASA's Appendix C uses a detailed checklist, the SMART acronym provides a 
 
 ### NASA SEH Appendix C: Full Checklist
 
-*[Source: NASA SEH Appendix C — How to Write a Good Requirement]*
+*[Source: NASA SEH Appendix C -- How to Write a Good Requirement]*
 
 The NASA checklist adds additional criteria:
 
-1. **Single requirement per statement** — no compound "and" requirements
-2. **Positive form** — state what the system shall DO, not what it shall NOT do
-3. **Active voice** — "The system shall..." not "It is required that..."
-4. **No implementation** — avoid naming specific hardware, software, or methods
-5. **Verifiable** — must be provable by analysis, test, inspection, or demonstration
-6. **No TBDs** — every threshold must have a value (even if it changes later)
-7. **Consistent** — no contradictions with other requirements
-8. **Bounded** — tolerance or range specified where appropriate
+1. **Single requirement per statement** -- no compound "and" requirements
+2. **Positive form** -- state what the system shall DO, not what it shall NOT do
+3. **Active voice** -- "The system shall..." not "It is required that..."
+4. **No implementation** -- avoid naming specific hardware, software, or methods
+5. **Verifiable** -- must be provable by analysis, test, inspection, or demonstration
+6. **No TBDs** -- every threshold must have a value (even if it changes later)
+7. **Consistent** -- no contradictions with other requirements
+8. **Bounded** -- tolerance or range specified where appropriate
 
 ### Common Anti-Patterns (HOW not WHAT)
 
@@ -88,10 +88,10 @@ These fail the SMART test because they specify implementation:
 
 | Anti-Pattern | Problem | Better Version |
 |-------------|---------|----------------|
-| "The spacecraft shall operate at 500 km altitude" | Prescribes orbit — that's a design choice | "The system shall provide global coverage with ≤ 5 day revisit at ±60° latitude" |
-| "The spacecraft shall use triple-junction GaAs solar cells" | Prescribes technology | "The EPS shall generate ≥ 15 W EOL with ≤ 0.5 m² array area" |
-| "The system shall use AX.25 protocol" | Prescribes implementation | "The TTC system shall provide reliable command reception with BER ≤ 10⁻⁵" |
-| "The spacecraft shall be a 3U CubeSat" | Prescribes form factor | "The system shall have total mass ≤ 6 kg and fit within ISIPOD 3U envelope" |
+| "The spacecraft shall operate at 500 km altitude" | Prescribes orbit -- that's a design choice | "The system shall provide global coverage with <= 5 day revisit at ±60° latitude" |
+| "The spacecraft shall use triple-junction GaAs solar cells" | Prescribes technology | "The EPS shall generate >= 15 W EOL with <= 0.5 m^2 array area" |
+| "The system shall use AX.25 protocol" | Prescribes implementation | "The TTC system shall provide reliable command reception with BER <= 10??" |
+| "The spacecraft shall be a 3U CubeSat" | Prescribes form factor | "The system shall have total mass <= 6 kg and fit within ISIPOD 3U envelope" |
 
 **Exception:** Interface requirements ARE specific because they define boundaries between systems:
 > "The EPS shall provide 28V ± 2V regulated bus voltage to all subsystems"
@@ -112,19 +112,19 @@ Requirements exist at multiple levels of the system hierarchy, each decomposing 
 
 ```
 Stakeholder Need: "Timely agricultural monitoring for food security"
-   ↓ derives
+   ? derives
 Mission Requirement (MR): "The system shall provide multispectral 
-   imagery with GSD ≤ 10m and revisit ≤ 5 days over target region"
-   ↓ decomposes into
+   imagery with GSD <= 10m and revisit <= 5 days over target region"
+   ? decomposes into
 System Requirements (SR):
-   SR-PL-001: "The payload shall achieve GSD ≤ 10m at nadir from operational orbit"
-   SR-AOCS-001: "The AOCS shall provide pointing accuracy ≤ 0.1°"
-   SR-LINK-001: "The comms system shall downlink ≥ 5 GB/day"
-   ↓ derives
+   SR-PL-001: "The payload shall achieve GSD <= 10m at nadir from operational orbit"
+   SR-AOCS-001: "The AOCS shall provide pointing accuracy <= 0.1°"
+   SR-LINK-001: "The comms system shall downlink >= 5 GB/day"
+   ? derives
 Subsystem Requirements (SSR):
-   SSR-PL-001a: "The telescope aperture shall be ≥ 8 cm"
-   SSR-AOCS-001a: "The star tracker shall provide ≤ 5 arcsec accuracy"
-   SSR-LINK-001a: "The X-band TX shall provide ≥ 2W RF power"
+   SSR-PL-001a: "The telescope aperture shall be >= 8 cm"
+   SSR-AOCS-001a: "The star tracker shall provide <= 5 arcsec accuracy"
+   SSR-LINK-001a: "The X-band TX shall provide >= 2W RF power"
 ```
 
 ### Level Definitions
@@ -153,8 +153,8 @@ A requirement addressing multiple concerns must be split for independent managem
 
 | Compound (bad) | Split (good) |
 |----------------|-------------|
-| "The system shall provide 10m GSD with 5-day revisit and 24h latency" | MR-001: "GSD ≤ 10m" + MR-002: "Revisit ≤ 5 days" + MR-003: "Latency ≤ 24h" |
-| "The EPS shall provide positive power margin in all modes including eclipse" | SR-PWR-001: "Positive margin in sunlight" + SR-PWR-002: "Positive margin in eclipse" + SR-PWR-003: "Battery DoD ≤ 30% in worst-case eclipse" |
+| "The system shall provide 10m GSD with 5-day revisit and 24h latency" | MR-001: "GSD <= 10m" + MR-002: "Revisit <= 5 days" + MR-003: "Latency <= 24h" |
+| "The EPS shall provide positive power margin in all modes including eclipse" | SR-PWR-001: "Positive margin in sunlight" + SR-PWR-002: "Positive margin in eclipse" + SR-PWR-003: "Battery DoD <= 30% in worst-case eclipse" |
 
 **Rationale:** Each split requirement can be verified independently. If GSD passes but revisit fails, you know exactly what to fix.
 
@@ -179,11 +179,11 @@ Every requirement must have an assigned verification method. The four standard m
 
 | Requirement Type | Typical Method | Rationale |
 |-----------------|---------------|-----------|
-| Mass ≤ X kg | I (weigh it) | Direct measurement |
-| Pointing ≤ Y° | A (simulation) + T (TVAC pointing test) | Both: analysis first, confirmed by test |
-| Link margin ≥ 3 dB | A (link budget) | Test would require satellite in orbit |
+| Mass <= X kg | I (weigh it) | Direct measurement |
+| Pointing <= Y° | A (simulation) + T (TVAC pointing test) | Both: analysis first, confirmed by test |
+| Link margin >= 3 dB | A (link budget) | Test would require satellite in orbit |
 | Survival at launch loads | T (vibration test) | Must physically prove structural integrity |
-| Data latency ≤ 24h | R (ops concept review) | End-to-end pipeline is procedural |
+| Data latency <= 24h | R (ops concept review) | End-to-end pipeline is procedural |
 | Operating temp range | T (TVAC) | Thermal environment must be simulated |
 
 ### Verification Phase
@@ -202,7 +202,7 @@ Every requirement must have an assigned verification method. The four standard m
 ### Instructions
 
 1. Navigate to the **Requirements** tab
-2. Click **"Generate from Objectives"** — the tool generates SMART requirements from your mission objectives
+2. Click **"Generate from Objectives"** -- the tool generates SMART requirements from your mission objectives
 3. For each generated requirement:
    - Review the SMART validation badges (green = pass, amber = warning, red = fail)
    - Check: does it say WHAT not HOW?
@@ -213,7 +213,7 @@ Every requirement must have an assigned verification method. The four standard m
 ### Exercise
 
 1. Generate requirements for your team's mission
-2. Identify at least one requirement that specifies HOW (implementation) — rewrite it as WHAT
+2. Identify at least one requirement that specifies HOW (implementation) -- rewrite it as WHAT
 3. Split any compound requirements into individual testable statements
 4. For 5 key requirements, assign verification method (A/T/R/I) and phase (B/C/D)
 5. Complete Worksheet 2.1
@@ -227,6 +227,6 @@ Every requirement must have an assigned verification method. The four standard m
 | Shall statements | Formal, verifiable, single-concern |
 | WHAT not HOW | Requirements preserve design freedom; design choices come later |
 | SMART | Specific, Measurable, Achievable, Relevant, Traceable |
-| Hierarchy | Mission → System → Subsystem with bidirectional traceability |
+| Hierarchy | Mission -> System -> Subsystem with bidirectional traceability |
 | Splitting | One concern per requirement for independent verification |
-| ATRI | Analysis, Test, Review, Inspection — assigned per requirement |
+| ATRI | Analysis, Test, Review, Inspection -- assigned per requirement |

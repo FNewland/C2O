@@ -9,7 +9,7 @@
 ## Learning Objectives
 
 By the end of this session, participants will be able to:
-1. Identify all subsystem-to-subsystem interfaces using an N² matrix
+1. Identify all subsystem-to-subsystem interfaces using an N^2 matrix
 2. Classify interface types (mechanical, electrical, thermal, data, RF, optical)
 3. Detect and resolve interface conflicts
 4. Write interface requirements for key subsystem pairs
@@ -21,7 +21,7 @@ By the end of this session, participants will be able to:
 
 ### Teaching Notes
 
-*[Source: NASA SEH §6.3 — Process 12: Interface Management]*
+*[Source: NASA SEH §6.3 -- Process 12: Interface Management]*
 
 Interface problems are the #1 cause of integration failures. NASA SEH states: "Most system failures can be traced back to interface problems."
 
@@ -36,11 +36,11 @@ Interface problems are the #1 cause of integration failures. NASA SEH states: "M
 
 ---
 
-## 2. The N² (N-Squared) Interface Matrix (25 min)
+## 2. The N^2 (N-Squared) Interface Matrix (25 min)
 
 ### Teaching Notes
 
-The N² matrix is a standard systems engineering tool that maps all subsystem interactions:
+The N^2 matrix is a standard systems engineering tool that maps all subsystem interactions:
 
 ### Structure
 - **Diagonal:** Subsystems (power, AOCS, link, thermal, structure, propulsion, data, payload)
@@ -49,7 +49,7 @@ The N² matrix is a standard systems engineering tool that maps all subsystem in
 - **Lower triangle:** Data/command flow in the other direction
 
 ### For a CubeSat with 8 subsystems:
-- 8 subsystems → 8×7/2 = **28 potential interface pairs**
+- 8 subsystems -> 8×7/2 = **28 potential interface pairs**
 - Typical CubeSat: **18-22 defined interfaces** (not all pairs interact)
 
 ### Interface Types
@@ -59,7 +59,7 @@ The N² matrix is a standard systems engineering tool that maps all subsystem in
 | **Mechanical** | M | Physical attachment, loads, alignment | Payload mounting to structure |
 | **Electrical** | E | Power connections, bus voltage | EPS 28V bus to all subsystems |
 | **Thermal** | T | Heat transfer paths, thermal coupling | Transponder heat to radiator |
-| **Data** | D | Digital communication (I²C, SPI, UART, CAN) | OBC commands to AOCS |
+| **Data** | D | Digital communication (I^2C, SPI, UART, CAN) | OBC commands to AOCS |
 | **RF** | R | Radio frequency coupling or interference | TX interference with payload |
 | **Optical** | O | Light path, FOV clearance, stray light | Star tracker FOV clearance |
 
@@ -67,19 +67,19 @@ The N² matrix is a standard systems engineering tool that maps all subsystem in
 
 | Pair | Types | Key Concern |
 |------|-------|-------------|
-| Power ↔ AOCS | E | Bus voltage compatibility; RW power draw |
-| Power ↔ Link | E | TX peak power demand; switched line allocation |
-| Power ↔ Thermal | E, T | SA thermal coupling; radiator vs SA area competition |
-| Power ↔ Payload | E | Peak power switching; duty cycle coordination |
-| Structure ↔ AOCS | M | RW/ST mounting alignment; vibration isolation |
-| Structure ↔ Payload | M, O | Payload alignment stability; FOV clearance |
-| Data ↔ AOCS | D | Attitude data for payload pointing; mode commands |
-| Data ↔ Link | D | Telemetry stream routing; TC distribution |
-| Data ↔ Payload | D | Science data acquisition; instrument commanding |
-| Link ↔ Payload | R | EMC: TX interference with payload receiver |
-| Link ↔ AOCS | R, O | Antenna vs star tracker FOV |
-| Thermal ↔ Payload | T | Detector cooling; operating temperature range |
-| AOCS ↔ Payload | M | Reaction wheel vibration vs payload stability |
+| Power <-> AOCS | E | Bus voltage compatibility; RW power draw |
+| Power <-> Link | E | TX peak power demand; switched line allocation |
+| Power <-> Thermal | E, T | SA thermal coupling; radiator vs SA area competition |
+| Power <-> Payload | E | Peak power switching; duty cycle coordination |
+| Structure <-> AOCS | M | RW/ST mounting alignment; vibration isolation |
+| Structure <-> Payload | M, O | Payload alignment stability; FOV clearance |
+| Data <-> AOCS | D | Attitude data for payload pointing; mode commands |
+| Data <-> Link | D | Telemetry stream routing; TC distribution |
+| Data <-> Payload | D | Science data acquisition; instrument commanding |
+| Link <-> Payload | R | EMC: TX interference with payload receiver |
+| Link <-> AOCS | R, O | Antenna vs star tracker FOV |
+| Thermal <-> Payload | T | Detector cooling; operating temperature range |
+| AOCS <-> Payload | M | Reaction wheel vibration vs payload stability |
 
 ---
 
@@ -115,7 +115,7 @@ For each conflict, the team has four options:
 5. Select resolution option, enter rationale
 6. Choose: Resolve / Accept Risk / Defer
 
-**Discussion prompt:** *For the "SA area vs radiator area" conflict — what are the pros and cons of each resolution option?*
+**Discussion prompt:** *For the "SA area vs radiator area" conflict -- what are the pros and cons of each resolution option?*
 
 ---
 
@@ -125,7 +125,7 @@ For each conflict, the team has four options:
 
 For each significant interface, write formal requirements that define the boundary agreement:
 
-### Example: EPS ↔ All Subsystems (Power Bus)
+### Example: EPS <-> All Subsystems (Power Bus)
 
 ```
 IR-PWR-001: The EPS shall provide a regulated bus voltage of 
@@ -136,7 +136,7 @@ IR-PWR-003: The EPS shall provide at least 2 switched power lines
             for payload and 2 for TTC.
 ```
 
-### Example: Structure ↔ AOCS (Mounting)
+### Example: Structure <-> AOCS (Mounting)
 
 ```
 IR-STR-AOCS-001: The star tracker mounting shall maintain alignment 
@@ -145,7 +145,7 @@ IR-STR-AOCS-002: The reaction wheel mounting shall provide vibration
                   isolation with first mode > 50 Hz.
 ```
 
-### Example: Link ↔ Payload (EMC)
+### Example: Link <-> Payload (EMC)
 
 ```
 IR-EMC-001: The TX conducted emissions shall be below -60 dBm in the 
@@ -163,7 +163,7 @@ IR-EMC-002: Alternatively, TX and imaging shall not operate simultaneously
 ### Instructions
 
 1. Open the **Interfaces** tab
-2. Review the N² matrix — each coloured dot represents an interface type
+2. Review the N^2 matrix -- each coloured dot represents an interface type
 3. Click on 3 interface cells to examine their details:
    - What types are defined?
    - Is there a conflict?
@@ -180,7 +180,7 @@ IR-EMC-002: Alternatively, TX and imaging shall not operate simultaneously
 
 | Topic | Key Takeaway |
 |-------|-------------|
-| N² matrix | Maps all subsystem-to-subsystem interfaces systematically |
+| N^2 matrix | Maps all subsystem-to-subsystem interfaces systematically |
 | 6 types | Mechanical, Electrical, Thermal, Data, RF, Optical |
 | Conflicts | Incompatible requirements at shared boundaries; 3 severity levels |
 | Resolution | Relocate, Shield/Isolate, Time-Division, or Accept Risk |

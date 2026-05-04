@@ -4,7 +4,7 @@
 
 ---
 
-## Part A: The 17 SE Processes → SpaceCDF Mapping
+## Part A: The 17 SE Processes -> SpaceCDF Mapping
 
 For each NASA SE process, identify which SpaceCDF feature (tab, button, or panel) implements it. Mark "Manual" if it requires human judgment.
 

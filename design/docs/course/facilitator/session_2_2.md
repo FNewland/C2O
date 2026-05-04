@@ -21,7 +21,7 @@ By the end of this session, participants will be able to:
 
 ### Teaching Notes
 
-*[Source: NASA SEH §4.3 — Process 3: Logical Decomposition]*
+*[Source: NASA SEH §4.3 -- Process 3: Logical Decomposition]*
 
 Functional decomposition answers: **"What must the system DO to meet the requirements?"**
 
@@ -31,11 +31,11 @@ It bridges requirements (WHAT) and design (HOW) by identifying the functions the
 
 ```
 Objective: "Provide 10m imagery with 5-day revisit"
-   ↓ what functions are needed?
+   ? what functions are needed?
 F-001: Acquire imagery of target
-   ├── F-002: Point instrument at target (needs: AOCS)
-   ├── F-003: Store acquired data onboard (needs: OBC/storage)
-   └── F-004: Downlink data to ground station (needs: comms)
+   ??? F-002: Point instrument at target (needs: AOCS)
+   ??? F-003: Store acquired data onboard (needs: OBC/storage)
+   ??? F-004: Downlink data to ground station (needs: comms)
 
 F-005: Generate electrical power (universal function)
 F-006: Maintain thermal environment (universal function)
@@ -80,27 +80,27 @@ Different mission types require different primary function trees:
 ### Earth Observation (Optical/SAR)
 ```
 F-001: Acquire imagery
-   ├── Point instrument at target
-   ├── Capture image data
-   ├── Store data onboard
-   └── Downlink to ground
+   ??? Point instrument at target
+   ??? Capture image data
+   ??? Store data onboard
+   ??? Downlink to ground
 ```
 
 ### Communications Relay
 ```
 F-001: Relay communications between users
-   ├── Receive uplink signal from user terminal
-   ├── Process and route data (store-and-forward or bent-pipe)
-   └── Transmit downlink signal to destination
+   ??? Receive uplink signal from user terminal
+   ??? Process and route data (store-and-forward or bent-pipe)
+   ??? Transmit downlink signal to destination
 ```
 
 ### AIS / IoT Receiver
 ```
 F-001: Receive and process signals of interest
-   ├── Receive AIS/IoT signals (passive receive)
-   ├── Decode and validate messages
-   ├── Store processed data
-   └── Downlink to ground for distribution
+   ??? Receive AIS/IoT signals (passive receive)
+   ??? Decode and validate messages
+   ??? Store processed data
+   ??? Downlink to ground for distribution
 ```
 
 ### Ground Segment Functions
@@ -108,7 +108,7 @@ F-001: Receive and process signals of interest
 Missions that include ground processing need ground-side functions:
 ```
 F-G01: Receive satellite data at ground station
-F-G02: Process data (L0 → L1 → L2)
+F-G02: Process data (L0 -> L1 -> L2)
 F-G03: Archive and distribute to users
 F-G04: Operate mission control centre
 ```
@@ -130,10 +130,10 @@ Each function must be **allocated** to one or more responsible subsystems. This 
 | Acquire imagery | Payload | No (single owner) |
 | Point at target | AOCS | No |
 | Store data | OBC/Data | No |
-| Downlink data | Link (+ AOCS for pointing) | Yes — link for RF chain, AOCS for antenna pointing |
+| Downlink data | Link (+ AOCS for pointing) | Yes -- link for RF chain, AOCS for antenna pointing |
 | Generate power | Power | No |
 | Maintain thermal | Thermal | No |
-| Relay communications | Payload + Link | Yes — boundary depends on architecture |
+| Relay communications | Payload + Link | Yes -- boundary depends on architecture |
 
 ### Multi-Allocation and System Boundaries
 
@@ -150,15 +150,15 @@ SpaceCDF allows multi-allocation (comma-separated domains).
 
 ### Derived Requirements
 
-Each function generates **derived requirements** — requirements not explicitly stated by stakeholders but necessary for the function to work:
+Each function generates **derived requirements** -- requirements not explicitly stated by stakeholders but necessary for the function to work:
 
 | Function | Derived Requirement |
 |----------|-------------------|
-| "Point instrument at target" | "AOCS shall provide ≤ 0.1° pointing accuracy during imaging" |
-| "Store data onboard" | "OBDH shall provide ≥ 32 GB solid-state storage" |
-| "Downlink within daily contact window" | "TX shall provide ≥ 50 Mbps data rate" |
+| "Point instrument at target" | "AOCS shall provide <= 0.1° pointing accuracy during imaging" |
+| "Store data onboard" | "OBDH shall provide >= 32 GB solid-state storage" |
+| "Downlink within daily contact window" | "TX shall provide >= 50 Mbps data rate" |
 
-*[Source: NASA SEH §4.3.3 — derived requirements from functional allocation]*
+*[Source: NASA SEH §4.3.3 -- derived requirements from functional allocation]*
 
 ---
 
@@ -166,24 +166,24 @@ Each function generates **derived requirements** — requirements not explicitly
 
 ### Teaching Notes
 
-Each function should have **performance criteria** — quantitative measures that define "how well" the function must be performed:
+Each function should have **performance criteria** -- quantitative measures that define "how well" the function must be performed:
 
 | Function | Performance Criteria |
 |----------|---------------------|
-| Acquire imagery | GSD ≤ 10 m; SNR ≥ 100:1; 4+ spectral bands |
-| Point at target | Accuracy ≤ 0.1°; stability ≤ 0.01°/s; slew rate ≥ 1°/s |
-| Downlink data | Link margin ≥ 3 dB; daily throughput ≥ 5 GB |
-| Generate power | Positive margin in all modes; battery DoD ≤ 30% |
+| Acquire imagery | GSD <= 10 m; SNR >= 100:1; 4+ spectral bands |
+| Point at target | Accuracy <= 0.1°; stability <= 0.01°/s; slew rate >= 1°/s |
+| Downlink data | Link margin >= 3 dB; daily throughput >= 5 GB |
+| Generate power | Positive margin in all modes; battery DoD <= 30% |
 
 Performance criteria form the basis for subsystem-level requirements.
 
 ### Coverage Check
 
-Every **leaf function** (a function with no subfunctions) should trace to at least one requirement. If it doesn't, there's a **coverage gap** — the function is defined but has no verification path.
+Every **leaf function** (a function with no subfunctions) should trace to at least one requirement. If it doesn't, there's a **coverage gap** -- the function is defined but has no verification path.
 
 SpaceCDF shows coverage status:
 - Green badge: function has linked requirements
-- Amber badge: "no requirements" — coverage gap
+- Amber badge: "no requirements" -- coverage gap
 
 ---
 
@@ -216,7 +216,7 @@ SpaceCDF shows coverage status:
 
 | Topic | Key Takeaway |
 |-------|-------------|
-| Functions | WHAT the system does, not HOW — bridges requirements to design |
+| Functions | WHAT the system does, not HOW -- bridges requirements to design |
 | Types | Observe, communicate, navigate, point, power, protect, store, process, support |
 | Mission-specific | Different mission types need different primary function trees |
 | Allocation | Each function assigned to subsystem(s); multi-allocation creates interfaces |

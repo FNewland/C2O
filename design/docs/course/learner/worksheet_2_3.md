@@ -22,7 +22,7 @@ List the 5 most critical interfaces in your design:
 
 Write 2 formal interface requirements for your most critical interface pair:
 
-**Interface:** ________ ↔ ________
+**Interface:** ________ <-> ________
 
 **IR-001:** _______________________________________________
 

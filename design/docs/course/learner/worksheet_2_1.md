@@ -11,7 +11,7 @@ Evaluate each requirement against the SMART checklist. Mark Pass (P) or Fail (F)
 | # | Requirement | S | M | A | R | T | HOW? | Rewrite |
 |---|------------|---|---|---|---|---|------|---------|
 | 1 | "The spacecraft shall operate at 500 km altitude" | | | | | | | |
-| 2 | "The system shall achieve GSD ≤ 10 m at nadir" | | | | | | | |
+| 2 | "The system shall achieve GSD <= 10 m at nadir" | | | | | | | |
 | 3 | "The EPS shall use triple-junction GaAs cells" | | | | | | | |
 | 4 | "The system shall have a design lifetime of at least 3 years" | | | | | | | |
 | 5 | "The structure shall be made of aluminium 7075" | | | | | | | |
@@ -52,7 +52,7 @@ Split this compound requirement into individually testable statements:
 
 1. In SpaceCDF, click "Generate from Objectives." How many requirements were generated? ____
 
-2. Use the level filter — how many at each level?
+2. Use the level filter -- how many at each level?
    - Mission: ____ System: ____ Subsystem: ____
 
 3. Find one requirement that says HOW not WHAT. Write it and your correction:

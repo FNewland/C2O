@@ -8,15 +8,15 @@
 
 Tick all that apply to your mission:
 
-- [ ] ISED spectrum licence (CPC-2-6-02) — all missions transmitting
-- [ ] ITU API/coordination/notification — commercial/experimental
-- [ ] IARU amateur coordination — if using amateur bands
-- [ ] RSSSA operating licence — if ANY Earth imaging capability
-- [ ] Export permit — if controlled components or US launch
-- [ ] Controlled Goods registration — if handling US-origin controlled items
-- [ ] COPUOS registration — all missions (post-launch)
-- [ ] FCC Part 25 — if US-licensed or US launch
-- [ ] End-of-life compliance report — all missions
+- [ ] ISED spectrum licence (CPC-2-6-02) -- all missions transmitting
+- [ ] ITU API/coordination/notification -- commercial/experimental
+- [ ] IARU amateur coordination -- if using amateur bands
+- [ ] RSSSA operating licence -- if ANY Earth imaging capability
+- [ ] Export permit -- if controlled components or US launch
+- [ ] Controlled Goods registration -- if handling US-origin controlled items
+- [ ] COPUOS registration -- all missions (post-launch)
+- [ ] FCC Part 25 -- if US-licensed or US launch
+- [ ] End-of-life compliance report -- all missions
 
 ---
 
@@ -40,11 +40,11 @@ Working backward from your target launch date:
 
 | Milestone | Date (L minus) | Filing | Authority |
 |-----------|---------------|--------|-----------|
-| L - __ months | | ITU API | ISED→ITU |
+| L - __ months | | ITU API | ISED->ITU |
 | L - __ months | | ISED spectrum | ISED |
 | L - __ months | | RSSSA (if needed) | Global Affairs |
 | L - __ months | | Export permits | Global Affairs |
-| L - __ months | | IARU coord (if amateur) | RAC→IARU |
+| L - __ months | | IARU coord (if amateur) | RAC->IARU |
 | L + 1 month | | COPUOS registration | Global Affairs |
 
 **Critical path filing:** _______________________________________________

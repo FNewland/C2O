@@ -1,4 +1,4 @@
-# Verification Record — Session 1.1: Introduction to Space Mission Design
+# Verification Record -- Session 1.1: Introduction to Space Mission Design
 
 ## Verification Date: 2026-05-04
 
@@ -54,15 +54,15 @@ KDPs are lettered A-F, gating entry to each phase. Governed by NPR 7120.5 (curre
 **Claim:** ECSS phases 0/A/B/C/D/E/F map approximately to NASA Pre-A/A/B/C/D/E/F.
 
 **Verification:** CONFIRMED as approximate. Phase letters align but entry/exit criteria differ.
-- ECSS Phase 0 ≈ NASA Pre-A (exit: MDR ≈ MCR)
-- ECSS Phase A ≈ NASA Phase A (exit: PRR ≈ SRR)
-- ECSS Phase B ≈ NASA Phase B (exit: PDR in both)
-- ECSS Phase C ≈ NASA Phase C (exit: CDR in both)
-- ECSS Phase D ≈ NASA Phase D (exit: QR+AR ≈ TRR/ORR)
-- ECSS Phase E ≈ NASA Phase E
-- ECSS Phase F ≈ NASA Phase F
+- ECSS Phase 0 ~ NASA Pre-A (exit: MDR ~ MCR)
+- ECSS Phase A ~ NASA Phase A (exit: PRR ~ SRR)
+- ECSS Phase B ~ NASA Phase B (exit: PDR in both)
+- ECSS Phase C ~ NASA Phase C (exit: CDR in both)
+- ECSS Phase D ~ NASA Phase D (exit: QR+AR ~ TRR/ORR)
+- ECSS Phase E ~ NASA Phase E
+- ECSS Phase F ~ NASA Phase F
 
-**Caveat:** Not identical — review content and baseline expectations differ. Course uses "approximately equivalent" language.
+**Caveat:** Not identical -- review content and baseline expectations differ. Course uses "approximately equivalent" language.
 
 **Source:** ECSS-M-ST-10C Rev.1; NASA SEH Chapter 3
 **Confidence:** MEDIUM-HIGH
@@ -82,7 +82,7 @@ KDPs are lettered A-F, gating entry to each phase. Governed by NPR 7120.5 (curre
 **Confidence:** HIGH
 
 ### 6. System-V Model
-**Claim:** Left side = decomposition (need → requirements → design → implementation); right side = integration (verification → validation → operations).
+**Claim:** Left side = decomposition (need -> requirements -> design -> implementation); right side = integration (verification -> validation -> operations).
 
 **Verification:** CONFIRMED. The "Vee" model is described in NASA SEH §2.3 as the fundamental framework showing how system design (left side, top-down decomposition) maps to product realization (right side, bottom-up integration and verification). Each level on the left has a corresponding verification level on the right.
 

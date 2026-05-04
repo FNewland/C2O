@@ -25,7 +25,7 @@ By the end of this session, participants will be able to:
 
 ### CDS Dimensional Specifications
 
-| Form Factor | Dimensions (mm) | Max Mass (kg) | Internal Volume (cm³) |
+| Form Factor | Dimensions (mm) | Max Mass (kg) | Internal Volume (cm^3) |
 |------------|-----------------|---------------|----------------------|
 | 1U | 100 × 100 × 113.5 | 2.0 | ~1000 |
 | 1.5U | 100 × 100 × 170.2 | 3.0 | ~1500 |
@@ -53,7 +53,7 @@ Most CubeSat avionics use the PC/104 form factor for inter-board connections:
 - **Board size:** 96 × 90 mm
 - **Connector:** 104-pin stack-through (2 rows × 52 pins)
 - **Pitch:** 2.54 mm
-- **Signals:** 3.3V, 5V, 12V, GND + I²C, SPI, UART, CAN, GPIO
+- **Signals:** 3.3V, 5V, 12V, GND + I^2C, SPI, UART, CAN, GPIO
 - **Stack height:** 1U ~70 mm (4 boards), 3U ~250 mm (12 boards)
 
 ### Launch Loads
@@ -71,7 +71,7 @@ Most CubeSat avionics use the PC/104 form factor for inter-board connections:
 MoS = (Allowable Load / (Design Load × Factor of Safety)) - 1
 ```
 
-**Requirement:** MoS ≥ 0 (positive margin) for all load cases.
+**Requirement:** MoS >= 0 (positive margin) for all load cases.
 
 Typical factors of safety:
 - Yield: 1.25 (metallic), 1.5 (composite)
@@ -87,7 +87,7 @@ Typical factors of safety:
 
 ### When Propulsion is Needed
 
-| Need | ΔV Required | Example |
+| Need | ?V Required | Example |
 |------|------------|---------|
 | **Orbit maintenance** | 5-15 m/s/year | Drag compensation at low altitude |
 | **Deorbit** | 50-150 m/s | Lowering perigee from >600 km |
@@ -103,7 +103,7 @@ Typical factors of safety:
 
 ### CubeSat Propulsion Options
 
-| Type | Isp (s) | Thrust | Mass | ΔV (5kg SC) | TRL | Example |
+| Type | Isp (s) | Thrust | Mass | ?V (5kg SC) | TRL | Example |
 |------|---------|--------|------|-------------|-----|---------|
 | **Cold gas** | 40-80 | 10-100 mN | 0.3-1.0 kg | 10-30 m/s | 9 | VACCO MiPS |
 | **Resistojet** | 80-150 | 10-50 mN | 0.3-0.8 kg | 20-50 m/s | 7-8 | Busek AMAC |
@@ -115,12 +115,12 @@ Typical factors of safety:
 ### Propellant Mass (Tsiolkovsky)
 
 ```
-m_propellant = m_dry × (e^(ΔV/(Isp×g₀)) - 1)
+m_propellant = m_dry × (e^(?V/(Isp×g0)) - 1)
 ```
 
-Where g₀ = 9.80665 m/s².
+Where g0 = 9.80665 m/s^2.
 
-*Example: m_dry = 5 kg, ΔV = 50 m/s, Isp = 60 s (cold gas):*
+*Example: m_dry = 5 kg, ?V = 50 m/s, Isp = 60 s (cold gas):*
 *m_prop = 5 × (e^(50/(60×9.81)) - 1) = 5 × (e^0.085 - 1) = 5 × 0.0887 = **0.44 kg***
 
 ---
@@ -135,7 +135,7 @@ CubeSat OBCs typically provide:
 - **Processor:** ARM Cortex-M/A or LEON3/4 (rad-tolerant)
 - **RAM:** 64 MB - 1 GB
 - **Flash storage:** 4-128 GB
-- **Interfaces:** I²C, SPI, UART, CAN, RS-422, USB
+- **Interfaces:** I^2C, SPI, UART, CAN, RS-422, USB
 - **Operating system:** FreeRTOS, Linux, or bare-metal
 - **Power:** 0.5-3 W
 
@@ -174,8 +174,8 @@ This is the main hands-on session for Day 3. Teams will select actual components
 
 1. **Open the Equipment Browser** (button in header bar or during session)
 2. The sidebar shows categories **annotated by need**:
-   - 🔵 Blue dot = Required for your mission
-   - ⭕ Circle = Optional
+   - ? Blue dot = Required for your mission
+   - ? Circle = Optional
    - Dimmed = Not needed
 3. **Select equipment for each required category:**
    - Check the quantity needed (e.g., 4 reaction wheels)
@@ -184,7 +184,7 @@ This is the main hands-on session for Day 3. Teams will select actual components
 4. **For each selection, verify:**
    - Does it fit within your subsystem mass allocation?
    - Is the power draw within your power budget for its mode?
-   - Is the interface compatible (PC/104? I²C? SPI?)
+   - Is the interface compatible (PC/104? I^2C? SPI?)
 5. **Review the Budget Breakdown** on the Dashboard:
    - Has per-subsystem mass changed?
    - Is the overall mass margin still positive?
@@ -211,9 +211,9 @@ For at least one subsystem, select 2-3 candidate components and run a tabular tr
 | Topic | Key Takeaway |
 |-------|-------------|
 | CDS | Standard CubeSat dimensions, rails, deployment switches, RBF pin |
-| PC/104 | 104-pin stack connector; 3.3/5/12V power + I²C/SPI/UART/CAN data |
-| Launch loads | 6-9g axial, random vibe 20-2000 Hz; MoS must be ≥ 0 |
+| PC/104 | 104-pin stack connector; 3.3/5/12V power + I^2C/SPI/UART/CAN data |
+| Launch loads | 6-9g axial, random vibe 20-2000 Hz; MoS must be >= 0 |
 | Propulsion | Only if needed (deorbit >600km, maintenance, constellation); cold gas simplest |
-| Tsiolkovsky | m_prop = m_dry × (e^(ΔV/Isp·g₀) - 1) |
-| Data handling | Storage ≥ 2× daily generation; OBC: ARM/LEON, FreeRTOS/Linux |
+| Tsiolkovsky | m_prop = m_dry × (e^(?V/Isp·g0) - 1) |
+| Data handling | Storage >= 2× daily generation; OBC: ARM/LEON, FreeRTOS/Linux |
 | Equipment | Select from KB with RF compatibility, live budget tracking, need annotations |

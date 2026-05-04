@@ -1,4 +1,4 @@
-# Verification Record — Session 1.2: Mission Need & Stakeholder Analysis
+# Verification Record -- Session 1.2: Mission Need & Stakeholder Analysis
 
 ## Verification Date: 2026-05-04
 
@@ -15,7 +15,7 @@
 
 **Verification:** CONFIRMED. While NASA SEH Appendix C uses a different checklist structure (shall statements, single requirement per statement, performance-based, verifiable, etc.), the SMART acronym is widely used in the SE community. NASA SEH Appendix C §C.2 lists characteristics of well-written requirements that align with SMART principles. ECSS-E-ST-10-06C §5.2 also requires requirements to be verifiable and traceable.
 
-**Caveat:** "SMART" is not a NASA-coined acronym — it originates from project management (Doran, 1981). NASA's own checklist in Appendix C is more detailed. Course should reference both.
+**Caveat:** "SMART" is not a NASA-coined acronym -- it originates from project management (Doran, 1981). NASA's own checklist in Appendix C is more detailed. Course should reference both.
 
 **Source:** NASA SEH Appendix C; ECSS-E-ST-10-06C §5.2
 **Confidence:** HIGH (framework), MEDIUM (attribution)

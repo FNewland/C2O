@@ -26,7 +26,7 @@ A CubeSat mission requires approvals from multiple authorities:
 | Authority | What They Approve | Timeline |
 |-----------|------------------|----------|
 | **ISED (Canada)** | Spectrum licence (CPC-2-6-02) | 126 days service standard |
-| **ITU** | International frequency coordination | 12-24 months (API → coordination → notification) |
+| **ITU** | International frequency coordination | 12-24 months (API -> coordination -> notification) |
 | **IARU** | Amateur frequency coordination | 2-6 months |
 | **Global Affairs Canada** | RSSSA licence (if remote sensing) | 6+ months |
 | **Global Affairs Canada** | Export permit (if controlled goods) | 3-6 months |
@@ -46,18 +46,18 @@ The longest-lead regulatory item is typically **ITU coordination** (12-24 months
 
 ### Teaching Notes
 
-*[Source: SpaceCDF spectrum research — see ULTRAPLAN3 reference data]*
+*[Source: SpaceCDF spectrum research -- see ULTRAPLAN3 reference data]*
 
 ### Step 1: Determine License Type
 
 ```
 Is the mission:
   Non-commercial + educational + data will be open?
-    → AMATEUR (IARU + national amateur licence)
+    -> AMATEUR (IARU + national amateur licence)
   R&D/technology demonstration + no revenue?
-    → EXPERIMENTAL (FCC Part 5 / ISED developmental)
+    -> EXPERIMENTAL (FCC Part 5 / ISED developmental)
   Will generate revenue OR data is proprietary?
-    → COMMERCIAL (FCC Part 25 / ISED CPC-2-6-02 + ITU filing)
+    -> COMMERCIAL (FCC Part 25 / ISED CPC-2-6-02 + ITU filing)
 ```
 
 ### Step 2: Determine Required Bands
@@ -105,17 +105,17 @@ Is the mission:
 
 **Filing:** Global Affairs Canada (RSSSA-LSTS@international.gc.ca)
 
-**For educational CubeSats with cameras:** Still need RSSSA licence, even for low-resolution. There are no minimum GSD thresholds — any Earth-imaging capability triggers the requirement.
+**For educational CubeSats with cameras:** Still need RSSSA licence, even for low-resolution. There are no minimum GSD thresholds -- any Earth-imaging capability triggers the requirement.
 
 ### Export Control (Canadian Controlled Goods Program)
 
 **Applies if:** Any component is controlled under the Export Control List (item 5504 includes satellite systems).
 
 **Key considerations:**
-- US-origin components → ITAR/EAR apply even in Canada
-- Launching from US soil → all satellite components need EAR classification
-- Rad-hard components → often export controlled (ECCN 9A515.d/e)
-- Star trackers → some models are controlled (military-grade accuracy)
+- US-origin components -> ITAR/EAR apply even in Canada
+- Launching from US soil -> all satellite components need EAR classification
+- Rad-hard components -> often export controlled (ECCN 9A515.d/e)
+- Star trackers -> some models are controlled (military-grade accuracy)
 
 **Process:**
 1. Classify all components (request ECCN from vendors)
@@ -130,12 +130,12 @@ Is the mission:
 
 1. Navigate to **Exports** tab in SpaceCDF
 2. Under **Regulatory Filings**, generate:
-   - **ITU API Filing Template** — review all fields
-   - **IARU Coordination Request** — review all fields
+   - **ITU API Filing Template** -- review all fields
+   - **IARU Coordination Request** -- review all fields
    - **RSSSA Filing** (if your mission has imaging)
-   - **Export Control Assessment** — review classification
-   - **COPUOS Registration** — review Article IV fields
-   - **End-of-Life Analysis** — review debris compliance
+   - **Export Control Assessment** -- review classification
+   - **COPUOS Registration** -- review Article IV fields
+   - **End-of-Life Analysis** -- review debris compliance
 3. For each generated document:
    - Identify which fields are auto-populated from the design
    - Identify which fields are "TBD" (require manual completion)
@@ -197,8 +197,8 @@ L+1 month:   COPUOS registration filed
 |-------|-------------|
 | Licensing types | Amateur (free, open data) / Experimental (R&D) / Commercial (revenue OK) |
 | Canadian authorities | ISED (spectrum), Global Affairs (RSSSA, export), PSPC (controlled goods) |
-| ITU process | API → Coordination → Notification; 12-24 months total |
+| ITU process | API -> Coordination -> Notification; 12-24 months total |
 | RSSSA | Any Earth-imaging satellite needs this; no GSD minimum |
-| Export control | US components → ITAR/EAR; US launch → EAR applies to all hardware |
+| Export control | US components -> ITAR/EAR; US launch -> EAR applies to all hardware |
 | Timeline | Start filings 12-24 months before launch; ITU is usually critical path |
 | SpaceCDF | Exports tab generates all filing templates from design data |

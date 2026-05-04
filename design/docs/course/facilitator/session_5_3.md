@@ -34,11 +34,11 @@ By the end of this session, participants will be able to:
 
 ### Available Providers (2026)
 
-*[Source: SpaceCDF launch_providers.yaml — verified against public data]*
+*[Source: SpaceCDF launch_providers.yaml -- verified against public data]*
 
 | Provider | Vehicle | Type | Price | Orbit | Cadence |
 |----------|---------|------|-------|-------|---------|
-| SpaceX | Falcon 9 Transporter | Rideshare | $350K (≤50kg) | SSO 525 km | 4/year |
+| SpaceX | Falcon 9 Transporter | Rideshare | $350K (<=50kg) | SSO 525 km | 4/year |
 | Rocket Lab | Electron | Dedicated | $7.5M | Custom | 12/year |
 | Exolaunch | Various | Broker | Custom | SSO | 6/year |
 | D-Orbit | ION Carrier | Space tug | ~$100K/slot | Custom precise | 4/year |
@@ -51,14 +51,14 @@ By the end of this session, participants will be able to:
 
 ```
 Is your orbit ISS (51.6°, 410 km)?
-  → Yes: NanoRacks ISS deploy ($90K/U)
-  → No: ↓
-Is your mass ≤ 50 kg AND SSO acceptable?
-  → Yes: SpaceX Transporter ($350K minimum)
-  → No: ↓
+  -> Yes: NanoRacks ISS deploy ($90K/U)
+  -> No: ?
+Is your mass <= 50 kg AND SSO acceptable?
+  -> Yes: SpaceX Transporter ($350K minimum)
+  -> No: ?
 Do you need a specific non-SSO orbit?
-  → Yes: Dedicated launcher (Rocket Lab $7.5M, Firefly $15M)
-  → No: Broker (Exolaunch, ISILaunch) for best value
+  -> Yes: Dedicated launcher (Rocket Lab $7.5M, Firefly $15M)
+  -> No: Broker (Exolaunch, ISILaunch) for best value
 ```
 
 ### SpaceCDF Launch Selector
@@ -83,7 +83,7 @@ The Launch ICD defines the contractual interface between the satellite and the l
 |-----------|--------------------|--------------------|
 | Dimensions | 100 × 100 × 340.5 ±0.5 mm | Fit check in deployer |
 | Rail dimensions | 8.5 × 8.5 mm ± 0.1 mm | Caliper measurement |
-| Surface roughness | Rail surfaces < 1.6 μm Ra | Surface finish inspection |
+| Surface roughness | Rail surfaces < 1.6 mum Ra | Surface finish inspection |
 | CG location | Within 2 cm of geometric centre | Mass properties measurement |
 | No protrusions | Nothing beyond rail envelope (stowed) | Visual inspection |
 
@@ -93,8 +93,8 @@ The Launch ICD defines the contractual interface between the satellite and the l
 |-----------|------------|-------------|
 | **Deployment switches** | Min 2 on rail faces (+X, -X) | Functional test |
 | **RBF pin** | 1 minimum; deactivates all power | Functional test |
-| **Total switch force** | ≤ 9 N (NanoRacks) / per deployer ICD | Force gauge measurement |
-| **Battery state** | ≤ 50% SoC at delivery | Voltage measurement |
+| **Total switch force** | <= 9 N (NanoRacks) / per deployer ICD | Force gauge measurement |
+| **Battery state** | <= 50% SoC at delivery | Voltage measurement |
 | **No RF emissions** | No TX while in deployer | Test in integration |
 | **Charging port** | Access for pre-launch top-up | Design review |
 
@@ -113,7 +113,7 @@ All three must be active simultaneously to keep the satellite powered off.
 
 ### Teaching Notes
 
-*[Source: Vendor documentation — ISIPOD, EXOpod, CSD, NRCSD]*
+*[Source: Vendor documentation -- ISIPOD, EXOpod, CSD, NRCSD]*
 
 | Deployer | Provider | Sizes | Mass Limit | Heritage |
 |----------|---------|-------|-----------|---------|
@@ -127,7 +127,7 @@ All three must be active simultaneously to keep the satellite powered off.
 ### Deployer-Satellite Compatibility Check
 
 Verify:
-1. **Form factor fits** (e.g., 3U satellite → 3U deployer slot)
+1. **Form factor fits** (e.g., 3U satellite -> 3U deployer slot)
 2. **Mass within deployer limit** (not just CDS limit)
 3. **Rail profile compatible** (CDS-standard rails required for most deployers)
 4. **Deployment switches in correct positions** (varies by deployer)
@@ -145,9 +145,9 @@ Test levels derive from the **launch vehicle Payload User's Guide (PUG)**:
 ### Process
 
 ```
-Launch vehicle PUG → Maximum Predicted Environment (MPE)
-  → Add qualification margin (+3 dB for random, +5°C for thermal)
-    → Qualification/Proto-flight test levels
+Launch vehicle PUG -> Maximum Predicted Environment (MPE)
+  -> Add qualification margin (+3 dB for random, +5°C for thermal)
+    -> Qualification/Proto-flight test levels
 ```
 
 ### Example: SpaceX Transporter Rideshare
@@ -165,14 +165,14 @@ Launch vehicle PUG → Maximum Predicted Environment (MPE)
 
 ```
 1. Receive flight hardware from assembly
-2. Initial functional test (reference baseline) ✓
-3. Random vibration (3 axes, 1 min each) ✓
-4. Post-vibe functional test ✓
-5. Thermal vacuum (4-8 cycles, func at extremes) ✓
-6. Post-TVAC functional test ✓
-7. EMC test (if required) ✓
-8. Final mass measurement ✓
-9. Deployer fit check ✓
+2. Initial functional test (reference baseline) Y
+3. Random vibration (3 axes, 1 min each) Y
+4. Post-vibe functional test Y
+5. Thermal vacuum (4-8 cycles, func at extremes) Y
+6. Post-TVAC functional test Y
+7. EMC test (if required) Y
+8. Final mass measurement Y
+9. Deployer fit check Y
 10. Pack and ship to launch site
 ```
 
@@ -184,14 +184,14 @@ Launch vehicle PUG → Maximum Predicted Environment (MPE)
 
 1. **Launch Selector** on Dashboard:
    - Review available providers filtered by your spacecraft mass
-   - Select a provider — note the mass allocation update
+   - Select a provider -- note the mass allocation update
    - Which deployer is compatible?
 
-2. **Exports** tab → generate documents:
-   - **Launch ICD template** (if available) — review mechanical/electrical interface
-   - **End-of-Life Analysis** — confirm debris compliance for selected orbit
+2. **Exports** tab -> generate documents:
+   - **Launch ICD template** (if available) -- review mechanical/electrical interface
+   - **End-of-Life Analysis** -- confirm debris compliance for selected orbit
 
-3. **Worksheet 5.3** — ICD compliance checklist:
+3. **Worksheet 5.3** -- ICD compliance checklist:
    - Verify CDS dimensional compliance
    - Verify deployment switch locations
    - Verify RBF pin provision

@@ -23,7 +23,7 @@ By the end of this session, participants will be able to:
 
 Begin by asking the group: *"How is spacecraft design traditionally done?"*
 
-Traditional approach: sequential design — one discipline finishes, hands off to the next. Problems:
+Traditional approach: sequential design -- one discipline finishes, hands off to the next. Problems:
 - Interface mismatches discovered late
 - Mass/power budget overruns not caught until integration
 - Long iteration cycles (months between design reviews)
@@ -31,14 +31,14 @@ Traditional approach: sequential design — one discipline finishes, hands off t
 
 **Concurrent design** changes this: all disciplines work simultaneously on a shared parametric model, in the same room, resolving conflicts in real-time.
 
-### Key Facts (verified — see Appendix N)
+### Key Facts (verified -- see Appendix N)
 
 **ESA's CDF** was established in **November 1998** at ESTEC, Noordwijk, Netherlands. It pioneered the approach for space missions.
 
 - **Team:** ~20-25 domain specialists working simultaneously
 - **Sessions:** 4-hour focused design sessions, typically 2 per week
 - **Study duration:** 4-8 weeks for a complete mission assessment
-- **Tool:** Shared parametric model (originally Excel-based IDM, now OCDT — Open Concurrent Design Tool)
+- **Tool:** Shared parametric model (originally Excel-based IDM, now OCDT -- Open Concurrent Design Tool)
 - **Output:** Complete mission feasibility assessment including mass, power, cost, risk, and schedule
 - **Track record:** Over 200 studies completed by the 20th anniversary (2018)
 
@@ -78,18 +78,18 @@ The "Vee" (V) model is the fundamental framework for systems engineering. It app
 ```
 
 **Left side (top-down decomposition):**
-1. Mission need → What problem are we solving?
-2. Mission requirements → What must the system achieve? (WHAT, not HOW)
-3. System architecture → How is the system structured? (segments, interfaces)
-4. Subsystem design → How does each subsystem work?
-5. Component selection → Which hardware fulfils each need?
+1. Mission need -> What problem are we solving?
+2. Mission requirements -> What must the system achieve? (WHAT, not HOW)
+3. System architecture -> How is the system structured? (segments, interfaces)
+4. Subsystem design -> How does each subsystem work?
+5. Component selection -> Which hardware fulfils each need?
 
 **Right side (bottom-up integration):**
-5. Component verification → Does each component meet its spec?
-4. Subsystem integration → Do subsystems work together?
-3. System verification → Does the system meet requirements?
-2. System validation → Does the system satisfy the mission need?
-1. Mission operations → Does it solve the original problem?
+5. Component verification -> Does each component meet its spec?
+4. Subsystem integration -> Do subsystems work together?
+3. System verification -> Does the system meet requirements?
+2. System validation -> Does the system satisfy the mission need?
+1. Mission operations -> Does it solve the original problem?
 
 ### Key Principle: Traceability
 
@@ -103,7 +103,7 @@ Every element on the right traces horizontally to its counterpart on the left:
 The V is not a single pass. Real design iterates:
 - Requirements change as design constraints are discovered
 - Design parameters feed back to refine requirements
-- This is captured in the "SE Engine" — the iterative loop of the 17 processes
+- This is captured in the "SE Engine" -- the iterative loop of the 17 processes
 
 *[Source: NASA SEH §2.3, Figure 2.3-1]*
 
@@ -119,7 +119,7 @@ NASA's NPR 7123.1 (currently Revision D) defines 17 processes that apply recursi
 
 *[Source: NPR 7123.1D Chapter 3; NASA SEH §2.1]*
 
-### System Design Processes (1-4) — NASA SEH Chapter 4
+### System Design Processes (1-4) -- NASA SEH Chapter 4
 
 These processes decompose the problem into a solution:
 
@@ -130,7 +130,7 @@ These processes decompose the problem into a solution:
 | 3 | **Logical Decomposition** | Functional/behavioural analysis, derived requirements | Functional architecture |
 | 4 | **Design Solution Definition** | Select among alternatives; produce baseline design | Design solution baseline |
 
-### Product Realization Processes (5-9) — NASA SEH Chapter 5
+### Product Realization Processes (5-9) -- NASA SEH Chapter 5
 
 These processes build and verify the solution:
 
@@ -142,7 +142,7 @@ These processes build and verify the solution:
 | 8 | **Product Validation** | Confirm product meets stakeholder expectations | Validation evidence |
 | 9 | **Product Transition** | Deliver, hand over, deploy | Operational system |
 
-### Technical Management Processes (10-17) — NASA SEH Chapter 6
+### Technical Management Processes (10-17) -- NASA SEH Chapter 6
 
 These processes manage the engineering work:
 
@@ -160,7 +160,7 @@ These processes manage the engineering work:
 ### Recursion
 
 These 17 processes apply at **every level** of the system hierarchy:
-- Mission level → system level → subsystem level → component level
+- Mission level -> system level -> subsystem level -> component level
 
 At each level, the same processes execute but with different scope and detail.
 
@@ -202,7 +202,7 @@ At each level, the same processes execute but with different scope and detail.
 
 **Important caveat:** The phase letters align but entry/exit criteria and review content differ between NASA and ECSS. They are **approximately equivalent**, not identical.
 
-### Review Gates — What Each Checks
+### Review Gates -- What Each Checks
 
 | Review | Key Question | Evidence Required |
 |--------|-------------|-------------------|
@@ -261,7 +261,7 @@ In a CDF study, each engineering position owns a set of parameters and is respon
 
 **Duration:** 15 minutes
 
-1. Open SpaceCDF and navigate through the workflow steps (Need → Concept → Requirements → Design)
+1. Open SpaceCDF and navigate through the workflow steps (Need -> Concept -> Requirements -> Design)
 2. In the Design Dashboard, identify which KPI cards correspond to which engineering positions
 3. Go to the Positions tab and review the key questions for your assigned position
 4. Go to the Gate Review tab and examine the MCR exit criteria
