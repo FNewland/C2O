@@ -337,3 +337,27 @@ async def get_position_guidance(position_id: str) -> PositionGuidance:
     position = _get_position(position_id)
     params = _get_current_design_state()
     return _compute_guidance(position, params)
+
+
+# In-memory answer store (in production, persist to DB)
+_answers: dict[str, dict] = {}
+
+
+@router.post("/answers")
+async def save_answer(body: dict) -> dict:
+    """Save a position question answer."""
+    qid = body.get("question_id", "")
+    _answers[qid] = {
+        "question_id": qid,
+        "position_id": body.get("position_id", ""),
+        "text": body.get("text", ""),
+        "confidence": body.get("confidence", "medium"),
+        "timestamp": body.get("timestamp", ""),
+    }
+    return {"saved": True, "total_answers": len(_answers)}
+
+
+@router.get("/answers")
+async def get_answers() -> dict:
+    """Get all saved position answers."""
+    return {"answers": list(_answers.values()), "count": len(_answers)}

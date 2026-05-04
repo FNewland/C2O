@@ -34,6 +34,9 @@ import { ConflictReviewModal } from './components/ConflictReviewModal'
 import { ChangeAuditPanel } from './components/ChangeAuditPanel'
 import { ParametricEditor } from './components/ParametricEditor'
 import { LinkBudgetTool } from './components/LinkBudgetTool'
+import { PointingBudget } from './components/PointingBudget'
+import { DataBudget } from './components/DataBudget'
+import { VerificationMatrix } from './components/VerificationMatrix'
 import { GateReviewPanel } from './components/GateReviewPanel'
 import { PositionAnswersPanel } from './components/PositionAnswersPanel'
 import { ConOpsEditor } from './components/ConOpsEditor'
@@ -47,7 +50,7 @@ const queryClient = new QueryClient({
   },
 })
 
-type CenterTab = 'need' | 'concept' | 'requirements' | 'design' | 'conops' | 'functions' | 'interfaces' | 'reqs' | 'positions' | 'answers' | 'gate' | 'compliance' | 'ecss' | 'cost' | 'trade' | 'snapshots' | 'optimizer' | 'linkbudget' | 'exports' | 'parametric' | 'audit' | 'help'
+type CenterTab = 'need' | 'concept' | 'requirements' | 'design' | 'conops' | 'functions' | 'interfaces' | 'reqs' | 'positions' | 'answers' | 'gate' | 'compliance' | 'ecss' | 'cost' | 'trade' | 'snapshots' | 'optimizer' | 'linkbudget' | 'verification' | 'exports' | 'parametric' | 'audit' | 'help'
 type RightTab = 'insights' | 'conflicts' | 'exports'
 
 function AppContent() {
@@ -197,6 +200,7 @@ function AppContent() {
     { id: 'trade', label: 'Trade Studies' },
     { id: 'optimizer', label: 'Optimizer' },
     { id: 'linkbudget', label: 'Link Budget' },
+    { id: 'verification', label: 'V&V Matrix' },
     { id: 'exports', label: 'Exports' },
     { id: 'parametric', label: 'Parametric' },
     { id: 'audit', label: 'Changes' },
@@ -312,6 +316,7 @@ function AppContent() {
                 {centerTab === 'optimizer' && <OptimizerPanel sessionId={sessionId} />}
                 {centerTab === 'exports' && <ExportsPanel studyId={studyId} />}
                 {centerTab === 'linkbudget' && <LinkBudgetTool />}
+                {centerTab === 'verification' && <VerificationMatrix studyId={studyId} />}
                 {centerTab === 'parametric' && <ParametricEditor />}
                 {centerTab === 'audit' && <ChangeAuditPanel />}
                 {centerTab === 'help' && <UserManual />}

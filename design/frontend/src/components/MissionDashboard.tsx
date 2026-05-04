@@ -9,6 +9,8 @@ import { BudgetComparison } from './BudgetComparison'
 import { MarginEnforcement } from './MarginEnforcement'
 import { SpectrumSelector } from './SpectrumSelector'
 import { LaunchSelector } from './LaunchSelector'
+import { PointingBudget } from './PointingBudget'
+import { DataBudget } from './DataBudget'
 
 // Extended domain order including all 20 agent domains
 const DOMAIN_ORDER = [
@@ -335,7 +337,11 @@ export function MissionDashboard() {
         <LaunchSelector />
       </div>
 
-      {/* Row 5: Community */}
+      {/* Row 5: Engineering Budgets */}
+      <PointingBudget />
+      <DataBudget />
+
+      {/* Row 6: Community */}
       <CommunityCard parameters={p} />
 
       {/* Row 5: Collapsible all parameters */}

@@ -7,7 +7,7 @@
 - [x] Constellation not in mission trade options → FIXED
 - [x] FunctionTreeView JSX parse error → FIXED
 - [x] Functions show multispectral for comms → FIXED (mission-type-aware)
-- [ ] Position Q&A answers not persisted to backend
+- [x] Position Q&A answers persisted to backend (POST /api/positions/answers, loaded on mount)
 - [ ] "operate at 500km" auto-generated requirement not user-approved
 - [x] Optimizer UI passes mission_type → auto-enables relevant variables, disables propulsion for non-prop missions
 
@@ -27,10 +27,10 @@
 - [ ] System-V requirement hierarchy (mission → system → subsystem with parent/child links)
 - [ ] Per-subsystem engineering budgets (mass/power/cost breakdown per subsystem)
 - [x] Interactive link budget calculator → LinkBudgetTool tab with full cascade (TX, path, RX, margin)
-- [ ] Pointing budget (RSS error tree)
-- [ ] Data budget (generation → storage → downlink → processing pipeline)
+- [x] Pointing budget → PointingBudget on dashboard (7 error sources, RSS, editable, margin vs requirement)
+- [x] Data budget → DataBudget on dashboard (generation→storage→downlink→user flow, balance check)
 - [ ] Timing budget (mode durations, transition times)
-- [ ] Full V&V matrix with verification phases
+- [x] V&V matrix → VerificationMatrix tab (per-req ATRI method, phase, level, status, responsible)
 - [ ] Spectrum selection as design constraint (band choice filters transponders)
 - [ ] Launch selection as design constraint (sets mass allocation, vibration levels)
 - [ ] Consolidate duplicate exports (right panel ExportPanel vs center ExportsPanel)

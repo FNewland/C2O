@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSessionStore } from '../stores/sessionStore'
 import { useActiveParameters } from '../hooks/useActiveParameters'
 import { POSITION_COLOR } from '../constants'
@@ -70,6 +70,25 @@ export function PositionAnswersPanel() {
     setEditingId(qid)
   }
 
+  // Load saved answers on mount
+  useEffect(() => {
+    fetch('/api/positions/answers')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data?.answers) {
+          const map = new Map<string, Answer>()
+          for (const a of data.answers) {
+            map.set(a.question_id, {
+              questionId: a.question_id, positionId: a.position_id,
+              text: a.text, confidence: a.confidence, timestamp: a.timestamp,
+            })
+          }
+          setAnswers(map)
+        }
+      })
+      .catch(() => {})
+  }, [])
+
   const submitAnswer = (q: typeof KEY_QUESTIONS[0]) => {
     if (!draftText.trim()) return
     const answer: Answer = {
@@ -81,6 +100,16 @@ export function PositionAnswersPanel() {
     }
     setAnswers(prev => new Map(prev).set(q.id, answer))
     setEditingId(null)
+
+    // Persist to backend
+    fetch('/api/positions/answers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        question_id: q.id, position_id: q.position,
+        text: draftText, confidence: draftConf, timestamp: answer.timestamp,
+      }),
+    }).catch(() => {})
   }
 
   // Detect conflicts using multiple heuristics
