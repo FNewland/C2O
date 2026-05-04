@@ -33,14 +33,20 @@ interface Answer {
 
 export function PositionAnswersPanel() {
   const sessionId = useSessionStore(s => s.sessionId)
-  const positionIds = useSessionStore(s => s.positionIds)
+  const storePositionIds = useSessionStore(s => s.positionIds)
   const [answers, setAnswers] = useState<Map<string, Answer>>(new Map())
   const [editingId, setEditingId] = useState<string | null>(null)
   const [draftText, setDraftText] = useState('')
   const [draftConf, setDraftConf] = useState<'high' | 'medium' | 'low'>('medium')
+  const [soloPositions, setSoloPositions] = useState<string[]>(['systems_engineer'])
 
-  const myQuestions = KEY_QUESTIONS.filter(q => positionIds.includes(q.position))
-  const otherQuestions = KEY_QUESTIONS.filter(q => !positionIds.includes(q.position))
+  // In solo mode, user can answer ALL questions; use soloPositions for "my" questions
+  const isSoloMode = !sessionId
+  const positionIds = isSoloMode ? soloPositions : storePositionIds
+
+  const allPositions = [...new Set(KEY_QUESTIONS.map(q => q.position))]
+  const myQuestions = isSoloMode ? KEY_QUESTIONS : KEY_QUESTIONS.filter(q => positionIds.includes(q.position))
+  const otherQuestions = isSoloMode ? [] : KEY_QUESTIONS.filter(q => !positionIds.includes(q.position))
 
   const startAnswer = (qid: string) => {
     const existing = answers.get(qid)
@@ -122,13 +128,6 @@ export function PositionAnswersPanel() {
   const seenDescs = new Set<string>()
   const conflicts = tensions.filter(t => { if (seenDescs.has(t.description)) return false; seenDescs.add(t.description); return true })
 
-  if (!sessionId) {
-    return (
-      <div style={{ padding: '1rem', color: '#9ca3af' }}>
-        <p>Join a session to answer position questions and see cross-position discussions.</p>
-      </div>
-    )
-  }
 
   return (
     <div style={{ padding: '1rem', overflowY: 'auto', height: '100%' }}>

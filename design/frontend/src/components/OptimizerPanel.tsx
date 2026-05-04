@@ -51,21 +51,14 @@ export function OptimizerPanel({ sessionId }: Props) {
 
   const enabled = useMemo(() => vars.filter(v => v.enabled), [vars])
 
-  if (!sessionId) {
-    return (
-      <div style={{ padding: '1rem' }}>
-        <p style={{ color: 'var(--text-secondary, #9ca3af)' }}>
-          Join a session to run the design optimiser.
-        </p>
-      </div>
-    )
-  }
+  // Optimizer works in both session and solo mode
+  const effectiveSessionId = sessionId || 'solo'
 
   const handleStart = async () => {
     if (enabled.length === 0) { alert('Select at least one design variable'); return }
     try {
       const res = await start.mutateAsync({
-        sessionId,
+        sessionId: effectiveSessionId,
         ...(mode === 'pareto'
           ? { objectives, pop_size: popSize, n_generations: nGens }
           : { objective }),

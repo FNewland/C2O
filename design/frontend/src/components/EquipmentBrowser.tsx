@@ -125,6 +125,7 @@ interface Props {
 export function EquipmentBrowser({ studyId, onClose, onSelect }: Props) {
   const [activeCategory, setActiveCategory] = useState<string>('batteries')
   const [sortKey, setSortKey] = useState<'fit' | 'mass' | 'cost' | 'trl'>('fit')
+  // Key = category:componentId to allow multiple per category
   const [selections, setSelections] = useState<Map<string, SelectedEquipment>>(new Map())
   const [compareMode, setCompareMode] = useState(false)
   const [compareIds, setCompareIds] = useState<Set<string>>(new Set())
@@ -151,19 +152,71 @@ export function EquipmentBrowser({ studyId, onClose, onSelect }: Props) {
     })
   }
 
+  // Check RF band compatibility between selected transponders and antennas
+  const checkRfCompatibility = (category: string, component: any): string | null => {
+    const getBand = (c: any): string | null => {
+      const b = c.frequency_band || c.band || c.performance?.frequency_band || ''
+      if (b) return b.toUpperCase().replace('-BAND', '').trim()
+      const name = (c.name || '').toUpperCase()
+      for (const band of ['UHF', 'VHF', 'S', 'X', 'KA', 'L']) {
+        if (name.includes(band + '-BAND') || name.includes(band + ' BAND') || name.includes(band + 'BAND')) return band
+      }
+      return null
+    }
+
+    if (category === 'antennas') {
+      const antBand = getBand(component)
+      for (const [, sel] of selections) {
+        if (sel.category === 'transponders') {
+          const txBand = getBand(sel.component)
+          if (txBand && antBand && txBand !== antBand) {
+            return `Incompatible: this ${antBand}-band antenna won't work with selected ${txBand}-band transponder "${sel.component.name}"`
+          }
+        }
+      }
+    }
+    if (category === 'transponders') {
+      const txBand = getBand(component)
+      for (const [, sel] of selections) {
+        if (sel.category === 'antennas') {
+          const antBand = getBand(sel.component)
+          if (txBand && antBand && txBand !== antBand) {
+            return `Incompatible: this ${txBand}-band transponder won't work with selected ${antBand}-band antenna "${sel.component.name}"`
+          }
+        }
+      }
+    }
+    return null
+  }
+
   const handleSelectComponent = (category: string, component: any, qty: number = 1) => {
+    // Check RF compatibility before allowing selection
+    const warning = checkRfCompatibility(category, component)
+    if (warning) {
+      if (!confirm(`⚠ ${warning}\n\nSelect anyway?`)) return
+    }
+
+    const key = `${category}:${component.id || component.name}`
     setSelections(prev => {
       const next = new Map(prev)
-      next.set(category, { category, component, quantity: qty, timestamp: Date.now() })
+      next.set(key, { category, component, quantity: qty, timestamp: Date.now() })
       return next
     })
   }
 
-  const handleQuantityChange = (category: string, qty: number) => {
+  const handleQuantityChange = (key: string, qty: number) => {
     setSelections(prev => {
       const next = new Map(prev)
-      const existing = next.get(category)
-      if (existing) next.set(category, { ...existing, quantity: Math.max(1, qty) })
+      const existing = next.get(key)
+      if (existing) next.set(key, { ...existing, quantity: Math.max(1, qty) })
+      return next
+    })
+  }
+
+  const handleDeselectItem = (key: string) => {
+    setSelections(prev => {
+      const next = new Map(prev)
+      next.delete(key)
       return next
     })
   }
@@ -179,10 +232,13 @@ export function EquipmentBrowser({ studyId, onClose, onSelect }: Props) {
     return { mass, power, cost }
   }, [selections])
 
+  // Legacy: remove all selections for a category
   const handleDeselectCategory = (category: string) => {
     setSelections(prev => {
       const next = new Map(prev)
-      next.delete(category)
+      for (const [key, sel] of next) {
+        if (sel.category === category) next.delete(key)
+      }
       return next
     })
   }
@@ -222,7 +278,13 @@ export function EquipmentBrowser({ studyId, onClose, onSelect }: Props) {
     setCustomComp({ name: '', manufacturer: '', mass_kg: 0, power_w: 0, cost_keur: 0, trl: 5, notes: '' })
   }
 
-  const selectedInCategory = selections.get(activeCategory)?.component?.id
+  // Check if a specific component is selected in the active category
+  const selectedIds = new Set(
+    Array.from(selections.values())
+      .filter(s => s.category === activeCategory)
+      .map(s => s.component.id || s.component.name)
+  )
+  const categorySelectionCount = Array.from(selections.values()).filter(s => s.category === activeCategory).length
 
   // Items for comparison
   const compareItems = useMemo(() => {
@@ -298,22 +360,21 @@ export function EquipmentBrowser({ studyId, onClose, onSelect }: Props) {
           }}>
             <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center', marginBottom: '0.3rem' }}>
               <span style={{ fontSize: '0.72rem', color: '#10b981', fontWeight: 600 }}>Selected:</span>
-              {Array.from(selections.entries()).map(([cat, sel]) => (
-                <span key={cat} style={{
+              {Array.from(selections.entries()).map(([key, sel]) => (
+                <span key={key} style={{
                   display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
                   background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.3)',
                   borderRadius: '4px', padding: '0.15rem 0.5rem', fontSize: '0.72rem',
                 }}>
-                  <span style={{ color: '#9ca3af' }}>{cat.replace(/_/g, ' ')}:</span>
+                  <span style={{ color: '#9ca3af', fontSize: '0.6rem' }}>{sel.category.replace(/_/g, ' ')}</span>
                   <span style={{ fontWeight: 600, color: '#10b981' }}>{sel.component.name}</span>
-                  {sel.quantity > 1 && <span style={{ color: '#f59e0b', fontWeight: 600 }}>×{sel.quantity}</span>}
                   <input type="number" min={1} max={10} value={sel.quantity}
-                    onChange={e => handleQuantityChange(cat, Number(e.target.value))}
+                    onChange={e => handleQuantityChange(key, Number(e.target.value))}
                     style={{ width: 30, background: 'transparent', border: '1px solid #374151', borderRadius: '3px', color: '#d1d5db', fontSize: '0.65rem', textAlign: 'center', padding: '0 2px' }}
                     onClick={e => e.stopPropagation()} />
                   <span style={{ color: '#6b7280', fontSize: '0.65rem' }}>{((sel.component.mass_kg || 0) * sel.quantity).toFixed(2)}kg</span>
                   {sel.component.custom && <span style={{ fontSize: '0.6rem', color: '#f59e0b' }}>(custom)</span>}
-                  <button onClick={() => handleDeselectCategory(cat)}
+                  <button onClick={() => handleDeselectItem(key)}
                     style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '0.8rem', padding: 0, lineHeight: 1 }}>
                     x
                   </button>
@@ -504,7 +565,7 @@ export function EquipmentBrowser({ studyId, onClose, onSelect }: Props) {
                     const c = row.component || row
                     const id = c.id || c.name
                     const heritage = Array.isArray(c.heritage_missions) ? c.heritage_missions.join(', ') : ''
-                    const isChosen = selectedInCategory === id
+                    const isChosen = selectedIds.has(id)
                     const isComparing = compareIds.has(id)
                     const notes: string[] = row.notes || []
                     const hasGaps = notes.some((n: string) => n.includes('BELOW'))
