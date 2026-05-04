@@ -7,7 +7,7 @@ against the mission objectives. Shows WHY space is or isn't needed.
 Alternatives considered:
   - Existing satellite data (Copernicus Sentinel-2, Landsat, commercial)
   - Commercial satellite tasking (Planet, Maxar, Airbus)
-  - Aerial (drones, manned aircraft)
+  - Aerial (drones, crewed aircraft)
   - Ground sensors (IoT, weather stations)
   - New dedicated satellite (what SpaceCDF designs)
   - Hybrid approaches
@@ -140,7 +140,7 @@ def _get_alternatives(target_gsd_m: float, target_revisit_days: float,
     ))
 
     alts.append(MissionAlternative(
-        name="Manned aircraft survey",
+        name="Crewed aircraft survey",
         category="aerial",
         description="Aircraft-mounted multispectral/hyperspectral sensor. Regional coverage.",
         coverage="regional", revisit_days=7, gsd_m=0.5, latency_hours=24,

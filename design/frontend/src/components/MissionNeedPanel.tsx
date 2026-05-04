@@ -29,7 +29,7 @@ const ALTERNATIVE_TYPES = [
   { value: 'space_existing', label: 'Existing satellite data (Copernicus, Landsat, commercial)' },
   { value: 'space_constellation', label: 'Constellation' },
   { value: 'aerial_drone', label: 'Drone / UAV' },
-  { value: 'aerial_aircraft', label: 'Manned aircraft' },
+  { value: 'aerial_aircraft', label: 'Crewed aircraft' },
   { value: 'ground_sensor', label: 'Ground sensors / in-situ' },
   { value: 'ground_network', label: 'Ground network' },
   { value: 'hybrid', label: 'Hybrid (space + ground/air)' },

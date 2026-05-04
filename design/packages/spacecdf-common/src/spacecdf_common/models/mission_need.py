@@ -86,7 +86,7 @@ class AlternativeType(str, Enum):
     SPACE_EXISTING = "space_existing"         # Use existing satellite data (Copernicus, Landsat, commercial)
     SPACE_CONSTELLATION = "space_constellation"
     AERIAL_DRONE = "aerial_drone"             # UAV / drone
-    AERIAL_AIRCRAFT = "aerial_aircraft"       # Manned aircraft
+    AERIAL_AIRCRAFT = "aerial_aircraft"       # Crewed aircraft
     GROUND_SENSOR = "ground_sensor"           # In-situ ground sensors
     GROUND_NETWORK = "ground_network"         # Network of ground stations
     HYBRID = "hybrid"                         # Combination of modalities
