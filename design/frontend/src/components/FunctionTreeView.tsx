@@ -73,7 +73,7 @@ const DOMAIN_OPTIONS = [
 export function FunctionTreeView() {
   const missionType = useDesignStore(s => s.requirements.mission_type)
   const [functions, setFunctions] = useState<FunctionNode[]>(() => getDemoFunctions(missionType))
-  const [expanded, setExpanded] = useState<Set<string>>(new Set(DEMO_FUNCTIONS.map(f => f.id)))
+  const [expanded, setExpanded] = useState<Set<string>>(() => new Set(getDemoFunctions(missionType).map(f => f.id)))
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editName, setEditName] = useState('')
   const [editDomain, setEditDomain] = useState('')
