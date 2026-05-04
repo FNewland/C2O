@@ -32,9 +32,9 @@
 - [x] Timing budget → TimingBudget on dashboard (orbit timeline with mode segments, transitions, energy per mode)
 - [x] V&V matrix → VerificationMatrix tab (per-req ATRI method, phase, level, status, responsible)
 - [x] Spectrum selection → EquipmentBrowser filters transponders/antennas by selectedRfBand from SpectrumSelector
-- [ ] Launch selection as design constraint (selector exists, mass allocation not yet auto-set)
-- [ ] Consolidate duplicate exports (right panel ExportPanel vs center ExportsPanel)
-- [ ] Mission type auto-set from mission need objectives
+- [x] Launch selection → auto-sets target_mass_kg from provider capacity (85% usable)
+- [ ] Consolidate duplicate exports (right panel ExportPanel vs center ExportsPanel — low priority, both functional)
+- [x] Mission type auto-set → inferred from objective text keywords (comms/relay→communications, imagery/GSD→EO, SAR→sar, lunar/mars→planetary, tech demo)
 
 ## Tier 4: Deepening (improve existing features)
 

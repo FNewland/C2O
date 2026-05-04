@@ -45,8 +45,13 @@ export function LaunchSelector() {
       .finally(() => setLoading(false))
   }, [])
 
+  const setRequirements = useDesignStore(s => s.setRequirements)
   const handleSelect = (provider: LaunchProvider) => {
     setSelectedId(provider.id)
+    // Set mass allocation from launch capacity (with structure/deployer overhead)
+    const usableMass = provider.capacity_kg * 0.85 // 85% of capacity after deployer
+    setRequirements({ target_mass_kg: usableMass })
+    useDesignStore.setState({ selectedLaunchProvider: provider.id })
     markStale('launch')
   }
 

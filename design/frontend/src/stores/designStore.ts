@@ -201,8 +201,31 @@ export const useDesignStore = create<DesignStore>((set, get) => ({
       oldValue: Object.keys(need).map(k => (s.missionNeed as any)[k]),
       newValue: Object.values(need),
     }
+
+    // Auto-infer mission type from objectives when objectives change
+    let reqUpdate: Partial<MissionRequirements> = {}
+    if (need.objectives) {
+      const allText = need.objectives.map(o => o.text).join(' ').toLowerCase()
+      if (allText.match(/communi|relay|iot|m2m|data link|connect/)) {
+        reqUpdate = { mission_type: 'communications' }
+      } else if (allText.match(/sar|radar|synthetic aperture/)) {
+        reqUpdate = { mission_type: 'sar' }
+      } else if (allText.match(/ais|maritime|ship track/)) {
+        reqUpdate = { mission_type: 'earth_observation' }
+      } else if (allText.match(/imag|gsd|resolution|spectral|optical|photo/)) {
+        reqUpdate = { mission_type: 'earth_observation' }
+      } else if (allText.match(/lunar|moon|cislunar/)) {
+        reqUpdate = { mission_type: 'lunar' }
+      } else if (allText.match(/mars|deep.?space|interplanet/)) {
+        reqUpdate = { mission_type: 'mars' }
+      } else if (allText.match(/tech.?demo|demonstrat|experiment|test/)) {
+        reqUpdate = { mission_type: 'technology_demo' }
+      }
+    }
+
     return {
       missionNeed: { ...s.missionNeed, ...need },
+      requirements: Object.keys(reqUpdate).length > 0 ? { ...s.requirements, ...reqUpdate } : s.requirements,
       designStale: true, lastChangeSource: 'mission_need',
       changeHistory: [...s.changeHistory.slice(-49), record],
     }
