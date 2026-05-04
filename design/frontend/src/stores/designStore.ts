@@ -130,6 +130,7 @@ interface DesignStore {
   setStudyId: (id: string | null) => void
   markStale: (source: string) => void
   applyConvergenceResult: (params: Record<string, DesignParam>, conflicts: CrossDomainConflict[]) => void
+  undoLastChange: () => void
   runDesign: () => Promise<void>
   createStudy: () => Promise<string | null>
 }
@@ -185,28 +186,91 @@ export const useDesignStore = create<DesignStore>((set, get) => ({
   changeHistory: [],
   pendingConflicts: [],
 
-  setMissionNeed: (need) => set((s) => ({
-    missionNeed: { ...s.missionNeed, ...need },
-    designStale: true,
-    lastChangeSource: 'mission_need',
-  })),
+  setMissionNeed: (need) => set((s) => {
+    const record: ChangeRecord = {
+      timestamp: Date.now(), source: 'mission_need',
+      paramId: Object.keys(need).join(', '),
+      oldValue: Object.keys(need).map(k => (s.missionNeed as any)[k]),
+      newValue: Object.values(need),
+    }
+    return {
+      missionNeed: { ...s.missionNeed, ...need },
+      designStale: true, lastChangeSource: 'mission_need',
+      changeHistory: [...s.changeHistory.slice(-49), record],
+    }
+  }),
 
-  setRequirements: (req) => set((s) => ({
-    requirements: { ...s.requirements, ...req },
-    designStale: true,
-    lastChangeSource: 'requirements',
-  })),
+  setRequirements: (req) => set((s) => {
+    const record: ChangeRecord = {
+      timestamp: Date.now(), source: 'requirements',
+      paramId: Object.keys(req).join(', '),
+      oldValue: Object.keys(req).map(k => (s.requirements as any)[k]),
+      newValue: Object.values(req),
+    }
+    return {
+      requirements: { ...s.requirements, ...req },
+      designStale: true, lastChangeSource: 'requirements',
+      changeHistory: [...s.changeHistory.slice(-49), record],
+    }
+  }),
 
-  setOrbit: (orbit) => set((s) => ({
-    requirements: {
-      ...s.requirements,
-      orbit: { ...s.requirements.orbit, ...orbit }
-    },
-    designStale: true,
-    lastChangeSource: 'orbit',
-  })),
+  setOrbit: (orbit) => set((s) => {
+    const record: ChangeRecord = {
+      timestamp: Date.now(), source: 'orbit',
+      paramId: Object.keys(orbit).join(', '),
+      oldValue: Object.keys(orbit).map(k => (s.requirements.orbit as any)[k]),
+      newValue: Object.values(orbit),
+    }
+    return {
+      requirements: {
+        ...s.requirements,
+        orbit: { ...s.requirements.orbit, ...orbit }
+      },
+      designStale: true, lastChangeSource: 'orbit',
+      changeHistory: [...s.changeHistory.slice(-49), record],
+    }
+  }),
 
   setStudyId: (id) => set({ studyId: id }),
+
+  undoLastChange: () => set((s) => {
+    if (s.changeHistory.length === 0) return {}
+    const last = s.changeHistory[s.changeHistory.length - 1]
+    const history = s.changeHistory.slice(0, -1)
+
+    // Restore the old values based on source
+    if (last.source === 'orbit') {
+      const keys = last.paramId.split(', ')
+      const oldVals = Array.isArray(last.oldValue) ? last.oldValue : [last.oldValue]
+      const patch: any = {}
+      keys.forEach((k, i) => { patch[k] = oldVals[i] })
+      return {
+        requirements: { ...s.requirements, orbit: { ...s.requirements.orbit, ...patch } },
+        changeHistory: history, designStale: true,
+      }
+    }
+    if (last.source === 'requirements') {
+      const keys = last.paramId.split(', ')
+      const oldVals = Array.isArray(last.oldValue) ? last.oldValue : [last.oldValue]
+      const patch: any = {}
+      keys.forEach((k, i) => { patch[k] = oldVals[i] })
+      return {
+        requirements: { ...s.requirements, ...patch },
+        changeHistory: history, designStale: true,
+      }
+    }
+    if (last.source === 'mission_need') {
+      const keys = last.paramId.split(', ')
+      const oldVals = Array.isArray(last.oldValue) ? last.oldValue : [last.oldValue]
+      const patch: any = {}
+      keys.forEach((k, i) => { patch[k] = oldVals[i] })
+      return {
+        missionNeed: { ...s.missionNeed, ...patch },
+        changeHistory: history, designStale: true,
+      }
+    }
+    return { changeHistory: history }
+  }),
 
   markStale: (source) => set({ designStale: true, lastChangeSource: source }),
 

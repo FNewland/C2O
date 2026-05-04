@@ -112,6 +112,57 @@ class SelectiveReconvergence:
         result.extend(sorted(remaining))
         return result
 
+    def preview_impact(self, changed_param_ids: set[str]) -> dict:
+        """Preview what would happen if these parameters changed.
+
+        Does NOT execute agents — just reports what WOULD run and what
+        budgets would be affected. Used for pre-edit impact preview.
+        """
+        if not self._agents:
+            self.initialise()
+
+        affected_t1 = self._find_affected_agents(changed_param_ids)
+        sorted_agents = self._topological_sort(affected_t1)
+
+        # Find which Tier 2 agents would run (all of them after convergence)
+        tier2 = [n for n, a in self._agents.items() if a.tier == 2]
+
+        # Determine affected budgets/domains
+        affected_domains = set()
+        affected_outputs = []
+        for name in sorted_agents:
+            agent = self._agents[name]
+            affected_domains.add(agent.domain)
+            affected_outputs.extend(agent.output_parameters())
+
+        # Categorize impact
+        budget_impacts = []
+        if any('mass' in o for o in affected_outputs):
+            budget_impacts.append('Mass budget')
+        if any('power' in o or 'sa_' in o or 'battery' in o for o in affected_outputs):
+            budget_impacts.append('Power budget')
+        if any('cost' in o for o in affected_outputs):
+            budget_impacts.append('Cost estimate')
+        if any('link' in o or 'ttc' in o for o in affected_outputs):
+            budget_impacts.append('Link budget')
+        if any('thermal' in o for o in affected_outputs):
+            budget_impacts.append('Thermal analysis')
+        if any('aocs' in o or 'pointing' in o for o in affected_outputs):
+            budget_impacts.append('AOCS/pointing')
+
+        return {
+            "changed_parameters": list(changed_param_ids),
+            "agents_affected": sorted_agents,
+            "tier2_agents": sorted(tier2),
+            "affected_domains": sorted(affected_domains),
+            "affected_outputs": affected_outputs[:20],
+            "budget_impacts": budget_impacts,
+            "estimated_cascade_depth": len(sorted_agents),
+            "description": f"Changing {', '.join(changed_param_ids)} will trigger "
+                           f"{len(sorted_agents)} agent(s) across {', '.join(sorted(affected_domains))} domain(s), "
+                           f"affecting: {', '.join(budget_impacts) or 'no budget changes'}.",
+        }
+
     async def reconverge(
         self,
         state: DesignState,

@@ -10,7 +10,10 @@
  */
 import { useDesignStore } from '../stores/designStore'
 
-export function DesignStateBar() {
+export function DesignStateBar({ autoReconverge, onToggleAuto }: {
+  autoReconverge?: boolean
+  onToggleAuto?: () => void
+}) {
   const designStale = useDesignStore(s => s.designStale)
   const lastChangeSource = useDesignStore(s => s.lastChangeSource)
   const isRunning = useDesignStore(s => s.isRunning)
@@ -56,6 +59,13 @@ export function DesignStateBar() {
             style={{ background: '#f59e0b', color: '#000', fontSize: '0.72rem', fontWeight: 600 }}>
             Re-run Design
           </button>
+          {onToggleAuto && (
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.68rem', color: '#6b7280', cursor: 'pointer' }}>
+              <input type="checkbox" checked={autoReconverge} onChange={onToggleAuto}
+                style={{ accentColor: '#3b82f6' }} />
+              Auto-reconverge
+            </label>
+          )}
         </>
       )}
 

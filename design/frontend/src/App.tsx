@@ -30,6 +30,8 @@ import { OptimizerPanel } from './components/OptimizerPanel'
 import { UserManual } from './components/UserManual'
 import { ExportsPanel } from './components/ExportsPanel'
 import { DesignStateBar } from './components/DesignStateBar'
+import { ConflictReviewModal } from './components/ConflictReviewModal'
+import { ChangeAuditPanel } from './components/ChangeAuditPanel'
 import { GateReviewPanel } from './components/GateReviewPanel'
 import { PositionAnswersPanel } from './components/PositionAnswersPanel'
 import { ConOpsEditor } from './components/ConOpsEditor'
@@ -43,7 +45,7 @@ const queryClient = new QueryClient({
   },
 })
 
-type CenterTab = 'need' | 'concept' | 'requirements' | 'design' | 'conops' | 'functions' | 'interfaces' | 'reqs' | 'positions' | 'answers' | 'gate' | 'compliance' | 'ecss' | 'cost' | 'trade' | 'snapshots' | 'optimizer' | 'exports' | 'help'
+type CenterTab = 'need' | 'concept' | 'requirements' | 'design' | 'conops' | 'functions' | 'interfaces' | 'reqs' | 'positions' | 'answers' | 'gate' | 'compliance' | 'ecss' | 'cost' | 'trade' | 'snapshots' | 'optimizer' | 'exports' | 'audit' | 'help'
 type RightTab = 'insights' | 'conflicts' | 'exports'
 
 function AppContent() {
@@ -52,6 +54,8 @@ function AppContent() {
   const [rightTab, setRightTab] = useState<RightTab>('insights')
   const [showEquipmentBrowser, setShowEquipmentBrowser] = useState(false)
   const [showSessionStarter, setShowSessionStarter] = useState(false)
+  const [showConflictReview, setShowConflictReview] = useState(false)
+  const [autoReconverge, setAutoReconverge] = useState(false)
   const [showTemplateGallery, setShowTemplateGallery] = useState(false)
 
   // Auto-navigate to Design tab when design run completes
@@ -59,7 +63,26 @@ function AppContent() {
     if (result && centerTab === 'requirements') {
       setCenterTab('design')
     }
+    // Show conflict review if critical conflicts exist after convergence
+    if (result?.conflicts?.some(c => c.severity === 'critical')) {
+      setShowConflictReview(true)
+    }
   }, [result])
+
+  // Auto-reconverge when design is stale (if enabled)
+  const designStale = useDesignStore(s => s.designStale)
+  const isRunning = useDesignStore(s => s.isRunning)
+  useEffect(() => {
+    if (autoReconverge && designStale && !isRunning && result) {
+      // Debounce: wait 1 second after last change before auto-running
+      const timer = setTimeout(() => {
+        if (useDesignStore.getState().designStale) {
+          runDesign()
+        }
+      }, 1000)
+      return () => clearTimeout(timer)
+    }
+  }, [autoReconverge, designStale, isRunning])
 
   // Session state
   const sessionId = useSessionStore(s => s.sessionId)
@@ -172,6 +195,7 @@ function AppContent() {
     { id: 'trade', label: 'Trade Studies' },
     { id: 'optimizer', label: 'Optimizer' },
     { id: 'exports', label: 'Exports' },
+    { id: 'audit', label: 'Changes' },
     { id: 'help', label: 'Help' },
   ], [])
 
@@ -266,7 +290,7 @@ function AppContent() {
                   >{tab.label}</button>
                 ))}
               </div>
-              <DesignStateBar />
+              <DesignStateBar autoReconverge={autoReconverge} onToggleAuto={() => setAutoReconverge(a => !a)} />
               <div style={{ padding: '0 1rem', overflow: 'auto', flex: 1 }}>
                 {centerTab === 'design' && <DesignWorkspace />}
                 {centerTab === 'conops' && <ConOpsEditor />}
@@ -283,6 +307,7 @@ function AppContent() {
                 {centerTab === 'snapshots' && <SnapshotsPanel sessionId={sessionId} />}
                 {centerTab === 'optimizer' && <OptimizerPanel sessionId={sessionId} />}
                 {centerTab === 'exports' && <ExportsPanel studyId={studyId} />}
+                {centerTab === 'audit' && <ChangeAuditPanel />}
                 {centerTab === 'help' && <UserManual />}
               </div>
             </>
@@ -327,6 +352,11 @@ function AppContent() {
 
       {/* History drawer (edit audit trail) */}
       <HistoryDrawer sessionId={sessionId} />
+
+      {/* Conflict review modal */}
+      {showConflictReview && (
+        <ConflictReviewModal onClose={() => setShowConflictReview(false)} />
+      )}
 
       {/* Equipment browser modal */}
       {showEquipmentBrowser && (

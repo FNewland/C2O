@@ -40,6 +40,27 @@ async def _get_design_state(study_id: str | None = None, requirements: MissionRe
     return result.final_state, result, requirements
 
 
+# --- Impact Preview ---
+
+
+class ImpactPreviewRequest(BaseModel):
+    parameter_ids: list[str]
+
+
+@router.post("/impact-preview")
+async def preview_impact(req: ImpactPreviewRequest) -> dict:
+    """Preview the downstream impact of changing specific parameters.
+
+    Returns which agents would re-run, which budgets would change,
+    and a human-readable description — WITHOUT actually executing anything.
+    """
+    from ..services.reconvergence import SelectiveReconvergence
+
+    reconv = SelectiveReconvergence()
+    reconv.initialise()
+    return reconv.preview_impact(set(req.parameter_ids))
+
+
 # --- Equipment Search ---
 
 class EquipmentSearchResponse(BaseModel):
