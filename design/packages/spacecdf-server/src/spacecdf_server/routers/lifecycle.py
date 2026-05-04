@@ -243,6 +243,7 @@ class OrbitTradeRequest(BaseModel):
     max_mass_kg: float = 12.0
     max_cost_meur: float = 10.0
     min_lifetime_years: float = 2.0
+    mission_type: str = "earth_observation"
 
 @router.post("/orbit-trade")
 async def orbit_trade_custom(req: OrbitTradeRequest) -> dict:
@@ -252,6 +253,7 @@ async def orbit_trade_custom(req: OrbitTradeRequest) -> dict:
         target_latitude_band=tuple(req.target_latitude_band[:2]),
         aperture_m=req.aperture_m, max_mass_kg=req.max_mass_kg,
         max_cost_meur=req.max_cost_meur, min_lifetime_years=req.min_lifetime_years,
+        mission_type=req.mission_type,
     )
 
 

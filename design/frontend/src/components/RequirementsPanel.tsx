@@ -148,33 +148,34 @@ function ClassAdvisor({ onSelect }: { onSelect: (cls: string, massRange: number[
     <div className="card" style={{ borderLeft: '3px solid #06b6d4' }}>
       <h3 style={{ fontSize: '0.9rem', marginBottom: '0.5rem' }}>Mission Class Advisor</h3>
       <p style={{ fontSize: '0.75rem', color: '#9ca3af', marginBottom: '0.75rem' }}>
-        Set your performance and programmatic targets. The advisor recommends
+        Enter what you know — all fields are optional. The advisor recommends
         which spacecraft class fits and sets realistic mass/cost targets.
+        Leave fields blank if unknown; the advisor will use typical values.
       </p>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.5rem', marginBottom: '0.75rem' }}>
         <div className="form-group" style={{ margin: 0 }}>
-          <label>GSD target (m)</label>
-          <input className="input" type="number" min={0.1} step={1} value={gsd ?? ''} onChange={e => setGsd(e.target.value ? Number(e.target.value) : undefined)} />
+          <label>GSD target (m) <span style={{ color: '#6b7280', fontWeight: 400 }}>— optical only</span></label>
+          <input className="input" type="number" min={0.1} step={1} value={gsd ?? ''} placeholder="e.g. 10" onChange={e => setGsd(e.target.value ? Number(e.target.value) : undefined)} />
         </div>
         <div className="form-group" style={{ margin: 0 }}>
           <label>Lifetime (years)</label>
-          <input className="input" type="number" min={0.5} step={0.5} value={lifetime ?? ''} onChange={e => setLifetime(e.target.value ? Number(e.target.value) : undefined)} />
+          <input className="input" type="number" min={0.5} step={0.5} value={lifetime ?? ''} placeholder="e.g. 3" onChange={e => setLifetime(e.target.value ? Number(e.target.value) : undefined)} />
         </div>
         <div className="form-group" style={{ margin: 0 }}>
-          <label>Max budget (MEUR)</label>
-          <input className="input" type="number" min={0.5} step={1} value={budget ?? ''} onChange={e => setBudget(e.target.value ? Number(e.target.value) : undefined)} />
+          <label>Max budget (MEUR) <span style={{ color: '#6b7280', fontWeight: 400 }}>— optional</span></label>
+          <input className="input" type="number" min={0.5} step={1} value={budget ?? ''} placeholder="e.g. 10" onChange={e => setBudget(e.target.value ? Number(e.target.value) : undefined)} />
         </div>
         <div className="form-group" style={{ margin: 0 }}>
-          <label>Schedule (months)</label>
-          <input className="input" type="number" min={3} step={3} value={schedule ?? ''} onChange={e => setSchedule(e.target.value ? Number(e.target.value) : undefined)} />
+          <label>Schedule (months) <span style={{ color: '#6b7280', fontWeight: 400 }}>— optional</span></label>
+          <input className="input" type="number" min={3} step={3} value={schedule ?? ''} placeholder="e.g. 18" onChange={e => setSchedule(e.target.value ? Number(e.target.value) : undefined)} />
         </div>
         <div className="form-group" style={{ margin: 0 }}>
-          <label>Pointing (deg)</label>
-          <input className="input" type="number" min={0.001} step={0.01} value={pointing ?? ''} onChange={e => setPointing(e.target.value ? Number(e.target.value) : undefined)} />
+          <label>Pointing (deg) <span style={{ color: '#6b7280', fontWeight: 400 }}>— optional</span></label>
+          <input className="input" type="number" min={0.001} step={0.01} value={pointing ?? ''} placeholder="e.g. 0.1" onChange={e => setPointing(e.target.value ? Number(e.target.value) : undefined)} />
         </div>
         <div className="form-group" style={{ margin: 0 }}>
-          <label>Data rate (Mbps)</label>
-          <input className="input" type="number" min={0.1} step={10} value={dataRate ?? ''} onChange={e => setDataRate(e.target.value ? Number(e.target.value) : undefined)} />
+          <label>Data rate (Mbps) <span style={{ color: '#6b7280', fontWeight: 400 }}>— optional</span></label>
+          <input className="input" type="number" min={0.1} step={10} value={dataRate ?? ''} placeholder="e.g. 100" onChange={e => setDataRate(e.target.value ? Number(e.target.value) : undefined)} />
         </div>
       </div>
       <button className="btn btn-sm" onClick={runAdvisor} disabled={loading} style={{ marginBottom: '0.5rem' }}>
@@ -218,8 +219,16 @@ function ClassAdvisor({ onSelect }: { onSelect: (cls: string, massRange: number[
 export function RequirementsPanel() {
   const { requirements, setRequirements, setOrbit, runDesign, isRunning } = useDesignStore()
 
+  const [orbitSelected, setOrbitSelected] = useState(false)
+  const [classSelected, setClassSelected] = useState(false)
+
   const handleOrbitSelect = (alt: number, inc: number) => {
     setOrbit({ altitude_km: alt, inclination_deg: inc, orbit_type: 'sso' as any })
+    setOrbitSelected(true)
+    // Scroll to orbit form to show the change
+    setTimeout(() => {
+      document.getElementById('orbit-form')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }, 100)
   }
 
   const handleClassSelect = (cls: string, massRange: number[], costRange: number[]) => {
@@ -282,14 +291,17 @@ export function RequirementsPanel() {
         </div>
       </div>
 
-      <div className="card">
-        <h3>Orbit</h3>
+      <div className="card" id="orbit-form" style={orbitSelected ? { borderLeft: '3px solid #10b981' } : undefined}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <h3 style={{ margin: 0 }}>Orbit</h3>
+          {orbitSelected && <span style={{ fontSize: '0.68rem', color: '#10b981', background: 'rgba(16,185,129,0.15)', padding: '0.1rem 0.4rem', borderRadius: '3px' }}>Set from advisor</span>}
+        </div>
         <div className="form-group">
           <label>Type</label>
           <select
             className="select"
             value={requirements.orbit.orbit_type}
-            onChange={(e) => setOrbit({ orbit_type: e.target.value })}
+            onChange={(e) => { setOrbit({ orbit_type: e.target.value }); setOrbitSelected(false) }}
           >
             <option value="leo">LEO</option>
             <option value="sso">SSO</option>

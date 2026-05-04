@@ -35,6 +35,10 @@ export function ComplianceMatrix({ studyId }: { studyId: string | null }) {
   return (
     <div style={{ padding: '1rem' }}>
       <h2>Requirement Compliance</h2>
+      <p style={{ fontSize: '0.75rem', color: '#9ca3af', marginBottom: '0.5rem' }}>
+        Requirements are auto-derived from your mission parameters for verification.
+        Edit requirements in the Requirements tab — changes will flow here automatically.
+      </p>
 
       {/* Summary + worst-case toggle */}
       <div className="card" style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>

@@ -60,22 +60,84 @@ export function ConOpsEditor() {
       {/* Mission Architecture Diagram */}
       <div className="card">
         <h3 style={{ fontSize: '0.9rem', marginBottom: '0.5rem' }}>Mission Architecture</h3>
-        <svg width="100%" height="200" viewBox="0 0 700 200" style={{ background: 'var(--bg-primary, #0a0e1a)', borderRadius: '6px' }}>
-          <rect x="250" y="20" width="200" height="60" rx="8" fill="#1f2937" stroke="#3b82f6" strokeWidth="2"/>
-          <text x="350" y="45" textAnchor="middle" fill="#3b82f6" fontSize="12" fontWeight="600">Space Segment</text>
-          <text x="350" y="62" textAnchor="middle" fill="#9ca3af" fontSize="9">Spacecraft + Payload</text>
-          <rect x="50" y="130" width="160" height="50" rx="8" fill="#1f2937" stroke="#10b981" strokeWidth="2"/>
-          <text x="130" y="152" textAnchor="middle" fill="#10b981" fontSize="11" fontWeight="600">Ground Segment</text>
-          <text x="130" y="167" textAnchor="middle" fill="#9ca3af" fontSize="9">GS + MCC + Processing</text>
-          <rect x="490" y="130" width="160" height="50" rx="8" fill="#1f2937" stroke="#f59e0b" strokeWidth="2"/>
-          <text x="570" y="152" textAnchor="middle" fill="#f59e0b" fontSize="11" fontWeight="600">End Users</text>
-          <text x="570" y="167" textAnchor="middle" fill="#9ca3af" fontSize="9">Data Products + Services</text>
-          <line x1="300" y1="80" x2="130" y2="130" stroke="#06b6d4" strokeWidth="1.5" strokeDasharray="4 2"/>
-          <text x="195" y="108" fill="#06b6d4" fontSize="8" transform="rotate(-25 195 108)">TM/TC + Science Data</text>
-          <line x1="160" y1="130" x2="280" y2="80" stroke="#8b5cf6" strokeWidth="1.5" strokeDasharray="4 2"/>
-          <text x="200" y="98" fill="#8b5cf6" fontSize="8" transform="rotate(-25 200 98)">Commands</text>
-          <line x1="210" y1="155" x2="490" y2="155" stroke="#f59e0b" strokeWidth="1.5"/>
-          <text x="350" y="148" textAnchor="middle" fill="#f59e0b" fontSize="8">Data Products (L1/L2/L3)</text>
+        <svg width="100%" height="280" viewBox="0 0 780 280" style={{ background: 'var(--bg-primary, #0a0e1a)', borderRadius: '6px' }}>
+          {/* Space Segment */}
+          <rect x="250" y="10" width="280" height="70" rx="8" fill="#1f2937" stroke="#3b82f6" strokeWidth="2"/>
+          <text x="390" y="32" textAnchor="middle" fill="#3b82f6" fontSize="12" fontWeight="600">Space Segment</text>
+          {/* Sub-boxes inside space segment */}
+          <rect x="260" y="40" width="80" height="30" rx="4" fill="#0f172a" stroke="#3b82f680" strokeWidth="1"/>
+          <text x="300" y="59" textAnchor="middle" fill="#93c5fd" fontSize="8">Platform</text>
+          <rect x="350" y="40" width="80" height="30" rx="4" fill="#0f172a" stroke="#8b5cf680" strokeWidth="1"/>
+          <text x="390" y="59" textAnchor="middle" fill="#a78bfa" fontSize="8">Payload/Sensor</text>
+          <rect x="440" y="40" width="80" height="30" rx="4" fill="#0f172a" stroke="#06b6d480" strokeWidth="1"/>
+          <text x="480" y="59" textAnchor="middle" fill="#67e8f9" fontSize="8">Comms (TTC)</text>
+
+          {/* Ground Operations */}
+          <rect x="30" y="120" width="150" height="55" rx="8" fill="#1f2937" stroke="#10b981" strokeWidth="2"/>
+          <text x="105" y="140" textAnchor="middle" fill="#10b981" fontSize="10" fontWeight="600">Ground Operations</text>
+          <text x="105" y="153" textAnchor="middle" fill="#9ca3af" fontSize="8">GS Antenna + MCC</text>
+          <text x="105" y="164" textAnchor="middle" fill="#6b7280" fontSize="7">TM/TC, Commanding</text>
+
+          {/* Payload Processing */}
+          <rect x="220" y="120" width="170" height="55" rx="8" fill="#1f2937" stroke="#8b5cf6" strokeWidth="2"/>
+          <text x="305" y="140" textAnchor="middle" fill="#8b5cf6" fontSize="10" fontWeight="600">Payload Data Centre</text>
+          <text x="305" y="153" textAnchor="middle" fill="#9ca3af" fontSize="8">Reception + Processing</text>
+          <text x="305" y="164" textAnchor="middle" fill="#6b7280" fontSize="7">L0→L1→L2 Pipeline</text>
+
+          {/* End Users */}
+          <rect x="560" y="120" width="140" height="55" rx="8" fill="#1f2937" stroke="#f59e0b" strokeWidth="2"/>
+          <text x="630" y="140" textAnchor="middle" fill="#f59e0b" fontSize="10" fontWeight="600">End Users</text>
+          <text x="630" y="153" textAnchor="middle" fill="#9ca3af" fontSize="8">Data Products</text>
+          <text x="630" y="164" textAnchor="middle" fill="#6b7280" fontSize="7">API / Portal / Archive</text>
+
+          {/* Ground Sensors (optional) */}
+          <rect x="430" y="120" width="110" height="55" rx="8" fill="#1f2937" stroke="#f97316" strokeWidth="1.5" strokeDasharray="4 2"/>
+          <text x="485" y="140" textAnchor="middle" fill="#f97316" fontSize="9" fontWeight="600">Ground Sensors</text>
+          <text x="485" y="153" textAnchor="middle" fill="#9ca3af" fontSize="7">(if applicable)</text>
+          <text x="485" y="164" textAnchor="middle" fill="#6b7280" fontSize="7">In-situ / Relay / IoT</text>
+
+          {/* Data flow arrows with direction markers */}
+          {/* Space → Ground Ops: TM + Housekeeping (S-band) */}
+          <defs>
+            <marker id="arrow-down" markerWidth="6" markerHeight="4" refX="3" refY="2" orient="auto">
+              <polygon points="0 0, 6 2, 0 4" fill="#06b6d4"/>
+            </marker>
+            <marker id="arrow-up" markerWidth="6" markerHeight="4" refX="3" refY="2" orient="auto">
+              <polygon points="6 0, 0 2, 6 4" fill="#8b5cf6"/>
+            </marker>
+            <marker id="arrow-right" markerWidth="6" markerHeight="4" refX="3" refY="2" orient="auto">
+              <polygon points="0 0, 6 2, 0 4" fill="#f59e0b"/>
+            </marker>
+          </defs>
+          {/* S-band TM downlink */}
+          <line x1="310" y1="80" x2="105" y2="120" stroke="#06b6d4" strokeWidth="1.5" markerEnd="url(#arrow-down)"/>
+          <text x="185" y="96" fill="#06b6d4" fontSize="7" transform="rotate(-22 185 96)">S-band TM/HK ↓</text>
+          {/* S-band TC uplink */}
+          <line x1="115" y1="120" x2="320" y2="80" stroke="#8b5cf6" strokeWidth="1.5" strokeDasharray="3 2" markerEnd="url(#arrow-up)"/>
+          <text x="195" y="108" fill="#8b5cf6" fontSize="7" transform="rotate(-22 195 108)">S-band TC ↑</text>
+          {/* X-band science data downlink */}
+          <line x1="400" y1="80" x2="305" y2="120" stroke="#ec4899" strokeWidth="2" markerEnd="url(#arrow-down)"/>
+          <text x="370" y="100" fill="#ec4899" fontSize="7" transform="rotate(-30 370 100)">X-band Science ↓</text>
+          {/* Payload processing → Users */}
+          <line x1="390" y1="147" x2="560" y2="147" stroke="#f59e0b" strokeWidth="1.5" markerEnd="url(#arrow-right)"/>
+          <text x="475" y="142" textAnchor="middle" fill="#f59e0b" fontSize="7">L2/L3 Products (HTTPS)</text>
+          {/* Ground ops → payload processing */}
+          <line x1="180" y1="155" x2="220" y2="155" stroke="#6b7280" strokeWidth="1" markerEnd="url(#arrow-right)"/>
+          <text x="200" y="168" textAnchor="middle" fill="#6b7280" fontSize="6">Orbit/TLE</text>
+          {/* Ground sensors → processing (if applicable) */}
+          <line x1="485" y1="175" x2="370" y2="175" stroke="#f97316" strokeWidth="1" strokeDasharray="3 2"/>
+          <text x="430" y="185" textAnchor="middle" fill="#f97316" fontSize="6">Sensor data (IP/radio)</text>
+
+          {/* Legend */}
+          <text x="30" y="210" fill="#6b7280" fontSize="7" fontWeight="600">LEGEND:</text>
+          <line x1="30" y1="222" x2="50" y2="222" stroke="#06b6d4" strokeWidth="1.5"/>
+          <text x="55" y="225" fill="#6b7280" fontSize="7">S-band (TM/TC)</text>
+          <line x1="150" y1="222" x2="170" y2="222" stroke="#ec4899" strokeWidth="2"/>
+          <text x="175" y="225" fill="#6b7280" fontSize="7">X-band (payload data)</text>
+          <line x1="300" y1="222" x2="320" y2="222" stroke="#f59e0b" strokeWidth="1.5"/>
+          <text x="325" y="225" fill="#6b7280" fontSize="7">Ground network (fibre/IP)</text>
+          <line x1="470" y1="222" x2="490" y2="222" stroke="#f97316" strokeWidth="1" strokeDasharray="3 2"/>
+          <text x="495" y="225" fill="#6b7280" fontSize="7">Optional ground sensor link</text>
         </svg>
       </div>
 

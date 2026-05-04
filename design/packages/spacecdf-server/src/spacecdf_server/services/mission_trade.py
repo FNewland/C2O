@@ -214,6 +214,71 @@ def _get_alternatives(target_gsd_m: float, target_revisit_days: float,
               "Two data sources to integrate"],
     ))
 
+    # --- Non-optical alternatives (comms, SAR, AIS) ---
+    alts.append(MissionAlternative(
+        name="Iridium NEXT (existing comms)",
+        category="existing_satellite",
+        description="Iridium constellation: global L-band coverage, 66 satellites, voice/data/SBD. "
+                    "Short Burst Data (SBD) for IoT/M2M at ~$0.05/message.",
+        coverage="global", revisit_days=0, gsd_m=0,
+        latency_hours=0.01, spectral_bands=[],
+        operational_lifetime_years=99,
+        cost_type="subscription", annual_cost_keur=5, capital_cost_keur=2, total_3yr_cost_keur=17,
+        data_ownership="shared", scheduling_control="none", customisation="none",
+        pros=["Global coverage including poles", "Low latency", "Operational now",
+              "Proven reliability", "SBD for IoT"],
+        cons=["Low bandwidth", "No imaging", "No customisation",
+              "Subscription cost per terminal", "Shared infrastructure"],
+    ))
+
+    alts.append(MissionAlternative(
+        name="ICEYE SAR constellation (existing)",
+        category="existing_satellite",
+        description="ICEYE X-band SAR constellation: <1m resolution, day/night/all-weather. "
+                    "Tasking available for specific targets.",
+        coverage="global", revisit_days=1, gsd_m=1,
+        latency_hours=6, spectral_bands=["X-band SAR"],
+        operational_lifetime_years=99,
+        cost_type="subscription", annual_cost_keur=200, capital_cost_keur=0, total_3yr_cost_keur=600,
+        data_ownership="licensed", scheduling_control="partial", customisation="partial",
+        pros=["Sub-metre SAR resolution", "Day/night/all-weather", "Fast tasking",
+              "Global coverage", "No development needed"],
+        cons=["High subscription cost", "Licensed data only", "No instrument customisation",
+              "Dependent on provider scheduling"],
+    ))
+
+    alts.append(MissionAlternative(
+        name="Spire Global AIS/GNSS-R (existing)",
+        category="existing_satellite",
+        description="Spire nanosatellite constellation: AIS maritime tracking, GNSS reflectometry, "
+                    "weather data. Data-as-a-Service model.",
+        coverage="global", revisit_days=0.5, gsd_m=0,
+        latency_hours=1, spectral_bands=["AIS VHF", "GNSS L-band"],
+        operational_lifetime_years=99,
+        cost_type="subscription", annual_cost_keur=50, capital_cost_keur=0, total_3yr_cost_keur=150,
+        data_ownership="licensed", scheduling_control="none", customisation="none",
+        pros=["Global AIS coverage", "GNSS-R for ocean/soil moisture", "Weather profiles",
+              "Operational now", "API access"],
+        cons=["AIS only (no imaging)", "Licensed data", "No customisation",
+              "Dependent on Spire infrastructure"],
+    ))
+
+    alts.append(MissionAlternative(
+        name="Dedicated CubeSat (non-optical)",
+        category="new_satellite",
+        description="Purpose-built CubeSat for RF/comms/IoT payload. Full control over design, "
+                    "spectrum, and data. 3U-6U form factor typical.",
+        coverage="regional", revisit_days=3, gsd_m=0,
+        latency_hours=6, spectral_bands=["User-defined"],
+        operational_lifetime_years=3,
+        cost_type="capital", annual_cost_keur=200, capital_cost_keur=2000, total_3yr_cost_keur=2600,
+        data_ownership="full", scheduling_control="full", customisation="full",
+        pros=["Full control", "Custom payload", "Own data", "IP ownership",
+              "CubeSat cost structure"],
+        cons=["Development risk", "Single point of failure",
+              "Regulatory burden (spectrum)", "Launch procurement needed"],
+    ))
+
     return alts
 
 

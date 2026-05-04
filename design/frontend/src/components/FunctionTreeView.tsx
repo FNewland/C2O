@@ -27,9 +27,14 @@ const SUBSYSTEM_COLORS: Record<string, string> = {
   payload: '#10b981', power: '#f59e0b', aocs: '#06b6d4',
   link: '#ec4899', thermal: '#ef4444', structure: '#84cc16',
   propulsion: '#f97316', data: '#8b5cf6',
+  ground_station: '#14b8a6', ground_processing: '#a78bfa', ground_sensor: '#fb923c',
+  systems: '#6b7280',
 }
 
-const DOMAIN_OPTIONS = ['payload', 'power', 'aocs', 'link', 'thermal', 'structure', 'propulsion', 'data', 'systems', '']
+const DOMAIN_OPTIONS = [
+  'payload', 'power', 'aocs', 'link', 'thermal', 'structure', 'propulsion', 'data', 'systems',
+  'ground_station', 'ground_processing', 'ground_sensor', '',
+]
 
 export function FunctionTreeView() {
   const [functions, setFunctions] = useState<FunctionNode[]>(DEMO_FUNCTIONS)

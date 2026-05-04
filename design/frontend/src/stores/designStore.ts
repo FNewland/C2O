@@ -207,6 +207,20 @@ export const useDesignStore = create<DesignStore>((set, get) => ({
     set({ isRunning: true, error: null })
     try {
       const { requirements, missionNeed } = get()
+
+      // Ensure a study exists so studyId is available for requirements, compliance, etc.
+      if (!get().studyId) {
+        const createRes = await fetch(`${API_BASE}/studies/`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ requirements, mission_need: missionNeed }),
+        })
+        if (createRes.ok) {
+          const studyData = await createRes.json()
+          set({ studyId: studyData.id })
+        }
+      }
+
       const res = await fetch(`${API_BASE}/design/quick-design`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

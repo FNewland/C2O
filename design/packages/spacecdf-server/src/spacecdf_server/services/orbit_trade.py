@@ -81,6 +81,7 @@ def compute_orbit_trade(
     min_lifetime_years: float = 2.0,
     downlink_rate_mbps: float = 50.0,
     wavelength_um: float = 0.55,
+    mission_type: str = "earth_observation",
 ) -> dict[str, Any]:
     """Compute orbit trade study from mission objectives.
 
@@ -115,22 +116,57 @@ def compute_orbit_trade(
         _compute_orbit_properties(c, aperture_m, wavelength_um,
                                   target_latitude_band, downlink_rate_mbps)
 
-    # Score candidates
-    criteria_weights = {
-        "gsd": 0.25,         # How close to target GSD
-        "revisit": 0.20,     # How close to target revisit
-        "lifetime": 0.15,    # Meets lifetime need
-        "debris": 0.15,      # Debris compliance
-        "cost": 0.15,        # Launch cost
-        "data": 0.10,        # Daily data downlink capacity
-    }
+    # Score candidates — weights depend on mission type
+    is_optical = mission_type in ("earth_observation", "optical_imager", "science_planetary")
+    is_comms = mission_type in ("communications", "rf_relay", "iot")
+    is_sar = mission_type == "sar"
+
+    if is_comms:
+        criteria_weights = {
+            "coverage": 0.25,    # Ground coverage / contact time
+            "latency": 0.20,     # End-to-end latency
+            "lifetime": 0.15,
+            "debris": 0.15,
+            "cost": 0.15,
+            "data": 0.10,
+        }
+    elif is_sar:
+        criteria_weights = {
+            "revisit": 0.25,
+            "coverage": 0.20,
+            "lifetime": 0.15,
+            "debris": 0.15,
+            "cost": 0.15,
+            "data": 0.10,
+        }
+    else:
+        criteria_weights = {
+            "gsd": 0.25,
+            "revisit": 0.20,
+            "lifetime": 0.15,
+            "debris": 0.15,
+            "cost": 0.15,
+            "data": 0.10,
+        }
 
     for c in candidates:
-        # GSD score: 1.0 if meets target, degrades linearly
-        if c.achievable_gsd_m <= target_gsd_m:
-            c.scores["gsd"] = 1.0
-        else:
-            c.scores["gsd"] = max(0, 1.0 - (c.achievable_gsd_m - target_gsd_m) / target_gsd_m)
+        # GSD score (optical missions only)
+        if is_optical:
+            if c.achievable_gsd_m <= target_gsd_m:
+                c.scores["gsd"] = 1.0
+            else:
+                c.scores["gsd"] = max(0, 1.0 - (c.achievable_gsd_m - target_gsd_m) / target_gsd_m)
+
+        # Coverage / contact score (comms missions)
+        if is_comms:
+            c.scores["coverage"] = min(1.0, c.contact_min_per_day / 60)  # 60 min/day = perfect
+            # Latency: lower altitude = lower latency
+            latency_ms = c.altitude_km * 1000 / C_LIGHT * 2 * 1000  # Round-trip
+            c.scores["latency"] = max(0, 1.0 - latency_ms / 20)  # 20ms = worst acceptable
+
+        # Coverage for SAR
+        if is_sar:
+            c.scores["coverage"] = min(1.0, c.contact_min_per_day / 30)
 
         # Revisit score
         if c.revisit_days <= target_revisit_days:
