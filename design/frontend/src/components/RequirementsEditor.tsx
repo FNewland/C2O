@@ -7,6 +7,7 @@
  * options for RED requirements.
  */
 import { useState } from 'react'
+import { useDesignStore } from '../stores/designStore'
 
 interface SuggestedReq {
   id: string; text: string; req_type: string; domain: string
@@ -126,6 +127,9 @@ export function RequirementsEditor({ studyId }: { studyId: string | null }) {
           ))}
         </div>
       )}
+
+      {/* Architecture-derived requirements */}
+      <ArchDerivedRequirements levelFilter={levelFilter} />
 
       {!studyId && (
         <div style={{ color: '#6b7280', fontSize: '0.85rem', padding: '2rem', textAlign: 'center' }}>
@@ -306,6 +310,43 @@ function RequirementCard({ req, smart, editing, editText, editThreshold, editMet
           Edit
         </button>
       )}
+    </div>
+  )
+}
+
+
+function ArchDerivedRequirements({ levelFilter }: { levelFilter: string }) {
+  const archReqs = useDesignStore(s => s.architectureDerivedReqs)
+  if (!archReqs || archReqs.length === 0) return null
+
+  const filtered = levelFilter === 'all' ? archReqs : archReqs.filter(r => r.level === levelFilter)
+  if (filtered.length === 0) return null
+
+  return (
+    <div style={{ marginBottom: '1rem' }}>
+      <div style={{ fontSize: '0.78rem', fontWeight: 600, color: '#8b5cf6', marginBottom: '0.4rem' }}>
+        Architecture-Derived Requirements ({filtered.length})
+      </div>
+      <p style={{ fontSize: '0.68rem', color: '#6b7280', marginBottom: '0.4rem' }}>
+        These requirements were automatically derived from your architecture selections in the Architecture tab.
+      </p>
+      {filtered.map(req => (
+        <div key={req.id} style={{
+          display: 'flex', alignItems: 'flex-start', gap: '0.4rem',
+          padding: '0.3rem 0.5rem', marginBottom: '0.2rem', borderRadius: '4px',
+          background: 'rgba(139,92,246,0.05)', borderLeft: '3px solid #8b5cf6',
+        }}>
+          <span style={{
+            fontSize: '0.6rem', padding: '0.1rem 0.3rem', borderRadius: '3px',
+            background: req.level === 'system' ? 'rgba(59,130,246,0.15)' : 'rgba(6,182,212,0.15)',
+            color: req.level === 'system' ? '#3b82f6' : '#06b6d4',
+            fontWeight: 600, textTransform: 'uppercase', flexShrink: 0,
+          }}>{req.level}</span>
+          <span style={{ fontFamily: 'monospace', fontSize: '0.65rem', color: '#6b7280', flexShrink: 0 }}>{req.id}</span>
+          <span style={{ fontSize: '0.75rem', color: '#d1d5db' }}>{req.text}</span>
+          <span style={{ fontSize: '0.6rem', color: '#6b7280', flexShrink: 0 }}>{req.subsystem}</span>
+        </div>
+      ))}
     </div>
   )
 }

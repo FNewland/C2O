@@ -118,6 +118,9 @@ interface DesignStore {
   error: string | null
   studyId: string | null
 
+  // Architecture-derived requirements
+  architectureDerivedReqs: Array<{ id: string; level: string; text: string; subsystem: string }>
+
   // Reactive state
   designStale: boolean  // true when requirements changed since last design run
   lastChangeSource: string  // which tab made the last change
@@ -186,6 +189,7 @@ export const useDesignStore = create<DesignStore>((set, get) => ({
   isRunning: false,
   error: null,
   studyId: null,
+  architectureDerivedReqs: [],
   designStale: false,
   lastChangeSource: '',
   changeHistory: [],

@@ -8,6 +8,7 @@
  */
 import { useState, useEffect } from 'react'
 import { useDesignStore } from '../stores/designStore'
+import { useSessionStore } from '../stores/sessionStore'
 
 interface ArchOption {
   id: string; name: string; description: string
@@ -36,9 +37,21 @@ const SUBSYSTEM_LABELS: Record<string, { name: string; color: string }> = {
   ground: { name: 'Ground Segment', color: '#0ea5e9' },
 }
 
+// Map positions to their primary subsystem for default view
+const POSITION_SUBSYSTEM: Record<string, string> = {
+  systems_engineer: 'eps', power_engineer: 'eps', aocs_engineer: 'aocs',
+  comms_engineer: 'ttc', thermal_engineer: 'thermal', structures_engineer: 'structure',
+  propulsion_engineer: 'propulsion', software_engineer: 'obc',
+  ground_segment: 'ground', mission_ops: 'ground',
+  payload_lead: 'eps', mission_analyst: 'aocs', cost_engineer: 'eps',
+  compliance_engineer: 'ttc', user_representative: 'ground',
+}
+
 export function SystemArchitectureEditor() {
+  const positionIds = useSessionStore(s => s.positionIds)
+  const primaryPos = positionIds?.[0] || 'systems_engineer'
   const [subsystems, setSubsystems] = useState<string[]>([])
-  const [activeSubsystem, setActiveSubsystem] = useState<string>('eps')
+  const [activeSubsystem, setActiveSubsystem] = useState<string>(POSITION_SUBSYSTEM[primaryPos] || 'eps')
   const [options, setOptions] = useState<ArchOption[]>([])
   const [selected, setSelected] = useState<Record<string, SelectedArch>>({})
   const [loading, setLoading] = useState(false)
@@ -71,21 +84,44 @@ export function SystemArchitectureEditor() {
     })
     if (res.ok) {
       const data = await res.json()
-      setSelected(prev => ({ ...prev, [activeSubsystem]: data }))
+      setSelected(prev => {
+        const next = { ...prev, [activeSubsystem]: data }
+        // Push ALL derived requirements from ALL selections to designStore
+        const allReqs = Object.entries(next).flatMap(([ss, sel]) =>
+          (sel.derived_requirements || []).map((r: any) => ({ ...r, subsystem: ss }))
+        )
+        useDesignStore.setState({ architectureDerivedReqs: allReqs })
+        return next
+      })
       markStale('architecture')
     }
   }
 
   const currentSelection = selected[activeSubsystem]
-  const info = SUBSYSTEM_LABELS[activeSubsystem] || { name: activeSubsystem, color: '#6b7280', icon: '' }
+  const info = SUBSYSTEM_LABELS[activeSubsystem] || { name: activeSubsystem, color: '#6b7280' }
+  const selectedCount = Object.keys(selected).length
+  const totalCount = subsystems.length
+  const totalDerivedReqs = Object.values(selected).reduce((s, sel) => s + (sel.derived_requirements?.length || 0), 0)
 
   return (
     <div style={{ padding: '1rem', overflowY: 'auto', height: '100%' }}>
       <h2 style={{ marginBottom: '0.25rem' }}>System Architecture</h2>
-      <p style={{ fontSize: '0.78rem', color: '#9ca3af', marginBottom: '0.75rem' }}>
+      <p style={{ fontSize: '0.78rem', color: '#9ca3af', marginBottom: '0.5rem' }}>
         Select architecture options for each subsystem. Each choice derives system and subsystem requirements.
-        Per NASA SEH Process 4 (Design Solution Definition).
       </p>
+
+      {/* Progress bar */}
+      <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.75rem', marginBottom: '0.75rem', alignItems: 'center' }}>
+        <span style={{ color: selectedCount === totalCount ? '#10b981' : '#f59e0b', fontWeight: 600 }}>
+          {selectedCount}/{totalCount} subsystems configured
+        </span>
+        <span style={{ color: '#6b7280' }}>{totalDerivedReqs} requirements derived</span>
+        {primaryPos !== 'systems_engineer' && (
+          <span style={{ fontSize: '0.68rem', color: '#3b82f6' }}>
+            Your subsystem: {SUBSYSTEM_LABELS[POSITION_SUBSYSTEM[primaryPos] || '']?.name || primaryPos}
+          </span>
+        )}
+      </div>
 
       {/* Subsystem tabs */}
       <div style={{ display: 'flex', gap: '0.3rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
