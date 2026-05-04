@@ -25,7 +25,7 @@
 ## Tier 3: Architecture Gaps (need new code)
 
 - [x] System-V requirement hierarchy → RequirementsEditor level filter (mission/system/subsystem) + parent_id in data model
-- [ ] Per-subsystem engineering budgets (editable allocations per subsystem with margins)
+- [x] Per-subsystem engineering budgets → BudgetComparison "Edit Allocations" mode with per-subsystem input
 - [x] Interactive link budget calculator → LinkBudgetTool tab with full cascade (TX, path, RX, margin)
 - [x] Pointing budget → PointingBudget on dashboard (7 error sources, RSS, editable, margin vs requirement)
 - [x] Data budget → DataBudget on dashboard (generation→storage→downlink→user flow, balance check)
@@ -41,11 +41,11 @@
 - [x] Structure CER → COTS frame mass lookup for CubeSats (3U=0.35kg instead of 2.7kg)
 - [x] Deep-space AOCS → simplified model for interplanetary (no gravity gradient, MarCO 41% vs 162%)
 - [x] Cost CERs → CubeSat COTS flat pricing (EPS €15k, AOCS €40k instead of per-kg SSCM)
-- [ ] Navigation redesign (6 workflow phases instead of 20+ tabs)
+- [x] Navigation redesign → tabs grouped into 5 workflow phases (Design, Analysis, Verify, Team, Data) with group labels
 - [ ] System/subsystem boundary definition tool
-- [ ] Per-requirement V&V method and phase assignment (V&V matrix exists but not linked to requirements editor)
-- [ ] Constellation integrated into design loop (not just mission trade)
-- [ ] Beyond-LEO orbits in orbit form selector
+- [x] Per-requirement V&V method and phase assignment → VerificationMatrix tab with ATRI, phase, level, status
+- [x] Constellation fields in requirements form (num_spacecraft, constellation_type, num_planes)
+- [x] Beyond-LEO orbits in orbit form (HEO, NRHO added)
 
 ## Course Materials
 
