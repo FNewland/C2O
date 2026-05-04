@@ -46,42 +46,60 @@ def estimate_structure_mass(
     """
     result = StructureDesignResult()
 
-    # Structure fraction by class
-    fractions = {
-        "nano": (0.25, 0.30),     # CubeSat/nanosat
-        "micro": (0.20, 0.28),    # 10-100 kg
-        "small": (0.18, 0.25),    # 100-500 kg
-        "medium": (0.14, 0.20),   # 500-2000 kg
-        "large": (0.12, 0.18),    # 2000-5000 kg
-        "flagship": (0.10, 0.15), # 5000+ kg
+    # For CubeSats: use COTS frame mass lookup (not parametric fraction)
+    # Real CubeSat frames: ISIS 3U = 0.35 kg, Pumpkin 6U = 0.9 kg
+    CUBESAT_FRAME_MASS = {
+        "1U": 0.20, "2U": 0.28, "3U": 0.35, "6U": 0.70,
+        "12U": 1.20, "16U": 1.60, "27U": 2.50,
     }
 
-    low, high = fractions.get(spacecraft_class, (0.18, 0.25))
-    base_fraction = (low + high) / 2
+    if spacecraft_class in ("nano", "micro") and spacecraft_dry_mass_kg < 30:
+        # CubeSat: use COTS frame + fasteners + brackets
+        if spacecraft_dry_mass_kg <= 2:
+            form = "1U"
+        elif spacecraft_dry_mass_kg <= 4:
+            form = "2U"
+        elif spacecraft_dry_mass_kg <= 6:
+            form = "3U"
+        elif spacecraft_dry_mass_kg <= 14:
+            form = "6U"
+        elif spacecraft_dry_mass_kg <= 24:
+            form = "12U"
+        else:
+            form = "16U"
 
-    # Adjust for deployables
-    if has_deployables:
-        base_fraction += 0.02
+        frame_mass = CUBESAT_FRAME_MASS.get(form, 0.35)
+        fasteners_mass = 0.03 * spacecraft_dry_mass_kg  # ~3% for fasteners, standoffs
+        mechanisms_mass = num_deployable_panels * 0.03 + (0.02 if has_deployables else 0)
+        total_structure = frame_mass + fasteners_mass + mechanisms_mass
 
-    # Adjust for propulsion (tank support structure)
-    if has_propulsion:
-        base_fraction += 0.03
+        result.structure_fraction = total_structure / max(spacecraft_dry_mass_kg, 0.1)
+        result.primary_structure_mass_kg = frame_mass
+        result.secondary_structure_mass_kg = fasteners_mass
+        result.mechanisms_mass_kg = mechanisms_mass
+    else:
+        # Larger spacecraft: use parametric fraction
+        fractions = {
+            "small": (0.14, 0.18),    # 100-500 kg
+            "medium": (0.12, 0.16),   # 500-2000 kg
+            "large": (0.10, 0.14),    # 2000-5000 kg
+            "flagship": (0.08, 0.12), # 5000+ kg
+        }
 
-    result.structure_fraction = base_fraction
+        low, high = fractions.get(spacecraft_class, (0.14, 0.18))
+        base_fraction = (low + high) / 2
+        if has_deployables:
+            base_fraction += 0.02
+        if has_propulsion:
+            base_fraction += 0.03
 
-    # Solve the circular dependency: if f is the structure fraction of total
-    # dry mass, then m_struct = f * m_total = f * (m_non_struct + m_struct),
-    # so m_struct = m_non_struct * f / (1 - f).
-    # spacecraft_dry_mass_kg is the current estimate (may include structure
-    # from a previous iteration). Use it directly but cap the fraction to
-    # avoid runaway on first iterations.
-    capped_fraction = min(base_fraction, 0.35)
-    total_structure = spacecraft_dry_mass_kg * capped_fraction / (1.0 + capped_fraction)
+        result.structure_fraction = base_fraction
+        capped_fraction = min(base_fraction, 0.25)
+        total_structure = spacecraft_dry_mass_kg * capped_fraction / (1.0 + capped_fraction)
 
-    # Breakdown
-    result.primary_structure_mass_kg = total_structure * 0.60  # Bus, panels
-    result.secondary_structure_mass_kg = total_structure * 0.25  # Brackets, inserts
-    result.mechanisms_mass_kg = total_structure * 0.15 + num_deployable_panels * 0.3  # HRMs, hinges
+        result.primary_structure_mass_kg = total_structure * 0.60
+        result.secondary_structure_mass_kg = total_structure * 0.25
+        result.mechanisms_mass_kg = total_structure * 0.15 + num_deployable_panels * 0.3
 
     result.structure_mass_kg = (
         result.primary_structure_mass_kg

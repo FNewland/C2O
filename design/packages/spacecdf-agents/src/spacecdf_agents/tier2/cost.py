@@ -7,8 +7,26 @@ from __future__ import annotations
 from spacecdf_common.agents.base import AgentResult, DesignAgent, DesignState
 
 
-# Cost Estimating Relationships (CER) — kEUR per kg by subsystem
-# Based on SSCM and heritage data, inflation-adjusted to 2025
+# Cost Estimating Relationships — kEUR per kg by subsystem
+# TWO models: CubeSat (COTS-anchored) and larger (SSCM-based)
+
+# CubeSat COTS pricing (kEUR per subsystem, NOT per kg)
+# Based on vendor pricing: GomSpace, ISIS, NanoAvionics, Endurosat
+CUBESAT_SUBSYSTEM_COST_KEUR = {
+    "eps": 15,        # NanoPower P31u + BP4 + panels: ~€10-20k
+    "aocs": 40,       # Fine: RW(4×€8k) + ST(€15k) + MTQ(€5k) = ~€50k; Coarse: MTQ only ~€8k
+    "aocs_coarse": 8,
+    "tcs": 3,         # Passive: heaters + MLI ~€2-5k
+    "ttc": 20,        # UHF transceiver €10-15k + antenna €2-5k
+    "ttc_xband": 50,  # X-band transmitter €30-50k + antenna €10-15k
+    "obdh": 10,       # NanoMind/SatBus OBC ~€5-15k
+    "structure": 8,   # COTS frame €5-10k
+    "propulsion": 60, # Cold gas €20-40k; Electric €50-100k
+    "payload": 50,    # Highly variable: €10k (AIS) to €200k+ (custom imager)
+    "harness": 5,     # Harness + connectors €3-8k
+}
+
+# Larger spacecraft CER — kEUR per kg (SSCM-based, inflation-adjusted 2025)
 CER_KEUR_PER_KG = {
     "eps": 80,
     "aocs": 120,
@@ -22,8 +40,8 @@ CER_KEUR_PER_KG = {
 
 # Non-recurring engineering as fraction of hardware cost
 NRE_FRACTION = {
-    "nano": 0.50,    # CubeSat — high NRE relative to hardware
-    "micro": 0.60,
+    "nano": 0.30,     # CubeSat — lower NRE (COTS reduces custom work)
+    "micro": 0.50,
     "small": 0.80,
     "medium": 1.00,
     "large": 1.20,
@@ -32,8 +50,8 @@ NRE_FRACTION = {
 
 # Operations cost per year (kEUR)
 OPS_COST_PER_YEAR = {
-    "nano": 200,
-    "micro": 500,
+    "nano": 100,      # CubeSat ops: mostly automated, ~€50-150k/yr
+    "micro": 300,
     "small": 1500,
     "medium": 5000,
     "large": 15000,
@@ -84,13 +102,19 @@ class CostAgent(DesignAgent):
             "payload": state.get("mass.payload_kg", 0) or 0,
         }
 
-        for subsys, mass in subsystems.items():
-            cer = CER_KEUR_PER_KG.get(subsys, 50)
-            hw_cost += mass * cer
-
-        # OBDH
-        obdh_mass = state.get("data.obdh_mass_kg", 2.0) or 2.0
-        hw_cost += obdh_mass * CER_KEUR_PER_KG.get("obdh", 150)
+        # CubeSat: use COTS flat pricing instead of per-kg CER
+        if sc_class in ("nano", "micro"):
+            for subsys, mass in subsystems.items():
+                if mass > 0:
+                    hw_cost += CUBESAT_SUBSYSTEM_COST_KEUR.get(subsys, 20)
+            hw_cost += CUBESAT_SUBSYSTEM_COST_KEUR.get("obdh", 10)
+            hw_cost += CUBESAT_SUBSYSTEM_COST_KEUR.get("harness", 5)
+        else:
+            for subsys, mass in subsystems.items():
+                cer = CER_KEUR_PER_KG.get(subsys, 50)
+                hw_cost += mass * cer
+            obdh_mass = state.get("data.obdh_mass_kg", 2.0) or 2.0
+            hw_cost += obdh_mass * CER_KEUR_PER_KG.get("obdh", 150)
 
         # AIT (Assembly, Integration, Test) — typically 10-15% of hardware
         ait_cost = hw_cost * 0.12
@@ -101,8 +125,10 @@ class CostAgent(DesignAgent):
 
         # Launch cost estimate
         wet_mass = state.get("mass.wet_mass_kg", 100.0) or 100.0
-        if wet_mass < 50:
-            launch_cost = 1000  # Rideshare ~1 MEUR
+        if wet_mass < 10:
+            launch_cost = 200   # CubeSat rideshare: $200-350k (€150-250k)
+        elif wet_mass < 50:
+            launch_cost = 350   # Larger CubeSat rideshare
         elif wet_mass < 300:
             launch_cost = 3000  # Dedicated smallsat launcher
         elif wet_mass < 2000:

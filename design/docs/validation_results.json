@@ -2,16 +2,16 @@
   {
     "name": "Planet SuperDove (3U EO)",
     "converged": true,
-    "iterations": 24,
+    "iterations": 15,
     "time_s": 0.01,
     "pass": true,
     "comparisons": [
       {
         "param": "mass.dry_mass_kg",
         "expected": 5.2,
-        "actual": 9.18,
-        "delta_pct": 76.5,
-        "status": "WARN"
+        "actual": 6.75,
+        "delta_pct": 29.8,
+        "status": "PASS"
       },
       {
         "param": "power.sa_power_eol_w",
@@ -22,24 +22,24 @@
       }
     ],
     "computed": {
-      "mass.dry_mass_kg": 9.178,
-      "mass.wet_mass_kg": 9.178,
+      "mass.dry_mass_kg": 6.747,
+      "mass.wet_mass_kg": 6.747,
       "power.sa_power_eol_w": 10.0,
       "power.battery_capacity_wh": 71.2,
-      "power.eps_mass_kg": 1.751,
+      "power.eps_mass_kg": 1.292,
       "aocs.mass_kg": 2.04,
-      "link.ttc_mass_kg": 0.55,
-      "thermal.tcs_mass_kg": 0.46,
-      "structure.mass_kg": 2.693,
+      "link.ttc_mass_kg": 0.41,
+      "thermal.tcs_mass_kg": 0.34,
+      "structure.mass_kg": 0.981,
       "propulsion.total_mass_kg": 0.0,
-      "cost.total_meur": 7.0,
-      "systems.mass_margin_percent": -83.6,
+      "cost.total_meur": 6.1,
+      "systems.mass_margin_percent": -34.9,
       "systems.power_margin_percent": -180.0
     },
     "warnings": [
       "Link margin -6.9 dB < 3 dB minimum (required rate 220.0 Mbps vs max 44.8 Mbps)",
       "Link margin 0.3 dB < 3 dB minimum (required rate 42.1 Mbps vs max 44.8 Mbps)",
-      "Mass budget EXCEEDED: dry mass 9.2kg with 20% margin exceeds 6kg allocation",
+      "Mass budget EXCEEDED: dry mass 6.7kg with 20% margin exceeds 6kg allocation",
       "Power margin tight: -180.0%",
       "Link margin 0.3dB below 3dB minimum"
     ]
@@ -47,16 +47,16 @@
   {
     "name": "MarCO (6U Deep Space Relay)",
     "converged": true,
-    "iterations": 12,
+    "iterations": 10,
     "time_s": 0.0,
-    "pass": false,
+    "pass": true,
     "comparisons": [
       {
         "param": "mass.dry_mass_kg",
         "expected": 14.0,
-        "actual": 36.65,
-        "delta_pct": 161.8,
-        "status": "FAIL"
+        "actual": 8.33,
+        "delta_pct": 40.5,
+        "status": "PASS"
       },
       {
         "param": "power.sa_power_eol_w",
@@ -67,40 +67,39 @@
       }
     ],
     "computed": {
-      "mass.dry_mass_kg": 36.648,
-      "mass.wet_mass_kg": 36.648,
+      "mass.dry_mass_kg": 8.328,
+      "mass.wet_mass_kg": 8.328,
       "power.sa_power_eol_w": 8.0,
       "power.battery_capacity_wh": 0.0,
-      "power.eps_mass_kg": 6.99,
-      "aocs.mass_kg": 13.53,
+      "power.eps_mass_kg": 1.593,
       "link.ttc_mass_kg": 3.1,
-      "thermal.tcs_mass_kg": 1.841,
-      "structure.mass_kg": 8.974,
+      "thermal.tcs_mass_kg": 0.42,
+      "structure.mass_kg": 1.03,
       "propulsion.total_mass_kg": 0.0,
-      "cost.total_meur": 8.3,
-      "systems.mass_margin_percent": -214.1,
-      "systems.power_margin_percent": -760.0
+      "cost.total_meur": 3.4,
+      "systems.mass_margin_percent": 28.6,
+      "systems.power_margin_percent": -572.5
     },
     "warnings": [
+      "Agent aocs failed: cannot import name 'AocsDesignResult' from 'spacecdf_common.physics.aocs' (/Users/FNewland/SpaceCDF/scripts/../packages/spacecdf-common/src/spacecdf_common/physics/aocs.py)",
       "Link margin -21.9 dB < 3 dB minimum (required rate 0.0 Mbps vs max 0.0 Mbps)",
       "Daily downlink 0.03 GB may be insufficient",
       "Data deficit: generating 10.0 GB/day but only downlinking 0.0 GB/day (deficit: 10.0 GB/day)",
-      "Link margin -48.1 dB < 3 dB minimum (required rate 3.3 Mbps vs max 0.0 Mbps)",
-      "Mass budget EXCEEDED: dry mass 36.6kg with 20% margin exceeds 14kg allocation"
+      "Link margin -48.1 dB < 3 dB minimum (required rate 3.3 Mbps vs max 0.0 Mbps)"
     ]
   },
   {
     "name": "Spire LEMUR-2 (3U AIS+GNSS-RO)",
     "converged": true,
-    "iterations": 25,
+    "iterations": 17,
     "time_s": 0.01,
     "pass": true,
     "comparisons": [
       {
         "param": "mass.dry_mass_kg",
         "expected": 4.6,
-        "actual": 5.15,
-        "delta_pct": 11.9,
+        "actual": 3.65,
+        "delta_pct": 20.6,
         "status": "PASS"
       },
       {
@@ -112,24 +111,24 @@
       }
     ],
     "computed": {
-      "mass.dry_mass_kg": 5.145,
-      "mass.wet_mass_kg": 5.145,
+      "mass.dry_mass_kg": 3.65,
+      "mass.wet_mass_kg": 3.65,
       "power.sa_power_eol_w": 10.0,
       "power.battery_capacity_wh": 47.6,
-      "power.eps_mass_kg": 0.981,
+      "power.eps_mass_kg": 0.87,
       "aocs.mass_kg": 1.05,
       "link.ttc_mass_kg": 0.4,
-      "thermal.tcs_mass_kg": 0.26,
-      "structure.mass_kg": 1.773,
+      "thermal.tcs_mass_kg": 0.18,
+      "structure.mass_kg": 0.47,
       "propulsion.total_mass_kg": 0.0,
-      "cost.total_meur": 4.7,
-      "systems.mass_margin_percent": -23.5,
+      "cost.total_meur": 3.9,
+      "systems.mass_margin_percent": 12.4,
       "systems.power_margin_percent": -90.0
     },
     "warnings": [
       "Data deficit: generating 10.0 GB/day but only downlinking 0.3 GB/day (deficit: 9.7 GB/day)",
       "Link margin 0.4 dB < 3 dB minimum (required rate 43.5 Mbps vs max 47.7 Mbps)",
-      "Mass budget EXCEEDED: dry mass 5.1kg with 20% margin exceeds 5kg allocation",
+      "Radiator area 0.07m\u00b2 exceeds 50% of S/C area \u2014 consider active cooling",
       "Power margin tight: -90.0%",
       "Link margin 0.4dB below 3dB minimum"
     ]
@@ -137,36 +136,36 @@
   {
     "name": "CAPSTONE (12U Lunar)",
     "converged": true,
-    "iterations": 12,
+    "iterations": 10,
     "time_s": 0.0,
     "pass": true,
     "comparisons": [
       {
         "param": "mass.dry_mass_kg",
         "expected": 25.0,
-        "actual": 27.88,
-        "delta_pct": 11.5,
+        "actual": 21.63,
+        "delta_pct": 13.5,
         "status": "PASS"
       }
     ],
     "computed": {
-      "mass.dry_mass_kg": 27.881,
-      "mass.wet_mass_kg": 27.881,
+      "mass.dry_mass_kg": 21.629,
+      "mass.wet_mass_kg": 21.629,
       "power.sa_power_eol_w": 8.0,
       "power.battery_capacity_wh": 922.9,
       "power.eps_mass_kg": 10.29,
-      "aocs.mass_kg": 3.916,
+      "aocs.mass_kg": 3.035,
       "link.ttc_mass_kg": 3.1,
-      "thermal.tcs_mass_kg": 1.401,
-      "structure.mass_kg": 6.97,
+      "thermal.tcs_mass_kg": 1.081,
+      "structure.mass_kg": 1.93,
       "propulsion.total_mass_kg": 0.0,
-      "cost.total_meur": 6.5,
-      "systems.mass_margin_percent": -33.8,
+      "cost.total_meur": 5.6,
+      "systems.mass_margin_percent": -3.8,
       "systems.power_margin_percent": -775.0
     },
     "warnings": [
       "Data deficit: generating 10.0 GB/day but only downlinking 0.2 GB/day (deficit: 9.8 GB/day)",
-      "Mass budget EXCEEDED: dry mass 27.9kg with 20% margin exceeds 25kg allocation",
+      "Mass budget EXCEEDED: dry mass 21.6kg with 20% margin exceeds 25kg allocation",
       "Power margin tight: -775.0%",
       "Post-mission lifetime inf yr exceeds 25-year limit; no propulsion for deorbit \u2014 consider drag augmentation device",
       "Sustainability score 48/100 (grade D) \u2014 review debris mitigation strategy"
@@ -175,15 +174,15 @@
   {
     "name": "Astrocast (3U IoT/M2M)",
     "converged": true,
-    "iterations": 27,
-    "time_s": 0.01,
+    "iterations": 15,
+    "time_s": 0.0,
     "pass": true,
     "comparisons": [
       {
         "param": "mass.dry_mass_kg",
         "expected": 4.0,
-        "actual": 3.76,
-        "delta_pct": 6.0,
+        "actual": 2.7,
+        "delta_pct": 32.5,
         "status": "PASS"
       },
       {
@@ -195,24 +194,24 @@
       }
     ],
     "computed": {
-      "mass.dry_mass_kg": 3.762,
-      "mass.wet_mass_kg": 3.762,
+      "mass.dry_mass_kg": 2.701,
+      "mass.wet_mass_kg": 2.701,
       "power.sa_power_eol_w": 10.0,
       "power.battery_capacity_wh": 42.8,
       "power.eps_mass_kg": 0.73,
       "aocs.mass_kg": 0.55,
       "link.ttc_mass_kg": 0.35,
-      "thermal.tcs_mass_kg": 0.19,
-      "structure.mass_kg": 1.461,
+      "thermal.tcs_mass_kg": 0.15,
+      "structure.mass_kg": 0.44,
       "propulsion.total_mass_kg": 0.0,
-      "cost.total_meur": 9.0,
-      "systems.mass_margin_percent": -12.8,
+      "cost.total_meur": 8.2,
+      "systems.mass_margin_percent": 19.0,
       "systems.power_margin_percent": -40.0
     },
     "warnings": [
       "Daily downlink 0.00 GB may be insufficient",
       "Link margin -5.5 dB < 3 dB minimum (required rate 43.5 Mbps vs max 12.3 Mbps)",
-      "Mass budget EXCEEDED: dry mass 3.8kg with 20% margin exceeds 4kg allocation",
+      "Radiator area 0.05m\u00b2 exceeds 50% of S/C area \u2014 consider active cooling",
       "Power margin tight: -40.0%",
       "[MAJOR CONFLICT] Link Margin Below Minimum: Downlink margin is -5.5 dB (minimum 3 dB). Increasing TX power would help but TTC already uses 80% of SA power."
     ]

@@ -59,16 +59,37 @@ class AOCSAgent(DesignAgent):
             body = "moon"
         elif orbit_type in ("mars",):
             body = "mars"
+        elif orbit_type in ("interplanetary",):
+            body = "sun"  # Deep space: solar radiation pressure dominant, no gravity gradient
 
-        aocs = compute_aocs_design(
-            altitude_km=alt,
-            spacecraft_mass_kg=sc_mass,
-            spacecraft_area_m2=dim * dim,
-            max_dimension_m=dim,
-            required_pointing_deg=pointing_req,
-            orbit_period_s=period,
-            body=body,
-        )
+        # For deep space / interplanetary: disturbance torques are minimal
+        # (no atmosphere, no magnetic field, gravity gradient negligible)
+        # Use a simplified AOCS model: just actuators for pointing
+        if orbit_type in ("interplanetary",) or alt == 0:
+            # Deep space CubeSat AOCS: reference MarCO (BCT XACT, 2.19 kg for 14 kg SC)
+            # Fraction: ~15% for fine pointing, ~5% for coarse
+            if pointing_req <= 0.5:
+                aocs_mass_estimate = max(0.8, sc_mass * 0.15)  # Fine: RW + ST
+            else:
+                aocs_mass_estimate = max(0.3, sc_mass * 0.05)  # Coarse: just sun sensors
+
+            from spacecdf_common.physics.aocs import AOCSDesignResult
+            aocs = AOCSDesignResult()
+            aocs.aocs_mass_kg = aocs_mass_estimate
+            aocs.aocs_power_w = aocs_mass_estimate * 3  # ~3 W/kg for AOCS
+            aocs.aocs_cost_keur = aocs_mass_estimate * 30
+            aocs.pointing_accuracy_deg = pointing_req
+            result.log(f"Deep-space AOCS: simplified model, {aocs_mass_estimate:.1f} kg")
+        else:
+            aocs = compute_aocs_design(
+                altitude_km=alt,
+                spacecraft_mass_kg=sc_mass,
+                spacecraft_area_m2=dim * dim,
+                max_dimension_m=dim,
+                required_pointing_deg=pointing_req,
+                orbit_period_s=period,
+                body=body,
+            )
 
         dry_est = state.get("mass.dry_mass_estimate_kg", 100.0) or 100.0
         aocs_mass = calibrate_mass("aocs", aocs.aocs_mass_kg, dry_est, sc_class)
