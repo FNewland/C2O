@@ -1,104 +1,80 @@
-import { useState } from 'react'
+/**
+ * StudyStepper — thin vertical step indicator (60px wide).
+ *
+ * Shows 4 numbered steps with completion status. Clicking a step
+ * navigates to that step's content (rendered in the center panel by App.tsx).
+ * No longer contains step content — just the navigation.
+ */
 import { useDesignStore } from '../stores/designStore'
-import { MissionNeedPanel } from './MissionNeedPanel'
-import { MissionTradeView } from './MissionTradeView'
-import { RequirementsPanel } from './RequirementsPanel'
 
 type Step = 'need' | 'concept' | 'requirements' | 'design'
 
-const STEPS: { id: Step; label: string; description: string }[] = [
-  { id: 'need', label: '1. Mission Need', description: 'What problem are we solving? For whom?' },
-  { id: 'concept', label: '2. Concept', description: 'Alternatives analysis — is space the right answer?' },
-  { id: 'requirements', label: '3. Requirements', description: 'Mission parameters — orbit, payload, constraints' },
-  { id: 'design', label: '4. Design', description: 'Run convergence and review system design' },
+const STEPS: { id: Step; label: string }[] = [
+  { id: 'need', label: 'Need' },
+  { id: 'concept', label: 'Concept' },
+  { id: 'requirements', label: 'Reqs' },
+  { id: 'design', label: 'Design' },
 ]
 
-export function StudyStepper() {
-  const [activeStep, setActiveStep] = useState<Step>('need')
-  const { missionNeed, runDesign, isRunning, result } = useDesignStore()
+interface Props {
+  activeStep: string
+  onStepClick: (step: Step) => void
+}
 
-  // Determine step completion
+export function StudyStepper({ activeStep, onStepClick }: Props) {
+  const { missionNeed, result } = useDesignStore()
+
   const needComplete = !!(missionNeed.problem_statement.trim() && missionNeed.stakeholders.length > 0 && missionNeed.objectives.length > 0)
   const conceptComplete = !!(missionNeed.alternatives.length >= 2 && missionNeed.selected_alternative_id)
-  const reqComplete = !!result
+  const designComplete = !!result
 
   const completionMap: Record<Step, boolean> = {
     need: needComplete,
     concept: conceptComplete,
-    requirements: false, // Always editable
-    design: reqComplete,
+    requirements: false,
+    design: designComplete,
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      {/* Step indicator */}
-      <div style={{ padding: '0.5rem', borderBottom: '1px solid var(--border, #374151)' }}>
-        {STEPS.map((step, i) => {
-          const isActive = activeStep === step.id
-          const isComplete = completionMap[step.id]
-          return (
+    <div style={{
+      width: '60px', background: 'var(--bg-secondary, #111827)',
+      borderRight: '1px solid var(--border, #374151)',
+      display: 'flex', flexDirection: 'column', alignItems: 'center',
+      paddingTop: '1rem', gap: '0.25rem',
+    }}>
+      {STEPS.map((step, i) => {
+        const isActive = activeStep === step.id
+        const isComplete = completionMap[step.id]
+        const isPast = STEPS.findIndex(s => s.id === activeStep) > i
+
+        return (
+          <div key={step.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.15rem' }}>
             <button
-              key={step.id}
-              onClick={() => setActiveStep(step.id)}
+              onClick={() => onStepClick(step.id)}
+              title={step.label}
               style={{
-                display: 'flex', alignItems: 'center', gap: '0.4rem', width: '100%',
-                padding: '0.4rem 0.5rem', border: 'none', cursor: 'pointer', textAlign: 'left',
-                background: isActive ? 'rgba(59,130,246,0.12)' : 'transparent',
-                borderLeft: isActive ? '3px solid var(--accent, #3b82f6)' : '3px solid transparent',
-                borderRadius: '0 4px 4px 0', marginBottom: '0.15rem',
+                width: 34, height: 34, borderRadius: '50%', border: 'none',
+                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '0.72rem', fontWeight: 700,
+                background: isComplete ? '#10b981' : isActive ? '#3b82f6' : (isPast ? '#374151' : '#1f2937'),
+                color: (isComplete || isActive) ? 'white' : '#6b7280',
+                transition: 'all 0.15s',
               }}
             >
-              <span style={{
-                width: 20, height: 20, borderRadius: '50%', fontSize: '0.65rem', fontWeight: 700,
-                display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                background: isComplete ? '#10b981' : isActive ? '#3b82f6' : '#374151',
-                color: 'white',
-              }}>
-                {isComplete ? '\u2713' : i + 1}
-              </span>
-              <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: '0.75rem', fontWeight: 600, color: isActive ? '#f3f4f6' : '#9ca3af' }}>{step.label}</div>
-                <div style={{ fontSize: '0.6rem', color: '#6b7280', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{step.description}</div>
-              </div>
+              {isComplete ? '\u2713' : i + 1}
             </button>
-          )
-        })}
-      </div>
-
-      {/* Step content */}
-      <div style={{ flex: 1, overflow: 'auto' }}>
-        {activeStep === 'need' && (
-          <MissionNeedPanel onNext={() => setActiveStep('concept')} />
-        )}
-        {activeStep === 'concept' && (
-          <MissionTradeView onConceptSelected={() => setActiveStep('requirements')} />
-        )}
-        {activeStep === 'requirements' && (
-          <RequirementsPanel />
-        )}
-        {activeStep === 'design' && (
-          <div style={{ padding: '1rem' }}>
-            <h2>System Design</h2>
-            <p style={{ fontSize: '0.85rem', color: '#9ca3af', marginBottom: '1rem' }}>
-              Run the AI concurrent design loop to size all subsystems, compute budgets,
-              and identify technology innovation opportunities.
-            </p>
-            {!needComplete && (
-              <div style={{ padding: '0.75rem', background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: '6px', marginBottom: '1rem', fontSize: '0.8rem', color: '#f59e0b' }}>
-                Consider completing Mission Need (Step 1) first — it establishes the rationale for design decisions.
-              </div>
+            <span style={{
+              fontSize: '0.55rem', color: isActive ? '#3b82f6' : '#4b5563',
+              fontWeight: isActive ? 600 : 400, textAlign: 'center',
+            }}>
+              {step.label}
+            </span>
+            {i < STEPS.length - 1 && (
+              <div style={{ width: 2, height: 12, background: isPast || isComplete ? '#374151' : '#1f2937', margin: '0.1rem 0' }} />
             )}
-            {!conceptComplete && needComplete && (
-              <div style={{ padding: '0.75rem', background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.3)', borderRadius: '6px', marginBottom: '1rem', fontSize: '0.8rem', color: '#3b82f6' }}>
-                Consider completing Concept Exploration (Step 2) — have you considered non-space alternatives?
-              </div>
-            )}
-            <button className="btn" onClick={runDesign} disabled={isRunning} style={{ width: '100%' }}>
-              {isRunning ? 'Running Design Loop...' : 'Run Design'}
-            </button>
           </div>
-        )}
-      </div>
+        )
+      })}
     </div>
   )
 }

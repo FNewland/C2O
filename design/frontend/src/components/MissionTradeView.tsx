@@ -47,15 +47,20 @@ const CATEGORY_COLORS: Record<string, string> = {
 }
 
 export function MissionTradeView({ onConceptSelected }: { onConceptSelected?: () => void }) {
-  const { missionNeed, setMissionNeed } = useDesignStore()
+  const { missionNeed } = useDesignStore()
   const [result, setResult] = useState<TradeResult | null>(null)
   const [loading, setLoading] = useState(false)
   const [expanded, setExpanded] = useState<number | null>(null)
 
-  // Extract objectives to derive trade parameters
+  // Explicit inputs — pre-populated from objectives where possible, editable
   const objectives = missionNeed.objectives
-  const gsd = _extractGSD(objectives) || 10
-  const revisit = _extractRevisit(objectives) || 3
+  const [gsd, setGsd] = useState(_extractGSD(objectives) || 10)
+  const [revisit, setRevisit] = useState(_extractRevisit(objectives) || 3)
+  const [coverage, setCoverage] = useState('regional')
+  const [latency, setLatency] = useState(24)
+  const [budget, setBudget] = useState(500)
+  const [needOwnership, setNeedOwnership] = useState(false)
+  const [needControl, setNeedControl] = useState(false)
 
   const runTrade = async () => {
     setLoading(true)
@@ -66,9 +71,11 @@ export function MissionTradeView({ onConceptSelected }: { onConceptSelected?: ()
         body: JSON.stringify({
           target_gsd_m: gsd,
           target_revisit_days: revisit,
-          target_coverage: 'regional',
-          target_latency_hours: 24,
-          max_annual_budget_keur: 500,
+          target_coverage: coverage,
+          target_latency_hours: latency,
+          max_annual_budget_keur: budget,
+          require_data_ownership: needOwnership,
+          require_scheduling_control: needControl,
         }),
       })
       if (res.ok) setResult(await res.json())
@@ -76,13 +83,8 @@ export function MissionTradeView({ onConceptSelected }: { onConceptSelected?: ()
     setLoading(false)
   }
 
-  // Auto-run when objectives change
-  useEffect(() => {
-    if (objectives.length > 0) runTrade()
-  }, [objectives.length])
-
   return (
-    <div style={{ padding: '0.75rem' }}>
+    <div>
       <h2 style={{ fontSize: '1rem', marginBottom: '0.25rem' }}>Is Space the Right Answer?</h2>
       <p style={{ fontSize: '0.78rem', color: '#9ca3af', marginBottom: '0.75rem' }}>
         Before building a satellite, consider all alternatives. This analysis compares
@@ -90,18 +92,56 @@ export function MissionTradeView({ onConceptSelected }: { onConceptSelected?: ()
         against your objectives.
       </p>
 
-      {/* Parameters derived from objectives */}
-      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem', flexWrap: 'wrap', fontSize: '0.75rem' }}>
-        <span style={{ color: '#9ca3af' }}>Derived from your objectives:</span>
-        <span style={{ background: '#1f2937', padding: '0.15rem 0.5rem', borderRadius: '3px' }}>
-          GSD target: <strong>{gsd}m</strong>
-        </span>
-        <span style={{ background: '#1f2937', padding: '0.15rem 0.5rem', borderRadius: '3px' }}>
-          Revisit: <strong>{revisit} days</strong>
-        </span>
-        <button className="btn btn-sm" onClick={runTrade} disabled={loading}
-          style={{ fontSize: '0.7rem', padding: '0.15rem 0.5rem' }}>
-          {loading ? 'Analysing...' : 'Run Analysis'}
+      {/* Trade analysis inputs */}
+      <div className="card" style={{ marginBottom: '1rem' }}>
+        <h3 style={{ fontSize: '0.85rem', marginBottom: '0.5rem' }}>What do you need?</h3>
+        <p style={{ fontSize: '0.72rem', color: '#9ca3af', marginBottom: '0.75rem' }}>
+          Set your performance and budget targets. The analysis will compare all available
+          options — existing satellite data, commercial services, aerial, ground, and a new satellite.
+        </p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '0.75rem' }}>
+          <div className="form-group" style={{ margin: 0 }}>
+            <label>Ground resolution (m)</label>
+            <input className="input" type="number" min={0.1} step={1} value={gsd}
+              onChange={e => setGsd(Number(e.target.value) || 10)} />
+          </div>
+          <div className="form-group" style={{ margin: 0 }}>
+            <label>Revisit time (days)</label>
+            <input className="input" type="number" min={0.1} step={1} value={revisit}
+              onChange={e => setRevisit(Number(e.target.value) || 3)} />
+          </div>
+          <div className="form-group" style={{ margin: 0 }}>
+            <label>Coverage</label>
+            <select className="select" value={coverage} onChange={e => setCoverage(e.target.value)}>
+              <option value="global">Global</option>
+              <option value="regional">Regional</option>
+              <option value="local">Local</option>
+            </select>
+          </div>
+          <div className="form-group" style={{ margin: 0 }}>
+            <label>Max data latency (hours)</label>
+            <input className="input" type="number" min={0.1} step={1} value={latency}
+              onChange={e => setLatency(Number(e.target.value) || 24)} />
+          </div>
+          <div className="form-group" style={{ margin: 0 }}>
+            <label>Annual budget (kEUR)</label>
+            <input className="input" type="number" min={0} step={50} value={budget}
+              onChange={e => setBudget(Number(e.target.value) || 500)} />
+          </div>
+          <div className="form-group" style={{ margin: 0 }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', cursor: 'pointer' }}>
+              <input type="checkbox" checked={needOwnership} onChange={e => setNeedOwnership(e.target.checked)} />
+              Must own data
+            </label>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', cursor: 'pointer', marginTop: '0.3rem' }}>
+              <input type="checkbox" checked={needControl} onChange={e => setNeedControl(e.target.checked)} />
+              Must control scheduling
+            </label>
+          </div>
+        </div>
+        <button className="btn" onClick={runTrade} disabled={loading}
+          style={{ marginTop: '0.75rem', width: '100%' }}>
+          {loading ? 'Analysing alternatives...' : 'Run Mission Trade Analysis'}
         </button>
       </div>
 

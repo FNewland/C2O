@@ -8,6 +8,9 @@ import { useCreateSession } from './hooks/useSession'
 import { POSITION_OPTIONS, POSITION_COLOR } from './constants'
 
 import { StudyStepper } from './components/StudyStepper'
+import { MissionNeedPanel } from './components/MissionNeedPanel'
+import { MissionTradeView } from './components/MissionTradeView'
+import { RequirementsPanel } from './components/RequirementsPanel'
 import { DesignWorkspace } from './components/DesignWorkspace'
 import { InsightsPanel } from './components/InsightsPanel'
 import { ConflictsPanel } from './components/ConflictsPanel'
@@ -37,12 +40,12 @@ const queryClient = new QueryClient({
   },
 })
 
-type CenterTab = 'design' | 'conops' | 'functions' | 'interfaces' | 'positions' | 'answers' | 'gate' | 'compliance' | 'ecss' | 'cost' | 'trade' | 'snapshots' | 'optimizer' | 'help'
+type CenterTab = 'need' | 'concept' | 'requirements' | 'design' | 'conops' | 'functions' | 'interfaces' | 'positions' | 'answers' | 'gate' | 'compliance' | 'ecss' | 'cost' | 'trade' | 'snapshots' | 'optimizer' | 'help'
 type RightTab = 'insights' | 'conflicts' | 'exports'
 
 function AppContent() {
   const { result, studyId, createStudy, setStudyId, runDesign } = useDesignStore()
-  const [centerTab, setCenterTab] = useState<CenterTab>('design')
+  const [centerTab, setCenterTab] = useState<CenterTab>('need')
   const [rightTab, setRightTab] = useState<RightTab>('insights')
   const [showEquipmentBrowser, setShowEquipmentBrowser] = useState(false)
   const [showSessionStarter, setShowSessionStarter] = useState(false)
@@ -205,92 +208,103 @@ function AppContent() {
         onLeaveSession={handleLeaveSession}
       />
 
-      <main className="main">
-        <div className="panel">
-          <StudyStepper />
-        </div>
+      {/* Phase-adaptive layout: steps 1-3 use full center, step 4 uses 3-panel */}
+      <main className={`main ${centerTab === 'design' || result ? 'phase-design' : 'phase-workflow'}`}>
 
-        <div className="panel" style={{ background: 'var(--bg-primary)', borderRight: '1px solid var(--border)' }}>
-          <div style={{ display: 'flex', gap: '0.25rem', marginBottom: '0.75rem', padding: '0 1rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem', flexWrap: 'wrap' }}>
-            {centerTabs.map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => setCenterTab(tab.id)}
-                style={{
-                  background: centerTab === tab.id ? 'var(--accent)' : 'transparent',
-                  color: centerTab === tab.id ? 'white' : 'var(--text-secondary)',
-                  border: 'none',
-                  padding: '0.35rem 0.75rem',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontSize: '0.75rem',
-                  fontWeight: 600,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.03em',
-                }}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-          {centerTab === 'design' && <DesignWorkspace />}
-          {centerTab === 'conops' && <ConOpsEditor />}
-          {centerTab === 'functions' && <FunctionTreeView />}
-          {centerTab === 'interfaces' && <InterfaceMatrixView />}
-          {centerTab === 'positions' && <PositionPanel />}
-          {centerTab === 'answers' && <PositionAnswersPanel />}
-          {centerTab === 'gate' && <GateReviewPanel studyId={studyId} />}
-          {centerTab === 'compliance' && <ComplianceMatrix studyId={studyId} />}
-          {centerTab === 'ecss' && <EcssCompliancePanel studyId={studyId} />}
-          {centerTab === 'cost' && <CostBreakdown studyId={studyId} />}
-          {centerTab === 'trade' && <TradeStudyPanel studyId={studyId} />}
-          {centerTab === 'snapshots' && <SnapshotsPanel sessionId={sessionId} />}
-          {centerTab === 'optimizer' && <OptimizerPanel sessionId={sessionId} />}
-          {centerTab === 'help' && <UserManual />}
-        </div>
+        {/* Left: thin step indicator (always visible) */}
+        <StudyStepper activeStep={centerTab === 'design' ? 'design' : centerTab as any} onStepClick={(step) => {
+          if (step === 'design') setCenterTab('design')
+          else setCenterTab(step as CenterTab)
+        }} />
 
-        <div className="panel">
-          <div style={{ display: 'flex', gap: '0.25rem', marginBottom: '0.75rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem' }}>
-            {(['insights', 'conflicts', 'exports'] as RightTab[]).map(tab => (
-              <button
-                key={tab}
-                onClick={() => setRightTab(tab)}
-                style={{
-                  background: rightTab === tab ? 'var(--accent)' : 'transparent',
-                  color: rightTab === tab ? 'white' : 'var(--text-secondary)',
-                  border: 'none',
-                  padding: '0.35rem 0.75rem',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontSize: '0.75rem',
-                  fontWeight: 600,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.03em',
-                  position: 'relative',
-                }}
-              >
-                {tab}
-                {tab === 'conflicts' && conflictCount > 0 && (
-                  <span style={{
-                    position: 'absolute', top: '-4px', right: '-4px',
-                    background: criticalCount > 0 ? 'var(--danger)' : 'var(--warning)',
-                    color: 'white', borderRadius: '50%',
-                    width: '16px', height: '16px', fontSize: '0.6rem',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}>{conflictCount}</span>
-                )}
-              </button>
-            ))}
-          </div>
-          {rightTab === 'insights' && <InsightsPanel />}
-          {rightTab === 'conflicts' && (
+        {/* Center: workflow steps OR tabbed design content */}
+        <div className="panel" style={{ background: 'var(--bg-primary)', padding: 0 }}>
+          {/* Show workflow step content for steps 1-3 */}
+          {centerTab === 'need' && (
+            <div style={{ maxWidth: '800px', margin: '0 auto', padding: '1.5rem' }}>
+              <MissionNeedPanel onNext={() => setCenterTab('concept' as CenterTab)} />
+            </div>
+          )}
+          {centerTab === 'concept' && (
+            <div style={{ maxWidth: '900px', margin: '0 auto', padding: '1.5rem' }}>
+              <MissionTradeView onConceptSelected={() => setCenterTab('requirements' as CenterTab)} />
+            </div>
+          )}
+          {centerTab === 'requirements' && (
+            <div style={{ maxWidth: '800px', margin: '0 auto', padding: '1.5rem' }}>
+              <RequirementsPanel />
+            </div>
+          )}
+
+          {/* Design phase: tabbed content */}
+          {!['need', 'concept', 'requirements'].includes(centerTab) && (
             <>
-              <h2>Cross-Domain Conflicts</h2>
-              <ConflictsPanel />
+              <div style={{ display: 'flex', gap: '0.25rem', padding: '0.5rem 1rem', borderBottom: '1px solid var(--border)', flexWrap: 'wrap' }}>
+                {centerTabs.map(tab => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setCenterTab(tab.id)}
+                    style={{
+                      background: centerTab === tab.id ? 'var(--accent)' : 'transparent',
+                      color: centerTab === tab.id ? 'white' : 'var(--text-secondary)',
+                      border: 'none', padding: '0.35rem 0.75rem', borderRadius: '4px',
+                      cursor: 'pointer', fontSize: '0.75rem', fontWeight: 600,
+                      textTransform: 'uppercase', letterSpacing: '0.03em',
+                    }}
+                  >{tab.label}</button>
+                ))}
+              </div>
+              <div style={{ padding: '0 1rem', overflow: 'auto', flex: 1 }}>
+                {centerTab === 'design' && <DesignWorkspace />}
+                {centerTab === 'conops' && <ConOpsEditor />}
+                {centerTab === 'functions' && <FunctionTreeView />}
+                {centerTab === 'interfaces' && <InterfaceMatrixView />}
+                {centerTab === 'positions' && <PositionPanel />}
+                {centerTab === 'answers' && <PositionAnswersPanel />}
+                {centerTab === 'gate' && <GateReviewPanel studyId={studyId} />}
+                {centerTab === 'compliance' && <ComplianceMatrix studyId={studyId} />}
+                {centerTab === 'ecss' && <EcssCompliancePanel studyId={studyId} />}
+                {centerTab === 'cost' && <CostBreakdown studyId={studyId} />}
+                {centerTab === 'trade' && <TradeStudyPanel studyId={studyId} />}
+                {centerTab === 'snapshots' && <SnapshotsPanel sessionId={sessionId} />}
+                {centerTab === 'optimizer' && <OptimizerPanel sessionId={sessionId} />}
+                {centerTab === 'help' && <UserManual />}
+              </div>
             </>
           )}
-          {rightTab === 'exports' && <ExportPanel studyId={studyId} />}
         </div>
+
+        {/* Right panel: only visible in design phase */}
+        {(centerTab === 'design' || result) && !['need', 'concept', 'requirements'].includes(centerTab) && (
+          <div className="panel">
+            <div style={{ display: 'flex', gap: '0.25rem', marginBottom: '0.75rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem' }}>
+              {(['insights', 'conflicts', 'exports'] as RightTab[]).map(tab => (
+                <button key={tab} onClick={() => setRightTab(tab)}
+                  style={{
+                    background: rightTab === tab ? 'var(--accent)' : 'transparent',
+                    color: rightTab === tab ? 'white' : 'var(--text-secondary)',
+                    border: 'none', padding: '0.35rem 0.75rem', borderRadius: '4px',
+                    cursor: 'pointer', fontSize: '0.75rem', fontWeight: 600,
+                    textTransform: 'uppercase', letterSpacing: '0.03em', position: 'relative',
+                  }}>
+                  {tab}
+                  {tab === 'conflicts' && conflictCount > 0 && (
+                    <span style={{
+                      position: 'absolute', top: '-4px', right: '-4px',
+                      background: criticalCount > 0 ? 'var(--danger)' : 'var(--warning)',
+                      color: 'white', borderRadius: '50%',
+                      width: '16px', height: '16px', fontSize: '0.6rem',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>{conflictCount}</span>
+                  )}
+                </button>
+              ))}
+            </div>
+            {rightTab === 'insights' && <InsightsPanel />}
+            {rightTab === 'conflicts' && <><h2>Cross-Domain Conflicts</h2><ConflictsPanel /></>}
+            {rightTab === 'exports' && <ExportPanel studyId={studyId} />}
+          </div>
+        )}
       </main>
 
       {/* Live toast notifications */}
