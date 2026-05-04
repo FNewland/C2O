@@ -441,3 +441,73 @@ async def import_custom_component(req: CustomComponentRequest) -> dict:
         "category": req.category,
         "note": "Component added to in-memory KB for this session. Restart will clear it.",
     }
+
+
+# --- Requirement Engine ---
+
+@router.get("/requirements/generate/{study_id}")
+async def generate_requirements_endpoint(study_id: str) -> dict:
+    """Generate SMART requirements from study objectives and functions.
+
+    Returns suggested requirements for user approval (suggest-then-approve).
+    Each requirement has Accept / Edit / Reject status.
+    """
+    from ..services.requirement_engine import generate_smart_requirements
+    store = get_study_store()
+    study = store.get(study_id)
+    if not study:
+        raise HTTPException(404)
+
+    objectives = [o.model_dump() for o in study.mission_need.objectives] if study.mission_need.objectives else []
+    functions = [f.model_dump() for f in study.functional_decomposition.functions] if study.functional_decomposition.functions else []
+
+    suggestions = generate_smart_requirements(
+        objectives=objectives,
+        mission_requirements_dict=study.requirements.model_dump(),
+        functions=functions,
+    )
+
+    return {
+        "study_id": study_id,
+        "suggestions": [
+            {
+                "id": s.id, "text": s.text, "req_type": s.req_type,
+                "domain": s.domain, "threshold": s.threshold,
+                "operator": s.operator, "unit": s.unit,
+                "verification_method": s.verification_method,
+                "objective_id": s.objective_id, "function_id": s.function_id,
+                "rationale": s.rationale, "status": s.status,
+            }
+            for s in suggestions
+        ],
+        "count": len(suggestions),
+    }
+
+
+@router.post("/requirements/validate")
+async def validate_requirement_endpoint(requirement: dict[str, Any]) -> dict:
+    """Validate a single requirement against SMART criteria."""
+    from ..services.requirement_engine import validate_smart
+    check = validate_smart(requirement)
+    return {
+        "requirement_id": check.requirement_id,
+        "is_smart": check.is_smart,
+        "specific": check.specific,
+        "measurable": check.measurable,
+        "achievable": check.achievable,
+        "relevant": check.relevant,
+        "traceable": check.traceable,
+        "is_how_not_what": check.is_how_not_what,
+        "issues": check.issues,
+    }
+
+
+@router.post("/requirements/check-compliance")
+async def check_compliance_endpoint(body: dict[str, Any]) -> dict:
+    """Check non-compliance and get resolution options."""
+    from ..services.requirement_engine import check_non_compliance
+    return check_non_compliance(
+        requirement=body.get("requirement", {}),
+        achieved_value=body.get("achieved_value"),
+        margin_percent=body.get("margin_percent"),
+    )
