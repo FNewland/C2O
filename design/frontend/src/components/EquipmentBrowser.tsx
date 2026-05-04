@@ -228,7 +228,13 @@ export function EquipmentBrowser({ studyId, onClose, onSelect }: Props) {
     const key = `${category}:${component.id || component.name}`
     setSelections(prev => {
       const next = new Map(prev)
-      next.set(key, { category, component, quantity: qty, timestamp: Date.now() })
+      const existing = next.get(key)
+      if (existing) {
+        // Clicking same component again increments quantity
+        next.set(key, { ...existing, quantity: existing.quantity + 1 })
+      } else {
+        next.set(key, { category, component, quantity: qty, timestamp: Date.now() })
+      }
       return next
     })
   }

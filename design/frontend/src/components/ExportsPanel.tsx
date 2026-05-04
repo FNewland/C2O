@@ -13,7 +13,7 @@
 import { useState } from 'react'
 import { useDesignStore } from '../stores/designStore'
 
-type ExportCategory = 'ecss' | 'regulatory' | 'spectrum' | 'launch' | 'data'
+type ExportCategory = 'ecss' | 'regulatory' | 'spectrum' | 'launch' | 'data' | 'engineering'
 
 interface GeneratedDoc {
   title: string
@@ -45,11 +45,19 @@ const EXPORT_ITEMS: { category: ExportCategory; id: string; name: string; endpoi
   { category: 'data', id: 'duty_cycles', name: 'Power Duty Cycles', endpoint: '/api/lifecycle/duty-cycles', method: 'POST', description: 'Per-mode power and duty cycle estimate' },
   { category: 'data', id: 'consistency', name: 'Consistency Check', endpoint: '/api/lifecycle/consistency/', method: 'GET', description: 'Full design consistency validation' },
   { category: 'data', id: 'margins', name: 'ECSS Margin Enforcement', endpoint: '/api/ecss/margins/', method: 'GET', description: 'Budget margins vs ECSS policy' },
+  // Engineering outputs (from right panel ExportPanel)
+  { category: 'engineering', id: 'smo', name: 'SMO Simulator Config', endpoint: '/api/exports/smo/', method: 'POST', description: 'Simulator configuration (YAML)' },
+  { category: 'engineering', id: 'srr_docs', name: 'SRR Design Review Package', endpoint: '/api/exports/docs/srr', method: 'POST', description: 'System Requirements Review documents' },
+  { category: 'engineering', id: 'pdr_docs', name: 'PDR Design Review Package', endpoint: '/api/exports/docs/pdr', method: 'POST', description: 'Preliminary Design Review documents' },
+  { category: 'engineering', id: 'cdr_docs', name: 'CDR Design Review Package', endpoint: '/api/exports/docs/cdr', method: 'POST', description: 'Critical Design Review documents' },
+  { category: 'engineering', id: 'mbse', name: 'MBSE Export (SysML JSON)', endpoint: '/api/exports/mbse/', method: 'POST', description: 'ECSS-E-TM-10-25A-style model exchange' },
+  { category: 'engineering', id: 'fsw', name: 'Flight Software Architecture', endpoint: '/api/exports/fsw/', method: 'POST', description: 'Mode manager, FDIR, TC/TM (C headers)' },
 ]
 
 const CATEGORY_LABELS: Record<ExportCategory, { name: string; color: string }> = {
   ecss: { name: 'ECSS Documents', color: '#3b82f6' },
   regulatory: { name: 'Regulatory Filings', color: '#f59e0b' },
+  engineering: { name: 'Engineering Outputs', color: '#8b5cf6' },
   spectrum: { name: 'Spectrum & Licensing', color: '#ec4899' },
   launch: { name: 'Launch', color: '#f97316' },
   data: { name: 'Design Data', color: '#10b981' },
@@ -67,8 +75,10 @@ export function ExportsPanel({ studyId }: { studyId: string | null }) {
     try {
       let url = item.endpoint
       if (studyId) {
-        if (item.method === 'GET') {
-          url += (url.includes('?') ? '&' : (url.endsWith('/') ? studyId : `?study_id=${studyId}`))
+        if (url.endsWith('/')) {
+          url += studyId
+        } else if (item.method === 'GET') {
+          url += (url.includes('?') ? '&' : '?') + `study_id=${studyId}`
         }
       }
 

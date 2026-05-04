@@ -136,8 +136,22 @@ export function useSessionSocket(sessionId: string | null, positionId: string | 
           setStatus('error')
         }
 
-        ws.onclose = () => {
+        ws.onclose = (event) => {
           wsRef.current = null
+          // Stop retrying on 403 (session doesn't exist on server)
+          if (event.code === 4403 || event.code === 1008 || event.code === 403) {
+            console.warn('WS session rejected (403) — stopping reconnect')
+            shouldReconnectRef.current = false
+            setStatus('disconnected')
+            return
+          }
+          // Also stop if we've had too many consecutive failures
+          if (backoffRef.current >= BACKOFF_MAX_MS) {
+            console.warn('WS max backoff reached — stopping reconnect')
+            shouldReconnectRef.current = false
+            setStatus('disconnected')
+            return
+          }
           if (shouldReconnectRef.current) {
             setStatus('reconnecting')
             const delay = backoffRef.current
