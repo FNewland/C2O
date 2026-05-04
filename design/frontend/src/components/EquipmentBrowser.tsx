@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useEquipmentSearch } from '../hooks/useSession'
 
 // All KB component categories, grouped by domain
@@ -131,6 +131,22 @@ export function EquipmentBrowser({ studyId, onClose, onSelect }: Props) {
   const [compareIds, setCompareIds] = useState<Set<string>>(new Set())
   const [showCustomForm, setShowCustomForm] = useState(false)
   const [customComp, setCustomComp] = useState({ name: '', manufacturer: '', mass_kg: 0, power_w: 0, cost_keur: 0, trl: 5, notes: '' })
+
+  // Equipment needs from requirements analysis
+  const [needs, setNeeds] = useState<Record<string, { required: boolean; reason: string; quantity: number }>>({})
+  useEffect(() => {
+    if (!studyId) return
+    fetch(`/api/engineering/equipment/needs/${studyId}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data?.needs) {
+          const map: Record<string, { required: boolean; reason: string; quantity: number }> = {}
+          for (const n of data.needs) map[n.category] = { required: n.required, reason: n.reason, quantity: n.quantity }
+          setNeeds(map)
+        }
+      })
+      .catch(() => {})
+  }, [studyId])
 
   // Load components for the active category's domain
   const activeDomain = CATEGORIES.find(c => c.id === activeCategory)?.domain || 'power'
@@ -406,20 +422,32 @@ export function EquipmentBrowser({ studyId, onClose, onSelect }: Props) {
                 }}>{DOMAIN_LABELS[domain] || domain}</div>
                 {cats.map(cat => {
                   const isActive = activeCategory === cat.id
-                  const hasSelection = selections.has(cat.id)
+                  const hasSelection = Array.from(selections.values()).some(s => s.category === cat.id)
+                  const need = needs[cat.id]
+                  const isNeeded = need?.required
+                  const isOptional = need && !need.required
+                  const notNeeded = Object.keys(needs).length > 0 && !need
                   return (
                     <button key={cat.id} onClick={() => setActiveCategory(cat.id)}
+                      title={need?.reason || ''}
                       style={{
                         display: 'flex', alignItems: 'center', gap: '0.4rem', width: '100%',
                         padding: '0.4rem 0.75rem', border: 'none', cursor: 'pointer', textAlign: 'left',
                         background: isActive ? 'var(--bg-secondary, #1f2937)' : 'transparent',
                         borderLeft: isActive ? `3px solid ${DOMAIN_COLORS[cat.domain] || '#3b82f6'}` : '3px solid transparent',
-                        fontSize: '0.78rem', color: isActive ? '#f3f4f6' : '#9ca3af',
+                        fontSize: '0.78rem',
+                        color: notNeeded ? '#4b5563' : isActive ? '#f3f4f6' : '#9ca3af',
+                        opacity: notNeeded ? 0.5 : 1,
                       }}>
-                      {hasSelection && (
+                      {hasSelection ? (
                         <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981', flexShrink: 0 }} />
-                      )}
-                      <span>{cat.name}</span>
+                      ) : isNeeded ? (
+                        <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#3b82f6', flexShrink: 0 }} title="Required" />
+                      ) : isOptional ? (
+                        <span style={{ width: 8, height: 8, borderRadius: '50%', border: '1.5px solid #6b7280', flexShrink: 0 }} title="Optional" />
+                      ) : null}
+                      <span style={{ flex: 1 }}>{cat.name}</span>
+                      {need && <span style={{ fontSize: '0.6rem', color: '#6b7280' }}>×{need.quantity}</span>}
                     </button>
                   )
                 })}

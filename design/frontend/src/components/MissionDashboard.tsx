@@ -8,6 +8,7 @@ import { SustainabilityCard } from './SustainabilityCard'
 import { BudgetComparison } from './BudgetComparison'
 import { MarginEnforcement } from './MarginEnforcement'
 import { SpectrumSelector } from './SpectrumSelector'
+import { LaunchSelector } from './LaunchSelector'
 
 // Extended domain order including all 20 agent domains
 const DOMAIN_ORDER = [
@@ -331,6 +332,7 @@ export function MissionDashboard() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '0.75rem', marginBottom: '0.75rem' }}>
         <MarginEnforcement studyId={studyId} />
         <SpectrumSelector />
+        <LaunchSelector />
       </div>
 
       {/* Row 5: Community */}

@@ -19,8 +19,8 @@
 - [x] Parametric data interactive editor → ParametricEditor tab (mass/cost/power/SA tables)
 - [x] Duty cycle display → in ParametricEditor power tab
 - [x] ECSS margin enforcement display → MarginEnforcement on dashboard
-- [ ] Equipment needs analysis driving browser category filtering (backend exists, UI filtering not yet connected)
-- [ ] Launch provider interactive selector (backend exists, UI not yet built as standalone selector)
+- [x] Equipment needs analysis → browser sidebar shows required (blue dot) / optional (circle) / not needed (dimmed) per category with quantity and reason tooltip
+- [x] Launch provider interactive selector → LaunchSelector on dashboard with 8 providers, capacity filtering, pricing, deployer compatibility
 
 ## Tier 3: Architecture Gaps (need new code)
 
