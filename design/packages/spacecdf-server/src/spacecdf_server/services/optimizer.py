@@ -60,18 +60,64 @@ OBJECTIVES: dict[str, ObjectiveSpec] = {
         "max_link_margin", "Maximise downlink margin",
         parameter_id="link.downlink_margin_db", direction="max",
     ),
+    "max_mass_margin": ObjectiveSpec(
+        "max_mass_margin", "Maximise mass margin",
+        parameter_id="systems.mass_margin_percent", direction="max",
+    ),
+    "max_power_margin": ObjectiveSpec(
+        "max_power_margin", "Maximise power margin",
+        parameter_id="systems.power_margin_percent", direction="max",
+    ),
+    "max_reliability": ObjectiveSpec(
+        "max_reliability", "Maximise reliability score",
+        parameter_id="reliability.mission_reliability", direction="max",
+    ),
+    "min_data_latency": ObjectiveSpec(
+        "min_data_latency", "Minimise data latency (hours)",
+        parameter_id="link.data_latency_hours", direction="min",
+    ),
+    "max_trl": ObjectiveSpec(
+        "max_trl", "Maximise composite TRL",
+        parameter_id="systems.composite_trl", direction="max",
+    ),
+    "max_debris_compliance": ObjectiveSpec(
+        "max_debris_compliance", "Maximise debris compliance",
+        parameter_id="debris.compliance_score", direction="max",
+    ),
 }
 
 # Canonical design variables with sane default bounds — the UI will offer
 # these as checkboxes; the user overrides bounds per run.
 DEFAULT_DESIGN_VARIABLES: dict[str, tuple[float, float]] = {
     "orbit.altitude_km":                  (300.0, 900.0),
+    "orbit.inclination_deg":              (0.0,   98.0),
     "payload.power_w":                    (5.0,  150.0),
     "payload.data_volume_per_day_gb":     (0.1,  50.0),
     "payload.duty_cycle_percent":         (5.0,  100.0),
     "power.sa_margin_percent":            (10.0, 40.0),
+    "power.battery_dod_percent":          (20.0, 80.0),
     "link.downlink_data_rate_mbps":       (10.0, 1000.0),
+    "link.frequency_ghz":                 (2.0,  26.0),
+    "thermal.radiator_area_m2":           (0.01, 0.5),
+    "aocs.pointing_accuracy_deg":         (0.01, 5.0),
+    "propulsion.total_dv_ms":             (0.0,  200.0),
 }
+
+# Explicit constraints for feasibility checking
+@dataclass
+class DesignConstraint:
+    """A constraint the optimizer must satisfy."""
+    parameter_id: str
+    operator: str  # ">=", "<=", "=="
+    threshold: float
+    name: str
+    penalty_weight: float = 1e6  # Penalty per unit of violation
+
+DEFAULT_CONSTRAINTS: list[DesignConstraint] = [
+    DesignConstraint("systems.mass_margin_percent", ">=", 0.0, "Positive mass margin"),
+    DesignConstraint("systems.power_margin_percent", ">=", 0.0, "Positive power margin"),
+    DesignConstraint("debris.compliance_score", ">=", 50.0, "Debris compliance"),
+]
 
 
 # -- Run bookkeeping --------------------------------------------------------

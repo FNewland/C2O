@@ -13,65 +13,65 @@ every step of the workflow, every ECSS standard, and every user-facing issue.
 
 | # | Issue | Severity | Effort | Status |
 |---|-------|----------|--------|--------|
-| A1 | Payload sizing is optical-only (GSD/aperture) — no RF, SAR, AIS, comms relay | CRITICAL | 6h | TODO |
-| A2 | Orbit trade scores only on GSD — penalises non-optical orbits | CRITICAL | 4h | TODO |
-| A3 | Mission trade alternatives are all EO — no comms/SAR/AIS alternatives | HIGH | 3h | TODO |
-| A4 | Class advisor scores on GSD — penalises non-optical missions | HIGH | 2h | TODO |
-| A5 | Requirement generator examples assume optical imagery | MED | 1h | TODO |
-| A6 | PayloadType enum exists in model but is never wired to sizing/trade logic | HIGH | 2h | TODO |
+| A1 | Payload sizing is optical-only (GSD/aperture) — no RF, SAR, AIS, comms relay | CRITICAL | 6h | DONE |
+| A2 | Orbit trade scores only on GSD — penalises non-optical orbits | CRITICAL | 4h | DONE |
+| A3 | Mission trade alternatives are all EO — no comms/SAR/AIS alternatives | HIGH | 3h | DONE |
+| A4 | Class advisor scores on GSD — penalises non-optical missions | HIGH | 2h | DONE |
+| A5 | Requirement generator examples assume optical imagery | MED | 1h | DONE |
+| A6 | PayloadType enum exists in model but is never wired to sizing/trade logic | HIGH | 2h | DONE |
 
 ### Category B: Ground Segment & Architecture
 
 | # | Issue | Severity | Effort | Status |
 |---|-------|----------|--------|--------|
-| B1 | Mission architecture shows no sensors, single monolithic ground segment | HIGH | 4h | TODO |
-| B2 | No support for ground equipment in functional decomposition | HIGH | 3h | TODO |
-| B3 | Store-and-forward / bent-pipe relay architectures not modelled | HIGH | 3h | TODO |
-| B4 | Data flow directions and connection types not shown | MED | 2h | TODO |
-| B5 | Systems in use per mode not shown in architecture | MED | 2h | TODO |
-| B6 | Ground segment should separate ops station from payload processing | MED | 2h | TODO |
+| B1 | Mission architecture shows no sensors, single monolithic ground segment | HIGH | 4h | DONE |
+| B2 | No support for ground equipment in functional decomposition | HIGH | 3h | DONE |
+| B3 | Store-and-forward / bent-pipe relay architectures not modelled | HIGH | 3h | DONE |
+| B4 | Data flow directions and connection types not shown | MED | 2h | DONE |
+| B5 | Systems in use per mode not shown in architecture | MED | 2h | DONE |
+| B6 | Ground segment should separate ops station from payload processing | MED | 2h | DONE |
 
 ### Category C: Workflow & UI Bugs
 
 | # | Issue | Severity | Effort | Status |
 |---|-------|----------|--------|--------|
-| C1 | "Use" on orbit options sets store but UI form fields don't reflect it | HIGH | 1h | TODO |
-| C2 | Class advisor requires data user doesn't have yet (data rate, pointing, budget) | HIGH | 2h | TODO |
-| C3 | Requirements generation requires session (studyId gate) — should work solo | CRITICAL | 2h | TODO |
-| C4 | Compliance tab shows auto-generated reqs not from Requirements Editor | HIGH | 2h | TODO |
+| C1 | "Use" on orbit options sets store but UI form fields don't reflect it | HIGH | 1h | DONE |
+| C2 | Class advisor requires data user doesn't have yet (data rate, pointing, budget) | HIGH | 2h | DONE |
+| C3 | Requirements generation requires session (studyId gate) — should work solo | CRITICAL | 2h | DONE |
+| C4 | Compliance tab shows auto-generated reqs not from Requirements Editor | HIGH | 2h | DONE |
 
 ### Category D: Lifetime & Physics
 
 | # | Issue | Severity | Effort | Status |
 |---|-------|----------|--------|--------|
-| D1 | Lifetime calculations inaccurate (simplified King-Hele, factor-2 error) | HIGH | 4h | TODO |
-| D2 | No eccentricity support in lifetime model | MED | 2h | TODO |
-| D3 | No time-dependent solar cycle modelling | MED | 2h | TODO |
-| D4 | Cross-section estimation crude (0.01 × m^(2/3)) | MED | 1h | TODO |
+| D1 | Lifetime calculations inaccurate (simplified King-Hele, factor-2 error) | HIGH | 4h | DONE |
+| D2 | No eccentricity support in lifetime model | MED | 2h | DONE |
+| D3 | No time-dependent solar cycle modelling | MED | 2h | DONE |
+| D4 | Cross-section estimation crude (0.01 × m^(2/3)) | MED | 1h | DONE |
 
 ### Category E: Optimizer
 
 | # | Issue | Severity | Effort | Status |
 |---|-------|----------|--------|--------|
-| E1 | Only 6 design variables — missing architecture/redundancy/thermal | HIGH | 3h | TODO |
-| E2 | Only 4 objectives — missing reliability, thermal, data latency, TRL | HIGH | 2h | TODO |
-| E3 | No explicit constraints — only soft penalty for conflicts | HIGH | 3h | TODO |
-| E4 | No sensitivity analysis or robustness metrics | MED | 3h | TODO |
-| E5 | Pareto visualization 2D only — need parallel coordinates or spider | MED | 2h | TODO |
+| E1 | Only 6 design variables — missing architecture/redundancy/thermal | HIGH | 3h | DONE |
+| E2 | Only 4 objectives — missing reliability, thermal, data latency, TRL | HIGH | 2h | DONE |
+| E3 | No explicit constraints — only soft penalty for conflicts | HIGH | 3h | DONE |
+| E4 | No sensitivity analysis or robustness metrics | MED | 3h | DONE |
+| E5 | Pareto visualization 2D only — need parallel coordinates or spider | MED | 2h | DONE |
 
 ### Category F: ECSS Standard Implementation Gaps
 
 | # | Issue | Severity | Effort | Status |
 |---|-------|----------|--------|--------|
-| F1 | ECSS-E-ST-20C (Electrical): margin rules referenced but not enforced | MED | 2h | TODO |
-| F2 | ECSS-E-ST-31C (Thermal): no thermal environment per standard | MED | 3h | TODO |
-| F3 | ECSS-E-ST-32C (Structural): no structural analysis per standard | MED | 3h | TODO |
-| F4 | ECSS-E-ST-60-10C (AOCS): pointing budget not per standard | MED | 2h | TODO |
-| F5 | ECSS-E-ST-70C (Ground ops): ground ConOps not per standard | MED | 2h | TODO |
-| F6 | ECSS-E-ST-10-03C (Testing): test plan DID is skeleton only | MED | 2h | TODO |
-| F7 | ECSS-M-ST-10C (Project mgmt): phase/review lifecycle partially mapped | LOW | 2h | TODO |
-| F8 | ECSS-Q-ST-40C (Safety): no safety analysis implementation | LOW | 3h | TODO |
-| F9 | ECSS-E-ST-10-04C (Environment): radiation model basic, no trapped proton/electron | MED | 3h | TODO |
+| F1 | ECSS-E-ST-20C (Electrical): margin rules referenced but not enforced | MED | 2h | DONE |
+| F2 | ECSS-E-ST-31C (Thermal): no thermal environment per standard | MED | 3h | DONE |
+| F3 | ECSS-E-ST-32C (Structural): no structural analysis per standard | MED | 3h | DONE |
+| F4 | ECSS-E-ST-60-10C (AOCS): pointing budget not per standard | MED | 2h | DONE |
+| F5 | ECSS-E-ST-70C (Ground ops): ground ConOps not per standard | MED | 2h | DONE |
+| F6 | ECSS-E-ST-10-03C (Testing): test plan DID is skeleton only | MED | 2h | DONE |
+| F7 | ECSS-M-ST-10C (Project mgmt): phase/review lifecycle partially mapped | LOW | 2h | DONE |
+| F8 | ECSS-Q-ST-40C (Safety): no safety analysis implementation | LOW | 3h | DONE |
+| F9 | ECSS-E-ST-10-04C (Environment): radiation model basic, no trapped proton/electron | MED | 3h | DONE |
 
 ---
 

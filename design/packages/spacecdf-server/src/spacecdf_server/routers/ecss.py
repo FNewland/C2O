@@ -14,6 +14,7 @@ from fastapi import APIRouter, HTTPException
 
 from ..services.ecss_gates import compliance_summary, list_phases
 from ..services.did_generator import list_available_dids, DID_TYPES
+from ..services.ecss_margin_enforcer import enforce_ecss_margins
 from .studies import get_study_store
 
 router = APIRouter()
@@ -32,6 +33,61 @@ async def get_phase_compliance(phase_id: str) -> dict:
     if not summary.get("found"):
         raise HTTPException(status_code=404, detail=f"Unknown phase: {phase_id}")
     return summary
+
+
+@router.get("/margins/{study_id}")
+async def check_margins(study_id: str) -> dict:
+    """Enforce ECSS margin philosophy against current design state.
+
+    Checks mass, power, link, thermal, and ΔV margins against the
+    phase-appropriate ECSS policy values.
+    """
+    from .engineering import _get_design_state
+
+    _, params_dict, _ = await _get_design_state(study_id=study_id)
+
+    store = get_study_store()
+    study = store.get(study_id)
+    phase_id = "phase_a"
+    if study:
+        phase_id = study.phase.value if hasattr(study.phase, "value") else str(study.phase)
+
+    report = enforce_ecss_margins(params_dict, phase_id)
+
+    return {
+        "study_id": study_id,
+        "phase": report.phase,
+        "compliant": report.compliant,
+        "critical_count": report.critical_count,
+        "major_count": report.major_count,
+        "total_checks": len(report.checks),
+        "checks": [
+            {
+                "domain": c.domain,
+                "standard": c.standard,
+                "parameter": c.parameter,
+                "required_margin": c.required_margin,
+                "actual_margin": round(c.actual_margin, 2),
+                "unit": c.unit,
+                "severity": c.severity,
+                "message": c.message,
+            }
+            for c in report.checks
+        ],
+        "violations": [
+            {
+                "domain": v.domain,
+                "standard": v.standard,
+                "parameter": v.parameter,
+                "required_margin": v.required_margin,
+                "actual_margin": round(v.actual_margin, 2),
+                "unit": v.unit,
+                "severity": v.severity,
+                "message": v.message,
+            }
+            for v in report.violations
+        ],
+    }
 
 
 @router.get("/compliance/by-study/{study_id}")

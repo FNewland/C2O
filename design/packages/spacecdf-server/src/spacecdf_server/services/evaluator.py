@@ -187,7 +187,17 @@ def _default_output_params() -> list[str]:
         "systems.health_score",
         "systems.mass_margin_percent",
         "systems.power_margin_percent",
+        "systems.composite_trl",
         "trl.innovation_count",
+        # Debris and sustainability
+        "debris.lifetime_years",
+        "debris.compliance_score",
+        "debris.compliant_5yr",
+        # Reliability
+        "reliability.mission_reliability",
+        "reliability.spf_count",
+        # Data latency
+        "link.data_latency_hours",
     ]
 
 

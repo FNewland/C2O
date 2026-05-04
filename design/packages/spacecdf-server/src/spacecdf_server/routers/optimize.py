@@ -309,3 +309,94 @@ async def list_runs(limit: int = 20) -> list[dict]:
             }
             for r in rows
         ]
+
+
+class SensitivityRequest(BaseModel):
+    """Request for Morris screening sensitivity analysis."""
+    variables: list[str]
+    bounds: list[tuple[float, float]]
+    objective: str = "min_mass"
+    num_trajectories: int = 10
+    levels: int = 4
+
+
+@router.post("/sensitivity/{session_id}")
+async def run_sensitivity(session_id: str, req: SensitivityRequest) -> dict:
+    """Run Morris screening sensitivity analysis.
+
+    Returns the elementary effects (mean and std) for each variable,
+    indicating which variables have the most influence on the objective.
+    """
+    import numpy as np
+    from ..services.optimizer import OBJECTIVES
+    from ..services.evaluator import CandidateEvaluator
+    from spacecdf_common.agents.base import DesignState
+
+    if req.objective not in OBJECTIVES:
+        raise HTTPException(400, f"Unknown objective: {req.objective}")
+
+    obj_spec = OBJECTIVES[req.objective]
+    n_vars = len(req.variables)
+    if n_vars == 0:
+        raise HTTPException(400, "Need at least one variable")
+
+    bounds = np.array(req.bounds)
+    evaluator = CandidateEvaluator()
+    base_state = DesignState()
+
+    # Morris method: generate trajectories
+    results_per_var: dict[str, list[float]] = {v: [] for v in req.variables}
+
+    for _ in range(req.num_trajectories):
+        # Random base point in [0,1]^n, quantised to `levels` grid
+        x_base = np.random.randint(0, req.levels, size=n_vars) / (req.levels - 1)
+
+        # Evaluate base point
+        overrides_base = {
+            req.variables[j]: float(bounds[j, 0] + x_base[j] * (bounds[j, 1] - bounds[j, 0]))
+            for j in range(n_vars)
+        }
+        res_base = await evaluator.evaluate(base_state, overrides_base)
+        y_base = res_base.parameters.get(obj_spec.parameter_id, 0.0)
+
+        # Perturb each variable one at a time
+        delta = 1.0 / (req.levels - 1)
+        for j in range(n_vars):
+            x_pert = x_base.copy()
+            x_pert[j] = min(1.0, x_pert[j] + delta)
+            overrides_pert = {
+                req.variables[k]: float(bounds[k, 0] + x_pert[k] * (bounds[k, 1] - bounds[k, 0]))
+                for k in range(n_vars)
+            }
+            res_pert = await evaluator.evaluate(base_state, overrides_pert)
+            y_pert = res_pert.parameters.get(obj_spec.parameter_id, 0.0)
+
+            # Elementary effect
+            ee = (y_pert - y_base) / (delta * (bounds[j, 1] - bounds[j, 0]))
+            results_per_var[req.variables[j]].append(ee)
+
+    # Compute Morris indices: mu* (mean of absolute EE) and sigma (std of EE)
+    sensitivity = []
+    for v in req.variables:
+        ees = results_per_var[v]
+        if ees:
+            mu_star = float(np.mean(np.abs(ees)))
+            sigma = float(np.std(ees))
+        else:
+            mu_star, sigma = 0.0, 0.0
+        sensitivity.append({
+            "variable": v,
+            "mu_star": round(mu_star, 4),
+            "sigma": round(sigma, 4),
+            "classification": "important" if mu_star > 0.1 else "negligible",
+        })
+
+    # Sort by importance
+    sensitivity.sort(key=lambda s: s["mu_star"], reverse=True)
+
+    return {
+        "objective": req.objective,
+        "num_trajectories": req.num_trajectories,
+        "total_evals": req.num_trajectories * (n_vars + 1),
+        "sensitivity": sensitivity,
+    }
