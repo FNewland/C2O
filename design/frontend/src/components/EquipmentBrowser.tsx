@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import { useEquipmentSearch } from '../hooks/useSession'
 
-// All 15 KB component categories, grouped by domain
+// All KB component categories, grouped by domain
 const CATEGORIES = [
   // Power
   { id: 'batteries', name: 'Batteries', domain: 'power' },
@@ -19,21 +19,26 @@ const CATEGORIES = [
   { id: 'gps_receivers', name: 'GPS Receivers', domain: 'link' },
   // Propulsion
   { id: 'thrusters', name: 'Thrusters', domain: 'propulsion' },
-  // Structure
+  // Structure & Mechanisms
   { id: 'cubesat_structures', name: 'CubeSat Structures', domain: 'structure' },
   { id: 'deployers', name: 'Deployers', domain: 'structure' },
+  { id: 'mechanical_hardware', name: 'Mechanical Hardware', domain: 'structure' },
   // Data handling
   { id: 'obcs', name: 'OBCs', domain: 'data' },
+  // Thermal
+  { id: 'thermal_hardware', name: 'Thermal Hardware', domain: 'thermal' },
+  // Integration
+  { id: 'harnesses', name: 'Harnesses & Cables', domain: 'integration' },
 ]
 
 const DOMAIN_LABELS: Record<string, string> = {
   power: 'Power', aocs: 'AOCS', link: 'Comms', propulsion: 'Propulsion',
-  structure: 'Structure', data: 'Data Handling',
+  structure: 'Structure', data: 'Data Handling', thermal: 'Thermal', integration: 'Integration',
 }
 
 const DOMAIN_COLORS: Record<string, string> = {
   power: '#f59e0b', aocs: '#06b6d4', link: '#ec4899', propulsion: '#f97316',
-  structure: '#84cc16', data: '#8b5cf6',
+  structure: '#84cc16', data: '#8b5cf6', thermal: '#ef4444', integration: '#6b7280',
 }
 
 // Map each KB category to the parameter edits that selecting a component produces.
@@ -93,11 +98,21 @@ const SELECTION_EFFECTS: Record<string, { paramId: string; extract: (c: any) => 
     { paramId: 'data.obc_mass_kg', extract: c => c.mass_kg ?? null, label: 'OBC Mass' },
     { paramId: 'data.obc_power_w', extract: c => c.power_w ?? null, label: 'OBC Power' },
   ],
+  thermal_hardware: [
+    { paramId: 'thermal.hardware_mass_kg', extract: c => c.mass_kg ?? null, label: 'Thermal HW Mass' },
+  ],
+  harnesses: [
+    { paramId: 'integration.harness_mass_kg', extract: c => c.mass_kg ?? null, label: 'Harness Mass' },
+  ],
+  mechanical_hardware: [
+    { paramId: 'structure.hardware_mass_kg', extract: c => c.mass_kg ?? null, label: 'Mechanical HW Mass' },
+  ],
 }
 
 interface SelectedEquipment {
   category: string
   component: any
+  quantity: number
   timestamp: number
 }
 
@@ -136,13 +151,33 @@ export function EquipmentBrowser({ studyId, onClose, onSelect }: Props) {
     })
   }
 
-  const handleSelectComponent = (category: string, component: any) => {
+  const handleSelectComponent = (category: string, component: any, qty: number = 1) => {
     setSelections(prev => {
       const next = new Map(prev)
-      next.set(category, { category, component, timestamp: Date.now() })
+      next.set(category, { category, component, quantity: qty, timestamp: Date.now() })
       return next
     })
   }
+
+  const handleQuantityChange = (category: string, qty: number) => {
+    setSelections(prev => {
+      const next = new Map(prev)
+      const existing = next.get(category)
+      if (existing) next.set(category, { ...existing, quantity: Math.max(1, qty) })
+      return next
+    })
+  }
+
+  // Live budget totals
+  const budgetTotals = useMemo(() => {
+    let mass = 0, power = 0, cost = 0
+    for (const [, sel] of selections) {
+      mass += (sel.component.mass_kg || 0) * sel.quantity
+      power += (sel.component.power_w || 0) * sel.quantity
+      cost += (sel.component.cost_keur || 0) * sel.quantity
+    }
+    return { mass, power, cost }
+  }, [selections])
 
   const handleDeselectCategory = (category: string) => {
     setSelections(prev => {
@@ -255,30 +290,43 @@ export function EquipmentBrowser({ studyId, onClose, onSelect }: Props) {
           <button className="btn btn-sm" onClick={onClose}>Close</button>
         </div>
 
-        {/* Selected equipment summary bar */}
+        {/* Selected equipment summary bar with live budget */}
         {selections.size > 0 && (
           <div style={{
             padding: '0.5rem 1rem', background: 'rgba(16,185,129,0.08)',
             borderBottom: '1px solid var(--border, #374151)',
-            display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center',
           }}>
-            <span style={{ fontSize: '0.72rem', color: '#10b981', fontWeight: 600 }}>Selected:</span>
-            {Array.from(selections.entries()).map(([cat, sel]) => (
-              <span key={cat} style={{
-                display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
-                background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.3)',
-                borderRadius: '4px', padding: '0.15rem 0.5rem', fontSize: '0.72rem',
-              }}>
-                <span style={{ color: '#9ca3af' }}>{cat.replace(/_/g, ' ')}:</span>
-                <span style={{ fontWeight: 600, color: '#10b981' }}>{sel.component.name}</span>
-                <span style={{ color: '#6b7280', fontSize: '0.65rem' }}>{sel.component.mass_kg?.toFixed(2)} kg</span>
-                {sel.component.custom && <span style={{ fontSize: '0.6rem', color: '#f59e0b' }}>(custom)</span>}
-                <button onClick={() => handleDeselectCategory(cat)}
-                  style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '0.8rem', padding: 0, lineHeight: 1 }}>
-                  x
-                </button>
-              </span>
-            ))}
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center', marginBottom: '0.3rem' }}>
+              <span style={{ fontSize: '0.72rem', color: '#10b981', fontWeight: 600 }}>Selected:</span>
+              {Array.from(selections.entries()).map(([cat, sel]) => (
+                <span key={cat} style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
+                  background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.3)',
+                  borderRadius: '4px', padding: '0.15rem 0.5rem', fontSize: '0.72rem',
+                }}>
+                  <span style={{ color: '#9ca3af' }}>{cat.replace(/_/g, ' ')}:</span>
+                  <span style={{ fontWeight: 600, color: '#10b981' }}>{sel.component.name}</span>
+                  {sel.quantity > 1 && <span style={{ color: '#f59e0b', fontWeight: 600 }}>×{sel.quantity}</span>}
+                  <input type="number" min={1} max={10} value={sel.quantity}
+                    onChange={e => handleQuantityChange(cat, Number(e.target.value))}
+                    style={{ width: 30, background: 'transparent', border: '1px solid #374151', borderRadius: '3px', color: '#d1d5db', fontSize: '0.65rem', textAlign: 'center', padding: '0 2px' }}
+                    onClick={e => e.stopPropagation()} />
+                  <span style={{ color: '#6b7280', fontSize: '0.65rem' }}>{((sel.component.mass_kg || 0) * sel.quantity).toFixed(2)}kg</span>
+                  {sel.component.custom && <span style={{ fontSize: '0.6rem', color: '#f59e0b' }}>(custom)</span>}
+                  <button onClick={() => handleDeselectCategory(cat)}
+                    style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '0.8rem', padding: 0, lineHeight: 1 }}>
+                    x
+                  </button>
+                </span>
+              ))}
+            </div>
+            {/* Live budget totals */}
+            <div style={{ display: 'flex', gap: '1rem', fontSize: '0.7rem' }}>
+              <span style={{ color: '#9ca3af' }}>Budget impact:</span>
+              <span style={{ fontFamily: 'monospace', color: '#d1d5db' }}>{budgetTotals.mass.toFixed(2)} kg</span>
+              <span style={{ fontFamily: 'monospace', color: '#d1d5db' }}>{budgetTotals.power.toFixed(1)} W</span>
+              <span style={{ fontFamily: 'monospace', color: '#d1d5db' }}>{budgetTotals.cost.toFixed(0)} kEUR</span>
+            </div>
           </div>
         )}
 

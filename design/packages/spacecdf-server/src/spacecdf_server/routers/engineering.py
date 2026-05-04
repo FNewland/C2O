@@ -351,3 +351,126 @@ async def get_eol_curves(study_id: str | None = None) -> dict:
             for p in result.points
         ],
     }
+
+
+# --- Equipment Needs & Compatibility ---
+
+
+@router.get("/equipment/needs/{study_id}")
+async def get_equipment_needs(study_id: str) -> dict:
+    """Determine which equipment categories are needed for this mission.
+
+    Returns a list of equipment needs with category, quantity, reason,
+    and whether each is required or optional.
+    """
+    from ..services.equipment_logic import determine_equipment_needs
+
+    store = get_study_store()
+    study = store.get(study_id)
+    if not study:
+        raise HTTPException(404, f"Study {study_id} not found")
+
+    req = study.requirements
+    pointing = 1.0
+    data_rate = 10.0
+    if req.payloads:
+        pointing = getattr(req.payloads[0], "pointing_accuracy_deg", 1.0) or 1.0
+        data_rate = getattr(req.payloads[0], "data_rate_mbps", 10.0) or 10.0
+
+    has_prop = getattr(req, "has_propulsion", False) or (
+        getattr(req, "propulsion_type", "none") != "none"
+    )
+
+    needs = determine_equipment_needs(
+        mission_type=req.mission_type,
+        pointing_accuracy_deg=pointing,
+        has_propulsion=has_prop,
+        orbit_type=getattr(req.orbit, "orbit_type", "sso"),
+        altitude_km=req.orbit.altitude_km,
+        data_rate_mbps=data_rate,
+        bus_form_factor=getattr(req, "spacecraft_class", "3U"),
+        mission_duration_years=req.design_lifetime_years,
+    )
+
+    return {
+        "study_id": study_id,
+        "needs": [
+            {
+                "category": n.category,
+                "reason": n.reason,
+                "quantity": n.quantity,
+                "required": n.required,
+                "notes": n.notes,
+            }
+            for n in needs
+        ],
+        "required_categories": [n.category for n in needs if n.required],
+        "optional_categories": [n.category for n in needs if not n.required],
+    }
+
+
+class CompatibilityCheckRequest(BaseModel):
+    transponder_id: str = ""
+    antenna_id: str = ""
+
+
+@router.post("/equipment/check-compatibility")
+async def check_compatibility(req: CompatibilityCheckRequest) -> dict:
+    """Check RF compatibility between a transponder and antenna."""
+    from ..services.equipment_logic import check_rf_compatibility
+    from spacecdf_common.config.loader import load_yaml
+
+    # Load both components
+    kb_dir = Path(__file__).resolve().parents[4] / "spacecdf-kb" / "src" / "spacecdf_kb" / "data"
+    if not kb_dir.exists():
+        p = Path(__file__).resolve()
+        while p != p.parent:
+            candidate = p / "packages" / "spacecdf-kb" / "src" / "spacecdf_kb" / "data"
+            if candidate.exists():
+                kb_dir = candidate
+                break
+            p = p.parent
+
+    tx = {}
+    ant = {}
+    for cat_file in ["transponders", "antennas"]:
+        yaml_path = kb_dir / "components" / f"{cat_file}.yaml"
+        if yaml_path.exists():
+            data = load_yaml(yaml_path)
+            for comp in data.get("components", data.get("items", [])):
+                if comp.get("id") == req.transponder_id:
+                    tx = comp
+                if comp.get("id") == req.antenna_id:
+                    ant = comp
+
+    if not tx and not ant:
+        return {"compatible": True, "reason": "unknown", "details": "Components not found"}
+
+    return check_rf_compatibility(tx, ant)
+
+
+class BudgetImpactRequest(BaseModel):
+    selections: list[dict] = []  # [{category, component: {mass_kg, power_w, ...}, quantity}]
+    mass_budget_kg: float | None = None
+    power_budget_w: float | None = None
+
+
+@router.post("/equipment/budget-impact")
+async def compute_budget_impact(req: BudgetImpactRequest) -> dict:
+    """Compute live budget impact of current equipment selections."""
+    from ..services.equipment_logic import compute_selection_budget
+
+    impact = compute_selection_budget(
+        req.selections,
+        mass_budget_kg=req.mass_budget_kg,
+        power_budget_w=req.power_budget_w,
+    )
+
+    return {
+        "total_mass_kg": round(impact.total_mass_kg, 3),
+        "total_power_w": round(impact.total_power_w, 1),
+        "total_cost_keur": round(impact.total_cost_keur, 0),
+        "total_volume_litres": round(impact.total_volume_litres, 2),
+        "items": impact.items,
+        "warnings": impact.warnings,
+    }

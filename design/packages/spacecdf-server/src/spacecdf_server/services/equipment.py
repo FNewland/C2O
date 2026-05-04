@@ -20,8 +20,10 @@ DOMAIN_TO_CATEGORIES = {
     "aocs": ["reaction_wheels", "star_trackers", "sun_sensors", "magnetorquers"],
     "link": ["transponders", "antennas", "gps_receivers"],
     "propulsion": ["thrusters"],
-    "structure": ["cubesat_structures", "deployers"],
+    "structure": ["cubesat_structures", "deployers", "mechanical_hardware"],
     "data": ["obcs"],
+    "thermal": ["thermal_hardware"],
+    "integration": ["harnesses"],
 }
 
 # Map SpaceCDF domains to the key sizing parameter and unit

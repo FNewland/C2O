@@ -55,8 +55,24 @@ class OptimizeBody(BaseModel):
 
 
 @router.get("/config")
-async def optimizer_config() -> dict:
-    """Expose the objective + default-variable registry for the UI picker."""
+async def optimizer_config(
+    mission_type: str | None = None,
+    has_propulsion: bool = False,
+    pointing_accuracy_deg: float = 1.0,
+) -> dict:
+    """Expose the objective + default-variable registry for the UI picker.
+
+    If mission_type is provided, filters to only relevant objectives and variables.
+    """
+    from ..services.equipment_logic import filter_relevant_objectives, filter_relevant_variables
+
+    if mission_type:
+        relevant_obj_keys = set(filter_relevant_objectives(mission_type, has_propulsion))
+        relevant_var_keys = set(filter_relevant_variables(mission_type, has_propulsion, pointing_accuracy_deg))
+    else:
+        relevant_obj_keys = set(OBJECTIVES.keys())
+        relevant_var_keys = set(DEFAULT_DESIGN_VARIABLES.keys())
+
     return {
         "objectives": [
             {
@@ -64,11 +80,12 @@ async def optimizer_config() -> dict:
                 "description": s.description,
                 "parameter_id": s.parameter_id,
                 "direction": s.direction,
+                "relevant": s.key in relevant_obj_keys,
             }
             for s in OBJECTIVES.values()
         ],
         "default_variables": [
-            {"id": vid, "lower": lo, "upper": hi}
+            {"id": vid, "lower": lo, "upper": hi, "relevant": vid in relevant_var_keys}
             for vid, (lo, hi) in DEFAULT_DESIGN_VARIABLES.items()
         ],
     }
