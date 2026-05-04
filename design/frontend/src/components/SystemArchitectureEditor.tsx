@@ -226,21 +226,33 @@ export function SystemArchitectureEditor() {
               <div style={{ fontSize: '0.72rem', fontWeight: 600, color: '#9ca3af', marginBottom: '0.3rem' }}>
                 Derived Requirements ({currentSelection.derived_requirements.length})
               </div>
-              {currentSelection.derived_requirements.map(req => (
-                <div key={req.id} style={{
-                  display: 'flex', alignItems: 'flex-start', gap: '0.4rem',
-                  padding: '0.2rem 0', fontSize: '0.72rem',
-                }}>
-                  <span style={{
-                    fontSize: '0.6rem', padding: '0.1rem 0.3rem', borderRadius: '3px', flexShrink: 0,
-                    background: req.level === 'system' ? 'rgba(59,130,246,0.15)' : 'rgba(6,182,212,0.15)',
-                    color: req.level === 'system' ? '#3b82f6' : '#06b6d4',
-                    fontWeight: 600, textTransform: 'uppercase',
-                  }}>{req.level}</span>
-                  <span style={{ fontFamily: 'monospace', color: '#6b7280', fontSize: '0.65rem', flexShrink: 0 }}>{req.id}</span>
-                  <span style={{ color: '#d1d5db' }}>{req.text}</span>
-                </div>
-              ))}
+              {currentSelection.derived_requirements.map((req: any) => {
+                const typeColors: Record<string, string> = {
+                  performance: '#10b981', interface: '#f59e0b', budget: '#3b82f6', functional: '#8b5cf6',
+                }
+                const typeColor = typeColors[req.type] || '#6b7280'
+                return (
+                  <div key={req.id} style={{
+                    display: 'flex', alignItems: 'flex-start', gap: '0.3rem',
+                    padding: '0.2rem 0', fontSize: '0.72rem',
+                  }}>
+                    <span style={{
+                      fontSize: '0.55rem', padding: '0.1rem 0.25rem', borderRadius: '3px', flexShrink: 0,
+                      background: req.level === 'system' ? 'rgba(59,130,246,0.15)' : 'rgba(6,182,212,0.15)',
+                      color: req.level === 'system' ? '#3b82f6' : '#06b6d4',
+                      fontWeight: 600, textTransform: 'uppercase',
+                    }}>{req.level}</span>
+                    {req.type && (
+                      <span style={{
+                        fontSize: '0.55rem', padding: '0.1rem 0.25rem', borderRadius: '3px', flexShrink: 0,
+                        background: `${typeColor}22`, color: typeColor, fontWeight: 600,
+                      }}>{req.type}</span>
+                    )}
+                    <span style={{ fontFamily: 'monospace', color: '#6b7280', fontSize: '0.6rem', flexShrink: 0 }}>{req.id}</span>
+                    <span style={{ color: '#d1d5db', flex: 1 }}>{req.text}</span>
+                  </div>
+                )
+              })}
             </div>
           )}
         </div>

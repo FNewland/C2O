@@ -343,7 +343,14 @@ function ArchDerivedRequirements({ levelFilter }: { levelFilter: string }) {
             fontWeight: 600, textTransform: 'uppercase', flexShrink: 0,
           }}>{req.level}</span>
           <span style={{ fontFamily: 'monospace', fontSize: '0.65rem', color: '#6b7280', flexShrink: 0 }}>{req.id}</span>
-          <span style={{ fontSize: '0.75rem', color: '#d1d5db' }}>{req.text}</span>
+          {(req as any).type && (
+            <span style={{
+              fontSize: '0.55rem', padding: '0.1rem 0.2rem', borderRadius: '2px', flexShrink: 0,
+              background: (req as any).type === 'interface' ? '#f59e0b22' : (req as any).type === 'budget' ? '#3b82f622' : (req as any).type === 'functional' ? '#8b5cf622' : '#10b98122',
+              color: (req as any).type === 'interface' ? '#f59e0b' : (req as any).type === 'budget' ? '#3b82f6' : (req as any).type === 'functional' ? '#8b5cf6' : '#10b981',
+            }}>{(req as any).type}</span>
+          )}
+          <span style={{ fontSize: '0.75rem', color: '#d1d5db', flex: 1 }}>{req.text}</span>
           <span style={{ fontSize: '0.6rem', color: '#6b7280', flexShrink: 0 }}>{req.subsystem}</span>
         </div>
       ))}

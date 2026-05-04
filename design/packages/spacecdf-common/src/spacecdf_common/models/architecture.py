@@ -59,9 +59,22 @@ EPS_OPTIONS = [
         pros=["Simplest design", "No deployment risk", "Lowest cost", "Flight proven"],
         cons=["Limited power (7-12W for 3U)", "No redundancy", "Eclipse survival constrained"],
         derived_requirements=[
-            {"id": "SR-PWR-001", "level": "system", "text": "The EPS shall generate >=8W EOL from body-mounted solar cells"},
-            {"id": "SR-PWR-002", "level": "system", "text": "The EPS shall provide regulated 3.3V and 5.0V buses"},
-            {"id": "SSR-PWR-001", "level": "subsystem", "text": "The battery shall provide >=10 Wh at 30% maximum DoD"},
+            # Performance
+            {"id": "SR-PWR-001", "level": "system", "type": "performance", "text": "The EPS shall generate >=8W EOL from body-mounted solar cells"},
+            {"id": "SR-PWR-002", "level": "system", "type": "performance", "text": "The EPS shall maintain positive power margin in all operational modes"},
+            # Interface
+            {"id": "IR-PWR-001", "level": "system", "type": "interface", "text": "The EPS shall provide regulated 3.3V +/-0.1V and 5.0V +/-0.25V buses to all subsystems via PC/104 connector"},
+            {"id": "IR-PWR-002", "level": "system", "type": "interface", "text": "The EPS shall provide >=4 independently switched power lines with over-current protection"},
+            {"id": "IR-PWR-003", "level": "system", "type": "interface", "text": "The EPS shall provide battery voltage telemetry via I2C to the OBC"},
+            # Budget
+            {"id": "BR-PWR-001", "level": "system", "type": "budget", "text": "The EPS total mass shall not exceed 0.75 kg including SA, battery, and board"},
+            {"id": "BR-PWR-002", "level": "system", "type": "budget", "text": "The EPS recurring cost shall not exceed 20 kEUR"},
+            # Functional
+            {"id": "FR-PWR-001", "level": "system", "type": "functional", "text": "The EPS shall autonomously disconnect loads when battery voltage falls below safe threshold"},
+            {"id": "FR-PWR-002", "level": "system", "type": "functional", "text": "The EPS shall support battery passivation (discharge to safe level) via ground command"},
+            # Subsystem
+            {"id": "SSR-PWR-001", "level": "subsystem", "type": "performance", "text": "The battery shall provide >=10 Wh capacity at 30% maximum DoD"},
+            {"id": "SSR-PWR-002", "level": "subsystem", "type": "interface", "text": "The EPS board shall accept 4 solar panel inputs via standard connectors"},
         ],
         blocks=[
             {"id": "sa", "name": "Body-Mounted SA", "type": "source"},
@@ -84,11 +97,24 @@ EPS_OPTIONS = [
         pros=["Higher power (15-30W)", "Enables more payload duty cycle", "Well-proven on CubeSats"],
         cons=["Deployment risk", "More complex", "Higher mass", "Mechanism testing needed"],
         derived_requirements=[
-            {"id": "SR-PWR-001", "level": "system", "text": "The EPS shall generate >=20W EOL from deployable solar arrays"},
-            {"id": "SR-PWR-002", "level": "system", "text": "The EPS shall provide regulated 3.3V and 5.0V buses"},
-            {"id": "SR-PWR-003", "level": "system", "text": "The SA deployment mechanism shall deploy within 30 minutes of separation"},
-            {"id": "SSR-PWR-001", "level": "subsystem", "text": "The battery shall provide >=20 Wh at 30% maximum DoD"},
-            {"id": "SSR-PWR-002", "level": "subsystem", "text": "The deployment hinge shall provide >=180deg deployment angle"},
+            # Performance
+            {"id": "SR-PWR-001", "level": "system", "type": "performance", "text": "The EPS shall generate >=20W EOL from deployable solar arrays"},
+            {"id": "SR-PWR-002", "level": "system", "type": "performance", "text": "The EPS shall maintain positive power margin in all operational modes including eclipse"},
+            # Interface
+            {"id": "IR-PWR-001", "level": "system", "type": "interface", "text": "The EPS shall provide regulated 3.3V +/-0.1V and 5.0V +/-0.25V buses via PC/104"},
+            {"id": "IR-PWR-002", "level": "system", "type": "interface", "text": "The EPS shall provide >=6 independently switched power lines"},
+            {"id": "IR-PWR-003", "level": "system", "type": "interface", "text": "The SA deployment signal shall be provided by the OBC via dedicated GPIO"},
+            {"id": "IR-PWR-004", "level": "system", "type": "interface", "text": "The SA deployment status shall be reported via deployment switch telemetry"},
+            # Budget
+            {"id": "BR-PWR-001", "level": "system", "type": "budget", "text": "The EPS total mass shall not exceed 1.1 kg including deployable SA, battery, and board"},
+            # Functional
+            {"id": "FR-PWR-001", "level": "system", "type": "functional", "text": "The SA deployment mechanism shall deploy within 30 minutes of separation"},
+            {"id": "FR-PWR-002", "level": "system", "type": "functional", "text": "The EPS shall autonomously manage battery charge/discharge cycling"},
+            {"id": "FR-PWR-003", "level": "system", "type": "functional", "text": "The EPS shall support battery passivation via ground command"},
+            # Subsystem
+            {"id": "SSR-PWR-001", "level": "subsystem", "type": "performance", "text": "The battery shall provide >=20 Wh at 30% maximum DoD"},
+            {"id": "SSR-PWR-002", "level": "subsystem", "type": "interface", "text": "The deployment hinge shall provide >=180deg deployment with positive latch"},
+            {"id": "SSR-PWR-003", "level": "subsystem", "type": "interface", "text": "The SA harness shall route through the hinge without exceeding bend radius limits"},
         ],
         blocks=[
             {"id": "sa", "name": "Deployable SA Panels", "type": "source"},
@@ -211,12 +237,28 @@ AOCS_OPTIONS = [
         pros=["Fine pointing (<0.1deg)", "4th wheel redundancy", "Star tracker accuracy"],
         cons=["Higher mass", "Higher cost", "Star tracker FOV exclusion zones", "Wheel vibration"],
         derived_requirements=[
-            {"id": "SR-AOCS-001", "level": "system", "text": "The AOCS shall achieve <=0.1deg pointing accuracy in imaging mode"},
-            {"id": "SR-AOCS-002", "level": "system", "text": "The AOCS shall autonomously enter safe mode (sun-pointing) on anomaly"},
-            {"id": "SR-AOCS-003", "level": "system", "text": "The AOCS shall provide 3+1 redundant reaction wheel configuration"},
-            {"id": "SSR-AOCS-001", "level": "subsystem", "text": "The star tracker shall provide <=10 arcsec attitude knowledge (3-sigma)"},
-            {"id": "SSR-AOCS-002", "level": "subsystem", "text": "Each reaction wheel shall provide >=5 mNm torque"},
-            {"id": "SSR-AOCS-003", "level": "subsystem", "text": "The safe mode shall use sun sensors + magnetorquers only"},
+            # Performance
+            {"id": "SR-AOCS-001", "level": "system", "type": "performance", "text": "The AOCS shall achieve <=0.1deg pointing accuracy (3-sigma) in imaging mode"},
+            {"id": "SR-AOCS-002", "level": "system", "type": "performance", "text": "The AOCS shall achieve <=0.01deg/s pointing stability during imaging"},
+            {"id": "SR-AOCS-003", "level": "system", "type": "performance", "text": "The AOCS shall complete a 30deg slew within 120 seconds"},
+            # Functional
+            {"id": "FR-AOCS-001", "level": "system", "type": "functional", "text": "The AOCS shall autonomously enter safe mode (sun-pointing) within 60s of anomaly detection"},
+            {"id": "FR-AOCS-002", "level": "system", "type": "functional", "text": "The AOCS shall perform autonomous momentum dumping using magnetorquers"},
+            {"id": "FR-AOCS-003", "level": "system", "type": "functional", "text": "The AOCS shall support nadir pointing, target tracking, and inertial hold modes"},
+            # Interface
+            {"id": "IR-AOCS-001", "level": "system", "type": "interface", "text": "The AOCS shall receive attitude commands from the OBC via I2C/SPI bus"},
+            {"id": "IR-AOCS-002", "level": "system", "type": "interface", "text": "The AOCS shall provide attitude quaternion telemetry to the OBC at >=1 Hz"},
+            {"id": "IR-AOCS-003", "level": "system", "type": "interface", "text": "The reaction wheels shall be powered via dedicated EPS switched lines"},
+            {"id": "IR-AOCS-004", "level": "system", "type": "interface", "text": "The star tracker mounting shall maintain <=0.05deg alignment to payload axis"},
+            # Budget
+            {"id": "BR-AOCS-001", "level": "system", "type": "budget", "text": "The AOCS total mass shall not exceed 1.0 kg (4 RW + ST + 3 MTQ + sensors)"},
+            {"id": "BR-AOCS-002", "level": "system", "type": "budget", "text": "The AOCS peak power shall not exceed 8W (all wheels + ST active)"},
+            # Subsystem
+            {"id": "SSR-AOCS-001", "level": "subsystem", "type": "performance", "text": "The star tracker shall provide <=10 arcsec attitude knowledge (3-sigma)"},
+            {"id": "SSR-AOCS-002", "level": "subsystem", "type": "performance", "text": "Each reaction wheel shall provide >=5 mNm torque and >=20 mNms momentum"},
+            {"id": "SSR-AOCS-003", "level": "subsystem", "type": "interface", "text": "The star tracker shall have >=20deg x 20deg FOV with exclusion zone handling"},
+            {"id": "SSR-AOCS-004", "level": "subsystem", "type": "functional", "text": "The safe mode shall use sun sensors + magnetorquers only (no RW/ST dependency)"},
+            {"id": "SSR-AOCS-005", "level": "subsystem", "type": "interface", "text": "The RW vibration isolators shall attenuate >=20 dB above 50 Hz"},
         ],
         blocks=[
             {"id": "st", "name": "Star Tracker", "type": "sensor"},
@@ -274,9 +316,24 @@ TTC_OPTIONS = [
         pros=["Moderate data rate (1-10 Mbps)", "Single band", "Moderate cost"],
         cons=["Commercial licence needed", "ITU filing required", "Higher power than UHF"],
         derived_requirements=[
-            {"id": "SR-TTC-001", "level": "system", "text": "The TTC shall provide S-band uplink (2025-2110 MHz) and downlink (2200-2290 MHz)"},
-            {"id": "SR-TTC-002", "level": "system", "text": "The TTC shall achieve >=4 Mbps downlink data rate"},
-            {"id": "SR-TTC-003", "level": "system", "text": "The TTC shall provide >=3 dB link margin at 10deg elevation"},
+            # Performance
+            {"id": "SR-TTC-001", "level": "system", "type": "performance", "text": "The TTC shall achieve >=4 Mbps downlink data rate at >=3 dB margin"},
+            {"id": "SR-TTC-002", "level": "system", "type": "performance", "text": "The TTC shall close the link at minimum 10deg elevation angle"},
+            # Interface
+            {"id": "IR-TTC-001", "level": "system", "type": "interface", "text": "The TTC shall operate on S-band uplink (2025-2110 MHz) and downlink (2200-2290 MHz)"},
+            {"id": "IR-TTC-002", "level": "system", "type": "interface", "text": "The TTC shall interface with the OBC via UART for TC reception and TM formatting"},
+            {"id": "IR-TTC-003", "level": "system", "type": "interface", "text": "The TTC RF output shall be 50 ohm impedance via SMA connector to antenna"},
+            {"id": "IR-TTC-004", "level": "system", "type": "interface", "text": "The TTC shall be powered via dedicated EPS switched line"},
+            # Budget
+            {"id": "BR-TTC-001", "level": "system", "type": "budget", "text": "The TTC total mass shall not exceed 0.3 kg (transponder + antenna + cable)"},
+            {"id": "BR-TTC-002", "level": "system", "type": "budget", "text": "The TTC peak power shall not exceed 8W during transmission"},
+            # Functional
+            {"id": "FR-TTC-001", "level": "system", "type": "functional", "text": "The TTC shall support store-and-forward data delivery"},
+            {"id": "FR-TTC-002", "level": "system", "type": "functional", "text": "The TTC shall transmit beacon telemetry at >=1 packet per 30 seconds in safe mode"},
+            {"id": "FR-TTC-003", "level": "system", "type": "functional", "text": "The TTC shall support authenticated telecommand reception"},
+            # Subsystem
+            {"id": "SSR-TTC-001", "level": "subsystem", "type": "performance", "text": "The S-band transmitter shall provide >=2W RF output power"},
+            {"id": "SSR-TTC-002", "level": "subsystem", "type": "interface", "text": "The S-band antenna shall provide >=4 dBi gain with hemispherical coverage"},
         ],
         blocks=[
             {"id": "rx", "name": "S-band Receiver", "type": "receiver"},
@@ -396,12 +453,24 @@ STRUCTURE_OPTIONS = [
         pros=["Most common form factor", "Widest deployer compatibility", "Lowest cost"],
         cons=["Limited volume (3000 cm3)", "6 kg mass limit", "Tight for complex missions"],
         derived_requirements=[
-            {"id": "SR-STR-001", "level": "system", "text": "The spacecraft shall comply with CDS Rev 14.1 for 3U form factor"},
-            {"id": "SR-STR-002", "level": "system", "text": "The structure shall survive qualification launch loads with MoS >=0"},
-            {"id": "SR-STR-003", "level": "system", "text": "The first natural frequency shall be >=40 Hz"},
-            {"id": "SSR-STR-001", "level": "subsystem", "text": "CDS rail dimensions shall be 8.5x8.5 mm anodised aluminium"},
-            {"id": "SSR-STR-002", "level": "subsystem", "text": "Deployment switches shall be provided on +X and -X rail faces"},
-            {"id": "SSR-STR-003", "level": "subsystem", "text": "RBF pin shall deactivate all power when inserted"},
+            # Performance
+            {"id": "SR-STR-001", "level": "system", "type": "performance", "text": "The structure shall survive qualification launch loads with MoS >=0 (quasi-static, random, shock)"},
+            {"id": "SR-STR-002", "level": "system", "type": "performance", "text": "The first natural frequency shall be >=40 Hz in all axes"},
+            # Interface
+            {"id": "IR-STR-001", "level": "system", "type": "interface", "text": "The spacecraft shall comply with CDS Rev 14.1 for 3U form factor (100x100x340.5 mm)"},
+            {"id": "IR-STR-002", "level": "system", "type": "interface", "text": "The PC/104 stack shall accommodate all avionics boards within 250 mm stack height"},
+            {"id": "IR-STR-003", "level": "system", "type": "interface", "text": "All subsystem mounting shall use M3 fasteners with specified torque values"},
+            # Budget
+            {"id": "BR-STR-001", "level": "system", "type": "budget", "text": "The total spacecraft mass shall not exceed 6 kg (CDS 3U limit)"},
+            {"id": "BR-STR-002", "level": "system", "type": "budget", "text": "The structure mass shall not exceed 0.5 kg including frame, fasteners, and brackets"},
+            {"id": "BR-STR-003", "level": "system", "type": "budget", "text": "Internal volume utilisation shall not exceed 85% of 3000 cm3"},
+            # Functional
+            {"id": "FR-STR-001", "level": "system", "type": "functional", "text": "The structure shall provide 3 independent deployment inhibits (2 switches + 1 RBF pin)"},
+            {"id": "FR-STR-002", "level": "system", "type": "functional", "text": "The CG shall remain within 2 cm of geometric centre in all axes"},
+            # Subsystem
+            {"id": "SSR-STR-001", "level": "subsystem", "type": "interface", "text": "CDS rail dimensions shall be 8.5x8.5 mm +/-0.1 mm hard anodised aluminium"},
+            {"id": "SSR-STR-002", "level": "subsystem", "type": "interface", "text": "Deployment switches shall be provided on +X and -X rail faces per deployer ICD"},
+            {"id": "SSR-STR-003", "level": "subsystem", "type": "functional", "text": "RBF pin shall deactivate all power when inserted and be accessible for pre-launch removal"},
         ],
         blocks=[
             {"id": "frame", "name": "3U Frame + Rails", "type": "structure"},
@@ -616,8 +685,20 @@ GROUND_OPTIONS = [
         pros=["Global coverage", "High availability (>99%)", "Professional operations", "Multi-band support"],
         cons=["High cost (per-pass fees)", "Scheduling required", "Shared infrastructure"],
         derived_requirements=[
-            {"id": "SR-GND-001", "level": "system", "text": "The ground network shall provide >=6 passes per day with global coverage"},
-            {"id": "SR-GND-002", "level": "system", "text": "The ground network shall provide >=99% service availability"},
+            # Performance
+            {"id": "SR-GND-001", "level": "system", "type": "performance", "text": "The ground network shall provide >=6 passes per day with global coverage"},
+            {"id": "SR-GND-002", "level": "system", "type": "performance", "text": "The ground network shall provide >=99% service availability"},
+            {"id": "SR-GND-003", "level": "system", "type": "performance", "text": "The data processing pipeline shall deliver L2 products within 24h of acquisition"},
+            # Interface
+            {"id": "IR-GND-001", "level": "system", "type": "interface", "text": "The ground station RF shall be compatible with selected spacecraft TTC bands"},
+            {"id": "IR-GND-002", "level": "system", "type": "interface", "text": "The MCS shall provide CCSDS-compatible TM/TC processing"},
+            {"id": "IR-GND-003", "level": "system", "type": "interface", "text": "The data archive shall provide API access for end users"},
+            # Budget
+            {"id": "BR-GND-001", "level": "system", "type": "budget", "text": "Ground segment annual operating cost shall not exceed 200 kEUR"},
+            # Functional
+            {"id": "FR-GND-001", "level": "system", "type": "functional", "text": "The MCS shall support automated pass scheduling and execution"},
+            {"id": "FR-GND-002", "level": "system", "type": "functional", "text": "The MCS shall support manual commanding for contingency operations"},
+            {"id": "FR-GND-003", "level": "system", "type": "functional", "text": "The ground segment shall perform conjunction screening and collision avoidance analysis"},
         ],
         blocks=[
             {"id": "net", "name": "KSAT Network (20+ stations)", "type": "network"},
