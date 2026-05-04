@@ -5,6 +5,7 @@ import {
   useStartOptimization,
   type ParetoPoint,
 } from '../hooks/useOptimizer'
+import { useDesignStore } from '../stores/designStore'
 
 interface Props {
   sessionId: string | null
@@ -20,7 +21,9 @@ interface VarRow {
 type Mode = 'single' | 'pareto'
 
 export function OptimizerPanel({ sessionId }: Props) {
-  const { data: config, isLoading: cfgLoading } = useOptimizerConfig()
+  const missionType = useDesignStore(s => s.requirements.mission_type)
+  const pointingDeg = useDesignStore(s => s.requirements.payloads?.[0]?.pointing_accuracy_deg ?? 1.0)
+  const { data: config, isLoading: cfgLoading } = useOptimizerConfig(missionType, false, pointingDeg)
   const start = useStartOptimization()
 
   const [mode, setMode] = useState<Mode>('single')
@@ -37,8 +40,8 @@ export function OptimizerPanel({ sessionId }: Props) {
 
   useEffect(() => {
     if (!config) return
-    setVars(config.default_variables.map(d => ({
-      id: d.id, enabled: false, lower: d.lower, upper: d.upper,
+    setVars(config.default_variables.map((d: any) => ({
+      id: d.id, enabled: d.relevant !== false, lower: d.lower, upper: d.upper,
     })))
   }, [config])
 

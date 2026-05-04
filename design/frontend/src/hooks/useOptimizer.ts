@@ -53,10 +53,15 @@ export interface OptimizeRun {
   latest_event?: any
 }
 
-export function useOptimizerConfig() {
+export function useOptimizerConfig(missionType?: string, hasPropulsion?: boolean, pointingDeg?: number) {
+  const params = new URLSearchParams()
+  if (missionType) params.set('mission_type', missionType)
+  if (hasPropulsion !== undefined) params.set('has_propulsion', String(hasPropulsion))
+  if (pointingDeg !== undefined) params.set('pointing_accuracy_deg', String(pointingDeg))
+  const qs = params.toString()
   return useQuery<OptimizerConfigResponse>({
-    queryKey: ['optimizer-config'],
-    queryFn: () => api<OptimizerConfigResponse>('/optimize/config'),
+    queryKey: ['optimizer-config', missionType, hasPropulsion, pointingDeg],
+    queryFn: () => api<OptimizerConfigResponse>(`/optimize/config${qs ? '?' + qs : ''}`),
     staleTime: 300_000,
   })
 }
