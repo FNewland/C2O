@@ -69,9 +69,22 @@ export function BudgetComparison() {
 
   const totalParametricMass = rows.reduce((s, r) => s + r.parametric_mass_kg, 0)
   const totalParametricPower = rows.reduce((s, r) => s + r.parametric_power_w, 0)
-  const dryMass = get('mass.dry_mass_kg') || totalParametricMass
+
+  // UPWARD FLOW: Equipment selections roll up into budget totals
+  const selectedEquipment = useDesignStore(s => s.selectedEquipment)
+  const equipTotalMass = selectedEquipment.reduce((s, e) => s + (e.mass_kg * e.quantity), 0)
+  const equipTotalPower = selectedEquipment.reduce((s, e) => s + (e.power_w * e.quantity), 0)
+  const equipTotalCost = selectedEquipment.reduce((s, e) => s + (e.cost_keur * e.quantity), 0)
+  const hasEquipment = selectedEquipment.length > 0
+
+  // Use equipment totals if available (more accurate than parametric), otherwise parametric
+  const dryMass = hasEquipment ? equipTotalMass : (get('mass.dry_mass_kg') || totalParametricMass)
   const massMargin = get('systems.mass_margin_percent')
   const powerMargin = get('systems.power_margin_percent')
+
+  // Constraint violation check (UPWARD feedback to mission level)
+  const targetMass = requirements.target_mass_kg
+  const massExceeded = targetMass && dryMass > targetMass
   const totalCost = get('cost.total_meur')
 
   // Volume fit assessment
@@ -82,6 +95,25 @@ export function BudgetComparison() {
 
   return (
     <div className="card">
+      {/* UPWARD FEEDBACK: Constraint violation warning */}
+      {massExceeded && (
+        <div style={{
+          padding: '0.4rem 0.6rem', marginBottom: '0.5rem', borderRadius: '4px',
+          background: 'rgba(239,68,68,0.1)', border: '1px solid #ef444440',
+          fontSize: '0.75rem', color: '#ef4444', fontWeight: 600,
+        }}>
+          MISSION CONSTRAINT VIOLATED: Equipment mass ({dryMass.toFixed(1)} kg) exceeds
+          mission target ({targetMass} kg). Reduce equipment or increase mass allocation.
+        </div>
+      )}
+      {hasEquipment && !massExceeded && (
+        <div style={{
+          padding: '0.3rem 0.6rem', marginBottom: '0.5rem', borderRadius: '4px',
+          background: 'rgba(16,185,129,0.08)', fontSize: '0.72rem', color: '#10b981',
+        }}>
+          Equipment selected: {selectedEquipment.length} items, {equipTotalMass.toFixed(2)} kg, {equipTotalPower.toFixed(1)} W, {equipTotalCost.toFixed(0)} kEUR
+        </div>
+      )}
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
         <h3 style={{ fontSize: '0.9rem', margin: 0 }}>Budget Breakdown</h3>
         <button className="btn btn-sm" onClick={() => setEditMode(!editMode)}

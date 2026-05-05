@@ -123,6 +123,8 @@ interface DesignStore {
   architectureDerivedReqs: Array<{ id: string; level: string; text: string; subsystem: string }>
   // Generated requirements (persisted)
   generatedRequirements: Array<{ id: string; text: string; req_type: string; domain: string; threshold: number; operator: string; unit: string; verification_method: string; objective_id: string; function_id: string; rationale: string; status: string; level: string; parent_id: string | null }>
+  // Selected equipment (persisted) — feeds into budget roll-up
+  selectedEquipment: Array<{ category: string; componentId: string; name: string; mass_kg: number; power_w: number; cost_keur: number; quantity: number }>
 
   // Reactive state
   designStale: boolean  // true when requirements changed since last design run
@@ -194,6 +196,7 @@ export const useDesignStore = create<DesignStore>()(persist((set, get) => ({
   studyId: null,
   architectureDerivedReqs: [],
   generatedRequirements: [],
+  selectedEquipment: [],
   designStale: false,
   lastChangeSource: '',
   changeHistory: [],
@@ -391,6 +394,7 @@ export const useDesignStore = create<DesignStore>()(persist((set, get) => ({
     studyId: state.studyId,
     architectureDerivedReqs: state.architectureDerivedReqs,
     generatedRequirements: state.generatedRequirements,
+    selectedEquipment: state.selectedEquipment,
     selectedRfBand: state.selectedRfBand,
     selectedLaunchProvider: state.selectedLaunchProvider,
     selectedLicenseType: state.selectedLicenseType,

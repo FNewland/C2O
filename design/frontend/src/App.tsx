@@ -131,10 +131,34 @@ function AppContent() {
   }
 
   const handleEquipmentSelect = (category: string, component: any) => {
-    // Read sendEdit from the session store (not the closure) — always current
+    // Always persist equipment selection to designStore (upward flow)
+    const existing = useDesignStore.getState().selectedEquipment
+    const key = `${category}:${component.id || component.name}`
+    const existingItem = existing.find(e => `${e.category}:${e.componentId}` === key)
+    if (existingItem) {
+      // Increment quantity
+      useDesignStore.setState({
+        selectedEquipment: existing.map(e =>
+          `${e.category}:${e.componentId}` === key ? { ...e, quantity: e.quantity + 1 } : e
+        ),
+      })
+    } else {
+      useDesignStore.setState({
+        selectedEquipment: [...existing, {
+          category, componentId: component.id || component.name,
+          name: component.name, mass_kg: component.mass_kg || 0,
+          power_w: component.power_w || 0, cost_keur: component.cost_keur || 0,
+          quantity: 1,
+        }],
+      })
+    }
+    // Mark design stale — triggers reconvergence to update budgets
+    useDesignStore.getState().markStale('equipment')
+
+    // Also send via WebSocket if session active (for real-time collaboration)
     const storeSendEdit = useSessionStore.getState().sendEdit
     if (!storeSendEdit) {
-      alert('WebSocket not connected. Join a session first, then try again.')
+      // No session — equipment persisted to store, design marked stale, user can re-run
       return
     }
 
