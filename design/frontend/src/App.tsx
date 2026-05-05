@@ -41,6 +41,7 @@ import { VerificationMatrix } from './components/VerificationMatrix'
 import { GateReviewPanel } from './components/GateReviewPanel'
 import { PositionAnswersPanel } from './components/PositionAnswersPanel'
 import { ConOpsEditor } from './components/ConOpsEditor'
+import { MissionArchitectureEditor } from './components/MissionArchitectureEditor'
 import { FunctionTreeView } from './components/FunctionTreeView'
 import { InterfaceMatrixView } from './components/InterfaceMatrixView'
 import { RequirementsEditor } from './components/RequirementsEditor'
@@ -370,7 +371,12 @@ function AppContent() {
               <DesignStateBar autoReconverge={autoReconverge} onToggleAuto={() => setAutoReconverge(a => !a)} />
               <div style={{ padding: '0 1rem', overflow: 'auto', flex: 1 }}>
                 {centerTab === 'design' && <DesignWorkspace />}
-                {centerTab === 'conops' && <ConOpsEditor />}
+                {centerTab === 'conops' && (
+                  <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                    <MissionArchitectureEditor />
+                    <ConOpsEditor />
+                  </div>
+                )}
                 {centerTab === 'functions' && <FunctionTreeView />}
                 {centerTab === 'reqs' && <RequirementsEditor studyId={studyId} />}
                 {centerTab === 'architecture' && <SystemArchitectureEditor />}
