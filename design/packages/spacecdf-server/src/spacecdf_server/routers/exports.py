@@ -174,3 +174,60 @@ async def export_mbse(study_id: str) -> JSONResponse:
         notes=notes,
     )
     return JSONResponse(content=export)
+
+
+# --- Word Document Generation ---
+
+@router.post("/docx/{doc_type}")
+async def generate_docx(doc_type: str, study_id: str | None = None):
+    """Generate an editable Word (.docx) document.
+
+    Available types: mrd, conops, vp
+    Returns a downloadable .docx file.
+    """
+    from ..services.docx_generator import DOCX_GENERATORS
+    from .studies import get_study_store
+
+    if doc_type not in DOCX_GENERATORS:
+        raise HTTPException(400, f"Unknown doc type: {doc_type}. Available: {list(DOCX_GENERATORS.keys())}")
+
+    name, gen_fn = DOCX_GENERATORS[doc_type]
+
+    # Get study data if available
+    study_name = "Unnamed Mission"
+    mission_need = {}
+    requirements = []
+    conops = {}
+
+    if study_id:
+        store = get_study_store()
+        study = store.get(study_id)
+        if study:
+            study_name = study.name
+            if hasattr(study, 'mission_need') and study.mission_need:
+                mn = study.mission_need
+                mission_need = {
+                    "problem_statement": getattr(mn, "problem_statement", ""),
+                    "objectives": [{"text": o.text, "priority": o.priority, "measurable_criterion": getattr(o, "measurable_criterion", "")} for o in getattr(mn, "objectives", [])],
+                    "stakeholders": [{"name": s.name, "role": getattr(s, "role", ""), "needs": getattr(s, "needs", [])} for s in getattr(mn, "stakeholders", [])],
+                }
+
+    # Generate the document
+    kwargs = {"study_name": study_name}
+    if doc_type in ("mrd",):
+        kwargs["mission_need"] = mission_need
+        kwargs["requirements"] = requirements
+    elif doc_type in ("conops",):
+        kwargs["mission_need"] = mission_need
+        kwargs["conops"] = conops
+    elif doc_type in ("vp",):
+        kwargs["requirements"] = requirements
+
+    docx_bytes = gen_fn(**kwargs)
+
+    filename = f"SpaceCDF_{name.replace(' ', '_')}_{study_name.replace(' ', '_')}.docx"
+    return StreamingResponse(
+        io.BytesIO(docx_bytes),
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )

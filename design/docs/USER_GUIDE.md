@@ -193,3 +193,69 @@ The API also supports import: `POST /api/lifecycle/equipment/import`
 | Design shows no results | Click "Run Design" in Step 3 |
 | Requirements tab empty | Need a study ID ? run design at least once |
 | Optimizer won't start | Need a session (or use 'solo' mode) |
+
+---
+
+## New Features (UP6)
+
+### Progressive Level Unlocking
+
+The tool now follows the System-V model with 5 progressive levels:
+- **Level 0**: Help only (define mission need first)
+- **Level 1**: Mission Architecture (after need defined) — ConOps, Functions, Requirements
+- **Level 2**: System Architecture (after design run) — Architecture options, Interfaces, Budgets, Trade Studies, Project Management
+- **Level 3**: Subsystem Design (after architecture selected) — Link Budget, Optimizer, Cost, Equipment Browser
+- **Level 4**: Verification (after subsystem design) — Compliance, V&V Matrix, Gate Review
+
+The level indicator bar shows your current progress and what to do next.
+
+### Interactive Mission Architecture Editor
+
+In the ConOps tab, a drag-and-drop diagram editor lets you build your mission architecture:
+- **6 node types**: Satellite, Ground Station, Processing, User, Sensor, GNSS/External
+- Drag nodes to position, connect with labelled lines
+- Architecture drives what systems need to be defined at the next level
+
+### System Architecture Selection
+
+In the Architecture tab:
+- **Top half**: Select architecture options for each of 8 subsystems (EPS, AOCS, TTC, Thermal, Structure, Propulsion, OBC, Ground)
+- **Bottom half**: Auto-generated block diagram showing subsystems and their connections
+- Each selection derives requirements (tagged performance/interface/budget/functional)
+
+### Engineering Budgets (Unified View)
+
+New "Eng. Budgets" tab shows all 8 budgets in one place:
+- Mass, Power, Link, Pointing, Delta-V, Volume, Data, Cost
+- **Configurable margins** by design phase (Phase A: 20%, B: 15%, C: 10%)
+- Per-subsystem breakdown with margin source (COTS vs new design)
+- Roll-up from equipment selections
+
+### Constraint Propagation Engine
+
+187 design point interconnections detected automatically:
+- When any parameter changes, the engine identifies ALL affected budgets
+- Shows resolution options for violations with cross-budget trade-off analysis
+- Detects circular dependencies (trade-off loops requiring team decision)
+
+### Project Management
+
+New "Project Mgmt" tab with:
+- **5x5 Risk Matrix**: Interactive, color-coded by L×C score
+- **Schedule**: 10 milestones from MCR through commissioning
+- **WBS**: 9 work packages with effort hours and status tracking
+- **Project Manager** position added
+
+### Word Document Export
+
+ECSS documents can now be exported as editable .docx files:
+- Click "Word" button next to MRD, ConOps, or VP in the Exports tab
+- Documents populated from live design state
+- Editable in Microsoft Word or LibreOffice
+
+### Session Persistence
+
+Your design state now persists across page refreshes:
+- All data saved to browser localStorage automatically
+- No need to "save" — it's always saved
+- To clear: browser DevTools → Application → Local Storage → delete 'spacecdf-design-state'

@@ -161,8 +161,16 @@ export function ExportsPanel({ studyId }: { studyId: string | null }) {
             <button className="btn btn-sm" onClick={() => generateExport(item)}
               disabled={generating !== null}
               style={{ fontSize: '0.7rem', whiteSpace: 'nowrap' }}>
-              {generating === item.id ? 'Generating...' : 'Generate'}
+              {generating === item.id ? 'Generating...' : 'JSON'}
             </button>
+            {item.category === 'ecss' && ['mrd', 'conops_doc', 'test_plan'].includes(item.id) && (
+              <button className="btn btn-sm" onClick={() => {
+                const url = `/api/exports/docx/${item.id === 'conops_doc' ? 'conops' : item.id === 'test_plan' ? 'vp' : item.id}${studyId ? `?study_id=${studyId}` : ''}`
+                window.open(url, '_blank')
+              }} style={{ fontSize: '0.7rem', whiteSpace: 'nowrap', background: '#3b82f6' }}>
+                Word
+              </button>
+            )}
           </div>
         ))}
       </div>
