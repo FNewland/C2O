@@ -188,32 +188,42 @@ function AppContent() {
   }
 
   // Tabs organized by workflow phase
-  const centerTabs: { id: CenterTab; label: string; group?: string }[] = useMemo(() => [
-    // Architecture
-    { id: 'design', label: 'Dashboard', group: 'Design' },
-    { id: 'conops', label: 'ConOps' },
-    { id: 'functions', label: 'Functions' },
-    { id: 'reqs', label: 'Requirements' },
-    { id: 'architecture', label: 'Architecture' },
-    { id: 'interfaces', label: 'Interfaces' },
-    // Analysis
-    { id: 'linkbudget', label: 'Link Budget', group: 'Analysis' },
-    { id: 'trade', label: 'Trade Studies' },
-    { id: 'optimizer', label: 'Optimizer' },
-    { id: 'cost', label: 'Cost' },
-    // Verification
-    { id: 'compliance', label: 'Compliance', group: 'Verify' },
-    { id: 'verification', label: 'V&V Matrix' },
-    { id: 'gate', label: 'Gate Review' },
-    // Team
-    { id: 'positions', label: 'Positions', group: 'Team' },
-    { id: 'answers', label: 'Q&A' },
-    // Data
-    { id: 'exports', label: 'Exports', group: 'Data' },
-    { id: 'parametric', label: 'Parametric' },
-    { id: 'audit', label: 'Changes' },
-    { id: 'help', label: 'Help' },
+  // Determine current design maturity level based on what's been completed
+  const hasNeed = !!(missionNeed.problem_statement && missionNeed.objectives.length > 0)
+  const hasDesignResult = !!result
+  const hasArchitecture = !!(useDesignStore.getState().architectureDerivedReqs?.length > 0)
+  const currentLevel = hasArchitecture ? 4 : hasDesignResult ? 3 : hasNeed ? 1 : 0
+
+  // Tabs organized by System-V level with progressive unlock
+  const centerTabs: { id: CenterTab; label: string; group?: string; level: number }[] = useMemo(() => [
+    // Level 1: Mission Architecture (after need defined)
+    { id: 'design', label: 'Dashboard', group: 'Mission', level: 1 },
+    { id: 'conops', label: 'ConOps', level: 1 },
+    { id: 'functions', label: 'Functions', level: 1 },
+    { id: 'reqs', label: 'Requirements', level: 1 },
+    // Level 2: System Architecture (after design run)
+    { id: 'architecture', label: 'Architecture', group: 'System', level: 2 },
+    { id: 'interfaces', label: 'Interfaces', level: 2 },
+    { id: 'trade', label: 'Trade Studies', level: 2 },
+    // Level 3: Subsystem Design (after architecture selected)
+    { id: 'linkbudget', label: 'Link Budget', group: 'Subsystem', level: 3 },
+    { id: 'optimizer', label: 'Optimizer', level: 3 },
+    { id: 'cost', label: 'Cost', level: 3 },
+    // Level 4: Verification (after subsystem design)
+    { id: 'compliance', label: 'Compliance', group: 'Verify', level: 4 },
+    { id: 'verification', label: 'V&V Matrix', level: 4 },
+    { id: 'gate', label: 'Gate Review', level: 4 },
+    // Cross-cutting (always available after Level 1)
+    { id: 'positions', label: 'Positions', group: 'Team', level: 1 },
+    { id: 'answers', label: 'Q&A', level: 1 },
+    { id: 'exports', label: 'Exports', group: 'Data', level: 2 },
+    { id: 'parametric', label: 'Parametric', level: 1 },
+    { id: 'audit', label: 'Changes', level: 1 },
+    { id: 'help', label: 'Help', level: 0 },
   ], [])
+
+  // Filter tabs to only show those at or below current level
+  const visibleTabs = centerTabs.filter(t => t.level <= currentLevel)
 
   const handleTemplateInstantiated = (newStudyId: string) => {
     setStudyId(newStudyId)
@@ -246,7 +256,7 @@ function AppContent() {
           <button className="btn btn-sm" onClick={() => setShowTemplateGallery(true)}>
             New from Template
           </button>
-          {(sessionId || result) && (
+          {(sessionId || result) && currentLevel >= 3 && (
             <button className="btn btn-sm" onClick={() => setShowEquipmentBrowser(true)}>
               Browse Equipment
             </button>
@@ -291,8 +301,28 @@ function AppContent() {
           {/* Design phase: tabbed content */}
           {!['need', 'concept', 'requirements'].includes(centerTab) && (
             <>
+              {/* Level indicator */}
+              <div style={{ display: 'flex', gap: '0.5rem', padding: '0.3rem 1rem', fontSize: '0.65rem', color: '#6b7280', borderBottom: '1px solid var(--border)', alignItems: 'center' }}>
+                <span style={{ fontWeight: 700 }}>LEVEL:</span>
+                {['Need', 'Mission Arch', 'System Arch', 'Subsystem', 'V&V'].map((lvl, i) => (
+                  <span key={i} style={{
+                    padding: '0.1rem 0.4rem', borderRadius: '3px', fontSize: '0.6rem',
+                    background: i <= currentLevel ? ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ef4444'][i] + '22' : '#374151',
+                    color: i <= currentLevel ? ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ef4444'][i] : '#4b5563',
+                    fontWeight: i === currentLevel ? 700 : 400,
+                  }}>{lvl}</span>
+                ))}
+                {currentLevel < 4 && (
+                  <span style={{ color: '#9ca3af', marginLeft: '0.5rem' }}>
+                    {currentLevel === 0 ? 'Define mission need to unlock Mission Architecture' :
+                     currentLevel === 1 ? 'Run design to unlock System Architecture' :
+                     currentLevel === 2 ? 'Select architecture options to unlock Subsystem Design' :
+                     'Complete subsystem design to unlock V&V'}
+                  </span>
+                )}
+              </div>
               <div style={{ display: 'flex', gap: '0.2rem', padding: '0.4rem 1rem', borderBottom: '1px solid var(--border)', flexWrap: 'wrap', alignItems: 'center' }}>
-                {centerTabs.map((tab, i) => (
+                {visibleTabs.map((tab, i) => (
                   <span key={tab.id} style={{ display: 'contents' }}>
                     {tab.group && (
                       <span style={{
