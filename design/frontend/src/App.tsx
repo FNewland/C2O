@@ -34,6 +34,7 @@ import { ConflictReviewModal } from './components/ConflictReviewModal'
 import { ChangeAuditPanel } from './components/ChangeAuditPanel'
 import { SystemArchitectureEditor } from './components/SystemArchitectureEditor'
 import { SystemBlockDiagram } from './components/SystemBlockDiagram'
+import { EngineeringBudgets } from './components/EngineeringBudgets'
 import { ParametricEditor } from './components/ParametricEditor'
 import { LinkBudgetTool } from './components/LinkBudgetTool'
 import { PointingBudget } from './components/PointingBudget'
@@ -53,7 +54,7 @@ const queryClient = new QueryClient({
   },
 })
 
-type CenterTab = 'need' | 'concept' | 'requirements' | 'design' | 'conops' | 'functions' | 'architecture' | 'interfaces' | 'reqs' | 'positions' | 'answers' | 'gate' | 'compliance' | 'ecss' | 'cost' | 'trade' | 'snapshots' | 'optimizer' | 'linkbudget' | 'verification' | 'exports' | 'parametric' | 'audit' | 'help'
+type CenterTab = 'need' | 'concept' | 'requirements' | 'design' | 'conops' | 'functions' | 'architecture' | 'budgets' | 'interfaces' | 'reqs' | 'positions' | 'answers' | 'gate' | 'compliance' | 'ecss' | 'cost' | 'trade' | 'snapshots' | 'optimizer' | 'linkbudget' | 'verification' | 'exports' | 'parametric' | 'audit' | 'help'
 type RightTab = 'insights' | 'conflicts' | 'exports'
 
 function AppContent() {
@@ -230,6 +231,7 @@ function AppContent() {
     // Level 2: System Architecture (after design run)
     { id: 'architecture', label: 'Architecture', group: 'System', level: 2 },
     { id: 'interfaces', label: 'Interfaces', level: 2 },
+    { id: 'budgets', label: 'Eng. Budgets', level: 2 },
     { id: 'trade', label: 'Trade Studies', level: 2 },
     // Level 3: Subsystem Design (after architecture selected)
     { id: 'linkbudget', label: 'Link Budget', group: 'Subsystem', level: 3 },
@@ -401,6 +403,7 @@ function AppContent() {
                 {centerTab === 'snapshots' && <SnapshotsPanel sessionId={sessionId} />}
                 {centerTab === 'optimizer' && <OptimizerPanel sessionId={sessionId} />}
                 {centerTab === 'exports' && <ExportsPanel studyId={studyId} />}
+                {centerTab === 'budgets' && <EngineeringBudgets />}
                 {centerTab === 'linkbudget' && <LinkBudgetTool />}
                 {centerTab === 'verification' && <VerificationMatrix studyId={studyId} />}
                 {centerTab === 'parametric' && <ParametricEditor />}
