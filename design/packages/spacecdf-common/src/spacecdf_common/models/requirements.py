@@ -120,21 +120,10 @@ def generate_requirements(mission_req: dict) -> list[Requirement]:
         req_counter[prefix] = req_counter.get(prefix, 0) + 1
         return f"REQ-{prefix}-{req_counter[prefix]:03d}"
 
-    # Orbit requirements
+    # Orbit requirements — NOTE: altitude is a design CHOICE, not a requirement
+    # Do NOT generate "shall operate at X km" — that's HOW not WHAT
+    # Instead, the orbit choice derives from coverage/revisit/lifetime needs
     orbit = mission_req.get("orbit", {})
-    if orbit.get("altitude_km"):
-        reqs.append(Requirement(
-            id=_next_id("ORB"),
-            text=f"The spacecraft shall operate at an orbital altitude of {orbit['altitude_km']} km",
-            req_type=RequirementType.PERFORMANCE,
-            parameter_ids=["orbit.altitude_km"],
-            threshold=orbit["altitude_km"],
-            operator="==",
-            unit="km",
-            domain="orbit",
-            position="mission_analyst",
-            margin_policy_percent=2.0,  # Orbit altitude has tight tolerance
-        ))
 
     if orbit.get("mission_duration_years"):
         reqs.append(Requirement(

@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 
 export interface DesignParam {
   value: number | string | boolean
@@ -120,6 +121,8 @@ interface DesignStore {
 
   // Architecture-derived requirements
   architectureDerivedReqs: Array<{ id: string; level: string; text: string; subsystem: string }>
+  // Generated requirements (persisted)
+  generatedRequirements: Array<{ id: string; text: string; req_type: string; domain: string; threshold: number; operator: string; unit: string; verification_method: string; objective_id: string; function_id: string; rationale: string; status: string; level: string; parent_id: string | null }>
 
   // Reactive state
   designStale: boolean  // true when requirements changed since last design run
@@ -182,7 +185,7 @@ const defaultMissionNeed: MissionNeedState = {
   conops_summary: '',
 }
 
-export const useDesignStore = create<DesignStore>((set, get) => ({
+export const useDesignStore = create<DesignStore>()(persist((set, get) => ({
   missionNeed: defaultMissionNeed,
   requirements: defaultRequirements,
   result: null,
@@ -190,6 +193,7 @@ export const useDesignStore = create<DesignStore>((set, get) => ({
   error: null,
   studyId: null,
   architectureDerivedReqs: [],
+  generatedRequirements: [],
   designStale: false,
   lastChangeSource: '',
   changeHistory: [],
@@ -377,4 +381,20 @@ export const useDesignStore = create<DesignStore>((set, get) => ({
       set({ error: String(err), isRunning: false })
     }
   },
+}), {
+  name: 'spacecdf-design-state',
+  partialize: (state) => ({
+    // Persist these fields across page refreshes:
+    missionNeed: state.missionNeed,
+    requirements: state.requirements,
+    result: state.result,
+    studyId: state.studyId,
+    architectureDerivedReqs: state.architectureDerivedReqs,
+    generatedRequirements: state.generatedRequirements,
+    selectedRfBand: state.selectedRfBand,
+    selectedLaunchProvider: state.selectedLaunchProvider,
+    selectedLicenseType: state.selectedLicenseType,
+    changeHistory: state.changeHistory,
+    // Don't persist: isRunning, error, designStale, pendingConflicts (transient)
+  }),
 }))

@@ -31,7 +31,13 @@ const TYPE_COLORS: Record<string, string> = {
 const METHOD_OPTIONS = ['analysis', 'test', 'inspection', 'demonstration']
 
 export function RequirementsEditor({ studyId }: { studyId: string | null }) {
-  const [requirements, setRequirements] = useState<SuggestedReq[]>([])
+  // Requirements now persist in designStore (survives tab changes and page refreshes)
+  const storedReqs = useDesignStore(s => s.generatedRequirements)
+  const [requirements, setRequirementsLocal] = useState<SuggestedReq[]>(storedReqs as any || [])
+  const setRequirements = (reqs: SuggestedReq[]) => {
+    setRequirementsLocal(reqs)
+    useDesignStore.setState({ generatedRequirements: reqs as any })
+  }
   const [smartResults, setSmartResults] = useState<Record<string, SMARTResult>>({})
   const [loading, setLoading] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
