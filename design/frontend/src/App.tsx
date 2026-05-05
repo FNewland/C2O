@@ -34,7 +34,7 @@ import { ConflictReviewModal } from './components/ConflictReviewModal'
 import { ChangeAuditPanel } from './components/ChangeAuditPanel'
 import { SystemArchitectureEditor } from './components/SystemArchitectureEditor'
 import { SystemBlockDiagram } from './components/SystemBlockDiagram'
-import { EngineeringBudgets } from './components/EngineeringBudgets'
+import { EngineeringBudgets } from './components/EngineeringBudgets'\nimport { ProjectManagement } from './components/ProjectManagement'
 import { ParametricEditor } from './components/ParametricEditor'
 import { LinkBudgetTool } from './components/LinkBudgetTool'
 import { PointingBudget } from './components/PointingBudget'
@@ -54,7 +54,7 @@ const queryClient = new QueryClient({
   },
 })
 
-type CenterTab = 'need' | 'concept' | 'requirements' | 'design' | 'conops' | 'functions' | 'architecture' | 'budgets' | 'interfaces' | 'reqs' | 'positions' | 'answers' | 'gate' | 'compliance' | 'ecss' | 'cost' | 'trade' | 'snapshots' | 'optimizer' | 'linkbudget' | 'verification' | 'exports' | 'parametric' | 'audit' | 'help'
+type CenterTab = 'need' | 'concept' | 'requirements' | 'design' | 'conops' | 'functions' | 'architecture' | 'budgets' | 'pm' | 'interfaces' | 'reqs' | 'positions' | 'answers' | 'gate' | 'compliance' | 'ecss' | 'cost' | 'trade' | 'snapshots' | 'optimizer' | 'linkbudget' | 'verification' | 'exports' | 'parametric' | 'audit' | 'help'
 type RightTab = 'insights' | 'conflicts' | 'exports'
 
 function AppContent() {
@@ -240,7 +240,7 @@ function AppContent() {
     // Level 4: Verification (after subsystem design)
     { id: 'compliance', label: 'Compliance', group: 'Verify', level: 4 },
     { id: 'verification', label: 'V&V Matrix', level: 4 },
-    { id: 'gate', label: 'Gate Review', level: 4 },
+    { id: 'gate', label: 'Gate Review', level: 4 },\n    { id: 'pm', label: 'Project Mgmt', level: 2 },
     // Cross-cutting (always available after Level 1)
     { id: 'positions', label: 'Positions', group: 'Team', level: 1 },
     { id: 'answers', label: 'Q&A', level: 1 },
@@ -403,7 +403,7 @@ function AppContent() {
                 {centerTab === 'snapshots' && <SnapshotsPanel sessionId={sessionId} />}
                 {centerTab === 'optimizer' && <OptimizerPanel sessionId={sessionId} />}
                 {centerTab === 'exports' && <ExportsPanel studyId={studyId} />}
-                {centerTab === 'budgets' && <EngineeringBudgets />}
+                {centerTab === 'budgets' && <EngineeringBudgets />}\n                {centerTab === 'pm' && <ProjectManagement />}
                 {centerTab === 'linkbudget' && <LinkBudgetTool />}
                 {centerTab === 'verification' && <VerificationMatrix studyId={studyId} />}
                 {centerTab === 'parametric' && <ParametricEditor />}
