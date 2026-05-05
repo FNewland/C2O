@@ -781,6 +781,40 @@ async def dsn_link_budget(body: dict[str, Any]) -> dict:
     return compute_dsn_link_budget(**body)
 
 
+# --- Constraint Propagation ---
+
+@router.post("/constraints/analyze")
+async def analyze_constraints(body: dict[str, Any]) -> dict:
+    """Analyze constraint violations with root causes, impacts, and resolutions."""
+    from ..services.constraint_propagation import analyze_violations
+    violations = analyze_violations(
+        design_params=body.get("design_params", {}),
+        constraints=body.get("constraints", {}),
+    )
+    return {
+        "violations": [
+            {
+                "id": v.constraint.id, "name": v.constraint.name,
+                "budget": v.constraint.budget_type, "parameter": v.constraint.parameter_id,
+                "current": v.constraint.current_value, "limit": v.constraint.limit_value,
+                "margin_pct": round(v.constraint.margin_pct, 1),
+                "root_causes": v.root_causes,
+                "downstream_impacts": [{"target": i.target_param, "budget": i.target_budget, "desc": i.description} for i in v.downstream_impacts],
+                "resolutions": [{"id": r.id, "desc": r.description, "param": r.parameter_to_change, "dir": r.direction, "trade_off": r.trade_off} for r in v.resolutions],
+            }
+            for v in violations
+        ],
+        "total_violations": len(violations),
+    }
+
+@router.get("/constraints/interconnections")
+async def get_interconnections() -> dict:
+    """Return the full design point interconnection map (50+ connections)."""
+    from ..services.constraint_propagation import get_interconnection_map
+    conns = get_interconnection_map()
+    return {"connections": conns, "total": len(conns)}
+
+
 # --- System Architecture ---
 
 @router.get("/architecture/subsystems")
