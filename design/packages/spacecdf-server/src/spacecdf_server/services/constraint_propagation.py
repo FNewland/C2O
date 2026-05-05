@@ -69,8 +69,16 @@ class ConstraintViolation:
 
 
 # ===========================================================================
-# MASTER INTERCONNECTION MAP
+# MASTER INTERCONNECTION MAP (187 connections from exhaustive research)
 # ===========================================================================
+# Import the full 187-connection map auto-generated from CDF research
+from .interconnection_data import FULL_INTERCONNECTION_MAP
+
+# Use full map as primary; legacy 50-connection map below as fallback
+INTERCONNECTION_MAP = FULL_INTERCONNECTION_MAP
+
+# Legacy map (original 50 connections) — kept as subset for quick checks
+_LEGACY_MAP: list[dict[str, Any]] = []
 # Every row: when SOURCE changes, it affects TARGET in TARGET_BUDGET
 # This is the complete dependency graph of a CubeSat design
 
@@ -304,3 +312,119 @@ def get_interconnection_map() -> list[dict[str, Any]]:
 def get_resolution_options(violation_type: str) -> list[dict[str, Any]]:
     """Get resolution options for a specific violation type."""
     return RESOLUTION_RULES.get(violation_type, [])
+
+
+# ===========================================================================
+# REQUIREMENT COMPLIANCE CASCADE
+# ===========================================================================
+# When a parameter changes, trace UP through the requirement hierarchy
+# to determine if mission/system requirements are still met.
+
+def check_requirement_compliance(
+    changed_param: str,
+    new_value: float,
+    requirements: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Check if a parameter change violates any requirements at any level.
+
+    Traces upward: subsystem requirement → system requirement → mission requirement.
+    Returns violations at the HIGHEST level affected.
+
+    Args:
+        changed_param: The parameter ID that changed
+        new_value: Its new value
+        requirements: List of requirements with {id, level, text, threshold, operator, parameter_id}
+    """
+    violations = []
+
+    for req in requirements:
+        # Check if this requirement references the changed parameter
+        param_ids = req.get("parameter_ids", [])
+        req_param = req.get("parameter_id", "")
+        if changed_param not in param_ids and changed_param != req_param:
+            # Check if the parameter domain matches
+            changed_domain = changed_param.split(".")[0]
+            req_domain = req.get("domain", "")
+            if changed_domain != req_domain:
+                continue
+
+        threshold = req.get("threshold")
+        operator = req.get("operator", "<=")
+        if threshold is None:
+            continue
+
+        # Check compliance
+        compliant = True
+        if operator == "<=" and new_value > threshold:
+            compliant = False
+        elif operator == ">=" and new_value < threshold:
+            compliant = False
+        elif operator == "==" and abs(new_value - threshold) > threshold * 0.1:
+            compliant = False
+
+        if not compliant:
+            violations.append({
+                "requirement_id": req.get("id", ""),
+                "requirement_text": req.get("text", ""),
+                "level": req.get("level", "subsystem"),
+                "threshold": threshold,
+                "operator": operator,
+                "achieved_value": new_value,
+                "parameter": changed_param,
+                "compliance": "VIOLATED",
+                "parent_requirement": req.get("parent_id"),
+            })
+
+    # Sort by level priority: mission > system > subsystem
+    level_order = {"mission": 0, "system": 1, "subsystem": 2}
+    violations.sort(key=lambda v: level_order.get(v["level"], 3))
+
+    return violations
+
+
+def detect_circular_dependencies(
+    starting_param: str,
+    resolution_param: str,
+) -> list[list[str]]:
+    """Detect if resolving a violation creates a circular dependency.
+
+    A circular dependency occurs when:
+    - Fixing budget A requires changing parameter X
+    - Changing X affects budget B
+    - Budget B was already tight
+    - Fixing B requires changing parameter Y
+    - Changing Y affects budget A again
+
+    Returns list of detected cycles (each cycle = list of param IDs in the loop).
+    """
+    cycles = []
+    visited = set()
+    path = []
+
+    def _dfs(param: str, depth: int = 0):
+        if depth > 6:  # Max depth to prevent infinite recursion
+            return
+        if param in visited:
+            # Found a cycle
+            cycle_start = path.index(param) if param in path else -1
+            if cycle_start >= 0:
+                cycles.append(path[cycle_start:] + [param])
+            return
+
+        visited.add(param)
+        path.append(param)
+
+        # Find what this parameter affects
+        for conn in INTERCONNECTION_MAP:
+            if conn["source"] == param or param.startswith(conn["source"].split(".")[0]):
+                _dfs(conn["target"], depth + 1)
+
+        path.pop()
+        visited.discard(param)
+
+    _dfs(resolution_param)
+
+    # Filter to only cycles that include the starting parameter
+    relevant_cycles = [c for c in cycles if starting_param in c or any(starting_param.startswith(p.split(".")[0]) for p in c)]
+
+    return relevant_cycles[:3]  # Return top 3 cycles found
