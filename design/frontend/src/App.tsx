@@ -33,6 +33,7 @@ import { DesignStateBar } from './components/DesignStateBar'
 import { ConflictReviewModal } from './components/ConflictReviewModal'
 import { ChangeAuditPanel } from './components/ChangeAuditPanel'
 import { SystemArchitectureEditor } from './components/SystemArchitectureEditor'
+import { SystemBlockDiagram } from './components/SystemBlockDiagram'
 import { ParametricEditor } from './components/ParametricEditor'
 import { LinkBudgetTool } from './components/LinkBudgetTool'
 import { PointingBudget } from './components/PointingBudget'
@@ -379,7 +380,16 @@ function AppContent() {
                 )}
                 {centerTab === 'functions' && <FunctionTreeView />}
                 {centerTab === 'reqs' && <RequirementsEditor studyId={studyId} />}
-                {centerTab === 'architecture' && <SystemArchitectureEditor />}
+                {centerTab === 'architecture' && (
+                  <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                    <div style={{ flex: '0 0 50%', overflow: 'auto' }}>
+                      <SystemArchitectureEditor />
+                    </div>
+                    <div style={{ flex: '0 0 50%', borderTop: '2px solid var(--border, #374151)' }}>
+                      <SystemBlockDiagram />
+                    </div>
+                  </div>
+                )}
                 {centerTab === 'interfaces' && <InterfaceMatrixView onNavigate={(tab) => setCenterTab(tab as CenterTab)} />}
                 {centerTab === 'positions' && <PositionPanel />}
                 {centerTab === 'answers' && <PositionAnswersPanel />}
