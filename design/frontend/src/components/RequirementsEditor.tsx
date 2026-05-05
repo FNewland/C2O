@@ -26,6 +26,8 @@ interface SMARTResult {
 
 const TYPE_COLORS: Record<string, string> = {
   mission: '#8b5cf6', system: '#3b82f6', subsystem: '#06b6d4', interface: '#10b981',
+  performance: '#10b981', functional: '#8b5cf6', regulatory: '#f97316', constraint: '#ef4444', process: '#ef4444',
+  budget: '#3b82f6',
 }
 
 const METHOD_OPTIONS = ['analysis', 'test', 'inspection', 'demonstration']

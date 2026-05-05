@@ -17,7 +17,7 @@ function getDemoFunctions(missionType: string): FunctionNode[] {
     { id: 'F-005', name: 'Generate electrical power', function_type: 'power', parent_function_id: null, objective_ids: [], derived_requirement_ids: ['REQ-PWR-001'], allocated_to: ['power'], performance_criteria: ['positive power margin in all modes'], level: 0 },
     { id: 'F-007', name: 'Maintain thermal environment', function_type: 'protect', parent_function_id: null, objective_ids: [], derived_requirement_ids: [], allocated_to: ['thermal'], performance_criteria: ['all components within operating range'], level: 0 },
     { id: 'F-008', name: 'Survive launch environment', function_type: 'launch', parent_function_id: null, objective_ids: [], derived_requirement_ids: [], allocated_to: ['structure'], performance_criteria: ['first natural freq > 45 Hz'], level: 0 },
-    { id: 'F-009', name: 'Communicate with ground (TTC)', function_type: 'command', parent_function_id: null, objective_ids: [], derived_requirement_ids: [], allocated_to: ['link'], performance_criteria: [], level: 0 },
+    { id: 'F-009', name: 'Communicate with ground (TTC)', function_type: 'command', parent_function_id: null, objective_ids: [], derived_requirement_ids: [], allocated_to: ['communications'], performance_criteria: [], level: 0 },
     { id: 'F-010', name: 'Dispose of spacecraft at end of life', function_type: 'dispose', parent_function_id: null, objective_ids: [], derived_requirement_ids: [], allocated_to: ['structure'], performance_criteria: ['comply with debris mitigation rules'], level: 0 },
   ]
 
@@ -27,7 +27,7 @@ function getDemoFunctions(missionType: string): FunctionNode[] {
       { id: 'F-001', name: 'Acquire imagery of target', function_type: 'observe', parent_function_id: null, objective_ids: ['obj-1'], derived_requirement_ids: ['REQ-PL-001'], allocated_to: ['payload'], performance_criteria: ['GSD meets requirement', 'SNR >= threshold'], level: 0 },
       { id: 'F-002', name: 'Point instrument at target', function_type: 'point', parent_function_id: 'F-001', objective_ids: ['obj-1'], derived_requirement_ids: ['REQ-AOCS-001'], allocated_to: ['aocs'], performance_criteria: ['pointing meets requirement'], level: 1 },
       { id: 'F-003', name: 'Store acquired data onboard', function_type: 'store', parent_function_id: 'F-001', objective_ids: ['obj-1'], derived_requirement_ids: [], allocated_to: ['data'], performance_criteria: ['storage >= 2x daily volume'], level: 1 },
-      { id: 'F-004', name: 'Downlink data to ground station', function_type: 'communicate', parent_function_id: 'F-001', objective_ids: ['obj-1'], derived_requirement_ids: ['REQ-TTC-001'], allocated_to: ['link'], performance_criteria: ['link margin >= 3 dB'], level: 1 },
+      { id: 'F-004', name: 'Downlink data to ground station', function_type: 'communicate', parent_function_id: 'F-001', objective_ids: ['obj-1'], derived_requirement_ids: ['REQ-TTC-001'], allocated_to: ['communications'], performance_criteria: ['link margin >= 3 dB'], level: 1 },
       ...universal,
     ]
   } else if (missionType === 'communications' || missionType === 'rf_relay') {
@@ -35,7 +35,7 @@ function getDemoFunctions(missionType: string): FunctionNode[] {
       { id: 'F-001', name: 'Relay communications between users', function_type: 'communicate', parent_function_id: null, objective_ids: ['obj-1'], derived_requirement_ids: ['REQ-PL-001'], allocated_to: ['payload', 'link'], performance_criteria: ['data rate meets requirement', 'latency meets requirement'], level: 0 },
       { id: 'F-002', name: 'Receive uplink signal', function_type: 'communicate', parent_function_id: 'F-001', objective_ids: ['obj-1'], derived_requirement_ids: [], allocated_to: ['payload'], performance_criteria: ['receiver sensitivity meets requirement'], level: 1 },
       { id: 'F-003', name: 'Process and route data', function_type: 'store', parent_function_id: 'F-001', objective_ids: ['obj-1'], derived_requirement_ids: [], allocated_to: ['data'], performance_criteria: ['processing latency < threshold'], level: 1 },
-      { id: 'F-004', name: 'Transmit downlink signal', function_type: 'communicate', parent_function_id: 'F-001', objective_ids: ['obj-1'], derived_requirement_ids: [], allocated_to: ['link'], performance_criteria: ['EIRP meets link budget'], level: 1 },
+      { id: 'F-004', name: 'Transmit downlink signal', function_type: 'communicate', parent_function_id: 'F-001', objective_ids: ['obj-1'], derived_requirement_ids: [], allocated_to: ['communications'], performance_criteria: ['EIRP meets link budget'], level: 1 },
       ...universal,
     ]
   } else if (missionType === 'sar') {
@@ -43,7 +43,7 @@ function getDemoFunctions(missionType: string): FunctionNode[] {
       { id: 'F-001', name: 'Acquire SAR imagery', function_type: 'observe', parent_function_id: null, objective_ids: ['obj-1'], derived_requirement_ids: ['REQ-PL-001'], allocated_to: ['payload'], performance_criteria: ['resolution meets requirement', 'swath meets requirement'], level: 0 },
       { id: 'F-002', name: 'Point antenna at target', function_type: 'point', parent_function_id: 'F-001', objective_ids: ['obj-1'], derived_requirement_ids: [], allocated_to: ['aocs'], performance_criteria: ['pointing meets SAR geometry'], level: 1 },
       { id: 'F-003', name: 'Store SAR data onboard', function_type: 'store', parent_function_id: 'F-001', objective_ids: ['obj-1'], derived_requirement_ids: [], allocated_to: ['data'], performance_criteria: ['storage >= daily SAR volume'], level: 1 },
-      { id: 'F-004', name: 'Downlink SAR data', function_type: 'communicate', parent_function_id: 'F-001', objective_ids: ['obj-1'], derived_requirement_ids: [], allocated_to: ['link'], performance_criteria: ['X-band link margin >= 3 dB'], level: 1 },
+      { id: 'F-004', name: 'Downlink SAR data', function_type: 'communicate', parent_function_id: 'F-001', objective_ids: ['obj-1'], derived_requirement_ids: [], allocated_to: ['communications'], performance_criteria: ['X-band link margin >= 3 dB'], level: 1 },
       ...universal,
     ]
   } else {
@@ -51,7 +51,7 @@ function getDemoFunctions(missionType: string): FunctionNode[] {
     return [
       { id: 'F-001', name: 'Operate mission payload', function_type: 'observe', parent_function_id: null, objective_ids: ['obj-1'], derived_requirement_ids: ['REQ-PL-001'], allocated_to: ['payload'], performance_criteria: ['payload performance meets requirement'], level: 0 },
       { id: 'F-003', name: 'Store mission data onboard', function_type: 'store', parent_function_id: 'F-001', objective_ids: ['obj-1'], derived_requirement_ids: [], allocated_to: ['data'], performance_criteria: ['storage sufficient'], level: 1 },
-      { id: 'F-004', name: 'Downlink data to ground', function_type: 'communicate', parent_function_id: 'F-001', objective_ids: ['obj-1'], derived_requirement_ids: [], allocated_to: ['link'], performance_criteria: ['link margin >= 3 dB'], level: 1 },
+      { id: 'F-004', name: 'Downlink data to ground', function_type: 'communicate', parent_function_id: 'F-001', objective_ids: ['obj-1'], derived_requirement_ids: [], allocated_to: ['communications'], performance_criteria: ['link margin >= 3 dB'], level: 1 },
       ...universal,
     ]
   }
@@ -59,14 +59,14 @@ function getDemoFunctions(missionType: string): FunctionNode[] {
 
 const SUBSYSTEM_COLORS: Record<string, string> = {
   payload: '#10b981', power: '#f59e0b', aocs: '#06b6d4',
-  link: '#ec4899', thermal: '#ef4444', structure: '#84cc16',
+  link: '#ec4899', communications: '#ec4899', thermal: '#ef4444', structure: '#84cc16',
   propulsion: '#f97316', data: '#8b5cf6',
   ground_station: '#14b8a6', ground_processing: '#a78bfa', ground_sensor: '#fb923c',
   systems: '#6b7280',
 }
 
 const DOMAIN_OPTIONS = [
-  'payload', 'power', 'aocs', 'link', 'thermal', 'structure', 'propulsion', 'data', 'systems',
+  'payload', 'power', 'aocs', 'communications', 'thermal', 'structure', 'propulsion', 'data', 'systems',
   'ground_station', 'ground_processing', 'ground_sensor', '',
 ]
 

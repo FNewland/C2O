@@ -19,11 +19,13 @@ export function LinkBudgetTool() {
   const reqs = useDesignStore(s => s.requirements)
   const alt = reqs.orbit.altitude_km
 
-  // Inputs with defaults from design state
+  const [linkDirection, setLinkDirection] = useState<'downlink' | 'uplink'>('downlink')
+
+  // Inputs with defaults from design state (adapt for up/downlink)
   const [txPower, setTxPower] = useState(2.0)
-  const [txGain, setTxGain] = useState(6.0)
+  const [txGain, setTxGain] = useState(linkDirection === 'downlink' ? 6.0 : 35.0)
   const [txLosses, setTxLosses] = useState(1.5)
-  const [frequency, setFrequency] = useState(2250)
+  const [frequency, setFrequency] = useState(linkDirection === 'downlink' ? 2250 : 2050)
   const [slantRange, setSlantRange] = useState(alt * 1.15 || 575)
   const [atmosphericLoss, setAtmosphericLoss] = useState(0.5)
   const [pointingLoss, setPointingLoss] = useState(1.0)
@@ -76,11 +78,29 @@ export function LinkBudgetTool() {
         Per ECSS-E-ST-50-05C. Edit any parameter to see the impact on link margin.
       </p>
 
+      {/* Uplink / Downlink toggle */}
+      <div style={{ display: 'flex', gap: '0.3rem', marginBottom: '0.75rem' }}>
+        <button onClick={() => setLinkDirection('downlink')} style={{
+          padding: '0.25rem 0.75rem', fontSize: '0.78rem', borderRadius: '4px', cursor: 'pointer',
+          background: linkDirection === 'downlink' ? '#3b82f6' : 'var(--bg-secondary, #1f2937)',
+          color: linkDirection === 'downlink' ? 'white' : '#9ca3af',
+          border: `1px solid ${linkDirection === 'downlink' ? '#3b82f6' : '#374151'}`,
+        }}>Downlink (Space→Ground)</button>
+        <button onClick={() => setLinkDirection('uplink')} style={{
+          padding: '0.25rem 0.75rem', fontSize: '0.78rem', borderRadius: '4px', cursor: 'pointer',
+          background: linkDirection === 'uplink' ? '#8b5cf6' : 'var(--bg-secondary, #1f2937)',
+          color: linkDirection === 'uplink' ? 'white' : '#9ca3af',
+          border: `1px solid ${linkDirection === 'uplink' ? '#8b5cf6' : '#374151'}`,
+        }}>Uplink (Ground→Space)</button>
+      </div>
+
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
         {/* Input column */}
         <div>
           <div className="card">
-            <h3 style={{ fontSize: '0.85rem', marginBottom: '0.4rem' }}>Transmitter (Spacecraft)</h3>
+            <h3 style={{ fontSize: '0.85rem', marginBottom: '0.4rem' }}>
+              Transmitter ({linkDirection === 'downlink' ? 'Spacecraft' : 'Ground Station'})
+            </h3>
             <InputRow label="TX Power (W)" value={txPower} onChange={setTxPower} step={0.5} />
             <InputRow label="TX Antenna Gain (dBi)" value={txGain} onChange={setTxGain} step={1} />
             <InputRow label="TX Losses (dB)" value={txLosses} onChange={setTxLosses} step={0.1} />

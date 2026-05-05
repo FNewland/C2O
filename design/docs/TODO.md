@@ -1,66 +1,49 @@
-# SpaceCDF — Complete TODO List
+# SpaceCDF — TODO List (Updated 2026-05-05)
 
-## Tier 1: Critical Bugs (things that are broken)
+## Completed (All Tiers 1-4, UP5, UP6 Phases 1-7)
 
-- [x] Mission trade shows optical alternatives for comms missions → FIXED (mission_type threading)
-- [x] Default spacecraft_class is "small" not "nano" → FIXED
-- [x] Constellation not in mission trade options → FIXED
-- [x] FunctionTreeView JSX parse error → FIXED
-- [x] Functions show multispectral for comms → FIXED (mission-type-aware)
-- [x] Position Q&A answers persisted to backend (POST /api/positions/answers, loaded on mount)
-- [x] "operate at 500km" auto-generated requirement → RequirementsEditor now has level filter and auto-generated reqs tagged; compliance panel already has explanatory note
-- [x] Optimizer UI passes mission_type → auto-enables relevant variables, disables propulsion for non-prop missions
+All previous tier items DONE. See git history for details.
 
-## Tier 2: Missing Wiring (backend exists, no interactive UI)
+---
 
-- [x] Tabular trade studies → WIRED (TradeStudyPanel with templates, criteria, options)
-- [x] Conflict count on dashboard → WIRED (KPI badge)
-- [x] Spectrum bands as interactive design constraint → SpectrumSelector on dashboard
-- [x] Parametric data interactive editor → ParametricEditor tab (mass/cost/power/SA tables)
-- [x] Duty cycle display → in ParametricEditor power tab
-- [x] ECSS margin enforcement display → MarginEnforcement on dashboard
-- [x] Equipment needs analysis → browser sidebar shows required (blue dot) / optional (circle) / not needed (dimmed) per category with quantity and reason tooltip
-- [x] Launch provider interactive selector → LaunchSelector on dashboard with 8 providers, capacity filtering, pricing, deployer compatibility
+## Remaining Items (from ULTRAPLAN6 user feedback)
 
-## Tier 3: Architecture Gaps (need new code)
+### HIGH Priority — Functional Gaps
 
-- [x] System-V requirement hierarchy → RequirementsEditor level filter (mission/system/subsystem) + parent_id in data model
-- [x] Per-subsystem engineering budgets → BudgetComparison "Edit Allocations" mode with per-subsystem input
-- [x] Interactive link budget calculator → LinkBudgetTool tab with full cascade (TX, path, RX, margin)
-- [x] Pointing budget → PointingBudget on dashboard (7 error sources, RSS, editable, margin vs requirement)
-- [x] Data budget → DataBudget on dashboard (generation→storage→downlink→user flow, balance check)
-- [x] Timing budget → TimingBudget on dashboard (orbit timeline with mode segments, transitions, energy per mode)
-- [x] V&V matrix → VerificationMatrix tab (per-req ATRI method, phase, level, status, responsible)
-- [x] Spectrum selection → EquipmentBrowser filters transponders/antennas by selectedRfBand from SpectrumSelector
-- [x] Launch selection → auto-sets target_mass_kg from provider capacity (85% usable)
-- [x] Consolidate duplicate exports → right panel now links to center Exports tab for ECSS/regulatory/spectrum documents
-- [x] Mission type auto-set → inferred from objective text keywords (comms/relay→communications, imagery/GSD→EO, SAR→sar, lunar/mars→planetary, tech demo)
+- [ ] Requirement-to-function linking in UI (D3 — can't connect a requirement to a function)
+- [ ] Long statements auto-split into multiple requirements (D4)
+- [ ] Requirements types: add Regulatory, Process/Constraint alongside existing Performance/Interface/Budget/Functional (D1)
+- [ ] "Communications" not "Link" as function type label (D2)
+- [ ] Position Q&A answerable from Positions tab (not just Q&A tab) (K1)
+- [ ] ConOps phases should include Phase A-F as well as operational phases (B6)
+- [ ] Editable data pipeline in ConOps (B7)
+- [ ] Full uplink + downlink link budget (E1 — current tool only does downlink)
+- [ ] Pointing budget: knowledge AND control as separate contributors (E4)
+- [ ] Cost estimation editable with selected component costs feeding in (I2)
 
-## Tier 4: Deepening (improve existing features)
+### MEDIUM Priority — Architecture & Diagrams
 
-- [x] Structure CER → COTS frame mass lookup for CubeSats (3U=0.35kg instead of 2.7kg)
-- [x] Deep-space AOCS → simplified model for interplanetary (no gravity gradient, MarCO 41% vs 162%)
-- [x] Cost CERs → CubeSat COTS flat pricing (EPS €15k, AOCS €40k instead of per-kg SSCM)
-- [x] Navigation redesign → tabs grouped into 5 workflow phases (Design, Analysis, Verify, Team, Data) with group labels
-- [x] System/subsystem boundary definition → FunctionTreeView multi-allocation defines boundaries; InterfaceMatrixView manages boundary interfaces
-- [x] Per-requirement V&V method and phase assignment → VerificationMatrix tab with ATRI, phase, level, status
-- [x] Constellation fields in requirements form (num_spacecraft, constellation_type, num_planes)
-- [x] Beyond-LEO orbits in orbit form (HEO, NRHO added)
+- [ ] ConOps diagram standard symbols: need more (aircraft, ground vehicles, relay sats) (B2-B3)
+- [ ] Architecture diagram should drive what systems need defining (B5 — partially done)
+- [ ] System block diagrams should be generated from selected architecture AND editable (C1-C2)
+- [ ] Custom architecture options beyond the pre-built catalogue (C2)
+- [ ] Ground segment architecture block diagram (C4)
+- [ ] Interfaces at mission segment level (between segments, not just subsystems) (F1)
+- [ ] Interfaces only visible once level of work is done (F3 — partially done via progressive unlock)
 
-## Course Materials
+### MEDIUM Priority — Constraint Engine Enhancement
 
-- [x] Course plan (40 hours, 5 days, 20 sessions) → docs/course/COURSE_PLAN.md
-- [x] Facilitator's Book — 20 session guides written (~320 pages), 65 claims verified
-- [x] Learner's Workbook — 20 worksheets written (~80 pages)
-- [x] 3-week programme syllabus (Canadian landscape + CDF + mission ops)
-- [x] Verification appendix (5 records, 65 claims, 7 corrections)
-- [ ] Position appendices (A-M) — 13 position-specific deep dives
-- [ ] PDF compilation with front matter, index, diagrams
-- [ ] Diagrams (V-model, orbit geometry, link budget waterfall, etc.)
+- [ ] Wire 187-connection engine to UI (show constraint violations in real-time)
+- [ ] Requirement compliance cascade integrated into design state bar
+- [ ] Circular dependency visualization (show trade-off loops to team)
+- [ ] Resolution options shown inline when budget goes red
 
-## Documentation
+### LOW Priority — Polish
 
-- [x] README.md overhaul with install guide
-- [x] REDESIGN.md with architecture vision
-- [ ] User guide PDF (short, focused on tool usage)
-- [ ] API documentation
+- [ ] ConOps boxes/lines overlap checking (B4)
+- [ ] Session save/load button (explicit save to named file, not just localStorage) (A1 enhancement)
+- [ ] Gantt chart with actual dates (editable timeline) (H2 enhancement)
+- [ ] WBS editable with add/remove work packages (H3 enhancement)
+- [ ] All remaining ECSS documents as Word (.docx) export (J1 — currently MRD/ConOps/VP only)
+- [ ] Course: remaining position appendices as part of PDF compilation
+- [ ] Regenerate PDFs with updated content

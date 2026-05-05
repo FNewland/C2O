@@ -393,7 +393,16 @@ function AppContent() {
                   </div>
                 )}
                 {centerTab === 'interfaces' && <InterfaceMatrixView onNavigate={(tab) => setCenterTab(tab as CenterTab)} />}
-                {centerTab === 'positions' && <PositionPanel />}
+                {centerTab === 'positions' && (
+                  <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                    <div style={{ flex: '0 0 40%', overflow: 'auto' }}>
+                      <PositionPanel />
+                    </div>
+                    <div style={{ flex: '0 0 60%', borderTop: '2px solid var(--border, #374151)', overflow: 'auto' }}>
+                      <PositionAnswersPanel />
+                    </div>
+                  </div>
+                )}
                 {centerTab === 'answers' && <PositionAnswersPanel />}
                 {centerTab === 'gate' && <GateReviewPanel studyId={studyId} onNavigate={(tab) => setCenterTab(tab as CenterTab)} />}
                 {centerTab === 'compliance' && <ComplianceMatrix studyId={studyId} />}
