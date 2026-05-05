@@ -12,7 +12,9 @@
 import { useState } from 'react'
 
 const PHASE_COLORS: Record<string, string> = {
+  phase_a: '#8b5cf6', phase_b: '#3b82f6', phase_c: '#06b6d4', phase_d: '#f59e0b',
   leop: '#ef4444', commissioning: '#f59e0b', nominal: '#10b981', extended: '#3b82f6', disposal: '#6b7280',
+  phase_e: '#10b981', phase_f: '#6b7280',
 }
 
 interface MissionPhase {
@@ -25,6 +27,10 @@ interface OperationalMode {
 }
 
 const DEFAULT_PHASES: MissionPhase[] = [
+  { id: 'phase_a', name: 'Phase A (Feasibility)', duration_days: 180, description: 'Concept and technology development, SRR' },
+  { id: 'phase_b', name: 'Phase B (Preliminary Design)', duration_days: 270, description: 'Preliminary design, PDR, technology maturation' },
+  { id: 'phase_c', name: 'Phase C (Detailed Design)', duration_days: 180, description: 'Detailed design, CDR, procurement' },
+  { id: 'phase_d', name: 'Phase D (AIT & Launch)', duration_days: 180, description: 'Assembly, integration, test, launch campaign' },
   { id: 'leop', name: 'LEOP', duration_days: 3, description: 'Launch, deployment, first contact, initial checkout' },
   { id: 'commissioning', name: 'Commissioning', duration_days: 30, description: 'Subsystem checkout, calibration, first light' },
   { id: 'nominal', name: 'Nominal Operations', duration_days: 900, description: 'Primary science/service data collection and delivery' },
@@ -47,6 +53,7 @@ export function ConOpsEditor() {
   const [modes, setModes] = useState<OperationalMode[]>(DEFAULT_MODES)
   const [editingPhase, setEditingPhase] = useState<string | null>(null)
   const [editingMode, setEditingMode] = useState<string | null>(null)
+  const [pipelineSteps, setPipelineSteps] = useState<string[]>(['Instrument', 'Onboard Storage', 'Downlink', 'Ground Processing', 'Archive', 'User'])
   const totalDays = phases.reduce((s, p) => s + p.duration_days, 0)
 
   return (
@@ -221,22 +228,34 @@ export function ConOpsEditor() {
         ))}
       </div>
 
-      {/* Data Flow Pipeline */}
+      {/* Data Flow Pipeline — editable */}
       <div className="card">
-        <h3 style={{ fontSize: '0.9rem', marginBottom: '0.5rem' }}>Data Flow Pipeline</h3>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+          <h3 style={{ fontSize: '0.9rem', margin: 0 }}>Data Flow Pipeline</h3>
+          <button className="btn btn-sm" onClick={() => {
+            const step = prompt('Add pipeline step (e.g., "On-board Compression", "Relay Satellite"):')
+            if (step) setPipelineSteps(prev => [...prev.slice(0, -1), step, prev[prev.length - 1]])
+          }} style={{ fontSize: '0.65rem' }}>+ Add Step</button>
+        </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', flexWrap: 'wrap', fontSize: '0.78rem' }}>
-          {['Instrument', '→', 'Onboard Storage', '→', 'Downlink', '→', 'Ground Processing', '→', 'Archive', '→', 'User'].map((step, i) => (
-            <span key={i} style={{
-              padding: step === '→' ? '0' : '0.25rem 0.5rem',
-              background: step === '→' ? 'transparent' : '#1f2937',
-              border: step === '→' ? 'none' : '1px solid #374151',
-              borderRadius: step === '→' ? 0 : '4px',
-              color: step === '→' ? '#6b7280' : '#d1d5db',
-            }}>{step}</span>
+          {pipelineSteps.map((step, i) => (
+            <span key={i} style={{ display: 'contents' }}>
+              <span style={{
+                padding: '0.25rem 0.5rem', background: '#1f2937',
+                border: '1px solid #374151', borderRadius: '4px', color: '#d1d5db',
+                cursor: 'pointer',
+              }} onClick={() => {
+                const newName = prompt(`Rename step "${step}":`, step)
+                if (newName) setPipelineSteps(prev => prev.map((s, j) => j === i ? newName : s))
+              }} title="Click to rename">{step}</span>
+              {i < pipelineSteps.length - 1 && (
+                <span style={{ color: '#6b7280' }}>{'\u2192'}</span>
+              )}
+            </span>
           ))}
         </div>
         <div style={{ fontSize: '0.7rem', color: '#6b7280', marginTop: '0.4rem' }}>
-          End-to-end latency depends on: ground station access, data volume, processing pipeline, and distribution method.
+          Click a step to rename. Click "+ Add Step" to insert a new stage. End-to-end latency depends on: ground station access, data volume, processing pipeline, and distribution method.
         </div>
       </div>
     </div>

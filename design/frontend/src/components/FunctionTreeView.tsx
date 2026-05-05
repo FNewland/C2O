@@ -72,7 +72,15 @@ const DOMAIN_OPTIONS = [
 
 export function FunctionTreeView() {
   const missionType = useDesignStore(s => s.requirements.mission_type)
-  const [functions, setFunctions] = useState<FunctionNode[]>(() => getDemoFunctions(missionType))
+  const [functions, setFunctionsLocal] = useState<FunctionNode[]>(() => getDemoFunctions(missionType))
+  // Sync functions to store for cross-component access (requirement linking)
+  const setFunctions = (updater: FunctionNode[] | ((prev: FunctionNode[]) => FunctionNode[])) => {
+    setFunctionsLocal(prev => {
+      const next = typeof updater === 'function' ? updater(prev) : updater
+      useDesignStore.setState({ functionsList: next.map(f => ({ id: f.id, name: f.name, allocated_to: f.allocated_to })) })
+      return next
+    })
+  }
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set(getDemoFunctions(missionType).map(f => f.id)))
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editName, setEditName] = useState('')
