@@ -31,14 +31,19 @@ const TYPE_COLORS: Record<string, string> = {
 }
 
 const METHOD_OPTIONS = ['analysis', 'test', 'inspection', 'demonstration']
+const REQ_TYPE_OPTIONS = ['mission', 'system', 'subsystem', 'interface', 'performance', 'functional', 'regulatory', 'constraint', 'process', 'budget']
 
-export function RequirementsEditor({ studyId }: { studyId: string | null }) {
-  // Requirements now persist in designStore (survives tab changes and page refreshes)
-  const storedReqs = useDesignStore(s => s.generatedRequirements)
-  const [requirements, setRequirementsLocal] = useState<SuggestedReq[]>(storedReqs as any || [])
-  const setRequirements = (reqs: SuggestedReq[]) => {
-    setRequirementsLocal(reqs)
-    useDesignStore.setState({ generatedRequirements: reqs as any })
+export function RequirementsEditor({ studyId, defaultLevel = 'all' }: { studyId: string | null; defaultLevel?: string }) {
+  // Requirements read directly from designStore (persists across tab switches + page refreshes)
+  const rawReqs = useDesignStore(s => s.generatedRequirements)
+  const requirements: SuggestedReq[] = Array.isArray(rawReqs) ? rawReqs as any : []
+  const setRequirements = (reqs: SuggestedReq[] | ((prev: SuggestedReq[]) => SuggestedReq[])) => {
+    if (typeof reqs === 'function') {
+      const current = Array.isArray(useDesignStore.getState().generatedRequirements) ? useDesignStore.getState().generatedRequirements as any : []
+      useDesignStore.setState({ generatedRequirements: reqs(current) as any })
+    } else {
+      useDesignStore.setState({ generatedRequirements: reqs as any })
+    }
   }
   const [smartResults, setSmartResults] = useState<Record<string, SMARTResult>>({})
   const [loading, setLoading] = useState(false)
@@ -46,6 +51,9 @@ export function RequirementsEditor({ studyId }: { studyId: string | null }) {
   const [editText, setEditText] = useState('')
   const [editThreshold, setEditThreshold] = useState(0)
   const [editMethod, setEditMethod] = useState('analysis')
+  const [editFunctionId, setEditFunctionId] = useState('')
+  const [editReqType, setEditReqType] = useState('system')
+  const functionsList = useDesignStore(s => s.functionsList)
 
   const generateRequirements = async () => {
     if (!studyId) return
@@ -79,7 +87,73 @@ export function RequirementsEditor({ studyId }: { studyId: string | null }) {
   }
 
   const updateStatus = (id: string, status: string) => {
-    setRequirements(prev => prev.map(r => r.id === id ? { ...r, status } : r))
+    setRequirements(prev => {
+      const updated = prev.map(r => {
+        if (r.id !== id) return r
+        // On acceptance, assign a proper mission-scoped ID if not already assigned
+        if (status === 'accepted' && !r.id.includes('-MIS-') && !r.id.includes('-SYS-') && !r.id.includes('-SUB-')) {
+          const level = r.level || r.req_type || 'system'
+          const newId = useDesignStore.getState().nextReqId(level)
+          return { ...r, status, id: newId, _originalId: r.id }
+        }
+        return { ...r, status }
+      })
+      // When accepting a requirement with a threshold, set the budget allocation
+      if (status === 'accepted') {
+        const req = updated.find(r => r._originalId === id || r.id === id)
+        if (req && req.threshold > 0 && req.operator) {
+          const allocMap: Record<string, (v: number) => void> = {
+            mass: (v) => useDesignStore.setState(s => ({ requirements: { ...s.requirements, target_mass_kg: v } })),
+            cost: (v) => useDesignStore.setState(s => ({ requirements: { ...s.requirements, target_cost_meur: v } })),
+          }
+          const setter = allocMap[req.domain]
+          if (setter && req.operator === '<=') {
+            setter(req.threshold)
+          }
+        }
+
+        // SYSTEM-V: When accepting a mission requirement, auto-derive a system-level child
+        if (req && (req.level === 'mission' || req.req_type === 'mission')) {
+          const childId = useDesignStore.getState().nextReqId('system')
+          if (!updated.find(r => r.parent_id === req.id && r.level === 'system')) {
+            updated.push({
+              ...req,
+              id: childId,
+              level: 'system',
+              req_type: 'system',
+              parent_id: req.id,
+              status: 'suggested',
+              text: req.text.replace('The system shall', 'The space segment shall'),
+              rationale: `Derived from mission requirement ${req.id}`,
+            })
+          }
+        }
+
+        // SYSTEM-V: When accepting a system requirement, auto-derive subsystem-level child
+        if (req && (req.level === 'system' || req.req_type === 'system')) {
+          const subId = useDesignStore.getState().nextReqId('subsystem')
+          if (!updated.find(r => r.parent_id === req.id && r.level === 'subsystem')) {
+            // Determine which subsystem based on domain
+            const domainSubsystem: Record<string, string> = {
+              mass: 'structure', power: 'EPS', aocs: 'AOCS', link: 'comms',
+              thermal: 'thermal', data: 'OBC', propulsion: 'propulsion',
+            }
+            const subsys = domainSubsystem[req.domain] || req.domain || 'subsystem'
+            updated.push({
+              ...req,
+              id: subId,
+              level: 'subsystem',
+              req_type: 'subsystem',
+              parent_id: req.id,
+              status: 'suggested',
+              text: req.text.replace(/The (?:space segment|system) shall/i, `The ${subsys} subsystem shall`),
+              rationale: `Derived from system requirement ${req.id}`,
+            })
+          }
+        }
+      }
+      return updated
+    })
   }
 
   const startEdit = (req: SuggestedReq) => {
@@ -87,22 +161,46 @@ export function RequirementsEditor({ studyId }: { studyId: string | null }) {
     setEditText(req.text)
     setEditThreshold(req.threshold)
     setEditMethod(req.verification_method)
+    setEditFunctionId(req.function_id || '')
+    setEditReqType(req.req_type || 'system')
   }
 
   const saveEdit = (id: string) => {
     setRequirements(prev => prev.map(r =>
-      r.id === id ? { ...r, text: editText, threshold: editThreshold, verification_method: editMethod, status: 'accepted' } : r
+      r.id === id ? { ...r, text: editText, threshold: editThreshold, verification_method: editMethod, function_id: editFunctionId, req_type: editReqType, status: 'accepted' } : r
     ))
     const updated = requirements.find(r => r.id === id)
     if (updated) validateReq({ ...updated, text: editText, threshold: editThreshold, verification_method: editMethod })
     setEditingId(null)
   }
 
+  const splitRequirement = async (req: SuggestedReq) => {
+    try {
+      const res = await fetch('/api/lifecycle/requirements/split', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(req),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        if (data.was_split && data.split.length > 1) {
+          // Replace original with split children
+          setRequirements(prev => {
+            const idx = prev.findIndex(r => r.id === req.id)
+            if (idx < 0) return prev
+            const newList = [...prev]
+            newList.splice(idx, 1, ...data.split.map((s: any) => ({ ...s, status: 'suggested' })))
+            return newList
+          })
+        }
+      }
+    } catch { /* silent — button just won't work */ }
+  }
+
   const accepted = requirements.filter(r => r.status === 'accepted')
   const suggested = requirements.filter(r => r.status === 'suggested')
   const rejected = requirements.filter(r => r.status === 'rejected')
 
-  const [levelFilter, setLevelFilter] = useState<string>('all')
+  const [levelFilter, setLevelFilter] = useState<string>(defaultLevel)
   const LEVELS = ['all', 'mission', 'system', 'subsystem']
 
   return (
@@ -161,12 +259,16 @@ export function RequirementsEditor({ studyId }: { studyId: string | null }) {
           {suggested.map(req => (
             <RequirementCard key={req.id} req={req} smart={smartResults[req.id]}
               editing={editingId === req.id} editText={editText} editThreshold={editThreshold} editMethod={editMethod}
+              editFunctionId={editFunctionId} functionsList={functionsList}
               onAccept={() => updateStatus(req.id, 'accepted')}
               onReject={() => updateStatus(req.id, 'rejected')}
               onStartEdit={() => startEdit(req)}
               onSaveEdit={() => saveEdit(req.id)}
               onCancelEdit={() => setEditingId(null)}
               onEditText={setEditText} onEditThreshold={setEditThreshold} onEditMethod={setEditMethod}
+              onEditFunctionId={setEditFunctionId} onEditReqType={setEditReqType}
+              editReqType={editReqType}
+              onSplit={() => splitRequirement(req)}
             />
           ))}
         </>
@@ -181,10 +283,12 @@ export function RequirementsEditor({ studyId }: { studyId: string | null }) {
           {accepted.map(req => (
             <RequirementCard key={req.id} req={req} smart={smartResults[req.id]}
               editing={editingId === req.id} editText={editText} editThreshold={editThreshold} editMethod={editMethod}
+              editFunctionId={editFunctionId} editReqType={editReqType} functionsList={functionsList}
               onStartEdit={() => startEdit(req)}
               onSaveEdit={() => saveEdit(req.id)}
               onCancelEdit={() => setEditingId(null)}
               onEditText={setEditText} onEditThreshold={setEditThreshold} onEditMethod={setEditMethod}
+              onEditFunctionId={setEditFunctionId} onEditReqType={setEditReqType}
             />
           ))}
         </>
@@ -209,19 +313,23 @@ export function RequirementsEditor({ studyId }: { studyId: string | null }) {
   )
 }
 
-function RequirementCard({ req, smart, editing, editText, editThreshold, editMethod,
+function RequirementCard({ req, smart, editing, editText, editThreshold, editMethod, editFunctionId, editReqType, functionsList,
   onAccept, onReject, onStartEdit, onSaveEdit, onCancelEdit,
-  onEditText, onEditThreshold, onEditMethod,
+  onEditText, onEditThreshold, onEditMethod, onEditFunctionId, onEditReqType, onSplit,
 }: {
   req: SuggestedReq; smart?: SMARTResult
   editing: boolean; editText: string; editThreshold: number; editMethod: string
+  editFunctionId?: string; editReqType?: string; functionsList?: any[]
   onAccept?: () => void; onReject?: () => void
   onStartEdit?: () => void; onSaveEdit?: () => void; onCancelEdit?: () => void
   onEditText: (t: string) => void; onEditThreshold: (t: number) => void; onEditMethod: (m: string) => void
+  onEditFunctionId?: (id: string) => void; onEditReqType?: (t: string) => void
+  onSplit?: () => void
 }) {
   const typeColor = TYPE_COLORS[req.req_type] || '#6b7280'
   const isHowNotWhat = smart?.is_how_not_what
   const isSmart = smart?.is_smart
+  const isCompound = /\bshall\b.*\b(and shall|; shall)\b/i.test(req.text) || (req.text.length > 200 && (req.text.match(/\bshall\b/gi) || []).length > 1)
 
   return (
     <div style={{
@@ -262,7 +370,15 @@ function RequirementCard({ req, smart, editing, editText, editThreshold, editMet
         <div style={{ marginBottom: '0.3rem' }}>
           <textarea className="input" rows={2} value={editText} onChange={e => onEditText(e.target.value)}
             style={{ width: '100%', fontSize: '0.82rem', resize: 'vertical', marginBottom: '0.3rem' }} />
-          <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', flexWrap: 'wrap' }}>
+            {onEditReqType && (
+              <label style={{ fontSize: '0.7rem', color: '#9ca3af' }}>Type:
+                <select className="select" value={editReqType || 'system'} onChange={e => onEditReqType(e.target.value)}
+                  style={{ width: '100px', marginLeft: '0.3rem', fontSize: '0.75rem' }}>
+                  {REQ_TYPE_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
+                </select>
+              </label>
+            )}
             <label style={{ fontSize: '0.7rem', color: '#9ca3af' }}>Threshold:
               <input className="input" type="number" step="any" value={editThreshold}
                 onChange={e => onEditThreshold(Number(e.target.value))}
@@ -274,6 +390,15 @@ function RequirementCard({ req, smart, editing, editText, editThreshold, editMet
                 {METHOD_OPTIONS.map(m => <option key={m} value={m}>{m}</option>)}
               </select>
             </label>
+            {functionsList && functionsList.length > 0 && onEditFunctionId && (
+              <label style={{ fontSize: '0.7rem', color: '#9ca3af' }}>Function:
+                <select className="select" value={editFunctionId || ''} onChange={e => onEditFunctionId(e.target.value)}
+                  style={{ width: '150px', marginLeft: '0.3rem', fontSize: '0.75rem' }}>
+                  <option value="">— None —</option>
+                  {functionsList.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+                </select>
+              </label>
+            )}
             <span style={{ flex: 1 }} />
             <button className="btn btn-sm" onClick={onSaveEdit} style={{ fontSize: '0.7rem', background: '#10b981' }}>Save</button>
             <button className="btn btn-sm" onClick={onCancelEdit} style={{ fontSize: '0.7rem', background: '#374151' }}>Cancel</button>
@@ -283,10 +408,14 @@ function RequirementCard({ req, smart, editing, editText, editThreshold, editMet
         <div style={{ fontSize: '0.82rem', marginBottom: '0.2rem' }}>{req.text}</div>
       )}
 
-      {/* Threshold + rationale */}
+      {/* Threshold + rationale + linked function */}
       {!editing && (
         <div style={{ fontSize: '0.7rem', color: '#6b7280', display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
           {req.threshold !== 0 && <span>{req.operator} {req.threshold} {req.unit}</span>}
+          {req.function_id && functionsList && (() => {
+            const fn = functionsList.find(f => f.id === req.function_id)
+            return fn ? <span style={{ color: '#8b5cf6' }}>⤷ {fn.name}</span> : null
+          })()}
           {req.rationale && <span style={{ fontStyle: 'italic' }}>{req.rationale}</span>}
         </div>
       )}
@@ -307,6 +436,9 @@ function RequirementCard({ req, smart, editing, editText, editThreshold, editMet
         <div style={{ display: 'flex', gap: '0.3rem', marginTop: '0.4rem' }}>
           <button className="btn btn-sm" onClick={onAccept} style={{ fontSize: '0.68rem', background: '#10b981' }}>Accept</button>
           <button className="btn btn-sm" onClick={onStartEdit} style={{ fontSize: '0.68rem', background: '#3b82f6' }}>Edit</button>
+          {isCompound && onSplit && (
+            <button className="btn btn-sm" onClick={onSplit} style={{ fontSize: '0.68rem', background: '#8b5cf6' }}>Split</button>
+          )}
           <button className="btn btn-sm" onClick={onReject} style={{ fontSize: '0.68rem', background: '#ef4444' }}>Reject</button>
         </div>
       )}

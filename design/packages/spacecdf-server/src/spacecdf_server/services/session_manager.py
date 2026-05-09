@@ -235,6 +235,7 @@ class SessionManager:
             equipment_id=equipment_id,
         )
         session.edits.append(edit)
+        session.dirty_params.add(parameter_id)  # SCDF-040: mark dirty
 
         # Apply to design state with sticky source
         source = ParameterSource.KB_COMPONENT if equipment_id else ParameterSource.POSITION_OVERRIDE
@@ -367,9 +368,9 @@ class SessionManager:
         reconverger = SelectiveReconvergence()
         reconverger.initialise()
 
-        # Find recently edited parameters
-        recent_edits = session.edits[-20:]  # Last 20 edits
-        changed_ids = {e.parameter_id for e in recent_edits}
+        # Consume dirty set (SCDF-040: replaces recent_edits[-20:] heuristic)
+        changed_ids = set(session.dirty_params)
+        session.dirty_params.clear()
 
         result = await reconverger.reconverge(state, changed_ids)
 

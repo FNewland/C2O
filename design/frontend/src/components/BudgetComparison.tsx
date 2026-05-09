@@ -6,7 +6,7 @@
  */
 import { useMemo, useState } from 'react'
 import { useDesignStore, type DesignParam } from '../stores/designStore'
-import { useActiveParameters } from '../hooks/useActiveParameters'
+import { useEquipmentView } from '../hooks/useEquipmentView'
 
 // CDS internal volumes per form factor (cm³)
 const CDS_VOLUMES: Record<string, number> = {
@@ -32,7 +32,9 @@ interface BudgetRow {
 }
 
 export function BudgetComparison() {
-  const params = useActiveParameters()
+  // Use result.parameters directly (stable ref) to avoid recharts infinite loop
+  const result = useDesignStore(s => s.result)
+  const params = (result?.parameters || {}) as Record<string, DesignParam>
   const { requirements } = useDesignStore()
   const markStale = useDesignStore(s => s.markStale)
   const [editMode, setEditMode] = useState(false)
@@ -70,8 +72,8 @@ export function BudgetComparison() {
   const totalParametricMass = rows.reduce((s, r) => s + r.parametric_mass_kg, 0)
   const totalParametricPower = rows.reduce((s, r) => s + r.parametric_power_w, 0)
 
-  // UPWARD FLOW: Equipment selections roll up into budget totals
-  const selectedEquipment = useDesignStore(s => s.selectedEquipment)
+  // UPWARD FLOW: Equipment selections roll up into budget totals (prefers element tree)
+  const selectedEquipment = useEquipmentView()
   const equipTotalMass = selectedEquipment.reduce((s, e) => s + (e.mass_kg * e.quantity), 0)
   const equipTotalPower = selectedEquipment.reduce((s, e) => s + (e.power_w * e.quantity), 0)
   const equipTotalCost = selectedEquipment.reduce((s, e) => s + (e.cost_keur * e.quantity), 0)

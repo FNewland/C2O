@@ -1,225 +1,278 @@
-# Session 3.2: Payload & Communications Design
+# Session 3.2: Attitude and Orbit Control System (AOCS)
 
 **Duration:** 2 hours
-**Prerequisites:** Session 3.1 (orbit selected)
-**References:** SMAD4 Ch.9 (Payloads), Ch.13 (Communications); ECSS-E-ST-50-05C
+**Prerequisites:** Sessions 2.1--2.4 and 3.1 (requirements, orbit, power defined)
+**SpaceCDF Tabs:** Dashboard (AOCS KPI), Pointing Budget, Architecture (AOCS)
+
+---
+
+## References
+
+- [Wertz, Everett & Puschell, *Space Mission Engineering: The New SMAD*, 2011, Ch. 11.1 (ADCS)](https://www.space.com/smad)
+- [Sidi, *Spacecraft Dynamics and Control*, 1997, Ch. 4--9](https://www.cambridge.org/core/books/spacecraft-dynamics-and-control/82B47C7B6E2AA53BFAADAF26C2A79F14)
+- [Markley & Crassidis, *Fundamentals of Spacecraft Attitude Determination and Control*, 2014](https://link.springer.com/book/10.1007/978-1-4939-0802-8)
+- [ECSS, *ECSS-E-ST-60-10C: Control Performance*, 2008](https://ecss.nl/standard/ecss-e-st-60-10c-control-performance/)
+- [ECSS, *ECSS-E-ST-60-20C: Star Tracker Performance Testing*, 2019](https://ecss.nl/standard/ecss-e-st-60-20c-star-tracker-performance-testing/)
 
 ---
 
 ## Learning Objectives
 
 By the end of this session, participants will be able to:
-1. Size an optical payload from GSD and altitude (aperture -> mass -> power)
-2. Understand RF payload sizing principles for comms/SAR missions
-3. Construct a complete link budget and determine link margin
-4. Select appropriate frequency band and licensing approach
-5. Use SpaceCDF's link budget tool and spectrum selector
+
+1. Explain the distinction between attitude determination and attitude control
+2. Select AOCS hardware architecture based on pointing requirements
+3. Compute a pointing error budget using root-sum-square (RSS) combination
+4. Calculate disturbance torques from gravity gradient, aerodynamic drag, solar radiation pressure, and residual magnetic dipole
+5. Size actuators (reaction wheels, magnetorquers) for the computed disturbance environment
+6. Verify AOCS design against requirements using SpaceCDF's pointing budget tool
 
 ---
 
-## 1. Optical Payload Sizing (25 min)
+## 1. AOCS Fundamentals (20 min)
 
 ### Teaching Notes
 
-For Earth observation missions, the payload drives the entire mission design. GSD is the key performance parameter.
+*[Source: SMAD, Ch. 11.1; Markley & Crassidis, Ch. 1--3]*
 
-### GSD from Optics
+The AOCS performs two distinct functions:
 
-**Diffraction-limited GSD:**
-```
-GSD_diff = 1.22 × lambda × h / D
-```
-Where lambda = wavelength (m), h = altitude (m), D = aperture diameter (m).
+| Function | Purpose | Hardware |
+|----------|---------|---------|
+| **Attitude Determination** (AD) | Know the spacecraft's orientation relative to a reference frame | Sensors: star tracker, sun sensors, magnetometer, gyroscope, Earth sensor |
+| **Attitude Control** (AC) | Change or maintain the spacecraft's orientation | Actuators: reaction wheels, magnetorquers, thrusters, control moment gyros |
 
-**Pixel-limited GSD:**
-```
-GSD_pixel = p × h / f
-```
-Where p = pixel size (m), f = focal length (m), and f = F/# × D.
+### AOCS Architecture Selection by Pointing Requirement
 
-The actual GSD is the **worse** (larger) of these two:
-```
-GSD = max(GSD_diff, GSD_pixel)
-```
+| Pointing Requirement | Architecture | Typical Hardware | Mass | Power | Cost |
+|---------------------|-------------|-----------------|------|-------|------|
+| > 5 deg | Passive magnetic | Permanent magnet + hysteresis rods | ~0.05 kg | 0 W | ~2 kEUR |
+| 2--5 deg | Magnetorquers + sun sensors | 3-axis MTQ + coarse sun sensors | ~0.10 kg | 0.2 W | ~8 kEUR |
+| 0.1--2 deg | Reaction wheels + MTQ | 3--4 RW + 3 MTQ + fine sun sensors | ~0.50 kg | 2--4 W | ~35 kEUR |
+| < 0.1 deg | Fine pointing (RW + star tracker) | 4 RW + ST + 3 MTQ + sun sensors | ~0.80 kg | 3--5 W | ~55 kEUR |
+| < 0.01 deg | Very fine pointing | 4 RW + ST + MEMS gyro + 3 MTQ | ~1.20 kg | 4--6 W | ~80 kEUR |
 
-*Example: lambda = 0.55 mum, h = 500 km, D = 0.15 m, pixel = 6.5 mum, F/8:*
-- GSD_diff = 1.22 × 0.55×10?? × 500×10^3 / 0.15 = **2.24 m**
-- f = 8 × 0.15 = 1.2 m; GSD_pixel = 6.5×10?? × 500×10^3 / 1.2 = **2.71 m**
-- GSD = max(2.24, 2.71) = **2.71 m** (pixel-limited)
+**Real mission examples:**
 
-### Mass and Power from Aperture
-
-Heritage parametric relations (Ball Aerospace/SMAD4):
-```
-Mass_payload ~ 20 × D^1.5 + 2 kg     (D in metres)
-Power_payload ~ 3 × Mass_payload W     (typical for optical instruments)
-```
-
-*Example: D = 0.15 m -> Mass = 20×0.058+2 = 3.16 kg; Power = 9.5 W*
-
-*[Caveat: these CERs are for traditional instruments. CubeSat COTS imagers are typically lighter: Planet SuperDove achieves 3.7m GSD from 1.5 kg payload at 525 km with a proprietary design.]*
-
-### Data Rate
-
-```
-Data_rate = N_pixels × N_bands × bit_depth × line_rate
-```
-
-*Example: 5000 pixels × 4 bands × 12 bits × 1000 lines/s = 240 Mbps*
-
-**Discussion:** *For non-optical missions (comms, AIS, SAR), the payload sizing uses entirely different physics. What parameter replaces GSD for a communications relay?*
+| Mission | Pointing Req | Architecture | Mass |
+|---------|-------------|-------------|------|
+| **Astrocast** (IoT) | ~5 deg | MTQ + sun sensors | 0.1 kg |
+| **Planet SuperDove** (EO) | ~0.1 deg | 4 RW + ST + MTQ | 0.8 kg |
+| **CAPSTONE** (cislunar) | ~0.05 deg | RW + ST + sun sensors | ~1.0 kg |
 
 ---
 
-## 2. Non-Optical Payload Sizing (20 min)
+## 2. Disturbance Torques (25 min)
 
 ### Teaching Notes
 
-### RF Communications Relay
+In LEO, four external torques disturb the spacecraft attitude. The AOCS must counteract them continuously.
 
-Key parameter: **data rate** (Mbps) and **coverage**
+*[Source: SMAD, Ch. 11.1; Sidi, Ch. 5]*
 
-Sizing driven by link budget:
-```
-Required EIRP -> antenna gain + TX power -> antenna size + amplifier mass
-```
+> **Key Equations -- Disturbance Torques**
+>
+> **Gravity gradient torque** (worst case, 45 deg off nadir):
+> $$T_{gg} = \frac{3\mu}{2a^3} |I_z - I_x| \sin(2\theta) \approx \frac{3\mu}{2a^3} |I_z - I_x|$$
+> where $I_z$, $I_x$ are principal moments of inertia (kg m$^2$) and $\theta = 45\degree$ for worst case.
+>
+> **Aerodynamic torque:**
+> $$T_{\text{aero}} = \frac{1}{2} \rho v^2 C_D A_{\text{ref}} \, d_{cp-cm}$$
+> where $\rho$ = atmospheric density (kg/m$^3$), $v$ = orbital velocity (m/s), $C_D \approx 2.2$, $A_{\text{ref}}$ = cross-sectional area (m$^2$), $d_{cp-cm}$ = offset between centre of pressure and centre of mass (m).
+>
+> **Solar radiation pressure torque:**
+> $$T_{\text{SRP}} = \frac{S}{c} A_s (1 + q) \, d_{sp-cm}$$
+> where $S = 1361$ W/m$^2$, $c = 3 \times 10^8$ m/s, $A_s$ = illuminated area (m$^2$), $q$ = reflectance (0--1), $d_{sp-cm}$ = offset between solar pressure centre and centre of mass (m).
+>
+> **Residual magnetic dipole torque:**
+> $$T_{\text{mag}} = M \times B$$
+> where $M$ = spacecraft residual magnetic dipole moment (A m$^2$), $B$ = local geomagnetic field strength (T). For LEO: $B \approx 3 \times 10^{-5}$ T; typical CubeSat $M \approx 0.01$--$0.1$ A m$^2$.
 
-Heritage: Astrocast 3U IoT -> 0.3 kg payload, 3W; Iridium NEXT -> much larger.
-
-### SAR (Synthetic Aperture Radar)
-
-Key parameter: **resolution** (metres)
-
-```
-Antenna_length >= 2 × resolution      (azimuth constraint)
-Antenna_area >= 4lambdaRv/c              (range ambiguity constraint)
-```
-
-Where R = slant range, v = orbital velocity, c = speed of light.
-
-SAR is **power-hungry**: peak TX power 50-4000 W, but low duty cycle (~5-15%).
-Heritage: ICEYE X-band SAR: 3.25 m antenna, 85 kg, 3.2 kW peak.
-
-### AIS Receiver
-
-Passive receive -- no TX sizing needed. Key: **antenna gain** at VHF (161-162 MHz).
-```
-Antenna_length ~ lambda/2 ~ 0.93 m    (half-wave dipole at 162 MHz)
-```
-
-Heritage: Spire LEMUR-2 AIS: 0.5 kg payload, 5W, deployable VHF monopoles.
+> **Worked Example -- Disturbance Torques for a 3U CubeSat at 500 km**
+>
+> **Spacecraft properties:** 3U (100 x 100 x 340 mm), mass = 5 kg, $I_z = 0.035$ kg m$^2$, $I_x = 0.007$ kg m$^2$, $A_{\text{ref}} = 0.034$ m$^2$ (3U face), $d_{cp-cm} = 0.02$ m.
+>
+> **Gravity gradient:**
+> $T_{gg} = \frac{3 \times 3.986 \times 10^{14}}{2 \times (6.871 \times 10^6)^3} \times |0.035 - 0.007|$
+> $= \frac{1.196 \times 10^{15}}{6.494 \times 10^{20}} \times 0.028 = 1.84 \times 10^{-6} \times 0.028 = 5.2 \times 10^{-8}$ N m
+>
+> **Aerodynamic** (at 500 km, $\rho \approx 6 \times 10^{-13}$ kg/m$^3$):
+> $T_{\text{aero}} = 0.5 \times 6 \times 10^{-13} \times 7617^2 \times 2.2 \times 0.034 \times 0.02$
+> $= 0.5 \times 6 \times 10^{-13} \times 5.80 \times 10^7 \times 2.2 \times 0.034 \times 0.02 = 1.6 \times 10^{-8}$ N m
+>
+> **Solar radiation pressure:**
+> $T_{\text{SRP}} = \frac{1361}{3 \times 10^8} \times 0.034 \times 1.5 \times 0.02 = 4.6 \times 10^{-9}$ N m
+>
+> **Magnetic** ($M = 0.05$ A m$^2$, $B = 3 \times 10^{-5}$ T):
+> $T_{\text{mag}} = 0.05 \times 3 \times 10^{-5} = 1.5 \times 10^{-6}$ N m
+>
+> **Summary:**
+>
+> | Source | Torque (N m) | Dominant? |
+> |--------|-------------|-----------|
+> | Gravity gradient | $5.2 \times 10^{-8}$ | No |
+> | Aerodynamic | $1.6 \times 10^{-8}$ | No |
+> | Solar radiation pressure | $4.6 \times 10^{-9}$ | No |
+> | Residual magnetic dipole | $1.5 \times 10^{-6}$ | **Yes** |
+> | **Total (RSS)** | $\approx 1.5 \times 10^{-6}$ | |
+>
+> The residual magnetic dipole dominates for CubeSats due to COTS electronics and short wiring runs. This is a key finding -- magnetic cleanliness matters.
 
 ---
 
-## 3. Link Budget Deep Dive (35 min)
+## 3. Actuator Sizing (20 min)
 
 ### Teaching Notes
 
-*[Source: ECSS-E-ST-50-05C; SMAD4 Ch.13 -- verified in Session 2.4]*
+### Reaction Wheel Sizing
 
-The link budget determines whether the satellite can communicate with the ground. Every term is in decibels (dB).
+> **Key Equations -- Reaction Wheel Sizing**
+>
+> **Torque requirement** (to counteract disturbances + provide control authority):
+> $$T_{\text{RW}} \geq k \times T_{\text{disturbance,total}}$$
+> where $k \geq 2$ is the control margin factor (typically 2--5).
+>
+> **Momentum storage requirement** (accumulation between desaturation cycles):
+> $$H_{\text{required}} = T_{\text{disturbance}} \times \frac{t_{\text{desat}}}{2}$$
+> where $t_{\text{desat}}$ is the time between magnetorquer desaturation events (typically one orbit).
+>
+> **Slew rate** (for agile missions):
+> $$\dot{\theta}_{\text{max}} = \frac{H_{\text{RW,max}}}{I_{\text{axis}}}$$
 
-### Complete Link Budget Cascade
+> **Worked Example -- Reaction Wheel for 3U CubeSat**
+>
+> **Given:** $T_{\text{disturbance}} = 1.5 \times 10^{-6}$ N m, desaturation interval = 1 orbit (5670 s).
+>
+> **Momentum storage:**
+> $H_{\text{required}} = 1.5 \times 10^{-6} \times \frac{5670}{2} = 4.25 \times 10^{-3}$ N m s $= 4.25$ mN m s
+>
+> **Typical CubeSat reaction wheels:**
+>
+> | Product | Torque (mN m) | Momentum (mN m s) | Mass (g) | Manufacturer |
+> |---------|--------------|-------------------|----------|-------------|
+> | RW-0.01 | 0.23 | 1.0 | 30 | Hyperion |
+> | RW210 | 1.0 | 10 | 55 | Blue Canyon |
+> | RW400 | 4.0 | 40 | 120 | Blue Canyon |
+> | RW3-1.0 | 1.0 | 15 | 50 | CubeSpace |
+>
+> The RW210 (10 mN m s) exceeds the 4.25 mN m s requirement with 135% margin. **Selected.**
 
-| # | Parameter | Formula/Value | Unit |
-|---|-----------|--------------|------|
-| 1 | TX Power | P_TX (e.g., 2W = +3.0) | dBW |
-| 2 | TX Antenna Gain | G_TX (e.g., +6) | dBi |
-| 3 | TX Losses | L_TX (cables, filters: -1.5) | dB |
-| 4 | **EIRP** | = P_TX + G_TX - L_TX = **+7.5** | dBW |
-| 5 | Free Space Path Loss | FSPL = 20log10(4pid/lambda) | dB |
-| | *S-band, 500 km:* | -168.5 | dB |
-| 6 | Atmospheric Loss | L_atm (-0.5 typ) | dB |
-| 7 | Pointing Loss | L_point (-1.0 typ) | dB |
-| 8 | Polarisation Loss | L_pol (-0.3 typ) | dB |
-| 9 | **Received Power** | = EIRP - FSPL - losses + G_RX | dBW |
-| 10 | RX Antenna Gain | G_RX (e.g., +35 for 3m dish) | dBi |
-| 11 | System Noise Temp | T_sys (e.g., 150K -> 21.8 dBK) | dBK |
-| 12 | **G/T** | = G_RX - 10log10(T_sys) = **+13.2** | dB/K |
-| 13 | Boltzmann Constant | k = -228.6 | dBW/K/Hz |
-| 14 | **C/N0** | = EIRP - FSPL - losses + G/T - k | dBHz |
-| 15 | Data Rate | R_b (e.g., 1 Mbps = 60 dBbps) | dBbps |
-| 16 | **Eb/N0 available** | = C/N0 - 10log10(R_b) | dB |
-| 17 | Eb/N0 required | (e.g., 4.0 for QPSK+LDPC) | dB |
-| 18 | Implementation Margin | (e.g., 2.0) | dB |
-| 19 | **LINK MARGIN** | = Eb/N0_avail - Eb/N0_req - Impl | dB |
+### Magnetorquer Sizing
 
-**Requirement:** Link margin >= 3 dB (ECSS-E-ST-50-05C Phase B+ minimum).
+Magnetorquers (MTQs) provide torque by interacting with Earth's magnetic field. They are essential for momentum dumping from reaction wheels.
 
-### Free Space Path Loss
+> **Key Equations -- Magnetorquer Torque**
+>
+> $$T_{\text{MTQ}} = m_{\text{dipole}} \times B \times \sin(\alpha)$$
+>
+> where $m_{\text{dipole}}$ = magnetic dipole moment (A m$^2$), $B$ = local field (T), $\alpha$ = angle between dipole and field.
+>
+> **Desaturation time** (to dump one wheel from full momentum):
+> $$t_{\text{dump}} = \frac{H_{\text{wheel}}}{T_{\text{MTQ,avg}}}$$
 
-```
-FSPL = 20 × log10(4pid/lambda) = 20 × log10(4pi × d × f / c)
-```
+For a CubeSat MTQ with $m = 0.2$ A m$^2$ and $B = 3 \times 10^{-5}$ T:
+$T_{\text{MTQ}} = 0.2 \times 3 \times 10^{-5} = 6 \times 10^{-6}$ N m
 
-| Band | Frequency | FSPL at 500 km |
-|------|-----------|---------------|
-| UHF | 437 MHz | 148.3 dB |
-| S-band | 2250 MHz | 162.5 dB |
-| X-band | 8200 MHz | 173.8 dB |
-| Ka-band | 26 GHz | 183.8 dB |
-
-*[Verification: FSPL(S-band, 500km) = 20×log10(4pi×500×10^3×2250×10?/3×10?) = 20×log10(4.71×10¹?/3×10?) = 20×log10(157.1) = 20×43.92/... let me compute properly:*
-*FSPL = 20×log10(4pi) + 20×log10(d) + 20×log10(f) - 20×log10(c)*
-*= 21.98 + 20×log10(5×10?) + 20×log10(2.25×10?) - 20×log10(3×10?)*
-*= 21.98 + 113.98 + 187.04 - 169.54 = 153.46 dB*
-
-*Hmm, let me recompute at slant range (not altitude). Slant range at 10° elevation ~ 1150 km:*
-*FSPL = 21.98 + 20×log10(1.15×10?) + 20×log10(2.25×10?) - 169.54*
-*= 21.98 + 121.21 + 187.04 - 169.54 = 160.69 ~ 161 dB*
-
-*At minimum elevation (10°) the path loss is higher than at nadir. The 162.5 dB value in the table corresponds to ~1300 km slant range which is reasonable for minimum elevation pass.]*
-
-### Modulation and Coding
-
-| Modulation | Eb/N0 Required (BER 10??) | Spectral Efficiency |
-|-----------|---------------------------|---------------------|
-| BPSK uncoded | 9.6 dB | 1 bit/s/Hz |
-| QPSK uncoded | 9.6 dB | 2 bit/s/Hz |
-| QPSK + conv (r=1/2) | 5.0 dB | 1 bit/s/Hz |
-| QPSK + LDPC (r=1/2) | 2.0 dB | 1 bit/s/Hz |
-| QPSK + LDPC (r=3/4) | 4.0 dB | 1.5 bit/s/Hz |
-| 8PSK + LDPC (r=3/4) | 6.5 dB | 2.25 bit/s/Hz |
-
-*[Source: CCSDS 131.0-B-4 (TM Synchronization and Channel Coding); DVB-S2 standard]*
+This is 4x the total disturbance torque -- sufficient for desaturation within a fraction of an orbit.
 
 ---
 
-## 4. Frequency Band Selection & Licensing (20 min)
+## 4. Pointing Error Budget (25 min)
 
 ### Teaching Notes
 
-Band selection is a **design constraint**, not just a regulatory afterthought. It affects:
-- Available data rate (higher band = more bandwidth)
-- Antenna size (higher frequency = smaller antenna for same gain)
-- Atmospheric losses (Ka-band: significant rain fade)
-- Licensing cost and timeline (amateur = free; commercial = $30-45K + ITU fees)
-- Data policy (amateur = open; commercial = proprietary)
-- Equipment availability (UHF/S-band: many COTS options; Ka-band: few)
+*[Source: ECSS-E-ST-60-10C; SMAD, Ch. 11.1]*
 
-### Decision Tree
+The pointing error budget combines all independent error sources using root-sum-square (RSS) to determine the total pointing uncertainty.
 
-```
-Is data rate < 20 kbps AND non-commercial?
-  -> Yes: Consider amateur UHF (IARU coordination, free, 6 months)
-  -> No: ?
-Is data rate < 10 Mbps?
-  -> Yes: S-band commercial (ISED/FCC, ?30-45K, 6-12 months)
-  -> No: ?
-Is data rate < 400 Mbps?
-  -> Yes: X-band (ISED/FCC + ITU, higher cost, 12+ months)
-  -> No: Ka-band (complex coordination, rain fade, emerging for CubeSats)
-```
+> **Key Equations -- Pointing Error Budget (RSS)**
+>
+> $$\theta_{\text{total}} = \sqrt{\theta_{\text{sensor}}^2 + \theta_{\text{actuator}}^2 + \theta_{\text{alignment}}^2 + \theta_{\text{thermal}}^2 + \theta_{\text{jitter}}^2 + \theta_{\text{orbit}}^2 + \theta_{\text{timing}}^2}$$
+>
+> The result must satisfy:
+> $$\theta_{\text{total}} \leq \theta_{\text{requirement}}$$
 
-### SpaceCDF Exercise
+### Error Source Definitions
 
-1. In the **Dashboard**, find the **Spectrum Selector** card
-2. Select your license type (amateur / experimental / commercial)
-3. Review the available bands -- which are suitable for your data rate?
-4. Select a band -- note how the equipment browser will filter transponders
-5. Navigate to the **Link Budget** tab
-6. Enter your TX power, antenna gain, frequency, and ground station parameters
-7. Check: does the link close with >= 3 dB margin?
+| Source | Description | Typical Values (Star Tracker) | Typical Values (Sun Sensor) |
+|--------|------------|------------------------------|----------------------------|
+| **Sensor accuracy** | Intrinsic measurement noise of attitude sensor | 3--10 arcsec (0.001--0.003 deg) | 0.5--2 deg |
+| **Actuator resolution** | Minimum controllable torque/step of actuators | 2--5 arcsec (0.001 deg) | N/A (MTQ: 1--5 deg) |
+| **Alignment knowledge** | Misalignment between sensor boresight and payload boresight | 30--60 arcsec (0.01--0.02 deg) | 0.5 deg |
+| **Thermal distortion** | Structural deformation with temperature | 10--30 arcsec (0.003--0.01 deg) | 0.1 deg |
+| **Jitter** | High-frequency vibration from reaction wheels | 5--20 arcsec (0.001--0.006 deg) | N/A |
+| **Orbit knowledge** | Uncertainty in satellite position (affects nadir pointing) | 1--5 arcsec (< 0.001 deg) | 0.05 deg |
+| **Timing** | Time-stamping error between sensor read and actuator command | 1--3 arcsec (< 0.001 deg) | 0.01 deg |
+
+> **Worked Example -- Pointing Budget for 3U EO CubeSat (Star Tracker + RW)**
+>
+> | Error Source | Value (deg) | Value$^2$ |
+> |-------------|------------|-----------|
+> | Star tracker accuracy | 0.003 | $9.0 \times 10^{-6}$ |
+> | Reaction wheel resolution | 0.001 | $1.0 \times 10^{-6}$ |
+> | Alignment knowledge | 0.020 | $4.0 \times 10^{-4}$ |
+> | Thermal distortion | 0.010 | $1.0 \times 10^{-4}$ |
+> | RW jitter | 0.005 | $2.5 \times 10^{-5}$ |
+> | Orbit knowledge | 0.001 | $1.0 \times 10^{-6}$ |
+> | Timing error | 0.001 | $1.0 \times 10^{-6}$ |
+> | **RSS Total** | $\sqrt{5.37 \times 10^{-4}}$ = **0.023 deg** | |
+>
+> **Requirement:** 0.1 deg (3-sigma)
+> **Margin:** 0.1 - 0.023 = 0.077 deg (77% margin) -- **comfortable**.
+>
+> **Key insight:** Alignment knowledge (0.020 deg) dominates the budget. Improving the star tracker accuracy from 0.003 to 0.001 deg would have negligible impact. **Budget-driven design** means investing effort in the dominant term.
+
+---
+
+## 5. Momentum Management and Desaturation (10 min)
+
+### Teaching Notes
+
+Disturbance torques cause angular momentum to accumulate in reaction wheels over time. Without management, wheels saturate and lose control authority.
+
+**Desaturation cycle:**
+1. Wheels accumulate momentum from disturbance torques (~$10^{-6}$ N m continuous)
+2. At scheduled intervals (typically once per orbit), MTQs are activated
+3. MTQs generate torque against Earth's magnetic field, slowing the wheels
+4. Process takes 5--15 minutes per desaturation cycle
+
+**Limitation:** MTQs can only generate torque **perpendicular** to the local magnetic field vector. They cannot dump momentum in all three axes simultaneously. This requires a multi-axis dumping strategy timed with the magnetic field rotation along the orbit.
+
+### 3+1 Redundancy
+
+The standard 4-wheel configuration provides full 3-axis control with one spare:
+- **3 wheels** in the body X, Y, Z axes provide minimum control
+- **4th wheel** on a skew axis provides redundancy and enhanced torque distribution
+- If one wheel fails, the remaining three (including the skew wheel) maintain 3-axis control
+
+---
+
+## 6. SpaceCDF Exercise (30 min)
+
+### Instructions
+
+1. **Architecture tab (AOCS):** Select the AOCS architecture appropriate for your pointing requirement
+   - Review the derived requirements that appear
+   - Check that the selected hardware fits within your power and mass budgets
+2. **Pointing Budget** card on the Dashboard:
+   - Review the RSS error tree
+   - Identify the largest contributor
+   - Verify the total is within your pointing requirement
+3. **Dashboard AOCS KPI:**
+   - Pointing accuracy achieved
+   - Margin to requirement
+   - AOCS power demand by mode
+4. **Equipment Browser (if time permits):**
+   - Browse reaction wheels: compare mass, torque, momentum, cost
+   - Browse star trackers: compare accuracy, mass, FOV
+
+### Worksheet 3.2 Tasks
+
+1. Select AOCS architecture and justify based on pointing requirement
+2. Calculate at least 2 disturbance torques for your orbit and spacecraft
+3. Size the reaction wheel (torque and momentum storage)
+4. Complete the pointing error budget table (RSS)
+5. Verify margin to pointing requirement
 
 ---
 
@@ -227,9 +280,12 @@ Is data rate < 400 Mbps?
 
 | Topic | Key Takeaway |
 |-------|-------------|
-| Optical sizing | GSD = max(diffraction, pixel); aperture drives mass and power |
-| Non-optical | Comms: EIRP -> antenna; SAR: resolution -> antenna area; AIS: passive VHF receive |
-| Link budget | EIRP - FSPL + G/T - k - 10log(Rb) - Eb/N0 - impl >= 3 dB |
-| FSPL | Increases 6 dB per octave of frequency; increases 6 dB per doubling of distance |
-| Band selection | Design constraint -- affects equipment, cost, data policy, licensing timeline |
-| SpaceCDF | Spectrum Selector -> equipment filtering; Link Budget tab for detailed analysis |
+| AD vs AC | Determination = know orientation (sensors); Control = change orientation (actuators) |
+| Architecture selection | Driven by pointing requirement: MTQ for > 2 deg; RW+ST for < 0.1 deg |
+| Disturbance torques | Gravity gradient, aero, SRP, magnetic dipole; magnetic dominates for CubeSats |
+| RW sizing | Torque >= 2x disturbance; momentum storage >= half-orbit accumulation |
+| MTQ sizing | Desaturation torque must exceed disturbance accumulation rate |
+| Pointing budget | RSS of 5--7 independent sources; alignment knowledge typically dominates |
+| Budget-driven design | Improve the dominant error source, not the smallest one |
+| Redundancy | 4-wheel (3+1 skew) provides single-fault tolerance for 3-axis control |
+| Momentum management | MTQs dump momentum against Earth's B-field; ~once per orbit |

@@ -34,6 +34,7 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query
 
 from ..services.session_manager import get_session_manager
+from ..db.write_queue import get_persistence_failures
 
 logger = logging.getLogger(__name__)
 
@@ -230,6 +231,12 @@ async def websocket_session(
                                 "convergence_count": session.convergence_count,
                             })
 
+                    # SCDF-035/105: Surface persistence failures if any
+                    failures = get_persistence_failures()
+                    if failures:
+                        for failure in failures:
+                            await _broadcast(session_id, failure)
+
             elif msg_type == "request_convergence":
                 convergence_result = await mgr.run_convergence(session_id)
                 await _broadcast(session_id, {
@@ -239,6 +246,66 @@ async def websocket_session(
                     "cascade_rounds": convergence_result.get("cascade_rounds", 0),
                     "time_ms": convergence_result.get("total_time_ms", 0),
                     "triggered_by": position_id,
+                })
+
+            # ─── Model-centric element mutations (broadcast to all clients) ───
+            elif msg_type == "element_create":
+                from .elements import _elements
+                from uuid import uuid4
+                el_data = msg.get("element", {})
+                el_id = uuid4().hex
+                element = {"id": el_id, "study_id": msg.get("study_id", ""), **el_data, "version": 1, "deleted_at": None}
+                _elements[el_id] = element
+                await _broadcast(session_id, {
+                    "type": "element_created", "element": element,
+                    "actor": position_id, "timestamp": datetime.now(timezone.utc).isoformat(),
+                })
+
+            elif msg_type == "element_update":
+                from .elements import _elements
+                el_id = msg.get("element_id")
+                changes = msg.get("changes", {})
+                version = msg.get("version", 0)
+                el = _elements.get(el_id)
+                if el and el["version"] == version:
+                    old_values = {}
+                    for k, v in changes.items():
+                        old_values[k] = el.get(k)
+                        el[k] = v
+                    el["version"] += 1
+                    await _broadcast(session_id, {
+                        "type": "element_updated", "element_id": el_id,
+                        "changes": {k: [old_values.get(k), v] for k, v in changes.items()},
+                        "actor": position_id, "timestamp": datetime.now(timezone.utc).isoformat(),
+                    })
+                elif el:
+                    await _send(websocket, {
+                        "type": "conflict_rejected", "element_id": el_id,
+                        "your_version": version, "current_version": el["version"],
+                        "current_state": el,
+                    })
+
+            elif msg_type == "element_delete":
+                from .elements import _elements
+                el_id = msg.get("element_id")
+                el = _elements.get(el_id)
+                if el:
+                    el["deleted_at"] = datetime.now(timezone.utc).isoformat()
+                    await _broadcast(session_id, {
+                        "type": "element_deleted", "element_id": el_id,
+                        "actor": position_id, "timestamp": datetime.now(timezone.utc).isoformat(),
+                    })
+
+            elif msg_type == "interface_create":
+                from .elements import _interfaces
+                from uuid import uuid4
+                iface_data = msg.get("interface", {})
+                iface_id = uuid4().hex
+                iface = {"id": iface_id, "study_id": msg.get("study_id", ""), **iface_data, "version": 1, "deleted_at": None, "status": "defined", "criticality": "standard"}
+                _interfaces[iface_id] = iface
+                await _broadcast(session_id, {
+                    "type": "interface_created", "interface": iface,
+                    "actor": position_id, "timestamp": datetime.now(timezone.utc).isoformat(),
                 })
 
             else:

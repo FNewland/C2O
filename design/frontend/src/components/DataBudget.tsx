@@ -3,12 +3,14 @@
  *
  * Shows: generation rate → storage capacity → downlink capacity → latency.
  */
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useDesignStore } from '../stores/designStore'
 import { useActiveParameters } from '../hooks/useActiveParameters'
+import { useApplyToDesign } from '../hooks/useApplyToDesign'
 
 export function DataBudget() {
   const reqs = useDesignStore(s => s.requirements)
+  const setParam = useDesignStore(s => s.setParameter)
   const params = useActiveParameters()
   const get = (id: string) => { const p = params[id]; return p && typeof p.value === 'number' ? p.value : 0 }
 
@@ -44,7 +46,21 @@ export function DataBudget() {
     }
   }, [reqs, params])
 
+  // Values pushed to design store via Apply button (not auto — would cause infinite loop
+  // since setParam → store change → params change → pipeline recompute → setParam...)
+
   const p = pipeline
+  const [applied, setApplied] = useState(false)
+
+  const apply = useApplyToDesign({
+    events: [
+      { kind: 'parameter_override', target_id: 'data.storage_gb', new_value: p.storage.capacity_gb },
+      { kind: 'parameter_override', target_id: 'link.downlink_data_rate_mbps', new_value: p.downlink.rate_mbps },
+      { kind: 'parameter_override', target_id: 'link.contact_min_per_day', new_value: p.downlink.contact_min },
+    ],
+    correlation_id: 'data-budget',
+    rationale: 'Apply data pipeline budget parameters',
+  })
 
   return (
     <div className="card">
@@ -83,6 +99,11 @@ export function DataBudget() {
           </span>
         )}
       </div>
+
+      <button className="btn" onClick={async () => { await apply(); setApplied(true); setTimeout(() => setApplied(false), 2000) }}
+        style={{ marginTop: '0.5rem', width: '100%', background: applied ? '#10b981' : '#3b82f6', fontSize: '0.78rem' }}>
+        {applied ? 'Applied — reconverging...' : 'Apply to Design'}
+      </button>
     </div>
   )
 }

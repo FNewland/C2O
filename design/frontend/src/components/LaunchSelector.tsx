@@ -6,6 +6,7 @@
  */
 import { useState, useEffect } from 'react'
 import { useDesignStore } from '../stores/designStore'
+import { useApplyToDesign } from '../hooks/useApplyToDesign'
 
 interface LaunchProvider {
   id: string; name: string; type: string; vehicle: string; orbit: string
@@ -45,6 +46,7 @@ export function LaunchSelector() {
       .finally(() => setLoading(false))
   }, [])
 
+  const setParam = useDesignStore(s => s.setParameter)
   const setRequirements = useDesignStore(s => s.setRequirements)
   const handleSelect = (provider: LaunchProvider) => {
     setSelectedId(provider.id)
@@ -52,10 +54,28 @@ export function LaunchSelector() {
     const usableMass = provider.capacity_kg * 0.85 // 85% of capacity after deployer
     setRequirements({ target_mass_kg: usableMass })
     useDesignStore.setState({ selectedLaunchProvider: provider.id })
+    // Immediately write selection constraints to design store
+    setParam('launch.capacity_kg', provider.capacity_kg, 'launch-selector')
+    setParam('launch.usable_mass_kg', usableMass, 'launch-selector')
+    setParam('launch.price_usd', provider.price_usd, 'launch-selector')
     markStale('launch')
   }
 
   const fitsCapacity = (p: LaunchProvider) => dryMass * 1.3 <= p.capacity_kg // 30% margin for wet mass
+
+  const [applied, setApplied] = useState(false)
+
+  const selectedProvider = providers.find(p => p.id === selectedId)
+  const apply = useApplyToDesign({
+    events: selectedProvider ? [
+      { kind: 'launch_vehicle_selection' as any, target_id: 'launch.provider', new_value: selectedProvider.id },
+      { kind: 'parameter_override', target_id: 'launch.capacity_kg', new_value: selectedProvider.capacity_kg },
+      { kind: 'parameter_override', target_id: 'launch.usable_mass_kg', new_value: selectedProvider.capacity_kg * 0.85 },
+      { kind: 'parameter_override', target_id: 'launch.price_usd', new_value: selectedProvider.price_usd },
+    ] : [],
+    correlation_id: 'launch-selector',
+    rationale: selectedProvider ? `Selected launch provider: ${selectedProvider.name}` : 'No provider selected',
+  })
 
   return (
     <div className="card">
@@ -106,6 +126,11 @@ export function LaunchSelector() {
           })}
         </div>
       )}
+
+      <button className="btn" onClick={async () => { await apply(); setApplied(true); setTimeout(() => setApplied(false), 2000) }}
+        style={{ marginTop: '0.5rem', width: '100%', background: applied ? '#10b981' : '#3b82f6', fontSize: '0.78rem' }}>
+        {applied ? 'Applied — reconverging...' : 'Apply to Design'}
+      </button>
     </div>
   )
 }

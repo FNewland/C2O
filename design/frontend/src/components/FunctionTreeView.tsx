@@ -71,7 +71,7 @@ const DOMAIN_OPTIONS = [
 ]
 
 export function FunctionTreeView() {
-  const missionType = useDesignStore(s => s.requirements.mission_type)
+  const missionType = useDesignStore(s => s.requirements?.mission_type ?? 'earth_observation')
   const [functions, setFunctionsLocal] = useState<FunctionNode[]>(() => getDemoFunctions(missionType))
   // Sync functions to store for cross-component access (requirement linking)
   const setFunctions = (updater: FunctionNode[] | ((prev: FunctionNode[]) => FunctionNode[])) => {

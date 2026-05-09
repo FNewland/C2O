@@ -13,6 +13,15 @@ logger = logging.getLogger(__name__)
 
 _queue: asyncio.Queue | None = None
 _worker_task: asyncio.Task | None = None
+_persistence_failures: list[dict] = []  # SCDF-035: surfaced failures
+
+
+def get_persistence_failures() -> list[dict]:
+    """Return and clear any persistence failures since last check."""
+    global _persistence_failures
+    failures = _persistence_failures[:]
+    _persistence_failures = []
+    return failures
 
 
 async def start_worker() -> None:
@@ -125,3 +134,9 @@ async def _flush_batch(batch: list) -> None:
                 await repo.save_study(item[1])
         except Exception as e:
             logger.error("Failed to persist %s: %s", item[0], e)
+            _persistence_failures.append({
+                "type": "persistence_warning",
+                "failed_kind": item[0],
+                "error": str(e),
+                "retry_recommended": True,
+            })

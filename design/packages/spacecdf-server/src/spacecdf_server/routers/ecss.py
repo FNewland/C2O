@@ -44,7 +44,7 @@ async def check_margins(study_id: str) -> dict:
     """
     from .engineering import _get_design_state
 
-    _, params_dict, _ = await _get_design_state(study_id=study_id)
+    params_dict, _, _ = await _get_design_state(study_id=study_id)
 
     store = get_study_store()
     study = store.get(study_id)
@@ -134,6 +134,10 @@ async def generate_did(did_type: str, study_id: str | None = None) -> dict:
     design_params: dict = {}
     interfaces: list[dict] = []
     conops: dict = {}
+    elements: list[dict] = []
+    mission_phases: list[dict] = []
+    ground_stations: list[dict] = []
+    equipment: list[dict] = []
 
     if study_id:
         study = store.get(study_id)
@@ -144,30 +148,55 @@ async def generate_did(did_type: str, study_id: str | None = None) -> dict:
                 mn = study.mission_need
                 mission_need = {
                     "problem_statement": getattr(mn, "problem_statement", ""),
-                    "objectives": [{"text": o.text, "priority": o.priority, "measurable_criterion": getattr(o, "measurable_criterion", "")} for o in getattr(mn, "objectives", [])],
-                    "stakeholders": [{"name": s.name, "role": getattr(s, "role", "")} for s in getattr(mn, "stakeholders", [])],
+                    "operational_context": getattr(mn, "operational_context", ""),
+                    "objectives": [{"id": getattr(o, "id", ""), "text": o.text, "priority": o.priority, "type": getattr(o, "type", ""), "measurable_criterion": getattr(o, "measurable_criterion", "")} for o in getattr(mn, "objectives", [])],
+                    "stakeholders": [{"name": s.name, "role": getattr(s, "role", ""), "needs": getattr(s, "needs", [])} for s in getattr(mn, "stakeholders", [])],
                 }
             requirements = [
-                {"id": r.id, "text": r.text, "domain": r.domain, "category": getattr(r, "category", ""), "verification_method": r.verification_method.value}
+                {"id": r.id, "text": r.text, "domain": r.domain, "level": getattr(r, "level", "system"),
+                 "category": getattr(r, "category", ""), "verification_method": r.verification_method.value,
+                 "threshold": getattr(r, "threshold", None), "operator": getattr(r, "operator", ""),
+                 "unit": getattr(r, "unit", ""), "objective_id": getattr(r, "objective_id", "")}
                 for r in getattr(study, "requirements", [])
             ]
 
-    # Generate based on type
+        # Load element tree and interfaces for this study
+        from .elements import _elements, _interfaces
+        elements = [e for e in _elements.values() if e.get("study_id") == study_id and not e.get("deleted_at")]
+        interfaces = list(_interfaces.values())
+        equipment = [e for e in elements if e.get("element_type") == "component"]
+
+    # Generate based on type — pass all available data (generators use **kwargs)
     _, gen_fn = DID_TYPES[did_type]
+    common = dict(study_name=study_name, phase_id=phase_id)
 
     if did_type == "mrd":
-        return gen_fn(study_name=study_name, mission_need=mission_need, requirements=requirements, phase_id=phase_id)
+        return gen_fn(**common, mission_need=mission_need, requirements=requirements)
     elif did_type == "ts":
-        return gen_fn(study_name=study_name, requirements=requirements, design_params=design_params, phase_id=phase_id)
+        return gen_fn(**common, requirements=requirements, design_params=design_params,
+                       mission_phases=mission_phases, interfaces=interfaces)
     elif did_type == "ird":
-        return gen_fn(study_name=study_name, interfaces=interfaces, phase_id=phase_id)
+        return gen_fn(**common, interfaces=interfaces, elements=elements)
     elif did_type == "semp":
-        return gen_fn(study_name=study_name, phase_id=phase_id)
+        # Use the enriched SEMP generator if available
+        try:
+            from ..services.semp_generator import generate_semp as gen_semp_full
+            # Build study_data from available info
+            study_data: dict = {
+                "requirements": {"name": study_name},
+                "mission_need": mission_need,
+                "generated_requirements": requirements,
+                "parameters": design_params,
+            }
+            return gen_semp_full(study_data=study_data, semp_answers={})
+        except Exception:
+            return gen_fn(**common)
     elif did_type == "rmp":
-        return gen_fn(study_name=study_name, phase_id=phase_id)
+        return gen_fn(**common, parameters=design_params)
     elif did_type == "conops":
-        return gen_fn(study_name=study_name, mission_need=mission_need, conops=conops, phase_id=phase_id)
+        return gen_fn(**common, mission_need=mission_need, conops=conops,
+                       ground_stations=ground_stations)
     elif did_type == "test_plan":
-        return gen_fn(study_name=study_name, requirements=requirements, phase_id=phase_id)
+        return gen_fn(**common, requirements=requirements, equipment=equipment)
     else:
         raise HTTPException(status_code=400, detail=f"Generator not implemented for {did_type}")

@@ -381,3 +381,93 @@ def _extract_unit(text: str) -> str:
     import re
     match = re.search(r'[\d.]+\s*([a-zA-Z/%°]+)', text)
     return match.group(1) if match else ""
+
+
+def split_compound_requirement(req: dict[str, Any]) -> list[dict[str, Any]]:
+    """Split a compound requirement into atomic statements.
+
+    Detects requirements that contain multiple 'shall' clauses (compound),
+    conjunction-joined obligations ('and shall', '; shall'), or excessive
+    length (>200 chars with multiple verbs). Returns a list of atomic
+    requirements derived from the original.
+
+    Per ECSS-E-ST-10C §5.2.4: "Each requirement shall express a single thought."
+    Per NASA SEH Appendix C: "A good requirement addresses one thing."
+    """
+    import re
+    import uuid
+
+    text = req.get("text", "")
+    if not text:
+        return [req]
+
+    # Split strategies (in priority order)
+    clauses: list[str] = []
+
+    # Strategy 1: Multiple "shall" separated by "and shall", "; shall", ", and shall"
+    # e.g. "The system shall do X and shall do Y"
+    shall_split = re.split(
+        r'(?:,?\s+and\s+shall\s+|;\s*(?:the\s+\w+\s+)?shall\s+|,\s+shall\s+)',
+        text, flags=re.IGNORECASE
+    )
+    if len(shall_split) > 1:
+        # First clause already has subject + shall, subsequent need it added back
+        subject_match = re.match(r'(.*?\bshall)\s+', text, re.IGNORECASE)
+        subject_prefix = subject_match.group(1) + " " if subject_match else "The system shall "
+        clauses = [shall_split[0].strip()]
+        for part in shall_split[1:]:
+            part = part.strip().rstrip('.')
+            if part:
+                # If part doesn't start with subject+shall, add it
+                if not re.match(r'.*\bshall\b', part, re.IGNORECASE):
+                    clauses.append(f"{subject_prefix}{part}")
+                else:
+                    clauses.append(part)
+
+    # Strategy 2: Semicolons separating distinct obligations
+    if not clauses or len(clauses) <= 1:
+        semi_split = text.split(';')
+        if len(semi_split) > 1 and all(len(s.strip()) > 15 for s in semi_split):
+            subject_match = re.match(r'(.*?\bshall)\s+', text, re.IGNORECASE)
+            subject_prefix = subject_match.group(1) + " " if subject_match else "The system shall "
+            clauses = []
+            for part in semi_split:
+                part = part.strip().rstrip('.')
+                if part:
+                    if 'shall' not in part.lower():
+                        clauses.append(f"{subject_prefix}{part}")
+                    else:
+                        clauses.append(part)
+
+    # Strategy 3: Very long requirement (>200 chars) with "and" joining verb phrases
+    if (not clauses or len(clauses) <= 1) and len(text) > 200:
+        # Split on " and " that precedes a verb (not in "less than and" patterns)
+        and_split = re.split(r',\s+and\s+(?=[a-z])', text)
+        if len(and_split) > 1:
+            subject_match = re.match(r'(.*?\bshall)\s+', text, re.IGNORECASE)
+            subject_prefix = subject_match.group(1) + " " if subject_match else "The system shall "
+            clauses = [and_split[0].strip()]
+            for part in and_split[1:]:
+                part = part.strip().rstrip('.')
+                if part and len(part) > 20:
+                    clauses.append(f"{subject_prefix}{part}")
+
+    # If no split was needed, return original
+    if len(clauses) <= 1:
+        return [req]
+
+    # Generate atomic requirements from clauses
+    results: list[dict[str, Any]] = []
+    base_id = req.get("id", "REQ")
+    for i, clause in enumerate(clauses):
+        if not clause.strip():
+            continue
+        child = dict(req)
+        child["id"] = f"{base_id}-{chr(65 + i)}"  # REQ-SYS-001-A, -B, -C
+        child["text"] = clause.strip().rstrip('.') + '.'  # Normalise period
+        child["parent_id"] = base_id
+        child["status"] = "suggested"
+        # Preserve traceability from parent
+        results.append(child)
+
+    return results

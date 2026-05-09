@@ -471,3 +471,65 @@ def _monte_carlo_risk(est: CostEstimate, n_samples: int = 1000) -> tuple[float, 
     p70 = samples[int(n_samples * 0.70)]
     p80 = samples[int(n_samples * 0.80)]
     return round(p50, 0), round(p70, 0), round(p80, 0)
+
+
+# === SCDF-251: WBS Template Library ===
+
+WBS_TEMPLATES: dict[str, list[dict[str, str]]] = {
+    "nano": [
+        {"wbs_id": "1.0", "name": "Programme Management", "phase": "All"},
+        {"wbs_id": "2.0", "name": "Systems Engineering", "phase": "All"},
+        {"wbs_id": "3.0", "name": "Payload", "phase": "B-C"},
+        {"wbs_id": "4.0", "name": "Bus Procurement (COTS)", "phase": "C"},
+        {"wbs_id": "5.0", "name": "Integration & Test", "phase": "C-D"},
+        {"wbs_id": "6.0", "name": "Flight Software", "phase": "B-D"},
+        {"wbs_id": "7.0", "name": "Ground Segment", "phase": "C-D"},
+        {"wbs_id": "8.0", "name": "Launch Services", "phase": "D"},
+        {"wbs_id": "9.0", "name": "Operations (3yr)", "phase": "E"},
+    ],
+    "micro": [
+        {"wbs_id": "1.0", "name": "Programme Management", "phase": "All"},
+        {"wbs_id": "2.0", "name": "Systems Engineering", "phase": "All"},
+        {"wbs_id": "3.0", "name": "Payload Development", "phase": "B-C"},
+        {"wbs_id": "4.0", "name": "Platform Development", "phase": "B-C"},
+        {"wbs_id": "4.1", "name": "  EPS", "phase": "B-C"},
+        {"wbs_id": "4.2", "name": "  AOCS", "phase": "B-C"},
+        {"wbs_id": "4.3", "name": "  TTC", "phase": "B-C"},
+        {"wbs_id": "4.4", "name": "  Thermal", "phase": "B-C"},
+        {"wbs_id": "4.5", "name": "  Structure", "phase": "B-C"},
+        {"wbs_id": "4.6", "name": "  Propulsion", "phase": "B-C"},
+        {"wbs_id": "5.0", "name": "Assembly, Integration & Test", "phase": "C-D"},
+        {"wbs_id": "6.0", "name": "Flight & Ground Software", "phase": "B-D"},
+        {"wbs_id": "7.0", "name": "Ground Segment", "phase": "C-D"},
+        {"wbs_id": "8.0", "name": "Launch Campaign", "phase": "D"},
+        {"wbs_id": "9.0", "name": "Operations", "phase": "E"},
+    ],
+    "small": [
+        {"wbs_id": "1.0", "name": "Programme Management", "phase": "All"},
+        {"wbs_id": "2.0", "name": "Systems Engineering & PA/QA", "phase": "All"},
+        {"wbs_id": "3.0", "name": "Payload Instrument", "phase": "A-C"},
+        {"wbs_id": "4.0", "name": "Spacecraft Bus", "phase": "B-D"},
+        {"wbs_id": "4.1", "name": "  Structure & Mechanisms", "phase": "B-C"},
+        {"wbs_id": "4.2", "name": "  Power Subsystem", "phase": "B-C"},
+        {"wbs_id": "4.3", "name": "  AOCS/GNC", "phase": "B-C"},
+        {"wbs_id": "4.4", "name": "  TT&C", "phase": "B-C"},
+        {"wbs_id": "4.5", "name": "  Data Handling", "phase": "B-C"},
+        {"wbs_id": "4.6", "name": "  Thermal Control", "phase": "B-C"},
+        {"wbs_id": "4.7", "name": "  Propulsion", "phase": "B-C"},
+        {"wbs_id": "4.8", "name": "  Harness", "phase": "C"},
+        {"wbs_id": "5.0", "name": "AIT (Assembly Integration Test)", "phase": "C-D"},
+        {"wbs_id": "6.0", "name": "Flight Software", "phase": "B-D"},
+        {"wbs_id": "7.0", "name": "Ground Segment", "phase": "B-D"},
+        {"wbs_id": "7.1", "name": "  Mission Control", "phase": "C-D"},
+        {"wbs_id": "7.2", "name": "  Ground Stations", "phase": "C-D"},
+        {"wbs_id": "7.3", "name": "  Data Processing", "phase": "C-D"},
+        {"wbs_id": "8.0", "name": "Launch Services", "phase": "D"},
+        {"wbs_id": "9.0", "name": "Mission Operations", "phase": "E"},
+        {"wbs_id": "10.0", "name": "Disposal", "phase": "F"},
+    ],
+}
+
+
+def get_wbs_template(spacecraft_class: str) -> list[dict[str, str]]:
+    """Return WBS template for the given spacecraft class."""
+    return WBS_TEMPLATES.get(spacecraft_class, WBS_TEMPLATES["nano"])

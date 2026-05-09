@@ -1,11 +1,10 @@
 import { useState } from 'react'
 import { useDesignStore, type DesignParam } from '../stores/designStore'
 import { useSessionStore } from '../stores/sessionStore'
-import { useActiveParameters, useCanEditParameter, useHasActiveSession } from '../hooks/useActiveParameters'
-import { MassWaterfall } from './MassWaterfall'
-import { PowerProfile } from './PowerProfile'
-import { SustainabilityCard } from './SustainabilityCard'
-import { BudgetComparison } from './BudgetComparison'
+import { useCanEditParameter, useHasActiveSession } from '../hooks/useActiveParameters'
+import { SVGWaterfall } from '../charts/SVGWaterfall'
+import { SVGBarChart } from '../charts/SVGBarChart'
+import { BudgetGauge } from '../charts/BudgetGauge'
 import { MarginEnforcement } from './MarginEnforcement'
 import { SpectrumSelector } from './SpectrumSelector'
 import { LaunchSelector } from './LaunchSelector'
@@ -281,13 +280,11 @@ function CommunityCard({ parameters: p }: { parameters: Record<string, DesignPar
 // === MAIN DASHBOARD ===
 export function MissionDashboard() {
   const { result, studyId } = useDesignStore()
-  const activeParams = useActiveParameters()
 
-  // Show dashboard if we have parameters from either store
-  const hasParams = Object.keys(activeParams).length > 0
-  if (!result && !hasParams) return null
+  // Use result.parameters directly (stable reference) to avoid recharts infinite loop
+  if (!result?.parameters) return null
 
-  const p = hasParams ? activeParams : (result?.parameters as Record<string, DesignParam>) || {}
+  const p = result.parameters as Record<string, DesignParam>
   const get = (id: string) => { const v = p[id]; return v && typeof v.value === 'number' ? v.value : 0 }
   const getStr = (id: string) => { const v = p[id]; return v ? String(v.value) : '—' }
 
@@ -317,21 +314,56 @@ export function MissionDashboard() {
         <KpiCard label="Conflicts" value={`${conflictCount}`} status={conflictCount === 0 ? 'green' : criticalCount > 0 ? 'red' : 'amber'} />
       </div>
 
-      {/* Row 2: Charts */}
+      {/* Row 2: Charts (pure SVG — no recharts) */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '0.75rem', marginBottom: '1rem' }}>
-        <MassWaterfall parameters={p} />
-        <PowerProfile parameters={p} />
+        <div className="card">
+          <SVGWaterfall
+            title="Mass Breakdown"
+            items={[
+              { label: 'Payload', value: get('payload.mass_kg') || (result?.parameters as any)?.['payload.mass_kg']?.value || 0, color: '#10b981' },
+              { label: 'EPS', value: get('power.eps_mass_kg'), color: '#f59e0b' },
+              { label: 'AOCS', value: get('aocs.mass_kg'), color: '#06b6d4' },
+              { label: 'Comms', value: get('link.ttc_mass_kg'), color: '#ec4899' },
+              { label: 'Thermal', value: get('thermal.tcs_mass_kg'), color: '#ef4444' },
+              { label: 'Structure', value: get('structure.mass_kg'), color: '#84cc16' },
+            ].filter(i => i.value > 0)}
+            allocation={requirements.target_mass_kg || 6}
+            unit="kg"
+            width={380}
+            height={200}
+          />
+        </div>
+        <div className="card">
+          <SVGBarChart
+            title="Power Profile"
+            data={[
+              { label: 'Sun Demand', value: get('power.total_sunlight_w'), color: '#f59e0b' },
+              { label: 'Eclipse', value: get('power.total_eclipse_w'), color: '#6b7280' },
+              { label: 'SA BOL', value: get('power.sa_power_bol_w'), color: '#10b981' },
+              { label: 'SA EOL', value: get('power.sa_power_eol_w'), color: '#3b82f6' },
+            ].filter(d => d.value > 0)}
+            unit=" W"
+            width={380}
+            height={200}
+          />
+        </div>
       </div>
 
-      {/* Row 3: Analysis Cards */}
+      {/* Row 3: Budget Gauges */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.5rem', marginBottom: '1rem' }}>
+        <BudgetGauge label="Mass" value={get('mass.dry_mass_kg')} allocation={requirements.target_mass_kg || 6} unit="kg" />
+        <BudgetGauge label="Power" value={get('power.total_sunlight_w')} allocation={get('power.sa_power_eol_w') || 15} unit="W" />
+        <BudgetGauge label="TTC Link" value={3} allocation={get('link.ttc_margin_db') || 3} unit="dB" />
+        <BudgetGauge label="Cost" value={get('cost.total_meur') * 1000} allocation={(requirements.target_cost_meur || 2) * 1000} unit="kEUR" />
+      </div>
+
+      {/* Row 4: Analysis Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '0.75rem', marginBottom: '0.75rem' }}>
-        <SustainabilityCard parameters={p} />
         <RadiationCard parameters={p} />
         <VolumeReliabilityCard parameters={p} />
       </div>
 
-      {/* Row 4: Budget Breakdown + Margins */}
-      <BudgetComparison />
+      {/* Row 5: Margins */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '0.75rem', marginBottom: '0.75rem' }}>
         <MarginEnforcement studyId={studyId} />
         <SpectrumSelector />

@@ -8,7 +8,7 @@
  *
  * Per ECSS-M-ST-80C (Risk Management), NPR 8000.4, ECSS-M-ST-10C (Project Management).
  */
-import { useState } from 'react'
+import React, { useState } from 'react'
 
 type PMTab = 'risk' | 'schedule' | 'wbs'
 
@@ -30,6 +30,9 @@ interface WorkPackage {
   responsible: string; effort_hours: number
   status: 'not_started' | 'in_progress' | 'complete'
   phase: string
+  start_date: string  // ISO date
+  end_date: string    // ISO date
+  depends_on: string  // WP or milestone ID
 }
 
 const RISK_COLORS: Record<number, string> = {
@@ -68,22 +71,23 @@ const DEFAULT_MILESTONES: Milestone[] = [
 ]
 
 const DEFAULT_WBS: WorkPackage[] = [
-  { id: 'WP-1.0', name: 'Programme Management', description: 'Project planning, reporting, reviews', responsible: 'project_manager', effort_hours: 200, status: 'in_progress', phase: 'All' },
-  { id: 'WP-2.0', name: 'Systems Engineering', description: 'Requirements, architecture, budgets, V&V', responsible: 'systems_engineer', effort_hours: 300, status: 'in_progress', phase: 'All' },
-  { id: 'WP-3.0', name: 'Payload Development', description: 'Instrument design, build, calibration', responsible: 'payload_lead', effort_hours: 400, status: 'not_started', phase: 'B-C' },
-  { id: 'WP-4.0', name: 'Bus Procurement', description: 'COTS component procurement and acceptance', responsible: 'systems_engineer', effort_hours: 100, status: 'not_started', phase: 'C' },
-  { id: 'WP-5.0', name: 'Integration & Test', description: 'Assembly, functional test, environmental test', responsible: 'structures_engineer', effort_hours: 250, status: 'not_started', phase: 'C-D' },
-  { id: 'WP-6.0', name: 'Software Development', description: 'FSW, GSW, ops procedures', responsible: 'software_engineer', effort_hours: 350, status: 'not_started', phase: 'B-D' },
-  { id: 'WP-7.0', name: 'Ground Segment', description: 'Station setup, MCS, data pipeline', responsible: 'ground_segment', effort_hours: 150, status: 'not_started', phase: 'C-D' },
-  { id: 'WP-8.0', name: 'Launch Campaign', description: 'Launch procurement, integration, shipping', responsible: 'project_manager', effort_hours: 100, status: 'not_started', phase: 'D' },
-  { id: 'WP-9.0', name: 'Operations', description: 'LEOP, commissioning, nominal ops', responsible: 'mission_ops', effort_hours: 500, status: 'not_started', phase: 'E' },
+  { id: 'WP-1.0', name: 'Programme Management', description: 'Project planning, reporting, reviews', responsible: 'project_manager', effort_hours: 200, status: 'in_progress', phase: 'All', start_date: '', end_date: '', depends_on: '' },
+  { id: 'WP-2.0', name: 'Systems Engineering', description: 'Requirements, architecture, budgets, V&V', responsible: 'systems_engineer', effort_hours: 300, status: 'in_progress', phase: 'All', start_date: '', end_date: '', depends_on: '' },
+  { id: 'WP-3.0', name: 'Payload Development', description: 'Instrument design, build, calibration', responsible: 'payload_lead', effort_hours: 400, status: 'not_started', phase: 'B-C', start_date: '', end_date: '', depends_on: 'WP-2.0' },
+  { id: 'WP-4.0', name: 'Bus Procurement', description: 'COTS component procurement and acceptance', responsible: 'systems_engineer', effort_hours: 100, status: 'not_started', phase: 'C', start_date: '', end_date: '', depends_on: 'WP-2.0' },
+  { id: 'WP-5.0', name: 'Integration & Test', description: 'Assembly, functional test, environmental test', responsible: 'structures_engineer', effort_hours: 250, status: 'not_started', phase: 'C-D', start_date: '', end_date: '', depends_on: 'WP-3.0' },
+  { id: 'WP-6.0', name: 'Software Development', description: 'FSW, GSW, ops procedures', responsible: 'software_engineer', effort_hours: 350, status: 'not_started', phase: 'B-D', start_date: '', end_date: '', depends_on: 'WP-2.0' },
+  { id: 'WP-7.0', name: 'Ground Segment', description: 'Station setup, MCS, data pipeline', responsible: 'ground_segment', effort_hours: 150, status: 'not_started', phase: 'C-D', start_date: '', end_date: '', depends_on: 'WP-2.0' },
+  { id: 'WP-8.0', name: 'Launch Campaign', description: 'Launch procurement, integration, shipping', responsible: 'project_manager', effort_hours: 100, status: 'not_started', phase: 'D', start_date: '', end_date: '', depends_on: 'WP-5.0' },
+  { id: 'WP-9.0', name: 'Operations', description: 'LEOP, commissioning, nominal ops', responsible: 'mission_ops', effort_hours: 500, status: 'not_started', phase: 'E', start_date: '', end_date: '', depends_on: 'WP-8.0' },
 ]
 
 export function ProjectManagement() {
-  const [activeTab, setActiveTab] = useState<PMTab>('risk')
+  const [activeTab, setActiveTab] = useState<PMTab>('wbs')
   const [risks, setRisks] = useState<Risk[]>(DEFAULT_RISKS)
-  const [milestones] = useState<Milestone[]>(DEFAULT_MILESTONES)
-  const [wbs] = useState<WorkPackage[]>(DEFAULT_WBS)
+  const [milestones, setMilestones] = useState<Milestone[]>(DEFAULT_MILESTONES)
+  const [wbs, setWbs] = useState<WorkPackage[]>(DEFAULT_WBS)
+  const [expandedWp, setExpandedWp] = useState<string | null>(null)
 
   return (
     <div style={{ padding: '1rem', overflowY: 'auto', height: '100%' }}>
@@ -95,9 +99,9 @@ export function ProjectManagement() {
       {/* Tab selector */}
       <div style={{ display: 'flex', gap: '0.3rem', marginBottom: '1rem' }}>
         {[
-          { id: 'risk' as PMTab, label: 'Risk Matrix' },
-          { id: 'schedule' as PMTab, label: 'Schedule' },
           { id: 'wbs' as PMTab, label: 'WBS' },
+          { id: 'schedule' as PMTab, label: 'Schedule' },
+          { id: 'risk' as PMTab, label: 'Risk Matrix' },
         ].map(t => (
           <button key={t.id} onClick={() => setActiveTab(t.id)} style={{
             padding: '0.3rem 0.75rem', fontSize: '0.78rem', borderRadius: '4px', cursor: 'pointer',
@@ -153,77 +157,242 @@ export function ProjectManagement() {
               {risks.map(r => (
                 <tr key={r.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                   <td style={{ ...td, fontFamily: 'monospace', fontSize: '0.65rem' }}>{r.id}</td>
-                  <td style={{ ...td, fontWeight: 500 }}>{r.title}</td>
-                  <td style={tdC}>{r.likelihood}</td>
-                  <td style={tdC}>{r.consequence}</td>
-                  <td style={{ ...tdC, color: getRiskColor(r.likelihood * r.consequence), fontWeight: 700 }}>{r.likelihood * r.consequence}</td>
-                  <td style={{ ...td, fontSize: '0.68rem', color: '#9ca3af' }}>{r.mitigation}</td>
+                  <td style={td}>
+                    <input value={r.title} onChange={e => setRisks(prev => prev.map(rr => rr.id === r.id ? { ...rr, title: e.target.value } : rr))}
+                      style={{ background: 'transparent', border: 'none', color: '#d1d5db', width: '100%', fontSize: '0.72rem', fontWeight: 500 }} />
+                  </td>
                   <td style={tdC}>
-                    <span style={{ fontSize: '0.6rem', padding: '0.1rem 0.3rem', borderRadius: '3px', background: r.status === 'closed' ? '#10b98122' : r.status === 'mitigating' ? '#3b82f622' : '#f59e0b22', color: r.status === 'closed' ? '#10b981' : r.status === 'mitigating' ? '#3b82f6' : '#f59e0b' }}>{r.status}</span>
+                    <input type="number" min={1} max={5} value={r.likelihood} onChange={e => setRisks(prev => prev.map(rr => rr.id === r.id ? { ...rr, likelihood: Number(e.target.value) } : rr))}
+                      style={{ width: '30px', textAlign: 'center', background: 'var(--bg-primary, #111827)', border: '1px solid #374151', borderRadius: '3px', color: '#d1d5db', fontSize: '0.72rem' }} />
+                  </td>
+                  <td style={tdC}>
+                    <input type="number" min={1} max={5} value={r.consequence} onChange={e => setRisks(prev => prev.map(rr => rr.id === r.id ? { ...rr, consequence: Number(e.target.value) } : rr))}
+                      style={{ width: '30px', textAlign: 'center', background: 'var(--bg-primary, #111827)', border: '1px solid #374151', borderRadius: '3px', color: '#d1d5db', fontSize: '0.72rem' }} />
+                  </td>
+                  <td style={{ ...tdC, color: getRiskColor(r.likelihood * r.consequence), fontWeight: 700 }}>{r.likelihood * r.consequence}</td>
+                  <td style={td}>
+                    <input value={r.mitigation} onChange={e => setRisks(prev => prev.map(rr => rr.id === r.id ? { ...rr, mitigation: e.target.value } : rr))}
+                      style={{ background: 'transparent', border: 'none', color: '#9ca3af', width: '100%', fontSize: '0.68rem' }} />
+                  </td>
+                  <td style={tdC}>
+                    <select value={r.status} onChange={e => setRisks(prev => prev.map(rr => rr.id === r.id ? { ...rr, status: e.target.value as Risk['status'] } : rr))}
+                      style={{ background: 'var(--bg-primary, #111827)', border: '1px solid #374151', borderRadius: '3px', color: r.status === 'closed' ? '#10b981' : r.status === 'mitigating' ? '#3b82f6' : '#f59e0b', fontSize: '0.6rem', padding: '0.1rem' }}>
+                      <option value="open">Open</option>
+                      <option value="mitigating">Mitigating</option>
+                      <option value="accepted">Accepted</option>
+                      <option value="closed">Closed</option>
+                    </select>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
+          <button onClick={() => setRisks(prev => [...prev, {
+            id: `R-${String(prev.length + 1).padStart(3, '0')}`, title: 'New risk', description: '',
+            likelihood: 2, consequence: 2, category: 'technical', owner: 'systems_engineer',
+            mitigation: '', status: 'open' as const,
+          }])} className="btn btn-sm" style={{ marginTop: '0.5rem', fontSize: '0.7rem', background: '#374151' }}>
+            + Add Risk
+          </button>
         </div>
       )}
 
-      {/* Schedule / Milestones */}
+      {/* Schedule / Gantt with editable dates + WBS items */}
       {activeTab === 'schedule' && (
         <div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
-            {milestones.map((m, i) => (
-              <div key={m.id} style={{
-                display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.4rem 0.6rem',
-                background: 'var(--bg-secondary, #1f2937)', borderRadius: '4px',
-                borderLeft: `3px solid ${m.status === 'complete' ? '#10b981' : m.status === 'in_progress' ? '#3b82f6' : '#374151'}`,
-              }}>
-                <span style={{ fontSize: '0.65rem', color: '#6b7280', fontFamily: 'monospace', width: '40px' }}>{m.id}</span>
-                <span style={{ fontSize: '0.6rem', padding: '0.1rem 0.3rem', borderRadius: '3px', background: '#374151', color: '#9ca3af' }}>{m.phase}</span>
-                <span style={{ flex: 1, fontSize: '0.78rem', fontWeight: 500 }}>{m.name}</span>
-                <span style={{
-                  fontSize: '0.6rem', padding: '0.1rem 0.3rem', borderRadius: '3px',
-                  background: m.status === 'complete' ? '#10b98122' : m.status === 'in_progress' ? '#3b82f622' : '#37415180',
-                  color: m.status === 'complete' ? '#10b981' : m.status === 'in_progress' ? '#3b82f6' : '#6b7280',
-                }}>{m.status}</span>
-              </div>
-            ))}
-          </div>
-          <div style={{ fontSize: '0.68rem', color: '#6b7280', marginTop: '0.5rem' }}>
-            Phase gates per ECSS-M-ST-10C / NASA NPR 7120.5. Edit dates and status to track progress.
+          <p style={{ fontSize: '0.72rem', color: '#9ca3af', marginBottom: '0.5rem' }}>
+            Milestones + work packages. Set dependencies between items (FS = Finish-to-Start, FF, SS, SF).
+          </p>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.72rem', marginBottom: '0.5rem' }}>
+            <thead>
+              <tr style={{ background: 'var(--bg-primary, #0a0e1a)' }}>
+                <th style={th}>ID</th><th style={th}>Item</th><th style={th}>Phase</th>
+                <th style={th}>Date</th><th style={th}>Depends On</th><th style={thC}>Status</th><th style={th}>Gantt</th>
+              </tr>
+            </thead>
+            <tbody>
+              {milestones.map((m, i) => {
+                const statusColor = m.status === 'complete' ? '#10b981' : m.status === 'in_progress' ? '#3b82f6' : '#6b7280'
+                // Simple Gantt: position based on index
+                const barLeft = (i / milestones.length) * 100
+                return (
+                  <tr key={m.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                    <td style={{ ...td, fontFamily: 'monospace', fontSize: '0.65rem' }}>{m.id}</td>
+                    <td style={{ ...td, fontWeight: 500 }}>{m.name}</td>
+                    <td style={{ ...td, fontSize: '0.65rem', color: '#9ca3af' }}>{m.phase}</td>
+                    <td style={td}>
+                      <input type="date" value={m.date}
+                        onChange={e => setMilestones(prev => prev.map(ms => ms.id === m.id ? { ...ms, date: e.target.value } : ms))}
+                        style={{ background: 'var(--bg-primary, #111827)', border: '1px solid #374151', borderRadius: '3px', color: '#d1d5db', fontSize: '0.68rem', padding: '0.1rem 0.3rem' }} />
+                    </td>
+                    <td style={td}>
+                      <select value={m.dependencies[0] || ''} onChange={e => setMilestones(prev => prev.map(ms => ms.id === m.id ? { ...ms, dependencies: e.target.value ? [e.target.value] : [] } : ms))}
+                        style={{ background: 'var(--bg-primary, #111827)', border: '1px solid #374151', borderRadius: '3px', color: '#6b7280', fontSize: '0.6rem', padding: '0.1rem', width: '70px' }}>
+                        <option value="">None</option>
+                        {milestones.filter(mm => mm.id !== m.id).map(mm => (
+                          <option key={mm.id} value={mm.id}>{mm.id} (FS)</option>
+                        ))}
+                      </select>
+                    </td>
+                    <td style={tdC}>
+                      <select value={m.status}
+                        onChange={e => setMilestones(prev => prev.map(ms => ms.id === m.id ? { ...ms, status: e.target.value as Milestone['status'] } : ms))}
+                        style={{ background: 'var(--bg-primary, #111827)', border: '1px solid #374151', borderRadius: '3px', color: statusColor, fontSize: '0.65rem', padding: '0.1rem' }}>
+                        <option value="planned">Planned</option>
+                        <option value="in_progress">In Progress</option>
+                        <option value="complete">Complete</option>
+                      </select>
+                    </td>
+                    <td style={{ ...td, width: '120px' }}>
+                      <div style={{ position: 'relative', height: '12px', background: '#1f2937', borderRadius: '2px' }}>
+                        <div style={{
+                          position: 'absolute', left: `${barLeft}%`, top: '2px', width: '8px', height: '8px',
+                          borderRadius: '50%', background: statusColor,
+                        }} />
+                        {i > 0 && (
+                          <div style={{
+                            position: 'absolute', left: `${((i - 1) / milestones.length) * 100}%`, top: '5px',
+                            width: `${(1 / milestones.length) * 100}%`, height: '2px', background: `${statusColor}60`,
+                          }} />
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
+              {/* WBS work packages in schedule */}
+              {wbs.map((wp, i) => (
+                <tr key={`wp-${wp.id}`} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', background: 'rgba(59,130,246,0.03)' }}>
+                  <td style={{ ...td, fontFamily: 'monospace', fontSize: '0.65rem', color: '#3b82f6' }}>{wp.id}</td>
+                  <td style={{ ...td, fontWeight: 500, color: '#93c5fd' }}>{wp.name}</td>
+                  <td style={{ ...td, fontSize: '0.65rem', color: '#9ca3af' }}>{wp.phase}</td>
+                  <td style={td}>—</td>
+                  <td style={td}>—</td>
+                  <td style={tdC}>
+                    <span style={{ fontSize: '0.6rem', padding: '0.1rem 0.3rem', borderRadius: '3px', background: wp.status === 'complete' ? '#10b98122' : wp.status === 'in_progress' ? '#3b82f622' : '#37415180', color: wp.status === 'complete' ? '#10b981' : wp.status === 'in_progress' ? '#3b82f6' : '#6b7280' }}>
+                      {wp.status.replace(/_/g, ' ')}
+                    </span>
+                  </td>
+                  <td style={td}>
+                    <div style={{ height: 12, background: '#1f2937', borderRadius: 2 }}>
+                      <div style={{ height: '100%', width: `${wp.status === 'complete' ? 100 : wp.status === 'in_progress' ? 50 : 0}%`, background: '#3b82f640', borderRadius: 2 }} />
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <div style={{ fontSize: '0.68rem', color: '#6b7280' }}>
+            Milestones (white) + WBS work packages (blue). Dependencies: FS = Finish-to-Start.
           </div>
         </div>
       )}
 
-      {/* WBS */}
+      {/* WBS — editable with add/remove */}
       {activeTab === 'wbs' && (
         <div>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.72rem' }}>
             <thead>
               <tr style={{ background: 'var(--bg-primary, #0a0e1a)' }}>
-                <th style={th}>WP</th><th style={th}>Name</th><th style={th}>Responsible</th><th style={thC}>Effort (h)</th><th style={th}>Phase</th><th style={thC}>Status</th>
+                <th style={th}>WP</th><th style={th}>Name</th><th style={th}>Responsible</th><th style={thC}>Effort (h)</th><th style={th}>Phase</th><th style={th}>Start</th><th style={th}>End</th><th style={th}>Depends On</th><th style={thC}>Status</th><th style={thC}></th>
               </tr>
             </thead>
             <tbody>
-              {wbs.map(wp => (
-                <tr key={wp.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+              {wbs.map(wp => (<React.Fragment key={wp.id}>
+                <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                   <td style={{ ...td, fontFamily: 'monospace', fontSize: '0.65rem' }}>{wp.id}</td>
-                  <td style={{ ...td, fontWeight: 500 }}>{wp.name}</td>
-                  <td style={{ ...td, fontSize: '0.68rem', color: '#9ca3af' }}>{wp.responsible.replace(/_/g, ' ')}</td>
-                  <td style={tdC}>{wp.effort_hours}</td>
-                  <td style={{ ...td, fontSize: '0.68rem', color: '#6b7280' }}>{wp.phase}</td>
+                  <td style={td}>
+                    <input className="input" value={wp.name}
+                      onChange={e => setWbs(prev => prev.map(w => w.id === wp.id ? { ...w, name: e.target.value } : w))}
+                      style={{ width: '100%', fontSize: '0.72rem', background: 'transparent', border: 'none', color: '#d1d5db', fontWeight: 500 }} />
+                  </td>
+                  <td style={td}>
+                    <input className="input" value={wp.responsible}
+                      onChange={e => setWbs(prev => prev.map(w => w.id === wp.id ? { ...w, responsible: e.target.value } : w))}
+                      style={{ width: '100%', fontSize: '0.68rem', background: 'transparent', border: 'none', color: '#9ca3af' }} />
+                  </td>
                   <td style={tdC}>
-                    <span style={{ fontSize: '0.6rem', padding: '0.1rem 0.3rem', borderRadius: '3px', background: wp.status === 'complete' ? '#10b98122' : wp.status === 'in_progress' ? '#3b82f622' : '#37415180', color: wp.status === 'complete' ? '#10b981' : wp.status === 'in_progress' ? '#3b82f6' : '#6b7280' }}>{wp.status.replace(/_/g, ' ')}</span>
+                    <input className="input" type="number" value={wp.effort_hours}
+                      onChange={e => setWbs(prev => prev.map(w => w.id === wp.id ? { ...w, effort_hours: Number(e.target.value) } : w))}
+                      style={{ width: '55px', fontSize: '0.72rem', textAlign: 'center' }} />
+                  </td>
+                  <td style={td}>
+                    <input className="input" value={wp.phase}
+                      onChange={e => setWbs(prev => prev.map(w => w.id === wp.id ? { ...w, phase: e.target.value } : w))}
+                      style={{ width: '50px', fontSize: '0.68rem', background: 'transparent', border: 'none', color: '#6b7280' }} />
+                  </td>
+                  <td style={td}>
+                    <input type="date" value={wp.start_date}
+                      onChange={e => setWbs(prev => prev.map(w => w.id === wp.id ? { ...w, start_date: e.target.value } : w))}
+                      style={{ background: 'var(--bg-primary, #111827)', border: '1px solid #374151', borderRadius: '3px', color: '#d1d5db', fontSize: '0.62rem', padding: '0.1rem' }} />
+                  </td>
+                  <td style={td}>
+                    <input type="date" value={wp.end_date}
+                      onChange={e => setWbs(prev => prev.map(w => w.id === wp.id ? { ...w, end_date: e.target.value } : w))}
+                      style={{ background: 'var(--bg-primary, #111827)', border: '1px solid #374151', borderRadius: '3px', color: '#d1d5db', fontSize: '0.62rem', padding: '0.1rem' }} />
+                  </td>
+                  <td style={td}>
+                    <select value={wp.depends_on} onChange={e => setWbs(prev => prev.map(w => w.id === wp.id ? { ...w, depends_on: e.target.value } : w))}
+                      style={{ background: 'var(--bg-primary, #111827)', border: '1px solid #374151', borderRadius: '3px', color: '#6b7280', fontSize: '0.6rem', padding: '0.1rem', width: '65px' }}>
+                      <option value="">None</option>
+                      {wbs.filter(w => w.id !== wp.id).map(w => <option key={w.id} value={w.id}>{w.id}</option>)}
+                    </select>
+                  </td>
+                  <td style={tdC}>
+                    <select value={wp.status}
+                      onChange={e => setWbs(prev => prev.map(w => w.id === wp.id ? { ...w, status: e.target.value as WorkPackage['status'] } : w))}
+                      style={{ background: 'var(--bg-primary, #111827)', border: '1px solid #374151', borderRadius: '3px', color: wp.status === 'complete' ? '#10b981' : wp.status === 'in_progress' ? '#3b82f6' : '#6b7280', fontSize: '0.6rem', padding: '0.1rem' }}>
+                      <option value="not_started">Not Started</option>
+                      <option value="in_progress">In Progress</option>
+                      <option value="complete">Complete</option>
+                    </select>
+                  </td>
+                  <td style={tdC}>
+                    <button onClick={() => setExpandedWp(expandedWp === wp.id ? null : wp.id)}
+                      style={{ background: 'none', border: 'none', color: '#3b82f6', cursor: 'pointer', fontSize: '0.6rem', marginRight: '0.2rem' }}
+                      title="Work Package Description">WPD</button>
+                    <button onClick={() => setWbs(prev => prev.filter(w => w.id !== wp.id))}
+                      style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '0.7rem' }}>×</button>
                   </td>
                 </tr>
-              ))}
+                {expandedWp === wp.id && (
+                  <tr>
+                    <td colSpan={7} style={{ padding: '0.5rem', background: 'var(--bg-primary, #0a0e1a)' }}>
+                      <div style={{ fontSize: '0.72rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                        <label style={{ color: '#9ca3af' }}>Description:
+                          <textarea className="input" value={wp.description} onChange={e => setWbs(prev => prev.map(w => w.id === wp.id ? { ...w, description: e.target.value } : w))}
+                            rows={2} style={{ width: '100%', fontSize: '0.72rem', resize: 'vertical' }} placeholder="What this work package delivers..." />
+                        </label>
+                        <label style={{ color: '#9ca3af' }}>People / Skills:
+                          <input className="input" value={(wp as any).people || ''} onChange={e => setWbs(prev => prev.map(w => w.id === wp.id ? { ...w, people: e.target.value } as any : w))}
+                            style={{ width: '100%', fontSize: '0.72rem' }} placeholder="e.g., 2 × SE, 1 × thermal" />
+                        </label>
+                        <label style={{ color: '#9ca3af' }}>Inputs:
+                          <input className="input" value={(wp as any).inputs || ''} onChange={e => setWbs(prev => prev.map(w => w.id === wp.id ? { ...w, inputs: e.target.value } as any : w))}
+                            style={{ width: '100%', fontSize: '0.72rem' }} placeholder="e.g., Requirements baseline, architecture decisions" />
+                        </label>
+                        <label style={{ color: '#9ca3af' }}>Outputs / Deliverables:
+                          <input className="input" value={(wp as any).outputs || ''} onChange={e => setWbs(prev => prev.map(w => w.id === wp.id ? { ...w, outputs: e.target.value } as any : w))}
+                            style={{ width: '100%', fontSize: '0.72rem' }} placeholder="e.g., Test report, flight model, procedures" />
+                        </label>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </React.Fragment>))}
               <tr style={{ borderTop: '2px solid #374151', fontWeight: 700 }}>
                 <td style={td}></td><td style={td}>Total</td><td style={td}></td>
                 <td style={tdC}>{wbs.reduce((s, wp) => s + wp.effort_hours, 0)}</td>
-                <td></td><td></td>
+                <td></td><td></td><td></td><td></td><td></td><td></td>
               </tr>
             </tbody>
           </table>
+          <button onClick={() => {
+            const id = `WP-${wbs.length + 1}.0`
+            setWbs(prev => [...prev, { id, name: 'New Work Package', description: '', responsible: 'systems_engineer', effort_hours: 0, status: 'not_started' as const, phase: '', start_date: '', end_date: '', depends_on: '' }])
+          }} className="btn btn-sm" style={{ marginTop: '0.5rem', fontSize: '0.7rem', background: '#374151' }}>
+            + Add Work Package
+          </button>
         </div>
       )}
     </div>

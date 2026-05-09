@@ -9,6 +9,7 @@
 import { useState, useEffect } from 'react'
 import { useDesignStore } from '../stores/designStore'
 import { useSessionStore } from '../stores/sessionStore'
+import { useModelStore } from '../stores/modelStore'
 
 interface ArchOption {
   id: string; name: string; description: string
@@ -47,14 +48,31 @@ const POSITION_SUBSYSTEM: Record<string, string> = {
   compliance_engineer: 'ttc', user_representative: 'ground',
 }
 
-export function SystemArchitectureEditor() {
+export function SystemArchitectureEditor({ segment = 'space' }: { segment?: string }) {
+  const modelCreateElement = useModelStore(s => s.createElement)
+  const modelElements = useModelStore(s => s.elements)
   const positionIds = useSessionStore(s => s.positionIds)
   const primaryPos = positionIds?.[0] || 'systems_engineer'
   const [subsystems, setSubsystems] = useState<string[]>([])
   const [activeSubsystem, setActiveSubsystem] = useState<string>(POSITION_SUBSYSTEM[primaryPos] || 'eps')
   const [options, setOptions] = useState<ArchOption[]>([])
-  const [selected, setSelected] = useState<Record<string, SelectedArch>>({})
+  const storedSelections = useDesignStore(s => s.architectureSelections) as Record<string, SelectedArch>
+  const [selected, setSelectedLocal] = useState<Record<string, SelectedArch>>(storedSelections || {})
+  const setSelected: (u: Record<string, SelectedArch> | ((p: Record<string, SelectedArch>) => Record<string, SelectedArch>)) => void = (updater) => {
+    setSelectedLocal(prev => {
+      const next = typeof updater === 'function' ? updater(prev) : updater
+      useDesignStore.setState({ architectureSelections: next as any })
+      return next
+    })
+  }
   const [loading, setLoading] = useState(false)
+  const [showCustomForm, setShowCustomForm] = useState(false)
+  const [customName, setCustomName] = useState('')
+  const [customDesc, setCustomDesc] = useState('')
+  const [customMass, setCustomMass] = useState(0)
+  const [customPower, setCustomPower] = useState(0)
+  const [customCost, setCustomCost] = useState(0)
+  const [customTrl, setCustomTrl] = useState(5)
   const markStale = useDesignStore(s => s.markStale)
 
   // Load subsystem list
@@ -91,10 +109,99 @@ export function SystemArchitectureEditor() {
           (sel.derived_requirements || []).map((r: any) => ({ ...r, subsystem: ss }))
         )
         useDesignStore.setState({ architectureDerivedReqs: allReqs })
+
+        // Write architecture mass/power/cost to parameterOverrides so budgets update
+        const setParam = useDesignStore.getState().setParameter
+        for (const [ss, sel] of Object.entries(next)) {
+          if (sel.mass_kg) setParam(`${ss}.mass_kg`, sel.mass_kg, 'architecture')
+          if (sel.power_w) setParam(`${ss}.power_w`, sel.power_w, 'architecture')
+          if (sel.cost_keur) setParam(`${ss}.cost_keur`, sel.cost_keur, 'architecture')
+        }
+
+        // SYSTEM-V: Create or update subsystem element in the backend element tree
+        const sid = useDesignStore.getState().studyId
+        if (sid && data) {
+          // Find parent system element (Platform for space segment)
+          let parentId: string | undefined
+          for (const el of modelElements.values()) {
+            if (el.element_type === 'system' && el.segment === segment) {
+              parentId = el.id
+              break
+            }
+          }
+          // Check if subsystem element already exists for this domain — update instead of creating duplicate
+          let existingSubsystem: string | undefined
+          const updateElement = useModelStore.getState().updateElement
+          for (const el of modelElements.values()) {
+            if (el.element_type === 'subsystem' && el.subsystem_domain === activeSubsystem && el.segment === segment) {
+              existingSubsystem = el.id
+              break
+            }
+          }
+          if (existingSubsystem) {
+            // Update existing subsystem element
+            updateElement(existingSubsystem, {
+              name: data.option_name || activeSubsystem,
+              mass_kg: data.mass_kg || null,
+              power_avg_w: data.power_w || null,
+              cost_recurring_keur: data.cost_keur || null,
+              trl: data.trl || null,
+            })
+          } else {
+            // Create new subsystem element
+            modelCreateElement(sid, {
+              name: data.option_name || activeSubsystem,
+              element_type: 'subsystem',
+              subsystem_domain: activeSubsystem,
+              segment: segment,
+              parent_id: parentId || null,
+              mass_kg: data.mass_kg || null,
+              power_avg_w: data.power_w || null,
+              cost_recurring_keur: data.cost_keur || null,
+              trl: data.trl || null,
+            } as any)
+          }
+        }
+
         return next
       })
       markStale('architecture')
     }
+  }
+
+  const addCustomOption = () => {
+    if (!customName) return
+    const customOpt: ArchOption = {
+      id: `custom-${activeSubsystem}-${Date.now()}`,
+      name: customName, description: customDesc,
+      mass_kg: customMass, power_w: customPower, cost_keur: customCost, trl: customTrl,
+      pointing_deg: null, data_rate_mbps: null,
+      pros: ['User-defined'], cons: ['No auto-derived requirements'],
+      num_derived_requirements: 0,
+    }
+    setOptions(prev => [...prev, customOpt])
+    setShowCustomForm(false)
+    setCustomName(''); setCustomDesc(''); setCustomMass(0); setCustomPower(0); setCustomCost(0); setCustomTrl(5)
+    // Auto-select it
+    setSelected(prev => {
+      const sel: SelectedArch = {
+        option_id: customOpt.id, option_name: customOpt.name, description: customOpt.description,
+        mass_kg: customOpt.mass_kg, power_w: customOpt.power_w, cost_keur: customOpt.cost_keur, trl: customOpt.trl,
+        derived_requirements: [], blocks: [], connections: [],
+      }
+      const next = { ...prev, [activeSubsystem]: sel }
+      const allReqs = Object.entries(next).flatMap(([ss, s]) =>
+        (s.derived_requirements || []).map((r: any) => ({ ...r, subsystem: ss }))
+      )
+      useDesignStore.setState({ architectureDerivedReqs: allReqs })
+      // Write custom option values to parameterOverrides
+      const setParam = useDesignStore.getState().setParameter
+      setParam(`${activeSubsystem}.mass_kg`, customMass, 'architecture')
+      setParam(`${activeSubsystem}.power_w`, customPower, 'architecture')
+      setParam(`${activeSubsystem}.cost_keur`, customCost, 'architecture')
+      return next
+    })
+    markStale('architecture')
   }
 
   const currentSelection = selected[activeSubsystem]
@@ -125,7 +232,7 @@ export function SystemArchitectureEditor() {
 
       {/* Subsystem tabs */}
       <div style={{ display: 'flex', gap: '0.3rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
-        {subsystems.map(ss => {
+        {subsystems.filter(ss => segment === 'ground' ? ss === 'ground' : ss !== 'ground').map(ss => {
           const ssInfo = SUBSYSTEM_LABELS[ss] || { name: ss, color: '#6b7280' }
           const isActive = activeSubsystem === ss
           const isSelected = !!selected[ss]
@@ -183,6 +290,48 @@ export function SystemArchitectureEditor() {
           )
         })}
       </div>
+
+      {/* Custom option */}
+      {!showCustomForm ? (
+        <button onClick={() => setShowCustomForm(true)} className="btn btn-sm"
+          style={{ marginBottom: '0.75rem', fontSize: '0.72rem', background: '#374151' }}>
+          + Define Custom Option
+        </button>
+      ) : (
+        <div className="card" style={{ marginBottom: '0.75rem', borderLeft: `3px solid ${info.color}` }}>
+          <h4 style={{ fontSize: '0.8rem', marginBottom: '0.4rem' }}>Custom {info.name} Option</h4>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.4rem', marginBottom: '0.4rem' }}>
+            <label style={{ fontSize: '0.7rem', color: '#9ca3af' }}>Name:
+              <input className="input" value={customName} onChange={e => setCustomName(e.target.value)}
+                style={{ width: '100%', fontSize: '0.72rem' }} placeholder="e.g., Custom AOCS" />
+            </label>
+            <label style={{ fontSize: '0.7rem', color: '#9ca3af' }}>TRL:
+              <input className="input" type="number" min={1} max={9} value={customTrl} onChange={e => setCustomTrl(Number(e.target.value))}
+                style={{ width: '100%', fontSize: '0.72rem' }} />
+            </label>
+            <label style={{ fontSize: '0.7rem', color: '#9ca3af' }}>Mass (kg):
+              <input className="input" type="number" step={0.1} value={customMass} onChange={e => setCustomMass(Number(e.target.value))}
+                style={{ width: '100%', fontSize: '0.72rem' }} />
+            </label>
+            <label style={{ fontSize: '0.7rem', color: '#9ca3af' }}>Power (W):
+              <input className="input" type="number" step={0.1} value={customPower} onChange={e => setCustomPower(Number(e.target.value))}
+                style={{ width: '100%', fontSize: '0.72rem' }} />
+            </label>
+            <label style={{ fontSize: '0.7rem', color: '#9ca3af' }}>Cost (kEUR):
+              <input className="input" type="number" step={1} value={customCost} onChange={e => setCustomCost(Number(e.target.value))}
+                style={{ width: '100%', fontSize: '0.72rem' }} />
+            </label>
+          </div>
+          <label style={{ fontSize: '0.7rem', color: '#9ca3af', display: 'block', marginBottom: '0.4rem' }}>Description:
+            <input className="input" value={customDesc} onChange={e => setCustomDesc(e.target.value)}
+              style={{ width: '100%', fontSize: '0.72rem' }} placeholder="Brief description of the architecture option" />
+          </label>
+          <div style={{ display: 'flex', gap: '0.3rem' }}>
+            <button onClick={addCustomOption} className="btn btn-sm" style={{ fontSize: '0.7rem', background: '#10b981' }}>Add & Select</button>
+            <button onClick={() => setShowCustomForm(false)} className="btn btn-sm" style={{ fontSize: '0.7rem', background: '#374151' }}>Cancel</button>
+          </div>
+        </div>
+      )}
 
       {/* Selected architecture details */}
       {currentSelection && (

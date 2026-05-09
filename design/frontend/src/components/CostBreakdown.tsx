@@ -1,10 +1,18 @@
+import { useState } from 'react'
 import { useCostEstimate } from '../hooks/useSession'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts'
+import { useDesignStore } from '../stores/designStore'
+import { useEquipmentView } from '../hooks/useEquipmentView'
+import { SVGBarChart } from '../charts/SVGBarChart'
 
 const PHASE_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444']
 
 export function CostBreakdown({ studyId }: { studyId: string | null }) {
   const { data, isLoading, error } = useCostEstimate(studyId)
+  const selectedEquipment = useEquipmentView()
+  const [costOverrides, setCostOverrides] = useState<Record<string, number>>({})
+
+  const getEquipCost = (id: string, defaultCost: number) => costOverrides[id] ?? defaultCost
+  const totalEquipCost = selectedEquipment.reduce((s, eq) => s + getEquipCost(eq.componentId, eq.cost_keur) * eq.quantity, 0)
 
   if (!studyId) return <div style={{ padding: '1rem', color: 'var(--text-secondary, #9ca3af)' }}>Run a design first to see cost breakdown.</div>
   if (isLoading) return <div className="loading"><div className="spinner" /> Estimating cost...</div>
@@ -66,38 +74,69 @@ export function CostBreakdown({ studyId }: { studyId: string | null }) {
         </div>
       </div>
 
-      {/* Cost distribution histogram */}
+      {/* Cost distribution histogram (SVG) */}
       {histData.length > 0 && (
         <div className="card">
           <h3>Cost Distribution</h3>
-          <div style={{ width: '100%', height: '200px' }}>
-            <ResponsiveContainer>
-              <BarChart data={histData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="bin" tick={{ fontSize: 10, fill: '#9ca3af' }} />
-                <YAxis tick={{ fontSize: 10, fill: '#9ca3af' }} />
-                <Tooltip contentStyle={{ background: '#1f2937', border: '1px solid #374151', fontSize: '0.75rem' }} />
-                <Bar dataKey="count" fill="#3b82f6" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+          <SVGBarChart
+            data={histData.map((h: any) => ({ label: h.bin, value: h.count, color: '#3b82f6' }))}
+            width={500} height={200} unit="" title=""
+          />
         </div>
       )}
 
-      {/* Phase distribution */}
+      {/* Phase distribution (simple bar instead of pie) */}
       {phaseData.length > 0 && (
         <div className="card">
           <h3>Phase Distribution</h3>
-          <div style={{ width: '100%', height: '220px' }}>
-            <ResponsiveContainer>
-              <PieChart>
-                <Pie data={phaseData} dataKey="value" nameKey="name" outerRadius={80} label={(e: any) => `${e.name}: ${(e.value / 1000).toFixed(1)}M`}>
-                  {phaseData.map((_, i) => <Cell key={i} fill={PHASE_COLORS[i]} />)}
-                </Pie>
-                <Legend wrapperStyle={{ fontSize: '0.75rem' }} />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
+          <SVGBarChart
+            data={phaseData.map((p: any, i: number) => ({ label: p.name, value: p.value / 1000, color: PHASE_COLORS[i] }))}
+            width={400} height={180} unit="M" orientation="horizontal"
+          />
+        </div>
+      )}
+
+      {/* Equipment costs (bottom-up from selections) */}
+      {selectedEquipment.length > 0 && (
+        <div className="card">
+          <h3>Equipment Costs (Bottom-Up)</h3>
+          <p style={{ fontSize: '0.72rem', color: '#9ca3af', marginBottom: '0.5rem' }}>
+            From selected hardware. Edit costs to override catalogue values.
+          </p>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.78rem' }}>
+            <thead>
+              <tr style={{ background: 'var(--bg-secondary, #1f2937)' }}>
+                <th style={th}>Component</th>
+                <th style={th}>Subsystem</th>
+                <th style={thNum}>Qty</th>
+                <th style={thNum}>Unit Cost (kEUR)</th>
+                <th style={thNum}>Line Total (kEUR)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {selectedEquipment.map(eq => (
+                <tr key={eq.componentId} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                  <td style={td}>{eq.name}</td>
+                  <td style={{ ...td, color: '#6b7280' }}>{eq.category}</td>
+                  <td style={tdNum}>{eq.quantity}</td>
+                  <td style={tdNum}>
+                    <input className="input" type="number" step={1}
+                      value={getEquipCost(eq.componentId, eq.cost_keur)}
+                      onChange={e => setCostOverrides(prev => ({ ...prev, [eq.componentId]: Number(e.target.value) }))}
+                      style={{ width: '70px', fontSize: '0.72rem', textAlign: 'right' }} />
+                  </td>
+                  <td style={{ ...tdNum, fontWeight: 600 }}>
+                    {(getEquipCost(eq.componentId, eq.cost_keur) * eq.quantity).toLocaleString()}
+                  </td>
+                </tr>
+              ))}
+              <tr style={{ background: 'var(--bg-secondary, #1f2937)', fontWeight: 700 }}>
+                <td style={td} colSpan={3}>Total Equipment (Hardware)</td>
+                <td style={tdNum}></td>
+                <td style={tdNum}>{totalEquipCost.toLocaleString()} kEUR</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       )}
 

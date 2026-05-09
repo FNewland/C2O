@@ -33,5 +33,6 @@ export const POSITION_OPTIONS = [
   { id: 'user_representative', label: 'User Representative' },
   { id: 'mission_ops', label: 'Mission Operations' },
   { id: 'ground_segment', label: 'Ground Segment' },
-  { id: 'software_engineer', label: 'Software Engineer' },\n  { id: 'project_manager', label: 'Project Manager' },
+  { id: 'software_engineer', label: 'Software Engineer' },
+  { id: 'project_manager', label: 'Project Manager' },
 ] as const

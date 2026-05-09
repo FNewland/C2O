@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useSessionStore } from '../stores/sessionStore'
 import { useDesignStore } from '../stores/designStore'
+import { useModelStore } from '../stores/modelStore'
 
 // WebSocket client with auto-reconnect for SpaceCDF concurrent design sessions.
 // Backs SessionBar, LiveEditToast, PositionPanel presence, and live parameter updates.
@@ -87,8 +88,22 @@ export function useSessionSocket(sessionId: string | null, positionId: string | 
             errorMessage: msg.reason,
           })
           break
+        case 'persistence_warning':
+          useSessionStore.setState({ persistenceOk: false })
+          break
+        case 'persistence_recovered':
+          useSessionStore.setState({ persistenceOk: true })
+          break
         case 'error':
           console.warn('WS error:', msg.message)
+          break
+        // SYSTEM-V: Forward element tree events to modelStore for concurrent design sync
+        case 'element_created':
+        case 'element_updated':
+        case 'element_deleted':
+        case 'interface_created':
+        case 'interface_deleted':
+          useModelStore.getState().handleWsMessage(msg)
           break
         default:
           break

@@ -19,7 +19,7 @@ from ..services.harness_designer import design_harness, harness_summary
 from ..services.ground_configurator import generate_mcs_config, generate_pass_predictions, generate_ops_timeline
 from ..services.test_generator import generate_test_procedures, generate_environmental_test_specs
 from ..services.launch_planner import check_launch_compatibility, generate_campaign_timeline, generate_regulatory_checklist
-from ..services.bom_generator import generate_bom
+from ..services.bom_generator import generate_bom, generate_bom_from_elements, bom_to_csv, bom_to_svg_table
 from ..services.fit_gap_analysis import analyze_component_fit, analyze_category
 from ..services.ground_segment_trade import compute_ground_segment_trade
 from ..services.orbit_trade import compute_orbit_trade
@@ -162,8 +162,40 @@ class BOMRequest(BaseModel):
 
 @router.post("/bom")
 async def bom_endpoint(req: BOMRequest) -> dict:
-    """Generate Bill of Materials from selected components."""
+    """Generate Bill of Materials from selected components (legacy)."""
     return generate_bom(req.selected_components, req.form_factor)
+
+
+@router.get("/bom/{study_id}")
+async def bom_from_elements_endpoint(
+    study_id: str,
+    fmt: str = Query("json", description="Output format: json, csv, svg"),
+) -> Any:
+    """Generate BOM from the element tree for a study."""
+    from ..routers.elements import _elements
+    from fastapi.responses import PlainTextResponse
+
+    elements = [e for e in _elements.values() if e.get("study_id") == study_id and not e.get("deleted_at")]
+    if not elements:
+        raise HTTPException(404, f"No elements found for study {study_id}")
+
+    # Get study name
+    store = get_study_store()
+    study = store.get(study_id)
+    study_name = study.requirements.name if study else "SpaceCDF Mission"
+
+    # Get SEMP answers if available (from request body or study)
+    bom = generate_bom_from_elements(elements, study_name=study_name)
+
+    if fmt == "csv":
+        csv_content = bom_to_csv(bom)
+        return PlainTextResponse(csv_content, media_type="text/csv",
+                                 headers={"Content-Disposition": f"attachment; filename=bom-{study_id[:8]}.csv"})
+    elif fmt == "svg":
+        svg_content = bom_to_svg_table(bom)
+        return PlainTextResponse(svg_content, media_type="image/svg+xml")
+
+    return bom
 
 
 # --- Engineering Budgets ---
@@ -520,6 +552,14 @@ async def check_compliance_endpoint(body: dict[str, Any]) -> dict:
     )
 
 
+@router.post("/requirements/split")
+async def split_requirement_endpoint(requirement: dict[str, Any]) -> dict:
+    """Split a compound requirement into atomic statements."""
+    from ..services.requirement_engine import split_compound_requirement
+    results = split_compound_requirement(requirement)
+    return {"original_id": requirement.get("id", ""), "split": results, "was_split": len(results) > 1}
+
+
 # --- Consistency Checking ---
 
 @router.get("/consistency/{study_id}")
@@ -642,9 +682,16 @@ async def generate_copuos(body: dict[str, Any]) -> dict:
 
 @router.post("/regulatory/eol-report")
 async def generate_eol(body: dict[str, Any]) -> dict:
-    """Generate end-of-life analysis report."""
+    """Generate end-of-life / debris compliance analysis report."""
     from ..services.regulatory import generate_eol_report
     return generate_eol_report(**body)
+
+
+@router.post("/regulatory/itu-api-filing")
+async def generate_itu_filing(body: dict[str, Any]) -> dict:
+    """Generate ITU API filing template (Appendix 4) with auto-computed fields."""
+    from ..services.regulatory import generate_itu_api_filing
+    return generate_itu_api_filing(**body)
 
 
 # --- Tabular Trade Studies ---
@@ -813,6 +860,17 @@ async def get_interconnections() -> dict:
     from ..services.constraint_propagation import get_interconnection_map
     conns = get_interconnection_map()
     return {"connections": conns, "total": len(conns)}
+
+
+@router.post("/constraints/circular-deps")
+async def check_circular_dependencies(body: dict[str, Any]) -> dict:
+    """Detect circular dependencies for a given resolution path."""
+    from ..services.constraint_propagation import detect_circular_dependencies
+    cycles = detect_circular_dependencies(
+        starting_param=body.get("starting_param", ""),
+        resolution_param=body.get("resolution_param", ""),
+    )
+    return {"cycles": cycles, "has_cycles": len(cycles) > 0}
 
 
 # --- System Architecture ---

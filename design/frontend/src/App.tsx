@@ -1,574 +1,320 @@
-import { useState, useMemo, useEffect } from 'react'
+/**
+ * SpaceCDF — App Shell (v2: Phase-driven System-V architecture)
+ *
+ * 6 phases as primary navigation. Margin tower always visible.
+ * Anyone can connect at any time. No role assignment in the tool.
+ */
+import { useState, useEffect } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-
 import { useDesignStore } from './stores/designStore'
+import { useModelStore } from './stores/modelStore'
 import { useSessionStore } from './stores/sessionStore'
-import { useSessionSocket } from './hooks/useSessionSocket'
-import { useCreateSession } from './hooks/useSession'
-import { POSITION_OPTIONS, POSITION_COLOR } from './constants'
+import { Phase0Need } from './phases/Phase0Need'
+import { Phase1MissionArch } from './phases/Phase1MissionArch'
+import { Phase2SystemArch } from './phases/Phase2SystemArch'
+import { Phase3SubsystemDesign } from './phases/Phase3SubsystemDesign'
+import { Phase4Integration } from './phases/Phase4Integration'
+import { Phase5Verification } from './phases/Phase5Verification'
+import { BudgetCascade } from './charts/BudgetCascade'
+import { PHASE_LABELS, PHASE_SHORT, PHASE_COLORS, type Phase } from './types/phases'
+import { ErrorBoundary } from './components/ErrorBoundary'
 
-import { StudyStepper } from './components/StudyStepper'
-import { MissionNeedPanel } from './components/MissionNeedPanel'
-import { MissionTradeView } from './components/MissionTradeView'
-import { RequirementsPanel } from './components/RequirementsPanel'
-import { DesignWorkspace } from './components/DesignWorkspace'
-import { InsightsPanel } from './components/InsightsPanel'
-import { ConflictsPanel } from './components/ConflictsPanel'
-import { ExportPanel } from './components/ExportPanel'
-import { PositionPanel } from './components/PositionPanel'
-import { SessionBar } from './components/SessionBar'
-import { LiveEditToast } from './components/LiveEditToast'
-import { EquipmentBrowser } from './components/EquipmentBrowser'
-import { ComplianceMatrix } from './components/ComplianceMatrix'
-import { CostBreakdown } from './components/CostBreakdown'
-import { TradeStudyPanel } from './components/TradeStudyPanel'
-import { HistoryDrawer } from './components/HistoryDrawer'
-import { TemplateGallery } from './components/TemplateGallery'
-import { EcssCompliancePanel } from './components/EcssCompliancePanel'
-import { SnapshotsPanel } from './components/SnapshotsPanel'
-import { OptimizerPanel } from './components/OptimizerPanel'
-import { UserManual } from './components/UserManual'
-import { ExportsPanel } from './components/ExportsPanel'
-import { DesignStateBar } from './components/DesignStateBar'
-import { ConflictReviewModal } from './components/ConflictReviewModal'
-import { ChangeAuditPanel } from './components/ChangeAuditPanel'
-import { SystemArchitectureEditor } from './components/SystemArchitectureEditor'
-import { SystemBlockDiagram } from './components/SystemBlockDiagram'
-import { EngineeringBudgets } from './components/EngineeringBudgets'\nimport { ProjectManagement } from './components/ProjectManagement'
-import { ParametricEditor } from './components/ParametricEditor'
-import { LinkBudgetTool } from './components/LinkBudgetTool'
-import { PointingBudget } from './components/PointingBudget'
-import { DataBudget } from './components/DataBudget'
-import { VerificationMatrix } from './components/VerificationMatrix'
-import { GateReviewPanel } from './components/GateReviewPanel'
-import { PositionAnswersPanel } from './components/PositionAnswersPanel'
-import { ConOpsEditor } from './components/ConOpsEditor'
-import { MissionArchitectureEditor } from './components/MissionArchitectureEditor'
-import { FunctionTreeView } from './components/FunctionTreeView'
-import { InterfaceMatrixView } from './components/InterfaceMatrixView'
-import { RequirementsEditor } from './components/RequirementsEditor'
+const queryClient = new QueryClient({ defaultOptions: { queries: { retry: 1, staleTime: 30000 } } })
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: { retry: 1, staleTime: 5_000 },
-  },
-})
-
-type CenterTab = 'need' | 'concept' | 'requirements' | 'design' | 'conops' | 'functions' | 'architecture' | 'budgets' | 'pm' | 'interfaces' | 'reqs' | 'positions' | 'answers' | 'gate' | 'compliance' | 'ecss' | 'cost' | 'trade' | 'snapshots' | 'optimizer' | 'linkbudget' | 'verification' | 'exports' | 'parametric' | 'audit' | 'help'
-type RightTab = 'insights' | 'conflicts' | 'exports'
-
-function AppContent() {
-  const { result, studyId, createStudy, setStudyId, runDesign } = useDesignStore()
-  const [centerTab, setCenterTab] = useState<CenterTab>('need')
-  const [rightTab, setRightTab] = useState<RightTab>('insights')
-  const [showEquipmentBrowser, setShowEquipmentBrowser] = useState(false)
-  const [showSessionStarter, setShowSessionStarter] = useState(false)
-  const [showConflictReview, setShowConflictReview] = useState(false)
-  const [autoReconverge, setAutoReconverge] = useState(false)
-  const [showTemplateGallery, setShowTemplateGallery] = useState(false)
-
-  // Auto-navigate to Design tab when design run completes
-  useEffect(() => {
-    if (result && centerTab === 'requirements') {
-      setCenterTab('design')
+function AppShell() {
+  const [activePhase, setActivePhaseRaw] = useState<Phase>(0)
+  const [prevPhase, setPrevPhase] = useState<Phase>(0)
+  const [showReviewBanner, setShowReviewBanner] = useState<string | null>(null)
+  const setActivePhase = (p: Phase) => {
+    // Show review prompt when going to a lower phase from a higher one
+    if (p < activePhase && activePhase >= 2) {
+      const messages: Record<number, string> = {
+        0: 'Returning to Mission Need — review objectives against design results',
+        1: 'Returning to Mission Architecture — review architecture against system design',
+        2: 'Returning to System Architecture — review budgets and interfaces against subsystem design',
+      }
+      setShowReviewBanner(messages[p] || null)
+      setTimeout(() => setShowReviewBanner(null), 5000)
     }
-    // Show conflict review if critical conflicts exist after convergence
-    if (result?.conflicts?.some(c => c.severity === 'critical')) {
-      setShowConflictReview(true)
+    // Show forward completion prompt when advancing to next phase
+    if (p > activePhase) {
+      const fwdMessages: Record<number, string> = {
+        1: 'Phase 0 complete — mission need defined. Now define the mission architecture.',
+        2: 'Phase 1 complete — architecture defined. Now decompose into system-level design.',
+        3: 'Phase 2 complete — system architecture set. Now select subsystem equipment.',
+        4: 'Phase 3 complete — subsystems designed. Now verify interfaces and integration.',
+        5: 'Phase 4 complete — integration verified. Final verification and validation.',
+      }
+      if (fwdMessages[p]) {
+        setShowReviewBanner(fwdMessages[p])
+        setTimeout(() => setShowReviewBanner(null), 4000)
+      }
     }
-  }, [result])
-
-  // Auto-reconverge when design is stale (if enabled)
-  const designStale = useDesignStore(s => s.designStale)
-  const isRunning = useDesignStore(s => s.isRunning)
-  useEffect(() => {
-    if (autoReconverge && designStale && !isRunning && result) {
-      // Debounce: wait 1 second after last change before auto-running
-      const timer = setTimeout(() => {
-        if (useDesignStore.getState().designStale) {
-          runDesign()
-        }
-      }, 1000)
-      return () => clearTimeout(timer)
-    }
-  }, [autoReconverge, designStale, isRunning])
-
-  // Session state
-  const sessionId = useSessionStore(s => s.sessionId)
-  const positionId = useSessionStore(s => s.positionId)
-  const displayName = useSessionStore(s => s.displayName)
-  const setSession = useSessionStore(s => s.setSession)
-  const clearSession = useSessionStore(s => s.clearSession)
-
-  // WebSocket (only active when session is set)
-  const { status: wsStatus, sendEdit } = useSessionSocket(sessionId, positionId, displayName)
-
-  // Publish sendEdit into the session store so any component can use it
-  const setSendEdit = useSessionStore(s => s.setSendEdit)
-  useEffect(() => {
-    setSendEdit(sessionId ? sendEdit : null)
-    return () => setSendEdit(null)
-  }, [sessionId, sendEdit, setSendEdit])
-
-  const createSession = useCreateSession()
-
-  const conflictCount = result?.conflicts?.length || 0
-  const criticalCount = result?.conflicts?.filter(c => c.severity === 'critical').length || 0
-
-  const handleStartSession = () => setShowSessionStarter(true)
-
-  const handleLeaveSession = () => clearSession()
-
-  const handleSessionConfirm = async (pos: string, name: string, positionIds: string[]) => {
-    // Ensure study exists
-    let sid = studyId
-    if (!sid) sid = await createStudy()
-    if (!sid) return
-    // Create session (backend runs initial convergence)
-    const data = await createSession.mutateAsync({ study_id: sid, name: `${name || pos} session` })
-    setSession(data.id, pos, name || pos, positionIds)
-    setShowSessionStarter(false)
-    // Also run design on frontend so designStore.result is populated immediately
-    // (gives dashboard data while WebSocket bootstraps the live state)
-    runDesign()
-  }
-
-  const handleEquipmentSelect = (category: string, component: any) => {
-    // Always persist equipment selection to designStore (upward flow)
-    const existing = useDesignStore.getState().selectedEquipment
-    const key = `${category}:${component.id || component.name}`
-    const existingItem = existing.find(e => `${e.category}:${e.componentId}` === key)
-    if (existingItem) {
-      // Increment quantity
-      useDesignStore.setState({
-        selectedEquipment: existing.map(e =>
-          `${e.category}:${e.componentId}` === key ? { ...e, quantity: e.quantity + 1 } : e
-        ),
-      })
-    } else {
-      useDesignStore.setState({
-        selectedEquipment: [...existing, {
-          category, componentId: component.id || component.name,
-          name: component.name, mass_kg: component.mass_kg || 0,
-          power_w: component.power_w || 0, cost_keur: component.cost_keur || 0,
-          quantity: 1,
-        }],
-      })
-    }
-    // Mark design stale — triggers reconvergence to update budgets
-    useDesignStore.getState().markStale('equipment')
-
-    // Also send via WebSocket if session active (for real-time collaboration)
-    const storeSendEdit = useSessionStore.getState().sendEdit
-    if (!storeSendEdit) {
-      // No session — equipment persisted to store, design marked stale, user can re-run
-      return
-    }
-
-    // Rich parameter mapping: each category can produce multiple parameter edits
-    const EFFECTS: Record<string, { paramId: string; extract: (c: any) => number | null }[]> = {
-      batteries: [
-        { paramId: 'power.battery_capacity_wh', extract: c => c.performance?.capacity_wh ?? null },
-        { paramId: 'power.battery_mass_kg', extract: c => c.mass_kg ?? null },
-      ],
-      solar_cells: [
-        { paramId: 'power.sa_power_eol_w', extract: c => c.performance?.power_w ?? null },
-        { paramId: 'power.sa_mass_kg', extract: c => c.mass_kg ?? null },
-      ],
-      reaction_wheels: [
-        { paramId: 'aocs.mass_kg', extract: c => c.mass_kg ? c.mass_kg * 4 : null },
-        { paramId: 'aocs.wheel_momentum_nms', extract: c => c.performance?.momentum_nms ?? null },
-      ],
-      star_trackers: [
-        { paramId: 'aocs.pointing_accuracy_deg', extract: c => c.performance?.accuracy_arcsec ? c.performance.accuracy_arcsec / 3600 : null },
-      ],
-      transponders: [
-        { paramId: 'link.ttc_mass_kg', extract: c => c.mass_kg ?? null },
-        { paramId: 'link.ttc_power_w', extract: c => c.power_w ?? null },
-      ],
-      thrusters: [
-        { paramId: 'propulsion.isp_s', extract: c => c.performance?.isp_s ?? null },
-        { paramId: 'propulsion.total_mass_kg', extract: c => c.mass_kg ?? null },
-      ],
-    }
-
-    const effects = EFFECTS[category] || []
-    for (const eff of effects) {
-      const value = eff.extract(component)
-      if (value !== null) {
-        storeSendEdit(eff.paramId, value, {
-          rationale: `Selected ${component.name} from ${component.manufacturer || 'KB'}`,
-          equipmentId: component.id,
-          editType: 'equipment_selection',
+    // SYSTEM-V: When entering Phase 1 for the first time, auto-create segment elements
+    if (p === 1 && activePhase === 0) {
+      const sid = useDesignStore.getState().studyId
+      const ms = useModelStore.getState()
+      if (sid && ms.elements.size === 0) {
+        // Create mission root + standard segments
+        const createEl = ms.createElement
+        const missionName = useDesignStore.getState().missionNeed?.problem_statement?.slice(0, 40) || 'New Mission'
+        createEl(sid, { name: missionName, element_type: 'mission', segment: 'space', diagram_x: 300, diagram_y: 10 } as any).then(missionId => {
+          if (!missionId) return
+          createEl(sid, { name: 'Space Segment', element_type: 'segment', segment: 'space', parent_id: missionId, diagram_x: 100, diagram_y: 100 } as any)
+          createEl(sid, { name: 'Ground Segment', element_type: 'segment', segment: 'ground', parent_id: missionId, diagram_x: 300, diagram_y: 100 } as any)
+          createEl(sid, { name: 'Launch Segment', element_type: 'segment', segment: 'space', parent_id: missionId, diagram_x: 500, diagram_y: 100 } as any)
+          createEl(sid, { name: 'Operations', element_type: 'segment', segment: 'operations', parent_id: missionId, diagram_x: 300, diagram_y: 250 } as any)
         })
       }
     }
 
-    // Fallback: if no effects matched, try mass as the primary param
-    if (effects.length === 0 && component.mass_kg) {
-      storeSendEdit(`${category}.mass_kg`, component.mass_kg, {
-        rationale: `Selected ${component.name}`,
-        equipmentId: component.id,
-        editType: 'equipment_selection',
-      })
+    setPrevPhase(activePhase)
+    setActivePhaseRaw(p)
+  }
+  // SYSTEM-V: Reload element tree when phase changes or design completes
+  const studyIdForReload = useDesignStore(s => s.studyId)
+  const loadModel = useModelStore(s => s.loadStudyModel)
+  useEffect(() => {
+    if (studyIdForReload && activePhase >= 1) {
+      loadModel(studyIdForReload)
     }
+  }, [activePhase, studyIdForReload])
+  // Also reload after design run completes (seeds the element tree)
+  useEffect(() => {
+    if (!isRunning && studyIdForReload && activePhase >= 1) {
+      loadModel(studyIdForReload)
+    }
+  }, [isRunning])
+
+  const missionNeed = useDesignStore(s => s.missionNeed)
+  const result = useDesignStore(s => s.result)
+  const archReqs = useDesignStore(s => s.architectureDerivedReqs)
+  const error = useDesignStore(s => s.error)
+  const isRunning = useDesignStore(s => s.isRunning)
+  const designStale = useDesignStore(s => s.designStale)
+  const runDesign = useDesignStore(s => s.runDesign)
+  const requirements = useDesignStore(s => s.requirements)
+
+  // Phase unlock + completion logic
+  const hasNeed = !!(missionNeed?.problem_statement && missionNeed?.objectives?.length > 0)
+  const hasDesign = !!result
+  const hasArch = (archReqs?.length || 0) > 0
+  const modelElements = useModelStore(s => s.elements)
+  const selectedEquipmentCount = Array.from(modelElements.values()).filter(e => e.element_type === 'component').length
+  const phaseCompletion = useDesignStore(s => s.phaseCompletion)
+  const setPhaseComplete = useDesignStore(s => s.setPhaseComplete)
+
+  const phaseUnlocked = (p: Phase): boolean => {
+    if (p === 0) return true
+    if (p === 1) return hasNeed
+    if (p === 2) return hasDesign
+    if (p === 3) return hasArch
+    if (p === 4) return hasArch && hasDesign
+    if (p === 5) return hasArch && hasDesign
+    return false
   }
 
-  // Tabs organized by workflow phase
-  // Determine current design maturity level based on what's been completed
-  const hasNeed = !!(missionNeed.problem_statement && missionNeed.objectives.length > 0)
-  const hasDesignResult = !!result
-  const hasArchitecture = !!(useDesignStore.getState().architectureDerivedReqs?.length > 0)
-  const currentLevel = hasArchitecture ? 4 : hasDesignResult ? 3 : hasNeed ? 1 : 0
-
-  // Tabs organized by System-V level with progressive unlock
-  const centerTabs: { id: CenterTab; label: string; group?: string; level: number }[] = useMemo(() => [
-    // Level 1: Mission Architecture (after need defined)
-    { id: 'design', label: 'Dashboard', group: 'Mission', level: 1 },
-    { id: 'conops', label: 'ConOps', level: 1 },
-    { id: 'functions', label: 'Functions', level: 1 },
-    { id: 'reqs', label: 'Requirements', level: 1 },
-    // Level 2: System Architecture (after design run)
-    { id: 'architecture', label: 'Architecture', group: 'System', level: 2 },
-    { id: 'interfaces', label: 'Interfaces', level: 2 },
-    { id: 'budgets', label: 'Eng. Budgets', level: 2 },
-    { id: 'trade', label: 'Trade Studies', level: 2 },
-    // Level 3: Subsystem Design (after architecture selected)
-    { id: 'linkbudget', label: 'Link Budget', group: 'Subsystem', level: 3 },
-    { id: 'optimizer', label: 'Optimizer', level: 3 },
-    { id: 'cost', label: 'Cost', level: 3 },
-    // Level 4: Verification (after subsystem design)
-    { id: 'compliance', label: 'Compliance', group: 'Verify', level: 4 },
-    { id: 'verification', label: 'V&V Matrix', level: 4 },
-    { id: 'gate', label: 'Gate Review', level: 4 },\n    { id: 'pm', label: 'Project Mgmt', level: 2 },
-    // Cross-cutting (always available after Level 1)
-    { id: 'positions', label: 'Positions', group: 'Team', level: 1 },
-    { id: 'answers', label: 'Q&A', level: 1 },
-    { id: 'exports', label: 'Exports', group: 'Data', level: 2 },
-    { id: 'parametric', label: 'Parametric', level: 1 },
-    { id: 'audit', label: 'Changes', level: 1 },
-    { id: 'help', label: 'Help', level: 0 },
-  ], [])
-
-  // Filter tabs to only show those at or below current level
-  const visibleTabs = centerTabs.filter(t => t.level <= currentLevel)
-
-  const handleTemplateInstantiated = (newStudyId: string) => {
-    setStudyId(newStudyId)
-    setShowTemplateGallery(false)
-    setCenterTab('design')
+  // Auto-detect phase completion from state
+  const isPhaseComplete = (p: Phase): boolean => {
+    if (phaseCompletion[p]) return true // Manual override
+    if (p === 0) return hasNeed
+    if (p === 1) return hasDesign && hasArch
+    if (p === 2) return hasArch && Array.from(modelElements.values()).some(e => e.element_type === 'subsystem')
+    if (p === 3) return selectedEquipmentCount > 0
+    if (p === 4) return false // Integration requires manual sign-off
+    if (p === 5) return false // Verification requires manual sign-off
+    return false
   }
+
+  // Quick budget summary for margin tower
+  const params = result?.parameters || {}
+  const get = (id: string) => { const p = (params as any)[id]; return p && typeof p.value === 'number' ? p.value : 0 }
+  const massUsed = get('mass.dry_mass_kg')
+  const massAlloc = requirements.target_mass_kg || 6
+  const massMargin = massAlloc > 0 ? ((massAlloc - massUsed) / massAlloc * 100) : 0
 
   return (
-    <div className="app">
-      <header className="header">
-        <h1>SpaceCDF</h1>
-        <span className="subtitle">AI-Supported Concurrent Design Facility</span>
-        <div style={{ marginLeft: 'auto', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-          {result && (
-            <>
-              <span className="stat">
-                {result.converged ? '✓ Converged' : '⚠ Not converged'} in{' '}
-                <strong>{result.iterations}</strong> iterations
+    <div style={{ display: 'flex', height: '100vh', background: 'var(--bg-primary, #0a0e1a)', color: '#d1d5db' }}>
+      {/* Phase sidebar */}
+      <nav style={{ width: '70px', background: '#111827', borderRight: '1px solid #374151', display: 'flex', flexDirection: 'column', padding: '0.5rem 0' }}>
+        <div style={{ textAlign: 'center', fontSize: '0.6rem', fontWeight: 700, color: '#3b82f6', padding: '0.3rem', marginBottom: '0.5rem' }}>
+          SCDF
+        </div>
+        {([0, 1, 2, 3, 4, 5] as Phase[]).map(p => {
+          const unlocked = phaseUnlocked(p)
+          const active = activePhase === p
+          return (
+            <button key={p} onClick={() => unlocked && setActivePhase(p)} style={{
+              padding: '0.5rem 0.25rem', margin: '0.15rem 0.25rem', borderRadius: '6px', cursor: unlocked ? 'pointer' : 'not-allowed',
+              background: active ? `${PHASE_COLORS[p]}20` : 'transparent',
+              border: active ? `2px solid ${PHASE_COLORS[p]}` : '2px solid transparent',
+              opacity: unlocked ? 1 : 0.35, transition: 'all 0.15s',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.15rem',
+            }}>
+              <span style={{ fontSize: '0.85rem', fontWeight: 700, color: active ? PHASE_COLORS[p] : '#6b7280' }}>{p}</span>
+              <span style={{ fontSize: '0.5rem', color: active ? PHASE_COLORS[p] : '#6b7280', lineHeight: 1.1, textAlign: 'center' }}>
+                {PHASE_SHORT[p]}
               </span>
-              <span className="stat">
-                <strong>{result.total_time_s}s</strong>
-              </span>
-              {conflictCount > 0 && (
-                <span className="stat" style={{ color: criticalCount > 0 ? 'var(--danger)' : 'var(--warning)' }}>
-                  {conflictCount} conflict{conflictCount !== 1 ? 's' : ''}
-                </span>
+              {/* Phase completion indicator */}
+              {unlocked && (
+                <span style={{
+                  width: 5, height: 5, borderRadius: '50%',
+                  background: isPhaseComplete(p) ? '#10b981' : unlocked ? '#f59e0b' : '#374151',
+                }} title={isPhaseComplete(p) ? 'Complete' : 'In progress'} />
               )}
-            </>
-          )}
-          <button className="btn btn-sm" onClick={() => setShowTemplateGallery(true)}>
-            New from Template
-          </button>
-          {(sessionId || result) && currentLevel >= 3 && (
-            <button className="btn btn-sm" onClick={() => setShowEquipmentBrowser(true)}>
-              Browse Equipment
             </button>
-          )}
-        </div>
-      </header>
+          )
+        })}
 
-      <SessionBar
-        wsStatus={wsStatus}
-        onStartSession={handleStartSession}
-        onLeaveSession={handleLeaveSession}
-      />
+        <div style={{ flex: 1 }} />
 
-      {/* Phase-adaptive layout: steps 1-3 use full center, step 4 uses 3-panel */}
-      <main className={`main ${centerTab === 'design' || result ? 'phase-design' : 'phase-workflow'}`}>
+        {/* Run design button */}
+        <button onClick={() => runDesign()} disabled={isRunning} style={{
+          margin: '0.25rem', padding: '0.4rem', borderRadius: '6px', cursor: isRunning ? 'wait' : 'pointer',
+          background: designStale ? '#f59e0b' : '#374151', color: designStale ? '#000' : '#9ca3af',
+          border: 'none', fontSize: '0.55rem', fontWeight: 600,
+        }}>
+          {isRunning ? '...' : designStale ? 'Run' : 'OK'}
+        </button>
 
-        {/* Left: thin step indicator (always visible) */}
-        <StudyStepper activeStep={centerTab === 'design' ? 'design' : centerTab as any} onStepClick={(step) => {
-          if (step === 'design') setCenterTab('design')
-          else setCenterTab(step as CenterTab)
-        }} />
+        {/* Save / Load / New — Save highlights when design is stale */}
+        <button onClick={() => {
+          const state = useDesignStore.getState()
+          // Include element tree snapshot for offline recovery
+          const elements = Array.from(useModelStore.getState().elements.values())
+          const interfaces = Array.from(useModelStore.getState().interfaces.values())
+          const saveData = { ...state, _elementTreeSnapshot: { elements, interfaces } }
+          const blob = new Blob([JSON.stringify(saveData, null, 2)], { type: 'application/json' })
+          const url = URL.createObjectURL(blob)
+          const a = document.createElement('a'); a.href = url
+          a.download = `spacecdf-${new Date().toISOString().slice(0, 10)}.json`
+          a.click(); URL.revokeObjectURL(url)
+        }} style={{ margin: '0.15rem 0.25rem', padding: '0.3rem', borderRadius: '4px', background: designStale ? '#f59e0b30' : '#1f2937', border: designStale ? '1px solid #f59e0b' : '1px solid transparent', color: designStale ? '#f59e0b' : '#6b7280', fontSize: '0.5rem', cursor: 'pointer' }}>
+          Save
+        </button>
+        <button onClick={() => {
+          const input = document.createElement('input'); input.type = 'file'; input.accept = '.json'
+          input.onchange = (e: any) => {
+            const file = e.target.files?.[0]; if (!file) return
+            const reader = new FileReader()
+            reader.onload = (ev) => {
+              try {
+                const data = JSON.parse(ev.target?.result as string)
+                // Preserve studyId so element tree can reconnect
+                const savedStudyId = data.studyId
+                const treeSnapshot = data._elementTreeSnapshot
+                delete data._elementTreeSnapshot
+                useDesignStore.setState(data)
+                // Reload element tree from backend if studyId exists
+                if (savedStudyId) {
+                  useModelStore.getState().loadStudyModel(savedStudyId).catch(() => {
+                    // Backend unavailable — restore from snapshot if available
+                    if (treeSnapshot?.elements?.length) {
+                      const elMap = new Map()
+                      for (const el of treeSnapshot.elements) elMap.set(el.id, el)
+                      const ifMap = new Map()
+                      for (const i of (treeSnapshot.interfaces || [])) ifMap.set(i.id, i)
+                      useModelStore.setState({ elements: elMap, interfaces: ifMap })
+                    }
+                  })
+                }
+              } catch { alert('Invalid file') }
+            }
+            reader.readAsText(file)
+          }
+          input.click()
+        }} style={{ margin: '0.15rem 0.25rem', padding: '0.3rem', borderRadius: '4px', background: '#1f2937', border: 'none', color: '#6b7280', fontSize: '0.5rem', cursor: 'pointer' }}>
+          Load
+        </button>
+        <button onClick={() => {
+          const id = prompt('Enter Study ID or Mission ID:')
+          if (!id) return
+          // Try to load from backend by study ID
+          useDesignStore.setState({ studyId: id })
+          useModelStore.getState().loadStudyModel(id).then(() => {
+            // Check if we got elements
+            if (useModelStore.getState().elements.size > 0) {
+              setActivePhaseRaw(1 as Phase) // Jump to Phase 1 since we have data
+            } else {
+              alert('No elements found for that ID. Check the ID and try again.')
+            }
+          }).catch(() => {
+            alert('Could not connect to backend. Check the ID and server status.')
+          })
+        }} style={{ margin: '0.15rem 0.25rem', padding: '0.3rem', borderRadius: '4px', background: '#1f2937', border: 'none', color: '#6b7280', fontSize: '0.5rem', cursor: 'pointer' }}>
+          Open
+        </button>
+        <button onClick={() => {
+          if (!confirm('Start new? Save first if needed.')) return
+          localStorage.removeItem('spacecdf-design-state'); window.location.reload()
+        }} style={{ margin: '0.15rem 0.25rem 0.5rem', padding: '0.3rem', borderRadius: '4px', background: '#1f2937', border: 'none', color: '#6b7280', fontSize: '0.5rem', cursor: 'pointer' }}>
+          New
+        </button>
+      </nav>
 
-        {/* Center: workflow steps OR tabbed design content */}
-        <div className="panel" style={{ background: 'var(--bg-primary)', padding: 0 }}>
-          {/* Show workflow step content for steps 1-3 */}
-          {centerTab === 'need' && (
-            <div style={{ maxWidth: '800px', margin: '0 auto', padding: '1.5rem' }}>
-              <MissionNeedPanel onNext={() => setCenterTab('concept' as CenterTab)} />
+      {/* Main area */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {/* Header: title + margin tower */}
+        <header style={{ padding: '0.3rem 1rem', borderBottom: '1px solid #374151', display: 'flex', alignItems: 'center', gap: '0.75rem', background: '#111827' }}>
+          <h1 style={{ fontSize: '0.9rem', margin: 0, color: '#d1d5db' }}>SpaceCDF</h1>
+          <span style={{ fontSize: '0.65rem', color: '#6b7280' }}>{PHASE_LABELS[activePhase]}</span>
+          {/* Prominent Run Design button */}
+          <button onClick={() => runDesign()} disabled={isRunning} style={{
+            padding: '0.25rem 0.75rem', borderRadius: '4px', cursor: isRunning ? 'wait' : 'pointer',
+            background: designStale ? '#f59e0b' : isRunning ? '#374151' : '#10b981',
+            color: designStale ? '#000' : 'white', border: 'none',
+            fontSize: '0.72rem', fontWeight: 600,
+          }}>
+            {isRunning ? 'Running...' : designStale ? '▶ Run Design' : '✓ Design Current'}
+          </button>
+          <span style={{ fontSize: '0.6rem', color: '#6b7280', fontFamily: 'monospace' }}
+            title="Unique mission identifier — used in requirement numbering and document references">
+            {useDesignStore.getState().missionId}
+          </span>
+          <span style={{ flex: 1 }} />
+          {/* Compact margin indicators — only show at system level and above with meaningful values */}
+          {result && get('mass.dry_mass_kg') > 0 && activePhase >= 2 && (
+            <div style={{ display: 'flex', gap: '0.5rem', fontSize: '0.65rem' }}>
+              <span style={{ color: massMargin > 20 ? '#10b981' : massMargin > 0 ? '#f59e0b' : '#ef4444' }}>
+                Mass: {massMargin.toFixed(0)}%
+              </span>
+              <span style={{ color: get('power.sa_power_eol_w') > get('power.total_sunlight_w') ? '#10b981' : '#ef4444' }}>
+                Power: {get('power.sa_power_eol_w') > 0 ? ((get('power.sa_power_eol_w') - get('power.total_sunlight_w')) / get('power.sa_power_eol_w') * 100).toFixed(0) : '—'}%
+              </span>
+              <span style={{ color: get('link.ttc_margin_db') >= 3 ? '#10b981' : '#ef4444' }}>
+                TTC: {get('link.ttc_margin_db').toFixed(0)}dB
+              </span>
             </div>
           )}
-          {centerTab === 'concept' && (
-            <div style={{ maxWidth: '900px', margin: '0 auto', padding: '1.5rem' }}>
-              <MissionTradeView onConceptSelected={() => setCenterTab('requirements' as CenterTab)} />
-            </div>
-          )}
-          {centerTab === 'requirements' && (
-            <div style={{ maxWidth: '800px', margin: '0 auto', padding: '1.5rem' }}>
-              <RequirementsPanel />
-            </div>
-          )}
+        </header>
 
-          {/* Design phase: tabbed content */}
-          {!['need', 'concept', 'requirements'].includes(centerTab) && (
-            <>
-              {/* Level indicator */}
-              <div style={{ display: 'flex', gap: '0.5rem', padding: '0.3rem 1rem', fontSize: '0.65rem', color: '#6b7280', borderBottom: '1px solid var(--border)', alignItems: 'center' }}>
-                <span style={{ fontWeight: 700 }}>LEVEL:</span>
-                {['Need', 'Mission Arch', 'System Arch', 'Subsystem', 'V&V'].map((lvl, i) => (
-                  <span key={i} style={{
-                    padding: '0.1rem 0.4rem', borderRadius: '3px', fontSize: '0.6rem',
-                    background: i <= currentLevel ? ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ef4444'][i] + '22' : '#374151',
-                    color: i <= currentLevel ? ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ef4444'][i] : '#4b5563',
-                    fontWeight: i === currentLevel ? 700 : 400,
-                  }}>{lvl}</span>
-                ))}
-                {currentLevel < 4 && (
-                  <span style={{ color: '#9ca3af', marginLeft: '0.5rem' }}>
-                    {currentLevel === 0 ? 'Define mission need to unlock Mission Architecture' :
-                     currentLevel === 1 ? 'Run design to unlock System Architecture' :
-                     currentLevel === 2 ? 'Select architecture options to unlock Subsystem Design' :
-                     'Complete subsystem design to unlock V&V'}
-                  </span>
-                )}
-              </div>
-              <div style={{ display: 'flex', gap: '0.2rem', padding: '0.4rem 1rem', borderBottom: '1px solid var(--border)', flexWrap: 'wrap', alignItems: 'center' }}>
-                {visibleTabs.map((tab, i) => (
-                  <span key={tab.id} style={{ display: 'contents' }}>
-                    {tab.group && (
-                      <span style={{
-                        fontSize: '0.55rem', color: '#6b7280', textTransform: 'uppercase',
-                        letterSpacing: '0.08em', marginLeft: i > 0 ? '0.5rem' : 0,
-                        marginRight: '0.15rem', fontWeight: 700,
-                      }}>{tab.group}</span>
-                    )}
-                    <button
-                      onClick={() => setCenterTab(tab.id)}
-                      style={{
-                        background: centerTab === tab.id ? 'var(--accent)' : 'transparent',
-                        color: centerTab === tab.id ? 'white' : 'var(--text-secondary)',
-                        border: 'none', padding: '0.25rem 0.55rem', borderRadius: '4px',
-                        cursor: 'pointer', fontSize: '0.68rem', fontWeight: 500,
-                      }}
-                    >{tab.label}</button>
-                  </span>
-                ))}
-              </div>
-              <DesignStateBar autoReconverge={autoReconverge} onToggleAuto={() => setAutoReconverge(a => !a)} />
-              <div style={{ padding: '0 1rem', overflow: 'auto', flex: 1 }}>
-                {centerTab === 'design' && <DesignWorkspace />}
-                {centerTab === 'conops' && (
-                  <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-                    <MissionArchitectureEditor />
-                    <ConOpsEditor />
-                  </div>
-                )}
-                {centerTab === 'functions' && <FunctionTreeView />}
-                {centerTab === 'reqs' && <RequirementsEditor studyId={studyId} />}
-                {centerTab === 'architecture' && (
-                  <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-                    <div style={{ flex: '0 0 50%', overflow: 'auto' }}>
-                      <SystemArchitectureEditor />
-                    </div>
-                    <div style={{ flex: '0 0 50%', borderTop: '2px solid var(--border, #374151)' }}>
-                      <SystemBlockDiagram />
-                    </div>
-                  </div>
-                )}
-                {centerTab === 'interfaces' && <InterfaceMatrixView onNavigate={(tab) => setCenterTab(tab as CenterTab)} />}
-                {centerTab === 'positions' && (
-                  <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-                    <div style={{ flex: '0 0 40%', overflow: 'auto' }}>
-                      <PositionPanel />
-                    </div>
-                    <div style={{ flex: '0 0 60%', borderTop: '2px solid var(--border, #374151)', overflow: 'auto' }}>
-                      <PositionAnswersPanel />
-                    </div>
-                  </div>
-                )}
-                {centerTab === 'answers' && <PositionAnswersPanel />}
-                {centerTab === 'gate' && <GateReviewPanel studyId={studyId} onNavigate={(tab) => setCenterTab(tab as CenterTab)} />}
-                {centerTab === 'compliance' && <ComplianceMatrix studyId={studyId} />}
-                {centerTab === 'ecss' && <EcssCompliancePanel studyId={studyId} />}
-                {centerTab === 'cost' && <CostBreakdown studyId={studyId} />}
-                {centerTab === 'trade' && <TradeStudyPanel studyId={studyId} />}
-                {centerTab === 'snapshots' && <SnapshotsPanel sessionId={sessionId} />}
-                {centerTab === 'optimizer' && <OptimizerPanel sessionId={sessionId} />}
-                {centerTab === 'exports' && <ExportsPanel studyId={studyId} />}
-                {centerTab === 'budgets' && <EngineeringBudgets />}\n                {centerTab === 'pm' && <ProjectManagement />}
-                {centerTab === 'linkbudget' && <LinkBudgetTool />}
-                {centerTab === 'verification' && <VerificationMatrix studyId={studyId} />}
-                {centerTab === 'parametric' && <ParametricEditor />}
-                {centerTab === 'audit' && <ChangeAuditPanel />}
-                {centerTab === 'help' && <UserManual />}
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* Right panel: only visible in design phase */}
-        {(centerTab === 'design' || result) && !['need', 'concept', 'requirements'].includes(centerTab) && (
-          <div className="panel">
-            <div style={{ display: 'flex', gap: '0.25rem', marginBottom: '0.75rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem' }}>
-              {(['insights', 'conflicts', 'exports'] as RightTab[]).map(tab => (
-                <button key={tab} onClick={() => setRightTab(tab)}
-                  style={{
-                    background: rightTab === tab ? 'var(--accent)' : 'transparent',
-                    color: rightTab === tab ? 'white' : 'var(--text-secondary)',
-                    border: 'none', padding: '0.35rem 0.75rem', borderRadius: '4px',
-                    cursor: 'pointer', fontSize: '0.75rem', fontWeight: 600,
-                    textTransform: 'uppercase', letterSpacing: '0.03em', position: 'relative',
-                  }}>
-                  {tab}
-                  {tab === 'conflicts' && conflictCount > 0 && (
-                    <span style={{
-                      position: 'absolute', top: '-4px', right: '-4px',
-                      background: criticalCount > 0 ? 'var(--danger)' : 'var(--warning)',
-                      color: 'white', borderRadius: '50%',
-                      width: '16px', height: '16px', fontSize: '0.6rem',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    }}>{conflictCount}</span>
-                  )}
-                </button>
-              ))}
-            </div>
-            {rightTab === 'insights' && <InsightsPanel />}
-            {rightTab === 'conflicts' && <><h2>Cross-Domain Conflicts</h2><ConflictsPanel /></>}
-            {rightTab === 'exports' && (
-              <div style={{ padding: '1rem' }}>
-                <h3 style={{ marginBottom: '0.5rem' }}>Exports</h3>
-                <p style={{ fontSize: '0.78rem', color: '#9ca3af', marginBottom: '0.75rem' }}>
-                  All exports are consolidated in the center panel Exports tab.
-                </p>
-                <button className="btn" onClick={() => setCenterTab('exports')}
-                  style={{ width: '100%', fontSize: '0.82rem' }}>
-                  Open Exports Tab
-                </button>
-                <ExportPanel studyId={studyId} />
-              </div>
-            )}
+        {/* Error banner */}
+        {error && (
+          <div style={{ padding: '0.3rem 1rem', background: 'rgba(239,68,68,0.15)', borderBottom: '1px solid #ef4444', fontSize: '0.72rem', color: '#ef4444', display: 'flex', alignItems: 'center' }}>
+            {error}
+            <button onClick={() => useDesignStore.setState({ error: null })} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}>×</button>
           </div>
         )}
-      </main>
 
-      {/* Live toast notifications */}
-      <LiveEditToast />
+        {/* Review prompt banner (shown when navigating back to earlier phases) */}
+        {showReviewBanner && (
+          <div style={{ padding: '0.3rem 1rem', background: 'rgba(59,130,246,0.15)', borderBottom: '1px solid #3b82f6', fontSize: '0.72rem', color: '#93c5fd', display: 'flex', alignItems: 'center' }}>
+            <span style={{ fontWeight: 600, marginRight: '0.3rem' }}>Review:</span> {showReviewBanner}
+            <button onClick={() => setShowReviewBanner(null)} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#3b82f6', cursor: 'pointer' }}>×</button>
+          </div>
+        )}
 
-      {/* History drawer (edit audit trail) */}
-      <HistoryDrawer sessionId={sessionId} />
-
-      {/* Conflict review modal */}
-      {showConflictReview && (
-        <ConflictReviewModal onClose={() => setShowConflictReview(false)} />
-      )}
-
-      {/* Equipment browser modal */}
-      {showEquipmentBrowser && (
-        <EquipmentBrowser
-          studyId={studyId}
-          onClose={() => setShowEquipmentBrowser(false)}
-          onSelect={handleEquipmentSelect}
-        />
-      )}
-
-      {/* Template gallery modal */}
-      {showTemplateGallery && (
-        <TemplateGallery
-          onClose={() => setShowTemplateGallery(false)}
-          onInstantiated={handleTemplateInstantiated}
-        />
-      )}
-
-      {/* Session starter modal */}
-      {showSessionStarter && (
-        <SessionStarterModal
-          onConfirm={handleSessionConfirm}
-          onCancel={() => setShowSessionStarter(false)}
-          isLoading={createSession.isPending}
-        />
-      )}
-    </div>
-  )
-}
-
-function SessionStarterModal({
-  onConfirm, onCancel, isLoading,
-}: {
-  onConfirm: (positionId: string, displayName: string, positionIds: string[]) => void
-  onCancel: () => void
-  isLoading: boolean
-}) {
-  const [selected, setSelected] = useState<string[]>(['systems_engineer'])
-  const [name, setName] = useState('')
-
-  const toggle = (id: string) => {
-    setSelected(prev =>
-      prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]
-    )
-  }
-
-  return (
-    <div style={{
-      position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)',
-      zIndex: 9000, display: 'flex', alignItems: 'center', justifyContent: 'center',
-    }} onClick={onCancel}>
-      <div style={{
-        background: 'var(--bg-primary, #111827)', border: '1px solid var(--border, #374151)',
-        borderRadius: '8px', padding: '1.5rem', maxWidth: '480px', width: '90%',
-      }} onClick={e => e.stopPropagation()}>
-        <h2>Join a Design Session</h2>
-        <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary, #9ca3af)', marginBottom: '0.75rem' }}>
-          Select one or more positions. Small teams can claim multiple roles.
-          You can edit parameters owned by any of your positions.
-        </p>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginBottom: '1rem' }}>
-          {POSITION_OPTIONS.map(p => {
-            const active = selected.includes(p.id)
-            const c = POSITION_COLOR[p.id] || '#3b82f6'
-            return (
-              <label key={p.id} style={{
-                display: 'flex', alignItems: 'center', gap: '0.3rem',
-                fontSize: '0.78rem', padding: '0.25rem 0.6rem', borderRadius: '4px', cursor: 'pointer',
-                background: active ? `${c}22` : 'transparent',
-                border: `1px solid ${active ? c : 'var(--border, #374151)'}`,
-                color: active ? c : 'var(--text-secondary, #9ca3af)',
-              }}>
-                <input type="checkbox" checked={active} onChange={() => toggle(p.id)}
-                  style={{ width: 14, height: 14 }} />
-                {p.label}
-              </label>
-            )
-          })}
-        </div>
-        <div className="form-group">
-          <label>Display name (optional)</label>
-          <input className="input" value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Alice" />
-        </div>
-        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
-          <button className="btn" onClick={() => onConfirm(selected[0], name, selected)} disabled={isLoading || selected.length === 0}>
-            {isLoading ? 'Creating...' : `Join as ${selected.length} position${selected.length !== 1 ? 's' : ''}`}
-          </button>
-          <button className="btn btn-sm" onClick={onCancel} style={{ background: 'var(--border, #374151)' }}>
-            Cancel
-          </button>
-        </div>
+        {/* Phase content — each wrapped in error boundary for resilience */}
+        <main style={{ flex: 1, overflow: 'hidden' }}>
+          <ErrorBoundary phaseName={PHASE_LABELS[activePhase]} key={activePhase}>
+            {activePhase === 0 && <Phase0Need />}
+            {activePhase === 1 && <Phase1MissionArch />}
+            {activePhase === 2 && <Phase2SystemArch />}
+            {activePhase === 3 && <Phase3SubsystemDesign />}
+            {activePhase === 4 && <Phase4Integration />}
+            {activePhase === 5 && <Phase5Verification />}
+          </ErrorBoundary>
+        </main>
       </div>
     </div>
   )
@@ -577,7 +323,7 @@ function SessionStarterModal({
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AppContent />
+      <AppShell />
     </QueryClientProvider>
   )
 }

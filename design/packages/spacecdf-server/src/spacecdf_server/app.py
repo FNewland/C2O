@@ -12,7 +12,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from .routers import studies, design, agents, kb, exports, positions, engineering, sessions, ws, templates, ecss, snapshots, optimize, compliance, lifecycle, ai
+from .routers import studies, design, agents, kb, exports, positions, engineering, sessions, ws, templates, ecss, snapshots, optimize, compliance, lifecycle, ai, requirements, conops, thermal, ground, fmeca, elements
 from .db.engine import DATABASE_URL, dispose_engine, get_engine
 from .db.write_queue import start_worker, stop_worker
 
@@ -113,6 +113,12 @@ app.include_router(optimize.router, prefix="/api/optimize", tags=["Optimize"])
 app.include_router(compliance.router, prefix="/api/compliance", tags=["Compliance"])
 app.include_router(lifecycle.router, prefix="/api/lifecycle", tags=["Lifecycle"])
 app.include_router(ai.router, prefix="/api/ai", tags=["AI Advisor"])
+app.include_router(requirements.router, prefix="/api/requirements", tags=["Requirements"])
+app.include_router(conops.router, prefix="/api/conops", tags=["ConOps"])
+app.include_router(thermal.router, prefix="/api/thermal", tags=["Thermal"])
+app.include_router(ground.router, prefix="/api/ground", tags=["Ground Segment"])
+app.include_router(fmeca.router, prefix="/api/fmeca", tags=["FMECA"])
+app.include_router(elements.router, prefix="/api", tags=["Design Elements"])
 app.include_router(ws.router, tags=["WebSocket"])
 
 

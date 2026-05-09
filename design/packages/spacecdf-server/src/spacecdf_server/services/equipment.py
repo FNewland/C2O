@@ -24,6 +24,9 @@ DOMAIN_TO_CATEGORIES = {
     "data": ["obcs"],
     "thermal": ["thermal_hardware"],
     "integration": ["harnesses"],
+    # Ground segment equipment
+    "ground_rf": ["ground_antennas", "ground_rf", "ground_baseband"],
+    "ground_ops": ["ground_software", "ground_timing"],
 }
 
 # Map SpaceCDF domains to the key sizing parameter and unit

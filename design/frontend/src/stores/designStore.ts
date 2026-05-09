@@ -60,6 +60,15 @@ export interface DesignResult {
   conflicts: CrossDomainConflict[]
 }
 
+export interface MissionPhase {
+  id: string; name: string; duration_days: number; description: string
+}
+
+export interface OperationalMode {
+  id: string; name: string; description: string
+  subsystems_active: string[]; pointing: string; dataflow: string
+}
+
 export interface MissionRequirements {
   name: string
   mission_type: string
@@ -118,7 +127,10 @@ interface DesignStore {
   isRunning: boolean
   error: string | null
   studyId: string | null
+  missionId: string  // Human-readable unique mission identifier (e.g., "SCDF-2026-001")
 
+  // Architecture selections (persisted)
+  architectureSelections: Record<string, any>
   // Architecture-derived requirements
   architectureDerivedReqs: Array<{ id: string; level: string; text: string; subsystem: string }>
   // Generated requirements (persisted)
@@ -128,22 +140,63 @@ interface DesignStore {
   // Selected equipment (persisted) — feeds into budget roll-up
   selectedEquipment: Array<{ category: string; componentId: string; name: string; mass_kg: number; power_w: number; cost_keur: number; quantity: number }>
 
+  // ConOps state (persisted so it survives tab switches)
+  missionPhases: MissionPhase[]
+  operationalModes: OperationalMode[]
+
+  setMissionPhases: (phases: MissionPhase[]) => void
+  setOperationalModes: (modes: OperationalMode[]) => void
+
   // Reactive state
   designStale: boolean  // true when requirements changed since last design run
   lastChangeSource: string  // which tab made the last change
   changeHistory: ChangeRecord[]  // recent changes for audit trail
   pendingConflicts: string[]  // conflicts detected from latest change
 
+  // Ground stations (shared between Phase 1 and Phase 2)
+  groundStations: Array<{ id: string; name: string; latitude: number; longitude: number; antenna_m: number; bands: string[]; min_elevation: number; cost_keur: number; owned: boolean }>
+  setGroundStations: (stations: any[]) => void
+
   // Design constraints from selections
   selectedRfBand: string | null  // constrains transponder/antenna selection
   selectedLaunchProvider: string | null  // constrains mass allocation
   selectedLicenseType: string  // amateur/experimental/commercial
+
+  // Requirement ID sequence counters — never decrement, never reuse
+  reqSequence: Record<string, number>  // { mission: 3, system: 14, subsystem: 32 }
+  nextReqId: (level: string) => string  // Returns e.g. "SUPERDOVE-SYS-015"
+
+  // V&V change log — tracks all changes to verification entries
+  vvChangeLog: Array<{ req_id: string; field: string; old_value: string; new_value: string; timestamp: number; changed_by: string }>
+  addVVChange: (req_id: string, field: string, old_value: string, new_value: string) => void
+
+  // Budget allocations (persisted) — assigned by systems engineer in SystemBudgetEditor
+  budgetAllocations: Record<string, Record<string, number>>
+  setBudgetAllocations: (allocations: Record<string, Record<string, number>>) => void
+
+  // Interface conflict resolutions (persisted)
+  interfaceResolutions: Record<string, { status: string; selectedOption: string; rationale: string; resolvedBy: string }>
+  setInterfaceResolutions: (resolutions: Record<string, { status: string; selectedOption: string; rationale: string; resolvedBy: string }>) => void
+
+  // Phase completion tracking
+  phaseCompletion: Record<number, boolean>
+  setPhaseComplete: (phase: number, complete: boolean) => void
+
+  // SEMP questionnaire answers (persisted)
+  sempAnswers: Record<string, any>
+  setSempAnswers: (answers: Record<string, any>) => void
+
+  // Parameter overrides — user-set values that persist and override agent defaults
+  // Any component can write here via setParameter(). Values are sent to backend
+  // on runDesign() and injected as sticky (POSITION_OVERRIDE) so agents don't overwrite.
+  parameterOverrides: Record<string, number | string | boolean>
 
   setMissionNeed: (need: Partial<MissionNeedState>) => void
   setRequirements: (req: Partial<MissionRequirements>) => void
   setOrbit: (orbit: Partial<MissionRequirements['orbit']>) => void
   setStudyId: (id: string | null) => void
   markStale: (source: string) => void
+  setParameter: (paramId: string, value: number | string | boolean, source?: string) => void
   applyConvergenceResult: (params: Record<string, DesignParam>, conflicts: CrossDomainConflict[]) => void
   undoLastChange: () => void
   runDesign: () => Promise<void>
@@ -196,10 +249,35 @@ export const useDesignStore = create<DesignStore>()(persist((set, get) => ({
   isRunning: false,
   error: null,
   studyId: null,
+  missionId: `SCDF-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 900) + 100)}`,
+  architectureSelections: {},
   architectureDerivedReqs: [],
   generatedRequirements: [],
   functionsList: [],
   selectedEquipment: [],
+  missionPhases: [
+    { id: 'phase_a', name: 'Phase A (Feasibility)', duration_days: 180, description: 'Concept and technology development, SRR' },
+    { id: 'phase_b', name: 'Phase B (Preliminary Design)', duration_days: 270, description: 'Preliminary design, PDR, technology maturation' },
+    { id: 'phase_c', name: 'Phase C (Detailed Design)', duration_days: 180, description: 'Detailed design, CDR, procurement' },
+    { id: 'phase_d', name: 'Phase D (AIT & Launch)', duration_days: 180, description: 'Assembly, integration, test, launch campaign' },
+    { id: 'leop', name: 'LEOP', duration_days: 3, description: 'Launch, deployment, first contact, initial checkout' },
+    { id: 'commissioning', name: 'Commissioning', duration_days: 30, description: 'Subsystem checkout, calibration, first light' },
+    { id: 'nominal', name: 'Nominal Operations', duration_days: 900, description: 'Primary science/service data collection and delivery' },
+    { id: 'extended', name: 'Extended Operations', duration_days: 365, description: 'Beyond design lifetime, degraded modes, reduced capability' },
+    { id: 'phase_e', name: 'Phase E (Utilisation)', duration_days: 1095, description: 'Full operational phase: science/service, maintenance, orbit manoeuvres' },
+    { id: 'phase_f', name: 'Phase F (Disposal)', duration_days: 30, description: 'End-of-life: passivation, deorbit/graveyard, final data archive' },
+    { id: 'disposal', name: 'Disposal', duration_days: 14, description: 'Passivation, deorbit, final telemetry' },
+  ],
+  operationalModes: [
+    { id: 'safe', name: 'Safe Mode', description: 'Minimum power survival. Entered on anomaly. Sun-pointing, no payload.',
+      subsystems_active: ['EPS', 'OBC', 'TTC (beacon)', 'AOCS (coarse)'], pointing: 'Sun-pointing', dataflow: 'Beacon only → ground' },
+    { id: 'science', name: 'Science / Imaging', description: 'Primary data acquisition. Payload active, nadir-pointing.',
+      subsystems_active: ['EPS', 'OBC', 'Payload', 'AOCS (fine)', 'OBDH'], pointing: 'Nadir (target)', dataflow: 'Instrument → OBDH storage' },
+    { id: 'downlink', name: 'Downlink', description: 'Ground station pass. TX active, data download.',
+      subsystems_active: ['EPS', 'OBC', 'TTC (full)', 'OBDH'], pointing: 'Ground station', dataflow: 'OBDH → TX → GS → processing → user' },
+    { id: 'eclipse', name: 'Eclipse', description: 'Battery-powered. Reduced operations, heaters active.',
+      subsystems_active: ['EPS (battery)', 'OBC', 'TCS (heaters)', 'AOCS (coarse)'], pointing: 'Inertial hold', dataflow: 'None' },
+  ],
   designStale: false,
   lastChangeSource: '',
   changeHistory: [],
@@ -207,6 +285,51 @@ export const useDesignStore = create<DesignStore>()(persist((set, get) => ({
   selectedRfBand: null,
   selectedLaunchProvider: null,
   selectedLicenseType: 'commercial',
+  groundStations: [
+    { id: 'gs1', name: 'Svalbard', latitude: 78.2, longitude: 15.4, antenna_m: 13, bands: ['S', 'X'], min_elevation: 5, cost_keur: 500, owned: false },
+    { id: 'gs2', name: 'Kiruna', latitude: 67.9, longitude: 20.2, antenna_m: 13, bands: ['S', 'X'], min_elevation: 5, cost_keur: 400, owned: false },
+    { id: 'gs3', name: 'Weilheim', latitude: 47.9, longitude: 11.1, antenna_m: 15, bands: ['S', 'X', 'Ka'], min_elevation: 5, cost_keur: 600, owned: false },
+  ],
+  setGroundStations: (stations) => set({ groundStations: stations }),
+  reqSequence: { mission: 0, system: 0, subsystem: 0 },
+  nextReqId: (level) => {
+    const state = get()
+    const prefix = (state.requirements?.name || 'MISSION').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12)
+    const levelCode: Record<string, string> = { mission: 'MIS', system: 'SYS', subsystem: 'SUB' }
+    const code = levelCode[level] || level.toUpperCase().slice(0, 3)
+    const seq = (state.reqSequence[level] || 0) + 1
+    set({ reqSequence: { ...state.reqSequence, [level]: seq } })
+    return `${prefix}-${code}-${String(seq).padStart(3, '0')}`
+  },
+  sempAnswers: {},
+  setSempAnswers: (answers) => set({ sempAnswers: answers }),
+  vvChangeLog: [],
+  addVVChange: (req_id, field, old_value, new_value) => set(s => ({
+    vvChangeLog: [...s.vvChangeLog, {
+      req_id, field, old_value, new_value,
+      timestamp: Date.now(), changed_by: 'systems_engineer',
+    }],
+  })),
+  budgetAllocations: {},
+  setBudgetAllocations: (allocations) => set({ budgetAllocations: allocations }),
+  interfaceResolutions: {},
+  setInterfaceResolutions: (resolutions) => set({ interfaceResolutions: resolutions }),
+  phaseCompletion: {},
+  setPhaseComplete: (phase, complete) => set(s => ({ phaseCompletion: { ...s.phaseCompletion, [phase]: complete } })),
+  parameterOverrides: {},
+
+  setParameter: (paramId, value, source = 'user') => set((s) => ({
+    parameterOverrides: { ...s.parameterOverrides, [paramId]: value },
+    designStale: true,
+    lastChangeSource: source,
+    changeHistory: [...s.changeHistory.slice(-49), {
+      timestamp: Date.now(), source, paramId,
+      oldValue: s.parameterOverrides[paramId], newValue: value,
+    }],
+  })),
+
+  setMissionPhases: (phases) => set({ missionPhases: phases }),
+  setOperationalModes: (modes) => set({ operationalModes: modes }),
 
   setMissionNeed: (need) => set((s) => {
     const record: ChangeRecord = {
@@ -367,22 +490,53 @@ export const useDesignStore = create<DesignStore>()(persist((set, get) => ({
         }
       }
 
+      const parameterOverrides = get().parameterOverrides
       const res = await fetch(`${API_BASE}/design/quick-design`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           requirements,
           mission_need: missionNeed,
+          parameter_overrides: Object.keys(parameterOverrides).length > 0 ? parameterOverrides : undefined,
         }),
       })
       if (!res.ok) {
         throw new Error(`Server error: ${res.status}`)
       }
       const data: DesignResult = await res.json()
+
+      // Prune overrides where agent computed the same value (cleanup stale overrides)
+      const currentOverrides = get().parameterOverrides
+      const prunedOverrides: Record<string, number | string | boolean> = {}
+      for (const [pid, ov] of Object.entries(currentOverrides)) {
+        const computed = data.parameters?.[pid]
+        // Keep override only if agent computed a different value (or param doesn't exist)
+        if (!computed || computed.value !== ov) {
+          prunedOverrides[pid] = ov
+        }
+      }
+
       set({
         result: data, isRunning: false, designStale: false,
         pendingConflicts: (data.conflicts || []).map(c => c.title),
+        parameterOverrides: prunedOverrides,
       })
+
+      // Seed the element tree from design results (model-centric architecture)
+      const sid = get().studyId
+      if (sid && data.parameters) {
+        try {
+          await fetch(`${API_BASE}/studies/${sid}/seed-elements`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              parameters: data.parameters,
+              mission_type: requirements.mission_type || 'earth_observation',
+              spacecraft_class: requirements.spacecraft_class || 'nano',
+            }),
+          })
+        } catch { /* seed is best-effort — don't block design run on seed failure */ }
+      }
     } catch (err) {
       set({ error: String(err), isRunning: false })
     }
@@ -395,14 +549,26 @@ export const useDesignStore = create<DesignStore>()(persist((set, get) => ({
     requirements: state.requirements,
     result: state.result,
     studyId: state.studyId,
+    missionId: state.missionId,
+    architectureSelections: state.architectureSelections,
+    groundStations: state.groundStations,
     architectureDerivedReqs: state.architectureDerivedReqs,
     generatedRequirements: state.generatedRequirements,
     functionsList: state.functionsList,
     selectedEquipment: state.selectedEquipment,
+    missionPhases: state.missionPhases,
+    operationalModes: state.operationalModes,
     selectedRfBand: state.selectedRfBand,
     selectedLaunchProvider: state.selectedLaunchProvider,
     selectedLicenseType: state.selectedLicenseType,
     changeHistory: state.changeHistory,
+    parameterOverrides: state.parameterOverrides,
+    sempAnswers: state.sempAnswers,
+    reqSequence: state.reqSequence,
+    vvChangeLog: state.vvChangeLog,
+    budgetAllocations: state.budgetAllocations,
+    interfaceResolutions: state.interfaceResolutions,
+    phaseCompletion: state.phaseCompletion,
     // Don't persist: isRunning, error, designStale, pendingConflicts (transient)
   }),
 }))

@@ -1,4 +1,4 @@
-"""SpaceCDF — Full Traceability Chain.
+"""SpaceCDF — Full Traceability Chain (SCDF-145: canonical traceability service).
 
 When a budget is at risk, traces ALL the way up:
   Budget exceedance → System requirement → Function → Objective → Stakeholder need
@@ -6,6 +6,11 @@ When a budget is at risk, traces ALL the way up:
 And back down with recovery options:
   "To recover pointing margin: (a) better star tracker, (b) stiffer structure,
    (c) relax GSD requirement (needs stakeholder approval)"
+
+For component-level spec analysis (fit/gap), see fit_gap_analysis.py which
+provides component-to-requirement matching. Both services complement each other:
+  - traceability.py: budget → requirement → need chain (this file)
+  - fit_gap_analysis.py: component specs vs requirement thresholds
 
 This is the bidirectional V-model traceability that makes the tool useful
 for understanding WHY a problem matters and WHAT to do about it.

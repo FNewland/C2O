@@ -7,19 +7,45 @@
  * session parameters override design parameters. This ensures that live
  * edits from other positions are immediately visible.
  */
+import { useMemo } from 'react'
 import { useDesignStore, type DesignParam } from '../stores/designStore'
 import { useSessionStore } from '../stores/sessionStore'
 
+const EMPTY_PARAMS: Record<string, DesignParam> = {}
+const EMPTY_OVERRIDES: Record<string, number | string | boolean> = {}
+
 export function useActiveParameters(): Record<string, DesignParam> {
-  const designParams = useDesignStore(s => s.result?.parameters ?? {})
+  const designParams = useDesignStore(s => s.result?.parameters) || EMPTY_PARAMS
+  const parameterOverrides = useDesignStore(s => s.parameterOverrides) || EMPTY_OVERRIDES
   const sessionParams = useSessionStore(s => s.parameters)
   const sessionId = useSessionStore(s => s.sessionId)
 
-  // When a live session is active and has data, prefer session params
-  if (sessionId && Object.keys(sessionParams).length > 0) {
-    return { ...designParams, ...sessionParams }
-  }
-  return designParams
+  // Memoize the merged result to prevent infinite re-render loops
+  // (recharts subscribes to store changes and triggers re-renders on new object refs)
+  return useMemo(() => {
+    let merged = designParams
+
+    if (sessionId && Object.keys(sessionParams).length > 0) {
+      merged = { ...merged, ...sessionParams }
+    }
+
+    // Apply parameterOverrides on top
+    if (Object.keys(parameterOverrides).length > 0) {
+      const overrideParams: Record<string, DesignParam> = {}
+      for (const [id, value] of Object.entries(parameterOverrides)) {
+        const existing = merged[id]
+        overrideParams[id] = {
+          value,
+          unit: existing?.unit || '',
+          confidence: 1.0,
+          margin_percent: existing?.margin_percent || 0,
+        }
+      }
+      merged = { ...merged, ...overrideParams }
+    }
+
+    return merged
+  }, [designParams, parameterOverrides, sessionParams, sessionId])
 }
 
 export function useHasActiveSession(): boolean {

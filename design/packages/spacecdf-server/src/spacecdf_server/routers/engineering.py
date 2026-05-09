@@ -117,11 +117,38 @@ async def search_equipment(domain: str, study_id: str | None = None) -> dict:
             }
         }
     else:
-        # No design state — just return all components
+        # No design state — return all components with default fit score
         return {
             "domain": domain,
-            "categories": {cat: comps for cat, comps in kb_components.items()}
+            "categories": {
+                cat: [{"component": c, "fit_score": 0.5, "notes": []} for c in comps]
+                for cat, comps in kb_components.items()
+            }
         }
+
+
+@router.get("/equipment/needs/{study_id}")
+async def get_equipment_needs(study_id: str) -> dict:
+    """Return which equipment categories are needed based on architecture selections."""
+    # Standard CubeSat subsystem needs
+    needs = [
+        {"category": "batteries", "required": True, "reason": "Power storage for eclipse", "quantity": 1},
+        {"category": "solar_panels", "required": True, "reason": "Power generation", "quantity": 2},
+        {"category": "solar_cells", "required": False, "reason": "Cell-level selection (optional)", "quantity": 0},
+        {"category": "eps_boards", "required": True, "reason": "Power conditioning & distribution", "quantity": 1},
+        {"category": "reaction_wheels", "required": True, "reason": "3-axis attitude control", "quantity": 4},
+        {"category": "star_trackers", "required": True, "reason": "Fine attitude determination", "quantity": 1},
+        {"category": "magnetorquers", "required": True, "reason": "Momentum desaturation", "quantity": 3},
+        {"category": "sun_sensors", "required": True, "reason": "Safe mode attitude", "quantity": 2},
+        {"category": "transponders", "required": True, "reason": "TT&C communications", "quantity": 1},
+        {"category": "antennas", "required": True, "reason": "RF antenna", "quantity": 1},
+        {"category": "obcs", "required": True, "reason": "On-board computer", "quantity": 1},
+        {"category": "gps_receivers", "required": True, "reason": "Orbit determination", "quantity": 1},
+        {"category": "cubesat_structures", "required": True, "reason": "Spacecraft structure", "quantity": 1},
+        {"category": "thermal_hardware", "required": True, "reason": "Thermal control", "quantity": 1},
+        {"category": "thrusters", "required": False, "reason": "Propulsion (if delta-V required)", "quantity": 0},
+    ]
+    return {"needs": needs, "study_id": study_id}
 
 
 # --- Requirement Verification ---

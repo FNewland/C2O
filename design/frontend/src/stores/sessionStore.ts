@@ -37,6 +37,7 @@ interface SessionState {
   toasts: SessionToast[]
   lastConvergence: ConvergenceInfo | null
   sendEdit: SendEditFn | null
+  persistenceOk: boolean
 
   setSession: (sessionId: string, positionId: string, displayName?: string, positionIds?: string[]) => void
   clearSession: () => void
@@ -73,6 +74,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   toasts: [],
   lastConvergence: null,
   sendEdit: null,
+  persistenceOk: true,
 
   setSendEdit: (fn) => set({ sendEdit: fn }),
 

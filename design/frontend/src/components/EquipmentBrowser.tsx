@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useEquipmentSearch } from '../hooks/useSession'
 import { useDesignStore } from '../stores/designStore'
+import { useModelStore } from '../stores/modelStore'
 
 // All KB component categories, grouped by domain
 const CATEGORIES = [
@@ -30,6 +31,12 @@ const CATEGORIES = [
   { id: 'thermal_hardware', name: 'Thermal Hardware', domain: 'thermal' },
   // Integration
   { id: 'harnesses', name: 'Harnesses & Cables', domain: 'integration' },
+  // Ground Segment Equipment
+  { id: 'ground_antennas', name: 'Ground Antennas', domain: 'ground_rf' },
+  { id: 'ground_rf', name: 'RF Equipment (LNA/HPA)', domain: 'ground_rf' },
+  { id: 'ground_baseband', name: 'Modems & Baseband', domain: 'ground_rf' },
+  { id: 'ground_software', name: 'MCS/FD Software', domain: 'ground_ops' },
+  { id: 'ground_timing', name: 'Timing & Frequency', domain: 'ground_ops' },
 ]
 
 const DOMAIN_LABELS: Record<string, string> = {
@@ -121,10 +128,39 @@ interface Props {
   studyId: string | null
   onClose: () => void
   onSelect: (category: string, component: any) => void
+  mode?: 'modal' | 'inline'  // inline skips the fixed overlay
 }
 
-export function EquipmentBrowser({ studyId, onClose, onSelect }: Props) {
-  const [activeCategory, setActiveCategory] = useState<string>('batteries')
+export function EquipmentBrowser({ studyId, onClose, onSelect, mode = 'modal' }: Props) {
+  // SYSTEM-V: Filter categories based on subsystems defined in the element tree
+  const modelElements = useModelStore(s => s.elements)
+  const definedDomains = useMemo(() => {
+    const domains = new Set<string>()
+    for (const el of modelElements.values()) {
+      if (el.element_type === 'subsystem' && el.subsystem_domain) {
+        domains.add(el.subsystem_domain)
+      }
+    }
+    return domains
+  }, [modelElements])
+
+  // Map equipment categories to subsystem domains
+  const categoryToDomain: Record<string, string> = {
+    batteries: 'power', solar_cells: 'power', solar_panels: 'power', eps_boards: 'power',
+    reaction_wheels: 'aocs', star_trackers: 'aocs', sun_sensors: 'aocs', magnetorquers: 'aocs',
+    transponders: 'ttc', antennas: 'ttc', gps_receivers: 'obc',
+    thrusters: 'propulsion', cubesat_structures: 'structure', deployers: 'structure', mechanical_hardware: 'structure',
+    obcs: 'obc', thermal_hardware: 'thermal', harnesses: 'structure',
+    ground_antennas: 'ground', ground_rf: 'ground', ground_baseband: 'ground', ground_software: 'ground', ground_timing: 'ground',
+  }
+
+  // Filter categories to only show those whose domain exists in the element tree
+  // If no subsystems defined yet, show all (don't block the user)
+  const filteredCategories = definedDomains.size > 0
+    ? CATEGORIES.filter(c => definedDomains.has(categoryToDomain[c.id] || '') || !categoryToDomain[c.id])
+    : CATEGORIES
+
+  const [activeCategory, setActiveCategory] = useState<string>(filteredCategories[0]?.id || 'batteries')
   const [sortKey, setSortKey] = useState<'fit' | 'mass' | 'cost' | 'trl'>('fit')
   // Key = category:componentId to allow multiple per category
   const [selections, setSelections] = useState<Map<string, SelectedEquipment>>(new Map())
@@ -230,8 +266,8 @@ export function EquipmentBrowser({ studyId, onClose, onSelect }: Props) {
       const next = new Map(prev)
       const existing = next.get(key)
       if (existing) {
-        // Clicking same component again increments quantity
-        next.set(key, { ...existing, quantity: existing.quantity + 1 })
+        // Already selected — do nothing (use qty input to change quantity)
+        return prev
       } else {
         next.set(key, { category, component, quantity: qty, timestamp: Date.now() })
       }
@@ -276,6 +312,34 @@ export function EquipmentBrowser({ studyId, onClose, onSelect }: Props) {
       }
       return next
     })
+  }
+
+  // SYSTEM-V: Currently installed components from element tree (removable)
+  const deleteElement = useModelStore(s => s.deleteElement)
+  const installedComponents = useMemo(() => {
+    const result: Array<{ id: string; name: string; domain: string; mass_kg: number; power_w: number; cost_keur: number; quantity: number; kb_component_id: string | null }> = []
+    for (const el of modelElements.values()) {
+      if (el.element_type === 'component') {
+        result.push({
+          id: el.id, name: el.name, domain: el.subsystem_domain || 'unknown',
+          mass_kg: el.mass_kg || 0, power_w: el.power_avg_w || 0,
+          cost_keur: el.cost_recurring_keur || 0, quantity: el.quantity || 1,
+          kb_component_id: el.kb_component_id,
+        })
+      }
+    }
+    return result
+  }, [modelElements])
+
+  const handleRemoveInstalled = async (elementId: string, name: string) => {
+    if (!confirm(`Remove ${name} from the design?`)) return
+    await deleteElement(elementId)
+    // Also remove from flat designStore
+    const existing = useDesignStore.getState().selectedEquipment
+    useDesignStore.setState({
+      selectedEquipment: existing.filter(e => e.name !== name),
+    })
+    useDesignStore.getState().markStale('equipment')
   }
 
   const handleApplyAll = () => {
@@ -333,23 +397,20 @@ export function EquipmentBrowser({ studyId, onClose, onSelect }: Props) {
   // Group categories by domain for sidebar
   const groupedCategories = useMemo(() => {
     const groups: Record<string, typeof CATEGORIES> = {}
-    for (const cat of CATEGORIES) {
+    for (const cat of filteredCategories) {
       if (!groups[cat.domain]) groups[cat.domain] = []
       groups[cat.domain].push(cat)
     }
     return groups
   }, [])
 
-  return (
-    <div style={{
-      position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)',
-      zIndex: 9000, display: 'flex', alignItems: 'center', justifyContent: 'center',
-    }} onClick={onClose}>
+  const innerContent = (
       <div style={{
-        background: 'var(--bg-primary, #111827)', border: '1px solid var(--border, #374151)',
-        borderRadius: '8px', width: '95%', maxWidth: '1200px', maxHeight: '90vh',
+        background: 'var(--bg-primary, #111827)', border: mode === 'modal' ? '1px solid var(--border, #374151)' : 'none',
+        borderRadius: mode === 'modal' ? '8px' : '0', width: '100%', maxWidth: mode === 'modal' ? '1200px' : 'none',
+        maxHeight: mode === 'modal' ? '90vh' : '100%', height: mode === 'inline' ? '100%' : 'auto',
         display: 'flex', flexDirection: 'column', overflow: 'hidden',
-      }} onClick={e => e.stopPropagation()}>
+      } as React.CSSProperties} onClick={e => e.stopPropagation()}>
 
         {/* Header */}
         <div style={{
@@ -358,7 +419,10 @@ export function EquipmentBrowser({ studyId, onClose, onSelect }: Props) {
         }}>
           <h2 style={{ fontSize: '1rem', margin: 0 }}>Equipment Browser</h2>
           <span style={{ fontSize: '0.68rem', color: '#6b7280' }}>
-            {CATEGORIES.length} categories · {activeRows.length} components
+            {filteredCategories.length} categories · {activeRows.length} components
+          </span>
+          <span style={{ fontSize: '0.6rem', padding: '0.1rem 0.4rem', background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.3)', borderRadius: '3px', color: '#93c5fd' }}>
+            Filtered by architecture selections
           </span>
           <div style={{ flex: 1 }} />
           <button className="btn btn-sm" onClick={() => { setCompareMode(!compareMode); setCompareIds(new Set()) }}
@@ -370,7 +434,7 @@ export function EquipmentBrowser({ studyId, onClose, onSelect }: Props) {
             {showCustomForm ? 'Cancel Custom' : 'Design Custom'}
           </button>
           <span style={{ fontSize: '0.75rem', color: '#9ca3af' }}>
-            {selections.size} of {CATEGORIES.length} selected
+            {selections.size} of {filteredCategories.length} selected
           </span>
           {selections.size > 0 && (
             <>
@@ -571,6 +635,44 @@ export function EquipmentBrowser({ studyId, onClose, onSelect }: Props) {
               </div>
             )}
 
+            {/* Currently installed components from element tree */}
+            {installedComponents.length > 0 && (
+              <div style={{
+                padding: '0.5rem 0.75rem', marginBottom: '0.75rem', borderRadius: '6px',
+                background: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.2)',
+              }}>
+                <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#93c5fd', marginBottom: '0.3rem' }}>
+                  Installed Components ({installedComponents.length})
+                </div>
+                <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap' }}>
+                  {installedComponents.map(comp => (
+                    <span key={comp.id} style={{
+                      display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
+                      background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)',
+                      borderRadius: '4px', padding: '0.15rem 0.5rem', fontSize: '0.68rem',
+                    }}>
+                      <span style={{ color: '#6b7280', fontSize: '0.6rem' }}>{comp.domain}</span>
+                      <span style={{ fontWeight: 500, color: '#93c5fd' }}>{comp.name}</span>
+                      <span style={{ color: '#6b7280', fontSize: '0.6rem' }}>
+                        {comp.mass_kg.toFixed(2)}kg · {comp.power_w.toFixed(1)}W
+                        {comp.quantity > 1 && ` ×${comp.quantity}`}
+                      </span>
+                      <button onClick={() => handleRemoveInstalled(comp.id, comp.name)}
+                        style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '0.8rem', padding: 0, lineHeight: 1 }}
+                        title="Remove from design">
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+                <div style={{ fontSize: '0.65rem', color: '#6b7280', marginTop: '0.25rem' }}>
+                  Total: {installedComponents.reduce((s, c) => s + c.mass_kg * c.quantity, 0).toFixed(2)} kg
+                  · {installedComponents.reduce((s, c) => s + c.power_w * c.quantity, 0).toFixed(1)} W
+                  · {installedComponents.reduce((s, c) => s + c.cost_keur * c.quantity, 0).toFixed(0)} kEUR
+                </div>
+              </div>
+            )}
+
             {/* Sort controls */}
             <div style={{ display: 'flex', gap: '0.3rem', marginBottom: '0.5rem', alignItems: 'center' }}>
               <span style={{ fontSize: '0.7rem', color: '#9ca3af' }}>Sort:</span>
@@ -713,6 +815,16 @@ export function EquipmentBrowser({ studyId, onClose, onSelect }: Props) {
           </div>
         </div>
       </div>
+  )
+
+  if (mode === 'inline') return innerContent
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)',
+      zIndex: 9000, display: 'flex', alignItems: 'center', justifyContent: 'center',
+    }} onClick={onClose}>
+      {innerContent}
     </div>
   )
 }

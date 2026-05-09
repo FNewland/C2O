@@ -10,6 +10,10 @@
  * Power profiles are in the engineering budgets tab.
  */
 import { useState } from 'react'
+import { useApplyToDesign } from '../hooks/useApplyToDesign'
+import { useDesignStore } from '../stores/designStore'
+import { SVGBarChart } from '../charts/SVGBarChart'
+import { MissionArchitectureEditor } from './MissionArchitectureEditor'
 
 const PHASE_COLORS: Record<string, string> = {
   phase_a: '#8b5cf6', phase_b: '#3b82f6', phase_c: '#06b6d4', phase_d: '#f59e0b',
@@ -17,44 +21,47 @@ const PHASE_COLORS: Record<string, string> = {
   phase_e: '#10b981', phase_f: '#6b7280',
 }
 
-interface MissionPhase {
-  id: string; name: string; duration_days: number; description: string
-}
-
-interface OperationalMode {
-  id: string; name: string; description: string
-  subsystems_active: string[]; pointing: string; dataflow: string
-}
-
-const DEFAULT_PHASES: MissionPhase[] = [
-  { id: 'phase_a', name: 'Phase A (Feasibility)', duration_days: 180, description: 'Concept and technology development, SRR' },
-  { id: 'phase_b', name: 'Phase B (Preliminary Design)', duration_days: 270, description: 'Preliminary design, PDR, technology maturation' },
-  { id: 'phase_c', name: 'Phase C (Detailed Design)', duration_days: 180, description: 'Detailed design, CDR, procurement' },
-  { id: 'phase_d', name: 'Phase D (AIT & Launch)', duration_days: 180, description: 'Assembly, integration, test, launch campaign' },
-  { id: 'leop', name: 'LEOP', duration_days: 3, description: 'Launch, deployment, first contact, initial checkout' },
-  { id: 'commissioning', name: 'Commissioning', duration_days: 30, description: 'Subsystem checkout, calibration, first light' },
-  { id: 'nominal', name: 'Nominal Operations', duration_days: 900, description: 'Primary science/service data collection and delivery' },
-  { id: 'disposal', name: 'Disposal', duration_days: 14, description: 'Passivation, deorbit, final telemetry' },
-]
-
-const DEFAULT_MODES: OperationalMode[] = [
-  { id: 'safe', name: 'Safe Mode', description: 'Minimum power survival. Entered on anomaly. Sun-pointing, no payload.',
-    subsystems_active: ['EPS', 'OBC', 'TTC (beacon)', 'AOCS (coarse)'], pointing: 'Sun-pointing', dataflow: 'Beacon only → ground' },
-  { id: 'science', name: 'Science / Imaging', description: 'Primary data acquisition. Payload active, nadir-pointing.',
-    subsystems_active: ['EPS', 'OBC', 'Payload', 'AOCS (fine)', 'OBDH'], pointing: 'Nadir (target)', dataflow: 'Instrument → OBDH storage' },
-  { id: 'downlink', name: 'Downlink', description: 'Ground station pass. TX active, data download.',
-    subsystems_active: ['EPS', 'OBC', 'TTC (full)', 'OBDH'], pointing: 'Ground station', dataflow: 'OBDH → TX → GS → processing → user' },
-  { id: 'eclipse', name: 'Eclipse', description: 'Battery-powered. Reduced operations, heaters active.',
-    subsystems_active: ['EPS (battery)', 'OBC', 'TCS (heaters)', 'AOCS (coarse)'], pointing: 'Inertial hold', dataflow: 'None' },
-]
+import type { MissionPhase, OperationalMode } from '../stores/designStore'
 
 export function ConOpsEditor() {
-  const [phases, setPhases] = useState<MissionPhase[]>(DEFAULT_PHASES)
-  const [modes, setModes] = useState<OperationalMode[]>(DEFAULT_MODES)
+  const phases = useDesignStore(s => s.missionPhases)
+  const setPhases = useDesignStore(s => s.setMissionPhases)
+  const modes = useDesignStore(s => s.operationalModes)
+  const setModes = useDesignStore(s => s.setOperationalModes)
   const [editingPhase, setEditingPhase] = useState<string | null>(null)
   const [editingMode, setEditingMode] = useState<string | null>(null)
   const [pipelineSteps, setPipelineSteps] = useState<string[]>(['Instrument', 'Onboard Storage', 'Downlink', 'Ground Processing', 'Archive', 'User'])
   const totalDays = phases.reduce((s, p) => s + p.duration_days, 0)
+  const [applied, setApplied] = useState(false)
+
+  // Compute duty cycle from modes — payload active fraction
+  const payloadModes = modes.filter(m => m.subsystems_active.some(s => s.toLowerCase().includes('payload')))
+  const totalModes = modes.length || 1
+  const payloadDutyCycle = payloadModes.length / totalModes  // Simplified: equal time per mode
+  // Heater mode detection
+  const heaterModes = modes.filter(m => m.subsystems_active.some(s => s.toLowerCase().includes('heater') || s.toLowerCase().includes('tcs')))
+  const heaterDutyCycle = heaterModes.length / totalModes
+
+  const applyModes = useApplyToDesign({
+    events: [
+      // Write mode definitions
+      ...modes.map(m => ({
+        kind: 'conops_edit' as const,
+        target_id: `conops.mode.${m.id}`,
+        target_kind: 'conops_mode',
+        new_value: { name: m.name, subsystems_active: m.subsystems_active, pointing: m.pointing, dataflow: m.dataflow },
+      })),
+      // Write derived duty cycles that the power agent reads
+      { kind: 'parameter_override' as const, target_id: 'payload.0.duty_cycle', new_value: payloadDutyCycle },
+      { kind: 'parameter_override' as const, target_id: 'conops.payload_duty_cycle', new_value: payloadDutyCycle },
+      { kind: 'parameter_override' as const, target_id: 'conops.heater_duty_cycle', new_value: heaterDutyCycle },
+      { kind: 'parameter_override' as const, target_id: 'conops.num_modes', new_value: modes.length },
+    ],
+    correlation_id: 'conops-editor',
+    rationale: 'ConOps operational modes update',
+  })
+  // Overlap/collision check: warn if phases are too short relative to total
+  const overlapWarnings = phases.filter(p => (p.duration_days / totalDays) < 0.02 && p.duration_days > 0)
 
   return (
     <div style={{ padding: '1rem', overflowY: 'auto', height: '100%' }}>
@@ -63,10 +70,15 @@ export function ConOpsEditor() {
         How the mission operates: architecture, phases, modes, and data flow.
         Power profiles are in the engineering budgets.
       </p>
+      {overlapWarnings.length > 0 && (
+        <div style={{ padding: '0.3rem 0.6rem', marginBottom: '0.5rem', background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: '4px', fontSize: '0.7rem', color: '#f59e0b' }}>
+          ⚠ {overlapWarnings.length} phase{overlapWarnings.length > 1 ? 's' : ''} too short to display clearly: {overlapWarnings.map(p => p.name).join(', ')}. Consider adjusting durations or merging.
+        </div>
+      )}
 
-      {/* Mission Architecture Diagram */}
-      <div className="card">
-        <h3 style={{ fontSize: '0.9rem', marginBottom: '0.5rem' }}>Mission Architecture</h3>
+      {/* Architecture diagram is shown in the parent (Phase1MissionArch) — not duplicated here */}
+      {/* Hide the old static SVG */}
+      {false && <div className="card"><div style={{ display: 'none' }}>
         <svg width="100%" height="280" viewBox="0 0 780 280" style={{ background: 'var(--bg-primary, #0a0e1a)', borderRadius: '6px' }}>
           {/* Space Segment */}
           <rect x="250" y="10" width="280" height="70" rx="8" fill="#1f2937" stroke="#3b82f6" strokeWidth="2"/>
@@ -146,7 +158,7 @@ export function ConOpsEditor() {
           <line x1="470" y1="222" x2="490" y2="222" stroke="#f97316" strokeWidth="1" strokeDasharray="3 2"/>
           <text x="495" y="225" fill="#6b7280" fontSize="7">Optional ground sensor link</text>
         </svg>
-      </div>
+      </div></div>}
 
       {/* Mission Phases Timeline */}
       <div className="card">
@@ -174,10 +186,10 @@ export function ConOpsEditor() {
               {editingPhase === p.id ? (
                 <div style={{ display: 'flex', gap: '0.3rem', marginTop: '0.2rem' }}>
                   <input className="input" value={p.description}
-                    onChange={e => setPhases(prev => prev.map(ph => ph.id === p.id ? { ...ph, description: e.target.value } : ph))}
+                    onChange={e => setPhases(phases.map(ph => ph.id === p.id ? { ...ph, description: e.target.value } : ph))}
                     style={{ flex: 1, fontSize: '0.72rem' }} />
                   <input className="input" type="number" value={p.duration_days}
-                    onChange={e => setPhases(prev => prev.map(ph => ph.id === p.id ? { ...ph, duration_days: Number(e.target.value) || 1 } : ph))}
+                    onChange={e => setPhases(phases.map(ph => ph.id === p.id ? { ...ph, duration_days: Number(e.target.value) || 1 } : ph))}
                     style={{ width: '60px', fontSize: '0.72rem' }} />
                   <button onClick={() => setEditingPhase(null)} style={{ background: 'none', border: 'none', color: '#10b981', cursor: 'pointer', fontSize: '0.68rem' }}>Done</button>
                 </div>
@@ -193,18 +205,18 @@ export function ConOpsEditor() {
       <div className="card">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
           <h3 style={{ fontSize: '0.9rem', margin: 0 }}>Operational Modes</h3>
-          <button className="btn btn-sm" onClick={() => setModes(prev => [...prev, { id: `m-${Date.now()}`, name: 'New Mode', description: '', subsystems_active: [], pointing: '', dataflow: '' }])} style={{ fontSize: '0.7rem' }}>+ Add Mode</button>
+          <button className="btn btn-sm" onClick={() => setModes([...modes, { id: `m-${Date.now()}`, name: 'New Mode', description: '', subsystems_active: [], pointing: '', dataflow: '' }])} style={{ fontSize: '0.7rem' }}>+ Add Mode</button>
         </div>
         {modes.map(m => (
           <div key={m.id} style={{ padding: '0.5rem 0.75rem', background: 'var(--bg-primary, #0a0e1a)', borderRadius: '6px', marginBottom: '0.35rem', border: '1px solid #374151' }}>
             {editingMode === m.id ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
-                <input className="input" value={m.name} onChange={e => setModes(prev => prev.map(mm => mm.id === m.id ? { ...mm, name: e.target.value } : mm))} placeholder="Mode name" style={{ fontSize: '0.82rem', fontWeight: 600 }} />
-                <input className="input" value={m.description} onChange={e => setModes(prev => prev.map(mm => mm.id === m.id ? { ...mm, description: e.target.value } : mm))} placeholder="Description" style={{ fontSize: '0.72rem' }} />
-                <input className="input" value={m.subsystems_active.join(', ')} onChange={e => setModes(prev => prev.map(mm => mm.id === m.id ? { ...mm, subsystems_active: e.target.value.split(',').map(s => s.trim()) } : mm))} placeholder="Active subsystems (comma-separated)" style={{ fontSize: '0.72rem' }} />
+                <input className="input" value={m.name} onChange={e => setModes(modes.map(mm => mm.id === m.id ? { ...mm, name: e.target.value } : mm))} placeholder="Mode name" style={{ fontSize: '0.82rem', fontWeight: 600 }} />
+                <input className="input" value={m.description} onChange={e => setModes(modes.map(mm => mm.id === m.id ? { ...mm, description: e.target.value } : mm))} placeholder="Description" style={{ fontSize: '0.72rem' }} />
+                <input className="input" value={m.subsystems_active.join(', ')} onChange={e => setModes(modes.map(mm => mm.id === m.id ? { ...mm, subsystems_active: e.target.value.split(',').map(s => s.trim()) } : mm))} placeholder="Active subsystems (comma-separated)" style={{ fontSize: '0.72rem' }} />
                 <div style={{ display: 'flex', gap: '0.3rem' }}>
-                  <input className="input" value={m.pointing} onChange={e => setModes(prev => prev.map(mm => mm.id === m.id ? { ...mm, pointing: e.target.value } : mm))} placeholder="Pointing" style={{ flex: 1, fontSize: '0.72rem' }} />
-                  <input className="input" value={m.dataflow} onChange={e => setModes(prev => prev.map(mm => mm.id === m.id ? { ...mm, dataflow: e.target.value } : mm))} placeholder="Data flow" style={{ flex: 1, fontSize: '0.72rem' }} />
+                  <input className="input" value={m.pointing} onChange={e => setModes(modes.map(mm => mm.id === m.id ? { ...mm, pointing: e.target.value } : mm))} placeholder="Pointing" style={{ flex: 1, fontSize: '0.72rem' }} />
+                  <input className="input" value={m.dataflow} onChange={e => setModes(modes.map(mm => mm.id === m.id ? { ...mm, dataflow: e.target.value } : mm))} placeholder="Data flow" style={{ flex: 1, fontSize: '0.72rem' }} />
                 </div>
                 <button onClick={() => setEditingMode(null)} className="btn btn-sm" style={{ fontSize: '0.68rem', alignSelf: 'flex-start' }}>Done</button>
               </div>
@@ -213,7 +225,7 @@ export function ConOpsEditor() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                   <span style={{ fontWeight: 600, fontSize: '0.82rem' }}>{m.name}</span>
                   <span style={{ flex: 1 }} />
-                  <button onClick={e => { e.stopPropagation(); setModes(prev => prev.filter(mm => mm.id !== m.id)) }}
+                  <button onClick={e => { e.stopPropagation(); setModes(modes.filter(mm => mm.id !== m.id)) }}
                     style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '0.6rem' }}>remove</button>
                 </div>
                 <div style={{ fontSize: '0.72rem', color: '#9ca3af', marginBottom: '0.15rem' }}>{m.description}</div>
@@ -226,6 +238,10 @@ export function ConOpsEditor() {
             )}
           </div>
         ))}
+        <button className="btn" onClick={async () => { await applyModes(); setApplied(true); setTimeout(() => setApplied(false), 2000) }}
+          style={{ marginTop: '0.5rem', width: '100%', background: applied ? '#10b981' : '#3b82f6', fontSize: '0.78rem' }}>
+          {applied ? 'Applied — reconverging...' : 'Apply Modes to Design'}
+        </button>
       </div>
 
       {/* Data Flow Pipeline — editable */}
@@ -258,6 +274,29 @@ export function ConOpsEditor() {
           Click a step to rename. Click "+ Add Step" to insert a new stage. End-to-end latency depends on: ground station access, data volume, processing pipeline, and distribution method.
         </div>
       </div>
+
+      {/* Power profile removed — belongs at subsystem level, not mission level */}
+    </div>
+  )
+}
+
+function PowerProfileSection() {
+  const result = useDesignStore(s => s.result)
+  if (!result?.parameters || Object.keys(result.parameters).length === 0) return null
+  const p = result.parameters as Record<string, any>
+  const get = (id: string) => { const v = p[id]; return v && typeof v.value === 'number' ? v.value : 0 }
+  return (
+    <div className="card">
+      <h3 style={{ fontSize: '0.9rem', marginBottom: '0.5rem' }}>Power Profile by Mode</h3>
+      <SVGBarChart
+        data={[
+          { label: 'Sun Demand', value: get('power.total_sunlight_w'), color: '#f59e0b' },
+          { label: 'Eclipse', value: get('power.total_eclipse_w'), color: '#6b7280' },
+          { label: 'SA BOL', value: get('power.sa_power_bol_w'), color: '#10b981' },
+          { label: 'SA EOL', value: get('power.sa_power_eol_w'), color: '#3b82f6' },
+        ].filter(d => d.value > 0)}
+        unit=" W" width={350} height={180}
+      />
     </div>
   )
 }

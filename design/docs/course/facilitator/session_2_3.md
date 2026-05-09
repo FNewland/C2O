@@ -1,178 +1,312 @@
-# Session 2.3: Interface Management
+# Session 2.3: Orbit Selection and Mission Architecture
 
 **Duration:** 2 hours
-**Prerequisites:** Session 2.2 (functions defined and allocated)
-**References:** NASA SEH §6.3 (Process 12), ECSS-E-ST-10-24C
+**Prerequisites:** Sessions 2.1--2.2 (requirements and functions defined)
+**SpaceCDF Tabs:** Mission Architecture, Orbit Trade Advisor
+
+---
+
+## References
+
+- [Vallado, *Fundamentals of Astrodynamics and Applications*, 4th ed., 2013, Ch. 2--6](https://www.amazon.com/Fundamentals-Astrodynamics-Applications-Technology-Library/dp/1881883183)
+- [Wertz, Everett & Puschell, *Space Mission Engineering: The New SMAD*, 2011, Ch. 5--7](https://www.space.com/smad)
+- [Curtis, *Orbital Mechanics for Engineering Students*, 4th ed., 2020, Ch. 2--4](https://www.elsevier.com/books/orbital-mechanics-for-engineering-students/curtis/978-0-08-102133-0)
+- [NASA, *Systems Engineering Handbook*, 2016, Sec. 4.4 (Process 4: Design Solution Definition)](https://www.nasa.gov/reference/systems-engineering-handbook/)
+- [ECSS, *ECSS-U-AS-10C Rev.2: Space Debris Mitigation Requirements*, 2023](https://ecss.nl/standard/ecss-u-as-10c-rev-2-space-debris-mitigation-requirements/)
+- [IADC, *Space Debris Mitigation Guidelines*, IADC-02-01 Rev 3, 2021](https://www.iadc-home.org/documents_public/)
+- [FCC, *Report and Order FCC 22-74: Space Innovation*, 2022](https://www.fcc.gov/document/fcc-adopts-new-5-year-rule-deorbiting-satellites)
 
 ---
 
 ## Learning Objectives
 
 By the end of this session, participants will be able to:
-1. Identify all subsystem-to-subsystem interfaces using an N^2 matrix
-2. Classify interface types (mechanical, electrical, thermal, data, RF, optical)
-3. Detect and resolve interface conflicts
-4. Write interface requirements for key subsystem pairs
-5. Use SpaceCDF's interface matrix and conflict resolution workflow
+
+1. Define and compute the six Keplerian orbital elements
+2. Calculate orbital period, velocity, and eclipse fraction for circular orbits
+3. Compute the Sun-synchronous inclination using J2 precession
+4. Evaluate orbit trade-offs across altitude, coverage, lifetime, radiation, and debris compliance
+5. Apply the Hohmann transfer $\Delta V$ equations for orbit raising and deorbit
+6. Use SpaceCDF's orbit trade advisor with mission-appropriate scoring weights
 
 ---
 
-## 1. Why Interface Management Matters (15 min)
+## 1. Keplerian Orbital Elements (25 min)
 
 ### Teaching Notes
 
-*[Source: NASA SEH §6.3 -- Process 12: Interface Management]*
+Six parameters (the *classical orbital elements*) fully describe the size, shape, and orientation of an orbit, plus the satellite's position on it.
 
-Interface problems are the #1 cause of integration failures. NASA SEH states: "Most system failures can be traced back to interface problems."
+*[Source: Vallado, Ch. 2; Curtis, Ch. 2]*
 
-**Root causes:**
-- Assumptions made by one subsystem about another's behaviour
-- Voltage/protocol mismatches (e.g., 3.3V logic driving 5V input)
-- Thermal coupling not accounted for (e.g., hot transponder next to cold-sensitive payload)
-- Mechanical interference (e.g., antenna deployment blocking star tracker FOV)
-- EMC interference (e.g., TX radiation coupling into payload receiver)
+| Element | Symbol | Physical Meaning | Typical Range |
+|---------|--------|-----------------|---------------|
+| Semi-major axis | $a$ | Size of the orbit | 6571--42164 km (LEO to GEO) |
+| Eccentricity | $e$ | Shape (0 = circle, 0 < e < 1 = ellipse) | 0--0.001 for LEO circular |
+| Inclination | $i$ | Tilt of orbit plane from equatorial plane | 0--180 deg |
+| RAAN | $\Omega$ | Orientation of ascending node in equatorial plane | 0--360 deg |
+| Argument of perigee | $\omega$ | Orientation of perigee within orbit plane | 0--360 deg |
+| True anomaly | $\nu$ | Satellite position along the orbit | 0--360 deg |
 
-**Prevention:** Every subsystem pair must have their interface explicitly defined, agreed, and documented in an Interface Requirements Document (IRD) per ECSS-E-ST-10-24C.
+For **circular LEO** missions (the most common CubeSat orbit type), the key design parameters reduce to three: **altitude** ($h$), **inclination** ($i$), and **LTAN** (local time of ascending node, for Sun-synchronous orbits).
+
+<svg viewBox="0 0 500 400" xmlns="http://www.w3.org/2000/svg" style="max-width:450px; font-family: sans-serif; font-size: 11px;">
+  <!-- Earth -->
+  <circle cx="250" cy="200" r="80" fill="#bfdbfe" stroke="#2563eb" stroke-width="2"/>
+  <text x="250" y="205" text-anchor="middle" fill="#1e3a5f" font-size="12">Earth</text>
+  <!-- Equatorial plane -->
+  <ellipse cx="250" cy="200" rx="160" ry="30" fill="none" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="420" y="195" fill="#94a3b8" font-size="10">Equatorial plane</text>
+  <!-- Orbit ellipse (tilted) -->
+  <ellipse cx="250" cy="185" rx="160" ry="120" fill="none" stroke="#dc2626" stroke-width="2" transform="rotate(-15, 250, 185)"/>
+  <!-- Ascending node -->
+  <circle cx="405" cy="195" r="5" fill="#dc2626"/>
+  <text x="415" y="200" fill="#dc2626" font-weight="bold">AN</text>
+  <!-- Labels -->
+  <text x="250" y="50" text-anchor="middle" fill="#dc2626" font-weight="bold">Orbit plane (inclined)</text>
+  <line x1="250" y1="200" x2="250" y2="100" stroke="#16a34a" stroke-width="1" stroke-dasharray="3,2"/>
+  <text x="260" y="145" fill="#16a34a" font-size="10">i (inclination)</text>
+  <!-- RAAN arrow -->
+  <path d="M 330 200 A 80 15 0 0 1 370 195" fill="none" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="345" y="220" fill="#7c3aed" font-size="10">$\Omega$ (RAAN)</text>
+  <!-- Satellite -->
+  <rect x="310" y="88" width="12" height="8" fill="#f59e0b" stroke="#92400e"/>
+  <text x="330" y="95" fill="#92400e" font-size="10">Satellite</text>
+</svg>
+
+### Key Equations
+
+> **Key Equations -- Orbital Mechanics Fundamentals**
+>
+> **Orbital period** (circular orbit):
+> $$T = 2\pi \sqrt{\frac{a^3}{\mu}}$$
+> where $a = R_E + h$ is the semi-major axis (m), $\mu = 3.986 \times 10^{14}$ m$^3$/s$^2$ is Earth's gravitational parameter, and $R_E = 6371$ km.
+>
+> **Orbital velocity** (circular):
+> $$v = \sqrt{\frac{\mu}{a}}$$
+>
+> **Eclipse fraction** (maximum, circular orbit, cylindrical shadow):
+> $$f_{\text{eclipse}} = \frac{1}{\pi} \arccos\left(\frac{\sqrt{a^2 - R_E^2}}{a}\right)$$
+>
+> **Sun-synchronous inclination** (J2-driven RAAN precession = 360 deg/year):
+> $$\cos(i) = -\frac{2 \dot{\Omega}_{\text{req}} \, a^{7/2}}{3 R_E^2 \, J_2 \, \sqrt{\mu}}$$
+> where $J_2 = 1.0826 \times 10^{-3}$, $\dot{\Omega}_{\text{req}} = \frac{2\pi}{365.25 \times 86400}$ rad/s.
 
 ---
 
-## 2. The N^2 (N-Squared) Interface Matrix (25 min)
+## 2. Worked Examples: Orbital Computations (15 min)
+
+> **Worked Example -- 500 km Circular LEO**
+>
+> **Given:** $h = 500$ km, circular orbit.
+>
+> **Step 1 -- Semi-major axis:**
+> $a = 6371 + 500 = 6871$ km $= 6.871 \times 10^6$ m
+>
+> **Step 2 -- Orbital period:**
+> $T = 2\pi \sqrt{\frac{(6.871 \times 10^6)^3}{3.986 \times 10^{14}}} = 2\pi \sqrt{8.137 \times 10^{5}} = 2\pi \times 5668 = 5669$ s $\approx$ **94.5 min**
+>
+> **Step 3 -- Orbital velocity:**
+> $v = \sqrt{\frac{3.986 \times 10^{14}}{6.871 \times 10^6}} = \sqrt{5.802 \times 10^7} =$ **7617 m/s** $\approx$ 7.62 km/s
+>
+> **Step 4 -- Eclipse fraction (maximum):**
+> $f = \frac{1}{\pi} \arccos\left(\frac{\sqrt{6871^2 - 6371^2}}{6871}\right) = \frac{1}{\pi} \arccos\left(\frac{2594}{6871}\right) = \frac{1}{\pi} \arccos(0.3774) = \frac{1}{\pi} \times 67.8\degree = $ **0.376** (37.6%)
+>
+> **Step 5 -- Eclipse and sunlight duration:**
+> $t_{\text{eclipse}} = 94.5 \times 0.376 =$ **35.5 min**; $\quad t_{\text{sun}} = 94.5 - 35.5 =$ **59.0 min**
+>
+> **Step 6 -- Sun-synchronous inclination:**
+> $\cos(i) = -\frac{2 \times 1.991 \times 10^{-7} \times (6.871 \times 10^6)^{3.5}}{3 \times (6.371 \times 10^6)^2 \times 1.0826 \times 10^{-3} \times \sqrt{3.986 \times 10^{14}}}$
+>
+> Numerator: $\approx -1.301 \times 10^{17}$; Denominator: $\approx 1.006 \times 10^{18}$
+>
+> $\cos(i) \approx -0.1293 \Rightarrow i \approx$ **97.4 deg**
+
+---
+
+## 3. Orbit Selection Trade-Offs (25 min)
 
 ### Teaching Notes
 
-The N^2 matrix is a standard systems engineering tool that maps all subsystem interactions:
+The orbit is the single most impactful early design decision. It cascades to every subsystem.
 
-### Structure
-- **Diagonal:** Subsystems (power, AOCS, link, thermal, structure, propulsion, data, payload)
-- **Off-diagonal cells:** Interface between the row and column subsystems
-- **Upper triangle:** Data/command flow in one direction
-- **Lower triangle:** Data/command flow in the other direction
+*[Source: SMAD, Ch. 7; Wertz et al., "Reducing Space Mission Cost," Ch. 3]*
 
-### For a CubeSat with 8 subsystems:
-- 8 subsystems -> 8×7/2 = **28 potential interface pairs**
-- Typical CubeSat: **18-22 defined interfaces** (not all pairs interact)
+| Parameter | Lower Altitude (300--400 km) | Higher Altitude (600--800 km) |
+|-----------|------------------------------|-------------------------------|
+| **GSD** | Better (shorter range to target) | Worse (longer range) |
+| **Orbital lifetime** | Short (1--5 years, natural decay) | Long (25--100+ years) |
+| **Debris compliance** | Easy (FCC 5-year rule met naturally) | May require active deorbit propulsion |
+| **Radiation (TID)** | Lower (2--5 krad/yr) | Higher (10--20 krad/yr above 700 km) |
+| **Launch cost** | Lower $\Delta V$ to orbit | Slightly higher |
+| **Link budget** | Better (shorter slant range) | Worse (longer path loss) |
+| **Coverage/swath** | Narrower per pass | Wider per pass |
+| **Atmospheric drag** | Significant (limits lifetime) | Negligible above ~700 km |
+| **Eclipse fraction** | ~35--38% | ~33--35% |
 
-### Interface Types
+### Orbit Types and Applications
 
-| Type | Symbol | Description | Example |
-|------|--------|-------------|---------|
-| **Mechanical** | M | Physical attachment, loads, alignment | Payload mounting to structure |
-| **Electrical** | E | Power connections, bus voltage | EPS 28V bus to all subsystems |
-| **Thermal** | T | Heat transfer paths, thermal coupling | Transponder heat to radiator |
-| **Data** | D | Digital communication (I^2C, SPI, UART, CAN) | OBC commands to AOCS |
-| **RF** | R | Radio frequency coupling or interference | TX interference with payload |
-| **Optical** | O | Light path, FOV clearance, stray light | Star tracker FOV clearance |
+| Orbit | Altitude | Inclination | Best For | Real Example |
+|-------|----------|-------------|----------|-------------|
+| **LEO (non-SSO)** | 300--600 km | Any | Technology demos, ISS deployment | Many CubeSats |
+| **SSO** | 400--800 km | 97--99 deg | EO (consistent solar illumination) | Planet SuperDove (475 km) |
+| **ISS orbit** | ~410 km | 51.6 deg | ISS-deployed CubeSats | NanoRacks deployments |
+| **MEO** | 2000--20200 km | Various | Navigation | GPS (20200 km) |
+| **GEO** | 35786 km | 0 deg | Comms, weather | Anik F2 (Telesat) |
+| **HEO (Molniya)** | 500--40000 km | 63.4 deg | High-latitude coverage | Meridian (Russia) |
+| **Lunar NRHO** | 1500--70000 km | Lunar | Cislunar operations | CAPSTONE (NASA/Advanced Space) |
 
-### Common CubeSat Interfaces (Verified)
+### Debris Compliance Rules
 
-| Pair | Types | Key Concern |
-|------|-------|-------------|
-| Power <-> AOCS | E | Bus voltage compatibility; RW power draw |
-| Power <-> Link | E | TX peak power demand; switched line allocation |
-| Power <-> Thermal | E, T | SA thermal coupling; radiator vs SA area competition |
-| Power <-> Payload | E | Peak power switching; duty cycle coordination |
-| Structure <-> AOCS | M | RW/ST mounting alignment; vibration isolation |
-| Structure <-> Payload | M, O | Payload alignment stability; FOV clearance |
-| Data <-> AOCS | D | Attitude data for payload pointing; mode commands |
-| Data <-> Link | D | Telemetry stream routing; TC distribution |
-| Data <-> Payload | D | Science data acquisition; instrument commanding |
-| Link <-> Payload | R | EMC: TX interference with payload receiver |
-| Link <-> AOCS | R, O | Antenna vs star tracker FOV |
-| Thermal <-> Payload | T | Detector cooling; operating temperature range |
-| AOCS <-> Payload | M | Reaction wheel vibration vs payload stability |
+| Rule | Requirement | Applies To |
+|------|------------|-----------|
+| **IADC guideline** (2021) | Post-mission disposal within 25 years | International (voluntary but expected) |
+| **FCC rule** (2024+) | Post-mission disposal within **5 years** | All FCC-licensed LEO satellites |
+| **ECSS-U-AS-10C Rev.2** | Compliance with IADC + ESA Zero Debris Charter | ESA missions |
+| **ISED (Canada)** | Currently 25-year rule; tightening under review | Canadian-licensed satellites |
+
+**Critical altitude boundaries for FCC 5-year compliance:**
+
+| Altitude | Natural Lifetime | FCC Compliant? | Action Needed |
+|----------|-----------------|---------------|---------------|
+| < 450 km | < 5 years | Yes | None (natural decay) |
+| 450--550 km | 5--20 years | Marginal | Drag augmentation may suffice |
+| 550--650 km | 20--50 years | **No** | Active deorbit (propulsion or drag sail) |
+| > 700 km | > 100 years | **No** | Propulsion mandatory; ESA Zero Debris zone |
+
+*[Source: IADC-02-01 Rev 3, Sec. 5.3.2; FCC 22-74; ECSS-U-AS-10C Rev.2]*
+
+### Perturbation Effects
+
+| Perturbation | Cause | Effect on Orbit | Design Impact |
+|-------------|-------|----------------|---------------|
+| **$J_2$ (Earth oblateness)** | Equatorial bulge | RAAN precession, argument of perigee drift | Enables Sun-synchronous; frozen orbits at $\omega = 90\degree$ |
+| **Atmospheric drag** | Residual atmosphere | Semi-major axis decay, eventual re-entry | Limits lifetime below ~600 km; drives propulsion need |
+| **Solar radiation pressure** | Photon momentum | Eccentricity oscillations, orbit perturbation | Significant for large A/m ratio (drag sails, large SA) |
+| **Third-body (Moon/Sun)** | Gravitational pull | Long-period oscillations in $e$, $i$ | Significant for GEO and HEO; negligible for LEO |
+| **Magnetic field** | Lorentz force on charged S/C | Very small drag-like effect | Negligible for most missions |
 
 ---
 
-## 3. Conflict Detection and Resolution (30 min)
+## 4. Ground Coverage and Revisit (15 min)
 
 ### Teaching Notes
 
-Interface conflicts arise when two subsystems have incompatible requirements at their shared boundary.
+> **Key Equations -- Ground Coverage**
+>
+> **Swath width** (nadir-pointing sensor with half-cone angle $\theta$):
+> $$W_{\text{swath}} = 2h \tan(\theta)$$
+>
+> **Ground track spacing** (for a single satellite in LEO):
+> The Earth rotates ~22.9 deg per orbit (for $T \approx 95$ min). At the equator, this corresponds to:
+> $$\Delta_{\text{lon}} = \frac{360\degree}{T_{\text{sidereal}}} \times T_{\text{orbit}} \approx 22.9\degree \approx 2550 \text{ km (at equator)}$$
+>
+> **Revisit time** (approximate, single satellite):
+> $$t_{\text{revisit}} \approx \frac{\Delta_{\text{lon}}}{W_{\text{swath}}} \times T_{\text{orbit}}$$
+>
+> **Constellation revisit** (N identical satellites in same plane):
+> $$t_{\text{revisit,constellation}} \approx \frac{t_{\text{revisit,single}}}{N}$$
 
-### Severity Classification
+**Example -- SuperDove constellation:**
+Planet operates ~200 SuperDove satellites. With a ~24 km swath at 475 km and multiple orbital planes, the constellation achieves daily global revisit -- a dramatic improvement over a single satellite's ~7-day revisit.
 
-| Severity | Description | Example | Action Required |
-|----------|-------------|---------|----------------|
-| **Critical** | Design cannot close without resolving | EMC: TX interference prevents payload operation | Must resolve before PDR |
-| **Major** | Significant design impact | Radiator area competes with SA area | Must have mitigation plan by PDR |
-| **Minor** | Manageable with minor design adjustment | Star tracker FOV partially blocked by antenna | Accommodation analysis needed |
+### Ground Station Contact Geometry
 
-### Resolution Options
+**Contact time per pass** depends on the minimum elevation angle $\epsilon_{\min}$ (typically 5--10 deg):
 
-For each conflict, the team has four options:
+$$t_{\text{contact}} \approx \frac{T}{\pi} \arccos\left(\frac{\cos(\rho)}{\cos(\epsilon_{\min})}\right) - \text{geometric correction}$$
 
-1. **Relocate:** Move a component to avoid the conflict (e.g., move star tracker to different face)
-2. **Shield/Isolate:** Add shielding or isolation (e.g., EMC filter, vibration isolator)
-3. **Time-Division:** Schedule activities to avoid simultaneous operation (e.g., no TX during imaging)
-4. **Accept Risk:** Document the risk and accept the margin reduction
-
-### Resolution Workflow in SpaceCDF
-
-1. Navigate to **Interfaces** tab
-2. Click on a red-bordered cell (conflict detected)
-3. Review: affected parameters, responsible positions, severity
-4. Click **"Resolve Conflict"**
-5. Select resolution option, enter rationale
-6. Choose: Resolve / Accept Risk / Defer
-
-**Discussion prompt:** *For the "SA area vs radiator area" conflict -- what are the pros and cons of each resolution option?*
+**Simplified rule of thumb** for LEO at 500 km, $\epsilon_{\min} = 10\degree$:
+- Maximum pass duration: ~10 min (overhead pass)
+- Average pass duration: ~6--7 min
+- Passes per day (mid-latitude station): ~4--6
 
 ---
 
-## 4. Interface Requirements (20 min)
+## 5. Hohmann Transfer and Deorbit (10 min)
 
 ### Teaching Notes
 
-For each significant interface, write formal requirements that define the boundary agreement:
+> **Key Equations -- Hohmann Transfer**
+>
+> The minimum-energy transfer between two circular orbits of radii $r_1$ and $r_2$:
+>
+> $$\Delta V_1 = \sqrt{\frac{\mu}{r_1}} \left(\sqrt{\frac{2r_2}{r_1 + r_2}} - 1\right)$$
+>
+> $$\Delta V_2 = \sqrt{\frac{\mu}{r_2}} \left(1 - \sqrt{\frac{2r_1}{r_1 + r_2}}\right)$$
+>
+> $$\Delta V_{\text{total}} = |\Delta V_1| + |\Delta V_2|$$
 
-### Example: EPS <-> All Subsystems (Power Bus)
+> **Worked Example -- Deorbit from 600 km to 200 km (re-entry perigee)**
+>
+> $r_1 = 6971$ km, $r_2 = 6571$ km
+>
+> $\Delta V_1 = \sqrt{\frac{3.986 \times 10^5}{6971}} \left(\sqrt{\frac{2 \times 6571}{6971 + 6571}} - 1\right)$
+> $= 7.561 \times (\sqrt{0.9705} - 1) = 7.561 \times (-0.01498) = -0.1133$ km/s
+>
+> $\Delta V_{\text{total}} \approx$ **113 m/s** (only the first burn needed to lower perigee)
 
-```
-IR-PWR-001: The EPS shall provide a regulated bus voltage of 
-            3.3V ± 0.1V and 5.0V ± 0.25V to all subsystems.
-IR-PWR-002: Each subsystem shall not draw more than its allocated 
-            power from the bus without EPS approval.
-IR-PWR-003: The EPS shall provide at least 2 switched power lines 
-            for payload and 2 for TTC.
-```
-
-### Example: Structure <-> AOCS (Mounting)
-
-```
-IR-STR-AOCS-001: The star tracker mounting shall maintain alignment 
-                  to within 0.05° over the operating temperature range.
-IR-STR-AOCS-002: The reaction wheel mounting shall provide vibration 
-                  isolation with first mode > 50 Hz.
-```
-
-### Example: Link <-> Payload (EMC)
-
-```
-IR-EMC-001: The TX conducted emissions shall be below -60 dBm in the 
-            payload receiver band during imaging mode.
-IR-EMC-002: Alternatively, TX and imaging shall not operate simultaneously 
-            (time-division approach).
-```
-
-**Exercise:** *Write 2 interface requirements for the most critical interface pair in your design. Use the "shall" convention and make them verifiable.*
+This deorbit $\Delta V$ is a critical input to the propulsion sizing in Session 3.4.
 
 ---
 
-## 5. SpaceCDF Interface Matrix Exercise (30 min)
+## 6. Radiation Environment (10 min)
+
+### Teaching Notes
+
+*[Source: ECSS-E-ST-10-04C Rev.1; SMAD, Ch. 8.1]*
+
+### Total Ionising Dose (TID) by Orbit
+
+| Orbit | TID (krad/year behind 2mm Al) | Electronics Class |
+|-------|-------------------------------|-------------------|
+| ISS (410 km, 51.6 deg) | 2--5 | Commercial COTS OK |
+| SSO 500 km | 5--10 | Commercial / rad-tolerant |
+| SSO 800 km | 10--20 | Rad-tolerant recommended |
+| MEO 2000 km | 50--100 | Rad-hard required |
+| GEO 35786 km | 10--20 | Rad-hard required |
+
+**Rule of thumb:** Below 600 km in LEO, commercial COTS electronics can survive 3-year missions with modest shielding (2--3 mm Al equivalent). Above 600 km, radiation becomes a significant design driver and component cost escalates.
+
+### South Atlantic Anomaly (SAA)
+
+At 200--600 km altitude over South America, trapped protons from the inner Van Allen belt dip to lower altitudes. The SAA causes:
+- Single-event upsets (SEU) in memory
+- Single-event latch-ups (SEL) in CMOS
+- Increased background noise in optical detectors
+
+Mitigation: error-correcting memory (EDAC), watchdog timers, latch-up protection circuits.
+
+---
+
+## 7. SpaceCDF Orbit Trade Exercise (20 min)
 
 ### Instructions
 
-1. Open the **Interfaces** tab
-2. Review the N^2 matrix -- each coloured dot represents an interface type
-3. Click on 3 interface cells to examine their details:
-   - What types are defined?
-   - Is there a conflict?
-   - What are the responsible positions?
-4. For any conflict (red border):
-   - Click to view details
-   - Use the "Resolve Conflict" workflow
-   - Select a resolution and enter rationale
-5. Complete Worksheet 2.3: write interface requirements for 2 key pairs
+1. Navigate to the **Mission Architecture** tab in SpaceCDF
+2. Open the **Orbit Trade Advisor** panel
+3. Enter your mission parameters:
+   - GSD target (optical missions) or "N/A" for non-optical
+   - Revisit target (days)
+   - Mission lifetime (years)
+   - Latitude band of interest
+   - Cost ceiling (MEUR)
+   - Aperture diameter (if known from optical sizing)
+4. Click **"Compute Orbit Trade"**
+5. Review the scored candidates:
+   - Which orbit scores highest overall?
+   - Is it debris-compliant (FCC 5-year rule)?
+   - What is the natural orbital lifetime?
+6. Click **"Use"** on your preferred orbit to populate the design parameters
+7. Verify orbit fields updated in the dashboard (look for "Set from advisor" badge)
+
+### Discussion Points
+
+- Does the best-scoring orbit match your engineering intuition?
+- What happens when you change scoring weights (prioritise GSD over cost, or vice versa)?
+- For non-optical missions (comms, AIS), does the orbit scoring still make physical sense?
+- If your selected orbit is above 600 km, what deorbit strategy will you use?
+- Complete Worksheet 2.3
 
 ---
 
@@ -180,9 +314,12 @@ IR-EMC-002: Alternatively, TX and imaging shall not operate simultaneously
 
 | Topic | Key Takeaway |
 |-------|-------------|
-| N^2 matrix | Maps all subsystem-to-subsystem interfaces systematically |
-| 6 types | Mechanical, Electrical, Thermal, Data, RF, Optical |
-| Conflicts | Incompatible requirements at shared boundaries; 3 severity levels |
-| Resolution | Relocate, Shield/Isolate, Time-Division, or Accept Risk |
-| IRD | Formal interface requirements define boundary agreements |
-| Prevention | Define interfaces early; most integration failures trace to interface problems |
+| Keplerian elements | Six parameters define the orbit; for LEO: altitude + inclination + LTAN |
+| Key formulae | $T = 2\pi\sqrt{a^3/\mu}$; $v = \sqrt{\mu/a}$; eclipse fraction from geometry |
+| Sun-synchronous | Requires specific inclination (~97 deg at 500 km) using $J_2$ precession |
+| Perturbations | $J_2$ enables SSO; drag limits lifetime; SRP affects high-A/m satellites |
+| Trade-offs | Lower altitude = better GSD and link but shorter lifetime and more drag |
+| Debris rules | FCC 5-year, IADC 25-year; above ~550 km requires active deorbit |
+| Hohmann transfer | $\Delta V_{\text{deorbit}} \approx 100$ m/s from 600 km; critical propulsion input |
+| Radiation | Below 600 km: COTS OK; above: rad-tolerant/hard needed; SAA causes SEU |
+| Cascade | Orbit choice affects every subsystem -- highest-leverage design decision |

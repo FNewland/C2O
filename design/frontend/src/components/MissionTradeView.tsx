@@ -58,13 +58,19 @@ export function MissionTradeView({ onConceptSelected }: { onConceptSelected?: ()
   // Explicit inputs — pre-populated from objectives where possible, editable
   const objectives = missionNeed.objectives
   const isOptical = missionType === 'earth_observation' || missionType === 'science_planetary'
+  const isComms = missionType === 'communications' || missionType === 'relay' || missionType === 'iot'
+  const isRealTime = missionType === 'relay' || missionType === 'communications'
   const [gsd, setGsd] = useState(_extractGSD(objectives) || 10)
   const [revisit, setRevisit] = useState(_extractRevisit(objectives) || 3)
   const [coverage, setCoverage] = useState('regional')
-  const [latency, setLatency] = useState(24)
+  const [latency, setLatency] = useState(isRealTime ? 0.01 : 24)
   const [budget, setBudget] = useState(500)
   const [needOwnership, setNeedOwnership] = useState(false)
   const [needControl, setNeedControl] = useState(false)
+  // Comms-specific parameters
+  const [throughput, setThroughput] = useState(10)  // Mbps
+  const [availability, setAvailability] = useState(99.0)  // %
+  const [linkContinuity, setLinkContinuity] = useState(isRealTime ? 24 : 0.5)  // hours
 
   const runTrade = async () => {
     setLoading(true)
@@ -100,7 +106,13 @@ export function MissionTradeView({ onConceptSelected }: { onConceptSelected?: ()
 
       {/* Trade analysis inputs */}
       <div className="card" style={{ marginBottom: '1rem' }}>
-        <h3 style={{ fontSize: '0.85rem', marginBottom: '0.5rem' }}>What do you need?</h3>
+        <h3 style={{ fontSize: '0.85rem', marginBottom: '0.25rem' }}>What do you need?</h3>
+        <p style={{ fontSize: '0.68rem', color: '#6b7280', marginBottom: '0.5rem' }}>
+          Parameters adapted for: <strong style={{ color: '#3b82f6' }}>{missionType?.replace(/_/g, ' ') || 'earth observation'}</strong>
+          {isComms && ' — showing throughput, availability, and link continuity'}
+          {isOptical && ' — showing resolution, revisit, and coverage'}
+          {!isComms && !isOptical && ' — showing general mission parameters'}
+        </p>
         <p style={{ fontSize: '0.72rem', color: '#9ca3af', marginBottom: '0.75rem' }}>
           Set your performance and budget targets. The analysis will compare all available
           options — existing satellite data, commercial services, aerial, ground, and a new satellite.
@@ -108,29 +120,53 @@ export function MissionTradeView({ onConceptSelected }: { onConceptSelected?: ()
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '0.75rem' }}>
           {isOptical && (
             <div className="form-group" style={{ margin: 0 }}>
-              <label>Ground resolution (m) <span style={{ color: '#6b7280', fontWeight: 400 }}>— optical only</span></label>
+              <label>Ground resolution (m)</label>
               <input className="input" type="number" min={0.1} step={1} value={gsd}
                 onChange={e => setGsd(Number(e.target.value) || 10)} />
             </div>
           )}
-          <div className="form-group" style={{ margin: 0 }}>
-            <label>{missionType === 'communications' ? 'Service revisit (hours)' : 'Revisit time (days)'}</label>
-            <input className="input" type="number" min={0.1} step={1} value={revisit}
-              onChange={e => setRevisit(Number(e.target.value) || 3)} />
-          </div>
+          {isComms && (
+            <>
+              <div className="form-group" style={{ margin: 0 }}>
+                <label>Throughput (Mbps)</label>
+                <input className="input" type="number" min={0.01} step={1} value={throughput}
+                  onChange={e => setThroughput(Number(e.target.value) || 10)} />
+              </div>
+              <div className="form-group" style={{ margin: 0 }}>
+                <label>Availability (%)</label>
+                <input className="input" type="number" min={50} max={100} step={0.1} value={availability}
+                  onChange={e => setAvailability(Number(e.target.value) || 99)} />
+              </div>
+              <div className="form-group" style={{ margin: 0 }}>
+                <label>Link continuity (hours)</label>
+                <input className="input" type="number" min={0} step={0.5} value={linkContinuity}
+                  onChange={e => setLinkContinuity(Number(e.target.value) || 0.5)} />
+              </div>
+            </>
+          )}
+          {!isRealTime && (
+            <div className="form-group" style={{ margin: 0 }}>
+              <label>{isComms ? 'Service gap tolerance (hours)' : 'Revisit time (days)'}</label>
+              <input className="input" type="number" min={0.1} step={1} value={revisit}
+                onChange={e => setRevisit(Number(e.target.value) || 3)} />
+            </div>
+          )}
           <div className="form-group" style={{ margin: 0 }}>
             <label>Coverage</label>
             <select className="select" value={coverage} onChange={e => setCoverage(e.target.value)}>
               <option value="global">Global</option>
               <option value="regional">Regional</option>
-              <option value="local">Local</option>
+              <option value="local">Local / Point-to-point</option>
+              {isComms && <option value="corridor">Corridor / Shipping lane</option>}
             </select>
           </div>
-          <div className="form-group" style={{ margin: 0 }}>
-            <label>Max data latency (hours)</label>
-            <input className="input" type="number" min={0.1} step={1} value={latency}
-              onChange={e => setLatency(Number(e.target.value) || 24)} />
-          </div>
+          {!isRealTime && (
+            <div className="form-group" style={{ margin: 0 }}>
+              <label>Max data latency (hours)</label>
+              <input className="input" type="number" min={0.01} step={1} value={latency}
+                onChange={e => setLatency(Number(e.target.value) || 24)} />
+            </div>
+          )}
           <div className="form-group" style={{ margin: 0 }}>
             <label>Annual budget (kEUR)</label>
             <input className="input" type="number" min={0} step={50} value={budget}

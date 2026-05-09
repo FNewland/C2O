@@ -6,6 +6,7 @@
  */
 import { useState, useEffect } from 'react'
 import { useDesignStore } from '../stores/designStore'
+import { useApplyToDesign } from '../hooks/useApplyToDesign'
 
 interface ParametricData {
   mass_fractions: Record<string, Record<string, number>>
@@ -29,6 +30,27 @@ export function ParametricEditor() {
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [])
+
+  const [applied, setApplied] = useState(false)
+
+  const parametricEvents = data ? [
+    ...Object.entries(data.mass_fractions).map(([subsys, values]) => ({
+      kind: 'parameter_override' as const,
+      target_id: `parametric.mass_fraction.${subsys}`,
+      new_value: values[scClass] ?? 0,
+    })),
+    ...Object.entries(data.cost_fractions).map(([subsys, values]) => ({
+      kind: 'parameter_override' as const,
+      target_id: `parametric.cost_fraction.${subsys}`,
+      new_value: values[scClass] ?? 0,
+    })),
+  ] : []
+
+  const apply = useApplyToDesign({
+    events: parametricEvents,
+    correlation_id: 'parametric-editor',
+    rationale: `Apply parametric model fractions for ${scClass} class`,
+  })
 
   if (loading) return <div style={{ padding: '1rem', color: '#6b7280' }}>Loading parametric data...</div>
   if (!data) return <div style={{ padding: '1rem', color: '#ef4444' }}>Failed to load parametric data.</div>
@@ -125,6 +147,11 @@ export function ParametricEditor() {
           </table>
         </div>
       )}
+
+      <button className="btn" onClick={async () => { await apply(); setApplied(true); setTimeout(() => setApplied(false), 2000) }}
+        style={{ marginTop: '0.5rem', width: '100%', background: applied ? '#10b981' : '#3b82f6', fontSize: '0.78rem' }}>
+        {applied ? 'Applied — reconverging...' : 'Apply to Design'}
+      </button>
     </div>
   )
 }

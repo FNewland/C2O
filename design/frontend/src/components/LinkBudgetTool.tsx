@@ -4,8 +4,9 @@
  * Computes EIRP, FSPL, received power, C/N0, Eb/N0, margin per ECSS-E-ST-50-05C.
  * Shows each term as a cascade with the final margin.
  */
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef, useCallback } from 'react'
 import { useDesignStore } from '../stores/designStore'
+import { useApplyToDesign } from '../hooks/useApplyToDesign'
 
 interface LinkBudgetLine {
   label: string
@@ -17,22 +18,36 @@ interface LinkBudgetLine {
 
 export function LinkBudgetTool() {
   const reqs = useDesignStore(s => s.requirements)
+  const setParam = useDesignStore(s => s.setParameter)
   const alt = reqs.orbit.altitude_km
+
+  // Helper: set local state immediately, debounce designStore write to avoid render storms
+  const timersRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
+  const useLinkedState = (initial: number, paramId: string): [number, (v: number) => void] => {
+    const [val, setVal] = useState(initial)
+    const setter = useCallback((v: number) => {
+      setVal(v)
+      // Debounce the store write — only fires after 500ms of no changes
+      if (timersRef.current[paramId]) clearTimeout(timersRef.current[paramId])
+      timersRef.current[paramId] = setTimeout(() => setParam(paramId, v, 'link-budget'), 500)
+    }, [paramId])
+    return [val, setter]
+  }
 
   const [linkDirection, setLinkDirection] = useState<'downlink' | 'uplink'>('downlink')
 
-  // Inputs with defaults from design state (adapt for up/downlink)
-  const [txPower, setTxPower] = useState(2.0)
-  const [txGain, setTxGain] = useState(linkDirection === 'downlink' ? 6.0 : 35.0)
-  const [txLosses, setTxLosses] = useState(1.5)
-  const [frequency, setFrequency] = useState(linkDirection === 'downlink' ? 2250 : 2050)
-  const [slantRange, setSlantRange] = useState(alt * 1.15 || 575)
-  const [atmosphericLoss, setAtmosphericLoss] = useState(0.5)
-  const [pointingLoss, setPointingLoss] = useState(1.0)
-  const [polLoss, setPolLoss] = useState(0.3)
-  const [rxGain, setRxGain] = useState(35.0)
-  const [rxTemp, setRxTemp] = useState(150)
-  const [dataRate, setDataRate] = useState(1e6)
+  // Inputs with defaults from design state — every change writes to parameterOverrides
+  const [txPower, setTxPower] = useLinkedState(2.0, 'link.tx_power_w')
+  const [txGain, setTxGain] = useLinkedState(linkDirection === 'downlink' ? 6.0 : 35.0, 'link.tx_antenna_gain_db')
+  const [txLosses, setTxLosses] = useLinkedState(1.5, 'link.tx_losses_db')
+  const [frequency, setFrequency] = useLinkedState(linkDirection === 'downlink' ? 2250 : 2050, 'link.frequency_mhz')
+  const [slantRange, setSlantRange] = useLinkedState(alt * 1.15 || 575, 'link.slant_range_km')
+  const [atmosphericLoss, setAtmosphericLoss] = useLinkedState(0.5, 'link.atmospheric_loss_db')
+  const [pointingLoss, setPointingLoss] = useLinkedState(1.0, 'link.pointing_loss_db')
+  const [polLoss, setPolLoss] = useLinkedState(0.3, 'link.polarisation_loss_db')
+  const [rxGain, setRxGain] = useLinkedState(35.0, 'link.rx_antenna_gain_db')
+  const [rxTemp, setRxTemp] = useLinkedState(150, 'link.system_noise_temp_k')
+  const [dataRate, setDataRate] = useLinkedState(1e6, 'link.data_rate_bps')
   const [reqEbN0, setReqEbN0] = useState(4.0)
   const [implMargin, setImplMargin] = useState(2.0)
 
@@ -70,6 +85,21 @@ export function LinkBudgetTool() {
   }, [txPower, txGain, txLosses, frequency, slantRange, atmosphericLoss, pointingLoss, polLoss, rxGain, rxTemp, dataRate, reqEbN0, implMargin])
 
   const margin = budget[budget.length - 1]?.value || 0
+  const [applied, setApplied] = useState(false)
+
+  const apply = useApplyToDesign({
+    events: [
+      { kind: 'parameter_override', target_id: 'link.tx_power_w', new_value: txPower },
+      { kind: 'parameter_override', target_id: 'link.tx_antenna_gain_db', new_value: txGain },
+      { kind: 'parameter_override', target_id: 'link.frequency_mhz', new_value: frequency },
+      { kind: 'parameter_override', target_id: 'link.rx_antenna_gain_db', new_value: rxGain },
+      { kind: 'parameter_override', target_id: 'link.data_rate_bps', new_value: dataRate },
+      { kind: 'parameter_override', target_id: 'link.slant_range_km', new_value: slantRange },
+      { kind: 'parameter_override', target_id: 'link.system_noise_temp_k', new_value: rxTemp },
+    ],
+    correlation_id: 'linkbudget-tool',
+    rationale: 'Manual link-budget tuning',
+  })
 
   return (
     <div style={{ padding: '1rem', overflowY: 'auto', height: '100%' }}>
@@ -154,6 +184,12 @@ export function LinkBudgetTool() {
           </table>
         </div>
       </div>
+
+      {/* Apply to design */}
+      <button className="btn" onClick={async () => { await apply(); setApplied(true); setTimeout(() => setApplied(false), 2000) }}
+        style={{ marginTop: '0.75rem', width: '100%', background: applied ? '#10b981' : '#3b82f6', fontSize: '0.82rem' }}>
+        {applied ? 'Applied — reconverging...' : 'Apply to Design'}
+      </button>
     </div>
   )
 }

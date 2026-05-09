@@ -1,121 +1,152 @@
-# Worksheet 1.2: Mission Need & Stakeholder Analysis
+# Worksheet 1.2: Canadian Space Ecosystem & Regulatory Environment
 
-**Name:** ___________________________  **Date:** ___________
-
----
-
-## Part A: Stakeholder Matrix
-
-Identify at least 4 stakeholders for your team's mission. For each, capture their needs, constraints, and priority.
-
-| # | Stakeholder | Role | Key Needs | Constraints They Impose | Priority (P/S) |
-|---|-------------|------|-----------|------------------------|----------------|
-| 1 | | | | | |
-| 2 | | | | | |
-| 3 | | | | | |
-| 4 | | | | | |
-| 5 | | | | | |
-
-**Discussion:** Which stakeholder has the most influence? Which has needs that conflict with others?
+| | |
+|---|---|
+| **Name:** | __________________________________________ |
+| **Date:** | __________________________________________ |
+| **Team:** | __________________________________________ |
+| **Session:** | 1.2 -- Canadian Space Ecosystem & Regulatory Environment |
 
 ---
 
-## Part B: Objective Quality Checklist
+## Part A: Canadian Space Industry Mapping
 
-Write 2-3 mission objectives below. Then score each against the checklist.
+For your team's mission concept, identify potential Canadian industry partners at each tier. If no Canadian supplier exists for a capability, note what country you would source from and why.
 
-**Objective 1:** _____________________________________________________________
+| Tier | Capability Needed | Canadian Candidate(s) | International Alternative | Justification |
+|------|-------------------|----------------------|--------------------------|--------------|
+| Tier 1 (Prime/Integration) | _____________________ | _____________________ | _____________________ | _____________________ |
+| Tier 2 (Subsystem) | _____________________ | _____________________ | _____________________ | _____________________ |
+| Tier 2 (Subsystem) | _____________________ | _____________________ | _____________________ | _____________________ |
+| Tier 3 (Component/Service) | _____________________ | _____________________ | _____________________ | _____________________ |
+| Tier 4 (R&D/Academic) | _____________________ | _____________________ | _____________________ | _____________________ |
 
-_____________________________________________________________
+**Question:** What CSA funding program(s) might support your mission? Why?
 
-| Criterion | Yes/No | Notes |
-|-----------|--------|-------|
-| States WHAT, not HOW? | | |
-| Has a measurable criterion with number + unit? | | |
-| Is achievable with current technology? | | |
-| Is relevant to the problem statement? | | |
-| Is traceable to a stakeholder need? | | |
-| Is classified as primary or secondary? | | |
+_______________________________________________
 
-**Objective 2:** _____________________________________________________________
+_______________________________________________
 
-_____________________________________________________________
-
-| Criterion | Yes/No | Notes |
-|-----------|--------|-------|
-| States WHAT, not HOW? | | |
-| Has a measurable criterion with number + unit? | | |
-| Is achievable with current technology? | | |
-| Is relevant to the problem statement? | | |
-| Is traceable to a stakeholder need? | | |
-| Is classified as primary or secondary? | | |
+_______________________________________________
 
 ---
 
-## Part C: Problem Statement Writing
+## Part B: RSSSA Compliance Assessment
 
-Write your team's mission problem statement below. It should answer:
-- What is the problem (capability gap)?
-- Who is affected?
-- What is the impact of not solving it?
-- What constraints exist?
+Answer the following questions for your team's mission concept:
 
-**Problem Statement:**
+1. Does your mission involve any remote sensing of Earth (imaging, SAR, radiometry, etc.)?
 
-_______________________________________________________________
+   _______________________________________________
 
-_______________________________________________________________
+2. If yes, will the satellite be operated from Canada?
 
-_______________________________________________________________
+   _______________________________________________
 
-_______________________________________________________________
+3. What RSSSA conditions might apply? (Check all that apply)
 
-**Peer review:** Exchange with another team. Does their problem statement prescribe a solution (HOW)? Mark any solution language.
+   | Condition | Applies? | Notes |
+   |-----------|----------|-------|
+   | Priority access for Government of Canada | __________ | _____________________ |
+   | Shutter control provisions | __________ | _____________________ |
+   | Data disposition / handling plan | __________ | _____________________ |
+   | System disposal plan | __________ | _____________________ |
+   | Raw data protection | __________ | _____________________ |
+   | Interoperability arrangements (foreign access) | __________ | _____________________ |
 
----
+4. If your mission does NOT involve remote sensing, what other regulatory requirements apply? (e.g., spectrum licensing, export control)
 
-## Part D: MoE -> MoP -> TPM Chain
+   _______________________________________________
 
-For one of your objectives, trace the measurement hierarchy:
-
-**Objective:** _____________________________________________________________
-
-**MoE** (operational effectiveness from user perspective):
-
-_______________________________________________________________
-
-**MoP** (technical performance measure):
-
-_______________________________________________________________
-
-**TPM** (design parameter to track during development):
-
-_______________________________________________________________
+   _______________________________________________
 
 ---
 
-## Part E: SpaceCDF Tool Entry
+## Part C: Spectrum Licensing Plan
 
-In SpaceCDF Step 1 (Mission Need), enter your problem statement, stakeholders, and objectives. Then answer:
+Identify the frequency bands your mission will use and the licensing path for each:
 
-1. Did the tool auto-detect your mission type from the objectives? What type did it suggest?
+| Link | Band | Frequency (GHz) | Data Rate | Use (TT&C / Payload / ISL) | Licensing Path |
+|------|------|-----------------|-----------|---------------------------|---------------|
+| Uplink | __________ | __________ | __________ | __________ | __________ |
+| Downlink (TT&C) | __________ | __________ | __________ | __________ | __________ |
+| Downlink (Payload) | __________ | __________ | __________ | __________ | __________ |
+| Other | __________ | __________ | __________ | __________ | __________ |
 
-   _______________________________________________________________
+*Hint: For a typical CubeSat, TT&C uses S-band (2.0--2.3 GHz) and payload data uses X-band (8.025--8.4 GHz). The licensing path for each is: ISED application -> ISED technical review -> ITU filing (API) -> ITU coordination -> ISED licence issuance.*
 
-2. How many stakeholders did you enter? Are there any the tool doesn't let you capture?
+**Question:** How early in your project should you begin the spectrum licensing process? Why?
 
-   _______________________________________________________________
+_______________________________________________
 
-3. What measurable criteria did you enter for each objective?
+_______________________________________________
 
-   _______________________________________________________________
+_______________________________________________
 
 ---
 
-## Notes
+## Part D: Export Control Classification
 
-_______________________________________________________________
+List the 3 most critical components in your preliminary mission concept. For each, identify the likely export control classification:
 
-_______________________________________________________________
+| Component | Country of Origin | Likely Classification | Licence Required? |
+|-----------|------------------|-----------------------|-------------------|
+| _____________________ | __________ | ECCN: __________ / USML Cat: __________ | __________ |
+| _____________________ | __________ | ECCN: __________ / USML Cat: __________ | __________ |
+| _____________________ | __________ | ECCN: __________ / USML Cat: __________ | __________ |
 
-_______________________________________________________________
+*Hint: Most commercial-off-the-shelf (COTS) space components from US manufacturers are classified under EAR (ECCN 9A515 for spacecraft parts). Military-grade or specifically designed items may fall under ITAR (USML Category XV). Canadian-origin components are subject to EIPA if they appear on the Export Control List.*
+
+**Question:** If your mission includes a US-origin star tracker and you plan to launch on an Indian PSLV, what export control issues arise?
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+---
+
+## Part E: Regulatory Timeline
+
+Based on your mission concept, estimate when each regulatory activity should begin and how long it will take. Mark the activities on the timeline below:
+
+| Regulatory Activity | Start Phase | Duration | Critical Path? |
+|--------------------|-------------|----------|---------------|
+| RSSSA licence application | __________ | __________ | __________ |
+| ISED spectrum application | __________ | __________ | __________ |
+| ITU coordination | __________ | __________ | __________ |
+| Export permit(s) | __________ | __________ | __________ |
+| Launch provider interface agreement | __________ | __________ | __________ |
+
+**Question:** Which regulatory activity is most likely to be on the critical path for your mission? Why?
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+---
+
+## Notes & Reflections
+
+Record key points from the discussion, regulatory questions you need to research further, and implications for your mission design:
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________

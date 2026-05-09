@@ -56,8 +56,8 @@ export function DesignStateBar({ autoReconverge, onToggleAuto }: {
             — {sourceLabels[lastChangeSource] || lastChangeSource} changed since last run
           </span>
           <button className="btn btn-sm" onClick={runDesign}
-            style={{ background: '#f59e0b', color: '#000', fontSize: '0.72rem', fontWeight: 600 }}>
-            Re-run Design
+            style={{ background: autoReconverge ? '#374151' : '#f59e0b', color: autoReconverge ? '#9ca3af' : '#000', fontSize: '0.72rem', fontWeight: autoReconverge ? 400 : 600 }}>
+            {autoReconverge ? 'Force Re-run' : 'Run Design'}
           </button>
           {onToggleAuto && (
             <label style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.68rem', color: '#6b7280', cursor: 'pointer' }}>

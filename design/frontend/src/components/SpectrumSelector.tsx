@@ -6,6 +6,7 @@
  */
 import { useState, useEffect } from 'react'
 import { useDesignStore } from '../stores/designStore'
+import { useApplyToDesign } from '../hooks/useApplyToDesign'
 
 interface FreqBand {
   name: string; band: string; freq_min_mhz: number; freq_max_mhz: number
@@ -38,13 +39,36 @@ export function SpectrumSelector() {
       .finally(() => setLoading(false))
   }, [missionType, licenseType, dataRate])
 
+  const setParam = useDesignStore(s => s.setParameter)
   const setRfBand = useDesignStore(s => (s as any).setRfBand)
   const handleSelectBand = (bandName: string) => {
     setSelectedBand(bandName)
     // Store in designStore so EquipmentBrowser can filter
     useDesignStore.setState({ selectedRfBand: bandName, selectedLicenseType: licenseType })
+    // Immediately write frequency constraints to design store
+    const bandInfo = bands.find(b => b.band === bandName)
+    if (bandInfo) {
+      setParam('spectrum.band', bandName, 'spectrum-selector')
+      setParam('spectrum.freq_min_mhz', bandInfo.freq_min_mhz, 'spectrum-selector')
+      setParam('spectrum.freq_max_mhz', bandInfo.freq_max_mhz, 'spectrum-selector')
+      setParam('spectrum.license_type', licenseType, 'spectrum-selector')
+    }
     markStale('spectrum')
   }
+
+  const [applied, setApplied] = useState(false)
+
+  const selectedBandInfo = bands.find(b => b.band === selectedBand)
+  const apply = useApplyToDesign({
+    events: selectedBandInfo ? [
+      { kind: 'spectrum_band_selection' as any, target_id: 'spectrum.band', new_value: selectedBandInfo.band },
+      { kind: 'parameter_override', target_id: 'spectrum.freq_min_mhz', new_value: selectedBandInfo.freq_min_mhz },
+      { kind: 'parameter_override', target_id: 'spectrum.freq_max_mhz', new_value: selectedBandInfo.freq_max_mhz },
+      { kind: 'parameter_override', target_id: 'spectrum.license_type', new_value: licenseType },
+    ] : [],
+    correlation_id: 'spectrum-selector',
+    rationale: selectedBandInfo ? `Selected ${selectedBandInfo.band} band (${selectedBandInfo.name})` : 'No band selected',
+  })
 
   const BAND_COLORS: Record<string, string> = {
     VHF: '#10b981', UHF: '#3b82f6', S: '#f59e0b', X: '#ec4899', Ka: '#8b5cf6', L: '#f97316',
@@ -60,7 +84,7 @@ export function SpectrumSelector() {
       {/* License type selector */}
       <div style={{ display: 'flex', gap: '0.3rem', marginBottom: '0.5rem' }}>
         {LICENSE_OPTIONS.map(opt => (
-          <button key={opt.id} onClick={() => setLicenseType(opt.id)}
+          <button key={opt.id} onClick={() => { setLicenseType(opt.id); setParam('spectrum.license_type', opt.id, 'spectrum-selector') }}
             title={opt.description}
             style={{
               padding: '0.25rem 0.6rem', fontSize: '0.72rem', borderRadius: '4px', cursor: 'pointer',
@@ -111,6 +135,11 @@ export function SpectrumSelector() {
           )}
         </div>
       )}
+
+      <button className="btn" onClick={async () => { await apply(); setApplied(true); setTimeout(() => setApplied(false), 2000) }}
+        style={{ marginTop: '0.5rem', width: '100%', background: applied ? '#10b981' : '#3b82f6', fontSize: '0.78rem' }}>
+        {applied ? 'Applied — reconverging...' : 'Apply to Design'}
+      </button>
     </div>
   )
 }

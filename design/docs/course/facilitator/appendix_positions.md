@@ -285,3 +285,81 @@ common pitfalls, and references.
 - Develop ground control software and procedures
 
 **References:** ECSS-E-ST-70-01C; ECSS-E-ST-70-41C (PUS); CCSDS 133.0-B (Space Packet Protocol)
+
+---
+
+## Appendix N: Mission Operations Engineer
+
+**Responsibility:** Operations concept, ground procedures, LEOP planning, anomaly response, scheduling.
+
+**Key Parameters Owned:** Pass schedule, contact time, command load timing, housekeeping budget, anomaly recovery time.
+
+**Key Activities:**
+- Define operations concept (number of operators, shifts, automation level)
+- Plan LEOP sequence (first contact, deployment, commissioning timeline)
+- Define ground station network requirements (contact minutes per orbit, latency)
+- Write nominal operations procedures (imaging, downlink, orbit maintenance)
+- Define anomaly response procedures (safe mode recovery, contingencies)
+- Plan scheduling and resource allocation (data volume vs contact time)
+
+**Decision Authority:** Operations approach, automation vs manual, pass scheduling priority.
+
+**Common Pitfalls:**
+- Underestimating LEOP complexity (first hours are most critical)
+- Not planning for degraded operations (single ground station, partial hardware)
+- Assuming 24/7 staffing when budget supports only office hours
+- Not accounting for seasonal ground station visibility
+
+**References:** ECSS-E-ST-70C; ECSS-M-ST-10C Annex B (Operations); NASA SEH Appendix T (Phase E)
+
+---
+
+## Appendix O: Project Manager
+
+**Responsibility:** Schedule, budget, team coordination, review preparation, stakeholder management.
+
+**Key Parameters Owned:** Project schedule, cost breakdown, FTE allocation, risk register, milestone status.
+
+**Key Activities:**
+- Maintain project schedule with milestones and dependencies
+- Track cost against budget (EAC, ETC, cost-to-complete)
+- Coordinate between positions (ensure interface agreements are met)
+- Prepare review data packages (SRR, PDR, CDR, FRR)
+- Manage risk register (convene risk review boards)
+- Interface with customer/stakeholder on requirements changes
+
+**Decision Authority:** Schedule priorities, resource allocation, risk acceptance (with engineering concurrence).
+
+**Common Pitfalls:**
+- Not protecting schedule margin (consumed by early phases)
+- Accepting scope creep without schedule/cost impact assessment
+- Not tracking earned value (work done vs time spent)
+- Holding reviews before engineering products are mature
+
+**References:** ECSS-M-ST-10C (Project Management); NPR 7120.5 (NASA PM Requirements); PMI PMBOK
+
+---
+
+## Appendix P: User Representative
+
+**Responsibility:** End-user needs, data product requirements, service level agreements, utilisation planning.
+
+**Key Parameters Owned:** Data product specifications, latency requirements, coverage needs, user interface requirements.
+
+**Key Activities:**
+- Define data product requirements (format, resolution, accuracy, timeliness)
+- Specify user access methods (API, web portal, direct download)
+- Define service level agreements (availability, response time, data freshness)
+- Validate that system design meets stakeholder expectations
+- Represent user community in trade study decisions
+- Plan user training and documentation
+
+**Decision Authority:** Data product format, delivery mechanism, user interface design.
+
+**Common Pitfalls:**
+- Not distinguishing between "nice to have" and actual requirements
+- Specifying implementation details instead of user needs
+- Not considering different user types (research, commercial, public)
+- Assuming unlimited bandwidth for data delivery
+
+**References:** NASA SEH §4.1 (Stakeholder Expectations); ECSS-E-ST-10C §5.2 (Requirements); ISO 9241 (Usability)

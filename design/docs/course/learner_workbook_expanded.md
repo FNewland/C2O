@@ -1,0 +1,3924 @@
+---
+title: "SpaceCDF Learner's Workbook"
+subtitle: "Worksheets and exercises for the 40-hour Concurrent Design Facility intensive"
+course-codes: "SpaceCDF"
+term: "2026"
+version: "v3 — 2026-05-09"
+language: en
+brand: uottawa-horizon
+publisher: "Faculty of Engineering · School of Engineering Design and Teaching Innovation (SEDTI)"
+footer-en: "SpaceCDF Learner's Workbook · 2026"
+running: "SpaceCDF — Learner's Workbook"
+---
+
+# Learner's Workbook
+
+## How to use this workbook
+
+This workbook is your hands-on companion through the 40-hour SpaceCDF intensive. There is one worksheet per session. Each worksheet contains:
+
+- **Key Equations Reference** — the essential formulas you need for that session
+- **Calculation Space** — room to work through problems step by step
+- **Budget Templates** — tables to fill in as you design your mission
+- **Notes & Reflections** — space to capture insights and discussion points
+
+The workbook is paired with the *Facilitator's Book*, which carries the teaching content, worked solutions, and references.
+
+> **Tip:** Complete the expected reading listed at the top of each worksheet *before* the session — the exercises are designed to be completed quickly when you arrive prepared.
+
+---
+
+
+---
+
+# Worksheet 1.1: Introduction to Space Mission Design
+
+| | |
+|---|---|
+| **Name:** | __________________________________________ |
+| **Date:** | __________________________________________ |
+| **Team:** | __________________________________________ |
+| **Session:** | 1.1 -- Introduction to Space Mission Design |
+
+---
+
+## Part A: The 17 SE Processes -- SpaceCDF Mapping
+
+For each NASA SE process (NPR 7123.1D), identify which SpaceCDF feature implements it. Write the tab name, button, or panel. If the process requires human judgment that the tool cannot automate, mark "Manual" in the last column.
+
+*Hint: Navigate through SpaceCDF's workflow steps (Need -> Concept -> Requirements -> Design) and explore each tab. Many processes map to more than one feature.*
+
+| # | SE Process | SpaceCDF Feature(s) | Manual? |
+|---|-----------|---------------------|---------|
+| 1 | Stakeholder Expectations Definition | __________________________________________ | ______ |
+| 2 | Technical Requirements Definition | __________________________________________ | ______ |
+| 3 | Logical Decomposition | __________________________________________ | ______ |
+| 4 | Design Solution Definition | __________________________________________ | ______ |
+| 5 | Product Implementation | __________________________________________ | ______ |
+| 6 | Product Integration | __________________________________________ | ______ |
+| 7 | Product Verification | __________________________________________ | ______ |
+| 8 | Product Validation | __________________________________________ | ______ |
+| 9 | Product Transition | __________________________________________ | ______ |
+| 10 | Technical Planning | __________________________________________ | ______ |
+| 11 | Requirements Management | __________________________________________ | ______ |
+| 12 | Interface Management | __________________________________________ | ______ |
+| 13 | Technical Risk Management | __________________________________________ | ______ |
+| 14 | Configuration Management | __________________________________________ | ______ |
+| 15 | Technical Data Management | __________________________________________ | ______ |
+| 16 | Technical Assessment | __________________________________________ | ______ |
+| 17 | Decision Analysis | __________________________________________ | ______ |
+
+**Discussion question:** Which processes are well-supported by the tool? Which ones fundamentally require human judgment and cannot be fully automated? Write your answer below:
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+---
+
+## Part B: Lifecycle Phase Identification
+
+For each activity below, identify which NASA lifecycle phase (Pre-A through F) it belongs to and which review gate marks the end of that phase:
+
+| Activity | NASA Phase | Review Gate |
+|----------|-----------|-------------|
+| "We need to monitor sea ice thickness in the Canadian Arctic" | __________ | __________ |
+| Writing system-level "shall" requirements with verification methods | __________ | __________ |
+| Selecting a specific reaction wheel vendor after evaluating 3 options | __________ | __________ |
+| Running thermal-vacuum qualification tests on the flight model | __________ | __________ |
+| Operating the satellite and producing daily data products | __________ | __________ |
+| Decommissioning the satellite and performing passivation | __________ | __________ |
+| Preliminary orbit trade study comparing SSO, ISS-orbit, and polar | __________ | __________ |
+| Detailed finite element analysis of the primary structure | __________ | __________ |
+
+*Hint: Refer to the lifecycle phase table in Session 1.1, Section 4.3. Ask yourself: "What level of design detail does this activity require?"*
+
+---
+
+## Part C: CDF Position Interaction Analysis
+
+For each design conflict below, identify which engineering positions must interact to resolve it. Then briefly describe how you would approach the resolution.
+
+**Conflict 1:** The payload requires 50 W but the solar array can only provide 30 W.
+
+Positions involved: _______________________________________________
+
+Resolution approach: _______________________________________________
+
+_______________________________________________
+
+**Conflict 2:** The reaction wheel vibration exceeds the payload's pointing stability requirement.
+
+Positions involved: _______________________________________________
+
+Resolution approach: _______________________________________________
+
+_______________________________________________
+
+**Conflict 3:** The selected orbit (700 km) requires a propulsive deorbit for debris compliance, but there is no mass budget remaining for a propulsion system.
+
+Positions involved: _______________________________________________
+
+Resolution approach: _______________________________________________
+
+_______________________________________________
+
+**Conflict 4:** The X-band downlink antenna pattern interferes with the payload's sensitive optical receiver.
+
+Positions involved: _______________________________________________
+
+Resolution approach: _______________________________________________
+
+_______________________________________________
+
+---
+
+## Part D: SpaceCDF Tool Exploration
+
+Navigate through the SpaceCDF tool and answer each question:
+
+1. How many KPI cards are shown on the Design Dashboard? List them by name:
+
+   _______________________________________________
+
+   _______________________________________________
+
+   _______________________________________________
+
+2. In the Gate Review tab, what are the MCR exit criteria? Which are auto-evaluated?
+
+   _______________________________________________
+
+   _______________________________________________
+
+   _______________________________________________
+
+3. What engineering positions are available when starting a collaborative session?
+
+   _______________________________________________
+
+   _______________________________________________
+
+4. What workflow steps does SpaceCDF guide you through (from left to right)?
+
+   _______________________________________________
+
+5. In the Positions tab, find your assigned position. What key questions does it list?
+
+   _______________________________________________
+
+   _______________________________________________
+
+   _______________________________________________
+
+---
+
+## Part E: V-Model Sketch
+
+In the space below, sketch the System-V model from memory. Label each level on both the left side (decomposition) and right side (integration). Draw the horizontal traceability arrows and label them.
+
+*Use this space for your sketch:*
+
+|   |
+|---|
+|   |
+|   |
+|   |
+|   |
+|   |
+|   |
+|   |
+|   |
+|   |
+|   |
+|   |
+|   |
+|   |
+|   |
+|   |
+
+---
+
+## Notes & Reflections
+
+Record key points from the group discussion, questions you want to follow up on, and connections to your mission concept:
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+---
+
+# Worksheet 1.2: Canadian Space Ecosystem & Regulatory Environment
+
+| | |
+|---|---|
+| **Name:** | __________________________________________ |
+| **Date:** | __________________________________________ |
+| **Team:** | __________________________________________ |
+| **Session:** | 1.2 -- Canadian Space Ecosystem & Regulatory Environment |
+
+---
+
+## Part A: Canadian Space Industry Mapping
+
+For your team's mission concept, identify potential Canadian industry partners at each tier. If no Canadian supplier exists for a capability, note what country you would source from and why.
+
+| Tier | Capability Needed | Canadian Candidate(s) | International Alternative | Justification |
+|------|-------------------|----------------------|--------------------------|--------------|
+| Tier 1 (Prime/Integration) | _____________________ | _____________________ | _____________________ | _____________________ |
+| Tier 2 (Subsystem) | _____________________ | _____________________ | _____________________ | _____________________ |
+| Tier 2 (Subsystem) | _____________________ | _____________________ | _____________________ | _____________________ |
+| Tier 3 (Component/Service) | _____________________ | _____________________ | _____________________ | _____________________ |
+| Tier 4 (R&D/Academic) | _____________________ | _____________________ | _____________________ | _____________________ |
+
+**Question:** What CSA funding program(s) might support your mission? Why?
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+---
+
+## Part B: RSSSA Compliance Assessment
+
+Answer the following questions for your team's mission concept:
+
+1. Does your mission involve any remote sensing of Earth (imaging, SAR, radiometry, etc.)?
+
+   _______________________________________________
+
+2. If yes, will the satellite be operated from Canada?
+
+   _______________________________________________
+
+3. What RSSSA conditions might apply? (Check all that apply)
+
+   | Condition | Applies? | Notes |
+   |-----------|----------|-------|
+   | Priority access for Government of Canada | __________ | _____________________ |
+   | Shutter control provisions | __________ | _____________________ |
+   | Data disposition / handling plan | __________ | _____________________ |
+   | System disposal plan | __________ | _____________________ |
+   | Raw data protection | __________ | _____________________ |
+   | Interoperability arrangements (foreign access) | __________ | _____________________ |
+
+4. If your mission does NOT involve remote sensing, what other regulatory requirements apply? (e.g., spectrum licensing, export control)
+
+   _______________________________________________
+
+   _______________________________________________
+
+---
+
+## Part C: Spectrum Licensing Plan
+
+Identify the frequency bands your mission will use and the licensing path for each:
+
+| Link | Band | Frequency (GHz) | Data Rate | Use (TT&C / Payload / ISL) | Licensing Path |
+|------|------|-----------------|-----------|---------------------------|---------------|
+| Uplink | __________ | __________ | __________ | __________ | __________ |
+| Downlink (TT&C) | __________ | __________ | __________ | __________ | __________ |
+| Downlink (Payload) | __________ | __________ | __________ | __________ | __________ |
+| Other | __________ | __________ | __________ | __________ | __________ |
+
+*Hint: For a typical CubeSat, TT&C uses S-band (2.0--2.3 GHz) and payload data uses X-band (8.025--8.4 GHz). The licensing path for each is: ISED application -> ISED technical review -> ITU filing (API) -> ITU coordination -> ISED licence issuance.*
+
+**Question:** How early in your project should you begin the spectrum licensing process? Why?
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+---
+
+## Part D: Export Control Classification
+
+List the 3 most critical components in your preliminary mission concept. For each, identify the likely export control classification:
+
+| Component | Country of Origin | Likely Classification | Licence Required? |
+|-----------|------------------|-----------------------|-------------------|
+| _____________________ | __________ | ECCN: __________ / USML Cat: __________ | __________ |
+| _____________________ | __________ | ECCN: __________ / USML Cat: __________ | __________ |
+| _____________________ | __________ | ECCN: __________ / USML Cat: __________ | __________ |
+
+*Hint: Most commercial-off-the-shelf (COTS) space components from US manufacturers are classified under EAR (ECCN 9A515 for spacecraft parts). Military-grade or specifically designed items may fall under ITAR (USML Category XV). Canadian-origin components are subject to EIPA if they appear on the Export Control List.*
+
+**Question:** If your mission includes a US-origin star tracker and you plan to launch on an Indian PSLV, what export control issues arise?
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+---
+
+## Part E: Regulatory Timeline
+
+Based on your mission concept, estimate when each regulatory activity should begin and how long it will take. Mark the activities on the timeline below:
+
+| Regulatory Activity | Start Phase | Duration | Critical Path? |
+|--------------------|-------------|----------|---------------|
+| RSSSA licence application | __________ | __________ | __________ |
+| ISED spectrum application | __________ | __________ | __________ |
+| ITU coordination | __________ | __________ | __________ |
+| Export permit(s) | __________ | __________ | __________ |
+| Launch provider interface agreement | __________ | __________ | __________ |
+
+**Question:** Which regulatory activity is most likely to be on the critical path for your mission? Why?
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+---
+
+## Notes & Reflections
+
+Record key points from the discussion, regulatory questions you need to research further, and implications for your mission design:
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+---
+
+# Worksheet 1.3: International Standards for Space Systems
+
+| | |
+|---|---|
+| **Name:** | __________________________________________ |
+| **Date:** | __________________________________________ |
+| **Team:** | __________________________________________ |
+| **Session:** | 1.3 -- International Standards for Space Systems |
+
+---
+
+## Part A: Standard Applicability Matrix
+
+For your team's mission concept, determine which ECSS and NASA standards apply. For each standard, decide whether it is fully applicable, partially applicable (with tailoring), or not applicable. Justify your decision.
+
+| Standard | Branch | Applicability | Tailoring Notes / Justification |
+|----------|--------|--------------|-------------------------------|
+| ECSS-M-ST-10C (Project Management) | M | __________ | _____________________________________ |
+| ECSS-M-ST-40C (Configuration Management) | M | __________ | _____________________________________ |
+| ECSS-M-ST-80C (Risk Management) | M | __________ | _____________________________________ |
+| ECSS-E-ST-10C (Systems Engineering) | E | __________ | _____________________________________ |
+| ECSS-E-ST-20C (Electrical & Electronic) | E | __________ | _____________________________________ |
+| ECSS-E-ST-32C (Structures) | E | __________ | _____________________________________ |
+| ECSS-E-ST-40C (Software) | E | __________ | _____________________________________ |
+| ECSS-E-ST-50C (Communications) | E | __________ | _____________________________________ |
+| ECSS-Q-ST-10C (Product Assurance) | Q | __________ | _____________________________________ |
+| ECSS-U-AS-10C (Debris Mitigation) | U | __________ | _____________________________________ |
+| ISO 24113 (Debris Mitigation) | -- | __________ | _____________________________________ |
+| NPR 7123.1D (SE Processes) | -- | __________ | _____________________________________ |
+
+*Hint: A university CubeSat mission would typically invoke ECSS-E-ST-10C with heavy tailoring, ECSS-U-AS-10C fully, and might waive ECSS-Q-ST-10C (product assurance) due to cost constraints. A CSA-funded mission would typically require more complete ECSS compliance.*
+
+**Question:** What is the minimum set of standards your mission MUST comply with regardless of mission class?
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+---
+
+## Part B: CDS Rev 14 Compliance Checklist
+
+If your mission uses a CubeSat form factor, complete this compliance checklist. If not, skip to Part C.
+
+| CDS Requirement | Your Design Value | Compliant? | Notes |
+|----------------|------------------|-----------|-------|
+| Unit dimensions (100 x 100 x 113.5 mm per U) | __________ | __________ | __________ |
+| Mass per U ($\leq$ 2.0 kg) | __________ | __________ | __________ |
+| Total mass (for your form factor) | __________ | __________ | __________ |
+| Rail material (hard-anodised Al) | __________ | __________ | __________ |
+| CG within 2 cm of geometric centre | __________ | __________ | __________ |
+| No protrusions beyond envelope during launch | __________ | __________ | __________ |
+| RF silence for 30 min after deployment | __________ | __________ | __________ |
+| Deployment switches on all deployables | __________ | __________ | __________ |
+| Propulsion inhibits (3 independent, if applicable) | __________ | __________ | __________ |
+
+*Hint: Use SpaceCDF's Compliance panel to check CDS compliance. The tool will flag non-compliant parameters automatically based on your mass and dimensions entries.*
+
+---
+
+## Part C: Debris Mitigation Compliance
+
+Complete the following debris mitigation assessment for your mission orbit:
+
+1. **Planned orbit altitude:** __________ km
+
+2. **Estimated natural orbital lifetime** (without propulsion):
+
+   *Use the rule of thumb: $\tau_{years} \approx \frac{h - 200}{30} \times \frac{m/A}{50}$ where $h$ is altitude (km), $m$ is mass (kg), $A$ is cross-section area (m$^2$)*
+
+   $h$ = __________ km, $m$ = __________ kg, $A$ = __________ m$^2$
+
+   $m/A$ = __________ kg/m$^2$
+
+   $\tau$ = __________ years (approximate)
+
+3. **Compliance assessment:**
+
+   | Requirement | Limit | Your Mission | Compliant? |
+   |-------------|-------|-------------|-----------|
+   | IADC post-mission lifetime | $\leq$ 25 years | __________ | __________ |
+   | FCC post-mission lifetime (2024+) | $\leq$ 5 years | __________ | __________ |
+   | ISO 24113 disposal reliability | $\geq$ 90% | __________ | __________ |
+
+4. **If non-compliant with the 5-year FCC rule, what options exist?**
+
+   _______________________________________________
+
+   _______________________________________________
+
+   _______________________________________________
+
+5. **Passivation plan** (list all stored energy sources and how you will deplete them at end of life):
+
+   | Energy Source | Passivation Method |
+   |-------------|-------------------|
+   | Battery | __________________________________________ |
+   | Pressure vessels (if any) | __________________________________________ |
+   | Reaction wheels | __________________________________________ |
+   | RF transmitter | __________________________________________ |
+   | Other: __________ | __________________________________________ |
+
+---
+
+## Part D: Structural Design Margins
+
+If your mission has preliminary structural design information, calculate the margin of safety:
+
+*Use the formula: $MoS = \frac{\sigma_{allowable}}{FoS \times \sigma_{applied}} - 1$*
+
+**Worked example:** For Al 7075-T6 ($\sigma_{yield}$ = 503 MPa), applied stress = 200 MPa, FoS (yield) = 1.25:
+
+$MoS = \frac{503}{1.25 \times 200} - 1 = \frac{503}{250} - 1 = 1.012$
+
+This is a positive margin (compliant).
+
+**Your calculation:**
+
+Material: __________ , $\sigma_{allowable}$ = __________ MPa
+
+$\sigma_{applied}$ = __________ MPa, FoS = __________
+
+$MoS$ = __________ (show work below)
+
+_______________________________________________
+
+_______________________________________________
+
+---
+
+## Part E: SpaceCDF Compliance Panel
+
+Navigate to the Compliance panel in SpaceCDF and answer:
+
+1. What is the debris mitigation compliance status for your mission?
+
+   _______________________________________________
+
+2. What orbital altitude would be needed to comply with the FCC 5-year rule WITHOUT propulsion? (Use the tool's orbital lifetime calculator)
+
+   _______________________________________________
+
+3. What standards has the tool automatically suggested for your mission type?
+
+   _______________________________________________
+
+   _______________________________________________
+
+4. Are there any compliance flags (warnings or errors) on your current design?
+
+   _______________________________________________
+
+   _______________________________________________
+
+---
+
+## Notes & Reflections
+
+Record key points about standards applicability, compliance challenges, and design implications for your mission:
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+---
+
+# Worksheet 1.4: Mission Needs, Trade Studies & Concept of Operations
+
+| | |
+|---|---|
+| **Name:** | __________________________________________ |
+| **Date:** | __________________________________________ |
+| **Team:** | __________________________________________ |
+| **Session:** | 1.4 -- Mission Needs, Trade Studies & ConOps |
+
+---
+
+## Part A: Stakeholder Analysis Matrix
+
+Identify at least 4 stakeholders for your team's mission. For each, capture their needs, constraints, priority, and influence level.
+
+| # | Stakeholder | Role | Key Needs | Constraints Imposed | Priority (P/S/T) | Influence (H/M/L) |
+|---|-------------|------|-----------|--------------------|--------------------|-------------------|
+| 1 | ____________ | ____________ | ________________________ | ________________________ | ______ | ______ |
+| 2 | ____________ | ____________ | ________________________ | ________________________ | ______ | ______ |
+| 3 | ____________ | ____________ | ________________________ | ________________________ | ______ | ______ |
+| 4 | ____________ | ____________ | ________________________ | ________________________ | ______ | ______ |
+| 5 | ____________ | ____________ | ________________________ | ________________________ | ______ | ______ |
+| 6 | ____________ | ____________ | ________________________ | ________________________ | ______ | ______ |
+
+*P = Primary (must satisfy), S = Secondary (should satisfy), T = Tertiary (nice to have)*
+*H = High influence, M = Medium, L = Low*
+
+**Question:** Which stakeholder has the most influence over your mission? Do any stakeholders have conflicting needs? If so, how might you resolve the conflict?
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+---
+
+## Part B: Problem Statement
+
+Write your team's mission problem statement. It must answer all four questions: What is the problem? Who is affected? What is the impact? What constraints exist?
+
+**Problem Statement:**
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+**Peer Review Checklist** (exchange with another team):
+
+| Criterion | Pass? | Feedback |
+|-----------|-------|---------|
+| Describes WHAT is needed, not HOW to achieve it? | ______ | _________________________________ |
+| Identifies the capability gap? | ______ | _________________________________ |
+| Names specific affected stakeholders? | ______ | _________________________________ |
+| Quantifies the impact of not solving it? | ______ | _________________________________ |
+| States constraints (budget, schedule, regulatory)? | ______ | _________________________________ |
+| Free of solution language? (No specific satellite type, orbit, component named) | ______ | _________________________________ |
+
+---
+
+## Part C: Mission Objectives
+
+Write 2--3 mission objectives. Score each against the quality checklist.
+
+**Objective 1:** _______________________________________________
+
+_______________________________________________
+
+| Quality Criterion | Yes/No | Notes |
+|-------------------|--------|-------|
+| States WHAT, not HOW? | ______ | _________________________________ |
+| Has measurable criterion with number + unit? | ______ | _________________________________ |
+| Achievable with current technology (TRL $\geq$ 4)? | ______ | _________________________________ |
+| Relevant to the problem statement? | ______ | _________________________________ |
+| Traceable to a specific stakeholder need? | ______ | _________________________________ |
+| Classified as primary or secondary? | ______ | _________________________________ |
+
+**Objective 2:** _______________________________________________
+
+_______________________________________________
+
+| Quality Criterion | Yes/No | Notes |
+|-------------------|--------|-------|
+| States WHAT, not HOW? | ______ | _________________________________ |
+| Has measurable criterion with number + unit? | ______ | _________________________________ |
+| Achievable with current technology (TRL $\geq$ 4)? | ______ | _________________________________ |
+| Relevant to the problem statement? | ______ | _________________________________ |
+| Traceable to a specific stakeholder need? | ______ | _________________________________ |
+| Classified as primary or secondary? | ______ | _________________________________ |
+
+**Objective 3 (optional):** _______________________________________________
+
+_______________________________________________
+
+---
+
+## Part D: MoE / MoP / TPM Trace
+
+For your primary objective, trace the measurement hierarchy:
+
+**Objective:** _______________________________________________
+
+**MoE** (Measure of Effectiveness -- operational effectiveness from user perspective):
+
+_______________________________________________
+
+_______________________________________________
+
+**MoP** (Measure of Performance -- technical performance of the system):
+
+_______________________________________________
+
+_______________________________________________
+
+**TPM** (Technical Performance Measure -- design parameter tracked during development):
+
+_______________________________________________
+
+_______________________________________________
+
+*Hint: If your objective is "Provide 10 m GSD multispectral imagery...", then:*
+- *MoE might be "% of target area with usable (<30% cloud) imagery within 5 days"*
+- *MoP might be "GSD $\leq$ 10 m at nadir, SNR $\geq$ 100 in all bands"*
+- *TPM might be "current estimate of aperture diameter (target: 15 cm), imager mass (target: 1.5 kg)"*
+
+---
+
+## Part E: Trade Study -- Space vs Non-Space
+
+Complete a trade study evaluating whether a dedicated satellite is the right solution for your mission need.
+
+**Decision statement:** _______________________________________________
+
+**Alternatives:**
+
+| # | Alternative | Description |
+|---|------------|-------------|
+| 1 | __________________________ | ________________________________________________ |
+| 2 | __________________________ | ________________________________________________ |
+| 3 | __________________________ | ________________________________________________ |
+| 4 | Do nothing / status quo | ________________________________________________ |
+
+**Criteria and Weights** (must sum to 1.0):
+
+*Use pairwise comparison or direct assignment. Show your weight derivation below.*
+
+| Criterion | Weight | Direction (higher/lower is better) |
+|-----------|--------|-----------------------------------|
+| __________________________ | ______ | __________ |
+| __________________________ | ______ | __________ |
+| __________________________ | ______ | __________ |
+| __________________________ | ______ | __________ |
+| __________________________ | ______ | __________ |
+| **Total** | **1.00** | |
+
+*Weight derivation (pairwise comparison table or notes):*
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+**Scoring Matrix** (normalised 0--1):
+
+| Alternative | Criterion 1 | Criterion 2 | Criterion 3 | Criterion 4 | Criterion 5 | **Weighted Total** |
+|------------|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------------:|
+| 1: ____________ | ______ | ______ | ______ | ______ | ______ | ______ |
+| 2: ____________ | ______ | ______ | ______ | ______ | ______ | ______ |
+| 3: ____________ | ______ | ______ | ______ | ______ | ______ | ______ |
+| 4: Do nothing | ______ | ______ | ______ | ______ | ______ | ______ |
+
+*Recall: Weighted Total = $\sum w_c \times s(a,c)$*
+
+**Result:** The highest-scoring alternative is: _______________________________________________
+
+**Decision statement** (1 paragraph -- include top 2 alternatives and why one was selected over the other):
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+**Sensitivity check:** If you increase the weight of your second-most-important criterion by 20% (and re-normalise), does the ranking change?
+
+_______________________________________________
+
+_______________________________________________
+
+---
+
+## Part F: Concept of Operations Outline
+
+Document your preliminary ConOps following the NASA SEH Appendix S structure:
+
+**1. Mission Architecture:**
+
+Space segment: _______________________________________________
+
+Ground segment: _______________________________________________
+
+User segment: _______________________________________________
+
+**2. Orbit-Average Power Budget:**
+
+*Calculate using: $P_{avg} = \sum P_{mode,i} \times DC_i$*
+
+| Mode | Power (W) | Duty Cycle (fraction of orbit) | P x DC (W) |
+|------|-----------|-------------------------------|-----------|
+| Idle / Housekeeping | __________ | __________ | __________ |
+| Science / Imaging | __________ | __________ | __________ |
+| Downlink | __________ | __________ | __________ |
+| Eclipse | __________ | __________ | __________ |
+| | | **Orbit-average power:** | **__________ W** |
+
+Solar array requirement: $P_{SA}$ = __________ W
+
+*Show your calculation:*
+
+_______________________________________________
+
+_______________________________________________
+
+**3. Data Budget:**
+
+Daily data generation: __________ GB/day
+
+Downlink capacity per pass: __________ GB/pass
+
+Passes per day: __________
+
+Daily downlink capacity: __________ GB/day
+
+Balance (downlink $\geq$ generation)? __________
+
+---
+
+## Part G: SpaceCDF Tool Entry
+
+In SpaceCDF, enter your mission need (Step 1) and concept (Step 2). Then answer:
+
+1. In Step 1, did the tool auto-detect your mission type from the objective text? What type did it suggest?
+
+   _______________________________________________
+
+2. In Step 2, run the mission trade analysis. Does the tool's recommendation match your manual trade study result from Part E?
+
+   _______________________________________________
+
+   _______________________________________________
+
+3. In the ConOps tab, build your architecture diagram. How many systems did you define?
+
+   _______________________________________________
+
+4. In the Trade Studies tab, run an orbit selection trade with at least 3 orbit options. What orbit did it recommend?
+
+   _______________________________________________
+
+---
+
+## Notes & Reflections
+
+Record key decisions made today, open questions, and what you want to investigate further:
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+---
+
+# Worksheet 2.1: The System-V and Requirements Engineering
+
+| | |
+|---|---|
+| **Name:** | _______________________________________ |
+| **Date:** | _______________________________________ |
+| **Team / Mission:** | _______________________________________ |
+| **Role / Position:** | _______________________________________ |
+
+**SpaceCDF Tab:** Requirements
+
+---
+
+## Key Equations Reference
+
+> **Traceability Coverage:**
+> $$\text{Coverage} = \frac{N_{\text{verified requirements}}}{N_{\text{total requirements}}} \times 100\%$$
+> Target: 100% -- every requirement needs a parent trace, a verification method, and a responsible subsystem.
+
+> **Requirement Quality (SMART):**
+> **S**pecific -- **M**easurable -- **A**chievable -- **R**elevant -- **T**raceable
+
+> **Verification Methods (ATID):**
+> **A**nalysis -- **T**est -- **I**nspection -- **D**emonstration
+
+---
+
+## Part A: System-V Mapping (10 min)
+
+For your mission, identify one element at each level of the V-model:
+
+| V-Level | Left Branch (Decomposition) | Right Branch (Verification) |
+|---------|---------------------------|---------------------------|
+| **Stakeholder Need** | | |
+| **Mission Requirement** | | |
+| **System Requirement** | | |
+| **Subsystem Requirement** | | |
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+---
+
+## Part B: Requirement Quality Assessment (15 min)
+
+Evaluate each requirement using the SMART checklist and NASA Appendix C criteria. Mark Pass (P) or Fail (F). Rewrite any failures.
+
+| # | Requirement | S | M | A | R | T | WHAT or HOW? | Rewrite (if needed) |
+|---|------------|---|---|---|---|---|-------------|---------------------|
+| 1 | "The spacecraft shall operate at 500 km altitude" | | | | | | | |
+| 2 | "The system shall achieve GSD <= 10 m at nadir" | | | | | | | |
+| 3 | "The EPS shall use triple-junction GaAs cells" | | | | | | | |
+| 4 | "The system shall have a design lifetime of at least 3 years" | | | | | | | |
+| 5 | "The structure shall be made of aluminium 7075" | | | | | | | |
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+---
+
+## Part C: Requirement Hierarchy and Traceability (15 min)
+
+For your mission, write one requirement at each level. Draw the traceability chain.
+
+**Stakeholder Objective (traces FROM):** _________________________________________
+
+_____________________________________________________________________
+
+**Mission Requirement (MR-___):** ______________________________________________
+
+_____________________________________________________________________
+
+**System Requirement (SR-___), derived from MR above:** __________________________
+
+_____________________________________________________________________
+
+**Subsystem Requirement (SSR-___), derived from SR above:** _____________________
+
+_____________________________________________________________________
+
+**Traceability diagram** (draw arrows showing parent-child relationships):
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+---
+
+## Part D: Splitting Compound Requirements (10 min)
+
+Split this compound requirement into individually testable statements:
+
+> "The system shall provide 10 m GSD multispectral imagery with 5-day revisit, 24-hour data latency, and positive power margin in all operational modes including eclipse."
+
+| # | Split Requirement (one concern each) | Type (F/P/I/C/E) | Verification (A/T/I/D) | Phase |
+|---|--------------------------------------|-------------------|------------------------|-------|
+| 1 | | | | |
+| 2 | | | | |
+| 3 | | | | |
+| 4 | | | | |
+| 5 | | | | |
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+---
+
+## Part E: SpaceCDF Requirements Generation (20 min)
+
+1. In SpaceCDF, click **"Generate from Objectives."** How many requirements were generated? ____
+
+2. Use the Level filter -- count at each level:
+   - Mission: ____ &nbsp;&nbsp;&nbsp; System: ____ &nbsp;&nbsp;&nbsp; Subsystem: ____
+
+3. Classify 5 requirements by type:
+
+| Req ID | Requirement Text (abbreviated) | Type (Functional / Performance / Interface / Constraint / Environmental) |
+|--------|-------------------------------|-------------------------------------------------------------------------|
+| | | |
+| | | |
+| | | |
+| | | |
+| | | |
+
+4. Find one requirement that says HOW (implementation) not WHAT. Write it and your correction:
+
+   - **Original:** _______________________________________________
+   - **Corrected:** _______________________________________________
+
+5. Accept at least 5 requirements and reject at least 1. Record your decisions:
+
+| Req ID | Action (Accept/Edit/Reject) | Rationale |
+|--------|----------------------------|-----------|
+| | | |
+| | | |
+| | | |
+| | | |
+| | | |
+| | | |
+
+6. For 5 key requirements, assign verification method and phase:
+
+| Req ID | Verification Method (A/T/I/D) | Phase (B/C/D/E) | Rationale for Method |
+|--------|-------------------------------|-----------------|---------------------|
+| | | | |
+| | | | |
+| | | | |
+| | | | |
+| | | | |
+
+---
+
+## Notes & Reflections
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+---
+
+# Worksheet 2.2: Functional Decomposition and Allocation
+
+| | |
+|---|---|
+| **Name:** | _______________________________________ |
+| **Date:** | _______________________________________ |
+| **Team / Mission:** | _______________________________________ |
+| **Role / Position:** | _______________________________________ |
+
+**SpaceCDF Tab:** Functions
+
+---
+
+## Key Equations Reference
+
+> **Function Types:** Observe, Communicate, Navigate, Point, Power, Protect, Store, Process, Support
+>
+> **Universal Functions (every spacecraft):**
+> 1. Generate electrical power
+> 2. Maintain thermal environment
+> 3. Survive launch environment
+> 4. Communicate with ground (TTC)
+> 5. Dispose at end of life
+>
+> **Coverage Rule:** Every leaf function must trace to at least one requirement. No gaps.
+>
+> **Allocation Rule:** Multi-allocated functions create interfaces that must be explicitly managed.
+
+---
+
+## Part A: Mission Function Tree (20 min)
+
+Draw your mission's complete function tree. Use minimum 3 levels of decomposition. Include both mission-specific and universal functions.
+
+**Mission-specific functions:**
+
+```
+F-001: _______________________________________________
+  +-- F-002: _______________________________________________
+      +-- F-002a: ___________________________________________
+      +-- F-002b: ___________________________________________
+  +-- F-003: _______________________________________________
+      +-- F-003a: ___________________________________________
+  +-- F-004: _______________________________________________
+  +-- F-005: _______________________________________________
+```
+
+**Universal functions:**
+
+```
+F-010: Generate electrical power
+  +-- F-011: _______________________________________________
+  +-- F-012: _______________________________________________
+F-020: Maintain thermal environment
+  +-- F-021: _______________________________________________
+F-030: Survive launch environment
+F-040: Communicate with ground (TTC)
+F-050: Dispose at end of life
+```
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+---
+
+## Part B: Function-to-Requirement Traceability (15 min)
+
+For each leaf function, write one derived requirement with a measurable threshold:
+
+| Function ID | Function Name | Allocated To (Subsystem) | Derived Requirement | Type |
+|-------------|--------------|-------------------------|-------------------|------|
+| | | | | |
+| | | | | |
+| | | | | |
+| | | | | |
+| | | | | |
+| | | | | |
+| | | | | |
+| | | | | |
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+---
+
+## Part C: Multi-Allocation Analysis (10 min)
+
+Identify at least one function that is allocated to more than one subsystem:
+
+**Function:** _______________________________________________
+
+**Subsystem A (primary):** _______________________________________________
+
+**Subsystem B (contributor):** _______________________________________________
+
+**Interface created between A and B:** _______________________________________________
+
+_____________________________________________________________________
+
+**Who "owns" this function?** _______________________________________________
+
+**What interface requirements are needed?** _______________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+---
+
+## Part D: Performance Criteria (10 min)
+
+For 4 key functions, define quantitative performance criteria:
+
+| Function | Performance Criterion | Value | Unit | Source |
+|----------|----------------------|-------|------|--------|
+| | | | | |
+| | | | | |
+| | | | | |
+| | | | | |
+
+---
+
+## Part E: SpaceCDF Coverage Check (15 min)
+
+After entering functions in SpaceCDF:
+
+1. How many total functions in your tree? ____
+
+2. How many leaf functions? ____
+
+3. How many leaf functions have NO linked requirements (amber badge)? ____
+
+4. List the uncovered functions and derive requirements for them:
+
+| Function ID | Function Name | Derived Requirement |
+|-------------|--------------|-------------------|
+| | | |
+| | | |
+| | | |
+
+5. Are there any functions the tool generated that are NOT appropriate for your mission? List and explain why you removed them:
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+---
+
+## Notes & Reflections
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+---
+
+# Worksheet 2.3: Orbit Selection and Mission Architecture
+
+| | |
+|---|---|
+| **Name:** | _______________________________________ |
+| **Date:** | _______________________________________ |
+| **Team / Mission:** | _______________________________________ |
+| **Role / Position:** | _______________________________________ |
+
+**SpaceCDF Tabs:** Mission Architecture, Orbit Trade Advisor
+
+---
+
+## Key Equations Reference
+
+> **Orbital period:** $T = 2\pi \sqrt{a^3/\mu}$ &nbsp;&nbsp; where $a = R_E + h$, $\mu = 3.986 \times 10^{14}$ m$^3$/s$^2$, $R_E = 6371$ km
+>
+> **Orbital velocity:** $v = \sqrt{\mu/a}$
+>
+> **Eclipse fraction:** $f_{\text{ecl}} = \frac{1}{\pi} \arccos\left(\frac{\sqrt{a^2 - R_E^2}}{a}\right)$
+>
+> **Sun-synchronous inclination:** $\cos(i) = -\frac{2\dot{\Omega} a^{7/2}}{3 R_E^2 J_2 \sqrt{\mu}}$ &nbsp;&nbsp; where $J_2 = 1.0826 \times 10^{-3}$
+>
+> **Hohmann $\Delta V$:** $\Delta V_1 = \sqrt{\mu/r_1}\left(\sqrt{2r_2/(r_1+r_2)} - 1\right)$
+>
+> **Swath width:** $W = 2h\tan(\theta)$
+
+---
+
+## Part A: Orbital Mechanics Calculations (20 min)
+
+**Your selected orbit:** Altitude $h$ = _____ km, &nbsp; Inclination $i$ = _____ deg, &nbsp; Type: __________
+
+Show all working for each calculation:
+
+**1. Semi-major axis:**
+
+$a = R_E + h = 6371 + $ _____ $= $ _____ km $= $ _____ m
+
+_____________________________________________________________________
+
+**2. Orbital period:**
+
+$T = 2\pi\sqrt{a^3/\mu} = 2\pi\sqrt{$ _____ $^3 /\ 3.986 \times 10^{14}} = $ _____ s $= $ _____ min
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+**3. Orbital velocity:**
+
+$v = \sqrt{\mu/a} = \sqrt{3.986 \times 10^{14} /\ }$ _____ $= $ _____ m/s
+
+_____________________________________________________________________
+
+**4. Eclipse fraction (maximum):**
+
+$f = \frac{1}{\pi}\arccos\left(\frac{\sqrt{a^2 - R_E^2}}{a}\right) = \frac{1}{\pi}\arccos\left(\frac{\sqrt{\ }}{\ }\right) = $ _____
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+**5. Sunlight and eclipse time per orbit:**
+
+$t_{\text{sun}} = T \times (1 - f) = $ _____ $\times$ _____ $= $ _____ min
+
+$t_{\text{ecl}} = T \times f = $ _____ $\times$ _____ $= $ _____ min
+
+**6. Sun-synchronous inclination** (if applicable):
+
+$\cos(i) = $ _____ $\Rightarrow i = $ _____ deg
+
+Does this match your selected inclination? Y / N
+
+_____________________________________________________________________
+
+---
+
+## Part B: Orbit Trade Matrix (10 min)
+
+From SpaceCDF's Orbit Trade Advisor, record the top 3 candidates:
+
+| Rank | Orbit Type | Alt (km) | Inc (deg) | GSD (m) | Revisit (d) | Natural Lifetime (yr) | FCC 5-yr? | Score |
+|------|-----------|---------|---------|---------|-------------|----------------------|-----------|-------|
+| 1 | | | | | | | | |
+| 2 | | | | | | | | |
+| 3 | | | | | | | | |
+
+**Selected orbit:** ___________ **Rationale:** ___________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+---
+
+## Part C: Debris Compliance (10 min)
+
+For your selected orbit:
+
+| Parameter | Value |
+|-----------|-------|
+| Natural orbital lifetime | _____ years |
+| FCC 5-year compliant? | Y / N |
+| IADC 25-year compliant? | Y / N |
+| Propulsion needed for deorbit? | Y / N |
+| If yes, estimated deorbit $\Delta V$ | _____ m/s |
+| Deorbit method (if needed) | _____________________________________ |
+
+**Show $\Delta V$ calculation if propulsion needed:**
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+---
+
+## Part D: Downstream Cascade Analysis (10 min)
+
+How does your orbit selection affect each subsystem? Fill in the impact:
+
+| Subsystem | Orbit Parameter That Matters | Impact on Your Design |
+|-----------|-----------------------------|-----------------------|
+| Payload (GSD) | Altitude = _____ km | GSD = _____ m |
+| EPS (eclipse) | Eclipse fraction = _____ | Eclipse duration = _____ min |
+| Comms (link) | Slant range at 10 deg elev = _____ km | FSPL increase = _____ dB |
+| Thermal | Eclipse/sunlight cycling | Hot case / Cold case concern: ______ |
+| AOCS | Orbit rate = _____ deg/min | Nadir tracking rate needed |
+| Propulsion | Lifetime = _____ yr | Propulsion needed? Y / N |
+| Radiation | TID estimate = _____ krad/yr | Electronics class: ____________ |
+
+---
+
+## Part E: Discussion (10 min)
+
+What would happen to your mission if you moved the orbit **100 km higher**?
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+What would happen if you moved it **100 km lower**?
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+---
+
+## Notes & Reflections
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+---
+
+# Worksheet 2.4: Mission Architecture -- Segments, Interfaces, and Budgets
+
+| | |
+|---|---|
+| **Name:** | _______________________________________ |
+| **Date:** | _______________________________________ |
+| **Team / Mission:** | _______________________________________ |
+| **Role / Position:** | _______________________________________ |
+
+**SpaceCDF Tabs:** System Architecture, Interfaces, Dashboard, Budget Breakdown
+
+---
+
+## Key Equations Reference
+
+> **Mass margin:** $\text{Margin}_\% = \frac{M_{\text{alloc}} - M_{\text{MEV}}}{M_{\text{alloc}}} \times 100\%$
+> &nbsp;&nbsp; Green: > 20% | Amber: 10--20% | Red: < 10%
+>
+> **MEV:** $M_{\text{MEV}} = M_{\text{CBE}} + \text{equipment margin} + \text{system margin}$
+>
+> **Orbit-average power:** $P_{\text{avg}} = \sum (P_{\text{mode}} \times f_{\text{duty}})$
+>
+> **SA power:** $P_{\text{SA}} = P_{\text{peak}} + \frac{P_{\text{ecl}} \times t_{\text{ecl}}}{t_{\text{sun}} \times \eta_{\text{charge}}}$
+>
+> **ECSS Phase A margins:** Equipment 20% + System 20% = ~44% compound
+
+---
+
+## Part A: Mass Budget (15 min)
+
+Complete from your SpaceCDF design (or estimate if pre-run):
+
+| Subsystem | CBE Mass (kg) | % of Dry | Equip. Margin (20%) | MEV (kg) |
+|-----------|--------------|----------|---------------------|---------|
+| Payload | | | | |
+| EPS | | | | |
+| AOCS | | | | |
+| Comms (TTC) | | | | |
+| OBC | | | | |
+| Thermal | | | | |
+| Structure | | | | |
+| Harness | | | | |
+| Propulsion | | | | |
+| **Dry Total (CBE)** | | 100% | | |
+| **System margin (20%)** | | | | |
+| **Dry MEV** | | | | |
+| Propellant | | | | |
+| **Wet Mass** | | | | |
+| **Launcher Allocation** | | | | |
+| **Mass Margin** | | | | |
+| **Mass Margin %** | | | G / A / R | |
+
+**Show margin calculation:**
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+---
+
+## Part B: Power Budget by Mode (15 min)
+
+| Subsystem | Safe (W) | Idle (W) | Imaging (W) | Downlink (W) | Eclipse (W) |
+|-----------|---------|---------|-------------|-------------|-------------|
+| OBC | | | | | |
+| AOCS | | | | | |
+| Payload | | | | | |
+| Comms (TX) | | | | | |
+| Thermal | | | | | |
+| **Total** | | | | | |
+| **Duty cycle (%)** | | | | | |
+
+**Orbit-average power calculation (show working):**
+
+$P_{\text{avg}} = $ _____ $\times$ _____ $+$ _____ $\times$ _____ $+$ _____ $\times$ _____ $+$ _____ $\times$ _____ $= $ _____ W
+
+_____________________________________________________________________
+
+**SA power required:**
+
+$P_{\text{recharge}} = \frac{P_{\text{ecl}} \times t_{\text{ecl}}}{t_{\text{sun}} \times \eta_{\text{charge}}} = \frac{\ \ \ \ \times \ \ \ \ }{\ \ \ \ \times 0.9} = $ _____ W
+
+$P_{\text{SA,EOL}} = P_{\text{peak}} + P_{\text{recharge}} = $ _____ $+$ _____ $= $ _____ W
+
+$P_{\text{SA,BOL}} = P_{\text{SA,EOL}} / (1 - 0.025)^n = $ _____ $/ $ _____ $= $ _____ W
+
+_____________________________________________________________________
+
+---
+
+## Part C: Interface Identification (15 min)
+
+List the 5 most critical interfaces in your design:
+
+| # | Subsystem A | Subsystem B | Interface Types (M/E/T/D/R/O) | Key Concern |
+|---|-------------|-------------|-------------------------------|-------------|
+| 1 | | | | |
+| 2 | | | | |
+| 3 | | | | |
+| 4 | | | | |
+| 5 | | | | |
+
+**Write 2 formal interface requirements** for your most critical pair:
+
+Interface: ____________ <-> ____________
+
+**IR-001:** _______________________________________________
+
+_____________________________________________________________________
+
+**IR-002:** _______________________________________________
+
+_____________________________________________________________________
+
+Verification method for IR-001: _____ &nbsp; IR-002: _____
+
+---
+
+## Part D: Conflict Resolution (10 min)
+
+From the SpaceCDF Interface Matrix, identify one conflict (red border):
+
+**Conflict description:** _______________________________________________
+
+_____________________________________________________________________
+
+**Severity:** Critical / Major / Minor
+
+**Resolution options considered:**
+
+| # | Option | Pros | Cons |
+|---|--------|------|------|
+| 1 | | | |
+| 2 | | | |
+| 3 | | | |
+
+**Selected resolution:** _______________________________________________
+
+**Rationale:** _______________________________________________
+
+---
+
+## Part E: Budget Health Check (10 min)
+
+From the SpaceCDF Dashboard, record all KPIs:
+
+| Budget | Value | Margin | Status (G/A/R) |
+|--------|-------|--------|----------------|
+| Mass | _____ kg wet vs _____ kg alloc | _____% | |
+| Power (worst mode) | _____ W vs _____ W SA | _____% | |
+| Link | _____ dB margin | >= 3 dB? | |
+| Cost | _____ MEUR vs _____ ceiling | _____% | |
+| Pointing | _____ deg vs _____ deg req | _____% | |
+
+**Which budget is tightest?** _______________________________________________
+
+**What single design change would improve it?** ____________________________
+
+_____________________________________________________________________
+
+---
+
+## Notes & Reflections
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+---
+
+# Worksheet 3.1: Power System and Thermal Control Design
+
+| | |
+|---|---|
+| **Name:** | _______________________________________ |
+| **Date:** | _______________________________________ |
+| **Team / Mission:** | _______________________________________ |
+| **Role / Position:** | _______________________________________ |
+
+**SpaceCDF Tabs:** Dashboard (Power KPI), Engineering Budgets, Timing Budget, Parametric
+
+---
+
+## Key Equations Reference
+
+> **SA EOL power:** $P_{\text{SA,EOL}} = P_{\text{peak}} + \frac{P_{\text{ecl}} \times t_{\text{ecl}}}{t_{\text{sun}} \times \eta_{\text{charge}}}$
+>
+> **SA BOL power:** $P_{\text{SA,BOL}} = \frac{P_{\text{SA,EOL}}}{(1 - \delta)^n}$ &nbsp;&nbsp; ($\delta = 0.025$/yr for GaAs)
+>
+> **SA area:** $A = \frac{P_{\text{BOL}}}{\eta_{\text{cell}} \times S \times \cos\theta \times f_{\text{pack}}}$ &nbsp;&nbsp; ($\eta = 0.295$, $S = 1361$ W/m$^2$, $f_{\text{pack}} = 0.85$)
+>
+> **Battery capacity:** $C = \frac{P_{\text{ecl}} \times t_{\text{ecl}}}{DOD \times \eta_{\text{discharge}}}$ &nbsp;&nbsp; ($DOD = 0.30$, $\eta = 0.95$)
+>
+> **Thermal equilibrium:** $T = \left(\frac{Q_{\text{abs}} + Q_{\text{int}}}{\varepsilon \sigma A_{\text{rad}}}\right)^{1/4}$ &nbsp;&nbsp; ($\sigma = 5.67 \times 10^{-8}$ W/m$^2$/K$^4$)
+>
+> **ECSS thermal margins:** Operating +/-5 degC, Acceptance +/-10 degC, Qualification +/-15 degC
+
+---
+
+## Part A: Solar Array Sizing (20 min)
+
+Show all calculations step by step.
+
+**1. Peak sunlight power demand:** $P_{\text{peak}} = $ _____ W (from mode: _____________)
+
+**2. Eclipse power demand:** $P_{\text{ecl}} = $ _____ W
+
+**3. Eclipse and sunlight times (from Worksheet 2.3):**
+
+$t_{\text{ecl}} = $ _____ min &nbsp;&nbsp;&nbsp; $t_{\text{sun}} = $ _____ min
+
+**4. Recharge power:**
+
+$P_{\text{recharge}} = \frac{P_{\text{ecl}} \times t_{\text{ecl}}}{t_{\text{sun}} \times \eta_{\text{charge}}} = \frac{\ \ \ \ \ \times \ \ \ \ \ }{\ \ \ \ \ \times 0.9} = $ _____ W
+
+_____________________________________________________________________
+
+**5. SA EOL required:**
+
+$P_{\text{SA,EOL}} = P_{\text{peak}} + P_{\text{recharge}} = $ _____ $+$ _____ $= $ _____ W
+
+**6. EOL degradation factor** (mission lifetime = _____ years, $\delta = 0.025$/yr):
+
+$(1 - 0.025)^{\ \ \ } = $ _____
+
+**7. SA BOL required:**
+
+$P_{\text{SA,BOL}} = \frac{P_{\text{SA,EOL}}}{(1-\delta)^n} = \frac{\ \ \ \ \ }{\ \ \ \ \ } = $ _____ W
+
+_____________________________________________________________________
+
+**8. SA area:**
+
+$A = \frac{P_{\text{BOL}}}{0.295 \times 1361 \times \cos(\ \ \ ) \times 0.85} = \frac{\ \ \ \ \ }{\ \ \ \ \ } = $ _____ m$^2$
+
+_____________________________________________________________________
+
+**9. SA type needed** (compare to CubeSat reference values):
+
+- [ ] Body-mounted only (1U: ~2 W, 3U: ~7 W, 6U: ~12 W)
+- [ ] Single deployable (1U: ~4 W, 3U: ~15 W, 6U: ~30 W)
+- [ ] Dual deployable (3U: ~25 W, 6U: ~48 W)
+
+**10. SA mass:**
+
+$m_{\text{SA}} = A \times \sigma = $ _____ $\times$ _____ $= $ _____ kg
+
+(body-mounted: $\sigma = 2.5$ kg/m$^2$; deployable: $\sigma = 1.5$ kg/m$^2$)
+
+---
+
+## Part B: Battery Sizing (10 min)
+
+Show all calculations:
+
+**1. Eclipse energy:**
+
+$E = P_{\text{ecl}} \times \frac{t_{\text{ecl}}}{60} = $ _____ $\times$ _____ $= $ _____ Wh
+
+**2. Battery capacity required:**
+
+$C = \frac{E}{DOD \times \eta} = \frac{\ \ \ \ \ }{0.30 \times 0.95} = \frac{\ \ \ \ \ }{0.285} = $ _____ Wh
+
+**3. With 20% margin:** $C_{\text{spec}} = $ _____ $\times 1.2 = $ _____ Wh
+
+_____________________________________________________________________
+
+**4. Battery mass:**
+
+$m_{\text{bat}} = \frac{C_{\text{spec}}}{E_{\text{specific}}} = \frac{\ \ \ \ \ }{150} = $ _____ kg
+
+**5. Cycle life check:**
+
+Number of eclipses in mission = _____ orbits/day $\times$ 365 $\times$ _____ years $= $ _____ cycles
+
+At DOD = 30%, Li-ion provides ~10,000 cycles. Is this sufficient? Y / N
+
+_____________________________________________________________________
+
+---
+
+## Part C: Thermal Analysis (15 min)
+
+**1. Identify hot case and cold case for your orbit:**
+
+| Parameter | Hot Case | Cold Case |
+|-----------|----------|-----------|
+| Solar illumination | | |
+| Operational mode | | |
+| Internal dissipation | | |
+| Coating condition | BOL / EOL | BOL / EOL |
+| Key concern | | |
+
+**2. From SpaceCDF Dashboard, record thermal predictions:**
+
+| Component | Min Predicted (degC) | Max Predicted (degC) | Operating Min (degC) | Operating Max (degC) |
+|-----------|---------------------|---------------------|---------------------|---------------------|
+| Payload / sensor | | | | |
+| Battery | | | | |
+| OBC | | | | |
+| Transponder | | | | |
+
+**3. Margin check (need >= 5 degC):**
+
+| Component | Hot margin = Max_op - Max_pred | Cold margin = Min_pred - Min_op | Pass? |
+|-----------|-------------------------------|--------------------------------|-------|
+| | | | |
+| | | | |
+| | | | |
+| | | | |
+
+**4. If any margin fails, what thermal control action would you take?**
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+---
+
+## Part D: SpaceCDF Verification (15 min)
+
+Compare your hand calculations to SpaceCDF values:
+
+| Parameter | Hand Calculation | SpaceCDF Value | Difference |
+|-----------|-----------------|---------------|------------|
+| SA power required (BOL) | _____ W | _____ W | _____ W |
+| Battery capacity | _____ Wh | _____ Wh | _____ Wh |
+| Orbit-average power | _____ W | _____ W | _____ W |
+| Eclipse duration | _____ min | _____ min | _____ min |
+
+If there are significant differences, explain why:
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+---
+
+## Notes & Reflections
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+---
+
+# Worksheet 3.2: Attitude and Orbit Control System (AOCS)
+
+| | |
+|---|---|
+| **Name:** | _______________________________________ |
+| **Date:** | _______________________________________ |
+| **Team / Mission:** | _______________________________________ |
+| **Role / Position:** | _______________________________________ |
+
+**SpaceCDF Tabs:** Dashboard (AOCS KPI), Pointing Budget, Architecture (AOCS)
+
+---
+
+## Key Equations Reference
+
+> **Gravity gradient torque:** $T_{gg} = \frac{3\mu}{2a^3}|I_z - I_x|\sin(2\theta)$
+>
+> **Aerodynamic torque:** $T_{\text{aero}} = \frac{1}{2}\rho v^2 C_D A \cdot d_{cp-cm}$
+>
+> **SRP torque:** $T_{\text{SRP}} = \frac{S}{c} A_s (1+q) \cdot d_{sp-cm}$
+>
+> **Magnetic torque:** $T_{\text{mag}} = M \times B$
+>
+> **Momentum storage:** $H = T_{\text{dist}} \times t_{\text{desat}}/2$
+>
+> **Pointing error (RSS):** $\theta_{\text{total}} = \sqrt{\sum \theta_i^2}$
+>
+> **MTQ torque:** $T_{\text{MTQ}} = m_{\text{dipole}} \times B \times \sin(\alpha)$
+
+---
+
+## Part A: AOCS Architecture Selection (10 min)
+
+**Pointing requirement from your mission:** _____ deg (3-sigma)
+
+**AOCS architecture selected** (tick one):
+
+- [ ] Passive magnetic (> 5 deg)
+- [ ] Magnetorquers only (2--5 deg)
+- [ ] Reaction wheels + MTQ (0.1--2 deg)
+- [ ] Fine pointing: RW + star tracker + MTQ (< 0.1 deg)
+- [ ] Very fine: RW + ST + gyro + MTQ (< 0.01 deg)
+
+**Justification for selection:**
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+**Estimated AOCS mass:** _____ kg &nbsp;&nbsp;&nbsp; **Estimated AOCS power:** _____ W
+
+---
+
+## Part B: Disturbance Torque Calculations (20 min)
+
+Calculate at least 2 disturbance torques for your spacecraft and orbit. Show all working.
+
+**Spacecraft properties:**
+
+| Parameter | Value | Unit |
+|-----------|-------|------|
+| Mass | | kg |
+| Form factor | | U |
+| $I_z$ (largest MOI) | | kg m$^2$ |
+| $I_x$ (smallest MOI) | | kg m$^2$ |
+| Cross-section area (largest face) | | m$^2$ |
+| $d_{cp-cm}$ (CP-CM offset estimate) | | m |
+| Orbit altitude | | km |
+
+**1. Gravity gradient torque:**
+
+$T_{gg} = \frac{3 \times 3.986 \times 10^{14}}{2 \times (\ \ \ \ )^3} \times |I_z - I_x| = $
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+$T_{gg} = $ _____ N m
+
+**2. Aerodynamic torque** ($\rho$ at _____ km $\approx$ _____ kg/m$^3$):
+
+$T_{\text{aero}} = \frac{1}{2} \times$ _____ $\times$ _____ $^2 \times 2.2 \times$ _____ $\times$ _____ $= $
+
+_____________________________________________________________________
+
+$T_{\text{aero}} = $ _____ N m
+
+**3. (Optional) Solar radiation pressure torque:**
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+$T_{\text{SRP}} = $ _____ N m
+
+**4. (Optional) Residual magnetic dipole torque** ($M \approx$ _____ A m$^2$, $B \approx 3 \times 10^{-5}$ T):
+
+$T_{\text{mag}} = $ _____ $\times$ _____ $= $ _____ N m
+
+**Summary:**
+
+| Source | Torque (N m) |
+|--------|-------------|
+| Gravity gradient | |
+| Aerodynamic | |
+| SRP | |
+| Magnetic dipole | |
+| **Total (RSS or sum)** | |
+
+**Which disturbance dominates?** _______________________________________________
+
+---
+
+## Part C: Reaction Wheel Sizing (10 min)
+
+**1. Torque requirement** ($\geq 2\times$ total disturbance):
+
+$T_{\text{RW,req}} = 2 \times$ _____ $= $ _____ N m $= $ _____ mN m
+
+**2. Momentum storage** (desaturation interval = 1 orbit = _____ s):
+
+$H = T_{\text{dist}} \times \frac{t_{\text{desat}}}{2} = $ _____ $\times \frac{\ \ \ \ }{2} = $ _____ mN m s
+
+**3. Selected reaction wheel:**
+
+| Parameter | Required | Selected Product |
+|-----------|----------|-----------------|
+| Torque | _____ mN m | _____ mN m |
+| Momentum | _____ mN m s | _____ mN m s |
+| Mass | -- | _____ g |
+| Power | -- | _____ W |
+| Quantity | 4 (3+1 redundancy) | |
+
+---
+
+## Part D: Pointing Error Budget (15 min)
+
+Complete the RSS pointing error budget:
+
+| Error Source | Value (deg) | Value$^2$ |
+|-------------|------------|-----------|
+| Sensor accuracy | | |
+| Actuator resolution | | |
+| Alignment knowledge | | |
+| Thermal distortion | | |
+| Jitter (RW) | | |
+| Orbit knowledge | | |
+| Timing error | | |
+| **Sum of squares** | | |
+| **RSS Total** = $\sqrt{\text{sum}}$ | **= _____ deg** | |
+
+**Requirement:** _____ deg
+
+**Margin:** _____ deg (_____ %)
+
+**Does the pointing budget close?** Y / N
+
+**Which error source dominates?** _______________________________________________
+
+**What action would most improve the budget?** _________________________________
+
+_____________________________________________________________________
+
+---
+
+## Part E: SpaceCDF Verification (10 min)
+
+Compare your hand calculations to SpaceCDF's Pointing Budget display:
+
+| Parameter | Hand Calculation | SpaceCDF | Match? |
+|-----------|-----------------|----------|--------|
+| RSS pointing error | _____ deg | _____ deg | |
+| Dominant contributor | ____________ | ____________ | |
+| Margin to requirement | _____ % | _____ % | |
+
+If there are differences, explain:
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+---
+
+## Notes & Reflections
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+---
+
+# Worksheet 3.3: Communications and Link Budget Design
+
+| | |
+|---|---|
+| **Name:** | _______________________________________ |
+| **Date:** | _______________________________________ |
+| **Team / Mission:** | _______________________________________ |
+| **Role / Position:** | _______________________________________ |
+
+**SpaceCDF Tabs:** Link Budget, Spectrum Selector, Equipment Browser (Comms)
+
+---
+
+## Key Equations Reference
+
+> **EIRP:** $\text{EIRP} = P_{TX} + G_{TX} - L_{TX}$ &nbsp; (dBW)
+>
+> **FSPL:** $\text{FSPL} = 20\log_{10}\left(\frac{4\pi d f}{c}\right)$ &nbsp; (dB)
+>
+> **G/T:** $G/T = G_{RX} - 10\log_{10}(T_{sys})$ &nbsp; (dB/K)
+>
+> **C/N$_0$:** $C/N_0 = \text{EIRP} - \text{FSPL} - L_{\text{losses}} + G/T + 228.6$ &nbsp; (dBHz)
+>
+> **$E_b/N_0$:** $E_b/N_0 = C/N_0 - 10\log_{10}(R_b)$ &nbsp; (dB)
+>
+> **Link margin:** $\text{Margin} = E_b/N_{0,\text{avail}} - E_b/N_{0,\text{req}} - L_{\text{impl}} \geq 3$ dB
+>
+> **Antenna gain:** $G = \eta_a(\pi D/\lambda)^2$
+>
+> **dB conversion:** $P_{\text{dBW}} = 10\log_{10}(P_W)$; &nbsp; 2 W = +3.0 dBW; 1 W = 0 dBW
+
+---
+
+## Part A: Frequency Band Selection (10 min)
+
+**Mission data rate requirement:** _____ Mbps
+
+**License type selected:** Amateur / Experimental / Commercial
+
+**Band selected:** _____________ &nbsp;&nbsp; **Centre frequency:** _____ MHz
+
+**Rationale for band selection:**
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+**Licensing/filing required:** _______________________________________________
+
+**Estimated licensing cost:** _____ &nbsp;&nbsp; **Timeline:** _____ months
+
+---
+
+## Part B: Complete Link Budget (25 min)
+
+Fill in ALL rows. Show computation for EIRP, FSPL, G/T, C/N$_0$, and margin.
+
+| Line | Parameter | Formula / Source | Value | Unit |
+|------|-----------|-----------------|-------|------|
+| 1 | TX Power | _____ W = | | dBW |
+| 2 | TX Antenna Gain | | | dBi |
+| 3 | TX Line Losses | | | dB |
+| 4 | **EIRP** = Line 1 + 2 + 3 | | **______** | dBW |
+| 5 | Free Space Path Loss | $20\log_{10}(4\pi \times$ ___ $\times$ ___ $/c)$ | | dB |
+| 6 | Atmospheric Loss | | | dB |
+| 7 | Pointing Loss | | | dB |
+| 8 | Polarisation Loss | | | dB |
+| 9 | RX Antenna Gain | | | dBi |
+| 10 | System Noise Temp | _____ K = | | dBK |
+| 11 | **G/T** = Line 9 - 10 | | **______** | dB/K |
+| 12 | Boltzmann Constant | | +228.6 | dBW/K/Hz |
+| 13 | **C/N$_0$** = 4 + 5 + 6 + 7 + 8 + 11 + 12 | | **______** | dBHz |
+| 14 | Data Rate | _____ bps = $10\log_{10}($___$)$ | | dBbps |
+| 15 | **$E_b/N_0$ available** = 13 - 14 | | **______** | dB |
+| 16 | $E_b/N_0$ required (mod+code: ________) | | | dB |
+| 17 | Implementation Loss | | | dB |
+| 18 | **LINK MARGIN** = 15 - 16 - 17 | | **______** | dB |
+
+**Show FSPL calculation:**
+
+$\text{FSPL} = 20\log_{10}(4\pi) + 20\log_{10}(d) + 20\log_{10}(f) - 20\log_{10}(c)$
+
+$= 21.98 + 20\log_{10}($ _____ $) + 20\log_{10}($ _____ $) - 169.54 = $ _____ dB
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+**Does the link close ($\geq$ 3 dB)?** Y / N
+
+**If margin is excessive, maximum achievable data rate at 3 dB margin:**
+
+$R_{b,\text{max}} = 10^{(E_b/N_{0,\text{avail}} - E_b/N_{0,\text{req}} - L_{\text{impl}} - 3)/10} \times R_b = $ _____ Mbps
+
+_____________________________________________________________________
+
+---
+
+## Part C: Data Budget (10 min)
+
+**Daily data generation:**
+
+$V_{\text{gen}} = R_{\text{payload}} \times t_{\text{imaging}} \times N_{\text{orbits}} \times f_{\text{compression}}$
+
+$= $ _____ Mbps $\times$ _____ s $\times$ _____ $\times$ _____ $= $ _____ MB/day $= $ _____ GB/day
+
+**Daily downlink capacity:**
+
+$V_{\text{DL}} = R_{\text{DL}} \times t_{\text{contact}} \times N_{\text{passes}} \times \eta_{\text{protocol}}$
+
+$= $ _____ Mbps $\times$ _____ s $\times$ _____ $\times$ _____ $= $ _____ MB/day $= $ _____ GB/day
+
+**Data budget closes?** ($V_{\text{DL}} \geq V_{\text{gen}}$): Y / N
+
+If no, what is your mitigation plan?
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+---
+
+## Part D: SpaceCDF Comparison (10 min)
+
+Open the Link Budget tab, enter your parameters, and compare:
+
+| Parameter | Hand Calculation | SpaceCDF | Difference |
+|-----------|-----------------|----------|------------|
+| EIRP (dBW) | | | |
+| FSPL (dB) | | | |
+| C/N$_0$ (dBHz) | | | |
+| Link Margin (dB) | | | |
+
+If there are differences, explain:
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+---
+
+## Part E: Modulation and Coding Selection (5 min)
+
+**Selected modulation:** _______________________________________________
+
+**Selected FEC code:** _______________________________________________
+
+**Required $E_b/N_0$ at BER $10^{-6}$:** _____ dB
+
+**Spectral efficiency:** _____ bps/Hz
+
+**Rationale:**
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+---
+
+## Notes & Reflections
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+---
+
+# Worksheet 3.4: Structure, Propulsion, and Equipment Selection
+
+| | |
+|---|---|
+| **Name:** | _______________________________________ |
+| **Date:** | _______________________________________ |
+| **Team / Mission:** | _______________________________________ |
+| **Role / Position:** | _______________________________________ |
+
+**SpaceCDF Tabs:** Equipment Browser, Dashboard, Trade Studies, Budget Breakdown
+
+---
+
+## Key Equations Reference
+
+> **Structural Margin of Safety:** $\text{MoS} = \frac{\sigma_{\text{allow}}}{\sigma_{\text{design}} \times \text{FoS}} - 1 \geq 0$
+> &nbsp;&nbsp; FoS: Yield 1.25, Ultimate 1.5 (metallic)
+>
+> **Tsiolkovsky rocket equation:** $\Delta V = I_{sp} \cdot g_0 \cdot \ln(m_0/m_f)$
+>
+> **Propellant mass:** $m_{\text{prop}} = m_{\text{dry}} \times \left(e^{\Delta V/(I_{sp} \cdot g_0)} - 1\right)$
+> &nbsp;&nbsp; $g_0 = 9.80665$ m/s$^2$
+>
+> **Data storage:** $S = V_{\text{daily}} \times N_{\text{days}} \times f_{\text{safety}}$
+>
+> **Fundamental frequency:** $f_1 > 40$ Hz (deployer requirement)
+
+---
+
+## Part A: CDS Compliance Check (10 min)
+
+| CDS Requirement | Your Design Value | Specification | Compliant? |
+|----------------|-------------------|---------------|-----------|
+| Form factor: _____ U | Dimensions: _____ mm | _____ mm | Y / N |
+| Maximum mass | _____ kg (wet) | _____ kg | Y / N |
+| Rail material | | Hard anodised Al | Y / N |
+| Deployment switches | _____ (quantity) | Min 2 | Y / N |
+| RBF pin provided | Y / N | Required | Y / N |
+| No protrusions beyond rails (stowed) | Y / N | Required | Y / N |
+| CG within 2 cm of geometric centre | Estimated: _____ cm offset | <= 2 cm | Y / N |
+| Fundamental frequency | Estimated: _____ Hz | > 40 Hz | Y / N |
+
+**Non-compliance items and corrective actions:**
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+---
+
+## Part B: Structural Margin Calculation (10 min)
+
+**Axial launch load:** _____ g &nbsp;&nbsp; **Lateral launch load:** _____ g
+
+**Load per rail** (4 rails, equal sharing):
+
+$F_{\text{axial}} = \frac{m \times a_{\text{axial}} \times g_0}{4} = \frac{\ \ \ \ \times \ \ \ \ \times 9.81}{4} = $ _____ N
+
+**Stress in rail** (cross-section 8.5 x 8.5 mm = $7.225 \times 10^{-5}$ m$^2$):
+
+$\sigma = \frac{F}{A} = \frac{\ \ \ \ }{7.225 \times 10^{-5}} = $ _____ MPa
+
+**Margin of safety (yield, Al 7075-T6, $\sigma_y = 503$ MPa):**
+
+$\text{MoS} = \frac{503}{\ \ \ \ \times 1.25} - 1 = $ _____
+
+**Pass?** Y / N
+
+_____________________________________________________________________
+
+---
+
+## Part C: Propulsion Decision (15 min)
+
+**Does your mission need propulsion?**
+
+| Question | Answer |
+|----------|--------|
+| Orbit altitude | _____ km |
+| Natural orbital lifetime | _____ years |
+| FCC 5-year compliant without propulsion? | Y / N |
+| Orbit maintenance required? | Y / N |
+| Constellation phasing required? | Y / N |
+| Active deorbit required? | Y / N |
+
+**Decision:** &nbsp; Propulsion / No propulsion
+
+---
+
+**If propulsion is selected, complete this section. Show all working.**
+
+**Total $\Delta V$ required:**
+
+| Manoeuvre | $\Delta V$ (m/s) |
+|-----------|-----------------|
+| Orbit maintenance (_____ yr) | |
+| Deorbit | |
+| Collision avoidance margin | |
+| **Total** | |
+
+**Propulsion type selected:** _______________ &nbsp;&nbsp; $I_{sp} = $ _____ s
+
+**Propellant mass (Tsiolkovsky):**
+
+$m_{\text{prop}} = m_{\text{dry}} \times \left(e^{\Delta V/(I_{sp} \times g_0)} - 1\right)$
+
+$= $ _____ $\times \left(e^{\ \ \ /(\ \ \ \times 9.81)} - 1\right) = $ _____ $\times \left(e^{\ \ \ } - 1\right) = $ _____ $\times$ _____ $= $ _____ kg
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+**System dry mass (thruster + tank + feed):** _____ kg
+
+**Total propulsion system mass:** _____ kg (propellant + dry)
+
+**Fraction of total spacecraft mass:** _____ %
+
+---
+
+## Part D: Equipment Selection Log (25 min)
+
+Using SpaceCDF's Equipment Browser, select components for each category:
+
+| Category | Component Selected | Manufacturer | Mass (kg) | Power (W) | Cost (kEUR) | Qty | Total Mass |
+|----------|-------------------|-------------|-----------|-----------|-------------|-----|-----------|
+| EPS Board | | | | | | 1 | |
+| Battery | | | | | | 1 | |
+| Solar Panels | | | | | | | |
+| OBC | | | | | | 1 | |
+| Reaction Wheel | | | | | | x | |
+| Magnetorquer | | | | | | x | |
+| Star Tracker | | | | | | | |
+| Sun Sensor | | | | | | x | |
+| Transponder | | | | | | 1 | |
+| Antenna | | | | | | | |
+| Payload | | | | | | 1 | |
+| Structure | | | | | | 1 | |
+| Harness | | | | | | 1 | |
+| Propulsion | | | | | | | |
+| **TOTAL** | | | **_____** | | **_____** | | |
+
+**Parametric estimate (from Session 2.4):** _____ kg
+
+**Equipment-based total:** _____ kg
+
+**Difference:** _____ kg ( _____ %)
+
+**Any incompatibilities detected?** (RF band mismatch, voltage mismatch, interface conflict)
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+---
+
+## Part E: Component Trade Study (15 min)
+
+**Subsystem traded:** _____________ &nbsp;&nbsp; **Options compared:** 3
+
+| Criterion | Weight | Option A: _________ | Score | Option B: _________ | Score | Option C: _________ | Score |
+|-----------|--------|---------------------|-------|---------------------|-------|---------------------|-------|
+| Mass | 0.20 | | | | | | |
+| Power | 0.15 | | | | | | |
+| Cost | 0.20 | | | | | | |
+| TRL | 0.15 | | | | | | |
+| Heritage | 0.15 | | | | | | |
+| Performance | 0.15 | | | | | | |
+| **Weighted** | **1.00** | | **_____** | | **_____** | | **_____** |
+
+**Winner:** _____________ &nbsp;&nbsp; **Score:** _____
+
+**Rationale (beyond the numbers):**
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+---
+
+## Part F: Final Budget Health Check (10 min)
+
+After equipment selection, record final budget status:
+
+| Budget | Value | Margin | Status |
+|--------|-------|--------|--------|
+| Mass (wet vs allocation) | _____ / _____ kg | _____ % | G / A / R |
+| Power (worst mode vs SA) | _____ / _____ W | _____ % | G / A / R |
+| Link margin | _____ dB | >= 3 dB? | G / A / R |
+| Cost vs ceiling | _____ / _____ MEUR | _____ % | G / A / R |
+| Pointing (RSS vs req) | _____ / _____ deg | _____ % | G / A / R |
+| Data (DL vs gen) | _____ / _____ GB/day | _____ % | G / A / R |
+
+**Any budget that does not close?** _______________________________________________
+
+**Proposed fix:** _______________________________________________
+
+_____________________________________________________________________
+
+---
+
+## Notes & Reflections
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+---
+
+# Worksheet 4.1: Equipment Selection & Bill of Materials
+
+**Name:** ___________________________  **Date:** ___________  **Team:** ___________
+
+**Mission Name:** ___________________________  **Form Factor:** ______U
+
+---
+
+## Part A: Make/Buy/Reuse Decisions
+
+For each subsystem, document the procurement decision and rationale:
+
+| Subsystem | Decision (Buy/Reuse/Make) | Rationale | Lead Time |
+|-----------|--------------------------|-----------|-----------|
+| Structure | | | |
+| EPS (solar array) | | | |
+| EPS (battery) | | | |
+| EPS (distribution) | | | |
+| OBC | | | |
+| AOCS (sensors) | | | |
+| AOCS (actuators) | | | |
+| TTC (transceiver) | | | |
+| TTC (antenna) | | | |
+| Thermal | | | |
+| Payload | | | |
+| Propulsion (if applicable) | | | |
+
+---
+
+## Part B: Bill of Materials (BOM)
+
+Complete the BOM from the SpaceCDF Equipment Browser selections:
+
+| Item ID | Component | Manufacturer | Part Number | Qty | Mass (g) | Power (W) | Cost (kEUR) | TRL | ECCN |
+|---------|-----------|-------------|-------------|-----|----------|-----------|-------------|-----|------|
+| STR-001 | | | | | | | | | |
+| EPS-001 | | | | | | | | | |
+| EPS-002 | | | | | | | | | |
+| EPS-003 | | | | | | | | | |
+| OBC-001 | | | | | | | | | |
+| AOCS-001 | | | | | | | | | |
+| AOCS-002 | | | | | | | | | |
+| AOCS-003 | | | | | | | | | |
+| TTC-001 | | | | | | | | | |
+| TTC-002 | | | | | | | | | |
+| THM-001 | | | | | | | | | |
+| PLD-001 | | | | | | | | | |
+| HRN-001 | | | | | | | | | |
+| | | | | | | | | | |
+| | | | | | | | | | |
+
+---
+
+## Part C: Budget Tracking
+
+After all selections, record the live budget values from the SpaceCDF Dashboard:
+
+| Budget | BOM Total | Parametric Estimate | Allocation | Margin | Margin % |
+|--------|-----------|--------------------|-----------:|-------:|---------:|
+| Dry mass | _____ g | _____ g | _____ g | _____ g | _____% |
+| Peak power | _____ W | _____ W | _____ W | _____ W | _____% |
+| Total cost | _____ kEUR | _____ kEUR | _____ kEUR | _____ kEUR | _____% |
+| Volume | _____% of ___U | | 100% | _____% | |
+
+Does everything fit within allocation? Y / N
+
+If not, what would you change? _______________________________________________
+
+_______________________________________________
+
+---
+
+## Part D: Export Control Assessment
+
+List any components that may require export licences:
+
+| Component | ECCN / USML Category | Controlled? | Licence Required? | Action Needed |
+|-----------|---------------------|-------------|-------------------|--------------|
+| | | Y / N | Y / N | |
+| | | Y / N | Y / N | |
+| | | Y / N | Y / N | |
+| | | Y / N | Y / N | |
+
+Are there any ITAR-controlled items? Y / N
+
+If yes, what TAA (Technical Assistance Agreement) or DSP-5 licence is needed?
+
+_______________________________________________
+
+---
+
+## Part E: Interface Compatibility Check
+
+For each selected component, verify interface compatibility:
+
+| Component | Bus Voltage OK? | Data Protocol OK? | RF Band Match? | Connector OK? | Notes |
+|-----------|:-:|:-:|:-:|:-:|-------|
+| | Y / N | Y / N | Y / N / NA | Y / N | |
+| | Y / N | Y / N | Y / N / NA | Y / N | |
+| | Y / N | Y / N | Y / N / NA | Y / N | |
+| | Y / N | Y / N | Y / N / NA | Y / N | |
+| | Y / N | Y / N | Y / N / NA | Y / N | |
+| | Y / N | Y / N | Y / N / NA | Y / N | |
+
+---
+
+## Part F: Interface Incompatibility Resolution
+
+Describe one interface incompatibility found during selection and how you resolved it:
+
+**Issue:** _______________________________________________
+
+_______________________________________________
+
+**Components involved:** _______________________________________________
+
+**Root cause:** _______________________________________________
+
+**Resolution chosen:** _______________________________________________
+
+**Impact on budget:** _______________________________________________
+
+---
+
+## Notes & Reflections
+
+What was the most difficult equipment selection decision? Why?
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+---
+
+# Worksheet 4.2: Verification & Validation Planning
+
+**Name:** ___________________________  **Date:** ___________  **Team:** ___________
+
+**Mission Name:** ___________________________
+
+---
+
+## Part A: IADT Method Assignment
+
+For 10 key requirements from your SpaceCDF V&V Matrix, assign the verification method and justify:
+
+| # | Req ID | Requirement Text (abbreviated) | Method (I/A/D/T) | Phase (B/C/D) | Level (Unit/Sub/Sys) | Justification |
+|---|--------|-------------------------------|:-:|:-:|:-:|--------------|
+| 1 | | | | | | |
+| 2 | | | | | | |
+| 3 | | | | | | |
+| 4 | | | | | | |
+| 5 | | | | | | |
+| 6 | | | | | | |
+| 7 | | | | | | |
+| 8 | | | | | | |
+| 9 | | | | | | |
+| 10 | | | | | | |
+
+**Summary count:** Analysis: ___ / Test: ___ / Demonstration: ___ / Inspection: ___
+
+---
+
+## Part B: Dual-Method Requirements
+
+Identify 3 requirements that need BOTH analysis (early confidence) AND test (final proof):
+
+| Requirement ID | Requirement Text | Analysis (Phase B) | Test (Phase C/D) | Why Both Needed? |
+|---------------|-----------------|-------------------|------------------|-----------------|
+| | | | | |
+| | | | | |
+| | | | | |
+
+---
+
+## Part C: Environmental Test Sequence
+
+For your selected launch vehicle, specify the complete proto-flight test sequence:
+
+**Launch vehicle:** _______________  **PUG reference:** _______________
+
+| Step | Test | Specification | Duration | Pass Criteria |
+|:----:|------|--------------|----------|--------------|
+| 1 | Initial functional test | Full performance baseline | _____ hr | All parameters nominal |
+| 2 | Sine vibration | _____ g, _____ - _____ Hz | _____ min/axis x 3 | No resonance shift > 5% |
+| 3 | Random vibration | _____ gRMS overall | _____ min/axis x 3 | No structural damage |
+| 4 | Post-vibe functional test | Same as step 1 | _____ hr | Compare to baseline |
+| 5 | Thermal vacuum -- hot | + _____ C (predicted max + 10 C) | _____ cycles | Functional at hot extreme |
+| 6 | Thermal vacuum -- cold | - _____ C (predicted min - 10 C) | _____ cycles | Functional at cold extreme |
+| 7 | Post-TVAC functional test | Same as step 1 | _____ hr | Compare to baseline |
+| 8 | EMC test | Required? Y / N | _____ day | No interference |
+| 9 | Mass measurement | Calibrated scale (+/- 0.01 kg) | 30 min | M <= _____ kg |
+| 10 | Deployer fit check | _____ deployer | 2 hr | Fits; slides freely |
+
+**Total test campaign duration estimate:** _____ weeks
+
+---
+
+## Part D: Vibration Test Profile
+
+Record the random vibration PSD profile from your launch vehicle PUG:
+
+| Frequency (Hz) | PSD Level (g^2/Hz) | Slope |
+|:-:|:-:|:-:|
+| 20 | | Start |
+| 20 - _____ | | + _____ dB/oct |
+| _____ - _____ | | Flat |
+| _____ - 2000 | | - _____ dB/oct |
+| 2000 | | End |
+
+**Overall gRMS (calculated):** _____ gRMS
+
+**Show your calculation:**
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+---
+
+## Part E: TVAC Cycle Profile
+
+Sketch or describe one TVAC cycle:
+
+**Hot extreme:** + _____ C    **Cold extreme:** - _____ C
+
+**Ramp rate:** _____ C/min    **Dwell time at extreme:** _____ hr
+
+**Functional test at each extreme?** Y / N    **Duration of functional test:** _____ hr
+
+**Calculate time for one cycle:**
+
+t_cycle = _______________________________________________
+
+= _____ hours
+
+**Total TVAC campaign:** _____ cycles x _____ hr + _____ hr setup = _____ hr = _____ days
+
+---
+
+## Part F: Waiver Identification
+
+Are there any requirements that cannot be verified by the standard method? Document potential waivers:
+
+| Req ID | Standard Method | Proposed Alternative | Justification | Risk |
+|--------|:-:|:-:|--------------|------|
+| | | | | |
+| | | | | |
+
+---
+
+## Notes & Reflections
+
+Which environmental test do you consider most critical for your mission? Why?
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+---
+
+# Worksheet 4.3: Risk, Interfaces & FMECA
+
+**Name:** ___________________________  **Date:** ___________  **Team:** ___________
+
+**Mission Name:** ___________________________
+
+---
+
+## Part A: Risk Register
+
+Identify at least 5 technical risks for your mission design. Score each on the 5x5 matrix.
+
+**Scoring reminder:** L x C = Score. Low (1-4), Medium (5-9), High (10-15), Critical (16-25).
+
+| # | Risk Description | L (1-5) | C (1-5) | Score | Category (L/M/H/C) | Mitigation Strategy | Owner (Position) | Post-Mitigation Score |
+|:-:|-----------------|:-:|:-:|:-:|:-:|-------------------|:-:|:-:|
+| 1 | | | | | | | | |
+| 2 | | | | | | | | |
+| 3 | | | | | | | | |
+| 4 | | | | | | | | |
+| 5 | | | | | | | | |
+| 6 | | | | | | | | |
+| 7 | | | | | | | | |
+
+**How many risks are High or Critical (before mitigation)?** _____
+
+**How many remain High or Critical after mitigation?** _____
+
+---
+
+## Part B: 5x5 Risk Matrix Plot
+
+Plot your risks on the matrix below. Write the risk number in the appropriate cell.
+
+```
+             Consequence ->
+             1       2       3       4       5
+  L   5 |       |       |       |       |       |
+  i   4 |       |       |       |       |       |
+  k   3 |       |       |       |       |       |
+  e   2 |       |       |       |       |       |
+  l   1 |       |       |       |       |       |
+```
+
+---
+
+## Part C: N-Squared (N^2) Interface Matrix
+
+Fill in the interface matrix for your mission's subsystems. Use abbreviations:
+- **P** = Power (electrical)
+- **D** = Data (I2C, SPI, UART, CAN, RS-422)
+- **R** = RF (coaxial)
+- **M** = Mechanical (mounting, alignment)
+- **T** = Thermal (conductive/radiative)
+
+|  | EPS | OBC | AOCS | TTC | Payload | Structure |
+|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
+| **EPS** | --- | | | | | |
+| **OBC** | | --- | | | | |
+| **AOCS** | | | --- | | | |
+| **TTC** | | | | --- | | |
+| **Payload** | | | | | --- | |
+| **Structure** | | | | | | --- |
+
+**Total number of interfaces identified:** _____
+
+**Interface conflicts detected:** (describe at least 2)
+
+1. Conflict: _______________________________________________
+
+   Resolution: _______________________________________________
+
+2. Conflict: _______________________________________________
+
+   Resolution: _______________________________________________
+
+---
+
+## Part D: FMECA Table
+
+Complete for 4 critical components:
+
+| Component | Function | Failure Mode | Cause | Local Effect | System Effect | Severity (1-5) | Detection Method | Compensating Provision |
+|-----------|----------|-------------|-------|-------------|---------------|:-:|:-:|:-:|
+| | | | | | | | | |
+| | | | | | | | | |
+| | | | | | | | | |
+| | | | | | | | | |
+
+---
+
+## Part E: Single-Point Failure Analysis
+
+List all single-point failures in your design:
+
+| # | Component | Failure Mode | Effect on Mission | SPF? | Acceptable? | Mitigation (if not acceptable) |
+|:-:|-----------|-------------|-------------------|:-:|:-:|:-:|
+| 1 | | | | Y/N | Y/N | |
+| 2 | | | | Y/N | Y/N | |
+| 3 | | | | Y/N | Y/N | |
+| 4 | | | | Y/N | Y/N | |
+| 5 | | | | Y/N | Y/N | |
+
+**Total SPFs identified:** _____    **Accepted:** _____    **Mitigated:** _____
+
+---
+
+## Part F: Reliability Calculation
+
+Calculate the series reliability for your mission's critical chain (components that must all work for mission success):
+
+| Component | Individual Reliability (R_i) | Mission Duration Used |
+|-----------|:--:|:-:|
+| | | |
+| | | |
+| | | |
+| | | |
+| | | |
+
+**R_series = R_1 x R_2 x ... x R_n = _____________________________**
+
+**R_series = ___________**
+
+If you added redundancy to one component (e.g., dual deployment mechanism), recalculate:
+
+**R_redundant = 1 - (1 - R)^2 = 1 - (1 - _____)^2 = _____**
+
+**New R_series (with redundancy) = _____**
+
+**Improvement: from _____ to _____ (+ _____ percentage points)**
+
+---
+
+## Part G: Risk Discussion
+
+What is the highest-risk item in your design? What would it take (cost, mass, schedule) to bring the risk to an acceptable level?
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+---
+
+## Notes & Reflections
+
+Which single-point failure concerns you the most? Would you accept it, or is mitigation essential?
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+---
+
+# Worksheet 4.4: Cost Estimation & Design Review
+
+**Name:** ___________________________  **Date:** ___________  **Team:** ___________
+
+**Mission Name:** ___________________________
+
+---
+
+## Part A: Mission Cost Estimate (WBS)
+
+Complete using both parametric estimates (from SpaceCDF Cost tab) and bottom-up estimates (from BOM vendor quotes):
+
+| WBS # | Element | Parametric (kEUR) | Bottom-Up (kEUR) | Difference | Notes |
+|:-----:|---------|------------------:|------------------:|:----------:|-------|
+| 1.0 | Programme Management | | | | |
+| 2.0 | Systems Engineering | | | | |
+| 3.0 | Mission Assurance | | | | |
+| 4.0 | Payload | | | | |
+| 5.0 | Spacecraft Bus Hardware | | | | |
+|  | 5.1 Structure & mechanisms | | | | |
+|  | 5.2 EPS | | | | |
+|  | 5.3 AOCS | | | | |
+|  | 5.4 TTC | | | | |
+|  | 5.5 OBC & data handling | | | | |
+|  | 5.6 Thermal | | | | |
+|  | 5.7 Propulsion | | | | |
+|  | 5.8 Harness | | | | |
+| 6.0 | Integration & Test | | | | |
+| 7.0 | Software (FSW + GSW) | | | | |
+| 8.0 | Launch Services | | | | |
+| 9.0 | Ground Segment | | | | |
+| 10.0 | Operations (_____ years) | | | | |
+| | **TOTAL** | **_____** | **_____** | | |
+
+---
+
+## Part B: Confidence Levels
+
+**P50 estimate (your best estimate):** _____ kEUR
+
+**P70 estimate (P50 x 1.2):** _____ kEUR
+
+**P80 estimate (P50 x 1.3):** _____ kEUR
+
+Show your reasoning for the multiplier (is 1.3 appropriate, or should it be higher for your mission?):
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+---
+
+## Part C: Constellation Cost (if applicable)
+
+**Number of satellites:** _____    **Learning rate:** _____% 
+
+**b = ln(learning_rate) / ln(2) = ln(_____) / ln(2) = _____**
+
+| Unit # | Unit Cost (kEUR) = C_1 x N^b | Cumulative (kEUR) |
+|:------:|-----------------------------:|------------------:|
+| 1 | | |
+| 2 | | |
+| 4 | | |
+| 8 | | |
+| _____ (total) | | |
+
+Show your calculation for the total constellation cost:
+
+Hardware: _____ units x _____ kEUR avg = _____ kEUR
+
+Spares (____%): _____ units x _____ kEUR = _____ kEUR
+
+Launch: _____ sats x _____ kEUR = _____ kEUR
+
+Ground segment: _____ kEUR
+
+Operations (_____ years): _____ kEUR
+
+PM/SE/MA: _____ kEUR
+
+**Total constellation cost: _____ kEUR = _____ MEUR**
+
+**P80 constellation cost (x 1.3): _____ MEUR**
+
+---
+
+## Part D: Cost Drivers
+
+**Top 3 cost drivers in your mission (from SpaceCDF Cost Breakdown):**
+
+| Rank | Cost Element | Cost (kEUR) | % of Total | Why is it Expensive? |
+|:----:|-------------|------------:|-----------:|---------------------|
+| 1 | | | | |
+| 2 | | | | |
+| 3 | | | | |
+
+**What would you change to reduce total cost by 20%?**
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+---
+
+## Part E: Design Review Readiness
+
+From the SpaceCDF Gate Review tab, assess your readiness for SRR/PDR:
+
+| # | Gate Criterion | Status (Pass/Fail/Manual) | Evidence Location | If Fail: Action Needed |
+|:-:|---------------|:------------------------:|:-:|:-:|
+| 1 | Mission need justified | | | |
+| 2 | Requirements complete & traceable | | | |
+| 3 | All budgets close with margin | | | |
+| 4 | Equipment selected (BOM complete) | | | |
+| 5 | Interfaces defined, conflicts resolved | | | |
+| 6 | V&V approach defined | | | |
+| 7 | Risks identified with mitigations | | | |
+| 8 | Cost estimate with WBS | | | |
+| 9 | ConOps defined | | | |
+| 10 | Sustainability compliance | | | |
+
+**Must-pass criteria met:** _____ / _____
+
+**Overall readiness:** READY / NOT READY
+
+**Action items to achieve readiness:**
+
+1. _______________________________________________
+
+2. _______________________________________________
+
+3. _______________________________________________
+
+---
+
+## Part F: Presentation Preparation
+
+Outline your 12-minute design review presentation:
+
+| Section | Duration | Key Message | Evidence/Data to Show |
+|---------|:--------:|------------|---------------------|
+| 1. Mission Need | 2 min | | |
+| 2. Why Space? | 2 min | | |
+| 3. System Design | 3 min | | |
+| 4. Equipment & V&V | 2 min | | |
+| 5. Risk & Cost | 2 min | | |
+| 6. Operations & Lessons | 1 min | | |
+
+---
+
+## Notes & Reflections
+
+What is the most uncertain element in your cost estimate? How would you reduce the uncertainty?
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+---
+
+# Worksheet 5.1: Ground Segment & Operations Architecture
+
+**Name:** ___________________________  **Date:** ___________  **Team:** ___________
+
+**Mission Name:** ___________________________  **Orbit:** _____ km, _____ deg inclination
+
+---
+
+## Part A: Ground Station Contact Analysis
+
+**Calculate contact time and data volume per pass for your mission.**
+
+### Input Parameters
+
+| Parameter | Value | Source |
+|-----------|-------|--------|
+| Orbital altitude (h) | _____ km | SpaceCDF orbit selection |
+| Minimum elevation angle (epsilon) | _____ deg | Ground station spec (typically 5-10) |
+| Downlink data rate (R) | _____ Mbps | SpaceCDF link budget |
+| Protocol efficiency (eta) | _____ (typically 0.85-0.95) | CCSDS overhead estimate |
+| Ground station latitude | _____ deg | Selected station |
+| Earth radius (R_E) | 6371 km | Constant |
+
+### Calculations
+
+**Maximum slant range:**
+
+rho = R_E x (sqrt((h/R_E + 1)^2 - cos^2(epsilon)) - sin(epsilon))
+
+rho = 6371 x (sqrt((_____/6371 + 1)^2 - cos^2(_____)) - sin(_____))
+
+rho = _____ km
+
+**Average pass duration (approximate):**
+
+T_avg ~ _____ minutes (from STK/SpaceCDF or estimate: ~6 min for 500 km SSO)
+
+**Data volume per pass:**
+
+V_data = R x T x eta = _____ Mbps x _____ s x _____ = _____ Mbit = _____ MB
+
+---
+
+## Part B: Data Budget Closure
+
+| Parameter | Value | Unit |
+|-----------|------:|------|
+| Daily data generation (payload) | | MB/day |
+| Daily data generation (housekeeping) | | MB/day |
+| **Total daily generation** | | **MB/day** |
+| | | |
+| Passes per day (GS 1: _____________) | | passes |
+| Data per pass (GS 1) | | MB |
+| Subtotal downlink (GS 1) | | MB/day |
+| | | |
+| Passes per day (GS 2: _____________) | | passes |
+| Data per pass (GS 2) | | MB |
+| Subtotal downlink (GS 2) | | MB/day |
+| | | |
+| **Total daily downlink capacity** | | **MB/day** |
+| | | |
+| **Data budget margin** | | **MB/day** |
+| **Margin percentage** | | **%** |
+
+**Does the data budget close?** Y / N
+
+If not, what changes would close it? (check all that apply)
+
+- [ ] Add another ground station at: _______________
+- [ ] Increase data rate to: _____ Mbps (requires: _______________)
+- [ ] Reduce payload data generation to: _____ MB/day (impact: _______________)
+- [ ] Add onboard compression (ratio: _____:1)
+- [ ] Use SatNOGS network for additional passes
+- [ ] Other: _______________________________________________
+
+---
+
+## Part C: Ground Station Network Design
+
+| Station # | Location | Latitude | Antenna | Band | Data Rate | Passes/Day | Role |
+|:-:|---------|:--------:|---------|:----:|:---------:|:----------:|------|
+| 1 | | | | | | | Primary TTC |
+| 2 | | | | | | | Payload DL |
+| 3 | | | | | | | Backup/SatNOGS |
+
+**Total ground segment cost estimate:** _____ kEUR
+
+| Cost Element | Annual Cost (kEUR) | Notes |
+|-------------|-------------------:|-------|
+| Antenna rental / ownership | | |
+| MCS software licence | | |
+| Network connectivity | | |
+| Operations staff (_____ FTE) | | |
+| **Total annual** | | |
+| **Mission lifetime (_____ yr)** | | |
+
+---
+
+## Part D: LEOP Timeline
+
+Construct the LEOP timeline for the first 72 hours after separation:
+
+| Time (UTC) | Sim Time | Activity | Success Criterion | Status |
+|-----------|----------|---------|-------------------|:------:|
+| T+0 | Separation | Deployment switches release | | [ ] |
+| T+30 min | Timer expires | Antenna deployment commanded | | [ ] |
+| T+_____ | | Beacon acquisition | Carrier lock | [ ] |
+| T+_____ | | First HK telemetry | Data decoded | [ ] |
+| T+_____ | | First uplink command | ACK received | [ ] |
+| T+_____ | | SA deployment (if separate) | Power generation confirmed | [ ] |
+| T+_____ | | ADCS initialisation | Attitude determination active | [ ] |
+| T+_____ | | ADCS calibration | Pointing < _____ deg | [ ] |
+| T+_____ | | Full duplex validation | Uplink + downlink at ops rate | [ ] |
+| T+_____ | | Health assessment complete | All subsystems nominal | [ ] |
+
+---
+
+## Part E: Mission Operations Timeline (Gantt Chart)
+
+Sketch the operations timeline from launch to end of life:
+
+```
+Phase:       LEOP  Commission  Early Ops    Nominal Operations         EOL
+Week:     1  2  3  4  5  6  7  8  9  ... 26 ... 52 ... 104 ... 156
+          |  |  |  |  |  |  |  |  |       |      |       |       |
+Staffing: ________________________________________________
+          24/7     16/7        8/5         8/5 or automated    8/5
+          
+Key milestones:
+  L+___: First light
+  L+___: Commissioning complete
+  L+___: Orbit maintenance manoeuvre (if applicable)
+  L+___: End of nominal mission
+  L+___: Extended mission (if applicable)
+  L+___: Passivation and deorbit
+```
+
+---
+
+## Notes & Reflections
+
+What is the most challenging aspect of your ground segment design? What would you do differently with more budget?
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+---
+
+# Worksheet 5.2: Mission Operations Concepts
+
+**Name:** ___________________________  **Date:** ___________  **Team:** ___________
+
+**Mission Name:** ___________________________
+
+---
+
+## Part A: Operational Modes
+
+Define all operational modes for your spacecraft. Use the SpaceCDF ConOps Editor to enter these.
+
+| Mode | Description | Power (W) | Data Rate | Entry Condition | Exit Condition |
+|------|------------|:---------:|:---------:|----------------|---------------|
+| Safe | | | | | |
+| Detumble | | | | | |
+| Standby | | | | | |
+| Science | | | | | |
+| Downlink | | | | | |
+| Eclipse | | | | | |
+| Manoeuvre | | | | | |
+| | | | | | |
+
+**Verify:** Does the power budget close in every mode?
+
+| Mode | Power Consumption (W) | Power Available (W) | Margin (W) | Closes? |
+|------|:---------------------:|:-------------------:|:----------:|:-------:|
+| Safe | | | | Y / N |
+| Detumble | | | | Y / N |
+| Standby | | | | Y / N |
+| Science | | | | Y / N |
+| Downlink | | | | Y / N |
+| Eclipse (battery only) | | | | Y / N |
+
+---
+
+## Part B: FDIR Rules
+
+Define at least 5 FDIR rules for your spacecraft:
+
+| # | Fault Description | Detection Method | Threshold | FDIR Level (0-4) | Autonomous Response | Recovery Procedure |
+|:-:|------------------|-----------------|-----------|:-:|:-:|:-:|
+| 1 | | | | | | |
+| 2 | | | | | | |
+| 3 | | | | | | |
+| 4 | | | | | | |
+| 5 | | | | | | |
+| 6 | | | | | | |
+
+**Can Safe Mode sustain the spacecraft indefinitely (power + thermal)?** Y / N
+
+If not, what is the maximum Safe Mode duration? _____ hours
+
+**Can every autonomous FDIR action be overridden from ground?** Y / N
+
+If not, which cannot? _______________________________________________
+
+---
+
+## Part C: Nominal Procedure
+
+Write one nominal procedure for your mission (science observation or data downlink):
+
+**Procedure ID:** _____________  **Title:** _______________________________________________
+
+**Preconditions:**
+
+_______________________________________________
+
+_______________________________________________
+
+| Step | Action | Expected Result | If Not Achieved |
+|:----:|--------|----------------|----------------|
+| 1 | | | |
+| 2 | | | |
+| 3 | | | |
+| 4 | | | |
+| 5 | | | |
+| 6 | | | |
+| 7 | | | |
+| 8 | | | |
+
+**Post-conditions:**
+
+_______________________________________________
+
+---
+
+## Part D: Contingency Procedure
+
+Write one contingency procedure (e.g., safe mode recovery, communication loss recovery):
+
+**Procedure ID:** _____________  **Title:** _______________________________________________
+
+**Trigger condition:**
+
+_______________________________________________
+
+**Severity level:** Green / Yellow / Orange / Red
+
+| Step | Action | Expected Result | If Not Achieved | Timeout |
+|:----:|--------|----------------|----------------|:-------:|
+| 1 | | | | |
+| 2 | | | | |
+| 3 | | | | |
+| 4 | | | | |
+| 5 | | | | |
+| 6 | | | | |
+
+**Escalation:** If this procedure fails, escalate to: _______________________________________________
+
+**Post-conditions:**
+
+_______________________________________________
+
+---
+
+## Part E: Operations Staffing
+
+Estimate the staffing requirements for each mission phase:
+
+| Phase | Duration | Shifts/Day | Staff/Shift | Total FTE | Annual Cost (kEUR) |
+|-------|----------|:----------:|:-----------:|:---------:|---------:|
+| LEOP | _____ days | 3 (24/7) | | | |
+| Commissioning | _____ weeks | 2 (16/7) | | | |
+| Early Operations | _____ months | 1 (8/5) | | | |
+| Nominal Operations | _____ years | 1 (8/5) or auto | | | |
+| End of Life | _____ weeks | 1 (8/5) | | | |
+| **Total** | | | | | |
+
+---
+
+## Part F: Anomaly Scenario
+
+Hypothetical scenario: Your satellite enters Safe Mode during a weekend. The next ground contact is Monday morning (40 hours away). Walk through your response:
+
+1. **What is the spacecraft doing in Safe Mode?**
+
+   _______________________________________________
+
+   _______________________________________________
+
+2. **Will it survive 40 hours? (Check power and thermal)**
+
+   _______________________________________________
+
+   _______________________________________________
+
+3. **What telemetry will you review first on Monday?**
+
+   _______________________________________________
+
+   _______________________________________________
+
+4. **What is your recovery plan?**
+
+   _______________________________________________
+
+   _______________________________________________
+
+---
+
+## Notes & Reflections
+
+How much autonomy should your spacecraft have? Where is the line between onboard decision-making and ground control?
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+---
+
+# Worksheet 5.3: Mission Simulation Day
+
+**Name:** ___________________________  **Date:** ___________  **Team:** ___________
+
+**Mission Name:** ___________________________
+
+**Your Role:** ___________________________  (FD / SC / GSO / PO / FD-nav / Logger)
+
+---
+
+## Simulation Event Log
+
+Record ALL events, decisions, and actions in real-time during the simulation:
+
+| # | Sim Time | Real Time | Event / Observation | Action Taken | Result | Logged By |
+|:-:|----------|:---------:|--------------------:|-------------|--------|:---------:|
+| 1 | T+0 | | Separation | | | |
+| 2 | | | | | | |
+| 3 | | | | | | |
+| 4 | | | | | | |
+| 5 | | | | | | |
+| 6 | | | | | | |
+| 7 | | | | | | |
+| 8 | | | | | | |
+| 9 | | | | | | |
+| 10 | | | | | | |
+| 11 | | | | | | |
+| 12 | | | | | | |
+| 13 | | | | | | |
+| 14 | | | | | | |
+| 15 | | | | | | |
+| 16 | | | | | | |
+| 17 | | | | | | |
+| 18 | | | | | | |
+| 19 | | | | | | |
+| 20 | | | | | | |
+
+---
+
+## LEOP Checklist
+
+Check off each LEOP milestone as it is achieved during the simulation:
+
+| # | Milestone | Time Achieved | Status | Notes |
+|:-:|-----------|:-------------:|:------:|-------|
+| 1 | Separation confirmed | | [ ] | |
+| 2 | 30-min timer expired | | [ ] | |
+| 3 | Antenna deployed | | [ ] | |
+| 4 | Beacon acquired | | [ ] | |
+| 5 | First HK telemetry decoded | | [ ] | |
+| 6 | First uplink command ACK'd | | [ ] | |
+| 7 | Solar array deployed (if sep.) | | [ ] | |
+| 8 | ADCS detumble complete | | [ ] | |
+| 9 | ADCS calibration complete | | [ ] | |
+| 10 | Full duplex validated | | [ ] | |
+| 11 | All subsystems nominal | | [ ] | |
+
+---
+
+## Anomaly Response Form 1
+
+Complete this form for each injected anomaly during the simulation.
+
+| Field | Entry |
+|-------|-------|
+| **Anomaly ID** | ANO-SIM-001 |
+| **Sim Time** | |
+| **Real Time** | |
+| **Severity** | Green / Yellow / Orange / Red |
+| **Affected Subsystem** | |
+
+**Observation** (exact telemetry values and symptoms):
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+**Initial Assessment** (what do you think happened?):
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+**Diagnosis** (root cause after investigation):
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+**Action Taken** (commands sent, procedures executed):
+
+| Step | Time | Action | Expected Result | Actual Result |
+|:----:|:----:|--------|----------------|:-------------:|
+| 1 | | | | |
+| 2 | | | | |
+| 3 | | | | |
+| 4 | | | | |
+| 5 | | | | |
+
+**Final Result** (system state after response):
+
+_______________________________________________
+
+_______________________________________________
+
+**Follow-up Required:**
+
+_______________________________________________
+
+**Procedure used:** _______________  **Did it work as written?** Y / N / Partially
+
+If not, what changes are needed? _______________________________________________
+
+---
+
+## Anomaly Response Form 2
+
+| Field | Entry |
+|-------|-------|
+| **Anomaly ID** | ANO-SIM-002 |
+| **Sim Time** | |
+| **Real Time** | |
+| **Severity** | Green / Yellow / Orange / Red |
+| **Affected Subsystem** | |
+
+**Observation** (exact telemetry values and symptoms):
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+**Initial Assessment** (what do you think happened?):
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+**Diagnosis** (root cause after investigation):
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+**Action Taken** (commands sent, procedures executed):
+
+| Step | Time | Action | Expected Result | Actual Result |
+|:----:|:----:|--------|----------------|:-------------:|
+| 1 | | | | |
+| 2 | | | | |
+| 3 | | | | |
+| 4 | | | | |
+| 5 | | | | |
+
+**Final Result** (system state after response):
+
+_______________________________________________
+
+_______________________________________________
+
+**Follow-up Required:**
+
+_______________________________________________
+
+**Procedure used:** _______________  **Did it work as written?** Y / N / Partially
+
+If not, what changes are needed? _______________________________________________
+
+---
+
+## Anomaly Response Form 3
+
+| Field | Entry |
+|-------|-------|
+| **Anomaly ID** | ANO-SIM-003 |
+| **Sim Time** | |
+| **Real Time** | |
+| **Severity** | Green / Yellow / Orange / Red |
+| **Affected Subsystem** | |
+
+**Observation** (exact telemetry values and symptoms):
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+**Initial Assessment:**
+
+_______________________________________________
+
+_______________________________________________
+
+**Diagnosis:**
+
+_______________________________________________
+
+_______________________________________________
+
+**Action Taken:**
+
+| Step | Time | Action | Expected Result | Actual Result |
+|:----:|:----:|--------|----------------|:-------------:|
+| 1 | | | | |
+| 2 | | | | |
+| 3 | | | | |
+| 4 | | | | |
+
+**Final Result:**
+
+_______________________________________________
+
+**Procedure used:** _______________  **Did it work as written?** Y / N / Partially
+
+---
+
+## Commissioning Status
+
+After the commissioning phase of the simulation, record subsystem checkout status:
+
+| Subsystem | Checkout Complete? | Performance vs Spec | Issues Found |
+|-----------|:-:|:-:|:-:|
+| EPS | [ ] | Nominal / Degraded / Failed | |
+| OBC | [ ] | Nominal / Degraded / Failed | |
+| AOCS | [ ] | Nominal / Degraded / Failed | |
+| TTC | [ ] | Nominal / Degraded / Failed | |
+| Thermal | [ ] | Nominal / Degraded / Failed | |
+| Payload | [ ] | Nominal / Degraded / Failed | |
+| Propulsion | [ ] | Nominal / Degraded / Failed / NA | |
+
+---
+
+## Nominal Operations Summary
+
+After the nominal operations phase, record:
+
+| Metric | Planned | Actual (Simulated) | Variance |
+|--------|--------:|-------------------:|---------:|
+| Science observations completed | | | |
+| Data downlinked (MB) | | | |
+| Anomalies encountered | | | |
+| Ground contacts made | | | |
+| Safe mode entries | | | |
+
+---
+
+## Simulation Debrief
+
+### What went well?
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+### What could be improved?
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+### Design weaknesses revealed by simulation:
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+### Procedure changes needed:
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+### FDIR gaps identified:
+
+_______________________________________________
+
+_______________________________________________
+
+---
+
+## Notes & Reflections
+
+What was the most stressful moment during the simulation? What did it teach you about operations?
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+---
+
+# Worksheet 5.4: Final Review & Presentations
+
+**Name:** ___________________________  **Date:** ___________  **Team:** ___________
+
+**Mission Name:** ___________________________
+
+---
+
+## Part A: Final Design Summary
+
+Record the final state of your design from the SpaceCDF Dashboard:
+
+| Parameter | Value | Unit | Margin | Margin % | Status (G/A/R) |
+|-----------|------:|------|-------:|---------:|:-:|
+| Dry mass | | kg | | | |
+| Wet mass (if propulsion) | | kg | | | |
+| SA power (EOL) | | W | | | |
+| Battery capacity | | Wh | | | |
+| Link margin (worst case) | | dB | | | |
+| Pointing accuracy | | deg | | | |
+| Data balance | | MB/day | | | |
+| Total cost (P50) | | kEUR | | | |
+| Total cost (P80) | | kEUR | | | |
+| Debris compliance score | | /100 | | | |
+| Mission lifetime | | years | | | |
+
+**Do all budgets close?** Y / N    **If not, which fail?** _______________________________________________
+
+**Number of unresolved conflicts:** _____
+
+---
+
+## Part B: Documentation Checklist
+
+Tick each document generated from SpaceCDF Exports tab:
+
+| Document | Generated? | Complete? | Notes |
+|----------|:----------:|:---------:|-------|
+| MRD (Mission Requirements Document) | [ ] | [ ] | |
+| Technical Specification | [ ] | [ ] | |
+| Verification Plan | [ ] | [ ] | |
+| ConOps Document | [ ] | [ ] | |
+| SEMP (Systems Engineering Mgmt Plan) | [ ] | [ ] | |
+| IRD (Interface Requirements Document) | [ ] | [ ] | |
+| Risk Management Plan | [ ] | [ ] | |
+| Test Plan | [ ] | [ ] | |
+| Bill of Materials | [ ] | [ ] | |
+| ITU Filing Template | [ ] | [ ] | |
+| RSSSA Filing | [ ] | [ ] | |
+| Export Control Assessment | [ ] | [ ] | |
+| End-of-Life Report | [ ] | [ ] | |
+| COPUOS Registration | [ ] | [ ] | |
+
+**Total documents generated:** _____ / 14
+
+---
+
+## Part C: Presentation Outline
+
+Prepare your 12-minute final design review presentation:
+
+| Section | Time | Key Points to Cover | Evidence / Data to Show |
+|---------|:----:|--------------------|-----------------------|
+| 1. Mission Need | 2 min | | |
+| 2. Why Space? | 2 min | | |
+| 3. System Design | 3 min | | |
+| 4. Equipment & V&V | 2 min | | |
+| 5. Risk & Cost | 2 min | | |
+| 6. Operations & Lessons | 1 min | | |
+
+**Presenter(s):** _______________________________________________
+
+**Backup slides prepared on:** _______________________________________________
+
+---
+
+## Part D: Peer Review Evaluation
+
+*Complete this section while reviewing another team's presentation.*
+
+**Team being reviewed:** ___________________________
+
+**Reviewers:** ___________________________
+
+| # | Criterion | Score (0-2) | Comments / Questions |
+|:-:|-----------|:----------:|---------------------|
+| 1 | Mission need clearly justified | | |
+| 2 | Requirements complete and traceable | | |
+| 3 | All budgets close with margin | | |
+| 4 | Equipment selected with justified trades | | |
+| 5 | Interfaces defined, conflicts resolved | | |
+| 6 | V&V approach defined | | |
+| 7 | Risks identified with mitigations | | |
+| 8 | Cost estimate with WBS and P80 | | |
+| 9 | ConOps and ground segment designed | | |
+| 10 | Sustainability compliance | | |
+| | **TOTAL** | **/ 20** | |
+
+**Presentation quality:**
+
+| Criterion | Score (1-5) | Comments |
+|-----------|:----------:|---------|
+| Clarity of communication | | |
+| Use of evidence (data, not assertions) | | |
+| Ability to answer questions | | |
+| Time management | | |
+
+**Board recommendation:** GO / NO GO / GO WITH ACTIONS
+
+**Action items for the presenting team:**
+
+| # | Action | Responsible | Deadline |
+|:-:|--------|:-----------:|:--------:|
+| 1 | | | |
+| 2 | | | |
+| 3 | | | |
+
+**Strongest aspect of this team's design:**
+
+_______________________________________________
+
+**Biggest area for improvement:**
+
+_______________________________________________
+
+---
+
+## Part E: Lessons Learned
+
+1. **What was the most challenging design decision your team faced?**
+
+   _______________________________________________
+
+   _______________________________________________
+
+   _______________________________________________
+
+2. **What would you do differently if starting the course over?**
+
+   _______________________________________________
+
+   _______________________________________________
+
+   _______________________________________________
+
+3. **What does the design need next (Phase B activities)?**
+
+   _______________________________________________
+
+   _______________________________________________
+
+   _______________________________________________
+
+4. **What was the most valuable SpaceCDF feature?**
+
+   _______________________________________________
+
+   _______________________________________________
+
+5. **What feature was missing that you needed?**
+
+   _______________________________________________
+
+   _______________________________________________
+
+6. **What concept from this course will you apply in your future work?**
+
+   _______________________________________________
+
+   _______________________________________________
+
+   _______________________________________________
+
+---
+
+## Part F: Self-Assessment Rubric
+
+Rate your own learning across the three weeks of the course. Be honest -- this is for your own reflection, not grading.
+
+| Competency | Week 1 Start (1-5) | Now (1-5) | Evidence of Growth |
+|-----------|:------------------:|:---------:|-------------------|
+| Define a space mission starting from the problem, not the solution | | | |
+| Write verifiable, traceable requirements (SMART format) | | | |
+| Conduct a structured trade study with weighted criteria | | | |
+| Size subsystems using parametric models and engineering budgets | | | |
+| Select COTS equipment and verify interface compatibility | | | |
+| Construct a verification matrix with IADT methods | | | |
+| Assess risk using a 5x5 matrix and define mitigations | | | |
+| Estimate mission cost using parametric and bottom-up methods | | | |
+| Design a ground segment and calculate data budget | | | |
+| Define operational modes, FDIR rules, and procedures | | | |
+| Respond to anomalies using a systematic process | | | |
+| Present a design to a review board with evidence | | | |
+
+**Scale:** 1 = No familiarity, 2 = Basic awareness, 3 = Can apply with guidance, 4 = Can apply independently, 5 = Can teach others
+
+**Overall self-assessment:**
+
+At the start of this course, I would describe my systems engineering ability as:
+
+_______________________________________________
+
+Now, I would describe it as:
+
+_______________________________________________
+
+**One thing I am most proud of from this course:**
+
+_______________________________________________
+
+_______________________________________________
+
+---
+
+## Notes & Reflections
+
+Final thoughts on the course, the design process, and what comes next:
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________
+
+_______________________________________________

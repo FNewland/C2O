@@ -13,6 +13,8 @@
 import { useState, useMemo } from 'react'
 import { useDesignStore } from '../stores/designStore'
 import { useActiveParameters } from '../hooks/useActiveParameters'
+import { useSessionStore } from '../stores/sessionStore'
+import { useEquipmentView } from '../hooks/useEquipmentView'
 
 type BudgetType = 'mass' | 'power' | 'link' | 'pointing' | 'deltav' | 'volume' | 'data' | 'cost'
 
@@ -59,9 +61,15 @@ const BUDGET_CONFIGS: { type: BudgetType; label: string; unit: string; color: st
 export function EngineeringBudgets() {
   const params = useActiveParameters()
   const { requirements } = useDesignStore()
-  const selectedEquipment = useDesignStore(s => s.selectedEquipment)
+  const selectedEquipment = useEquipmentView()
   const [activeBudget, setActiveBudget] = useState<BudgetType>('mass')
-  const [designPhase, setDesignPhase] = useState<'phase_a' | 'phase_b' | 'phase_c'>('phase_a')
+  const [designPhase, setDesignPhaseLocal] = useState<'phase_a' | 'phase_b' | 'phase_c'>('phase_a')
+  const parameterOverrides = useDesignStore(s => s.parameterOverrides)
+  const sendEdit = useSessionStore(s => s.sendEdit)
+  const setDesignPhase = (phase: 'phase_a' | 'phase_b' | 'phase_c') => {
+    setDesignPhaseLocal(phase)
+    if (sendEdit) sendEdit('ecss.design_phase', phase, { rationale: 'Design phase changed', editType: 'margin_phase_change' })
+  }
 
   const get = (id: string): number => {
     const p = params[id]
@@ -161,6 +169,13 @@ export function EngineeringBudgets() {
           <option value="phase_b">Phase B (15% margins)</option>
           <option value="phase_c">Phase C (10% margins)</option>
         </select>
+        {Object.keys(parameterOverrides).length > 0 && (
+          <button className="btn btn-sm" onClick={() => {
+            useDesignStore.setState({ parameterOverrides: {}, designStale: true })
+          }} style={{ fontSize: '0.65rem', background: '#374151', color: '#9ca3af' }}>
+            Clear {Object.keys(parameterOverrides).length} override{Object.keys(parameterOverrides).length !== 1 ? 's' : ''}
+          </button>
+        )}
       </div>
       <p style={{ fontSize: '0.72rem', color: '#9ca3af', marginBottom: '0.75rem' }}>
         Per ECSS-E-HB-10-02A. Margins decrease with design maturity. Equipment margins: COTS {margins.off_the_shelf}%, modified {margins.modified}%, new {margins.new_design}%. System margin: {margins.system}%.
@@ -215,28 +230,69 @@ export function EngineeringBudgets() {
           </span>
         </div>
 
-        {/* Per-subsystem breakdown (for mass and power) */}
+        {/* Per-subsystem breakdown (for mass and power) — EDITABLE */}
         {active.lines.length > 0 && (
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.72rem' }}>
             <thead>
               <tr style={{ background: 'var(--bg-primary, #0a0e1a)' }}>
                 <th style={{ padding: '0.25rem 0.5rem', textAlign: 'left', fontSize: '0.65rem', color: '#9ca3af' }}>Subsystem</th>
-                <th style={{ padding: '0.25rem 0.5rem', textAlign: 'right', fontSize: '0.65rem', color: '#9ca3af' }}>Nominal</th>
+                <th style={{ padding: '0.25rem 0.5rem', textAlign: 'right', fontSize: '0.65rem', color: '#9ca3af' }}>Nominal (edit)</th>
                 <th style={{ padding: '0.25rem 0.5rem', textAlign: 'right', fontSize: '0.65rem', color: '#9ca3af' }}>Margin %</th>
                 <th style={{ padding: '0.25rem 0.5rem', textAlign: 'right', fontSize: '0.65rem', color: '#9ca3af' }}>With Margin</th>
                 <th style={{ padding: '0.25rem 0.5rem', textAlign: 'left', fontSize: '0.65rem', color: '#9ca3af' }}>Source</th>
               </tr>
             </thead>
             <tbody>
-              {active.lines.filter(l => l.value > 0).map(l => (
-                <tr key={l.subsystem} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+              {active.lines.filter(l => l.value > 0).map(l => {
+                const paramMap: Record<string, string> = {
+                  'Payload': activeBudget === 'mass' ? 'payload.mass_kg' : 'payload.power_w',
+                  'EPS': activeBudget === 'mass' ? 'power.eps_mass_kg' : 'power.eps_power_w',
+                  'AOCS': activeBudget === 'mass' ? 'aocs.mass_kg' : 'aocs.power_w',
+                  'TTC': activeBudget === 'mass' ? 'link.ttc_mass_kg' : 'link.ttc_power_w',
+                  'TTC (TX)': 'link.ttc_power_w',
+                  'OBC': activeBudget === 'mass' ? 'data.obc_mass_kg' : 'data.obc_power_w',
+                  'Thermal': activeBudget === 'mass' ? 'thermal.tcs_mass_kg' : 'thermal.heater_power_w',
+                  'Structure': 'structure.mass_kg',
+                  'Propulsion': 'propulsion.total_mass_kg',
+                  'Harness': 'harness.mass_kg',
+                }
+                const paramId = paramMap[l.subsystem]
+                const isOverridden = paramId && paramId in parameterOverrides
+                return (
+                <tr key={l.subsystem} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', background: isOverridden ? 'rgba(59,130,246,0.05)' : 'transparent' }}>
                   <td style={{ padding: '0.2rem 0.5rem' }}>{l.subsystem}</td>
-                  <td style={{ padding: '0.2rem 0.5rem', textAlign: 'right', fontFamily: 'monospace' }}>{l.value.toFixed(3)}</td>
+                  <td style={{ padding: '0.2rem 0.5rem', textAlign: 'right' }}>
+                    <input className="input" type="number" step={0.1} value={l.value.toFixed(2)}
+                      onChange={e => {
+                        const newVal = Number(e.target.value)
+                        if (paramId) {
+                          useDesignStore.getState().setParameter(paramId, newVal, 'budgets')
+                          if (sendEdit) sendEdit(paramId, newVal, { rationale: `Manual budget edit: ${l.subsystem}` })
+                        }
+                      }}
+                      style={{ width: '65px', fontSize: '0.72rem', textAlign: 'right', fontFamily: 'monospace' }} />
+                  </td>
                   <td style={{ padding: '0.2rem 0.5rem', textAlign: 'right', color: '#6b7280' }}>+{l.margin_pct}%</td>
                   <td style={{ padding: '0.2rem 0.5rem', textAlign: 'right', fontFamily: 'monospace', fontWeight: 600 }}>{l.value_with_margin.toFixed(3)}</td>
-                  <td style={{ padding: '0.2rem 0.5rem', fontSize: '0.6rem', color: l.source === 'equipment' ? '#10b981' : '#6b7280' }}>{l.source}</td>
+                  <td style={{ padding: '0.2rem 0.5rem', fontSize: '0.6rem' }}>
+                    {(() => {
+                      if (isOverridden) {
+                        return (
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.2rem' }}>
+                            <span style={{ color: '#3b82f6', fontWeight: 600 }}>override</span>
+                            <button onClick={() => {
+                              const next = { ...parameterOverrides }
+                              delete next[paramId]
+                              useDesignStore.setState({ parameterOverrides: next, designStale: true })
+                            }} style={{ background: 'none', border: 'none', color: '#6b7280', cursor: 'pointer', fontSize: '0.6rem' }} title="Reset to computed value">↺</button>
+                          </span>
+                        )
+                      }
+                      return <span style={{ color: l.source === 'equipment' ? '#10b981' : '#6b7280' }}>{l.source}</span>
+                    })()}
+                  </td>
                 </tr>
-              ))}
+              )})}
               <tr style={{ borderTop: '2px solid #374151', fontWeight: 700 }}>
                 <td style={{ padding: '0.2rem 0.5rem' }}>Total + System ({margins.system}%)</td>
                 <td style={{ padding: '0.2rem 0.5rem', textAlign: 'right', fontFamily: 'monospace' }}>{active.total_nominal.toFixed(3)}</td>

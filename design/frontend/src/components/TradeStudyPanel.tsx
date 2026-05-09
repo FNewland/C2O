@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+import { SVGBarChart } from '../charts/SVGBarChart'
 import { useSensitivity, useEOLCurves } from '../hooks/useSession'
 
 // --- Tabular Trade Study Types ---
@@ -103,20 +103,10 @@ export function TradeStudyPanel({ studyId }: { studyId: string | null }) {
         )}
 
         {sweepData.length > 0 && (
-          <div style={{ width: '100%', height: '280px' }}>
-            <ResponsiveContainer>
-              <LineChart data={sweepData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="sweep" tick={{ fontSize: 10, fill: '#9ca3af' }} label={{ value: meta?.label || 'Sweep', position: 'insideBottom', offset: -5, fill: '#9ca3af', fontSize: 10 }} />
-                <YAxis tick={{ fontSize: 10, fill: '#9ca3af' }} />
-                <Tooltip contentStyle={{ background: '#1f2937', border: '1px solid #374151', fontSize: '0.75rem' }} />
-                <Legend wrapperStyle={{ fontSize: '0.75rem' }} />
-                {KEY_METRICS.map(m => (
-                  <Line key={m.id} type="monotone" dataKey={m.id} name={m.label} stroke={m.color} strokeWidth={2} dot={{ r: 3 }} />
-                ))}
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
+          <SVGBarChart
+            data={sweepData.slice(0, 20).map((d: any) => ({ label: String(d.sweep), value: d.mass_kg || 0, color: '#3b82f6' }))}
+            width={500} height={240} unit=" kg" title="Parametric Sweep"
+          />
         )}
       </div>
 
@@ -129,20 +119,10 @@ export function TradeStudyPanel({ studyId }: { studyId: string | null }) {
         {eolData.length === 0 ? (
           <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary, #9ca3af)' }}>Select a study to view EOL curves.</div>
         ) : (
-          <div style={{ width: '100%', height: '260px' }}>
-            <ResponsiveContainer>
-              <LineChart data={eolData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="year" tick={{ fontSize: 10, fill: '#9ca3af' }} label={{ value: 'Mission year', position: 'insideBottom', offset: -5, fill: '#9ca3af', fontSize: 10 }} />
-                <YAxis tick={{ fontSize: 10, fill: '#9ca3af' }} />
-                <Tooltip contentStyle={{ background: '#1f2937', border: '1px solid #374151', fontSize: '0.75rem' }} />
-                <Legend wrapperStyle={{ fontSize: '0.75rem' }} />
-                <Line type="monotone" dataKey="sa_power_w" name="SA power (W)" stroke="#3b82f6" strokeWidth={2} />
-                <Line type="monotone" dataKey="battery_capacity_wh" name="Battery (Wh)" stroke="#10b981" strokeWidth={2} />
-                <Line type="monotone" dataKey="link_margin_db" name="Link margin (dB)" stroke="#8b5cf6" strokeWidth={2} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
+          <SVGBarChart
+            data={eolData.map((d: any) => ({ label: `Yr ${d.year}`, value: d.sa_power_w || 0, color: '#3b82f6' }))}
+            width={500} height={220} unit=" W" title="SA Power Degradation"
+          />
         )}
       </div>
     </div>

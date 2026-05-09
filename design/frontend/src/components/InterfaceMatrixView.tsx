@@ -1,6 +1,13 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
+import { useModelStore } from '../stores/modelStore'
+import { useDesignStore } from '../stores/designStore'
 
-const SUBSYSTEMS = ['power', 'aocs', 'link', 'thermal', 'structure', 'propulsion', 'data', 'payload']
+const DEFAULT_SUBSYSTEMS = ['power', 'aocs', 'link', 'thermal', 'structure', 'propulsion', 'data', 'payload']
+
+// Map subsystem_domain values to display labels used in matrix
+const DOMAIN_ALIASES: Record<string, string> = {
+  eps: 'power', ttc: 'link', obc: 'data',
+}
 
 type ResolutionStatus = 'open' | 'under_discussion' | 'resolved' | 'accepted_risk' | 'deferred'
 
@@ -99,14 +106,85 @@ const STATUS_LABELS: Record<ResolutionStatus, { label: string; color: string }> 
   deferred: { label: 'DEFERRED', color: '#6b7280' },
 }
 
-function getCell(a: string, b: string): InterfaceCell | null {
-  return INTERFACE_DATA[`${a}-${b}`] || INTERFACE_DATA[`${b}-${a}`] || null
-}
+// getCell is now inside the component to access dynamicInterfaces
 
 export function InterfaceMatrixView({ onNavigate }: { onNavigate?: (tab: string) => void }) {
+  const modelInterfaces = useModelStore(s => s.interfaces)
+  const modelElements = useModelStore(s => s.elements)
   const [hoveredCell, setHoveredCell] = useState<string | null>(null)
   const [selectedCell, setSelectedCell] = useState<string | null>(null)
-  const [resolutions, setResolutions] = useState<Map<string, ConflictResolution>>(new Map())
+
+  // Persisted resolutions — survive tab switches and page refresh
+  const storedResolutions = useDesignStore(s => s.interfaceResolutions)
+  const persistResolutions = useDesignStore(s => s.setInterfaceResolutions)
+  const [resolutions, setResolutionsLocal] = useState<Map<string, ConflictResolution>>(() => {
+    const map = new Map<string, ConflictResolution>()
+    for (const [key, val] of Object.entries(storedResolutions || {})) {
+      map.set(key, { cellKey: key, ...val } as ConflictResolution)
+    }
+    return map
+  })
+  const setResolutions = (updater: (prev: Map<string, ConflictResolution>) => Map<string, ConflictResolution>) => {
+    setResolutionsLocal(prev => {
+      const next = updater(prev)
+      // Persist to designStore as plain object
+      const obj: Record<string, { status: string; selectedOption: string; rationale: string; resolvedBy: string }> = {}
+      for (const [k, v] of next) {
+        obj[k] = { status: v.status, selectedOption: v.selectedOption, rationale: v.rationale, resolvedBy: v.resolvedBy }
+      }
+      persistResolutions(obj)
+      return next
+    })
+  }
+
+  // SYSTEM-V: Derive subsystem list from element tree (fall back to defaults)
+  const SUBSYSTEMS = useMemo(() => {
+    const domains = new Set<string>()
+    for (const el of modelElements.values()) {
+      if (el.element_type === 'subsystem' && el.subsystem_domain) {
+        const alias = DOMAIN_ALIASES[el.subsystem_domain] || el.subsystem_domain
+        domains.add(alias)
+      }
+    }
+    // If the element tree has subsystems, use them (in a consistent order)
+    if (domains.size >= 3) {
+      // Order: match default order, then append any extras
+      const ordered: string[] = []
+      for (const d of DEFAULT_SUBSYSTEMS) {
+        if (domains.has(d)) { ordered.push(d); domains.delete(d) }
+      }
+      for (const d of domains) ordered.push(d)
+      return ordered
+    }
+    return DEFAULT_SUBSYSTEMS
+  }, [modelElements])
+
+  // Build dynamic interface data from model if available
+  const dynamicInterfaces = useMemo(() => {
+    const dynamic: Record<string, InterfaceCell> = {}
+    for (const iface of modelInterfaces.values()) {
+      const fromEl = modelElements.get(iface.from_element_id)
+      const toEl = modelElements.get(iface.to_element_id)
+      if (!fromEl || !toEl) continue
+      const aRaw = fromEl.subsystem_domain || fromEl.name.toLowerCase()
+      const bRaw = toEl.subsystem_domain || toEl.name.toLowerCase()
+      const a = DOMAIN_ALIASES[aRaw] || aRaw
+      const b = DOMAIN_ALIASES[bRaw] || bRaw
+      const key = `${a}-${b}`
+      if (!dynamic[key]) {
+        dynamic[key] = { types: [iface.interface_type], description: iface.name || iface.diagram_label || '', hasConflict: false }
+      } else {
+        if (!dynamic[key].types.includes(iface.interface_type)) dynamic[key].types.push(iface.interface_type)
+      }
+    }
+    return dynamic
+  }, [modelInterfaces, modelElements])
+
+  // Cell lookup: prefer model data, fall back to static
+  const getCell = (a: string, b: string): InterfaceCell | null => {
+    return dynamicInterfaces[`${a}-${b}`] || dynamicInterfaces[`${b}-${a}`] || INTERFACE_DATA[`${a}-${b}`] || INTERFACE_DATA[`${b}-${a}`] || null
+  }
+
   const [resolvingCell, setResolvingCell] = useState<string | null>(null)
   const [selectedOption, setSelectedOption] = useState('')
   const [rationale, setRationale] = useState('')
@@ -135,7 +213,10 @@ export function InterfaceMatrixView({ onNavigate }: { onNavigate?: (tab: string)
       </p>
 
       <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.75rem', marginBottom: '0.75rem', alignItems: 'center' }}>
-        <span>{Object.keys(INTERFACE_DATA).length} interfaces</span>
+        <span>{Object.keys(INTERFACE_DATA).length + Object.keys(dynamicInterfaces).length} interfaces</span>
+        {Object.keys(dynamicInterfaces).length > 0 && (
+          <span style={{ color: '#10b981', fontSize: '0.65rem' }}>({Object.keys(dynamicInterfaces).length} from model)</span>
+        )}
         <span style={{ color: '#ef4444' }}>{conflicts.length} conflicts</span>
         <span style={{ color: '#10b981' }}>{resolvedCount} resolved</span>
         <span style={{ color: '#f59e0b' }}>{conflicts.length - resolvedCount} open</span>

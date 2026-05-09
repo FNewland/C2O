@@ -4,8 +4,9 @@
  * Shows one orbit as a circular/linear timeline with mode segments,
  * transition times, and total time accounting.
  */
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useDesignStore } from '../stores/designStore'
+import { useApplyToDesign } from '../hooks/useApplyToDesign'
 
 interface ModeSegment {
   name: string; duration_min: number; power_w: number; color: string; description: string
@@ -42,6 +43,17 @@ export function TimingBudget() {
   }, [sunlightMin, eclipseMin, imagingMin])
 
   const totalMin = segments.reduce((s, seg) => s + seg.duration_min, 0)
+  const [applied, setApplied] = useState(false)
+
+  const apply = useApplyToDesign({
+    events: segments.map(seg => ({
+      kind: 'parameter_override' as const,
+      target_id: `timing.${seg.name.toLowerCase().replace(/[\s\/]+/g, '_')}_min`,
+      new_value: seg.duration_min,
+    })),
+    correlation_id: 'timing-budget',
+    rationale: 'Apply orbit timing budget mode durations',
+  })
 
   return (
     <div className="card">
@@ -104,6 +116,11 @@ export function TimingBudget() {
           </tr>
         </tbody>
       </table>
+
+      <button className="btn" onClick={async () => { await apply(); setApplied(true); setTimeout(() => setApplied(false), 2000) }}
+        style={{ marginTop: '0.5rem', width: '100%', background: applied ? '#10b981' : '#3b82f6', fontSize: '0.78rem' }}>
+        {applied ? 'Applied — reconverging...' : 'Apply to Design'}
+      </button>
     </div>
   )
 }

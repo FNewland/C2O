@@ -12,6 +12,10 @@
  */
 import { useState } from 'react'
 import { useDesignStore } from '../stores/designStore'
+import { useModelStore } from '../stores/modelStore'
+import { useEquipmentView } from '../hooks/useEquipmentView'
+import { SEMPQuestionnaire } from './SEMPQuestionnaire'
+import { DocumentPreview } from './DocumentPreview'
 
 type ExportCategory = 'ecss' | 'regulatory' | 'spectrum' | 'launch' | 'data' | 'engineering'
 
@@ -67,7 +71,13 @@ export function ExportsPanel({ studyId }: { studyId: string | null }) {
   const [activeCategory, setActiveCategory] = useState<ExportCategory>('ecss')
   const [generating, setGenerating] = useState<string | null>(null)
   const [generatedDoc, setGeneratedDoc] = useState<GeneratedDoc | null>(null)
+  const [showSEMP, setShowSEMP] = useState(false)
   const { requirements } = useDesignStore()
+  const sempAnswers = useDesignStore(s => s.sempAnswers)
+  const setSempAnswers = useDesignStore(s => s.setSempAnswers)
+  const modelElements = useModelStore(s => s.elements)
+  const modelInterfaces = useModelStore(s => s.interfaces)
+  const equipment = useEquipmentView()
 
   const generateExport = async (item: typeof EXPORT_ITEMS[0]) => {
     setGenerating(item.id)
@@ -83,13 +93,68 @@ export function ExportsPanel({ studyId }: { studyId: string | null }) {
       }
 
       const body: any = {}
+
+      // Enrich POST body with element tree data for richer document generation
+      if (item.method === 'POST' && modelElements.size > 0) {
+        // Build subsystem summary from element tree
+        const subsystems = Array.from(modelElements.values())
+          .filter(e => e.element_type === 'subsystem')
+          .map(e => ({ id: e.id, name: e.name, domain: e.subsystem_domain, segment: e.segment, mass_kg: e.mass_kg, power_w: e.power_avg_w }))
+        body.subsystems = subsystems
+
+        // Build equipment BOM from element tree + flat store
+        body.equipment_bom = equipment.map(e => ({
+          name: e.name, category: e.category, component_id: e.componentId,
+          mass_kg: e.mass_kg, power_w: e.power_w, cost_keur: e.cost_keur, quantity: e.quantity,
+        }))
+
+        // Build interface summary
+        body.interfaces = Array.from(modelInterfaces.values()).map(i => ({
+          name: i.name, type: i.interface_type, from: i.from_element_id, to: i.to_element_id,
+        }))
+      }
+
       if (item.category === 'regulatory') {
+        // Pass full design parameters for deep auto-population
+        const result = useDesignStore.getState().result
+        const params = result?.parameters || {}
+        const getP = (id: string) => { const p = (params as any)[id]; return p && typeof p.value === 'number' ? p.value : undefined }
         body.study_name = requirements.name
+        body.mission_type = requirements.mission_type
         body.orbit_altitude_km = requirements.orbit.altitude_km
         body.orbit_inclination_deg = requirements.orbit.inclination_deg
+        body.orbit_type = requirements.orbit.orbit_type
+        body.design_lifetime_years = requirements.design_lifetime_years
         body.operator_name = ''
         body.has_imaging = requirements.mission_type === 'earth_observation'
         body.country_of_origin = 'Canada'
+        body.mission_id = useDesignStore.getState().missionId
+        // Design parameters for auto-computation
+        body.design_params = {
+          mass_kg: getP('mass.dry_mass_kg') || getP('systems.total_mass_kg'),
+          power_w: getP('power.sa_power_eol_w'),
+          tx_power_w: getP('link.ttc_power_w'),
+          antenna_gain_dbi: getP('link.antenna_gain_dbi'),
+          data_rate_mbps: requirements.payloads?.[0]?.data_rate_mbps,
+          pointing_accuracy_deg: getP('aocs.pointing_accuracy_deg'),
+          isp_s: getP('propulsion.isp_s'),
+          battery_capacity_wh: getP('power.battery_capacity_wh'),
+          delta_v_ms: getP('propulsion.delta_v_total_ms'),
+        }
+        // Ground stations for RSSSA/ITU
+        body.ground_stations = useDesignStore.getState().groundStations?.map((gs: any) => ({
+          name: gs.name, latitude: gs.latitude, longitude: gs.longitude, bands: gs.bands,
+        }))
+        // Payload info
+        if (requirements.payloads?.[0]) {
+          body.payload = {
+            name: requirements.payloads[0].name,
+            mass_kg: requirements.payloads[0].mass_kg,
+            power_w: requirements.payloads[0].power_w,
+            data_rate_mbps: requirements.payloads[0].data_rate_mbps,
+            pointing_accuracy_deg: requirements.payloads[0].pointing_accuracy_deg,
+          }
+        }
       }
       if (item.id === 'duty_cycles') {
         body.spacecraft_class = requirements.spacecraft_class
@@ -129,9 +194,46 @@ export function ExportsPanel({ studyId }: { studyId: string | null }) {
   return (
     <div style={{ padding: '1rem', overflowY: 'auto', height: '100%' }}>
       <h2 style={{ marginBottom: '0.25rem' }}>Exports & Documents</h2>
-      <p style={{ fontSize: '0.78rem', color: '#9ca3af', marginBottom: '0.75rem' }}>
+      <p style={{ fontSize: '0.78rem', color: '#9ca3af', marginBottom: '0.5rem' }}>
         Generate ECSS documents, regulatory filings, spectrum analysis, and design data exports.
       </p>
+
+      {/* Quick action buttons */}
+      <div style={{ display: 'flex', gap: '0.3rem', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
+        <button className="btn btn-sm" onClick={() => setShowSEMP(true)}
+          style={{ fontSize: '0.72rem', background: Object.keys(sempAnswers).length > 0 ? '#10b981' : '#3b82f6' }}>
+          {Object.keys(sempAnswers).length > 0 ? 'Update SEMP Inputs' : 'Configure SEMP'}
+        </button>
+        {studyId && (
+          <button className="btn btn-sm" onClick={() => window.open(`/api/lifecycle/bom/${studyId}?fmt=csv`, '_blank')}
+            style={{ fontSize: '0.72rem', background: '#8b5cf6' }}>
+            Export BOM (CSV)
+          </button>
+        )}
+      </div>
+
+      {/* Full design export — element tree + all state */}
+      {modelElements.size > 0 && (
+        <button className="btn btn-sm" onClick={() => {
+          const exportData = {
+            exported_at: new Date().toISOString(),
+            study_id: studyId,
+            requirements,
+            elements: Array.from(modelElements.values()),
+            interfaces: Array.from(modelInterfaces.values()),
+            equipment_bom: equipment,
+            design_result: useDesignStore.getState().result,
+            budget_allocations: useDesignStore.getState().budgetAllocations,
+          }
+          const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' })
+          const url = URL.createObjectURL(blob)
+          const a = document.createElement('a')
+          a.href = url; a.download = `spacecdf-full-${new Date().toISOString().slice(0, 10)}.json`
+          a.click(); URL.revokeObjectURL(url)
+        }} style={{ fontSize: '0.72rem', marginBottom: '0.75rem', background: '#10b981' }}>
+          Export Full Design (Element Tree + BOM + Budgets)
+        </button>
+      )}
 
       {/* Category tabs */}
       <div style={{ display: 'flex', gap: '0.3rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
@@ -163,44 +265,64 @@ export function ExportsPanel({ studyId }: { studyId: string | null }) {
               style={{ fontSize: '0.7rem', whiteSpace: 'nowrap' }}>
               {generating === item.id ? 'Generating...' : 'JSON'}
             </button>
-            {item.category === 'ecss' && ['mrd', 'conops_doc', 'test_plan'].includes(item.id) && (
+            {/* .docx download — available for ECSS, regulatory, and engineering docs */}
+            {(item.category === 'ecss' || item.category === 'regulatory' || item.category === 'engineering') && (
               <button className="btn btn-sm" onClick={() => {
-                const url = `/api/exports/docx/${item.id === 'conops_doc' ? 'conops' : item.id === 'test_plan' ? 'vp' : item.id}${studyId ? `?study_id=${studyId}` : ''}`
+                const docxMap: Record<string, string> = {
+                  mrd: 'mrd', conops_doc: 'conops', test_plan: 'testplan',
+                  ts: 'ts', ird: 'ird', semp: 'semp', rmp: 'rmp', vp: 'vp',
+                  // Regulatory — mapped to docx generator or falls back to JSON download
+                  itu_api: 'itu_api', iaru: 'iaru', rsssa: 'rsssa', export: 'export',
+                  copuos: 'copuos', eol: 'eol',
+                  // Engineering
+                  srr_docs: 'srr', pdr_docs: 'pdr', cdr_docs: 'cdr',
+                }
+                const docType = docxMap[item.id] || item.id
+                const url = `/api/exports/docx/${docType}${studyId ? `?study_id=${studyId}` : ''}`
                 window.open(url, '_blank')
-              }} style={{ fontSize: '0.7rem', whiteSpace: 'nowrap', background: '#3b82f6' }}>
-                Word
+              }} style={{ fontSize: '0.7rem', whiteSpace: 'nowrap', background: item.category === 'ecss' ? '#3b82f6' : item.category === 'regulatory' ? '#f59e0b' : '#8b5cf6' }}>
+                .docx
               </button>
             )}
           </div>
         ))}
       </div>
 
-      {/* Generated document viewer */}
+      {/* Generated document viewer — renders sections, tables, and diagrams */}
       {generatedDoc && (
-        <div style={{
-          padding: '0.75rem', borderRadius: '6px',
-          background: 'var(--bg-primary, #0a0e1a)', border: '1px solid var(--border, #374151)',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-            <span style={{ fontWeight: 700, fontSize: '0.9rem' }}>{generatedDoc.title}</span>
-            <button className="btn btn-sm" onClick={() => {
-              const blob = new Blob([JSON.stringify(generatedDoc.content, null, 2)], { type: 'application/json' })
-              const url = URL.createObjectURL(blob)
-              const a = document.createElement('a')
-              a.href = url
-              a.download = `${generatedDoc.title.replace(/\s+/g, '_')}.json`
-              a.click()
-            }} style={{ fontSize: '0.68rem' }}>Download JSON</button>
-          </div>
-          <pre style={{
-            fontSize: '0.72rem', color: '#d1d5db', overflow: 'auto', maxHeight: '400px',
-            background: '#111827', padding: '0.5rem', borderRadius: '4px',
-            whiteSpace: 'pre-wrap', wordBreak: 'break-word',
-          }}>
-            {JSON.stringify(generatedDoc.content, null, 2)}
-          </pre>
-        </div>
+        <DocumentPreview
+          title={generatedDoc.title}
+          content={generatedDoc.content}
+          onClose={() => setGeneratedDoc(null)}
+        />
       )}
+      {/* SEMP Questionnaire wizard */}
+      <SEMPQuestionnaire
+        isOpen={showSEMP}
+        onClose={() => setShowSEMP(false)}
+        onSubmit={(answers) => {
+          setSempAnswers(answers)
+          setShowSEMP(false)
+        }}
+        subsystemTRLs={(() => {
+          // Read actual TRLs from element tree subsystems
+          const trls: Record<string, number> = {}
+          for (const el of modelElements.values()) {
+            if (el.element_type === 'subsystem' && el.subsystem_domain && el.trl) {
+              trls[el.subsystem_domain] = el.trl
+            } else if (el.element_type === 'component' && el.subsystem_domain && el.trl) {
+              // Use min TRL of components in each subsystem (weakest link)
+              const current = trls[el.subsystem_domain]
+              if (!current || el.trl < current) trls[el.subsystem_domain] = el.trl
+            }
+          }
+          // Default fallback for domains without elements
+          const defaults: Record<string, number> = { power: 9, aocs: 8, ttc: 9, thermal: 9, structure: 9, propulsion: 7, obc: 9, payload: 6 }
+          return { ...defaults, ...trls }
+        })()}
+        orbitAltitude={requirements?.orbit?.altitude_km || 500}
+        missionDurationYears={requirements?.design_lifetime_years || 3}
+      />
     </div>
   )
 }
