@@ -279,6 +279,49 @@ Mitigation: error-correcting memory (EDAC), watchdog timers, latch-up protection
 
 ---
 
+### 1U Worked Example: UniSat-1
+
+**Orbit Selection: ISS Orbit (400 km, 51.6 deg) for Rideshare**
+
+UniSat-1 selects the ISS orbit not by optimisation but by **access**: deployment from the ISS via NanoRacks or a similar deployer is the cheapest and most accessible launch opportunity for a university 1U CubeSat.
+
+> **Worked Example -- Orbital Parameters at 400 km, 51.6 deg**
+>
+> **Step 1 -- Semi-major axis:**
+> $a = 6371 + 400 = 6771$ km $= 6.771 \times 10^6$ m
+>
+> **Step 2 -- Orbital period:**
+> $T = 2\pi \sqrt{\frac{(6.771 \times 10^6)^3}{3.986 \times 10^{14}}} = 2\pi \times 5564 = 5565$ s $\approx$ **92.4 min**
+>
+> **Step 3 -- Orbital velocity:**
+> $v = \sqrt{\frac{3.986 \times 10^{14}}{6.771 \times 10^6}} =$ **7672 m/s** $\approx$ 7.67 km/s
+>
+> **Step 4 -- Eclipse fraction (maximum):**
+> $f = \frac{1}{\pi} \arccos\left(\frac{\sqrt{6771^2 - 6371^2}}{6771}\right) = \frac{1}{\pi} \arccos(0.3423) = \frac{1}{\pi} \times 70.0\degree \approx$ **0.389** (38.9%)
+>
+> **Step 5 -- Eclipse and sunlight duration:**
+> $t_{\text{eclipse}} = 92.4 \times 0.389 \approx$ **36 min**; $\quad t_{\text{sun}} = 92.4 - 36 =$ **56 min**
+
+**Why this orbit works for UniSat-1:**
+
+| Factor | 400 km / 51.6 deg | Impact on UniSat-1 |
+|--------|-------------------|-------------------|
+| Launch cost | Lowest (ISS resupply rideshare) | Fits university budget |
+| Orbital lifetime | ~1 year (natural decay) | Exceeds 6-month mission; compliant with FCC 5-year rule without propulsion |
+| Radiation | Low (~2--3 krad/yr behind 2 mm Al) | COTS electronics safe for 6-month mission |
+| Inclination | 51.6 deg | Adequate latitude coverage for space weather science |
+| Eclipse | ~36 min (~39% of orbit) | Manageable with 10 Wh battery |
+| Ground contacts | Mid-latitude stations: ~4--6 passes/day | Sufficient for 9600 bps UHF downlink |
+
+**What this orbit does NOT provide:**
+- Sun-synchronous lighting (not needed -- magnetometer is not an optical instrument)
+- Polar coverage (acceptable -- 51.6 deg covers the majority of magnetic field variation)
+- Long lifetime (acceptable -- 6-month design life is well within ~1-year natural lifetime)
+
+**No propulsion trade:** At 400 km, atmospheric drag causes natural re-entry within approximately 1 year (depending on solar activity and ballistic coefficient). UniSat-1 therefore needs no propulsion system for either orbit maintenance or debris compliance. This eliminates an entire subsystem -- a major simplification for a 1U mission.
+
+---
+
 ## 7. SpaceCDF Orbit Trade Exercise (20 min)
 
 ### Instructions

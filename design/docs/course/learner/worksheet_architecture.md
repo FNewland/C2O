@@ -80,3 +80,84 @@ For your selected TTC architecture, draw the block diagram showing:
 3. Did any architecture selection conflict with another subsystem's choice?
 
    _______________________________________________
+
+---
+
+## Part F: 1U CubeSat Architecture Exercise (UniSat-1)
+
+Use the SpaceCDF "Load Example" button to load the **UniSat-1 (1U Tech Demo)** mission. This pre-loads a MEMS magnetometer technology demonstrator with all requirements and equipment pre-selected.
+
+### F1: Mass Budget Analysis
+
+The 1U CubeSat standard allows 1.33 kg maximum. Complete the table from the loaded equipment:
+
+| Component | Mass (kg) | % of Total |
+|-----------|-----------|------------|
+| Structure (ISIS 1U) | 0.200 | |
+| EPS (NanoPower P31us) | 0.042 | |
+| Battery (NanoPower P31u) | 0.060 | |
+| Solar Panels (5x body-mount) | 0.150 | |
+| UHF Transceiver (ISIS TRXVU) | 0.080 | |
+| UHF Monopole Antenna | 0.010 | |
+| OBC (Endurosat Type I) | 0.058 | |
+| Payload (MEMS Magnetometer) | 0.050 | |
+| **Harness + fasteners (est.)** | 0.050 | |
+| **Total** | | |
+| **Margin to 1.33 kg** | | |
+
+Is the margin sufficient for a 1U mission? What is the typical recommended margin at Phase A?
+
+_______________________________________________
+
+### F2: Power Budget (Orbit-Average)
+
+With 5 body-mounted solar panels (2.3 W each, but only ~2-3 faces illuminated at any time):
+
+| Parameter | Value |
+|-----------|-------|
+| Max solar input (2-3 panels illuminated) | _____ W |
+| Eclipse fraction (ISS orbit, 400 km) | ~35% |
+| Orbit-average solar power | _____ W |
+| Battery discharge during eclipse | _____ W |
+| Payload (always on) | 0.2 W |
+| OBC (always on) | 0.4 W |
+| Comms (UHF, ~10% duty cycle) | _____ W avg |
+| **Total orbit-average consumption** | _____ W |
+
+Is the power budget positive? What happens if the magnetometer duty cycle is reduced to 50%?
+
+_______________________________________________
+
+### F3: 1U Architecture Constraints
+
+Answer the following questions about the 1U form factor:
+
+1. Why is passive thermal control (no heaters) acceptable for this mission?
+
+   _______________________________________________
+
+2. Why is a magnetometer-only payload well-suited to a 1U platform?
+
+   _______________________________________________
+
+3. What AOCS approach is appropriate for a magnetometer mission on 1U? (Hint: consider magnetic cleanliness vs. magnetic torquers)
+
+   _______________________________________________
+
+4. The selected UHF link gives ~1 kbps. How much data can be downlinked per 10-minute ground pass?
+
+   _______________________________________________
+
+5. Is this sufficient for the magnetometer's data rate? Show your calculation.
+
+   _______________________________________________
+
+### F4: What Would Break at 1U?
+
+List three mission types that would NOT fit in a 1U form factor, and explain the limiting constraint for each:
+
+| Mission Type | Limiting Constraint |
+|-------------|-------------------|
+| 1. | |
+| 2. | |
+| 3. | |

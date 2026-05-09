@@ -206,6 +206,65 @@ In SpaceCDF, the BOM is built automatically from the Equipment Browser selection
 
 ---
 
+### 1U Worked Example: UniSat-1
+
+**Complete Bill of Materials**
+
+UniSat-1's BOM is remarkably short -- only 5--7 line items plus harness. This simplicity is a major advantage for university teams with limited procurement experience.
+
+> **UniSat-1 BOM (Phase B -- vendor quotes obtained):**
+>
+> | Item ID | Component | Manufacturer | Part Number | Qty | Unit Mass (g) | Unit Cost (kEUR) | TRL | ECCN | Lead (wks) |
+> |---------|-----------|-------------|-------------|-----|---------------|-----------------|-----|------|-----------|
+> | STR-001 | 1U CubeSat Structure | ISIS | ISIS-1U-STR | 1 | 200 | 4.0 | 9 | EAR99 | 8 |
+> | EPS-001 | NanoPower P31us (EPS + 10Wh battery) | GomSpace | P31US-10 | 1 | 200 | 12.0 | 9 | EAR99 | 12 |
+> | EPS-SA-001 | Body-mounted GaAs solar cells | AzurSpace | 3G30C | 5 | 10 | 1.5 | 9 | EAR99 | 10 |
+> | OBC-001 | Custom flight computer (Cortex-M) | In-house | UNISAT-OBC-01 | 1 | 30 | 3.0 | 5 | EAR99 | -- |
+> | COM-001 | UHF Transceiver | GomSpace | NanoCom AX100 | 1 | 55 | 8.0 | 8 | EAR99 | 12 |
+> | COM-ANT-001 | UHF Deployable Antenna | Endurosat | UHF-ANT-S | 1 | 25 | 2.5 | 8 | EAR99 | 8 |
+> | PL-001 | MEMS Magnetometer Board | In-house | UNISAT-MAG-01 | 1 | 50 | 5.0 | 4 | EAR99 | -- |
+> | AOCS-001 | Passive magnetic kit (magnet + rods) | NewSpace | PMAG-1U | 1 | 30 | 1.0 | 9 | EAR99 | 6 |
+> | HAR-001 | Internal harness | Custom | -- | 1 | 50 | 1.0 | N/A | EAR99 | -- |
+> | | **TOTALS** | | | | **690 g** | **~44 kEUR** | | | |
+
+**Cost summary (total mission, hardware + services):**
+
+| WBS Element | Cost (kEUR) | Notes |
+|-------------|------------|-------|
+| Hardware (BOM) | 44 | All COTS except OBC and payload |
+| OBC software | 5 | Student labour (costed at stipend rate) |
+| Payload calibration | 3 | University magnetometer lab |
+| I&T | 8 | Assembly + vibration test (university facility) |
+| Ground station | 5 | SatNOGS (free) + dedicated Yagi antenna purchase |
+| Launch (ISS deploy) | 15 | NanoRacks 1U deployment fee |
+| PM/SE/QA | 5 | Faculty supervision |
+| **TOTAL** | **~85 kEUR** | |
+
+**Comparison to 3U EO mission:**
+
+| Metric | UniSat-1 (1U) | 3U EO CubeSat |
+|--------|--------------|---------------|
+| BOM line items | 9 | ~15--20 |
+| Hardware cost | ~44 kEUR | ~290 kEUR |
+| Total mission cost | ~85 kEUR | ~490 kEUR |
+| Development time | 6--12 months | 18--24 months |
+| Team size | 3--5 people | 8--15 people |
+
+**Export control:** All UniSat-1 components are classified EAR99 (no licence required). There are no ITAR-controlled items because the mission uses no star trackers, no radiation-hardened processors, and no propulsion with ITAR-restricted technology. This is a significant advantage for international university collaborations.
+
+**Make/Buy/Reuse decisions:**
+
+| Component | Decision | Rationale |
+|-----------|----------|-----------|
+| Structure | Buy (COTS) | ISIS 1U frame is flight-proven, TRL 9, low cost |
+| EPS | Buy (COTS) | GomSpace P31us is the de facto standard, TRL 9 |
+| OBC | Make (custom) | Minimal board using university lab; lower cost than COTS OBC for this simple application |
+| Comms | Buy (COTS) | GomSpace AX100, TRL 8, well-documented |
+| Payload | Make (custom) | Novel MEMS sensor -- this IS the technology demonstration |
+| Passive AOCS | Buy (COTS) | Standard magnetic stabilisation kit |
+
+---
+
 ## 4. Export Control and Procurement (25 min)
 
 ### Teaching Notes

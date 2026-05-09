@@ -321,6 +321,45 @@ Every requirement must have an assigned verification method. The four standard m
 > | SR-LINK-001 (downlink) | A | B | Link budget analysis |
 > | SSR-PL-001a (aperture) | I | D | Physical measurement |
 
+### 1U Worked Example: UniSat-1
+
+> **Worked Example -- Deriving Requirements for a 1U Technology Demonstrator**
+>
+> **Stakeholder need:** "Demonstrate the feasibility of a MEMS-based magnetometer for space weather monitoring in LEO."
+>
+> **Step 1 -- Mission requirements:**
+>
+> | ID | Requirement | Type | Rationale |
+> |----|------------|------|-----------|
+> | MR-001 | "The system shall measure the local magnetic field vector with resolution <= 10 nT at 1 Hz sampling rate for a minimum of 6 months." | Performance | Minimum science return for technology validation |
+> | MR-002 | "The system total mass shall not exceed 1.33 kg." | Constraint | CDS Rev 14, 1U mass limit |
+> | MR-003 | "The system shall downlink at least 1 MB of magnetometer data per day." | Performance | Sufficient for statistical analysis of sensor performance |
+> | MR-004 | "The system shall operate for a minimum of 6 months in LEO." | Performance | Minimum mission duration for seasonal variation coverage |
+>
+> **Step 2 -- System requirements (decomposed):**
+> - SR-PWR-001: "The EPS shall provide orbit-average power >= 2 W to all subsystems."
+> - SR-PWR-002: "The battery shall provide >= 10 Wh capacity."
+> - SR-LINK-001: "The comms system shall provide a downlink data rate >= 9600 bps."
+> - SR-LINK-002: "The comms system shall achieve link margin >= 3 dB at 10 deg minimum elevation."
+> - SR-OBC-001: "The OBC shall consume <= 0.5 W average power."
+> - SR-STR-001: "The structure shall comply with CDS Rev 14, 1U envelope (100 x 100 x 113.5 mm)."
+>
+> **Step 3 -- Subsystem requirements (derived):**
+> - SSR-PWR-001a: "Body-mounted solar cells shall generate >= 2 W orbit-average power accounting for eclipse and geometry." [Derived from power budget]
+> - SSR-LINK-001a: "The UHF transmitter shall provide >= 0.5 W RF output at 437 MHz." [Derived from link budget]
+>
+> **Step 4 -- Verification assignment:**
+>
+> | Requirement | Method | Phase | Rationale |
+> |-------------|--------|-------|-----------|
+> | MR-001 (magnetometer performance) | T + D | D + E | Ground calibration then in-orbit demonstration |
+> | MR-002 (mass <= 1.33 kg) | I | D | Weigh the flight unit |
+> | SR-PWR-001 (orbit-avg power) | A | B | Power budget analysis |
+> | SR-LINK-001 (9600 bps downlink) | A + D | B + E | Link budget analysis; demonstrated from orbit |
+> | SR-STR-001 (CDS compliance) | I | D | Physical measurement against CDS template |
+>
+> **Key difference from 3U:** The 1U requirement set is much smaller (~15--20 requirements vs ~40--60 for a 3U EO mission). There are no pointing requirements, no imaging requirements, and no propulsion requirements. This makes the verification campaign significantly simpler and cheaper.
+
 ---
 
 ## 7. SpaceCDF Exercise (30 min)

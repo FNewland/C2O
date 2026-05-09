@@ -335,6 +335,52 @@ After equipment selection, perform a final budget health check:
 
 ---
 
+### 1U Worked Example: UniSat-1
+
+**CDS Compliance for 1U Form Factor**
+
+The CubeSat Design Specification (CDS Rev 14) defines the 1U envelope:
+
+| Parameter | 1U Specification | UniSat-1 Design |
+|-----------|-----------------|-----------------|
+| Dimensions | 100.0 x 100.0 x 113.5 mm | 100.0 x 100.0 x 113.5 mm (ISIS 1U frame) |
+| Maximum mass | 1.33 kg (CDS Rev 14) | 1.0 kg target (25% margin) |
+| Rail material | Hard anodised Al 7075-T6 | Standard (part of ISIS frame) |
+| Rail cross-section | 8.5 x 8.5 mm minimum | Standard (ISIS) |
+| Deployment switches | Minimum 1 per accessible face | 2 switches (ISIS standard) |
+| RBF pin | Required | Included |
+| CG offset | <= 2 cm from geometric centre | < 1 cm (symmetric layout) |
+| Protrusions | None beyond rail envelope (stowed) | UHF antenna stowed along rail |
+
+**Note on CDS mass limit:** The CDS Rev 14 specifies 2.0 kg as the 1U deployer limit for the ISIPOD. However, many deployer providers (e.g., NanoRacks, Exolaunch) specify 1.33 kg for 1U. Always check the specific deployer ICD. UniSat-1 targets 1.0 kg, well within either limit.
+
+**No propulsion:** At 400 km altitude, atmospheric drag provides natural deorbit within approximately 1 year. The ballistic coefficient for a 1U is:
+
+$BC = \frac{m}{C_D \times A} = \frac{1.0}{2.2 \times 0.01} = 45.5$ kg/m$^2$
+
+This gives an orbital lifetime of approximately 8--14 months depending on solar activity (F10.7 index). The FCC 5-year rule and IADC 25-year guideline are both satisfied without any propulsion system.
+
+**Complete 1U Equipment List:**
+
+> | # | Category | Component | Mass (g) | Power (W) | Cost (kEUR) | Qty |
+> |---|----------|-----------|----------|----------|-------------|-----|
+> | 1 | Structure | ISIS 1U CubeSat structure | 200 | -- | 4.0 | 1 |
+> | 2 | EPS | GomSpace NanoPower P31us (board + battery) | 200 | 0.3 | 12.0 | 1 |
+> | 3 | Solar cells | Body-mounted GaAs cells (5 faces) | 50 | -- | 8.0 | 5 |
+> | 4 | OBC | Custom MSP430/Cortex-M board | 30 | 0.3 | 3.0 | 1 |
+> | 5 | Comms | UHF transceiver (e.g., NanoCom AX100) | 60 | 0.5 (TX) | 8.0 | 1 |
+> | 6 | Antenna | UHF monopole/dipole (deployable) | 20 | -- | 2.0 | 1 |
+> | 7 | Payload | MEMS magnetometer (custom PCB) | 50 | 0.2 | 5.0 | 1 |
+> | 8 | AOCS (passive) | Permanent magnet + hysteresis rods | 30 | 0 | 1.0 | 1 |
+> | 9 | Harness | Internal cables, connectors | 50 | -- | 1.0 | 1 |
+> | | **TOTAL** | | **690** | **~1.3 (peak)** | **~44** | |
+>
+> **Mass margin:** 1330 - 690 = 640 g (48%) or 1330 - 994 (MEV with 20% equip + 20% system) = 336 g (25%). **Green.**
+>
+> **Key insight:** The entire UniSat-1 BOM is 5 COTS components plus 2 custom boards (OBC and magnetometer). Total hardware cost is ~44 kEUR -- an order of magnitude less than a typical 3U mission. With labour, I&T, and launch, the total mission cost is 80--150 kEUR.
+
+---
+
 ## Worked Example: Complete 3U EO CubeSat Equipment List
 
 > | Category | Component | Mass (kg) | Power (W) | Cost (kEUR) | Qty |

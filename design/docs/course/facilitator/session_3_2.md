@@ -247,6 +247,50 @@ The standard 4-wheel configuration provides full 3-axis control with one spare:
 
 ---
 
+### 1U Worked Example: UniSat-1
+
+**Passive Magnetic Attitude Stabilisation**
+
+UniSat-1 does not have an active AOCS. Instead, it uses **passive magnetic stabilisation** -- the simplest and cheapest attitude control method, requiring zero power and minimal mass.
+
+**How it works:**
+
+1. **Permanent magnet:** A small bar magnet (typically AlNiCo or NdFeB, ~10--20 g) is embedded along one body axis. This magnet aligns the satellite with Earth's local magnetic field, like a compass needle, so that the magnet axis points roughly along the field lines.
+
+2. **Hysteresis rods:** Two or more strips of magnetically soft material (e.g., Permalloy or HyMu-80, ~5--10 g each) are mounted perpendicular to the permanent magnet. As the satellite oscillates around the field-aligned equilibrium, the hysteresis rods dissipate energy through magnetic hysteresis losses, damping the oscillations over time.
+
+**Performance:**
+
+| Parameter | Passive Magnetic | Active (RW + ST) |
+|-----------|-----------------|------------------|
+| Pointing accuracy | ~10--15 deg (to local B-field) | < 0.1 deg (to inertial frame) |
+| Settling time | Hours to days after deployment | Minutes after mode transition |
+| Residual tumble rate | ~1--5 deg/s (damped from initial ~10 deg/s) | < 0.01 deg/s |
+| Power | 0 W | 3--5 W |
+| Mass | ~30--50 g | 500--800 g |
+| Cost | ~2 kEUR | ~55 kEUR |
+
+**Why this works for UniSat-1:**
+
+The MEMS magnetometer payload does not require accurate pointing. In fact, it benefits from being in a slowly rotating/tumbling state because this provides magnetic field measurements across multiple directions, improving the scientific data quality. The magnetometer can measure the field vector regardless of spacecraft orientation.
+
+**No pointing budget needed:** Since there is no payload pointing requirement, there is no need for a pointing error budget. This eliminates the star tracker, reaction wheels, magnetorquers (as actuators), sun sensors, and gyroscopes -- removing the most expensive and power-hungry subsystem from the design.
+
+> **Disturbance environment for 1U at 400 km:**
+>
+> | Source | Torque (N m) | Notes |
+> |--------|-------------|-------|
+> | Gravity gradient | ~$1 \times 10^{-8}$ | Small due to nearly cubic 1U shape ($I_z \approx I_x$) |
+> | Aerodynamic | ~$3 \times 10^{-8}$ | Higher than 3U at 500 km due to lower altitude (higher $\rho$) |
+> | Solar radiation pressure | ~$1 \times 10^{-9}$ | Small area |
+> | Permanent magnet (restoring) | ~$1 \times 10^{-5}$ | Dominant -- this IS the control torque |
+>
+> The permanent magnet restoring torque (~$10^{-5}$ N m) is three orders of magnitude larger than all disturbances combined. This ensures the satellite remains approximately field-aligned.
+
+**Limitation:** Passive magnetic stabilisation provides alignment to the *local* magnetic field, which rotates as the satellite orbits. The satellite does not point at nadir, the Sun, or any fixed direction. For missions requiring Earth-pointing or Sun-tracking, active AOCS is mandatory. For UniSat-1's magnetometer mission, this is not a limitation -- it is a feature.
+
+---
+
 ## 6. SpaceCDF Exercise (30 min)
 
 ### Instructions

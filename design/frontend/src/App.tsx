@@ -247,8 +247,46 @@ function AppShell() {
         <button onClick={() => {
           if (!confirm('Start new? Save first if needed.')) return
           localStorage.removeItem('spacecdf-design-state'); window.location.reload()
-        }} style={{ margin: '0.15rem 0.25rem 0.5rem', padding: '0.3rem', borderRadius: '4px', background: '#1f2937', border: 'none', color: '#6b7280', fontSize: '0.5rem', cursor: 'pointer' }}>
+        }} style={{ margin: '0.15rem 0.25rem', padding: '0.3rem', borderRadius: '4px', background: '#1f2937', border: 'none', color: '#6b7280', fontSize: '0.5rem', cursor: 'pointer' }}>
           New
+        </button>
+        <button onClick={async () => {
+          try {
+            const res = await fetch('/api/lifecycle/example-missions')
+            const data = await res.json()
+            const missions: Array<{ id: string; name: string; description: string }> = data.missions || []
+            if (missions.length === 0) { alert('No example missions available.'); return }
+            const choice = prompt(
+              'Load Example Mission:\n\n' +
+              missions.map((m, i) => `${i + 1}. ${m.name}\n   ${m.description}`).join('\n\n') +
+              '\n\nEnter number:'
+            )
+            if (!choice) return
+            const idx = parseInt(choice, 10) - 1
+            if (idx < 0 || idx >= missions.length) { alert('Invalid selection.'); return }
+            const selected = missions[idx]
+            const fullRes = await fetch(`/api/lifecycle/example-missions/${selected.id}`)
+            const mission = await fullRes.json()
+            if (!mission.requirements) { alert('Invalid mission data.'); return }
+            // Generate a new missionId
+            const newMissionId = `SCDF-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 900) + 100)}`
+            // Apply to design store
+            useDesignStore.setState({
+              requirements: mission.requirements,
+              missionNeed: mission.mission_need || {},
+              selectedEquipment: mission.selected_equipment || [],
+              missionId: newMissionId,
+              result: null,
+              studyId: null,
+              designStale: true,
+              error: null,
+            })
+            setActivePhaseRaw(0 as Phase)
+          } catch (err) {
+            alert('Could not load example missions. Check server connection.')
+          }
+        }} style={{ margin: '0.15rem 0.25rem 0.5rem', padding: '0.3rem', borderRadius: '4px', background: '#1e3a5f', border: '1px solid #3b82f6', color: '#93c5fd', fontSize: '0.5rem', cursor: 'pointer' }}>
+          Example
         </button>
       </nav>
 

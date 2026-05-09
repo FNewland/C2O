@@ -507,6 +507,35 @@ The most productive CDF sessions are those where **interface conflicts** are ide
 
 ---
 
+### 1U Worked Example: UniSat-1
+
+Throughout this course, we use a second running example alongside the 3U EO CubeSat: **UniSat-1**, a 1U CubeSat technology demonstrator designed by a university team. This is the simplest realistic spacecraft design.
+
+**Mission:** Demonstrate a novel MEMS-based magnetometer for space weather monitoring from LEO.
+
+**Why 1U?** The 1U form factor (100 x 100 x 113.5 mm, up to 1.33 kg) is the smallest standard CubeSat and the entry point for many university and educational missions. It forces extreme design discipline -- every gram, every milliwatt, and every cubic centimetre matters.
+
+| Parameter | Value |
+|-----------|-------|
+| Form factor | 1U (100 x 100 x 113.5 mm) |
+| Mass limit | 1.33 kg (CDS Rev 14) |
+| Target mass | 1.0 kg |
+| Orbit | 400 km circular, 51.6 deg (ISS rideshare) |
+| Design lifetime | 6 months |
+| Payload | MEMS magnetometer (50 g, 0.2 W, < 1 kbps) |
+| Comms | UHF 437 MHz, 9600 bps |
+| Power | ~2 W orbit average (body-mounted solar cells) |
+| AOCS | Passive magnetic (permanent magnet + hysteresis rods) |
+| Propulsion | None (natural deorbit in ~1 year) |
+| Estimated cost | 50--200 kEUR |
+| Development time | 6--12 months |
+
+UniSat-1 illustrates that a meaningful space mission can be accomplished with just five subsystems (EPS, OBC, Comms, Structure, Payload), no active attitude control, no propulsion, and no thermal hardware beyond surface coatings. As the course progresses, each session will show how the same design processes apply to UniSat-1, but with radically simpler solutions at every step.
+
+**Discussion prompt:** *How does the CDF process differ when the team has only 5 subsystems instead of 8--9? Which engineering positions are still needed, and which can be combined?*
+
+---
+
 ## 7. Tool Exercise (15 min)
 
 1. Open SpaceCDF and navigate through the workflow steps (Need -> Concept -> Requirements -> Design)

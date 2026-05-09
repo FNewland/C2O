@@ -566,6 +566,41 @@ Instrument -> Onboard Storage -> Downlink -> Ground Reception
 
 ---
 
+### 1U Worked Example: UniSat-1
+
+**Trade Study: Why 1U instead of 2U or 3U for UniSat-1?**
+
+The UniSat-1 team must justify the choice of a 1U form factor for their MEMS magnetometer technology demonstration. This is a classic Process 17 (Decision Analysis) exercise.
+
+**Decision statement:** "What CubeSat form factor best supports a MEMS magnetometer technology demonstration within the university's budget and schedule constraints?"
+
+**Alternatives:**
+
+| Alternative | Mass Limit | Internal Volume | Typical Cost | Dev Time |
+|-------------|-----------|-----------------|-------------|----------|
+| 1U | 1.33 kg | ~1000 cm^3 | 50--200 kEUR | 6--12 months |
+| 2U | 2.66 kg | ~2000 cm^3 | 100--400 kEUR | 12--18 months |
+| 3U | 4.0 kg | ~3000 cm^3 | 200--800 kEUR | 18--24 months |
+
+**Criteria and scoring:**
+
+| Criterion | Weight | 1U | 2U | 3U | Rationale |
+|-----------|--------|-----|-----|-----|-----------|
+| Cost | 0.35 | 1.0 | 0.5 | 0.2 | University budget is 150 kEUR total |
+| Schedule | 0.25 | 1.0 | 0.6 | 0.3 | Must launch within 12 months |
+| Payload fits | 0.20 | 0.8 | 1.0 | 1.0 | MEMS sensor is 50 g, 0.2 W -- fits easily in 1U |
+| Design simplicity | 0.10 | 1.0 | 0.7 | 0.5 | Smaller team, fewer subsystems |
+| Data return | 0.10 | 0.5 | 0.7 | 1.0 | More volume allows better comms, but 9600 bps is sufficient for < 1 kbps payload |
+| **Weighted Total** | | **0.90** | **0.63** | **0.41** | |
+
+**Result:** 1U wins decisively. The MEMS magnetometer payload (50 g, 0.2 W, < 1 kbps) has no need for the extra volume, mass, or power that 2U/3U would provide. The additional cost and schedule of a larger bus are unjustified.
+
+**Sensitivity check:** Even if cost weight drops from 0.35 to 0.15 (and schedule from 0.25 to 0.15, redistributing to data return), 1U still wins (0.82 vs 0.68 vs 0.51). The result is robust.
+
+**Key lesson:** Do not over-design the bus for a simple payload. The 1U form factor imposes healthy constraints that force the team to focus on the mission objective rather than adding unnecessary capability.
+
+---
+
 ## Session Summary
 
 | Topic | Key Takeaway |

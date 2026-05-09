@@ -1,32 +1,10 @@
 ---
 title: "SpaceCDF Learner's Workbook"
 subtitle: "Worksheets and exercises for the 40-hour Concurrent Design Facility intensive"
-course-codes: "SpaceCDF"
-term: "2026"
-version: "v3 — 2026-05-09"
-language: en
-brand: uottawa-horizon
-publisher: "Faculty of Engineering · School of Engineering Design and Teaching Innovation (SEDTI)"
-footer-en: "SpaceCDF Learner's Workbook · 2026"
-running: "SpaceCDF — Learner's Workbook"
+version: "v4 — 2026-05-09"
 ---
 
 # Learner's Workbook
-
-## How to use this workbook
-
-This workbook is your hands-on companion through the 40-hour SpaceCDF intensive. There is one worksheet per session. Each worksheet contains:
-
-- **Key Equations Reference** — the essential formulas you need for that session
-- **Calculation Space** — room to work through problems step by step
-- **Budget Templates** — tables to fill in as you design your mission
-- **Notes & Reflections** — space to capture insights and discussion points
-
-The workbook is paired with the *Facilitator's Book*, which carries the teaching content, worked solutions, and references.
-
-> **Tip:** Complete the expected reading listed at the top of each worksheet *before* the session — the exercises are designed to be completed quickly when you arrive prepared.
-
----
 
 
 ---

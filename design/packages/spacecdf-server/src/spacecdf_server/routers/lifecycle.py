@@ -27,8 +27,26 @@ from ..services.class_advisor import advise_mission_class
 from ..services.traceability import trace_budget_to_need
 from ..services.session_guidance import recommend_next_session
 from ..services.mission_trade import compute_mission_trade
+from ..services.example_missions import list_example_missions, get_example_mission
 
 router = APIRouter()
+
+
+# --- Example Missions ---
+
+@router.get("/example-missions")
+async def list_examples() -> dict:
+    """Return a summary list of pre-loaded example missions."""
+    return {"missions": list_example_missions()}
+
+
+@router.get("/example-missions/{mission_id}")
+async def get_example(mission_id: str) -> dict:
+    """Return full mission data for a pre-loaded example."""
+    mission = get_example_mission(mission_id)
+    if not mission:
+        raise HTTPException(404, f"Example mission '{mission_id}' not found")
+    return mission
 
 
 # --- Harness Design ---

@@ -281,6 +281,59 @@ Point estimates are misleading. Every cost estimate has uncertainty. The standar
 
 ---
 
+### 1U Worked Example: UniSat-1
+
+**Cost Breakdown: Simple WBS, Mostly COTS**
+
+UniSat-1's cost structure is fundamentally different from larger missions because (a) nearly all hardware is COTS, so NRE is near zero, and (b) the team is small and university-based, so labour costs are low.
+
+> **UniSat-1 WBS Cost Estimate (Parametric vs Bottom-Up):**
+>
+> | WBS Element | Parametric (kEUR) | Bottom-Up (kEUR) | Notes |
+> |-------------|-------------------|-------------------|-------|
+> | 1.0 Programme Management | 4 | 5 | Faculty oversight, 0.1 FTE x 12 months |
+> | 2.0 Systems Engineering | 3 | 3 | Student team lead |
+> | 3.0 Mission Assurance | 1 | 1 | Minimal QA for university mission |
+> | 4.0 Payload | 8 | 8 | MEMS sensor PCB + calibration |
+> | 5.0 Bus Hardware | 38 | 36 | See BOM from Session 4.1 |
+> |   5.1 Structure | 4 | 4 | ISIS 1U frame |
+> |   5.2 EPS + SA | 20 | 19.5 | P31us + body-mounted cells |
+> |   5.3 AOCS (passive) | 1 | 1 | Magnet + hysteresis rods |
+> |   5.4 Comms (UHF) | 11 | 10.5 | AX100 + antenna |
+> |   5.5 OBC | 3 | 3 | Custom Cortex-M board |
+> | 6.0 I&T | 8 | 8 | University clean room + vibe test facility |
+> | 7.0 Software | 5 | 5 | FSW (FreeRTOS) + GSW |
+> | 8.0 Launch | 15 | 15 | NanoRacks 1U ISS deployment |
+> | 9.0 Ground Segment | 5 | 5 | Yagi antenna + SatNOGS network |
+> | 10.0 Operations (6 months) | 3 | 3 | Student operators, 0.2 FTE |
+> | **TOTAL (P50)** | **~90** | **~85** | |
+> | **P80 (x 1.3)** | **~117** | **~111** | Conservative estimate |
+
+**Key cost observations for 1U missions:**
+
+1. **Hardware is cheap:** Total COTS hardware cost is ~36--44 kEUR. This is less than a single star tracker for a 3U mission.
+
+2. **NRE is minimal:** Only the OBC and payload require custom development. NRE is estimated at ~8 kEUR (payload calibration + OBC board layout), compared to ~50--150 kEUR for custom payloads on larger missions.
+
+3. **Launch cost is proportionally large:** At 15 kEUR, the launch represents ~18% of total cost. For a 3U mission at ~200 kEUR launch cost, launch is ~40% of total. The 1U launch cost is low in absolute terms but still a significant fraction.
+
+4. **Labour dominates:** For a university team, the "free" student labour is the hidden cost. If students were costed at professional rates (~50 EUR/hr), the total labour cost would be ~100--200 kEUR, far exceeding the hardware cost. This is typical for educational missions.
+
+5. **No cost drivers from complexity:** There is no AOCS software development, no deployable mechanism qualification, no propulsion system integration, no thermal vacuum testing of heaters -- all of which add 10--50 kEUR each on a 3U mission.
+
+**Learning curve applicability:** If a university builds a series of 1U demonstrators (UniSat-1, UniSat-2, UniSat-3...), the 90% learning rate applies:
+
+| Unit | Hardware Cost (kEUR) | Total Cost (kEUR) |
+|------|---------------------|-------------------|
+| UniSat-1 | 44 | 85 |
+| UniSat-2 | 40 | 77 |
+| UniSat-4 | 36 | 69 |
+| UniSat-8 | 32 | 62 |
+
+The asymptotic floor is dominated by launch cost (15 kEUR) and irreducible ground segment + operations costs (~8 kEUR), giving a minimum mission cost of ~40--50 kEUR for repeat builds.
+
+---
+
 ## 5. Design Review Process (25 min)
 
 ### Teaching Notes

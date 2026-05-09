@@ -336,6 +336,70 @@ These budgets will be developed in detail during Week 2 Day 3--4 sessions:
 
 ---
 
+### 1U Worked Example: UniSat-1
+
+**Simplified Architecture: Only 5 Subsystems**
+
+UniSat-1 demonstrates that a 1U CubeSat can be built with a radically simplified architecture compared to a 3U EO mission. Several subsystems are eliminated entirely:
+
+| Subsystem | 3U EO CubeSat | UniSat-1 (1U) | Rationale for Elimination |
+|-----------|--------------|---------------|--------------------------|
+| **EPS** | Required | **Required** | Always needed |
+| **OBC** | Required | **Required** | Always needed (minimal: MSP430 or ARM Cortex-M class) |
+| **Comms** | S-band + X-band | **UHF only** | 9600 bps is sufficient for < 1 kbps payload data |
+| **Structure** | Required | **Required** | Always needed (ISIS 1U or Pumpkin Rev C) |
+| **Payload** | Telescope (complex) | **MEMS magnetometer** (simple: 50 g, 0.2 W) |
+| **AOCS** | Star tracker + RWs + MTQs | **Eliminated** | Passive magnetic only (permanent magnet + hysteresis rods, treated as structure, not a subsystem) |
+| **Thermal** | MLI + heaters | **Eliminated** | Passive coatings only; 400 km LEO thermal environment is benign for 6-month mission |
+| **Propulsion** | May be needed | **Eliminated** | 400 km orbit decays naturally in ~1 year; no orbit maintenance needed |
+| **Harness** | Significant | **Minimal** | Only 3--4 board-to-board connections via PC/104 stack |
+
+**N-squared matrix -- drastically reduced:**
+
+For UniSat-1, the interface matrix shrinks from 28 potential pairs (8 subsystems) to just 10 pairs (5 subsystems). The active interfaces are:
+
+| Interface Pair | Types | Key Concern |
+|----------------|-------|-------------|
+| EPS <-> OBC | E, D | Power regulation, housekeeping telemetry |
+| EPS <-> Comms | E | TX peak power (~0.5 W -- small relative to budget) |
+| EPS <-> Payload | E | Payload switching (0.2 W -- trivial) |
+| OBC <-> Comms | D | TM/TC packet routing |
+| OBC <-> Payload | D | Magnetometer data acquisition (I2C or SPI) |
+| Structure <-> All | M | Mounting, CDS rail compliance |
+
+**Mass budget (Phase A):**
+
+| Subsystem | CBE (g) | Equip. Margin (20%) | MEV (g) |
+|-----------|---------|---------------------|---------|
+| Payload (MEMS magnetometer) | 50 | 10 | 60 |
+| EPS (board + battery + body-mounted cells) | 250 | 50 | 300 |
+| OBC (MSP430/Cortex-M board) | 30 | 6 | 36 |
+| Comms (UHF transceiver + antenna) | 80 | 16 | 96 |
+| Structure (1U frame) | 200 | 40 | 240 |
+| Passive magnetic AOCS (magnet + rods) | 30 | 6 | 36 |
+| Harness | 50 | 10 | 60 |
+| **Dry Total** | **690** | | **828** |
+| System Margin (20%) | | | **166** |
+| **Dry MEV** | | | **994** |
+| **CDS Allocation** | | | **1330** |
+| **Mass Margin** | | | **336 g (25.3%)** -- Green |
+
+**Power budget (all modes use the same simple duty cycle):**
+
+| Mode | Power (W) | Duty (%) | Contribution (W) |
+|------|----------|----------|-------------------|
+| Idle (OBC + beacon) | 0.7 | 50% | 0.35 |
+| Science (+ magnetometer) | 0.9 | 10% | 0.09 |
+| Downlink (+ UHF TX) | 1.2 | 5% | 0.06 |
+| Eclipse (OBC only) | 0.5 | 35% | 0.18 |
+| **Orbit Average** | | **100%** | **0.68 W** |
+
+With ~2 W available from body-mounted cells, the power margin is substantial (~1.3 W, or 66%). This is one of the luxuries of a simple payload on a 1U bus.
+
+**Key architectural insight:** The UniSat-1 architecture is so simple that a small team (3--5 people) can design, build, test, and operate it. This makes it ideal for a university or educational programme. The CDF process still applies -- but the sessions are shorter and the trade space is narrower.
+
+---
+
 ## 5. SpaceCDF Exercise (30 min)
 
 ### Instructions

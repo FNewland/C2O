@@ -1,32 +1,10 @@
 ---
 title: "SpaceCDF Facilitator's Book"
 subtitle: "Teaching reference for the 40-hour Concurrent Design Facility intensive"
-course-codes: "SpaceCDF"
-term: "2026"
-version: "v3 — 2026-05-09"
-language: en
-brand: uottawa-horizon
-publisher: "Faculty of Engineering · School of Engineering Design and Teaching Innovation (SEDTI)"
-footer-en: "SpaceCDF Facilitator's Book · 2026"
-running: "SpaceCDF — Facilitator's Book"
+version: "v4 — 2026-05-09"
 ---
 
 # Facilitator's Book
-
-## How to use this book
-
-The Facilitator's Book is the teaching reference for the SpaceCDF 40-hour intensive. Each session in the *Course Plan* has a chapter here, with deep technical content, equations, worked examples, cited references, and SVG diagrams. The book is written so an instructor can lift it page-by-page into a session, while still leaving room for cohort-specific judgement.
-
-The book is paired with the *Learner's Workbook*, which carries the worksheets the cohort fills in.
-
-> **Key references used throughout:**
-> - [NASA Systems Engineering Handbook Rev 2](https://www.nasa.gov/reference/systems-engineering-handbook/)
-> - [NPR 7123.1D — SE Processes and Requirements](https://nodis3.gsfc.nasa.gov/)
-> - [ECSS-E-ST-10C Rev.1 — System Engineering General Requirements](https://ecss.nl/standard/ecss-e-st-10c-rev-1-system-engineering-general-requirements-15-february-2017/)
-> - [SMAD 4th Edition (Wertz, Everett, Puschell)](https://www.amazon.com/Space-Mission-Engineering-Microcosm-Inc/dp/1881883159)
-> - [NASA CubeSat 101](https://www.nasa.gov/wp-content/uploads/2017/03/nasa_csli_cubesat_101_508.pdf)
-
----
 
 
 ---
@@ -537,6 +515,35 @@ The most productive CDF sessions are those where **interface conflicts** are ide
 | Lifecycle Phases | Pre-A through F with KDP gates; ECSS phases approximately align; SpaceCDF covers Pre-A through C |
 | Review Gates | Each gate answers a specific question with required evidence; auto-evaluated where possible in SpaceCDF |
 | Positions | Each owns a parameter domain; conflicts arise at interfaces; the systems engineer arbitrates |
+
+---
+
+### 1U Worked Example: UniSat-1
+
+Throughout this course, we use a second running example alongside the 3U EO CubeSat: **UniSat-1**, a 1U CubeSat technology demonstrator designed by a university team. This is the simplest realistic spacecraft design.
+
+**Mission:** Demonstrate a novel MEMS-based magnetometer for space weather monitoring from LEO.
+
+**Why 1U?** The 1U form factor (100 x 100 x 113.5 mm, up to 1.33 kg) is the smallest standard CubeSat and the entry point for many university and educational missions. It forces extreme design discipline -- every gram, every milliwatt, and every cubic centimetre matters.
+
+| Parameter | Value |
+|-----------|-------|
+| Form factor | 1U (100 x 100 x 113.5 mm) |
+| Mass limit | 1.33 kg (CDS Rev 14) |
+| Target mass | 1.0 kg |
+| Orbit | 400 km circular, 51.6 deg (ISS rideshare) |
+| Design lifetime | 6 months |
+| Payload | MEMS magnetometer (50 g, 0.2 W, < 1 kbps) |
+| Comms | UHF 437 MHz, 9600 bps |
+| Power | ~2 W orbit average (body-mounted solar cells) |
+| AOCS | Passive magnetic (permanent magnet + hysteresis rods) |
+| Propulsion | None (natural deorbit in ~1 year) |
+| Estimated cost | 50--200 kEUR |
+| Development time | 6--12 months |
+
+UniSat-1 illustrates that a meaningful space mission can be accomplished with just five subsystems (EPS, OBC, Comms, Structure, Payload), no active attitude control, no propulsion, and no thermal hardware beyond surface coatings. As the course progresses, each session will show how the same design processes apply to UniSat-1, but with radically simpler solutions at every step.
+
+**Discussion prompt:** *How does the CDF process differ when the team has only 5 subsystems instead of 8--9? Which engineering positions are still needed, and which can be combined?*
 
 ---
 
@@ -2027,6 +2034,41 @@ Instrument -> Onboard Storage -> Downlink -> Ground Reception
 
 ---
 
+### 1U Worked Example: UniSat-1
+
+**Trade Study: Why 1U instead of 2U or 3U for UniSat-1?**
+
+The UniSat-1 team must justify the choice of a 1U form factor for their MEMS magnetometer technology demonstration. This is a classic Process 17 (Decision Analysis) exercise.
+
+**Decision statement:** "What CubeSat form factor best supports a MEMS magnetometer technology demonstration within the university's budget and schedule constraints?"
+
+**Alternatives:**
+
+| Alternative | Mass Limit | Internal Volume | Typical Cost | Dev Time |
+|-------------|-----------|-----------------|-------------|----------|
+| 1U | 1.33 kg | ~1000 cm^3 | 50--200 kEUR | 6--12 months |
+| 2U | 2.66 kg | ~2000 cm^3 | 100--400 kEUR | 12--18 months |
+| 3U | 4.0 kg | ~3000 cm^3 | 200--800 kEUR | 18--24 months |
+
+**Criteria and scoring:**
+
+| Criterion | Weight | 1U | 2U | 3U | Rationale |
+|-----------|--------|-----|-----|-----|-----------|
+| Cost | 0.35 | 1.0 | 0.5 | 0.2 | University budget is 150 kEUR total |
+| Schedule | 0.25 | 1.0 | 0.6 | 0.3 | Must launch within 12 months |
+| Payload fits | 0.20 | 0.8 | 1.0 | 1.0 | MEMS sensor is 50 g, 0.2 W -- fits easily in 1U |
+| Design simplicity | 0.10 | 1.0 | 0.7 | 0.5 | Smaller team, fewer subsystems |
+| Data return | 0.10 | 0.5 | 0.7 | 1.0 | More volume allows better comms, but 9600 bps is sufficient for < 1 kbps payload |
+| **Weighted Total** | | **0.90** | **0.63** | **0.41** | |
+
+**Result:** 1U wins decisively. The MEMS magnetometer payload (50 g, 0.2 W, < 1 kbps) has no need for the extra volume, mass, or power that 2U/3U would provide. The additional cost and schedule of a larger bus are unjustified.
+
+**Sensitivity check:** Even if cost weight drops from 0.35 to 0.15 (and schedule from 0.25 to 0.15, redistributing to data return), 1U still wins (0.82 vs 0.68 vs 0.51). The result is robust.
+
+**Key lesson:** Do not over-design the bus for a simple payload. The 1U form factor imposes healthy constraints that force the team to focus on the mission objective rather than adding unnecessary capability.
+
+---
+
 ## Session Summary
 
 | Topic | Key Takeaway |
@@ -2376,6 +2418,45 @@ Every requirement must have an assigned verification method. The four standard m
 > | SR-AOCS-001 (pointing) | A + T | B + D | Simulation then hardware-in-loop test |
 > | SR-LINK-001 (downlink) | A | B | Link budget analysis |
 > | SSR-PL-001a (aperture) | I | D | Physical measurement |
+
+### 1U Worked Example: UniSat-1
+
+> **Worked Example -- Deriving Requirements for a 1U Technology Demonstrator**
+>
+> **Stakeholder need:** "Demonstrate the feasibility of a MEMS-based magnetometer for space weather monitoring in LEO."
+>
+> **Step 1 -- Mission requirements:**
+>
+> | ID | Requirement | Type | Rationale |
+> |----|------------|------|-----------|
+> | MR-001 | "The system shall measure the local magnetic field vector with resolution <= 10 nT at 1 Hz sampling rate for a minimum of 6 months." | Performance | Minimum science return for technology validation |
+> | MR-002 | "The system total mass shall not exceed 1.33 kg." | Constraint | CDS Rev 14, 1U mass limit |
+> | MR-003 | "The system shall downlink at least 1 MB of magnetometer data per day." | Performance | Sufficient for statistical analysis of sensor performance |
+> | MR-004 | "The system shall operate for a minimum of 6 months in LEO." | Performance | Minimum mission duration for seasonal variation coverage |
+>
+> **Step 2 -- System requirements (decomposed):**
+> - SR-PWR-001: "The EPS shall provide orbit-average power >= 2 W to all subsystems."
+> - SR-PWR-002: "The battery shall provide >= 10 Wh capacity."
+> - SR-LINK-001: "The comms system shall provide a downlink data rate >= 9600 bps."
+> - SR-LINK-002: "The comms system shall achieve link margin >= 3 dB at 10 deg minimum elevation."
+> - SR-OBC-001: "The OBC shall consume <= 0.5 W average power."
+> - SR-STR-001: "The structure shall comply with CDS Rev 14, 1U envelope (100 x 100 x 113.5 mm)."
+>
+> **Step 3 -- Subsystem requirements (derived):**
+> - SSR-PWR-001a: "Body-mounted solar cells shall generate >= 2 W orbit-average power accounting for eclipse and geometry." [Derived from power budget]
+> - SSR-LINK-001a: "The UHF transmitter shall provide >= 0.5 W RF output at 437 MHz." [Derived from link budget]
+>
+> **Step 4 -- Verification assignment:**
+>
+> | Requirement | Method | Phase | Rationale |
+> |-------------|--------|-------|-----------|
+> | MR-001 (magnetometer performance) | T + D | D + E | Ground calibration then in-orbit demonstration |
+> | MR-002 (mass <= 1.33 kg) | I | D | Weigh the flight unit |
+> | SR-PWR-001 (orbit-avg power) | A | B | Power budget analysis |
+> | SR-LINK-001 (9600 bps downlink) | A + D | B + E | Link budget analysis; demonstrated from orbit |
+> | SR-STR-001 (CDS compliance) | I | D | Physical measurement against CDS template |
+>
+> **Key difference from 3U:** The 1U requirement set is much smaller (~15--20 requirements vs ~40--60 for a 3U EO mission). There are no pointing requirements, no imaging requirements, and no propulsion requirements. This makes the verification campaign significantly simpler and cheaper.
 
 ---
 
@@ -3040,6 +3121,49 @@ Mitigation: error-correcting memory (EDAC), watchdog timers, latch-up protection
 
 ---
 
+### 1U Worked Example: UniSat-1
+
+**Orbit Selection: ISS Orbit (400 km, 51.6 deg) for Rideshare**
+
+UniSat-1 selects the ISS orbit not by optimisation but by **access**: deployment from the ISS via NanoRacks or a similar deployer is the cheapest and most accessible launch opportunity for a university 1U CubeSat.
+
+> **Worked Example -- Orbital Parameters at 400 km, 51.6 deg**
+>
+> **Step 1 -- Semi-major axis:**
+> $a = 6371 + 400 = 6771$ km $= 6.771 \times 10^6$ m
+>
+> **Step 2 -- Orbital period:**
+> $T = 2\pi \sqrt{\frac{(6.771 \times 10^6)^3}{3.986 \times 10^{14}}} = 2\pi \times 5564 = 5565$ s $\approx$ **92.4 min**
+>
+> **Step 3 -- Orbital velocity:**
+> $v = \sqrt{\frac{3.986 \times 10^{14}}{6.771 \times 10^6}} =$ **7672 m/s** $\approx$ 7.67 km/s
+>
+> **Step 4 -- Eclipse fraction (maximum):**
+> $f = \frac{1}{\pi} \arccos\left(\frac{\sqrt{6771^2 - 6371^2}}{6771}\right) = \frac{1}{\pi} \arccos(0.3423) = \frac{1}{\pi} \times 70.0\degree \approx$ **0.389** (38.9%)
+>
+> **Step 5 -- Eclipse and sunlight duration:**
+> $t_{\text{eclipse}} = 92.4 \times 0.389 \approx$ **36 min**; $\quad t_{\text{sun}} = 92.4 - 36 =$ **56 min**
+
+**Why this orbit works for UniSat-1:**
+
+| Factor | 400 km / 51.6 deg | Impact on UniSat-1 |
+|--------|-------------------|-------------------|
+| Launch cost | Lowest (ISS resupply rideshare) | Fits university budget |
+| Orbital lifetime | ~1 year (natural decay) | Exceeds 6-month mission; compliant with FCC 5-year rule without propulsion |
+| Radiation | Low (~2--3 krad/yr behind 2 mm Al) | COTS electronics safe for 6-month mission |
+| Inclination | 51.6 deg | Adequate latitude coverage for space weather science |
+| Eclipse | ~36 min (~39% of orbit) | Manageable with 10 Wh battery |
+| Ground contacts | Mid-latitude stations: ~4--6 passes/day | Sufficient for 9600 bps UHF downlink |
+
+**What this orbit does NOT provide:**
+- Sun-synchronous lighting (not needed -- magnetometer is not an optical instrument)
+- Polar coverage (acceptable -- 51.6 deg covers the majority of magnetic field variation)
+- Long lifetime (acceptable -- 6-month design life is well within ~1-year natural lifetime)
+
+**No propulsion trade:** At 400 km, atmospheric drag causes natural re-entry within approximately 1 year (depending on solar activity and ballistic coefficient). UniSat-1 therefore needs no propulsion system for either orbit maintenance or debris compliance. This eliminates an entire subsystem -- a major simplification for a 1U mission.
+
+---
+
 ## 7. SpaceCDF Orbit Trade Exercise (20 min)
 
 ### Instructions
@@ -3425,6 +3549,70 @@ These budgets will be developed in detail during Week 2 Day 3--4 sessions:
 
 ---
 
+### 1U Worked Example: UniSat-1
+
+**Simplified Architecture: Only 5 Subsystems**
+
+UniSat-1 demonstrates that a 1U CubeSat can be built with a radically simplified architecture compared to a 3U EO mission. Several subsystems are eliminated entirely:
+
+| Subsystem | 3U EO CubeSat | UniSat-1 (1U) | Rationale for Elimination |
+|-----------|--------------|---------------|--------------------------|
+| **EPS** | Required | **Required** | Always needed |
+| **OBC** | Required | **Required** | Always needed (minimal: MSP430 or ARM Cortex-M class) |
+| **Comms** | S-band + X-band | **UHF only** | 9600 bps is sufficient for < 1 kbps payload data |
+| **Structure** | Required | **Required** | Always needed (ISIS 1U or Pumpkin Rev C) |
+| **Payload** | Telescope (complex) | **MEMS magnetometer** (simple: 50 g, 0.2 W) |
+| **AOCS** | Star tracker + RWs + MTQs | **Eliminated** | Passive magnetic only (permanent magnet + hysteresis rods, treated as structure, not a subsystem) |
+| **Thermal** | MLI + heaters | **Eliminated** | Passive coatings only; 400 km LEO thermal environment is benign for 6-month mission |
+| **Propulsion** | May be needed | **Eliminated** | 400 km orbit decays naturally in ~1 year; no orbit maintenance needed |
+| **Harness** | Significant | **Minimal** | Only 3--4 board-to-board connections via PC/104 stack |
+
+**N-squared matrix -- drastically reduced:**
+
+For UniSat-1, the interface matrix shrinks from 28 potential pairs (8 subsystems) to just 10 pairs (5 subsystems). The active interfaces are:
+
+| Interface Pair | Types | Key Concern |
+|----------------|-------|-------------|
+| EPS <-> OBC | E, D | Power regulation, housekeeping telemetry |
+| EPS <-> Comms | E | TX peak power (~0.5 W -- small relative to budget) |
+| EPS <-> Payload | E | Payload switching (0.2 W -- trivial) |
+| OBC <-> Comms | D | TM/TC packet routing |
+| OBC <-> Payload | D | Magnetometer data acquisition (I2C or SPI) |
+| Structure <-> All | M | Mounting, CDS rail compliance |
+
+**Mass budget (Phase A):**
+
+| Subsystem | CBE (g) | Equip. Margin (20%) | MEV (g) |
+|-----------|---------|---------------------|---------|
+| Payload (MEMS magnetometer) | 50 | 10 | 60 |
+| EPS (board + battery + body-mounted cells) | 250 | 50 | 300 |
+| OBC (MSP430/Cortex-M board) | 30 | 6 | 36 |
+| Comms (UHF transceiver + antenna) | 80 | 16 | 96 |
+| Structure (1U frame) | 200 | 40 | 240 |
+| Passive magnetic AOCS (magnet + rods) | 30 | 6 | 36 |
+| Harness | 50 | 10 | 60 |
+| **Dry Total** | **690** | | **828** |
+| System Margin (20%) | | | **166** |
+| **Dry MEV** | | | **994** |
+| **CDS Allocation** | | | **1330** |
+| **Mass Margin** | | | **336 g (25.3%)** -- Green |
+
+**Power budget (all modes use the same simple duty cycle):**
+
+| Mode | Power (W) | Duty (%) | Contribution (W) |
+|------|----------|----------|-------------------|
+| Idle (OBC + beacon) | 0.7 | 50% | 0.35 |
+| Science (+ magnetometer) | 0.9 | 10% | 0.09 |
+| Downlink (+ UHF TX) | 1.2 | 5% | 0.06 |
+| Eclipse (OBC only) | 0.5 | 35% | 0.18 |
+| **Orbit Average** | | **100%** | **0.68 W** |
+
+With ~2 W available from body-mounted cells, the power margin is substantial (~1.3 W, or 66%). This is one of the luxuries of a simple payload on a 1U bus.
+
+**Key architectural insight:** The UniSat-1 architecture is so simple that a small team (3--5 people) can design, build, test, and operate it. This makes it ideal for a university or educational programme. The CDF process still applies -- but the sessions are shorter and the trade space is narrower.
+
+---
+
 ## 5. SpaceCDF Exercise (30 min)
 
 ### Instructions
@@ -3757,6 +3945,73 @@ A spacecraft in LEO experiences four thermal inputs and one thermal sink:
 
 ---
 
+### 1U Worked Example: UniSat-1
+
+**Power Sizing: Body-Mounted Only**
+
+UniSat-1 uses body-mounted solar cells on all five sun-exposed faces (the sixth face mounts the deployment switch interface). With no deployable panels, the power system is simpler, lighter, and cheaper -- but severely power-limited.
+
+> **Worked Example -- UniSat-1 Solar Array Sizing**
+>
+> **Given:** Body-mounted cells on 5 faces of a 1U (100 x 100 mm each). ISS orbit: 400 km, 92.4 min period, 56 min sunlight, 36 min eclipse. $P_{\text{eclipse}} = 0.5$ W (OBC only), $P_{\text{peak,sunlight}} = 1.2$ W (science + downlink overlap avoided by scheduling). Mission lifetime = 6 months.
+>
+> **Step 1 -- Effective illuminated area:**
+> At any given time in LEO with passive magnetic attitude (slow tumble ~1 deg/s), on average only ~1.5 faces are well-illuminated. Effective average area:
+> $A_{\text{eff}} \approx 1.5 \times (0.10 \times 0.10) = 0.015$ m$^2$
+>
+> **Step 2 -- SA BOL power:**
+> $P_{\text{SA,BOL}} = \eta_{\text{cell}} \times S \times A_{\text{eff}} \times f_{\text{pack}} = 0.295 \times 1361 \times 0.015 \times 0.80 = 4.82$ W (illuminated peak)
+>
+> **Step 3 -- Orbit-average power available:**
+> $P_{\text{avg,avail}} = P_{\text{SA,BOL}} \times \frac{t_{\text{sun}}}{T} \times \eta_{\text{EPS}} = 4.82 \times \frac{56}{92.4} \times 0.85 = 2.48$ W
+>
+> After 6-month degradation ($(1 - 0.025)^{0.5} = 0.987$):
+> $P_{\text{avg,EOL}} = 2.48 \times 0.987 = 2.45$ W
+>
+> **Step 4 -- Power demand (orbit-average):**
+> From Session 2.4: $P_{\text{avg,demand}} = 0.68$ W.
+>
+> **Power margin:** $2.45 - 0.68 = 1.77$ W (**72% margin**). Even with conservative geometry assumptions, the link closes comfortably.
+>
+> **Note on body-mounted vs tumbling:** The key uncertainty in 1U body-mounted power is the attitude. With passive magnetic stabilisation, the satellite aligns roughly with Earth's magnetic field, providing more predictable illumination than a random tumble. However, the effective area varies significantly around the orbit. The 1.5-face average is conservative.
+
+> **Worked Example -- UniSat-1 Battery Sizing**
+>
+> **Given:** $P_{\text{eclipse}} = 0.5$ W, $t_{\text{eclipse}} = 36$ min $= 0.60$ h, $DOD = 0.50$ (acceptable for 6-month mission), $\eta = 0.95$.
+>
+> $C_{\text{bat}} = \frac{0.5 \times 0.60}{0.50 \times 0.95} = \frac{0.30}{0.475} = 0.63$ Wh
+>
+> With margin: specify minimum **10 Wh** (standard GomSpace NanoPower P31u battery pack).
+>
+> **Cycle count check:** 6 months at 15 orbits/day = 2,740 eclipses. At 50% DOD, Li-ion cells comfortably survive > 2,000 cycles. **Pass.**
+>
+> **Conclusion:** The 10 Wh battery is massively oversized for the actual eclipse demand (0.63 Wh per eclipse, or 6.3% actual DOD). This provides excellent margin and means battery degradation is negligible over the 6-month mission.
+
+**Thermal: Passive Only**
+
+UniSat-1 uses no heaters, no MLI, and no active thermal control. This is justified by three factors:
+
+1. **Low altitude (400 km):** Strong Earth IR flux (~240 W/m^2) provides a warm floor, preventing extreme cold cases
+2. **Short mission (6 months):** No long-term coating degradation to worry about
+3. **Tolerant components:** COTS electronics typically operate from -20 degC to +60 degC; the 400 km LEO thermal environment stays within -10 degC to +45 degC for a 1U with standard aluminium/anodised surfaces
+
+> **Quick Thermal Check -- UniSat-1 Cold Case**
+>
+> Worst eclipse, all subsystems off except OBC (0.5 W internal dissipation):
+> - Earth IR absorbed: $\varepsilon \times A_{\text{nadir}} \times q_{\text{IR}} = 0.85 \times 0.01 \times 240 = 2.04$ W
+> - Internal dissipation: 0.5 W
+> - Total heat in: 2.54 W
+> - Radiating area (5 faces, rough): $\varepsilon \times \sigma \times A_{\text{rad}} \times T^4$
+> - $A_{\text{rad}} \approx 0.045$ m^2 (accounting for partial Earth view blocking)
+>
+> Solving: $T = (2.54 / (0.85 \times 5.67 \times 10^{-8} \times 0.045))^{0.25} = (2.54 / 2.17 \times 10^{-9})^{0.25}$
+>
+> $T \approx 195$ K $= -78$ degC -- **this is too cold!**
+>
+> **However:** This is a worst-case steady-state calculation. In practice, the thermal mass of a 1 kg aluminium-rich CubeSat limits the rate of cooling. With 36 min eclipses and 56 min sunlit periods, the actual minimum temperature is typically -10 to -20 degC for a 1U at 400 km -- well within COTS operating limits. A transient thermal analysis (which accounts for thermal capacitance) is needed for accurate prediction, but the simplified check confirms that heaters are not mandatory.
+
+---
+
 ## 5. Real Mission Examples (10 min)
 
 ### Planet SuperDove EPS
@@ -4081,6 +4336,50 @@ The standard 4-wheel configuration provides full 3-axis control with one spare:
 
 ---
 
+### 1U Worked Example: UniSat-1
+
+**Passive Magnetic Attitude Stabilisation**
+
+UniSat-1 does not have an active AOCS. Instead, it uses **passive magnetic stabilisation** -- the simplest and cheapest attitude control method, requiring zero power and minimal mass.
+
+**How it works:**
+
+1. **Permanent magnet:** A small bar magnet (typically AlNiCo or NdFeB, ~10--20 g) is embedded along one body axis. This magnet aligns the satellite with Earth's local magnetic field, like a compass needle, so that the magnet axis points roughly along the field lines.
+
+2. **Hysteresis rods:** Two or more strips of magnetically soft material (e.g., Permalloy or HyMu-80, ~5--10 g each) are mounted perpendicular to the permanent magnet. As the satellite oscillates around the field-aligned equilibrium, the hysteresis rods dissipate energy through magnetic hysteresis losses, damping the oscillations over time.
+
+**Performance:**
+
+| Parameter | Passive Magnetic | Active (RW + ST) |
+|-----------|-----------------|------------------|
+| Pointing accuracy | ~10--15 deg (to local B-field) | < 0.1 deg (to inertial frame) |
+| Settling time | Hours to days after deployment | Minutes after mode transition |
+| Residual tumble rate | ~1--5 deg/s (damped from initial ~10 deg/s) | < 0.01 deg/s |
+| Power | 0 W | 3--5 W |
+| Mass | ~30--50 g | 500--800 g |
+| Cost | ~2 kEUR | ~55 kEUR |
+
+**Why this works for UniSat-1:**
+
+The MEMS magnetometer payload does not require accurate pointing. In fact, it benefits from being in a slowly rotating/tumbling state because this provides magnetic field measurements across multiple directions, improving the scientific data quality. The magnetometer can measure the field vector regardless of spacecraft orientation.
+
+**No pointing budget needed:** Since there is no payload pointing requirement, there is no need for a pointing error budget. This eliminates the star tracker, reaction wheels, magnetorquers (as actuators), sun sensors, and gyroscopes -- removing the most expensive and power-hungry subsystem from the design.
+
+> **Disturbance environment for 1U at 400 km:**
+>
+> | Source | Torque (N m) | Notes |
+> |--------|-------------|-------|
+> | Gravity gradient | ~$1 \times 10^{-8}$ | Small due to nearly cubic 1U shape ($I_z \approx I_x$) |
+> | Aerodynamic | ~$3 \times 10^{-8}$ | Higher than 3U at 500 km due to lower altitude (higher $\rho$) |
+> | Solar radiation pressure | ~$1 \times 10^{-9}$ | Small area |
+> | Permanent magnet (restoring) | ~$1 \times 10^{-5}$ | Dominant -- this IS the control torque |
+>
+> The permanent magnet restoring torque (~$10^{-5}$ N m) is three orders of magnitude larger than all disturbances combined. This ensures the satellite remains approximately field-aligned.
+
+**Limitation:** Passive magnetic stabilisation provides alignment to the *local* magnetic field, which rotates as the satellite orbits. The satellite does not point at nadir, the Sun, or any fixed direction. For missions requiring Earth-pointing or Sun-tracking, active AOCS is mandatory. For UniSat-1's magnetometer mission, this is not a limitation -- it is a feature.
+
+---
+
 ## 6. SpaceCDF Exercise (30 min)
 
 ### Instructions
@@ -4395,6 +4694,75 @@ Required data rate?
 >
 > **Design insight:** The generous 10.7 dB margin suggests the link is over-designed for 1 Mbps. The team could increase the data rate:
 > $R_{b,\text{max}} = 10^{(16.7 - 4.0 - 2.0 - 3.0)/10} \times 10^6 = 10^{0.77} \times 10^6 \approx$ **5.9 Mbps** at minimum 3 dB margin.
+
+---
+
+### 1U Worked Example: UniSat-1
+
+**UHF Link Budget: 437 MHz at 9600 bps**
+
+UniSat-1 uses the UHF amateur band at 437 MHz with a ground station equipped with a 10 dBi Yagi antenna. This is the lowest-cost and simplest communication architecture available to CubeSat missions.
+
+> **Worked Example -- UHF Downlink Link Budget for UniSat-1**
+>
+> **Scenario:** 400 km orbit, UHF (437 MHz), 9600 bps downlink, 10 deg minimum elevation angle, amateur ground station with 10 dBi Yagi antenna.
+>
+> **Slant range at 10 deg elevation:**
+> From 400 km altitude, the worst-case slant range at 10 deg elevation is approximately 1150 km.
+>
+> | Line | Parameter | Value | Unit |
+> |------|-----------|-------|------|
+> | 1 | TX Power (0.5 W) | -3.0 | dBW |
+> | 2 | TX Antenna Gain (monopole, ~0 dBi) | 0.0 | dBi |
+> | 3 | TX Line Losses | -0.5 | dB |
+> | 4 | **EIRP** | **-3.5** | dBW |
+> | 5 | FSPL (437 MHz, 1150 km slant) | -155.5 | dB |
+> | 6 | Atmospheric Loss | -0.3 | dB |
+> | 7 | Pointing Loss (omni antenna -- minimal) | -0.5 | dB |
+> | 8 | Polarisation Loss (linear to linear, worst case) | -3.0 | dB |
+> | 9 | RX Antenna Gain (10 dBi Yagi) | +10.0 | dBi |
+> | 10 | System Noise Temp (600 K -- amateur station with LNA) | 27.8 | dBK |
+> | 11 | **G/T** | **-17.8** | dB/K |
+> | 12 | Boltzmann Constant | +228.6 | dBW/K/Hz |
+> | 13 | **C/N$_0$** = -3.5 - 155.5 - 0.3 - 0.5 - 3.0 + (-17.8) + 228.6 | **+48.0** | dBHz |
+> | 14 | Data Rate (9600 bps = $10\log_{10}(9600)$) | 39.8 | dBbps |
+> | 15 | **$E_b/N_0$ available** = 48.0 - 39.8 | **+8.2** | dB |
+> | 16 | $E_b/N_0$ required (GMSK uncoded, BER $10^{-5}$) | 10.5 | dB |
+> | 17 | Implementation Loss | -2.0 | dB |
+>
+> **Wait -- that gives a negative margin!** $8.2 - 10.5 - 2.0 = -4.3$ dB. The link does NOT close with uncoded GMSK.
+>
+> **Fix: Add forward error correction (FEC).** Using convolutional coding (r=1/2):
+> - $E_b/N_0$ required drops to **5.0 dB** (from 10.5 dB uncoded)
+> - Effective data rate halves to 4800 bps useful throughput (9600 bps channel rate)
+> - **Margin** = 8.2 - 5.0 - 2.0 = **+1.2 dB** -- still marginal.
+>
+> **Further fix: Upgrade ground antenna to a cross-Yagi (13 dBi) with circular polarisation:**
+> - RX gain: +13.0 dBi (was +10.0)
+> - Polarisation loss: -0.5 dB (was -3.0 dB, now RHCP-to-RHCP)
+> - Net improvement: +3.0 + 2.5 = **+5.5 dB**
+> - New C/N$_0$: 53.5 dBHz
+> - New $E_b/N_0$ available: 53.5 - 39.8 = 13.7 dB
+> - **Margin** = 13.7 - 5.0 - 2.0 = **+6.7 dB** -- **Pass** (> 3 dB).
+>
+> **Final link budget summary (with FEC + cross-Yagi):**
+>
+> | Parameter | Value |
+> |-----------|-------|
+> | TX power | 0.5 W |
+> | TX antenna | Monopole (0 dBi) |
+> | Frequency | 437 MHz |
+> | Channel rate | 9600 bps |
+> | Useful throughput | 4800 bps (with r=1/2 FEC) |
+> | Ground antenna | 13 dBi cross-Yagi, RHCP |
+> | Link margin | **+6.7 dB** |
+
+**Key lesson from UniSat-1 link budget:** UHF links are power-starved compared to S-band or X-band. The lower FSPL at 437 MHz does not compensate for the low TX power (0.5 W vs 2 W), low antenna gain (0 dBi vs 6 dBi), and higher system noise temperature of amateur stations. FEC coding and a reasonable ground antenna are essential for closing a UHF CubeSat link.
+
+**Data throughput:** At 4800 bps useful throughput, a 7-minute pass delivers:
+$V_{\text{pass}} = 4800 \times 420 \times 0.85 = 1.71$ Mbit $= 214$ kB per pass.
+
+With 4 passes/day: $V_{\text{daily}} = 856$ kB/day $\approx$ **0.84 MB/day**. The magnetometer generates < 1 kbps $\times$ 600 s/orbit $\times$ 15 orbits = 9 Mbit/day = 1.13 MB/day. This is marginal -- the team may need to prioritise data or add a second ground station.
 
 ---
 
@@ -4801,6 +5169,52 @@ After equipment selection, perform a final budget health check:
 
 ---
 
+### 1U Worked Example: UniSat-1
+
+**CDS Compliance for 1U Form Factor**
+
+The CubeSat Design Specification (CDS Rev 14) defines the 1U envelope:
+
+| Parameter | 1U Specification | UniSat-1 Design |
+|-----------|-----------------|-----------------|
+| Dimensions | 100.0 x 100.0 x 113.5 mm | 100.0 x 100.0 x 113.5 mm (ISIS 1U frame) |
+| Maximum mass | 1.33 kg (CDS Rev 14) | 1.0 kg target (25% margin) |
+| Rail material | Hard anodised Al 7075-T6 | Standard (part of ISIS frame) |
+| Rail cross-section | 8.5 x 8.5 mm minimum | Standard (ISIS) |
+| Deployment switches | Minimum 1 per accessible face | 2 switches (ISIS standard) |
+| RBF pin | Required | Included |
+| CG offset | <= 2 cm from geometric centre | < 1 cm (symmetric layout) |
+| Protrusions | None beyond rail envelope (stowed) | UHF antenna stowed along rail |
+
+**Note on CDS mass limit:** The CDS Rev 14 specifies 2.0 kg as the 1U deployer limit for the ISIPOD. However, many deployer providers (e.g., NanoRacks, Exolaunch) specify 1.33 kg for 1U. Always check the specific deployer ICD. UniSat-1 targets 1.0 kg, well within either limit.
+
+**No propulsion:** At 400 km altitude, atmospheric drag provides natural deorbit within approximately 1 year. The ballistic coefficient for a 1U is:
+
+$BC = \frac{m}{C_D \times A} = \frac{1.0}{2.2 \times 0.01} = 45.5$ kg/m$^2$
+
+This gives an orbital lifetime of approximately 8--14 months depending on solar activity (F10.7 index). The FCC 5-year rule and IADC 25-year guideline are both satisfied without any propulsion system.
+
+**Complete 1U Equipment List:**
+
+> | # | Category | Component | Mass (g) | Power (W) | Cost (kEUR) | Qty |
+> |---|----------|-----------|----------|----------|-------------|-----|
+> | 1 | Structure | ISIS 1U CubeSat structure | 200 | -- | 4.0 | 1 |
+> | 2 | EPS | GomSpace NanoPower P31us (board + battery) | 200 | 0.3 | 12.0 | 1 |
+> | 3 | Solar cells | Body-mounted GaAs cells (5 faces) | 50 | -- | 8.0 | 5 |
+> | 4 | OBC | Custom MSP430/Cortex-M board | 30 | 0.3 | 3.0 | 1 |
+> | 5 | Comms | UHF transceiver (e.g., NanoCom AX100) | 60 | 0.5 (TX) | 8.0 | 1 |
+> | 6 | Antenna | UHF monopole/dipole (deployable) | 20 | -- | 2.0 | 1 |
+> | 7 | Payload | MEMS magnetometer (custom PCB) | 50 | 0.2 | 5.0 | 1 |
+> | 8 | AOCS (passive) | Permanent magnet + hysteresis rods | 30 | 0 | 1.0 | 1 |
+> | 9 | Harness | Internal cables, connectors | 50 | -- | 1.0 | 1 |
+> | | **TOTAL** | | **690** | **~1.3 (peak)** | **~44** | |
+>
+> **Mass margin:** 1330 - 690 = 640 g (48%) or 1330 - 994 (MEV with 20% equip + 20% system) = 336 g (25%). **Green.**
+>
+> **Key insight:** The entire UniSat-1 BOM is 5 COTS components plus 2 custom boards (OBC and magnetometer). Total hardware cost is ~44 kEUR -- an order of magnitude less than a typical 3U mission. With labour, I&T, and launch, the total mission cost is 80--150 kEUR.
+
+---
+
 ## Worked Example: Complete 3U EO CubeSat Equipment List
 
 > | Category | Component | Mass (kg) | Power (W) | Cost (kEUR) | Qty |
@@ -5045,6 +5459,65 @@ In SpaceCDF, the BOM is built automatically from the Equipment Browser selection
 | **Total** | | **2620** | **28.2 (peak)** | **173.5** |
 | Allocation (6U) | | 12000 | 40.0 (SA EOL) | 250.0 |
 | Margin | | 9380 (78%) | 11.8 (30%) | 76.5 (31%) |
+
+---
+
+### 1U Worked Example: UniSat-1
+
+**Complete Bill of Materials**
+
+UniSat-1's BOM is remarkably short -- only 5--7 line items plus harness. This simplicity is a major advantage for university teams with limited procurement experience.
+
+> **UniSat-1 BOM (Phase B -- vendor quotes obtained):**
+>
+> | Item ID | Component | Manufacturer | Part Number | Qty | Unit Mass (g) | Unit Cost (kEUR) | TRL | ECCN | Lead (wks) |
+> |---------|-----------|-------------|-------------|-----|---------------|-----------------|-----|------|-----------|
+> | STR-001 | 1U CubeSat Structure | ISIS | ISIS-1U-STR | 1 | 200 | 4.0 | 9 | EAR99 | 8 |
+> | EPS-001 | NanoPower P31us (EPS + 10Wh battery) | GomSpace | P31US-10 | 1 | 200 | 12.0 | 9 | EAR99 | 12 |
+> | EPS-SA-001 | Body-mounted GaAs solar cells | AzurSpace | 3G30C | 5 | 10 | 1.5 | 9 | EAR99 | 10 |
+> | OBC-001 | Custom flight computer (Cortex-M) | In-house | UNISAT-OBC-01 | 1 | 30 | 3.0 | 5 | EAR99 | -- |
+> | COM-001 | UHF Transceiver | GomSpace | NanoCom AX100 | 1 | 55 | 8.0 | 8 | EAR99 | 12 |
+> | COM-ANT-001 | UHF Deployable Antenna | Endurosat | UHF-ANT-S | 1 | 25 | 2.5 | 8 | EAR99 | 8 |
+> | PL-001 | MEMS Magnetometer Board | In-house | UNISAT-MAG-01 | 1 | 50 | 5.0 | 4 | EAR99 | -- |
+> | AOCS-001 | Passive magnetic kit (magnet + rods) | NewSpace | PMAG-1U | 1 | 30 | 1.0 | 9 | EAR99 | 6 |
+> | HAR-001 | Internal harness | Custom | -- | 1 | 50 | 1.0 | N/A | EAR99 | -- |
+> | | **TOTALS** | | | | **690 g** | **~44 kEUR** | | | |
+
+**Cost summary (total mission, hardware + services):**
+
+| WBS Element | Cost (kEUR) | Notes |
+|-------------|------------|-------|
+| Hardware (BOM) | 44 | All COTS except OBC and payload |
+| OBC software | 5 | Student labour (costed at stipend rate) |
+| Payload calibration | 3 | University magnetometer lab |
+| I&T | 8 | Assembly + vibration test (university facility) |
+| Ground station | 5 | SatNOGS (free) + dedicated Yagi antenna purchase |
+| Launch (ISS deploy) | 15 | NanoRacks 1U deployment fee |
+| PM/SE/QA | 5 | Faculty supervision |
+| **TOTAL** | **~85 kEUR** | |
+
+**Comparison to 3U EO mission:**
+
+| Metric | UniSat-1 (1U) | 3U EO CubeSat |
+|--------|--------------|---------------|
+| BOM line items | 9 | ~15--20 |
+| Hardware cost | ~44 kEUR | ~290 kEUR |
+| Total mission cost | ~85 kEUR | ~490 kEUR |
+| Development time | 6--12 months | 18--24 months |
+| Team size | 3--5 people | 8--15 people |
+
+**Export control:** All UniSat-1 components are classified EAR99 (no licence required). There are no ITAR-controlled items because the mission uses no star trackers, no radiation-hardened processors, and no propulsion with ITAR-restricted technology. This is a significant advantage for international university collaborations.
+
+**Make/Buy/Reuse decisions:**
+
+| Component | Decision | Rationale |
+|-----------|----------|-----------|
+| Structure | Buy (COTS) | ISIS 1U frame is flight-proven, TRL 9, low cost |
+| EPS | Buy (COTS) | GomSpace P31us is the de facto standard, TRL 9 |
+| OBC | Make (custom) | Minimal board using university lab; lower cost than COTS OBC for this simple application |
+| Comms | Buy (COTS) | GomSpace AX100, TRL 8, well-documented |
+| Payload | Make (custom) | Novel MEMS sensor -- this IS the technology demonstration |
+| Passive AOCS | Buy (COTS) | Standard magnetic stabilisation kit |
 
 ---
 
@@ -6331,6 +6804,59 @@ Point estimates are misleading. Every cost estimate has uncertainty. The standar
 > Example: If P50 = EUR 500K, then P80 ~ EUR 650K.
 >
 > *This approximation assumes moderate complexity and well-understood COTS hardware. For missions with custom payloads or new technology, use P80 ~ P50 x 1.5.*
+
+---
+
+### 1U Worked Example: UniSat-1
+
+**Cost Breakdown: Simple WBS, Mostly COTS**
+
+UniSat-1's cost structure is fundamentally different from larger missions because (a) nearly all hardware is COTS, so NRE is near zero, and (b) the team is small and university-based, so labour costs are low.
+
+> **UniSat-1 WBS Cost Estimate (Parametric vs Bottom-Up):**
+>
+> | WBS Element | Parametric (kEUR) | Bottom-Up (kEUR) | Notes |
+> |-------------|-------------------|-------------------|-------|
+> | 1.0 Programme Management | 4 | 5 | Faculty oversight, 0.1 FTE x 12 months |
+> | 2.0 Systems Engineering | 3 | 3 | Student team lead |
+> | 3.0 Mission Assurance | 1 | 1 | Minimal QA for university mission |
+> | 4.0 Payload | 8 | 8 | MEMS sensor PCB + calibration |
+> | 5.0 Bus Hardware | 38 | 36 | See BOM from Session 4.1 |
+> |   5.1 Structure | 4 | 4 | ISIS 1U frame |
+> |   5.2 EPS + SA | 20 | 19.5 | P31us + body-mounted cells |
+> |   5.3 AOCS (passive) | 1 | 1 | Magnet + hysteresis rods |
+> |   5.4 Comms (UHF) | 11 | 10.5 | AX100 + antenna |
+> |   5.5 OBC | 3 | 3 | Custom Cortex-M board |
+> | 6.0 I&T | 8 | 8 | University clean room + vibe test facility |
+> | 7.0 Software | 5 | 5 | FSW (FreeRTOS) + GSW |
+> | 8.0 Launch | 15 | 15 | NanoRacks 1U ISS deployment |
+> | 9.0 Ground Segment | 5 | 5 | Yagi antenna + SatNOGS network |
+> | 10.0 Operations (6 months) | 3 | 3 | Student operators, 0.2 FTE |
+> | **TOTAL (P50)** | **~90** | **~85** | |
+> | **P80 (x 1.3)** | **~117** | **~111** | Conservative estimate |
+
+**Key cost observations for 1U missions:**
+
+1. **Hardware is cheap:** Total COTS hardware cost is ~36--44 kEUR. This is less than a single star tracker for a 3U mission.
+
+2. **NRE is minimal:** Only the OBC and payload require custom development. NRE is estimated at ~8 kEUR (payload calibration + OBC board layout), compared to ~50--150 kEUR for custom payloads on larger missions.
+
+3. **Launch cost is proportionally large:** At 15 kEUR, the launch represents ~18% of total cost. For a 3U mission at ~200 kEUR launch cost, launch is ~40% of total. The 1U launch cost is low in absolute terms but still a significant fraction.
+
+4. **Labour dominates:** For a university team, the "free" student labour is the hidden cost. If students were costed at professional rates (~50 EUR/hr), the total labour cost would be ~100--200 kEUR, far exceeding the hardware cost. This is typical for educational missions.
+
+5. **No cost drivers from complexity:** There is no AOCS software development, no deployable mechanism qualification, no propulsion system integration, no thermal vacuum testing of heaters -- all of which add 10--50 kEUR each on a 3U mission.
+
+**Learning curve applicability:** If a university builds a series of 1U demonstrators (UniSat-1, UniSat-2, UniSat-3...), the 90% learning rate applies:
+
+| Unit | Hardware Cost (kEUR) | Total Cost (kEUR) |
+|------|---------------------|-------------------|
+| UniSat-1 | 44 | 85 |
+| UniSat-2 | 40 | 77 |
+| UniSat-4 | 36 | 69 |
+| UniSat-8 | 32 | 62 |
+
+The asymptotic floor is dominated by launch cost (15 kEUR) and irreducible ground segment + operations costs (~8 kEUR), giving a minimum mission cost of ~40--50 kEUR for repeat builds.
 
 ---
 

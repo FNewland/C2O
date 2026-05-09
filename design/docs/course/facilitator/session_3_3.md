@@ -270,6 +270,75 @@ Required data rate?
 
 ---
 
+### 1U Worked Example: UniSat-1
+
+**UHF Link Budget: 437 MHz at 9600 bps**
+
+UniSat-1 uses the UHF amateur band at 437 MHz with a ground station equipped with a 10 dBi Yagi antenna. This is the lowest-cost and simplest communication architecture available to CubeSat missions.
+
+> **Worked Example -- UHF Downlink Link Budget for UniSat-1**
+>
+> **Scenario:** 400 km orbit, UHF (437 MHz), 9600 bps downlink, 10 deg minimum elevation angle, amateur ground station with 10 dBi Yagi antenna.
+>
+> **Slant range at 10 deg elevation:**
+> From 400 km altitude, the worst-case slant range at 10 deg elevation is approximately 1150 km.
+>
+> | Line | Parameter | Value | Unit |
+> |------|-----------|-------|------|
+> | 1 | TX Power (0.5 W) | -3.0 | dBW |
+> | 2 | TX Antenna Gain (monopole, ~0 dBi) | 0.0 | dBi |
+> | 3 | TX Line Losses | -0.5 | dB |
+> | 4 | **EIRP** | **-3.5** | dBW |
+> | 5 | FSPL (437 MHz, 1150 km slant) | -155.5 | dB |
+> | 6 | Atmospheric Loss | -0.3 | dB |
+> | 7 | Pointing Loss (omni antenna -- minimal) | -0.5 | dB |
+> | 8 | Polarisation Loss (linear to linear, worst case) | -3.0 | dB |
+> | 9 | RX Antenna Gain (10 dBi Yagi) | +10.0 | dBi |
+> | 10 | System Noise Temp (600 K -- amateur station with LNA) | 27.8 | dBK |
+> | 11 | **G/T** | **-17.8** | dB/K |
+> | 12 | Boltzmann Constant | +228.6 | dBW/K/Hz |
+> | 13 | **C/N$_0$** = -3.5 - 155.5 - 0.3 - 0.5 - 3.0 + (-17.8) + 228.6 | **+48.0** | dBHz |
+> | 14 | Data Rate (9600 bps = $10\log_{10}(9600)$) | 39.8 | dBbps |
+> | 15 | **$E_b/N_0$ available** = 48.0 - 39.8 | **+8.2** | dB |
+> | 16 | $E_b/N_0$ required (GMSK uncoded, BER $10^{-5}$) | 10.5 | dB |
+> | 17 | Implementation Loss | -2.0 | dB |
+>
+> **Wait -- that gives a negative margin!** $8.2 - 10.5 - 2.0 = -4.3$ dB. The link does NOT close with uncoded GMSK.
+>
+> **Fix: Add forward error correction (FEC).** Using convolutional coding (r=1/2):
+> - $E_b/N_0$ required drops to **5.0 dB** (from 10.5 dB uncoded)
+> - Effective data rate halves to 4800 bps useful throughput (9600 bps channel rate)
+> - **Margin** = 8.2 - 5.0 - 2.0 = **+1.2 dB** -- still marginal.
+>
+> **Further fix: Upgrade ground antenna to a cross-Yagi (13 dBi) with circular polarisation:**
+> - RX gain: +13.0 dBi (was +10.0)
+> - Polarisation loss: -0.5 dB (was -3.0 dB, now RHCP-to-RHCP)
+> - Net improvement: +3.0 + 2.5 = **+5.5 dB**
+> - New C/N$_0$: 53.5 dBHz
+> - New $E_b/N_0$ available: 53.5 - 39.8 = 13.7 dB
+> - **Margin** = 13.7 - 5.0 - 2.0 = **+6.7 dB** -- **Pass** (> 3 dB).
+>
+> **Final link budget summary (with FEC + cross-Yagi):**
+>
+> | Parameter | Value |
+> |-----------|-------|
+> | TX power | 0.5 W |
+> | TX antenna | Monopole (0 dBi) |
+> | Frequency | 437 MHz |
+> | Channel rate | 9600 bps |
+> | Useful throughput | 4800 bps (with r=1/2 FEC) |
+> | Ground antenna | 13 dBi cross-Yagi, RHCP |
+> | Link margin | **+6.7 dB** |
+
+**Key lesson from UniSat-1 link budget:** UHF links are power-starved compared to S-band or X-band. The lower FSPL at 437 MHz does not compensate for the low TX power (0.5 W vs 2 W), low antenna gain (0 dBi vs 6 dBi), and higher system noise temperature of amateur stations. FEC coding and a reasonable ground antenna are essential for closing a UHF CubeSat link.
+
+**Data throughput:** At 4800 bps useful throughput, a 7-minute pass delivers:
+$V_{\text{pass}} = 4800 \times 420 \times 0.85 = 1.71$ Mbit $= 214$ kB per pass.
+
+With 4 passes/day: $V_{\text{daily}} = 856$ kB/day $\approx$ **0.84 MB/day**. The magnetometer generates < 1 kbps $\times$ 600 s/orbit $\times$ 15 orbits = 9 Mbit/day = 1.13 MB/day. This is marginal -- the team may need to prioritise data or add a second ground station.
+
+---
+
 ## 7. Data Budget (10 min)
 
 ### Teaching Notes
