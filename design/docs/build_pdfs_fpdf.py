@@ -270,32 +270,67 @@ def _render_table(pdf: SpaceCDFPDF, rows: list[list[str]]):
         return
     pdf.ln(3)
     n_cols = max(len(r) for r in rows)
-    # Calculate column widths based on content
     avail_w = 170
-    col_widths = [avail_w / n_cols] * n_cols
+    line_h = 4  # Height per line of text in a cell
+
+    # Calculate column widths proportional to max content length
+    max_lens = [0] * n_cols
+    for row in rows:
+        for j, cell in enumerate(row[:n_cols]):
+            max_lens[j] = max(max_lens[j], len(_clean_md(cell)))
+    total_len = max(sum(max_lens), 1)
+    col_widths = [max(avail_w * l / total_len, 15) for l in max_lens]
+    # Normalize to fit available width
+    scale = avail_w / sum(col_widths)
+    col_widths = [w * scale for w in col_widths]
 
     for row_idx, row in enumerate(rows):
-        # Pad row if needed
         while len(row) < n_cols:
             row.append("")
-        if row_idx == 0:
-            # Header
-            pdf.set_font("Helvetica", "B", 8)
+
+        is_header = row_idx == 0
+        if is_header:
+            pdf.set_font("Helvetica", "B", 7.5)
             pdf.set_fill_color(30, 58, 95)
             pdf.set_text_color(255, 255, 255)
         else:
-            pdf.set_font("Helvetica", "", 8)
+            pdf.set_font("Helvetica", "", 7.5)
             pdf.set_text_color(26, 26, 46)
             if row_idx % 2 == 0:
                 pdf.set_fill_color(249, 250, 251)
             else:
                 pdf.set_fill_color(255, 255, 255)
 
-        max_h = 5
-        for j, cell in enumerate(row):
-            text = _clean_md(cell)[:60]  # Truncate for table cells
-            pdf.cell(col_widths[j], max_h, f" {text}", border=1, fill=True)
-        pdf.ln(max_h)
+        # Calculate row height based on tallest cell
+        cell_texts = [_clean_md(cell) for cell in row[:n_cols]]
+        row_height = line_h  # minimum 1 line
+        for j, text in enumerate(cell_texts):
+            # Estimate number of lines needed for wrapping
+            char_width = pdf.get_string_width("x")
+            chars_per_line = max(int(col_widths[j] / char_width) - 1, 5)
+            n_lines = max(1, -(-len(text) // chars_per_line))  # ceil division
+            row_height = max(row_height, n_lines * line_h)
+        row_height = min(row_height, 30)  # cap at ~7 lines
+
+        # Check if we need a page break
+        if pdf.get_y() + row_height > pdf.h - 20:
+            pdf.add_page()
+
+        # Draw cells using multi_cell in a row
+        x_start = pdf.get_x()
+        y_start = pdf.get_y()
+
+        for j, text in enumerate(cell_texts):
+            x = x_start + sum(col_widths[:j])
+            pdf.set_xy(x, y_start)
+            # Draw cell background and border
+            pdf.rect(x, y_start, col_widths[j], row_height, style="DF")
+            # Draw text with padding
+            pdf.set_xy(x + 1, y_start + 0.5)
+            pdf.multi_cell(col_widths[j] - 2, line_h, text)
+
+        # Move to next row
+        pdf.set_xy(x_start, y_start + row_height)
 
     pdf.set_text_color(26, 26, 46)
     pdf.ln(3)
