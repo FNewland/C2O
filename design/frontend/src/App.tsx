@@ -79,12 +79,6 @@ function AppShell() {
       loadModel(studyIdForReload)
     }
   }, [activePhase, studyIdForReload])
-  // Also reload after design run completes (seeds the element tree)
-  useEffect(() => {
-    if (!isRunning && studyIdForReload && activePhase >= 1) {
-      loadModel(studyIdForReload)
-    }
-  }, [isRunning])
 
   const missionNeed = useDesignStore(s => s.missionNeed)
   const result = useDesignStore(s => s.result)
@@ -92,6 +86,13 @@ function AppShell() {
   const error = useDesignStore(s => s.error)
   const isRunning = useDesignStore(s => s.isRunning)
   const designStale = useDesignStore(s => s.designStale)
+
+  // Also reload after design run completes (seeds the element tree)
+  useEffect(() => {
+    if (!isRunning && studyIdForReload && activePhase >= 1) {
+      loadModel(studyIdForReload)
+    }
+  }, [isRunning])
   const runDesign = useDesignStore(s => s.runDesign)
   const requirements = useDesignStore(s => s.requirements)
 
