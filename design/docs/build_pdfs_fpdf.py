@@ -144,15 +144,46 @@ def parse_markdown_to_pdf(pdf: SpaceCDFPDF, md_text: str):
                 i += 1
                 continue
 
-        # SVG blocks — skip (can't render in fpdf)
+        # SVG blocks — render a bordered placeholder box with the diagram title
         if "<svg" in stripped:
+            # Try to extract a title from the SVG or surrounding context
+            svg_title = "Diagram"
+            svg_content = stripped
             while i < len(lines) and "</svg>" not in lines[i]:
+                svg_content += lines[i]
                 i += 1
             i += 1
-            pdf.set_font("Helvetica", "I", 9)
-            pdf.set_text_color(107, 114, 128)
-            pdf.cell(0, 6, "[SVG diagram -- see digital version]", new_x="LMARGIN", new_y="NEXT")
-            pdf.ln(2)
+            # Extract title from <text> elements or nearby heading
+            import re as _re
+            title_match = _re.search(r'<text[^>]*>([^<]+)</text>', svg_content)
+            if title_match:
+                svg_title = _clean_md(title_match.group(1))
+            # Draw a placeholder box
+            pdf.ln(3)
+            box_y = pdf.get_y()
+            box_h = 40
+            if pdf.get_y() + box_h > pdf.h - 25:
+                pdf.add_page()
+                box_y = pdf.get_y()
+            pdf.set_draw_color(59, 130, 246)
+            pdf.set_line_width(0.5)
+            pdf.rect(25, box_y, 160, box_h)
+            pdf.set_line_width(0.2)
+            # Diagonal lines to indicate diagram area
+            pdf.set_draw_color(220, 220, 230)
+            pdf.line(25, box_y, 185, box_y + box_h)
+            pdf.line(185, box_y, 25, box_y + box_h)
+            # Label
+            pdf.set_font("Helvetica", "BI", 10)
+            pdf.set_text_color(59, 130, 246)
+            pdf.set_xy(25, box_y + box_h / 2 - 5)
+            pdf.cell(160, 5, f"Figure: {svg_title}", align="C")
+            pdf.set_xy(25, box_y + box_h / 2 + 2)
+            pdf.set_font("Helvetica", "I", 8)
+            pdf.set_text_color(156, 163, 175)
+            pdf.cell(160, 4, "(See digital/markdown version for interactive diagram)", align="C")
+            pdf.set_xy(20, box_y + box_h + 3)
+            pdf.ln(3)
             continue
 
         # HTML comments (SVG descriptions) — skip
@@ -218,6 +249,33 @@ def parse_markdown_to_pdf(pdf: SpaceCDFPDF, md_text: str):
         # Empty line
         if not stripped:
             pdf.ln(3)
+            i += 1
+            continue
+
+        # Blank response lines (underscores) — render as full-width ruled lines
+        if re.match(r"^_{5,}$", stripped):
+            pdf.set_draw_color(180, 180, 190)
+            y = pdf.get_y() + 4
+            pdf.line(20, y, 190, y)  # Full page width
+            pdf.ln(6)
+            i += 1
+            continue
+
+        # Lines with label + underscores (e.g., "Name: ___________")
+        if "___" in stripped:
+            parts = stripped.split("___", 1)
+            label = _clean_md(parts[0].strip())
+            pdf.set_font("Helvetica", "", 10)
+            pdf.set_text_color(26, 26, 46)
+            if label:
+                label_w = pdf.get_string_width(label) + 4
+                pdf.cell(label_w, 6, label)
+            # Draw line for the rest of the width
+            pdf.set_draw_color(180, 180, 190)
+            x = pdf.get_x()
+            y = pdf.get_y() + 5
+            pdf.line(x, y, 190, y)  # Extend to right margin
+            pdf.ln(7)
             i += 1
             continue
 
@@ -336,13 +394,52 @@ def _render_table(pdf: SpaceCDFPDF, rows: list[list[str]]):
     pdf.ln(3)
 
 
+def _latex_to_text(latex: str) -> str:
+    """Convert LaTeX math notation to readable plain text."""
+    t = latex
+    # Step 1: Handle subscripts/superscripts FIRST (removes inner braces so \frac can match)
+    for _ in range(3):
+        t = re.sub(r"_\{([^{}]+)\}", r"_\1", t)
+        t = re.sub(r"\^\{([^{}]+)\}", r"^\1", t)
+    # Step 2: Now handle fractions (inner braces already removed)
+    for _ in range(3):
+        t = re.sub(r"\\frac\{([^{}]+)\}\{([^{}]+)\}", r"(\1)/(\2)", t)
+    # Fallback: bare \frac without braces
+    t = re.sub(r"\\frac([A-Za-z0-9_]+)([A-Za-z0-9_]+)", r"(\1)/(\2)", t)
+    # Step 3: Common commands — order matters (longer commands first)
+    cmd_replacements = [
+        (r"\times", " x "), (r"\cdot", " * "), (r"\pm", " +/- "),
+        (r"\approx", " ~= "), (r"\geq", " >= "), (r"\leq", " <= "),
+        (r"\neq", " != "), (r"\infty", "inf"),
+        (r"\sqrt", "sqrt"), (r"\sum", "Sum"), (r"\prod", "Prod"),
+        (r"\pi", "pi"), (r"\mu", "u"), (r"\sigma", "sigma"),
+        (r"\alpha", "alpha"), (r"\beta", "beta"), (r"\gamma", "gamma"),
+        (r"\delta", "delta"), (r"\Delta", "D"), (r"\theta", "theta"),
+        (r"\lambda", "lambda"), (r"\omega", "omega"), (r"\epsilon", "eps"),
+        (r"\eta", "eta"), (r"\rho", "rho"), (r"\phi", "phi"),
+        (r"\cos", "cos"), (r"\sin", "sin"), (r"\tan", "tan"),
+        (r"\log", "log"), (r"\ln", "ln"), (r"\exp", "exp"),
+        (r"\text", ""), (r"\mathrm", ""), (r"\mathbf", ""),
+        (r"\left", ""), (r"\right", ""), (r"\quad", " "), (r"\,", " "),
+        (r"\%", "%"), (r"\_", "_"),
+    ]
+    for cmd, repl in cmd_replacements:
+        t = t.replace(cmd, repl)
+    # Clean remaining braces
+    t = t.replace("{", "").replace("}", "")
+    # Clean up multiple spaces
+    t = re.sub(r"  +", " ", t).strip()
+    return t
+
+
 def _clean_md(text: str) -> str:
     """Strip markdown formatting and make latin-1 safe for fpdf."""
     text = re.sub(r"\*\*(.+?)\*\*", r"\1", text)  # Bold
     text = re.sub(r"\*(.+?)\*", r"\1", text)  # Italic
     text = re.sub(r"`(.+?)`", r"\1", text)  # Code
     text = re.sub(r"\[(.+?)\]\(.+?\)", r"\1", text)  # Links (keep text)
-    text = re.sub(r"\$(.+?)\$", r"\1", text)  # LaTeX (render as text)
+    # LaTeX — convert common notation to readable form
+    text = re.sub(r"\$(.+?)\$", lambda m: _latex_to_text(m.group(1)), text)
     # Replace Unicode characters with latin-1 safe equivalents
     replacements = {
         "\u2014": "--", "\u2013": "-", "\u2192": "->", "\u2194": "<->",
