@@ -1,0 +1,213 @@
+---
+# Ground Segment Equipment Knowledge Base
+# Covers: RF equipment, baseband, tracking, MCC, data processing
+
+components:
+  # Antenna Systems
+  - id: gs-ant-3m7
+    name: 3.7m S/X-band Antenna
+    manufacturer: Vertex Antennentechnik
+    category: ground_antennas
+    mass_kg: 500
+    power_w: 200
+    cost_keur: 150
+    trl: 9
+    performance:
+      diameter_m: 3.7
+      bands: [S, X]
+      gain_s_dbi: 33
+      gain_x_dbi: 43
+      tracking: autotrack
+    heritage_missions: [Leaf Space, various university stations]
+    notes: Small commercial tracking antenna
+
+  - id: gs-ant-5m4
+    name: 5.4m S/X-band Antenna
+    manufacturer: ViaSat
+    category: ground_antennas
+    mass_kg: 1200
+    power_w: 500
+    cost_keur: 400
+    trl: 9
+    performance:
+      diameter_m: 5.4
+      bands: [S, X]
+      gain_s_dbi: 36
+      gain_x_dbi: 46
+      tracking: autotrack + program track
+    heritage_missions: [KSAT Svalbard, SSC Esrange]
+
+  - id: gs-ant-13m
+    name: 13m Multi-band Antenna
+    manufacturer: General Dynamics SATCOM
+    category: ground_antennas
+    mass_kg: 8000
+    power_w: 2000
+    cost_keur: 2000
+    trl: 9
+    performance:
+      diameter_m: 13
+      bands: [S, X, Ka]
+      gain_s_dbi: 44
+      gain_x_dbi: 54
+      gain_ka_dbi: 60
+      tracking: monopulse + autotrack
+    heritage_missions: [ESA Redu, KSAT Svalbard]
+
+  # LNA (Low Noise Amplifiers)
+  - id: gs-lna-s
+    name: S-band Cryogenic LNA
+    manufacturer: Miteq
+    category: ground_rf
+    mass_kg: 5
+    power_w: 50
+    cost_keur: 15
+    trl: 9
+    performance:
+      band: S
+      noise_temp_k: 25
+      gain_db: 35
+    notes: Cryogenically cooled for minimum noise
+
+  - id: gs-lna-x
+    name: X-band LNA
+    manufacturer: Miteq
+    category: ground_rf
+    mass_kg: 3
+    power_w: 30
+    cost_keur: 10
+    trl: 9
+    performance:
+      band: X
+      noise_temp_k: 40
+      gain_db: 30
+
+  # HPA (High Power Amplifiers)
+  - id: gs-hpa-s-200w
+    name: 200W S-band SSPA
+    manufacturer: CPI
+    category: ground_rf
+    mass_kg: 20
+    power_w: 800
+    cost_keur: 25
+    trl: 9
+    performance:
+      band: S
+      output_power_w: 200
+      efficiency_pct: 25
+
+  - id: gs-hpa-s-1kw
+    name: 1kW S-band SSPA
+    manufacturer: Advantech Wireless
+    category: ground_rf
+    mass_kg: 50
+    power_w: 4000
+    cost_keur: 60
+    trl: 9
+    performance:
+      band: S
+      output_power_w: 1000
+      efficiency_pct: 25
+
+  # Modems / Baseband
+  - id: gs-modem-cortex
+    name: Cortex CRT-II
+    manufacturer: Zodiac Data Systems
+    category: ground_baseband
+    mass_kg: 10
+    power_w: 100
+    cost_keur: 80
+    trl: 9
+    performance:
+      max_data_rate_mbps: 300
+      modulation: [BPSK, QPSK, 8PSK, OQPSK]
+      coding: [conv, RS, LDPC, turbo]
+      standards: [CCSDS]
+    heritage_missions: [ESA missions, many commercial]
+    notes: Industry standard ground modem
+
+  - id: gs-modem-amergint
+    name: Amergint softFEP
+    manufacturer: Amergint Technologies
+    category: ground_baseband
+    mass_kg: 5
+    power_w: 50
+    cost_keur: 40
+    trl: 9
+    performance:
+      max_data_rate_mbps: 500
+      modulation: [BPSK, QPSK, 8PSK]
+      coding: [LDPC, turbo]
+      standards: [CCSDS, DVB-S2]
+    notes: Software-defined modem
+
+  # Mission Control Software
+  - id: gs-mcs-scos
+    name: SCOS-2000
+    manufacturer: ESA
+    category: ground_software
+    mass_kg: 0
+    power_w: 0
+    cost_keur: 0
+    trl: 9
+    performance:
+      type: mission_control
+      standards: [CCSDS PUS, ECSS]
+      open_source: true
+    notes: ESA standard MCS, free but requires expertise
+
+  - id: gs-mcs-cosmos
+    name: COSMOS
+    manufacturer: Ball Aerospace (OpenC3)
+    category: ground_software
+    mass_kg: 0
+    power_w: 0
+    cost_keur: 0
+    trl: 8
+    performance:
+      type: mission_control
+      standards: [CCSDS]
+      open_source: true
+    notes: Open-source command and telemetry system
+
+  - id: gs-mcs-bright
+    name: Generation One
+    manufacturer: Bright Ascension
+    category: ground_software
+    mass_kg: 0
+    power_w: 0
+    cost_keur: 50
+    trl: 9
+    performance:
+      type: mission_control
+      standards: [CCSDS PUS]
+      cloud: true
+    notes: Cloud-native MCS for CubeSats/SmallSats
+
+  # Flight Dynamics
+  - id: gs-fd-gmat
+    name: GMAT
+    manufacturer: NASA GSFC
+    category: ground_software
+    mass_kg: 0
+    power_w: 0
+    cost_keur: 0
+    trl: 9
+    performance:
+      type: flight_dynamics
+      capabilities: [orbit_determination, manoeuvre_planning, propagation]
+      open_source: true
+
+  # Station Infrastructure
+  - id: gs-gpsdo
+    name: GPS-Disciplined Oscillator
+    manufacturer: Symmetricom/Microsemi
+    category: ground_timing
+    mass_kg: 5
+    power_w: 15
+    cost_keur: 5
+    trl: 9
+    performance:
+      accuracy_ns: 50
+      stability: 1e-12
+    notes: Required for coherent ranging and Doppler
