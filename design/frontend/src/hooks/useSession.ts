@@ -80,8 +80,20 @@ export function useSessionHistory(sessionId: string | null) {
 export function useEquipmentSearch(domain: string | null, studyId: string | null) {
   return useQuery({
     queryKey: ['equipment', domain, studyId],
-    queryFn: () => api(`/engineering/equipment/${domain}/search${studyId ? `?study_id=${studyId}` : ''}`),
+    queryFn: async () => {
+      // Try with studyId first for fit scoring, fall back to domain-only
+      if (studyId) {
+        try {
+          return await api(`/engineering/equipment/${domain}/search?study_id=${studyId}`)
+        } catch {
+          // Study may not exist yet — try without studyId
+        }
+      }
+      return api(`/engineering/equipment/${domain}/search`)
+    },
     enabled: !!domain,
+    retry: 1,
+    staleTime: 60000, // Cache for 1 min to reduce load
   })
 }
 
@@ -91,6 +103,8 @@ export function useCompliance(studyId: string | null, worstCase = 'nominal') {
     queryFn: () =>
       api(`/engineering/verification${studyId ? `?study_id=${studyId}&worst_case=${worstCase}` : `?worst_case=${worstCase}`}`),
     enabled: !!studyId,
+    retry: false,
+    staleTime: 30000,
   })
 }
 
@@ -99,7 +113,8 @@ export function useCostEstimate(studyId: string | null) {
     queryKey: ['cost', studyId],
     queryFn: () => api(`/engineering/cost${studyId ? `?study_id=${studyId}` : ''}`),
     enabled: !!studyId,
-    retry: false,  // Don't retry 404s
+    retry: false,
+    staleTime: 30000,
   })
 }
 

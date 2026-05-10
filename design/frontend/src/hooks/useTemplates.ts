@@ -76,9 +76,17 @@ export function useCreateStudyFromTemplate() {
 export function useEcssCompliance(studyId: string | null) {
   return useQuery<ComplianceSummary>({
     queryKey: ['ecss-compliance', studyId],
-    queryFn: () => api<ComplianceSummary>(`/ecss/compliance/by-study/${studyId}`),
+    queryFn: async () => {
+      try {
+        return await api<ComplianceSummary>(`/ecss/compliance/by-study/${studyId}`)
+      } catch {
+        // Study may not have design results yet — try phase-based fallback
+        return await api<ComplianceSummary>(`/ecss/compliance/phase_a`)
+      }
+    },
     enabled: !!studyId,
     staleTime: 30_000,
+    retry: false,
   })
 }
 
