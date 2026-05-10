@@ -319,18 +319,9 @@ function AppShell() {
             {useDesignStore.getState().missionId}
           </span>
           <span style={{ flex: 1 }} />
-          {/* Compact margin indicators — only show at system level and above with meaningful values */}
-          {result && get('mass.dry_mass_kg') > 0 && activePhase >= 2 && (
+          {/* Margin indicators removed per user feedback — use Phase 2 Budget view instead */}
+          {false && (
             <div style={{ display: 'flex', gap: '0.5rem', fontSize: '0.65rem' }}>
-              <span style={{ color: massMargin > 20 ? '#10b981' : massMargin > 0 ? '#f59e0b' : '#ef4444' }}>
-                Mass: {massMargin.toFixed(0)}%
-              </span>
-              <span style={{ color: get('power.sa_power_eol_w') > get('power.total_sunlight_w') ? '#10b981' : '#ef4444' }}>
-                Power: {get('power.sa_power_eol_w') > 0 ? ((get('power.sa_power_eol_w') - get('power.total_sunlight_w')) / get('power.sa_power_eol_w') * 100).toFixed(0) : '—'}%
-              </span>
-              <span style={{ color: get('link.ttc_margin_db') >= 3 ? '#10b981' : '#ef4444' }}>
-                TTC: {get('link.ttc_margin_db').toFixed(0)}dB
-              </span>
             </div>
           )}
         </header>

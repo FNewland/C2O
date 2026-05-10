@@ -18,14 +18,19 @@ export function MassPropertiesPanel() {
     return p && typeof p.value === 'number' ? p.value : 0
   }
 
-  const totalMass = get('mass.total_kg') || get('systems.total_mass_kg')
-  const hasData = totalMass > 0
+  const totalMass = get('mass.total_kg') || get('systems.total_mass_kg') || get('mass.dry_mass_kg')
+  // Also compute from equipment if parametric mass not available
+  const eqMassTotal = equipmentView.reduce((s, e) => s + e.mass_kg * e.quantity, 0)
+  const effectiveMass = totalMass > 0 ? totalMass : eqMassTotal
+  const hasData = effectiveMass > 0
 
-  if (!result || !hasData) {
+  if (!hasData) {
     return (
       <div className="card" style={{ borderLeft: '3px solid #6b7280' }}>
         <h3 style={{ fontSize: '0.85rem', color: '#6b7280' }}>Mass Properties</h3>
-        <p style={{ fontSize: '0.72rem', color: '#6b7280' }}>Run a design to see mass properties.</p>
+        <p style={{ fontSize: '0.72rem', color: '#6b7280' }}>
+          {result ? 'No mass data in design result. Select equipment in Phase 3 to populate.' : 'Run a design to see mass properties.'}
+        </p>
       </div>
     )
   }
