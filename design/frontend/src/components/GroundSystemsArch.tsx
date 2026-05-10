@@ -216,12 +216,28 @@ export function GroundSystemsArch() {
     setNodes(diagramNodes)
   }, [diagramNodes, setNodes])
 
+  const createInterface = useModelStore(s => s.createInterface)
+
   const onConnect = useCallback(
     (connection: Connection) => {
       const label = prompt('Interface label:') || ''
       setEdges(eds => addEdge({ ...connection, label }, eds))
+      // Persist the interface in the model store
+      if (studyId && connection.source && connection.target) {
+        const fromId = connection.source.replace('gs-', '')
+        const toId = connection.target.replace('gs-', '')
+        createInterface(studyId, {
+          name: label,
+          interface_type: 'data',
+          direction: 'bidirectional',
+          from_element_id: fromId,
+          to_element_id: toId,
+          diagram_label: label,
+          status: 'defined',
+        } as any)
+      }
     },
-    [setEdges],
+    [setEdges, studyId, createInterface],
   )
 
   // Persist drag positions back to modelStore

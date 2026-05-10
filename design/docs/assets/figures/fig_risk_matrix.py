@@ -5,7 +5,7 @@ from matplotlib.patches import Rectangle
 from uottawa_brand import apply_style, COLORS, add_footer
 
 apply_style()
-fig, ax = plt.subplots(figsize=(7.6, 6.4))
+fig, ax = plt.subplots(figsize=(7.6, 7.2))
 
 # Tier colours: 1-2 green, 3-4 amber, 5-9 yellow, 10-15 orange, 16-25 red
 def tier_color(score):
@@ -23,7 +23,8 @@ for p in range(1, 6):       # severity (column)
         ax.text(p-0.5, s-0.5, f"{score}", ha="center", va="center",
                 color="white", fontsize=11, fontweight="bold")
 
-# Risks plotted
+# Risks plotted - position markers in cell corners with leader lines to labels
+# placed outside the matrix so they don't overlap the cell numbers or each other
 risks = [
     ("R1 RW failure",            4, 3),  # P=4 S=3
     ("R2 Battery degradation",   2, 4),
@@ -32,13 +33,24 @@ risks = [
     ("R5 Schedule slip",         4, 4),
     ("R6 Cosmic ray SEU",        5, 1),
 ]
-for name, sev, lik in risks:
-    ax.plot(sev-0.5, lik-0.5, "o", color="white", ms=11, mec=COLORS["charcoal"], mew=1.3)
-    ax.text(sev-0.5, lik-0.85, name, ha="center", va="top",
-            fontsize=8.0, color=COLORS["charcoal"],
-            bbox=dict(boxstyle="round,pad=0.18", fc="white", ec=COLORS["polar"], alpha=0.92))
+# Offset positions inside each cell (small ID badges)
+for i, (name, sev, lik) in enumerate(risks):
+    rid = name.split(" ")[0]   # "R1", "R2"...
+    # Place small badge in upper-left corner of cell
+    bx = sev - 1 + 0.18
+    by = lik - 1 + 0.78
+    ax.add_patch(plt.Circle((bx, by), 0.13, color=COLORS["charcoal"], zorder=3))
+    ax.text(bx, by, rid, ha="center", va="center",
+            color="white", fontsize=8, fontweight="bold", zorder=4)
 
-ax.set_xlim(0, 5); ax.set_ylim(0, 5)
+# Build a legend below the matrix
+legend_lines = [f"{name.split(' ',1)[0]} = {name.split(' ',1)[1]}" for name in [r[0] for r in risks]]
+legend_text = "   ".join(legend_lines[:3]) + "\n" + "   ".join(legend_lines[3:])
+ax.text(2.5, -0.85, legend_text, ha="center", va="top",
+        fontsize=8.0, color=COLORS["charcoal"],
+        family="DejaVu Sans Mono")
+
+ax.set_xlim(-0.05, 5.05); ax.set_ylim(-1.5, 5.05)
 ax.set_aspect("equal")
 ax.set_xticks(np.arange(0.5, 5.5))
 ax.set_xticklabels(["1\nNegligible", "2\nMinor", "3\nModerate", "4\nMajor", "5\nCatastrophic"], fontsize=8)

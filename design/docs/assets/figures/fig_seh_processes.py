@@ -13,7 +13,7 @@ tiers = [
     {
         "name": "System Design",
         "color": COLORS["garnet"],
-        "y": (5.8, 7.5),
+        "y": (5.7, 7.5),
         "items": [
             "1. Stakeholder Expectations Definition",
             "2. Technical Requirements Definition",
@@ -24,7 +24,7 @@ tiers = [
     {
         "name": "Product Realisation",
         "color": COLORS["green"],
-        "y": (3.6, 5.4),
+        "y": (3.4, 5.4),
         "items": [
             "5. Product Implementation",
             "6. Product Integration",
@@ -36,7 +36,7 @@ tiers = [
     {
         "name": "Technical Management",
         "color": COLORS["blue"],
-        "y": (0.8, 3.2),
+        "y": (0.6, 3.1),
         "items": [
             "10. Technical Planning",
             "11. Requirements Management",
@@ -55,18 +55,27 @@ for tier in tiers:
     box = FancyBboxPatch((0.4, y0), 11.2, y1 - y0, boxstyle="round,pad=0.05",
                         linewidth=0, facecolor=tier["color"], alpha=0.18)
     ax.add_patch(box)
-    ax.text(0.6, (y0 + y1) / 2, tier["name"], fontsize=11, fontweight="bold",
-            color=tier["color"], rotation=90, ha="center", va="center")
+    # Tier label inside top-left of the band, horizontal, in the band colour
+    ax.text(0.85, y1 - 0.32, tier["name"].upper(), fontsize=9.0, fontweight="bold",
+            color=tier["color"], ha="left", va="center")
     # Items in two columns
-    cols = 4 if len(tier["items"]) >= 4 else len(tier["items"])
+    # Two columns for the larger tiers (TM has 8 items)
+    cols = 2 if len(tier["items"]) > 4 else 1
     rows = -(-len(tier["items"]) // cols)
-    col_w = (11.2 - 1.2) / cols
+    col_w = (11.2 - 0.5) / cols
+    # Compute spacing so all items fit between header (y1-0.7) and band bottom (y0+0.2)
+    band_inner_h = (y1 - 0.7) - (y0 + 0.2)
+    if rows > 1:
+        dy = band_inner_h / (rows - 1)
+    else:
+        dy = 0
+    dy = min(dy, 0.42)
     for i, item in enumerate(tier["items"]):
         c = i % cols
         r = i // cols
-        cx = 1.6 + c * col_w
-        cy = y1 - 0.5 - r * 0.9
-        ax.text(cx, cy, item, fontsize=8.5, color=COLORS["charcoal"],
+        cx = 0.85 + c * col_w
+        cy = y1 - 0.95 - r * dy
+        ax.text(cx, cy, item, fontsize=8.0, color=COLORS["charcoal"],
                 ha="left", va="center")
 
 add_footer(fig)

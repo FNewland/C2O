@@ -32,7 +32,21 @@ const DEFAULT_OPS_ACTIVITIES: OpsActivity[] = [
 ]
 
 export function OpsSystemsArch() {
-  const [activities, setActivities] = useState(DEFAULT_OPS_ACTIVITIES)
+  const storedActivities = useDesignStore(s => s.operationsActivities)
+  const persistActivities = useDesignStore(s => s.setOperationsActivities)
+
+  const [activities, setActivitiesLocal] = useState<OpsActivity[]>(
+    storedActivities.length > 0
+      ? storedActivities.map(sa => ({ description: '', duration: '', automated: false, ...sa } as OpsActivity))
+      : DEFAULT_OPS_ACTIVITIES
+  )
+  const setActivities = (updater: OpsActivity[] | ((prev: OpsActivity[]) => OpsActivity[])) => {
+    setActivitiesLocal(prev => {
+      const next = typeof updater === 'function' ? updater(prev) : updater
+      persistActivities(next)
+      return next
+    })
+  }
   const [expandedId, setExpandedId] = useState<string | null>(null)
 
   const phaseColors: Record<string, string> = {

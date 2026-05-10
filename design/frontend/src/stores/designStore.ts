@@ -191,6 +191,18 @@ interface DesignStore {
   // on runDesign() and injected as sticky (POSITION_OVERRIDE) so agents don't overwrite.
   parameterOverrides: Record<string, number | string | boolean>
 
+  // Constellation/fleet variants (persisted)
+  constellationVariants: Array<{ id: string; name: string; quantity: number; altitude_km: number; inclination_deg: number; cost_modifier: number }>
+  setConstellationVariants: (variants: any[]) => void
+
+  // Mission operations concept (persisted)
+  missionOps: { controlCentre: string; staffingModel: string; location: string }
+  setMissionOps: (ops: { controlCentre: string; staffingModel: string; location: string }) => void
+
+  // Operations activities (persisted)
+  operationsActivities: Array<{ id: string; name: string; phase: string; systems_involved: string[]; staffing: string; frequency: string; automation_level: string }>
+  setOperationsActivities: (activities: any[]) => void
+
   // Project WBS (persisted) — work packages with inputs/activities/outputs
   projectWbs: Array<{ id: string; name: string; description: string; responsible: string; effort_hours: number; status: string; phase: string; start_date: string; end_date: string; depends_on: string; inputs: string; work_content: string; outputs: string }>
   setProjectWbs: (wbs: Array<{ id: string; name: string; description: string; responsible: string; effort_hours: number; status: string; phase: string; start_date: string; end_date: string; depends_on: string; inputs: string; work_content: string; outputs: string }>) => void
@@ -321,6 +333,12 @@ export const useDesignStore = create<DesignStore>()(persist((set, get) => ({
   phaseCompletion: {},
   setPhaseComplete: (phase, complete) => set(s => ({ phaseCompletion: { ...s.phaseCompletion, [phase]: complete } })),
   parameterOverrides: {},
+  constellationVariants: [],
+  setConstellationVariants: (variants) => set({ constellationVariants: variants }),
+  missionOps: { controlCentre: '', staffingModel: 'pass_based', location: '' },
+  setMissionOps: (ops) => set({ missionOps: ops }),
+  operationsActivities: [],
+  setOperationsActivities: (activities) => set({ operationsActivities: activities }),
   projectWbs: [],
   setProjectWbs: (wbs) => set({ projectWbs: wbs }),
 
@@ -575,6 +593,9 @@ export const useDesignStore = create<DesignStore>()(persist((set, get) => ({
     budgetAllocations: state.budgetAllocations,
     interfaceResolutions: state.interfaceResolutions,
     phaseCompletion: state.phaseCompletion,
+    constellationVariants: state.constellationVariants,
+    missionOps: state.missionOps,
+    operationsActivities: state.operationsActivities,
     projectWbs: state.projectWbs,
     // Don't persist: isRunning, error, designStale, pendingConflicts (transient)
   }),

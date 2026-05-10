@@ -48,17 +48,19 @@ ax.set_yticks(y_pos)
 ax.set_yticklabels(labels)
 ax.set_xlabel("Cumulative C/N₀ (dB-Hz)")
 ax.set_title("S-band Downlink Link Budget — Waterfall")
-ax.set_xlim(-180, max(cum) + 60)
-ax.legend(loc="lower right", frameon=False)
+ax.set_xlim(-180, max(cum) + 80)
+ax.legend(loc="upper right", frameon=False, fontsize=8.5)
 ax.grid(axis="x")
 ax.grid(axis="y", visible=False)
 
-# Margin annotation
+# Margin annotation — placed upper-left so it does not collide with bar labels
 margin = final - required
 note = f"Link margin: {margin:+.1f} dB"
-ax.text(0.99, 0.02, note, transform=ax.transAxes,
-        ha="right", va="bottom",
-        fontsize=10, color=COLORS["garnet"], fontweight="bold")
+ax.text(0.01, 0.98, note, transform=ax.transAxes,
+        ha="left", va="top",
+        fontsize=10, color=COLORS["garnet"], fontweight="bold",
+        bbox=dict(boxstyle="round,pad=0.3", fc="white",
+                  ec=COLORS["garnet"], lw=0.8))
 
 add_footer(fig)
 fig.savefig("/sessions/serene-eager-noether/mnt/docs/assets/figures/fig_link_budget.png")

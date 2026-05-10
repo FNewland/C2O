@@ -21,6 +21,8 @@ type SubView = 'arch_conops' | 'functions' | 'requirements' | 'fleet'
 export function Phase1MissionArch() {
   const studyId = useDesignStore(s => s.studyId)
   const requirements = useDesignStore(s => s.requirements)
+  const missionOps = useDesignStore(s => s.missionOps)
+  const setMissionOps = useDesignStore(s => s.setMissionOps)
   const [segment, setSegment] = useState<Segment>('space')
   const [subView, setSubView] = useState<SubView>('arch_conops')
 
@@ -120,14 +122,18 @@ export function Phase1MissionArch() {
               <h3 style={{ fontSize: '0.85rem', marginBottom: '0.3rem' }}>Mission Control</h3>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
                 <label style={{ fontSize: '0.72rem', color: '#9ca3af' }}>Control Centre Location:
-                  <input className="input" placeholder="e.g., Darmstadt, Germany" style={{ width: '100%', fontSize: '0.72rem' }} />
+                  <input className="input" placeholder="e.g., Darmstadt, Germany" style={{ width: '100%', fontSize: '0.72rem' }}
+                    value={missionOps.controlCentre}
+                    onChange={e => setMissionOps({ ...missionOps, controlCentre: e.target.value })} />
                 </label>
                 <label style={{ fontSize: '0.72rem', color: '#9ca3af' }}>Staffing Model:
-                  <select className="select" style={{ width: '100%', fontSize: '0.72rem' }}>
-                    <option>24/7 (3 shifts)</option>
-                    <option>Office hours only</option>
-                    <option>Pass-based (attend for contacts)</option>
-                    <option>Autonomous (periodic check)</option>
+                  <select className="select" style={{ width: '100%', fontSize: '0.72rem' }}
+                    value={missionOps.staffingModel}
+                    onChange={e => setMissionOps({ ...missionOps, staffingModel: e.target.value })}>
+                    <option value="24_7">24/7 (3 shifts)</option>
+                    <option value="office_hours">Office hours only</option>
+                    <option value="pass_based">Pass-based (attend for contacts)</option>
+                    <option value="autonomous">Autonomous (periodic check)</option>
                   </select>
                 </label>
               </div>

@@ -10,6 +10,12 @@ const GROUND_SUBSYSTEMS = ['ground_rf', 'ground_ops', 'ground_data', 'ground_net
 // Map subsystem_domain values to display labels used in matrix
 const DOMAIN_ALIASES: Record<string, string> = {
   eps: 'power', ttc: 'link', obc: 'data',
+  // Ground system element names → matrix column keys
+  'ground station network': 'ground_rf',
+  'mission control centre': 'ground_ops',
+  'data processing centre': 'ground_data',
+  'network infrastructure': 'ground_net',
+  'user services': 'ground_net',
 }
 
 const GROUND_INTERFACE_DATA: Record<string, InterfaceCell> = {
@@ -153,6 +159,11 @@ export function InterfaceMatrixView({ onNavigate }: { onNavigate?: (tab: string)
     for (const el of modelElements.values()) {
       if (el.element_type === 'subsystem' && el.subsystem_domain) {
         const alias = DOMAIN_ALIASES[el.subsystem_domain] || el.subsystem_domain
+        domains.add(alias)
+      }
+      // Also include ground system elements (element_type 'system', segment 'ground')
+      if (el.element_type === 'system' && el.segment === 'ground') {
+        const alias = DOMAIN_ALIASES[el.name.toLowerCase()] || el.name.toLowerCase().replace(/\s+/g, '_')
         domains.add(alias)
       }
     }

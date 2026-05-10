@@ -30,9 +30,23 @@ export function ConstellationDesigner() {
   const baseCost = get('cost.total_keur') || 700
   const baseMass = get('mass.dry_mass_kg') || 5
 
-  const [variants, setVariants] = useState<Variant[]>([
-    { id: 'v1', name: 'Primary', quantity: requirements.num_spacecraft || 1, planes: 1, sats_per_plane: requirements.num_spacecraft || 1, altitude_km: requirements.orbit.altitude_km, inclination_deg: requirements.orbit.inclination_deg, mass_delta_kg: 0, cost_modifier: 1.0, description: 'Main operational spacecraft' },
-  ])
+  const storedVariants = useDesignStore(s => s.constellationVariants)
+  const persistVariants = useDesignStore(s => s.setConstellationVariants)
+
+  const defaultVariant: Variant = { id: 'v1', name: 'Primary', quantity: requirements.num_spacecraft || 1, planes: 1, sats_per_plane: requirements.num_spacecraft || 1, altitude_km: requirements.orbit.altitude_km, inclination_deg: requirements.orbit.inclination_deg, mass_delta_kg: 0, cost_modifier: 1.0, description: 'Main operational spacecraft' }
+
+  const [variants, setVariantsLocal] = useState<Variant[]>(
+    storedVariants.length > 0
+      ? storedVariants.map(sv => ({ ...defaultVariant, ...sv }))
+      : [defaultVariant]
+  )
+  const setVariants = (updater: Variant[] | ((prev: Variant[]) => Variant[])) => {
+    setVariantsLocal(prev => {
+      const next = typeof updater === 'function' ? updater(prev) : updater
+      persistVariants(next)
+      return next
+    })
+  }
   const [learningCurve, setLearningCurve] = useState(0.90) // 90% learning rate
 
   const totalSats = variants.reduce((s, v) => s + v.quantity, 0)
