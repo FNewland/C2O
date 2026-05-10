@@ -57,8 +57,13 @@ export function Phase2SystemArch() {
           }}>{s}</button>
         ))}
         <span style={{ color: '#374151', margin: '0 0.3rem' }}>|</span>
-        {/* Sub-views */}
-        {(['architecture', 'block_diagram', 'interfaces', 'budgets', 'fmeca', 'compliance'] as SubView[]).map(v => (
+        {/* Sub-views — filtered by segment */}
+        {(segment === 'space'
+          ? ['architecture', 'block_diagram', 'interfaces', 'budgets', 'fmeca'] as SubView[]
+          : segment === 'ground'
+          ? ['architecture', 'block_diagram', 'interfaces', 'budgets'] as SubView[]
+          : ['architecture', 'budgets'] as SubView[]
+        ).map(v => (
           <button key={v} onClick={() => setSubView(v)} style={{
             padding: '0.25rem 0.6rem', fontSize: '0.7rem', borderRadius: '3px', cursor: 'pointer',
             background: subView === v ? 'rgba(6,182,212,0.15)' : 'transparent',

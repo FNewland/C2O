@@ -168,7 +168,12 @@ export function Phase3SubsystemDesign() {
           }}>{s}</button>
         ))}
         <span style={{ color: '#374151', margin: '0 0.3rem' }}>|</span>
-        {(['equipment', 'link', 'pointing', 'power', 'data', 'thermal', 'propulsion', 'cost', 'mass'] as SubView[]).map(v => (
+        {(segment === 'space'
+          ? ['equipment', 'link', 'pointing', 'power', 'data', 'thermal', 'propulsion', 'cost', 'mass'] as SubView[]
+          : segment === 'ground'
+          ? ['equipment', 'link', 'cost'] as SubView[]
+          : ['equipment'] as SubView[]
+        ).map(v => (
           <button key={v} onClick={() => setSubView(v)} style={{
             padding: '0.25rem 0.5rem', fontSize: '0.68rem', borderRadius: '3px', cursor: 'pointer',
             background: subView === v ? 'rgba(16,185,129,0.15)' : 'transparent',

@@ -67,6 +67,11 @@ function AppShell() {
         })
       })
     }
+    // Auto-run design when entering Phase 2+ without results (fixes cost/compliance 404s)
+    if (p >= 2 && useDesignStore.getState().studyId && !useDesignStore.getState().result && !useDesignStore.getState().isRunning) {
+      useDesignStore.getState().runDesign()
+    }
+
     // If study exists but segments don't, create them
     if (p === 1 && activePhase === 0) {
       const sid = useDesignStore.getState().studyId

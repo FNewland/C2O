@@ -192,8 +192,8 @@ export function InterfaceMatrixView({ onNavigate }: { onNavigate?: (tab: string)
       const fromEl = modelElements.get(iface.from_element_id)
       const toEl = modelElements.get(iface.to_element_id)
       if (!fromEl || !toEl) continue
-      const aRaw = fromEl.subsystem_domain || fromEl.name.toLowerCase()
-      const bRaw = toEl.subsystem_domain || toEl.name.toLowerCase()
+      const aRaw = fromEl.subsystem_domain || fromEl.name.toLowerCase().replace(/\s+/g, '_')
+      const bRaw = toEl.subsystem_domain || toEl.name.toLowerCase().replace(/\s+/g, '_')
       const a = DOMAIN_ALIASES[aRaw] || aRaw
       const b = DOMAIN_ALIASES[bRaw] || bRaw
       const key = `${a}-${b}`
@@ -242,9 +242,9 @@ export function InterfaceMatrixView({ onNavigate }: { onNavigate?: (tab: string)
       </p>
 
       <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.75rem', marginBottom: '0.75rem', alignItems: 'center' }}>
-        <span>{Object.keys(INTERFACE_DATA).length + Object.keys(dynamicInterfaces).length} interfaces</span>
-        {Object.keys(dynamicInterfaces).length > 0 && (
-          <span style={{ color: '#10b981', fontSize: '0.65rem' }}>({Object.keys(dynamicInterfaces).length} from model)</span>
+        <span>{Object.keys(INTERFACE_DATA).length + Object.keys(dynamicInterfaces).filter(k => !INTERFACE_DATA[k]).length} interfaces</span>
+        {modelInterfaces.size > 0 && (
+          <span style={{ color: '#10b981', fontSize: '0.65rem' }}>({modelInterfaces.size} from model)</span>
         )}
         <span style={{ color: '#ef4444' }}>{conflicts.length} conflicts</span>
         <span style={{ color: '#10b981' }}>{resolvedCount} resolved</span>

@@ -187,7 +187,7 @@ function generateFromElementTree(
   const subsystems = allEls.filter(
     el => el.element_type === 'subsystem' && el.segment === seg
   )
-  if (subsystems.length < 2) return null // Not enough data, fall back to static
+  if (subsystems.length < 1) return null // Not enough data, fall back to static
 
   const nodes: Node[] = []
 
@@ -254,6 +254,55 @@ function generateFromElementTree(
     nodes.push(node)
   })
 
+  // Build component nodes inside subsystem containers
+  const subsystemIds = new Set(subsystems.map(s => s.id))
+  const components = allEls.filter(
+    el => el.element_type === 'component' && el.parent_id && subsystemIds.has(el.parent_id)
+  )
+  components.forEach((el, i) => {
+    const parentNodeId = `el-${el.parent_id}`
+    // Count siblings for grid layout
+    const siblings = components.filter(c => c.parent_id === el.parent_id)
+    const sibIdx = siblings.indexOf(el)
+    const cCol = sibIdx % 3
+    const cRow = Math.floor(sibIdx / 3)
+    const massStr = el.mass_kg != null ? ` (${el.mass_kg} kg)` : ''
+    const parentDomain = subsystems.find(s => s.id === el.parent_id)?.subsystem_domain || ''
+    const color = SUBSYSTEM_COLORS[parentDomain] || '#6b7280'
+
+    nodes.push({
+      id: `el-${el.id}`,
+      type: 'subsystem',
+      position: { x: el.diagram_x ?? (10 + cCol * 140), y: el.diagram_y ?? (30 + cRow * 50) },
+      parentId: parentNodeId,
+      extent: 'parent' as const,
+      data: {
+        label: `${el.name}${massStr}`,
+        color,
+        blocks: [],
+      },
+      style: { fontSize: '0.6rem' },
+    } as Node)
+  })
+
+  // Expand subsystem containers to fit their components
+  for (const ss of subsystems) {
+    const childComps = components.filter(c => c.parent_id === ss.id)
+    if (childComps.length > 0) {
+      const ssNode = nodes.find(n => n.id === `el-${ss.id}`)
+      if (ssNode && ssNode.type === 'subsystem') {
+        // Upgrade subsystem to container so children can live inside
+        ssNode.type = 'container'
+        const cols = Math.min(childComps.length, 3)
+        const rows = Math.ceil(childComps.length / 3)
+        ssNode.style = {
+          width: Math.max(200, cols * 140 + 30),
+          height: Math.max(120, rows * 50 + 60),
+        }
+      }
+    }
+  }
+
   // Build edges from model interfaces
   const edges: Edge[] = []
   for (const iface of interfaces.values()) {
@@ -301,6 +350,7 @@ export function SystemBlockDiagram() {
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges)
 
   const updateElement = useModelStore(s => s.updateElement)
+  const createElement = useModelStore(s => s.createElement)
   const createInterface = useModelStore(s => s.createInterface)
   const studyId = useDesignStore(s => s.studyId)
 
@@ -341,6 +391,31 @@ export function SystemBlockDiagram() {
     [updateElement],
   )
 
+  // Add Subsystem handler
+  const handleAddSubsystem = async () => {
+    if (!studyId || segment === 'segments') return
+    const name = prompt('Subsystem name:')
+    if (!name) return
+    const DOMAINS = ['power', 'aocs', 'ttc', 'thermal', 'structure', 'propulsion', 'obc', 'payload']
+    const domain = prompt(`Domain (${DOMAINS.join('/')}):`)?.toLowerCase()
+    if (!domain || !DOMAINS.includes(domain)) {
+      alert('Invalid domain. Choose from: ' + DOMAINS.join(', '))
+      return
+    }
+    // Find system-level parent for this segment
+    const allEls = Array.from(modelElements.values())
+    const systemParent = allEls.find(
+      el => el.element_type === 'system' && el.segment === segment
+    )
+    await createElement(studyId, {
+      name,
+      element_type: 'subsystem',
+      subsystem_domain: domain,
+      segment,
+      parent_id: systemParent?.id || null,
+    } as any)
+  }
+
   // Reset when segment changes — prefer element tree, fall back to static
   const switchSegment = (s: Segment) => {
     setSegment(s)
@@ -372,6 +447,12 @@ export function SystemBlockDiagram() {
             textTransform: 'capitalize',
           }}>{s} Segment</button>
         ))}
+        {segment !== 'segments' && (
+          <button onClick={handleAddSubsystem} style={{
+            padding: '0.25rem 0.6rem', fontSize: '0.72rem', borderRadius: '4px', cursor: 'pointer',
+            background: '#10b981', color: 'white', border: 'none', marginLeft: '0.5rem',
+          }}>+ Add Subsystem</button>
+        )}
         <span style={{ flex: 1 }} />
         <span style={{ fontSize: '0.65rem', color: '#6b7280' }}>
           {segment === 'space' ? 'Platform subsystems + interfaces' :
