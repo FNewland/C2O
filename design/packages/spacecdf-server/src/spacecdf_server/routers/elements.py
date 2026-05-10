@@ -189,17 +189,49 @@ async def update_element(element_id: str, body: ElementUpdate) -> dict:
 
 @router.delete("/elements/{element_id}")
 async def delete_element(element_id: str) -> dict:
-    """Soft-delete a design element."""
+    """Delete a design element and cascade to all children."""
     el = _elements.get(element_id)
     if not el:
         raise HTTPException(404, f"Element {element_id} not found")
     from datetime import datetime, timezone
     deleted_at = datetime.now(timezone.utc).isoformat()
-    el["deleted_at"] = deleted_at
 
-    # Persist soft-delete to DB
+    # Find all children recursively (cascade delete)
+    children_to_delete: list[str] = []
+    def find_children(parent_id: str) -> None:
+        for e in list(_elements.values()):
+            if e.get("parent_id") == parent_id and not e.get("deleted_at"):
+                children_to_delete.append(e["id"])
+                find_children(e["id"])
+    find_children(element_id)
+
+    # REMOVE from in-memory dict — not just soft-delete flag
+    # This is the critical fix: previously only set deleted_at but left
+    # the element in the dict, causing it to reappear on model reload
+    del _elements[element_id]
+    for child_id in children_to_delete:
+        if child_id in _elements:
+            del _elements[child_id]
+
+    # Also remove associated interfaces
+    iface_ids_to_delete = []
+    for iface_id, iface in list(_interfaces.items()):
+        if iface.get("from_element_id") == element_id or iface.get("to_element_id") == element_id:
+            iface_ids_to_delete.append(iface_id)
+        elif iface.get("from_element_id") in children_to_delete or iface.get("to_element_id") in children_to_delete:
+            iface_ids_to_delete.append(iface_id)
+    for iface_id in iface_ids_to_delete:
+        if iface_id in _interfaces:
+            del _interfaces[iface_id]
+
+    # Persist to DB (soft-delete for recovery if needed)
     await db_soft_delete_element(element_id, deleted_at)
-    return {"id": element_id, "deleted": True}
+    for child_id in children_to_delete:
+        await db_soft_delete_element(child_id, deleted_at)
+    for iface_id in iface_ids_to_delete:
+        await db_soft_delete_interface(iface_id, deleted_at)
+
+    return {"id": element_id, "deleted": True, "children_deleted": len(children_to_delete), "interfaces_deleted": len(iface_ids_to_delete)}
 
 
 # ─── Tree Traversal ───
