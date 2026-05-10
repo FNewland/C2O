@@ -76,6 +76,13 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.warning("Element cache init failed (continuing with empty cache): %s", e)
 
+    # Load persisted studies into the write-through cache
+    try:
+        from .routers.studies import init_study_cache
+        await init_study_cache()
+    except Exception as e:
+        logger.warning("Study cache init failed (continuing with empty cache): %s", e)
+
     yield
     logger.info("SpaceCDF server shutting down...")
     try:

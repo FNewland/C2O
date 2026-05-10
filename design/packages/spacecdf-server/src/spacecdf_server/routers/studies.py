@@ -18,11 +18,23 @@ from spacecdf_common.models.mission_need import MissionNeed
 from spacecdf_common.models.conops import ConceptOfOperations, OperationalMode, MissionPhase, ModeType, MissionPhaseType
 from spacecdf_common.models.functions import FunctionalDecomposition, generate_starter_decomposition
 from spacecdf_common.models.interfaces import generate_standard_interface_matrix
+from ..db.study_repo import db_save_study, db_delete_study, db_load_all_studies
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-# In-memory study store (PostgreSQL in production)
+# Write-through cache — primary read path (fast), backed by DB
 _studies: dict[str, Study] = {}
+
+
+async def init_study_cache() -> None:
+    """Load all persisted studies from DB into the in-memory cache."""
+    loaded = await db_load_all_studies()
+    _studies.update(loaded)
+    logger.info("Study cache initialized with %d studies", len(_studies))
 
 
 class CreateStudyRequest(BaseModel):
@@ -82,6 +94,12 @@ async def create_study(req: CreateStudyRequest) -> dict:
         created=datetime.now(timezone.utc),
     )
     _studies[study.id] = study
+
+    # Persist to DB (fire-and-forget — errors logged, never crash the API)
+    try:
+        await db_save_study(study)
+    except Exception:
+        logger.exception("Failed to persist study %s to DB", study.id)
 
     return {
         "id": study.id,
@@ -173,6 +191,11 @@ async def delete_study(study_id: str) -> dict:
     """Delete a study."""
     if study_id not in _studies:
         raise HTTPException(status_code=404, detail=f"Study {study_id} not found")
+    # Remove from DB first, then cache
+    try:
+        await db_delete_study(study_id)
+    except Exception:
+        logger.exception("Failed to delete study %s from DB", study_id)
     del _studies[study_id]
     return {"deleted": study_id}
 
