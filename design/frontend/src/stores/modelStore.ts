@@ -36,6 +36,8 @@ export interface DesignElement {
   diagram_x: number | null
   diagram_y: number | null
   diagram_collapsed: boolean
+  in_scope: boolean
+  frozen: boolean
   version: number
   children?: DesignElement[]
 }

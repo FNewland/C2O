@@ -45,24 +45,45 @@ const ELEMENT_TYPES = ['segment', 'system', 'subsystem', 'component'] as const
 function HierarchyNode({ data }: { data: {
   label: string; elementType: string; color: string;
   mass: number | null; power: number | null; childCount: number;
-  domain: string | null; selected?: boolean
+  domain: string | null; selected?: boolean;
+  inScope: boolean; frozen: boolean;
+  onToggleScope?: () => void;
 }}) {
   const borderColor = data.color
+  const isOutOfScope = data.inScope === false
+  const isFrozen = data.frozen === true
   return (
     <div style={{
-      padding: '10px 14px', border: `2px solid ${borderColor}`,
+      padding: '10px 14px',
+      border: `2px ${isOutOfScope ? 'dashed' : 'solid'} ${borderColor}`,
       borderRadius: 8, background: `${borderColor}12`,
       minWidth: 140, maxWidth: 220,
+      opacity: isOutOfScope ? 0.7 : 1,
     }}>
       <Handle type="target" position={Position.Top} style={{ background: borderColor }} />
 
-      {/* Type badge */}
+      {/* Type badge + scope/frozen badges */}
       <div style={{
         fontSize: '0.58rem', textTransform: 'uppercase', letterSpacing: '0.06em',
         color: borderColor, fontWeight: 700, marginBottom: '0.2rem',
+        display: 'flex', alignItems: 'center', gap: '0.3rem', flexWrap: 'wrap',
       }}>
-        {data.elementType}
-        {data.domain && <span style={{ marginLeft: '0.3rem', opacity: 0.7 }}>/ {data.domain}</span>}
+        <span>
+          {data.elementType}
+          {data.domain && <span style={{ marginLeft: '0.3rem', opacity: 0.7 }}>/ {data.domain}</span>}
+        </span>
+        {isOutOfScope && (
+          <span style={{
+            fontSize: '0.5rem', padding: '0.05rem 0.25rem', borderRadius: '3px',
+            background: 'rgba(107,114,128,0.3)', color: '#9ca3af', fontWeight: 600,
+          }}>External</span>
+        )}
+        {isFrozen && (
+          <span style={{
+            fontSize: '0.5rem', padding: '0.05rem 0.25rem', borderRadius: '3px',
+            background: 'rgba(59,130,246,0.2)', color: '#93c5fd',
+          }} title="Frozen — cannot delete or rename">&#x1f512;</span>
+        )}
       </div>
 
       {/* Name */}
@@ -85,12 +106,20 @@ function HierarchyNode({ data }: { data: {
       </div>
 
       {/* Children indicator */}
-      {data.childCount > 0 && (
+      {data.childCount > 0 && !isOutOfScope && (
         <div style={{
           fontSize: '0.6rem', color: '#6b7280', marginTop: '0.25rem',
           borderTop: `1px solid ${borderColor}30`, paddingTop: '0.2rem',
         }}>
           {data.childCount} item{data.childCount !== 1 ? 's' : ''} — double-click to expand
+        </div>
+      )}
+      {isOutOfScope && (
+        <div style={{
+          fontSize: '0.58rem', color: '#6b7280', marginTop: '0.25rem',
+          borderTop: `1px solid ${borderColor}30`, paddingTop: '0.2rem', fontStyle: 'italic',
+        }}>
+          Out of scope — external element
         </div>
       )}
 
@@ -204,6 +233,8 @@ export function HierarchicalDesigner({ studyId, initialElementId }: Props) {
           power,
           childCount: kids.length,
           domain: el.subsystem_domain,
+          inScope: (el as any).in_scope !== false,
+          frozen: (el as any).frozen === true,
         },
       }
     })
@@ -241,6 +272,8 @@ export function HierarchicalDesigner({ studyId, initialElementId }: Props) {
   const onNodeDoubleClick = useCallback((_event: React.MouseEvent, node: Node) => {
     const el = elements.get(node.id)
     if (!el) return
+    // Block drill-down on out-of-scope (external) elements
+    if ((el as any).in_scope === false) return
     // Only drill if element has children (or could have)
     const kids = getChildren(el.id).filter(c => !(c as any).deleted_at)
     if (el.element_type === 'component' && kids.length === 0) return // Leaf — no drill
@@ -313,15 +346,67 @@ export function HierarchicalDesigner({ studyId, initialElementId }: Props) {
     }
   }
 
-  // ─── Delete selected ───
+  // ─── Delete selected (respects frozen) ───
   const handleDeleteSelected = async () => {
     const selectedNodeIds = nodes.filter(n => n.selected).map(n => n.id)
     if (selectedNodeIds.length === 0) return
-    if (!confirm(`Delete ${selectedNodeIds.length} element(s)? This also removes their children.`)) return
 
-    for (const id of selectedNodeIds) {
+    // Filter out frozen elements
+    const deletable = selectedNodeIds.filter(id => {
+      const el = elements.get(id)
+      return el && (el as any).frozen !== true
+    })
+    const frozenCount = selectedNodeIds.length - deletable.length
+    if (frozenCount > 0 && deletable.length === 0) {
+      alert(`All ${frozenCount} selected element(s) are frozen and cannot be deleted.`)
+      return
+    }
+    const msg = frozenCount > 0
+      ? `Delete ${deletable.length} element(s)? (${frozenCount} frozen element(s) will be skipped.) This also removes their children.`
+      : `Delete ${deletable.length} element(s)? This also removes their children.`
+    if (!confirm(msg)) return
+
+    for (const id of deletable) {
       if (elements.has(id)) {
         await deleteElement(id)
+      }
+    }
+    markStale('architecture')
+  }
+
+  // ─── Toggle in_scope on selected elements ───
+  const handleToggleScope = async () => {
+    const selectedNodeIds = nodes.filter(n => n.selected).map(n => n.id)
+    if (selectedNodeIds.length === 0) {
+      alert('Select one or more elements to toggle in/out of scope.')
+      return
+    }
+    for (const id of selectedNodeIds) {
+      const el = elements.get(id)
+      if (el) {
+        const currentScope = (el as any).in_scope !== false
+        await updateElement(id, { in_scope: !currentScope } as any)
+      }
+    }
+    markStale('architecture')
+  }
+
+  // ─── Freeze Level — freeze all children of current element ───
+  const handleFreezeLevel = async () => {
+    const kids = currentId === null ? getRoots() : getChildren(currentId)
+    const unfrozen = kids.filter(k => (k as any).frozen !== true)
+    const frozen = kids.filter(k => (k as any).frozen === true)
+
+    if (unfrozen.length === 0 && frozen.length > 0) {
+      // All frozen — offer to unfreeze
+      if (!confirm(`All ${frozen.length} element(s) at this level are already frozen. Unfreeze them?`)) return
+      for (const el of frozen) {
+        await updateElement(el.id, { frozen: false } as any)
+      }
+    } else {
+      if (!confirm(`Freeze ${unfrozen.length} element(s) at this level? Frozen elements cannot be deleted or renamed.`)) return
+      for (const el of unfrozen) {
+        await updateElement(el.id, { frozen: true } as any)
       }
     }
     markStale('architecture')
@@ -497,6 +582,20 @@ export function HierarchicalDesigner({ studyId, initialElementId }: Props) {
             + Add Equipment
           </button>
         )}
+        <button onClick={handleToggleScope} style={{
+          padding: '0.22rem 0.6rem', fontSize: '0.7rem', borderRadius: '4px',
+          border: '1px solid rgba(107,114,128,0.4)', background: 'rgba(107,114,128,0.1)',
+          color: '#9ca3af', cursor: 'pointer',
+        }} title="Toggle selected elements in/out of scope (external)">
+          Toggle Scope
+        </button>
+        <button onClick={handleFreezeLevel} style={{
+          padding: '0.22rem 0.6rem', fontSize: '0.7rem', borderRadius: '4px',
+          border: '1px solid rgba(59,130,246,0.4)', background: 'rgba(59,130,246,0.1)',
+          color: '#93c5fd', cursor: 'pointer',
+        }} title="Freeze all elements at this level (prevent delete/rename)">
+          Freeze Level
+        </button>
         <span style={{ flex: 1 }} />
         <span style={{ fontSize: '0.65rem', color: '#6b7280' }}>
           {childElements.length} block{childElements.length !== 1 ? 's' : ''}

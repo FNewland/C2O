@@ -414,44 +414,89 @@ def generate_ird(
     phase_id: str = "phase_b",
     elements: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
-    """Interface Requirements Document — ECSS-E-ST-10-24C."""
+    """Interface Requirements Document — ECSS-E-ST-10-24C.
+
+    Accepts actual interface data from the element tree. The ``interfaces``
+    list should contain dicts with keys matching the ElementInterface model:
+      - from_element_id / from_element / from
+      - to_element_id / to_element / to
+      - interface_type / types
+      - name / description / diagram_label
+      - properties (dict)
+      - direction
+      - status
+
+    The ``elements`` list provides the design-element context so that
+    element names and subsystem_domain values can be resolved from IDs.
+    """
     elem_list = elements or []
 
-    # Build element lookup by id
+    # Build element lookup by id — support both "id" key and nested structures
     elem_map: dict[str, dict] = {}
     for e in elem_list:
         eid = e.get("id", "")
-        elem_map[eid] = e
+        if eid:
+            elem_map[eid] = e
 
     # ---- Section 2: Interface details ----
     ifc_subsections: list[dict] = []
     subsystem_pairs: dict[tuple[str, str], list[str]] = {}  # for N² matrix
 
+    # ---- Interface statistics by type ----
+    type_counts: dict[str, int] = {}
+
     for i, ifc in enumerate(interfaces[:40]):
-        # Resolve element names
-        from_id = ifc.get("from_element") or ifc.get("from", "")
-        to_id = ifc.get("to_element") or ifc.get("to", "")
+        # Resolve element IDs — support multiple key naming conventions
+        from_id = ifc.get("from_element_id") or ifc.get("from_element") or ifc.get("from", "")
+        to_id = ifc.get("to_element_id") or ifc.get("to_element") or ifc.get("to", "")
         from_elem = elem_map.get(from_id, {})
         to_elem = elem_map.get(to_id, {})
-        from_name = from_elem.get("name") or ifc.get("subsystems", ["?", "?"])[0] if ifc.get("subsystems") else from_id
-        to_name = to_elem.get("name") or (ifc.get("subsystems", ["?", "?"])[1] if ifc.get("subsystems") else to_id)
-        from_domain = from_elem.get("subsystem_domain", from_name)
-        to_domain = to_elem.get("subsystem_domain", to_name)
+
+        # Resolve human-readable names from the element tree
+        from_name = (
+            from_elem.get("name")
+            or ifc.get("from_element_name")
+            or (ifc.get("subsystems", ["?", "?"])[0] if ifc.get("subsystems") else None)
+            or from_id
+            or "?"
+        )
+        to_name = (
+            to_elem.get("name")
+            or ifc.get("to_element_name")
+            or (ifc.get("subsystems", ["?", "?"])[1] if ifc.get("subsystems") else None)
+            or to_id
+            or "?"
+        )
+        from_domain = from_elem.get("subsystem_domain") or ifc.get("from_subsystem_domain") or from_name
+        to_domain = to_elem.get("subsystem_domain") or ifc.get("to_subsystem_domain") or to_name
 
         ifc_type = ifc.get("interface_type") or ", ".join(ifc.get("types", []))
-        props = ifc.get("properties", {})
+        props = ifc.get("properties") or ifc.get("properties_json") or {}
         props_str = ", ".join(f"{k}: {v}" for k, v in props.items()) if props else ""
-        desc = ifc.get("description", "")
+        desc = ifc.get("description") or ifc.get("name") or ifc.get("diagram_label") or ""
+        direction = ifc.get("direction", "bidirectional")
+        status = ifc.get("status", "defined")
+
+        # Count by type
+        for t in (ifc_type.split(", ") if ifc_type else ["unspecified"]):
+            type_counts[t.strip()] = type_counts.get(t.strip(), 0) + 1
 
         content_parts = [f"**Interface type**: {ifc_type or 'TBD'}"]
+        content_parts.append(f"**Direction**: {direction}")
+        content_parts.append(f"**Status**: {status}")
         if desc:
             content_parts.append(f"**Description**: {desc}")
         if props_str:
             content_parts.append(f"**Properties**: {props_str}")
+        # Include element context if resolved
+        if from_elem.get("element_type"):
+            content_parts.append(f"**From element type**: {from_elem['element_type']} ({from_domain})")
+        if to_elem.get("element_type"):
+            content_parts.append(f"**To element type**: {to_elem['element_type']} ({to_domain})")
 
         ifc_subsections.append({
             "number": f"2.{i + 1}",
-            "title": f"{from_name} ↔ {to_name}",
+            "title": f"{from_name} \u2194 {to_name}",
             "content": "\n".join(content_parts),
         })
 
@@ -514,6 +559,8 @@ def generate_ird(
         ],
         "total_interfaces": len(interfaces),
         "unique_subsystem_pairs": len(subsystem_pairs),
+        "interfaces_by_type": type_counts,
+        "total_elements": len(elem_list),
     }
 
 

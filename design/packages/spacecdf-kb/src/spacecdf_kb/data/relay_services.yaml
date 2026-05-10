@@ -1,0 +1,175 @@
+# Space Relay Services Knowledge Base
+# Data relay satellites and constellations for inter-satellite link (ISL) communications
+# Sources: operator specifications, ITU filings, published datasheets (2025 data)
+
+services:
+  - id: tdrss
+    name: NASA TDRSS
+    type: geo_relay
+    operator: NASA
+    constellation_size: 10
+    orbit: GEO
+    bands: [S, Ku, Ka]
+    forward_data_rate_mbps: 25
+    return_data_rate_mbps: 300
+    coverage_percent: 85
+    availability: NASA missions only (with exceptions via reimbursable agreements)
+    cost: Included in NASA mission budget
+    notes: >
+      Tracking and Data Relay Satellite System. Operational since 1983.
+      10 GEO satellites providing near-continuous LEO coverage (Zone of Exclusion
+      over the Indian Ocean). S-band single-access and multiple-access services.
+      Ka-band high-rate return link up to 800 Mbps on newest TDRS-K/L/M series.
+      Primary relay for ISS, Hubble, and all major NASA LEO missions.
+    url: https://www.nasa.gov/directorates/somd/space-communications-navigation-program/tracking-and-data-relay-satellite-system/
+
+  - id: edrs
+    name: EDRS (European Data Relay System)
+    type: geo_relay
+    operator: ESA / Airbus Defence & Space
+    constellation_size: 2
+    orbit: GEO
+    bands: [Ka, optical (1064nm)]
+    forward_data_rate_mbps: 50
+    return_data_rate_mbps: 1800
+    coverage_percent: 65
+    availability: Commercial and institutional (ESA member states priority)
+    cost_per_gb_eur: 5-15
+    notes: >
+      SpaceDataHighway. Two GEO nodes: EDRS-A (hosted on Eutelsat 9B, 9 deg E)
+      and EDRS-C (31 deg E). Laser Inter-Satellite Links (LISL) at 1.8 Gbps using
+      Tesat LCT135 terminals. Primary customer: Copernicus Sentinel-1/2 for
+      near-real-time SAR data relay. Also supports ISS Columbus Ka-band link.
+      Planned EDRS-D for Pacific coverage.
+    url: https://www.esa.int/Applications/Connectivity_and_Secure_Communications/EDRS
+
+  - id: kepler
+    name: Kepler Communications
+    type: leo_relay
+    operator: Kepler Communications
+    constellation_size: 19
+    orbit: LEO (500-600 km, polar)
+    bands: [Ku]
+    forward_data_rate_mbps: 1
+    return_data_rate_mbps: 40
+    coverage_percent: 100
+    coverage_type: store-and-forward (non-real-time), with growing real-time coverage
+    availability: Commercial
+    cost_per_mb_eur: 0.5-2
+    notes: >
+      LEO relay network originally designed for IoT and small satellites.
+      Ku-band ISL. Store-and-forward architecture provides global coverage
+      with latency (minutes to hours). Aether service for high-bandwidth
+      downlink. Growing constellation aims for real-time relay capability.
+      Good option for CubeSats without dedicated ground stations.
+    url: https://www.kepler.space
+
+  - id: iridium-sbd
+    name: Iridium SBD (Short Burst Data)
+    type: leo_relay
+    operator: Iridium Communications
+    constellation_size: 66
+    orbit: LEO (780 km, polar, 6 planes)
+    bands: [L (1616-1626.5 MHz)]
+    forward_data_rate_mbps: 0.002
+    return_data_rate_mbps: 0.002
+    max_message_bytes: 340
+    coverage_percent: 100
+    coverage_type: real-time (global, including poles)
+    availability: Commercial
+    cost_per_message_eur: 0.05-0.15
+    notes: >
+      Iridium NEXT constellation with cross-linked LEO satellites providing
+      true global real-time coverage including polar regions. SBD service is
+      widely used for satellite health telemetry, emergency commanding, and
+      IoT. Very low data rate (340 bytes per message) but extremely reliable.
+      Ideal for CubeSat beacon, health monitoring, and emergency TM/TC.
+      SBD 9603 transceiver is flight-qualified and small (30g).
+    url: https://www.iridium.com/services/iridium-sbd/
+
+  - id: orbcomm
+    name: ORBCOMM OG2
+    type: leo_relay
+    operator: ORBCOMM
+    constellation_size: 36
+    orbit: LEO (715 km, low-inclination + polar)
+    bands: [VHF (137-150 MHz)]
+    forward_data_rate_mbps: 0.0024
+    return_data_rate_mbps: 0.0048
+    coverage_percent: 95
+    coverage_type: store-and-forward + near-real-time
+    availability: Commercial
+    cost_per_message_eur: 0.01-0.10
+    notes: >
+      VHF M2M/IoT messaging constellation. OG2 (second generation) satellites
+      provide low-latency message delivery. Used for asset tracking, AIS,
+      and satellite telemetry forwarding. Simple VHF transceiver integration.
+      Limited to small message sizes (few kB). Good for low-cost CubeSat
+      telemetry relay when ground station contacts are sparse.
+    url: https://www.orbcomm.com
+
+  - id: spacelink
+    name: SpaceLink
+    type: meo_relay
+    operator: SpaceLink
+    constellation_size: 4
+    orbit: MEO (approximately 8,000 km, 2 planes)
+    bands: [Ka, optical]
+    forward_data_rate_mbps: 100
+    return_data_rate_mbps: 10000
+    coverage_percent: 100
+    coverage_type: real-time (continuous for LEO/MEO/GEO users)
+    availability: Commercial (planned, not yet operational)
+    status: planned (expected 2027+)
+    cost_per_gb_eur: 2-8
+    notes: >
+      Planned MEO relay constellation with Ka-band and optical ISLs.
+      4 satellites in 2 MEO planes provide continuous real-time coverage
+      for LEO customers. Up to 10 Gbps optical return link. Gateway ground
+      stations feed directly to cloud data centres. Designed as commercial
+      alternative to TDRSS/EDRS. Not yet operational — target 2027-2028 IOC.
+    url: https://www.spacelinkco.com
+
+  - id: inmarsat-bgan
+    name: Inmarsat BGAN
+    type: geo_relay
+    operator: Inmarsat (now Viasat)
+    constellation_size: 4
+    orbit: GEO (I-4 satellites)
+    bands: [L (1525-1559 / 1626.5-1660.5 MHz)]
+    forward_data_rate_mbps: 0.492
+    return_data_rate_mbps: 0.492
+    coverage_percent: 85
+    coverage_type: real-time (excl. polar regions above ~80 deg latitude)
+    availability: Commercial
+    cost_per_mb_eur: 5-15
+    notes: >
+      Broadband Global Area Network via Inmarsat I-4 GEO satellites.
+      L-band service with small terminal requirements. Used as backup
+      TTC relay for some LEO missions. BGAN M2M terminal can be
+      integrated for autonomous satellite-to-ground relay via GEO hop.
+      Limited data rate but high availability. Not available at high latitudes.
+    url: https://www.inmarsat.com/en/solutions-services/enterprise/services/bgan.html
+
+  - id: starlink-isl
+    name: SpaceX Starlink (Laser ISL)
+    type: leo_relay
+    operator: SpaceX
+    constellation_size: 6000+
+    orbit: LEO (540-570 km, multiple planes)
+    bands: [optical (inter-satellite), Ku/Ka (user terminal)]
+    forward_data_rate_mbps: 100
+    return_data_rate_mbps: 200
+    coverage_percent: 99
+    coverage_type: real-time (continuous global)
+    availability: Commercial (Starshield for government; general availability TBD for ISL relay)
+    cost: Custom contract
+    notes: >
+      Starlink V2 satellites include laser inter-satellite links providing
+      a global mesh relay network. While primarily designed for consumer/enterprise
+      broadband, the Starshield variant supports government and defence relay
+      services. Direct satellite-to-Starlink ISL relay for third-party missions
+      is not yet commercially available but is under development. If available,
+      would provide near-continuous real-time relay with very low latency via
+      the optical mesh backbone.
+    url: https://www.starlink.com

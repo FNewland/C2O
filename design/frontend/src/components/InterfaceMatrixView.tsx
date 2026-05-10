@@ -245,6 +245,81 @@ export function InterfaceMatrixView({ onNavigate }: { onNavigate?: (tab: string)
         <span style={{ color: '#ef4444' }}>{conflicts.length} conflicts</span>
         <span style={{ color: '#10b981' }}>{resolvedCount} resolved</span>
         <span style={{ color: '#f59e0b' }}>{conflicts.length - resolvedCount} open</span>
+        <button onClick={() => {
+          // Generate ICD JSON from all interfaces (model + static)
+          const icdInterfaces: any[] = []
+
+          // Include model interfaces with resolved element names
+          for (const iface of modelInterfaces.values()) {
+            const fromEl = modelElements.get(iface.from_element_id)
+            const toEl = modelElements.get(iface.to_element_id)
+            icdInterfaces.push({
+              id: iface.id,
+              name: iface.name,
+              interface_type: iface.interface_type,
+              direction: iface.direction,
+              from_element: iface.from_element_id,
+              from_element_name: fromEl?.name || iface.from_element_id,
+              from_subsystem_domain: fromEl?.subsystem_domain || null,
+              to_element: iface.to_element_id,
+              to_element_name: toEl?.name || iface.to_element_id,
+              to_subsystem_domain: toEl?.subsystem_domain || null,
+              properties: iface.properties,
+              status: iface.status,
+              diagram_label: iface.diagram_label,
+              source: 'model',
+            })
+          }
+
+          // Include static interface data as supplementary
+          for (const [key, cell] of Object.entries(INTERFACE_DATA)) {
+            const [fromDomain, toDomain] = key.split('-')
+            const res = resolutions.get(key)
+            icdInterfaces.push({
+              id: `static-${key}`,
+              name: cell.description,
+              interface_type: cell.types.join(', '),
+              direction: 'bidirectional',
+              from_subsystem_domain: fromDomain,
+              to_subsystem_domain: toDomain,
+              has_conflict: cell.hasConflict,
+              conflict_title: cell.conflictTitle || null,
+              conflict_severity: cell.conflictSeverity || null,
+              resolution: res ? {
+                status: res.status,
+                selected_option: res.selectedOption,
+                rationale: res.rationale,
+                resolved_by: res.resolvedBy,
+              } : null,
+              source: 'static_matrix',
+            })
+          }
+
+          const icd = {
+            document: 'Interface Control Document (ICD)',
+            generated: new Date().toISOString(),
+            total_interfaces: icdInterfaces.length,
+            model_interfaces: modelInterfaces.size,
+            static_interfaces: Object.keys(INTERFACE_DATA).length,
+            conflicts_total: conflicts.length,
+            conflicts_resolved: resolvedCount,
+            interfaces: icdInterfaces,
+          }
+
+          const blob = new Blob([JSON.stringify(icd, null, 2)], { type: 'application/json' })
+          const url = URL.createObjectURL(blob)
+          const a = document.createElement('a')
+          a.href = url
+          a.download = `ICD_${new Date().toISOString().slice(0, 10)}.json`
+          a.click()
+          URL.revokeObjectURL(url)
+        }} style={{
+          padding: '0.2rem 0.6rem', fontSize: '0.7rem', borderRadius: '4px',
+          border: '1px solid rgba(16,185,129,0.4)', background: 'rgba(16,185,129,0.1)',
+          color: '#10b981', cursor: 'pointer', marginLeft: 'auto',
+        }}>
+          Generate ICD
+        </button>
       </div>
 
       {/* Conflict summary bar */}

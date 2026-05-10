@@ -246,6 +246,10 @@ class DesignElementRow(Base):
     # Ownership in concurrent design
     owner_position: Mapped[str | None] = mapped_column(String(64), nullable=True)
 
+    # Scope & freeze flags
+    in_scope: Mapped[bool] = mapped_column(default=True)
+    frozen: Mapped[bool] = mapped_column(default=False)
+
     # Diagram layout (for @xyflow/react persistence)
     diagram_x: Mapped[float | None] = mapped_column(nullable=True)
     diagram_y: Mapped[float | None] = mapped_column(nullable=True)
