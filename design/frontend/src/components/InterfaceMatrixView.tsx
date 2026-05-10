@@ -161,11 +161,7 @@ export function InterfaceMatrixView({ onNavigate }: { onNavigate?: (tab: string)
         const alias = DOMAIN_ALIASES[el.subsystem_domain] || el.subsystem_domain
         domains.add(alias)
       }
-      // Also include ground system elements (element_type 'system', segment 'ground')
-      if (el.element_type === 'system' && el.segment === 'ground') {
-        const alias = DOMAIN_ALIASES[el.name.toLowerCase()] || el.name.toLowerCase().replace(/\s+/g, '_')
-        domains.add(alias)
-      }
+      // Ground subsystems added via the subsystem check above — don't add raw system elements
     }
     // If the element tree has subsystems, use them (in a consistent order)
     if (domains.size >= 3) {

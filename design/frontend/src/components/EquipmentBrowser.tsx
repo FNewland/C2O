@@ -162,12 +162,10 @@ export function EquipmentBrowser({ studyId, onClose, onSelect, mode = 'modal', s
     ground_antennas: 'ground_rf', ground_rf: 'ground_rf', ground_baseband: 'ground_rf', ground_software: 'ground_ops', ground_timing: 'ground_ops',
   }
 
-  // Filter categories to only show those whose domain exists in the element tree
-  // If no subsystems defined yet, show all (don't block the user)
-  // Uses segmentFilteredCategories as base (already filtered by space/ground)
-  const filteredCategories = definedDomains.size > 0
-    ? segmentFilteredCategories.filter(c => definedDomains.has(categoryToDomain[c.id] || '') || !categoryToDomain[c.id])
-    : segmentFilteredCategories
+  // Show all categories for the segment — segment filter (space/ground) is sufficient.
+  // Previously filtered by definedDomains which was too aggressive (hid categories
+  // if their subsystem didn't exist yet, preventing equipment selection).
+  const filteredCategories = segmentFilteredCategories
 
   const [activeCategory, setActiveCategory] = useState<string>(filteredCategories[0]?.id || 'batteries')
   const [sortKey, setSortKey] = useState<'fit' | 'mass' | 'cost' | 'trl'>('fit')
@@ -285,13 +283,17 @@ export function EquipmentBrowser({ studyId, onClose, onSelect, mode = 'modal', s
       const next = new Map(prev)
       const existing = next.get(key)
       if (existing) {
-        // Already selected — do nothing (use qty input to change quantity)
         return prev
       } else {
         next.set(key, { category, component, quantity: qty, timestamp: Date.now() })
       }
       return next
     })
+
+    // In inline mode, auto-apply immediately (no "Apply" button needed)
+    if (mode === 'inline') {
+      onSelect(category, component)
+    }
   }
 
   const handleQuantityChange = (key: string, qty: number) => {

@@ -7,14 +7,14 @@ import { SVGBarChart } from '../charts/SVGBarChart'
 const PHASE_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444']
 
 export function CostBreakdown({ studyId }: { studyId: string | null }) {
-  const { data, isLoading, error } = useCostEstimate(studyId)
+  const hasDesignResult = !!useDesignStore(s => s.result)
+  // Only fire cost query if design result exists (prevents 404 race condition)
+  const { data, isLoading, error } = useCostEstimate(hasDesignResult ? studyId : null)
   const selectedEquipment = useEquipmentView()
   const [costOverrides, setCostOverrides] = useState<Record<string, number>>({})
 
   const getEquipCost = (id: string, defaultCost: number) => costOverrides[id] ?? defaultCost
   const totalEquipCost = selectedEquipment.reduce((s, eq) => s + getEquipCost(eq.componentId, eq.cost_keur) * eq.quantity, 0)
-
-  const hasDesignResult = !!useDesignStore(s => s.result)
 
   if (!studyId || !hasDesignResult) return (
     <div style={{ padding: '2rem', color: '#6b7280' }}>

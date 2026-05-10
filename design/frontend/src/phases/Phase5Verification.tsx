@@ -14,6 +14,7 @@ type SubView = 'gate_review' | 'maturity' | 'bom' | 'compliance' | 'ecss' | 'exp
 
 export function Phase5Verification() {
   const studyId = useDesignStore(s => s.studyId)
+  const result = useDesignStore(s => s.result)
   const [subView, setSubView] = useState<SubView>('gate_review')
 
   return (
@@ -51,8 +52,8 @@ export function Phase5Verification() {
         {subView === 'gate_review' && <GateReviewPanel studyId={studyId} />}
         {subView === 'maturity' && <MaturityOverview />}
         {subView === 'bom' && <BOMView />}
-        {subView === 'compliance' && studyId && useDesignStore.getState().result && <ComplianceMatrix studyId={studyId} />}
-        {subView === 'ecss' && studyId && useDesignStore.getState().result && <EcssCompliancePanel studyId={studyId} />}
+        {subView === 'compliance' && studyId && result && <ComplianceMatrix studyId={studyId} />}
+        {subView === 'ecss' && studyId && result && <EcssCompliancePanel studyId={studyId} />}
         {subView === 'exports' && <ExportsPanel studyId={studyId} />}
       </div>
     </div>
