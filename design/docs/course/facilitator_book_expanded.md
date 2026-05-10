@@ -1,7 +1,7 @@
 ---
 title: "SpaceCDF Facilitator's Book"
 subtitle: "Teaching reference for the 40-hour Concurrent Design Facility intensive"
-version: "v4 — 2026-05-09"
+version: "v5 — 2026-05-10"
 ---
 
 # Facilitator's Book
@@ -3672,6 +3672,9 @@ With ~2 W available from body-mounted cells, the power margin is substantial (~1
 - [Gilmore, *Spacecraft Thermal Control Handbook, Vol. 1*, 2002](https://arc.aiaa.org/doi/book/10.2514/4.104503)
 - [GomSpace, *P31u EPS Datasheet*, 2023](https://www.gomspace.com)
 - [MMA Design, *HaWK Solar Array Datasheet*, 2023](https://mmadesignllc.com)
+- [Spectrolab, *30% Triple-Junction Solar Cell Datasheet*, 2020](https://www.spectrolab.com)
+- [Ratnakumar et al., *Lithium-Ion Batteries for Space*, NASA JPL, 2003](https://trs.jpl.nasa.gov)
+- [Gilmore, *Spacecraft Thermal Control Handbook, Vol. 2: Cryogenics*, 2003](https://arc.aiaa.org/doi/book/10.2514/4.104515)
 
 ---
 
@@ -3682,20 +3685,21 @@ By the end of this session, participants will be able to:
 1. Size a solar array from mission power demand, eclipse profile, and degradation
 2. Size a battery from eclipse energy demand, depth-of-discharge, and cycle-life requirements
 3. Compute orbit-average power using duty cycle analysis
-4. Explain EPS architecture (DET vs PPT, MPPT, bus regulation)
-5. Perform first-order thermal balance analysis (hot case and cold case)
+4. Explain EPS architecture (DET vs PPT, MPPT, bus regulation) and articulate the physics of each
+5. Perform first-order thermal balance analysis (hot case and cold case) with full radiative derivation
 6. Select thermal control methods and apply ECSS thermal margins
-7. Verify power and thermal budgets in SpaceCDF
+7. Explain MLI construction, heat pipe operation, and heater sizing
+8. Verify power and thermal budgets in SpaceCDF
 
 ---
 
-## 1. Electrical Power System Architecture (20 min)
+## 1. Electrical Power System Architecture (25 min)
 
 ### Teaching Notes
 
 *[Source: SMAD, Ch. 11.4; ECSS-E-ST-20C; Patel, Ch. 3]*
 
-The EPS is the "utility company" of the spacecraft. It must continuously supply regulated power to all subsystems through every operational mode, including eclipse.
+The EPS is the "utility company" of the spacecraft. It must continuously supply regulated power to all subsystems through every operational mode, including eclipse. Unlike terrestrial power systems, spacecraft EPS cannot draw from a grid -- the solar array, battery, and power conditioning electronics must form a fully self-contained, autonomous energy system with zero maintenance for the mission lifetime.
 
 ### EPS Block Diagram
 
@@ -3742,16 +3746,79 @@ The EPS is the "utility company" of the spacecraft. It must continuously supply 
   <defs><marker id="arr" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#64748b"/></marker></defs>
 </svg>
 
+### Solar Cell Physics
+
+A photovoltaic cell converts photon energy into electrical energy via the photovoltaic effect. When a photon with energy $E = h\nu \geq E_g$ (where $E_g$ is the semiconductor bandgap) strikes the cell, it promotes an electron from the valence band to the conduction band, creating an electron-hole pair. The built-in electric field at the p-n junction sweeps carriers to opposite terminals, producing a voltage ($V_{oc}$) and current ($I_{sc}$).
+
+**Single-junction vs multi-junction cells:**
+
+A single-junction cell (e.g., silicon, $E_g = 1.12$ eV) can only absorb photons with $E \geq E_g$. Photons with $E < E_g$ pass through unabsorbed; photons with $E \gg E_g$ lose excess energy as heat (thermalisation loss). The theoretical maximum efficiency for a single-junction cell under AM0 (space) illumination is approximately 31% (Shockley-Queisser limit).
+
+Multi-junction (MJ) cells stack two or three p-n junctions of different semiconductor materials, each tuned to absorb a different portion of the solar spectrum:
+
+| Cell Technology | Structure | Bandgaps (eV) | AM0 Efficiency | Temp Coefficient | Flight Heritage |
+|----------------|-----------|---------------|----------------|------------------|-----------------|
+| **Monocrystalline Si** | Single junction | 1.12 | 16--18% | $-0.45$%/degC | Extensive (ISS, many LEO) |
+| **GaAs single-junction** | Single junction | 1.42 | 22--24% | $-0.21$%/degC | Moderate |
+| **InGaP/GaAs dual-junction** | 2-junction | 1.86 / 1.42 | 26--28% | $-0.20$%/degC | Moderate |
+| **InGaP/GaAs/Ge triple-junction** | 3-junction (lattice-matched) | 1.86 / 1.42 / 0.67 | 28--30% | $-0.19$%/degC | Extensive (>90% of modern S/C) |
+| **InGaP/GaAs/InGaAs IMM** | 3-junction (inverted metamorphic) | 1.86 / 1.42 / 1.0 | 32--33% | $-0.18$%/degC | Growing (SolAero ZTJ, Spectrolab XTJ Prime) |
+
+*[Source: Spectrolab XTJ Prime datasheet; SolAero ZTJ datasheet; Green et al., "Solar Cell Efficiency Tables," Progress in Photovoltaics, v.62, 2024]*
+
+**Why triple-junction GaAs dominates space:** The AM0 solar spectrum (above the atmosphere) is richer in UV and blue photons than the AM1.5 terrestrial spectrum. Triple-junction cells capture this energy across three bandgaps. The top cell (InGaP, $E_g = 1.86$ eV) absorbs blue/UV, the middle cell (GaAs, $E_g = 1.42$ eV) absorbs visible, and the bottom cell (Ge, $E_g = 0.67$ eV) absorbs near-IR. Each junction contributes voltage in series, while current is limited by the lowest-current junction (current matching constraint).
+
+**Temperature effects:** In orbit, solar cells operate at 40--80 degC depending on mounting and orbit. Cell efficiency decreases with temperature due to increased intrinsic carrier concentration (which reduces $V_{oc}$). The temperature coefficient for triple-junction GaAs is approximately $-0.19$%/degC relative -- meaning a cell rated at 29.5% at 28 degC drops to approximately 28.5% at 80 degC. This must be included in power budget calculations:
+
+$$\eta_{\text{cell}}(T) = \eta_{\text{ref}} \times [1 + \beta (T - T_{\text{ref}})]$$
+
+where $\beta \approx -0.0019$ /degC for triple-junction GaAs and $T_{\text{ref}} = 28$ degC (standard test conditions).
+
+**Degradation mechanisms:** Solar cells degrade in orbit due to:
+- **Radiation damage:** Energetic protons and electrons (trapped in the Van Allen belts and from solar particle events) displace atoms in the crystal lattice, creating recombination centres that reduce minority carrier lifetime and thus current. Degradation is characterised as equivalent 1 MeV electron fluence. Typical rates: 2--3%/year in LEO, 5--8%/year in MEO (through proton belt), 1--2%/year in GEO.
+- **UV darkening:** Ultraviolet radiation darkens cover glass adhesive over time, reducing transmission.
+- **Micrometeoroid erosion:** Gradual pitting of cover glass reduces optical transmission.
+- **Electrostatic discharge (ESD):** In GEO or polar orbits, differential charging can cause arcing between cells, permanently damaging interconnects.
+
+Cover glass (typically ceria-doped borosilicate, 100--150 um thick) mitigates radiation and UV effects. The combined degradation factor is:
+
+$$L_d = (1 - \delta)^n$$
+
+where $\delta = 0.025$ (2.5%/year for triple-junction GaAs in LEO with standard cover glass) and $n$ = mission lifetime in years.
+
+### Body-Mounted vs Deployable Solar Arrays
+
+**Body-mounted cells** are bonded directly to the spacecraft's external panels. They are the simplest and most reliable option (no deployment mechanism, no hinges, no drive motors) but are severely area-limited.
+
+| Mounting | Advantages | Disadvantages | Typical Power |
+|----------|-----------|---------------|--------------|
+| **Body-mounted** | No mechanism risk, no power for tracking, low mass, low cost | Limited area (satellite surface only), poor illumination geometry for nadir-pointing S/C, high cell temperature | 1U: ~2 W, 3U: ~7 W, 6U: ~12 W |
+| **Fixed deployable** | 2--4x more area, better sun angle, lower cell temp (radiative cooling from back side) | Deployment mechanism (single point of failure), aerodynamic drag increase, structural dynamics | 3U: ~15--25 W, 6U: ~30--48 W |
+| **Tracking deployable** | Optimal sun incidence ($\cos\theta \approx 1$), maximum power | SADM (Solar Array Drive Mechanism) adds mass/cost/complexity, continuous power for motor | Large S/C: 100+ W |
+
+**Real mission examples:**
+- **Planet SuperDove (3U+):** Body-mounted + two fixed deployable wings. ~25 W BOL. The deployables are spring-hinged panels that fold against the 3U body during launch and deploy after ejection from the P-POD.
+- **Asteria (6U, JPL):** Dual deployable arrays, 48 W BOL. Used MMA Design HaWK panels with triple-junction GaAs cells.
+- **ISS CubeSats (various 1U):** Body-mounted only, 2--3 W. Adequate for simple sensor missions with low duty cycles.
+
 ### Architecture Types
 
-| Architecture | Description | Efficiency | Complexity | Typical Use |
-|-------------|-------------|-----------|-----------|------------|
-| **DET** (Direct Energy Transfer) | SA connects directly to bus through shunt regulator | 80--85% | Low | Small satellites, CubeSats |
-| **PPT** (Peak Power Tracking / MPPT) | DC-DC converter maximises SA power extraction | 90--95% | Medium | Most modern CubeSats |
-| **Unregulated bus** | Battery voltage varies (3.0--4.2 V per cell) | Highest | Lowest | Very simple CubeSats |
-| **Regulated bus** | Fixed voltage rails (3.3 V, 5 V, 12 V) | Good | Medium | Most CubeSat COTS EPS |
+| Architecture | How It Works (Physics) | Efficiency | Complexity | Typical Use |
+|-------------|----------------------|-----------|-----------|------------|
+| **DET** (Direct Energy Transfer) | SA connects directly to bus; a shunt regulator diverts excess current to a resistor bank (dissipated as heat) when SA output exceeds load. No series regulator between SA and bus. Voltage varies with illumination. | 80--85% (shunt losses) | Low | Heritage GEO spacecraft, some CubeSats |
+| **PPT / MPPT** (Peak Power Tracking) | A DC-DC converter (typically boost or buck-boost) between SA and bus continuously adjusts its input impedance to operate the SA at its maximum power point (MPP). Uses perturb-and-observe or incremental conductance algorithm. Extracts 10--15% more power than DET, especially at off-nominal temperatures and end-of-life. | 90--95% | Medium | Most modern CubeSats |
+| **Unregulated bus** | Battery connects directly to the power bus through protection FETs only. Bus voltage equals battery voltage (varies from 3.0 V at empty to 4.2 V at full per cell, or 6.0--8.4 V for 2S configuration). Subsystems must tolerate voltage variation. | Highest (no regulator losses) | Lowest | Very simple CubeSats, 1U missions |
+| **Regulated bus** | DC-DC converters create fixed voltage rails (3.3 V, 5 V, 12 V) from battery/SA input. Subsystems see constant voltage regardless of battery state. Adds ~5--10% losses in regulators but greatly simplifies subsystem design. | Good (85--90% overall) | Medium | Most CubeSat COTS EPS (GomSpace P31u, Endurosat, AAC Clyde) |
 
-**CubeSat standard:** Most commercial EPS boards (GomSpace P31u, Endurosat, AAC Clyde) use MPPT + regulated bus with 3.3 V and 5 V rails.
+**MPPT physics:** A solar cell's I-V curve has a distinct "knee" where the maximum power ($P = I \times V$) is extracted. At open-circuit ($I = 0$), voltage is maximum but power is zero. At short-circuit ($V = 0$), current is maximum but power is zero. The MPP sits at approximately 75--80% of $V_{oc}$ and 90--95% of $I_{sc}$. Temperature shifts the I-V curve (higher T moves $V_{oc}$ left), so the MPP moves. An MPPT controller dynamically tracks this point, typically updating every 0.1--1 s. Common CubeSat MPPT converters achieve 95--97% tracking efficiency.
+
+**Battery charge regulation:** The EPS must prevent overcharging (which causes lithium plating, gas generation, and thermal runaway in Li-ion cells) and overdischarging (which causes copper dissolution from the negative current collector, permanently damaging the cell). Modern CubeSat EPS boards implement:
+- **CC-CV charging:** Constant-current charging until cell voltage reaches 4.2 V, then constant-voltage taper until current drops below C/20
+- **Under-voltage lockout:** Bus disconnect when cell voltage falls below 3.0 V (or 2.8 V for emergency)
+- **Cell balancing:** For multi-cell series configurations (2S or higher), passive or active balancing circuits ensure cells remain within 50 mV of each other
+- **Temperature cutoffs:** Charging inhibited below 0 degC and above 45 degC (Li-ion charging below 0 degC causes lithium plating)
+
+**CubeSat standard:** Most commercial EPS boards (GomSpace P31u, Endurosat, AAC Clyde) use MPPT + regulated bus with 3.3 V and 5 V rails, plus an unregulated battery rail (6.0--8.4 V for 2S Li-ion).
 
 ---
 
@@ -3759,122 +3826,233 @@ The EPS is the "utility company" of the spacecraft. It must continuously supply 
 
 ### Teaching Notes
 
-> **Key Equations -- Solar Array Sizing**
+> **Key Equations -- Solar Array Sizing (Full Derivation)**
 >
 > **Step 1: Orbit-average power demand:**
 > $$P_{\text{avg}} = \sum_{\text{modes}} P_{\text{mode}} \times f_{\text{duty,mode}}$$
 >
-> **Step 2: SA end-of-life power requirement:**
-> $$P_{\text{SA,EOL}} = P_{\text{peak,sunlight}} + \frac{P_{\text{eclipse}} \times t_{\text{eclipse}}}{t_{\text{sunlight}} \times \eta_{\text{charge}}}$$
-> where $\eta_{\text{charge}} \approx 0.9$ (battery charge efficiency for Li-ion).
+> This is computed from the ConOps mode table. For each mode (imaging, downlink, eclipse/safe, idle), multiply the mode power by the fraction of orbit spent in that mode.
 >
-> **Step 3: Account for degradation:**
-> $$P_{\text{SA,BOL}} = \frac{P_{\text{SA,EOL}}}{(1 - \delta)^n}$$
-> where $\delta = 0.025$ (2.5% per year degradation for triple-junction GaAs in LEO), $n$ = mission lifetime in years.
+> **Step 2: SA end-of-life power requirement:**
+>
+> During sunlight, the SA must simultaneously: (a) power all sunlit loads and (b) recharge the battery for the upcoming eclipse. The recharge power accounts for battery charge/discharge efficiency:
+>
+> $$P_{\text{SA,EOL}} = P_{\text{peak,sunlight}} + \frac{P_{\text{eclipse}} \times t_{\text{eclipse}}}{t_{\text{sunlight}} \times \eta_{\text{path,eclipse}}}$$
+>
+> where $\eta_{\text{path,eclipse}} = \eta_{\text{charge}} \times \eta_{\text{discharge}} \times \eta_{\text{regulator}}$.
+>
+> For a typical CubeSat EPS: $\eta_{\text{charge}} \approx 0.92$ (Li-ion coulombic efficiency $\times$ charge regulator), $\eta_{\text{discharge}} \approx 0.95$ (battery internal resistance losses), $\eta_{\text{regulator}} \approx 0.90$ (DC-DC converter). Combined: $\eta_{\text{path,eclipse}} \approx 0.79$.
+>
+> A simpler approximation uses $\eta_{\text{charge}} \approx 0.90$ as a lumped path efficiency, which is common in textbooks but slightly optimistic.
+>
+> **Step 3: Account for degradation and temperature:**
+> $$P_{\text{SA,BOL}} = \frac{P_{\text{SA,EOL}}}{L_d \times L_T}$$
+>
+> where:
+> - $L_d = (1 - \delta)^n$ is the radiation degradation factor ($\delta = 0.025$/yr for TJ GaAs in LEO)
+> - $L_T = 1 + \beta(T_{\text{cell}} - T_{\text{ref}})$ is the temperature derating factor ($\beta = -0.0019$/degC, $T_{\text{ref}} = 28$ degC, $T_{\text{cell}}$ typically 60--80 degC in LEO)
+>
+> For a cell operating at 65 degC: $L_T = 1 + (-0.0019)(65 - 28) = 1 - 0.070 = 0.930$ (7% power loss from temperature).
 >
 > **Step 4: Compute SA area:**
-> $$A_{\text{SA}} = \frac{P_{\text{SA,BOL}}}{\eta_{\text{cell}} \times S \times \cos(\theta) \times f_{\text{pack}}}$$
+> $$A_{\text{SA}} = \frac{P_{\text{SA,BOL}}}{\eta_{\text{cell}} \times S \times \cos(\theta) \times f_{\text{pack}} \times f_{\text{cover}}}$$
 > where:
-> - $\eta_{\text{cell}} = 0.295$ (triple-junction GaAs efficiency, AM0)
-> - $S = 1361$ W/m$^2$ (solar constant at 1 AU)
-> - $\theta$ = sun incidence angle (0 deg for ideal tracking)
-> - $f_{\text{pack}} = 0.85$ (cell packing factor)
+> - $\eta_{\text{cell}} = 0.295$ (triple-junction GaAs efficiency at AM0, 28 degC -- STC rating)
+> - $S = 1361$ W/m$^2$ (solar constant at 1 AU, per [Kopp & Lean 2011](https://doi.org/10.1029/2010GL045777))
+> - $\theta$ = sun incidence angle (0 deg for ideal tracking; for body-mounted, use orbit-averaged $\cos\theta$)
+> - $f_{\text{pack}} = 0.85$--$0.90$ (cell packing factor -- fraction of panel area covered by cells; gaps exist for cell interconnects, edge clearance, and harness routing)
+> - $f_{\text{cover}} = 0.97$ (cover glass transmission loss, typically 2--4%)
 >
 > **Step 5: SA mass:**
-> $$m_{\text{SA}} = A_{\text{SA}} \times \sigma_{\text{SA}}$$
-> where $\sigma_{\text{SA}}$ = 2.5 kg/m$^2$ (body-mounted) or 1.5 kg/m$^2$ (deployable).
+> $$m_{\text{SA}} = A_{\text{SA}} \times \sigma_{\text{SA}} + m_{\text{mechanism}}$$
+> where $\sigma_{\text{SA}}$ = areal density of the panel:
+> - Body-mounted (cells on Al substrate): $\sigma \approx 2.0$--$2.5$ kg/m$^2$
+> - Rigid deployable (cells on Al honeycomb/CFRP panel): $\sigma \approx 1.5$--$2.0$ kg/m$^2$
+> - Flexible deployable (roll-out or fold-out): $\sigma \approx 0.8$--$1.2$ kg/m$^2$
+> - $m_{\text{mechanism}}$ = hinge, spring, hold-down mechanism: typically 0.1--0.3 kg per panel for CubeSats
 
-> **Worked Example -- 3U EO CubeSat Solar Array**
+> **Worked Example -- 3U EO CubeSat (SuperDove-class) Solar Array**
 >
-> **Given:** $P_{\text{peak,sunlight}} = 10.0$ W (imaging mode), $P_{\text{eclipse}} = 3.5$ W, $t_{\text{eclipse}} = 35$ min, $t_{\text{sunlight}} = 60$ min, $\eta_{\text{charge}} = 0.9$, mission lifetime = 3 years.
+> **Given:** $P_{\text{peak,sunlight}} = 10.0$ W (imaging mode), $P_{\text{eclipse}} = 3.5$ W, $t_{\text{eclipse}} = 35$ min, $t_{\text{sunlight}} = 60$ min, mission lifetime = 3 years, cell temperature = 65 degC, single deployable panel with fixed sun angle $\theta = 23$ deg (average over orbit for SSO with body-fixed panel).
 >
-> **Step 2:** Recharge power:
-> $P_{\text{recharge}} = \frac{3.5 \times 35}{60 \times 0.9} = \frac{122.5}{54.0} = 2.27$ W
+> **Step 2:** Recharge power (using detailed path efficiency):
+> $\eta_{\text{path}} = 0.92 \times 0.95 \times 0.90 = 0.786$
 >
-> $P_{\text{SA,EOL}} = 10.0 + 2.27 = 12.27$ W
+> $P_{\text{recharge}} = \frac{3.5 \times 35}{60 \times 0.786} = \frac{122.5}{47.2} = 2.60$ W
 >
-> **Step 3:** BOL accounting for 3-year degradation:
-> $P_{\text{SA,BOL}} = \frac{12.27}{(1 - 0.025)^3} = \frac{12.27}{0.9269} = 13.24$ W
+> $P_{\text{SA,EOL}} = 10.0 + 2.60 = 12.60$ W
+>
+> **Step 3:** BOL accounting for 3-year degradation + temperature:
+> $L_d = (1 - 0.025)^3 = 0.9269$
+>
+> $L_T = 1 + (-0.0019)(65 - 28) = 0.930$
+>
+> $P_{\text{SA,BOL}} = \frac{12.60}{0.9269 \times 0.930} = \frac{12.60}{0.862} = 14.62$ W
 >
 > **Step 4:** SA area:
-> $A_{\text{SA}} = \frac{13.24}{0.295 \times 1361 \times 1.0 \times 0.85} = \frac{13.24}{341.2} = 0.0388$ m$^2$
+> $A_{\text{SA}} = \frac{14.62}{0.295 \times 1361 \times \cos(23\degree) \times 0.85 \times 0.97}$
 >
-> This is approximately 20 cm x 20 cm -- achievable with a single deployable panel on a 3U CubeSat.
+> $= \frac{14.62}{0.295 \times 1361 \times 0.921 \times 0.85 \times 0.97}$
 >
-> **Step 5:** SA mass (deployable):
-> $m_{\text{SA}} = 0.0388 \times 1.5 = 0.058$ kg (panel only; mechanism adds ~0.1--0.2 kg)
+> $= \frac{14.62}{305.0} = 0.0479$ m$^2$
+>
+> This is approximately 22 cm x 22 cm -- achievable with a single deployable panel on a 3U CubeSat (the MMA HaWK panel provides up to 0.06 m$^2$ per wing).
+>
+> **Step 5:** SA mass (deployable, rigid):
+> $m_{\text{SA}} = 0.0479 \times 1.8 + 0.15 = 0.086 + 0.15 = 0.24$ kg (panel + mechanism)
+>
+> **Comparison to Planet SuperDove:** The actual SuperDove uses body-mounted cells plus two deployable wings, achieving ~25 W BOL. Our calculation (14.6 W BOL from one panel) is consistent -- SuperDove's higher power supports continuous imaging plus S-band downlink simultaneously.
 
 ### CubeSat SA Power Reference
 
-| Configuration | 1U | 3U | 6U |
-|--------------|-----|-----|-----|
-| Body-mounted only | ~2 W | ~7 W | ~12 W |
-| Single deployable | ~4 W | ~15 W | ~30 W |
-| Dual deployable | -- | ~25 W | ~48 W |
+| Configuration | 1U | 3U | 6U | 12U |
+|--------------|-----|-----|-----|------|
+| Body-mounted only | ~2 W | ~7 W | ~12 W | ~20 W |
+| Single deployable | ~4 W | ~15 W | ~30 W | ~55 W |
+| Dual deployable | -- | ~25 W | ~48 W | ~100 W |
+| Quad deployable | -- | -- | ~80 W | ~180 W |
 
-*[Source: GomSpace, ISIS, MMA Design vendor datasheets; ASTERIA 6U confirmed 48 W BOL]*
+*[Source: GomSpace, ISIS, MMA Design vendor datasheets; ASTERIA 6U confirmed 48 W BOL; Dove/SuperDove confirmed ~25 W]*
 
 ---
 
-## 3. Battery Sizing (15 min)
+## 3. Battery Sizing (20 min)
 
 ### Teaching Notes
 
+### Li-ion Cell Chemistry and Physics
+
+All modern spacecraft batteries use lithium-ion (Li-ion) chemistry. During discharge, lithium ions migrate from the graphite anode (negative electrode) through an organic electrolyte and polymer separator to the lithium metal oxide cathode (positive electrode), while electrons flow through the external circuit doing work. During charging, the process reverses.
+
+**Common cathode chemistries used in space:**
+
+| Chemistry | Cathode | Nominal Voltage | Energy Density | Cycle Life (30% DOD) | Thermal Stability | Space Heritage |
+|-----------|---------|----------------|---------------|----------------------|-------------------|----------------|
+| **LCO** (LiCoO$_2$) | Cobalt oxide | 3.7 V | 150--200 Wh/kg | ~10,000 | Moderate | ISS, many CubeSats (18650 cells) |
+| **NMC** (LiNiMnCoO$_2$) | Nickel-manganese-cobalt | 3.7 V | 170--250 Wh/kg | ~5,000 | Moderate | Growing heritage |
+| **LFP** (LiFePO$_4$) | Iron phosphate | 3.2 V | 90--120 Wh/kg | ~50,000 | Excellent | Niche (when cycle life is paramount) |
+| **NCA** (LiNiCoAlO$_2$) | Nickel-cobalt-aluminium | 3.6 V | 200--260 Wh/kg | ~3,000 | Lower | Limited space heritage |
+
+*[Source: Ratnakumar et al., NASA JPL; Saft VES-16 space cell datasheet; Samsung SDI 18650 specifications]*
+
+**Cell form factors:**
+
+- **18650 cylindrical:** 18 mm diameter, 65 mm long. The workhorse of CubeSat missions. Common cells: Samsung 25R (2500 mAh, 20A continuous), Panasonic NCR18650B (3350 mAh, moderate rate), Sony VTC6 (3000 mAh, high rate). Energy: 9--12 Wh per cell.
+- **Pouch cells:** Custom dimensions, higher energy density (~250 Wh/kg) but require external structural support. Used in some 6U+ missions and all large spacecraft. GomSpace NanoPower BPX uses pouch cells.
+- **Prismatic cells:** Rigid case, intermediate between cylindrical and pouch. Used in some mission-specific designs.
+
+**Cell configuration:**
+
+Cells are arranged in series (S) to increase voltage and parallel (P) to increase capacity:
+- **1S (single cell):** 3.0--4.2 V bus. Used for very simple 1U CubeSats.
+- **2S (two in series):** 6.0--8.4 V bus. Standard for most CubeSats (matches GomSpace P31u default).
+- **2S2P (two series, two parallel):** 6.0--8.4 V bus, double capacity. Used for higher-energy missions (e.g., GomSpace BP4 pack: 4 cells, 2S2P, ~38 Wh).
+
+**Protection circuits:** Every flight battery pack includes:
+- **Cell voltage monitoring:** Per-cell voltage measurement to detect over/under-voltage
+- **Over-current protection:** Current-sense resistors + MOSFET switches to disconnect at overcurrent (prevents short-circuit thermal runaway)
+- **Temperature monitoring:** Thermistors on each cell; inhibit charging below 0 degC and above 45 degC
+- **Heater circuit:** Kapton heater on battery pack, thermostatically controlled, to maintain cells above minimum charging temperature during eclipse
+
+**Capacity fade model:** Li-ion cells lose capacity over time due to solid electrolyte interphase (SEI) growth on the anode. A simplified calendar + cycling fade model:
+
+$$C(t, N) = C_0 \times (1 - \alpha \sqrt{t}) \times (1 - \beta \cdot N \cdot DOD^{\gamma})$$
+
+where $C_0$ = initial capacity, $t$ = time (years), $N$ = number of cycles, $\alpha \approx 0.02$ (calendar fade), $\beta \approx 3 \times 10^{-6}$, $\gamma \approx 2.1$ (cycling fade). For LEO at 30% DOD, this gives approximately 5--8% capacity loss per year -- consistent with flight data from ISS battery replacements and CubeSat fleet telemetry.
+
 > **Key Equations -- Battery Sizing**
 >
-> **Required battery capacity:**
-> $$C_{\text{bat}} = \frac{P_{\text{eclipse}} \times t_{\text{eclipse}}}{DOD \times \eta_{\text{discharge}}}$$
+> **Required battery energy:**
+> $$E_{\text{bat}} = \frac{P_{\text{eclipse}} \times t_{\text{eclipse}}}{DOD \times \eta_{\text{discharge}}}$$
 > where:
-> - $DOD$ = maximum depth of discharge (0.30 for > 10,000 cycle life with Li-ion)
-> - $\eta_{\text{discharge}} = 0.95$ (discharge efficiency)
+> - $DOD$ = maximum depth of discharge
+> - $\eta_{\text{discharge}} = 0.95$ (discharge efficiency, accounting for internal resistance $I^2R$ losses)
 > - $t_{\text{eclipse}}$ in hours
 >
 > **Battery mass:**
-> $$m_{\text{bat}} = \frac{C_{\text{bat}}}{E_{\text{specific}}}$$
-> where $E_{\text{specific}} = 150$--$200$ Wh/kg for Li-ion 18650 cells.
+> $$m_{\text{bat}} = \frac{E_{\text{bat}}}{e_{\text{specific}}}$$
+> where $e_{\text{specific}} = 150$--$200$ Wh/kg for packaged Li-ion 18650 cells (cell-level energy density is higher, but packaging adds ~30% mass).
 >
-> **Cycle life relationship** (Li-ion 18650):
+> **Cycle life vs DOD relationship** (Li-ion 18650, LCO chemistry):
 >
-> | DOD | Typical Cycle Life | Suitable For |
-> |-----|-------------------|-------------|
-> | 80% | ~500 cycles | Short missions (< 1 month) |
-> | 50% | ~2,000 cycles | Medium missions (< 6 months) |
-> | 30% | ~10,000 cycles | Multi-year LEO missions |
-> | 20% | ~30,000 cycles | Long-life LEO (> 5 years) |
+> | DOD | Typical Cycle Life | Suitable Mission Duration | Annual Eclipses (LEO, 15/day) |
+> |-----|-------------------|--------------------------|-------------------------------|
+> | 80% | ~500 cycles | < 1 month | 450 |
+> | 50% | ~2,000 cycles | < 4 months | 1,800 |
+> | 30% | ~10,000 cycles | 1--2 years | 5,475 |
+> | 20% | ~30,000 cycles | 3--5 years | 10,950 |
+> | 10% | ~100,000 cycles | > 7 years | 38,325 |
+>
+> **Design rule of thumb:** For a multi-year LEO mission, start with 20--30% DOD. For a short technology demonstration (< 6 months), 40--50% DOD is acceptable and significantly reduces battery size/mass/cost.
 
-> **Worked Example -- Battery for 3U EO CubeSat**
+> **Worked Example -- Battery for 3U EO CubeSat (SuperDove-class)**
 >
-> **Given:** $P_{\text{eclipse}} = 3.5$ W, $t_{\text{eclipse}} = 35$ min $= 0.583$ h, $DOD = 0.30$, $\eta = 0.95$.
+> **Given:** $P_{\text{eclipse}} = 3.5$ W, $t_{\text{eclipse}} = 35$ min $= 0.583$ h, $DOD = 0.25$ (conservative for 3-year mission), $\eta = 0.95$.
 >
-> $C_{\text{bat}} = \frac{3.5 \times 0.583}{0.30 \times 0.95} = \frac{2.04}{0.285} = 7.16$ Wh
+> **Step 1 -- Required battery energy:**
+> $E_{\text{bat}} = \frac{3.5 \times 0.583}{0.25 \times 0.95} = \frac{2.04}{0.2375} = 8.59$ Wh
 >
-> With 20% margin: $C_{\text{bat,spec}} \geq 8.6$ Wh. Specify **10 Wh** minimum.
+> **Step 2 -- Apply ECSS margin (20% at Phase A/B):**
+> $E_{\text{bat,spec}} \geq 8.59 \times 1.20 = 10.3$ Wh. Specify **minimum 10 Wh**, ideally **20 Wh** for operational flexibility.
 >
-> Battery mass: $m_{\text{bat}} = \frac{10}{150} = 0.067$ kg
+> **Step 3 -- Verify cycle life:**
+> 3-year mission at 15 orbits/day = 16,425 eclipses. At 25% DOD, Li-ion 18650 cells provide ~20,000 cycles. **Margin = 22%. Pass.**
 >
-> **Verification:** 3-year mission at 15 orbits/day = 16,425 eclipses. At 30% DOD, Li-ion 18650 cells provide > 10,000 cycles. **Marginal** -- consider 20% DOD for extra life margin ($C_{\text{bat}} = 10.7$ Wh, specify 13 Wh).
+> Including capacity fade: after 3 years, ~15--20% capacity loss from calendar + cycling aging. Effective DOD increases to $0.25 / 0.82 = 0.30$ -- still within the 10,000-cycle regime. **Acceptable with monitoring.**
+>
+> **Step 4 -- Battery mass:**
+> $m_{\text{bat}} = \frac{20}{170} = 0.118$ kg (using 170 Wh/kg for packaged 18650 cells)
+>
+> **Step 5 -- Battery volume:**
+> Two 18650 cells in 2S1P: $2 \times 18\text{mm} \times 65\text{mm} = $ approximately 34 mL, fitting easily within a 3U stack.
+>
+> **Comparison to Planet SuperDove:** SuperDove carries approximately 20 Wh in a 2S2P configuration (4 cells), consistent with our sizing. The actual operating DOD is estimated at 10--15% per eclipse, giving substantial cycle-life margin for the multi-year constellation replenishment cadence.
+
+**Failure modes to watch for:**
+- **Thermal runaway:** If a cell is overcharged, mechanically damaged, or experiences an internal short, the exothermic decomposition of the cathode material can lead to thermal runaway (self-heating > heat dissipation), potentially reaching 600+ degC. Mitigation: cell-level fuses, per-cell voltage monitoring, thermal cutoffs.
+- **Lithium plating:** Charging below 0 degC causes metallic lithium to deposit on the anode surface rather than intercalating into graphite. This is irreversible, reduces capacity, and can cause internal shorts. Mitigation: battery heater + thermostat + software lockout.
+- **Capacity imbalance:** In series configurations, the weakest cell limits the pack. If cells age at different rates, the weakest cell hits under-voltage lockout while others still have capacity. Mitigation: cell balancing circuits, matched cell lots.
 
 ---
 
-## 4. Thermal Control System (30 min)
+## 4. Thermal Control System (35 min)
 
 ### Teaching Notes
 
 *[Source: ECSS-E-ST-31C; Gilmore, Ch. 1--4; SMAD, Ch. 11.5]*
 
+### The Physics of Spacecraft Thermal Control
+
+Spacecraft thermal control is fundamentally different from terrestrial thermal engineering because **there is no convection in vacuum**. The only heat transfer mechanisms are:
+
+1. **Conduction:** Heat flow through solid material, governed by Fourier's law: $\dot{Q} = -kA \frac{dT}{dx}$. Critical within the spacecraft structure and between components and mounting surfaces.
+2. **Radiation:** Heat transfer via electromagnetic radiation, governed by the Stefan-Boltzmann law: $\dot{Q} = \varepsilon \sigma A T^4$. This is the **only** mechanism for rejecting heat to the environment.
+
+There is no convective cooling. A component that overheats cannot be cooled by a fan. All waste heat must be conducted to a radiating surface and then radiated to space. This is the central constraint of spacecraft thermal design.
+
 ### Thermal Environment in LEO
 
 A spacecraft in LEO experiences four thermal inputs and one thermal sink:
 
-| Source | Flux | Direction |
-|--------|------|-----------|
-| **Direct solar** | $S = 1361$ W/m$^2$ | Sun-facing surfaces only |
-| **Earth albedo** | $\alpha_E \times S \approx 0.30 \times 1361 \approx 408$ W/m$^2$ | Earth-facing surfaces (nadir) |
-| **Earth infrared** | $q_{\text{IR}} \approx 240$ W/m$^2$ | Earth-facing surfaces (nadir) |
-| **Internal dissipation** | $Q_{\text{int}} = P_{\text{dissipated}}$ | From electronics waste heat |
-| **Deep space** (sink) | $T_{\text{space}} \approx 3$ K | Zenith-facing radiator surfaces |
+| Source | Flux | Direction | Variability |
+|--------|------|-----------|-------------|
+| **Direct solar** | $S = 1361 \pm 1$ W/m$^2$ (at 1 AU) | Sun-facing surfaces only | Seasonal ($\pm 3.3$% due to Earth's orbital eccentricity: $S_{\text{perihelion}} = 1414$ W/m$^2$ in January, $S_{\text{aphelion}} = 1322$ W/m$^2$ in July) |
+| **Earth albedo** | $\alpha_E \times S \approx 0.30 \times 1361 \approx 408$ W/m$^2$ | Earth-facing surfaces (nadir) | Varies with cloud cover, surface type (0.06 for ocean to 0.80 for fresh snow); orbit-average range 0.25--0.35 |
+| **Earth infrared** | $q_{\text{IR}} \approx 240$ W/m$^2$ (orbit average) | Earth-facing surfaces (nadir) | Range 200--270 W/m$^2$ depending on latitude, season, cloud cover |
+| **Internal dissipation** | $Q_{\text{int}} = P_{\text{dissipated}}$ | From electronics waste heat | Varies with operational mode; nearly all electrical power eventually becomes heat |
+| **Deep space** (sink) | $T_{\text{space}} \approx 2.7$ K (CMB) | Zenith-facing radiator surfaces | Effectively 0 K for engineering purposes |
 
-### Thermal Balance Equation
+### View Factors
+
+The fraction of a surface's radiative "view" that sees each thermal source is critical for accurate thermal modelling. For a nadir-pointing spacecraft in LEO:
+
+$$F_{\text{Earth}} = \frac{1}{1 + (h/R_E)^2 + 2(h/R_E)}$$
+
+where $h$ = altitude (km) and $R_E = 6371$ km. For a 500 km orbit: $F_{\text{Earth}} = 1 / (1 + (500/6371)^2 + 2 \times 500/6371) = 1 / 1.163 = 0.860$. The nadir face sees 86% Earth and 14% deep space. The zenith face sees 100% deep space (assuming no S/C self-shadowing). Side faces see a mix.
+
+At higher altitudes, $F_{\text{Earth}}$ decreases: at 800 km it is 0.79, at 35,786 km (GEO) it is only 0.018 -- which is why GEO thermal design is dominated by solar flux and internal dissipation, not Earth IR/albedo.
+
+### Thermal Balance Equation -- Full Derivation
 
 > **Key Equations -- Thermal Equilibrium**
 >
@@ -3882,66 +4060,217 @@ A spacecraft in LEO experiences four thermal inputs and one thermal sink:
 >
 > $$Q_{\text{in}} = Q_{\text{out}}$$
 >
-> $$\alpha_s A_{\text{sun}} S + \alpha_s A_{\text{alb}} \alpha_E S + \varepsilon A_{\text{IR}} q_{\text{IR}} + Q_{\text{int}} = \varepsilon \sigma A_{\text{rad}} T^4$$
+> **Absorbed heat (expanded):**
+>
+> $$Q_{\text{in}} = \underbrace{\alpha_s \cdot A_{\text{sun}} \cdot S}_{\text{direct solar}} + \underbrace{\alpha_s \cdot A_{\text{alb}} \cdot F_{\text{alb}} \cdot \alpha_E \cdot S}_{\text{Earth albedo}} + \underbrace{\varepsilon \cdot A_{\text{IR}} \cdot F_{\text{IR}} \cdot q_{\text{IR}}}_{\text{Earth IR}} + \underbrace{Q_{\text{int}}}_{\text{internal dissipation}}$$
+>
+> **Radiated heat:**
+>
+> $$Q_{\text{out}} = \varepsilon \cdot \sigma \cdot A_{\text{rad}} \cdot T^4$$
 >
 > where:
-> - $\alpha_s$ = solar absorptance of surface coating
-> - $\varepsilon$ = infrared emittance of surface coating
-> - $\sigma = 5.67 \times 10^{-8}$ W/m$^2$/K$^4$ (Stefan-Boltzmann constant)
-> - $A_{\text{sun}}$, $A_{\text{alb}}$, $A_{\text{IR}}$, $A_{\text{rad}}$ = projected areas for each flux
+> - $\alpha_s$ = solar absorptance of surface coating (dimensionless, 0--1)
+> - $\varepsilon$ = infrared emittance of surface coating (dimensionless, 0--1)
+> - $\sigma = 5.670 \times 10^{-8}$ W/m$^2$/K$^4$ (Stefan-Boltzmann constant)
+> - $A_{\text{sun}}$, $A_{\text{alb}}$, $A_{\text{IR}}$, $A_{\text{rad}}$ = projected areas for each flux (m$^2$)
+> - $F_{\text{alb}}$, $F_{\text{IR}}$ = view factors to Earth for albedo and IR surfaces
 > - $T$ = equilibrium temperature (K)
+>
+> **Note on $\alpha_s$ vs $\varepsilon$:** Solar absorptance ($\alpha_s$) is measured over the solar spectrum (0.2--2.5 um, peak at 0.5 um visible). Infrared emittance ($\varepsilon$) is measured over the thermal IR spectrum (3--50 um, peak at ~10 um for room-temperature objects). These are **different spectral ranges**, so $\alpha_s \neq \varepsilon$ for most real surfaces. This decoupling is the basis of all passive thermal control: by choosing the $\alpha_s / \varepsilon$ ratio, the designer controls the equilibrium temperature.
 >
 > **Solving for equilibrium temperature:**
 > $$T = \left(\frac{Q_{\text{absorbed}} + Q_{\text{internal}}}{\varepsilon \sigma A_{\text{rad}}}\right)^{1/4}$$
+>
+> This equation is valid only for a single isothermal node (lumped-parameter model). For multi-node thermal models (which are needed for any real spacecraft), the heat balance is solved simultaneously for all nodes using numerical methods (Thermal Desktop, ESATAN, or similar thermal analysis software).
 
 ### Hot Case and Cold Case
 
 | Case | Conditions | Design Concern |
 |------|-----------|----------------|
-| **Hot case** | Maximum solar exposure, all subsystems active, worst sun angle, BOL coatings | Components exceed maximum operating temperature |
-| **Cold case** | Eclipse, minimum power dissipation, degraded coatings (EOL), deep space view | Components fall below minimum operating temperature |
+| **Hot case** | Maximum solar exposure ($S = 1414$ W/m$^2$, perihelion), all subsystems active (max $Q_{\text{int}}$), worst sun angle (max $A_{\text{sun}}$), BOL coatings ($\alpha_s$ at minimum -- fresh white paint), max albedo (0.35) | Components exceed maximum operating temperature |
+| **Cold case** | Eclipse (no solar), minimum power dissipation (safe mode, min $Q_{\text{int}}$), EOL coatings ($\alpha_s$ increased by UV darkening), minimum Earth IR (200 W/m$^2$), deep space view | Components fall below minimum operating temperature |
 
-### Surface Coatings
+**Design philosophy:** The thermal engineer designs to keep all components within their qualified temperature range under both worst-case hot and worst-case cold conditions, with ECSS-mandated margins applied.
 
-| Coating | $\alpha_s$ | $\varepsilon$ | $\alpha_s / \varepsilon$ | Use |
-|---------|-----------|--------------|------------------------|-----|
-| White paint (S13G) | 0.20 | 0.85 | 0.24 | Radiators (stay cool) |
-| Black paint (Aeroglaze Z306) | 0.95 | 0.85 | 1.12 | Internal surfaces (maximize exchange) |
-| Gold tape | 0.25 | 0.04 | 6.25 | MLI outer layer (minimize radiation) |
-| Alodine (bare Al) | 0.38 | 0.15 | 2.53 | Moderate thermal control |
-| MLI blanket (effective) | 0.05--0.15 | 0.02--0.05 | ~3 | Thermal isolation |
-| Solar cells | 0.75--0.92 | 0.80--0.85 | ~1.0 | SA surfaces (high absorption) |
+### Surface Coatings -- The Passive Thermal Toolbox
 
-### Thermal Control Methods
+| Coating | $\alpha_s$ (BOL) | $\alpha_s$ (EOL, 5 yr LEO) | $\varepsilon$ | $\alpha_s / \varepsilon$ (BOL) | Use Case |
+|---------|-----------|---------------------------|--------------|------------------------|----------|
+| White paint (AZ-93, S13G-LO) | 0.14--0.20 | 0.25--0.35 | 0.89--0.92 | 0.16--0.22 | Radiator surfaces (stay cool; low solar absorption, high IR emission) |
+| Black paint (Aeroglaze Z306) | 0.95 | 0.95 | 0.89 | 1.07 | Internal surfaces (maximise radiative exchange between components) |
+| Gold tape (2 mil Kapton + VDA) | 0.22--0.25 | 0.25--0.30 | 0.03--0.05 | 5.0--7.5 | MLI outer layer, thermal isolation |
+| Bare aluminium (polished) | 0.10--0.15 | 0.15--0.20 | 0.03--0.05 | 2.5--4.0 | Reflective surfaces, low emissivity |
+| Alodine (chromate conversion on Al) | 0.35--0.40 | 0.40--0.50 | 0.12--0.16 | 2.5--3.0 | Moderate thermal control, structural surfaces |
+| Anodised aluminium (clear or black) | 0.30--0.50 | 0.35--0.55 | 0.75--0.86 | 0.4--0.65 | CubeSat external structure (standard finish per CDS) |
+| MLI blanket (effective) | 0.05--0.15 | 0.10--0.20 | 0.02--0.05 | ~3 | Thermal isolation of sensitive components |
+| Solar cells (with cover glass) | 0.75--0.92 | 0.78--0.92 | 0.80--0.85 | ~1.0 | SA surfaces (high absorption is unavoidable; cells get hot) |
+| OSR (Optical Solar Reflector) | 0.05--0.08 | 0.08--0.12 | 0.78--0.80 | 0.06--0.10 | High-performance radiators (large S/C, GEO) |
 
-| Method | Type | Mass Impact | Typical Use |
-|--------|------|-------------|------------|
-| **Surface coatings** | Passive | Negligible | Always -- select $\alpha_s/\varepsilon$ ratio per face |
-| **MLI blankets** | Passive | 0.05--0.2 kg | Insulate sensitive components from environment |
-| **Radiators** | Passive | Part of structure | Reject internal waste heat to deep space |
-| **Heaters** | Active | 0.005--0.02 kg each | Maintain minimum temp during eclipse/safe mode |
-| **Heat pipes** | Active/passive | 0.05--0.1 kg | Transport heat from source to radiator |
-| **Louvers** | Active | 0.1--0.5 kg | Variable-conductance radiators (rare on CubeSats) |
+**Key design insight:** A surface with low $\alpha_s / \varepsilon$ (e.g., white paint: 0.2) stays cool because it reflects most solar energy but efficiently radiates thermal IR. A surface with high $\alpha_s / \varepsilon$ (e.g., gold tape: 6.0) stays warm because it absorbs solar energy but barely radiates. This is why white paint is used on radiators and gold/MLI is used for insulation.
+
+**Coating degradation:** UV radiation darkens most white paints over time, increasing $\alpha_s$ while leaving $\varepsilon$ nearly unchanged. This means $\alpha_s / \varepsilon$ increases, and the surface gets hotter at EOL. The thermal engineer must design the hot case with BOL coatings (which give the highest $\alpha_s$... wait -- actually BOL white paint has the *lowest* $\alpha_s$, so the **cold case** is more conservative at BOL, and the **hot case** is more conservative at EOL when $\alpha_s$ has increased. This is a common source of confusion: BOL coatings give a colder cold case; EOL coatings give a hotter hot case.
+
+### MLI (Multi-Layer Insulation) -- Construction and Physics
+
+MLI blankets are the most common thermal insulation on spacecraft. They work by minimising both radiation and conduction heat transfer through multiple reflective layers separated by low-conductance spacers.
+
+**Construction (typical MLI blanket):**
+1. **Outer cover:** 1 mil (25 um) aluminised Kapton (VDA -- Vapour Deposited Aluminium on one side). Provides mechanical protection and low solar absorptance.
+2. **Inner reflective layers:** 10--20 layers of 0.25 mil (6 um) double-aluminised Mylar (DAM). Each layer reflects IR radiation, and the vacuum gaps between layers have zero convection.
+3. **Spacer material:** Dacron or Nomex netting between each DAM layer, preventing conductive contact between adjacent reflective sheets.
+4. **Inner cover:** 1 mil aluminised Kapton, protecting the inner layers.
+
+**Effective emissivity:** An ideal MLI blanket with $N$ reflective layers has an effective emissivity of:
+
+$$\varepsilon_{\text{eff}} = \frac{1}{2/\varepsilon_{\text{inner}} + (N-1)(2/\varepsilon_{\text{layer}} - 1)}$$
+
+For 20 layers of DAM ($\varepsilon_{\text{layer}} = 0.03$): $\varepsilon_{\text{eff}} \approx 0.002$. In practice, real MLI achieves $\varepsilon_{\text{eff}} = 0.01$--$0.03$ due to seams, penetrations (harness, mounting), and edge effects. The ratio of actual to theoretical performance is typically 2--5x worse.
+
+**CubeSat MLI challenges:** CubeSats have limited surface area and many penetrations (connectors, antennas, sensors, solar cells), making it difficult to achieve good MLI performance. Most CubeSats in LEO do not use MLI -- they rely on the moderate thermal environment (Earth IR provides a "warm floor") and surface coatings. MLI becomes essential for deep-space CubeSats (e.g., MarCO, CAPSTONE) or missions with sensitive payloads (IR detectors, laser systems).
+
+### Heater Sizing
+
+When passive thermal control cannot prevent a component from falling below its minimum temperature (typically during eclipse or safe mode), electrical heaters are required.
+
+> **Key Equations -- Heater Sizing**
+>
+> **Required heater power** (to maintain minimum temperature during worst cold case):
+>
+> $$P_{\text{heater}} = \varepsilon \sigma A_{\text{rad}} T_{\text{min}}^4 - Q_{\text{environment,cold}} - Q_{\text{internal,cold}}$$
+>
+> where $T_{\text{min}}$ is the minimum allowable temperature of the component (converted to Kelvin).
+>
+> **Heater types for CubeSats:**
+> - **Kapton foil heaters:** Etched-foil resistance elements laminated between Kapton sheets. Flexible, thin (0.2--0.5 mm), lightweight (2--10 g each). Typical power: 0.5--5 W per heater. Bond directly to component surface with pressure-sensitive adhesive.
+> - **Cartridge heaters:** Cylindrical, inserted into drilled holes. Higher power density but heavier and less common on CubeSats.
+>
+> **Thermostat control:** Simple bimetallic thermostats (e.g., Honeywell Klixon) switch heaters on/off at set temperatures (e.g., on at -5 degC, off at +5 degC). Mass: ~2 g each. For higher reliability, software-controlled heaters using temperature sensor feedback and EPS switches are preferred on modern CubeSats -- but this requires OBC to be running, which may not be the case in safe mode.
+
+### Heat Pipes and Thermal Straps
+
+**Heat pipes** are passive two-phase heat transfer devices that transport large amounts of thermal energy with very small temperature differences. They are widely used on larger spacecraft and are beginning to appear on 6U+ CubeSats.
+
+**How a heat pipe works:**
+1. Working fluid (ammonia, methanol, or water) evaporates at the hot end (evaporator), absorbing latent heat
+2. Vapour travels through the hollow pipe core to the cold end (condenser)
+3. At the condenser, vapour releases latent heat and condenses back to liquid
+4. Liquid returns to the evaporator via capillary action in a wick structure (sintered metal, axial grooves, or screen mesh)
+5. The process is continuous, passive (no moving parts, no power), and can transport 10--100 W across 20--50 cm with < 5 degC temperature difference
+
+**Thermal conductance of a heat pipe:** Effective thermal conductivity is 10,000--100,000 W/m/K (compared to copper at 400 W/m/K and aluminium at 237 W/m/K). A 6 mm diameter ammonia heat pipe can transport ~30 W over 30 cm with < 3 degC gradient.
+
+**Thermal straps** are flexible conductive links (braided copper, graphite fibre, or pyrolytic graphite sheet) used to conduct heat between components that cannot be rigidly connected (e.g., across a hinge or between a vibration-isolated payload and the spacecraft bus). Typical conductance: 0.5--5 W/K.
+
+| Heat Transport Method | Conductance | Mass | Power | Orientation Sensitivity | CubeSat Use |
+|----------------------|-------------|------|-------|------------------------|------------|
+| Aluminium conduction | ~0.5--2 W/K per path | Part of structure | 0 W | None | Always (inherent) |
+| Copper thermal strap | 1--5 W/K | 10--50 g | 0 W | None | Occasional (6U+) |
+| Heat pipe (ammonia) | 5--50 W/K | 20--100 g | 0 W | Gravity-dependent (must test in relevant orientation) | Rare (6U+, some 3U) |
+| Pumped fluid loop | 50--500 W/K | 500+ g | 5--20 W | None | Large S/C only |
+
+### Thermal Control Methods Summary
+
+| Method | Type | Mass Impact | Typical Use | Key Design Parameter |
+|--------|------|-------------|------------|---------------------|
+| **Surface coatings** | Passive | Negligible | Always -- select $\alpha_s/\varepsilon$ ratio per face | $\alpha_s/\varepsilon$ ratio |
+| **MLI blankets** | Passive | 0.5--2.0 kg/m$^2$ | Insulate sensitive components from environment | Number of layers, $\varepsilon_{\text{eff}}$ |
+| **Radiators** | Passive | Part of structure | Reject internal waste heat to deep space | Radiator area, $\varepsilon$, view to space |
+| **Heaters** | Active | 0.005--0.02 kg each | Maintain minimum temp during eclipse/safe mode | Power, thermostat set point |
+| **Heat pipes** | Passive | 0.02--0.10 kg each | Transport heat from source to radiator | Working fluid, $Q_{\text{max}}$, orientation |
+| **Thermal straps** | Passive | 0.01--0.05 kg each | Flexible conductive link across joints/hinges | Conductance (W/K) |
+| **Louvers** | Active | 0.1--0.5 kg | Variable-conductance radiators (rare on CubeSats) | Open/close temperature range |
 
 ### ECSS Thermal Margins
 
 *[Source: ECSS-E-ST-31C, Table 5-1]*
 
-| Test Level | Hot Margin | Cold Margin |
-|-----------|-----------|-------------|
+| Phase | Hot Margin (above predicted max) | Cold Margin (below predicted min) |
+|-------|----------------------------------|-----------------------------------|
 | **Qualification** | Predicted + 15 degC | Predicted - 15 degC |
 | **Acceptance** | Predicted + 10 degC | Predicted - 10 degC |
 | **Operating** | Predicted + 5 degC | Predicted - 5 degC |
 
-> **Worked Example -- 3U CubeSat Thermal Check**
+These margins ensure that thermal model uncertainties (typically $\pm 5$--$10$ degC for simplified models, $\pm 2$--$5$ degC for detailed correlated models) do not cause in-orbit temperature exceedances.
+
+> **Worked Example -- 3U CubeSat Full Thermal Analysis**
 >
-> **Hot case:** Predicted maximum temperature of payload CCD = 42 degC.
+> **Hot case (sunlit, all systems active, perihelion, EOL coatings):**
+>
+> Simplified single-node model. 3U CubeSat, nadir-pointing.
+>
+> - Sun-facing area ($+Z$, zenith-facing 3U panel): $A_{\text{sun}} = 0.034$ m$^2$
+> - SA surfaces (sun-facing): $\alpha_s = 0.85$, $\varepsilon = 0.82$ (solar cell properties)
+> - Nadir face ($-Z$): $A_{\text{nadir}} = 0.034$ m$^2$, anodised Al ($\alpha_s = 0.45$ EOL, $\varepsilon = 0.82$)
+> - Side faces (4x): $A_{\text{side}} = 4 \times 0.01$ m$^2$ = $0.04$ m$^2$, anodised Al
+> - Internal dissipation (imaging mode): $Q_{\text{int}} = 10.0$ W
+>
+> $Q_{\text{solar}} = 0.85 \times 0.034 \times 1414 = 40.9$ W (ouch -- but much of this is captured by the SA and converted to electricity, so the net thermal input from solar cells is $Q_{\text{solar,thermal}} = \alpha_s \times A \times S \times (1 - \eta_{\text{cell}}) = 0.85 \times 0.034 \times 1414 \times 0.705 = 28.8$ W)
+>
+> $Q_{\text{albedo}} = 0.45 \times 0.034 \times 0.35 \times 1414 = 7.6$ W
+>
+> $Q_{\text{Earth IR}} = 0.82 \times 0.034 \times 270 = 7.5$ W (nadir face, hot case Earth IR)
+>
+> $Q_{\text{int}} = 10.0$ W (but ~12.6 W of the 10 W load power ultimately becomes heat after doing useful work)
+>
+> Total $Q_{\text{in}} \approx 28.8 + 7.6 + 7.5 + 10.0 = 53.9$ W
+>
+> Total radiating area (all 6 faces, minus SA area which is a net absorber): $A_{\text{rad}} \approx 0.066$ m$^2$ (accounting for partial Earth blockage on nadir face)
+>
+> Average emissivity: $\varepsilon_{\text{avg}} \approx 0.82$
+>
+> $T_{\text{hot}} = \left(\frac{53.9}{0.82 \times 5.67 \times 10^{-8} \times 0.066}\right)^{0.25} = \left(\frac{53.9}{3.07 \times 10^{-9}}\right)^{0.25}$
+>
+> $= (1.756 \times 10^{10})^{0.25} = 364$ K $= +91$ degC
+>
+> **This exceeds most component limits!** However, this simplified calculation overestimates temperature because it treats the satellite as a single isothermal node and includes solar cell thermal absorption on the zenith face. In practice:
+> - The zenith face (solar cells) runs hotter than the bus
+> - Internal components are conductively coupled to all faces, including the cold nadir face
+> - A multi-node model typically predicts peak internal temperatures of +40 to +55 degC for this scenario
+>
+> **Thermal engineer's response:** If the single-node calculation exceeds 60 degC, a detailed multi-node thermal model is required. The simplified calculation is a screening tool, not a design tool.
+>
+> **Cold case (eclipse, safe mode, aphelion, BOL coatings):**
+>
+> - No solar flux, no albedo
+> - Earth IR only: $Q_{\text{Earth IR}} = 0.82 \times 0.034 \times 200 = 5.58$ W (cold case: 200 W/m$^2$)
+> - Internal dissipation (safe mode): $Q_{\text{int}} = 1.5$ W (OBC + heater)
+> - Total $Q_{\text{in}} = 5.58 + 1.5 = 7.08$ W
+>
+> $T_{\text{cold}} = \left(\frac{7.08}{0.82 \times 5.67 \times 10^{-8} \times 0.070}\right)^{0.25}$
+>
+> $= \left(\frac{7.08}{3.26 \times 10^{-9}}\right)^{0.25} = (2.172 \times 10^{9})^{0.25} = 216$ K $= -57$ degC
+>
+> **This is too cold** for Li-ion batteries (min -20 degC operating, min 0 degC charging) and most COTS electronics (min -40 degC).
+>
+> **Action:** Add battery heater. To maintain battery at $T_{\text{min}} = -10$ degC = 263 K:
+>
+> Need additional heat input: $Q_{\text{heater}} = \varepsilon \sigma A_{\text{rad}} T_{\text{min}}^4 - Q_{\text{other}}$
+>
+> $= 0.82 \times 5.67 \times 10^{-8} \times 0.070 \times 263^4 - 7.08 = 3.26 \times 10^{-9} \times 4.78 \times 10^{9} - 7.08 = 15.6 - 7.08 = 8.5$ W
+>
+> **Problem:** 8.5 W heater in eclipse exceeds the battery capacity. **Resolution:** This is an isothermal whole-spacecraft calculation. In reality, the battery is inside the bus, partially insulated by the structure and surrounding boards. A targeted heater of 0.5--1.0 W directly on the battery pack, with some MLI wrapping, is typically sufficient to keep the battery above -10 degC in a 35-minute eclipse. The structure's thermal mass (aluminium at $c_p = 900$ J/kg/K) provides significant thermal inertia -- a 1 kg 1U CubeSat cooling from +20 degC at 7 W net loss drops only about 16 degC in 35 minutes.
+>
+> **Transient check:**
+> $\Delta T = \frac{Q_{\text{net}} \times t}{m \times c_p} = \frac{(7.08 - 0) \times 35 \times 60}{5.0 \times 900} = \frac{14,868}{4500} = 3.3$ degC per 35-min eclipse
+>
+> Wait -- in eclipse $Q_{\text{out}} > Q_{\text{in}}$: net cooling rate = $\varepsilon \sigma A_{\text{rad}} T^4 - Q_{\text{in,eclipse}}$. At $T = 293$ K (20 degC):
+>
+> $Q_{\text{out}} = 0.82 \times 5.67 \times 10^{-8} \times 0.070 \times 293^4 = 3.26 \times 10^{-9} \times 7.37 \times 10^{9} = 24.0$ W
+>
+> $Q_{\text{net cooling}} = 24.0 - 7.08 = 16.9$ W
+>
+> $\Delta T = \frac{16.9 \times 2100}{5.0 \times 900} = \frac{35,490}{4500} = 7.9$ degC drop in 35 minutes
+>
+> So from +20 degC, the satellite cools to about +12 degC after one eclipse -- well within limits. **No heater needed for the bus; battery heater only if battery is thermally isolated from bus.**
+>
+> **ECSS margin check -- Payload CCD:**
+> Predicted maximum temperature of payload CCD = 42 degC.
 > - Operating limit = 50 degC. Margin = 50 - 42 = 8 degC > 5 degC. **Pass.**
 > - Qualification test: must test at 42 + 15 = 57 degC. If qualification limit is 60 degC: **Pass.**
 >
-> **Cold case:** Predicted minimum temperature of battery = -8 degC during worst eclipse.
-> - Operating limit = -10 degC. Margin = -8 - (-10) = 2 degC < 5 degC. **Fail.**
-> - **Action:** Add heater (0.5 W survival heater with thermostat set to -5 degC).
+> Predicted minimum temperature of battery = -8 degC during worst eclipse.
+> - Operating limit = -10 degC. Margin = -8 - (-10) = 2 degC < 5 degC. **Fail -- inadequate margin.**
+> - **Action:** Add heater (0.5 W survival heater with thermostat set to -5 degC), or add MLI around battery pack.
 
 ---
 
@@ -3953,62 +4282,75 @@ UniSat-1 uses body-mounted solar cells on all five sun-exposed faces (the sixth 
 
 > **Worked Example -- UniSat-1 Solar Array Sizing**
 >
-> **Given:** Body-mounted cells on 5 faces of a 1U (100 x 100 mm each). ISS orbit: 400 km, 92.4 min period, 56 min sunlight, 36 min eclipse. $P_{\text{eclipse}} = 0.5$ W (OBC only), $P_{\text{peak,sunlight}} = 1.2$ W (science + downlink overlap avoided by scheduling). Mission lifetime = 6 months.
+> **Given:** Body-mounted cells on 5 faces of a 1U (100 x 100 mm each). ISS orbit: 400 km, 51.6 deg inclination, 92.4 min period, 56 min sunlight, 36 min eclipse. $P_{\text{eclipse}} = 0.5$ W (OBC only), $P_{\text{peak,sunlight}} = 1.2$ W (science + downlink overlap avoided by scheduling). Mission lifetime = 6 months. Cell temperature = 55 degC (body-mounted cells run cooler on 1U due to better thermal coupling to bus mass).
 >
 > **Step 1 -- Effective illuminated area:**
 > At any given time in LEO with passive magnetic attitude (slow tumble ~1 deg/s), on average only ~1.5 faces are well-illuminated. Effective average area:
 > $A_{\text{eff}} \approx 1.5 \times (0.10 \times 0.10) = 0.015$ m$^2$
 >
-> **Step 2 -- SA BOL power:**
-> $P_{\text{SA,BOL}} = \eta_{\text{cell}} \times S \times A_{\text{eff}} \times f_{\text{pack}} = 0.295 \times 1361 \times 0.015 \times 0.80 = 4.82$ W (illuminated peak)
+> **Step 2 -- SA BOL power (with temperature derating):**
+> $L_T = 1 + (-0.0019)(55 - 28) = 0.949$
+>
+> $P_{\text{SA,BOL}} = \eta_{\text{cell}} \times L_T \times S \times A_{\text{eff}} \times f_{\text{pack}} = 0.295 \times 0.949 \times 1361 \times 0.015 \times 0.80 = 4.57$ W (illuminated peak)
 >
 > **Step 3 -- Orbit-average power available:**
-> $P_{\text{avg,avail}} = P_{\text{SA,BOL}} \times \frac{t_{\text{sun}}}{T} \times \eta_{\text{EPS}} = 4.82 \times \frac{56}{92.4} \times 0.85 = 2.48$ W
+> $P_{\text{avg,avail}} = P_{\text{SA,BOL}} \times \frac{t_{\text{sun}}}{T} \times \eta_{\text{EPS}} = 4.57 \times \frac{56}{92.4} \times 0.85 = 2.35$ W
 >
 > After 6-month degradation ($(1 - 0.025)^{0.5} = 0.987$):
-> $P_{\text{avg,EOL}} = 2.48 \times 0.987 = 2.45$ W
+> $P_{\text{avg,EOL}} = 2.35 \times 0.987 = 2.32$ W
 >
 > **Step 4 -- Power demand (orbit-average):**
 > From Session 2.4: $P_{\text{avg,demand}} = 0.68$ W.
 >
-> **Power margin:** $2.45 - 0.68 = 1.77$ W (**72% margin**). Even with conservative geometry assumptions, the link closes comfortably.
+> **Power margin:** $2.32 - 0.68 = 1.64$ W (**71% margin**). Even with conservative geometry assumptions, the link closes comfortably.
 >
-> **Note on body-mounted vs tumbling:** The key uncertainty in 1U body-mounted power is the attitude. With passive magnetic stabilisation, the satellite aligns roughly with Earth's magnetic field, providing more predictable illumination than a random tumble. However, the effective area varies significantly around the orbit. The 1.5-face average is conservative.
+> **Note on body-mounted vs tumbling:** The key uncertainty in 1U body-mounted power is the attitude. With passive magnetic stabilisation, the satellite aligns roughly with Earth's magnetic field, providing more predictable illumination than a random tumble. However, the effective area varies significantly around the orbit as the B-field direction changes with latitude. The 1.5-face average is conservative. A Monte Carlo simulation of illumination geometry over many orbits typically yields a more optimistic 1.7--1.9 effective face average.
 
 > **Worked Example -- UniSat-1 Battery Sizing**
 >
-> **Given:** $P_{\text{eclipse}} = 0.5$ W, $t_{\text{eclipse}} = 36$ min $= 0.60$ h, $DOD = 0.50$ (acceptable for 6-month mission), $\eta = 0.95$.
+> **Given:** $P_{\text{eclipse}} = 0.5$ W, $t_{\text{eclipse}} = 36$ min $= 0.60$ h, $DOD = 0.50$ (acceptable for 6-month mission: ~2,740 cycles), $\eta = 0.95$.
 >
-> $C_{\text{bat}} = \frac{0.5 \times 0.60}{0.50 \times 0.95} = \frac{0.30}{0.475} = 0.63$ Wh
+> $E_{\text{bat}} = \frac{0.5 \times 0.60}{0.50 \times 0.95} = \frac{0.30}{0.475} = 0.63$ Wh
 >
-> With margin: specify minimum **10 Wh** (standard GomSpace NanoPower P31u battery pack).
+> With margin: specify minimum **10 Wh** (standard GomSpace NanoPower P31u battery pack -- this is the smallest available COTS battery with flight heritage).
 >
 > **Cycle count check:** 6 months at 15 orbits/day = 2,740 eclipses. At 50% DOD, Li-ion cells comfortably survive > 2,000 cycles. **Pass.**
 >
-> **Conclusion:** The 10 Wh battery is massively oversized for the actual eclipse demand (0.63 Wh per eclipse, or 6.3% actual DOD). This provides excellent margin and means battery degradation is negligible over the 6-month mission.
+> **Actual operating DOD:** With 10 Wh battery and 0.63 Wh per eclipse demand, actual DOD = 0.63 / 10 = **6.3%** per eclipse. At this DOD, cycle life exceeds 100,000 cycles. **Battery degradation is negligible** over the 6-month mission.
+>
+> **Key insight:** The 10 Wh battery is massively oversized for the actual eclipse demand. This is common in 1U missions -- the minimum COTS battery available provides far more capacity than needed. The excess capacity provides excellent margin and enables recovery from anomalies (multiple missed sunlit periods).
 
 **Thermal: Passive Only**
 
 UniSat-1 uses no heaters, no MLI, and no active thermal control. This is justified by three factors:
 
-1. **Low altitude (400 km):** Strong Earth IR flux (~240 W/m^2) provides a warm floor, preventing extreme cold cases
+1. **Low altitude (400 km):** Strong Earth IR flux (~240 W/m$^2$) provides a warm floor, preventing extreme cold cases
 2. **Short mission (6 months):** No long-term coating degradation to worry about
 3. **Tolerant components:** COTS electronics typically operate from -20 degC to +60 degC; the 400 km LEO thermal environment stays within -10 degC to +45 degC for a 1U with standard aluminium/anodised surfaces
 
-> **Quick Thermal Check -- UniSat-1 Cold Case**
+> **Quick Thermal Check -- UniSat-1 Cold Case (Transient)**
 >
 > Worst eclipse, all subsystems off except OBC (0.5 W internal dissipation):
 > - Earth IR absorbed: $\varepsilon \times A_{\text{nadir}} \times q_{\text{IR}} = 0.85 \times 0.01 \times 240 = 2.04$ W
 > - Internal dissipation: 0.5 W
 > - Total heat in: 2.54 W
-> - Radiating area (5 faces, rough): $\varepsilon \times \sigma \times A_{\text{rad}} \times T^4$
-> - $A_{\text{rad}} \approx 0.045$ m^2 (accounting for partial Earth view blocking)
 >
-> Solving: $T = (2.54 / (0.85 \times 5.67 \times 10^{-8} \times 0.045))^{0.25} = (2.54 / 2.17 \times 10^{-9})^{0.25}$
+> Steady-state temperature (if eclipse were infinite):
+> $T_{\text{steady}} = (2.54 / (0.85 \times 5.67 \times 10^{-8} \times 0.045))^{0.25} = 195$ K $= -78$ degC
 >
-> $T \approx 195$ K $= -78$ degC -- **this is too cold!**
+> **This looks alarming** -- but the eclipse is only 36 minutes, and the thermal mass prevents the satellite from reaching steady state.
 >
-> **However:** This is a worst-case steady-state calculation. In practice, the thermal mass of a 1 kg aluminium-rich CubeSat limits the rate of cooling. With 36 min eclipses and 56 min sunlit periods, the actual minimum temperature is typically -10 to -20 degC for a 1U at 400 km -- well within COTS operating limits. A transient thermal analysis (which accounts for thermal capacitance) is needed for accurate prediction, but the simplified check confirms that heaters are not mandatory.
+> **Transient analysis:** Starting at $T_0 = +15$ degC (293 K) at eclipse entry:
+>
+> Net cooling rate at 293 K: $Q_{\text{rad,out}} = 0.85 \times 5.67 \times 10^{-8} \times 0.045 \times 293^4 = 2.17 \times 10^{-9} \times 7.37 \times 10^{9} = 16.0$ W
+>
+> Net cooling: $16.0 - 2.54 = 13.5$ W
+>
+> Temperature drop: $\Delta T = \frac{Q_{\text{net}} \times t}{m \times c_p} = \frac{13.5 \times 36 \times 60}{1.0 \times 900} = \frac{29,160}{900} = 32$ degC
+>
+> But this is a linear approximation -- as the satellite cools, the radiation rate drops as $T^4$, so the actual cooling slows. A more accurate estimate gives $\Delta T \approx 20$--$25$ degC, resulting in a minimum temperature of about $-5$ to $-10$ degC.
+>
+> **Conclusion:** The 1U at 400 km reaches approximately -5 to -10 degC during worst-case eclipse, starting from a warm sunlit entry. This is within COTS operating limits (-20 degC to +60 degC for most components) and within battery operating range (-20 degC to +60 degC for discharge). **No heaters needed.** The ISS orbit's relatively short eclipse (36 min vs 35 min for SSO) and the strong Earth IR flux at 400 km make passive thermal control viable for a 1U mission.
 
 ---
 
@@ -4016,16 +4358,17 @@ UniSat-1 uses no heaters, no MLI, and no active thermal control. This is justifi
 
 ### Planet SuperDove EPS
 
-| Parameter | Value |
-|-----------|-------|
-| Form factor | 3U+, ~5 kg |
-| SA configuration | Body-mounted + deployable wings |
-| SA power (BOL) | ~25 W |
-| Battery | Li-ion, ~20 Wh |
-| Bus voltage | Unregulated 7.2--8.4 V (2S) |
-| Peak demand | ~18 W (imaging mode) |
-| Orbit | 475 km SSO, ~94 min period |
-| Eclipse | ~35 min max, ~3 W demand |
+| Parameter | Value | Design Rationale |
+|-----------|-------|-----------------|
+| Form factor | 3U+, ~5 kg | Flock constellation; P-POD compatible |
+| SA configuration | Body-mounted + two deployable wings | ~25 W BOL needed for continuous imaging + S-band downlink |
+| SA cells | Triple-junction GaAs (Spectrolab or SolAero) | Standard space-grade, 29.5% AM0 |
+| Battery | Li-ion, ~20 Wh (2S2P 18650) | Supports ~3.5 W eclipse load for 35 min at < 20% DOD |
+| Bus voltage | Unregulated 7.2--8.4 V (2S) + regulated 3.3 V, 5 V | Standard CubeSat EPS architecture |
+| Peak demand | ~18 W (imaging mode) | Multi-spectral imager + star tracker + reaction wheels + OBC |
+| Orbit | 475 km SSO, ~94 min period | Optimal for EO: sun-synchronous for consistent lighting |
+| Eclipse | ~35 min max, ~3 W demand | OBC + AOCS only during eclipse; no imaging or downlink |
+| Thermal | Body-mounted radiator panels + battery heater | Passive thermal control; battery heater for eclipse charging margin |
 
 *[Source: Planet Labs conference presentations; Salas et al., "SuperDove Constellation," SSC 2021]*
 
@@ -4034,8 +4377,10 @@ UniSat-1 uses no heaters, no MLI, and no active thermal control. This is justifi
 NASA's CAPSTONE (12U, 25 kg) operates in a near-rectilinear halo orbit (NRHO) around the Moon with extreme thermal cycling:
 
 - Perilune: strong Earth/Moon IR + solar
-- Apolune: deep space cold, long shadow periods
-- Thermal control: MLI wrapping, heaters on propulsion lines, passive radiator panels
+- Apolune: deep space cold, long shadow periods (up to 12+ hours)
+- Thermal control: MLI wrapping (10-layer DAM blankets), heaters on propulsion lines (to prevent propellant freezing), passive radiator panels with white paint (AZ-93)
+- Battery heaters: 5 W total, thermostatically controlled, critical for survival during long eclipses
+- Operating temperature range: -20 degC to +50 degC for electronics; propulsion lines maintained above +5 degC
 
 *[Source: Advanced Space, "CAPSTONE Design Overview," SmallSat Conference 2022]*
 
@@ -4063,11 +4408,12 @@ NASA's CAPSTONE (12U, 25 kg) operates in a near-rectilinear halo orbit (NRHO) ar
 
 ### Worksheet 3.1 Tasks
 
-1. Size the solar array for your mission (show all 5 calculation steps)
-2. Size the battery (show calculation with DOD justification)
+1. Size the solar array for your mission (show all 5 calculation steps, including temperature derating)
+2. Size the battery (show calculation with DOD justification and cycle-life verification)
 3. Compute orbit-average power using duty cycle table
 4. Identify hot case and cold case conditions for your orbit
 5. Check thermal margins against ECSS requirements
+6. Identify the dominant thermal concern for your mission (hot case or cold case) and propose a mitigation
 
 ---
 
@@ -4075,15 +4421,23 @@ NASA's CAPSTONE (12U, 25 kg) operates in a near-rectilinear halo orbit (NRHO) ar
 
 | Topic | Key Takeaway |
 |-------|-------------|
-| EPS architecture | MPPT + regulated bus is CubeSat standard; 3.3 V / 5 V / battery rails |
-| SA sizing | $P_{\text{SA}} = P_{\text{peak}} + P_{\text{recharge}}$; account for degradation $(1-\delta)^n$ |
-| SA area | $A = P_{\text{BOL}} / (\eta \cdot S \cdot \cos\theta \cdot f_{\text{pack}})$ |
-| Battery | $C = P_{\text{ecl}} \cdot t_{\text{ecl}} / (DOD \cdot \eta)$; DOD 30% for multi-year LEO |
+| Solar cell physics | Triple-junction GaAs (InGaP/GaAs/Ge) achieves 28--30% AM0; multi-junction stacking captures broader solar spectrum |
+| Temperature effects | Cells lose ~0.19%/degC (relative); operating at 65 degC costs ~7% power vs STC |
+| Degradation | Radiation damage: $(1-\delta)^n$, $\delta \approx 2.5$%/yr LEO; cover glass mitigates proton/electron damage |
+| EPS architecture | MPPT + regulated bus is CubeSat standard; MPPT extracts 10--15% more power than DET |
+| SA sizing | $P_{\text{SA}} = P_{\text{peak}} + P_{\text{recharge}}$; derate for degradation $(1-\delta)^n$ and temperature $L_T$ |
+| SA area | $A = P_{\text{BOL}} / (\eta \cdot S \cdot \cos\theta \cdot f_{\text{pack}} \cdot f_{\text{cover}})$ |
+| Battery chemistry | Li-ion (LCO/NMC): 150--200 Wh/kg packaged; 3.0--4.2 V per cell; CC-CV charging |
+| Battery sizing | $E = P_{\text{ecl}} \cdot t_{\text{ecl}} / (DOD \cdot \eta)$; DOD 20--30% for multi-year LEO |
+| Battery failure modes | Thermal runaway (overcharge), lithium plating (cold charge), capacity imbalance (series cells) |
 | SA power reference | Body-mounted: 2--12 W; single deploy: 4--30 W; dual deploy: 25--48 W |
-| Thermal balance | $Q_{\text{in}} = Q_{\text{out}}$; solve for $T = (Q/\varepsilon\sigma A)^{1/4}$ |
-| Hot/cold cases | Hot: max solar + all systems on; Cold: eclipse + min power |
+| Thermal physics | No convection in vacuum; radiation ($\varepsilon \sigma T^4$) is only mechanism for heat rejection |
+| Thermal balance | $Q_{\text{in}} = Q_{\text{out}}$; solve for $T = (Q/\varepsilon\sigma A)^{1/4}$ (single-node); multi-node for real design |
+| $\alpha_s / \varepsilon$ ratio | Low ratio = cold surface (radiator); high ratio = warm surface (insulation) |
+| MLI construction | VDA Kapton outer + 10--20 DAM layers + Dacron spacers; $\varepsilon_{\text{eff}} = 0.01$--$0.03$ |
+| Heater sizing | $P_{\text{heater}} = \varepsilon\sigma A T_{\text{min}}^4 - Q_{\text{env}} - Q_{\text{int}}$; Kapton foil heaters, thermostat control |
 | Thermal margins | ECSS: +/-5 degC operating, +/-10 degC acceptance, +/-15 degC qualification |
-| Coatings | $\alpha_s/\varepsilon$ ratio controls equilibrium temperature; white paint for radiators |
+| Transient effects | Thermal mass ($mc_p$) prevents reaching steady state during short eclipses; 1U at 400 km cools ~20--25 degC in 36 min eclipse |
 
 ---
 
@@ -4102,6 +4456,10 @@ NASA's CAPSTONE (12U, 25 kg) operates in a near-rectilinear halo orbit (NRHO) ar
 - [Markley & Crassidis, *Fundamentals of Spacecraft Attitude Determination and Control*, 2014](https://link.springer.com/book/10.1007/978-1-4939-0802-8)
 - [ECSS, *ECSS-E-ST-60-10C: Control Performance*, 2008](https://ecss.nl/standard/ecss-e-st-60-10c-control-performance/)
 - [ECSS, *ECSS-E-ST-60-20C: Star Tracker Performance Testing*, 2019](https://ecss.nl/standard/ecss-e-st-60-20c-star-tracker-performance-testing/)
+- [Wertz, *Space Mission Analysis and Design*, 3rd ed., 1999, Ch. 11 (ADCS)](https://www.springer.com)
+- [Hughes, *Spacecraft Attitude Dynamics*, 1986](https://www.wiley.com)
+- [Blue Canyon Technologies, *XACT ADCS Datasheet*, 2023](https://www.bluecanyontech.com)
+- [CubeSpace, *ADCS Product Catalogue*, 2023](https://www.cubespace.co.za)
 
 ---
 
@@ -4109,16 +4467,18 @@ NASA's CAPSTONE (12U, 25 kg) operates in a near-rectilinear halo orbit (NRHO) ar
 
 By the end of this session, participants will be able to:
 
-1. Explain the distinction between attitude determination and attitude control
+1. Explain the distinction between attitude determination and attitude control and the physics of each sensor/actuator type
 2. Select AOCS hardware architecture based on pointing requirements
 3. Compute a pointing error budget using root-sum-square (RSS) combination
 4. Calculate disturbance torques from gravity gradient, aerodynamic drag, solar radiation pressure, and residual magnetic dipole
-5. Size actuators (reaction wheels, magnetorquers) for the computed disturbance environment
-6. Verify AOCS design against requirements using SpaceCDF's pointing budget tool
+5. Size actuators (reaction wheels, magnetorquers) for the computed disturbance environment with worked equations
+6. Explain the physics of momentum storage, saturation, and desaturation
+7. Compare CMGs vs reaction wheels and articulate when each is appropriate
+8. Verify AOCS design against requirements using SpaceCDF's pointing budget tool
 
 ---
 
-## 1. AOCS Fundamentals (20 min)
+## 1. AOCS Fundamentals (25 min)
 
 ### Teaching Notes
 
@@ -4128,26 +4488,166 @@ The AOCS performs two distinct functions:
 
 | Function | Purpose | Hardware |
 |----------|---------|---------|
-| **Attitude Determination** (AD) | Know the spacecraft's orientation relative to a reference frame | Sensors: star tracker, sun sensors, magnetometer, gyroscope, Earth sensor |
+| **Attitude Determination** (AD) | Know the spacecraft's orientation relative to a reference frame | Sensors: star tracker, sun sensors, magnetometer, gyroscope, Earth sensor, GPS receiver |
 | **Attitude Control** (AC) | Change or maintain the spacecraft's orientation | Actuators: reaction wheels, magnetorquers, thrusters, control moment gyros |
+
+**The attitude state:** A spacecraft's attitude is its orientation in 3D space relative to a reference frame (typically J2000 Earth-centred inertial, or the local-vertical/local-horizontal frame for nadir-pointing missions). The attitude is described by a rotation (e.g., quaternion, direction cosine matrix, or Euler angles) plus angular velocity $\vec{\omega}$. Euler's equation of rotational motion governs the dynamics:
+
+$$\mathbf{I} \dot{\vec{\omega}} + \vec{\omega} \times (\mathbf{I} \vec{\omega}) = \vec{T}_{\text{external}} + \vec{T}_{\text{control}}$$
+
+where $\mathbf{I}$ is the spacecraft inertia tensor, $\vec{T}_{\text{external}}$ is the sum of disturbance torques, and $\vec{T}_{\text{control}}$ is the actuator torque. The $\vec{\omega} \times (\mathbf{I} \vec{\omega})$ term is the gyroscopic coupling -- it means that rotating about one axis can induce motion about other axes if the inertia tensor is not spherically symmetric.
+
+### Attitude Sensors -- How They Work
+
+#### Star Trackers
+
+A star tracker is the most accurate attitude sensor available, providing absolute attitude knowledge to arcsecond-level accuracy.
+
+**How it works:**
+1. A CMOS or CCD detector (typically 1024x1024 to 2048x2048 pixels) images a patch of sky through a wide-angle lens (typically 15--25 deg FOV)
+2. The onboard processor detects bright point sources (stars) in the image, computing their centroid positions to sub-pixel accuracy using Gaussian fitting
+3. The processor matches the observed pattern of star positions against an onboard star catalogue (typically Hipparcos or Tycho-2, containing 3,000--10,000 stars, stored in a k-d tree or hash table for fast lookup)
+4. The "lost in space" algorithm identifies the star pattern without any prior attitude knowledge (first acquisition), typically taking 1--5 seconds
+5. Once identified, the processor computes a quaternion rotation from the catalogue (inertial) frame to the camera (body) frame
+6. In tracking mode, the processor tracks known stars frame-to-frame, providing updates at 1--10 Hz with 3--10 arcsec accuracy (1-sigma, per axis)
+
+**Key specifications:**
+
+| Parameter | Typical CubeSat Star Tracker | Large S/C Star Tracker |
+|-----------|------------------------------|----------------------|
+| Accuracy (1-sigma, boresight) | 5--15 arcsec | 0.5--3 arcsec |
+| Accuracy (1-sigma, roll) | 30--100 arcsec | 5--20 arcsec |
+| FOV | 10--15 deg circular | 15--25 deg circular |
+| Update rate | 2--5 Hz | 5--20 Hz |
+| Sensitivity | Stars to magnitude 6--7 | Stars to magnitude 8--10 |
+| Mass | 50--350 g | 1--5 kg |
+| Power | 0.5--2 W | 5--15 W |
+| Products | Blue Canyon NST (350g), Sinclair SS-411 (90g), CubeSpace CubeStar (50g) | Sodern Hydra, Leonardo AA-STR |
+
+*[Source: Blue Canyon NST datasheet; CubeSpace CubeStar datasheet; ECSS-E-ST-60-20C]*
+
+**Exclusion zones:** Star trackers cannot operate when bright objects are in or near the FOV:
+- **Sun:** Exclusion angle typically 25--45 deg (direct sunlight saturates the detector and can cause permanent damage to some sensor types)
+- **Earth (illuminated limb):** Exclusion angle typically 25--35 deg (Earth's brightness overwhelms star signals)
+- **Moon:** Exclusion angle typically 10--15 deg
+- **Stray light:** Internal reflections from nearby spacecraft structure can create false stars
+
+**Implication for mission design:** A nadir-pointing spacecraft in LEO always has the Earth within ~65 deg of one hemisphere. The star tracker must be mounted on a face that never points toward Earth (typically the zenith or anti-velocity face). If the Sun is near the orbital plane (beta angle near 0), the star tracker may be periodically blinded. Two star trackers mounted on different faces provide redundancy and eliminate single-axis exclusion zone gaps.
+
+**Why star trackers are the most accurate:** Other sensors measure vectors to specific objects (Sun, Earth, magnetic field) -- each provides only 2 of the 3 attitude degrees of freedom (direction but not roll around that vector). A star tracker measures multiple star directions simultaneously, providing a full 3-axis attitude fix from a single measurement. The accuracy is limited by optical diffraction, centroiding noise, and catalogue accuracy -- all of which are extremely well characterised.
+
+#### Sun Sensors
+
+Sun sensors determine the direction to the Sun, providing 2-axis attitude information (the Sun vector in the body frame). They are simple, reliable, radiation-tolerant, and low-power.
+
+**Coarse sun sensors (photodiode-based):**
+A coarse sun sensor consists of one or more photodiodes behind a mask or window. The photocurrent is proportional to the cosine of the incidence angle:
+
+$$I = I_0 \cos(\theta)$$
+
+A set of 6 coarse sun sensors (one per face of the spacecraft) determines the Sun direction to 2--5 deg accuracy by comparing the photocurrents from each face. The face with the highest current is sun-facing; the ratio between adjacent faces gives the angle.
+
+**Fine sun sensors (linear array or quadrant detector):**
+A fine sun sensor uses a slit mask above a linear photodiode array (similar to a miniature sundial). Sunlight passes through the slit and illuminates a specific position on the array, which is proportional to the incidence angle. Fine sun sensors achieve 0.1--1.0 deg accuracy.
+
+| Type | Accuracy | FOV | Mass | Power | Products |
+|------|----------|-----|------|-------|----------|
+| Coarse (photodiode) | 2--5 deg | ~hemisphere | 1--5 g | < 1 mW | NewSpace NCSS-SA05, Solar MEMS nanoSSOC-A60 |
+| Fine (analog, slit+array) | 0.1--0.5 deg | 60--120 deg | 5--30 g | 10--50 mW | NewSpace NFSS-411, Solar MEMS nanoSSOC-D60 |
+| Digital (APS detector + slit) | 0.01--0.05 deg | 60--120 deg | 30--50 g | 50--200 mW | TNO micro digital sun sensor |
+
+*[Source: NewSpace Systems NFSS-411 datasheet; Solar MEMS nanoSSOC datasheets]*
+
+**Why every spacecraft needs sun sensors:** Sun sensors are the only sensor guaranteed to work in any attitude, at any rate, in any environment (LEO, GEO, deep space). They are the primary sensor for safe mode: when the spacecraft tumbles, the OBC reboots, or the star tracker is blinded, the sun sensors can determine the Sun direction and enable the spacecraft to orient its solar arrays for power generation. Without sun sensors, a spacecraft that enters safe mode may not recover power.
+
+#### Magnetometers
+
+A magnetometer measures the local geomagnetic field vector $\vec{B}$ in the body frame. By comparing the measured $\vec{B}$ to a model of Earth's magnetic field (IGRF -- International Geomagnetic Reference Field) at the known orbit position, the spacecraft attitude can be determined.
+
+**How it works:**
+- **Fluxgate magnetometer:** A ferromagnetic core is periodically driven into saturation by an excitation coil. The presence of an external magnetic field creates an asymmetry in the saturation waveform, which is detected by a sense coil. Three orthogonal fluxgate elements provide the 3-axis field vector. Resolution: 1--10 nT. Accuracy: $\pm$200--500 nT (limited by spacecraft residual magnetic dipole contamination).
+- **Magnetoresistive (AMR/GMR):** Thin-film magnetic sensors. Smaller and cheaper than fluxgates but noisier and less stable. Common in COTS CubeSat magnetometers.
+
+**Attitude determination from magnetometers:**
+- A single magnetometer measurement provides the magnetic field direction in the body frame (2 DOF, analogous to a sun sensor providing the Sun direction)
+- Comparing with the IGRF model gives attitude, but accuracy is limited by:
+  - IGRF model uncertainty (~100 nT in LEO)
+  - Spacecraft residual magnetic dipole contamination (can be 1000+ nT close to electronics)
+  - Only 2 DOF per measurement (no roll determination around the field vector)
+- Magnetometer-only attitude determination: ~5--10 deg accuracy
+- Magnetometer + sun sensor (combined): ~1--3 deg accuracy (the two independent vectors provide a full 3-axis solution via TRIAD or q-method)
+
+**Residual dipole contamination:** Every electronic circuit creates a magnetic field. Current loops, permanent magnets in motors/speakers, magnetised structural components, and battery cells all contribute to the spacecraft's residual magnetic dipole. This contaminates the magnetometer reading. Mitigation: mount the magnetometer on a deployable boom (10--30 cm from the bus), use magnetically clean design practices (twisted pairs, balanced current loops), and perform a residual dipole calibration in orbit by comparing magnetometer readings during eclipse (no solar array current) vs sunlit.
+
+| Parameter | Typical CubeSat Magnetometer |
+|-----------|------------------------------|
+| Range | $\pm$60,000 nT (sufficient for LEO: B ~20,000--50,000 nT) |
+| Resolution | 10--100 nT |
+| Accuracy (after calibration) | 200--1000 nT |
+| Mass | 5--30 g |
+| Power | 10--50 mW |
+| Products | NewSpace NMAG, PNI RM3100, Honeywell HMC5883L |
+
+#### Gyroscopes (Rate Sensors)
+
+Gyroscopes measure angular velocity $\vec{\omega}$ rather than absolute attitude. They provide high-bandwidth rate information for control loops and bridge the gap between star tracker updates.
+
+**Types used on CubeSats:**
+- **MEMS gyroscope:** Vibrating structure (tuning fork or ring) whose Coriolis force is proportional to rotation rate. Small, cheap (< 50 EUR per axis), low power. Bias drift: 1--10 deg/hr. Products: InvenSense MPU-6050, Analog Devices ADIS16265.
+- **MEMS IMU (6-axis):** Combined 3-axis accelerometer + 3-axis gyroscope. Mass: 5--15 g. Very common in CubeSats. Products: Sensonor STIM300 (high-end), InvenSense ICM-20948 (COTS).
+- **Fibre optic gyroscope (FOG):** Much better stability (bias drift 0.01--1 deg/hr) but larger, heavier (200+ g), and more expensive. Used on high-end CubeSats and small satellites.
+
+**Why gyroscopes drift:** MEMS gyroscopes have a non-zero bias (a constant offset in the measured rate even when stationary) that changes with temperature and time. Integrating angular rate to get attitude ($\theta = \int \omega \, dt$) accumulates this bias error linearly. A 1 deg/hr bias drift means the attitude estimate drifts 1 deg per hour. Star trackers provide absolute attitude corrections that reset this drift -- the combination of star tracker (low rate, absolute) + gyroscope (high rate, relative) via a Kalman filter is the standard approach for high-performance attitude determination.
+
+#### GPS Receivers for Orbit Determination
+
+GPS receivers determine the spacecraft's **position and velocity** (orbit determination), not attitude (though multi-antenna GPS can provide coarse attitude).
+
+**How it works in LEO:**
+- GPS satellites orbit at ~20,200 km altitude; LEO spacecraft orbit below them at 300--800 km
+- GPS signals travel downward through the ionosphere to the LEO receiver
+- The receiver must use a specialised correlator that handles Doppler shifts up to $\pm$40 kHz (LEO relative velocity ~7.5 km/s vs GPS satellite velocity ~3.9 km/s)
+- Typical accuracy: 5--20 m position, 0.1--0.5 m/s velocity (single frequency, C/A code)
+- Dual-frequency GPS with carrier phase: sub-meter position accuracy
+
+**Why GPS matters for AOCS:** Accurate orbit knowledge is needed for:
+- Nadir pointing (must know where "down" is, which requires knowing position)
+- Ground target tracking (must know position to compute pointing angles)
+- IGRF evaluation (magnetometer attitude determination needs position input)
+- Orbit manoeuvre planning
+
+| Parameter | Typical CubeSat GPS Receiver |
+|-----------|------------------------------|
+| Position accuracy | 5--20 m (C/A code) |
+| Velocity accuracy | 0.1--0.5 m/s |
+| Time accuracy | 100 ns |
+| Altitude limit | Typically 600 km (must verify ITAR/COCOM limits removed) |
+| Mass | 15--30 g |
+| Power | 0.5--1.0 W |
+| Products | SkyFox Labs piNAV-NG, NovAtel OEM719, Hemisphere V200 |
+
+*[Source: SkyFox Labs piNAV datasheet; NovAtel OEM7 specifications]*
 
 ### AOCS Architecture Selection by Pointing Requirement
 
-| Pointing Requirement | Architecture | Typical Hardware | Mass | Power | Cost |
-|---------------------|-------------|-----------------|------|-------|------|
-| > 5 deg | Passive magnetic | Permanent magnet + hysteresis rods | ~0.05 kg | 0 W | ~2 kEUR |
-| 2--5 deg | Magnetorquers + sun sensors | 3-axis MTQ + coarse sun sensors | ~0.10 kg | 0.2 W | ~8 kEUR |
-| 0.1--2 deg | Reaction wheels + MTQ | 3--4 RW + 3 MTQ + fine sun sensors | ~0.50 kg | 2--4 W | ~35 kEUR |
-| < 0.1 deg | Fine pointing (RW + star tracker) | 4 RW + ST + 3 MTQ + sun sensors | ~0.80 kg | 3--5 W | ~55 kEUR |
-| < 0.01 deg | Very fine pointing | 4 RW + ST + MEMS gyro + 3 MTQ | ~1.20 kg | 4--6 W | ~80 kEUR |
+| Pointing Requirement | Architecture | Sensors | Actuators | Mass | Power | Cost |
+|---------------------|-------------|---------|-----------|------|-------|------|
+| > 5 deg | Passive magnetic | None (or 1 magnetometer) | Permanent magnet + hysteresis rods | ~0.05 kg | 0 W | ~2 kEUR |
+| 2--5 deg | B-dot detumble + magnetic pointing | 3-axis magnetometer + coarse sun sensors | 3-axis magnetorquers | ~0.10 kg | 0.2 W | ~8 kEUR |
+| 0.1--2 deg | Active 3-axis (RW + sensors) | Fine sun sensors + magnetometer + (optional gyro) | 3--4 RW + 3 MTQ for desaturation | ~0.50 kg | 2--4 W | ~35 kEUR |
+| < 0.1 deg | Fine pointing (RW + star tracker) | Star tracker + fine sun sensors + magnetometer + gyro | 4 RW + 3 MTQ | ~0.80 kg | 3--5 W | ~55 kEUR |
+| < 0.01 deg | Very fine pointing | Dual star trackers + MEMS gyro + fine sun sensors + magnetometer | 4 RW + 3 MTQ | ~1.20 kg | 4--6 W | ~80 kEUR |
 
 **Real mission examples:**
 
-| Mission | Pointing Req | Architecture | Mass |
-|---------|-------------|-------------|------|
-| **Astrocast** (IoT) | ~5 deg | MTQ + sun sensors | 0.1 kg |
-| **Planet SuperDove** (EO) | ~0.1 deg | 4 RW + ST + MTQ | 0.8 kg |
-| **CAPSTONE** (cislunar) | ~0.05 deg | RW + ST + sun sensors | ~1.0 kg |
+| Mission | Form Factor | Pointing Req | Architecture | AOCS Mass | Key Sensor |
+|---------|------------|-------------|-------------|-----------|------------|
+| **Astrocast** (3U, IoT) | 3U | ~5 deg | MTQ + sun sensors + magnetometer | 0.1 kg | Sun sensors |
+| **Planet SuperDove** (3U+, EO) | 3U+ | ~0.1 deg | 4 RW + ST + 3 MTQ + 6 sun sensors | 0.8 kg | Blue Canyon NST star tracker |
+| **CAPSTONE** (12U, cislunar nav) | 12U | ~0.05 deg | 4 RW + ST + sun sensors + IMU | ~1.0 kg | Star tracker + IMU |
+| **ASTERIA** (6U, exoplanet) | 6U | ~0.003 deg (10 arcsec) | 4 RW + ST + fine guidance sensor | ~1.2 kg | Custom fine guidance camera |
+
+*[Source: Pong et al., "ASTERIA: Achieving 10-arcsecond Pointing on a 6U CubeSat," SSC 2018]*
 
 ---
 
@@ -4155,114 +4655,326 @@ The AOCS performs two distinct functions:
 
 ### Teaching Notes
 
-In LEO, four external torques disturb the spacecraft attitude. The AOCS must counteract them continuously.
+In LEO, four external torques disturb the spacecraft attitude. The AOCS must counteract them continuously. Understanding the source and magnitude of each disturbance is essential for sizing actuators.
 
-*[Source: SMAD, Ch. 11.1; Sidi, Ch. 5]*
+*[Source: SMAD, Ch. 11.1; Sidi, Ch. 5; Wertz 1999, Ch. 11]*
 
-> **Key Equations -- Disturbance Torques**
+### Gravity Gradient Torque
+
+**Physics:** A spacecraft in orbit experiences a non-uniform gravitational field -- the side closer to Earth is pulled more strongly than the far side. For an elongated body, this differential pull creates a torque that tends to align the long axis with the local vertical (nadir direction). This is the principle behind gravity gradient stabilisation.
+
+> **Key Equations -- Gravity Gradient Torque**
 >
-> **Gravity gradient torque** (worst case, 45 deg off nadir):
-> $$T_{gg} = \frac{3\mu}{2a^3} |I_z - I_x| \sin(2\theta) \approx \frac{3\mu}{2a^3} |I_z - I_x|$$
-> where $I_z$, $I_x$ are principal moments of inertia (kg m$^2$) and $\theta = 45\degree$ for worst case.
+> $$T_{gg} = \frac{3\mu}{2a^3} |I_z - I_x| \sin(2\theta)$$
 >
-> **Aerodynamic torque:**
+> where:
+> - $\mu = 3.986 \times 10^{14}$ m$^3$/s$^2$ (Earth's gravitational parameter)
+> - $a = R_E + h$ (semi-major axis in metres)
+> - $I_z$, $I_x$ are principal moments of inertia about the maximum and minimum axes (kg m$^2$)
+> - $\theta$ = angle between the long axis and the local vertical
+> - Worst case occurs at $\theta = 45$ deg, where $\sin(2\theta) = 1$
+>
+> For a body with $I_z \approx I_x$ (a cube), $T_{gg} \approx 0$ -- this is why 1U CubeSats experience minimal gravity gradient torque.
+
+### Aerodynamic Torque
+
+**Physics:** At LEO altitudes (200--600 km), residual atmospheric molecules collide with the spacecraft surface. The force acts through the centre of pressure (cp), which generally does not coincide with the centre of mass (cm). The offset creates a torque.
+
+> **Key Equations -- Aerodynamic Torque**
+>
 > $$T_{\text{aero}} = \frac{1}{2} \rho v^2 C_D A_{\text{ref}} \, d_{cp-cm}$$
-> where $\rho$ = atmospheric density (kg/m$^3$), $v$ = orbital velocity (m/s), $C_D \approx 2.2$, $A_{\text{ref}}$ = cross-sectional area (m$^2$), $d_{cp-cm}$ = offset between centre of pressure and centre of mass (m).
 >
-> **Solar radiation pressure torque:**
-> $$T_{\text{SRP}} = \frac{S}{c} A_s (1 + q) \, d_{sp-cm}$$
-> where $S = 1361$ W/m$^2$, $c = 3 \times 10^8$ m/s, $A_s$ = illuminated area (m$^2$), $q$ = reflectance (0--1), $d_{sp-cm}$ = offset between solar pressure centre and centre of mass (m).
->
-> **Residual magnetic dipole torque:**
-> $$T_{\text{mag}} = M \times B$$
-> where $M$ = spacecraft residual magnetic dipole moment (A m$^2$), $B$ = local geomagnetic field strength (T). For LEO: $B \approx 3 \times 10^{-5}$ T; typical CubeSat $M \approx 0.01$--$0.1$ A m$^2$.
+> where:
+> - $\rho$ = atmospheric density (kg/m$^3$) -- varies by orders of magnitude with altitude, solar activity (F10.7), and local time:
+>   - 300 km: $\rho \approx 2 \times 10^{-11}$ (solar min) to $3 \times 10^{-10}$ (solar max)
+>   - 400 km: $\rho \approx 4 \times 10^{-12}$ to $1 \times 10^{-11}$
+>   - 500 km: $\rho \approx 6 \times 10^{-13}$ to $5 \times 10^{-12}$
+>   - 600 km: $\rho \approx 1 \times 10^{-13}$ to $8 \times 10^{-13}$
+> - $v$ = orbital velocity (~7.6 km/s at 500 km)
+> - $C_D \approx 2.0$--$2.3$ (molecular flow drag coefficient; 2.2 is standard for flat plates in free molecular flow)
+> - $A_{\text{ref}}$ = cross-sectional area perpendicular to velocity (m$^2$)
+> - $d_{cp-cm}$ = offset between centre of pressure and centre of mass (m); typically 0.5--5 cm for CubeSats depending on deployable configuration
 
-> **Worked Example -- Disturbance Torques for a 3U CubeSat at 500 km**
+### Solar Radiation Pressure Torque
+
+**Physics:** Sunlight carries momentum. When photons strike a surface, they transfer momentum ($p = E/c$ for absorption, $p = 2E/c$ for specular reflection). The resulting force acts through the centre of solar pressure, which may not coincide with the cm.
+
+> **Key Equations -- SRP Torque**
 >
-> **Spacecraft properties:** 3U (100 x 100 x 340 mm), mass = 5 kg, $I_z = 0.035$ kg m$^2$, $I_x = 0.007$ kg m$^2$, $A_{\text{ref}} = 0.034$ m$^2$ (3U face), $d_{cp-cm} = 0.02$ m.
+> $$T_{\text{SRP}} = \frac{S}{c} A_s (1 + q) \, d_{sp-cm}$$
 >
-> **Gravity gradient:**
-> $T_{gg} = \frac{3 \times 3.986 \times 10^{14}}{2 \times (6.871 \times 10^6)^3} \times |0.035 - 0.007|$
+> where:
+> - $S = 1361$ W/m$^2$ (solar constant at 1 AU)
+> - $c = 3 \times 10^8$ m/s (speed of light)
+> - $S/c = 4.54 \times 10^{-6}$ N/m$^2$ (solar radiation pressure at 1 AU)
+> - $A_s$ = illuminated area (m$^2$)
+> - $q$ = surface reflectance (0 for perfect absorber, 1 for perfect specular reflector)
+> - $d_{sp-cm}$ = offset between solar pressure centre and centre of mass (m)
+>
+> **Note:** SRP torque is tiny in LEO compared to aero and magnetic torques. It becomes the dominant disturbance in GEO and deep space (where there is no atmosphere and the magnetic field is weak).
+
+### Residual Magnetic Dipole Torque
+
+**Physics:** A spacecraft with a net magnetic dipole moment $\vec{M}$ (from current loops in wiring, permanent magnets in reaction wheel motors, magnetised ferromagnetic components) interacts with Earth's magnetic field $\vec{B}$ to produce a torque:
+
+> **Key Equations -- Magnetic Dipole Torque**
+>
+> $$\vec{T}_{\text{mag}} = \vec{M} \times \vec{B}$$
+>
+> Magnitude: $T_{\text{mag}} = M \cdot B \cdot \sin(\alpha)$
+>
+> where:
+> - $M$ = spacecraft residual magnetic dipole moment (A m$^2$)
+> - $B$ = local geomagnetic field strength (T):
+>   - LEO (400--600 km): $B \approx 2$--$5 \times 10^{-5}$ T (varies with latitude; strongest near poles, weakest near equator)
+>   - GEO (35,786 km): $B \approx 1 \times 10^{-7}$ T
+> - $\alpha$ = angle between $\vec{M}$ and $\vec{B}$
+>
+> **Typical CubeSat residual dipole moments:**
+>
+> | Source | Dipole Moment (A m$^2$) | Notes |
+> |--------|-------------------------|-------|
+> | Reaction wheel motor | 0.005--0.02 per wheel | Permanent magnets in brushless motor |
+> | Solar array wiring | 0.001--0.01 | Current loops from SA to EPS |
+> | Battery cells | 0.001--0.005 | Nickel in cell casing |
+> | Unshielded cables | 0.005--0.05 | Depends on routing and length |
+> | **Total (typical 3U)** | **0.01--0.10** | Varies significantly with design |
+>
+> **Why magnetic torque dominates for CubeSats:** COTS electronics are not designed for magnetic cleanliness. Short wiring runs create small but unbalanced current loops. Reaction wheel motors contain permanent magnets. The result is a residual dipole of 0.01--0.1 A m$^2$, which in a 30 uT field produces $3 \times 10^{-7}$ to $3 \times 10^{-6}$ N m -- often larger than gravity gradient or SRP torques.
+
+> **Worked Example -- Disturbance Torques for 3U CubeSat at 500 km (SuperDove-class)**
+>
+> **Spacecraft properties:** 3U (100 x 100 x 340 mm), mass = 5 kg, $I_z = 0.035$ kg m$^2$ (long axis), $I_x = 0.007$ kg m$^2$ (short axis), $A_{\text{ref}} = 0.034$ m$^2$ (3U face), $d_{cp-cm} = 0.02$ m (deployable panels offset cm from geometric centre).
+>
+> **Gravity gradient** (worst case, $\theta = 45$ deg):
+> $T_{gg} = \frac{3 \times 3.986 \times 10^{14}}{2 \times (6871 \times 10^{3})^3} \times |0.035 - 0.007| \times 1$
 > $= \frac{1.196 \times 10^{15}}{6.494 \times 10^{20}} \times 0.028 = 1.84 \times 10^{-6} \times 0.028 = 5.2 \times 10^{-8}$ N m
 >
-> **Aerodynamic** (at 500 km, $\rho \approx 6 \times 10^{-13}$ kg/m$^3$):
-> $T_{\text{aero}} = 0.5 \times 6 \times 10^{-13} \times 7617^2 \times 2.2 \times 0.034 \times 0.02$
-> $= 0.5 \times 6 \times 10^{-13} \times 5.80 \times 10^7 \times 2.2 \times 0.034 \times 0.02 = 1.6 \times 10^{-8}$ N m
+> **Aerodynamic** (at 500 km, solar minimum, $\rho \approx 6 \times 10^{-13}$ kg/m$^3$):
+> $F_{\text{aero}} = 0.5 \times 6 \times 10^{-13} \times 7617^2 \times 2.2 \times 0.034 = 1.30 \times 10^{-6}$ N
+>
+> $T_{\text{aero}} = F_{\text{aero}} \times d_{cp-cm} = 1.30 \times 10^{-6} \times 0.02 = 2.6 \times 10^{-8}$ N m
+>
+> Note: at solar maximum ($\rho \approx 5 \times 10^{-12}$), this increases by ~8x to $2.1 \times 10^{-7}$ N m.
 >
 > **Solar radiation pressure:**
-> $T_{\text{SRP}} = \frac{1361}{3 \times 10^8} \times 0.034 \times 1.5 \times 0.02 = 4.6 \times 10^{-9}$ N m
+> $F_{\text{SRP}} = \frac{1361}{3 \times 10^8} \times 0.034 \times 1.5 = 2.31 \times 10^{-7}$ N
 >
-> **Magnetic** ($M = 0.05$ A m$^2$, $B = 3 \times 10^{-5}$ T):
+> $T_{\text{SRP}} = F_{\text{SRP}} \times d_{sp-cm} = 2.31 \times 10^{-7} \times 0.02 = 4.6 \times 10^{-9}$ N m
+>
+> **Residual magnetic dipole** ($M = 0.05$ A m$^2$, $B = 3 \times 10^{-5}$ T):
 > $T_{\text{mag}} = 0.05 \times 3 \times 10^{-5} = 1.5 \times 10^{-6}$ N m
 >
 > **Summary:**
 >
-> | Source | Torque (N m) | Dominant? |
-> |--------|-------------|-----------|
-> | Gravity gradient | $5.2 \times 10^{-8}$ | No |
-> | Aerodynamic | $1.6 \times 10^{-8}$ | No |
-> | Solar radiation pressure | $4.6 \times 10^{-9}$ | No |
-> | Residual magnetic dipole | $1.5 \times 10^{-6}$ | **Yes** |
-> | **Total (RSS)** | $\approx 1.5 \times 10^{-6}$ | |
+> | Source | Torque (N m) | Rank | Notes |
+> |--------|-------------|------|-------|
+> | Gravity gradient | $5.2 \times 10^{-8}$ | 3rd | Small because 3U is not very elongated |
+> | Aerodynamic (solar min) | $2.6 \times 10^{-8}$ | 4th | Increases 8x at solar max |
+> | Solar radiation pressure | $4.6 \times 10^{-9}$ | 5th | Negligible at LEO distances |
+> | Residual magnetic dipole | $1.5 \times 10^{-6}$ | **1st** | **Dominates by >10x** |
+> | **Total (worst-case sum)** | $\approx 1.6 \times 10^{-6}$ | | Conservative estimate |
+> | **Total (RSS)** | $\approx 1.5 \times 10^{-6}$ | | More realistic (uncorrelated sources) |
 >
-> The residual magnetic dipole dominates for CubeSats due to COTS electronics and short wiring runs. This is a key finding -- magnetic cleanliness matters.
+> **Key finding:** The residual magnetic dipole dominates for CubeSats due to COTS electronics and short wiring runs. **Magnetic cleanliness matters.** Reducing the residual dipole from 0.05 to 0.01 A m$^2$ (achievable with careful wire routing, twisted pairs, and degaussing) would reduce the total disturbance by 5x.
 
 ---
 
-## 3. Actuator Sizing (20 min)
+## 3. Attitude Actuators -- Physics and Sizing (25 min)
 
 ### Teaching Notes
 
-### Reaction Wheel Sizing
+### Reaction Wheels -- Physics of Angular Momentum Storage
+
+**How reaction wheels work:**
+
+A reaction wheel is a flywheel (typically a brass or steel ring, 20--200 g for CubeSats) spun by a brushless DC motor. By Newton's third law, changing the wheel's angular momentum produces an equal and opposite torque on the spacecraft:
+
+$$\vec{H}_{\text{total}} = \vec{H}_{\text{spacecraft}} + \vec{H}_{\text{wheels}} = \text{constant}$$
+
+If the wheel speeds up ($\Delta H_{\text{wheel}} > 0$), the spacecraft receives an equal and opposite angular momentum change ($\Delta H_{\text{SC}} = -\Delta H_{\text{wheel}}$), causing it to rotate. The control torque is:
+
+$$T_{\text{control}} = \frac{dH_{\text{wheel}}}{dt} = I_{\text{wheel}} \cdot \dot{\omega}_{\text{wheel}}$$
+
+where $I_{\text{wheel}}$ is the wheel's moment of inertia and $\dot{\omega}_{\text{wheel}}$ is the wheel's angular acceleration.
+
+**Momentum storage:** The maximum angular momentum a wheel can store is:
+
+$$H_{\text{max}} = I_{\text{wheel}} \times \omega_{\text{max}}$$
+
+For a Blue Canyon RW210: $I_{\text{wheel}} \approx 1.5 \times 10^{-5}$ kg m$^2$, $\omega_{\text{max}} \approx 6000$ RPM $= 628$ rad/s, giving $H_{\text{max}} = 0.0094$ N m s $\approx 10$ mN m s.
+
+**Saturation:** As disturbance torques act on the spacecraft, the reaction wheels absorb angular momentum. Over time, the wheel speed increases until it reaches $\omega_{\text{max}}$ (saturation). At saturation, the wheel can no longer absorb momentum in that direction, and control authority is lost. The time to saturation from zero speed is:
+
+$$t_{\text{sat}} = \frac{H_{\text{max}}}{T_{\text{disturbance}}} = \frac{10 \times 10^{-3}}{1.5 \times 10^{-6}} = 6667 \text{ s} \approx 111 \text{ minutes}$$
+
+This is approximately 1.2 orbits -- so the wheels would saturate after about one orbit without desaturation. This is why magnetorquers are essential companions to reaction wheels.
+
+**The zero-crossing problem:** When a reaction wheel passes through zero speed (reversing direction), the static friction in the bearings creates a "dead zone" where the wheel cannot produce smooth, continuous torque. This causes a brief loss of control authority and increased jitter. Mitigations:
+- **Bias momentum:** Operate all wheels with a positive bias speed (e.g., 500 RPM), so they never cross zero during normal operations
+- **4-wheel pyramid configuration:** The skewed geometry means individual wheels reverse less frequently
+- **Lubrication:** Space-rated bearings use solid or vapour-deposited lubricants (MoS$_2$, Braycote) that minimise static friction
+
+**Jitter:** Reaction wheel imbalance (mass asymmetry in the flywheel) creates vibrations at the spin frequency and its harmonics. For imaging missions, this jitter degrades image quality. Jitter amplitude depends on wheel speed, imbalance mass, and the spacecraft's structural transfer function. Typical CubeSat reaction wheel jitter: 5--20 arcsec at the payload, depending on isolation.
+
+### Reaction Wheel Configurations
+
+| Configuration | Description | Pros | Cons | Use |
+|--------------|------------|------|------|-----|
+| **3 orthogonal** | One wheel per body axis (X, Y, Z) | Minimum mass, simple control | No redundancy; single wheel failure = loss of 1-axis control | Low-cost missions with short lifetime |
+| **3 + 1 skew** | 3 orthogonal + 1 on a skew axis (e.g., [1,1,1] direction) | Single-fault tolerant; the skew wheel + remaining 2 provide 3-axis control | Slightly more complex control law distribution | **Standard for CubeSats** |
+| **4-wheel pyramid** | 4 wheels tilted ~20--30 deg from body axes, symmetrically arranged | Optimal torque/momentum distribution; single-fault tolerant; reduced zero-crossings | More complex mounting, heavier | High-performance missions, agile S/C |
+
+The **distribution matrix** maps wheel torques to body-frame torques:
+
+$$\vec{T}_{\text{body}} = \mathbf{D} \cdot \vec{T}_{\text{wheels}}$$
+
+For a 4-wheel pyramid with cant angle $\beta$:
+
+$$\mathbf{D} = \begin{bmatrix} \cos\beta & 0 & -\cos\beta & 0 \\ 0 & \cos\beta & 0 & -\cos\beta \\ \sin\beta & \sin\beta & \sin\beta & \sin\beta \end{bmatrix}$$
 
 > **Key Equations -- Reaction Wheel Sizing**
 >
-> **Torque requirement** (to counteract disturbances + provide control authority):
-> $$T_{\text{RW}} \geq k \times T_{\text{disturbance,total}}$$
-> where $k \geq 2$ is the control margin factor (typically 2--5).
+> **Torque requirement** (to counteract disturbances + provide slewing capability):
+> $$T_{\text{RW,min}} \geq k \times T_{\text{disturbance,total}}$$
+> where $k \geq 2$ is the control margin factor (typically 2--5 to provide adequate control bandwidth and slewing performance).
 >
 > **Momentum storage requirement** (accumulation between desaturation cycles):
 > $$H_{\text{required}} = T_{\text{disturbance}} \times \frac{t_{\text{desat}}}{2}$$
-> where $t_{\text{desat}}$ is the time between magnetorquer desaturation events (typically one orbit).
+> where $t_{\text{desat}}$ is the time between magnetorquer desaturation events (typically one half-orbit to one orbit). The factor of 1/2 accounts for the average (sinusoidal disturbance torques average to half their peak over a quarter orbit).
 >
-> **Slew rate** (for agile missions):
+> **Slew rate** (for agile/imaging missions):
 > $$\dot{\theta}_{\text{max}} = \frac{H_{\text{RW,max}}}{I_{\text{axis}}}$$
-
-> **Worked Example -- Reaction Wheel for 3U CubeSat**
 >
-> **Given:** $T_{\text{disturbance}} = 1.5 \times 10^{-6}$ N m, desaturation interval = 1 orbit (5670 s).
+> For a 3U CubeSat with RW210 ($H = 10$ mN m s) and $I_{\text{axis}} = 0.035$ kg m$^2$:
+> $\dot{\theta}_{\text{max}} = 0.010 / 0.035 = 0.286$ rad/s $= 16.4$ deg/s -- more than adequate for target-to-target slewing.
+>
+> **Slew time for a given angle** (acceleration-limited, trapezoidal profile):
+> $$t_{\text{slew}} = 2\sqrt{\frac{\theta_{\text{slew}} \cdot I_{\text{axis}}}{T_{\text{RW}}}}$$
+>
+> For a 90 deg (1.57 rad) slew with RW210 ($T = 1.0$ mN m) and $I = 0.035$:
+> $t_{\text{slew}} = 2\sqrt{\frac{1.57 \times 0.035}{0.001}} = 2\sqrt{54.95} = 14.8$ s
+
+> **Worked Example -- Reaction Wheel Sizing for 3U CubeSat (SuperDove-class)**
+>
+> **Given:** $T_{\text{disturbance}} = 1.5 \times 10^{-6}$ N m (from Section 2), desaturation interval = 1 orbit (5670 s), pointing requirement = 0.1 deg, slew requirement = 90 deg in < 60 s.
+>
+> **Torque requirement:**
+> $T_{\text{RW,min}} = 3 \times 1.5 \times 10^{-6} = 4.5 \times 10^{-6}$ N m $= 0.0045$ mN m
+>
+> This is a very low torque requirement. The minimum available CubeSat wheel (RW-0.01 at 0.23 mN m) exceeds this by 50x. The sizing driver is actually the slew rate and momentum storage, not the disturbance rejection torque.
 >
 > **Momentum storage:**
 > $H_{\text{required}} = 1.5 \times 10^{-6} \times \frac{5670}{2} = 4.25 \times 10^{-3}$ N m s $= 4.25$ mN m s
 >
-> **Typical CubeSat reaction wheels:**
+> **Slew time check with candidate wheels:**
 >
-> | Product | Torque (mN m) | Momentum (mN m s) | Mass (g) | Manufacturer |
-> |---------|--------------|-------------------|----------|-------------|
-> | RW-0.01 | 0.23 | 1.0 | 30 | Hyperion |
-> | RW210 | 1.0 | 10 | 55 | Blue Canyon |
-> | RW400 | 4.0 | 40 | 120 | Blue Canyon |
-> | RW3-1.0 | 1.0 | 15 | 50 | CubeSpace |
+> | Product | Torque (mN m) | Momentum (mN m s) | Mass (g) | 90 deg Slew (s) | Momentum Margin | Manufacturer |
+> |---------|--------------|-------------------|----------|----------------|-----------------|-------------|
+> | RW-0.01 | 0.23 | 1.0 | 30 | 69 s | -3.25 mN m s (FAIL) | Hyperion |
+> | RW210 | 1.0 | 10 | 55 | 14.8 s | +5.75 mN m s (135%) | Blue Canyon |
+> | RW3-1.0 | 1.0 | 15 | 50 | 14.8 s | +10.75 mN m s (253%) | CubeSpace |
+> | RW400 | 4.0 | 40 | 120 | 7.4 s | +35.75 mN m s (841%) | Blue Canyon |
 >
-> The RW210 (10 mN m s) exceeds the 4.25 mN m s requirement with 135% margin. **Selected.**
-
-### Magnetorquer Sizing
-
-Magnetorquers (MTQs) provide torque by interacting with Earth's magnetic field. They are essential for momentum dumping from reaction wheels.
-
-> **Key Equations -- Magnetorquer Torque**
+> The RW-0.01 fails the momentum storage requirement (would saturate in < 1 orbit). The RW210 (10 mN m s) provides 135% margin and 14.8 s slew time. **Selected: RW210 (or CubeSpace RW3-1.0).**
 >
+> **Configuration:** 4 wheels (3+1 skew) for single-fault tolerance. Total AOCS actuator mass: 4 x 55 g = 220 g.
+
+### Magnetorquers -- Physics of Magnetic Torque Generation
+
+**How magnetorquers work:**
+
+A magnetorquer (MTQ) is simply a coil of wire (or a ferromagnetic rod wrapped with wire). When current flows through the coil, it creates a magnetic dipole moment:
+
+$$\vec{m} = N \cdot I \cdot A \cdot \hat{n}$$
+
+where $N$ = number of turns, $I$ = current (A), $A$ = coil cross-sectional area (m$^2$), and $\hat{n}$ is the coil normal direction.
+
+This magnetic dipole interacts with Earth's geomagnetic field $\vec{B}$ to produce a torque:
+
+$$\vec{T}_{\text{MTQ}} = \vec{m} \times \vec{B}$$
+
+The torque is **perpendicular** to both the dipole moment and the magnetic field. This has a critical implication: **a magnetorquer cannot produce torque parallel to the local magnetic field vector.** At any instant, only 2 of 3 axes can be torqued. Over a full orbit, as the field direction rotates, all 3 axes become accessible -- but not simultaneously.
+
+**Magnetorquer types for CubeSats:**
+
+| Type | Dipole Moment | Mass | Power | Form Factor | Products |
+|------|--------------|------|-------|-------------|----------|
+| **Air-core coil** (PCB trace) | 0.01--0.05 A m$^2$ | 1--5 g | 0.1--0.3 W | Flat PCB, integrates into solar panel substrate | ZARM Technik MTC-1, custom |
+| **Air-core rod** (wound wire) | 0.05--0.50 A m$^2$ | 10--30 g | 0.2--0.5 W | Cylindrical, 60--100 mm long | CubeSpace CubeMAG, NewSpace NTQS |
+| **Ferromagnetic core rod** | 0.2--5.0 A m$^2$ | 20--100 g | 0.3--1.0 W | Cylindrical with mu-metal core, 60--100 mm long | ZARM Technik MTQ-1, ISIS iMTQ |
+
+The ferromagnetic core concentrates the magnetic flux, providing 5--20x more dipole moment per unit current than an air-core coil of the same size. However, ferromagnetic cores can retain residual magnetism after power-off, contributing to the spacecraft's residual magnetic dipole.
+
+**Why magnetorquers cannot point (only detumble and desaturate):**
+
+The torque $\vec{T} = \vec{m} \times \vec{B}$ is always perpendicular to $\vec{B}$. This means:
+1. You cannot generate torque about the $\vec{B}$ direction at any given instant
+2. The achievable torque direction changes continuously as the spacecraft orbits (because $\vec{B}$ rotates)
+3. Pointing control requires torque in any direction at any time -- magnetorquers cannot provide this
+
+Magnetorquers are excellent for:
+- **Detumbling:** The B-dot controller ($\vec{m} = -k \dot{\vec{B}}$) brakes spacecraft rotation by opposing the change in the measured B-field. Works regardless of attitude.
+- **Desaturation:** Systematically dumping momentum from reaction wheels by applying the correct dipole moment: $\vec{m} = -k (\vec{H}_{\text{wheel}} \times \hat{B})$
+- **Coarse pointing** (2--10 deg): Possible over time using model-predictive control that plans the dipole commands over a full orbit, exploiting the field rotation. But accuracy is limited.
+
+> **Key Equations -- Magnetorquer Sizing**
+>
+> **Desaturation torque:**
 > $$T_{\text{MTQ}} = m_{\text{dipole}} \times B \times \sin(\alpha)$$
 >
-> where $m_{\text{dipole}}$ = magnetic dipole moment (A m$^2$), $B$ = local field (T), $\alpha$ = angle between dipole and field.
+> Average torque over an orbit (accounting for varying $\alpha$): $T_{\text{MTQ,avg}} \approx 0.7 \times m_{\text{dipole}} \times B_{\text{avg}}$
 >
 > **Desaturation time** (to dump one wheel from full momentum):
 > $$t_{\text{dump}} = \frac{H_{\text{wheel}}}{T_{\text{MTQ,avg}}}$$
+>
+> **Design requirement:** $t_{\text{dump}} < t_{\text{shadow}}$ (must complete desaturation during the portion of the orbit where the field geometry is favourable).
 
-For a CubeSat MTQ with $m = 0.2$ A m$^2$ and $B = 3 \times 10^{-5}$ T:
-$T_{\text{MTQ}} = 0.2 \times 3 \times 10^{-5} = 6 \times 10^{-6}$ N m
+> **Worked Example -- Magnetorquer Sizing for 3U CubeSat**
+>
+> **Given:** RW210 momentum = 10 mN m s, $B_{\text{avg}} = 3 \times 10^{-5}$ T.
+>
+> **Option 1: CubeMAG rod** ($m = 0.2$ A m$^2$):
+> $T_{\text{MTQ,avg}} = 0.7 \times 0.2 \times 3 \times 10^{-5} = 4.2 \times 10^{-6}$ N m
+>
+> $t_{\text{dump}} = \frac{10 \times 10^{-3}}{4.2 \times 10^{-6}} = 2381$ s $\approx 40$ min
+>
+> This is approximately 42% of one orbit period. **Acceptable** -- desaturation can be scheduled once per orbit during the non-imaging portion.
+>
+> **Disturbance rejection check:** The MTQ average torque ($4.2 \times 10^{-6}$ N m) is 2.8x the total disturbance torque ($1.5 \times 10^{-6}$ N m). The MTQ can dump momentum faster than it accumulates. **Pass.**
+>
+> **Configuration:** 3 MTQ rods, one per body axis (X, Y, Z). This ensures torque can be generated about any two axes at any given time. Total MTQ mass: 3 x 30 g = 90 g.
 
-This is 4x the total disturbance torque -- sufficient for desaturation within a fraction of an orbit.
+### Control Moment Gyroscopes (CMGs) vs Reaction Wheels
+
+**CMGs** are an alternative momentum exchange device used on large, agile spacecraft. A CMG consists of a spinning flywheel mounted on a gimbal. Instead of changing the wheel speed (as in a reaction wheel), the CMG changes the direction of the angular momentum vector by rotating the gimbal. This produces a gyroscopic output torque:
+
+$$T_{\text{CMG}} = H_{\text{wheel}} \times \dot{\delta}$$
+
+where $H_{\text{wheel}}$ is the constant wheel momentum and $\dot{\delta}$ is the gimbal rate.
+
+**The torque amplification effect:** For a CMG wheel spinning at high speed ($H = 1$--$100$ N m s), even a slow gimbal rate ($\dot{\delta} = 1$ rad/s) produces a large output torque ($T = 1$--$100$ N m). This is orders of magnitude more than a reaction wheel of similar mass. CMGs are "torque machines"; reaction wheels are "momentum machines."
+
+| Parameter | Reaction Wheel | CMG (Single Gimbal) |
+|-----------|---------------|---------------------|
+| Output torque | $T = I_w \dot{\omega}_w$ (low, 0.001--10 N m) | $T = H_w \dot{\delta}$ (high, 0.1--1000+ N m) |
+| Control complexity | Simple (speed command) | Complex (gimbal singularity avoidance) |
+| Mass efficiency | Lower torque/kg | Higher torque/kg (10--100x) |
+| Failure mode | Bearing wear, motor failure | Gimbal lock (singularity), bearing wear |
+| Typical use | CubeSats, small satellites, non-agile | Large agile satellites, ISS, Earth observation with rapid retargeting |
+| CubeSat status | Standard (many COTS products) | Emerging (Honeybee Robotics microCMG, some research prototypes) |
+
+**When to use CMGs:**
+- Spacecraft requiring rapid slewing (> 3 deg/s for large spacecraft)
+- Large moments of inertia where reaction wheel torque is insufficient
+- Missions requiring frequent retargeting (e.g., video from orbit, rapid revisit EO)
+
+**When to use reaction wheels:**
+- CubeSats and small satellites (adequate torque, simpler control, more COTS options)
+- Missions with modest agility requirements (< 10 deg/s slew for CubeSats)
+- Cost-constrained missions (CMGs are significantly more expensive)
+
+The ISS uses four 4600 kg CMGs, each storing 3500 N m s of momentum, to maintain attitude without propellant. The Pleiades Neo Earth observation satellite uses CMGs for rapid retargeting between imaging strips.
 
 ---
 
@@ -4272,44 +4984,57 @@ This is 4x the total disturbance torque -- sufficient for desaturation within a 
 
 *[Source: ECSS-E-ST-60-10C; SMAD, Ch. 11.1]*
 
-The pointing error budget combines all independent error sources using root-sum-square (RSS) to determine the total pointing uncertainty.
+The pointing error budget combines all independent error sources using root-sum-square (RSS) to determine the total pointing uncertainty. This is a statistical combination assuming errors are uncorrelated and normally distributed.
+
+**ECSS pointing performance taxonomy:**
+
+| Term | Definition | Measured Over |
+|------|-----------|---------------|
+| **APE** (Absolute Performance Error) | Total error between actual pointing and commanded pointing | Single measurement |
+| **RPE** (Relative Performance Error) | Variation in pointing over a short time (jitter/stability) | Measurement window (e.g., integration time) |
+| **MPE** (Mean Performance Error) | Systematic bias in pointing | Long-term average |
+
+For most CubeSat missions, APE is the primary requirement. RPE matters for long-exposure imaging (e.g., ASTERIA's 10-arcsec stability over 20-minute exposures).
 
 > **Key Equations -- Pointing Error Budget (RSS)**
 >
-> $$\theta_{\text{total}} = \sqrt{\theta_{\text{sensor}}^2 + \theta_{\text{actuator}}^2 + \theta_{\text{alignment}}^2 + \theta_{\text{thermal}}^2 + \theta_{\text{jitter}}^2 + \theta_{\text{orbit}}^2 + \theta_{\text{timing}}^2}$$
+> $$\theta_{\text{APE}} = \sqrt{\theta_{\text{sensor}}^2 + \theta_{\text{actuator}}^2 + \theta_{\text{alignment}}^2 + \theta_{\text{thermal}}^2 + \theta_{\text{jitter}}^2 + \theta_{\text{orbit}}^2 + \theta_{\text{timing}}^2}$$
 >
 > The result must satisfy:
-> $$\theta_{\text{total}} \leq \theta_{\text{requirement}}$$
+> $$\theta_{\text{APE}} \leq \theta_{\text{requirement}}$$
 
-### Error Source Definitions
+### Error Source Definitions and Physics
 
-| Source | Description | Typical Values (Star Tracker) | Typical Values (Sun Sensor) |
-|--------|------------|------------------------------|----------------------------|
-| **Sensor accuracy** | Intrinsic measurement noise of attitude sensor | 3--10 arcsec (0.001--0.003 deg) | 0.5--2 deg |
-| **Actuator resolution** | Minimum controllable torque/step of actuators | 2--5 arcsec (0.001 deg) | N/A (MTQ: 1--5 deg) |
-| **Alignment knowledge** | Misalignment between sensor boresight and payload boresight | 30--60 arcsec (0.01--0.02 deg) | 0.5 deg |
-| **Thermal distortion** | Structural deformation with temperature | 10--30 arcsec (0.003--0.01 deg) | 0.1 deg |
-| **Jitter** | High-frequency vibration from reaction wheels | 5--20 arcsec (0.001--0.006 deg) | N/A |
-| **Orbit knowledge** | Uncertainty in satellite position (affects nadir pointing) | 1--5 arcsec (< 0.001 deg) | 0.05 deg |
-| **Timing** | Time-stamping error between sensor read and actuator command | 1--3 arcsec (< 0.001 deg) | 0.01 deg |
+| Source | Description | Physics | Typical Values (Star Tracker) | Typical Values (Sun Sensor) |
+|--------|------------|---------|------------------------------|----------------------------|
+| **Sensor accuracy** | Intrinsic measurement noise of attitude sensor | Photon noise, centroiding error, optical distortion | 3--15 arcsec (0.001--0.004 deg) | 0.5--2 deg |
+| **Actuator resolution** | Minimum controllable torque step; control loop dead band | Motor cogging torque, driver quantisation, control bandwidth | 2--5 arcsec (0.001 deg) | N/A (MTQ: 1--5 deg) |
+| **Alignment knowledge** | Misalignment between sensor boresight and payload boresight; measured during I&T | Mechanical tolerances, shimming, bonding accuracy, measurement uncertainty | 30--60 arcsec (0.01--0.02 deg) | 0.5 deg |
+| **Thermal distortion** | Structural deformation with temperature changes; orbital thermal cycling | CTE mismatch between materials, temperature gradients across structure | 10--30 arcsec (0.003--0.01 deg) | 0.1 deg |
+| **Jitter** | High-frequency vibration from reaction wheels, mechanisms | Wheel imbalance forces at spin frequency and harmonics, structural resonances | 5--20 arcsec (0.001--0.006 deg) | N/A |
+| **Orbit knowledge** | Uncertainty in satellite position (affects nadir pointing vector computation) | GPS accuracy, propagation error between GPS fixes | 1--5 arcsec (< 0.001 deg) | 0.05 deg |
+| **Timing** | Time-stamping error between sensor read and actuator command | Clock synchronisation, interrupt latency, bus communication delay | 1--3 arcsec (< 0.001 deg) | 0.01 deg |
 
 > **Worked Example -- Pointing Budget for 3U EO CubeSat (Star Tracker + RW)**
 >
-> | Error Source | Value (deg) | Value$^2$ |
-> |-------------|------------|-----------|
-> | Star tracker accuracy | 0.003 | $9.0 \times 10^{-6}$ |
-> | Reaction wheel resolution | 0.001 | $1.0 \times 10^{-6}$ |
-> | Alignment knowledge | 0.020 | $4.0 \times 10^{-4}$ |
-> | Thermal distortion | 0.010 | $1.0 \times 10^{-4}$ |
-> | RW jitter | 0.005 | $2.5 \times 10^{-5}$ |
-> | Orbit knowledge | 0.001 | $1.0 \times 10^{-6}$ |
-> | Timing error | 0.001 | $1.0 \times 10^{-6}$ |
-> | **RSS Total** | $\sqrt{5.37 \times 10^{-4}}$ = **0.023 deg** | |
+> | Error Source | Value (deg) | Value (arcsec) | Value$^2$ (deg$^2$) | Notes |
+> |-------------|------------|----------------|---------------------|-------|
+> | Star tracker accuracy | 0.003 | 10.8 | $9.0 \times 10^{-6}$ | Blue Canyon NST, 1-sigma boresight |
+> | Reaction wheel resolution | 0.001 | 3.6 | $1.0 \times 10^{-6}$ | Motor cogging + control dead band |
+> | Alignment knowledge | 0.020 | 72 | $4.0 \times 10^{-4}$ | **Dominant** -- shimmed to 1 arcmin |
+> | Thermal distortion | 0.010 | 36 | $1.0 \times 10^{-4}$ | Al structure, 40 degC orbital range |
+> | RW jitter | 0.005 | 18 | $2.5 \times 10^{-5}$ | At 3000 RPM, no isolation mount |
+> | Orbit knowledge (GPS) | 0.001 | 3.6 | $1.0 \times 10^{-6}$ | GPS fix every 10 s |
+> | Timing error | 0.001 | 3.6 | $1.0 \times 10^{-6}$ | < 1 ms timestamp sync |
+> | **RSS Total** | $\sqrt{5.37 \times 10^{-4}}$ = **0.023 deg** | **83 arcsec** | | |
 >
-> **Requirement:** 0.1 deg (3-sigma)
+> **Requirement:** 0.1 deg (3-sigma) -- this is typical for a 5 m GSD imager at 500 km (where 0.1 deg corresponds to ~870 m pointing error on ground, or ~175 pixels for a 5 m GSD sensor).
+>
 > **Margin:** 0.1 - 0.023 = 0.077 deg (77% margin) -- **comfortable**.
 >
-> **Key insight:** Alignment knowledge (0.020 deg) dominates the budget. Improving the star tracker accuracy from 0.003 to 0.001 deg would have negligible impact. **Budget-driven design** means investing effort in the dominant term.
+> **Key insight:** Alignment knowledge (0.020 deg = 72 arcsec) dominates the budget at 74% of the RSS. Improving the star tracker accuracy from 10 to 3 arcsec would change the RSS total from 83 to 82.3 arcsec -- negligible improvement. **Budget-driven design** means investing effort in the dominant term: better alignment calibration (e.g., on-orbit calibration using ground targets) would have far more impact than upgrading any sensor.
+>
+> To achieve < 0.01 deg (36 arcsec) pointing, the alignment must be improved to < 0.005 deg (18 arcsec), which requires precision optical alignment during I&T and/or on-orbit alignment calibration.
 
 ---
 
@@ -4317,22 +5042,47 @@ The pointing error budget combines all independent error sources using root-sum-
 
 ### Teaching Notes
 
-Disturbance torques cause angular momentum to accumulate in reaction wheels over time. Without management, wheels saturate and lose control authority.
+Disturbance torques cause angular momentum to accumulate in reaction wheels over time. Without management, wheels saturate and lose control authority. Understanding this cycle is essential for AOCS design.
 
-**Desaturation cycle:**
-1. Wheels accumulate momentum from disturbance torques (~$10^{-6}$ N m continuous)
-2. At scheduled intervals (typically once per orbit), MTQs are activated
-3. MTQs generate torque against Earth's magnetic field, slowing the wheels
-4. Process takes 5--15 minutes per desaturation cycle
+**The momentum lifecycle:**
 
-**Limitation:** MTQs can only generate torque **perpendicular** to the local magnetic field vector. They cannot dump momentum in all three axes simultaneously. This requires a multi-axis dumping strategy timed with the magnetic field rotation along the orbit.
+1. **Accumulation:** External disturbance torques (gravity gradient, aero, SRP, magnetic) act on the spacecraft body. The control loop commands the reaction wheels to counteract these torques, absorbing the angular momentum. Wheel speed increases (or decreases) at a rate of $\dot{H} = T_{\text{disturbance}}$.
 
-### 3+1 Redundancy
+2. **Monitoring:** The OBC monitors wheel speeds. When any wheel exceeds a threshold (typically 80% of maximum), a desaturation manoeuvre is triggered.
+
+3. **Desaturation:** The OBC activates the magnetorquers to generate a torque that opposes the stored wheel momentum. The algorithm computes the optimal dipole command:
+
+$$\vec{m}_{\text{cmd}} = -k_d (\vec{H}_{\text{wheel}} \times \hat{B})$$
+
+where $k_d$ is the desaturation gain and $\hat{B}$ is the unit magnetic field vector. This produces a torque $\vec{T} = \vec{m} \times \vec{B}$ that is in the direction to reduce $\vec{H}_{\text{wheel}}$.
+
+4. **Completion:** Wheel speeds return to near-zero (or bias speed). The cycle repeats.
+
+**Desaturation constraints:**
+- MTQs can only generate torque **perpendicular** to the local magnetic field vector. They cannot dump momentum parallel to $\vec{B}$.
+- Near the magnetic equator, $\vec{B}$ is nearly horizontal (north-pointing). MTQs can effectively dump momentum about the pitch and roll axes but not yaw.
+- Near the magnetic poles, $\vec{B}$ is nearly vertical. MTQs can dump pitch and yaw but not roll.
+- Over a full orbit, the field direction rotates sufficiently to dump all three axes. But at any instant, one axis is poorly controllable.
+- A multi-pass desaturation strategy (spreading the dump over a full orbit) is more efficient than a single-point dump.
+
+**Typical desaturation frequency for CubeSats:**
+- At 500 km with 1.5 uN m total disturbance and 10 mN m s wheels: one desaturation per orbit (every ~95 minutes)
+- Duration: 5--15 minutes per cycle
+- Power: 0.5--1.5 W during desaturation (3 MTQ rods active)
+- During desaturation, pointing accuracy degrades slightly (the MTQ torques perturb the attitude). Imaging should be inhibited during desaturation.
+
+### Wheel Configurations -- 3+1 Redundancy
 
 The standard 4-wheel configuration provides full 3-axis control with one spare:
 - **3 wheels** in the body X, Y, Z axes provide minimum control
-- **4th wheel** on a skew axis provides redundancy and enhanced torque distribution
-- If one wheel fails, the remaining three (including the skew wheel) maintain 3-axis control
+- **4th wheel** on a skew axis (typically [1,1,1] normalised, or cant angle 20--30 deg from each axis) provides redundancy and enhanced torque distribution
+- If one wheel fails, the remaining three (including the skew wheel) maintain 3-axis control with reduced but adequate authority
+
+**4-wheel torque envelope:** With 4 wheels in a pyramid configuration, the maximum torque in any body direction is:
+
+$$T_{\text{max,body}} = \sqrt{2} \cdot T_{\text{wheel}} \approx 1.41 \times T_{\text{wheel}}$$
+
+for the optimal distribution. This is better than the 3-orthogonal configuration where $T_{\text{max,body}} = T_{\text{wheel}}$ along any axis.
 
 ---
 
@@ -4342,11 +5092,25 @@ The standard 4-wheel configuration provides full 3-axis control with one spare:
 
 UniSat-1 does not have an active AOCS. Instead, it uses **passive magnetic stabilisation** -- the simplest and cheapest attitude control method, requiring zero power and minimal mass.
 
-**How it works:**
+**How it works -- physics:**
 
-1. **Permanent magnet:** A small bar magnet (typically AlNiCo or NdFeB, ~10--20 g) is embedded along one body axis. This magnet aligns the satellite with Earth's local magnetic field, like a compass needle, so that the magnet axis points roughly along the field lines.
+1. **Permanent magnet:** A small bar magnet (typically AlNiCo or NdFeB, ~10--20 g, dipole moment $M_p = 0.1$--$1.0$ A m$^2$) is embedded along one body axis (say, the Z-axis). In Earth's magnetic field $\vec{B}$, the magnet experiences a restoring torque:
 
-2. **Hysteresis rods:** Two or more strips of magnetically soft material (e.g., Permalloy or HyMu-80, ~5--10 g each) are mounted perpendicular to the permanent magnet. As the satellite oscillates around the field-aligned equilibrium, the hysteresis rods dissipate energy through magnetic hysteresis losses, damping the oscillations over time.
+$$\vec{T}_{\text{restoring}} = \vec{M}_p \times \vec{B}$$
+
+This torque acts to align the magnet axis with the local field direction, analogous to a compass needle aligning with magnetic north. The restoring torque is maximum when the magnet is perpendicular to the field ($\alpha = 90$ deg) and zero when aligned ($\alpha = 0$).
+
+For $M_p = 0.5$ A m$^2$ and $B = 3 \times 10^{-5}$ T: $T_{\text{max}} = 0.5 \times 3 \times 10^{-5} = 1.5 \times 10^{-5}$ N m. This is ~10x larger than any environmental disturbance torque, ensuring stable alignment.
+
+2. **Hysteresis rods:** Two or more strips of magnetically soft material (e.g., Permalloy, HyMu-80, ~5--10 g each, dimensions ~60 x 1 x 1 mm) are mounted perpendicular to the permanent magnet. As the satellite oscillates around the field-aligned equilibrium, the external field component along the hysteresis rod alternates, driving the rod material around its B-H hysteresis loop. The area enclosed by the hysteresis loop represents energy dissipated per cycle as heat in the rod material. This extracts kinetic energy from the satellite's oscillation, damping it over time.
+
+The energy dissipated per oscillation cycle is:
+
+$$E_{\text{dissipated}} = V_{\text{rod}} \times \oint H \, dB$$
+
+where $V_{\text{rod}}$ is the rod volume and $\oint H \, dB$ is the area of the hysteresis loop. For HyMu-80 material, typical energy density is ~100 J/m$^3$ per cycle.
+
+**Damping time constant:** From initial tumble (~10 deg/s after deployment) to settled oscillation (~1--5 deg amplitude), the damping process typically takes hours to days, depending on the hysteresis rod material, volume, and the initial tumble rate.
 
 **Performance:**
 
@@ -4358,6 +5122,7 @@ UniSat-1 does not have an active AOCS. Instead, it uses **passive magnetic stabi
 | Power | 0 W | 3--5 W |
 | Mass | ~30--50 g | 500--800 g |
 | Cost | ~2 kEUR | ~55 kEUR |
+| Failure modes | Demagnetisation (radiation, temperature) | Motor failure, bearing wear, software bugs |
 
 **Why this works for UniSat-1:**
 
@@ -4367,12 +5132,12 @@ The MEMS magnetometer payload does not require accurate pointing. In fact, it be
 
 > **Disturbance environment for 1U at 400 km:**
 >
-> | Source | Torque (N m) | Notes |
-> |--------|-------------|-------|
-> | Gravity gradient | ~$1 \times 10^{-8}$ | Small due to nearly cubic 1U shape ($I_z \approx I_x$) |
-> | Aerodynamic | ~$3 \times 10^{-8}$ | Higher than 3U at 500 km due to lower altitude (higher $\rho$) |
-> | Solar radiation pressure | ~$1 \times 10^{-9}$ | Small area |
-> | Permanent magnet (restoring) | ~$1 \times 10^{-5}$ | Dominant -- this IS the control torque |
+> | Source | Torque (N m) | Calculation | Notes |
+> |--------|-------------|-------------|-------|
+> | Gravity gradient | ~$1 \times 10^{-8}$ | $\frac{3\mu}{2a^3} \Delta I$; $\Delta I \approx 0.001$ kg m$^2$ for 1U | Small because nearly cubic shape ($I_z \approx I_x$) |
+> | Aerodynamic | ~$3 \times 10^{-8}$ | $\frac{1}{2}\rho v^2 C_D A d$; $\rho(400\text{km}) \approx 5 \times 10^{-12}$ | Higher $\rho$ at 400 km than 500 km |
+> | Solar radiation pressure | ~$1 \times 10^{-9}$ | $\frac{S}{c} A (1+q) d$; $A = 0.01$ m$^2$ | Small area |
+> | Permanent magnet (restoring) | ~$1 \times 10^{-5}$ | $M_p \times B \times \sin(\alpha)$ | **Dominant** -- this IS the control torque |
 >
 > The permanent magnet restoring torque (~$10^{-5}$ N m) is three orders of magnitude larger than all disturbances combined. This ensures the satellite remains approximately field-aligned.
 
@@ -4397,15 +5162,17 @@ The MEMS magnetometer payload does not require accurate pointing. In fact, it be
    - AOCS power demand by mode
 4. **Equipment Browser (if time permits):**
    - Browse reaction wheels: compare mass, torque, momentum, cost
-   - Browse star trackers: compare accuracy, mass, FOV
+   - Browse star trackers: compare accuracy, mass, FOV, exclusion zones
+   - Note that star tracker exclusion zones constrain mounting face options
 
 ### Worksheet 3.2 Tasks
 
 1. Select AOCS architecture and justify based on pointing requirement
-2. Calculate at least 2 disturbance torques for your orbit and spacecraft
-3. Size the reaction wheel (torque and momentum storage)
-4. Complete the pointing error budget table (RSS)
-5. Verify margin to pointing requirement
+2. Calculate all 4 disturbance torques for your orbit and spacecraft configuration
+3. Size the reaction wheel (torque, momentum storage, and slew time)
+4. Size the magnetorquer for desaturation (verify dump time < 1 orbit)
+5. Complete the pointing error budget table (RSS of all 7 sources)
+6. Verify margin to pointing requirement and identify the dominant error source
 
 ---
 
@@ -4414,14 +5181,22 @@ The MEMS magnetometer payload does not require accurate pointing. In fact, it be
 | Topic | Key Takeaway |
 |-------|-------------|
 | AD vs AC | Determination = know orientation (sensors); Control = change orientation (actuators) |
-| Architecture selection | Driven by pointing requirement: MTQ for > 2 deg; RW+ST for < 0.1 deg |
-| Disturbance torques | Gravity gradient, aero, SRP, magnetic dipole; magnetic dominates for CubeSats |
-| RW sizing | Torque >= 2x disturbance; momentum storage >= half-orbit accumulation |
-| MTQ sizing | Desaturation torque must exceed disturbance accumulation rate |
-| Pointing budget | RSS of 5--7 independent sources; alignment knowledge typically dominates |
-| Budget-driven design | Improve the dominant error source, not the smallest one |
-| Redundancy | 4-wheel (3+1 skew) provides single-fault tolerance for 3-axis control |
-| Momentum management | MTQs dump momentum against Earth's B-field; ~once per orbit |
+| Star trackers | Pattern-match stars against catalogue; 3--15 arcsec accuracy; exclusion zones (Sun 25--45 deg, Earth 25--35 deg); most accurate sensor |
+| Sun sensors | Coarse (photodiode, 2--5 deg) or fine (slit+array, 0.1 deg); essential for safe mode; every S/C needs them |
+| Magnetometers | Measure $\vec{B}$ field; compare with IGRF model; 5--10 deg accuracy alone; residual dipole contamination is key error source |
+| GPS receivers | Orbit determination (position/velocity), not attitude; 5--20 m accuracy in LEO; needed for nadir pointing computation |
+| Gyroscopes | Measure angular rate $\vec{\omega}$; MEMS drift 1--10 deg/hr; combined with star tracker via Kalman filter for high-bandwidth estimation |
+| Architecture selection | Driven by pointing requirement: passive magnetic for > 5 deg; MTQ for 2--5 deg; RW+ST for < 0.1 deg |
+| Disturbance torques | Gravity gradient, aero, SRP, magnetic dipole; **magnetic dipole dominates for CubeSats** |
+| Reaction wheel physics | $H = I_w \omega_w$; $T = dH/dt$; saturation occurs when $\omega \rightarrow \omega_{\text{max}}$; zero-crossing jitter |
+| RW sizing | Torque $\geq 2\times$ disturbance; momentum $\geq$ half-orbit accumulation; check slew time |
+| Magnetorquer physics | $\vec{T} = \vec{m} \times \vec{B}$; torque always perpendicular to $\vec{B}$; cannot point, only detumble/desaturate |
+| MTQ sizing | Desaturation torque must exceed disturbance accumulation rate; dump time < 1 orbit |
+| CMGs vs RWs | CMGs: torque amplification ($T = H \dot{\delta}$), for large/agile S/C; RWs: simpler, cheaper, standard for CubeSats |
+| Pointing budget | RSS of 7 independent sources; alignment knowledge typically dominates; improve the dominant term |
+| Budget-driven design | Investing in the smallest error source has negligible impact on total; focus on the dominant term |
+| Redundancy | 4-wheel (3+1 skew) provides single-fault tolerance; distribution matrix maps wheels to body torques |
+| Momentum management | MTQs dump momentum against Earth's $\vec{B}$-field; ~once per orbit; 5--15 min; imaging inhibited during dump |
 
 ---
 
@@ -4441,6 +5216,9 @@ The MEMS magnetometer payload does not require accurate pointing. In fact, it be
 - [ITU, *Radio Regulations*, 2020 (Articles 5 and 22)](https://www.itu.int/en/publications/ITU-R/pages/default.aspx)
 - [Maral & Bousquet, *Satellite Communications Systems*, 6th ed., 2020, Ch. 5](https://www.wiley.com/en-us/Satellite+Communications+Systems)
 - [Roddy, *Satellite Communications*, 4th ed., 2006, Ch. 4--6](https://www.mhprofessional.com)
+- [Haykin, *Communication Systems*, 5th ed., 2009](https://www.wiley.com)
+- [Sklar, *Digital Communications: Fundamentals and Applications*, 2nd ed., 2001](https://www.pearson.com)
+- [IARU, *Amateur Satellite Frequency Coordination*, 2023](https://www.iaru.org/satellite/)
 
 ---
 
@@ -4451,10 +5229,13 @@ By the end of this session, participants will be able to:
 1. Construct a complete link budget from first principles (in decibels)
 2. Compute free space path loss for any frequency and slant range
 3. Select an appropriate frequency band based on data rate, licensing, and equipment availability
-4. Choose modulation and coding scheme based on required $E_b/N_0$
-5. Size an antenna (gain, beamwidth, mass) for the selected frequency
-6. Determine data throughput and verify the data budget closes
-7. Use SpaceCDF's link budget tool and spectrum selector
+4. Explain the physics of each antenna type and compute antenna gain and beamwidth
+5. Choose modulation and coding scheme based on required $E_b/N_0$ and spectral efficiency
+6. Explain the physical basis for coding gain and why FEC is essential for space links
+7. Size an antenna (gain, beamwidth, mass) for the selected frequency
+8. Determine data throughput and verify the data budget closes
+9. Identify ground station options and compute contact geometry
+10. Use SpaceCDF's link budget tool and spectrum selector
 
 ---
 
@@ -4465,6 +5246,8 @@ By the end of this session, participants will be able to:
 *[Source: SMAD, Ch. 13; ECSS-E-ST-50-05C; Roddy, Ch. 4]*
 
 The link budget is the accounting statement for the communication link. Every gain and every loss from transmitter to receiver is tallied in **decibels (dB)** to determine whether the link "closes" -- meaning the received signal is strong enough to decode with acceptable error rate.
+
+The fundamental question: **does the received signal have enough energy per bit, relative to the noise, to achieve the required bit error rate?** This is quantified by $E_b/N_0$ -- the ratio of energy per information bit to noise spectral density.
 
 ### Link Budget Flow
 
@@ -4512,16 +5295,28 @@ The link budget is the accounting statement for the communication link. Every ga
 
 All link budget terms are in decibels to convert multiplication/division into addition/subtraction:
 
-| Conversion | Formula |
-|-----------|---------|
-| Watts to dBW | $P_{\text{dBW}} = 10 \log_{10}(P_W)$ |
-| dBW to Watts | $P_W = 10^{P_{\text{dBW}}/10}$ |
-| Ratio to dB | $G_{\text{dB}} = 10 \log_{10}(G)$ |
-| Common values | 2 W = +3.0 dBW; 1 W = 0 dBW; 0.5 W = -3.0 dBW |
+| Conversion | Formula | Example |
+|-----------|---------|---------|
+| Watts to dBW | $P_{\text{dBW}} = 10 \log_{10}(P_W)$ | 2 W = +3.0 dBW |
+| Milliwatts to dBm | $P_{\text{dBm}} = 10 \log_{10}(P_{mW})$ | 1 W = +30 dBm |
+| dBW to Watts | $P_W = 10^{P_{\text{dBW}}/10}$ | -3 dBW = 0.5 W |
+| Ratio to dB | $G_{\text{dB}} = 10 \log_{10}(G)$ | Gain of 100 = 20 dB |
+| dBW vs dBm | dBm = dBW + 30 | 0 dBW = 30 dBm |
+
+**Common power values:**
+
+| Power | dBW | dBm |
+|-------|-----|-----|
+| 0.1 W | -10.0 | +20.0 |
+| 0.5 W | -3.0 | +27.0 |
+| 1 W | 0.0 | +30.0 |
+| 2 W | +3.0 | +33.0 |
+| 5 W | +7.0 | +37.0 |
+| 10 W | +10.0 | +40.0 |
 
 ---
 
-## 2. Complete Link Budget Equation (30 min)
+## 2. Complete Link Budget Equation (25 min)
 
 ### Teaching Notes
 
@@ -4530,111 +5325,101 @@ All link budget terms are in decibels to convert multiplication/division into ad
 > **EIRP** (Effective Isotropic Radiated Power):
 > $$\text{EIRP} = P_{TX} + G_{TX} - L_{TX} \quad \text{(dBW)}$$
 >
+> EIRP represents the power that an isotropic antenna would need to radiate to produce the same signal strength in the direction of maximum antenna gain. It combines the transmitter power, antenna gain (directivity), and cable/filter losses.
+>
 > **Free Space Path Loss:**
 > $$\text{FSPL} = 20\log_{10}\left(\frac{4\pi d}{\lambda}\right) = 20\log_{10}\left(\frac{4\pi d f}{c}\right) \quad \text{(dB)}$$
 > where $d$ = slant range (m), $f$ = frequency (Hz), $c = 3 \times 10^8$ m/s.
 >
+> **Physical interpretation:** FSPL is not "energy absorption" -- no energy is lost. It is the geometric spreading of radiated power over a sphere of radius $d$. An isotropic antenna radiates equally in all directions, so the power per unit area at distance $d$ is $P/(4\pi d^2)$. The $\lambda^2$ dependence arises because a receive antenna's effective aperture scales as $A_{\text{eff}} = G\lambda^2/(4\pi)$ -- at higher frequencies the receive antenna "captures" less of the available flux (unless the antenna is physically larger).
+>
 > **Receiver figure of merit:**
 > $$G/T = G_{RX} - 10\log_{10}(T_{sys}) \quad \text{(dB/K)}$$
 >
+> $G/T$ is the single most important parameter of any receive station. It combines the antenna gain (signal capture) with the system noise temperature (noise floor). A high $G/T$ means good sensitivity.
+>
+> **System noise temperature** $T_{sys}$ includes:
+> - Antenna noise temperature $T_A$ (depends on what the antenna "sees": sky ~10--50 K at zenith, ~150--300 K looking at Earth/ground)
+> - Feed/cable losses: $T_{\text{feed}} = T_{\text{physical}} (L-1)$ where $L$ = loss factor
+> - LNA noise temperature: $T_{\text{LNA}} = T_0 (F-1)$ where $F$ = noise figure, $T_0 = 290$ K
+> - Subsequent stages (reduced by LNA gain)
+>
+> Rule of thumb: $T_{sys} \approx 100$--$200$ K for a professional ground station with cryogenic or low-noise LNA; $T_{sys} \approx 400$--$800$ K for an amateur station with COTS LNA.
+>
 > **Carrier-to-noise density ratio:**
 > $$C/N_0 = \text{EIRP} - \text{FSPL} - L_{\text{atm}} - L_{\text{point}} - L_{\text{pol}} + G/T - k \quad \text{(dBHz)}$$
-> where $k = -228.6$ dBW/K/Hz (Boltzmann constant).
+> where $k = -228.6$ dBW/K/Hz (Boltzmann constant: $k = 1.381 \times 10^{-23}$ J/K).
 >
 > **Energy per bit to noise density:**
 > $$E_b/N_0 = C/N_0 - 10\log_{10}(R_b) \quad \text{(dB)}$$
-> where $R_b$ = data rate (bps).
+> where $R_b$ = data rate (bps). This is the fundamental quality metric: each bit needs a certain amount of energy ($E_b$) relative to the noise floor ($N_0$) to be correctly demodulated.
 >
 > **Link margin:**
 > $$\text{Margin} = E_b/N_{0,\text{available}} - E_b/N_{0,\text{required}} - L_{\text{implementation}} \quad \text{(dB)}$$
 >
-> **Requirement:** Margin $\geq$ 3 dB for Phase B+ (per ECSS-E-ST-50-05C).
+> **Requirement:** Margin $\geq$ 3 dB for Phase B+ (per ECSS-E-ST-50-05C). This 3 dB margin covers:
+> - Transmitter power variation (aging, temperature)
+> - Antenna gain uncertainties
+> - Atmospheric scintillation
+> - Pointing error variations
+> - Ground station performance variation
 
 ### Complete Link Budget Table
 
-| Line | Parameter | Formula / Typical Value | Unit |
-|------|-----------|------------------------|------|
-| 1 | TX Power | $P_{TX}$ (e.g., 2 W = +3.0) | dBW |
-| 2 | TX Antenna Gain | $G_{TX}$ (e.g., +6.0 for patch) | dBi |
-| 3 | TX Line Losses | $L_{TX}$ (cables, filters: -1.5) | dB |
-| 4 | **EIRP** | $= P_{TX} + G_{TX} - L_{TX}$ | dBW |
-| 5 | Free Space Path Loss | $\text{FSPL} = 20\log_{10}(4\pi d f/c)$ | dB |
-| 6 | Atmospheric Loss | $L_{\text{atm}}$ (-0.5 typical for S-band) | dB |
-| 7 | Pointing Loss | $L_{\text{point}}$ (-1.0 typical) | dB |
-| 8 | Polarisation Loss | $L_{\text{pol}}$ (-0.3 typical for circular) | dB |
-| 9 | RX Antenna Gain | $G_{RX}$ (e.g., +35 for 3 m dish) | dBi |
-| 10 | System Noise Temp | $T_{sys}$ (e.g., 150 K = 21.8 dBK) | dBK |
-| 11 | **G/T** | $= G_{RX} - 10\log_{10}(T_{sys})$ | dB/K |
-| 12 | Boltzmann Constant | $k = -228.6$ | dBW/K/Hz |
-| 13 | **C/N$_0$** | $= \text{EIRP} - \text{FSPL} + G/T - k - L_{\text{losses}}$ | dBHz |
-| 14 | Data Rate | $10\log_{10}(R_b)$ | dBbps |
-| 15 | **$E_b/N_0$ available** | $= C/N_0 - 10\log_{10}(R_b)$ | dB |
-| 16 | $E_b/N_0$ required | From modulation/coding selection | dB |
-| 17 | Implementation Loss | Typically 2.0 dB | dB |
-| 18 | **LINK MARGIN** | $= E_b/N_{0,\text{avail}} - E_b/N_{0,\text{req}} - L_{\text{impl}}$ | dB |
+| Line | Parameter | Formula / Typical Value | Unit | Physical Meaning |
+|------|-----------|------------------------|------|-----------------|
+| 1 | TX Power | $P_{TX}$ (e.g., 2 W = +3.0) | dBW | RF power from amplifier output |
+| 2 | TX Antenna Gain | $G_{TX}$ (e.g., +6.0 for patch) | dBi | Directivity relative to isotropic |
+| 3 | TX Line Losses | $L_{TX}$ (cables, filters: -1.5) | dB | Ohmic loss in RF cables and connectors |
+| 4 | **EIRP** | $= P_{TX} + G_{TX} - L_{TX}$ | dBW | Effective radiated power |
+| 5 | Free Space Path Loss | $\text{FSPL} = 20\log_{10}(4\pi d f/c)$ | dB | Geometric spreading + aperture effect |
+| 6 | Atmospheric Loss | $L_{\text{atm}}$ (-0.3 to -3.0) | dB | Molecular absorption (O$_2$, H$_2$O) |
+| 7 | Pointing Loss | $L_{\text{point}}$ (-0.5 to -3.0) | dB | Signal reduction from antenna mispointing |
+| 8 | Polarisation Loss | $L_{\text{pol}}$ (-0.1 to -3.0) | dB | Mismatch between TX and RX polarisation |
+| 9 | RX Antenna Gain | $G_{RX}$ (e.g., +35 for 3 m dish) | dBi | Ground antenna directivity |
+| 10 | System Noise Temp | $T_{sys}$ (e.g., 150 K = 21.8 dBK) | dBK | Total noise temperature of receive chain |
+| 11 | **G/T** | $= G_{RX} - 10\log_{10}(T_{sys})$ | dB/K | Receiver figure of merit |
+| 12 | Boltzmann Constant | $k = -228.6$ | dBW/K/Hz | Thermal noise power spectral density |
+| 13 | **C/N$_0$** | $= \text{EIRP} - \text{FSPL} + G/T - k - L_{\text{losses}}$ | dBHz | Signal-to-noise density ratio |
+| 14 | Data Rate | $10\log_{10}(R_b)$ | dBbps | Information throughput |
+| 15 | **$E_b/N_0$ available** | $= C/N_0 - 10\log_{10}(R_b)$ | dB | Available energy per bit |
+| 16 | $E_b/N_0$ required | From modulation/coding selection | dB | Minimum needed for target BER |
+| 17 | Implementation Loss | Typically 1.5--2.5 dB | dB | Real vs ideal demodulator performance |
+| 18 | **LINK MARGIN** | $= E_b/N_{0,\text{avail}} - E_b/N_{0,\text{req}} - L_{\text{impl}}$ | dB | Must be $\geq$ 3 dB |
 
 ---
 
-## 3. Free Space Path Loss by Band (10 min)
+## 3. Antenna Types -- Physics and Selection (15 min)
 
 ### Teaching Notes
 
-FSPL increases with both frequency and distance. At a fixed slant range, higher-frequency bands lose more signal.
+*[Source: SMAD, Ch. 13; Balanis, *Antenna Theory: Analysis and Design*, 4th ed., 2016]*
 
-> **Key Equations -- FSPL (expanded form)**
->
-> $$\text{FSPL (dB)} = 20\log_{10}(4\pi) + 20\log_{10}(d) + 20\log_{10}(f) - 20\log_{10}(c)$$
-> $$= 21.98 + 20\log_{10}(d_m) + 20\log_{10}(f_{Hz}) - 169.54$$
+The antenna converts guided RF energy (in cables/waveguides) into radiated electromagnetic waves (and vice versa for receive). The key performance parameters are:
 
-| Band | Centre Frequency | FSPL at 500 km (nadir) | FSPL at 1300 km (10 deg elev) |
-|------|-----------------|----------------------|-------------------------------|
-| **UHF** | 437 MHz | 148.3 dB | 157.6 dB |
-| **S-band** | 2250 MHz | 162.5 dB | 170.8 dB |
-| **X-band** | 8200 MHz | 173.8 dB | 182.1 dB |
-| **Ka-band** | 26 GHz | 183.8 dB | 192.1 dB |
+- **Gain** ($G$): How much more signal the antenna concentrates in its beam direction compared to an isotropic radiator. Higher gain = narrower beam = more signal but requires more precise pointing.
+- **Beamwidth** ($\theta_{3\text{dB}}$): The angular width of the main beam between the -3 dB (half-power) points.
+- **Polarisation:** Linear (vertical/horizontal), circular (RHCP/LHCP), or elliptical.
 
-**Note:** The 10 deg minimum elevation corresponds to a slant range of approximately 1300 km for a 500 km orbit. All link budgets should be computed at the worst-case (minimum elevation) geometry.
+**Fundamental trade-off:** $G \propto 1/\theta_{3\text{dB}}^2$. A higher-gain antenna has a narrower beam and requires more precise pointing. For a spacecraft without accurate pointing, a low-gain omnidirectional antenna is mandatory. For a spacecraft with 0.1 deg pointing, a high-gain directional antenna is feasible.
 
----
+### Antenna Types for Spacecraft
 
-## 4. Modulation, Coding, and Eb/N0 (15 min)
+| Antenna Type | Gain (dBi) | Beamwidth | Pointing Needed? | Mass (CubeSat) | Physics |
+|-------------|-----------|-----------|-------------------|----------------|---------|
+| **Monopole/Dipole** | 0--2 | ~omnidirectional (toroidal pattern) | No | 5--20 g (deployable wire) | Current distribution on a wire radiates; $\lambda/4$ monopole on ground plane or $\lambda/2$ dipole | 
+| **Turnstile** | 0--3 | Hemispherical | No | 10--30 g | Two crossed dipoles fed 90 deg apart; produces circular polarisation |
+| **Patch (microstrip)** | 5--8 | 60--90 deg | Loose (~10 deg) | 10--50 g | Resonant conducting patch on dielectric substrate over ground plane; $\lambda/2$ patch at resonance |
+| **Patch array (2x2, 4x4)** | 10--18 | 15--40 deg | Moderate (~5 deg) | 50--200 g | Multiple patch elements with corporate feed network; gain = $G_{\text{element}} + 10\log_{10}(N)$ |
+| **Horn** | 15--25 | 10--25 deg | Yes (~2 deg) | 100--500 g | Flared waveguide; smooth aperture illumination gives low side lobes |
+| **Parabolic reflector** | 25--45 | 1--5 deg | Yes (< 1 deg) | 500 g -- 5 kg | Feed at focal point illuminates parabolic dish; $G = \eta_a (\pi D/\lambda)^2$ |
+| **Phased array** | 15--35 | Electronically steered, 1--30 deg | Electronic (no mechanical) | 200 g -- 2 kg | Array of elements with individual phase shifters; beam steered by adjusting relative phases; no moving parts |
 
-### Teaching Notes
+**Monopole/dipole physics:** A quarter-wave monopole ($L = \lambda/4$) is the simplest antenna. At 437 MHz (UHF), $\lambda = 0.686$ m, so a monopole is 17.2 cm long -- easily deployable from a CubeSat using a spring-loaded tape measure or nitinol wire. The radiation pattern is omnidirectional in the azimuthal plane (perpendicular to the wire) and null along the wire axis. Gain is approximately 0--2 dBi depending on the ground plane size.
 
-*[Source: CCSDS 131.0-B-4; DVB-S2 standard; Maral & Bousquet, Ch. 5]*
+**Patch antenna physics:** A microstrip patch antenna consists of a conducting patch (typically rectangular, $L \approx \lambda/2$ at the desired frequency) printed on a dielectric substrate (e.g., Rogers RT/duroid, $\varepsilon_r = 2.2$--$10.2$, thickness 1--3 mm) above a ground plane. The patch resonates at the frequency where its length equals $\lambda_{eff}/2$ (where $\lambda_{eff} = \lambda_0/\sqrt{\varepsilon_r}$). At S-band (2.25 GHz), a patch is approximately 40 x 40 mm -- small enough to mount on a CubeSat face. Gain is typically 5--8 dBi with a hemispherical pattern. Circular polarisation is achieved by feeding two orthogonal modes 90 deg apart (dual-feed or corner-truncated patch).
 
-The choice of modulation scheme and forward error correction (FEC) code determines the required $E_b/N_0$ for a target bit error rate (BER).
-
-| Modulation + Coding | $E_b/N_0$ Required (BER $10^{-6}$) | Spectral Efficiency | Typical Use |
-|--------------------|------------------------------------|---------------------|------------|
-| BPSK uncoded | 10.5 dB | 1.0 bps/Hz | Legacy telecommand |
-| QPSK uncoded | 10.5 dB | 2.0 bps/Hz | Simple telemetry |
-| QPSK + convolutional (r=1/2) | 5.0 dB | 1.0 bps/Hz | Standard CCSDS TM |
-| QPSK + LDPC (r=1/2) | 2.0 dB | 1.0 bps/Hz | High-efficiency downlink |
-| QPSK + LDPC (r=3/4) | 4.0 dB | 1.5 bps/Hz | Balanced performance |
-| 8PSK + LDPC (r=3/4) | 6.5 dB | 2.25 bps/Hz | High-rate downlink |
-| 16APSK + LDPC (r=3/4) | 8.5 dB | 3.0 bps/Hz | Maximum throughput |
-
-**Design guidance:** For CubeSat missions, QPSK + LDPC (r=1/2 or r=3/4) is the most common choice, offering a good balance of coding gain and implementation simplicity.
-
----
-
-## 5. Frequency Band Selection and Licensing (15 min)
-
-### Teaching Notes
-
-*[Source: ITU Radio Regulations, Articles 5 and 22; ISED RSS-SAT; FCC Part 25]*
-
-Band selection is a **design constraint** that affects data rate, antenna size, atmospheric losses, equipment availability, licensing cost, and data policy.
-
-| Band | Frequency | Max BW | Data Rate | Antenna Size | License | Equipment |
-|------|-----------|--------|-----------|-------------|---------|-----------|
-| **UHF (amateur)** | 435--438 MHz | 20 kHz | < 20 kbps | Dipole/monopole | IARU coord (free) | Many COTS |
-| **S-band** | 2200--2290 MHz | 5 MHz | 0.1--10 Mbps | Patch antenna | ISED/FCC ($30--45K) | Many COTS |
-| **X-band** | 8025--8400 MHz | 375 MHz | 10--400 Mbps | Horn/patch array | ISED/FCC + ITU | Growing COTS |
-| **Ka-band** | 25.5--27.0 GHz | 1.5 GHz | 100--2000 Mbps | Small dish/array | Complex ITU | Emerging |
-
-### Antenna Gain and Beamwidth
+**Parabolic reflector physics:** A parabolic dish focuses incoming plane waves to its focal point (for receive) or collimates spherical waves from a feed at the focus into a parallel beam (for transmit). The gain depends on the dish diameter $D$ and the wavelength $\lambda$:
 
 > **Key Equations -- Antenna**
 >
@@ -4643,59 +5428,285 @@ Band selection is a **design constraint** that affects data rate, antenna size, 
 >
 > In dBi: $G_{\text{dBi}} = 10\log_{10}\left[\eta_a \left(\frac{\pi D}{\lambda}\right)^2\right]$
 >
-> where $\eta_a \approx 0.55$--$0.65$ (aperture efficiency), $D$ = antenna diameter (m), $\lambda = c/f$.
+> where $\eta_a \approx 0.55$--$0.65$ (aperture efficiency, accounting for illumination taper, spillover, blockage, and surface errors), $D$ = antenna diameter (m), $\lambda = c/f$.
 >
 > **Half-power beamwidth (HPBW):**
 > $$\theta_{3\text{dB}} \approx \frac{70\lambda}{D} \quad \text{(degrees)}$$
 >
-> **Patch antenna gain** (single element): typically 5--8 dBi
-> **Patch array gain** (N elements): $G_{\text{array}} = G_{\text{element}} + 10\log_{10}(N)$
+> **Patch antenna gain** (single element): typically 5--8 dBi, beamwidth ~60--90 deg
+>
+> **Patch array gain** ($N$ elements): $G_{\text{array}} = G_{\text{element}} + 10\log_{10}(N)$
+>
+> **Pointing loss** (when antenna is mispointed by angle $\Delta\theta$):
+> $$L_{\text{point}} \approx -12 \left(\frac{\Delta\theta}{\theta_{3\text{dB}}}\right)^2 \quad \text{(dB)}$$
+>
+> This shows that a narrower beam (smaller $\theta_{3\text{dB}}$) is more sensitive to pointing errors.
+
+**Worked example -- antenna gain at different bands for a 30 cm dish:**
+
+| Band | Frequency | $\lambda$ (mm) | $D/\lambda$ | Gain (dBi) | HPBW (deg) | Pointing req |
+|------|-----------|----------------|-------------|-----------|-----------|-------------|
+| S-band | 2.25 GHz | 133 | 2.3 | 14.3 | 30 | ~5 deg |
+| X-band | 8.4 GHz | 35.7 | 8.4 | 25.4 | 8.3 | ~1 deg |
+| Ka-band | 26 GHz | 11.5 | 26.1 | 35.2 | 2.7 | ~0.3 deg |
+
+This table illustrates the fundamental link between frequency, antenna size, gain, and pointing requirement. At Ka-band, even a small dish provides high gain -- but the beamwidth is so narrow that sub-degree pointing accuracy is essential. This is why Ka-band CubeSat links require star tracker + reaction wheel AOCS.
+
+**Phased array physics:** A phased array consists of multiple antenna elements (patch, dipole, or slot) arranged in a grid. Each element has an individual phase shifter (and sometimes amplitude control). By adjusting the relative phase between elements, the beam can be electronically steered without moving the antenna. The beam direction $\theta_s$ for element spacing $d$ and phase increment $\Delta\phi$:
+
+$$\sin(\theta_s) = \frac{\Delta\phi \cdot \lambda}{2\pi d}$$
+
+Advantages: no moving parts, fast beam steering (microseconds), multiple simultaneous beams possible. Disadvantages: complex, expensive, high power consumption for active arrays, scan loss at wide angles ($\cos\theta_s$ factor). Phased arrays are used on Starlink satellites (Ka-band), Iridium NEXT (L-band), and are emerging for CubeSats in Ka-band.
+
+---
+
+## 4. Free Space Path Loss by Band (10 min)
+
+### Teaching Notes
+
+FSPL increases with both frequency and distance. At a fixed slant range, higher-frequency bands lose more signal -- but this is offset by the ability to use smaller, higher-gain antennas at higher frequencies.
+
+> **Key Equations -- FSPL (expanded form)**
+>
+> $$\text{FSPL (dB)} = 20\log_{10}(4\pi) + 20\log_{10}(d) + 20\log_{10}(f) - 20\log_{10}(c)$$
+> $$= 21.98 + 20\log_{10}(d_m) + 20\log_{10}(f_{Hz}) - 169.54$$
+>
+> **Practical form (with km and GHz):**
+> $$\text{FSPL (dB)} = 92.45 + 20\log_{10}(d_{km}) + 20\log_{10}(f_{GHz})$$
+
+### Slant Range Geometry
+
+The slant range $d$ from a LEO spacecraft to a ground station depends on the orbit altitude $h$ and the elevation angle $\varepsilon$ above the horizon:
+
+$$d = R_E \left[\sqrt{\left(\frac{R_E + h}{R_E}\right)^2 - \cos^2(\varepsilon)} - \sin(\varepsilon)\right]$$
+
+For typical LEO orbits:
+
+| Altitude | Elevation 90 deg (nadir) | Elevation 30 deg | Elevation 10 deg | Elevation 5 deg |
+|----------|------------------------|-------------------|-------------------|-------------------|
+| 400 km | 400 km | 723 km | 1150 km | 1500 km |
+| 500 km | 500 km | 875 km | 1300 km | 1650 km |
+| 600 km | 600 km | 1020 km | 1460 km | 1820 km |
+
+**Design rule:** Always compute the link budget at the **minimum elevation angle** (worst case), typically 5--10 deg. Below 5 deg, atmospheric losses increase sharply, ground clutter enters the antenna sidelobes, and the link is generally unusable.
+
+### FSPL by Band and Geometry
+
+| Band | Centre Frequency | FSPL at 500 km (nadir) | FSPL at 1300 km (10 deg elev) | Difference |
+|------|-----------------|----------------------|-------------------------------|------------|
+| **VHF** | 146 MHz | 139.0 dB | 147.3 dB | 8.3 dB |
+| **UHF** | 437 MHz | 148.3 dB | 157.6 dB | 9.3 dB |
+| **S-band** | 2250 MHz | 162.5 dB | 170.8 dB | 8.3 dB |
+| **X-band** | 8200 MHz | 173.8 dB | 182.1 dB | 8.3 dB |
+| **Ka-band** | 26 GHz | 183.8 dB | 192.1 dB | 8.3 dB |
+
+**The elevation angle penalty:** Going from nadir to 10 deg elevation increases FSPL by ~8 dB (distance increases by ~2.6x; FSPL scales as $20\log_{10}(2.6) = 8.3$ dB). This is a significant loss and is why contact time at high elevations is much more valuable than contact time at low elevations.
+
+---
+
+## 5. Frequency Band Selection and Licensing (15 min)
+
+### Teaching Notes
+
+*[Source: ITU Radio Regulations, Articles 5 and 22; ISED RSS-SAT; FCC Part 25; IARU Satellite Frequency Coordination]*
+
+Band selection is a **design constraint** that affects data rate, antenna size, atmospheric losses, equipment availability, licensing cost, and data policy. The choice of band is one of the earliest and most consequential decisions in mission design.
+
+### Band Comparison Table
+
+| Band | Frequency Range | Allocation | Max BW | Practical Data Rate | Atmospheric Loss (10 deg) | Rain Fade | Licensing | Equipment Availability |
+|------|----------------|-----------|--------|--------------------|--------------------------|-----------|-----------|-----------------------|
+| **VHF** | 144--146 MHz | Amateur | 15 kHz | < 9.6 kbps | 0.1 dB | None | IARU coord (free, 3--6 mo) | Many COTS, low cost |
+| **UHF** | 435--438 MHz | Amateur | 20 kHz | < 19.2 kbps | 0.2 dB | Negligible | IARU coord (free, 3--6 mo) | Many COTS, low cost |
+| **S-band** | 2200--2290 MHz | Space research/EES | 5 MHz | 0.1--10 Mbps | 0.5 dB | < 0.5 dB | ISED/FCC ($30--45K, 6--12 mo) | Many COTS |
+| **X-band** | 8025--8400 MHz | EES | 375 MHz | 10--400 Mbps | 1.0 dB | 1--3 dB | ISED/FCC + ITU ($50--80K, 12+ mo) | Growing COTS |
+| **Ka-band** | 25.5--27.0 GHz | EES/FSS | 1.5 GHz | 100--2000+ Mbps | 2--5 dB | 3--15 dB (location-dependent) | Complex ITU ($100K+, 18+ mo) | Emerging COTS |
+
+*EES = Earth Exploration Satellite; FSS = Fixed Satellite Service*
+
+**Atmospheric attenuation physics:** The atmosphere absorbs and scatters RF energy. Molecular oxygen has a strong absorption line at 60 GHz (used for inter-satellite links where atmospheric penetration is not needed). Water vapour absorbs at 22.2 GHz (near Ka-band). At S-band and below, atmospheric losses are minimal (< 1 dB). At Ka-band, losses of 2--5 dB are typical at 10 deg elevation, and rain fade can add 3--15 dB in tropical regions.
+
+**Rain fade:** Raindrops scatter and absorb RF energy. The effect scales approximately as $f^2$ -- negligible below 4 GHz, significant above 10 GHz, and severe above 20 GHz. Rain fade is characterised by the rain rate (mm/hr) and the path length through rain. In tropical regions, rain rates of 50+ mm/hr can cause 10+ dB additional loss at Ka-band. Mitigation: adaptive data rate (reduce rate during rain), site diversity (multiple ground stations), power control (increase TX power during fade). For Ka-band links, a rain fade margin of 5--10 dB is typically included.
+
+**Amateur band regulations (IARU):**
+- Non-commercial, educational, and experimental use only
+- Open data policy: all transmissions must be unencrypted and the protocol must be published
+- No commercial data or imagery downlink
+- Coordination through IARU (International Amateur Radio Union): free but takes 3--6 months
+- Very popular for university CubeSats (low cost, no license fees, large amateur community provides free ground station support via SatNOGS network)
+
+**Commercial band licensing:**
+- Requires national filing (FCC in US, ISED in Canada, Ofcom in UK, CNES/ANFR in France) + ITU coordination for frequencies above 1 GHz
+- Costs: $30--45K for S-band (typical), $50--80K for X-band, $100K+ for Ka-band
+- Timeline: 6--12 months for S-band, 12--18 months for X-band, 18+ months for Ka-band
+- Commercial data can be encrypted and proprietary
+- Bandwidth allocation may be limited by the national authority
 
 ### Band Selection Decision Tree
 
 ```
 Required data rate?
-  <= 20 kbps AND non-commercial data -> UHF amateur (IARU, free, 6 mo)
-  <= 10 Mbps                         -> S-band commercial (ISED/FCC, $30-45K, 6-12 mo)
-  <= 400 Mbps                        -> X-band (ISED/FCC + ITU, higher cost, 12+ mo)
-  > 400 Mbps                         -> Ka-band (complex ITU, rain fade, emerging)
+  <= 9.6 kbps AND non-commercial/educational -> VHF/UHF amateur (IARU, free, 3-6 mo)
+  <= 10 Mbps                                 -> S-band commercial (ISED/FCC, $30-45K, 6-12 mo)
+  <= 400 Mbps                                -> X-band (ISED/FCC + ITU, $50-80K, 12+ mo)
+  > 400 Mbps                                 -> Ka-band (complex ITU, $100K+, 18+ mo, rain fade)
 ```
 
 ---
 
-## 6. Worked Example: Complete Link Budget (15 min)
+## 6. Modulation and Coding -- Physics and Selection (20 min)
 
-> **Worked Example -- S-band Downlink for 3U EO CubeSat**
+### Teaching Notes
+
+*[Source: CCSDS 131.0-B-4; Sklar, Ch. 7--8; Haykin, Ch. 10; DVB-S2 standard]*
+
+### Modulation -- How Information Becomes RF
+
+Modulation encodes digital data onto an RF carrier by varying the carrier's amplitude, frequency, or phase.
+
+**Phase Shift Keying (PSK):** The most common modulation family for space communications. The carrier phase is shifted by discrete amounts to represent different bit patterns:
+
+- **BPSK (Binary PSK):** 2 phase states (0 deg and 180 deg). Each symbol carries 1 bit. Spectral efficiency: 1 bps/Hz. Most robust to noise.
+- **QPSK (Quadrature PSK):** 4 phase states (0, 90, 180, 270 deg). Each symbol carries 2 bits. Spectral efficiency: 2 bps/Hz. Requires the same $E_b/N_0$ as BPSK but doubles the data rate for the same bandwidth. **The standard choice for most space links.**
+- **8PSK:** 8 phase states, 3 bits/symbol, spectral efficiency 3 bps/Hz. Requires ~3.5 dB more $E_b/N_0$ than QPSK for the same BER.
+- **16APSK:** 16 states (amplitude + phase), 4 bits/symbol, spectral efficiency 4 bps/Hz. Requires ~7 dB more $E_b/N_0$ than QPSK.
+
+**Frequency Shift Keying (FSK):** The carrier frequency is shifted between discrete values. Less spectrally efficient than PSK but more tolerant of amplifier nonlinearity. Variants:
+- **FSK:** Simple frequency switching. 
+- **GFSK (Gaussian FSK):** Gaussian filter smooths frequency transitions, reducing spectral spreading. Used by many CubeSat UHF radios (AX.25 protocol at 9600 bps).
+- **MSK (Minimum Shift Keying):** A special case of FSK with minimum frequency deviation that still allows coherent detection. Constant envelope (important for nonlinear amplifiers). Spectral efficiency ~1 bps/Hz.
+
+**Why QPSK is preferred over BPSK for space links:** QPSK transmits 2 bits per symbol while requiring the same energy per bit as BPSK. This means QPSK achieves twice the data rate for the same bandwidth and the same $E_b/N_0$ performance. The only additional complexity is that the receiver must resolve 4 phase states instead of 2, which is trivial for modern digital receivers.
+
+### Forward Error Correction (FEC) -- Coding Gain
+
+FEC adds redundant bits to the data stream before transmission. The receiver uses these redundant bits to detect and correct bit errors without retransmission. The improvement in $E_b/N_0$ requirement (compared to uncoded) is called the **coding gain**.
+
+**Why coding is essential for space links:** Space links operate at very low received signal power (femtowatts to picowatts). Without coding, the required $E_b/N_0$ for BER $10^{-6}$ is 10.5 dB. With LDPC coding, this drops to 2.0 dB -- a coding gain of 8.5 dB. This is equivalent to either: increasing the TX power by 7x, or increasing the antenna diameter by 2.7x, or reducing the data rate by 7x. Coding achieves the same benefit at the cost of only a few watts of digital processing power.
+
+**Code types used in space communications:**
+
+| Code Type | Code Rate | Coding Gain at BER $10^{-6}$ | Decoding Complexity | Standard | Use |
+|-----------|-----------|-------------------------------|---------------------|----------|-----|
+| **Convolutional** (K=7) | 1/2 | ~5.5 dB | Low (Viterbi decoder, hardware) | CCSDS | Legacy telecommand, AX.25 |
+| **Convolutional + RS** (concatenated) | ~0.44 | ~7.5 dB | Medium | CCSDS | Standard CCSDS telemetry (many heritage missions) |
+| **Turbo code** | 1/2 to 1/6 | ~8--10 dB | High (iterative decoder) | CCSDS | Deep space links (Mars, Jupiter) |
+| **LDPC** (Low-Density Parity Check) | 1/2 | ~8.5 dB | Medium-High (iterative BP decoder) | CCSDS, DVB-S2 | Modern space downlinks, **recommended for CubeSats** |
+| **LDPC** | 3/4 | ~6.5 dB | Medium-High | CCSDS, DVB-S2 | Balanced performance and throughput |
+| **LDPC** | 7/8 | ~5.0 dB | Medium-High | DVB-S2 | Maximum throughput, strong signal |
+
+*[Source: CCSDS 131.0-B-4; DVB-S2 ETSI EN 302 307]*
+
+**Code rate $r$:** The ratio of information bits to total transmitted bits. A rate-1/2 code transmits 1 information bit for every 2 transmitted bits (50% overhead). This means the channel data rate must be $R_{\text{channel}} = R_{\text{info}} / r$ -- a rate-1/2 code requires twice the channel bandwidth for a given information rate.
+
+### Complete Modulation + Coding Table
+
+| Modulation + Coding | $E_b/N_0$ Required (BER $10^{-6}$) | Spectral Efficiency (bps/Hz) | Typical Use | Implementation |
+|--------------------|------------------------------------|-------------------------------|------------|----------------|
+| GMSK uncoded | 10.5 dB | ~1.0 | AX.25 amateur, legacy | Simple radio IC |
+| BPSK uncoded | 10.5 dB | 1.0 | Legacy telecommand | Simple |
+| QPSK uncoded | 10.5 dB | 2.0 | Simple telemetry | Moderate |
+| QPSK + conv (r=1/2, K=7) | 5.0 dB | 1.0 | Standard CCSDS TM | Hardware Viterbi |
+| QPSK + conv + RS (concat) | 3.0 dB | 0.88 | Heritage CCSDS | Hardware |
+| QPSK + LDPC (r=1/2) | 2.0 dB | 1.0 | High-efficiency downlink | FPGA-based |
+| QPSK + LDPC (r=3/4) | 4.0 dB | 1.5 | **Balanced -- recommended** | FPGA-based |
+| QPSK + LDPC (r=7/8) | 5.5 dB | 1.75 | Bandwidth-limited | FPGA-based |
+| 8PSK + LDPC (r=3/4) | 6.5 dB | 2.25 | High-rate downlink | FPGA-based |
+| 16APSK + LDPC (r=3/4) | 8.5 dB | 3.0 | Maximum throughput | FPGA-based |
+
+**Design guidance for CubeSats:** 
+- **UHF amateur:** GMSK or AFSK (AX.25 protocol) at 1.2--9.6 kbps channel rate. Add convolutional coding if link margin is tight.
+- **S-band:** QPSK + LDPC (r=1/2 or r=3/4). This is the sweet spot: 5.5--8.5 dB coding gain with manageable complexity. Most COTS S-band CubeSat transmitters (Endurosat, NanoAvionics, AAC Clyde) support DVB-S2 or CCSDS LDPC natively.
+- **X-band / Ka-band:** 8PSK or 16APSK + LDPC for maximum spectral efficiency when bandwidth is limited.
+
+---
+
+## 7. Ground Stations (10 min)
+
+### Teaching Notes
+
+The ground station is half of the communication link. Its performance ($G/T$) directly determines the achievable data rate. Upgrading the ground station is often the cheapest way to improve link performance (compared to upgrading the spacecraft transmitter or antenna).
+
+### Ground Station Types
+
+| Type | Antenna | G/T (S-band) | Cost | Availability | Examples |
+|------|---------|-------------|------|-------------|---------|
+| **Amateur (SatNOGS)** | 10--15 dBi Yagi | -15 to -10 dB/K | Free (volunteer-operated) | Global network, 200+ stations | SatNOGS network |
+| **University** | 2--3 m dish | +10 to +15 dB/K | $50--200K (build) | Limited availability | Many universities have S-band stations |
+| **Commercial (small)** | 3--5 m dish | +15 to +25 dB/K | $500/pass or $5--20K/month | KSAT Lite, AWS Ground Station | KSAT, Amazon, Leaf Space |
+| **Commercial (large)** | 5--13 m dish | +25 to +35 dB/K | $1000/pass or $20--50K/month | SSC, KSAT, ATLAS | SSC (Esrange), KSAT (Svalbard), ATLAS (Fairbanks) |
+| **Deep Space Network** | 34--70 m dish | +45 to +60 dB/K | NASA-funded only | DSN (3 sites globally) | Goldstone, Canberra, Madrid |
+
+*[Source: KSAT Lite pricing 2024; AWS Ground Station pricing; SSC SmallSat ground segment]*
+
+**Contact geometry and pass duration:**
+
+A LEO satellite is in view of a ground station for a limited time per orbit. The pass duration depends on the orbit altitude and the maximum elevation angle:
+
+$$t_{\text{pass}} \approx \frac{2}{n} \arccos\left(\frac{\cos(\varepsilon_{\text{max}})}{\cos(\varepsilon_{\text{min}})}\right)$$
+
+For a simplified estimate:
+
+| Altitude | Min Elevation | Max Pass Duration | Typical Usable Duration | Passes/Day (mid-latitude) |
+|----------|--------------|-------------------|------------------------|--------------------------|
+| 400 km | 10 deg | ~7 min | ~5 min | 3--4 |
+| 500 km | 10 deg | ~8 min | ~6 min | 4--5 |
+| 600 km | 10 deg | ~9 min | ~7 min | 4--5 |
+| 800 km | 10 deg | ~11 min | ~9 min | 5--6 |
+
+The "usable duration" is shorter than the total pass because the link only closes above the minimum elevation angle, and the first/last 30--60 seconds are used for signal acquisition and link setup.
+
+**Ground station selection criteria:**
+- **Location:** Polar stations (Svalbard at 78 degN, McMurdo at 78 degS) see every orbit of a polar/SSO satellite, providing 12+ contacts per day. Mid-latitude stations see only 3--5 passes. Equatorial stations see even fewer passes of polar satellites.
+- **G/T:** Determines the achievable data rate. A 3 dB improvement in G/T allows doubling the data rate.
+- **Licensing:** Must be compatible with the spacecraft frequency allocation
+- **Cost:** Ranges from free (SatNOGS, university) to $1000+/pass (commercial)
+- **Reliability:** SLA (service-level agreement) for commercial stations; university stations may have limited operator availability
+
+**EIRP (ground station transmit, for uplink):** For telecommand uplink, the ground station transmits to the spacecraft. Ground station EIRP is typically 40--60 dBW for commercial stations, sufficient for robust command links even with low-gain spacecraft receive antennas.
+
+---
+
+## 8. Worked Examples: Complete Link Budgets (15 min)
+
+### 3U EO CubeSat -- S-band Downlink
+
+> **Worked Example -- S-band Downlink for 3U EO CubeSat (SuperDove-class)**
 >
-> **Scenario:** 500 km SSO, S-band (2250 MHz), 1 Mbps downlink, 10 deg minimum elevation, 3 m ground station dish.
+> **Scenario:** 500 km SSO, S-band (2250 MHz), 1 Mbps downlink, 10 deg minimum elevation (slant range 1300 km), 3 m ground station dish ($T_{sys} = 150$ K, $G_{RX} = 35$ dBi at S-band).
 >
-> | Line | Parameter | Value | Unit |
-> |------|-----------|-------|------|
-> | 1 | TX Power (2 W) | +3.0 | dBW |
-> | 2 | TX Antenna Gain (patch) | +6.0 | dBi |
-> | 3 | TX Line Losses | -1.5 | dB |
-> | 4 | **EIRP** | **+7.5** | dBW |
-> | 5 | FSPL (2250 MHz, 1300 km slant) | -170.8 | dB |
-> | 6 | Atmospheric Loss | -0.5 | dB |
-> | 7 | Pointing Loss | -1.0 | dB |
-> | 8 | Polarisation Loss | -0.3 | dB |
-> | 9 | RX Antenna Gain (3 m dish) | +35.0 | dBi |
-> | 10 | System Noise Temp (150 K) | 21.8 | dBK |
-> | 11 | **G/T** | **+13.2** | dB/K |
-> | 12 | Boltzmann Constant | +228.6 | dBW/K/Hz |
-> | 13 | **C/N$_0$** = 7.5 - 170.8 - 0.5 - 1.0 - 0.3 + 13.2 + 228.6 | **+76.7** | dBHz |
-> | 14 | Data Rate (1 Mbps = $10\log_{10}(10^6)$) | 60.0 | dBbps |
-> | 15 | **$E_b/N_0$ available** = 76.7 - 60.0 | **+16.7** | dB |
-> | 16 | $E_b/N_0$ required (QPSK + LDPC r=3/4) | 4.0 | dB |
-> | 17 | Implementation Loss | 2.0 | dB |
-> | 18 | **LINK MARGIN** = 16.7 - 4.0 - 2.0 | **+10.7** | dB |
+> | Line | Parameter | Value | Unit | Calculation/Source |
+> |------|-----------|-------|------|--------------------|
+> | 1 | TX Power (2 W) | +3.0 | dBW | COTS S-band TX (Endurosat) |
+> | 2 | TX Antenna Gain (patch) | +6.0 | dBi | Single-element S-band patch |
+> | 3 | TX Line Losses | -1.5 | dB | 15 cm cable + connector |
+> | 4 | **EIRP** | **+7.5** | dBW | $3.0 + 6.0 - 1.5$ |
+> | 5 | FSPL (2250 MHz, 1300 km) | -170.8 | dB | $92.45 + 20\log_{10}(1300) + 20\log_{10}(2.25)$ |
+> | 6 | Atmospheric Loss | -0.5 | dB | S-band, 10 deg elevation |
+> | 7 | Pointing Loss | -1.0 | dB | 5 deg mispoint, 80 deg beamwidth patch |
+> | 8 | Polarisation Loss (RHCP-RHCP) | -0.3 | dB | Minor axial ratio mismatch |
+> | 9 | RX Antenna Gain (3 m dish) | +35.0 | dBi | $10\log_{10}(0.6 \times (\pi \times 3.0 / 0.133)^2)$ |
+> | 10 | System Noise Temp (150 K) | 21.8 | dBK | Professional LNA + sky temp |
+> | 11 | **G/T** | **+13.2** | dB/K | $35.0 - 21.8$ |
+> | 12 | Boltzmann Constant | +228.6 | dBW/K/Hz | $-k$ in link equation |
+> | 13 | **C/N$_0$** | **+76.7** | dBHz | $7.5 - 170.8 - 0.5 - 1.0 - 0.3 + 13.2 + 228.6$ |
+> | 14 | Data Rate (1 Mbps) | 60.0 | dBbps | $10\log_{10}(10^6)$ |
+> | 15 | **$E_b/N_0$ available** | **+16.7** | dB | $76.7 - 60.0$ |
+> | 16 | $E_b/N_0$ required (QPSK + LDPC r=3/4) | 4.0 | dB | From modulation/coding table |
+> | 17 | Implementation Loss | 2.0 | dB | Real demodulator vs ideal |
+> | 18 | **LINK MARGIN** | **+10.7** | dB | $16.7 - 4.0 - 2.0$ |
 >
 > **Result:** Link closes with 10.7 dB margin (requirement: >= 3 dB). **Pass.**
 >
 > **Design insight:** The generous 10.7 dB margin suggests the link is over-designed for 1 Mbps. The team could increase the data rate:
-> $R_{b,\text{max}} = 10^{(16.7 - 4.0 - 2.0 - 3.0)/10} \times 10^6 = 10^{0.77} \times 10^6 \approx$ **5.9 Mbps** at minimum 3 dB margin.
-
----
+>
+> Maximum data rate at 3 dB margin:
+> $E_b/N_0 \text{ available at max rate} = 4.0 + 2.0 + 3.0 = 9.0$ dB
+>
+> $C/N_0 = 76.7$ dBHz, so $R_{b,\text{max}} = 10^{(76.7 - 9.0)/10} = 10^{6.77} \approx$ **5.9 Mbps** at 3 dB margin.
+>
+> Alternatively, at 5 Mbps ($10\log_{10}(5 \times 10^6) = 67.0$ dBbps):
+> $E_b/N_0 = 76.7 - 67.0 = 9.7$ dB. Margin = $9.7 - 4.0 - 2.0 = 3.7$ dB. **Pass** (barely).
 
 ### 1U Worked Example: UniSat-1
 
@@ -4705,45 +5716,47 @@ UniSat-1 uses the UHF amateur band at 437 MHz with a ground station equipped wit
 
 > **Worked Example -- UHF Downlink Link Budget for UniSat-1**
 >
-> **Scenario:** 400 km orbit, UHF (437 MHz), 9600 bps downlink, 10 deg minimum elevation angle, amateur ground station with 10 dBi Yagi antenna.
+> **Scenario:** 400 km orbit, UHF (437 MHz), 9600 bps downlink (GMSK), 10 deg minimum elevation angle, amateur ground station with 10 dBi Yagi antenna, $T_{sys} = 600$ K (COTS LNA, coax cable losses, sky noise near horizon).
 >
 > **Slant range at 10 deg elevation:**
 > From 400 km altitude, the worst-case slant range at 10 deg elevation is approximately 1150 km.
 >
-> | Line | Parameter | Value | Unit |
-> |------|-----------|-------|------|
-> | 1 | TX Power (0.5 W) | -3.0 | dBW |
-> | 2 | TX Antenna Gain (monopole, ~0 dBi) | 0.0 | dBi |
-> | 3 | TX Line Losses | -0.5 | dB |
-> | 4 | **EIRP** | **-3.5** | dBW |
-> | 5 | FSPL (437 MHz, 1150 km slant) | -155.5 | dB |
-> | 6 | Atmospheric Loss | -0.3 | dB |
-> | 7 | Pointing Loss (omni antenna -- minimal) | -0.5 | dB |
-> | 8 | Polarisation Loss (linear to linear, worst case) | -3.0 | dB |
-> | 9 | RX Antenna Gain (10 dBi Yagi) | +10.0 | dBi |
-> | 10 | System Noise Temp (600 K -- amateur station with LNA) | 27.8 | dBK |
-> | 11 | **G/T** | **-17.8** | dB/K |
-> | 12 | Boltzmann Constant | +228.6 | dBW/K/Hz |
-> | 13 | **C/N$_0$** = -3.5 - 155.5 - 0.3 - 0.5 - 3.0 + (-17.8) + 228.6 | **+48.0** | dBHz |
-> | 14 | Data Rate (9600 bps = $10\log_{10}(9600)$) | 39.8 | dBbps |
-> | 15 | **$E_b/N_0$ available** = 48.0 - 39.8 | **+8.2** | dB |
-> | 16 | $E_b/N_0$ required (GMSK uncoded, BER $10^{-5}$) | 10.5 | dB |
-> | 17 | Implementation Loss | -2.0 | dB |
+> | Line | Parameter | Value | Unit | Notes |
+> |------|-----------|-------|------|-------|
+> | 1 | TX Power (0.5 W) | -3.0 | dBW | Standard CubeSat UHF radio |
+> | 2 | TX Antenna Gain (monopole) | 0.0 | dBi | Quarter-wave monopole, ~omnidirectional |
+> | 3 | TX Line Losses | -0.5 | dB | Short cable to antenna |
+> | 4 | **EIRP** | **-3.5** | dBW | Low EIRP is the fundamental UHF challenge |
+> | 5 | FSPL (437 MHz, 1150 km) | -155.5 | dB | Lower than S-band (good) |
+> | 6 | Atmospheric Loss | -0.3 | dB | UHF atmospheric loss is minimal |
+> | 7 | Pointing Loss (omni antenna) | -0.5 | dB | Omni pattern -- negligible |
+> | 8 | Polarisation Loss (linear-linear) | -3.0 | dB | **Major loss** -- Faraday rotation in ionosphere rotates polarisation randomly |
+> | 9 | RX Antenna Gain (10 dBi Yagi) | +10.0 | dBi | 5-element Yagi, manually tracked |
+> | 10 | System Noise Temp (600 K) | 27.8 | dBK | Amateur station: warm LNA + cable loss |
+> | 11 | **G/T** | **-17.8** | dB/K | Low G/T is the ground station limitation |
+> | 12 | Boltzmann Constant | +228.6 | dBW/K/Hz | |
+> | 13 | **C/N$_0$** | **+48.0** | dBHz | |
+> | 14 | Data Rate (9600 bps) | 39.8 | dBbps | |
+> | 15 | **$E_b/N_0$ available** | **+8.2** | dB | |
+> | 16 | $E_b/N_0$ required (GMSK uncoded) | 10.5 | dB | |
+> | 17 | Implementation Loss | -2.0 | dB | |
 >
-> **Wait -- that gives a negative margin!** $8.2 - 10.5 - 2.0 = -4.3$ dB. The link does NOT close with uncoded GMSK.
+> **Margin = 8.2 - 10.5 - 2.0 = -4.3 dB. The link does NOT close!**
 >
-> **Fix: Add forward error correction (FEC).** Using convolutional coding (r=1/2):
-> - $E_b/N_0$ required drops to **5.0 dB** (from 10.5 dB uncoded)
-> - Effective data rate halves to 4800 bps useful throughput (9600 bps channel rate)
-> - **Margin** = 8.2 - 5.0 - 2.0 = **+1.2 dB** -- still marginal.
+> **Fix 1: Add FEC.** Convolutional coding (r=1/2, K=7):
+> - $E_b/N_0$ required drops to **5.0 dB** (5.5 dB coding gain)
+> - Channel rate remains 9600 bps, but useful throughput is 4800 bps (half is redundancy)
+> - **Margin** = 8.2 - 5.0 - 2.0 = **+1.2 dB** -- still below 3 dB requirement.
 >
-> **Further fix: Upgrade ground antenna to a cross-Yagi (13 dBi) with circular polarisation:**
-> - RX gain: +13.0 dBi (was +10.0)
-> - Polarisation loss: -0.5 dB (was -3.0 dB, now RHCP-to-RHCP)
-> - Net improvement: +3.0 + 2.5 = **+5.5 dB**
+> **Fix 2: Upgrade ground antenna to cross-Yagi (13 dBi) with circular polarisation:**
+> - RX gain: +13.0 dBi (was +10.0) -> +3.0 dB improvement
+> - Polarisation loss: -0.5 dB (was -3.0 dB, now RHCP-to-RHCP) -> +2.5 dB improvement
+> - Net improvement: +5.5 dB
 > - New C/N$_0$: 53.5 dBHz
 > - New $E_b/N_0$ available: 53.5 - 39.8 = 13.7 dB
 > - **Margin** = 13.7 - 5.0 - 2.0 = **+6.7 dB** -- **Pass** (> 3 dB).
+>
+> **Polarisation loss physics:** At UHF (437 MHz), the ionosphere causes Faraday rotation of linearly polarised signals. The rotation angle depends on the total electron content (TEC) along the path and varies with time of day, solar activity, and signal path. If the satellite transmits linear polarisation and the ground station receives with linear polarisation, the polarisation planes may be orthogonal at times, causing up to complete signal loss (theoretically infinite loss, practically 20+ dB fades). Using circular polarisation on at least one end (preferably both) eliminates Faraday rotation loss, reducing it to ~0.3--0.5 dB axial ratio mismatch. **This is why circular polarisation is mandatory for reliable UHF satellite links.**
 >
 > **Final link budget summary (with FEC + cross-Yagi):**
 >
@@ -4757,18 +5770,22 @@ UniSat-1 uses the UHF amateur band at 437 MHz with a ground station equipped wit
 > | Ground antenna | 13 dBi cross-Yagi, RHCP |
 > | Link margin | **+6.7 dB** |
 
-**Key lesson from UniSat-1 link budget:** UHF links are power-starved compared to S-band or X-band. The lower FSPL at 437 MHz does not compensate for the low TX power (0.5 W vs 2 W), low antenna gain (0 dBi vs 6 dBi), and higher system noise temperature of amateur stations. FEC coding and a reasonable ground antenna are essential for closing a UHF CubeSat link.
-
-**Data throughput:** At 4800 bps useful throughput, a 7-minute pass delivers:
+**Data throughput for UniSat-1:** At 4800 bps useful throughput, a 7-minute pass delivers:
 $V_{\text{pass}} = 4800 \times 420 \times 0.85 = 1.71$ Mbit $= 214$ kB per pass.
 
-With 4 passes/day: $V_{\text{daily}} = 856$ kB/day $\approx$ **0.84 MB/day**. The magnetometer generates < 1 kbps $\times$ 600 s/orbit $\times$ 15 orbits = 9 Mbit/day = 1.13 MB/day. This is marginal -- the team may need to prioritise data or add a second ground station.
+The 0.85 factor accounts for protocol overhead (packet headers, acknowledgements, retransmissions, link setup time).
+
+With 4 passes/day: $V_{\text{daily}} = 856$ kB/day $\approx$ **0.84 MB/day**. The magnetometer generates $< 1$ kbps $\times$ 600 s/orbit $\times$ 15 orbits $= 9$ Mbit/day $= 1.13$ MB/day. This is **marginal** -- the team may need to prioritise data or add a second ground station. Using the SatNOGS network (200+ volunteer stations worldwide) could provide 10+ additional contacts per day at no cost.
+
+**Key lesson from UniSat-1 link budget:** UHF links are power-starved compared to S-band or X-band. The lower FSPL at 437 MHz (~15 dB less than S-band) does not compensate for the low TX power (0.5 W vs 2 W = 6 dB less), low antenna gain (0 dBi vs 6 dBi = 6 dB less), and higher system noise temperature of amateur stations (600 K vs 150 K = 6 dB worse). FEC coding and circular polarisation are essential for closing a UHF CubeSat link.
 
 ---
 
-## 7. Data Budget (10 min)
+## 9. Data Budget (10 min)
 
 ### Teaching Notes
+
+The data budget determines whether the communication system can deliver all mission data to the ground. Even if the link budget closes, the mission fails if the total data volume exceeds the downlink capacity.
 
 > **Key Equations -- Data Budget**
 >
@@ -4778,22 +5795,40 @@ With 4 passes/day: $V_{\text{daily}} = 856$ kB/day $\approx$ **0.84 MB/day**. Th
 > **Daily downlink capacity:**
 > $$V_{\text{DL}} = R_{\text{downlink}} \times t_{\text{contact}} \times N_{\text{passes}} \times \eta_{\text{protocol}}$$
 >
+> where $\eta_{\text{protocol}} = 0.80$--$0.90$ accounts for packet overhead, retransmissions, link setup time, and handshaking.
+>
 > **Data budget closure:**
 > $$V_{\text{DL}} \geq V_{\text{gen}} \quad \text{(data budget closes)}$$
+>
+> **Backlog clearance time:** If $V_{\text{DL}} < V_{\text{gen}}$ per day, data accumulates in onboard storage. The backlog clearance time is:
+> $$t_{\text{clear}} = \frac{V_{\text{stored}}}{V_{\text{DL}} - V_{\text{gen}}}$$
+> If $V_{\text{DL}} < V_{\text{gen}}$, the backlog grows forever -- the mission cannot sustain its data generation rate.
 
 > **Worked Example -- Data Budget for 3U EO CubeSat**
 >
-> **Generation:** 240 Mbps raw x 5 min/orbit x 15 orbits/day x 0.25 (4:1 compression) = **4.5 GB/day**
+> **Generation:** 240 Mbps raw imaging data x 5 min/orbit x 15 orbits/day x 0.25 (4:1 JPEG2000 compression)
+> = 240 x 300 x 15 x 0.25 = 270,000 Mbit/day = **33.75 GB/day**
 >
-> **Downlink:** 5 Mbps effective x 7 min/pass x 5 passes/day x 0.85 (protocol overhead) = **1.49 GB/day**
+> Wait -- that's extremely high. Let's be more realistic about imaging time. Not every orbit has a target. Assume 4 imaging passes per day, 5 minutes each:
 >
-> **Result:** 1.49 GB/day < 4.5 GB/day. **Data budget does NOT close.**
+> $V_{\text{gen}} = 240 \times 10^6 \times 300 \times 4 \times 0.25 = 72,000$ Mbit $= 9.0$ GB/day
 >
-> **Options:** (a) reduce imaging duty cycle, (b) increase data rate (X-band), (c) add ground stations, (d) increase compression ratio.
+> Still high. Planet SuperDove images approximately 1--2 minutes per orbit over priority targets, compresses heavily (10:1+), and downlinks selectively.
+>
+> **Revised:** 240 Mbps x 1 min/pass x 4 passes/day x 0.10 (10:1 compression) = 240 x 60 x 4 x 0.10 = 5,760 Mbit = **720 MB/day**
+>
+> **Downlink (S-band at 5 Mbps):** 5 Mbps x 6 min/pass x 5 passes/day x 0.85 = 153 Mbit/pass x 5 = 765 Mbit = **95.6 MB/day x 5 = 478 MB/day**
+>
+> Hmm, let's recompute carefully:
+> $V_{\text{DL}} = 5 \times 10^6 \times 360 \times 5 \times 0.85 = 7,650$ Mbit $= 956$ MB/day
+>
+> **Result:** 956 MB/day > 720 MB/day. **Data budget closes** with 33% margin.
+>
+> **Sensitivity:** If imaging duty cycle doubles (2 min/pass), generation rises to 1440 MB/day > 956 MB/day. Options: (a) X-band for higher data rate, (b) additional ground stations, (c) more aggressive compression, (d) onboard data prioritisation/selection.
 
 ---
 
-## 8. SpaceCDF Exercise (30 min)
+## 10. SpaceCDF Exercise (25 min)
 
 ### Instructions
 
@@ -4804,15 +5839,16 @@ With 4 passes/day: $V_{\text{daily}} = 856$ kB/day $\approx$ **0.84 MB/day**. Th
    - Verify it meets >= 3 dB requirement
 3. **Compare** to your hand calculation from the worked example
 4. **Equipment Browser:** Select a transponder and antenna that match your band choice
-   - Note RF compatibility warnings
+   - Note RF compatibility warnings (band mismatch between transponder and antenna)
 5. Complete Worksheet 3.3
 
 ### Discussion Questions
 
 - What is the most impactful parameter in your link budget? (Usually FSPL or G/T)
-- How does doubling the data rate affect link margin? (Reduces by 3 dB)
-- Could you use a lower-power transmitter and still close the link?
-- Does your data budget close? If not, what is the cheapest fix?
+- How does doubling the data rate affect link margin? (Reduces by 3 dB -- because $10\log_{10}(2) = 3$ dB)
+- Could you use a lower-power transmitter and still close the link? What is the minimum TX power?
+- Does your data budget close? If not, what is the cheapest fix? (Usually: more ground station passes, or lower imaging duty cycle)
+- What is the effect of Faraday rotation on your UHF link? (If applicable)
 
 ---
 
@@ -4821,14 +5857,22 @@ With 4 passes/day: $V_{\text{daily}} = 856$ kB/day $\approx$ **0.84 MB/day**. Th
 | Topic | Key Takeaway |
 |-------|-------------|
 | Link budget | $\text{Margin} = E_b/N_{0,\text{avail}} - E_b/N_{0,\text{req}} - L_{\text{impl}} \geq 3$ dB |
-| EIRP | $\text{EIRP} = P_{TX} + G_{TX} - L_{TX}$ -- transmitter's effective power |
-| FSPL | $20\log_{10}(4\pi df/c)$; increases 6 dB per doubling of frequency or distance |
-| G/T | Receiver figure of merit: antenna gain minus noise temperature |
-| Modulation | QPSK + LDPC (r=3/4): $E_b/N_0 = 4.0$ dB -- standard CubeSat choice |
-| Band selection | UHF for < 20 kbps; S-band for < 10 Mbps; X-band for < 400 Mbps |
-| Antenna gain | $G = \eta_a (\pi D/\lambda)^2$; patch ~6 dBi; 3 m dish ~35 dBi at S-band |
-| Data budget | Daily downlink capacity must exceed daily data generation |
-| Licensing | Amateur (free, IARU); Commercial (ISED/FCC, $30--45K, 6--12 months) |
+| EIRP | $\text{EIRP} = P_{TX} + G_{TX} - L_{TX}$ -- transmitter's effective power in beam direction |
+| FSPL physics | Geometric spreading ($1/d^2$) + aperture scaling ($\lambda^2$); not energy absorption |
+| FSPL formula | $92.45 + 20\log_{10}(d_{km}) + 20\log_{10}(f_{GHz})$; increases 6 dB per doubling of frequency or distance |
+| G/T | Receiver figure of merit: antenna gain minus noise temperature; most important ground station parameter |
+| Antenna types | Monopole (0 dBi, omni) to parabolic (25--45 dBi, narrow beam); gain vs pointing trade-off |
+| Antenna gain | $G = \eta_a (\pi D/\lambda)^2$; patch ~6 dBi; 3 m dish: 35 dBi at S-band, 25 dBi at X-band |
+| Pointing loss | $-12(\Delta\theta/\theta_{3\text{dB}})^2$ dB; narrower beam = more sensitive to pointing errors |
+| Modulation | QPSK: 2 bits/symbol, same $E_b/N_0$ as BPSK but 2x spectral efficiency; **standard choice** |
+| FEC coding | LDPC (r=3/4): $E_b/N_0 = 4.0$ dB, coding gain ~6.5 dB; **essential for space links** |
+| Coding gain | 5--10 dB improvement for free (just digital processing); equivalent to 3--10x power increase |
+| UHF challenges | Low EIRP, Faraday rotation (use circular polarisation), high ground station noise; FEC mandatory |
+| Band selection | UHF for < 9.6 kbps (free, amateur); S-band for < 10 Mbps; X-band for < 400 Mbps; Ka-band for > 400 Mbps |
+| Rain fade | Negligible below 4 GHz; 1--3 dB at X-band; 3--15 dB at Ka-band; add margin or adaptive rate |
+| Ground stations | G/T: amateur -15 dB/K, university +12 dB/K, commercial +25 dB/K; polar stations see every orbit |
+| Data budget | Daily downlink capacity must exceed daily data generation; compression ratio is a key lever |
+| Licensing | Amateur (free, IARU, 3--6 mo); S-band ($30--45K, 6--12 mo); X-band ($50--80K, 12+ mo) |
 
 ---
 
@@ -4850,6 +5894,8 @@ With 4 passes/day: $V_{\text{daily}} = 856$ kB/day $\approx$ **0.84 MB/day**. Th
 - [Sutton & Biblarz, *Rocket Propulsion Elements*, 9th ed., 2017, Ch. 2--4](https://www.wiley.com/en-us/Rocket+Propulsion+Elements)
 - [Enpulsion, *NANO R3 Thruster Datasheet*, 2023](https://www.enpulsion.com/nano)
 - [VACCO, *MiPS Propulsion System Datasheet*, 2023](https://www.cubesat-propulsion.com)
+- [Tyvak, *Structure Specifications*, 2023](https://www.tyvak.com)
+- [ECSS, *ECSS-E-ST-10-03C: Testing*, 2012](https://ecss.nl/standard/ecss-e-st-10-03c-testing/)
 
 ---
 
@@ -4858,53 +5904,132 @@ With 4 passes/day: $V_{\text{daily}} = 856$ kB/day $\approx$ **0.84 MB/day**. Th
 By the end of this session, participants will be able to:
 
 1. Verify CubeSat Design Specification (CDS) compliance for 1U--12U form factors
-2. Compute structural margin of safety for quasi-static launch loads
-3. Estimate the fundamental frequency requirement and verify it against deployer specifications
-4. Apply the Tsiolkovsky rocket equation to compute propellant mass for a given $\Delta V$
-5. Select appropriate propulsion technology based on mission $\Delta V$, thrust level, and form factor
-6. Size onboard data storage from the data budget
-7. Select flight hardware using SpaceCDF's equipment browser with budget tracking
+2. Explain the structural load environment (quasi-static, vibration, shock) and its physical origins
+3. Compute structural margin of safety for quasi-static launch loads
+4. Estimate the fundamental frequency requirement and verify it against deployer specifications
+5. Apply the Tsiolkovsky rocket equation to compute propellant mass for a given $\Delta V$
+6. Explain the physics of each propulsion technology and select based on mission requirements
+7. Select OBC architecture based on processing, radiation, and interface requirements
+8. Size onboard data storage from the data budget
+9. Select flight hardware using SpaceCDF's equipment browser with budget tracking
 
 ---
 
-## 1. CubeSat Structure and CDS Compliance (25 min)
+## 1. CubeSat Structure and CDS Compliance (30 min)
 
 ### Teaching Notes
 
-*[Source: Cal Poly CDS Rev 14.1, February 2022]*
+*[Source: Cal Poly CDS Rev 14.1, February 2022; ECSS-E-ST-32C]*
 
 ### CDS Dimensional Specifications
 
-| Form Factor | Dimensions (mm) | Max Mass (kg) | Internal Volume (cm$^3$) |
-|------------|-----------------|---------------|------------------------|
-| 1U | 100 x 100 x 113.5 | 2.0 | ~1000 |
-| 1.5U | 100 x 100 x 170.2 | 3.0 | ~1500 |
-| 2U | 100 x 100 x 227.0 | 4.0 | ~2000 |
-| 3U | 100 x 100 x 340.5 | 6.0 | ~3000 |
-| 6U | 100 x 226.3 x 340.5 | 12.0 | ~6000 |
-| 12U | 226.3 x 226.3 x 340.5 | 24.0 | ~12000 |
+| Form Factor | Dimensions (mm) | Max Mass (kg) | Internal Volume (cm$^3$) | Typical Deployer |
+|------------|-----------------|---------------|------------------------|-----------------|
+| 1U | 100 x 100 x 113.5 | 2.0 | ~1000 | ISIPOD, P-POD |
+| 1.5U | 100 x 100 x 170.2 | 3.0 | ~1500 | ISIPOD |
+| 2U | 100 x 100 x 227.0 | 4.0 | ~2000 | ISIPOD, P-POD |
+| 3U | 100 x 100 x 340.5 | 6.0 | ~3000 | P-POD, ISIPOD, NanoRacks NRCSD |
+| 6U | 100 x 226.3 x 340.5 | 12.0 | ~6000 | 6U deployer (Exolaunch, D-Orbit) |
+| 12U | 226.3 x 226.3 x 340.5 | 24.0 | ~12000 | 12U deployer (Exolaunch) |
+
+### Structural Materials
+
+**CubeSat rail material: Aluminium 7075-T6**
+
+This is the most commonly specified structural aluminium alloy for CubeSat rails. The CDS mandates hard-anodised aluminium for the rails (the four load-bearing edges that slide along the deployer guide channels).
+
+| Property | Al 7075-T6 | Al 6061-T6 | Ti-6Al-4V | CFRP (quasi-isotropic) |
+|----------|-----------|-----------|-----------|----------------------|
+| Density (kg/m$^3$) | 2810 | 2700 | 4430 | 1600 |
+| Yield strength $\sigma_y$ (MPa) | 503 | 276 | 880 | N/A (use ultimate) |
+| Ultimate strength $\sigma_u$ (MPa) | 572 | 310 | 950 | 500--800 |
+| Young's modulus $E$ (GPa) | 71.7 | 68.9 | 114 | 70--150 (direction-dependent) |
+| CTE (ppm/degC) | 23.6 | 23.1 | 8.6 | 0--2 (tuneable) |
+| Thermal conductivity (W/m/K) | 130 | 167 | 6.7 | 3--10 |
+
+*[Source: MMPDS / ASM Handbook; Hexcel HexPly datasheets]*
+
+**Why Al 7075-T6 for rails:**
+- High strength-to-weight ratio (superior to 6061-T6)
+- Hard anodisation provides a durable, low-friction surface finish for deployer guide channel contact (reduces galling, provides electrical insulation)
+- Good machinability
+- Extensive flight heritage (virtually every CubeSat ever launched)
+- CTE-matched to Al deployer structure (prevents differential thermal expansion binding)
+
+**Why NOT other materials for rails:**
+- **Titanium:** Excellent strength but poor thermal conductivity (thermal hot spots), difficult to machine, risk of galling against aluminium deployer
+- **CFRP:** Cannot be anodised; CTE mismatch with Al deployer causes binding at temperature extremes; poor electrical conductivity (grounding/bonding issues)
+- **Stainless steel:** Too heavy; poor CTE match
+
+**Anodisation physics:** Anodisation is an electrochemical process that grows a hard aluminium oxide ($\text{Al}_2\text{O}_3$) layer on the surface. Hard anodisation (Type III) produces a 25--75 um thick oxide layer with hardness of 60--70 HRC (harder than most steel). This layer provides: wear resistance against deployer contact, electrical insulation (prevents arcing between satellite and deployer), corrosion resistance, and controlled surface optical properties ($\alpha_s \approx 0.3$--$0.5$, $\varepsilon \approx 0.8$--$0.85$ for clear anodise; $\alpha_s \approx 0.9$, $\varepsilon \approx 0.85$ for black anodise).
 
 ### Key CDS Requirements
 
-| Requirement | Specification |
-|------------|---------------|
-| Rail material | Hard anodised aluminium (7075-T6 or 6061-T6) |
-| Rail cross-section | 8.5 x 8.5 mm minimum contact area |
-| Surface finish | All external surfaces anodised or non-outgassing coating |
-| Deployment switches | Minimum 1 on each accessible rail face (+X, -X) |
-| Remove Before Flight (RBF) pin | Required; physically disables all power systems |
-| Protrusions | None beyond rail envelope in stowed configuration |
-| Centre of gravity | Within 2 cm of geometric centre (per deployer ICD) |
-| Fundamental frequency | > 40 Hz first mode (typical deployer requirement) |
+| Requirement | Specification | Physical Rationale |
+|------------|---------------|-------------------|
+| Rail material | Hard anodised aluminium (7075-T6 or 6061-T6) | Wear resistance, CTE match to deployer, electrical isolation |
+| Rail cross-section | 8.5 x 8.5 mm minimum contact area | Adequate bearing area for launch loads; prevents rail yielding under quasi-static acceleration |
+| Surface finish | All external surfaces anodised or non-outgassing coating | Prevent contamination of other payloads on launch vehicle (molecular outgassing deposits on optics) |
+| Deployment switches | Minimum 1 on each accessible rail face (+X, -X) | Inhibit all spacecraft activity until fully deployed from deployer (prevents inadvertent deployment, RF emissions in fairing) |
+| Remove Before Flight (RBF) pin | Required; physically disables all power systems | Final safety inhibit; removed at launch pad after integration; ensures zero RF emissions and zero deployment actuator current until intentional removal |
+| Protrusions | None beyond rail envelope in stowed configuration | Ensures clean ejection from deployer; prevents snagging on guide rails or adjacent CubeSat |
+| Centre of gravity | Within 2 cm of geometric centre (per deployer ICD) | Prevents wobble during deployment ejection; ensures all CubeSats eject with similar tip-off rates |
+| Fundamental frequency | > 40 Hz first mode (typical deployer requirement) | Prevents dynamic coupling between satellite and launch vehicle structural modes (which cluster at 10--30 Hz) |
+
+### PC/104 Stack Architecture
+
+Most CubeSat avionics use the PC/104-compatible stack architecture, a heritage from the industrial embedded computing standard adapted for space:
+
+**Physical specifications:**
+- **Board size:** 96 x 90 mm (standard) or 90 x 96 mm
+- **Connector:** 104-pin stack-through header (2 x 52 pins, 2.54 mm pitch) -- original PC/104 pinout carries power + I2C + SPI + UART + GPIO
+- **Stack spacing:** Typically 10--15 mm between boards (constrained by component height and connector mating height)
+- **Stack capacity:** 1U accommodates ~4 boards; 3U accommodates ~12 boards (340 mm / ~28 mm per board slot)
+
+**What rides on the stack:**
+- EPS board (battery management, MPPT, power distribution)
+- OBC board (processor, memory, interfaces)
+- Communications board (UHF radio, or S-band transponder)
+- AOCS board (if integrated -- some vendors combine IMU + magnetorquer driver + RW interface on one PCB)
+- Payload interface board (ADC, sensor interfaces)
+
+**Mechanical concerns:**
+- Solder joints are the weakest point; random vibration causes fatigue cracking at heavy component leads (especially tall electrolytic capacitors, large connectors, and crystal oscillators)
+- Board-to-board connectors must be properly preloaded (too loose = intermittent contact; too tight = difficult assembly/disassembly during I&T)
+- Standoffs and spacers must be correctly torqued; Loctite 222 (low-strength threadlocker) is standard
 
 ### Launch Load Environment
 
-| Load Type | Typical Level | Verification Method |
-|-----------|--------------|---------------------|
-| Quasi-static acceleration | 6--9 g axial, 2--4 g lateral | Analysis + sine vibration test |
-| Random vibration | Per launch vehicle PUG (20--2000 Hz spectrum) | Random vibration test (3 axes) |
-| Shock | 500--2000 g at separation (high frequency) | Shock response spectrum test |
-| Acoustic | Per vehicle specification | Usually covered by random vibration for CubeSats |
+The launch environment subjects the satellite to loads from engine thrust, aerodynamic buffeting, stage separation, and pyrotechnic events. The satellite must survive all of these without structural failure or functional degradation.
+
+| Load Type | Physical Source | Typical Level | Duration | Frequency Range | Verification Method |
+|-----------|----------------|--------------|----------|----------------|---------------------|
+| **Quasi-static acceleration** | Engine thrust + aeroloading | 6--12 g axial, 2--4 g lateral | Seconds to minutes | 0 (static equivalent) | Analysis + sine vibration test |
+| **Sine vibration** | Low-frequency vehicle dynamics | 0.5--3 g (5--100 Hz) | Minutes | 5--100 Hz | Sine sweep test (3 axes) |
+| **Random vibration** | Acoustic noise + turbulent boundary layer | 5--15 grms (20--2000 Hz) | 60--120 s per axis | 20--2000 Hz | Random vibration test (3 axes) |
+| **Shock** | Pyrotechnic separation events (stage sep, fairing sep, deployer spring release) | 500--2000 g at separation (high frequency) | < 10 ms | 100--10,000 Hz | Shock response spectrum (SRS) test |
+| **Acoustic** | Sound pressure from engine exhaust, aerodynamic noise | 120--140 dB (20--10,000 Hz) | Minutes | 20--10,000 Hz | Usually covered by random vib for CubeSats |
+
+*[Source: ECSS-E-ST-10-03C; NASA GEVS (GSFC-STD-7000B); Falcon 9 Payload User's Guide; PSLV User's Guide]*
+
+**Random vibration PSD profile (typical CubeSat deployer level):**
+
+| Frequency (Hz) | ASD Level (g$^2$/Hz) | Notes |
+|----------------|---------------------|-------|
+| 20 | 0.01 | Low-frequency start (ramp up) |
+| 50 | 0.04 | Ramp up at +6 dB/oct |
+| 100 | 0.04 | Flat region start |
+| 800 | 0.04 | Flat region end |
+| 2000 | 0.01 | Roll off at -6 dB/oct |
+| **Overall** | **~7 grms** | Typical for CubeSat deployer qualification level |
+
+The flat region at 0.04 g$^2$/Hz from 100--800 Hz is where most structural damage occurs, because this is where PCB resonances and solder joint fatigue are excited.
+
+**What fails during vibration testing:**
+1. **Solder joints:** Heavy components (connectors, tall capacitors, transformers) with long lever arms crack at their solder joints. Mitigation: use surface-mount components, stake tall components with adhesive (Loctite 4860 or similar), use conformal coating.
+2. **Deployable mechanisms:** Antenna hinges, solar panel hold-down mechanisms, and deployment springs can fail if not properly constrained. Mitigation: adequate preload on hold-down mechanisms, shock testing of pyrotechnic release devices.
+3. **Optical components:** Lenses and mirrors can shift or crack if not properly mounted with strain-relief. Mitigation: RTV potting, flexure mounts.
+4. **Wire harness:** Chafing against structure edges. Mitigation: edge radii > 1 mm, harness tie-downs every 50 mm, protective sleeving.
 
 ### Structural Margin of Safety
 
@@ -4921,39 +6046,57 @@ By the end of this session, participants will be able to:
 >
 > **Factors of safety (ECSS-E-ST-32C):**
 >
-> | Material | Yield FoS | Ultimate FoS |
-> |----------|----------|-------------|
-> | Metallic (Al 7075-T6) | 1.25 | 1.5 |
-> | Composite (CFRP) | 1.5 | 2.0 |
-> | Bonded joints | 1.5 | 2.0 |
-
-> **Worked Example -- Axial Load on 3U CubeSat Rail**
+> | Material / Joint | Yield FoS | Ultimate FoS | Rationale |
+> |-----------------|----------|-------------|-----------|
+> | Metallic (Al 7075-T6) | 1.25 | 1.5 | Standard structural metals |
+> | Composite (CFRP) | 1.5 | 2.0 | Higher variability in laminate properties |
+> | Bonded joints | 1.5 | 2.0 | Bond strength is highly process-dependent |
+> | Pressurised systems | 1.5 | 2.0 | Burst hazard to other payloads |
+> | Mechanisms (single-use) | -- | 2.0 | Must work first time; no test opportunity |
 >
-> **Given:** 3U CubeSat, mass = 5 kg, axial launch load = 9 g, 4 rails (load shared equally), rail cross-section = 8.5 x 8.5 mm, material = Al 7075-T6 ($\sigma_y = 503$ MPa, $\sigma_u = 572$ MPa).
+> **Design loads:** The design load includes the quasi-static acceleration (from the launch vehicle user guide), multiplied by a dynamic amplification factor ($DAF \approx 1.25$--$1.5$) if the satellite's natural frequency is near any launch vehicle forcing frequency.
+
+> **Worked Example -- Axial Load on 3U CubeSat Rail (SuperDove-class)**
+>
+> **Given:** 3U CubeSat, mass = 5 kg, axial launch load = 9 g (Falcon 9 typical), 4 rails (load shared equally), rail cross-section = 8.5 x 8.5 mm, material = Al 7075-T6 ($\sigma_y = 503$ MPa, $\sigma_u = 572$ MPa).
 >
 > **Step 1 -- Design load per rail:**
-> $F = \frac{m \times a}{4} = \frac{5 \times 9 \times 9.81}{4} = \frac{441.5}{4} = 110.4$ N
+> $F = \frac{m \times n \times g_0}{4} = \frac{5 \times 9 \times 9.81}{4} = \frac{441.5}{4} = 110.4$ N
 >
-> **Step 2 -- Stress:**
-> $\sigma = \frac{F}{A} = \frac{110.4}{8.5 \times 10^{-3} \times 8.5 \times 10^{-3}} = \frac{110.4}{7.225 \times 10^{-5}} = 1.53$ MPa
+> **Step 2 -- Compressive stress:**
+> $\sigma = \frac{F}{A_{\text{rail}}} = \frac{110.4}{8.5 \times 10^{-3} \times 8.5 \times 10^{-3}} = \frac{110.4}{7.225 \times 10^{-5}} = 1.53$ MPa
 >
 > **Step 3 -- Margin of safety (yield):**
 > $\text{MoS}_y = \frac{503}{1.53 \times 1.25} - 1 = \frac{503}{1.91} - 1 = 262 \gg 0$ **Pass** (by a very large margin)
 >
-> **Key insight:** For CubeSats, quasi-static axial stress on the rails is never the critical load case. The critical structural design drivers are usually: **(a)** stiffness (fundamental frequency > 40 Hz), **(b)** random vibration fatigue on PCB solder joints, and **(c)** deployment mechanism reliability.
+> **Step 4 -- Margin of safety (ultimate):**
+> $\text{MoS}_u = \frac{572}{1.53 \times 1.5} - 1 = \frac{572}{2.30} - 1 = 248 \gg 0$ **Pass**
+>
+> **Key insight:** For CubeSats, quasi-static axial stress on the rails is never the critical load case. The rails are massively over-designed for direct compression. The critical structural design drivers are usually:
+> 1. **Stiffness** (fundamental frequency > 40 Hz) -- driven by internal board/component mounting, not rail strength
+> 2. **Random vibration fatigue** on PCB solder joints -- the real failure mode
+> 3. **Deployment mechanism reliability** -- spring force, latch engagement, alignment tolerances
+> 4. **CG location** -- difficult to achieve with asymmetric payloads or propulsion tanks
 
 ### Fundamental Frequency
 
 > **Key Equations -- Fundamental Frequency (simplified beam model)**
 >
-> For a cantilevered beam (simplified CubeSat model):
-> $$f_1 = \frac{1.875^2}{2\pi L^2} \sqrt{\frac{EI}{\rho A}}$$
+> For a cantilevered beam (simplified CubeSat model, clamped at deployer interface):
+> $$f_1 = \frac{1.875^2}{2\pi L^2} \sqrt{\frac{EI}{\rho A_{\text{cross}}}}$$
 >
-> where $E$ = Young's modulus (Pa), $I$ = second moment of area (m$^4$), $\rho$ = density (kg/m$^3$), $A$ = cross-section area (m$^2$), $L$ = length (m).
+> where $E$ = Young's modulus (Pa), $I$ = second moment of area (m$^4$), $\rho$ = linear density (kg/m), $A_{\text{cross}}$ = cross-section area (m$^2$), $L$ = length (m).
 >
-> **Requirement:** $f_1 > 40$ Hz (from deployer ICD).
+> **Requirement:** $f_1 > 40$ Hz (from deployer ICD). Some deployers require $> 90$ Hz (e.g., NanoRacks NRCSD).
 >
-> In practice, CubeSat structures meet this easily with Al frames. The concern is PCB stack assemblies and deployable mechanisms, which may have lower-frequency modes if not properly constrained.
+> **For a 3U CubeSat modelled as a cantilevered Al box beam:**
+> - $L = 0.34$ m, $E = 72$ GPa, box wall thickness $t = 1.5$ mm
+> - $I \approx \frac{b^4 - (b-2t)^4}{12} = \frac{0.10^4 - 0.097^4}{12} \approx 1.36 \times 10^{-6}$ m$^4$
+> - Linear mass: $\rho_L = m/L = 5/0.34 = 14.7$ kg/m
+>
+> $f_1 = \frac{3.516}{2\pi \times 0.34^2} \sqrt{\frac{72 \times 10^9 \times 1.36 \times 10^{-6}}{14.7}} = \frac{3.516}{0.726} \sqrt{6666} = 4.84 \times 81.6 = 395$ Hz
+>
+> **This easily exceeds 40 Hz.** The structure itself is very stiff. However, the actual first mode is usually determined by: (a) the heaviest internal component on its mounting bracket (e.g., a 350 g star tracker cantilevered on a bracket), or (b) a deployable mechanism in its stowed configuration (e.g., a folded solar panel constrained only by a hold-down pin). **These local modes, not the overall structural mode, are typically the design concern.**
 
 ---
 
@@ -4961,96 +6104,234 @@ By the end of this session, participants will be able to:
 
 ### Teaching Notes
 
-*[Source: SMAD, Ch. 17; Sutton & Biblarz, Ch. 2--4]*
+*[Source: SMAD, Ch. 17; Sutton & Biblarz, Ch. 2--4; Goebel & Katz, *Fundamentals of Electric Propulsion*, 2008]*
 
 ### When Propulsion is Required
 
-| Need | Typical $\Delta V$ | Example Scenario |
-|------|-------------------|------------------|
-| **Orbit maintenance** (drag compensation) | 5--15 m/s per year | LEO below 400 km |
-| **Deorbit** | 50--150 m/s | Active disposal from > 600 km |
-| **Collision avoidance** | 1--5 m/s per event | Conjunction avoidance manoeuvre |
-| **Constellation phasing** | 10--50 m/s | Spreading satellites into operational slots |
-| **Orbit raising** | 50--200 m/s | Transfer from deployment orbit to operational orbit |
+| Need | Typical $\Delta V$ | Example Scenario | Timeline |
+|------|-------------------|------------------|----------|
+| **Orbit maintenance** (drag compensation) | 5--15 m/s per year | LEO below 400 km in solar maximum | Continuous low-thrust |
+| **Deorbit** (active disposal) | 50--150 m/s | Active disposal from > 600 km (FCC 5-year rule) | End of mission |
+| **Collision avoidance** | 1--5 m/s per event | Conjunction avoidance, 2--5 events per year for LEO | On-demand, within hours |
+| **Constellation phasing** | 10--50 m/s | Spreading satellites into operational orbit slots | Weeks to months |
+| **Orbit raising** | 50--200 m/s | Transfer from deployment orbit to operational orbit | Weeks to months |
+| **Station-keeping** | 1--10 m/s per year | Maintain orbit altitude and phase | Periodic |
 
 ### When NO Propulsion is Needed
 
-- Orbit < 500 km: natural atmospheric decay provides FCC 5-year deorbit compliance
-- Low-cost technology demonstration: limited lifetime acceptable, no orbit maintenance needed
-- Constellation using differential drag for phasing (e.g., Planet SuperDove)
-- Budget-constrained missions where propulsion cost/risk exceeds benefit
+- **Orbit < 500 km:** Natural atmospheric decay provides FCC 5-year deorbit compliance (depends on ballistic coefficient and solar activity)
+- **Low-cost technology demonstration:** Limited lifetime acceptable, no orbit maintenance needed
+- **Constellation using differential drag for phasing** (e.g., Planet SuperDove adjusts its cross-section area to create differential drag, enabling free phasing manoeuvres)
+- **Budget-constrained missions** where propulsion cost/risk/mass exceeds benefit
 
-### The Tsiolkovsky Rocket Equation
+### The Tsiolkovsky Rocket Equation -- Physics
+
+The rocket equation is the fundamental relationship governing all propulsive manoeuvres. It derives from conservation of momentum: the momentum of the exhaust equals the momentum change of the spacecraft.
 
 > **Key Equations -- Tsiolkovsky Rocket Equation**
 >
-> $$\Delta V = I_{sp} \cdot g_0 \cdot \ln\left(\frac{m_0}{m_f}\right)$$
+> Starting from $F = \dot{m} v_e$ (thrust = mass flow rate x exhaust velocity) and integrating:
+>
+> $$\Delta V = v_e \ln\left(\frac{m_0}{m_f}\right) = I_{sp} \cdot g_0 \cdot \ln\left(\frac{m_0}{m_f}\right)$$
 >
 > Rearranged for propellant mass:
 > $$m_{\text{propellant}} = m_{\text{dry}} \times \left(e^{\Delta V / (I_{sp} \cdot g_0)} - 1\right)$$
 >
 > where:
-> - $I_{sp}$ = specific impulse (s) -- thruster efficiency metric
-> - $g_0 = 9.80665$ m/s$^2$ -- standard gravitational acceleration
-> - $m_0$ = initial (wet) mass (kg)
-> - $m_f$ = final (dry) mass (kg)
-> - $m_{\text{propellant}} = m_0 - m_f$
+> - $v_e = I_{sp} \times g_0$ = effective exhaust velocity (m/s)
+> - $I_{sp}$ = specific impulse (s) -- the "fuel efficiency" of the thruster. Physically: how many seconds a thruster can produce 1 N of thrust from 1 kg of propellant under standard gravity. Higher $I_{sp}$ = less propellant needed.
+> - $g_0 = 9.80665$ m/s$^2$ -- standard gravitational acceleration (conversion factor)
+> - $m_0$ = initial (wet) mass (kg) = $m_f + m_{\text{propellant}}$
+> - $m_f$ = final (dry) mass (kg) = spacecraft mass after all propellant is consumed
+>
+> **The tyranny of the rocket equation:** The propellant mass grows exponentially with $\Delta V / v_e$. For $\Delta V = v_e$ (one exhaust velocity worth of $\Delta V$), 63% of the initial mass must be propellant. For $\Delta V = 2 v_e$, 86% must be propellant. This is why high-$I_{sp}$ systems are so valuable for large $\Delta V$ missions -- they move the $v_e$ in the denominator, dramatically reducing the mass ratio.
 
-### CubeSat Propulsion Options
+### CubeSat Propulsion Technologies -- Physics and Comparison
 
-| Type | $I_{sp}$ (s) | Thrust | Dry Mass | $\Delta V$ (5 kg S/C) | TRL | Example Product |
-|------|-------------|--------|----------|----------------------|-----|----------------|
-| **Cold gas** (N$_2$, R-236fa) | 40--80 | 10--100 mN | 0.3--1.0 kg | 10--30 m/s | 9 | VACCO MiPS |
-| **Resistojet** | 80--150 | 10--50 mN | 0.3--0.8 kg | 20--50 m/s | 7--8 | Busek AMAC |
-| **Electrospray** (FEEP) | 500--1500 | 0.01--1 mN | 0.5--1.5 kg | 50--200 m/s | 7--8 | Enpulsion NANO R3 |
-| **Hall effect** | 800--1500 | 1--10 mN | 1.0--3.0 kg | 100--500 m/s | 6--8 | Exotrail ExoMG-nano |
-| **Hydrazine mono** | 200--230 | 0.1--1 N | 1.0--4.0 kg | 50--200 m/s | 9 | Aerojet MPS-130 |
-| **Green monopropellant** | 200--250 | 0.1--1 N | 1.0--3.0 kg | 50--200 m/s | 7--8 | Bradford HPGP |
+#### Cold Gas Propulsion
 
-> **Worked Example -- Propellant Mass for Deorbit**
->
-> **Scenario:** 3U CubeSat, $m_{\text{dry}} = 5.0$ kg, deorbit from 600 km ($\Delta V = 113$ m/s), cold gas thruster ($I_{sp} = 60$ s).
->
-> $m_{\text{prop}} = 5.0 \times \left(e^{113/(60 \times 9.81)} - 1\right) = 5.0 \times \left(e^{0.192} - 1\right) = 5.0 \times 0.212 = $ **1.06 kg**
->
-> **Problem:** 1.06 kg of propellant is 21% of the 3U mass limit (6 kg). This is a significant fraction.
->
-> **Alternative with electrospray** ($I_{sp} = 1200$ s):
-> $m_{\text{prop}} = 5.0 \times \left(e^{113/(1200 \times 9.81)} - 1\right) = 5.0 \times \left(e^{0.00960} - 1\right) = 5.0 \times 0.00965 = $ **0.048 kg**
->
-> But the Enpulsion NANO R3 dry mass is 0.9 kg and thrust is 0.35 mN -- deorbit burn takes months.
->
-> **Trade-off:** High-$I_{sp}$ systems use far less propellant but are heavier, lower-thrust, and require longer burn times. Low-$I_{sp}$ systems are lighter and provide immediate thrust but consume much more propellant.
+**Physics:** Compressed gas (N$_2$, xenon, R-236fa refrigerant, or other) is stored in a tank at 1--30 MPa. When a valve opens, gas expands through a nozzle, converting thermal/pressure energy to kinetic energy. No combustion, no heating, no chemical reaction.
 
-### Propulsion Trade Summary
+**Thrust:** $F = \dot{m} v_e + (p_e - p_a) A_e$. For a small converging nozzle, $v_e \approx \sqrt{2 c_p T_0}$ where $T_0$ is the tank temperature. For N$_2$ at 300 K: $v_e \approx 500$--$750$ m/s, giving $I_{sp} \approx 50$--$75$ s.
 
-| Parameter | Cold Gas | Electrospray | Hall Effect |
-|-----------|---------|-------------|------------|
-| Propellant for 100 m/s | 0.87 kg | 0.042 kg | 0.052 kg |
-| System dry mass | 0.3 kg | 0.9 kg | 1.5 kg |
-| **Total system mass** | **1.17 kg** | **0.94 kg** | **1.55 kg** |
-| Burn time | Minutes | Months | Weeks |
-| Complexity | Low | Medium | High |
-| Cost | ~15 kEUR | ~50 kEUR | ~80 kEUR |
+**Advantages:** Simplest system (no ignition, no power except valve solenoid), fast response (ms-level valve opening), high reliability, no plume contamination concerns.
+
+**Disadvantages:** Low $I_{sp}$ (large propellant mass for given $\Delta V$), bulky high-pressure tank, limited total impulse.
+
+**Products:** VACCO MiPS (R-236fa, $I_{sp} = 40$ s, 4 thrusters, 0.3 kg dry), VACCO ArgoMoon (Xe cold gas), Bradford ECAPS cold gas.
+
+**Missions using cold gas:** MarCO (6U, JPL -- used R-236fa cold gas for trajectory correction and attitude control en route to Mars), many ISS-deployed CubeSats for collision avoidance.
+
+#### Resistojet / Warm Gas
+
+**Physics:** Similar to cold gas, but the propellant is electrically heated before expansion through the nozzle. Heating increases the gas temperature $T_0$, which increases the exhaust velocity ($v_e \propto \sqrt{T_0}$). Common propellants: butane (C$_4$H$_{10}$), water (H$_2$O), ammonia (NH$_3$).
+
+**Butane propulsion:** Butane is stored as a liquid at its saturation pressure (~2 atm at 20 degC). When heated to 200--400 degC and expanded through a nozzle, it achieves $I_{sp} \approx 80$--$100$ s. The liquid storage is much denser than compressed gas, allowing more propellant in a smaller tank.
+
+**Advantages:** Higher $I_{sp}$ than cold gas (~2x), dense liquid storage, moderate complexity.
+
+**Disadvantages:** Requires electrical power for heating (5--15 W during firing), lower thrust than cold gas, potential for nozzle clogging if propellant decomposes.
+
+**Products:** Busek BGT-X5 (butane, $I_{sp} = 80$ s), NanoAvionics EPSS (butane, $I_{sp} = 85$ s), Pale Blue water resistojet ($I_{sp} = 70$--$80$ s).
+
+#### Green Monopropellant
+
+**Physics:** A liquid propellant is injected into a catalyst bed where it decomposes exothermically, producing hot gases that expand through a nozzle. "Green" propellants are alternatives to hydrazine (N$_2$H$_4$) that are less toxic and easier to handle.
+
+| Propellant | Chemical | $I_{sp}$ (s) | Density (kg/m$^3$) | Toxicity | TRL | Heritage |
+|-----------|----------|-------------|-------------------|---------|-----|---------|
+| **Hydrazine** (N$_2$H$_4$) | Monopropellant, Shell 405 catalyst | 220--230 | 1010 | **Extremely toxic** (carcinogen) | 9 | 50+ years, thousands of missions |
+| **AF-M315E (ASCENT)** | HAN-based ionic liquid | 235--250 | 1460 | Low toxicity | 8 | GPIM demo (2019, NASA) |
+| **LMP-103S** | ADN-based ionic liquid | 225--235 | 1240 | Low toxicity | 8 | PRISMA demo (2010, SSC), SkySat |
+| **HTP (H$_2$O$_2$ 90%)** | Hydrogen peroxide + silver catalyst | 150--165 | 1400 | Moderate (oxidiser) | 7 | Various small satellites |
+
+*[Source: Masse et al., "GPIM AF-M315E Propulsion System," AIAA 2019; Anflo et al., "Flight Demonstration of LMP-103S," AIAA 2011]*
+
+**Advantages:** High thrust (0.1--1 N for CubeSat systems), good $I_{sp}$ (220+ s), proven technology (heritage from hydrazine systems).
+
+**Disadvantages:** Requires catalyst preheating (2--10 W, 10--30 min warmup), higher system mass (tank + catalyst bed + valves + feed system), propellant handling safety requirements (even "green" propellants require PPE), higher cost ($100K+ for flight units).
+
+**Products:** Aerojet MPS-130 (AF-M315E, 1 N thrust, $I_{sp} = 235$ s, 3 kg system mass), Bradford HPGP (LMP-103S, 1 N, $I_{sp} = 230$ s).
+
+#### Electric Propulsion -- Electrospray (FEEP)
+
+**Physics:** Field Emission Electric Propulsion (FEEP) uses a strong electric field (~$10^9$ V/m) at the tip of a needle or along the edge of a slit to ionise and extract metal atoms (typically indium or gallium) or ionic liquid droplets. The ions are accelerated by an electric field to high velocities (10--50 km/s), producing very high $I_{sp}$.
+
+**How it works (indium FEEP):**
+1. Solid indium is heated to just above its melting point (157 degC) to form a liquid reservoir
+2. Capillary action draws liquid indium to an array of sharp emitter tips
+3. A high voltage (1--10 kV) between the emitter tips and an extractor grid creates an intense electric field at the tip apex
+4. The field ionises individual indium atoms via field evaporation
+5. The ions are accelerated through the extractor grid, creating a beam of In$^+$ ions at 20--40 km/s
+6. A neutraliser (typically a carbon nanotube or thermionic emitter) emits electrons to neutralise the beam and prevent spacecraft charging
+
+**Performance:** $I_{sp} = 500$--$5000$ s (adjustable by varying acceleration voltage), thrust = 0.01--1 mN, power = 20--60 W.
+
+**Advantages:** Extremely high $I_{sp}$ (minimal propellant consumption), no pressurised tanks, compact solid propellant storage, precise thrust control (useful for formation flying).
+
+**Disadvantages:** Very low thrust (months-long burn times for significant $\Delta V$), requires significant power (20--60 W for ~0.5 mN thrust), plume contamination from metal ions (indium deposition on surfaces), limited heritage.
+
+**Products:** Enpulsion NANO R3 (indium FEEP, 0.35 mN, $I_{sp} = 1000$--$5000$ s, 0.9 kg dry mass, < 40 W), Accion TILE (ionic liquid electrospray, 0.1 mN, $I_{sp} = 1500$ s).
+
+**Missions using FEEP/electrospray:** LISA Pathfinder (ESA, precision formation flying, used colloid thrusters), SSTL NovaSAR-1 (Enpulsion NANO for orbit maintenance).
+
+#### Electric Propulsion -- Hall Effect Thruster
+
+**Physics:** A Hall effect thruster uses crossed electric and magnetic fields to ionise a neutral propellant gas (xenon, krypton, or iodine) and accelerate the resulting ions to high velocity.
+
+**How it works:**
+1. Neutral propellant gas (Xe or I$_2$) is injected into an annular discharge channel
+2. A radial magnetic field (from permanent magnets or electromagnets) traps electrons in a Hall current loop, preventing them from reaching the anode
+3. The trapped electrons collide with neutral gas atoms, ionising them
+4. The ions, being much heavier, are not significantly deflected by the magnetic field and are accelerated axially by the electric field (100--500 V) between anode and cathode
+5. An external cathode (hollow cathode or RF cathode) provides electrons for beam neutralisation and to sustain the discharge
+
+**Performance:** $I_{sp} = 800$--$3000$ s, thrust = 1--50 mN for CubeSat-scale systems, power = 50--300 W.
+
+**Advantages:** Higher thrust than FEEP (N range for larger systems), excellent $I_{sp}$, well-proven technology (GEO station-keeping heritage: Aerojet PPS-1350, Busek BHT-200).
+
+**Disadvantages:** Requires significant power (> 50 W for CubeSat-scale), heavy cathode assembly, xenon storage requires high-pressure tanks (100--300 bar), channel erosion limits lifetime.
+
+**Products:** Exotrail ExoMG-nano (40 mN, $I_{sp} = 800$ s, 1.5 kg, 60 W), Busek BHT-200 (13 mN, $I_{sp} = 1370$ s, 1.0 kg, 200 W), Enpulsion MICRO (Hall thruster, iodine propellant, 1 mN, $I_{sp} = 1000$ s).
+
+**Iodine propulsion:** Iodine (I$_2$) is emerging as an alternative to xenon for Hall thrusters and gridded ion engines. Iodine is solid at room temperature (stored without a pressure vessel), has a density of 4940 kg/m$^3$ (vs xenon at ~1600 kg/m$^3$ at 100 bar), and has similar atomic mass (127 vs 131). The Busek BIT-3 (iodine Hall thruster) and ThrustMe NPT30-I2 have demonstrated iodine propulsion in orbit.
+
+#### No Propulsion -- Passive Deorbit Strategies
+
+For missions below ~500 km where propulsion is not needed for operations, passive deorbit can satisfy the FCC 5-year or IADC 25-year guidelines:
+
+| Method | Mechanism | Mass | Volume | Effectiveness | TRL |
+|--------|-----------|------|--------|--------------|-----|
+| **Atmospheric drag (natural)** | Below 500 km, atmospheric drag naturally decays the orbit | 0 | 0 | Depends on ballistic coefficient and solar cycle | 9 |
+| **Drag sail** | Deployable membrane increases cross-section area by 10--100x | 0.1--0.5 kg | 0.25--1U | Very effective above 600 km | 7--8 |
+| **Drag chute (tether)** | Electrodynamic tether interacts with geomagnetic field to decelerate | 0.2--0.5 kg | 0.5U | Moderate effectiveness; depends on orbital inclination | 6--7 |
+
+*[Source: Cranfield Icarus drag sail, 0.1 kg; NanoSail-D2, NASA; InflateSail, SSC]*
+
+### Propulsion System Comparison Table
+
+| Parameter | Cold Gas (N$_2$) | Warm Gas (Butane) | Green Monoprop (AF-M315E) | Electrospray (FEEP) | Hall Effect (Xe) |
+|-----------|-----------------|------------------|--------------------------|--------------------|--------------------|
+| $I_{sp}$ (s) | 40--75 | 80--100 | 230--250 | 500--5000 | 800--3000 |
+| Thrust | 10--100 mN | 5--50 mN | 0.1--1 N | 0.01--1 mN | 1--50 mN |
+| Propellant mass (100 m/s, 5 kg S/C) | 0.87 kg | 0.44 kg | 0.18 kg | 0.042 kg | 0.055 kg |
+| System dry mass | 0.3 kg | 0.5 kg | 3.0 kg | 0.9 kg | 1.5 kg |
+| **Total system mass** | **1.17 kg** | **0.94 kg** | **3.18 kg** | **0.94 kg** | **1.55 kg** |
+| Burn time (100 m/s) | Minutes | Minutes | Seconds | **Months** | Days--weeks |
+| Power during firing | < 1 W (valve) | 5--15 W | 2--10 W (preheat) | 20--60 W | 50--300 W |
+| Complexity | Low | Low-medium | High | Medium | High |
+| Cost | ~15 kEUR | ~30 kEUR | ~120 kEUR | ~50 kEUR | ~80 kEUR |
+| TRL | 9 | 7--8 | 7--8 | 7--8 | 6--8 (CubeSat) |
+
+> **Worked Example -- Propellant Mass Comparison for 100 m/s Deorbit**
+>
+> **Scenario:** 3U CubeSat, $m_{\text{dry}} = 5.0$ kg, deorbit from 600 km ($\Delta V = 113$ m/s).
+>
+> **Cold gas** ($I_{sp} = 60$ s, $v_e = 589$ m/s):
+> $m_{\text{prop}} = 5.0 \times (e^{113/589} - 1) = 5.0 \times (e^{0.192} - 1) = 5.0 \times 0.212 =$ **1.06 kg**
+>
+> Total system: 1.06 + 0.3 = 1.36 kg = **23% of 6 kg CubeSat mass limit**
+>
+> **Green monopropellant** ($I_{sp} = 235$ s, $v_e = 2305$ m/s):
+> $m_{\text{prop}} = 5.0 \times (e^{113/2305} - 1) = 5.0 \times (e^{0.0490} - 1) = 5.0 \times 0.0502 =$ **0.251 kg**
+>
+> Total system: 0.251 + 3.0 = 3.25 kg = **54% of mass limit** (system is heavy even though propellant is light)
+>
+> **Electrospray (FEEP)** ($I_{sp} = 1200$ s, $v_e = 11,772$ m/s):
+> $m_{\text{prop}} = 5.0 \times (e^{113/11772} - 1) = 5.0 \times (e^{0.00960} - 1) = 5.0 \times 0.00965 =$ **0.048 kg**
+>
+> Total system: 0.048 + 0.9 = 0.95 kg = **16% of mass limit** (lightest total, but takes months to execute)
+>
+> **Trade-off summary:** The electrospray system is the lightest overall because the high $I_{sp}$ minimises propellant mass, and the dry mass is moderate. Cold gas uses the most propellant but has the lowest dry mass. Green monopropellant is dominated by its heavy feed system. **The optimal choice depends on the mission timeline:** if deorbit must happen quickly (days), cold gas or monoprop; if months are acceptable, electric propulsion wins on mass.
 
 ---
 
-## 3. On-Board Data Handling (15 min)
+## 3. On-Board Data Handling (20 min)
 
 ### Teaching Notes
 
-### OBC Architecture
+### OBC Architecture -- Processor Selection
 
-CubeSat OBCs provide computing, data storage, and bus management:
+The OBC is the spacecraft's brain, managing all data handling, commanding, telemetry generation, and FDIR (Fault Detection, Isolation, and Recovery). Processor selection involves a fundamental trade between radiation tolerance, processing power, power consumption, and cost.
 
-| Component | Typical Specification |
-|-----------|----------------------|
-| Processor | ARM Cortex-M4/M7 or Cortex-A (Linux-capable) |
-| RAM | 64 MB -- 1 GB |
-| Flash storage | 4--128 GB (NOR for code, NAND for data) |
-| Interfaces | I$^2$C, SPI, UART, CAN, RS-422, USB |
-| Operating system | FreeRTOS (real-time) or Linux (data-intensive) |
-| Power | 0.5--3 W depending on processor |
+#### Flight-Heritage Processors
+
+| Processor | Architecture | Clock (MHz) | RAM | Rad Tolerance | Power (W) | TRL (Space) | Cost | Typical Use |
+|-----------|-------------|-------------|-----|---------------|-----------|------------|------|------------|
+| **TI MSP430** | 16-bit RISC | 16--25 | 2--10 kB | Moderate (COTS, tested to 30 krad) | 0.005--0.01 | 9 | < 10 EUR | Ultra-low-power housekeeping, safe mode OBC |
+| **ARM Cortex-M4** (STM32F4) | 32-bit ARM | 168 | 192 kB + ext | Low-moderate (COTS, 10--30 krad) | 0.05--0.20 | 8--9 | 10--20 EUR | **Standard CubeSat OBC**, TM/TC handling, ADCS control loop |
+| **ARM Cortex-M7** (STM32H7) | 32-bit ARM | 400--480 | 1 MB + ext | Low-moderate (COTS, 10--20 krad) | 0.1--0.5 | 7--8 | 15--30 EUR | Higher-performance CubeSat OBC, onboard image processing |
+| **ARM Cortex-A** (Linux-capable, e.g., NXP i.MX6) | 32/64-bit ARM | 500--1200 | 256 MB--1 GB DDR | Low (COTS, < 10 krad) | 1--3 | 6--7 | 20--50 EUR | Payload processing, AI/ML inference, Linux OS |
+| **Xilinx Zynq** (SoC: ARM + FPGA) | ARM Cortex-A9 + Artix-7 FPGA | 667 + programmable | 512 MB + FPGA fabric | Moderate (Zynq-7000) to High (Kintex radhard) | 2--5 | 7--8 | 100--500 EUR | High-throughput data processing, SDR (software-defined radio), image compression |
+| **LEON3/4** (rad-hard SPARC) | 32-bit SPARC | 50--250 | External | High (100--300 krad, SEL immune) | 1--3 | 9 | 10K--50K EUR | ESA heritage missions, GEO, deep space |
+| **RAD750** (BAE Systems) | 32-bit PowerPC | 200 | 128 MB | Very high (1 Mrad, SEL immune) | 5--10 | 9 | 200K+ EUR | NASA flagship missions (MRO, Curiosity, JWST) |
+
+*[Source: ST Microelectronics STM32 datasheets; Xilinx Zynq-7000 datasheet; Cobham Gaisler LEON3 datasheet]*
+
+#### RTOS vs Bare-Metal vs Linux
+
+| Approach | OS | Pros | Cons | When to Use |
+|----------|-----|------|------|------------|
+| **Bare-metal** | None (custom event loop) | Minimum overhead, deterministic timing, smallest code size | Hard to maintain, no task isolation, no file system | Ultra-simple 1U missions (MSP430) |
+| **RTOS** (FreeRTOS, ChibiOS, Zephyr) | Real-time OS | Deterministic scheduling, task isolation, mature ecosystem, small footprint (10--50 kB) | More complex than bare-metal; requires task priority design | **Standard for CubeSat C&DH**: ADCS loop, TM/TC, mode management |
+| **Linux** (Yocto, Buildroot) | Full OS | Rich ecosystem (Python, networking, file system, device drivers), easy development | Non-deterministic (not suitable for hard real-time), large footprint (50+ MB), power-hungry processor | Payload data processing, AI/ML, onboard image analysis |
+
+**Radiation effects on processors:**
+
+The space radiation environment causes two categories of effects:
+
+1. **Total Ionising Dose (TID):** Accumulated radiation damage from trapped protons/electrons and solar particles. Measured in rad(Si) or gray. Causes threshold voltage shifts in CMOS transistors, increasing leakage current and eventually causing functional failure.
+   - LEO (500 km, 51.6 deg): ~1--5 krad/year behind 2 mm Al shielding
+   - LEO polar/SSO (800 km): ~5--10 krad/year
+   - MEO (through proton belt): ~50--100 krad/year
+   - GEO: ~10--30 krad/year
+
+2. **Single Event Effects (SEE):** A single energetic particle (proton or heavy ion) deposits enough charge in a transistor to flip a bit (SEU -- Single Event Upset), latch a transistor (SEL -- Single Event Latchup, potentially destructive), or burn out a power device (SEB -- Single Event Burnout).
+   - **SEU rate in LEO:** ~1--10 bit flips per day per GB of SRAM (highly variable with orbit and shielding)
+   - **SEL mitigation:** Current-limiting resistors on power lines, latchup detection circuits, watchdog resets
+   - **SEU mitigation:** Error Detection and Correction (EDAC) on memory (Hamming codes, TMR -- Triple Modular Redundancy)
+
+**CubeSat approach to radiation:** Most CubeSats in LEO (< 600 km, < 3-year mission) use COTS processors with EDAC on memory and a watchdog timer. Total dose over a 3-year LEO mission is typically 3--15 krad, which most COTS ARM Cortex-M processors survive (tested and characterised, even if not guaranteed). For longer missions, higher orbits, or critical applications, rad-tolerant or rad-hard processors are needed.
 
 ### Data Storage Sizing
 
@@ -5058,36 +6339,40 @@ CubeSat OBCs provide computing, data storage, and bus management:
 >
 > $$S_{\text{required}} = V_{\text{daily}} \times N_{\text{days}} \times f_{\text{safety}}$$
 >
-> where $V_{\text{daily}}$ = daily data generation, $N_{\text{days}}$ = days between full downlinks (typically 1--2 for LEO), $f_{\text{safety}} = 2$ (to handle missed passes).
+> where $V_{\text{daily}}$ = daily data generation, $N_{\text{days}}$ = days between full downlinks (typically 1--3 for LEO), $f_{\text{safety}} = 2$ (to handle missed passes, ground station outages, and safe mode periods).
+>
+> **Storage technologies:**
+>
+> | Technology | Capacity | Write Speed | Radiation Tolerance | Power | CubeSat Use |
+> |-----------|----------|------------|---------------------|-------|------------|
+> | NOR flash | 4--256 MB | 1--5 MB/s | Moderate (10--50 krad) | Low | Code storage, boot ROM, critical parameters |
+> | NAND flash (SLC) | 1--128 GB | 10--50 MB/s | Low-moderate (5--20 krad) | Low | **Primary data storage** |
+> | NAND flash (MLC/TLC) | 32--512 GB | 50--200 MB/s | Low (< 10 krad) | Low | Maximum capacity (use EDAC and scrubbing) |
+> | SD card (industrial) | 4--128 GB | 10--50 MB/s | Low (< 5 krad) | Very low | Budget missions (risk: wear levelling + radiation = data loss) |
+> | MRAM | 1--64 MB | 10--50 MB/s | High (> 100 krad) | Very low | Critical parameters, non-volatile log |
 
 > **Worked Example -- Storage for 3U EO CubeSat**
 >
-> **Given:** Daily generation = 4.5 GB (from Session 3.3 data budget), daily downlink = 1.5 GB, days to clear backlog = $4.5/1.5 = 3$ days.
+> **Given:** Daily generation = 720 MB (from Session 3.3 data budget), daily downlink = 480 MB, days to clear backlog = $720/480 = 1.5$ days.
 >
-> $S_{\text{required}} = 4.5 \times 3 \times 2 = 27$ GB
+> $S_{\text{required}} = 720 \times 3 \times 2 = 4320$ MB $\approx$ **4.3 GB**
 >
-> **Specify:** >= 32 GB flash storage.
-
-### PC/104 Bus Standard
-
-Most CubeSat avionics use the PC/104 stack architecture:
-
-- **Board size:** 96 x 90 mm
-- **Connector:** 104-pin stack-through header (2 x 52 pins, 2.54 mm pitch)
-- **Signals:** 3.3 V, 5 V, 12 V, GND + I$^2$C, SPI, UART, CAN, GPIO
-- **Stack capacity:** 1U ~ 4 boards; 3U ~ 12 boards; 6U ~ 24 boards
+> **Specify:** >= 8 GB NAND flash storage (next standard size). The GomSpace A3200 OBC includes 4 GB NAND flash; adding an 8 GB SD card or additional NAND chip provides adequate capacity.
+>
+> For a high-resolution imager generating 4.5 GB/day, storage requirement is: $4500 \times 3 \times 2 = 27$ GB. Specify >= 32 GB flash storage.
 
 ### Flight Software Functions
 
-| Function | Description |
-|----------|------------|
-| **Mode management** | Transition between Safe, Idle, Imaging, Downlink, Eclipse modes |
-| **ADCS control loop** | Attitude determination + control (PD/PID controller, Kalman filter) |
-| **TM/TC handling** | Generate telemetry packets, execute telecommands |
-| **Data handling** | Payload data acquisition, compression, buffering, downlink queue |
-| **FDIR** | Fault Detection, Isolation, and Recovery (watchdog, safe mode triggers) |
-| **Housekeeping** | Monitor temperatures, voltages, currents, wheel speeds |
-| **Scheduling** | Time-tagged command execution (autonomous imaging, pass prep) |
+| Function | Description | Typical Execution Rate | Criticality |
+|----------|------------|----------------------|-------------|
+| **Mode management** | Transition between Safe, Idle, Imaging, Downlink, Eclipse modes based on state machine | Event-driven | **Critical** (incorrect transition = mission loss) |
+| **ADCS control loop** | Read sensors (star tracker, gyro, magnetometer), compute attitude estimate (Kalman filter), command actuators (PID controller) | 1--10 Hz | **Critical** (loss of pointing = loss of mission) |
+| **TM/TC handling** | Generate CCSDS telemetry packets, parse and execute telecommands | 1 Hz (TM), event-driven (TC) | **Critical** (loss of communication = loss of mission) |
+| **Data handling** | Payload data acquisition, compression (JPEG2000, CCSDS 122.0), buffering, downlink queue management | On-demand | Important |
+| **FDIR** | Fault Detection, Isolation, and Recovery: watchdog timer, over-current protection, sensor consistency checks, autonomous safe mode trigger | 1--10 Hz | **Critical** (must detect and recover from faults autonomously) |
+| **Housekeeping** | Monitor temperatures, voltages, currents, wheel speeds; log to non-volatile memory | 0.1--1 Hz | Important |
+| **Scheduling** | Time-tagged command execution: autonomous imaging over target, downlink preparation before ground pass, desat scheduling | 1 Hz | Important |
+| **Thermal control** | Read temperature sensors, control heaters (on/off thermostat or PID) | 0.1 Hz | Moderate (for heater-equipped missions) |
 
 ---
 
@@ -5110,6 +6395,7 @@ This is the primary hands-on session for Day 4 of the design week. Teams select 
    - Does it fit within the subsystem mass allocation?
    - Is power draw within the power budget for its operational mode?
    - Is the interface compatible (PC/104? I$^2$C? SPI? CAN?)
+   - Is the component qualified for the launch vibration environment?
 5. **Review the Budget Breakdown** on the Dashboard:
    - Has per-subsystem mass changed from the parametric estimate?
    - Is the overall mass margin still positive?
@@ -5160,12 +6446,13 @@ After equipment selection, perform a final budget health check:
 
 ### If a Budget Does Not Close
 
-| Budget | Common Fix | Impact |
-|--------|-----------|--------|
-| **Mass** (negative) | Remove propulsion; select lighter components; reduce redundancy | Risk / performance trade |
-| **Power** (negative) | Add deployable SA; reduce payload duty cycle; select lower-power AOCS | Cost / schedule trade |
-| **Link** (negative) | Increase TX power; use higher-gain antenna; reduce data rate; upgrade coding | Mass / power trade |
-| **Cost** (over ceiling) | Use COTS instead of rad-hard; remove propulsion; reduce ground segment | Risk / capability trade |
+| Budget | Common Fix | Impact | Typical Mass/Power/Cost Trade |
+|--------|-----------|--------|------------------------------|
+| **Mass** (negative) | Remove propulsion; select lighter components; reduce redundancy; move to larger form factor | Risk / performance trade | Removing propulsion saves 0.5--1.5 kg |
+| **Power** (negative) | Add deployable SA; reduce payload duty cycle; select lower-power AOCS; schedule operations to avoid simultaneous loads | Cost / schedule trade | Deployable panel adds ~15 W but costs 0.3 kg + 25 kEUR |
+| **Link** (negative) | Increase TX power; use higher-gain antenna; reduce data rate; upgrade coding; upgrade ground station | Mass / power trade | 3 dB gain from coding is "free"; 3 dB from bigger antenna costs mass |
+| **Cost** (over ceiling) | Use COTS instead of rad-hard; remove propulsion; reduce ground segment; use SatNOGS instead of commercial ground | Risk / capability trade | COTS vs rad-hard saves 10--100x on processor cost |
+| **Pointing** (insufficient) | Upgrade star tracker; improve alignment calibration; add vibration isolation for RW; reduce thermal gradients | Cost / complexity trade | Alignment improvement is usually cheapest |
 
 ---
 
@@ -5175,66 +6462,99 @@ After equipment selection, perform a final budget health check:
 
 The CubeSat Design Specification (CDS Rev 14) defines the 1U envelope:
 
-| Parameter | 1U Specification | UniSat-1 Design |
-|-----------|-----------------|-----------------|
-| Dimensions | 100.0 x 100.0 x 113.5 mm | 100.0 x 100.0 x 113.5 mm (ISIS 1U frame) |
-| Maximum mass | 1.33 kg (CDS Rev 14) | 1.0 kg target (25% margin) |
-| Rail material | Hard anodised Al 7075-T6 | Standard (part of ISIS frame) |
-| Rail cross-section | 8.5 x 8.5 mm minimum | Standard (ISIS) |
-| Deployment switches | Minimum 1 per accessible face | 2 switches (ISIS standard) |
-| RBF pin | Required | Included |
-| CG offset | <= 2 cm from geometric centre | < 1 cm (symmetric layout) |
-| Protrusions | None beyond rail envelope (stowed) | UHF antenna stowed along rail |
+| Parameter | 1U Specification | UniSat-1 Design | Compliance |
+|-----------|-----------------|-----------------|------------|
+| Dimensions | 100.0 x 100.0 x 113.5 mm | 100.0 x 100.0 x 113.5 mm (ISIS 1U frame) | **Pass** |
+| Maximum mass | 2.0 kg (CDS Rev 14, ISIPOD) | 1.0 kg target (50% margin to 2 kg limit) | **Pass** |
+| Rail material | Hard anodised Al 7075-T6 | Standard (part of ISIS frame, 7075-T6, Type III anodise) | **Pass** |
+| Rail cross-section | 8.5 x 8.5 mm minimum | Standard (ISIS: 8.5 x 8.5 mm) | **Pass** |
+| Deployment switches | Min 1 per accessible face | 2 switches (ISIS standard, on +X/-X rail faces) | **Pass** |
+| RBF pin | Required | Included (ISIS standard, on -Z face) | **Pass** |
+| CG offset | <= 2 cm from geometric centre | < 1 cm (symmetric PCB stack layout, battery centred) | **Pass** |
+| Protrusions | None beyond rail envelope (stowed) | UHF monopole antenna stowed along rail (spring-loaded, within envelope) | **Pass** |
+| Fundamental frequency | > 40 Hz first mode | ~600 Hz (1U Al structure is extremely stiff) | **Pass** |
 
 **Note on CDS mass limit:** The CDS Rev 14 specifies 2.0 kg as the 1U deployer limit for the ISIPOD. However, many deployer providers (e.g., NanoRacks, Exolaunch) specify 1.33 kg for 1U. Always check the specific deployer ICD. UniSat-1 targets 1.0 kg, well within either limit.
 
-**No propulsion:** At 400 km altitude, atmospheric drag provides natural deorbit within approximately 1 year. The ballistic coefficient for a 1U is:
+**No propulsion:** At 400 km altitude, atmospheric drag provides natural deorbit. The ballistic coefficient for a 1U is:
 
 $BC = \frac{m}{C_D \times A} = \frac{1.0}{2.2 \times 0.01} = 45.5$ kg/m$^2$
 
-This gives an orbital lifetime of approximately 8--14 months depending on solar activity (F10.7 index). The FCC 5-year rule and IADC 25-year guideline are both satisfied without any propulsion system.
+This gives an orbital lifetime of approximately 8--14 months depending on solar activity (F10.7 index). At solar maximum (F10.7 > 200), the denser atmosphere deorbits the satellite in ~6 months. At solar minimum (F10.7 ~ 70), lifetime extends to ~18 months. Both are within the FCC 5-year rule and IADC 25-year guideline without any propulsion system.
+
+**OBC selection rationale:** UniSat-1 uses a custom board based on the TI MSP430 (safe mode / housekeeping) + STM32F4 Cortex-M4 (main OBC). The MSP430 runs bare-metal firmware handling the watchdog, power monitoring, and safe-mode recovery. The STM32F4 runs FreeRTOS handling TM/TC, magnetometer data acquisition, and scheduling. Dual-processor architecture provides redundancy: if the STM32F4 fails (SEU, latchup), the MSP430 can maintain safe-mode operations and respond to ground commands.
+
+**Data storage:** With 0.84 MB/day of magnetometer data and 4800 bps downlink, onboard storage is not a bottleneck. A 4 MB NOR flash is more than adequate (stores ~4 days of data as buffer). No NAND flash, no SD card needed.
 
 **Complete 1U Equipment List:**
 
-> | # | Category | Component | Mass (g) | Power (W) | Cost (kEUR) | Qty |
-> |---|----------|-----------|----------|----------|-------------|-----|
-> | 1 | Structure | ISIS 1U CubeSat structure | 200 | -- | 4.0 | 1 |
-> | 2 | EPS | GomSpace NanoPower P31us (board + battery) | 200 | 0.3 | 12.0 | 1 |
-> | 3 | Solar cells | Body-mounted GaAs cells (5 faces) | 50 | -- | 8.0 | 5 |
-> | 4 | OBC | Custom MSP430/Cortex-M board | 30 | 0.3 | 3.0 | 1 |
-> | 5 | Comms | UHF transceiver (e.g., NanoCom AX100) | 60 | 0.5 (TX) | 8.0 | 1 |
-> | 6 | Antenna | UHF monopole/dipole (deployable) | 20 | -- | 2.0 | 1 |
-> | 7 | Payload | MEMS magnetometer (custom PCB) | 50 | 0.2 | 5.0 | 1 |
-> | 8 | AOCS (passive) | Permanent magnet + hysteresis rods | 30 | 0 | 1.0 | 1 |
-> | 9 | Harness | Internal cables, connectors | 50 | -- | 1.0 | 1 |
-> | | **TOTAL** | | **690** | **~1.3 (peak)** | **~44** | |
+> | # | Category | Component | Mass (g) | Power (W) | Cost (kEUR) | Qty | Interface |
+> |---|----------|-----------|----------|----------|-------------|-----|-----------|
+> | 1 | Structure | ISIS 1U CubeSat structure (Al 7075-T6) | 200 | -- | 4.0 | 1 | Mechanical |
+> | 2 | EPS | GomSpace NanoPower P31us (EPS board + 2S Li-ion battery, 10 Wh) | 200 | 0.3 (quiescent) | 12.0 | 1 | I$^2$C |
+> | 3 | Solar cells | Body-mounted triple-junction GaAs cells (5 faces) | 50 | -- (generates power) | 8.0 | 5 | Direct to EPS |
+> | 4 | OBC | Custom MSP430 + STM32F4 board (with 4 MB NOR flash) | 30 | 0.3 | 3.0 | 1 | I$^2$C, SPI, UART |
+> | 5 | Comms | UHF transceiver (NanoCom AX100, 0.5 W TX, 9600 bps) | 60 | 0.5 (TX) / 0.1 (RX) | 8.0 | 1 | SPI |
+> | 6 | Antenna | UHF monopole (deployable, $\lambda/4 = 17$ cm nitinol) | 20 | -- | 2.0 | 1 | RF coax |
+> | 7 | Payload | MEMS magnetometer (custom PCB, PNI RM3100 sensor) | 50 | 0.2 | 5.0 | 1 | SPI |
+> | 8 | AOCS (passive) | Permanent magnet (AlNiCo, 0.5 A m$^2$) + 2 hysteresis rods (HyMu-80) | 30 | 0 | 1.0 | 1 | None (passive) |
+> | 9 | Harness | Internal cables, connectors, PC/104 stack header | 50 | -- | 1.0 | 1 | Various |
+> | | **TOTAL** | | **690** | **~1.3 (peak TX)** | **~44** | | |
 >
-> **Mass margin:** 1330 - 690 = 640 g (48%) or 1330 - 994 (MEV with 20% equip + 20% system) = 336 g (25%). **Green.**
+> **Mass budget:**
 >
-> **Key insight:** The entire UniSat-1 BOM is 5 COTS components plus 2 custom boards (OBC and magnetometer). Total hardware cost is ~44 kEUR -- an order of magnitude less than a typical 3U mission. With labour, I&T, and launch, the total mission cost is 80--150 kEUR.
+> | Level | Mass (g) |
+> |-------|----------|
+> | CBE (Current Best Estimate) | 690 |
+> | + 20% equipment margin | 828 |
+> | + 20% system margin | 994 |
+> | **MEV (Maximum Expected Value)** | **994** |
+> | Deployer limit (ISIPOD) | 2000 |
+> | **Margin to limit** | **1006 g (50%)** |
+>
+> **Power budget (worst case: TX mode in sunlight):**
+>
+> | Load | Power (W) |
+> |------|----------|
+> | OBC (STM32F4 + MSP430) | 0.3 |
+> | EPS quiescent | 0.3 |
+> | UHF TX | 0.5 |
+> | Magnetometer | 0.2 |
+> | **Total peak** | **1.3** |
+> | SA available (orbit avg, EOL) | 2.3 |
+> | **Margin** | **1.0 W (43%)** |
+>
+> **Key insight:** The entire UniSat-1 BOM is 5 COTS components plus 2 custom boards (OBC and magnetometer PCB). Total hardware cost is ~44 kEUR -- an order of magnitude less than a typical 3U mission. With labour, I&T, launch, and operations, the total mission cost is 80--150 kEUR. This demonstrates that a useful space mission can be built for less than the cost of a mid-range car.
 
 ---
 
 ## Worked Example: Complete 3U EO CubeSat Equipment List
 
-> | Category | Component | Mass (kg) | Power (W) | Cost (kEUR) | Qty |
-> |----------|-----------|----------|----------|-------------|-----|
-> | EPS Board | GomSpace P31u | 0.10 | 0.5 | 8 | 1 |
-> | Battery | GomSpace BP4 (20 Wh) | 0.20 | -- | 5 | 1 |
-> | Solar Panels | MMA HaWK (deploy) | 0.45 | -- | 25 | 2 |
-> | OBC | GomSpace A3200 | 0.08 | 1.0 | 12 | 1 |
-> | Reaction Wheel | Blue Canyon RW210 | 0.055 | 0.6 | 8 | 4 |
-> | Magnetorquer | CubeSpace CubeMAG | 0.03 | 0.1 | 3 | 3 |
-> | Star Tracker | Blue Canyon NST | 0.35 | 1.5 | 35 | 1 |
-> | Sun Sensor | NewSpace NFSS-411 | 0.005 | 0.01 | 1 | 6 |
-> | Transponder | Endurosat S-band TX/RX | 0.10 | 6.0 (TX) | 15 | 1 |
-> | Antenna | Endurosat S-band patch | 0.02 | -- | 3 | 1 |
-> | Payload | Custom telescope | 1.50 | 5.0 | 150 | 1 |
-> | Structure | ISIS 3U frame | 0.30 | -- | 8 | 1 |
-> | Harness | Custom | 0.15 | -- | 5 | 1 |
-> | **TOTAL** | | **3.57** | **~10 (imaging)** | **~290** | |
+> | Category | Component | Mass (kg) | Power (W) | Cost (kEUR) | Qty | Interface |
+> |----------|-----------|----------|----------|-------------|-----|-----------|
+> | EPS Board | GomSpace P31u (MPPT, 3.3V/5V/batt rails) | 0.10 | 0.5 | 8 | 1 | I$^2$C |
+> | Battery | GomSpace BP4 (2S2P, 38 Wh, Li-ion 18650) | 0.20 | -- | 5 | 1 | I$^2$C (telemetry) |
+> | Solar Panels | MMA HaWK deployable (TJ GaAs, ~12 W/panel BOL) | 0.45 | -- | 25 | 2 | Direct to EPS |
+> | OBC | GomSpace A3200 (ARM Cortex-A, Linux, 4 GB NAND) | 0.08 | 1.0 | 12 | 1 | I$^2$C, SPI, UART |
+> | Reaction Wheel | Blue Canyon RW210 (1 mN m torque, 10 mN m s momentum) | 0.055 | 0.6 | 8 | 4 | SPI |
+> | Magnetorquer | CubeSpace CubeMAG (0.2 A m$^2$ dipole) | 0.03 | 0.1 | 3 | 3 | I$^2$C |
+> | Star Tracker | Blue Canyon NST (10 arcsec accuracy, 2 Hz update) | 0.35 | 1.5 | 35 | 1 | SPI/UART |
+> | Sun Sensor | NewSpace NFSS-411 (0.5 deg accuracy, fine analog) | 0.005 | 0.01 | 1 | 6 | Analog/I$^2$C |
+> | Transponder | Endurosat S-band TX/RX (2 W, QPSK+LDPC, 1--5 Mbps) | 0.10 | 6.0 (TX) | 15 | 1 | SPI |
+> | Antenna | Endurosat S-band patch (6 dBi, RHCP) | 0.02 | -- | 3 | 1 | RF coax |
+> | Payload | Custom telescope (multispectral, 5 m GSD) | 1.50 | 5.0 | 150 | 1 | LVDS/SPI |
+> | Structure | ISIS 3U frame (Al 7075-T6, hard anodised) | 0.30 | -- | 8 | 1 | Mechanical |
+> | Harness | Custom cables, connectors, PC/104 stack | 0.15 | -- | 5 | 1 | Various |
+> | **TOTAL** | | **3.57** | **~10 (imaging mode)** | **~290** | | |
 >
-> **Parametric estimate from Session 2.4:** 3.68 kg CBE. **Equipment total:** 3.57 kg. Difference: -3% (within expected range).
+> **Parametric estimate from Session 2.4:** 3.68 kg CBE. **Equipment total:** 3.57 kg. Difference: -3% (within expected accuracy of parametric models).
+>
+> **Mass budget:**
+> - CBE: 3.57 kg
+> - + 20% equipment margin: 4.28 kg
+> - + 20% system margin: 5.14 kg (MEV)
+> - CDS limit: 6.0 kg
+> - **Margin to limit: 0.86 kg (14%)** -- amber, acceptable for Phase A but tight for Phase B+.
 
 ---
 
@@ -5242,15 +6562,24 @@ This gives an orbital lifetime of approximately 8--14 months depending on solar 
 
 | Topic | Key Takeaway |
 |-------|-------------|
-| CDS compliance | Standard dimensions, rail specs, deployment switches, RBF pin, CG limits |
-| Launch loads | 6--9 g axial, random vibe 20--2000 Hz; MoS $\geq$ 0 with FoS 1.25 (yield) / 1.5 (ultimate) |
-| Frequency req | First mode > 40 Hz; CubeSat structures easily meet this; PCBs and deployables are the risk |
-| Tsiolkovsky | $m_{\text{prop}} = m_{\text{dry}} \times (e^{\Delta V/(I_{sp} g_0)} - 1)$ |
-| Propulsion trades | High-$I_{sp}$: less propellant, more dry mass, long burns; Low-$I_{sp}$: more propellant, light system, fast burns |
+| CDS compliance | Standard dimensions, Al 7075-T6 anodised rails (8.5 mm), deployment switches, RBF pin, CG limits |
+| Structural materials | Al 7075-T6: $\sigma_y = 503$ MPa, $E = 72$ GPa; anodisation for wear/insulation; CFRP not suitable for rails |
+| Launch loads | 6--12 g axial QS, 7 grms random vib (20--2000 Hz), 500--2000 g shock; PCB solder joints are the weak point |
+| Structural MoS | $\text{MoS} = \sigma_{\text{allow}}/(\sigma_{\text{design}} \times \text{FoS}) - 1 \geq 0$; FoS 1.25 yield / 1.5 ultimate (metallic) |
+| Frequency req | First mode > 40 Hz; CubeSat Al structures easily exceed this; local modes (PCBs, deployables) are the risk |
+| Tsiolkovsky equation | $m_{\text{prop}} = m_{\text{dry}} \times (e^{\Delta V/(I_{sp} g_0)} - 1)$; exponential growth with $\Delta V / v_e$ |
+| Cold gas | $I_{sp}$ 40--75 s; simple, fast, reliable; heavy propellant penalty for $\Delta V > 30$ m/s |
+| Green monoprop | $I_{sp}$ 225--250 s; high thrust (0.1--1 N); heavy feed system; AF-M315E and LMP-103S flight-proven |
+| Electrospray (FEEP) | $I_{sp}$ 500--5000 s; minimal propellant; months-long burns; 20--60 W power; indium or ionic liquid |
+| Hall thruster | $I_{sp}$ 800--3000 s; moderate thrust (1--50 mN); 50--300 W; iodine emerging as Xe alternative |
+| Propulsion trades | High-$I_{sp}$: less propellant, more dry mass, long burns; Low-$I_{sp}$: more propellant, lighter system, fast burns |
 | When to skip propulsion | Below 500 km (natural deorbit); tech demo; differential drag constellation |
-| Data handling | Storage $\geq 2\times$ daily generation; PC/104 stack architecture; FreeRTOS or Linux |
-| Equipment selection | Live budget tracking; RF compatibility check; trade study for contested selections |
-| Budget closure | All margins must be positive before proceeding to integration week |
+| OBC processors | MSP430 (0.01 W, safe mode), Cortex-M4 (0.2 W, standard CubeSat), Zynq (3 W, high-throughput), LEON3 (rad-hard, ESA) |
+| RTOS vs Linux | FreeRTOS for real-time C&DH (standard); Linux for payload processing (data-intensive) |
+| Radiation effects | TID: 1--10 krad/yr LEO; SEU: 1--10 bit flips/day/GB; mitigate with EDAC, watchdog, redundancy |
+| Data storage | $S \geq 2\times$ daily generation; SLC NAND flash for primary storage; NOR flash for code/critical params |
+| Equipment selection | Live budget tracking; RF compatibility check; interface compatibility; trade study for contested selections |
+| Budget closure | All margins must be positive before proceeding to integration week; mass margin > 10% at Phase A |
 
 ---
 

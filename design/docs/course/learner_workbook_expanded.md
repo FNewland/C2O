@@ -1,7 +1,7 @@
 ---
 title: "SpaceCDF Learner's Workbook"
 subtitle: "Worksheets and exercises for the 40-hour Concurrent Design Facility intensive"
-version: "v4 — 2026-05-09"
+version: "v5 — 2026-05-10"
 ---
 
 # Learner's Workbook
@@ -1576,6 +1576,72 @@ _____________________________________________________________________
 
 ---
 
+## Quick Reference: Power and Thermal Concepts
+
+### What is a Solar Array?
+
+A solar array converts sunlight into electrical power using photovoltaic cells. In space, the solar flux (called the solar constant) is $S = 1361$ W/m$^2$ at 1 AU from the Sun -- about 40% more intense than at Earth's surface because there is no atmosphere absorbing part of the spectrum.
+
+**Solar cell types and efficiency (AM0, space spectrum):**
+
+| Cell Technology | Typical Efficiency | Degradation Rate | Cost Relative | Notes |
+|----------------|-------------------|------------------|--------------|-------|
+| Silicon (Si) | 16--18% | ~3.5%/yr | Low | Legacy; rarely used in new missions |
+| Gallium Arsenide (GaAs) single-junction | 22--24% | ~2.5%/yr | Medium | Good radiation tolerance |
+| Triple-junction GaAs (InGaP/GaAs/Ge) | 28--30% | ~2.5%/yr | High | CubeSat standard today |
+| Multi-junction (4J, 5J) | 32--35% | ~2%/yr | Very high | Emerging; used on flagship missions |
+
+For CubeSat design, assume **triple-junction GaAs cells at 29.5% efficiency** ($\eta = 0.295$). Cells are mounted on panels with a **packing factor** of $f_{\text{pack}} = 0.80$--$0.85$, meaning 80--85% of the panel area is actually covered by active cells (the rest is gaps, wiring, and structural margin).
+
+**Degradation:** Solar cells lose efficiency over time due to radiation damage (proton and electron bombardment in the Van Allen belts). At a rate of $\delta = 2.5\%$ per year, after $n$ years the remaining efficiency is $(1 - 0.025)^n$. This means a 3-year mission loses about 7.3% of its beginning-of-life (BOL) power, and a 5-year mission loses about 11.9%.
+
+### Body-Mounted vs Deployable Solar Arrays
+
+| Configuration | Advantages | Disadvantages | Typical Power |
+|--------------|-----------|---------------|---------------|
+| **Body-mounted** | No moving parts, no deployment risk, no stowed volume penalty | Limited area (only the sunlit faces), power varies with attitude | 1U: ~2 W, 3U: ~7 W, 6U: ~12 W |
+| **Single deployable** | More area, moderate complexity | One mechanism, partially blocks FOV | 1U: ~4 W, 3U: ~15 W, 6U: ~30 W |
+| **Dual deployable** | Maximum area for the form factor | Two mechanisms, larger stowed volume, deployment risk | 3U: ~25 W, 6U: ~48 W |
+
+**Rule of thumb:** If your total power demand (including battery recharge) exceeds what body-mounted panels can provide, you need deployable arrays. Compare your $P_{\text{SA,BOL}}$ to the reference power values above.
+
+### How Batteries Work in Space
+
+Batteries store electrical energy to power the spacecraft during eclipse (when the satellite is in Earth's shadow and receives no sunlight). In LEO, eclipses occur every orbit -- typically 30--36 minutes out of a ~95-minute orbit period.
+
+**Key battery parameters:**
+
+- **Depth of Discharge (DOD):** The fraction of total battery capacity used each cycle. Lower DOD dramatically extends cycle life but requires a larger (heavier) battery.
+- **Cycle life:** The number of charge/discharge cycles before the battery degrades below 80% of its original capacity.
+- **Specific energy:** Energy stored per unit mass (Wh/kg). For space-grade Li-ion 18650 cells: 150--200 Wh/kg.
+
+| DOD | Typical Cycle Life (Li-ion 18650) | Suitable Mission Duration |
+|-----|----------------------------------|--------------------------|
+| 80% | ~500 cycles | Short missions (< 1 month) |
+| 50% | ~2,000 cycles | Medium missions (< 6 months) |
+| 30% | ~10,000 cycles | Multi-year LEO missions |
+| 20% | ~30,000 cycles | Long-life LEO (> 5 years) |
+
+**Design guidance:** For a multi-year LEO mission (15 orbits/day), use DOD = 30%. For a 6-month technology demonstration, DOD = 50% is acceptable.
+
+### What Does the EPS Do?
+
+The Electrical Power System (EPS) is the spacecraft's power utility. A typical CubeSat EPS board (e.g., GomSpace P31u) includes:
+
+- **MPPT (Maximum Power Point Tracking):** A DC-DC converter that continuously adjusts the operating voltage of the solar array to extract maximum power. Efficiency: 90--95%.
+- **Battery charge controller:** Manages battery charging with voltage and current limits to protect battery life.
+- **Regulated voltage rails:** Provides fixed voltages (typically 3.3 V, 5 V, and unregulated battery voltage) to all subsystems.
+- **Switched outputs:** Allows the OBC to turn subsystems on/off for power management and safe mode.
+- **Overcurrent protection:** Protects against short circuits in any subsystem.
+
+### Thermal Control Basics
+
+In space, there is no air for convection. Heat transfer occurs only by **radiation** and **conduction**. A spacecraft reaches thermal equilibrium when absorbed heat (solar flux, Earth albedo, Earth IR, internal electronics waste heat) equals radiated heat (to deep space at ~3 K).
+
+**ECSS thermal margins (ECSS-E-ST-31C):** Operating $\pm$5 degC, Acceptance $\pm$10 degC, Qualification $\pm$15 degC. If the predicted temperature of any component is within 5 degC of its operating limit, you must add thermal control (heater, coating change, or radiator).
+
+---
+
 ## Key Equations Reference
 
 > **SA EOL power:** $P_{\text{SA,EOL}} = P_{\text{peak}} + \frac{P_{\text{ecl}} \times t_{\text{ecl}}}{t_{\text{sun}} \times \eta_{\text{charge}}}$
@@ -1589,6 +1655,46 @@ _____________________________________________________________________
 > **Thermal equilibrium:** $T = \left(\frac{Q_{\text{abs}} + Q_{\text{int}}}{\varepsilon \sigma A_{\text{rad}}}\right)^{1/4}$ &nbsp;&nbsp; ($\sigma = 5.67 \times 10^{-8}$ W/m$^2$/K$^4$)
 >
 > **ECSS thermal margins:** Operating +/-5 degC, Acceptance +/-10 degC, Qualification +/-15 degC
+
+---
+
+## Worked Example: UniSat-1 (1U) Power and Thermal
+
+### Solar Array Sizing (Body-Mounted)
+
+UniSat-1 uses body-mounted solar cells on 5 faces (the 6th face is the deployment interface). ISS orbit: 400 km altitude, 92.4 min period, 56 min sunlight, 36 min eclipse.
+
+**Given:** $P_{\text{peak,sunlight}} = 1.2$ W, $P_{\text{eclipse}} = 0.5$ W (OBC only), mission lifetime = 6 months.
+
+**Step 1 -- Effective illuminated area (passive magnetic attitude, ~1.5 faces average):**
+
+$A_{\text{eff}} = 1.5 \times (0.10 \times 0.10) = 0.015$ m$^2$
+
+**Step 2 -- SA BOL power:**
+
+$P_{\text{SA,BOL}} = \eta \times S \times A_{\text{eff}} \times f_{\text{pack}} = 0.295 \times 1361 \times 0.015 \times 0.80 = 4.82$ W (illuminated peak)
+
+**Step 3 -- Orbit-average power available:**
+
+$P_{\text{avg}} = P_{\text{SA,BOL}} \times \frac{t_{\text{sun}}}{T_{\text{orbit}}} \times \eta_{\text{EPS}} = 4.82 \times \frac{56}{92.4} \times 0.85 = 2.48$ W
+
+**Step 4 -- After 6-month degradation:**
+
+$(1 - 0.025)^{0.5} = 0.987$, so $P_{\text{avg,EOL}} = 2.48 \times 0.987 = 2.45$ W
+
+**Step 5 -- Power demand:** $P_{\text{avg,demand}} = 0.68$ W. Margin = $2.45 - 0.68 = 1.77$ W (72%). **Comfortable.**
+
+### Battery Sizing
+
+**Given:** $P_{\text{ecl}} = 0.5$ W, $t_{\text{ecl}} = 36$ min $= 0.60$ h, $DOD = 0.50$ (acceptable for 6-month mission), $\eta = 0.95$.
+
+$C_{\text{bat}} = \frac{0.5 \times 0.60}{0.50 \times 0.95} = \frac{0.30}{0.475} = 0.63$ Wh
+
+Specify minimum **10 Wh** (standard GomSpace NanoPower P31u battery). Actual DOD per eclipse = 0.63/10 = 6.3%. Cycle count: 6 months at 15 orbits/day = 2,740 eclipses. At 6.3% actual DOD, battery life is not a concern. **Pass.**
+
+### Thermal Check (Passive Only)
+
+UniSat-1 uses no heaters or MLI. At 400 km, strong Earth IR (~240 W/m$^2$) provides a warm floor. With COTS electronics rated -20 to +60 degC and a 400 km orbit, the thermal environment stays within approximately -10 to +45 degC for a 1U with aluminium/anodised surfaces. A simplified cold-case equilibrium calculation gives a very cold steady-state temperature, but the thermal mass of a 1 kg CubeSat limits actual cooling during 36-minute eclipses. **No heaters required for a 6-month mission at 400 km.**
 
 ---
 
@@ -1733,7 +1839,41 @@ _____________________________________________________________________
 
 ---
 
+## Decision Justification
+
+Explain WHY you chose each element of your power and thermal design. Consider the alternatives you rejected and the trade-offs involved.
+
+**Solar array configuration choice and rationale:**
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+**Battery sizing rationale (why this DOD? why this capacity margin?):**
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+**Thermal control approach (passive only? heaters? coatings?):**
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+---
+
 ## Notes & Reflections
+
+_____________________________________________________________________
+
+_____________________________________________________________________
 
 _____________________________________________________________________
 
@@ -1766,6 +1906,64 @@ _____________________________________________________________________
 
 ---
 
+## Quick Reference: AOCS Concepts
+
+### What is AOCS?
+
+The Attitude and Orbit Control System performs two distinct jobs:
+
+- **Attitude Determination (AD):** Figuring out which way the spacecraft is pointing, using sensors.
+- **Attitude Control (AC):** Changing or holding the spacecraft's orientation, using actuators.
+
+These are separate problems. You can know your orientation perfectly (great sensors) but still wobble if your actuators are weak. Or you can have powerful actuators but poor knowledge of where you are pointing.
+
+### Sensors: How Do We Know Where We Are Pointing?
+
+| Sensor | What It Measures | Accuracy | Mass | Power | Cost | When You Use It |
+|--------|-----------------|----------|------|-------|------|----------------|
+| **Magnetometer** | Direction of Earth's magnetic field | ~2--5 deg | ~5 g | ~0.1 W | ~1 kEUR | Coarse determination; always on for B-field knowledge |
+| **Coarse sun sensor** | Direction to the Sun (1--2 axes) | ~2--5 deg | ~5 g | ~0.01 W | ~0.5 kEUR | Safe mode; initial acquisition |
+| **Fine sun sensor** | Direction to the Sun (2 axes, high precision) | ~0.1--0.5 deg | ~10 g | ~0.05 W | ~2 kEUR | Sun-pointing missions; backup to star tracker |
+| **Star tracker** | Full 3-axis attitude from star patterns | ~0.001--0.01 deg (3--30 arcsec) | 50--350 g | ~0.5--1.5 W | ~20--35 kEUR | Precision pointing for imaging, comms, science |
+| **MEMS gyroscope** | Angular rate (rotation speed) | Drift: ~1--10 deg/hr | ~20 g | ~0.3 W | ~3 kEUR | Fills gaps during star tracker blinding; slew control |
+| **Earth sensor** | Nadir direction (local vertical) | ~0.1--0.5 deg | ~50 g | ~0.5 W | ~5 kEUR | Nadir-pointing missions (less common on CubeSats) |
+
+**Key insight:** Star trackers are by far the most accurate sensor. They work by photographing the sky, matching the observed star pattern to an onboard catalogue, and computing the spacecraft's orientation to within a few arcseconds. However, they are blinded by the Sun, Moon, or Earth limb entering their field of view, so sun sensors or gyroscopes provide backup during these periods.
+
+### Actuators: How Do We Control Our Orientation?
+
+| Actuator | How It Works | Torque | Precision | Mass | Power | When You Use It |
+|----------|-------------|--------|-----------|------|-------|----------------|
+| **Permanent magnet** | Aligns spacecraft with Earth's B-field like a compass needle | ~$10^{-5}$ N m (restoring) | ~10--15 deg | ~20 g | 0 W | Passive stabilisation for missions with no pointing need |
+| **Hysteresis rods** | Dissipate rotational energy through magnetic hysteresis; damp tumbling | N/A (damping only) | N/A | ~10 g each | 0 W | Always paired with permanent magnet for passive stabilisation |
+| **Magnetorquers (MTQ)** | Electromagnetic coils that interact with Earth's magnetic field to produce torque | ~$10^{-6}$--$10^{-4}$ N m | ~2--5 deg (as primary); N/A (as desaturation) | ~10--30 g each | 0.1--0.2 W | **Primary control** for low-precision missions; **desaturation** of reaction wheels for all RW-based systems |
+| **Reaction wheels (RW)** | Spinning flywheels that exchange angular momentum with the spacecraft | ~$10^{-4}$--$10^{-2}$ N m | ~0.001--0.01 deg | 30--120 g each | 0.3--1.5 W | Precision pointing -- any mission requiring < 2 deg accuracy |
+| **Thrusters** | Expel mass (cold gas, ions) to produce torque via offset force | Variable | ~0.1--1 deg | System-dependent | High | Large slews; orbit adjust; when MTQs are insufficient (deep space) |
+
+**Magnetorquers -- two critical roles:**
+
+1. **As primary actuators** (missions needing only 2--5 deg pointing): MTQs alone provide 3-axis control, but only in LEO where Earth's magnetic field is strong. They cannot produce torque parallel to the local field vector, so control authority varies around the orbit.
+
+2. **As desaturation actuators** (all RW-based missions): Reaction wheels absorb disturbance torques by spinning up. Over time, they accumulate angular momentum and reach saturation (maximum spin speed). MTQs "dump" this stored momentum by generating opposing torque against Earth's magnetic field. This is done approximately once per orbit, taking 5--15 minutes.
+
+**Reaction wheels -- why 4 wheels?** Three wheels (one per axis) provide minimum 3-axis control. A 4th wheel on a skew axis provides single-fault tolerance: if any one wheel fails, the remaining three still provide full 3-axis control.
+
+### AOCS Architecture Decision Table
+
+Use this table to select your architecture based on your pointing requirement:
+
+| Pointing Requirement | Architecture | Sensors | Actuators | Mass | Power | Cost |
+|---------------------|-------------|---------|-----------|------|-------|------|
+| > 5 deg (no pointing need) | Passive magnetic | Magnetometer | Permanent magnet + hysteresis rods | ~50 g | 0 W | ~2 kEUR |
+| 2--5 deg | Magnetorquer-based | Coarse sun sensors + magnetometer | 3-axis MTQ | ~100 g | 0.2 W | ~8 kEUR |
+| 0.1--2 deg | Reaction wheel system | Fine sun sensors + magnetometer | 3--4 RW + 3 MTQ (desaturation) | ~500 g | 2--4 W | ~35 kEUR |
+| < 0.1 deg | Fine pointing | Star tracker + fine sun sensors | 4 RW + 3 MTQ | ~800 g | 3--5 W | ~55 kEUR |
+| < 0.01 deg | Very fine pointing | Star tracker + MEMS gyro + sun sensors | 4 RW + 3 MTQ | ~1200 g | 4--6 W | ~80 kEUR |
+
+**How to use this table:** Find your mission's pointing requirement (from your requirements worksheet). Read across to find the architecture, sensors, and actuators you need. If your mission is an Earth-observation camera needing 0.05 deg pointing, you need fine pointing (star tracker + 4 RW + 3 MTQ). If your mission is an IoT relay needing only 5 deg pointing, magnetorquers alone suffice.
+
+---
+
 ## Key Equations Reference
 
 > **Gravity gradient torque:** $T_{gg} = \frac{3\mu}{2a^3}|I_z - I_x|\sin(2\theta)$
@@ -1781,6 +1979,37 @@ _____________________________________________________________________
 > **Pointing error (RSS):** $\theta_{\text{total}} = \sqrt{\sum \theta_i^2}$
 >
 > **MTQ torque:** $T_{\text{MTQ}} = m_{\text{dipole}} \times B \times \sin(\alpha)$
+
+---
+
+## Worked Example: UniSat-1 (1U) AOCS
+
+### Architecture Selection
+
+UniSat-1 carries a MEMS magnetometer payload that does not require accurate pointing. In fact, a slowly rotating/tumbling state provides magnetic field measurements across multiple directions, improving data quality.
+
+**Architecture: Passive magnetic stabilisation** (permanent magnet + hysteresis rods). No pointing error budget is needed because there is no pointing requirement.
+
+| Parameter | Value |
+|-----------|-------|
+| Pointing accuracy | ~10--15 deg (to local magnetic field) |
+| Mass | ~30--50 g |
+| Power | 0 W |
+| Cost | ~1--2 kEUR |
+
+### Disturbance Torques at 400 km
+
+Even though UniSat-1 has no active AOCS, understanding the disturbance environment confirms that the passive magnet provides sufficient restoring torque.
+
+**Gravity gradient** (1U is nearly cubic, so $I_z \approx I_x$, making this very small):
+
+$T_{gg} \approx \frac{3 \times 3.986 \times 10^{14}}{2 \times (6.771 \times 10^6)^3} \times |I_z - I_x| \approx 1 \times 10^{-8}$ N m
+
+**Aerodynamic** ($\rho$ at 400 km $\approx 4 \times 10^{-12}$ kg/m$^3$, $v \approx 7670$ m/s):
+
+$T_{\text{aero}} = 0.5 \times 4 \times 10^{-12} \times 7670^2 \times 2.2 \times 0.01 \times 0.01 \approx 3 \times 10^{-8}$ N m
+
+**Permanent magnet restoring torque:** $\sim 1 \times 10^{-5}$ N m -- three orders of magnitude larger than all disturbances. **The satellite stays field-aligned.**
 
 ---
 
@@ -1868,6 +2097,8 @@ $T_{\text{mag}} = $ _____ $\times$ _____ $= $ _____ N m
 
 ## Part C: Reaction Wheel Sizing (10 min)
 
+*Skip this section if your mission uses passive magnetic or MTQ-only architecture.*
+
 **1. Torque requirement** ($\geq 2\times$ total disturbance):
 
 $T_{\text{RW,req}} = 2 \times$ _____ $= $ _____ N m $= $ _____ mN m
@@ -1889,6 +2120,8 @@ $H = T_{\text{dist}} \times \frac{t_{\text{desat}}}{2} = $ _____ $\times \frac{\
 ---
 
 ## Part D: Pointing Error Budget (15 min)
+
+*Skip this section if your mission uses passive magnetic stabilisation (no pointing requirement).*
 
 Complete the RSS pointing error budget:
 
@@ -1936,7 +2169,39 @@ _____________________________________________________________________
 
 ---
 
+## Decision Justification
+
+Explain WHY you chose your AOCS architecture. Consider the alternatives and what drove your decision.
+
+**Why this architecture and not a simpler one?**
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+**Why this architecture and not a more capable one?**
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+**What is the single biggest risk in your AOCS design?**
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+---
+
 ## Notes & Reflections
+
+_____________________________________________________________________
+
+_____________________________________________________________________
 
 _____________________________________________________________________
 
@@ -1969,6 +2234,88 @@ _____________________________________________________________________
 
 ---
 
+## Quick Reference: Communications Concepts
+
+### What is a Link Budget?
+
+A link budget is an accounting statement for your communication link. It adds up every gain (transmitter power, antenna gain) and subtracts every loss (distance, atmosphere, pointing error) to determine whether the signal arriving at the receiver is strong enough to decode. Everything is computed in **decibels (dB)** so that multiplication and division become addition and subtraction.
+
+**Decibel refresher:**
+
+| Conversion | Formula | Common Values |
+|-----------|---------|---------------|
+| Watts to dBW | $P_{\text{dBW}} = 10\log_{10}(P_W)$ | 2 W = +3.0 dBW; 1 W = 0 dBW; 0.5 W = -3.0 dBW |
+| Kelvin to dBK | $T_{\text{dBK}} = 10\log_{10}(T_K)$ | 150 K = 21.8 dBK; 600 K = 27.8 dBK |
+| Ratio to dB | $G_{\text{dB}} = 10\log_{10}(G)$ | x2 = +3 dB; x10 = +10 dB; x100 = +20 dB |
+
+### What Each Term in the Link Budget Means
+
+| Term | What It Is | Analogy |
+|------|-----------|---------|
+| **TX Power ($P_{TX}$)** | Electrical power fed to the transmitter amplifier | How loud you shout |
+| **TX Antenna Gain ($G_{TX}$)** | How well the antenna focuses the signal into a beam (vs radiating equally in all directions) | Using a megaphone vs shouting in all directions |
+| **TX Line Losses ($L_{TX}$)** | Power lost in cables and filters between amplifier and antenna | Sound absorbed by the megaphone walls |
+| **EIRP** | Effective Isotropic Radiated Power = $P_{TX} + G_{TX} - L_{TX}$. The total "signal strength leaving the spacecraft" | Total loudness heard from a distance |
+| **FSPL** | Free Space Path Loss -- signal weakens as it spreads over a larger sphere. Depends on distance and frequency | Voice getting quieter the farther away you walk |
+| **Atmospheric Loss** | Signal absorbed/scattered by Earth's atmosphere (rain, oxygen, water vapour) | Fog muffling sound |
+| **Pointing Loss** | Signal loss because the antenna beam is not perfectly aimed | Megaphone pointed slightly off-target |
+| **Polarisation Loss** | Loss when TX and RX antenna polarisations do not match | Holding the megaphone sideways when the listener expects vertical |
+| **RX Antenna Gain ($G_{RX}$)** | Ground station antenna ability to collect signal. Larger dish = more gain | Listener using a large ear trumpet |
+| **System Noise Temp ($T_{sys}$)** | Combined noise from antenna, sky, and receiver electronics. Lower = better | Background noise in the room |
+| **G/T** | Receiver figure of merit = $G_{RX} - T_{sys}$ (in dB). Captures how "good" the ground station is | Ear trumpet size minus room noise |
+| **$C/N_0$** | Carrier-to-noise-density ratio -- the received signal strength relative to noise | Signal-to-noise ratio before decoding |
+| **$E_b/N_0$** | Energy per bit to noise density -- the fundamental measure of link quality. Divides $C/N_0$ by data rate | How much energy is available per bit of information |
+| **Link Margin** | How much $E_b/N_0$ you have above the minimum needed. Must be >= 3 dB | Safety factor for your communication |
+
+### Frequency Band Comparison
+
+| Parameter | UHF (Amateur) | S-band | X-band | Ka-band |
+|-----------|--------------|--------|--------|---------|
+| **Frequency** | 435--438 MHz | 2200--2290 MHz | 8025--8400 MHz | 25.5--27.0 GHz |
+| **Bandwidth available** | 20 kHz | 5 MHz | 375 MHz | 1.5 GHz |
+| **Maximum data rate** | < 20 kbps | 0.1--10 Mbps | 10--400 Mbps | 100--2000 Mbps |
+| **FSPL at 500 km (nadir)** | 148 dB | 163 dB | 174 dB | 184 dB |
+| **FSPL at 1300 km (10 deg elev)** | 158 dB | 171 dB | 182 dB | 192 dB |
+| **Atmospheric loss** | ~0.1 dB | ~0.5 dB | ~1.0 dB | ~3--10 dB (rain!) |
+| **Typical spacecraft antenna** | Monopole (0 dBi) | Patch (6 dBi) | Horn/patch array (10--15 dBi) | Small dish/array (20+ dBi) |
+| **Ground antenna** | Yagi (10--13 dBi) | 3 m dish (35 dBi) | 3 m dish (45 dBi) | 1 m dish (45 dBi) |
+| **License type** | IARU coordination (free) | ISED/FCC ($30--45K) | ISED/FCC + ITU (higher) | Complex ITU filing |
+| **License timeline** | ~6 months | 6--12 months | 12+ months | 12--18 months |
+| **Equipment availability** | Many COTS | Many COTS | Growing COTS | Emerging |
+| **Best for** | TT&C, telemetry, simple missions | Medium data rate, standard EO | High data rate, EO/SAR | Very high data rate |
+
+**How to choose:** Start with your data rate requirement. If you need < 20 kbps and have non-commercial data, UHF amateur is free and simple. If you need up to 10 Mbps, S-band is the CubeSat workhorse. For high-resolution imaging producing GBs per day, you need X-band or Ka-band.
+
+### Antenna Types
+
+| Antenna Type | Gain | Beamwidth | Pointing Need | Mass | Typical Band | Use Case |
+|-------------|------|-----------|---------------|------|-------------|----------|
+| **Monopole/dipole** | ~0 dBi | Omnidirectional | None | 5--20 g | UHF | TT&C, simple telemetry |
+| **Patch (single)** | ~5--8 dBi | ~70--90 deg | Low (~10 deg) | 10--50 g | S-band | Standard CubeSat downlink |
+| **Patch array (2x2)** | ~12 dBi | ~30--40 deg | Medium (~5 deg) | 30--100 g | S/X-band | Higher-rate downlink |
+| **Horn** | ~10--15 dBi | ~20--30 deg | Medium (~5 deg) | 50--200 g | X-band | High-rate downlink |
+| **Parabolic reflector** | ~20--35 dBi | ~2--10 deg | Tight (< 1 deg) | 200--500 g | X/Ka-band | Very high-rate, DTE |
+| **Phased array** | ~15--25 dBi | Electronically steered | Electronic (fast) | 100--300 g | S/X/Ka-band | Agile beam, multiple targets |
+
+**Trade-off:** Higher gain antennas provide stronger signals (enabling higher data rates or lower TX power), but they have narrower beams, which means the spacecraft must point more accurately. An omnidirectional antenna works regardless of spacecraft orientation but provides very low gain.
+
+### Modulation and Coding
+
+The modulation scheme and forward error correction (FEC) code determine the minimum $E_b/N_0$ required for a target bit error rate (BER):
+
+| Modulation + Coding | $E_b/N_0$ Required (BER $10^{-6}$) | Spectral Efficiency | Best For |
+|--------------------|-----------------------------------|--------------------|----------|
+| BPSK uncoded | 10.5 dB | 1.0 bps/Hz | Legacy telecommand |
+| QPSK uncoded | 10.5 dB | 2.0 bps/Hz | Simple telemetry |
+| QPSK + convolutional (r=1/2) | 5.0 dB | 1.0 bps/Hz | Standard CCSDS TM |
+| QPSK + LDPC (r=1/2) | 2.0 dB | 1.0 bps/Hz | High-efficiency downlink |
+| QPSK + LDPC (r=3/4) | 4.0 dB | 1.5 bps/Hz | Balanced (CubeSat standard) |
+| 8PSK + LDPC (r=3/4) | 6.5 dB | 2.25 bps/Hz | High-rate downlink |
+
+**Design guidance:** For most CubeSat missions, **QPSK + LDPC (r=3/4)** at $E_b/N_0 = 4.0$ dB is the standard choice, offering a good balance of coding gain and implementation simplicity.
+
+---
+
 ## Key Equations Reference
 
 > **EIRP:** $\text{EIRP} = P_{TX} + G_{TX} - L_{TX}$ &nbsp; (dBW)
@@ -1986,6 +2333,61 @@ _____________________________________________________________________
 > **Antenna gain:** $G = \eta_a(\pi D/\lambda)^2$
 >
 > **dB conversion:** $P_{\text{dBW}} = 10\log_{10}(P_W)$; &nbsp; 2 W = +3.0 dBW; 1 W = 0 dBW
+
+---
+
+## Worked Example: UniSat-1 (1U) UHF Link Budget
+
+UniSat-1 uses UHF amateur band at 437 MHz with 9600 bps downlink to an amateur ground station.
+
+### Step-by-Step Link Budget
+
+**Scenario:** 400 km orbit, 437 MHz, 9600 bps, 10 deg minimum elevation (slant range ~1150 km), ground station with 13 dBi cross-Yagi (RHCP).
+
+| Line | Parameter | Calculation | Value | Unit |
+|------|-----------|-------------|-------|------|
+| 1 | TX Power | 0.5 W = $10\log_{10}(0.5)$ | -3.0 | dBW |
+| 2 | TX Antenna Gain | Monopole | 0.0 | dBi |
+| 3 | TX Line Losses | Short cable run | -0.5 | dB |
+| 4 | **EIRP** | $-3.0 + 0.0 - 0.5$ | **-3.5** | dBW |
+| 5 | FSPL | $21.98 + 20\log_{10}(1.15 \times 10^6) + 20\log_{10}(437 \times 10^6) - 169.54$ | -155.5 | dB |
+| 6 | Atmospheric Loss | Minimal at UHF | -0.3 | dB |
+| 7 | Pointing Loss | Omni antenna, minimal | -0.5 | dB |
+| 8 | Polarisation Loss | RHCP-to-RHCP (cross-Yagi) | -0.5 | dB |
+| 9 | RX Antenna Gain | 13 dBi cross-Yagi | +13.0 | dBi |
+| 10 | System Noise Temp | 600 K (amateur + LNA) = $10\log_{10}(600)$ | 27.8 | dBK |
+| 11 | **G/T** | $13.0 - 27.8$ | **-14.8** | dB/K |
+| 12 | Boltzmann Constant | | +228.6 | dBW/K/Hz |
+| 13 | **C/N$_0$** | $-3.5 - 155.5 - 0.3 - 0.5 - 0.5 + (-14.8) + 228.6$ | **+53.5** | dBHz |
+| 14 | Data Rate | 9600 bps = $10\log_{10}(9600)$ | 39.8 | dBbps |
+| 15 | **$E_b/N_0$ available** | $53.5 - 39.8$ | **+13.7** | dB |
+| 16 | $E_b/N_0$ required | QPSK + conv. code r=1/2 | 5.0 | dB |
+| 17 | Implementation Loss | | 2.0 | dB |
+| 18 | **LINK MARGIN** | $13.7 - 5.0 - 2.0$ | **+6.7** | dB |
+
+**Result:** Link closes with 6.7 dB margin (> 3 dB). **Pass.**
+
+### FSPL Calculation Detail
+
+$\text{FSPL} = 21.98 + 20\log_{10}(1.15 \times 10^6) + 20\log_{10}(437 \times 10^6) - 169.54$
+
+$= 21.98 + 121.21 + 172.81 - 169.54 = 146.46$ ... wait, let us recompute:
+
+$20\log_{10}(1.15 \times 10^6) = 20 \times 6.0607 = 121.2$ dB
+
+$20\log_{10}(437 \times 10^6) = 20 \times 8.640 = 172.8$ dB
+
+$\text{FSPL} = 21.98 + 121.2 + 172.8 - 169.54 = 146.4$ dB
+
+Note: The line-5 value of 155.5 dB uses the slant range in metres ($1.15 \times 10^6$ m) and frequency in Hz ($437 \times 10^6$ Hz) in the single-formula form: $20\log_{10}(4\pi \times 1.15 \times 10^6 \times 437 \times 10^6 / 3 \times 10^8) = 155.5$ dB. Both approaches give the same result when applied consistently.
+
+### Data Throughput
+
+At 4800 bps useful throughput (9600 bps channel rate with r=1/2 FEC), a 7-minute pass delivers:
+
+$V_{\text{pass}} = 4800 \times 420 \times 0.85 = 1.71$ Mbit $= 214$ kB per pass
+
+With 4 passes/day: ~0.84 MB/day. The magnetometer generates ~1.13 MB/day -- marginal. May need a second ground station or data prioritisation.
 
 ---
 
@@ -2115,7 +2517,41 @@ _____________________________________________________________________
 
 ---
 
+## Decision Justification
+
+Explain WHY you chose your communications architecture. Address each decision explicitly.
+
+**Why this frequency band and not another?**
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+**Why this antenna type? What pointing does it require from AOCS?**
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+**Why this modulation/coding scheme? What trade-off did you make between data rate and link robustness?**
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+---
+
 ## Notes & Reflections
+
+_____________________________________________________________________
+
+_____________________________________________________________________
 
 _____________________________________________________________________
 
@@ -2148,6 +2584,97 @@ _____________________________________________________________________
 
 ---
 
+## Quick Reference: Structure and Propulsion Concepts
+
+### CubeSat Design Specification (CDS Rev 14) Key Dimensions
+
+The CDS defines standard CubeSat form factors. All CubeSats must comply with these dimensions to fit inside standard deployers (e.g., ISIPOD, NRCSD, Exolaunch). The unit "U" represents a 10 x 10 x 11.35 cm cube.
+
+| Form Factor | Dimensions (mm) | Max Mass (kg) | Internal Volume (cm$^3$) | Rails | Typical Use |
+|------------|-----------------|---------------|------------------------|-------|-------------|
+| **1U** | 100 x 100 x 113.5 | 2.0 | ~1,000 | 4 | Technology demo, simple sensors |
+| **1.5U** | 100 x 100 x 170.2 | 3.0 | ~1,500 | 4 | Extended 1U with more volume |
+| **2U** | 100 x 100 x 227.0 | 4.0 | ~2,000 | 4 | IoT, AIS, simple payloads |
+| **3U** | 100 x 100 x 340.5 | 6.0 | ~3,000 | 4 | Standard EO, comms, science |
+| **6U** | 100 x 226.3 x 340.5 | 12.0 | ~6,000 | 4 | High-performance EO, SAR, comms |
+| **12U** | 226.3 x 226.3 x 340.5 | 24.0 | ~12,000 | 8 | Advanced payloads, propulsion |
+| **16U** | 226.3 x 226.3 x 454.0 | 32.0 | ~16,000 | 8 | Microsatellite-class missions |
+
+**Key CDS requirements (all form factors):**
+
+| Requirement | Specification | Why It Matters |
+|------------|---------------|---------------|
+| Rail material | Hard anodised Al 7075-T6 or 6061-T6 | Prevents cold welding in vacuum; provides structural load path |
+| Rail cross-section | 8.5 x 8.5 mm minimum contact | Transmits launch loads through deployer rails |
+| Deployment switches | Minimum 1 per accessible rail face | Ensures spacecraft is powered off until deployed |
+| RBF (Remove Before Flight) pin | Required | Physically disconnects batteries during ground handling |
+| No protrusions beyond rail envelope (stowed) | Required | Prevents jamming inside the deployer |
+| CG offset from geometric centre | <= 2 cm | Prevents uncontrolled tumbling at deployment; deployer balance |
+| Fundamental frequency | > 40 Hz (first mode) | Avoids resonance with launch vehicle modes |
+
+### Structural Loads and Margins
+
+During launch, the spacecraft experiences:
+
+- **Quasi-static acceleration:** 6--9 g axial (along rocket axis), 2--4 g lateral (sideways). Think of your 5 kg CubeSat feeling like it weighs 45 kg.
+- **Random vibration:** Broadband shaking at 20--2000 Hz. Critical for PCB solder joints and connectors.
+- **Shock:** Brief, high-g pulses (500--2000 g) at separation events. Critical for brittle components.
+
+**Margin of Safety (MoS):** The ratio of what the structure can withstand to what it must withstand, minus 1. Must be >= 0. If MoS is negative, the structure fails under the design load.
+
+**Material properties (Al 7075-T6):** Yield strength $\sigma_y = 503$ MPa, Ultimate strength $\sigma_u = 572$ MPa. Factor of Safety: 1.25 (yield), 1.5 (ultimate).
+
+### Propulsion Decision Tree
+
+Not every CubeSat needs propulsion. Use this decision tree:
+
+```
+START: Does my mission need propulsion?
+  |
+  +-- Orbit altitude < 500 km?
+  |     YES --> Natural atmospheric drag deorbits within 5 years (FCC compliant)
+  |             Do I need orbit maintenance to extend lifetime?
+  |               NO  --> NO PROPULSION NEEDED
+  |               YES --> Need drag compensation (5-15 m/s per year)
+  |
+  +-- Orbit altitude 500-700 km?
+  |     Natural lifetime is 5-25+ years
+  |     FCC 5-year rule: likely NON-COMPLIANT without active deorbit
+  |     --> PROPULSION REQUIRED for deorbit (50-150 m/s)
+  |
+  +-- Orbit altitude > 700 km?
+  |     Natural lifetime is decades to centuries
+  |     IADC 25-year guideline: NON-COMPLIANT
+  |     --> PROPULSION REQUIRED for deorbit (high Delta-V)
+  |
+  +-- Constellation phasing needed?
+  |     YES --> Add 10-50 m/s for orbit plane/phase adjustment
+  |
+  +-- Collision avoidance needed?
+        YES --> Add 1-5 m/s reserve per manoeuvre
+```
+
+**Key rule:** Below ~500 km, you almost certainly do not need propulsion. Above ~600 km, you almost certainly do. The 500--600 km range depends on your specific ballistic coefficient and mission lifetime.
+
+### Propulsion Technologies Comparison
+
+| Type | How It Works | $I_{sp}$ (s) | Thrust | Propellant Mass (100 m/s, 5 kg S/C) | System Dry Mass | Total System Mass | Burn Time | Cost |
+|------|-------------|-------------|--------|--------------------------------------|-----------------|-------------------|-----------|------|
+| **Cold gas** | Pressurised gas expelled through nozzle | 40--80 | 10--100 mN | 0.87 kg | 0.3 kg | **1.17 kg** | Minutes | ~15 kEUR |
+| **Resistojet** | Gas heated before expulsion | 80--150 | 10--50 mN | 0.34 kg | 0.3 kg | **0.64 kg** | Minutes | ~25 kEUR |
+| **Electrospray (FEEP)** | Liquid metal ionised and accelerated by electric field | 500--1500 | 0.01--1 mN | 0.04 kg | 0.9 kg | **0.94 kg** | Months | ~50 kEUR |
+| **Hall effect** | Xenon ionised and accelerated by magnetic/electric fields | 800--1500 | 1--10 mN | 0.05 kg | 1.5 kg | **1.55 kg** | Weeks | ~80 kEUR |
+| **Green monoprop** | Catalytic decomposition of non-toxic propellant | 200--250 | 0.1--1 N | 0.21 kg | 1.0 kg | **1.21 kg** | Seconds | ~60 kEUR |
+
+**The fundamental trade-off:**
+
+- **High $I_{sp}$ (electric propulsion):** Uses very little propellant but has very low thrust, so manoeuvres take weeks or months. The thruster hardware is also heavier and more expensive.
+- **Low $I_{sp}$ (chemical/cold gas):** Uses much more propellant but provides high thrust for quick manoeuvres. Hardware is simpler, lighter, and cheaper.
+
+Choose based on: How much $\Delta V$ do you need? How fast must the manoeuvre happen? How much mass/volume/cost can you afford?
+
+---
+
 ## Key Equations Reference
 
 > **Structural Margin of Safety:** $\text{MoS} = \frac{\sigma_{\text{allow}}}{\sigma_{\text{design}} \times \text{FoS}} - 1 \geq 0$
@@ -2161,6 +2688,57 @@ _____________________________________________________________________
 > **Data storage:** $S = V_{\text{daily}} \times N_{\text{days}} \times f_{\text{safety}}$
 >
 > **Fundamental frequency:** $f_1 > 40$ Hz (deployer requirement)
+
+---
+
+## Worked Example: UniSat-1 (1U) Structure and Propulsion
+
+### CDS Compliance
+
+| Parameter | 1U Specification | UniSat-1 Design | Compliant? |
+|-----------|-----------------|-----------------|-----------|
+| Dimensions | 100 x 100 x 113.5 mm | 100 x 100 x 113.5 mm (ISIS 1U frame) | Y |
+| Maximum mass | 2.0 kg (CDS) / 1.33 kg (NanoRacks) | 1.0 kg target | Y |
+| Rail material | Hard anodised Al 7075-T6 | ISIS standard frame | Y |
+| Deployment switches | Min 1 per accessible face | 2 (ISIS standard) | Y |
+| RBF pin | Required | Included | Y |
+| CG offset | <= 2 cm | < 1 cm (symmetric layout) | Y |
+| Protrusions (stowed) | None beyond rail envelope | UHF antenna stowed along rail | Y |
+
+### Propulsion Decision
+
+**Orbit altitude:** 400 km. **Natural lifetime:** ~8--14 months (ballistic coefficient $BC = m/(C_D A) = 1.0/(2.2 \times 0.01) = 45.5$ kg/m$^2$).
+
+FCC 5-year rule satisfied without propulsion. No orbit maintenance needed (6-month mission). No constellation phasing. **Decision: No propulsion.**
+
+### Structural Margin (Axial Load)
+
+**Given:** Mass = 1.0 kg, axial load = 9 g, 4 rails.
+
+$F_{\text{axial}} = \frac{1.0 \times 9 \times 9.81}{4} = \frac{88.3}{4} = 22.1$ N per rail
+
+$\sigma = \frac{22.1}{8.5 \times 10^{-3} \times 8.5 \times 10^{-3}} = \frac{22.1}{7.225 \times 10^{-5}} = 0.31$ MPa
+
+$\text{MoS}_y = \frac{503}{0.31 \times 1.25} - 1 = \frac{503}{0.39} - 1 = 1289 \gg 0$ **Pass** (by a very large margin)
+
+**Key insight:** Quasi-static axial stress is never the critical case for CubeSats. The real structural risks are: (a) PCB solder joint fatigue from random vibration, (b) deployment mechanism reliability, (c) stiffness (fundamental frequency > 40 Hz).
+
+### Equipment List
+
+| # | Category | Component | Mass (g) | Power (W) | Cost (kEUR) |
+|---|----------|-----------|----------|----------|-------------|
+| 1 | Structure | ISIS 1U frame | 200 | -- | 4.0 |
+| 2 | EPS + Battery | GomSpace P31us | 200 | 0.3 | 12.0 |
+| 3 | Solar cells | Body-mounted GaAs (5 faces) | 50 | -- | 8.0 |
+| 4 | OBC | Custom MSP430/Cortex-M | 30 | 0.3 | 3.0 |
+| 5 | Comms | NanoCom AX100 (UHF) | 60 | 0.5 | 8.0 |
+| 6 | Antenna | UHF monopole (deployable) | 20 | -- | 2.0 |
+| 7 | Payload | MEMS magnetometer PCB | 50 | 0.2 | 5.0 |
+| 8 | AOCS | Permanent magnet + hysteresis rods | 30 | 0 | 1.0 |
+| 9 | Harness | Internal cables, connectors | 50 | -- | 1.0 |
+| | **TOTAL** | | **690** | **~1.3 (peak)** | **~44** |
+
+Mass margin: 1330 - 690 = 640 g (48%). With 20% equipment margin + 20% system margin (MEV): 1330 - 994 = 336 g (25%). **Green.**
 
 ---
 
@@ -2338,7 +2916,41 @@ _____________________________________________________________________
 
 ---
 
+## Decision Justification
+
+Explain WHY you made each key structural and propulsion decision.
+
+**Form factor selection rationale (why this size and not larger/smaller?):**
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+**Propulsion decision rationale (if no propulsion: why not? if propulsion: why this type?):**
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+**Equipment selection rationale (which component trade-offs were hardest? what compromises did you make?):**
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+_____________________________________________________________________
+
+---
+
 ## Notes & Reflections
+
+_____________________________________________________________________
+
+_____________________________________________________________________
 
 _____________________________________________________________________
 
