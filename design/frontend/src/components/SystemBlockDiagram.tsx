@@ -10,6 +10,7 @@
 import { useMemo, useCallback, useState } from 'react'
 import {
   ReactFlow, useNodesState, useEdgesState, Handle, Position, Controls, Background,
+  NodeResizer,
   type Node, type Edge, type NodeTypes, type Connection, addEdge,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
@@ -38,16 +39,22 @@ function SubsystemNode({ data }: { data: { label: string; color: string; blocks?
 }
 
 // Container node — resizable boundary box for segments/systems
-function ContainerNode({ data }: { data: { label: string; color: string; childCount?: number } }) {
+function ContainerNode({ data, selected }: { data: { label: string; color: string; childCount?: number }; selected?: boolean }) {
   const w = data.childCount ? Math.max(400, (Math.min(data.childCount, 4)) * 200 + 60) : 400
   const h = data.childCount ? Math.max(300, Math.ceil(data.childCount / 4) * 150 + 80) : 300
   return (
     <div style={{
-      width: w, height: h, minWidth: 300, minHeight: 200,
+      width: '100%', height: '100%', minWidth: 300, minHeight: 200,
       border: `2px dashed ${data.color}`, borderRadius: 12,
       background: `${data.color}08`,
       position: 'relative',
     }}>
+      <NodeResizer
+        minWidth={300} minHeight={200}
+        isVisible={!!selected}
+        lineStyle={{ borderColor: data.color, borderWidth: 2 }}
+        handleStyle={{ backgroundColor: data.color, width: 8, height: 8 }}
+      />
       {/* Title bar */}
       <div style={{
         position: 'absolute', top: 0, left: 0, right: 0,

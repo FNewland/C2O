@@ -1,7 +1,7 @@
 ---
 title: "SpaceCDF Learner's Workbook"
 subtitle: "Worksheets and exercises for the 40-hour Concurrent Design Facility intensive"
-version: "v5 — 2026-05-10"
+version: "v6 — 2026-05-10"
 ---
 
 # Learner's Workbook

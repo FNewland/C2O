@@ -159,7 +159,7 @@ export function EquipmentBrowser({ studyId, onClose, onSelect, mode = 'modal', s
     transponders: 'ttc', antennas: 'ttc', gps_receivers: 'obc',
     thrusters: 'propulsion', cubesat_structures: 'structure', deployers: 'structure', mechanical_hardware: 'structure',
     obcs: 'obc', thermal_hardware: 'thermal', harnesses: 'structure',
-    ground_antennas: 'ground', ground_rf: 'ground', ground_baseband: 'ground', ground_software: 'ground', ground_timing: 'ground',
+    ground_antennas: 'ground_rf', ground_rf: 'ground_rf', ground_baseband: 'ground_rf', ground_software: 'ground_ops', ground_timing: 'ground_ops',
   }
 
   // Filter categories to only show those whose domain exists in the element tree
