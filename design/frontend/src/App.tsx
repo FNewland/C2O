@@ -86,14 +86,15 @@ function AppShell() {
     setPrevPhase(activePhase)
     setActivePhaseRaw(p)
   }
-  // SYSTEM-V: Reload element tree when phase changes or design completes
+  // Load element tree on initial mount (not on every phase change — that overwrites local edits)
   const studyIdForReload = useDesignStore(s => s.studyId)
   const loadModel = useModelStore(s => s.loadStudyModel)
+  const [modelLoaded, setModelLoaded] = useState(false)
   useEffect(() => {
-    if (studyIdForReload && activePhase >= 1) {
-      loadModel(studyIdForReload)
+    if (studyIdForReload && !modelLoaded) {
+      loadModel(studyIdForReload).then(() => setModelLoaded(true))
     }
-  }, [activePhase, studyIdForReload])
+  }, [studyIdForReload])
 
   const missionNeed = useDesignStore(s => s.missionNeed)
   const result = useDesignStore(s => s.result)

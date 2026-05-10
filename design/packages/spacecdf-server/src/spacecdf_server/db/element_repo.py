@@ -97,14 +97,18 @@ async def load_all_elements() -> tuple[dict[str, dict], dict[str, dict]]:
     try:
         factory = get_session_factory()
         async with factory() as session:
-            # Elements
-            result = await session.execute(select(DesignElementRow))
+            # Elements — exclude soft-deleted
+            result = await session.execute(
+                select(DesignElementRow).where(DesignElementRow.deleted_at.is_(None))
+            )
             for row in result.scalars():
                 d = _element_row_to_dict(row)
                 elements[d["id"]] = d
 
-            # Interfaces
-            result = await session.execute(select(ElementInterfaceRow))
+            # Interfaces — exclude soft-deleted
+            result = await session.execute(
+                select(ElementInterfaceRow).where(ElementInterfaceRow.deleted_at.is_(None))
+            )
             for row in result.scalars():
                 d = _interface_row_to_dict(row)
                 interfaces[d["id"]] = d
