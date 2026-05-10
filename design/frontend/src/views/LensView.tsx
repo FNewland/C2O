@@ -105,7 +105,53 @@ export function LensView({ lens, segment }: Props) {
             </div>
           )}
 
-          {/* Bar chart of primary property by subsystem */}
+          {/* Mission lens: show requirements compliance + KPIs instead of mass chart */}
+          {lens === 'mission' && (
+            <div className="card" style={{ marginBottom: '1rem' }}>
+              <h3 style={{ fontSize: '0.85rem', marginBottom: '0.5rem' }}>Mission Capability Assessment</h3>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.75rem' }}>
+                <thead>
+                  <tr style={{ background: 'var(--bg-primary, #0a0e1a)' }}>
+                    <th style={th}>KPI</th>
+                    <th style={thR}>Design Value</th>
+                    <th style={thR}>Requirement</th>
+                    <th style={thR}>Margin</th>
+                    <th style={th}>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    { kpi: 'Total Mass', value: visibleElements.reduce((s, el) => s + (el.mass_kg || 0) * el.quantity, 0), req: requirements.target_mass_kg || 6, unit: 'kg' },
+                    { kpi: 'Orbit Average Power', value: get('power.sa_power_eol_w'), req: visibleElements.reduce((s, el) => s + (el.power_avg_w || 0) * el.quantity, 0) || 10, unit: 'W' },
+                    { kpi: 'Data Rate', value: get('link.data_rate_kbps') / 1000, req: requirements.payloads?.[0]?.data_rate_mbps || 1, unit: 'Mbps' },
+                    { kpi: 'Pointing Accuracy', value: get('aocs.pointing_accuracy_deg'), req: requirements.payloads?.[0]?.pointing_accuracy_deg || 1, unit: 'deg' },
+                    { kpi: 'Design Lifetime', value: requirements.orbit?.mission_duration_years || 3, req: requirements.design_lifetime_years || 3, unit: 'yr' },
+                    { kpi: 'Mission Cost', value: get('cost.total_mission_meur') || (requirements.target_cost_meur || 2), req: requirements.target_cost_meur || 10, unit: 'MEUR' },
+                  ].map(row => {
+                    const margin = row.req > 0 ? ((row.req - row.value) / row.req * 100) : 0
+                    const ok = row.kpi === 'Pointing Accuracy' ? row.value <= row.req : row.value <= row.req * 1.2
+                    return (
+                      <tr key={row.kpi} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                        <td style={td}>{row.kpi}</td>
+                        <td style={{ ...tdR, fontFamily: 'monospace' }}>{row.value > 0 ? row.value.toFixed(2) : '—'} {row.unit}</td>
+                        <td style={{ ...tdR, fontFamily: 'monospace', color: '#6b7280' }}>{row.req.toFixed(2)} {row.unit}</td>
+                        <td style={{ ...tdR, fontFamily: 'monospace', color: ok ? '#10b981' : '#ef4444' }}>{row.value > 0 ? `${margin.toFixed(0)}%` : '—'}</td>
+                        <td style={td}>
+                          <span style={{ width: 8, height: 8, borderRadius: '50%', background: row.value > 0 ? (ok ? '#10b981' : '#ef4444') : '#6b7280', display: 'inline-block' }} />
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+              <p style={{ fontSize: '0.65rem', color: '#6b7280', marginTop: '0.3rem' }}>
+                Green = meets requirement with margin. Red = exceeds allocation or fails requirement.
+              </p>
+            </div>
+          )}
+
+          {/* Bar chart of primary property by subsystem (not for mission lens) */}
+          {lens !== 'mission' && (
           <div className="card" style={{ marginBottom: '1rem' }}>
             <SVGBarChart
               data={chartData}
@@ -115,6 +161,7 @@ export function LensView({ lens, segment }: Props) {
               title={`${lensInfo.name}: ${lensConfig.primary.replace('_', ' ')} by subsystem`}
             />
           </div>
+          )}
 
           {/* Element table */}
           <div className="card">

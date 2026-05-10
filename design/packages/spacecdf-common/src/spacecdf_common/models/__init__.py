@@ -20,6 +20,12 @@ from .study import (
     StudyPhase,
     SubsystemDesign,
 )
+from .change_event import ChangeEvent, ChangeKind
+from .requirement import (
+    Requirement as SpineRequirement,
+    RequirementLevel,
+    RequirementStatus,
+)
 from .component import (
     Component,
     GroundStationEntry,
@@ -34,4 +40,5 @@ __all__ = [
     "OrbitRequirements", "OrbitType", "PayloadRequirements",
     "SpacecraftDesign", "Study", "StudyPhase", "SubsystemDesign",
     "Component", "GroundStationEntry", "LaunchVehicle", "MaterialProperty",
+    "SpineRequirement", "RequirementLevel", "RequirementStatus",
 ]

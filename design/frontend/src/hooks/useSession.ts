@@ -99,6 +99,7 @@ export function useCostEstimate(studyId: string | null) {
     queryKey: ['cost', studyId],
     queryFn: () => api(`/engineering/cost${studyId ? `?study_id=${studyId}` : ''}`),
     enabled: !!studyId,
+    retry: false,  // Don't retry 404s
   })
 }
 

@@ -75,6 +75,8 @@ class ThermalAgent(DesignAgent):
         result.add_param("thermal.radiator_area_m2", "Radiator Area", round(tb.radiator_area_m2, 3), "m²")
         result.add_param("thermal.radiator_mass_kg", "Radiator Mass", round(radiator_mass, 2), "kg")
         result.add_param("thermal.heater_power_w", "Eclipse Heater Power", round(tb.tcs_heater_power_w, 1), "W")
+        if tb.tcs_heater_power_w > 20:
+            result.warnings.append(f"Heater power {tb.tcs_heater_power_w:.0f} W exceeds 20 W — consider MLI improvements or passive thermal design")
         tcs_mass = calibrate_mass("tcs", tcs_mass, dry_mass, sc_class)
         result.add_param("thermal.tcs_mass_kg", "TCS Total Mass", round(tcs_mass, 2), "kg", margin_percent=20)
         result.add_param("thermal.tcs_cost_keur", "TCS Cost", round(tcs_mass * 15, 0), "kEUR")

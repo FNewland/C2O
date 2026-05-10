@@ -189,7 +189,17 @@ export function EquipmentBrowser({ studyId, onClose, onSelect, mode = 'modal' }:
   const activeDomain = CATEGORIES.find(c => c.id === activeCategory)?.domain || 'power'
   const { data, isLoading, error } = useEquipmentSearch(activeDomain, studyId)
 
-  const categories: Record<string, any[]> = (data as any)?.categories || {}
+  // Handle multiple response formats: {categories: {cat: [...]}} or {components: [...]} or [{component, fit_score}]
+  const rawData = data as any
+  let categories: Record<string, any[]> = {}
+  if (rawData?.categories) {
+    categories = rawData.categories
+  } else if (rawData?.components) {
+    // Flat list — group by active category
+    categories[activeCategory] = rawData.components.map((c: any) => ({ component: c, fit_score: 0.5 }))
+  } else if (Array.isArray(rawData)) {
+    categories[activeCategory] = rawData
+  }
   const selectedRfBand = useDesignStore(s => s.selectedRfBand)
 
   // Filter transponders/antennas by selected RF band if set

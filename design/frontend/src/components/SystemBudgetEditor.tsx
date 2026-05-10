@@ -148,11 +148,12 @@ export function SystemBudgetEditor() {
     return { mass: massUsed, power: powerUsed, cost: costUsed }
   }, [elements, requirements, result])
 
+  const [volumeOverride, setVolumeOverride] = useState<number | null>(null)
   const envelopes: Record<string, number> = {
     mass: requirements.target_mass_kg || 6,
     power: get('power.sa_power_eol_w') || 30,
     cost: (requirements.target_cost_meur || 2) * 1000,
-    volume: requirements.spacecraft_class === 'nano' ? 3000 : 6000,
+    volume: volumeOverride || (requirements.spacecraft_class === 'nano' ? 3000 : 6000),
     deltav: get('propulsion.delta_v_total_ms') || 0,
     data: 10,
   }
@@ -236,8 +237,7 @@ export function SystemBudgetEditor() {
               { label: '16U', volume: 16000, mass: 32.0 },
             ].map(ff => (
               <button key={ff.label} className="btn btn-sm" onClick={() => {
-                // Update volume envelope
-                envelopes.volume = ff.volume
+                setVolumeOverride(ff.volume)
               }} style={{
                 fontSize: '0.72rem',
                 background: envelope === ff.volume ? '#8b5cf6' : '#374151',

@@ -1,6 +1,9 @@
 """SpaceCDF — Cost Estimation Agent (Tier 2).
 
 Rule-based parametric cost estimation using heritage CER data.
+
+SCDF-144: This agent's CERs are the canonical source of truth for cost estimation.
+The cost_engine.py service delegates to these same CERs for API-driven cost queries.
 """
 from __future__ import annotations
 
@@ -85,7 +88,8 @@ class CostAgent(DesignAgent):
     async def execute(self, state: DesignState) -> AgentResult:
         result = AgentResult(domain=self.domain)
 
-        sc_class = state.get("mission.spacecraft_class", "small")
+        # Use get_requirement for string values (state.get only returns numerics)
+        sc_class = state.get_requirement("spacecraft_class", "small")
         if not isinstance(sc_class, str):
             sc_class = "small"
         mission_years = state.get("mission.duration_years", 3.0) or 3.0
@@ -102,8 +106,10 @@ class CostAgent(DesignAgent):
             "payload": state.get("mass.payload_kg", 0) or 0,
         }
 
-        # CubeSat: use COTS flat pricing instead of per-kg CER
-        if sc_class in ("nano", "micro"):
+        # CubeSat/small COTS: use flat pricing for small spacecraft
+        dry_mass = state.get("mass.dry_mass_kg", 0) or 0
+        use_cots = sc_class in ("nano", "micro") or (sc_class == "small" and dry_mass < 50)
+        if use_cots:
             for subsys, mass in subsystems.items():
                 if mass > 0:
                     hw_cost += CUBESAT_SUBSYSTEM_COST_KEUR.get(subsys, 20)

@@ -55,6 +55,7 @@ class DesignSession(BaseModel):
     convergence_count: int = 0
     created: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     last_convergence: datetime | None = None
+    dirty_params: set[str] = Field(default_factory=set)  # SCDF-040: replaces recent_edits heuristic
 
     def get_participant(self, position_id: str) -> Participant | None:
         for p in self.participants:

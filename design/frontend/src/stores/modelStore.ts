@@ -194,12 +194,12 @@ export const useModelStore = create<ModelStore>((set, get) => ({
   },
 
   deleteElement: async (id) => {
+    // Optimistic delete — remove locally first, then try backend
+    set(s => { s.elements.delete(id); return { elements: new Map(s.elements) } })
     try {
-      const res = await fetch(`${API}/elements/${id}`, { method: 'DELETE' })
-      if (!res.ok) return false
-      set(s => { s.elements.delete(id); return { elements: new Map(s.elements) } })
-      return true
-    } catch { return false }
+      await fetch(`${API}/elements/${id}`, { method: 'DELETE' })
+    } catch { /* best-effort backend sync */ }
+    return true
   },
 
   createInterface: async (studyId, data) => {

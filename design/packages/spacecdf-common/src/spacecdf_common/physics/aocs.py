@@ -19,6 +19,7 @@ _BODY_PARAMS: dict[str, dict] = {
     "earth": {"mu": 3.986004418e14, "radius": 6371.0e3, "dipole_T": 3e-5, "has_atmo": True},
     "moon":  {"mu": 4.9048695e12,   "radius": 1737.4e3, "dipole_T": 0.0,  "has_atmo": False},
     "mars":  {"mu": 4.282837e13,    "radius": 3389.5e3, "dipole_T": 0.0,  "has_atmo": True},
+    "sun":   {"mu": 1.32712440018e20, "radius": 695700.0e3, "dipole_T": 0.0, "has_atmo": False},
 }
 
 

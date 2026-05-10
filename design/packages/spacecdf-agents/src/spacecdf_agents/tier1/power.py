@@ -25,7 +25,18 @@ class PowerAgent(DesignAgent):
             "payload.0.power_w", "payload.0.duty_cycle",
             "thermal.heater_power_w",
             "mission.duration_years",
+            "power.battery.equipment_id",
+            "power.solar_array.cell_equipment_id",
         ]
+
+    def _resolve_from_kb(self, state: DesignState, category: str, param_path: str) -> dict | None:
+        """Look up a KB component by equipment_id (SPINE_SPEC §8)."""
+        eq_id = state.get(param_path)
+        if eq_id and hasattr(state, 'kb') and state.kb is not None:
+            component = state.kb.get_component(category, eq_id)
+            if component:
+                return component.__dict__
+        return None
 
     def output_parameters(self) -> list[str]:
         return [
@@ -110,6 +121,13 @@ class PowerAgent(DesignAgent):
             cell_eff = 0.32
             sa_specific = 130.0  # High-efficiency deployable
 
+        # --- KB override: solar cell datasheet values (SPINE_SPEC §8) ---
+        kb_cell = self._resolve_from_kb(state, "solar_cells", "power.solar_array.cell_equipment_id")
+        if kb_cell:
+            cell_eff = kb_cell.get("efficiency_pct", cell_eff * 100) / 100.0
+            sa_specific = 1000.0 / kb_cell.get("mass_kg_per_m2", 1000.0 / sa_specific) if kb_cell.get("mass_kg_per_m2") else sa_specific
+            result.log(f"KB solar cell: efficiency={cell_eff*100:.1f}%, specific_power={sa_specific:.0f} W/kg")
+
         pb = compute_power_budget(
             eclipse_fraction=eclipse_frac,
             sunlight_fraction=sunlight_frac,
@@ -123,12 +141,21 @@ class PowerAgent(DesignAgent):
             sa_specific_power_w_kg=sa_specific,
         )
 
+        # --- KB override: battery datasheet values (SPINE_SPEC §8) ---
+        kb_battery = self._resolve_from_kb(state, "batteries", "power.battery.equipment_id")
+        if kb_battery:
+            pb.battery_mass_kg = kb_battery.get("mass_kg", pb.battery_mass_kg)
+            result.log(f"KB battery: mass={pb.battery_mass_kg:.2f} kg")
+
         result.add_param("power.sa_area_m2", "Solar Array Area", round(pb.sa_area_m2, 3), "m²")
         result.add_param("power.sa_power_bol_w", "SA Power BOL", round(pb.sa_power_bol_w, 1), "W")
         result.add_param("power.sa_power_eol_w", "SA Power EOL", round(pb.sa_power_eol_w, 1), "W")
         result.add_param("power.sa_mass_kg", "Solar Array Mass", round(pb.sa_mass_kg, 2), "kg")
         result.add_param("power.battery_capacity_wh", "Battery Capacity", round(pb.battery_capacity_wh, 1), "Wh")
         result.add_param("power.battery_mass_kg", "Battery Mass", round(pb.battery_mass_kg, 2), "kg")
+        result.add_param("power.battery_dod_pct", "Battery DOD", round(pb.battery_dod_percent, 1), "%")
+        if pb.battery_dod_percent > 30:
+            result.warnings.append(f"Battery DOD {pb.battery_dod_percent:.0f}% exceeds 30% design limit — reduce eclipse load or increase battery capacity")
         result.add_param("power.total_sunlight_w", "Total Power (Sunlight)", round(pb.total_power_sunlight_w, 1), "W")
         result.add_param("power.total_eclipse_w", "Total Power (Eclipse)", round(pb.total_power_eclipse_w, 1), "W")
         dry_est = state.get("mass.dry_mass_estimate_kg", 100.0) or 100.0
@@ -136,31 +163,11 @@ class PowerAgent(DesignAgent):
         result.add_param("power.eps_mass_kg", "EPS Total Mass", round(eps_mass, 2), "kg", margin_percent=20)
         result.add_param("power.eps_cost_keur", "EPS Cost", round(pb.eps_cost_keur, 0), "kEUR")
 
-        # Cross-check: duty-cycle-aware SA estimate for CubeSats
-        # The standard power budget sums simultaneous loads, but real CubeSats
-        # duty-cycle heavily. Use the lower estimate for nano/micro class.
-        if sc_class in ("nano", "micro"):
-            mission_type = state.get_requirement("mission_type", "earth_observation")
-            duty_sa = estimate_sa_power_needed(
-                spacecraft_class=sc_class,
-                mission_type=mission_type,
-                comms_band="S",
-                eclipse_fraction=eclipse_frac,
-            )
-            if duty_sa < pb.sa_power_eol_w * 0.85 and duty_sa > 3.0:
-                result.log(f"Duty-cycle SA estimate {duty_sa:.1f}W is significantly less than "
-                           f"peak-sum estimate {pb.sa_power_eol_w:.1f}W — using duty-cycle value for CubeSat")
-                # Scale down SA to duty-cycle estimate
-                scale = duty_sa / max(pb.sa_power_eol_w, 1)
-                pb.sa_power_eol_w = duty_sa
-                pb.sa_power_bol_w = duty_sa / max((1 - 0.025) ** mission_years, 0.5)
-                pb.sa_area_m2 *= scale
-                pb.sa_mass_kg *= scale
-                # Re-set the parameters
-                result.add_param("power.sa_area_m2", "Solar Array Area", round(pb.sa_area_m2, 3), "m²")
-                result.add_param("power.sa_power_bol_w", "SA Power BOL", round(pb.sa_power_bol_w, 1), "W")
-                result.add_param("power.sa_power_eol_w", "SA Power EOL", round(pb.sa_power_eol_w, 1), "W")
-                result.add_param("power.sa_mass_kg", "Solar Array Mass", round(pb.sa_mass_kg, 2), "kg")
+        # Note: duty-cycle SA override removed — compute_power_budget now uses
+        # peak power (p_peak) for SA sizing, which is correct for all classes.
+        # The old override used hardcoded class power tables that ignored actual
+        # payload specifications, capping SA at ~10W for nano class regardless
+        # of the real payload power requirement.
 
         result.warnings.extend(pb.warnings)
         result.confidence = 0.85

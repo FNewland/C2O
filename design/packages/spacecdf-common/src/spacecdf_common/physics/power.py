@@ -112,9 +112,14 @@ def compute_power_budget(
     result.battery_mass_kg = result.battery_capacity_wh / battery_specific_energy_wh_kg
     result.num_eclipse_cycles = mission_duration_years * 365.25 * 86400 / orbit_period_s
 
-    # Solar array sizing (must power spacecraft + recharge battery)
+    # Solar array sizing: must cover PEAK demand + battery recharge simultaneously
+    # SA must be large enough for the worst-case instantaneous power draw
     charge_efficiency = 0.90  # Battery charge/discharge round-trip
-    sa_power_required = p_sunlight + (e_eclipse_wh / (sunlight_time_s / 3600.0)) / charge_efficiency
+    recharge_power = (e_eclipse_wh / max(sunlight_time_s / 3600.0, 0.01)) / charge_efficiency
+    sa_power_required = max(
+        p_peak + recharge_power,             # Peak payload active + recharge
+        p_sunlight + recharge_power * 1.2,   # Average with 20% margin on recharge
+    )
 
     # End-of-life degradation
     eol_factor = (1 - sa_degradation_per_year) ** mission_duration_years

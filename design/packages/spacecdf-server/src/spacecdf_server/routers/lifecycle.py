@@ -541,6 +541,42 @@ async def generate_requirements_endpoint(study_id: str) -> dict:
     }
 
 
+@router.post("/requirements/generate")
+async def generate_requirements_from_data(body: dict[str, Any]) -> dict:
+    """Generate SMART requirements from posted objectives (no study needed)."""
+    from ..services.requirement_engine import generate_smart_requirements
+
+    objectives = body.get("objectives", [])
+    mission_reqs = {
+        "mission_type": body.get("mission_type", "earth_observation"),
+        "spacecraft_class": body.get("spacecraft_class", "nano"),
+        "orbit": body.get("orbit", {}),
+        "payloads": body.get("payloads", []),
+        "name": body.get("name", "Mission"),
+    }
+
+    suggestions = generate_smart_requirements(
+        objectives=objectives,
+        mission_requirements_dict=mission_reqs,
+        functions=[],
+    )
+
+    return {
+        "suggestions": [
+            {
+                "id": s.id, "text": s.text, "req_type": s.req_type,
+                "domain": s.domain, "threshold": s.threshold,
+                "operator": s.operator, "unit": s.unit,
+                "verification_method": s.verification_method,
+                "objective_id": s.objective_id, "function_id": s.function_id,
+                "rationale": s.rationale, "status": s.status,
+            }
+            for s in suggestions
+        ],
+        "count": len(suggestions),
+    }
+
+
 @router.post("/requirements/validate")
 async def validate_requirement_endpoint(requirement: dict[str, Any]) -> dict:
     """Validate a single requirement against SMART criteria."""

@@ -19,7 +19,20 @@ class PropulsionAgent(DesignAgent):
         return 1
 
     def input_parameters(self) -> list[str]:
-        return ["orbit.delta_v_total_ms", "mass.dry_mass_estimate_kg"]
+        return [
+            "orbit.delta_v_total_ms", "mass.dry_mass_estimate_kg",
+            "propulsion.thruster.equipment_id",
+            "propulsion.tank.equipment_id",
+        ]
+
+    def _resolve_from_kb(self, state: DesignState, category: str, param_path: str) -> dict | None:
+        """Look up a KB component by equipment_id (SPINE_SPEC §8)."""
+        eq_id = state.get(param_path)
+        if eq_id and hasattr(state, 'kb') and state.kb is not None:
+            component = state.kb.get_component(category, eq_id)
+            if component:
+                return component.__dict__
+        return None
 
     def output_parameters(self) -> list[str]:
         return [
@@ -67,6 +80,36 @@ class PropulsionAgent(DesignAgent):
             dry_mass_kg=dry_mass,
             available_power_w=available_power,
         )
+
+        # --- KB override: thruster datasheet values (SPINE_SPEC §8) ---
+        kb_thruster = self._resolve_from_kb(state, "thrusters", "propulsion.thruster.equipment_id")
+        if kb_thruster:
+            prop.isp_s = kb_thruster.get("isp_sec", prop.isp_s)
+            thruster_mass = kb_thruster.get("mass_kg", 0)
+            thruster_cost = kb_thruster.get("cost_keur", 0)
+            if thruster_mass:
+                prop.total_propulsion_mass_kg = thruster_mass + prop.propellant_mass_kg
+            if thruster_cost:
+                prop.propulsion_cost_keur = thruster_cost
+            # Recompute propellant mass with KB Isp (Tsiolkovsky)
+            import math
+            if prop.isp_s > 0:
+                g0 = 9.80665
+                mass_ratio = math.exp(dv / (prop.isp_s * g0))
+                prop.propellant_mass_kg = dry_mass * (mass_ratio - 1)
+                prop.total_propulsion_mass_kg = (thruster_mass or (prop.total_propulsion_mass_kg - prop.propellant_mass_kg)) + prop.propellant_mass_kg
+            result.log(f"KB thruster: Isp={prop.isp_s:.0f} s, mass={thruster_mass:.2f} kg")
+
+        # --- KB override: tank datasheet values (SPINE_SPEC §8) ---
+        kb_tank = self._resolve_from_kb(state, "tanks", "propulsion.tank.equipment_id")
+        if kb_tank:
+            tank_mass = kb_tank.get("mass_empty_kg", 0)
+            tank_cost = kb_tank.get("cost_keur", 0)
+            if tank_mass:
+                prop.total_propulsion_mass_kg += tank_mass
+            if tank_cost:
+                prop.propulsion_cost_keur += tank_cost
+            result.log(f"KB tank: empty_mass={tank_mass:.2f} kg, capacity={kb_tank.get('capacity_liters', 0):.1f} L")
 
         result.add_param("propulsion.total_mass_kg", "Propulsion System Mass",
                          round(prop.total_propulsion_mass_kg, 2), "kg", margin_percent=10)

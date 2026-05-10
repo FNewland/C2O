@@ -74,7 +74,7 @@ class PayloadRequirements(BaseModel):
     power_w: float = 30.0
     power_peak_w: float = 50.0
     data_rate_mbps: float = 100.0
-    data_volume_per_day_gb: float = 10.0
+    data_volume_per_day_gb: float = 0.0  # 0 = compute from data_rate_mbps × duty_cycle
     pointing_accuracy_deg: float = 0.1
     pointing_stability_deg_s: float = 0.01
     temperature_range_c: list[float] = Field(default_factory=lambda: [-20.0, 40.0])

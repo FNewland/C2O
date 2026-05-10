@@ -56,14 +56,32 @@ export function RequirementsEditor({ studyId, defaultLevel = 'all' }: { studyId:
   const functionsList = useDesignStore(s => s.functionsList)
 
   const generateRequirements = async () => {
-    if (!studyId) return
     setLoading(true)
     try {
-      const res = await fetch(`/api/lifecycle/requirements/generate/${studyId}`)
-      if (res.ok) {
-        const data = await res.json()
+      // Try study-based generation first, fall back to POST with local data
+      let data: any = null
+      if (studyId) {
+        const res = await fetch(`/api/lifecycle/requirements/generate/${studyId}`)
+        if (res.ok) data = await res.json()
+      }
+      // Fallback: POST objectives and requirements context directly
+      if (!data) {
+        const { missionNeed, requirements: reqs } = useDesignStore.getState()
+        const res = await fetch('/api/lifecycle/requirements/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            objectives: missionNeed?.objectives || [],
+            mission_type: reqs?.mission_type || 'earth_observation',
+            spacecraft_class: reqs?.spacecraft_class || 'nano',
+            orbit: reqs?.orbit || {},
+            payloads: reqs?.payloads || [],
+          }),
+        })
+        if (res.ok) data = await res.json()
+      }
+      if (data) {
         setRequirements(data.suggestions || [])
-        // Validate each
         for (const req of data.suggestions || []) {
           validateReq(req)
         }

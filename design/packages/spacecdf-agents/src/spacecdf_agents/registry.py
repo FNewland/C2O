@@ -41,7 +41,7 @@ def _register_builtins() -> None:
         "radiation": "spacecdf_agents.tier2.radiation.RadiationAgent",
         "volume": "spacecdf_agents.tier2.volume.VolumeAgent",
         "reliability": "spacecdf_agents.tier2.reliability.ReliabilityAgent",
-        "community": "spacecdf_agents.tier2.community.CommunityImpactAgent",
+        # "community": "spacecdf_agents.tier2.community.CommunityImpactAgent",  # SCDF-005: hidden until C4 integration
     }
     for name, qualname in builtins.items():
         module_path, class_name = qualname.rsplit(".", 1)
