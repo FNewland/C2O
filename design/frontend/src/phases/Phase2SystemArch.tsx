@@ -7,7 +7,7 @@
  */
 import { useState } from 'react'
 import { SystemArchitectureEditor } from '../components/SystemArchitectureEditor'
-import { ModelBlockDiagram } from '../components/ModelBlockDiagram'
+import { SystemBlockDiagram } from '../components/SystemBlockDiagram'
 import { LensView } from '../views/LensView'
 import { InterfaceMatrixView } from '../components/InterfaceMatrixView'
 import { SystemBudgetEditor } from '../components/SystemBudgetEditor'
@@ -94,7 +94,7 @@ export function Phase2SystemArch() {
           ) : segment === 'space' ? (
             <>
               {subView === 'architecture' && <SystemArchitectureEditor />}
-              {subView === 'block_diagram' && <ModelBlockDiagram studyId={useDesignStore.getState().studyId} segment="space" />}
+              {subView === 'block_diagram' && <SystemBlockDiagram />}
               {subView === 'interfaces' && <InterfaceMatrixView onNavigate={() => {}} />}
               {subView === 'budgets' && (
                 <>
@@ -148,7 +148,12 @@ export function Phase2SystemArch() {
               )}
             </>
           ) : segment === 'ground' ? (
-            <GroundSystemsArch />
+            <>
+              {subView === 'architecture' && <GroundSystemsArch />}
+              {subView === 'block_diagram' && <SystemBlockDiagram />}
+              {subView === 'interfaces' && <InterfaceMatrixView onNavigate={() => {}} />}
+              {subView === 'budgets' && <SystemBudgetEditor />}
+            </>
           ) : segment === 'operations' ? (
             <OpsSystemsArch />
           ) : null}
