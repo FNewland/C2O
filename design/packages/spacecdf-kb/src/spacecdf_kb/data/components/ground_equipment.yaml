@@ -1,11 +1,105 @@
 ---
 # Ground Segment Equipment Knowledge Base
-# Covers: RF equipment, baseband, tracking, MCC, data processing
+# Covers: antennas, RF chain, baseband/modems, mission control software, timing
+# Focused on CubeSat / SmallSat ground station operators
+# 38 components across 5 categories
 
 components:
-  # Antenna Systems
-  - id: gs-ant-3m7
-    name: 3.7m S/X-band Antenna
+
+  # ============================================================
+  # GROUND ANTENNAS (10 items)
+  # ============================================================
+
+  - id: gs-ant-uhf-yagi
+    name: UHF Yagi Antenna (10-element)
+    manufacturer: M2 Antenna Systems
+    category: ground_antennas
+    mass_kg: 3
+    power_w: 0
+    cost_keur: 0.5
+    trl: 9
+    performance:
+      type: directional
+      bands: [UHF]
+      frequency_mhz: 430-440
+      gain_dbi: 14.5
+      beamwidth_deg: 25
+      polarisation: linear
+      tracking: manual or az/el rotator
+    heritage_missions: [AMSAT, university CubeSats worldwide]
+    notes: >
+      Entry-level CubeSat ground antenna. Widely used by universities and
+      amateur operators. Pair with an az/el rotator (Yaesu G-5500 ~$700) for
+      automated satellite tracking. Suitable for 9.6 kbps UHF downlink.
+
+  - id: gs-ant-uhf-crossyagi
+    name: UHF Cross-Yagi with Rotator
+    manufacturer: Wimo / SatNOGS community
+    category: ground_antennas
+    mass_kg: 8
+    power_w: 50
+    cost_keur: 2
+    trl: 9
+    performance:
+      type: directional
+      bands: [UHF]
+      frequency_mhz: 430-440
+      gain_dbi: 16
+      beamwidth_deg: 22
+      polarisation: circular (RHCP/LHCP switchable)
+      tracking: az/el rotator with SatNOGS controller
+    heritage_missions: [SatNOGS network stations, MOVE-II (TU Munich), UPSat]
+    notes: >
+      Circular-polarised cross-Yagi eliminates Faraday rotation fading.
+      SatNOGS-compatible rotator controller can be 3D-printed. Full station
+      BOM is open-source. Excellent for university teams on a budget.
+
+  - id: gs-ant-vhf-turnstile
+    name: VHF/UHF Turnstile (Eggbeater) Antenna
+    manufacturer: M2 Antenna Systems / homebrew
+    category: ground_antennas
+    mass_kg: 2
+    power_w: 0
+    cost_keur: 0.3
+    trl: 9
+    performance:
+      type: omnidirectional
+      bands: [VHF, UHF]
+      frequency_mhz: 145-146 (VHF) / 435-438 (UHF)
+      gain_dbi: 3
+      beamwidth_deg: 180
+      polarisation: circular
+      tracking: none required
+    heritage_missions: [GeneSat-1, PhoneSat, many amateur CubeSats]
+    notes: >
+      Omnidirectional hemispherical pattern — no rotator needed. Ideal for
+      low-data-rate beacon reception and basic telemetry. Limited link budget
+      restricts use to UHF at 1.2-9.6 kbps. Good for a secondary/backup station.
+
+  - id: gs-ant-sband-2m4
+    name: 2.4m S-band Dish
+    manufacturer: ATLAS Space Operations / RF Design
+    category: ground_antennas
+    mass_kg: 120
+    power_w: 100
+    cost_keur: 60
+    trl: 9
+    performance:
+      type: parabolic
+      diameter_m: 2.4
+      bands: [S]
+      frequency_mhz: 2200-2290 (downlink) / 2025-2110 (uplink)
+      gain_dbi: 30
+      tracking: program track with step-track refinement
+      slew_rate_deg_s: 5
+    heritage_missions: [Leaf Space Freedom stations, ATLAS Links]
+    notes: >
+      Compact commercial ground station antenna. Small enough for rooftop
+      installation at university sites. Supports up to ~2 Mbps downlink
+      with appropriate modem. Good balance of performance vs. site logistics.
+
+  - id: gs-ant-sband-3m7
+    name: 3.7m S-band Antenna
     manufacturer: Vertex Antennentechnik
     category: ground_antennas
     mass_kg: 500
@@ -13,16 +107,45 @@ components:
     cost_keur: 150
     trl: 9
     performance:
+      type: parabolic
       diameter_m: 3.7
-      bands: [S, X]
-      gain_s_dbi: 33
-      gain_x_dbi: 43
+      bands: [S]
+      frequency_mhz: 2200-2290 (downlink) / 2025-2110 (uplink)
+      gain_dbi: 33
       tracking: autotrack
-    heritage_missions: [Leaf Space, various university stations]
-    notes: Small commercial tracking antenna
+      slew_rate_deg_s: 5
+      pointing_accuracy_deg: 0.05
+    heritage_missions: [Leaf Space, various university stations, DLR GSOC]
+    notes: >
+      Workhorse small commercial tracking antenna. Concrete pad and small
+      radome recommended. Suitable for S-band downlinks up to ~4 Mbps.
 
-  - id: gs-ant-5m4
-    name: 5.4m S/X-band Antenna
+  - id: gs-ant-xband-3m7
+    name: 3.7m X-band Antenna
+    manufacturer: General Dynamics SATCOM
+    category: ground_antennas
+    mass_kg: 600
+    power_w: 300
+    cost_keur: 200
+    trl: 9
+    performance:
+      type: parabolic
+      diameter_m: 3.7
+      bands: [X]
+      frequency_mhz: 8025-8400 (downlink)
+      gain_dbi: 43
+      tracking: autotrack + monopulse option
+      slew_rate_deg_s: 5
+      pointing_accuracy_deg: 0.02
+      radome_option: true
+    heritage_missions: [Planet (SkySat), Spire, various 6U missions]
+    notes: >
+      Dedicated X-band receive for high-rate CubeSat downlinks. With a
+      good LNA and modem, supports 50-100 Mbps. Radome recommended for
+      sites with high wind or precipitation.
+
+  - id: gs-ant-xband-5m4
+    name: 5.4m X-band Antenna
     manufacturer: ViaSat
     category: ground_antennas
     mass_kg: 1200
@@ -30,34 +153,113 @@ components:
     cost_keur: 400
     trl: 9
     performance:
+      type: parabolic
       diameter_m: 5.4
-      bands: [S, X]
-      gain_s_dbi: 36
-      gain_x_dbi: 46
+      bands: [X]
+      frequency_mhz: 8025-8400 (downlink)
+      gain_dbi: 46.5
       tracking: autotrack + program track
-    heritage_missions: [KSAT Svalbard, SSC Esrange]
+      slew_rate_deg_s: 5
+      pointing_accuracy_deg: 0.015
+    heritage_missions: [KSAT Svalbard, SSC Esrange, Planet Labs]
+    notes: >
+      High-performance X-band antenna for demanding downlink budgets.
+      Supports 100-200+ Mbps with 8PSK/16APSK. Often used by constellation
+      operators needing maximum data throughput per pass.
 
-  - id: gs-ant-13m
-    name: 13m Multi-band Antenna
-    manufacturer: General Dynamics SATCOM
+  - id: gs-ant-sx-4m5
+    name: 4.5m S/X Dual-Band Antenna
+    manufacturer: ViaSat / Cobham
     category: ground_antennas
-    mass_kg: 8000
-    power_w: 2000
-    cost_keur: 2000
+    mass_kg: 800
+    power_w: 400
+    cost_keur: 300
     trl: 9
     performance:
-      diameter_m: 13
-      bands: [S, X, Ka]
-      gain_s_dbi: 44
-      gain_x_dbi: 54
-      gain_ka_dbi: 60
-      tracking: monopulse + autotrack
-    heritage_missions: [ESA Redu, KSAT Svalbard]
+      type: parabolic
+      diameter_m: 4.5
+      bands: [S, X]
+      gain_s_dbi: 34.5
+      gain_x_dbi: 45
+      tracking: autotrack + monopulse
+      slew_rate_deg_s: 5
+      pointing_accuracy_deg: 0.02
+    heritage_missions: [KSAT Lite stations, ESA ESTRACK augmentation]
+    notes: >
+      Versatile dual-band antenna supporting S-band TT&C uplink/downlink
+      and X-band high-rate payload downlink simultaneously. KSAT-style
+      small station concept. Reduces footprint vs. two separate antennas.
 
-  # LNA (Low Noise Amplifiers)
-  - id: gs-lna-s
+  - id: gs-ant-ka-2m4
+    name: 2.4m Ka-band Antenna
+    manufacturer: Viasat / EM Solutions
+    category: ground_antennas
+    mass_kg: 150
+    power_w: 150
+    cost_keur: 120
+    trl: 7
+    performance:
+      type: parabolic
+      diameter_m: 2.4
+      bands: [Ka]
+      frequency_mhz: 25500-27000 (downlink)
+      gain_dbi: 48
+      tracking: autotrack
+      pointing_accuracy_deg: 0.01
+    heritage_missions: [JAXA RAPIS-1 (technology demo), emerging CubeSat Ka missions]
+    notes: >
+      Emerging capability for CubeSat Ka-band downlink. Very high data
+      rates possible (>500 Mbps) but rain attenuation is significant.
+      Requires tight pointing. TRL 7 reflects limited CubeSat heritage
+      but the ground technology itself is mature from GEO/MEO applications.
+
+  # ============================================================
+  # GROUND RF EQUIPMENT (8 items)
+  # ============================================================
+
+  - id: gs-rf-lna-uhf
+    name: UHF Low Noise Amplifier
+    manufacturer: Minicircuits / Kuhne Electronic
+    category: ground_rf
+    mass_kg: 0.3
+    power_w: 2
+    cost_keur: 0.3
+    trl: 9
+    performance:
+      band: UHF
+      frequency_mhz: 430-440
+      noise_figure_db: 0.4
+      gain_db: 20
+      ip3_dbm: 15
+    heritage_missions: [SatNOGS stations, AMSAT ground stations]
+    notes: >
+      Mast-mounted LNA placed directly at the antenna feed to minimise
+      cable loss. Critical for UHF CubeSat links where received signal
+      is very weak. Kuhne MKU LNA 432 is a popular choice among amateurs.
+
+  - id: gs-rf-lna-sband-room
+    name: S-band Room-Temperature LNA
+    manufacturer: Miteq / L3Harris Narda
+    category: ground_rf
+    mass_kg: 1
+    power_w: 10
+    cost_keur: 5
+    trl: 9
+    performance:
+      band: S
+      frequency_mhz: 2200-2300
+      noise_figure_db: 0.6
+      noise_temp_k: 45
+      gain_db: 35
+    heritage_missions: [Leaf Space, ISIS ground stations, many university stations]
+    notes: >
+      Room-temperature GaAs or InP LNA. Lower cost and complexity than
+      cryogenic option. Adequate for most CubeSat S-band links. Typical
+      system noise temperature ~80-120 K including antenna contribution.
+
+  - id: gs-rf-lna-sband-cryo
     name: S-band Cryogenic LNA
-    manufacturer: Miteq
+    manufacturer: Miteq / Low Noise Factory
     category: ground_rf
     mass_kg: 5
     power_w: 50
@@ -65,27 +267,58 @@ components:
     trl: 9
     performance:
       band: S
-      noise_temp_k: 25
+      frequency_mhz: 2200-2300
+      noise_temp_k: 15
       gain_db: 35
-    notes: Cryogenically cooled for minimum noise
+      cooling: closed-cycle cryocooler (15-20 K)
+    heritage_missions: [ESTRACK stations, DSN, KSAT]
+    notes: >
+      Cryogenically cooled for minimum system noise temperature (~25-40 K
+      total). Justified when link margins are tight or when operating
+      small antennas. Adds operational complexity (cryocooler maintenance).
 
-  - id: gs-lna-x
-    name: X-band LNA
-    manufacturer: Miteq
+  - id: gs-rf-lna-xband
+    name: X-band Low Noise Amplifier
+    manufacturer: Miteq / Narda-MITEQ
     category: ground_rf
-    mass_kg: 3
-    power_w: 30
-    cost_keur: 10
+    mass_kg: 1
+    power_w: 10
+    cost_keur: 8
     trl: 9
     performance:
       band: X
-      noise_temp_k: 40
+      frequency_mhz: 8025-8400
+      noise_figure_db: 0.8
+      noise_temp_k: 60
       gain_db: 30
+    heritage_missions: [Planet Labs, Spire, KSAT X-band stations]
+    notes: >
+      Standard room-temperature X-band LNA. InP HEMT technology. Mount
+      at the antenna feed to minimise waveguide losses. For high-rate
+      CubeSat X-band downlinks the LNA is a critical component.
 
-  # HPA (High Power Amplifiers)
-  - id: gs-hpa-s-200w
+  - id: gs-rf-sspa-uhf
+    name: UHF Solid-State Power Amplifier (25W)
+    manufacturer: Microset / RM Italy
+    category: ground_rf
+    mass_kg: 2
+    power_w: 100
+    cost_keur: 0.5
+    trl: 9
+    performance:
+      band: UHF
+      frequency_mhz: 430-440
+      output_power_w: 25
+      efficiency_pct: 40
+    heritage_missions: [University CubeSat ground stations, AMSAT]
+    notes: >
+      Low-power UHF amplifier for CubeSat uplink commanding. 25W is
+      sufficient for most UHF CubeSat uplinks with a Yagi antenna.
+      Often an amateur radio amplifier (e.g., Microset SR-70) is used.
+
+  - id: gs-rf-sspa-sband-200w
     name: 200W S-band SSPA
-    manufacturer: CPI
+    manufacturer: CPI / Paradise Datacom
     category: ground_rf
     mass_kg: 20
     power_w: 800
@@ -93,12 +326,19 @@ components:
     trl: 9
     performance:
       band: S
+      frequency_mhz: 2025-2110
       output_power_w: 200
       efficiency_pct: 25
+      linearity_c_im3_dbc: -25
+    heritage_missions: [Leaf Space, ISIS, university S-band stations]
+    notes: >
+      Standard S-band uplink amplifier for CubeSat commanding. 200W
+      provides comfortable margin for 2 Mbps uplink to a 3U-6U CubeSat.
+      GaN technology is making these smaller and more efficient.
 
-  - id: gs-hpa-s-1kw
-    name: 1kW S-band SSPA
-    manufacturer: Advantech Wireless
+  - id: gs-rf-sspa-sband-1kw
+    name: 1 kW S-band SSPA
+    manufacturer: Advantech Wireless / CPI
     category: ground_rf
     mass_kg: 50
     power_w: 4000
@@ -106,72 +346,260 @@ components:
     trl: 9
     performance:
       band: S
+      frequency_mhz: 2025-2110
       output_power_w: 1000
       efficiency_pct: 25
+    heritage_missions: [ESTRACK, KSAT, SSC Esrange]
+    notes: >
+      High-power S-band uplink amplifier. Used when commanding at longer
+      ranges or when higher uplink data rates are needed. Typically for
+      professional-grade stations supporting multiple missions.
 
-  # Modems / Baseband
-  - id: gs-modem-cortex
+  - id: gs-rf-diplexer-sband
+    name: S-band Diplexer / Filter Assembly
+    manufacturer: Reactel / K&L Microwave
+    category: ground_rf
+    mass_kg: 3
+    power_w: 0
+    cost_keur: 4
+    trl: 9
+    performance:
+      band: S
+      tx_frequency_mhz: 2025-2110
+      rx_frequency_mhz: 2200-2290
+      isolation_db: 80
+      insertion_loss_db: 0.3
+    heritage_missions: [Standard in all S-band stations]
+    notes: >
+      Enables simultaneous transmit and receive on a single antenna feed.
+      High isolation protects the LNA from transmitter power. Essential
+      for any S-band station doing both uplink and downlink.
+
+  # ============================================================
+  # GROUND BASEBAND / MODEMS (6 items)
+  # ============================================================
+
+  - id: gs-bb-cortex
     name: Cortex CRT-II
-    manufacturer: Zodiac Data Systems
+    manufacturer: L3Harris (formerly Zodiac Data Systems)
     category: ground_baseband
     mass_kg: 10
     power_w: 100
     cost_keur: 80
     trl: 9
     performance:
+      type: hardware_modem
       max_data_rate_mbps: 300
       modulation: [BPSK, QPSK, 8PSK, OQPSK]
-      coding: [conv, RS, LDPC, turbo]
-      standards: [CCSDS]
-    heritage_missions: [ESA missions, many commercial]
-    notes: Industry standard ground modem
+      coding: [convolutional, Reed-Solomon, LDPC, turbo]
+      standards: [CCSDS 131.0, CCSDS 401.0]
+      ranging: tone ranging (CCSDS 414.1)
+      doppler_tracking: true
+    heritage_missions: [ESA missions, CNES missions, many commercial operators]
+    notes: >
+      Industry-standard ground modem used by most European space agencies.
+      Handles telemetry, telecommand, ranging, and Doppler extraction.
+      High cost but extremely mature and well-supported.
 
-  - id: gs-modem-amergint
+  - id: gs-bb-amergint
     name: Amergint softFEP
     manufacturer: Amergint Technologies
     category: ground_baseband
     mass_kg: 5
-    power_w: 50
+    power_w: 200
     cost_keur: 40
     trl: 9
     performance:
+      type: software_modem
       max_data_rate_mbps: 500
-      modulation: [BPSK, QPSK, 8PSK]
-      coding: [LDPC, turbo]
+      modulation: [BPSK, QPSK, 8PSK, 16APSK]
+      coding: [LDPC, turbo, Reed-Solomon]
       standards: [CCSDS, DVB-S2]
-    notes: Software-defined modem
+      gpu_accelerated: true
+    heritage_missions: [NASA TDRS ground segment, USAF AFSCN]
+    notes: >
+      Software-defined modem running on COTS GPU hardware. Very flexible
+      and upgradeable via software. Lower per-channel cost than Cortex
+      for multi-mission ground stations.
 
-  # Mission Control Software
-  - id: gs-mcs-scos
-    name: SCOS-2000
-    manufacturer: ESA
+  - id: gs-bb-rands-ttc
+    name: R&S GNSS100/STTC Baseband
+    manufacturer: Rohde & Schwarz
+    category: ground_baseband
+    mass_kg: 8
+    power_w: 80
+    cost_keur: 60
+    trl: 9
+    performance:
+      type: hardware_modem
+      max_data_rate_mbps: 100
+      modulation: [BPSK, QPSK, OQPSK]
+      coding: [convolutional, Reed-Solomon, turbo]
+      standards: [CCSDS, ECSS]
+      ranging: PN and tone ranging
+      doppler_tracking: true
+    heritage_missions: [DLR GSOC stations, OHB SmallSat missions]
+    notes: >
+      German-built TT&C baseband processor with integrated ranging.
+      Popular in European institutional ground stations. Compact form
+      factor suitable for smaller stations.
+
+  - id: gs-bb-innoflight-sdr
+    name: Innoflight SCR-106 Ground SDR
+    manufacturer: Innoflight
+    category: ground_baseband
+    mass_kg: 2
+    power_w: 30
+    cost_keur: 15
+    trl: 8
+    performance:
+      type: software_defined_radio
+      max_data_rate_mbps: 50
+      modulation: [BPSK, QPSK, GMSK]
+      coding: [convolutional, LDPC]
+      standards: [CCSDS]
+      bands: [UHF, S]
+    heritage_missions: [NASA CubeSat missions, various 6U CubeSats]
+    notes: >
+      CubeSat-focused SDR that can serve as both flight and ground modem.
+      Using matched flight/ground radios simplifies the RF chain. Good
+      for teams building their first ground station.
+
+  - id: gs-bb-nanocom-sdr
+    name: NanoCom GS100 Ground Modem
+    manufacturer: GomSpace
+    category: ground_baseband
+    mass_kg: 1
+    power_w: 15
+    cost_keur: 8
+    trl: 9
+    performance:
+      type: software_defined_radio
+      max_data_rate_mbps: 10
+      modulation: [GMSK, GFSK, BPSK]
+      coding: [convolutional, Reed-Solomon]
+      bands: [UHF]
+      frequency_mhz: 430-440
+    heritage_missions: [GomX-1, GomX-3, AAUSAT, many GomSpace-based CubeSats]
+    notes: >
+      Companion ground modem for GomSpace NanoCom flight radios. Plug-and-play
+      with GomSpace UHF transceivers. Very simple integration but limited
+      to UHF and moderate data rates.
+
+  - id: gs-bb-gnuradio-sdr
+    name: GNU Radio + USRP SDR Platform
+    manufacturer: Ettus Research (NI) / open-source community
+    category: ground_baseband
+    mass_kg: 3
+    power_w: 30
+    cost_keur: 5
+    trl: 7
+    performance:
+      type: software_defined_radio
+      max_data_rate_mbps: 50
+      modulation: [user-defined, any supported by software]
+      coding: [user-defined]
+      standards: [CCSDS via gr-satellites, AX.25 via gr-ax25]
+      hardware: USRP B210 (70 MHz - 6 GHz, 56 MHz BW)
+      open_source: true
+    heritage_missions: [SatNOGS network, many university CubeSats, Libre Space Foundation]
+    notes: >
+      Open-source SDR platform offering maximum flexibility. USRP B210
+      (~$3k) covers UHF through S-band. GNU Radio flowgraphs available
+      for CCSDS, AX.25, and custom protocols. Requires significant
+      software expertise. SatNOGS uses this stack for its global network.
+
+  # ============================================================
+  # GROUND SOFTWARE (6 items)
+  # ============================================================
+
+  - id: gs-sw-cosmos
+    name: COSMOS
+    manufacturer: Ball Aerospace
     category: ground_software
     mass_kg: 0
     power_w: 0
     cost_keur: 0
     trl: 9
-    performance:
-      type: mission_control
-      standards: [CCSDS PUS, ECSS]
-      open_source: true
-    notes: ESA standard MCS, free but requires expertise
-
-  - id: gs-mcs-cosmos
-    name: COSMOS
-    manufacturer: Ball Aerospace (OpenC3)
-    category: ground_software
-    mass_kg: 0
-    power_w: 0
-    cost_keur: 0
-    trl: 8
     performance:
       type: mission_control
       standards: [CCSDS]
       open_source: true
-    notes: Open-source command and telemetry system
+      license: AGPL-3.0
+      language: Ruby
+      capabilities: [command, telemetry, scripting, limits_monitoring, data_viewer]
+    heritage_missions: [Ball Aerospace missions, many US university CubeSats]
+    notes: >
+      Original open-source command and telemetry system. Mature and
+      battle-tested. Superseded by OpenC3 but still widely deployed.
 
-  - id: gs-mcs-bright
-    name: Generation One
+  - id: gs-sw-openc3
+    name: OpenC3 (COSMOS successor)
+    manufacturer: OpenC3 Inc.
+    category: ground_software
+    mass_kg: 0
+    power_w: 0
+    cost_keur: 0
+    trl: 9
+    performance:
+      type: mission_control
+      standards: [CCSDS]
+      open_source: true
+      license: AGPL-3.0
+      language: Ruby / Python / JavaScript
+      deployment: Docker containers, cloud-native
+      capabilities: [command, telemetry, scripting, limits, calendar, data_extractor]
+    heritage_missions: [continuation of COSMOS user base, growing CubeSat adoption]
+    notes: >
+      Modern rewrite of COSMOS with web-based UI, containerised deployment,
+      and plugin architecture. Free open-source edition plus paid Enterprise
+      edition with support. Excellent documentation and active community.
+
+  - id: gs-sw-yamcs
+    name: Yamcs Mission Control
+    manufacturer: Space Applications Services
+    category: ground_software
+    mass_kg: 0
+    power_w: 0
+    cost_keur: 0
+    trl: 9
+    performance:
+      type: mission_control
+      standards: [CCSDS PUS, XTCE]
+      open_source: true
+      license: AGPL-3.0
+      language: Java
+      deployment: standalone or Docker
+      capabilities: [command, telemetry, archive, displays, scripting, parameter_db]
+    heritage_missions: [ESA (various), JUICE MAPPS, BepiColombo simulator]
+    notes: >
+      ESA-heritage open-source MCS used for both real missions and
+      simulators. Java-based with web UI. Strong CCSDS PUS support.
+      Active development and good European institutional adoption.
+
+  - id: gs-sw-scos2000
+    name: SCOS-2000
+    manufacturer: ESA / Telespazio
+    category: ground_software
+    mass_kg: 0
+    power_w: 0
+    cost_keur: 0
+    trl: 9
+    performance:
+      type: mission_control
+      standards: [CCSDS PUS, ECSS-E-ST-70-41C]
+      open_source: true
+      license: ESA Community Licence
+      language: C++ / Java
+      capabilities: [command, telemetry, mission_planning, flight_procedures]
+    heritage_missions: [Rosetta, Mars Express, Sentinel-1/2/3, LISA Pathfinder]
+    notes: >
+      ESA standard MCS for all ESA missions. Free but requires significant
+      expertise to configure. Overkill for simple CubeSat missions but
+      relevant for institutional operators or ESA-funded projects.
+
+  - id: gs-sw-bright-gssc
+    name: Bright Ascension GSSC (Generation-S)
     manufacturer: Bright Ascension
     category: ground_software
     mass_kg: 0
@@ -182,32 +610,103 @@ components:
       type: mission_control
       standards: [CCSDS PUS]
       cloud: true
-    notes: Cloud-native MCS for CubeSats/SmallSats
+      saas: true
+      capabilities: [command, telemetry, pass_scheduling, fleet_management]
+    heritage_missions: [Lacuna Space, Spire, multiple UK CubeSat missions]
+    notes: >
+      Cloud-native MCS designed specifically for CubeSats and SmallSats.
+      SaaS model reduces upfront cost. Integrates with Bright Ascension
+      flight software (GenerationOne OBCS). Good for commercial CubeSat
+      operators wanting managed ground software.
 
-  # Flight Dynamics
-  - id: gs-fd-gmat
-    name: GMAT
-    manufacturer: NASA GSFC
+  - id: gs-sw-satnogs
+    name: SatNOGS Network
+    manufacturer: Libre Space Foundation
     category: ground_software
     mass_kg: 0
     power_w: 0
     cost_keur: 0
-    trl: 9
+    trl: 8
     performance:
-      type: flight_dynamics
-      capabilities: [orbit_determination, manoeuvre_planning, propagation]
+      type: distributed_ground_network
+      standards: [SatNOGS DB, community standard]
       open_source: true
+      license: AGPL-3.0
+      station_count: 300+
+      global_coverage: true
+      capabilities: [observation_scheduling, waterfall_recording, telemetry_decoding, data_aggregation]
+    heritage_missions: [UPSat, QB50, FOSSASAT, hundreds of amateur CubeSats]
+    notes: >
+      Open-source distributed network of ground stations worldwide. Any
+      CubeSat operator can schedule observations on community stations.
+      Excellent for early orbit phase when you need global coverage but
+      only have one station. Also provides a platform for building your
+      own SatNOGS-compatible station.
 
-  # Station Infrastructure
-  - id: gs-gpsdo
+  # ============================================================
+  # GROUND TIMING AND FREQUENCY (3 items)
+  # ============================================================
+
+  - id: gs-time-gpsdo
     name: GPS-Disciplined Oscillator
-    manufacturer: Symmetricom/Microsemi
+    manufacturer: Microsemi (Microchip) / Trimble
     category: ground_timing
-    mass_kg: 5
+    mass_kg: 2
     power_w: 15
-    cost_keur: 5
+    cost_keur: 3
     trl: 9
     performance:
-      accuracy_ns: 50
-      stability: 1e-12
-    notes: Required for coherent ranging and Doppler
+      type: frequency_reference
+      output_frequency_mhz: 10
+      accuracy_ppb: 0.01
+      stability_1s: 1.0e-12
+      time_accuracy_ns: 50
+      gps_disciplined: true
+    heritage_missions: [Standard in all professional ground stations]
+    notes: >
+      Essential for coherent Doppler tracking and ranging. GPS-disciplined
+      10 MHz reference locks a high-quality OCXO to GPS timing. Microsemi
+      SyncServer S600/S650 or Trimble Thunderbolt are common choices.
+      Required for CCSDS-compliant ranging.
+
+  - id: gs-time-rubidium
+    name: Rubidium Frequency Standard
+    manufacturer: Stanford Research Systems (SRS) / Microsemi
+    category: ground_timing
+    mass_kg: 4
+    power_w: 40
+    cost_keur: 8
+    trl: 9
+    performance:
+      type: frequency_reference
+      output_frequency_mhz: 10
+      accuracy_ppb: 0.001
+      stability_1s: 2.0e-11
+      stability_100s: 3.0e-13
+      holdover_drift_per_day_ns: 500
+    heritage_missions: [ESA ESTRACK, KSAT, DSN (as backup)]
+    notes: >
+      Higher stability than GPSDO, especially over short intervals.
+      Maintains accuracy during GPS signal outages (holdover mode).
+      Used in professional ground stations where precise Doppler and
+      ranging measurements are critical. Often GPS-disciplined as well.
+
+  - id: gs-time-ntp
+    name: NTP Time Server (Stratum 1)
+    manufacturer: Meinberg / Galleon Systems
+    category: ground_timing
+    mass_kg: 1
+    power_w: 10
+    cost_keur: 1
+    trl: 9
+    performance:
+      type: time_distribution
+      protocol: NTP / PTP (IEEE 1588)
+      accuracy_ms: 1
+      gps_input: true
+    heritage_missions: [Lightweight CubeSat operations, university stations]
+    notes: >
+      Distributes GPS-derived time to MCS servers and workstations via
+      NTP. Sufficient accuracy for most CubeSat operations where precise
+      ranging is not required. Low-cost Raspberry Pi + GPS HAT can serve
+      as a basic Stratum-1 NTP server for ~$100.
