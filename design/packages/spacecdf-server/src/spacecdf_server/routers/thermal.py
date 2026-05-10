@@ -14,6 +14,7 @@ from ..services.thermal_network import (
     ThermalNode,
     analyze_thermal_network,
 )
+from ..services.thermal_transient import compute_thermal_transient
 
 router = APIRouter()
 
@@ -135,3 +136,48 @@ async def analyze_thermal(req: ThermalAnalyzeRequest) -> ThermalAnalyzeResponse:
     )
 
     return ThermalAnalyzeResponse(**result)
+
+
+# ---------------------------------------------------------------------------
+# Transient solver endpoint (single-node lumped parameter)
+# ---------------------------------------------------------------------------
+
+
+class ThermalTransientRequest(BaseModel):
+    orbit_altitude_km: float = 500
+    orbit_inclination_deg: float = 97.4
+    mass_kg: float = 4.0
+    surface_area_m2: float = 0.06
+    alpha_s: float = 0.3
+    epsilon_ir: float = 0.8
+    internal_power_w: float = 5.0
+    num_orbits: int = 3
+
+
+class ThermalTransientResponse(BaseModel):
+    times_s: List[float]
+    temperatures_k: List[float]
+    hot_case_k: float
+    cold_case_k: float
+    eclipse_fraction: float
+    orbit_period_s: float
+
+
+@router.post("/transient", response_model=ThermalTransientResponse)
+async def thermal_transient(req: ThermalTransientRequest) -> ThermalTransientResponse:
+    """Lumped-parameter single-node thermal transient solver.
+
+    Computes temperature profile over multiple orbits including solar,
+    albedo, Earth IR, and radiative cooling.
+    """
+    result = compute_thermal_transient(
+        orbit_altitude_km=req.orbit_altitude_km,
+        orbit_inclination_deg=req.orbit_inclination_deg,
+        mass_kg=req.mass_kg,
+        surface_area_m2=req.surface_area_m2,
+        alpha_s=req.alpha_s,
+        epsilon_ir=req.epsilon_ir,
+        internal_power_w=req.internal_power_w,
+        num_orbits=req.num_orbits,
+    )
+    return ThermalTransientResponse(**result)

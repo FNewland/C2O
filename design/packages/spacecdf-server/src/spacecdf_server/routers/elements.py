@@ -2,23 +2,55 @@
 
 Every block in a diagram is a rich object. This router provides CRUD,
 tree traversal, budget computation, and interface management.
+
+Persistence: write-through cache.  In-memory dicts are the primary read
+path (fast).  Every mutation is mirrored to the database via element_repo
+so data survives restarts.
 """
 from __future__ import annotations
 
+import logging
 from typing import Any
 from uuid import uuid4
 
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 
+from ..db.element_repo import (
+    db_bulk_create_elements,
+    db_bulk_create_interfaces,
+    db_create_element,
+    db_create_interface,
+    db_soft_delete_element,
+    db_soft_delete_interface,
+    db_update_element,
+    load_all_elements,
+)
+
+logger = logging.getLogger(__name__)
+
 router = APIRouter()
 
 
-# ─── In-memory store (Phase A — will migrate to SQLAlchemy in Phase B) ───
+# ─── In-memory store (write-through cache — DB is source of truth) ───
 _elements: dict[str, dict] = {}
 _interfaces: dict[str, dict] = {}
 _mode_elements: list[dict] = []
 _budget_allocations: list[dict] = []
+
+
+async def init_element_cache() -> None:
+    """Load persisted elements and interfaces into the in-memory cache.
+
+    Called once during application startup (from app.py lifespan).
+    """
+    loaded_els, loaded_ifaces = await load_all_elements()
+    _elements.update(loaded_els)
+    _interfaces.update(loaded_ifaces)
+    logger.info(
+        "Element cache initialized: %d elements, %d interfaces",
+        len(_elements), len(_interfaces),
+    )
 
 
 # ─── Pydantic models ───
@@ -112,6 +144,8 @@ async def create_element(body: ElementCreate, study_id: str = Query(...)) -> dic
                 if element.get(k) is None and v is not None:
                     element[k] = v
 
+    # Write to DB first, then cache
+    await db_create_element(element)
     _elements[el_id] = element
     return element
 
@@ -147,6 +181,9 @@ async def update_element(element_id: str, body: ElementUpdate) -> dict:
         if v is not None:
             el[k] = v
     el["version"] += 1
+
+    # Persist to DB
+    await db_update_element(element_id, el)
     return el
 
 
@@ -157,7 +194,11 @@ async def delete_element(element_id: str) -> dict:
     if not el:
         raise HTTPException(404, f"Element {element_id} not found")
     from datetime import datetime, timezone
-    el["deleted_at"] = datetime.now(timezone.utc).isoformat()
+    deleted_at = datetime.now(timezone.utc).isoformat()
+    el["deleted_at"] = deleted_at
+
+    # Persist soft-delete to DB
+    await db_soft_delete_element(element_id, deleted_at)
     return {"id": element_id, "deleted": True}
 
 
@@ -321,6 +362,8 @@ async def create_interface(body: InterfaceCreate, study_id: str = Query(...)) ->
         "version": 1,
         "deleted_at": None,
     }
+    # Write to DB first, then cache
+    await db_create_interface(iface)
     _interfaces[iface_id] = iface
     return iface
 
@@ -354,7 +397,11 @@ async def delete_interface(interface_id: str) -> dict:
     if not iface:
         raise HTTPException(404)
     from datetime import datetime, timezone
-    iface["deleted_at"] = datetime.now(timezone.utc).isoformat()
+    deleted_at = datetime.now(timezone.utc).isoformat()
+    iface["deleted_at"] = deleted_at
+
+    # Persist soft-delete to DB
+    await db_soft_delete_interface(interface_id, deleted_at)
     return {"id": interface_id, "deleted": True}
 
 
@@ -452,5 +499,9 @@ async def seed_elements_from_design(study_id: str, body: SeedRequest) -> dict:
         _elements[el["id"]] = el
     for iface in interfaces:
         _interfaces[iface["id"]] = iface
+
+    # Bulk-persist to DB
+    await db_bulk_create_elements(elements)
+    await db_bulk_create_interfaces(interfaces)
 
     return {"status": "seeded", "element_count": len(elements), "interface_count": len(interfaces)}

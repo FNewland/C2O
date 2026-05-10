@@ -4,20 +4,22 @@
  * 6 phases as primary navigation. Margin tower always visible.
  * Anyone can connect at any time. No role assignment in the tool.
  */
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect, Suspense } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useDesignStore } from './stores/designStore'
 import { useModelStore } from './stores/modelStore'
 import { useSessionStore } from './stores/sessionStore'
-import { Phase0Need } from './phases/Phase0Need'
-import { Phase1MissionArch } from './phases/Phase1MissionArch'
-import { Phase2SystemArch } from './phases/Phase2SystemArch'
-import { Phase3SubsystemDesign } from './phases/Phase3SubsystemDesign'
-import { Phase4Integration } from './phases/Phase4Integration'
-import { Phase5Verification } from './phases/Phase5Verification'
 import { BudgetCascade } from './charts/BudgetCascade'
 import { PHASE_LABELS, PHASE_SHORT, PHASE_COLORS, type Phase } from './types/phases'
 import { ErrorBoundary } from './components/ErrorBoundary'
+
+// Lazy-loaded phase components — each chunk is loaded on first navigation
+const Phase0Need = React.lazy(() => import('./phases/Phase0Need').then(m => ({ default: m.Phase0Need })))
+const Phase1MissionArch = React.lazy(() => import('./phases/Phase1MissionArch').then(m => ({ default: m.Phase1MissionArch })))
+const Phase2SystemArch = React.lazy(() => import('./phases/Phase2SystemArch').then(m => ({ default: m.Phase2SystemArch })))
+const Phase3SubsystemDesign = React.lazy(() => import('./phases/Phase3SubsystemDesign').then(m => ({ default: m.Phase3SubsystemDesign })))
+const Phase4Integration = React.lazy(() => import('./phases/Phase4Integration').then(m => ({ default: m.Phase4Integration })))
+const Phase5Verification = React.lazy(() => import('./phases/Phase5Verification').then(m => ({ default: m.Phase5Verification })))
 
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: 1, staleTime: 30000 } } })
 
@@ -300,9 +302,9 @@ function AppShell() {
               missionNeed: mission.mission_need || {},
               selectedEquipment: mission.selected_equipment || [],
               missionId: newMissionId,
-              result: null,
+              result: mission.design_result || null,
               studyId: null,
-              designStale: true,
+              designStale: !mission.design_result,
               error: null,
             })
             setActivePhaseRaw(0 as Phase)
@@ -361,12 +363,14 @@ function AppShell() {
         {/* Phase content — each wrapped in error boundary for resilience */}
         <main style={{ flex: 1, overflow: 'hidden' }}>
           <ErrorBoundary phaseName={PHASE_LABELS[activePhase]} key={activePhase}>
-            {activePhase === 0 && <Phase0Need />}
-            {activePhase === 1 && <Phase1MissionArch />}
-            {activePhase === 2 && <Phase2SystemArch />}
-            {activePhase === 3 && <Phase3SubsystemDesign />}
-            {activePhase === 4 && <Phase4Integration />}
-            {activePhase === 5 && <Phase5Verification />}
+            <Suspense fallback={<div style={{ padding: '2rem', color: '#6b7280', textAlign: 'center' }}>Loading...</div>}>
+              {activePhase === 0 && <Phase0Need />}
+              {activePhase === 1 && <Phase1MissionArch />}
+              {activePhase === 2 && <Phase2SystemArch />}
+              {activePhase === 3 && <Phase3SubsystemDesign />}
+              {activePhase === 4 && <Phase4Integration />}
+              {activePhase === 5 && <Phase5Verification />}
+            </Suspense>
           </ErrorBoundary>
         </main>
       </div>
