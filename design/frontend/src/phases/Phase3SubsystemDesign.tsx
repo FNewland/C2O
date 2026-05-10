@@ -182,7 +182,7 @@ export function Phase3SubsystemDesign() {
       <div style={{ flex: 1, overflow: 'auto' }}>
         {segment === 'space' && (
           <>
-            {subView === 'equipment' && <EquipmentBrowser studyId={studyId} onClose={() => setSubView('link')} onSelect={handleEquipmentSelect} mode="inline" />}
+            {subView === 'equipment' && <EquipmentBrowser studyId={studyId} onClose={() => setSubView('link')} onSelect={handleEquipmentSelect} mode="inline" segment={segment} />}
             {subView === 'link' && <LinkBudgetTool />}
             {subView === 'pointing' && <><PointingBudget /><DisturbanceTorqueBudget /></>}
             {subView === 'power' && <PowerDistribution />}
@@ -195,7 +195,7 @@ export function Phase3SubsystemDesign() {
         )}
         {segment === 'ground' && (
           <>
-            {subView === 'equipment' && <EquipmentBrowser studyId={studyId} onClose={() => setSubView('link')} onSelect={handleEquipmentSelect} mode="inline" />}
+            {subView === 'equipment' && <EquipmentBrowser studyId={studyId} onClose={() => setSubView('link')} onSelect={handleEquipmentSelect} mode="inline" segment={segment} />}
             {subView !== 'equipment' && (
               <div style={{ padding: '1.5rem' }}>
                 <h2 style={{ fontSize: '1rem', marginBottom: '0.5rem' }}>Ground Segment — Subsystem Design</h2>

@@ -8,7 +8,8 @@
  *
  * Per ECSS-M-ST-80C (Risk Management), NPR 8000.4, ECSS-M-ST-10C (Project Management).
  */
-import React, { useState } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
+import { useDesignStore } from '../stores/designStore'
 
 type PMTab = 'risk' | 'schedule' | 'wbs'
 
@@ -33,6 +34,9 @@ interface WorkPackage {
   start_date: string  // ISO date
   end_date: string    // ISO date
   depends_on: string  // WP or milestone ID
+  inputs: string       // What inputs are needed
+  work_content: string // What the work consists of
+  outputs: string      // What outputs come from it
 }
 
 const RISK_COLORS: Record<number, string> = {
@@ -71,23 +75,41 @@ const DEFAULT_MILESTONES: Milestone[] = [
 ]
 
 const DEFAULT_WBS: WorkPackage[] = [
-  { id: 'WP-1.0', name: 'Programme Management', description: 'Project planning, reporting, reviews', responsible: 'project_manager', effort_hours: 200, status: 'in_progress', phase: 'All', start_date: '', end_date: '', depends_on: '' },
-  { id: 'WP-2.0', name: 'Systems Engineering', description: 'Requirements, architecture, budgets, V&V', responsible: 'systems_engineer', effort_hours: 300, status: 'in_progress', phase: 'All', start_date: '', end_date: '', depends_on: '' },
-  { id: 'WP-3.0', name: 'Payload Development', description: 'Instrument design, build, calibration', responsible: 'payload_lead', effort_hours: 400, status: 'not_started', phase: 'B-C', start_date: '', end_date: '', depends_on: 'WP-2.0' },
-  { id: 'WP-4.0', name: 'Bus Procurement', description: 'COTS component procurement and acceptance', responsible: 'systems_engineer', effort_hours: 100, status: 'not_started', phase: 'C', start_date: '', end_date: '', depends_on: 'WP-2.0' },
-  { id: 'WP-5.0', name: 'Integration & Test', description: 'Assembly, functional test, environmental test', responsible: 'structures_engineer', effort_hours: 250, status: 'not_started', phase: 'C-D', start_date: '', end_date: '', depends_on: 'WP-3.0' },
-  { id: 'WP-6.0', name: 'Software Development', description: 'FSW, GSW, ops procedures', responsible: 'software_engineer', effort_hours: 350, status: 'not_started', phase: 'B-D', start_date: '', end_date: '', depends_on: 'WP-2.0' },
-  { id: 'WP-7.0', name: 'Ground Segment', description: 'Station setup, MCS, data pipeline', responsible: 'ground_segment', effort_hours: 150, status: 'not_started', phase: 'C-D', start_date: '', end_date: '', depends_on: 'WP-2.0' },
-  { id: 'WP-8.0', name: 'Launch Campaign', description: 'Launch procurement, integration, shipping', responsible: 'project_manager', effort_hours: 100, status: 'not_started', phase: 'D', start_date: '', end_date: '', depends_on: 'WP-5.0' },
-  { id: 'WP-9.0', name: 'Operations', description: 'LEOP, commissioning, nominal ops', responsible: 'mission_ops', effort_hours: 500, status: 'not_started', phase: 'E', start_date: '', end_date: '', depends_on: 'WP-8.0' },
+  { id: 'WP-1.0', name: 'Programme Management', description: 'Project planning, reporting, reviews', responsible: 'project_manager', effort_hours: 200, status: 'in_progress', phase: 'All', start_date: '', end_date: '', depends_on: '', inputs: '', work_content: '', outputs: '' },
+  { id: 'WP-2.0', name: 'Systems Engineering', description: 'Requirements, architecture, budgets, V&V', responsible: 'systems_engineer', effort_hours: 300, status: 'in_progress', phase: 'All', start_date: '', end_date: '', depends_on: '', inputs: '', work_content: '', outputs: '' },
+  { id: 'WP-3.0', name: 'Payload Development', description: 'Instrument design, build, calibration', responsible: 'payload_lead', effort_hours: 400, status: 'not_started', phase: 'B-C', start_date: '', end_date: '', depends_on: 'WP-2.0', inputs: '', work_content: '', outputs: '' },
+  { id: 'WP-4.0', name: 'Bus Procurement', description: 'COTS component procurement and acceptance', responsible: 'systems_engineer', effort_hours: 100, status: 'not_started', phase: 'C', start_date: '', end_date: '', depends_on: 'WP-2.0', inputs: '', work_content: '', outputs: '' },
+  { id: 'WP-5.0', name: 'Integration & Test', description: 'Assembly, functional test, environmental test', responsible: 'structures_engineer', effort_hours: 250, status: 'not_started', phase: 'C-D', start_date: '', end_date: '', depends_on: 'WP-3.0', inputs: '', work_content: '', outputs: '' },
+  { id: 'WP-6.0', name: 'Software Development', description: 'FSW, GSW, ops procedures', responsible: 'software_engineer', effort_hours: 350, status: 'not_started', phase: 'B-D', start_date: '', end_date: '', depends_on: 'WP-2.0', inputs: '', work_content: '', outputs: '' },
+  { id: 'WP-7.0', name: 'Ground Segment', description: 'Station setup, MCS, data pipeline', responsible: 'ground_segment', effort_hours: 150, status: 'not_started', phase: 'C-D', start_date: '', end_date: '', depends_on: 'WP-2.0', inputs: '', work_content: '', outputs: '' },
+  { id: 'WP-8.0', name: 'Launch Campaign', description: 'Launch procurement, integration, shipping', responsible: 'project_manager', effort_hours: 100, status: 'not_started', phase: 'D', start_date: '', end_date: '', depends_on: 'WP-5.0', inputs: '', work_content: '', outputs: '' },
+  { id: 'WP-9.0', name: 'Operations', description: 'LEOP, commissioning, nominal ops', responsible: 'mission_ops', effort_hours: 500, status: 'not_started', phase: 'E', start_date: '', end_date: '', depends_on: 'WP-8.0', inputs: '', work_content: '', outputs: '' },
 ]
 
 export function ProjectManagement() {
   const [activeTab, setActiveTab] = useState<PMTab>('wbs')
   const [risks, setRisks] = useState<Risk[]>(DEFAULT_RISKS)
   const [milestones, setMilestones] = useState<Milestone[]>(DEFAULT_MILESTONES)
-  const [wbs, setWbs] = useState<WorkPackage[]>(DEFAULT_WBS)
   const [expandedWp, setExpandedWp] = useState<string | null>(null)
+
+  // WBS persistence: initialize from designStore, fall back to defaults
+  const storedWbs = useDesignStore(s => s.projectWbs)
+  const setStoredWbs = useDesignStore(s => s.setProjectWbs)
+  const [wbs, setWbsLocal] = useState<WorkPackage[]>(() => {
+    if (storedWbs && storedWbs.length > 0) {
+      return storedWbs as WorkPackage[]
+    }
+    return DEFAULT_WBS
+  })
+
+  // Wrap setWbs to also persist to designStore
+  const setWbs: React.Dispatch<React.SetStateAction<WorkPackage[]>> = useCallback((action) => {
+    setWbsLocal(prev => {
+      const next = typeof action === 'function' ? action(prev) : action
+      setStoredWbs(next)
+      return next
+    })
+  }, [setStoredWbs])
 
   return (
     <div style={{ padding: '1rem', overflowY: 'auto', height: '100%' }}>
@@ -357,7 +379,7 @@ export function ProjectManagement() {
                 </tr>
                 {expandedWp === wp.id && (
                   <tr>
-                    <td colSpan={7} style={{ padding: '0.5rem', background: 'var(--bg-primary, #0a0e1a)' }}>
+                    <td colSpan={10} style={{ padding: '0.5rem', background: 'var(--bg-primary, #0a0e1a)' }}>
                       <div style={{ fontSize: '0.72rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
                         <label style={{ color: '#9ca3af' }}>Description:
                           <textarea className="input" value={wp.description} onChange={e => setWbs(prev => prev.map(w => w.id === wp.id ? { ...w, description: e.target.value } : w))}
@@ -367,13 +389,19 @@ export function ProjectManagement() {
                           <input className="input" value={(wp as any).people || ''} onChange={e => setWbs(prev => prev.map(w => w.id === wp.id ? { ...w, people: e.target.value } as any : w))}
                             style={{ width: '100%', fontSize: '0.72rem' }} placeholder="e.g., 2 × SE, 1 × thermal" />
                         </label>
-                        <label style={{ color: '#9ca3af' }}>Inputs:
-                          <input className="input" value={(wp as any).inputs || ''} onChange={e => setWbs(prev => prev.map(w => w.id === wp.id ? { ...w, inputs: e.target.value } as any : w))}
-                            style={{ width: '100%', fontSize: '0.72rem' }} placeholder="e.g., Requirements baseline, architecture decisions" />
+                      </div>
+                      <div style={{ fontSize: '0.72rem', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem', marginTop: '0.5rem' }}>
+                        <label style={{ color: '#9ca3af' }}>Inputs Required:
+                          <textarea className="input" value={wp.inputs || ''} onChange={e => setWbs(prev => prev.map(w => w.id === wp.id ? { ...w, inputs: e.target.value } : w))}
+                            rows={3} style={{ width: '100%', fontSize: '0.72rem', resize: 'vertical' }} placeholder="What needs to be in place before this WP starts (e.g., requirements baseline, architecture decisions, approved budgets)" />
                         </label>
-                        <label style={{ color: '#9ca3af' }}>Outputs / Deliverables:
-                          <input className="input" value={(wp as any).outputs || ''} onChange={e => setWbs(prev => prev.map(w => w.id === wp.id ? { ...w, outputs: e.target.value } as any : w))}
-                            style={{ width: '100%', fontSize: '0.72rem' }} placeholder="e.g., Test report, flight model, procedures" />
+                        <label style={{ color: '#9ca3af' }}>Work Activities:
+                          <textarea className="input" value={wp.work_content || ''} onChange={e => setWbs(prev => prev.map(w => w.id === wp.id ? { ...w, work_content: e.target.value } : w))}
+                            rows={3} style={{ width: '100%', fontSize: '0.72rem', resize: 'vertical' }} placeholder="What the WP consists of (e.g., detailed design, analysis, fabrication, coding, testing)" />
+                        </label>
+                        <label style={{ color: '#9ca3af' }}>Deliverables / Outputs:
+                          <textarea className="input" value={wp.outputs || ''} onChange={e => setWbs(prev => prev.map(w => w.id === wp.id ? { ...w, outputs: e.target.value } : w))}
+                            rows={3} style={{ width: '100%', fontSize: '0.72rem', resize: 'vertical' }} placeholder="What comes out of this WP (e.g., test report, flight model, procedures, data products)" />
                         </label>
                       </div>
                     </td>
@@ -389,7 +417,7 @@ export function ProjectManagement() {
           </table>
           <button onClick={() => {
             const id = `WP-${wbs.length + 1}.0`
-            setWbs(prev => [...prev, { id, name: 'New Work Package', description: '', responsible: 'systems_engineer', effort_hours: 0, status: 'not_started' as const, phase: '', start_date: '', end_date: '', depends_on: '' }])
+            setWbs(prev => [...prev, { id, name: 'New Work Package', description: '', responsible: 'systems_engineer', effort_hours: 0, status: 'not_started' as const, phase: '', start_date: '', end_date: '', depends_on: '', inputs: '', work_content: '', outputs: '' }])
           }} className="btn btn-sm" style={{ marginTop: '0.5rem', fontSize: '0.7rem', background: '#374151' }}>
             + Add Work Package
           </button>

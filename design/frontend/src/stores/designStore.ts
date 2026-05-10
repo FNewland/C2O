@@ -191,6 +191,10 @@ interface DesignStore {
   // on runDesign() and injected as sticky (POSITION_OVERRIDE) so agents don't overwrite.
   parameterOverrides: Record<string, number | string | boolean>
 
+  // Project WBS (persisted) — work packages with inputs/activities/outputs
+  projectWbs: Array<{ id: string; name: string; description: string; responsible: string; effort_hours: number; status: string; phase: string; start_date: string; end_date: string; depends_on: string; inputs: string; work_content: string; outputs: string }>
+  setProjectWbs: (wbs: Array<{ id: string; name: string; description: string; responsible: string; effort_hours: number; status: string; phase: string; start_date: string; end_date: string; depends_on: string; inputs: string; work_content: string; outputs: string }>) => void
+
   setMissionNeed: (need: Partial<MissionNeedState>) => void
   setRequirements: (req: Partial<MissionRequirements>) => void
   setOrbit: (orbit: Partial<MissionRequirements['orbit']>) => void
@@ -317,6 +321,8 @@ export const useDesignStore = create<DesignStore>()(persist((set, get) => ({
   phaseCompletion: {},
   setPhaseComplete: (phase, complete) => set(s => ({ phaseCompletion: { ...s.phaseCompletion, [phase]: complete } })),
   parameterOverrides: {},
+  projectWbs: [],
+  setProjectWbs: (wbs) => set({ projectWbs: wbs }),
 
   setParameter: (paramId, value, source = 'user') => set((s) => ({
     parameterOverrides: { ...s.parameterOverrides, [paramId]: value },
@@ -569,6 +575,7 @@ export const useDesignStore = create<DesignStore>()(persist((set, get) => ({
     budgetAllocations: state.budgetAllocations,
     interfaceResolutions: state.interfaceResolutions,
     phaseCompletion: state.phaseCompletion,
+    projectWbs: state.projectWbs,
     // Don't persist: isRunning, error, designStale, pendingConflicts (transient)
   }),
 }))

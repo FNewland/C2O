@@ -129,9 +129,17 @@ interface Props {
   onClose: () => void
   onSelect: (category: string, component: any) => void
   mode?: 'modal' | 'inline'  // inline skips the fixed overlay
+  segment?: string  // 'space', 'ground', or 'operations' — filters categories
 }
 
-export function EquipmentBrowser({ studyId, onClose, onSelect, mode = 'modal' }: Props) {
+export function EquipmentBrowser({ studyId, onClose, onSelect, mode = 'modal', segment }: Props) {
+  // Filter categories by segment (space/ground)
+  const segmentFilteredCategories = useMemo(() => {
+    if (segment === 'ground') return CATEGORIES.filter(c => c.id.startsWith('ground_'))
+    if (segment === 'space') return CATEGORIES.filter(c => !c.id.startsWith('ground_'))
+    return CATEGORIES // show all for 'operations' or unset
+  }, [segment])
+
   // SYSTEM-V: Filter categories based on subsystems defined in the element tree
   const modelElements = useModelStore(s => s.elements)
   const definedDomains = useMemo(() => {
@@ -156,9 +164,10 @@ export function EquipmentBrowser({ studyId, onClose, onSelect, mode = 'modal' }:
 
   // Filter categories to only show those whose domain exists in the element tree
   // If no subsystems defined yet, show all (don't block the user)
+  // Uses segmentFilteredCategories as base (already filtered by space/ground)
   const filteredCategories = definedDomains.size > 0
-    ? CATEGORIES.filter(c => definedDomains.has(categoryToDomain[c.id] || '') || !categoryToDomain[c.id])
-    : CATEGORIES
+    ? segmentFilteredCategories.filter(c => definedDomains.has(categoryToDomain[c.id] || '') || !categoryToDomain[c.id])
+    : segmentFilteredCategories
 
   const [activeCategory, setActiveCategory] = useState<string>(filteredCategories[0]?.id || 'batteries')
   const [sortKey, setSortKey] = useState<'fit' | 'mass' | 'cost' | 'trl'>('fit')
@@ -412,7 +421,7 @@ export function EquipmentBrowser({ studyId, onClose, onSelect, mode = 'modal' }:
       groups[cat.domain].push(cat)
     }
     return groups
-  }, [])
+  }, [filteredCategories])
 
   const innerContent = (
       <div style={{
