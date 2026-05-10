@@ -209,23 +209,33 @@ function AppShell() {
             reader.onload = (ev) => {
               try {
                 const data = JSON.parse(ev.target?.result as string)
-                // Preserve studyId so element tree can reconnect
-                const savedStudyId = data.studyId
                 const treeSnapshot = data._elementTreeSnapshot
                 delete data._elementTreeSnapshot
                 useDesignStore.setState(data)
-                // Reload element tree from backend if studyId exists
+
+                // ALWAYS restore element tree from snapshot first (guaranteed to work)
+                if (treeSnapshot?.elements?.length) {
+                  const elMap = new Map()
+                  for (const el of treeSnapshot.elements) elMap.set(el.id, el)
+                  const ifMap = new Map()
+                  for (const i of (treeSnapshot.interfaces || [])) ifMap.set(i.id, i)
+                  useModelStore.setState({ elements: elMap, interfaces: ifMap })
+                }
+
+                // Then try to sync with backend (may have newer data if server is running)
+                const savedStudyId = data.studyId
                 if (savedStudyId) {
-                  useModelStore.getState().loadStudyModel(savedStudyId).catch(() => {
-                    // Backend unavailable — restore from snapshot if available
-                    if (treeSnapshot?.elements?.length) {
+                  useModelStore.getState().loadStudyModel(savedStudyId).then(() => {
+                    // If backend returned elements, they override the snapshot
+                    // If backend returned empty (study not found), keep the snapshot
+                    if (useModelStore.getState().elements.size === 0 && treeSnapshot?.elements?.length) {
                       const elMap = new Map()
                       for (const el of treeSnapshot.elements) elMap.set(el.id, el)
                       const ifMap = new Map()
                       for (const i of (treeSnapshot.interfaces || [])) ifMap.set(i.id, i)
                       useModelStore.setState({ elements: elMap, interfaces: ifMap })
                     }
-                  })
+                  }).catch(() => {}) // Backend unavailable — snapshot already restored
                 }
               } catch { alert('Invalid file') }
             }
