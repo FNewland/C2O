@@ -80,46 +80,6 @@ components:
       sensitivity_mv: 7.5
     notes: ESA workhorse star tracker with extensive European heritage
 
-  - id: st-sodern-hydra
-    name: Hydra
-    manufacturer: Sodern (ArianeGroup)
-    category: star_tracker
-    mass_kg: 2.5
-    power_w: 10.0
-    cost_keur: 280
-    trl: 9
-    heritage_missions:
-      - Spot-6
-      - MetOp
-      - Pleiades
-    performance:
-      accuracy_arcsec: 1.5
-      fov_deg: 16.0
-      update_rate_hz: 10.0
-      tracking_stars: 30
-      sensitivity_mv: 7.0
-    notes: Three-head autonomous star tracker for high-accuracy missions
-
-  - id: st-ball-ct2020
-    name: CT-2020
-    manufacturer: Ball Aerospace
-    category: star_tracker
-    mass_kg: 3.0
-    power_w: 8.0
-    cost_keur: 350
-    trl: 9
-    heritage_missions:
-      - JWST
-      - WorldView-3
-      - GPM
-    performance:
-      accuracy_arcsec: 0.8
-      fov_deg: 8.0
-      update_rate_hz: 10.0
-      tracking_stars: 50
-      sensitivity_mv: 8.0
-    notes: High-accuracy tracker for flagship science and defence missions
-
   - id: st-jena-astroaps
     name: ASTRO APS
     manufacturer: Jena-Optronik
@@ -139,26 +99,6 @@ components:
       tracking_stars: 25
       sensitivity_mv: 7.5
     notes: High-performance European tracker with DLR heritage
-
-  - id: st-leonardo-aa-str
-    name: AA-STR
-    manufacturer: Leonardo
-    category: star_tracker
-    mass_kg: 4.5
-    power_w: 12.0
-    cost_keur: 400
-    trl: 9
-    heritage_missions:
-      - Galileo constellation
-      - COSMO-SkyMed
-      - BepiColombo
-    performance:
-      accuracy_arcsec: 0.5
-      fov_deg: 16.0
-      update_rate_hz: 10.0
-      tracking_stars: 40
-      sensitivity_mv: 8.5
-    notes: Autonomous star tracker with cold redundancy and radiation hardening
 
   - id: st-sinclair-st16rt2
     name: ST-16RT2

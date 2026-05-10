@@ -174,28 +174,3 @@ missions:
     license: government
     validation_notes: AIS microsatellite. Verify AIS receiver + S-band sizing for 16 kg platform.
 
-  - id: iceye
-    name: ICEYE-X1
-    type: sar
-    form_factor: custom_micro
-    orbit:
-      inclination_deg: 97.7
-      type: sso
-    mass:
-      total_kg: 85
-    power:
-      peak_power_w: 3200
-    payload:
-      type: sar
-      frequency_ghz: 9.65
-      resolution_m: 1
-      antenna_length_m: 3.25
-    comms:
-      payload_band: X
-      payload_data_rate_mbps: 140
-    aocs:
-      type: 3-axis
-    propulsion:
-      type: ion
-    license: commercial
-    validation_notes: SAR microsatellite. Verify SAR power budget and antenna sizing (not CubeSat).

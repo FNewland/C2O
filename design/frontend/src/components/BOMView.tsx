@@ -69,7 +69,12 @@ export function BOMView() {
       if (el.element_type !== 'component') continue
       lineNum++
       const parent = byId.get(el.parent_id || '')
-      const subsysName = parent?.name || 'Unassigned'
+      const DOMAIN_LABELS: Record<string, string> = {
+        power: 'EPS', aocs: 'AOCS', ttc: 'TTC', obc: 'OBC',
+        thermal: 'Thermal', structure: 'Structure', propulsion: 'Propulsion',
+        payload: 'Payload', ground_rf: 'Ground RF', ground_ops: 'Ground Ops',
+      }
+      const subsysName = parent?.name || DOMAIN_LABELS[el.subsystem_domain || ''] || 'Unassigned'
       const domain = el.subsystem_domain || parent?.subsystem_domain || ''
       const maturity = getElementMaturity(el.id)
       const trl = el.trl || 0

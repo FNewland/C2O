@@ -19,7 +19,6 @@ import { PowerDistribution } from '../components/PowerDistribution'
 import { EquipmentBrowser } from '../components/EquipmentBrowser'
 import { OBCInterfaceDiagram } from '../components/OBCInterfaceDiagram'
 import { ModelBlockDiagram } from '../components/ModelBlockDiagram'
-import { ConstellationDesigner } from '../components/ConstellationDesigner'
 import { useDesignStore } from '../stores/designStore'
 import { useModelStore } from '../stores/modelStore'
 import type { Segment } from '../types/phases'
@@ -102,6 +101,39 @@ export function Phase3SubsystemDesign() {
           }
         }
 
+        // If no subsystem found, auto-create one
+        if (!parentId && domain && studyId) {
+          const DOMAIN_NAMES: Record<string, string> = {
+            power: 'EPS', aocs: 'AOCS', ttc: 'TTC', thermal: 'Thermal Control',
+            structure: 'Structure', propulsion: 'Propulsion', obc: 'OBC / Data Handling',
+            payload: 'Payload', ground_rf: 'Ground RF', ground_ops: 'Ground Operations',
+          }
+          // Find system parent (Platform for space, any ground system for ground)
+          let systemParentId: string | undefined
+          for (const el of modelElements.values()) {
+            if (el.element_type === 'system' && el.segment === elementSegment) {
+              systemParentId = el.id; break
+            }
+          }
+          // If no system, use segment
+          if (!systemParentId) {
+            for (const el of modelElements.values()) {
+              if (el.element_type === 'segment' && el.segment === elementSegment) {
+                systemParentId = el.id; break
+              }
+            }
+          }
+          // Create the subsystem
+          const newSubId = await modelCreateElement(studyId, {
+            name: DOMAIN_NAMES[domain] || domain,
+            element_type: 'subsystem',
+            subsystem_domain: domain,
+            segment: elementSegment,
+            parent_id: systemParentId || null,
+          } as any)
+          if (newSubId) parentId = newSubId
+        }
+
         await modelCreateElement(studyId, {
           name: component.name,
           element_type: 'component',
@@ -126,7 +158,7 @@ export function Phase3SubsystemDesign() {
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* Segment + sub-view bar */}
       <div style={{ display: 'flex', gap: '0.25rem', padding: '0.4rem 1rem', borderBottom: '1px solid var(--border, #374151)', flexWrap: 'wrap', alignItems: 'center' }}>
-        {(['space', 'ground', 'operations', 'fleet'] as Segment[]).map(s => (
+        {(['space', 'ground', 'operations'] as Segment[]).map(s => (
           <button key={s} onClick={() => setSegment(s)} style={{
             padding: '0.3rem 0.75rem', fontSize: '0.75rem', borderRadius: '4px', cursor: 'pointer',
             background: segment === s ? '#10b981' : 'transparent',
@@ -194,12 +226,6 @@ export function Phase3SubsystemDesign() {
                 <li>Network Infrastructure — VPN, dedicated links to ground stations</li>
               </ul>
             </div>
-          </div>
-        )}
-        {segment === 'fleet' && (
-          <div style={{ padding: '2rem', textAlign: 'center', color: '#6b7280' }}>
-            <h3>Fleet / Constellation</h3>
-            <p style={{ fontSize: '0.82rem' }}>Fleet design is at Mission level (Phase 1). Navigate there to define spacecraft variants and quantities.</p>
           </div>
         )}
       </div>

@@ -135,28 +135,6 @@ components:
       operating_temp_c: [-20, 60]
     notes: LEO-optimised cell for 15+ year missions
 
-  - id: bat-eaglepicher-sahm-10
-    name: SAR 10198
-    manufacturer: EaglePicher Technologies
-    category: battery
-    chemistry: Li-ion
-    mass_kg: 4.5
-    cost_keur: 120
-    trl: 9
-    heritage_missions:
-      - Mars Reconnaissance Orbiter
-      - Juno
-    performance:
-      capacity_wh: 540.0
-      specific_energy_wh_kg: 120
-      cycle_life: 30000
-      voltage_v:
-        nominal: 28.0
-        min: 22.0
-        max: 32.8
-      operating_temp_c: [-20, 40]
-    notes: Radiation-hardened deep-space battery module
-
   - id: bat-gs-yuasa-lsb50
     name: LSB-50
     manufacturer: GS Yuasa

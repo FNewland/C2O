@@ -314,6 +314,7 @@ function AppShell() {
         {/* Header: title + margin tower */}
         <header style={{ padding: '0.3rem 1rem', borderBottom: '1px solid #374151', display: 'flex', alignItems: 'center', gap: '0.75rem', background: '#111827' }}>
           <h1 style={{ fontSize: '0.9rem', margin: 0, color: '#d1d5db' }}>SpaceCDF</h1>
+          <span style={{ fontSize: '0.55rem', color: '#4b5563', fontStyle: 'italic' }}>CubeSat Design (1U-16U)</span>
           <span style={{ fontSize: '0.65rem', color: '#6b7280' }}>{PHASE_LABELS[activePhase]}</span>
           {/* Prominent Run Design button */}
           <button onClick={() => runDesign()} disabled={isRunning} style={{

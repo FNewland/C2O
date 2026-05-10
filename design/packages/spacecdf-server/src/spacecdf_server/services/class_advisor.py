@@ -66,7 +66,7 @@ CLASS_PROFILES: list[ClassProfile] = [
         max_pointing_deg=0.01, max_lifetime_years=10,
         max_delta_v_ms=1000,
         typical_applications=["High-res EO", "Targeted science", "Constellation ops", "Technology pathfinder"],
-        risk_profile="Lower: semi-custom platforms (SSTL, NanoAvionics), partial redundancy, longer heritage.",
+        risk_profile="BEYOND CUBESAT SCOPE — consider custom microsatellite platform if CubeSat form factor cannot meet requirements",
         heritage_examples=["PROBA-V (138kg, ESA)", "SSTL-42", "NovaSAR (450kg)", "TechDemoSat-1"],
     ),
     ClassProfile(
@@ -77,7 +77,7 @@ CLASS_PROFILES: list[ClassProfile] = [
         max_pointing_deg=0.005, max_lifetime_years=15,
         max_delta_v_ms=2000,
         typical_applications=["Operational EO service", "Dedicated science", "Deep space precursor", "Defence/intel"],
-        risk_profile="Lower: custom platforms, full redundancy, extensive testing. Mature supply chain.",
+        risk_profile="WELL BEYOND CUBESAT SCOPE — SpaceCDF is not designed for this class. Consider ESA CDF or dedicated mission design tools.",
         heritage_examples=["LADEE (248kg, NASA)", "Sentinel-2 (1100kg)", "PRISMA (145kg, ASI)"],
     ),
 ]

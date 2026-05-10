@@ -14,9 +14,26 @@ export function CostBreakdown({ studyId }: { studyId: string | null }) {
   const getEquipCost = (id: string, defaultCost: number) => costOverrides[id] ?? defaultCost
   const totalEquipCost = selectedEquipment.reduce((s, eq) => s + getEquipCost(eq.componentId, eq.cost_keur) * eq.quantity, 0)
 
-  if (!studyId) return <div style={{ padding: '1rem', color: 'var(--text-secondary, #9ca3af)' }}>Run a design first to see cost breakdown.</div>
+  const hasDesignResult = !!useDesignStore(s => s.result)
+
+  if (!studyId || !hasDesignResult) return (
+    <div style={{ padding: '2rem', color: '#6b7280' }}>
+      <h3 style={{ fontSize: '1rem', marginBottom: '0.5rem', color: '#9ca3af' }}>Cost Estimation</h3>
+      <p style={{ fontSize: '0.78rem' }}>
+        Cost estimation requires a completed design run. Click "Run Design" in the sidebar first,
+        then return here for parametric cost breakdown by WBS element.
+      </p>
+    </div>
+  )
   if (isLoading) return <div className="loading"><div className="spinner" /> Estimating cost...</div>
-  if (error) return <div className="warning-item">Cost estimation failed: {String(error)}</div>
+  if (error) return (
+    <div style={{ padding: '1rem', color: '#6b7280' }}>
+      <p style={{ fontSize: '0.78rem', color: '#f59e0b' }}>
+        Cost estimation is unavailable. The design may need to be re-run, or the backend may be restarting.
+      </p>
+      <p style={{ fontSize: '0.65rem', color: '#6b7280', marginTop: '0.3rem' }}>Error: {String(error)}</p>
+    </div>
+  )
 
   const d: any = data
   if (!d) return null

@@ -133,6 +133,19 @@ export function SystemBudgetEditor() {
       else powerUsed['Payload Use'] = usedPower
     }
 
+    // Catch orphaned components (parent_id null but subsystem_domain set)
+    for (const el of elements.values()) {
+      if (el.element_type !== 'component' || el.parent_id) continue
+      const label = domainToLabel[el.subsystem_domain || '']
+      if (!label) continue
+      const m = (el.mass_kg || 0) * (el.quantity || 1)
+      const p = (el.power_avg_w || 0) * (el.quantity || 1)
+      const c = (el.cost_recurring_keur || 0) * (el.quantity || 1)
+      massUsed[label] = (massUsed[label] || 0) + m
+      if (label !== 'Payload') powerUsed['Platform Use'] = (powerUsed['Platform Use'] || 0) + p
+      else powerUsed['Payload Use'] = (powerUsed['Payload Use'] || 0) + p
+    }
+
     // Also check flat store as fallback (parametric estimates when no elements exist)
     if (elements.size < 5) {
       // No meaningful element tree — show parametric estimates

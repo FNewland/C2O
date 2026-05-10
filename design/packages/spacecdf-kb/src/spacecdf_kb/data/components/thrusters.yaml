@@ -136,46 +136,6 @@ components:
       propellant: hydrazine
     notes: Standard 22 N monoprop for orbit maintenance
 
-  # --- Bipropellant ---
-  - id: thr-aerojet-r4d
-    name: R-4D-11
-    manufacturer: Aerojet Rocketdyne
-    category: thruster
-    type: bipropellant
-    mass_kg: 3.63
-    power_w: 0.0
-    cost_keur: 350
-    trl: 9
-    heritage_missions:
-      - Apollo (Service Module)
-      - GOES
-      - Intelsat
-    performance:
-      isp_s: 312
-      thrust_n: 490
-      total_impulse_ns: 2000000
-      propellant: MMH/NTO
-    notes: Heritage apogee engine dating to Apollo era
-
-  - id: thr-airbus-s400-15
-    name: S400-15
-    manufacturer: Airbus Defence and Space
-    category: thruster
-    type: bipropellant
-    mass_kg: 3.6
-    power_w: 0.0
-    cost_keur: 380
-    trl: 9
-    heritage_missions:
-      - Eurostar 3000
-      - SES-12
-    performance:
-      isp_s: 321
-      thrust_n: 400
-      total_impulse_ns: 2300000
-      propellant: MMH/MON
-    notes: European GEO apogee motor
-
   # --- Electric (Hall Effect) ---
   - id: thr-enpulsion-nano
     name: NANO R3
@@ -233,46 +193,6 @@ components:
       propellant: xenon
     notes: Small Hall-effect thruster with USAF heritage
 
-  - id: thr-safran-pps1350
-    name: PPS-1350-G
-    manufacturer: Safran Aircraft Engines
-    category: thruster
-    type: electric_hall
-    mass_kg: 5.3
-    power_w: 1500
-    cost_keur: 400
-    trl: 9
-    heritage_missions:
-      - SMART-1
-      - Alphabus
-      - Eutelsat 172B
-    performance:
-      isp_s: 1660
-      thrust_n: 0.088
-      total_impulse_ns: 2500000
-      propellant: xenon
-    notes: European heritage Hall thruster for GEO station-keeping and orbit raising
-
-  - id: thr-aerojet-xr5
-    name: XR-5 (BPT-4000)
-    manufacturer: Aerojet Rocketdyne
-    category: thruster
-    type: electric_hall
-    mass_kg: 12.5
-    power_w: 4500
-    cost_keur: 800
-    trl: 9
-    heritage_missions:
-      - AEHF
-      - Viasat-3
-      - GPS IIIF (planned)
-    performance:
-      isp_s: 2000
-      thrust_n: 0.290
-      total_impulse_ns: 7500000
-      propellant: xenon
-    notes: High-power Hall thruster for large GEO platforms
-
   # --- Electric (Ion / Gridded) ---
   - id: thr-qinetiq-t5
     name: T5 Ion Thruster
@@ -292,24 +212,6 @@ components:
       total_impulse_ns: 1200000
       propellant: xenon
     notes: European gridded ion thruster for drag compensation
-
-  - id: thr-nasa-next-c
-    name: NEXT-C
-    manufacturer: Aerojet Rocketdyne (NASA GRC design)
-    category: thruster
-    type: electric_gridded_ion
-    mass_kg: 13.5
-    power_w: 6900
-    cost_keur: 1200
-    trl: 8
-    heritage_missions:
-      - DART (planned follow-on)
-    performance:
-      isp_s: 4190
-      thrust_n: 0.236
-      total_impulse_ns: 17000000
-      propellant: xenon
-    notes: Next-generation NASA ion engine, successor to NSTAR
 
   - id: thr-enpulsion-nano-r3
     name: ENPULSION NANO R3
@@ -395,68 +297,33 @@ components:
     operating_temp_c: [-20, 60]
     notes: ADN-based green monoprop, 6% higher Isp than hydrazine, non-toxic
 
-  - id: thr-enpulsion-nano-r3
-    name: ENPULSION NANO R3
-    manufacturer: Enpulsion
-    category: thruster
-    type: feep_ion
-    mass_kg: 0.670
-    cost_keur: 65
-    trl: 9
+  # --- CubeSat Deep Space Thrusters ---
+  - id: thr-busek-bit3
+    name: BIT-3 Gridded Ion
+    manufacturer: Busek
+    mass_kg: 1.4
+    power_w: 80
+    cost_keur: 150
+    trl: 7
+    heritage_missions: ["Lunar IceCube"]
     performance:
-      thrust_n: 0.000350
-      isp_s: 4000
-      total_impulse_ns: 5500
-      propellant: indium
-    power_w: 40
-    notes: FEEP ion, 0.5U, no moving parts, solid propellant
+      thrust_mn: 0.6
+      isp_s: 2200
+      propellant: xenon
+      total_impulse_ns: 45000
+    notes: CubeSat-class gridded ion for deep space. Heritage from NASA Lunar IceCube (6U). Low thrust but very high Isp for long-duration missions.
 
-  - id: thr-thrustme-npt30-1u
-    name: NPT30-I2 1U
-    manufacturer: ThrustMe
-    category: thruster
-    type: gridded_ion
-    mass_kg: 1.200
-    cost_keur: 55
-    trl: 9
-    heritage_missions: [Beihangkongshi-1 (first iodine EP in space)]
+  - id: thr-phasefour-maxwell
+    name: Maxwell Block 2 Hall
+    manufacturer: Phase Four
+    mass_kg: 1.5
+    power_w: 200
+    cost_keur: 120
+    trl: 7
+    heritage_missions: []
     performance:
-      thrust_n: 0.0011
-      isp_s: 2450
-      total_impulse_ns: 5500
-      propellant: iodine_solid
-    power_w: 50
-    notes: Iodine, 1U, non-pressurised solid propellant
-
-  - id: thr-thrustme-npt30-1-5u
-    name: NPT30-I2 1.5U
-    manufacturer: ThrustMe
-    category: thruster
-    type: gridded_ion
-    mass_kg: 1.500
-    cost_keur: 65
-    trl: 9
-    heritage_missions: [NorSat-TD]
-    performance:
-      thrust_n: 0.0011
-      isp_s: 2450
-      total_impulse_ns: 9500
-      propellant: iodine_solid
-    power_w: 50
-
-  - id: thr-nanoavionics-epss
-    name: EPSS Green Monopropellant
-    manufacturer: NanoAvionics
-    category: thruster
-    type: monoprop_green
-    mass_kg: 0.800
-    cost_keur: 45
-    trl: 9
-    heritage_missions: [M6P bus, 2019 IOD]
-    performance:
-      thrust_n: 0.300
-      isp_s: 252
-      total_impulse_ns: 2500
-      propellant: adn_green
-    power_w: 15
-    notes: ADN-based green monoprop, non-toxic
+      thrust_mn: 5.4
+      isp_s: 1000
+      propellant: xenon
+      total_impulse_ns: 60000
+    notes: CubeSat-class Hall thruster. Ambipolar design eliminates cathode. Suitable for orbit raising, station-keeping on 6U-16U platforms.

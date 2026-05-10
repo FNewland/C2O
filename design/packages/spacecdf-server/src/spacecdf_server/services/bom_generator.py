@@ -61,7 +61,12 @@ def generate_bom_from_elements(
     for comp in components:
         line_num += 1
         parent = by_id.get(comp.get("parent_id", ""), {})
-        subsys_name = parent.get("name", "Unassigned")
+        _DOMAIN_LABELS = {
+            "power": "EPS", "aocs": "AOCS", "ttc": "TTC", "obc": "OBC",
+            "thermal": "Thermal", "structure": "Structure", "propulsion": "Propulsion",
+            "payload": "Payload", "ground_rf": "Ground RF", "ground_ops": "Ground Ops",
+        }
+        subsys_name = parent.get("name") or _DOMAIN_LABELS.get(comp.get("subsystem_domain", ""), "Unassigned")
         domain = comp.get("subsystem_domain") or parent.get("subsystem_domain", "")
         segment = comp.get("segment", "space")
 

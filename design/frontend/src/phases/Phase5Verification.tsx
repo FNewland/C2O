@@ -32,17 +32,27 @@ export function Phase5Verification() {
         })}
       </div>
       <div style={{ flex: 1, overflow: 'auto' }}>
-        {!studyId && subView !== 'exports' && subView !== 'gate_review' && subView !== 'maturity' && subView !== 'bom' && (
-          <div style={{ padding: '2rem', textAlign: 'center', color: '#6b7280' }}>
-            <p>Run a design first to generate compliance and ECSS data.</p>
-            <p style={{ fontSize: '0.72rem', color: '#374151' }}>Use the "Run Design" button in the header.</p>
+        {(!studyId || !useDesignStore(s => s.result)) && (subView === 'compliance' || subView === 'ecss') && (
+          <div style={{ padding: '2rem', color: '#6b7280' }}>
+            <h3 style={{ fontSize: '1rem', marginBottom: '0.5rem', color: '#9ca3af' }}>
+              {subView === 'compliance' ? 'Compliance Matrix' : 'ECSS Standards'}
+            </h3>
+            <p style={{ fontSize: '0.78rem', marginBottom: '0.5rem' }}>
+              This view requires a completed design run. Click "Run Design" in the sidebar to execute
+              the parametric design loop, then return here.
+            </p>
+            <p style={{ fontSize: '0.72rem', color: '#6b7280' }}>
+              The design loop runs 20 engineering agents that compute mass, power, link, thermal,
+              AOCS, propulsion, and cost budgets. These results are then checked against requirements
+              and ECSS margin policies.
+            </p>
           </div>
         )}
         {subView === 'gate_review' && <GateReviewPanel studyId={studyId} />}
         {subView === 'maturity' && <MaturityOverview />}
         {subView === 'bom' && <BOMView />}
-        {subView === 'compliance' && studyId && <ComplianceMatrix studyId={studyId} />}
-        {subView === 'ecss' && studyId && <EcssCompliancePanel studyId={studyId} />}
+        {subView === 'compliance' && studyId && useDesignStore.getState().result && <ComplianceMatrix studyId={studyId} />}
+        {subView === 'ecss' && studyId && useDesignStore.getState().result && <EcssCompliancePanel studyId={studyId} />}
         {subView === 'exports' && <ExportsPanel studyId={studyId} />}
       </div>
     </div>

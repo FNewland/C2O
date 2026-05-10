@@ -378,6 +378,14 @@ export const useModelStore = create<ModelStore>((set, get) => ({
       }
     } else if (el.element_type === 'subsystem') {
       const children = get().getChildren(el.id)
+      // Also count orphaned components with matching domain
+      if (children.length === 0 && el.subsystem_domain) {
+        for (const c of get().elements.values()) {
+          if (c.element_type === 'component' && c.subsystem_domain === el.subsystem_domain && !c.parent_id) {
+            children.push(c)
+          }
+        }
+      }
       if (children.length === 0 && el.mass_kg) {
         level = 'parametric'; label = 'Parametric'; color = '#f59e0b'
         description = 'Mass/power from parametric estimate, no equipment selected'
