@@ -190,6 +190,73 @@ export function VerificationMatrix({ studyId }: { studyId: string | null }) {
 
   const filtered = filter === 'all' ? entries : entries.filter(e => e.method === filter || e.domain === filter)
 
+  // Build requirement parent map from designStore
+  const rawGenReqs2 = useDesignStore(s => s.generatedRequirements)
+  const reqParentMap = useMemo(() => {
+    const map: Record<string, string | null> = {}
+    const reqs = Array.isArray(rawGenReqs2) ? rawGenReqs2 : []
+    for (const r of reqs as any[]) {
+      if (r.id) map[r.id] = r.parent_id || null
+    }
+    return map
+  }, [rawGenReqs2])
+
+  // Build requirement level map
+  const reqLevelMap = useMemo(() => {
+    const map: Record<string, string> = {}
+    const reqs = Array.isArray(rawGenReqs2) ? rawGenReqs2 : []
+    for (const r of reqs as any[]) {
+      if (r.id) map[r.id] = r.level || r.req_type || 'system'
+    }
+    return map
+  }, [rawGenReqs2])
+
+  // Build child-to-parent relationships for verification closure
+  const verificationClosure = useMemo(() => {
+    const reqs = Array.isArray(rawGenReqs2) ? (rawGenReqs2 as any[]) : []
+    // Mission reqs: those with level=mission and status=accepted
+    const missionReqs = reqs.filter(r => (r.level === 'mission' || r.req_type === 'mission') && r.status === 'accepted')
+    const systemReqs = reqs.filter(r => (r.level === 'system' || r.req_type === 'system') && r.status === 'accepted')
+
+    // For each mission req, check if it has verified system-level children
+    let missionWithVerifiedChildren = 0
+    for (const mr of missionReqs) {
+      const children = reqs.filter(r => r.parent_id === mr.id && (r.level === 'system' || r.req_type === 'system'))
+      const verifiedChildren = children.filter(c => entries.find(e => e.req_id === c.id && e.status === 'complete'))
+      if (verifiedChildren.length > 0) missionWithVerifiedChildren++
+    }
+
+    // For each system req, check if it has verified subsystem-level children
+    let systemWithVerifiedChildren = 0
+    for (const sr of systemReqs) {
+      const children = reqs.filter(r => r.parent_id === sr.id && (r.level === 'subsystem' || r.req_type === 'subsystem'))
+      const verifiedChildren = children.filter(c => entries.find(e => e.req_id === c.id && e.status === 'complete'))
+      if (verifiedChildren.length > 0) systemWithVerifiedChildren++
+    }
+
+    return {
+      missionTotal: missionReqs.length,
+      missionVerified: missionWithVerifiedChildren,
+      systemTotal: systemReqs.length,
+      systemVerified: systemWithVerifiedChildren,
+    }
+  }, [rawGenReqs2, entries])
+
+  // Build children verification counts for inline display
+  const childVerificationCounts = useMemo(() => {
+    const reqs = Array.isArray(rawGenReqs2) ? (rawGenReqs2 as any[]) : []
+    const map: Record<string, { total: number; verified: number }> = {}
+    for (const r of reqs) {
+      if (!r.id) continue
+      const children = reqs.filter(c => c.parent_id === r.id)
+      if (children.length > 0) {
+        const verified = children.filter(c => entries.find(e => e.req_id === c.id && e.status === 'complete')).length
+        map[r.id] = { total: children.length, verified }
+      }
+    }
+    return map
+  }, [rawGenReqs2, entries])
+
   const stats = useMemo(() => ({
     total: entries.length,
     analysis: entries.filter(e => e.method === 'A').length,
@@ -246,11 +313,56 @@ export function VerificationMatrix({ studyId }: { studyId: string | null }) {
         <button className="btn btn-sm" onClick={exportCSV} style={{ fontSize: '0.65rem', background: '#10b981' }}>CSV</button>
       </div>
 
+      {/* SYSTEM-V Break 5: Verification Closure Summary */}
+      {(verificationClosure.missionTotal > 0 || verificationClosure.systemTotal > 0) && (
+        <div style={{
+          padding: '0.5rem 0.75rem', marginBottom: '0.75rem', borderRadius: '6px',
+          background: 'var(--bg-secondary, #1f2937)', border: '1px solid #374151',
+        }}>
+          <div style={{ fontSize: '0.78rem', fontWeight: 600, marginBottom: '0.4rem' }}>Requirements Verification Closure</div>
+          {verificationClosure.missionTotal > 0 && (
+            <div style={{ marginBottom: '0.3rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', marginBottom: '0.15rem' }}>
+                <span>Mission Requirements: {verificationClosure.missionVerified} of {verificationClosure.missionTotal} have verified system-level children</span>
+                <span style={{ color: verificationClosure.missionVerified === verificationClosure.missionTotal ? '#10b981' : '#f59e0b' }}>
+                  {verificationClosure.missionTotal > 0 ? Math.round((verificationClosure.missionVerified / verificationClosure.missionTotal) * 100) : 0}%
+                </span>
+              </div>
+              <div style={{ height: '4px', borderRadius: '2px', background: '#374151', overflow: 'hidden' }}>
+                <div style={{
+                  height: '100%', borderRadius: '2px', transition: 'width 0.3s',
+                  width: `${verificationClosure.missionTotal > 0 ? (verificationClosure.missionVerified / verificationClosure.missionTotal) * 100 : 0}%`,
+                  background: verificationClosure.missionVerified === verificationClosure.missionTotal ? '#10b981' : '#f59e0b',
+                }} />
+              </div>
+            </div>
+          )}
+          {verificationClosure.systemTotal > 0 && (
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', marginBottom: '0.15rem' }}>
+                <span>System Requirements: {verificationClosure.systemVerified} of {verificationClosure.systemTotal} have verified subsystem-level children</span>
+                <span style={{ color: verificationClosure.systemVerified === verificationClosure.systemTotal ? '#10b981' : '#f59e0b' }}>
+                  {verificationClosure.systemTotal > 0 ? Math.round((verificationClosure.systemVerified / verificationClosure.systemTotal) * 100) : 0}%
+                </span>
+              </div>
+              <div style={{ height: '4px', borderRadius: '2px', background: '#374151', overflow: 'hidden' }}>
+                <div style={{
+                  height: '100%', borderRadius: '2px', transition: 'width 0.3s',
+                  width: `${verificationClosure.systemTotal > 0 ? (verificationClosure.systemVerified / verificationClosure.systemTotal) * 100 : 0}%`,
+                  background: verificationClosure.systemVerified === verificationClosure.systemTotal ? '#10b981' : '#f59e0b',
+                }} />
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Matrix table */}
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.72rem' }}>
         <thead>
           <tr style={{ background: 'var(--bg-primary, #0a0e1a)' }}>
             <th style={th}>ID</th>
+            <th style={th}>Parent</th>
             <th style={{ ...th, maxWidth: '300px' }}>Requirement</th>
             <th style={thC}>Method</th>
             <th style={thC}>Phase</th>
@@ -264,7 +376,24 @@ export function VerificationMatrix({ studyId }: { studyId: string | null }) {
           {filtered.map(e => (
             <React.Fragment key={e.req_id}>
             <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-              <td style={{ ...td, fontFamily: 'monospace', fontSize: '0.68rem', color: '#6b7280' }}>{e.req_id}</td>
+              <td style={{ ...td, fontFamily: 'monospace', fontSize: '0.68rem', color: '#6b7280' }}>
+                {e.req_id}
+                {childVerificationCounts[e.req_id] && (
+                  <span style={{
+                    display: 'inline-block', marginLeft: '0.3rem', fontSize: '0.55rem', padding: '0 0.2rem',
+                    borderRadius: '3px',
+                    background: childVerificationCounts[e.req_id].verified === childVerificationCounts[e.req_id].total
+                      ? 'rgba(16,185,129,0.15)' : 'rgba(245,158,11,0.15)',
+                    color: childVerificationCounts[e.req_id].verified === childVerificationCounts[e.req_id].total
+                      ? '#10b981' : '#f59e0b',
+                  }} title={`${childVerificationCounts[e.req_id].verified}/${childVerificationCounts[e.req_id].total} children verified`}>
+                    {childVerificationCounts[e.req_id].verified}/{childVerificationCounts[e.req_id].total}
+                  </span>
+                )}
+              </td>
+              <td style={{ ...td, fontFamily: 'monospace', fontSize: '0.6rem', color: '#4b5563' }}>
+                {reqParentMap[e.req_id] || '—'}
+              </td>
               <td style={{ ...td, maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={e.req_text}>
                 {e.req_text}
               </td>
@@ -318,7 +447,7 @@ export function VerificationMatrix({ studyId }: { studyId: string | null }) {
             </tr>
             {showHistory === e.req_id && (
               <tr>
-                <td colSpan={8} style={{ padding: '0.3rem 0.5rem', background: 'rgba(59,130,246,0.05)' }}>
+                <td colSpan={9} style={{ padding: '0.3rem 0.5rem', background: 'rgba(59,130,246,0.05)' }}>
                   <div style={{ fontSize: '0.65rem', color: '#9ca3af' }}>
                     {vvChangeLog.filter(c => c.req_id === e.req_id).map((c, i) => (
                       <div key={i} style={{ marginBottom: '0.15rem' }}>

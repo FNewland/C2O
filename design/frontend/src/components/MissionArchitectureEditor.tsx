@@ -94,7 +94,8 @@ export function MissionArchitectureEditor() {
   const modelNodes = useMemo(() => {
     const nodes: Node[] = []
     for (const el of elements.values()) {
-      // Only show mission-level elements (segments, top-level systems)
+      // Skip deleted or non-mission-level elements
+      if ((el as any).deleted_at) continue
       if (el.element_type === 'subsystem' || el.element_type === 'component') continue
       if (el.element_type === 'mode') continue
 
@@ -214,15 +215,24 @@ export function MissionArchitectureEditor() {
   }, [elements, updateElement])
 
   // ─── SYSTEM-V: Delete = delete element ───
+  // Don't manually filter setNodes — let the reactive chain handle it:
+  // deleteElement removes from modelStore.elements → modelNodes useMemo recalculates → useEffect syncs
   const deleteSelected = async () => {
     const selectedNodeIds = nodes.filter(n => n.selected).map(n => n.id)
+    const selectedEdgeIds = edges.filter(e => e.selected).map(e => e.id)
     for (const id of selectedNodeIds) {
       if (elements.has(id)) {
         await deleteElement(id)
       }
     }
-    setNodes(nds => nds.filter(n => !n.selected))
-    setEdges(eds => eds.filter(e => !e.selected))
+    // Also delete associated interfaces
+    for (const edgeId of selectedEdgeIds) {
+      for (const iface of interfaces.values()) {
+        if (iface.id === edgeId || `${iface.from_element_id}-${iface.to_element_id}` === edgeId) {
+          await useModelStore.getState().deleteInterface(iface.id)
+        }
+      }
+    }
     markStale('architecture')
   }
 

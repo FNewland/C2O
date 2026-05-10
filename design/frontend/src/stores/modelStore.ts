@@ -92,6 +92,7 @@ interface ModelStore {
   getRoots: () => DesignElement[]
   getElementsByDomain: (domain: string) => DesignElement[]
   computeBudget: (elementId: string, type: string) => BudgetSummary | null
+  computeHierarchicalBudget: (rootId: string, budgetType: string) => number
 
   // Derived views — replaces flat designStore state
   getArchitectureSelections: () => Record<string, { option_id: string; option_name: string; mass_kg: number; power_w: number; cost_keur: number }>
@@ -420,6 +421,28 @@ export const useModelStore = create<ModelStore>((set, get) => ({
     const completeness = Math.round(((totalFields - missing.length) / totalFields) * 100)
 
     return { level, label, color, description, completeness, missingFields: missing }
+  },
+
+  computeHierarchicalBudget: (rootId, budgetType) => {
+    const propMap: Record<string, keyof DesignElement> = {
+      mass: 'mass_kg', power: 'power_avg_w', cost: 'cost_recurring_keur', volume: 'volume_cm3',
+    }
+    const prop = propMap[budgetType]
+    if (!prop) return 0
+
+    const sumTree = (id: string): number => {
+      const children = get().getChildren(id)
+      let total = 0
+      for (const child of children) {
+        if (child.element_type === 'component') {
+          total += ((child[prop] as number) || 0) * (child.quantity || 1)
+        } else {
+          total += sumTree(child.id)  // recurse into subsystems/systems
+        }
+      }
+      return total
+    }
+    return sumTree(rootId)
   },
 
   computeBudget: (elementId, type) => {

@@ -148,7 +148,7 @@ export function SystemArchitectureEditor({ segment = 'space' }: { segment?: stri
               trl: data.trl || null,
             })
           } else {
-            // Create new subsystem element
+            // Create new subsystem element, then materialize blocks as children
             modelCreateElement(sid, {
               name: data.option_name || activeSubsystem,
               element_type: 'subsystem',
@@ -159,8 +159,50 @@ export function SystemArchitectureEditor({ segment = 'space' }: { segment?: stri
               power_avg_w: data.power_w || null,
               cost_recurring_keur: data.cost_keur || null,
               trl: data.trl || null,
-            } as any)
+            } as any).then(newSubId => {
+              // SYSTEM-V Break 3: Create block elements under the new subsystem
+              if (newSubId && data.blocks && Array.isArray(data.blocks)) {
+                for (const block of data.blocks) {
+                  modelCreateElement(sid, {
+                    name: block.name,
+                    element_type: 'logical',
+                    subsystem_domain: activeSubsystem,
+                    segment: segment,
+                    parent_id: newSubId,
+                    description: `Architecture block from ${data.option_name || activeSubsystem} option`,
+                  } as any)
+                }
+              }
+            })
           }
+        }
+
+        // SYSTEM-V Break 3: Materialize architecture blocks as child elements
+        if (data.blocks && Array.isArray(data.blocks)) {
+          const subsysId = existingSubsystem || null  // will be set after createElement resolves
+          const createBlockElements = async (parentId: string) => {
+            for (const block of data.blocks) {
+              // Check if block element already exists (avoid duplicates)
+              const exists = Array.from(modelElements.values()).some(
+                el => el.parent_id === parentId && el.name === block.name
+              )
+              if (!exists && parentId) {
+                await modelCreateElement(sid, {
+                  name: block.name,
+                  element_type: 'logical',  // architectural block, not physical component yet
+                  subsystem_domain: activeSubsystem,
+                  segment: segment,
+                  parent_id: parentId,
+                  description: `Architecture block from ${data.option_name || activeSubsystem} option`,
+                } as any)
+              }
+            }
+          }
+          if (existingSubsystem) {
+            createBlockElements(existingSubsystem)
+          }
+          // For new subsystems, the parent ID comes from createElement above —
+          // blocks will be created on next selection since the element now exists
         }
 
         return next

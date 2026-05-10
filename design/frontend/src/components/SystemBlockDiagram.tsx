@@ -176,7 +176,7 @@ function generateFromElementTree(
   interfaces: Map<string, any>,
   seg: 'space' | 'ground',
 ): { nodes: Node[]; edges: Edge[] } | null {
-  const allEls = Array.from(elements.values())
+  const allEls = Array.from(elements.values()).filter(el => !(el as any).deleted_at)
 
   // Find segment and system container elements for this segment
   const containers = allEls.filter(

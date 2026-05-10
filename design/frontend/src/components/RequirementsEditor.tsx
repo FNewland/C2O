@@ -349,9 +349,13 @@ function RequirementCard({ req, smart, editing, editText, editThreshold, editMet
   const isSmart = smart?.is_smart
   const isCompound = /\bshall\b.*\b(and shall|; shall)\b/i.test(req.text) || (req.text.length > 200 && (req.text.match(/\bshall\b/gi) || []).length > 1)
 
+  // SYSTEM-V Break 5: Indentation based on requirement level
+  const levelIndent = req.level === 'subsystem' ? 32 : req.level === 'system' ? 16 : 0
+
   return (
     <div style={{
       padding: '0.6rem 0.75rem', borderRadius: '6px', marginBottom: '0.4rem',
+      marginLeft: `${levelIndent}px`,
       background: 'var(--bg-secondary, #1f2937)',
       border: `1px solid ${isHowNotWhat ? '#ef4444' : isSmart ? '#10b981' : 'var(--border, #374151)'}`,
       borderLeft: `3px solid ${typeColor}`,

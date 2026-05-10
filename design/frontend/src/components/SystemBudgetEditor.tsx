@@ -395,6 +395,113 @@ export function SystemBudgetEditor() {
           </tbody>
         </table>
       </div>
+      {/* SYSTEM-V: System Rollup — hierarchical sum across the entire element tree */}
+      <SystemRollupSection elements={elements} getChildren={getChildren} envelopes={envelopes} config={config} activeBudget={activeBudget} />
+    </div>
+  )
+}
+
+/** System Rollup: for each system element, recursively sum all descendants */
+function SystemRollupSection({
+  elements, getChildren, envelopes, config, activeBudget,
+}: {
+  elements: Map<string, any>
+  getChildren: (id: string) => any[]
+  envelopes: Record<string, number>
+  config: { type: string; label: string; unit: string; color: string }
+  activeBudget: string
+}) {
+  const computeHierarchicalBudget = useModelStore(s => s.computeHierarchicalBudget)
+
+  // Find all system-level elements
+  const systems = useMemo(() => {
+    const result: { id: string; name: string; segment: string }[] = []
+    for (const el of elements.values()) {
+      if (el.element_type === 'system') result.push({ id: el.id, name: el.name, segment: el.segment })
+    }
+    return result
+  }, [elements])
+
+  if (systems.length === 0) return null
+
+  const rows = systems.map(sys => {
+    const mass = computeHierarchicalBudget(sys.id, 'mass')
+    const power = computeHierarchicalBudget(sys.id, 'power')
+    const cost = computeHierarchicalBudget(sys.id, 'cost')
+    return { ...sys, mass, power, cost }
+  })
+
+  const totalMass = rows.reduce((s, r) => s + r.mass, 0)
+  const totalPower = rows.reduce((s, r) => s + r.power, 0)
+  const totalCost = rows.reduce((s, r) => s + r.cost, 0)
+
+  const massEnv = envelopes.mass || 0
+  const powerEnv = envelopes.power || 0
+  const costEnv = envelopes.cost || 0
+
+  const marginColor = (used: number, env: number) => {
+    if (env <= 0) return '#6b7280'
+    const pct = (env - used) / env * 100
+    return pct < 0 ? '#ef4444' : pct < 20 ? '#f59e0b' : '#10b981'
+  }
+
+  return (
+    <div className="card" style={{ marginTop: '0.75rem' }}>
+      <h3 style={{ fontSize: '0.85rem', marginBottom: '0.3rem' }}>System Rollup (hierarchical sum)</h3>
+      <p style={{ fontSize: '0.65rem', color: '#6b7280', marginBottom: '0.4rem' }}>
+        Recursive sum of all component descendants per system element. Compares against mission envelope.
+      </p>
+      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.72rem' }}>
+        <thead>
+          <tr style={{ background: 'var(--bg-primary, #0a0e1a)' }}>
+            <th style={{ padding: '0.25rem 0.5rem', textAlign: 'left', fontSize: '0.65rem', color: '#9ca3af' }}>System</th>
+            <th style={{ padding: '0.25rem 0.5rem', textAlign: 'left', fontSize: '0.65rem', color: '#9ca3af' }}>Segment</th>
+            <th style={{ padding: '0.25rem 0.5rem', textAlign: 'right', fontSize: '0.65rem', color: '#9ca3af' }}>Mass (kg)</th>
+            <th style={{ padding: '0.25rem 0.5rem', textAlign: 'right', fontSize: '0.65rem', color: '#9ca3af' }}>Power (W)</th>
+            <th style={{ padding: '0.25rem 0.5rem', textAlign: 'right', fontSize: '0.65rem', color: '#9ca3af' }}>Cost (kEUR)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map(r => (
+            <tr key={r.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+              <td style={{ padding: '0.2rem 0.5rem', fontWeight: 600 }}>{r.name}</td>
+              <td style={{ padding: '0.2rem 0.5rem', color: '#9ca3af', fontSize: '0.68rem' }}>{r.segment}</td>
+              <td style={{ padding: '0.2rem 0.5rem', textAlign: 'right', fontFamily: 'monospace' }}>{r.mass.toFixed(2)}</td>
+              <td style={{ padding: '0.2rem 0.5rem', textAlign: 'right', fontFamily: 'monospace' }}>{r.power.toFixed(2)}</td>
+              <td style={{ padding: '0.2rem 0.5rem', textAlign: 'right', fontFamily: 'monospace' }}>{r.cost.toFixed(2)}</td>
+            </tr>
+          ))}
+          <tr style={{ borderTop: '2px solid #374151', fontWeight: 700 }}>
+            <td style={{ padding: '0.2rem 0.5rem' }}>Total</td>
+            <td />
+            <td style={{ padding: '0.2rem 0.5rem', textAlign: 'right', fontFamily: 'monospace', color: marginColor(totalMass, massEnv) }}>
+              {totalMass.toFixed(2)} <span style={{ fontSize: '0.6rem', color: '#6b7280' }}>/ {massEnv.toFixed(1)}</span>
+            </td>
+            <td style={{ padding: '0.2rem 0.5rem', textAlign: 'right', fontFamily: 'monospace', color: marginColor(totalPower, powerEnv) }}>
+              {totalPower.toFixed(2)} <span style={{ fontSize: '0.6rem', color: '#6b7280' }}>/ {powerEnv.toFixed(1)}</span>
+            </td>
+            <td style={{ padding: '0.2rem 0.5rem', textAlign: 'right', fontFamily: 'monospace', color: marginColor(totalCost, costEnv) }}>
+              {totalCost.toFixed(2)} <span style={{ fontSize: '0.6rem', color: '#6b7280' }}>/ {costEnv.toFixed(1)}</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      {/* Margin status indicators */}
+      <div style={{ display: 'flex', gap: '1rem', marginTop: '0.4rem', fontSize: '0.68rem' }}>
+        {[
+          { label: 'Mass', used: totalMass, env: massEnv, unit: 'kg' },
+          { label: 'Power', used: totalPower, env: powerEnv, unit: 'W' },
+          { label: 'Cost', used: totalCost, env: costEnv, unit: 'kEUR' },
+        ].map(b => {
+          const pct = b.env > 0 ? ((b.env - b.used) / b.env * 100) : 0
+          const c = marginColor(b.used, b.env)
+          return (
+            <span key={b.label} style={{ color: c }}>
+              {b.label}: {b.env > 0 ? `${pct.toFixed(0)}% margin` : 'no envelope'}
+            </span>
+          )
+        })}
+      </div>
     </div>
   )
 }

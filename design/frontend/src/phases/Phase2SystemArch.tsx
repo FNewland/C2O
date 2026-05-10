@@ -11,6 +11,7 @@ import { ModelBlockDiagram } from '../components/ModelBlockDiagram'
 import { LensView } from '../views/LensView'
 import { InterfaceMatrixView } from '../components/InterfaceMatrixView'
 import { SystemBudgetEditor } from '../components/SystemBudgetEditor'
+import { MissionBudgetSummary } from '../components/MissionBudgetSummary'
 import { useDesignStore } from '../stores/designStore'
 import { SEGMENT_LABELS, LENS_LABELS, type Segment, type Lens } from '../types/phases'
 import { BudgetCascade } from '../charts/BudgetCascade'
@@ -95,7 +96,12 @@ export function Phase2SystemArch() {
               {subView === 'architecture' && <SystemArchitectureEditor />}
               {subView === 'block_diagram' && <ModelBlockDiagram studyId={useDesignStore.getState().studyId} segment="space" />}
               {subView === 'interfaces' && <InterfaceMatrixView onNavigate={() => {}} />}
-              {subView === 'budgets' && <SystemBudgetEditor />}
+              {subView === 'budgets' && (
+                <>
+                  <MissionBudgetSummary />
+                  <SystemBudgetEditor />
+                </>
+              )}
               {subView === 'fmeca' && <FMECAPanel />}
               {subView === 'compliance' && (
                 requirements ? (
