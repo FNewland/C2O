@@ -136,16 +136,22 @@ async def quick_design(body: QuickDesignRequest | MissionRequirements) -> Design
     if overrides and loop_result.final_state:
         from spacecdf_common.models.parameter import ParameterSource, ParameterValue
         for param_id, value in overrides.items():
-            existing = loop_result.final_state.get_param(param_id)
-            loop_result.final_state._parameters[param_id] = ParameterValue(
-                id=param_id,
-                name=existing.name if existing else param_id,
-                value=value,
-                unit=existing.unit if existing else "",
-                domain=existing.domain if existing else param_id.split(".")[0],
-                source=ParameterSource.POSITION_OVERRIDE,
-                confidence=1.0,
-            )
+            # Skip non-scalar values (dicts, lists) — only float/str/bool are valid
+            if isinstance(value, (dict, list)):
+                continue
+            try:
+                existing = loop_result.final_state.get_param(param_id)
+                loop_result.final_state._parameters[param_id] = ParameterValue(
+                    id=param_id,
+                    name=existing.name if existing else param_id,
+                    value=value,
+                    unit=existing.unit if existing else "",
+                    domain=existing.domain if existing else param_id.split(".")[0],
+                    source=ParameterSource.POSITION_OVERRIDE,
+                    confidence=1.0,
+                )
+            except Exception:
+                continue  # Skip any value that can't be coerced
 
     params = {}
     if loop_result.final_state:
