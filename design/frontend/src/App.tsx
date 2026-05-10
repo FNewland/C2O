@@ -50,21 +50,29 @@ function AppShell() {
         setTimeout(() => setShowReviewBanner(null), 4000)
       }
     }
-    // SYSTEM-V: When entering Phase 1 for the first time, auto-create segment elements
+    // SYSTEM-V: Auto-create study on first forward navigation (Phase 0→1+)
+    // This ensures all backend endpoints (cost, compliance, equipment) work
+    if (p >= 1 && !useDesignStore.getState().studyId) {
+      useDesignStore.getState().createStudy().then(newStudyId => {
+        if (!newStudyId) return
+        // Create mission root + standard segments in element tree
+        const ms = useModelStore.getState()
+        const missionName = useDesignStore.getState().requirements?.name || 'New Mission'
+        ms.createElement(newStudyId, { name: missionName, element_type: 'mission', segment: 'space', diagram_x: 300, diagram_y: 10 } as any).then(missionId => {
+          if (!missionId) return
+          ms.createElement(newStudyId, { name: 'Space Segment', element_type: 'segment', segment: 'space', parent_id: missionId, diagram_x: 100, diagram_y: 100 } as any)
+          ms.createElement(newStudyId, { name: 'Ground Segment', element_type: 'segment', segment: 'ground', parent_id: missionId, diagram_x: 300, diagram_y: 100 } as any)
+          ms.createElement(newStudyId, { name: 'Launch Segment', element_type: 'segment', segment: 'space', parent_id: missionId, diagram_x: 500, diagram_y: 100 } as any)
+          ms.createElement(newStudyId, { name: 'Operations', element_type: 'segment', segment: 'operations', parent_id: missionId, diagram_x: 300, diagram_y: 250 } as any)
+        })
+      })
+    }
+    // If study exists but segments don't, create them
     if (p === 1 && activePhase === 0) {
       const sid = useDesignStore.getState().studyId
       const ms = useModelStore.getState()
       if (sid && ms.elements.size === 0) {
-        // Create mission root + standard segments
-        const createEl = ms.createElement
-        const missionName = useDesignStore.getState().missionNeed?.problem_statement?.slice(0, 40) || 'New Mission'
-        createEl(sid, { name: missionName, element_type: 'mission', segment: 'space', diagram_x: 300, diagram_y: 10 } as any).then(missionId => {
-          if (!missionId) return
-          createEl(sid, { name: 'Space Segment', element_type: 'segment', segment: 'space', parent_id: missionId, diagram_x: 100, diagram_y: 100 } as any)
-          createEl(sid, { name: 'Ground Segment', element_type: 'segment', segment: 'ground', parent_id: missionId, diagram_x: 300, diagram_y: 100 } as any)
-          createEl(sid, { name: 'Launch Segment', element_type: 'segment', segment: 'space', parent_id: missionId, diagram_x: 500, diagram_y: 100 } as any)
-          createEl(sid, { name: 'Operations', element_type: 'segment', segment: 'operations', parent_id: missionId, diagram_x: 300, diagram_y: 250 } as any)
-        })
+        ms.loadStudyModel(sid)
       }
     }
 

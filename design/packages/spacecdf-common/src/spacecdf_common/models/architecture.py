@@ -446,6 +446,32 @@ THERMAL_OPTIONS = [
 
 STRUCTURE_OPTIONS = [
     ArchitectureOption(
+        id="str-1u", subsystem="structure",
+        name="1U CubeSat (10x10x11.35 cm)",
+        description="Smallest standard CubeSat per CDS Rev 14.1. 1000 cm3 volume. 1.33 kg mass limit. Ideal for tech demos, education, and sensor missions.",
+        mass_kg_typical=0.2, power_w_typical=0.0, cost_keur_typical=5, trl=9,
+        pros=["Lowest cost (~5 kEUR structure)", "Simplest to build", "Fastest schedule (6-12 months)", "Widest rideshare availability"],
+        cons=["Very limited volume (1000 cm3)", "1.33 kg mass limit", "Body-mounted SA only (~2W)", "Minimal payload volume"],
+        derived_requirements=[
+            {"id": "SR-STR-001-1U", "level": "system", "type": "performance", "text": "The structure shall survive qualification launch loads with MoS >=0"},
+            {"id": "SR-STR-002-1U", "level": "system", "type": "performance", "text": "The first natural frequency shall be >=90 Hz (1U stiffness requirement)"},
+            {"id": "IR-STR-001-1U", "level": "system", "type": "interface", "text": "The spacecraft shall comply with CDS Rev 14.1 for 1U form factor (100x100x113.5 mm)"},
+            {"id": "BR-STR-001-1U", "level": "system", "type": "budget", "text": "Total spacecraft mass shall not exceed 1.33 kg (CDS 1U limit)"},
+            {"id": "BR-STR-002-1U", "level": "system", "type": "budget", "text": "Structure mass shall not exceed 0.25 kg including frame, fasteners, and brackets"},
+            {"id": "FR-STR-001-1U", "level": "system", "type": "functional", "text": "The structure shall provide 3 deployment inhibits (2 switches + 1 RBF pin)"},
+            {"id": "FR-STR-002-1U", "level": "system", "type": "functional", "text": "The CG shall remain within 1 cm of geometric centre in all axes"},
+        ],
+        blocks=[
+            {"id": "frame-1u", "name": "1U Frame (ISIS/Pumpkin)", "type": "structure"},
+            {"id": "rails-1u", "name": "1U Rails + Feet", "type": "structure"},
+            {"id": "stack-1u", "name": "PC/104 Stack (3-4 boards)", "type": "avionics"},
+        ],
+        connections=[
+            {"from": "frame-1u", "to": "rails-1u", "label": "Mechanical"},
+            {"from": "stack-1u", "to": "frame-1u", "label": "Mounting"},
+        ],
+    ),
+    ArchitectureOption(
         id="str-3u", subsystem="structure",
         name="3U CubeSat (10x10x34 cm)",
         description="Standard 3U frame per CDS Rev 14.1. 3000 cm3 internal volume. 6 kg mass limit.",

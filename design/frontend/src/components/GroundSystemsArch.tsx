@@ -8,11 +8,16 @@
  * - Network Infrastructure (WAN, VPN, timing)
  *
  * Each system creates elements in the model tree as children of the Ground Segment.
+ * Supports adding free-form custom ground system blocks via the "Add System" button.
  */
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
+import {
+  ReactFlow, useNodesState, useEdgesState, Handle, Position, Controls, Background,
+  type Node, type Edge, type NodeTypes, type Connection, addEdge,
+} from '@xyflow/react'
+import '@xyflow/react/dist/style.css'
 import { useDesignStore } from '../stores/designStore'
 import { useModelStore } from '../stores/modelStore'
-import { ModelBlockDiagram } from './ModelBlockDiagram'
 
 interface GroundSystem {
   id: string
@@ -56,10 +61,40 @@ const GROUND_SYSTEMS: GroundSystem[] = [
   },
 ]
 
+const GROUND_SYSTEM_COLORS = [
+  '#10b981', '#d946ef', '#14b8a6', '#6b7280', '#f59e0b',
+  '#06b6d4', '#8b5cf6', '#ef4444', '#84cc16', '#ec4899',
+]
+
+// Ground system block node
+function GroundBlockNode({ data }: { data: { label: string; color: string; subsystems?: string[] } }) {
+  return (
+    <div style={{
+      padding: '8px 14px', border: `2px solid ${data.color}`, borderRadius: 8,
+      background: `${data.color}15`, textAlign: 'center', minWidth: 130,
+    }}>
+      <Handle type="target" position={Position.Top} />
+      <Handle type="target" position={Position.Left} id="left" />
+      <div style={{ fontSize: '0.78rem', color: data.color, fontWeight: 700 }}>{data.label}</div>
+      {data.subsystems && data.subsystems.length > 0 && (
+        <div style={{ fontSize: '0.58rem', color: '#9ca3af', marginTop: '0.2rem', maxWidth: 160 }}>
+          {data.subsystems.slice(0, 4).join(' | ')}
+          {data.subsystems.length > 4 && ` +${data.subsystems.length - 4}`}
+        </div>
+      )}
+      <Handle type="source" position={Position.Bottom} />
+      <Handle type="source" position={Position.Right} id="right" />
+    </div>
+  )
+}
+
+const nodeTypes: NodeTypes = { groundBlock: GroundBlockNode }
+
 export function GroundSystemsArch() {
   const studyId = useDesignStore(s => s.studyId)
   const createElement = useModelStore(s => s.createElement)
   const elements = useModelStore(s => s.elements)
+  const updateElement = useModelStore(s => s.updateElement)
   const [systems, setSystems] = useState(GROUND_SYSTEMS)
   const [createdIds, setCreatedIds] = useState<Set<string>>(new Set())
 
@@ -118,6 +153,91 @@ export function GroundSystemsArch() {
     }
   }
 
+  // Add custom ground system
+  const addCustomSystem = async () => {
+    const name = prompt('Enter new ground system name:')
+    if (!name || !name.trim() || !studyId) return
+
+    // Find ground segment parent
+    let groundParentId: string | undefined
+    for (const el of elements.values()) {
+      if (el.element_type === 'segment' && el.segment === 'ground') {
+        groundParentId = el.id
+        break
+      }
+    }
+
+    await createElement(studyId, {
+      name: name.trim(),
+      element_type: 'system',
+      segment: 'ground',
+      parent_id: groundParentId || null,
+      description: 'Custom ground system',
+    } as any)
+  }
+
+  // Build ReactFlow nodes/edges from all ground system elements in modelStore
+  const groundSystems = useMemo(() => {
+    return Array.from(elements.values()).filter(
+      el => el.segment === 'ground' && el.element_type === 'system'
+    )
+  }, [elements])
+
+  const { diagramNodes, diagramEdges } = useMemo(() => {
+    const dNodes: Node[] = groundSystems.map((el, i) => {
+      const col = i % 3
+      const row = Math.floor(i / 3)
+      // Gather subsystem children for display
+      const children = Array.from(elements.values()).filter(c => c.parent_id === el.id)
+      const subsystemNames = children.slice(0, 6).map((c: any) => c.name)
+      return {
+        id: `gs-${el.id}`,
+        type: 'groundBlock',
+        position: {
+          x: (el as any).diagram_x ?? (40 + col * 220),
+          y: (el as any).diagram_y ?? (30 + row * 140),
+        },
+        data: {
+          label: el.name,
+          color: GROUND_SYSTEM_COLORS[i % GROUND_SYSTEM_COLORS.length],
+          subsystems: subsystemNames,
+        },
+      }
+    })
+    // No automatic edges; users draw them via onConnect
+    return { diagramNodes: dNodes, diagramEdges: [] as Edge[] }
+  }, [groundSystems, elements])
+
+  const [nodes, setNodes, onNodesChange] = useNodesState(diagramNodes)
+  const [edges, setEdges, onEdgesChange] = useEdgesState(diagramEdges)
+
+  // Sync when diagramNodes changes (new elements added)
+  useEffect(() => {
+    setNodes(diagramNodes)
+  }, [diagramNodes, setNodes])
+
+  const onConnect = useCallback(
+    (connection: Connection) => {
+      const label = prompt('Interface label:') || ''
+      setEdges(eds => addEdge({ ...connection, label }, eds))
+    },
+    [setEdges],
+  )
+
+  // Persist drag positions back to modelStore
+  const onNodeDragStop = useCallback(
+    (_event: any, node: Node) => {
+      if (node.id.startsWith('gs-')) {
+        const elementId = node.id.replace('gs-', '')
+        updateElement(elementId, {
+          diagram_x: Math.round(node.position.x),
+          diagram_y: Math.round(node.position.y),
+        })
+      }
+    },
+    [updateElement],
+  )
+
   return (
     <div style={{ padding: '1rem', overflowY: 'auto', height: '100%' }}>
       <h2 style={{ fontSize: '1rem', marginBottom: '0.25rem' }}>Ground Segment — System Architecture</h2>
@@ -126,7 +246,7 @@ export function GroundSystemsArch() {
       </p>
 
       {/* System selection cards */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '0.75rem' }}>
         {systems.map(sys => (
           <div key={sys.id} onClick={() => toggleSystem(sys.id)} style={{
             padding: '0.6rem 0.75rem', borderRadius: '6px', cursor: 'pointer',
@@ -151,11 +271,43 @@ export function GroundSystemsArch() {
         ))}
       </div>
 
-      {/* Block diagram of selected ground systems */}
-      <div className="card" style={{ height: '300px' }}>
+      {/* Add custom system button */}
+      <button
+        onClick={addCustomSystem}
+        style={{
+          padding: '0.4rem 0.8rem', fontSize: '0.75rem', borderRadius: '5px',
+          background: '#1e3a5f', color: '#60a5fa', border: '1px solid #3b82f6',
+          cursor: 'pointer', marginBottom: '0.75rem',
+        }}
+      >
+        + Add Custom System
+      </button>
+
+      {/* ReactFlow block diagram of all ground systems from modelStore */}
+      <div className="card" style={{ height: '350px' }}>
         <h3 style={{ fontSize: '0.85rem', marginBottom: '0.3rem' }}>Ground Segment Block Diagram</h3>
-        <div style={{ height: '250px' }}>
-          <ModelBlockDiagram studyId={studyId} segment="ground" />
+        <div style={{ height: '300px' }}>
+          {groundSystems.length > 0 ? (
+            <ReactFlow
+              nodes={nodes}
+              edges={edges}
+              onNodesChange={onNodesChange}
+              onEdgesChange={onEdgesChange}
+              onConnect={onConnect}
+              onNodeDragStop={onNodeDragStop}
+              nodeTypes={nodeTypes}
+              fitView
+              style={{ background: '#0a0e1a' }}
+              defaultEdgeOptions={{ style: { strokeWidth: 1.5, stroke: '#6b7280' } }}
+            >
+              <Controls />
+              <Background color="#374151" gap={20} />
+            </ReactFlow>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#6b7280', fontSize: '0.8rem' }}>
+              Select or add ground systems above to populate the diagram
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -55,9 +55,24 @@ export function FMECAPanel() {
   if (loading) return <div style={{ padding: '1rem', color: '#6b7280' }}>Analysing failure modes...</div>
 
   if (!result) return (
-    <div style={{ padding: '1rem', color: '#6b7280' }}>
-      <h3>FMECA — Failure Mode Analysis</h3>
-      <p style={{ fontSize: '0.78rem' }}>No failure mode data available. Check backend connection.</p>
+    <div style={{ padding: '2rem', color: '#6b7280' }}>
+      <h3 style={{ fontSize: '1rem', marginBottom: '0.5rem', color: '#9ca3af' }}>FMECA — Failure Mode, Effects & Criticality Analysis</h3>
+      <p style={{ fontSize: '0.78rem', marginBottom: '0.75rem' }}>
+        FMECA identifies potential failure modes in your design and assesses their risk using the Risk Priority Number (RPN = Severity x Occurrence x Detection).
+      </p>
+      <div style={{ fontSize: '0.72rem', marginBottom: '0.75rem' }}>
+        <p style={{ fontWeight: 600, marginBottom: '0.3rem' }}>How to address FMECA issues:</p>
+        <ol style={{ paddingLeft: '1.2rem', lineHeight: 1.8 }}>
+          <li><strong>Review top risks</strong> — focus on failure modes with RPN &gt; 60 (critical) or RPN &gt; 30 (major)</li>
+          <li><strong>Add redundancy</strong> — the tool recommends where redundancy reduces risk most effectively (e.g., 3-of-4 reaction wheels instead of 3-of-3)</li>
+          <li><strong>Select higher-TRL components</strong> — TRL 9 (flight-proven) components have lower occurrence scores</li>
+          <li><strong>Improve detection</strong> — add health monitoring (voltage/current sensors, temperature telemetry, watchdog timers)</li>
+          <li><strong>Accept risk</strong> — for 1U/educational missions, some single-point failures may be acceptable with documented rationale</li>
+        </ol>
+      </div>
+      <p style={{ fontSize: '0.72rem', color: '#f59e0b' }}>
+        Waiting for FMECA analysis... If this persists, check that the backend is running and the /api/fmeca/analyze endpoint is available.
+      </p>
     </div>
   )
 

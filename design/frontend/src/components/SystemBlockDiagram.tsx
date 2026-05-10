@@ -37,7 +37,38 @@ function SubsystemNode({ data }: { data: { label: string; color: string; blocks?
   )
 }
 
-const nodeTypes: NodeTypes = { subsystem: SubsystemNode }
+// Container node — resizable boundary box for segments/systems
+function ContainerNode({ data }: { data: { label: string; color: string; childCount?: number } }) {
+  const w = data.childCount ? Math.max(400, (Math.min(data.childCount, 4)) * 200 + 60) : 400
+  const h = data.childCount ? Math.max(300, Math.ceil(data.childCount / 4) * 150 + 80) : 300
+  return (
+    <div style={{
+      width: w, height: h, minWidth: 300, minHeight: 200,
+      border: `2px dashed ${data.color}`, borderRadius: 12,
+      background: `${data.color}08`,
+      position: 'relative',
+    }}>
+      {/* Title bar */}
+      <div style={{
+        position: 'absolute', top: 0, left: 0, right: 0,
+        padding: '4px 12px',
+        background: `${data.color}20`,
+        borderBottom: `1px solid ${data.color}40`,
+        borderRadius: '10px 10px 0 0',
+        fontSize: '0.75rem', fontWeight: 700, color: data.color,
+        textTransform: 'uppercase', letterSpacing: '0.05em',
+      }}>
+        {data.label}
+      </div>
+      <Handle type="target" position={Position.Top} />
+      <Handle type="target" position={Position.Left} id="left" />
+      <Handle type="source" position={Position.Bottom} />
+      <Handle type="source" position={Position.Right} id="right" />
+    </div>
+  )
+}
+
+const nodeTypes: NodeTypes = { subsystem: SubsystemNode, container: ContainerNode }
 
 const SUBSYSTEM_COLORS: Record<string, string> = {
   payload: '#10b981', eps: '#f59e0b', aocs: '#06b6d4', ttc: '#ec4899',
@@ -138,29 +169,82 @@ function generateFromElementTree(
   interfaces: Map<string, any>,
   seg: 'space' | 'ground',
 ): { nodes: Node[]; edges: Edge[] } | null {
+  const allEls = Array.from(elements.values())
+
+  // Find segment and system container elements for this segment
+  const containers = allEls.filter(
+    el => (el.element_type === 'segment' || el.element_type === 'system') && el.segment === seg
+  )
+
   // Find subsystem elements for this segment
-  const subsystems = Array.from(elements.values()).filter(
+  const subsystems = allEls.filter(
     el => el.element_type === 'subsystem' && el.segment === seg
   )
   if (subsystems.length < 2) return null // Not enough data, fall back to static
 
-  const nodes: Node[] = subsystems.map((el, i) => {
+  const nodes: Node[] = []
+
+  // Container color map for segments/systems
+  const CONTAINER_COLORS: Record<string, string> = {
+    space: '#3b82f6', ground: '#10b981', launch: '#f43f5e',
+  }
+
+  // Build container nodes for segment and system elements
+  const containerIds = new Set<string>()
+  containers.forEach((el, i) => {
+    const childCount = allEls.filter(c => c.parent_id === el.id).length
+    const col = i % 2
+    const row = Math.floor(i / 2)
+    const color = CONTAINER_COLORS[el.segment] || '#6b7280'
+    nodes.push({
+      id: `el-${el.id}`,
+      type: 'container',
+      position: { x: el.diagram_x ?? (20 + col * 440), y: el.diagram_y ?? (20 + row * 340) },
+      data: { label: el.name, color, childCount },
+      style: { width: Math.max(400, Math.min(childCount, 4) * 200 + 60), height: Math.max(300, Math.ceil(childCount / 4) * 150 + 80) },
+    })
+    containerIds.add(el.id)
+  })
+
+  // Build subsystem nodes — parent them inside their container if applicable
+  subsystems.forEach((el, i) => {
     const col = i % 4
     const row = Math.floor(i / 4)
     const domain = el.subsystem_domain || el.name.toLowerCase()
-    // Get component children as "blocks"
-    const children = Array.from(elements.values()).filter(c => c.parent_id === el.id)
+    const children = allEls.filter(c => c.parent_id === el.id)
     const blocks = children.slice(0, 3).map((c: any) => c.name)
-    return {
+
+    const parentContainerId = el.parent_id && containerIds.has(el.parent_id) ? el.parent_id : undefined
+    // If parented, position is relative to container; use stored pos or layout within container
+    let posX: number, posY: number
+    if (parentContainerId) {
+      // Count siblings to compute layout position within the container
+      const siblings = subsystems.filter(s => s.parent_id === parentContainerId)
+      const sibIdx = siblings.indexOf(el)
+      const sCol = sibIdx % 4
+      const sRow = Math.floor(sibIdx / 4)
+      posX = el.diagram_x ?? (30 + sCol * 180)
+      posY = el.diagram_y ?? (40 + sRow * 130)
+    } else {
+      posX = el.diagram_x ?? (50 + col * 180)
+      posY = el.diagram_y ?? (30 + row * 130)
+    }
+
+    const node: Node = {
       id: `el-${el.id}`,
       type: 'subsystem',
-      position: { x: el.diagram_x ?? (50 + col * 180), y: el.diagram_y ?? (30 + row * 130) },
+      position: { x: posX, y: posY },
       data: {
         label: el.name,
         color: SUBSYSTEM_COLORS[domain] || '#6b7280',
         blocks,
       },
     }
+    if (parentContainerId) {
+      node.parentId = `el-${parentContainerId}`
+      node.extent = 'parent' as const
+    }
+    nodes.push(node)
   })
 
   // Build edges from model interfaces

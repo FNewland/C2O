@@ -4,9 +4,19 @@ import { useDesignStore } from '../stores/designStore'
 
 const DEFAULT_SUBSYSTEMS = ['power', 'aocs', 'link', 'thermal', 'structure', 'propulsion', 'data', 'payload']
 
+// Ground segment subsystems (added to matrix when ground elements exist)
+const GROUND_SUBSYSTEMS = ['ground_rf', 'ground_ops', 'ground_data', 'ground_net']
+
 // Map subsystem_domain values to display labels used in matrix
 const DOMAIN_ALIASES: Record<string, string> = {
   eps: 'power', ttc: 'link', obc: 'data',
+}
+
+const GROUND_INTERFACE_DATA: Record<string, InterfaceCell> = {
+  'link-ground_rf': { types: ['rf'], description: 'TM/TC uplink/downlink via ground station RF chain', hasConflict: false },
+  'ground_rf-ground_ops': { types: ['data'], description: 'Telemetry frames from modem to MCS', hasConflict: false },
+  'ground_ops-ground_data': { types: ['data'], description: 'Science data products from MCS to processing', hasConflict: false },
+  'ground_data-ground_net': { types: ['data'], description: 'Data distribution to users via network', hasConflict: false },
 }
 
 type ResolutionStatus = 'open' | 'under_discussion' | 'resolved' | 'accepted_risk' | 'deferred'
@@ -148,11 +158,16 @@ export function InterfaceMatrixView({ onNavigate }: { onNavigate?: (tab: string)
     }
     // If the element tree has subsystems, use them (in a consistent order)
     if (domains.size >= 3) {
-      // Order: match default order, then append any extras
       const ordered: string[] = []
+      // Space subsystems first (in standard order)
       for (const d of DEFAULT_SUBSYSTEMS) {
         if (domains.has(d)) { ordered.push(d); domains.delete(d) }
       }
+      // Ground subsystems next
+      for (const d of GROUND_SUBSYSTEMS) {
+        if (domains.has(d)) { ordered.push(d); domains.delete(d) }
+      }
+      // Any remaining
       for (const d of domains) ordered.push(d)
       return ordered
     }
@@ -180,9 +195,12 @@ export function InterfaceMatrixView({ onNavigate }: { onNavigate?: (tab: string)
     return dynamic
   }, [modelInterfaces, modelElements])
 
-  // Cell lookup: prefer model data, fall back to static
+  // Cell lookup: prefer model data, fall back to static (space + ground)
   const getCell = (a: string, b: string): InterfaceCell | null => {
-    return dynamicInterfaces[`${a}-${b}`] || dynamicInterfaces[`${b}-${a}`] || INTERFACE_DATA[`${a}-${b}`] || INTERFACE_DATA[`${b}-${a}`] || null
+    return dynamicInterfaces[`${a}-${b}`] || dynamicInterfaces[`${b}-${a}`]
+      || INTERFACE_DATA[`${a}-${b}`] || INTERFACE_DATA[`${b}-${a}`]
+      || GROUND_INTERFACE_DATA[`${a}-${b}`] || GROUND_INTERFACE_DATA[`${b}-${a}`]
+      || null
   }
 
   const [resolvingCell, setResolvingCell] = useState<string | null>(null)
