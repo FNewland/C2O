@@ -135,7 +135,8 @@ async def update_requirement(req_id: str, body: dict[str, Any]) -> dict:
 
     for key in ("text", "rationale", "threshold_param_path", "threshold_op",
                 "threshold_value", "verification_method", "verification_phase",
-                "responsible_position", "status", "code", "element_id"):
+                "responsible_position", "status", "code", "element_id",
+                "parent_id", "derived_from_requirement_id"):
         if key in body:
             req[key] = body[key]
 

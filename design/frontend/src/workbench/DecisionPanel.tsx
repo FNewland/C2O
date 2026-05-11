@@ -25,6 +25,8 @@ export function DecisionPanel() {
     enabled: !!studyId,
   })
 
+  const [pairwiseWeights, setPairwiseWeights] = useState<Record<string, number>>({})
+
   const focusElement = allElements.find((e: any) => e.id === focusElementId)
   const isSpaceSegment = focusElement?.segment === 'space'
   const isGroundSegment = focusElement?.segment === 'ground'
@@ -52,8 +54,8 @@ export function DecisionPanel() {
       {currentLevel >= 1 && <ContactScheduleWidget studyId={studyId} />}
 
       {/* Any level: Decision tools — weighting first, then scoring */}
-      <PairwiseWeightingWidget />
-      <PughMatrixWidget />
+      <PairwiseWeightingWidget onWeightsChanged={setPairwiseWeights} />
+      <PughMatrixWidget weights={pairwiseWeights} />
     </div>
   )
 }
@@ -139,6 +141,7 @@ function MissionTradeWidget({ studyId }: { studyId: string | null }) {
 function OrbitTradeWidget({ studyId }: { studyId: string | null }) {
   const [result, setResult] = useState<any>(null)
   const [loading, setLoading] = useState(false)
+  const qc = useQueryClient()
 
   const runTrade = async () => {
     if (!studyId) return
@@ -167,6 +170,7 @@ function OrbitTradeWidget({ studyId }: { studyId: string | null }) {
                 <th style={thR}>Lifetime</th>
                 <th style={thR}>Score</th>
                 <th style={thC}>Deorbit</th>
+                <th style={thC}></th>
               </tr>
             </thead>
             <tbody>
@@ -186,6 +190,28 @@ function OrbitTradeWidget({ studyId }: { studyId: string | null }) {
                       </span>
                     ) : '—'}
                   </td>
+                  <td style={{ padding: '0.2rem 0.3rem', textAlign: 'center' }}>
+                    <button onClick={async () => {
+                      // Apply this orbit to the focused spacecraft element
+                      const fid = useUIStore.getState().focusElementId
+                      const sid = useUIStore.getState().studyId
+                      if (!fid || !sid) { alert('Drill into a spacecraft element first'); return }
+                      const els: any[] = qc.getQueryData(['elements', sid]) || []
+                      const el = els.find((e: any) => e.id === fid)
+                      if (!el) return
+                      await fetch(`${API}/elements/${fid}`, {
+                        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          performance: { ...((el as any).performance || {}), orbit_altitude_km: c.altitude_km, orbit_inclination_deg: c.inclination_deg, orbit_type: c.orbit_type },
+                          version: el.version,
+                        }),
+                      })
+                      qc.invalidateQueries({ queryKey: ['elements'] })
+                      alert(`Applied: ${c.name} (${c.altitude_km}km, ${c.inclination_deg}°)`)
+                    }} style={{ ...btnStyle, fontSize: '0.5rem', padding: '0.1rem 0.3rem', background: 'var(--success)' }}>
+                      Apply
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -201,6 +227,7 @@ function OrbitTradeWidget({ studyId }: { studyId: string | null }) {
 function ConstellationWidget({ studyId }: { studyId: string | null }) {
   const [result, setResult] = useState<any>(null)
   const [loading, setLoading] = useState(false)
+  const qc = useQueryClient()
   const [altitude, setAltitude] = useState('500')
   const [inclination, setInclination] = useState('97.4')
   const [revisitHours, setRevisitHours] = useState('24')
@@ -249,6 +276,26 @@ function ConstellationWidget({ studyId }: { studyId: string | null }) {
                 {opt.total_mass_kg != null && ` | Mass: ${opt.total_mass_kg}kg`}
                 {opt.spares != null && ` | Spares: ${opt.spares}`}
               </div>
+              <button onClick={async () => {
+                const fid = useUIStore.getState().focusElementId
+                const sid = useUIStore.getState().studyId
+                if (!fid || !sid) { alert('Drill into a spacecraft element first'); return }
+                const els: any[] = qc.getQueryData(['elements', sid]) || []
+                const el = els.find((e: any) => e.id === fid)
+                if (!el) return
+                await fetch(`${API}/elements/${fid}`, {
+                  method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    quantity: opt.total_satellites || opt.total_sats,
+                    performance: { ...((el as any).performance || {}), constellation: true, orbital_planes: opt.num_planes || opt.planes, sats_per_plane: opt.sats_per_plane, walker_notation: opt.walker_notation },
+                    version: el.version,
+                  }),
+                })
+                qc.invalidateQueries({ queryKey: ['elements'] })
+                alert(`Applied: ${opt.walker_notation || `${opt.total_satellites} sats`}`)
+              }} style={{ ...btnStyle, fontSize: '0.55rem', padding: '0.1rem 0.3rem', background: 'var(--success)', marginTop: '0.15rem' }}>
+                Apply to Design
+              </button>
             </div>
           ))}
           {result.count != null && (
@@ -359,11 +406,8 @@ function ContactScheduleWidget({ studyId }: { studyId: string | null }) {
 
 // ─── Pugh Matrix ───
 
-function PughMatrixWidget() {
-  // Persist Pugh matrix state in localStorage
-  const loadSaved = () => {
-    try { const s = localStorage.getItem('spacecdf-pugh'); return s ? JSON.parse(s) : null } catch { return null }
-  }
+function PughMatrixWidget({ weights }: { weights?: Record<string, number> }) {
+  const loadSaved = () => { try { const s = localStorage.getItem('spacecdf-pugh'); return s ? JSON.parse(s) : null } catch { return null } }
   const saved = loadSaved()
   const [criteria, setCriteria] = useState<string[]>(saved?.criteria || ['Mass', 'Power', 'Cost', 'TRL', 'Risk'])
   const [options, setOptions] = useState<string[]>(saved?.options || ['Option A', 'Option B', 'Option C'])
@@ -372,7 +416,6 @@ function PughMatrixWidget() {
   const [newCriterion, setNewCriterion] = useState('')
   const [newOption, setNewOption] = useState('')
 
-  // Auto-save on change
   const saveState = useCallback(() => {
     localStorage.setItem('spacecdf-pugh', JSON.stringify({ criteria, options, datum, scores }))
   }, [criteria, options, datum, scores])
@@ -381,30 +424,40 @@ function PughMatrixWidget() {
   const setScore = (opt: string, crit: string, val: number) => {
     setScores(prev => ({ ...prev, [opt]: { ...(prev[opt] || {}), [crit]: val } }))
   }
-
   const getScore = (opt: string, crit: string) => scores[opt]?.[crit] ?? 0
+  const hasWeights = weights && Object.keys(weights).length > 0
 
-  // Compute totals
+  // Compute weighted totals
   const totals = options.map((opt, i) => {
-    if (i === datum) return { plus: 0, minus: 0, net: 0 }
-    const vals = criteria.map(c => getScore(opt, c))
-    return { plus: vals.filter(v => v > 0).reduce((s, v) => s + v, 0), minus: vals.filter(v => v < 0).reduce((s, v) => s + v, 0), net: vals.reduce((s, v) => s + v, 0) }
+    if (i === datum) return { unweighted: 0, weighted: 0 }
+    let unweighted = 0, weighted = 0
+    for (const c of criteria) {
+      const s = getScore(opt, c)
+      unweighted += s
+      const w = weights?.[c] ?? (1 / criteria.length)
+      weighted += s * w
+    }
+    return { unweighted, weighted: Math.round(weighted * 100) / 100 }
   })
 
+  const best = totals.reduce((bi, t, i) => (i !== datum && t.weighted > (totals[bi]?.weighted ?? -999) ? i : bi), datum === 0 ? 1 : 0)
+
   return (
-    <ToolSection title="Pugh Matrix (Relative Scoring)" color="#ec4899">
+    <ToolSection title={`Pugh Matrix${hasWeights ? ' (Weighted)' : ' (Unweighted)'}`} color="#ec4899">
       <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
-        Score each option relative to the datum: +2 much better, +1 better, 0 same, −1 worse, −2 much worse
+        Score each option vs datum: +2 much better, +1 better, 0 same, −1 worse, −2 much worse.
+        {hasWeights ? ' Weights from pairwise comparison applied.' : ' Define weights above for weighted scoring.'}
       </div>
 
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.65rem', marginBottom: '0.3rem' }}>
         <thead>
           <tr style={{ borderBottom: '1px solid var(--border)' }}>
             <th style={thL}>Criteria</th>
+            {hasWeights && <th style={thR}>Wt</th>}
             {options.map((opt, i) => (
-              <th key={opt} style={{ ...thC, background: i === datum ? 'rgba(59,130,246,0.1)' : undefined, cursor: 'pointer' }}
+              <th key={opt} style={{ ...thC, background: i === datum ? 'rgba(59,130,246,0.1)' : i === best ? 'rgba(16,185,129,0.1)' : undefined, cursor: 'pointer' }}
                 onClick={() => setDatum(i)} title="Click to set as datum">
-                {opt} {i === datum && '(D)'}
+                {opt} {i === datum ? '(D)' : i === best ? '★' : ''}
               </th>
             ))}
           </tr>
@@ -413,13 +466,12 @@ function PughMatrixWidget() {
           {criteria.map(crit => (
             <tr key={crit} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
               <td style={{ padding: '0.15rem 0.3rem', fontWeight: 500 }}>{crit}</td>
+              {hasWeights && <td style={{ padding: '0.15rem 0.3rem', textAlign: 'right', fontSize: '0.55rem', color: 'var(--accent)' }}>{((weights?.[crit] ?? 0) * 100).toFixed(0)}%</td>}
               {options.map((opt, i) => (
                 <td key={opt} style={{ padding: '0.15rem', textAlign: 'center' }}>
-                  {i === datum ? (
-                    <span style={{ color: 'var(--text-secondary)' }}>DATUM</span>
-                  ) : (
+                  {i === datum ? <span style={{ color: 'var(--text-secondary)' }}>D</span> : (
                     <select value={getScore(opt, crit)} onChange={e => setScore(opt, crit, parseInt(e.target.value))}
-                      style={{ width: 45, fontSize: '0.6rem', padding: '0.1rem', borderRadius: '2px', background: 'var(--bg-primary)', border: '1px solid var(--border)', color: getScore(opt, crit) > 0 ? 'var(--success)' : getScore(opt, crit) < 0 ? 'var(--danger)' : 'var(--text-secondary)', textAlign: 'center' }}>
+                      style={{ width: 40, fontSize: '0.6rem', padding: '0.1rem', borderRadius: '2px', background: 'var(--bg-primary)', border: '1px solid var(--border)', color: getScore(opt, crit) > 0 ? 'var(--success)' : getScore(opt, crit) < 0 ? 'var(--danger)' : 'var(--text-secondary)', textAlign: 'center' }}>
                       <option value={2}>+2</option><option value={1}>+1</option><option value={0}>0</option><option value={-1}>−1</option><option value={-2}>−2</option>
                     </select>
                   )}
@@ -428,10 +480,11 @@ function PughMatrixWidget() {
             </tr>
           ))}
           <tr style={{ borderTop: '2px solid var(--border)' }}>
-            <td style={{ padding: '0.2rem 0.3rem', fontWeight: 700 }}>Totals</td>
+            <td style={{ padding: '0.2rem 0.3rem', fontWeight: 700 }}>{hasWeights ? 'Weighted Total' : 'Total'}</td>
+            {hasWeights && <td />}
             {totals.map((t, i) => (
-              <td key={i} style={{ padding: '0.2rem', textAlign: 'center', fontWeight: 600, color: i === datum ? 'var(--text-secondary)' : t.net > 0 ? 'var(--success)' : t.net < 0 ? 'var(--danger)' : 'var(--text-primary)' }}>
-                {i === datum ? '—' : `+${t.plus} / ${t.minus} = ${t.net}`}
+              <td key={i} style={{ padding: '0.2rem', textAlign: 'center', fontWeight: 700, color: i === datum ? 'var(--text-secondary)' : i === best ? 'var(--success)' : t.weighted > 0 ? 'var(--success)' : t.weighted < 0 ? 'var(--danger)' : 'var(--text-primary)' }}>
+                {i === datum ? '—' : hasWeights ? t.weighted.toFixed(2) : t.unweighted}
               </td>
             ))}
           </tr>
@@ -450,7 +503,7 @@ function PughMatrixWidget() {
 
 // ─── Pairwise Comparison Weighting ───
 
-function PairwiseWeightingWidget() {
+function PairwiseWeightingWidget({ onWeightsChanged }: { onWeightsChanged?: (weights: Record<string, number>) => void }) {
   const [criteria, setCriteria] = useState<string[]>(['Mass', 'Power', 'Cost', 'TRL'])
   const [comparisons, setComparisons] = useState<Record<string, number>>({})
   const [newCrit, setNewCrit] = useState('')
@@ -477,6 +530,11 @@ function PairwiseWeightingWidget() {
   })
   const totalRaw = weights.reduce((s, w) => s + Math.max(w.rawScore, 0), 0) || 1
   const normalizedWeights = weights.map(w => ({ ...w, weight: Math.max(w.rawScore, 0) / totalRaw }))
+
+  // Notify parent of weight changes
+  const weightMap = Object.fromEntries(normalizedWeights.map(w => [w.criterion, w.weight]))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useMemo(() => { onWeightsChanged?.(weightMap) }, [JSON.stringify(weightMap)])
 
   // Generate pairs
   const pairs: Array<[string, string]> = []

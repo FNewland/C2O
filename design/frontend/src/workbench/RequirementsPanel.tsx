@@ -263,18 +263,37 @@ export function RequirementsPanel() {
                     <option value="violated">Violated</option>
                   </select>
 
-                  {/* Traceability badge */}
+                  {/* Traceability badge — click to link/unlink */}
                   {req.derived_from_requirement_id ? (
-                    <span style={{ fontSize: '0.5rem', padding: '0.05rem 0.2rem', borderRadius: '2px', background: 'rgba(16,185,129,0.15)', color: 'var(--success)', fontWeight: 600, flexShrink: 0 }}
-                      title={`Derived from ${req.derived_from_requirement_id}`}>
-                      ↑ traced
-                    </span>
-                  ) : req.level !== 'mission' ? (
-                    <span style={{ fontSize: '0.5rem', padding: '0.05rem 0.2rem', borderRadius: '2px', background: 'rgba(245,158,11,0.15)', color: 'var(--warning)', fontWeight: 600, flexShrink: 0 }}
-                      title="Not derived from a parent requirement">
-                      orphan
-                    </span>
-                  ) : null}
+                    <button style={{ fontSize: '0.5rem', padding: '0.05rem 0.2rem', borderRadius: '2px', background: 'rgba(16,185,129,0.15)', color: 'var(--success)', fontWeight: 600, flexShrink: 0, border: 'none', cursor: 'pointer' }}
+                      title={`Derived from ${req.derived_from_requirement_id} — click to change`}
+                      onClick={() => {
+                        const parentCode = prompt('Enter parent requirement code to link to (or leave empty to unlink):')
+                        if (parentCode === null) return
+                        const parentReq = parentCode ? allRequirements.find((r: any) => r.code === parentCode) : null
+                        fetch(`${API}/requirements/${req.id}`, {
+                          method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ derived_from_requirement_id: parentReq?.id || null }),
+                        }).then(() => qc.invalidateQueries({ queryKey: ['requirements', studyId] }))
+                      }}>
+                      ↑ {allRequirements.find((r: any) => r.id === req.derived_from_requirement_id)?.code || 'traced'}
+                    </button>
+                  ) : (
+                    <button style={{ fontSize: '0.5rem', padding: '0.05rem 0.2rem', borderRadius: '2px', background: req.level !== 'mission' ? 'rgba(245,158,11,0.15)' : 'rgba(59,130,246,0.1)', color: req.level !== 'mission' ? 'var(--warning)' : 'var(--accent)', fontWeight: 600, flexShrink: 0, border: 'none', cursor: 'pointer' }}
+                      title="Click to link to a parent requirement"
+                      onClick={() => {
+                        const parentCode = prompt('Enter parent requirement code to derive from:')
+                        if (!parentCode) return
+                        const parentReq = allRequirements.find((r: any) => r.code === parentCode)
+                        if (!parentReq) { alert(`Requirement "${parentCode}" not found`); return }
+                        fetch(`${API}/requirements/${req.id}`, {
+                          method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ derived_from_requirement_id: parentReq.id }),
+                        }).then(() => qc.invalidateQueries({ queryKey: ['requirements', studyId] }))
+                      }}>
+                      {req.level !== 'mission' ? 'orphan — link ↑' : 'link ↑'}
+                    </button>
+                  )}
 
                   <button onClick={() => startDerive(req)} title="Flow down — derive a child requirement"
                     style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--info)', fontSize: '0.6rem', flexShrink: 0 }}>

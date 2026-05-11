@@ -330,20 +330,36 @@ async def compute_budget(element_id: str, budget_type: str) -> dict:
         if alloc["budget_type"] == budget_type:
             child_allocations[alloc["element_id"]] = alloc["allocation_value"]
 
-    # Sum children (also recursively sum grandchildren for elements with no direct value)
+    # Recursive rollup helper: sum leaf (component) values through the tree
+    def _rollup(eid: str) -> float:
+        """Recursively sum property values from leaf elements (components)."""
+        total = 0.0
+        has_children = False
+        for ch in _elements.values():
+            if ch.get("parent_id") == eid and not ch.get("deleted_at"):
+                has_children = True
+                total += _rollup(ch["id"])
+        if not has_children:
+            # Leaf element — use its direct value
+            el = _elements.get(eid)
+            if el:
+                total = (el.get(prop) or 0) * el.get("quantity", 1)
+        return total
+
+    # Sum children — actuals come from recursive rollup of components
     lines = []
     total_nominal = 0
     for e in _elements.values():
         if e.get("parent_id") == element_id and not e.get("deleted_at"):
             qty = e.get("quantity", 1)
-            per_unit = e.get(prop) or 0
 
-            # If this element has no direct value, sum its own children (recursive rollup)
-            if per_unit == 0:
-                for gc in _elements.values():
-                    if gc.get("parent_id") == e["id"] and not gc.get("deleted_at"):
-                        gc_val = (gc.get(prop) or 0) * gc.get("quantity", 1)
-                        per_unit += gc_val
+            # For components (leaf), use direct value
+            # For systems/subsystems, recursively roll up from their children
+            if e.get("element_type") == "component":
+                per_unit = e.get(prop) or 0
+            else:
+                # Recursive rollup from descendants
+                per_unit = _rollup(e["id"]) / qty if qty > 0 else 0
 
             val_total = per_unit * qty
             margin = e.get("margin_percent", 20) / 100

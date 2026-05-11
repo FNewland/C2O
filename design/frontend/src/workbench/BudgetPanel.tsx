@@ -93,6 +93,25 @@ export function BudgetPanel() {
         )}
       </div>
 
+      {/* Auto-allocate from current values */}
+      {budget?.lines?.some((l: any) => l.nominal > 0 && l.allocation == null) && (
+        <button onClick={async () => {
+          for (const line of budget.lines) {
+            if (line.nominal > 0 && line.allocation == null) {
+              // Set allocation to actual + 20% margin
+              const alloc = Math.round(line.with_margin * 1.1 * 100) / 100
+              await setAllocation(line.element_id, alloc)
+            }
+          }
+        }} style={{
+          marginBottom: '0.4rem', padding: '0.2rem 0.5rem', fontSize: '0.65rem', fontWeight: 600,
+          borderRadius: '3px', background: 'rgba(59,130,246,0.15)', color: 'var(--accent)',
+          border: '1px solid var(--accent)', cursor: 'pointer',
+        }}>
+          Auto-allocate from current values (+10% margin)
+        </button>
+      )}
+
       {/* Parent allocation row */}
       <div style={{
         display: 'flex', gap: '0.75rem', alignItems: 'center', marginBottom: '0.5rem',
