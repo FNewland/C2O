@@ -317,6 +317,27 @@ async def compute_budget(element_id: str, budget_type: str) -> dict:
     if not prop:
         raise HTTPException(400, f"Unknown budget type: {budget_type}")
 
+    # ── Constellation awareness: walk up the parent chain to find
+    #    the highest ancestor with quantity > 1.  When present, budget
+    #    values are reported *per spacecraft* so the user sees what one
+    #    satellite costs, not the whole constellation total.
+    def _find_constellation_qty(eid: str) -> int:
+        """Walk up parent_id chain; return the product of all ancestor
+        quantities > 1 (constellation multiplier).  Returns 1 when the
+        element is not inside a constellation."""
+        qty = 1
+        cur = _elements.get(eid)
+        while cur:
+            eq = cur.get("quantity", 1)
+            if eq > 1:
+                qty *= eq
+            pid = cur.get("parent_id")
+            cur = _elements.get(pid) if pid else None
+        return qty
+
+    constellation_qty = _find_constellation_qty(element_id)
+    is_constellation = constellation_qty > 1
+
     # Find allocation if set
     allocation = None
     for alloc in _budget_allocations:
@@ -330,9 +351,16 @@ async def compute_budget(element_id: str, budget_type: str) -> dict:
         if alloc["budget_type"] == budget_type:
             child_allocations[alloc["element_id"]] = alloc["allocation_value"]
 
-    # Recursive rollup helper: sum leaf (component) values through the tree
+    # Recursive rollup helper: sum leaf (component) values through the tree.
+    # Returns the total for ONE spacecraft (divides by the constellation
+    # ancestor quantity, not by the child's own quantity).
     def _rollup(eid: str) -> float:
-        """Recursively sum property values from leaf elements (components)."""
+        """Recursively sum property values from leaf elements (components).
+
+        The returned value is the *per-spacecraft* total: leaf values are
+        multiplied by their own quantity (units within the subsystem) but
+        NOT by any constellation-level quantity from an ancestor.
+        """
         total = 0.0
         has_children = False
         for ch in _elements.values():
@@ -340,10 +368,10 @@ async def compute_budget(element_id: str, budget_type: str) -> dict:
                 has_children = True
                 total += _rollup(ch["id"])
         if not has_children:
-            # Leaf element — use its direct value
-            el = _elements.get(eid)
-            if el:
-                total = (el.get(prop) or 0) * el.get("quantity", 1)
+            # Leaf element — use its direct value * local quantity
+            leaf = _elements.get(eid)
+            if leaf:
+                total = (leaf.get(prop) or 0) * leaf.get("quantity", 1)
         return total
 
     # Sum children — actuals come from recursive rollup of components
@@ -358,7 +386,9 @@ async def compute_budget(element_id: str, budget_type: str) -> dict:
             if e.get("element_type") == "component":
                 per_unit = e.get(prop) or 0
             else:
-                # Recursive rollup from descendants
+                # Recursive rollup from descendants — _rollup already
+                # returns per-spacecraft values, so divide by the CHILD's
+                # own quantity to get the per-unit value for that child.
                 per_unit = _rollup(e["id"]) / qty if qty > 0 else 0
 
             val_total = per_unit * qty
@@ -369,7 +399,7 @@ async def compute_budget(element_id: str, budget_type: str) -> dict:
             # For allocation: if set on this element, it's the total allocation
             # Per-instance allocation = total allocation / quantity
             alloc_per_unit = round(child_alloc / qty, 3) if child_alloc and qty > 1 else child_alloc
-            lines.append({
+            line: dict[str, Any] = {
                 "element_id": e["id"],
                 "name": e["name"],
                 "per_unit": round(per_unit, 3),
@@ -379,17 +409,24 @@ async def compute_budget(element_id: str, budget_type: str) -> dict:
                 "quantity": qty,
                 "allocation": child_alloc,
                 "allocation_per_unit": alloc_per_unit,
-            })
+            }
+            lines.append(line)
 
     total_with_margin = sum(l["with_margin"] for l in lines)
-    remaining = (allocation - total_with_margin) if allocation else None
-    margin_pct = ((allocation - total_with_margin) / allocation * 100) if allocation and allocation > 0 else None
+
+    # Allocation is per-spacecraft when inside a constellation
+    allocation_per_sc = round(allocation / constellation_qty, 3) if allocation and is_constellation else allocation
+    effective_alloc = allocation_per_sc if is_constellation else allocation
+
+    remaining = (effective_alloc - total_with_margin) if effective_alloc else None
+    margin_pct = ((effective_alloc - total_with_margin) / effective_alloc * 100) if effective_alloc and effective_alloc > 0 else None
     status = "green" if (margin_pct and margin_pct > 20) else "amber" if (margin_pct and margin_pct > 0) else "red" if margin_pct is not None else "undefined"
 
-    return {
+    result: dict[str, Any] = {
         "element_id": element_id,
         "element_name": el["name"],
         "budget_type": budget_type,
+        "context": "per_spacecraft" if is_constellation else "total",
         "allocation": allocation,
         "unit": prop_map[budget_type].split("_")[-1] if "_" in prop else "",
         "sum_nominal": round(total_nominal, 3),
@@ -399,6 +436,17 @@ async def compute_budget(element_id: str, budget_type: str) -> dict:
         "status": status,
         "lines": lines,
     }
+
+    # Add constellation-specific fields when applicable
+    if is_constellation:
+        result["constellation_quantity"] = constellation_qty
+        result["per_spacecraft_nominal"] = round(total_nominal, 3)
+        result["per_spacecraft_with_margin"] = round(total_with_margin, 3)
+        result["total_nominal"] = round(total_nominal * constellation_qty, 3)
+        result["total_with_margin"] = round(total_with_margin * constellation_qty, 3)
+        result["allocation_per_spacecraft"] = allocation_per_sc
+
+    return result
 
 
 @router.post("/elements/{element_id}/allocations")

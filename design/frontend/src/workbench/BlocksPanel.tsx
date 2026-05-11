@@ -436,6 +436,9 @@ export function BlocksPanel() {
         </button>
       )}
 
+      {/* Element properties editor (Tier C data capture for exports) */}
+      <ElementProperties studyId={studyId} focusElementId={focusElementId} allElements={allElements} />
+
       {/* Design Tools (constellation orbit, ground station config) */}
       <DesignTools />
 
@@ -626,6 +629,113 @@ const PRESETS_BY_LEVEL: Record<number, Array<{ id: string; name: string; descrip
   ],
   3: [],
   4: [],
+}
+
+// ─── Element Properties Editor (Tier C data capture) ───
+
+const PROPERTY_FIELDS: Record<string, Array<{ key: string; label: string; type: 'text' | 'number' | 'select'; options?: string[] }>> = {
+  payload: [
+    { key: 'gsd_m', label: 'GSD (m)', type: 'number' },
+    { key: 'fov_deg', label: 'FOV (deg)', type: 'number' },
+    { key: 'spectral_bands', label: 'Spectral bands', type: 'text' },
+    { key: 'shutter_control', label: 'Shutter control', type: 'select', options: ['yes', 'no', 'N/A'] },
+    { key: 'data_format', label: 'Data format', type: 'text' },
+  ],
+  ttc: [
+    { key: 'rf_band', label: 'RF band', type: 'select', options: ['UHF', 'S-band', 'X-band', 'Ka-band', 'L-band'] },
+    { key: 'tx_power_w', label: 'TX power (W)', type: 'number' },
+    { key: 'data_rate_kbps', label: 'Data rate (kbps)', type: 'number' },
+    { key: 'encryption', label: 'Encryption', type: 'select', options: ['none', 'AES-128', 'AES-256', 'custom'] },
+    { key: 'modulation', label: 'Modulation', type: 'text' },
+  ],
+  power: [
+    { key: 'bus_voltage_v', label: 'Bus voltage (V)', type: 'number' },
+    { key: 'sa_type', label: 'Solar array type', type: 'select', options: ['body-mounted', 'single-deploy', 'dual-deploy', 'tracking'] },
+    { key: 'battery_chemistry', label: 'Battery chemistry', type: 'select', options: ['Li-ion', 'LiPo', 'LiFePO4', 'NiMH'] },
+  ],
+  thermal: [
+    { key: 'temp_min_c', label: 'Min temp (°C)', type: 'number' },
+    { key: 'temp_max_c', label: 'Max temp (°C)', type: 'number' },
+    { key: 'coating', label: 'Surface coating', type: 'select', options: ['white paint', 'black anodize', 'gold', 'MLI', 'OSR'] },
+  ],
+  aocs: [
+    { key: 'pointing_accuracy_deg', label: 'Pointing accuracy (deg)', type: 'number' },
+    { key: 'pointing_knowledge_deg', label: 'Pointing knowledge (deg)', type: 'number' },
+    { key: 'slew_rate_deg_s', label: 'Slew rate (deg/s)', type: 'number' },
+  ],
+  propulsion: [
+    { key: 'isp_s', label: 'Isp (s)', type: 'number' },
+    { key: 'thrust_n', label: 'Thrust (N)', type: 'number' },
+    { key: 'propellant_type', label: 'Propellant', type: 'select', options: ['cold gas (N2)', 'cold gas (R236fa)', 'green monoprop', 'hydrazine', 'electric (Xe)', 'none'] },
+    { key: 'total_impulse_ns', label: 'Total impulse (Ns)', type: 'number' },
+  ],
+  structure: [
+    { key: 'form_factor', label: 'Form factor', type: 'select', options: ['1U', '1.5U', '2U', '3U', '6U', '12U', '16U', '27U', 'custom'] },
+    { key: 'material', label: 'Primary material', type: 'select', options: ['Al 6061-T6', 'Al 7075', 'CFRP', 'Ti-6Al-4V'] },
+    { key: 'deployables', label: 'Deployables', type: 'text' },
+  ],
+  ground: [
+    { key: 'latitude', label: 'Latitude (deg)', type: 'number' },
+    { key: 'longitude', label: 'Longitude (deg)', type: 'number' },
+    { key: 'antenna_diameter_m', label: 'Antenna diameter (m)', type: 'number' },
+    { key: 'min_elevation_deg', label: 'Min elevation (deg)', type: 'number' },
+    { key: 'bands', label: 'Bands', type: 'text' },
+  ],
+}
+
+function ElementProperties({ studyId, focusElementId, allElements }: { studyId: string | null; focusElementId: string | null; allElements: any[] }) {
+  const [expanded, setExpanded] = useState(false)
+  const qc = useQueryClient()
+
+  const focusElement = allElements.find((e: any) => e.id === focusElementId)
+  if (!focusElement) return null
+
+  const domain = focusElement.subsystem_domain || focusElement.element_type
+  const fields = PROPERTY_FIELDS[domain]
+  if (!fields || fields.length === 0) return null
+
+  const perf = focusElement.performance || {}
+
+  const updateProp = async (key: string, value: any) => {
+    const newPerf = { ...perf, [key]: value }
+    await fetch(`${API}/elements/${focusElement.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ performance: newPerf, version: focusElement.version }),
+    })
+    qc.invalidateQueries({ queryKey: ['elements', studyId] })
+  }
+
+  return (
+    <div style={{ marginTop: '0.5rem', borderTop: '1px solid var(--border)', paddingTop: '0.4rem' }}>
+      <button onClick={() => setExpanded(!expanded)} style={{
+        background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.68rem',
+        color: '#06b6d4', fontWeight: 600, padding: 0,
+      }}>
+        {expanded ? '▾' : '▸'} Properties: {focusElement.name}
+      </button>
+      {expanded && (
+        <div style={{ marginTop: '0.3rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.25rem' }}>
+          {fields.map(f => (
+            <div key={f.key} style={{ fontSize: '0.63rem' }}>
+              <label style={{ color: 'var(--text-secondary)', display: 'block', marginBottom: '0.1rem' }}>{f.label}:</label>
+              {f.type === 'select' ? (
+                <select value={perf[f.key] || ''} onChange={e => updateProp(f.key, e.target.value)}
+                  style={{ width: '100%', padding: '0.15rem 0.3rem', fontSize: '0.63rem', borderRadius: '3px', background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}>
+                  <option value="">—</option>
+                  {f.options?.map(o => <option key={o} value={o}>{o}</option>)}
+                </select>
+              ) : (
+                <input type={f.type} value={perf[f.key] ?? ''} onChange={e => updateProp(f.key, f.type === 'number' ? parseFloat(e.target.value) || null : e.target.value)}
+                  placeholder={f.label}
+                  style={{ width: '100%', padding: '0.15rem 0.3rem', fontSize: '0.63rem', borderRadius: '3px', background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)' }} />
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
 }
 
 // Suggested requirements moved to RequirementsPanel (suggestedReqs.ts)
