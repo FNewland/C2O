@@ -446,10 +446,14 @@ def compute_mission_trade(
     space_option = next((a for a in alts if a.category == "new_satellite"), None)
     free_option = next((a for a in alts if a.cost_type == "free" and a.meets_objectives), None)
 
+    # Check if any non-new-satellite alternative actually meets the objectives
+    commercial_viable = [a for a in alts if a.category != "new_satellite" and a.meets_objectives]
+
     if free_option and free_option.total_score >= (space_option.total_score if space_option else 0) * 0.9:
+        space_score = f"{space_option.total_score:.2f}" if space_option else "N/A"
         justification = (
             f"Free existing data ({free_option.name}) scores {free_option.total_score:.2f} vs "
-            f"new satellite at {space_option.total_score:.2f}. "
+            f"new satellite at {space_score}. "
             f"QUESTION: Why can't you use {free_option.name}? "
             f"If {free_option.revisit_days}-day revisit and {free_option.gsd_m}m GSD are sufficient, "
             f"a new satellite may not be justified."
@@ -462,14 +466,31 @@ def compute_mission_trade(
             f"{target_gsd_m}m GSD with {target_revisit_days}-day revisit."
         )
         space_justified = True
-    else:
+    elif not commercial_viable:
+        # No existing commercial service meets the requirements (e.g., lunar science,
+        # custom comms, unique spectrum needs)
+        justification = (
+            f"A dedicated mission is recommended — no existing commercial service meets your "
+            f"requirements. The highest-scoring existing alternative ({best.name}, "
+            f"score {best.total_score:.2f}) does not satisfy the mission objectives. "
+            f"A purpose-built spacecraft provides the control, customisation, and coverage needed."
+        )
+        space_justified = True
+    elif space_option:
         justification = (
             f"Best option: {best.name} (score {best.total_score:.2f}). "
-            f"A new satellite scores {space_option.total_score:.2f} if space_option is present. "
+            f"A new satellite scores {space_option.total_score:.2f}. "
             f"Consider whether the additional control and customisation of a dedicated mission "
             f"justifies the cost difference."
         )
-        space_justified = best.category in ("new_satellite",)
+        space_justified = False
+    else:
+        justification = (
+            f"Best option: {best.name} (score {best.total_score:.2f}). "
+            f"No dedicated satellite option was evaluated. Consider whether existing services "
+            f"meet your long-term needs."
+        )
+        space_justified = False
 
     return {
         "question": "Is space the right answer? What alternatives exist?",

@@ -44,6 +44,7 @@ class OrbitCandidate:
     # Coverage
     swath_km: float = 0.0
     revisit_days: float = 0.0
+    practical_revisit_days: float = 0.0
     latitude_coverage: str = ""
 
     # Resolution
@@ -100,16 +101,28 @@ def compute_orbit_trade(
 
     # ISS orbit
     candidates.append(OrbitCandidate(
-        name="ISS orbit (420 km, 51.6°)",
-        altitude_km=420, inclination_deg=51.6, orbit_type="iss",
+        name="ISS orbit (410 km, 51.6°)",
+        altitude_km=410, inclination_deg=51.6, orbit_type="iss",
     ))
 
-    # Equatorial LEO (if target is equatorial)
-    if target_latitude_band[0] >= -15 and target_latitude_band[1] <= 15:
-        candidates.append(OrbitCandidate(
-            name="Equatorial LEO 550 km",
-            altitude_km=550, inclination_deg=0, orbit_type="equatorial",
-        ))
+    # Equatorial LEO
+    candidates.append(OrbitCandidate(
+        name="Equatorial LEO (500 km, 0°)",
+        altitude_km=500, inclination_deg=0, orbit_type="equatorial",
+    ))
+
+    # Polar non-SSO
+    candidates.append(OrbitCandidate(
+        name="Polar non-SSO (500 km, 90°)",
+        altitude_km=500, inclination_deg=90, orbit_type="polar",
+    ))
+
+    # Mid-inclination (constellation coverage)
+    candidates.append(OrbitCandidate(
+        name="Mid-inclination (550 km, 53°)",
+        altitude_km=550, inclination_deg=53, orbit_type="mid_inc",
+        orbit_access_notes="Good for constellation coverage (Starlink-like inclination)",
+    ))
 
     # Compute properties for each
     for c in candidates:
@@ -168,11 +181,11 @@ def compute_orbit_trade(
         if is_sar:
             c.scores["coverage"] = min(1.0, c.contact_min_per_day / 30)
 
-        # Revisit score
-        if c.revisit_days <= target_revisit_days:
+        # Revisit score (use practical revisit with off-nadir pointing)
+        if c.practical_revisit_days <= target_revisit_days:
             c.scores["revisit"] = 1.0
         else:
-            c.scores["revisit"] = max(0, 1.0 - (c.revisit_days - target_revisit_days) / (target_revisit_days * 3))
+            c.scores["revisit"] = max(0, 1.0 - (c.practical_revisit_days - target_revisit_days) / (target_revisit_days * 3))
 
         # Lifetime score
         if c.natural_lifetime_years >= min_lifetime_years:
@@ -231,7 +244,8 @@ def compute_orbit_trade(
                 "achievable_gsd_m": round(c.achievable_gsd_m, 1),
                 "meets_gsd": c.achievable_gsd_m <= target_gsd_m,
                 "revisit_days": round(c.revisit_days, 1),
-                "meets_revisit": c.revisit_days <= target_revisit_days,
+                "practical_revisit_days": round(c.practical_revisit_days, 1),
+                "meets_revisit": c.practical_revisit_days <= target_revisit_days,
                 "eclipse_fraction": round(c.eclipse_fraction, 2),
                 "natural_lifetime_years": round(c.natural_lifetime_years, 1),
                 "compliant_25yr": c.compliant_25yr,
@@ -303,10 +317,17 @@ def _compute_orbit_properties(
     else:
         c.latitude_coverage = f"±{c.inclination_deg:.0f}° (equatorial band only)"
 
+    # Practical revisit with off-nadir pointing (±30°)
+    # Off-nadir pointing effectively widens the accessible swath by ~2-3x,
+    # reducing revisit time. At 500km, ±30° off-nadir gives ~580km access strip.
+    off_nadir_factor = 2.5  # swath overlap factor from ±30° pointing
+    c.practical_revisit_days = max(1.0, c.revisit_days / off_nadir_factor)
+
     # Check if target latitude band is covered
     max_lat = c.inclination_deg
     if lat_band[0] < -max_lat or lat_band[1] > max_lat:
         c.revisit_days = 999  # Can't reach target latitude
+        c.practical_revisit_days = 999
 
     # Orbital lifetime (simplified exponential atmosphere)
     from spacecdf_common.physics.debris import estimate_orbital_lifetime
@@ -339,6 +360,14 @@ def _compute_orbit_properties(
         c.launch_cost_keur = 500
         c.rideshare_available = False
         c.orbit_access_notes = "Equatorial orbit — limited rideshare, may need dedicated launcher from Kourou"
+    elif c.orbit_type == "polar":
+        c.launch_cost_keur = 220
+        c.rideshare_available = True
+        c.orbit_access_notes = "Polar non-SSO — similar access to SSO, slightly cheaper. No fixed LTAN."
+    elif c.orbit_type == "mid_inc":
+        c.launch_cost_keur = 180
+        c.rideshare_available = True
+        c.orbit_access_notes = "Mid-inclination — SpaceX Transporter or Falcon 9 rideshare. Good constellation orbit."
     else:
         c.launch_cost_keur = 250
         c.rideshare_available = True
@@ -369,10 +398,10 @@ def _build_recommendation(top3: list[OrbitCandidate], gsd: float, revisit: float
     else:
         parts.append(f"GSD: {best.achievable_gsd_m:.1f}m — does NOT meet {gsd}m target. Consider larger aperture or lower orbit.")
 
-    if best.revisit_days <= revisit:
-        parts.append(f"Revisit: {best.revisit_days:.1f} days (target: {revisit} days)")
+    if best.practical_revisit_days <= revisit:
+        parts.append(f"Practical revisit (±30° off-nadir): {best.practical_revisit_days:.1f} days (target: {revisit} days)")
     else:
-        parts.append(f"Revisit: {best.revisit_days:.1f} days — exceeds {revisit}-day target. Consider constellation or wider swath.")
+        parts.append(f"Practical revisit: {best.practical_revisit_days:.1f} days — exceeds {revisit}-day target. Consider constellation or wider swath.")
 
     if best.needs_propulsion_for_deorbit:
         parts.append(f"Orbit lifetime {best.natural_lifetime_years:.0f} years — needs propulsion for deorbit.")

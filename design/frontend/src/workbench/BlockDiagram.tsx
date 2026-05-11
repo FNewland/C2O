@@ -376,17 +376,23 @@ export function BlockDiagram() {
         }
       }).catch(() => {})
     } else {
-      // Element-to-element connection
+      // Element-to-element connection — ask for interface type
+      const ifaceType = prompt('Interface type?\n\n1. electrical\n2. data\n3. rf\n4. mechanical\n5. thermal\n\nEnter type or number:', 'data')
+      if (!ifaceType) return
+      const typeMap: Record<string, string> = { '1': 'electrical', '2': 'data', '3': 'rf', '4': 'mechanical', '5': 'thermal' }
+      const resolvedType = typeMap[ifaceType] || ifaceType
+      const label = prompt('Interface label (optional):', '') || ''
+
       fetch(`${API}/interfaces/?study_id=${studyId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: 'New Interface',
-          interface_type: 'data',
+          name: label || `${resolvedType} interface`,
+          interface_type: resolvedType,
           direction: 'bidirectional',
           from_element_id: source,
           to_element_id: target,
-          diagram_label: '',
+          diagram_label: label,
         }),
       }).then(r => {
         if (r.ok) {

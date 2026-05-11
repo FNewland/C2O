@@ -84,53 +84,85 @@ def compute_ground_segment_trade(
 
     alternatives: list[GroundSegmentAlternative] = []
 
+    # Compute realistic contact time per station based on orbit geometry.
+    # A polar station (78°N) sees every pass of a polar/SSO orbit (~4 passes/day, ~10 min each).
+    # For lower-inclination orbits, polar stations see fewer / shorter passes.
+    # Mid-latitude stations (~45-60°N) see more passes from mid-inclination orbits.
+    def _contact_min(station_lat: float, n_stations: int = 1) -> float:
+        """Estimate total contact min/day for n_stations at given latitude."""
+        from spacecdf_common.physics.orbit import estimate_contact_time_per_day
+        per_station_sec = estimate_contact_time_per_day(
+            orbit_altitude_km, station_lat, orbit_inclination_deg,
+        )
+        # Multiple stations in different longitudes add roughly linearly
+        # (diminishing returns if at similar longitudes)
+        total_sec = per_station_sec * n_stations * 0.85  # 15% overlap discount
+        return max(total_sec / 60, 0.5)  # At least 0.5 min if geometrically possible
+
     # --- Option 1: Single polar station (CubeSat default) ---
-    if is_polar:
-        contact_min = 4 * 10  # ~4 passes × 10 min each at Svalbard
-        dl_rate = _required_downlink_rate(data_volume_gb_per_day, contact_min * 60, margin=1.2)
+    contact_min_1 = _contact_min(78.0, 1)
+    if contact_min_1 >= 1.0:  # Only offer if station actually gets contact
+        dl_rate = _required_downlink_rate(data_volume_gb_per_day, contact_min_1 * 60, margin=1.2)
         band, tx_w, gain, mass, power = _rf_sizing(dl_rate, orbit_altitude_km, spacecraft_class)
         annual_cost = 12 * 8000  # KSAT Svalbard
+        polar_pros = ["Simple operations", "Proven for CubeSats", "High-latitude = long passes"]
+        polar_cons = ["Single point of failure"]
+        if not is_polar:
+            polar_cons.append(f"Only {contact_min_1:.0f} min/day contact for {orbit_inclination_deg:.0f}° orbit")
+        else:
+            polar_cons.extend(["Max 4 passes/day", "6-hour typical latency"])
         alternatives.append(GroundSegmentAlternative(
             name="Single polar station (KSAT Svalbard)",
-            description="One high-latitude station for SSO. Simple, proven, but limited contact time.",
+            description="One high-latitude station. Best for SSO/polar orbits; reduced contact for lower inclinations.",
             stations=["KSAT Svalbard (SvalSat)"],
-            total_contact_min_per_day=contact_min,
+            total_contact_min_per_day=contact_min_1,
             achievable_downlink_mbps=dl_rate / 1e6,
             data_downlinked_gb_per_day=data_volume_gb_per_day,
-            latency_hours=6.0,
+            latency_hours=6.0 if is_polar else 12.0,
             annual_cost_keur=annual_cost / 1000,
             requires_band=band, rf_tx_power_w=tx_w, rf_antenna_gain_dbi=gain,
             rf_mass_kg=mass, rf_power_w=power,
-            pros=["Simple operations", "Proven for CubeSats", "High-latitude = long passes"],
-            cons=["Max 4 passes/day", "6-hour typical latency", "Single point of failure"],
+            pros=polar_pros, cons=polar_cons,
             meets_data_need=True,
-            meets_latency_need=6.0 <= max_latency_hours,
+            meets_latency_need=(6.0 if is_polar else 12.0) <= max_latency_hours,
         ))
 
     # --- Option 2: Two-station network ---
-    contact_min_2 = 6 * 10  # ~6 passes across two stations
+    # Svalbard (78°N) + Inuvik (68°N) — both high-latitude
+    contact_min_2 = _contact_min(78.0, 1) + _contact_min(68.0, 1)
+    # For non-polar orbits, add a mid-latitude station instead of Inuvik
+    if not is_polar:
+        station_names_2 = ["KSAT Svalbard (SvalSat)", "KSAT Puertollano"]
+        contact_min_2 = _contact_min(78.0, 1) + _contact_min(38.7, 1)
+        desc_2 = "Polar + mid-latitude stations. Better coverage for non-polar orbits."
+        name_2 = "Two-station network (Svalbard + Puertollano)"
+    else:
+        station_names_2 = ["KSAT Svalbard (SvalSat)", "KSAT Inuvik"]
+        desc_2 = "Two polar stations for redundancy and more contact time."
+        name_2 = "Two-station network (Svalbard + Inuvik)"
     dl_rate_2 = _required_downlink_rate(data_volume_gb_per_day, contact_min_2 * 60, margin=1.2)
     band_2, tx_w_2, gain_2, mass_2, power_2 = _rf_sizing(dl_rate_2, orbit_altitude_km, spacecraft_class)
     annual_cost_2 = 12 * (8000 + 6000)
     alternatives.append(GroundSegmentAlternative(
-        name="Two-station network (Svalbard + Inuvik)",
-        description="Two polar stations for redundancy and more contact time.",
-        stations=["KSAT Svalbard (SvalSat)", "KSAT Inuvik"],
+        name=name_2,
+        description=desc_2,
+        stations=station_names_2,
         total_contact_min_per_day=contact_min_2,
         achievable_downlink_mbps=dl_rate_2 / 1e6,
         data_downlinked_gb_per_day=data_volume_gb_per_day,
-        latency_hours=4.0,
+        latency_hours=4.0 if is_polar else 6.0,
         annual_cost_keur=annual_cost_2 / 1000,
         requires_band=band_2, rf_tx_power_w=tx_w_2, rf_antenna_gain_dbi=gain_2,
         rf_mass_kg=mass_2, rf_power_w=power_2,
-        pros=["Redundancy", "4-hour latency", "More data capacity"],
+        pros=["Redundancy", "More data capacity", f"{contact_min_2:.0f} min/day contact"],
         cons=["Double ground ops cost", "Two station contracts to manage"],
         meets_data_need=True,
-        meets_latency_need=4.0 <= max_latency_hours,
+        meets_latency_need=(4.0 if is_polar else 6.0) <= max_latency_hours,
     ))
 
     # --- Option 3: Commercial cloud ground (AWS/Leaf Space) ---
-    contact_min_3 = 5 * 8
+    # AWS stations at mid-latitudes (Oregon 45.6°N, Stockholm 59.3°N)
+    contact_min_3 = _contact_min(45.6, 1) + _contact_min(59.3, 1)
     dl_rate_3 = _required_downlink_rate(data_volume_gb_per_day, contact_min_3 * 60, margin=1.3)
     band_3, tx_w_3, gain_3, mass_3, power_3 = _rf_sizing(dl_rate_3, orbit_altitude_km, spacecraft_class)
     annual_cost_3 = 12 * 5000
@@ -145,7 +177,8 @@ def compute_ground_segment_trade(
         annual_cost_keur=annual_cost_3 / 1000,
         requires_band=band_3, rf_tx_power_w=tx_w_3, rf_antenna_gain_dbi=gain_3,
         rf_mass_kg=mass_3, rf_power_w=power_3,
-        pros=["No station contract", "Global scalability", "API-driven scheduling"],
+        pros=["No station contract", "Global scalability", "API-driven scheduling",
+              f"{contact_min_3:.0f} min/day from mid-latitude stations"],
         cons=["Smaller antennas", "Less established for CubeSats", "Internet latency"],
         meets_data_need=True,
         meets_latency_need=5.0 <= max_latency_hours,

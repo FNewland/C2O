@@ -35,15 +35,21 @@ export function DecisionPanel() {
         Decision Support — Level {currentLevel}
       </div>
 
+      {/* Decision categorization — always shown */}
+      <DecisionCategorizer currentLevel={currentLevel} focusElement={focusElement} />
+
+      {/* Architecture trades driven by requirements */}
+      <ArchitectureTradeWidget currentLevel={currentLevel} focusElement={focusElement} />
+
       {/* Level 0: Mission-level decisions */}
       {currentLevel === 0 && <MissionTradeWidget studyId={studyId} />}
       {currentLevel === 0 && <OrbitTradeWidget studyId={studyId} />}
 
       {/* Level 1: System-level decisions */}
-      {currentLevel === 1 && isSpaceSegment && <ConstellationWidget studyId={studyId} />}
+      {(currentLevel === 1 || isSpaceSegment) && <ConstellationWidget studyId={studyId} />}
       {currentLevel === 1 && isSpaceSegment && <CostLearningCurveWidget />}
-      {currentLevel === 1 && isGroundSegment && <GroundTradeWidget studyId={studyId} />}
-      {currentLevel === 1 && <ContactScheduleWidget studyId={studyId} />}
+      {(currentLevel === 1 || isGroundSegment) && <GroundTradeWidget studyId={studyId} />}
+      {currentLevel >= 1 && <ContactScheduleWidget studyId={studyId} />}
 
       {/* Any level: Decision tools — weighting first, then scoring */}
       <PairwiseWeightingWidget />
@@ -354,12 +360,23 @@ function ContactScheduleWidget({ studyId }: { studyId: string | null }) {
 // ─── Pugh Matrix ───
 
 function PughMatrixWidget() {
-  const [criteria, setCriteria] = useState<string[]>(['Mass', 'Power', 'Cost', 'TRL', 'Risk'])
-  const [options, setOptions] = useState<string[]>(['Option A', 'Option B', 'Option C'])
-  const [datum, setDatum] = useState(0) // index of datum option
-  const [scores, setScores] = useState<Record<string, Record<string, number>>>({})
+  // Persist Pugh matrix state in localStorage
+  const loadSaved = () => {
+    try { const s = localStorage.getItem('spacecdf-pugh'); return s ? JSON.parse(s) : null } catch { return null }
+  }
+  const saved = loadSaved()
+  const [criteria, setCriteria] = useState<string[]>(saved?.criteria || ['Mass', 'Power', 'Cost', 'TRL', 'Risk'])
+  const [options, setOptions] = useState<string[]>(saved?.options || ['Option A', 'Option B', 'Option C'])
+  const [datum, setDatum] = useState(saved?.datum || 0)
+  const [scores, setScores] = useState<Record<string, Record<string, number>>>(saved?.scores || {})
   const [newCriterion, setNewCriterion] = useState('')
   const [newOption, setNewOption] = useState('')
+
+  // Auto-save on change
+  const saveState = useCallback(() => {
+    localStorage.setItem('spacecdf-pugh', JSON.stringify({ criteria, options, datum, scores }))
+  }, [criteria, options, datum, scores])
+  useState(() => { saveState() })
 
   const setScore = (opt: string, crit: string, val: number) => {
     setScores(prev => ({ ...prev, [opt]: { ...(prev[opt] || {}), [crit]: val } }))
@@ -557,6 +574,158 @@ function CostLearningCurveWidget() {
       <div style={{ fontSize: '0.55rem', color: 'var(--text-secondary)', textAlign: 'center' }}>
         Unit cost decreases with production experience (Wright learning curve)
       </div>
+    </ToolSection>
+  )
+}
+
+// ─── Shared components ───
+
+// ─── 3-Bin Decision Categorizer ───
+
+const DECISION_ITEMS_BY_LEVEL: Record<number, Array<{ item: string; category: 'obvious' | 'trade' | 'explore'; rationale: string }>> = {
+  0: [
+    { item: 'Orbit type (SSO for EO)', category: 'obvious', rationale: 'SSO is standard for EO; other types for comms/science' },
+    { item: 'Mission vs non-space alternative', category: 'trade', rationale: 'Commercial data may meet needs at lower cost — run mission trade' },
+    { item: 'Constellation vs single sat', category: 'trade', rationale: 'Revisit requirement drives this — run constellation sizing' },
+    { item: 'Ground station network', category: 'trade', rationale: 'Data volume and latency drive GS selection — run ground trade' },
+    { item: 'Launch vehicle', category: 'trade', rationale: 'Mass, orbit, cost, schedule constraints — compare options' },
+    { item: 'Regulatory regime', category: 'obvious', rationale: 'Driven by operator country and orbit — ISED/ITU for Canada' },
+  ],
+  1: [
+    { item: 'Spacecraft bus architecture', category: 'obvious', rationale: 'Standard subsystem decomposition for CubeSats' },
+    { item: 'Number of spacecraft', category: 'trade', rationale: 'Coverage, revisit, and cost trade-off' },
+    { item: 'Ground station locations', category: 'trade', rationale: 'Contact time, data throughput, redundancy trade' },
+    { item: 'Inter-satellite links', category: 'explore', rationale: 'Reduces ground dependency but adds mass/power/complexity' },
+    { item: 'Operations concept (autonomous vs manual)', category: 'explore', rationale: 'Drives staffing, software, ground segment design' },
+  ],
+  2: [
+    { item: 'AOCS architecture', category: 'trade', rationale: 'Pointing requirement drives 3-axis/spin/gravity-gradient — see arch trades' },
+    { item: 'EPS topology (MPPT vs DET)', category: 'trade', rationale: 'Power regulation approach trades efficiency vs complexity' },
+    { item: 'TTC frequency band', category: 'trade', rationale: 'UHF/S/X/Ka — data rate vs antenna size vs regulatory' },
+    { item: 'Thermal control (passive vs active)', category: 'obvious', rationale: 'CubeSats use passive (coatings + heaters); active only for extreme thermal' },
+    { item: 'Propulsion type', category: 'trade', rationale: 'Delta-V drives cold gas vs monoprop vs electric — run propulsion trade' },
+    { item: 'Structure form factor', category: 'obvious', rationale: 'Driven by payload volume and mass constraints' },
+  ],
+  3: [
+    { item: 'Component selection (COTS)', category: 'trade', rationale: 'Compare KB options by mass, power, cost, TRL — use equipment browser' },
+    { item: 'Redundancy approach', category: 'trade', rationale: 'Cold/warm/hot redundancy trades reliability vs mass/cost' },
+    { item: 'Custom hardware design', category: 'explore', rationale: 'When no COTS meets requirements — needs design space analysis' },
+  ],
+  4: [],
+}
+
+const BIN_COLORS = { obvious: '#10b981', trade: '#f59e0b', explore: '#8b5cf6' }
+const BIN_LABELS = { obvious: 'Obvious Choice', trade: 'Trade Study', explore: 'Design Space' }
+const BIN_ICONS = { obvious: '✓', trade: '⇄', explore: '?' }
+
+function DecisionCategorizer({ currentLevel, focusElement }: { currentLevel: number; focusElement: any }) {
+  const items = DECISION_ITEMS_BY_LEVEL[currentLevel] || []
+  if (items.length === 0) return null
+
+  const bins = { obvious: items.filter(i => i.category === 'obvious'), trade: items.filter(i => i.category === 'trade'), explore: items.filter(i => i.category === 'explore') }
+
+  return (
+    <ToolSection title="Decision Categorization" color="#06b6d4">
+      <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
+        Categorize decisions at this level: what's obvious, what needs a trade, what needs exploration.
+      </div>
+      <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '0.2rem' }}>
+        {(['obvious', 'trade', 'explore'] as const).map(bin => (
+          <div key={bin} style={{ flex: 1, fontSize: '0.55rem', textAlign: 'center', padding: '0.15rem', borderRadius: '3px', background: `${BIN_COLORS[bin]}15`, color: BIN_COLORS[bin], fontWeight: 700 }}>
+            {BIN_ICONS[bin]} {BIN_LABELS[bin]} ({bins[bin].length})
+          </div>
+        ))}
+      </div>
+      {items.map((item, i) => (
+        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', padding: '0.15rem 0.3rem', fontSize: '0.63rem', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: BIN_COLORS[item.category], flexShrink: 0 }} />
+          <span style={{ fontWeight: 500, flex: 1 }}>{item.item}</span>
+          <span style={{ color: 'var(--text-secondary)', fontSize: '0.55rem', maxWidth: 200 }}>{item.rationale}</span>
+        </div>
+      ))}
+    </ToolSection>
+  )
+}
+
+// ─── Architecture Trade Templates ───
+
+const ARCH_TRADES: Record<string, Array<{ name: string; driver: string; options: Array<{ name: string; when: string }> }>> = {
+  aocs: [
+    { name: 'AOCS Architecture', driver: 'Pointing accuracy requirement',
+      options: [
+        { name: '3-axis stabilized (reaction wheels + star tracker)', when: 'Pointing < 0.1° — EO, science, comms' },
+        { name: 'Spin-stabilized', when: 'Pointing 1-5° — simple missions, low cost' },
+        { name: 'Gravity gradient + magnetorquer', when: 'Pointing 5-10° — IoT, AIS, tech demo' },
+        { name: 'Momentum bias (1 wheel + magnetorquers)', when: 'Pointing 0.5-2° — moderate cost, good reliability' },
+      ],
+    },
+  ],
+  power: [
+    { name: 'EPS Architecture', driver: 'Power demand and eclipse duration',
+      options: [
+        { name: 'Body-mounted cells + Li-ion battery', when: '< 15W average — simple CubeSats' },
+        { name: 'Deployable panels + Li-ion', when: '15-80W — most 3U-6U missions' },
+        { name: 'Dual-deploy + high-capacity battery', when: '> 80W — 12U+ or high-power payloads' },
+        { name: 'RTG (radioisotope)', when: 'Deep space, no solar — lunar night, outer planets' },
+      ],
+    },
+  ],
+  ttc: [
+    { name: 'TTC Architecture', driver: 'Data rate and ground station infrastructure',
+      options: [
+        { name: 'UHF simplex (400 MHz)', when: '< 9.6 kbps — beacon, IoT, AIS' },
+        { name: 'UHF/VHF duplex', when: '< 100 kbps — command + low-rate telemetry' },
+        { name: 'S-band', when: '100 kbps - 2 Mbps — standard TT&C' },
+        { name: 'X-band downlink + S-band TT&C', when: '2-100 Mbps — EO payload data' },
+        { name: 'Ka-band', when: '> 100 Mbps — high-throughput, weather-dependent' },
+      ],
+    },
+  ],
+  propulsion: [
+    { name: 'Propulsion Architecture', driver: 'Total delta-V requirement',
+      options: [
+        { name: 'No propulsion (drag deorbit)', when: 'ΔV = 0, altitude < 600 km — natural decay' },
+        { name: 'Cold gas', when: 'ΔV < 10 m/s — attitude control, small maneuvers' },
+        { name: 'Green monopropellant', when: 'ΔV 10-200 m/s — orbit maintenance, deorbit' },
+        { name: 'Hall-effect electric', when: 'ΔV 100-2000 m/s, time available — orbit raising, station-keeping' },
+        { name: 'Bipropellant', when: 'ΔV > 500 m/s, time-critical — lunar transfer, fast maneuvers' },
+      ],
+    },
+  ],
+  thermal: [
+    { name: 'Thermal Architecture', driver: 'Internal dissipation and orbit environment',
+      options: [
+        { name: 'Passive (surface coatings + MLI)', when: '< 20W dissipation — most CubeSats' },
+        { name: 'Passive + heaters', when: 'Cold case concern — eclipse survival, battery protection' },
+        { name: 'Active (heat pipes + radiator)', when: '> 50W or tight temp control — large payloads' },
+        { name: 'Louvers', when: 'Variable dissipation — mode-dependent thermal load' },
+      ],
+    },
+  ],
+}
+
+function ArchitectureTradeWidget({ currentLevel, focusElement }: { currentLevel: number; focusElement: any }) {
+  const domain = focusElement?.subsystem_domain
+  const trades = domain ? (ARCH_TRADES[domain] || []) : (currentLevel === 2 ? Object.values(ARCH_TRADES).flat() : [])
+  if (trades.length === 0) return null
+
+  return (
+    <ToolSection title="Architecture Trades" color="#ec4899">
+      <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
+        Which architecture is right? The driving requirement determines the answer.
+      </div>
+      {trades.map((trade, i) => (
+        <div key={i} style={{ marginBottom: '0.4rem' }}>
+          <div style={{ fontWeight: 600, fontSize: '0.68rem', marginBottom: '0.1rem' }}>{trade.name}</div>
+          <div style={{ fontSize: '0.6rem', color: 'var(--warning)', marginBottom: '0.2rem' }}>Driver: {trade.driver}</div>
+          {trade.options.map((opt, j) => (
+            <div key={j} style={{ display: 'flex', gap: '0.3rem', padding: '0.1rem 0.3rem', fontSize: '0.6rem', borderLeft: '2px solid var(--border)', marginLeft: '0.3rem', marginBottom: '0.1rem' }}>
+              <span style={{ fontWeight: 500, minWidth: 120 }}>{opt.name}</span>
+              <span style={{ color: 'var(--text-secondary)' }}>→ {opt.when}</span>
+            </div>
+          ))}
+        </div>
+      ))}
     </ToolSection>
   )
 }

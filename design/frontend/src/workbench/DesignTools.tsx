@@ -58,13 +58,18 @@ export function DesignTools() {
   const isConstellation = (focusElement.quantity || 1) > 1 && focusElement.segment === 'space'
   const isGroundStation = focusElement.domain === 'ground' || focusElement.segment === 'ground'
     || focusElement.subsystem_domain === 'ground'
-  const isSpacecraft = (focusElement.element_type === 'system' || focusElement.element_type === 'subsystem')
-    && focusElement.segment === 'space'
+  const isSpacecraft = (focusElement.element_type === 'system' || focusElement.element_type === 'subsystem'
+    || focusElement.element_type === 'segment') && focusElement.segment === 'space'
 
-  if (!isConstellation && !isGroundStation && !isSpacecraft) return null
+  if (!isGroundStation && !isSpacecraft) return null
 
   return (
     <div style={{ marginTop: '0.5rem', borderTop: '1px solid var(--border)', paddingTop: '0.5rem' }}>
+      {/* Show what element we're configuring */}
+      <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
+        Configuring: <b style={{ color: 'var(--text-primary)' }}>{focusElement.name}</b>
+        <span style={{ marginLeft: '0.3rem' }}>({focusElement.element_type}, {focusElement.segment})</span>
+      </div>
       {(isConstellation || isSpacecraft) && (
         <OrbitTools elementId={focusElement.id} element={focusElement} version={focusElement.version} />
       )}

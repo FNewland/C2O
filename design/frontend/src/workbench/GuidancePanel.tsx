@@ -116,6 +116,72 @@ const LEVEL_GUIDANCE: Record<Level, { title: string; sessions: string[]; objecti
   },
 }
 
+interface Worksheet {
+  title: string
+  description: string
+  sections: Array<{ heading: string; content: string }>
+}
+
+const LEVEL_WORKSHEETS: Record<number, Worksheet[]> = {
+  0: [
+    { title: 'Mission Need Statement', description: 'Define problem, stakeholders, objectives, success criteria',
+      sections: [
+        { heading: 'Problem Statement', content: 'What problem does this mission solve?\n\n[Write here]' },
+        { heading: 'Stakeholders', content: 'Who benefits? Who funds? Who operates?\n\nStakeholder | Role | Needs | Priority\n---|---|---|---\n | | |' },
+        { heading: 'Mission Objectives', content: 'ID | Objective | Priority | Measurable Criterion\n---|---|---|---\nOBJ-001 | | |' },
+        { heading: 'Alternatives Considered', content: 'Option | Type | Pros | Cons | Feasibility\n---|---|---|---|---\n | | | |' },
+      ]
+    },
+    { title: 'Architecture Trade Study', description: 'Compare mission architecture options systematically',
+      sections: [
+        { heading: 'Trade Criteria', content: 'Criterion | Weight | Direction | Threshold\n---|---|---|---\nCost | | minimize |\nPerformance | | maximize |' },
+        { heading: 'Options', content: 'Option | Description | Pros | Cons\n---|---|---|---\n | | |' },
+        { heading: 'Scoring Matrix', content: '[Use the Pugh Matrix in the Decide tab]' },
+        { heading: 'Decision & Rationale', content: 'Selected option:\nRationale:\n' },
+      ]
+    },
+  ],
+  1: [
+    { title: 'System Requirements Derivation', description: 'Derive system requirements from mission requirements',
+      sections: [
+        { heading: 'Parent Requirement', content: 'MIS-XXX: [mission requirement text]' },
+        { heading: 'Derived System Requirements', content: 'ID | System | Text | V&V Method\n---|---|---|---\nSYS-001 | | |' },
+        { heading: 'Traceability Check', content: 'Does each system requirement trace to a mission requirement? [Y/N]' },
+      ]
+    },
+  ],
+  2: [
+    { title: 'Subsystem Design Worksheet', description: 'Define subsystem architecture and requirements',
+      sections: [
+        { heading: 'Subsystem', content: 'Name:\nDomain:\nDriving requirement:' },
+        { heading: 'Architecture Options', content: 'Option | Description | Mass | Power | Cost | TRL\n---|---|---|---|---|---\n | | | | |' },
+        { heading: 'Selected Architecture', content: 'Selection:\nRationale:' },
+        { heading: 'Interface Requirements', content: 'Interface | Type | To/From | Properties\n---|---|---|---\n | | |' },
+      ]
+    },
+  ],
+  3: [
+    { title: 'Equipment Selection Worksheet', description: 'Compare and select equipment from catalog',
+      sections: [
+        { heading: 'Subsystem', content: 'Name:\nBudget allocation: mass=__kg, power=__W, cost=__kEUR' },
+        { heading: 'Candidate Components', content: 'Component | Manufacturer | Mass | Power | Cost | TRL | Notes\n---|---|---|---|---|---|---\n | | | | | |' },
+        { heading: 'Selection', content: 'Selected:\nRationale:\nMargin remaining:' },
+      ]
+    },
+  ],
+  4: [],
+}
+
+function downloadWorksheet(ws: Worksheet) {
+  const md = `# ${ws.title}\n\n${ws.sections.map(s => `## ${s.heading}\n\n${s.content}\n`).join('\n')}`
+  const blob = new Blob([md], { type: 'text/markdown' })
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(blob)
+  a.download = `${ws.title.replace(/\s+/g, '_')}.md`
+  a.click()
+  URL.revokeObjectURL(a.href)
+}
+
 export function GuidancePanel({ onClose }: { onClose: () => void }) {
   const studyId = useUIStore(s => s.studyId)
   const currentLevel = useUIStore(s => s.currentLevel)
@@ -203,6 +269,26 @@ export function GuidancePanel({ onClose }: { onClose: () => void }) {
             }}>
               {t}
             </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Downloadable worksheets */}
+      <div style={{ borderTop: '1px solid var(--border)', paddingTop: '0.75rem', marginBottom: '0.75rem' }}>
+        <h3 style={{ fontSize: '0.8rem', color: '#ec4899', marginBottom: '0.3rem' }}>Worksheets</h3>
+        <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
+          Download worksheet templates for this level:
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+          {(LEVEL_WORKSHEETS[currentLevel] || []).map((ws, i) => (
+            <button key={i} onClick={() => downloadWorksheet(ws)} style={{
+              padding: '0.25rem 0.4rem', borderRadius: '3px', textAlign: 'left',
+              background: 'var(--bg-card)', border: '1px solid var(--border)',
+              color: 'var(--text-primary)', cursor: 'pointer', fontSize: '0.65rem',
+            }}>
+              <div style={{ fontWeight: 500 }}>{ws.title}</div>
+              <div style={{ fontSize: '0.55rem', color: 'var(--text-secondary)' }}>{ws.description}</div>
+            </button>
           ))}
         </div>
       </div>

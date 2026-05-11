@@ -263,6 +263,19 @@ export function RequirementsPanel() {
                     <option value="violated">Violated</option>
                   </select>
 
+                  {/* Traceability badge */}
+                  {req.derived_from_requirement_id ? (
+                    <span style={{ fontSize: '0.5rem', padding: '0.05rem 0.2rem', borderRadius: '2px', background: 'rgba(16,185,129,0.15)', color: 'var(--success)', fontWeight: 600, flexShrink: 0 }}
+                      title={`Derived from ${req.derived_from_requirement_id}`}>
+                      ↑ traced
+                    </span>
+                  ) : req.level !== 'mission' ? (
+                    <span style={{ fontSize: '0.5rem', padding: '0.05rem 0.2rem', borderRadius: '2px', background: 'rgba(245,158,11,0.15)', color: 'var(--warning)', fontWeight: 600, flexShrink: 0 }}
+                      title="Not derived from a parent requirement">
+                      orphan
+                    </span>
+                  ) : null}
+
                   <button onClick={() => startDerive(req)} title="Flow down — derive a child requirement"
                     style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--info)', fontSize: '0.6rem', flexShrink: 0 }}>
                     flow ↓

@@ -130,7 +130,7 @@ class TestOrbitTradePhysics:
         assert len(candidates) >= 2, f"Should have multiple orbit candidates"
 
         # Find SSO candidate
-        sso = [c for c in candidates if "sso" in c.get("orbit_type", "").lower() or "sso" in c.get("name", "").lower()]
+        sso = [c for c in candidates if c.get("orbit_type", "").lower() == "sso"]
         assert len(sso) >= 1, f"Should have SSO orbit candidate"
 
         for s in sso:
