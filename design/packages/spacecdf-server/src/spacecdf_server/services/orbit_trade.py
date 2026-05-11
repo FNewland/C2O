@@ -33,7 +33,8 @@ class OrbitCandidate:
     name: str
     altitude_km: float
     inclination_deg: float
-    orbit_type: str  # sso, polar, equatorial, iss, meo
+    orbit_type: str  # sso, polar, equatorial, iss, meo, molniya, tundra, gto, lunar
+    eccentricity: float = 0.0
 
     # Computed properties
     period_min: float = 0.0
@@ -46,6 +47,7 @@ class OrbitCandidate:
     revisit_days: float = 0.0
     practical_revisit_days: float = 0.0
     latitude_coverage: str = ""
+    coverage_description: str = ""
 
     # Resolution
     achievable_gsd_m: float = 0.0
@@ -124,6 +126,48 @@ def compute_orbit_trade(
         orbit_access_notes="Good for constellation coverage (Starlink-like inclination)",
     ))
 
+    # --- Non-LEO / HEO candidates (conditionally added) ---
+    add_heo = max_cost_meur > 5 or target_revisit_days < 0.1
+    add_lunar = mission_type == "lunar"
+
+    if add_heo or target_revisit_days < 0.1:
+        candidates.append(OrbitCandidate(
+            name="Molniya (39 000 km apogee, 63.4°)",
+            altitude_km=39000, inclination_deg=63.4, orbit_type="molniya",
+            eccentricity=0.74,
+            orbit_access_notes="Highly elliptical — dedicated launch (Soyuz/Proton heritage). "
+                               "Two-satellite constellation gives continuous high-latitude coverage.",
+            coverage_description="8 h dwell over 50–90°N per orbit",
+        ))
+        candidates.append(OrbitCandidate(
+            name="Tundra (42 164 km, 63.4°)",
+            altitude_km=42164, inclination_deg=63.4, orbit_type="tundra",
+            eccentricity=0.26,
+            orbit_access_notes="Semi-synchronous HEO — dedicated launch required. "
+                               "Single satellite covers northern hemisphere 12 h/day.",
+            coverage_description="12 h continuous dwell over northern hemisphere per orbit",
+        ))
+
+    if add_heo:
+        candidates.append(OrbitCandidate(
+            name="GTO (35 786 km apogee, 28.5°)",
+            altitude_km=35786, inclination_deg=28.5, orbit_type="gto",
+            eccentricity=0.73,
+            orbit_access_notes="Geostationary Transfer Orbit — rideshare as secondary payload "
+                               "on GTO launches (Falcon 9, Ariane 6). Not a final orbit.",
+            coverage_description="Transit orbit; ~2 h near apogee per 10.5 h period",
+        ))
+
+    if add_lunar:
+        candidates.append(OrbitCandidate(
+            name="Lunar transfer (~384 400 km)",
+            altitude_km=384400, inclination_deg=28.5, orbit_type="lunar",
+            eccentricity=0.97,
+            orbit_access_notes="Trans-lunar injection — dedicated launch or Artemis rideshare. "
+                               "Requires deep-space navigation and comms.",
+            coverage_description="Ballistic transfer; 4–5 day transit to lunar orbit",
+        ))
+
     # Compute properties for each
     for c in candidates:
         _compute_orbit_properties(c, aperture_m, wavelength_um,
@@ -162,10 +206,16 @@ def compute_orbit_trade(
             "data": 0.10,
         }
 
+    heo_types = {"molniya", "tundra", "gto", "lunar"}
+
     for c in candidates:
+        is_heo_candidate = c.orbit_type in heo_types
+
         # GSD score (optical missions only)
         if is_optical:
-            if c.achievable_gsd_m <= target_gsd_m:
+            if is_heo_candidate:
+                c.scores["gsd"] = 0.0  # HEO cannot do Earth imaging
+            elif c.achievable_gsd_m <= target_gsd_m:
                 c.scores["gsd"] = 1.0
             else:
                 c.scores["gsd"] = max(0, 1.0 - (c.achievable_gsd_m - target_gsd_m) / target_gsd_m)
@@ -240,9 +290,10 @@ def compute_orbit_trade(
                 "altitude_km": c.altitude_km,
                 "inclination_deg": round(c.inclination_deg, 1),
                 "orbit_type": c.orbit_type,
+                "eccentricity": c.eccentricity,
                 "period_min": round(c.period_min, 1),
                 "achievable_gsd_m": round(c.achievable_gsd_m, 1),
-                "meets_gsd": c.achievable_gsd_m <= target_gsd_m,
+                "meets_gsd": c.achievable_gsd_m <= target_gsd_m and c.achievable_gsd_m > 0,
                 "revisit_days": round(c.revisit_days, 1),
                 "practical_revisit_days": round(c.practical_revisit_days, 1),
                 "meets_revisit": c.practical_revisit_days <= target_revisit_days,
@@ -255,6 +306,7 @@ def compute_orbit_trade(
                 "max_data_gb_per_day": round(c.max_data_gb_per_day, 1),
                 "launch_cost_keur": round(c.launch_cost_keur, 0),
                 "rideshare_available": c.rideshare_available,
+                "coverage_description": c.coverage_description,
                 "scores": {k: round(v, 2) for k, v in c.scores.items()},
                 "total_score": round(c.total_score, 3),
             }
@@ -272,15 +324,88 @@ def _compute_orbit_properties(
     downlink_mbps: float,
 ) -> None:
     """Compute all derived properties for an orbit candidate."""
+    HEO_TYPES = {"molniya", "tundra", "gto", "lunar"}
+    is_heo = c.orbit_type in HEO_TYPES
+
     a = (R_EARTH_KM + c.altitude_km) * 1000  # metres
     c.velocity_ms = math.sqrt(MU_EARTH / a)
     c.period_min = 2 * math.pi * math.sqrt(a**3 / MU_EARTH) / 60
     c.orbits_per_day = 1440 / c.period_min
 
+    # --- HEO / non-LEO orbits: override with known values ---
+    if c.orbit_type == "molniya":
+        c.period_min = 720.0          # 12 h
+        c.orbits_per_day = 2.0
+    elif c.orbit_type == "tundra":
+        c.period_min = 1436.0         # ~24 h
+        c.orbits_per_day = 1.0
+    elif c.orbit_type == "gto":
+        c.period_min = 630.0
+        c.orbits_per_day = 1440 / 630
+    elif c.orbit_type == "lunar":
+        c.period_min = 655 * 60       # 27.3 days in minutes
+        c.orbits_per_day = 1440 / c.period_min
+
     # Eclipse fraction (cylindrical shadow, beta=0 worst case)
-    rho = math.asin(R_EARTH_KM * 1000 / a)
-    c.eclipse_fraction = rho / math.pi
-    c.eclipse_fraction = min(c.eclipse_fraction, 0.40)
+    if is_heo:
+        # HEO spends most time near apogee far from Earth shadow
+        c.eclipse_fraction = 0.05 if c.orbit_type != "lunar" else 0.0
+    else:
+        rho = math.asin(R_EARTH_KM * 1000 / a)
+        c.eclipse_fraction = rho / math.pi
+        c.eclipse_fraction = min(c.eclipse_fraction, 0.40)
+
+    if is_heo:
+        # GSD / imaging not applicable for HEO comms/science orbits
+        c.achievable_gsd_m = 0.0
+        c.diffraction_limited_gsd_m = 0.0
+        c.swath_km = 0.0
+        c.revisit_days = 0.0
+        c.practical_revisit_days = 0.0
+
+        # Latitude coverage descriptions
+        if c.orbit_type in ("molniya", "tundra"):
+            c.latitude_coverage = "High-latitude (50–90°N dwell)"
+        elif c.orbit_type == "gto":
+            c.latitude_coverage = f"±{c.inclination_deg:.0f}° (transit orbit)"
+        elif c.orbit_type == "lunar":
+            c.latitude_coverage = "Cislunar"
+
+        # Skip debris compliance for HEO — not meaningful
+        c.natural_lifetime_years = 999
+        c.compliant_25yr = True
+        c.compliant_5yr = False
+        c.needs_propulsion_for_deorbit = False
+
+        # Contact time — HEO has long visibility from high-latitude stations
+        if c.orbit_type == "molniya":
+            c.contact_min_per_day = 480   # ~8 h/day visible from Arctic
+        elif c.orbit_type == "tundra":
+            c.contact_min_per_day = 720   # ~12 h/day
+        elif c.orbit_type == "gto":
+            c.contact_min_per_day = 120   # Apogee visibility windows
+        elif c.orbit_type == "lunar":
+            c.contact_min_per_day = 480   # DSN-like tracking
+
+        c.max_data_gb_per_day = downlink_mbps * c.contact_min_per_day * 60 / 8 / 1000
+
+        # Launch cost for HEO orbits
+        if c.orbit_type == "molniya":
+            c.launch_cost_keur = 5000
+            c.rideshare_available = False
+        elif c.orbit_type == "tundra":
+            c.launch_cost_keur = 6000
+            c.rideshare_available = False
+        elif c.orbit_type == "gto":
+            c.launch_cost_keur = 1500
+            c.rideshare_available = True  # GTO rideshare is common
+        elif c.orbit_type == "lunar":
+            c.launch_cost_keur = 15000
+            c.rideshare_available = False
+
+        return  # Done — skip LEO-specific computations below
+
+    # --- LEO-specific computations ---
 
     # GSD from aperture and altitude
     wl = wavelength_um * 1e-6
@@ -295,11 +420,7 @@ def _compute_orbit_properties(
     # Swath width (assuming 5000 pixel detector)
     c.swath_km = 5000 * c.achievable_gsd_m / 1000
 
-    # Revisit time (for a single satellite in polar/SSO orbit)
-    # Each orbit, the ground track shifts west by (360° / orbits_per_day) × cos(inclination).
-    # At the equator, the inter-orbit spacing is Earth_circumference / orbits_per_day.
-    # Revisit = inter_orbit_spacing / swath_width (number of days to fill the gap).
-    # At higher latitudes, tracks converge so revisit improves.
+    # Revisit time — repeat ground track period (for reference)
     target_lat = (lat_band[0] + lat_band[1]) / 2
     lat_circumference_km = 2 * math.pi * R_EARTH_KM * math.cos(math.radians(target_lat))
     inter_orbit_km = lat_circumference_km / max(c.orbits_per_day, 1)
@@ -317,11 +438,18 @@ def _compute_orbit_properties(
     else:
         c.latitude_coverage = f"±{c.inclination_deg:.0f}° (equatorial band only)"
 
-    # Practical revisit with off-nadir pointing (±30°)
-    # Off-nadir pointing effectively widens the accessible swath by ~2-3x,
-    # reducing revisit time. At 500km, ±30° off-nadir gives ~580km access strip.
-    off_nadir_factor = 2.5  # swath overlap factor from ±30° pointing
-    c.practical_revisit_days = max(1.0, c.revisit_days / off_nadir_factor)
+    # Practical revisit — swath-based calculation for single satellite
+    # strips_per_day = orbits_per_day * swath_km / circumference_at_latitude
+    # practical_revisit = 1 / strips_per_day
+    equator_circumference_km = 2 * math.pi * R_EARTH_KM
+    if c.swath_km > 0:
+        strips_per_day = c.orbits_per_day * c.swath_km / equator_circumference_km
+        if strips_per_day > 0:
+            c.practical_revisit_days = max(1.0, 1.0 / strips_per_day)
+        else:
+            c.practical_revisit_days = 999
+    else:
+        c.practical_revisit_days = 999
 
     # Check if target latitude band is covered
     max_lat = c.inclination_deg

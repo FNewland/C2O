@@ -172,7 +172,31 @@ const LEVEL_WORKSHEETS: Record<number, Worksheet[]> = {
   4: [],
 }
 
-function downloadWorksheet(ws: Worksheet) {
+async function downloadWorksheet(ws: Worksheet) {
+  // Try branded DOCX from backend first
+  const templateId = ws.title.toLowerCase().includes('mission need') ? 'mission_need'
+    : ws.title.toLowerCase().includes('trade') ? 'trade_study'
+    : ws.title.toLowerCase().includes('requirement') ? 'requirements'
+    : ws.title.toLowerCase().includes('subsystem') ? 'subsystem_design'
+    : ws.title.toLowerCase().includes('equipment') ? 'equipment_selection'
+    : null
+
+  if (templateId) {
+    try {
+      const res = await fetch(`/api/exports/worksheet/${templateId}`, { method: 'POST' })
+      if (res.ok) {
+        const blob = await res.blob()
+        const a = document.createElement('a')
+        a.href = URL.createObjectURL(blob)
+        a.download = `SpaceCDF_Worksheet_${templateId}.docx`
+        a.click()
+        URL.revokeObjectURL(a.href)
+        return
+      }
+    } catch { /* fall back to markdown */ }
+  }
+
+  // Fallback: Markdown
   const md = `# ${ws.title}\n\n${ws.sections.map(s => `## ${s.heading}\n\n${s.content}\n`).join('\n')}`
   const blob = new Blob([md], { type: 'text/markdown' })
   const a = document.createElement('a')

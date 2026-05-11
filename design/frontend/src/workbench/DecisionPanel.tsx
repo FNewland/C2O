@@ -416,8 +416,10 @@ function PughMatrixWidget({ weights, criteria, onCriteriaChanged }: { weights?: 
   const [newCriterion, setNewCriterion] = useState('')
   const [newOption, setNewOption] = useState('')
 
+  const sid = useUIStore(s => s.studyId)
   const saveState = useCallback(() => {
-    localStorage.setItem('spacecdf-pugh', JSON.stringify({ criteria, options, datum, scores }))
+    const state = { criteria, options, datum, scores }
+    localStorage.setItem('spacecdf-pugh', JSON.stringify(state))
   }, [criteria, options, datum, scores])
   useState(() => { saveState() })
 

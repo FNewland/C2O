@@ -25,7 +25,7 @@ const REQ_STATUS_COLORS: Record<string, string> = {
 
 export function VVPanel() {
   const studyId = useUIStore(s => s.studyId)
-  const [activeSection, setActiveSection] = useState<'budget' | 'reqs' | 'gates' | 'fmeca' | 'trace'>('budget')
+  const [activeSection, setActiveSection] = useState<'budget' | 'reqs' | 'gates' | 'fmeca' | 'trace' | 'risks'>('budget')
 
   const { data: allElements = [] } = useQuery({
     queryKey: ['elements', studyId],
@@ -45,6 +45,7 @@ export function VVPanel() {
     { id: 'gates' as const, label: 'Review Gates', color: '#3b82f6' },
     { id: 'fmeca' as const, label: 'FMECA', color: '#ef4444' },
     { id: 'trace' as const, label: 'Traceability', color: '#10b981' },
+    { id: 'risks' as const, label: 'Risk Register', color: '#f43f5e' },
   ]
 
   return (
@@ -70,6 +71,7 @@ export function VVPanel() {
         {activeSection === 'gates' && <ReviewGates studyId={studyId} />}
         {activeSection === 'fmeca' && <FMECASummary studyId={studyId} />}
         {activeSection === 'trace' && <BudgetTraceability studyId={studyId} />}
+        {activeSection === 'risks' && <RiskRegister studyId={studyId} />}
       </div>
     </div>
   )
@@ -403,6 +405,194 @@ function BudgetTraceability({ studyId }: { studyId: string | null }) {
             </div>
           )}
         </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Helpers ───
+
+// ─── Risk Register ───
+
+interface Risk {
+  id: string; description: string; category: string
+  likelihood: number; consequence: number; rpn: number
+  mitigation: string; owner: string; status: string
+}
+
+const RISK_CATEGORIES = ['Technical', 'Schedule', 'Cost', 'Programmatic', 'Safety', 'Regulatory']
+const L_LABELS = ['', 'Rare', 'Unlikely', 'Possible', 'Likely', 'Almost Certain']
+const C_LABELS = ['', 'Negligible', 'Minor', 'Moderate', 'Major', 'Catastrophic']
+
+function RiskRegister({ studyId }: { studyId: string | null }) {
+  const storageKey = `spacecdf-risks-${studyId}`
+  const loadRisks = (): Risk[] => { try { return JSON.parse(localStorage.getItem(storageKey) || '[]') } catch { return [] } }
+  const [risks, setRisks] = useState<Risk[]>(loadRisks)
+  const [showAdd, setShowAdd] = useState(false)
+  const [newDesc, setNewDesc] = useState('')
+  const [newCat, setNewCat] = useState('Technical')
+  const [newL, setNewL] = useState(3)
+  const [newC, setNewC] = useState(3)
+  const [newMit, setNewMit] = useState('')
+  const [newOwner, setNewOwner] = useState('')
+
+  const save = (r: Risk[]) => { setRisks(r); localStorage.setItem(storageKey, JSON.stringify(r)) }
+
+  const addRisk = () => {
+    if (!newDesc) return
+    const r: Risk = {
+      id: `RSK-${String(risks.length + 1).padStart(3, '0')}`,
+      description: newDesc, category: newCat,
+      likelihood: newL, consequence: newC, rpn: newL * newC,
+      mitigation: newMit, owner: newOwner, status: 'open',
+    }
+    save([...risks, r])
+    setNewDesc(''); setNewMit(''); setNewOwner(''); setShowAdd(false)
+  }
+
+  const updateRisk = (idx: number, field: string, value: any) => {
+    const updated = [...risks]
+    ;(updated[idx] as any)[field] = value
+    if (field === 'likelihood' || field === 'consequence') {
+      updated[idx].rpn = updated[idx].likelihood * updated[idx].consequence
+    }
+    save(updated)
+  }
+
+  const riskColor = (rpn: number) => rpn >= 15 ? 'var(--danger)' : rpn >= 8 ? 'var(--warning)' : 'var(--success)'
+
+  // Stats
+  const critical = risks.filter(r => r.rpn >= 15).length
+  const high = risks.filter(r => r.rpn >= 8 && r.rpn < 15).length
+  const open = risks.filter(r => r.status === 'open').length
+
+  return (
+    <div>
+      <h3 style={{ fontSize: '0.85rem', marginBottom: '0.3rem' }}>Risk Register</h3>
+
+      <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '0.5rem', fontSize: '0.68rem' }}>
+        <span>Total: <b>{risks.length}</b></span>
+        <span style={{ color: 'var(--danger)' }}>Critical: <b>{critical}</b></span>
+        <span style={{ color: 'var(--warning)' }}>High: <b>{high}</b></span>
+        <span>Open: <b>{open}</b></span>
+      </div>
+
+      {/* Risk matrix heatmap (5×5) */}
+      <div style={{ marginBottom: '0.5rem' }}>
+        <div style={{ fontSize: '0.55rem', color: 'var(--text-secondary)', marginBottom: '0.2rem' }}>Likelihood × Consequence Matrix:</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '40px repeat(5, 1fr)', gap: 1, fontSize: '0.5rem' }}>
+          <div />
+          {C_LABELS.slice(1).map(c => <div key={c} style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: '0.1rem' }}>{c}</div>)}
+          {[5, 4, 3, 2, 1].map(l => (
+            <>
+              <div key={`l${l}`} style={{ textAlign: 'right', paddingRight: '0.2rem', color: 'var(--text-secondary)' }}>{L_LABELS[l]}</div>
+              {[1, 2, 3, 4, 5].map(c => {
+                const rpn = l * c
+                const count = risks.filter(r => r.likelihood === l && r.consequence === c).length
+                return (
+                  <div key={`${l}-${c}`} style={{
+                    textAlign: 'center', padding: '0.1rem', borderRadius: '2px',
+                    background: rpn >= 15 ? 'rgba(239,68,68,0.3)' : rpn >= 8 ? 'rgba(245,158,11,0.3)' : 'rgba(16,185,129,0.15)',
+                    color: count > 0 ? 'var(--text-primary)' : 'var(--text-secondary)',
+                    fontWeight: count > 0 ? 700 : 400,
+                  }}>
+                    {count > 0 ? count : rpn}
+                  </div>
+                )
+              })}
+            </>
+          ))}
+        </div>
+      </div>
+
+      {/* Risk table */}
+      {risks.length > 0 && (
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.65rem', marginBottom: '0.5rem' }}>
+          <thead>
+            <tr style={{ borderBottom: '1px solid var(--border)' }}>
+              <th style={thL}>ID</th><th style={thL}>Description</th><th style={thC}>Cat</th>
+              <th style={thC}>L</th><th style={thC}>C</th><th style={thC}>RPN</th>
+              <th style={thL}>Mitigation</th><th style={thL}>Owner</th><th style={thC}>Status</th>
+              <th style={thC}></th>
+            </tr>
+          </thead>
+          <tbody>
+            {risks.map((r, i) => (
+              <tr key={r.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                <td style={{ padding: '0.2rem 0.3rem', fontFamily: 'monospace', color: riskColor(r.rpn) }}>{r.id}</td>
+                <td style={{ padding: '0.2rem 0.3rem', maxWidth: 200 }}>{r.description}</td>
+                <td style={{ padding: '0.2rem 0.3rem', textAlign: 'center', fontSize: '0.55rem' }}>{r.category}</td>
+                <td style={{ padding: '0.2rem 0.3rem', textAlign: 'center' }}>
+                  <select value={r.likelihood} onChange={e => updateRisk(i, 'likelihood', parseInt(e.target.value))}
+                    style={{ width: 30, fontSize: '0.6rem', background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}>
+                    {[1,2,3,4,5].map(v => <option key={v} value={v}>{v}</option>)}
+                  </select>
+                </td>
+                <td style={{ padding: '0.2rem 0.3rem', textAlign: 'center' }}>
+                  <select value={r.consequence} onChange={e => updateRisk(i, 'consequence', parseInt(e.target.value))}
+                    style={{ width: 30, fontSize: '0.6rem', background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}>
+                    {[1,2,3,4,5].map(v => <option key={v} value={v}>{v}</option>)}
+                  </select>
+                </td>
+                <td style={{ padding: '0.2rem 0.3rem', textAlign: 'center', fontWeight: 700, color: riskColor(r.rpn) }}>{r.rpn}</td>
+                <td style={{ padding: '0.2rem 0.3rem', fontSize: '0.6rem' }}>{r.mitigation}</td>
+                <td style={{ padding: '0.2rem 0.3rem', fontSize: '0.6rem' }}>{r.owner}</td>
+                <td style={{ padding: '0.2rem 0.3rem', textAlign: 'center' }}>
+                  <select value={r.status} onChange={e => updateRisk(i, 'status', e.target.value)}
+                    style={{ fontSize: '0.55rem', background: 'var(--bg-primary)', border: '1px solid var(--border)', color: r.status === 'closed' ? 'var(--success)' : 'var(--text-primary)' }}>
+                    <option value="open">Open</option><option value="mitigating">Mitigating</option>
+                    <option value="accepted">Accepted</option><option value="closed">Closed</option>
+                  </select>
+                </td>
+                <td style={{ padding: '0.2rem' }}>
+                  <button onClick={() => save(risks.filter((_, j) => j !== i))}
+                    style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', fontSize: '0.7rem' }}>×</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+
+      {/* Add risk form */}
+      {showAdd ? (
+        <div style={{ padding: '0.4rem', background: 'var(--bg-card)', borderRadius: '4px', border: '1px solid var(--danger)', display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+          <div style={{ display: 'flex', gap: '0.3rem' }}>
+            <select value={newCat} onChange={e => setNewCat(e.target.value)}
+              style={{ padding: '0.2rem', fontSize: '0.65rem', borderRadius: '3px', background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}>
+              {RISK_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+            <input value={newDesc} onChange={e => setNewDesc(e.target.value)} placeholder="Risk description" autoFocus
+              style={{ flex: 1, padding: '0.2rem 0.3rem', fontSize: '0.65rem', borderRadius: '3px', background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)' }} />
+          </div>
+          <div style={{ display: 'flex', gap: '0.3rem', alignItems: 'center', fontSize: '0.63rem' }}>
+            <span style={{ color: 'var(--text-secondary)' }}>L:</span>
+            <select value={newL} onChange={e => setNewL(parseInt(e.target.value))}
+              style={{ width: 40, fontSize: '0.6rem', background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}>
+              {[1,2,3,4,5].map(v => <option key={v} value={v}>{v} — {L_LABELS[v]}</option>)}
+            </select>
+            <span style={{ color: 'var(--text-secondary)' }}>C:</span>
+            <select value={newC} onChange={e => setNewC(parseInt(e.target.value))}
+              style={{ width: 40, fontSize: '0.6rem', background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}>
+              {[1,2,3,4,5].map(v => <option key={v} value={v}>{v} — {C_LABELS[v]}</option>)}
+            </select>
+            <span style={{ fontWeight: 700, color: riskColor(newL * newC) }}>RPN: {newL * newC}</span>
+          </div>
+          <div style={{ display: 'flex', gap: '0.3rem' }}>
+            <input value={newMit} onChange={e => setNewMit(e.target.value)} placeholder="Mitigation action"
+              style={{ flex: 1, padding: '0.2rem 0.3rem', fontSize: '0.65rem', borderRadius: '3px', background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)' }} />
+            <input value={newOwner} onChange={e => setNewOwner(e.target.value)} placeholder="Owner"
+              style={{ width: 80, padding: '0.2rem 0.3rem', fontSize: '0.65rem', borderRadius: '3px', background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)' }} />
+          </div>
+          <div style={{ display: 'flex', gap: '0.3rem' }}>
+            <button onClick={addRisk} disabled={!newDesc} style={{ padding: '0.2rem 0.5rem', fontSize: '0.65rem', fontWeight: 600, borderRadius: '3px', background: 'var(--danger)', color: 'white', border: 'none', cursor: 'pointer' }}>Add Risk</button>
+            <button onClick={() => setShowAdd(false)} style={{ padding: '0.2rem 0.5rem', fontSize: '0.65rem', borderRadius: '3px', background: 'var(--bg-secondary)', color: 'var(--text-secondary)', border: 'none', cursor: 'pointer' }}>Cancel</button>
+          </div>
+        </div>
+      ) : (
+        <button onClick={() => setShowAdd(true)} style={{ padding: '0.3rem 0.6rem', fontSize: '0.68rem', fontWeight: 600, borderRadius: '4px', background: 'var(--danger)', color: 'white', border: 'none', cursor: 'pointer' }}>
+          + Add Risk
+        </button>
       )}
     </div>
   )

@@ -168,6 +168,17 @@ function GroundStationTools({ elementId, element, version }: { elementId: string
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ performance: newPerf, version }),
     })
+    // Propagate location to child antenna/subsystem elements
+    if (studyId) {
+      const allEls: any[] = qc.getQueryData(['elements', studyId]) || []
+      for (const child of allEls.filter((e: any) => e.parent_id === elementId)) {
+        const childPerf = { ...(child.performance || {}), latitude: loc.lat, longitude: loc.lon, location: loc.name }
+        fetch(`${API}/elements/${child.id}`, {
+          method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ performance: childPerf, version: child.version }),
+        }).catch(() => {})
+      }
+    }
     qc.invalidateQueries({ queryKey: ['elements', studyId] })
   }, [elementId, perf, version, qc, studyId])
 
