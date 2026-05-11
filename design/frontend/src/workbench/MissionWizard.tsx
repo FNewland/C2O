@@ -92,11 +92,16 @@ export function MissionWizard() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          target_gsd_m: 5, target_revisit_days: 3,
-          target_coverage: 'regional', target_latency_hours: 24,
-          require_data_ownership: true,
+          // Derive trade parameters from mission type
+          target_gsd_m: ['earth_observation'].includes(missionType) ? 5 : 0,
+          target_revisit_days: ['earth_observation'].includes(missionType) ? 3 : ['communications'].includes(missionType) ? 0 : 1,
+          target_coverage: ['communications', 'navigation'].includes(missionType) ? 'global' : 'regional',
+          target_latency_hours: ['communications'].includes(missionType) ? 0.1 : ['earth_observation'].includes(missionType) ? 6 : 24,
+          require_data_ownership: ['science_planetary', 'lunar', 'technology_demo'].includes(missionType),
+          require_scheduling_control: ['science_planetary', 'lunar', 'technology_demo'].includes(missionType),
           max_annual_budget_keur: 2000,
-          mission_type: missionType, num_spacecraft: 1,
+          mission_type: missionType,
+          num_spacecraft: ['communications', 'navigation'].includes(missionType) ? 4 : 1,
         }),
       })
       if (res.ok) setTradeResult(await res.json())

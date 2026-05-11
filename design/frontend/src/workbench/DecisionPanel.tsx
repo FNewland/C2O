@@ -26,6 +26,7 @@ export function DecisionPanel() {
   })
 
   const [pairwiseWeights, setPairwiseWeights] = useState<Record<string, number>>({})
+  const [sharedCriteria, setSharedCriteria] = useState<string[]>(['Mass', 'Power', 'Cost', 'TRL', 'Risk'])
 
   const focusElement = allElements.find((e: any) => e.id === focusElementId)
   const isSpaceSegment = focusElement?.segment === 'space'
@@ -54,8 +55,8 @@ export function DecisionPanel() {
       {currentLevel >= 1 && <ContactScheduleWidget studyId={studyId} />}
 
       {/* Any level: Decision tools — weighting first, then scoring */}
-      <PairwiseWeightingWidget onWeightsChanged={setPairwiseWeights} />
-      <PughMatrixWidget weights={pairwiseWeights} />
+      <PairwiseWeightingWidget onWeightsChanged={setPairwiseWeights} criteria={sharedCriteria} onCriteriaChanged={setSharedCriteria} />
+      <PughMatrixWidget weights={pairwiseWeights} criteria={sharedCriteria} onCriteriaChanged={setSharedCriteria} />
     </div>
   )
 }
@@ -406,10 +407,9 @@ function ContactScheduleWidget({ studyId }: { studyId: string | null }) {
 
 // ─── Pugh Matrix ───
 
-function PughMatrixWidget({ weights }: { weights?: Record<string, number> }) {
+function PughMatrixWidget({ weights, criteria, onCriteriaChanged }: { weights?: Record<string, number>; criteria: string[]; onCriteriaChanged: (c: string[]) => void }) {
   const loadSaved = () => { try { const s = localStorage.getItem('spacecdf-pugh'); return s ? JSON.parse(s) : null } catch { return null } }
   const saved = loadSaved()
-  const [criteria, setCriteria] = useState<string[]>(saved?.criteria || ['Mass', 'Power', 'Cost', 'TRL', 'Risk'])
   const [options, setOptions] = useState<string[]>(saved?.options || ['Option A', 'Option B', 'Option C'])
   const [datum, setDatum] = useState(saved?.datum || 0)
   const [scores, setScores] = useState<Record<string, Record<string, number>>>(saved?.scores || {})
@@ -493,7 +493,7 @@ function PughMatrixWidget({ weights }: { weights?: Record<string, number> }) {
 
       <div style={{ display: 'flex', gap: '0.2rem', flexWrap: 'wrap' }}>
         <input value={newCriterion} onChange={e => setNewCriterion(e.target.value)} placeholder="+ criterion" style={{ ...inputStyle, width: 80 }}
-          onKeyDown={e => { if (e.key === 'Enter' && newCriterion) { setCriteria(p => [...p, newCriterion]); setNewCriterion('') } }} />
+          onKeyDown={e => { if (e.key === 'Enter' && newCriterion) { onCriteriaChanged([...criteria, newCriterion]); setNewCriterion('') } }} />
         <input value={newOption} onChange={e => setNewOption(e.target.value)} placeholder="+ option" style={{ ...inputStyle, width: 80 }}
           onKeyDown={e => { if (e.key === 'Enter' && newOption) { setOptions(p => [...p, newOption]); setNewOption('') } }} />
       </div>
@@ -503,8 +503,11 @@ function PughMatrixWidget({ weights }: { weights?: Record<string, number> }) {
 
 // ─── Pairwise Comparison Weighting ───
 
-function PairwiseWeightingWidget({ onWeightsChanged }: { onWeightsChanged?: (weights: Record<string, number>) => void }) {
-  const [criteria, setCriteria] = useState<string[]>(['Mass', 'Power', 'Cost', 'TRL'])
+function PairwiseWeightingWidget({ onWeightsChanged, criteria, onCriteriaChanged }: {
+  onWeightsChanged?: (weights: Record<string, number>) => void
+  criteria: string[]
+  onCriteriaChanged: (c: string[]) => void
+}) {
   const [comparisons, setComparisons] = useState<Record<string, number>>({})
   const [newCrit, setNewCrit] = useState('')
 
@@ -578,7 +581,7 @@ function PairwiseWeightingWidget({ onWeightsChanged }: { onWeightsChanged?: (wei
 
       <input value={newCrit} onChange={e => setNewCrit(e.target.value)} placeholder="+ criterion"
         style={{ ...inputStyle, marginTop: '0.3rem', width: 100 }}
-        onKeyDown={e => { if (e.key === 'Enter' && newCrit) { setCriteria(p => [...p, newCrit]); setNewCrit('') } }} />
+        onKeyDown={e => { if (e.key === 'Enter' && newCrit) { onCriteriaChanged([...criteria, newCrit]); setNewCrit('') } }} />
     </ToolSection>
   )
 }

@@ -10,7 +10,7 @@
  * The top-level allocation on the parent constrains the total.
  * Per-child allocations break the parent allocation down.
  */
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useUIStore } from '../stores/uiStore'
 
@@ -39,6 +39,18 @@ export function BudgetPanel() {
     enabled: !!studyId,
   })
   const targetId = focusElementId || allElements.find((e: any) => !e.parent_id)?.id
+
+  // Detect constellation context: if an ancestor has quantity > 1, show per-unit values
+  const constellationQty = useMemo(() => {
+    if (!focusElementId) return 1
+    let current = allElements.find((e: any) => e.id === focusElementId)
+    while (current) {
+      if ((current.quantity || 1) > 1) return current.quantity
+      current = current.parent_id ? allElements.find((e: any) => e.id === current.parent_id) : null
+    }
+    return 1
+  }, [focusElementId, allElements])
+  const isConstellation = constellationQty > 1
 
   // Fetch budget
   const { data: budget, refetch: refetchBudget } = useQuery({
@@ -117,7 +129,9 @@ export function BudgetPanel() {
         display: 'flex', gap: '0.75rem', alignItems: 'center', marginBottom: '0.5rem',
         padding: '0.4rem 0.5rem', background: 'var(--bg-card)', borderRadius: '4px', border: '1px solid var(--border)',
       }}>
-        <span style={{ fontWeight: 600, fontSize: '0.72rem' }}>{budget?.element_name || 'Parent'} Total:</span>
+        <span style={{ fontWeight: 600, fontSize: '0.72rem' }}>
+          {budget?.element_name || 'Parent'} {isConstellation ? `(per spacecraft, ×${constellationQty} in constellation)` : 'Total'}:
+        </span>
         <span style={{ color: 'var(--text-secondary)', fontSize: '0.68rem' }}>Allocation:</span>
         <AllocationInput currentValue={parentAlloc} onSet={v => setAllocation(targetId, v)} unit={bt.unit} />
         <span style={{ color: 'var(--text-secondary)', fontSize: '0.68rem' }}>
