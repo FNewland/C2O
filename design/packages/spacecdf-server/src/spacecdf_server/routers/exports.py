@@ -6,6 +6,8 @@ documents, and flight software architecture from a design study.
 from __future__ import annotations
 
 import io
+import math
+import re
 
 from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import JSONResponse, StreamingResponse
@@ -84,14 +86,580 @@ def _read_orbit_params(study) -> dict:
     }
 
 
+# ─── Helpers: FSW enrichment from study data ───
+
+def _derive_state_machine(study) -> dict:
+    """Derive FSW state machine from ConOps modes."""
+    states = []
+    transitions = []
+    conops = getattr(study, "conops", None)
+    if not conops:
+        return {"states": [], "transitions": []}
+
+    modes = getattr(conops, "modes", [])
+    for m in modes:
+        mode_name = m.name if hasattr(m, "name") else str(m)
+        mode_type = m.mode_type.value if hasattr(m, "mode_type") and hasattr(m.mode_type, "value") else ""
+        states.append({
+            "name": mode_name,
+            "mode_type": mode_type,
+            "is_critical": getattr(m, "is_critical", False),
+            "power_w": getattr(m, "power_w", 0.0),
+        })
+
+    # Standard transitions: any mode can reach Safe, Safe can reach any
+    mode_names = [s["name"] for s in states]
+    safe_name = next((n for n in mode_names if "safe" in n.lower()), mode_names[0] if mode_names else "Safe")
+
+    for name in mode_names:
+        if name != safe_name:
+            transitions.append({
+                "from": name, "to": safe_name,
+                "trigger": f"fault_detected OR cmd_go_safe",
+                "priority": "critical",
+            })
+            transitions.append({
+                "from": safe_name, "to": name,
+                "trigger": f"cmd_enter_{re.sub(r'[^a-z0-9]', '_', name.lower())}",
+                "priority": "nominal",
+            })
+
+    # Sequential transitions between non-safe modes
+    non_safe = [n for n in mode_names if n != safe_name]
+    for i in range(len(non_safe) - 1):
+        transitions.append({
+            "from": non_safe[i], "to": non_safe[i + 1],
+            "trigger": f"mode_complete_{re.sub(r'[^a-z0-9]', '_', non_safe[i].lower())}",
+            "priority": "nominal",
+        })
+
+    return {"states": states, "transitions": transitions}
+
+
+def _derive_task_list(elements: list[dict]) -> list[dict]:
+    """Derive FSW task list from element tree — one task per subsystem domain."""
+    domain_priorities = {
+        "eps": ("eps_manager", 2, 1000),
+        "power": ("power_manager", 2, 1000),
+        "aocs": ("aocs_controller", 1, 100),
+        "ttc": ("ttc_handler", 3, 5000),
+        "obc": ("obc_supervisor", 1, 500),
+        "obdh": ("obdh_manager", 2, 1000),
+        "payload": ("payload_controller", 5, 10000),
+        "thermal": ("thermal_monitor", 6, 30000),
+        "propulsion": ("propulsion_manager", 4, 5000),
+        "structure": ("structure_monitor", 8, 60000),
+        "structures": ("structure_monitor", 8, 60000),
+    }
+    seen_domains: set[str] = set()
+    tasks = []
+    for e in elements:
+        domain = e.get("subsystem_domain", "")
+        if not domain or domain in seen_domains:
+            continue
+        if e.get("segment") != "space":
+            continue
+        seen_domains.add(domain)
+        task_name, priority, period = domain_priorities.get(
+            domain, (f"{domain}_handler", 7, 10000)
+        )
+        tasks.append({
+            "task_name": task_name,
+            "subsystem_domain": domain,
+            "priority": priority,
+            "period_ms": period,
+            "stack_size_bytes": 4096,
+        })
+    # Always include watchdog and housekeeping
+    tasks.append({"task_name": "watchdog", "subsystem_domain": "system",
+                  "priority": 0, "period_ms": 100, "stack_size_bytes": 1024})
+    tasks.append({"task_name": "housekeeping_collector", "subsystem_domain": "system",
+                  "priority": 9, "period_ms": 10000, "stack_size_bytes": 2048})
+    return sorted(tasks, key=lambda t: t["priority"])
+
+
+def _derive_memory_map(elements: list[dict]) -> dict:
+    """Estimate OBC memory map from component count. 512KB typical CubeSat."""
+    space_components = [e for e in elements if e.get("segment") == "space"
+                        and e.get("element_type") == "component"]
+    component_count = len(space_components)
+    total_ram_kb = 512
+    os_kb = 128
+    fsw_kb = 256
+    data_buffer_kb = 128
+    # Scale FSW allocation slightly with component count
+    if component_count > 10:
+        fsw_kb = min(fsw_kb + (component_count - 10) * 4, 384)
+        data_buffer_kb = total_ram_kb - os_kb - fsw_kb
+
+    return {
+        "total_ram_kb": total_ram_kb,
+        "allocation": {
+            "os_kernel": {"size_kb": os_kb, "description": "RTOS kernel + drivers"},
+            "fsw_application": {"size_kb": fsw_kb, "description": "Flight software application code + state"},
+            "data_buffer": {"size_kb": data_buffer_kb, "description": "Telemetry / science data ring buffer"},
+        },
+        "component_count": component_count,
+        "estimated_task_count": component_count + 2,  # +watchdog +housekeeping
+    }
+
+
+def _derive_tm_tc(elements: list[dict], conops_modes: list) -> dict:
+    """Derive TM/TC packet definitions from elements and ConOps modes."""
+    # TM: one housekeeping packet per subsystem
+    tm_packets = []
+    seen_domains: set[str] = set()
+    apid = 1
+    for e in elements:
+        domain = e.get("subsystem_domain", "")
+        if not domain or domain in seen_domains or e.get("segment") != "space":
+            continue
+        seen_domains.add(domain)
+        tm_packets.append({
+            "apid": apid,
+            "name": f"TM_{domain.upper()}_HK",
+            "type": "housekeeping",
+            "subsystem": domain,
+            "rate_hz": 1.0 if domain in ("aocs", "eps", "obc") else 0.1,
+            "size_bytes": 64,
+        })
+        apid += 1
+
+    # TC: mode change commands + subsystem-specific
+    tc_packets = []
+    cmd_id = 1
+    for mode in conops_modes:
+        mode_name = mode.name if hasattr(mode, "name") else str(mode)
+        tc_packets.append({
+            "cmd_id": cmd_id,
+            "name": f"TC_ENTER_{re.sub(r'[^A-Z0-9]', '_', mode_name.upper())}",
+            "type": "mode_change",
+            "target_mode": mode_name,
+        })
+        cmd_id += 1
+    # Standard commands
+    for cmd_name, cmd_type in [
+        ("TC_RESET_OBC", "system"), ("TC_DEPLOY_ANTENNA", "mechanism"),
+        ("TC_SET_PARAM", "configuration"), ("TC_REQUEST_TM", "data"),
+    ]:
+        tc_packets.append({"cmd_id": cmd_id, "name": cmd_name, "type": cmd_type})
+        cmd_id += 1
+
+    return {"tm_packets": tm_packets, "tc_packets": tc_packets}
+
+
+def _derive_fault_handlers(elements: list[dict]) -> list[dict]:
+    """Derive FDIR fault handlers from element domains."""
+    handlers = []
+    domains_present = {e.get("subsystem_domain", "") for e in elements
+                       if e.get("segment") == "space"}
+
+    fault_map = {
+        "eps": {"fault": "power_low", "action": "safe_mode",
+                "description": "Battery SoC below threshold — enter safe mode, shed non-essential loads"},
+        "power": {"fault": "power_low", "action": "safe_mode",
+                  "description": "Battery SoC below threshold — enter safe mode, shed non-essential loads"},
+        "aocs": {"fault": "attitude_lost", "action": "sun_search",
+                 "description": "Attitude determination lost — initiate sun search using coarse sensors"},
+        "ttc": {"fault": "comms_lost", "action": "beacon_mode",
+                "description": "No ground contact for N orbits — switch to low-rate beacon transmit"},
+        "obc": {"fault": "obc_watchdog_timeout", "action": "warm_reset",
+                "description": "OBC watchdog expired — perform warm reset and reload FSW from NVM"},
+        "obdh": {"fault": "memory_fault", "action": "scrub_and_restart",
+                 "description": "SEU detected in memory — scrub, verify checksum, restart task"},
+        "thermal": {"fault": "over_temperature", "action": "load_shed",
+                    "description": "Component temperature exceeds limit — reduce duty cycle, disable payload"},
+        "payload": {"fault": "payload_anomaly", "action": "payload_safe",
+                    "description": "Payload reports anomaly — disable payload, store diagnostic TM"},
+        "propulsion": {"fault": "thruster_fault", "action": "inhibit_propulsion",
+                       "description": "Thruster valve anomaly — close isolation valve, enter safe mode"},
+    }
+
+    for domain, handler in fault_map.items():
+        if domain in domains_present:
+            handlers.append({
+                "subsystem": domain,
+                "fault": handler["fault"],
+                "action": handler["action"],
+                "description": handler["description"],
+                "severity": "critical" if domain in ("eps", "power", "aocs") else "major",
+                "autonomous": True,
+            })
+
+    return handlers
+
+
+# ─── Helpers: MBSE enrichment ───
+
+def _derive_functional_architecture(study) -> list[dict]:
+    """Derive functional architecture from study's functional decomposition or objectives."""
+    func_decomp = getattr(study, "functional_decomposition", None)
+    if func_decomp and func_decomp.functions:
+        return [
+            {
+                "id": f.id,
+                "name": f.name,
+                "type": f.function_type.value if hasattr(f.function_type, "value") else str(f.function_type),
+                "description": f.description,
+                "parent_id": f.parent_function_id,
+                "objective_ids": f.objective_ids,
+                "derived_requirement_ids": f.derived_requirement_ids,
+            }
+            for f in func_decomp.functions
+        ]
+    # Fallback: generate generic functions from mission need objectives
+    mission_need = getattr(study, "mission_need", None)
+    objectives = getattr(mission_need, "objectives", []) if mission_need else []
+    generic_functions = [
+        {"id": "fn_acquire", "name": "Acquire data", "type": "observe",
+         "description": "Collect mission data using payload instruments"},
+        {"id": "fn_process", "name": "Process data", "type": "process",
+         "description": "Onboard data processing and compression"},
+        {"id": "fn_store", "name": "Store data", "type": "store",
+         "description": "Buffer data between acquisition and downlink"},
+        {"id": "fn_downlink", "name": "Downlink data", "type": "communicate",
+         "description": "Transmit data to ground segment"},
+        {"id": "fn_attitude", "name": "Maintain attitude", "type": "point",
+         "description": "Attitude determination and control"},
+        {"id": "fn_power", "name": "Generate power", "type": "power",
+         "description": "Solar energy conversion, storage, and distribution"},
+        {"id": "fn_thermal", "name": "Control thermal environment", "type": "protect",
+         "description": "Maintain component temperatures within limits"},
+        {"id": "fn_navigate", "name": "Navigate and manoeuvre", "type": "navigate",
+         "description": "Orbit determination, station-keeping, collision avoidance"},
+    ]
+    # Link to objectives if present
+    for i, obj in enumerate(objectives):
+        obj_id = getattr(obj, "id", f"OBJ-{i+1}")
+        if i < len(generic_functions):
+            generic_functions[i]["objective_ids"] = [obj_id]
+    return generic_functions
+
+
+def _derive_logical_architecture(elements: list[dict], functions: list[dict]) -> list[dict]:
+    """Map functions to systems/subsystems from element tree."""
+    # Build domain → elements mapping
+    domain_elements: dict[str, list[str]] = {}
+    for e in elements:
+        domain = e.get("subsystem_domain", "")
+        if domain and e.get("segment") == "space":
+            domain_elements.setdefault(domain, []).append(e.get("name", ""))
+
+    function_to_domain = {
+        "observe": ["payload"],
+        "communicate": ["ttc"],
+        "navigate": ["aocs", "propulsion"],
+        "point": ["aocs"],
+        "power": ["eps", "power"],
+        "protect": ["thermal", "structure", "structures"],
+        "process": ["obc", "obdh"],
+        "store": ["obc", "obdh"],
+        "propel": ["propulsion"],
+        "support": ["structure", "structures"],
+        "command": ["obc", "ttc"],
+        "dispose": ["propulsion"],
+    }
+
+    mappings = []
+    for func in functions:
+        ftype = func.get("type", "")
+        candidate_domains = function_to_domain.get(ftype, [])
+        allocated_elements = []
+        for d in candidate_domains:
+            allocated_elements.extend(domain_elements.get(d, []))
+        mappings.append({
+            "function_id": func["id"],
+            "function_name": func["name"],
+            "allocated_domains": candidate_domains,
+            "allocated_elements": allocated_elements,
+        })
+    return mappings
+
+
+def _derive_physical_architecture(elements: list[dict]) -> list[dict]:
+    """Return element tree with parent/child relationships."""
+    element_map = {e.get("id"): e for e in elements if e.get("id")}
+    tree = []
+    for e in elements:
+        children = [
+            c.get("name", "") for c in elements
+            if c.get("parent_element_id") == e.get("id")
+        ]
+        tree.append({
+            "id": e.get("id", ""),
+            "name": e.get("name", ""),
+            "element_type": e.get("element_type", ""),
+            "segment": e.get("segment", ""),
+            "subsystem_domain": e.get("subsystem_domain", ""),
+            "parent_id": e.get("parent_element_id", ""),
+            "parent_name": element_map.get(e.get("parent_element_id", ""), {}).get("name", ""),
+            "children": children,
+            "mass_kg": e.get("mass_kg"),
+            "power_avg_w": e.get("power_avg_w"),
+            "quantity": e.get("quantity", 1),
+        })
+    return tree
+
+
+def _derive_allocation_matrix(requirements: list[dict], elements: list[dict]) -> list[dict]:
+    """Build requirements-to-elements allocation matrix from element_id FK."""
+    element_map = {e.get("id"): e.get("name", "") for e in elements if e.get("id")}
+    allocations = []
+    for r in requirements:
+        element_id = r.get("element_id", "")
+        allocations.append({
+            "requirement_code": r.get("code", r.get("id", "")),
+            "requirement_text": r.get("text", ""),
+            "level": r.get("level", ""),
+            "element_id": element_id,
+            "element_name": element_map.get(element_id, "unallocated"),
+            "verification_method": r.get("verification_method", ""),
+        })
+    return allocations
+
+
+def _derive_traceability(study, requirements: list[dict], elements: list[dict]) -> list[dict]:
+    """Build objective -> requirement -> element -> verification chain."""
+    mission_need = getattr(study, "mission_need", None)
+    objectives = getattr(mission_need, "objectives", []) if mission_need else []
+
+    element_map = {e.get("id"): e.get("name", "") for e in elements if e.get("id")}
+    chains = []
+
+    for obj in objectives:
+        obj_id = getattr(obj, "id", "")
+        obj_text = getattr(obj, "text", "")
+        # Find requirements that trace to this objective (by parent or tag)
+        linked_reqs = [
+            r for r in requirements
+            if r.get("parent_objective_id") == obj_id
+            or obj_id in r.get("objective_ids", [])
+            or obj_text.lower()[:20] in r.get("text", "").lower()
+        ]
+        if not linked_reqs:
+            # Fallback: all system-level requirements
+            linked_reqs = [r for r in requirements if r.get("level") in ("mission", "system")]
+
+        for r in linked_reqs:
+            element_id = r.get("element_id", "")
+            chains.append({
+                "objective_id": obj_id,
+                "objective_text": obj_text,
+                "requirement_code": r.get("code", r.get("id", "")),
+                "requirement_text": r.get("text", ""),
+                "element_id": element_id,
+                "element_name": element_map.get(element_id, "unallocated"),
+                "verification_method": r.get("verification_method", ""),
+            })
+
+    return chains
+
+
+# ─── Helpers: SMO enrichment ───
+
+def _derive_mission_profile(study) -> list[dict]:
+    """Derive mission event timeline from ConOps phases."""
+    conops = getattr(study, "conops", None)
+    phases = getattr(conops, "phases", []) if conops else []
+
+    # Standard event timeline
+    events = [
+        {"event": "separation", "time_offset": "T+0s",
+         "description": "Spacecraft separation from launch vehicle"},
+    ]
+
+    cumulative_s = 0
+    for p in phases:
+        phase_name = p.name if hasattr(p, "name") else str(p)
+        duration_days = getattr(p, "duration_days", 0) or 0
+        phase_type = p.phase_type.value if hasattr(p, "phase_type") and hasattr(p.phase_type, "value") else ""
+
+        # Map ConOps phases to simulation events
+        if "leop" in phase_type.lower() or "leop" in phase_name.lower():
+            events.append({"event": "detumble", "time_offset": "T+30min",
+                           "description": "Detumble and initial stabilisation"})
+            events.append({"event": "sun_acquisition", "time_offset": "T+1h",
+                           "description": "Sun acquisition and solar array deployment"})
+            events.append({"event": "antenna_deploy", "time_offset": "T+1.5h",
+                           "description": "Antenna deployment and first beacon"})
+            cumulative_s += duration_days * 86400
+        elif "commissioning" in phase_type.lower() or "commissioning" in phase_name.lower():
+            events.append({"event": "commissioning_start",
+                           "time_offset": f"T+{cumulative_s/3600:.0f}h",
+                           "description": "Begin commissioning — subsystem checkout"})
+            cumulative_s += duration_days * 86400
+        elif "nominal" in phase_type.lower() or "nominal" in phase_name.lower():
+            events.append({"event": "nominal_ops",
+                           "time_offset": f"T+{cumulative_s/3600:.0f}h",
+                           "description": "Transition to nominal science operations"})
+            cumulative_s += duration_days * 86400
+        elif "disposal" in phase_type.lower() or "disposal" in phase_name.lower():
+            events.append({"event": "end_of_life",
+                           "time_offset": f"T+{cumulative_s/3600:.0f}h",
+                           "description": "Begin disposal / passivation sequence"})
+
+    # Estimate first ground pass from orbit
+    events.append({"event": "first_ground_pass",
+                   "time_offset": "T+~90min",
+                   "description": "Estimated first ground station contact (orbit-dependent)"})
+
+    return events
+
+
+def _derive_perturbations(orbit_params: dict) -> dict:
+    """Set perturbation model flags from orbit type."""
+    orbit_type = orbit_params.get("orbit_type", "SSO").upper()
+    altitude_km = orbit_params.get("altitude_km", 500.0)
+
+    is_leo = orbit_type in ("LEO", "SSO") or altitude_km < 2000
+    is_geo = orbit_type == "GEO" or (altitude_km > 35000 and altitude_km < 36000)
+    is_deep = orbit_type in ("LUNAR", "INTERPLANETARY", "LAGRANGE")
+
+    return {
+        "J2": True,
+        "atmospheric_drag": is_leo,
+        "solar_radiation_pressure": True,
+        "third_body_moon": is_geo or is_deep,
+        "third_body_sun": is_geo or is_deep,
+        "solid_earth_tides": False,
+        "general_relativity": is_deep,
+        "notes": (
+            "LEO config: J2 + drag + SRP dominant"
+            if is_leo else
+            "GEO/deep-space config: third-body perturbations enabled"
+            if is_geo or is_deep else
+            "MEO config: J2 + SRP, drag negligible"
+        ),
+    }
+
+
+def _derive_simulation_config(orbit_params: dict) -> dict:
+    """Set simulation time step and duration from orbit."""
+    altitude_km = orbit_params.get("altitude_km", 500.0)
+    # Estimate orbital period
+    mu = 3.986004418e5  # km^3/s^2
+    r_earth = 6371.0
+    a = r_earth + altitude_km
+    period_s = 2 * math.pi * math.sqrt(a ** 3 / mu)
+
+    return {
+        "quick_sim": {
+            "duration_s": round(period_s, 1),
+            "duration_label": "1 orbit",
+            "time_step_s": 10,
+        },
+        "full_sim": {
+            "duration_s": 86400,
+            "duration_label": "24 hours",
+            "time_step_s": 10,
+        },
+        "long_sim": {
+            "duration_s": 86400 * 7,
+            "duration_label": "7 days",
+            "time_step_s": 60,
+        },
+        "orbital_period_s": round(period_s, 1),
+        "integrator": "RK45",
+        "reference_frame": "J2000",
+        "epoch": "2026-01-01T00:00:00Z",
+    }
+
+
+def _derive_output_config() -> dict:
+    """Define simulation output variables."""
+    return {
+        "state_vector": {
+            "position_eci_km": True,
+            "velocity_eci_km_s": True,
+            "position_ecef_km": True,
+            "lat_lon_alt": True,
+        },
+        "attitude": {
+            "quaternion": True,
+            "euler_angles_deg": True,
+            "angular_velocity_deg_s": True,
+            "nadir_angle_deg": True,
+        },
+        "power": {
+            "solar_flux_w_m2": True,
+            "eclipse_flag": True,
+            "battery_soc_percent": True,
+            "power_generated_w": True,
+            "power_consumed_w": True,
+        },
+        "thermal": {
+            "solar_input_w": True,
+            "albedo_input_w": True,
+            "earth_ir_input_w": True,
+            "spacecraft_temp_c": True,
+        },
+        "ground_contact": {
+            "station_name": True,
+            "elevation_deg": True,
+            "in_contact": True,
+        },
+        "output_rate_hz": 0.1,
+    }
+
+
+def _derive_orbit_initial_conditions(orbit_params: dict) -> dict:
+    """Compute initial Keplerian elements and Cartesian state from orbit params."""
+    mu = 3.986004418e5  # km^3/s^2
+    r_earth = 6371.0
+    alt = orbit_params.get("altitude_km", 500.0)
+    inc = orbit_params.get("inclination_deg", 97.4)
+    ecc = orbit_params.get("eccentricity", 0.0)
+    a = r_earth + alt
+    period_s = 2 * math.pi * math.sqrt(a ** 3 / mu)
+    v_circular = math.sqrt(mu / a)
+
+    return {
+        "keplerian": {
+            "semi_major_axis_km": round(a, 3),
+            "eccentricity": ecc,
+            "inclination_deg": inc,
+            "raan_deg": 0.0,
+            "argument_of_perigee_deg": 0.0,
+            "true_anomaly_deg": 0.0,
+        },
+        "cartesian_eci": {
+            "x_km": round(a, 3),
+            "y_km": 0.0,
+            "z_km": 0.0,
+            "vx_km_s": 0.0,
+            "vy_km_s": round(v_circular * math.cos(math.radians(inc)), 4),
+            "vz_km_s": round(v_circular * math.sin(math.radians(inc)), 4),
+        },
+        "derived": {
+            "orbital_period_s": round(period_s, 1),
+            "circular_velocity_km_s": round(v_circular, 4),
+            "altitude_km": alt,
+        },
+    }
+
+
 @router.post("/smo/{study_id}")
 async def export_smo_config(study_id: str) -> JSONResponse:
     """Generate SMO simulator configuration files from a design study."""
+    studies = get_study_store()
+    study = studies.get(study_id)
     state, requirements, _ = await _run_design_for_study(study_id)
 
     from spacecdf_agents.exporters.smo.exporter import SMOExporter
     exporter = SMOExporter()
     export = exporter.export(state, requirements)
+
+    # ── Enrichments: mission profile, perturbations, sim config ──
+    orbit_params = _read_orbit_params(study) if study else {
+        "altitude_km": 500.0, "inclination_deg": 97.4, "orbit_type": "SSO",
+        "eccentricity": 0.0, "design_lifetime_years": 3.0,
+    }
+
+    mission_profile = _derive_mission_profile(study) if study else []
+    perturbations = _derive_perturbations(orbit_params)
+    simulation_config = _derive_simulation_config(orbit_params)
+    output_config = _derive_output_config()
+    orbit_initial_conditions = _derive_orbit_initial_conditions(orbit_params)
 
     return JSONResponse(content={
         "files": {k: v for k, v in export.files.items()},
@@ -100,6 +668,11 @@ async def export_smo_config(study_id: str) -> JSONResponse:
         "validation_warnings": export.validation_warnings,
         "param_count": len(export.param_id_map),
         "file_count": len(export.files),
+        "mission_profile": mission_profile,
+        "perturbations": perturbations,
+        "simulation_config": simulation_config,
+        "output_config": output_config,
+        "orbit_initial_conditions": orbit_initial_conditions,
     })
 
 
@@ -163,7 +736,29 @@ async def export_design_document(
 @router.post("/fsw/{study_id}")
 async def export_fsw_architecture(study_id: str) -> JSONResponse:
     """Generate flight software architecture scaffolding."""
+    studies = get_study_store()
+    study = studies.get(study_id)
     state, requirements, _ = await _run_design_for_study(study_id)
+
+    # ── Gather element and ConOps data for enrichment ──
+    elements: list[dict] = []
+    conops_modes: list = []
+    try:
+        from .elements import _elements
+        elements = [e for e in _elements.values()
+                    if e.get("study_id") == study_id and not e.get("deleted_at")]
+    except Exception:
+        pass
+    if study:
+        conops = getattr(study, "conops", None)
+        conops_modes = getattr(conops, "modes", []) if conops else []
+
+    # ── Derive FSW enrichments ──
+    fsw_state_machine = _derive_state_machine(study) if study else {"states": [], "transitions": []}
+    fsw_task_list = _derive_task_list(elements)
+    fsw_memory_map = _derive_memory_map(elements)
+    fsw_tm_tc = _derive_tm_tc(elements, conops_modes)
+    fsw_fault_handlers = _derive_fault_handlers(elements)
 
     from spacecdf_agents.exporters.fsw.generator import FSWGenerator
     generator = FSWGenerator()
@@ -172,6 +767,11 @@ async def export_fsw_architecture(study_id: str) -> JSONResponse:
     return JSONResponse(content={
         "files": files,
         "file_count": len(files),
+        "state_machine": fsw_state_machine,
+        "task_list": fsw_task_list,
+        "memory_map": fsw_memory_map,
+        "tm_tc_definitions": fsw_tm_tc,
+        "fault_handlers": fsw_fault_handlers,
     })
 
 

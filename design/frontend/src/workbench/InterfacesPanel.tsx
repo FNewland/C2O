@@ -108,51 +108,10 @@ export function InterfacesPanel() {
             No interfaces defined. Click "Add Interface" to connect elements.
           </div>
         )}
-        {interfaces.map((iface: any) => {
-          const typeInfo = INTERFACE_TYPES.find(t => t.value === iface.interface_type)
-          return (
-            <div key={iface.id} style={{
-              display: 'flex', alignItems: 'center', gap: '0.4rem',
-              padding: '0.3rem 0.5rem', borderRadius: '4px',
-              background: 'var(--bg-card)', border: '1px solid var(--border)',
-            }}>
-              {/* Type badge */}
-              <span style={{
-                fontSize: '0.55rem', padding: '0.1rem 0.3rem', borderRadius: '2px',
-                background: `${typeInfo?.color || '#6b7280'}20`,
-                color: typeInfo?.color || '#6b7280',
-                fontWeight: 600, textTransform: 'uppercase', flexShrink: 0,
-              }}>
-                {iface.interface_type}
-              </span>
-
-              {/* From → To */}
-              <span style={{ fontWeight: 500 }}>{nameOf(iface.from_element_id)}</span>
-              <span style={{ color: 'var(--text-secondary)' }}>→</span>
-              <span style={{ fontWeight: 500 }}>{nameOf(iface.to_element_id)}</span>
-
-              {/* Name/label */}
-              {iface.name && (
-                <span style={{ color: 'var(--text-secondary)', fontSize: '0.68rem', flex: 1 }}>
-                  ({iface.name})
-                </span>
-              )}
-
-              <span style={{ flex: 1 }} />
-
-              {/* Delete */}
-              <button
-                onClick={() => deleteMutation.mutate(iface.id)}
-                style={{
-                  background: 'none', border: 'none', cursor: 'pointer',
-                  color: 'var(--danger)', fontSize: '0.75rem',
-                }}
-              >
-                ×
-              </button>
-            </div>
-          )
-        })}
+        {interfaces.map((iface: any) => (
+          <InterfaceRow key={iface.id} iface={iface} nameOf={nameOf} studyId={studyId}
+            onDelete={() => deleteMutation.mutate(iface.id)} />
+        ))}
       </div>
 
       {/* Add form */}
@@ -240,6 +199,103 @@ export function InterfacesPanel() {
         >
           + Add Interface
         </button>
+      )}
+    </div>
+  )
+}
+
+// ─── Interface Row with expandable properties ───
+
+const IFACE_PROPERTY_FIELDS: Record<string, Array<{ key: string; label: string; placeholder: string }>> = {
+  electrical: [
+    { key: 'voltage_v', label: 'Voltage (V)', placeholder: '3.3 / 5 / 28' },
+    { key: 'current_a', label: 'Current (A)', placeholder: '0.5' },
+    { key: 'connector', label: 'Connector', placeholder: 'Micro-D 9pin' },
+    { key: 'wire_gauge', label: 'Wire gauge', placeholder: 'AWG 26' },
+    { key: 'power_w', label: 'Power (W)', placeholder: '2.5' },
+  ],
+  data: [
+    { key: 'protocol', label: 'Protocol', placeholder: 'SPI / I2C / UART / CAN / SpaceWire' },
+    { key: 'baud_rate', label: 'Baud rate', placeholder: '115200 / 1 Mbps' },
+    { key: 'data_format', label: 'Data format', placeholder: 'CCSDS / raw bytes' },
+    { key: 'bus_width', label: 'Bus width', placeholder: '8 / 16 / 32 bit' },
+    { key: 'connector', label: 'Connector', placeholder: 'Micro-D / Harwin' },
+  ],
+  rf: [
+    { key: 'frequency_ghz', label: 'Frequency (GHz)', placeholder: '0.435 / 2.2 / 8.2' },
+    { key: 'bandwidth_mhz', label: 'Bandwidth (MHz)', placeholder: '20' },
+    { key: 'polarization', label: 'Polarization', placeholder: 'RHCP / linear / dual' },
+    { key: 'power_dbm', label: 'TX power (dBm)', placeholder: '30' },
+    { key: 'connector', label: 'RF connector', placeholder: 'SMA / N-type' },
+  ],
+  mechanical: [
+    { key: 'mount_type', label: 'Mount type', placeholder: 'bolted / bonded / rail' },
+    { key: 'fastener', label: 'Fasteners', placeholder: 'M3×8 SS / M2.5' },
+    { key: 'torque_nm', label: 'Torque (Nm)', placeholder: '0.5' },
+    { key: 'material', label: 'Material', placeholder: 'Al 6061-T6' },
+  ],
+  thermal: [
+    { key: 'heat_flow_w', label: 'Heat flow (W)', placeholder: '2.0' },
+    { key: 'conductance_w_k', label: 'Conductance (W/K)', placeholder: '0.5' },
+    { key: 'strap_type', label: 'Thermal strap', placeholder: 'Cu braid / Al plate' },
+    { key: 'interface_temp_c', label: 'Interface temp (°C)', placeholder: '20' },
+  ],
+}
+
+function InterfaceRow({ iface, nameOf, studyId, onDelete }: {
+  iface: any; nameOf: (id: string) => string; studyId: string | null; onDelete: () => void
+}) {
+  const [expanded, setExpanded] = useState(false)
+  const qc = useQueryClient()
+  const typeInfo = INTERFACE_TYPES.find(t => t.value === iface.interface_type)
+  const props = iface.properties || {}
+  const fields = IFACE_PROPERTY_FIELDS[iface.interface_type] || []
+
+  const updateProp = async (key: string, value: string) => {
+    const newProps = { ...props, [key]: value }
+    await fetch(`${API}/interfaces/${iface.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ properties: newProps }),
+    }).catch(() => {
+      // If PATCH not supported on interfaces, store in a different way
+    })
+    qc.invalidateQueries({ queryKey: ['interfaces', studyId] })
+  }
+
+  return (
+    <div style={{ borderRadius: '4px', background: 'var(--bg-card)', border: '1px solid var(--border)', marginBottom: '0.15rem' }}>
+      {/* Header row */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', padding: '0.3rem 0.5rem', cursor: 'pointer' }}
+        onClick={() => setExpanded(!expanded)}>
+        <span style={{ fontSize: '0.55rem', padding: '0.1rem 0.25rem', borderRadius: '2px', background: `${typeInfo?.color || '#6b7280'}20`, color: typeInfo?.color || '#6b7280', fontWeight: 600, textTransform: 'uppercase', flexShrink: 0 }}>
+          {iface.interface_type}
+        </span>
+        <span style={{ fontWeight: 500, fontSize: '0.72rem' }}>{nameOf(iface.from_element_id)}</span>
+        <span style={{ color: 'var(--text-secondary)', fontSize: '0.65rem' }}>→</span>
+        <span style={{ fontWeight: 500, fontSize: '0.72rem' }}>{nameOf(iface.to_element_id)}</span>
+        {iface.name && <span style={{ color: 'var(--text-secondary)', fontSize: '0.63rem' }}>({iface.name})</span>}
+        <span style={{ flex: 1 }} />
+        {Object.keys(props).length > 0 && (
+          <span style={{ fontSize: '0.5rem', color: 'var(--success)' }}>{Object.keys(props).length} props</span>
+        )}
+        <span style={{ fontSize: '0.6rem', color: 'var(--text-secondary)' }}>{expanded ? '▾' : '▸'}</span>
+        <button onClick={e => { e.stopPropagation(); onDelete() }}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)', fontSize: '0.72rem' }}>×</button>
+      </div>
+
+      {/* Expandable properties */}
+      {expanded && fields.length > 0 && (
+        <div style={{ padding: '0.3rem 0.5rem', borderTop: '1px solid var(--border)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.2rem' }}>
+          {fields.map(f => (
+            <div key={f.key} style={{ fontSize: '0.6rem' }}>
+              <label style={{ color: 'var(--text-secondary)', display: 'block', marginBottom: '0.05rem' }}>{f.label}:</label>
+              <input value={props[f.key] || ''} onChange={e => updateProp(f.key, e.target.value)}
+                placeholder={f.placeholder}
+                style={{ width: '100%', padding: '0.15rem 0.25rem', fontSize: '0.6rem', borderRadius: '2px', background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)' }} />
+            </div>
+          ))}
+        </div>
       )}
     </div>
   )

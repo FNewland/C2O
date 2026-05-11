@@ -516,6 +516,28 @@ async def list_interfaces(study_id: str, interface_type: str | None = None) -> l
     return results
 
 
+@router.patch("/interfaces/{interface_id}")
+async def update_interface(interface_id: str, body: dict[str, Any]) -> dict:
+    """Update interface properties."""
+    iface = _interfaces.get(interface_id)
+    if not iface or iface.get("deleted_at"):
+        raise HTTPException(404)
+    for key in ("name", "interface_type", "direction", "properties", "status",
+                "criticality", "diagram_label"):
+        if key in body:
+            if key == "properties" and isinstance(body[key], dict):
+                # Merge properties rather than replace
+                existing = iface.get("properties") or {}
+                if isinstance(existing, dict):
+                    existing.update(body[key])
+                    iface["properties"] = existing
+                else:
+                    iface["properties"] = body[key]
+            else:
+                iface[key] = body[key]
+    return iface
+
+
 @router.delete("/interfaces/{interface_id}")
 async def delete_interface(interface_id: str) -> dict:
     """Soft-delete an interface."""
