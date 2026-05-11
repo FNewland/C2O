@@ -11,6 +11,7 @@ import { useState, useCallback } from 'react'
 import { QueryClient, QueryClientProvider, useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useUIStore, type Level, type ActivityPanel } from './stores/uiStore'
 import { LevelWorkbench } from './workbench/LevelWorkbench'
+import { MissionWizard } from './workbench/MissionWizard'
 import { ReadinessChecklist } from './workbench/ReadinessChecklist'
 import { EscalationBanner } from './workbench/EscalationBanner'
 import { ExportPanel } from './workbench/ExportPanel'
@@ -510,7 +511,7 @@ function AppShell() {
   const showExport = useUIStore(s => s.showExport)
   const showGuide = useUIStore(s => s.showGuide)
 
-  if (!studyId) return <CreateStudyGate />
+  if (!studyId) return <MissionWizard />
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
