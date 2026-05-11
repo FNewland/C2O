@@ -129,16 +129,13 @@ interface DesignStore {
   studyId: string | null
   missionId: string  // Human-readable unique mission identifier (e.g., "SCDF-2026-001")
 
-  // Architecture selections (persisted)
-  architectureSelections: Record<string, any>
-  // Architecture-derived requirements
-  architectureDerivedReqs: Array<{ id: string; level: string; text: string; subsystem: string }>
-  // Generated requirements (persisted)
+  // REMOVED: architectureSelections — presets now create real elements in tree
+  // REMOVED: architectureDerivedReqs — requirements now linked to elements via element_id
+  /** @deprecated Will migrate to backend RequirementRow with element_id FK */
   generatedRequirements: Array<{ id: string; text: string; req_type: string; domain: string; threshold: number; operator: string; unit: string; verification_method: string; objective_id: string; function_id: string; rationale: string; status: string; level: string; parent_id: string | null }>
-  // Functions list (for requirement linking)
+  /** @deprecated Will migrate to logical elements in tree */
   functionsList: Array<{ id: string; name: string; allocated_to: string[] }>
-  // Selected equipment (persisted) — feeds into budget roll-up
-  selectedEquipment: Array<{ category: string; componentId: string; name: string; mass_kg: number; power_w: number; cost_keur: number; quantity: number }>
+  // REMOVED: selectedEquipment — now lives in element tree (modelStore) as component elements
 
   // ConOps state (persisted so it survives tab switches)
   missionPhases: MissionPhase[]
@@ -153,9 +150,7 @@ interface DesignStore {
   changeHistory: ChangeRecord[]  // recent changes for audit trail
   pendingConflicts: string[]  // conflicts detected from latest change
 
-  // Ground stations (shared between Phase 1 and Phase 2)
-  groundStations: Array<{ id: string; name: string; latitude: number; longitude: number; antenna_m: number; bands: string[]; min_elevation: number; cost_keur: number; owned: boolean }>
-  setGroundStations: (stations: any[]) => void
+  // REMOVED: groundStations — now live in element tree as component elements under Ground Segment
 
   // Design constraints from selections
   selectedRfBand: string | null  // constrains transponder/antenna selection
@@ -266,11 +261,9 @@ export const useDesignStore = create<DesignStore>()(persist((set, get) => ({
   error: null,
   studyId: null,
   missionId: `SCDF-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 900) + 100)}`,
-  architectureSelections: {},
-  architectureDerivedReqs: [],
+  // architectureSelections, architectureDerivedReqs removed — in element tree
   generatedRequirements: [],
   functionsList: [],
-  selectedEquipment: [],
   missionPhases: [
     { id: 'phase_a', name: 'Phase A (Feasibility)', duration_days: 180, description: 'Concept and technology development, SRR' },
     { id: 'phase_b', name: 'Phase B (Preliminary Design)', duration_days: 270, description: 'Preliminary design, PDR, technology maturation' },
@@ -301,12 +294,7 @@ export const useDesignStore = create<DesignStore>()(persist((set, get) => ({
   selectedRfBand: null,
   selectedLaunchProvider: null,
   selectedLicenseType: 'commercial',
-  groundStations: [
-    { id: 'gs1', name: 'Svalbard', latitude: 78.2, longitude: 15.4, antenna_m: 13, bands: ['S', 'X'], min_elevation: 5, cost_keur: 500, owned: false },
-    { id: 'gs2', name: 'Kiruna', latitude: 67.9, longitude: 20.2, antenna_m: 13, bands: ['S', 'X'], min_elevation: 5, cost_keur: 400, owned: false },
-    { id: 'gs3', name: 'Weilheim', latitude: 47.9, longitude: 11.1, antenna_m: 15, bands: ['S', 'X', 'Ka'], min_elevation: 5, cost_keur: 600, owned: false },
-  ],
-  setGroundStations: (stations) => set({ groundStations: stations }),
+  // groundStations removed — now in element tree
   reqSequence: { mission: 0, system: 0, subsystem: 0 },
   nextReqId: (level) => {
     const state = get()
@@ -546,21 +534,8 @@ export const useDesignStore = create<DesignStore>()(persist((set, get) => ({
         parameterOverrides: prunedOverrides,
       })
 
-      // Seed the element tree from design results (model-centric architecture)
-      const sid = get().studyId
-      if (sid && data.parameters) {
-        try {
-          await fetch(`${API_BASE}/studies/${sid}/seed-elements`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              parameters: data.parameters,
-              mission_type: requirements.mission_type || 'earth_observation',
-              spacecraft_class: requirements.spacecraft_class || 'nano',
-            }),
-          })
-        } catch { /* seed is best-effort — don't block design run on seed failure */ }
-      }
+      // Design agents annotate existing elements — no auto-creation of elements.
+      // The element tree is built explicitly by the user via HierarchicalDesigner.
     } catch (err) {
       set({ error: String(err), isRunning: false })
     }
@@ -574,12 +549,12 @@ export const useDesignStore = create<DesignStore>()(persist((set, get) => ({
     result: state.result,
     studyId: state.studyId,
     missionId: state.missionId,
-    architectureSelections: state.architectureSelections,
-    groundStations: state.groundStations,
-    architectureDerivedReqs: state.architectureDerivedReqs,
+    // architectureSelections removed — in element tree
+    // groundStations removed — lives in element tree
+    // architectureDerivedReqs removed — in element tree
     generatedRequirements: state.generatedRequirements,
     functionsList: state.functionsList,
-    selectedEquipment: state.selectedEquipment,
+    // selectedEquipment removed — lives in element tree
     missionPhases: state.missionPhases,
     operationalModes: state.operationalModes,
     selectedRfBand: state.selectedRfBand,

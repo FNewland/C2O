@@ -231,3 +231,235 @@ async def generate_docx(doc_type: str, study_id: str | None = None):
         media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
+
+
+# ─── New branded export endpoints ───
+
+@router.post("/launch-icd/{study_id}")
+async def export_launch_icd(study_id: str) -> JSONResponse:
+    """Generate Launch Interface Control Document data."""
+    from ..services.branding import get_branding
+    from .elements import _elements
+
+    elements = [e for e in _elements.values() if e.get("study_id") == study_id and not e.get("deleted_at")]
+    spacecraft = [e for e in elements if e.get("segment") == "space" and e.get("element_type") in ("system", "segment")]
+    components = [e for e in elements if e.get("element_type") == "component"]
+
+    total_mass = sum((e.get("mass_kg") or 0) * (e.get("quantity", 1)) for e in elements if e.get("segment") == "space")
+
+    b = get_branding()
+    return JSONResponse(content={
+        "document": "Launch Interface Control Document",
+        "branding": {"university": b.university, "department": b.department, "classification": b.classification},
+        "study_id": study_id,
+        "spacecraft": {
+            "total_mass_kg": round(total_mass, 2),
+            "form_factor": "CubeSat",
+            "systems": [{"name": s["name"], "mass_kg": s.get("mass_kg"), "quantity": s.get("quantity", 1)} for s in spacecraft],
+        },
+        "mechanical_interface": {
+            "deployer_type": "Standard CubeSat deployer (ISIPOD / EXApod)",
+            "rail_spec": "PC/104 compliant rails",
+            "protrusion_limit_mm": 6.5,
+            "cg_offset_limit_mm": 20,
+        },
+        "electrical_interface": {
+            "inhibit_switches": 3,
+            "battery_state": "Charged, RBF pin installed",
+            "max_voltage_v": 8.4,
+            "umbilical": "None (autonomous activation)",
+        },
+        "environmental": {
+            "vibration": "Qualification: 14.1 grms (20-2000 Hz random)",
+            "shock": "1500g SRS at 1000 Hz",
+            "thermal_range_c": [-40, 60],
+            "depressurization_rate": "< 5 kPa/s",
+        },
+        "components_summary": {
+            "total_components": len(components),
+            "total_mass_kg": round(sum((c.get("mass_kg") or 0) * c.get("quantity", 1) for c in components), 2),
+        },
+    })
+
+
+@router.post("/rsssa/{study_id}")
+async def export_rsssa(study_id: str) -> JSONResponse:
+    """Generate RSSSA (Remote Sensing Space Systems Act) filing data."""
+    from ..services.branding import get_branding
+    from .elements import _elements
+
+    elements = [e for e in _elements.values() if e.get("study_id") == study_id and not e.get("deleted_at")]
+    gs_elements = [e for e in elements if e.get("segment") == "ground" and (e.get("performance") or {}).get("latitude")]
+    ttc_elements = [e for e in elements if e.get("subsystem_domain") == "ttc"]
+    spacecraft = [e for e in elements if e.get("segment") == "space" and e.get("element_type") == "system"]
+
+    # Try to get regulatory data from existing service
+    filing_data: dict = {}
+    try:
+        from ..services.regulatory import generate_rsssa_template
+        filing_data = generate_rsssa_template({})
+    except Exception:
+        pass
+
+    b = get_branding()
+    return JSONResponse(content={
+        "document": "RSSSA Licence Application Data",
+        "branding": {"university": b.university, "department": b.department, "classification": b.classification},
+        "study_id": study_id,
+        "applicant": {
+            "name": b.university,
+            "department": b.department,
+            "country": "Canada",
+        },
+        "system_description": {
+            "spacecraft_count": sum(s.get("quantity", 1) for s in spacecraft),
+            "spacecraft": [{"name": s["name"], "quantity": s.get("quantity", 1)} for s in spacecraft],
+        },
+        "ground_stations": [
+            {"name": e["name"], "latitude": e["performance"]["latitude"], "longitude": e["performance"]["longitude"],
+             "bands": e["performance"].get("bands", [])}
+            for e in gs_elements
+        ],
+        "frequency_usage": [
+            {"subsystem": e["name"], "bands": (e.get("performance") or {}).get("bands", []),
+             "rf_band": (e.get("performance") or {}).get("rf_band")}
+            for e in ttc_elements
+        ],
+        "template_fields": filing_data,
+    })
+
+
+@router.post("/deorbit/{study_id}")
+async def export_deorbit(study_id: str) -> JSONResponse:
+    """Generate deorbit analysis and debris compliance report."""
+    from ..services.branding import get_branding
+    from .elements import _elements
+
+    elements = [e for e in _elements.values() if e.get("study_id") == study_id and not e.get("deleted_at")]
+    total_mass = sum((e.get("mass_kg") or 0) * e.get("quantity", 1) for e in elements if e.get("segment") == "space")
+
+    # Run deorbit analysis using existing physics
+    deorbit_data: dict = {}
+    try:
+        from spacecdf_common.physics.debris import (
+            compute_orbital_lifetime, compute_casualty_risk, check_deorbit_compliance
+        )
+        lifetime = compute_orbital_lifetime(altitude_km=500, mass_kg=total_mass or 6, area_m2=0.03)
+        casualty = compute_casualty_risk(mass_kg=total_mass or 6)
+        compliance = check_deorbit_compliance(altitude_km=500, mass_kg=total_mass or 6, area_m2=0.03)
+        deorbit_data = {
+            "orbital_lifetime_years": round(lifetime, 1) if isinstance(lifetime, (int, float)) else None,
+            "casualty_risk": round(casualty, 6) if isinstance(casualty, (int, float)) else None,
+            "compliant_25yr": compliance if isinstance(compliance, bool) else None,
+        }
+    except Exception:
+        deorbit_data = {"note": "Deorbit physics module not available — manual analysis required"}
+
+    b = get_branding()
+    return JSONResponse(content={
+        "document": "Deorbit Analysis & Debris Compliance Report",
+        "branding": {"university": b.university, "department": b.department, "classification": b.classification},
+        "study_id": study_id,
+        "spacecraft": {
+            "total_mass_kg": round(total_mass, 2),
+            "assumed_altitude_km": 500,
+            "assumed_area_m2": 0.03,
+        },
+        "analysis": deorbit_data,
+        "standards": {
+            "iso_24113": "ISO 24113:2023 — Space debris mitigation requirements",
+            "ecss_u_as_10c": "ECSS-U-AS-10C Rev.2 — Space sustainability",
+            "fcc_5yr": "FCC 2024+ 5-year deorbit rule",
+            "iadc_25yr": "IADC 25-year guideline",
+        },
+        "mitigation_options": [
+            {"method": "Natural decay", "description": "Rely on atmospheric drag at current altitude"},
+            {"method": "Propulsive deorbit", "description": "Use onboard thruster for controlled reentry"},
+            {"method": "Drag sail", "description": "Deploy drag augmentation device at end-of-life"},
+            {"method": "Electrodynamic tether", "description": "Lorentz force deorbiting"},
+        ],
+    })
+
+
+@router.post("/thermal-report/{study_id}")
+async def export_thermal_report(study_id: str) -> JSONResponse:
+    """Generate thermal design report data."""
+    from ..services.branding import get_branding
+    from .elements import _elements
+
+    elements = [e for e in _elements.values() if e.get("study_id") == study_id and not e.get("deleted_at")]
+    power_elements = [e for e in elements if (e.get("power_avg_w") or 0) > 0]
+
+    total_power = sum((e.get("power_avg_w") or 0) * e.get("quantity", 1) for e in power_elements)
+
+    b = get_branding()
+    return JSONResponse(content={
+        "document": "Thermal Design Report",
+        "branding": {"university": b.university, "department": b.department, "classification": b.classification},
+        "study_id": study_id,
+        "thermal_environment": {
+            "orbit": "LEO SSO (assumed 500 km)",
+            "eclipse_fraction": 0.35,
+            "solar_flux_w_m2": 1361,
+            "albedo_factor": 0.3,
+            "earth_ir_w_m2": 237,
+        },
+        "power_dissipation": {
+            "total_avg_w": round(total_power, 1),
+            "elements": [
+                {"name": e["name"], "power_avg_w": e.get("power_avg_w", 0), "quantity": e.get("quantity", 1),
+                 "domain": e.get("subsystem_domain", "")}
+                for e in power_elements
+            ],
+        },
+        "design_notes": [
+            "Passive thermal control assumed (surface coatings + MLI)",
+            "Heater power allocated for eclipse survival",
+            "Radiator area sized from total power dissipation",
+        ],
+    })
+
+
+@router.post("/test-plan/{study_id}")
+async def export_test_plan(study_id: str) -> JSONResponse:
+    """Generate AIT/AIV test plan from requirements."""
+    from ..services.branding import get_branding
+    from ..routers.requirements import _requirements
+
+    reqs = [r for r in _requirements.values() if r.get("study_id") == study_id and r.get("status") != "retired"]
+    test_reqs = [r for r in reqs if r.get("verification_method") == "T"]
+    analysis_reqs = [r for r in reqs if r.get("verification_method") == "A"]
+    inspection_reqs = [r for r in reqs if r.get("verification_method") == "I"]
+
+    test_cases = []
+    for i, r in enumerate(test_reqs):
+        test_cases.append({
+            "test_id": f"TC-{i+1:03d}",
+            "requirement_code": r.get("code", r["id"]),
+            "requirement_text": r.get("text", ""),
+            "level": r.get("level", "system"),
+            "test_description": f"Verify: {r.get('text', '')}",
+            "pass_criteria": f"Requirement {r.get('code', '')} is satisfied",
+            "test_type": "Functional",
+            "status": "planned",
+        })
+
+    b = get_branding()
+    return JSONResponse(content={
+        "document": "AIT/AIV Test Plan",
+        "branding": {"university": b.university, "department": b.department, "classification": b.classification},
+        "study_id": study_id,
+        "summary": {
+            "total_requirements": len(reqs),
+            "test_requirements": len(test_reqs),
+            "analysis_requirements": len(analysis_reqs),
+            "inspection_requirements": len(inspection_reqs),
+        },
+        "test_cases": test_cases,
+        "test_phases": [
+            {"phase": "Unit Test", "description": "Individual component functional verification"},
+            {"phase": "Integration Test", "description": "Subsystem-level interface and performance verification"},
+            {"phase": "System Test", "description": "Full spacecraft functional and environmental testing"},
+            {"phase": "Acceptance Test", "description": "Final verification before launch campaign"},
+        ],
+    })

@@ -1,0 +1,426 @@
+/**
+ * VVPanel — Verification & Validation view for Level 4.
+ *
+ * Five sections:
+ * 1. Budget Rollup: mass/power/cost hierarchy
+ * 2. Requirement Traceability: derivation chains, orphans, SMART status
+ * 3. Review Gate Checklist: MCR/SRR/PDR/CDR gate evaluation (from gate_evaluator)
+ * 4. FMECA Summary: failure mode analysis results
+ * 5. Budget Traceability: trace budget exceedance to stakeholder impact
+ */
+import { useState, useMemo } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { useUIStore } from '../stores/uiStore'
+
+const API = '/api'
+
+const STATUS_COLORS: Record<string, string> = {
+  green: 'var(--success)', amber: 'var(--warning)', red: 'var(--danger)', undefined: 'var(--text-secondary)',
+  pass: 'var(--success)', fail: 'var(--danger)', manual: 'var(--warning)', not_evaluated: 'var(--text-secondary)',
+}
+
+const REQ_STATUS_COLORS: Record<string, string> = {
+  draft: 'var(--text-secondary)', approved: 'var(--accent)', verified: 'var(--success)', violated: 'var(--danger)',
+}
+
+export function VVPanel() {
+  const studyId = useUIStore(s => s.studyId)
+  const [activeSection, setActiveSection] = useState<'budget' | 'reqs' | 'gates' | 'fmeca' | 'trace'>('budget')
+
+  const { data: allElements = [] } = useQuery({
+    queryKey: ['elements', studyId],
+    queryFn: () => fetch(`${API}/studies/${studyId}/elements`).then(r => r.json()),
+    enabled: !!studyId,
+  })
+
+  const { data: allRequirements = [] } = useQuery({
+    queryKey: ['requirements', studyId],
+    queryFn: () => fetch(`${API}/requirements/tree?study_id=${studyId}`).then(r => r.json()),
+    enabled: !!studyId,
+  })
+
+  const sections = [
+    { id: 'budget' as const, label: 'Budget Rollup', color: '#f59e0b' },
+    { id: 'reqs' as const, label: 'Requirements', color: '#8b5cf6' },
+    { id: 'gates' as const, label: 'Review Gates', color: '#3b82f6' },
+    { id: 'fmeca' as const, label: 'FMECA', color: '#ef4444' },
+    { id: 'trace' as const, label: 'Traceability', color: '#10b981' },
+  ]
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+      {/* Section tabs */}
+      <div style={{ display: 'flex', gap: '1px', padding: '0.3rem 1rem', background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border)' }}>
+        {sections.map(s => (
+          <button key={s.id} onClick={() => setActiveSection(s.id)} style={{
+            padding: '0.3rem 0.8rem', fontSize: '0.72rem', fontWeight: 600, borderRadius: '3px 3px 0 0',
+            background: activeSection === s.id ? 'var(--bg-primary)' : 'transparent',
+            color: activeSection === s.id ? s.color : 'var(--text-secondary)',
+            border: 'none', cursor: 'pointer',
+            borderBottom: activeSection === s.id ? `2px solid ${s.color}` : '2px solid transparent',
+          }}>
+            {s.label}
+          </button>
+        ))}
+      </div>
+
+      <div style={{ flex: 1, overflow: 'auto', padding: '1rem' }}>
+        {activeSection === 'budget' && <BudgetRollup elements={allElements} />}
+        {activeSection === 'reqs' && <RequirementTraceability requirements={allRequirements} elements={allElements} studyId={studyId} />}
+        {activeSection === 'gates' && <ReviewGates studyId={studyId} />}
+        {activeSection === 'fmeca' && <FMECASummary studyId={studyId} />}
+        {activeSection === 'trace' && <BudgetTraceability studyId={studyId} />}
+      </div>
+    </div>
+  )
+}
+
+// ─── Budget Rollup ───
+
+function BudgetRollup({ elements }: { elements: any[] }) {
+  return (
+    <div>
+      <h3 style={{ fontSize: '0.85rem', marginBottom: '0.5rem' }}>Budget Rollup — All Elements</h3>
+      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.72rem' }}>
+        <thead>
+          <tr style={{ borderBottom: '1px solid var(--border)' }}>
+            <th style={thL}>Element</th><th style={thL}>Type</th>
+            <th style={thR}>Mass (kg)</th><th style={thR}>Power (W)</th><th style={thR}>Cost (kEUR)</th><th style={thR}>Qty</th>
+          </tr>
+        </thead>
+        <tbody>
+          {elements.map((el: any) => {
+            const depth = getDepth(el, elements)
+            return (
+              <tr key={el.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                <td style={{ padding: '0.2rem 0.4rem', paddingLeft: `${0.4 + depth * 1}rem`, fontWeight: depth < 2 ? 600 : 400 }}>{el.name}</td>
+                <td style={{ padding: '0.2rem 0.4rem' }}>
+                  <span style={{ fontSize: '0.55rem', padding: '0.05rem 0.2rem', borderRadius: '2px', background: 'rgba(59,130,246,0.1)', color: 'var(--accent)', textTransform: 'uppercase' }}>
+                    {el.subsystem_domain || el.element_type}
+                  </span>
+                </td>
+                <td style={{ ...tdR, fontFamily: 'monospace' }}>{el.mass_kg != null ? (el.mass_kg * (el.quantity || 1)).toFixed(2) : '—'}</td>
+                <td style={{ ...tdR, fontFamily: 'monospace' }}>{el.power_avg_w != null ? (el.power_avg_w * (el.quantity || 1)).toFixed(1) : '—'}</td>
+                <td style={{ ...tdR, fontFamily: 'monospace' }}>{el.cost_recurring_keur != null ? (el.cost_recurring_keur * (el.quantity || 1)).toFixed(0) : '—'}</td>
+                <td style={{ ...tdR, color: 'var(--text-secondary)' }}>{(el.quantity || 1) > 1 ? `×${el.quantity}` : ''}</td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+// ─── Requirement Traceability ───
+
+function RequirementTraceability({ requirements, elements, studyId }: { requirements: any[]; elements: any[]; studyId: string | null }) {
+  const nameOf = (id: string) => elements.find((e: any) => e.id === id)?.name || '—'
+
+  // Compute traceability stats
+  const stats = useMemo(() => {
+    const total = requirements.length
+    const byStatus: Record<string, number> = {}
+    const byLevel: Record<string, number> = {}
+    let orphans = 0
+    let withElement = 0
+    for (const r of requirements) {
+      byStatus[r.status] = (byStatus[r.status] || 0) + 1
+      byLevel[r.level] = (byLevel[r.level] || 0) + 1
+      if (r.level !== 'mission' && !r.derived_from_requirement_id && !r.parent_id) orphans++
+      if (r.element_id) withElement++
+    }
+    return { total, byStatus, byLevel, orphans, withElement, coverage: total > 0 ? (withElement / total * 100) : 0 }
+  }, [requirements])
+
+  return (
+    <div>
+      <h3 style={{ fontSize: '0.85rem', marginBottom: '0.3rem' }}>Requirement Traceability</h3>
+
+      {/* Stats */}
+      <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '0.5rem', fontSize: '0.68rem', flexWrap: 'wrap' }}>
+        <span>Total: <b>{stats.total}</b></span>
+        {Object.entries(stats.byStatus).map(([s, n]) => (
+          <span key={s} style={{ color: REQ_STATUS_COLORS[s] || 'var(--text-secondary)' }}>{s}: <b>{n}</b></span>
+        ))}
+        <span style={{ color: 'var(--border)' }}>|</span>
+        {Object.entries(stats.byLevel).map(([l, n]) => (
+          <span key={l} style={{ color: 'var(--text-secondary)' }}>{l}: <b>{n}</b></span>
+        ))}
+        <span style={{ color: 'var(--border)' }}>|</span>
+        <span style={{ color: stats.orphans > 0 ? 'var(--warning)' : 'var(--success)' }}>Orphans: <b>{stats.orphans}</b></span>
+        <span>Element coverage: <b>{stats.coverage.toFixed(0)}%</b></span>
+      </div>
+
+      {/* Table */}
+      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.72rem' }}>
+        <thead>
+          <tr style={{ borderBottom: '1px solid var(--border)' }}>
+            <th style={thL}>Code</th><th style={thL}>Level</th><th style={thL}>Element</th>
+            <th style={{ ...thL, width: '35%' }}>Text</th><th style={thC}>V&V</th><th style={thC}>Status</th><th style={thC}>Derived</th>
+          </tr>
+        </thead>
+        <tbody>
+          {requirements.map((req: any) => {
+            const isOrphan = req.level !== 'mission' && !req.derived_from_requirement_id && !req.parent_id
+            return (
+              <tr key={req.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', background: isOrphan ? 'rgba(245,158,11,0.05)' : undefined }}>
+                <td style={{ padding: '0.2rem 0.4rem', fontFamily: 'monospace', color: 'var(--accent)', fontSize: '0.65rem' }}>{req.code}</td>
+                <td style={{ padding: '0.2rem 0.4rem' }}>
+                  <span style={{ fontSize: '0.5rem', padding: '0.05rem 0.2rem', borderRadius: '2px', background: 'rgba(59,130,246,0.1)', color: 'var(--accent)', textTransform: 'uppercase' }}>{req.level}</span>
+                </td>
+                <td style={{ padding: '0.2rem 0.4rem', fontSize: '0.65rem', color: 'var(--text-secondary)' }}>{req.element_id ? nameOf(req.element_id) : '—'}</td>
+                <td style={{ padding: '0.2rem 0.4rem', fontSize: '0.68rem' }}>{req.text}</td>
+                <td style={{ padding: '0.2rem 0.4rem', textAlign: 'center', color: 'var(--success)', fontWeight: 600, fontSize: '0.6rem' }}>{req.verification_method || '—'}</td>
+                <td style={{ padding: '0.2rem 0.4rem', textAlign: 'center' }}>
+                  <span style={{ fontSize: '0.55rem', padding: '0.05rem 0.2rem', borderRadius: '2px', background: `${REQ_STATUS_COLORS[req.status]}20`, color: REQ_STATUS_COLORS[req.status], fontWeight: 600 }}>{req.status}</span>
+                </td>
+                <td style={{ padding: '0.2rem 0.4rem', textAlign: 'center', fontSize: '0.55rem' }}>
+                  {req.derived_from_requirement_id ? (
+                    <span style={{ color: 'var(--success)' }}>✓</span>
+                  ) : isOrphan ? (
+                    <span style={{ color: 'var(--warning)' }} title="Not derived from parent requirement">orphan</span>
+                  ) : (
+                    <span style={{ color: 'var(--text-secondary)' }}>—</span>
+                  )}
+                </td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+// ─── Review Gates ───
+
+function ReviewGates({ studyId }: { studyId: string | null }) {
+  const gates = ['mcr', 'srr', 'pdr', 'cdr']
+  const [activeGate, setActiveGate] = useState('srr')
+
+  const { data: gateResult, isLoading } = useQuery({
+    queryKey: ['gate-evaluate', studyId, activeGate],
+    queryFn: () => fetch(`${API}/ecss/gate-evaluate/${studyId}/${activeGate}`).then(r => r.json()),
+    enabled: !!studyId,
+  })
+
+  return (
+    <div>
+      <h3 style={{ fontSize: '0.85rem', marginBottom: '0.3rem' }}>Review Gate Evaluation</h3>
+
+      <div style={{ display: 'flex', gap: '0.3rem', marginBottom: '0.5rem' }}>
+        {gates.map(g => (
+          <button key={g} onClick={() => setActiveGate(g)} style={{
+            padding: '0.3rem 0.8rem', fontSize: '0.72rem', fontWeight: 700, borderRadius: '4px',
+            background: activeGate === g ? 'var(--accent)' : 'var(--bg-card)',
+            color: activeGate === g ? 'white' : 'var(--text-secondary)',
+            border: 'none', cursor: 'pointer', textTransform: 'uppercase',
+          }}>
+            {g}
+          </button>
+        ))}
+      </div>
+
+      {isLoading && <div style={{ color: 'var(--text-secondary)' }}>Evaluating...</div>}
+
+      {gateResult && (
+        <div>
+          {/* Summary */}
+          <div style={{
+            display: 'flex', gap: '0.75rem', marginBottom: '0.5rem', padding: '0.4rem 0.5rem',
+            background: gateResult.ready ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
+            borderRadius: '4px', fontSize: '0.72rem',
+          }}>
+            <span style={{ fontWeight: 700, color: gateResult.ready ? 'var(--success)' : 'var(--danger)' }}>
+              {gateResult.ready ? 'READY' : 'NOT READY'}
+            </span>
+            {gateResult.summary && (
+              <>
+                <span style={{ color: 'var(--success)' }}>Pass: {gateResult.summary.pass}</span>
+                <span style={{ color: 'var(--danger)' }}>Fail: {gateResult.summary.fail}</span>
+                <span style={{ color: 'var(--warning)' }}>Manual: {gateResult.summary.manual}</span>
+              </>
+            )}
+          </div>
+
+          {/* Criteria list */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+            {(gateResult.criteria || []).map((c: any, i: number) => (
+              <div key={i} style={{
+                display: 'flex', alignItems: 'center', gap: '0.3rem', padding: '0.25rem 0.4rem',
+                background: 'var(--bg-card)', borderRadius: '3px', fontSize: '0.68rem',
+                borderLeft: `3px solid ${STATUS_COLORS[c.status] || 'var(--text-secondary)'}`,
+              }}>
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: STATUS_COLORS[c.status], flexShrink: 0 }} />
+                <span style={{ flex: 1 }}>{c.question}</span>
+                {c.evidence_found && <span style={{ fontSize: '0.55rem', color: 'var(--text-secondary)' }}>{c.evidence_found}</span>}
+                <span style={{ fontSize: '0.55rem', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>{c.priority}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── FMECA Summary ───
+
+function FMECASummary({ studyId }: { studyId: string | null }) {
+  const [result, setResult] = useState<any>(null)
+  const [loading, setLoading] = useState(false)
+
+  const runFMECA = async () => {
+    setLoading(true)
+    try {
+      const res = await fetch(`${API}/fmeca/analyze`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ study_id: studyId, subsystems: ['power', 'aocs', 'ttc', 'obc', 'thermal', 'structure', 'propulsion'] }),
+      })
+      if (res.ok) setResult(await res.json())
+    } finally { setLoading(false) }
+  }
+
+  return (
+    <div>
+      <h3 style={{ fontSize: '0.85rem', marginBottom: '0.3rem' }}>Failure Mode Analysis (FMECA)</h3>
+      <button onClick={runFMECA} disabled={loading} style={{
+        padding: '0.3rem 0.6rem', fontSize: '0.68rem', fontWeight: 600, borderRadius: '4px',
+        background: 'var(--accent)', color: 'white', border: 'none', cursor: 'pointer', marginBottom: '0.5rem',
+      }}>
+        {loading ? 'Analysing...' : 'Run FMECA'}
+      </button>
+
+      {result?.failure_modes && (
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.68rem' }}>
+          <thead>
+            <tr style={{ borderBottom: '1px solid var(--border)' }}>
+              <th style={thL}>Subsystem</th><th style={thL}>Failure Mode</th><th style={thC}>Severity</th>
+              <th style={thC}>Probability</th><th style={thC}>RPN</th><th style={thL}>Mitigation</th>
+            </tr>
+          </thead>
+          <tbody>
+            {result.failure_modes.slice(0, 20).map((fm: any, i: number) => (
+              <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                <td style={{ padding: '0.2rem 0.4rem', fontWeight: 500 }}>{fm.subsystem}</td>
+                <td style={{ padding: '0.2rem 0.4rem' }}>{fm.failure_mode || fm.description}</td>
+                <td style={{ padding: '0.2rem 0.4rem', textAlign: 'center', color: (fm.severity || 0) > 7 ? 'var(--danger)' : 'var(--warning)' }}>{fm.severity}</td>
+                <td style={{ padding: '0.2rem 0.4rem', textAlign: 'center' }}>{fm.probability || fm.occurrence}</td>
+                <td style={{ padding: '0.2rem 0.4rem', textAlign: 'center', fontWeight: 600, color: (fm.rpn || 0) > 100 ? 'var(--danger)' : 'var(--text-primary)' }}>{fm.rpn}</td>
+                <td style={{ padding: '0.2rem 0.4rem', fontSize: '0.6rem', color: 'var(--text-secondary)' }}>{fm.mitigation || fm.recommended_action}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+
+      {result?.summary && (
+        <div style={{ marginTop: '0.4rem', padding: '0.3rem 0.5rem', background: 'var(--bg-card)', borderRadius: '4px', fontSize: '0.68rem' }}>
+          Total failure modes: <b>{result.summary.total || result.failure_modes?.length}</b>
+          {result.summary.critical > 0 && <span style={{ color: 'var(--danger)', marginLeft: '0.5rem' }}>Critical: <b>{result.summary.critical}</b></span>}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Budget Traceability ───
+
+function BudgetTraceability({ studyId }: { studyId: string | null }) {
+  const budgets = ['mass', 'power', 'cost', 'link', 'delta_v']
+  const [activeBudget, setActiveBudget] = useState('mass')
+  const [result, setResult] = useState<any>(null)
+  const [loading, setLoading] = useState(false)
+
+  const trace = async () => {
+    if (!studyId) return
+    setLoading(true)
+    try {
+      const res = await fetch(`${API}/lifecycle/traceability/${studyId}/${activeBudget}`)
+      if (res.ok) setResult(await res.json())
+    } finally { setLoading(false) }
+  }
+
+  return (
+    <div>
+      <h3 style={{ fontSize: '0.85rem', marginBottom: '0.3rem' }}>Budget → Stakeholder Traceability</h3>
+
+      <div style={{ display: 'flex', gap: '0.3rem', marginBottom: '0.4rem' }}>
+        {budgets.map(b => (
+          <button key={b} onClick={() => setActiveBudget(b)} style={{
+            padding: '0.2rem 0.5rem', fontSize: '0.65rem', borderRadius: '3px',
+            background: activeBudget === b ? 'var(--accent)' : 'var(--bg-card)',
+            color: activeBudget === b ? 'white' : 'var(--text-secondary)',
+            border: 'none', cursor: 'pointer',
+          }}>
+            {b}
+          </button>
+        ))}
+        <button onClick={trace} disabled={loading} style={{
+          padding: '0.2rem 0.5rem', fontSize: '0.65rem', fontWeight: 600, borderRadius: '3px',
+          background: 'var(--success)', color: 'white', border: 'none', cursor: 'pointer', marginLeft: '0.3rem',
+        }}>
+          {loading ? '...' : 'Trace'}
+        </button>
+      </div>
+
+      {result && (
+        <div>
+          {/* Trace chain */}
+          {result.chain?.length > 0 && (
+            <div style={{ marginBottom: '0.5rem' }}>
+              <div style={{ fontSize: '0.65rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.2rem' }}>Trace Chain:</div>
+              {result.chain.map((link: any, i: number) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', padding: '0.2rem 0', fontSize: '0.68rem' }}>
+                  <span style={{ fontSize: '0.5rem', padding: '0.05rem 0.2rem', borderRadius: '2px', background: 'rgba(59,130,246,0.1)', color: 'var(--accent)', textTransform: 'uppercase' }}>{link.level}</span>
+                  <span>{link.text}</span>
+                  {i < (result.chain?.length || 0) - 1 && <span style={{ color: 'var(--text-secondary)' }}>→</span>}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Recovery options */}
+          {result.recovery_options?.length > 0 && (
+            <div>
+              <div style={{ fontSize: '0.65rem', fontWeight: 600, color: 'var(--warning)', marginBottom: '0.2rem' }}>Recovery Options:</div>
+              {result.recovery_options.map((opt: any, i: number) => (
+                <div key={i} style={{ padding: '0.25rem 0.4rem', background: 'var(--bg-card)', borderRadius: '3px', marginBottom: '0.2rem', fontSize: '0.68rem' }}>
+                  <div style={{ fontWeight: 500 }}>{opt.description}</div>
+                  <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)' }}>
+                    Subsystem: {opt.subsystem} | Impact: {opt.impact} | Feasibility: {opt.feasibility}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {result.stakeholder_impact && (
+            <div style={{ marginTop: '0.3rem', padding: '0.3rem', background: 'rgba(245,158,11,0.1)', borderRadius: '3px', fontSize: '0.68rem', color: 'var(--warning)' }}>
+              Stakeholder impact: {result.stakeholder_impact}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Helpers ───
+
+function getDepth(el: any, allElements: any[]): number {
+  let depth = 0, current = el
+  while (current.parent_id) {
+    depth++
+    current = allElements.find((e: any) => e.id === current.parent_id)
+    if (!current) break
+  }
+  return depth
+}
+
+const thL: React.CSSProperties = { textAlign: 'left', padding: '0.2rem 0.4rem', color: 'var(--text-secondary)', fontWeight: 500, fontSize: '0.6rem', textTransform: 'uppercase' }
+const thR: React.CSSProperties = { ...thL, textAlign: 'right' }
+const thC: React.CSSProperties = { ...thL, textAlign: 'center' }
+const tdR: React.CSSProperties = { padding: '0.2rem 0.4rem', textAlign: 'right' }

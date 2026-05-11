@@ -323,28 +323,23 @@ function generateFromElementTree(
 }
 
 export function SystemBlockDiagram() {
-  const archReqs = useDesignStore(s => s.architectureDerivedReqs)
+  const archReqs: any[] = []  // TODO: migrate to backend requirements API with element_id
   const modelElements = useModelStore(s => s.elements)
   const modelInterfaces = useModelStore(s => s.interfaces)
   const [segment, setSegment] = useState<Segment>('space')
 
   const { initialNodes, initialEdges } = useMemo(() => {
-    if (segment === 'space') {
-      // Try element tree first, fall back to static generator
-      const fromTree = generateFromElementTree(modelElements, modelInterfaces, 'space')
-      if (fromTree) return { initialNodes: fromTree.nodes, initialEdges: fromTree.edges }
-      const { nodes, edges } = generateSpaceSegmentDiagram(archReqs)
-      return { initialNodes: nodes, initialEdges: edges }
-    } else if (segment === 'segments') {
+    if (segment === 'segments') {
+      // Segment-level interface diagram is always available as a template
       const { nodes, edges } = generateSegmentInterfaceDiagram()
       return { initialNodes: nodes, initialEdges: edges }
-    } else {
-      const fromTree = generateFromElementTree(modelElements, modelInterfaces, 'ground')
-      if (fromTree) return { initialNodes: fromTree.nodes, initialEdges: fromTree.edges }
-      const { nodes, edges } = generateGroundSegmentDiagram()
-      return { initialNodes: nodes, initialEdges: edges }
     }
-  }, [segment, archReqs, modelElements, modelInterfaces])
+    // Primary: render from element tree
+    const fromTree = generateFromElementTree(modelElements, modelInterfaces, segment === 'space' ? 'space' : 'ground')
+    if (fromTree) return { initialNodes: fromTree.nodes, initialEdges: fromTree.edges }
+    // No elements yet — show empty canvas
+    return { initialNodes: [] as Node[], initialEdges: [] as Edge[] }
+  }, [segment, modelElements, modelInterfaces])
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes)
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges)

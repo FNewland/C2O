@@ -137,6 +137,9 @@ class RequirementRow(Base):
     verification_phase: Mapped[str | None] = mapped_column(String(8), nullable=True)  # PDR CDR QR AR
     responsible_position: Mapped[str | None] = mapped_column(String(64), nullable=True)
     status: Mapped[str] = mapped_column(String(16), default="draft")  # draft approved violated verified retired
+    element_id: Mapped[str | None] = mapped_column(
+        String(64), ForeignKey("design_elements.id"), nullable=True, index=True
+    )
     derived_from_requirement_id: Mapped[str | None] = mapped_column(String(32), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow, onupdate=_utcnow)

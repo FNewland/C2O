@@ -355,11 +355,6 @@ export function EquipmentBrowser({ studyId, onClose, onSelect, mode = 'modal', s
   const handleRemoveInstalled = async (elementId: string, name: string) => {
     if (!confirm(`Remove ${name} from the design?`)) return
     await deleteElement(elementId)
-    // Also remove from flat designStore
-    const existing = useDesignStore.getState().selectedEquipment
-    useDesignStore.setState({
-      selectedEquipment: existing.filter(e => e.name !== name),
-    })
     useDesignStore.getState().markStale('equipment')
   }
 

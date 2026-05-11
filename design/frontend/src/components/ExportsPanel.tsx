@@ -141,10 +141,11 @@ export function ExportsPanel({ studyId }: { studyId: string | null }) {
           battery_capacity_wh: getP('power.battery_capacity_wh'),
           delta_v_ms: getP('propulsion.delta_v_total_ms'),
         }
-        // Ground stations for RSSSA/ITU
-        body.ground_stations = useDesignStore.getState().groundStations?.map((gs: any) => ({
-          name: gs.name, latitude: gs.latitude, longitude: gs.longitude, bands: gs.bands,
-        }))
+        // Ground stations from element tree
+        const allElements = useModelStore.getState().elements
+        body.ground_stations = Array.from(allElements.values())
+          .filter(el => el.segment === 'ground' && el.element_type === 'component' && el.performance?.latitude != null)
+          .map(el => ({ name: el.name, latitude: el.performance.latitude, longitude: el.performance.longitude, bands: el.performance.bands || [] }))
         // Payload info
         if (requirements.payloads?.[0]) {
           body.payload = {

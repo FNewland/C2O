@@ -1,6 +1,7 @@
 """Requirements API — tree, derive, patch, soft-delete (SCDF-112).
 
 Per SPINE_SPEC §6.3. Provides CRUD for the requirement hierarchy.
+Requirements are linked to elements via `element_id` FK.
 """
 from __future__ import annotations
 
@@ -17,9 +18,50 @@ _requirements: dict[str, dict] = {}
 
 
 @router.get("/tree")
-async def get_tree(study_id: str) -> list[dict]:
-    """Return full requirement tree for a study."""
-    return [r for r in _requirements.values() if r.get("study_id") == study_id and r.get("status") != "retired"]
+async def get_tree(study_id: str, element_id: str | None = None) -> list[dict]:
+    """Return requirement tree for a study, optionally filtered by element_id."""
+    results = []
+    for r in _requirements.values():
+        if r.get("study_id") != study_id:
+            continue
+        if r.get("status") == "retired":
+            continue
+        if element_id is not None and r.get("element_id") != element_id:
+            continue
+        results.append(r)
+    return results
+
+
+@router.get("/verify")
+async def verify_requirements(study_id: str) -> dict:
+    """Verify all requirements for a study: SMART check, orphan detection, threshold violations."""
+    from ..services.requirement_engine import validate_smart
+
+    reqs = [r for r in _requirements.values() if r.get("study_id") == study_id and r.get("status") != "retired"]
+
+    issues = []
+    orphans = 0
+    smart_pass = 0
+    smart_fail = 0
+
+    for req in reqs:
+        req_issues: list[str] = []
+        if req.get("level") in ("system", "subsystem") and not req.get("derived_from_requirement_id") and not req.get("parent_id"):
+            orphans += 1
+            req_issues.append("Not derived from a parent requirement (orphan)")
+        try:
+            check = validate_smart(req)
+            if check.is_smart:
+                smart_pass += 1
+            else:
+                smart_fail += 1
+                req_issues.extend(check.issues)
+        except Exception:
+            pass
+        if req_issues:
+            issues.append({"requirement_id": req["id"], "code": req.get("code", ""), "text": req.get("text", ""), "issues": req_issues})
+
+    return {"study_id": study_id, "total": len(reqs), "smart_pass": smart_pass, "smart_fail": smart_fail, "orphans": orphans, "issues": issues}
 
 
 @router.get("/{req_id}")
@@ -38,9 +80,7 @@ async def create_requirement(body: dict[str, Any]) -> dict:
     level = body.get("level", "system")
     parent_id = body.get("parent_id")
 
-    # Validate hierarchy
-    if level in ("system", "subsystem") and not parent_id:
-        raise HTTPException(400, f"{level} requirements must have a parent_id")
+    # Validate parent reference if provided (derivation is optional, not mandatory)
     if parent_id and parent_id not in _requirements:
         raise HTTPException(400, f"Parent requirement {parent_id} not found")
 
@@ -48,6 +88,7 @@ async def create_requirement(body: dict[str, Any]) -> dict:
         "id": req_id,
         "study_id": body.get("study_id", ""),
         "parent_id": parent_id,
+        "element_id": body.get("element_id"),
         "level": level,
         "code": body.get("code", req_id),
         "text": body.get("text", ""),
@@ -81,6 +122,7 @@ async def derive_requirement(req_id: str, body: dict[str, Any]) -> dict:
     body["parent_id"] = req_id
     body["level"] = body.get("level", child_level)
     body["study_id"] = parent["study_id"]
+    body.setdefault("derived_from_requirement_id", req_id)
     return await create_requirement(body)
 
 
@@ -93,7 +135,7 @@ async def update_requirement(req_id: str, body: dict[str, Any]) -> dict:
 
     for key in ("text", "rationale", "threshold_param_path", "threshold_op",
                 "threshold_value", "verification_method", "verification_phase",
-                "responsible_position", "status", "code"):
+                "responsible_position", "status", "code", "element_id"):
         if key in body:
             req[key] = body[key]
 
@@ -109,3 +151,6 @@ async def delete_requirement(req_id: str) -> dict:
 
     req["status"] = "retired"
     return {"id": req_id, "status": "retired"}
+
+
+    # Duplicate verify removed — moved above /{req_id} route to avoid path conflict

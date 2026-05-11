@@ -157,7 +157,8 @@ export function HierarchicalDesigner({ studyId, initialElementId }: Props) {
   const computeHierarchicalBudget = useModelStore(s => s.computeHierarchicalBudget)
   const loadModel = useModelStore(s => s.loadStudyModel)
   const markStale = useDesignStore(s => s.markStale)
-  const generatedRequirements = useDesignStore(s => s.generatedRequirements)
+  // Legacy: reads from designStore. Will migrate to backend requirements API with element_id
+  const generatedRequirements = (useDesignStore.getState() as any).generatedRequirements || []
 
   // Load model on mount
   useEffect(() => {
@@ -450,19 +451,6 @@ export function HierarchicalDesigner({ studyId, initialElementId }: Props) {
       quantity: 1,
     } as any)
 
-    // Also write to designStore for backward compatibility
-    const existing = useDesignStore.getState().selectedEquipment
-    const key = `${category}:${component.id || component.name}`
-    if (!existing.find(e => `${e.category}:${e.componentId}` === key)) {
-      useDesignStore.setState({
-        selectedEquipment: [...existing, {
-          category, componentId: component.id || component.name,
-          name: component.name, mass_kg: component.mass_kg || 0,
-          power_w: component.power_w || 0, cost_keur: component.cost_keur || 0,
-          quantity: 1,
-        }],
-      })
-    }
     markStale('equipment')
   }
 

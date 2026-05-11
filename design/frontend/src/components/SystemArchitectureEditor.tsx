@@ -2,11 +2,12 @@
  * SystemArchitectureEditor -- Select architecture options per subsystem.
  *
  * For each subsystem, shows selectable option cards with mass/power/cost/TRL,
- * pros/cons, and derived requirements. Selection updates the design.
+ * pros/cons, and derived requirements. Selection creates real child elements
+ * in the element tree (single source of truth).
  *
  * Per NASA SEH Process 4 (Design Solution Definition).
  */
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useDesignStore } from '../stores/designStore'
 import { useSessionStore } from '../stores/sessionStore'
 import { useModelStore } from '../stores/modelStore'
@@ -38,7 +39,6 @@ const SUBSYSTEM_LABELS: Record<string, { name: string; color: string }> = {
   ground: { name: 'Ground Segment', color: '#0ea5e9' },
 }
 
-// Map positions to their primary subsystem for default view
 const POSITION_SUBSYSTEM: Record<string, string> = {
   systems_engineer: 'eps', power_engineer: 'eps', aocs_engineer: 'aocs',
   comms_engineer: 'ttc', thermal_engineer: 'thermal', structures_engineer: 'structure',
@@ -56,15 +56,8 @@ export function SystemArchitectureEditor({ segment = 'space' }: { segment?: stri
   const [subsystems, setSubsystems] = useState<string[]>([])
   const [activeSubsystem, setActiveSubsystem] = useState<string>(POSITION_SUBSYSTEM[primaryPos] || 'eps')
   const [options, setOptions] = useState<ArchOption[]>([])
-  const storedSelections = useDesignStore(s => s.architectureSelections) as Record<string, SelectedArch>
-  const [selected, setSelectedLocal] = useState<Record<string, SelectedArch>>(storedSelections || {})
-  const setSelected: (u: Record<string, SelectedArch> | ((p: Record<string, SelectedArch>) => Record<string, SelectedArch>)) => void = (updater) => {
-    setSelectedLocal(prev => {
-      const next = typeof updater === 'function' ? updater(prev) : updater
-      useDesignStore.setState({ architectureSelections: next as any })
-      return next
-    })
-  }
+  // Track selections in local state — element tree is the source of truth for the actual elements
+  const [selected, setSelected] = useState<Record<string, SelectedArch>>({})
   const [loading, setLoading] = useState(false)
   const [showCustomForm, setShowCustomForm] = useState(false)
   const [customName, setCustomName] = useState('')
@@ -74,6 +67,17 @@ export function SystemArchitectureEditor({ segment = 'space' }: { segment?: stri
   const [customCost, setCustomCost] = useState(0)
   const [customTrl, setCustomTrl] = useState(5)
   const markStale = useDesignStore(s => s.markStale)
+
+  // Derive which subsystems have elements from the tree (shows as "configured")
+  const configuredSubsystems = useMemo(() => {
+    const configured = new Set<string>()
+    for (const el of modelElements.values()) {
+      if (el.element_type === 'subsystem' && el.subsystem_domain && el.segment === segment) {
+        configured.add(el.subsystem_domain)
+      }
+    }
+    return configured
+  }, [modelElements, segment])
 
   // Load subsystem list
   useEffect(() => {
@@ -101,117 +105,108 @@ export function SystemArchitectureEditor({ segment = 'space' }: { segment?: stri
       body: JSON.stringify({ subsystem: activeSubsystem, option_id: optionId }),
     })
     if (res.ok) {
-      const data = await res.json()
-      setSelected(prev => {
-        const next = { ...prev, [activeSubsystem]: data }
-        // Push ALL derived requirements from ALL selections to designStore
-        const allReqs = Object.entries(next).flatMap(([ss, sel]) =>
-          (sel.derived_requirements || []).map((r: any) => ({ ...r, subsystem: ss }))
-        )
-        useDesignStore.setState({ architectureDerivedReqs: allReqs })
+      const data: SelectedArch = await res.json()
+      setSelected(prev => ({ ...prev, [activeSubsystem]: data }))
 
-        // Write architecture mass/power/cost to parameterOverrides so budgets update
-        const setParam = useDesignStore.getState().setParameter
-        for (const [ss, sel] of Object.entries(next)) {
-          if (sel.mass_kg) setParam(`${ss}.mass_kg`, sel.mass_kg, 'architecture')
-          if (sel.power_w) setParam(`${ss}.power_w`, sel.power_w, 'architecture')
-          if (sel.cost_keur) setParam(`${ss}.cost_keur`, sel.cost_keur, 'architecture')
+      // Write architecture mass/power/cost to parameterOverrides so budgets update
+      const setParam = useDesignStore.getState().setParameter
+      if (data.mass_kg) setParam(`${activeSubsystem}.mass_kg`, data.mass_kg, 'architecture')
+      if (data.power_w) setParam(`${activeSubsystem}.power_w`, data.power_w, 'architecture')
+      if (data.cost_keur) setParam(`${activeSubsystem}.cost_keur`, data.cost_keur, 'architecture')
+
+      // Create or update subsystem element in the element tree
+      const sid = useDesignStore.getState().studyId
+      if (sid) {
+        // Find parent system element
+        let parentId: string | undefined
+        for (const el of modelElements.values()) {
+          if (el.element_type === 'system' && el.segment === segment) {
+            parentId = el.id
+            break
+          }
         }
-
-        // SYSTEM-V: Create or update subsystem element in the backend element tree
-        const sid = useDesignStore.getState().studyId
-        if (sid && data) {
-          // Find parent system element (Platform for space segment)
-          let parentId: string | undefined
+        // If no system element, try segment
+        if (!parentId) {
           for (const el of modelElements.values()) {
-            if (el.element_type === 'system' && el.segment === segment) {
+            if (el.element_type === 'segment' && el.segment === segment) {
               parentId = el.id
               break
             }
           }
-          // Check if subsystem element already exists for this domain — update instead of creating duplicate
-          let existingSubsystem: string | undefined
-          const updateElement = useModelStore.getState().updateElement
-          for (const el of modelElements.values()) {
-            if (el.element_type === 'subsystem' && el.subsystem_domain === activeSubsystem && el.segment === segment) {
-              existingSubsystem = el.id
-              break
-            }
-          }
-          if (existingSubsystem) {
-            // Update existing subsystem element
-            updateElement(existingSubsystem, {
-              name: data.option_name || activeSubsystem,
-              mass_kg: data.mass_kg || null,
-              power_avg_w: data.power_w || null,
-              cost_recurring_keur: data.cost_keur || null,
-              trl: data.trl || null,
-            })
-          } else {
-            // Create new subsystem element, then materialize blocks as children
-            modelCreateElement(sid, {
-              name: data.option_name || activeSubsystem,
-              element_type: 'subsystem',
-              subsystem_domain: activeSubsystem,
-              segment: segment,
-              parent_id: parentId || null,
-              mass_kg: data.mass_kg || null,
-              power_avg_w: data.power_w || null,
-              cost_recurring_keur: data.cost_keur || null,
-              trl: data.trl || null,
-            } as any).then(newSubId => {
-              // SYSTEM-V Break 3: Create block elements under the new subsystem
-              if (newSubId && data.blocks && Array.isArray(data.blocks)) {
-                for (const block of data.blocks) {
-                  modelCreateElement(sid, {
-                    name: block.name,
-                    element_type: 'logical',
-                    subsystem_domain: activeSubsystem,
-                    segment: segment,
-                    parent_id: newSubId,
-                    description: `Architecture block from ${data.option_name || activeSubsystem} option`,
-                  } as any)
-                }
-              }
-            })
+        }
+
+        // Check if subsystem element already exists
+        const updateElement = useModelStore.getState().updateElement
+        let existingSubsystemId: string | undefined
+        for (const el of modelElements.values()) {
+          if (el.element_type === 'subsystem' && el.subsystem_domain === activeSubsystem && el.segment === segment) {
+            existingSubsystemId = el.id
+            break
           }
         }
 
-        // SYSTEM-V Break 3: Materialize architecture blocks as child elements
-        if (data.blocks && Array.isArray(data.blocks)) {
-          const subsysId = existingSubsystem || null  // will be set after createElement resolves
-          const createBlockElements = async (parentId: string) => {
+        if (existingSubsystemId) {
+          // Update existing subsystem
+          updateElement(existingSubsystemId, {
+            name: data.option_name || activeSubsystem,
+            mass_kg: data.mass_kg || null,
+            power_avg_w: data.power_w || null,
+            cost_recurring_keur: data.cost_keur || null,
+            trl: data.trl || null,
+            performance: { preset_id: optionId, preset_name: data.option_name },
+          })
+          // Create block children if they don't exist
+          if (data.blocks?.length) {
             for (const block of data.blocks) {
-              // Check if block element already exists (avoid duplicates)
               const exists = Array.from(modelElements.values()).some(
-                el => el.parent_id === parentId && el.name === block.name
+                el => el.parent_id === existingSubsystemId && el.name === block.name
               )
-              if (!exists && parentId) {
-                await modelCreateElement(sid, {
+              if (!exists) {
+                modelCreateElement(sid, {
                   name: block.name,
-                  element_type: 'logical',  // architectural block, not physical component yet
+                  element_type: 'logical',
                   subsystem_domain: activeSubsystem,
                   segment: segment,
-                  parent_id: parentId,
-                  description: `Architecture block from ${data.option_name || activeSubsystem} option`,
+                  parent_id: existingSubsystemId,
+                  description: `Architecture block from ${data.option_name} option`,
                 } as any)
               }
             }
           }
-          if (existingSubsystem) {
-            createBlockElements(existingSubsystem)
+        } else {
+          // Create new subsystem element + block children
+          const newSubId = await modelCreateElement(sid, {
+            name: data.option_name || activeSubsystem,
+            element_type: 'subsystem',
+            subsystem_domain: activeSubsystem,
+            segment: segment,
+            parent_id: parentId || null,
+            mass_kg: data.mass_kg || null,
+            power_avg_w: data.power_w || null,
+            cost_recurring_keur: data.cost_keur || null,
+            trl: data.trl || null,
+            performance: { preset_id: optionId, preset_name: data.option_name },
+          } as any)
+          if (newSubId && data.blocks?.length) {
+            for (const block of data.blocks) {
+              await modelCreateElement(sid, {
+                name: block.name,
+                element_type: 'logical',
+                subsystem_domain: activeSubsystem,
+                segment: segment,
+                parent_id: newSubId,
+                description: `Architecture block from ${data.option_name} option`,
+              } as any)
+            }
           }
-          // For new subsystems, the parent ID comes from createElement above —
-          // blocks will be created on next selection since the element now exists
         }
+      }
 
-        return next
-      })
       markStale('architecture')
     }
   }
 
-  const addCustomOption = () => {
+  const addCustomOption = async () => {
     if (!customName) return
     const customOpt: ArchOption = {
       id: `custom-${activeSubsystem}-${Date.now()}`,
@@ -223,40 +218,58 @@ export function SystemArchitectureEditor({ segment = 'space' }: { segment?: stri
     }
     setOptions(prev => [...prev, customOpt])
     setShowCustomForm(false)
-    setCustomName(''); setCustomDesc(''); setCustomMass(0); setCustomPower(0); setCustomCost(0); setCustomTrl(5)
-    // Auto-select it
-    setSelected(prev => {
-      const sel: SelectedArch = {
-        option_id: customOpt.id, option_name: customOpt.name, description: customOpt.description,
-        mass_kg: customOpt.mass_kg, power_w: customOpt.power_w, cost_keur: customOpt.cost_keur, trl: customOpt.trl,
-        derived_requirements: [], blocks: [], connections: [],
+
+    const sel: SelectedArch = {
+      option_id: customOpt.id, option_name: customOpt.name, description: customOpt.description,
+      mass_kg: customOpt.mass_kg, power_w: customOpt.power_w, cost_keur: customOpt.cost_keur, trl: customOpt.trl,
+      derived_requirements: [], blocks: [], connections: [],
+    }
+    setSelected(prev => ({ ...prev, [activeSubsystem]: sel }))
+
+    // Write to parameterOverrides
+    const setParam = useDesignStore.getState().setParameter
+    setParam(`${activeSubsystem}.mass_kg`, customMass, 'architecture')
+    setParam(`${activeSubsystem}.power_w`, customPower, 'architecture')
+    setParam(`${activeSubsystem}.cost_keur`, customCost, 'architecture')
+
+    // Create subsystem element in tree
+    const sid = useDesignStore.getState().studyId
+    if (sid) {
+      let parentId: string | undefined
+      for (const el of modelElements.values()) {
+        if ((el.element_type === 'system' || el.element_type === 'segment') && el.segment === segment) {
+          parentId = el.id
+          break
+        }
       }
-      const next = { ...prev, [activeSubsystem]: sel }
-      const allReqs = Object.entries(next).flatMap(([ss, s]) =>
-        (s.derived_requirements || []).map((r: any) => ({ ...r, subsystem: ss }))
-      )
-      useDesignStore.setState({ architectureDerivedReqs: allReqs })
-      // Write custom option values to parameterOverrides
-      const setParam = useDesignStore.getState().setParameter
-      setParam(`${activeSubsystem}.mass_kg`, customMass, 'architecture')
-      setParam(`${activeSubsystem}.power_w`, customPower, 'architecture')
-      setParam(`${activeSubsystem}.cost_keur`, customCost, 'architecture')
-      return next
-    })
+      await modelCreateElement(sid, {
+        name: customName,
+        element_type: 'subsystem',
+        subsystem_domain: activeSubsystem,
+        segment: segment,
+        parent_id: parentId || null,
+        mass_kg: customMass || null,
+        power_avg_w: customPower || null,
+        cost_recurring_keur: customCost || null,
+        trl: customTrl || null,
+        performance: { preset_id: customOpt.id, preset_name: customName },
+      } as any)
+    }
+
+    setCustomName(''); setCustomDesc(''); setCustomMass(0); setCustomPower(0); setCustomCost(0); setCustomTrl(5)
     markStale('architecture')
   }
 
   const currentSelection = selected[activeSubsystem]
   const info = SUBSYSTEM_LABELS[activeSubsystem] || { name: activeSubsystem, color: '#6b7280' }
-  const selectedCount = Object.keys(selected).length
+  const selectedCount = configuredSubsystems.size
   const totalCount = subsystems.length
-  const totalDerivedReqs = Object.values(selected).reduce((s, sel) => s + (sel.derived_requirements?.length || 0), 0)
 
   return (
     <div style={{ padding: '1rem', overflowY: 'auto', height: '100%' }}>
       <h2 style={{ marginBottom: '0.25rem' }}>System Architecture</h2>
       <p style={{ fontSize: '0.78rem', color: '#9ca3af', marginBottom: '0.5rem' }}>
-        Select architecture options for each subsystem. Each choice derives system and subsystem requirements.
+        Select architecture options for each subsystem. Each choice creates subsystem elements in the design tree.
       </p>
 
       {/* Progress bar */}
@@ -264,7 +277,6 @@ export function SystemArchitectureEditor({ segment = 'space' }: { segment?: stri
         <span style={{ color: selectedCount === totalCount ? '#10b981' : '#f59e0b', fontWeight: 600 }}>
           {selectedCount}/{totalCount} subsystems configured
         </span>
-        <span style={{ color: '#6b7280' }}>{totalDerivedReqs} requirements derived</span>
         {primaryPos !== 'systems_engineer' && (
           <span style={{ fontSize: '0.68rem', color: '#3b82f6' }}>
             Your subsystem: {SUBSYSTEM_LABELS[POSITION_SUBSYSTEM[primaryPos] || '']?.name || primaryPos}
@@ -277,16 +289,16 @@ export function SystemArchitectureEditor({ segment = 'space' }: { segment?: stri
         {subsystems.filter(ss => segment === 'ground' ? ss === 'ground' : ss !== 'ground').map(ss => {
           const ssInfo = SUBSYSTEM_LABELS[ss] || { name: ss, color: '#6b7280' }
           const isActive = activeSubsystem === ss
-          const isSelected = !!selected[ss]
+          const isConfigured = configuredSubsystems.has(ss) || !!selected[ss]
           return (
             <button key={ss} onClick={() => setActiveSubsystem(ss)} style={{
               padding: '0.3rem 0.75rem', fontSize: '0.78rem', borderRadius: '4px', cursor: 'pointer',
               background: isActive ? ssInfo.color : 'var(--bg-secondary, #1f2937)',
               color: isActive ? 'white' : '#9ca3af',
-              border: `1px solid ${isActive ? ssInfo.color : isSelected ? ssInfo.color + '60' : '#374151'}`,
+              border: `1px solid ${isActive ? ssInfo.color : isConfigured ? ssInfo.color + '60' : '#374151'}`,
             }}>
               {ssInfo.name}
-              {isSelected && <span style={{ marginLeft: '0.3rem', fontSize: '0.6rem' }}>selected</span>}
+              {isConfigured && <span style={{ marginLeft: '0.3rem', fontSize: '0.6rem' }}>configured</span>}
             </button>
           )
         })}

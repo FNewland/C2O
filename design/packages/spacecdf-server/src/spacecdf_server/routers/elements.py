@@ -78,6 +78,8 @@ class ElementCreate(BaseModel):
     performance: dict[str, Any] | None = None
     margin_percent: float = 20.0
     owner_position: str | None = None
+    in_scope: bool = True
+    frozen: bool = False
     diagram_x: float | None = None
     diagram_y: float | None = None
 
@@ -85,6 +87,8 @@ class ElementCreate(BaseModel):
 class ElementUpdate(BaseModel):
     version: int  # Required for optimistic locking
     name: str | None = None
+    in_scope: bool | None = None
+    frozen: bool | None = None
     parent_id: str | None = None
     description: str | None = None
     mass_kg: float | None = None
@@ -320,22 +324,45 @@ async def compute_budget(element_id: str, budget_type: str) -> dict:
             allocation = alloc["allocation_value"]
             break
 
-    # Sum children
+    # Build per-element allocation lookup
+    child_allocations: dict[str, float] = {}
+    for alloc in _budget_allocations:
+        if alloc["budget_type"] == budget_type:
+            child_allocations[alloc["element_id"]] = alloc["allocation_value"]
+
+    # Sum children (also recursively sum grandchildren for elements with no direct value)
     lines = []
     total_nominal = 0
     for e in _elements.values():
         if e.get("parent_id") == element_id and not e.get("deleted_at"):
-            val = (e.get(prop) or 0) * (e.get("quantity", 1))
+            qty = e.get("quantity", 1)
+            per_unit = e.get(prop) or 0
+
+            # If this element has no direct value, sum its own children (recursive rollup)
+            if per_unit == 0:
+                for gc in _elements.values():
+                    if gc.get("parent_id") == e["id"] and not gc.get("deleted_at"):
+                        gc_val = (gc.get(prop) or 0) * gc.get("quantity", 1)
+                        per_unit += gc_val
+
+            val_total = per_unit * qty
             margin = e.get("margin_percent", 20) / 100
-            val_with_margin = val * (1 + margin)
-            total_nominal += val
+            val_with_margin = val_total * (1 + margin)
+            total_nominal += val_total
+            child_alloc = child_allocations.get(e["id"])
+            # For allocation: if set on this element, it's the total allocation
+            # Per-instance allocation = total allocation / quantity
+            alloc_per_unit = round(child_alloc / qty, 3) if child_alloc and qty > 1 else child_alloc
             lines.append({
                 "element_id": e["id"],
                 "name": e["name"],
-                "nominal": round(val, 3),
+                "per_unit": round(per_unit, 3),
+                "nominal": round(val_total, 3),
                 "margin_pct": e.get("margin_percent", 20),
                 "with_margin": round(val_with_margin, 3),
-                "quantity": e.get("quantity", 1),
+                "quantity": qty,
+                "allocation": child_alloc,
+                "allocation_per_unit": alloc_per_unit,
             })
 
     total_with_margin = sum(l["with_margin"] for l in lines)
@@ -371,6 +398,9 @@ async def set_allocation(element_id: str, body: BudgetAllocationCreate) -> dict:
     # Replace existing allocation for same type
     _budget_allocations[:] = [a for a in _budget_allocations if not (a["element_id"] == element_id and a["budget_type"] == body.budget_type)]
     _budget_allocations.append(alloc)
+    # Persist to DB
+    from ..db.element_repo import db_upsert_budget_allocation
+    await db_upsert_budget_allocation(alloc)
     return alloc
 
 
@@ -506,34 +536,11 @@ class SeedRequest(BaseModel):
     spacecraft_class: str = "nano"
 
 
-@router.post("/studies/{study_id}/seed-elements")
+@router.post("/studies/{study_id}/seed-elements", deprecated=True)
 async def seed_elements_from_design(study_id: str, body: SeedRequest) -> dict:
-    """Seed the element tree from a design run result.
+    """DEPRECATED: Element tree is now built explicitly by the user via HierarchicalDesigner.
 
-    Creates the initial hierarchy: mission → segments → systems → subsystems.
-    Called automatically after the first successful runDesign().
-    Idempotent: if elements already exist for this study, returns them without re-creating.
+    Design agents annotate existing elements — they do not create new ones.
+    This endpoint is retained for backward compatibility but is a no-op.
     """
-    # Check if already seeded
-    existing = [e for e in _elements.values() if e.get("study_id") == study_id and not e.get("deleted_at")]
-    if existing:
-        return {"status": "already_seeded", "element_count": len(existing)}
-
-    from ..services.element_projection import seed_elements_from_design_result
-    elements, interfaces = seed_elements_from_design_result(
-        study_id=study_id,
-        result_params=body.parameters,
-        mission_type=body.mission_type,
-        spacecraft_class=body.spacecraft_class,
-    )
-
-    for el in elements:
-        _elements[el["id"]] = el
-    for iface in interfaces:
-        _interfaces[iface["id"]] = iface
-
-    # Bulk-persist to DB
-    await db_bulk_create_elements(elements)
-    await db_bulk_create_interfaces(interfaces)
-
-    return {"status": "seeded", "element_count": len(elements), "interface_count": len(interfaces)}
+    return {"status": "deprecated", "message": "Element tree is built by user, not auto-seeded from design results."}

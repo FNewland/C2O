@@ -5,6 +5,7 @@
  * Renders below the MarginTower in the app shell.
  */
 import { useDesignStore } from '../stores/designStore'
+import { useModelStore } from '../stores/modelStore'
 
 const PHASES = [
   { id: 'phase_a', label: 'A', name: 'Feasibility' },
@@ -14,15 +15,24 @@ const PHASES = [
 ]
 
 const GATE_CRITERIA = [
-  { id: 'reqs', label: 'Requirements', check: (s: any) => (Array.isArray(s.generatedRequirements) ? s.generatedRequirements : []).filter((r: any) => r.status === 'accepted').length >= 3 },
-  { id: 'arch', label: 'Architecture', check: (s: any) => (s.architectureDerivedReqs?.length || 0) > 0 },
+  { id: 'reqs', label: 'Requirements', check: (s: any) => (Array.isArray((s as any).generatedRequirements) ? (s as any).generatedRequirements : []).filter((r: any) => r.status === 'accepted').length >= 3 },
+  { id: 'arch', label: 'Architecture', check: (_s: any, elements?: Map<string, any>) => {
+    if (!elements) return false
+    for (const el of elements.values()) { if (el.element_type === 'subsystem') return true }
+    return false
+  } },
   { id: 'budgets', label: 'Budgets', check: (s: any) => !!s.result },
-  { id: 'equipment', label: 'Equipment', check: (s: any) => (s.selectedEquipment?.length || 0) > 0 },
+  { id: 'equipment', label: 'Equipment', check: (_s: any, elements?: Map<string, any>) => {
+    if (!elements) return false
+    for (const el of elements.values()) { if (el.element_type === 'component') return true }
+    return false
+  } },
 ]
 
 export function PhaseAndGateStrip() {
   const result = useDesignStore(s => s.result)
   const store = useDesignStore()
+  const elements = useModelStore(s => s.elements)
 
   if (!result) return null
 
@@ -42,7 +52,7 @@ export function PhaseAndGateStrip() {
       <span style={{ color: '#374151', margin: '0 0.2rem' }}>|</span>
       <span style={{ color: '#6b7280' }}>Gate:</span>
       {GATE_CRITERIA.map(g => {
-        const pass = g.check(store)
+        const pass = g.check(store, elements)
         return (
           <span key={g.id} style={{ color: pass ? '#10b981' : '#6b7280', fontWeight: pass ? 600 : 400 }}>
             {pass ? '\u2713' : '\u25cb'} {g.label}

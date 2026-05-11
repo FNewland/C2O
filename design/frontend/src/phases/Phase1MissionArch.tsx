@@ -6,12 +6,13 @@
  * Functions and requirements as separate sub-views.
  * Segment tabs: Space | Ground | Operations
  */
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { MissionArchitectureEditor } from '../components/MissionArchitectureEditor'
 import { ConOpsEditor } from '../components/ConOpsEditor'
 import { FunctionTreeView } from '../components/FunctionTreeView'
 import { RequirementsEditor } from '../components/RequirementsEditor'
 import { useDesignStore } from '../stores/designStore'
+import { useModelStore } from '../stores/modelStore'
 import { GroundStationDesigner } from '../components/GroundStationDesigner'
 import { ConstellationDesigner } from '../components/ConstellationDesigner'
 import type { Segment } from '../types/phases'
@@ -25,8 +26,49 @@ export function Phase1MissionArch() {
   const setMissionOps = useDesignStore(s => s.setMissionOps)
   const [segment, setSegment] = useState<Segment>('space')
   const [subView, setSubView] = useState<SubView>('arch_conops')
+  const [creating, setCreating] = useState(false)
 
   const showFleet = (requirements.num_spacecraft || 1) > 1
+
+  const handleCreateStudy = useCallback(async () => {
+    setCreating(true)
+    try {
+      const newStudyId = await useDesignStore.getState().createStudy()
+      if (!newStudyId) return
+      // Create mission root + standard segments — user can add/remove/rename later
+      const ms = useModelStore.getState()
+      const missionName = useDesignStore.getState().requirements?.name || 'New Mission'
+      const missionId = await ms.createElement(newStudyId, { name: missionName, element_type: 'mission', segment: 'space', diagram_x: 300, diagram_y: 10 } as any)
+      if (!missionId) return
+      await Promise.all([
+        ms.createElement(newStudyId, { name: 'Space Segment', element_type: 'segment', segment: 'space', parent_id: missionId, diagram_x: 100, diagram_y: 100 } as any),
+        ms.createElement(newStudyId, { name: 'Ground Segment', element_type: 'segment', segment: 'ground', parent_id: missionId, diagram_x: 300, diagram_y: 100 } as any),
+        ms.createElement(newStudyId, { name: 'Launch Segment', element_type: 'segment', segment: 'space', parent_id: missionId, diagram_x: 500, diagram_y: 100 } as any),
+        ms.createElement(newStudyId, { name: 'Operations', element_type: 'segment', segment: 'operations', parent_id: missionId, diagram_x: 300, diagram_y: 250 } as any),
+      ])
+    } finally {
+      setCreating(false)
+    }
+  }, [])
+
+  // Gate: show "Create Study" prompt if no study exists yet
+  if (!studyId) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: '1.5rem', color: '#d1d5db' }}>
+        <h2 style={{ margin: 0, fontSize: '1.3rem', color: '#93c5fd' }}>Define Mission Architecture</h2>
+        <p style={{ fontSize: '0.85rem', color: '#9ca3af', maxWidth: 500, textAlign: 'center', lineHeight: 1.6 }}>
+          Create a study to start building your mission architecture.
+          This will set up the element tree where you define segments, systems, and subsystems.
+        </p>
+        <button onClick={handleCreateStudy} disabled={creating} style={{
+          padding: '0.6rem 2rem', fontSize: '0.9rem', fontWeight: 600, borderRadius: '6px',
+          background: '#3b82f6', color: 'white', border: 'none', cursor: creating ? 'wait' : 'pointer',
+        }}>
+          {creating ? 'Creating...' : 'Create Study & Start'}
+        </button>
+      </div>
+    )
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>

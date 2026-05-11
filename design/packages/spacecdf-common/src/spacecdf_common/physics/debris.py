@@ -73,16 +73,17 @@ CUBESAT_CROSS_SECTIONS: dict[str, float] = {
 
 # Atmospheric model: altitude bands with reference density, scale height, solar exponent
 # (h_ref_km, rho_ref_kg_m3, H_km, solar_exponent)
+# Reference densities from NRLMSISE-00 at F10.7=120 (mean solar activity)
 _ATMO_BANDS: list[tuple[float, float, float, float]] = [
-    (180, 2.53e-10, 37.0, 0.0),
-    (200, 2.53e-10, 45.0, 1.0),
-    (300, 6.24e-12, 53.6, 1.5),
-    (400, 1.95e-13, 58.0, 2.0),
-    (500, 6.57e-15, 62.0, 2.5),
-    (600, 2.39e-16, 68.0, 3.0),
-    (700, 1.17e-17, 75.0, 3.0),
-    (800, 7.00e-19, 82.0, 3.0),
-    (900, 5.00e-20, 90.0, 3.0),
+    (180, 3.50e-10, 37.0, 0.5),
+    (200, 2.50e-10, 40.0, 0.8),
+    (300, 2.00e-11, 50.0, 1.2),
+    (400, 3.00e-12, 55.0, 1.5),
+    (500, 5.00e-13, 60.0, 1.8),
+    (600, 1.00e-13, 65.0, 2.0),
+    (700, 2.50e-14, 72.0, 2.2),
+    (800, 7.00e-15, 80.0, 2.5),
+    (900, 2.00e-15, 88.0, 2.5),
 ]
 
 
@@ -172,9 +173,10 @@ def _integrate_lifetime(
         # Modulate F10.7 with solar cycle if time evolves
         current_f107 = f107
         if solar_cycle_phase_years > 0:
-            # Sinusoidal solar cycle: F10.7 = mean + amplitude × cos(2π × (phase+elapsed)/11)
+            # Sinusoidal solar cycle centred on the given f107
             phase = solar_cycle_phase_years + elapsed_years
-            current_f107 = 120 + 80 * math.cos(2 * math.pi * phase / 11.0)
+            amplitude = min(80, f107 * 0.5)  # ±50% of mean
+            current_f107 = f107 + amplitude * math.cos(2 * math.pi * phase / 11.0)
             current_f107 = max(70, min(250, current_f107))
 
         rho, H = _atmospheric_density(h, current_f107)
@@ -183,8 +185,9 @@ def _integrate_lifetime(
         a_m = (_R_EARTH_KM + h) * 1000
         v = math.sqrt(_MU_EARTH / a_m)
 
-        # Decay rate: dh/dt = -ρ × v × Cd × (A/m) × H (King-Hele)
-        dh_dt = rho * v * cd * a_over_m * H * 1000  # m/s of altitude decay
+        # Decay rate: da/dt = -ρ × v × Cd × (A/m) × a (Vallado 2013, eq. 8-41)
+        # No π factor — reference densities are already orbit-averaged values
+        dh_dt = rho * v * cd * a_over_m * a_m  # m/s of altitude decay
 
         if dh_dt <= 1e-15:
             # Negligible drag — would take >1e6 years

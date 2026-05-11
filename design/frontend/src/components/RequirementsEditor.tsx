@@ -478,7 +478,7 @@ function RequirementCard({ req, smart, editing, editText, editThreshold, editMet
 
 
 function ArchDerivedRequirements({ levelFilter }: { levelFilter: string }) {
-  const archReqs = useDesignStore(s => s.architectureDerivedReqs)
+  const archReqs: any[] = []  // TODO: migrate to backend requirements API with element_id
   if (!archReqs || archReqs.length === 0) return null
 
   const filtered = levelFilter === 'all' ? archReqs : archReqs.filter(r => r.level === levelFilter)

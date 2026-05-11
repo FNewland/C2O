@@ -225,3 +225,32 @@ async def db_bulk_create_interfaces(interface_dicts: list[dict]) -> None:
         logger.info("Bulk-created %d interfaces in DB", len(interface_dicts))
     except Exception:
         logger.exception("db_bulk_create_interfaces failed (%d items)", len(interface_dicts))
+
+
+async def db_upsert_budget_allocation(alloc: dict) -> None:
+    """Persist a budget allocation to DB (upsert by element_id + budget_type)."""
+    from .models import BudgetAllocationRow
+    try:
+        factory = get_session_factory()
+        async with factory() as session:
+            # Delete existing for same element + type
+            from sqlalchemy import delete
+            await session.execute(
+                delete(BudgetAllocationRow).where(
+                    BudgetAllocationRow.element_id == alloc["element_id"],
+                    BudgetAllocationRow.budget_type == alloc["budget_type"],
+                )
+            )
+            session.add(BudgetAllocationRow(
+                study_id=alloc["study_id"],
+                element_id=alloc["element_id"],
+                budget_type=alloc["budget_type"],
+                allocation_value=alloc["allocation_value"],
+                unit=alloc.get("unit", ""),
+                source=alloc.get("source", "manual"),
+                rationale=alloc.get("rationale", ""),
+            ))
+            await session.commit()
+        logger.info("Persisted budget allocation %s/%s", alloc["element_id"], alloc["budget_type"])
+    except Exception:
+        logger.exception("db_upsert_budget_allocation failed")

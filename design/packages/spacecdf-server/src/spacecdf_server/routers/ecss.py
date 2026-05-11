@@ -200,3 +200,39 @@ async def generate_did(did_type: str, study_id: str | None = None) -> dict:
         return gen_fn(**common, requirements=requirements, equipment=equipment)
     else:
         raise HTTPException(status_code=400, detail=f"Generator not implemented for {did_type}")
+
+
+@router.get("/gate-evaluate/{study_id}/{phase_id}")
+async def evaluate_gate_endpoint(study_id: str, phase_id: str) -> dict:
+    """Evaluate review gate exit criteria for a study."""
+    from ..services.gate_evaluator import evaluate_gate
+
+    store = get_study_store()
+    study = store.get(study_id)
+
+    mission_need = None
+    design_params: dict = {}
+    target_mass = None
+    target_cost = None
+
+    if study:
+        mission_need = study.mission_need if hasattr(study, "mission_need") else None
+        target_mass = getattr(study.requirements, "target_mass_kg", None) if study.requirements else None
+        target_cost = getattr(study.requirements, "target_cost_meur", None) if study.requirements else None
+
+    # Get element tree data for gate evaluation context
+    from .elements import _elements
+    elements = [e for e in _elements.values() if e.get("study_id") == study_id and not e.get("deleted_at")]
+    design_params["_elements"] = elements
+    design_params["_element_count"] = len(elements)
+    design_params["_component_count"] = len([e for e in elements if e.get("element_type") == "component"])
+    design_params["_frozen_count"] = len([e for e in elements if e.get("frozen")])
+
+    result = evaluate_gate(
+        phase_id=phase_id,
+        mission_need=mission_need,
+        design_params=design_params,
+        target_mass_kg=target_mass,
+        target_cost_meur=target_cost,
+    )
+    return result

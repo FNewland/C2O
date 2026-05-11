@@ -245,6 +245,11 @@ body {
   margin-bottom: 0.25rem;
 }
 
+/* Allow stacked-box shadows and quantity badges to overflow ReactFlow node bounds */
+.react-flow__node {
+  overflow: visible !important;
+}
+
 .loading {
   display: flex;
   align-items: center;

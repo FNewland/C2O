@@ -19,12 +19,16 @@ DOMAIN_TO_CATEGORIES = {
     "power": ["batteries", "solar_cells", "solar_panels", "eps_boards"],
     "aocs": ["reaction_wheels", "star_trackers", "sun_sensors", "magnetorquers"],
     "link": ["transponders", "antennas", "gps_receivers"],
+    "ttc": ["transponders", "antennas", "gps_receivers"],  # alias — UI uses ttc
     "propulsion": ["thrusters"],
     "structure": ["cubesat_structures", "deployers", "mechanical_hardware"],
     "data": ["obcs"],
+    "obc": ["obcs"],  # alias — UI uses obc
     "thermal": ["thermal_hardware"],
     "integration": ["harnesses"],
+    "payload": ["antennas"],  # payload-specific sensors/optics would go here
     # Ground segment equipment
+    "ground": ["ground_antennas", "ground_rf", "ground_baseband", "ground_software", "ground_timing"],
     "ground_rf": ["ground_antennas", "ground_rf", "ground_baseband"],
     "ground_ops": ["ground_software", "ground_timing"],
 }

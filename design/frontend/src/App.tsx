@@ -1,380 +1,528 @@
 /**
- * SpaceCDF — App Shell (v2: Phase-driven System-V architecture)
+ * SpaceCDF — Level Workbench
  *
- * 6 phases as primary navigation. Margin tower always visible.
- * Anyone can connect at any time. No role assignment in the tool.
+ * Architecture designed from the System-V hierarchical decomposition process.
+ * User works at the highest broken level, decomposes downward, escalates upward.
+ *
+ * Layout: LevelBar (top) → StatusBar → LevelWorkbench (main)
+ * State: uiStore holds navigation only. All design content from server API.
  */
-import React, { useState, useEffect, Suspense } from 'react'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { useDesignStore } from './stores/designStore'
-import { useModelStore } from './stores/modelStore'
-import { useSessionStore } from './stores/sessionStore'
-import { BudgetCascade } from './charts/BudgetCascade'
-import { PHASE_LABELS, PHASE_SHORT, PHASE_COLORS, type Phase } from './types/phases'
-import { ErrorBoundary } from './components/ErrorBoundary'
+import { useState, useCallback } from 'react'
+import { QueryClient, QueryClientProvider, useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useUIStore, type Level, type ActivityPanel } from './stores/uiStore'
+import { LevelWorkbench } from './workbench/LevelWorkbench'
+import { ReadinessChecklist } from './workbench/ReadinessChecklist'
+import { EscalationBanner } from './workbench/EscalationBanner'
+import { ExportPanel } from './workbench/ExportPanel'
+import { GuidancePanel } from './workbench/GuidancePanel'
 
-// Lazy-loaded phase components — each chunk is loaded on first navigation
-const Phase0Need = React.lazy(() => import('./phases/Phase0Need').then(m => ({ default: m.Phase0Need })))
-const Phase1MissionArch = React.lazy(() => import('./phases/Phase1MissionArch').then(m => ({ default: m.Phase1MissionArch })))
-const Phase2SystemArch = React.lazy(() => import('./phases/Phase2SystemArch').then(m => ({ default: m.Phase2SystemArch })))
-const Phase3SubsystemDesign = React.lazy(() => import('./phases/Phase3SubsystemDesign').then(m => ({ default: m.Phase3SubsystemDesign })))
-const Phase4Integration = React.lazy(() => import('./phases/Phase4Integration').then(m => ({ default: m.Phase4Integration })))
-const Phase5Verification = React.lazy(() => import('./phases/Phase5Verification').then(m => ({ default: m.Phase5Verification })))
+const queryClient = new QueryClient({
+  defaultOptions: { queries: { retry: 1, staleTime: 10_000 } },
+})
 
-const queryClient = new QueryClient({ defaultOptions: { queries: { retry: 1, staleTime: 30000 } } })
+const API = '/api'
 
-function AppShell() {
-  const [activePhase, setActivePhaseRaw] = useState<Phase>(0)
-  const [prevPhase, setPrevPhase] = useState<Phase>(0)
-  const [showReviewBanner, setShowReviewBanner] = useState<string | null>(null)
-  const setActivePhase = (p: Phase) => {
-    // Show review prompt when going to a lower phase from a higher one
-    if (p < activePhase && activePhase >= 2) {
-      const messages: Record<number, string> = {
-        0: 'Returning to Mission Need — review objectives against design results',
-        1: 'Returning to Mission Architecture — review architecture against system design',
-        2: 'Returning to System Architecture — review budgets and interfaces against subsystem design',
-      }
-      setShowReviewBanner(messages[p] || null)
-      setTimeout(() => setShowReviewBanner(null), 5000)
-    }
-    // Show forward completion prompt when advancing to next phase
-    if (p > activePhase) {
-      const fwdMessages: Record<number, string> = {
-        1: 'Phase 0 complete — mission need defined. Now define the mission architecture.',
-        2: 'Phase 1 complete — architecture defined. Now decompose into system-level design.',
-        3: 'Phase 2 complete — system architecture set. Now select subsystem equipment.',
-        4: 'Phase 3 complete — subsystems designed. Now verify interfaces and integration.',
-        5: 'Phase 4 complete — integration verified. Final verification and validation.',
-      }
-      if (fwdMessages[p]) {
-        setShowReviewBanner(fwdMessages[p])
-        setTimeout(() => setShowReviewBanner(null), 4000)
-      }
-    }
-    // SYSTEM-V: Auto-create study on first forward navigation (Phase 0→1+)
-    // This ensures all backend endpoints (cost, compliance, equipment) work
-    if (p >= 1 && !useDesignStore.getState().studyId) {
-      useDesignStore.getState().createStudy().then(newStudyId => {
-        if (!newStudyId) return
-        // Create mission root + standard segments in element tree
-        const ms = useModelStore.getState()
-        const missionName = useDesignStore.getState().requirements?.name || 'New Mission'
-        ms.createElement(newStudyId, { name: missionName, element_type: 'mission', segment: 'space', diagram_x: 300, diagram_y: 10 } as any).then(missionId => {
-          if (!missionId) return
-          ms.createElement(newStudyId, { name: 'Space Segment', element_type: 'segment', segment: 'space', parent_id: missionId, diagram_x: 100, diagram_y: 100 } as any)
-          ms.createElement(newStudyId, { name: 'Ground Segment', element_type: 'segment', segment: 'ground', parent_id: missionId, diagram_x: 300, diagram_y: 100 } as any)
-          ms.createElement(newStudyId, { name: 'Launch Segment', element_type: 'segment', segment: 'space', parent_id: missionId, diagram_x: 500, diagram_y: 100 } as any)
-          ms.createElement(newStudyId, { name: 'Operations', element_type: 'segment', segment: 'operations', parent_id: missionId, diagram_x: 300, diagram_y: 250 } as any)
-        })
+const LEVEL_LABELS: Record<Level, string> = {
+  0: 'Mission',
+  1: 'Systems',
+  2: 'Subsystems',
+  3: 'Equipment',
+  4: 'V&V',
+}
+
+const LEVEL_COLORS: Record<Level, string> = {
+  0: '#3b82f6',
+  1: '#8b5cf6',
+  2: '#06b6d4',
+  3: '#10b981',
+  4: '#f59e0b',
+}
+
+// ─── Study Creation Gate ───
+
+function CreateStudyGate() {
+  const setStudyId = useUIStore(s => s.setStudyId)
+  const [name, setName] = useState('New Mission')
+  const [creating, setCreating] = useState(false)
+
+  const handleCreate = async () => {
+    setCreating(true)
+    try {
+      const res = await fetch(`${API}/studies/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ requirements: { name }, mission_need: {} }),
       })
-    }
-    // Auto-run design when entering Phase 2+ without results (fixes cost/compliance 404s)
-    if (p >= 2 && useDesignStore.getState().studyId && !useDesignStore.getState().result && !useDesignStore.getState().isRunning) {
-      useDesignStore.getState().runDesign()
-    }
-
-    // If study exists but segments don't, create them
-    if (p === 1 && activePhase === 0) {
-      const sid = useDesignStore.getState().studyId
-      const ms = useModelStore.getState()
-      if (sid && ms.elements.size === 0) {
-        ms.loadStudyModel(sid)
+      if (res.ok) {
+        const data = await res.json()
+        setStudyId(data.id)
       }
+    } finally {
+      setCreating(false)
     }
-
-    setPrevPhase(activePhase)
-    setActivePhaseRaw(p)
   }
-  // Load element tree on initial mount (not on every phase change — that overwrites local edits)
-  const studyIdForReload = useDesignStore(s => s.studyId)
-  const loadModel = useModelStore(s => s.loadStudyModel)
-  const [modelLoaded, setModelLoaded] = useState(false)
-  useEffect(() => {
-    if (studyIdForReload && !modelLoaded) {
-      loadModel(studyIdForReload).then(() => setModelLoaded(true))
-    }
-  }, [studyIdForReload])
-
-  const missionNeed = useDesignStore(s => s.missionNeed)
-  const result = useDesignStore(s => s.result)
-  const archReqs = useDesignStore(s => s.architectureDerivedReqs)
-  const error = useDesignStore(s => s.error)
-  const isRunning = useDesignStore(s => s.isRunning)
-  const designStale = useDesignStore(s => s.designStale)
-
-  // Also reload after design run completes (seeds the element tree)
-  useEffect(() => {
-    if (!isRunning && studyIdForReload && activePhase >= 1) {
-      loadModel(studyIdForReload)
-    }
-  }, [isRunning])
-  const runDesign = useDesignStore(s => s.runDesign)
-  const requirements = useDesignStore(s => s.requirements)
-
-  // Phase unlock + completion logic
-  const hasNeed = !!(missionNeed?.problem_statement && missionNeed?.objectives?.length > 0)
-  const hasDesign = !!result
-  const hasArch = (archReqs?.length || 0) > 0
-  const modelElements = useModelStore(s => s.elements)
-  const selectedEquipmentCount = Array.from(modelElements.values()).filter(e => e.element_type === 'component').length
-  const phaseCompletion = useDesignStore(s => s.phaseCompletion)
-  const setPhaseComplete = useDesignStore(s => s.setPhaseComplete)
-
-  const phaseUnlocked = (p: Phase): boolean => {
-    if (p === 0) return true
-    if (p === 1) return hasNeed
-    if (p === 2) return hasDesign
-    if (p === 3) return hasArch
-    if (p === 4) return hasArch && hasDesign
-    if (p === 5) return hasArch && hasDesign
-    return false
-  }
-
-  // Auto-detect phase completion from state
-  const isPhaseComplete = (p: Phase): boolean => {
-    if (phaseCompletion[p]) return true // Manual override
-    if (p === 0) return hasNeed
-    if (p === 1) return hasDesign && hasArch
-    if (p === 2) return hasArch && Array.from(modelElements.values()).some(e => e.element_type === 'subsystem')
-    if (p === 3) return selectedEquipmentCount > 0
-    if (p === 4) return false // Integration requires manual sign-off
-    if (p === 5) return false // Verification requires manual sign-off
-    return false
-  }
-
-  // Quick budget summary for margin tower
-  const params = result?.parameters || {}
-  const get = (id: string) => { const p = (params as any)[id]; return p && typeof p.value === 'number' ? p.value : 0 }
-  const massUsed = get('mass.dry_mass_kg')
-  const massAlloc = requirements.target_mass_kg || 6
-  const massMargin = massAlloc > 0 ? ((massAlloc - massUsed) / massAlloc * 100) : 0
 
   return (
-    <div style={{ display: 'flex', height: '100vh', background: 'var(--bg-primary, #0a0e1a)', color: '#d1d5db' }}>
-      {/* Phase sidebar */}
-      <nav style={{ width: '70px', background: '#111827', borderRight: '1px solid #374151', display: 'flex', flexDirection: 'column', padding: '0.5rem 0' }}>
-        <div style={{ textAlign: 'center', fontSize: '0.6rem', fontWeight: 700, color: '#3b82f6', padding: '0.3rem', marginBottom: '0.5rem' }}>
-          SCDF
-        </div>
-        {([0, 1, 2, 3, 4, 5] as Phase[]).map(p => {
-          const unlocked = phaseUnlocked(p)
-          const active = activePhase === p
-          return (
-            <button key={p} onClick={() => unlocked && setActivePhase(p)} style={{
-              padding: '0.5rem 0.25rem', margin: '0.15rem 0.25rem', borderRadius: '6px', cursor: unlocked ? 'pointer' : 'not-allowed',
-              background: active ? `${PHASE_COLORS[p]}20` : 'transparent',
-              border: active ? `2px solid ${PHASE_COLORS[p]}` : '2px solid transparent',
-              opacity: unlocked ? 1 : 0.35, transition: 'all 0.15s',
-              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.15rem',
-            }}>
-              <span style={{ fontSize: '0.85rem', fontWeight: 700, color: active ? PHASE_COLORS[p] : '#6b7280' }}>{p}</span>
-              <span style={{ fontSize: '0.5rem', color: active ? PHASE_COLORS[p] : '#6b7280', lineHeight: 1.1, textAlign: 'center' }}>
-                {PHASE_SHORT[p]}
-              </span>
-              {/* Phase completion indicator */}
-              {unlocked && (
-                <span style={{
-                  width: 5, height: 5, borderRadius: '50%',
-                  background: isPhaseComplete(p) ? '#10b981' : unlocked ? '#f59e0b' : '#374151',
-                }} title={isPhaseComplete(p) ? 'Complete' : 'In progress'} />
-              )}
-            </button>
-          )
-        })}
-
-        <div style={{ flex: 1 }} />
-
-        {/* Run design button */}
-        <button onClick={() => runDesign()} disabled={isRunning} style={{
-          margin: '0.25rem', padding: '0.4rem', borderRadius: '6px', cursor: isRunning ? 'wait' : 'pointer',
-          background: designStale ? '#f59e0b' : '#374151', color: designStale ? '#000' : '#9ca3af',
-          border: 'none', fontSize: '0.55rem', fontWeight: 600,
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', gap: '1.5rem', background: 'var(--bg-primary)' }}>
+      <h1 style={{ fontSize: '1.8rem', color: 'var(--accent)', fontWeight: 700 }}>SpaceCDF</h1>
+      <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', maxWidth: 420, textAlign: 'center', lineHeight: 1.6 }}>
+        Concurrent Design Facility for CubeSat missions.
+        Create a study to start building your mission architecture.
+      </p>
+      <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+        <input
+          value={name}
+          onChange={e => setName(e.target.value)}
+          placeholder="Mission name"
+          style={{
+            padding: '0.5rem 0.75rem', fontSize: '0.85rem', borderRadius: '4px',
+            background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text-primary)',
+            width: 220,
+          }}
+        />
+        <button onClick={handleCreate} disabled={creating} style={{
+          padding: '0.5rem 1.5rem', fontSize: '0.85rem', fontWeight: 600, borderRadius: '4px',
+          background: 'var(--accent)', color: 'white', border: 'none',
+          cursor: creating ? 'wait' : 'pointer', opacity: creating ? 0.7 : 1,
         }}>
-          {isRunning ? '...' : designStale ? 'Run' : 'OK'}
+          {creating ? 'Creating...' : 'Create Study'}
         </button>
+      </div>
+    </div>
+  )
+}
 
-        {/* Save / Load / New — Save highlights when design is stale */}
-        <button onClick={() => {
-          const state = useDesignStore.getState()
-          // Include element tree snapshot for offline recovery
-          const elements = Array.from(useModelStore.getState().elements.values())
-          const interfaces = Array.from(useModelStore.getState().interfaces.values())
-          const saveData = { ...state, _elementTreeSnapshot: { elements, interfaces } }
-          const blob = new Blob([JSON.stringify(saveData, null, 2)], { type: 'application/json' })
-          const url = URL.createObjectURL(blob)
-          const a = document.createElement('a'); a.href = url
-          a.download = `spacecdf-${new Date().toISOString().slice(0, 10)}.json`
-          a.click(); URL.revokeObjectURL(url)
-        }} style={{ margin: '0.15rem 0.25rem', padding: '0.3rem', borderRadius: '4px', background: designStale ? '#f59e0b30' : '#1f2937', border: designStale ? '1px solid #f59e0b' : '1px solid transparent', color: designStale ? '#f59e0b' : '#6b7280', fontSize: '0.5rem', cursor: 'pointer' }}>
-          Save
-        </button>
-        <button onClick={() => {
-          const input = document.createElement('input'); input.type = 'file'; input.accept = '.json'
-          input.onchange = (e: any) => {
-            const file = e.target.files?.[0]; if (!file) return
-            const reader = new FileReader()
-            reader.onload = (ev) => {
-              try {
-                const data = JSON.parse(ev.target?.result as string)
-                const treeSnapshot = data._elementTreeSnapshot
-                delete data._elementTreeSnapshot
-                useDesignStore.setState(data)
+// ─── Level Bar ───
 
-                // ALWAYS restore element tree from snapshot first (guaranteed to work)
-                if (treeSnapshot?.elements?.length) {
-                  const elMap = new Map()
-                  for (const el of treeSnapshot.elements) elMap.set(el.id, el)
-                  const ifMap = new Map()
-                  for (const i of (treeSnapshot.interfaces || [])) ifMap.set(i.id, i)
-                  useModelStore.setState({ elements: elMap, interfaces: ifMap })
-                }
+function LevelBar() {
+  const currentLevel = useUIStore(s => s.currentLevel)
+  const breadcrumb = useUIStore(s => s.breadcrumb)
+  const goToLevel = useUIStore(s => s.goToLevel)
 
-                // Then try to sync with backend (may have newer data if server is running)
-                const savedStudyId = data.studyId
-                if (savedStudyId) {
-                  useModelStore.getState().loadStudyModel(savedStudyId).then(() => {
-                    // If backend returned elements, they override the snapshot
-                    // If backend returned empty (study not found), keep the snapshot
-                    if (useModelStore.getState().elements.size === 0 && treeSnapshot?.elements?.length) {
-                      const elMap = new Map()
-                      for (const el of treeSnapshot.elements) elMap.set(el.id, el)
-                      const ifMap = new Map()
-                      for (const i of (treeSnapshot.interfaces || [])) ifMap.set(i.id, i)
-                      useModelStore.setState({ elements: elMap, interfaces: ifMap })
-                    }
-                  }).catch(() => {}) // Backend unavailable — snapshot already restored
-                }
-              } catch { alert('Invalid file') }
+  return (
+    <div style={{
+      display: 'flex', gap: '2px', padding: '0.4rem 1rem',
+      background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border)',
+    }}>
+      {([0, 1, 2, 3, 4] as Level[]).map(level => {
+        const active = currentLevel === level
+        const visited = level <= breadcrumb.length || level === 4  // V&V always accessible
+        const color = LEVEL_COLORS[level]
+        // Show breadcrumb context in the tab label
+        const contextName = level > 0 && level <= breadcrumb.length
+          ? ` (${breadcrumb[level - 1].name})`
+          : ''
+        return (
+          <button
+            key={level}
+            onClick={() => visited && goToLevel(level)}
+            style={{
+              padding: '0.4rem 0.8rem', fontSize: '0.72rem', fontWeight: 600,
+              borderRadius: '4px 4px 0 0', cursor: visited ? 'pointer' : 'default',
+              background: active ? `${color}20` : 'transparent',
+              color: active ? color : visited ? 'var(--text-secondary)' : '#374151',
+              border: 'none',
+              borderBottom: active ? `2px solid ${color}` : '2px solid transparent',
+              opacity: visited ? 1 : 0.3,
+              transition: 'all 0.15s',
+            }}
+          >
+            {level}: {LEVEL_LABELS[level]}
+            {contextName && <span style={{ fontWeight: 400, fontSize: '0.6rem', marginLeft: '0.2rem' }}>{contextName}</span>}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+// ─── Status Bar ───
+
+function StatusBar() {
+  const studyId = useUIStore(s => s.studyId)
+  const breadcrumb = useUIStore(s => s.breadcrumb)
+  const drillUp = useUIStore(s => s.drillUp)
+  const analysisRunning = useUIStore(s => s.analysisRunning)
+  const setAnalysisRunning = useUIStore(s => s.setAnalysisRunning)
+  const qc = useQueryClient()
+
+  const runAnalysis = useCallback(async () => {
+    if (!studyId || analysisRunning) return
+    setAnalysisRunning(true)
+    try {
+      // First fetch current elements to build a requirements context
+      const elements = await fetch(`${API}/studies/${studyId}/elements`).then(r => r.json())
+
+      const res = await fetch(`${API}/design/quick-design`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ requirements: {}, mission_need: {} }),
+      })
+      if (res.ok) {
+        const result = await res.json()
+        const params = result.parameters || {}
+
+        // Map agent parameters back to elements by domain
+        // Parameter ID patterns:
+        //   {domain}.mass_kg or {domain}.*_mass_kg → mass_kg on matching element
+        //   {domain}.power_w or {domain}.*_power_w → power_avg_w
+        //   {domain}.cost_keur or {domain}.*_cost_keur → cost_recurring_keur
+        //   mass.dry_mass_kg → mission root element mass_kg
+        //   cost.total_meur → mission root element cost (converted kEUR)
+
+        // Build index: domain → ALL matching elements (systems, subsystems, components)
+        const domainElements = new Map<string, any[]>()
+        let missionRoot: any = null
+        for (const el of elements) {
+          if (!el.parent_id) missionRoot = el
+          if (el.subsystem_domain) {
+            const list = domainElements.get(el.subsystem_domain) || []
+            list.push(el)
+            domainElements.set(el.subsystem_domain, list)
+          }
+        }
+
+        // Collect all patches: { id, field, value, version }
+        const patches: { id: string; field: string; value: number; version: number }[] = []
+
+        for (const [paramId, paramData] of Object.entries(params)) {
+          const pv = paramData as any
+          if (pv.value == null || typeof pv.value !== 'number') continue
+
+          const dotIdx = paramId.indexOf('.')
+          if (dotIdx < 0) continue
+          const domain = paramId.slice(0, dotIdx)
+          const propName = paramId.slice(dotIdx + 1)
+
+          // Special case: mission-level aggregates
+          if (domain === 'mass' && propName === 'dry_mass_kg' && missionRoot && missionRoot.mass_kg == null) {
+            patches.push({ id: missionRoot.id, field: 'mass_kg', value: pv.value, version: missionRoot.version })
+            continue
+          }
+          if (domain === 'cost' && propName === 'total_meur' && missionRoot && missionRoot.cost_recurring_keur == null) {
+            patches.push({ id: missionRoot.id, field: 'cost_recurring_keur', value: pv.value * 1000, version: missionRoot.version })
+            continue
+          }
+
+          // Determine which element field this parameter maps to
+          let field: string | null = null
+          if (propName.endsWith('mass_kg')) field = 'mass_kg'
+          else if (propName.endsWith('power_w')) field = 'power_avg_w'
+          else if (propName.endsWith('cost_keur')) field = 'cost_recurring_keur'
+
+          if (!field) continue
+
+          // Apply to ALL elements with matching domain where the field is null
+          const matchingEls = domainElements.get(domain) || []
+          for (const el of matchingEls) {
+            if (el[field] == null) {
+              patches.push({ id: el.id, field, value: pv.value, version: el.version })
             }
-            reader.readAsText(file)
+          }
+        }
+
+        // Deduplicate: if multiple params target the same element+field, keep the first
+        const seen = new Set<string>()
+        const uniquePatches = patches.filter(p => {
+          const key = `${p.id}:${p.field}`
+          if (seen.has(key)) return false
+          seen.add(key)
+          return true
+        })
+
+        // Apply all patches
+        for (const p of uniquePatches) {
+          await fetch(`${API}/elements/${p.id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ [p.field]: p.value, version: p.version }),
+          }).catch(() => {})
+        }
+
+        qc.invalidateQueries({ queryKey: ['elements'] })
+        qc.invalidateQueries({ queryKey: ['budget'] })
+        qc.invalidateQueries({ queryKey: ['escalation'] })
+      }
+    } finally {
+      setAnalysisRunning(false)
+    }
+  }, [studyId, analysisRunning, setAnalysisRunning, qc])
+
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: '0.5rem',
+      padding: '0.3rem 1rem',
+      background: 'var(--bg-primary)', borderBottom: '1px solid var(--border)',
+      fontSize: '0.75rem',
+    }}>
+      {/* Breadcrumb */}
+      <button
+        onClick={() => drillUp(-1)}
+        style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 600 }}
+      >
+        Mission
+      </button>
+      {breadcrumb.map((crumb, i) => (
+        <span key={crumb.id} style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+          <span style={{ color: 'var(--border)' }}>›</span>
+          <button
+            onClick={() => drillUp(i)}
+            style={{
+              background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.75rem',
+              color: i === breadcrumb.length - 1 ? 'var(--text-primary)' : 'var(--accent)',
+              fontWeight: i === breadcrumb.length - 1 ? 600 : 400,
+            }}
+          >
+            {crumb.name}
+          </button>
+        </span>
+      ))}
+
+      <span style={{ flex: 1 }} />
+
+      {/* Run Analysis */}
+      <button
+        onClick={runAnalysis}
+        disabled={analysisRunning}
+        style={{
+          padding: '0.25rem 0.75rem', borderRadius: '4px', fontSize: '0.72rem', fontWeight: 600,
+          background: analysisRunning ? 'var(--border)' : 'var(--success)',
+          color: 'white', border: 'none',
+          cursor: analysisRunning ? 'wait' : 'pointer',
+        }}
+      >
+        {analysisRunning ? 'Analysing...' : 'Run Analysis'}
+      </button>
+
+      {/* Save */}
+      <button
+        onClick={async () => {
+          if (!studyId) return
+          try {
+            const [elements, interfaces, requirements] = await Promise.all([
+              fetch(`${API}/studies/${studyId}/elements`).then(r => r.json()),
+              fetch(`${API}/studies/${studyId}/interfaces`).then(r => r.json()),
+              fetch(`${API}/requirements/tree?study_id=${studyId}`).then(r => r.json()),
+            ])
+            const { breadcrumb, currentLevel, focusElementId } = useUIStore.getState()
+            const uiState = { breadcrumb, currentLevel, focusElementId }
+            const blob = new Blob([JSON.stringify({ studyId, elements, interfaces, requirements, uiState }, null, 2)], { type: 'application/json' })
+            const a = document.createElement('a')
+            a.href = URL.createObjectURL(blob)
+            a.download = `spacecdf_${new Date().toISOString().slice(0, 10)}.json`
+            a.click()
+            URL.revokeObjectURL(a.href)
+          } catch { alert('Save failed') }
+        }}
+        style={{
+          padding: '0.25rem 0.75rem', borderRadius: '4px', fontSize: '0.72rem', fontWeight: 600,
+          background: 'var(--bg-card)', color: 'var(--text-secondary)', border: '1px solid var(--border)',
+          cursor: 'pointer',
+        }}
+      >
+        Save
+      </button>
+
+      {/* Load */}
+      <button
+        onClick={() => {
+          const input = document.createElement('input')
+          input.type = 'file'
+          input.accept = '.json'
+          input.onchange = async (e: any) => {
+            const file = e.target.files?.[0]
+            if (!file) return
+            try {
+              const text = await file.text()
+              const data = JSON.parse(text)
+              if (!data.elements || !Array.isArray(data.elements)) {
+                alert('Invalid save file — no elements found')
+                return
+              }
+              // Create a new study
+              const studyRes = await fetch(`${API}/studies/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ requirements: { name: 'Loaded Mission' }, mission_need: {} }),
+              })
+              if (!studyRes.ok) { alert('Failed to create study'); return }
+              const newStudy = await studyRes.json()
+              const newStudyId = newStudy.id
+
+              // Sort elements so parents are created before children
+              const sorted: any[] = []
+              const remaining = [...data.elements]
+              const created = new Set<string>()
+              const oldToNew = new Map<string, string>()
+
+              // First pass: roots (no parent_id)
+              while (remaining.length > 0) {
+                const batch = remaining.filter((el: any) =>
+                  !el.parent_id || created.has(el.parent_id)
+                )
+                if (batch.length === 0) {
+                  // Circular or orphans — just add them
+                  sorted.push(...remaining)
+                  break
+                }
+                for (const el of batch) {
+                  sorted.push(el)
+                  created.add(el.id)
+                  remaining.splice(remaining.indexOf(el), 1)
+                }
+              }
+
+              // Create elements in order
+              for (const el of sorted) {
+                const body: any = {
+                  name: el.name,
+                  element_type: el.element_type,
+                  segment: el.segment || 'space',
+                  parent_id: el.parent_id ? (oldToNew.get(el.parent_id) || null) : null,
+                  subsystem_domain: el.subsystem_domain || undefined,
+                  mass_kg: el.mass_kg, power_avg_w: el.power_avg_w, power_peak_w: el.power_peak_w,
+                  cost_recurring_keur: el.cost_recurring_keur, cost_nre_keur: el.cost_nre_keur,
+                  trl: el.trl, manufacturer: el.manufacturer, kb_component_id: el.kb_component_id,
+                  quantity: el.quantity || 1, margin_percent: el.margin_percent ?? 20,
+                  description: el.description || '',
+                  in_scope: el.in_scope ?? true, frozen: el.frozen ?? false,
+                  diagram_x: el.diagram_x, diagram_y: el.diagram_y,
+                  performance: el.performance,
+                }
+                const res = await fetch(`${API}/elements/?study_id=${newStudyId}`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(body),
+                })
+                if (res.ok) {
+                  const created = await res.json()
+                  oldToNew.set(el.id, created.id)
+                }
+              }
+
+              // Create interfaces
+              if (data.interfaces) {
+                for (const iface of data.interfaces) {
+                  const fromId = oldToNew.get(iface.from_element_id)
+                  const toId = oldToNew.get(iface.to_element_id)
+                  if (fromId && toId) {
+                    await fetch(`${API}/interfaces/?study_id=${newStudyId}`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        name: iface.name, interface_type: iface.interface_type,
+                        direction: iface.direction || 'bidirectional',
+                        from_element_id: fromId, to_element_id: toId,
+                        diagram_label: iface.diagram_label,
+                      }),
+                    })
+                  }
+                }
+              }
+
+              // Create requirements
+              if (data.requirements) {
+                for (const req of data.requirements) {
+                  const elementId = req.element_id ? oldToNew.get(req.element_id) : undefined
+                  await fetch(`${API}/requirements/`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      study_id: newStudyId,
+                      element_id: elementId,
+                      level: req.level || 'mission',
+                      code: req.code, text: req.text, rationale: req.rationale,
+                      verification_method: req.verification_method,
+                      status: req.status || 'draft',
+                    }),
+                  })
+                }
+              }
+
+              // Switch to the new study
+              useUIStore.getState().setStudyId(newStudyId)
+              useUIStore.getState().drillUp(-1)  // reset to root
+
+              // Restore UI state if present
+              if (data.uiState && data.uiState.breadcrumb) {
+                const mappedBreadcrumb = data.uiState.breadcrumb
+                  .map((crumb: { id: string; name: string }) => {
+                    const newId = oldToNew.get(crumb.id)
+                    return newId ? { id: newId, name: crumb.name } : null
+                  })
+                  .filter(Boolean) as Array<{ id: string; name: string }>
+
+                if (mappedBreadcrumb.length > 0) {
+                  // Replay drill-down from root to restore breadcrumb
+                  for (const crumb of mappedBreadcrumb) {
+                    useUIStore.getState().drillInto(crumb.id, crumb.name)
+                  }
+                }
+              }
+
+              qc.invalidateQueries()
+            } catch (err) {
+              alert('Load failed: ' + (err as Error).message)
+            }
           }
           input.click()
-        }} style={{ margin: '0.15rem 0.25rem', padding: '0.3rem', borderRadius: '4px', background: '#1f2937', border: 'none', color: '#6b7280', fontSize: '0.5rem', cursor: 'pointer' }}>
-          Load
-        </button>
-        <button onClick={() => {
-          const id = prompt('Enter Study ID or Mission ID:')
-          if (!id) return
-          // Try to load from backend by study ID
-          useDesignStore.setState({ studyId: id })
-          useModelStore.getState().loadStudyModel(id).then(() => {
-            // Check if we got elements
-            if (useModelStore.getState().elements.size > 0) {
-              setActivePhaseRaw(1 as Phase) // Jump to Phase 1 since we have data
-            } else {
-              alert('No elements found for that ID. Check the ID and try again.')
-            }
-          }).catch(() => {
-            alert('Could not connect to backend. Check the ID and server status.')
-          })
-        }} style={{ margin: '0.15rem 0.25rem', padding: '0.3rem', borderRadius: '4px', background: '#1f2937', border: 'none', color: '#6b7280', fontSize: '0.5rem', cursor: 'pointer' }}>
-          Open
-        </button>
-        <button onClick={() => {
-          if (!confirm('Start new? Save first if needed.')) return
-          localStorage.removeItem('spacecdf-design-state'); window.location.reload()
-        }} style={{ margin: '0.15rem 0.25rem', padding: '0.3rem', borderRadius: '4px', background: '#1f2937', border: 'none', color: '#6b7280', fontSize: '0.5rem', cursor: 'pointer' }}>
-          New
-        </button>
-        <button onClick={async () => {
-          try {
-            const res = await fetch('/api/lifecycle/example-missions')
-            const data = await res.json()
-            const missions: Array<{ id: string; name: string; description: string }> = data.missions || []
-            if (missions.length === 0) { alert('No example missions available.'); return }
-            const choice = prompt(
-              'Load Example Mission:\n\n' +
-              missions.map((m, i) => `${i + 1}. ${m.name}\n   ${m.description}`).join('\n\n') +
-              '\n\nEnter number:'
-            )
-            if (!choice) return
-            const idx = parseInt(choice, 10) - 1
-            if (idx < 0 || idx >= missions.length) { alert('Invalid selection.'); return }
-            const selected = missions[idx]
-            const fullRes = await fetch(`/api/lifecycle/example-missions/${selected.id}`)
-            const mission = await fullRes.json()
-            if (!mission.requirements) { alert('Invalid mission data.'); return }
-            // Generate a new missionId
-            const newMissionId = `SCDF-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 900) + 100)}`
-            // Apply to design store
-            useDesignStore.setState({
-              requirements: mission.requirements,
-              missionNeed: mission.mission_need || {},
-              selectedEquipment: mission.selected_equipment || [],
-              missionId: newMissionId,
-              result: mission.design_result || null,
-              studyId: null,
-              designStale: !mission.design_result,
-              error: null,
-            })
-            setActivePhaseRaw(0 as Phase)
-          } catch (err) {
-            alert('Could not load example missions. Check server connection.')
-          }
-        }} style={{ margin: '0.15rem 0.25rem 0.5rem', padding: '0.3rem', borderRadius: '4px', background: '#1e3a5f', border: '1px solid #3b82f6', color: '#93c5fd', fontSize: '0.5rem', cursor: 'pointer' }}>
-          Example
-        </button>
-      </nav>
+        }}
+        style={{
+          padding: '0.25rem 0.75rem', borderRadius: '4px', fontSize: '0.72rem', fontWeight: 600,
+          background: 'var(--bg-card)', color: 'var(--text-secondary)', border: '1px solid var(--border)',
+          cursor: 'pointer',
+        }}
+      >
+        Load
+      </button>
 
-      {/* Main area */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        {/* Header: title + margin tower */}
-        <header style={{ padding: '0.3rem 1rem', borderBottom: '1px solid #374151', display: 'flex', alignItems: 'center', gap: '0.75rem', background: '#111827' }}>
-          <h1 style={{ fontSize: '0.9rem', margin: 0, color: '#d1d5db' }}>SpaceCDF</h1>
-          <span style={{ fontSize: '0.55rem', color: '#4b5563', fontStyle: 'italic' }}>CubeSat Design (1U-16U)</span>
-          <span style={{ fontSize: '0.65rem', color: '#6b7280' }}>{PHASE_LABELS[activePhase]}</span>
-          {/* Prominent Run Design button */}
-          <button onClick={() => runDesign()} disabled={isRunning} style={{
-            padding: '0.25rem 0.75rem', borderRadius: '4px', cursor: isRunning ? 'wait' : 'pointer',
-            background: designStale ? '#f59e0b' : isRunning ? '#374151' : '#10b981',
-            color: designStale ? '#000' : 'white', border: 'none',
-            fontSize: '0.72rem', fontWeight: 600,
-          }}>
-            {isRunning ? 'Running...' : designStale ? '▶ Run Design' : '✓ Design Current'}
-          </button>
-          <span style={{ fontSize: '0.6rem', color: '#6b7280', fontFamily: 'monospace' }}
-            title="Unique mission identifier — used in requirement numbering and document references">
-            {useDesignStore.getState().missionId}
-          </span>
-          <span style={{ flex: 1 }} />
-          {/* Margin indicators removed per user feedback — use Phase 2 Budget view instead */}
-          {false && (
-            <div style={{ display: 'flex', gap: '0.5rem', fontSize: '0.65rem' }}>
-            </div>
-          )}
-        </header>
+      {/* Export */}
+      <button
+        onClick={() => useUIStore.getState().setShowExport(true)}
+        style={{
+          padding: '0.25rem 0.75rem', borderRadius: '4px', fontSize: '0.72rem', fontWeight: 600,
+          background: 'var(--bg-card)', color: 'var(--text-secondary)', border: '1px solid var(--border)',
+          cursor: 'pointer',
+        }}
+      >
+        Export
+      </button>
 
-        {/* Error banner */}
-        {error && (
-          <div style={{ padding: '0.3rem 1rem', background: 'rgba(239,68,68,0.15)', borderBottom: '1px solid #ef4444', fontSize: '0.72rem', color: '#ef4444', display: 'flex', alignItems: 'center' }}>
-            {error}
-            <button onClick={() => useDesignStore.setState({ error: null })} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}>×</button>
-          </div>
-        )}
+      {/* Guide */}
+      <button
+        onClick={() => useUIStore.getState().setShowGuide(true)}
+        style={{
+          padding: '0.25rem 0.75rem', borderRadius: '4px', fontSize: '0.72rem', fontWeight: 600,
+          background: 'var(--bg-card)', color: '#f59e0b', border: '1px solid #f59e0b40',
+          cursor: 'pointer',
+        }}
+      >
+        Guide
+      </button>
+    </div>
+  )
+}
 
-        {/* Review prompt banner (shown when navigating back to earlier phases) */}
-        {showReviewBanner && (
-          <div style={{ padding: '0.3rem 1rem', background: 'rgba(59,130,246,0.15)', borderBottom: '1px solid #3b82f6', fontSize: '0.72rem', color: '#93c5fd', display: 'flex', alignItems: 'center' }}>
-            <span style={{ fontWeight: 600, marginRight: '0.3rem' }}>Review:</span> {showReviewBanner}
-            <button onClick={() => setShowReviewBanner(null)} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#3b82f6', cursor: 'pointer' }}>×</button>
-          </div>
-        )}
+// ─── App Shell ───
 
-        {/* Phase content — each wrapped in error boundary for resilience */}
-        <main style={{ flex: 1, overflow: 'hidden' }}>
-          <ErrorBoundary phaseName={PHASE_LABELS[activePhase]} key={activePhase}>
-            <Suspense fallback={<div style={{ padding: '2rem', color: '#6b7280', textAlign: 'center' }}>Loading...</div>}>
-              {activePhase === 0 && <Phase0Need />}
-              {activePhase === 1 && <Phase1MissionArch />}
-              {activePhase === 2 && <Phase2SystemArch />}
-              {activePhase === 3 && <Phase3SubsystemDesign />}
-              {activePhase === 4 && <Phase4Integration />}
-              {activePhase === 5 && <Phase5Verification />}
-            </Suspense>
-          </ErrorBoundary>
-        </main>
-      </div>
+function AppShell() {
+  const studyId = useUIStore(s => s.studyId)
+  const showExport = useUIStore(s => s.showExport)
+  const showGuide = useUIStore(s => s.showGuide)
+
+  if (!studyId) return <CreateStudyGate />
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
+      <LevelBar />
+      <StatusBar />
+      <ReadinessChecklist />
+      <EscalationBanner />
+      <main style={{ flex: 1, overflow: 'hidden' }}>
+        <LevelWorkbench />
+      </main>
+      {showExport && <ExportPanel onClose={() => useUIStore.getState().setShowExport(false)} />}
+      {showGuide && <GuidancePanel onClose={() => useUIStore.getState().setShowGuide(false)} />}
     </div>
   )
 }

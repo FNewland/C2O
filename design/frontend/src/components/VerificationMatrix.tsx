@@ -51,7 +51,7 @@ export function VerificationMatrix({ studyId }: { studyId: string | null }) {
 
   // Generate V&V entries from ALL requirement sources
   const rawGenReqs = useDesignStore(s => s.generatedRequirements)
-  const archReqs = useDesignStore(s => s.architectureDerivedReqs)
+  const archReqs: any[] = []  // TODO: migrate to backend requirements API with element_id
   const modelElements = useModelStore(s => s.elements)
 
   useEffect(() => {
