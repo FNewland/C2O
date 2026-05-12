@@ -120,7 +120,7 @@ export function BlocksPanel() {
     queryKey: ['elements', studyId],
     queryFn: () => fetch(`${API}/studies/${studyId}/elements`).then(r => r.json()),
     enabled: !!studyId,
-    structuralSharing: false,
+    structuralSharing: false, refetchInterval: 3000,
   })
 
   const children = allElements.filter((el: any) =>

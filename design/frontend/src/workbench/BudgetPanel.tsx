@@ -36,7 +36,7 @@ export function BudgetPanel() {
   const { data: allElements = [] } = useQuery({
     queryKey: ['elements', studyId],
     queryFn: () => fetch(`${API}/studies/${studyId}/elements`).then(r => r.json()),
-    enabled: !!studyId, structuralSharing: false,
+    enabled: !!studyId, structuralSharing: false, refetchInterval: 3000,
   })
   const targetId = focusElementId || allElements.find((e: any) => !e.parent_id)?.id
 
@@ -58,6 +58,7 @@ export function BudgetPanel() {
     queryFn: () => fetch(`${API}/elements/${targetId}/budget/${activeBudget}`).then(r => r.json()),
     enabled: !!targetId,
     structuralSharing: false,
+    refetchInterval: 3000,  // Poll every 3s for live multi-user updates
   })
 
   const bt = BUDGET_TYPES.find(b => b.id === activeBudget)!
