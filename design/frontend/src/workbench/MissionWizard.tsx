@@ -281,12 +281,16 @@ export function MissionWizard() {
           <p style={{ fontSize: '0.7rem', color: '#8B0000' }}>University of Ottawa — SEDTI</p>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', width: 320 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', width: 400 }}>
           <button onClick={() => setStep('problem')} style={{ ...wizBtn, background: 'var(--accent)', color: 'white', fontSize: '0.9rem', padding: '0.7rem' }}>
             Create New Mission
           </button>
+
+          {/* Active studies — join an existing session */}
+          <ActiveStudies onJoin={(id) => { setStudyId(id); qc.invalidateQueries() }} />
+
           <button onClick={handleLoad} style={{ ...wizBtn, background: 'var(--bg-card)' }}>
-            Load Existing Study
+            Load from File
           </button>
           <button onClick={handleExample} style={{ ...wizBtn, background: 'var(--bg-card)', borderColor: '#8B0000', color: '#8B0000' }}>
             Load Example Mission
@@ -569,4 +573,84 @@ const wizBtn: React.CSSProperties = {
   padding: '0.4rem 0.75rem', fontSize: '0.78rem', fontWeight: 600, borderRadius: '4px',
   border: '1px solid var(--border)', cursor: 'pointer', color: 'var(--text-secondary)',
   background: 'var(--bg-card)',
+}
+
+// ─── Active Studies List ───
+
+function ActiveStudies({ onJoin }: { onJoin: (studyId: string) => void }) {
+  const [studies, setStudies] = useState<any[]>([])
+  const [loading, setLoading] = useState(false)
+  const [expanded, setExpanded] = useState(false)
+
+  const refresh = async () => {
+    setLoading(true)
+    try {
+      const res = await fetch(`${API}/studies/`)
+      if (res.ok) {
+        const data = await res.json()
+        // API may return array or {studies: [...]}
+        const list = Array.isArray(data) ? data : (data.studies || [])
+        setStudies(list)
+      }
+    } finally { setLoading(false) }
+  }
+
+  if (!expanded) {
+    return (
+      <button onClick={() => { setExpanded(true); refresh() }}
+        style={{ ...wizBtn, background: 'rgba(16,185,129,0.1)', borderColor: 'var(--success)', color: 'var(--success)' }}>
+        Join Active Study
+      </button>
+    )
+  }
+
+  return (
+    <div style={{
+      padding: '0.5rem', borderRadius: '6px',
+      background: 'var(--bg-card)', border: '1px solid var(--success)',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.4rem' }}>
+        <span style={{ fontWeight: 600, fontSize: '0.78rem', color: 'var(--success)' }}>Active Studies</span>
+        <span style={{ flex: 1 }} />
+        <button onClick={refresh} disabled={loading}
+          style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '0.65rem' }}>
+          {loading ? '...' : 'Refresh'}
+        </button>
+        <button onClick={() => setExpanded(false)}
+          style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '0.9rem', marginLeft: '0.3rem' }}>
+          ×
+        </button>
+      </div>
+
+      {studies.length === 0 ? (
+        <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', padding: '0.3rem 0' }}>
+          {loading ? 'Loading...' : 'No active studies found. Create a new mission to start.'}
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+          {studies.map((s: any) => (
+            <button key={s.id} onClick={() => onJoin(s.id)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '0.4rem',
+                padding: '0.35rem 0.5rem', borderRadius: '4px', textAlign: 'left',
+                background: 'var(--bg-primary)', border: '1px solid var(--border)',
+                color: 'var(--text-primary)', cursor: 'pointer', width: '100%',
+              }}>
+              <span style={{ fontWeight: 600, fontSize: '0.75rem', flex: 1 }}>
+                {s.name || s.id}
+              </span>
+              {s.phase && (
+                <span style={{ fontSize: '0.55rem', color: 'var(--accent)', textTransform: 'uppercase' }}>
+                  {s.phase}
+                </span>
+              )}
+              <span style={{ fontSize: '0.55rem', color: 'var(--text-secondary)' }}>
+                {s.id?.slice(0, 8)}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
 }
