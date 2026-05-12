@@ -155,9 +155,10 @@ async def create_element(body: ElementCreate, study_id: str = Query(...)) -> dic
 
     # Broadcast creation via study WebSocket
     from .ws import _broadcast_study
-    asyncio.ensure_future(_broadcast_study(study_id, {
-        "type": "element_created", "element": element,
-    }))
+    try:
+        await _broadcast_study(study_id, {"type": "element_created", "element": element})
+    except Exception as exc:
+        logger.warning("Broadcast failed: %s", exc)
 
     return element
 
@@ -199,9 +200,10 @@ async def update_element(element_id: str, body: ElementUpdate) -> dict:
 
     # Broadcast update via study WebSocket
     from .ws import _broadcast_study
-    asyncio.ensure_future(_broadcast_study(el["study_id"], {
-        "type": "element_updated", "element": el,
-    }))
+    try:
+        await _broadcast_study(el["study_id"], {"type": "element_updated", "element": el})
+    except Exception as exc:
+        logger.warning("Broadcast failed: %s", exc)
 
     return el
 
@@ -256,11 +258,13 @@ async def delete_element(element_id: str) -> dict:
     # Broadcast deletion via study WebSocket
     if study_id_for_broadcast:
         from .ws import _broadcast_study
-        asyncio.ensure_future(_broadcast_study(study_id_for_broadcast, {
-            "type": "element_deleted",
-            "element_id": element_id,
-            "children_deleted": children_to_delete,
-        }))
+        try:
+            await _broadcast_study(study_id_for_broadcast, {
+                "type": "element_deleted", "element_id": element_id,
+                "children_deleted": children_to_delete,
+            })
+        except Exception as exc:
+            logger.warning("Broadcast failed: %s", exc)
 
     return result
 

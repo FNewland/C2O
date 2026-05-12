@@ -72,12 +72,16 @@ _heartbeat_task: asyncio.Task | None = None
 
 async def _broadcast_study(study_id: str, message: dict, exclude: str | None = None) -> None:
     """Broadcast to all connected users in a study, optionally excluding one."""
-    for name, ws in list(_study_connections.get(study_id, {}).items()):
+    conns = _study_connections.get(study_id, {})
+    logger.info("Broadcasting %s to study %s (%d connections, exclude=%s)",
+                message.get("type"), study_id, len(conns), exclude)
+    for name, ws in list(conns.items()):
         if name != exclude:
             try:
                 await ws.send_json(message)
-            except Exception:
-                pass
+                logger.info("  → sent to %s", name)
+            except Exception as exc:
+                logger.warning("  → failed to send to %s: %s", name, exc)
 
 
 async def _heartbeat_checker() -> None:
@@ -434,21 +438,19 @@ async def study_websocket(
         _study_contributors[study_id].append(name)
 
     # Broadcast updated user list
-    users = list(_study_connections[study_id].keys())
+    users = [{"name": n} for n in _study_connections[study_id].keys()]
+    logger.info("Study %s: user %s connected. Active users: %s", study_id, name, [u["name"] for u in users])
     await _broadcast_study(study_id, {
         "type": "users_update",
         "users": users,
     })
 
-    # Send current lock state to the new connection
-    locks_payload: dict[str, dict] = {}
-    for eid, lock in _edit_locks.get(study_id, {}).items():
-        locks_payload[eid] = {
-            "element_id": lock.element_id,
-            "held_by": lock.held_by,
-            "acquired_at": lock.acquired_at,
-        }
-    await _send(websocket, {"type": "locks_state", "locks": locks_payload})
+    # Send current lock state to the new connection (as array for frontend)
+    locks_list = [
+        {"element_id": lock.element_id, "held_by": lock.held_by}
+        for lock in _edit_locks.get(study_id, {}).values()
+    ]
+    await _send(websocket, {"type": "locks_state", "locks": locks_list})
 
     # Message loop
     try:
@@ -542,7 +544,8 @@ async def study_websocket(
         conns.pop(name, None)
 
         # Broadcast updated user list
-        users = list(_study_connections.get(study_id, {}).keys())
+        users = [{"name": n} for n in _study_connections.get(study_id, {}).keys()]
+        logger.info("Study %s: user %s disconnected. Remaining: %s", study_id, name, [u["name"] for u in users])
         await _broadcast_study(study_id, {
             "type": "users_update",
             "users": users,
