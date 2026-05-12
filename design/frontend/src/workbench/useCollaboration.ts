@@ -98,14 +98,11 @@ function _connect(studyId: string, userName: string) {
           case 'element_created':
           case 'element_updated':
           case 'element_deleted':
-            // Invalidate + force refetch with cache bust
-            _qcRef?.invalidateQueries({ queryKey: ['elements', studyId], refetchType: 'all' })
-            _qcRef?.invalidateQueries({ queryKey: ['budget'], refetchType: 'all' })
-            _qcRef?.invalidateQueries({ queryKey: ['escalation'], refetchType: 'all' })
-            break
           case 'interface_created':
           case 'interface_deleted':
-            _qcRef?.invalidateQueries({ queryKey: ['interfaces', studyId], refetchType: 'all' })
+            // Refetch ALL active queries — ensures budget, requirements,
+            // interfaces, escalation, readiness all update immediately
+            _qcRef?.refetchQueries({ type: 'active' })
             break
         }
       } catch { /* ignore */ }
