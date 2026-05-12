@@ -578,6 +578,12 @@ const wizBtn: React.CSSProperties = {
 // ─── Active Studies List ───
 
 function ActiveStudies({ onJoin }: { onJoin: (studyId: string) => void }) {
+  const directJoin = useCallback((id: string) => {
+    useUIStore.getState().setStudyId(id)
+    // Also reset breadcrumb to root
+    useUIStore.getState().drillUp(-1)
+    onJoin(id)
+  }, [onJoin])
   const [studies, setStudies] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [expanded, setExpanded] = useState(false)
@@ -638,7 +644,7 @@ function ActiveStudies({ onJoin }: { onJoin: (studyId: string) => void }) {
                 padding: '0.3rem 0.5rem', borderRadius: '4px',
                 background: 'var(--bg-primary)', border: '1px solid var(--border)',
               }}>
-                <button onClick={() => onJoin(s.id)} style={{
+                <button onClick={() => directJoin(s.id)} style={{
                   background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-primary)',
                   fontWeight: 600, fontSize: '0.72rem', flex: 1, textAlign: 'left', padding: 0,
                 }}>
