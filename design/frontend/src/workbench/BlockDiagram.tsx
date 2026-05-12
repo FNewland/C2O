@@ -176,6 +176,7 @@ export function BlockDiagram() {
     queryKey: ['elements', studyId],
     queryFn: () => fetch(`${API}/studies/${studyId}/elements`).then(r => r.json()),
     enabled: !!studyId,
+    structuralSharing: false,  // Force new reference on every fetch for real-time sync
   })
 
   // Fetch interfaces for this study
@@ -183,6 +184,7 @@ export function BlockDiagram() {
     queryKey: ['interfaces', studyId],
     queryFn: () => fetch(`${API}/studies/${studyId}/interfaces`).then(r => r.json()),
     enabled: !!studyId,
+    structuralSharing: false,
   })
 
   // Filter to children of the focus element (or roots if no focus)
