@@ -28,19 +28,19 @@ export function ReadinessChecklist() {
   const { data: allElements = [] } = useQuery({
     queryKey: ['elements', studyId],
     queryFn: () => fetch(`${API}/studies/${studyId}/elements`).then(r => r.json()),
-    enabled: !!studyId,
+    enabled: !!studyId, structuralSharing: false,
   })
 
   const { data: allRequirements = [] } = useQuery({
     queryKey: ['requirements', studyId],
     queryFn: () => fetch(`${API}/requirements/tree?study_id=${studyId}`).then(r => r.json()),
-    enabled: !!studyId,
+    enabled: !!studyId, structuralSharing: false,
   })
 
   const { data: allInterfaces = [] } = useQuery({
     queryKey: ['interfaces', studyId],
     queryFn: () => fetch(`${API}/studies/${studyId}/interfaces`).then(r => r.json()),
-    enabled: !!studyId,
+    enabled: !!studyId, structuralSharing: false,
   })
 
   const checks = useMemo<Check[]>(() => {

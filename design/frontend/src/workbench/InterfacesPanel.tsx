@@ -27,7 +27,7 @@ export function InterfacesPanel() {
   const { data: allElements = [] } = useQuery({
     queryKey: ['elements', studyId],
     queryFn: () => fetch(`${API}/studies/${studyId}/elements`).then(r => r.json()),
-    enabled: !!studyId,
+    enabled: !!studyId, structuralSharing: false,
   })
 
   const siblings = allElements.filter((el: any) =>
@@ -38,7 +38,7 @@ export function InterfacesPanel() {
   const { data: allInterfaces = [] } = useQuery({
     queryKey: ['interfaces', studyId],
     queryFn: () => fetch(`${API}/studies/${studyId}/interfaces`).then(r => r.json()),
-    enabled: !!studyId,
+    enabled: !!studyId, structuralSharing: false,
   })
 
   // Filter to interfaces between visible siblings

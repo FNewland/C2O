@@ -42,7 +42,7 @@ export function RequirementsPanel() {
   const { data: allElements = [] } = useQuery({
     queryKey: ['elements', studyId],
     queryFn: () => fetch(`${API}/studies/${studyId}/elements`).then(r => r.json()),
-    enabled: !!studyId,
+    enabled: !!studyId, structuralSharing: false,
   })
 
   // Children of current focus (the elements we can assign requirements to)
@@ -56,7 +56,7 @@ export function RequirementsPanel() {
   const { data: allRequirements = [] } = useQuery({
     queryKey: ['requirements', studyId],
     queryFn: () => fetch(`${API}/requirements/tree?study_id=${studyId}`).then(r => r.json()),
-    enabled: !!studyId,
+    enabled: !!studyId, structuralSharing: false,
   })
 
   // Filter to requirements relevant to current view

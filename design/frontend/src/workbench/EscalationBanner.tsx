@@ -36,7 +36,7 @@ export function EscalationBanner() {
   const { data: allElements = [] } = useQuery({
     queryKey: ['elements', studyId],
     queryFn: () => fetch(`${API}/studies/${studyId}/elements`).then(r => r.json()),
-    enabled: !!studyId,
+    enabled: !!studyId, structuralSharing: false,
   })
 
   // Find mission root as well

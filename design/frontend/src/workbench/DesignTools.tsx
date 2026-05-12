@@ -49,7 +49,7 @@ export function DesignTools() {
   const { data: allElements = [] } = useQuery({
     queryKey: ['elements', studyId],
     queryFn: () => fetch(`${API}/studies/${studyId}/elements`).then(r => r.json()),
-    enabled: !!studyId,
+    enabled: !!studyId, structuralSharing: false,
   })
 
   const focusElement = allElements.find((e: any) => e.id === focusElementId)

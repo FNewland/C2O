@@ -30,13 +30,13 @@ export function VVPanel() {
   const { data: allElements = [] } = useQuery({
     queryKey: ['elements', studyId],
     queryFn: () => fetch(`${API}/studies/${studyId}/elements`).then(r => r.json()),
-    enabled: !!studyId,
+    enabled: !!studyId, structuralSharing: false,
   })
 
   const { data: allRequirements = [] } = useQuery({
     queryKey: ['requirements', studyId],
     queryFn: () => fetch(`${API}/requirements/tree?study_id=${studyId}`).then(r => r.json()),
-    enabled: !!studyId,
+    enabled: !!studyId, structuralSharing: false,
   })
 
   const sections = [
@@ -204,7 +204,7 @@ function ReviewGates({ studyId }: { studyId: string | null }) {
   const { data: gateResult, isLoading } = useQuery({
     queryKey: ['gate-evaluate', studyId, activeGate],
     queryFn: () => fetch(`${API}/ecss/gate-evaluate/${studyId}/${activeGate}`).then(r => r.json()),
-    enabled: !!studyId,
+    enabled: !!studyId, structuralSharing: false,
   })
 
   return (
