@@ -9,6 +9,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useUIStore, type Level } from '../stores/uiStore'
 import { EquipmentBrowser } from './EquipmentBrowser'
 import { DesignTools } from './DesignTools'
+import { useCollaboration } from './useCollaboration'
 
 const API = '/api'
 
@@ -112,6 +113,7 @@ export function BlocksPanel() {
   const focusElementId = useUIStore(s => s.focusElementId)
   const currentLevel = useUIStore(s => s.currentLevel)
   const qc = useQueryClient()
+  const { isLockedByOther, lockHolder, requestLock, releaseLock } = useCollaboration()
 
   // Elements at current focus
   const { data: allElements = [] } = useQuery({
@@ -225,12 +227,23 @@ export function BlocksPanel() {
             }}>
               {el.subsystem_domain || el.element_type}
             </span>
-            <InlineEdit
-              value={el.name}
-              onCommit={(v) => patchElement(el.id, { name: v })}
-              style={{ fontWeight: 500, flex: 1 }}
-              inputStyle={{ width: 120, fontWeight: 500 }}
-            />
+            {/* Lock indicator */}
+            {isLockedByOther(el.id) && (
+              <span style={{ fontSize: '0.5rem', padding: '0.05rem 0.2rem', borderRadius: '2px', background: 'rgba(239,68,68,0.15)', color: 'var(--danger)', fontWeight: 600, flexShrink: 0 }}
+                title={`Locked by ${lockHolder(el.id)}`}>
+                🔒 {lockHolder(el.id)}
+              </span>
+            )}
+            {isLockedByOther(el.id) ? (
+              <span style={{ fontWeight: 500, flex: 1, color: 'var(--text-secondary)' }}>{el.name}</span>
+            ) : (
+              <InlineEdit
+                value={el.name}
+                onCommit={(v) => { requestLock(el.id); patchElement(el.id, { name: v }); releaseLock(el.id) }}
+                style={{ fontWeight: 500, flex: 1 }}
+                inputStyle={{ width: 120, fontWeight: 500 }}
+              />
+            )}
 
             {el.mass_kg != null && (
               <InlineEdit

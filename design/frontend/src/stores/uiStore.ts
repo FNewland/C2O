@@ -36,6 +36,10 @@ interface UIStore {
   analysisRunning: boolean
   setAnalysisRunning: (running: boolean) => void
 
+  // User identity
+  userName: string
+  setUserName: (name: string) => void
+
   // Modals
   showExport: boolean
   setShowExport: (show: boolean) => void
@@ -102,6 +106,9 @@ export const useUIStore = create<UIStore>((set, get) => ({
 
   analysisRunning: false,
   setAnalysisRunning: (running) => set({ analysisRunning: running }),
+
+  userName: localStorage.getItem('spacecdf-username') || '',
+  setUserName: (name) => { localStorage.setItem('spacecdf-username', name); set({ userName: name }) },
 
   showExport: false,
   setShowExport: (show) => set({ showExport: show }),

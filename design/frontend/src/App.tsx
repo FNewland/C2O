@@ -16,6 +16,7 @@ import { ReadinessChecklist } from './workbench/ReadinessChecklist'
 import { EscalationBanner } from './workbench/EscalationBanner'
 import { ExportPanel } from './workbench/ExportPanel'
 import { GuidancePanel } from './workbench/GuidancePanel'
+import { PresenceBar } from './workbench/PresenceBar'
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 10_000 } },
@@ -506,15 +507,38 @@ function StatusBar() {
 
 // ─── App Shell ───
 
+function NamePrompt() {
+  const [name, setName] = useState('')
+  const setUserName = useUIStore(s => s.setUserName)
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', background: 'var(--bg-primary)', gap: '1rem' }}>
+      <h1 style={{ fontSize: '1.5rem', color: '#8B0000', margin: 0 }}>SpaceCDF</h1>
+      <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Enter your name to join the design session</p>
+      <div style={{ display: 'flex', gap: '0.5rem' }}>
+        <input value={name} onChange={e => setName(e.target.value)} placeholder="Your name"
+          autoFocus onKeyDown={e => e.key === 'Enter' && name && setUserName(name)}
+          style={{ padding: '0.5rem 0.75rem', fontSize: '0.85rem', borderRadius: '4px', background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text-primary)', width: 200 }} />
+        <button onClick={() => name && setUserName(name)} disabled={!name}
+          style={{ padding: '0.5rem 1.5rem', fontSize: '0.85rem', fontWeight: 600, borderRadius: '4px', background: 'var(--accent)', color: 'white', border: 'none', cursor: 'pointer' }}>
+          Join
+        </button>
+      </div>
+    </div>
+  )
+}
+
 function AppShell() {
   const studyId = useUIStore(s => s.studyId)
+  const userName = useUIStore(s => s.userName)
   const showExport = useUIStore(s => s.showExport)
   const showGuide = useUIStore(s => s.showGuide)
 
+  if (!userName) return <NamePrompt />
   if (!studyId) return <MissionWizard />
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
+      <PresenceBar />
       <LevelBar />
       <StatusBar />
       <ReadinessChecklist />

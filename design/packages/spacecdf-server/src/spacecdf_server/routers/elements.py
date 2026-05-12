@@ -9,6 +9,7 @@ so data survives restarts.
 """
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any
 from uuid import uuid4
@@ -151,6 +152,13 @@ async def create_element(body: ElementCreate, study_id: str = Query(...)) -> dic
     # Write to DB first, then cache
     await db_create_element(element)
     _elements[el_id] = element
+
+    # Broadcast creation via study WebSocket
+    from .ws import _broadcast_study
+    asyncio.ensure_future(_broadcast_study(study_id, {
+        "type": "element_created", "element": element,
+    }))
+
     return element
 
 
@@ -188,6 +196,13 @@ async def update_element(element_id: str, body: ElementUpdate) -> dict:
 
     # Persist to DB
     await db_update_element(element_id, el)
+
+    # Broadcast update via study WebSocket
+    from .ws import _broadcast_study
+    asyncio.ensure_future(_broadcast_study(el["study_id"], {
+        "type": "element_updated", "element": el,
+    }))
+
     return el
 
 
@@ -197,6 +212,7 @@ async def delete_element(element_id: str) -> dict:
     el = _elements.get(element_id)
     if not el:
         raise HTTPException(404, f"Element {element_id} not found")
+    study_id_for_broadcast = el.get("study_id")
     from datetime import datetime, timezone
     deleted_at = datetime.now(timezone.utc).isoformat()
 
@@ -235,7 +251,18 @@ async def delete_element(element_id: str) -> dict:
     for iface_id in iface_ids_to_delete:
         await db_soft_delete_interface(iface_id, deleted_at)
 
-    return {"id": element_id, "deleted": True, "children_deleted": len(children_to_delete), "interfaces_deleted": len(iface_ids_to_delete)}
+    result = {"id": element_id, "deleted": True, "children_deleted": len(children_to_delete), "interfaces_deleted": len(iface_ids_to_delete)}
+
+    # Broadcast deletion via study WebSocket
+    if study_id_for_broadcast:
+        from .ws import _broadcast_study
+        asyncio.ensure_future(_broadcast_study(study_id_for_broadcast, {
+            "type": "element_deleted",
+            "element_id": element_id,
+            "children_deleted": children_to_delete,
+        }))
+
+    return result
 
 
 # ─── Tree Traversal ───

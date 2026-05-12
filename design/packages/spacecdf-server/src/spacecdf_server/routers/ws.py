@@ -27,9 +27,13 @@ Server → Client:
 """
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
+import time
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
+from typing import Any
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query
 
@@ -42,6 +46,61 @@ router = APIRouter()
 
 # Active WebSocket connections: session_id -> {position_id: WebSocket}
 _connections: dict[str, dict[str, WebSocket]] = {}
+
+
+# ─── Edit Lock System for Level Workbench ───
+
+@dataclass
+class EditLock:
+    element_id: str
+    held_by: str  # display name
+    study_id: str
+    acquired_at: float
+    last_heartbeat: float
+
+
+# study_id → {element_id → EditLock}
+_edit_locks: dict[str, dict[str, EditLock]] = {}
+# study_id → [display_name] — all contributors who ever connected
+_study_contributors: dict[str, list[str]] = {}
+# study_id → {display_name → WebSocket}
+_study_connections: dict[str, dict[str, Any]] = {}
+
+# Background task handle
+_heartbeat_task: asyncio.Task | None = None
+
+
+async def _broadcast_study(study_id: str, message: dict, exclude: str | None = None) -> None:
+    """Broadcast to all connected users in a study, optionally excluding one."""
+    for name, ws in list(_study_connections.get(study_id, {}).items()):
+        if name != exclude:
+            try:
+                await ws.send_json(message)
+            except Exception:
+                pass
+
+
+async def _heartbeat_checker() -> None:
+    """Background task: expire locks whose heartbeat is older than 30 seconds."""
+    while True:
+        await asyncio.sleep(10)
+        now = time.time()
+        for study_id, locks in list(_edit_locks.items()):
+            for eid, lock in list(locks.items()):
+                if now - lock.last_heartbeat > 30:
+                    del locks[eid]
+                    await _broadcast_study(study_id, {
+                        "type": "lock_expired",
+                        "element_id": eid,
+                        "was_held_by": lock.held_by,
+                    })
+
+
+def start_heartbeat_checker() -> None:
+    """Start the background heartbeat checker (call once at app startup)."""
+    global _heartbeat_task
+    if _heartbeat_task is None or _heartbeat_task.done():
+        _heartbeat_task = asyncio.ensure_future(_heartbeat_checker())
 
 
 async def _broadcast(session_id: str, message: dict, exclude_position: str | None = None) -> None:
@@ -330,3 +389,170 @@ async def websocket_session(
             "active_positions": session.active_positions,
             "timestamp": datetime.now(timezone.utc).isoformat(),
         })
+
+
+# ─── Level Workbench: study-scoped WebSocket with edit locking ───
+
+@router.websocket("/ws/study/{study_id}")
+async def study_websocket(
+    websocket: WebSocket,
+    study_id: str,
+    name: str = Query("Anonymous"),
+) -> None:
+    """WebSocket for the Level Workbench — collaborative editing with element locking.
+
+    Connect: ws://host/ws/study/{study_id}?name=Alice
+
+    Client → Server:
+      {"type": "lock_request", "element_id": "..."}
+      {"type": "lock_release", "element_id": "..."}
+      {"type": "heartbeat"}
+      {"type": "element_created/updated/deleted", ...}
+
+    Server → Client:
+      {"type": "users_update", "users": [...]}
+      {"type": "locks_state", "locks": {...}}
+      {"type": "element_locked", "element_id": "...", "held_by": "..."}
+      {"type": "lock_denied", "element_id": "...", "held_by": "..."}
+      {"type": "lock_released", "element_id": "...", "released_by": "..."}
+      {"type": "lock_expired", "element_id": "...", "was_held_by": "..."}
+    """
+    await websocket.accept()
+
+    # Ensure heartbeat checker is running
+    start_heartbeat_checker()
+
+    # Register connection
+    if study_id not in _study_connections:
+        _study_connections[study_id] = {}
+    _study_connections[study_id][name] = websocket
+
+    # Track contributor
+    if study_id not in _study_contributors:
+        _study_contributors[study_id] = []
+    if name not in _study_contributors[study_id]:
+        _study_contributors[study_id].append(name)
+
+    # Broadcast updated user list
+    users = list(_study_connections[study_id].keys())
+    await _broadcast_study(study_id, {
+        "type": "users_update",
+        "users": users,
+    })
+
+    # Send current lock state to the new connection
+    locks_payload: dict[str, dict] = {}
+    for eid, lock in _edit_locks.get(study_id, {}).items():
+        locks_payload[eid] = {
+            "element_id": lock.element_id,
+            "held_by": lock.held_by,
+            "acquired_at": lock.acquired_at,
+        }
+    await _send(websocket, {"type": "locks_state", "locks": locks_payload})
+
+    # Message loop
+    try:
+        while True:
+            raw = await websocket.receive_text()
+            try:
+                msg = json.loads(raw)
+            except json.JSONDecodeError:
+                await _send(websocket, {"type": "error", "message": "Invalid JSON"})
+                continue
+
+            msg_type = msg.get("type")
+
+            if msg_type == "lock_request":
+                eid = msg.get("element_id")
+                if not eid:
+                    await _send(websocket, {"type": "error", "message": "Missing element_id"})
+                    continue
+
+                study_locks = _edit_locks.setdefault(study_id, {})
+                existing = study_locks.get(eid)
+
+                if existing and existing.held_by != name:
+                    # Locked by someone else
+                    await _send(websocket, {
+                        "type": "lock_denied",
+                        "element_id": eid,
+                        "held_by": existing.held_by,
+                    })
+                else:
+                    # Grant lock (or re-grant to same user)
+                    now = time.time()
+                    study_locks[eid] = EditLock(
+                        element_id=eid,
+                        held_by=name,
+                        study_id=study_id,
+                        acquired_at=now,
+                        last_heartbeat=now,
+                    )
+                    await _broadcast_study(study_id, {
+                        "type": "element_locked",
+                        "element_id": eid,
+                        "held_by": name,
+                    })
+
+            elif msg_type == "lock_release":
+                eid = msg.get("element_id")
+                if not eid:
+                    continue
+                study_locks = _edit_locks.get(study_id, {})
+                existing = study_locks.get(eid)
+                if existing and existing.held_by == name:
+                    del study_locks[eid]
+                    await _broadcast_study(study_id, {
+                        "type": "lock_released",
+                        "element_id": eid,
+                        "released_by": name,
+                    })
+
+            elif msg_type == "heartbeat":
+                # Update last_heartbeat on all locks held by this user
+                for eid, lock in _edit_locks.get(study_id, {}).items():
+                    if lock.held_by == name:
+                        lock.last_heartbeat = time.time()
+
+            elif msg_type in ("element_created", "element_updated", "element_deleted"):
+                # Relay to all OTHER connections in this study
+                await _broadcast_study(study_id, msg, exclude=name)
+
+            else:
+                await _send(websocket, {"type": "error", "message": f"Unknown message type: {msg_type}"})
+
+    except WebSocketDisconnect:
+        logger.info("User %s disconnected from study %s", name, study_id)
+    except Exception as e:
+        logger.error("Study WebSocket error for %s in %s: %s", name, study_id, e)
+    finally:
+        # Release all locks held by this user
+        study_locks = _edit_locks.get(study_id, {})
+        released_eids = [eid for eid, lock in study_locks.items() if lock.held_by == name]
+        for eid in released_eids:
+            del study_locks[eid]
+            await _broadcast_study(study_id, {
+                "type": "lock_released",
+                "element_id": eid,
+                "released_by": name,
+            })
+
+        # Remove connection
+        conns = _study_connections.get(study_id, {})
+        conns.pop(name, None)
+
+        # Broadcast updated user list
+        users = list(_study_connections.get(study_id, {}).keys())
+        await _broadcast_study(study_id, {
+            "type": "users_update",
+            "users": users,
+        })
+
+
+@router.get("/ws/study/{study_id}/contributors")
+async def get_contributors(study_id: str) -> dict:
+    """Return all users who have ever connected to this study's WebSocket."""
+    return {
+        "study_id": study_id,
+        "contributors": _study_contributors.get(study_id, []),
+    }
