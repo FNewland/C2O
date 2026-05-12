@@ -301,14 +301,22 @@ function StatusBar() {
         onClick={async () => {
           if (!studyId) return
           try {
-            const [elements, interfaces, requirements] = await Promise.all([
+            const [elements, interfaces, requirements, allocations, study] = await Promise.all([
               fetch(`${API}/studies/${studyId}/elements`).then(r => r.json()),
               fetch(`${API}/studies/${studyId}/interfaces`).then(r => r.json()),
               fetch(`${API}/requirements/tree?study_id=${studyId}`).then(r => r.json()),
+              fetch(`${API}/studies/${studyId}/allocations`).then(r => r.ok ? r.json() : []),
+              fetch(`${API}/studies/${studyId}`).then(r => r.ok ? r.json() : null),
             ])
             const { breadcrumb, currentLevel, focusElementId } = useUIStore.getState()
             const uiState = { breadcrumb, currentLevel, focusElementId }
-            const blob = new Blob([JSON.stringify({ studyId, elements, interfaces, requirements, uiState }, null, 2)], { type: 'application/json' })
+            // Also save localStorage items (risk register, pugh matrix)
+            const riskRegister = JSON.parse(localStorage.getItem(`spacecdf-risks-${studyId}`) || '[]')
+            const pughMatrix = JSON.parse(localStorage.getItem('spacecdf-pugh') || '{}')
+            const blob = new Blob([JSON.stringify({
+              studyId, elements, interfaces, requirements, allocations,
+              studyMetadata: study, uiState, riskRegister, pughMatrix,
+            }, null, 2)], { type: 'application/json' })
             const a = document.createElement('a')
             a.href = URL.createObjectURL(blob)
             a.download = `spacecdf_${new Date().toISOString().slice(0, 10)}.json`

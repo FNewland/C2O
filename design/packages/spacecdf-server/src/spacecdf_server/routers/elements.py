@@ -499,6 +499,12 @@ async def set_allocation(element_id: str, body: BudgetAllocationCreate) -> dict:
     return alloc
 
 
+@router.get("/studies/{study_id}/allocations")
+async def list_allocations(study_id: str) -> list[dict]:
+    """List all budget allocations for a study."""
+    return [a for a in _budget_allocations if a.get("study_id") == study_id]
+
+
 # ─── Interfaces ───
 
 @router.post("/interfaces/")

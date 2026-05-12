@@ -216,9 +216,11 @@ export function MissionWizard() {
       try {
         const data = JSON.parse(await file.text())
         if (!data.elements) { alert('Invalid save file'); return }
+        const studyReq = data.studyMetadata?.requirements || { name: data.studyMetadata?.name || 'Loaded Mission' }
+        const studyNeed = data.studyMetadata?.mission_need || {}
         const studyRes = await fetch(`${API}/studies/`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ requirements: { name: 'Loaded Mission' }, mission_need: {} }),
+          body: JSON.stringify({ requirements: studyReq, mission_need: studyNeed }),
         })
         if (!studyRes.ok) return
         const newStudy = await studyRes.json()
@@ -245,7 +247,45 @@ export function MissionWizard() {
             })
           }
         }
-        setStudyId(newStudy.id); qc.invalidateQueries()
+        // Restore requirements
+        if (data.requirements) {
+          for (const req of data.requirements) {
+            const elementId = req.element_id ? oldToNew.get(req.element_id) : undefined
+            const parentId = req.derived_from_requirement_id  // Can't remap req IDs easily, keep as-is
+            await fetch(`${API}/requirements/`, {
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ ...req, id: undefined, study_id: newStudy.id, element_id: elementId || undefined, derived_from_requirement_id: undefined }),
+            })
+          }
+        }
+        // Restore budget allocations
+        if (data.allocations) {
+          for (const alloc of data.allocations) {
+            const elementId = oldToNew.get(alloc.element_id)
+            if (elementId) {
+              await fetch(`${API}/elements/${elementId}/allocations`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ budget_type: alloc.budget_type, allocation_value: alloc.allocation_value, unit: alloc.unit || '', source: alloc.source || 'loaded', rationale: alloc.rationale || '' }),
+              })
+            }
+          }
+        }
+        // Restore risk register and pugh matrix to localStorage
+        if (data.riskRegister?.length > 0) {
+          localStorage.setItem(`spacecdf-risks-${newStudy.id}`, JSON.stringify(data.riskRegister))
+        }
+        if (data.pughMatrix && Object.keys(data.pughMatrix).length > 0) {
+          localStorage.setItem('spacecdf-pugh', JSON.stringify(data.pughMatrix))
+        }
+        // Restore UI state
+        setStudyId(newStudy.id)
+        if (data.uiState?.breadcrumb) {
+          const mapped = data.uiState.breadcrumb
+            .map((c: any) => ({ id: oldToNew.get(c.id) || c.id, name: c.name }))
+            .filter((c: any) => c.id)
+          for (const crumb of mapped) { useUIStore.getState().drillInto(crumb.id, crumb.name) }
+        }
+        qc.invalidateQueries()
       } catch { alert('Load failed') }
     }
     input.click()
