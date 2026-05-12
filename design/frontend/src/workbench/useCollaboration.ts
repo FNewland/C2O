@@ -98,12 +98,13 @@ function _connect(studyId: string, userName: string) {
           case 'element_created':
           case 'element_updated':
           case 'element_deleted':
-            _qcRef?.invalidateQueries({ queryKey: ['elements', studyId] })
-            _qcRef?.invalidateQueries({ queryKey: ['budget'] })
+            _qcRef?.refetchQueries({ queryKey: ['elements', studyId] })
+            _qcRef?.refetchQueries({ queryKey: ['budget'] })
+            _qcRef?.refetchQueries({ queryKey: ['escalation'] })
             break
           case 'interface_created':
           case 'interface_deleted':
-            _qcRef?.invalidateQueries({ queryKey: ['interfaces', studyId] })
+            _qcRef?.refetchQueries({ queryKey: ['interfaces', studyId] })
             break
         }
       } catch { /* ignore */ }

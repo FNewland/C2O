@@ -19,7 +19,7 @@ import { GuidancePanel } from './workbench/GuidancePanel'
 import { PresenceBar } from './workbench/PresenceBar'
 
 const queryClient = new QueryClient({
-  defaultOptions: { queries: { retry: 1, staleTime: 10_000 } },
+  defaultOptions: { queries: { retry: 1, staleTime: 2_000 } },
 })
 
 const API = '/api'
