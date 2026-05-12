@@ -627,29 +627,55 @@ function ActiveStudies({ onJoin }: { onJoin: (studyId: string) => void }) {
           {loading ? 'Loading...' : 'No active studies found. Create a new mission to start.'}
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-          {studies.map((s: any) => (
-            <button key={s.id} onClick={() => onJoin(s.id)}
-              style={{
-                display: 'flex', alignItems: 'center', gap: '0.4rem',
-                padding: '0.35rem 0.5rem', borderRadius: '4px', textAlign: 'left',
+        <>
+          <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', marginBottom: '0.2rem' }}>
+            {studies.length} studies — most recent first
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', maxHeight: 200, overflow: 'auto' }}>
+            {studies.slice().reverse().map((s: any) => (
+              <div key={s.id} style={{
+                display: 'flex', alignItems: 'center', gap: '0.3rem',
+                padding: '0.3rem 0.5rem', borderRadius: '4px',
                 background: 'var(--bg-primary)', border: '1px solid var(--border)',
-                color: 'var(--text-primary)', cursor: 'pointer', width: '100%',
               }}>
-              <span style={{ fontWeight: 600, fontSize: '0.75rem', flex: 1 }}>
-                {s.name || s.id}
-              </span>
-              {s.phase && (
-                <span style={{ fontSize: '0.55rem', color: 'var(--accent)', textTransform: 'uppercase' }}>
-                  {s.phase}
-                </span>
-              )}
-              <span style={{ fontSize: '0.55rem', color: 'var(--text-secondary)' }}>
-                {s.id?.slice(0, 8)}
-              </span>
+                <button onClick={() => onJoin(s.id)} style={{
+                  background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-primary)',
+                  fontWeight: 600, fontSize: '0.72rem', flex: 1, textAlign: 'left', padding: 0,
+                }}>
+                  {s.name || s.id}
+                </button>
+                {s.phase && (
+                  <span style={{ fontSize: '0.5rem', color: 'var(--accent)', textTransform: 'uppercase' }}>{s.phase}</span>
+                )}
+                {s.created && (
+                  <span style={{ fontSize: '0.5rem', color: 'var(--text-secondary)' }}>
+                    {new Date(s.created).toLocaleDateString()}
+                  </span>
+                )}
+                <button onClick={async (e) => {
+                  e.stopPropagation()
+                  if (!confirm(`Delete study "${s.name || s.id}"? This cannot be undone.`)) return
+                  await fetch(`${API}/studies/${s.id}`, { method: 'DELETE' })
+                  refresh()
+                }} style={{
+                  background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)',
+                  fontSize: '0.7rem', padding: '0 0.2rem', flexShrink: 0,
+                }} title="Delete study">
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
+          {studies.length > 5 && (
+            <button onClick={async () => {
+              if (!confirm(`Delete all ${studies.length} studies? This cannot be undone.`)) return
+              for (const s of studies) { await fetch(`${API}/studies/${s.id}`, { method: 'DELETE' }) }
+              refresh()
+            }} style={{ fontSize: '0.6rem', color: 'var(--danger)', background: 'none', border: 'none', cursor: 'pointer', marginTop: '0.2rem' }}>
+              Delete all studies
             </button>
-          ))}
-        </div>
+          )}
+        </>
       )}
     </div>
   )
