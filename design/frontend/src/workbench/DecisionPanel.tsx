@@ -361,24 +361,69 @@ function GroundTradeWidget({ studyId }: { studyId: string | null }) {
 function ContactScheduleWidget({ studyId }: { studyId: string | null }) {
   const [result, setResult] = useState<any>(null)
   const [loading, setLoading] = useState(false)
+  const qc = useQueryClient()
 
   const runSchedule = async () => {
+    if (!studyId) return
     setLoading(true)
     try {
+      // Read actual orbit and ground stations from the design
+      const elements: any[] = qc.getQueryData(['elements', studyId]) || await fetch(`${API}/studies/${studyId}/elements`).then(r => r.json())
+
+      // Find orbit params from spacecraft element performance or use defaults
+      let altitude = 500, inclination = 97.4
+      for (const el of elements) {
+        const perf = el.performance || {}
+        if (perf.orbit_altitude_km) { altitude = perf.orbit_altitude_km; inclination = perf.orbit_inclination_deg || inclination; break }
+      }
+
+      // Find ground stations from elements
+      const gsElements = elements.filter((e: any) => e.segment === 'ground' && (e.performance || {}).latitude)
+      const customStations = gsElements.map((e: any) => ({
+        id: e.name.toLowerCase().replace(/\s+/g, '_'),
+        name: e.name,
+        lat: e.performance.latitude,
+        lon: e.performance.longitude,
+        antenna_m: e.performance.antenna_diameter_m || e.performance.antenna_m || 3.7,
+        min_elevation_deg: e.performance.min_elevation_deg || 5,
+        bands: e.performance.bands || ['S'],
+      }))
+
+      // Find number of spacecraft
+      const spacecraft = elements.filter((e: any) => e.segment === 'space' && e.element_type === 'system')
+      const totalSats = spacecraft.reduce((s: number, e: any) => s + (e.quantity || 1), 0)
+
+      const body: any = { orbit: { altitude_km: altitude, inclination_deg: inclination } }
+      if (customStations.length > 0) body.custom_stations = customStations
+
       const res = await fetch(`${API}/ground/schedule`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orbit: { altitude_km: 500, inclination_deg: 97.4 } }),
+        body: JSON.stringify(body),
       })
-      if (res.ok) setResult(await res.json())
+      if (res.ok) {
+        const data = await res.json()
+        data._design_context = { altitude, inclination, ground_stations: gsElements.length, spacecraft: totalSats }
+        setResult(data)
+      }
     } finally { setLoading(false) }
   }
 
   return (
     <ToolSection title="Ground Contact Schedule" color="#0ea5e9">
+      <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', marginBottom: '0.2rem' }}>
+        Uses your design's orbit parameters and ground stations from the element tree.
+      </div>
       <button onClick={runSchedule} disabled={loading} style={btnStyle}>
         {loading ? 'Computing...' : 'Predict Contact Windows'}
       </button>
+      {result?._design_context && (
+        <div style={{ fontSize: '0.55rem', color: 'var(--info)', marginTop: '0.2rem' }}>
+          Using: {result._design_context.altitude}km, {result._design_context.inclination}° inc,
+          {result._design_context.ground_stations} ground station{result._design_context.ground_stations !== 1 ? 's' : ''},
+          {result._design_context.spacecraft} spacecraft
+        </div>
+      )}
       {result && (
         <div style={{ marginTop: '0.4rem', fontSize: '0.68rem' }}>
           {(result.coverage_stats || result.contacts) && (
