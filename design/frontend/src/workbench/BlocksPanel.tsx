@@ -450,6 +450,9 @@ export function BlocksPanel() {
         </button>
       )}
 
+      {/* Auto-populate subsystem tree from KB */}
+      <PopulateButton studyId={studyId} focusElementId={focusElementId} currentLevel={currentLevel} childElements={children} />
+
       {/* Element properties editor (Tier C data capture for exports) */}
       <ElementProperties studyId={studyId} focusElementId={focusElementId} allElements={allElements} />
 
@@ -840,6 +843,75 @@ function DesignAssist({ studyId, focusElementId, currentLevel }: { studyId: stri
               </span>
             </button>
           ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+
+// ─── Populate Button: auto-create subsystems + equipment from KB ───
+
+function PopulateButton({ studyId, focusElementId, currentLevel, childElements }: {
+  studyId: string | null; focusElementId: string | null; currentLevel: number; childElements: any[]
+}) {
+  const [loading, setLoading] = useState(false)
+  const [result, setResult] = useState<string | null>(null)
+  const qc = useQueryClient()
+
+  // Show at Level 1 (segment focused) when no system children exist yet
+  const focusEl = (qc.getQueryData(['elements', studyId]) as any[] || [])
+    .find((e: any) => e.id === focusElementId)
+  const isSegment = focusEl?.element_type === 'segment'
+  const hasSystem = childElements.some((c: any) => c.element_type === 'system')
+
+  if (currentLevel !== 1 || !isSegment || hasSystem) return null
+
+  const populate = async () => {
+    if (!studyId || !focusElementId) return
+    setLoading(true)
+    setResult(null)
+    try {
+      const res = await fetch(
+        `${API}/studies/${studyId}/populate-subsystems?parent_element_id=${focusElementId}`,
+        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }
+      )
+      if (!res.ok) throw new Error(await res.text())
+      const data = await res.json()
+      setResult(data.message)
+      qc.invalidateQueries({ queryKey: ['elements', studyId] })
+    } catch (e) {
+      setResult(`Error: ${e}`)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div style={{
+      marginTop: '0.5rem', padding: '0.5rem', borderRadius: '6px',
+      background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)',
+    }}>
+      <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--accent)', marginBottom: '0.3rem' }}>
+        Quick Start
+      </div>
+      <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
+        Auto-create standard subsystems (EPS, AOCS, Comms, OBC, Thermal, Structure, Propulsion) with recommended CubeSat equipment from the component catalogue.
+      </div>
+      <button
+        onClick={populate}
+        disabled={loading}
+        style={{
+          padding: '0.3rem 0.8rem', fontSize: '0.72rem', fontWeight: 600,
+          borderRadius: '4px', background: loading ? 'var(--border)' : 'var(--accent)',
+          color: 'white', border: 'none', cursor: loading ? 'wait' : 'pointer',
+        }}
+      >
+        {loading ? 'Populating...' : 'Populate Subsystems + Equipment'}
+      </button>
+      {result && (
+        <div style={{ marginTop: '0.3rem', fontSize: '0.65rem', color: result.startsWith('Error') ? 'var(--danger)' : 'var(--success)' }}>
+          {result}
         </div>
       )}
     </div>

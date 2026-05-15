@@ -638,13 +638,15 @@ def _lookup_kb_component(kb_id: str) -> dict | None:
             for c in components:
                 if isinstance(c, dict) and (c.get("id") == kb_id or c.get("name") == kb_id):
                     return {
+                        "name": c.get("name"),
                         "mass_kg": c.get("mass_kg"),
-                        "power_avg_w": c.get("power_w"),
+                        "power_avg_w": c.get("power_w") or c.get("power_avg_w"),
                         "cost_recurring_keur": c.get("cost_keur"),
                         "trl": c.get("trl"),
                         "manufacturer": c.get("manufacturer"),
                         "part_number": c.get("part_number", c.get("id")),
                         "performance": c.get("performance"),
+                        "category": c.get("category"),
                     }
         except Exception:
             continue
@@ -667,3 +669,200 @@ async def seed_elements_from_design(study_id: str, body: SeedRequest) -> dict:
     This endpoint is retained for backward compatibility but is a no-op.
     """
     return {"status": "deprecated", "message": "Element tree is built by user, not auto-seeded from design results."}
+
+
+# ─── Populate subsystem tree with recommended equipment ───
+
+class PopulateRequest(BaseModel):
+    """Request to auto-populate a segment with subsystems and initial equipment."""
+    spacecraft_class: str = "nano"  # nano|micro|small|medium|large
+    include_equipment: bool = True  # Also add recommended components from KB
+
+
+# Standard subsystems per spacecraft class
+_SUBSYSTEM_TEMPLATES: dict[str, list[dict]] = {
+    "space": [
+        {"name": "Payload", "domain": "payload"},
+        {"name": "EPS", "domain": "power"},
+        {"name": "AOCS", "domain": "aocs"},
+        {"name": "Communications", "domain": "ttc"},
+        {"name": "On-Board Computer", "domain": "obc"},
+        {"name": "Thermal", "domain": "thermal"},
+        {"name": "Structure", "domain": "structure"},
+        {"name": "Propulsion", "domain": "propulsion"},
+    ],
+    "ground": [
+        {"name": "Ground Station", "domain": "ground"},
+        {"name": "Mission Control", "domain": "ground"},
+    ],
+}
+
+# Default equipment per subsystem domain for CubeSat-class missions
+_DEFAULT_EQUIPMENT: dict[str, list[str]] = {
+    "power": ["bat-gom-nanopow-bpx", "eps-gom-nanopow-p60", "sp-gom-nanopow-p110"],
+    "aocs": ["rw-cubew-medium", "st-cubespace-cubestar", "ss-nss-css-01", "mtq-isis-imtq"],
+    "ttc": ["txr-endurosat-uhf-ii", "ant-endurosat-uhf-dipole"],
+    "obc": ["obc-gom-nanomind-a3200"],
+    "thermal": [],  # Thermal hardware depends heavily on the mission
+    "structure": [],  # Structure is mission-specific
+    "propulsion": [],  # Not all missions need propulsion
+}
+
+
+@router.post("/studies/{study_id}/populate-subsystems")
+async def populate_subsystems(
+    study_id: str,
+    parent_element_id: str = Query(..., description="ID of the segment to populate"),
+    body: PopulateRequest = PopulateRequest(),
+) -> dict:
+    """Auto-populate a segment element with standard subsystems and initial equipment.
+
+    Creates:
+    1. A system element (e.g. "Spacecraft") under the segment
+    2. Standard subsystem elements under the system
+    3. Optionally, recommended equipment from the KB under each subsystem
+
+    This bridges the gap between "I have a mission concept" and "I have
+    equipment in the tree that drives budgets".
+    """
+    parent = _elements.get(parent_element_id)
+    if not parent:
+        raise HTTPException(404, "Parent element not found")
+    if parent["study_id"] != study_id:
+        raise HTTPException(400, "Element does not belong to this study")
+
+    segment = parent.get("segment", "space")
+    subsystem_defs = _SUBSYSTEM_TEMPLATES.get(segment, _SUBSYSTEM_TEMPLATES["space"])
+
+    created_elements: list[dict] = []
+
+    # Check if there's already a system under this segment
+    existing_children = [
+        e for e in _elements.values()
+        if e.get("parent_id") == parent_element_id
+        and not e.get("deleted_at")
+    ]
+
+    # Create system element if none exists
+    system_id = None
+    if not any(c.get("element_type") == "system" for c in existing_children):
+        system_name = "Spacecraft" if segment == "space" else f"{segment.title()} System"
+        system_el = {
+            "id": uuid4().hex,
+            "study_id": study_id,
+            "name": system_name,
+            "element_type": "system",
+            "parent_id": parent_element_id,
+            "segment": segment,
+            "version": 1,
+            "deleted_at": None,
+            "margin_percent": 20.0,
+            "quantity": parent.get("quantity", 1),
+        }
+        await db_create_element(system_el)
+        _elements[system_el["id"]] = system_el
+        created_elements.append(system_el)
+        system_id = system_el["id"]
+    else:
+        system_id = next(c["id"] for c in existing_children if c.get("element_type") == "system")
+
+    # Create subsystems
+    subsystem_ids: dict[str, str] = {}
+    existing_subsystems = [
+        e for e in _elements.values()
+        if e.get("parent_id") == system_id
+        and not e.get("deleted_at")
+        and e.get("element_type") == "subsystem"
+    ]
+    existing_domains = {e.get("subsystem_domain") for e in existing_subsystems}
+
+    for i, sub_def in enumerate(subsystem_defs):
+        if sub_def["domain"] in existing_domains:
+            # Already exists — use it
+            match = next(e for e in existing_subsystems if e.get("subsystem_domain") == sub_def["domain"])
+            subsystem_ids[sub_def["domain"]] = match["id"]
+            continue
+
+        sub_el = {
+            "id": uuid4().hex,
+            "study_id": study_id,
+            "name": sub_def["name"],
+            "element_type": "subsystem",
+            "parent_id": system_id,
+            "segment": segment,
+            "subsystem_domain": sub_def["domain"],
+            "version": 1,
+            "deleted_at": None,
+            "margin_percent": 20.0,
+            "diagram_x": 80 + (i % 4) * 200,
+            "diagram_y": 40 + (i // 4) * 140,
+        }
+        await db_create_element(sub_el)
+        _elements[sub_el["id"]] = sub_el
+        created_elements.append(sub_el)
+        subsystem_ids[sub_def["domain"]] = sub_el["id"]
+
+    # Add default equipment from KB
+    equipment_count = 0
+    if body.include_equipment and segment == "space":
+        for domain, kb_ids in _DEFAULT_EQUIPMENT.items():
+            parent_sub_id = subsystem_ids.get(domain)
+            if not parent_sub_id or not kb_ids:
+                continue
+
+            # Check existing components in this subsystem
+            existing_comps = [
+                e for e in _elements.values()
+                if e.get("parent_id") == parent_sub_id
+                and not e.get("deleted_at")
+                and e.get("element_type") == "component"
+            ]
+            if existing_comps:
+                continue  # Don't overwrite existing equipment selections
+
+            for kb_id in kb_ids:
+                kb_data = _lookup_kb_component(kb_id)
+                if not kb_data:
+                    continue
+                comp_el = {
+                    "id": uuid4().hex,
+                    "study_id": study_id,
+                    "name": kb_data.get("name") or kb_data.get("part_number", kb_id),
+                    "element_type": "component",
+                    "parent_id": parent_sub_id,
+                    "segment": segment,
+                    "subsystem_domain": domain,
+                    "kb_component_id": kb_id,
+                    "mass_kg": kb_data.get("mass_kg"),
+                    "power_avg_w": kb_data.get("power_avg_w"),
+                    "cost_recurring_keur": kb_data.get("cost_recurring_keur"),
+                    "trl": kb_data.get("trl"),
+                    "manufacturer": kb_data.get("manufacturer"),
+                    "performance": kb_data.get("performance"),
+                    "quantity": 1,
+                    "version": 1,
+                    "deleted_at": None,
+                    "margin_percent": 20.0,
+                }
+                await db_create_element(comp_el)
+                _elements[comp_el["id"]] = comp_el
+                created_elements.append(comp_el)
+                equipment_count += 1
+
+    # Broadcast
+    from .ws import _broadcast_study
+    try:
+        await _broadcast_study(study_id, {
+            "type": "elements_populated",
+            "count": len(created_elements),
+        })
+    except Exception:
+        pass
+
+    return {
+        "created": len(created_elements),
+        "system_id": system_id,
+        "subsystem_ids": subsystem_ids,
+        "equipment_count": equipment_count,
+        "message": f"Created {len(created_elements)} elements ({equipment_count} equipment items from KB)",
+    }
