@@ -25,7 +25,7 @@ const REQ_STATUS_COLORS: Record<string, string> = {
 
 export function VVPanel() {
   const studyId = useUIStore(s => s.studyId)
-  const [activeSection, setActiveSection] = useState<'budget' | 'reqs' | 'gates' | 'fmeca' | 'trace' | 'risks'>('budget')
+  const [activeSection, setActiveSection] = useState<'budget' | 'reqs' | 'gates' | 'fmeca' | 'trace' | 'risks' | 'bom' | 'maturity'>('budget')
 
   const { data: allElements = [] } = useQuery({
     queryKey: ['elements', studyId],
@@ -46,6 +46,8 @@ export function VVPanel() {
     { id: 'fmeca' as const, label: 'FMECA', color: '#ef4444' },
     { id: 'trace' as const, label: 'Traceability', color: '#10b981' },
     { id: 'risks' as const, label: 'Risk Register', color: '#f43f5e' },
+    { id: 'bom' as const, label: 'BOM', color: '#06b6d4' },
+    { id: 'maturity' as const, label: 'Maturity', color: '#a855f7' },
   ]
 
   return (
@@ -72,6 +74,8 @@ export function VVPanel() {
         {activeSection === 'fmeca' && <FMECASummary studyId={studyId} />}
         {activeSection === 'trace' && <BudgetTraceability studyId={studyId} />}
         {activeSection === 'risks' && <RiskRegister studyId={studyId} />}
+        {activeSection === 'bom' && <BOMSection elements={allElements} />}
+        {activeSection === 'maturity' && <MaturitySection elements={allElements} />}
       </div>
     </div>
   )
@@ -593,6 +597,241 @@ function RiskRegister({ studyId }: { studyId: string | null }) {
         <button onClick={() => setShowAdd(true)} style={{ padding: '0.3rem 0.6rem', fontSize: '0.68rem', fontWeight: 600, borderRadius: '4px', background: 'var(--danger)', color: 'white', border: 'none', cursor: 'pointer' }}>
           + Add Risk
         </button>
+      )}
+    </div>
+  )
+}
+
+// ─── BOM Section ───
+
+function BOMSection({ elements }: { elements: any[] }) {
+  const components = useMemo(() => elements.filter((el: any) => el.element_type === 'component'), [elements])
+
+  const totals = useMemo(() => {
+    let mass = 0, power = 0, cost = 0
+    for (const c of components) {
+      const qty = c.quantity || 1
+      mass += (c.mass_kg || 0) * qty
+      power += (c.power_avg_w || 0) * qty
+      cost += (c.cost_recurring_keur || 0) * qty
+    }
+    return { mass, power, cost }
+  }, [components])
+
+  const exportCSV = () => {
+    const headers = ['Name', 'Subsystem', 'Mass (kg)', 'Power (W)', 'Cost (kEUR)', 'TRL', 'Manufacturer', 'Qty', 'KB ID']
+    const rows = components.map((c: any) => {
+      const qty = c.quantity || 1
+      return [
+        `"${(c.name || '').replace(/"/g, '""')}"`,
+        c.subsystem_domain || '',
+        ((c.mass_kg || 0) * qty).toFixed(3),
+        ((c.power_avg_w || 0) * qty).toFixed(1),
+        ((c.cost_recurring_keur || 0) * qty).toFixed(1),
+        c.trl || '',
+        `"${(c.manufacturer || '').replace(/"/g, '""')}"`,
+        qty,
+        c.kb_component_id || '',
+      ].join(',')
+    })
+    const csv = [headers.join(','), ...rows].join('\n')
+    const blob = new Blob([csv], { type: 'text/csv' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a'); a.href = url; a.download = 'bom-export.csv'; a.click(); URL.revokeObjectURL(url)
+  }
+
+  return (
+    <div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.4rem' }}>
+        <h3 style={{ fontSize: '0.85rem', margin: 0 }}>Bill of Materials</h3>
+        <span style={{ fontSize: '0.68rem', color: 'var(--text-secondary)' }}>{components.length} components</span>
+        <span style={{ flex: 1 }} />
+        <button onClick={exportCSV} style={{
+          padding: '0.2rem 0.5rem', fontSize: '0.65rem', fontWeight: 600, borderRadius: '3px',
+          background: '#06b6d4', color: 'white', border: 'none', cursor: 'pointer',
+        }}>Export CSV</button>
+      </div>
+
+      {/* Summary */}
+      <div style={{
+        display: 'flex', gap: '1rem', padding: '0.35rem 0.5rem', marginBottom: '0.5rem',
+        background: 'rgba(6,182,212,0.06)', borderRadius: '4px', border: '1px solid rgba(6,182,212,0.15)',
+        fontSize: '0.72rem',
+      }}>
+        <span>Mass: <b style={{ fontFamily: 'monospace' }}>{totals.mass.toFixed(2)} kg</b></span>
+        <span>Power: <b style={{ fontFamily: 'monospace' }}>{totals.power.toFixed(1)} W</b></span>
+        <span>Cost: <b style={{ fontFamily: 'monospace' }}>{totals.cost.toFixed(0)} kEUR</b></span>
+      </div>
+
+      {components.length === 0 ? (
+        <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', padding: '1rem 0' }}>
+          No components in the element tree yet. Run a design and select equipment to populate the BOM.
+        </div>
+      ) : (
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.72rem' }}>
+          <thead>
+            <tr style={{ borderBottom: '1px solid var(--border)' }}>
+              <th style={thL}>Name</th><th style={thL}>Subsystem</th>
+              <th style={thR}>Mass (kg)</th><th style={thR}>Power (W)</th><th style={thR}>Cost (kEUR)</th>
+              <th style={thC}>TRL</th><th style={thL}>Manufacturer</th><th style={thC}>Qty</th><th style={thL}>KB ID</th>
+            </tr>
+          </thead>
+          <tbody>
+            {components.map((c: any) => {
+              const qty = c.quantity || 1
+              const DOMAIN_LABELS: Record<string, string> = {
+                power: 'EPS', aocs: 'AOCS', ttc: 'TTC', obc: 'OBC',
+                thermal: 'Thermal', structure: 'Structure', propulsion: 'Propulsion',
+                payload: 'Payload', ground_rf: 'Ground RF', ground_ops: 'Ground Ops',
+              }
+              return (
+                <tr key={c.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                  <td style={{ padding: '0.2rem 0.4rem', fontWeight: 500 }}>{c.name}</td>
+                  <td style={{ padding: '0.2rem 0.4rem' }}>
+                    <span style={{ fontSize: '0.55rem', padding: '0.05rem 0.2rem', borderRadius: '2px', background: 'rgba(6,182,212,0.1)', color: '#06b6d4', textTransform: 'uppercase' }}>
+                      {DOMAIN_LABELS[c.subsystem_domain] || c.subsystem_domain || '—'}
+                    </span>
+                  </td>
+                  <td style={{ ...tdR, fontFamily: 'monospace' }}>{(c.mass_kg != null ? (c.mass_kg * qty).toFixed(3) : '—')}</td>
+                  <td style={{ ...tdR, fontFamily: 'monospace' }}>{(c.power_avg_w != null ? (c.power_avg_w * qty).toFixed(1) : '—')}</td>
+                  <td style={{ ...tdR, fontFamily: 'monospace' }}>{(c.cost_recurring_keur != null ? (c.cost_recurring_keur * qty).toFixed(1) : '—')}</td>
+                  <td style={{ padding: '0.2rem 0.4rem', textAlign: 'center' }}>
+                    <span style={{ color: (c.trl || 0) >= 7 ? 'var(--success)' : (c.trl || 0) >= 5 ? 'var(--warning)' : 'var(--danger)', fontWeight: 600 }}>
+                      {c.trl || '?'}
+                    </span>
+                  </td>
+                  <td style={{ padding: '0.2rem 0.4rem', fontSize: '0.65rem', color: 'var(--text-secondary)' }}>{c.manufacturer || '—'}</td>
+                  <td style={{ padding: '0.2rem 0.4rem', textAlign: 'center', color: qty > 1 ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
+                    {qty > 1 ? `x${qty}` : qty}
+                  </td>
+                  <td style={{ padding: '0.2rem 0.4rem', fontFamily: 'monospace', fontSize: '0.6rem', color: 'var(--text-secondary)' }}>
+                    {c.kb_component_id ? c.kb_component_id.slice(0, 12) : '—'}
+                  </td>
+                </tr>
+              )
+            })}
+            {/* Totals row */}
+            <tr style={{ borderTop: '2px solid var(--border)', fontWeight: 700 }}>
+              <td style={{ padding: '0.3rem 0.4rem' }}>TOTAL</td>
+              <td />
+              <td style={{ ...tdR, fontFamily: 'monospace' }}>{totals.mass.toFixed(2)}</td>
+              <td style={{ ...tdR, fontFamily: 'monospace' }}>{totals.power.toFixed(1)}</td>
+              <td style={{ ...tdR, fontFamily: 'monospace' }}>{totals.cost.toFixed(0)}</td>
+              <td /><td /><td /><td />
+            </tr>
+          </tbody>
+        </table>
+      )}
+    </div>
+  )
+}
+
+// ─── Maturity Section ───
+
+const MATURITY_BADGE: Record<string, { label: string; color: string; bg: string }> = {
+  parametric: { label: 'Parametric', color: '#f97316', bg: 'rgba(249,115,22,0.15)' },
+  catalogue:  { label: 'Catalogue',  color: '#3b82f6', bg: 'rgba(59,130,246,0.15)' },
+  specified:  { label: 'Specified',  color: '#10b981', bg: 'rgba(16,185,129,0.15)' },
+  verified:   { label: 'Verified',   color: '#059669', bg: 'rgba(5,150,105,0.15)' },
+}
+
+function MaturitySection({ elements }: { elements: any[] }) {
+  const subsystems = useMemo(() => {
+    // Group components by subsystem_domain
+    const groups: Record<string, any[]> = {}
+    for (const el of elements) {
+      if (el.element_type !== 'component') continue
+      const domain = el.subsystem_domain || 'unassigned'
+      if (!groups[domain]) groups[domain] = []
+      groups[domain].push(el)
+    }
+
+    // Determine maturity per subsystem
+    const DOMAIN_LABELS: Record<string, string> = {
+      power: 'EPS', aocs: 'AOCS', ttc: 'TTC', obc: 'OBC',
+      thermal: 'Thermal', structure: 'Structure', propulsion: 'Propulsion',
+      payload: 'Payload', ground_rf: 'Ground RF', ground_ops: 'Ground Ops',
+      unassigned: 'Unassigned',
+    }
+
+    return Object.entries(groups).map(([domain, comps]) => {
+      let level: string
+      const allFrozen = comps.every((c: any) => c.frozen === true)
+      const allSpecified = comps.every((c: any) => c.manufacturer && c.mass_kg != null && c.power_avg_w != null)
+      const anyKb = comps.some((c: any) => c.kb_component_id)
+
+      if (allFrozen) {
+        level = 'verified'
+      } else if (allSpecified) {
+        level = 'specified'
+      } else if (anyKb) {
+        level = 'catalogue'
+      } else {
+        level = 'parametric'
+      }
+
+      return {
+        domain,
+        label: DOMAIN_LABELS[domain] || domain,
+        components: comps.length,
+        level,
+      }
+    }).sort((a, b) => a.label.localeCompare(b.label))
+  }, [elements])
+
+  const maturityOrder = ['parametric', 'catalogue', 'specified', 'verified']
+
+  return (
+    <div>
+      <h3 style={{ fontSize: '0.85rem', marginBottom: '0.3rem' }}>Design Maturity by Subsystem</h3>
+      <p style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
+        Maturity is determined from component data completeness within each subsystem domain.
+      </p>
+
+      {subsystems.length === 0 ? (
+        <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', padding: '1rem 0' }}>
+          No components in the element tree yet. Run a design and select equipment to see maturity.
+        </div>
+      ) : (
+        <>
+          {/* Maturity grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '0.4rem', marginBottom: '0.75rem' }}>
+            {subsystems.map(ss => {
+              const badge = MATURITY_BADGE[ss.level] || MATURITY_BADGE.parametric
+              return (
+                <div key={ss.domain} style={{
+                  padding: '0.5rem 0.6rem', borderRadius: '6px',
+                  background: 'var(--bg-card)', border: `1px solid ${badge.color}30`,
+                  display: 'flex', flexDirection: 'column', gap: '0.25rem',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span style={{ fontSize: '0.78rem', fontWeight: 600 }}>{ss.label}</span>
+                    <span style={{ fontSize: '0.55rem', color: 'var(--text-secondary)' }}>{ss.components} comp.</span>
+                  </div>
+                  <span style={{
+                    fontSize: '0.62rem', fontWeight: 600, padding: '0.1rem 0.35rem', borderRadius: '3px',
+                    background: badge.bg, color: badge.color, alignSelf: 'flex-start',
+                  }}>
+                    {badge.label}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+
+          {/* Legend */}
+          <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.62rem', color: 'var(--text-secondary)', flexWrap: 'wrap' }}>
+            {maturityOrder.map(level => {
+              const badge = MATURITY_BADGE[level]
+              return (
+                <span key={level} style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: badge.color }} />
+                  {badge.label}
+                </span>
+              )
+            })}
+          </div>
+        </>
       )}
     </div>
   )
