@@ -19,6 +19,7 @@ const API = '/api'
 const BUDGET_TYPES = [
   { id: 'mass', label: 'Mass', unit: 'kg' },
   { id: 'power', label: 'Power', unit: 'W' },
+  { id: 'data', label: 'Data', unit: 'Mbps' },
   { id: 'cost', label: 'Cost', unit: 'kEUR' },
 ]
 
@@ -156,18 +157,62 @@ export function BudgetPanel() {
         </div>
       )}
 
+      {/* Power budget summary bar */}
+      {activeBudget === 'power' && budget?.total_avg_power != null && (
+        <div style={{
+          display: 'flex', gap: '1rem', marginBottom: '0.5rem', padding: '0.3rem 0.5rem',
+          background: 'rgba(168,85,247,0.08)', borderRadius: '4px', fontSize: '0.68rem',
+        }}>
+          <span>Avg Power: <b>{budget.total_avg_power.toFixed(2)} W</b></span>
+          <span>Peak Power: <b>{budget.total_peak_power.toFixed(2)} W</b></span>
+        </div>
+      )}
+
+      {/* Data budget summary bar */}
+      {activeBudget === 'data' && budget?.total_data_rate_mbps != null && (
+        <div style={{
+          display: 'flex', gap: '1rem', marginBottom: '0.5rem', padding: '0.3rem 0.5rem',
+          background: 'rgba(6,182,212,0.08)', borderRadius: '4px', fontSize: '0.68rem',
+        }}>
+          <span>Total Data Rate: <b>{budget.total_data_rate_mbps.toFixed(3)} Mbps</b></span>
+          <span>Volume/Day: <b>{budget.total_data_volume_gb_per_day.toFixed(3)} GB</b></span>
+        </div>
+      )}
+
       {/* Per-element table */}
       {budget?.lines?.length > 0 ? (
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.72rem' }}>
           <thead>
             <tr style={{ borderBottom: '1px solid var(--border)' }}>
               <th style={thL}>Element</th>
-              <th style={thR}>Allocation ({bt.unit})</th>
-              <th style={thR}>Actual ({bt.unit})</th>
-              <th style={thR}>Margin</th>
-              <th style={thR}>With Margin</th>
-              <th style={thR}>Qty</th>
-              <th style={thC}>Status</th>
+              {activeBudget === 'power' ? (
+                <>
+                  <th style={thR}>Allocation (W)</th>
+                  <th style={thR}>Avg (W)</th>
+                  <th style={thR}>Peak (W)</th>
+                  <th style={thR}>Duty %</th>
+                  <th style={thR}>Margin</th>
+                  <th style={thR}>Qty</th>
+                  <th style={thC}>Status</th>
+                </>
+              ) : activeBudget === 'data' ? (
+                <>
+                  <th style={thR}>Data Rate (Mbps)</th>
+                  <th style={thR}>Duty %</th>
+                  <th style={thR}>Vol/Orbit (MB)</th>
+                  <th style={thR}>Vol/Day (GB)</th>
+                  <th style={thR}>Qty</th>
+                </>
+              ) : (
+                <>
+                  <th style={thR}>Allocation ({bt.unit})</th>
+                  <th style={thR}>Actual ({bt.unit})</th>
+                  <th style={thR}>Margin</th>
+                  <th style={thR}>With Margin</th>
+                  <th style={thR}>Qty</th>
+                  <th style={thC}>Status</th>
+                </>
+              )}
             </tr>
           </thead>
           <tbody>
@@ -177,6 +222,62 @@ export function BudgetPanel() {
                 : null
               const childStatus = childMargin == null ? 'undefined'
                 : childMargin > 20 ? 'green' : childMargin > 0 ? 'amber' : 'red'
+
+              if (activeBudget === 'power') {
+                return (
+                  <tr key={line.element_id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                    <td style={{ padding: '0.3rem 0.4rem', fontWeight: 500 }}>{line.name}</td>
+                    <td style={{ padding: '0.3rem 0.4rem', textAlign: 'right' }}>
+                      <AllocationInput currentValue={line.allocation} onSet={v => setAllocation(line.element_id, v)} unit="W" />
+                    </td>
+                    <td style={{ padding: '0.3rem 0.4rem', textAlign: 'right', fontFamily: 'monospace' }}>
+                      {(line.power_avg_w || 0) > 0 ? line.power_avg_w.toFixed(2) : '—'}
+                    </td>
+                    <td style={{ padding: '0.3rem 0.4rem', textAlign: 'right', fontFamily: 'monospace' }}>
+                      {(line.power_peak_w || 0) > 0 ? line.power_peak_w.toFixed(2) : '—'}
+                    </td>
+                    <td style={{ padding: '0.3rem 0.4rem', textAlign: 'right', color: 'var(--text-secondary)' }}>
+                      {line.duty_cycle != null ? `${(line.duty_cycle * 100).toFixed(0)}%` : '—'}
+                    </td>
+                    <td style={{ padding: '0.3rem 0.4rem', textAlign: 'right', color: 'var(--text-secondary)' }}>
+                      {line.margin_pct}%
+                    </td>
+                    <td style={{ padding: '0.3rem 0.4rem', textAlign: 'right', color: 'var(--text-secondary)' }}>
+                      {line.quantity > 1 ? `×${line.quantity}` : ''}
+                    </td>
+                    <td style={{ padding: '0.3rem 0.4rem', textAlign: 'center' }}>
+                      {childMargin != null ? (
+                        <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: STATUS_COLORS[childStatus] }} title={`${childMargin.toFixed(0)}% margin`} />
+                      ) : <span style={{ color: 'var(--text-secondary)', fontSize: '0.6rem' }}>—</span>}
+                    </td>
+                  </tr>
+                )
+              }
+
+              if (activeBudget === 'data') {
+                return (
+                  <tr key={line.element_id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                    <td style={{ padding: '0.3rem 0.4rem', fontWeight: 500 }}>{line.name}</td>
+                    <td style={{ padding: '0.3rem 0.4rem', textAlign: 'right', fontFamily: 'monospace' }}>
+                      {(line.data_rate_mbps || 0) > 0 ? line.data_rate_mbps.toFixed(3) : '—'}
+                    </td>
+                    <td style={{ padding: '0.3rem 0.4rem', textAlign: 'right', color: 'var(--text-secondary)' }}>
+                      {line.duty_cycle != null ? `${(line.duty_cycle * 100).toFixed(0)}%` : '—'}
+                    </td>
+                    <td style={{ padding: '0.3rem 0.4rem', textAlign: 'right', fontFamily: 'monospace' }}>
+                      {(line.volume_per_orbit_mb || 0) > 0 ? line.volume_per_orbit_mb.toFixed(2) : '—'}
+                    </td>
+                    <td style={{ padding: '0.3rem 0.4rem', textAlign: 'right', fontFamily: 'monospace' }}>
+                      {(line.data_volume_gb_per_day || 0) > 0 ? line.data_volume_gb_per_day.toFixed(3) : '—'}
+                    </td>
+                    <td style={{ padding: '0.3rem 0.4rem', textAlign: 'right', color: 'var(--text-secondary)' }}>
+                      {line.quantity > 1 ? `×${line.quantity}` : ''}
+                    </td>
+                  </tr>
+                )
+              }
+
+              // Default: mass, cost, volume
               return (
                 <tr key={line.element_id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
                   <td style={{ padding: '0.3rem 0.4rem', fontWeight: 500 }}>{line.name}</td>
@@ -226,18 +327,48 @@ export function BudgetPanel() {
           <tfoot>
             <tr style={{ borderTop: '2px solid var(--border)' }}>
               <td style={{ padding: '0.3rem 0.4rem', fontWeight: 700 }}>Total</td>
-              <td style={{ padding: '0.3rem 0.4rem', textAlign: 'right', fontWeight: 600, fontFamily: 'monospace' }}>
-                {totalChildAlloc > 0 ? totalChildAlloc.toFixed(2) : '—'}
-              </td>
-              <td style={{ padding: '0.3rem 0.4rem', textAlign: 'right', fontWeight: 600, fontFamily: 'monospace' }}>
-                {budget.sum_nominal.toFixed(2)}
-              </td>
-              <td />
-              <td style={{ padding: '0.3rem 0.4rem', textAlign: 'right', fontWeight: 600, fontFamily: 'monospace' }}>
-                {budget.sum_with_margin.toFixed(2)}
-              </td>
-              <td />
-              <td />
+              {activeBudget === 'power' ? (
+                <>
+                  <td style={{ padding: '0.3rem 0.4rem', textAlign: 'right', fontWeight: 600, fontFamily: 'monospace' }}>
+                    {totalChildAlloc > 0 ? totalChildAlloc.toFixed(2) : '—'}
+                  </td>
+                  <td style={{ padding: '0.3rem 0.4rem', textAlign: 'right', fontWeight: 600, fontFamily: 'monospace' }}>
+                    {budget.total_avg_power?.toFixed(2) || '0.00'}
+                  </td>
+                  <td style={{ padding: '0.3rem 0.4rem', textAlign: 'right', fontWeight: 600, fontFamily: 'monospace' }}>
+                    {budget.total_peak_power?.toFixed(2) || '0.00'}
+                  </td>
+                  <td /><td /><td /><td />
+                </>
+              ) : activeBudget === 'data' ? (
+                <>
+                  <td style={{ padding: '0.3rem 0.4rem', textAlign: 'right', fontWeight: 600, fontFamily: 'monospace' }}>
+                    {budget.total_data_rate_mbps?.toFixed(3) || '0.000'}
+                  </td>
+                  <td />
+                  <td style={{ padding: '0.3rem 0.4rem', textAlign: 'right', fontWeight: 600, fontFamily: 'monospace' }}>
+                    {budget.lines.reduce((s: number, l: any) => s + (l.volume_per_orbit_mb || 0), 0).toFixed(2)}
+                  </td>
+                  <td style={{ padding: '0.3rem 0.4rem', textAlign: 'right', fontWeight: 600, fontFamily: 'monospace' }}>
+                    {budget.total_data_volume_gb_per_day?.toFixed(3) || '0.000'}
+                  </td>
+                  <td />
+                </>
+              ) : (
+                <>
+                  <td style={{ padding: '0.3rem 0.4rem', textAlign: 'right', fontWeight: 600, fontFamily: 'monospace' }}>
+                    {totalChildAlloc > 0 ? totalChildAlloc.toFixed(2) : '—'}
+                  </td>
+                  <td style={{ padding: '0.3rem 0.4rem', textAlign: 'right', fontWeight: 600, fontFamily: 'monospace' }}>
+                    {budget.sum_nominal.toFixed(2)}
+                  </td>
+                  <td />
+                  <td style={{ padding: '0.3rem 0.4rem', textAlign: 'right', fontWeight: 600, fontFamily: 'monospace' }}>
+                    {budget.sum_with_margin.toFixed(2)}
+                  </td>
+                  <td /><td />
+                </>
+              )}
             </tr>
           </tfoot>
         </table>
