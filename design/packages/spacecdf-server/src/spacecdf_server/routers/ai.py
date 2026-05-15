@@ -13,12 +13,26 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, Header, HTTPException
+from fastapi import APIRouter, Header, HTTPException, Request
 from pydantic import BaseModel, Field
 
 from ..services.ai_advisor import (
     ask_ai, get_token_budget, reset_token_budget, is_ai_available,
 )
+
+# Mapping from router capability names to AIService capability names
+_CAPABILITY_MAP: dict[str, str] = {
+    "critique_need": "design_advisor",
+    "write_requirements": "requirements_decomposition",
+    "analyze_trade": "trade_analysis",
+    "review_design": "consistency_checking",
+    "recommend_component": "design_advisor",
+    "generate_conops": "design_advisor",
+    "general": "design_advisor",
+}
+
+# Capabilities that should pass the original name as capability_hint
+_HINT_CAPABILITIES = {"critique_need", "recommend_component", "generate_conops"}
 
 router = APIRouter()
 
@@ -51,9 +65,24 @@ async def ai_status() -> dict:
     }
 
 
+@router.get("/capabilities")
+async def ai_capabilities(request: Request) -> dict:
+    """Return full capability status from AIService, if available."""
+    ai_service = getattr(request.app.state, "ai_service", None)
+    if ai_service is None:
+        return {
+            "available": False,
+            "message": "spacecdf-ai package is not installed",
+            "capabilities": {},
+        }
+    status = ai_service.get_status()
+    return {"available": True, **status}
+
+
 @router.post("/ask")
 async def ai_ask(
     req: AIRequest,
+    request: Request,
     x_api_key: str | None = Header(default=None, alias="X-API-Key"),
 ) -> dict:
     """Ask the AI advisor a question with design context.
@@ -63,7 +92,37 @@ async def ai_ask(
     2. ANTHROPIC_API_KEY environment variable (from .env)
 
     The key is NEVER stored on the server.
+
+    When the spacecdf-ai AIService is available and enabled, requests
+    are delegated to it.  Otherwise falls back to ai_advisor.ask_ai().
     """
+    # Try AIService first (spacecdf-ai package)
+    ai_service = getattr(request.app.state, "ai_service", None)
+    if ai_service is not None and ai_service.enabled:
+        mapped = _CAPABILITY_MAP.get(req.capability, "design_advisor")
+        kwargs: dict[str, Any] = {
+            "context": req.context,
+            "question": req.question,
+            "max_tokens": req.max_tokens,
+        }
+        if req.capability in _HINT_CAPABILITIES:
+            kwargs["capability_hint"] = req.capability
+        result = await ai_service.run(
+            mapped,
+            api_key=x_api_key,
+            session_id=req.session_id,
+            **kwargs,
+        )
+        return {
+            "content": result.get("content", ""),
+            "capability": result.get("capability", req.capability),
+            "model": result.get("model", ""),
+            "tokens_used": result.get("tokens_used", 0),
+            "elapsed_ms": round(result.get("elapsed_ms", 0), 0),
+            "error": result.get("message") if not result.get("ai_available") else None,
+        }
+
+    # Fallback: legacy ai_advisor direct calls
     response = await ask_ai(
         capability=req.capability,
         context=req.context,

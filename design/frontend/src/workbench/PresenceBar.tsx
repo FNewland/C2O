@@ -2,6 +2,7 @@
  * PresenceBar — Shows connected users and connection status.
  */
 import { useCollaboration } from './useCollaboration'
+import { AIStatusIndicator } from '../ai'
 
 export function PresenceBar() {
   const { connected, users, myName } = useCollaboration()
@@ -38,6 +39,9 @@ export function PresenceBar() {
       )}
       <span style={{ color: 'var(--text-secondary)', marginLeft: '0.3rem' }}>
         — {users.length || 1} connected
+      </span>
+      <span style={{ marginLeft: 'auto' }}>
+        <AIStatusIndicator />
       </span>
     </div>
   )

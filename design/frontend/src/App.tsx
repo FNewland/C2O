@@ -17,6 +17,7 @@ import { EscalationBanner } from './workbench/EscalationBanner'
 import { ExportPanel } from './workbench/ExportPanel'
 import { GuidancePanel } from './workbench/GuidancePanel'
 import { PresenceBar } from './workbench/PresenceBar'
+import { AIProvider, AIStatusIndicator } from './ai'
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 2_000 } },
@@ -563,7 +564,9 @@ function AppShell() {
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AppShell />
+      <AIProvider>
+        <AppShell />
+      </AIProvider>
     </QueryClientProvider>
   )
 }
