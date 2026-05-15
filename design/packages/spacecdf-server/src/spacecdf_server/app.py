@@ -87,6 +87,20 @@ async def lifespan(app: FastAPI):
     from .routers.ws import start_heartbeat_checker
     start_heartbeat_checker()
 
+    # Optional GenAI integration — graceful degradation when spacecdf-ai not installed
+    try:
+        from spacecdf_ai import AIService
+        ai_service = AIService.from_config()
+        app.state.ai_service = ai_service
+        status = "enabled" if ai_service.enabled else "disabled (set genai.enabled: true in configs/genai.yaml)"
+        logger.info("GenAI capabilities loaded — %s", status)
+    except ImportError:
+        app.state.ai_service = None
+        logger.info("GenAI not available (spacecdf-ai package not installed) — running in manual mode")
+    except Exception as e:
+        app.state.ai_service = None
+        logger.warning("GenAI failed to initialize: %s — running in manual mode", e)
+
     yield
     logger.info("SpaceCDF server shutting down...")
     try:
@@ -102,7 +116,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="SpaceCDF",
     description="AI-Supported Concurrent Design Facility for Space Missions",
-    version="0.1.0",
+    version="2.0.0",
     lifespan=lifespan,
 )
 
@@ -142,4 +156,17 @@ app.include_router(ws.router, tags=["WebSocket"])
 
 @app.get("/api/health")
 async def health_check():
-    return {"status": "ok", "service": "spacecdf"}
+    ai_service = getattr(app.state, "ai_service", None)
+    return {
+        "status": "ok",
+        "service": "spacecdf",
+        "version": "2.0.0",
+        "genai": {
+            "installed": ai_service is not None,
+            "enabled": ai_service.enabled if ai_service else False,
+            "capabilities": (
+                {k: v for k, v in ai_service.config.capabilities.items()}
+                if ai_service and ai_service.enabled else {}
+            ),
+        },
+    }
