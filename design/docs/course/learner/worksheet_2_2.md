@@ -28,7 +28,7 @@
 
 ---
 
-## Part A: Mission Function Tree (20 min)
+## Part A: Mission Function Tree
 
 Draw your mission's complete function tree. Use minimum 3 levels of decomposition. Include both mission-specific and universal functions.
 
@@ -70,7 +70,7 @@ _____________________________________________________________________
 
 ---
 
-## Part B: Function-to-Requirement Traceability (15 min)
+## Part B: Function-to-Requirement Traceability
 
 For each leaf function, write one derived requirement with a measurable threshold:
 
@@ -91,7 +91,7 @@ _____________________________________________________________________
 
 ---
 
-## Part C: Multi-Allocation Analysis (10 min)
+## Part C: Multi-Allocation Analysis
 
 Identify at least one function that is allocated to more than one subsystem:
 
@@ -115,7 +115,7 @@ _____________________________________________________________________
 
 ---
 
-## Part D: Performance Criteria (10 min)
+## Part D: Performance Criteria
 
 For 4 key functions, define quantitative performance criteria:
 
@@ -128,7 +128,7 @@ For 4 key functions, define quantitative performance criteria:
 
 ---
 
-## Part E: SpaceCDF Coverage Check (15 min)
+## Part E: SpaceCDF Coverage Check
 
 After entering functions in SpaceCDF:
 

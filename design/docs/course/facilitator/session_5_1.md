@@ -1,6 +1,6 @@
 # Session 5.1: Ground Segment & Operations Architecture
 
-**Duration:** 2 hours
+
 **Prerequisites:** Week 2 complete (full design cycle through cost estimation)
 **References:** ECSS-E-ST-70C (Ground Systems), ECSS-E-ST-70-01C (Ground Segment), CCSDS 131.0-B-4 (TM Coding), CCSDS 231.0-B-4 (TC Coding), CCSDS 133.0-B-2 (Space Packet Protocol), NASA DSN Handbook (810-005)
 
@@ -17,10 +17,7 @@ By the end of this session, participants will be able to:
 
 ---
 
-## 1. Ground Segment Architecture (25 min)
-
-### Teaching Notes
-
+## 1. Ground Segment Architecture
 The ground segment is everything on the ground that supports the space mission. It is frequently underestimated in early mission design but accounts for 5-15% of total mission cost and is critical to mission success.
 
 *[Source: ECSS-E-ST-70C (Ground Systems and Operations); ECSS-E-ST-70-01C (Ground Segment)]*
@@ -89,10 +86,7 @@ The ground segment is everything on the ground that supports the space mission. 
 
 ---
 
-## 2. Ground Station Contact Analysis (25 min)
-
-### Teaching Notes
-
+## 2. Ground Station Contact Analysis
 Understanding how much data can be transferred per pass is fundamental to mission design. The data budget depends on the contact geometry, data rate, and pass duration.
 
 ### Contact Geometry
@@ -174,10 +168,7 @@ For a circular LEO orbit, the visibility of a ground station is determined by th
 
 ---
 
-## 3. CCSDS Protocol Stack (20 min)
-
-### Teaching Notes
-
+## 3. CCSDS Protocol Stack
 The Consultative Committee for Space Data Systems (CCSDS) defines the standard protocols for space communication, analogous to TCP/IP for ground networks.
 
 *[Source: CCSDS 131.0-B-4 (TM Synchronization and Channel Coding); CCSDS 231.0-B-4 (TC Synchronization and Channel Coding); CCSDS 133.0-B-2 (Space Packet Protocol)]*
@@ -219,10 +210,7 @@ The Consultative Committee for Space Data Systems (CCSDS) defines the standard p
 
 ---
 
-## 4. Operations Timeline Construction (25 min)
-
-### Teaching Notes
-
+## 4. Operations Timeline Construction
 The operations timeline (or operations concept timeline) defines all major activities from launch to end of life. It is part of the ConOps and drives ground segment design.
 
 ### Mission Phases (Operations Perspective)
@@ -275,8 +263,7 @@ SpaceCDF's **ConOps Editor** allows you to:
 
 ---
 
-## 5. Ground Segment Design Exercise (25 min)
-
+## 5. Ground Segment Design Exercise
 ### Instructions
 
 1. **Data Budget** tab -- Review the daily data generation vs downlink capacity

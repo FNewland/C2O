@@ -10,6 +10,11 @@ Two rendering paths:
      and renders rich content (tables, bullets, mixed text).
 
 Supports: MRD, TS, VP, ConOps, SEMP, RMP, IRD, Test Plan, BOM.
+
+Visual style: uOttawa SpaceCDF Facilitator's Book.  All cover pages,
+headers, footers, ToCs and tables route through
+``spacecdf_agents.exporters.docs.theme`` so every document shares the
+garnet course identity.
 """
 from __future__ import annotations
 
@@ -26,18 +31,22 @@ from docx.enum.section import WD_ORIENT
 from docx.oxml.ns import qn, nsdecls
 from docx.oxml import parse_xml
 
+# uOttawa SpaceCDF course-style theme (shared with the design-review generator).
+from spacecdf_agents.exporters.docs import theme as _theme
+
 
 # ---------------------------------------------------------------------------
-# Colour palette
+# Colour palette — uOttawa Horizon (kept as RGBColor tuples for the legacy
+# helpers; identical to the theme module's constants).
 # ---------------------------------------------------------------------------
 
-_CLR_HEADER_BG = RGBColor(31, 41, 55)       # dark slate for table headers
-_CLR_ALT_ROW = RGBColor(243, 244, 246)       # light grey for alt rows
+_CLR_HEADER_BG = RGBColor(0x8f, 0x00, 0x1a)   # uOttawa garnet — table headers
+_CLR_ALT_ROW = RGBColor(0xf2, 0xf2, 0xf2)     # polar grey — alternate rows
 _CLR_WHITE = RGBColor(255, 255, 255)
-_CLR_TITLE = RGBColor(30, 58, 95)            # dark navy for titles
-_CLR_SUBTITLE = RGBColor(107, 114, 128)      # grey for subtitles
-_CLR_BODY = RGBColor(34, 34, 34)             # near-black for body text
-_CLR_ACCENT = RGBColor(16, 185, 129)         # emerald for highlights
+_CLR_TITLE = RGBColor(0x8f, 0x00, 0x1a)       # garnet — headings & titles
+_CLR_SUBTITLE = RGBColor(0x80, 0x74, 0x6c)    # warm grey — captions & metadata
+_CLR_BODY = RGBColor(0x2d, 0x2d, 0x2c)        # charcoal — body text
+_CLR_ACCENT = RGBColor(0x67, 0x79, 0x6c)      # uOttawa green — accent
 
 
 # ---------------------------------------------------------------------------
@@ -45,61 +54,24 @@ _CLR_ACCENT = RGBColor(16, 185, 129)         # emerald for highlights
 # ---------------------------------------------------------------------------
 
 def _setup_styles(doc: Document):
-    """Configure consistent Calibri-based styling on the document."""
-    style = doc.styles['Normal']
-    font = style.font
-    font.name = 'Calibri'
-    font.size = Pt(10)
-    font.color.rgb = _CLR_BODY
-    pf = style.paragraph_format
-    pf.space_after = Pt(4)
-    pf.line_spacing = 1.15
-
-    # Heading styles
-    for level, size in [(1, 16), (2, 14), (3, 12)]:
-        style_name = f'Heading {level}'
-        if style_name in doc.styles:
-            hs = doc.styles[style_name]
-            hs.font.name = 'Calibri'
-            hs.font.bold = True
-            hs.font.size = Pt(size)
-            hs.font.color.rgb = _CLR_TITLE
+    """Apply the uOttawa SpaceCDF Facilitator's Book styles to the document."""
+    _theme.apply_styles(doc)
 
 
 def _setup_margins(doc: Document):
-    """Set 2.5 cm margins on all sections."""
-    for section in doc.sections:
-        section.top_margin = Cm(2.5)
-        section.bottom_margin = Cm(2.5)
-        section.left_margin = Cm(2.5)
-        section.right_margin = Cm(2.5)
+    """Set the SpaceCDF page geometry on every section."""
+    _theme._set_page_geometry(doc)
 
 
-def _add_footer(doc: Document, study_name: str):
-    """Add footer with study name and page number to all sections."""
-    for section in doc.sections:
-        footer = section.footer
-        footer.is_linked_to_previous = False
-        p = footer.paragraphs[0] if footer.paragraphs else footer.add_paragraph()
-        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-
-        run = p.add_run(f"SpaceCDF \u2014 {study_name}    |    Page ")
-        run.font.size = Pt(8)
-        run.font.name = 'Calibri'
-        run.font.color.rgb = _CLR_SUBTITLE
-
-        # Add page number field
-        fld_char_begin = parse_xml(f'<w:fldChar {nsdecls("w")} w:fldCharType="begin"/>')
-        instr_text = parse_xml(f'<w:instrText {nsdecls("w")} xml:space="preserve"> PAGE </w:instrText>')
-        fld_char_end = parse_xml(f'<w:fldChar {nsdecls("w")} w:fldCharType="end"/>')
-
-        run2 = p.add_run()
-        run2.font.size = Pt(8)
-        run2.font.name = 'Calibri'
-        run2.font.color.rgb = _CLR_SUBTITLE
-        run2._r.append(fld_char_begin)
-        run2._r.append(instr_text)
-        run2._r.append(fld_char_end)
+def _add_footer(doc: Document, study_name: str, document_code: str = ""):
+    """Bilingual EN/FR running header + footer matching the course style."""
+    _theme.add_page_furniture(
+        doc,
+        running_title=f"SpaceCDF \u2014 {study_name}",
+        document_code=document_code,
+        footer_left=f"SpaceCDF \u00b7 {study_name}",
+        footer_right="uOttawa SEDTI",
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -114,70 +86,21 @@ def _add_cover_page(
     date_str: str | None = None,
     status: str = "DRAFT",
 ):
-    """Add a professional cover page with title, standard, study, date, status."""
+    """uOttawa SpaceCDF-style cover page (delegates to the shared theme)."""
     date_str = date_str or datetime.now().strftime("%Y-%m-%d")
-
-    for _ in range(3):
-        doc.add_paragraph()
-
-    # Title
-    p = doc.add_paragraph()
-    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    run = p.add_run(title)
-    run.bold = True
-    run.font.size = Pt(26)
-    run.font.name = 'Calibri'
-    run.font.color.rgb = _CLR_TITLE
-
-    # Standard reference
-    p = doc.add_paragraph()
-    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    run = p.add_run(standard)
-    run.font.size = Pt(13)
-    run.font.name = 'Calibri'
-    run.font.color.rgb = _CLR_SUBTITLE
-
-    for _ in range(2):
-        doc.add_paragraph()
-
-    # Info table (study, date, status, generator)
-    info_items = [
-        ("Study", study_name),
-        ("Date", date_str),
-        ("Status", status),
-        ("Generator", "SpaceCDF -- AI-Assisted Concurrent Design Facility"),
-    ]
-
-    table = doc.add_table(rows=len(info_items), cols=2)
-    table.alignment = WD_TABLE_ALIGNMENT.CENTER
-    for i, (label, value) in enumerate(info_items):
-        cell_l = table.rows[i].cells[0]
-        cell_r = table.rows[i].cells[1]
-        cell_l.text = label
-        cell_r.text = value
-        for cell in (cell_l, cell_r):
-            for paragraph in cell.paragraphs:
-                paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
-                for run in paragraph.runs:
-                    run.font.size = Pt(11)
-                    run.font.name = 'Calibri'
-        # Bold label
-        for run in cell_l.paragraphs[0].runs:
-            run.bold = True
-
-    for _ in range(3):
-        doc.add_paragraph()
-
-    # Status badge
-    p = doc.add_paragraph()
-    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    run = p.add_run(f"  {status}  ")
-    run.bold = True
-    run.font.size = Pt(14)
-    run.font.name = 'Calibri'
-    run.font.color.rgb = RGBColor(220, 38, 38) if status == "DRAFT" else _CLR_ACCENT
-
-    doc.add_page_break()
+    _theme.add_cover_page(
+        doc,
+        title=title,
+        subtitle=standard,
+        document_code=standard,
+        study_name=study_name,
+        issue="1.0",
+        date=date_str,
+        classification=status if status != "DRAFT" else "Internal · DRAFT",
+        cohort="SpaceCDF",
+        publisher=("Faculty of Engineering · School of Engineering Design "
+                   "and Teaching Innovation (SEDTI)"),
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -185,29 +108,8 @@ def _add_cover_page(
 # ---------------------------------------------------------------------------
 
 def _add_toc_placeholder(doc: Document):
-    """Add a Table of Contents placeholder (must be updated in Word)."""
-    doc.add_heading("Table of Contents", level=1)
-    p = doc.add_paragraph()
-    p.alignment = WD_ALIGN_PARAGRAPH.LEFT
-    run = p.add_run("[Right-click and select 'Update Field' to generate Table of Contents]")
-    run.font.size = Pt(10)
-    run.font.italic = True
-    run.font.color.rgb = _CLR_SUBTITLE
-
-    # Insert actual TOC field code so Word can generate it
-    p2 = doc.add_paragraph()
-    fld_begin = parse_xml(f'<w:fldChar {nsdecls("w")} w:fldCharType="begin"/>')
-    instr = parse_xml(f'<w:instrText {nsdecls("w")} xml:space="preserve"> TOC \\o "1-3" \\h \\z \\u </w:instrText>')
-    fld_separate = parse_xml(f'<w:fldChar {nsdecls("w")} w:fldCharType="separate"/>')
-    fld_end = parse_xml(f'<w:fldChar {nsdecls("w")} w:fldCharType="end"/>')
-
-    run2 = p2.add_run()
-    run2._r.append(fld_begin)
-    run2._r.append(instr)
-    run2._r.append(fld_separate)
-    run2._r.append(fld_end)
-
-    doc.add_page_break()
+    """Insert a Word-native ToC field (delegates to the shared theme)."""
+    _theme.add_toc(doc)
 
 
 # ---------------------------------------------------------------------------
@@ -288,7 +190,7 @@ def _render_formatted_table(doc: Document, headers: list[str], rows: list[list[s
         p = cell.paragraphs[0]
         run = p.add_run(header)
         run.bold = True
-        run.font.size = Pt(8)
+        run.font.size = Pt(10)
         run.font.name = 'Calibri'
         run.font.color.rgb = _CLR_WHITE
         _set_cell_shading(cell, _CLR_HEADER_BG)
@@ -301,7 +203,7 @@ def _render_formatted_table(doc: Document, headers: list[str], rows: list[list[s
             cell.text = ""
             p = cell.paragraphs[0]
             run = p.add_run(cell_text)
-            run.font.size = Pt(8)
+            run.font.size = Pt(10)
             run.font.name = 'Calibri'
             # Alternating row colour
             if r_idx % 2 == 1:
@@ -433,8 +335,15 @@ def generate_did_docx(did_json: dict[str, Any]) -> bytes:
         document: str,
         standard: str,
         study_name: str,
+        document_code: str            (optional — defaults to standard)
+        issue: str                    (optional — defaults to "1.0")
+        classification: str           (optional — defaults to "Internal")
+        acronyms: dict[str,str]       (optional — adds an acronym table)
+        applicable_documents: list    (optional — list of {id,ref,title})
+        reference_documents: list     (optional — list of {id,ref,title})
+        change_record: list           (optional — list of {issue,date,by,summary})
         sections: [
-          {number, title, subsections: [{number, title, content}]}
+          {number, title, content, subsections: [...]}
         ]
       }
 
@@ -445,26 +354,71 @@ def generate_did_docx(did_json: dict[str, Any]) -> bytes:
       - Plain text paragraphs
       - Any mix of the above
     """
-    doc = Document()
-
-    # Setup
-    _setup_styles(doc)
-    _setup_margins(doc)
+    doc = _theme.new_document()
+    _theme.reset_counters()
 
     title = did_json.get("document", "SpaceCDF Document")
     standard = did_json.get("standard", "")
     study_name = did_json.get("study_name", "Unnamed Mission")
     generated = did_json.get("generated", "")
     date_str = generated[:10] if generated else datetime.now().strftime("%Y-%m-%d")
+    document_code = did_json.get("document_code") or standard or "SCDF-DOC"
+    issue = did_json.get("issue", "1.0")
+    classification = did_json.get("classification", "Internal · DRAFT")
 
     # Cover page
-    _add_cover_page(doc, title, standard, study_name, date_str=date_str, status="DRAFT")
+    _theme.add_cover_page(
+        doc,
+        title=title,
+        subtitle=standard,
+        document_code=document_code,
+        study_name=study_name,
+        issue=issue,
+        date=date_str,
+        classification=classification,
+        cohort="SpaceCDF",
+        publisher=("Faculty of Engineering · School of Engineering Design "
+                   "and Teaching Innovation (SEDTI)"),
+    )
+
+    # Page furniture (header rule + bilingual footer with Page X of / de Y)
+    _theme.add_page_furniture(
+        doc,
+        running_title=f"SpaceCDF — {title}",
+        document_code=document_code,
+        footer_left=f"{document_code} · {study_name}",
+        footer_right="uOttawa SEDTI",
+    )
+
+    # Document information & change record
+    _theme.add_doc_info_table(
+        doc, document_code=document_code, title=title,
+        study_name=study_name, issue=issue, date=date_str,
+        classification=classification, applies_to=study_name,
+    )
+    if did_json.get("change_record"):
+        _theme.add_change_record(doc, did_json["change_record"])
+    else:
+        _theme.add_change_record(doc, [
+            {"issue": issue, "date": date_str, "by": "SpaceCDF",
+             "summary": f"Initial issue of {title}."}
+        ])
+
+    # AIG (Peters 2023) acknowledgement — applies to every exported document
+    _theme.add_aig_acknowledgement(doc)
+
+    # Acronyms & references (optional)
+    if did_json.get("acronyms"):
+        _theme.add_acronyms_table(doc, did_json["acronyms"])
+    if did_json.get("applicable_documents"):
+        _theme.add_reference_list(doc, did_json["applicable_documents"],
+                                  heading="Applicable Documents")
+    if did_json.get("reference_documents"):
+        _theme.add_reference_list(doc, did_json["reference_documents"],
+                                  heading="Reference Documents")
 
     # Table of contents
-    _add_toc_placeholder(doc)
-
-    # Footer
-    _add_footer(doc, study_name)
+    _theme.add_toc(doc)
 
     # Render sections
     sections = did_json.get("sections", [])

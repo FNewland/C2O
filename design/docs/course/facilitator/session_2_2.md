@@ -1,6 +1,6 @@
 # Session 2.2: Functional Decomposition and Allocation
 
-**Duration:** 2 hours
+
 **Prerequisites:** Session 2.1 (requirements defined and validated)
 **SpaceCDF Tab:** Functions
 
@@ -30,10 +30,7 @@ By the end of this session, participants will be able to:
 
 ---
 
-## 1. What is Functional Decomposition? (20 min)
-
-### Teaching Notes
-
+## 1. What is Functional Decomposition?
 *[Source: NASA SEH Sec. 4.3 -- Process 3: Logical Decomposition]*
 
 Functional decomposition answers: **"What must the system DO to satisfy the requirements?"**
@@ -109,10 +106,7 @@ SpaceCDF auto-generates these universal functions for every mission.
 
 ---
 
-## 2. Mission-Type-Specific Function Trees (20 min)
-
-### Teaching Notes
-
+## 2. Mission-Type-Specific Function Trees
 Different mission types produce fundamentally different primary function trees. The universal functions remain the same; it is the mission-specific branch that differentiates.
 
 ### Earth Observation (Optical/SAR)
@@ -165,10 +159,7 @@ SpaceCDF supports allocation to ground domains: `ground_station`, `ground_proces
 
 ---
 
-## 3. Allocation to Subsystems (25 min)
-
-### Teaching Notes
-
+## 3. Allocation to Subsystems
 Each function must be **allocated** to one or more responsible subsystem domains. This allocation defines system boundaries and, critically, identifies **interfaces** wherever a function is shared.
 
 ### Allocation Rules
@@ -199,7 +190,7 @@ When a function is allocated to more than one subsystem, it creates an **interfa
 
 SpaceCDF supports multi-allocation by entering comma-separated domains.
 
-**Discussion prompt:** *For each multi-allocated function in your design, where should the system boundary be drawn? Who "owns" the function, and who is a "contributor"?*
+**Discussion point.** *For each multi-allocated function in your design, where should the system boundary be drawn? Who "owns" the function, and who is a "contributor"?*
 
 ### Derived Requirements from Functions
 
@@ -216,10 +207,7 @@ Each allocated function generates **derived requirements** -- requirements not e
 
 ---
 
-## 4. Performance Criteria and Coverage Analysis (15 min)
-
-### Teaching Notes
-
+## 4. Performance Criteria and Coverage Analysis
 Each leaf function (a function with no sub-functions) must have **performance criteria** -- quantitative thresholds that define "how well" the function must be performed:
 
 | Function | Performance Criteria |
@@ -250,8 +238,7 @@ NASA's CAPSTONE mission (2022, Advanced Space) experienced a coverage gap during
 
 ---
 
-## 5. SpaceCDF Function Tree Exercise (40 min)
-
+## 5. SpaceCDF Function Tree Exercise
 ### Instructions
 
 1. Navigate to the **Functions** tab in SpaceCDF

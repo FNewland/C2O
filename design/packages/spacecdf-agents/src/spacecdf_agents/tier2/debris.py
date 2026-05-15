@@ -93,5 +93,35 @@ class DebrisComplianceAgent(DesignAgent):
                          dc.deorbit_method, "")
 
         result.warnings.extend(dc.warnings)
+
+        # ---- Report-quality narrative & structured intermediates ----
+        result.rationale = (
+            f"Post-mission disposal: orbital lifetime {dc.lifetime_years:.1f} yr "
+            f"with deorbit method '{dc.deorbit_method}'.  Casualty risk Ec="
+            f"{dc.casualty_risk:.2e} ({'compliant' if dc.casualty_compliant else 'non-compliant'} "
+            f"against 1e-4 threshold).  Passivation score {dc.passivation_score:.2f} "
+            f"covers stored-energy depletion of battery and propellant tanks "
+            f"per ISO 24113.  25-yr rule "
+            f"{'satisfied' if dc.compliant_25yr else 'NOT satisfied'}; "
+            f"5-yr rule {'satisfied' if dc.compliant_5yr else 'NOT satisfied'}."
+        )
+        result.assumptions = [
+            "Atmospheric drag lifetime per NRLMSISE-00 / JR-1971 (mean solar flux).",
+            "Casualty risk per NASA-STD-8719.14 demise model.",
+            "Passivation score weighted by battery + propellant tank stored energy.",
+            "Collision-avoidance ΔV budget assumed ~1 m/s per year in LEO.",
+        ]
+        result.extras["debris.compliance"] = {
+            "lifetime_years": dc.lifetime_years,
+            "compliant_25yr": bool(dc.compliant_25yr),
+            "compliant_5yr": bool(dc.compliant_5yr),
+            "casualty_risk": dc.casualty_risk,
+            "casualty_compliant": bool(dc.casualty_compliant),
+            "passivation_score": dc.passivation_score,
+            "compliance_score": dc.debris_compliance_score,
+            "method": dc.deorbit_method,
+            "collision_avoidance_dv_per_year_ms": dc.collision_avoidance_dv_per_year_ms,
+        }
+
         result.confidence = 0.75
         return result

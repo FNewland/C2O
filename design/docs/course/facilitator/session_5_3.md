@@ -1,6 +1,6 @@
 # Session 5.3: Mission Simulation Day
 
-**Duration:** 2 hours
+
 **Prerequisites:** Sessions 5.1-5.2 (ground segment designed, operations concepts defined)
 **References:** ECSS-E-ST-70-11C (Operability), ECSS-E-ST-70-32C (Procedures), ESA OPS-G Training Manual, NASA Mission Operations Directorate Training Handbook
 
@@ -17,10 +17,7 @@ By the end of this session, participants will be able to:
 
 ---
 
-## 1. Simulation Overview & Roles (10 min)
-
-### Teaching Notes
-
+## 1. Simulation Overview & Roles
 This session is a **hands-on simulation** of mission operations. The facilitator acts as the "Universe" -- injecting events, anomalies, and time jumps. The team operates the mission using SpaceCDF and their procedures from Session 5.2.
 
 ### Role Assignments
@@ -50,10 +47,7 @@ This session is a **hands-on simulation** of mission operations. The facilitator
 
 ---
 
-## 2. LEOP Simulation (20 min)
-
-### Teaching Notes
-
+## 2. LEOP Simulation
 The facilitator narrates the simulation. Time is compressed. Each team executes their LEOP procedure.
 
 ### Facilitator Script -- LEOP
@@ -61,7 +55,7 @@ The facilitator narrates the simulation. Time is compressed. Each team executes 
 **[T+0 -- Separation]**
 *"Your satellite has separated from the deployer. Deployment switches have released. The 30-minute timer has started. You are in radio silence -- no RF emissions allowed until the timer expires. What is your spacecraft doing right now?"*
 
-Expected answers: Timer counting down. Battery providing power. No subsystems active except OBC running timer.
+Worked response: Timer counting down. Battery providing power. No subsystems active except OBC running timer.
 
 **[T+30 min -- Timer Expires]**
 *"The 30-minute timer has expired. Your OBC has commanded antenna deployment. What do you expect to see?"*
@@ -101,8 +95,7 @@ Teams should: compose command, verify encoding, transmit, wait for acknowledgeme
 
 ---
 
-## 3. Commissioning Simulation (15 min)
-
+## 3. Commissioning Simulation
 ### Facilitator Script -- Commissioning
 
 **[Time Jump: T+24 hr]**
@@ -125,10 +118,7 @@ Teams should calculate:
 
 ---
 
-## 4. Anomaly Injection Scenarios (30 min)
-
-### Teaching Notes
-
+## 4. Anomaly Injection Scenarios
 The facilitator selects 2-3 anomalies from the list below, appropriate to the mission design. Teams respond using their FDIR rules and contingency procedures.
 
 ### Anomaly Menu (Facilitator selects 2-3)
@@ -204,10 +194,8 @@ For each injected anomaly, teams complete the **Anomaly Response Form** on Works
 
 ---
 
-## 5. Nominal Operations & Debrief (25 min)
-
-### Nominal Operations (10 min)
-
+## 5. Nominal Operations & Debrief
+### Nominal Operations
 **[Time Jump: T+30 days to T+1 year]**
 *"Your mission has been operational for one month. All commissioning activities are complete. You are now in nominal operations. Let's review your operational metrics."*
 
@@ -218,8 +206,7 @@ Teams report:
 - Current budget status: power margin, data margin, propellant remaining (if applicable)
 - Orbit status: any conjunction alerts? Debris compliance on track?
 
-### Debrief (15 min)
-
+### Debrief
 1. **What went well?**
    - Which procedures worked as written?
    - Which FDIR rules triggered correctly?

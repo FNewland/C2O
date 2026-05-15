@@ -1,6 +1,6 @@
 # Session 1.4: Mission Needs, Stakeholder Analysis & Trade Studies
 
-**Duration:** 6 hours (Thursday + Friday)
+
 **Prerequisites:** Sessions 1.1--1.3
 **References:**
 - [NASA, Systems Engineering Handbook (SP-2016-6105 Rev 2), 2016 -- Sections 4.1, 4.4, 6.8](https://www.nasa.gov/reference/systems-engineering-handbook/)
@@ -26,12 +26,10 @@ By the end of this session, participants will be able to:
 
 ---
 
-## Part 1: Mission Need & Stakeholder Analysis (Thursday AM -- 2 hours)
-
+## Part 1: Mission Need & Stakeholder Analysis
 ---
 
-### 1. The Problem Statement (30 min)
-
+### 1. The Problem Statement
 #### 1.1 Why Start with the Problem?
 
 NASA SEH Section 4.1.1 states: *"Clearly define the problem before solving it."*
@@ -80,12 +78,11 @@ At the mission need level, everything should describe **WHAT** is needed, not **
 
 The HOW column is not wrong -- these are all reasonable design decisions. But they belong in later phases (Phase A/B), not in the problem statement. Fixing the HOW prematurely eliminates design freedom and may lead to suboptimal solutions.
 
-**Discussion prompt:** *Why is it harmful to specify HOW at this stage? What design options does it close off?*
+**Discussion point.** *Why is it harmful to specify HOW at this stage? What design options does it close off?*
 
 ---
 
-### 2. Stakeholder Identification & Analysis (30 min)
-
+### 2. Stakeholder Identification & Analysis
 #### 2.1 Who is a Stakeholder?
 
 NASA SEH Section 4.1.2 defines stakeholders as "all parties who have a legitimate interest in the system throughout its lifecycle." This is broader than just the end user -- it includes everyone who affects or is affected by the mission.
@@ -118,12 +115,11 @@ For each stakeholder, capture five attributes:
 
 > **Industry Practice:** For the RADARSAT Constellation Mission (RCM), the stakeholder analysis identified over 20 distinct stakeholder groups, including DND (maritime surveillance), Environment Canada (sea ice monitoring), Agriculture and Agri-Food Canada (crop monitoring), Natural Resources Canada (forestry), Public Safety Canada (disaster response), and international partners. Each stakeholder had different priority imaging modes, coverage requirements, and data latency needs. The systems engineering challenge was to design a 3-satellite constellation that satisfied all these needs within a single system architecture -- a classic example of multi-stakeholder optimisation.
 
-**Exercise:** *Complete Part A of Worksheet 1.4 -- identify at least 4 stakeholders for your team's mission and fill in the analysis matrix.*
+**Exercise.** *Complete Part A of Worksheet 1.4 -- identify at least 4 stakeholders for your team's mission and fill in the analysis matrix.*
 
 ---
 
-### 3. Mission Objectives and the MoE/MoP/TPM Hierarchy (30 min)
-
+### 3. Mission Objectives and the MoE/MoP/TPM Hierarchy
 #### 3.1 From Need to Objectives
 
 Objectives translate the problem statement into specific, testable goals. Each objective must have:
@@ -181,12 +177,11 @@ Stakeholder Need
 >
 > Where $A_{imaged\_per\_revisit}$ depends on swath width and orbit ground track spacing, $A_{total\_target}$ is the target area, and $P_{cloud}$ is the cloud cover probability.
 
-**Exercise:** *For one of your objectives, trace the full hierarchy from stakeholder need through MoE, MoP, and TPM. Complete Part B of Worksheet 1.4.*
+**Exercise.** *For one of your objectives, trace the full hierarchy from stakeholder need through MoE, MoP, and TPM. Complete Part B of Worksheet 1.4.*
 
 ---
 
-### 4. From Need to Design: The Flow (20 min)
-
+### 4. From Need to Design: The Flow
 Show how the mission need flows through to design decisions without the need itself prescribing the design:
 
 <!-- SVG DIAGRAM: Need to Design Flow -->
@@ -260,12 +255,10 @@ At each level in this hierarchy, the design team makes decisions informed by ana
 
 ---
 
-## Part 2: Trade Study Methodology (Thursday PM -- 2 hours)
-
+## Part 2: Trade Study Methodology
 ---
 
-### 5. Decision Analysis Framework (40 min)
-
+### 5. Decision Analysis Framework
 #### 5.1 Process 17: Decision Analysis
 
 NASA SEH Process 17 (Decision Analysis) provides the framework for structured alternative evaluation. Every major design decision should follow this process to ensure decisions are auditable, traceable, and defensible.
@@ -337,12 +330,11 @@ A trade study result is only meaningful if it is **robust** -- i.e., the ranking
 
 > **Industry Practice:** For the Iridium NEXT constellation (66 operational + 6 on-orbit spares), the initial trade study for the constellation architecture compared Walker Delta, Walker Star, and hybrid configurations across 12 criteria including global coverage, revisit time, inter-satellite link geometry, launch cost, and orbital debris risk. Sensitivity analysis revealed that the ranking was robust for all weight perturbations up to $\pm 30\%$, giving high confidence in the selected Walker Star configuration at 780 km altitude.
 
-**Exercise:** *Practice the pairwise comparison method by weighting 4 criteria for a lunch restaurant choice: taste, cost, healthiness, speed. Then score 3 options. This builds the skill on a low-stakes example before applying it to mission design.*
+**Exercise.** *Practice the pairwise comparison method by weighting 4 criteria for a lunch restaurant choice: taste, cost, healthiness, speed. Then score 3 options. This builds the skill on a low-stakes example before applying it to mission design.*
 
 ---
 
-### 6. Space vs Non-Space Alternatives (30 min)
-
+### 6. Space vs Non-Space Alternatives
 #### 6.1 The Most Important Trade Study
 
 Before committing to building a satellite, teams must honestly evaluate whether existing solutions meet the need. This is the most important trade study in the mission lifecycle because it determines whether the entire project should proceed.
@@ -393,8 +385,7 @@ For missions requiring short revisit, the number of satellites drives cost:
 
 ---
 
-### 7. Documenting the Trade Decision (20 min)
-
+### 7. Documenting the Trade Decision
 Every trade study must produce an **auditable decision record**. NASA SEH Process 17 requires documentation of:
 
 | Element | Content | Purpose |
@@ -412,12 +403,10 @@ Every trade study must produce an **auditable decision record**. NASA SEH Proces
 
 ---
 
-## Part 3: Concept of Operations (Friday -- 2 hours)
-
+## Part 3: Concept of Operations
 ---
 
-### 8. Mission Architecture (30 min)
-
+### 8. Mission Architecture
 #### 8.1 Three Segments of a Space Mission
 
 Every space mission comprises three segments that must be designed together:
@@ -450,12 +439,11 @@ SpaceCDF provides a **drag-and-drop architecture diagram editor** in the ConOps 
 | Sensor (orange) | `sensor` | Ground sensor, IoT device, in-situ instrument |
 | GNSS/External (purple) | `gnss` | External system (GNSS, relay sat, other constellation) |
 
-**Exercise:** *In the ConOps tab, build your mission architecture diagram. Add all segments, label all connections with data type and frequency band.*
+**Exercise.** *In the ConOps tab, build your mission architecture diagram. Add all segments, label all connections with data type and frequency band.*
 
 ---
 
-### 9. Mission Phases and Operational Modes (30 min)
-
+### 9. Mission Phases and Operational Modes
 #### 9.1 Operational Mission Phases
 
 | Phase | Duration (typical CubeSat) | Activities | Key Risks |
@@ -514,8 +502,7 @@ CubeSats have limited power generation (7--25 W for a 3U with deployable panels)
 
 ---
 
-### 10. Data Flow Pipeline (20 min)
-
+### 10. Data Flow Pipeline
 #### 10.1 End-to-End Data Flow
 
 ```
@@ -554,8 +541,7 @@ Instrument -> Onboard Storage -> Downlink -> Ground Reception
 
 ---
 
-### 11. ConOps Tool Exercise (20 min)
-
+### 11. ConOps Tool Exercise
 1. Navigate to the **ConOps** tab in SpaceCDF
 2. Review and edit the **mission architecture diagram** -- add all segments and connections
 3. Edit the **mission phases**: adjust durations for your mission type

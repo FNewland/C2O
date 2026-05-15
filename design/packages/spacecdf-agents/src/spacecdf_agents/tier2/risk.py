@@ -6,6 +6,7 @@ risk matrix (likelihood x consequence).
 from __future__ import annotations
 
 from spacecdf_common.agents.base import AgentResult, DesignAgent, DesignState
+from spacecdf_agents.exporters.docs.agent_extras import risk_entry
 
 
 class RiskAgent(DesignAgent):
@@ -78,6 +79,26 @@ class RiskAgent(DesignAgent):
             severity = "HIGH" if r["likelihood"] * r["consequence"] >= 12 else "MEDIUM"
             result.add_warning(f"[{severity}] {r['description']}")
             result.add_recommendation(f"Mitigation for {r['id']}: {r['mitigation']}")
+
+        # ---- Report-quality narrative & structured intermediates ----
+        result.rationale = (
+            f"Identified {len(risks)} risks ({high_risks} high-rated, "
+            f"aggregate score {total_score}).  Risks scored on a 5×5 "
+            f"likelihood × severity matrix per ECSS-M-ST-80C; mitigation "
+            f"actions are tracked in the Risk Management Plan."
+        )
+        result.assumptions = [
+            "Likelihood/severity scaled 1–5 per ECSS-M-ST-80C.",
+            "Score ≥12 → red, 8–11 → amber, <8 → green.",
+            "Technical risks anchored to TRL ≤5 components from the design state.",
+        ]
+        result.extras["risk.register"] = [
+            risk_entry(id=r["id"], name=r["description"],
+                       likelihood=r["likelihood"], severity=r["consequence"],
+                       mitigation=r.get("mitigation", ""),
+                       owner=r.get("category", "system"))
+            for r in risks
+        ]
 
         result.confidence = 0.70
         return result

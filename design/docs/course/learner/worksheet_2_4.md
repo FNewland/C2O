@@ -26,7 +26,7 @@
 
 ---
 
-## Part A: Mass Budget (15 min)
+## Part A: Mass Budget
 
 Complete from your SpaceCDF design (or estimate if pre-run):
 
@@ -58,7 +58,7 @@ _____________________________________________________________________
 
 ---
 
-## Part B: Power Budget by Mode (15 min)
+## Part B: Power Budget by Mode
 
 | Subsystem | Safe (W) | Idle (W) | Imaging (W) | Downlink (W) | Eclipse (W) |
 |-----------|---------|---------|-------------|-------------|-------------|
@@ -88,7 +88,7 @@ _____________________________________________________________________
 
 ---
 
-## Part C: Interface Identification (15 min)
+## Part C: Interface Identification
 
 List the 5 most critical interfaces in your design:
 
@@ -116,7 +116,7 @@ Verification method for IR-001: _____ &nbsp; IR-002: _____
 
 ---
 
-## Part D: Conflict Resolution (10 min)
+## Part D: Conflict Resolution
 
 From the SpaceCDF Interface Matrix, identify one conflict (red border):
 
@@ -140,7 +140,7 @@ _____________________________________________________________________
 
 ---
 
-## Part E: Budget Health Check (10 min)
+## Part E: Budget Health Check
 
 From the SpaceCDF Dashboard, record all KPIs:
 

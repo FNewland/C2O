@@ -1,6 +1,6 @@
 # Session 3.2: Attitude and Orbit Control System (AOCS)
 
-**Duration:** 2 hours
+
 **Prerequisites:** Sessions 2.1--2.4 and 3.1 (requirements, orbit, power defined)
 **SpaceCDF Tabs:** Dashboard (AOCS KPI), Pointing Budget, Architecture (AOCS)
 
@@ -35,10 +35,7 @@ By the end of this session, participants will be able to:
 
 ---
 
-## 1. AOCS Fundamentals (25 min)
-
-### Teaching Notes
-
+## 1. AOCS Fundamentals
 *[Source: SMAD, Ch. 11.1; Markley & Crassidis, Ch. 1--3]*
 
 The AOCS performs two distinct functions:
@@ -208,10 +205,7 @@ GPS receivers determine the spacecraft's **position and velocity** (orbit determ
 
 ---
 
-## 2. Disturbance Torques (25 min)
-
-### Teaching Notes
-
+## 2. Disturbance Torques
 In LEO, four external torques disturb the spacecraft attitude. The AOCS must counteract them continuously. Understanding the source and magnitude of each disturbance is essential for sizing actuators.
 
 *[Source: SMAD, Ch. 11.1; Sidi, Ch. 5; Wertz 1999, Ch. 11]*
@@ -337,10 +331,7 @@ In LEO, four external torques disturb the spacecraft attitude. The AOCS must cou
 
 ---
 
-## 3. Attitude Actuators -- Physics and Sizing (25 min)
-
-### Teaching Notes
-
+## 3. Attitude Actuators -- Physics and Sizing
 ### Reaction Wheels -- Physics of Angular Momentum Storage
 
 **How reaction wheels work:**
@@ -535,10 +526,7 @@ The ISS uses four 4600 kg CMGs, each storing 3500 N m s of momentum, to maintain
 
 ---
 
-## 4. Pointing Error Budget (25 min)
-
-### Teaching Notes
-
+## 4. Pointing Error Budget
 *[Source: ECSS-E-ST-60-10C; SMAD, Ch. 11.1]*
 
 The pointing error budget combines all independent error sources using root-sum-square (RSS) to determine the total pointing uncertainty. This is a statistical combination assuming errors are uncorrelated and normally distributed.
@@ -595,10 +583,7 @@ For most CubeSat missions, APE is the primary requirement. RPE matters for long-
 
 ---
 
-## 5. Momentum Management and Desaturation (10 min)
-
-### Teaching Notes
-
+## 5. Momentum Management and Desaturation
 Disturbance torques cause angular momentum to accumulate in reaction wheels over time. Without management, wheels saturate and lose control authority. Understanding this cycle is essential for AOCS design.
 
 **The momentum lifecycle:**
@@ -702,8 +687,7 @@ The MEMS magnetometer payload does not require accurate pointing. In fact, it be
 
 ---
 
-## 6. SpaceCDF Exercise (30 min)
-
+## 6. SpaceCDF Exercise
 ### Instructions
 
 1. **Architecture tab (AOCS):** Select the AOCS architecture appropriate for your pointing requirement

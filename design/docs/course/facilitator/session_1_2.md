@@ -1,6 +1,6 @@
 # Session 1.2: The Canadian Space Ecosystem & Regulatory Environment
 
-**Duration:** 4 hours (Monday PM + Tuesday AM)
+
 **Prerequisites:** Session 1.1
 **References:**
 - [Government of Canada, Canadian Space Agency Act (S.C. 1990, c. 13)](https://laws-lois.justice.gc.ca/eng/acts/c-11.2/)
@@ -25,12 +25,10 @@ By the end of this session, participants will be able to:
 
 ---
 
-## Part 1: The Canadian Space Ecosystem (Monday PM -- 2 hours)
-
+## Part 1: The Canadian Space Ecosystem
 ---
 
-### 1. The Canadian Space Agency (30 min)
-
+### 1. The Canadian Space Agency
 #### 1.1 Mandate and History
 
 The Canadian Space Agency (CSA) was established by the *Canadian Space Agency Act* (S.C. 1990, c. 13) with the mandate to "promote the peaceful use and development of space, to advance the knowledge of space through science and to ensure that space science and technology provide social and economic benefits for Canadians."
@@ -73,8 +71,7 @@ The *Exploration, Imagination, Innovation: A New Space Strategy for Canada* (201
 
 ---
 
-### 2. Canadian Space Industry Map (30 min)
-
+### 2. Canadian Space Industry Map
 #### 2.1 Industry Structure
 
 The Canadian space industry generated approximately $2.7B in revenue (2022) and employs ~12,000 people. It is structured in tiers:
@@ -116,12 +113,11 @@ Canadian space activities are funded through several mechanisms:
 
 > **Industry Practice:** GHGSat (Montreal) progressed from a CSA-funded technology demonstrator (GHGSat-D "Claire", launched 2016) to a commercial constellation of 12+ satellites monitoring methane emissions from individual industrial facilities. This trajectory -- government seed funding enabling commercial scale-up -- is the canonical Canadian space industry growth model.
 
-**Discussion prompt:** *For your mission concept, which industry tier would you engage? What CSA funding programs might apply? What capabilities would need to be sourced internationally?*
+**Discussion point.** *For your mission concept, which industry tier would you engage? What CSA funding programs might apply? What capabilities would need to be sourced internationally?*
 
 ---
 
-### 3. Comparison with Other National Models (20 min)
-
+### 3. Comparison with Other National Models
 Understanding Canada's space ecosystem requires comparing it with partner agencies:
 
 | Parameter | Canada (CSA) | USA (NASA) | Europe (ESA) | Japan (JAXA) |
@@ -136,8 +132,7 @@ Canada's lack of indigenous launch capability means all Canadian satellites laun
 
 ---
 
-### 4. Canadian Space in the International Context (20 min)
-
+### 4. Canadian Space in the International Context
 #### 4.1 International Partnerships
 
 Canada participates in space through multilateral and bilateral agreements:
@@ -162,12 +157,10 @@ Canada has historically pursued a "niche excellence" strategy: rather than attem
 
 ---
 
-## Part 2: Regulatory Environment (Tuesday AM -- 2 hours)
-
+## Part 2: Regulatory Environment
 ---
 
-### 5. Regulatory Framework Overview (15 min)
-
+### 5. Regulatory Framework Overview
 Space activities in Canada are governed by multiple federal bodies. There is no single "Space Act" -- instead, regulation is distributed across several statutes:
 
 <!-- SVG DIAGRAM: Canadian Space Regulatory Framework -->
@@ -186,8 +179,7 @@ Space activities in Canada are governed by multiple federal bodies. There is no 
 
 ---
 
-### 6. Remote Sensing Space Systems Act (RSSSA) (30 min)
-
+### 6. Remote Sensing Space Systems Act (RSSSA)
 #### 6.1 Purpose and Scope
 
 The RSSSA (S.C. 2005, c. 45) regulates the operation of remote sensing satellites from Canada. It was enacted primarily in response to the commercialisation of RADARSAT-2 (the first Canadian commercial EO satellite) and addresses national security and foreign policy concerns related to Earth imagery.
@@ -232,12 +224,11 @@ Even small CubeSat missions with cameras must comply with RSSSA if they produce 
 
 > **Industry Practice:** MDA's RADARSAT-2 operates under an RSSSA licence that includes shutter control provisions. During the 2010 Haiti earthquake response, the Government of Canada exercised priority access to direct RADARSAT-2 to image the disaster zone within hours. This demonstrates both the operational utility and the regulatory mechanism of RSSSA.
 
-**Discussion prompt:** *Does your mission concept involve any remote sensing of Earth? If so, what RSSSA conditions might apply?*
+**Discussion point.** *Does your mission concept involve any remote sensing of Earth? If so, what RSSSA conditions might apply?*
 
 ---
 
-### 7. Spectrum Management and Licensing (40 min)
-
+### 7. Spectrum Management and Licensing
 #### 7.1 Why Spectrum Licensing Matters
 
 Every satellite that transmits or receives radio signals requires spectrum authorisation. This is not optional -- unauthorised RF transmission is illegal in all ITU member states and can result in harmful interference to other systems.
@@ -315,8 +306,7 @@ Many CubeSat operators use amateur radio frequencies (VHF/UHF) during developmen
 
 ---
 
-### 8. Export Control (30 min)
-
+### 8. Export Control
 #### 8.1 The Export Control Landscape
 
 Satellite technology is controlled goods in most countries due to dual-use (civil/military) applications. Canadian space companies and universities must navigate three overlapping regimes:
@@ -368,7 +358,7 @@ Any mission using US-origin components (which includes nearly all commercial spa
 
 > **Industry Practice:** MDA's export of RADARSAT-2 ground segment technology to international partners required extensive EIPA permitting and ITAR compliance review (since US-origin components were embedded in the system). The process took 18+ months and required dedicated compliance staff. Even university CubeSat projects using US-origin COTS components must track their ECCN classifications.
 
-**Discussion prompt:** *Does your mission concept involve any US-origin components? Any international partners? What export control obligations might apply?*
+**Discussion point.** *Does your mission concept involve any US-origin components? Any international partners? What export control obligations might apply?*
 
 ---
 

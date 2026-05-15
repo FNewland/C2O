@@ -83,6 +83,10 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.warning("Study cache init failed (continuing with empty cache): %s", e)
 
+    # Start WebSocket edit-lock heartbeat checker
+    from .routers.ws import start_heartbeat_checker
+    start_heartbeat_checker()
+
     yield
     logger.info("SpaceCDF server shutting down...")
     try:

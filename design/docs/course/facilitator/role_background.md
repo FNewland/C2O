@@ -1,7 +1,7 @@
 # Per-Role Background Briefings
 
 This chapter is a per-role background briefing for first-time CubeSat
-designers in a CDF. For each engineering position the cohort might
+designers in a CDF. For each engineering position students might
 take, it covers:
 
 - **Decisions you own.** What you have to choose, in what order.
@@ -15,7 +15,7 @@ read the one for your assigned role before Day 2 of Week 2 (CDF
 intensive Day 1).
 
 > **Expected reading.** Each role briefing is overnight reading the
-> evening before the cohort takes its CDF positions. Read your own
+> evening before students takes its CDF positions. Read your own
 > briefing in full and scan one adjacent one (e.g. Power Engineers
 > should scan Thermal; AOCS should scan Structures).
 

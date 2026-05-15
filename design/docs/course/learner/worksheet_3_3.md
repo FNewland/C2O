@@ -168,7 +168,7 @@ With 4 passes/day: ~0.84 MB/day. The magnetometer generates ~1.13 MB/day -- marg
 
 ---
 
-## Part A: Frequency Band Selection (10 min)
+## Part A: Frequency Band Selection
 
 **Mission data rate requirement:** _____ Mbps
 
@@ -188,7 +188,7 @@ _____________________________________________________________________
 
 ---
 
-## Part B: Complete Link Budget (25 min)
+## Part B: Complete Link Budget
 
 Fill in ALL rows. Show computation for EIRP, FSPL, G/T, C/N$_0$, and margin.
 
@@ -233,7 +233,7 @@ _____________________________________________________________________
 
 ---
 
-## Part C: Data Budget (10 min)
+## Part C: Data Budget
 
 **Daily data generation:**
 
@@ -257,7 +257,7 @@ _____________________________________________________________________
 
 ---
 
-## Part D: SpaceCDF Comparison (10 min)
+## Part D: SpaceCDF Comparison
 
 Open the Link Budget tab, enter your parameters, and compare:
 
@@ -276,7 +276,7 @@ _____________________________________________________________________
 
 ---
 
-## Part E: Modulation and Coding Selection (5 min)
+## Part E: Modulation and Coding Selection
 
 **Selected modulation:** _______________________________________________
 

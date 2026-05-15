@@ -1,6 +1,6 @@
 # Session 2.3: Orbit Selection and Mission Architecture
 
-**Duration:** 2 hours
+
 **Prerequisites:** Sessions 2.1--2.2 (requirements and functions defined)
 **SpaceCDF Tabs:** Mission Architecture, Orbit Trade Advisor
 
@@ -31,10 +31,7 @@ By the end of this session, participants will be able to:
 
 ---
 
-## 1. Keplerian Orbital Elements (25 min)
-
-### Teaching Notes
-
+## 1. Keplerian Orbital Elements
 Six parameters (the *classical orbital elements*) fully describe the size, shape, and orientation of an orbit, plus the satellite's position on it.
 
 *[Source: Vallado, Ch. 2; Curtis, Ch. 2]*
@@ -94,8 +91,7 @@ For **circular LEO** missions (the most common CubeSat orbit type), the key desi
 
 ---
 
-## 2. Worked Examples: Orbital Computations (15 min)
-
+## 2. Worked Examples: Orbital Computations
 > **Worked Example -- 500 km Circular LEO**
 >
 > **Given:** $h = 500$ km, circular orbit.
@@ -124,10 +120,7 @@ For **circular LEO** missions (the most common CubeSat orbit type), the key desi
 
 ---
 
-## 3. Orbit Selection Trade-Offs (25 min)
-
-### Teaching Notes
-
+## 3. Orbit Selection Trade-Offs
 The orbit is the single most impactful early design decision. It cascades to every subsystem.
 
 *[Source: SMAD, Ch. 7; Wertz et al., "Reducing Space Mission Cost," Ch. 3]*
@@ -188,10 +181,7 @@ The orbit is the single most impactful early design decision. It cascades to eve
 
 ---
 
-## 4. Ground Coverage and Revisit (15 min)
-
-### Teaching Notes
-
+## 4. Ground Coverage and Revisit
 > **Key Equations -- Ground Coverage**
 >
 > **Swath width** (nadir-pointing sensor with half-cone angle $\theta$):
@@ -223,10 +213,7 @@ $$t_{\text{contact}} \approx \frac{T}{\pi} \arccos\left(\frac{\cos(\rho)}{\cos(\
 
 ---
 
-## 5. Hohmann Transfer and Deorbit (10 min)
-
-### Teaching Notes
-
+## 5. Hohmann Transfer and Deorbit
 > **Key Equations -- Hohmann Transfer**
 >
 > The minimum-energy transfer between two circular orbits of radii $r_1$ and $r_2$:
@@ -250,10 +237,7 @@ This deorbit $\Delta V$ is a critical input to the propulsion sizing in Session 
 
 ---
 
-## 6. Radiation Environment (10 min)
-
-### Teaching Notes
-
+## 6. Radiation Environment
 *[Source: ECSS-E-ST-10-04C Rev.1; SMAD, Ch. 8.1]*
 
 ### Total Ionising Dose (TID) by Orbit
@@ -322,8 +306,7 @@ UniSat-1 selects the ISS orbit not by optimisation but by **access**: deployment
 
 ---
 
-## 7. SpaceCDF Orbit Trade Exercise (20 min)
-
+## 7. SpaceCDF Orbit Trade Exercise
 ### Instructions
 
 1. Navigate to the **Mission Architecture** tab in SpaceCDF

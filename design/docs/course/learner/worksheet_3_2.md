@@ -118,7 +118,7 @@ $T_{\text{aero}} = 0.5 \times 4 \times 10^{-12} \times 7670^2 \times 2.2 \times 
 
 ---
 
-## Part A: AOCS Architecture Selection (10 min)
+## Part A: AOCS Architecture Selection
 
 **Pointing requirement from your mission:** _____ deg (3-sigma)
 
@@ -140,7 +140,7 @@ _____________________________________________________________________
 
 ---
 
-## Part B: Disturbance Torque Calculations (20 min)
+## Part B: Disturbance Torque Calculations
 
 Calculate at least 2 disturbance torques for your spacecraft and orbit. Show all working.
 
@@ -200,7 +200,7 @@ $T_{\text{mag}} = $ _____ $\times$ _____ $= $ _____ N m
 
 ---
 
-## Part C: Reaction Wheel Sizing (10 min)
+## Part C: Reaction Wheel Sizing
 
 *Skip this section if your mission uses passive magnetic or MTQ-only architecture.*
 
@@ -224,7 +224,7 @@ $H = T_{\text{dist}} \times \frac{t_{\text{desat}}}{2} = $ _____ $\times \frac{\
 
 ---
 
-## Part D: Pointing Error Budget (15 min)
+## Part D: Pointing Error Budget
 
 *Skip this section if your mission uses passive magnetic stabilisation (no pointing requirement).*
 
@@ -256,7 +256,7 @@ _____________________________________________________________________
 
 ---
 
-## Part E: SpaceCDF Verification (10 min)
+## Part E: SpaceCDF Verification
 
 Compare your hand calculations to SpaceCDF's Pointing Budget display:
 

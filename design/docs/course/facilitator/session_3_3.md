@@ -1,6 +1,6 @@
 # Session 3.3: Communications and Link Budget Design
 
-**Duration:** 2 hours
+
 **Prerequisites:** Sessions 2.1--3.2 (requirements, orbit, power, AOCS defined)
 **SpaceCDF Tabs:** Link Budget, Spectrum Selector, Equipment Browser (Comms)
 
@@ -37,10 +37,7 @@ By the end of this session, participants will be able to:
 
 ---
 
-## 1. The Link Budget Concept (15 min)
-
-### Teaching Notes
-
+## 1. The Link Budget Concept
 *[Source: SMAD, Ch. 13; ECSS-E-ST-50-05C; Roddy, Ch. 4]*
 
 The link budget is the accounting statement for the communication link. Every gain and every loss from transmitter to receiver is tallied in **decibels (dB)** to determine whether the link "closes" -- meaning the received signal is strong enough to decode with acceptable error rate.
@@ -114,10 +111,7 @@ All link budget terms are in decibels to convert multiplication/division into ad
 
 ---
 
-## 2. Complete Link Budget Equation (25 min)
-
-### Teaching Notes
-
+## 2. Complete Link Budget Equation
 > **Key Equations -- Link Budget (dB form)**
 >
 > **EIRP** (Effective Isotropic Radiated Power):
@@ -187,10 +181,7 @@ All link budget terms are in decibels to convert multiplication/division into ad
 
 ---
 
-## 3. Antenna Types -- Physics and Selection (15 min)
-
-### Teaching Notes
-
+## 3. Antenna Types -- Physics and Selection
 *[Source: SMAD, Ch. 13; Balanis, *Antenna Theory: Analysis and Design*, 4th ed., 2016]*
 
 The antenna converts guided RF energy (in cables/waveguides) into radiated electromagnetic waves (and vice versa for receive). The key performance parameters are:
@@ -258,10 +249,7 @@ Advantages: no moving parts, fast beam steering (microseconds), multiple simulta
 
 ---
 
-## 4. Free Space Path Loss by Band (10 min)
-
-### Teaching Notes
-
+## 4. Free Space Path Loss by Band
 FSPL increases with both frequency and distance. At a fixed slant range, higher-frequency bands lose more signal -- but this is offset by the ability to use smaller, higher-gain antennas at higher frequencies.
 
 > **Key Equations -- FSPL (expanded form)**
@@ -302,10 +290,7 @@ For typical LEO orbits:
 
 ---
 
-## 5. Frequency Band Selection and Licensing (15 min)
-
-### Teaching Notes
-
+## 5. Frequency Band Selection and Licensing
 *[Source: ITU Radio Regulations, Articles 5 and 22; ISED RSS-SAT; FCC Part 25; IARU Satellite Frequency Coordination]*
 
 Band selection is a **design constraint** that affects data rate, antenna size, atmospheric losses, equipment availability, licensing cost, and data policy. The choice of band is one of the earliest and most consequential decisions in mission design.
@@ -352,10 +337,7 @@ Required data rate?
 
 ---
 
-## 6. Modulation and Coding -- Physics and Selection (20 min)
-
-### Teaching Notes
-
+## 6. Modulation and Coding -- Physics and Selection
 *[Source: CCSDS 131.0-B-4; Sklar, Ch. 7--8; Haykin, Ch. 10; DVB-S2 standard]*
 
 ### Modulation -- How Information Becomes RF
@@ -419,10 +401,7 @@ FEC adds redundant bits to the data stream before transmission. The receiver use
 
 ---
 
-## 7. Ground Stations (10 min)
-
-### Teaching Notes
-
+## 7. Ground Stations
 The ground station is half of the communication link. Its performance ($G/T$) directly determines the achievable data rate. Upgrading the ground station is often the cheapest way to improve link performance (compared to upgrading the spacecraft transmitter or antenna).
 
 ### Ground Station Types
@@ -465,8 +444,7 @@ The "usable duration" is shorter than the total pass because the link only close
 
 ---
 
-## 8. Worked Examples: Complete Link Budgets (15 min)
-
+## 8. Worked Examples: Complete Link Budgets
 ### 3U EO CubeSat -- S-band Downlink
 
 > **Worked Example -- S-band Downlink for 3U EO CubeSat (SuperDove-class)**
@@ -579,10 +557,7 @@ With 4 passes/day: $V_{\text{daily}} = 856$ kB/day $\approx$ **0.84 MB/day**. Th
 
 ---
 
-## 9. Data Budget (10 min)
-
-### Teaching Notes
-
+## 9. Data Budget
 The data budget determines whether the communication system can deliver all mission data to the ground. Even if the link budget closes, the mission fails if the total data volume exceeds the downlink capacity.
 
 > **Key Equations -- Data Budget**
@@ -626,8 +601,7 @@ The data budget determines whether the communication system can deliver all miss
 
 ---
 
-## 10. SpaceCDF Exercise (25 min)
-
+## 10. SpaceCDF Exercise
 ### Instructions
 
 1. **Spectrum Selector** (Dashboard): Select your license type and frequency band

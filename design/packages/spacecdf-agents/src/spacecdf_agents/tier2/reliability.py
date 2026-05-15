@@ -14,6 +14,7 @@ from __future__ import annotations
 import math
 
 from spacecdf_common.agents.base import AgentResult, DesignAgent, DesignState
+from spacecdf_agents.exporters.docs.agent_extras import fmeca_row
 
 
 # Heritage failure rates (failures per 10^6 hours) by subsystem
@@ -121,6 +122,60 @@ class ReliabilityAgent(DesignAgent):
             )
         if single_point_failures:
             result.add_warning(f"Single-point failures: {', '.join(single_point_failures)}")
+
+        # ---- Report-quality narrative & FMECA-lite extras ----
+        result.rationale = (
+            f"Series reliability model R_sys=∏R_i.  Over {mission_years:.1f} yr "
+            f"({mission_hours:.0f} h) the mission reliability is "
+            f"{system_reliability:.3f} against a target of "
+            f"{reliability_target:.2f}.  Weakest contributor: "
+            f"{weakest[0] or 'n/a'} (R={weakest[1]:.3f}).  System MTBF "
+            f"is {mtbf_hours:.0f} h."
+        )
+        result.assumptions = [
+            "Constant failure-rate (exponential) model R(t) = e^{-λt}.",
+            "Series model: all subsystems must function; no parallel redundancy modelled here.",
+            "Failure rates from heritage (SMAD4 Table 19-5, MIL-HDBK-217F).",
+        ]
+        # FMECA-lite from heritage failure modes
+        mode_catalog = {
+            "eps": ("Battery cell short", "Cell internal short / thermal runaway",
+                    "Loss of bus voltage; depleted battery"),
+            "aocs": ("Reaction-wheel bearing seizure", "Bearing wear over cycles",
+                     "Loss of fine pointing; switch to coarse mode"),
+            "ttc": ("Transmitter PA failure", "RF stress / latch-up",
+                    "Loss of downlink; use backup transmitter"),
+            "obdh": ("OBC SEU latch-up", "Heavy-ion induced single-event upset",
+                     "Reset cycle; loss of telemetry window"),
+            "tcs": ("Heater string open", "Wire chafe / FET failure",
+                    "Component temperature excursion below limit"),
+            "propulsion": ("Valve stuck open", "Particulate contamination",
+                           "Propellant leak; loss of station-keeping capability"),
+            "structure": ("Bolt back-out", "Vibration / launch loads",
+                          "Loss of deployable, latched structure"),
+            "payload": ("Detector dark current rise", "TID accumulation",
+                        "Image SNR degradation; calibration drift"),
+        }
+        fmeca = []
+        for sub, R in subsystem_reliabilities.items():
+            if R >= 1.0 or sub not in mode_catalog:
+                continue
+            mode, cause, effect = mode_catalog[sub]
+            severity = 5 if R < 0.85 else 4 if R < 0.95 else 3
+            occurrence = 4 if R < 0.85 else 3 if R < 0.95 else 2
+            detection = 2  # telemetry-detectable in most cases
+            fmeca.append(fmeca_row(
+                item=sub.upper(), failure_mode=mode, cause=cause, effect=effect,
+                severity=severity, occurrence=occurrence, detection=detection,
+                mitigation="Cold/hot redundancy; safe-mode handoff; ground-commanded reset.",
+            ))
+        result.extras["reliability.fmeca"] = fmeca
+        result.extras["reliability.failure_rates"] = [
+            {"subsystem": k.upper(), "lambda_per_hour": v / 1e6,
+             "reliability": round(subsystem_reliabilities.get(k, 1.0), 4),
+             "redundancy": "single string"}
+            for k, v in _FAILURE_RATES.items()
+        ]
 
         result.confidence = 0.60
         return result

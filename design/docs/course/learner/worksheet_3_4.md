@@ -169,7 +169,7 @@ Mass margin: 1330 - 690 = 640 g (48%). With 20% equipment margin + 20% system ma
 
 ---
 
-## Part A: CDS Compliance Check (10 min)
+## Part A: CDS Compliance Check
 
 | CDS Requirement | Your Design Value | Specification | Compliant? |
 |----------------|-------------------|---------------|-----------|
@@ -190,7 +190,7 @@ _____________________________________________________________________
 
 ---
 
-## Part B: Structural Margin Calculation (10 min)
+## Part B: Structural Margin Calculation
 
 **Axial launch load:** _____ g &nbsp;&nbsp; **Lateral launch load:** _____ g
 
@@ -212,7 +212,7 @@ _____________________________________________________________________
 
 ---
 
-## Part C: Propulsion Decision (15 min)
+## Part C: Propulsion Decision
 
 **Does your mission need propulsion?**
 
@@ -260,7 +260,7 @@ _____________________________________________________________________
 
 ---
 
-## Part D: Equipment Selection Log (25 min)
+## Part D: Equipment Selection Log
 
 Using SpaceCDF's Equipment Browser, select components for each category:
 
@@ -296,7 +296,7 @@ _____________________________________________________________________
 
 ---
 
-## Part E: Component Trade Study (15 min)
+## Part E: Component Trade Study
 
 **Subsystem traded:** _____________ &nbsp;&nbsp; **Options compared:** 3
 
@@ -322,7 +322,7 @@ _____________________________________________________________________
 
 ---
 
-## Part F: Final Budget Health Check (10 min)
+## Part F: Final Budget Health Check
 
 After equipment selection, record final budget status:
 

@@ -1,6 +1,6 @@
 # Session 2.1: The System-V and Requirements Engineering
 
-**Duration:** 2 hours
+
 **Prerequisites:** Week 1 complete (mission need, stakeholder analysis, ConOps defined)
 **SpaceCDF Tab:** Requirements
 
@@ -29,10 +29,7 @@ By the end of this session, participants will be able to:
 
 ---
 
-## 1. The System-V Model (20 min)
-
-### Teaching Notes
-
+## 1. The System-V Model
 The **System-V** (or "Vee model") is the canonical systems engineering lifecycle. It connects the decomposition of requirements on the left branch to the integration and verification on the right branch. Every horizontal level on the V represents a matched pair: requirements at that level are verified by the corresponding test or analysis campaign at the same level on the right side.
 
 *[Source: NASA SEH Fig. 3-1; ECSS-E-ST-10C Rev.1 Fig. 5-1; INCOSE SEH 5th ed. Fig. 2.7]*
@@ -93,10 +90,7 @@ Planet's SuperDove constellation (2020--present) illustrates the V-model in comm
 
 ---
 
-## 2. What is a Requirement? (15 min)
-
-### Teaching Notes
-
+## 2. What is a Requirement?
 *[Source: NASA SEH Sec. 4.2; ECSS-E-ST-10-06C Sec. 5.2]*
 
 A requirement is a **formal, verifiable statement of what the system must do or how well it must perform**. It is expressed as a "shall" statement with a measurable threshold.
@@ -142,10 +136,7 @@ This is testable: GSD can be computed from optical geometry and verified from ca
 
 ---
 
-## 3. The SMART Framework (20 min)
-
-### Teaching Notes
-
+## 3. The SMART Framework
 While NASA Appendix C provides a detailed quality checklist, the SMART acronym serves as a rapid quality screen:
 
 | Letter | Meaning | Test Question |
@@ -187,10 +178,7 @@ This is acceptable because bus voltage is a negotiated interface agreement, not 
 
 ---
 
-## 4. Requirement Hierarchy and Traceability (25 min)
-
-### Teaching Notes
-
+## 4. Requirement Hierarchy and Traceability
 Requirements exist at multiple levels, each decomposed from the level above. Every requirement must trace bidirectionally.
 
 ### Hierarchy Structure
@@ -253,10 +241,7 @@ A compound requirement that addresses multiple concerns must be split for indepe
 
 ---
 
-## 5. Verification Methods -- ATID (20 min)
-
-### Teaching Notes
-
+## 5. Verification Methods -- ATID
 *[Source: ECSS-E-ST-10-02C Rev.1 Sec. 5.3; NASA SEH Sec. 5.3]*
 
 Every requirement must have an assigned verification method. The four standard methods (sometimes called ATRI or ATID) are:
@@ -291,8 +276,7 @@ Every requirement must have an assigned verification method. The four standard m
 
 ---
 
-## 6. Worked Example: 3U Earth Observation CubeSat (10 min)
-
+## 6. Worked Example: 3U Earth Observation CubeSat
 > **Worked Example -- Deriving Requirements for a 3U EO CubeSat**
 >
 > **Stakeholder need:** "Monitor crop health across the Canadian prairies with weekly updates."
@@ -362,8 +346,7 @@ Every requirement must have an assigned verification method. The four standard m
 
 ---
 
-## 7. SpaceCDF Exercise (30 min)
-
+## 7. SpaceCDF Exercise
 ### Instructions
 
 1. Navigate to the **Requirements** tab in SpaceCDF

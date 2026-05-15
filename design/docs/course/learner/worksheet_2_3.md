@@ -27,7 +27,7 @@
 
 ---
 
-## Part A: Orbital Mechanics Calculations (20 min)
+## Part A: Orbital Mechanics Calculations
 
 **Your selected orbit:** Altitude $h$ = _____ km, &nbsp; Inclination $i$ = _____ deg, &nbsp; Type: __________
 
@@ -77,7 +77,7 @@ _____________________________________________________________________
 
 ---
 
-## Part B: Orbit Trade Matrix (10 min)
+## Part B: Orbit Trade Matrix
 
 From SpaceCDF's Orbit Trade Advisor, record the top 3 candidates:
 
@@ -95,7 +95,7 @@ _____________________________________________________________________
 
 ---
 
-## Part C: Debris Compliance (10 min)
+## Part C: Debris Compliance
 
 For your selected orbit:
 
@@ -118,7 +118,7 @@ _____________________________________________________________________
 
 ---
 
-## Part D: Downstream Cascade Analysis (10 min)
+## Part D: Downstream Cascade Analysis
 
 How does your orbit selection affect each subsystem? Fill in the impact:
 
@@ -134,7 +134,7 @@ How does your orbit selection affect each subsystem? Fill in the impact:
 
 ---
 
-## Part E: Discussion (10 min)
+## Part E: Discussion
 
 What would happen to your mission if you moved the orbit **100 km higher**?
 

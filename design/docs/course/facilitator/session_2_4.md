@@ -1,6 +1,6 @@
 # Session 2.4: Mission Architecture -- Segments, Interfaces, and Budgets
 
-**Duration:** 2 hours
+
 **Prerequisites:** Sessions 2.1--2.3 (requirements, functions, orbit selected)
 **SpaceCDF Tabs:** Mission Architecture, System Architecture, Interfaces, Dashboard
 
@@ -29,10 +29,7 @@ By the end of this session, participants will be able to:
 
 ---
 
-## 1. Mission Segment Decomposition (15 min)
-
-### Teaching Notes
-
+## 1. Mission Segment Decomposition
 *[Source: NASA SEH Sec. 4.4; ECSS-E-ST-10C Sec. 5.4; SMAD, Ch. 1]*
 
 Every space mission decomposes into segments, each with distinct functions and interfaces:
@@ -82,10 +79,7 @@ Every space mission decomposes into segments, each with distinct functions and i
 
 ---
 
-## 2. System Architecture Block Diagram (20 min)
-
-### Teaching Notes
-
+## 2. System Architecture Block Diagram
 The system block diagram shows the internal architecture of the space segment -- all subsystems and their data/power/mechanical connections.
 
 <svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg" style="max-width:750px; font-family: sans-serif; font-size: 11px;">
@@ -147,10 +141,7 @@ The system block diagram shows the internal architecture of the space segment --
 
 ---
 
-## 3. The N-Squared Interface Matrix (25 min)
-
-### Teaching Notes
-
+## 3. The N-Squared Interface Matrix
 *[Source: NASA SEH Sec. 6.3 -- Process 12: Interface Management; ECSS-E-ST-10-24C]*
 
 Interface problems are the leading cause of integration failures. NASA SEH states: "Most system failures can be traced back to interface problems."
@@ -236,10 +227,7 @@ IR-EMC-002: "TX and payload acquisition shall not operate simultaneously
 
 ---
 
-## 4. Engineering Budgets: Mass and Power (30 min)
-
-### Teaching Notes
-
+## 4. Engineering Budgets: Mass and Power
 *[Source: ECSS-E-HB-10-02A Sec. 5.2; SMAD, Ch. 10--11]*
 
 Engineering budgets are the quantitative backbone of the design. They answer: **"Will this design close?"**
@@ -400,8 +388,7 @@ With ~2 W available from body-mounted cells, the power margin is substantial (~1
 
 ---
 
-## 5. SpaceCDF Exercise (30 min)
-
+## 5. SpaceCDF Exercise
 ### Instructions
 
 1. **System Architecture tab:** Review or edit the subsystem block diagram for your mission

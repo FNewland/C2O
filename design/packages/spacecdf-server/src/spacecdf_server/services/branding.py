@@ -46,106 +46,50 @@ def get_branding() -> BrandingConfig:
 
 
 def apply_docx_branding(doc: Any) -> None:
-    """Apply UOttawa/SEDTI branding to a python-docx Document.
-
-    Sets:
-    - Default font (Calibri)
-    - Header with university name, department, tool name
-    - Footer with page number and classification
-    - Title page colour scheme
-    """
+    """Apply the uOttawa SpaceCDF Facilitator's Book theme to a Document."""
     try:
-        from docx.shared import Pt, RGBColor, Inches
-        from docx.enum.text import WD_ALIGN_PARAGRAPH
+        from spacecdf_agents.exporters.docs import theme as _theme
     except ImportError:
-        return  # python-docx not installed — skip branding
-
-    b = BRANDING
-    style = doc.styles['Normal']
-    font = style.font
-    font.name = 'Calibri'
-    font.size = Pt(11)
-    font.color.rgb = RGBColor(0x2D, 0x2D, 0x2D)
-
-    # Header
-    for section in doc.sections:
-        header = section.header
-        header.is_linked_to_previous = False
-        if not header.paragraphs:
-            header.add_paragraph()
-        hp = header.paragraphs[0]
-        hp.text = f"{b.university}  |  {b.department}  |  {b.tool_name}"
-        hp.style.font.size = Pt(8)
-        hp.style.font.color.rgb = RGBColor(0x8B, 0x00, 0x00)
-        hp.alignment = WD_ALIGN_PARAGRAPH.CENTER
-
-        # Footer
-        footer = section.footer
-        footer.is_linked_to_previous = False
-        if not footer.paragraphs:
-            footer.add_paragraph()
-        fp = footer.paragraphs[0]
-        fp.text = f"{b.footer_left}  |  {b.classification}  |  {b.footer_right}"
-        fp.style.font.size = Pt(7)
-        fp.style.font.color.rgb = RGBColor(0x99, 0x99, 0x99)
-        fp.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        return
+    _theme.apply_styles(doc)
+    _theme._set_page_geometry(doc)
+    _theme.add_page_furniture(
+        doc,
+        running_title=f"{BRANDING.university} · {BRANDING.tool_name}",
+        document_code="",
+        footer_left=BRANDING.footer_left,
+        footer_right="uOttawa SEDTI",
+    )
 
 
 def create_branded_docx(title: str, subtitle: str = "") -> Any:
-    """Create a new DOCX document with UOttawa/SEDTI branding pre-applied.
-
-    Returns a python-docx Document ready for content.
-    """
+    """Create a Document with the uOttawa course-style cover + page furniture."""
     try:
-        from docx import Document
-        from docx.shared import Pt, RGBColor
-        from docx.enum.text import WD_ALIGN_PARAGRAPH
+        from spacecdf_agents.exporters.docs import theme as _theme
     except ImportError:
         return None
-
-    doc = Document()
-    apply_docx_branding(doc)
-
-    b = BRANDING
-
-    # Title page
-    p = doc.add_paragraph()
-    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    p.space_before = Pt(72)
-    run = p.add_run(b.university)
-    run.font.size = Pt(18)
-    run.font.color.rgb = RGBColor(0x8B, 0x00, 0x00)
-    run.bold = True
-
-    p2 = doc.add_paragraph()
-    p2.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    run2 = p2.add_run(b.department)
-    run2.font.size = Pt(12)
-    run2.font.color.rgb = RGBColor(0x66, 0x66, 0x66)
-
-    p3 = doc.add_paragraph()
-    p3.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    p3.space_before = Pt(36)
-    run3 = p3.add_run(title)
-    run3.font.size = Pt(24)
-    run3.bold = True
-
-    if subtitle:
-        p4 = doc.add_paragraph()
-        p4.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        run4 = p4.add_run(subtitle)
-        run4.font.size = Pt(14)
-        run4.font.color.rgb = RGBColor(0x66, 0x66, 0x66)
-
-    # Classification
-    pc = doc.add_paragraph()
-    pc.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    pc.space_before = Pt(24)
-    rc = pc.add_run(b.classification)
-    rc.font.size = Pt(10)
-    rc.font.color.rgb = RGBColor(0xCC, 0x00, 0x00)
-
-    doc.add_page_break()
+    from datetime import datetime
+    doc = _theme.new_document()
+    _theme.add_cover_page(
+        doc,
+        title=title,
+        subtitle=subtitle or BRANDING.tool_name,
+        document_code="",
+        study_name=BRANDING.tool_name,
+        issue="1.0",
+        date=datetime.now().strftime("%Y-%m-%d"),
+        classification=BRANDING.classification,
+        cohort=BRANDING.tool_name,
+        publisher=f"{BRANDING.university} · {BRANDING.department}",
+    )
+    _theme.add_page_furniture(
+        doc,
+        running_title=f"{BRANDING.tool_name} — {title}",
+        footer_left=BRANDING.footer_left,
+        footer_right="uOttawa SEDTI",
+    )
+    # AIG (Peters 2023) acknowledgement on every branded document
+    _theme.add_aig_acknowledgement(doc)
     return doc
 
 

@@ -1,6 +1,6 @@
 # Session 1.3: International Standards for Space Systems
 
-**Duration:** 4 hours (Tuesday PM + Wednesday)
+
 **Prerequisites:** Sessions 1.1--1.2
 **References:**
 - [ECSS, ECSS System -- Description, Implementation and General Requirements (ECSS-S-ST-00C), 2020](https://ecss.nl/standard/ecss-s-st-00c-space-standardization-policy-and-organisation/)
@@ -25,12 +25,10 @@ By the end of this session, participants will be able to:
 
 ---
 
-## Part 1: The ECSS Framework (Tuesday PM -- 2 hours)
-
+## Part 1: The ECSS Framework
 ---
 
-### 1. Why Standards Matter in Space Engineering (20 min)
-
+### 1. Why Standards Matter in Space Engineering
 #### 1.1 The Cost of Non-Compliance
 
 Space missions operate in an environment where failures are catastrophic, repair is impossible, and the consequences of interference or debris affect all space users. Standards exist to:
@@ -57,8 +55,7 @@ These frameworks are not mutually exclusive. Many missions (including Canadian o
 
 ---
 
-### 2. ECSS Standard Hierarchy (40 min)
-
+### 2. ECSS Standard Hierarchy
 #### 2.1 Structure
 
 The ECSS system organises standards into four branches, each with three levels:
@@ -190,8 +187,7 @@ The tailoring rationale is documented in the **Product Assurance and Safety Plan
 
 ---
 
-### 3. Key ECSS Engineering Standards (30 min)
-
+### 3. Key ECSS Engineering Standards
 #### 3.1 Systems Engineering (ECSS-E-ST-10C)
 
 This is the master engineering standard, equivalent to NASA's NPR 7123.1D. It defines:
@@ -246,8 +242,7 @@ To illustrate the depth of ECSS standards, consider the structural design requir
 
 ---
 
-### 4. NASA Standards Comparison (20 min)
-
+### 4. NASA Standards Comparison
 #### 4.1 NASA Technical Standards Architecture
 
 NASA's standards are organised differently from ECSS. Key document types:
@@ -275,12 +270,10 @@ NASA's standards are organised differently from ECSS. Key document types:
 
 ---
 
-## Part 2: Launch Interfaces, Debris Mitigation & International Law (Wednesday -- 2 hours)
-
+## Part 2: Launch Interfaces, Debris Mitigation & International Law
 ---
 
-### 5. CDS Rev 14 -- Launch Vehicle Interface Standard (30 min)
-
+### 5. CDS Rev 14 -- Launch Vehicle Interface Standard
 #### 5.1 What is the CDS?
 
 The **Cubesat Design Specification (CDS)**, maintained by the California Polytechnic State University (Cal Poly) and updated by the CubeSat community, defines the mechanical, electrical, and operational interfaces between CubeSats and their deployment systems (P-PODs, ISIPOD, etc.).
@@ -329,8 +322,7 @@ For non-CubeSat smallsats (microsatellites 10--200 kg), the interface standard d
 
 ---
 
-### 6. Space Debris Mitigation (40 min)
-
+### 6. Space Debris Mitigation
 #### 6.1 The Debris Problem
 
 As of 2025, there are approximately:
@@ -404,8 +396,7 @@ The debris population is growing due to collisions (the Kessler Syndrome), anti-
 
 ---
 
-### 7. International Space Law and COPUOS (30 min)
-
+### 7. International Space Law and COPUOS
 #### 7.1 The UN Space Treaties
 
 The legal framework for space activities is established by five UN treaties negotiated under the Committee on the Peaceful Uses of Outer Space (COPUOS):
@@ -444,8 +435,7 @@ In 2019, COPUOS adopted 21 guidelines for the long-term sustainability of outer 
 
 ---
 
-### 8. SpaceCDF Compliance Features (20 min)
-
+### 8. SpaceCDF Compliance Features
 SpaceCDF tracks compliance through the **Compliance Engineer** position:
 
 | Feature | What It Tracks | Automation Level |
@@ -457,7 +447,7 @@ SpaceCDF tracks compliance through the **Compliance Engineer** position:
 | **Export control classification** | ECCN/USML classification of key components | Manual (per-component) |
 | **CDS compliance** | Mechanical/electrical interface compliance with CDS Rev 14 | Semi-automated (checks mass, dimensions, CG) |
 
-**Exercise:** *In SpaceCDF, navigate to the Compliance panel. Review the debris mitigation compliance status for your mission. What orbit altitude would be needed to comply with the FCC 5-year rule without propulsion? Use the tool's orbital lifetime calculator.*
+**Exercise.** *In SpaceCDF, navigate to the Compliance panel. Review the debris mitigation compliance status for your mission. What orbit altitude would be needed to comply with the FCC 5-year rule without propulsion? Use the tool's orbital lifetime calculator.*
 
 ---
 

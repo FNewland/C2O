@@ -1,6 +1,6 @@
 # Session 3.1: Power System and Thermal Control Design
 
-**Duration:** 2 hours
+
 **Prerequisites:** Sessions 2.1--2.4 (requirements, functions, orbit, architecture defined)
 **SpaceCDF Tabs:** Dashboard (Power KPI), Engineering Budgets, Timing Budget, Parametric
 
@@ -36,10 +36,7 @@ By the end of this session, participants will be able to:
 
 ---
 
-## 1. Electrical Power System Architecture (25 min)
-
-### Teaching Notes
-
+## 1. Electrical Power System Architecture
 *[Source: SMAD, Ch. 11.4; ECSS-E-ST-20C; Patel, Ch. 3]*
 
 The EPS is the "utility company" of the spacecraft. It must continuously supply regulated power to all subsystems through every operational mode, including eclipse. Unlike terrestrial power systems, spacecraft EPS cannot draw from a grid -- the solar array, battery, and power conditioning electronics must form a fully self-contained, autonomous energy system with zero maintenance for the mission lifetime.
@@ -165,10 +162,7 @@ where $\delta = 0.025$ (2.5%/year for triple-junction GaAs in LEO with standard 
 
 ---
 
-## 2. Solar Array Sizing (25 min)
-
-### Teaching Notes
-
+## 2. Solar Array Sizing
 > **Key Equations -- Solar Array Sizing (Full Derivation)**
 >
 > **Step 1: Orbit-average power demand:**
@@ -259,10 +253,7 @@ where $\delta = 0.025$ (2.5%/year for triple-junction GaAs in LEO with standard 
 
 ---
 
-## 3. Battery Sizing (20 min)
-
-### Teaching Notes
-
+## 3. Battery Sizing
 ### Li-ion Cell Chemistry and Physics
 
 All modern spacecraft batteries use lithium-ion (Li-ion) chemistry. During discharge, lithium ions migrate from the graphite anode (negative electrode) through an organic electrolyte and polymer separator to the lithium metal oxide cathode (positive electrode), while electrons flow through the external circuit doing work. During charging, the process reverses.
@@ -358,10 +349,7 @@ where $C_0$ = initial capacity, $t$ = time (years), $N$ = number of cycles, $\al
 
 ---
 
-## 4. Thermal Control System (35 min)
-
-### Teaching Notes
-
+## 4. Thermal Control System
 *[Source: ECSS-E-ST-31C; Gilmore, Ch. 1--4; SMAD, Ch. 11.5]*
 
 ### The Physics of Spacecraft Thermal Control
@@ -697,8 +685,7 @@ UniSat-1 uses no heaters, no MLI, and no active thermal control. This is justifi
 
 ---
 
-## 5. Real Mission Examples (10 min)
-
+## 5. Real Mission Examples
 ### Planet SuperDove EPS
 
 | Parameter | Value | Design Rationale |
@@ -729,8 +716,7 @@ NASA's CAPSTONE (12U, 25 kg) operates in a near-rectilinear halo orbit (NRHO) ar
 
 ---
 
-## 6. SpaceCDF Exercise (30 min)
-
+## 6. SpaceCDF Exercise
 ### Instructions
 
 1. **Run the design** in SpaceCDF if not already converged

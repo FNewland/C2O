@@ -25,7 +25,7 @@
 
 ---
 
-## Part A: System-V Mapping (10 min)
+## Part A: System-V Mapping
 
 For your mission, identify one element at each level of the V-model:
 
@@ -44,7 +44,7 @@ _____________________________________________________________________
 
 ---
 
-## Part B: Requirement Quality Assessment (15 min)
+## Part B: Requirement Quality Assessment
 
 Evaluate each requirement using the SMART checklist and NASA Appendix C criteria. Mark Pass (P) or Fail (F). Rewrite any failures.
 
@@ -66,7 +66,7 @@ _____________________________________________________________________
 
 ---
 
-## Part C: Requirement Hierarchy and Traceability (15 min)
+## Part C: Requirement Hierarchy and Traceability
 
 For your mission, write one requirement at each level. Draw the traceability chain.
 
@@ -100,7 +100,7 @@ _____________________________________________________________________
 
 ---
 
-## Part D: Splitting Compound Requirements (10 min)
+## Part D: Splitting Compound Requirements
 
 Split this compound requirement into individually testable statements:
 
@@ -120,7 +120,7 @@ _____________________________________________________________________
 
 ---
 
-## Part E: SpaceCDF Requirements Generation (20 min)
+## Part E: SpaceCDF Requirements Generation
 
 1. In SpaceCDF, click **"Generate from Objectives."** How many requirements were generated? ____
 

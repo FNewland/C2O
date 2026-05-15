@@ -5,7 +5,7 @@ cohort uses across the CDF intensive. Every derivation is paired
 with a plot showing the formula in action and verified against a
 published reference value.
 
-The aim is twofold: (a) give the cohort a place to look up the
+The aim is twofold: (a) give students a place to look up the
 *why* behind any formula they're applying; (b) provide a worked
 verification trail an examiner can audit at PDR.
 
@@ -448,7 +448,7 @@ hyperspectral.*
 
 ## V.16 — Cross-method verification matrix
 
-For the cohort's PDR pack, every quantitative claim should be
+For students's PDR pack, every quantitative claim should be
 verified by at least two methods. Use this matrix:
 
 | Quantity | Method 1 | Method 2 | Source |

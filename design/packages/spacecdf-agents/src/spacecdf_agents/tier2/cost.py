@@ -163,5 +163,54 @@ class CostAgent(DesignAgent):
         if target and total / 1000 > target:
             result.add_warning(f"Cost estimate {total/1000:.1f} MEUR exceeds target {target:.1f} MEUR")
 
+        # ---- Report-quality narrative & structured intermediates ----
+        result.rationale = (
+            f"Parametric life-cycle cost estimate using the "
+            f"{'CubeSat COTS' if use_cots else 'SSCM kEUR/kg'} model. "
+            f"Hardware {hw_cost:.0f} kEUR + AIT {ait_cost:.0f} kEUR + "
+            f"NRE {nre_cost:.0f} kEUR ({nre_fraction*100:.0f}% of HW) + "
+            f"launch {launch_cost:.0f} kEUR + operations "
+            f"{ops_cost:.0f} kEUR over {mission_years:.1f} yr.  Total "
+            f"{total/1000:.1f} MEUR with ±40% confidence interval at Phase A."
+        )
+        result.assumptions = [
+            f"Spacecraft class '{sc_class}' → {'COTS pricing table' if use_cots else 'SSCM kEUR/kg CERs'}.",
+            f"AIT 12% of HW; NRE {nre_fraction*100:.0f}% of HW; ops "
+            f"€{ops_per_year:.0f}k/yr.",
+            "Launch cost from rideshare/dedicated-launcher market reference.",
+            "All costs in 2025-EUR; no inflation escalation applied.",
+            "Phase-A P-curve: P50≈total, P70≈+15%, P80≈+25%, P90≈+50% per "
+            "ECSS-M-ST-60C cost-uncertainty practice.",
+        ]
+        result.extras["cost.wbs"] = [
+            {"wbs_id": "1.1", "name": "Spacecraft hardware",
+             "ddte_keur": nre_cost * 0.7, "recurring_keur": hw_cost,
+             "total_keur": nre_cost * 0.7 + hw_cost},
+            {"wbs_id": "1.2", "name": "AIT",
+             "ddte_keur": nre_cost * 0.2, "recurring_keur": ait_cost,
+             "total_keur": nre_cost * 0.2 + ait_cost},
+            {"wbs_id": "1.3", "name": "Ground segment & ops",
+             "ddte_keur": nre_cost * 0.1, "recurring_keur": ops_cost,
+             "total_keur": nre_cost * 0.1 + ops_cost},
+            {"wbs_id": "1.4", "name": "Launch service",
+             "ddte_keur": 0, "recurring_keur": launch_cost,
+             "total_keur": launch_cost},
+        ]
+        result.extras["cost.summary"] = {
+            "model_used": "CubeSat COTS table (2025-EUR)" if use_cots else "SSCM kEUR/kg (2025-EUR)",
+            "hw_keur": hw_cost,
+            "ait_keur": ait_cost,
+            "nre_keur": nre_cost,
+            "launch_keur": launch_cost,
+            "ops_keur": ops_cost,
+            "total_keur": total,
+            "total_meur": total / 1000,
+            # ECSS phase-A P-curve approximation
+            "p50_meur": total / 1000,
+            "p70_meur": total * 1.15 / 1000,
+            "p80_meur": total * 1.25 / 1000,
+            "p90_meur": total * 1.50 / 1000,
+        }
+
         result.confidence = 0.60  # Parametric cost estimates have high uncertainty
         return result

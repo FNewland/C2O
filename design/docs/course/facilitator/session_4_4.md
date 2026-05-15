@@ -1,6 +1,6 @@
 # Session 4.4: Cost Estimation & Design Review
 
-**Duration:** 2 hours
+
 **Prerequisites:** Sessions 4.1-4.3 (equipment selected, V&V planned, risks assessed)
 **References:** SMAD4 Ch.20, NASA Cost Estimating Handbook (CEH) v4.0, Aerospace Corp SSCM, NPR 7120.5F (WBS), ECSS-M-ST-60C (Cost Management), NPR 7123.1D Appendix G (Reviews)
 
@@ -18,10 +18,7 @@ By the end of this session, participants will be able to:
 
 ---
 
-## 1. Cost Estimation Methodologies (25 min)
-
-### Teaching Notes
-
+## 1. Cost Estimation Methodologies
 *[Source: NASA CEH v4.0 Appendix C; SMAD4 Chapter 20; Aerospace Corp SSCM]*
 *[URL: https://www.nasa.gov/offices/ocfo/references-and-tools/ (NASA CEH)]*
 
@@ -117,10 +114,7 @@ SpaceCDF uses a hybrid approach: COTS flat pricing for nano/micro class, CERs fo
 
 ---
 
-## 2. Cost Breakdown Structure (WBS) (20 min)
-
-### Teaching Notes
-
+## 2. Cost Breakdown Structure (WBS)
 The Work Breakdown Structure (WBS) is the hierarchical decomposition of all work required to complete the mission. It is the foundation for cost estimation, scheduling, and management.
 
 *[Source: NPR 7120.5F Appendix G; ECSS-M-ST-60C; NASA CEH v4.0 Appendix B]*
@@ -183,10 +177,7 @@ The distribution of cost across lifecycle phases is important for budgeting:
 
 ---
 
-## 3. Learning Curve for Constellations (15 min)
-
-### Teaching Notes
-
+## 3. Learning Curve for Constellations
 *[Source: SMAD4 section 20.3; Wright's Learning Curve Theory (1936)]*
 
 When building multiple identical units, the cost per unit decreases due to manufacturing efficiency, reduced test time, bulk purchasing, and labour learning.
@@ -243,10 +234,7 @@ Total constellation estimate:
 
 ---
 
-## 4. Cost Risk and Confidence Levels (10 min)
-
-### Teaching Notes
-
+## 4. Cost Risk and Confidence Levels
 Point estimates are misleading. Every cost estimate has uncertainty. The standard practice is to express cost as a probability distribution.
 
 *[Source: NASA CEH v4.0 section 2.3; JPL parametric estimation practice]*
@@ -334,10 +322,7 @@ The asymptotic floor is dominated by launch cost (15 kEUR) and irreducible groun
 
 ---
 
-## 5. Design Review Process (25 min)
-
-### Teaching Notes
-
+## 5. Design Review Process
 Design reviews are formal decision gates where the project demonstrates readiness to proceed to the next lifecycle phase.
 
 *[Source: NPR 7123.1D Appendix G; ECSS-M-ST-10C Rev.1 section 6; NASA SEH Rev 2 section 3.7]*
@@ -399,11 +384,10 @@ Design reviews are formal decision gates where the project demonstrates readines
 
 ---
 
-## 6. Cost & Review Exercise (25 min)
-
+## 6. Cost & Review Exercise
 ### Instructions
 
-**Part A: Cost Estimation (15 min)**
+**Part A: Cost Estimation**
 
 1. **Dashboard** -- Check the Cost KPI card (total cost in MEUR)
 2. **Cost Breakdown** tab -- Review the breakdown by subsystem
@@ -413,7 +397,7 @@ Design reviews are formal decision gates where the project demonstrates readines
    - Compute P50 and P80 estimates
    - If constellation: apply 90% learning curve
 
-**Part B: Design Review Preparation (10 min)**
+**Part B: Design Review Preparation**
 
 1. Open the **Gate Review** tab in SpaceCDF
 2. Check all criteria: which are Pass/Fail/Manual?

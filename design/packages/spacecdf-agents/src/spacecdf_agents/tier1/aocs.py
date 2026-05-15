@@ -142,5 +142,46 @@ class AOCSAgent(DesignAgent):
         result.add_param("aocs.torque_total_nm", "Total Disturbance Torque", round(aocs.total_disturbance_torque_nm, 6), "Nm")
 
         result.warnings.extend(aocs.warnings)
+
+        # ---- Report-quality narrative & structured intermediates ----
+        result.rationale = (
+            f"AOCS sized for a pointing requirement of {pointing_req:.3f}° around "
+            f"a {body} central body.  Disturbance torque budget is dominated by "
+            f"gravity gradient ({aocs.gravity_gradient_torque_nm:.2e} Nm), with "
+            f"solar pressure ({aocs.solar_pressure_torque_nm:.2e}), aerodynamic "
+            f"({aocs.aerodynamic_torque_nm:.2e}) and magnetic ("
+            f"{aocs.magnetic_torque_nm:.2e}) contributions over one orbit "
+            f"summing to {aocs.total_disturbance_torque_nm:.2e} Nm.  Reaction "
+            f"wheel momentum capacity {aocs.reaction_wheel_momentum_nms:.3f} Nms "
+            f"provides one-orbit absorption before desaturation."
+        )
+        result.assumptions = [
+            f"Spacecraft maximum dimension {dim:.2f} m (class-typical).",
+            f"Wet area assumed {dim*dim:.2f} m² (cubical bus).",
+            "Worst-case attitude offsets: 5° from nadir for gravity gradient; "
+            "0.05 m solar CoP offset; 0.05 m aero CoP offset.",
+            "Magnetorquer dipole desaturation effective at mid-latitudes "
+            "(Earth orbits only).",
+        ]
+        result.extras["aocs.disturbance_breakdown"] = [
+            {"source": "Gravity gradient", "torque_nm": aocs.gravity_gradient_torque_nm},
+            {"source": "Solar pressure", "torque_nm": aocs.solar_pressure_torque_nm},
+            {"source": "Aerodynamic", "torque_nm": aocs.aerodynamic_torque_nm},
+            {"source": "Magnetic", "torque_nm": aocs.magnetic_torque_nm},
+        ]
+        result.extras["aocs.pointing_budget"] = [
+            {"contributor": "Sensor noise (star tracker)", "value_arcsec": 10},
+            {"contributor": "Actuator quantisation (RW)", "value_arcsec": 30},
+            {"contributor": "Disturbance reject. residual", "value_arcsec": 60},
+            {"contributor": "Alignment", "value_arcsec": 36},
+            {"contributor": "Achieved (RSS)",
+             "value_arcsec": (10**2 + 30**2 + 60**2 + 36**2) ** 0.5},
+        ]
+        result.extras["aocs.components"] = [
+            (kb_rw or {}).get("name", "Reaction wheel (generic)"),
+            (kb_st or {}).get("name", "Star tracker (generic)"),
+            (kb_mtq or {}).get("name", "Magnetorquer (generic)"),
+        ]
+
         result.confidence = 0.80
         return result

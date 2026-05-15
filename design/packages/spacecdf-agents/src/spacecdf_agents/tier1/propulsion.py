@@ -72,6 +72,20 @@ class PropulsionAgent(DesignAgent):
             result.add_param("propulsion.delta_v_total_ms", "Total Delta-V", 0.0, "m/s")
             result.add_param("propulsion.total_impulse_ns", "Total Impulse", 0.0, "Ns")
             result.log("No delta-V required — propulsion system not needed")
+            result.rationale = (
+                f"No propulsion required — the spacecraft is a {sc_class} class at "
+                f"{alt:.0f} km altitude, where natural atmospheric drag completes "
+                f"deorbit within the IADC 25-year window without active manoeuvres."
+            )
+            result.assumptions = [
+                "Natural-decay regime (low-LEO nano/micro-class).",
+                "No collision-avoidance budget; mission-dependent JCA on-orbit.",
+            ]
+            result.extras["propulsion.tsiolkovsky"] = {
+                "delta_v_ms": 0.0, "isp_s": 0.0, "g0": 9.80665,
+                "m0_kg": dry_mass, "mf_kg": dry_mass,
+                "mass_ratio": 1.0, "propellant_kg": 0.0,
+            }
             result.confidence = 0.95
             return result
 
@@ -127,5 +141,44 @@ class PropulsionAgent(DesignAgent):
                          round(total_impulse, 1), "Ns")
 
         result.warnings.extend(prop.warnings)
+
+        # ---- Report-quality narrative & structured intermediates ----
+        import math as _math
+        g0 = 9.80665
+        m0 = dry_mass + prop.propellant_mass_kg
+        mf = dry_mass
+        mass_ratio = m0 / mf if mf > 0 else 1.0
+        result.rationale = (
+            f"Propulsion type: {prop.propulsion_type}.  Total ΔV "
+            f"{prop.total_delta_v_ms:.1f} m/s is met by "
+            f"{prop.propellant_mass_kg:.2f} kg of propellant using a "
+            f"thruster with Isp={prop.isp_s:.0f} s (Tsiolkovsky mass ratio "
+            f"m₀/m_f={mass_ratio:.3f}).  Total propulsion system mass is "
+            f"{prop.total_propulsion_mass_kg:.2f} kg including thruster and tank, "
+            f"delivering {total_impulse:.0f} Ns of total impulse."
+        )
+        result.assumptions = [
+            f"Tsiolkovsky rocket equation: ΔV = Isp·g₀·ln(m₀/m_f) (g₀={g0} m/s²).",
+            "Thruster type selected by Isp/power/ΔV trade against electric/chemical KB entries.",
+            "Propellant mass margin 5%; system mass margin 10% (ECSS-E-ST-35).",
+            "No gravity / drag losses assumed at this design phase.",
+        ]
+        result.extras["propulsion.tsiolkovsky"] = {
+            "delta_v_ms": prop.total_delta_v_ms,
+            "isp_s": prop.isp_s,
+            "g0": g0,
+            "m0_kg": m0,
+            "mf_kg": mf,
+            "mass_ratio": mass_ratio,
+            "propellant_kg": prop.propellant_mass_kg,
+        }
+        result.extras["propulsion.thruster"] = {
+            "name": kb_thruster.get("name") if kb_thruster else f"{prop.propulsion_type} (generic)",
+            "thrust_n": kb_thruster.get("thrust_n") if kb_thruster else None,
+            "type": prop.propulsion_type,
+            "isp_s": prop.isp_s,
+            "power_w": kb_thruster.get("power_w") if kb_thruster else available_power * 0.1,
+        }
+
         result.confidence = 0.80
         return result

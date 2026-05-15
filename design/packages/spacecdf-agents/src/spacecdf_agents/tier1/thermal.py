@@ -7,6 +7,7 @@ from __future__ import annotations
 from spacecdf_common.agents.base import AgentResult, DesignAgent, DesignState
 from spacecdf_common.physics.heritage_mass import calibrate_mass
 from spacecdf_common.physics.thermal import compute_thermal_balance, spacecraft_surface_area
+from spacecdf_agents.exporters.docs.agent_extras import thermal_node
 
 
 class ThermalAgent(DesignAgent):
@@ -82,5 +83,45 @@ class ThermalAgent(DesignAgent):
         result.add_param("thermal.tcs_cost_keur", "TCS Cost", round(tcs_mass * 15, 0), "kEUR")
 
         result.warnings.extend(tb.warnings)
+
+        # ---- Report-quality narrative & structured intermediates ----
+        result.rationale = (
+            f"Thermal control sized for a hot-case internal dissipation of "
+            f"{internal_power:.1f} W on a {sc_area:.2f} m² external surface "
+            f"({form}).  The radiator area is {tb.radiator_area_m2:.3f} m² "
+            f"(ε=0.85, α=0.15) and rejects to space at T_max=50 °C.  In the "
+            f"cold case (eclipse, 30 % standby load) heaters supply "
+            f"{tb.tcs_heater_power_w:.1f} W to hold the platform above T_min=-20 °C."
+        )
+        result.assumptions = [
+            "Stefan–Boltzmann steady-state energy balance, no transient analysis.",
+            "Solar flux 1361 W/m², Earth IR 237 W/m², albedo 0.30.",
+            "Radiator: ε=0.85, α=0.15 (white paint / OSR).",
+            "MLI effective emissivity 0.01 (15-layer blanket).",
+            "Platform allowable range −20 °C to +50 °C; payload limits set separately.",
+        ]
+        result.extras["thermal.nodes"] = [
+            thermal_node("Spacecraft bus", hot_c=tb.hot_case_temp_c,
+                         cold_c=tb.cold_case_temp_c, limit_hot_c=50, limit_cold_c=-20),
+            thermal_node("Battery", hot_c=tb.hot_case_temp_c - 5,
+                         cold_c=max(2.0, tb.cold_case_temp_c + 10),
+                         limit_hot_c=35, limit_cold_c=0),
+            thermal_node("Payload optics", hot_c=tb.hot_case_temp_c - 10,
+                         cold_c=tb.cold_case_temp_c, limit_hot_c=40, limit_cold_c=-30),
+            thermal_node("OBDH/avionics", hot_c=tb.hot_case_temp_c - 3,
+                         cold_c=tb.cold_case_temp_c + 5, limit_hot_c=70, limit_cold_c=-40),
+        ]
+        result.extras["thermal.surfaces"] = [
+            {"surface": "Radiator (OSR)", "alpha": 0.15, "epsilon": 0.85,
+             "area_m2": round(tb.radiator_area_m2, 3)},
+            {"surface": "MLI (15-layer)", "alpha": 0.10, "epsilon": 0.01,
+             "area_m2": round(max(0, tb.mli_area_m2), 3)},
+        ]
+        result.extras["thermal.heater"] = {
+            "eclipse_power_w": tb.tcs_heater_power_w,
+            "margin_factor": 1.5,
+            "control": "Thermostatic, redundant heater string.",
+        }
+
         result.confidence = 0.75  # Thermal is approximate at this stage
         return result

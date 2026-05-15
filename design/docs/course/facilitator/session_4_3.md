@@ -1,6 +1,6 @@
 # Session 4.3: Risk, Interfaces & FMECA
 
-**Duration:** 2 hours
+
 **Prerequisites:** Sessions 4.1-4.2 (equipment selected, V&V methods assigned)
 **References:** ECSS-M-ST-80C (Risk Management), ECSS-Q-ST-30-02C (FMEA/FMECA), ECSS-E-ST-10-24C (Interface Management), NASA SEH Rev 2 section 6.4, NPR 8000.4B
 
@@ -17,10 +17,7 @@ By the end of this session, participants will be able to:
 
 ---
 
-## 1. Risk Management Process (20 min)
-
-### Teaching Notes
-
+## 1. Risk Management Process
 *[Source: ECSS-M-ST-80C (Risk Management); NASA SEH Rev 2 section 6.4 (Process 13: Technical Risk Management)]*
 *[URL: https://ecss.nl/standard/ecss-m-st-80c-risk-management-31-july-2008/]*
 
@@ -45,10 +42,7 @@ Risk management is continuous throughout the project lifecycle. The four steps a
 
 ---
 
-## 2. The 5x5 Risk Matrix (25 min)
-
-### Teaching Notes
-
+## 2. The 5x5 Risk Matrix
 The 5x5 matrix is the standard risk scoring tool used across ESA, NASA, and commercial space programmes.
 
 ### Likelihood Scale
@@ -126,10 +120,7 @@ The 5x5 matrix is the standard risk scoring tool used across ESA, NASA, and comm
 
 ---
 
-## 3. N-Squared (N^2) Interface Matrix (25 min)
-
-### Teaching Notes
-
+## 3. N-Squared (N^2) Interface Matrix
 The N^2 matrix is the standard systems engineering tool for identifying and managing interfaces between subsystems. It was popularised by NASA and ESA CDF practice.
 
 *[Source: ECSS-E-ST-10-24C (Interface Management); NASA SEH Rev 2 section 6.3 (Process 12: Interface Management)]*
@@ -199,10 +190,7 @@ SpaceCDF detects many of these automatically through the **constraint engine** a
 
 ---
 
-## 4. FMEA/FMECA (25 min)
-
-### Teaching Notes
-
+## 4. FMEA/FMECA
 *[Source: ECSS-Q-ST-30-02C (Failure Mode, Effects, and Criticality Analysis); ECSS-Q-ST-30C (Dependability)]*
 *[URL: https://ecss.nl/standard/ecss-q-st-30-02c-failure-mode-effects-and-criticality-analysis-fmeca-6-march-2009/]*
 
@@ -320,8 +308,7 @@ JAXA's Hitomi X-ray observatory was lost on 26 March 2016, just 37 days after la
 
 ---
 
-## 5. Risk & Interface Exercise (25 min)
-
+## 5. Risk & Interface Exercise
 ### Instructions
 
 1. **Dashboard** -- Check the reliability score and conflict count

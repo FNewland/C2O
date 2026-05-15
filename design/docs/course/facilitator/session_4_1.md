@@ -1,6 +1,6 @@
 # Session 4.1: Equipment Selection & Bill of Materials
 
-**Duration:** 2 hours
+
 **Prerequisites:** Day 3 complete (subsystems sized, components identified via parametric agents)
 **References:** ECSS-Q-ST-20C (Quality Assurance), ECSS-E-ST-10-24C (Interfaces), ITAR/EAR (22 CFR 120-130 / 15 CFR 730-774), CDS Rev 14.1, NASA SEH Rev 2 section 6.8
 
@@ -18,10 +18,7 @@ By the end of this session, participants will be able to:
 
 ---
 
-## 1. The Make/Buy/Reuse Decision (20 min)
-
-### Teaching Notes
-
+## 1. The Make/Buy/Reuse Decision
 Before selecting any hardware, the team must decide the procurement strategy for each subsystem. This is a fundamental systems engineering decision that affects cost, schedule, risk, and performance.
 
 *[Source: NASA SEH Rev 2 section 6.8 "Decision Analysis"; ECSS-M-ST-10C Rev.1 section 5.4]*
@@ -76,10 +73,7 @@ For each subsystem or component:
 
 ---
 
-## 2. Technology Readiness Level (TRL) Assessment (20 min)
-
-### Teaching Notes
-
+## 2. Technology Readiness Level (TRL) Assessment
 TRL is the standard metric for technology maturity. It was developed by NASA in the 1970s and is now used universally in space programmes.
 
 *[Source: NASA NPR 7123.1D Appendix E; ECSS-E-HB-11A "Technology Readiness Level (TRL) Guidelines"]*
@@ -129,10 +123,7 @@ The custom antenna was the highest-risk item. It required extensive development 
 
 ---
 
-## 3. Bill of Materials (BOM) Construction (20 min)
-
-### Teaching Notes
-
+## 3. Bill of Materials (BOM) Construction
 The BOM is the definitive list of all hardware, software, and consumables required to build the satellite. It is the bridge between design and procurement.
 
 ### BOM Structure
@@ -265,10 +256,7 @@ UniSat-1's BOM is remarkably short -- only 5--7 line items plus harness. This si
 
 ---
 
-## 4. Export Control and Procurement (25 min)
-
-### Teaching Notes
-
+## 4. Export Control and Procurement
 Export control is one of the most commonly overlooked aspects of CubeSat missions, especially for international teams. Violations carry severe penalties (criminal prosecution, programme cancellation).
 
 *[Source: ITAR -- 22 CFR Parts 120-130; EAR -- 15 CFR Parts 730-774; Canadian Controlled Goods Program -- Defence Production Act]*
@@ -333,10 +321,7 @@ The BRITE-Constellation (Austria/Canada/Poland) was a series of nanosatellites f
 
 ---
 
-## 5. Interface Compatibility Verification (20 min)
-
-### Teaching Notes
-
+## 5. Interface Compatibility Verification
 As components are selected, every interface must be verified for compatibility. The three interface categories are RF, electrical, and mechanical.
 
 ### RF Chain Compatibility
@@ -383,11 +368,10 @@ SpaceCDF checks RF compatibility automatically: if you select a transponder in o
 
 ---
 
-## 6. Equipment Selection Exercise (35 min)
-
+## 6. Equipment Selection Exercise
 ### Instructions
 
-**Part A: Equipment Selection (20 min)**
+**Part A: Equipment Selection**
 
 1. Open the **Equipment Browser** in SpaceCDF
 2. For each **required** category (blue dot), select at least one component:
@@ -398,7 +382,7 @@ SpaceCDF checks RF compatibility automatically: if you select a transponder in o
 4. When selecting TTC: verify the spectrum band matches your earlier selection
 5. After all selections, review the **Budget Breakdown** on the Dashboard
 
-**Part B: BOM Review and Export Check (15 min)**
+**Part B: BOM Review and Export Check**
 
 1. Navigate to the **Exports** tab
 2. Generate the **BOM** -- review all entries

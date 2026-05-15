@@ -89,5 +89,26 @@ class DataAgent(DesignAgent):
                 f"{downlink_per_day:.1f} GB/day (deficit: {deficit:.1f} GB/day)"
             )
 
+        # ---- Report-quality narrative & structured intermediates ----
+        result.rationale = (
+            f"Data architecture sized for {gen_per_day_gb:.1f} GB/day generated "
+            f"({downlink_per_day:.1f} GB/day downlinked).  Onboard storage "
+            f"{storage_gb:.1f} GB provides 2-orbit redundancy.  OBDH mass "
+            f"{obdh_mass:.2f} kg from class factor × storage demand."
+        )
+        result.assumptions = [
+            "2:1 lossless compression when payload data rate is used as input "
+            "(explicit per-day volume overrides this).",
+            "Storage = 2 × daily generation (operational buffer).",
+            "OBDH mass scales with class baseline × (1 + storage/100 GB).",
+        ]
+        result.extras["data.summary"] = {
+            "per_day_gb": gen_per_day_gb,
+            "downlink_capacity_gb": downlink_per_day,
+            "storage_required_gb": storage_gb,
+            "compression_ratio": 2.0,
+            "obdh_mass_kg": obdh_mass,
+        }
+
         result.confidence = 0.80
         return result

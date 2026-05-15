@@ -1,6 +1,6 @@
 # Session 4.2: Verification & Validation Matrix and Compliance
 
-**Duration:** 2 hours
+
 **Prerequisites:** Session 4.1 (equipment selected, BOM constructed)
 **References:** ECSS-E-ST-10-02C Rev.1 (Verification), ECSS-E-ST-10-03C (Testing), NASA SEH Rev 2 sections 5.3-5.4, MIL-STD-1540E, MIL-STD-461G
 
@@ -17,10 +17,7 @@ By the end of this session, participants will be able to:
 
 ---
 
-## 1. Verification vs Validation: Precise Definitions (15 min)
-
-### Teaching Notes
-
+## 1. Verification vs Validation: Precise Definitions
 *[Source: ECSS-E-ST-10-02C Rev.1 section 4; NASA SEH Rev 2 section 5.3 (Process 7: Product Verification) and section 5.4 (Process 8: Product Validation)]*
 
 | | **Verification** | **Validation** |
@@ -50,10 +47,7 @@ A system can be **verified** (every requirement marked "pass") but still **fail 
 
 ---
 
-## 2. IADT Verification Methods in Detail (30 min)
-
-### Teaching Notes
-
+## 2. IADT Verification Methods in Detail
 ECSS-E-ST-10-02C Rev.1 section 5.3 defines four verification methods. Note: ECSS uses "IADT" ordering; some NASA documents use "ATRI" -- the methods are identical.
 
 *[Source: ECSS-E-ST-10-02C Rev.1 section 5.3; freely available from https://ecss.nl]*
@@ -154,10 +148,7 @@ For CubeSats, the **proto-flight** approach is standard because building a separ
 
 ---
 
-## 3. Environmental Test Programme (30 min)
-
-### Teaching Notes
-
+## 3. Environmental Test Programme
 *[Source: ECSS-E-ST-10-03C (Testing); Launch vehicle Payload User's Guides; MIL-STD-1540E]*
 
 ### Standard Environmental Test Sequence
@@ -315,10 +306,7 @@ Random vibration simulates the broadband acoustic and mechanical environment dur
 
 ---
 
-## 4. Compliance Verification Matrix Construction (20 min)
-
-### Teaching Notes
-
+## 4. Compliance Verification Matrix Construction
 The Verification Matrix (also called Compliance Matrix or Verification Cross-Reference Matrix, VCRM) is the central document linking every requirement to its verification evidence.
 
 *[Source: ECSS-E-ST-10-02C Rev.1 section 6; DRD in Annex A]*
@@ -383,8 +371,7 @@ When a requirement cannot be verified by the prescribed method, a **waiver** is 
 
 ---
 
-## 5. SpaceCDF V&V Matrix Exercise (25 min)
-
+## 5. SpaceCDF V&V Matrix Exercise
 ### Instructions
 
 1. Navigate to the **V&V Matrix** tab in SpaceCDF

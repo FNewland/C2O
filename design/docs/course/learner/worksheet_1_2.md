@@ -133,7 +133,7 @@ _______________________________________________
 
 ## Notes & Reflections
 
-Record key points from the discussion, regulatory questions you need to research further, and implications for your mission design:
+Record key points below, regulatory questions you need to research further, and implications for your mission design:
 
 _______________________________________________
 

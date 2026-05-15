@@ -1,6 +1,6 @@
 # Session 5.4: Final Review & Presentations
 
-**Duration:** 2 hours
+
 **Prerequisites:** All previous sessions (complete design through simulation)
 **References:** ECSS-M-ST-10C Rev.1 section 6 (Reviews), NPR 7123.1D Appendix G, NASA SEH Rev 2 section 3.7, ECSS-E-ST-10C section 4 (Technical Dossier)
 
@@ -17,10 +17,7 @@ By the end of this session, participants will be able to:
 
 ---
 
-## 1. Design Documentation Review (20 min)
-
-### Teaching Notes
-
+## 1. Design Documentation Review
 Before presenting, each team must verify that their design documentation is complete and internally consistent.
 
 ### Documentation Checklist
@@ -63,16 +60,12 @@ Navigate to **Exports** tab and generate all documents:
 
 ---
 
-## 2. Presentation Structure (15 min)
-
-### Teaching Notes
-
+## 2. Presentation Structure
 Each team presents a 12-minute design review followed by 5 minutes of Q&A from the peer review board.
 
 *[Source: ECSS-M-ST-10C Rev.1 section 6; NPR 7123.1D Appendix G (Review Process)]*
 
-### Presentation Outline (12 minutes)
-
+### Presentation Outline
 | Section | Duration | Content | Evidence |
 |---------|----------|---------|----------|
 | **1. Mission Need** | 2 min | Problem statement; stakeholders; objectives with MoPs | Mission Need step |
@@ -103,10 +96,7 @@ Each team presents a 12-minute design review followed by 5 minutes of Q&A from t
 
 ---
 
-## 3. Peer Review Process (10 min)
-
-### Teaching Notes
-
+## 3. Peer Review Process
 Each team acts as a review board for another team. This mirrors the real design review process where an independent board evaluates the project.
 
 ### Review Board Roles
@@ -153,8 +143,7 @@ Standard questions for the review board to ask:
 
 ---
 
-## 4. Team Presentations (45 min)
-
+## 4. Team Presentations
 ### Instructions
 
 **Presentation Schedule:** 12 minutes presentation + 5 minutes Q&A per team.
@@ -179,16 +168,11 @@ For 4 teams: allocate 17 min x 4 = 68 min. Adjust timing based on actual number 
 
 ---
 
-## 5. Course Wrap-Up & Lessons Learned (30 min)
-
-### Teaching Notes
-
-### Individual Reflection (5 min)
-
+## 5. Course Wrap-Up & Lessons Learned
+### Individual Reflection
 Each participant completes the self-assessment rubric on Worksheet 5.4, reflecting on their learning across all three weeks.
 
-### Team Lessons Learned (10 min)
-
+### Team Lessons Learned
 Each team discusses and reports:
 
 1. **Most challenging design decision:** What trade-off was hardest to resolve? Why?
@@ -197,8 +181,7 @@ Each team discusses and reports:
 4. **Process insight:** How did concurrent design change your approach to engineering?
 5. **If starting over:** What would you do differently in Week 1?
 
-### Key Takeaways from the Course (10 min)
-
+### Key Takeaways from the Course
 | Week | Theme | Core Lesson |
 |------|-------|------------|
 | **Week 1** | Requirements & Architecture | Start with the problem, not the solution. Requirements define WHAT, not HOW. |

@@ -1,6 +1,6 @@
 # Session 1.1: Introduction to Space Mission Design
 
-**Duration:** 3 hours (Monday AM)
+
 **Prerequisites:** None (engineering background assumed)
 **References:**
 - [NASA, Systems Engineering Handbook Rev 2 (SP-2016-6105), 2016](https://www.nasa.gov/reference/systems-engineering-handbook/)
@@ -21,11 +21,10 @@ By the end of this session, participants will be able to:
 
 ---
 
-## 1. What is a Concurrent Design Facility? (30 min)
-
+## 1. What is a Concurrent Design Facility?
 ### 1.1 The Problem with Sequential Design
 
-Begin by asking the group: *"How is spacecraft design traditionally done?"*
+Consider the question: How is spacecraft design traditionally done?
 
 Traditional spacecraft design follows a **sequential (waterfall) approach**: one discipline completes its work, documents it, and passes the design to the next discipline. This method dominated the space industry from the 1960s through the 1990s. Its limitations are well documented:
 
@@ -74,17 +73,16 @@ SpaceCDF implements the CDF concept as a web-based tool accessible from any brow
 |---------|---------------|
 | Shared model | Real-time synchronisation via WebSocket; all participants see live updates |
 | Parameter ownership | 15 engineering positions with scoped editing rights |
-| Design convergence | 20 automated design agents that propagate parametric relationships |
+| Design convergence | 20 background design agents (9 Tier 1 sizing, 11 Tier 2 analysis) that propagate parametric relationships |
 | Conflict detection | Automated constraint engine with 187 inter-parameter connections |
 | Document generation | ECSS-compliant exports (Word, PDF) with full traceability |
-| Review gates | Automated gate criteria evaluation for MCR, SRR, PDR, CDR |
+| Review gates | Automated gate criteria evaluation for MCR, SRR, SDR, PDR, CDR |
 
-**Discussion prompt:** *What advantages does concurrent design offer over sequential? What risks does it introduce (e.g., groupthink, premature convergence)?*
+**Discussion point.** *What advantages does concurrent design offer over sequential? What risks does it introduce (e.g., groupthink, premature convergence)?*
 
 ---
 
-## 2. The System-V Model (40 min)
-
+## 2. The System-V Model
 ### 2.1 Origin and Purpose
 
 The "Vee" (V) model is the foundational framework for systems engineering. It appears in NASA SEH Section 2.3 (Figure 2.3-1), in ECSS-E-ST-10C, and in ISO/IEC 15288. It is not a project schedule -- it is a **logical model** showing the relationship between decomposition (breaking the problem down) and integration (building and verifying the solution).
@@ -225,12 +223,11 @@ The V is not a single pass. Real design iterates -- requirements change as desig
 
 [Source: NASA SEH Section 2.3, Figure 2.3-1; INCOSE Systems Engineering Handbook, 4th Edition, Section 3.2]
 
-**Exercise:** *On a whiteboard, draw the V-model from memory and label each level. Add the horizontal traceability arrows and name one verification method for each level.*
+**Exercise.** *Sketch the V-model from memory and label each level. Add the horizontal traceability arrows and name one verification method for each level.*
 
 ---
 
-## 3. The 17 Common Technical Processes (30 min)
-
+## 3. The 17 Common Technical Processes
 ### 3.1 Overview
 
 NASA's NPR 7123.1D defines 17 processes that apply recursively at every level of the system hierarchy. They are grouped into three categories, collectively called the **"SE Engine"**. These processes are not sequential -- they execute concurrently and iteratively, which is precisely what a CDF facilitates.
@@ -294,12 +291,11 @@ At each level, the same processes execute but with different scope, detail, and 
 
 > **Industry Practice:** On the James Webb Space Telescope (JWST), requirements management (Process 11) was applied at five levels of the system hierarchy simultaneously: Observatory, Optical Telescope Element, Integrated Science Instrument Module, individual instruments (NIRSpec, MIRI, NIRCam, FGS), and components (detectors, mechanisms). Each level had its own requirements baseline, traceability matrix, and verification plan. The total requirements count exceeded 10,000.
 
-**Exercise:** *Map each of the 17 processes to a feature in SpaceCDF. Which processes does the tool support directly? Which require human judgment? Complete Part A of Worksheet 1.1.*
+**Exercise.** *Map each of the 17 processes to a feature in SpaceCDF. Which processes does the tool support directly? Which require human judgment? Complete Part A of Worksheet 1.1.*
 
 ---
 
-## 4. Lifecycle Phases and Review Gates (30 min)
-
+## 4. Lifecycle Phases and Review Gates
 ### 4.1 NASA Lifecycle Phases
 
 NASA defines seven lifecycle phases for space flight projects, governed by NPR 7120.5F. Each phase has specific objectives, activities, and exit criteria evaluated at formal review gates called Key Decision Points (KDPs).
@@ -450,12 +446,11 @@ ECSS defines a similar but not identical lifecycle. The phase letters convenient
 
 > **Industry Practice:** RADARSAT-2 (MDA/CSA, launched 2007) went through all NASA-equivalent review gates over a 6-year development. The CDR alone involved over 400 review items and 50 reviewers across 3 weeks. The mission exceeded its 7-year design life, operating for over 15 years -- a testament to thorough verification at each gate.
 
-**Exercise:** *In SpaceCDF, go to the Gate Review tab and examine the MCR exit criteria. Which criteria are auto-evaluated by the tool? Which require manual review by the facilitator?*
+**Exercise.** *In SpaceCDF, go to the Gate Review tab and examine the MCR exit criteria. Which criteria are auto-evaluated by the tool? Which require manual review by an engineer?*
 
 ---
 
-## 5. CDF Engineering Positions (20 min)
-
+## 5. CDF Engineering Positions
 ### 5.1 Position Overview
 
 In a CDF study, each engineering position owns a set of parameters and is responsible for their domain's design decisions. SpaceCDF supports 15 positions:
@@ -490,7 +485,7 @@ The most productive CDF sessions are those where **interface conflicts** are ide
 | Downlink capacity vs data generation | Comms, Payload, Ground | Add ground stations, increase TX power, reduce data rate, add compression |
 | Volume constraint vs thermal rejection | Structures, Thermal, Payload | Redesign radiator location, add deployable radiator, reduce heat dissipation |
 
-**Discussion prompt:** *Which positions would interact most frequently in your mission? Where do you expect the most difficult trade-offs?*
+**Discussion point.** *Which positions would interact most frequently in your mission? Where do you expect the most difficult trade-offs?*
 
 ---
 
@@ -532,13 +527,12 @@ Throughout this course, we use a second running example alongside the 3U EO Cube
 
 UniSat-1 illustrates that a meaningful space mission can be accomplished with just five subsystems (EPS, OBC, Comms, Structure, Payload), no active attitude control, no propulsion, and no thermal hardware beyond surface coatings. As the course progresses, each session will show how the same design processes apply to UniSat-1, but with radically simpler solutions at every step.
 
-**Discussion prompt:** *How does the CDF process differ when the team has only 5 subsystems instead of 8--9? Which engineering positions are still needed, and which can be combined?*
+**Discussion point.** *How does the CDF process differ when the team has only 5 subsystems instead of 8--9? Which engineering positions are still needed, and which can be combined?*
 
 ---
 
-## 7. Tool Exercise (15 min)
-
-1. Open SpaceCDF and navigate through the workflow steps (Need -> Concept -> Requirements -> Design)
+## 7. Tool Exercise
+1. Open SpaceCDF and navigate through the workflow steps (Step 1 Mission Need · Step 2 Concept · Step 3 Requirements · Step 4 Design)
 2. On the Design Dashboard, identify which KPI cards correspond to which engineering positions
 3. Go to the Positions tab and review the key questions for your assigned position
 4. Go to the Gate Review tab and examine the MCR exit criteria

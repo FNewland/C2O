@@ -19,7 +19,18 @@ from ..models.parameter import ParameterValue, TRLAssessment
 
 @dataclass
 class AgentResult:
-    """Result of a design agent execution."""
+    """Result of a design agent execution.
+
+    Agents may populate ``extras`` with structured, domain-specific
+    intermediate data that the document exporters surface (delta-V
+    breakdowns, link waterfall lines, FMECA rows, thermal nodes, etc.).
+    Keys are domain-specific; see ``exporters/docs/agent_extras.py`` for
+    the conventions consumed by the report generator.
+
+    ``rationale`` and ``assumptions`` give the exporter free-form
+    professional narrative without forcing it through ``computation_log``,
+    which remains a debug-style trace.
+    """
 
     domain: str
     parameters: dict[str, ParameterValue] = field(default_factory=dict)
@@ -29,6 +40,21 @@ class AgentResult:
     computation_log: list[str] = field(default_factory=list)
     converged: bool = True
     confidence: float = 0.8
+
+    # Report-quality narrative.  These are surfaced by the DOCX exporter
+    # in the per-domain chapters; computation_log stays a debug trace.
+    rationale: str = ""
+    assumptions: list[str] = field(default_factory=list)
+
+    # Structured intermediate calculations.  See agent_extras.py for keys.
+    extras: dict[str, Any] = field(default_factory=dict)
+
+    def set_extras(self, **kwargs: Any) -> None:
+        """Bulk-update extras (convenience)."""
+        self.extras.update(kwargs)
+
+    def add_assumption(self, msg: str) -> None:
+        self.assumptions.append(msg)
 
     def add_param(
         self,

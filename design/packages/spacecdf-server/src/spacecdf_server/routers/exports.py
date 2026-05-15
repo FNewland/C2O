@@ -821,6 +821,78 @@ async def export_mbse(study_id: str) -> JSONResponse:
         applicable_standards=applicable_ecss,
         notes=notes,
     )
+
+    # ── MBSE Enrichments: functional / logical / physical arch, allocations, traceability ──
+    elements: list[dict] = []
+    interfaces: list[dict] = []
+    req_dicts: list[dict] = []
+    try:
+        from .elements import _elements, _interfaces
+        elements = [e for e in _elements.values()
+                    if e.get("study_id") == study_id and not e.get("deleted_at")]
+        interfaces = [
+            i for i in _interfaces.values()
+            if not i.get("deleted_at") and (
+                i.get("study_id") == study_id
+                or i.get("source_element_id") in {e.get("id") for e in elements}
+                or i.get("target_element_id") in {e.get("id") for e in elements}
+            )
+        ]
+    except Exception:
+        pass
+    try:
+        from .requirements import _requirements
+        req_dicts = [r for r in _requirements.values()
+                     if r.get("study_id") == study_id and r.get("status") != "retired"]
+    except Exception:
+        pass
+
+    functional_architecture = _derive_functional_architecture(study)
+    logical_architecture = _derive_logical_architecture(elements, functional_architecture)
+    physical_architecture = _derive_physical_architecture(elements)
+
+    # Interface definitions from the interface store
+    interface_definitions = []
+    element_map = {e.get("id"): e.get("name", "") for e in elements if e.get("id")}
+    for iface in interfaces:
+        interface_definitions.append({
+            "id": iface.get("id", ""),
+            "source_element_id": iface.get("source_element_id", ""),
+            "source_name": element_map.get(iface.get("source_element_id", ""),
+                                           iface.get("source_name", "")),
+            "target_element_id": iface.get("target_element_id", ""),
+            "target_name": element_map.get(iface.get("target_element_id", ""),
+                                           iface.get("target_name", "")),
+            "interface_type": iface.get("interface_type", iface.get("type", "")),
+            "properties": iface.get("properties", {}),
+            "direction": iface.get("direction", "bidirectional"),
+        })
+
+    # Also include subsystem-level interfaces from study's InterfaceMatrix
+    interface_matrix = getattr(study, "interface_matrix", None)
+    if interface_matrix:
+        for si in getattr(interface_matrix, "subsystem_interfaces", []):
+            interface_definitions.append({
+                "id": f"{si.subsystem_a}_{si.subsystem_b}",
+                "source_name": si.subsystem_a,
+                "target_name": si.subsystem_b,
+                "interface_type": [it.value if hasattr(it, "value") else str(it)
+                                   for it in getattr(si, "interface_types", [])],
+                "status": si.status.value if hasattr(si.status, "value") else str(si.status),
+                "criticality": getattr(si, "criticality", "standard"),
+                "description": getattr(si, "description", ""),
+            })
+
+    allocation_matrix = _derive_allocation_matrix(req_dicts, elements)
+    traceability = _derive_traceability(study, req_dicts, elements)
+
+    export["functional_architecture"] = functional_architecture
+    export["logical_architecture"] = logical_architecture
+    export["physical_architecture"] = physical_architecture
+    export["interface_definitions"] = interface_definitions
+    export["allocation_matrix"] = allocation_matrix
+    export["traceability"] = traceability
+
     return JSONResponse(content=export)
 
 

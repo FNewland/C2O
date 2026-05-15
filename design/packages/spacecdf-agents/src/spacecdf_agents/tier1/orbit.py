@@ -13,6 +13,7 @@ from spacecdf_common.physics.orbit import (
     estimate_contact_time_per_day,
     sso_inclination,
 )
+from spacecdf_agents.exporters.docs.agent_extras import delta_v_breakdown
 
 
 class OrbitAgent(DesignAgent):
@@ -103,6 +104,53 @@ class OrbitAgent(DesignAgent):
                          rationale=f"Drag makeup over {mission_years:.0f} years")
         result.add_param("orbit.delta_v_deorbit_ms", "Deorbit ΔV", dv_deorbit, "m/s")
         result.add_param("orbit.delta_v_total_ms", "Total ΔV", dv_total, "m/s", margin_percent=10)
+
+        # ---- Report-quality narrative & structured intermediates ----
+        # Flatten any enum representation to a clean uppercase token
+        _ot = getattr(orbit_type, "value", orbit_type)
+        _ot = str(_ot).split(".")[-1].upper().replace("_", " ")
+        result.rationale = (
+            f"Orbit chosen as {_ot} at {alt:.0f} km altitude "
+            f"and inclination {inc:.2f}°.  The Keplerian period is {params.period_min:.1f} min "
+            f"({params.orbits_per_day:.1f} orbits / day) with an eclipse fraction of "
+            f"{params.eclipse_fraction:.2f} (cylindrical shadow).  A high-latitude ground "
+            f"station near {gs_latitude:.0f}° provides ≈{contact_s/60:.1f} min of contact / day."
+        )
+        result.add_assumption(f"Cylindrical Earth-shadow eclipse model (no penumbra).")
+        result.add_assumption(f"Ground-station latitude assumed {gs_latitude:.0f}° (Svalbard-class).")
+        if orbit_type in ("lunar", "interplanetary", "lagrange", "mars"):
+            result.add_assumption(
+                "Atmospheric drag neglected — non-Earth-orbit / deep-space regime; "
+                "station-keeping ΔV taken from mission requirements."
+            )
+        else:
+            result.add_assumption(
+                f"Station-keeping ΔV from JR-1971 drag model over {mission_years:.0f}-yr life."
+            )
+
+        result.extras["orbit.delta_v_breakdown"] = delta_v_breakdown(
+            ("Insertion", dv_insertion,
+             "From launch vehicle injection accuracy / orbital manoeuvres."),
+            ("Station-keeping", dv_sk,
+             f"Drag makeup over {mission_years:.0f} yr design life."),
+            ("Collision avoidance",
+             1.0 * (mission_years or 1.0) if body == "earth" else 0.0,
+             "Allowance of ~1 m/s per year for collision-avoidance burns."),
+            ("Deorbit / EOL", dv_deorbit,
+             "Lower perigee for ≤25-yr re-entry (IADC compliance)."),
+        )
+        result.extras["orbit.contact_window"] = {
+            "per_day_s": contact_s,
+            "ground_station_latitude_deg": gs_latitude,
+            "footprint_radius_km": params.footprint_radius_km,
+        }
+        result.extras["orbit.geometry"] = {
+            "altitude_km": alt,
+            "inclination_deg": inc,
+            "orbit_type": str(orbit_type).upper(),
+            "eclipse_fraction": params.eclipse_fraction,
+            "central_body": body,
+        }
 
         result.confidence = 0.95
         return result

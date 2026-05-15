@@ -13,7 +13,7 @@
 
 For each NASA SE process (NPR 7123.1D), identify which SpaceCDF feature implements it. Write the tab name, button, or panel. If the process requires human judgment that the tool cannot automate, mark "Manual" in the last column.
 
-*Hint: Navigate through SpaceCDF's workflow steps (Need -> Concept -> Requirements -> Design) and explore each tab. Many processes map to more than one feature.*
+*Hint: Navigate through SpaceCDF's workflow steps (Step 1 Mission Need · Step 2 Concept · Step 3 Requirements · Step 4 Design) and explore each tab. Many processes map to more than one feature.*
 
 | # | SE Process | SpaceCDF Feature(s) | Manual? |
 |---|-----------|---------------------|---------|
@@ -35,7 +35,7 @@ For each NASA SE process (NPR 7123.1D), identify which SpaceCDF feature implemen
 | 16 | Technical Assessment | __________________________________________ | ______ |
 | 17 | Decision Analysis | __________________________________________ | ______ |
 
-**Discussion question:** Which processes are well-supported by the tool? Which ones fundamentally require human judgment and cannot be fully automated? Write your answer below:
+**Reflection:** Which processes are well-supported by the tool? Which ones fundamentally require human judgment and cannot be fully automated? Write your answer below:
 
 _______________________________________________
 
@@ -62,7 +62,7 @@ For each activity below, identify which NASA lifecycle phase (Pre-A through F) i
 | Preliminary orbit trade study comparing SSO, ISS-orbit, and polar | __________ | __________ |
 | Detailed finite element analysis of the primary structure | __________ | __________ |
 
-*Hint: Refer to the lifecycle phase table in Session 1.1, Section 4.3. Ask yourself: "What level of design detail does this activity require?"*
+*Hint: Refer to the lifecycle phase table in Session 1.1, Section 4.3. Consider: What level of design detail does this activity require?*
 
 ---
 
@@ -172,7 +172,7 @@ In the space below, sketch the System-V model from memory. Label each level on b
 
 ## Notes & Reflections
 
-Record key points from the group discussion, questions you want to follow up on, and connections to your mission concept:
+Record key points below, questions you want to follow up on, and connections to your mission concept:
 
 _______________________________________________
 

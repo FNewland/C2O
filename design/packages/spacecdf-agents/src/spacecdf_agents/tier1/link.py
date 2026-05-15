@@ -4,9 +4,12 @@ Computes communication link budgets, antenna sizing, and data throughput.
 """
 from __future__ import annotations
 
+import math
+
 from spacecdf_common.agents.base import AgentResult, DesignAgent, DesignState
 from spacecdf_common.physics.heritage_mass import calibrate_mass
 from spacecdf_common.physics.link_budget import compute_link_budget
+from spacecdf_agents.exporters.docs.agent_extras import link_waterfall
 
 
 class LinkAgent(DesignAgent):
@@ -175,5 +178,63 @@ class LinkAgent(DesignAgent):
         result.add_param("link.ttc_cost_keur", "TTC Cost", round(lb.ttc_cost_keur, 0), "kEUR")
 
         result.warnings.extend(lb.warnings)
+
+        # ---- Report-quality narrative & structured intermediates ----
+        result.rationale = (
+            f"Communications architecture is a dual link: an always-on "
+            f"{'UHF' if sc_class == 'nano' else 'S-band'} TT&C channel for command and "
+            f"housekeeping (margin {ttc_margin:.1f} dB) and a higher-rate "
+            f"{lb.band} payload downlink at {freq_ghz:.1f} GHz "
+            f"(margin {payload_margin:.1f} dB).  EIRP is "
+            f"{lb.downlink_eirp_dbw:.1f} dBW; free-space loss is "
+            f"{lb.free_space_loss_db:.1f} dB at the worst-case slant range of "
+            f"{lb.slant_range_km:.0f} km."
+        )
+        result.assumptions = [
+            f"{lb.elevation_deg:.0f}° minimum elevation; ITU-R P.676/P.618 atmospheric model.",
+            f"GS antenna {gs_diam:.1f} m, efficiency 0.55, system noise temperature 200 K.",
+            f"Modulation coding rate 0.5, protocol overhead 10%, implementation loss 2 dB.",
+            f"Required Eb/N0 10 dB for BER 10⁻⁶ at the assumed modulation.",
+        ]
+
+        # GS antenna gain (recomputed for the waterfall display)
+        wavelength_m = 299792458.0 / (freq_ghz * 1e9)
+        gs_gain_dbi = 10 * math.log10(
+            0.55 * (math.pi * gs_diam / wavelength_m) ** 2
+        )
+        rb_db = 10 * math.log10(max(lb.downlink_data_rate_bps, 1))
+
+        result.extras["link.waterfall"] = link_waterfall(
+            ("Tx power (dBW)", 10 * math.log10(max(tx_power, 1e-6))),
+            ("Tx antenna gain", tx_gain),
+            ("Tx line loss", -1.0),
+            ("Free-space loss", -lb.free_space_loss_db),
+            ("Atmospheric gas", -lb.atmos_gas_loss_db),
+            ("Rain", -lb.atmos_rain_loss_db),
+            ("Polarisation", -lb.polarisation_loss_db),
+            ("Pointing", -lb.pointing_loss_db),
+            ("GS antenna gain", gs_gain_dbi),
+            ("Boltzmann (k)", -(-228.6)),  # +228.6
+            ("System noise T", -10 * math.log10(200)),
+            ("Data rate", -rb_db),
+            ("Required Eb/N0", -10.0),
+            ("Implementation loss", -2.0),
+        )
+        result.extras["link.summary"] = {
+            "band": lb.band,
+            "frequency_ghz": lb.frequency_ghz,
+            "tx_power_w": tx_power,
+            "tx_antenna_gain_dbi": tx_gain,
+            "gs_antenna_diameter_m": gs_diam,
+            "gs_antenna_gain_dbi": gs_gain_dbi,
+            "slant_range_km": lb.slant_range_km,
+            "data_rate_bps": lb.downlink_data_rate_bps,
+            "data_per_day_gb": lb.data_downlinked_per_day_gb,
+            "downlink_margin_db": payload_margin,
+            "ttc_margin_db": ttc_margin,
+            "uplink_margin_db": uplink_margin,
+            "is_deep_space": is_deep_space,
+        }
+
         result.confidence = 0.85
         return result

@@ -1,6 +1,6 @@
 # Session 3.4: Structure, Propulsion, and Equipment Selection
 
-**Duration:** 2 hours
+
 **Prerequisites:** Sessions 2.1--3.3 (all subsystem sizing complete)
 **SpaceCDF Tabs:** Equipment Browser, Dashboard, Trade Studies, Budget Breakdown
 
@@ -37,10 +37,7 @@ By the end of this session, participants will be able to:
 
 ---
 
-## 1. CubeSat Structure and CDS Compliance (30 min)
-
-### Teaching Notes
-
+## 1. CubeSat Structure and CDS Compliance
 *[Source: Cal Poly CDS Rev 14.1, February 2022; ECSS-E-ST-32C]*
 
 ### CDS Dimensional Specifications
@@ -222,10 +219,7 @@ The flat region at 0.04 g$^2$/Hz from 100--800 Hz is where most structural damag
 
 ---
 
-## 2. Propulsion System Design (30 min)
-
-### Teaching Notes
-
+## 2. Propulsion System Design
 *[Source: SMAD, Ch. 17; Sutton & Biblarz, Ch. 2--4; Goebel & Katz, *Fundamentals of Electric Propulsion*, 2008]*
 
 ### When Propulsion is Required
@@ -408,10 +402,7 @@ For missions below ~500 km where propulsion is not needed for operations, passiv
 
 ---
 
-## 3. On-Board Data Handling (20 min)
-
-### Teaching Notes
-
+## 3. On-Board Data Handling
 ### OBC Architecture -- Processor Selection
 
 The OBC is the spacecraft's brain, managing all data handling, commanding, telemetry generation, and FDIR (Fault Detection, Isolation, and Recovery). Processor selection involves a fundamental trade between radiation tolerance, processing power, power consumption, and cost.
@@ -498,8 +489,7 @@ The space radiation environment causes two categories of effects:
 
 ---
 
-## 4. Equipment Selection Exercise (45 min)
-
+## 4. Equipment Selection Exercise
 ### Instructions
 
 This is the primary hands-on session for Day 4 of the design week. Teams select actual hardware components.
@@ -551,8 +541,7 @@ The selection was ultimately Candidate A (Thales) due to contractual considerati
 
 ---
 
-## 5. SpaceCDF Budget Closure Check (15 min)
-
+## 5. SpaceCDF Budget Closure Check
 ### Instructions
 
 After equipment selection, perform a final budget health check:

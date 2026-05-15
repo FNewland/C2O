@@ -93,5 +93,44 @@ class MassAgent(DesignAgent):
         result.add_param("mass.dry_mass_estimate_kg", "Dry Mass Estimate", round(dry_mass, 2), "kg",
                          confidence=0.7)
 
+        # ---- Report-quality narrative & structured intermediates ----
+        dry_margin = 20.0
+        result.rationale = (
+            f"System mass rollup: payload {payload_mass:.2f} kg, platform "
+            f"{platform_mass:.2f} kg (EPS {eps_mass:.2f}, TCS {tcs_mass:.2f}, "
+            f"TT&C {ttc_mass:.2f}, AOCS {aocs_mass:.2f}, structure {struct_mass:.2f}, "
+            f"OBDH {obdh_mass:.2f}), propulsion dry hardware {prop_dry_hw:.2f} kg, "
+            f"yielding a dry mass of {dry_mass:.2f} kg and a wet (launch) mass "
+            f"of {wet_mass:.2f} kg with {prop_mass:.2f} kg of propellant.  "
+            f"ECSS Phase-A margin policy applied: payload 10%, platform 20%, "
+            f"propellant 5%."
+        )
+        result.assumptions = [
+            "Per-subsystem masses come from each Tier-1 agent with heritage calibration.",
+            "OBDH mass set by class-aware default if data agent has not yet sized.",
+            "Propulsion dry hardware = total propulsion mass − propellant mass.",
+            "ECSS-E-ST-10-02 / SMAD Phase A margins applied per subsystem.",
+        ]
+        result.extras["mass.rollup"] = [
+            {"subsystem": "Payload", "nominal_kg": payload_mass, "margin_percent": 10,
+             "with_margin_kg": payload_mass * 1.10},
+            {"subsystem": "EPS", "nominal_kg": eps_mass, "margin_percent": 20,
+             "with_margin_kg": eps_mass * 1.20},
+            {"subsystem": "AOCS", "nominal_kg": aocs_mass, "margin_percent": 20,
+             "with_margin_kg": aocs_mass * 1.20},
+            {"subsystem": "TT&C", "nominal_kg": ttc_mass, "margin_percent": 10,
+             "with_margin_kg": ttc_mass * 1.10},
+            {"subsystem": "OBDH", "nominal_kg": obdh_mass, "margin_percent": 20,
+             "with_margin_kg": obdh_mass * 1.20},
+            {"subsystem": "Thermal", "nominal_kg": tcs_mass, "margin_percent": 20,
+             "with_margin_kg": tcs_mass * 1.20},
+            {"subsystem": "Structure", "nominal_kg": struct_mass, "margin_percent": 20,
+             "with_margin_kg": struct_mass * 1.20},
+            {"subsystem": "Propulsion (dry)", "nominal_kg": prop_dry_hw,
+             "margin_percent": 10, "with_margin_kg": prop_dry_hw * 1.10},
+            {"subsystem": "Propellant", "nominal_kg": prop_mass,
+             "margin_percent": 5, "with_margin_kg": prop_mass * 1.05},
+        ]
+
         result.confidence = 0.80
         return result

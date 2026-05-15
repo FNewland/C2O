@@ -1,6 +1,6 @@
 # Session 5.2: Mission Operations Concepts
 
-**Duration:** 2 hours
+
 **Prerequisites:** Session 5.1 (ground segment architecture understood)
 **References:** ECSS-E-ST-70-11C (Space Segment Operability), ECSS-E-ST-70-32C (Procedures), ECSS-E-ST-70-41C (Packet Utilisation Standard), NPR 7120.5F, NASA Fault Management Handbook (NASA-HDBK-1002)
 
@@ -17,10 +17,7 @@ By the end of this session, participants will be able to:
 
 ---
 
-## 1. Concept of Operations (ConOps) (25 min)
-
-### Teaching Notes
-
+## 1. Concept of Operations (ConOps)
 The ConOps is the bridge between engineering design and operational reality. It describes HOW the system will be used, not just WHAT it can do.
 
 *[Source: ECSS-E-ST-70-11C (Space Segment Operability); IEEE 1362 (Concept of Operations Document)]*
@@ -92,10 +89,7 @@ ESA's PROBA-2 (launched 2009, still operational in 2026) demonstrates mature Cub
 
 ---
 
-## 2. FDIR Architecture (30 min)
-
-### Teaching Notes
-
+## 2. FDIR Architecture
 FDIR (Fault Detection, Isolation, Recovery) is the spacecraft's autonomous ability to detect failures, determine which component failed, and take corrective action -- all without ground intervention.
 
 *[Source: NASA Fault Management Handbook (NASA-HDBK-1002); ECSS-E-ST-70-11C section 5.3]*
@@ -177,10 +171,7 @@ FDIR (Fault Detection, Isolation, Recovery) is the spacecraft's autonomous abili
 
 ---
 
-## 3. Operational Procedures (20 min)
-
-### Teaching Notes
-
+## 3. Operational Procedures
 *[Source: ECSS-E-ST-70-32C (Procedure Definition Language); ECSS-E-ST-70-01C section 5.6]*
 
 ### Procedure Types
@@ -239,10 +230,7 @@ Post-conditions: Mode = Standby, imagery stored in mass memory
 
 ---
 
-## 4. Anomaly Response Process (20 min)
-
-### Teaching Notes
-
+## 4. Anomaly Response Process
 *[Source: NASA-HDBK-1002 (Fault Management Handbook); ESA Anomaly Review Board procedures]*
 
 ### Anomaly Escalation Levels
@@ -300,8 +288,7 @@ NASA's Kepler space telescope lost reaction wheel #2 in July 2012, followed by w
 
 ---
 
-## 5. Operations Concepts Exercise (25 min)
-
+## 5. Operations Concepts Exercise
 ### Instructions
 
 1. **ConOps Editor** in SpaceCDF:

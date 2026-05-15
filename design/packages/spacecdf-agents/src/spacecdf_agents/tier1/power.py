@@ -170,5 +170,61 @@ class PowerAgent(DesignAgent):
         # of the real payload power requirement.
 
         result.warnings.extend(pb.warnings)
+
+        # ---- Report-quality narrative & structured intermediates ----
+        result.rationale = (
+            f"Electrical power system sized for a worst-case sunlight load of "
+            f"{pb.total_power_sunlight_w:.1f} W and worst-case eclipse load of "
+            f"{pb.total_power_eclipse_w:.1f} W.  Solar array delivers "
+            f"{pb.sa_power_bol_w:.1f} W BoL / {pb.sa_power_eol_w:.1f} W EoL "
+            f"after {mission_years:.1f} yr of degradation, covering "
+            f"{pb.sa_area_m2:.3f} m² of {cell_eff*100:.1f}%-efficient cells.  "
+            f"Battery capacity {pb.battery_capacity_wh:.1f} Wh chosen for "
+            f"{pb.battery_dod_percent:.1f}% depth-of-discharge over the "
+            f"eclipse duration."
+        )
+        result.assumptions = [
+            f"Solar cell efficiency {cell_eff*100:.1f}% (class-appropriate "
+            f"triple-junction GaAs / KB-resolved cell).",
+            f"Specific power {sa_specific:.0f} W/kg.",
+            f"Worst-case mode selected from ConOps."
+            if has_modes else "Mode profile estimated from payload duty cycles.",
+            f"Heater allocation {heater_power:.1f} W during eclipse.",
+            "Battery DoD limit 30% (ECSS Li-ion practice).",
+        ]
+        # Build mode-by-mode breakdown
+        modes_extras = []
+        if has_modes:
+            for m in conops.modes:
+                modes_extras.append({
+                    "name": m.name,
+                    "duty_cycle": float(getattr(m, "duty_cycle_percent", 0)) / 100,
+                    "power_w": float(getattr(m, "power_w", 0)),
+                    "platform_w": float(getattr(m, "platform_power_w", 0)),
+                    "payload_w": float(getattr(m, "payload_power_w", 0)),
+                    "heater_w": float(getattr(m, "heater_power_w", 0)),
+                })
+        result.extras["power.modes"] = modes_extras
+        result.extras["power.battery"] = {
+            "capacity_wh": pb.battery_capacity_wh,
+            "dod_percent": pb.battery_dod_percent,
+            "mass_kg": pb.battery_mass_kg,
+            "chemistry": kb_battery.get("chemistry") if kb_battery else "Li-ion (assumed)",
+        }
+        result.extras["power.solar_array"] = {
+            "area_m2": pb.sa_area_m2,
+            "bol_w": pb.sa_power_bol_w,
+            "eol_w": pb.sa_power_eol_w,
+            "efficiency_pct": cell_eff * 100,
+            "specific_power_w_kg": sa_specific,
+        }
+        result.extras["power.profile"] = {
+            "sunlit_load_w": pb.total_power_sunlight_w,
+            "eclipse_load_w": pb.total_power_eclipse_w,
+            "period_min": period_s / 60.0 if period_s else 95.0,
+            "eclipse_fraction": eclipse_frac,
+            "sa_eol_w": pb.sa_power_eol_w,
+        }
+
         result.confidence = 0.85
         return result

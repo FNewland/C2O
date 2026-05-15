@@ -133,7 +133,7 @@ UniSat-1 uses no heaters or MLI. At 400 km, strong Earth IR (~240 W/m$^2$) provi
 
 ---
 
-## Part A: Solar Array Sizing (20 min)
+## Part A: Solar Array Sizing
 
 Show all calculations step by step.
 
@@ -185,7 +185,7 @@ $m_{\text{SA}} = A \times \sigma = $ _____ $\times$ _____ $= $ _____ kg
 
 ---
 
-## Part B: Battery Sizing (10 min)
+## Part B: Battery Sizing
 
 Show all calculations:
 
@@ -215,7 +215,7 @@ _____________________________________________________________________
 
 ---
 
-## Part C: Thermal Analysis (15 min)
+## Part C: Thermal Analysis
 
 **1. Identify hot case and cold case for your orbit:**
 
@@ -255,7 +255,7 @@ _____________________________________________________________________
 
 ---
 
-## Part D: SpaceCDF Verification (15 min)
+## Part D: SpaceCDF Verification
 
 Compare your hand calculations to SpaceCDF values:
 
