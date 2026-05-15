@@ -1,0 +1,208 @@
+---
+# Ground Station Antennas — from UHF Yagi to Ka-band parabolic
+# Focused on CubeSat / SmallSat ground station operators
+
+components:
+
+  - id: gs-ant-uhf-yagi
+    name: UHF Yagi Antenna (10-element)
+    manufacturer: M2 Antenna Systems
+    category: ground_antennas
+    mass_kg: 3
+    power_w: 0
+    cost_keur: 0.5
+    trl: 9
+    performance:
+      type: directional
+      bands: [UHF]
+      frequency_mhz: 430-440
+      gain_dbi: 14.5
+      beamwidth_deg: 25
+      polarisation: linear
+      tracking: manual or az/el rotator
+    heritage_missions: [AMSAT, university CubeSats worldwide]
+    notes: >
+      Entry-level CubeSat ground antenna. Widely used by universities and
+      amateur operators. Pair with an az/el rotator (Yaesu G-5500 ~$700) for
+      automated satellite tracking. Suitable for 9.6 kbps UHF downlink.
+
+  - id: gs-ant-uhf-crossyagi
+    name: UHF Cross-Yagi with Rotator
+    manufacturer: Wimo / SatNOGS community
+    category: ground_antennas
+    mass_kg: 8
+    power_w: 50
+    cost_keur: 2
+    trl: 9
+    performance:
+      type: directional
+      bands: [UHF]
+      frequency_mhz: 430-440
+      gain_dbi: 16
+      beamwidth_deg: 22
+      polarisation: circular (RHCP/LHCP switchable)
+      tracking: az/el rotator with SatNOGS controller
+    heritage_missions: [SatNOGS network stations, MOVE-II (TU Munich), UPSat]
+    notes: >
+      Circular-polarised cross-Yagi eliminates Faraday rotation fading.
+      SatNOGS-compatible rotator controller can be 3D-printed. Full station
+      BOM is open-source. Excellent for university teams on a budget.
+
+  - id: gs-ant-vhf-turnstile
+    name: VHF/UHF Turnstile (Eggbeater) Antenna
+    manufacturer: M2 Antenna Systems / homebrew
+    category: ground_antennas
+    mass_kg: 2
+    power_w: 0
+    cost_keur: 0.3
+    trl: 9
+    performance:
+      type: omnidirectional
+      bands: [VHF, UHF]
+      frequency_mhz: 145-146 (VHF) / 435-438 (UHF)
+      gain_dbi: 3
+      beamwidth_deg: 180
+      polarisation: circular
+      tracking: none required
+    heritage_missions: [GeneSat-1, PhoneSat, many amateur CubeSats]
+    notes: >
+      Omnidirectional hemispherical pattern — no rotator needed. Ideal for
+      low-data-rate beacon reception and basic telemetry. Limited link budget
+      restricts use to UHF at 1.2-9.6 kbps. Good for a secondary/backup station.
+
+  - id: gs-ant-sband-2m4
+    name: 2.4m S-band Dish
+    manufacturer: ATLAS Space Operations / RF Design
+    category: ground_antennas
+    mass_kg: 120
+    power_w: 100
+    cost_keur: 60
+    trl: 9
+    performance:
+      type: parabolic
+      diameter_m: 2.4
+      bands: [S]
+      frequency_mhz: 2200-2290 (downlink) / 2025-2110 (uplink)
+      gain_dbi: 30
+      tracking: program track with step-track refinement
+      slew_rate_deg_s: 5
+    heritage_missions: [Leaf Space Freedom stations, ATLAS Links]
+    notes: >
+      Compact commercial ground station antenna. Small enough for rooftop
+      installation at university sites. Supports up to ~2 Mbps downlink
+      with appropriate modem. Good balance of performance vs. site logistics.
+
+  - id: gs-ant-sband-3m7
+    name: 3.7m S-band Antenna
+    manufacturer: Vertex Antennentechnik
+    category: ground_antennas
+    mass_kg: 500
+    power_w: 200
+    cost_keur: 150
+    trl: 9
+    performance:
+      type: parabolic
+      diameter_m: 3.7
+      bands: [S]
+      frequency_mhz: 2200-2290 (downlink) / 2025-2110 (uplink)
+      gain_dbi: 33
+      tracking: autotrack
+      slew_rate_deg_s: 5
+      pointing_accuracy_deg: 0.05
+    heritage_missions: [Leaf Space, various university stations, DLR GSOC]
+    notes: >
+      Workhorse small commercial tracking antenna. Concrete pad and small
+      radome recommended. Suitable for S-band downlinks up to ~4 Mbps.
+
+  - id: gs-ant-xband-3m7
+    name: 3.7m X-band Antenna
+    manufacturer: General Dynamics SATCOM
+    category: ground_antennas
+    mass_kg: 600
+    power_w: 300
+    cost_keur: 200
+    trl: 9
+    performance:
+      type: parabolic
+      diameter_m: 3.7
+      bands: [X]
+      frequency_mhz: 8025-8400 (downlink)
+      gain_dbi: 43
+      tracking: autotrack + monopulse option
+      slew_rate_deg_s: 5
+      pointing_accuracy_deg: 0.02
+      radome_option: true
+    heritage_missions: [Planet (SkySat), Spire, various 6U missions]
+    notes: >
+      Dedicated X-band receive for high-rate CubeSat downlinks. With a
+      good LNA and modem, supports 50-100 Mbps. Radome recommended for
+      sites with high wind or precipitation.
+
+  - id: gs-ant-xband-5m4
+    name: 5.4m X-band Antenna
+    manufacturer: ViaSat
+    category: ground_antennas
+    mass_kg: 1200
+    power_w: 500
+    cost_keur: 400
+    trl: 9
+    performance:
+      type: parabolic
+      diameter_m: 5.4
+      bands: [X]
+      frequency_mhz: 8025-8400 (downlink)
+      gain_dbi: 46.5
+      tracking: autotrack + program track
+      slew_rate_deg_s: 5
+      pointing_accuracy_deg: 0.015
+    heritage_missions: [KSAT Svalbard, SSC Esrange, Planet Labs]
+    notes: >
+      High-performance X-band antenna for demanding downlink budgets.
+      Supports 100-200+ Mbps with 8PSK/16APSK. Often used by constellation
+      operators needing maximum data throughput per pass.
+
+  - id: gs-ant-sx-4m5
+    name: 4.5m S/X Dual-Band Antenna
+    manufacturer: ViaSat / Cobham
+    category: ground_antennas
+    mass_kg: 800
+    power_w: 400
+    cost_keur: 300
+    trl: 9
+    performance:
+      type: parabolic
+      diameter_m: 4.5
+      bands: [S, X]
+      gain_s_dbi: 34.5
+      gain_x_dbi: 45
+      tracking: autotrack + monopulse
+      slew_rate_deg_s: 5
+      pointing_accuracy_deg: 0.02
+    heritage_missions: [KSAT Lite stations, ESA ESTRACK augmentation]
+    notes: >
+      Versatile dual-band antenna supporting S-band TT&C uplink/downlink
+      and X-band high-rate payload downlink simultaneously. KSAT-style
+      small station concept. Reduces footprint vs. two separate antennas.
+
+  - id: gs-ant-ka-2m4
+    name: 2.4m Ka-band Antenna
+    manufacturer: Viasat / EM Solutions
+    category: ground_antennas
+    mass_kg: 150
+    power_w: 150
+    cost_keur: 120
+    trl: 7
+    performance:
+      type: parabolic
+      diameter_m: 2.4
+      bands: [Ka]
+      frequency_mhz: 25500-27000 (downlink)
+      gain_dbi: 48
+      tracking: autotrack
+      pointing_accuracy_deg: 0.01
+    heritage_missions: [JAXA RAPIS-1 (technology demo), emerging CubeSat Ka missions]
+    notes: >
+      Emerging capability for CubeSat Ka-band downlink. Very high data
+      rates possible (>500 Mbps) but rain attenuation is significant.
+      Requires tight pointing. TRL 7 reflects limited CubeSat heritage
+      but the ground technology itself is mature from GEO/MEO applications.

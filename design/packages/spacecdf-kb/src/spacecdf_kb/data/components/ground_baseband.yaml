@@ -1,0 +1,135 @@
+---
+# Ground Station Baseband / Modems — hardware and software-defined
+# Focused on CubeSat / SmallSat ground station operators
+
+components:
+
+  - id: gs-bb-cortex
+    name: Cortex CRT-II
+    manufacturer: L3Harris (formerly Zodiac Data Systems)
+    category: ground_baseband
+    mass_kg: 10
+    power_w: 100
+    cost_keur: 80
+    trl: 9
+    performance:
+      type: hardware_modem
+      max_data_rate_mbps: 300
+      modulation: [BPSK, QPSK, 8PSK, OQPSK]
+      coding: [convolutional, Reed-Solomon, LDPC, turbo]
+      standards: [CCSDS 131.0, CCSDS 401.0]
+      ranging: tone ranging (CCSDS 414.1)
+      doppler_tracking: true
+    heritage_missions: [ESA missions, CNES missions, many commercial operators]
+    notes: >
+      Industry-standard ground modem used by most European space agencies.
+      Handles telemetry, telecommand, ranging, and Doppler extraction.
+      High cost but extremely mature and well-supported.
+
+  - id: gs-bb-amergint
+    name: Amergint softFEP
+    manufacturer: Amergint Technologies
+    category: ground_baseband
+    mass_kg: 5
+    power_w: 200
+    cost_keur: 40
+    trl: 9
+    performance:
+      type: software_modem
+      max_data_rate_mbps: 500
+      modulation: [BPSK, QPSK, 8PSK, 16APSK]
+      coding: [LDPC, turbo, Reed-Solomon]
+      standards: [CCSDS, DVB-S2]
+      gpu_accelerated: true
+    heritage_missions: [NASA TDRS ground segment, USAF AFSCN]
+    notes: >
+      Software-defined modem running on COTS GPU hardware. Very flexible
+      and upgradeable via software. Lower per-channel cost than Cortex
+      for multi-mission ground stations.
+
+  - id: gs-bb-rands-ttc
+    name: R&S GNSS100/STTC Baseband
+    manufacturer: Rohde & Schwarz
+    category: ground_baseband
+    mass_kg: 8
+    power_w: 80
+    cost_keur: 60
+    trl: 9
+    performance:
+      type: hardware_modem
+      max_data_rate_mbps: 100
+      modulation: [BPSK, QPSK, OQPSK]
+      coding: [convolutional, Reed-Solomon, turbo]
+      standards: [CCSDS, ECSS]
+      ranging: PN and tone ranging
+      doppler_tracking: true
+    heritage_missions: [DLR GSOC stations, OHB SmallSat missions]
+    notes: >
+      German-built TT&C baseband processor with integrated ranging.
+      Popular in European institutional ground stations. Compact form
+      factor suitable for smaller stations.
+
+  - id: gs-bb-innoflight-sdr
+    name: Innoflight SCR-106 Ground SDR
+    manufacturer: Innoflight
+    category: ground_baseband
+    mass_kg: 2
+    power_w: 30
+    cost_keur: 15
+    trl: 8
+    performance:
+      type: software_defined_radio
+      max_data_rate_mbps: 50
+      modulation: [BPSK, QPSK, GMSK]
+      coding: [convolutional, LDPC]
+      standards: [CCSDS]
+      bands: [UHF, S]
+    heritage_missions: [NASA CubeSat missions, various 6U CubeSats]
+    notes: >
+      CubeSat-focused SDR that can serve as both flight and ground modem.
+      Using matched flight/ground radios simplifies the RF chain. Good
+      for teams building their first ground station.
+
+  - id: gs-bb-nanocom-sdr
+    name: NanoCom GS100 Ground Modem
+    manufacturer: GomSpace
+    category: ground_baseband
+    mass_kg: 1
+    power_w: 15
+    cost_keur: 8
+    trl: 9
+    performance:
+      type: software_defined_radio
+      max_data_rate_mbps: 10
+      modulation: [GMSK, GFSK, BPSK]
+      coding: [convolutional, Reed-Solomon]
+      bands: [UHF]
+      frequency_mhz: 430-440
+    heritage_missions: [GomX-1, GomX-3, AAUSAT, many GomSpace-based CubeSats]
+    notes: >
+      Companion ground modem for GomSpace NanoCom flight radios. Plug-and-play
+      with GomSpace UHF transceivers. Very simple integration but limited
+      to UHF and moderate data rates.
+
+  - id: gs-bb-gnuradio-sdr
+    name: GNU Radio + USRP SDR Platform
+    manufacturer: Ettus Research (NI) / open-source community
+    category: ground_baseband
+    mass_kg: 3
+    power_w: 30
+    cost_keur: 5
+    trl: 7
+    performance:
+      type: software_defined_radio
+      max_data_rate_mbps: 50
+      modulation: [user-defined, any supported by software]
+      coding: [user-defined]
+      standards: [CCSDS via gr-satellites, AX.25 via gr-ax25]
+      hardware: USRP B210 (70 MHz - 6 GHz, 56 MHz BW)
+      open_source: true
+    heritage_missions: [SatNOGS network, many university CubeSats, Libre Space Foundation]
+    notes: >
+      Open-source SDR platform offering maximum flexibility. USRP B210
+      (~$3k) covers UHF through S-band. GNU Radio flowgraphs available
+      for CCSDS, AX.25, and custom protocols. Requires significant
+      software expertise. SatNOGS uses this stack for its global network.

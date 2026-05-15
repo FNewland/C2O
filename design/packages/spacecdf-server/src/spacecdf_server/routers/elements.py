@@ -343,10 +343,14 @@ async def compute_budget(element_id: str, budget_type: str) -> dict:
         "power_peak": "power_peak_w",
         "cost": "cost_recurring_keur",
         "volume": "volume_cm3",
+        "data": "_data",  # sentinel — handled specially below
     }
     prop = prop_map.get(budget_type)
     if not prop:
         raise HTTPException(400, f"Unknown budget type: {budget_type}")
+
+    is_power_budget = budget_type == "power"
+    is_data_budget = budget_type == "data"
 
     # ── Constellation awareness: walk up the parent chain to find
     #    the highest ancestor with quantity > 1.  When present, budget
@@ -405,24 +409,120 @@ async def compute_budget(element_id: str, budget_type: str) -> dict:
                 total = (leaf.get(prop) or 0) * leaf.get("quantity", 1)
         return total
 
+    # ── Power-specific rollup: returns (avg_total, peak_total) tuples ──
+    def _rollup_power(eid: str) -> tuple[float, float]:
+        """Recursively sum power values from leaf elements.
+        Returns (average_power, peak_power) per-spacecraft."""
+        avg_total = 0.0
+        peak_total = 0.0
+        has_children = False
+        for ch in _elements.values():
+            if ch.get("parent_id") == eid and not ch.get("deleted_at"):
+                has_children = True
+                a, p = _rollup_power(ch["id"])
+                avg_total += a
+                peak_total += p
+        if not has_children:
+            leaf = _elements.get(eid)
+            if leaf:
+                qty = leaf.get("quantity", 1)
+                perf = leaf.get("performance") or {}
+                duty_cycle = perf.get("duty_cycle", 1.0)
+                power_avg = leaf.get("power_avg_w") or 0
+                power_peak = leaf.get("power_peak_w") or power_avg
+                avg_total = power_avg * duty_cycle * qty
+                peak_total = power_peak * qty
+        return avg_total, peak_total
+
+    # ── Data-specific rollup: returns (data_rate_mbps, volume_gb_per_day) tuples ──
+    def _rollup_data(eid: str) -> tuple[float, float]:
+        """Recursively sum data values from leaf elements.
+        Returns (data_rate_mbps, data_volume_gb_per_day) per-spacecraft."""
+        rate_total = 0.0
+        vol_total = 0.0
+        has_children = False
+        for ch in _elements.values():
+            if ch.get("parent_id") == eid and not ch.get("deleted_at"):
+                has_children = True
+                r, v = _rollup_data(ch["id"])
+                rate_total += r
+                vol_total += v
+        if not has_children:
+            leaf = _elements.get(eid)
+            if leaf:
+                qty = leaf.get("quantity", 1)
+                perf = leaf.get("performance") or {}
+                duty_cycle = perf.get("duty_cycle", 1.0)
+                data_rate = perf.get("data_rate_mbps") or 0
+                data_vol = perf.get("data_volume_gb_per_day") or 0
+                rate_total = data_rate * duty_cycle * qty
+                vol_total = data_vol * qty
+        return rate_total, vol_total
+
     # Sum children — actuals come from recursive rollup of components
     lines = []
     total_nominal = 0
+    # Power budget extra totals
+    total_avg_power = 0.0
+    total_peak_power = 0.0
+    # Data budget extra totals
+    total_data_rate = 0.0
+    total_data_volume = 0.0
+
     for e in _elements.values():
         if e.get("parent_id") == element_id and not e.get("deleted_at"):
             qty = e.get("quantity", 1)
+            perf = e.get("performance") or {}
+            duty_cycle = perf.get("duty_cycle", 1.0)
 
-            # For components (leaf), use direct value
-            # For systems/subsystems, recursively roll up from their children
-            if e.get("element_type") == "component":
-                per_unit = e.get(prop) or 0
+            if is_power_budget:
+                # ── Power budget: compute avg and peak separately ──
+                if e.get("element_type") == "component":
+                    power_avg = e.get("power_avg_w") or 0
+                    power_peak = e.get("power_peak_w") or power_avg
+                    avg_per_unit = power_avg * duty_cycle
+                    peak_per_unit = power_peak
+                else:
+                    a, p = _rollup_power(e["id"])
+                    avg_per_unit = a / qty if qty > 0 else 0
+                    peak_per_unit = p / qty if qty > 0 else 0
+
+                avg_total = avg_per_unit * qty
+                peak_total = peak_per_unit * qty
+                # "nominal" for power budget = average power (duty-cycle-aware)
+                per_unit = avg_per_unit
+                val_total = avg_total
+                total_avg_power += avg_total
+                total_peak_power += peak_total
+
+            elif is_data_budget:
+                # ── Data budget: data rates and volumes ──
+                if e.get("element_type") == "component":
+                    data_rate = perf.get("data_rate_mbps") or 0
+                    data_vol = perf.get("data_volume_gb_per_day") or 0
+                    rate_per_unit = data_rate * duty_cycle
+                    vol_per_unit = data_vol
+                else:
+                    r, v = _rollup_data(e["id"])
+                    rate_per_unit = r / qty if qty > 0 else 0
+                    vol_per_unit = v / qty if qty > 0 else 0
+
+                rate_total = rate_per_unit * qty
+                vol_total_val = vol_per_unit * qty
+                # "nominal" for data budget = data rate (Mbps)
+                per_unit = rate_per_unit
+                val_total = rate_total
+                total_data_rate += rate_total
+                total_data_volume += vol_total_val
+
             else:
-                # Recursive rollup from descendants — _rollup already
-                # returns per-spacecraft values, so divide by the CHILD's
-                # own quantity to get the per-unit value for that child.
-                per_unit = _rollup(e["id"]) / qty if qty > 0 else 0
+                # ── Standard budget (mass, cost, volume) ──
+                if e.get("element_type") == "component":
+                    per_unit = e.get(prop) or 0
+                else:
+                    per_unit = _rollup(e["id"]) / qty if qty > 0 else 0
+                val_total = per_unit * qty
 
-            val_total = per_unit * qty
             margin = e.get("margin_percent", 20) / 100
             val_with_margin = val_total * (1 + margin)
             total_nominal += val_total
@@ -441,6 +541,24 @@ async def compute_budget(element_id: str, budget_type: str) -> dict:
                 "allocation": child_alloc,
                 "allocation_per_unit": alloc_per_unit,
             }
+
+            # Add power-specific fields
+            if is_power_budget:
+                line["power_avg_w"] = round(avg_total, 3)
+                line["power_peak_w"] = round(peak_total, 3)
+                line["duty_cycle"] = duty_cycle
+
+            # Add data-specific fields
+            if is_data_budget:
+                line["data_rate_mbps"] = round(rate_total, 3)
+                line["data_volume_gb_per_day"] = round(vol_total_val, 3)
+                line["duty_cycle"] = duty_cycle
+                # Volume per orbit (assume ~95 min LEO orbit)
+                # rate_total already includes duty_cycle from rollup, so no extra multiply
+                orbit_period_min = 95.0
+                volume_per_orbit_mb = (rate_total * orbit_period_min * 60) / 8  # Mbps * seconds / 8 = MB
+                line["volume_per_orbit_mb"] = round(volume_per_orbit_mb, 3)
+
             lines.append(line)
 
     total_with_margin = sum(l["with_margin"] for l in lines)
@@ -453,13 +571,21 @@ async def compute_budget(element_id: str, budget_type: str) -> dict:
     margin_pct = ((effective_alloc - total_with_margin) / effective_alloc * 100) if effective_alloc and effective_alloc > 0 else None
     status = "green" if (margin_pct and margin_pct > 20) else "amber" if (margin_pct and margin_pct > 0) else "red" if margin_pct is not None else "undefined"
 
+    # Determine unit label
+    if is_data_budget:
+        unit_label = "Mbps"
+    elif "_" in prop:
+        unit_label = prop_map[budget_type].split("_")[-1]
+    else:
+        unit_label = ""
+
     result: dict[str, Any] = {
         "element_id": element_id,
         "element_name": el["name"],
         "budget_type": budget_type,
         "context": "per_spacecraft" if is_constellation else "total",
         "allocation": allocation,
-        "unit": prop_map[budget_type].split("_")[-1] if "_" in prop else "",
+        "unit": unit_label,
         "sum_nominal": round(total_nominal, 3),
         "sum_with_margin": round(total_with_margin, 3),
         "remaining": round(remaining, 3) if remaining is not None else None,
@@ -467,6 +593,16 @@ async def compute_budget(element_id: str, budget_type: str) -> dict:
         "status": status,
         "lines": lines,
     }
+
+    # Add power-specific summary fields
+    if is_power_budget:
+        result["total_avg_power"] = round(total_avg_power, 3)
+        result["total_peak_power"] = round(total_peak_power, 3)
+
+    # Add data-specific summary fields
+    if is_data_budget:
+        result["total_data_rate_mbps"] = round(total_data_rate, 3)
+        result["total_data_volume_gb_per_day"] = round(total_data_volume, 3)
 
     # Add constellation-specific fields when applicable
     if is_constellation:
@@ -692,8 +828,10 @@ _SUBSYSTEM_TEMPLATES: dict[str, list[dict]] = {
         {"name": "Propulsion", "domain": "propulsion"},
     ],
     "ground": [
-        {"name": "Ground Station", "domain": "ground"},
-        {"name": "Mission Control", "domain": "ground"},
+        {"name": "Ground Station Antenna System", "domain": "ground_rf"},
+        {"name": "Ground Station Electronics", "domain": "ground_rf"},
+        {"name": "Mission Control Centre", "domain": "ground_ops"},
+        {"name": "Ground Network & Communications", "domain": "ground_ops"},
     ],
 }
 
@@ -706,6 +844,12 @@ _DEFAULT_EQUIPMENT: dict[str, list[str]] = {
     "thermal": [],  # Thermal hardware depends heavily on the mission
     "structure": [],  # Structure is mission-specific
     "propulsion": [],  # Not all missions need propulsion
+}
+
+# Default equipment for ground segment
+_DEFAULT_GROUND_EQUIPMENT: dict[str, list[str]] = {
+    "ground_rf": ["gs-ant-uhf-crossyagi", "gs-rf-lna-uhf", "gs-bb-gnuradio-sdr"],
+    "ground_ops": ["gs-sw-openc3", "gs-time-gpsdo"],
 }
 
 
@@ -804,8 +948,13 @@ async def populate_subsystems(
 
     # Add default equipment from KB
     equipment_count = 0
-    if body.include_equipment and segment == "space":
-        for domain, kb_ids in _DEFAULT_EQUIPMENT.items():
+    equip_map = (
+        _DEFAULT_EQUIPMENT if segment == "space"
+        else _DEFAULT_GROUND_EQUIPMENT if segment == "ground"
+        else {}
+    )
+    if body.include_equipment and equip_map:
+        for domain, kb_ids in equip_map.items():
             parent_sub_id = subsystem_ids.get(domain)
             if not parent_sub_id or not kb_ids:
                 continue
