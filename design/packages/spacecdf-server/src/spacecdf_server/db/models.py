@@ -544,3 +544,59 @@ class ElementParameterRow(Base):
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow, onupdate=_utcnow)
+
+
+# ── SCDF-170 §1.2: analysis runs + conflicts ──────────────────────────
+
+class AnalysisRunRow(Base):
+    """One execution of an engineering analysis (design loop, simulation, ...).
+
+    ``inputs_hash`` is ``analysis_context.context_hash`` over the context
+    subset the analysis declares it reads; the API reports the run as *stale*
+    when it no longer matches the live context. ``series_ref`` points at the
+    JSON file under ``<SPACECDF_DATA_DIR>/analysis/<run_id>.json`` that holds
+    the bulky time-series / full parameter set; ``summary_json`` is the small
+    part the UI shows on the card.
+    """
+    __tablename__ = "analysis_runs"
+    __table_args__ = (
+        Index("ix_analysis_runs_study_analysis", "study_id", "analysis"),
+    )
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    study_id: Mapped[str] = mapped_column(String(32), ForeignKey("studies.id"), index=True)
+    option_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    analysis: Mapped[str] = mapped_column(String(64), index=True)
+    started_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    status: Mapped[str] = mapped_column(String(16), default="running")  # running|ok|failed
+    inputs_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    summary_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    series_ref: Mapped[str | None] = mapped_column(String(255), nullable=True)
+
+
+class AnalysisConflictRow(Base):
+    """A conflict raised by an analysis run (SCDF-170 §1.2).
+
+    Unresolved conflicts of the same (study, option, analysis) are replaced on
+    every publish; resolved ones are kept for history (``resolved_at`` set).
+    """
+    __tablename__ = "analysis_conflicts"
+    __table_args__ = (
+        Index("ix_analysis_conflicts_study_analysis", "study_id", "analysis"),
+    )
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    study_id: Mapped[str] = mapped_column(String(32), ForeignKey("studies.id"), index=True)
+    option_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    run_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    analysis: Mapped[str] = mapped_column(String(64), index=True)
+    severity: Mapped[str] = mapped_column(String(16), default="major")  # critical|major|minor|warning|info
+    code: Mapped[str] = mapped_column(String(64), default="")
+    title: Mapped[str] = mapped_column(String(255), default="")
+    detail: Mapped[str] = mapped_column(Text, default="")
+    element_ids_json: Mapped[list | None] = mapped_column(JSON, nullable=True)
+    requirement_ids_json: Mapped[list | None] = mapped_column(JSON, nullable=True)
+    suggested_fix: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
+    resolved_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)

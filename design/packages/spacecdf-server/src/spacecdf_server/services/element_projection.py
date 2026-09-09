@@ -4,6 +4,14 @@ Forward projection: element tree → flat parameter dict (for agents)
 Reverse merge: agent results → update element tree
 
 The mapping registry defines how element properties map to parameter paths.
+
+SCDF-170: ``sum`` aggregates count *leaf* elements only (an element with
+live children contributes through its children, never in addition to them),
+so a subsystem that carries a rolled-up ``mass_kg`` column (N1) is not
+double-counted. ``contributing_elements`` / ``reverse_map`` expose the
+registry both ways for ``services.analysis_context`` (which flat paths an
+element override touches) and ``services.analysis_results`` (which element
+parameter an agent output lands on).
 """
 from __future__ import annotations
 
@@ -64,10 +72,14 @@ def project_elements_to_params(elements: list[dict]) -> dict[str, float]:
         Flat parameter dict like {"power.eps_mass_kg": 1.3, "aocs.mass_kg": 0.87, ...}
     """
     params: dict[str, float] = {}
+    live = [e for e in elements if not e.get("deleted_at")]
+    parents_with_children = {e.get("parent_id") for e in live if e.get("parent_id")}
 
     for param_path, (domain, prop, agg_type) in PROPERTY_TO_PARAM.items():
-        # Find matching elements
-        matching = [e for e in elements if e.get("subsystem_domain") == domain and not e.get("deleted_at")]
+        # Find matching elements; ``sum`` aggregates use leaves only (no double count)
+        matching = [e for e in live if e.get("subsystem_domain") == domain]
+        if agg_type == "sum":
+            matching = [e for e in matching if e["id"] not in parents_with_children]
 
         if not matching:
             continue
@@ -102,13 +114,58 @@ def project_elements_to_params(elements: list[dict]) -> dict[str, float]:
                         params[param_path] = val
                         break
 
-    # Also compute total mass
-    all_physical = [e for e in elements if e.get("element_type") == "component" and not e.get("deleted_at")]
+    # Also compute total mass: every physical leaf (components, plus subsystems
+    # that carry a mass but no equipment yet) in the space segment.
+    all_physical = [
+        e for e in live
+        if e.get("element_type") in ("component", "subsystem")
+        and e["id"] not in parents_with_children
+        and (e.get("segment") or "space") == "space"
+    ]
     total_mass = sum((e.get("mass_kg", 0) or 0) * (e.get("quantity", 1)) for e in all_physical)
     if total_mass > 0:
         params["mass.dry_mass_kg"] = total_mass
 
     return params
+
+
+def contributing_elements(elements: list[dict]) -> dict[str, list[tuple[str, str]]]:
+    """``{param_path: [(element_id, property_name), ...]}`` — which element
+    properties feed each registry path under the same rules as
+    :func:`project_elements_to_params` (leaves only for ``sum``; every
+    matching element for ``first`` since any of them may be picked).
+    ``performance.<key>`` properties are reported as ``performance.<key>``.
+    """
+    live = [e for e in elements if not e.get("deleted_at")]
+    parents_with_children = {e.get("parent_id") for e in live if e.get("parent_id")}
+    out: dict[str, list[tuple[str, str]]] = {}
+    for param_path, (domain, prop, agg_type) in PROPERTY_TO_PARAM.items():
+        matching = [e for e in live if e.get("subsystem_domain") == domain]
+        if agg_type == "sum":
+            matching = [e for e in matching if e["id"] not in parents_with_children]
+        if matching:
+            out[param_path] = [(e["id"], prop) for e in matching]
+    return out
+
+
+def reverse_map(param_path: str, elements: list[dict]) -> tuple[dict, str] | None:
+    """Registry path -> ``(subsystem element, parameter name)`` it writes back to.
+
+    Only paths in ``PROPERTY_TO_PARAM`` resolve; the target is the
+    ``subsystem`` element of the path's domain (``performance.<key>`` maps
+    to parameter name ``<key>``). ``None`` when the path is unknown or the
+    study has no such subsystem.
+    """
+    entry = PROPERTY_TO_PARAM.get(param_path)
+    if entry is None:
+        return None
+    domain, prop, _ = entry
+    for e in elements:
+        if (e.get("element_type") == "subsystem" and e.get("subsystem_domain") == domain
+                and not e.get("deleted_at")):
+            name = prop.split(".", 1)[1] if prop.startswith("performance.") else prop
+            return e, name
+    return None
 
 
 def merge_agent_params_to_elements(

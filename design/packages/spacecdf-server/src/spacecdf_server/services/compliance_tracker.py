@@ -9,13 +9,25 @@ Evaluable requirements have:
   - threshold_value (e.g., '100')
 
 Narrative requirements (no threshold) carry status from human approval.
+
+SCDF-170: ``threshold_param_path`` may also be an element parameter path
+``el:<element id or name>.<param name>`` (e.g. ``el:EPS.mass_kg``). Those are
+resolved through the *state* when it offers ``resolve(path)`` (an
+``AnalysisContext`` does) or through the ``resolver`` callable given to the
+tracker / ``evaluate_single``; ``recheck`` matches them against the dirty
+set in canonical ``el:<element_id>.<name>`` form (``state.canonical_path``)
+so a write to the element by id also re-checks a requirement written by
+name.
 """
 from __future__ import annotations
 
 import json
 import logging
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Callable
+
+#: Prefix of element-parameter threshold paths.
+ELEMENT_PATH_PREFIX = "el:"
 
 logger = logging.getLogger(__name__)
 
@@ -55,10 +67,39 @@ class ComplianceTracker:
     """Evaluates requirements against design state and tracks violations."""
 
     def __init__(self, requirements: list[dict] | None = None,
-                 relations: list[dict] | None = None):
+                 relations: list[dict] | None = None,
+                 resolver: Callable[[str], float | None] | None = None):
         self._requirements = requirements or []
         self._relations = relations or []
+        self._resolver = resolver
         self._last_results: dict[str, ComplianceResult] = {}
+
+    def set_resolver(self, resolver: Callable[[str], float | None] | None) -> None:
+        """Fallback lookup for paths the state cannot answer (``el:`` paths in particular)."""
+        self._resolver = resolver
+
+    @staticmethod
+    def resolve_path(path: str, state: Any,
+                     resolver: Callable[[str], float | None] | None = None) -> Any:
+        """Achieved value for ``path``: ``state.resolve`` (AnalysisContext) >
+        ``resolver`` > ``state.get`` / dict lookup. ``None`` when unknown."""
+        value = None
+        if hasattr(state, "resolve"):
+            try:
+                value = state.resolve(path)
+            except Exception:
+                value = None
+        if value is None and resolver is not None:
+            try:
+                value = resolver(path)
+            except Exception:
+                value = None
+        if value is None and not path.startswith(ELEMENT_PATH_PREFIX):
+            if hasattr(state, "get"):
+                value = state.get(path)
+            elif isinstance(state, dict):
+                value = state.get(path)
+        return value
 
     def set_requirements(self, requirements: list[dict]) -> None:
         self._requirements = requirements
@@ -96,8 +137,15 @@ class ComplianceTracker:
                 functions.append(other)
         return elements, functions
 
-    def evaluate_single(self, req: dict, state: Any) -> ComplianceResult:
-        """Evaluate a single requirement against design state."""
+    def evaluate_single(self, req: dict, state: Any,
+                        resolver: Callable[[str], float | None] | None = None) -> ComplianceResult:
+        """Evaluate a single requirement against design state.
+
+        ``state`` is anything with ``get(path)`` (a ``DesignState``, a flat
+        dict, an ``AnalysisContext``); ``el:`` paths need a state with
+        ``resolve()`` or a ``resolver`` (argument, else the tracker's own).
+        """
+        resolver = resolver or self._resolver
         req_id = req.get("id", "")
         param_path = req.get("threshold_param_path")
         op = req.get("threshold_op")
@@ -112,14 +160,10 @@ class ComplianceTracker:
         except (ValueError, TypeError, json.JSONDecodeError):
             return ComplianceResult(requirement_id=req_id, status="untestable")
 
-        # Get achieved value from state
-        achieved = None
-        if hasattr(state, 'get'):
-            achieved = state.get(param_path)
-        elif isinstance(state, dict):
-            achieved = state.get(param_path)
+        # Get achieved value from state (``el:`` paths via resolve()/resolver)
+        achieved = self.resolve_path(param_path, state, resolver)
 
-        if achieved is None or not isinstance(achieved, (int, float)):
+        if achieved is None or isinstance(achieved, bool) or not isinstance(achieved, (int, float)):
             return ComplianceResult(requirement_id=req_id, status="untestable",
                                    threshold_value=threshold)
 
@@ -157,11 +201,18 @@ class ComplianceTracker:
         Returns set of newly-violated, newly-cleared, and now-untestable IDs.
         """
         delta = ComplianceDelta()
+        canon = getattr(state, "canonical_path", None)
+        if dirty_param_ids and callable(canon):
+            dirty_param_ids = {canon(p) for p in dirty_param_ids} | set(dirty_param_ids)
 
         for req in self._requirements:
             param_path = req.get("threshold_param_path")
-            if dirty_param_ids and param_path and param_path not in dirty_param_ids:
-                continue  # Not dirty, skip
+            if dirty_param_ids and param_path:
+                candidates = {param_path}
+                if callable(canon):
+                    candidates.add(canon(param_path))
+                if not (candidates & dirty_param_ids):
+                    continue  # Not dirty, skip
 
             result = self.evaluate_single(req, state)
             prev = self._last_results.get(result.requirement_id)

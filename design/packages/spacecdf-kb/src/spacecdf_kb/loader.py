@@ -129,6 +129,20 @@ class KnowledgeBase:
         return results
 
     @property
+    def ground_stations(self) -> list[dict]:
+        """Catalogue ground stations (``ground_stations/networks.yaml`` ``stations:``)."""
+        if not self._loaded:
+            self.load()
+        return list(self._ground_stations)
+
+    def get_ground_station(self, station_id: str) -> dict | None:
+        """Station by ``id`` (or exact ``name``), ``None`` if unknown."""
+        for s in self.ground_stations:
+            if s.get("id") == station_id or s.get("name") == station_id:
+                return s
+        return None
+
+    @property
     def categories(self) -> list[str]:
         if not self._loaded:
             self.load()
