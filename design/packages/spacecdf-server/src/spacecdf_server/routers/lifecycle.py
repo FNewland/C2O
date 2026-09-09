@@ -32,6 +32,46 @@ from ..services.example_missions import list_example_missions, get_example_missi
 router = APIRouter()
 
 
+# ─── SCDF-160 §1.1: functions come from rows when present, legacy JSON otherwise ───
+
+async def _study_functions(study_id: str, study) -> list[dict]:
+    """Legacy-shaped function dicts for this study.
+
+    Delegates to ``services.function_migration.get_functions`` so persisted
+    ``FunctionRow``s win; when no rows exist the study's
+    ``functional_decomposition.functions`` are returned exactly as before.
+    Row dicts are given the legacy keys the lifecycle services read
+    (``parent_function_id``, ``allocated_to``, ``derived_requirement_ids``).
+    """
+    from ..services.function_migration import get_functions
+
+    fd = getattr(study, "functional_decomposition", None)
+    legacy = [f.model_dump() for f in getattr(fd, "functions", [])] if fd else []
+    rows = await get_functions(study_id, legacy)
+    if not rows or "parent_function_id" in rows[0]:  # legacy shape passed through
+        return rows
+
+    from ..db import function_repo
+    from .elements import _elements
+    allocs: dict[str, str] = {}
+    for a in await function_repo.list_allocations_by_study(study_id):
+        if a.get("layer", "SA") == "SA" or a["function_id"] not in allocs:
+            allocs[a["function_id"]] = a["element_id"]
+
+    out = []
+    for r in rows:
+        el = _elements.get(allocs.get(r["id"], ""))
+        allocated_to = (el.get("subsystem_domain") or el.get("id")) if el else (allocs.get(r["id"]) or "")
+        out.append({
+            **r,
+            "parent_function_id": r.get("parent_id"),
+            "allocated_to": allocated_to,
+            "derived_requirement_ids": [],
+            "objective_ids": [],
+        })
+    return out
+
+
 # --- Example Missions ---
 
 @router.get("/example-missions")
@@ -364,7 +404,7 @@ async def traceability_endpoint(study_id: str, budget_name: str) -> dict:
         raise HTTPException(404, f"Budget {budget_name} not found")
 
     reqs = generate_requirements(study.requirements.model_dump())
-    funcs = [f.model_dump() for f in study.functional_decomposition.functions] if study.functional_decomposition else []
+    funcs = await _study_functions(study_id, study)
     objs = [o.model_dump() for o in study.mission_need.objectives] if study.mission_need else []
     shs = [s.model_dump() for s in study.mission_need.stakeholders] if study.mission_need else []
 
@@ -516,7 +556,7 @@ async def generate_requirements_endpoint(study_id: str) -> dict:
         raise HTTPException(404)
 
     objectives = [o.model_dump() for o in study.mission_need.objectives] if study.mission_need.objectives else []
-    functions = [f.model_dump() for f in study.functional_decomposition.functions] if study.functional_decomposition.functions else []
+    functions = await _study_functions(study_id, study)
 
     suggestions = generate_smart_requirements(
         objectives=objectives,
@@ -644,11 +684,9 @@ async def run_consistency_check_endpoint(study_id: str) -> dict:
              "function_id": getattr(r, "function_id", None)}
             for r in getattr(study, "requirements", []) if hasattr(study, "requirements")]
 
-    funcs = []
-    if hasattr(study, "functional_decomposition") and study.functional_decomposition:
-        funcs = [{"id": f.id, "name": f.name, "parent_function_id": f.parent_function_id,
-                  "allocated_to": f.allocated_to, "derived_requirement_ids": f.derived_requirement_ids}
-                 for f in getattr(study.functional_decomposition, "functions", [])]
+    funcs = [{"id": f.get("id"), "name": f.get("name"), "parent_function_id": f.get("parent_function_id"),
+              "allocated_to": f.get("allocated_to"), "derived_requirement_ids": f.get("derived_requirement_ids") or []}
+             for f in await _study_functions(study_id, study)]
 
     phase_id = study.phase.value if hasattr(study.phase, "value") else str(study.phase)
 

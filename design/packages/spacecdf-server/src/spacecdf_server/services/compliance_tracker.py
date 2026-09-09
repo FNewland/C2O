@@ -33,21 +33,68 @@ class ComplianceResult:
 
 @dataclass
 class ComplianceDelta:
-    """Changes from a recheck — what shifted since last evaluation."""
+    """Changes from a recheck — what shifted since last evaluation.
+
+    ``affected_elements`` / ``affected_functions`` (SCDF-160 §1.4) list the
+    design entities linked to the newly violated or cleared requirements by
+    ``satisfies`` / ``allocates`` relations (plus ``RequirementRow.element_id``),
+    so the UI can flag the component or function that owns the problem.
+    """
     newly_violated: list[str] = field(default_factory=list)
     newly_cleared: list[str] = field(default_factory=list)
     now_untestable: list[str] = field(default_factory=list)
+    affected_elements: list[str] = field(default_factory=list)
+    affected_functions: list[str] = field(default_factory=list)
+
+
+#: Relation kinds that bind a requirement to the entity that meets it.
+LINK_RELATION_KINDS = ("satisfies", "allocates")
 
 
 class ComplianceTracker:
     """Evaluates requirements against design state and tracks violations."""
 
-    def __init__(self, requirements: list[dict] | None = None):
+    def __init__(self, requirements: list[dict] | None = None,
+                 relations: list[dict] | None = None):
         self._requirements = requirements or []
+        self._relations = relations or []
         self._last_results: dict[str, ComplianceResult] = {}
 
     def set_requirements(self, requirements: list[dict]) -> None:
         self._requirements = requirements
+
+    def set_relations(self, relations: list[dict]) -> None:
+        """Typed requirement relations (``db/relation_repo`` dicts) used to
+        resolve ``affected_elements`` / ``affected_functions`` in the delta."""
+        self._relations = relations or []
+
+    async def load_relations(self, study_id: str) -> None:
+        """Convenience: pull the study's relations from the DB."""
+        from ..db.relation_repo import list_relations_by_study
+        self._relations = await list_relations_by_study(study_id)
+
+    def linked_entities(self, req_id: str) -> tuple[list[str], list[str]]:
+        """(element ids, function ids) linked to ``req_id`` by satisfies/allocates
+        relations in either direction, plus the requirement's own ``element_id``."""
+        elements: list[str] = []
+        functions: list[str] = []
+        req = next((r for r in self._requirements if r.get("id") == req_id), None)
+        if req and req.get("element_id"):
+            elements.append(req["element_id"])
+        for rel in self._relations:
+            if rel.get("kind") not in LINK_RELATION_KINDS:
+                continue
+            if rel.get("source_kind") == "requirement" and rel.get("source_id") == req_id:
+                kind, other = rel.get("target_kind"), rel.get("target_id")
+            elif rel.get("target_kind") == "requirement" and rel.get("target_id") == req_id:
+                kind, other = rel.get("source_kind"), rel.get("source_id")
+            else:
+                continue
+            if kind == "element" and other and other not in elements:
+                elements.append(other)
+            elif kind == "function" and other and other not in functions:
+                functions.append(other)
+        return elements, functions
 
     def evaluate_single(self, req: dict, state: Any) -> ComplianceResult:
         """Evaluate a single requirement against design state."""
@@ -129,6 +176,15 @@ class ComplianceTracker:
                 delta.now_untestable.append(result.requirement_id)
 
             self._last_results[result.requirement_id] = result
+
+        for req_id in [*delta.newly_violated, *delta.newly_cleared]:
+            els, fns = self.linked_entities(req_id)
+            for e in els:
+                if e not in delta.affected_elements:
+                    delta.affected_elements.append(e)
+            for f in fns:
+                if f not in delta.affected_functions:
+                    delta.affected_functions.append(f)
 
         return delta
 

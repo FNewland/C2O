@@ -195,6 +195,23 @@ async def db_create_interface(interface_dict: dict) -> None:
         logger.exception("db_create_interface failed for %s", interface_dict.get("id"))
 
 
+async def db_update_interface(interface_id: str, full_dict: dict) -> None:
+    """Persist the full in-memory interface dict (write-through, SCDF-160 §1.2)."""
+    try:
+        factory = get_session_factory()
+        async with factory() as session:
+            kw = _dict_to_interface_row_kwargs(full_dict)
+            kw.pop("id", None)
+            kw.pop("created_at", None)
+            if isinstance(kw.get("deleted_at"), str):
+                kw["deleted_at"] = datetime.fromisoformat(kw["deleted_at"])
+            stmt = sa_update(ElementInterfaceRow).where(ElementInterfaceRow.id == interface_id).values(**kw)
+            await session.execute(stmt)
+            await session.commit()
+    except Exception:
+        logger.exception("db_update_interface failed for %s", interface_id)
+
+
 async def db_soft_delete_interface(interface_id: str, deleted_at_iso: str) -> None:
     """Set deleted_at on an interface row."""
     try:

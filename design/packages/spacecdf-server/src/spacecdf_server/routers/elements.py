@@ -25,6 +25,7 @@ from ..db.element_repo import (
     db_soft_delete_element,
     db_soft_delete_interface,
     db_update_element,
+    db_update_interface,
     load_all_elements,
 )
 
@@ -724,6 +725,25 @@ async def delete_interface(interface_id: str) -> dict:
     # Persist soft-delete to DB
     await db_soft_delete_interface(interface_id, deleted_at)
     return {"id": interface_id, "deleted": True}
+
+
+# ─── Exchange items on interfaces (SCDF-160 §1.2; used by routers/exchange_items.py) ───
+
+async def set_interface_exchange_items(interface_id: str, exchange_item_ids: list[str]) -> dict:
+    """Replace the exchange-item list of an interface, write-through to DB.
+
+    Kept here so the interface cache stays the single source for readers.
+    Raises ``KeyError`` when the interface is unknown or deleted.
+    """
+    iface = _interfaces.get(interface_id)
+    if not iface or iface.get("deleted_at"):
+        raise KeyError(interface_id)
+    ids = list(dict.fromkeys(exchange_item_ids))
+    iface["exchange_item_ids_json"] = ids
+    iface["exchange_item_ids"] = ids
+    iface["version"] = int(iface.get("version") or 1) + 1
+    await db_update_interface(interface_id, iface)
+    return iface
 
 
 # ─── Modes ───
