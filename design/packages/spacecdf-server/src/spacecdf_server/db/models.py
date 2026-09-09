@@ -230,6 +230,7 @@ class DesignElementRow(Base):
     power_peak_w: Mapped[float | None] = mapped_column(nullable=True)
     volume_cm3: Mapped[float | None] = mapped_column(nullable=True)
     dimensions_json: Mapped[list | None] = mapped_column(JSON, nullable=True)
+    position_json: Mapped[list | None] = mapped_column(JSON, nullable=True)  # [x,y,z] m, body frame (SCDF-176)
 
     # Financial
     cost_nre_keur: Mapped[float | None] = mapped_column(nullable=True)
@@ -600,3 +601,40 @@ class AnalysisConflictRow(Base):
     suggested_fix: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
     resolved_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+
+class OptionRow(Base):
+    """Design option / variant (ECSS-E-TM-10-25 Option). Parameter overrides may be option-scoped (SCDF-172)."""
+    __tablename__ = "options"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    study_id: Mapped[str] = mapped_column(String(32), ForeignKey("studies.id"), index=True)
+    name: Mapped[str] = mapped_column(String(128))
+    description: Mapped[str] = mapped_column(Text, default="")
+    is_baseline: Mapped[bool] = mapped_column(default=False)
+    branched_from_option_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow, onupdate=_utcnow)
+
+
+class VerificationItemRow(Base):
+    """Per-requirement verification planning item (SCDF-175, ECSS-E-ST-10-02C)."""
+    __tablename__ = "verification_items"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    study_id: Mapped[str] = mapped_column(String(32), ForeignKey("studies.id"), index=True)
+    requirement_id: Mapped[str] = mapped_column(String(32), index=True)
+    method: Mapped[str | None] = mapped_column(String(8), nullable=True)      # A T I R D
+    level: Mapped[str | None] = mapped_column(String(16), nullable=True)      # unit subsystem system segment
+    phase: Mapped[str | None] = mapped_column(String(8), nullable=True)       # PDR CDR QR AR
+    facility: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    procedure_ref: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    acceptance_criterion: Mapped[str | None] = mapped_column(Text, nullable=True)
+    status: Mapped[str] = mapped_column(String(16), default="planned")        # planned in_progress passed failed waived
+    evidence_ref: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    edited_by_user: Mapped[bool] = mapped_column(default=False)
+    notes: Mapped[str] = mapped_column(Text, default="")
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow, onupdate=_utcnow)
