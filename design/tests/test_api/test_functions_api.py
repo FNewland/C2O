@@ -173,3 +173,31 @@ async def test_lifecycle_prefers_rows(client, study_obj, study):
     assert [r["name"] for r in rows] == ["Row function"]
     assert rows[0]["parent_function_id"] is None and rows[0]["allocated_to"] == "eps"
     assert rows[0]["derived_requirement_ids"] == []
+
+
+async def test_lifecycle_consistency_reads_functions_from_rows_and_legacy(client):
+    """SCDF-160 verification regression: /lifecycle/consistency/{id} 500'd on every study
+    (it iterated ``study.requirements`` — the MissionRequirements input model — as if it
+    were the requirement list). It must answer for a study with only legacy JSON functions
+    and for one with FunctionRows."""
+    r = await client.post("/api/studies/", json={
+        "requirements": {"name": "Consistency"},
+        "mission_need": {"problem_statement": "p", "objectives": [
+            {"id": "O1", "text": "Image the UK", "priority": "primary", "type": "performance"}]},
+    })
+    assert r.status_code == 200, r.text
+    sid = r.json()["id"]
+    assert r.json()["functions"] > 0  # legacy JSON functions generated from the objective
+    assert (await client.get(f"/api/studies/{sid}/functions")).json() == []
+
+    await client.post("/api/requirements/", json={"id": "MR-C", "study_id": sid, "level": "mission",
+                                                  "text": "The mission shall image the UK.", "objective_id": "O1"})
+    legacy = await client.get(f"/api/lifecycle/consistency/{sid}")
+    assert legacy.status_code == 200, legacy.text
+    assert legacy.json()["total_checks"] > 0
+
+    m = await client.post(f"/api/studies/{sid}/functions/migrate-legacy")
+    assert m.status_code == 200 and m.json()["functions_created"] > 0
+    rows = await client.get(f"/api/lifecycle/consistency/{sid}")
+    assert rows.status_code == 200, rows.text
+    assert rows.json()["total_checks"] == legacy.json()["total_checks"]

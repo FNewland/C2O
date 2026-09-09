@@ -679,10 +679,14 @@ async def run_consistency_check_endpoint(study_id: str) -> dict:
                            for o in getattr(study.mission_need, "objectives", [])],
         }
 
-    reqs = [{"id": r.id, "text": r.text, "domain": r.domain,
-             "objective_id": getattr(r, "objective_id", None),
-             "function_id": getattr(r, "function_id", None)}
-            for r in getattr(study, "requirements", []) if hasattr(study, "requirements")]
+    # ``study.requirements`` is the MissionRequirements *input* model, not the
+    # requirement list (iterating it yielded (name, value) tuples -> 500).
+    # The requirement hierarchy lives in the requirements router store.
+    from .requirements import _requirements
+    reqs = [{"id": r.get("id"), "text": r.get("text", ""), "domain": r.get("domain") or r.get("responsible_position"),
+             "objective_id": r.get("objective_id"), "function_id": r.get("function_id")}
+            for r in _requirements.values()
+            if r.get("study_id") == study_id and r.get("status") != "retired"]
 
     funcs = [{"id": f.get("id"), "name": f.get("name"), "parent_function_id": f.get("parent_function_id"),
               "allocated_to": f.get("allocated_to"), "derived_requirement_ids": f.get("derived_requirement_ids") or []}
