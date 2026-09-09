@@ -13,6 +13,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useUIStore } from '../stores/uiStore'
 
 import { TraceabilityTree } from '../components/TraceabilityTree'
+import { VVPlanPanel } from '../components/VVPlanPanel'
 
 const API = '/api'
 
@@ -76,6 +77,7 @@ export function VVPanel() {
         {activeSection === 'fmeca' && <FMECASummary studyId={studyId} />}
         {activeSection === 'trace' && (<>
           <div style={{ marginBottom: '0.75rem' }}><TraceabilityTree studyId={studyId} /></div>
+          <div style={{ marginBottom: '0.75rem' }}><VVPlanPanel studyId={studyId} /></div>
           <BudgetTraceability studyId={studyId} />
         </>)}
         {activeSection === 'risks' && <RiskRegister studyId={studyId} />}

@@ -259,3 +259,121 @@ export interface GroundStationsResponse {
 // ═══════════════════════════════════════════════════════════════════════
 // SCDF-174 — Ground segment closure — END
 // ═══════════════════════════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════════════════════
+// SCDF-175 — V&V closure (services/vv_closure.py, routers/analyses_vv.py) — BEGIN
+// ═══════════════════════════════════════════════════════════════════════
+
+export type VVMethod = 'A' | 'T' | 'I' | 'R' | 'D'
+export type VVLevel = 'unit' | 'subsystem' | 'system' | 'segment'
+export type VVPhase = 'PDR' | 'CDR' | 'QR' | 'AR'
+export type VVStatus = 'planned' | 'in_progress' | 'passed' | 'failed' | 'waived'
+
+/** One ``verification_items`` row. */
+export interface VerificationItem {
+  id: string
+  study_id: string
+  requirement_id: string
+  method: VVMethod | null
+  level: VVLevel | null
+  phase: VVPhase | null
+  facility: string | null
+  procedure_ref: string | null
+  acceptance_criterion: string | null
+  status: VVStatus
+  evidence_ref: string | null
+  edited_by_user: boolean
+  notes: string
+  created_at: string
+  updated_at: string
+}
+
+/** Item joined with its requirement (GET /studies/{id}/verification-items, run response). */
+export interface VerificationItemView extends VerificationItem {
+  requirement_code: string
+  requirement_text: string
+  requirement_level: string | null
+  threshold_param_path: string | null
+  threshold_op: string | null
+  threshold_value: string | null
+  linked_elements: string[]
+  linked_element_names: string[]
+  linked_functions: string[]
+  /** closed by an analysis run (evidence ``analysis:<run_id>``) and not hand-edited */
+  auto_closed: boolean
+}
+
+export interface VVLevelRollup {
+  total: number
+  planned: number
+  in_progress: number
+  passed: number
+  failed: number
+  waived: number
+}
+
+export interface VerificationItemsResponse {
+  study_id: string
+  items: VerificationItemView[]
+  by_level: Record<VVLevel, VVLevelRollup>
+  total: number
+}
+
+export interface VVRunSummary {
+  vv_items_total: number
+  vv_items_passed: number
+  vv_items_failed: number
+  vv_items_planned: number
+  vv_closure_pct: number
+  vv_by_analysis_pct: number
+  items_waived: number
+  items_auto_closed: number
+  by_level: Record<VVLevel, VVLevelRollup>
+  by_method: Record<VVMethod, number>
+  conflicts: number
+  parameters_written?: number
+  shadowed?: string[]
+  run_id?: string | null
+}
+
+export interface VVRunResponse {
+  run_id: string
+  analysis: 'vv'
+  option_id: string | null
+  status: AnalysisRunStatus
+  summary: VVRunSummary
+  items: VerificationItemView[]
+  parameters: { name: string; value: number; element_id: string }[]
+  shadowed: { name: string; value: number; element_id: string }[]
+  conflicts: AnalysisConflict[]
+  warnings: string[]
+  stale: boolean
+}
+
+export interface VVRun extends AnalysisRun {
+  summary: VVRunSummary
+  conflicts?: AnalysisConflict[]
+  items?: VerificationItemView[]
+}
+
+export interface VerificationItemPatch {
+  method?: VVMethod | null
+  level?: VVLevel | null
+  phase?: VVPhase | null
+  facility?: string | null
+  procedure_ref?: string | null
+  acceptance_criterion?: string | null
+  status?: VVStatus
+  evidence_ref?: string | null
+  notes?: string
+}
+
+export interface VerificationEvidencePost {
+  evidence_ref?: string | null
+  status: VVStatus
+  notes?: string
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// SCDF-175 — V&V closure — END
+// ═══════════════════════════════════════════════════════════════════════

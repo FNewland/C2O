@@ -41,6 +41,7 @@ Public API:
     list_analyses(study_id, option_id=None) -> list[dict]                            (+ stale)
     resolve_conflict(conflict_id) -> dict | None
     get_tracker(study_id) -> ComplianceTracker
+    on_publish(callback) / off_publish(callback)   post-publish hooks (SCDF-175 V&V auto-closure)
     data_dir() / series_path(run_id) / save_series(run_id, series) / load_series(ref)
     ANALYSIS_INPUT_KEYS
 """
@@ -51,7 +52,7 @@ import logging
 import os
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Awaitable, Callable
 
 from spacecdf_common.models.parameters import WELL_KNOWN_PARAMETERS
 
@@ -270,6 +271,35 @@ def reset_trackers() -> None:
     _trackers.clear()
 
 
+# ── Post-publish hooks (SCDF-175) ──────────────────────────────────────
+
+#: ``async def cb(study_id, analysis, result: PublishResult) -> None`` — called
+#: after every publish once compliance has been rechecked, before the
+#: ``analysis_completed`` broadcast. Hooks never break the publish: exceptions
+#: are logged and swallowed.
+_publish_hooks: list[Callable[..., Awaitable[None]]] = []
+
+
+def on_publish(callback: Callable[..., Awaitable[None]]) -> Callable[..., Awaitable[None]]:
+    """Register ``callback(study_id, analysis, result)`` (idempotent). Returns it."""
+    if callback not in _publish_hooks:
+        _publish_hooks.append(callback)
+    return callback
+
+
+def off_publish(callback: Callable[..., Awaitable[None]]) -> None:
+    if callback in _publish_hooks:
+        _publish_hooks.remove(callback)
+
+
+async def _run_publish_hooks(study_id: str, analysis: str, result: "PublishResult") -> None:
+    for cb in list(_publish_hooks):
+        try:
+            await cb(study_id, analysis, result)
+        except Exception:  # pragma: no cover - defensive
+            logger.exception("publish hook %r failed for %s/%s", cb, study_id, analysis)
+
+
 # ── Sink ────────────────────────────────────────────────────────────────
 
 class ResultsSink:
@@ -357,6 +387,8 @@ class ResultsSink:
                       "margin_pct": r.margin_pct}
                 for rid, r in tracker.get_all_results().items()
             }
+
+        await _run_publish_hooks(study_id, analysis, result)
 
         if broadcast:
             try:
