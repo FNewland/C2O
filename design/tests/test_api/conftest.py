@@ -20,14 +20,14 @@ async def client(db_factory):  # noqa: F811
 
     elements._elements.clear()
     elements._interfaces.clear()
-    requirements._requirements.clear()
+    requirements.reset_requirement_cache()
     saved_studies = dict(studies.get_study_store())
     studies.get_study_store().clear()
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
         yield c
     elements._elements.clear()
     elements._interfaces.clear()
-    requirements._requirements.clear()
+    requirements.reset_requirement_cache()
     studies.get_study_store().clear()
     studies.get_study_store().update(saved_studies)
 

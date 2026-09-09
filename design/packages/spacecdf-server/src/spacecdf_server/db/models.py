@@ -141,6 +141,8 @@ class RequirementRow(Base):
         String(64), ForeignKey("design_elements.id"), nullable=True, index=True
     )
     derived_from_requirement_id: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    # SCDF-160: objective trace (MissionNeed.objectives[].id) — read by the traceability tree
+    objective_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
     # SCDF-160 §1.4: identity in external tools (Capella Requirements VP / ReqIF)
     external_id: Mapped[str | None] = mapped_column(String(128), nullable=True, index=True)
     external_ids_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)

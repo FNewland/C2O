@@ -68,6 +68,13 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.warning("Element cache init failed (continuing with empty cache): %s", e)
 
+    # Load persisted requirements into the write-through cache (SCDF-160 N0)
+    try:
+        from .routers.requirements import init_requirement_cache
+        await init_requirement_cache()
+    except Exception as e:
+        logger.warning("Requirement cache init failed (continuing with empty cache): %s", e)
+
     # Load persisted studies into the write-through cache
     try:
         from .routers.studies import init_study_cache

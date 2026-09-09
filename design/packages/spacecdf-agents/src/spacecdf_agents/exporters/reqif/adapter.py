@@ -18,7 +18,7 @@ Export
 
 Source of truth for requirements is the in-memory store the API serves
 (``routers.requirements._requirements``); the ``requirements`` DB table
-(``repositories/requirement_repo.py``) is not wired to the API today, so the
+(``db/requirement_repo.py``) is write-through from the API (SCDF-160 N0), so the
 ``external_id`` write-back updates the store and mirrors into the DB row
 *if* one exists (best effort, never raises).
 
@@ -308,6 +308,12 @@ async def import_requirements_reqif(study_id: str, data: bytes | str) -> ImportR
         store[rid]["parent_id"] = pid
         if pid and not store[rid].get("derived_from_requirement_id"):
             store[rid]["derived_from_requirement_id"] = pid
+
+    # write-through (SCDF-160 N0): imported requirements must survive a restart
+    from spacecdf_server.db.requirement_repo import db_upsert_requirement
+    for rid in result.id_map.values():
+        if rid in store:
+            await db_upsert_requirement(store[rid])
 
     # relations
     existing_rels = {(r["kind"], r["source_id"], r["target_id"]) for r in (await load_all_relations(study_id)).values()

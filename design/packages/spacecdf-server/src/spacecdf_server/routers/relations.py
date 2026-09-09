@@ -105,8 +105,9 @@ async def list_relations(study_id: str, kind: str | None = None) -> list[dict]:
 
 # ─── Traceability ───
 
-def _study_requirements(study_id: str) -> dict[str, dict]:
-    from .requirements import _requirements
+async def _study_requirements(study_id: str) -> dict[str, dict]:
+    from .requirements import _requirements, ensure_requirements_loaded
+    await ensure_requirements_loaded()
     return {
         r["id"]: r for r in _requirements.values()
         if r.get("study_id") == study_id and r.get("status") != "retired"
@@ -193,7 +194,7 @@ async def get_traceability_tree(study_id: str) -> dict:
     from .studies import get_study_store
 
     study = get_study_store().get(study_id)
-    reqs = _study_requirements(study_id)
+    reqs = await _study_requirements(study_id)
     relations = await repo.list_relations_by_study(study_id)
     functions_by_id = await function_repo.load_all_functions(study_id)
 
@@ -261,14 +262,15 @@ async def get_traceability_tree(study_id: str) -> dict:
 @router.get("/requirements/{requirement_id}/trace")
 async def get_requirement_trace(requirement_id: str) -> dict:
     """Up (parents → objectives) and down (children → elements/functions → verification)."""
-    from .requirements import _requirements
+    from .requirements import _requirements, ensure_requirements_loaded
     from .studies import get_study_store
 
+    await ensure_requirements_loaded()
     req = _requirements.get(requirement_id)
     if not req:
         raise HTTPException(404, f"Requirement {requirement_id} not found")
     study_id = req.get("study_id") or ""
-    reqs = _study_requirements(study_id)
+    reqs = await _study_requirements(study_id)
     reqs.setdefault(requirement_id, req)
     relations = await repo.list_relations_by_study(study_id)
     functions_by_id = await function_repo.load_all_functions(study_id)

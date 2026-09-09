@@ -133,3 +133,26 @@ round-trip on a fresh DB and on a DB upgraded from `master`. Two defects were fo
 the branch (B1 was the frontend agent's reported symptom; B2 was a pre-existing 500). The
 remaining findings (N0–N4) are pre-existing or out of the design's stated scope, with N0
 (volatile requirement store) being the one most likely to bite users next.
+
+## 6. Follow-up — N0 resolved (2026-09-09)
+
+Requirements are now persistent, using the same write-through-cache pattern as
+`routers/elements.py`. `routers/requirements.py` keeps `_requirements` as the read path
+(still importable by relations/exporters/compliance); POST/PATCH/DELETE/derive mirror to the
+`requirements` table via `db/requirement_repo.py` (chosen as canonical — dict-based, column-driven
+mapping; `repositories/requirement_repo.py` is the Pydantic-model variant and is untouched).
+The cache is hydrated by `init_requirement_cache()` in the app lifespan and lazily on first
+access (`ensure_requirements_loaded()`, also awaited by the traceability tree/trace endpoints).
+`RequirementRow` gained `objective_id` (the router already served it; `ensure_schema_upgrades`
+adds the column to existing DBs — verified). `external_id` is now accepted on POST/PATCH and
+persisted. The ReqIF importer upserts imported requirements into the table.
+
+Evidence: `tests/test_api/test_requirements_persistence.py` (create/patch/derive/delete, tree,
+traceability tree and trace all correct after a simulated restart); full suite 231 passed,
+1 skipped (`--ignore=tests/test_level_workbench.py`). Live: uvicorn on a temp DB, POST + PATCH a
+requirement, kill, restart — `GET /api/requirements/{id}`, `/tree` and
+`/studies/{id}/traceability/tree` all return it with the patched status.
+
+Still volatile (out of this fix): the Capella importer's `_spine.upsert_requirement` writes into
+the cache from a sync path and is not mirrored; it should call `db_upsert_requirement` once that
+path is made async.
