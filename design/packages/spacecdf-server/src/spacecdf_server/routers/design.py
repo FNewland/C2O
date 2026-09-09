@@ -188,7 +188,9 @@ async def run_design_loop(study_id: str, request: DesignRunRequest | None = None
             from ..services.element_projection import merge_agent_params_to_elements
             agent_values = {pid: p["value"] for pid, p in params.items()}
             modified = merge_agent_params_to_elements(ctx.elements, agent_values)
-            if modified:
+            if modified and ctx.option_id is None:
+                # SCDF-172: element columns are baseline state; option runs
+                # only write option-scoped parameter rows (ResultsSink below).
                 await _persist_merged_elements(ctx.elements, modified)
             publish = await ResultsSink().publish(
                 study_id, DESIGN_LOOP,

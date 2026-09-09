@@ -27,9 +27,11 @@ thermal / physics closures and the V&V planner need:
 ``context_hash(ctx, keys)`` is a stable SHA-256 over the named subsets and
 is what ``analysis_results`` stores as ``inputs_hash`` for stale detection.
 
-Option scoping (SCDF-172 arrives later): ``option_id`` selects parameter rows
-whose ``option_id`` matches and falls back to the baseline rows (``NULL``)
-for everything else. Elements are not cloned per option.
+Option scoping (SCDF-172): ``option_id`` selects parameter rows whose
+``option_id`` matches and falls back to the baseline rows (``NULL``) for
+everything else (``equations.evaluate_study(study_id, option_id)``).
+``EffectiveParam.option_id`` is set on the overrides. Elements are not cloned
+per option; analysis runs/conflicts are option-scoped.
 
 Public API:
     build_context(study_id, *, option_id=None) -> AnalysisContext
@@ -217,37 +219,21 @@ async def _load_params(study_id: str, option_id: str | None) -> dict[str, dict[s
     from . import equations
 
     out: dict[str, dict[str, EffectiveParam]] = {}
-    res = await equations.evaluate_study(study_id)
+    # SCDF-172: the equation engine evaluates baseline ∪ option overrides in one
+    # pass (option rows shadow baseline rows; formulas see the option's values).
+    res = await equations.evaluate_study(study_id, option_id=option_id)
     for p in res.get("parameters", []):
         ep = EffectiveParam(
             element_id=p["element_id"], name=p["name"], value=p.get("effective_value"),
             unit=p.get("unit") or "", quantity_kind=p.get("quantity_kind") or "",
             switch=p.get("value_switch") or "computed", provenance=p.get("provenance") or "column",
             formula=p.get("formula"), formula_kind=p.get("formula_kind"),
-            owner_domain=p.get("owner_domain"), errors=list(p.get("errors") or []),
+            owner_domain=p.get("owner_domain"), option_id=p.get("option_id"),
+            errors=list(p.get("errors") or []),
         )
         if ep.switch == "reference" and ep.provenance == "agent":
             ep.provenance = "reference"
         out.setdefault(ep.element_id, {})[ep.name] = ep
-    if option_id:
-        # Option rows shadow the baseline (formulas in option rows are not evaluated here — SCDF-172).
-        defs = await parameter_repo.load_all_parameter_definitions()
-        for row in (await parameter_repo.load_all_element_parameters(study_id)).values():
-            if row.get("option_id") != option_id or row.get("iteration", 1) != 1:
-                continue
-            defn = defs.get(row["definition_id"])
-            if not defn:
-                continue
-            sw = row.get("value_switch") or "computed"
-            value = {"manual": row.get("manual_value"), "reference": row.get("reference_value")}.get(
-                sw, row.get("computed_value"))
-            prov = "manual" if sw == "manual" else "reference" if sw == "reference" else \
-                "formula" if row.get("formula") else "agent"
-            out.setdefault(row["element_id"], {})[defn["name"]] = EffectiveParam(
-                element_id=row["element_id"], name=defn["name"], value=value, unit=defn.get("unit") or "",
-                quantity_kind=defn.get("quantity_kind") or "", switch=sw, provenance=prov,
-                formula=row.get("formula"), formula_kind=row.get("formula_kind"),
-                owner_domain=row.get("owner_domain"), option_id=option_id)
     return out
 
 
@@ -492,6 +478,13 @@ async def build_context(study_id: str, *, option_id: str | None = None) -> Analy
     missing optional parts — they come back empty with a note in ``warnings``)."""
     from ..routers.studies import get_study_store
 
+    if option_id:
+        # SCDF-172: the baseline option's own id addresses the NULL rows.
+        try:
+            from ..db import option_repo
+            option_id = await option_repo.resolve_option_id(option_id)
+        except Exception:
+            pass   # unknown id → treated as an option without overrides
     ctx = AnalysisContext(study_id=study_id, option_id=option_id)
     ctx.study = get_study_store().get(study_id)
 

@@ -1,0 +1,126 @@
+/**
+ * OptionSwitcher — pick the active design option (SCDF-172).
+ *
+ * Small enough for the workbench status bar: a dropdown over
+ * GET /api/studies/{id}/options (baseline first), "branch" (POST
+ * /api/options/{id}/branch — copies the current option's overrides into a new
+ * option and activates it), "rename" (PATCH /api/options/{id}) and "delete"
+ * (DELETE /api/options/{id}; not for the baseline). Selecting the baseline
+ * stores `null` in `optionStore` so requests carry no `option_id`.
+ *
+ * Not mounted here — SCDF-178 places it in `PresenceBar` (workbench/PresenceBar.tsx)
+ * between the user list and the AI status indicator, or next to `StudyStepper`.
+ */
+import { useEffect, useState } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useUIStore } from '../stores/uiStore'
+import { useOptionStore } from '../stores/optionStore'
+import type { DesignOption } from '../types/options'
+
+const API = '/api'
+
+async function jsonOrThrow(res: Response) {
+  if (!res.ok) {
+    let msg = `${res.status}`
+    try { const b = await res.json(); msg = typeof b.detail === 'string' ? b.detail : JSON.stringify(b.detail ?? b) } catch { /* noop */ }
+    throw new Error(msg)
+  }
+  return res.json()
+}
+
+const btn = (color = 'var(--text-secondary)'): React.CSSProperties => ({
+  background: 'none', border: '1px solid var(--border)', borderRadius: '3px', cursor: 'pointer',
+  fontSize: '0.58rem', padding: '0 0.3rem', color, lineHeight: '1.1rem',
+})
+
+export function useOptions(studyId: string | null) {
+  return useQuery<DesignOption[]>({
+    queryKey: ['options', studyId],
+    queryFn: () => fetch(`${API}/studies/${studyId}/options`).then(jsonOrThrow),
+    enabled: !!studyId,
+  })
+}
+
+export function OptionSwitcher({ studyId: studyIdProp }: { studyId?: string | null }) {
+  const wbStudy = useUIStore(s => s.studyId)
+  const studyId = studyIdProp ?? wbStudy
+  const qc = useQueryClient()
+  const activeId = useOptionStore(s => (studyId ? s.activeByStudy[studyId] ?? null : null))
+  const setActive = useOptionStore(s => s.setActiveOption)
+  const [error, setError] = useState<string | null>(null)
+  const { data: options = [] } = useOptions(studyId)
+
+  const baseline = options.find(o => o.is_baseline)
+  const active = options.find(o => o.id === activeId) ?? baseline
+  // A stale persisted id (deleted option) falls back to the baseline.
+  useEffect(() => {
+    if (studyId && activeId && options.length > 0 && !options.some(o => o.id === activeId)) setActive(studyId, null)
+  }, [studyId, activeId, options, setActive])
+
+  const invalidate = () => {
+    qc.invalidateQueries({ queryKey: ['options', studyId] })
+    qc.invalidateQueries({ queryKey: ['element-parameters'] })
+    qc.invalidateQueries({ queryKey: ['study-parameters', studyId] })
+    qc.invalidateQueries({ queryKey: ['analyses'] })
+    qc.invalidateQueries({ queryKey: ['conflicts'] })
+  }
+  const onErr = (e: Error) => setError(e.message)
+
+  const branch = useMutation({
+    mutationFn: (name: string) =>
+      fetch(`${API}/options/${active?.id}/branch`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }),
+      }).then(jsonOrThrow),
+    onSuccess: (opt: DesignOption) => { invalidate(); if (studyId) setActive(studyId, opt.id); setError(null) },
+    onError: onErr,
+  })
+  const rename = useMutation({
+    mutationFn: ({ id, name }: { id: string; name: string }) =>
+      fetch(`${API}/options/${id}`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }),
+      }).then(jsonOrThrow),
+    onSuccess: () => { invalidate(); setError(null) }, onError: onErr,
+  })
+  const remove = useMutation({
+    mutationFn: (id: string) => fetch(`${API}/options/${id}`, { method: 'DELETE' }).then(jsonOrThrow),
+    onSuccess: () => { invalidate(); if (studyId) setActive(studyId, null); setError(null) }, onError: onErr,
+  })
+
+  if (!studyId) return null
+
+  const onSelect = (id: string) => {
+    const opt = options.find(o => o.id === id)
+    setActive(studyId, !opt || opt.is_baseline ? null : opt.id)
+    invalidate()
+  }
+  const onBranch = () => {
+    const name = window.prompt(`Branch "${active?.name ?? 'Baseline'}" as:`, `${active?.name ?? 'Baseline'} (copy)`)
+    if (name && name.trim()) branch.mutate(name.trim())
+  }
+  const onRename = () => {
+    if (!active || active.is_baseline) return
+    const name = window.prompt('Rename option:', active.name)
+    if (name && name.trim() && name.trim() !== active.name) rename.mutate({ id: active.id, name: name.trim() })
+  }
+  const onDelete = () => {
+    if (!active || active.is_baseline) return
+    if (window.confirm(`Delete option "${active.name}" and its overrides?`)) remove.mutate(active.id)
+  }
+
+  const isBaseline = !active || active.is_baseline
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.6rem' }} title="Design option (SCDF-172): parameter overrides and analysis runs are scoped to the active option">
+      <span style={{ color: 'var(--text-secondary)' }}>Option</span>
+      <select value={active?.id ?? ''} onChange={e => onSelect(e.target.value)}
+        style={{ fontSize: '0.6rem', padding: '0 0.2rem', background: 'var(--bg-primary)', color: isBaseline ? 'var(--text-primary)' : '#f59e0b', border: '1px solid var(--border)', borderRadius: '3px', fontWeight: isBaseline ? 400 : 600 }}>
+        {options.map(o => <option key={o.id} value={o.id}>{o.is_baseline ? 'Baseline' : o.name}</option>)}
+      </select>
+      <button style={btn('#3b82f6')} onClick={onBranch} disabled={branch.isPending} title="Copy the active option's overrides into a new option">branch</button>
+      {!isBaseline && <button style={btn()} onClick={onRename} title="Rename">rename</button>}
+      {!isBaseline && <button style={btn('#ef4444')} onClick={onDelete} title="Delete this option and its overrides">×</button>}
+      {error && <span style={{ color: '#ef4444' }} title={error}>error <button style={btn('#ef4444')} onClick={() => setError(null)}>ok</button></span>}
+    </span>
+  )
+}
+
+export default OptionSwitcher

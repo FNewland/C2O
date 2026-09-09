@@ -25,8 +25,10 @@ the bulky ``series`` as JSON under ``<SPACECDF_DATA_DIR>/analysis/<run_id>.json`
 ``stale`` by comparing the stored ``inputs_hash`` with a fresh
 ``context_hash`` over the keys the analysis declares in ``ANALYSIS_INPUT_KEYS``.
 
-Option scoping: runs and conflicts carry ``option_id``; parameter rows do not
-yet (single row per element/definition — SCDF-172 will add option rows).
+Option scoping: runs, conflicts *and* parameter writes carry ``option_id``
+(SCDF-172). Publishing with ``option_id=X`` upserts X override rows (the
+baseline rows are untouched) and skips the well-known column write — element
+columns are baseline state.
 
 Public API:
     ParamWrite, Conflict, PublishResult
@@ -310,10 +312,15 @@ class ResultsSink:
             existing = ctx.params.get(element_id, {}).get(pw.name)
             payload: dict[str, Any] = {
                 "study_id": study_id, "element_id": element_id, "definition_name": pw.name,
-                "computed_value": float(pw.value), "owner_domain": analysis,
+                "computed_value": float(pw.value), "owner_domain": analysis, "option_id": option_id,
             }
             if existing is None or existing.switch == "computed":
                 payload["value_switch"] = "computed"
+            elif option_id is not None and existing.option_id != option_id:
+                # A manual/reference *baseline* value must keep shadowing the
+                # analysis output inside the option: the new option row copies it.
+                payload["value_switch"] = existing.switch
+                payload["manual_value" if existing.switch == "manual" else "reference_value"] = existing.value
             try:
                 row = await parameter_repo.upsert_element_parameter(payload)
             except Exception as exc:
@@ -328,7 +335,7 @@ class ResultsSink:
             else:
                 result.written.append(entry)
                 written_keys.append((element_id, pw.name))
-                if pw.name in WELL_KNOWN_PARAMETERS and by_id[element_id].get(pw.name) is None:
+                if option_id is None and pw.name in WELL_KNOWN_PARAMETERS and by_id[element_id].get(pw.name) is None:
                     await self._write_column(study_id, element_id, pw.name, float(pw.value))
 
         # conflicts

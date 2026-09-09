@@ -30,10 +30,19 @@ plain ``computed`` mirrors leave the column alone.
 Nothing in here raises into the API: every problem lands in the
 ``errors`` list of the affected parameter and in the study-level result.
 
+Option scoping (SCDF-172): every entry point takes ``option_id=None``.
+``None`` evaluates the baseline (rows with ``option_id IS NULL``); ``X``
+evaluates baseline ∪ X-overrides, an override row shadowing the baseline row
+of the same (element, parameter). Formulas in either set are evaluated
+against the option's effective values, so a baseline ``children("mass_kg")``
+sees the option's overridden child. ``recompute_study(option_id=X)`` persists
+``ref`` results only into X rows and never writes element columns back —
+columns belong to the baseline.
+
 Public API:
-    evaluate_study(study_id) -> dict
-    evaluate_element(element_id) -> dict
-    recompute_study(study_id) -> dict       evaluate + persist ref values + write-back
+    evaluate_study(study_id, option_id=None) -> dict
+    evaluate_element(element_id, option_id=None) -> dict
+    recompute_study(study_id, option_id=None) -> dict   evaluate + persist ref values + write-back
     dependency_graph(study_id) -> dict      {nodes, edges, cycles}
     on_change(study_id, changed_element_ids) -> None   non-fatal recompute trigger
     parse_dependencies(formula) -> ParsedFormula        pure helper
@@ -157,9 +166,10 @@ class _Snapshot:
     def_by_name: dict[str, dict]                  # name -> definition
     params: dict[NodeKey, dict]                   # (element, name) -> row dict
     budgets: dict[tuple[str, str], float]         # (element, budget_type) -> value
+    option_id: str | None = None                  # None = baseline
 
 
-async def _load_snapshot(study_id: str) -> _Snapshot:
+async def _load_snapshot(study_id: str, option_id: str | None = None) -> _Snapshot:
     factory = get_session_factory()
     elements: dict[str, dict] = {}
     budgets: dict[tuple[str, str], float] = {}
@@ -186,14 +196,15 @@ async def _load_snapshot(study_id: str) -> _Snapshot:
     definitions = await parameter_repo.load_all_parameter_definitions()
     def_by_name = {d["name"]: d for d in definitions.values()}
     params: dict[NodeKey, dict] = {}
-    for p in (await parameter_repo.load_all_element_parameters(study_id)).values():
+    for p in (await parameter_repo.load_all_element_parameters(study_id, option_id=option_id)).values():
         if p.get("iteration", 1) != 1 or p["element_id"] not in elements:
             continue
         defn = definitions.get(p["definition_id"])
         if not defn:
             continue
         params[(p["element_id"], defn["name"])] = p
-    return _Snapshot(study_id, elements, by_name, children, definitions, def_by_name, params, budgets)
+    return _Snapshot(study_id, elements, by_name, children, definitions, def_by_name, params, budgets,
+                     option_id=option_id)
 
 
 def _switch_value(row: dict) -> float | None:
@@ -454,6 +465,7 @@ def _param_view(snap: _Snapshot, ev: _Evaluator, key: NodeKey) -> dict:
         "provenance": _provenance(row, name),
         "version": row.get("version"),
         "updated_at": row.get("updated_at"),
+        "option_id": row.get("option_id"),      # set → this row is an override of the option
     }
 
 
@@ -462,6 +474,7 @@ def _study_result(snap: _Snapshot, graph: _Graph, ev: _Evaluator) -> dict:
     errors = [{"element_id": k[0], "name": k[1], "errors": v} for k, v in sorted(ev.errors.items()) if v]
     return {
         "study_id": snap.study_id,
+        "option_id": snap.option_id,
         "parameters": params,
         "errors": errors,
         "cycles": [[{"element_id": e, "name": n} for e, n in c] for c in ev.cycles],
@@ -470,10 +483,11 @@ def _study_result(snap: _Snapshot, graph: _Graph, ev: _Evaluator) -> dict:
 
 # ── Public API ─────────────────────────────────────────────────────────
 
-async def evaluate_study(study_id: str) -> dict:
-    """Evaluate every formula in the study without persisting anything."""
+async def evaluate_study(study_id: str, option_id: str | None = None) -> dict:
+    """Evaluate every formula in the study without persisting anything.
+    ``option_id`` evaluates baseline ∪ that option's overrides (see module doc)."""
     try:
-        snap = await _load_snapshot(study_id)
+        snap = await _load_snapshot(study_id, option_id)
         graph, ev = _evaluate(snap)
         return _study_result(snap, graph, ev)
     except Exception as exc:
@@ -482,12 +496,12 @@ async def evaluate_study(study_id: str) -> dict:
                 "errors": [{"element_id": None, "name": None, "errors": [f"engine failure: {exc}"]}]}
 
 
-async def evaluate_element(element_id: str) -> dict:
+async def evaluate_element(element_id: str, option_id: str | None = None) -> dict:
     """Study-wide evaluation, filtered to one element's parameters."""
     study_id = await _study_of(element_id)
     if study_id is None:
         return {"element_id": element_id, "parameters": [], "errors": [f"element {element_id} not found"]}
-    res = await evaluate_study(study_id)
+    res = await evaluate_study(study_id, option_id)
     return {
         "element_id": element_id,
         "study_id": study_id,
@@ -522,17 +536,22 @@ async def dependency_graph(study_id: str) -> dict:
         return {"study_id": study_id, "nodes": [], "edges": [], "cycles": [], "errors": [str(exc)]}
 
 
-async def recompute_study(study_id: str) -> dict:
+async def recompute_study(study_id: str, option_id: str | None = None) -> dict:
     """Evaluate, persist ``ref`` results into ``computed_value`` and write back
     well-known columns whose effective value moved. Returns the evaluation
-    result plus ``persisted`` / ``written_back`` counts."""
+    result plus ``persisted`` / ``written_back`` counts.
+
+    With ``option_id`` only the option's own rows are persisted and nothing is
+    written back to element columns (they are baseline state)."""
     try:
-        snap = await _load_snapshot(study_id)
+        snap = await _load_snapshot(study_id, option_id)
         graph, ev = _evaluate(snap)
         persisted = 0
         for key, computed in ev.computed_results.items():
             row = snap.params[key]
             if row.get("formula_kind") != "ref":
+                continue
+            if option_id is not None and row.get("option_id") != option_id:
                 continue
             if computed is None or row.get("computed_value") == computed:
                 continue
@@ -542,7 +561,7 @@ async def recompute_study(study_id: str) -> dict:
                 persisted += 1
             except Exception:
                 logger.exception("persisting computed_value for %s failed", row["id"])
-        written = await _write_back_columns(snap, ev)
+        written = await _write_back_columns(snap, ev) if option_id is None else 0
         result = _study_result(snap, graph, ev)
         result["persisted"] = persisted
         result["written_back"] = written
@@ -553,7 +572,8 @@ async def recompute_study(study_id: str) -> dict:
                 "errors": [{"element_id": None, "name": None, "errors": [f"engine failure: {exc}"]}]}
 
 
-async def on_change(study_id: str | None, changed_element_ids: list[str] | set[str] | None = None) -> None:
+async def on_change(study_id: str | None, changed_element_ids: list[str] | set[str] | None = None,
+                    option_id: str | None = None) -> None:
     """Recompute trigger for element / parameter mutations. Never raises,
     never blocks the caller on failure (all errors are logged)."""
     if not study_id:
@@ -561,7 +581,7 @@ async def on_change(study_id: str | None, changed_element_ids: list[str] | set[s
     try:
         await _dirty.mark(param_ids=set(changed_element_ids or ()), domains={study_id})
         await _dirty.consume()
-        await recompute_study(study_id)
+        await recompute_study(study_id, option_id)
     except Exception:
         logger.exception("equations.on_change failed for %s", study_id)
 

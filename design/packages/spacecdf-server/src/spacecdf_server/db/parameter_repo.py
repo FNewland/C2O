@@ -7,12 +7,24 @@ Public API:
     list_parameter_definitions(well_known_only=False)
     load_all_parameter_definitions()                    -> dict[id, dict]
 
-    load_all_element_parameters(study_id=None)          -> dict[id, dict]
-    upsert_element_parameter(d)                         keyed by (element_id, definition_id, iteration)
+    load_all_element_parameters(study_id=None, option_id=ALL) -> dict[id, dict]
+    upsert_element_parameter(d)                         keyed by (element_id, definition_id, iteration, option_id)
     get_element_parameter(id)
     update_element_parameter(id, updates, expected_version=None)
     soft_delete_element_parameter(id)
-    list_element_parameters_by_study(study_id) / list_element_parameters_by_element(element_id)
+    list_element_parameters_by_study(study_id, option_id=None)
+    list_element_parameters_by_element(element_id, iteration=None, option_id=None)
+    overlay_option_rows(rows, option_id)                baseline ∪ option overrides (pure helper)
+
+Option scoping (SCDF-172): the *baseline* is the set of rows with
+``option_id IS NULL``. A row with ``option_id = X`` *shadows* the baseline
+row for the same (element, definition, iteration) when reading option X.
+Reads for option X therefore return baseline ∪ X-overrides (override wins);
+writing with ``option_id = X`` creates/updates the X row and never touches
+the baseline. ``option_id=None`` everywhere means "baseline" — so existing
+callers see exactly what they saw before option rows existed. Well-known
+column mirroring (``mirror_well_known_columns`` / ``effective_well_known_values``)
+is baseline-only: element columns are not cloned per option.
 
     mirror_well_known_columns(element_dict)             element row -> parameter rows (non-fatal)
     effective_well_known_values(element_id)             parameter rows -> {column: value}
@@ -149,7 +161,32 @@ def _validate_param_fields(d: dict) -> None:
         raise ValueError(f"formula_kind must be one of {FORMULA_KINDS}")
 
 
-async def load_all_element_parameters(study_id: str | None = None) -> dict[str, dict]:
+#: Sentinel for ``load_all_element_parameters(option_id=ALL)`` — every row, all options.
+ALL = "__all__"
+
+
+def _option_filter(option_id: str | None):
+    return ElementParameterRow.option_id.is_(None) if option_id is None else ElementParameterRow.option_id == option_id
+
+
+def overlay_option_rows(rows: list[dict], option_id: str | None) -> list[dict]:
+    """Pure helper: baseline rows (``option_id`` None) with option ``option_id``
+    rows shadowing them per (element_id, definition_id, iteration).
+    ``option_id=None`` returns the baseline rows only."""
+    base = {(r["element_id"], r["definition_id"], r.get("iteration", 1)): r
+            for r in rows if r.get("option_id") is None}
+    if option_id:
+        for r in rows:
+            if r.get("option_id") == option_id:
+                base[(r["element_id"], r["definition_id"], r.get("iteration", 1))] = r
+    return list(base.values())
+
+
+async def load_all_element_parameters(study_id: str | None = None,
+                                      option_id: str | None = ALL) -> dict[str, dict]:
+    """Rows by id. ``option_id=ALL`` (default) returns every row regardless of
+    option; ``None`` returns the baseline only; ``X`` returns baseline ∪ X
+    overrides with the override shadowing the baseline row."""
     out: dict[str, dict] = {}
     try:
         factory = get_session_factory()
@@ -157,10 +194,17 @@ async def load_all_element_parameters(study_id: str | None = None) -> dict[str, 
             stmt = select(ElementParameterRow).where(ElementParameterRow.deleted_at.is_(None))
             if study_id is not None:
                 stmt = stmt.where(ElementParameterRow.study_id == study_id)
+            if option_id is None:
+                stmt = stmt.where(ElementParameterRow.option_id.is_(None))
+            elif option_id != ALL:
+                stmt = stmt.where((ElementParameterRow.option_id.is_(None))
+                                  | (ElementParameterRow.option_id == option_id))
             result = await session.execute(stmt)
-            for row in result.scalars():
-                d = row_to_dict(row)
-                out[d["id"]] = d
+            rows = [row_to_dict(row) for row in result.scalars()]
+        if option_id is not None and option_id != ALL:
+            rows = overlay_option_rows(rows, option_id)
+        for d in rows:
+            out[d["id"]] = d
     except Exception:
         logger.exception("load_all_element_parameters failed")
     return out
@@ -173,14 +217,17 @@ async def _upsert_param_in_session(session, d: dict) -> ElementParameterRow:
             raise ValueError(f"{key} is required")
     _validate_param_fields(kw)
     iteration = kw.setdefault("iteration", 1)
+    option_id = kw.get("option_id") or None
+    kw["option_id"] = option_id
     result = await session.execute(
         select(ElementParameterRow).where(
             ElementParameterRow.element_id == kw["element_id"],
             ElementParameterRow.definition_id == kw["definition_id"],
             ElementParameterRow.iteration == iteration,
+            _option_filter(option_id),
         )
     )
-    row = result.scalar_one_or_none()
+    row = result.scalars().first()
     if row is None:
         kw.setdefault("id", new_id("ep"))
         row = ElementParameterRow(**kw)
@@ -188,12 +235,14 @@ async def _upsert_param_in_session(session, d: dict) -> ElementParameterRow:
     else:
         row.deleted_at = None
         apply_update(row, kw, immutable=("id", "study_id", "element_id", "definition_id",
-                                         "iteration", "created_at"))
+                                         "iteration", "option_id", "created_at"))
     return row
 
 
 async def upsert_element_parameter(d: dict) -> dict:
-    """Create or update the parameter keyed by (element_id, definition_id, iteration).
+    """Create or update the parameter keyed by (element_id, definition_id,
+    iteration, option_id). ``option_id`` absent/None targets the baseline row;
+    ``option_id=X`` targets (creates) the X override and leaves the baseline alone.
 
     Accepts ``definition_name`` instead of ``definition_id``; the definition is
     created on the fly (unit-less) if it does not exist yet.
@@ -236,15 +285,30 @@ async def soft_delete_element_parameter(param_id: str) -> bool:
     return await soft_delete_row(ElementParameterRow, param_id)
 
 
-async def list_element_parameters_by_study(study_id: str) -> list[dict]:
-    return await list_rows(ElementParameterRow, ElementParameterRow.study_id == study_id)
+async def list_element_parameters_by_study(study_id: str, option_id: str | None = None) -> list[dict]:
+    """Baseline rows of the study; with ``option_id`` the option's overrides
+    shadow the baseline rows they duplicate (baseline ∪ overrides)."""
+    rows = await list_rows(ElementParameterRow, ElementParameterRow.study_id == study_id,
+                           (ElementParameterRow.option_id.is_(None)) if option_id is None else
+                           ((ElementParameterRow.option_id.is_(None)) | (ElementParameterRow.option_id == option_id)))
+    return overlay_option_rows(rows, option_id)
 
 
-async def list_element_parameters_by_element(element_id: str, iteration: int | None = None) -> list[dict]:
+async def list_element_parameters_by_element(element_id: str, iteration: int | None = None,
+                                             option_id: str | None = None) -> list[dict]:
+    """Same shadowing rule as ``list_element_parameters_by_study`` for one element."""
     filters = [ElementParameterRow.element_id == element_id]
     if iteration is not None:
         filters.append(ElementParameterRow.iteration == iteration)
-    return await list_rows(ElementParameterRow, *filters)
+    filters.append((ElementParameterRow.option_id.is_(None)) if option_id is None else
+                   ((ElementParameterRow.option_id.is_(None)) | (ElementParameterRow.option_id == option_id)))
+    return overlay_option_rows(await list_rows(ElementParameterRow, *filters), option_id)
+
+
+async def list_option_overrides(study_id: str, option_id: str) -> list[dict]:
+    """Only the rows that belong to ``option_id`` (no baseline)."""
+    return await list_rows(ElementParameterRow, ElementParameterRow.study_id == study_id,
+                           ElementParameterRow.option_id == option_id)
 
 
 # ── Well-known column mirroring ─────────────────────────────────────────
@@ -278,9 +342,10 @@ async def mirror_well_known_columns(element: dict) -> int:
                         ElementParameterRow.element_id == element_id,
                         ElementParameterRow.definition_id == defn["id"],
                         ElementParameterRow.iteration == 1,
+                        ElementParameterRow.option_id.is_(None),
                     )
                 )
-                row = result.scalar_one_or_none()
+                row = result.scalars().first()
                 if row is None:
                     session.add(ElementParameterRow(
                         id=new_id("ep"), study_id=study_id, element_id=element_id,
@@ -315,6 +380,7 @@ async def effective_well_known_values(element_id: str) -> dict[str, float | None
                     ElementParameterRow.element_id == element_id,
                     ElementParameterRow.deleted_at.is_(None),
                     ElementParameterRow.iteration == 1,
+                    ElementParameterRow.option_id.is_(None),
                     ParameterDefinitionRow.name.in_(WELL_KNOWN_PARAMETERS),
                 )
             )

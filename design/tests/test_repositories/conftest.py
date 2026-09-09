@@ -3,7 +3,9 @@
 ``db_factory`` points the *global* engine/session-factory singletons in
 ``spacecdf_server.db.engine`` at a throw-away SQLite file, so every repo that
 calls ``get_session_factory()`` — whatever module it imported it from — hits
-the test database. Tables are created from the current ORM metadata.
+the test database. Tables are created from the current ORM metadata and
+then passed through ``ensure_schema_upgrades`` exactly as the app lifespan
+does (SCDF-172: this is what makes ``element_parameters`` unique per option).
 """
 from __future__ import annotations
 
@@ -17,6 +19,7 @@ import pytest
 def db_factory(tmp_path):
     from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
     from spacecdf_server.db import engine as engine_mod
+    from spacecdf_server.db.migrate import ensure_schema_upgrades
     from spacecdf_server.db.models import Base
 
     db_url = f"sqlite+aiosqlite:///{tmp_path}/test.db"
@@ -26,6 +29,7 @@ def db_factory(tmp_path):
     async def _create_tables():
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
+        await ensure_schema_upgrades(engine)
 
     asyncio.run(_create_tables())
 

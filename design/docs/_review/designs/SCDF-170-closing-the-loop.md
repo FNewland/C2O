@@ -47,6 +47,31 @@ study ──► AnalysisContext ──► {agents | simulation | ground | therma
 - API: `GET/POST /studies/{id}/options`, `POST /options/{id}/branch` (copy current overrides into a new option), `GET /studies/{id}/options/compare?a=&b=` → table of parameters and analysis summaries that differ, with deltas. Design runs and analyses accept `?option_id=`.
 - UI: option switcher in the workbench status bar; `OptionCompare.tsx` table.
 - Elements/tree are NOT cloned per option in this range (documented limit); `in_scope` per option is deferred.
+- **As built (SCDF-172, 2026-09-09) — semantics.** The *baseline* is the set of `element_parameters` rows with
+  `option_id IS NULL`; it is not an `OptionRow` (one `is_baseline` row named "Baseline" is created lazily by
+  `option_repo.ensure_baseline` so the UI can select/compare it; its id resolves to `option_id=None`).
+  A row `(element, definition, option_id=X)` **shadows** the baseline row of the same (element, definition) when
+  reading X: *reads for X = baseline ∪ X-overrides*; *writing with `option_id=X` creates/updates the X row and
+  never the baseline*. `parameter_repo.list_element_parameters_by_{study,element}(…, option_id)`,
+  `load_all_element_parameters(study, option_id)`, `equations.evaluate_study/evaluate_element/recompute_study(…, option_id)`
+  and `analysis_context.build_context(option_id=)` all apply this rule; formulas in either set are evaluated
+  against the option's effective values (a baseline `children("mass_kg")` sees the option's override).
+  `recompute_study(option_id=X)` persists `ref` results only into X rows and never writes element columns
+  (columns are baseline state); `ResultsSink.publish(option_id=X)` writes X rows and skips the column write;
+  `run_design_loop(?option_id=)` does not merge agent outputs into elements. Branching (`branch_option`) copies
+  the source option's override rows; branching from the baseline copies nothing. Deleting an option
+  soft-deletes its rows; the baseline cannot be deleted.
+  *Schema:* `db/models.py` still declares the pre-172 unique constraint `(element_id, definition_id, iteration)`;
+  `db/migrate.ensure_option_scoped_parameters` (run by `ensure_schema_upgrades` at start-up and in the test
+  `db_factory`) rebuilds the live table so uniqueness is `(element_id, definition_id, iteration, option_id)` —
+  update the ORM constraint to match when `models.py` is next touched.
+  *Routes:* `GET/POST /api/studies/{id}/options`, `GET/PATCH/DELETE /api/options/{id}`,
+  `POST /api/options/{id}/branch {name}`, `GET /api/studies/{id}/options/compare?a=&b=`,
+  `GET /api/studies/{id}/options/{option_id}/overrides`; `?option_id=` on parameters GET/PUT/DELETE/list/recompute.
+  *Frontend:* `stores/optionStore.ts` (active option per study, localStorage), `components/OptionSwitcher.tsx`,
+  `components/OptionCompare.tsx`, `types/options.ts`; `ParameterPanel` sends the active option and shows an
+  "override in <option>" chip. Neither component is mounted — SCDF-178 puts the switcher in `PresenceBar` and
+  the compare table in the Analyses tab.
 
 ### 1.5 As built (SCDF-170 Phase A, 2026-09-09) — binding interfaces for the closures
 

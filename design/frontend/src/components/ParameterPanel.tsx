@@ -6,12 +6,20 @@
  * evaluation errors in red. Inline edit of manual value and formula via
  * PUT /api/elements/{id}/parameters/{name}; add / delete; study-wide
  * "Recompute".
+ *
+ * Options (SCDF-172): every request carries the active option from
+ * `optionStore` (`?option_id=`; none for the baseline). Rows that are
+ * overrides of the active option show an "override in <option>" chip; a PUT
+ * while an option is active writes the option row and leaves the baseline
+ * alone; delete removes the override so the baseline shows through.
  */
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   VALUE_SWITCHES, type ParameterUpsert, type ParameterView, type Provenance, type ValueSwitch,
 } from '../types/arcadia'
+import { optionQuery, useActiveOptionId } from '../stores/optionStore'
+import { useOptions } from './OptionSwitcher'
 
 const API = '/api'
 
@@ -57,8 +65,21 @@ export function ProvenanceChip({ p }: { p: Provenance }) {
   return <span title={PROV_TITLES[p] || p} style={{ fontSize: '0.56rem', padding: '0 0.3rem', borderRadius: '3px', background: `${c}22`, color: c, border: `1px solid ${c}55` }}>{p}</span>
 }
 
+export function OptionOverrideChip({ optionName }: { optionName: string }) {
+  const c = '#f59e0b'
+  return <span title={`This value is an override that exists only in option "${optionName}"; the baseline row is shadowed`}
+    style={{ fontSize: '0.56rem', padding: '0 0.3rem', borderRadius: '3px', background: `${c}22`, color: c, border: `1px solid ${c}55`, marginLeft: '0.2rem', whiteSpace: 'nowrap' }}>
+    override in {optionName}
+  </span>
+}
+
 export function ParameterPanel({ elementId, studyId, compact }: { elementId: string | null; studyId: string | null; compact?: boolean }) {
   const qc = useQueryClient()
+  const optionId = useActiveOptionId(studyId)
+  const oq = optionQuery(optionId)
+  const { data: options = [] } = useOptions(studyId)
+  const activeOption = options.find(o => o.id === optionId)
+  const optionName = activeOption?.name ?? 'option'
   const [error, setError] = useState<string | null>(null)
   const [editing, setEditing] = useState<string | null>(null)   // parameter name being edited
   const [manual, setManual] = useState('')
@@ -69,8 +90,8 @@ export function ParameterPanel({ elementId, studyId, compact }: { elementId: str
   const [newValue, setNewValue] = useState('')
 
   const { data: params = [], isLoading } = useQuery<ParameterView[]>({
-    queryKey: ['element-parameters', elementId],
-    queryFn: () => fetch(`${API}/elements/${elementId}/parameters`).then(jsonOrThrow),
+    queryKey: ['element-parameters', elementId, optionId ?? null],
+    queryFn: () => fetch(`${API}/elements/${elementId}/parameters${oq}`).then(jsonOrThrow),
     enabled: !!elementId, structuralSharing: false,
   })
 
@@ -84,18 +105,18 @@ export function ParameterPanel({ elementId, studyId, compact }: { elementId: str
 
   const upsert = useMutation({
     mutationFn: ({ name, body }: { name: string; body: ParameterUpsert }) =>
-      fetch(`${API}/elements/${elementId}/parameters/${encodeURIComponent(name)}`, {
+      fetch(`${API}/elements/${elementId}/parameters/${encodeURIComponent(name)}${oq}`, {
         method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
       }).then(jsonOrThrow),
     onSuccess: () => { invalidate(); setEditing(null); setError(null) }, onError: onErr,
   })
   const remove = useMutation({
     mutationFn: (name: string) =>
-      fetch(`${API}/elements/${elementId}/parameters/${encodeURIComponent(name)}`, { method: 'DELETE' }).then(jsonOrThrow),
+      fetch(`${API}/elements/${elementId}/parameters/${encodeURIComponent(name)}${oq}`, { method: 'DELETE' }).then(jsonOrThrow),
     onSuccess: invalidate, onError: onErr,
   })
   const recompute = useMutation({
-    mutationFn: () => fetch(`${API}/studies/${studyId}/parameters/recompute`, { method: 'POST' }).then(jsonOrThrow),
+    mutationFn: () => fetch(`${API}/studies/${studyId}/parameters/recompute${oq}`, { method: 'POST' }).then(jsonOrThrow),
     onSuccess: (res: any) => {
       invalidate()
       const n = (res?.errors || []).length; const c = (res?.cycles || []).length
@@ -140,6 +161,12 @@ export function ParameterPanel({ elementId, studyId, compact }: { elementId: str
         <span style={{ color: 'var(--text-secondary)', fontSize: '0.62rem' }}>
           {params.length} parameter{params.length === 1 ? '' : 's'} · formulas use names on this element, <code>el("Name").x</code>, <code>children("mass_kg")</code>, <code>budget("power")</code>
         </span>
+        {optionId && (
+          <span title="Edits are written into this option only; the baseline is untouched"
+            style={{ fontSize: '0.58rem', color: '#f59e0b', border: '1px solid #f59e0b55', borderRadius: '3px', padding: '0 0.3rem' }}>
+            editing option: {optionName}
+          </span>
+        )}
         <span style={{ flex: 1 }} />
         <button style={smallBtn('#3b82f6')} onClick={() => setAdding(v => !v)}>+ parameter</button>
         <button style={smallBtn('#8b5cf6')} disabled={!studyId || recompute.isPending} onClick={() => recompute.mutate()}>
@@ -210,14 +237,19 @@ export function ParameterPanel({ elementId, studyId, compact }: { elementId: str
                     )}
                     {hasErr && <div style={{ color: '#ef4444', fontSize: '0.58rem', marginTop: '0.1rem' }}>{p.errors.join('; ')}</div>}
                   </td>
-                  <td style={td}><ProvenanceChip p={p.provenance} /></td>
+                  <td style={{ ...td, whiteSpace: 'nowrap' }}>
+                    <ProvenanceChip p={p.provenance} />
+                    {p.option_id && <OptionOverrideChip optionName={options.find(o => o.id === p.option_id)?.name ?? optionName} />}
+                  </td>
                   <td style={{ ...td, whiteSpace: 'nowrap' }}>
                     {isEd ? (<>
                       <button style={smallBtn('#10b981')} onClick={() => commitEdit(p)}>save</button>{' '}
                       <button style={smallBtn()} onClick={() => setEditing(null)}>cancel</button>
                     </>) : (<>
                       <button style={smallBtn()} onClick={() => startEdit(p)}>edit</button>{' '}
-                      <button style={smallBtn('#ef4444')} title="Delete (well-known parameters are reset to the column value)"
+                      <button style={smallBtn('#ef4444')}
+                        title={p.option_id ? `Remove the override from option "${optionName}" (the baseline value shows through)` : 'Delete (well-known parameters are reset to the column value)'}
+                        disabled={!!optionId && !p.option_id}
                         onClick={() => remove.mutate(p.name)}>×</button>
                     </>)}
                   </td>

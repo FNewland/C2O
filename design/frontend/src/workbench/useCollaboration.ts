@@ -12,7 +12,7 @@ import { ARCADIA_WS_PREFIXES } from '../types/arcadia'
 import { setArcadiaInvalidator } from '../hooks/useSessionSocket'
 
 /** Query keys owned by the SCDF-160 components. */
-const ARCADIA_QUERY_KEYS = ['functions-tree', 'functional-exchanges', 'icd', 'exchange-items', 'element-parameters', 'study-parameters', 'traceability-tree', 'requirements', 'elements', 'interfaces']
+const ARCADIA_QUERY_KEYS = ['options', 'option-compare', 'functions-tree', 'functional-exchanges', 'icd', 'exchange-items', 'element-parameters', 'study-parameters', 'traceability-tree', 'requirements', 'elements', 'interfaces']
 function isArcadiaEvent(type: string | undefined): boolean {
   return !!type && ARCADIA_WS_PREFIXES.some(p => type.startsWith(p))
 }

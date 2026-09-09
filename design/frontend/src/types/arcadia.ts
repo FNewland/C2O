@@ -168,6 +168,8 @@ export interface ParameterView {
   provenance: Provenance
   version: number | null
   updated_at: string | null
+  /** SCDF-172: set when this row is an override belonging to that option (null = baseline row). */
+  option_id?: string | null
 }
 
 export interface ParameterUpsert {
@@ -269,4 +271,4 @@ export interface ReqIFImportResult {
 export type ImportResult = CapellaImportResult | ReqIFImportResult
 
 /** WS ChangeEvent types emitted by the spine routers. */
-export const ARCADIA_WS_PREFIXES = ['function_', 'functions_', 'functional_exchange_', 'exchange_item_', 'interface_exchange_items_', 'relation_', 'realization_', 'parameter_', 'parameters_recomputed', 'model_imported', 'element_updated'] as const
+export const ARCADIA_WS_PREFIXES = ['option_', 'function_', 'functions_', 'functional_exchange_', 'exchange_item_', 'interface_exchange_items_', 'relation_', 'realization_', 'parameter_', 'parameters_recomputed', 'model_imported', 'element_updated'] as const

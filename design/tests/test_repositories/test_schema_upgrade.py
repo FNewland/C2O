@@ -97,7 +97,47 @@ async def test_noop_on_fresh_schema(tmp_path):
     engine = create_async_engine(f"sqlite+aiosqlite:///{tmp_path}/fresh.db")
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+    # SCDF-172: the only non-column upgrade — element_parameters uniqueness gains option_id
+    # (the ORM still declares the pre-172 constraint). Idempotent afterwards.
+    assert await ensure_schema_upgrades(engine) == [
+        "element_parameters.uq_element_parameter_element_definition_iteration_option"]
     assert await ensure_schema_upgrades(engine) == []
+    await engine.dispose()
+
+
+async def test_option_scoped_parameter_uniqueness(tmp_path):
+    """SCDF-172: after the upgrade one row per option may exist for the same
+    element/definition; duplicates inside an option are still refused and the
+    existing rows / indexes survive the SQLite table rebuild."""
+    from sqlalchemy import inspect
+    from spacecdf_server.db.migrate import ensure_option_scoped_parameters
+
+    engine = create_async_engine(f"sqlite+aiosqlite:///{tmp_path}/opt.db")
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+        await conn.execute(text("INSERT INTO studies (id, name, created_at, meta_json) VALUES ('s', 'S', '2026-01-01', '{}')"))
+        await conn.execute(text(
+            "INSERT INTO element_parameters (id, study_id, element_id, definition_id, iteration, version, "
+            "value_switch, created_at, updated_at) VALUES ('base', 's', 'e', 'd', 1, 1, 'computed', '2026-01-01', '2026-01-01')"))
+        with pytest.raises(Exception):   # pre-upgrade: (element, definition, iteration) unique
+            await conn.execute(text(
+                "INSERT INTO element_parameters (id, study_id, element_id, definition_id, iteration, version, "
+                "value_switch, option_id, created_at, updated_at) VALUES ('o1', 's', 'e', 'd', 1, 1, 'computed', 'X', '2026-01-01', '2026-01-01')"))
+    assert await ensure_option_scoped_parameters(engine) is True
+    assert await ensure_option_scoped_parameters(engine) is False
+    async with engine.begin() as conn:
+        uniques = await conn.run_sync(lambda c: inspect(c).get_unique_constraints("element_parameters"))
+        assert [u["column_names"] for u in uniques] == [["element_id", "definition_id", "iteration", "option_id"]]
+        indexes = await conn.run_sync(lambda c: {i["name"] for i in inspect(c).get_indexes("element_parameters")})
+        assert {"ix_element_parameters_element_id", "ix_element_parameters_study_id"} <= indexes
+        assert (await conn.execute(text("SELECT id FROM element_parameters"))).fetchall() == [("base",)]
+        await conn.execute(text(
+            "INSERT INTO element_parameters (id, study_id, element_id, definition_id, iteration, version, "
+            "value_switch, option_id, created_at, updated_at) VALUES ('o1', 's', 'e', 'd', 1, 1, 'computed', 'X', '2026-01-01', '2026-01-01')"))
+        with pytest.raises(Exception):
+            await conn.execute(text(
+                "INSERT INTO element_parameters (id, study_id, element_id, definition_id, iteration, version, "
+                "value_switch, option_id, created_at, updated_at) VALUES ('o2', 's', 'e', 'd', 1, 1, 'computed', 'X', '2026-01-01', '2026-01-01')"))
     await engine.dispose()
 
 
