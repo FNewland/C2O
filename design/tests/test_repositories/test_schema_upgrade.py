@@ -109,3 +109,21 @@ async def test_skips_tables_that_do_not_exist_yet(old_engine):
             text("SELECT name FROM sqlite_master WHERE type='table'")
         )).scalars().all()
     assert "functions" not in names
+
+
+async def test_old_db_gains_analysis_tables_via_create_all(old_engine):
+    """SCDF-170: on an old DB the app path (create_all, then the upgrader) creates
+    ``analysis_runs`` / ``analysis_conflicts`` and adds nothing else for them."""
+    async with old_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    added = await ensure_schema_upgrades(old_engine)
+    assert not any(a.startswith(("analysis_runs.", "analysis_conflicts.")) for a in added)
+    async with old_engine.connect() as conn:
+        names = set((await conn.execute(
+            text("SELECT name FROM sqlite_master WHERE type='table'")
+        )).scalars().all())
+    assert {"analysis_runs", "analysis_conflicts"} <= names
+    assert {"id", "study_id", "option_id", "analysis", "status", "inputs_hash", "summary_json", "series_ref"} \
+        <= await _columns(old_engine, "analysis_runs")
+    assert {"severity", "code", "element_ids_json", "requirement_ids_json", "resolved_at"} \
+        <= await _columns(old_engine, "analysis_conflicts")
