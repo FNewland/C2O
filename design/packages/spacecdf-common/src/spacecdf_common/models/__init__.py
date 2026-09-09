@@ -26,6 +26,27 @@ from .requirement import (
     RequirementLevel,
     RequirementStatus,
 )
+from .arcadia import (
+    ArcadiaFunction,
+    ArcadiaLayer,
+    EntityKind,
+    ExchangeItem,
+    ExchangeItemKind,
+    FunctionAllocation,
+    FunctionPort,
+    FunctionalExchange,
+    PortDirection,
+    Realization,
+    RelationKind,
+    RequirementRelation,
+)
+from .parameters import (
+    WELL_KNOWN_PARAMETERS,
+    ElementParameter,
+    FormulaKind,
+    ParameterDefinition,
+    ValueSwitch,
+)
 from .component import (
     Component,
     GroundStationEntry,
@@ -41,4 +62,11 @@ __all__ = [
     "SpacecraftDesign", "Study", "StudyPhase", "SubsystemDesign",
     "Component", "GroundStationEntry", "LaunchVehicle", "MaterialProperty",
     "SpineRequirement", "RequirementLevel", "RequirementStatus",
+    # SCDF-160 arcadia spine
+    "ArcadiaFunction", "ArcadiaLayer", "EntityKind", "ExchangeItem",
+    "ExchangeItemKind", "FunctionAllocation", "FunctionPort",
+    "FunctionalExchange", "PortDirection", "Realization", "RelationKind",
+    "RequirementRelation",
+    "WELL_KNOWN_PARAMETERS", "ElementParameter", "FormulaKind",
+    "ParameterDefinition", "ValueSwitch",
 ]
