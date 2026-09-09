@@ -199,6 +199,10 @@ async def update_element(element_id: str, body: ElementUpdate) -> dict:
     # Persist to DB
     await db_update_element(element_id, el)
 
+    # SCDF-160 §1.5: re-evaluate parameter formulas that depend on this element (never raises)
+    from ..services.equations import on_change as _equations_on_change
+    await _equations_on_change(el["study_id"], [element_id])
+
     # Broadcast update via study WebSocket
     from .ws import _broadcast_study
     try:
