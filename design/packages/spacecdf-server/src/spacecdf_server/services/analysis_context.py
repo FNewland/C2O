@@ -527,7 +527,8 @@ def _hash_subset(ctx: AnalysisContext, key: str) -> Any:
             [e["id"], e.get("parent_id"), e.get("name"), e.get("element_type"), e.get("subsystem_domain"),
              e.get("segment"), e.get("quantity", 1), e.get("kb_component_id"),
              [e.get(c) for c in WELL_KNOWN_PARAMETERS],
-             e.get("performance_json") or e.get("performance") or {}, e.get("in_scope", True)]
+             e.get("performance_json") or e.get("performance") or {}, e.get("in_scope", True),
+             e.get("position_json"), e.get("dimensions_mm") or e.get("dimensions_json"), e.get("redundancy_type")]
             for e in ctx.elements)
     if key == "params":
         return sorted(

@@ -20,6 +20,7 @@ class MassComponent:
     x_m: float = 0.0  # Forward (velocity direction)
     y_m: float = 0.0  # Starboard
     z_m: float = 0.0  # Nadir
+    dims_m: tuple[float, float, float] | None = None  # box (dx, dy, dz) about the component CoM (SCDF-176)
 
 
 @dataclass
@@ -42,6 +43,7 @@ class MassPropertiesResult:
     principal_ixx: float = 0.0
     principal_iyy: float = 0.0
     principal_izz: float = 0.0
+    principal_axes: list[list[float]] | None = None  # rows = unit vectors in the body frame (SCDF-176)
     warnings: list[str] = None
 
     def __post_init__(self):
@@ -49,15 +51,59 @@ class MassPropertiesResult:
             self.warnings = []
 
 
+def principal_moments(ixx: float, iyy: float, izz: float, ixy: float, ixz: float, iyz: float,
+                      ) -> tuple[list[float], list[list[float]]]:
+    """Eigen-decomposition of the symmetric inertia tensor (cyclic Jacobi).
+
+    ``ixy/ixz/iyz`` are the *products of inertia* in the negative convention
+    (the off-diagonal tensor entries). Returns ``(moments, axes)`` with the
+    moments ascending and ``axes[i]`` the unit eigenvector of ``moments[i]``.
+    """
+    a = [[ixx, ixy, ixz], [ixy, iyy, iyz], [ixz, iyz, izz]]
+    v = [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]
+    for _ in range(50):
+        off = abs(a[0][1]) + abs(a[0][2]) + abs(a[1][2])
+        if off < 1e-15 * max(1.0, abs(ixx) + abs(iyy) + abs(izz)):
+            break
+        for p, q in ((0, 1), (0, 2), (1, 2)):
+            if abs(a[p][q]) < 1e-300:
+                continue
+            theta = (a[q][q] - a[p][p]) / (2.0 * a[p][q])
+            t = (1.0 if theta >= 0 else -1.0) / (abs(theta) + math.sqrt(theta * theta + 1.0))
+            c = 1.0 / math.sqrt(t * t + 1.0)
+            s_ = t * c
+            for k in range(3):
+                akp, akq = a[k][p], a[k][q]
+                a[k][p], a[k][q] = c * akp - s_ * akq, s_ * akp + c * akq
+            for k in range(3):
+                apk, aqk = a[p][k], a[q][k]
+                a[p][k], a[q][k] = c * apk - s_ * aqk, s_ * apk + c * aqk
+            for k in range(3):
+                vkp, vkq = v[k][p], v[k][q]
+                v[k][p], v[k][q] = c * vkp - s_ * vkq, s_ * vkp + c * vkq
+    order = sorted(range(3), key=lambda i: a[i][i])
+    moments = [a[i][i] for i in order]
+    axes = [[v[0][i], v[1][i], v[2][i]] for i in order]
+    return moments, axes
+
+
 def compute_mass_properties(
     components: list[MassComponent],
     spacecraft_dims_m: tuple[float, float, float] = (0.1, 0.1, 0.3),
+    *,
+    body_inertia: bool = True,
 ) -> MassPropertiesResult:
     """Compute CoM and inertia from component placements.
 
     Args:
-        components: List of mass components with positions.
+        components: List of mass components with positions. A component with
+            ``dims_m`` contributes its own box inertia about its CoM (SCDF-176);
+            the others are point masses.
         spacecraft_dims_m: (x, y, z) dimensions for geometric center.
+        body_inertia: add the uniform-cuboid term of the whole envelope about
+            the CoM (legacy single-body approximation). Pass ``False`` when the
+            components carry their own ``dims_m`` — otherwise the mass is
+            counted twice.
 
     Returns:
         MassPropertiesResult with CoM, offset, and inertias.
@@ -85,18 +131,31 @@ def compute_mass_properties(
     ixz = -sum(c.mass_kg * (c.x_m - com_x) * (c.z_m - com_z) for c in components)
     iyz = -sum(c.mass_kg * (c.y_m - com_y) * (c.z_m - com_z) for c in components)
 
-    # Add body contribution (uniform cuboid about CoM)
-    dx, dy, dz = spacecraft_dims_m
-    ixx += total_mass * (dy ** 2 + dz ** 2) / 12
-    iyy += total_mass * (dx ** 2 + dz ** 2) / 12
-    izz += total_mass * (dx ** 2 + dy ** 2) / 12
+    # Own box inertia of the components that carry dimensions (about their CoM)
+    for c in components:
+        if c.dims_m:
+            cx, cy, cz = c.dims_m
+            ixx += c.mass_kg * (cy ** 2 + cz ** 2) / 12
+            iyy += c.mass_kg * (cx ** 2 + cz ** 2) / 12
+            izz += c.mass_kg * (cx ** 2 + cy ** 2) / 12
 
-    # Principal moments (eigenvalues of inertia tensor — simplified for near-diagonal)
-    # For a proper solution, would need eigenvalue decomposition; for CubeSats
-    # the off-diagonals are usually small, so approximate as diagonal values
-    principal_ixx = ixx
-    principal_iyy = iyy
-    principal_izz = izz
+    # Add body contribution (uniform cuboid about CoM)
+    if body_inertia:
+        dx, dy, dz = spacecraft_dims_m
+        ixx += total_mass * (dy ** 2 + dz ** 2) / 12
+        iyy += total_mass * (dx ** 2 + dz ** 2) / 12
+        izz += total_mass * (dx ** 2 + dy ** 2) / 12
+
+    # Principal moments / axes (Jacobi eigen-decomposition of the tensor)
+    moments, axes = principal_moments(ixx, iyy, izz, ixy, ixz, iyz)
+    # keep the body-axis naming: the principal moment closest to each body axis
+    principal = [0.0, 0.0, 0.0]
+    used: set[int] = set()
+    for body_axis in range(3):
+        best = max((i for i in range(3) if i not in used), key=lambda i: abs(axes[i][body_axis]))
+        used.add(best)
+        principal[body_axis] = moments[best]
+    principal_ixx, principal_iyy, principal_izz = principal
 
     warnings = []
     if offset > max(spacecraft_dims_m) * 0.1:
@@ -117,5 +176,6 @@ def compute_mass_properties(
         principal_ixx=round(principal_ixx, 4),
         principal_iyy=round(principal_iyy, 4),
         principal_izz=round(principal_izz, 4),
+        principal_axes=[[round(x, 6) for x in ax] for ax in axes],
         warnings=warnings,
     )

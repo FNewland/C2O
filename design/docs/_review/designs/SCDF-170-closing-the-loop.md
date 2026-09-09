@@ -123,7 +123,32 @@ New table `verification_items` (id, study_id, requirement_id, method A/T/I/R/D, 
 - AOCS: `spacecdf_common.physics.aocs` disturbance torques with real inertia + offset → momentum per orbit vs selected reaction wheel capacity (KB) and pointing budget vs the tightest pointing requirement (threshold path or `payload.pointing_deg`); parameters `aocs_disturbance_torque_nm`, `aocs_momentum_per_orbit_nms`, `aocs_wheel_margin_pct`, `aocs_pointing_margin_deg`; conflicts on negative margins.
 - Thermal: build `ThermalNode`s per subsystem/component (dissipation = effective `power_avg_w`, capacitance from mass × class Cp, area from dimensions) + conductances between parent/child and along `thermal`-type interfaces; `solve_steady_state` hot/cold + `solve_transient` one orbit; compare to allowable ranges (`performance_json.op_temp_min/max_c` from KB or class defaults); parameters per element `thermal_t_hot_c`, `thermal_t_cold_c`, `thermal_margin_c`; conflicts when out of range. Feed the existing `DisturbanceTorqueBudget`, `MassPropertiesPanel`, `ThermalAnalysis` components from these results (extend, don't duplicate).
 
+- **As built (SCDF-176, 2026-09-09).** `services/physics_closure.py`: `place_elements` (explicit `position_json`, else a +z
+  stack in the envelope = system `dimensions_mm` or class default; origin at the envelope corner), `run_mass_properties`
+  (`compute_mass_properties(..., body_inertia=False)` with per-component box inertia + Jacobi principal axes; CP = envelope
+  centre), `run_aocs_closure` (`compute_disturbance_torques` fed the real principal ΔI via `inertia_ratio`, largest face,
+  CP-CG offset floored at 1 % of the max dimension, class dipole; momentum = RSS × period with one desaturation per
+  orbit vs the wheel from `performance.momentum_nms` / KB / manual `aocs_wheel_capacity_nms` on the root / class default;
+  pointing = RSS(knowledge from the best sensor in the tree, T/(I·ω²) control error, ripple) vs the tightest requirement
+  whose threshold path contains `pointing`), `run_thermal_closure` (nodes: bus structure = system element, subsystems,
+  components > 0.5 W; empty subsystem shells dropped; 0.5 W/K joints + `thermal` interfaces; **hot** = sunlit steady
+  state at peak power, **cold** = minimum over a periodic orbit at safe-mode power with eclipse — an eclipse steady state
+  is meaningless for a 90-min orbit). Parameters per element `thermal_t_hot_c/t_cold_c/margin_hot_c/margin_cold_c`
+  (`thermal_margin_c` of the draft split in two). Routes in `routers/analyses_physics.py` incl. `PATCH /elements/{id}/position`
+  and `GET .../physics/placement`; `analysis_context` hashes `position_json`, `dimensions_mm`, `redundancy_type` so a move
+  flags the run stale. `PhysicsClosurePanel` is self-contained (the legacy Mass/Torque/Thermal panels still read the
+  agent parameters); not mounted.
+
 ### 2.5 FMECA closure (SCDF-177, small) — extend `routers/fmeca.py` so `run_fmeca` takes the element tree + `redundancy_type` + relations and writes `fmeca_max_rpn`, `fmeca_single_point_failures` and a conflict per single-point failure on a `critical` element; link failure modes to functions via allocations (`function_id` on the failure mode).
+
+- **As built (SCDF-177, 2026-09-09).** `services/fmeca_closure.py::run_fmeca_closure(ctx, critical=)` — subsystem
+  catalogue entries + one keyword-specialised mode per component, TRL / telemetry derating, `redundancy_type` or
+  `quantity > 1` = redundant (severity −1, never single-point), functions from allocations, propagation over the
+  interface graph; `FMECA_SINGLE_POINT` (major) when severity ≥ 4, no redundancy, and the element is in a critical domain
+  (power/obc/ttc) or owns a critical function. Routes `POST/GET /studies/{id}/analyses/fmeca[/run]` live in
+  `routers/fmeca.py::study_router`, mounted through `analyses_physics` (the bare `/api/fmeca/analyze` stays). The plain GET
+  is served by the generic `analyses_common` route, so the panel reads the modes from the run series. `FMECAPanel`
+  gained a "Run from study" block (takes an optional `studyId`).
 
 ## 3. Cross-cutting UI (SCDF-178)
 - **Analyses tab** in the Level Workbench (`ActivityPanel` 'analyses'): cards for Design loop, Mission simulation, Ground segment, Physics (mass/AOCS/thermal), V&V, FMECA — each with last-run time, stale badge, run button, summary metrics, and its panel below.
