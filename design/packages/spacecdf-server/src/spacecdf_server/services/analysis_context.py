@@ -13,7 +13,8 @@ thermal / physics closures and the V&V planner need:
   ``calc`` formula, else computed / column) from ``services.equations``;
 * ``flat`` — the ``parameter_path -> value`` dict the agents consume:
   ``element_projection.project_elements_to_params`` over the element tree
-  **with effective parameter values overlaid** on the six well-known columns.
+  **with effective parameter values overlaid** on the six well-known columns
+  (an overridden roll-up on a subsystem replaces the sum of its children).
   ``overridden_paths`` lists the flat paths that inherit at least one manual /
   reference / formula value; ``seed_design_state`` marks those
   ``POSITION_OVERRIDE`` (sticky) so the agents cannot overwrite them
@@ -511,9 +512,9 @@ async def build_context(study_id: str, *, option_id: str | None = None) -> Analy
     ctx.latest_design = await _load_latest_design(study_id, option_id)
 
     eff_elements, overridden_cols = _effective_elements(ctx.elements, ctx.params)
-    ctx.flat = project_elements_to_params(eff_elements)
+    ctx.flat = project_elements_to_params(eff_elements, overridden_cols)
     ctx.overridden_paths = {
-        path for path, contribs in contributing_elements(eff_elements).items()
+        path for path, contribs in contributing_elements(eff_elements, overridden_cols).items()
         if any((eid, prop) in overridden_cols for eid, prop in contribs) and path in ctx.flat
     }
 

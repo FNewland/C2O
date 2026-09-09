@@ -32,7 +32,9 @@ Public API:
     ParamWrite, Conflict, PublishResult
     ResultsSink().publish(study_id, analysis, *, parameters, conflicts, notes, option_id, run_id, ctx)
     start_run(study_id, analysis, inputs_hash, option_id=None) -> run_id
-    finish_run(run_id, status, summary=None, series=None) -> dict
+    finish_run(run_id, status, summary=None, series=None, inputs_hash=None) -> dict
+    current_hash(study_id, analysis, option_id=None) -> str
+    refresh_inputs_hash(run_id) -> str | None      (write-back analyses: call after finish_run)
     get_last_run(study_id, analysis, option_id=None, *, ctx=None) -> dict | None   (+ stale)
     list_analyses(study_id, option_id=None) -> list[dict]                            (+ stale)
     resolve_conflict(conflict_id) -> dict | None
@@ -170,11 +172,40 @@ async def start_run(study_id: str, analysis: str, inputs_hash: str | None,
 
 
 async def finish_run(run_id: str, status: str, summary: dict | None = None,
-                     series: Any = None) -> dict:
+                     series: Any = None, inputs_hash: str | None = None) -> dict:
     """Close a run (``ok`` | ``failed``), store ``summary`` on the row and
-    ``series`` (any JSON-able object) in the series file. Returns the run dict."""
+    ``series`` (any JSON-able object) in the series file. Returns the run dict.
+
+    ``inputs_hash`` replaces the hash recorded by ``start_run``. An analysis
+    that writes back into the model (the design loop writes element
+    parameters) should call ``refresh_inputs_hash(run_id)`` afterwards —
+    otherwise its own outputs would flag the run stale.
+    """
     series_ref = save_series(run_id, series) if series is not None else None
-    return await analysis_repo.finish_run(run_id, status, summary=summary, series_ref=series_ref)
+    return await analysis_repo.finish_run(run_id, status, summary=summary, series_ref=series_ref,
+                                          inputs_hash=inputs_hash)
+
+
+async def current_hash(study_id: str, analysis: str, option_id: str | None = None) -> str:
+    """``context_hash`` of a fresh context over ``ANALYSIS_INPUT_KEYS[analysis]``."""
+    ctx = await build_context(study_id, option_id=option_id)
+    return context_hash(ctx, input_keys_for(analysis))
+
+
+async def refresh_inputs_hash(run_id: str) -> str | None:
+    """Re-stamp a *finished* run's ``inputs_hash`` from the live context.
+
+    Call this after ``finish_run`` for analyses that write back into the
+    model (the design loop): the context now includes their own outputs (and,
+    for ``design_loop``, ``latest_design`` is the run itself), so the run is
+    fresh until the next external change. Returns the new hash.
+    """
+    run = await analysis_repo.get_run(run_id)
+    if run is None:
+        return None
+    h = await current_hash(run["study_id"], run["analysis"], run.get("option_id"))
+    await analysis_repo.finish_run(run_id, run["status"], inputs_hash=h)
+    return h
 
 
 def _with_stale(run: dict, ctx: AnalysisContext) -> dict:

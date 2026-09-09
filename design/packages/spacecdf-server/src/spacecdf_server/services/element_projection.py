@@ -62,24 +62,51 @@ PROPERTY_TO_PARAM = {
 }
 
 
-def project_elements_to_params(elements: list[dict]) -> dict[str, float]:
+def _sum_members(live: list[dict], prop: str, overrides: set[tuple[str, str]] | None) -> list[dict]:
+    """Elements that count towards a ``sum`` of ``prop``: leaves, plus any
+    element whose ``(id, prop)`` is in ``overrides`` — an overridden roll-up
+    replaces its subtree (its descendants are excluded for that property)."""
+    by_id = {e["id"]: e for e in live}
+    children: dict[str, list[str]] = {}
+    for e in live:
+        if e.get("parent_id"):
+            children.setdefault(e["parent_id"], []).append(e["id"])
+    overridden = {eid for eid, p in (overrides or ()) if p == prop and eid in by_id}
+
+    def _under_override(eid: str) -> bool:
+        pid = by_id[eid].get("parent_id")
+        while pid and pid in by_id:
+            if pid in overridden:
+                return True
+            pid = by_id[pid].get("parent_id")
+        return False
+
+    return [e for e in live
+            if (e["id"] in overridden or not children.get(e["id"])) and not _under_override(e["id"])]
+
+
+def project_elements_to_params(elements: list[dict],
+                               overrides: set[tuple[str, str]] | None = None) -> dict[str, float]:
     """Convert element tree (flat list) to parameter dict for agents.
 
     Args:
         elements: list of design element dicts (with subsystem_domain, mass_kg, etc.)
+        overrides: ``{(element_id, property)}`` whose value is a user override /
+            formula result; such an element replaces its subtree in ``sum``
+            aggregates (see ``_sum_members``).
 
     Returns:
         Flat parameter dict like {"power.eps_mass_kg": 1.3, "aocs.mass_kg": 0.87, ...}
     """
     params: dict[str, float] = {}
     live = [e for e in elements if not e.get("deleted_at")]
-    parents_with_children = {e.get("parent_id") for e in live if e.get("parent_id")}
 
     for param_path, (domain, prop, agg_type) in PROPERTY_TO_PARAM.items():
         # Find matching elements; ``sum`` aggregates use leaves only (no double count)
         matching = [e for e in live if e.get("subsystem_domain") == domain]
         if agg_type == "sum":
-            matching = [e for e in matching if e["id"] not in parents_with_children]
+            member_ids = {e["id"] for e in _sum_members(live, prop, overrides)}
+            matching = [e for e in matching if e["id"] in member_ids]
 
         if not matching:
             continue
@@ -116,10 +143,11 @@ def project_elements_to_params(elements: list[dict]) -> dict[str, float]:
 
     # Also compute total mass: every physical leaf (components, plus subsystems
     # that carry a mass but no equipment yet) in the space segment.
+    mass_member_ids = {e["id"] for e in _sum_members(live, "mass_kg", overrides)}
     all_physical = [
         e for e in live
         if e.get("element_type") in ("component", "subsystem")
-        and e["id"] not in parents_with_children
+        and e["id"] in mass_member_ids
         and (e.get("segment") or "space") == "space"
     ]
     total_mass = sum((e.get("mass_kg", 0) or 0) * (e.get("quantity", 1)) for e in all_physical)
@@ -129,20 +157,21 @@ def project_elements_to_params(elements: list[dict]) -> dict[str, float]:
     return params
 
 
-def contributing_elements(elements: list[dict]) -> dict[str, list[tuple[str, str]]]:
+def contributing_elements(elements: list[dict],
+                          overrides: set[tuple[str, str]] | None = None) -> dict[str, list[tuple[str, str]]]:
     """``{param_path: [(element_id, property_name), ...]}`` — which element
     properties feed each registry path under the same rules as
-    :func:`project_elements_to_params` (leaves only for ``sum``; every
-    matching element for ``first`` since any of them may be picked).
-    ``performance.<key>`` properties are reported as ``performance.<key>``.
+    :func:`project_elements_to_params` (leaves / overridden roll-ups for
+    ``sum``; every matching element for ``first`` since any of them may be
+    picked). ``performance.<key>`` properties are reported as ``performance.<key>``.
     """
     live = [e for e in elements if not e.get("deleted_at")]
-    parents_with_children = {e.get("parent_id") for e in live if e.get("parent_id")}
     out: dict[str, list[tuple[str, str]]] = {}
     for param_path, (domain, prop, agg_type) in PROPERTY_TO_PARAM.items():
         matching = [e for e in live if e.get("subsystem_domain") == domain]
         if agg_type == "sum":
-            matching = [e for e in matching if e["id"] not in parents_with_children]
+            member_ids = {e["id"] for e in _sum_members(live, prop, overrides)}
+            matching = [e for e in matching if e["id"] in member_ids]
         if matching:
             out[param_path] = [(e["id"], prop) for e in matching]
     return out

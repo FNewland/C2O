@@ -6,7 +6,7 @@ on not-found so the service layer can decide.
 
 Public API:
     create_run(study_id, analysis, inputs_hash, option_id=None) -> dict
-    finish_run(run_id, status, summary=None, series_ref=None)   -> dict
+    finish_run(run_id, status, summary=None, series_ref=None, inputs_hash=None) -> dict
     get_run(run_id)                                              -> dict | None
     get_last_run(study_id, analysis, option_id=None)             -> dict | None
     list_last_runs(study_id, option_id=None)                     -> dict[analysis, dict]
@@ -72,7 +72,7 @@ async def create_run(study_id: str, analysis: str, inputs_hash: str | None,
 
 
 async def finish_run(run_id: str, status: str, summary: dict | None = None,
-                     series_ref: str | None = None) -> dict:
+                     series_ref: str | None = None, inputs_hash: str | None = None) -> dict:
     if status not in RUN_STATUSES:
         raise ValueError(f"status must be one of {RUN_STATUSES}")
     factory = get_session_factory()
@@ -81,11 +81,14 @@ async def finish_run(run_id: str, status: str, summary: dict | None = None,
         if row is None:
             raise ValueError(f"analysis run '{run_id}' not found")
         row.status = status
-        row.finished_at = utcnow()
+        if row.finished_at is None:
+            row.finished_at = utcnow()
         if summary is not None:
             row.summary_json = summary
         if series_ref is not None:
             row.series_ref = series_ref
+        if inputs_hash is not None:
+            row.inputs_hash = inputs_hash
         await session.commit()
         return _run_dict(row)
 
