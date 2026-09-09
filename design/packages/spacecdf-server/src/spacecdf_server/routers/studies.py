@@ -68,7 +68,10 @@ async def create_study(req: CreateStudyRequest) -> dict:
     if req.mission_need:
         try:
             mission_need = MissionNeed(**req.mission_need)
-        except Exception:
+        except Exception as exc:
+            # Do not fail study creation, but say so: a dropped mission_need
+            # shows up downstream as "0 objectives" in the traceability tree.
+            logger.warning("mission_need rejected, study created without it: %s", exc)
             mission_need = MissionNeed()
 
     # Auto-generate ConOps with default modes from requirements

@@ -147,3 +147,38 @@ def test_compliance_tracker_without_relations_unchanged():
     asyncio.run(t.recheck({"m": 5}))
     d = asyncio.run(t.recheck({"m": 15}))
     assert d.newly_violated == ["R"] and d.affected_elements == ["el-x"] and d.affected_functions == []
+
+
+async def test_traceability_tree_api_seeded_objective_id(client, study):
+    """Regression (SCDF-160 verification): a study created through POST /studies with
+    objectives, and requirements created through POST /requirements with ``objective_id``,
+    must show the requirements under their objective. Previously ``objective_id`` was
+    dropped by the requirements router, so the tree always reported 0 traced requirements."""
+    r = await client.post("/api/studies/", json={
+        "requirements": {"name": "Traced"},
+        "mission_need": {"problem_statement": "p", "objectives": [
+            {"id": "OBJ-A", "text": "Image the UK", "priority": "primary", "type": "performance"},
+        ]},
+    })
+    assert r.status_code == 200, r.text
+    sid = r.json()["id"]
+    mr = await make_requirement(client, sid, "MR-A", level="mission", objective_id="OBJ-A")
+    assert mr["objective_id"] == "OBJ-A"
+    await make_requirement(client, sid, "SR-A", level="system", parent_id="MR-A")
+    orphan = await make_requirement(client, sid, "MR-B", level="mission")
+    # PATCH must be able to set the trace too
+    r = await client.patch(f"/api/requirements/{orphan['id']}", json={"objective_id": "OBJ-A"})
+    assert r.status_code == 200 and r.json()["objective_id"] == "OBJ-A"
+
+    tree = (await client.get(f"/api/studies/{sid}/traceability/tree")).json()
+    assert tree["summary"]["objectives"] == 1
+    assert tree["summary"]["requirements"] == 3
+    assert tree["summary"]["requirements_traced_to_objectives"] == 2
+    obj = tree["objectives"][0]
+    assert sorted(q["id"] for q in obj["requirements"]) == ["MR-A", "MR-B"]
+    mr_node = next(q for q in obj["requirements"] if q["id"] == "MR-A")
+    assert [c["id"] for c in mr_node["children"]] == ["SR-A"]
+    assert tree["unlinked_requirements"] == []
+
+    trace = (await client.get("/api/requirements/SR-A/trace")).json()
+    assert [o["id"] for o in trace["up"]["objectives"]] == ["OBJ-A"]
