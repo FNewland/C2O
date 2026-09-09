@@ -94,3 +94,51 @@ async def test_interface_binding_and_icd(client, study_obj, study):
     assert (await client.get(f"/api/interfaces/{can['id']}/exchange-items")).json()[0]["id"] == tc["id"]
     icd = (await client.get(f"/api/studies/{study}/icd")).json()
     assert not any((r["exchange_item"] or {}).get("id") == tm["id"] for r in icd)
+
+
+# ── SCDF-170 N3: populate-subsystems creates the default interface set ──
+
+async def test_populate_subsystems_creates_default_interfaces(client, study_obj, study):
+    mission = await make_element(client, study, "Mission", "mission")
+    space = await make_element(client, study, "Space Segment", "segment", mission["id"])
+    r = await client.post(f"/api/elements/?study_id={study}", json={
+        "name": "Ground Segment", "element_type": "segment", "parent_id": mission["id"], "segment": "ground"})
+    ground = r.json()
+    r = await client.post(f"/api/studies/{study}/populate-subsystems?parent_element_id={space['id']}",
+                          json={"spacecraft_class": "nano", "include_equipment": False})
+    assert r.status_code == 200, r.text
+    body = r.json()
+    subs = body["subsystem_ids"]
+    # 6 power bus + 6 data bus + 1 RF
+    assert body["interfaces_created"] == 13 and len(body["interface_ids"]) == 13
+
+    ifaces = (await client.get(f"/api/studies/{study}/interfaces")).json()
+    assert len(ifaces) == 13
+    by_type = {}
+    for i in ifaces:
+        by_type.setdefault(i["interface_type"], []).append(i)
+    assert {i["from_element_id"] for i in by_type["electrical"]} == {subs["power"]}
+    assert {i["to_element_id"] for i in by_type["electrical"]} == {subs[d] for d in ("payload", "aocs", "ttc", "obc", "thermal", "propulsion")}
+    assert all(i["direction"] == "unidirectional" and i["properties"]["voltage_v"] == 7.4 for i in by_type["electrical"])
+    assert {i["from_element_id"] for i in by_type["data"]} == {subs["obc"]}
+    assert all(i["direction"] == "bidirectional" for i in by_type["data"])
+    rf = by_type["rf"]
+    assert len(rf) == 1 and (rf[0]["from_element_id"], rf[0]["to_element_id"]) == (subs["ttc"], ground["id"])
+
+    # exchange items exist and are bound; the ICD is no longer empty
+    items = {x["name"]: x for x in (await client.get(f"/api/studies/{study}/exchange-items")).json()}
+    assert {"Regulated bus power", "Housekeeping telemetry", "Telecommands", "Payload science data",
+            "Uplink TC", "Downlink TM"} <= set(items)
+    assert items["Regulated bus power"]["kind"] == "power" and items["Uplink TC"]["kind"] == "rf"
+    payload_data = next(i for i in by_type["data"] if i["to_element_id"] == subs["payload"])
+    r = await client.get(f"/api/interfaces/{payload_data['id']}/exchange-items")
+    assert r.status_code == 200 and {x["name"] for x in r.json()} == {"Housekeeping telemetry", "Telecommands", "Payload science data"}
+    icd = (await client.get(f"/api/studies/{study}/icd")).json()
+    assert len(icd) >= 13
+
+    # re-populate: nothing duplicated
+    r = await client.post(f"/api/studies/{study}/populate-subsystems?parent_element_id={space['id']}",
+                          json={"spacecraft_class": "nano", "include_equipment": False})
+    assert r.json()["interfaces_created"] == 0
+    assert len((await client.get(f"/api/studies/{study}/interfaces")).json()) == 13
+    assert len((await client.get(f"/api/studies/{study}/exchange-items")).json()) == 6

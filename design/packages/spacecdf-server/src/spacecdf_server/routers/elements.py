@@ -876,6 +876,138 @@ _DEFAULT_GROUND_EQUIPMENT: dict[str, list[str]] = {
     "ground_ops": ["gs-sw-openc3", "gs-time-gpsdo"],
 }
 
+# SCDF-170 N1: class heritage (mass_kg, power_avg_w) per subsystem domain, used
+# when a subsystem has no equipment to roll up. Order of magnitude values from
+# CubeSat / SmallSat heritage (3U, ~50 kg, ~200 kg, ~800 kg, ~2.5 t buses).
+_CLASS_HERITAGE_DEFAULTS: dict[str, dict[str, tuple[float, float]]] = {
+    "nano":   {"payload": (1.0, 3.0), "power": (0.6, 0.5), "aocs": (0.5, 1.5), "ttc": (0.3, 2.0),
+               "obc": (0.15, 0.5), "thermal": (0.1, 0.5), "structure": (0.8, 0.0), "propulsion": (0.5, 1.0)},
+    "micro":  {"payload": (10.0, 20.0), "power": (6.0, 2.0), "aocs": (5.0, 8.0), "ttc": (3.0, 10.0),
+               "obc": (2.0, 5.0), "thermal": (2.0, 5.0), "structure": (8.0, 0.0), "propulsion": (6.0, 5.0)},
+    "small":  {"payload": (40.0, 60.0), "power": (25.0, 5.0), "aocs": (20.0, 25.0), "ttc": (10.0, 20.0),
+               "obc": (6.0, 10.0), "thermal": (8.0, 15.0), "structure": (35.0, 0.0), "propulsion": (25.0, 10.0)},
+    "medium": {"payload": (150.0, 200.0), "power": (90.0, 10.0), "aocs": (70.0, 60.0), "ttc": (30.0, 50.0),
+               "obc": (15.0, 20.0), "thermal": (30.0, 40.0), "structure": (130.0, 0.0), "propulsion": (90.0, 20.0)},
+    "large":  {"payload": (500.0, 600.0), "power": (280.0, 20.0), "aocs": (200.0, 150.0), "ttc": (80.0, 120.0),
+               "obc": (40.0, 40.0), "thermal": (90.0, 100.0), "structure": (400.0, 0.0), "propulsion": (300.0, 40.0)},
+}
+_GROUND_HERITAGE_DEFAULTS: dict[str, tuple[float, float]] = {"ground_rf": (50.0, 500.0), "ground_ops": (0.0, 200.0)}
+
+# SCDF-170 N3: default interface set created by populate-subsystems (space segment).
+# (from_domain, to_domain, interface_type, direction, name, exchange item names)
+_POWERED_DOMAINS = ("payload", "aocs", "ttc", "obc", "thermal", "propulsion")
+_DATA_DOMAINS = ("payload", "power", "aocs", "ttc", "thermal", "propulsion")
+_DEFAULT_EXCHANGE_ITEMS: dict[str, dict] = {
+    "Regulated bus power": {"kind": "power", "properties": {"voltage_v": 28.0, "regulation": "regulated"}},
+    "Housekeeping telemetry": {"kind": "data", "properties": {"protocol": "CAN/CSP", "rate_hz": 1.0}},
+    "Telecommands": {"kind": "data", "properties": {"protocol": "CAN/CSP"}},
+    "Payload science data": {"kind": "data", "properties": {"protocol": "SpaceWire/LVDS"}},
+    "Uplink TC": {"kind": "rf", "properties": {"band": "UHF", "direction": "ground->space"}},
+    "Downlink TM": {"kind": "rf", "properties": {"band": "UHF", "direction": "space->ground"}},
+}
+_NANO_BUS_VOLTAGE = 7.4
+
+
+def _heritage_default(spacecraft_class: str, domain: str) -> tuple[float, float]:
+    if domain in _GROUND_HERITAGE_DEFAULTS:
+        return _GROUND_HERITAGE_DEFAULTS[domain]
+    table = _CLASS_HERITAGE_DEFAULTS.get(spacecraft_class) or _CLASS_HERITAGE_DEFAULTS["nano"]
+    return table.get(domain, (0.0, 0.0))
+
+
+async def _roll_up_subsystems(subsystem_ids: dict[str, str], spacecraft_class: str) -> list[str]:
+    """N1: give every subsystem a numeric ``mass_kg`` / ``power_avg_w``
+    (sum of live children × quantity, else the class heritage default).
+    Only ``None`` columns are filled; returns the ids that were updated."""
+    updated: list[str] = []
+    for domain, sid in subsystem_ids.items():
+        sub = _elements.get(sid)
+        if not sub or sub.get("deleted_at"):
+            continue
+        children = [e for e in _elements.values() if e.get("parent_id") == sid and not e.get("deleted_at")]
+        default_mass, default_power = _heritage_default(spacecraft_class, domain)
+        changed = False
+        for col, default in (("mass_kg", default_mass), ("power_avg_w", default_power)):
+            if sub.get(col) is not None:
+                continue
+            if children:
+                sub[col] = round(sum((c.get(col) or 0.0) * (c.get("quantity") or 1) for c in children), 4)
+            else:
+                sub[col] = default
+            changed = True
+        if changed:
+            sub["version"] = int(sub.get("version") or 1) + 1
+            await db_update_element(sid, sub)
+            updated.append(sid)
+    return updated
+
+
+async def _ensure_exchange_items(study_id: str, names: list[str]) -> dict[str, str]:
+    """``{name: exchange_item_id}`` — reuse the study's items by name, create the rest."""
+    from ..db.exchange_item_repo import create_exchange_item, list_exchange_items_by_study
+    existing = {x["name"]: x["id"] for x in await list_exchange_items_by_study(study_id)}
+    out: dict[str, str] = {}
+    for name in names:
+        if name in existing:
+            out[name] = existing[name]
+            continue
+        spec = _DEFAULT_EXCHANGE_ITEMS[name]
+        item = await create_exchange_item({"study_id": study_id, "name": name, "kind": spec["kind"],
+                                           "properties": dict(spec["properties"]), "description": "default (populate-subsystems)"})
+        out[name] = existing[name] = item["id"]
+    return out
+
+
+async def _create_default_interfaces(study_id: str, subsystem_ids: dict[str, str],
+                                     spacecraft_class: str) -> list[dict]:
+    """N3: power bus EPS→powered subsystems, data bus OBC↔subsystems, RF TTC↔ground
+    segment (when the study has one), each with sensible exchange items.
+    Existing interfaces between the same pair of the same type are kept."""
+    existing_pairs = {
+        (i["from_element_id"], i["to_element_id"], i["interface_type"])
+        for i in _interfaces.values() if i.get("study_id") == study_id and not i.get("deleted_at")
+    }
+    ground_el = next((e for e in _elements.values()
+                      if e.get("study_id") == study_id and not e.get("deleted_at")
+                      and e.get("segment") == "ground" and e.get("element_type") in ("segment", "system")), None)
+    plan: list[tuple[str, str, str, str, str, list[str]]] = []
+    eps, obc, ttc = subsystem_ids.get("power"), subsystem_ids.get("obc"), subsystem_ids.get("ttc")
+    if eps:
+        for d in _POWERED_DOMAINS:
+            if subsystem_ids.get(d):
+                plan.append((eps, subsystem_ids[d], "electrical", "unidirectional", "Power bus", ["Regulated bus power"]))
+    if obc:
+        for d in _DATA_DOMAINS:
+            if subsystem_ids.get(d):
+                items = ["Housekeeping telemetry", "Telecommands"] + (["Payload science data"] if d == "payload" else [])
+                plan.append((obc, subsystem_ids[d], "data", "bidirectional", "Data bus", items))
+    if ttc and ground_el:
+        plan.append((ttc, ground_el["id"], "rf", "bidirectional", "TT&C link", ["Uplink TC", "Downlink TM"]))
+
+    needed = sorted({n for *_, items in plan for n in items})
+    item_ids = await _ensure_exchange_items(study_id, needed) if needed else {}
+    created: list[dict] = []
+    for from_id, to_id, itype, direction, label, items in plan:
+        if (from_id, to_id, itype) in existing_pairs or (to_id, from_id, itype) in existing_pairs:
+            continue
+        props = {}
+        if itype == "electrical":
+            props = {"voltage_v": _NANO_BUS_VOLTAGE if spacecraft_class == "nano" else 28.0}
+        iface = {
+            "id": uuid4().hex, "study_id": study_id,
+            "name": f"{label}: {_elements[from_id]['name']} → {_elements[to_id]['name']}",
+            "interface_type": itype, "direction": direction,
+            "from_element_id": from_id, "to_element_id": to_id,
+            "properties": props, "diagram_label": label,
+            "exchange_item_ids_json": [item_ids[n] for n in items],
+            "status": "defined", "criticality": "standard", "version": 1, "deleted_at": None,
+        }
+        await db_create_interface(iface)
+        _interfaces[iface["id"]] = iface
+        existing_pairs.add((from_id, to_id, itype))
+        created.append(iface)
+    return created
+
 
 @router.post("/studies/{study_id}/populate-subsystems")
 async def populate_subsystems(
@@ -892,6 +1024,11 @@ async def populate_subsystems(
 
     This bridges the gap between "I have a mission concept" and "I have
     equipment in the tree that drives budgets".
+
+    SCDF-170 N1/N3: every subsystem ends up with a numeric ``mass_kg`` /
+    ``power_avg_w`` (children roll-up or class heritage default, so formulas
+    like ``mass_kg * 1.2`` work) and the space segment gets a default
+    interface set (power bus, data bus, TT&C RF link) with exchange items.
     """
     parent = _elements.get(parent_element_id)
     if not parent:
@@ -1022,12 +1159,24 @@ async def populate_subsystems(
                 created_elements.append(comp_el)
                 equipment_count += 1
 
+    # N1: roll-up / heritage defaults so every subsystem has numeric mass & power
+    rolled_up = await _roll_up_subsystems(subsystem_ids, body.spacecraft_class)
+
+    # N3: default interfaces + exchange items (space segment only)
+    created_interfaces: list[dict] = []
+    if segment == "space":
+        try:
+            created_interfaces = await _create_default_interfaces(study_id, subsystem_ids, body.spacecraft_class)
+        except Exception:
+            logger.exception("populate-subsystems: default interfaces failed for %s", study_id)
+
     # Broadcast
     from .ws import _broadcast_study
     try:
         await _broadcast_study(study_id, {
             "type": "elements_populated",
             "count": len(created_elements),
+            "interfaces": len(created_interfaces),
         })
     except Exception:
         pass
@@ -1037,5 +1186,9 @@ async def populate_subsystems(
         "system_id": system_id,
         "subsystem_ids": subsystem_ids,
         "equipment_count": equipment_count,
-        "message": f"Created {len(created_elements)} elements ({equipment_count} equipment items from KB)",
+        "rolled_up": rolled_up,
+        "interfaces_created": len(created_interfaces),
+        "interface_ids": [i["id"] for i in created_interfaces],
+        "message": (f"Created {len(created_elements)} elements ({equipment_count} equipment items from KB), "
+                    f"{len(created_interfaces)} interfaces"),
     }

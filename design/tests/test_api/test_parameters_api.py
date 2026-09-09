@@ -3,6 +3,8 @@ value, manual switch overrides computed (and writes back to the element column),
 graph endpoint, recompute, delete, element PATCH re-evaluates dependents."""
 from __future__ import annotations
 
+import pytest
+
 from tests.test_api.conftest import make_element
 
 
@@ -132,3 +134,45 @@ async def test_recompute_and_delete(client, study_obj, study):
     assert p["formula"] is None and p["provenance"] == "column" and p["effective_value"] == 10.0
     r = await client.delete(f"/api/elements/{sc['id']}/parameters/never_set")
     assert r.status_code == 404
+
+
+# ── SCDF-170 N1: populate-subsystems leaves numeric mass/power on every subsystem ──
+
+async def test_populate_subsystems_rolls_up_mass_and_power(client, study_obj, study):
+    await client.post("/api/parameters/definitions/seed")
+    mission = await make_element(client, study, "Mission", "mission")
+    seg = await make_element(client, study, "Space Segment", "segment", mission["id"])
+    r = await client.post(f"/api/studies/{study}/populate-subsystems?parent_element_id={seg['id']}",
+                          json={"spacecraft_class": "nano", "include_equipment": True})
+    assert r.status_code == 200, r.text
+    body = r.json()
+    subs = body["subsystem_ids"]
+    assert set(subs) == {"payload", "power", "aocs", "ttc", "obc", "thermal", "structure", "propulsion"}
+    assert set(body["rolled_up"]) == set(subs.values())
+
+    tree = (await client.get(f"/api/studies/{study}/elements?element_type=subsystem")).json()
+    by_domain = {e["subsystem_domain"]: e for e in tree}
+    for e in tree:
+        assert isinstance(e["mass_kg"], (int, float)) and isinstance(e["power_avg_w"], (int, float)), e["name"]
+    # equipment domains roll up their KB children; empty domains get the class heritage default
+    eps_children = (await client.get(f"/api/studies/{study}/elements?element_type=component&domain=power")).json()
+    assert eps_children
+    assert by_domain["power"]["mass_kg"] == pytest.approx(
+        sum((c["mass_kg"] or 0) * (c.get("quantity") or 1) for c in eps_children), abs=1e-4)
+    assert by_domain["structure"]["mass_kg"] == 0.8 and by_domain["thermal"]["power_avg_w"] == 0.5
+
+    # the original repro: a bare-name formula on a subsystem now evaluates
+    r = await client.put(f"/api/elements/{subs['structure']}/parameters/mass_with_margin_kg",
+                         json={"formula": "mass_kg * 1.2", "formula_kind": "calc", "unit": "kg"})
+    assert r.status_code == 200, r.text
+    assert r.json()["errors"] == [] and r.json()["effective_value"] == pytest.approx(0.96)
+    # children("mass_kg") on the system element sums the subsystems
+    r = await client.put(f"/api/elements/{body['system_id']}/parameters/children_mass_kg",
+                         json={"formula": 'children("mass_kg")', "formula_kind": "calc", "unit": "kg"})
+    assert r.status_code == 200 and r.json()["effective_value"] == pytest.approx(
+        sum(e["mass_kg"] for e in tree), abs=1e-3)
+
+    # idempotent: a second populate keeps the values, creates nothing
+    r = await client.post(f"/api/studies/{study}/populate-subsystems?parent_element_id={seg['id']}",
+                          json={"spacecraft_class": "nano"})
+    assert r.json()["created"] == 0 and r.json()["rolled_up"] == []
