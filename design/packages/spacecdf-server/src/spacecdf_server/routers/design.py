@@ -3,12 +3,23 @@
 Runs the design convergence loop and returns results.
 Now accepts full V-model input: requirements + mission_need → auto-generates
 ConOps modes that are passed to DesignState so agents use them.
+
+SCDF-171 (model coupling): ``POST /{study_id}/run`` builds an
+``AnalysisContext`` for the study, seeds the orchestrator's ``DesignState``
+from ``ctx.flat`` (overridden element parameters become sticky
+``POSITION_OVERRIDE`` values the agents cannot overwrite) and, after the run,
+writes the agent outputs back through ``ResultsSink`` (element parameters via
+the projection registry's reverse map, ``owner_domain='agent:<domain>'``,
+cross-domain conflicts into ``analysis_conflicts``) and records a
+``design_loop`` row in ``analysis_runs``. The response shape is unchanged;
+the coupling is best-effort — a persistence failure is logged, not raised.
 """
 from __future__ import annotations
 
+import logging
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 
 from spacecdf_common.agents.base import DesignState
@@ -17,7 +28,78 @@ from spacecdf_agents import DesignLoopOrchestrator, ConvergenceConfig
 
 from .studies import get_study_store, _generate_default_conops
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter()
+
+DESIGN_LOOP = "design_loop"
+
+#: Study-level agent outputs written onto the mission root (parameter name =
+#: path with dots replaced by underscores); subsystem-level outputs go through
+#: ``element_projection.reverse_map``.
+STUDY_LEVEL_OUTPUTS: tuple[str, ...] = (
+    "mass.dry_mass_kg", "mass.wet_mass_kg", "mass.payload_kg", "mass.platform_kg",
+    "power.sa_area_m2", "power.sa_power_bol_w", "power.sa_power_eol_w",
+    "power.total_sunlight_w", "power.total_eclipse_w",
+    "link.margin_db", "data.storage_gb", "cost.total_meur",
+)
+
+
+def _agent_param_writes(loop_result, elements: list[dict], root: dict | None) -> list:
+    """Agent outputs -> ``ParamWrite`` list (registry reverse map + study-level set)."""
+    from ..services.analysis_results import ParamWrite
+    from ..services.element_projection import PROPERTY_TO_PARAM, reverse_map
+
+    writes: list = []
+    state = loop_result.final_state
+    if state is None:
+        return writes
+    for path in PROPERTY_TO_PARAM:
+        p = state.get_param(path)
+        if p is None or isinstance(p.value, bool) or not isinstance(p.value, (int, float)):
+            continue
+        target = reverse_map(path, elements)
+        if target is None:
+            continue
+        el, name = target
+        writes.append(ParamWrite(name=name, value=float(p.value), element_id=el["id"], unit=p.unit or ""))
+    if root is not None:
+        for path in STUDY_LEVEL_OUTPUTS:
+            p = state.get_param(path)
+            if p is None or isinstance(p.value, bool) or not isinstance(p.value, (int, float)):
+                continue
+            writes.append(ParamWrite(name=path.replace(".", "_"), value=float(p.value),
+                                     element_id=root["id"], unit=p.unit or "",
+                                     description=f"Design loop output {path}"))
+    return writes
+
+
+def _loop_conflicts(loop_result) -> list:
+    from ..services.analysis_results import Conflict
+    out = []
+    for c in loop_result.conflicts:
+        d = c.model_dump() if hasattr(c, "model_dump") else dict(c)
+        sev = d.get("severity")
+        sev = sev.value if hasattr(sev, "value") else str(sev or "major")
+        out.append(Conflict(
+            severity=sev if sev in ("critical", "major", "minor", "warning", "info") else "major",
+            code=str(d.get("id") or ""), title=str(d.get("title") or ""),
+            detail=str(d.get("description") or ""),
+            suggested_fix="; ".join(str(r.get("description") or r.get("title") or r)
+                                    for r in (d.get("resolutions") or [])) or None,
+        ))
+    return out
+
+
+async def _persist_merged_elements(elements: list[dict], modified_ids: list[str]) -> None:
+    from ..db.element_repo import db_update_element
+    by_id = {e["id"]: e for e in elements}
+    for eid in modified_ids:
+        el = by_id.get(eid)
+        if el is None:
+            continue
+        el["version"] = int(el.get("version") or 1) + 1
+        await db_update_element(eid, el)
 
 
 class DesignRunRequest(BaseModel):
@@ -39,8 +121,9 @@ class DesignRunResponse(BaseModel):
 
 
 @router.post("/{study_id}/run")
-async def run_design_loop(study_id: str, request: DesignRunRequest | None = None) -> DesignRunResponse:
-    """Execute the design convergence loop for a study."""
+async def run_design_loop(study_id: str, request: DesignRunRequest | None = None,
+                          option_id: str | None = Query(None)) -> DesignRunResponse:
+    """Execute the design convergence loop for a study (model-coupled, SCDF-171)."""
     studies = get_study_store()
     study = studies.get(study_id)
     if not study:
@@ -54,7 +137,21 @@ async def run_design_loop(study_id: str, request: DesignRunRequest | None = None
     orchestrator = DesignLoopOrchestrator(config=config)
     orchestrator.initialise_agents()
 
-    loop_result = await orchestrator.run(study.requirements, conops=study.conops)
+    # SCDF-171: seed the design state from the model (best-effort)
+    ctx = None
+    initial_state = None
+    run_id = None
+    try:
+        from ..services.analysis_context import build_context, context_hash, seed_design_state
+        from ..services.analysis_results import input_keys_for, start_run
+        ctx = await build_context(study_id, option_id=option_id)
+        initial_state = seed_design_state(ctx, requirements=study.requirements, conops=study.conops)
+        run_id = await start_run(study_id, DESIGN_LOOP, context_hash(ctx, input_keys_for(DESIGN_LOOP)), option_id)
+    except Exception:
+        logger.warning("design loop: model coupling unavailable for %s (running uncoupled)", study_id, exc_info=True)
+        ctx, initial_state, run_id = None, None, None
+
+    loop_result = await orchestrator.run(study.requirements, initial_state=initial_state, conops=study.conops)
 
     # Update study with results
     study.iterations = loop_result.iterations
@@ -83,6 +180,44 @@ async def run_design_loop(study_id: str, request: DesignRunRequest | None = None
             "status": budget.status.value,
             "lines": [line.model_dump() for line in budget.lines],
         }
+
+    # SCDF-171: write agent outputs back to the model + record the run
+    if ctx is not None:
+        try:
+            from ..services.analysis_results import ResultsSink, finish_run, refresh_inputs_hash
+            from ..services.element_projection import merge_agent_params_to_elements
+            agent_values = {pid: p["value"] for pid, p in params.items()}
+            modified = merge_agent_params_to_elements(ctx.elements, agent_values)
+            if modified:
+                await _persist_merged_elements(ctx.elements, modified)
+            publish = await ResultsSink().publish(
+                study_id, DESIGN_LOOP,
+                parameters=_agent_param_writes(loop_result, ctx.elements, ctx.mission_root),
+                conflicts=_loop_conflicts(loop_result),
+                notes=list(loop_result.all_warnings)[:20],
+                option_id=option_id, run_id=run_id, ctx=ctx,
+            )
+            if run_id:
+                summary = {
+                    "converged": loop_result.converged, "iterations": len(loop_result.iterations),
+                    "total_time_s": round(loop_result.total_time_s, 3),
+                    "sticky_paths": sorted(ctx.overridden_paths),
+                    "parameters_written": len(publish.written), "shadowed": len(publish.shadowed),
+                    "conflicts": len(publish.conflicts), "warnings": len(loop_result.all_warnings),
+                    "budgets": {k: {"total_with_margin": v["total_with_margin"], "status": v["status"]}
+                                for k, v in budgets.items()},
+                    "compliance": publish.compliance_results,
+                }
+                await finish_run(run_id, "ok", summary=summary, series={"parameters": params, "budgets": budgets})
+                await refresh_inputs_hash(run_id)   # the run's own outputs are now part of the context
+        except Exception:
+            logger.warning("design loop: write-back failed for %s", study_id, exc_info=True)
+            if run_id:
+                try:
+                    from ..services.analysis_results import finish_run
+                    await finish_run(run_id, "failed", summary={"error": "write-back failed"})
+                except Exception:
+                    pass
 
     return DesignRunResponse(
         converged=loop_result.converged,
