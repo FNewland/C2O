@@ -13,6 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from .routers import studies, design, agents, kb, exports, positions, engineering, sessions, ws, templates, ecss, snapshots, optimize, compliance, lifecycle, ai, requirements, conops, thermal, ground, fmeca, elements
+from .routers import functions as functions_router, exchange_items as exchange_items_router, relations as relations_router, parameters as parameters_router, exchange as exchange_router
 from .db.engine import DATABASE_URL, dispose_engine, get_engine
 from .db.write_queue import start_worker, stop_worker
 
@@ -151,6 +152,12 @@ app.include_router(thermal.router, prefix="/api/thermal", tags=["Thermal"])
 app.include_router(ground.router, prefix="/api/ground", tags=["Ground Segment"])
 app.include_router(fmeca.router, prefix="/api/fmeca", tags=["FMECA"])
 app.include_router(elements.router, prefix="/api", tags=["Design Elements"])
+# SCDF-160 Arcadia spine routers
+app.include_router(functions_router.router, prefix="/api", tags=["Functions"])
+app.include_router(exchange_items_router.router, prefix="/api", tags=["Exchange Items / ICD"])
+app.include_router(relations_router.router, prefix="/api", tags=["Traceability"])
+app.include_router(parameters_router.router, prefix="/api", tags=["Parameters"])
+app.include_router(exchange_router.router, prefix="/api", tags=["Model Exchange"])
 app.include_router(ws.router, tags=["WebSocket"])
 
 

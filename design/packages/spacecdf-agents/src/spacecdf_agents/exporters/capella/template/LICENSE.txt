@@ -1,0 +1,3 @@
+Empty Capella 7.0.0 project template.
+Source: https://github.com/dbinfrago/py-capellambse (tests/data/models/empty), Copyright DB InfraGO AG, Apache-2.0.
+Used by SpaceCDF as the seed model for Capella export.

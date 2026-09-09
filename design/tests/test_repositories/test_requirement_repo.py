@@ -34,12 +34,12 @@ def _patch_engine(tmp_path):
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
 
-    asyncio.get_event_loop().run_until_complete(_create_tables())
+    asyncio.run(_create_tables())
 
     with patch("spacecdf_server.repositories.requirement_repo.get_session_factory", return_value=factory):
         yield factory
 
-    asyncio.get_event_loop().run_until_complete(engine.dispose())
+    asyncio.run(engine.dispose())
 
 
 @pytest.fixture()
