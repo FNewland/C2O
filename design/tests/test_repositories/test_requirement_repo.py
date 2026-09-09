@@ -167,10 +167,10 @@ class TestUpdateRequirement:
         await repo.create(_mission_req())
         updated = await repo.update("MR-001", {"text": "Updated text", "code": "MR-001-v2"})
         assert updated.text == "Updated text"
-        # code is not in allowed_fields so won't change via update
-        # Actually code IS in allowed_fields - let me check
-        # It's not in allowed_fields, so we verify it stayed the same
-        assert updated.code == "MR-001"
+        # 'code' is in RequirementRepository.update.allowed_fields: the human
+        # readable code is editable (renumbering during review is normal),
+        # while 'id' stays the stable key.
+        assert updated.code == "MR-001-v2"
 
     @pytest.mark.asyncio
     async def test_update_threshold(self, repo):

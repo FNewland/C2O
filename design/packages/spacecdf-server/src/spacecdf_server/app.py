@@ -23,33 +23,21 @@ logger = logging.getLogger(__name__)
 async def init_db() -> None:
     """Create DB tables from SQLAlchemy metadata (idempotent).
 
-    Also runs a tiny additive-column migrator for Phase 5B snapshot columns
-    (name, label, parent_snapshot_id, tags_json). SQLite-only; Postgres
-    users must run the migration documented in the Phase 5B release notes.
+    Then runs the additive-column migrator (db/migrate.py) so databases
+    created from an older model set gain any new columns.
     """
-    from sqlalchemy import text
-
     from .db.models import Base
 
     engine = get_engine()
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
-    # Additive-migration: snapshot columns
-    if DATABASE_URL.startswith("sqlite"):
-        async with engine.begin() as conn:
-            rows = (await conn.execute(text("PRAGMA table_info(design_states)"))).fetchall()
-            existing_cols = {row[1] for row in rows}
-            additions = [
-                ("name", "VARCHAR(128)"),
-                ("label", "VARCHAR(32) DEFAULT 'auto'"),
-                ("parent_snapshot_id", "INTEGER"),
-                ("tags_json", "JSON"),
-            ]
-            for col, typ in additions:
-                if col not in existing_cols:
-                    await conn.execute(text(f"ALTER TABLE design_states ADD COLUMN {col} {typ}"))
-                    logger.info("Added column design_states.%s", col)
+    # Additive migration: any ORM column missing from an existing table
+    # (Phase 5B snapshot columns, SCDF-160 arcadia columns, ...).
+    from .db.migrate import ensure_schema_upgrades
+    added = await ensure_schema_upgrades(engine)
+    if added:
+        logger.info("Schema upgraded: %s", ", ".join(added))
 
     logger.info("Database initialized: %s", DATABASE_URL)
 

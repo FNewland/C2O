@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from sqlalchemy import DateTime, ForeignKey, Integer, JSON, String, Text
+from sqlalchemy import Boolean, DateTime, ForeignKey, Index, Integer, JSON, String, Text, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -141,6 +141,9 @@ class RequirementRow(Base):
         String(64), ForeignKey("design_elements.id"), nullable=True, index=True
     )
     derived_from_requirement_id: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    # SCDF-160 §1.4: identity in external tools (Capella Requirements VP / ReqIF)
+    external_id: Mapped[str | None] = mapped_column(String(128), nullable=True, index=True)
+    external_ids_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow, onupdate=_utcnow)
 
@@ -215,6 +218,9 @@ class DesignElementRow(Base):
     description: Mapped[str] = mapped_column(Text, default="")
     segment: Mapped[str] = mapped_column(String(16), default="space")
     # segment values: space, ground, operations
+    # SCDF-160 §1.3: Arcadia layer. 'PA' for physical items, 'LA' where
+    # element_type='logical'. Realizations (RealizationRow) link LA<->PA.
+    layer: Mapped[str] = mapped_column(String(4), default="PA")
 
     # Physical properties
     mass_kg: Mapped[float | None] = mapped_column(nullable=True)
@@ -286,6 +292,8 @@ class ElementInterfaceRow(Base):
 
     # Type-specific properties (voltage, current, data rate, frequency, connector, protocol)
     properties_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    # SCDF-160 §1.2: list of exchange_items.id flowing over this interface
+    exchange_item_ids_json: Mapped[list | None] = mapped_column(JSON, nullable=True)
 
     status: Mapped[str] = mapped_column(String(32), default="defined")
     criticality: Mapped[str] = mapped_column(String(16), default="standard")
@@ -341,3 +349,196 @@ class ElementBaselineRow(Base):
 
     snapshot_json: Mapped[dict] = mapped_column(JSON)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# SCDF-160 ARCADIA SPINE (design: docs/_review/designs/SCDF-160-arcadia-spine.md)
+# Functions, ports, allocations, functional exchanges, realizations,
+# exchange items, typed requirement relations, typed parameters.
+# ═══════════════════════════════════════════════════════════════════════
+
+class FunctionRow(Base):
+    """Persisted, allocatable function (Arcadia `fa`). §1.1"""
+    __tablename__ = "functions"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    study_id: Mapped[str] = mapped_column(String(32), ForeignKey("studies.id"), index=True)
+    parent_id: Mapped[str | None] = mapped_column(
+        String(64), ForeignKey("functions.id"), nullable=True, index=True
+    )
+    name: Mapped[str] = mapped_column(String(255))
+    description: Mapped[str] = mapped_column(Text, default="")
+    layer: Mapped[str] = mapped_column(String(4), default="SA", index=True)  # OA|SA|LA|PA
+    function_type: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    level: Mapped[int] = mapped_column(Integer, default=0)
+    is_leaf: Mapped[bool] = mapped_column(Boolean, default=False)
+    position_responsible: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    external_id: Mapped[str | None] = mapped_column(String(128), nullable=True, index=True)
+    external_ids_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+
+    version: Mapped[int] = mapped_column(Integer, default=1)
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow, onupdate=_utcnow)
+
+
+class FunctionPortRow(Base):
+    """Input/output port of a function. §1.1"""
+    __tablename__ = "function_ports"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    function_id: Mapped[str] = mapped_column(String(64), ForeignKey("functions.id"), index=True)
+    name: Mapped[str] = mapped_column(String(255), default="")
+    direction: Mapped[str] = mapped_column(String(4), default="out")  # in|out
+    exchange_item_ids_json: Mapped[list | None] = mapped_column(JSON, nullable=True)
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
+
+
+class FunctionAllocationRow(Base):
+    """Function -> element allocation, unique per (function, layer). §1.1"""
+    __tablename__ = "function_allocations"
+    __table_args__ = (
+        UniqueConstraint("function_id", "layer", name="uq_function_allocation_function_layer"),
+    )
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    study_id: Mapped[str] = mapped_column(String(32), ForeignKey("studies.id"), index=True)
+    function_id: Mapped[str] = mapped_column(String(64), ForeignKey("functions.id"), index=True)
+    element_id: Mapped[str] = mapped_column(String(64), ForeignKey("design_elements.id"), index=True)
+    layer: Mapped[str] = mapped_column(String(4), default="SA")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
+
+
+class FunctionalExchangeRow(Base):
+    """Flow between two function ports, optionally realised by an element interface. §1.1"""
+    __tablename__ = "functional_exchanges"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    study_id: Mapped[str] = mapped_column(String(32), ForeignKey("studies.id"), index=True)
+    name: Mapped[str] = mapped_column(String(255), default="")
+    from_port_id: Mapped[str] = mapped_column(String(64), ForeignKey("function_ports.id"), index=True)
+    to_port_id: Mapped[str] = mapped_column(String(64), ForeignKey("function_ports.id"), index=True)
+    exchange_item_ids_json: Mapped[list | None] = mapped_column(JSON, nullable=True)
+    realized_by_interface_id: Mapped[str | None] = mapped_column(
+        String(64), ForeignKey("element_interfaces.id"), nullable=True, index=True
+    )
+    external_id: Mapped[str | None] = mapped_column(String(128), nullable=True, index=True)
+    version: Mapped[int] = mapped_column(Integer, default=1)
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow, onupdate=_utcnow)
+
+
+class RealizationRow(Base):
+    """Cross-layer realization link (SA->LA->PA functions, LA->PA elements). §1.1"""
+    __tablename__ = "realizations"
+    __table_args__ = (
+        UniqueConstraint(
+            "source_kind", "source_id", "target_kind", "target_id",
+            name="uq_realization_source_target",
+        ),
+        Index("ix_realizations_source", "source_kind", "source_id"),
+        Index("ix_realizations_target", "target_kind", "target_id"),
+    )
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    study_id: Mapped[str] = mapped_column(String(32), ForeignKey("studies.id"), index=True)
+    source_kind: Mapped[str] = mapped_column(String(16))  # function|element
+    source_id: Mapped[str] = mapped_column(String(64))
+    target_kind: Mapped[str] = mapped_column(String(16))
+    target_id: Mapped[str] = mapped_column(String(64))
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
+
+
+class ExchangeItemRow(Base):
+    """What flows over an interface (Arcadia `information` -> ICD line). §1.2"""
+    __tablename__ = "exchange_items"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    study_id: Mapped[str] = mapped_column(String(32), ForeignKey("studies.id"), index=True)
+    name: Mapped[str] = mapped_column(String(255))
+    kind: Mapped[str] = mapped_column(String(16), default="data", index=True)
+    # kind values: data, power, rf, thermal, mechanical, optical, fluid
+    properties_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    description: Mapped[str] = mapped_column(Text, default="")
+    external_id: Mapped[str | None] = mapped_column(String(128), nullable=True, index=True)
+    external_ids_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    version: Mapped[int] = mapped_column(Integer, default=1)
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow, onupdate=_utcnow)
+
+
+class RequirementRelationRow(Base):
+    """Typed relation (Capella Requirements VP / ReqIF SPEC-RELATION). §1.4"""
+    __tablename__ = "requirement_relations"
+    __table_args__ = (
+        UniqueConstraint(
+            "kind", "source_kind", "source_id", "target_kind", "target_id",
+            name="uq_requirement_relation",
+        ),
+        Index("ix_requirement_relations_source", "source_kind", "source_id"),
+        Index("ix_requirement_relations_target", "target_kind", "target_id"),
+    )
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    study_id: Mapped[str] = mapped_column(String(32), ForeignKey("studies.id"), index=True)
+    kind: Mapped[str] = mapped_column(String(16), index=True)
+    # kind values: satisfies, verifies, refines, derives, traces, allocates
+    source_kind: Mapped[str] = mapped_column(String(16))
+    # source/target kind values: requirement, element, function, interface, parameter, test
+    source_id: Mapped[str] = mapped_column(String(64))
+    target_kind: Mapped[str] = mapped_column(String(16))
+    target_id: Mapped[str] = mapped_column(String(64))
+    rationale: Mapped[str] = mapped_column(Text, default="")
+    external_id: Mapped[str | None] = mapped_column(String(128), nullable=True, index=True)
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
+
+
+class ParameterDefinitionRow(Base):
+    """Global parameter definition (10-25 ParameterType + quantity kind + unit). §1.5"""
+    __tablename__ = "parameter_definitions"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    name: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+    quantity_kind: Mapped[str] = mapped_column(String(32), default="")
+    unit: Mapped[str] = mapped_column(String(16), default="")
+    scale: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    description: Mapped[str] = mapped_column(Text, default="")
+    is_well_known: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow, onupdate=_utcnow)
+
+
+class ElementParameterRow(Base):
+    """Typed parameter value on an element (10-25 ParameterValueSet). §1.5"""
+    __tablename__ = "element_parameters"
+    __table_args__ = (
+        UniqueConstraint(
+            "element_id", "definition_id", "iteration",
+            name="uq_element_parameter_element_definition_iteration",
+        ),
+    )
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    study_id: Mapped[str] = mapped_column(String(32), ForeignKey("studies.id"), index=True)
+    element_id: Mapped[str] = mapped_column(String(64), ForeignKey("design_elements.id"), index=True)
+    definition_id: Mapped[str] = mapped_column(
+        String(64), ForeignKey("parameter_definitions.id"), index=True
+    )
+    owner_domain: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    manual_value: Mapped[float | None] = mapped_column(nullable=True)
+    computed_value: Mapped[float | None] = mapped_column(nullable=True)
+    reference_value: Mapped[float | None] = mapped_column(nullable=True)
+    value_switch: Mapped[str] = mapped_column(String(16), default="computed")  # manual|computed|reference
+    formula: Mapped[str | None] = mapped_column(Text, nullable=True)
+    formula_kind: Mapped[str | None] = mapped_column(String(8), nullable=True)  # ref|calc|None
+    option_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    iteration: Mapped[int] = mapped_column(Integer, default=1)
+    version: Mapped[int] = mapped_column(Integer, default=1)
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow, onupdate=_utcnow)
