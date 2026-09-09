@@ -24,7 +24,25 @@ Mapping (design §2, "capella" row)
                                function, linked via ``!promise``
 * function allocations      -> ``allocated_functions`` on the component
 * requirements              -> one ``CapellaModule`` in ``oa.requirement_modules``,
-                               nested by ``parent_id``; relations ->
+                               nested by ``parent_id``. A requirement that has
+                               children is exported as ``Requirements:Folder``
+                               (SCDF-160 N4 / SCDF-170): in the Requirements
+                               viewpoint only ``Folder`` owns requirements —
+                               ``Requirement`` has no containment (checked
+                               against capellambse 0.8: ``Folder.requirements``
+                               / ``Folder.folders`` exist, ``Requirement`` has
+                               neither), so nesting requires the Folder class.
+                               Folders keep the full requirement payload
+                               (``identifier``, ``text``, ``description`` =
+                               rationale, ``chapter_name`` = level) and
+                               additionally carry ``long_name`` =
+                               ``"<code>: <text>"`` so the tree reads as
+                               requirements in Capella (``summary`` is not
+                               writable on Folder in capellambse 0.8).
+                               ``model.search("Requirement")`` does not return
+                               Folders — use ``search("Requirement",
+                               "Requirements:Folder")`` or
+                               ``oa.all_requirements``. Relations ->
                                ``CapellaOutgoingRelation`` (req -> model element),
                                ``CapellaIncomingRelation`` (model element -> req),
                                ``InternalRelation`` (req -> req), typed by a
@@ -57,7 +75,7 @@ from capellambse.decl import Promise, UUIDReference
 __all__ = [
     "SpineSnapshot", "ModelAnchors", "MappingResult", "build_instructions",
     "capella_uuid", "promise_id", "BUDGET_GROUP", "META_GROUP", "MODULE_NAME",
-    "TYPES_FOLDER_NAME", "RELATION_KINDS", "guess_subsystem_domain",
+    "TYPES_FOLDER_NAME", "RELATION_KINDS", "guess_subsystem_domain", "folder_long_name",
     "FUNCTION_CLASS", "COMPONENTS_ATTR", "EXCHANGE_MECHANISM", "candidate_uuids",
 ]
 
@@ -549,14 +567,18 @@ class _Builder:
                 parent_ref = Promise(promise_id("requirement_module", "module"))
                 parent_hint = mod_uuid
             code = r.get("code") or r["id"]
+            text = r.get("text") or ""
             # A requirement with children is a ``Folder`` (a Requirement subclass
-            # that owns requirements) - the only way to nest in the VP.
-            cls = "Requirements:Folder" if r["id"] in has_children else "Requirement"
-            self.upsert("requirement", r, parent_ref, parent_hint, "requirements",
-                        {"_type": cls, "identifier": code, "long_name": code, "name": code,
-                         "text": r.get("text") or "",
-                         "description": r.get("rationale") or "",
-                         "chapter_name": r.get("level") or ""})
+            # that owns requirements) - the only way to nest in the VP (see module
+            # docstring). Folders get their long_name from the requirement text.
+            is_folder = r["id"] in has_children
+            cls = "Requirements:Folder" if is_folder else "Requirement"
+            props = {"_type": cls, "identifier": code, "long_name": code, "name": code,
+                     "text": text, "description": r.get("rationale") or "",
+                     "chapter_name": r.get("level") or ""}
+            if is_folder:
+                props["long_name"] = folder_long_name(code, text)
+            self.upsert("requirement", r, parent_ref, parent_hint, "requirements", props)
 
         for r in self.req_by_id.values():
             visit(r)
@@ -606,6 +628,16 @@ class _Builder:
             return
         owner_uuid = self.id_map.get(("requirement", sid if owner is src else tid))
         self.upsert("relation", rel, owner, owner_uuid, "owned_relations", props)
+
+
+def folder_long_name(code: str, text: str, limit: int = 120) -> str:
+    """``"<code>: <text>"`` (single line, truncated with an ellipsis) for the
+    ``Requirements:Folder`` that stands in for a parent requirement (N4)."""
+    one_line = " ".join((text or "").split())
+    if not one_line:
+        return code
+    label = f"{code}: {one_line}"
+    return label if len(label) <= limit else label[: limit - 1].rstrip() + "…"
 
 
 def candidate_uuids(snap: SpineSnapshot) -> dict[str, tuple[str, str]]:

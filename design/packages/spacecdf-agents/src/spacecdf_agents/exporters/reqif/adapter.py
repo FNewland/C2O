@@ -4,7 +4,10 @@ Export
 ------
 * one ``SPEC-OBJECT-TYPE`` "SpaceCDF Requirement" with STRING attributes
   ``code, text, rationale, level, verification_method, verification_phase,
-  status`` (all ``DATATYPE-DEFINITION-STRING``);
+  status, threshold_param_path, threshold_op, threshold_value`` (all
+  ``DATATYPE-DEFINITION-STRING``; the three threshold attributes — SCDF-170
+  N2 — carry the compliance-tracker contract, ``threshold_value`` verbatim as
+  the JSON-encoded string the store holds);
 * one ``SPEC-OBJECT`` per (non-retired) requirement, ``IDENTIFIER`` =
   ``external_id`` or a generated ``SCDF-REQ-<id>`` that is written back to the
   requirement so the next export re-uses it;
@@ -58,7 +61,11 @@ from reqif.unparser import ReqIFUnparser
 
 logger = logging.getLogger(__name__)
 
-ATTRIBUTES = ("code", "text", "rationale", "level", "verification_method", "verification_phase", "status")
+ATTRIBUTES = ("code", "text", "rationale", "level", "verification_method", "verification_phase", "status",
+              "threshold_param_path", "threshold_op", "threshold_value")
+#: Attributes that are cleared on import when the ReqIF value is empty.
+CLEARABLE_ATTRIBUTES = ("rationale", "verification_method", "verification_phase",
+                        "threshold_param_path", "threshold_op", "threshold_value")
 RELATION_KINDS = ("satisfies", "verifies", "refines", "derives", "traces")
 SPEC_OBJECT_TYPE_ID = "SCDF-TYPE-REQUIREMENT"
 SPECIFICATION_TYPE_ID = "SCDF-TYPE-SPECIFICATION"
@@ -282,8 +289,9 @@ async def import_requirements_reqif(study_id: str, data: bytes | str) -> ImportR
             req = {
                 "id": req_id, "study_id": study_id, "parent_id": None, "element_id": None,
                 "level": fields["level"], "code": fields.get("code") or ident, "text": fields.get("text") or "",
-                "rationale": fields.get("rationale"), "threshold_param_path": None, "threshold_op": None,
-                "threshold_value": None, "verification_method": fields.get("verification_method"),
+                "rationale": fields.get("rationale"), "threshold_param_path": fields.get("threshold_param_path"),
+                "threshold_op": fields.get("threshold_op"), "threshold_value": fields.get("threshold_value"),
+                "verification_method": fields.get("verification_method"),
                 "verification_phase": fields.get("verification_phase"), "responsible_position": None,
                 "status": fields["status"], "derived_from_requirement_id": None, "external_id": ident,
             }
@@ -292,7 +300,7 @@ async def import_requirements_reqif(study_id: str, data: bytes | str) -> ImportR
             result.created += 1
         else:
             for k, v in fields.items():
-                if v is not None or k in ("rationale", "verification_method", "verification_phase"):
+                if v is not None or k in CLEARABLE_ATTRIBUTES:
                     req[k] = v
             req["external_id"] = ident
             result.updated += 1

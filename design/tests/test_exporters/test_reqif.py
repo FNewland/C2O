@@ -110,3 +110,44 @@ async def test_import_updates_existing_by_identifier(db_factory, study, clean_st
     assert res.created == 0 and res.updated == 4
     assert _requirements["SR-1"]["text"] == "The EPS shall deliver 30 W average."
     assert _requirements["SR-1"]["parent_id"] == "MR-1"
+
+
+async def test_threshold_round_trip(db_factory, study, clean_stores):  # noqa: F811
+    """SCDF-170 N2: threshold_param_path/op/value survive export -> import."""
+    from reqif.parser import ReqIFParser
+    from spacecdf_agents.exporters.reqif import ATTRIBUTES, export_requirements_reqif, import_requirements_reqif
+    from spacecdf_server.routers.requirements import _requirements
+
+    await _seed_requirements(study)
+    _requirements["SR-1"].update({"threshold_param_path": "power.eps_mass_kg", "threshold_op": "<=",
+                                  "threshold_value": "5"})
+    _requirements["SSR-1"].update({"threshold_param_path": "el:PCDU.mass_kg", "threshold_op": ">=",
+                                   "threshold_value": "0.25"})
+    assert {"threshold_param_path", "threshold_op", "threshold_value"} <= set(ATTRIBUTES)
+
+    data = await export_requirements_reqif(study)
+    content = ReqIFParser.parse_from_string(data.decode()).core_content.req_if_content
+    objs = {o.identifier: {a.definition_ref: a.value for a in o.attributes} for o in content.spec_objects}
+    assert objs["SCDF-REQ-SR-1"]["SCDF-ATTR-THRESHOLD_PARAM_PATH"] == "power.eps_mass_kg"
+    assert objs["SCDF-REQ-SR-1"]["SCDF-ATTR-THRESHOLD_OP"] == "<="
+    assert objs["SCDF-REQ-SR-1"]["SCDF-ATTR-THRESHOLD_VALUE"] == "5"
+    assert objs["CUSTOMER-REQ-42"]["SCDF-ATTR-THRESHOLD_PARAM_PATH"] == "el:PCDU.mass_kg"
+    assert objs["SCDF-REQ-MR-1"]["SCDF-ATTR-THRESHOLD_PARAM_PATH"] == ""
+
+    fresh = "study-fresh"
+    await import_requirements_reqif(fresh, data)
+    new = {r["external_id"]: r for r in _requirements.values() if r["study_id"] == fresh}
+    sr1, ssr1, mr1 = new["SCDF-REQ-SR-1"], new["CUSTOMER-REQ-42"], new["SCDF-REQ-MR-1"]
+    assert (sr1["threshold_param_path"], sr1["threshold_op"], sr1["threshold_value"]) == ("power.eps_mass_kg", "<=", "5")
+    assert (ssr1["threshold_param_path"], ssr1["threshold_op"], ssr1["threshold_value"]) == ("el:PCDU.mass_kg", ">=", "0.25")
+    assert mr1["threshold_param_path"] is None and mr1["threshold_op"] is None and mr1["threshold_value"] is None
+
+    # the compliance tracker can act on the imported requirement
+    from spacecdf_server.services.compliance_tracker import ComplianceTracker
+    res = ComplianceTracker().evaluate_single(sr1, {"power.eps_mass_kg": 6.0})
+    assert res.status == "fail" and res.threshold_value == 5.0
+
+    # re-import after the source cleared its threshold clears it on the target too
+    _requirements["SR-1"].update({"threshold_param_path": None, "threshold_op": None, "threshold_value": None})
+    await import_requirements_reqif(fresh, await export_requirements_reqif(study))
+    assert new["SCDF-REQ-SR-1"]["threshold_param_path"] is None

@@ -311,3 +311,32 @@ def test_render_is_optional():
     svgs = render_context_svgs(load_model(td / "empty.aird"), warnings=warnings)
     assert isinstance(svgs, dict)
     assert all(v.lstrip().startswith("<") for v in svgs.values())
+
+
+async def test_parent_requirement_folder_carries_text(db_factory, study, clean_stores):  # noqa: F811
+    """SCDF-170 N4: a parent requirement is a ``Requirements:Folder`` (the VP's
+    only nesting container) that still carries the requirement payload plus a
+    text-bearing ``long_name``; children are nested under it."""
+    from spacecdf_agents.exporters.capella import export_study_to_capella
+    from spacecdf_agents.exporters.capella.mapping import folder_long_name
+
+    await _seed(study)
+    res = await export_study_to_capella(study)
+    model, _ = _open(res.zip_bytes)
+    reqs = {r.identifier: r for r in model.oa.all_requirements}
+    mr, sr = reqs["MR-001"], reqs["SR-001"]
+    assert type(mr).__name__ == "Folder" and type(sr).__name__ == "Requirement"
+    assert sr.parent is mr or sr.parent.uuid == mr.uuid
+    assert [r.identifier for r in mr.requirements] == ["SR-001"]
+    assert str(mr.text) == "The mission shall image the coast."
+    assert mr.long_name == "MR-001: The mission shall image the coast."
+    assert str(mr.description) == "customer need"                  # rationale, as for leaf requirements
+    assert mr.chapter_name == "mission"
+    assert sr.long_name == "SR-001"                                # leaves unchanged
+    # a plain Requirement cannot own requirements in this VP -> Folder is required
+    assert not hasattr(sr, "requirements") or "requirements" not in type(sr).__dict__
+    # folders are found via the explicit class, not via search("Requirement")
+    assert {r.identifier for r in model.search("Requirement")} == {"SR-001"}
+    assert {r.identifier for r in model.search("Requirement", "Requirements:Folder")} == {"MR-001", "SR-001"}
+    assert folder_long_name("X-1", "  a   very\nlong " + "text " * 40).endswith("…")
+    assert folder_long_name("X-1", "") == "X-1"

@@ -48,6 +48,37 @@ study ──► AnalysisContext ──► {agents | simulation | ground | therma
 - UI: option switcher in the workbench status bar; `OptionCompare.tsx` table.
 - Elements/tree are NOT cloned per option in this range (documented limit); `in_scope` per option is deferred.
 
+### 1.5 As built (SCDF-170 Phase A, 2026-09-09) — binding interfaces for the closures
+
+* `services/analysis_context.py`: `AnalysisContext` (fields as in §1.1 plus `overridden_paths`,
+  `latest_design`, `all_kb_stations`, `relations`, `warnings`; helpers `element()`, `subsystem()`,
+  `param()`, `resolve(path)`, `canonical_path(path)`, `get(path)`, `mission_root`),
+  `async build_context(study_id, *, option_id=None)`, `context_hash(ctx, keys)` over
+  `HASH_KEYS = elements|params|modes|orbit|power|thermal|stations|requirements`,
+  `seed_design_state(ctx, *, requirements, conops, knowledge_base)`. Overrides (manual /
+  reference / formula) on the well-known columns overlay the projection; an overridden roll-up on a
+  non-leaf element **replaces** its subtree in `sum` aggregates (`element_projection` now sums
+  leaves only, so N1's rolled-up subsystem columns are not double counted).
+* `services/analysis_results.py`: `ParamWrite`, `Conflict`, `PublishResult`,
+  `ResultsSink().publish(study_id, analysis, *, parameters, conflicts, notes, option_id, run_id, ctx)`,
+  `start_run` / `finish_run(run_id, status, summary, series, inputs_hash)` /
+  `refresh_inputs_hash(run_id)` (write-back analyses call it after `finish_run`, else their own
+  outputs flag them stale) / `get_last_run` / `list_analyses` / `resolve_conflict`,
+  `ANALYSIS_INPUT_KEYS` (declare yours), series under `$SPACECDF_DATA_DIR/analysis/<run_id>.json`.
+  Parameter rows are not yet option-scoped (unique per element/definition) — SCDF-172.
+* Compliance: `threshold_param_path = "el:<element id|name>.<param>"` resolved via
+  `ctx.resolve`; `ResultsSink` re-checks through a per-study `ComplianceTracker` (`get_tracker`).
+* Routes: `GET /api/studies/{id}/conflicts` → `{design, analysis}` (design = `analysis='design_loop'`
+  rows), `POST /api/conflicts/{id}/resolve`, `GET /api/studies/{id}/analyses[/{analysis}]`.
+* Design loop (`routers/design.py`) is coupled per §1.3; `?option_id=` accepted.
+* N4 ruling: the Capella Requirements VP has **no** containment on `Requirement` (capellambse 0.8:
+  only `Folder.requirements` / `Folder.folders`), so parent requirements stay `Requirements:Folder`
+  with the full payload plus `long_name = "<code>: <text>"`. Do not "fix" the
+  `search("Requirement")` count — use `oa.all_requirements` or `search("Requirement", "Requirements:Folder")`.
+* N1–N3: `populate-subsystems` rolls up `mass_kg`/`power_avg_w` (children, else class heritage
+  table) and creates the default power/data/RF interfaces with exchange items; ReqIF carries the
+  three threshold attributes.
+
 ## 2. Engineering closures (parallel, each owns its service + router + component)
 
 Each closure implements `async def run_<name>(ctx: AnalysisContext) -> AnalysisOutput(parameters, conflicts, series, summary)` and a thin router `POST /studies/{id}/analyses/<name>/run?option_id=` + `GET /studies/{id}/analyses/<name>` (last run + stale flag) that goes through `ResultsSink`. No calculator keeps its own defaults path as the primary entry; the old bare endpoints stay for ad-hoc use.
