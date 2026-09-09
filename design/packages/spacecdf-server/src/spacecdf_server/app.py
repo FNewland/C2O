@@ -14,6 +14,7 @@ from fastapi.staticfiles import StaticFiles
 
 from .routers import studies, design, agents, kb, exports, positions, engineering, sessions, ws, templates, ecss, snapshots, optimize, compliance, lifecycle, ai, requirements, conops, thermal, ground, fmeca, elements
 from .routers import options as options_router, analyses_simulation as analyses_simulation_router, analyses_ground as analyses_ground_router, analyses_vv as analyses_vv_router, analyses_physics as analyses_physics_router
+from .routers import analyses_common as analyses_common_router
 from .routers import functions as functions_router, exchange_items as exchange_items_router, relations as relations_router, parameters as parameters_router, exchange as exchange_router
 from .db.engine import DATABASE_URL, dispose_engine, get_engine
 from .db.write_queue import start_worker, stop_worker
@@ -159,6 +160,7 @@ app.include_router(parameters_router.router, prefix="/api", tags=["Parameters"])
 app.include_router(exchange_router.router, prefix="/api", tags=["Model Exchange"])
 # SCDF-170 closing-the-loop routers
 app.include_router(options_router.router, prefix="/api", tags=["Options"])
+app.include_router(analyses_common_router.router, prefix="/api", tags=["Analyses"])
 app.include_router(analyses_simulation_router.router, prefix="/api", tags=["Analyses: Mission Simulation"])
 app.include_router(analyses_ground_router.router, prefix="/api", tags=["Analyses: Ground Segment"])
 app.include_router(analyses_vv_router.router, prefix="/api", tags=["Analyses: V&V"])
