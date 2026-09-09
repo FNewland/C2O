@@ -85,6 +85,16 @@ def _interface_row_to_dict(row: ElementInterfaceRow) -> dict:
     return d
 
 
+async def _mirror_parameters(element_dict: dict) -> None:
+    """SCDF-160 §1.5: write-through the six well-known columns into
+    ElementParameterRow. Non-fatal — the element write already succeeded."""
+    try:
+        from .parameter_repo import mirror_well_known_columns
+        await mirror_well_known_columns(element_dict)
+    except Exception:
+        logger.exception("parameter mirroring failed for %s", element_dict.get("id"))
+
+
 # ── Public API ──────────────────────────────────────────────────────────
 
 async def load_all_elements() -> tuple[dict[str, dict], dict[str, dict]]:
@@ -132,6 +142,8 @@ async def db_create_element(element_dict: dict) -> None:
             await session.commit()
     except Exception:
         logger.exception("db_create_element failed for %s", element_dict.get("id"))
+        return
+    await _mirror_parameters(element_dict)
 
 
 async def db_update_element(element_id: str, full_dict: dict) -> None:
@@ -151,6 +163,8 @@ async def db_update_element(element_id: str, full_dict: dict) -> None:
             await session.commit()
     except Exception:
         logger.exception("db_update_element failed for %s", element_id)
+        return
+    await _mirror_parameters({**full_dict, "id": element_id})
 
 
 async def db_soft_delete_element(element_id: str, deleted_at_iso: str) -> None:

@@ -15,4 +15,4 @@ build-backend = "hatchling.build"
 packages = ["src/spacecdf_kb"]
 
 [tool.hatch.build]
-artifacts = ["src/spacecdf_kb/data/**/*.yaml"]
+artifacts = ["src/spacecdf_kb/data/**/*.yaml", "src/spacecdf_kb/data/**/*.json"]

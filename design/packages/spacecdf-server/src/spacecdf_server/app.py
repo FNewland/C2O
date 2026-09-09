@@ -55,6 +55,9 @@ async def lifespan(app: FastAPI):
     try:
         await init_db()
         await start_worker()
+        # SCDF-160: reference parameter definitions (idempotent, non-fatal)
+        from .db.parameter_repo import seed_parameter_definitions
+        await seed_parameter_definitions()
     except Exception as e:
         logger.warning("Persistence layer failed to start (continuing in-memory only): %s", e)
 
