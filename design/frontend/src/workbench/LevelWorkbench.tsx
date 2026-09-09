@@ -17,6 +17,7 @@ import { FunctionTree } from '../components/FunctionTree'
 import { ICDTable } from '../components/ICDTable'
 import { TraceabilityTree } from '../components/TraceabilityTree'
 import { ErrorBoundary } from '../components/ErrorBoundary'
+import { AnalysesPanel } from './AnalysesPanel'
 
 const PANELS: Array<{ id: ActivityPanel; label: string; color: string }> = [
   { id: 'blocks', label: 'Blocks', color: '#3b82f6' },
@@ -27,6 +28,7 @@ const PANELS: Array<{ id: ActivityPanel; label: string; color: string }> = [
   { id: 'icd', label: 'ICD', color: '#14b8a6' },
   { id: 'trace', label: 'Traceability', color: '#06b6d4' },
   { id: 'decide', label: 'Decide', color: '#f59e0b' },
+  { id: 'analyses', label: 'Analyses', color: '#ec4899' },
 ]
 
 export function LevelWorkbench() {
@@ -84,6 +86,7 @@ export function LevelWorkbench() {
           {activePanel === 'icd' && <ErrorBoundary phaseName="ICD"><ICDTable /></ErrorBoundary>}
           {activePanel === 'trace' && <ErrorBoundary phaseName="Traceability"><div style={{ padding: '0.5rem 1rem' }}><TraceabilityTree /></div></ErrorBoundary>}
           {activePanel === 'decide' && <DecisionPanel />}
+          {activePanel === 'analyses' && <ErrorBoundary phaseName="Analyses"><AnalysesPanel /></ErrorBoundary>}
         </div>
       </div>
     </div>

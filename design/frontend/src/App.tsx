@@ -17,6 +17,7 @@ import { EscalationBanner } from './workbench/EscalationBanner'
 import { ExportPanel } from './workbench/ExportPanel'
 import { GuidancePanel } from './workbench/GuidancePanel'
 import { PresenceBar } from './workbench/PresenceBar'
+import { MarginTower } from './components/MarginTower'
 import { AIProvider, AIStatusIndicator } from './ai'
 
 const queryClient = new QueryClient({
@@ -550,6 +551,7 @@ function AppShell() {
       <PresenceBar />
       <LevelBar />
       <StatusBar />
+      <MarginTower />
       <ReadinessChecklist />
       <EscalationBanner />
       <main style={{ flex: 1, overflow: 'hidden' }}>

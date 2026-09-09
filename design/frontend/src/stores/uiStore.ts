@@ -11,7 +11,7 @@
 import { create } from 'zustand'
 
 export type Level = 0 | 1 | 2 | 3 | 4
-export type ActivityPanel = 'blocks' | 'budget' | 'requirements' | 'functions' | 'interfaces' | 'icd' | 'trace' | 'decide'
+export type ActivityPanel = 'blocks' | 'budget' | 'requirements' | 'functions' | 'interfaces' | 'icd' | 'trace' | 'decide' | 'analyses'
 
 interface UIStore {
   studyId: string | null

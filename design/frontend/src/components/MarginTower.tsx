@@ -4,9 +4,62 @@
  * Per SPINE_SPEC §10.3. Shows mass/power/link/cost/ΔV margin bars
  * with phase-rule colours from ECSSMarginEnforcer.
  * Updates on every convergence.
+ *
+ * SCDF-178: two optional bars from the mission-root parameters written by
+ * the analyses — "Battery SoC (sim)" (sim_min_soc_pct vs the 20 % floor) and
+ * "Data return" (gs_data_return_gb_per_day vs gs_data_generated_gb_per_day).
+ * Read through `GET /api/elements/{root}/parameters?option_id=` (shared
+ * cache key with the Blocks parameter section). Shown whenever the
+ * parameters exist, even without a designStore result.
  */
+import { useQuery } from '@tanstack/react-query'
 import { useDesignStore } from '../stores/designStore'
 import { useActiveParameters } from '../hooks/useActiveParameters'
+import { useUIStore } from '../stores/uiStore'
+import { useActiveOptionId, optionQuery } from '../stores/optionStore'
+
+const API = '/api'
+
+interface AnalysisBar { id: string; label: string; value: number | null; display: string; color: string; barPct: number; title: string }
+
+/** Mission-root parameters written by the analyses (SCDF-173/174) as margin bars. */
+function useAnalysisBars(): AnalysisBar[] {
+  const studyId = useUIStore(s => s.studyId)
+  const optionId = useActiveOptionId(studyId)
+  const { data: elements = [] } = useQuery<any[]>({
+    queryKey: ['elements', studyId],
+    queryFn: () => fetch(`${API}/studies/${studyId}/elements`).then(r => r.json()),
+    enabled: !!studyId, structuralSharing: false,
+  })
+  const rootId: string | undefined = elements.find((e: any) => !e.parent_id)?.id
+  const { data: params = [] } = useQuery<{ name: string; effective_value: number | null; unit?: string }[]>({
+    queryKey: ['element-parameters', rootId, optionId ?? null],
+    queryFn: () => fetch(`${API}/elements/${rootId}/parameters${optionQuery(optionId)}`).then(r => r.ok ? r.json() : []),
+    enabled: !!rootId, structuralSharing: false,
+  })
+  const get = (name: string): number | null => {
+    const p = params.find(x => x.name === name)
+    return p && typeof p.effective_value === 'number' && Number.isFinite(p.effective_value) ? p.effective_value : null
+  }
+  const bars: AnalysisBar[] = []
+  const soc = get('sim_min_soc_pct')
+  if (soc !== null) {
+    const min = 20
+    const color = soc >= min + 10 ? '#10b981' : soc >= min ? '#f59e0b' : '#ef4444'
+    bars.push({ id: 'soc', label: 'SoC', value: soc, display: `${soc.toFixed(0)}%`, color,
+      barPct: Math.min(100, Math.max(0, soc)), title: `Battery SoC (sim): min ${soc.toFixed(1)} % vs ${min} % floor (mission simulation)` })
+  }
+  const ret = get('gs_data_return_gb_per_day')
+  const gen = get('gs_data_generated_gb_per_day')
+  if (ret !== null && gen !== null) {
+    const ratio = gen > 0 ? ret / gen : ret > 0 ? 1 : 0
+    const pct = 100 * ratio
+    const color = ratio >= 1 ? '#10b981' : ratio >= 0.8 ? '#f59e0b' : '#ef4444'
+    bars.push({ id: 'data', label: 'Data', value: pct, display: `${pct.toFixed(0)}%`, color,
+      barPct: Math.min(100, Math.max(0, pct)), title: `Data return: ${ret.toFixed(2)} of ${gen.toFixed(2)} GB/day returned (ground segment)` })
+  }
+  return bars
+}
 
 interface MarginItem {
   id: string; label: string; paramId: string; limitParamId?: string
@@ -24,8 +77,9 @@ const MARGINS: MarginItem[] = [
 export function MarginTower() {
   const result = useDesignStore(s => s.result)
   const params = useActiveParameters()
+  const analysisBars = useAnalysisBars()
 
-  if (!result) return null
+  if (!result && analysisBars.length === 0) return null
 
   const get = (id: string): number | null => {
     const p = params[id]
@@ -34,7 +88,7 @@ export function MarginTower() {
 
   return (
     <div style={{ display: 'flex', gap: '0.4rem', padding: '0.25rem 0.5rem', background: 'var(--bg-secondary, #1f2937)', borderBottom: '1px solid var(--border, #374151)', fontSize: '0.7rem' }}>
-      {MARGINS.map(m => {
+      {result && MARGINS.map(m => {
         const val = get(m.paramId)
         const color = val === null ? '#6b7280' : val >= m.goodAbove ? '#10b981' : val >= m.warnAbove ? '#f59e0b' : '#ef4444'
         const barPct = val !== null ? Math.min(100, Math.max(0, (val / m.goodAbove) * 50 + 50)) : 0
@@ -50,6 +104,17 @@ export function MarginTower() {
           </div>
         )
       })}
+      {analysisBars.map(b => (
+        <div key={b.id} title={b.title} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', minWidth: '80px' }}>
+          <span style={{ color: '#9ca3af', width: '30px', textAlign: 'right', fontSize: '0.62rem' }}>{b.label}</span>
+          <div style={{ flex: 1, height: 6, background: '#111827', borderRadius: 3, minWidth: 30, position: 'relative' }}>
+            <div style={{ height: '100%', width: `${b.barPct}%`, background: b.color, borderRadius: 3, transition: 'width 0.3s' }} />
+          </div>
+          <span style={{ color: b.color, fontFamily: 'monospace', fontWeight: 600, minWidth: '35px', textAlign: 'right', fontSize: '0.65rem' }}>
+            {b.display}
+          </span>
+        </div>
+      ))}
     </div>
   )
 }

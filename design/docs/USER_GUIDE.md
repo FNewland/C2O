@@ -130,6 +130,25 @@ Generates 18+ document types:
 - **Impact Preview:** Shows which agents and budgets a change will affect before accepting
 - **Change Audit:** Full history with undo capability
 
+### Analyses tab (workbench)
+
+The Level Workbench has an **Analyses** tab (bottom panel, after Decide). It shows one card per engineering analysis, with the last run time, an `ok` / `stale` / `failed` badge (stale = the model changed since the run), two or three headline numbers from the run summary, the number of open conflicts it raised, and a **Run** button. Click a card to open its full panel below the grid; the **Options ▸** button opens the A/B option comparison. A **Conflicts** list at the bottom merges the design-loop conflicts with every analysis' conflicts (source badge, severity, element chips — click one to focus that element in Blocks — the suggested fix, and **Resolve**).
+
+The active design option is chosen in the **Option** switcher in the presence bar (top left area, next to the AI status). Every run and every parameter read on this tab is scoped to that option; the baseline sends no option.
+
+What each analysis needs from the model before its result means anything:
+
+| Card | Reads | Writes (mission root) | Needs |
+|------|-------|----------------------|-------|
+| Design loop | requirements, subsystems by domain | agent parameters, budgets | a mission root with orbit / payload / lifetime requirements and subsystems with a `subsystem_domain` |
+| Mission simulation | operational modes, battery `capacity_wh`, array `sa_power_eol_w`, payload `data_rate_bps`, orbit | `sim_min_soc_pct`, `sim_energy_balance_wh_per_orbit`, `sim_data_backlog_end_gb`, `sim_time_in_safe_pct` | at least one operational mode (ConOps) with power and data rate; a battery and a solar array under the power subsystem |
+| Ground segment | selected ground stations, TT&C band / rate, orbit, generated data | `gs_contact_min_per_day`, `gs_data_return_gb_per_day`, `gs_data_generated_gb_per_day`, `gs_min_link_margin_db` | one or more ground stations selected from the catalogue (Ground segment panel → add), a radio in the comms subsystem with a band the station supports |
+| Physics | component masses / dimensions / body positions, reaction wheel, pointing requirement, dissipations | `mp_*` mass properties, `aocs_*` torques and wheel margin, `thermal_worst_margin_c` | masses on components; positions (Physics panel → placement, or auto-placed inside the structure envelope); a wheel or a pointing requirement for the AOCS part; dissipations for thermal |
+| V&V | requirements with verification method and threshold parameters | `vv_closure_pct`, `vv_items_*` | requirements carrying a threshold (`param op value`); analysis runs then close those items automatically |
+| FMECA | components with domain, quantity / redundancy, allocated functions | `fmeca_max_rpn`, `fmeca_single_point_failures` | functions allocated to components (Functions tab) so single points on critical functions are found |
+
+The margin bar under the status bar gains **SoC** (minimum battery state of charge from the simulation, against a 20 % floor) and **Data** (fraction of the generated data actually returned) as soon as those parameters exist on the mission root.
+
 ---
 
 ## Editing Parametric Data

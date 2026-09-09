@@ -8,13 +8,20 @@ import { useEffect, useCallback } from 'react'
 import { create } from 'zustand'
 import { useQueryClient } from '@tanstack/react-query'
 import { useUIStore } from '../stores/uiStore'
-import { ARCADIA_WS_PREFIXES } from '../types/arcadia'
+import { ARCADIA_WS_PREFIXES, ANALYSIS_WS_PREFIXES, ANALYSIS_QUERY_KEYS } from '../types/arcadia'
 import { setArcadiaInvalidator } from '../hooks/useSessionSocket'
 
 /** Query keys owned by the SCDF-160 components. */
 const ARCADIA_QUERY_KEYS = ['options', 'option-compare', 'functions-tree', 'functional-exchanges', 'icd', 'exchange-items', 'element-parameters', 'study-parameters', 'traceability-tree', 'requirements', 'elements', 'interfaces']
 function isArcadiaEvent(type: string | undefined): boolean {
   return !!type && ARCADIA_WS_PREFIXES.some(p => type.startsWith(p))
+}
+/** SCDF-178: analysis_started / analysis_completed / conflict_resolved / option_* / verification_item_* / ground_station_* / element_position_* */
+function isAnalysisEvent(type: string | undefined): boolean {
+  return !!type && ANALYSIS_WS_PREFIXES.some(p => type.startsWith(p))
+}
+function invalidateAnalysisKeys(qc: any) {
+  for (const key of ANALYSIS_QUERY_KEYS) qc?.invalidateQueries({ queryKey: [key] })
 }
 
 export interface CollaborationUser {
@@ -122,6 +129,9 @@ function _connect(studyId: string, userName: string) {
               for (const key of ARCADIA_QUERY_KEYS) _qcRef?.invalidateQueries({ queryKey: [key] })
               if (msg.type === 'model_imported' || msg.type === 'functions_migrated') _qcRef?.refetchQueries({ type: 'active' })
             }
+            // SCDF-178: analyses / options / V&V / ground stations / positions →
+            // analyses, conflicts, parameters, options (and budgets/escalation) refetch.
+            if (isAnalysisEvent(msg.type)) invalidateAnalysisKeys(_qcRef)
             break
         }
       } catch { /* ignore */ }
@@ -158,7 +168,10 @@ export function useCollaboration() {
   // Store QueryClient ref for WebSocket handler
   _qcRef = qc
   // Legacy session socket (useSessionSocket) forwards Arcadia spine events here too
-  setArcadiaInvalidator(() => { for (const key of ARCADIA_QUERY_KEYS) qc.invalidateQueries({ queryKey: [key] }) })
+  setArcadiaInvalidator((type) => {
+    if (isArcadiaEvent(type)) for (const key of ARCADIA_QUERY_KEYS) qc.invalidateQueries({ queryKey: [key] })
+    if (isAnalysisEvent(type)) invalidateAnalysisKeys(qc)
+  })
 
   // Connect/reconnect when studyId or userName changes
   useEffect(() => {

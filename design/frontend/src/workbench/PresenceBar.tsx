@@ -3,6 +3,7 @@
  */
 import { useCollaboration } from './useCollaboration'
 import { AIStatusIndicator } from '../ai'
+import { OptionSwitcher } from '../components/OptionSwitcher'
 
 export function PresenceBar() {
   const { connected, users, myName } = useCollaboration()
@@ -40,7 +41,8 @@ export function PresenceBar() {
       <span style={{ color: 'var(--text-secondary)', marginLeft: '0.3rem' }}>
         — {users.length || 1} connected
       </span>
-      <span style={{ marginLeft: 'auto' }}>
+      <span style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.6rem' }}>
+        <OptionSwitcher />
         <AIStatusIndicator />
       </span>
     </div>

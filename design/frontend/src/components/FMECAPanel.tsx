@@ -37,7 +37,7 @@ interface FMECAResult {
   redundancy_recommendations: { failure_mode_id: string; component: string; recommendation: string; expected_rpn_reduction: number }[]
 }
 
-export function FMECAPanel({ studyId }: { studyId?: string | null } = {}) {
+export function FMECAPanel({ studyId, optionId }: { studyId?: string | null; optionId?: string | null } = {}) {
   const [result, setResult] = useState<FMECAResult | null>(null)
   const [loading, setLoading] = useState(false)
   const requirements = useDesignStore(s => s.requirements)
@@ -49,7 +49,7 @@ export function FMECAPanel({ studyId }: { studyId?: string | null } = {}) {
     if (!studyId) return
     setStudyBusy(true); setStudyError(null)
     try {
-      const r = await fetch(`/api/studies/${studyId}/analyses/fmeca/run`, {
+      const r = await fetch(`/api/studies/${studyId}/analyses/fmeca/run${optionId ? `?option_id=${encodeURIComponent(optionId)}` : ''}`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ critical: [] }),
       })
       if (!r.ok) throw new Error(`${r.status} ${await r.text()}`)

@@ -272,3 +272,8 @@ export type ImportResult = CapellaImportResult | ReqIFImportResult
 
 /** WS ChangeEvent types emitted by the spine routers. */
 export const ARCADIA_WS_PREFIXES = ['option_', 'function_', 'functions_', 'functional_exchange_', 'exchange_item_', 'interface_exchange_items_', 'relation_', 'realization_', 'parameter_', 'parameters_recomputed', 'model_imported', 'element_updated'] as const
+
+/** WS ChangeEvent types emitted by the SCDF-170 analyses / options / V&V / ground / physics routers (SCDF-178). */
+export const ANALYSIS_WS_PREFIXES = ['analysis_started', 'analysis_completed', 'conflict_resolved', 'option_', 'verification_item_', 'ground_station_', 'element_position_'] as const
+/** Query keys to invalidate on an ANALYSIS_WS_PREFIXES event. */
+export const ANALYSIS_QUERY_KEYS = ['analyses', 'analysis', 'conflicts', 'options', 'option-compare', 'study-parameters', 'element-parameters', 'verification-items', 'ground-stations', 'physics-placement', 'budget', 'escalation'] as const
