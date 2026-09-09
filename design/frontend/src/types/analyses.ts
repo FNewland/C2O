@@ -125,3 +125,137 @@ export interface RunSeriesResponse<S = MissionSimSeries> {
 // ═══════════════════════════════════════════════════════════════════════
 // SCDF-173 — Mission simulation — END
 // ═══════════════════════════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════════════════════
+// SCDF-174 — Ground segment closure (services/ground_closure.py) — BEGIN
+// ═══════════════════════════════════════════════════════════════════════
+
+export const GROUND_SEGMENT_PARAMETERS = [
+  'gs_contact_min_per_day', 'gs_contacts_per_day', 'gs_data_return_gb_per_day', 'gs_data_generated_gb_per_day',
+  'gs_backlog_end_gb', 'gs_min_link_margin_db', 'gs_station_count',
+] as const
+export type GroundSegmentParameter = typeof GROUND_SEGMENT_PARAMETERS[number]
+
+export type GroundSegmentConflictCode =
+  | 'GS_DATA_DEFICIT' | 'GS_LINK_MARGIN_LOW' | 'GS_STATION_EXCLUDED' | 'GS_NO_STATIONS'
+
+export type GroundStationStatus = 'ok' | 'low_margin' | 'excluded' | 'no_contact'
+
+/** One row of the per-station table (summary.stations / series.stations). */
+export interface GroundStationRow {
+  station_id: string
+  name: string
+  element_id: string | null
+  lat: number
+  lon: number
+  bands: string[]
+  antenna_m: number
+  min_elevation_deg: number
+  contacts_per_day: number
+  contact_min_per_day: number
+  margin_db: number | null
+  g_t_db_k: number | null
+  status: GroundStationStatus
+  reason: string | null
+  data_gb_per_day?: number
+}
+
+export interface GroundSegmentSummary extends Partial<Record<GroundSegmentParameter, number>> {
+  stations?: GroundStationRow[]
+  backlog_growth_gb_per_day?: number
+  max_gap_hours?: number
+  coverage_pct?: number
+  downlink_rate_mbps?: number
+  band?: string
+  frequency_ghz?: number
+  data_source?: string
+  closure_pct?: number
+  conflict_codes?: string[]
+  warnings?: string[]
+  parameters_written?: number
+  shadowed?: string[]
+  conflicts?: number
+  error?: string
+}
+
+export interface GroundSegmentRun extends AnalysisRun {
+  summary: GroundSegmentSummary
+  conflicts?: AnalysisConflict[]
+}
+
+export interface GroundSegmentRunResponse {
+  run_id: string
+  analysis: 'ground_segment'
+  option_id: string | null
+  status: AnalysisRunStatus
+  summary: GroundSegmentSummary
+  parameters: { name: string; value: number; element_id: string }[]
+  shadowed: { name: string; value: number; element_id: string }[]
+  conflicts: AnalysisConflict[]
+  warnings: string[]
+  stale: false
+}
+
+export interface GroundContact {
+  station_id: string
+  station: string
+  start_s: number
+  end_s: number
+  max_elevation_deg: number
+  data_gb: number
+}
+
+export interface GroundSegmentSeries {
+  analysis: 'ground_segment'
+  duration_s: number
+  contacts: GroundContact[]
+  buffer: { t_s: number[]; gb: number[] }
+  stations: GroundStationRow[]
+  inputs: Record<string, any>
+}
+
+/** KB catalogue entry (packages/spacecdf-kb ground_stations/networks.yaml ``stations:``). */
+export interface KbGroundStation {
+  id: string
+  name: string
+  lat: number
+  lon: number
+  alt_m?: number
+  bands: string[]
+  antenna_m?: number
+  operator?: string
+  min_elevation_deg?: number
+  g_over_t_db_k?: number
+  eirp_dbw?: number
+  notes?: string
+  selected?: boolean
+}
+
+/** A station selected for the study (a ``segment='ground'`` component element). */
+export interface SelectedGroundStation {
+  element_id: string
+  kb_station_id: string
+  name: string
+  parent_id: string | null
+  version: number
+  lat: number | null
+  lon: number | null
+  alt_m: number | null
+  bands: string[] | null
+  antenna_m: number | null
+  g_over_t_db_k: number | null
+  eirp_dbw: number | null
+  min_elevation_deg: number | null
+  operator: string | null
+  in_catalogue: boolean
+}
+
+export interface GroundStationsResponse {
+  study_id: string
+  selected: SelectedGroundStation[]
+  catalogue: KbGroundStation[]
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// SCDF-174 — Ground segment closure — END
+// ═══════════════════════════════════════════════════════════════════════

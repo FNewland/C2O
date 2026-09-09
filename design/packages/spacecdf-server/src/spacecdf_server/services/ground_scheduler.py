@@ -338,13 +338,15 @@ def schedule_downlinks(
     last_contact_end = 0.0
 
     for contact in sorted_contacts:
-        # Fill buffer from last event to start of this contact
-        gap = contact.start_s - last_contact_end
-        buffer_level = min(buffer_size_mbit, buffer_level + gap * fill_rate_mbps)
+        # Fill buffer from last event to start of this contact, plus what is
+        # generated during the contact itself (data is conserved: nothing is
+        # lost when a window is skipped or overlaps the previous one).
+        gap = max(0.0, contact.start_s - last_contact_end)
+        duration = max(0.0, contact.end_s - max(contact.start_s, last_contact_end))
+        buffer_level = min(buffer_size_mbit, buffer_level + (gap + duration) * fill_rate_mbps)
 
-        if buffer_level > 0:
+        if buffer_level > 0 and duration > 0:
             # Schedule this contact — dump as much as possible
-            duration = contact.duration_s
             max_dump = duration * data_rate_mbps
             actual_dump = min(buffer_level, max_dump)
             buffer_level -= actual_dump
@@ -357,7 +359,7 @@ def schedule_downlinks(
                 data_volume_mbit=round(actual_dump, 1),
             ))
 
-        last_contact_end = contact.end_s
+        last_contact_end = max(last_contact_end, contact.end_s)
 
     # Compute metrics
     total_contact_s = sum(c.duration_s for c in scheduled)
