@@ -15,4 +15,5 @@ skip-excluded-dirs = true
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+pythonpath = ["."]
 testpaths = ["tests"]
