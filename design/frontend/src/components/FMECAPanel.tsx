@@ -4,9 +4,16 @@
  * Shows failure modes, RPN scores, and redundancy recommendations
  * for the current architecture. Helps engineers make informed
  * architecture choices at system level.
+ *
+ * Two modes (SCDF-177): the catalogue analysis (``POST /api/fmeca/analyze``,
+ * default, no study needed) and "Run from study" — the study-driven closure
+ * (``POST /api/studies/{id}/analyses/fmeca/run``) whose failure modes are built
+ * from the element tree, carry the functions allocated to each element and
+ * flag single-point failures on critical elements.
  */
 import { useState, useEffect } from 'react'
 import { useDesignStore } from '../stores/designStore'
+import type { FMECARunResponse, StudyFailureMode } from '../types/analyses'
 
 interface FailureMode {
   id: string
@@ -30,10 +37,29 @@ interface FMECAResult {
   redundancy_recommendations: { failure_mode_id: string; component: string; recommendation: string; expected_rpn_reduction: number }[]
 }
 
-export function FMECAPanel() {
+export function FMECAPanel({ studyId }: { studyId?: string | null } = {}) {
   const [result, setResult] = useState<FMECAResult | null>(null)
   const [loading, setLoading] = useState(false)
   const requirements = useDesignStore(s => s.requirements)
+  const [studyRun, setStudyRun] = useState<FMECARunResponse | null>(null)
+  const [studyBusy, setStudyBusy] = useState(false)
+  const [studyError, setStudyError] = useState<string | null>(null)
+
+  const runFromStudy = async () => {
+    if (!studyId) return
+    setStudyBusy(true); setStudyError(null)
+    try {
+      const r = await fetch(`/api/studies/${studyId}/analyses/fmeca/run`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ critical: [] }),
+      })
+      if (!r.ok) throw new Error(`${r.status} ${await r.text()}`)
+      setStudyRun(await r.json())
+    } catch (e) {
+      setStudyError(e instanceof Error ? e.message : String(e))
+    } finally {
+      setStudyBusy(false)
+    }
+  }
 
   useEffect(() => {
     setLoading(true)
@@ -85,6 +111,56 @@ export function FMECAPanel() {
         Failure modes for current architecture. Use this to inform redundancy and architecture decisions.
         Critical items (RPN ≥ 60) should drive architecture changes.
       </p>
+
+      {/* SCDF-177: study-driven run */}
+      {studyId && (
+        <div className="card" style={{ borderLeft: '3px solid #8b5cf6', marginBottom: '0.75rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.3rem' }}>
+            <h3 style={{ fontSize: '0.85rem', color: '#8b5cf6', margin: 0 }}>From the study model</h3>
+            <span style={{ fontSize: '0.65rem', color: '#9ca3af' }}>failure modes per element, functions allocated, single points on critical elements</span>
+            <span style={{ flex: 1 }} />
+            <button disabled={studyBusy} onClick={runFromStudy}
+                    style={{ cursor: 'pointer', fontSize: '0.66rem', padding: '0.2rem 0.6rem', borderRadius: 4, border: '1px solid #8b5cf6', background: '#8b5cf622', color: '#c4b5fd' }}>
+              {studyBusy ? 'Running…' : studyRun ? 'Re-run from study' : 'Run from study'}
+            </button>
+          </div>
+          {studyError && <div style={{ color: '#ef4444', fontSize: '0.68rem' }}>{studyError}</div>}
+          {studyRun && (
+            <>
+              <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.68rem', marginBottom: '0.4rem', flexWrap: 'wrap' }}>
+                <span>{studyRun.summary.fmeca_modes ?? studyRun.modes.length} modes</span>
+                <span style={{ color: (studyRun.summary.fmeca_single_point_failures ?? 0) > 0 ? '#f59e0b' : '#10b981' }}>{studyRun.summary.fmeca_single_point_failures ?? 0} single points</span>
+                <span style={{ color: (studyRun.summary.fmeca_critical_modes ?? 0) > 0 ? '#ef4444' : '#10b981' }}>{studyRun.summary.fmeca_critical_modes ?? 0} on critical elements</span>
+                <span>max RPN {studyRun.summary.fmeca_max_rpn}</span>
+                <span style={{ color: '#6b7280' }}>{studyRun.conflicts.length} conflict{studyRun.conflicts.length === 1 ? '' : 's'} published</span>
+              </div>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.66rem' }}>
+                <thead>
+                  <tr style={{ background: 'var(--bg-primary, #0a0e1a)' }}>
+                    <th style={th}>Element</th><th style={th}>Failure mode</th><th style={th}>Functions</th>
+                    <th style={thC}>S</th><th style={thC}>O</th><th style={thC}>D</th><th style={thC}>RPN</th><th style={th}>Flags</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {studyRun.modes.map((m: StudyFailureMode) => (
+                    <tr key={m.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', background: m.single_point && m.critical ? '#ef444411' : undefined }}>
+                      <td style={td}>{m.element_name}<span style={{ color: '#6b7280', marginLeft: 4, fontSize: '0.6rem' }}>{m.subsystem && m.subsystem !== m.element_name ? m.subsystem : m.domain}</span></td>
+                      <td style={td}>{m.mode}</td>
+                      <td style={{ ...td, color: '#9ca3af' }}>{m.functions.length ? m.functions.join(', ') : '—'}</td>
+                      <td style={tdC}>{m.severity}</td><td style={tdC}>{m.occurrence}</td><td style={tdC}>{m.detection}</td>
+                      <td style={{ ...tdC, color: riskColor(m.rpn), fontWeight: 700 }}>{m.rpn}</td>
+                      <td style={td}>
+                        {m.single_point && <span style={{ color: m.critical ? '#ef4444' : '#f59e0b', fontWeight: 600 }}>single point{m.critical ? ' · critical' : ''}</span>}
+                        {m.redundant && <span style={{ color: '#10b981' }}>{m.redundancy_type ? `${m.redundancy_type} redundant` : `x${m.quantity}`}</span>}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </>
+          )}
+        </div>
+      )}
 
       {/* Summary */}
       <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem' }}>
