@@ -3,6 +3,7 @@
  */
 import { useState } from 'react'
 import { useUIStore } from '../stores/uiStore'
+import { ExchangePanel } from '../components/ExchangePanel'
 
 const API = '/api'
 
@@ -198,6 +199,10 @@ export function ExportPanel({ onClose }: { onClose: () => void }) {
 
         {error && <div style={{ padding: '0.3rem 0.5rem', background: 'rgba(239,68,68,0.15)', borderRadius: '4px', color: 'var(--danger)', fontSize: '0.72rem', marginBottom: '0.5rem' }}>{error}</div>}
         {success && <div style={{ padding: '0.3rem 0.5rem', background: 'rgba(16,185,129,0.15)', borderRadius: '4px', color: 'var(--success)', fontSize: '0.72rem', marginBottom: '0.5rem' }}>{success}</div>}
+
+        <div style={{ marginBottom: '0.75rem', padding: '0.5rem 0.6rem', borderRadius: '4px', background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+          <ExchangePanel studyId={studyId} title="Model exchange (Capella / ECSS-E-TM-10-25 / ReqIF / SysML v2)" />
+        </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           {categories.map(cat => (

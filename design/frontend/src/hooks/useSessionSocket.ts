@@ -2,6 +2,13 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { useSessionStore } from '../stores/sessionStore'
 import { useDesignStore } from '../stores/designStore'
 import { useModelStore } from '../stores/modelStore'
+import { ARCADIA_WS_PREFIXES } from '../types/arcadia'
+
+// Optional hook for React Query invalidation on Arcadia spine events; set by
+// whichever shell owns the QueryClient (see useCollaboration for the workbench).
+let _arcadiaInvalidator: ((type: string) => void) | null = null
+export function setArcadiaInvalidator(fn: ((type: string) => void) | null) { _arcadiaInvalidator = fn }
+function arcadiaInvalidate(type: string) { _arcadiaInvalidator?.(type) }
 
 // WebSocket client with auto-reconnect for SpaceCDF concurrent design sessions.
 // Backs SessionBar, LiveEditToast, PositionPanel presence, and live parameter updates.
@@ -106,6 +113,10 @@ export function useSessionSocket(sessionId: string | null, positionId: string | 
           useModelStore.getState().handleWsMessage(msg)
           break
         default:
+          // SCDF-160: Arcadia spine events — let any registered query client refetch
+          if (msg.type && ARCADIA_WS_PREFIXES.some(p => msg.type.startsWith(p))) {
+            arcadiaInvalidate(msg.type)
+          }
           break
       }
     },

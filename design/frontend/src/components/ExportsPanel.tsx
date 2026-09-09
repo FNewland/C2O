@@ -16,6 +16,7 @@ import { useModelStore } from '../stores/modelStore'
 import { useEquipmentView } from '../hooks/useEquipmentView'
 import { SEMPQuestionnaire } from './SEMPQuestionnaire'
 import { DocumentPreview } from './DocumentPreview'
+import { ExchangePanel } from './ExchangePanel'
 
 type ExportCategory = 'ecss' | 'regulatory' | 'spectrum' | 'launch' | 'data' | 'engineering'
 
@@ -211,6 +212,11 @@ export function ExportsPanel({ studyId }: { studyId: string | null }) {
             Export BOM (CSV)
           </button>
         )}
+      </div>
+
+      {/* Model exchange (SCDF-160): Capella / ECSS-E-TM-10-25 / ReqIF / SysML v2 */}
+      <div className="card" style={{ marginBottom: '0.75rem', borderLeft: '3px solid #3b82f6' }}>
+        <ExchangePanel studyId={studyId} />
       </div>
 
       {/* Full design export — element tree + all state */}

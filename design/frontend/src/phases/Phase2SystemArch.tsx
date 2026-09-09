@@ -13,13 +13,14 @@ import { HierarchicalDesigner } from '../components/HierarchicalDesigner'
 import { SystemArchitectureEditor } from '../components/SystemArchitectureEditor'
 import { LensView } from '../views/LensView'
 import { InterfaceMatrixView } from '../components/InterfaceMatrixView'
+import { ICDTable } from '../components/ICDTable'
 import { SystemBudgetEditor } from '../components/SystemBudgetEditor'
 import { MissionBudgetSummary } from '../components/MissionBudgetSummary'
 import { useDesignStore } from '../stores/designStore'
 import { LENS_LABELS, type Segment, type Lens } from '../types/phases'
 import { FMECAPanel } from '../components/FMECAPanel'
 
-type SubView = 'designer' | 'presets' | 'interfaces' | 'budgets' | 'fmeca'
+type SubView = 'designer' | 'presets' | 'interfaces' | 'icd' | 'budgets' | 'fmeca'
 
 export function Phase2SystemArch() {
   const studyId = useDesignStore(s => s.studyId)
@@ -30,6 +31,7 @@ export function Phase2SystemArch() {
     { key: 'designer', label: 'Designer' },
     { key: 'presets', label: 'Arch Presets' },
     { key: 'interfaces', label: 'Interface Matrix' },
+    { key: 'icd', label: 'ICD' },
     { key: 'budgets', label: 'Budgets' },
     { key: 'fmeca', label: 'FMECA' },
   ]
@@ -76,6 +78,8 @@ export function Phase2SystemArch() {
           <SystemArchitectureEditor />
         ) : subView === 'interfaces' ? (
           <InterfaceMatrixView onNavigate={() => {}} />
+        ) : subView === 'icd' ? (
+          <ICDTable studyId={studyId} />
         ) : subView === 'budgets' ? (
           <div style={{ overflow: 'auto', height: '100%' }}>
             <MissionBudgetSummary />

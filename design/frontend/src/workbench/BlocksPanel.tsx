@@ -11,6 +11,8 @@ import { EquipmentBrowser } from './EquipmentBrowser'
 import { DesignTools } from './DesignTools'
 import { useCollaboration } from './useCollaboration'
 
+import { ParameterSection } from '../components/ParameterPanel'
+
 const API = '/api'
 
 const ELEMENT_TYPES_BY_LEVEL: Record<Level, Array<{ value: string; label: string }>> = {
@@ -455,6 +457,10 @@ export function BlocksPanel() {
 
       {/* Element properties editor (Tier C data capture for exports) */}
       <ElementProperties studyId={studyId} focusElementId={focusElementId} allElements={allElements} />
+
+      {/* Parameters & equations (SCDF-160) for the focused element */}
+      <ParameterSection studyId={studyId} elementId={focusElementId}
+        elementName={allElements.find((e: any) => e.id === focusElementId)?.name} />
 
       {/* Design Tools (constellation orbit, ground station config) */}
       <DesignTools />

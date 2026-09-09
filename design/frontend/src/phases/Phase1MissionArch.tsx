@@ -9,7 +9,7 @@
 import { useState, useCallback } from 'react'
 import { MissionArchitectureEditor } from '../components/MissionArchitectureEditor'
 import { ConOpsEditor } from '../components/ConOpsEditor'
-import { FunctionTreeView } from '../components/FunctionTreeView'
+import { FunctionTree } from '../components/FunctionTree'
 import { RequirementsEditor } from '../components/RequirementsEditor'
 import { useDesignStore } from '../stores/designStore'
 import { useModelStore } from '../stores/modelStore'
@@ -115,7 +115,7 @@ export function Phase1MissionArch() {
                 </div>
               </div>
             )}
-            {subView === 'functions' && <FunctionTreeView />}
+            {subView === 'functions' && <FunctionTree studyId={studyId} />}
             {subView === 'requirements' && <RequirementsEditor studyId={studyId} defaultLevel="mission" />}
             {subView === 'fleet' && <ConstellationDesigner />}
           </>

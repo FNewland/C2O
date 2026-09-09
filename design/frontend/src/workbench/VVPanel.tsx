@@ -12,6 +12,8 @@ import { useState, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useUIStore } from '../stores/uiStore'
 
+import { TraceabilityTree } from '../components/TraceabilityTree'
+
 const API = '/api'
 
 const STATUS_COLORS: Record<string, string> = {
@@ -72,7 +74,10 @@ export function VVPanel() {
         {activeSection === 'reqs' && <RequirementTraceability requirements={allRequirements} elements={allElements} studyId={studyId} />}
         {activeSection === 'gates' && <ReviewGates studyId={studyId} />}
         {activeSection === 'fmeca' && <FMECASummary studyId={studyId} />}
-        {activeSection === 'trace' && <BudgetTraceability studyId={studyId} />}
+        {activeSection === 'trace' && (<>
+          <div style={{ marginBottom: '0.75rem' }}><TraceabilityTree studyId={studyId} /></div>
+          <BudgetTraceability studyId={studyId} />
+        </>)}
         {activeSection === 'risks' && <RiskRegister studyId={studyId} />}
         {activeSection === 'bom' && <BOMSection elements={allElements} />}
         {activeSection === 'maturity' && <MaturitySection elements={allElements} />}

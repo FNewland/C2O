@@ -13,12 +13,19 @@ import { RequirementsPanel } from './RequirementsPanel'
 import { InterfacesPanel } from './InterfacesPanel'
 import { DecisionPanel } from './DecisionPanel'
 import { VVPanel } from './VVPanel'
+import { FunctionTree } from '../components/FunctionTree'
+import { ICDTable } from '../components/ICDTable'
+import { TraceabilityTree } from '../components/TraceabilityTree'
+import { ErrorBoundary } from '../components/ErrorBoundary'
 
 const PANELS: Array<{ id: ActivityPanel; label: string; color: string }> = [
   { id: 'blocks', label: 'Blocks', color: '#3b82f6' },
   { id: 'budget', label: 'Budget', color: '#f59e0b' },
   { id: 'requirements', label: 'Requirements', color: '#8b5cf6' },
+  { id: 'functions', label: 'Functions', color: '#a855f7' },
   { id: 'interfaces', label: 'Interfaces', color: '#10b981' },
+  { id: 'icd', label: 'ICD', color: '#14b8a6' },
+  { id: 'trace', label: 'Traceability', color: '#06b6d4' },
   { id: 'decide', label: 'Decide', color: '#f59e0b' },
 ]
 
@@ -72,7 +79,10 @@ export function LevelWorkbench() {
           {activePanel === 'blocks' && <BlocksPanel />}
           {activePanel === 'budget' && <BudgetPanel />}
           {activePanel === 'requirements' && <RequirementsPanel />}
+          {activePanel === 'functions' && <ErrorBoundary phaseName="Functions"><FunctionTree /></ErrorBoundary>}
           {activePanel === 'interfaces' && <InterfacesPanel />}
+          {activePanel === 'icd' && <ErrorBoundary phaseName="ICD"><ICDTable /></ErrorBoundary>}
+          {activePanel === 'trace' && <ErrorBoundary phaseName="Traceability"><div style={{ padding: '0.5rem 1rem' }}><TraceabilityTree /></div></ErrorBoundary>}
           {activePanel === 'decide' && <DecisionPanel />}
         </div>
       </div>
