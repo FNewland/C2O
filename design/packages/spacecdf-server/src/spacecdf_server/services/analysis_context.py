@@ -54,6 +54,9 @@ from .element_projection import contributing_elements, project_elements_to_param
 
 logger = logging.getLogger(__name__)
 
+#: owner_domain of parameter rows written by the engineering closures (their outputs)
+CLOSURE_OWNED_DOMAINS = frozenset({"mission_simulation", "ground_segment", "physics", "fmeca", "vv"})
+
 HASH_KEYS: tuple[str, ...] = (
     "elements", "params", "modes", "orbit", "power", "thermal", "stations", "requirements",
 )
@@ -461,6 +464,12 @@ async def _load_latest_design(study_id: str, option_id: str | None) -> dict[str,
         from .analysis_results import load_series
         from ..db.analysis_repo import get_last_run
         run = await get_last_run(study_id, "design_loop", option_id)
+        if option_id and (not run or run.get("status") != "ok"):
+            # SCDF-170 verification fix: an option without a design run of its own
+            # inherits the baseline's (reads for X = baseline ∪ X-overrides); before,
+            # every agent-derived input (SA power, link rate, ...) vanished in a fresh
+            # option and the simulation fell back to the first KB panel it found.
+            run = await get_last_run(study_id, "design_loop", None)
         if not run or run.get("status") != "ok":
             return {}
         series = load_series(run.get("series_ref"))
@@ -531,9 +540,15 @@ def _hash_subset(ctx: AnalysisContext, key: str) -> Any:
              e.get("position_json"), e.get("dimensions_mm") or e.get("dimensions_json"), e.get("redundancy_type")]
             for e in ctx.elements)
     if key == "params":
+        # SCDF-170 verification fix: rows that are pure outputs of a closure
+        # (computed, owned by mission_simulation/ground_segment/physics/fmeca/vv)
+        # are not inputs of anything — hashing them made every analysis stale
+        # as soon as any other closure ran. A manual override / formula on such
+        # a row is user state and still counts.
         return sorted(
             [eid, name, p.value, p.switch, p.formula, p.formula_kind]
-            for eid, ps in ctx.params.items() for name, p in ps.items())
+            for eid, ps in ctx.params.items() for name, p in ps.items()
+            if not (p.switch == "computed" and not p.formula and p.owner_domain in CLOSURE_OWNED_DOMAINS))
     if key == "modes":
         return [[m.id, m.name, m.power_w, m.duty_cycle_percent, sorted(m.active_element_ids),
                  m.payload_active, m.data_rate_bps, m.pointing, m.guards] for m in ctx.modes]

@@ -309,7 +309,9 @@ def _build_inputs(ctx: AnalysisContext, n_orbits: int, contact_override_s_per_da
         heater = _pick(ctx, "thermal.heater_power_w")
     if heater is None:
         heater = FALLBACK_HEATER_W
-    power = PowerParams(sa_power_eol_w=sa_eol, battery_capacity_wh=cap, heater_power_w=heater)
+    # start full: the executor's 80 % default is a multi-orbit charging transient that
+    # dominated min SoC / max DoD for any energy-positive design (verification finding)
+    power = PowerParams(sa_power_eol_w=sa_eol, battery_capacity_wh=cap, heater_power_w=heater, initial_soc_pct=100.0)
 
     # orbit + contacts
     period = _num(ctx.orbit.get("period_s")) or 5700.0
@@ -456,8 +458,12 @@ def _post_process(ctx: AnalysisContext, inp: _SimInputs, res: TimeSeriesResult, 
     energy_balance = net_wh_total / orbits_done
     heater_per_orbit = heater_wh / orbits_done
 
-    min_soc = min(res.soc_pct)
-    i_min = res.soc_pct.index(min_soc)
+    # SCDF-170 verification fix: the battery starts full (see _build_inputs) and the
+    # first orbit is still skipped as a settling transient when more than one was run,
+    # so min SoC / max DoD reflect the periodic orbit, not the initial condition.
+    i0 = next((i for i, t in enumerate(res.time_s) if t >= period), 0) if sim_s > 1.5 * period else 0
+    min_soc = min(res.soc_pct[i0:])
+    i_min = i0 + res.soc_pct[i0:].index(min_soc)
     max_dod = 100.0 - min_soc
     safe_steps = sum(1 for m in res.mode if m == inp.safe)
     safe_pct = 100.0 * safe_steps / n

@@ -108,6 +108,14 @@ class ElementUpdate(BaseModel):
     diagram_x: float | None = None
     diagram_y: float | None = None
     diagram_collapsed: bool | None = None
+    # SCDF-170 verification fix: settable at create but silently dropped on PATCH before —
+    # the physics envelope/box inertia (dimensions) and the FMECA single-point rule
+    # (redundancy_type) depend on them.
+    dimensions_mm: list[float] | None = None
+    redundancy_type: str | None = None
+    part_number: str | None = None
+    subsystem_domain: str | None = None
+    owner_position: str | None = None
 
 
 class InterfaceCreate(BaseModel):
@@ -760,14 +768,55 @@ async def activate_element_in_mode(mode_id: str, element_id: str = Query(...), p
     if element_id not in _elements:
         raise HTTPException(404, "Element not found")
     entry = {"mode_id": mode_id, "element_id": element_id, "is_active": True, "power_w_in_mode": power_w, "duty_cycle_percent": duty_cycle}
+    _mode_elements[:] = [m for m in _mode_elements if not (m["mode_id"] == mode_id and m["element_id"] == element_id)]
     _mode_elements.append(entry)
+    # SCDF-170 verification fix: persist the membership (the analysis context reads
+    # ``mode_elements`` rows; before, a restart emptied every mode -> 0 W in the simulation)
+    await _db_upsert_mode_member(entry)
     return entry
+
+
+async def _db_upsert_mode_member(entry: dict) -> None:
+    try:
+        from sqlalchemy import select
+        from ..db.engine import get_session_factory
+        from ..db.models import ModeElementRow
+        async with get_session_factory()() as session:
+            res = await session.execute(select(ModeElementRow).where(
+                ModeElementRow.mode_id == entry["mode_id"], ModeElementRow.element_id == entry["element_id"]))
+            row = res.scalars().first()
+            if row is None:
+                row = ModeElementRow(mode_id=entry["mode_id"], element_id=entry["element_id"])
+                session.add(row)
+            row.is_active = bool(entry.get("is_active", True))
+            row.power_w_in_mode = entry.get("power_w_in_mode")
+            row.duty_cycle_percent = float(entry.get("duty_cycle_percent") or 100.0)
+            await session.commit()
+    except Exception:
+        logger.exception("mode_elements persist failed for mode %s", entry.get("mode_id"))
+
+
+async def _db_load_mode_members(mode_id: str) -> list[dict]:
+    try:
+        from sqlalchemy import select
+        from ..db.engine import get_session_factory
+        from ..db.models import ModeElementRow
+        async with get_session_factory()() as session:
+            res = await session.execute(select(ModeElementRow).where(ModeElementRow.mode_id == mode_id))
+            return [{"mode_id": r.mode_id, "element_id": r.element_id, "is_active": bool(r.is_active),
+                     "power_w_in_mode": r.power_w_in_mode, "duty_cycle_percent": r.duty_cycle_percent}
+                    for r in res.scalars()]
+    except Exception:
+        logger.debug("mode_elements table unavailable", exc_info=True)
+        return []
 
 
 @router.get("/elements/{mode_id}/mode-profile")
 async def get_mode_profile(mode_id: str) -> dict:
     """Get power/data profile for a mode."""
     members = [m for m in _mode_elements if m["mode_id"] == mode_id and m["is_active"]]
+    if not members:
+        members = [m for m in await _db_load_mode_members(mode_id) if m["is_active"]]
     total_power = 0
     items = []
     for m in members:

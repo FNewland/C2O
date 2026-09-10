@@ -50,6 +50,10 @@ def row_to_dict(row: Base) -> dict:
     for c in row.__table__.columns:
         val = getattr(row, c.key)
         if isinstance(val, datetime):
+            # SCDF-170 verification fix: SQLite drops tzinfo, and a naive ISO string is
+            # parsed as *local* time by browsers (`new Date(...)`) — stamp it as UTC.
+            if val.tzinfo is None:
+                val = val.replace(tzinfo=timezone.utc)
             val = val.isoformat()
         d[_COL_TO_KEY.get(c.key, c.key)] = val
     return d

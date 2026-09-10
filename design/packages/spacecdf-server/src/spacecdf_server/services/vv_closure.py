@@ -136,11 +136,14 @@ def _fmt_value(v: Any) -> str:
     return str(v)
 
 
-def humanise_path(path: str) -> tuple[str, str]:
-    """``power.battery_dod_percent`` -> ("Battery DoD", "%"); ``el:EPS.mass_kg`` -> ("EPS mass", "kg")."""
+def humanise_path(path: str, element_names: dict[str, str] | None = None) -> tuple[str, str]:
+    """``power.battery_dod_percent`` -> ("Battery DoD", "%"); ``el:EPS.mass_kg`` -> ("EPS mass", "kg").
+
+    ``element_names`` (id -> name) turns an ``el:<id>.x`` reference into the element's name
+    (SCDF-170 verification fix: the acceptance text showed the raw 32-hex id, capitalised)."""
     if path.startswith("el:"):
         ref, _, name = path[3:].rpartition(".")
-        prefix = ref
+        prefix = (element_names or {}).get(ref, ref)
     else:
         prefix, _, name = path.rpartition(".")
         prefix = ""
@@ -162,6 +165,13 @@ def _path_domain(path: str | None) -> tuple[str | None, str | None]:
     if not path:
         return None, None
     if path.startswith("el:"):
+        # closure outputs on the mission root carry a prefix (SCDF-173..177)
+        name = path.rpartition(".")[2].lower()
+        for pfx, label in (("sim_", "mission simulation"), ("gs_", "ground segment"), ("aocs_", "physics (AOCS)"),
+                           ("mp_", "physics (mass properties)"), ("thermal_", "physics (thermal)"),
+                           ("fmeca_", "FMECA"), ("vv_", "V&V")):
+            if name.startswith(pfx):
+                return None, label
         return None, "design loop"
     prefix = path.split(".", 1)[0].lower()
     d = PATH_DOMAINS.get(prefix)
@@ -173,7 +183,8 @@ def _path_domain(path: str | None) -> tuple[str | None, str | None]:
     return None, f"{prefix} analysis"
 
 
-def acceptance_text(req: dict, method: str, phase: str, analysis_label: str | None = None) -> str:
+def acceptance_text(req: dict, method: str, phase: str, analysis_label: str | None = None,
+                    element_names: dict[str, str] | None = None) -> str:
     """``"Battery DoD <= 30 % (analysis: power budget), PDR"`` — or a narrative fallback."""
     path, op, value = _threshold(req)
     mname = METHOD_NAMES.get(method, "analysis")
@@ -181,7 +192,7 @@ def acceptance_text(req: dict, method: str, phase: str, analysis_label: str | No
         text = (req.get("text") or "").strip().rstrip(".")
         core = text[:120] if text else f"Requirement {req.get('code') or req.get('id')}"
         return f"{core} ({mname}), {phase}"
-    label, unit = humanise_path(path)
+    label, unit = humanise_path(path, element_names)
     unit_txt = f" {unit}" if unit else ""
     if op == "in_range" and isinstance(value, (list, tuple)) and len(value) == 2:
         cond = f"{label} within {_fmt_value(value[0])}–{_fmt_value(value[1])}{unit_txt}"
@@ -293,7 +304,8 @@ def plan_item(req: dict, ctx: AnalysisContext) -> dict:
     return {
         "study_id": ctx.study_id, "requirement_id": req["id"],
         "method": method, "level": level, "phase": phase, "facility": facility,
-        "acceptance_criterion": acceptance_text(req, method, phase, analysis_label if method == "A" else None),
+        "acceptance_criterion": acceptance_text(req, method, phase, analysis_label if method == "A" else None,
+                                                {e["id"]: e.get("name") or e["id"] for e in ctx.elements}),
         "procedure_ref": None,
         "_inferred_method": inferred, "_linked_elements": linked,
         "_linked_functions": _linked_functions(req, relations), "_domain": planner_domain,

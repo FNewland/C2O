@@ -69,7 +69,7 @@ ANALYSIS_INPUT_KEYS: dict[str, tuple[str, ...]] = {
     "design_loop": ("elements", "params", "orbit", "modes", "requirements"),
     "mission_simulation": ("elements", "params", "orbit", "modes", "power", "thermal", "stations"),
     "ground": ("elements", "params", "orbit", "stations"),
-    "physics": ("elements", "params", "orbit", "thermal"),
+    "physics": ("elements", "params", "orbit", "thermal", "requirements"),   # pointing budget vs requirement
     "vv": ("requirements", "elements"),
     "fmeca": ("elements",),
 }

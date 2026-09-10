@@ -51,6 +51,7 @@ class PowerParams:
     sa_power_eol_w: float = 60.0
     battery_capacity_wh: float = 40.0
     heater_power_w: float = 5.0
+    initial_soc_pct: float = 80.0      # SCDF-170: the model-driven closure starts full
 
 
 @dataclass
@@ -210,7 +211,7 @@ def simulate_orbit(
     # Simulation state
     dt = 30.0  # timestep seconds
     t = 0.0
-    soc_wh = power_params.battery_capacity_wh * 0.8  # start at 80%
+    soc_wh = power_params.battery_capacity_wh * max(0.0, min(100.0, power_params.initial_soc_pct)) / 100.0
     temp_k = thermal_params.initial_temp_c + 273.15
     data_buffer_mbit = 0.0
 

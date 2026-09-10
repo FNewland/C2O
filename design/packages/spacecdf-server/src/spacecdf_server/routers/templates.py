@@ -5,6 +5,7 @@ to create a new Study seeded from a template.
 """
 from __future__ import annotations
 
+import logging
 import uuid
 from datetime import datetime, timezone
 
@@ -15,7 +16,9 @@ from spacecdf_common.models.template import MissionTemplate
 
 from ..services.template_library import get_template, list_templates
 from .studies import get_study_store
+from ..db.study_repo import db_save_study
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
@@ -54,4 +57,9 @@ async def create_study_from_template(template_id: str) -> Study:
         notes=f"Seeded from template: {tmpl.id} ({tmpl.name})",
     )
     get_study_store()[study.id] = study
+    # SCDF-170 verification fix: persist like POST /studies so the study survives a restart
+    try:
+        await db_save_study(study)
+    except Exception:
+        logger.exception("Failed to persist study %s to DB", study.id)
     return study
