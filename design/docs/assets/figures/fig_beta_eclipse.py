@@ -1,83 +1,110 @@
-"""β-angle sweep & eclipse fraction for a 600 km SSO over a year."""
+"""β-angle over a year (ISS-like vs 10:30 LTAN SSO) and eclipse fraction vs β.
+
+Left: daily sweep of sin β = cos δ☉ sin i sin(Ω − α☉) + sin δ☉ cos i with the
+node precessing at the J2 rate; the ±(i + ε) envelope and ±β* lines are shown.
+Right: f_ecl(β) from the Ch 7 β-form equation (circular orbit, cylindrical shadow).
+"""
+from pathlib import Path
+
 import numpy as np
 import matplotlib.pyplot as plt
-from uottawa_brand import apply_style, COLORS, add_footer
+from oer_style import apply_style, COLORS, save
 
 apply_style()
 
 RE = 6378.137
-mu = 398_600.4418
+MU = 398_600.4418
+J2 = 1.082_626_68e-3
+EPS = np.deg2rad(23.44)      # obliquity
 
-# Two orbits to compare
 cases = [
-    {"label": "ISS-like (51.6° i, 400 km)", "alt": 400, "i": 51.6},
-    {"label": "SSO 10:30 LTAN (98° i, 600 km)", "alt": 600, "i": 98.0},
+    {"label": "ISS-like (51.6°, 400 km)", "alt": 400, "i": 51.6,
+     "color": COLORS["accent"], "sso": False, "ltan": None},
+    {"label": "SSO 10:30 LTAN (98°, 600 km)", "alt": 600, "i": 98.0,
+     "color": COLORS["accent_2"], "sso": True, "ltan": 10.5},
 ]
 
-# Sun ecliptic latitude over a year (approx)
-days = np.arange(0, 365)
-sun_dec = 23.45 * np.sin(2 * np.pi * (days - 80) / 365.25)  # deg
+days = np.arange(0, 366)
+lam_sun = 2 * np.pi * (days - 80) / 365.25          # ecliptic longitude (0 at ~Mar 21)
+dec = np.arcsin(np.sin(EPS) * np.sin(lam_sun))       # solar declination
+ra = np.arctan2(np.cos(EPS) * np.sin(lam_sun), np.cos(lam_sun))   # solar RA
+
+
+def beta_star(h):
+    return np.arcsin(RE / (RE + h))
+
 
 fig, axes = plt.subplots(1, 2, figsize=(10.5, 4.4))
 
-for case in cases:
-    a = RE + case["alt"]
-    inc = np.deg2rad(case["i"])
-    # Approximate β-angle with Sun in equatorial frame, ignoring RAAN drift
-    # β = arcsin(sin(δ) cos(i) - cos(δ) sin(i) sin(RAAN_sun - RAAN))
-    # For simple sweep across the year, take RAAN_sun - RAAN = 0 then 90 to bound
-    beta_min = []
-    beta_max = []
-    for d in sun_dec:
-        d_r = np.deg2rad(d)
-        b1 = np.rad2deg(np.arcsin(np.sin(d_r) * np.cos(inc)
-                                   - np.cos(d_r) * np.sin(inc) * 0))
-        b2 = np.rad2deg(np.arcsin(np.sin(d_r) * np.cos(inc)
-                                   - np.cos(d_r) * np.sin(inc) * 1))
-        beta_min.append(min(b1, b2))
-        beta_max.append(max(b1, b2))
-    # Plot envelope
-    axes[0].fill_between(days, beta_min, beta_max,
-                         color=COLORS["garnet"] if "SSO" in case["label"] else COLORS["blue"],
-                         alpha=0.35, label=case["label"])
+ax = axes[0]
+for c in cases:
+    a = RE + c["alt"]
+    inc = np.deg2rad(c["i"])
+    n = np.sqrt(MU / a**3)
+    raan_dot = -1.5 * n * J2 * (RE / a) ** 2 * np.cos(inc) * 86400   # rad/day
+    if c["sso"]:
+        # LTAN fixes the node relative to the Sun: Ω − α☉ = (LTAN − 12 h) × 15°/h
+        raan = ra + np.deg2rad((c["ltan"] - 12.0) * 15.0)
+    else:
+        raan = np.deg2rad(0.0) + raan_dot * days
+    sb = np.cos(dec) * np.sin(inc) * np.sin(raan - ra) + np.sin(dec) * np.cos(inc)
+    beta = np.rad2deg(np.arcsin(np.clip(sb, -1, 1)))
+    ax.plot(days, beta, color=c["color"], lw=1.8, label=c["label"])
+    env = min(c["i"], 180 - c["i"]) + 23.44
+    bs = np.rad2deg(beta_star(c["alt"]))
+    if not c["sso"]:
+        ax.axhspan(-env, env, color=c["color"], alpha=0.08, lw=0)
+        ax.text(5, -env - 1.5, f"ISS envelope ±(i + 23.4°) = ±{env:.0f}°",
+                fontsize=8, color=c["color"], va="top", clip_on=True)
+        ax.axhline(bs, color=c["color"], lw=0.8, ls=":")
+        ax.axhline(-bs, color=c["color"], lw=0.8, ls=":")
+        ax.text(360, bs + 1.5, f"β* = {bs:.0f}° at 400 km — fully sunlit beyond",
+                fontsize=7.5, color=c["color"], ha="right", va="bottom", clip_on=True)
+    else:
+        ax.fill_between(days, beta.min(), beta.max(), color=c["color"], alpha=0.12, lw=0)
+        ax.text(183, beta.min() - 9,
+                f"SSO band {beta.min():.0f}° … {beta.max():.0f}° (set by LTAN)",
+                fontsize=8, color=c["color"], ha="center", va="top", clip_on=True)
 
-axes[0].set_xlabel("Day of year")
-axes[0].set_ylabel("β-angle envelope (deg)")
-axes[0].set_title("β-angle range vs day of year")
-axes[0].axhline(0, color=COLORS["polar"], lw=0.6)
-axes[0].set_xlim(0, 365)
-axes[0].legend(loc="lower left", frameon=False, fontsize=9)
+ax.axhline(0, color=COLORS["grey_light"], lw=0.8)
+ax.set_xlabel("Day of year")
+ax.set_ylabel("β-angle (deg)")
+ax.set_title("β-angle through the year")
+ax.set_xlim(0, 365)
+ax.set_ylim(-90, 90)
+ax.set_yticks(range(-90, 91, 30))
+ax.legend(loc="lower center", fontsize=8.5, ncol=1,
+          bbox_to_anchor=(0.5, -0.36))
 
-# Eclipse fraction vs β analytically (for circular orbit)
-# Φ_eclipse fraction = (1/π) * acos( sqrt(h^2 + 2 R h) / (R + h) / cos(β) )
-# (Vallado — for |β| < β*, where β* = asin(R/(R+h)))
-beta_grid = np.deg2rad(np.linspace(-90, 90, 900))
-for case in cases:
-    a = RE + case["alt"]
-    R = RE
-    h = case["alt"]
-    beta_star = np.arcsin(R / (R + h))
-    eclipse = np.zeros_like(beta_grid)
-    mask = np.abs(beta_grid) < beta_star
-    inside = np.sqrt(h**2 + 2*R*h) / (R + h) / np.cos(beta_grid[mask])
-    inside = np.clip(inside, -1.0, 1.0)
-    eclipse[mask] = np.arccos(inside) / np.pi
-    axes[1].plot(np.rad2deg(beta_grid), eclipse * 100,
-                 lw=2.0,
-                 color=COLORS["garnet"] if "SSO" in case["label"] else COLORS["blue"],
-                 label=case["label"])
+# Right: eclipse fraction vs β  (Ch 7 β-form equation)
+ax = axes[1]
+beta_grid = np.deg2rad(np.linspace(-90, 90, 1801))
+for c in cases:
+    h = c["alt"]
+    bs = beta_star(h)
+    f = np.zeros_like(beta_grid)
+    m = np.abs(beta_grid) < bs
+    arg = np.sqrt(h**2 + 2 * RE * h) / ((RE + h) * np.cos(beta_grid[m]))
+    f[m] = np.arccos(np.clip(arg, -1, 1)) / np.pi
+    ax.plot(np.rad2deg(beta_grid), f * 100, lw=2.0, color=c["color"], label=c["label"])
+    ax.axvline(np.rad2deg(bs), color=c["color"], lw=0.8, ls=":")
+    ax.axvline(-np.rad2deg(bs), color=c["color"], lw=0.8, ls=":")
+    if h == 400:
+        ax.text(0, f.max() * 100 + 1.0, f"max {f.max()*100:.0f} % at β = 0 ({h} km)",
+                fontsize=8, color=c["color"], ha="center", va="bottom", clip_on=True)
+    else:
+        ax.text(0, f.max() * 100 - 2.0, f"max {f.max()*100:.0f} % ({h} km)",
+                fontsize=8, color=c["color"], ha="center", va="top", clip_on=True)
 
-axes[1].set_xlabel("β-angle (deg)")
-axes[1].set_ylabel("Eclipse fraction of orbit (%)")
-axes[1].set_title("Eclipse fraction vs β-angle")
-axes[1].axhline(0, color=COLORS["polar"], lw=0.6)
-axes[1].set_xlim(-90, 90)
-axes[1].set_ylim(0, 50)
-axes[1].legend(loc="upper right", frameon=False, fontsize=9)
+ax.text(-88, 48.5, "fully sunlit for |β| ≥ β*:\nβ* = 70° (400 km), 66° (600 km)",
+        fontsize=8, color=COLORS["grey"], ha="left", va="top", clip_on=True)
 
-fig.suptitle("β-angle behaviour over a year — and eclipse fraction analytics",
-             fontsize=12, color=COLORS["charcoal"], y=1.02)
+ax.set_xlabel("β-angle (deg)")
+ax.set_ylabel("Eclipse fraction of orbit (%)")
+ax.set_title("Eclipse fraction vs β-angle")
+ax.set_xlim(-90, 90)
+ax.set_ylim(0, 50)
+ax.legend(loc="lower center", fontsize=8.5, bbox_to_anchor=(0.5, -0.36))
 
-add_footer(fig)
-fig.savefig("/sessions/serene-eager-noether/mnt/docs/assets/figures/fig_beta_eclipse.png")
-print("OK beta+eclipse")
+fig.subplots_adjust(wspace=0.3, bottom=0.3)
+save(fig, Path(__file__).stem)

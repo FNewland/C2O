@@ -1,102 +1,74 @@
-"""N² interface matrix for a CubeSat — 8 subsystems."""
-import numpy as np
+"""N² interface matrix for a 6U CubeSat — 8 subsystems, interface types M/E/T/D/R/O/S."""
+from pathlib import Path
+
 import matplotlib.pyplot as plt
-from uottawa_brand import apply_style, COLORS, add_footer
+from matplotlib.patches import Patch
+from oer_style import apply_style, COLORS, save
 
 apply_style()
-subs = ["Power", "AOCS", "Thermal", "Comms", "Structure",
-        "Propulsion", "Data/OBC", "Payload"]
+subs = ["Power", "AOCS", "Thermal", "Comms", "Struct.", "Prop.", "OBC", "Payload"]
 N = len(subs)
 
-# Encode interface presence:
-#   0 = no interface, 1 = data, 2 = electrical, 3 = mechanical,
-#   4 = thermal, 5 = RF, 6 = optical
-M = np.zeros((N, N), dtype=int)
-
-# i = source (row), j = destination (col)
+# (row = source, col = destination) → interface type code (Table 8.2)
 edges = {
-    ("Power","AOCS"): 2, ("AOCS","Power"): 1,
-    ("Power","Comms"): 2, ("Comms","Power"): 1,
-    ("Power","Thermal"): 4, ("Thermal","Power"): 4,
-    ("Power","Payload"): 2, ("Payload","Power"): 1,
-    ("Power","Data/OBC"): 2, ("Data/OBC","Power"): 1,
-    ("Power","Propulsion"): 2,
-    ("Structure","AOCS"): 3, ("AOCS","Structure"): 3,
-    ("Structure","Payload"): 3,
-    ("Structure","Propulsion"): 3,
-    ("Data/OBC","AOCS"): 1, ("AOCS","Data/OBC"): 1,
-    ("Data/OBC","Comms"): 1, ("Comms","Data/OBC"): 1,
-    ("Data/OBC","Payload"): 1, ("Payload","Data/OBC"): 1,
-    ("Comms","Payload"): 5,
-    ("Comms","AOCS"): 6,    # antenna vs star tracker FOV
-    ("Thermal","Payload"): 4,
-    ("AOCS","Payload"): 3,  # RW vibration coupling
-    ("Propulsion","Thermal"): 4,
+    ("Power", "AOCS"): "E",    ("AOCS", "Power"): "D",
+    ("Power", "Comms"): "E",   ("Comms", "Power"): "D",
+    ("Power", "Thermal"): "T", ("Thermal", "Power"): "T",
+    ("Power", "Payload"): "E", ("Payload", "Power"): "D",
+    ("Power", "OBC"): "E",     ("OBC", "Power"): "D",
+    ("Power", "Prop."): "E",
+    ("Struct.", "AOCS"): "M",  ("AOCS", "Struct."): "M",
+    ("Struct.", "Payload"): "M",
+    ("Struct.", "Prop."): "M",
+    ("OBC", "AOCS"): "S",      ("AOCS", "OBC"): "D",      # flight software hosts AOCS
+    ("OBC", "Comms"): "D",     ("Comms", "OBC"): "D",
+    ("OBC", "Payload"): "S",   ("Payload", "OBC"): "D",   # payload command set / driver
+    ("Comms", "Payload"): "R",
+    ("Comms", "AOCS"): "O",    # antenna vs star-tracker field of view
+    ("Thermal", "Payload"): "T",
+    ("AOCS", "Payload"): "M",  # wheel micro-vibration coupling
+    ("Prop.", "Thermal"): "T",
 }
+names = {"M": "Mechanical", "E": "Electrical", "T": "Thermal", "D": "Data",
+         "R": "RF", "O": "Optical", "S": "Software"}
 
-cmap_lookup = {
-    1: COLORS["garnet"],   # data
-    2: COLORS["blue"],     # electrical
-    3: COLORS["warm_grey"],# mechanical
-    4: COLORS["green"],    # thermal
-    5: COLORS["garnet_2"], # RF
-    6: COLORS["charcoal"], # optical
-}
-labels = {1:"D", 2:"E", 3:"M", 4:"T", 5:"R", 6:"O"}
-
-for (a, b), kind in edges.items():
-    i, j = subs.index(a), subs.index(b)
-    M[i, j] = kind
-
-fig, ax = plt.subplots(figsize=(8.4, 7.0))
-# Diagonal cells = subsystems
-for i, name in enumerate(subs):
-    ax.add_patch(plt.Rectangle((i, N-1-i), 1, 1,
-                               facecolor=COLORS["charcoal"], edgecolor="white"))
-    ax.text(i+0.5, N-0.5-i, name, ha="center", va="center",
-            color="white", fontsize=8.5, fontweight="bold")
-
-# Off-diagonal cells
+fig, ax = plt.subplots(figsize=(9.0, 7.2))
 for i in range(N):
     for j in range(N):
+        x, y = j, N - 1 - i
         if i == j:
+            ax.add_patch(plt.Rectangle((x, y), 1, 1, facecolor=COLORS["diag"], edgecolor="white"))
+            ax.text(x + 0.5, y + 0.5, subs[i], ha="center", va="center",
+                    color="white", fontsize=8.5, fontweight="bold")
             continue
-        kind = M[i, j]
-        if kind == 0:
-            ax.add_patch(plt.Rectangle((j, N-1-i), 1, 1,
-                                        facecolor=COLORS["polar"],
-                                        edgecolor="white"))
+        kind = edges.get((subs[i], subs[j]))
+        if kind is None:
+            ax.add_patch(plt.Rectangle((x, y), 1, 1, facecolor="#f3f3f3", edgecolor="white"))
         else:
-            color = cmap_lookup[kind]
-            ax.add_patch(plt.Rectangle((j, N-1-i), 1, 1,
-                                        facecolor=color, edgecolor="white",
-                                        alpha=0.85))
-            ax.text(j+0.5, N-0.5-i, labels[kind], ha="center", va="center",
-                    color="white", fontweight="bold", fontsize=10)
+            ax.add_patch(plt.Rectangle((x, y), 1, 1, facecolor=COLORS[kind],
+                                       edgecolor="white", alpha=0.9))
+            ax.text(x + 0.5, y + 0.5, kind, ha="center", va="center",
+                    color="white", fontweight="bold", fontsize=11)
 
-ax.set_xlim(0, N); ax.set_ylim(0, N)
+# Row/column guides
+for k, name in enumerate(subs):
+    ax.text(-0.15, N - 0.5 - k, name, ha="right", va="center", fontsize=8.5, color=COLORS["grey"])
+    ax.text(k + 0.5, N + 0.12, name, ha="center", va="bottom", fontsize=8.5, color=COLORS["grey"])
+ax.text(-0.15, N + 0.12, "from ↓ / to →", ha="right", va="bottom", fontsize=8,
+        color=COLORS["grey"], style="italic")
+
+ax.set_xlim(-1.6, N + 0.1)
+ax.set_ylim(-0.1, N + 0.6)
 ax.set_aspect("equal")
-ax.set_xticks([]); ax.set_yticks([])
-ax.invert_yaxis()
-# Hide spines for cleaner look
-for s in ax.spines.values(): s.set_visible(False)
+ax.set_xticks([])
+ax.set_yticks([])
+ax.grid(False)
+for s in ax.spines.values():
+    s.set_visible(False)
 
-# Legend
-from matplotlib.patches import Patch
-legend = [
-    Patch(color=cmap_lookup[1], label="Data (D)"),
-    Patch(color=cmap_lookup[2], label="Electrical (E)"),
-    Patch(color=cmap_lookup[3], label="Mechanical (M)"),
-    Patch(color=cmap_lookup[4], label="Thermal (T)"),
-    Patch(color=cmap_lookup[5], label="RF (R)"),
-    Patch(color=cmap_lookup[6], label="Optical (O)"),
-]
-ax.legend(handles=legend, loc="upper left", bbox_to_anchor=(1.02, 1.0),
-          frameon=False, fontsize=9)
+legend = [Patch(color=COLORS[k], label=f"{v} ({k})") for k, v in names.items()]
+ax.legend(handles=legend, loc="upper left", bbox_to_anchor=(1.01, 1.0), fontsize=9,
+          title="Interface type", title_fontsize=9)
+ax.set_title("N² interface matrix — 6U CubeSat (illustrative), read row → column", pad=22)
 
-ax.set_title("N² Interface Matrix — 6U CubeSat (illustrative)",
-             fontsize=12, color=COLORS["charcoal"], pad=10)
-
-add_footer(fig)
-fig.savefig("/sessions/serene-eager-noether/mnt/docs/assets/figures/fig_n2_matrix.png")
-print("OK N² matrix")
+save(fig, Path(__file__).stem)

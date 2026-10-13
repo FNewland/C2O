@@ -49,6 +49,8 @@ plt.rcParams.update({
 def _render(expr: str, *, display: bool) -> Path:
     """Render a math expression to a cached transparent SVG."""
     fontsize = DISPLAY_FONTSIZE if display else INLINE_FONTSIZE
+    # Computer Modern has no U+00B0; mathtext falls back to an "fl" glyph.
+    expr = expr.replace("°", r"^\circ")
     key = hashlib.sha1(
         f"svg::{display}::{fontsize}::{expr}".encode("utf-8")
     ).hexdigest()[:16]
@@ -115,6 +117,10 @@ def transform(text: str) -> tuple[str, int, int]:
         return _img_tag(path, display=False, alt=expr)
 
     text = _INLINE.sub(_inl, text)
+    # A literal currency "\$" in prose is not a math delimiter; unescape it
+    # now that every math fragment has been replaced (Python-Markdown does
+    # not treat "\$" as an escape).
+    text = text.replace("\\$", "$")
 
     return text, n_display, n_inline
 

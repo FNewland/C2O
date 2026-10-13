@@ -1,47 +1,43 @@
-"""TRL ladder annotated with course touchpoints."""
+"""Technology readiness level ladder with the evidence environment for each band."""
+from pathlib import Path
+
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyBboxPatch
-from uottawa_brand import apply_style, COLORS, add_footer
+from oer_style import apply_style, COLORS, save
 
 apply_style()
-fig, ax = plt.subplots(figsize=(9.0, 5.4))
-ax.set_xlim(0, 12); ax.set_ylim(0, 10); ax.axis("off")
-ax.set_title("Technology Readiness Level (TRL) Ladder",
-             fontsize=12, color=COLORS["charcoal"], pad=10)
+fig, ax = plt.subplots(figsize=(10.0, 5.4))
+ax.set_xlim(0, 13.5)
+ax.set_ylim(0, 10)
+ax.axis("off")
+ax.set_title("Technology readiness level (TRL) ladder", pad=8)
 
 trls = [
-    (1,  "Basic principles",                 COLORS["warm_grey"]),
-    (2,  "Concept formulated",               COLORS["warm_grey"]),
-    (3,  "Proof of concept",                 COLORS["warm_grey"]),
-    (4,  "Lab validation",                   COLORS["green"]),
-    (5,  "Relevant-environment validation",  COLORS["green"]),
-    (6,  "Relevant-environment demo",        COLORS["green"]),
-    (7,  "Operational demo",                 COLORS["blue"]),
-    (8,  "Qualified system",                 COLORS["blue"]),
-    (9,  "Flight-proven",                    COLORS["garnet"]),
+    (1, "Basic principles observed",               COLORS["grey"]),
+    (2, "Technology concept formulated",           COLORS["grey"]),
+    (3, "Analytical / experimental proof of concept", COLORS["grey"]),
+    (4, "Component validation in laboratory",      COLORS["accent_3"]),
+    (5, "Component validation in relevant environment", COLORS["accent_3"]),
+    (6, "System/subsystem demo in relevant environment", COLORS["accent_3"]),
+    (7, "System prototype demo in space",          COLORS["accent"]),
+    (8, "System qualified through test and demo",  COLORS["accent"]),
+    (9, "Flight-proven in successful mission",     COLORS["accent_2"]),
 ]
-
 for idx, (trl, label, color) in enumerate(trls):
     y = idx + 0.4
-    box = FancyBboxPatch((1, y), 8, 0.8, boxstyle="round,pad=0.04",
-                         linewidth=0, facecolor=color, alpha=0.82)
-    ax.add_patch(box)
-    ax.text(1.3, y + 0.4, f"TRL {trl}",
-            color="white", fontsize=10, fontweight="bold", va="center")
-    ax.text(2.7, y + 0.4, label, color="white", fontsize=10, va="center")
+    ax.add_patch(FancyBboxPatch((0.6, y), 7.9, 0.8, boxstyle="round,pad=0.04",
+                                linewidth=0, facecolor=color, alpha=0.85))
+    ax.text(0.9, y + 0.4, f"TRL {trl}", color="white", fontsize=10, fontweight="bold", va="center")
+    ax.text(2.2, y + 0.4, label, color="white", fontsize=9.5, va="center")
 
-# Right-side ladder annotations: course touchpoints
-touch = {
-    "TRL 1–3": "Discussed in Course Plan §2 — research / IRAD context",
-    "TRL 4–6": "CubeSat platforms typically buy at TRL ≥ 6 (commercial COTS)",
-    "TRL 7":   "First in-orbit demonstration — relevant for new instruments",
-    "TRL 8–9": "Operational missions — flight heritage drives selection in CDF Day 3",
-}
-for j, (k, v) in enumerate(touch.items()):
-    y = 8 - j*1.6
-    ax.text(9.5, y + 0.45, k, fontsize=9.5, fontweight="bold", color=COLORS["charcoal"])
-    ax.text(9.5, y - 0.05, v, fontsize=8.5, color=COLORS["charcoal"], wrap=True)
+notes = [
+    ("TRL 1–3", "Research and internal R&D —\nnot selectable for flight", 1.6),
+    ("TRL 4–6", "Ground evidence; CubeSat buses\ntypically buy COTS at TRL ≥ 6", 4.9),
+    ("TRL 7",   "First in-orbit demonstration —\nthe costliest gap to cross (6 → 7)", 6.8),
+    ("TRL 8–9", "Operational missions —\nflight heritage drives selection", 8.5),
+]
+for k, v, yc in notes:
+    ax.text(9.0, yc + 0.32, k, fontsize=9.5, fontweight="bold", color=COLORS["ink"], va="bottom")
+    ax.text(9.0, yc + 0.22, v, fontsize=8.5, color=COLORS["ink"], va="top", linespacing=1.25)
 
-add_footer(fig)
-fig.savefig("/sessions/serene-eager-noether/mnt/docs/assets/figures/fig_trl.png")
-print("OK trl ladder")
+save(fig, Path(__file__).stem)

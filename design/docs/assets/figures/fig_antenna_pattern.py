@@ -1,56 +1,74 @@
-"""Parabolic dish gain pattern — polar plot."""
+"""Antenna patterns — high-gain parabolic dish (Airy pattern) vs S-band patch."""
+from pathlib import Path
+
 import numpy as np
 import matplotlib.pyplot as plt
-from uottawa_brand import apply_style, COLORS, add_footer
+from oer_style import apply_style, COLORS, save
 
 apply_style()
 
-# Parabolic dish gain: G_max in dBi, pattern G(theta) ~ G_max * (J1(u)/u)^2 * 4
-# Where u = ka sin(theta), k = 2*pi/lambda, a = D/2
-# Use simpler: G(theta) = G_max - 12*(theta/HPBW)^2  (typical parametric model)
-freq = 2.2e9   # 2.2 GHz S-band
+freq = 2.25e9            # S-band (Ch 11 worked example)
 c = 3e8
-lam = c/freq
+lam = c / freq
 
-# Two cases: a 0.6 m dish (high gain) and a patch antenna (low gain)
-fig, ax = plt.subplots(1, 2, figsize=(10.0, 4.4),
-                       subplot_kw={"projection":"polar"})
 
-theta = np.linspace(-np.deg2rad(60), np.deg2rad(60), 600)
+def J1(x):
+    """Bessel J1 via its integral form (numpy only)."""
+    tau = np.linspace(0, np.pi, 2001)
+    x = np.atleast_1d(x)[:, None]
+    f = np.cos(tau[None, :] - x * np.sin(tau[None, :]))
+    return np.trapezoid(f, tau, axis=1) / np.pi
 
-# Dish 1: 0.6 m dish, S-band
-D1 = 0.6
-HPBW1 = 70 * lam / D1   # deg, rule-of-thumb
-HPBW1_rad = np.deg2rad(HPBW1)
-Gmax1 = 10 * np.log10(0.55 * (np.pi * D1 / lam)**2)
-G1 = Gmax1 - 12 * (theta/HPBW1_rad)**2
-G1 = np.clip(G1, -10, None)
 
-# Patch antenna: ~6 dBi peak, ~80 deg HPBW
+# --- 3 m ground dish: uniformly illuminated circular aperture (Airy) ---
+D1 = 3.0
+eff = 0.6
+Gmax1 = 10 * np.log10(eff * (np.pi * D1 / lam) ** 2)       # ≈ 35 dBi
+HPBW1 = 70 * lam / D1                                        # deg (rule of thumb)
+deg1 = np.linspace(-20, 20, 2001)
+u = (np.pi * D1 / lam) * np.sin(np.deg2rad(deg1))
+u_safe = np.where(np.abs(u) < 1e-9, 1e-9, u)
+pat1 = (2 * J1(u_safe) / u_safe) ** 2
+G1 = Gmax1 + 10 * np.log10(np.clip(pat1, 1e-6, None))
+
+# --- S-band patch: cos^n model, ~6 dBi, ~80° HPBW ---
 Gmax2 = 6.0
-HPBW2 = 80
-HPBW2_rad = np.deg2rad(HPBW2)
-G2 = Gmax2 - 12 * (theta/HPBW2_rad)**2
-G2 = np.clip(G2, -10, None)
+HPBW2 = 80.0
+n = np.log(0.5) / np.log(np.cos(np.deg2rad(HPBW2 / 2)))
+deg2 = np.linspace(-90, 90, 721)
+G2 = Gmax2 + 10 * np.log10(np.clip(np.cos(np.deg2rad(deg2)) ** n, 1e-6, None))
 
-for axi, G, Gmax, HPBW, label, color in [
-    (ax[0], G1, Gmax1, HPBW1, f"0.6 m dish — G = {Gmax1:.1f} dBi", COLORS["garnet"]),
-    (ax[1], G2, Gmax2, HPBW2, f"S-band patch — G = {Gmax2:.1f} dBi", COLORS["blue"]),
-]:
-    axi.plot(theta, G, color=color, lw=2.0)
-    axi.fill_between(theta, -10, G, color=color, alpha=0.18)
-    axi.set_theta_zero_location("N")
-    axi.set_theta_direction(-1)
-    axi.set_thetalim(-np.deg2rad(60), np.deg2rad(60))
-    axi.set_rlim(-10, max(Gmax+5, 35))
-    axi.set_title(label + f"\nHPBW ≈ {HPBW:.1f}°", pad=14, fontsize=10)
-    axi.grid(True, alpha=0.4)
-    axi.set_rticks([0, 10, 20, 30])
-    axi.set_xticks(np.deg2rad([-60,-30,0,30,60]))
-    axi.set_xticklabels(["-60°", "-30°", "0°", "30°", "60°"])
+fig, axes = plt.subplots(1, 2, figsize=(10.0, 4.2), sharey=True)
 
-fig.suptitle("Antenna Patterns — High-gain dish vs low-gain patch",
-             fontsize=12, color=COLORS["charcoal"], y=1.02)
-add_footer(fig)
-fig.savefig("/sessions/serene-eager-noether/mnt/docs/assets/figures/fig_antenna_pattern.png")
-print("OK antenna pattern")
+panels = [
+    (axes[0], deg1, G1, Gmax1, HPBW1, 20,
+     f"3 m parabolic dish — G = {Gmax1:.0f} dBi, HPBW ≈ {HPBW1:.1f}°", COLORS["accent"]),
+    (axes[1], deg2, G2, Gmax2, HPBW2, 90,
+     f"S-band patch — G = {Gmax2:.0f} dBi, HPBW ≈ {HPBW2:.0f}°", COLORS["accent_2"]),
+]
+for ax, th, G, Gmax, HPBW, span, label, color in panels:
+    ax.plot(th, G, color=color, lw=1.8)
+    ax.fill_between(th, -10, G, color=color, alpha=0.15)
+    ax.axvspan(-HPBW / 2, HPBW / 2, color=COLORS["band"], alpha=0.8, zorder=0)
+    ax.axhline(Gmax - 3, color=COLORS["grey"], lw=0.8, ls=":")
+    ax.text(-span + 0.03 * 2 * span, Gmax - 3 + 1, "−3 dB", fontsize=8,
+            color=COLORS["grey"], va="bottom", clip_on=True)
+    ax.set_xlim(-span, span)
+    ax.set_ylim(-10, 40)
+    ax.set_xlabel("Angle from boresight (deg)")
+    ax.set_title(label, fontsize=10.5)
+    ax.grid(True, alpha=0.4)
+
+axes[0].set_ylabel("Gain (dBi)")
+axes[0].text(0, -6, "half-power beamwidth\n(shaded)", ha="center", va="bottom",
+             fontsize=8, color=COLORS["grey"], clip_on=True)
+axes[0].annotate("sidelobes\n(−17.6 dB first)", xy=(5.0, Gmax1 - 17.6),
+                 xytext=(11, 28), fontsize=8, color=COLORS["accent"],
+                 arrowprops=dict(arrowstyle="->", color=COLORS["accent"], lw=0.9),
+                 annotation_clip=True)
+axes[1].text(0, -6, "half-power beamwidth (shaded)", ha="center", va="bottom",
+             fontsize=8, color=COLORS["grey"], clip_on=True)
+
+fig.suptitle(f"Antenna gain patterns at {freq/1e9:.2f} GHz — high-gain dish vs low-gain patch",
+             fontsize=12, fontweight="bold", y=1.03)
+save(fig, Path(__file__).stem)

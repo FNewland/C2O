@@ -1,48 +1,67 @@
-"""Solar array sizing nomograph — required area vs orbit-average load."""
+"""Solar-array sizing nomograph (Ch 9 §9.2 sizing chain).
+
+Left:  P_SA,BOL vs orbit-average load for three eclipse fractions
+       (Step 2 with P_sun = P_ecl = P_avg, η_sun = 0.90, η_ecl = 0.786; Step 3 L_d·L_T = 0.862).
+Right: A_SA = P_BOL / (η_cell · S · cosθ · f_pack · f_cover) for three Sun angles,
+       with the EOSat-3U point 16.0 W BOL → 0.053 m² at θ = 23°.
+"""
+from pathlib import Path
+
 import numpy as np
 import matplotlib.pyplot as plt
-from uottawa_brand import apply_style, COLORS, SERIES, add_footer
+from oer_style import apply_style, COLORS, SERIES, save
 
 apply_style()
-fig, ax = plt.subplots(figsize=(8.4, 5.0))
 
-# A_SA = (P_sun + P_eclipse * t_e/t_d / eta_dis) / (S_AM0 * eta_cell * cos(beta) * (1 - deg))
-# Simplified: A_SA = P_avg * f_eclipse_factor / (S * eta_eff)
-S0 = 1361.0     # W/m^2 AM0
-eta_cell = 0.30   # GaAs triple-junction
-deg = 0.10        # 5-year EOL degradation
-beta = np.deg2rad(20)  # representative incidence
-eta_eff = eta_cell * np.cos(beta) * (1 - deg)  # ~ 0.226
+S = 1361.0
+eta_cell = 0.295
+f_pack, f_cover = 0.85, 0.97
+eta_sun, eta_ecl = 0.90, 0.786
+Ld_LT = 0.9269 * 0.930          # 3-yr degradation × 65 °C derating
 
-# Eclipse factor: P_avg orbit-average must be supplied during sun arc
-# Sun arc fraction f_s, eclipse f_e = 1 - f_s
-# Required generation P_gen = P_avg * (1 + f_e/(f_s * eta_dis))
-eta_dis = 0.85
-fe_values = [0.0, 0.20, 0.35]   # eclipse fractions
-P_avg = np.linspace(5, 50, 100)
+fig, axes = plt.subplots(1, 2, figsize=(10.5, 4.4))
+fig.subplots_adjust(wspace=0.32)
 
-for i, fe in enumerate(fe_values):
+# Left: orbit-average load → BOL array power
+ax = axes[0]
+P_avg = np.linspace(2, 30, 200)
+for i, fe in enumerate([0.0, 0.20, 0.38]):
     fs = 1 - fe
-    P_gen = P_avg * (1 + fe / (fs * eta_dis))
-    A = P_gen / (S0 * eta_eff)
-    ax.plot(P_avg, A * 100*100,  # m^2 → cm^2 doesn't help; use m^2 with fine ticks
-            lw=2.0,
-            color=SERIES[i],
-            label=f"eclipse fraction = {fe:.2f}")
-ax.set_xlabel("Orbit-average load $P_{avg}$ (W)")
-ax.set_ylabel("Required solar-array area at EOL (cm²)")
-ax.set_title("Solar-array nomograph — η = 30 %, EOL deg = 10 %, β = 20°, η_dis = 85 %")
-ax.set_xlim(5, 50)
-ax.grid(True, alpha=0.3)
-ax.legend(loc="upper left", frameon=False, fontsize=9)
+    P_eol = P_avg * (1 / eta_sun + fe / (fs * eta_ecl))
+    P_bol = P_eol / Ld_LT
+    ax.plot(P_avg, P_bol, lw=2.0, color=SERIES[i], label=f"eclipse fraction = {fe:.2f}")
+ax.set_xlabel("Orbit-average load (W)")
+ax.set_ylabel("Required array power, BOL (W)")
+ax.set_title("Load → BOL power (Steps 2–3)", fontsize=11)
+ax.set_xlim(2, 30)
+ax.set_ylim(0, 70)
+ax.legend(loc="upper left", fontsize=8.5)
+ax.text(0.98, 0.03, "η_sun = 0.90, η_ecl = 0.79\nL_d·L_T = 0.86 (3 yr, 65 °C)",
+        transform=ax.transAxes, ha="right", va="bottom", fontsize=8, color=COLORS["grey"])
 
-# Annotate typical 6U
-ax.plot(15, (15 * (1 + 0.35/(0.65*0.85))) / (S0*eta_eff) * 1e4,
-        "o", color=COLORS["garnet"], ms=8)
-ax.annotate("6U at 15 W avg\n~ 870 cm² needed",
-            xy=(15, 870), xytext=(28, 1200),
-            fontsize=9, color=COLORS["garnet"], fontweight="bold",
-            arrowprops=dict(arrowstyle="->", color=COLORS["garnet"], lw=1.2))
-add_footer(fig)
-fig.savefig("/sessions/serene-eager-noether/mnt/docs/assets/figures/fig_solar_array.png")
-print("OK solar array")
+# Right: BOL power → array area
+ax = axes[1]
+P_bol = np.linspace(2, 60, 200)
+for i, theta in enumerate([0, 23, 45]):
+    A = P_bol / (eta_cell * S * np.cos(np.deg2rad(theta)) * f_pack * f_cover)
+    ax.plot(P_bol, A, lw=2.0, color=SERIES[i], label=f"Sun angle θ = {theta}°")
+
+P_e, th_e = 16.0, 23
+A_e = P_e / (eta_cell * S * np.cos(np.deg2rad(th_e)) * f_pack * f_cover)
+ax.plot(P_e, A_e, "o", color=COLORS["accent_2"], ms=9, zorder=5)
+ax.annotate(f"EOSat-3U: {P_e:.1f} W BOL\n→ {A_e:.3f} m² at θ = {th_e}°",
+            xy=(P_e, A_e), xytext=(26, 0.03), fontsize=9, color=COLORS["accent_2"],
+            fontweight="bold", arrowprops=dict(arrowstyle="->", color=COLORS["accent_2"], lw=1.2),
+            annotation_clip=True)
+ax.set_xlabel("Required array power, BOL (W)")
+ax.set_ylabel("Array area A$_{SA}$ (m²)")
+ax.set_title("BOL power → array area (Step 4)", fontsize=11)
+ax.set_xlim(2, 60)
+ax.set_ylim(0, 0.3)
+ax.legend(loc="upper left", fontsize=8.5)
+ax.text(0.98, 0.97, "η_cell = 0.295, S = 1361 W/m²\nf_pack = 0.85, f_cover = 0.97",
+        transform=ax.transAxes, ha="right", va="top", fontsize=8, color=COLORS["grey"])
+
+fig.suptitle("Solar-array sizing nomograph — A = P_BOL / (η_cell · S · cos θ · f_pack · f_cover)",
+             fontsize=12, fontweight="bold", y=1.02)
+save(fig, Path(__file__).stem)

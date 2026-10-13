@@ -1,66 +1,65 @@
-"""5x5 risk matrix with worked example points (ECSS-M-ST-80C-style)."""
+"""5x5 risk matrix with worked-example risks (ECSS-M-ST-80C style)."""
+from pathlib import Path
+
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
-from uottawa_brand import apply_style, COLORS, add_footer
+from oer_style import apply_style, COLORS, save
 
 apply_style()
-fig, ax = plt.subplots(figsize=(7.6, 7.2))
+fig, ax = plt.subplots(figsize=(7.4, 7.0))
 
-# Tier colours: 1-2 green, 3-4 amber, 5-9 yellow, 10-15 orange, 16-25 red
+
 def tier_color(score):
-    if score <= 2:  return "#7ea668"
-    if score <= 4:  return "#a1c47a"
-    if score <= 9:  return "#dfca6f"
-    if score <= 15: return "#d97a45"
-    return "#9c1c30"
+    if score <= 2:
+        return "#7ea668"
+    if score <= 4:
+        return "#a1c47a"
+    if score <= 9:
+        return "#dfca6f"
+    if score <= 15:
+        return "#d97a45"
+    return "#b03a2e"
 
-for p in range(1, 6):       # severity (column)
-    for s in range(1, 6):   # likelihood (row)
+
+for p in range(1, 6):
+    for s in range(1, 6):
         score = p * s
-        ax.add_patch(Rectangle((p-1, s-1), 1, 1,
-                                facecolor=tier_color(score), edgecolor="white"))
-        ax.text(p-0.5, s-0.5, f"{score}", ha="center", va="center",
+        ax.add_patch(Rectangle((p - 1, s - 1), 1, 1, facecolor=tier_color(score), edgecolor="white"))
+        ax.text(p - 0.5, s - 0.5, f"{score}", ha="center", va="center",
                 color="white", fontsize=11, fontweight="bold")
 
-# Risks plotted - position markers in cell corners with leader lines to labels
-# placed outside the matrix so they don't overlap the cell numbers or each other
 risks = [
-    ("R1 RW failure",            4, 3),  # P=4 S=3
-    ("R2 Battery degradation",   2, 4),
-    ("R3 Star tracker glare",    3, 2),
-    ("R4 Ground link outage",    3, 3),
-    ("R5 Schedule slip",         4, 4),
-    ("R6 Cosmic ray SEU",        5, 1),
+    ("R1", "Reaction-wheel failure",   4, 3),
+    ("R2", "Battery degradation",      2, 4),
+    ("R3", "Star-tracker glare",       3, 2),
+    ("R4", "Ground-link outage",       3, 3),
+    ("R5", "Schedule slip",            4, 4),
+    ("R6", "Cosmic-ray SEU",           5, 1),
 ]
-# Offset positions inside each cell (small ID badges)
-for i, (name, sev, lik) in enumerate(risks):
-    rid = name.split(" ")[0]   # "R1", "R2"...
-    # Place small badge in upper-left corner of cell
-    bx = sev - 1 + 0.18
-    by = lik - 1 + 0.78
-    ax.add_patch(plt.Circle((bx, by), 0.13, color=COLORS["charcoal"], zorder=3))
-    ax.text(bx, by, rid, ha="center", va="center",
-            color="white", fontsize=8, fontweight="bold", zorder=4)
+for rid, _, sev, lik in risks:
+    bx, by = sev - 1 + 0.2, lik - 1 + 0.78
+    ax.add_patch(plt.Circle((bx, by), 0.14, color=COLORS["ink"], zorder=3))
+    ax.text(bx, by, rid, ha="center", va="center", color="white", fontsize=8,
+            fontweight="bold", zorder=4)
 
-# Build a legend below the matrix
-legend_lines = [f"{name.split(' ',1)[0]} = {name.split(' ',1)[1]}" for name in [r[0] for r in risks]]
-legend_text = "   ".join(legend_lines[:3]) + "\n" + "   ".join(legend_lines[3:])
-ax.text(2.5, -0.85, legend_text, ha="center", va="top",
-        fontsize=8.0, color=COLORS["charcoal"],
-        family="DejaVu Sans Mono")
-
-ax.set_xlim(-0.05, 5.05); ax.set_ylim(-1.5, 5.05)
+ax.set_xlim(-0.05, 5.05)
+ax.set_ylim(-0.05, 5.05)
 ax.set_aspect("equal")
 ax.set_xticks(np.arange(0.5, 5.5))
-ax.set_xticklabels(["1\nNegligible", "2\nMinor", "3\nModerate", "4\nMajor", "5\nCatastrophic"], fontsize=8)
+ax.set_xticklabels(["1\nNegligible", "2\nMinor", "3\nModerate", "4\nMajor", "5\nCatastrophic"], fontsize=8.5)
 ax.set_yticks(np.arange(0.5, 5.5))
-ax.set_yticklabels(["1\nVery low", "2\nLow", "3\nMedium", "4\nHigh", "5\nVery high"], fontsize=8)
-ax.set_xlabel("Severity")
+ax.set_yticklabels(["1\nVery low", "2\nLow", "3\nMedium", "4\nHigh", "5\nVery high"], fontsize=8.5)
+ax.set_xlabel("Severity (consequence)")
 ax.set_ylabel("Likelihood")
-ax.set_title("Risk Matrix (ECSS-M-ST-80C 5×5) — worked example")
-for spine in ax.spines.values(): spine.set_visible(False)
+ax.set_title("Risk matrix (ECSS-M-ST-80C 5×5) — worked example")
+ax.grid(False)
+for spine in ax.spines.values():
+    spine.set_visible(False)
 
-add_footer(fig)
-fig.savefig("/sessions/serene-eager-noether/mnt/docs/assets/figures/fig_risk_matrix.png")
-print("OK risk matrix")
+key = "   ".join(f"{rid} {name}" for rid, name, _, _ in risks[:3]) + "\n" + \
+      "   ".join(f"{rid} {name}" for rid, name, _, _ in risks[3:])
+fig.text(0.5, 0.015, key, ha="center", va="bottom", fontsize=8.5, color=COLORS["ink"])
+fig.subplots_adjust(bottom=0.2)
+
+save(fig, Path(__file__).stem)
