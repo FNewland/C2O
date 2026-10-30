@@ -1,0 +1,4 @@
+# Filled-in settings and any credentials copied down from Secret Manager.
+c2o.env
+session.env
+*.local
