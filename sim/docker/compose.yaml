@@ -1,15 +1,20 @@
 # SMO split deployment over smo-link (docs/web_2026-10/LINK_DESIGN.md §5).
 #
-# Run from the repository root:
+# Run from the simulator root (sim/ in the C2O repository):
 #   export SMO_CONFIG_HASH=$(docker/config-hash.sh)
 #
 #   space host (laptop / cloud-sim container):
 #     cp docker/space.env.example docker/space.env      # fill URL/session/secret
-#     docker compose -f docker/compose.yaml --profile space up -d --build
+#     docker compose --env-file docker/space.env -f docker/compose.yaml --profile space up -d --build
 #
-#   ground host (cloud VM, behind the GCP load balancer — deploy/gcp/README.md):
+#   ground host (cloud VM, behind the GCP load balancer — C2O deploy/gcp/README.md):
 #     cp docker/ground.env.example docker/ground.env    # same session/secret
-#     docker compose -f docker/compose.yaml --profile ground up -d --build
+#     docker compose --env-file docker/ground.env -f docker/compose.yaml --profile ground up -d --build
+#
+#   --env-file matters: `env_file:` below only passes variables INTO the
+#   containers. The `ports:` lines are interpolated from the shell and the
+#   --env-file, so SMO_PUBLISH_ADDR written only in ground.env would be
+#   ignored and every port would stay on 127.0.0.1 (unreachable by the LB).
 #     ... add `--profile rf` for the RF bridge (and set SMO_MCS_TM_PORT=8012,
 #         SMO_MCS_TC_PORT=8011 in ground.env so the MCS goes through it)
 #
@@ -32,8 +37,9 @@
 #   (instructor proxy) and link 9100. NONE of them has its own login (MCS can
 #   send TCs), so they publish on SMO_PUBLISH_ADDR, which DEFAULTS TO
 #   127.0.0.1 (review H4). Only on the GCP VM set SMO_PUBLISH_ADDR to the VM's
-#   INTERNAL IP, with the VPC firewall admitting only the Google load-balancer
-#   ranges and IAP (deploy/gcp/README.md); never 0.0.0.0 on a host with a
+#   INTERNAL IP (via --env-file or the shell, see above), with the VPC firewall
+#   admitting only the Google load-balancer ranges and IAP (C2O
+#   deploy/gcp/README.md); never 0.0.0.0 on a host with a
 #   public or campus address (Docker-published ports bypass ufw).
 #   Tool viewers and the radio UI are published on the host's loopback only
 #   (reach them through an IAP SSH tunnel).
