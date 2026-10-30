@@ -131,7 +131,14 @@ Exemple (une seule ligne sur le réseau, mise en forme ici pour la lisibilité)�
 * **Satellite** — repère direct, lié au satellite :
   +X le long de la trace (vitesse) en pointage nominal · +Y perpendiculaire à la trace, axe de l'aile +Y et
   du mécanisme d'entraînement du générateur solaire · **+Z nadir** (imageur, tourné vers la Terre) · −Z zénith.
-  Plateforme 6U de 0,100 × 0,226 × 0,366 m selon X, Y, Z.
+  Plateforme 6U de 0,100 × 0,226 × 0,366 m selon X, Y, Z.
+  Ces axes sont ceux de l'interface smo-vr/1 ; ce ne sont pas ceux du repère
+  satellite du simulateur. Depuis la décision de l'auteur Q4 (2026-10-30), le simulateur et le
+  manuel d'exploitation utilisent +Z = zénith et −Z = nadir (imageur et radiateur sur
+  −Z), avec +Y = +normale à l'orbite. Le pont VR convertit toutes les grandeurs
+  exprimées en axes satellite, `v_vr = diag(1, −1, −1) · v_sim` (rotation de 180° autour de X) : les
+  clients smo-vr/1 voient donc exactement les axes ci-dessus. Faire passer l'ICD elle-même à
+  la nouvelle convention serait une rupture de compatibilité (smo-vr/2).
 * **Quaternion** `q_body_to_eci = [x, y, z, w]` — partie scalaire **en dernier**, convention de
   Hamilton, norme unitaire. En tant que rotation active, il transforme un vecteur exprimé en
   axes satellite en vecteur ECI : `v_eci = q ⊗ v_body ⊗ q*`. Dans une scène dont les axes du monde sont
@@ -153,7 +160,7 @@ Code C# prêt à l'emploi pour Unity : `tools/vr_stub/unity/VRLinkClient.cs`.
 * Une scène centrée sur le satellite est la plus simple : garder le satellite à l'origine, placer
   le centre de la Terre en `-pos_eci_km` (mis à l'échelle), orienter la lumière directionnelle selon
   `-sun.dir_eci`.
-* L'échelle réelle est impitoyable : un satellite de 0,37 m à 500 km au-dessus d'une Terre de 6371 km. Utiliser
+* L'échelle réelle est impitoyable : un satellite de 0,37 m à 513 km au-dessus d'une Terre de 6371 km. Utiliser
   des échelles séparées (satellite à l'échelle réelle, distance à la Terre comprimée), ou une
   Terre en skybox rendue à partir de `earth.dir_body`.
 * En éclipse, le Soleil est derrière la Terre — une scène physiquement exacte devient

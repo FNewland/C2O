@@ -19,7 +19,7 @@ expected-reading: "EOSAT-1 mission summary (Section 2 of this document) before D
 |------|------|--------|
 | 09:00 – 10:30 | Brief: ground-segment elements; ConOps recap; tools intro | Q&A captured |
 | 10:30 – 12:00 | Mission Planning System (MPS) hands-on | First plan exported |
-| 13:00 – 15:00 | MCS round-robin: each student rotates through six positions | Position tour completed |
+| 13:00 – 15:00 | MCS round-robin: 15-min briefing, then each student rotates through the seven consoles (7 × 15 min) | Position tour completed |
 | 15:00 – 16:30 | Pass-plan team exercise on the MPS | Team-written pass plan |
 | 16:30 – 17:00 | Debrief & Day 2 brief; **expected reading flag** | Set up for Day 2 |
 
@@ -32,42 +32,70 @@ can focus on tools rather than recovery.
 
 ## 1. Brief — what we're flying
 
-[Claude Code: expand to ~400 words. Cover EOSAT-1 mission: 6U
-CubeSat, ocean-current monitoring with multispectral imager (443,
-560, 665, 865 nm), 450 km Sun-synchronous orbit at 98° inclination.
-Ground stations Iqaluit and Troll, both polar S-band. Reference
-`~/SpaceMissionSimulation/configs/eosat1/mission.yaml` and
-`orbit.yaml` for canonical values.]
+EOSAT-1 is a 6U CubeSat (12.0 kg dry, 12.40 kg wet) for
+ocean-current monitoring along the Canadian coastlines. Its
+four-band multispectral pushbroom imager (443, 560, 665 and 865 nm)
+gives a 273 km swath at 33.4 m ground sample distance. It flies a
+513 km sun-synchronous orbit at 97.39° inclination with the
+ascending node at 10:00 local time, so each 94.5-minute orbit
+includes about 34 minutes of eclipse. Power comes from body-mounted
+cells and two deployable wings into a 100 Wh battery. Attitude is
+controlled by four reaction wheels, with two star trackers, six
+coarse sun sensors, one magnetometer and three gyros, and a 1U
+green-monopropellant module (66.9 m/s) covers debris avoidance,
+drag make-up and the end-of-life disposal burn.
+
+The ground segment is five polar S-band stations — Iqaluit, Troll,
+Svalbard, Inuvik and O'Higgins — on a 5° mask: about 51 passes a
+day, 7.5 minutes long on average, with a median gap of 33 minutes.
+Telemetry runs on a three-rung ladder: BEACON 1 kbps, LOW 16 kbps
+for routine operations, HIGH 128 kbps for image dumps above 10°
+elevation.
+
+The full brief is textbook Part 2, §5.7. The canonical values are in
+`configs/eosat1/mission.yaml` and `orbit.yaml`.
 
 ### 1.1 The four ground-segment elements
 
-[Claude Code: 200 words. Reference NASA Mission Operations
-Handbook structure: ground stations · baseband · MCS · flight
-dynamics. EOSAT-1 specifics: Iqaluit (63.7° N), Troll (72° S),
-S-band, 5° minimum elevation.]
+Textbook Part 2, §8.2, walks the four elements as they appear in the
+room: **ground stations** (five polar S-band sites on a 5° mask —
+Iqaluit 63.7° N, Inuvik 68.3° N, Svalbard 78.2° N, Troll 72.0° S and
+O'Higgins 63.3° S; `ttc.active_gs`, 0x0523, names the live one),
+**baseband** (the RF and baseband health feed: Eb/N0 and frame
+sync), the **MCS** (port 9090) and **flight dynamics** (the
+planner's contact schedule on port 9091 and
+`tools/pass_gap_analysis.py`). The station list and coordinates are
+in `orbit.yaml`.
 
 ### 1.2 Pass geometry — the polar S-band picture
 
-[Claude Code: 200 words and a diagram. Show why polar SSO with
-polar ground stations gives many short passes per day. Include a
-Python-generated diagram (use `outputs/sample_figures/uottawa_brand.py`
-style) showing one orbit with ground tracks, Iqaluit + Troll
-visibility cones, and AOS/TCA/LOS markers.]
+Textbook Part 2, §8.2.1, with Figure 8.1 (one orbit with the five
+stations' visibility cones, lit and eclipsed segments shaded), is
+the session text. The point to land: the stations sit at high
+latitude, where the ground tracks of a polar sun-synchronous orbit
+converge, so most orbits bring the spacecraft over at least one of
+them. Over 48 h that gives 103 passes, a median gap of 33 minutes
+and a worst gap of 79 minutes. Passes last 3 to 9.4 minutes; the
+overhead maximum with the 5° mask is 9.3 minutes at 513 km.
 
 ### 1.3 Procedure structure
 
-[Claude Code: 150 words. Walk through one procedure from the
-simulator (recommend `procedures/leop/first_acquisition.md` since
-it's the simplest LEOP one). Highlight: preconditions block,
-ownership column, verification, exit criteria. Tell students they
-will read procedures, not write them.]
+Walk through `procedures/leop/first_acquisition.md` using the
+*Procedure Quick-Reference*, "How to read a procedure file", and
+textbook Part 2, §7.4. Highlight the header with its entry state,
+the Prerequisites checklist, steps built from **TC**, **Action**,
+**Verify** and **Note** labels, Off-Nominal Handling, and the Exit
+state and Post-Conditions that form the exit criterion. Ownership
+is not a column in the file: it is `required_positions` in
+`procedure_index.yaml`. Students read procedures; they do not write
+them.
 
 ### 1.4 PUS service primer (light)
 
-[Claude Code: 150 words. Introduce only services 1, 3, 5, 8, 9, 11,
-17 by name and one-line meaning. Source: `mcs/pus_services.yaml`.
-Emphasise that students use the MCS UI; PUS knowledge is for
-context only.]
+Use the seven-service list in the *Student MCS & MPS Reference*, §3
+(S1, S3, S5, S8, S9, S11 and S17, one line each). The full primer is
+textbook Part 2, §7.6, and the source is `mcs/pus_services.yaml`.
+Students command through the MCS; PUS knowledge is context only.
 
 ---
 
@@ -75,13 +103,21 @@ context only.]
 
 > **Read before Day 1.** Approximate reading time 25 minutes.
 
-[Claude Code: produce a 600 – 900 word readable summary covering:
-spacecraft platform (6U bus, multispectral imager, S-band), orbit
-choice rationale (Sun-sync 450 km, why), payload science driver
-(ocean-current monitoring, why those 4 bands), ground segment, ops
-concept summary. Include diagrams: orbit + ground tracks + ground
-station visibility (Python figure); spacecraft block diagram with
-six MCS-position colour-coding; pass-cadence chart.]
+The expected reading is textbook Part 2, §5.7 (*What we are flying —
+EOSAT-1 in 600 words*), with §§5.2–5.5 for the operations concept:
+the arc of the mission, what an operator must be able to do, the
+control-room positions, and how passes and shifts work. On the
+orbit: a sun-synchronous orbit keeps the local solar time of each
+pass the same, so images of a target are taken under comparable
+light; EOSAT-1's is at 513 km with the ascending node at 10:00, so
+it has an eclipse on every orbit. Natural decay from 513 km takes
+5.0 years at mean solar activity and 14.2 years at solar minimum,
+which fails the 5-year disposal rule, so the mission ends with a
+34.3 m/s perigee-lowering burn to 390 km (NOM-014), after which
+re-entry takes 1.5 years (4.2 at solar minimum). The band choice (443, 560, 665 and 865 nm, for
+dissolved organic carbon and surface chlorophyll) is explained in
+§5.7. Figures: Figure 8.1 for the orbit and station visibility, and
+§5.6 for the control-room layout.
 
 ### Key references
 
@@ -100,37 +136,41 @@ six MCS-position colour-coding; pass-cadence chart.]
 **Tool:** the MPS web UI (port 9091 by default — the planner's own
 `--port`; the simulator uses 8080 and the MCS 9090).
 
-[Claude Code: produce a 1.5-page exercise. Use planning configs
-(`planning/activity_types.yaml`, `planning/imaging_targets.yaml`,
-`planning/ground_stations.yaml`) as reference. Steps:
-  1. Open MPS, view ground-station schedule for next 24 h
-  2. Pick three ocean-current imaging targets from the config
-  3. Drop one imaging activity per target into the next available
-     viable window
-  4. Run conflict check (pointing slew time, power, thermal)
-  5. Resolve conflicts, export plan
-  6. Open the resulting plan in the MCS procedure panel.]
+> **TODO (author):** Write the MPS exercise for this session
+> (about one and a half pages) from `planning/activity_types.yaml`,
+> `planning/imaging_targets.yaml` and `planning/ground_stations.yaml`:
+> open the 24 h station schedule, pick three ocean-current targets,
+> drop one imaging activity per target into a viable window, run the
+> conflict check (slew time, power, thermal), resolve and export the
+> plan, then open it in the MCS Procedures page. Textbook Part 2,
+> §8.5, has a ten-step version that can serve as the base.
 
 ---
 
 ## 4. MCS round-robin
 
-Six MCS positions, six 15-minute stations. Every student visits all
-six during the afternoon. At each station, the seat-holder reads the
-position's role analysis card aloud, then completes one position-
-specific task while watching live telemetry.
+A 15-minute briefing, then seven 15-minute stations, one per console
+configured in `mcs/positions.yaml`: the 13:00–15:00 block exactly.
+Every student visits all seven during the afternoon. At each
+station, the seat-holder reads the position's role analysis card
+aloud, then completes one position-specific task while watching live
+telemetry and records it on the matching workbook card (WB-5.1).
+Mission Manager and Ground Segment are room roles, not consoles; the
+ground-segment check is part of the TT&C station.
 
 | Position | Role analysis source | 15-min task |
 |----------|---------------------|-------------|
-| Flight Director | `mcs/role_analysis/flight_director_role.md` | Run a GO/NO-GO round on the live dashboard |
-| Power & Thermal | `mcs/role_analysis/eps_tcs_role.md` | Identify the next eclipse and predict battery SoC at exit |
-| Flight Dynamics (AOCS) | `mcs/role_analysis/aocs_role.md` | Compute AOS, TCA, LOS for the next Iqaluit pass |
-| TT&C | `mcs/role_analysis/ttc_role.md` | Configure low-rate beacon → high-rate downlink at AOS |
-| Payload Operations | `mcs/role_analysis/payload_ops_role.md` | Schedule a single imaging session via MPS |
+| Flight Director | `mcs/role_analysis/flight_director_role.md` | Run a GO/NO-GO round on the live dashboard (*go for* `CONNECTION_TEST`) |
+| Power & Thermal | `mcs/role_analysis/eps_tcs_role.md` | Predict battery SoC at exit of the next eclipse; name the heater at the highest duty cycle |
+| Flight Dynamics | `mcs/role_analysis/aocs_role.md` | Check `aocs.att_error` against the NOMINAL budget; compute AOS, TCA and LOS for the next Iqaluit pass |
+| TT&C | `mcs/role_analysis/ttc_role.md` | Walk the rate ladder from LOW to HIGH at AOS; confirm which station carries the pass |
+| Payload Operations | `mcs/role_analysis/payload_ops_role.md` | Schedule a single imaging session via MPS; confirm `payload.fpa_ready` = 1 |
 | FDIR / Systems | `mcs/role_analysis/fdir_systems_role.md` | Walk through the FDIR panel and explain one rule |
+| Propulsion | `mcs/role_analysis/propulsion_role.md` | Read the arm interlock mask (`prop.arm_inhibit_mask`, 0x0B15) and name the gate blocking an arm, without commanding |
 
-[Claude Code: convert each row into a one-page station card and
-include in the student bundle.]
+The station cards are workbook WB-5.1, one per console, each with
+its task and the readings to record. The role analysis named in the
+table is the brief each seat-holder reads aloud.
 
 ---
 

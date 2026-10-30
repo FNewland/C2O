@@ -47,8 +47,24 @@ Each pass is 90 min real time / 90 min sim time (1× speed).
   pass duration.
 - **Speed multiplier:** 1× (real time).
 
-[Claude Code: confirm the scenario CLI invocation. Expected form:
-`sim run scenarios/first_contact.yaml --duration 5400 --inject <anomaly_yaml>`]
+There is no `sim run` command. Start the simulator once
+(`smo-simulator --config configs/eosat1/ --speed 1`, or `./start.sh`
+for the whole suite), then start the scenario by the `name:` in its
+YAML — **First Contact** — from the instructor console's Scenarios
+panel, or over the instructor API on the simulator port:
+
+```
+curl -X POST http://localhost:8080/api/command \
+     -H 'Content-Type: application/json' \
+     -d '{"type": "start_scenario", "scenario": "First Contact"}'
+```
+
+Start an anomaly from §4 the same way, by its name, at its cue
+moment. Only one scenario is active at a time: starting the anomaly
+replaces *First Contact* as the active scenario but keeps the
+spacecraft state, and the anomaly's events run from that moment.
+`first_contact.yaml` declares `duration_s: 1800`; the pass runs for
+as long as the instructor keeps the clock going.
 
 ---
 
@@ -59,18 +75,23 @@ Operator team is expected to drive the spacecraft from phase 3
 complete) in roughly that order:
 
 1. **LEOP-001** First Acquisition of Signal & OBC Boot
-2. **LEOP-006** Time Synchronisation
-3. **(LEOP-002)** Initial Health Check
-4. **LEOP-007** Sequential Power-On (this is the long one — battery
-   heater, reaction wheels, AOCS detumble; see procedure for full
-   ordering note)
-5. (Optional, if time permits) **LEOP-005** Sun Acquisition
+2. **LEOP-002** Initial Health Check
+3. **LEOP-004** Solar Array Verification (wing deployment)
+4. **LEOP-007** Sequential Power-On (heaters if needed, the AOCS
+   suite line, magnetometer, magnetorquers and GPS, then DETUMBLE;
+   the wheels stay disabled until COM-004)
+5. **LEOP-005** Sun Acquisition (observes the automatic handover to
+   COARSE_SUN)
+6. **LEOP-006** Time Synchronisation
+7. (If time permits) **LEOP-003** Initial Orbit Determination, which
+   ends LEOP by declaring phase 5
 
 Pass 1 typical end-state: phase 4, antennas deployed, app SW running,
 htr_bat ON, aocs_wheels ON, body rates < 0.05 °/s.
 
-Pass 2 typical end-state: same, plus payload-bus on standby, FDIR
-rule sets verified, ready for commissioning Thursday.
+Pass 2 typical end-state: same, in the COARSE_SUN sun hold, clock
+set; the payload stays off until COM-009; ready for commissioning
+Thursday.
 
 ---
 
@@ -92,9 +113,13 @@ through the scenario operator UI mid-run.
 | Hard | `obc_bus_failure.yaml` | CAN bus A drops mid-sequential-power-on | CTG-017 Bus Failure Switchover |
 | Very hard | `gs_antenna_failure.yaml` | Iqaluit antenna degraded mid-pass; team must defer rest of pass to Troll | CTG-020 Ground Station Antenna Failure |
 
-[Claude Code: cross-check filenames against simulator. The four
-*medium* and *hard* scenarios are listed in
-`scenarios/aocs_*.yaml`, `obc_*.yaml`, etc.]
+All seven files exist in `configs/eosat1/scenarios/` (checked against
+the simulator tree on 2026-10-30). The console lists them by their
+`name:` field: *No Telemetry at AOS*, *LCL Overcurrent Trip*,
+*Reaction Wheel Stuck at Speed*, *Star Tracker Failure*, *OBC
+Watchdog Reset*, *CAN Bus A Failure* and *Ground Station Antenna
+Failure*. The instructor book's catalogue (§5.10.2) gives CTG-026
+alongside CTG-007 for `aocs_actuator_stuck.yaml`.
 
 ### Injection cue card
 
@@ -107,7 +132,13 @@ For each injection, the instructor needs to know:
    the pass.
 4. **Five debrief questions** to use after the pass.
 
-[Claude Code: produce a one-page cue card per scenario.]
+The cue cards for all seven are in the instructor book, chapter 18:
+§18.1 No TM at Pass Start, §18.2 Power-Line Overcurrent, §18.3
+Reaction Wheel Stuck, §18.4 Star Tracker Failure, §18.5 OBC
+Watchdog Reset, §18.6 OBC Bus Failure and §18.7 Ground Station
+Antenna Failure. Each card gives the cue moment, first indicator,
+recovery procedure, pass criterion and five debrief questions.
+Print the cards you will use before the shift.
 
 ---
 

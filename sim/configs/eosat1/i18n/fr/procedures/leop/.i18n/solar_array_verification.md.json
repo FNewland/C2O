@@ -34,8 +34,8 @@
   },
   {
    "id": "leop-004-solar-array-verification/procedure-steps/step-1-request-detailed-eps-telemetry",
-   "en_hash": "5843ca2f147cc03b",
-   "fr_hash": "5b984cb966d29c17"
+   "en_hash": "c4a849adac883029",
+   "fr_hash": "1cec81ab58f51c46"
   },
   {
    "id": "leop-004-solar-array-verification/procedure-steps/step-2-check-y-wing-deployment-status-and-current",
@@ -70,7 +70,7 @@
   {
    "id": "leop-004-solar-array-verification/off-nominal-handling",
    "en_hash": "7e9e88d37f18b921",
-   "fr_hash": "0241d73ea3147b75"
+   "fr_hash": "125fe9aaa82d3777"
   },
   {
    "id": "leop-004-solar-array-verification/exit-state",
@@ -83,5 +83,5 @@
    "fr_hash": "7c81318c38639b75"
   }
  ],
- "en_commit": "3e80564"
+ "en_commit": "c4a140a"
 }

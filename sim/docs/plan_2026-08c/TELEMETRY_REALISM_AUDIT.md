@@ -1,4 +1,4 @@
-# Telemetry realism audit — what a real EO-Sat-1 could actually show
+# Telemetry realism audit — what a real EOSAT-1 could actually show
 
 **Raised 2026-08-20:** *"there are a little over 160 parameters [on the AOCS page]. There is
 no way all of these can be telemetered from an actual spacecraft ... and why would an actual

@@ -36,7 +36,7 @@ events:
 expected_responses:
   - { category: detect, description: "Observe separation timer expiry and OBC bootloader power-on" }
   - { category: detect, description: "Detect beacon telemetry (SID 11) during first contact" }
-  - { category: command, description: "Boot application software (S8 func_id 42)" }
+  - { category: command, description: "Boot application software (OBC_BOOT_APP, S8 func_id 55)" }
   - { category: command, description: "Set onboard time (S9.1)" }
   - { category: detect, description: "Verify full HK (all SIDs) after app boot" }
-  - { category: command, description: "Deploy antennas (S8 func_id 56)" }
+  - { category: command, description: "Deploy antennas (TTC_DEPLOY_ANTENNA, S8 func_id 69)" }

@@ -1,8 +1,8 @@
-# Guide d'installation de SpaceMissionSimulation
+# Guide d'installation de SpaceMissionSimulation {#spacemissionsimulation-installation-guide}
 
 **Manual-Scope:** system — documentation du système de formation, ne fait pas partie du manuel d'opérations de vol.
 
-## Démarrage rapide
+## Démarrage rapide {#quick-start}
 
 Cloner le dépôt, créer un environnement virtuel, installer les paquets et lancer le simulateur.
 
@@ -18,7 +18,7 @@ git clone <repo-url>; cd SpaceMissionSimulation; python -m venv .venv; .\.venv\S
 
 ---
 
-## Prérequis
+## Prérequis {#prerequisites}
 
 - **Python 3.11 ou supérieur** (3.11 recommandé, compatible 3.12/3.13)
 - **pip** (fourni avec Python)
@@ -29,27 +29,27 @@ git clone <repo-url>; cd SpaceMissionSimulation; python -m venv .venv; .\.venv\S
 
 ---
 
-## Instructions propres à chaque plateforme
+## Instructions propres à chaque plateforme {#platform-specific-instructions}
 
-### Linux (Ubuntu/Debian)
+### Linux (Ubuntu/Debian) {#linux-ubuntudebian}
 
 ```bash
 sudo apt update && sudo apt install python3.11 python3.11-venv python3-pip git
 ```
 
-### Linux (Fedora/RHEL)
+### Linux (Fedora/RHEL) {#linux-fedorarhel}
 
 ```bash
 sudo dnf install python3.11 git
 ```
 
-### macOS
+### macOS {#macos}
 
 ```bash
 brew install python@3.11 git
 ```
 
-### Windows
+### Windows {#windows}
 
 1. Télécharger Python 3.11 depuis [python.org](https://www.python.org/downloads/)
    - Pendant l'installation, cocher **« Add Python to PATH »**
@@ -58,7 +58,7 @@ brew install python@3.11 git
 
 ---
 
-## Étapes d'installation (toutes plateformes)
+## Étapes d'installation (toutes plateformes) {#installation-steps-all-platforms}
 
 1. **Cloner le dépôt :**
    ```bash
@@ -98,15 +98,15 @@ brew install python@3.11 git
 
 ---
 
-## Lancement du simulateur
+## Lancement du simulateur {#running-the-simulator}
 
-### Linux/macOS
+### Linux/macOS {#linuxmacos}
 
 ```bash
 bash start.sh
 ```
 
-### Windows
+### Windows {#windows-1}
 
 Lancer chaque service séparément :
 
@@ -123,7 +123,7 @@ python -m smo_planner.server --config configs/eosat1/ --port 9091
 
 ---
 
-## Ports des services
+## Ports des services {#service-ports}
 
 | Service | Port | URL |
 |---------|------|-----|
@@ -135,7 +135,7 @@ python -m smo_planner.server --config configs/eosat1/ --port 9091
 
 ---
 
-## Installation hors ligne (Cyber Range)
+## Installation hors ligne (Cyber Range) {#offline-installation-cyberrange}
 
 Pour les environnements sans accès à Internet :
 
@@ -154,7 +154,7 @@ Pour les environnements sans accès à Internet :
 
 ---
 
-## Vérification
+## Vérification {#verification}
 
 1. **Vérifier que tous les services se chargent :**
    - Ouvrir chaque URL de la section [Ports des services](#service-ports)
@@ -173,9 +173,9 @@ Pour les environnements sans accès à Internet :
 
 ---
 
-## Dépannage
+## Dépannage {#troubleshooting}
 
-### Conflits de ports
+### Conflits de ports {#port-conflicts}
 
 Si un service ne démarre pas parce que le port est déjà utilisé :
 
@@ -191,13 +191,13 @@ netstat -ano | findstr :8080
 
 Arrêter le processus en conflit ou changer de port au lancement du service.
 
-### Redirection HTTPS de Chrome
+### Redirection HTTPS de Chrome {#chrome-https-redirect}
 
 Si Chrome redirige automatiquement vers HTTPS :
 - Utiliser `http://127.0.0.1:PORT` au lieu de `localhost:PORT`
 - Ou désactiver la redirection HTTPS dans les paramètres du navigateur
 
-### Problèmes de version de Python
+### Problèmes de version de Python {#python-version-issues}
 
 Vérifier la version de Python :
 ```bash
@@ -205,7 +205,7 @@ python3 --version
 ```
 Elle doit être **3.11 ou supérieure**. Si nécessaire, indiquer le chemin complet : `python3.11`.
 
-### Modules manquants
+### Modules manquants {#missing-modules}
 
 S'assurer que l'environnement virtuel est activé :
 ```bash
@@ -220,7 +220,7 @@ pip install -e packages/smo-common
 pip install -e packages/smo-simulator -e packages/smo-mcs -e packages/smo-planner
 ```
 
-### Les outils d'orbite (Orbit Tools) ne démarrent pas
+### Les outils d'orbite (Orbit Tools) ne démarrent pas {#orbit-tools-wont-start}
 
 Installer manuellement les dépendances facultatives :
 ```bash
@@ -229,7 +229,7 @@ pip install sgp4 numpy aiohttp
 
 ---
 
-## Configuration
+## Configuration {#configuration}
 
 Les fichiers de configuration de la mission se trouvent dans `configs/eosat1/` :
 
@@ -243,6 +243,6 @@ Modifier ces fichiers pour adapter la mission, l'orbite et le comportement des s
 
 ---
 
-## Assistance
+## Assistance {#support}
 
 Pour tout problème ou toute question, consulter la documentation du projet ou contacter l'équipe de développement.

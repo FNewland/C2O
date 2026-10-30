@@ -897,8 +897,8 @@ _______________________________________________
 > **Qualité des exigences (SMART) :**
 > **S**pécifique -- **M**esurable -- **A**tteignable -- **R**attachée au besoin (pertinente) -- **T**raçable
 
-> **Méthodes de vérification (ATID) :**
-> **A**nalyse -- **T**est (essai) -- **I**nspection -- **D**émonstration
+> **Méthodes de vérification (ATIR(D)) :**
+> **A**nalyse -- **T**est (essai) -- **I**nspection -- **R**evue de conception -- (**D**émonstration, que l'ECSS compte dans l'essai et que la NASA présente à part)
 
 ---
 
@@ -1673,7 +1673,7 @@ Le sous-système d'alimentation électrique (EPS) est le fournisseur d'énergie 
 
 Dans l'espace, il n'y a pas d'air permettant la convection. Les transferts de chaleur se font uniquement par **rayonnement** et par **conduction**. Un engin spatial atteint l'équilibre thermique lorsque la chaleur absorbée (flux solaire, albédo terrestre, rayonnement infrarouge terrestre, chaleur dissipée par l'électronique interne) est égale à la chaleur rayonnée (vers l'espace profond, à ~3 K).
 
-**Marges thermiques ECSS (ECSS-E-ST-31C) :** fonctionnement $\pm$5 °C, recette $\pm$10 °C, qualification $\pm$15 °C. Si la température prévue d'un composant se situe à moins de 5 °C de sa limite de fonctionnement, vous devez ajouter un moyen de contrôle thermique (réchauffeur, modification du revêtement ou radiateur).
+**Marges thermiques (convention pédagogique du manuel, tableau 3.1.11 ; le TVAC de protovol se fait à la prévision $\pm$10 °C selon le GSFC-STD-7000B) :** fonctionnement $\pm$5 °C, recette $\pm$10 °C, qualification $\pm$15 °C. Si la température prévue d'un composant se situe à moins de 5 °C de sa limite de fonctionnement, vous devez ajouter un moyen de contrôle thermique (réchauffeur, modification du revêtement ou radiateur).
 
 ---
 
@@ -1689,7 +1689,7 @@ Dans l'espace, il n'y a pas d'air permettant la convection. Les transferts de ch
 >
 > **Équilibre thermique :** $T = \left(\frac{Q_{\text{abs}} + Q_{\text{int}}}{\varepsilon \sigma A_{\text{rad}}}\right)^{1/4}$    ($\sigma = 5.67 \times 10^{-8}$ W/m$^2$/K$^4$)
 >
-> **Marges thermiques ECSS :** fonctionnement +/-5 °C, recette +/-10 °C, qualification +/-15 °C
+> **Marges thermiques (convention du manuel) :** fonctionnement +/-5 °C, recette +/-10 °C, qualification +/-15 °C
 
 ---
 
@@ -3165,11 +3165,11 @@ _______________________________________________
 
 ---
 
-## Partie A : Attribution des méthodes IADT
+## Partie A : Attribution des méthodes ATIR(D)
 
 Pour 10 exigences clés de votre Matrice V&V (V&V Matrix) dans SpaceCDF, attribuez la méthode de vérification et justifiez-la :
 
-| # | ID exig. | Texte de l'exigence (abrégé) | Méthode (I/A/D/T) | Phase (B/C/D) | Niveau (équip./sous-syst./syst.) | Justification |
+| # | ID exig. | Texte de l'exigence (abrégé) | Méthode (A/T/I/R/D) | Phase (B/C/D) | Niveau (équip./sous-syst./syst.) | Justification |
 |---|--------|-------------------------------|:-:|:-:|:-:|--------------|
 | 1 | | | | | | |
 | 2 | | | | | | |
@@ -3182,7 +3182,7 @@ Pour 10 exigences clés de votre Matrice V&V (V&V Matrix) dans SpaceCDF, attribu
 | 9 | | | | | | |
 | 10 | | | | | | |
 
-**Décompte :** analyse : ___ / essai (test) : ___ / démonstration : ___ / inspection : ___
+**Décompte :** analyse : ___ / essai (test) : ___ / inspection : ___ / revue de conception : ___ / démonstration : ___
 
 ---
 
@@ -4502,7 +4502,7 @@ _______________________________________________
 | Mener une étude de compromis structurée avec des critères pondérés | | | |
 | Dimensionner des sous-systèmes à l'aide de modèles paramétriques et de bilans d'ingénierie | | | |
 | Choisir des équipements COTS et vérifier la compatibilité des interfaces | | | |
-| Construire une matrice de vérification avec les méthodes IADT | | | |
+| Construire une matrice de vérification avec les méthodes ATIR(D) | | | |
 | Évaluer les risques à l'aide d'une matrice 5 x 5 et définir des mesures de réduction | | | |
 | Estimer le coût d'une mission par des méthodes paramétriques et ascendantes | | | |
 | Concevoir un segment sol et calculer un bilan de données | | | |

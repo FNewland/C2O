@@ -10,8 +10,9 @@ comparaison de sommes de contrôle et, le cas échéant, activer la nouvelle ima
 qui exige l'autorisation du directeur de vol et une exécution pas à pas avec des jalons GO/NO-GO
 explicites. Un chargement raté ou une image corrompue pourrait rendre l'OBC inopérant ; plusieurs
 contrôles d'intégrité sont donc effectués. La procédure couvre à la fois les correctifs partiels (appliqués à
-l'image en cours d'exécution) et les remplacements complets de l'image applicative (chargée dans le banc mémoire
-alternatif et activée par basculement de la source d'amorçage).
+l'image en cours d'exécution) et les remplacements complets de l'image applicative (chargée à la place de
+l'image applicative et amorcée avec `OBC_BOOT_APP`). L'OBC n'a qu'une seule image applicative et aucune sélection
+de banc d'amorçage : l'image précédente n'est pas conservée à bord, et revenir en arrière signifie la recharger.
 
 ## Prérequis
 - [ ] Liaison TTC établie avec une marge > 6 dB : `ttc.link_margin` (0x0503) > 6.0
@@ -98,19 +99,18 @@ suivant, quel qu'il soit) en plein chargement de logiciel. Il n'existe pas de fo
 distincte de « sélection de la source d'amorçage » : `OBC_BOOT_APP` vérifie le CRC de l'application
 pendant 10 s et fait passer `obdh.sw_image` (0x0311) à 1.
 **Verify:** acceptation de la commande sous 5 s
-**Action:** L'OBC reconfigure le registre de source d'amorçage pour qu'il pointe vers le banc
-de l'image nouvellement chargée. La nouvelle image devient active au prochain amorçage.
+**Note:** Il n'existe ni registre de source d'amorçage ni second banc d'image : l'image chargée
+EST l'image applicative, et `OBC_BOOT_APP` l'amorce après le contrôle de son CRC.
 **Note:** Pour les correctifs appliqués à l'image en cours d'exécution, cette étape peut être remplacée par une
 commande d'application directe du correctif. Consulter l'ingénieur OBDH pour l'activation propre au correctif.
 **Verify:** `obdh.sw_image` (0x0311) toujours = 1 (application) --- aucun redémarrage intempestif à ce stade
-**GO/NO-GO:** Source d'amorçage configurée. Prêt pour un redémarrage maîtrisé.
+**GO/NO-GO:** Nouvelle image acceptée par le contrôle CRC. Prêt pour un redémarrage maîtrisé.
 
 ### Étape 7 --- Confirmer l'amorçage sur le nouveau logiciel
 **TC:** `OBC_REBOOT` (Service 8, Subtype 1, func_id 52) --- commander un redémarrage maîtrisé de l'OBC
 **Note:** Était `FUNC_PERFORM func_id=30`, qui correspond à `PAYLOAD_DELETE_IMAGE`.
 **Action:** Attendre la séquence d'amorçage --- l'OBC ne répond plus pendant environ 60 s.
 **Verify:** `obdh.mode` (0x0300) répond dans les 90 s qui suivent la commande de redémarrage
-**Verify:** `obdh.sw_version` (0x030B) = numéro de la nouvelle version attendue
 **Verify:** `obdh.sw_image` (0x0311) = 1 (application, et non chargeur d'amorçage)
 **Verify:** `obdh.last_reboot_cause` (0x0316) = 1 (commandé)
 **Verify:** `obdh.active_obc` (0x030C) inchangé (même unité OBC qu'avant)
@@ -157,11 +157,12 @@ somme de contrôle, anomalies éventuellement observées.
    d'amorçage précédente » — l'ancienne fiche envoyait `FUNC_PERFORM func_id=21`, qui correspond à
    `EPS_RESET_OC_FLAG`. Si l'OBC ne quitte pas le chargeur d'amorçage, utiliser
    `OBC_BOOT_INHIBIT(inhibit=0)` (func 56) puis `OBC_REBOOT` (func 52), et
-   suivre CTG-018 Reprise par le chargeur d'amorçage.
-3. **TC:** `OBC_REBOOT` (Service 8, Subtype 1, func_id 52) --- commander un redémarrage de l'OBC.
-4. Attendre 90 s l'amorçage sur l'image applicative précédente (réputée saine).
-5. Vérifier que `obdh.sw_version` (0x030B) = version précédente et que `obdh.sw_image` (0x0311) = 1.
-6. Si l'OBC se rétablit : consigner l'échec, effacer l'image corrompue, rechercher la cause racine au sol.
+   suivre CTG-021 Reprise par le chargeur d'amorçage de l'OBC.
+3. Recharger l'image précédente (réputée saine) depuis l'archive sol avec `MEM_LOAD`,
+   en répétant les étapes 3-5 de cette fiche avec les segments et le CRC-32 de cette image.
+4. L'amorcer avec `OBC_BOOT_APP` (func 55) et attendre la fenêtre de contrôle CRC de 10 s.
+5. Vérifier que `obdh.sw_image` (0x0311) = 1 et que la somme de contrôle de l'étape 5 correspond à l'image précédente.
+6. Si l'OBC se rétablit : consigner l'échec, rechercher la cause racine au sol.
 7. Si l'OBC reste sur le chargeur d'amorçage : faire remonter au directeur de vol. Envisager un basculement de redondance
    de l'OBC vers l'unité de secours si elle est disponible (`obdh.obc_b_status` (0x030D) = 1 STANDBY).
 
@@ -183,14 +184,14 @@ somme de contrôle, anomalies éventuellement observées.
   ne retenter qu'après l'analyse de la cause racine du redémarrage.
 
 ## Postconditions
-- [ ] OBC exécutant la nouvelle version logicielle : `obdh.sw_version` (0x030B) = version cible
+- [ ] OBC exécutant l'image applicative chargée : `obdh.sw_image` (0x0311) = 1 après `OBC_BOOT_APP`, la somme de contrôle de l'étape 5 étant vérifiée
 - [ ] `obdh.mode` (0x0300) = NOMINAL (0)
 - [ ] Tous les sous-systèmes communiquant normalement par le bus CAN
 - [ ] Ordonnancement de bord rétabli et opérationnel
 - [ ] `obdh.mem_errors` (0x031E) = 0
 - [ ] Somme de contrôle de l'image chargée vérifiée correcte
 - [ ] Journal de chargement complété avec numéros de version, sommes de contrôle et durée
-- [ ] Image logicielle précédente conservée comme solution de repli dans le banc mémoire alternatif
+- [ ] Image précédente et son CRC-32 archivés au sol (revenir en arrière signifie la recharger)
 - [ ] Le directeur de vol a validé la réussite du chargement
 
 ---

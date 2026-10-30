@@ -59,8 +59,16 @@ dans les cas chauds) et surveille la tendance de température jusqu'au retour de
 **TC:** `PAYLOAD_SET_MODE(mode=0)` (Service 8, Subtype 1, func_id 26) — supprimer la charge thermique de l'électronique
 **Verify:** `payload.mode` (0x0600) = 0 (OFF) en 10 s
 **LABEL:** `STEP-2B-OBC`
-**TC (OBC chaud) :** `SET_PARAM(param_id=obdh.task_shed, value=1)` — réduire la charge processeur pour diminuer la dissipation
-**Verify:** `obdh.cpu_load` (0x0302) diminue en 30 s
+**BRANCH:** `tcs.temp_obc > 55` -> GO `STEP-2B-OBCHOT` | NO-GO `STEP-2B-BATCHK` (timeout 10 s)
+**LABEL:** `STEP-2B-OBCHOT`
+**Note:** OBC chaud : couper le réchauffeur de l'OBC, puis placer l'OBC en SAFE. Il
+n'existe à bord aucun paramètre de délestage des tâches ; le mode SAFE de l'OBC est la
+réduction commandée.
+**TC:** `HEATER_OBC(on=0)` (Service 8, Subtype 1, func_id 41) — réchauffeur de l'OBC sur OFF
+**Verify:** `tcs.htr_obc` (0x040B) = 0 (OFF) en 5 s
+**TC:** `OBC_SET_MODE(mode=1)` (Service 8, Subtype 1, func_id 50) — OBC en SAFE
+**Verify:** `obdh.mode == 1` (0x0300, timeout 10 s) — SAFE
+**LABEL:** `STEP-2B-BATCHK`
 **BRANCH:** `tcs.temp_battery > 42` -> GO `STEP-2B-BAT` | NO-GO `STEP-3` (timeout 10 s)
 **LABEL:** `STEP-2B-BAT`
 **Note:** Batterie chaude : vérifier que `tcs.htr_battery` (0x040A) = 0 (OFF) ; s'il est sur ON, le couper :
@@ -93,7 +101,22 @@ dans les cas chauds) et surveille la tendance de température jusqu'au retour de
 **TC:** `AOCS_SET_MODE(mode=3)` (Service 8, Subtype 1, func_id 0) — COARSE_SUN, pour optimiser l'attitude du satellite pour la dissipation thermique
 **Verify:** `aocs.mode` (0x020F) = 3 en 15 s
 **LABEL:** `STEP-4E`
-**GO/NO-GO:** Si la température se stabilise dans un délai supplémentaire de 15 min, l'étape 5 s'applique. À l'approche d'une limite rouge, passer à EMG-002. -> GO `STEP-5` | NO-GO `STEP-END`
+**GO/NO-GO:** Si la température se stabilise dans un délai supplémentaire de 15 min, l'étape 5 s'applique. À l'approche d'une limite rouge, faire remonter l'anomalie. -> GO `STEP-5` | NO-GO `STEP-4X`
+**LABEL:** `STEP-4X`
+**Note:** L'escalade dépend de l'état du réchauffeur de la zone concernée. Un
+réchauffeur sur ON dans une zone au-dessus de sa limite chaude est la signature d'un
+emballement thermique (EMG-006) ; réchauffeur sur OFF, la chaleur vient d'ailleurs et le
+satellite passe en mode survie d'urgence (EMG-001). La branche exploitable par la machine
+est celle du réchauffeur de la batterie ; pour la zone OBC, lire `tcs.htr_obc` (0x040B) à la place.
+**TC:** `HK_REQUEST(sid=3)` (Service 3, Subtype 27) — relire l'état du réchauffeur
+**BRANCH:** `tcs.htr_battery == 1` -> GO `STEP-4X-EMG006` | NO-GO `STEP-4X-EMG001` (timeout 70 s)
+**LABEL:** `STEP-4X-EMG006`
+**Note:** Réchauffeur sur ON — exécuter EMG-006 (emballement thermique) maintenant.
+**GO/NO-GO:** Relais passé à EMG-006 -> GO `STEP-END` | NO-GO `STEP-END`
+**LABEL:** `STEP-4X-EMG001`
+**Note:** Réchauffeur sur OFF — exécuter EMG-001 (mode survie d'urgence) maintenant ;
+son étape 1 commande le mode EMERGENCY de l'OBC.
+**GO/NO-GO:** Relais passé à EMG-001 -> GO `STEP-END` | NO-GO `STEP-END`
 
 ### Étape 5 — Confirmer la reprise et rétablir les opérations
 **LABEL:** `STEP-5`
@@ -109,7 +132,7 @@ dans les cas chauds) et surveille la tendance de température jusqu'au retour de
 **GO/NO-GO:** Toutes les températures nominales et opérations rétablies — reprise terminée
 
 ## Conduite à tenir hors nominal
-- Si la température de la batterie dépasse +45 °C (limite rouge) : commander `OBC_SET_MODE(mode=2)` pour passer en EMERGENCY — exécuter EMG-002
+- Si la température de la batterie dépasse +45 °C (limite rouge) : faire remonter selon l'état du réchauffeur de la batterie, comme à l'étape 4 — réchauffeur sur ON (`tcs.htr_battery` (0x040A) = 1) : exécuter EMG-006 (emballement thermique) ; réchauffeur sur OFF : exécuter EMG-001 (mode survie d'urgence), qui commande le mode EMERGENCY
 - Si la température de l'OBC dépasse +60 °C : commander immédiatement `OBC_SET_MODE(mode=1)` pour passer en SAFE
 - Si un circuit de réchauffeur ne s'active pas : suspecter une défaillance matérielle du réchauffeur, consigner l'anomalie, ajuster l'attitude pour un contrôle thermique passif
 - Si plusieurs zones dépassent simultanément leurs limites : suspecter un changement de géométrie orbitale ou une anomalie SCAO — contrôler `aocs.mode` (0x020F) et exécuter CTG-002 si l'attitude est hors nominal

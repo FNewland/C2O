@@ -1,4 +1,4 @@
-# MCS Operator Displays — Audit (EO-Sat-1 simulator suite)
+# MCS Operator Displays — Audit (EOSAT-1 simulator suite)
 
 **Date:** 2026-07-28 · **Mode:** read-only investigation · **Repo:** `/home/claude/repos/SpaceMissionSimulation`
 

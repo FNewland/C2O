@@ -48,13 +48,17 @@ at the centre of the Earth".
 **TC:** `GET_PARAM(param_id=0x0212)` (Service 20, Subtype 3) --- `aocs.gps_alt` (km)
 **Verify:** `aocs.gps_lat` (0x0210) in range [-90, +90] within 10s
 **Verify:** `aocs.gps_lon` (0x0211) in range [-180, +180] within 10s
-**Verify:** `aocs.gps_alt` (0x0212) in range [495 km, 540 km] within 10s
-**Note:** Band = the TLE-propagated geodetic altitude range (503-530 km over
+**Verify:** `aocs.gps_alt` (0x0212) in range [495 km, 540 km] within 10s --- the CHECK band
+**Note:** Check band = the TLE-propagated geodetic altitude range (503-530 km over
 an orbit, mean 513 km) plus ~8-10 km of margin. The historical 450 km
 declaration was retired by the 2026-08 owner ruling: the orbit.yaml TLE
 (mean motion 15.24 rev/day) is the truth and `altitude_km` now records the
 propagated mean, 513 km.
-**GO/NO-GO:** Position fix valid and altitude in the accepted LEO band
+**Note:** The wider 400-550 km band is the ANOMALY band (Off-Nominal
+Handling): only outside it is the insertion itself suspect. A reading outside
+the check band but inside the anomaly band fails this check --- verify PDOP,
+take a second fix and report it to Flight Dynamics.
+**GO/NO-GO:** Position fix valid and altitude in the 495-540 km check band
 
 ### Step 3 --- Read the ECEF State Vector
 **TC:** `GET_PARAM(param_id=0x0231)` (Service 20, Subtype 3) --- ECEF X (m)
@@ -73,7 +77,7 @@ Dynamics.
 ### Step 4 --- Flight Dynamics Comparison
 **Action:** Transmit the GPS-derived state vector to Flight Dynamics. Flight
 Dynamics computes osculating elements and compares with the launcher-predicted
-orbit: inclination within 0.2 deg of 98.0 deg, eccentricity < 0.01, LTAN
+orbit: inclination within 0.2 deg of 97.39 deg, eccentricity < 0.01, LTAN
 within 15 minutes of the mission requirement.
 **Action:** Confirm the orbit period against the TLE mean motion; note the
 altitude discrepancy from Step 2 in the comparison.
@@ -110,10 +114,10 @@ event log carrying `4 (LEOP) -> 5 (COMMISSIONING)`.
 **GO/NO-GO:** All positions GO; phase = COMMISSIONING --- LEOP is over
 
 ## Off-Nominal Handling
-- If `aocs.gps_fix` < 2: confirm the receiver device is ON (`S2_AOCS_GPS_RECEIVER` device 0x020F, LEOP-007). Wait out the cold start (up to 15 min). If no fix after 30 minutes, fall back to ground-based range/Doppler from Iqaluit and Troll for the initial orbit and schedule a GPS investigation for commissioning; the phase declaration may still proceed on a ground-tracked orbit with FD approval.
+- If `aocs.gps_fix` < 2: confirm the receiver device is ON (`S2_AOCS_GPS_RECEIVER` device 0x020F, LEOP-007). Wait out the cold start (up to 15 min). If no fix after 30 minutes, fall back to ground-based range/Doppler from the ground-station network for the initial orbit and schedule a GPS investigation for commissioning; the phase declaration may still proceed on a ground-tracked orbit with FD approval.
 - If SID 12 is absent from the downlink: `HK_ENABLE(sid=12)` (Service 3, Subtype 5) was missed or lost (LEOP-006 Step 6a) --- re-issue it.
-- If the altitude is outside even the wide [400, 550] km band: verify PDOP first. With a good fix this is an insertion anomaly --- alert Flight Dynamics and assess a correction manoeuvre before declaring phase 5.
-- If inclination differs from 98.0 deg by more than 0.2 deg: flag to Flight Dynamics; sun-synchronous precession and mission lifetime are affected.
+- If the altitude is outside even the [400, 550] km anomaly band: verify PDOP first. With a good fix this is an insertion anomaly --- alert Flight Dynamics and assess a correction manoeuvre before declaring phase 5.
+- If inclination differs from 97.39 deg by more than 0.2 deg: flag to Flight Dynamics; sun-synchronous precession and mission lifetime are affected.
 - If `SYS_SET_MISSION_PHASE` is refused: 0x0C03 means the OBC is (back) in the bootloader --- re-run LEOP-001 Step 5 and LEOP-006 first. 0x0C04 means a backwards declaration without FORCE.
 
 ## Exit state
@@ -132,5 +136,6 @@ event log carrying `4 (LEOP) -> 5 (COMMISSIONING)`.
 - [ ] Phase 5 declared (event 0x0055 logged) --- LEOP complete
 
 **NEXT:** Commissioning, starting with COM-001 (EPS Checkout). The definitive
-commissioning order is COM-001 ... COM-013 as indexed, with COM-003 (sensor
-calibration) deliberately BEFORE COM-004 (wheel enable).
+commissioning order is COM-001 ... COM-013 as indexed, with COM-004 (wheel
+enable, commanded NOMINAL) BEFORE COM-003 (sensor calibration), per author
+ruling Q16.

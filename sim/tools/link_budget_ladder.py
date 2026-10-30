@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""EO-Sat-1 TM data-rate ladder — link-margin table per tier per station.
+"""EOSAT-1 TM data-rate ladder — link-margin table per tier per station.
 
 Reproduces the arithmetic of the data-rate research report (sections B.1-B.8)
 directly from the shipped configuration, so the numbers Franz reads in the
@@ -94,7 +94,7 @@ def main(argv=None) -> int:
     stations = load_stations(config_dir)
     elevations = [float(x) for x in args.elevations.split(",") if x.strip()]
 
-    print(f"EO-Sat-1 TM data-rate ladder — link margins")
+    print(f"EOSAT-1 TM data-rate ladder — link margins")
     print(f"  config      : {config_dir}")
     print(f"  altitude    : {args.altitude_km:.0f} km")
     print(f"  downlink    : {model._dl_freq_hz / 1e6:.1f} MHz")

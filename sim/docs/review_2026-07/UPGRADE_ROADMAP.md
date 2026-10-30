@@ -1,4 +1,4 @@
-# EO-Sat-1 Simulator Suite — Prioritised Upgrade Roadmap
+# EOSAT-1 Simulator Suite — Prioritised Upgrade Roadmap
 
 **Document:** SMO-ROADMAP-2026-07 · **Date:** 2026-07-28 · **Revised:** 2026-07-29
 **Companion to:** `REVIEW_2026-07.md` (this document is the answer to review item 10)

@@ -98,7 +98,7 @@ parameters:
   - { id: 0x0208, name: aocs.rw2_speed, subsystem: aocs, units: RPM }
   - { id: 0x0209, name: aocs.rw3_speed, subsystem: aocs, units: RPM }
   - { id: 0x020A, name: aocs.rw4_speed, subsystem: aocs, units: RPM }
-# Measured body-frame magnetic field from THE magnetometer (EO-Sat-1 flies a
+# Measured body-frame magnetic field from THE magnetometer (EOSAT-1 flies a
   # single 3-axis unit — no redundant B unit; see the gyro precedent). These
   # are the MEASURED values the B-dot law consumes: IGRF truth rotated into
   # the body frame plus sensor bias and noise, zeroed when the unit is
@@ -170,7 +170,7 @@ parameters:
   - { id: 0x0222, name: aocs.sun_body_z, subsystem: aocs, description: Sun vector body Z (from CSS composite) , on_demand: true }
 
   # 0x0223-0x0229 (the "Wave 5-B dual magnetometer" block: mag_a_x..z,
-  # mag_b_x..z, mag_select) are RETIRED (owner ruling, 2026-08c): EO-Sat-1
+  # mag_b_x..z, mag_select) are RETIRED (owner ruling, 2026-08c): EOSAT-1
   # carries ONE 3-axis magnetometer, like it carries one gyro set — there is
   # no spare and no prime/backup switch. The measured field is 0x020B-0x020D;
   # magnetometer failure teaching is by instructor injection (mag_failure),
@@ -366,8 +366,8 @@ parameters:
   - { id: 0x0425, name: tcs.fpa_cooler_margin_k, subsystem: tcs, units: K, description: "Commanded FPA setpoint minus achievable floor; <= 0 means the setpoint is out of reach", on_demand: true }
 
   # ===== PROP (Phase D — block 0x0B00; 0x01=EPS … 0x0A=OBDH, 0x0B free) =====
-  # 1U green-monoprop blowdown module: debris avoidance + drag make-up only
-  # (no deorbit capability — disposal is passive decay, FCC 5-yr compliant).
+  # 1U green-monoprop blowdown module: debris avoidance, drag make-up and the
+  # end-of-life perigee-lowering burn (ruling Q3 amended; NOM-014).
   - { id: 0x0B00, name: prop.state, subsystem: prop, description: "Propulsion state: 0=SAFED, 1=ARMED, 2=FIRING, 3=INHIBIT" }
   - { id: 0x0B01, name: prop.tank_pressure, subsystem: prop, units: bar, description: "Tank/feed pressure (blowdown 22.00 -> 9.33 bar)" }
   - { id: 0x0B02, name: prop.propellant_mass, subsystem: prop, units: g, description: "Propellant remaining (400 -> 0 g)" }

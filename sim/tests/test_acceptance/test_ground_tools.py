@@ -40,8 +40,8 @@ class TestOrbitTools:
 
     def test_gt_orb_001_tle_parse(self, orbit_module):
         """TLE parsing produces valid orbital elements."""
-        tle1 = "1 99001U 26001A   26068.50000000  .00000100  00000-0  10000-4 0  9990"
-        tle2 = "2 99001  98.0000 120.0000 0001200  90.0000 270.0000 15.24000000 00010"
+        tle1 = "1 99001U 26001A   26068.50000000  .00000100  00000-0  10000-4 0  9991"
+        tle2 = "2 99001  97.3900 120.0000 0001200  90.0000 270.0000 15.24000000 00016"
         try:
             sat = orbit_module.Satrec.twoline2rv(tle1, tle2)
             assert sat.inclo > 0, "Inclination should be positive"
@@ -68,13 +68,13 @@ class TestOrbitTools:
 
     def test_gt_orb_003_orbital_elements(self, orbit_module):
         """Orbital elements computed from TLE match expected SSO."""
-        tle1 = "1 99001U 26001A   26068.50000000  .00000100  00000-0  10000-4 0  9990"
-        tle2 = "2 99001  98.0000 120.0000 0001200  90.0000 270.0000 15.24000000 00010"
+        tle1 = "1 99001U 26001A   26068.50000000  .00000100  00000-0  10000-4 0  9991"
+        tle2 = "2 99001  97.3900 120.0000 0001200  90.0000 270.0000 15.24000000 00016"
         try:
             sat = orbit_module.Satrec.twoline2rv(tle1, tle2)
-            # Inclination should be ~98° (SSO)
+            # Inclination should be ~97.39° (exact SSO for 15.24 rev/day, ruling Q2b amended)
             incl_deg = sat.inclo * 180.0 / 3.14159265
-            assert 95.0 < incl_deg < 100.0, f"Inclination {incl_deg}° not SSO"
+            assert 97.3 < incl_deg < 97.6, f"Inclination {incl_deg}° not SSO"
             # Eccentricity should be near-circular
             assert sat.ecco < 0.01, f"Eccentricity {sat.ecco} too high"
         except Exception as e:

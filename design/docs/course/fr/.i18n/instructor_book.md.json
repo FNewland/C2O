@@ -1,6 +1,6 @@
 {
  "tool_version": "1.0.0",
- "en_path": "${DRIVE_COURSE}/instructor_book.md",
+ "en_path": "docs/course/instructor_book.md",
  "sections": [
   {
    "id": "_preamble",
@@ -19,8 +19,8 @@
   },
   {
    "id": "chapter-5-10-scenario-catalogue/5-10-0-starting-the-simulator",
-   "en_hash": "bd0093927c4d014e",
-   "fr_hash": "4ca857c23f144fd8"
+   "en_hash": "7b66bc2aa5176cb5",
+   "fr_hash": "f21286a19731ce26"
   },
   {
    "id": "chapter-5-10-scenario-catalogue/5-10-1-breakpoints-4",
@@ -34,8 +34,8 @@
   },
   {
    "id": "chapter-5-10-scenario-catalogue/5-10-2-anomaly-scenario-catalogue-36",
-   "en_hash": "47c317e1fbddb37d",
-   "fr_hash": "72ac45873b6f1dee"
+   "en_hash": "ead049170e460be8",
+   "fr_hash": "28b0e43ab1a5d9f5"
   },
   {
    "id": "chapter-5-10-scenario-catalogue/5-10-2-anomaly-scenario-catalogue-36/failure-injections-without-a-scenario-file",
@@ -49,8 +49,8 @@
   },
   {
    "id": "chapter-2-mission-simulation-day-instructor-walkthrough",
-   "en_hash": "e4089342e7edd522",
-   "fr_hash": "4769f569a4276640"
+   "en_hash": "9032d07209d8e0e9",
+   "fr_hash": "7da01cb04a24d4c6"
   },
   {
    "id": "chapter-2-mission-simulation-day-instructor-walkthrough/learning-objectives",
@@ -64,8 +64,8 @@
   },
   {
    "id": "chapter-2-mission-simulation-day-instructor-walkthrough/1-simulation-overview-roles/role-assignments",
-   "en_hash": "ed852c7177b05d65",
-   "fr_hash": "68e77bb9256baed8"
+   "en_hash": "d5e54bff5a4a1fc1",
+   "fr_hash": "9859ec24db135785"
   },
   {
    "id": "chapter-2-mission-simulation-day-instructor-walkthrough/1-simulation-overview-roles/simulation-timeline",
@@ -79,8 +79,8 @@
   },
   {
    "id": "chapter-2-mission-simulation-day-instructor-walkthrough/2-leop-simulation/facilitator-script-leop",
-   "en_hash": "92d44b4d91c53ba9",
-   "fr_hash": "81386d61ee880c1d"
+   "en_hash": "de25cfac12433051",
+   "fr_hash": "e60665a068516c8f"
   },
   {
    "id": "chapter-2-mission-simulation-day-instructor-walkthrough/3-commissioning-simulation",
@@ -89,8 +89,8 @@
   },
   {
    "id": "chapter-2-mission-simulation-day-instructor-walkthrough/3-commissioning-simulation/facilitator-script-commissioning",
-   "en_hash": "b56bbeb9e551cac9",
-   "fr_hash": "4194331ed4d18f35"
+   "en_hash": "21cd7ffce63fee4a",
+   "fr_hash": "73dca14e44a021ab"
   },
   {
    "id": "chapter-2-mission-simulation-day-instructor-walkthrough/4-anomaly-injection-scenarios",
@@ -139,8 +139,8 @@
   },
   {
    "id": "chapter-2-mission-simulation-day-instructor-walkthrough/5-nominal-operations-debrief/nominal-operations",
-   "en_hash": "0593391e67df35a5",
-   "fr_hash": "58e21d58bb258a77"
+   "en_hash": "9ff4c909d1bb069f",
+   "fr_hash": "b582e38270309ffd"
   },
   {
    "id": "chapter-2-mission-simulation-day-instructor-walkthrough/5-nominal-operations-debrief/debrief",
@@ -154,8 +154,8 @@
   },
   {
    "id": "chapter-2-mission-simulation-day-instructor-walkthrough/facilitator-notes/preparation",
-   "en_hash": "61b6303456151054",
-   "fr_hash": "137249f68652c623"
+   "en_hash": "415b2451b6a433a4",
+   "fr_hash": "74ee8640292da572"
   },
   {
    "id": "chapter-2-mission-simulation-day-instructor-walkthrough/facilitator-notes/pacing",
@@ -219,13 +219,13 @@
   },
   {
    "id": "chapter-18-anomaly-cue-cards/18-2-power-line-overcurrent-easy-day-3-or-4",
-   "en_hash": "3b0c9db3d4a27214",
-   "fr_hash": "28affa3aa024b1ba"
+   "en_hash": "c916edc3f36ac381",
+   "fr_hash": "b0fa93efe9f41262"
   },
   {
    "id": "chapter-18-anomaly-cue-cards/18-3-reaction-wheel-stuck-medium",
-   "en_hash": "76172c20c3bb33d8",
-   "fr_hash": "80a95e6cc146f06a"
+   "en_hash": "00ca2b211990f4bd",
+   "fr_hash": "af2abae6015d68d7"
   },
   {
    "id": "chapter-18-anomaly-cue-cards/18-4-star-tracker-failure-medium-day-3-or-4",
@@ -234,13 +234,13 @@
   },
   {
    "id": "chapter-18-anomaly-cue-cards/18-5-obc-watchdog-reset-hard",
-   "en_hash": "196c013f1201deca",
-   "fr_hash": "4614246ce2b1418b"
+   "en_hash": "7f090c5efc67c4d8",
+   "fr_hash": "c5ea575ceb2a941a"
   },
   {
    "id": "chapter-18-anomaly-cue-cards/18-6-obc-bus-failure-hard",
-   "en_hash": "57e69eca7fd3714c",
-   "fr_hash": "badd2ea0f7de959e"
+   "en_hash": "68266404cbff8472",
+   "fr_hash": "444ca7884ff35cb4"
   },
   {
    "id": "chapter-18-anomaly-cue-cards/18-7-ground-station-antenna-failure-very-hard-day-4",
@@ -273,5 +273,5 @@
    "fr_hash": "8f5c6c08b2ba5111"
   }
  ],
- "en_commit": "c175838"
+ "en_commit": "c4a140a"
 }

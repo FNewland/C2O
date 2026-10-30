@@ -99,14 +99,8 @@ KNOWN_MISROUTED = {
     1003: ("aocs", "rw_ramp_down"),         # func 14 is AOCS_RW_RAMP_DOWN, not power line off
     1004: ("aocs", "slew_to_quaternion"),   # func 10 again
     1005: ("aocs", "slew_to_quaternion"),   # func 10 again
-    3002: ("aocs", "begin_acquisition"),    # func 12 is AOCS_BEGIN_ACQUISITION, not transponder off
-    3003: ("tcs", "heater"),                # func 40 is a TCS heater circuit, not OBDH safe mode
-    4002: ("obdh", "obc_select_bus"),       # func 54 is OBDH select-bus, not TTC PA off
     5001: ("tcs", "heater"),                # func 42 is a TCS heater circuit, not OBC reboot
     5002: ("tcs", "set_setpoint"),          # func 44 is TCS heater setpoint, not CAN bus switch
-    5003: ("tcs", "heater"),                # func 41 is a TCS heater circuit, not memory scrub
-    5004: ("tcs", "heater"),                # func 40 again
-    6002: ("eps", "reset_oc_flag"),         # func 21 is EPS reset-OC-flag, not payload standby
 }
 
 # Rules whose *trigger id* does not mean what the rule's description says.

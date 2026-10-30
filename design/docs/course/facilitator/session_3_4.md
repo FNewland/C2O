@@ -135,14 +135,14 @@ The launch environment subjects the satellite to loads from engine thrust, aerod
 
 | Frequency (Hz) | ASD Level (g$^2$/Hz) | Notes |
 |----------------|---------------------|-------|
-| 20 | 0.01 | Low-frequency start (ramp up) |
-| 50 | 0.04 | Ramp up at +6 dB/oct |
-| 100 | 0.04 | Flat region start |
-| 800 | 0.04 | Flat region end |
-| 2000 | 0.01 | Roll off at -6 dB/oct |
-| **Overall** | **~7 grms** | Typical for CubeSat deployer qualification level |
+| 20 | 0.01 | Low-frequency start |
+| 20--80 | +3 dB/oct | Ramp up |
+| 80--500 | 0.04 | Flat plateau |
+| 500--2000 | -3 dB/oct | Roll off |
+| 2000 | 0.01 | End of profile |
+| **Overall** | **6.8 grms** | GSFC-STD-7000B (GEVS) minimum workmanship level; proto-flight is +3 dB, about 9.6 grms, for 1 min per axis |
 
-The flat region at 0.04 g$^2$/Hz from 100--800 Hz is where most structural damage occurs, because this is where PCB resonances and solder joint fatigue are excited.
+The flat region at 0.04 g$^2$/Hz from 80--500 Hz is where most structural damage occurs, because this is where PCB resonances and solder joint fatigue are excited. The binding levels for a given flight are set by the deployer or launch-vehicle user's guide; use this profile only where it envelops them.
 
 **What fails during vibration testing:**
 1. **Solder joints:** Heavy components (connectors, tall capacitors, transformers) with long lever arms crack at their solder joints. Mitigation: use surface-mount components, stake tall components with adhesive (Loctite 4860 or similar), use conformal coating.
@@ -675,7 +675,7 @@ This gives an orbital lifetime of approximately 8--14 months depending on solar 
 |-------|-------------|
 | CDS compliance | Standard dimensions, Al 7075-T6 anodised rails (8.5 mm), deployment switches, RBF pin, CG limits |
 | Structural materials | Al 7075-T6: $\sigma_y = 503$ MPa, $E = 72$ GPa; anodisation for wear/insulation; CFRP not suitable for rails |
-| Launch loads | 6--12 g axial QS, 7 grms random vib (20--2000 Hz), 500--2000 g shock; PCB solder joints are the weak point |
+| Launch loads | 6--12 g axial QS, 6.8 grms random vib (20--2000 Hz; 9.6 grms proto-flight), 500--2000 g shock; PCB solder joints are the weak point |
 | Structural MoS | $\text{MoS} = \sigma_{\text{allow}}/(\sigma_{\text{design}} \times \text{FoS}) - 1 \geq 0$; FoS 1.25 yield / 1.5 ultimate (metallic) |
 | Frequency req | First mode > 40 Hz; CubeSat Al structures easily exceed this; local modes (PCBs, deployables) are the risk |
 | Tsiolkovsky equation | $m_{\text{prop}} = m_{\text{dry}} \times (e^{\Delta V/(I_{sp} g_0)} - 1)$; exponential growth with $\Delta V / v_e$ |

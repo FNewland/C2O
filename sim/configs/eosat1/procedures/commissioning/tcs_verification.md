@@ -127,4 +127,4 @@ trap the old card fell into.
   as-needed configuration); heater switches OFF
 - No mode, tier or latch changed by this card
 
-**NEXT:** COM-003 (AOCS Sensor Calibration)
+**NEXT:** COM-004 (AOCS Actuator Checkout --- enables the wheels and commands NOMINAL; COM-003 follows it, ruling Q16)

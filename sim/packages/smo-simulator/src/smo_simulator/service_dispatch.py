@@ -1048,8 +1048,8 @@ class ServiceDispatcher:
             mode = self._require_u8(
                 data, "AOCS_SET_MODE", "`mode`",
                 "0=off, 1=safe_boot, 2=detumble, 3=coarse_sun, "
-                "4=nominal_nadir, 5=fine_point, 6=slew, 7=desaturation, "
-                "8=eclipse_propagate, 9=inertial")
+                "4=nominal, 5=fine_point, 6=slew, 7=desaturation, "
+                "8=eclipse, 9=inertial")
             if mode is None:
                 return []
             self._cmd(aocs, {"command": "set_mode", "mode": mode})
@@ -1086,7 +1086,7 @@ class ServiceDispatcher:
                 return []
             self._cmd(aocs, {"command": "st_select", "unit": unit})
         elif func_id == 7:  # Magnetometer select — RETIRED (2026-08c)
-            # EO-Sat-1 flies ONE magnetometer (owner ruling): MAG_SELECT was
+            # EOSAT-1 flies ONE magnetometer (owner ruling): MAG_SELECT was
             # removed from the catalogue, and the model's `mag_select`
             # handler now refuses with an explanatory 0x0007. The branch is
             # kept (allowlisted in test_catalogue_dispatch_bijection) so a

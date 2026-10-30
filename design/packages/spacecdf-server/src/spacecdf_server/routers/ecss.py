@@ -202,37 +202,82 @@ async def generate_did(did_type: str, study_id: str | None = None) -> dict:
         raise HTTPException(status_code=400, detail=f"Generator not implemented for {did_type}")
 
 
-@router.get("/gate-evaluate/{study_id}/{phase_id}")
-async def evaluate_gate_endpoint(study_id: str, phase_id: str) -> dict:
-    """Evaluate review gate exit criteria for a study."""
-    from ..services.gate_evaluator import evaluate_gate
+@router.get("/gates")
+async def list_review_gates() -> list[dict]:
+    """Review gates configured in ``configs/gate_exit_criteria.yaml``."""
+    from ..services.gate_evaluator import list_gate_options
+    return list_gate_options()
 
-    store = get_study_store()
-    study = store.get(study_id)
 
-    mission_need = None
-    design_params: dict = {}
-    target_mass = None
-    target_cost = None
+async def _evaluate_gate_for_study(study_id: str, phase_id: str, body: dict | None = None) -> dict:
+    """Shared by the GET and POST gate-evaluate routes.
 
-    if study:
-        mission_need = study.mission_need if hasattr(study, "mission_need") else None
-        target_mass = getattr(study.requirements, "target_mass_kg", None) if study.requirements else None
-        target_cost = getattr(study.requirements, "target_cost_meur", None) if study.requirements else None
-
-    # Get element tree data for gate evaluation context
+    ``phase_id`` is a phase id (``phase_b1``) or a gate name (``pdr``).
+    ``body`` (POST only) may carry the client's current ``mission_need`` and
+    ``parameters`` ({id: number | {value: number}}); they take precedence over
+    the stored study, so the gate reflects what the user is looking at.
+    """
+    from ..services.gate_evaluator import evaluate_gate, resolve_phase
     from .elements import _elements
+    from .requirements import _requirements, ensure_requirements_loaded
+
+    if resolve_phase(phase_id) is None:
+        raise HTTPException(status_code=404, detail=f"Unknown review gate: {phase_id}")
+
+    body = body or {}
+    study = get_study_store().get(study_id)
+
+    mission_need = body.get("mission_need")
+    target_mass = target_cost = rel_target = None
+    params: dict = {}
+    if study:
+        if mission_need is None:
+            mission_need = getattr(study, "mission_need", None)
+        reqs_model = getattr(study, "requirements", None)
+        if reqs_model is not None:
+            target_mass = getattr(reqs_model, "target_mass_kg", None)
+            target_cost = getattr(reqs_model, "target_cost_meur", None)
+            rel_target = getattr(reqs_model, "reliability_target", None)
+        iterations = getattr(study, "iterations", None) or []
+        if iterations:
+            params.update(iterations[-1].parameter_snapshot or {})
+    if isinstance(body.get("parameters"), dict):
+        params.update(body["parameters"])
+
     elements = [e for e in _elements.values() if e.get("study_id") == study_id and not e.get("deleted_at")]
-    design_params["_elements"] = elements
-    design_params["_element_count"] = len(elements)
-    design_params["_component_count"] = len([e for e in elements if e.get("element_type") == "component"])
-    design_params["_frozen_count"] = len([e for e in elements if e.get("frozen")])
+    params["_elements"] = elements
+    params["_element_count"] = len(elements)
+    params["_component_count"] = len([e for e in elements if e.get("element_type") == "component"])
+    params["_frozen_count"] = len([e for e in elements if e.get("frozen")])
+
+    try:
+        await ensure_requirements_loaded()
+    except Exception:  # noqa: BLE001 — DB unavailable: evaluate with what is cached
+        pass
+    reqs = [r for r in _requirements.values() if r.get("study_id") == study_id]
 
     result = evaluate_gate(
         phase_id=phase_id,
         mission_need=mission_need,
-        design_params=design_params,
+        design_params=params,
         target_mass_kg=target_mass,
         target_cost_meur=target_cost,
+        reliability_target=rel_target,
+        requirements=reqs,
+        elements=elements,
     )
+    result["study_id"] = study_id
+    result["study_found"] = study is not None
     return result
+
+
+@router.get("/gate-evaluate/{study_id}/{phase_id}")
+async def evaluate_gate_endpoint(study_id: str, phase_id: str) -> dict:
+    """Evaluate review gate exit criteria for a stored study."""
+    return await _evaluate_gate_for_study(study_id, phase_id)
+
+
+@router.post("/gate-evaluate/{study_id}/{phase_id}")
+async def evaluate_gate_with_state(study_id: str, phase_id: str, body: dict | None = None) -> dict:
+    """Evaluate review gate exit criteria using the client's current state."""
+    return await _evaluate_gate_for_study(study_id, phase_id, body)

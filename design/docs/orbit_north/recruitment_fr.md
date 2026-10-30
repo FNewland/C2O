@@ -47,22 +47,24 @@ le présent et l'émergent du secteur canadien ; le jeudi après-midi
 amène un court rappel réglementaire et votre première séance dans
 l'outil SpaceCDF. Le vendredi est consacré à l'architecture de mission
 et au travail conceptuel dans le CDF, avec l'ouverture du registre des
-risques de l'équipe en fin de journée.
+risques de l'équipe et un **Examen du concept de mission** informel en
+fin de journée.
 
-`Secteur canadien`  ·  `SpaceCDF`  ·  `Concept de mission`  ·  `Registre des risques`
+`Secteur canadien`  ·  `SpaceCDF`  ·  `Concept de mission`  ·  `Registre des risques`  ·  `MCR`
 
-### Semaine 2 — MCR, environnement réglementaire et intensif au CDF  ·  10 – 14 août 2026
+### Semaine 2 — Environnement réglementaire, intensif au CDF et revue de type PDR  ·  10 – 14 août 2026
 
-Le lundi matin est l'**Examen du concept de mission (MCR)** ; le lundi
+Le lundi matin clôt les actions du MCR et fige le concept ; le lundi
 après-midi couvre le cadre réglementaire canadien — RSSSA,
 coordination du spectre UIT/ISDE, contrôle des exportations,
 atténuation des débris, enregistrement. Le reste de la semaine est
 l'intensif SpaceCDF : base de référence des exigences, alimentation,
 AOCS et thermique, communications, structure et propulsion,
 intégration, V&V, coût, et clôture des risques — convergeant vers une
-**Revue de conception préliminaire (PDR)** le vendredi après-midi.
+**revue de type PDR** (revue de conception préliminaire) le vendredi
+après-midi.
 
-`MCR`  ·  `RSSSA · ISDE`  ·  `Conception sous-systèmes`  ·  `Études de compromis`  ·  `PDR`
+`RSSSA · ISDE`  ·  `Conception sous-systèmes`  ·  `Études de compromis`  ·  `PDR`
 
 ### Semaine 3 — Opérations et simulation de mission  ·  17 – 21 août 2026
 

@@ -19,7 +19,8 @@
 # (`packages/smo-common/src/smo_common/config/schemas.py`); the property used to
 # be smuggled through `runnable: {kind: advisory}`, which claimed a card was
 # linked to an executable definition when it is precisely the opposite.
-# Only CTG-020 (ground-segment antenna failure) qualifies today.
+# CTG-020 (ground-segment antenna failure) qualifies; CTG-018 is advisory
+# because it is retired (ruling Q15) and reduced to a pointer to CTG-021.
 # Without the flag, "extracts zero command steps" is indistinguishable from
 # the 2026-08b defect in which 21 documents wrote all their commanding behind
 # `**Action:**` prose and were silently inert; the audit gate pins
@@ -154,10 +155,12 @@ procedures:
     command_services: [3, 8, 20]
 
   # === Commissioning Procedures ===
-  # DEFINITIVE EXECUTION ORDER (2026-08c): COM-001 EPS -> COM-002 TCS ->
-  # COM-003 sensor calibration (gyro cal is startable in the COARSE_SUN hold
-  # — deliberately BEFORE COM-004) -> COM-004 wheel enable + actuator checkout
-  # -> COM-005 mode transitions (truth-table card) -> COM-006 TTC ladder ->
+  # DEFINITIVE EXECUTION ORDER (2026-08c; COM-003/004 swapped by author
+  # ruling Q16, 2026-10-30): COM-001 EPS -> COM-002 TCS -> COM-004 wheel
+  # enable + actuator checkout, ending in commanded wheel-controlled NOMINAL
+  # -> COM-003 sensor calibration (gyro cal in that NOMINAL, 0.10 deg/s gate
+  # kept; the wheels-off COARSE_SUN hold never met the gate) -> COM-005 mode
+  # transitions (truth-table card) -> COM-006 TTC ladder ->
   # COM-007 OBDH -> COM-008 FDIR/protection -> COM-009 payload power (line
   # moved here from LEOP) -> COM-010 FPA cooler (moved here from LEOP) ->
   # COM-012 FIRST LIGHT -> COM-011 calibration -> COM-013 closure + phase 6.
@@ -182,6 +185,16 @@ procedures:
       eps_tcs: "Verify thermal control loops and heater operation"
     command_services: [3, 8, 20]
 
+  - id: COM-004
+    name: "AOCS Actuator Checkout"
+    file: "commissioning/aocs_actuator_checkout.md"
+    category: commissioning
+    required_positions: [flight_director, aocs]
+    position_roles:
+      flight_director: "Authorize actuator tests"
+      aocs: "Test reaction wheels, magnetorquers"
+    command_services: [3, 8, 20]
+
   - id: COM-003
     name: "AOCS Sensor Calibration"
     file: "commissioning/aocs_sensor_calibration.md"
@@ -195,16 +208,6 @@ procedures:
     # GET_PARAM traffic it always claimed. Derived from the document, not hand
     # written — see test_procedure_gates.py gate 7.
     command_services: [2, 3, 8, 20]
-
-  - id: COM-004
-    name: "AOCS Actuator Checkout"
-    file: "commissioning/aocs_actuator_checkout.md"
-    category: commissioning
-    required_positions: [flight_director, aocs]
-    position_roles:
-      flight_director: "Authorize actuator tests"
-      aocs: "Test reaction wheels, magnetorquers"
-    command_services: [3, 8, 20]
 
   - id: COM-005
     name: "AOCS Mode Transitions"
@@ -460,6 +463,23 @@ procedures:
       propulsion: "Preheat, arm, execute, monitor thrust, post-burn OD"
     command_services: [8]
 
+  # Author ruling Q3 (amended 2026-10-30): disposal by an end-of-life
+  # perigee-lowering burn (513 -> 390 km perigee, 34.3 m/s in six retrograde
+  # burns, re-entry < 5 yr at solar minimum), then passivation. Budget and
+  # derivation: subsystems/prop.yaml.
+  - id: NOM-014
+    name: "End-of-Life Disposal (Perigee Lowering and Passivation)"
+    file: "nominal/eol_disposal.md"
+    category: nominal
+    required_positions: [flight_director, propulsion, aocs, eps_tcs, ttc]
+    position_roles:
+      flight_director: "Authorise the disposal plan, each burn and the final RF silence"
+      propulsion: "Burn watchdog, preheat, six retrograde burns, depletion, safing"
+      aocs: "Retrograde inertial hold for each burn, wheel spin-down"
+      eps_tcs: "Battery passivation (charge regulator off)"
+      ttc: "Confirm the disposal orbit, transmitters off, confirm loss of signal"
+    command_services: [2, 3, 8]
+
   # === Contingency Procedures ===
   # Runnable from 2026-08b. A five-rung escalation ladder whose decision
   # variable is a single telemetry parameter (`eps.bus_voltage`, 0x0105), which
@@ -572,7 +592,7 @@ procedures:
     position_roles:
       flight_director: "Authorize OBC recovery actions"
       fdir_systems: "Assess watchdog event, verify OBC state"
-    command_services: [3, 8]
+    command_services: [3, 8, 9]
 
   - id: CTG-011
     name: "OBC Redundancy Switchover"
@@ -643,15 +663,24 @@ procedures:
       fdir_systems: "Switch CAN bus, verify communication"
     command_services: [3, 8]
 
+  # RETIRED 2026-10-30 (author ruling Q15): CTG-021 is canonical. The index
+  # schema (ProcedureIndexEntry) is strict and has no status field, and every
+  # card on disk must be indexed, so retirement is represented by: the card
+  # reduced to a retirement notice that commands nothing, `advisory: true` with
+  # the reason below (the MCS then reports runnable=false and never offers it),
+  # and "(retired)" in the name. All CTG-018 references now point at CTG-021.
   - id: CTG-018
-    name: "Boot Loader Recovery"
+    name: "Boot Loader Recovery (retired, use CTG-021)"
     file: "contingency/boot_loader_recovery.md"
     category: contingency
     required_positions: [flight_director, fdir_systems]
     position_roles:
-      flight_director: "Authorize boot recovery"
-      fdir_systems: "Execute boot loader recovery sequence"
-    command_services: [3, 6, 8]
+      flight_director: "None: card retired, use CTG-021"
+      fdir_systems: "None: card retired, use CTG-021"
+    command_services: []
+    advisory: true
+    advisory_reason: "Retired by ruling Q15: superseded by CTG-021 OBC
+      Bootloader Recovery; kept only so the identifier still resolves"
 
   - id: CTG-019
     name: "No Telemetry at Pass Start"
@@ -774,6 +803,29 @@ procedures:
       propulsion: "Isolate, bound remaining delta-V, ticket"
       fdir_systems: "Correlate S12/S19 triggers, verify autonomy actions"
     command_services: [3, 8]
+
+  # Author ruling Q22 (amended 2026-10-30): the two ops-book cards that had no
+  # simulator equivalent (temporary CTG-B01 / CTG-B02) become real cards.
+  - id: CTG-029
+    name: "Gyro Failure Recovery"
+    file: "contingency/gyro_failure.md"
+    category: contingency
+    required_positions: [flight_director, aocs]
+    position_roles:
+      flight_director: "Authorise calibration or channel isolation"
+      aocs: "Classify the fault, calibrate the bias, isolate an unrecoverable unit"
+    command_services: [2, 3, 8, 20]
+
+  - id: CTG-030
+    name: "Telecommand Rejection and Verification Failure"
+    file: "contingency/tc_rejection.md"
+    category: contingency
+    required_positions: [flight_director, fdir_systems, ttc]
+    position_roles:
+      flight_director: "Stop commanding on unexplained codes, authorise re-sends"
+      fdir_systems: "Read counters and failure notices, classify each rejection"
+      ttc: "Check the uplink chain, run the connection test"
+    command_services: [3, 17]
 
   # === Emergency Procedures ===
   - id: EMG-001

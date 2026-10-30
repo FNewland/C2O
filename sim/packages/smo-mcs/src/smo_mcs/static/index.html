@@ -8545,6 +8545,14 @@ async function loadManualSection(path) {
   }
 }
 
+function manualAnchor(link, id) {
+  // In-document `#id` link: scroll inside the manual pane, leave the URL alone.
+  const host = link.closest('.manual-content') || document;
+  const el = host.querySelector('[id="' + id + '"]');
+  if (el) el.scrollIntoView({ block: 'start' });
+  return false;
+}
+
 function renderMarkdown(md) {
   // Escape HTML entities first
   let text = md.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -8586,10 +8594,18 @@ function renderMarkdown(md) {
   // Fenced code blocks
   text = text.replace(/```([\s\S]*?)```/g, (m, code) => '<pre>' + code.replace(/^\n/, '') + '</pre>');
 
+  // Explicit heading anchors `{#id}` (ruling Q33): id on the heading, text hidden.
+  const mdHeading = (tag) => (m, body) => {
+    const a = body.match(/[ \t]*\{#([A-Za-z0-9_][\w.:-]*)(?:[ \t][^}]*)?\}[ \t]*$/);
+    return a ? '<' + tag + ' id="' + a[1] + '">' + body.slice(0, a.index) + '</' + tag + '>'
+             : '<' + tag + '>' + body + '</' + tag + '>';
+  };
   return text
-    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
-    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
-    .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+    .replace(/^### (.+)$/gm, mdHeading('h3'))
+    .replace(/^## (.+)$/gm, mdHeading('h2'))
+    .replace(/^# (.+)$/gm, mdHeading('h1'))
+    .replace(/\[([^\]\n]+)\]\(#([A-Za-z0-9_][\w.:-]*)\)/g,
+             '<a href="#$2" onclick="return manualAnchor(this, \'$2\')">$1</a>')
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*(.+?)\*/g, '<em>$1</em>')
     .replace(/`([^`]+)`/g, '<code>$1</code>')

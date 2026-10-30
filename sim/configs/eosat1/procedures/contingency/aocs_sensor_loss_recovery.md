@@ -90,12 +90,24 @@ which have failed or are degraded.
 - If ST2 = 4 (FAILED): Both STs failed. Skip to Step 5.
 
 **Step 2b — Power On and Select ST2:**
+**LABEL:** `STEP-2B`
 **TC:** `ST2_POWER(on=1)` (Service 8, Subtype 1, func_id 5) — Command ST2 power on
-**Action:** Wait 60 s for boot sequence.
+**Note:** The boot sequence takes about 60 s; the branch below waits up to 120 s for it.
 **TC:** `HK_REQUEST(sid=2)` (Service 3, Subtype 27) — Request AOCS housekeeping
-**Verify:** `aocs.st2_status` (0x0243) transitions to 2 (TRACKING) within 120 s
-**Note:** Only if the previous check confirmed TRACKING. If ST2 did not reach
-TRACKING, do NOT send this — go to the Off-Nominal section instead.
+**BRANCH:** `aocs.st2_status == 2` -> GO `STEP-2B-SELECT` | NO-GO `STEP-2B-CYCLE` (timeout 120 s)
+**Note:** GO — ST2 reached TRACKING: select it. NO-GO — ST2 did not reach
+TRACKING within 120 s: power-cycle it ONCE and then go to the Step 5 mode
+decision. Step 5 re-reads both tracker states, so a tracker that recovers after
+the power-cycle is still found there.
+
+**LABEL:** `STEP-2B-CYCLE`
+**TC:** `ST2_POWER(on=0)` (Service 8, Subtype 1, func_id 5) — ST2 OFF
+**Note:** Wait 10 s.
+**TC:** `ST2_POWER(on=1)` (Service 8, Subtype 1, func_id 5) — ST2 ON again (single power-cycle)
+**TC:** `HK_REQUEST(sid=2)` (Service 3, Subtype 27) — Request AOCS housekeeping
+**GO/NO-GO:** ST2 power-cycled once — continue at the Step 5 mode decision -> GO `STEP-5` | NO-GO `STEP-5`
+
+**LABEL:** `STEP-2B-SELECT`
 **TC:** `ST_SELECT(unit=2)` (Service 8, Subtype 1, func_id 6) — select ST2 as
 primary. WIRE ENCODING IS 1=ST1, 2=ST2 (0 is refused): the old `unit=1` here
 SILENTLY SELECTED ST1 — the failed unit — when the card meant ST2 (2026-08c)
@@ -107,7 +119,7 @@ SILENTLY SELECTED ST1 — the failed unit — when the card meant ST2 (2026-08c)
 **Verify:** `aocs.att_error` (0x0217) < 1.0 deg with ST2 providing attitude
 **Action:** Log: "ST1 FAILED — operating on ST2 only. No star tracker redundancy."
 **GO/NO-GO:** ST2 operational and providing valid attitude — proceed to next
-failure if applicable. If ST2 did not reach TRACKING, proceed to Step 5.
+failure if applicable.
 
 ### Step 3: CSS Head Failure Response
 **Condition:** One or more CSS heads showing anomalous readings
@@ -146,7 +158,7 @@ and both STs are failed, proceed to Step 5.
 ### Step 4: Magnetometer Failure Response
 **Condition:** `aocs.mag_enabled` (0x025C) = 0 or magnetometer readings are invalid
 
-**Note (2026-08c, owner ruling):** EO-Sat-1 carries **ONE** 3-axis
+**Note (2026-08c, owner ruling):** EOSAT-1 carries **ONE** 3-axis
 magnetometer (S2 device 0x0209). There is no B unit, no selection telemetry
 and no `MAG_SELECT` — the on-board handler for the retired func 7 now REFUSES
 with 0x0007. The old Step 4 "switch to the redundant magnetometer" recovery
@@ -180,6 +192,7 @@ spacecraft anomaly report.
 declared — proceed to cumulative assessment.
 
 ### Step 5: Cumulative Sensor Assessment and Mode Decision
+**LABEL:** `STEP-5`
 **TC:** `HK_REQUEST(sid=2)` (Service 3, Subtype 27) — Request AOCS housekeeping
 **Action:** Evaluate the remaining sensor suite against mode requirements:
 
@@ -198,24 +211,60 @@ declared — proceed to cumulative assessment.
 - Magnetometer valid (for B-dot control law)
 - If met: Rate damping is possible. No pointing capability.
 
-**Note:** Based on remaining sensors, select the best available mode:
-**TC:** `AOCS_SET_MODE(mode=4)` (Service 8, Subtype 1, func_id 0) — If ST available: Maintain or return to NOMINAL
-**TC:** `AOCS_SET_MODE(mode=3)` (Service 8, Subtype 1, func_id 0) — If no ST but CSS valid: Transition to COARSE_SUN
-**TC:** `AOCS_SET_MODE(mode=2)` (Service 8, Subtype 1, func_id 0) — If no ST and CSS invalid: Transition to DETUMBLE
+**Note:** The best available mode is selected by a branch chain, best first:
+a tracker is valid → NOMINAL (mode 4); else CSS valid → COARSE_SUN (mode 3);
+else magnetometer enabled → DETUMBLE (mode 2); else hold and escalate.
 
-**Verify:** `aocs.mode` (0x020F) = commanded mode within 15 s
-**Verify:** `aocs.att_error` (0x0217) — acceptable for selected mode:
-- NOMINAL: < 1.0 deg
-- COARSE_SUN: < 5.0 deg
-- DETUMBLE: rates < 1.0 deg/s
+**Step 5a — Is a star tracker valid?**
+**BRANCH:** `aocs.st1_status == 2` -> GO `STEP-5-NOMINAL` | NO-GO `STEP-5-ST2` (timeout 10 s)
+**LABEL:** `STEP-5-ST2`
+**BRANCH:** `aocs.st2_status == 2` -> GO `STEP-5-NOMINAL` | NO-GO `STEP-5-CSS` (timeout 10 s)
 
-**Note:** If degraded to COARSE_SUN or DETUMBLE, disable payload:
-**TC:** `PAYLOAD_SET_MODE(mode=0)` (Service 8, Subtype 1, func_id 26)
+**Step 5b — No tracker: is the CSS valid?**
+**LABEL:** `STEP-5-CSS`
+**BRANCH:** `aocs.css_valid == 1` -> GO `STEP-5-COARSE` | NO-GO `STEP-5-MAG` (timeout 10 s)
 
-**GO/NO-GO:** Best available mode established and stable. If degraded below
-NOMINAL, notify Flight Director and mission planning of reduced capability.
+**Step 5c — No tracker, no CSS: is the magnetometer enabled?**
+**LABEL:** `STEP-5-MAG`
+**BRANCH:** `aocs.mag_enabled == 1` -> GO `STEP-5-DETUMBLE` | NO-GO `STEP-5-HOLD` (timeout 10 s)
+
+**Step 5d — Nothing usable: hold and escalate.**
+**LABEL:** `STEP-5-HOLD`
+**Note:** No tracker, no valid CSS and no magnetometer: there is no mode the
+remaining sensors can support. Do NOT command an AOCS mode — hold the current
+configuration, keep the payload off and escalate to the Flight Director and the
+AOCS engineer now (CTG-002 escalation path). Wait for the sunlit arc if the CSS
+loss may be an eclipse effect.
+**TC:** `PAYLOAD_SET_MODE(mode=0)` (Service 8, Subtype 1, func_id 26) — payload OFF
+**GO/NO-GO:** Holding, escalated — continue with Step 6 monitoring -> GO `STEP-6` | NO-GO `STEP-6`
+
+**Step 5e — NOMINAL (a tracker is valid):**
+**LABEL:** `STEP-5-NOMINAL`
+**TC:** `AOCS_SET_MODE(mode=4)` (Service 8, Subtype 1, func_id 0) — maintain or return to NOMINAL
+**Verify:** `aocs.mode == 4` (0x020F, timeout 15 s)
+**Verify:** `aocs.att_error` (0x0217) < 1.0 deg
+**GO/NO-GO:** NOMINAL established -> GO `STEP-6` | NO-GO `STEP-6`
+
+**Step 5f — COARSE_SUN (no tracker, CSS valid):**
+**LABEL:** `STEP-5-COARSE`
+**TC:** `AOCS_SET_MODE(mode=3)` (Service 8, Subtype 1, func_id 0) — transition to COARSE_SUN
+**Verify:** `aocs.mode == 3` (0x020F, timeout 15 s)
+**Verify:** `aocs.att_error` (0x0217) < 5.0 deg
+**TC:** `PAYLOAD_SET_MODE(mode=0)` (Service 8, Subtype 1, func_id 26) — degraded below NOMINAL: payload OFF
+**GO/NO-GO:** COARSE_SUN established -> GO `STEP-6` | NO-GO `STEP-6`
+
+**Step 5g — DETUMBLE (no tracker, no CSS, magnetometer enabled):**
+**LABEL:** `STEP-5-DETUMBLE`
+**TC:** `AOCS_SET_MODE(mode=2)` (Service 8, Subtype 1, func_id 0) — transition to DETUMBLE
+**Verify:** `aocs.mode == 2` (0x020F, timeout 15 s)
+**Verify:** body rates < 1.0 deg/s
+**TC:** `PAYLOAD_SET_MODE(mode=0)` (Service 8, Subtype 1, func_id 26) — degraded below NOMINAL: payload OFF
+
+**Note:** If the mode is degraded below NOMINAL, notify the Flight Director and
+mission planning of the reduced capability.
 
 ### Step 6: Post-Recovery Monitoring
+**LABEL:** `STEP-6`
 **TC:** `HK_REQUEST(sid=2)` (Service 3, Subtype 27) — Monitor AOCS telemetry at 60 s intervals for 10 minutes
 **Verify:** `aocs.att_error` (0x0217) — stable or improving
 **Verify:** `aocs.rate_roll` (0x0204) < 0.1 deg/s (for pointing modes)
@@ -244,8 +293,8 @@ NOMINAL, notify Flight Director and mission planning of reduced capability.
 - If both star trackers fail: CSS is the only attitude reference in sunlit phase.
   Command `AOCS_SET_MODE(mode=3)` (COARSE_SUN). Payload imaging is not possible.
   This is a mission-degrading configuration — escalate to engineering team.
-- If ST2 does not reach TRACKING within 120 s: Power cycle ST2 — `ST2_POWER(on=0)`,
-  wait 10 s, `ST2_POWER(on=1)`. If still fails, treat as dual ST failure.
+- If ST2 does not reach TRACKING within 120 s: Step 2b power-cycles it once and
+  hands to the Step 5 mode decision. If it still fails, treat as dual ST failure.
 - If the magnetometer fails: Detumble mode is not possible (B-dot requires mag data).
   Reaction wheels can still provide attitude control if operational. Momentum cannot
   be dumped via magnetorquers. This is critical — plan for graceful momentum build-up.

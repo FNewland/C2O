@@ -1,4 +1,4 @@
-# EO-Sat-1 SMO Suite — Work Plan for 2026-08-01
+# EOSAT-1 SMO Suite — Work Plan for 2026-08-01
 
 **Prepared** 2026-07-31 · **For** Fable (primary), with delegation notes for other models
 **Basis** eight parallel deep-dive audits of `~/SpaceMissionSimulation` and `~/SpaceCDF`, briefs in `briefs/01`–`briefs/08`

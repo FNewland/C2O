@@ -16,7 +16,7 @@
 
 ## 14.1 Vérification ou validation : définitions précises
 
-*[Source : ECSS-E-ST-10-02C Rev. 1, §4 ; NASA SEH Rev 2, §5.3 (Process 7 : Product Verification) et §5.4 (Process 8 : Product Validation)]*
+*[Source : ECSS-E-ST-10-02C Rev. 1, §4 et §5.2.2 ; NASA SEH Rev 2, §5.3 (Process 7 : Product Verification) et §5.4 (Process 8 : Product Validation)]*
 
 | | **Vérification** | **Validation** |
 |--|-----------------|----------------|
@@ -47,9 +47,9 @@ Un système peut être **vérifié** (chaque exigence notée « conforme »)
 
 ## 14.2 Les méthodes de vérification ATIR(D) en détail
 
-La norme ECSS-E-ST-10-02C Rev. 1, §5.3, définit quatre méthodes de vérification — **essai, analyse, revue de conception et inspection** — et la pratique de la NASA y ajoute la **démonstration** comme cinquième méthode. Cet ouvrage abrège l'ensemble en **ATIR(D)**, le D étant entre parenthèses parce que l'ECSS intègre la démonstration à l'essai. L'ordre des lettres varie d'un document à l'autre ; les méthodes sont les mêmes. Le chapitre 5, §5.5, a présenté le tableau à cinq lignes ; la présente section explique quand chaque méthode s'applique et quels éléments probants elle produit.
+La norme ECSS-E-ST-10-02C Rev. 1, §5.2.2.1, définit quatre méthodes de vérification — **essai, analyse, revue de conception et inspection** — et la pratique de la NASA y ajoute la **démonstration** comme cinquième méthode. Cet ouvrage abrège l'ensemble en **ATIR(D)**, le D étant entre parenthèses parce que l'ECSS compte la démonstration dans l'essai (« test (including demonstration) ») tandis que la NASA la présente à part. L'ordre des lettres varie d'un document à l'autre ; les méthodes sont les mêmes. Le chapitre 5, §5.5, a présenté le tableau à cinq lignes ; la présente section explique quand chaque méthode s'applique et quels éléments probants elle produit.
 
-*[Source : ECSS-E-ST-10-02C Rev. 1, §5.3 ; NASA SEH Rev 2, §5.3.2]*
+*[Source : ECSS-E-ST-10-02C Rev. 1, §5.2.2 ; NASA SEH Rev 2, §5.3.2]*
 
 ### 14.2.1 Analyse (A)
 
@@ -97,7 +97,7 @@ La norme ECSS-E-ST-10-02C Rev. 1, §5.3, définit quatre méthodes de vérificat
 
 **L'approche protovol.** Pour les CubeSats, l'approche **protovol** est la norme, car construire une unité de qualification distincte serait d'un coût prohibitif. Le modèle de vol est soumis aux **niveaux de qualification**, mais pendant les **durées de recette**.
 
-*[Source : ECSS-E-ST-10-03C, §5.4.2.3 ; MIL-STD-1540E, §6.2.4]*
+*[Source : ECSS-E-ST-10-03C, §4.5.4 ; MIL-STD-1540E, §6.2.4]*
 
 **Justification :** les durées de qualification sont plus longues et plus contraignantes — ce qui est acceptable pour un modèle de qualification dédié qui ne volera pas. En protovol, la durée plus courte limite la consommation de la durée de vie en fatigue tout en permettant de détecter les défauts de fabrication.
 
@@ -106,7 +106,10 @@ La norme ECSS-E-ST-10-02C Rev. 1, §5.3, définit quatre méthodes de vérificat
 | Niveau de vibrations | MPE + 3 dB | MPE | MPE + 3 dB |
 | Durée de vibrations | 2 min/axe | 1 min/axe | 1 min/axe |
 | Plage de température en TVAC | Prévue ± 15 °C | Prévue ± 10 °C | Prévue ± 10 °C |
-| Cycles de TVAC | 8 | 4 | 4–8 |
+| Cycles de TVAC | 8 | 4 | 4 |
+| Vitesse de balayage sinusoïdal | 2 oct/min | 4 oct/min | 4 oct/min |
+
+Les niveaux de protovol suivent les normes. Le GSFC-STD-7000B §2.6 essaie une unité de protovol aux températures maximale et minimale prédites ± 10 °C, avec au moins 4 cycles ; l'ECSS-E-ST-10-03C atteint les mêmes 10 °C avec sa marge de recette de 5 °C et sa marge de qualification de 5 °C sur la plage prédite. L'ECSS-E-ST-10-03C balaie en sinus à 2 oct/min en qualification (tableau 5-2) et à 4 oct/min en recette (tableau 5-4), et le protovol reprend les durées de recette, d'où 4 oct/min. Les colonnes de température de qualification et de recette sont celles du chapitre 9, §9.4.11.
 
 ### 14.2.3 Inspection (I)
 
@@ -165,7 +168,7 @@ La norme ECSS-E-ST-10-02C Rev. 1, §5.3, définit quatre méthodes de vérificat
 
 ### 14.3.1 Séquence type d'essais d'environnement
 
-La séquence d'essais est conçue de sorte que chaque essai sollicite le matériel d'une manière spécifique, et les essais fonctionnels intercalés entre les essais d'environnement détectent tout dommage. La figure 14.1 présente la séquence habituelle pour un CubeSat protovol.
+La séquence d'essais est conçue de sorte que chaque essai sollicite le matériel d'une manière spécifique, et les essais fonctionnels intercalés entre les essais d'environnement détectent tout dommage. La figure 14.1 présente la séquence habituelle pour un CubeSat protovol. Les niveaux des §14.3.2 à 14.3.4 sont des valeurs représentatives à des fins d'enseignement : les niveaux qui font foi pour un vol donné sont fixés par le manuel utilisateur du déployeur ou du lanceur.
 
 ![Enchaînement des essais d'environnement d'un CubeSat protovol](../assets/figures/fig_test_flow.png)
 
@@ -173,38 +176,40 @@ La séquence d'essais est conçue de sorte que chaque essai sollicite le matéri
 
 ### 14.3.2 Niveaux des essais de vibrations sinusoïdales
 
-*[Source : manuel utilisateur type du lancement partagé Falcon 9 Transporter]*
+*[Source : enveloppe représentative d'un lancement partagé de CubeSats ; le manuel utilisateur du déployeur ou du lanceur fixe les niveaux qui font foi]*
 
 Les vibrations sinusoïdales simulent les modes structuraux basse fréquence du lanceur (généralement 5–100 Hz). Il s'agit de charges quasi statiques.
 
 | Gamme de fréquences (Hz) | Niveau | Remarques |
 |----------------------|-------|-------|
-| 5–8 | Déplacement de 12,5 mm (0-crête) | Pilotage en déplacement |
-| 8–100 | 1,25 g (0-crête) | Pilotage en accélération |
-| Vitesse de balayage | 2 octaves/minute | Vitesse de balayage standard |
+| 5–100 | 1,25 g (0-crête) | Pilotage en accélération sur toute la bande ; pas de bande en déplacement |
+| Vitesse de balayage | 4 octaves/minute (protovol) | 2 oct/min est la vitesse de qualification |
 | Axes | 3 (X, Y, Z) | Successivement, un axe à la fois |
 
-> **Accélération sinusoïdale à la fréquence de transition :**
+> **Pourquoi il n'y a pas de bande en déplacement — la fréquence de transition :**
 >
-> $$a = (2\pi f)^2\, d$$
+> Pour une sinusoïde, $a = (2\pi f)^2\, d$ ; la fréquence à laquelle une accélération donnée correspond à un déplacement donné est donc
 >
-> Pour $f = 8$ Hz, $d = 12.5$ mm $= 0.0125$ m :
-> $a = (2\pi \times 8)^2 \times 0.0125 = (50.27)^2 \times 0.0125 = 2527 \times 0.0125 = 31.6$ m/s$^2 = 3.22$ g
+> $$f_c = \frac{1}{2\pi}\sqrt{\frac{a}{d}}$$
 >
-> *Remarque : le passage du pilotage en déplacement au pilotage en accélération se produit là où la limite en déplacement dépasserait la limite en accélération. La fréquence de transition réelle dépend du profil considéré ; dans le profil ci-dessus, le pilote limite le niveau à 8 Hz à 1,25 g, de sorte que la droite de déplacement ne s'applique qu'en dessous de la fréquence à laquelle $(2\pi f)^2 d = 1.25\,g_0$, soit environ 5 Hz.*
+> Pour $a = 1.25\,g_0 = 12.26$ m/s$^2$ et une limite de course de pot vibrant typique $d = 12.5$ mm $= 0.0125$ m :
+> $f_c = \sqrt{12.26/0.0125}\,/\,2\pi = 31.3/6.283 = 4.98$ Hz $\approx 5$ Hz
+>
+> *En dessous d'environ 5 Hz, maintenir 1,25 g exigerait plus de 12,5 mm de déplacement ; un profil qui descend plus bas en fréquence a donc besoin d'une bande pilotée en déplacement. Ce profil commence à 5 Hz : il est piloté en accélération sur toute sa bande.*
 
 ### 14.3.3 Niveaux des essais de vibrations aléatoires
 
-Les vibrations aléatoires simulent l'environnement acoustique et mécanique à large bande pendant le lancement. Les niveaux sont spécifiés sous forme de densité spectrale de puissance (DSP) en g$^2$/Hz.
+Les vibrations aléatoires simulent l'environnement acoustique et mécanique à large bande pendant le lancement. Les niveaux sont spécifiés sous forme de densité spectrale de puissance (DSP) en g$^2$/Hz. Le profil ci-dessous est le niveau minimal de qualité de fabrication des équipements du GSFC-STD-7000B (GEVS, tableau 2.4-4) ; le tableau 2.4-1 du GEVS fixe le niveau protovol à +3 dB pendant 1 minute par axe.
 
 | Fréquence (Hz) | Niveau de DSP (g$^2$/Hz) | Remarques |
 |----------------|---------------------|-------|
 | 20 | 0,01 | Début du profil |
-| 20–50 | Rampe à +3 dB/octave | Montée |
-| 50–800 | 0,04 (palier) | Palier de niveau maximal |
-| 800–2000 | Rampe à −6 dB/octave | Descente |
-| 2000 | 0,004 | Fin du profil |
-| **g$_{\text{rms}}$ global** | **~7,0 g$_{\text{rms}}$** | Niveau de qualification |
+| 20–80 | Rampe à +3 dB/octave | Montée |
+| 80–500 | 0,04 (palier) | Palier de niveau maximal |
+| 500–2000 | Rampe à −3 dB/octave | Descente |
+| 2000 | 0,01 | Fin du profil |
+| **g$_{\text{rms}}$ global** | **6,8 g$_{\text{rms}}$** | Niveau de qualité de fabrication (recette) |
+| **Protovol** | **+3 dB : 9,6 g$_{\text{rms}}$** | DSP doublée à toutes les fréquences ; 1 min par axe, 3 axes |
 
 > **Calcul du g$_{\text{rms}}$ global à partir d'un profil de DSP :**
 >
@@ -212,12 +217,12 @@ Les vibrations aléatoires simulent l'environnement acoustique et mécanique à 
 >
 > Pour une zone de DSP constante : $g_{\text{rms,flat}} = \sqrt{\text{PSD}_{\text{flat}} \times (f_2 - f_1)}$
 >
-> Exemple : DSP = 0,04 g$^2$/Hz de 50 à 800 Hz :
-> $g_{\text{rms,flat}} = \sqrt{0.04 \times 750} = \sqrt{30} = 5.48$ g$_{\text{rms}}$
+> Exemple : DSP = 0,04 g$^2$/Hz de 80 à 500 Hz :
+> $g_{\text{rms,flat}} = \sqrt{0.04 \times 420} = \sqrt{16.8} = 4.10$ g$_{\text{rms}}$
 >
 > Les contributions des rampes et du palier se combinent en somme quadratique :
 > $$g_{\text{rms,total}} = \sqrt{g_{\text{rms,ramp1}}^2 + g_{\text{rms,flat}}^2 + g_{\text{rms,ramp2}}^2}$$
-> La rampe montante contribuant pour environ 0,9 g$_{\text{rms}}$ et la rampe descendante pour environ 4,2 g$_{\text{rms}}$ (l'intégrale d'un segment en pente se calcule en coordonnées log–log, ou s'approche par son niveau moyen multiplié par sa largeur de bande), on obtient $g_{\text{rms,total}} \approx \sqrt{0.8 + 30 + 18} \approx 7.0$ g$_{\text{rms}}$.
+> Un segment en pente est une droite en coordonnées log–log, $\text{PSD}(f) = P_1 (f/f_1)^n$ avec $n = (\text{dB/oct})/3.01$, et s'intègre exactement en $\frac{P_1 f_1}{n+1}\left[(f_2/f_1)^{n+1} - 1\right]$ (ou $P_1 f_1 \ln(f_2/f_1)$ lorsque $n = -1$). La rampe montante ($n = +1$) donne $\frac{0.01 \times 20}{2}(4^2 - 1) = 1.50$ g$^2$, soit 1,22 g$_{\text{rms}}$, et la rampe descendante ($n = -1$) donne $0.04 \times 500 \times \ln 4 = 27.73$ g$^2$, soit 5,27 g$_{\text{rms}}$ ; d'où $g_{\text{rms,total}} = \sqrt{1.50 + 16.80 + 27.73} = \sqrt{46.03} = 6.78 \approx 6.8$ g$_{\text{rms}}$. En protovol (+3 dB, DSP × 2), $\sqrt{92.06} = 9.59 \approx 9.6$ g$_{\text{rms}}$.
 
 ### 14.3.4 Profil de l'essai de vide thermique
 
@@ -225,22 +230,22 @@ Les vibrations aléatoires simulent l'environnement acoustique et mécanique à 
 |-----------|-------------------|-------|
 | Température du cas chaud | Maximum prévu + 10 °C | P. ex. si le modèle thermique prévoit +55 °C → essai à +65 °C |
 | Température du cas froid | Minimum prévu − 10 °C | P. ex. si le modèle thermique prévoit −20 °C → essai à −30 °C |
-| Nombre de cycles | 4 minimum (protovol) | Début et fin en chaud ; essai fonctionnel à chaque extrême |
+| Nombre de cycles | 4 (protovol) | Début et fin en chaud ; essai fonctionnel à chaque extrême |
 | Niveau de vide | < 10$^{-5}$ mbar | Vide représentatif de l'espace |
 | Durée de palier à l'extrême | ≥ 1 heure | Permettre la stabilisation thermique (gradient < 1 °C/h) |
 | Vitesse de variation de température | 1–3 °C/min | Limitée par les capacités de l'enceinte |
 | Essai fonctionnel | Performances complètes aux extrêmes chaud et froid | Fonctions partielles lors des transitions intermédiaires |
 
-La bande de ± 10 °C du protovol correspond à la marge de recette du barème ECSS de marges thermiques du chapitre 9, §9.4.11 ; les extrêmes prévus proviennent des cas chaud et froid de l'analyse thermique.
+La bande de ± 10 °C du protovol est la marge de protovol du GSFC-STD-7000B §2.6 (§14.2.2) ; les extrêmes prévus proviennent des cas chaud et froid de l'analyse thermique.
 
 > **Estimation de la durée d'un cycle de TVAC :**
 >
 > $$t_{\text{cycle}} = 2\,\frac{\Delta T}{\dot{T}_{\text{ramp}}} + 2\, t_{\text{dwell}} + 2\, t_{\text{functional}}$$
 >
-> Exemple : $\Delta T = 95$ °C (de −30 à +65 °C), rampe = 2 °C/min, palier = 1 h, essai fonctionnel = 2 h :
-> $t_{\text{cycle}} = 2 \times (95/2) + 2 \times 60 + 2 \times 120 = 95 + 120 + 240 = 455$ min $= 7.6$ h
+> Exemple : $\Delta T = 95$ °C (de −30 à +65 °C), rampe = 2 °C/min, palier = 1 h, essai fonctionnel = 2 h :
+> $t_{\text{cycle}} = 2 \times (95/2) + 2 \times 60 + 2 \times 120 = 95 + 120 + 240 = 455$ min $\approx 7.6$ h
 >
-> Campagne de TVAC complète (4 cycles + mise en place) : $\approx 4 \times 7.6 + 8 = 38.4$ h $\approx$ 5 jours ouvrés de fonctionnement continu de l'enceinte.
+> Campagne de TVAC complète (4 cycles + mise en place) : $\approx 4 \times 7.6 + 8 = 38.4$ h $\approx$ 5 jours ouvrés de fonctionnement continu de l'enceinte.
 
 ### 14.3.5 Essais de CEM
 
@@ -268,7 +273,7 @@ La matrice de vérification (aussi appelée matrice de conformité ou matrice de
 | Id. exigence | Texte de l'exigence | Méthode | Phase | Niveau | Responsable | Moyen | État | Éléments probants |
 |--------|-----------------|--------|-------|-------|-------------|----------|--------|----------|
 | SYS-001 | $M_{\text{dry}} \leq 4.0$ kg | I | D | Système | Structures | Salle blanche | Prévu | Rapport de mesure de masse |
-| SYS-002 | Résister à 7 g$_{\text{rms}}$ en vibrations aléatoires | T | C/D | Système | Structures | Laboratoire de vibrations | Prévu | Rapport d'essai de vibrations |
+| SYS-002 | Résister à 9,6 g$_{\text{rms}}$ en vibrations aléatoires (protovol) | T | C/D | Système | Structures | Laboratoire de vibrations | Prévu | Rapport d'essai de vibrations |
 | SYS-003 | GSD ≤ 10 m à 500 km | A | B | Système | Charge utile | S. O. | Prévu | Rapport d'analyse optique |
 | SYS-004 | Marge de liaison ≥ 3 dB | A | B | Système | Communications | S. O. | Prévu | Analyse du bilan de liaison |
 | SYS-005 | Déploiement de l'antenne < 30 min | D | D | Système | Mécanismes | Salle blanche | Prévu | Démonstration de déploiement |
@@ -330,7 +335,7 @@ Les exigences ci-dessous sont tirées des exemples UniSat-1 des chapitres 5, 9, 
 | US-SYS-001 | Masse humide ≤ 1,33 kg (limite du déployeur) | I | D | Système | Mesure sur balance étalonnée |
 | US-SYS-002 | Conformité à l'enveloppe 1U et au profil de rails de la CDS Rev 14 | I | D | Système | Rapport de mesure au pied à coulisse et au calibre de profil ; essai d'ajustement dans le déployeur |
 | US-STR-001 | Premier mode structural > 90 Hz | A, confirmé par T | B / C | Système | Analyse modale ; balayage sinusoïdal bas niveau avant les vibrations aléatoires |
-| US-STR-002 | Résister sans dégradation à 7 g$_{\text{rms}}$ en vibrations aléatoires | T | C/D | Système | Comparaison fonctionnelle avant/après, rapport d'essai de vibrations |
+| US-STR-002 | Résister sans dégradation à 9,6 g$_{\text{rms}}$ (protovol) en vibrations aléatoires | T | C/D | Système | Comparaison fonctionnelle avant/après, rapport d'essai de vibrations |
 | US-EPS-001 | Deux interrupteurs de déploiement et une goupille RBF inhibent toute alimentation | R, confirmé par D | B / D | Système | Revue du schéma ; démonstration d'inhibition avec interrupteurs enfoncés |
 | US-COM-001 | Marge de liaison descendante ≥ 3 dB à 10° d'élévation | A | B | Système | Bilan de liaison (chapitre 11, §11.8.2) |
 | US-COM-002 | Déploiement de l'antenne dans les 30 min suivant le relâchement de l'interrupteur de séparation | D | D | Système | Démonstration chronométrée du déploiement (3 répétitions) |
@@ -349,9 +354,9 @@ Deux caractéristiques de ce tableau méritent d'être soulignées. D'abord, les
 | Vérification ou validation | Vérification = satisfait les exigences (ATIR(D)) ; validation = répond aux besoins des parties prenantes |
 | ATIR(D) | Analyse (modèles et similarité), essai (quantitatif), inspection (physique), revue de conception (documents et plans), démonstration (fonctionnelle) |
 | Protovol | CubeSats : un modèle de vol unique soumis aux niveaux de qualification, avec les durées de recette |
-| Vibrations sinusoïdales | 5–100 Hz, 1,25 g, charges de lancement quasi statiques ; $a = (2\pi f)^2 d$ à la transition déplacement/accélération |
-| Vibrations aléatoires | 20–2000 Hz, ~7 g$_{\text{rms}}$ global ($g_{\text{rms}} = \sqrt{\int \text{PSD}\, df}$), environnement acoustique à large bande |
-| TVAC | Extrêmes prévus ± 10 °C, 4 cycles ou plus, essai fonctionnel à chaque extrême ; ~7,6 h par cycle |
+| Vibrations sinusoïdales | 5–100 Hz, 1,25 g, 4 oct/min en protovol (2 oct/min en qualification), 3 axes, pas de bande en déplacement (transition $f_c = \sqrt{a/d}/2\pi \approx 5$ Hz à 12,5 mm) ; charges de lancement quasi statiques |
+| Vibrations aléatoires | 20–2000 Hz, 6,8 g$_{\text{rms}}$ (qualité de fabrication du GEVS, $g_{\text{rms}} = \sqrt{\int \text{PSD}\, df}$) ; protovol à +3 dB, environ 9,6 g$_{\text{rms}}$, 1 min par axe |
+| TVAC | Protovol à la prévision ± 10 °C (GSFC-STD-7000B / ECSS-E-ST-10-03C), 4 cycles, essai fonctionnel à chaque extrême ; ~7,6 h par cycle |
 | Matrice de conformité | Pour chaque exigence : méthode + phase + niveau + responsable + moyen + état + éléments probants |
 | Dérogations | Documenter l'écart, la justification, le risque et les mesures compensatoires |
 
@@ -367,7 +372,7 @@ Deux caractéristiques de ce tableau méritent d'être soulignées. D'abord, les
 
 4. **Profil sinusoïdal.** Un fournisseur de lancement spécifie un déplacement de 10 mm (0-crête) à partir de 4 Hz et 2,0 g (0-crête) jusqu'à 100 Hz. Calculez la fréquence de transition à laquelle les deux limites coïncident, ainsi que l'accélération que subirait le spécimen d'essai à 4 Hz si la limite en déplacement y était appliquée. Expliquez pourquoi le pilote doit passer du pilotage en déplacement au pilotage en accélération.
 
-5. **g$_{\text{rms}}$ en vibrations aléatoires.** Un déployeur spécifie un profil aléatoire de 0,02 g$^2$/Hz constant de 20 à 1000 Hz, décroissant à −6 dB/octave jusqu'à 2000 Hz. Calculez le g$_{\text{rms}}$ du palier puis, en assimilant la rampe descendante à une droite en DSP linéaire, estimez sa contribution et le g$_{\text{rms}}$ global. Ce niveau est-il supérieur ou inférieur au profil d'environ 7 g$_{\text{rms}}$ du §14.3.3 ?
+5. **g$_{\text{rms}}$ en vibrations aléatoires.** Un déployeur spécifie un profil aléatoire de 0,02 g$^2$/Hz constant de 20 à 1000 Hz, décroissant à −6 dB/octave jusqu'à 2000 Hz. Calculez le g$_{\text{rms}}$ du palier puis, en assimilant la rampe descendante à une droite en DSP linéaire, estimez sa contribution et le g$_{\text{rms}}$ global. Ce niveau est-il supérieur ou inférieur au profil de qualité de fabrication de 6,8 g$_{\text{rms}}$ du §14.3.3 ?
 
 6. **Planification de la TVAC.** L'analyse thermique d'EOSat-3U (chapitre 9, §9.4) prévoit de −15 °C à +50 °C au niveau de la batterie. Indiquez les températures d'essai protovol, puis calculez la durée d'un cycle pour une enceinte à 1,5 °C/min, des paliers de 1 h et des essais fonctionnels de 90 minutes, ainsi que la durée totale de la campagne pour six cycles plus 8 h de mise en place. Si l'enceinte coûte 2 k€ par jour (indicatif), quel est le coût de la campagne, et comment se compare-t-il au budget d'intégration et d'essais d'UniSat-1 du chapitre 13, §13.6 ?
 

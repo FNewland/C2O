@@ -1,4 +1,4 @@
-# Vue d'ensemble de la mission EOSAT-1
+# Vue d'ensemble de la mission EOSAT-1 {#eosat-1-mission-overview}
 
 **Référence du document :** EOSAT1-UM-MIS-001
 **Édition :** 2.0
@@ -7,13 +7,13 @@
 
 ---
 
-## 1. Objet
+## 1. Objet {#1-purpose}
 
 Le présent document donne une vue d'ensemble de haut niveau de la mission EOSAT-1 (Earth Observation Satellite 1) :
 objectifs de la mission, configuration du satellite, paramètres orbitaux, segment sol et
 phases de la mission. Il constitue le point d'entrée de la collection des manuels utilisateur du satellite EOSAT-1.
 
-## 2. Objectifs de la mission
+## 2. Objectifs de la mission {#2-mission-objectives}
 
 EOSAT-1 est un CubeSat 6U d'imagerie multispectrale en orbite basse, conçu pour la surveillance
 des courants océaniques et l'observation des zones côtières. Les objectifs principaux de la mission sont les suivants :
@@ -27,25 +27,27 @@ des courants océaniques et l'observation des zones côtières. Les objectifs pr
 - fournir des données d'imagerie pour l'estimation de la vitesse des courants océaniques, la détection des remontées d'eau froide (upwelling) et la
   cartographie de la concentration en chlorophylle.
 
-## 3. Paramètres orbitaux
+## 3. Paramètres orbitaux {#3-orbit-parameters}
 
 | Paramètre              | Valeur                       |
 |------------------------|------------------------------|
 | Type d'orbite          | Héliosynchrone (SSO)         |
 | Altitude               | ~513 km en moyenne (503–530 km) |
-| Inclinaison            | 98°                          |
-| LTAN                   | Aube-crépuscule (~06:00/18:00 heure locale) |
+| Inclinaison            | 97,39°                       |
+| LTAN                   | ~10:00 (nœud ascendant en milieu de matinée) |
 | Période orbitale       | ~94,5 min                    |
-| Durée d'éclipse        | ~34–36 min (variation saisonnière) |
+| Durée d'éclipse        | ~33–35 min, à chaque orbite (bêta de −20,8° à −31,2°) |
 | Cycle de répétition    | ~5 jours                     |
-| Vitesse de la trace au sol | ~7,07 km/s               |
+| Vitesse de la trace au sol | ~7,06 km/s               |
 
 L'altitude moyenne d'environ 513 km maintient une distance d'échantillonnage au sol (GSD) de quelques dizaines de mètres,
-tout en conservant une orbite héliosynchrone à 98° d'inclinaison. L'orbite SSO aube-crépuscule offre
-des conditions d'éclairement favorables à l'imageur multispectral et maximise l'exposition des panneaux
-solaires, ce qui réduit la profondeur de décharge de la batterie pendant les éclipses.
+tout en conservant une orbite héliosynchrone à 97,39° d'inclinaison, la valeur héliosynchrone
+exacte pour le moyen mouvement du TLE, 15,24 tours par jour. Avec un LTAN d'environ 10:00, le passage ascendant éclairé a lieu en milieu de matinée : les
+cibles océaniques sont donc imagées sous un éclairement homogène à chaque revisite. Ce n'est pas une orbite
+aube-crépuscule : l'angle bêta reste entre −21° et −31° environ, le satellite subit une éclipse à chaque orbite,
+et la batterie effectue un cycle de charge-décharge par orbite (environ 15 par jour).
 
-## 4. Vue d'ensemble de la plateforme
+## 4. Vue d'ensemble de la plateforme {#4-spacecraft-bus-overview}
 
 EOSAT-1 est un CubeSat 6U à plateforme stabilisée trois axes, doté des principaux sous-systèmes suivants :
 
@@ -58,21 +60,21 @@ EOSAT-1 est un CubeSat 6U à plateforme stabilisée trois axes, doté des princi
 | Télémesure, poursuite et télécommande | TTC       | Transpondeur bande S en redondance froide, émetteur de balise UHF, canal de commande PDM dédié, antenne déployée par fil thermofusible |
 | Charge utile                       | PLD          | Imageur multispectral (4 bandes de couleur de l'océan), monté au nadir |
 
-### 4.1 Repère satellite
+### 4.1 Repère satellite {#41-spacecraft-coordinate-frame}
 
 Le repère satellite est défini comme suit :
 
 - **+X** : le long de la trace (vecteur vitesse en pointage nadir nominal) ;
-- **+Y** : transverse à la trace (vers le panneau solaire tribord) ;
-- **+Z** : nadir (vers la Terre en attitude nominale) ; le senseur stellaire nadir et la charge utile y sont montés ;
-- **-Z** : zénith ; le senseur stellaire zénith et l'antenne GPS y sont montés.
+- **+Y** : transverse à la trace, selon la normale à l'orbite (complète le trièdre direct ; axe d'entraînement du générateur solaire) ;
+- **+Z** : zénith (à l'opposé de la Terre en attitude nominale) ; les deux senseurs stellaires (ST2 incliné de 45° vers +Y) et l'antenne GPS y sont montés ;
+- **-Z** : nadir (vers la Terre en attitude nominale) ; l'axe de visée de l'imageur et le radiateur y sont montés.
 
 Chacune des six faces de la structure (+X, -X, +Y, -Y, +Z, -Z) porte une tête de senseur solaire grossier ; cinq
-d'entre elles (toutes sauf -Z) portent un panneau solaire fixé sur la structure. Des ailes solaires déployables sur les faces +Y et -Y
+d'entre elles (toutes sauf -Z, qui porte l'ouverture de l'imageur et le radiateur) portent un panneau solaire fixé sur la structure. Des ailes solaires déployables sur les faces +Y et -Y
 (0,120 m² de cellules chacune) portent la surface de captation solaire totale de 0,198 m² (repliées) à
 0,438 m² (déployées).
 
-### 4.2 Bilan de masse et de puissance
+### 4.2 Bilan de masse et de puissance {#42-mass-and-power-budget}
 
 | Paramètre        | Valeur         |
 |------------------|----------------|
@@ -82,7 +84,7 @@ d'entre elles (toutes sauf -Z) portent un panneau solaire fixé sur la structure
 | Capacité de la batterie | 100 Wh, 3 Ah (8S1P), 21,5–29,2 V |
 | Puissance de l'OBC | 6 W          |
 
-### 4.3 Architecture de redondance
+### 4.3 Architecture de redondance {#43-redundancy-architecture}
 
 EOSAT-1 utilise la redondance froide pour les sous-systèmes critiques :
 
@@ -92,32 +94,37 @@ EOSAT-1 utilise la redondance froide pour les sous-systèmes critiques :
 | Transpondeur    | Principal/redondant (froide) | Commande sol ou FDIR après perte de liaison |
 | PDM             | Voie A/B (froide) | Commande sol                              |
 | Magnétomètre    | Aucune (unité unique) | Sa perte met fin à l'amortissement B-dot et à la désaturation magnétique |
-| Senseur stellaire | Zénith/nadir | Sélection automatique selon la disponibilité du champ de vue (FOV) |
+| Senseur stellaire | ST1/ST2 (tous deux sur +Z) | Sélection automatique selon la disponibilité du champ de vue (FOV) |
 
-## 5. Segment sol
+## 5. Segment sol {#5-ground-segment}
 
-### 5.1 Stations sol
+### 5.1 Stations sol {#51-ground-stations}
 
 | Station    | Emplacement                 | Élévation min. | Rôle principal     |
 |------------|-----------------------------|---------------|--------------------|
 | Iqaluit    | 63,747 N, 68,518 O          | 5°            | TT&C + vidage des données |
 | Troll      | 72,012 S, 2,535 E           | 5°            | TT&C + vidage des données |
+| Svalbard   | 78,230 N, 15,398 E          | 5°            | TT&C + vidage des données |
+| Inuvik     | 68,320 N, 133,550 O         | 5°            | TT&C + vidage des données |
+| O'Higgins  | 63,321 S, 57,901 O          | 5°            | TT&C + vidage des données |
 
-EOSAT-1 s'appuie sur un segment sol à deux stations assurant une couverture polaire dans les deux hémisphères :
+EOSAT-1 s'appuie sur un segment sol à cinq stations assurant une couverture polaire dans les deux hémisphères
+(liste de référence dans `orbit.yaml`) :
 
-- **Iqaluit** (Nunavut, Canada) : station de l'hémisphère Nord, à 63,747° de latitude nord.
-  Elle assure la TT&C principale et la transmission au sol des données scientifiques lors des passages nord. Sa latitude élevée
-  permet plusieurs contacts par jour avec l'orbite polaire héliosynchrone.
-- **Troll** (Terre de la Reine-Maud, Antarctique) : station de l'hémisphère Sud, à 72,012° de latitude sud.
-  Elle assure une couverture complémentaire de TT&C et de vidage des données lors des passages sud, ce qui réduit
-  l'intervalle maximal entre deux contacts sol.
+- **Hémisphère Nord :** Svalbard (KSAT SvalSat, Norvège, 78,230° N), Inuvik (Territoires du
+  Nord-Ouest, Canada, 68,320° N) et Iqaluit (Nunavut, Canada, 63,747° N). Svalbard voit
+  le plus de passages et les élévations les plus hautes ; c'est la première priorité de transmission au sol du planificateur.
+- **Hémisphère Sud :** Troll (Terre de la Reine-Maud, Antarctique, 72,012° S) et O'Higgins
+  (péninsule Antarctique, 63,321° S), qui couvrent les passages sud.
 
-Toutes les stations sol communiquent en bande S (liaison montante à 2025 MHz / liaison descendante à 2200 MHz). La durée
-type d'un contact varie de 5 à 12 minutes selon la géométrie du passage et l'élévation
-maximale. Le réseau de deux stations offre environ 4 à 8 contacts par jour, avec
-un intervalle maximal d'environ 4 à 6 heures entre deux contacts.
+Toutes les stations sol communiquent en bande S (liaison montante à 2025 MHz / liaison descendante à 2200 MHz). À l'altitude
+d'environ 513 km et avec un masque de 5°, un contact dure au plus 10 minutes environ, et 7 à 8 minutes en
+moyenne, selon la géométrie du passage et l'élévation maximale. Le réseau de cinq stations offre environ
+51 contacts par jour (Svalbard ~13, Troll ~11, Inuvik ~10,5, Iqaluit ~9, O'Higgins ~8), avec un intervalle
+médian d'environ 33 minutes et un intervalle maximal d'environ 80 minutes entre deux contacts
+(mesure sur 48 h, `tools/pass_gap_analysis.py`).
 
-### 5.2 Système de contrôle de mission
+### 5.2 Système de contrôle de mission {#52-mission-control-system}
 
 Le système de contrôle de mission (MCS) assure :
 
@@ -130,7 +137,7 @@ Le système de contrôle de mission (MCS) assure :
 - le processus de coordination GO/NO-GO pour les opérations critiques ;
 - la frise chronologique des fenêtres de visibilité, avec affichage de la visibilité par station.
 
-### 5.3 Postes opérateur
+### 5.3 Postes opérateur {#53-operator-positions}
 
 Le MCS prend en charge 6 postes opérateur avec contrôle d'accès par rôle :
 
@@ -143,7 +150,7 @@ Le MCS prend en charge 6 postes opérateur avec contrôle d'accès par rôle :
 | Opérateur OBDH    | OBDH         | Santé de l'OBC, gestion des données, gestion du logiciel |
 | Opérateur charge utile | PLD     | Opérations de prise de vue et gestion des données |
 
-## 6. Phases de la mission
+## 6. Phases de la mission {#6-mission-phases}
 
 | Phase                | Durée          | Description                                          |
 |----------------------|----------------|------------------------------------------------------|
@@ -152,9 +159,9 @@ Le MCS prend en charge 6 postes opérateur avec contrôle d'accès par rôle :
 | Recette en orbite    | 3–30 jours     | Vérification des sous-systèmes, étalonnage du SCAO, activation de la charge utile |
 | Opérations nominales | 30 jours–EOM   | Prise de vue de routine des océans, transmission des données au sol, surveillance de l'orbite |
 | Opérations prolongées | EOM+          | Opérations réduites en cas de prolongation de la mission |
-| Retrait de service   | Phase finale   | Passivation et désorbitation contrôlée               |
+| Retrait de service   | Phase finale   | Poussée d'abaissement du périgée à 390 km (34,3 m/s, NOM-014), puis passivation ; rentrée en moins de 5 ans |
 
-### 6.0 La phase de mission bord — et ce qu'elle conditionne
+### 6.0 La phase de mission bord — et ce qu'elle conditionne {#60-the-on-board-mission-phase--and-what-it-gates}
 
 Le satellite porte la phase de mission comme un état actif, dans `eps.spacecraft_phase`
 (0x0129) :
@@ -228,7 +235,7 @@ remède.
 Chaque changement accepté déclenche l'événement S5 `MISSION_PHASE_CHANGED` (0x0055),
 qui porte la phase de départ et la phase d'arrivée.
 
-### 6.1 Séquence de séparation
+### 6.1 Séquence de séparation {#61-separation-sequence}
 
 La séquence de séparation du lanceur suit un automate à 7 phases :
 
@@ -245,14 +252,14 @@ La séquence de séparation du lanceur suit un automate à 7 phases :
 Pendant l'attente de 30 minutes de la minuterie, seuls l'OBC (par la ligne PDM non commutable) et le récepteur
 (par le canal de commande PDM dédié) sont alimentés. Aucune émission RF n'a lieu.
 
-### 6.2 Concept de la LEOP
+### 6.2 Concept de la LEOP {#62-leop-concept}
 
-Pendant la LEOP, le satellite fonctionne d'abord en mode BOOTLOADER, avec un jeu de commandes
+Pendant la LEOP, l'OBC exécute d'abord le chargeur d'amorçage (`sw_image` = 0), avec un jeu de commandes
 restreint et une télémesure limitée à la balise (SID 11). La séquence LEOP se déroule comme suit :
 
 1. **Premier contact** : le sol acquiert le signal RF du paquet de balise. Vérifier la santé du satellite
    à partir des paramètres HK de la balise.
-2. **Démarrage de l'application** : le sol commande la transition du BOOTLOADER vers le logiciel applicatif.
+2. **Démarrage de l'application** : le sol commande la transition du chargeur d'amorçage vers le logiciel applicatif (`sw_image` 0 → 1).
    Vérifier la réussite du démarrage grâce à la télémesure de servitude complète.
 3. **Amortissement des vitesses angulaires** : l'AOCS fonctionne en mode DETUMBLE à l'aide des magnétocoupleurs. Surveiller la convergence des vitesses angulaires
    en dessous de 0.5 deg/s.
@@ -264,7 +271,7 @@ restreint et une télémesure limitée à la balise (SID 11). La séquence LEOP 
 7. **Transition vers le nominal** : une fois tous les points de contrôle GO/NO-GO franchis, commander la transition vers le
    mode AOCS NOMINAL (4) et commencer les opérations nominales.
 
-### 6.3 Concept des opérations nominales
+### 6.3 Concept des opérations nominales {#63-nominal-operations-concept}
 
 En opérations nominales, le satellite maintient une attitude de pointage nadir (mode AOCS NOMINAL, 4)
 pour la surveillance des courants océaniques. Les cibles de prise de vue sont planifiées en fonction des régions d'intérêt
@@ -275,12 +282,12 @@ d'Iqaluit et de Troll.
 
 Les opérations quotidiennes types comprennent :
 
-- 4 à 8 contacts sol avec les stations d'Iqaluit et de Troll ;
+- environ 20 contacts sol avec les stations d'Iqaluit et de Troll ;
 - 2 à 6 opportunités de prise de vue au-dessus des régions océaniques ciblées ;
 - l'enregistrement continu de la télémesure de servitude, pour relecture pendant les contacts ;
 - la surveillance des bilans de puissance et de données pour la planification de l'orbite suivante.
 
-## 7. Documents associés
+## 7. Documents associés {#7-related-documents}
 
 | Document                          | Référence              |
 |-----------------------------------|------------------------|

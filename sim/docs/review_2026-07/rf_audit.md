@@ -1,4 +1,4 @@
-# RF / Radio Subsystem Audit — EO-Sat-1 Simulator Suite
+# RF / Radio Subsystem Audit — EOSAT-1 Simulator Suite
 
 Date: 2026-07-28 · Scope: `packages/smo-rfsim` (whole package), radio web UI, `smo-simulator` TT&C model +
 engine TM path, `smo-mcs` displays, `configs/eosat1/rfsim.yaml`, `configs/eosat1/subsystems/ttc.yaml`, `start.sh`.

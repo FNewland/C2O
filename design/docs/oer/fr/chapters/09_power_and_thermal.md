@@ -507,7 +507,7 @@ Les **tresses thermiques** sont des liaisons conductrices souples (cuivre tress�
 
 ### 9.4.11 Marges thermiques de l'ECSS
 
-*[Source : ECSS-E-ST-31C, tableau 5-1]*
+*[Source : convention pédagogique propre à ce manuel ; les normes sont commentées sous le tableau]*
 
 | Niveau | Marge chaude (au-dessus du maximum prédit) | Marge froide (en dessous du minimum prédit) |
 |-------|----------------------------------|-----------------------------------|
@@ -516,6 +516,8 @@ Les **tresses thermiques** sont des liaisons conductrices souples (cuivre tress�
 | **Fonctionnement** | Prédiction + 5 °C | Prédiction − 5 °C |
 
 Ces marges garantissent que les incertitudes du modèle thermique (typiquement ±5 à 10 °C pour les modèles simplifiés, ±2 à 5 °C pour les modèles détaillés corrélés) ne provoquent pas de dépassements de température en orbite.
+
+**Lien avec les normes.** L'ECSS-E-ST-31C ne tabule pas ces valeurs. Sa figure 3-1 définit l'enchaînement qui va de la température prédite, en passant par l'incertitude, aux températures de recette et de qualification ; elle laisse les marges à l'autorité système et précise qu'on n'applique normalement pas d'incertitude inférieure à 10 K avant un essai d'équilibre thermique. L'ECSS-E-ST-10-03C (tableaux 5-2 et 5-4) ajoute à cette plage une marge de recette de 5 °C et une marge de qualification de 5 °C, et le GSFC-STD-7000B §2.6 essaie une unité de protovol aux températures maximale et minimale prédites ± 10 °C, pendant au moins 4 cycles. Le niveau de vide thermique en protovol du chapitre 14, §14.3.4 (prévision ± 10 °C), suit ces normes.
 
 > **Exemple résolu — analyse thermique à un nœud d'EOSat-3U**
 >
@@ -713,7 +715,7 @@ CAPSTONE, de la NASA (12U, 25 kg), évolue sur une orbite de halo quasi rectili
 | Rapport $\alpha_s/\varepsilon$ | Rapport faible = surface froide (radiateur) ; rapport élevé = surface chaude (isolation) |
 | Constitution du MLI | Enveloppe externe en Kapton VDA + 10–20 couches de DAM + intercalaires en Dacron ; $\varepsilon_{\text{eff}} = 0.01$–$0.03$ |
 | Dimensionnement des réchauffeurs | $P_{\text{heater}} = \varepsilon\sigma A T_{\text{min}}^4 - Q_{\text{env}} - Q_{\text{int}}$ ; réchauffeurs souples en Kapton, régulation par thermostat |
-| Marges thermiques | ECSS : ±5 °C en fonctionnement, ±10 °C en recette, ±15 °C en qualification |
+| Marges thermiques | Convention du manuel : ±5 °C en fonctionnement, ±10 °C en recette, ±15 °C en qualification ; TVAC de protovol à la prévision ±10 °C (GSFC-STD-7000B §2.6) |
 | Effets transitoires | L'inertie thermique ($mc_p$) empêche d'atteindre le régime permanent pendant les éclipses courtes ; un 1U à 400 km se refroidit de ~20–25 °C pendant une éclipse de 36 min |
 
 ## Exercices

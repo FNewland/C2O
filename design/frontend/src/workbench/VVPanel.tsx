@@ -4,7 +4,7 @@
  * Five sections:
  * 1. Budget Rollup: mass/power/cost hierarchy
  * 2. Requirement Traceability: derivation chains, orphans, SMART status
- * 3. Review Gate Checklist: MCR/SRR/PDR/CDR gate evaluation (from gate_evaluator)
+ * 3. Review Gate Checklist: MCR/SRR/PDR gate evaluation (from gate_evaluator; default PDR, ruling Q23)
  * 4. FMECA Summary: failure mode analysis results
  * 5. Budget Traceability: trace budget exceedance to stakeholder impact
  */
@@ -15,12 +15,16 @@ import { useUIStore } from '../stores/uiStore'
 
 import { TraceabilityTree } from '../components/TraceabilityTree'
 import { VVPlanPanel } from '../components/VVPlanPanel'
+import { useDesignStore } from '../stores/designStore'
+import { useActiveParameters } from '../hooks/useActiveParameters'
+import { useGateReview, type GateId } from '../components/useGateReview'
+import { STATUS_LABEL, badgeKind, evidenceText } from '../components/gateReviewText'
 
 const API = '/api'
 
 const STATUS_COLORS: Record<string, string> = {
   green: 'var(--success)', amber: 'var(--warning)', red: 'var(--danger)', undefined: 'var(--text-secondary)',
-  pass: 'var(--success)', fail: 'var(--danger)', manual: 'var(--warning)', not_evaluated: 'var(--text-secondary)',
+  pass: 'var(--success)', fail: 'var(--danger)', advisory: 'var(--warning)', manual: 'var(--accent)', not_evaluated: 'var(--text-secondary)',
 }
 
 const REQ_STATUS_COLORS: Record<string, string> = {
@@ -228,22 +232,23 @@ function RequirementTraceability({ requirements, elements, studyId }: { requirem
 
 function ReviewGates({ studyId }: { studyId: string | null }) {
   const { t } = useTranslation()
-  const gates = ['mcr', 'srr', 'pdr', 'cdr']
-  const [activeGate, setActiveGate] = useState('srr')
+  // Ruling Q23: MCR / SRR / PDR from configs/gate_exit_criteria.yaml, default PDR.
+  const gates: GateId[] = ['mcr', 'srr', 'pdr']
+  const [activeGate, setActiveGate] = useState<GateId>('pdr')
+  const missionNeed = useDesignStore(s => s.missionNeed)
+  const params = useActiveParameters()
 
-  const { data: gateResult, isLoading } = useQuery({
-    queryKey: ['gate-evaluate', studyId, activeGate],
-    queryFn: () => fetch(`${API}/ecss/gate-evaluate/${studyId}/${activeGate}`).then(r => r.json()),
-    enabled: !!studyId, structuralSharing: false,
-  })
+  const { data: gateResult, isLoading, isError } = useGateReview(studyId, activeGate, missionNeed, params)
+  const pending = !!gateResult && !gateResult.ready && gateResult.ready_pending_manual
+  const tone = gateResult?.ready ? 'var(--success)' : pending ? 'var(--accent)' : 'var(--danger)'
 
   return (
     <div>
       <h3 style={{ fontSize: '0.85rem', marginBottom: '0.3rem' }}>{t('Review Gate Evaluation')}</h3>
 
-      <div style={{ display: 'flex', gap: '0.3rem', marginBottom: '0.5rem' }}>
+      <div role="group" aria-label={t('Review gate')} style={{ display: 'flex', gap: '0.3rem', marginBottom: '0.5rem' }}>
         {gates.map(g => (
-          <button key={g} onClick={() => setActiveGate(g)} style={{
+          <button key={g} onClick={() => setActiveGate(g)} aria-pressed={activeGate === g} style={{
             padding: '0.3rem 0.8rem', fontSize: '0.72rem', fontWeight: 700, borderRadius: '4px',
             background: activeGate === g ? 'var(--accent)' : 'var(--bg-card)',
             color: activeGate === g ? 'white' : 'var(--text-secondary)',
@@ -255,41 +260,53 @@ function ReviewGates({ studyId }: { studyId: string | null }) {
       </div>
 
       {isLoading && <div style={{ color: 'var(--text-secondary)' }}>{t('Evaluating...')}</div>}
+      {isError && !gateResult && (
+        <div style={{ color: 'var(--warning)', fontSize: '0.72rem' }}>
+          {t('Gate review service unreachable.')}
+        </div>
+      )}
 
       {gateResult && (
         <div>
           {/* Summary */}
           <div style={{
-            display: 'flex', gap: '0.75rem', marginBottom: '0.5rem', padding: '0.4rem 0.5rem',
-            background: gateResult.ready ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
+            display: 'flex', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '0.5rem', padding: '0.4rem 0.5rem',
+            background: `color-mix(in srgb, ${tone} 10%, transparent)`,
             borderRadius: '4px', fontSize: '0.72rem',
           }}>
-            <span style={{ fontWeight: 700, color: gateResult.ready ? 'var(--success)' : 'var(--danger)' }}>
-              {gateResult.ready ? t('READY') : t('NOT READY')}
+            <span style={{ fontWeight: 700, color: tone }}>
+              {gateResult.ready ? t('READY')
+                : pending ? t('Ready for {{gate}}, pending manual sign-off', { gate: activeGate.toUpperCase() })
+                : t('NOT READY')}
             </span>
             {gateResult.summary && (
               <>
                 <span style={{ color: 'var(--success)' }}>{t('Pass: {{n}}', { n: gateResult.summary.pass })}</span>
-                <span style={{ color: 'var(--danger)' }}>{t('Fail: {{n}}', { n: gateResult.summary.fail })}</span>
-                <span style={{ color: 'var(--warning)' }}>{t('Manual: {{n}}', { n: gateResult.summary.manual })}</span>
+                <span style={{ color: 'var(--danger)' }}>{t('Fail: {{n}}', { n: gateResult.criteria.filter(c => c.verdict === 'fail').length })}</span>
+                <span style={{ color: 'var(--warning)' }}>{t('Advisory: {{n}}', { n: gateResult.summary.advisory })}</span>
+                <span style={{ color: 'var(--accent)' }}>{t('Manual: {{n}}', { n: gateResult.summary.manual })}</span>
               </>
             )}
           </div>
 
           {/* Criteria list */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
-            {(gateResult.criteria || []).map((c: any, i: number) => (
-              <div key={i} style={{
-                display: 'flex', alignItems: 'center', gap: '0.3rem', padding: '0.25rem 0.4rem',
-                background: 'var(--bg-card)', borderRadius: '3px', fontSize: '0.68rem',
-                borderLeft: `3px solid ${STATUS_COLORS[c.status] || 'var(--text-secondary)'}`,
-              }}>
-                <span style={{ width: 8, height: 8, borderRadius: '50%', background: STATUS_COLORS[c.status], flexShrink: 0 }} />
-                <span style={{ flex: 1 }}>{c.question}</span>
-                {c.evidence_found && <span style={{ fontSize: '0.55rem', color: 'var(--text-secondary)' }}>{c.evidence_found}</span>}
-                <span style={{ fontSize: '0.55rem', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>{c.priority}</span>
-              </div>
-            ))}
+            {gateResult.criteria.map(c => {
+              const kind = badgeKind(c)
+              const color = STATUS_COLORS[kind] || 'var(--text-secondary)'
+              return (
+                <div key={c.id} style={{
+                  display: 'flex', alignItems: 'center', gap: '0.3rem', padding: '0.25rem 0.4rem',
+                  background: 'var(--bg-card)', borderRadius: '3px', fontSize: '0.68rem',
+                  borderLeft: `3px solid ${color}`,
+                }}>
+                  <span style={{ fontSize: '0.55rem', fontWeight: 700, color, whiteSpace: 'nowrap' }}>{t(STATUS_LABEL[kind] || 'N/A')}</span>
+                  <span style={{ flex: 1 }}>{t(c.question)}</span>
+                  <span style={{ fontSize: '0.55rem', color: 'var(--text-secondary)' }}>{evidenceText(c, t)}</span>
+                  <span style={{ fontSize: '0.55rem', color: 'var(--text-secondary)', fontFamily: 'monospace' }}>{c.id}</span>
+                </div>
+              )
+            })}
           </div>
         </div>
       )}

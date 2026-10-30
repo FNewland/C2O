@@ -59,8 +59,8 @@
   },
   {
    "id": "chapter-16-cost-estimation-and-design-reviews/16-2-cost-breakdown-structure-wbs/16-2-1-standard-cubesat-wbs",
-   "en_hash": "80d57dc8f27c3d8e",
-   "fr_hash": "032c2a3daee1d0c2"
+   "en_hash": "61227797a334ccd1",
+   "fr_hash": "00200d960a4f5b5b"
   },
   {
    "id": "chapter-16-cost-estimation-and-design-reviews/16-2-cost-breakdown-structure-wbs/16-2-2-cost-by-phase",
@@ -163,5 +163,5 @@
    "fr_hash": "0768a2cc84325b68"
   }
  ],
- "en_commit": "3ea7113"
+ "en_commit": "c4a140a"
 }

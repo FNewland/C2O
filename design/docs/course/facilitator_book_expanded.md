@@ -365,7 +365,7 @@ Table 1.1.4 — Integration levels of the System-V model with corresponding veri
 
 The orange dashed arrows in the diagram represent **horizontal traceability** -- the principle that every element on the left must have a corresponding verification/validation activity on the right:
 
-- Each **requirement** (left) has a **verification method** (right): test, analysis, inspection, or demonstration (ATID)
+- Each **requirement** (left) has a **verification method** (right): analysis, test, inspection or review of design, plus the demonstration that NASA practice adds (ATIR(D))
 - Each **design decision** (left) has a **test or analysis** (right) to confirm it works
 - This traceability is captured in the **Requirements Verification Matrix (RVM)**
 
@@ -415,7 +415,7 @@ Table 1.1.6 — NPR 7123.1D Product Realisation processes for building, verifyin
 |---|---------|-------------|------------|-------------------|
 | 5 | **Product Implementation** | Make, buy, code, or reuse lowest-level products | Hardware/software products | Section 5.1 |
 | 6 | **Product Integration** | Assemble per integration plan, verify interfaces | Integrated system | Section 5.2 |
-| 7 | **Product Verification** | Confirm product meets technical requirements (ATID) | Verification evidence | Section 5.3 |
+| 7 | **Product Verification** | Confirm product meets technical requirements (ATIR(D)) | Verification evidence | Section 5.3 |
 | 8 | **Product Validation** | Confirm product meets stakeholder expectations | Validation evidence | Section 5.4 |
 | 9 | **Product Transition** | Deliver, deploy, hand over to operations | Operational system | Section 5.5 |
 
@@ -912,6 +912,8 @@ Canada has historically pursued a "niche excellence" strategy: rather than attem
 
 ## Part 2: Regulatory Environment
 ---
+
+> **Expected reading before this part.** [ITU Radio Regulations](https://www.itu.int/pub/R-REG-RR) (Edition of 2024), Article 21 — Terrestrial and space services sharing frequency bands above 1 GHz; ISED CPC-2-6-02 — Procedure for the Submission of Applications for Spectrum Licences for Space Stations (Issue 7, April 2026); Remote Sensing Space Systems Act (RSSSA) — [https://laws-lois.justice.gc.ca/eng/acts/R-5.4/](https://laws-lois.justice.gc.ca/eng/acts/R-5.4/).
 
 ### 5. Regulatory Framework Overview
 Space activities in Canada are governed by multiple federal bodies. There is no single "Space Act" -- instead, regulation is distributed across several statutes:
@@ -1465,6 +1467,8 @@ Table 1.3.9 — Cross-reference of ECSS, NASA, and ISO standards across major en
 
 ## Part 2: Launch Interfaces, Debris Mitigation & International Law
 ---
+
+> **Expected reading before this part.** Cal Poly, *CubeSat Design Specification (1U – 12U)*, Rev. 14.1 (CP-CDS-R14.1, February 2022), §4 — CubeSat dispenser interface and §5 — dispenser options; Wertz & Larson, *Space Mission Analysis and Design*, 3rd ed., Ch. 18 — Launch systems.
 
 ### 5. CDS Rev 14 -- Launch Vehicle Interface Standard
 #### 5.1 What is the CDS?
@@ -2394,7 +2398,7 @@ By the end of this session, participants will be able to:
 2. Write requirements that satisfy the SMART criteria and express WHAT, not HOW
 3. Classify requirements by type: functional, performance, interface, constraint, and environmental
 4. Construct a three-level requirement hierarchy (mission, system, subsystem) with bidirectional traceability
-5. Assign verification methods (ATID) to requirements and justify each choice
+5. Assign verification methods (ATIR(D)) to requirements and justify each choice
 6. Use SpaceCDF's Requirements tab to generate, validate, and manage requirements
 
 ---
@@ -2609,18 +2613,19 @@ Table 2.1.9 — Compound requirements rewritten as independently verifiable spli
 
 ---
 
-## 5. Verification Methods -- ATID
-*[Source: ECSS-E-ST-10-02C Rev.1 Sec. 5.3; [NASA SEH](https://www.nasa.gov/reference/systems-engineering-handbook/) Sec. 5.3]*
+## 5. Verification Methods -- ATIR(D)
+*[Source: ECSS-E-ST-10-02C Rev.1 §5.2.2; [NASA SEH](https://www.nasa.gov/reference/systems-engineering-handbook/) Sec. 5.3]*
 
-Every requirement must have an assigned verification method. The four standard methods (abbreviated ATID here; Chapter 4.2 lists the same four in the order IADT) are:
+Every requirement must have an assigned verification method. ECSS-E-ST-10-02C Rev.1 §5.2.2.1 defines four methods -- test, analysis, review of design and inspection -- and counts demonstration as part of test; NASA practice lists demonstration as a separate fifth method. This book abbreviates the set as ATIR(D), with the D in parentheses for that reason:
 
-Table 2.1.10 — Analysis, Test, Inspection and Demonstration verification methods with usage guidance.
+Table 2.1.10 — Analysis, Test, Inspection, Review-of-design and Demonstration verification methods with usage guidance.
 
 | Method | Code | What It Proves | When Used |
 |--------|------|---------------|-----------|
 | **Analysis** | A | Requirement satisfied by mathematical model, simulation, or similarity | Phase B--C; when testing is impractical or cost-prohibitive |
 | **Test** | T | Requirement satisfied by physical measurement | Phase C--D; when proof requires hardware in a controlled environment |
 | **Inspection** | I | Requirement confirmed by visual or physical examination | Physical characteristics (dimensions, labels, markings, mass) |
+| **Review of design** | R | Requirement confirmed by examination of drawings, schematics or documentation | Design features that can be established from the records (e.g., use of approved parts, redundancy present) |
 | **Demonstration** | D | Requirement confirmed by operational exercise | Functional requirements proven by executing procedures |
 
 ### Verification Method Selection Guide
@@ -2769,7 +2774,7 @@ Table 2.1.14 — Session summary: key takeaways for the System-V and requirement
 | Requirement types | Functional, performance, interface, constraint, environmental |
 | Hierarchy | Mission -> System -> Subsystem with bidirectional traceability (up, down, horizontal) |
 | Splitting | One concern per requirement for independent verification |
-| ATID | Analysis, Test, Inspection, Demonstration -- assigned per requirement per phase |
+| ATIR(D) | Analysis, Test, Inspection, Review of design (+ Demonstration) -- assigned per requirement per phase |
 
 # Chapter 2.2 — Functional Decomposition and Allocation
 
@@ -4468,9 +4473,9 @@ Table 3.1.10 — Passive and active thermal control methods with mass impact and
 
 ### ECSS Thermal Margins
 
-*[Source: ECSS-E-ST-31C, Table 5-1]*
+*[Source: this book's teaching convention; the standards are discussed below the table]*
 
-Table 3.1.11 — ECSS thermal margins for qualification, acceptance, and operating temperature limits.
+Table 3.1.11 — Thermal margins for qualification, acceptance, and operating temperature limits (this book's convention).
 
 | Phase | Hot Margin (above predicted max) | Cold Margin (below predicted min) |
 |-------|----------------------------------|-----------------------------------|
@@ -4479,6 +4484,8 @@ Table 3.1.11 — ECSS thermal margins for qualification, acceptance, and operati
 | **Operating** | Predicted + 5 degC | Predicted - 5 degC |
 
 These margins ensure that thermal model uncertainties (typically $\pm 5$--$10$ degC for simplified models, $\pm 2$--$5$ degC for detailed correlated models) do not cause in-orbit temperature exceedances.
+
+**How this relates to the standards.** ECSS-E-ST-31C does not tabulate these values. Its Figure 3-1 defines the chain from the predicted temperature, through the uncertainty, to the acceptance and qualification temperatures; it leaves the margins to the system authority and notes that uncertainties below 10 K are not normally applied before a thermal-balance test. ECSS-E-ST-10-03C (Tables 5-2 and 5-4) adds an acceptance margin of 5 degC and a qualification margin of 5 degC on top of that range, and GSFC-STD-7000B §2.6 tests a proto-flight unit at the maximum and minimum predicted temperatures $\pm 10$ degC for at least 4 cycles. The proto-flight thermal-vacuum level of Chapter 4.2 (predicted $\pm 10$ degC) follows those standards.
 
 > **Worked Example -- 3U CubeSat Full Thermal Analysis**
 >
@@ -4642,9 +4649,9 @@ UniSat-1 uses no heaters, no MLI, and no active thermal control. This is justifi
 
 ---
 
-### 6U Reference Design: EO-Sat-1 Power and Thermal, As Flown
+### 6U Reference Design: EOSAT-1 Power and Thermal, As Flown
 
-The 1U and 3U examples above are sizing exercises. EO-Sat-1 -- the 6U EO
+The 1U and 3U examples above are sizing exercises. EOSAT-1 -- the 6U EO
 spacecraft used as the reference mission throughout this book -- is a
 *completed* design, so its numbers can be read back rather than estimated. Every figure below comes from the flight
 configuration (`configs/eosat1/subsystems/eps.yaml`, `tcs.yaml`) and the
@@ -4672,7 +4679,7 @@ $19.2 / 0.0715 = 268$ W/m$^2$ delivered. The loss stack and a flight vendor's
 datasheet agree to within 0.1 W/m$^2$ -- so if a CubeSat power budget disagrees
 with the hardware, the error is almost always in the *area*, not in the physics.
 
-**Step 2 -- cell area.** EO-Sat-1 carries body-mounted cells plus two
+**Step 2 -- cell area.** EOSAT-1 carries body-mounted cells plus two
 single-axis-driven deployable wings:
 
 | Surface | Cell area (m$^2$) | Note |
@@ -4687,8 +4694,12 @@ single-axis-driven deployable wings:
 
 Wing rating at $\beta = 0$, BOL: $2 \times 0.120 \times 291.2 = 69.9$ W -- against
 the MMA eHaWK 6U+ published rating of "starts at 72 W". Peak whole-spacecraft
-generation is 88.6 W; orbit-average at EOL is 38.0 W at the worst beta angle
-(49.8 deg) and 45.0 W at the maximum-eclipse beta (24.2 deg).
+generation is 88.6 W. Over the year $\beta$ stays between $-20.8$ and $-31.2$ deg, and
+because the solar-array drive tracks the Sun about one axis only, generation
+follows $\cos\beta$. Orbit-average generation at EOL is therefore **45.1 W** at the
+worst-generation beta ($-31.2$ deg, the largest $|\beta|$ and the shortest
+eclipse) and 47.0 W at the longest-eclipse beta ($-20.8$ deg); at BOL the same two
+figures are 49.1 W and 51.2 W.
 
 **Step 3 -- the load sheet.** The PCDU has **nine** power lines, indices 0--8.
 Two are non-switchable; **every switchable line boots OFF** and must be
@@ -4717,11 +4728,15 @@ systems on *including* AOCS, judged at nadir pointing rather than sun pointing:
 
 | Profile | Gen (W) | Load (W) | Margin (W) | Ratio |
 |---------|--------:|---------:|-----------:|------:|
-| quiescent | 38.0 | 25.5 | +12.5 | 1.49 |
-| **nominal** | **38.0** | **28.7** | **+9.3** | **1.33** |
-| nominal imaging | 38.0 | 32.5 | +5.5 | 1.17 |
-| manoeuvre | 38.0 | 32.0 | +6.0 | 1.19 |
-| worst (abuse case) | 38.0 | 45.3 | $-7.3$ | 0.84 |
+| quiescent | 45.1 | 25.6 | +19.5 | 1.76 |
+| **nominal** | **45.1** | **28.8** | **+16.3** | **1.57** |
+| nominal imaging | 45.1 | 32.8 | +12.3 | 1.38 |
+| manoeuvre | 45.1 | 32.1 | +12.9 | 1.40 |
+| worst (abuse case) | 45.1 | 46.8 | $-1.7$ | 0.96 |
+
+The table is at 3-year EOL and the worst-generation beta ($-31.2$ deg). At the
+longest-eclipse beta ($-20.8$ deg) generation is 47.0 W and the nominal profile
+closes at 1.63x.
 
 The "worst" row is deliberately negative: it holds FINE pointing for a whole
 orbit, runs the cooler continuously, images through eclipse and dumps at the
@@ -4731,49 +4746,51 @@ imaging chain** -- three ~90 s captures per orbit with roughly 20 min of cooler
 around each -- which is what the "nominal imaging" row models. That is the
 lesson the exercise exists to teach.
 
-Cross-check the +9.3 W against flight hardware: the NanoAvionics M6P 6U bus
-publishes 12.5--17.5 W of payload power available while sun-tracking. A 6U
+Cross-check the +16.3 W against flight hardware: the NanoAvionics M6P 6U bus
+publishes 12.5--17.5 W of payload power available while sun-tracking, and the
+EOSAT-1 margin sits inside that range. A 6U
 design showing +40 W of payload headroom is not well designed; it is
 mis-specified.
 
-> **Worked Example -- EO-Sat-1 Eclipse Energy and Battery Sizing**
+> **Worked Example -- EOSAT-1 Eclipse Energy and Battery Sizing**
 >
-> **Given:** 450 km SSO, 98 deg inclination, 15.24 rev/day so $T = 86400/15.24 = 5669$ s
+> **Given:** 513 km SSO (mean altitude), 97.39 deg inclination, LTAN 10:00, 15.24 rev/day so $T = 86400/15.24 = 5669$ s
 > $= 1.575$ h. Battery: GomSpace NanoPower BPX class, 8S-1P, **100 Wh**, 3 Ah,
 > 26.4 V nominal on the bus model (29.2 V at 100 % SoC, 21.5 V at 0 %), charge
 > efficiency 0.94, CV taper from 90 % SoC.
 >
-> **Step 1 -- eclipse duration** (worst case, $\beta = 0$):
-> $$f_{\text{ecl}} = \frac{1}{\pi}\arccos\!\left(\frac{\sqrt{h(2R_E + h)}}{(R_E + h)\cos\beta}\right) = \frac{1}{\pi}\arccos\!\left(\frac{\sqrt{450 \times 13192}}{6821}\right)$$
+> **Step 1 -- eclipse duration** (bounding case, $\beta = 0$. A 10:00 LTAN orbit never reaches it: EOSAT-1's $\beta$ stays between $-20.8$ and $-31.2$ deg, and the simulator gives 33.2--35.2 min of eclipse on every orbit, so the 35.6 min below is conservative by about 0.4 min):
+> $$f_{\text{ecl}} = \frac{1}{\pi}\arccos\!\left(\frac{\sqrt{h(2R_E + h)}}{(R_E + h)\cos\beta}\right) = \frac{1}{\pi}\arccos\!\left(\frac{\sqrt{513 \times 13255}}{6884}\right)$$
 >
-> $= \frac{1}{\pi}\arccos(2436.5 / 6821) = \frac{1}{\pi}\arccos(0.3572) = \frac{69.08\degree}{180\degree} = 0.384$
+> $= \frac{1}{\pi}\arccos(2607.6 / 6884) = \frac{1}{\pi}\arccos(0.3788) = \frac{67.74\degree}{180\degree} = 0.376$
 >
-> Eclipse $= 0.384 \times 5669 = 2176$ s $= 36.3$ min; sunlight $= 3493$ s $= 58.2$ min.
+> Eclipse $= 0.376 \times 5669 = 2133$ s $= 35.6$ min; sunlight $= 3536$ s $= 58.9$ min.
 >
 > **Step 2 -- eclipse load.** Payload, cooler and TX are off; OBC 6.0 + `ttc_rx` 1.5
 > + `aocs_wheels` 12.0 = 19.5 W, plus the battery heater at roughly 50 % thermostat
 > duty ($8.0 \times 0.5 = 4.0$ W) = **23.5 W**.
 >
 > **Step 3 -- eclipse energy and DoD:**
-> $E_{\text{ecl}} = 23.5 \times (2176/3600) = 23.5 \times 0.6045 = 14.2$ Wh
+> $E_{\text{ecl}} = 23.5 \times (2133/3600) = 23.5 \times 0.5925 = 13.9$ Wh
 >
-> $DOD = 14.2 / 100 = \mathbf{14.2\%}$ per eclipse.
+> $DOD = 13.9 / 100 = \mathbf{13.9\%}$ per eclipse.
 >
 > **Step 4 -- recharge check.** Energy that must go back into the pack:
-> $14.2 / 0.94 = 15.1$ Wh, over 0.970 h of sunlight $= 15.6$ W of dedicated charge power.
+> $13.9 / 0.94 = 14.8$ Wh, over 0.982 h of sunlight $= 15.1$ W of dedicated charge power.
 >
-> Generation is collected only in sunlight, so the sunlit-average generation is
-> $38.0 \times 1.575 / 0.970 = 61.7$ W. The sunlit load is
-> $(28.7 \times 1.575 - 14.2)/0.970 = (45.2 - 14.2)/0.970 = 31.9$ W, leaving
-> $61.7 - 31.9 = 29.8$ W of charge power against the 15.6 W required.
-> **Recharge margin 1.9x. Closes.**
+> Generation is collected only in sunlight, so the sunlit-average generation,
+> taking the worst-generation 45.1 W together with the bounding eclipse, is
+> $45.1 \times 1.575 / 0.982 = 72.3$ W. The sunlit load is
+> $(28.8 \times 1.575 - 13.9)/0.982 = (45.4 - 13.9)/0.982 = 32.1$ W, leaving
+> $72.3 - 32.1 = 40.2$ W of charge power against the 15.1 W required.
+> **Recharge margin 2.7x. Closes.**
 >
 > **Step 5 -- cycle life.** A 3-year mission at 15.24 orbits/day is
-> $3 \times 365 \times 15.24 = 16{,}688$ eclipses. At 14 % DoD, Li-ion cells are
+> $3 \times 365 \times 15.24 = 16{,}688$ eclipses. At 13.9 % DoD, Li-ion cells are
 > in the $> 30{,}000$-cycle regime. **Pass with a factor of ~2 on cycles.**
 >
 > **Step 6 -- why 100 Wh and not 30 Wh.** The eclipse demand alone would be met
-> by a 30 Wh pack at 47 % DoD. The 100 Wh pack is sized by the *contingency*
+> by a 30 Wh pack at 46 % DoD. The 100 Wh pack is sized by the *contingency*
 > case -- survive a lost sunlit period, ride out a failed deployment, and keep
 > the bus above the load-shed voltage while FDIR works -- not by the nominal
 > eclipse. Protection levels follow: the in-model load shed fires at 25.0 V and
@@ -4781,7 +4798,7 @@ mis-specified.
 > with a 0.5 V restore hysteresis; the undervoltage flag is at 26.5 V and the
 > FDIR SoC ladder at 30 / 20 / 10 %.
 
-**Thermal: what is actually active.** EO-Sat-1 is passive apart from three
+**Thermal: what is actually active.** EOSAT-1 is passive apart from three
 heater circuits and one cooler:
 
 | Circuit | Power | Control | Telemetry |
@@ -4953,7 +4970,7 @@ Table 3.1.13 — Session summary: key takeaways for power and thermal control de
 | Thermal margins | ECSS: +/-5 degC operating, +/-10 degC acceptance, +/-15 degC qualification |
 | Transient effects | Thermal mass ($mc_p$) prevents reaching steady state during short eclipses; 1U at 400 km cools ~20--25 degC in 36 min eclipse |
 | Plane-of-array constant | Collapse the loss stack into one number: $K = 291.2$ W/m$^2$ BOL, **267.9 W/m$^2$ at 3-yr EOL** for TJ GaAs; cross-checks a vendor datasheet to 0.1 W/m$^2$ |
-| 6U reality check | 0.438 m$^2$ of cells $\to$ 88.6 W peak, 38.0 W orbit-average EOL against a 28.7 W nominal load (+9.3 W, 1.33x); +40 W of payload headroom on a 6U means the budget is wrong |
+| 6U reality check | 0.438 m$^2$ of cells $\to$ 88.6 W peak, 45.1 W orbit-average EOL at the worst beta against a 28.8 W nominal load (+16.3 W, 1.57x); +40 W of payload headroom on a 6U means the budget is wrong |
 | Power lines | Nine lines, indices 0--8 (`obc`, `ttc_rx`, `ttc_tx`, `payload`, `fpa_cooler`, `htr_bat`, `htr_obc`, `aocs_wheels`, `prop`); only the first two are non-switchable and **every switchable line boots OFF** |
 | FPA cooling | A 27 K lift at $COP = 1.5$ is beyond any single-stage Peltier ($COP_{\max} = 0.88$); it needs a **miniature Stirling-class cryocooler** at ~23 % of Carnot, whose authority *falls* as the lift grows |
 
@@ -5622,7 +5639,7 @@ $$T_{\text{max,body}} = \sqrt{2} \cdot T_{\text{wheel}} \approx 1.41 \times T_{\
 
 for the optimal distribution. This is better than the 3-orthogonal configuration where $T_{\text{max,body}} = T_{\text{wheel}}$ along any axis.
 
-**Worked through on the 6U reference.** EO-Sat-1 flies a **four-wheel pyramid**
+**Worked through on the 6U reference.** EOSAT-1 flies a **four-wheel pyramid**
 (Sinclair RW-0.03 class: 0.030 N m s each, 5500 rpm maximum) plus three
 magnetorquers saturating at 1.6 A m$^2$ per axis. On the determination side it
 carries **two star trackers** (ST1/ST2, selectable) and **three single-axis
@@ -5728,8 +5745,10 @@ needed **for end-of-life disposal**:
 
 A spacecraft that satisfies every line above may still need propulsion for
 *debris avoidance* and *orbit maintenance*, which are operational needs and not
-disposal needs. That is precisely the case for our 6U reference spacecraft, and
-it is worked through at the end of this section.
+disposal needs. Our 6U reference spacecraft is the instructive borderline case:
+at 513 km it sits just above the first line, so it needs propulsion for those
+operational needs *and* for a modest end-of-life disposal burn. It is worked
+through at the end of this section.
 
 ### The Tsiolkovsky Rocket Equation -- Physics
 
@@ -5902,21 +5921,44 @@ Table 3.2.17 — CubeSat propulsion technology trade across Isp, thrust, propell
 
 *Figure 3.2.2 — Propellant mass ratio ($m_p/m_d$) vs required $\Delta V$ from the Tsiolkovsky rocket equation $\Delta V = I_{sp} g_0 \ln(m_0/m_f)$, plotted for five common CubeSat propulsion technologies. The 113 m/s guide is the deorbit ΔV from 600 km circular to a 200 km perigee (worked example above). At low ΔV the propellant mass differences across technologies are modest; above ~500 m/s the "tyranny of the rocket equation" begins to bite and high-$I_{sp}$ electric propulsion becomes the only feasible choice.*
 
-### 6U Reference Design: EO-Sat-1 Propulsion, As Flown
+### 6U Reference Design: EOSAT-1 Propulsion, As Flown
 
-EO-Sat-1 carries a **1U green-monopropellant blowdown module**, and it is worth
+EOSAT-1 carries a **1U green-monopropellant blowdown module**, and it is worth
 being precise about what it is for, because the wrong answer is the intuitive
 one.
 
-**It is not a deorbit system.** From 450 km at a ballistic coefficient of
-77.9 kg/m$^2$, natural decay takes 1.7 yr at mean solar activity and 4.8 yr at
-solar minimum -- inside the FCC 5-year rule at *every* solar condition, and
-0.2 yr with the wings commanded broadside to the flow. A propulsive disposal
-burn (450 km down to a 300 km perigee) would cost 42.6 m/s and, given the
-blowdown profile, would consume essentially the whole tank. Disposal is
-therefore explicitly excluded from the design.
+**Natural decay is not enough.** From 513 km at a ballistic coefficient of
+77.9 kg/m$^2$, natural decay takes **5.0 yr** at mean solar activity and
+**14.2 yr** at solar minimum, so on its own it fails the 5-year disposal rule.
+EOSAT-1 therefore ends its mission with a retrograde **perigee-lowering burn of
+34.3 m/s**, taking the perigee from 513 km to **390 km**, flown as six burns of
+5.72 m/s. From the resulting 513 x 390 km orbit, re-entry takes **1.5 yr** at mean
+activity and **4.2 yr** at solar minimum -- inside the rule at both. (Method: the
+project's drag integration with the CIRA-72 exponential atmosphere, solar
+minimum modelled as 0.35 times that table.) The burn size is a single
+tangential impulse at the 513 km point, which becomes the apogee:
 
-**It is a debris-avoidance and orbit-maintenance system.** Those are ongoing
+$$\Delta V = \sqrt{\frac{\mu}{r_1}} - \sqrt{\mu\left(\frac{2}{r_1} - \frac{2}{r_1 + r_p}\right)} = 7605.4 - 7571.1 = 34.3 \text{ m/s}$$
+
+with $r_1 = R_E + 513$ km and $r_p = R_E + 390$ km. After the burns the spacecraft
+is passivated: the remaining propellant is depleted, the propulsion inhibit is
+latched, the wheels are stopped, and the charge regulator and the transmitters
+are switched off (simulator card NOM-014, End-of-Life Disposal).
+
+> **Model uncertainty -- why margins and model choice matter.** The 4.2-year
+> figure is only as good as the atmosphere behind it. Re-run the same 390 km
+> perigee with NRLMSIS 2.1 and hold solar minimum for years, and re-entry takes
+> **7.2 years** -- outside the rule. A perigee of **360 km**, i.e. **42.8 m/s**,
+> would meet 5 years even under the sustained-F10.7 = 70 bound, but it does not
+> close: it does not fit in the 66.9 m/s tank on top of the active-phase budget. Neither model is "the"
+> answer: a scaled exponential table and a full empirical model held at a
+> sustained minimum bracket the real future atmosphere, and the gap between
+> them (4.2 against 7.2 years) is larger than the rule leaves to spare. That is
+> why a disposal plan states its atmospheric model and solar-activity
+> assumption, carries margin on the $\Delta V$ and on the reserve, and is
+> re-planned against the observed solar cycle before the burn.
+
+**It is also a debris-avoidance and orbit-maintenance system.** Those are ongoing
 operational needs that drag does not satisfy, and no amount of natural decay
 substitutes for a collision-avoidance manoeuvre executed inside a few hours of
 a conjunction warning.
@@ -5937,12 +5979,16 @@ $v_e = 208 \times 9.80665 = 2040$ m/s, $m_0 = 12.40$ kg, $m_f = 12.00$ kg:
 
 $$\Delta V = 2040 \times \ln(12.40/12.00) = 2040 \times \ln(1.03333) = 2040 \times 0.032790 = 66.9 \text{ m/s}$$
 
-**And check that it is enough.** Over a two-year active phase: drag make-up
-42.6 + semi-major-axis and LTAN biasing 3.0 + six collision-avoidance events at
-0.1 m/s each = 0.6 + commissioning and calibration 1.0 + eccentricity control
-1.5 + margin 7.3 = **56.0 m/s required against 66.9 m/s available, +19.5 %**.
-That is a real, closing propulsion budget -- tight enough that the disposal burn
-genuinely does not fit, which is why the design says so out loud.
+**And check that it is enough.** Over a two-year active phase plus disposal:
+drag make-up 15.1 (at 513 km and design solar activity) + semi-major-axis and
+LTAN biasing 3.0 + six collision-avoidance events at 0.1 m/s each = 0.6 +
+commissioning and calibration 1.0 + eccentricity control 1.5 + **end-of-life
+disposal 34.3** = 55.5 m/s, plus a 5 % Phase-C margin (2.8) and a 10 %
+operations and dispersion reserve (5.8) = **64.1 m/s required against 66.9 m/s
+available, +4.4 %** (+2.6 % against the 65.8 m/s obtained by integrating the
+blowdown $I_{sp}$ curve). That is a real, closing propulsion budget, and a thin
+one: the disposal burn is its largest line, so at least 38 m/s is held in
+reserve for it from mid-mission and is not available for drag make-up.
 
 **The AOCS coupling is deliberate, not an oversight.** The single thruster
 fires along $+X$, which in the nominal nadir attitude is prograde. A *retrograde*
@@ -6033,7 +6079,8 @@ Table 3.2.18 — Session summary: key takeaways for AOCS and propulsion design.
 | Electrospray (FEEP) | $I_{sp}$ 500--5000 s; minimal propellant; months-long burns; 20--60 W power; indium or ionic liquid |
 | Hall thruster | $I_{sp}$ 800--3000 s; moderate thrust (1--50 mN); 50--300 W; iodine emerging as Xe alternative |
 | Propulsion trades | High-$I_{sp}$: less propellant, more dry mass, long burns; Low-$I_{sp}$: more propellant, lighter system, fast burns |
-| When to skip propulsion | Disposal only: below 500 km (natural deorbit); tech demo; differential drag constellation. Debris avoidance and orbit maintenance are separate needs -- EO-Sat-1 flies a 1U green monoprop, 66.9 m/s, for exactly those and explicitly *not* for deorbit |
+| When to skip propulsion | Disposal only: below 500 km (natural deorbit); tech demo; differential drag constellation. Debris avoidance and orbit maintenance are separate needs -- EOSAT-1 at 513 km flies a 1U green monoprop, 66.9 m/s, for those *and* for a 34.3 m/s end-of-life perigee-lowering burn (64.1 m/s needed in all) |
+| Disposal from 513 km | Natural decay 5.0 yr (mean) / 14.2 yr (solar minimum) fails the 5-year rule; a 34.3 m/s burn to a 390 km perigee gives 1.5 / 4.2 yr; NRLMSIS 2.1 at a sustained minimum gives 7.2 yr, so the model and the margin matter |
 
 # Chapter 3.3 — Communications and Link Budget Design
 
@@ -6648,9 +6695,9 @@ With 4 passes/day: $V_{\text{daily}} = 856$ kB/day $\approx$ **0.86 MB/day**. Th
 
 **Key lesson from UniSat-1 link budget:** At UHF, the lower FSPL at 437 MHz ($20\log_{10}(2250/437) = 14.2$ dB less than S-band) almost exactly compensates for the low TX power (0.5 W vs 2 W = 6 dB), low antenna gain (0 dBi vs 6 dBi = 6 dB), and warmer system noise temperature of amateur stations (600 K vs 150 K = 6 dB). The result is a *nominal* link that closes, but the **fade margin against ionospheric Faraday rotation and rain/atmospheric scintillation is the real design driver**. FEC coding and circular polarisation are not strictly required to make the nominal link close — they are required to absorb the 10--20 dB fades that occur stochastically during a polar pass. Treat them as fade-margin investments, not as the only way to make the numbers work.
 
-### 6U Reference Design: EO-Sat-1 RF, As Flown
+### 6U Reference Design: EOSAT-1 RF, As Flown
 
-EO-Sat-1 is the case where the link budget stops being the constraint, and that
+EOSAT-1 is the case where the link budget stops being the constraint, and that
 is itself the lesson.
 
 **Two transmitters, not one.** This is the single most important structural fact
@@ -6697,37 +6744,37 @@ drain. 16 kbps clears real-time HK at 9.7 % duty and still plays back 0.85
 orbits of stored HK inside one pass.
 
 **Five ground stations, and every rung closes everywhere.** The teaching
-baseline is the full five-station network. At 450 km the geometry is:
+baseline is the full five-station network. At 513 km the geometry is:
 
 | Elevation | Slant range | FSPL at 2200 MHz |
 |-----------|------------:|-----------------:|
-| 5 deg | 1944.5 km | 165.07 dB |
-| 10 deg | 1570.0 km | 163.22 dB |
-| 30 deg | 825.0 km | 157.63 dB |
-| 90 deg | 450.0 km | 152.36 dB |
+| 5 deg | 2111.7 km | 165.79 dB |
+| 10 deg | 1726.8 km | 164.04 dB |
+| 30 deg | 931.3 km | 158.68 dB |
+| 90 deg | 513.0 km | 153.50 dB |
 
 Link margin at 5 deg elevation -- the worst geometry any station ever sees:
 
 | Station | G/T (dB/K) | BEACON | LOW | HIGH |
 |---------|-----------:|-------:|----:|-----:|
-| Inuvik | 22.0 | 59.8 | 47.7 | 37.2 |
-| Svalbard | 21.5 | 59.3 | 47.2 | 36.7 |
-| Iqaluit | 20.0 | 57.8 | 45.7 | 35.2 |
-| O'Higgins | 20.0 | 57.8 | 45.7 | 35.2 |
-| Troll | 18.5 | 56.3 | 44.2 | **33.7** |
+| Inuvik | 22.0 | 59.0 | 47.0 | 36.5 |
+| Svalbard | 21.5 | 58.5 | 46.5 | 36.0 |
+| Iqaluit | 20.0 | 57.0 | 45.0 | 34.5 |
+| O'Higgins | 20.0 | 57.0 | 45.0 | 34.5 |
+| Troll | 18.5 | 55.5 | 43.5 | **33.0** |
 
 Work one cell to see where those come from -- Iqaluit, LOW tier, 5 deg:
 EIRP $= 10.0$ dBW (at the nominal 2 W PA) $+ 3.0$ dBi patch $= 13.0$ dBW;
 atmospheric loss $0.25 \times \mathrm{cosec}(5\degree) = 2.87$ dB;
 polarisation 0.3 dB; G/T de-rated $-1.5$ dB below 10 deg, so $20.0 - 1.5 = 18.5$ dB/K.
 
-$$C/N_0 = 13.0 - 165.07 - 2.87 - 0.3 + 18.5 + 228.6 = 91.9 \text{ dBHz}$$
-$$E_b/N_0 = 91.9 - 10\log_{10}(16000) = 91.9 - 42.0 = 49.9 \text{ dB}$$
-$$\text{Margin} = 49.9 - (9.6 - 7.5) - 2.0 = \mathbf{45.7} \text{ dB}$$
+$$C/N_0 = 13.0 - 165.79 - 2.87 - 0.3 + 18.5 + 228.6 = 91.1 \text{ dBHz}$$
+$$E_b/N_0 = 91.1 - 10\log_{10}(16000) = 91.1 - 42.0 = 49.1 \text{ dB}$$
+$$\text{Margin} = 49.1 - (9.6 - 7.5) - 2.0 = \mathbf{45.0} \text{ dB}$$
 
 **Read that table again.** The worst case in the entire matrix -- the top rate,
-the weakest station, the lowest elevation -- still has **33.7 dB** of margin. At
-450 km into a professional polar dish, a 2 W S-band link is not power-limited by
+the weakest station, the lowest elevation -- still has **33.0 dB** of margin. At
+513 km into a professional polar dish, a 2 W S-band link is not power-limited by
 anything. If you have been taught that a data rate is chosen by finding where the
 margin runs out, this is the more common real-world situation and it teaches a
 harder lesson: **the rate is chosen by policy, bandwidth, PA power, thermal cost
@@ -6739,8 +6786,8 @@ $\geq 10$ deg rather than on a margin threshold. Modelling a fake cliff would ha
 been easier to explain and less honest.
 
 **Elevation is worth more than rate ladders suggest.** Going from 5 deg to 10 deg
-buys about 4.8 dB (1.85 dB of path loss, 1.43 dB of atmosphere, 1.5 dB of the G/T
-de-rate coming off). Going to zenith buys 16.6 dB. An operator waits for a better
+buys about 4.7 dB (1.75 dB of path loss, 1.43 dB of atmosphere, 1.5 dB of the G/T
+de-rate coming off). Going to zenith buys 16.4 dB. An operator waits for a better
 pass, not for a better rate.
 
 *One honest caveat on the absolute numbers:* 10.0 dBW of EIRP at 2 W of RF
@@ -6760,7 +6807,7 @@ antenna gain and 2.7 dB of extra polarisation loss. The 12.0 dB gained by
 dropping from 16 to 1 kbps roughly cancels the 10.0 dB lost between the
 configured 10.0 dBW S-band transmit level and the beacon's 1 W (0 dBW), and
 both links use the same conv + RS coding. Net: the beacon closes on
-1 W at 1 kbps with about **27 dB**, against about 46 dB for the S-band LOW rung
+1 W at 1 kbps with about **26 dB**, against about 45 dB for the S-band LOW rung
 at 16 kbps. Same physics, different everything else -- and the beacon still gets
 home when the prime chain does not.
 
@@ -6809,13 +6856,13 @@ The data budget determines whether the communication system can deliver all miss
 >
 > **Sensitivity:** If imaging duty cycle doubles (2 min/pass), generation rises to 1440 MB/day > 956 MB/day. Options: (a) X-band for higher data rate, (b) additional ground stations, (c) more aggressive compression, (d) onboard data prioritisation/selection.
 
-> **Worked Example -- What One EO-Sat-1 Image Costs in Pass Time**
+> **Worked Example -- What One EOSAT-1 Image Costs in Pass Time**
 >
 > The courseware image product is 4 MB. At the HIGH tier:
 >
 > $$t_{\text{dump}} = \frac{4 \times 1{,}048{,}576 \times 8}{128{,}000} = \frac{33{,}554{,}432}{128{,}000} = \mathbf{262 \text{ s}}$$
 >
-> The average pass across the five-station network is 448 s, so **one image
+> The average pass across the five-station network is 450 s, so **one image
 > occupies 58 % of an average pass**. Two images do not fit in one pass. This is
 > the number that makes pass planning the binding constraint rather than the link
 > budget: the margin table above says the link will carry anything you ask of it,
@@ -6876,8 +6923,8 @@ Table 3.3.12 — Session summary: key takeaways for communications and link budg
 | Slant range | At 500 km the 10 deg slant is **1695 km, 3.4x** the nadir range -- worth 10.6 dB of extra path loss, not 8 dB |
 | Two transmitters | An S-band prime chain plus a separate UHF beacon share no single points of failure; disabling the S-band PA kills all S-band TM while the beacon keeps reporting |
 | Rate ladder | 1 / 16 / 128 kbps; each rung costs exactly the $-10\log_{10}(R_b)$ term (12.0 dB then 10.5 dB including the coding change) |
-| When margin is not the constraint | Every rung of EO-Sat-1's ladder closes at every one of five stations with 33.7--76.3 dB; the rate is set by policy, bandwidth, PA power, thermal cost and pass planning, not by a power cliff |
-| Pass planning | A 4 MB image at 128 kbps takes 262 s -- 58 % of an average 448 s pass; the clock binds long before the link does |
+| When margin is not the constraint | Every rung of EOSAT-1's ladder closes at every one of five stations with 33.0--75.4 dB; the rate is set by policy, bandwidth, PA power, thermal cost and pass planning, not by a power cliff |
+| Pass planning | A 4 MB image at 128 kbps takes 262 s -- 58 % of an average 450 s pass; the clock binds long before the link does |
 
 # Chapter 3.4 — Spacecraft Structure and On-Board Data Handling
 
@@ -7026,20 +7073,20 @@ Table 3.4.4 — Launch load environment categories with physical source, level, 
 
 *[Source: ECSS-E-ST-10-03C; NASA GEVS (GSFC-STD-7000B); Falcon 9 Payload User's Guide; PSLV User's Guide]*
 
-**Random vibration PSD profile (typical CubeSat deployer level):**
+**Random vibration PSD profile (GEVS minimum workmanship level):**
 
-Table 3.4.5 — Random-vibration acceleration-spectral-density profile at typical CubeSat deployer qualification level.
+Table 3.4.5 — Random-vibration acceleration-spectral-density profile: the GSFC-STD-7000B (GEVS) minimum workmanship level, Table 2.4-4.
 
 | Frequency (Hz) | ASD Level (g$^2$/Hz) | Notes |
 |----------------|---------------------|-------|
-| 20 | 0.01 | Low-frequency start (ramp up) |
-| 50 | 0.04 | Ramp up at +6 dB/oct |
-| 100 | 0.04 | Flat region start |
-| 800 | 0.04 | Flat region end |
-| 2000 | 0.01 | Roll off at -6 dB/oct |
-| **Overall** | **~7 grms** | Typical for CubeSat deployer qualification level |
+| 20 | 0.01 | Low-frequency start |
+| 20--80 | +3 dB/oct | Ramp up |
+| 80--500 | 0.04 | Flat plateau |
+| 500--2000 | -3 dB/oct | Roll off |
+| 2000 | 0.01 | End of profile |
+| **Overall** | **6.8 grms** | Workmanship (acceptance) level; proto-flight is +3 dB, about 9.6 grms, for 1 min per axis |
 
-The flat region at 0.04 g$^2$/Hz from 100--800 Hz is where most structural damage occurs, because this is where PCB resonances and solder joint fatigue are excited.
+The flat region at 0.04 g$^2$/Hz from 80--500 Hz is where most structural damage occurs, because this is where PCB resonances and solder joint fatigue are excited. The binding levels for a given flight are set by the deployer or launch-vehicle user's guide; use this profile only where it envelops them.
 
 **What fails during vibration testing:**
 1. **Solder joints:** Heavy components (connectors, tall capacitors, transformers) with long lever arms crack at their solder joints. Mitigation: use surface-mount components, stake tall components with adhesive (Loctite 4860 or similar), use conformal coating.
@@ -7225,7 +7272,7 @@ Table 3.4.11 — Session summary: key takeaways for spacecraft structure and on-
 |-------|-------------|
 | CDS compliance | Standard dimensions, Al 7075-T6 anodised rails (8.5 mm), deployment switches, RBF pin, CG limits |
 | Structural materials | Al 7075-T6: $\sigma_y = 503$ MPa, $E = 72$ GPa; anodisation for wear/insulation; CFRP not suitable for rails |
-| Launch loads | 6--12 g axial QS, 7 grms random vib (20--2000 Hz), 500--2000 g shock; PCB solder joints are the weak point |
+| Launch loads | 6--12 g axial QS, 6.8 grms random vib (20--2000 Hz; 9.6 grms proto-flight), 500--2000 g shock; PCB solder joints are the weak point |
 | Structural MoS | $\text{MoS} = \sigma_{\text{allow}}/(\sigma_{\text{design}} \times \text{FoS}) - 1 \geq 0$; FoS 1.25 yield / 1.5 ultimate (metallic) |
 | Frequency req | First mode > 40 Hz; CubeSat Al structures easily exceed this; local modes (PCBs, deployables) are the risk |
 | OBC processors | MSP430 (0.01 W, safe mode), Cortex-M4 (0.2 W, standard CubeSat), Zynq (3 W, high-throughput), LEON3 (rad-hard, ESA) |
@@ -7799,11 +7846,11 @@ This gives an orbital lifetime of approximately 8--14 months depending on solar 
 
 ---
 
-## Worked Example: Complete 6U EO CubeSat Equipment List (EO-Sat-1)
+## Worked Example: Complete 6U EO CubeSat Equipment List (EOSAT-1)
 
 This is the flight equipment list of the reference spacecraft used throughout
-the operations chapters: EO-Sat-1, a 6U wide-field multispectral imager in a
-450 km Sun-synchronous orbit. Every line is a real, current-production part
+the operations chapters: EOSAT-1, a 6U wide-field multispectral imager in a
+513 km Sun-synchronous orbit (97.39 deg, LTAN 10:00). Every line is a real, current-production part
 class rather than a parametric placeholder, which is what makes the totals
 worth arguing about.
 
@@ -7822,7 +7869,7 @@ worth arguing about.
 > | Sun Sensor | Coarse sun-sensor array (attitude acquisition and safe mode) | 0.06 | 0.01 | 4 | 1 set | Analog/I$^2$C |
 > | Magnetometer | Three-axis magnetometer (MAG A / MAG B, redundant pair; B-dot detumble reference) | 0.03 | 0.05 | 1 | 2 | I$^2$C |
 > | GNSS | GPS receiver + patch antenna (orbit determination, time reference) | 0.12 | 1.0 | 8 | 1 | UART |
-> | Payload | Simera Sense TriScape100 class wide-field pushbroom: 8192 px x 5.5 um, f = 84.5 mm, 29.856 deg full FOV -> 240 km swath, 29.3 m GSD, 244 Hz line rate, 96 Mbps raw readout | 1.45 | 5.5 (imaging) / 2.4 (idle) | 60 | 1 | LVDS/SPI |
+> | Payload | Simera Sense TriScape100 class wide-field pushbroom: 8192 px x 5.5 um, f = 84.5 mm, 29.856 deg full FOV -> 273 km swath, 33.4 m GSD at 513 km; 244 Hz line rate, 96 Mbps raw readout (sized at the earlier 450 km figure) | 1.45 | 5.5 (imaging) / 2.4 (idle) | 60 | 1 | LVDS/SPI |
 > | FPA cooler | Miniature Stirling-class cryocooler on the focal-plane bracket (-15 C setpoint, ~23 % of Carnot) | 0.50 | 15.0 | 15 | 1 | Own EPS line (`fpa_cooler`) |
 > | Transmitter | Endurosat-class S-band transceiver (prime chain): 2 W RF max, 5 W DC at the LOW tier, 11 W DC at the HIGH tier, 1.2 W idle Rx | 0.25 | 5.0 (LOW) / 11.0 (HIGH) | 15 | 1 | SPI |
 > | Antenna | S-band patch (body-fixed, RHCP) | 0.06 | -- | 3 | 1 | RF coax |
@@ -7834,12 +7881,12 @@ worth arguing about.
 > | Propellant | Green monoprop, 0.400 kg -> 66.9 m/s total $\Delta V$ | 0.40 | -- | -- | -- | -- |
 > | **TOTAL (wet, BOL)** | | **12.40** | | | | |
 >
-> **Power note.** The column is per-unit demand, not a sum: EO-Sat-1 never runs
+> **Power note.** The column is per-unit demand, not a sum: EOSAT-1 never runs
 > every line at once. The nine EPS lines (0 `obc`, 1 `ttc_rx`, 2 `ttc_tx`,
 > 3 `payload`, 4 `fpa_cooler`, 5 `htr_bat`, 6 `htr_obc`, 7 `aocs_wheels`,
 > 8 `prop`) are switched against the orbit-average budget: at end of life and
-> worst beta the array delivers ~38 W orbit-average against a ~29 W nominal
-> load, a margin of about +9 W. Add continuous imaging, a continuously running
+> worst beta the array delivers ~45 W orbit-average against a ~29 W nominal
+> load, a margin of about +16 W. Add continuous imaging, a continuously running
 > cooler and HIGH-tier dumps on every pass and the budget goes negative --
 > which is why imaging is duty-cycled (three ~90 s captures per orbit with the
 > cooler stabilised around them) rather than run continuously.
@@ -7856,7 +7903,7 @@ worth arguing about.
 > - Dry CBE: 12.00 kg (including 1.15 kg of propulsion dry mass)
 > - Propellant: 0.400 kg
 > - **Wet mass at BOL: 12.40 kg**
-> - CDS 6U reference limit: 12.0 kg -- EO-Sat-1 sits *at* the top of the 6U
+> - CDS 6U reference limit: 12.0 kg -- EOSAT-1 sits *at* the top of the 6U
 >   class, so the dispenser ICD governs: check the qualified mass of the
 >   specific 6U dispenser before assuming the CDS baseline applies.
 >
@@ -7910,7 +7957,7 @@ Table 4.1.17 — Session summary: key takeaways for equipment selection and the 
 
 By the end of this session, participants will be able to:
 1. Distinguish between verification and validation using the ECSS/NASA definitions
-2. Assign appropriate verification methods (IADT) to each requirement using a decision logic
+2. Assign appropriate verification methods (ATIR(D)) to each requirement using a decision logic
 3. Define environmental test levels derived from launch vehicle ICD specifications
 4. Construct a compliance verification matrix mapping every requirement to its method, level, and phase
 5. Identify when waivers are appropriate and document the waiver rationale
@@ -7929,7 +7976,7 @@ Table 4.2.1 — Verification versus validation contrasted by question, standard,
 | **Standard** | ECSS-E-ST-10-02C | ECSS-E-ST-10-06C |
 | **Performed by** | Engineering team | Users, operators, stakeholders |
 | **When** | Throughout development (Phases B-D) | End of development + early operations (Phase D-E) |
-| **Methods** | IADT (Inspection, Analysis, Demonstration, Test) | Operational demonstration, user acceptance testing |
+| **Methods** | ATIR(D) (Analysis, Test, Inspection, Review of design, Demonstration) | Operational demonstration, user acceptance testing |
 | **Output** | Verification Control Document (VCD) | Validation report |
 
 ### The Critical Distinction
@@ -7949,10 +7996,10 @@ A system can be **verified** (every requirement marked "pass") but still **fail 
 
 ---
 
-## 2. IADT Verification Methods in Detail
-ECSS-E-ST-10-02C Rev.1 section 5.3 defines four verification methods: test, analysis, review of design and inspection. Note: this chapter teaches the NASA set (IADT), which has demonstration in place of review of design; inspection, analysis and test are identical in both.
+## 2. ATIR(D) Verification Methods in Detail
+ECSS-E-ST-10-02C Rev.1 §5.2.2.1 defines four verification methods: test (including demonstration), analysis (including similarity), review of design and inspection. NASA practice lists demonstration separately as a fifth method. This book uses the full set, abbreviated ATIR(D) as in Chapter 2.1; the order in which the methods are described below does not matter.
 
-*[Source: ECSS-E-ST-10-02C Rev.1 section 5.3; freely available from [https://ecss.nl](https://ecss.nl)]*
+*[Source: ECSS-E-ST-10-02C Rev.1 §5.2.2; freely available from [https://ecss.nl](https://ecss.nl)]*
 
 ### Inspection (I)
 
@@ -7998,9 +8045,24 @@ ECSS-E-ST-10-02C Rev.1 section 5.3 defines four verification methods: test, anal
 > MoS must be >= 0 for all load cases.
 > Factor_of_Safety: 1.25 (yield), 1.5 (ultimate) per ECSS-E-ST-32-10C.
 
+### Review of design (R)
+
+**Definition:** Examination of design documentation -- drawings, schematics, software design, analyses already performed, process records -- to confirm that the design as documented satisfies the requirement. In ECSS-E-ST-10-02C this is a formal method in its own right, distinct from analysis: no new model is built; the evidence is the documented design.
+
+**When to use:**
+- Requirements on the existence or content of a document, process or plan ("a verification plan shall be produced")
+- Design features that are evident from the drawings (number of deployment switches, presence of an RBF pin, connector pin-out)
+- Requirements already covered by an approved heritage design
+
+**Evidence produced:** Review-of-design record citing the documents examined, signed by the reviewer; typically closed at a design review.
+
+**Examples for CubeSats:**
+- Review of the stack schematic -> verifies "two independent deployment switches shall inhibit all power"
+- Review of the software architecture document -> verifies "the watchdog shall be implemented in hardware, independent of the main processor"
+
 ### Demonstration (D)
 
-**Definition:** The system is operated under controlled conditions to show that it performs as required, without requiring precise measurement of performance parameters.
+**Definition:** The system is operated under controlled conditions to show that it performs as required, without requiring precise measurement of performance parameters. ECSS-E-ST-10-02C records a demonstration as a test; NASA lists it as a separate method.
 
 **When to use:**
 - Functional requirements ("the system shall deploy the antenna within 30 minutes of separation")
@@ -8039,7 +8101,7 @@ Table 4.2.2 — Four test types (development, qualification, acceptance, proto-f
 
 For CubeSats, the **proto-flight** approach is standard because building a separate qualification unit is prohibitively expensive. The flight unit is tested to **qualification levels** but for **acceptance duration**.
 
-*[Source: ECSS-E-ST-10-03C section 5.4.2.3; MIL-STD-1540E section 6.2.4]*
+*[Source: ECSS-E-ST-10-03C §4.5.4; MIL-STD-1540E section 6.2.4]*
 
 **Rationale:** Qualification duration is longer and more stressful -- this is acceptable for a dedicated qualification model that will not fly. For proto-flight, the shorter duration reduces fatigue life consumption while still screening for workmanship defects.
 
@@ -8050,7 +8112,10 @@ Table 4.2.3 — Vibration and TVAC parameters compared between qualification, ac
 | Vibration level | MPE + 3 dB | MPE | MPE + 3 dB |
 | Vibration duration | 2 min/axis | 1 min/axis | 1 min/axis |
 | TVAC temperature range | Predicted +/- 15 C | Predicted +/- 10 C | Predicted +/- 10 C |
-| TVAC cycles | 8 | 4 | 4-8 |
+| TVAC cycles | 8 | 4 | 4 |
+| Sine sweep rate | 2 oct/min | 4 oct/min | 4 oct/min |
+
+The proto-flight levels follow the standards. GSFC-STD-7000B §2.6 tests a proto-flight unit at the maximum and minimum predicted temperatures +/- 10 C, with at least 4 cycles; ECSS-E-ST-10-03C reaches the same 10 C with its 5 C acceptance and 5 C qualification margins on the predicted range. ECSS-E-ST-10-03C sweeps sine at 2 oct/min for qualification (Table 5-2) and 4 oct/min for acceptance (Table 5-4), and proto-flight takes the acceptance duration, hence 4 oct/min. The qualification and acceptance temperature columns are those of Table 3.1.11 (Chapter 3.1).
 
 ---
 
@@ -8064,7 +8129,7 @@ Table 4.2.3 — Vibration and TVAC parameters compared between qualification, ac
 
 ### Standard Environmental Test Sequence
 
-The test sequence is designed so that each test stresses the hardware in a specific way, and functional tests between environmental tests detect any damage.
+The test sequence is designed so that each test stresses the hardware in a specific way, and functional tests between environmental tests detect any damage. The levels below are representative teaching values: the binding levels for a given flight are set by the deployer or launch-vehicle user's guide.
 
 <!--
 SVG Description: Environmental Test Sequence Flow Diagram
@@ -8075,7 +8140,7 @@ A vertical flowchart with boxes connected by downward arrows:
 3. [Sine Vibration (3 axes)] ->
 4. [Random Vibration (3 axes)] ->
 5. [Post-Vibration Functional Test] ->
-6. [Thermal Vacuum (4-8 cycles)] ->
+6. [Thermal Vacuum (4 cycles)] ->
 7. [Post-TVAC Functional Test] ->
 8. [EMC Test (if required)] ->
 9. [Mass Properties Measurement] ->
@@ -8091,43 +8156,47 @@ Decision diamond after step 5: "Any anomaly?"
 
 ### Sine Vibration Test Levels
 
-*[Source: Typical Falcon 9 Transporter Rideshare PUG]*
+*[Source: representative CubeSat rideshare envelope; the deployer or launch-vehicle user's guide sets the binding levels]*
 
 Sine vibration simulates the low-frequency launch vehicle structural modes (typically 5-100 Hz). These are quasi-static loads.
 
-Table 4.2.4 — Sine vibration profile giving frequency ranges, displacement and acceleration levels, sweep rate, and axes.
+Table 4.2.4 — Sine vibration profile giving frequency range, acceleration level, sweep rate, and axes.
 
 | Frequency Range (Hz) | Level | Notes |
 |----------------------|-------|-------|
-| 5 - 8 | 12.5 mm displacement (0-peak) | Displacement-controlled |
-| 8 - 100 | 1.25 g (0-peak) | Acceleration-controlled |
-| Sweep rate | 2 octaves/minute | Standard sweep rate |
+| 5 - 100 | 1.25 g (0-peak) | Acceleration-controlled over the whole band; no displacement band |
+| Sweep rate | 4 octaves/minute (proto-flight) | 2 oct/min is the qualification rate |
 | Axes | 3 (X, Y, Z) | Sequential, one axis at a time |
 
-> **Sine Vibration Acceleration at Crossover Frequency:**
+> **Why there is no displacement band -- the crossover frequency:**
 >
-> $$a = (2\pi f)^2 \cdot d$$
+> For a sinusoid, acceleration and displacement amplitude are related by $a = (2\pi f)^2 \cdot d$, so the frequency at which a given acceleration corresponds to a given displacement is
 >
-> At $f = 8$ Hz, $d = 12.5$ mm $= 0.0125$ m:
+> $$f_c = \frac{1}{2\pi}\sqrt{\frac{a}{d}}.$$
 >
-> $$a = (2\pi \cdot 8)^2 \cdot 0.0125 = (50.27)^2 \cdot 0.0125 \approx 31.6~\text{m/s}^2 \approx 3.22~g.$$
+> For $a = 1.25~g = 12.26$ m/s$^2$ and a typical shaker stroke limit $d = 12.5$ mm $= 0.0125$ m:
 >
-> *Note: the transition from displacement-controlled to acceleration-controlled sweep occurs where the displacement limit would exceed the acceleration limit; the actual crossover depends on the specific profile.*
+> $$f_c = \frac{1}{2\pi}\sqrt{\frac{12.26}{0.0125}} = \frac{31.3}{6.283} \approx 4.98~\text{Hz} \approx 5~\text{Hz}.$$
+>
+> *Below about 5 Hz, holding 1.25 g would need more than 12.5 mm of displacement, so a profile reaching lower frequencies needs a displacement-controlled band. This profile starts at 5 Hz, so it is acceleration-controlled throughout.*
 
 ### Random Vibration Test Levels
 
 Random vibration simulates the broadband acoustic and mechanical environment during launch. Levels are specified as Power Spectral Density (PSD) in g^2/Hz.
 
-Table 4.2.5 — Random vibration PSD profile in g^2/Hz with overall qualification gRMS.
+*[Source: GSFC-STD-7000B (GEVS) Table 2.4-4, component minimum workmanship levels; Table 2.4-1 for the proto-flight level and duration]*
+
+Table 4.2.5 — Random vibration PSD profile in g^2/Hz: the GEVS minimum workmanship level, with the proto-flight level.
 
 | Frequency (Hz) | PSD Level (g^2/Hz) | Notes |
 |----------------|---------------------|-------|
 | 20 | 0.01 | Start of profile |
-| 20 - 50 | +3 dB/octave ramp | Rising |
-| 50 - 800 | 0.04 (flat) | Maximum level plateau |
-| 800 - 2000 | -6 dB/octave ramp | Falling |
-| 2000 | 0.004 | End of profile |
-| **Overall gRMS** | **~7.0 gRMS** | Qualification level |
+| 20 - 80 | +3 dB/octave ramp | Rising |
+| 80 - 500 | 0.04 (flat) | Maximum level plateau |
+| 500 - 2000 | -3 dB/octave ramp | Falling |
+| 2000 | 0.01 | End of profile |
+| **Overall gRMS** | **6.8 gRMS** | Workmanship (acceptance) level |
+| **Proto-flight** | **+3 dB: 9.6 gRMS** | PSD doubled at every frequency; 1 min per axis, 3 axes |
 
 > **Computing Overall gRMS from PSD Profile:**
 >
@@ -8137,13 +8206,23 @@ Table 4.2.5 — Random vibration PSD profile in g^2/Hz with overall qualificatio
 >
 > $$g_{\text{RMS,flat}} = \sqrt{\text{PSD}_{\text{flat}} \cdot (f_2 - f_1)}$$
 >
-> Example: $\text{PSD} = 0.04~g^2/\text{Hz}$ from 50–800 Hz:
+> Example: $\text{PSD} = 0.04~g^2/\text{Hz}$ from 80–500 Hz:
 >
-> $$g_{\text{RMS,flat}} = \sqrt{0.04 \cdot 750} = \sqrt{30} \approx 5.48~g_{\text{RMS}}.$$
+> $$g_{\text{RMS,flat}} = \sqrt{0.04 \cdot 420} = \sqrt{16.8} \approx 4.10~g_{\text{RMS}}.$$
 >
 > The ramp sections and flat section are summed in quadrature:
 >
 > $$g_{\text{RMS,total}} = \sqrt{g_{\text{RMS,ramp1}}^2 + g_{\text{RMS,flat}}^2 + g_{\text{RMS,ramp2}}^2}.$$
+>
+> A sloped segment is a straight line in log-log axes, $\text{PSD}(f) = P_1 (f/f_1)^n$ with $n = (\text{dB/oct})/3.01$, and integrates exactly:
+>
+> $$\int_{f_1}^{f_2} \text{PSD}\,df = \frac{P_1 f_1}{n+1}\left[\left(\frac{f_2}{f_1}\right)^{n+1} - 1\right] \quad (n \neq -1), \qquad = P_1 f_1 \ln\frac{f_2}{f_1} \quad (n = -1).$$
+>
+> For the profile above: ramp 20--80 Hz ($n = +1$): $\frac{0.01 \cdot 20}{2}(4^2 - 1) = 1.50~g^2$; plateau 80--500 Hz: $0.04 \cdot 420 = 16.80~g^2$; roll-off 500--2000 Hz ($n = -1$): $0.04 \cdot 500 \cdot \ln 4 = 27.73~g^2$. Total $46.03~g^2$, so
+>
+> $$g_{\text{RMS}} = \sqrt{46.03} = 6.78 \approx 6.8~g_{\text{RMS}}.$$
+>
+> At proto-flight (+3 dB, PSD multiplied by 2), $g_{\text{RMS}} = \sqrt{92.06} = 9.59 \approx 9.6~g_{\text{RMS}}$.
 
 ### Thermal Vacuum Test Profile
 
@@ -8153,7 +8232,7 @@ Table 4.2.6 — Proto-flight thermal vacuum parameters including temperatures, c
 |-----------|-------------------|-------|
 | Hot case temperature | Predicted max + 10 C | e.g., if thermal model predicts +55 C -> test to +65 C |
 | Cold case temperature | Predicted min - 10 C | e.g., if thermal model predicts -20 C -> test to -30 C |
-| Number of cycles | 4 minimum (proto-flight) | Start and end at hot; functional test at each extreme |
+| Number of cycles | 4 (proto-flight) | Start and end at hot; functional test at each extreme |
 | Vacuum level | < 10^-5 mbar | Space-representative vacuum |
 | Dwell time at extreme | >= 1 hour | Allow thermal stabilisation (< 1 C/hr gradient) |
 | Temperature transition rate | 1-3 C/min | Limited by chamber capability |
@@ -8198,12 +8277,12 @@ Table 4.2.8 — Sample verification matrix linking requirement ID to method, pha
 | Req ID | Requirement Text | Method | Phase | Level | Responsible | Facility | Status | Evidence |
 |--------|-----------------|--------|-------|-------|-------------|----------|--------|----------|
 | SYS-001 | M_dry <= 4.0 kg | I | D | System | Structures | Clean room | Planned | Mass measurement report |
-| SYS-002 | Survive 7 gRMS random | T | C/D | System | Structures | Vibe lab | Planned | Vibration test report |
+| SYS-002 | Survive 9.6 gRMS random (proto-flight) | T | C/D | System | Structures | Vibe lab | Planned | Vibration test report |
 | SYS-003 | GSD <= 10 m at 500 km | A | B | System | Payload | N/A | Planned | Optical analysis report |
 | SYS-004 | Link margin >= 3 dB | A | B | System | Comms | N/A | Planned | Link budget analysis |
 | SYS-005 | Antenna deploys < 30 min | D | D | System | Mechanisms | Clean room | Planned | Deployment demonstration |
 
-### IADT Assignment Decision Logic
+### ATIR(D) Assignment Decision Logic
 
 ```
 Is it a physical property (mass, dimensions, surface finish)?
@@ -8214,16 +8293,13 @@ Can it only be proven by quantitative measurement under controlled conditions?
 
 Can it be demonstrated by operating the system (functional, not precision)?
   -> Demonstration (D), Phase D, System level
+     (ECSS records this as a test without quantitative measurement)
 
-Can it be shown with acceptable confidence through modelling?
+Can it be shown with acceptable confidence through modelling or similarity?
   -> Analysis (A), Phase B/C, System level
 
-Is it a document, process, or plan?
-  -> Review of Design (R*), Phase B
-  (* Note: review of design is one of the four formal ECSS methods
-     (test, analysis, review of design, inspection); the NASA set used in
-     this chapter (IADT) has demonstration instead, and there requirements
-     verified from design documentation fall under "Analysis".)
+Is it a document, a process, a plan, or a design feature evident from the drawings?
+  -> Review of design (R), Phase B
 ```
 
 ### Multiple Methods
@@ -8263,19 +8339,19 @@ Table 4.2.10 — Waiver types (non-compliance, method deviation, tailoring) with
 1. Navigate to the **V&V Matrix** tab in SpaceCDF
 2. Requirements are auto-populated from the design
 3. For each requirement, assign:
-   - **Method:** I, A, D, or T (use the decision logic above)
+   - **Method:** A, T, I, R or D (use the decision logic above)
    - **Phase:** When will verification occur (B, C, D)?
    - **Level:** Unit, subsystem, or system level?
    - **Status:** All should be "Planned" at this stage
 4. Use the **filter buttons** to view by method type:
-   - Count: How many are Analysis? Test? Demonstration? Inspection?
+   - Count: How many are Analysis? Test? Inspection? Review of design? Demonstration?
    - Are there any requirements with no method assigned?
 5. Identify requirements that need **two methods** (analysis in Phase B + test in Phase D)
 6. Discuss with your team: which tests are most critical? Which drive the test campaign schedule?
 
 ### Worksheet 4.2 Tasks
 
-1. Assign IADT method to 10 key requirements (justify each choice)
+1. Assign an ATIR(D) method to 10 key requirements (justify each choice)
 2. Identify 3 requirements that need both analysis AND test
 3. Specify the complete environmental test sequence for your mission
 4. Determine which test levels apply from your selected launch vehicle PUG
@@ -8300,16 +8376,16 @@ Table 4.2.11 — Cited references for Chapter 4.2 covering ECSS verification, te
 
 ## Session Summary
 
-Table 4.2.12 — Session 4.2 takeaways summarising V&V definitions, IADT, proto-flight, environmental levels, and waivers.
+Table 4.2.12 — Session 4.2 takeaways summarising V&V definitions, ATIR(D), proto-flight, environmental levels, and waivers.
 
 | Topic | Key Takeaway |
 |-------|-------------|
-| V vs V | Verification = meets requirements (IADT); Validation = meets stakeholder needs |
-| IADT | Inspection (physical), Analysis (models), Demonstration (functional), Test (quantitative) |
+| V vs V | Verification = meets requirements (ATIR(D)); Validation = meets stakeholder needs |
+| ATIR(D) | Analysis (models and similarity), Test (quantitative), Inspection (physical), Review of design (documents and drawings), Demonstration (functional) |
 | Proto-flight | CubeSats: single flight unit tested to qualification levels, acceptance duration |
-| Sine vibration | 5-100 Hz, 1.25 g, quasi-static launch loads |
-| Random vibration | 20-2000 Hz, ~7 gRMS overall, broadband acoustic environment |
-| TVAC | Predicted extremes +/- 10 C, 4+ cycles, functional at each extreme |
+| Sine vibration | 5-100 Hz, 1.25 g, 4 oct/min for proto-flight (2 oct/min for qualification), 3 axes, no displacement band; quasi-static launch loads |
+| Random vibration | 20-2000 Hz, GEVS workmanship 6.8 gRMS; proto-flight +3 dB (about 9.6 gRMS), 1 min/axis |
+| TVAC | Proto-flight at predicted +/- 10 C (GSFC-STD-7000B / ECSS-E-ST-10-03C), 4 cycles, functional at each extreme; ~7.6 h per cycle |
 | Compliance matrix | Per requirement: method + phase + level + responsible + status + evidence |
 | Waivers | Document deviation, justification, risk, and compensating measures |
 
@@ -8694,6 +8770,12 @@ Table 4.3.11 — Session 4.3 takeaways summarising risk process, 5x5 matrix, N^2
 
 > **Expected reading before this session.** NPR 7120.5F — WBS (≈ 30 min).
 
+![Gate sequence at a glance.](../assets/figures/fig_lifecycle.png)
+
+*Gate sequence at a glance.*
+
+> **Expected reading before the design review.** ECSS-M-ST-10C Rev.1 — Project planning and implementation, §4.4 (project phasing: the phases and their review gates) and §5.4 (≈ 60 min); ECSS-M-ST-10-01C — Organization and conduct of reviews (skim).
+
 
 
 **Prerequisites:** Sessions 4.1-4.3 (equipment selected, V&V planned, risks assessed)
@@ -8847,7 +8929,7 @@ WBS Level 1: Mission Total
     4.1  Payload instrument hardware
     4.2  Payload software
     4.3  Payload calibration & characterisation
-  5.0  Spacecraft Bus Hardware            30%    (all subsystems)
+  5.0  Spacecraft Bus Hardware            27%    (all subsystems)
     5.1  Structure & mechanisms
     5.2  EPS (solar array + battery + board)
     5.3  AOCS (sensors + actuators)
@@ -10132,7 +10214,7 @@ to place each control-room seat alongside its design counterpart.
 > Ground Segment — the activity is different: in design you *size
 > and select*; in operations you *watch, command, and respond* on
 > the live spacecraft. The position descriptions below are framed
-> for EO-Sat-1; real industry boundaries are broader and blur.
+> for EOSAT-1; real industry boundaries are broader and blur.
 
 > **Positions vs consoles.** The MCS ships **seven configured consoles** —
 > `flight_director`, `eps_tcs` ("Power & Thermal"), `aocs` ("Flight
@@ -10350,11 +10432,14 @@ manoeuvre vector (to AOCS), and conjunction warnings (to FD).
 ## Propulsion Engineer
 
 The `propulsion` console. Owns the Δv budget, the arming chain and
-burn execution on EO-Sat-1's 1U green-monopropellant module: 0.400
+burn execution on EOSAT-1's 1U green-monopropellant module: 0.400
 kg of propellant for 66.9 m/s total, sized for debris-avoidance
-manoeuvres and limited drag make-up. It is **not** a deorbit
-system — natural decay from 450 km already satisfies the disposal
-rule — and saying so is part of the briefing, not a caveat on it.
+manoeuvres, drag make-up and the end-of-life disposal burn
+(64.1 m/s needed in all). Natural decay from 513 km does **not**
+meet the 5-year rule at solar minimum, so this seat also guards
+the disposal reserve — at least 38 m/s kept for the 34.3 m/s
+perigee-lowering burn (NOM-014) — and saying so is part of the
+briefing, not a caveat on it.
 Flight Dynamics produces the manoeuvre vector; this seat executes
 it.
 
@@ -10467,10 +10552,10 @@ semi-major axis.)
 remaining error attributable to the J₂ secular correction not
 applied here. At GEO, T = 1436 min vs 23.93 h × 60 = 1436 min ✓.*
 
-**Worked sanity check.** For the EO-Sat-1 mean altitude of 513 km:
+**Worked sanity check.** For the EOSAT-1 mean altitude of 513 km:
 a = 6378.137 + 513 = 6891.137 km;
 T = 2π √(6891.137³ / 398600.4418) = 2π × 906.1 = 5693 s = 94.9 min.
-From the EO-Sat-1 orbit definition (`orbit.yaml`): T = 60 × 24 / 15.24 =
+From the EOSAT-1 orbit definition (`orbit.yaml`): T = 60 × 24 / 15.24 =
 94.5 min — agreement to ~0.4 %, the residual being that 513 km is a mean
 geodetic altitude rather than a − R_E (the mean motion implies a = 6872 km). ✓
 
@@ -10707,18 +10792,21 @@ heritage at 786 km: diffraction at 0.135 m aperture is ≈ 3.9 m,
 matching the published 10 m bands when one accounts for the
 detector pitch and the f-number choice.*
 
-**Worked sanity check (EO-Sat-1).** The EO-Sat-1 instrument is a
+**Worked sanity check (EOSAT-1).** The EOSAT-1 instrument is a
 pushbroom with p = 5.5 µm, f = 84.5 mm, 8192 across-track pixels,
-at h = 450 km:
-GSD_pix = 5.5e-6 × 450 000 / 0.0845 = 29.3 m.
+at h = 513 km:
+GSD_pix = 5.5e-6 × 513 000 / 0.0845 = 33.4 m.
 Half-FOV = arctan((8192 × 5.5 µm / 2) / 84.5 mm) = 14.928°, so the
 full field is 29.856° and the swath is
-2 × 450 × tan 14.928° = 240 km. Square pixels at a 7.14 km/s
-ground velocity fix the line rate at 7140 / 29.3 = 244 Hz, and
-8192 px × 4 bands × 12 bit × 244 Hz = 96 Mbps of raw readout. ✓
-A 240 km swath from 450 km is a wide-field ocean-colour instrument,
+2 × 513 × tan 14.928° = 273 km. Square pixels at a 7.04 km/s
+ground velocity would fix the line rate at 7040 / 33.4 = 211 Hz, and
+8192 px × 4 bands × 12 bit × 211 Hz = 83 Mbps of raw readout. ✓
+The flight configuration still reads out at 244 Hz (96 Mbps), the
+value sized at the earlier 450 km altitude figure, so it oversamples
+along-track by about 16 %.
+A 273 km swath from 513 km is a wide-field ocean-colour instrument,
 so tens-of-metres GSD is the physically consistent answer — holding
-a 9 m GSD across that swath would need ~26 600 pixels per band.
+a 9 m GSD across that swath would need ~30 300 pixels per band.
 
 ---
 
@@ -10988,7 +11076,7 @@ underlying physics.
 ## Numerical worked examples — generated by running the tool
 
 Every numerical worked example in this textbook — UniSat-1, the 3U EO
-CubeSat teaching example, the 6U "EO-Sat-1" reference spacecraft that the
+CubeSat teaching example, the 6U "EOSAT-1" reference spacecraft that the
 operations chapters fly, ground-track timings,
 link-budget closures, thermal radiator sizings — was computed by running
 the SpaceCDF tool itself, so the textbook and the tool stay numerically
@@ -11072,6 +11160,7 @@ loop on the next edition of this book.
 <li>AOCS function IDs · <a class="idx-page" href="#aocs-func_id-015-8491-96"></a></li>
 <li>Architecture, system (block diagram) · <a class="idx-page" href="#2-system-architecture-block-diagram"></a></li>
 <li>Atmospheric drag · <a class="idx-page" href="#perturbation-effects"></a></li>
+<li>ATIR(D) verification methods · <a class="idx-page" href="#2-atird-verification-methods-in-detail"></a></li>
 <li>Attitude actuators · <a class="idx-page" href="#3-attitude-actuators-physics-and-sizing"></a></li>
 <li>Attitude sensors · <a class="idx-page" href="#attitude-sensors-how-they-work"></a></li>
 <li>Auto-numbered captions · <a class="idx-page" href="#how-to-use-this-book"></a></li>
@@ -11156,7 +11245,7 @@ loop on the next edition of this book.
 <li>EMC testing · <a class="idx-page" href="#emc-testing"></a></li>
 <li>End-of-life (EOL) degradation · <a class="idx-page" href="#2-solar-array-sizing"></a></li>
 <li>Environmental test programme · <a class="idx-page" href="#3-environmental-test-programme"></a></li>
-<li>EO-Sat-1 (reference spacecraft) · <a class="idx-page" href="#57-what-we-are-flying-eosat-1-in-600-words"></a></li>
+<li>EOSAT-1 (reference spacecraft) · <a class="idx-page" href="#57-what-we-are-flying-eosat-1-in-600-words"></a></li>
 <li>EPS (Electrical Power System) · <a class="idx-page" href="#1-electrical-power-system-architecture"></a></li>
 <li>EPS block diagram · <a class="idx-page" href="#eps-block-diagram"></a></li>
 <li>EPS Engineer (control-room position) · <a class="idx-page" href="#64-eps-engineer"></a></li>
@@ -11212,7 +11301,6 @@ loop on the next edition of this book.
 <div class="idx-letter">I</div>
 <ul>
 <li>IADC 25-year debris guideline · <a class="idx-page" href="#62-debris-mitigation-guidelines-hierarchy"></a></li>
-<li>IADT verification methods · <a class="idx-page" href="#2-iadt-verification-methods-in-detail"></a></li>
 <li>Inclination (orbital element) · <a class="idx-page" href="#1-keplerian-orbital-elements"></a></li>
 <li>Inspection (verification method) · <a class="idx-page" href="#inspection-i"></a></li>
 <li>Interface compatibility verification · <a class="idx-page" href="#5-interface-compatibility-verification"></a></li>
@@ -11349,6 +11437,7 @@ loop on the next edition of this book.
 <li>Requirement types · <a class="idx-page" href="#requirement-types"></a></li>
 <li>Requirement, definition · <a class="idx-page" href="#2-what-is-a-requirement"></a></li>
 <li>Review gates (what each checks) · <a class="idx-page" href="#45-review-gates-what-each-checks"></a></li>
+<li>Review of design (verification method) · <a class="idx-page" href="#review-of-design-r"></a></li>
 <li>Rideshare launch interfaces · <a class="idx-page" href="#54-rideshare-launch-interfaces"></a></li>
 <li>Risk management process · <a class="idx-page" href="#1-risk-management-process"></a></li>
 <li>Risk matrix 5x5 · <a class="idx-page" href="#2-the-5x5-risk-matrix"></a></li>
@@ -11420,7 +11509,7 @@ loop on the next edition of this book.
 <div class="idx-letter">V</div>
 <ul>
 <li>Verification by project phase · <a class="idx-page" href="#verification-by-project-phase"></a></li>
-<li>Verification methods (ATID/IADT) · <a class="idx-page" href="#5-verification-methods-atid"></a></li>
+<li>Verification methods (ATIR(D)) · <a class="idx-page" href="#5-verification-methods-atird"></a></li>
 <li>Verification vs validation · <a class="idx-page" href="#1-verification-vs-validation-precise-definitions"></a></li>
 <li>View factors (thermal) · <a class="idx-page" href="#view-factors"></a></li>
 <li>Voice loop discipline · <a class="idx-page" href="#chapter-9-voice-loop-discipline-and-procedure-execution"></a></li>

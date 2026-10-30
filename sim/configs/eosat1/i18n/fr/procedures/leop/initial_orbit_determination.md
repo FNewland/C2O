@@ -48,13 +48,17 @@ au centre de la Terre ».
 **TC:** `GET_PARAM(param_id=0x0212)` (Service 20, Subtype 3) --- `aocs.gps_alt` (km)
 **Verify:** `aocs.gps_lat` (0x0210) dans la plage [-90, +90] sous 10s
 **Verify:** `aocs.gps_lon` (0x0211) dans la plage [-180, +180] sous 10s
-**Verify:** `aocs.gps_alt` (0x0212) dans la plage [495 km, 540 km] sous 10s
-**Note:** Plage = intervalle d'altitude géodésique propagé à partir du TLE (503-530 km sur
+**Verify:** `aocs.gps_alt` (0x0212) dans la plage [495 km, 540 km] sous 10s --- la plage de CONTRÔLE
+**Note:** Plage de contrôle = intervalle d'altitude géodésique propagé à partir du TLE (503-530 km sur
 une orbite, moyenne 513 km) plus ~8-10 km de marge. L'ancienne déclaration de 450 km
 a été abandonnée par la décision du propriétaire de 2026-08 : le TLE de orbit.yaml
 (moyen mouvement 15,24 tours/jour) fait foi et `altitude_km` enregistre désormais la
-moyenne propagée, 513 km.
-**GO/NO-GO:** Point de position valide et altitude dans la plage LEO acceptée
+moyenne propagée, 513 km.
+**Note:** La plage plus large de 400-550 km est la plage d'ANOMALIE (conduite à tenir
+hors nominal) : ce n'est qu'en dehors de celle-ci que l'injection elle-même est suspecte. Une lecture
+hors de la plage de contrôle mais dans la plage d'anomalie fait échouer ce contrôle --- vérifier le PDOP,
+prendre un second point et le signaler à la dynamique du vol.
+**GO/NO-GO:** Point de position valide et altitude dans la plage de contrôle de 495-540 km
 
 ### Étape 3 --- Lire le vecteur d'état ECEF
 **TC:** `GET_PARAM(param_id=0x0231)` (Service 20, Subtype 3) --- ECEF X (m)
@@ -73,7 +77,7 @@ du vol.
 ### Étape 4 --- Comparaison par la dynamique du vol
 **Action:** Transmettre le vecteur d'état issu du GPS à la dynamique du vol. La dynamique
 du vol calcule les éléments osculateurs et les compare à l'orbite prédite par le lanceur :
-inclinaison à 0,2° près de 98,0°, excentricité < 0,01, LTAN
+inclinaison à 0,2° près de 97,39°, excentricité < 0,01, LTAN
 à 15 minutes près de l'exigence de mission.
 **Action:** Confirmer la période orbitale à partir du moyen mouvement du TLE ; noter
 l'écart d'altitude relevé à l'étape 2 dans la comparaison.
@@ -110,10 +114,10 @@ journal des événements avec `4 (LEOP) -> 5 (COMMISSIONING)`.
 **GO/NO-GO:** Toutes les positions GO ; phase = COMMISSIONING --- la LEOP est terminée
 
 ## Conduite à tenir hors nominal
-- Si `aocs.gps_fix` < 2 : confirmer que l'équipement récepteur est sur ON (`S2_AOCS_GPS_RECEIVER` équipement 0x020F, LEOP-007). Attendre la fin du démarrage à froid (jusqu'à 15 min). Sans point au bout de 30 minutes, se rabattre sur les mesures de distance et Doppler sol d'Iqaluit et de Troll pour l'orbite initiale et programmer une investigation GPS pendant la recette en orbite ; la déclaration de phase peut tout de même avoir lieu sur une orbite restituée depuis le sol, avec l'accord du FD.
+- Si `aocs.gps_fix` < 2 : confirmer que l'équipement récepteur est sur ON (`S2_AOCS_GPS_RECEIVER` équipement 0x020F, LEOP-007). Attendre la fin du démarrage à froid (jusqu'à 15 min). Sans point au bout de 30 minutes, se rabattre sur les mesures de distance et Doppler sol du réseau de stations pour l'orbite initiale et programmer une investigation GPS pendant la recette en orbite ; la déclaration de phase peut tout de même avoir lieu sur une orbite restituée depuis le sol, avec l'accord du FD.
 - Si le SID 12 est absent de la liaison descendante : `HK_ENABLE(sid=12)` (Service 3, Subtype 5) a été oublié ou perdu (LEOP-006, étape 6a) --- le renvoyer.
-- Si l'altitude sort même de la plage large [400, 550] km : vérifier d'abord le PDOP. Avec un bon point, il s'agit d'une anomalie d'injection --- alerter la dynamique du vol et évaluer une manœuvre de correction avant de déclarer la phase 5.
-- Si l'inclinaison s'écarte de 98,0° de plus de 0,2° : le signaler à la dynamique du vol ; la précession héliosynchrone et la durée de vie de la mission sont affectées.
+- Si l'altitude sort même de la plage d'anomalie [400, 550] km : vérifier d'abord le PDOP. Avec un bon point, il s'agit d'une anomalie d'injection --- alerter la dynamique du vol et évaluer une manœuvre de correction avant de déclarer la phase 5.
+- Si l'inclinaison s'écarte de 97,39° de plus de 0,2° : le signaler à la dynamique du vol ; la précession héliosynchrone et la durée de vie de la mission sont affectées.
 - Si `SYS_SET_MISSION_PHASE` est refusée : 0x0C03 signifie que l'OBC est (de nouveau) dans le chargeur d'amorçage --- exécuter d'abord de nouveau LEOP-001, étape 5, puis LEOP-006. 0x0C04 signifie une déclaration à rebours sans FORCE.
 
 ## État de sortie
@@ -132,5 +136,6 @@ journal des événements avec `4 (LEOP) -> 5 (COMMISSIONING)`.
 - [ ] Phase 5 déclarée (événement 0x0055 journalisé) --- LEOP terminée
 
 **PROCÉDURE SUIVANTE :** Recette en orbite, en commençant par COM-001 (Vérification de l'EPS). L'ordre définitif
-de la recette en orbite est COM-001 à COM-013 tel qu'indexé, avec COM-003 (étalonnage
-des capteurs) délibérément AVANT COM-004 (activation des roues).
+de la recette en orbite est COM-001 à COM-013 tel qu'indexé, avec COM-004 (activation
+des roues, NOMINAL commandé) AVANT COM-003 (étalonnage des capteurs), conformément à la
+décision de l'auteur Q16.

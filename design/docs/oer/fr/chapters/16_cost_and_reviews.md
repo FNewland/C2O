@@ -133,7 +133,7 @@ WBS niveau 1 : total mission
     4.1  Matériel de l'instrument charge utile
     4.2  Logiciel charge utile
     4.3  Étalonnage et caractérisation de la charge utile
-  5.0  Matériel de la plateforme           30 %   (tous les sous-systèmes)
+  5.0  Matériel de la plateforme           27 %   (tous les sous-systèmes)
     5.1  Structure et mécanismes
     5.2  EPS (générateur solaire + batterie + carte)
     5.3  AOCS (capteurs + actionneurs)

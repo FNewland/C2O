@@ -1,4 +1,4 @@
-# Charge utile d'EOSAT-1 — imageur multispectral
+# Charge utile d'EOSAT-1 — imageur multispectral {#eosat-1-payload--multispectral-imager}
 
 **Référence du document :** EOSAT1-UM-PLD-007
 **Édition :** 2.0
@@ -7,7 +7,7 @@
 
 ---
 
-## 1. Vue d'ensemble
+## 1. Vue d'ensemble {#1-overview}
 
 La charge utile d'EOSAT-1 est un imageur multispectral à balayage par barrette (pushbroom), monté au nadir et optimisé pour l'observation
 de la couleur de l'océan et la surveillance des courants. Il fournit des images de moyenne résolution dans quatre
@@ -16,23 +16,23 @@ la science de la couleur de l'océan (absorption de la chlorophylle, luminance �
 en suspension). Il dispose d'un plan focal (FPA) refroidi pour un rapport signal sur bruit
 optimal et d'une compression bord des données adaptée à la scène.
 
-## 2. Caractéristiques de l'instrument
+## 2. Caractéristiques de l'instrument {#2-instrument-characteristics}
 
 | Paramètre              | Valeur                         |
 |------------------------|--------------------------------|
 | Type d'instrument      | Imageur multispectral à barrette (pushbroom) |
 | Domaine spectral       | 443–865 nm (VNIR)             |
 | Nombre de bandes       | 4 (bleu, vert, rouge, NIR)    |
-| Distance d'échantillonnage au sol (GSD) | ~33 m (à l'altitude moyenne de 513 km) |
+| Distance d'échantillonnage au sol (GSD) | ~33,4 m (à l'altitude moyenne de 513 km) |
 | Largeur de fauchée     | ~273 km (à l'altitude moyenne de 513 km) |
 | Type de détecteur      | Barrette linéaire CCD          |
 | Température de fonctionnement du FPA | -15 °C (nominale) |
 | Débit (brut)           | ~40 Mbit/s                     |
 | Taux de compression    | 2:1 à 8:1 (selon la scène)    |
 | Débit effectif         | ~5–20 Mbit/s (compressé)      |
-| Montage                | Face nadir (+Z), axe de visée selon +Z |
+| Montage                | Face nadir (-Z), axe de visée selon -Z |
 
-### 2.1 Bandes spectrales — configuration couleur de l'océan
+### 2.1 Bandes spectrales — configuration couleur de l'océan {#21-spectral-bands--ocean-colour-configuration}
 
 Les bandes spectrales sont choisies spécifiquement pour la science de la couleur de l'océan et la surveillance des courants :
 
@@ -49,22 +49,21 @@ variations de couleur de l'océan associées aux limites des courants. La bande 
 luminance émergente de l'eau pour la cartographie de la turbidité. Les bandes rouge et NIR assurent la
 correction atmosphérique et la discrimination terre/mer.
 
-### 2.2 Géométrie en fonction de l'altitude
+### 2.2 Géométrie en fonction de l'altitude {#22-altitude-dependent-geometry}
 
 La géométrie de prise de vue varie avec l'altitude orbitale et découle du champ de vue total de 29,856°
 de l'optique (8192 px x 5,5 µm sur un télescope de 84,5 mm). Le segment
 sol calcule les deux grandeurs à partir de la solution d'orbite courante ; sur l'orbite de 503–530 km
 (moyenne de 513 km, décision 2026-08 sur l'époque et l'altitude) :
 
-| Paramètre              | À 513 km (moyenne) | À 450 km (valeur déclarée abandonnée) | Loi de variation |
-|------------------------|------------------|---------------------------------|--------------------|
-| GSD | ~33,4 m         | ~29,3 m                         | Proportionnelle à l'altitude |
-| Largeur de fauchée     | ~273 km          | ~240 km                         | Proportionnelle à l'altitude |
+| Paramètre              | À 503 km (périgée) | À 513 km (moyenne) | À 530 km (apogée) | Loi de variation |
+|------------------------|---------------------|------------------|--------------------|--------------------|
+| GSD                    | ~32,7 m             | ~33,4 m          | ~34,5 m            | Proportionnelle à l'altitude |
+| Largeur de fauchée     | ~268 km             | ~273 km          | ~283 km            | Proportionnelle à l'altitude |
 
-L'altitude réelle plus élevée élargit la fauchée et dégrade la GSD d'environ 14 % par rapport aux
-valeurs citées historiquement à 450 km.
+GSD = 5,5 µm / 84,5 mm x altitude ; fauchée = 2 x altitude x tan(14,928°).
 
-### 2.3 Compression adaptée à la scène
+### 2.3 Compression adaptée à la scène {#23-scene-dependent-compression}
 
 L'algorithme de compression bord adapte son taux au contenu de la scène :
 
@@ -78,7 +77,7 @@ L'algorithme de compression bord adapte son taux au contenu de la scène :
 Le taux de compression est indiqué dans la télémesure et influe sur le bilan de volume de données utilisé pour
 la planification des transmissions au sol.
 
-### 2.4 Couplage entre attitude et qualité d'image
+### 2.4 Couplage entre attitude et qualité d'image {#24-attitude-quality-coupling}
 
 La qualité d'image est directement liée à la stabilité d'attitude du satellite pendant l'acquisition :
 
@@ -94,7 +93,7 @@ l'erreur d'attitude dépasse 0.5 deg pendant l'acquisition, la qualité d'image
 et les données peuvent ne pas satisfaire aux exigences scientifiques de détection des courants océaniques. La règle FDIR
 PLD-02 interrompt la prise de vue si `att_error` dépasse 1 deg.
 
-## 3. Modes de la charge utile
+## 3. Modes de la charge utile {#3-payload-modes}
 
 | ID de mode | Nom du mode | Description                                        |
 |---------|------------|-------------------------------------------------------|
@@ -107,7 +106,7 @@ PLD-02 interrompt la prise de vue si `att_error` dépasse 1 deg.
 nécessite pas de mode dédié de la charge utile. Les données d'image enregistrées sont transmises au sol par le sous-système TTC
 pendant les contacts sol.
 
-### 3.1 Transitions de mode
+### 3.1 Transitions de mode {#31-mode-transitions}
 
 ```
 OFF --> STANDBY --> IMAGING --> STANDBY --> OFF
@@ -125,7 +124,7 @@ OFF --> STANDBY --> IMAGING --> STANDBY --> OFF
 - **De IMAGING à STANDBY** : sur commande sol ou de façon autonome à la fin de la fenêtre de prise de vue.
 - **De STANDBY à OFF** : sur commande sol via `PAYLOAD_SET_MODE` (mode=0).
 
-### 3.2 Contraintes de prise de vue
+### 3.2 Contraintes de prise de vue {#32-imaging-constraints}
 
 | Contrainte                   | Valeur / condition                   |
 |------------------------------|--------------------------------------|
@@ -135,7 +134,7 @@ OFF --> STANDBY --> IMAGING --> STANDBY --> OFF
 | Mode AOCS requis             | NOMINAL (4) ou FINE_POINT (5)        |
 | Erreur d'attitude requise    | < 0.5 deg                            |
 
-## 4. Stockage et gestion des données
+## 4. Stockage et gestion des données {#4-data-storage-and-management}
 
 Les images acquises sont stockées dans la mémoire de masse de l'OBDH. Chaque bande d'image reçoit un
 numéro de séquence et une somme de contrôle CRC pour la vérification de l'intégrité des données.
@@ -151,7 +150,7 @@ Le paramètre `store_used` (0x0604) indique le pourcentage de la mémoire de mas
 par les données de la charge utile. `image_count` (0x0605) comptabilise le nombre de fichiers image stockés.
 Le paramètre `checksum_errors` (0x0609) compte les défauts d'intégrité des données.
 
-## 5. Paramètres de télémesure
+## 5. Paramètres de télémesure {#5-telemetry-parameters}
 
 | ID param. | Nom            | Unité  | Description                          |
 |----------|-----------------|--------|--------------------------------------|
@@ -162,7 +161,7 @@ Le paramètre `checksum_errors` (0x0609) compte les défauts d'intégrité des d
 | 0x0605   | image_count     | nombre | Nombre d'images stockées             |
 | 0x0609   | checksum_errors | nombre | Nombre cumulé d'erreurs de somme de contrôle |
 
-## 6. Définition des limites
+## 6. Définition des limites {#6-limit-definitions}
 
 | Paramètre       | Jaune bas  | Jaune haut  | Rouge bas | Rouge haut |
 |-----------------|------------|-------------|---------|----------|
@@ -178,7 +177,7 @@ FPA du TCS (03_tcs.md §6) décalées le long de la chaîne thermique de la char
 | Doigt froid | 0x0601 `fpa_temp` | support **-0,5 K** |
 | Puce du détecteur | 0x0617 `detector_temp` | doigt froid **+0,5 K** (autoéchauffement) |
 
-### 6.1 Interprétation de la température du FPA
+### 6.1 Interprétation de la température du FPA {#61-fpa-temperature-interpretation}
 
 Les limites répondent à la question « le matériel est-il sain ? ». La disponibilité répond à la question « puis-je prendre des images ? ».
 Ce sont deux questions différentes, et elles figuraient autrefois dans le même tableau, ce qui explique pourquoi
@@ -195,7 +194,7 @@ cinq fichiers se contredisaient.
 - **Au-dessus de +13.5 °C** : jaune. Au-dessus de **+17.0 °C** : rouge — le chemin thermique vers le radiateur
   a été perdu, ou un étuvage de décontamination est en cours (0x0418).
 
-## 7. Commandes
+## 7. Commandes {#7-commands}
 
 | Commande          | Service  | Paramètres    | Description                          |
 |-------------------|----------|---------------|--------------------------------------|
@@ -204,7 +203,7 @@ cinq fichiers se contredisaient.
 | GET_PARAM         | S20,S3   | param_id      | Lire un paramètre individuel de la charge utile |
 | SET_PARAM         | S20,S1   | param_id, val | Modifier un paramètre de configuration de la charge utile |
 
-### 7.1 Séquence de prise de vue type
+### 7.1 Séquence de prise de vue type {#71-typical-imaging-sequence}
 
 1. Vérifier que le satellite est en mode AOCS NOMINAL (4) avec `att_error` < 0.5 deg.
 2. Vérifier que le SoC de la batterie est > 40 % et que la mémoire de masse disponible est suffisante.
@@ -217,7 +216,7 @@ cinq fichiers se contredisaient.
 7. À la fin de la fenêtre de prise de vue, envoyer `PAYLOAD_SET_MODE` (mode=1) pour revenir en STANDBY.
 8. Si aucune autre prise de vue n'est prévue, envoyer `PAYLOAD_SET_MODE` (mode=0).
 
-## 8. Remarques d'exploitation
+## 8. Remarques d'exploitation {#8-operational-notes}
 
 1. Le refroidisseur du FPA consomme 15 W. Le bilan de puissance total de la charge utile en mode IMAGING est
    d'environ 20,5 W (15 W pour le refroidisseur + 5,5 W pour l'imageur ; voir 01_eps.md).
@@ -251,7 +250,7 @@ cinq fichiers se contredisaient.
 
 ---
 
-## Réglages commandables
+## Réglages commandables {#commandable-settings}
 
 Tous les réglages de la charge utile accessibles par liaison, avec leur codage.
 

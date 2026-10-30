@@ -17,7 +17,10 @@ docs:
     fr_root: configs/eosat1/i18n/fr/procedures
     # STYLE_FR §13: French step-jump prose would bypass the English _PROSE_BRANCH safety gate.
     forbid_fr:
-      - "(?:passer|aller|revenir|sauter|reprendre)\\s+(?:directement\\s+)?(?:à|a|aux?)\\s+(?:l'|la\\s+)?[ée]tape\\s+\\d+"
+    # Ruling Q35 (2026-10-30): « passer à l'étape N » is allowed when the card declares a
+    # **BRANCH:** whose GO/NO-GO target is step N (tools/i18n/docs.py forbidden_fr_wording).
+    # The apostrophe may be typographic (’) as STYLE_FR prefers.
+      - "(?:passer|aller|revenir|sauter|reprendre)\\s+(?:directement\\s+)?(?:à|a|aux?)\\s+(?:l['’]\\s*|la\\s+)?[ée]tape\\s+\\d+"
 
   - group: manual
     en_glob: configs/eosat1/manual/*.md

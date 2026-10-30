@@ -116,7 +116,7 @@ python -m smo_mcs --simulator-host gateway.corp.net:6789 --mcs-port 8080
 ```
 Spacecraft: EOSAT-1
 Phase: Nominal Operations
-Orbit: 98.0° sun-synchronous, ~513 km mean altitude
+Orbit: 97.39° sun-synchronous, ~513 km mean altitude, LTAN ~10:00
 
 Attitude:
   Quaternion: (0.001, 0.707, -0.002, 0.707)
@@ -284,7 +284,7 @@ Anomaly: Margin < 3 dB → S19 rule triggers PA power increase
 ```
 MCS: Query HK_AOCS (S3 subtype 27, SID=2)
 Check:
-  - aocs.mode = 4 (nominal_nadir)
+  - aocs.mode = 4 (NOMINAL)
   - aocs.att_error < 0.5° (attitude good)
   - aocs.total_momentum < 50 Nms (wheels not saturated)
   - Power: eps.bus_voltage > 27V (sufficient power)
@@ -638,7 +638,7 @@ MCS: Check AOCS status
   S3 request HK_AOCS (SID=2)
   aocs.st1_status = 3 (blind)
   aocs.st2_status = 3 (blind)
-  aocs.mode = 4 (nominal_nadir, unsustainable without ST)
+  aocs.mode = 4 (NOMINAL, unsustainable without ST)
 
 MCS Commands:
   1. S8 func_id=0 (AOCS_SET_MODE), mode=3 (coarse_sun_pointing)
@@ -1424,7 +1424,7 @@ S13 subtype 1:  Transfer initiation (blocks other downlink activities)
 
 ### Overview
 
-The EOSAT-1 Launch and Early Orbit Phase (LEOP) and commissioning sequence takes the spacecraft from separation through to nominal operations over approximately 24 hours across 16 ground station passes. The spacecraft uses a ~513 km (mean) sun-synchronous orbit at 98° inclination (period ~94.5 min, 15.24 rev/day). Two ground stations provide coverage: Troll (Antarctica, -72.012°S) and Iqaluit (Canada, 63.747°N).
+The EOSAT-1 Launch and Early Orbit Phase (LEOP) and commissioning sequence takes the spacecraft from separation through to nominal operations over approximately 24 hours across 16 ground station passes. The spacecraft uses a ~513 km (mean) sun-synchronous orbit at 97.39° inclination, LTAN ~10:00 (period ~94.5 min, 15.24 rev/day). The network has five ground stations (Iqaluit, Troll, Svalbard, Inuvik, O'Higgins; manual 05 §5); the illustrative timeline below uses only two of them: Troll (Antarctica, -72.012°S) and Iqaluit (Canada, 63.747°N).
 
 ### Spacecraft Phases
 

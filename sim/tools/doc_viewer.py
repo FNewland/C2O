@@ -33,6 +33,22 @@ except ImportError:
 
 # ── Minimal Markdown → HTML converter (no dependencies) ──────────────
 
+#: A pandoc heading attribute block at the end of a heading line:
+#: ``## Title {#id}`` (optionally ``{#id .class key=val}``). Author ruling Q33
+#: (2026-10-30) puts these in the EN and FR manuals with the same id in both
+#: languages; the viewer uses the id and never displays the block.
+HEADING_ATTR_RE = re.compile(
+    r'\s*\{#([A-Za-z0-9_][\w.:-]*)(?:\s[^}]*)?\}\s*$')
+
+
+def split_heading_anchor(text: str) -> tuple[str, str | None]:
+    """``"Title {#id}"`` -> ``("Title", "id")``; no block -> ``(text, None)``."""
+    m = HEADING_ATTR_RE.search(text)
+    if not m:
+        return text, None
+    return text[:m.start()].rstrip(), m.group(1)
+
+
 def md_to_html(text: str) -> str:
     """Convert Markdown to HTML using regex. Handles headings, bold, italic,
     code blocks, inline code, links, tables, lists, horizontal rules, and
@@ -82,9 +98,10 @@ def md_to_html(text: str) -> str:
         m = re.match(r'^(#{1,6})\s+(.*)', line)
         if m:
             level = len(m.group(1))
-            content = _inline(m.group(2))
-            slug = re.sub(r'[^a-z0-9]+', '-', m.group(2).lower()).strip('-')
-            out.append(f'<h{level} id="{slug}">{content}</h{level}>')
+            heading, anchor = split_heading_anchor(m.group(2))
+            content = _inline(heading)
+            slug = anchor or re.sub(r'[^a-z0-9]+', '-', heading.lower()).strip('-')
+            out.append(f'<h{level} id="{html.escape(slug)}">{content}</h{level}>')
             continue
 
         # Horizontal rule
@@ -194,11 +211,11 @@ def discover_docs(base: Path) -> dict[str, list[dict]]:
 def _extract_title(path: Path) -> str:
     """Extract the first heading from a markdown file."""
     try:
-        with open(path) as f:
+        with open(path, encoding="utf-8") as f:
             for line in f:
                 m = re.match(r'^#\s+(.*)', line.strip())
                 if m:
-                    return m.group(1)
+                    return split_heading_anchor(m.group(1))[0]
         return path.stem.replace('_', ' ').title()
     except Exception:
         return path.stem

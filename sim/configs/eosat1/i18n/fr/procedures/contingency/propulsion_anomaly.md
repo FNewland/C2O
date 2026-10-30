@@ -8,7 +8,7 @@
 ## Objet
 Traiter un déclenchement de la FDIR propulsion — poussée faible, défaut de vanne, fuite ou pression
 de réservoir hors plage — en isolant les ergols, en bornant le delta-V utilisable
-restant et en protégeant la réserve d'évitement des débris. Sur EO-Sat-1, le
+restant et en protégeant la réserve d'évitement des débris. Sur EOSAT-1, le
 système de propulsion existe POUR l'évitement de collision : l'objectif de la reprise n'est
 pas de « réparer le propulseur », mais de « savoir exactement quelle capacité de CAM subsiste
 et la préserver ».

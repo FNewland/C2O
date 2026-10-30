@@ -46,10 +46,9 @@ checks suitable for the worked verification trail at PDR.
 
 ## About the author
 
-Dr Franz Newland is a Senior Lecturer in the Faculty of
-Engineering at the University of Ottawa, leading the School of
-Engineering Design and Teaching Innovation (SEDTI) and the
-SpaceCDF programme.
+Dr Franz Newland is Associate Professor, School of Engineering
+Design and Teaching Innovation (SEDTI), University of Ottawa,
+where he leads the SpaceCDF programme.
 
 **Claude**, an AI authoring assistant from Anthropic, is
 credited as co-author for content drafting, technical

@@ -1,7 +1,7 @@
 # SpaceCDF Textbook — Capability / Subsystem / Operational-Function Inventory
 
 **Source:** *SpaceCDF — A Course Textbook*, SCDF-TEXT-001 Issue 1, 2026-05-21, University of Ottawa SEDTI (546 pp.).
-**Purpose:** complete inventory of every spacecraft/mission capability, subsystem and operational function the book teaches or assumes, for comparison against the EO-Sat-1 / EOSAT-1 companion simulator.
+**Purpose:** complete inventory of every spacecraft/mission capability, subsystem and operational function the book teaches or assumes, for comparison against the EOSAT-1 / EOSAT-1 companion simulator.
 **Page numbers** are the PDF's printed "Page N of 546" pagination. Book structure: Part 1 "CubeSat Design" (Ch 1.1–4.4, pp. 29–302), Part 2 "CubeSat Operations" (Ch 5–16, pp. 303–508), Appendices A–D (pp. 509–540), Index (p. 541).
 
 **Depth legend:**

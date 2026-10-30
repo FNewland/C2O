@@ -1,21 +1,29 @@
-# Guide de la propulsion d'EO-Sat-1 (phase D)
+# Guide de la propulsion d'EOSAT-1 (phase D)
 
-**Décision de périmètre (directeur de vol) :** la propulsion sert aux **manœuvres d'évitement
-de débris** et à un **maintien d'orbite limité** (compensation de la traînée / décalage volontaire
-du demi-grand axe). Elle est délibérément minimale. Il n'existe **aucune capacité de désorbitation
-en fin de vie, et aucune n'est nécessaire** : le déclin naturel depuis 450 km avec
-B = 77,9 kg/m² prend 1,7 an à activité solaire moyenne (4,8 ans au minimum solaire, 0,2 an
-avec les ailes orientées face à la vitesse, traînée maximale) — conforme à la règle des 5 ans de la FCC quelle que soit
-l'activité solaire. Une désorbitation propulsée coûterait plus de 42,6 m/s, soit un second
-système propulsif complet.
+**Périmètre :** la propulsion sert aux **manœuvres d'évitement de débris**, à un **maintien
+d'orbite limité** (compensation de la traînée / décalage volontaire du demi-grand axe) et à la
+**poussée de retrait de service en fin de vie**. Elle est délibérément minimale.
 
-> **Mise en garde 2026-08 :** les durées de déclin ci-dessus ont été calculées pour l'altitude
-> déclarée de 450 km, désormais abandonnée. L'altitude moyenne réelle d'après le TLE est d'environ 513 km
-> (orbit.yaml, décision 2026-08 sur l'époque et l'altitude), où la densité atmosphérique est
-> environ deux fois plus faible et le déclin naturel plusieurs fois plus lent — le cas du minimum solaire
-> dépasse très probablement la règle des 5 ans de la FCC. L'analyse du déclin, et avec elle
-> la décision en vigueur « aucune capacité de désorbitation », doivent être refaites à 513 km.
-> Décision du responsable en attente ; non recalculé lors de la revue de configuration 2026-08.
+> **Décision de l'auteur Q3 (modifiée le 2026-10-30) :** le retrait de service se fait par une poussée
+> d'abaissement du périgée en fin de vie avec le propulseur existant, dimensionnée pour une rentrée en moins de
+> 5 ans même au minimum solaire. L'ancien « 1,7–4,8 ans, aucune capacité de désorbitation »
+> avait été établi à 450 km.
+
+**Déclin naturel depuis 513 km** (B = 77,9 kg/m², décroissance due à la traînée intégrée jusqu'à 120 km
+avec l'atmosphère exponentielle CIRA-72 pour l'activité moyenne et 0,35 fois celle-ci pour le
+minimum solaire, la méthode et le facteur d'échelle du dimensionnement initial) : environ
+**5,0 ans à activité solaire moyenne et 14 ans au minimum solaire** — hors de
+la règle des 5 ans. Orienter les ailes face à la vitesse (B ≈ 8,3 kg/m²) le ramènerait
+à environ 0,5 / 1,5 an, mais cela exige une attitude maîtrisée et n'est pas
+modélisé ; c'est une solution de secours, pas le plan.
+
+**Poussée de retrait de service (NOM-014) :** abaisser le périgée de 513 km à **390 km** avec
+**34,3 m/s** de ΔV rétrograde, en six poussées de 5,72 m/s au même point de l'orbite
+(chacune de 320–480 s à la poussée de fin de vie, avec le chien de garde de poussée relevé
+à 600 s). Durée de vie résiduelle **~1,5 an (moyenne), ~4,2 ans (minimum
+solaire)**. Ensuite, épuiser le propergol, verrouiller l'inhibition de la propulsion,
+arrêter les roues, couper le régulateur de charge de la batterie et faire taire les
+émetteurs.
 
 ## Matériel
 
@@ -33,13 +41,17 @@ attitude nominale nadir ; une poussée rétrograde exige un basculement délib
 | Système humide | 1,55 kg (12,9 % de la plateforme de 12 kg) |
 | **ΔV total** | **66,9 m/s** |
 
-**Bilan de ΔV (phase active de 2 ans, hypothèse évitement de débris + compensation de traînée) :**
-compensation de traînée 42,6 + décalage SMA/LTAN 3,0 + manœuvres d'évitement de collision, CAM (6 événements × 0,1) 0,6 +
-recette en orbite/étalonnage 1,0 + contrôle de l'excentricité 1,5 + marges 7,3 =
-**56,0 m/s nécessaires** pour une capacité de 66,9 (**+19,5 %**). L'enveloppe
-restante (`prop.dv_remaining`, 0x0B0C) constitue d'abord une **réserve d'évitement
-de collision** : en dessous d'environ 1 m/s, le satellite a de fait perdu sa capacité de CAM
-et la conduite à tenir face aux conjonctions change.
+**Bilan de ΔV (phase active de 2 ans + retrait de service, recalculé à 513 km) :**
+compensation de traînée 15,1 (activité solaire de dimensionnement à 513 km ; elle était de 42,6 à 450 km) +
+décalage SMA/LTAN 3,0 + manœuvres d'évitement de collision, CAM (6 événements × 0,1) 0,6 + recette en orbite/étalonnage 1,0 +
+contrôle de l'excentricité 1,5 + **retrait de service 34,3** = 55,5, plus des marges de 5 % (2,8) et
+10 % (5,8) = **64,1 m/s nécessaires** pour une capacité de 66,9 (**+4,4 %** ; +2,6 %
+par rapport aux 65,8 m/s obtenus en intégrant la courbe d'Isp en blowdown). Le
+propergol et le réservoir suffisent sans modification : le retrait de service consomme ~0,21 kg des
+0,400 kg chargés. L'enveloppe restante (`prop.dv_remaining`, 0x0B0C) est une
+**réserve d'évitement de collision et de retrait de service** : conserver au moins 38 m/s pour la
+poussée de retrait de service ; à moins d'environ 1 m/s au-dessus de cette réserve, le satellite a de fait
+perdu sa capacité de CAM et la conduite à tenir face aux conjonctions change.
 
 Poussées types : CAM de 0,20 m/s ≈ 7,5 s ; compensation de traînée bimensuelle de 0,85 m/s ≈
 32 s (BOL) ; toutes tiennent dans un passage. Une poussée prograde de 1,0 m/s relève le SMA de
@@ -104,7 +116,8 @@ de la phase éclairée.
   ΔV. **S19 :** ea_id 8001–8006.
 - **Procédures :** **NOM-004** (planification, occupe l'indice laissé libre),
   **NOM-013** (exécution ; la NOM-005 du manuel — la NOM-005 du simulateur était déjà la Configuration
-  HK), **CTG-028** (anomalie ; la CTG-006 du manuel — la CTG-006 du simulateur était
+  HK), **NOM-014** (retrait de service en fin de vie : abaissement du périgée et
+  passivation), **CTG-028** (anomalie ; la CTG-006 du manuel — la CTG-006 du simulateur était
   déjà l'Anomalie charge utile ; et « SID 5/propulsion » correspond ici au SID 9). L'OBCP 4
   (`obcp/04_orbit_manoeuvre.yaml`) constitue la séquence minutée à bord. Activité du planificateur :
   `orbit_manoeuvre`.
@@ -115,7 +128,9 @@ de la phase éclairée.
 ## Limites du modèle (enseignées, non simulées)
 
 Un propulseur, un axe — pas d'orientation de la poussée (TVC), pas de désaturation par propulseurs (NOM-007 reste
-réalisée uniquement aux magnétocoupleurs). Pas de retrait de service propulsé, de changement de plan, de relèvement d'orbite,
+réalisée uniquement aux magnétocoupleurs). La poussée de retrait de service est réalisée comme des poussées rétrogrades ordinaires ;
+le déclin et la rentrée qui suivent ne sont pas simulés, et il n'y a pas de mise à l'air du
+pressurisant à la passivation. Pas de changement de plan, de relèvement d'orbite,
 de phasage, de rendez-vous, de contrôle d'orbite en boucle fermée ni de véritable criblage des
 conjonctions (la CAM est une entrée de scénario scriptée). Pas de transitoires de combustion ou d'alimentation,
 de blowdown non isotherme, de ballottement ou de migration du centre de gravité, ni de couplage avec le tenseur d'inertie

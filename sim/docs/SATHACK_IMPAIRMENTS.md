@@ -1,6 +1,6 @@
 # SatHack-derived RF channel impairments (roadmap X-15)
 
-Additional, more physically realistic channel impairments for the EO-Sat-1 RF
+Additional, more physically realistic channel impairments for the EOSAT-1 RF
 chain, mined from Franz's **SatHack** SDR / weak-signal toolkit and ported into
 the `SpaceLinkChannel` impairment registry. They exist to be *taught against*:
 each one reproduces a real effect a ground-station operator or DSP student meets,

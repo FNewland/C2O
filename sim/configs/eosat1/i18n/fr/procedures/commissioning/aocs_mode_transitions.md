@@ -6,14 +6,14 @@
 numérotation à cinq modes qui n'a jamais correspondu au logiciel de vol (elle appelait
 le mode 2 COARSE_SUN et le mode 3 NOMINAL, essayait un « IDLE » qui est le mode 0 OFF,
 et supposait que la fiche COMMENCE en COARSE_SUN --- ce n'est pas le cas : COARSE_SUN est un
-maintien transitoire dont le satellite sort par promotion automatique, et lorsque COM-005 arrive, l'AOCS
-s'est depuis longtemps promu lui-même en NOMINAL).
+maintien transitoire, et lorsque COM-005 arrive, l'AOCS est depuis longtemps en NOMINAL, commandé
+par COM-004 depuis la décision Q16 du 2026-10-30).
 **Approuvé par :** Directeur des opérations de vol
 
-**État d'entrée :** état de sortie de COM-004 --- les quatre roues ACTIVÉES, senseur stellaire
+**État d'entrée :** état de sortie de COM-003 --- les quatre roues ACTIVÉES, senseur stellaire
 en suivi, gyromètres étalonnés, AOCS dans la famille NOMINAL : mode (0x020F) = 4
-NOMINAL ou 8 ECLIPSE (la promotion automatique hors de COARSE_SUN a eu lieu pendant
-COM-003/COM-004 ; 8 est le même état opérationnel côté ombre).
+NOMINAL ou 8 ECLIPSE (COM-004 a commandé NOMINAL pour sortir du maintien COARSE_SUN et
+COM-003 l'y a maintenu ; 8 est le même état opérationnel côté ombre).
 
 ## Objet
 Mettre en œuvre chaque transition COMMANDÉE utilisée par le concept d'opérations, et OBSERVER
@@ -41,8 +41,8 @@ du sol (positionné uniquement lorsque 4, 5, 9 ou OFF est commandé) ; `aocs.m
 
 ### Étape 1 --- Mémoriser le mode commandé (NOMINAL)
 **TC:** `AOCS_SET_MODE(mode=4)` (Service 8, Subtype 1, func_id 0) --- NOMINAL
-**Note:** L'AOCS est peut-être déjà en mode 4 --- il s'est promu automatiquement hors de
-COARSE_SUN pendant COM-003. Cette commande est tout de même envoyée : elle MÉMORISE
+**Note:** L'AOCS est normalement déjà en mode 4 --- COM-004 l'a
+commandé. Cette commande est tout de même envoyée : elle MÉMORISE
 `aocs.commanded_mode` (0x0297) = 4, valeur sur laquelle chaque transition automatique
 fonde son chemin de retour. L'intention doit être explicite avant que cette fiche
 ne commence à faire passer le véhicule par des transitoires.
@@ -121,7 +121,7 @@ et sa vérification ; les entrées AUTOMATIQUES portent le déclencheur et l'i
 
 | Transition | Type | Preuve |
 |---|---|---|
-| (entrée) COARSE_SUN -> NOMINAL | automatique (durant COM-003/004) | archive |
+| (entrée) COARSE_SUN -> NOMINAL | commandée (COM-004, étape 1b) | archive |
 | NOMINAL -> FINE_POINT | commandée, soumise au verrou 0x02C5 | Étape 2 |
 | FINE_POINT -> NOMINAL | commandée | Étape 3 |
 | NOMINAL -> INERTIAL -> NOMINAL | commandée | Étape 4 |

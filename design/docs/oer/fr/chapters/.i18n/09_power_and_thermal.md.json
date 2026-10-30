@@ -124,8 +124,8 @@
   },
   {
    "id": "chapter-9-electrical-power-and-thermal-control/9-4-thermal-control-system/9-4-11-ecss-thermal-margins",
-   "en_hash": "3108d46897936e93",
-   "fr_hash": "de6d8561a480ed1f"
+   "en_hash": "0866296b0578d254",
+   "fr_hash": "c109aa4aa0e7880c"
   },
   {
    "id": "chapter-9-electrical-power-and-thermal-control/9-5-worked-example-unisat-1-power-and-thermal",
@@ -149,8 +149,8 @@
   },
   {
    "id": "chapter-9-electrical-power-and-thermal-control/summary",
-   "en_hash": "428ac46bac9b08cc",
-   "fr_hash": "d5394f9bab149f06"
+   "en_hash": "d55f397140b48b82",
+   "fr_hash": "b18e11bc40455de3"
   },
   {
    "id": "chapter-9-electrical-power-and-thermal-control/problems",
@@ -163,5 +163,5 @@
    "fr_hash": "4ce43425bdd0f349"
   }
  ],
- "en_commit": "3ea7113"
+ "en_commit": "c4a140a"
 }

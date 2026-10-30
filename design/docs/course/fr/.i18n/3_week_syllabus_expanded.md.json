@@ -29,8 +29,8 @@
   },
   {
    "id": "3-week-intensive-syllabus/week-1-canadian-space-landscape-regulatory-environment/daily-schedule",
-   "en_hash": "8b2d31b0895b6846",
-   "fr_hash": "091546b993e61a07"
+   "en_hash": "57229787bad91c32",
+   "fr_hash": "2241a5b5b71090f3"
   },
   {
    "id": "3-week-intensive-syllabus/week-1-canadian-space-landscape-regulatory-environment/canadian-regulatory-checklist-tuesday-deliverable",
@@ -49,13 +49,13 @@
   },
   {
    "id": "3-week-intensive-syllabus/week-2-concurrent-design-facility-designing-a-mission",
-   "en_hash": "131c9f2dd062e3fe",
-   "fr_hash": "f9bf89dff833211a"
+   "en_hash": "3b002668a1eb226d",
+   "fr_hash": "ab553d51ec298c52"
   },
   {
    "id": "3-week-intensive-syllabus/week-2-concurrent-design-facility-designing-a-mission/daily-schedule",
-   "en_hash": "cac70221015a2a1c",
-   "fr_hash": "6b8fd7f5a77e8fb9"
+   "en_hash": "0c41798f47e7d931",
+   "fr_hash": "d2425621676c4981"
   },
   {
    "id": "3-week-intensive-syllabus/week-2-concurrent-design-facility-designing-a-mission/a-first-look-at-the-budgets-you-will-close",
@@ -64,8 +64,8 @@
   },
   {
    "id": "3-week-intensive-syllabus/week-2-concurrent-design-facility-designing-a-mission/risk-register-template-wednesday-thursday",
-   "en_hash": "5ac0cb1b922cdabb",
-   "fr_hash": "64958343c4a55e26"
+   "en_hash": "37b5fe96a206db7d",
+   "fr_hash": "10ea2e20965daf1b"
   },
   {
    "id": "3-week-intensive-syllabus/week-3-mission-operations-simulation",
@@ -74,8 +74,8 @@
   },
   {
    "id": "3-week-intensive-syllabus/assessment",
-   "en_hash": "570950a22b0c8e05",
-   "fr_hash": "4a8bb5aacf0a42c4"
+   "en_hash": "a50d00e691ea6805",
+   "fr_hash": "b407761afb0b05f9"
   },
   {
    "id": "3-week-intensive-syllabus/assessment/competency-self-assessment-grid",
@@ -93,5 +93,5 @@
    "fr_hash": "ae687e3266829d81"
   }
  ],
- "en_commit": "3ea7113"
+ "en_commit": "c4a140a"
 }

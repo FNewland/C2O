@@ -1,0 +1,87 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/contingency/gyro_failure.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "ctg-029-gyro-failure-recovery",
+   "en_hash": "3e1b4102c71730b5",
+   "fr_hash": "2538564803ca63ba"
+  },
+  {
+   "id": "ctg-029-gyro-failure-recovery/purpose",
+   "en_hash": "6cc585a39086fb71",
+   "fr_hash": "921e84a986d9cb57"
+  },
+  {
+   "id": "ctg-029-gyro-failure-recovery/prerequisites",
+   "en_hash": "e5075c1525274306",
+   "fr_hash": "4057c01ba7b8b9c8"
+  },
+  {
+   "id": "ctg-029-gyro-failure-recovery/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "ctg-029-gyro-failure-recovery/procedure-steps/step-1-collect-the-gyro-and-determination-telemetry",
+   "en_hash": "d0828bc2b02d6880",
+   "fr_hash": "4496bdfb82106d36"
+  },
+  {
+   "id": "ctg-029-gyro-failure-recovery/procedure-steps/step-2-protect-the-attitude-estimate",
+   "en_hash": "05d2e4ee08c663d1",
+   "fr_hash": "f347d164424f4b81"
+  },
+  {
+   "id": "ctg-029-gyro-failure-recovery/procedure-steps/step-3-restore-any-unit-that-is-off",
+   "en_hash": "efc72f5921304d7a",
+   "fr_hash": "86cf11ecbd737c87"
+  },
+  {
+   "id": "ctg-029-gyro-failure-recovery/procedure-steps/step-4-run-the-on-board-bias-calibration",
+   "en_hash": "d816ede5fffe441a",
+   "fr_hash": "236f162c2c55ea50"
+  },
+  {
+   "id": "ctg-029-gyro-failure-recovery/procedure-steps/step-5-monitor-the-calibration-arc",
+   "en_hash": "8224f1819d5f7999",
+   "fr_hash": "d1be56012ed7201d"
+  },
+  {
+   "id": "ctg-029-gyro-failure-recovery/procedure-steps/step-6-verify-the-result-and-record-the-bias",
+   "en_hash": "601ebb69147b9f5e",
+   "fr_hash": "f665dc8075e9a392"
+  },
+  {
+   "id": "ctg-029-gyro-failure-recovery/procedure-steps/step-7-isolate-an-unrecoverable-channel-only-if-step-6-failed",
+   "en_hash": "3aef6270227b21ac",
+   "fr_hash": "a1b8f4e3bffdc3be"
+  },
+  {
+   "id": "ctg-029-gyro-failure-recovery/procedure-steps/step-8-confirm-the-recovery",
+   "en_hash": "9e4d08c8c508aba2",
+   "fr_hash": "4b490b6cb17142f9"
+  },
+  {
+   "id": "ctg-029-gyro-failure-recovery/off-nominal-handling",
+   "en_hash": "d004d0cefac40325",
+   "fr_hash": "1012161c648d2bfc"
+  },
+  {
+   "id": "ctg-029-gyro-failure-recovery/post-conditions",
+   "en_hash": "24a9300bd0e84a95",
+   "fr_hash": "56d61d3387fc3e8c"
+  },
+  {
+   "id": "ctg-029-gyro-failure-recovery/exit-state",
+   "en_hash": "9ffd51db929ff0d1",
+   "fr_hash": "58ae515b69ccd238"
+  }
+ ],
+ "en_commit": "c4a140a"
+}

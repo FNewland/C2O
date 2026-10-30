@@ -154,13 +154,17 @@ repli COARSE_SUN (fin de l'étape 5). Consigner dans le rapport d'anomalie la br
 
 ## Cas de contingence
 - Si ST2 tombe en panne pendant l'amorçage (état bloqué à 1) : effectuer un cycle d'alimentation de ST2 — `ST2_POWER(on=0)`,
-  attendre 10 s, `ST2_POWER(on=1)`. En cas d'échec après la deuxième tentative, l'étape 5 s'applique.
+  attendre 10 s, `ST2_POWER(on=1)`. En cas d'échec après la deuxième tentative, passer à l'étape 5.
 - Si ST2 passe en BLIND (état = 3) plutôt qu'en TRACKING : le champ de vue est peut-être
   obstrué. Attendre jusqu'à 120 s. En éclipse, le senseur stellaire peut avoir besoin de la phase éclairée pour
-  acquérir des étoiles. S'il reste BLIND après deux tentatives, l'étape 5 s'applique.
+  acquérir des étoiles. S'il reste BLIND après deux tentatives, passer à l'étape 5.
 - Si l'erreur d'attitude dépasse 5° pendant le basculement : la FDIR peut déclencher le mode survie
   automatiquement. Si la FDIR se déclenche, laisser le passage autonome en mode survie se faire. Suivre ensuite
-  CTG-005 (mode survie EPS) pour le retour au nominal une fois ST2 opérationnel.
+  CTG-002 (reprise après anomalie SCAO) pour le retour au nominal une fois ST2 opérationnel.
+  Remarque : contrôler `aocs.mode` (0x020F) avant d'agir --- le simulateur a peut-être
+  déjà repris de lui-même le mode 4 (NOMINAL). Dès que COARSE_SUN a tenu un bon verrouillage
+  solaire (CSS valide, erreur < 15 deg) pendant 60 s avec un senseur stellaire disponible,
+  l'AOCS rend la main au mode commandé sans aucune télécommande.
 - Si les deux senseurs stellaires sont en panne et que les CSS sont également invalides (éclipse) : le SCAO n'a aucune
   référence d'attitude. Commander `AOCS_SET_MODE(mode=2)` pour passer en DETUMBLE au moyen des magnétocoupleurs.
   Attendre la phase éclairée pour l'acquisition CSS. Il s'agit d'une anomalie critique pour la mission —

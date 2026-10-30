@@ -1,4 +1,4 @@
-# EO-Sat-1 Power-Budget Analysis (Review Item 9)
+# EOSAT-1 Power-Budget Analysis (Review Item 9)
 
 Quantitative check of "the battery will not drain flat under standard operation", using a
 standalone reproduction of the simulator's own EPS arithmetic.

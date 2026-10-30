@@ -4,6 +4,9 @@
 frame ("body Z on the orbit normal") long after Phase C had moved the
 simulator to real LVLH (`smo_common.attitude.lvlh_dcm`: z = nadir,
 y = -orbit normal) and eps.yaml had moved `sada_axis` to 'y' to match.
+(Ruling Q4, 2026-10-30: the nominal BODY attitude is now LVLH turned 180 deg
+about X — +Z zenith, -Z nadir — so the tool feeds EPS `sun_body_nominal`;
+`sun_body_lvlh` remains the pure LVLH form.)
 
 Feeding a Z-normal sun vector into a Y-axis SADA replaced the wing
 illumination law cos(beta) with sqrt(1 - cos^2(b) sin^2(phi)), whose
@@ -76,7 +79,7 @@ def _orbit_mean_sunlit_gen(beta_deg: float, n_phase: int = 180) -> float:
     total = 0.0
     for k in range(n_phase):
         phase = 360.0 * k / n_phase
-        sx, sy, sz = power_budget.sun_body_lvlh(beta_deg, phase)
+        sx, sy, sz = power_budget.sun_body_nominal(beta_deg, phase)
         params = {0x02B3: sx, 0x02B4: sy, 0x02B5: sz}
         m.tick(dt, orbit, params)
         total += m._state.power_gen_w
@@ -115,6 +118,11 @@ class TestSunVectorFrame:
             ys = {round(power_budget.sun_body_lvlh(beta, p)[1], 12)
                   for p in range(0, 360, 7)}
             assert ys == {round(-math.sin(math.radians(beta)), 12)}
+            # The BODY frame the tool feeds EPS (ruling Q4: +Y = +orbit
+            # normal) carries the same law with the opposite sign.
+            yb = {round(power_budget.sun_body_nominal(beta, p)[1], 12)
+                  for p in range(0, 360, 7)}
+            assert yb == {round(math.sin(math.radians(beta)), 12)}
 
 
 class TestBetaTrend:
@@ -148,7 +156,7 @@ class TestBetaTrend:
             n = 180
             dt = ORBIT_PERIOD_S / n
             for k in range(n):
-                sx, sy, sz = power_budget.sun_body_lvlh(beta, 360.0 * k / n)
+                sx, sy, sz = power_budget.sun_body_nominal(beta, 360.0 * k / n)
                 m.tick(dt, orbit, {0x02B3: sx, 0x02B4: sy, 0x02B5: sz})
                 tot += sum(m._state.sa_wing_currents.values())
             return tot / n

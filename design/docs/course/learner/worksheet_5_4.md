@@ -184,7 +184,7 @@ Rate your own learning across the three weeks of the course. Be honest -- this i
 | Conduct a structured trade study with weighted criteria | | | |
 | Size subsystems using parametric models and engineering budgets | | | |
 | Select COTS equipment and verify interface compatibility | | | |
-| Construct a verification matrix with IADT methods | | | |
+| Construct a verification matrix with ATIR(D) methods | | | |
 | Assess risk using a 5x5 matrix and define mitigations | | | |
 | Estimate mission cost using parametric and bottom-up methods | | | |
 | Design a ground segment and calculate data budget | | | |

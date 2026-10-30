@@ -9,7 +9,7 @@ modes: [nominal, detumble, safe, wheel_desat, slew]
 
 # ═══════════════════════════════════════════════════════════════════════
 # Phase C spacecraft definition (brief 02 §Proposed model, re-derived for
-# the Phase B 6U-class EO-Sat-1: ~12 kg, deployed wings 2 x 0.15 m²).
+# the Phase B 6U-class EOSAT-1: ~12 kg, deployed wings 2 x 0.15 m²).
 # DECISIONS.md §4 resolution: the reaction-wheel momentum budget is derived
 # from a real current-production 6U-class wheel datasheet, not from either
 # of the two prior contradictory numbers (book 1.5e-5 / sim 5e-3 kg·m²).
@@ -17,8 +17,9 @@ modes: [nominal, detumble, safe, wheel_desat, slew]
 
 mass_properties:
   mass_kg: 12.0
-  # 6U (0.1 x 0.2 x 0.3 m) at 12 kg with deployed wings on ±Y; +Z is the
-  # payload boresight (nadir in NOMINAL). Small products of inertia.
+  # 6U (0.1 x 0.2 x 0.3 m) at 12 kg with deployed wings on ±Y. Body frame
+  # (ruling Q4): -Z is the payload boresight (nadir in NOMINAL), +Z zenith,
+  # +X ~ velocity, +Y = orbit normal. Small products of inertia.
   inertia_kgm2:
     - [0.180,  0.002, -0.003]
     - [0.002,  0.150,  0.001]
@@ -131,6 +132,9 @@ sensors:
     # Anchor: Blue Canyon NST (nano star tracker) class: NEA 6″ cross-
     # boresight / 40″ about-boresight (1σ), thermoelastic LF bias ≈8″ 3σ
     # (1/e ≈ 1 orbit), mounting misalignment 15″. 4 Hz in FINE, 1 Hz else.
+    # Mounting (ruling Q4, +Z = zenith): ST1 boresight +Z; ST2 on the +Z face
+    # canted 45° towards +Y (the anti-sun side of this orbit). Neither looks
+    # at the Earth in NOMINAL. Fixed in aocs_basic._ST_BORESIGHTS.
     nea_cross_arcsec: 6.0
     nea_roll_arcsec: 40.0
     lf_bias_arcsec: 3.0        # 1σ per axis (≈ 8″ 3σ)

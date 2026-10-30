@@ -2,6 +2,8 @@
 
 SpaceCDF is an open-source web tool for collaborative spacecraft mission design, following the System-V model from NASA SEH and ECSS standards. A team walks in with a problem and walks out with a complete, buildable CubeSat design.
 
+SpaceCDF is now part of the C2O repository, <https://github.com/FNewland/C2O>: it lives in the `design/` folder, next to the SMO mission simulator in `sim/`.
+
 ## What It Does
 
 - **Mission Definition**: Problem statement, stakeholders, objectives, space vs non-space trade analysis (mission-type-aware, constellation options)
@@ -45,8 +47,8 @@ scripts/           Mission validation harness
 ### Install & Run
 
 ```bash
-git clone https://github.com/FNewland/SpaceCDF.git
-cd SpaceCDF
+git clone https://github.com/FNewland/C2O.git
+cd C2O/design
 
 # Backend
 pip install -e packages/spacecdf-common

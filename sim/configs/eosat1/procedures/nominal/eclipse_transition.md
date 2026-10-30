@@ -31,7 +31,7 @@ eclipse exit.
 | tcs.htr_obc | 0x040B | Heater status |
 | tcs.temp_battery | 0x0407 | Within 0 to 40 C |
 | tcs.temp_obc | 0x0406 | Within 5 to 55 C |
-| aocs.mode | 0x020F | 8 (ECLIPSE_PROPAGATE) during eclipse |
+| aocs.mode | 0x020F | 8 (ECLIPSE) during eclipse |
 | aocs.att_error | 0x0217 | < 1.0 deg |
 
 ## Required Commands
@@ -77,7 +77,7 @@ and reassess after one additional sunlit pass.
 
 ### Step 4: Verify AOCS Eclipse Mode Transition
 **TC:** `AOCS_SET_MODE(mode=8)` (Service 8, Subtype 1, func_id 0) — Command AOCS to eclipse propagation mode
-**Verify:** `aocs.mode` (0x020F) = 8 (ECLIPSE_PROPAGATE) within 15 s
+**Verify:** `aocs.mode` (0x020F) = 8 (ECLIPSE) within 15 s
 **Verify:** `aocs.att_error` (0x0217) < 1.0 deg
 **Note:** In eclipse propagation mode, AOCS uses gyro-only propagation without star
 tracker updates (star tracker may lose tracking in Earth shadow).
@@ -117,7 +117,7 @@ diagnostics.
 
 ### Step 8: Restore Nominal Configuration
 **TC:** `AOCS_SET_MODE(mode=4)` (Service 8, Subtype 1, func_id 0) — Command AOCS back to nominal nadir pointing
-**Verify:** `aocs.mode` (0x020F) = 4 (NOMINAL_NADIR) within 30 s
+**Verify:** `aocs.mode` (0x020F) = 4 (NOMINAL) within 30 s
 **Verify:** `aocs.att_error` (0x0217) < 0.1 deg within 300 s (Phase C: gyro-only eclipse drift must be re-estimated and the PD re-converges at its real settling time)
 **Note:** Only if imaging is planned this orbit — the cooler is a 15 W load.
 **TC:** `FPA_COOLER(on=1)` (Service 8, Subtype 1, func_id 43) — re-enable the FPA cooler.

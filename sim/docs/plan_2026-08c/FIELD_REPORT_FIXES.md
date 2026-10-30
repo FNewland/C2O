@@ -353,7 +353,7 @@ Six cards would have damaged the spacecraft or lost the mission as written:
 Also corrected throughout: the 4S battery band (it is 8S-1P, 100 Wh), a
 six-face solar array (only five faces carry cells; -Z is the imager aperture),
 `EA_ENABLE(definition_id=)` (the field is `ea_id`), and the whole clock story
-across LEOP-006, NOM-006, NOM-009, CTG-010, CTG-018, CTG-021, CTG-027 and
+across LEOP-006, NOM-006, NOM-009, CTG-010, CTG-018 (now CTG-021), CTG-021, CTG-027 and
 EMG-004.
 
 ---

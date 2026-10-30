@@ -1,6 +1,6 @@
 {
  "tool_version": "1.0.0",
- "en_path": "${DRIVE_COURSE}/orbit_north_week3_workbook.md",
+ "en_path": "docs/course/orbit_north_week3_workbook.md",
  "sections": [
   {
    "id": "_preamble",
@@ -34,53 +34,43 @@
   },
   {
    "id": "worksheet-wb-5-1-position-score-cards-round-robin",
-   "en_hash": "5afaa547800302df",
-   "fr_hash": "83945d72a10c3941"
+   "en_hash": "6b546028f9710122",
+   "fr_hash": "97da73a55b6a9875"
   },
   {
    "id": "worksheet-wb-5-1-position-score-cards-round-robin/5-1-1-flight-director",
-   "en_hash": "ce52113f383b82ef",
-   "fr_hash": "4c148d84afafe7b3"
+   "en_hash": "9cd7ede3f5c38732",
+   "fr_hash": "77c116b6fc21d57a"
   },
   {
-   "id": "worksheet-wb-5-1-position-score-cards-round-robin/5-1-2-spacon-fdir-systems",
-   "en_hash": "56a215cbc9cf9c95",
-   "fr_hash": "a4f6975b3e9e176a"
+   "id": "worksheet-wb-5-1-position-score-cards-round-robin/5-1-2-power-thermal",
+   "en_hash": "eab517ddab1f5b08",
+   "fr_hash": "67dff9ca2e168b2e"
   },
   {
-   "id": "worksheet-wb-5-1-position-score-cards-round-robin/5-1-3-aocs-engineer",
-   "en_hash": "f57abb394e8f64d3",
-   "fr_hash": "dcb8f2deff171b42"
+   "id": "worksheet-wb-5-1-position-score-cards-round-robin/5-1-3-flight-dynamics",
+   "en_hash": "f21573ca0b46390c",
+   "fr_hash": "1fa4db9ad77a308c"
   },
   {
-   "id": "worksheet-wb-5-1-position-score-cards-round-robin/5-1-4-eps-engineer",
-   "en_hash": "a356615bfa38a601",
-   "fr_hash": "d94e735bb18564db"
+   "id": "worksheet-wb-5-1-position-score-cards-round-robin/5-1-4-tt-c",
+   "en_hash": "4efeb6cd728b7b93",
+   "fr_hash": "85bcdb50a1e26b33"
   },
   {
-   "id": "worksheet-wb-5-1-position-score-cards-round-robin/5-1-5-thermal-engineer",
-   "en_hash": "549b1d18547d0e60",
-   "fr_hash": "28dd37234d36ef50"
+   "id": "worksheet-wb-5-1-position-score-cards-round-robin/5-1-5-payload-operations",
+   "en_hash": "05de99a4e6cb5dfd",
+   "fr_hash": "4f42176afb5d84a7"
   },
   {
-   "id": "worksheet-wb-5-1-position-score-cards-round-robin/5-1-6-tt-c-engineer",
-   "en_hash": "cc0af502335c7c69",
-   "fr_hash": "9f074051148a61cf"
+   "id": "worksheet-wb-5-1-position-score-cards-round-robin/5-1-6-fdir-systems",
+   "en_hash": "c9d6dc179df3a587",
+   "fr_hash": "b90ca5227bedce02"
   },
   {
-   "id": "worksheet-wb-5-1-position-score-cards-round-robin/5-1-7-payload-operations",
-   "en_hash": "4b971cefccf4458a",
-   "fr_hash": "7cbf8605328f0655"
-  },
-  {
-   "id": "worksheet-wb-5-1-position-score-cards-round-robin/5-1-8-fds-orbit-analyst",
-   "en_hash": "099b279439e08967",
-   "fr_hash": "a161f4e2c185282b"
-  },
-  {
-   "id": "worksheet-wb-5-1-position-score-cards-round-robin/5-1-9-ground-segment-engineer",
-   "en_hash": "e053808de841eeaa",
-   "fr_hash": "7e721d23ab71e874"
+   "id": "worksheet-wb-5-1-position-score-cards-round-robin/5-1-7-propulsion",
+   "en_hash": "806e53d0d0703876",
+   "fr_hash": "0324e45e6c4717ca"
   },
   {
    "id": "worksheet-wb-5-3-pp-day-1-pass-plan-team-exercise",
@@ -104,8 +94,8 @@
   },
   {
    "id": "worksheet-wb-5-4-c003-ctg-003-ttc-link-loss-recovery-confirm-each-step",
-   "en_hash": "12db53e9916cdff2",
-   "fr_hash": "37a4003ce84dc54f"
+   "en_hash": "5346f32bb79d9e57",
+   "fr_hash": "10b96cc43d61ba28"
   },
   {
    "id": "worksheet-wb-5-4-n012-nom-012-shift-handover-template",
@@ -174,28 +164,33 @@
   },
   {
    "id": "worksheet-wb-5-5-l001-leop-001-first-acquisition-of-signal-obc-boot-confirm-each-step",
-   "en_hash": "f1ff801884432932",
-   "fr_hash": "9e4edae276a57334"
+   "en_hash": "8e5ce24787009e72",
+   "fr_hash": "d17f243a92c75acc"
   },
   {
    "id": "worksheet-wb-5-5-l006-leop-006-time-synchronisation-confirm-each-step",
-   "en_hash": "bbb2474ea5a03efc",
-   "fr_hash": "f9f882a7634944e1"
+   "en_hash": "2cc6c2373773afa5",
+   "fr_hash": "2080a5b9d01405cb"
   },
   {
    "id": "worksheet-wb-5-5-l002-leop-002-initial-health-check-confirm-each-step",
-   "en_hash": "0508f6cbec832b7f",
-   "fr_hash": "d974b52e34fe249b"
+   "en_hash": "b040466046c99ed5",
+   "fr_hash": "8ac97efb60a3d6df"
   },
   {
    "id": "worksheet-wb-5-5-l007-leop-007-sequential-power-on-confirm-each-step",
-   "en_hash": "69143abfd368f1da",
-   "fr_hash": "f4e1dc1cfc18a1f5"
+   "en_hash": "c1f73e16f3fe20cd",
+   "fr_hash": "1fc7daca74b64b90"
   },
   {
-   "id": "worksheet-wb-5-5-l005-leop-005-sun-acquisition-optional-confirm-each-step",
-   "en_hash": "ce8daef762820508",
-   "fr_hash": "0b9aad957e859d88"
+   "id": "worksheet-wb-5-5-l005-leop-005-sun-acquisition-observe-confirm-each-step",
+   "en_hash": "c113f91c23ad8892",
+   "fr_hash": "9eb47fad2162a708"
+  },
+  {
+   "id": "worksheet-wb-5-5-l003-leop-003-initial-orbit-determination-and-end-of-leop-confirm-each-step",
+   "en_hash": "8280a510bd75a21a",
+   "fr_hash": "1d8d249559982021"
   },
   {
    "id": "worksheet-wb-5-5-at-day-3-anomaly-ticket-3-copies",
@@ -259,18 +254,18 @@
   },
   {
    "id": "worksheet-wb-5-6-c001-com-001-eps-checkout-confirm-each-step",
-   "en_hash": "c15a6fda2eb9d2ca",
-   "fr_hash": "651bf02f8945d744"
+   "en_hash": "0acbcc638576b3cf",
+   "fr_hash": "93b7577494afe611"
   },
   {
    "id": "worksheet-wb-5-6-c002-com-002-tcs-verification-confirm-each-step",
-   "en_hash": "e3d07c681b4b46a8",
-   "fr_hash": "6781db66645b2ca9"
+   "en_hash": "a0479facedf7fcf4",
+   "fr_hash": "a7d67f3162ff36e0"
   },
   {
    "id": "worksheet-wb-5-6-c005-com-005-aocs-mode-transitions-confirm-each-step",
-   "en_hash": "e131bd0fceb2d655",
-   "fr_hash": "99824c7a2d738e5d"
+   "en_hash": "b1b64bea2c03f29d",
+   "fr_hash": "558ad444d96ea739"
   },
   {
    "id": "worksheet-wb-5-6-c006-com-006-ttc-link-verification-confirm-each-step",
@@ -279,13 +274,13 @@
   },
   {
    "id": "worksheet-wb-5-6-c007-com-007-obdh-checkout-confirm-each-step",
-   "en_hash": "a99bcab8c7c8a40d",
-   "fr_hash": "e5d6040c80b0420e"
+   "en_hash": "d3d75a05bd6bb436",
+   "fr_hash": "2e2e32f5023d420f"
   },
   {
    "id": "worksheet-wb-5-6-c008-com-008-fdir-configuration-confirm-each-step",
-   "en_hash": "67dac3e37cca423e",
-   "fr_hash": "f7e41feabe0ee2b9"
+   "en_hash": "9bab3ee2917957e0",
+   "fr_hash": "2d079f25be378a74"
   },
   {
    "id": "worksheet-wb-5-6-c009-com-009-payload-power-on-confirm-each-step",
@@ -309,13 +304,13 @@
   },
   {
    "id": "worksheet-wb-5-6-c012-com-012-first-light-confirm-each-step",
-   "en_hash": "b4e220e8db3c55c2",
-   "fr_hash": "a454f3085fd9bd1c"
+   "en_hash": "905c145fcc1df69a",
+   "fr_hash": "b1094bdb6634c8a5"
   },
   {
    "id": "worksheet-wb-5-6-fl-first-light-image-assessment",
-   "en_hash": "2f56d43bce0457cb",
-   "fr_hash": "adc8fd87c9b7d3b0"
+   "en_hash": "8e441a326e1cb78b",
+   "fr_hash": "4d8d6366a4b0d923"
   },
   {
    "id": "worksheet-wb-5-6-ma-day-4-multi-anomaly-response-form",
@@ -444,13 +439,13 @@
   },
   {
    "id": "appendix-wb-a-contingency-confirm-each-step-week-3-likely/ctg-007-reaction-wheel-anomaly",
-   "en_hash": "311a49f9c3bd1a4d",
-   "fr_hash": "f6b552a92cf65171"
+   "en_hash": "e70ae22abeca86ac",
+   "fr_hash": "ee3c97fa09d552c0"
   },
   {
    "id": "appendix-wb-a-contingency-confirm-each-step-week-3-likely/ctg-008-star-tracker-failure",
-   "en_hash": "4d2b557ee36ae887",
-   "fr_hash": "787d9c4edbf210fd"
+   "en_hash": "706b4543fde17bef",
+   "fr_hash": "a415d8f45ef5a4f6"
   },
   {
    "id": "appendix-wb-a-contingency-confirm-each-step-week-3-likely/ctg-010-obdh-watchdog-recovery",
@@ -489,9 +484,9 @@
   },
   {
    "id": "appendix-wb-c-workbook-self-check",
-   "en_hash": "871ef21d246605f8",
-   "fr_hash": "b958b443620cc5fd"
+   "en_hash": "acc3b052c8efb8b5",
+   "fr_hash": "4a357d00633e9454"
   }
  ],
- "en_commit": "c175838"
+ "en_commit": "c4a140a"
 }

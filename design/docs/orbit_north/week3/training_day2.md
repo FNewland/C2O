@@ -32,30 +32,37 @@ dry-runs use the **Nominal Post-Commissioning** breakpoint (BP-1).
 
 ## 1. Voice-loop discipline
 
-[Claude Code: 350 words. Cover the canonical phrasing used at NASA
-and ESA mission control. Include a one-page reference card with:
-addressing pattern ("FD, AOCS — go for star-tracker enable"),
-GO/NO-GO call-and-response, hot-mike rules, "loop discipline"
-expectations, the rule that the FD does not command directly. Cite
-ESA *Operations Manual for Mission Control* and the Mission
-Operations Voice Procedure standard from NASA APPEL —
-https://appel.nasa.gov/
+Textbook Part 2, §§9.1–9.2, is the session text and the reference
+card: the addressing pattern ("FD, AOCS — go for star-tracker
+enable": the station called, then the caller, then the message),
+the GO/NO-GO call-and-response, the hot-mike rule (push-to-talk;
+only the FD goes hot-mike, and announces it), loop discipline, and
+the rule that the FD authorises while the owning position commands.
+Run the three drills of §9.2: addressing, GO/NO-GO with a hold, and
+an anomaly callout.
 
-Also provide a short EN/FR glossary of voice-loop callouts. uOttawa
-is bilingual, but the callouts themselves stay in English for every
-crew; the glossary explains their meaning in French.]
+The callouts stay in English for every crew. The French edition of
+the textbook gives the meaning of each callout in French in the
+same table (§9.2, *Callout vocabulary*), which serves as the EN/FR
+glossary.
 
 ### 1.1 Standard callouts
 
-[Claude Code: produce a 12-row table — callout · meaning · response.
-Examples: "Comm check 1-2-3", "Standby plus 30", "TTC report",
-"AOS in 2", "Pass closed".]
+The callout table is textbook Part 2, §9.2, *Callout vocabulary*:
+15 callouts with meaning and expected response, from "Comm check
+1-2-3" to "Loop discipline", including "Standby plus 30", "AOS in
+N" and "Pass closed". Print it as the voice card.
 
 ### 1.2 GO/NO-GO protocol
 
-[Claude Code: 150 words. The FD polls each position; each position
-returns GO, NO-GO with reason, or HOLD with reason. The FD makes
-the decision. No commanding without an explicit FD authorisation.]
+Before any command that changes the spacecraft's state, the FD
+polls the positions concerned ("AOCS, EPS, FDIR — go for
+ST1_POWER?"). Each answers in poll order: *Go*, *No-go, [reason]*
+or *Hold, [reason]*. The FD decides and declares it on the loop:
+"Go for ST1_POWER" or "Hold on ST1_POWER, [reason]". The owning
+position commands only on that explicit GO. Staging the command
+(first key) before the GO is fine; uplinking before it is a
+violation. Source: textbook Part 2, §9.2, *GO / NO-GO protocol*.
 
 ---
 
@@ -63,45 +70,50 @@ the decision. No commanding without an explicit FD authorisation.]
 
 ### 2.1 NOM-001 Pass Startup
 
-[Claude Code: walk students through procedure
-`procedures/nominal/startup.md` step by step. Show how each step
-maps to MCS UI actions. ~350 words plus annotated MCS screenshots.]
+Textbook Part 2, §9.3, walks NOM-001 step by step against the MCS:
+the pre-checklist calculations, the checklist, the post-conditions,
+the common deviations, and which cards the MCS can run by itself.
+Use it as the session text, with `procedures/nominal/startup.md`
+open on the PRC page so students see each step become a line in
+the panel.
 
 ### 2.2 CTG-003 TTC Link Loss Recovery
 
-[Claude Code: walk students through
-`procedures/contingency/ttc_link_loss.md`. Emphasise the
-detection/assessment/recovery loop. ~350 words plus annotated MCS
-screenshots showing the FDIR panel and link-status telemetry.]
+Textbook Part 2, §9.4, is the walk-through: the escalation-ladder
+figure (check the ground station is tracking, blind-command the
+primary transponder, switch to the redundant one, retry the
+primary, verify, escalate to EMG-004), the read-and-do checklist,
+why it is structured that way, and what operators often miss. The
+loop to emphasise is detect (`ttc.link_status`, 0x0501, leaves 2)
+→ assess (ground or space?) → recover (least intrusive rung
+first).
 
 ---
 
 ## 3. Shift handover practice (NOM-012)
 
-[Claude Code: 150 words. Use procedure `nominal/shift_handover.md`.
-Each team performs two handovers — outgoing FD briefs incoming FD
-using the NOM-012 template — and the instructor times them. Target:
-under 6 minutes.]
+Textbook Part 2, §9.5, gives the NOM-012 template and the drill.
+Each team performs two handovers: the outgoing FD briefs the
+incoming FD on spacecraft posture, open anomalies, work in progress
+and the next pass plan; the incoming FD reads it back verbatim; then
+authority is handed over on the loop. The instructor times each
+one. Target: under 6 minutes.
 
 ---
 
 ## 4. Flight-dynamics workshop
 
-[Claude Code: 400 words plus three Python figures. Workshop
-exercises:
-
-1. Read the orbit (TLE in `configs/eosat1/orbit.yaml`); compute
-   period and rev/day; predict the next 24 h of Iqaluit AOS times.
-2. Compute pass duration as a function of maximum elevation; show
-   the typical 8–12 minute polar pass.
-3. Explain eclipse: where it starts in the orbit, how long it lasts,
-   what the power and thermal consequences are.
-
-Figures (use the brand stylesheet from `outputs/sample_figures/`):
-
-- Ground-track + Iqaluit and Troll visibility cones
-- Pass-elevation profile vs time for a typical Iqaluit pass
-- Eclipse fraction over a 24 h window]
+> **TODO (author):** Write the 400-word flight-dynamics workshop
+> and its three Python figures (ground track with the five
+> stations' visibility cones; elevation against time for a typical
+> Iqaluit pass; eclipse fraction over a 24 h window). Exercises:
+> read the TLE in `configs/eosat1/orbit.yaml` and compute the period
+> (94.5 min) and revolutions per day (15.24); predict the next 24 h
+> of Iqaluit AOS times; pass duration against maximum elevation
+> (9.3 min overhead at 513 km with the 5° mask, 7.5 min on average);
+> where eclipse starts, how long it lasts (33.2–35.2 min over the
+> year), and its power and thermal consequences. Textbook Part 2,
+> §9.6 and §§13.2–13.3, already have the arithmetic.
 
 ---
 
@@ -131,17 +143,12 @@ Figures (use the brand stylesheet from `outputs/sample_figures/`):
 
 ## 6. Operations training quiz
 
-[Claude Code: produce a 15-question MCQ + short-answer paper, 30
-minutes. Topics:
-
-- Voice-loop discipline (3 Qs)
-- MCS UI navigation (3 Qs)
-- Telemetry interpretation — limits and SIDs (3 Qs)
-- Procedure structure — what's in a procedure file (2 Qs)
-- Anomaly response steps (2 Qs)
-- Pass timing — AOS / TCA / LOS arithmetic (2 Qs)
-
-Solutions on a separate page for the instructor pack.]
+> **TODO (author):** Write the 15-question paper (multiple choice
+> and short answer, 30 minutes), with solutions on a separate page
+> for the instructor pack: voice-loop discipline (3 questions), MCS
+> navigation (3), telemetry interpretation — limits and SIDs (3),
+> procedure structure (2), anomaly response (2), and pass timing —
+> AOS / TCA / LOS arithmetic (2).
 
 ---
 

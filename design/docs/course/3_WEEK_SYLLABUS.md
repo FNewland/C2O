@@ -15,17 +15,17 @@
 | **Tue** | **Regulatory Framework** | ISED spectrum licensing (CPC-2-6-02). RSSSA (Remote Sensing Space Systems Act) for EO missions. Canadian Controlled Goods Program and export control. ITU filing process through ISED. Practical: complete an ISED spectrum licence application for a sample mission. |
 | **Wed** | **International Standards & Compliance** | ECSS standard framework and tailoring for small missions. NASA SEH 17 processes overview. CubeSat Design Specification (Cal Poly CDS Rev 14). Space debris mitigation (IADC 25yr, FCC 5yr). UN Registration Convention (COPUOS). Practical: complete a tailoring matrix. |
 | **Thu** | **Mission Needs & Opportunities** | Identifying mission needs in the Canadian context (Arctic monitoring, maritime surveillance, agriculture, resource management, connectivity). Stakeholder analysis for Canadian missions. Indigenous community engagement and UNDRIP considerations. Problem statement workshop. |
-| **Fri** | **Space vs Non-Space Trade & Concept** | Trade study methodology (criteria, weightings, scoring). Evaluating existing services (Radarsat, Sentinel, Planet) vs new missions. Constellation economics and business cases. Teams form, select a mission need, and run initial trade analysis in SpaceCDF. |
+| **Fri** | **Space vs Non-Space Trade & Concept** | Trade study methodology (criteria, weightings, scoring). Evaluating existing services (Radarsat, Sentinel, Planet) vs new missions. Constellation economics and business cases. Teams form, select a mission need, and run initial trade analysis in SpaceCDF. Informal mission concept review (MCR): each team presents its need, objectives and concept for feedback. |
 
 ### WEEK 2: Concurrent Design Facility -- Designing a Mission
 
 | Day | Topic | Activities |
 |-----|-------|-----------|
-| **Mon** | **System-V & Requirements** | System-V model deep dive. SMART requirements from objectives. Functional decomposition. Teams enter mission need, run orbit/class advisors, generate requirements in SpaceCDF. |
-| **Tue** | **Subsystem Design: Power, AOCS, Thermal** | Orbit selection trade. Solar array & battery sizing. Duty cycling. Attitude control selection. Thermal environment analysis. Teams run design loop, review parametric budgets. |
-| **Wed** | **Subsystem Design: Comms, Structure, Propulsion** | Link budget calculation. Frequency band selection & licensing. CubeSat structure and deployer selection. Propulsion trade (if needed). Equipment selection in browser. |
+| **Mon** | **System-V, Requirements, Orbit & Architecture** | System-V model deep dive. SMART requirements from objectives. Functional decomposition. Orbit selection trade. Mission architecture: segments, interfaces, budgets. Teams enter mission need, run orbit/class advisors, generate requirements in SpaceCDF. |
+| **Tue** | **Subsystem Design: Power & Thermal, AOCS & Propulsion** | Solar array & battery sizing. Duty cycling. Thermal environment analysis. Attitude control selection. Propulsion trade (if needed). Teams run design loop, review parametric budgets. |
+| **Wed** | **Subsystem Design: Comms, Structure & OBDH** | Link budget calculation. Frequency band selection & licensing. CubeSat structure and deployer selection. On-board computer and data handling. Equipment selection in browser. |
 | **Thu** | **Integration, Verification, Cost** | Interface matrix review. V&V matrix assignment. Environmental test planning. Cost estimation (parametric + COTS). BOM generation. Trade studies on key decisions. |
-| **Fri** | **Design Review & Optimization** | Run optimizer. Sensitivity analysis. Gate review (MCR criteria). Resolve conflicts. Generate ECSS documents (MRD, TS, VP). Regulatory filings (ITU, RSSSA if applicable). Each team presents preliminary design. |
+| **Fri** | **Design Review & Optimization** | Run optimizer. Sensitivity analysis. Gate review: a PDR-style review against the PDR criteria. Resolve conflicts. Generate ECSS documents (MRD, TS, VP). Regulatory filings (ITU, RSSSA if applicable). Each team presents preliminary design. |
 
 ### WEEK 3: Mission Operations & Simulation
 
@@ -44,7 +44,7 @@
 | Component | Weight | Description |
 |-----------|--------|-------------|
 | Worksheets (daily) | 20% | Completed during sessions, formative feedback |
-| Design Review (Week 2 Fri) | 30% | Team presentation of preliminary design |
+| PDR-style Design Review (Week 2 Fri) | 30% | Team presentation of preliminary design |
 | Simulation Performance (Week 3) | 20% | Console operations, anomaly response |
 | Final Presentation (Week 3 Fri) | 30% | Complete mission design, ops concept, lessons |
 

@@ -1,11 +1,26 @@
 """SpaceCDF — Gate exit criteria evaluator.
 
-Loads gate_exit_criteria.yaml and evaluates each criterion against the
-current study state (MissionNeed + DesignState + position answers).
-Returns a structured pass/fail/not-evaluated checklist.
+Loads ``configs/gate_exit_criteria.yaml`` and evaluates each criterion of one
+review gate (MCR / SRR / PDR) against the current study state: the Mission
+Need, the design parameters, the study's requirements and its element tree.
+
+Every criterion comes back with
+
+* ``status``   — ``pass`` | ``fail`` | ``manual`` | ``not_evaluated``
+  (what the evidence says);
+* ``verdict``  — ``pass`` | ``fail`` | ``advisory`` | ``manual`` |
+  ``not_evaluated`` (what it means for the gate). A ``should_pass`` criterion
+  that is not met is ``advisory``: it is reported but never blocks the gate
+  (author ruling Q23: PDR should-pass items stay advisory);
+* ``evidence_found`` — an English message, plus ``evidence_key`` /
+  ``evidence_params`` so the UI can render the same message in French
+  (the key is the English template with ``{{var}}`` placeholders).
+
+``ready`` is True when every ``must_pass`` criterion has status ``pass``.
 """
 from __future__ import annotations
 
+import json
 import logging
 from functools import lru_cache
 from pathlib import Path
@@ -13,9 +28,49 @@ from typing import Any
 
 import yaml
 
-from spacecdf_common.models.mission_need import MissionNeed
-
 logger = logging.getLogger(__name__)
+
+#: Message used when a criterion needs parameters the design loop has not produced yet.
+MSG_RUN_DESIGN = "Run the design loop first: {{params}} not available"
+
+# Every ``evidence_key`` this module can emit. The frontend lists the same
+# strings in components/gateReviewText.ts so they are translated; a test keeps
+# the three (this tuple, the frontend table, the French catalog) in step.
+EVIDENCE_KEYS: tuple[str, ...] = (
+    "Requires manual assessment",
+    "Auto-evaluation not implemented for this criterion",
+    MSG_RUN_DESIGN,
+    "Problem statement defined",
+    "Problem statement is empty",
+    "{{n}} stakeholder(s) identified",
+    "{{n}} primary objective(s) with measurable criteria",
+    "{{n}} alternative(s), including a non-space option",
+    "{{n}} alternative(s), no non-space option",
+    "Concept selected with rationale",
+    "Concept selected, rationale missing",
+    "No concept selected",
+    "ConOps summary documented",
+    "ConOps summary is empty",
+    "Mass margin {{mass}}%, power margin {{power}}%",
+    "No cost target set",
+    "Cost {{cost}} MEUR vs target {{target}} MEUR",
+    "Risk analysis run: {{n}} risk(s) identified",
+    "Debris compliance score {{score}}/100",
+    "No objectives defined",
+    "{{traced}}/{{total}} objectives traced to requirements",
+    "No requirements defined",
+    "{{ok}}/{{total}} requirements have a verification method and a threshold",
+    "No requirement threshold can be checked against the design yet",
+    "{{met}}/{{total}} checkable requirements met ({{pct}}%)",
+    "Mass margin {{mass}}%, power margin {{power}}% (required ≥ {{min}}%)",
+    "Sustainability score {{score}}/100; casualty risk compliant",
+    "Sustainability score {{score}}/100; casualty risk not compliant",
+    "{{n}} requirement(s) not met: {{codes}}",
+    "All {{n}} checkable requirements met",
+    "No subsystem elements defined",
+    "{{ok}}/{{total}} subsystems have at least one component",
+    "Reliability {{rel}} vs target {{target}}",
+)
 
 
 def _criteria_file() -> Path:
@@ -31,194 +86,447 @@ def _criteria_file() -> Path:
 def _load() -> dict[str, Any]:
     try:
         path = _criteria_file()
-        return yaml.safe_load(path.read_text()) or {"phases": {}}
+        return yaml.safe_load(path.read_text(encoding="utf-8")) or {"phases": {}}
     except (FileNotFoundError, yaml.YAMLError) as exc:
         logger.warning("Gate criteria file failed to load: %s", exc)
         return {"phases": {}}
 
 
 def list_gates() -> list[str]:
+    """Phase ids configured in the YAML (pre_phase_a, phase_a, ...)."""
     return list(_load().get("phases", {}).keys())
 
 
-def get_gate(phase_id: str) -> dict[str, Any] | None:
-    return _load().get("phases", {}).get(phase_id)
+def list_gate_options() -> list[dict[str, str]]:
+    """[{phase, gate, gate_name}] in YAML order — for selectors."""
+    return [
+        {"phase": pid, "gate": g.get("gate", ""), "gate_name": g.get("gate_name", "")}
+        for pid, g in _load().get("phases", {}).items()
+    ]
 
+
+def resolve_phase(key: str) -> str | None:
+    """Accept a phase id (``phase_b1``) or a gate name (``PDR``/``pdr``)."""
+    phases = _load().get("phases", {})
+    if not key:
+        return None
+    if key in phases:
+        return key
+    k = key.strip().lower()
+    for pid, g in phases.items():
+        if pid.lower() == k or str(g.get("gate", "")).lower() == k:
+            return pid
+    return None
+
+
+def get_gate(phase_id: str) -> dict[str, Any] | None:
+    pid = resolve_phase(phase_id)
+    return _load().get("phases", {}).get(pid) if pid else None
+
+
+# --------------------------------------------------------------------------- inputs
+
+def _mn_view(mission_need: Any) -> dict[str, Any]:
+    """Plain-dict view of a Mission Need (pydantic model or the frontend's dict).
+
+    The frontend store calls the alternatives list ``alternatives``; the model
+    calls it ``alternatives_considered``. Both are accepted.
+    """
+    if mission_need is None:
+        return {}
+    if hasattr(mission_need, "model_dump"):
+        d = mission_need.model_dump(mode="json")
+    elif isinstance(mission_need, dict):
+        d = dict(mission_need)
+    else:
+        return {}
+    if not d.get("alternatives_considered") and d.get("alternatives"):
+        d["alternatives_considered"] = d["alternatives"]
+    return d
+
+
+def _flat_params(design_params: Any) -> dict[str, Any]:
+    """{param id: number} from a dict of numbers, ``{"value": ...}`` dicts or
+    objects with ``.value``. Keys starting with ``_`` are kept as-is."""
+    out: dict[str, Any] = {}
+    for k, v in (design_params or {}).items():
+        if k.startswith("_"):
+            out[k] = v
+            continue
+        if isinstance(v, dict):
+            v = v.get("value")
+        elif hasattr(v, "value"):
+            v = v.value
+        if isinstance(v, bool):
+            v = 1.0 if v else 0.0
+        if isinstance(v, (int, float)):
+            out[k] = float(v)
+    return out
+
+
+def _get_param(dp: dict, pid: str, default: float | None = None) -> float | None:
+    """Numeric parameter value, or ``default`` when absent / non-numeric."""
+    p = dp.get(pid)
+    if p is None:
+        return default
+    if isinstance(p, dict):
+        p = p.get("value")
+    elif hasattr(p, "value"):
+        p = p.value
+    if isinstance(p, bool):
+        return 1.0 if p else 0.0
+    if isinstance(p, (int, float)):
+        return float(p)
+    return default
+
+
+# --------------------------------------------------------------------------- evaluation
 
 def evaluate_gate(
     phase_id: str,
-    mission_need: MissionNeed | None = None,
+    mission_need: Any = None,
     design_params: dict[str, Any] | None = None,
     position_answers: list[Any] | None = None,
     target_mass_kg: float | None = None,
     target_cost_meur: float | None = None,
     reliability_target: float | None = None,
+    requirements: list[dict] | None = None,
+    elements: list[dict] | None = None,
 ) -> dict[str, Any]:
     """Evaluate all exit criteria for a gate and return structured results.
 
-    Returns:
+    ``phase_id`` is a phase id from the YAML or a gate name (MCR/SRR/PDR).
+
+    Returns::
+
         {
-            "phase": str,
-            "gate": str,
-            "gate_name": str,
-            "purpose": str,
-            "criteria": [
-                {"id": str, "question": str, "status": "pass"|"fail"|"not_evaluated"|"manual",
-                 "evidence_found": str, "priority": str, "category": str}
-            ],
-            "summary": {"total": int, "pass": int, "fail": int, "manual": int, "not_evaluated": int},
-            "ready": bool  # True if all must_pass criteria pass
+            "phase": str, "gate": str, "gate_name": str, "purpose": str,
+            "authority": str, "found": bool,
+            "criteria": [{"id", "question", "category", "priority", "advisory",
+                          "status", "verdict", "evidence_required",
+                          "evidence_found", "evidence_key", "evidence_params"}],
+            "summary": {"total", "pass", "fail", "manual", "not_evaluated",
+                        "advisory", "must_pass", "must_pass_met"},
+            "ready": bool,  # True if all must_pass criteria pass
+            "ready_pending_manual": bool,  # must_pass all pass or manual
         }
     """
-    gate = get_gate(phase_id)
+    pid = resolve_phase(phase_id)
+    gate = _load().get("phases", {}).get(pid) if pid else None
     if not gate:
-        return {"phase": phase_id, "gate": "?", "criteria": [], "summary": {}, "ready": False}
+        return {"phase": phase_id, "gate": "?", "gate_name": "", "purpose": "", "authority": "",
+                "found": False, "criteria": [], "summary": {}, "ready": False,
+                "ready_pending_manual": False}
 
-    mn = mission_need or MissionNeed()
-    dp = design_params or {}
-    answers = position_answers or []
+    ctx = {
+        "mn": _mn_view(mission_need),
+        "dp": _flat_params(design_params),
+        "answers": position_answers or [],
+        "target_mass": target_mass_kg,
+        "target_cost": target_cost_meur,
+        "rel_target": reliability_target,
+        "reqs": [r for r in (requirements or []) if r.get("status") != "retired"],
+        "elements": [e for e in (elements or (design_params or {}).get("_elements") or [])
+                     if not e.get("deleted_at")],
+    }
 
-    results = []
-    for ec in gate.get("exit_criteria", []):
-        result = _evaluate_criterion(ec, mn, dp, answers, target_mass_kg, target_cost_meur, reliability_target)
-        results.append(result)
+    results = [_evaluate_criterion(ec, ctx) for ec in gate.get("exit_criteria", [])]
 
+    must_pass = [r for r in results if r["priority"] == "must_pass"]
     summary = {
         "total": len(results),
         "pass": sum(1 for r in results if r["status"] == "pass"),
         "fail": sum(1 for r in results if r["status"] == "fail"),
         "manual": sum(1 for r in results if r["status"] == "manual"),
         "not_evaluated": sum(1 for r in results if r["status"] == "not_evaluated"),
+        "advisory": sum(1 for r in results if r["verdict"] == "advisory"),
+        "must_pass": len(must_pass),
+        "must_pass_met": sum(1 for r in must_pass if r["status"] == "pass"),
     }
-
-    # Ready if all must_pass criteria pass
-    must_pass = [r for r in results if r["priority"] == "must_pass"]
     ready = all(r["status"] == "pass" for r in must_pass) if must_pass else False
+    # Nothing automatic blocks the gate; only manual sign-offs remain open.
+    ready_pending_manual = (all(r["status"] in ("pass", "manual") for r in must_pass)
+                            if must_pass else False)
 
     return {
-        "phase": phase_id,
+        "phase": pid,
         "gate": gate.get("gate", ""),
         "gate_name": gate.get("gate_name", ""),
-        "purpose": gate.get("purpose", "").strip(),
+        "purpose": " ".join(str(gate.get("purpose", "")).split()),
         "authority": gate.get("authority", ""),
+        "found": True,
         "criteria": results,
         "summary": summary,
         "ready": ready,
+        "ready_pending_manual": ready_pending_manual,
     }
 
 
-def _evaluate_criterion(
-    ec: dict, mn: MissionNeed, dp: dict, answers: list,
-    target_mass: float | None, target_cost: float | None, rel_target: float | None,
-) -> dict[str, Any]:
+def _render(template: str, params: dict[str, Any]) -> str:
+    out = template
+    for k, v in params.items():
+        out = out.replace("{{" + k + "}}", str(v))
+    return out
+
+
+def _set(result: dict, status: str, key: str, **params: Any) -> None:
+    result["status"] = status
+    result["evidence_key"] = key
+    result["evidence_params"] = params
+    result["evidence_found"] = _render(key, params)
+
+
+def _fmt(v: float, d: int = 0) -> str:
+    return f"{v:.{d}f}"
+
+
+def _need(result: dict, dp: dict, *pids: str) -> list[float] | None:
+    """Values of ``pids``; when any is missing mark the criterion not evaluated."""
+    vals = [_get_param(dp, p) for p in pids]
+    missing = [p for p, v in zip(pids, vals) if v is None]
+    if missing:
+        _set(result, "not_evaluated", MSG_RUN_DESIGN, params=", ".join(missing))
+        return None
+    return vals  # type: ignore[return-value]
+
+
+def _threshold_results(reqs: list[dict], dp: dict) -> list[tuple[dict, str]]:
+    """(requirement, pass|fail|untestable) for every requirement with a threshold."""
+    from .compliance_tracker import ComplianceTracker
+
+    tracker = ComplianceTracker()
+    plain = {k: v for k, v in dp.items() if not k.startswith("_")}
+    out = []
+    for r in reqs:
+        if not r.get("threshold_param_path"):
+            continue
+        out.append((r, tracker.evaluate_single(r, plain).status))
+    return out
+
+
+def _has_threshold(r: dict) -> bool:
+    raw = r.get("threshold_value")
+    if not r.get("threshold_param_path") or not r.get("threshold_op") or raw in (None, ""):
+        return False
+    try:
+        float(json.loads(raw) if isinstance(raw, str) else raw)
+    except (ValueError, TypeError, json.JSONDecodeError):
+        return False
+    return True
+
+
+def _evaluate_criterion(ec: dict, ctx: dict) -> dict[str, Any]:
     """Evaluate a single exit criterion."""
     cid = ec.get("id", "")
     status_mode = ec.get("status", "manual")
-    result = {
+    priority = ec.get("priority", "should_pass")
+    result: dict[str, Any] = {
         "id": cid,
         "question": ec.get("question", ""),
         "category": ec.get("category", ""),
-        "priority": ec.get("priority", "should_pass"),
+        "priority": priority,
+        "advisory": priority != "must_pass",
+        "evidence_required": ec.get("evidence", ""),
         "status": "not_evaluated",
+        "verdict": "not_evaluated",
         "evidence_found": "",
+        "evidence_key": "",
+        "evidence_params": {},
     }
 
     if status_mode == "manual":
-        result["status"] = "manual"
-        result["evidence_found"] = "Requires manual assessment"
-        return result
-
-    # Auto-evaluate based on criterion ID patterns
-    try:
-        if cid == "MCR-EC-01":
-            ok = bool(mn.problem_statement.strip())
-            result["status"] = "pass" if ok else "fail"
-            result["evidence_found"] = f"Problem statement: {'defined' if ok else 'empty'}"
-
-        elif cid == "MCR-EC-02":
-            ok = len(mn.stakeholders) >= 1
-            result["status"] = "pass" if ok else "fail"
-            result["evidence_found"] = f"{len(mn.stakeholders)} stakeholder(s) identified"
-
-        elif cid == "MCR-EC-03":
-            primary = [o for o in mn.objectives if o.priority.value == "primary" and o.measurable_criterion]
-            ok = len(primary) >= 1
-            result["status"] = "pass" if ok else "fail"
-            result["evidence_found"] = f"{len(primary)} primary objective(s) with measurable criteria"
-
-        elif cid == "MCR-EC-04":
-            has_non_space = mn.has_non_space_alternative
-            has_multiple = len(mn.alternatives_considered) >= 2
-            ok = has_multiple and has_non_space
-            result["status"] = "pass" if ok else "fail"
-            result["evidence_found"] = f"{len(mn.alternatives_considered)} alternatives, non-space: {'yes' if has_non_space else 'no'}"
-
-        elif cid == "MCR-EC-05":
-            ok = bool(mn.selected_alternative_id and mn.selection_rationale.strip())
-            result["status"] = "pass" if ok else "fail"
-            result["evidence_found"] = f"Selected: {'yes' if mn.selected_alternative_id else 'no'}, rationale: {'provided' if mn.selection_rationale.strip() else 'missing'}"
-
-        elif cid == "MCR-EC-06":
-            ok = bool(mn.conops_summary.strip())
-            result["status"] = "pass" if ok else "fail"
-            result["evidence_found"] = f"ConOps summary: {'documented' if ok else 'empty'}"
-
-        elif cid == "MCR-EC-07":
-            mass_margin = _get_param(dp, "systems.mass_margin_percent", -999)
-            power_margin = _get_param(dp, "systems.power_margin_percent", -999)
-            ok = mass_margin > -50 and power_margin > 0
-            result["status"] = "pass" if ok else "fail"
-            result["evidence_found"] = f"Mass margin: {mass_margin:.0f}%, Power margin: {power_margin:.0f}%"
-
-        elif cid == "MCR-EC-08":
-            cost = _get_param(dp, "cost.total_meur", 0)
-            if target_cost and target_cost > 0:
-                ok = cost <= target_cost * 1.2  # 20% slack for Phase 0 estimates
-                result["status"] = "pass" if ok else "fail"
-                result["evidence_found"] = f"Cost: {cost:.1f} MEUR vs target {target_cost:.1f} MEUR"
-            else:
-                result["status"] = "pass"
-                result["evidence_found"] = "No cost target set"
-
-        elif cid == "MCR-EC-10":
-            score = _get_param(dp, "debris.compliance_score", 0)
-            ok = score >= 50
-            result["status"] = "pass" if ok else "fail"
-            result["evidence_found"] = f"Debris compliance score: {score:.0f}/100"
-
-        elif cid.startswith("SRR-EC-06"):
-            mass_m = _get_param(dp, "systems.mass_margin_percent", -999)
-            power_m = _get_param(dp, "systems.power_margin_percent", -999)
-            ok = mass_m >= 0 and power_m >= 0
-            result["status"] = "pass" if ok else "fail"
-            result["evidence_found"] = f"Mass: {mass_m:.0f}%, Power: {power_m:.0f}%"
-
-        elif cid.startswith("SRR-EC-10") or cid.startswith("PDR-EC-05"):
-            rel = _get_param(dp, "reliability.mission_reliability", 0)
-            target = rel_target or 0.9
-            ok = rel >= target
-            result["status"] = "pass" if ok else "fail"
-            result["evidence_found"] = f"Reliability: {rel:.3f} vs target {target:.2f}"
-
-        else:
-            # Generic: try to evaluate from evidence string pattern
+        _set(result, "manual", "Requires manual assessment")
+    else:
+        try:
+            _auto(cid, result, ctx)
+        except Exception as e:  # noqa: BLE001 — one bad criterion must not sink the gate
+            logger.warning("Gate criterion %s failed to evaluate: %s", cid, e)
             result["status"] = "not_evaluated"
-            result["evidence_found"] = "Auto-evaluation not implemented for this criterion"
+            result["evidence_key"] = ""
+            result["evidence_params"] = {}
+            result["evidence_found"] = f"Evaluation error: {e}"
 
-    except Exception as e:
-        result["status"] = "not_evaluated"
-        result["evidence_found"] = f"Evaluation error: {e}"
-
+    st = result["status"]
+    if st == "pass":
+        result["verdict"] = "pass"
+    elif result["advisory"]:
+        result["verdict"] = "advisory"
+    else:
+        result["verdict"] = st
     return result
 
 
-def _get_param(dp: dict, pid: str, default: float) -> float:
-    """Extract a numeric parameter value from design params dict."""
-    p = dp.get(pid)
-    if p is None:
-        return default
-    if isinstance(p, (int, float)):
-        return float(p)
-    if hasattr(p, "value") and isinstance(p.value, (int, float)):
-        return float(p.value)
-    return default
+def _auto(cid: str, result: dict, ctx: dict) -> None:  # noqa: C901 — one branch per criterion
+    mn, dp = ctx["mn"], ctx["dp"]
+    reqs, elements = ctx["reqs"], ctx["elements"]
+
+    # ---------------------------------------------------------------- MCR
+    if cid == "MCR-EC-01":
+        if (mn.get("problem_statement") or "").strip():
+            _set(result, "pass", "Problem statement defined")
+        else:
+            _set(result, "fail", "Problem statement is empty")
+
+    elif cid == "MCR-EC-02":
+        n = len(mn.get("stakeholders") or [])
+        _set(result, "pass" if n >= 1 else "fail", "{{n}} stakeholder(s) identified", n=n)
+
+    elif cid == "MCR-EC-03":
+        n = len([o for o in mn.get("objectives") or []
+                 if o.get("priority", "primary") == "primary" and (o.get("measurable_criterion") or "").strip()])
+        _set(result, "pass" if n >= 1 else "fail", "{{n}} primary objective(s) with measurable criteria", n=n)
+
+    elif cid == "MCR-EC-04":
+        alts = mn.get("alternatives_considered") or []
+        non_space = {"aerial_drone", "aerial_aircraft", "ground_sensor", "ground_network", "space_existing"}
+        has_ns = any(a.get("type") in non_space for a in alts)
+        ok = len(alts) >= 2 and has_ns
+        key = ("{{n}} alternative(s), including a non-space option" if has_ns
+               else "{{n}} alternative(s), no non-space option")
+        _set(result, "pass" if ok else "fail", key, n=len(alts))
+
+    elif cid == "MCR-EC-05":
+        sel = bool(mn.get("selected_alternative_id"))
+        rat = bool((mn.get("selection_rationale") or "").strip())
+        if sel and rat:
+            _set(result, "pass", "Concept selected with rationale")
+        elif sel:
+            _set(result, "fail", "Concept selected, rationale missing")
+        else:
+            _set(result, "fail", "No concept selected")
+
+    elif cid == "MCR-EC-06":
+        if (mn.get("conops_summary") or "").strip():
+            _set(result, "pass", "ConOps summary documented")
+        else:
+            _set(result, "fail", "ConOps summary is empty")
+
+    elif cid == "MCR-EC-07":
+        v = _need(result, dp, "systems.mass_margin_percent", "systems.power_margin_percent")
+        if v:
+            mass, power = v
+            _set(result, "pass" if mass > -50 and power > 0 else "fail",
+                 "Mass margin {{mass}}%, power margin {{power}}%", mass=_fmt(mass), power=_fmt(power))
+
+    elif cid == "MCR-EC-08":
+        target = ctx["target_cost"]
+        if not target or target <= 0:
+            _set(result, "pass", "No cost target set")
+        else:
+            v = _need(result, dp, "cost.total_meur")
+            if v:
+                cost = v[0]
+                # 20 % allowance on Phase 0 estimates
+                _set(result, "pass" if cost <= target * 1.2 else "fail",
+                     "Cost {{cost}} MEUR vs target {{target}} MEUR", cost=_fmt(cost, 1), target=_fmt(target, 1))
+
+    elif cid == "MCR-EC-09":
+        v = _need(result, dp, "risk.total_risks")
+        if v:
+            _set(result, "pass", "Risk analysis run: {{n}} risk(s) identified", n=int(v[0]))
+
+    elif cid == "MCR-EC-10":
+        v = _need(result, dp, "debris.compliance_score")
+        if v:
+            _set(result, "pass" if v[0] >= 50 else "fail",
+                 "Debris compliance score {{score}}/100", score=_fmt(v[0]))
+
+    # ---------------------------------------------------------------- SRR
+    elif cid == "SRR-EC-01":
+        objectives = mn.get("objectives") or []
+        if not objectives:
+            _set(result, "fail", "No objectives defined")
+        else:
+            traced_ids = {r.get("objective_id") for r in reqs if r.get("objective_id")}
+            traced = sum(1 for o in objectives
+                         if o.get("traced_to_requirements") or (o.get("id") and o.get("id") in traced_ids))
+            _set(result, "pass" if traced == len(objectives) else "fail",
+                 "{{traced}}/{{total}} objectives traced to requirements", traced=traced, total=len(objectives))
+
+    elif cid == "SRR-EC-02":
+        if not reqs:
+            _set(result, "fail", "No requirements defined")
+        else:
+            ok = sum(1 for r in reqs if r.get("verification_method") and _has_threshold(r))
+            _set(result, "pass" if ok == len(reqs) else "fail",
+                 "{{ok}}/{{total}} requirements have a verification method and a threshold",
+                 ok=ok, total=len(reqs))
+
+    elif cid == "SRR-EC-03":
+        res = [s for _, s in _threshold_results(reqs, dp) if s != "untestable"]
+        if not res:
+            _set(result, "not_evaluated", "No requirement threshold can be checked against the design yet")
+        else:
+            met = sum(1 for s in res if s == "pass")
+            pct = 100.0 * met / len(res)
+            _set(result, "pass" if pct >= 80 else "fail",
+                 "{{met}}/{{total}} checkable requirements met ({{pct}}%)",
+                 met=met, total=len(res), pct=_fmt(pct))
+
+    elif cid == "SRR-EC-06":
+        v = _need(result, dp, "systems.mass_margin_percent", "systems.power_margin_percent")
+        if v:
+            mass, power = v
+            _set(result, "pass" if mass >= 0 and power >= 0 else "fail",
+                 "Mass margin {{mass}}%, power margin {{power}}% (required ≥ {{min}}%)",
+                 mass=_fmt(mass), power=_fmt(power), min=0)
+
+    elif cid == "SRR-EC-10":
+        v = _need(result, dp, "sustainability.score", "debris.casualty_compliant")
+        if v:
+            score, casualty = v
+            ok = score >= 55 and casualty >= 1
+            key = ("Sustainability score {{score}}/100; casualty risk compliant" if casualty >= 1
+                   else "Sustainability score {{score}}/100; casualty risk not compliant")
+            _set(result, "pass" if ok else "fail", key, score=_fmt(score))
+
+    # ---------------------------------------------------------------- PDR
+    elif cid == "PDR-EC-01":
+        res = [(r, s) for r, s in _threshold_results(reqs, dp) if s != "untestable"]
+        if not res:
+            _set(result, "not_evaluated", "No requirement threshold can be checked against the design yet")
+        else:
+            failed = [r.get("code") or r.get("id", "") for r, s in res if s == "fail"]
+            if failed:
+                _set(result, "fail", "{{n}} requirement(s) not met: {{codes}}",
+                     n=len(failed), codes=", ".join(failed[:8]) + (" …" if len(failed) > 8 else ""))
+            else:
+                _set(result, "pass", "All {{n}} checkable requirements met", n=len(res))
+
+    elif cid == "PDR-EC-03":
+        v = _need(result, dp, "systems.mass_margin_percent", "systems.power_margin_percent")
+        if v:
+            mass, power = v
+            _set(result, "pass" if mass >= 10 and power >= 10 else "fail",
+                 "Mass margin {{mass}}%, power margin {{power}}% (required ≥ {{min}}%)",
+                 mass=_fmt(mass), power=_fmt(power), min=10)
+
+    elif cid == "PDR-EC-04":
+        subs = [e for e in elements if e.get("element_type") == "subsystem"]
+        if not subs:
+            _set(result, "not_evaluated", "No subsystem elements defined")
+        else:
+            children: dict[str, list[dict]] = {}
+            for e in elements:
+                if e.get("parent_id"):
+                    children.setdefault(e["parent_id"], []).append(e)
+
+            def has_component(eid: str, depth: int = 0) -> bool:
+                if depth > 20:
+                    return False
+                return any(c.get("element_type") == "component" or has_component(c.get("id", ""), depth + 1)
+                           for c in children.get(eid, []))
+
+            ok = sum(1 for s in subs if has_component(s.get("id", "")))
+            _set(result, "pass" if ok == len(subs) else "fail",
+                 "{{ok}}/{{total}} subsystems have at least one component", ok=ok, total=len(subs))
+
+    elif cid in ("PDR-EC-05",):
+        v = _need(result, dp, "reliability.mission_reliability")
+        if v:
+            target = ctx["rel_target"] or 0.9
+            _set(result, "pass" if v[0] >= target else "fail",
+                 "Reliability {{rel}} vs target {{target}}", rel=_fmt(v[0], 3), target=_fmt(target, 2))
+
+    else:
+        _set(result, "not_evaluated", "Auto-evaluation not implemented for this criterion")

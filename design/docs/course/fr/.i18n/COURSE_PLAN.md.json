@@ -58,29 +58,29 @@
    "fr_hash": "ea59a87d4455ae54"
   },
   {
-   "id": "spacecdf-mission-design-course-40-hour-programme/day-2-requirements-functions-8-hours",
-   "en_hash": "dca5a32befb88f33",
-   "fr_hash": "7cbf602e8f568770"
+   "id": "spacecdf-mission-design-course-40-hour-programme/day-2-requirements-functions-orbit-architecture-8-hours",
+   "en_hash": "8cbf9e9faec2c932",
+   "fr_hash": "ac132eec5b959bb7"
   },
   {
-   "id": "spacecdf-mission-design-course-40-hour-programme/day-2-requirements-functions-8-hours/session-2-1-requirements-engineering-2-hrs",
+   "id": "spacecdf-mission-design-course-40-hour-programme/day-2-requirements-functions-orbit-architecture-8-hours/session-2-1-requirements-engineering-2-hrs",
    "en_hash": "08988f31e17b3164",
    "fr_hash": "dd1903508bc884b9"
   },
   {
-   "id": "spacecdf-mission-design-course-40-hour-programme/day-2-requirements-functions-8-hours/session-2-2-functional-decomposition-2-hrs",
+   "id": "spacecdf-mission-design-course-40-hour-programme/day-2-requirements-functions-orbit-architecture-8-hours/session-2-2-functional-decomposition-2-hrs",
    "en_hash": "ad017faa475e9093",
    "fr_hash": "e01215c80997ebf7"
   },
   {
-   "id": "spacecdf-mission-design-course-40-hour-programme/day-2-requirements-functions-8-hours/session-2-3-interface-management-2-hrs",
-   "en_hash": "b7e85cd3dc7c64ee",
-   "fr_hash": "c815453a6d54b0eb"
+   "id": "spacecdf-mission-design-course-40-hour-programme/day-2-requirements-functions-orbit-architecture-8-hours/session-2-3-orbit-selection-mission-architecture-2-hrs",
+   "en_hash": "f28533203617022b",
+   "fr_hash": "a6bdcd26c21aa171"
   },
   {
-   "id": "spacecdf-mission-design-course-40-hour-programme/day-2-requirements-functions-8-hours/session-2-4-design-budgets-introduction-2-hrs",
-   "en_hash": "9411c49412dc66bb",
-   "fr_hash": "c1081297148039f8"
+   "id": "spacecdf-mission-design-course-40-hour-programme/day-2-requirements-functions-orbit-architecture-8-hours/session-2-4-mission-architecture-segments-interfaces-budgets-2-hrs",
+   "en_hash": "28baa1640506c63e",
+   "fr_hash": "58e6de3bf9f09c98"
   },
   {
    "id": "spacecdf-mission-design-course-40-hour-programme/day-3-subsystem-design-8-hours",
@@ -88,24 +88,24 @@
    "fr_hash": "7c7ab388836d6e55"
   },
   {
-   "id": "spacecdf-mission-design-course-40-hour-programme/day-3-subsystem-design-8-hours/session-3-1-orbit-design-selection-2-hrs",
-   "en_hash": "12d51afed98613ad",
-   "fr_hash": "09d229464dc6d381"
+   "id": "spacecdf-mission-design-course-40-hour-programme/day-3-subsystem-design-8-hours/session-3-1-power-thermal-2-hrs",
+   "en_hash": "5b943c60e652f1ce",
+   "fr_hash": "f88ff5b1235d3fd6"
   },
   {
-   "id": "spacecdf-mission-design-course-40-hour-programme/day-3-subsystem-design-8-hours/session-3-2-payload-communications-2-hrs",
-   "en_hash": "302b63225d54413a",
-   "fr_hash": "9439cb7c24d16186"
+   "id": "spacecdf-mission-design-course-40-hour-programme/day-3-subsystem-design-8-hours/session-3-2-aocs-propulsion-2-hrs",
+   "en_hash": "3d3d43542d8c366b",
+   "fr_hash": "467e6c520d245a69"
   },
   {
-   "id": "spacecdf-mission-design-course-40-hour-programme/day-3-subsystem-design-8-hours/session-3-3-power-aocs-thermal-2-hrs",
-   "en_hash": "817bf51e189d01cd",
-   "fr_hash": "1be9ab06efc0bcc2"
+   "id": "spacecdf-mission-design-course-40-hour-programme/day-3-subsystem-design-8-hours/session-3-3-communications-2-hrs",
+   "en_hash": "5e1d82888c558565",
+   "fr_hash": "078700ff74586940"
   },
   {
-   "id": "spacecdf-mission-design-course-40-hour-programme/day-3-subsystem-design-8-hours/session-3-4-structure-propulsion-data-handling-2-hrs",
-   "en_hash": "87f3665ff2242a2a",
-   "fr_hash": "e83001bb7d2bb62d"
+   "id": "spacecdf-mission-design-course-40-hour-programme/day-3-subsystem-design-8-hours/session-3-4-structure-on-board-data-handling-2-hrs",
+   "en_hash": "c6c7991326e88dfa",
+   "fr_hash": "acac93138d6096e7"
   },
   {
    "id": "spacecdf-mission-design-course-40-hour-programme/day-4-integration-verification-8-hours",
@@ -119,8 +119,8 @@
   },
   {
    "id": "spacecdf-mission-design-course-40-hour-programme/day-4-integration-verification-8-hours/session-4-2-verification-validation-planning-2-hrs",
-   "en_hash": "52e808885abb3468",
-   "fr_hash": "acf1e9150dff7064"
+   "en_hash": "743a3e531e0bef1e",
+   "fr_hash": "96ccdc493bb7797c"
   },
   {
    "id": "spacecdf-mission-design-course-40-hour-programme/day-4-integration-verification-8-hours/session-4-3-risk-management-2-hrs",
@@ -139,8 +139,8 @@
   },
   {
    "id": "spacecdf-mission-design-course-40-hour-programme/day-5-design-review-regulatory-8-hours/session-5-1-gate-review-preparation-2-hrs",
-   "en_hash": "87cc1bd151ef84df",
-   "fr_hash": "fb35961f98f09fb5"
+   "en_hash": "9e061873dd17d2c4",
+   "fr_hash": "6eed497e7d660c94"
   },
   {
    "id": "spacecdf-mission-design-course-40-hour-programme/day-5-design-review-regulatory-8-hours/session-5-2-regulatory-licensing-2-hrs",
@@ -248,5 +248,5 @@
    "fr_hash": "acb8e5b6325c2843"
   }
  ],
- "en_commit": "be16bc3"
+ "en_commit": "c4a140a"
 }

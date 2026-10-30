@@ -165,9 +165,9 @@ Une exigence composée qui traite plusieurs points doit être scindée pour perm
 
 ## 5.5 Méthodes de vérification — ATIR(D)
 
-*[Source : ECSS-E-ST-10-02C Rev.1, sect. 5.3 ; NASA SEH, sect. 5.3]*
+*[Source : ECSS-E-ST-10-02C Rev.1, §5.2.2 ; NASA SEH, sect. 5.3]*
 
-Chaque exigence doit se voir affecter une méthode de vérification. L'ECSS-E-ST-10-02C définit quatre méthodes — analyse, essai, inspection et revue de conception — et la pratique de la NASA y ajoute la démonstration ; ce manuel abrège l'ensemble en ATIR(D). Le chapitre 14 décrit la planification et la mise en œuvre de chaque méthode.
+Chaque exigence doit se voir affecter une méthode de vérification. Le §5.2.2.1 de l'ECSS-E-ST-10-02C définit quatre méthodes — analyse, essai, inspection et revue de conception — et compte la démonstration dans l'essai, tandis que la pratique de la NASA présente la démonstration comme une méthode distincte ; ce manuel abrège l'ensemble en ATIR(D). Le chapitre 14 décrit la planification et la mise en œuvre de chaque méthode.
 
 | Méthode | Code | Ce qu'elle prouve | Quand l'utiliser |
 |--------|------|---------------|-----------|
@@ -318,6 +318,6 @@ Chaque exigence doit se voir affecter une méthode de vérification. L'ECSS-E-ST
 1. NASA, *Systems Engineering Handbook* (NASA/SP-2016-6105 Rev 2), 2016, chap. 4.2 et annexe C. [https://www.nasa.gov/reference/systems-engineering-handbook/](https://www.nasa.gov/reference/systems-engineering-handbook/)
 2. ECSS, *ECSS-E-ST-10-06C : Technical Requirements Specification*, 2009, sect. 5. [https://ecss.nl/standard/ecss-e-st-10-06c-technical-requirements-specification/](https://ecss.nl/standard/ecss-e-st-10-06c-technical-requirements-specification/)
 3. ECSS, *ECSS-E-ST-10C Rev.1 : Space Engineering — System Engineering General Requirements*, 2017, sect. 5.2. [https://ecss.nl/standard/ecss-e-st-10c-rev-1-system-engineering-general-requirements/](https://ecss.nl/standard/ecss-e-st-10c-rev-1-system-engineering-general-requirements/)
-4. ECSS, *ECSS-E-ST-10-02C Rev.1 : Space Engineering — Verification*, 2018, sect. 5.3. [https://ecss.nl/standard/ecss-e-st-10-02c-rev-1-verification-1-february-2018/](https://ecss.nl/standard/ecss-e-st-10-02c-rev-1-verification-1-february-2018/)
+4. ECSS, *ECSS-E-ST-10-02C Rev.1 : Space Engineering — Verification*, 2018, §5.2.2. [https://ecss.nl/standard/ecss-e-st-10-02c-rev-1-verification-1-february-2018/](https://ecss.nl/standard/ecss-e-st-10-02c-rev-1-verification-1-february-2018/)
 5. Wertz, J.R., Everett, D.F. et Puschell, J.J., *Space Mission Engineering : The New SMAD*, Microcosm Press, 2011, chap. 3–4. [https://www.microcosminc.com/](https://www.microcosminc.com/)
 6. INCOSE, *Systems Engineering Handbook*, 5e éd., 2023, chap. 2.3.5. [https://www.incose.org/products-and-publications/se-handbook](https://www.incose.org/products-and-publications/se-handbook)

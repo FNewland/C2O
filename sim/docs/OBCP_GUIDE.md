@@ -1,6 +1,6 @@
 # On-Board Control Procedures (OBCP) — PUS Service 18
 
-EO-Sat-1 supports **on-board scripting** through PUS Service 18. An OBCP is an
+EOSAT-1 supports **on-board scripting** through PUS Service 18. An OBCP is an
 ordered list of steps; each step is a *relative delay* plus a *complete PUS TC*
 that the spacecraft executes on itself when the delay expires. Because the
 steps run on board, a procedure keeps running after LOS — unlike the MCS-side

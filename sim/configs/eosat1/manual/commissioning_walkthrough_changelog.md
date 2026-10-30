@@ -1,4 +1,4 @@
-# Commissioning walkthrough — development change log
+# Commissioning walkthrough — development change log {#commissioning-walkthrough--development-change-log}
 
 **Manual-Scope:** system — a record of defects found and fixed while building the training system. Not part of the flight operations manual.
 
@@ -6,7 +6,7 @@ Excised from `commissioning_sequence_walkthrough.md` on 2026-08-21: an operation
 
 ---
 
-## Known Simulator Issues
+## Known Simulator Issues {#known-simulator-issues}
 
 All previously reported issues have been resolved:
 

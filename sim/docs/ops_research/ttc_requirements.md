@@ -716,10 +716,10 @@ to enable multi-day operations scheduling.
 
 **REQ-TTC-PLN-004:** With the Iqaluit + Troll two-station configuration, the planner
 shall compute the expected number of contacts per day and cumulative contact time. For
-a 500 km SSO at 97.4 deg inclination:
-- Iqaluit (63.7N): Expected 3-5 passes/day
-- Troll (72.0S): Expected 3-5 passes/day
-- Total: Expected 6-10 passes/day, 40-80 minutes cumulative contact
+a 513 km SSO at 97.39 deg inclination:
+- Iqaluit (63.7N): Expected ~9 passes/day
+- Troll (72.0S): Expected ~11 passes/day
+- Total: Expected ~20 passes/day, ~145 minutes cumulative contact
 
 **REQ-TTC-PLN-005:** The planner shall identify and flag contact gaps exceeding 4 hours,
 as these approach the 6-hour autonomous recovery timer threshold.
@@ -859,10 +859,10 @@ up to approximately 30 s).
 
 | Parameter | Value | Source |
 |---|---|---|
-| Altitude | 500 km | `orbit.yaml` |
-| Inclination | 97.4 deg | `orbit.yaml` (SSO) |
-| Orbital Period | ~95 min | Derived from altitude |
-| Revolutions/Day | ~15.15 | `orbit.yaml` TLE |
+| Altitude | 513 km (mean) | `orbit.yaml` |
+| Inclination | 97.39 deg | `orbit.yaml` (SSO) |
+| Orbital Period | ~94.5 min | `orbit.yaml` TLE (15.24 rev/day) |
+| Revolutions/Day | 15.24 | `orbit.yaml` TLE |
 | Earth Radius | 6371 km | `orbit.yaml` |
 
 ### 12.2 Two-Station Coverage (Iqaluit + Troll)
@@ -1015,7 +1015,7 @@ configuration values in `ttc.yaml` and the mission profile ground station networ
 | REQ-TTC-EQP-001 to 004 | Equipment | All | Must Have |
 | REQ-TTC-PDM-001 to 006 | PDM Channel | EMG-004, TRN-TTC-032 | Must Have |
 | REQ-TTC-BWD-001 to 006 | Antenna Deployment | LEOP-001, TRN-TTC-001/004 | Must Have |
-| REQ-TTC-BCN-001 to 004 | Beacon | CTG-018, TRN-TTC-003 | Should Have |
+| REQ-TTC-BCN-001 to 004 | Beacon | CTG-021, TRN-TTC-003 | Should Have |
 | REQ-TTC-LR-001 to 004 | Low Rate Ops | LEOP, pre-deployment | Must Have |
 | REQ-TTC-GS-IQ-001 to 002 | Iqaluit Station | All | Must Have |
 | REQ-TTC-GS-TR-001 | Troll Station | All | Must Have |

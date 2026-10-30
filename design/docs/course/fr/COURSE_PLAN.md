@@ -68,7 +68,7 @@ est supposée.
 
 ---
 
-## Jour 2 : exigences et fonctions (8 heures)
+## Jour 2 : exigences, fonctions, orbite et architecture (8 heures)
 
 ### Séance 2.1 : ingénierie des exigences (2 h)
 - Processus 2 du NASA SEH : définition des exigences techniques
@@ -88,61 +88,57 @@ est supposée.
 - **Exercice** : construire l'arbre fonctionnel dans SpaceCDF
 - **Fiche d'exercices** : matrice de traçabilité fonctions-exigences
 
-### Séance 2.3 : gestion des interfaces (2 h)
-- Processus 12 du NASA SEH : gestion des interfaces
-- ECSS-E-ST-10-24C : exigences d'interface
-- Méthodologie de la matrice d'interfaces N^2
-- Types d'interfaces : mécanique, électrique, thermique, données, RF, optique
-- Identification et résolution des conflits
-- **Exercice** : examiner la matrice d'interfaces dans SpaceCDF
-- **Fiche d'exercices** : spécification d'interface pour 2 paires de sous-systèmes
+### Séance 2.3 : choix de l'orbite et architecture de mission (2 h)
+- Fondamentaux de mécanique spatiale (éléments képlériens, perturbations)
+- Compromis LEO/SSO/MEO/GEO/HEO
+- Couverture, revisite et géométrie de contact avec les stations sol
+- Durée de vie orbitale et conformité en matière de débris (ECSS-U-AS-10C)
+- Fraction d'éclipse et conséquences sur la puissance ; environnement radiatif selon l'orbite
+- **Exercice** : mener le compromis d'orbite dans SpaceCDF
+- **Fiche d'exercices** : matrice de compromis pour le choix de l'orbite
 
-### Séance 2.4 : introduction aux bilans de conception (2 h)
-- Méthodologie du bilan de masse (ECSS-E-HB-10-02A)
-- Méthodologie du bilan de puissance (ECSS-E-ST-20C)
-- Politique de marges selon la phase du projet
-- Consolidation des bilans : composant -> sous-système -> système
-- Approches d'estimation des coûts (paramétrique, par analogie, ascendante)
-- **Exercice** : examiner les bilans paramétriques dans le tableau de bord de SpaceCDF
-- **Fiche d'exercices** : modèle de bilan de masse avec politique de marges
+### Séance 2.4 : architecture de mission -- segments, interfaces et bilans (2 h)
+- Décomposition de la mission en segments et schéma fonctionnel du système
+- Processus 12 du NASA SEH : gestion des interfaces ; ECSS-E-ST-10-24C : exigences d'interface
+- Méthodologie de la matrice d'interfaces N^2 ; types d'interfaces : mécanique, électrique, thermique, données, RF, optique
+- Identification et résolution des conflits
+- Méthodologie du bilan de masse (ECSS-E-HB-10-02A) et du bilan de puissance (ECSS-E-ST-20C)
+- Politique de marges selon la phase du projet ; consolidation des bilans : composant -> sous-système -> système
+- **Exercice** : examiner la matrice d'interfaces et les bilans paramétriques dans SpaceCDF
+- **Fiche d'exercices** : spécification d'interface pour 2 paires de sous-systèmes ; modèle de bilan de masse avec politique de marges
 
 ---
 
 ## Jour 3 : conception des sous-systèmes (8 heures)
 
-### Séance 3.1 : conception et choix de l'orbite (2 h)
-- Fondamentaux de mécanique spatiale (éléments képlériens, perturbations)
-- Compromis LEO/SSO/MEO/GEO/HEO
-- Analyse de couverture et de revisite
-- Durée de vie orbitale et conformité en matière de débris (ECSS-U-AS-10C)
-- Fraction d'éclipse et conséquences sur la puissance
-- **Exercice** : mener le compromis d'orbite dans SpaceCDF
-- **Fiche d'exercices** : matrice de compromis pour le choix de l'orbite
+### Séance 3.1 : puissance et thermique (2 h)
+- Architecture de l'EPS (générateur solaire, batterie, régulation)
+- Bilan de puissance par mode opérationnel, avec fonctionnement par intermittence
+- Dimensionnement du générateur solaire et de la batterie en fin de vie
+- Contrôle thermique : passif ou actif, dimensionnement des radiateurs, réchauffeurs
+- Analyse cas chaud / cas froid
+- **Exercice** : examiner les résultats puissance et thermique dans SpaceCDF
+- **Fiche d'exercices** : tableau du bilan de puissance par mode
 
-### Séance 3.2 : charge utile et communications (2 h)
-- Dimensionnement d'une charge utile optique (GSD -> ouverture -> masse -> puissance)
-- Dimensionnement d'une charge utile RF (bilan de liaison -> antenne -> puissance)
-- Fondamentaux du SAR (résolution -> surface d'antenne -> puissance)
+### Séance 3.2 : SCAO et propulsion (2 h)
+- Capteurs et actionneurs d'attitude : magnétocoupleurs, roues de réaction ou senseurs stellaires
+- Bilan de pointage (arbre d'erreurs RSS) ; couples perturbateurs et gestion du moment cinétique
+- Options de propulsion : gaz froid, électrique, chimique
+- Répartition du bilan de delta-V
+- **Exercice** : examiner les résultats SCAO et propulsion dans SpaceCDF
+- **Fiche d'exercices** : bilan de pointage et bilan de delta-V
+
+### Séance 3.3 : télécommunications (2 h)
 - Méthodologie du bilan de liaison (ECSS-E-ST-50-05C)
 - Choix de la bande de fréquences et licences
 - Licences radioamateur, expérimentales et commerciales
-- **Exercice** : configurer la charge utile et examiner le bilan de liaison
+- Volume de données de la charge utile et dimensionnement de la liaison descendante (bilan de liaison -> antenne -> puissance)
+- **Exercice** : configurer les données de la charge utile et examiner le bilan de liaison
 - **Fiche d'exercices** : feuille de calcul du bilan de liaison
 
-### Séance 3.3 : puissance, SCAO, thermique (2 h)
-- Architecture de l'EPS (générateur solaire, batterie, régulation)
-- Bilan de puissance par mode opérationnel, avec fonctionnement par intermittence
-- Contrôle d'attitude : magnétocoupleurs, roues de réaction ou senseurs stellaires
-- Bilan de pointage (arbre d'erreurs RSS)
-- Contrôle thermique : passif ou actif, dimensionnement des radiateurs
-- **Exercice** : examiner les résultats puissance/SCAO/thermique dans SpaceCDF
-- **Fiche d'exercices** : tableau du bilan de puissance par mode
-
-### Séance 3.4 : structure, propulsion, gestion des données (2 h)
+### Séance 3.4 : structure et gestion bord des données (2 h)
 - *CubeSat Design Specification* (CDS Rev 14.1)
 - Conception structurale : charges au lancement, fréquence propre, marge de sécurité
-- Options de propulsion : gaz froid, électrique, chimique
-- Répartition du bilan de delta-V
 - Architecture de l'OBC, stockage des données, logiciel de vol
 - Norme de bus PC/104
 - **Exercice** : choisir les équipements dans le navigateur de SpaceCDF
@@ -163,7 +159,7 @@ est supposée.
 
 ### Séance 4.2 : planification de la vérification et de la validation (2 h)
 - Processus 7-8 du NASA SEH : vérification et validation
-- ECSS-E-ST-10-02C : méthodes de vérification (ATRI)
+- ECSS-E-ST-10-02C : méthodes de vérification, ATIR(D) (analyse, essai, inspection, revue de conception, + démonstration)
 - Structure de la matrice de vérification
 - Niveaux d'essai : unité -> sous-système -> système -> recette -> qualification
 - Essais d'environnement (vibrations, vide thermique, CEM)
@@ -194,11 +190,11 @@ est supposée.
 
 ### Séance 5.1 : préparation des revues de jalon (2 h)
 - ECSS-M-ST-10C : structure des jalons de revue
-- Critères de sortie des revues MCR/SRR/PDR/CDR
+- Critères de sortie des revues MCR/SRR/PDR/CDR ; le jalon du jour 5 est une revue de type PDR
 - Structure de la présentation en revue de conception
 - Gestion des actions
 - **Exercice** : mener la revue de jalon dans SpaceCDF, solder les actions
-- **Fiche d'exercices** : plan de la présentation de la MCR
+- **Fiche d'exercices** : plan de la présentation de la PDR
 
 ### Séance 5.2 : réglementation et licences (2 h)
 - Licences de fréquences (UIT, IARU, nationales)

@@ -1,6 +1,6 @@
 {
  "tool_version": "1.0.0",
- "en_path": "${DRIVE_COURSE}/facilitator_book_expanded.md",
+ "en_path": "docs/course/facilitator_book_expanded.md",
  "sections": [
   {
    "id": "_preamble",
@@ -94,8 +94,8 @@
   },
   {
    "id": "chapter-1-1-introduction-to-space-mission-design/2-the-system-v-model/2-5-horizontal-traceability",
-   "en_hash": "0be2438f98656d79",
-   "fr_hash": "fbe8af47e2605d02"
+   "en_hash": "a80ca68842e9121d",
+   "fr_hash": "0bb46bade47d0e62"
   },
   {
    "id": "chapter-1-1-introduction-to-space-mission-design/2-the-system-v-model/2-6-iteration-and-the-se-engine",
@@ -119,8 +119,8 @@
   },
   {
    "id": "chapter-1-1-introduction-to-space-mission-design/3-the-17-common-technical-processes/3-3-product-realisation-processes-5-9",
-   "en_hash": "ddde50347225a250",
-   "fr_hash": "45777dc07863f4a0"
+   "en_hash": "a78ce36611fe6374",
+   "fr_hash": "19c13be0dd1cf960"
   },
   {
    "id": "chapter-1-1-introduction-to-space-mission-design/3-the-17-common-technical-processes/3-4-technical-management-processes-10-17",
@@ -274,8 +274,8 @@
   },
   {
    "id": "chapter-1-2-the-canadian-space-ecosystem-regulatory-environment/part-2-regulatory-environment",
-   "en_hash": "5c70a9361e120232",
-   "fr_hash": "0d0121d421ebd5e8"
+   "en_hash": "0c90406270f735d6",
+   "fr_hash": "e47f8797f31c9762"
   },
   {
    "id": "chapter-1-2-the-canadian-space-ecosystem-regulatory-environment/part-2-regulatory-environment/5-regulatory-framework-overview",
@@ -464,8 +464,8 @@
   },
   {
    "id": "chapter-1-3-international-standards-for-space-systems/part-2-launch-interfaces-debris-mitigation-international-law",
-   "en_hash": "1e7473750ba33189",
-   "fr_hash": "2de95fd5dc9d3377"
+   "en_hash": "1f7bba632acbd780",
+   "fr_hash": "c01dfb2f7313022d"
   },
   {
    "id": "chapter-1-3-international-standards-for-space-systems/part-2-launch-interfaces-debris-mitigation-international-law/5-cds-rev-14-launch-vehicle-interface-standard",
@@ -804,8 +804,8 @@
   },
   {
    "id": "chapter-2-1-the-system-v-and-requirements-engineering/learning-objectives",
-   "en_hash": "bef4644aec3e69fe",
-   "fr_hash": "2ea5c89a1a887fd7"
+   "en_hash": "15a7c0a309166e10",
+   "fr_hash": "4531683c164a1ce3"
   },
   {
    "id": "chapter-2-1-the-system-v-and-requirements-engineering/1-the-system-v-model-requirements-perspective",
@@ -883,17 +883,17 @@
    "fr_hash": "1c1a71d0f406c9c7"
   },
   {
-   "id": "chapter-2-1-the-system-v-and-requirements-engineering/5-verification-methods-atid",
-   "en_hash": "0b2ab51827405a11",
-   "fr_hash": "4bf21a8e735e13a9"
+   "id": "chapter-2-1-the-system-v-and-requirements-engineering/5-verification-methods-atird",
+   "en_hash": "da0a095becc4a590",
+   "fr_hash": "273afb8fad06f5a2"
   },
   {
-   "id": "chapter-2-1-the-system-v-and-requirements-engineering/5-verification-methods-atid/verification-method-selection-guide",
+   "id": "chapter-2-1-the-system-v-and-requirements-engineering/5-verification-methods-atird/verification-method-selection-guide",
    "en_hash": "57d8c51ec4023875",
    "fr_hash": "79892d88df69e1c9"
   },
   {
-   "id": "chapter-2-1-the-system-v-and-requirements-engineering/5-verification-methods-atid/verification-by-project-phase",
+   "id": "chapter-2-1-the-system-v-and-requirements-engineering/5-verification-methods-atird/verification-by-project-phase",
    "en_hash": "625e7df54148274f",
    "fr_hash": "e07890fd24c62501"
   },
@@ -929,8 +929,8 @@
   },
   {
    "id": "chapter-2-1-the-system-v-and-requirements-engineering/session-summary",
-   "en_hash": "a54028315912e4b3",
-   "fr_hash": "55dce8101d2f9572"
+   "en_hash": "d4045194b2caa32d",
+   "fr_hash": "c6579a0dc65194d5"
   },
   {
    "id": "chapter-2-2-functional-decomposition-and-allocation",
@@ -1414,8 +1414,8 @@
   },
   {
    "id": "chapter-3-1-power-system-and-thermal-control-design/4-thermal-control-system/ecss-thermal-margins",
-   "en_hash": "c470bc06cfea0c95",
-   "fr_hash": "688899956171bd89"
+   "en_hash": "984947153213ca0b",
+   "fr_hash": "893d0120aade4835"
   },
   {
    "id": "chapter-3-1-power-system-and-thermal-control-design/4-thermal-control-system/1u-worked-example-unisat-1",
@@ -1423,9 +1423,9 @@
    "fr_hash": "e661f1d59a838967"
   },
   {
-   "id": "chapter-3-1-power-system-and-thermal-control-design/4-thermal-control-system/6u-reference-design-eo-sat-1-power-and-thermal-as-flown",
-   "en_hash": "0c446ab91bac4678",
-   "fr_hash": "3d5fdb855c3d3186"
+   "id": "chapter-3-1-power-system-and-thermal-control-design/4-thermal-control-system/6u-reference-design-eosat-1-power-and-thermal-as-flown",
+   "en_hash": "63429900cd4b3638",
+   "fr_hash": "e9e524ab149ba6e4"
   },
   {
    "id": "chapter-3-1-power-system-and-thermal-control-design/5-real-mission-examples",
@@ -1459,8 +1459,8 @@
   },
   {
    "id": "chapter-3-1-power-system-and-thermal-control-design/session-summary",
-   "en_hash": "67db34d4b706de3a",
-   "fr_hash": "0c4370828095653c"
+   "en_hash": "111092d381725850",
+   "fr_hash": "dc36377e91773dd1"
   },
   {
    "id": "chapter-3-2-attitude-orbit-control-aocs-and-propulsion",
@@ -1584,8 +1584,8 @@
   },
   {
    "id": "chapter-3-2-attitude-orbit-control-aocs-and-propulsion/5-momentum-management-and-desaturation/wheel-configurations-3-1-redundancy",
-   "en_hash": "5b90513214ffbe9f",
-   "fr_hash": "e1c22845a00b9c1a"
+   "en_hash": "b8f741d1d9204bba",
+   "fr_hash": "7083722c0fa9e249"
   },
   {
    "id": "chapter-3-2-attitude-orbit-control-aocs-and-propulsion/5-momentum-management-and-desaturation/1u-worked-example-unisat-1",
@@ -1604,8 +1604,8 @@
   },
   {
    "id": "chapter-3-2-attitude-orbit-control-aocs-and-propulsion/6-propulsion-system-design/when-no-propulsion-is-needed-for-disposal",
-   "en_hash": "fa57226e472c2cb3",
-   "fr_hash": "19d23dbdd94b1bf2"
+   "en_hash": "ed04ef2c783804ed",
+   "fr_hash": "842b8ef4c0b504b2"
   },
   {
    "id": "chapter-3-2-attitude-orbit-control-aocs-and-propulsion/6-propulsion-system-design/the-tsiolkovsky-rocket-equation-physics",
@@ -1653,9 +1653,9 @@
    "fr_hash": "2e2ca72eb5276b6d"
   },
   {
-   "id": "chapter-3-2-attitude-orbit-control-aocs-and-propulsion/6-propulsion-system-design/6u-reference-design-eo-sat-1-propulsion-as-flown",
-   "en_hash": "bbb6996dfe7e043a",
-   "fr_hash": "0a78c2cb139f59ae"
+   "id": "chapter-3-2-attitude-orbit-control-aocs-and-propulsion/6-propulsion-system-design/6u-reference-design-eosat-1-propulsion-as-flown",
+   "en_hash": "69a15dd1ba465c96",
+   "fr_hash": "47143b50ebe020b8"
   },
   {
    "id": "chapter-3-2-attitude-orbit-control-aocs-and-propulsion/7-spacecdf-exercise",
@@ -1674,8 +1674,8 @@
   },
   {
    "id": "chapter-3-2-attitude-orbit-control-aocs-and-propulsion/session-summary",
-   "en_hash": "9f72deb68804333e",
-   "fr_hash": "8f7345ba55b09526"
+   "en_hash": "b3cc207a0543c316",
+   "fr_hash": "e89e390f47f759e8"
   },
   {
    "id": "chapter-3-3-communications-and-link-budget-design",
@@ -1798,14 +1798,14 @@
    "fr_hash": "b93a7b90228a4c4d"
   },
   {
-   "id": "chapter-3-3-communications-and-link-budget-design/8-worked-examples-complete-link-budgets/6u-reference-design-eo-sat-1-rf-as-flown",
-   "en_hash": "42ed2225eed5c67d",
-   "fr_hash": "ca0789efef3e3909"
+   "id": "chapter-3-3-communications-and-link-budget-design/8-worked-examples-complete-link-budgets/6u-reference-design-eosat-1-rf-as-flown",
+   "en_hash": "76d0fe8272a0a73c",
+   "fr_hash": "36858614c0097cdb"
   },
   {
    "id": "chapter-3-3-communications-and-link-budget-design/9-data-budget",
-   "en_hash": "f403a2189b8e2e5d",
-   "fr_hash": "4533382ef3c5af47"
+   "en_hash": "8724baf4de5e43ee",
+   "fr_hash": "ea01fb4c7eed2064"
   },
   {
    "id": "chapter-3-3-communications-and-link-budget-design/10-spacecdf-exercise",
@@ -1824,8 +1824,8 @@
   },
   {
    "id": "chapter-3-3-communications-and-link-budget-design/session-summary",
-   "en_hash": "da261b51a99112e9",
-   "fr_hash": "525e474cbbb2e7e9"
+   "en_hash": "edc63b5bb6d8675e",
+   "fr_hash": "b39df4d084e3cf58"
   },
   {
    "id": "chapter-3-4-spacecraft-structure-and-on-board-data-handling",
@@ -1869,8 +1869,8 @@
   },
   {
    "id": "chapter-3-4-spacecraft-structure-and-on-board-data-handling/1-cubesat-structure-and-cds-compliance/launch-load-environment",
-   "en_hash": "f4697affc698759d",
-   "fr_hash": "f8e9ab8503fca89d"
+   "en_hash": "84556d4782793013",
+   "fr_hash": "14e48d656d4f34d0"
   },
   {
    "id": "chapter-3-4-spacecraft-structure-and-on-board-data-handling/1-cubesat-structure-and-cds-compliance/structural-margin-of-safety",
@@ -1919,8 +1919,8 @@
   },
   {
    "id": "chapter-3-4-spacecraft-structure-and-on-board-data-handling/session-summary",
-   "en_hash": "44f340e9e835b1f6",
-   "fr_hash": "cbe5ac40fd84e0d0"
+   "en_hash": "736ee28c34b92592",
+   "fr_hash": "b054cafc59fd7527"
   },
   {
    "id": "chapter-4-1-equipment-selection-bill-of-materials",
@@ -2108,9 +2108,9 @@
    "fr_hash": "d0b019b5884f34ce"
   },
   {
-   "id": "chapter-4-1-equipment-selection-bill-of-materials/worked-example-complete-6u-eo-cubesat-equipment-list-eo-sat-1",
-   "en_hash": "834c4f2e5e75b18a",
-   "fr_hash": "7bbcdc46d5380c2a"
+   "id": "chapter-4-1-equipment-selection-bill-of-materials/worked-example-complete-6u-eo-cubesat-equipment-list-eosat-1",
+   "en_hash": "ba2fe1b58076e62c",
+   "fr_hash": "ab430f5b6d4136e1"
   },
   {
    "id": "chapter-4-1-equipment-selection-bill-of-materials/cited-references",
@@ -2129,13 +2129,13 @@
   },
   {
    "id": "chapter-4-2-verification-validation-matrix-and-compliance/learning-objectives",
-   "en_hash": "05d75c8b1d840ba4",
-   "fr_hash": "e838821ecfe0bb0b"
+   "en_hash": "074cb88de514dd6b",
+   "fr_hash": "2fca3a59963b5127"
   },
   {
    "id": "chapter-4-2-verification-validation-matrix-and-compliance/1-verification-vs-validation-precise-definitions",
-   "en_hash": "5775d4ce6dc910ca",
-   "fr_hash": "3db860983780d18f"
+   "en_hash": "d65f32979fe60f5a",
+   "fr_hash": "91c7cb6c01dd23ff"
   },
   {
    "id": "chapter-4-2-verification-validation-matrix-and-compliance/1-verification-vs-validation-precise-definitions/the-critical-distinction",
@@ -2148,34 +2148,39 @@
    "fr_hash": "e5397d0d21527c7f"
   },
   {
-   "id": "chapter-4-2-verification-validation-matrix-and-compliance/2-iadt-verification-methods-in-detail",
-   "en_hash": "0b011583db79edf3",
-   "fr_hash": "70ea60134b8deb7a"
+   "id": "chapter-4-2-verification-validation-matrix-and-compliance/2-atird-verification-methods-in-detail",
+   "en_hash": "db4753606b85b013",
+   "fr_hash": "b8615fff4501f5d1"
   },
   {
-   "id": "chapter-4-2-verification-validation-matrix-and-compliance/2-iadt-verification-methods-in-detail/inspection-i",
+   "id": "chapter-4-2-verification-validation-matrix-and-compliance/2-atird-verification-methods-in-detail/inspection-i",
    "en_hash": "79cc5776266932fc",
    "fr_hash": "ad8ba006f30ce7f8"
   },
   {
-   "id": "chapter-4-2-verification-validation-matrix-and-compliance/2-iadt-verification-methods-in-detail/analysis-a",
+   "id": "chapter-4-2-verification-validation-matrix-and-compliance/2-atird-verification-methods-in-detail/analysis-a",
    "en_hash": "ba1ce0bee0d25fa0",
    "fr_hash": "bad79f294302069e"
   },
   {
-   "id": "chapter-4-2-verification-validation-matrix-and-compliance/2-iadt-verification-methods-in-detail/demonstration-d",
-   "en_hash": "90b798625c738348",
-   "fr_hash": "e23f01fc18d7df26"
+   "id": "chapter-4-2-verification-validation-matrix-and-compliance/2-atird-verification-methods-in-detail/review-of-design-r",
+   "en_hash": "6ba0a9c1493f6778",
+   "fr_hash": "e269eb99c6eb0ec4"
   },
   {
-   "id": "chapter-4-2-verification-validation-matrix-and-compliance/2-iadt-verification-methods-in-detail/test-t",
+   "id": "chapter-4-2-verification-validation-matrix-and-compliance/2-atird-verification-methods-in-detail/demonstration-d",
+   "en_hash": "f2d88b60b06e5dfb",
+   "fr_hash": "29043883639dfb22"
+  },
+  {
+   "id": "chapter-4-2-verification-validation-matrix-and-compliance/2-atird-verification-methods-in-detail/test-t",
    "en_hash": "b6e6aa0c212bff28",
    "fr_hash": "862fe45687481977"
   },
   {
-   "id": "chapter-4-2-verification-validation-matrix-and-compliance/2-iadt-verification-methods-in-detail/proto-flight-approach",
-   "en_hash": "4bfa1e7d5f8b2b76",
-   "fr_hash": "518fd036e15b01fc"
+   "id": "chapter-4-2-verification-validation-matrix-and-compliance/2-atird-verification-methods-in-detail/proto-flight-approach",
+   "en_hash": "839333b6651728ab",
+   "fr_hash": "646a965d8b2f293f"
   },
   {
    "id": "chapter-4-2-verification-validation-matrix-and-compliance/3-environmental-test-programme",
@@ -2184,23 +2189,23 @@
   },
   {
    "id": "chapter-4-2-verification-validation-matrix-and-compliance/3-environmental-test-programme/standard-environmental-test-sequence",
-   "en_hash": "671dcf2c3433c569",
-   "fr_hash": "d80dde31719ed4c1"
+   "en_hash": "e3f938f53d82bcd5",
+   "fr_hash": "d4d5eda67f3c4056"
   },
   {
    "id": "chapter-4-2-verification-validation-matrix-and-compliance/3-environmental-test-programme/sine-vibration-test-levels",
-   "en_hash": "964221fde9361faa",
-   "fr_hash": "367a9685eef31d00"
+   "en_hash": "a5d243ae72b3ccf3",
+   "fr_hash": "2956c7511c5bc5c6"
   },
   {
    "id": "chapter-4-2-verification-validation-matrix-and-compliance/3-environmental-test-programme/random-vibration-test-levels",
-   "en_hash": "bb7fcc2af58ec3ba",
-   "fr_hash": "250a2ed9c56cb500"
+   "en_hash": "865d23e873f34c4f",
+   "fr_hash": "834127f98bba5b07"
   },
   {
    "id": "chapter-4-2-verification-validation-matrix-and-compliance/3-environmental-test-programme/thermal-vacuum-test-profile",
-   "en_hash": "5ac1388f226de245",
-   "fr_hash": "04019968f0b9d796"
+   "en_hash": "ba65b5be535456de",
+   "fr_hash": "cbc5788d70f88bdd"
   },
   {
    "id": "chapter-4-2-verification-validation-matrix-and-compliance/3-environmental-test-programme/emc-testing",
@@ -2214,13 +2219,13 @@
   },
   {
    "id": "chapter-4-2-verification-validation-matrix-and-compliance/4-compliance-verification-matrix-construction/matrix-structure",
-   "en_hash": "877a1328b378c9b9",
-   "fr_hash": "a41bb82a5c933ce6"
+   "en_hash": "5bc9d8002c2e6385",
+   "fr_hash": "23387754be335f45"
   },
   {
-   "id": "chapter-4-2-verification-validation-matrix-and-compliance/4-compliance-verification-matrix-construction/iadt-assignment-decision-logic",
-   "en_hash": "2f4ac12dff7aa61b",
-   "fr_hash": "6a04d93d32307b82"
+   "id": "chapter-4-2-verification-validation-matrix-and-compliance/4-compliance-verification-matrix-construction/atird-assignment-decision-logic",
+   "en_hash": "8754d0643bdd7877",
+   "fr_hash": "60aa9b6d89ca582e"
   },
   {
    "id": "chapter-4-2-verification-validation-matrix-and-compliance/4-compliance-verification-matrix-construction/multiple-methods",
@@ -2239,13 +2244,13 @@
   },
   {
    "id": "chapter-4-2-verification-validation-matrix-and-compliance/5-spacecdf-v-v-matrix-exercise/instructions",
-   "en_hash": "0988d2bd5988ec0b",
-   "fr_hash": "c11a2eca7cbcab53"
+   "en_hash": "cea1bb80f43b6b98",
+   "fr_hash": "b1dd1cf5fbde4b36"
   },
   {
    "id": "chapter-4-2-verification-validation-matrix-and-compliance/5-spacecdf-v-v-matrix-exercise/worksheet-4-2-tasks",
-   "en_hash": "36dc11c0ec545820",
-   "fr_hash": "48d1b67d2f09e33c"
+   "en_hash": "2674501647af354d",
+   "fr_hash": "f4f0e553562af005"
   },
   {
    "id": "chapter-4-2-verification-validation-matrix-and-compliance/cited-references",
@@ -2254,8 +2259,8 @@
   },
   {
    "id": "chapter-4-2-verification-validation-matrix-and-compliance/session-summary",
-   "en_hash": "826bb0951b05109a",
-   "fr_hash": "db8dd7527ad4af97"
+   "en_hash": "8ba8812b2db6e987",
+   "fr_hash": "831832b3621f8d82"
   },
   {
    "id": "chapter-4-3-risk-interfaces-fmeca",
@@ -2419,8 +2424,8 @@
   },
   {
    "id": "chapter-4-4-cost-estimation-design-review",
-   "en_hash": "d75279db2e036fcf",
-   "fr_hash": "b2227057cd4c24e3"
+   "en_hash": "885898f217a45ca0",
+   "fr_hash": "d7fa321a899330e7"
   },
   {
    "id": "chapter-4-4-cost-estimation-design-review/learning-objectives",
@@ -2469,8 +2474,8 @@
   },
   {
    "id": "chapter-4-4-cost-estimation-design-review/2-cost-breakdown-structure-wbs/standard-cubesat-wbs",
-   "en_hash": "dbc600d781b5e683",
-   "fr_hash": "e386b0d3b5f8afdc"
+   "en_hash": "a16040fd00de1e02",
+   "fr_hash": "bc16068326bbf253"
   },
   {
    "id": "chapter-4-4-cost-estimation-design-review/2-cost-breakdown-structure-wbs/cost-by-phase",
@@ -3019,8 +3024,8 @@
   },
   {
    "id": "appendix-b-operations-position-reference",
-   "en_hash": "937b2bff4534ab60",
-   "fr_hash": "26991bb917b08687"
+   "en_hash": "c8019a1856636a2b",
+   "fr_hash": "f95bf7d878456fc8"
   },
   {
    "id": "appendix-b-operations-position-reference/flight-director-fd",
@@ -3064,8 +3069,8 @@
   },
   {
    "id": "appendix-b-operations-position-reference/propulsion-engineer",
-   "en_hash": "6bf0a6b96d307925",
-   "fr_hash": "811e8cc8aaeccfa7"
+   "en_hash": "0b0e1365337da228",
+   "fr_hash": "5e340eacc889aedf"
   },
   {
    "id": "appendix-b-operations-position-reference/ground-segment-engineer-network-controller",
@@ -3099,8 +3104,8 @@
   },
   {
    "id": "appendix-c-verification-and-first-principles-reference/c-2-kepler-s-third-law/verification",
-   "en_hash": "daadace34651026f",
-   "fr_hash": "2c517cca8288ee9d"
+   "en_hash": "881662e7e6b4ac40",
+   "fr_hash": "da80caacda58f462"
   },
   {
    "id": "appendix-c-verification-and-first-principles-reference/c-3-tsiolkovsky-rocket-equation",
@@ -3214,8 +3219,8 @@
   },
   {
    "id": "appendix-c-verification-and-first-principles-reference/c-9-gsd-geometry/verification",
-   "en_hash": "27142a4be01bde00",
-   "fr_hash": "443f9a6832a0b198"
+   "en_hash": "7798043a05c17aac",
+   "fr_hash": "e4cdc125a4919c01"
   },
   {
    "id": "appendix-c-verification-and-first-principles-reference/c-10-radiative-thermal-equilibrium",
@@ -3319,8 +3324,8 @@
   },
   {
    "id": "appendix-d-how-this-textbook-was-generated/numerical-worked-examples-generated-by-running-the-tool",
-   "en_hash": "769692414652df89",
-   "fr_hash": "21d74a39e68796c7"
+   "en_hash": "e411996218171786",
+   "fr_hash": "567b0bb128070456"
   },
   {
    "id": "appendix-d-how-this-textbook-was-generated/document-rendering",
@@ -3339,8 +3344,8 @@
   },
   {
    "id": "index",
-   "en_hash": "39d03483fdddc8f2",
-   "fr_hash": "d383512043225db8"
+   "en_hash": "c78b4fa6e53bde16",
+   "fr_hash": "e8bc12c77493b588"
   }
  ],
  "waivers": [
@@ -3348,5 +3353,5 @@
   "chapter-1-4-mission-needs-stakeholder-analysis-trade-studies/part-3-concept-of-operations/1u-worked-example-unisat-1: numbers: missing in FR ['3', '3', '3']  extra in FR []",
   "chapter-2-1-the-system-v-and-requirements-engineering/3-the-smart-framework/common-anti-patterns: numbers: missing in FR ['2']  extra in FR []"
  ],
- "en_commit": "c175838"
+ "en_commit": "c4a140a"
 }

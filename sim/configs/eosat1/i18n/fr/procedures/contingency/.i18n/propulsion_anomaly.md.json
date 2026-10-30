@@ -14,8 +14,8 @@
   },
   {
    "id": "ctg-028-propulsion-anomaly/purpose",
-   "en_hash": "73146381f27203db",
-   "fr_hash": "6196d3d82e575d52"
+   "en_hash": "828d28697aadcf7f",
+   "fr_hash": "975d62accd025362"
   },
   {
    "id": "ctg-028-propulsion-anomaly/entry-criteria",
@@ -58,5 +58,5 @@
    "fr_hash": "cbc5ad1a93e1c0d7"
   }
  ],
- "en_commit": "3e80564"
+ "en_commit": "c4a140a"
 }

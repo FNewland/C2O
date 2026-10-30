@@ -54,8 +54,8 @@
   },
   {
    "id": "operations-guide-eosat-1-spacecraft-simulator/mission-control-system-mcs/dashboard-layout",
-   "en_hash": "b4cdbadc456645ec",
-   "fr_hash": "8072a72b388092bc"
+   "en_hash": "c511f7778bcc6b4c",
+   "fr_hash": "64c71c859265d298"
   },
   {
    "id": "operations-guide-eosat-1-spacecraft-simulator/mission-control-system-mcs/key-display-tabs",
@@ -104,8 +104,8 @@
   },
   {
    "id": "operations-guide-eosat-1-spacecraft-simulator/commanding-the-spacecraft/example-1-simple-mode-change",
-   "en_hash": "3a2b02ba5b42acc9",
-   "fr_hash": "dc83b81943e491e8"
+   "en_hash": "a707807609e86724",
+   "fr_hash": "ddae7673fbfc852d"
   },
   {
    "id": "operations-guide-eosat-1-spacecraft-simulator/commanding-the-spacecraft/example-2-complex-command-imaging-pass",
@@ -154,8 +154,8 @@
   },
   {
    "id": "operations-guide-eosat-1-spacecraft-simulator/anomaly-response-procedures/aocs-anomalies/star-tracker-blinded",
-   "en_hash": "b8bfde3b580a105e",
-   "fr_hash": "4d394b9c7545f090"
+   "en_hash": "ec7a68a26e7c1e9b",
+   "fr_hash": "570a271886a10320"
   },
   {
    "id": "operations-guide-eosat-1-spacecraft-simulator/anomaly-response-procedures/aocs-anomalies/momentum-saturation",
@@ -329,8 +329,8 @@
   },
   {
    "id": "operations-guide-eosat-1-spacecraft-simulator/leop-commissioning-sequence/overview",
-   "en_hash": "efda8ae046d792a2",
-   "fr_hash": "faa99ec7e78d5586"
+   "en_hash": "f8727bfdd747714e",
+   "fr_hash": "f7cb8d3234b17422"
   },
   {
    "id": "operations-guide-eosat-1-spacecraft-simulator/leop-commissioning-sequence/spacecraft-phases",
@@ -468,5 +468,5 @@
    "fr_hash": "be0fc2c2cfac45ae"
   }
  ],
- "en_commit": "3e80564"
+ "en_commit": "c4a140a"
 }

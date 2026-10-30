@@ -2,9 +2,10 @@
 
 1U green-monopropellant (LMP-103S/ADN-class) blowdown module, single
 thruster on -X firing along +X body. Deliberately minimal: the system exists
-for DEBRIS-AVOIDANCE manoeuvres and limited orbit maintenance (drag make-up),
-NOT end-of-life deorbit — disposal is passive decay (1.7 yr mean from 450 km
-at B = 77.9 kg/m2, inside the FCC 5-year rule).
+for DEBRIS-AVOIDANCE manoeuvres, limited orbit maintenance (drag make-up) and
+the END-OF-LIFE perigee-lowering burn (ruling Q3 as amended: 513 -> 390 km
+perigee, 34.3 m/s in six retrograde burns, NOM-014). Natural decay from 513 km
+at B = 77.9 kg/m2 is ~5 yr (mean) / ~14 yr (solar minimum); see prop.yaml.
 
 Physics (isothermal blowdown):
     P    = P0 * V_ull0 / (V_tank - m_p/rho)
@@ -24,7 +25,7 @@ State machine:
     PROP_INHIBIT_CLR from the ground.
 
 Out of scope (see configs/eosat1/subsystems/prop.yaml and
-docs/PROPULSION_GUIDE.md): multi-thruster TVC, propulsive deorbit, plane
+docs/PROPULSION_GUIDE.md): multi-thruster TVC, pressurant venting, plane
 changes, closed-loop orbit control, conjunction screening, combustion/feed
 transients, non-isothermal blowdown, slosh/CG migration, inertia coupling.
 """

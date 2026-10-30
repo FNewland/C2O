@@ -6,14 +6,14 @@ table (`docs/plan_2026-08c/AOCS_MODE_TRANSITIONS.md`). Revision 1.0 used a
 five-mode numbering that has never matched the flight software (it called
 mode 2 COARSE_SUN and mode 3 NOMINAL, tested an "IDLE" that is mode 0 OFF,
 and assumed the card STARTS in COARSE_SUN --- it does not: COARSE_SUN is a
-transient hold the spacecraft auto-promotes out of, and by COM-005 the AOCS
-has long since promoted itself to NOMINAL).
+transient hold, and by COM-005 the AOCS has long been in NOMINAL, commanded
+by COM-004 since the 2026-10-30 ruling Q16).
 **Approved:** Flight Operations Director
 
-**Entry state:** COM-004 exit state --- all four wheels ENABLED, star tracker
+**Entry state:** COM-003 exit state --- all four wheels ENABLED, star tracker
 tracking, gyros calibrated, AOCS in the NOMINAL family: mode (0x020F) = 4
-NOMINAL or 8 ECLIPSE (the auto-promotion out of COARSE_SUN happened during
-COM-003/COM-004; 8 is the same operational state on the shadow side).
+NOMINAL or 8 ECLIPSE (COM-004 commanded NOMINAL out of the COARSE_SUN hold and
+COM-003 kept it there; 8 is the same operational state on the shadow side).
 
 ## Purpose
 Exercise every COMMANDED transition the operations concept uses, and OBSERVE
@@ -41,8 +41,8 @@ INTENT (set only when 4, 5, 9 or OFF is commanded); `aocs.mode_demoted`
 
 ### Step 1 --- Latch the Commanded Mode (NOMINAL)
 **TC:** `AOCS_SET_MODE(mode=4)` (Service 8, Subtype 1, func_id 0) --- NOMINAL
-**Note:** The AOCS may already be flying mode 4 --- it auto-promoted out of
-COARSE_SUN during COM-003. This command is still sent: it LATCHES
+**Note:** The AOCS is normally already flying mode 4 --- COM-004 commanded
+it. This command is still sent: it LATCHES
 `aocs.commanded_mode` (0x0297) = 4, which is what every automatic transition
 resolves its return path against. Intent must be explicit before this card
 starts bouncing the vehicle through transients.
@@ -121,7 +121,7 @@ and its verify; AUTOMATIC entries carry the trigger and the observed time.
 
 | Transition | Kind | Evidence |
 |---|---|---|
-| (entry) COARSE_SUN -> NOMINAL | automatic (COM-003/004 span) | archive |
+| (entry) COARSE_SUN -> NOMINAL | commanded (COM-004 Step 1b) | archive |
 | NOMINAL -> FINE_POINT | commanded, gated by 0x02C5 | Step 2 |
 | FINE_POINT -> NOMINAL | commanded | Step 3 |
 | NOMINAL -> INERTIAL -> NOMINAL | commanded | Step 4 |

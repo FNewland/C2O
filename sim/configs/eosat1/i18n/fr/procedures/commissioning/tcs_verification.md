@@ -127,4 +127,4 @@ piège dans lequel l'ancienne fiche était tombée.
   « si nécessaire » de LEOP-007) ; interrupteurs des réchauffeurs sur OFF
 - Aucun mode, palier ou verrou modifié par cette fiche
 
-**PROCÉDURE SUIVANTE :** COM-003 (Étalonnage des capteurs SCAO)
+**PROCÉDURE SUIVANTE :** COM-004 (Vérification des actionneurs SCAO --- active les roues et commande NOMINAL ; COM-003 la suit, décision Q16)

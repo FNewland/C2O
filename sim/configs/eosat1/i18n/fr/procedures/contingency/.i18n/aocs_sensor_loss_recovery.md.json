@@ -44,8 +44,8 @@
   },
   {
    "id": "ctg-025-aocs-sensor-loss-recovery/procedure-steps/step-2-star-tracker-failure-response",
-   "en_hash": "91f58cac18c4aa3f",
-   "fr_hash": "102d12602692be6e"
+   "en_hash": "0cccdebdc2d10c21",
+   "fr_hash": "38390910dc3cdabe"
   },
   {
    "id": "ctg-025-aocs-sensor-loss-recovery/procedure-steps/step-3-css-head-failure-response",
@@ -54,18 +54,18 @@
   },
   {
    "id": "ctg-025-aocs-sensor-loss-recovery/procedure-steps/step-4-magnetometer-failure-response",
-   "en_hash": "e8d45992a3efe4fa",
-   "fr_hash": "8d9ef4218df392cb"
+   "en_hash": "97b0e224a53f2a0c",
+   "fr_hash": "59b198ec1bfd56de"
   },
   {
    "id": "ctg-025-aocs-sensor-loss-recovery/procedure-steps/step-5-cumulative-sensor-assessment-and-mode-decision",
-   "en_hash": "60f9f64d8abe02c0",
-   "fr_hash": "321e21b79d2e227e"
+   "en_hash": "e38a6799dac4b46b",
+   "fr_hash": "f8a1f226d9c48aba"
   },
   {
    "id": "ctg-025-aocs-sensor-loss-recovery/procedure-steps/step-6-post-recovery-monitoring",
-   "en_hash": "2f40c3f81908e848",
-   "fr_hash": "2c66085b6eb51892"
+   "en_hash": "6c903c012d12e483",
+   "fr_hash": "f0d24fb69eead906"
   },
   {
    "id": "ctg-025-aocs-sensor-loss-recovery/verification-criteria",
@@ -74,9 +74,9 @@
   },
   {
    "id": "ctg-025-aocs-sensor-loss-recovery/off-nominal-handling",
-   "en_hash": "9f67b05e72b02b4b",
-   "fr_hash": "70c8e007a2d1ae0d"
+   "en_hash": "ecf70e32cd36f6d7",
+   "fr_hash": "348f588ef107c0f6"
   }
  ],
- "en_commit": "3e80564"
+ "en_commit": "c4a140a"
 }

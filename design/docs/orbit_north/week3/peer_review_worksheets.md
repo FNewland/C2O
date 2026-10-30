@@ -60,7 +60,8 @@ Rules:
 
 ### Observed
 
-[Claude Code: produce a 6-row table prompt with these row labels]
+Write one note per row: a timestamp from the simulator clock, what
+happened, and who was involved.
 
 | Item | Note (timestamp · what · who) |
 |------|------|
@@ -100,9 +101,17 @@ Rules:
 | Handover: timing, content, completeness | |
 | Any silent confusion (operator did the wrong thing because no one said anything)? | |
 
-### Worked well · Could improve · Specific recommendation
+### Worked well
 
-[Claude Code: same three blocks as Worksheet 1.]
+(one or two specific behaviours)
+
+### Could improve
+
+(one or two specific behaviours)
+
+### Specific recommendation
+
+(one actionable sentence)
 
 ---
 
@@ -121,9 +130,17 @@ Rules:
 | Movement around the room (procedure printouts, water) | |
 | Physical comfort — chairs, monitors, posture | |
 
-### Worked well · Could improve · Specific recommendation
+### Worked well
 
-[Claude Code: same three blocks.]
+(one or two specific behaviours)
+
+### Could improve
+
+(one or two specific behaviours)
+
+### Specific recommendation
+
+(one actionable sentence)
 
 ---
 
@@ -142,9 +159,17 @@ Rules:
 | Use of the FDIR panel — did anyone watch it? | |
 | Outcome vs pass criteria | |
 
-### Worked well · Could improve · Specific recommendation
+### Worked well
 
-[Claude Code: same three blocks.]
+(one or two specific behaviours)
+
+### Could improve
+
+(one or two specific behaviours)
+
+### Specific recommendation
+
+(one actionable sentence)
 
 ---
 
@@ -179,10 +204,11 @@ into the cohort lessons-learned register.
 
 ## What good observation looks like
 
-[Claude Code: produce a 250-word example. Show a fictional
-*Communications* worksheet for an LEOP pass that has good
-specificity, includes timestamps, and ends with a concrete
-recommendation. Use it as the model students are given on Day 1.]
+> **TODO (author):** Write the 250-word worked example: a completed
+> *Communications* worksheet for an LEOP pass, with specific,
+> timestamped observations, one or two behaviours that worked and
+> one or two that did not, ending with one concrete recommendation.
+> It is the model students are given on Day 1.
 
 ---
 

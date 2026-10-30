@@ -270,7 +270,7 @@ Les paramètres sont regroupés par sous-système :
 - Mémoire utilisée (%)
 - Stockage utilisé (%)
 - Nombre de redémarrages
-- Mode (NOMINAL, SAFE, BOOTLOADER)
+- Mode (NOMINAL, SAFE, EMERGENCY) et image logicielle (`sw_image` : 0 = chargeur d'amorçage, 1 = application)
 
 #### TT&C (télémesure, poursuite et télécommande)
 - État de la liaison (UP/DOWN)
@@ -561,7 +561,7 @@ doit le signaler.
    - Cliquer sur **ACTUALISER** → sélectionner « Post-Separation » → cliquer sur **DÉMARRER**
 
 2. **Surveiller l'état initial** :
-   - Observer SoC batterie = 95 %, mode OBC = BOOTLOADER, mode AOCS = OFF
+   - Observer SoC batterie = 95 %, OBC dans le chargeur d'amorçage (`sw_image` = 0), mode AOCS = OFF
    - Vitesses angulaires d'environ 1-2 deg/s dues à l'impulsion de séparation
    - Suivre la barre de progression ; le scénario dure 1 heure
 

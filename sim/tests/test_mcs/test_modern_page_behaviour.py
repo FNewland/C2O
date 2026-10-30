@@ -48,7 +48,8 @@ requires_node = pytest.mark.skipif(NODE is None, reason="node required")
 # Agent-1 baseline (tests/test_common/test_classic_untouched.py).
 # Re-pinned 2026-08d (TZ-1): see tests/test_common/
 # test_classic_untouched.py for why the classic page changed.
-CLASSIC_SHA = "049d00b55de192552e48ea739bcd36f919d4423add347c3e7a91ed7252f6be01"
+# Re-pinned 2026-10-30 (ruling Q33, heading anchors) — see test_classic_untouched.py.
+CLASSIC_SHA = "aaffd294001d6d355dcf6825898e83195e039e040222f321cb39ca0b2166dc1b"
 
 
 def run_js(snippet: str, tmp_path: Path):
@@ -390,7 +391,7 @@ class TestCommandBuilderEncoding:
                        { exec_time_cuc: 1000, tc_data: "11 22 33" }),
             };
         """), tmp_path)
-        assert out["aocs"] == "00 04"                       # func 0 + enum NOMINAL_NADIR
+        assert out["aocs"] == "00 04"                       # func 0 + enum NOMINAL
         assert out["aocsDefault"] == "00 04"                # catalogue default = 4
         # -15.00 degC -> 25815 cK = 0x64D7 (tc_catalog.yaml worked example)
         assert out["cooler"] == "24 64 D7"

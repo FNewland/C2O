@@ -60,7 +60,7 @@ def engine(tmp_path):
     # AOCS and the payload out of MODE_OFF: their acceptance-stage mode gate
     # is a different (and correct) refusal, and it would mask the argument
     # refusal these tests are about.
-    eng.subsystems["aocs"]._state.mode = 4          # NOMINAL_NADIR
+    eng.subsystems["aocs"]._state.mode = 4          # NOMINAL
     eng.subsystems["payload"]._state.mode = 1       # STANDBY
     eng.params[0x0115] = 1                          # battery heater line
     eng.params[0x0116] = 1                          # OBC heater line

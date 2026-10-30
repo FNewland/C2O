@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <SpaceSystem xmlns="http://www.omg.org/spec/XTCE/20180204" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="EOSAT-1">
-  <Header version="1.0+590a05ec5309" classification="Unclassified — Simulation"/>
+  <Header version="1.0+4a992dbe3156" classification="Unclassified — Simulation"/>
   <SpaceSystem name="CCSDS">
     <LongDescription>CCSDS Space Packet Protocol header definitions</LongDescription>
     <TelemetryMetaData>
@@ -435,24 +435,12 @@
         <IntegerParameterType name="eps_bat_cycles_Type" signed="false">
           <IntegerDataEncoding sizeInBits="16" encoding="unsigned"/>
         </IntegerParameterType>
-        <IntegerParameterType name="eps_mppt_efficiency_Type" signed="false">
-          <IntegerDataEncoding sizeInBits="16" encoding="unsigned">
-            <DefaultCalibrator>
-              <PolynomialCalibrator>
-                <Term coefficient="0.0001" exponent="1"/>
-              </PolynomialCalibrator>
-            </DefaultCalibrator>
-          </IntegerDataEncoding>
-        </IntegerParameterType>
-        <IntegerParameterType name="eps_sa_age_factor_Type" signed="false">
-          <IntegerDataEncoding sizeInBits="16" encoding="unsigned">
-            <DefaultCalibrator>
-              <PolynomialCalibrator>
-                <Term coefficient="0.0001" exponent="1"/>
-              </PolynomialCalibrator>
-            </DefaultCalibrator>
-          </IntegerDataEncoding>
-        </IntegerParameterType>
+        <FloatParameterType name="eps_mppt_efficiency_Type">
+          <FloatDataEncoding sizeInBits="32"/>
+        </FloatParameterType>
+        <FloatParameterType name="eps_sa_age_factor_Type">
+          <FloatDataEncoding sizeInBits="32"/>
+        </FloatParameterType>
         <FloatParameterType name="eps_sa_a_degradation_Type">
           <FloatDataEncoding sizeInBits="32"/>
         </FloatParameterType>
@@ -1069,8 +1057,6 @@
             <ParameterRefEntry parameterRef="/EOSAT-1/EPS/eps_line_current_7"/>
             <ParameterRefEntry parameterRef="/EOSAT-1/EPS/eps_bat_dod"/>
             <ParameterRefEntry parameterRef="/EOSAT-1/EPS/eps_bat_cycles"/>
-            <ParameterRefEntry parameterRef="/EOSAT-1/EPS/eps_mppt_efficiency"/>
-            <ParameterRefEntry parameterRef="/EOSAT-1/EPS/eps_sa_age_factor"/>
             <ParameterRefEntry parameterRef="/EOSAT-1/EPS/eps_sa_px_current"/>
             <ParameterRefEntry parameterRef="/EOSAT-1/EPS/eps_sa_mx_current"/>
             <ParameterRefEntry parameterRef="/EOSAT-1/EPS/eps_sa_py_current"/>
@@ -1946,126 +1932,66 @@
         <IntegerParameterType name="aocs_attitude_source_Type" signed="false">
           <IntegerDataEncoding sizeInBits="8" encoding="unsigned"/>
         </IntegerParameterType>
-        <IntegerParameterType name="aocs_rw1_bearing_health_Type" signed="false">
-          <IntegerDataEncoding sizeInBits="16" encoding="unsigned">
-            <DefaultCalibrator>
-              <PolynomialCalibrator>
-                <Term coefficient="0.01" exponent="1"/>
-              </PolynomialCalibrator>
-            </DefaultCalibrator>
-          </IntegerDataEncoding>
+        <FloatParameterType name="aocs_rw1_bearing_health_Type">
+          <FloatDataEncoding sizeInBits="32"/>
           <UnitSet>
             <Unit>%</Unit>
           </UnitSet>
-        </IntegerParameterType>
-        <IntegerParameterType name="aocs_rw2_bearing_health_Type" signed="false">
-          <IntegerDataEncoding sizeInBits="16" encoding="unsigned">
-            <DefaultCalibrator>
-              <PolynomialCalibrator>
-                <Term coefficient="0.01" exponent="1"/>
-              </PolynomialCalibrator>
-            </DefaultCalibrator>
-          </IntegerDataEncoding>
+        </FloatParameterType>
+        <FloatParameterType name="aocs_rw2_bearing_health_Type">
+          <FloatDataEncoding sizeInBits="32"/>
           <UnitSet>
             <Unit>%</Unit>
           </UnitSet>
-        </IntegerParameterType>
-        <IntegerParameterType name="aocs_rw3_bearing_health_Type" signed="false">
-          <IntegerDataEncoding sizeInBits="16" encoding="unsigned">
-            <DefaultCalibrator>
-              <PolynomialCalibrator>
-                <Term coefficient="0.01" exponent="1"/>
-              </PolynomialCalibrator>
-            </DefaultCalibrator>
-          </IntegerDataEncoding>
+        </FloatParameterType>
+        <FloatParameterType name="aocs_rw3_bearing_health_Type">
+          <FloatDataEncoding sizeInBits="32"/>
           <UnitSet>
             <Unit>%</Unit>
           </UnitSet>
-        </IntegerParameterType>
-        <IntegerParameterType name="aocs_rw4_bearing_health_Type" signed="false">
-          <IntegerDataEncoding sizeInBits="16" encoding="unsigned">
-            <DefaultCalibrator>
-              <PolynomialCalibrator>
-                <Term coefficient="0.01" exponent="1"/>
-              </PolynomialCalibrator>
-            </DefaultCalibrator>
-          </IntegerDataEncoding>
+        </FloatParameterType>
+        <FloatParameterType name="aocs_rw4_bearing_health_Type">
+          <FloatDataEncoding sizeInBits="32"/>
           <UnitSet>
             <Unit>%</Unit>
           </UnitSet>
-        </IntegerParameterType>
-        <IntegerParameterType name="aocs_css_head_health_px_Type" signed="false">
-          <IntegerDataEncoding sizeInBits="16" encoding="unsigned">
-            <DefaultCalibrator>
-              <PolynomialCalibrator>
-                <Term coefficient="0.01" exponent="1"/>
-              </PolynomialCalibrator>
-            </DefaultCalibrator>
-          </IntegerDataEncoding>
+        </FloatParameterType>
+        <FloatParameterType name="aocs_css_head_health_px_Type">
+          <FloatDataEncoding sizeInBits="32"/>
           <UnitSet>
             <Unit>%</Unit>
           </UnitSet>
-        </IntegerParameterType>
-        <IntegerParameterType name="aocs_css_head_health_mx_Type" signed="false">
-          <IntegerDataEncoding sizeInBits="16" encoding="unsigned">
-            <DefaultCalibrator>
-              <PolynomialCalibrator>
-                <Term coefficient="0.01" exponent="1"/>
-              </PolynomialCalibrator>
-            </DefaultCalibrator>
-          </IntegerDataEncoding>
+        </FloatParameterType>
+        <FloatParameterType name="aocs_css_head_health_mx_Type">
+          <FloatDataEncoding sizeInBits="32"/>
           <UnitSet>
             <Unit>%</Unit>
           </UnitSet>
-        </IntegerParameterType>
-        <IntegerParameterType name="aocs_css_head_health_py_Type" signed="false">
-          <IntegerDataEncoding sizeInBits="16" encoding="unsigned">
-            <DefaultCalibrator>
-              <PolynomialCalibrator>
-                <Term coefficient="0.01" exponent="1"/>
-              </PolynomialCalibrator>
-            </DefaultCalibrator>
-          </IntegerDataEncoding>
+        </FloatParameterType>
+        <FloatParameterType name="aocs_css_head_health_py_Type">
+          <FloatDataEncoding sizeInBits="32"/>
           <UnitSet>
             <Unit>%</Unit>
           </UnitSet>
-        </IntegerParameterType>
-        <IntegerParameterType name="aocs_css_head_health_my_Type" signed="false">
-          <IntegerDataEncoding sizeInBits="16" encoding="unsigned">
-            <DefaultCalibrator>
-              <PolynomialCalibrator>
-                <Term coefficient="0.01" exponent="1"/>
-              </PolynomialCalibrator>
-            </DefaultCalibrator>
-          </IntegerDataEncoding>
+        </FloatParameterType>
+        <FloatParameterType name="aocs_css_head_health_my_Type">
+          <FloatDataEncoding sizeInBits="32"/>
           <UnitSet>
             <Unit>%</Unit>
           </UnitSet>
-        </IntegerParameterType>
-        <IntegerParameterType name="aocs_css_head_health_pz_Type" signed="false">
-          <IntegerDataEncoding sizeInBits="16" encoding="unsigned">
-            <DefaultCalibrator>
-              <PolynomialCalibrator>
-                <Term coefficient="0.01" exponent="1"/>
-              </PolynomialCalibrator>
-            </DefaultCalibrator>
-          </IntegerDataEncoding>
+        </FloatParameterType>
+        <FloatParameterType name="aocs_css_head_health_pz_Type">
+          <FloatDataEncoding sizeInBits="32"/>
           <UnitSet>
             <Unit>%</Unit>
           </UnitSet>
-        </IntegerParameterType>
-        <IntegerParameterType name="aocs_css_head_health_mz_Type" signed="false">
-          <IntegerDataEncoding sizeInBits="16" encoding="unsigned">
-            <DefaultCalibrator>
-              <PolynomialCalibrator>
-                <Term coefficient="0.01" exponent="1"/>
-              </PolynomialCalibrator>
-            </DefaultCalibrator>
-          </IntegerDataEncoding>
+        </FloatParameterType>
+        <FloatParameterType name="aocs_css_head_health_mz_Type">
+          <FloatDataEncoding sizeInBits="32"/>
           <UnitSet>
             <Unit>%</Unit>
           </UnitSet>
-        </IntegerParameterType>
+        </FloatParameterType>
         <FloatParameterType name="aocs_slew_state_Type">
           <FloatDataEncoding sizeInBits="32"/>
         </FloatParameterType>
@@ -2255,33 +2181,15 @@
             </DefaultCalibrator>
           </IntegerDataEncoding>
         </IntegerParameterType>
-        <IntegerParameterType name="aocs_sun_body_true_x_Type" signed="true">
-          <IntegerDataEncoding sizeInBits="16" encoding="twosComplement">
-            <DefaultCalibrator>
-              <PolynomialCalibrator>
-                <Term coefficient="0.0001" exponent="1"/>
-              </PolynomialCalibrator>
-            </DefaultCalibrator>
-          </IntegerDataEncoding>
-        </IntegerParameterType>
-        <IntegerParameterType name="aocs_sun_body_true_y_Type" signed="true">
-          <IntegerDataEncoding sizeInBits="16" encoding="twosComplement">
-            <DefaultCalibrator>
-              <PolynomialCalibrator>
-                <Term coefficient="0.0001" exponent="1"/>
-              </PolynomialCalibrator>
-            </DefaultCalibrator>
-          </IntegerDataEncoding>
-        </IntegerParameterType>
-        <IntegerParameterType name="aocs_sun_body_true_z_Type" signed="true">
-          <IntegerDataEncoding sizeInBits="16" encoding="twosComplement">
-            <DefaultCalibrator>
-              <PolynomialCalibrator>
-                <Term coefficient="0.0001" exponent="1"/>
-              </PolynomialCalibrator>
-            </DefaultCalibrator>
-          </IntegerDataEncoding>
-        </IntegerParameterType>
+        <FloatParameterType name="aocs_sun_body_true_x_Type">
+          <FloatDataEncoding sizeInBits="32"/>
+        </FloatParameterType>
+        <FloatParameterType name="aocs_sun_body_true_y_Type">
+          <FloatDataEncoding sizeInBits="32"/>
+        </FloatParameterType>
+        <FloatParameterType name="aocs_sun_body_true_z_Type">
+          <FloatDataEncoding sizeInBits="32"/>
+        </FloatParameterType>
         <IntegerParameterType name="aocs_h_body_x_Type" signed="true">
           <IntegerDataEncoding sizeInBits="16" encoding="twosComplement">
             <DefaultCalibrator>
@@ -2383,42 +2291,24 @@
             <Unit>Am2</Unit>
           </UnitSet>
         </IntegerParameterType>
-        <IntegerParameterType name="aocs_tau_dist_x_Type" signed="true">
-          <IntegerDataEncoding sizeInBits="16" encoding="twosComplement">
-            <DefaultCalibrator>
-              <PolynomialCalibrator>
-                <Term coefficient="0.1" exponent="1"/>
-              </PolynomialCalibrator>
-            </DefaultCalibrator>
-          </IntegerDataEncoding>
+        <FloatParameterType name="aocs_tau_dist_x_Type">
+          <FloatDataEncoding sizeInBits="32"/>
           <UnitSet>
             <Unit>uNm</Unit>
           </UnitSet>
-        </IntegerParameterType>
-        <IntegerParameterType name="aocs_tau_dist_y_Type" signed="true">
-          <IntegerDataEncoding sizeInBits="16" encoding="twosComplement">
-            <DefaultCalibrator>
-              <PolynomialCalibrator>
-                <Term coefficient="0.1" exponent="1"/>
-              </PolynomialCalibrator>
-            </DefaultCalibrator>
-          </IntegerDataEncoding>
+        </FloatParameterType>
+        <FloatParameterType name="aocs_tau_dist_y_Type">
+          <FloatDataEncoding sizeInBits="32"/>
           <UnitSet>
             <Unit>uNm</Unit>
           </UnitSet>
-        </IntegerParameterType>
-        <IntegerParameterType name="aocs_tau_dist_z_Type" signed="true">
-          <IntegerDataEncoding sizeInBits="16" encoding="twosComplement">
-            <DefaultCalibrator>
-              <PolynomialCalibrator>
-                <Term coefficient="0.1" exponent="1"/>
-              </PolynomialCalibrator>
-            </DefaultCalibrator>
-          </IntegerDataEncoding>
+        </FloatParameterType>
+        <FloatParameterType name="aocs_tau_dist_z_Type">
+          <FloatDataEncoding sizeInBits="32"/>
           <UnitSet>
             <Unit>uNm</Unit>
           </UnitSet>
-        </IntegerParameterType>
+        </FloatParameterType>
         <IntegerParameterType name="aocs_est_source_Type" signed="false">
           <IntegerDataEncoding sizeInBits="8" encoding="unsigned"/>
         </IntegerParameterType>
@@ -2452,9 +2342,9 @@
         <IntegerParameterType name="aocs_fine_ready_Type" signed="false">
           <IntegerDataEncoding sizeInBits="8" encoding="unsigned"/>
         </IntegerParameterType>
-        <IntegerParameterType name="aocs_fidelity_mode_Type" signed="false">
-          <IntegerDataEncoding sizeInBits="8" encoding="unsigned"/>
-        </IntegerParameterType>
+        <FloatParameterType name="aocs_fidelity_mode_Type">
+          <FloatDataEncoding sizeInBits="32"/>
+        </FloatParameterType>
         <IntegerParameterType name="aocs_geoloc_err_m_Type" signed="false">
           <IntegerDataEncoding sizeInBits="32" encoding="unsigned">
             <DefaultCalibrator>
@@ -2485,18 +2375,12 @@
         <IntegerParameterType name="aocs_gyro_saturated_Type" signed="false">
           <IntegerDataEncoding sizeInBits="8" encoding="unsigned"/>
         </IntegerParameterType>
-        <IntegerParameterType name="aocs_gyro_bias_injected_Type" signed="false">
-          <IntegerDataEncoding sizeInBits="16" encoding="unsigned">
-            <DefaultCalibrator>
-              <PolynomialCalibrator>
-                <Term coefficient="1e-05" exponent="1"/>
-              </PolynomialCalibrator>
-            </DefaultCalibrator>
-          </IntegerDataEncoding>
+        <FloatParameterType name="aocs_gyro_bias_injected_Type">
+          <FloatDataEncoding sizeInBits="32"/>
           <UnitSet>
             <Unit>deg/s</Unit>
           </UnitSet>
-        </IntegerParameterType>
+        </FloatParameterType>
         <IntegerParameterType name="aocs_commanded_mode_Type" signed="false">
           <IntegerDataEncoding sizeInBits="8" encoding="unsigned"/>
         </IntegerParameterType>
@@ -3201,16 +3085,6 @@
             <ParameterRefEntry parameterRef="/EOSAT-1/AOCS/aocs_slew_progress"/>
             <ParameterRefEntry parameterRef="/EOSAT-1/AOCS/aocs_momentum_saturation_pct"/>
             <ParameterRefEntry parameterRef="/EOSAT-1/AOCS/aocs_attitude_source"/>
-            <ParameterRefEntry parameterRef="/EOSAT-1/AOCS/aocs_rw1_bearing_health"/>
-            <ParameterRefEntry parameterRef="/EOSAT-1/AOCS/aocs_rw2_bearing_health"/>
-            <ParameterRefEntry parameterRef="/EOSAT-1/AOCS/aocs_rw3_bearing_health"/>
-            <ParameterRefEntry parameterRef="/EOSAT-1/AOCS/aocs_rw4_bearing_health"/>
-            <ParameterRefEntry parameterRef="/EOSAT-1/AOCS/aocs_css_head_health_px"/>
-            <ParameterRefEntry parameterRef="/EOSAT-1/AOCS/aocs_css_head_health_mx"/>
-            <ParameterRefEntry parameterRef="/EOSAT-1/AOCS/aocs_css_head_health_py"/>
-            <ParameterRefEntry parameterRef="/EOSAT-1/AOCS/aocs_css_head_health_my"/>
-            <ParameterRefEntry parameterRef="/EOSAT-1/AOCS/aocs_css_head_health_pz"/>
-            <ParameterRefEntry parameterRef="/EOSAT-1/AOCS/aocs_css_head_health_mz"/>
             <ParameterRefEntry parameterRef="/EOSAT-1/AOCS/aocs_commanded_mode"/>
             <ParameterRefEntry parameterRef="/EOSAT-1/AOCS/aocs_mode_demoted"/>
             <ParameterRefEntry parameterRef="/EOSAT-1/AOCS/aocs_fine_degraded"/>
@@ -3220,7 +3094,6 @@
             <ParameterRefEntry parameterRef="/EOSAT-1/AOCS/aocs_wheels_commissioned"/>
             <ParameterRefEntry parameterRef="/EOSAT-1/AOCS/aocs_gyro_units_on"/>
             <ParameterRefEntry parameterRef="/EOSAT-1/AOCS/aocs_gyro_saturated"/>
-            <ParameterRefEntry parameterRef="/EOSAT-1/AOCS/aocs_gyro_bias_injected"/>
             <ParameterRefEntry parameterRef="/EOSAT-1/AOCS/aocs_gyro_units_mask"/>
             <ParameterRefEntry parameterRef="/EOSAT-1/AOCS/aocs_gyro_bias_resid"/>
             <ParameterRefEntry parameterRef="/EOSAT-1/AOCS/aocs_mag_x"/>
@@ -3245,11 +3118,11 @@
             <Enumeration value="1" label="SAFE_BOOT"/>
             <Enumeration value="2" label="DETUMBLE"/>
             <Enumeration value="3" label="COARSE_SUN"/>
-            <Enumeration value="4" label="NOMINAL_NADIR"/>
+            <Enumeration value="4" label="NOMINAL"/>
             <Enumeration value="5" label="FINE_POINT" shortDescription="Refused with TM(1,8) unless aocs.fine_ready (0x02C5) == 0"/>
             <Enumeration value="6" label="SLEW"/>
-            <Enumeration value="7" label="DESATURATION"/>
-            <Enumeration value="8" label="ECLIPSE_PROPAGATE"/>
+            <Enumeration value="7" label="DESAT"/>
+            <Enumeration value="8" label="ECLIPSE"/>
             <Enumeration value="9" label="INERTIAL"/>
           </EnumerationList>
         </EnumeratedArgumentType>
@@ -3366,7 +3239,7 @@
           <LongDescription>Set AOCS mode</LongDescription>
           <ArgumentList>
             <Argument name="mode" argumentTypeRef="AOCS_SET_MODE_mode_ArgType" initialValue="4">
-              <LongDescription>0=off,1=safe_boot,2=detumble,3=coarse_sun,4=nominal_nadir,5=fine_point,6=slew,7=desaturation,8=eclipse_propagate,9=inertial. Mode 5 is refused with TM(1,8) unless the aocs.fine_ready (0x02C5) precondition bitmask is 0.</LongDescription>
+              <LongDescription>0=off,1=safe_boot,2=detumble,3=coarse_sun,4=nominal,5=fine_point,6=slew,7=desaturation,8=eclipse,9=inertial. Mode 5 is refused with TM(1,8) unless the aocs.fine_ready (0x02C5) precondition bitmask is 0.</LongDescription>
             </Argument>
           </ArgumentList>
           <CommandContainer name="AOCS_SET_MODE_Container">
@@ -3533,7 +3406,7 @@
           </CommandContainer>
         </MetaCommand>
         <MetaCommand name="AOCS_GYRO_CALIBRATION">
-          <LongDescription>Start (or abort) an on-board gyro bias calibration. The spacecraft averages the attitude filter's observed gyro bias over a quiet arc with the star tracker in the determination loop, then applies the result as a compensation on the gyro measurement path. Refused with a specific code if the preconditions do not hold (0x0A01 AOCS unpowered, 0x0A02 a gyro unit off, 0x0A03 no star-tracker reference, 0x0A04 body rate too high, 0x0A05 already running). Progress is aocs.gyro_cal_progress (0x02CA) and the estimate lands in aocs.gyro_cal_bias_x/y/z (0x02CB-0x02CD). NOTE the description used to read &quot;Reset gyro bias estimate&quot;, and that is exactly what the on-board handler did — it zeroed a truth state and returned success without estimating anything.</LongDescription>
+          <LongDescription>Start (or abort) an on-board gyro bias calibration. The spacecraft averages the attitude filter's observed gyro bias over a quiet arc with the star tracker in the determination loop, then applies the result as a compensation on the gyro measurement path. Refused with a specific code if the preconditions do not hold (0x0A01 AOCS unpowered, 0x0A02 a gyro unit off, 0x0A03 no star-tracker reference, 0x0A04 body rate too high, 0x0A05 already running). Progress is aocs.gyro_cal_progress (0x02CA) and the estimate lands in aocs.gyro_cal_bias_x/y/z (0x02CB-0x02CD). NOTE the description used to read "Reset gyro bias estimate", and that is exactly what the on-board handler did — it zeroed a truth state and returned success without estimating anything.</LongDescription>
           <ArgumentList>
             <Argument name="action" argumentTypeRef="AOCS_GYRO_CALIBRATION_action_ArgType" initialValue="0">
               <LongDescription>0=START a calibration, 1=ABORT the one in progress</LongDescription>
@@ -4615,7 +4488,7 @@
           <LongDescription>S15 store 4 (Alarm_Store) fill — same value as TM(15,14) for store 4</LongDescription>
         </Parameter>
         <Parameter name="obdh_last_reboot_cause" parameterTypeRef="obdh_last_reboot_cause_Type">
-          <LongDescription>Last reboot cause (0=none,1=watchdog,2=memory,3=switchover,4=commanded)</LongDescription>
+          <LongDescription>Last reboot cause (0=none,1=commanded,2=watchdog,3=memory,4=switchover)</LongDescription>
         </Parameter>
         <Parameter name="obdh_boot_count_a" parameterTypeRef="obdh_boot_count_a_Type">
           <LongDescription>Total boot count for OBC-A</LongDescription>
@@ -4898,40 +4771,18 @@
         <IntegerParameterType name="ttc_link_status_Type" signed="false">
           <IntegerDataEncoding sizeInBits="8" encoding="unsigned"/>
         </IntegerParameterType>
-        <IntegerParameterType name="ttc_rssi_Type" signed="true">
-          <IntegerDataEncoding sizeInBits="16" encoding="twosComplement">
-            <DefaultCalibrator>
-              <PolynomialCalibrator>
-                <Term coefficient="0.1" exponent="1"/>
-              </PolynomialCalibrator>
-            </DefaultCalibrator>
-          </IntegerDataEncoding>
+        <FloatParameterType name="ttc_rssi_Type">
+          <FloatDataEncoding sizeInBits="32"/>
           <UnitSet>
             <Unit>dBm</Unit>
           </UnitSet>
-          <DefaultAlarm>
-            <StaticAlarmRanges>
-              <WarningRange minInclusive="-95.0" maxInclusive="0.0"/>
-            </StaticAlarmRanges>
-          </DefaultAlarm>
-        </IntegerParameterType>
-        <IntegerParameterType name="ttc_link_margin_Type" signed="true">
-          <IntegerDataEncoding sizeInBits="16" encoding="twosComplement">
-            <DefaultCalibrator>
-              <PolynomialCalibrator>
-                <Term coefficient="0.1" exponent="1"/>
-              </PolynomialCalibrator>
-            </DefaultCalibrator>
-          </IntegerDataEncoding>
+        </FloatParameterType>
+        <FloatParameterType name="ttc_link_margin_Type">
+          <FloatDataEncoding sizeInBits="32"/>
           <UnitSet>
             <Unit>dB</Unit>
           </UnitSet>
-          <DefaultAlarm>
-            <StaticAlarmRanges>
-              <CriticalRange minInclusive="3.0" maxInclusive="100.0"/>
-            </StaticAlarmRanges>
-          </DefaultAlarm>
-        </IntegerParameterType>
+        </FloatParameterType>
         <IntegerParameterType name="ttc_tm_data_rate_Type" signed="false">
           <IntegerDataEncoding sizeInBits="32" encoding="unsigned"/>
           <UnitSet>
@@ -4953,38 +4804,21 @@
         <IntegerParameterType name="ttc_ranging_status_Type" signed="false">
           <IntegerDataEncoding sizeInBits="8" encoding="unsigned"/>
         </IntegerParameterType>
-        <IntegerParameterType name="ttc_range_km_Type" signed="false">
-          <IntegerDataEncoding sizeInBits="32" encoding="unsigned"/>
+        <FloatParameterType name="ttc_range_km_Type">
+          <FloatDataEncoding sizeInBits="32"/>
           <UnitSet>
             <Unit>km</Unit>
           </UnitSet>
-        </IntegerParameterType>
-        <IntegerParameterType name="ttc_contact_elevation_Type" signed="true">
-          <IntegerDataEncoding sizeInBits="16" encoding="twosComplement">
-            <DefaultCalibrator>
-              <PolynomialCalibrator>
-                <Term coefficient="0.01" exponent="1"/>
-              </PolynomialCalibrator>
-            </DefaultCalibrator>
-          </IntegerDataEncoding>
+        </FloatParameterType>
+        <FloatParameterType name="ttc_contact_elevation_Type">
+          <FloatDataEncoding sizeInBits="32"/>
           <UnitSet>
             <Unit>deg</Unit>
           </UnitSet>
-        </IntegerParameterType>
-        <IntegerParameterType name="ttc_ber_Type" signed="true">
-          <IntegerDataEncoding sizeInBits="16" encoding="twosComplement">
-            <DefaultCalibrator>
-              <PolynomialCalibrator>
-                <Term coefficient="0.01" exponent="1"/>
-              </PolynomialCalibrator>
-            </DefaultCalibrator>
-          </IntegerDataEncoding>
-          <DefaultAlarm>
-            <StaticAlarmRanges>
-              <WarningRange minInclusive="-5.0" maxInclusive="0.0"/>
-            </StaticAlarmRanges>
-          </DefaultAlarm>
-        </IntegerParameterType>
+        </FloatParameterType>
+        <FloatParameterType name="ttc_ber_Type">
+          <FloatDataEncoding sizeInBits="32"/>
+        </FloatParameterType>
         <IntegerParameterType name="ttc_tx_fwd_power_Type" signed="true">
           <IntegerDataEncoding sizeInBits="16" encoding="twosComplement">
             <DefaultCalibrator>
@@ -5029,53 +4863,30 @@
         <IntegerParameterType name="ttc_pa_on_Type" signed="false">
           <IntegerDataEncoding sizeInBits="8" encoding="unsigned"/>
         </IntegerParameterType>
-        <IntegerParameterType name="ttc_eb_n0_Type" signed="true">
-          <IntegerDataEncoding sizeInBits="16" encoding="twosComplement">
-            <DefaultCalibrator>
-              <PolynomialCalibrator>
-                <Term coefficient="0.01" exponent="1"/>
-              </PolynomialCalibrator>
-            </DefaultCalibrator>
-          </IntegerDataEncoding>
+        <FloatParameterType name="ttc_eb_n0_Type">
+          <FloatDataEncoding sizeInBits="32"/>
           <UnitSet>
             <Unit>dB</Unit>
           </UnitSet>
-          <DefaultAlarm>
-            <StaticAlarmRanges>
-              <WarningRange minInclusive="4.0" maxInclusive="100.0"/>
-            </StaticAlarmRanges>
-          </DefaultAlarm>
-        </IntegerParameterType>
-        <IntegerParameterType name="ttc_agc_level_Type" signed="true">
-          <IntegerDataEncoding sizeInBits="16" encoding="twosComplement">
-            <DefaultCalibrator>
-              <PolynomialCalibrator>
-                <Term coefficient="0.1" exponent="1"/>
-              </PolynomialCalibrator>
-            </DefaultCalibrator>
-          </IntegerDataEncoding>
+        </FloatParameterType>
+        <FloatParameterType name="ttc_agc_level_Type">
+          <FloatDataEncoding sizeInBits="32"/>
           <UnitSet>
             <Unit>dB</Unit>
           </UnitSet>
-        </IntegerParameterType>
+        </FloatParameterType>
         <IntegerParameterType name="ttc_doppler_hz_Type" signed="true">
           <IntegerDataEncoding sizeInBits="32" encoding="twosComplement"/>
           <UnitSet>
             <Unit>Hz</Unit>
           </UnitSet>
         </IntegerParameterType>
-        <IntegerParameterType name="ttc_range_rate_Type" signed="true">
-          <IntegerDataEncoding sizeInBits="16" encoding="twosComplement">
-            <DefaultCalibrator>
-              <PolynomialCalibrator>
-                <Term coefficient="0.1" exponent="1"/>
-              </PolynomialCalibrator>
-            </DefaultCalibrator>
-          </IntegerDataEncoding>
+        <FloatParameterType name="ttc_range_rate_Type">
+          <FloatDataEncoding sizeInBits="32"/>
           <UnitSet>
             <Unit>m/s</Unit>
           </UnitSet>
-        </IntegerParameterType>
+        </FloatParameterType>
         <IntegerParameterType name="ttc_cmd_auth_status_Type" signed="false">
           <IntegerDataEncoding sizeInBits="8" encoding="unsigned"/>
         </IntegerParameterType>
@@ -5317,14 +5128,9 @@
           <EntryList>
             <ParameterRefEntry parameterRef="/EOSAT-1/TTC/ttc_mode"/>
             <ParameterRefEntry parameterRef="/EOSAT-1/TTC/ttc_link_status"/>
-            <ParameterRefEntry parameterRef="/EOSAT-1/TTC/ttc_rssi"/>
-            <ParameterRefEntry parameterRef="/EOSAT-1/TTC/ttc_link_margin"/>
             <ParameterRefEntry parameterRef="/EOSAT-1/TTC/ttc_tm_data_rate"/>
             <ParameterRefEntry parameterRef="/EOSAT-1/TTC/ttc_xpdr_temp"/>
             <ParameterRefEntry parameterRef="/EOSAT-1/TTC/ttc_ranging_status"/>
-            <ParameterRefEntry parameterRef="/EOSAT-1/TTC/ttc_range_km"/>
-            <ParameterRefEntry parameterRef="/EOSAT-1/TTC/ttc_contact_elevation"/>
-            <ParameterRefEntry parameterRef="/EOSAT-1/TTC/ttc_ber"/>
             <ParameterRefEntry parameterRef="/EOSAT-1/TTC/ttc_tx_fwd_power"/>
             <ParameterRefEntry parameterRef="/EOSAT-1/TTC/ttc_pa_temp"/>
             <ParameterRefEntry parameterRef="/EOSAT-1/TTC/ttc_carrier_lock"/>
@@ -5333,10 +5139,7 @@
             <ParameterRefEntry parameterRef="/EOSAT-1/TTC/ttc_cmd_rx_count"/>
             <ParameterRefEntry parameterRef="/EOSAT-1/TTC/ttc_pa_on"/>
             <ParameterRefEntry parameterRef="/EOSAT-1/TTC/ttc_tx_active"/>
-            <ParameterRefEntry parameterRef="/EOSAT-1/TTC/ttc_eb_n0"/>
-            <ParameterRefEntry parameterRef="/EOSAT-1/TTC/ttc_agc_level"/>
             <ParameterRefEntry parameterRef="/EOSAT-1/TTC/ttc_doppler_hz"/>
-            <ParameterRefEntry parameterRef="/EOSAT-1/TTC/ttc_range_rate"/>
             <ParameterRefEntry parameterRef="/EOSAT-1/TTC/ttc_cmd_auth_status"/>
             <ParameterRefEntry parameterRef="/EOSAT-1/TTC/ttc_total_bytes_tx"/>
             <ParameterRefEntry parameterRef="/EOSAT-1/TTC/ttc_total_bytes_rx"/>
@@ -5403,7 +5206,7 @@
           </CommandContainer>
         </MetaCommand>
         <MetaCommand name="TTC_SET_DATA_RATE">
-          <LongDescription>Select a rung of the TM data-rate ladder defined in subsystems/ttc.yaml tm_rate_tiers. Sets data_rate_mode (the COMMANDED tier), which the TTC tick resolves the active tier from, so the commanded tier survives the tick and is authoritative. Three tiers: LOW 16 kbps BPSK conv(7,1/2)+RS — ROUTINE OPERATIONS, and the safe-mode / FDIR fallback; HIGH 128 kbps QPSK RS(255,223) — delayed-telemetry playback and image dumps only; SAFE 1 kbps BPSK conv(7,1/2)+RS — bootloader/contingency lifeline rate (renamed from BEACON, 2026-08c — &quot;beacon&quot; always means the UHF whip transmitter now), entered with TTC_SET_BEACON_MODE, not selectable here. LEGACY ENCODING PRESERVED VERBATIM: rate=0 still means &quot;the low rate&quot; and rate=1 still means &quot;the high rate&quot; — they now select LOW (16 kbps) and HIGH (128 kbps) instead of 1 kbps and 64 kbps, so existing procedures, OBCPs and the FDIR ttc_reduce_power action keep their meaning. Permission rules are enforced by REJECTION with an S1.8 execution failure (error 0x0007), never by silent clamping: HIGH requires a deployed antenna and DOWNLINK/dump mode (TTC_SET_DOWNLINK_MODE), and every tier except SAFE is refused while beacon mode is latched. An unknown tier code gives error 0x0003. There is NO on-board elevation gate (2026-08c): the 10 deg HIGH policy is a GROUND rule — the MCS warns when HIGH is commanded below 10 deg from its own contact geometry, and the planner schedules HIGH dumps above it.</LongDescription>
+          <LongDescription>Select a rung of the TM data-rate ladder defined in subsystems/ttc.yaml tm_rate_tiers. Sets data_rate_mode (the COMMANDED tier), which the TTC tick resolves the active tier from, so the commanded tier survives the tick and is authoritative. Three tiers: LOW 16 kbps BPSK conv(7,1/2)+RS — ROUTINE OPERATIONS, and the safe-mode / FDIR fallback; HIGH 128 kbps QPSK RS(255,223) — delayed-telemetry playback and image dumps only; SAFE 1 kbps BPSK conv(7,1/2)+RS — bootloader/contingency lifeline rate (renamed from BEACON, 2026-08c — "beacon" always means the UHF whip transmitter now), entered with TTC_SET_BEACON_MODE, not selectable here. LEGACY ENCODING PRESERVED VERBATIM: rate=0 still means "the low rate" and rate=1 still means "the high rate" — they now select LOW (16 kbps) and HIGH (128 kbps) instead of 1 kbps and 64 kbps, so existing procedures, OBCPs and the FDIR ttc_reduce_power action keep their meaning. Permission rules are enforced by REJECTION with an S1.8 execution failure (error 0x0007), never by silent clamping: HIGH requires a deployed antenna and DOWNLINK/dump mode (TTC_SET_DOWNLINK_MODE), and every tier except SAFE is refused while beacon mode is latched. An unknown tier code gives error 0x0003. There is NO on-board elevation gate (2026-08c): the 10 deg HIGH policy is a GROUND rule — the MCS warns when HIGH is commanded below 10 deg from its own contact geometry, and the planner schedules HIGH dumps above it.</LongDescription>
           <ArgumentList>
             <Argument name="rate" argumentTypeRef="TTC_SET_DATA_RATE_rate_ArgType" initialValue="0">
               <LongDescription>Tier code: 0=LOW(16 kbps, routine operations), 1=HIGH(128 kbps, dumps only), 255=SAFE(1 kbps, bootloader only). Codes come from tm_rate_tiers[].command_code in subsystems/ttc.yaml.</LongDescription>
@@ -5673,12 +5476,12 @@
         <IntegerParameterType name="payload_last_scene_id_Type" signed="false">
           <IntegerDataEncoding sizeInBits="16" encoding="unsigned"/>
         </IntegerParameterType>
-        <IntegerParameterType name="payload_last_scene_quality_Type" signed="false">
-          <IntegerDataEncoding sizeInBits="8" encoding="unsigned"/>
+        <FloatParameterType name="payload_last_scene_quality_Type">
+          <FloatDataEncoding sizeInBits="32"/>
           <UnitSet>
             <Unit>%</Unit>
           </UnitSet>
-        </IntegerParameterType>
+        </FloatParameterType>
         <IntegerParameterType name="payload_fpa_ready_Type" signed="false">
           <IntegerDataEncoding sizeInBits="8" encoding="unsigned"/>
         </IntegerParameterType>
@@ -5703,23 +5506,12 @@
         <IntegerParameterType name="payload_cal_lamp_on_Type" signed="false">
           <IntegerDataEncoding sizeInBits="8" encoding="unsigned"/>
         </IntegerParameterType>
-        <IntegerParameterType name="payload_snr_Type" signed="false">
-          <IntegerDataEncoding sizeInBits="16" encoding="unsigned">
-            <DefaultCalibrator>
-              <PolynomialCalibrator>
-                <Term coefficient="0.01" exponent="1"/>
-              </PolynomialCalibrator>
-            </DefaultCalibrator>
-          </IntegerDataEncoding>
+        <FloatParameterType name="payload_snr_Type">
+          <FloatDataEncoding sizeInBits="32"/>
           <UnitSet>
             <Unit>dB</Unit>
           </UnitSet>
-          <DefaultAlarm>
-            <StaticAlarmRanges>
-              <WarningRange minInclusive="25.0" maxInclusive="100.0"/>
-            </StaticAlarmRanges>
-          </DefaultAlarm>
-        </IntegerParameterType>
+        </FloatParameterType>
         <IntegerParameterType name="payload_detector_temp_Type" signed="true">
           <IntegerDataEncoding sizeInBits="16" encoding="twosComplement">
             <DefaultCalibrator>
@@ -6160,12 +5952,10 @@
             <ParameterRefEntry parameterRef="/EOSAT-1/Payload/payload_mem_total_mb"/>
             <ParameterRefEntry parameterRef="/EOSAT-1/Payload/payload_mem_used_mb"/>
             <ParameterRefEntry parameterRef="/EOSAT-1/Payload/payload_last_scene_id"/>
-            <ParameterRefEntry parameterRef="/EOSAT-1/Payload/payload_last_scene_quality"/>
             <ParameterRefEntry parameterRef="/EOSAT-1/Payload/payload_fpa_ready"/>
             <ParameterRefEntry parameterRef="/EOSAT-1/Payload/payload_mem_segments_bad"/>
             <ParameterRefEntry parameterRef="/EOSAT-1/Payload/payload_compression_ratio"/>
             <ParameterRefEntry parameterRef="/EOSAT-1/Payload/payload_cal_lamp_on"/>
-            <ParameterRefEntry parameterRef="/EOSAT-1/Payload/payload_snr"/>
             <ParameterRefEntry parameterRef="/EOSAT-1/Payload/payload_detector_temp"/>
             <ParameterRefEntry parameterRef="/EOSAT-1/Payload/payload_calibration_active"/>
             <ParameterRefEntry parameterRef="/EOSAT-1/Payload/payload_calibration_progress"/>
@@ -6544,7 +6334,7 @@ TM(8,2) reply, built like PROP_GET_STATUS (func 118): shown(2) + held(2) + produ
         </MetaCommand>
         <MetaCommand name="PAYLOAD_START_CALIBRATION">
           <LongDescription>Begin a radiometric calibration sequence (dark frame / flat field / both).
-PRECONDITIONS (2026-08b PL-d — the gate is on the OPTICS, not on a mode word; the old rule was &quot;must be in IMAGING mode&quot;, which required the shutter to be open onto the scene before a dark frame could be asked for). Refused with S1.8 unless:
+PRECONDITIONS (2026-08b PL-d — the gate is on the OPTICS, not on a mode word; the old rule was "must be in IMAGING mode", which required the shutter to be open onto the scene before a dark frame could be asked for). Refused with S1.8 unless:
 
   * payload mode is 1 STANDBY or 3 CALIBRATION — never 0 OFF and never
     2 IMAGING (error 0x0024);
@@ -6881,18 +6671,12 @@ Completion sets the per-band coefficients; 0x0646 cal_valid_mask marks the bands
         <IntegerParameterType name="prop_arm_inhibit_mask_Type" signed="false">
           <IntegerDataEncoding sizeInBits="16" encoding="unsigned"/>
         </IntegerParameterType>
-        <IntegerParameterType name="prop_leak_rate_Type" signed="false">
-          <IntegerDataEncoding sizeInBits="16" encoding="unsigned">
-            <DefaultCalibrator>
-              <PolynomialCalibrator>
-                <Term coefficient="0.01" exponent="1"/>
-              </PolynomialCalibrator>
-            </DefaultCalibrator>
-          </IntegerDataEncoding>
+        <FloatParameterType name="prop_leak_rate_Type">
+          <FloatDataEncoding sizeInBits="32"/>
           <UnitSet>
             <Unit>mg/s</Unit>
           </UnitSet>
-        </IntegerParameterType>
+        </FloatParameterType>
         <FloatParameterType name="prop_thrust_offset_torque_Type">
           <FloatDataEncoding sizeInBits="32"/>
           <UnitSet>
@@ -6911,21 +6695,15 @@ Completion sets the per-band coefficients; 0x0646 cal_valid_mask marks the bands
             <Unit>kg</Unit>
           </UnitSet>
         </IntegerParameterType>
-        <IntegerParameterType name="prop_orbit_epoch_version_Type" signed="false">
-          <IntegerDataEncoding sizeInBits="16" encoding="unsigned"/>
-        </IntegerParameterType>
-        <IntegerParameterType name="prop_sma_km_Type" signed="false">
-          <IntegerDataEncoding sizeInBits="32" encoding="unsigned">
-            <DefaultCalibrator>
-              <PolynomialCalibrator>
-                <Term coefficient="0.01" exponent="1"/>
-              </PolynomialCalibrator>
-            </DefaultCalibrator>
-          </IntegerDataEncoding>
+        <FloatParameterType name="prop_orbit_epoch_version_Type">
+          <FloatDataEncoding sizeInBits="32"/>
+        </FloatParameterType>
+        <FloatParameterType name="prop_sma_km_Type">
+          <FloatDataEncoding sizeInBits="32"/>
           <UnitSet>
             <Unit>km</Unit>
           </UnitSet>
-        </IntegerParameterType>
+        </FloatParameterType>
         <FloatParameterType name="prop_power_draw_Type">
           <FloatDataEncoding sizeInBits="32"/>
           <UnitSet>
@@ -8473,7 +8251,7 @@ Completion sets the per-band coefficients; 0x0646 cal_valid_mask marks the bands
         </MetaCommand>
         <MetaCommand name="PAYLOAD_SET_SHUTTER">
           <LongDescription>Drive the shutter to an ABSOLUTE position.
-2026-08b PL-d: there was no absolute shutter command anywhere in this catalogue — PAYLOAD_CYCLE_SHUTTER was the only shutter TC, and a relative toggle cannot reach a KNOWN state. That is what COM-011 step 2 (&quot;cycle to CLOSED, verify 0x063C == 0 within 10 s&quot;) needs, what a dark frame needs, and what PAYLOAD_CAPTURE now checks before acquiring.
+2026-08b PL-d: there was no absolute shutter command anywhere in this catalogue — PAYLOAD_CYCLE_SHUTTER was the only shutter TC, and a relative toggle cannot reach a KNOWN state. That is what COM-011 step 2 ("cycle to CLOSED, verify 0x063C == 0 within 10 s") needs, what a dark frame needs, and what PAYLOAD_CAPTURE now checks before acquiring.
 Idempotent: commanding CLOSED twice leaves it CLOSED. Refused (0x0007) when the shutter mechanism device 0x0603 is unpowered, and (0x0005) while a PAYLOAD_CYCLE_SHUTTER exercise is running.</LongDescription>
           <DefaultSignificance consequenceLevel="caution"/>
           <ArgumentList>
@@ -8700,7 +8478,7 @@ TM(13,2) response: transfer_id(2) + total_blocks(4) + crc32(4). The last two fie
           </CommandContainer>
         </MetaCommand>
         <MetaCommand name="S13_END_TRANSFER">
-          <LongDescription>Complete transfer session and free resources. 2026-08b PL-c: it now really does free them — a session whose blocks were ALL sent deletes the product and returns its storage (event 0x0614, 0x0647/0x0648 fall). Previously nothing was freed, so a spacecraft could downlink its entire store and still report it full. A partial or aborted session leaves the product on board, which is the &quot;the pass dropped, re-dump next orbit&quot; case this service exists for.</LongDescription>
+          <LongDescription>Complete transfer session and free resources. 2026-08b PL-c: it now really does free them — a session whose blocks were ALL sent deletes the product and returns its storage (event 0x0614, 0x0647/0x0648 fall). Previously nothing was freed, so a spacecraft could downlink its entire store and still report it full. A partial or aborted session leaves the product on board, which is the "the pass dropped, re-dump next orbit" case this service exists for.</LongDescription>
           <ArgumentList>
             <Argument name="transfer_id" argumentTypeRef="uint16_ArgType">
               <LongDescription>Transfer session ID</LongDescription>

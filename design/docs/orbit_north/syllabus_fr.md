@@ -28,8 +28,8 @@ seront confirmés dans Brightspace.
 
 | Bloc | Dates | Jours | Heures | Lieu |
 |------|-------|-------|--------|------|
-| Semaine 1 — Contexte canadien, introduction au CDF et développement du concept | jeu. – ven. 6 – 7 août 2026 | 2 | 09 h – 17 h | uOttawa, salle à confirmer |
-| Semaine 2 — MCR, environnement réglementaire et intensif au CDF | lun. – ven. 10 – 14 août 2026 | 5 | 09 h – 17 h | Laboratoire SpaceCDF |
+| Semaine 1 — Contexte canadien, introduction au CDF, développement du concept et MCR informel | jeu. – ven. 6 – 7 août 2026 | 2 | 09 h – 17 h | uOttawa, salle à confirmer |
+| Semaine 2 — Environnement réglementaire, intensif au CDF et revue de type PDR | lun. – ven. 10 – 14 août 2026 | 5 | 09 h – 17 h | Laboratoire SpaceCDF |
 | Semaine 3 — Opérations et simulation de mission | lun. – ven. 17 – 21 août 2026 | 5 | 09 h – 17 h | Cyberrange uOttawa |
 
 **Mode.** En personne. Un lien Zoom pourra être disponible pour les
@@ -80,13 +80,13 @@ jeudi matin, puis la plateforme SpaceCDF est ouverte l'après-midi pour
 un court rappel réglementaire et le début du développement du concept
 de mission. Le vendredi est consacré à l'architecture de mission et au
 travail conceptuel dans le CDF, avec une première amorce du registre
-des risques en fin de journée. Les étudiantes et étudiants doivent
-faire un travail préparatoire structuré durant la fin de semaine pour
-préparer l'examen du concept de mission de la semaine 2.
+des risques, et se termine en fin de journée par un examen du concept
+de mission (MCR) informel. Les étudiantes et étudiants doivent faire un
+travail préparatoire structuré durant la fin de semaine pour clore les
+actions du MCR avant que le concept soit figé le lundi de la semaine 2.
 
-**La semaine 2 (5 jours)** s'ouvre sur l'**examen du concept de
-mission (MCR)** le lundi matin, après quoi le concept approuvé de
-l'équipe est figé. L'après-midi du lundi couvre en profondeur le
+**La semaine 2 (5 jours)** s'ouvre le lundi matin sur la clôture des
+actions du MCR, après quoi le concept de l'équipe est figé. L'après-midi du lundi couvre en profondeur le
 cadre réglementaire canadien : la Loi sur les systèmes de
 télédétection spatiale (RSSSA), l'octroi de licences du spectre par
 ISDE, le contrôle des exportations, l'atténuation des débris et
@@ -97,8 +97,8 @@ intégrés à la première journée de CDF) ; alimentation, AOCS et
 thermique le mercredi ; communications, structure et propulsion le
 jeudi avec deux études de compromis formelles ; intégration,
 vérification et validation, coût et clôture des risques le vendredi
-matin ; et **revue de conception préliminaire (PDR)** le vendredi
-après-midi.
+matin ; et une **revue de type PDR** (revue de conception préliminaire)
+le vendredi après-midi.
 
 Les cadres d'ingénierie système eux-mêmes — modèle en V, ingénierie
 des exigences, décomposition fonctionnelle, politique de marges,
@@ -294,9 +294,9 @@ publiés dans Brightspace au début du cours.
 | Évaluation | Type | GNG 3100 | SYS 5186 | Calendrier |
 |------------|------|---------:|---------:|------------|
 | Quiz de préparation pré-cours | Individuel | 5 % | 3 % | Jour 1, semaine 1 |
-| Examen du concept de mission (MCR) | Équipe + individuel | 15 % | 15 % | Jour 1, semaine 2 |
+| Examen du concept de mission (MCR, informel) | Équipe + individuel | 15 % | 15 % | Jour 2, semaine 1 |
 | Cahiers d'exercices CDF et participation | Individuel | 10 % | 5 % | Tout au long de la semaine 2 |
-| Revue de conception préliminaire (PDR) | Équipe + individuel | 20 % | 22 % | Jour 5, semaine 2 |
+| Revue de conception préliminaire (revue de type PDR) | Équipe + individuel | 20 % | 22 % | Jour 5, semaine 2 |
 | Quiz de formation aux opérations | Individuel | 5 % | 2 % | Jour 2, semaine 3 |
 | Performance en simulation — quart d'opérateur | Équipe | 15 % | 18 % | Jours 3 – 4, semaine 3 |
 | Rapport de critique d'observateur | Équipe + individuel | 10 % | 10 % | Jours 3 – 4, semaine 3 |
@@ -375,22 +375,22 @@ Les apprenant·e·s sont attendu·e·s :
 Les dates sont indicatives. Les dates finales et tout ajustement
 seront confirmés dans Brightspace.
 
-### Semaine 1 — Contexte canadien, introduction au CDF et développement du concept · Ottawa · 6 – 7 août 2026
+### Semaine 1 — Contexte canadien, introduction au CDF, développement du concept et MCR informel · Ottawa · 6 – 7 août 2026
 
 | Jour | Avant-midi | Après-midi | Livrables |
 |------|------------|------------|-----------|
 | jeu. 6 août | **Écosystème spatial canadien et accueil du cours.** Passé — historique de l'ASC, Anik, Alouette, Radarsat, Canadarm. Présent — MDA, Telesat, GHGSat, Kepler, NorthStar, laboratoires universitaires et missions étudiantes. Émergent — STDP / FAST / CSEP de l'ASC, Gateway lunaire, missions de classe NEOSSat. Accueil du cours, formation des équipes, attribution des rôles disciplinaires, ouverture des comptes SpaceCDF, visite de l'outil. | **Rappel réglementaire et introduction au CDF.** Rappel de sensibilisation réglementaire de 30 min ; introduction à la plateforme SpaceCDF et à la méthode de conception concourante. Les équipes ouvrent un fichier de mission et commencent le travail conceptuel. | Quiz pré-cours ; équipes formées ; thème de mission choisi |
-| ven. 7 août | **Architecture de mission et développement du concept (CDF).** Étude de compromis sur les alternatives de mission dans le CDF ; ConOps de haut niveau v0 ; concept v0 ; premiers budgets paramétriques. | **Raffinement du concept et ouverture du registre des risques.** Poursuite du travail conceptuel ; ouverture du registre des risques du CDF (identification préliminaire seulement). Consolidation de fin de semaine et information sur le travail de fin de semaine. | Concept v0 ; ConOps de haut niveau v0 ; registre des risques ouvert |
+| ven. 7 août | **Architecture de mission et développement du concept (CDF).** Étude de compromis sur les alternatives de mission dans le CDF ; ConOps de haut niveau v0 ; concept v0 ; premiers budgets paramétriques. | **Raffinement du concept, ouverture du registre des risques et MCR informel.** Poursuite du travail conceptuel ; ouverture du registre des risques du CDF (identification préliminaire seulement). Examen du concept de mission (MCR) informel en fin de journée : concept v0, ConOps v0 et étude des alternatives présentés pour rétroaction. Information sur le travail de fin de semaine. | Concept v0 ; ConOps de haut niveau v0 ; registre des risques ouvert ; **MCR informel tenu** |
 
-### Semaine 2 — MCR, environnement réglementaire et intensif au CDF · Ottawa · 10 – 14 août 2026
+### Semaine 2 — Environnement réglementaire, intensif au CDF et revue de type PDR · Ottawa · 10 – 14 août 2026
 
 | Jour | Avant-midi | Après-midi | Livrables |
 |------|------------|------------|-----------|
-| lun. 10 août | **Examen du concept de mission (MCR).** Concept v1 ; résultat de l'étude des alternatives ; exigences de haut niveau ; enveloppe programmatique ; registre des risques v0. | **Cadre réglementaire canadien.** RSSSA ; coordination UIT ; Loi sur la radiocommunication ; octroi de licences du spectre ISDE CPC-2-6-02 ; Liste des marchandises d'exportation contrôlée du Canada ; Programme des marchandises contrôlées ; aperçu ITAR ; atténuation des débris (IADC 25 ans, FCC 5 ans) ; Convention sur l'immatriculation de l'ONU. | **MCR livré** ; mémoire réglementaire (équipe, 2 p.) ; ébauche de demande ISDE |
+| lun. 10 août | **Clôture des actions du MCR et gel du concept.** Concept v1 ; résultat de l'étude des alternatives ; exigences de haut niveau ; enveloppe programmatique ; registre des risques v0. | **Cadre réglementaire canadien.** RSSSA ; coordination UIT ; Loi sur la radiocommunication ; octroi de licences du spectre ISDE CPC-2-6-02 ; Liste des marchandises d'exportation contrôlée du Canada ; Programme des marchandises contrôlées ; aperçu ITAR ; atténuation des débris (IADC 25 ans, FCC 5 ans) ; Convention sur l'immatriculation de l'ONU. | **Concept v1 figé** ; mémoire réglementaire (équipe, 2 p.) ; ébauche de demande ISDE |
 | mar. 11 août | **Jour 1 de CDF — modèle en V et exigences (PRR/SRR intégrées).** Présentation du modèle en V ; matrice de personnalisation ; carte des portails du cycle de vie. Des objectifs de mission aux exigences SMART ; décomposition fonctionnelle. Premiers budgets paramétriques (masse, énergie, données, lien). Alimentation, AOCS et thermique amorcés en après-midi. | (suite) | Cahier CDF 1 ; base de référence des exigences ; registre des risques mis à jour |
 | mer. 12 août | **Jour 2 de CDF — alimentation, AOCS, thermique.** Étude de compromis sur la sélection d'orbite. Dimensionnement des panneaux solaires et des batteries. Sélection de la détermination et du contrôle d'attitude. Analyse de l'environnement thermique et concepts de contrôle thermique. | (suite) | Cahier CDF 2 ; décisions de compromis sous-systèmes consignées |
 | jeu. 13 août | **Jour 3 de CDF — communications, structure, propulsion + études de compromis.** Calcul du bilan de liaison ; planification des stations sol. Sélection des bandes de fréquences et implications réglementaires via le module de vérification réglementaire du CDF. Sélection de la structure CubeSat et compatibilité des déployeurs. Étude de compromis sur la propulsion. Deux études formelles dans le module d'étude de compromis du CDF — bande de liaison et propulsion. Sélection d'équipement dans la bibliothèque SpaceCDF ; cartographie des fournisseurs lorsque possible. | (suite) | Cahier CDF 3 ; liste de sélection d'équipement ; deux rapports d'étude de compromis |
-| ven. 14 août | **Jour 4 de CDF — intégration, V&V, coût, clôture des risques.** Revue de la matrice d'interfaces ; clôture nette des interfaces mécaniques, électriques, données et thermiques. Attribution de la matrice V&V par exigence. Planification des essais environnementaux. Estimation des coûts ; nomenclature. Clôture du registre des risques ; revue de la base de planification. | **Revue de conception préliminaire (PDR).** Exécution de l'optimiseur SpaceCDF ; export des documents conformes ECSS (MRD, TS, VP) ; revue et capture des actions. | Cahier CDF 4 ; matrices d'interfaces et de V&V ; coûts ; **PDR livrée** ; jeu de documents ECSS |
+| ven. 14 août | **Jour 4 de CDF — intégration, V&V, coût, clôture des risques.** Revue de la matrice d'interfaces ; clôture nette des interfaces mécaniques, électriques, données et thermiques. Attribution de la matrice V&V par exigence. Planification des essais environnementaux. Estimation des coûts ; nomenclature. Clôture du registre des risques ; revue de la base de planification. | **Revue de type PDR (revue de conception préliminaire).** Exécution de l'optimiseur SpaceCDF ; export des documents conformes ECSS (MRD, TS, VP) ; revue et capture des actions. | Cahier CDF 4 ; matrices d'interfaces et de V&V ; coûts ; **PDR livrée** ; jeu de documents ECSS |
 
 ### Semaine 3 — Opérations et simulation de mission · Cyberrange uOttawa · 17 – 21 août 2026
 

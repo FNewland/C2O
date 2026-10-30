@@ -1,0 +1,72 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/contingency/tc_rejection.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "ctg-030-telecommand-rejection-and-verification-failure",
+   "en_hash": "4e8250bce804168a",
+   "fr_hash": "d208c4383cf937a8"
+  },
+  {
+   "id": "ctg-030-telecommand-rejection-and-verification-failure/purpose",
+   "en_hash": "9b57683a4d4aa1b4",
+   "fr_hash": "e324b464a7bbdcd7"
+  },
+  {
+   "id": "ctg-030-telecommand-rejection-and-verification-failure/prerequisites",
+   "en_hash": "e3af6c72f974d332",
+   "fr_hash": "77d7f8dac88bdb81"
+  },
+  {
+   "id": "ctg-030-telecommand-rejection-and-verification-failure/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "ctg-030-telecommand-rejection-and-verification-failure/procedure-steps/step-1-read-the-on-board-command-counters-and-state",
+   "en_hash": "f12d22fee28f5622",
+   "fr_hash": "50049e108e9a24bd"
+  },
+  {
+   "id": "ctg-030-telecommand-rejection-and-verification-failure/procedure-steps/step-2-check-the-uplink-chain",
+   "en_hash": "e1ffdf3fc158afb7",
+   "fr_hash": "58a8ae431e46219f"
+  },
+  {
+   "id": "ctg-030-telecommand-rejection-and-verification-failure/procedure-steps/step-3-classify-the-rejection",
+   "en_hash": "16fc0afe7a513c8b",
+   "fr_hash": "0227c0ed839140b4"
+  },
+  {
+   "id": "ctg-030-telecommand-rejection-and-verification-failure/procedure-steps/step-4-test-clean-commanding",
+   "en_hash": "6d3a28b6b07a90aa",
+   "fr_hash": "6401d9a9a477d4a5"
+  },
+  {
+   "id": "ctg-030-telecommand-rejection-and-verification-failure/procedure-steps/step-5-re-send-the-corrected-telecommand",
+   "en_hash": "4219e000245f476f",
+   "fr_hash": "04518da05d04a0b4"
+  },
+  {
+   "id": "ctg-030-telecommand-rejection-and-verification-failure/off-nominal-handling",
+   "en_hash": "570cbf1e97762ef1",
+   "fr_hash": "b6012a69e92bbaaa"
+  },
+  {
+   "id": "ctg-030-telecommand-rejection-and-verification-failure/post-conditions",
+   "en_hash": "765dca595681dbb8",
+   "fr_hash": "fd790c5d66062d95"
+  },
+  {
+   "id": "ctg-030-telecommand-rejection-and-verification-failure/exit-state",
+   "en_hash": "b13d4312fe0de04d",
+   "fr_hash": "6d5e64c3cb0518ac"
+  }
+ ],
+ "en_commit": "c4a140a"
+}

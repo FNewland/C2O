@@ -12,11 +12,13 @@ spacecraft as an S11 time-tagged command sequence. Flight Dynamics (FDS)
 produces the manoeuvre vector; the Propulsion Engineer verifies system health;
 the Flight Director authorises execution.
 
-EO-Sat-1's propulsion is a minimal 1U green-monopropellant module sized for
-debris avoidance and limited orbit maintenance only (66.9 m/s total). There is
-no propulsive deorbit: end-of-life disposal is by natural decay, which meets
-the FCC 5-year rule from this orbit. Every burn spends the collision-avoidance
-reserve — the dV budget is a safety budget, not a fuel gauge.
+EOSAT-1's propulsion is a minimal 1U green-monopropellant module sized for
+debris avoidance, limited orbit maintenance and the end-of-life disposal burn
+(66.9 m/s total). Natural decay from this orbit takes about 14 years at solar
+minimum, so 34.3 m/s is reserved for the disposal burn (NOM-014): keep
+`prop.dv_remaining` (0x0B0C) at or above 38 m/s after any routine burn. Every
+burn spends the collision-avoidance and disposal reserves — the dV budget is a
+safety budget, not a fuel gauge.
 
 ## Prerequisites
 - [ ] Spacecraft in NOMINAL phase; no active FDIR safing

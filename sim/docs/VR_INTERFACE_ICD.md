@@ -132,6 +132,13 @@ Example (one line on the wire, pretty-printed here):
   +X along-track (velocity) in nominal pointing · +Y cross-track, +Y wing and
   solar-array-drive axis · **+Z nadir** (imager, faces Earth) · −Z zenith.
   6U bus 0.100 × 0.226 × 0.366 m along X, Y, Z.
+  These are the smo-vr/1 interface axes, and they are not the simulator's
+  own body frame. Since author ruling Q4 (2026-10-30) the simulator and the
+  operations manual use +Z = zenith and −Z = nadir (imager and radiator on
+  −Z), with +Y = +orbit normal. The VR bridge converts every body-frame
+  quantity, `v_vr = diag(1, −1, −1) · v_sim` (a 180° turn about X), so
+  smo-vr/1 clients see exactly the axes above. A move of the ICD itself to
+  the new convention would be a breaking change (smo-vr/2).
 * **Quaternion** `q_body_to_eci = [x, y, z, w]` — scalar **last**, Hamilton
   convention, unit length. As an active rotation it takes a vector expressed in
   body axes into ECI: `v_eci = q ⊗ v_body ⊗ q*`. In a scene whose world axes are
@@ -153,7 +160,7 @@ Ready-made C# for Unity: `tools/vr_stub/unity/VRLinkClient.cs`.
 * A satellite-centred scene is easiest: keep the satellite at the origin, put
   Earth's centre at `-pos_eci_km` (scaled), point the directional light along
   `-sun.dir_eci`.
-* Real scale is brutal: a 0.37 m spacecraft 500 km above a 6371 km Earth. Use
+* Real scale is brutal: a 0.37 m spacecraft 513 km above a 6371 km Earth. Use
   separate scales (true-scale satellite, compressed Earth distance), or a
   skybox Earth rendered from `earth.dir_body`.
 * In eclipse the Sun is behind the Earth — a physically-correct scene goes

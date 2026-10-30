@@ -1,6 +1,6 @@
-# Procédures de contingence de la recette en orbite
+# Procédures de contingence de la recette en orbite {#commissioning-contingency-procedures}
 
-## Vue d'ensemble
+## Vue d'ensemble {#overview}
 
 Ce document est une référence d'accompagnement du **Déroulé de la séquence de recette en orbite** (commissioning_sequence_walkthrough.md). Il met en correspondance chaque phase de la recette en orbite et ses modes de défaillance possibles avec les procédures de contingence et d'urgence à suivre lorsqu'une étape échoue.
 
@@ -13,9 +13,9 @@ Pendant la recette en orbite, consulter ce document dès qu'un comportement inat
 
 ---
 
-## Phase 0 — Premier contact (passage 1)
+## Phase 0 — Premier contact (passage 1) {#phase-0--first-contact-pass-1}
 
-### Défaillance : aucune télémesure reçue
+### Défaillance : aucune télémesure reçue {#failure-no-telemetry-received}
 
 **Symptômes :**
 - Le MCS n'affiche aucun indicateur de puissance du signal reçu (RSSI)
@@ -28,7 +28,7 @@ Pendant la recette en orbite, consulter ce document dès qu'un comportement inat
 
 ---
 
-### Défaillance : télémesure reçue mais la liaison TTC ne se verrouille pas
+### Défaillance : télémesure reçue mais la liaison TTC ne se verrouille pas {#failure-telemetry-received-but-ttc-link-wont-lock}
 
 **Symptômes :**
 - Signal RSSI détecté et stable
@@ -42,7 +42,7 @@ Pendant la recette en orbite, consulter ce document dès qu'un comportement inat
 
 ---
 
-### Défaillance : OBC dans un état inattendu (pas en mode chargeur d'amorçage)
+### Défaillance : OBC dans un état inattendu (pas en mode chargeur d'amorçage) {#failure-obc-in-unexpected-state-not-bootloader}
 
 **Symptômes :**
 - Télémesure reçue, mais message balise non reconnu ou corrompu
@@ -56,9 +56,9 @@ Pendant la recette en orbite, consulter ce document dès qu'un comportement inat
 
 ---
 
-## Phase 1 — Activation du satellite
+## Phase 1 — Activation du satellite {#phase-1--spacecraft-activation}
 
-### Défaillance : l'envoi de commandes échoue
+### Défaillance : l'envoi de commandes échoue {#failure-command-uplinking-fails}
 
 **Symptômes :**
 - Commande montante émise non acquittée
@@ -71,7 +71,7 @@ Pendant la recette en orbite, consulter ce document dès qu'un comportement inat
 
 ---
 
-### Défaillance : la batterie du satellite ne répond pas aux commandes
+### Défaillance : la batterie du satellite ne répond pas aux commandes {#failure-spacecraft-battery-not-responding-to-commands}
 
 **Symptômes :**
 - Aucune variation de la consommation après les commandes EPS
@@ -84,9 +84,9 @@ Pendant la recette en orbite, consulter ce document dès qu'un comportement inat
 
 ---
 
-## Phase 2 — Déploiement de l'antenne
+## Phase 2 — Déploiement de l'antenne {#phase-2--antenna-deployment}
 
-### Défaillance : commande de déploiement de l'antenne acquittée, mais aucun déploiement physique
+### Défaillance : commande de déploiement de l'antenne acquittée, mais aucun déploiement physique {#failure-antenna-deployment-command-acknowledged-but-no-physical-deployment}
 
 **Symptômes :**
 - Commande de déploiement renvoyée en écho dans la télémesure
@@ -100,7 +100,7 @@ Pendant la recette en orbite, consulter ce document dès qu'un comportement inat
 
 ---
 
-### Défaillance : l'antenne se déploie, mais la qualité de la liaison ne s'améliore pas
+### Défaillance : l'antenne se déploie, mais la qualité de la liaison ne s'améliore pas {#failure-antenna-deploys-but-link-quality-doesnt-improve}
 
 **Symptômes :**
 - L'état de l'antenne indique DEPLOYED
@@ -114,13 +114,13 @@ Pendant la recette en orbite, consulter ce document dès qu'un comportement inat
 
 ---
 
-## Phase 3 — Amorçage de l'OBC
+## Phase 3 — Amorçage de l'OBC {#phase-3--obc-boot}
 
-### Défaillance : l'OBC reste en mode chargeur d'amorçage après la commande d'amorçage
+### Défaillance : l'OBC reste en mode chargeur d'amorçage après la commande d'amorçage {#failure-obc-remains-in-bootloader-after-boot-command}
 
 **Symptômes :**
 - Le signal de vie du chargeur d'amorçage continue après la commande d'amorçage S1
-- Le registre de mode de l'OBC indique BOOTLOADER_STATE
+- `sw_image` (0x0311) vaut 0 : l'OBC est toujours dans le chargeur d'amorçage
 - Aucune tentative de chargement de l'image applicative
 - Le délai d'attente expire sans repli
 
@@ -130,7 +130,7 @@ Pendant la recette en orbite, consulter ce document dès qu'un comportement inat
 
 ---
 
-### Défaillance : l'OBC s'amorce correctement mais redémarre au bout de quelques minutes
+### Défaillance : l'OBC s'amorce correctement mais redémarre au bout de quelques minutes {#failure-obc-boots-successfully-but-reboots-within-minutes}
 
 **Symptômes :**
 - La télémesure montre d'abord l'OBC en mode NOMINAL
@@ -144,7 +144,7 @@ Pendant la recette en orbite, consulter ce document dès qu'un comportement inat
 
 ---
 
-### Défaillance : défaillance d'un segment mémoire détectée pendant l'amorçage
+### Défaillance : défaillance d'un segment mémoire détectée pendant l'amorçage {#failure-memory-segment-failure-detected-during-boot}
 
 **Symptômes :**
 - L'OBC signale des erreurs EDAC mémoire dans la télémesure de santé
@@ -158,9 +158,9 @@ Pendant la recette en orbite, consulter ce document dès qu'un comportement inat
 
 ---
 
-## Phase 4 — Bilan de santé
+## Phase 4 — Bilan de santé {#phase-4--health-check}
 
-### Défaillance : tension de la batterie sous le seuil minimal
+### Défaillance : tension de la batterie sous le seuil minimal {#failure-battery-voltage-below-minimum-threshold}
 
 **Symptômes :**
 - Télémesure de tension de la batterie < 26.0 V (ou minimum défini)
@@ -174,7 +174,7 @@ Pendant la recette en orbite, consulter ce document dès qu'un comportement inat
 
 ---
 
-### Défaillance : défaillance ou déséquilibre d'éléments de batterie détecté
+### Défaillance : défaillance ou déséquilibre d'éléments de batterie détecté {#failure-battery-cell-failure-or-imbalance-detected}
 
 **Symptômes :**
 - La télémesure montre un écart de tension > 0.5 V entre éléments
@@ -188,7 +188,7 @@ Pendant la recette en orbite, consulter ce document dès qu'un comportement inat
 
 ---
 
-### Défaillance : tension du bus hors plage
+### Défaillance : tension du bus hors plage {#failure-bus-voltage-out-of-range}
 
 **Symptômes :**
 - Tension du bus principal hors de la fenêtre 28 V ± 4 V
@@ -202,7 +202,7 @@ Pendant la recette en orbite, consulter ce document dès qu'un comportement inat
 
 ---
 
-### Défaillance : température hors plage (sous-système)
+### Défaillance : température hors plage (sous-système) {#failure-temperature-out-of-range-subsystem}
 
 **Symptômes :**
 - La température d'un sous-système dépasse les limites nominales (typiquement de −20 °C à +50 °C)
@@ -216,9 +216,9 @@ Pendant la recette en orbite, consulter ce document dès qu'un comportement inat
 
 ---
 
-## Phase 5 — Configuration de la mise en mémoire tampon de la TM
+## Phase 5 — Configuration de la mise en mémoire tampon de la TM {#phase-5--tm-buffering-configuration}
 
-### Défaillance : les données de servitude ne circulent pas après la commande d'activation
+### Défaillance : les données de servitude ne circulent pas après la commande d'activation {#failure-housekeeping-not-flowing-after-enable-command}
 
 **Symptômes :**
 - Commande d'activation des données de servitude acquittée
@@ -228,11 +228,11 @@ Pendant la recette en orbite, consulter ce document dès qu'un comportement inat
 
 **Procédure :** vérifier le mode de l'OBC et l'état des sous-systèmes par lecture directe de la télémesure. Se reporter aux diagnostics de la phase 5 du déroulé de recette en orbite.
 
-**Reprise :** confirmer que l'OBC est en mode NOMINAL (ni BOOTLOADER ni SAFE). Envoyer une commande explicite de démarrage des HK avec le bon identifiant de flux. Vérifier que les paramètres S5 sont correctement réglés dans la mémoire de l'OBC. Toujours sans données, soupçonner un problème logiciel de l'OBC — passer à CTG-021.
+**Reprise :** confirmer que l'OBC exécute l'application (`sw_image` = 1) en mode NOMINAL (et non SAFE). Envoyer une commande explicite de démarrage des HK avec le bon identifiant de flux. Vérifier que les paramètres S5 sont correctement réglés dans la mémoire de l'OBC. Toujours sans données, soupçonner un problème logiciel de l'OBC — passer à CTG-021.
 
 ---
 
-### Défaillance : anomalie de remplissage du tampon ou utilisation excessive du tampon
+### Défaillance : anomalie de remplissage du tampon ou utilisation excessive du tampon {#failure-buffer-fill-anomaly-or-excessive-buffer-usage}
 
 **Symptômes :**
 - Pourcentage de remplissage du tampon en hausse inattendue
@@ -246,9 +246,9 @@ Pendant la recette en orbite, consulter ce document dès qu'un comportement inat
 
 ---
 
-## Phase 6 — Réglage du temps
+## Phase 6 — Réglage du temps {#phase-6--set-time}
 
-### Défaillance : commande de réglage du temps rejetée
+### Défaillance : commande de réglage du temps rejetée {#failure-time-set-command-rejected}
 
 **Symptômes :**
 - Commande S9.1 (`SET_TIME`) rejetée ou non acquittée
@@ -262,7 +262,7 @@ Pendant la recette en orbite, consulter ce document dès qu'un comportement inat
 
 ---
 
-### Défaillance : la synchronisation du temps sur le GPS perturbe l'AOCS
+### Défaillance : la synchronisation du temps sur le GPS perturbe l'AOCS {#failure-time-sync-with-gps-causes-aocs-disruption}
 
 **Symptômes :**
 - Commande d'étiquette de temps GPS envoyée avec succès
@@ -276,9 +276,9 @@ Pendant la recette en orbite, consulter ce document dès qu'un comportement inat
 
 ---
 
-## Phase 7 — Mise sous tension (sous-systèmes)
+## Phase 7 — Mise sous tension (sous-systèmes) {#phase-7--power-on-subsystems}
 
-### Défaillance : la ligne d'alimentation ne commute pas malgré la commande
+### Défaillance : la ligne d'alimentation ne commute pas malgré la commande {#failure-power-line-wont-switch-despite-command}
 
 **Symptômes :**
 - Commande de mise sous tension acquittée
@@ -292,7 +292,7 @@ Pendant la recette en orbite, consulter ce document dès qu'un comportement inat
 
 ---
 
-### Défaillance : déclenchement sur surintensité d'une ligne d'alimentation
+### Défaillance : déclenchement sur surintensité d'une ligne d'alimentation {#failure-overcurrent-trip-on-power-line}
 
 **Symptômes :**
 - La commande de mise sous tension provoque un pic de courant immédiat
@@ -306,7 +306,7 @@ Pendant la recette en orbite, consulter ce document dès qu'un comportement inat
 
 ---
 
-### Défaillance : problèmes de générateur solaire (sous-performance ou intermittence)
+### Défaillance : problèmes de générateur solaire (sous-performance ou intermittence) {#failure-solar-array-issues-underperforming-or-intermittent}
 
 **Symptômes :**
 - Courant du générateur solaire inférieur à l'attendu pour l'angle solaire
@@ -320,7 +320,7 @@ Pendant la recette en orbite, consulter ce document dès qu'un comportement inat
 
 ---
 
-### Défaillance : l'EPS passe en mode survie de manière inattendue
+### Défaillance : l'EPS passe en mode survie de manière inattendue {#failure-eps-enters-safe-mode-unexpectedly}
 
 **Symptômes :**
 - Le sous-système EPS se trouve soudain à l'état SAFE_MODE
@@ -334,7 +334,7 @@ Pendant la recette en orbite, consulter ce document dès qu'un comportement inat
 
 ---
 
-### Défaillance : l'AOCS refuse d'entrer en mode DETUMBLE
+### Défaillance : l'AOCS refuse d'entrer en mode DETUMBLE {#failure-aocs-wont-enter-detumble-mode}
 
 **Symptômes :**
 - Commande de mode DETUMBLE non acquittée ou rejetée
@@ -348,7 +348,7 @@ Pendant la recette en orbite, consulter ce document dès qu'un comportement inat
 
 ---
 
-### Défaillance : roue de réaction bloquée ou ne répondant pas
+### Défaillance : roue de réaction bloquée ou ne répondant pas {#failure-reaction-wheel-stuck-or-unresponsive}
 
 **Symptômes :**
 - La commande de vitesse de la roue de réaction ne modifie pas sa vitesse
@@ -362,9 +362,9 @@ Pendant la recette en orbite, consulter ce document dès qu'un comportement inat
 
 ---
 
-## Phase 8 — Envoi des TLE et propagation d'orbite
+## Phase 8 — Envoi des TLE et propagation d'orbite {#phase-8--tle-upload-and-orbit-propagation}
 
-### Défaillance : l'état orbital ne se propage pas correctement
+### Défaillance : l'état orbital ne se propage pas correctement {#failure-orbit-state-does-not-propagate-correctly}
 
 **Symptômes :**
 - Les paramètres S20 semblent acceptés (aucune réponse d'erreur)
@@ -378,9 +378,9 @@ Pendant la recette en orbite, consulter ce document dès qu'un comportement inat
 
 ---
 
-## Phase 9 — Progression des modes AOCS (amortissement → nadir → pointage solaire)
+## Phase 9 — Progression des modes AOCS (amortissement → nadir → pointage solaire) {#phase-9--aocs-mode-progression-detumble--nadir--sun-point}
 
-### Défaillance : les vitesses angulaires ne s'amortissent pas pendant le DETUMBLE
+### Défaillance : les vitesses angulaires ne s'amortissent pas pendant le DETUMBLE {#failure-attitude-rates-not-damping-during-detumble}
 
 **Symptômes :**
 - Les vitesses angulaires du satellite restent élevées (> 5°/s)
@@ -394,7 +394,7 @@ Pendant la recette en orbite, consulter ce document dès qu'un comportement inat
 
 ---
 
-### Défaillance : perte d'un capteur pendant une transition de mode
+### Défaillance : perte d'un capteur pendant une transition de mode {#failure-sensor-loss-during-mode-transition}
 
 **Symptômes :**
 - Le senseur stellaire ou le gyromètre perd le verrouillage ou le signal
@@ -408,7 +408,7 @@ Pendant la recette en orbite, consulter ce document dès qu'un comportement inat
 
 ---
 
-### Défaillance : échec d'une transition de mode AOCS (impossible d'atteindre le pointage solaire ou nadir)
+### Défaillance : échec d'une transition de mode AOCS (impossible d'atteindre le pointage solaire ou nadir) {#failure-aocs-mode-transition-fails-cannot-reach-sun-point-or-nadir}
 
 **Symptômes :**
 - Commande de transition de mode envoyée mais non exécutée
@@ -422,9 +422,9 @@ Pendant la recette en orbite, consulter ce document dès qu'un comportement inat
 
 ---
 
-## Phase 10 — Vérification sur une orbite complète
+## Phase 10 — Vérification sur une orbite complète {#phase-10--whole-orbit-verification}
 
-### Défaillance : emballement thermique détecté
+### Défaillance : emballement thermique détecté {#failure-thermal-runaway-detected}
 
 **Symptômes :**
 - Température en hausse incontrôlée dans une zone thermique
@@ -438,7 +438,7 @@ Pendant la recette en orbite, consulter ce document dès qu'un comportement inat
 
 ---
 
-### Défaillance : perte totale d'alimentation
+### Défaillance : perte totale d'alimentation {#failure-total-power-failure}
 
 **Symptômes :**
 - Tous les sous-systèmes perdent l'alimentation simultanément
@@ -452,7 +452,7 @@ Pendant la recette en orbite, consulter ce document dès qu'un comportement inat
 
 ---
 
-### Défaillance : passage inattendu en mode survie
+### Défaillance : passage inattendu en mode survie {#failure-unexpected-safe-mode-triggered}
 
 **Symptômes :**
 - L'AOCS passe soudain en mode survie sans commande
@@ -466,9 +466,9 @@ Pendant la recette en orbite, consulter ce document dès qu'un comportement inat
 
 ---
 
-## Phase 11 — Activation du GPS et reprise du temps
+## Phase 11 — Activation du GPS et reprise du temps {#phase-11--gps-activation-and-time-recovery}
 
-### Défaillance : le GPS n'acquiert pas de verrouillage
+### Défaillance : le GPS n'acquiert pas de verrouillage {#failure-gps-wont-acquire-lock}
 
 **Symptômes :**
 - Récepteur GPS sous tension mais ne signalant pas de verrouillage
@@ -482,7 +482,7 @@ Pendant la recette en orbite, consulter ce document dès qu'un comportement inat
 
 ---
 
-### Défaillance : la synchronisation du temps sur le GPS provoque une réinitialisation ou une anomalie de l'AOCS
+### Défaillance : la synchronisation du temps sur le GPS provoque une réinitialisation ou une anomalie de l'AOCS {#failure-gps-time-sync-causes-aocs-reset-or-anomaly}
 
 **Symptômes :**
 - Commande d'étiquette de temps GPS exécutée
@@ -496,9 +496,9 @@ Pendant la recette en orbite, consulter ce document dès qu'un comportement inat
 
 ---
 
-## Phase 12 — Vérification du senseur stellaire
+## Phase 12 — Vérification du senseur stellaire {#phase-12--star-tracker-checkout}
 
-### Défaillance : le senseur stellaire reste à l'état BOOT
+### Défaillance : le senseur stellaire reste à l'état BOOT {#failure-star-tracker-stays-in-boot-state}
 
 **Symptômes :**
 - Alimentation du senseur stellaire confirmée, mais pas de passage à IDLE
@@ -512,7 +512,7 @@ Pendant la recette en orbite, consulter ce document dès qu'un comportement inat
 
 ---
 
-### Défaillance : senseur stellaire ébloui (aucune étoile visible)
+### Défaillance : senseur stellaire ébloui (aucune étoile visible) {#failure-star-tracker-blinded-no-stars-visible}
 
 **Symptômes :**
 - Le senseur stellaire signale un nombre d'étoiles insuffisant
@@ -526,7 +526,7 @@ Pendant la recette en orbite, consulter ce document dès qu'un comportement inat
 
 ---
 
-### Défaillance : panne matérielle du senseur stellaire
+### Défaillance : panne matérielle du senseur stellaire {#failure-star-tracker-hardware-failure}
 
 **Symptômes :**
 - Le senseur stellaire signale un code d'erreur interne
@@ -540,7 +540,7 @@ Pendant la recette en orbite, consulter ce document dès qu'un comportement inat
 
 ---
 
-### Défaillance : les deux senseurs stellaires en panne ou indisponibles
+### Défaillance : les deux senseurs stellaires en panne ou indisponibles {#failure-both-star-trackers-fail-or-unavailable}
 
 **Symptômes :**
 - Senseurs stellaires principal et secondaire tous deux hors service
@@ -554,9 +554,9 @@ Pendant la recette en orbite, consulter ce document dès qu'un comportement inat
 
 ---
 
-## Phase 13 — Vérification des redondances
+## Phase 13 — Vérification des redondances {#phase-13--redundancy-checkout}
 
-### Défaillance : échec du basculement de bus
+### Défaillance : échec du basculement de bus {#failure-bus-switchover-fails}
 
 **Symptômes :**
 - Commande de basculement acquittée mais non exécutée
@@ -570,7 +570,7 @@ Pendant la recette en orbite, consulter ce document dès qu'un comportement inat
 
 ---
 
-### Défaillance : échec des communications sur le transpondeur redondant
+### Défaillance : échec des communications sur le transpondeur redondant {#failure-redundant-transponder-communication-fails}
 
 **Symptômes :**
 - Basculement sur le transpondeur secondaire commandé
@@ -584,7 +584,7 @@ Pendant la recette en orbite, consulter ce document dès qu'un comportement inat
 
 ---
 
-### Défaillance : perte des communications pendant l'essai de redondance
+### Défaillance : perte des communications pendant l'essai de redondance {#failure-loss-of-communication-during-redundancy-test}
 
 **Symptômes :**
 - Commande montante reçue, mais la communication est interrompue
@@ -598,9 +598,9 @@ Pendant la recette en orbite, consulter ce document dès qu'un comportement inat
 
 ---
 
-## Phase 14 — Télécommandes datées
+## Phase 14 — Télécommandes datées {#phase-14--time-tagged-commands}
 
-### Défaillance : une commande programmée ne s'exécute pas à l'heure prévue
+### Défaillance : une commande programmée ne s'exécute pas à l'heure prévue {#failure-scheduled-command-does-not-execute-at-designated-time}
 
 **Symptômes :**
 - Commande envoyée et vérifiée dans la mémoire du plan
@@ -614,7 +614,7 @@ Pendant la recette en orbite, consulter ce document dès qu'un comportement inat
 
 ---
 
-### Défaillance : anomalie de taux d'erreur binaire pendant la montée des commandes
+### Défaillance : anomalie de taux d'erreur binaire pendant la montée des commandes {#failure-bit-error-rate-anomaly-during-command-uplink}
 
 **Symptômes :**
 - L'écho de commande reçu présente des inversions de bits
@@ -628,9 +628,9 @@ Pendant la recette en orbite, consulter ce document dès qu'un comportement inat
 
 ---
 
-## Phase 15 — Recette en orbite de la charge utile
+## Phase 15 — Recette en orbite de la charge utile {#phase-15--payload-commissioning}
 
-### Défaillance : la charge utile ne se met pas sous tension
+### Défaillance : la charge utile ne se met pas sous tension {#failure-payload-wont-power-on}
 
 **Symptômes :**
 - Commande de mise sous tension de la charge utile acquittée
@@ -644,7 +644,7 @@ Pendant la recette en orbite, consulter ce document dès qu'un comportement inat
 
 ---
 
-### Défaillance : le plan focal (FPA) ne refroidit pas
+### Défaillance : le plan focal (FPA) ne refroidit pas {#failure-focal-plane-array-fpa-wont-cool}
 
 **Symptômes :**
 - FPA sous tension, mais refroidisseur non activé
@@ -658,7 +658,7 @@ Pendant la recette en orbite, consulter ce document dès qu'un comportement inat
 
 ---
 
-### Défaillance : anomalie ou dysfonctionnement de la charge utile
+### Défaillance : anomalie ou dysfonctionnement de la charge utile {#failure-payload-anomaly-or-malfunction}
 
 **Symptômes :**
 - La télémesure de santé de la charge utile affiche un code d'erreur
@@ -672,7 +672,7 @@ Pendant la recette en orbite, consulter ce document dès qu'un comportement inat
 
 ---
 
-### Défaillance : échec de la prise d'image ou aucune donnée d'image reçue
+### Défaillance : échec de la prise d'image ou aucune donnée d'image reçue {#failure-image-capture-fails-or-no-image-data-received}
 
 **Symptômes :**
 - Commande de prise d'image acquittée
@@ -686,9 +686,9 @@ Pendant la recette en orbite, consulter ce document dès qu'un comportement inat
 
 ---
 
-## Phase 16 — Remise aux opérations de mission
+## Phase 16 — Remise aux opérations de mission {#phase-16--handover-to-mission-operations}
 
-### Défaillance : bilan de puissance négatif (production insuffisante)
+### Défaillance : bilan de puissance négatif (production insuffisante) {#failure-power-budget-negative-insufficient-generation}
 
 **Symptômes :**
 - La consommation moyenne dépasse la capacité de production solaire
@@ -702,7 +702,7 @@ Pendant la recette en orbite, consulter ce document dès qu'un comportement inat
 
 ---
 
-### Défaillance : sous-système non nominal en fin de recette en orbite
+### Défaillance : sous-système non nominal en fin de recette en orbite {#failure-subsystem-not-nominal-at-end-of-commissioning}
 
 **Symptômes :**
 - Un ou plusieurs sous-systèmes en mode DEGRADED ou SAFE
@@ -716,9 +716,9 @@ Pendant la recette en orbite, consulter ce document dès qu'un comportement inat
 
 ---
 
-## Principes généraux de reprise
+## Principes généraux de reprise {#general-recovery-principles}
 
-### Quand une procédure échoue
+### Quand une procédure échoue {#when-any-procedure-fails}
 
 1. **Documenter :** consigner toute la télémesure, les commandes envoyées et la chronologie
 2. **Faire remonter :** contacter immédiatement le directeur de vol ; ne pas continuer sans instructions
@@ -726,14 +726,14 @@ Pendant la recette en orbite, consulter ce document dès qu'un comportement inat
 4. **Enchaînement :** suivre exactement la procédure ; ne pas omettre d'étapes ni en modifier l'ordre
 5. **Temporisation :** laisser 10–30 minutes entre deux tentatives infructueuses, sauf instruction contraire
 
-### Communication pendant les contingences
+### Communication pendant les contingences {#communication-during-contingencies}
 
 - Maintenir une liaison en temps réel avec le directeur de vol pendant la reprise active
 - Rendre compte de la situation toutes les 5 minutes en l'absence de progrès
 - Utiliser les procédures établies du réseau vocal (et non des commandes envoyées vers le bord)
 - Préparer un briefing de contingence pour le passage suivant si le problème n'est pas résolu
 
-### Étapes après la reprise
+### Étapes après la reprise {#post-recovery-steps}
 
 - Ramener le sous-système concerné à l'état nominal une fois la procédure terminée
 - Effectuer un bilan de santé de suivi (phase 4) pour confirmer la stabilité

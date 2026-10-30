@@ -116,12 +116,13 @@ alignment:
   altitude_tolerance_km: 0.01      # 10 m
   elevation_tolerance_deg: 0.1
 
-# Per-station PLANNING attributes. Geometry mirrors ../orbit.yaml and is
+# Per-station PLANNING attributes (pass counts: tools/pass_gap_analysis.py,
+# 48 h from t0_epoch, 97.39 deg TLE, re-measured 2026-10-30). Geometry mirrors ../orbit.yaml and is
 # cross-checked against it; omit the lat/lon/alt/mask keys to inherit silently.
 stations:
   - name: Svalbard
     enabled: true
-    priority: 100                  # highest: 25 passes/48 h, median max-el 42 deg
+    priority: 100                  # highest: 26 passes/48 h, median max-el 39 deg
     bands: [S]
     supports_payload_downlink: false
     setup_time_s: 60.0
@@ -139,7 +140,7 @@ stations:
 
   - name: Troll
     enabled: true
-    priority: 90                   # 22 passes/48 h, median max-el 27 deg
+    priority: 90                   # 22 passes/48 h, median max-el 23 deg
     bands: [S]
     supports_payload_downlink: false
     setup_time_s: 60.0
@@ -153,7 +154,7 @@ stations:
 
   - name: Inuvik
     enabled: true
-    priority: 80                   # 20 passes/48 h, median max-el 21 deg
+    priority: 80                   # 21 passes/48 h, median max-el 19 deg
     bands: [S]
     supports_payload_downlink: false
     setup_time_s: 60.0
@@ -167,7 +168,7 @@ stations:
 
   - name: O'Higgins
     enabled: true
-    priority: 60                   # 19 passes/48 h, median max-el 16 deg
+    priority: 60                   # 16 passes/48 h, median max-el 20 deg
     bands: [S]
     supports_payload_downlink: false
     setup_time_s: 60.0
@@ -181,7 +182,7 @@ stations:
 
   - name: Iqaluit
     enabled: true
-    priority: 50                   # 17 passes/48 h, median max-el 17 deg
+    priority: 50                   # 18 passes/48 h, median max-el 19 deg
     bands: [S]
     supports_payload_downlink: false
     setup_time_s: 60.0

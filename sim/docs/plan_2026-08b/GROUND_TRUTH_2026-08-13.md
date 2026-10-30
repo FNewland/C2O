@@ -1,4 +1,4 @@
-# EO-Sat-1 ground truth for the 2026-08 textbook pass
+# EOSAT-1 ground truth for the 2026-08 textbook pass
 
 Authoritative source is ALWAYS the tree at `/root/smo` — `configs/eosat1/`,
 `packages/*/src/`. This file is a navigation aid and a list of known traps, not
@@ -24,7 +24,7 @@ a substitute for checking. Everything here reflects the tree AFTER the
   along-track. Planner roll limit is now 14.93 deg (was 7.5). Note the raw
   frame implied by the geometry is 100.7 MB while `image_size_mb` remains the
   courseware's 4 MB — that gap is deliberate and documented, do not paper over it.
-- **D-2 delete the no-propulsion argument** in Part 1 section 3.4. EO-Sat-1 has a
+- **D-2 delete the no-propulsion argument** in Part 1 section 3.4. EOSAT-1 has a
   1U green monoprop, 66.9 m/s, for debris avoidance and limited orbit
   maintenance — NOT end-of-life deorbit. Describe it as flown.
 - **D-3 the two orphan nominal cards** (Pass Plan Upload, Long-Term Trend Review)
@@ -93,7 +93,7 @@ and `tcs.fpa_cooler_margin_k` (0x0425). FPA setpoint is a uint16 in
 **centi-kelvin** (-15 C -> 0x64D7).
 
 ## TT&C
-EO-Sat-1 genuinely has **two transmitters**: an S-band prime and a separate
+EOSAT-1 genuinely has **two transmitters**: an S-band prime and a separate
 UHF whip beacon. **PA-off stops S-band TM while the beacon survives** — that
 contrast is a deliberate teaching point and should be made explicitly.
 - `link_status` LOCKED is **2**, not 1.

@@ -9,8 +9,8 @@
   },
   {
    "id": "on-board-control-procedures-obcp-pus-service-18",
-   "en_hash": "25102355610dbac0",
-   "fr_hash": "fd1144156faa4fc8"
+   "en_hash": "b09b5e127e8d284f",
+   "fr_hash": "33a60c5a556d0eb3"
   },
   {
    "id": "on-board-control-procedures-obcp-pus-service-18/1-procedure-format",
@@ -63,5 +63,5 @@
    "fr_hash": "4eaef53218b73289"
   }
  ],
- "en_commit": "3e80564"
+ "en_commit": "c4a140a"
 }

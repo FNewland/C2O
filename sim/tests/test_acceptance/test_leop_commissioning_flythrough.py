@@ -16,9 +16,12 @@ and ``manual/09_leop.md``):
   →  LEOP-005 sun acquisition (observe)  →  LEOP-006 time synchronisation
   →  LEOP-003 initial orbit determination + SYS_SET_MISSION_PHASE(5)
 
-then commissioning in the definitive order COM-001 … COM-010, COM-012 (first
-light), COM-011 (calibration), COM-013 — with COM-003 gyro calibration
-deliberately BEFORE COM-004 wheel enable (2026-08c item 11) — ending with
+then commissioning in the definitive order COM-001, COM-002, COM-004, COM-003,
+COM-005 … COM-010, COM-012 (first light), COM-011 (calibration), COM-013 —
+with COM-003 gyro calibration AFTER COM-004 wheel enable, in wheel-controlled
+NOMINAL with the 0.10 deg/s gate kept (author ruling Q16, 2026-10-30; it was
+BEFORE COM-004 under 2026-08c item 11, a window the wheels-off magnetorquer
+control could not reach at the 2026-08-20 epoch) — ending with
 SYS_SET_MISSION_PHASE(6) and a NOMINAL hold.
 
 Owner findings pinned by this test (numbers from the 2026-08c brief):
@@ -409,10 +412,37 @@ class TestLeopCommissioningFlyThrough:
         assert int(fly.p(0x0115) or 0) == bat_line_before
         assert int(fly.p(0x0116) or 0) == obc_line_before
 
-    # ── COM-003: AOCS sensor calibration (BEFORE COM-004) ───────────
+    # ── COM-004: actuator checkout (enable BEFORE exercising, #6) ───
+    # Ruling Q16 (2026-10-30): COM-004 now flies straight after COM-002,
+    # from the LEOP COARSE_SUN hold with no tracker up, so nothing promotes
+    # the AOCS automatically --- the card commands wheel-controlled NOMINAL.
+    def test_com_004_wheel_enable_then_checkout(self, fly):
+        assert int(fly.p(0x0240) or 0) == 0, \
+            "COM-004 now runs BEFORE COM-003 powers the trackers (Q16)"
+        for wheel in range(4):
+            fly.s8(3, wheel, label=f"AOCS_ENABLE_WHEEL {wheel}")
+        fly.run(5)
+        fly.verify(0x0260, lambda v: int(v) == 4, "all four wheels enabled")
+        fly.s8(0, 4, label="AOCS_SET_MODE NOMINAL (wheel control)")
+        fly.wait(lambda: int(fly.p(0x020F) or 0) in (4, 8), 300,
+                 "wheel-controlled NOMINAL")
+
+        base = fly.p(0x0207) or 0.0
+        fly.send(8, 1, bytes([8, 0]) + struct.pack(">f", 2000.0),
+                 label="RW_SET_SPEED_BIAS RW1 +2000")
+        fly.wait(lambda: (fly.p(0x0207) or 0.0) - base > 1500.0, 120,
+                 "RW1 spin-up")
+        fly.send(8, 1, bytes([14, 0]) + struct.pack(">f", 0.0),
+                 label="AOCS_RW_RAMP_DOWN RW1")
+        fly.wait(lambda: abs((fly.p(0x0207) or 0.0) - base) < 200.0, 180,
+                 "RW1 back to baseline")
+
+    # ── COM-003: AOCS sensor calibration (AFTER COM-004, ruling Q16) ─
     def test_com_003_sensors_and_gyro_calibration(self, fly):
-        assert int(fly.p(0x0260) or 0) == 0, \
-            "COM-003 must run before the wheels are enabled (item 11)"
+        assert int(fly.p(0x0260) or 0) == 4, \
+            "COM-003 runs after COM-004 has enabled the wheels (ruling Q16)"
+        fly.verify(0x020F, lambda v: int(v) in (4, 8),
+                   "entry state: wheel-controlled NOMINAL (COM-004 exit)")
         fly.hk_enable(7)
         for dev in (0x0206, 0x0207, 0x0208):
             fly.device(dev, 1)
@@ -424,12 +454,11 @@ class TestLeopCommissioningFlyThrough:
         fly.wait(lambda: int(fly.p(0x0240) or 0) == 2
                  and int(fly.p(0x0241) or 0) >= 5, 300, "ST1 tracking >= 5")
         fly.wait(lambda: int(fly.p(0x02C1) or 0) & 0x01, 600,
-                 "est_source bit 0 (ST aiding the MEKF in COARSE_SUN)")
+                 "est_source bit 0 (ST aiding the MEKF)")
 
-        # Start the calibration in the COARSE_SUN window; the spacecraft
-        # aborts (0x0A04) if it manoeuvres above 0.10 deg/s mid-arc, and the
-        # card's off-nominal branch is to re-run — including after the
-        # AUTOMATIC promotion COARSE_SUN -> NOMINAL (never verify mode 3).
+        # Start the calibration in wheel-controlled NOMINAL. The 0.10 deg/s
+        # gate is kept (ruling Q16); the card's off-nominal branch on a
+        # 0x0A04 refusal or abort is to wait for a quiet spell and re-run.
         done = False
         for _ in range(30):
             fly.soft_wait(lambda: max(abs(fly.p(x) or 9.0) for x in
@@ -445,48 +474,16 @@ class TestLeopCommissioningFlyThrough:
                     break
             else:
                 fly.run(20)
-        if not done:
-            # 2026-08 epoch/altitude ruling (t0 -> 2026-08-20T12:00:00Z,
-            # TLE-truth ~513 km): measured on this model, the wheels-off
-            # MTQ-only sun/nadir control now hunts at 0.1-0.4 deg/s
-            # CONTINUOUSLY at the new sun/field geometry (old epoch: quiet
-            # spells below the 0.10 deg/s calibration gate recurred, e.g. in
-            # the eclipse hold, and the calibration completed in ~2600 s).
-            # Dense 10 s-cadence attempts over ~3 orbits never got below a
-            # 0.097 deg/s max body rate, so the COM-003 wheels-off window is
-            # currently UNREACHABLE. This needs an OWNER decision (relax the
-            # 0.10 gate, permit an MTQ-quiet arc, or move the calibration
-            # after COM-004) — deliberately NOT decided here. xfail keeps the
-            # card's intent asserted: if the geometry or a ruling makes it
-            # reachable again this will XPASS and demand attention.
-            pytest.xfail("COM-003 wheels-off calibration window unreachable "
-                         "at the 2026-08-20 epoch geometry — owner decision "
-                         "pending (see comment)")
+        assert done, ("COM-003 gyro calibration did not complete in "
+                      "wheel-controlled NOMINAL within 30 attempts")
         for pid in (0x02CB, 0x02CC, 0x02CD):
             fly.verify(pid, lambda v: abs(v) < 0.5, "estimated bias sane")
         fly.verify(0x02D2, lambda v: v < 0.005, "residual bias compensated")
 
-    # ── COM-004: actuator checkout (enable BEFORE exercising, #6) ───
-    def test_com_004_wheel_enable_then_checkout(self, fly):
-        for wheel in range(4):
-            fly.s8(3, wheel, label=f"AOCS_ENABLE_WHEEL {wheel}")
-        fly.run(5)
-        fly.verify(0x0260, lambda v: int(v) == 4, "all four wheels enabled")
-
-        base = fly.p(0x0207) or 0.0
-        fly.send(8, 1, bytes([8, 0]) + struct.pack(">f", 2000.0),
-                 label="RW_SET_SPEED_BIAS RW1 +2000")
-        fly.wait(lambda: (fly.p(0x0207) or 0.0) - base > 1500.0, 120,
-                 "RW1 spin-up")
-        fly.send(8, 1, bytes([14, 0]) + struct.pack(">f", 0.0),
-                 label="AOCS_RW_RAMP_DOWN RW1")
-        fly.wait(lambda: abs((fly.p(0x0207) or 0.0) - base) < 200.0, 180,
-                 "RW1 back to baseline")
-
     # ── COM-005: mode transitions per the truth table (#12) ─────────
     def test_com_005_mode_transitions(self, fly):
-        # Entry state: NOT COARSE_SUN — the spacecraft auto-promoted out of
-        # it (fallback NOMINAL) once the tracker joined. Latch ground intent.
+        # Entry state: NOT COARSE_SUN — COM-004 commanded wheel-controlled
+        # NOMINAL and COM-003 kept it there (ruling Q16). Latch ground intent.
         fly.s8(0, 4, label="AOCS_SET_MODE NOMINAL (latch commanded_mode)")
         fly.wait(lambda: int(fly.p(0x020F) or 0) in (4, 8), 400, "NOMINAL")
         fly.verify(0x0297, lambda v: int(v) == 4, "commanded_mode latched")

@@ -1,4 +1,4 @@
-# Référence des services PUS — simulateur du satellite EOSAT-1
+# Référence des services PUS — simulateur du satellite EOSAT-1 {#pus-service-reference--eosat-1-spacecraft-simulator}
 
 **Conformité à la norme ECSS-E-ST-70-41C**
 
@@ -6,7 +6,7 @@ Ce document constitue une référence complète de tous les services PUS (*Packe
 
 ---
 
-## Table des matières
+## Table des matières {#table-of-contents}
 
 1. [Vue d'ensemble des services](#service-overview)
 2. [Service 1 : vérification des requêtes](#service-1-request-verification)
@@ -111,7 +111,7 @@ Spacecraft S1.3: Execution start (request_id=1234)
 Spacecraft S1.4: Execution failure (request_id=1234, error_code=0x0005)
 ```
 
-### Rapports d'échec et notice d'échec (défaut n° 87)
+### Rapports d'échec et notice d'échec (défaut n° 87) {#failure-reports-and-the-failure-notice-defect-87}
 
 L'ECSS-E-ST-70-41 autorise un rapport d'échec S1 à porter un champ de données
 **notice d'échec** (*failure notice*) après le code d'échec. EOSAT-1 utilise cet emplacement pour la
@@ -224,27 +224,27 @@ du code source mais non mis en œuvre** — ils sont acceptés et ignorés.
 
 **Commandes :**
 
-### S3 sous-type 27 — Demander un rapport HK ponctuel
+### S3 sous-type 27 — Demander un rapport HK ponctuel {#s3-subtype-27--request-one-shot-hk-report}
 ```
 Paramètre : SID (identifiant de structure, uint16)
 Exemple : demander HK_EPS (SID=1)
 Réponse : rapport HK de 35 paramètres (SoC batterie, tension, courant, etc.)
 ```
 
-### S3 sous-type 5 — Activer la HK périodique
+### S3 sous-type 5 — Activer la HK périodique {#s3-subtype-5--enable-periodic-hk}
 ```
 Paramètre : SID (identifiant de structure, uint16)
 Intervalle par défaut : 4 secondes
 Réponse : rapports HK émis toutes les 4 s jusqu'à désactivation
 ```
 
-### S3 sous-type 6 — Désactiver la HK périodique
+### S3 sous-type 6 — Désactiver la HK périodique {#s3-subtype-6--disable-periodic-hk}
 ```
 Paramètre : SID (identifiant de structure, uint16)
 Réponse : l'émission HK s'arrête (réactivable par S3.5)
 ```
 
-### S3 sous-type 31 — Modifier la période HK
+### S3 sous-type 31 — Modifier la période HK {#s3-subtype-31--change-hk-interval}
 ```
 Paramètres : SID (uint16), interval_s (float32)
 Exemple : passer l'intervalle de HK_AOCS à 2 secondes
@@ -331,14 +331,14 @@ ttc.ber                [—]    Bit error rate (1e-6 to 1e-4)
 
 **Commandes :**
 
-### S5 sous-type 5 — Activer un type d'événement
+### S5 sous-type 5 — Activer un type d'événement {#s5-subtype-5--enable-event-type}
 ```
 Paramètre : event_id (uint16)
 Exemple : activer RW_OVERSPEED (0x0201)
 Réponse : des paquets S5 seront générés lorsqu'une survitesse de roue est détectée
 ```
 
-### S5 sous-type 6 — Désactiver un type d'événement
+### S5 sous-type 6 — Désactiver un type d'événement {#s5-subtype-6--disable-event-type}
 ```
 Paramètre : event_id (uint16)
 Exemple : désactiver BATTERY_SOC_WARNING (0x0101)
@@ -362,7 +362,7 @@ Message [0-256 octets] : données facultatives propres à l'événement
 
 **Commandes :**
 
-### S6 sous-type 2 — Charger la mémoire
+### S6 sous-type 2 — Charger la mémoire {#s6-subtype-2--load-memory}
 ```
 Paramètres :
   memory_id [0=SRAM, 1=EEPROM]
@@ -373,7 +373,7 @@ Réponse : rapport de vérification S1
 Limites : implémentation simplifiée, pas de CRC par bloc
 ```
 
-### S6 sous-type 5 — Vider la mémoire
+### S6 sous-type 5 — Vider la mémoire {#s6-subtype-5--dump-memory}
 ```
 Paramètres :
   memory_id [0=SRAM, 1=EEPROM]
@@ -384,7 +384,7 @@ Réponse : paquet TM contenant la mémoire (peut s'étendre sur plusieurs paque
 Limites : renvoie des données fictives, pas de modèle de mémoire réel
 ```
 
-### S6 sous-type 9 — Vérifier le CRC de la mémoire
+### S6 sous-type 9 — Vérifier le CRC de la mémoire {#s6-subtype-9--check-memory-crc}
 ```
 Paramètres :
   memory_id [0=SRAM, 1=EEPROM]
@@ -524,7 +524,7 @@ Data: function-specific parameters
 | 97 | TTC_BEACON_TX_ON | — | Mettre en marche l'émetteur balise UHF |
 | 98 | TTC_BEACON_TX_OFF | — | Arrêter l'émetteur balise UHF (supprime la dernière liaison descendante indépendante) |
 
-#### Fonction 65 — TTC_SET_DATA_RATE et l'échelle de débits TM
+#### Fonction 65 — TTC_SET_DATA_RATE et l'échelle de débits TM {#func-65--ttc_set_data_rate-and-the-tm-rate-ladder}
 
 La liaison descendante est une échelle à trois échelons définie dans
 `configs/eosat1/subsystems/ttc.yaml tm_rate_tiers`, et non un simple commutateur haut/bas.
@@ -554,7 +554,7 @@ sortie du mode DOWNLINK), et reprend dès qu'il se rouvre, sans nouvelle command
 Télémesure associée : `ttc.tm_data_rate` (0x0506, débit binaire actif), `ttc.tm_tier` (0x0539),
 `ttc.tm_tier_cmd` (0x053A), `ttc.tm_symbol_rate` (0x053B), `ttc.downlink_mode` (0x053C).
 
-#### Fonction 79 — TTC_SET_DOWNLINK_MODE
+#### Fonction 79 — TTC_SET_DOWNLINK_MODE {#func-79--ttc_set_downlink_mode}
 
 ```
 Parameter: on (uint8) — 0 = leave DOWNLINK mode, 1 = enter DOWNLINK/dump mode
@@ -844,20 +844,20 @@ Tous les stockages sont activés à l'amorçage ; S15.1/S15.2 ne font que bascu
 
 **Commandes :**
 
-### S15 sous-type 1 — Activer une mémoire de paquets
+### S15 sous-type 1 — Activer une mémoire de paquets {#s15-subtype-1--enable-store}
 ```
 Paramètre : store_id (uint8)
 Effet : autorise l'enregistrement de paquets dans le stockage. (Les stockages sont déjà activés
         à l'amorçage : cette commande n'est donc utile qu'après S15.2.)
 ```
 
-### S15 sous-type 2 — Désactiver une mémoire de paquets
+### S15 sous-type 2 — Désactiver une mémoire de paquets {#s15-subtype-2--disable-store}
 ```
 Paramètre : store_id (uint8)
 Effet : arrête l'enregistrement dans le stockage. Les paquets existants sont conservés.
 ```
 
-### S15 sous-type 9 — Vider une mémoire de paquets (cadencé)
+### S15 sous-type 9 — Vider une mémoire de paquets (cadencé) {#s15-subtype-9--dump-store-paced}
 ```
 Paramètre : store_id (uint8)
 Effet : met en file la totalité (ALL) des paquets présents dans le stockage pour une transmission
@@ -877,13 +877,13 @@ Comportement de la liaison descendante :
     le vidage programmé se déclenche hors d'une fenêtre de visibilité, les paquets sont perdus.
 ```
 
-### S15 sous-type 11 — Effacer une mémoire de paquets
+### S15 sous-type 11 — Effacer une mémoire de paquets {#s15-subtype-11--delete-store}
 ```
 Paramètre : store_id (uint8)
 Effet : efface tous les paquets du stockage, réinitialise l'indicateur de débordement et les horodatages.
 ```
 
-### S15 sous-type 13 — Demande d'état
+### S15 sous-type 13 — Demande d'état {#s15-subtype-13--status-request}
 ```
 Paramètres : aucun
 Réponse : rapport d'état S15.14 listant tous les stockages avec :
@@ -893,7 +893,7 @@ Réponse : rapport d'état S15.14 listant tous les stockages avec :
             - indicateur d'activation (uint8)
 ```
 
-### S15 sous-type 14 — Rapport d'état
+### S15 sous-type 14 — Rapport d'état {#s15-subtype-14--status-report}
 ```
 TM response to S15.13. See format above.
 ```
@@ -912,7 +912,7 @@ TM response to S15.13. See format above.
 
 **Commandes :**
 
-### S17 sous-type 1 — Test de connexion
+### S17 sous-type 1 — Test de connexion {#s17-subtype-1--connection-test}
 ```
 Paramètres : aucun n'est utilisé. Tout champ de données est accepté et ignoré (IGNORED).
 Réponse :  S1.1 (acceptée) + TM(17,2), rapport de test de connexion avec un champ de données
@@ -1079,11 +1079,11 @@ Response:
 
 ---
 
-## Commande depuis le MCS
+## Commande depuis le MCS {#commanding-from-the-mcs}
 
 **Exemple pas à pas : exécuter un passage de prise de vue**
 
-### 1. Vérifier le bilan de puissance
+### 1. Vérifier le bilan de puissance {#1-check-power-budget}
 ```
 MCS: S3 request HK_EPS (SID=1)
 Response:
@@ -1094,7 +1094,7 @@ Response:
 Status: OK to proceed
 ```
 
-### 2. Régler l'attitude
+### 2. Régler l'attitude {#2-set-attitude}
 ```
 MCS: S8 func_id=0 (AOCS_SET_MODE), param=5 (fine_point)
 Response:
@@ -1104,7 +1104,7 @@ Response:
   S5: AOCS_MODE_CHANGE (0x0200)
 ```
 
-### 3. Activer la prise de vue
+### 3. Activer la prise de vue {#3-enable-imaging}
 ```
 MCS: S8 func_id=26 (PAYLOAD_SET_MODE), param=2 (imaging)
 Response:
@@ -1113,7 +1113,7 @@ Response:
   S5: PAYLOAD_MODE_CHANGE (0x0602)
 ```
 
-### 4. Acquérir l'image
+### 4. Acquérir l'image {#4-capture-image}
 ```
 MCS: S8 func_id=28 (PAYLOAD_CAPTURE), scene_id=42, lines=4096
 Response:
@@ -1125,7 +1125,7 @@ Response:
   S1.7: Completion
 ```
 
-### 5. Télécharger l'image
+### 5. Télécharger l'image {#5-download-image}
 ```
 MCS: S13 subtype 1 (initiate transfer), transfer_id=1
 Response:
@@ -1141,7 +1141,7 @@ Response:
   S1.7: Transfer complete
 ```
 
-### 6. Vérifier l'état
+### 6. Vérifier l'état {#6-verify-status}
 ```
 MCS: S3 request HK_Payload (SID=5)
 Response:
@@ -1153,7 +1153,7 @@ Response:
 
 ---
 
-## Dialogue de commande du MCS (exemple textuel)
+## Dialogue de commande du MCS (exemple textuel) {#mcs-command-dialog-text-example}
 
 ```
 MCS> list_commands AOCS
@@ -1188,7 +1188,7 @@ Status: Slew complete, fine point attitude achieved
 
 ---
 
-## Traitement des erreurs
+## Traitement des erreurs {#error-handling}
 
 **Codes d'erreur courants :**
 
@@ -1220,9 +1220,9 @@ Troubleshooting:
 
 ---
 
-## Aide-mémoire — séquences de commandes courantes
+## Aide-mémoire — séquences de commandes courantes {#quick-reference--common-command-sequences}
 
-### Reprise après mode survie (suite à une anomalie)
+### Reprise après mode survie (suite à une anomalie) {#safe-mode-recovery-after-anomaly}
 ```
 1. S8 func_id=26 (PAYLOAD_SET_MODE, mode=0 → payload off)
 2. S8 func_id=12 (AOCS_BEGIN_ACQUISITION)
@@ -1230,7 +1230,7 @@ Troubleshooting:
 4. Verify S5: SAFE_MODE_ENTRY
 ```
 
-### Délestage (urgence énergétique)
+### Délestage (urgence énergétique) {#load-shedding-power-emergency}
 ```
 There is ONE load-shed function; the stage is its argument.
 1. S8 func_id=25 (EPS_EMERGENCY_LOAD_SHED), stage=1
@@ -1243,7 +1243,7 @@ Alternatively S8 func_id=83 (EPS_SET_MODE), mode=1 (safe) or 2 (emergency)
 sheds the two least-essential loads, or all of them, in one command.
 ```
 
-### Désaturation du moment cinétique
+### Désaturation du moment cinétique {#momentum-desaturation}
 ```
 1. S8 func_id=1 (AOCS_DESATURATE)
 2. S3 request HK_AOCS (SID=2)
@@ -1251,7 +1251,7 @@ sheds the two least-essential loads, or all of them, in one command.
 4. Verify S5: DESATURATION_COMPLETE
 ```
 
-### Passage de prise de vue (automatisé)
+### Passage de prise de vue (automatisé) {#imaging-pass-automated}
 ```
 1. S11 subtype 4 (insert time-tagged command)   ← subtype 4, NOT 11
    Data: exec_time_cuc (absolute CUC, from TLE propagation + AOS prediction)
@@ -1266,7 +1266,7 @@ sheds the two least-essential loads, or all of them, in one command.
 
 ---
 
-## Remarques de mise en œuvre
+## Remarques de mise en œuvre {#implementation-notes}
 
 - Tous les horodatages sont en UTC (temps universel coordonné).
 - Le temps bord est entretenu par l'OBDH, de façon synchrone avec le sol.
@@ -1283,7 +1283,7 @@ sheds the two least-essential loads, or all of them, in one command.
 
 ---
 
-## Références
+## Références {#references}
 
 - ECSS-E-ST-70-41C : *Telemetry and Telecommand Packet Utilization Standard*
 - Configuration d'EOSAT-1 : `configs/eosat1/commands/tc_catalog.yaml`

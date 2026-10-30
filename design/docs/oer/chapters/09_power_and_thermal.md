@@ -507,7 +507,7 @@ When passive thermal control cannot prevent a component from falling below its m
 
 ### 9.4.11 ECSS thermal margins
 
-*[Source: ECSS-E-ST-31C, Table 5-1]*
+*[Source: this book's teaching convention; the standards are discussed below the table]*
 
 | Level | Hot margin (above predicted max) | Cold margin (below predicted min) |
 |-------|----------------------------------|-----------------------------------|
@@ -516,6 +516,8 @@ When passive thermal control cannot prevent a component from falling below its m
 | **Operating** | Predicted + 5 °C | Predicted − 5 °C |
 
 These margins ensure that thermal-model uncertainties (typically ±5–10 °C for simplified models, ±2–5 °C for detailed correlated models) do not cause in-orbit temperature exceedances.
+
+**How this relates to the standards.** ECSS-E-ST-31C does not tabulate these values. Its Figure 3-1 defines the chain from the predicted temperature, through the uncertainty, to the acceptance and qualification temperatures; it leaves the margins to the system authority and notes that uncertainties below 10 K are not normally applied before a thermal-balance test. ECSS-E-ST-10-03C (Tables 5-2 and 5-4) adds an acceptance margin of 5 °C and a qualification margin of 5 °C on top of that range, and GSFC-STD-7000B §2.6 tests a proto-flight unit at the maximum and minimum predicted temperatures ± 10 °C for at least 4 cycles. The proto-flight thermal-vacuum level of Chapter 14 §14.3.4 (predicted ± 10 °C) follows those standards.
 
 > **Worked example — EOSat-3U single-node thermal analysis**
 >
@@ -713,7 +715,7 @@ NASA's CAPSTONE (12U, 25 kg) operates in a near-rectilinear halo orbit (NRHO) ar
 | $\alpha_s/\varepsilon$ ratio | Low ratio = cold surface (radiator); high ratio = warm surface (insulation) |
 | MLI construction | VDA Kapton outer + 10–20 DAM layers + Dacron spacers; $\varepsilon_{\text{eff}} = 0.01$–$0.03$ |
 | Heater sizing | $P_{\text{heater}} = \varepsilon\sigma A T_{\text{min}}^4 - Q_{\text{env}} - Q_{\text{int}}$; Kapton foil heaters, thermostat control |
-| Thermal margins | ECSS: ±5 °C operating, ±10 °C acceptance, ±15 °C qualification |
+| Thermal margins | Book convention: ±5 °C operating, ±10 °C acceptance, ±15 °C qualification; proto-flight TVAC at predicted ±10 °C (GSFC-STD-7000B §2.6) |
 | Transient effects | Thermal mass ($mc_p$) prevents reaching steady state during short eclipses; a 1U at 400 km cools ~20–25 °C in a 36-min eclipse |
 
 ## Problems

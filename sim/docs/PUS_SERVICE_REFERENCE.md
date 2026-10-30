@@ -1,4 +1,4 @@
-# PUS Service Reference — EOSAT-1 Spacecraft Simulator
+# PUS Service Reference — EOSAT-1 Spacecraft Simulator {#pus-service-reference--eosat-1-spacecraft-simulator}
 
 **ECSS-E-ST-70-41C Standard Compliance**
 
@@ -6,7 +6,7 @@ This document provides a complete reference for all PUS (Packet Utilization Stan
 
 ---
 
-## Table of Contents
+## Table of Contents {#table-of-contents}
 
 1. [Service Overview](#service-overview)
 2. [Service 1: Request Verification](#service-1-request-verification)
@@ -111,7 +111,7 @@ Spacecraft S1.3: Execution start (request_id=1234)
 Spacecraft S1.4: Execution failure (request_id=1234, error_code=0x0005)
 ```
 
-### Failure reports and the failure notice (defect #87)
+### Failure reports and the failure notice (defect #87) {#failure-reports-and-the-failure-notice-defect-87}
 
 ECSS-E-ST-70-41 allows an S1 failure report to carry a **failure notice** data
 field after the failure code. EOSAT-1 uses that slot for the human-readable
@@ -224,27 +224,27 @@ comment but not implemented** — they are accepted and ignored.
 
 **Commands:**
 
-### S3 Subtype 27 — Request One-Shot HK Report
+### S3 Subtype 27 — Request One-Shot HK Report {#s3-subtype-27--request-one-shot-hk-report}
 ```
 Parameter: SID (structure ID, uint16)
 Example: Request HK_EPS (SID=1)
 Response: HK report with 35 parameters (battery SoC, voltage, current, etc.)
 ```
 
-### S3 Subtype 5 — Enable Periodic HK
+### S3 Subtype 5 — Enable Periodic HK {#s3-subtype-5--enable-periodic-hk}
 ```
 Parameter: SID (structure ID, uint16)
 Default interval: 4 seconds
 Response: HK reports sent every 4 s until disabled
 ```
 
-### S3 Subtype 6 — Disable Periodic HK
+### S3 Subtype 6 — Disable Periodic HK {#s3-subtype-6--disable-periodic-hk}
 ```
 Parameter: SID (structure ID, uint16)
 Response: HK transmission stops (can re-enable with S3.5)
 ```
 
-### S3 Subtype 31 — Change HK Interval
+### S3 Subtype 31 — Change HK Interval {#s3-subtype-31--change-hk-interval}
 ```
 Parameters: SID (uint16), interval_s (float32)
 Example: Change HK_AOCS interval to 2 seconds
@@ -331,14 +331,14 @@ ttc.ber                [—]    Bit error rate (1e-6 to 1e-4)
 
 **Commands:**
 
-### S5 Subtype 5 — Enable Event Type
+### S5 Subtype 5 — Enable Event Type {#s5-subtype-5--enable-event-type}
 ```
 Parameter: event_id (uint16)
 Example: Enable RW_OVERSPEED (0x0201)
 Response: S5 packets will be generated when wheel overspeed detected
 ```
 
-### S5 Subtype 6 — Disable Event Type
+### S5 Subtype 6 — Disable Event Type {#s5-subtype-6--disable-event-type}
 ```
 Parameter: event_id (uint16)
 Example: Disable BATTERY_SOC_WARNING (0x0101)
@@ -362,7 +362,7 @@ Message [0-256 bytes]: Optional event-specific data
 
 **Commands:**
 
-### S6 Subtype 2 — Load Memory
+### S6 Subtype 2 — Load Memory {#s6-subtype-2--load-memory}
 ```
 Parameters:
   memory_id [0=SRAM, 1=EEPROM]
@@ -373,7 +373,7 @@ Response: S1 verification report
 Limitations: Simplified implementation, no CRC per block
 ```
 
-### S6 Subtype 5 — Dump Memory
+### S6 Subtype 5 — Dump Memory {#s6-subtype-5--dump-memory}
 ```
 Parameters:
   memory_id [0=SRAM, 1=EEPROM]
@@ -384,7 +384,7 @@ Response: TM packet with memory contents (may span multiple packets for large du
 Limitations: Returns mock data, no real memory model
 ```
 
-### S6 Subtype 9 — Check Memory CRC
+### S6 Subtype 9 — Check Memory CRC {#s6-subtype-9--check-memory-crc}
 ```
 Parameters:
   memory_id [0=SRAM, 1=EEPROM]
@@ -524,7 +524,7 @@ Data: function-specific parameters
 | 97 | TTC_BEACON_TX_ON | — | Switch the UHF beacon transmitter on |
 | 98 | TTC_BEACON_TX_OFF | — | Switch the UHF beacon transmitter off (removes the last independent downlink) |
 
-#### Func 65 — TTC_SET_DATA_RATE and the TM rate ladder
+#### Func 65 — TTC_SET_DATA_RATE and the TM rate ladder {#func-65--ttc_set_data_rate-and-the-tm-rate-ladder}
 
 The downlink is a three-rung ladder defined in
 `configs/eosat1/subsystems/ttc.yaml tm_rate_tiers`, not a binary high/low switch.
@@ -554,7 +554,7 @@ DOWNLINK mode left) and resumes when it reopens without re-commanding.
 Related telemetry: `ttc.tm_data_rate` (0x0506, active bit rate), `ttc.tm_tier` (0x0539),
 `ttc.tm_tier_cmd` (0x053A), `ttc.tm_symbol_rate` (0x053B), `ttc.downlink_mode` (0x053C).
 
-#### Func 79 — TTC_SET_DOWNLINK_MODE
+#### Func 79 — TTC_SET_DOWNLINK_MODE {#func-79--ttc_set_downlink_mode}
 
 ```
 Parameter: on (uint8) — 0 = leave DOWNLINK mode, 1 = enter DOWNLINK/dump mode
@@ -844,20 +844,20 @@ All stores are enabled at boot; S15.1/S15.2 only toggle the enable flag.
 
 **Commands:**
 
-### S15 Subtype 1 — Enable Store
+### S15 Subtype 1 — Enable Store {#s15-subtype-1--enable-store}
 ```
 Parameter: store_id (uint8)
 Effect: Allows packets to be recorded into the store. (Stores are already enabled
         at boot, so this is only useful after S15.2.)
 ```
 
-### S15 Subtype 2 — Disable Store
+### S15 Subtype 2 — Disable Store {#s15-subtype-2--disable-store}
 ```
 Parameter: store_id (uint8)
 Effect: Stops recording into the store. Existing packets are retained.
 ```
 
-### S15 Subtype 9 — Dump Store (paced)
+### S15 Subtype 9 — Dump Store (paced) {#s15-subtype-9--dump-store-paced}
 ```
 Parameter: store_id (uint8)
 Effect: Queues ALL packets currently in the store for paced downlink. Packets
@@ -877,13 +877,13 @@ Downlink behaviour:
     scheduled dump fires outside a contact window, the packets are lost.
 ```
 
-### S15 Subtype 11 — Delete Store
+### S15 Subtype 11 — Delete Store {#s15-subtype-11--delete-store}
 ```
 Parameter: store_id (uint8)
 Effect: Clears all packets in the store, resets overflow flag and timestamps.
 ```
 
-### S15 Subtype 13 — Status Request
+### S15 Subtype 13 — Status Request {#s15-subtype-13--status-request}
 ```
 Parameters: none
 Response: S15.14 status report listing all stores with:
@@ -893,7 +893,7 @@ Response: S15.14 status report listing all stores with:
             - enabled flag (uint8)
 ```
 
-### S15 Subtype 14 — Status Report
+### S15 Subtype 14 — Status Report {#s15-subtype-14--status-report}
 ```
 TM response to S15.13. See format above.
 ```
@@ -912,7 +912,7 @@ TM response to S15.13. See format above.
 
 **Commands:**
 
-### S17 Subtype 1 — Connection Test
+### S17 Subtype 1 — Connection Test {#s17-subtype-1--connection-test}
 ```
 Parameters: none used. Any data field is accepted and IGNORED.
 Response:  S1.1 (accepted) + TM(17,2) Connection Test Report with an EMPTY
@@ -1079,11 +1079,11 @@ Response:
 
 ---
 
-## Commanding from the MCS
+## Commanding from the MCS {#commanding-from-the-mcs}
 
 **Step-by-step example: Execute imaging pass**
 
-### 1. Check Power Budget
+### 1. Check Power Budget {#1-check-power-budget}
 ```
 MCS: S3 request HK_EPS (SID=1)
 Response:
@@ -1094,7 +1094,7 @@ Response:
 Status: OK to proceed
 ```
 
-### 2. Set Attitude
+### 2. Set Attitude {#2-set-attitude}
 ```
 MCS: S8 func_id=0 (AOCS_SET_MODE), param=5 (fine_point)
 Response:
@@ -1104,7 +1104,7 @@ Response:
   S5: AOCS_MODE_CHANGE (0x0200)
 ```
 
-### 3. Enable Imaging
+### 3. Enable Imaging {#3-enable-imaging}
 ```
 MCS: S8 func_id=26 (PAYLOAD_SET_MODE), param=2 (imaging)
 Response:
@@ -1113,7 +1113,7 @@ Response:
   S5: PAYLOAD_MODE_CHANGE (0x0602)
 ```
 
-### 4. Capture Image
+### 4. Capture Image {#4-capture-image}
 ```
 MCS: S8 func_id=28 (PAYLOAD_CAPTURE), scene_id=42, lines=4096
 Response:
@@ -1125,7 +1125,7 @@ Response:
   S1.7: Completion
 ```
 
-### 5. Download Image
+### 5. Download Image {#5-download-image}
 ```
 MCS: S13 subtype 1 (initiate transfer), transfer_id=1
 Response:
@@ -1141,7 +1141,7 @@ Response:
   S1.7: Transfer complete
 ```
 
-### 6. Verify Status
+### 6. Verify Status {#6-verify-status}
 ```
 MCS: S3 request HK_Payload (SID=5)
 Response:
@@ -1153,7 +1153,7 @@ Response:
 
 ---
 
-## MCS Command Dialog (Text Example)
+## MCS Command Dialog (Text Example) {#mcs-command-dialog-text-example}
 
 ```
 MCS> list_commands AOCS
@@ -1188,7 +1188,7 @@ Status: Slew complete, fine point attitude achieved
 
 ---
 
-## Error Handling
+## Error Handling {#error-handling}
 
 **Common Error Codes:**
 
@@ -1220,9 +1220,9 @@ Troubleshooting:
 
 ---
 
-## Quick Reference — Common Command Sequences
+## Quick Reference — Common Command Sequences {#quick-reference--common-command-sequences}
 
-### Safe Mode Recovery (after anomaly)
+### Safe Mode Recovery (after anomaly) {#safe-mode-recovery-after-anomaly}
 ```
 1. S8 func_id=26 (PAYLOAD_SET_MODE, mode=0 → payload off)
 2. S8 func_id=12 (AOCS_BEGIN_ACQUISITION)
@@ -1230,7 +1230,7 @@ Troubleshooting:
 4. Verify S5: SAFE_MODE_ENTRY
 ```
 
-### Load Shedding (power emergency)
+### Load Shedding (power emergency) {#load-shedding-power-emergency}
 ```
 There is ONE load-shed function; the stage is its argument.
 1. S8 func_id=25 (EPS_EMERGENCY_LOAD_SHED), stage=1
@@ -1243,7 +1243,7 @@ Alternatively S8 func_id=83 (EPS_SET_MODE), mode=1 (safe) or 2 (emergency)
 sheds the two least-essential loads, or all of them, in one command.
 ```
 
-### Momentum Desaturation
+### Momentum Desaturation {#momentum-desaturation}
 ```
 1. S8 func_id=1 (AOCS_DESATURATE)
 2. S3 request HK_AOCS (SID=2)
@@ -1251,7 +1251,7 @@ sheds the two least-essential loads, or all of them, in one command.
 4. Verify S5: DESATURATION_COMPLETE
 ```
 
-### Imaging Pass (automated)
+### Imaging Pass (automated) {#imaging-pass-automated}
 ```
 1. S11 subtype 4 (insert time-tagged command)   ← subtype 4, NOT 11
    Data: exec_time_cuc (absolute CUC, from TLE propagation + AOS prediction)
@@ -1266,7 +1266,7 @@ sheds the two least-essential loads, or all of them, in one command.
 
 ---
 
-## Implementation Notes
+## Implementation Notes {#implementation-notes}
 
 - All time stamps are UTC (coordinated universal time)
 - Spacecraft time is maintained by OBDH, synchronous with ground
@@ -1283,7 +1283,7 @@ sheds the two least-essential loads, or all of them, in one command.
 
 ---
 
-## References
+## References {#references}
 
 - ECSS-E-ST-70-41C: Telemetry and Telecommand Packet Utilization Standard
 - EOSAT-1 Configuration: `configs/eosat1/commands/tc_catalog.yaml`

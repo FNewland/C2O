@@ -652,7 +652,7 @@ class ImagingPlanner:
             {
                 "service": 8, "subtype": 1,
                 "func_id": 0x00,              # 0 = AOCS_SET_MODE (1 = DESAT)
-                "args": {"mode": 4},          # NOMINAL_NADIR
+                "args": {"mode": 4},          # NOMINAL
                 "description": "AOCS_SET_MODE_NOMINAL",
             },
             {"wait_s": 10},

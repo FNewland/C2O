@@ -90,15 +90,15 @@ it sits inside.*
 | NPR 7120.5F | NASA Space Flight Program & Project Management | Sessions 1.1, 4.4, 5.1 |
 | ECSS-E-ST-10C Rev. 1 | Space engineering — general requirements | All sessions |
 | ECSS-E-ST-10-02C Rev. 1 | Verification | Sessions 4.1, 4.2 |
-| ECSS-E-ST-10-24C | Interface management | Session 2.3 |
+| ECSS-E-ST-10-24C | Interface management | Session 2.4 |
 | ECSS-M-ST-10C Rev. 1 | Project planning & management | Sessions 1.1, 4.4 |
 | ECSS-M-ST-80C | Risk management | Session 4.3 |
 | ECSS-Q-ST-30-02C | FMEA / FMECA | Session 4.3 |
-| ECSS-E-ST-32C | Structures | Session 3.2 |
-| ECSS-E-ST-31C | Thermal control | Session 3.3 |
-| ECSS-E-ST-50-05C | Radio frequency & modulation | Session 3.4 |
-| ECSS-U-AS-10C Rev. 2 | Space debris mitigation | Session 5.2 |
-| Cal Poly CDS Rev 14 | CubeSat Design Specification | Sessions 3.2, 5.3 |
+| ECSS-E-ST-32C | Structures | Session 3.4 |
+| ECSS-E-ST-31C | Thermal control | Session 3.1 |
+| ECSS-E-ST-50-05C | Radio frequency & modulation | Session 3.3 |
+| ECSS-U-AS-10C Rev. 2 | Space debris mitigation | Sessions 2.3, 5.2 |
+| Cal Poly CDS Rev 14 | CubeSat Design Specification | Sessions 3.4, 5.3 |
 | CCSDS PUS | Packet Utilization Standard | Session 4.1, Week 3 |
 | ITU Radio Regulations | RF allocation & licensing | Session 5.2 |
 | ISED CPC-2-6-02 | Spectrum licensing of space stations (Canada) | Session 5.2 |
@@ -119,12 +119,12 @@ it sits inside.*
 | 1 | 1.4 Concept of operations | App. S | E-ST-10C §5.4 | ConOps tab | ConOps outline |
 | 2 | 2.1 Requirements engineering | §4.2 | E-ST-10C §5.5 | Requirements tab | Requirements baseline |
 | 2 | 2.2 Functions & decomposition | §4.3 | E-ST-10C §5.6 | Functions tab | Functional baseline |
-| 2 | 2.3 Interface management | §6.3 | E-ST-10-24C | Interfaces tab | N² matrix |
-| 2 | 2.4 Architecture & block diagrams | §4.4 | E-ST-10C §5.7 | Dashboard | Block diagram |
-| 3 | 3.1 Power & EPS | §4.4 | E-ST-20C | EPS tab | Solar/battery sizing |
-| 3 | 3.2 Structure & mechanisms | §4.4 | E-ST-32C | Structure tab | Mass budget |
-| 3 | 3.3 Thermal | §4.4 | E-ST-31C | Thermal tab | Thermal budget |
-| 3 | 3.4 Comms | §4.4 | E-ST-50-05C | Link Budget tab | Link budget |
+| 2 | 2.3 Orbit selection & mission architecture | §4.4 | U-AS-10C | Orbit trade | Orbit trade matrix |
+| 2 | 2.4 Segments, interfaces & budgets | §6.3 | E-ST-10-24C | Interfaces tab, Dashboard | N² matrix, block diagram, mass budget |
+| 3 | 3.1 Power & thermal | §4.4 | E-ST-20C, E-ST-31C | EPS tab, Thermal tab | Solar/battery sizing, thermal budget |
+| 3 | 3.2 AOCS & propulsion | §4.4 | E-ST-60-30C, E-ST-35C | AOCS tab, Propulsion | Pointing and Δv budgets |
+| 3 | 3.3 Comms | §4.4 | E-ST-50-05C | Link Budget tab | Link budget |
+| 3 | 3.4 Structure & OBDH | §4.4 | E-ST-32C | Structure tab, Equipment | Mass budget, data budget |
 | 4 | 4.1 Equipment selection | §6.5 | E-ST-10C §5.8 | Equipment tab | BOM |
 | 4 | 4.2 V&V planning | §6.4 | E-ST-10-02C | V&V Matrix | Verification matrix |
 | 4 | 4.3 Risk management | §6.6 | M-ST-80C | Risk tab | Risk register |
@@ -205,12 +205,12 @@ not change.
 designs from Day 1 against this timeline.*
 
 > **Expected reading before Day 2.** SMAD4 Ch. 4 – §6 (mission
-> definition); NASA SEH Appendix C (How to write a good
+> definition), Ch. 9 (orbit selection); NASA SEH Appendix C (How to write a good
 > requirement) — [https://www.nasa.gov/reference/systems-engineering-handbook/](https://www.nasa.gov/reference/systems-engineering-handbook/).
 
 ---
 
-## Day 2 — Requirements, functions & interfaces (8 h)
+## Day 2 — Requirements, functions, orbit & architecture (8 h)
 
 ### Session 2.1 — Requirements engineering (2 h)
 
@@ -232,40 +232,56 @@ designs from Day 1 against this timeline.*
 - **Exercise:** decompose top-level mission function in SpaceCDF.
 - **Worksheet:** function-allocation matrix.
 
-### Session 2.3 — Interface management (2 h)
+### Session 2.3 — Orbit selection & mission architecture (2 h)
 
-- NASA SEH §6.3 (Process 12) — interface management.
-- ECSS-E-ST-10-24C — interface requirements documents.
+- Keplerian elements; for a circular LEO, altitude + inclination +
+  LTAN.
+- Orbit types and their trade-offs: LEO, SSO, MEO, GEO, HEO.
+- Coverage, revisit and ground-station contact geometry.
+- Perturbations, orbital lifetime and debris compliance
+  (ECSS-U-AS-10C; FCC 5-year rule).
+- β-angle and eclipse fraction — see Figure 2.5; radiation
+  environment by orbit.
+
+![β-angle envelope and eclipse fraction analysis](../assets/figures/fig_beta_eclipse.png)
+
+*Figure 2.5 — β-angle range vs day of year (left) and eclipse
+fraction analytical curves (right) for an ISS-like and a 600 km SSO.*
+
+- **Exercise:** run the orbit trade in SpaceCDF.
+- **Worksheet:** orbit selection trade matrix.
+
+### Session 2.4 — Mission architecture: segments, interfaces & budgets (2 h)
+
+- Mission segment decomposition (space, ground, launch, user) and
+  the system block diagram; signal-flow vs power-flow.
+- NASA SEH §6.3 (Process 12) — interface management;
+  ECSS-E-ST-10-24C — interface requirements documents.
 - The N² matrix and interface-type classification (Mechanical,
   Electrical, Thermal, Data, RF, Optical).
 
 ![N² interface matrix for a 6U CubeSat](../assets/figures/fig_n2_matrix.png)
 
-*Figure 2.5 — N² interface matrix for a 6U CubeSat. Cells are
+*Figure 2.6 — N² interface matrix for a 6U CubeSat. Cells are
 coloured by interface type; "D" = data, "E" = electrical,
 "M" = mechanical, "T" = thermal, "R" = RF, "O" = optical.*
 
-- **Exercise:** complete N² matrix for the team's mission in
-  SpaceCDF.
-- **Worksheet:** interface-requirements draft for two pairs.
+- Engineering budgets: mass and power roll-up under the ECSS
+  margin policy; mode-based power and orbit-average power.
+- **Exercise:** complete the N² matrix and the subsystem block
+  diagram for the team's mission in SpaceCDF.
+- **Worksheet:** interface-requirements draft for two pairs; mass
+  budget template with margin policy.
 
-### Session 2.4 — Architecture & block diagrams (2 h)
-
-- Architecture decision records.
-- Block-diagram conventions; signal-flow vs power-flow.
-- Power architecture; data architecture; thermal coupling.
-- **Exercise:** build subsystem block diagrams in SpaceCDF.
-- **Worksheet:** architecture decision log (3 entries).
-
-> **Expected reading before Day 3.** SMAD4 Ch. 9 (orbit selection),
-> Ch. 11 (power), Ch. 12 (thermal), Ch. 13 (structures). All
-> referenced sections cached on Brightspace.
+> **Expected reading before Day 3.** SMAD4 Ch. 11 (power), Ch. 12
+> (thermal), Ch. 13 (structures). All referenced sections cached
+> on Brightspace.
 
 ---
 
 ## Day 3 — Subsystem design loop (8 h)
 
-### Session 3.1 — Power & EPS (2 h)
+### Session 3.1 — Power & thermal (2 h)
 
 - Power-budget structure: bus / housekeeping / payload / comms /
   thermal / margin.
@@ -275,14 +291,50 @@ coloured by interface type; "D" = data, "E" = electrical,
 
 ![Power profile across one orbit — generation and stacked load](../assets/figures/fig_power_modes.png)
 
-*Figure 2.6 — Generation (top) and stacked load (bottom) over one
+*Figure 2.7 — Generation (top) and stacked load (bottom) over one
 orbit. Eclipse drives battery sizing; comms and payload pulses
 drive PCDU peak rating.*
 
-- **Exercise:** size SA + battery in SpaceCDF.
-- **Worksheet:** EPS sizing sheet, end-of-life worst-case.
+- Radiative equilibrium first-order analysis; hot-case / cold-case
+  envelope (β-angle and eclipse from Session 2.3).
+- Passive vs active thermal control; MLI; heaters; heat pipes.
+- **Exercise:** size SA + battery and run the thermal envelope
+  analysis in SpaceCDF.
+- **Worksheet:** EPS sizing sheet (end-of-life worst case);
+  thermal budget with heater duty.
 
-### Session 3.2 — Structure & mechanisms (2 h)
+### Session 3.2 — AOCS & propulsion (2 h)
+
+- Attitude determination: sensors (sun sensors, magnetometers,
+  star trackers, gyros) and their accuracy.
+- Attitude control: magnetorquers vs reaction wheels; disturbance
+  torques and momentum management.
+- Pointing budget (RSS error tree).
+- Propulsion options: cold gas, electric, chemical; when to skip
+  propulsion.
+- Δv budget allocation (Tsiolkovsky).
+- **Exercise:** select the AOCS architecture and review the Δv
+  budget in SpaceCDF.
+- **Worksheet:** pointing budget and Δv budget.
+
+### Session 3.3 — Communications (2 h)
+
+- Link-budget basics: EIRP, FSPL, G/T, C/N₀ vs Eb/N₀.
+- Frequency band selection — UHF / S / X / Ka.
+- Modulation and coding: QPSK + LDPC (DVB-S2 family) for ground.
+- Doppler and Doppler-rate budget for a polar pass.
+- Antenna patterns and pointing; payload data volume and downlink
+  capacity.
+
+![S-band downlink link budget — waterfall](../assets/figures/fig_link_budget.png)
+
+*Figure 2.8 — A canonical link-budget waterfall. Required C/N₀
+and link margin always sit at the bottom-right.*
+
+- **Exercise:** close link budget in SpaceCDF.
+- **Worksheet:** link-budget calculator with margin.
+
+### Session 3.4 — Structure & on-board data handling (2 h)
 
 - Cal Poly CDS Rev 14 — CubeSat structural envelope.
 - Launch loads: quasi-static, sine-vibration, random vibration,
@@ -291,43 +343,13 @@ drive PCDU peak rating.*
 
 ![Mass budget — distribution and ECSS margin policy](../assets/figures/fig_mass_budget.png)
 
-*Figure 2.7 — Mass distribution and the ECSS margin schedule.
+*Figure 2.9 — Mass distribution and the ECSS margin schedule.
 The compound margin (equipment maturity × the 20 % system margin)
 starts at +44 % at Phase A and tightens to +5 % at Phase D.*
 
-- **Exercise:** size structure in SpaceCDF.
-- **Worksheet:** mass budget with margin column.
-
-### Session 3.3 — Thermal (2 h)
-
-- Radiative equilibrium first-order analysis.
-- Hot-case / cold-case envelope.
-- β-angle and eclipse — see Figure 2.8.
-- Passive vs active thermal control; MLI; heaters; heat pipes.
-
-![β-angle envelope and eclipse fraction analysis](../assets/figures/fig_beta_eclipse.png)
-
-*Figure 2.8 — β-angle range vs day of year (left) and eclipse
-fraction analytical curves (right) for an ISS-like and a 600 km SSO.*
-
-- **Exercise:** thermal envelope analysis in SpaceCDF.
-- **Worksheet:** thermal budget with heater duty.
-
-### Session 3.4 — Communications (2 h)
-
-- Link-budget basics: EIRP, FSPL, G/T, C/N₀ vs Eb/N₀.
-- Frequency band selection — UHF / S / X / Ka.
-- Modulation and coding: QPSK + LDPC (DVB-S2 family) for ground.
-- Doppler and Doppler-rate budget for a polar pass.
-- Antenna patterns and pointing.
-
-![S-band downlink link budget — waterfall](../assets/figures/fig_link_budget.png)
-
-*Figure 2.9 — A canonical link-budget waterfall. Required C/N₀
-and link margin always sit at the bottom-right.*
-
-- **Exercise:** close link budget in SpaceCDF.
-- **Worksheet:** link-budget calculator with margin.
+- OBC architecture, data storage and flight software; PC/104 bus.
+- **Exercise:** size structure and select the OBC in SpaceCDF.
+- **Worksheet:** mass budget with margin column; data-storage budget.
 
 > **Expected reading before Day 4.** SMAD4 Ch. 17 (V&V); ECSS-E-ST-10-02C; NASA NPR 8715.3 (system safety —
 > primer only).
@@ -353,7 +375,7 @@ risk-buy-down planning.*
 ### Session 4.2 — Verification & validation planning (2 h)
 
 - NASA SEH Processes 7 – 8.
-- ECSS-E-ST-10-02C — verification methods (A · T · R · I).
+- ECSS-E-ST-10-02C — verification methods, ATIR(D): analysis, test, inspection, review of design (+ demonstration).
 - Verification-matrix structure.
 - Test levels — unit → subsystem → system → acceptance → qualification.
 - Environmental testing — vibration, thermal-vacuum, EMC.
@@ -452,8 +474,8 @@ drive mitigation priority.*
 | Recall the 17 SEH processes and gate sequence | Remember | Sessions 1.1, 5.1 |
 | Explain the System-V and where it fails | Understand | Sessions 1.1, 4.2 |
 | Apply SMART criteria to derive requirements | Apply | Session 2.1 |
-| Apply the N² matrix to a real CubeSat | Apply | Session 2.3 |
-| Analyse a link budget and find the dominant loss | Analyse | Session 3.4 |
+| Apply the N² matrix to a real CubeSat | Apply | Session 2.4 |
+| Analyse a link budget and find the dominant loss | Analyse | Session 3.3 |
 | Analyse a risk register and find single points of failure | Analyse | Session 4.3 |
 | Evaluate trade-off options and defend a recommendation | Evaluate | Sessions 1.3, 5.4 |
 | Create a complete preliminary CubeSat design | Create | Day 5 final review |
@@ -505,15 +527,15 @@ Facilitator's Book.
 | Position | Owns (parameters) | Drives (sessions) |
 |----------|-------------------|-------------------|
 | Systems Engineer | Mass margin, power margin, system cost, TRL, health score | All |
-| Mission Analyst | Orbit, ground track, contact time, eclipse, β | 1.4, 3.1 – 3.3 |
-| Payload Engineer | Aperture, GSD, data rate, FOV | 1.2, 3.4 |
+| Mission Analyst | Orbit, ground track, contact time, eclipse, β | 1.4, 2.3, 3.1 |
+| Payload Engineer | Aperture, GSD, data rate, FOV | 1.2, 3.3 |
 | Power Engineer | Solar-array area, battery capacity, EPS topology | 3.1 |
 | AOCS Engineer | Pointing budget, RW capacity, sensor selection | 3.2, 4.3 |
-| Thermal Engineer | Hot/cold case, radiator area, heater duty | 3.3 |
-| Structures Engineer | Mass-budget closure, deployers, mechanisms | 3.2 |
-| Propulsion Engineer | Δv budget, thruster sizing, propellant mass | (when needed) |
-| Comms Engineer | Link budget, antenna pattern, modulation | 3.4 |
-| OBDH / Software | OBC, FSW architecture, FDIR, telemetry list | 4.1 |
+| Thermal Engineer | Hot/cold case, radiator area, heater duty | 3.1 |
+| Structures Engineer | Mass-budget closure, deployers, mechanisms | 2.4, 3.4 |
+| Propulsion Engineer | Δv budget, thruster sizing, propellant mass | 3.2 (when needed) |
+| Comms Engineer | Link budget, antenna pattern, modulation | 3.3 |
+| OBDH / Software | OBC, FSW architecture, FDIR, telemetry list | 3.4, 4.1 |
 | Operations | Pass plan, ConOps, anomaly tree | 1.4, 5.1 |
 | Ground Segment | Ground stations, MCS, MPS, archive | 1.4, 5.1 |
 | Cost / Schedule | WBS, CER, critical path | 4.4 |

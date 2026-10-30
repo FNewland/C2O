@@ -67,7 +67,7 @@ but engineering background assumed.
 
 ---
 
-## Day 2: Requirements & Functions (8 hours)
+## Day 2: Requirements, Functions, Orbit & Architecture (8 hours)
 
 ### Session 2.1: Requirements Engineering (2 hrs)
 - NASA SEH Process 2: Technical Requirements Definition
@@ -87,61 +87,57 @@ but engineering background assumed.
 - **Exercise**: Build function tree in SpaceCDF
 - **Worksheet**: Function-to-requirement traceability matrix
 
-### Session 2.3: Interface Management (2 hrs)
-- NASA SEH Process 12: Interface Management
-- ECSS-E-ST-10-24C: Interface requirements
-- N^2 interface matrix methodology
-- Interface types: mechanical, electrical, thermal, data, RF, optical
-- Conflict identification and resolution
-- **Exercise**: Review interface matrix in SpaceCDF
-- **Worksheet**: Interface specification for 2 subsystem pairs
+### Session 2.3: Orbit Selection & Mission Architecture (2 hrs)
+- Orbit mechanics fundamentals (Keplerian elements, perturbations)
+- LEO/SSO/MEO/GEO/HEO trade-offs
+- Coverage, revisit and ground-station contact geometry
+- Orbital lifetime and debris compliance (ECSS-U-AS-10C)
+- Eclipse fraction and power implications; radiation environment by orbit
+- **Exercise**: Run orbit trade in SpaceCDF
+- **Worksheet**: Orbit selection trade matrix
 
-### Session 2.4: Design Budgets Introduction (2 hrs)
-- Mass budget methodology (ECSS-E-HB-10-02A)
-- Power budget methodology (ECSS-E-ST-20C)
-- Margin philosophy by project phase
-- Budget roll-up: component -> subsystem -> system
-- Cost estimation approaches (parametric, analogy, bottom-up)
-- **Exercise**: Review parametric budgets in SpaceCDF dashboard
-- **Worksheet**: Mass budget template with margin policy
+### Session 2.4: Mission Architecture -- Segments, Interfaces & Budgets (2 hrs)
+- Mission segment decomposition and system block diagram
+- NASA SEH Process 12: Interface Management; ECSS-E-ST-10-24C: Interface requirements
+- N^2 interface matrix methodology; interface types: mechanical, electrical, thermal, data, RF, optical
+- Conflict identification and resolution
+- Mass budget methodology (ECSS-E-HB-10-02A) and power budget methodology (ECSS-E-ST-20C)
+- Margin philosophy by project phase; budget roll-up: component -> subsystem -> system
+- **Exercise**: Review interface matrix and parametric budgets in SpaceCDF
+- **Worksheet**: Interface specification for 2 subsystem pairs; mass budget template with margin policy
 
 ---
 
 ## Day 3: Subsystem Design (8 hours)
 
-### Session 3.1: Orbit Design & Selection (2 hrs)
-- Orbit mechanics fundamentals (Keplerian elements, perturbations)
-- LEO/SSO/MEO/GEO/HEO trade-offs
-- Coverage and revisit analysis
-- Orbital lifetime and debris compliance (ECSS-U-AS-10C)
-- Eclipse fraction and power implications
-- **Exercise**: Run orbit trade in SpaceCDF
-- **Worksheet**: Orbit selection trade matrix
+### Session 3.1: Power & Thermal (2 hrs)
+- EPS architecture (solar array, battery, regulation)
+- Power budget by operational mode with duty cycling
+- Solar array and battery sizing at end of life
+- Thermal control: passive vs active, radiator sizing, heaters
+- Hot-case / cold-case analysis
+- **Exercise**: Review power and thermal outputs in SpaceCDF
+- **Worksheet**: Power mode budget table
 
-### Session 3.2: Payload & Communications (2 hrs)
-- Optical payload sizing (GSD -> aperture -> mass -> power)
-- RF payload sizing (link budget -> antenna -> power)
-- SAR fundamentals (resolution -> antenna area -> power)
+### Session 3.2: AOCS & Propulsion (2 hrs)
+- Attitude sensors and actuators: magnetorquers vs reaction wheels vs star trackers
+- Pointing budget (RSS error tree); disturbance torques and momentum management
+- Propulsion options: cold gas, electric, chemical
+- Delta-V budget allocation
+- **Exercise**: Review AOCS and propulsion outputs in SpaceCDF
+- **Worksheet**: Pointing budget and delta-V budget
+
+### Session 3.3: Communications (2 hrs)
 - Link budget methodology (ECSS-E-ST-50-05C)
 - Frequency band selection and licensing
 - Amateur vs experimental vs commercial licensing
-- **Exercise**: Configure payload and review link budget
+- Payload data volume and downlink sizing (link budget -> antenna -> power)
+- **Exercise**: Configure payload data and review link budget
 - **Worksheet**: Link budget calculation sheet
 
-### Session 3.3: Power, AOCS, Thermal (2 hrs)
-- EPS architecture (solar array, battery, regulation)
-- Power budget by operational mode with duty cycling
-- Attitude control: magnetorquers vs reaction wheels vs star trackers
-- Pointing budget (RSS error tree)
-- Thermal control: passive vs active, radiator sizing
-- **Exercise**: Review power/AOCS/thermal outputs in SpaceCDF
-- **Worksheet**: Power mode budget table
-
-### Session 3.4: Structure, Propulsion, Data Handling (2 hrs)
+### Session 3.4: Structure & On-Board Data Handling (2 hrs)
 - CubeSat Design Specification (CDS Rev 14.1)
 - Structural design: launch loads, natural frequency, margin of safety
-- Propulsion options: cold gas, electric, chemical
-- Delta-V budget allocation
 - OBC architecture, data storage, flight software
 - PC/104 bus standard
 - **Exercise**: Select equipment in SpaceCDF browser
@@ -162,7 +158,7 @@ but engineering background assumed.
 
 ### Session 4.2: Verification & Validation Planning (2 hrs)
 - NASA SEH Processes 7-8: Verification & Validation
-- ECSS-E-ST-10-02C: Verification methods (ATRI)
+- ECSS-E-ST-10-02C: Verification methods, ATIR(D) (analysis, test, inspection, review of design, + demonstration)
 - Verification matrix structure
 - Test levels: unit -> subsystem -> system -> acceptance -> qual
 - Environmental testing (vibration, thermal-vac, EMC)
@@ -193,11 +189,11 @@ but engineering background assumed.
 
 ### Session 5.1: Gate Review Preparation (2 hrs)
 - ECSS-M-ST-10C: Review gate structure
-- MCR/SRR/PDR/CDR exit criteria
+- MCR/SRR/PDR/CDR exit criteria; the Day 5 gate is a PDR-style review
 - Design review presentation structure
 - Action item management
 - **Exercise**: Run gate review in SpaceCDF, resolve action items
-- **Worksheet**: MCR presentation outline
+- **Worksheet**: PDR presentation outline
 
 ### Session 5.2: Regulatory & Licensing (2 hrs)
 - Frequency licensing (ITU, IARU, national)

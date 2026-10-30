@@ -125,9 +125,11 @@ class TestAllDiskProceduresAreIndexed:
             if relative.parts[0] == "custom":
                 continue
             disk_files.append(str(relative))
-        # Phase D added NOM-004, NOM-013 and CTG-028 (64 -> 67).
-        assert len(disk_files) == 67, (
-            f"Expected 67 procedure files, found {len(disk_files)}"
+        # Phase D added NOM-004, NOM-013 and CTG-028 (64 -> 67). The amended
+        # rulings of 2026-10-30 added NOM-014 (disposal, Q3), CTG-029 (gyro
+        # failure) and CTG-030 (TC rejection, Q22) (67 -> 70).
+        assert len(disk_files) == 70, (
+            f"Expected 70 procedure files, found {len(disk_files)}"
         )
 
     def test_new_procedure_files_exist(self):

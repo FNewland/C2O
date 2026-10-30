@@ -73,7 +73,7 @@ The Electrical Power System (EPS) is the spacecraft's power utility. A typical C
 
 In space, there is no air for convection. Heat transfer occurs only by **radiation** and **conduction**. A spacecraft reaches thermal equilibrium when absorbed heat (solar flux, Earth albedo, Earth IR, internal electronics waste heat) equals radiated heat (to deep space at ~3 K).
 
-**ECSS thermal margins (ECSS-E-ST-31C):** Operating $\pm$5 degC, Acceptance $\pm$10 degC, Qualification $\pm$15 degC. If the predicted temperature of any component is within 5 degC of its operating limit, you must add thermal control (heater, coating change, or radiator).
+**Thermal margins (the textbook's teaching convention, Table 3.1.11; proto-flight TVAC is at predicted $\pm$10 degC per GSFC-STD-7000B):** Operating $\pm$5 degC, Acceptance $\pm$10 degC, Qualification $\pm$15 degC. If the predicted temperature of any component is within 5 degC of its operating limit, you must add thermal control (heater, coating change, or radiator).
 
 ---
 
@@ -89,7 +89,7 @@ In space, there is no air for convection. Heat transfer occurs only by **radiati
 >
 > **Thermal equilibrium:** $T = \left(\frac{Q_{\text{abs}} + Q_{\text{int}}}{\varepsilon \sigma A_{\text{rad}}}\right)^{1/4}$ &nbsp;&nbsp; ($\sigma = 5.67 \times 10^{-8}$ W/m$^2$/K$^4$)
 >
-> **ECSS thermal margins:** Operating +/-5 degC, Acceptance +/-10 degC, Qualification +/-15 degC
+> **Thermal margins (textbook convention):** Operating +/-5 degC, Acceptance +/-10 degC, Qualification +/-15 degC
 
 ---
 

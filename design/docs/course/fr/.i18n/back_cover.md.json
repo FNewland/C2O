@@ -1,6 +1,6 @@
 {
  "tool_version": "1.0.0",
- "en_path": "${DRIVE_COURSE}/back_cover.md",
+ "en_path": "docs/course/back_cover.md",
  "sections": [
   {
    "id": "_preamble",
@@ -19,8 +19,8 @@
   },
   {
    "id": "spacecdf-a-course-textbook/about-the-author",
-   "en_hash": "b4769dc95b8cbe5d",
-   "fr_hash": "0e7cbafdeb30e942"
+   "en_hash": "7b05b8e0b3f06f1f",
+   "fr_hash": "18d9acc6d40948b7"
   },
   {
    "id": "spacecdf-a-course-textbook/licence-and-attribution",
@@ -28,5 +28,5 @@
    "fr_hash": "a4e8293d39fb0901"
   }
  ],
- "en_commit": "c175838"
+ "en_commit": "c4a140a"
 }

@@ -16,8 +16,8 @@ full lifecycle from LEOP detumble through nominal nadir-pointing operations, inc
 commissioning sequences, contingency responses, simulator fidelity needs, and MCS tooling
 requirements.
 
-EOSAT-1 is a 6U cubesat in a 500 km sun-synchronous dawn-dusk orbit (97.4 deg
-inclination, ~94.6 min period) performing ocean current monitoring. The ADCS provides
+EOSAT-1 is a 6U cubesat in a 513 km sun-synchronous orbit (97.39 deg
+inclination, LTAN ~10:00, eclipse every orbit, ~94.5 min period) performing ocean current monitoring. The ADCS provides
 three-axis attitude determination and control. There is no propulsion system; orbit
 determination is performed onboard via GPS with ground-based validation, but no orbital
 control is performed.

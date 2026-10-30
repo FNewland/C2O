@@ -38,14 +38,14 @@ familiariser avec les procédures.
 
 **État du satellite.**
 
-- Toutes les antennes déployées ; émetteur TT&C en balise bas débit entre les passages,
-  haut débit pendant un contact.
+- Toutes les antennes déployées ; TT&C sur l'échelon LOW (16 kbit/s) pour les
+  contacts de routine, HIGH (128 kbit/s) uniquement pour les vidages au-dessus de 10° d'élévation.
 - Mode SCAO : NOMINAL (4, pointage nadir), vitesses angulaires < 0,01 °/s, roues de réaction
   lancées.
 - EPS : batterie à 90 % de SoC, générateurs solaires nominaux, toutes les lignes d'alimentation principales sur ON.
 - TCS : réchauffeurs pilotés par thermostat, toutes les zones dans la plage verte.
 - Charge utile : imageur en STANDBY, refroidisseur du FPA à température.
-- OBDH : chargeur d'amorçage phase 5, logiciel applicatif en cours d'exécution, FDIR activée.
+- OBDH : image applicative en cours d'exécution (`obdh.sw_image` = 1), FDIR activée.
 
 **Géométrie de passage.** La valeur par défaut de `nominal_ops.yaml` laisse le
 propagateur d'orbite générer des passages naturels. Pour la journée de formation 1,
@@ -128,9 +128,7 @@ briefing: |
   is in phase 4 with FDIR configured for the LEOP-only fault set.
   Your shift covers the first 4 hours of commissioning across
   ~4 ground passes (compressed).
-  Goals for the shift:
-    1. Transition the spacecraft to phase 5 (COMMISSIONING).
-    2. Run COM-001 through COM-008 in order.
+  Goals for the shift:    1. Transition the spacecraft to phase 5 (COMMISSIONING) if LEOP-003 has not.    2. Run COM-001, COM-002, COM-004, COM-003, then COM-005 to COM-008.
     3. Power on the payload, cool the FPA, and complete COM-012
        (First Light) before LOS at end of pass 4.
 
@@ -146,8 +144,7 @@ initial_conditions:
     payload: false
     fpa_cooler: false
     prop: false
-  params:
-    0x020F: 3        # aocs.mode = COARSE_SUN (COM-005 takes it to NOMINAL 4)
+  params:    0x020F: 3        # aocs.mode = COARSE_SUN (COM-004 enables the wheels and commands NOMINAL 4)
     0x0600: 0        # payload.mode = OFF
 
 events:
@@ -163,7 +160,7 @@ events:
 
 expected_responses:
   - { category: command, description: "Declare COMMISSIONING: SYS_SET_MISSION_PHASE(phase=5) (S8 func_id 120)" }
-  - { category: command, description: "Run COM-001 EPS Checkout" }
+  - { category: command, description: "Run COM-001 EPS Checkout" }  - { category: command, description: "Run COM-004 AOCS Actuator Checkout, then COM-003 AOCS Sensor Calibration (ruling Q16)" }
   - { category: command, description: "Run COM-005 AOCS Mode Transitions" }
   - { category: command, description: "Run COM-006 TTC Link Verification" }
   - { category: command, description: "Run COM-008 FDIR Configuration — enable S12 monitoring (MON_ENABLE) and verify the S12/S19 rule sets; there is no table to load" }
@@ -190,14 +187,24 @@ avant que l'équipe ne s'engage dans le passage en mode survie) ; pendant la c
 simulation est restaurée à partir de cet instantané et une autre équipe commande
 la branche alternative. Aucun nouveau fichier de scénario n'est nécessaire.
 
-**Procédure.** L'enseignant utilise l'interface en ligne de commande du simulateur :
+**Procédure.** Il n'existe pas d'outil en ligne de commande `sim`. Les points
+de reprise s'enregistrent et se restaurent depuis la console de l'enseignant (panneau
+**Breakpoints** : SAVE, puis LOAD sur le nom enregistré) ou par l'API HTTP de
+l'enseignant sur le port du simulateur (8080 par défaut,
+`$SMO_SIM_HTTP_PORT`) :
 
 ```
-sim snapshot save snap_<scenario>_<event>
-sim snapshot restore snap_<scenario>_<event>
+curl -X POST http://localhost:8080/api/breakpoint/save \
+     -H 'Content-Type: application/json' -d '{"name": "snap_<scenario>_<event>"}'
+curl -X POST http://localhost:8080/api/breakpoint/load \
+     -H 'Content-Type: application/json' -d '{"name": "snap_<scenario>_<event>"}'
+curl http://localhost:8080/api/breakpoints
 ```
 
-[Claude Code : confirmer la commande exacte lors du développement de cette section.]
+Un point de reprise enregistré est écrit dans `workspace/breakpoints/<name>.json`
+sous le répertoire de travail du simulateur ; il survit donc à un redémarrage.
+L'enregistrement et le chargement s'exécutent tous deux entre deux pas de simulation :
+une restauration ne tombe jamais au milieu d'un pas. Voir le guide de l'enseignant, §5.10.1.
 
 ---
 

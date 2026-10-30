@@ -14,48 +14,48 @@
   },
   {
    "id": "student-mcs-mps-reference/1-the-console-at-a-glance",
-   "en_hash": "8fb7dbe0f53ccc22",
-   "fr_hash": "24aadec5595209bc"
+   "en_hash": "d13e5af17a5014db",
+   "fr_hash": "97809d1d95765bf8"
   },
   {
    "id": "student-mcs-mps-reference/1-the-console-at-a-glance/1-1-position-specific-tabs",
-   "en_hash": "eb47cae412f52eea",
-   "fr_hash": "07764caa826cab9b"
+   "en_hash": "cc205dffa592b58c",
+   "fr_hash": "fe3b45b2eef9fd38"
   },
   {
    "id": "student-mcs-mps-reference/2-reading-telemetry",
-   "en_hash": "d8c5036511462003",
-   "fr_hash": "44ceb2d798575d17"
+   "en_hash": "e05fe95a0253c8d0",
+   "fr_hash": "b0008386556b68b8"
   },
   {
    "id": "student-mcs-mps-reference/3-sending-a-command",
-   "en_hash": "61dc9feb599a5071",
-   "fr_hash": "bcb5759bf0273984"
+   "en_hash": "e9c8089bf22fe556",
+   "fr_hash": "b5477442c151552e"
   },
   {
    "id": "student-mcs-mps-reference/4-the-procedure-panel",
-   "en_hash": "c4028cc38a30ea28",
-   "fr_hash": "81abe54fb7690a08"
+   "en_hash": "7ba448a73bc6e4ae",
+   "fr_hash": "2eb426d5873b03c0"
   },
   {
    "id": "student-mcs-mps-reference/5-the-fdir-panel",
-   "en_hash": "9e60823ad8bc1692",
-   "fr_hash": "2c9bf19e11a7b6e5"
+   "en_hash": "f6d855c9eea9b541",
+   "fr_hash": "00bacb2db0f25f2c"
   },
   {
    "id": "student-mcs-mps-reference/6-the-mission-planning-system-mps",
-   "en_hash": "f4ad02b3532c4a60",
-   "fr_hash": "890d75ea79bba85d"
+   "en_hash": "58fa0eea34eb6780",
+   "fr_hash": "b7b80dbce890f54e"
   },
   {
    "id": "student-mcs-mps-reference/7-voice-loop-mcs-chat",
-   "en_hash": "3e29b35db5a414ff",
-   "fr_hash": "55fe62fcd6bca256"
+   "en_hash": "a2018856943b9436",
+   "fr_hash": "4034b4c609e75626"
   },
   {
    "id": "student-mcs-mps-reference/8-quick-keyboard-shortcuts",
-   "en_hash": "2aec119608c0ed99",
-   "fr_hash": "b13246e519b154bf"
+   "en_hash": "f962ae2cf83bffd5",
+   "fr_hash": "9f2f842d3b30446d"
   },
   {
    "id": "student-mcs-mps-reference/9-where-to-read-more",
@@ -63,5 +63,5 @@
    "fr_hash": "58a7516c0c337c1e"
   }
  ],
- "en_commit": "3ea7113"
+ "en_commit": "c4a140a"
 }

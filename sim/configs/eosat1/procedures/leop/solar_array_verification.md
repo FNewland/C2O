@@ -40,7 +40,7 @@ against predictions for the current sun angle and orbit phase. The spacecraft ha
 
 ### Step 1 — Request Detailed EPS Telemetry
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27)
-**Verify:** `eps.bus_voltage` (0x0105) in range [27.0V, 29.5V] within 10s
+**Verify:** `eps.bus_voltage` (0x0105) in range [26.0V, 30.0V] within 10s --- bus = min(29.0 V, battery voltage), so the band follows the battery, not a regulated rail
 **Verify:** `eps.bat_soc` (0x0101) reported within 10s
 **GO/NO-GO:** EPS telemetry responding nominally
 

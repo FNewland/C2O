@@ -133,7 +133,7 @@ WBS Level 1: Mission Total
     4.1  Payload instrument hardware
     4.2  Payload software
     4.3  Payload calibration and characterisation
-  5.0  Spacecraft Bus Hardware            30 %   (all subsystems)
+  5.0  Spacecraft Bus Hardware            27 %   (all subsystems)
     5.1  Structure and mechanisms
     5.2  EPS (solar array + battery + board)
     5.3  AOCS (sensors + actuators)

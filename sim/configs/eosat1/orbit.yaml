@@ -1,5 +1,15 @@
 # EOSAT-1 Orbit Configuration — Sun-Synchronous LEO (Ocean Current Monitoring)
-# ~513 km mean altitude, 98° inclination SSO
+# ~513 km mean altitude, 97.39° inclination SSO, LTAN ~10:00 (RAAN 120° at
+# the epoch below).
+# Owner ruling 2026-10-30 (Q2b, amended): inclination 97.39°, the exact
+# sun-synchronous value for the TLE mean motion of 15.24 rev/day. Derivation:
+# SGP4 (WGS-72) recovers the Brouwer mean semi-major axis from n (a = 6868.9
+# km) and its secular J2/J4 node rate equals the Sun's 0.98565 °/day at
+# i = 97.391° (WGS-84 constants: 97.390°). Residual: -0.00013 °/day, i.e.
+# -0.09° of node (≈ -22 s of LTAN) over the 2-year active phase.
+# History: 98.0° precessed the node ~1.07 °/day and drifted LTAN ~2 h per
+# year; the interim 97.45° (computed from the 513 km altitude, not from the
+# TLE mean motion) ran +0.0078 °/day fast, +0.38 h of LTAN in 2 years.
 # TLE mean motion 15.24 rev/day; propagated geodetic altitude 503–530 km,
 # mean 513 km. Owner ruling 2026-08: the TLE is the truth — the previously
 # declared "450 km" figure disagreed with the TLE and has been retired.
@@ -13,7 +23,7 @@
 # planning/ground_stations.yaml; geometry there must MATCH this file — the
 # MCS cross-checks and warns on divergence.
 tle_line1: "1 99001U 26001A   26232.50000000  .00000100  00000-0  10000-4 0  9994"
-tle_line2: "2 99001  98.0000 120.0000 0001200  90.0000 270.0000 15.24000000 00015"
+tle_line2: "2 99001  97.3900 120.0000 0001200  90.0000 270.0000 15.24000000 00016"
 # T-0: mission start epoch for MET computation (ISO 8601 UTC).
 # Kept AT the TLE epoch (day 26232.5 = 2026-08-20T12:00:00Z) deliberately:
 # SGP4 accuracy degrades away from the elset epoch, so runs always start at
@@ -23,7 +33,7 @@ t0_epoch: "2026-08-20T12:00:00Z"
 # with the repo's own OrbitPropagator (503–530 km over an orbit, mean 513 km).
 # Propagation itself uses only the TLE.
 altitude_km: 513.0
-inclination_deg: 98.0
+inclination_deg: 97.39
 earth_radius_km: 6371.0
 
 # EOSAT-1 ground network — five high-latitude stations.
@@ -41,9 +51,9 @@ earth_radius_km: 6371.0
 #
 # Adding/removing a station here changes the mission's contact statistics.
 # Measured with tools/pass_gap_analysis.py over 48 h from t0_epoch
-# (re-measured 2026-08 after the epoch move to 2026-08-20T12:00:00Z):
+# (re-measured 2026-10-30 after the amended Q2b inclination of 97.39°):
 #   2 stations (Iqaluit+Troll): 40 passes, median gap 84 min, max gap 147 min
-#   5 stations (this list):    103 passes, median gap 34 min, max gap  80 min
+#   5 stations (this list):    103 passes, median gap 33 min, max gap  79 min
 # The planner mirrors this list with planning-only attributes in
 # planning/planner.yaml; `python -m smo_planner.planner_config --config
 # configs/eosat1` prints a side-by-side alignment report of the two.

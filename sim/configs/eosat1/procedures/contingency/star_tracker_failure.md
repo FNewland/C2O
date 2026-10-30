@@ -160,7 +160,11 @@ anomaly report — they leave the spacecraft in materially different configurati
   acquire stars. If still BLIND after two attempts, proceed to Step 5.
 - If attitude error exceeds 5 deg during switchover: FDIR may trigger safe mode
   automatically. If FDIR triggers, allow autonomous safe mode entry. Then follow
-  CTG-005 (EPS Safe Mode Recovery) for nominal restoration after ST2 is operational.
+  CTG-002 (AOCS Anomaly Recovery) for nominal restoration after ST2 is operational.
+  Note: check `aocs.mode` (0x020F) before acting --- the simulator may already
+  have resumed mode 4 (NOMINAL) by itself. Once COARSE_SUN has held a good sun
+  lock (CSS valid, error < 15 deg) for 60 s with a tracker available, the AOCS
+  hands control back to the commanded mode without a telecommand.
 - If both star trackers fail and CSS is also invalid (eclipse): AOCS has no attitude
   reference. Command `AOCS_SET_MODE(mode=2)` for DETUMBLE using magnetorquers.
   Wait for sunlit phase for CSS acquisition. This is a mission-critical anomaly —

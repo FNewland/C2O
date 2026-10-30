@@ -19,7 +19,7 @@
 # of the spacecraft: the textbook (docs/review_2026-07/textbook_inventory.md
 # :46,131) has always described "S-band prime (body-fixed patch) + UHF whip
 # bootloader beacon", and UPGRADE_ROADMAP.md:97 scope (d) says to retain the
-# UHF numbers as the bootloader-beacon link. EO-Sat-1 therefore flies:
+# UHF numbers as the bootloader-beacon link. EOSAT-1 therefore flies:
 #
 #   * the S-BAND PRIME CHAIN — this file's ul/dl_freq_mhz, tm_rate_tiers,
 #     eirp_dbw, sc_gain_dbi. Carries everything: real-time HK, playback,
@@ -260,6 +260,22 @@ gt_derate_below_30deg_db: 0.5
 # with conv(7,1/2)+RS. Implementation loss is carried in the loss column
 # above and must NOT be added here as well.
 required_eb_n0_db: 9.6
+
+# ── Transponder auto-switch on command loss (author ruling Q7, 2026-10-30) ──
+# Documented on-board behaviour; NOT SIMULATED YET. If the spacecraft hears
+# no valid telecommand for `cmd_loss_switch_timeout_s`, it switches to the
+# other transponder (manual 08 FDIR rule TTC-01). The ruling fixes the timer
+# at 24 h; the old "120 s" figure in manual 05 is withdrawn. The simulator
+# does not perform the switch today (ttc_basic only raises event 0x0511
+# UPLINK_TIMEOUT after its own internal threshold), so these keys exist so
+# that the manuals and the simulator quote one value and a future model has
+# a single place to read it from.
+#
+# `cmd_loss_rssi_threshold_dbm` is the FDIR "RSSI degradation" level of
+# manual 05 §8 (rssi < -105 dBm). The −100 dBm in manual 05 §7 is an
+# operational guideline for marginal links, not an FDIR threshold.
+cmd_loss_switch_timeout_s: 86400      # 24 h
+cmd_loss_rssi_threshold_dbm: -105.0
 
 # ══════════════════════════════════════════════════════════════════════════
 # UHF BOOTLOADER BEACON TRANSMITTER (Franz's ruling R2, 2026-08-12)

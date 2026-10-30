@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Catalogue xmlns="http://www.ecss.nl/smp/2019/Smdl" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Name="OBDH" Creator="EOSAT-1 SMDL Generator" Version="1.0+590a05ec5309">
+<Catalogue xmlns="http://www.ecss.nl/smp/2019/Smdl" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Name="OBDH" Creator="EOSAT-1 SMDL Generator" Version="1.0+4a992dbe3156">
   <Description>SMP2 model catalogue for OBDH subsystem</Description>
   <Type Name="UInt8" Uuid="4e73fc8f-c4b0-5788-a75e-634a28fbbdd8" xsi:type="Integer" Size="1" Signed="false"/>
   <Type Name="UInt16" Uuid="a3adba6a-8630-5a9d-a78b-683cf4e4fd19" xsi:type="Integer" Size="2" Signed="false"/>
@@ -63,7 +63,7 @@
       <Description>S15 store 4 (Alarm_Store) fill — same value as TM(15,14) for store 4 [%]</Description>
     </Field>
     <Field Name="obdh_last_reboot_cause" Uuid="be29b8aa-0d1a-5864-9bd1-a93f32f972b2" Type="Float32" Kind="Output" View="true">
-      <Description>Last reboot cause (0=none,1=watchdog,2=memory,3=switchover,4=commanded)</Description>
+      <Description>Last reboot cause (0=none,1=commanded,2=watchdog,3=memory,4=switchover)</Description>
     </Field>
     <Field Name="obdh_boot_count_a" Uuid="c889b69b-5be5-52d2-b365-db41bd560b05" Type="Float32" Kind="Output" View="true">
       <Description>Total boot count for OBC-A</Description>

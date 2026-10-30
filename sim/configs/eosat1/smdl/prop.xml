@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Catalogue xmlns="http://www.ecss.nl/smp/2019/Smdl" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Name="Prop" Creator="EOSAT-1 SMDL Generator" Version="1.0+590a05ec5309">
+<Catalogue xmlns="http://www.ecss.nl/smp/2019/Smdl" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Name="Prop" Creator="EOSAT-1 SMDL Generator" Version="1.0+4a992dbe3156">
   <Description>SMP2 model catalogue for Prop subsystem</Description>
   <Type Name="UInt8" Uuid="9e3bbe90-63c9-5852-942f-84b545bd4020" xsi:type="Integer" Size="1" Signed="false"/>
   <Type Name="UInt16" Uuid="677c92a2-eb5f-5fd2-af71-c878b557eae5" xsi:type="Integer" Size="2" Signed="false"/>
-  <Type Name="UInt32" Uuid="055dc968-9133-5424-87df-4a03dbdad6c9" xsi:type="Integer" Size="4" Signed="false"/>
   <Type Name="Float32" Uuid="20fc95ec-9b42-5511-a3fe-742d0849eec4" xsi:type="Float" Size="4"/>
   <Type Name="Int16" Uuid="4b618236-8f9e-584e-9863-4d0f80cf5594" xsi:type="Integer" Size="2" Signed="true"/>
   <Type xsi:type="Bool" Name="Bool" Uuid="ef9e6f3b-9b25-56c1-af35-8c7e7e52f504"/>
@@ -75,7 +74,7 @@
     <Field Name="prop_arm_inhibit_mask" Uuid="21d825ce-44a2-5802-9058-5dc15ae22514" Type="UInt16" Kind="Output" View="true">
       <Description>Bitmask of interlocks blocking arm: b0 catbed, b1 tank P, b2 propellant, b3 AOCS mode, b4 att err, b5 SoC, b6 phase, b7 eclipse, b8 valves, b9 inhibit latched, b10 no burn loaded</Description>
     </Field>
-    <Field Name="prop_leak_rate" Uuid="720cd6b7-f8bb-54df-9093-3b3c40a5941f" Type="UInt16" Kind="Output" View="true">
+    <Field Name="prop_leak_rate" Uuid="720cd6b7-f8bb-54df-9093-3b3c40a5941f" Type="Float32" Kind="Output" View="true">
       <Description>Propellant leak rate (0 nominal; the 0x0B01 delta monitor sees a leak first) [mg/s]</Description>
     </Field>
     <Field Name="prop_thrust_offset_torque" Uuid="f6809600-8f31-5c4c-87bc-41d5334fd71b" Type="Float32" Kind="Output" View="true">
@@ -84,10 +83,10 @@
     <Field Name="prop_sc_mass" Uuid="39993a75-d220-5615-8269-a5d661346025" Type="UInt16" Kind="Output" View="true">
       <Description>Spacecraft mass m_dry + m_prop (12.40 BOL -&gt; 12.00 dry) [kg]</Description>
     </Field>
-    <Field Name="prop_orbit_epoch_version" Uuid="88c406d8-f66a-5629-949f-ca235aa9597f" Type="UInt16" Kind="Output" View="true">
+    <Field Name="prop_orbit_epoch_version" Uuid="88c406d8-f66a-5629-949f-ca235aa9597f" Type="Float32" Kind="Output" View="true">
       <Description>Orbit element-set version — increments per applied burn (planner/MCS cache key)</Description>
     </Field>
-    <Field Name="prop_sma_km" Uuid="1e1ee9a8-ed78-522d-bc75-53496cbbdeea" Type="UInt32" Kind="Output" View="true">
+    <Field Name="prop_sma_km" Uuid="1e1ee9a8-ed78-522d-bc75-53496cbbdeea" Type="Float32" Kind="Output" View="true">
       <Description>Semi-major axis from the active (post-burn) element set [km]</Description>
     </Field>
     <Field Name="prop_power_draw" Uuid="7dee7d92-7279-549b-b0d9-c19710ed0767" Type="Float32" Kind="Output" View="true">

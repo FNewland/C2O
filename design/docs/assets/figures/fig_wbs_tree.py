@@ -27,7 +27,7 @@ level1 = [
     ("2.0", "Systems\nEngineering", 5, "mgmt"),
     ("3.0", "Mission\nAssurance", 3, "mgmt"),
     ("4.0", "Payload", 20, "space"),
-    ("5.0", "Spacecraft\nBus Hardware", 30, "space"),
+    ("5.0", "Spacecraft\nBus Hardware", 27, "space"),
     ("6.0", "Integration\nand Test", 12, "space"),
     ("7.0", "Software\n(flight + ground)", 8, "sw"),
     ("8.0", "Launch\nServices", 10, "launch"),

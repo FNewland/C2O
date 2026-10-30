@@ -18,7 +18,7 @@ geometry:
 Why conical-with-penumbra and not the old cylindrical shell: a cylinder has no
 penumbra at all, so illumination steps 1 -> 0 between two samples and every
 consumer agrees only if it happens to sample at the same instant — which is
-exactly the coherence defect this module exists to remove. At EO-Sat-1's
+exactly the coherence defect this module exists to remove. At EOSAT-1's
 ~513 km the penumbra crossing lasts ~10 s of a ~2100 s eclipse and the umbra
 cone is ~2.4 km narrower than the cylinder: both physically small, both
 honest, and now computed in ONE place.

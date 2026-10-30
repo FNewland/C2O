@@ -1,4 +1,4 @@
-# Déroulé de la recette en orbite — journal des modifications de développement
+# Déroulé de la recette en orbite — journal des modifications de développement {#commissioning-walkthrough--development-change-log}
 
 **Manual-Scope:** system — relevé des défauts trouvés et corrigés pendant la construction du système de formation. Ne fait pas partie du manuel d'opérations de vol.
 
@@ -6,7 +6,7 @@ Retiré de `commissioning_sequence_walkthrough.md` le 2026-08-21 : un manuel d'
 
 ---
 
-## Problèmes connus du simulateur
+## Problèmes connus du simulateur {#known-simulator-issues}
 
 Tous les problèmes signalés précédemment ont été résolus :
 

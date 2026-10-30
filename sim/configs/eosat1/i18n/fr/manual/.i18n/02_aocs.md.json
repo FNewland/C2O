@@ -9,84 +9,84 @@
   },
   {
    "id": "eosat-1-attitude-and-orbit-control-system-aocs",
-   "en_hash": "f8faf94f15bf33bf",
-   "fr_hash": "002ebdff0c27512a"
+   "en_hash": "f594bbce4bd1ba91",
+   "fr_hash": "b409e1af219a7227"
   },
   {
    "id": "eosat-1-attitude-and-orbit-control-system-aocs/1-overview",
-   "en_hash": "c65e89b6139d2021",
-   "fr_hash": "2068a3adf478d240"
+   "en_hash": "5d5806cfed28c28b",
+   "fr_hash": "8d36ab0c4a14b5b0"
   },
   {
    "id": "eosat-1-attitude-and-orbit-control-system-aocs/2-hardware-configuration",
-   "en_hash": "ffe51048b47401c8",
-   "fr_hash": "b9a95e8bf0423c50"
+   "en_hash": "ba338ecc21cd2762",
+   "fr_hash": "d57886937a5a2d6c"
   },
   {
-   "id": "eosat-1-attitude-and-orbit-control-system-aocs/2-hardware-configuration/2-1-sensors",
-   "en_hash": "23c50c65a6306e65",
-   "fr_hash": "83c23dedb62257f7"
+   "id": "eosat-1-attitude-and-orbit-control-system-aocs/2-hardware-configuration/21-sensors",
+   "en_hash": "56882ad85906544b",
+   "fr_hash": "eecc7839aeb4c9c3"
   },
   {
-   "id": "eosat-1-attitude-and-orbit-control-system-aocs/2-hardware-configuration/2-1-sensors/2-1-1-magnetometer-single-string",
-   "en_hash": "8c4320f4f76593da",
-   "fr_hash": "d9186f8f7e21df1a"
+   "id": "eosat-1-attitude-and-orbit-control-system-aocs/2-hardware-configuration/21-sensors/211-magnetometer-single-string",
+   "en_hash": "5617b7e29247ced9",
+   "fr_hash": "6addd1febad0c947"
   },
   {
-   "id": "eosat-1-attitude-and-orbit-control-system-aocs/2-hardware-configuration/2-1-sensors/2-1-2-coarse-sun-sensors-6-head-configuration",
-   "en_hash": "0983cd51134e66ac",
-   "fr_hash": "ee28f55ae30cc7ff"
+   "id": "eosat-1-attitude-and-orbit-control-system-aocs/2-hardware-configuration/21-sensors/212-coarse-sun-sensors--6-head-configuration",
+   "en_hash": "fcf43b0688fb3078",
+   "fr_hash": "9f3b3de076e47147"
   },
   {
-   "id": "eosat-1-attitude-and-orbit-control-system-aocs/2-hardware-configuration/2-1-sensors/2-1-3-star-cameras-zenith-and-nadir-fov-geometry",
-   "en_hash": "bd359f7a412ed63e",
-   "fr_hash": "6277bb182e864179"
+   "id": "eosat-1-attitude-and-orbit-control-system-aocs/2-hardware-configuration/21-sensors/213-star-cameras--boresights-and-fov-geometry",
+   "en_hash": "628b9be0f2e818ca",
+   "fr_hash": "1f567bfd6e5cb213"
   },
   {
-   "id": "eosat-1-attitude-and-orbit-control-system-aocs/2-hardware-configuration/2-2-actuators",
-   "en_hash": "be72f43448070021",
-   "fr_hash": "95696e284565ca8e"
+   "id": "eosat-1-attitude-and-orbit-control-system-aocs/2-hardware-configuration/22-actuators",
+   "en_hash": "d94c1ff8d86723b0",
+   "fr_hash": "42f72d137d9e085d"
   },
   {
    "id": "eosat-1-attitude-and-orbit-control-system-aocs/3-aocs-modes",
-   "en_hash": "4ed876aa0b905d2e",
-   "fr_hash": "d10056277e095cd7"
+   "en_hash": "568bcb684768a93b",
+   "fr_hash": "a8992fbcea3cc2ba"
   },
   {
-   "id": "eosat-1-attitude-and-orbit-control-system-aocs/3-aocs-modes/3-1-mode-transitions",
-   "en_hash": "1ec523030c9c3e95",
-   "fr_hash": "8d990ab05cb7a6bc"
+   "id": "eosat-1-attitude-and-orbit-control-system-aocs/3-aocs-modes/31-mode-transitions",
+   "en_hash": "4f41096dfa5989ee",
+   "fr_hash": "9e84d167a13becbb"
   },
   {
    "id": "eosat-1-attitude-and-orbit-control-system-aocs/4-telemetry-parameters",
-   "en_hash": "9a9011858564bf1c",
-   "fr_hash": "df2c09c3b3286f10"
+   "en_hash": "00f23d4aa38a4197",
+   "fr_hash": "f61f7fbeb61f1fb7"
   },
   {
    "id": "eosat-1-attitude-and-orbit-control-system-aocs/5-limit-definitions",
-   "en_hash": "83497166b62f6281",
-   "fr_hash": "bd12081dbe518a0c"
+   "en_hash": "38822e40a4def8cb",
+   "fr_hash": "d344815ed7661f99"
   },
   {
    "id": "eosat-1-attitude-and-orbit-control-system-aocs/6-commands",
-   "en_hash": "7399508fc5eab45a",
-   "fr_hash": "6cf857c045aaed50"
+   "en_hash": "f55db822ea5580ed",
+   "fr_hash": "1feb711ad6a22ad0"
   },
   {
-   "id": "eosat-1-attitude-and-orbit-control-system-aocs/6-commands/6-1-desaturation-procedure",
-   "en_hash": "6272bb2213e52beb",
-   "fr_hash": "bb5d828aef2c0003"
+   "id": "eosat-1-attitude-and-orbit-control-system-aocs/6-commands/61-desaturation-procedure",
+   "en_hash": "f8d2d4326c02b931",
+   "fr_hash": "e9185ec282170c1e"
   },
   {
    "id": "eosat-1-attitude-and-orbit-control-system-aocs/7-operational-notes",
-   "en_hash": "70d59073753a049d",
-   "fr_hash": "a9edc211da90f68a"
+   "en_hash": "f30bff380b0be6b8",
+   "fr_hash": "084b5b8aeb0d09b7"
   },
   {
    "id": "eosat-1-attitude-and-orbit-control-system-aocs/8-adcs-commissioning-sequence",
-   "en_hash": "e58c1b7d1104f5cc",
-   "fr_hash": "21bc5b65cb6b15f9"
+   "en_hash": "d44604645772147b",
+   "fr_hash": "4518a9fc9f471c99"
   }
  ],
- "en_commit": "3e80564"
+ "en_commit": "c4a140a"
 }

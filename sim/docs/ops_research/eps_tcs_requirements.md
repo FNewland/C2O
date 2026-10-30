@@ -37,7 +37,7 @@ and Thermal Control Subsystem (TCS).
 
 **Mission profile context:**
 
-- 6U cubesat, Sun-synchronous dawn-dusk orbit
+- 6U cubesat, Sun-synchronous orbit, LTAN ~10:00 (eclipse every orbit)
 - Cold-redundant power system with a Power Distribution Module (PDM)
 - PDM provides switchable and unswitchable power lines
 - Battery heaters are the sole active thermal control mechanism
@@ -646,8 +646,8 @@ Power generation depends on the solar beta angle via cos(beta), with eclipse bla
 | Panel -X | -X | ~0.105 m^2 | Anti-ram or ram | dot(sun_vector, -X_body) |
 | Panel +Y | +Y | ~0.105 m^2 | Sun-facing (SSO) | dot(sun_vector, +Y_body) |
 | Panel -Y | -Y | ~0.105 m^2 | Anti-sun (SSO) | dot(sun_vector, -Y_body) |
-| Panel +Z | +Z (nadir) | ~0.105 m^2 | Earth-facing | dot(sun_vector, +Z_body) |
-| Panel -Z | -Z (zenith) | ~0.105 m^2 | Zenith-facing | dot(sun_vector, -Z_body) |
+| Panel +Z | +Z (zenith) | ~0.105 m^2 | Zenith-facing | dot(sun_vector, +Z_body) |
+| Panel -Z | -Z (nadir) | none | Earth-facing; imager aperture and radiator, no cells | — |
 
 **REQ-SOL-002:** Each panel shall compute power as:
 ```

@@ -1,4 +1,4 @@
-# EOSAT-1 Telemetry, Tracking and Command (TTC)
+# EOSAT-1 Telemetry, Tracking and Command (TTC) {#eosat-1-telemetry-tracking-and-command-ttc}
 
 **Document ID:** EOSAT1-UM-TTC-006
 **Issue:** 2.0
@@ -7,7 +7,7 @@
 
 ---
 
-## 1. Overview
+## 1. Overview {#1-overview}
 
 The Telemetry, Tracking and Command (TTC) subsystem provides the radio frequency
 communication link between EOSAT-1 and the ground segment. It supports telecommand
@@ -15,9 +15,9 @@ reception, telemetry transmission, and ranging for orbit determination. The subs
 comprises a cold-redundant S-band transponder pair (plus a separate UHF beacon transmitter) with a dedicated PDM command channel
 for the receiver, burn wire deployable antennas, and low-rate/high-rate data modes.
 
-## 2. Architecture
+## 2. Architecture {#2-architecture}
 
-### 2.1 Transponder Configuration
+### 2.1 Transponder Configuration {#21-transponder-configuration}
 
 | Parameter           | Primary          | Redundant        |
 |---------------------|------------------|------------------|
@@ -38,7 +38,7 @@ raising the downlink rate never raises the uplink rate.
 Only one transponder is active at any time. The redundant unit is powered off (cold standby)
 and can be activated by ground command via `TTC_SWITCH_REDUNDANT`.
 
-### 2.2 Dedicated PDM Command Channel
+### 2.2 Dedicated PDM Command Channel {#22-dedicated-pdm-command-channel}
 
 The transponder receiver is powered through a dedicated PDM command channel, independent of
 the main switchable PDM line that feeds the transmitter and power amplifier. This critical
@@ -59,12 +59,12 @@ This timer mechanism is particularly important during the 30-minute separation h
 when the TX must remain off, while the RX is ready to receive ground commands immediately
 after antenna deployment.
 
-### 2.3 Antenna System — Burn Wire Deployment
+### 2.3 Antenna System — Burn Wire Deployment {#23-antenna-system--burn-wire-deployment}
 
 | Antenna              | Type          | Coverage        | Gain     |
 |----------------------|---------------|-----------------|----------|
-| Zenith (-Z) Patch    | Patch array   | Hemispherical   | 3 dBi    |
-| Nadir (+Z) Patch     | Patch array   | Hemispherical   | 3 dBi    |
+| Zenith (+Z) Patch    | Patch array   | Hemispherical   | 3 dBi    |
+| Nadir (-Z) Patch     | Patch array   | Hemispherical   | 3 dBi    |
 
 The antennas are stowed during launch and deployed after the 30-minute separation timer
 expires using a burn wire mechanism:
@@ -80,7 +80,7 @@ expires using a burn wire mechanism:
 The burn wire deployment is a one-time, irreversible operation. If the primary burn wire
 fails, a redundant burn wire circuit is available.
 
-### 2.4 The TM Data-Rate Ladder
+### 2.4 The TM Data-Rate Ladder {#24-the-tm-data-rate-ladder}
 
 EOSAT-1 does not have "a downlink rate". It has a three-rung **ladder**, defined once in
 `configs/eosat1/subsystems/ttc.yaml` under `tm_rate_tiers` and read from there by the
@@ -152,9 +152,9 @@ against RS(255,223)'s 6.0 dB — so stepping down from HIGH to LOW recovers 9.03
 10.5 dB in total. See `docs/LINK_BUDGET_AND_RATES.md` for the derivation and the
 per-station table, or run `python tools/link_budget_ladder.py`.
 
-### 2.5 Beacon Packet Mode
+### 2.5 Beacon Packet Mode {#25-beacon-packet-mode}
 
-During LEOP and BOOTLOADER operations, the TTC transmits beacon packets on the SAFE
+During LEOP and bootloader operations, the TTC transmits beacon packets on the SAFE
 rung of the ladder:
 
 | Parameter          | Value                                      |
@@ -169,9 +169,9 @@ The beacon packet allows ground stations to acquire and identify the spacecraft 
 during first contact. The beacon contains sufficient information to assess basic spacecraft
 health and initiate recovery commanding.
 
-## 3. Link Budget Summary
+## 3. Link Budget Summary {#3-link-budget-summary}
 
-### 3.1 Uplink (Ground to Spacecraft)
+### 3.1 Uplink (Ground to Spacecraft) {#31-uplink-ground-to-spacecraft}
 
 | Parameter            | Value              |
 |----------------------|--------------------|
@@ -182,7 +182,7 @@ health and initiate recovery commanding.
 | Required Eb/N0       | 9.6 dB             |
 | Link Margin (min)    | > 6 dB at 5 deg    |
 
-### 3.2 Downlink (Spacecraft to Ground)
+### 3.2 Downlink (Spacecraft to Ground) {#32-downlink-spacecraft-to-ground}
 
 Computed by the ground link-budget tool from the RF constants in
 `subsystems/ttc.yaml`, so the published budget cannot drift from the values the
@@ -214,7 +214,7 @@ Link margin decreases with lower elevation angles: path loss rises, atmospheric 
 scaled by cosec(elevation) below 30 deg, and the ground station's G/T is de-rated for
 ground and sky noise pickup (-1.5 dB below 10 deg, -0.5 dB below 30 deg).
 
-## 4. Telemetry Parameters
+## 4. Telemetry Parameters {#4-telemetry-parameters}
 
 | Param ID | Name              | Unit   | Description                          |
 |----------|-------------------|--------|--------------------------------------|
@@ -227,59 +227,66 @@ ground and sky noise pickup (-1.5 dB below 10 deg, -0.5 dB below 30 deg).
 | 0x0509   | range_km          | km     | Slant range to active ground station |
 | 0x050A   | contact_elevation | deg    | Elevation of active ground station   |
 
-## 5. Ground Station Contacts
+## 5. Ground Station Contacts {#5-ground-station-contacts}
 
 | Station    | Latitude   | Longitude  | Min Elev. | Typical Pass Duration |
 |------------|------------|------------|-----------|----------------------|
-| Iqaluit    | 63.747 N   | 68.518 W   | 5 deg     | 5–12 min             |
+| Iqaluit    | 63.747 N   | 68.518 W   | 5 deg     | 5–10 min             |
 | Troll      | 72.012 S   | 2.535 E    | 5 deg     | 5–10 min             |
+| Svalbard   | 78.230 N   | 15.398 E   | 5 deg     | 5–10 min             |
+| Inuvik     | 68.320 N   | 133.550 W  | 5 deg     | 5–10 min             |
+| O'Higgins  | 63.321 S   | 57.901 W   | 5 deg     | 5–10 min             |
 
-EOSAT-1 uses a two-station ground network providing bipolar coverage:
+EOSAT-1 uses a five-station S-band network, three stations in the Arctic and two in the
+Antarctic. The list and its geometry are canonical in `orbit.yaml`; the RF data (antenna,
+G/T) are in `planning/ground_stations.yaml`.
 
-### 5.1 Iqaluit Ground Station (Nunavut, Canada)
+### 5.1 Station Network {#51-station-network}
 
-| Parameter          | Value                                      |
-|--------------------|--------------------------------------------|
-| Location           | 63.747 deg N, 68.518 deg W                 |
-| Antenna Diameter   | 9.0 m S-band                                |
-| Min. Elevation     | 5 deg                                      |
-| Contacts/Day       | 2–4 (typical)                              |
-| Pass Duration      | 5–12 min                                   |
-| Primary Role       | TT&C + science data downlink               |
+| Station   | Site                                         | Antenna | G/T     | Contacts/Day | Mean Pass | Planner Priority |
+|-----------|----------------------------------------------|---------|---------|--------------|-----------|------------------|
+| Svalbard  | KSAT SvalSat, Longyearbyen (Norway)          | 11.3 m  | 21.5 dB/K | ~13        | 7.8 min   | 100              |
+| Troll     | TrollSat, Queen Maud Land (Antarctica)       | 7.3 m   | 18.5 dB/K | ~11        | 7.8 min   | 90               |
+| Inuvik    | Inuvik Satellite Station Facility (NWT, Canada) | 13.0 m | 22.0 dB/K | ~10.5    | 7.4 min   | 80               |
+| O'Higgins | DLR GARS O'Higgins, Antarctic Peninsula      | 9.0 m   | 20.0 dB/K | ~8         | 7.5 min   | 60               |
+| Iqaluit   | Iqaluit Satellite Station Facility (Nunavut, Canada) | 9.0 m | 20.0 dB/K | ~9      | 6.7 min   | 50               |
 
-Iqaluit provides northern hemisphere coverage. Its sub-Arctic latitude ensures multiple
-daily contacts with the ~513 km, 98 deg inclination orbit.
+Contacts per day and mean pass duration are a 48 h measurement from the TLE epoch
+(`tools/pass_gap_analysis.py`); a contact lasts at most about 10 minutes at the 5 deg mask.
 
-### 5.2 Troll Ground Station (Queen Maud Land, Antarctica)
+### 5.2 Station Roles {#52-station-roles}
 
-| Parameter          | Value                                      |
-|--------------------|--------------------------------------------|
-| Location           | 72.012 deg S, 2.535 deg E                  |
-| Antenna Diameter   | 7.3 m S-band                                |
-| Min. Elevation     | 5 deg                                      |
-| Contacts/Day       | 2–4 (typical)                              |
-| Pass Duration      | 5–10 min                                   |
-| Primary Role       | TT&C + science data downlink               |
+Every station carries the same role: S-band TT&C (2025 MHz uplink / 2200 MHz downlink) and
+data dump. A station is not specialised; the planner ranks them by the priority column above
+when two contacts compete:
 
-Troll provides southern hemisphere coverage, reducing the maximum gap between contacts
-compared to a single northern station.
+- **Svalbard** (78.230 deg N) sees the most passes and the highest elevations (median maximum
+  elevation ~39 deg), so it is the primary polar downlink.
+- **Troll** (72.012 deg S) is its southern-hemisphere counterpart.
+- **Inuvik** (68.320 deg N) and **Iqaluit** (63.747 deg N) cover northern passes at the western
+  and eastern longitudes of the Canadian Arctic.
+- **O'Higgins** (63.321 deg S) fills southern passes west of Troll.
 
-### 5.3 Per-Station Link Budget
+With all five stations the longest gap between contacts is about 80 minutes, against about
+2.5 hours with Iqaluit and Troll alone.
 
-Link margin varies between stations due to different slant range geometries:
+### 5.3 Per-Station Link Budget {#53-per-station-link-budget}
 
-| Parameter             | Iqaluit            | Troll              |
-|-----------------------|--------------------|---------------------|
-| Typical max elevation | 20–70 deg          | 20–60 deg           |
-| Best-case margin      | > 10 dB            | > 10 dB             |
-| Worst-case margin     | 34.5 dB (5 deg elev, HIGH tier) | 33.0 dB (5 deg elev, HIGH tier) |
-| Free space loss (513 km, 10 deg elev) | -164.0 dB | -164.0 dB      |
+Link margin varies between stations through G/T; the slant-range geometry is the same for all
+(`tools/link_budget_ladder.py`):
 
-EOSAT-1 typically has 4–8 ground contacts per day across both stations, providing
-cumulative contact time of 30–60 minutes for telecommand uplink and telemetry/data
-downlink.
+| Parameter             | Iqaluit | Troll   | Svalbard | Inuvik  | O'Higgins |
+|-----------------------|---------|---------|----------|---------|-----------|
+| Margin @ 5 deg, HIGH tier  | 34.5 dB | 33.0 dB | 36.0 dB | 36.5 dB | 34.5 dB |
+| Margin @ 10 deg, HIGH tier | 38.6 dB | 37.1 dB | 40.1 dB | 40.6 dB | 38.6 dB |
+| Free space loss (513 km, 10 deg elev) | -164.0 dB | -164.0 dB | -164.0 dB | -164.0 dB | -164.0 dB |
 
-## 6. Commands
+Troll is the worst station. EOSAT-1 typically has about 51 ground contacts per day across the
+five stations, about 385 minutes of contact time for telecommand uplink and telemetry/data
+downlink, and a median gap of about 33 minutes between contacts (`tools/pass_gap_analysis.py`,
+48 h from the TLE epoch).
+
+## 6. Commands {#6-commands}
 
 | Command               | Service  | Parameters | Description                          |
 |-----------------------|----------|------------|--------------------------------------|
@@ -289,7 +296,7 @@ downlink.
 | GET_PARAM             | S20,S3   | param_id   | Read individual TTC parameter        |
 | SET_PARAM             | S20,S1   | param_id, value | Modify TTC configuration parameter |
 
-### 6.1 Transponder Switchover Procedure
+### 6.1 Transponder Switchover Procedure {#61-transponder-switchover-procedure}
 
 1. Verify current transponder health via `HK_REQUEST` (sid=5).
 2. Send `TTC_SWITCH_REDUNDANT` (or `TTC_SWITCH_PRIMARY`) command.
@@ -300,7 +307,7 @@ downlink.
 **Note:** A transponder switchover will cause a temporary link outage of 20–40 seconds.
 Schedule switchover commands with sufficient contact time remaining.
 
-## 7. Operational Notes
+## 7. Operational Notes {#7-operational-notes}
 
 1. The TTC subsystem does not go receive-only during spacecraft safe mode.
    Telemetry transmission continues on the LOW tier (16 kbps) — the configured
@@ -329,15 +336,15 @@ Schedule switchover commands with sufficient contact time remaining.
    re-configure it for 16 kBd immediately after application boot, when the ladder's
    `default_tier` (LOW) becomes active — the beacon demodulator will not lock 16 kbps.
 
-## 8. Failure Modes
+## 8. Failure Modes {#8-failure-modes}
 
 | Failure                     | Detection                   | Response                        |
 |-----------------------------|-----------------------------|---------------------------------|
-| Primary transponder failure | link_status = 0 for > 120s | Switch to redundant (auto FDIR) |
-| RSSI degradation            | rssi < -105 dBm            | Switch to low-rate, investigate |
+| Primary transponder failure | No valid telecommand for > 24 h (`cmd_loss_switch_timeout_s`) | Switch to redundant (FDIR TTC-01, see `08_fdir.md` §4.5) |
+| RSSI degradation            | rssi < -105 dBm (`cmd_loss_rssi_threshold_dbm`) | Switch to low-rate, investigate |
 | Antenna deployment failure  | No RSSI after burn wire     | Try redundant burn wire circuit |
 | TX auto-off (15 min timer)  | No downlink, RX still active| Expected behaviour; send command to re-enable TX |
-| No TM from either station   | Both Iqaluit and Troll report no signal | Investigate attitude; check transponder health |
+| No TM from any station      | Two or more stations in turn report no signal | Investigate attitude; check transponder health |
 
 ---
 

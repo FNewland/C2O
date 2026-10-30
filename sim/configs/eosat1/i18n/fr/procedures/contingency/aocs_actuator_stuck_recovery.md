@@ -223,7 +223,7 @@ suffit (il n'existe pas de paramètre `aocs.wheel_config` à écrire).
   `EPS_POWER_OFF(line_index=7)` (func_id 20) — attention, cela coupe TOUTES les roues de
   cette ligne d'alimentation. Si les roues sont sur des lignes distinctes, isoler uniquement la roue concernée
   par SET_PARAM.
-- Si le magnétomètre n'est pas valide (nécessaire à la désaturation) : EO-Sat-1 n'a qu'un magnétomètre
+- Si le magnétomètre n'est pas valide (nécessaire à la désaturation) : EOSAT-1 n'a qu'un magnétomètre
   et aucune unité redondante — l'éteindre puis le rallumer via le dispositif S2 0x0209. S'il reste invalide,
   la désaturation par magnétocoupleurs est impossible. Le moment cinétique s'accumulera jusqu'à ce que
   la saturation des roues force le passage en mode survie.

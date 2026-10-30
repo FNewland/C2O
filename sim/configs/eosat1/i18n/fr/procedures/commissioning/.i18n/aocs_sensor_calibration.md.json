@@ -9,18 +9,18 @@
   },
   {
    "id": "com-003-aocs-sensor-calibration",
-   "en_hash": "aad9c4672a5fe650",
-   "fr_hash": "0f08e9f8df9bdd6e"
+   "en_hash": "580e27127407e882",
+   "fr_hash": "77ae4875801e009d"
   },
   {
    "id": "com-003-aocs-sensor-calibration/purpose",
-   "en_hash": "07f1e1efa0fe2e75",
-   "fr_hash": "d27994cc9f8bf24f"
+   "en_hash": "21ce6b576aaa50d9",
+   "fr_hash": "fafd82020355e672"
   },
   {
    "id": "com-003-aocs-sensor-calibration/prerequisites",
-   "en_hash": "3e1c47f0d0be9787",
-   "fr_hash": "c62049b3cbce1528"
+   "en_hash": "a1df029a5c981184",
+   "fr_hash": "16eea6db47cfcc9a"
   },
   {
    "id": "com-003-aocs-sensor-calibration/procedure-steps",
@@ -44,8 +44,8 @@
   },
   {
    "id": "com-003-aocs-sensor-calibration/procedure-steps/step-4-wait-for-the-tracker-to-aid-the-estimator-no-mode-command",
-   "en_hash": "276c95cb4aed502d",
-   "fr_hash": "f71cb9ddac3fbebf"
+   "en_hash": "fe977a89efa5c9f2",
+   "fr_hash": "d51e2c5d16f394f7"
   },
   {
    "id": "com-003-aocs-sensor-calibration/procedure-steps/step-5-record-the-pre-calibration-bias",
@@ -54,13 +54,13 @@
   },
   {
    "id": "com-003-aocs-sensor-calibration/procedure-steps/step-6-command-the-gyro-bias-calibration",
-   "en_hash": "79f794093c191a4f",
-   "fr_hash": "281fbff4380edebf"
+   "en_hash": "aa75e091bf43c88a",
+   "fr_hash": "3e0af62fe9811f5b"
   },
   {
    "id": "com-003-aocs-sensor-calibration/procedure-steps/step-7-monitor-the-calibration-arc",
-   "en_hash": "67ebd18c299e1257",
-   "fr_hash": "7e3f0c841d6f6d50"
+   "en_hash": "d594774cf1ebffad",
+   "fr_hash": "f51f2d1777c66303"
   },
   {
    "id": "com-003-aocs-sensor-calibration/procedure-steps/step-8-verify-the-calibration-result",
@@ -79,8 +79,8 @@
   },
   {
    "id": "com-003-aocs-sensor-calibration/off-nominal-handling",
-   "en_hash": "7e885ae74e55f445",
-   "fr_hash": "fd23a106dba6588a"
+   "en_hash": "6bc9a5a9c8a2ea97",
+   "fr_hash": "b62453dc539fee4f"
   },
   {
    "id": "com-003-aocs-sensor-calibration/post-conditions",
@@ -89,9 +89,9 @@
   },
   {
    "id": "com-003-aocs-sensor-calibration/exit-state",
-   "en_hash": "cc7edf2d57e66d5b",
-   "fr_hash": "339bc7d74c77b407"
+   "en_hash": "c366b25f531b1aec",
+   "fr_hash": "4eb65d38b44ba9f3"
   }
  ],
- "en_commit": "983af0f"
+ "en_commit": "c4a140a"
 }

@@ -89,13 +89,25 @@ lesquels sont défaillants ou dégradés.
 - Si ST2 = 0 (OFF) : mise sous tension manuelle nécessaire. L'étape 2b s'applique.
 - Si ST2 = 4 (FAILED) : les deux ST sont en panne. L'étape 5 s'applique directement.
 
-**Étape 2b — Mettre ST2 sous tension et le sélectionner :**
+**Étape 2b — Mettre ST2 sous tension et le sélectionner :**
+**LABEL:** `STEP-2B`
 **TC:** `ST2_POWER(on=1)` (Service 8, Subtype 1, func_id 5) — Commander la mise sous tension de ST2
-**Action:** Attendre 60 s la fin de la séquence de démarrage.
+**Note:** La séquence de démarrage dure environ 60 s ; le branchement ci-dessous l'attend jusqu'à 120 s.
 **TC:** `HK_REQUEST(sid=2)` (Service 3, Subtype 27) — Demander les données de servitude SCAO
-**Verify:** `aocs.st2_status` (0x0243) passe à 2 (TRACKING) en moins de 120 s
-**Note:** Uniquement si la vérification précédente a confirmé TRACKING. Si ST2 n'a pas atteint
-TRACKING, NE PAS envoyer cette TC — appliquer plutôt la section « Conduite à tenir hors nominal ».
+**BRANCH:** `aocs.st2_status == 2` -> GO `STEP-2B-SELECT` | NO-GO `STEP-2B-CYCLE` (timeout 120 s)
+**Note:** GO — ST2 a atteint TRACKING : le sélectionner. NO-GO — ST2 n'a pas atteint
+TRACKING en 120 s : effectuer UN SEUL cycle d'alimentation, puis rejoindre le choix
+de mode de l'étape 5. L'étape 5 relit l'état des deux senseurs stellaires ; un senseur
+rétabli par le cycle d'alimentation y est donc bien pris en compte.
+
+**LABEL:** `STEP-2B-CYCLE`
+**TC:** `ST2_POWER(on=0)` (Service 8, Subtype 1, func_id 5) — ST2 hors tension
+**Note:** Attendre 10 s.
+**TC:** `ST2_POWER(on=1)` (Service 8, Subtype 1, func_id 5) — ST2 de nouveau sous tension (cycle unique)
+**TC:** `HK_REQUEST(sid=2)` (Service 3, Subtype 27) — Demander les données de servitude SCAO
+**GO/NO-GO:** ST2 a subi un cycle d'alimentation — poursuivre au choix de mode de l'étape 5 -> GO `STEP-5` | NO-GO `STEP-5`
+
+**LABEL:** `STEP-2B-SELECT`
 **TC:** `ST_SELECT(unit=2)` (Service 8, Subtype 1, func_id 6) — sélectionner ST2 comme
 senseur principal. LE CODAGE EST 1=ST1, 2=ST2 (0 est refusé) : l'ancien `unit=1` ici
 SÉLECTIONNAIT SILENCIEUSEMENT ST1 — l'unité défaillante — alors que la carte visait ST2 (2026-08c)
@@ -106,8 +118,8 @@ SÉLECTIONNAIT SILENCIEUSEMENT ST1 — l'unité défaillante — alors que la ca
 **Verify:** `aocs.st1_num_stars` (0x0241) = 0 en moins de 5 s (`aocs.st1_status` peut rester à 4 = FAILED après la mise hors tension ; voir CTG-008, étape 4)
 **Verify:** `aocs.att_error` (0x0217) < 1.0° avec ST2 fournissant l'attitude
 **Action:** Consigner au journal : « ST1 FAILED — operating on ST2 only. No star tracker redundancy. »
-**GO/NO-GO:** ST2 opérationnel et fournissant une attitude valide — traiter la panne
-suivante le cas échéant. Si ST2 n'a pas atteint TRACKING, l'étape 5 s'applique.
+**GO/NO-GO:** ST2 opérationnel et fournissant une attitude valide — traiter la panne
+suivante le cas échéant.
 
 ### Étape 3 : Traitement d'une panne de tête CSS
 **Condition :** Une ou plusieurs têtes CSS présentent des mesures anormales
@@ -146,7 +158,7 @@ et que les deux ST sont en panne, l'étape 5 s'applique.
 ### Étape 4 : Traitement d'une panne de magnétomètre
 **Condition :** `aocs.mag_enabled` (0x025C) = 0 ou mesures du magnétomètre invalides
 
-**Remarque (2026-08c, décision du responsable) :** EO-Sat-1 emporte **UN SEUL** magnétomètre
+**Remarque (2026-08c, décision du responsable) :** EOSAT-1 emporte **UN SEUL** magnétomètre
 3 axes (équipement S2 0x0209). Il n'y a ni unité B, ni télémesure de sélection,
 ni `MAG_SELECT` — le gestionnaire bord de l'ancienne func 7 REFUSE désormais
 avec 0x0007. L'ancienne reprise de l'étape 4, « basculer sur le magnétomètre redondant »,
@@ -180,6 +192,7 @@ rapport d'anomalie satellite.
 déclarée — engager l'évaluation cumulée.
 
 ### Étape 5 : Évaluation cumulée des capteurs et choix du mode
+**LABEL:** `STEP-5`
 **TC:** `HK_REQUEST(sid=2)` (Service 3, Subtype 27) — Demander les données de servitude SCAO
 **Action:** Confronter les capteurs restants aux exigences de chaque mode :
 
@@ -198,24 +211,60 @@ déclarée — engager l'évaluation cumulée.
 - le magnétomètre valide (pour la loi de commande B-dot) ;
 - si cette exigence est satisfaite : l'amortissement des vitesses angulaires est possible. Aucune capacité de pointage.
 
-**Note:** Selon les capteurs restants, choisir le meilleur mode disponible :
-**TC:** `AOCS_SET_MODE(mode=4)` (Service 8, Subtype 1, func_id 0) — Si un ST est disponible : maintenir NOMINAL ou y revenir
-**TC:** `AOCS_SET_MODE(mode=3)` (Service 8, Subtype 1, func_id 0) — Si aucun ST mais CSS valide : passer en COARSE_SUN
-**TC:** `AOCS_SET_MODE(mode=2)` (Service 8, Subtype 1, func_id 0) — Si aucun ST et CSS invalide : passer en DETUMBLE
+**Note:** Le meilleur mode disponible est choisi par une chaîne de branchements, du meilleur au moins bon :
+un senseur stellaire est valide → NOMINAL (mode 4) ; sinon CSS valide → COARSE_SUN (mode 3) ;
+sinon magnétomètre activé → DETUMBLE (mode 2) ; sinon maintien et escalade.
 
-**Verify:** `aocs.mode` (0x020F) = mode commandé en moins de 15 s
-**Verify:** `aocs.att_error` (0x0217) — acceptable pour le mode choisi :
-- NOMINAL : < 1.0°
-- COARSE_SUN : < 5.0°
-- DETUMBLE : vitesses angulaires < 1.0 °/s
+**Étape 5a — Un senseur stellaire est-il valide ?**
+**BRANCH:** `aocs.st1_status == 2` -> GO `STEP-5-NOMINAL` | NO-GO `STEP-5-ST2` (timeout 10 s)
+**LABEL:** `STEP-5-ST2`
+**BRANCH:** `aocs.st2_status == 2` -> GO `STEP-5-NOMINAL` | NO-GO `STEP-5-CSS` (timeout 10 s)
 
-**Note:** En cas de dégradation vers COARSE_SUN ou DETUMBLE, désactiver la charge utile :
-**TC:** `PAYLOAD_SET_MODE(mode=0)` (Service 8, Subtype 1, func_id 26)
+**Étape 5b — Aucun senseur stellaire : le CSS est-il valide ?**
+**LABEL:** `STEP-5-CSS`
+**BRANCH:** `aocs.css_valid == 1` -> GO `STEP-5-COARSE` | NO-GO `STEP-5-MAG` (timeout 10 s)
 
-**GO/NO-GO:** Meilleur mode disponible établi et stable. En cas de dégradation en deçà de
-NOMINAL, informer le directeur de vol et la planification de mission de la capacité réduite.
+**Étape 5c — Ni senseur stellaire ni CSS : le magnétomètre est-il activé ?**
+**LABEL:** `STEP-5-MAG`
+**BRANCH:** `aocs.mag_enabled == 1` -> GO `STEP-5-DETUMBLE` | NO-GO `STEP-5-HOLD` (timeout 10 s)
+
+**Étape 5d — Rien d'utilisable : maintien et escalade.**
+**LABEL:** `STEP-5-HOLD`
+**Note:** Ni senseur stellaire, ni CSS valide, ni magnétomètre : aucun mode n'est
+compatible avec les capteurs restants. NE PAS commander de mode SCAO — maintenir la
+configuration courante, laisser la charge utile éteinte et faire remonter sans délai au
+directeur de vol et à l'ingénieur SCAO (chemin d'escalade de CTG-002). Attendre l'arc
+éclairé si la perte du CSS peut être un effet de l'éclipse.
+**TC:** `PAYLOAD_SET_MODE(mode=0)` (Service 8, Subtype 1, func_id 26) — charge utile à l'arrêt
+**GO/NO-GO:** Maintien, escalade faite — poursuivre avec la surveillance de l'étape 6 -> GO `STEP-6` | NO-GO `STEP-6`
+
+**Étape 5e — NOMINAL (un senseur stellaire est valide) :**
+**LABEL:** `STEP-5-NOMINAL`
+**TC:** `AOCS_SET_MODE(mode=4)` (Service 8, Subtype 1, func_id 0) — maintenir NOMINAL ou y revenir
+**Verify:** `aocs.mode == 4` (0x020F, timeout 15 s)
+**Verify:** `aocs.att_error` (0x0217) < 1.0°
+**GO/NO-GO:** NOMINAL établi -> GO `STEP-6` | NO-GO `STEP-6`
+
+**Étape 5f — COARSE_SUN (aucun senseur stellaire, CSS valide) :**
+**LABEL:** `STEP-5-COARSE`
+**TC:** `AOCS_SET_MODE(mode=3)` (Service 8, Subtype 1, func_id 0) — passer en COARSE_SUN
+**Verify:** `aocs.mode == 3` (0x020F, timeout 15 s)
+**Verify:** `aocs.att_error` (0x0217) < 5.0°
+**TC:** `PAYLOAD_SET_MODE(mode=0)` (Service 8, Subtype 1, func_id 26) — dégradation en deçà de NOMINAL : charge utile à l'arrêt
+**GO/NO-GO:** COARSE_SUN établi -> GO `STEP-6` | NO-GO `STEP-6`
+
+**Étape 5g — DETUMBLE (ni senseur stellaire ni CSS, magnétomètre activé) :**
+**LABEL:** `STEP-5-DETUMBLE`
+**TC:** `AOCS_SET_MODE(mode=2)` (Service 8, Subtype 1, func_id 0) — passer en DETUMBLE
+**Verify:** `aocs.mode == 2` (0x020F, timeout 15 s)
+**Verify:** vitesses angulaires < 1.0 °/s
+**TC:** `PAYLOAD_SET_MODE(mode=0)` (Service 8, Subtype 1, func_id 26) — dégradation en deçà de NOMINAL : charge utile à l'arrêt
+
+**Note:** En cas de dégradation en deçà de NOMINAL, informer le directeur de vol et la
+planification de mission de la capacité réduite.
 
 ### Étape 6 : Surveillance après reprise
+**LABEL:** `STEP-6`
 **TC:** `HK_REQUEST(sid=2)` (Service 3, Subtype 27) — Surveiller la télémesure SCAO toutes les 60 s pendant 10 minutes
 **Verify:** `aocs.att_error` (0x0217) — stable ou en amélioration
 **Verify:** `aocs.rate_roll` (0x0204) < 0.1 °/s (pour les modes de pointage)
@@ -244,8 +293,8 @@ NOMINAL, informer le directeur de vol et la planification de mission de la capac
 - Si les deux senseurs stellaires sont en panne : le CSS est la seule référence d'attitude en phase éclairée.
   Commander `AOCS_SET_MODE(mode=3)` (COARSE_SUN). La prise de vue est impossible.
   Cette configuration dégrade la mission — faire remonter à l'équipe d'ingénierie.
-- Si ST2 n'atteint pas TRACKING en moins de 120 s : effectuer un cycle d'alimentation de ST2 — `ST2_POWER(on=0)`,
-  attendre 10 s, `ST2_POWER(on=1)`. En cas de nouvel échec, traiter comme une double panne de ST.
+- Si ST2 n'atteint pas TRACKING en moins de 120 s : l'étape 2b effectue un cycle d'alimentation unique
+  puis renvoie au choix de mode de l'étape 5. En cas de nouvel échec, traiter comme une double panne de ST.
 - Si le magnétomètre est en panne : le mode DETUMBLE est impossible (le B-dot exige les données magnétométriques).
   Les roues de réaction peuvent encore assurer le contrôle d'attitude si elles sont opérationnelles. Le moment cinétique ne peut pas
   être déchargé par les magnétocoupleurs. La situation est critique — prévoir une accumulation maîtrisée du moment cinétique.

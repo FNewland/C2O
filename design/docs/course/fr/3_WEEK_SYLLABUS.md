@@ -15,17 +15,17 @@
 | **Mar.** | **Cadre réglementaire** | Licences de spectre d'ISDE (CPC-2-6-02). LSTS (Loi sur les systèmes de télédétection spatiale) pour les missions d'observation de la Terre. Programme des marchandises contrôlées et contrôle des exportations. Procédure de notification à l'UIT par l'intermédiaire d'ISDE. Travaux pratiques : remplir une demande de licence de spectre auprès d'ISDE pour une mission type. |
 | **Mer.** | **Normes internationales et conformité** | Cadre des normes ECSS et adaptation aux petites missions. Vue d'ensemble des 17 processus du NASA SEH. *CubeSat Design Specification* (Cal Poly CDS Rev 14). Atténuation des débris spatiaux (25 ans selon l'IADC, 5 ans selon la FCC). Convention sur l'immatriculation de l'ONU (CUPEEA). Travaux pratiques : remplir une matrice d'adaptation. |
 | **Jeu.** | **Besoins et opportunités de mission** | Identification des besoins de mission dans le contexte canadien (surveillance de l'Arctique, surveillance maritime, agriculture, gestion des ressources, connectivité). Analyse des parties prenantes pour les missions canadiennes. Dialogue avec les communautés autochtones et prise en compte de la DNUDPA (UNDRIP). Atelier de rédaction de l'énoncé du problème. |
-| **Ven.** | **Compromis spatial / non spatial et concept** | Méthodologie des études de compromis (critères, pondérations, notation). Évaluation des services existants (Radarsat, Sentinel, Planet) face à de nouvelles missions. Économie des constellations et analyses de rentabilité. Constitution des équipes, choix d'un besoin de mission et première analyse de compromis dans SpaceCDF. |
+| **Ven.** | **Compromis spatial / non spatial et concept** | Méthodologie des études de compromis (critères, pondérations, notation). Évaluation des services existants (Radarsat, Sentinel, Planet) face à de nouvelles missions. Économie des constellations et analyses de rentabilité. Constitution des équipes, choix d'un besoin de mission et première analyse de compromis dans SpaceCDF. Revue informelle du concept de mission (MCR) : chaque équipe présente son besoin, ses objectifs et son concept pour recueillir des retours. |
 
 ### SEMAINE 2 : CENTRE DE CONCEPTION CONCOURANTE -- CONCEVOIR UNE MISSION
 
 | Jour | Thème | Activités |
 |-----|-------|-----------|
-| **Lun.** | **Cycle en V et exigences** | Étude approfondie du cycle en V. Exigences SMART dérivées des objectifs. Décomposition fonctionnelle. Les équipes saisissent le besoin de mission, utilisent les assistants d'orbite et de classe, et génèrent les exigences dans SpaceCDF. |
-| **Mar.** | **Conception des sous-systèmes : puissance, SCAO, thermique** | Compromis sur le choix de l'orbite. Dimensionnement du générateur solaire et de la batterie. Fonctionnement par intermittence. Choix du contrôle d'attitude. Analyse de l'environnement thermique. Les équipes exécutent la boucle de conception et examinent les bilans paramétriques. |
-| **Mer.** | **Conception des sous-systèmes : communications, structure, propulsion** | Calcul du bilan de liaison. Choix de la bande de fréquences et licences. Structure du CubeSat et choix du déployeur. Compromis sur la propulsion (si nécessaire). Choix des équipements dans le navigateur. |
+| **Lun.** | **Cycle en V, exigences, orbite et architecture** | Étude approfondie du cycle en V. Exigences SMART dérivées des objectifs. Décomposition fonctionnelle. Compromis sur le choix de l'orbite. Architecture de mission : segments, interfaces, bilans. Les équipes saisissent le besoin de mission, utilisent les assistants d'orbite et de classe, et génèrent les exigences dans SpaceCDF. |
+| **Mar.** | **Conception des sous-systèmes : puissance et thermique, SCAO et propulsion** | Dimensionnement du générateur solaire et de la batterie. Fonctionnement par intermittence. Analyse de l'environnement thermique. Choix du contrôle d'attitude. Compromis sur la propulsion (si nécessaire). Les équipes exécutent la boucle de conception et examinent les bilans paramétriques. |
+| **Mer.** | **Conception des sous-systèmes : communications, structure et gestion bord des données** | Calcul du bilan de liaison. Choix de la bande de fréquences et licences. Structure du CubeSat et choix du déployeur. Ordinateur de bord et gestion des données. Choix des équipements dans le navigateur. |
 | **Jeu.** | **Intégration, vérification, coûts** | Examen de la matrice d'interfaces. Affectation de la matrice V&V. Planification des essais d'environnement. Estimation des coûts (paramétrique + COTS). Génération de la nomenclature (BOM). Études de compromis sur les décisions clés. |
-| **Ven.** | **Revue de conception et optimisation** | Lancer l'optimiseur. Analyse de sensibilité. Revue de jalon (critères de la MCR). Résolution des conflits. Génération des documents ECSS (MRD, TS, VP). Dossiers réglementaires (UIT, LSTS le cas échéant). Chaque équipe présente sa conception préliminaire. |
+| **Ven.** | **Revue de conception et optimisation** | Lancer l'optimiseur. Analyse de sensibilité. Revue de jalon : revue de type PDR, selon les critères de la PDR. Résolution des conflits. Génération des documents ECSS (MRD, TS, VP). Dossiers réglementaires (UIT, LSTS le cas échéant). Chaque équipe présente sa conception préliminaire. |
 
 ### SEMAINE 3 : OPÉRATIONS ET SIMULATION DE MISSION
 
@@ -44,7 +44,7 @@
 | Composante | Pondération | Description |
 |-----------|--------|-------------|
 | Fiches d'exercices (quotidiennes) | 20 % | Remplies pendant les séances, retours formatifs |
-| Revue de conception (vendredi de la semaine 2) | 30 % | Présentation en équipe de la conception préliminaire |
+| Revue de conception de type PDR (vendredi de la semaine 2) | 30 % | Présentation en équipe de la conception préliminaire |
 | Performance en simulation (semaine 3) | 20 % | Opérations à la console, traitement des anomalies |
 | Présentation finale (vendredi de la semaine 3) | 30 % | Conception complète de la mission, concept d'opérations, retour d'expérience |
 

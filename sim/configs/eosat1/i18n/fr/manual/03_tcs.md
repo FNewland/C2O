@@ -1,4 +1,4 @@
-# Sous-système de contrôle thermique (TCS) d'EOSAT-1
+# Sous-système de contrôle thermique (TCS) d'EOSAT-1 {#eosat-1-thermal-control-subsystem-tcs}
 
 **Référence du document :** EOSAT1-UM-TCS-004
 **Édition :** 2.0
@@ -7,7 +7,7 @@
 
 ---
 
-## 1. Vue d'ensemble
+## 1. Vue d'ensemble {#1-overview}
 
 Le sous-système de contrôle thermique (TCS) maintient tous les composants du satellite dans leurs
 plages de température admissibles pendant toute la mission. EOSAT-1 recourt principalement à un contrôle thermique
@@ -16,9 +16,9 @@ actif de contrôle thermique. L'OBC et les autres composants s'appuient sur une 
 assurée par l'orientation du satellite et la dissipation thermique interne. Le refroidisseur du plan focal (FPA)
 est géré dans le cadre du sous-système charge utile.
 
-## 2. Contrôle thermique passif
+## 2. Contrôle thermique passif {#2-passive-thermal-control}
 
-### 2.1 Isolant multicouche (MLI)
+### 2.1 Isolant multicouche (MLI) {#21-multi-layer-insulation-mli}
 
 Des couvertures MLI recouvrent la majeure partie des surfaces externes du satellite et assurent l'isolation
 thermique vis-à-vis de l'environnement spatial. Les principales zones couvertes sont :
@@ -28,25 +28,25 @@ thermique vis-à-vis de l'environnement spatial. Les principales zones couvertes
 - le boîtier du module OBC ;
 - la baie électronique de la charge utile.
 
-### 2.2 Radiateurs
+### 2.2 Radiateurs {#22-radiators}
 
 Des panneaux radiateurs dédiés sont montés sur les faces -Y et +Y pour évacuer la chaleur dissipée.
 Le dimensionnement des radiateurs est optimisé pour une puissance dissipée nominale d'environ 29 W (moyenne sur l'orbite, voir 01_eps.md).
 
 | Radiateur       | Emplacement | Surface | Capacité de rejet |
 |-----------------|----------|----------|-----------------|
-| Principal (-Y)  | Face -Y  | 0,25 m²  | ~50 W           |
-| Secondaire (+Y) | Face +Y  | 0,15 m²  | ~30 W           |
+| Principal (-Y)  | Face -Y  | 0,25 m²  | ~50 W           |
+| Secondaire (+Y) | Face +Y  | 0,15 m²  | ~30 W           |
 
-### 2.3 Revêtements de surface
+### 2.3 Revêtements de surface {#23-surface-coatings}
 
 Les surfaces externes associent une peinture blanche (à forte émissivité) sur les radiateurs et du
 Kapton noir sur les surfaces de structure internes, afin de favoriser le transfert de chaleur par rayonnement à l'intérieur
 de la cavité du satellite.
 
-## 3. Contrôle thermique actif
+## 3. Contrôle thermique actif {#3-active-thermal-control}
 
-### 3.1 Circuit de réchauffeur de batterie
+### 3.1 Circuit de réchauffeur de batterie {#31-battery-heater-circuit}
 
 Le réchauffeur de batterie est le seul élément de contrôle thermique actif d'EOSAT-1. Tous les autres
 composants (OBC, structure, transpondeur) s'appuient sur une gestion thermique passive, assurée par
@@ -67,7 +67,7 @@ OFF +10 °C) est une sécurité pour le cas froid : la dissipation interne, la
 normalement l'OBC dans sa plage qualifiée. Le réchauffeur du lit catalytique du propulseur (`HEATER_THRUSTER`, S8 fonction 42 ;
 état 0x041B ; 12 W sur la ligne `prop`) préchauffe le propulseur avant une manœuvre.
 
-### 3.2 Orientation au service du contrôle thermique passif
+### 3.2 Orientation au service du contrôle thermique passif {#32-orientation-for-passive-thermal-control}
 
 EOSAT-1 utilise l'orientation du satellite comme stratégie de contrôle thermique passif. L'attitude
 AOCS peut être ajustée de façon à présenter différentes faces au Soleil, ce qui permet aux opérateurs
@@ -83,7 +83,7 @@ Ce contrôle thermique par l'orientation est particulièrement important pendant
 de contingence où la puissance des réchauffeurs actifs doit être économisée. En mode survie, le mode AOCS COARSE_SUN
 oriente le satellite vers le Soleil, ce qui assure un réchauffement passif.
 
-### 3.3 Modes de défaillance des réchauffeurs
+### 3.3 Modes de défaillance des réchauffeurs {#33-heater-failure-modes}
 
 | Mode de défaillance | Détection                       | Impact                          |
 |-----------------|-------------------------------------|---------------------------------|
@@ -94,7 +94,7 @@ Si un réchauffeur bloqué en marche est détecté, le sol devrait commander `HE
 on=false) et surveiller. Si le réchauffeur reste allumé, la sortie PDM qui alimente le circuit du réchauffeur
 peut être mise hors tension par commande, à titre de mesure d'isolation.
 
-### 3.4 Refroidisseur du FPA
+### 3.4 Refroidisseur du FPA {#34-fpa-cooler}
 
 Le refroidisseur du plan focal est un cryoréfrigérateur miniature à cycle de Stirling qui maintient le
 détecteur de l'imageur à sa température de fonctionnement d'environ -15 °C. Le refroidisseur
@@ -111,7 +111,7 @@ consomme jusqu'à 15 W et nécessite une mise en froid de 30 minutes à partir
 Le refroidisseur est activé automatiquement lorsque la charge utile passe en mode STANDBY, IMAGING ou
 CALIBRATION, et désactivé lorsque la charge utile est mise sur OFF.
 
-## 4. Zones de température
+## 4. Zones de température {#4-temperature-zones}
 
 | Zone           | Plage nominale   | Limites jaunes   | Limites rouges   |
 |----------------|------------------|------------------|------------------|
@@ -121,7 +121,7 @@ CALIBRATION, et désactivé lorsque la charge utile est mise sur OFF.
 | Panneaux solaires | -80 à 80 °C   | —                | —                |
 | Structure      | -20 à 50 °C      | —                | —                |
 
-## 5. Paramètres de télémesure
+## 5. Paramètres de télémesure {#5-telemetry-parameters}
 
 | ID param. | Nom            | Unité  | Description                          |
 |----------|-----------------|--------|--------------------------------------|
@@ -129,8 +129,8 @@ CALIBRATION, et désactivé lorsque la charge utile est mise sur OFF.
 | 0x0401   | temp_panel_mx   | °C     | Température du panneau -X            |
 | 0x0402   | temp_panel_py   | °C     | Température du panneau +Y            |
 | 0x0403   | temp_panel_my   | °C     | Température du panneau -Y            |
-| 0x0404   | temp_panel_pz   | °C     | Température du panneau +Z (nadir)    |
-| 0x0405   | temp_panel_mz   | °C     | Température du panneau -Z (zénith)   |
+| 0x0404   | temp_panel_pz   | °C     | Température du panneau +Z (zénith)   |
+| 0x0405   | temp_panel_mz   | °C     | Température du panneau -Z (nadir)    |
 | 0x0406   | temp_obc        | °C     | Température du module OBC            |
 | 0x0407   | temp_battery    | °C     | Température du bloc batterie         |
 | 0x0408   | temp_fpa        | °C     | Température du plan focal            |
@@ -139,7 +139,7 @@ CALIBRATION, et désactivé lorsque la charge utile est mise sur OFF.
 | 0x040B   | htr_obc         | booléen | État du réchauffeur de l'OBC (marche/arrêt) |
 | 0x040C   | cooler_fpa      | booléen | État du refroidisseur du FPA (marche/arrêt) |
 
-## 6. Définition des limites
+## 6. Définition des limites {#6-limit-definitions}
 
 | Paramètre       | Jaune bas  | Jaune haut  | Rouge bas | Rouge haut |
 |-----------------|------------|-------------|---------|----------|
@@ -163,7 +163,7 @@ tableau -18/+8, -20/+12 était antérieur à la consigne commandable et transfor
 (+50 °C) dépassera la limite rouge haute — délibérément. Vous avez alors sorti le
 détecteur de son enveloppe de fonctionnement, et la console doit le signaler.
 
-## 7. Commandes
+## 7. Commandes {#7-commands}
 
 | Commande          | Service  | Paramètres              | Description                        |
 |-------------------|----------|-------------------------|------------------------------------|
@@ -172,7 +172,7 @@ détecteur de son enveloppe de fonctionnement, et la console doit le signaler.
 | GET_PARAM         | S20,S3   | param_id (0x0400–040C)  | Lire un paramètre TCS individuel   |
 | SET_PARAM         | S20,S1   | param_id, value         | Modifier un paramètre de configuration TCS |
 
-## 8. Couplage entre la température des panneaux et l'éclairement solaire
+## 8. Couplage entre la température des panneaux et l'éclairement solaire {#8-panel-temperature-coupling-to-solar-illumination}
 
 Les cinq panneaux solaires fixés sur la structure (toutes les faces sauf -Z) constituent l'interface thermique principale entre le
 satellite et l'environnement spatial. Les températures des panneaux sont fortement couplées à l'éclairement
@@ -183,7 +183,7 @@ solaire :
 | Éclairé (direct)     | La température du panneau monte vers +80 °C (régime établi) |
 | Éclairé (oblique)    | Échauffement réduit ; température proportionnelle à cos(angle solaire) |
 | Éclipse (à l'ombre)  | Refroidissement rapide vers -80 °C à ~5 °C/min       |
-| Albédo terrestre seul | Léger échauffement de la face nadir (+Z)            |
+| Albédo terrestre seul | Léger échauffement de la face nadir (-Z)            |
 
 Le mécanisme de couplage thermique agit dans les deux sens :
 
@@ -197,7 +197,7 @@ influent directement sur la température du compartiment de la batterie (adjacen
 sur celle du module OBC. Les opérateurs devraient surveiller les températures des panneaux pendant les manœuvres
 d'attitude afin d'anticiper les transitoires thermiques.
 
-## 9. Remarques d'exploitation
+## 9. Remarques d'exploitation {#9-operational-notes}
 
 1. L'entrée en éclipse provoque une chute rapide de la température des panneaux exposés. Le gradient thermique
    peut atteindre 5 °C/min sur les surfaces directement exposées.
@@ -215,7 +215,7 @@ d'attitude afin d'anticiper les transitoires thermiques.
    contingence, le directeur de vol devrait se coordonner avec les opérateurs Puissance/thermique et AOCS
    pour choisir une attitude qui concilie production de puissance et contraintes thermiques.
 
-## 10. Marges de conception thermique
+## 10. Marges de conception thermique {#10-thermal-design-margins}
 
 La conception thermique assure une marge d'au moins 5 °C par rapport aux limites de qualification dans les cas
 chaud et froid les plus défavorables (fin de vie, durée d'éclipse la plus défavorable, flux solaire maximal/minimal).

@@ -146,7 +146,7 @@ OBC redundancy. Any failure of OBC-B is mission-critical.
   be in a boot loop. Try `OBC_BOOT_INHIBIT(inhibit=1)` (func_id 56) to stop
   auto-boot cycling, then `OBC_BOOT_APP` manually.
 - If `obdh.sw_image` remains 0 (stuck in bootloader): Application image may be corrupt.
-  Follow CTG-018 (Boot Loader Recovery) for memory check and recovery.
+  Follow CTG-021 (OBC Bootloader Recovery) for memory check and recovery.
 - If OBC-B boots but immediately enters repeated reboots: Command
   `OBC_BOOT_INHIBIT(inhibit=1)` to stay in bootloader. Investigate from bootloader. May need to upload
   fresh application image via `MEM_LOAD`.

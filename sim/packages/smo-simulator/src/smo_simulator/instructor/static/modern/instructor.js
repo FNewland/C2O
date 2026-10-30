@@ -33,8 +33,12 @@ import { I18n, t, tText, tdb, onLangChange } from "/static/shared/i18n.js";
 
 const MAX_LOG_ENTRIES = 200;
 
-const AOCS_MODES = { 0: "OFF", 1: "DETUMBLE", 2: "SAFE_POINT", 3: "NADIR_POINT", 4: "TARGET_TRACK" };
-const OBDH_MODES = { 0: "NOMINAL", 1: "SAFE", 2: "BOOTLOADER" };
+// Mode names follow the telemetry decoders (configs/eosat1/aocs/aocs_mode_codes.yaml,
+// rulings Q5/Q6). OBC mode 2 is EMERGENCY; the bootloader is not an OBC mode —
+// it is indicated by obdh.sw_image = 0.
+const AOCS_MODES = { 0: "OFF", 1: "SAFE_BOOT", 2: "DETUMBLE", 3: "COARSE_SUN", 4: "NOMINAL",
+                     5: "FINE_POINT", 6: "SLEW", 7: "DESAT", 8: "ECLIPSE", 9: "INERTIAL" };
+const OBDH_MODES = { 0: "NOMINAL", 1: "SAFE", 2: "EMERGENCY" };
 const TTC_MODES  = { 0: "NOMINAL", 1: "REDUNDANT", 2: "OFF" };
 const PL_MODES   = { 0: "OFF", 1: "STANDBY", 2: "IMAGING", 3: "PLAYBACK" };
 const LINK_STATUS = { 0: "DOWN", 1: "UP" };

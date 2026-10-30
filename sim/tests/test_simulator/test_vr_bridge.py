@@ -94,13 +94,19 @@ class TestFrameBuilder:
 
     def test_quaternion_is_body_to_eci_nadir(self, engine):
         """ICD §6 check: in nadir pointing, body +Z rotated by q points
-        straight down, +X along velocity, and earth.dir_body = +Z."""
+        straight down, +X along velocity, and earth.dir_body = +Z.
+
+        The simulator's own body frame has -Z at nadir since ruling Q4; the
+        bridge re-expresses it in the unchanged smo-vr/1 axes, so the ICD
+        check must still hold when the AOCS truth is the simulator's nominal
+        nadir attitude."""
+        from smo_simulator.models.aocs_basic import nominal_body_dcm
         o = engine.orbit.state
         s = engine.subsystems["aocs"]._state
         saved = list(s.q_true)
         try:
             s.q_true = [float(x) for x in att.dcm_to_quat(
-                att.lvlh_dcm(o.pos_eci, o.vel_eci))]
+                nominal_body_dcm(o.pos_eci, o.vel_eci))]
             b = vb.build_vr_state(engine)
         finally:
             s.q_true = saved
@@ -134,8 +140,24 @@ class TestFrameBuilder:
         finally:
             (es.wing_py_deployed, es.wing_py_deploying, es.wing_my_deployed,
              es.wing_my_deploying, es.wing_deploy_timer) = saved
-        assert d["wing_py"] == {"state": "DEPLOYING", "fraction": 0.75}
-        assert d["wing_my"] == {"state": "DEPLOYED", "fraction": 1.0}
+        # smo-vr/1 +Y is the simulator's -Y (ruling Q4 turned the simulator
+        # body 180 deg about X; the ICD did not move), so the simulator's
+        # +Y wing is the smo-vr/1 -Y wing and vice versa.
+        assert d["wing_my"] == {"state": "DEPLOYING", "fraction": 0.75}
+        assert d["wing_py"] == {"state": "DEPLOYED", "fraction": 1.0}
+
+    def test_sada_angle_is_in_vr_axes(self, engine):
+        """smo-vr/1: cell normal (cos a, 0, sin a) in smo-vr/1 body axes.
+        The simulator's shaft angle is about its own +Y (= smo-vr/1 -Y), so
+        the published angle is its negative."""
+        es = engine.subsystems["eps"]._state
+        saved = es.solar_array_drive_angle
+        try:
+            es.solar_array_drive_angle = 30.0
+            d = vb.build_vr_state(engine)["deploy"]
+        finally:
+            es.solar_array_drive_angle = saved
+        assert d["sada_angle_deg"] == pytest.approx(-30.0)
 
     @pytest.mark.parametrize("truth,sensor,state", [
         (False, 1, "STOWED"), (True, 2, "DEPLOYED"), (False, 3, "JAMMED"),

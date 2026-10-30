@@ -10,6 +10,7 @@ import json
 import logging
 import math
 import os
+import re
 import sqlite3
 import struct
 import argparse
@@ -4205,6 +4206,8 @@ class MCSServer:
             if content
             else rel_path
         )
+        # Explicit heading anchor `{#id}` (ruling Q33) is markup, not title text.
+        title = re.sub(r"\s*\{#[A-Za-z0-9_][\w.:-]*(?:\s[^}]*)?\}\s*$", "", title)
         body = {"title": title, "content_md": content}
         if lang is not None:
             body["lang"] = lang

@@ -9,264 +9,264 @@
   },
   {
    "id": "eosat-1-leop-operations-guide",
-   "en_hash": "442d6e74b77fe720",
-   "fr_hash": "99d923cd8ccb54db"
+   "en_hash": "a61bf76e4595c40e",
+   "fr_hash": "13a82cfc8eaf5601"
   },
   {
    "id": "eosat-1-leop-operations-guide/1-purpose",
-   "en_hash": "6f297a152de11e9f",
-   "fr_hash": "350c7bf84d34b8f4"
+   "en_hash": "179bddf372eef5d6",
+   "fr_hash": "335a53859d096a4f"
   },
   {
    "id": "eosat-1-leop-operations-guide/2-leop-overview",
-   "en_hash": "88e4fd2bd283b570",
-   "fr_hash": "7a7131b6e8f5ef79"
+   "en_hash": "f74140a3bbaffe89",
+   "fr_hash": "1712c31e744d8fda"
   },
   {
    "id": "eosat-1-leop-operations-guide/3-separation-sequence",
-   "en_hash": "59afccdf957dd166",
-   "fr_hash": "2c0fbfe8e99d69af"
+   "en_hash": "9130becae0fe0e45",
+   "fr_hash": "097fc25010b96e6e"
   },
   {
-   "id": "eosat-1-leop-operations-guide/3-separation-sequence/3-1-separation-state-machine",
-   "en_hash": "9aeac0134b15b025",
-   "fr_hash": "7d57fba3484dbf52"
+   "id": "eosat-1-leop-operations-guide/3-separation-sequence/31-separation-state-machine",
+   "en_hash": "6032405ec2c71519",
+   "fr_hash": "819978d6080f8976"
   },
   {
-   "id": "eosat-1-leop-operations-guide/3-separation-sequence/3-2-unswitchable-line-power-on",
-   "en_hash": "4a3a93576f1cfe13",
-   "fr_hash": "6db4bd508ebec9a1"
+   "id": "eosat-1-leop-operations-guide/3-separation-sequence/32-unswitchable-line-power-on",
+   "en_hash": "31227d41f09e329c",
+   "fr_hash": "cc2738b8ca06d173"
   },
   {
-   "id": "eosat-1-leop-operations-guide/3-separation-sequence/3-3-30-minute-timer-hold",
-   "en_hash": "0b0ef4a89d3a4a6a",
-   "fr_hash": "b09f3aa235d6a28b"
+   "id": "eosat-1-leop-operations-guide/3-separation-sequence/33-30-minute-timer-hold",
+   "en_hash": "53c5e156f2b83a32",
+   "fr_hash": "b345b4c4d5e1d6c9"
   },
   {
-   "id": "eosat-1-leop-operations-guide/3-separation-sequence/3-4-antenna-deployment",
-   "en_hash": "d09ca4f48fb33b45",
-   "fr_hash": "d7fbdd2cc7834a10"
+   "id": "eosat-1-leop-operations-guide/3-separation-sequence/34-antenna-deployment",
+   "en_hash": "cdc8968b7a3665dc",
+   "fr_hash": "67693860b14900f9"
   },
   {
-   "id": "eosat-1-leop-operations-guide/3-separation-sequence/3-5-beacon-transmission-start",
-   "en_hash": "e2321f7de3456f42",
-   "fr_hash": "c2d6a1d406031733"
+   "id": "eosat-1-leop-operations-guide/3-separation-sequence/35-beacon-transmission-start",
+   "en_hash": "bff05ffc12aef912",
+   "fr_hash": "31e4ff15a4f074a1"
   },
   {
-   "id": "eosat-1-leop-operations-guide/4-first-contact-rf-acquisition",
-   "en_hash": "1349e645a44ad84a",
-   "fr_hash": "2eba486a6e40d4dc"
+   "id": "eosat-1-leop-operations-guide/4-first-contact--rf-acquisition",
+   "en_hash": "397a4c0984d0ce68",
+   "fr_hash": "094586efa15b2bf2"
   },
   {
-   "id": "eosat-1-leop-operations-guide/4-first-contact-rf-acquisition/4-1-ground-station-preparation",
-   "en_hash": "c1db983e531a4644",
-   "fr_hash": "6a6ef4e3eb473ee4"
+   "id": "eosat-1-leop-operations-guide/4-first-contact--rf-acquisition/41-ground-station-preparation",
+   "en_hash": "246b50820c96b4d4",
+   "fr_hash": "6889211967eb784d"
   },
   {
-   "id": "eosat-1-leop-operations-guide/4-first-contact-rf-acquisition/4-2-beacon-tm-interpretation",
-   "en_hash": "590df93f8b6798ec",
-   "fr_hash": "7d66397345f527a7"
+   "id": "eosat-1-leop-operations-guide/4-first-contact--rf-acquisition/42-beacon-tm-interpretation",
+   "en_hash": "fb59d687f1b87c04",
+   "fr_hash": "ad6a8f5dfbc82f9f"
   },
   {
-   "id": "eosat-1-leop-operations-guide/4-first-contact-rf-acquisition/4-3-first-contact-procedure",
-   "en_hash": "6278d35d1f184543",
-   "fr_hash": "617c87998120762a"
+   "id": "eosat-1-leop-operations-guide/4-first-contact--rf-acquisition/43-first-contact-procedure",
+   "en_hash": "17dbc36d4ee0a6e0",
+   "fr_hash": "0f4c71e45d848331"
   },
   {
    "id": "eosat-1-leop-operations-guide/5-bootloader-operations",
-   "en_hash": "e5f91392287b77eb",
-   "fr_hash": "ec8ca6ef3a4854d9"
+   "en_hash": "d88e4a0c6421591e",
+   "fr_hash": "f6e9c6c2e9524533"
   },
   {
-   "id": "eosat-1-leop-operations-guide/5-bootloader-operations/5-1-limited-hk-in-bootloader",
-   "en_hash": "c4c26ed81321c5a2",
-   "fr_hash": "42deb2c102b1a0d5"
+   "id": "eosat-1-leop-operations-guide/5-bootloader-operations/51-limited-hk-in-the-bootloader",
+   "en_hash": "3cab8054a1a5d95c",
+   "fr_hash": "ee3bda56c34ff13f"
   },
   {
-   "id": "eosat-1-leop-operations-guide/5-bootloader-operations/5-2-restricted-commands-in-bootloader",
-   "en_hash": "7e0d62d656d67715",
-   "fr_hash": "9b73aeafb9e4aea5"
+   "id": "eosat-1-leop-operations-guide/5-bootloader-operations/52-restricted-commands-in-the-bootloader",
+   "en_hash": "32575522ea328259",
+   "fr_hash": "f78da1cf5eb15bfa"
   },
   {
    "id": "eosat-1-leop-operations-guide/6-application-boot-and-verification",
-   "en_hash": "b26988563425c7d0",
-   "fr_hash": "598870f0808f9d54"
+   "en_hash": "1e1ba3868095fd2a",
+   "fr_hash": "b9fd36df27ba1430"
   },
   {
-   "id": "eosat-1-leop-operations-guide/6-application-boot-and-verification/6-1-boot-procedure",
-   "en_hash": "98a4230245c65030",
-   "fr_hash": "03f9f91f79bb3865"
+   "id": "eosat-1-leop-operations-guide/6-application-boot-and-verification/61-boot-procedure",
+   "en_hash": "210ca8cb5370d8bf",
+   "fr_hash": "3e836dddfabe07d4"
   },
   {
-   "id": "eosat-1-leop-operations-guide/6-application-boot-and-verification/6-2-post-boot-verification",
-   "en_hash": "28a72cb6bf4bca9c",
-   "fr_hash": "0e546fb0a3f7bb89"
+   "id": "eosat-1-leop-operations-guide/6-application-boot-and-verification/62-post-boot-verification",
+   "en_hash": "cd8d21c505e41c4d",
+   "fr_hash": "afff82e05c8bb838"
   },
   {
-   "id": "eosat-1-leop-operations-guide/6-application-boot-and-verification/6-3-recovery-from-failed-boot",
-   "en_hash": "4df5453a502f5959",
-   "fr_hash": "fffb82b1d1f955ff"
+   "id": "eosat-1-leop-operations-guide/6-application-boot-and-verification/63-recovery-from-failed-boot",
+   "en_hash": "01a7d974f1e96d84",
+   "fr_hash": "316916191a8d0ec5"
   },
   {
    "id": "eosat-1-leop-operations-guide/6a-solar-wing-deployment",
-   "en_hash": "adebbb77d1ee168d",
-   "fr_hash": "b1da08e51ddf335c"
+   "en_hash": "2c868e37ce516ed9",
+   "fr_hash": "17bd82ea69edd38c"
   },
   {
-   "id": "eosat-1-leop-operations-guide/6a-solar-wing-deployment/6a-1-pre-deployment-checks",
-   "en_hash": "cce448241cdf0c15",
-   "fr_hash": "89a0cc0e1c393d7c"
+   "id": "eosat-1-leop-operations-guide/6a-solar-wing-deployment/6a1-pre-deployment-checks",
+   "en_hash": "5d3c5b5de21572ef",
+   "fr_hash": "de79c476678a1ac1"
   },
   {
-   "id": "eosat-1-leop-operations-guide/6a-solar-wing-deployment/6a-2-deploy-y-wing",
-   "en_hash": "e8a9ef5c2513101c",
-   "fr_hash": "a8ce0d231e43bbae"
+   "id": "eosat-1-leop-operations-guide/6a-solar-wing-deployment/6a2-deploy-y-wing",
+   "en_hash": "d8139ecbcb55eade",
+   "fr_hash": "6c0e8dff540189e9"
   },
   {
-   "id": "eosat-1-leop-operations-guide/6a-solar-wing-deployment/6a-3-deploy-y-wing",
-   "en_hash": "4ac1f130dd949ff2",
-   "fr_hash": "11f2628423b8db89"
+   "id": "eosat-1-leop-operations-guide/6a-solar-wing-deployment/6a3-deploy--y-wing",
+   "en_hash": "1b1ae9cd3873f8de",
+   "fr_hash": "3883333193392112"
   },
   {
-   "id": "eosat-1-leop-operations-guide/6a-solar-wing-deployment/6a-4-post-deployment-verification",
-   "en_hash": "91229d72f26fc2b9",
-   "fr_hash": "64aac914349179ed"
+   "id": "eosat-1-leop-operations-guide/6a-solar-wing-deployment/6a4-post-deployment-verification",
+   "en_hash": "419b2d7357dade99",
+   "fr_hash": "ca7dc7f5d34331d9"
   },
   {
-   "id": "eosat-1-leop-operations-guide/6a-solar-wing-deployment/6a-5-off-nominal-wing-deployment-failure",
-   "en_hash": "464ca25f2b81e24e",
-   "fr_hash": "dea6307154f50141"
+   "id": "eosat-1-leop-operations-guide/6a-solar-wing-deployment/6a5-off-nominal-wing-deployment-failure",
+   "en_hash": "ef26821e2ffbb2ec",
+   "fr_hash": "4f05a478c6fef3c6"
   },
   {
    "id": "eosat-1-leop-operations-guide/7-sequential-power-on-procedure",
-   "en_hash": "fd2b56db99ccd4da",
-   "fr_hash": "5af29a4c2d505c3c"
+   "en_hash": "45072e401b9fd6a0",
+   "fr_hash": "a95d6ee2196b4737"
   },
   {
-   "id": "eosat-1-leop-operations-guide/7-sequential-power-on-procedure/7-1-power-on-sequence",
-   "en_hash": "d6137935da0e5d7f",
-   "fr_hash": "1818023673f31c04"
+   "id": "eosat-1-leop-operations-guide/7-sequential-power-on-procedure/71-power-on-sequence",
+   "en_hash": "098a81048bbe2bdc",
+   "fr_hash": "5f3c6c9c72e42bb2"
   },
   {
-   "id": "eosat-1-leop-operations-guide/7-sequential-power-on-procedure/7-2-power-budget-monitoring",
-   "en_hash": "fa42b4d2e3e74ac5",
-   "fr_hash": "764a32631824735d"
+   "id": "eosat-1-leop-operations-guide/7-sequential-power-on-procedure/72-power-budget-monitoring",
+   "en_hash": "2cefe046f58a3403",
+   "fr_hash": "69a6178c1819bae9"
   },
   {
    "id": "eosat-1-leop-operations-guide/8-adcs-commissioning-sequence",
-   "en_hash": "d46ba861b5cba1d8",
-   "fr_hash": "489a4117fa08cf28"
+   "en_hash": "aa1f6e8e951f459b",
+   "fr_hash": "0f3ade474407f3b1"
   },
   {
-   "id": "eosat-1-leop-operations-guide/8-adcs-commissioning-sequence/8-1-phase-1-sensor-commissioning",
-   "en_hash": "95844cd655d0ab29",
-   "fr_hash": "a5a5f9e09386f0ba"
+   "id": "eosat-1-leop-operations-guide/8-adcs-commissioning-sequence/81-phase-1-sensor-commissioning",
+   "en_hash": "8f58a9f79950449c",
+   "fr_hash": "deb4bc84cc9c7d41"
   },
   {
-   "id": "eosat-1-leop-operations-guide/8-adcs-commissioning-sequence/8-1-phase-1-sensor-commissioning/step-1-magnetometer-calibration",
-   "en_hash": "0e8072c547bb30e1",
-   "fr_hash": "d3a6573b2c20ffc5"
+   "id": "eosat-1-leop-operations-guide/8-adcs-commissioning-sequence/81-phase-1-sensor-commissioning/step-1-magnetometer-calibration",
+   "en_hash": "f7db7486dbede22c",
+   "fr_hash": "59bcfc052e63ec9b"
   },
   {
-   "id": "eosat-1-leop-operations-guide/8-adcs-commissioning-sequence/8-1-phase-1-sensor-commissioning/step-2-css-verification",
-   "en_hash": "5ddcc5d924f2f74e",
-   "fr_hash": "237173c796aedb04"
+   "id": "eosat-1-leop-operations-guide/8-adcs-commissioning-sequence/81-phase-1-sensor-commissioning/step-2-css-verification",
+   "en_hash": "190a391688897829",
+   "fr_hash": "3fa98e07e85730b5"
   },
   {
-   "id": "eosat-1-leop-operations-guide/8-adcs-commissioning-sequence/8-1-phase-1-sensor-commissioning/step-3-star-camera-commissioning",
-   "en_hash": "6462853caa1fb63d",
-   "fr_hash": "ad6adbc0ef87b0a0"
+   "id": "eosat-1-leop-operations-guide/8-adcs-commissioning-sequence/81-phase-1-sensor-commissioning/step-3-star-camera-commissioning",
+   "en_hash": "d690cb8351467d5e",
+   "fr_hash": "ccfa577a4bb91094"
   },
   {
-   "id": "eosat-1-leop-operations-guide/8-adcs-commissioning-sequence/8-1-phase-1-sensor-commissioning/step-4-gyro-bias-calibration",
-   "en_hash": "e0510dc25a6d1b99",
-   "fr_hash": "5537b710bdd86815"
+   "id": "eosat-1-leop-operations-guide/8-adcs-commissioning-sequence/81-phase-1-sensor-commissioning/step-4-gyro-bias-calibration",
+   "en_hash": "2dc0ebe019387d24",
+   "fr_hash": "162713c8dadeb444"
   },
   {
-   "id": "eosat-1-leop-operations-guide/8-adcs-commissioning-sequence/8-2-phase-2-attitude-determination-validation",
-   "en_hash": "d3fd532e6ff0ab0c",
-   "fr_hash": "2b05bac267450d23"
+   "id": "eosat-1-leop-operations-guide/8-adcs-commissioning-sequence/82-phase-2-attitude-determination-validation",
+   "en_hash": "1df9c4de199f1456",
+   "fr_hash": "255191fdc363e502"
   },
   {
-   "id": "eosat-1-leop-operations-guide/8-adcs-commissioning-sequence/8-3-phase-3-actuator-commissioning",
-   "en_hash": "db8f154370a1cd2e",
-   "fr_hash": "20550dac8728eac3"
+   "id": "eosat-1-leop-operations-guide/8-adcs-commissioning-sequence/83-phase-3-actuator-commissioning",
+   "en_hash": "a7936eaa8ab901d9",
+   "fr_hash": "37c453b03185c397"
   },
   {
-   "id": "eosat-1-leop-operations-guide/8-adcs-commissioning-sequence/8-3-phase-3-actuator-commissioning/step-5-magnetorquer-sign-check",
-   "en_hash": "862953c1c3899f3f",
-   "fr_hash": "c4dee26da652d0f3"
+   "id": "eosat-1-leop-operations-guide/8-adcs-commissioning-sequence/83-phase-3-actuator-commissioning/step-5-magnetorquer-sign-check",
+   "en_hash": "9455361c0f3b5e6c",
+   "fr_hash": "cfeaab202a63f897"
   },
   {
-   "id": "eosat-1-leop-operations-guide/8-adcs-commissioning-sequence/8-3-phase-3-actuator-commissioning/step-6-reaction-wheel-spin-up-test",
-   "en_hash": "887d2ccdd722422a",
-   "fr_hash": "e555e08ae4e8df01"
+   "id": "eosat-1-leop-operations-guide/8-adcs-commissioning-sequence/83-phase-3-actuator-commissioning/step-6-reaction-wheel-spin-up-test",
+   "en_hash": "8f180cc248fb4f4c",
+   "fr_hash": "5c599e3c3ca1cc60"
   },
   {
-   "id": "eosat-1-leop-operations-guide/8-adcs-commissioning-sequence/8-3-phase-3-actuator-commissioning/step-7-control-gain-verification",
-   "en_hash": "270037c91ca2284e",
-   "fr_hash": "94ab79137ca4cc7e"
+   "id": "eosat-1-leop-operations-guide/8-adcs-commissioning-sequence/83-phase-3-actuator-commissioning/step-7-control-gain-verification",
+   "en_hash": "78982725faf57c40",
+   "fr_hash": "80db3eeb81de4b7c"
   },
   {
-   "id": "eosat-1-leop-operations-guide/8-adcs-commissioning-sequence/8-4-phase-4-active-control-validation",
-   "en_hash": "ce01286de518b745",
-   "fr_hash": "b91eca3c6523ec2a"
+   "id": "eosat-1-leop-operations-guide/8-adcs-commissioning-sequence/84-phase-4-active-control-validation",
+   "en_hash": "0b9ed37e3342c471",
+   "fr_hash": "dcb928e072a0d1cf"
   },
   {
-   "id": "eosat-1-leop-operations-guide/8-adcs-commissioning-sequence/8-4-phase-4-active-control-validation/step-8-rate-damping-test",
-   "en_hash": "23497bbc660b147b",
-   "fr_hash": "35f40134e2007359"
+   "id": "eosat-1-leop-operations-guide/8-adcs-commissioning-sequence/84-phase-4-active-control-validation/step-8-rate-damping-test",
+   "en_hash": "9a3800e1abed0f7d",
+   "fr_hash": "425af15769dafeb0"
   },
   {
-   "id": "eosat-1-leop-operations-guide/8-adcs-commissioning-sequence/8-4-phase-4-active-control-validation/step-9-sun-pointing-verification",
-   "en_hash": "b294bc5461a0846a",
-   "fr_hash": "7e14b9e8e083cc7b"
+   "id": "eosat-1-leop-operations-guide/8-adcs-commissioning-sequence/84-phase-4-active-control-validation/step-9-sun-pointing-verification",
+   "en_hash": "12feeb1ce607cab2",
+   "fr_hash": "cab8e2980b8c157e"
   },
   {
-   "id": "eosat-1-leop-operations-guide/8-adcs-commissioning-sequence/8-4-phase-4-active-control-validation/step-10-nadir-pointing-test",
-   "en_hash": "c721563c0a24c015",
-   "fr_hash": "071adfe2d36ac45f"
+   "id": "eosat-1-leop-operations-guide/8-adcs-commissioning-sequence/84-phase-4-active-control-validation/step-10-nadir-pointing-test",
+   "en_hash": "0fb5518b333ccbae",
+   "fr_hash": "22170ad0edf84987"
   },
   {
    "id": "eosat-1-leop-operations-guide/9-transition-to-nominal-operations",
-   "en_hash": "c6e0a0a4fb2ccdef",
-   "fr_hash": "e1c1ad19eb28d53c"
+   "en_hash": "0201e7671227238e",
+   "fr_hash": "1af3b51382c79f98"
   },
   {
-   "id": "eosat-1-leop-operations-guide/9-transition-to-nominal-operations/9-1-pre-transition-checklist",
-   "en_hash": "1932db48b44aa213",
-   "fr_hash": "c259f9fa66fd021b"
+   "id": "eosat-1-leop-operations-guide/9-transition-to-nominal-operations/91-pre-transition-checklist",
+   "en_hash": "17425eaf569d34d0",
+   "fr_hash": "a7a42e292844a302"
   },
   {
-   "id": "eosat-1-leop-operations-guide/9-transition-to-nominal-operations/9-2-nominal-transition-command-sequence",
-   "en_hash": "3bcb240e5c4101a6",
-   "fr_hash": "31c1c7333855ebb3"
+   "id": "eosat-1-leop-operations-guide/9-transition-to-nominal-operations/92-nominal-transition-command-sequence",
+   "en_hash": "9baf4fb6c62c2ff8",
+   "fr_hash": "8b103ac41f3bd152"
   },
   {
-   "id": "eosat-1-leop-operations-guide/9-transition-to-nominal-operations/9-3-post-leop-activities",
-   "en_hash": "26c7f4e6cf560dd7",
-   "fr_hash": "24a1a7cbc2d14b81"
+   "id": "eosat-1-leop-operations-guide/9-transition-to-nominal-operations/93-post-leop-activities",
+   "en_hash": "8bdb40a7b6d10638",
+   "fr_hash": "64afc185bb72ab5a"
   },
   {
    "id": "eosat-1-leop-operations-guide/10-emergency-procedures-during-leop",
-   "en_hash": "c21ceb4aa87c42e7",
-   "fr_hash": "927cfe81d1148760"
+   "en_hash": "4b6a171f9b657aee",
+   "fr_hash": "9143e4d989d5eaf9"
   },
   {
-   "id": "eosat-1-leop-operations-guide/10-emergency-procedures-during-leop/10-1-no-beacon-after-separation",
-   "en_hash": "6d548b1cf27df73e",
-   "fr_hash": "69c3689898e0528f"
+   "id": "eosat-1-leop-operations-guide/10-emergency-procedures-during-leop/101-no-beacon-after-separation",
+   "en_hash": "d968ce497204d97d",
+   "fr_hash": "c0abee8b7cf2e590"
   },
   {
-   "id": "eosat-1-leop-operations-guide/10-emergency-procedures-during-leop/10-2-obc-stuck-in-bootloader",
-   "en_hash": "84de36f4e6103469",
-   "fr_hash": "3f7dbe8b8804c811"
+   "id": "eosat-1-leop-operations-guide/10-emergency-procedures-during-leop/102-obc-stuck-in-the-bootloader",
+   "en_hash": "7ebfe9ce7d936523",
+   "fr_hash": "4ea19e4514f43424"
   },
   {
-   "id": "eosat-1-leop-operations-guide/10-emergency-procedures-during-leop/10-3-excessive-tumble-rates",
-   "en_hash": "6e6618f27b4f8a52",
-   "fr_hash": "fdebc00279b4af0e"
+   "id": "eosat-1-leop-operations-guide/10-emergency-procedures-during-leop/103-excessive-tumble-rates",
+   "en_hash": "3c3812ba32622256",
+   "fr_hash": "9dda5fbfec2ee26e"
   }
  ],
- "en_commit": "3e80564"
+ "en_commit": "c4a140a"
 }

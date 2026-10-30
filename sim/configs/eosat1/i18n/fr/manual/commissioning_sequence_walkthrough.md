@@ -1,4 +1,4 @@
-# Séquence complète de recette en orbite d'EOSAT-1 : du satellite éteint aux opérations de charge utile
+# Séquence complète de recette en orbite d'EOSAT-1 : du satellite éteint aux opérations de charge utile {#eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations}
 
 **Référence :** du démarrage à froid à la recette en orbite complète, étape par étape.
 **Révision :** 2.0
@@ -8,7 +8,7 @@ Ce document passe en revue chaque commande et chaque vérification de télémesu
 
 ---
 
-## Référence des onglets du MCS
+## Référence des onglets du MCS {#mcs-tab-reference}
 
 | Onglet | Ce qu'il affiche |
 |-----|---------------|
@@ -25,11 +25,11 @@ Ce document passe en revue chaque commande et chaque vérification de télémesu
 
 ---
 
-## Phase 0 — Configuration avant contact (sol uniquement)
+## Phase 0 — Configuration avant contact (sol uniquement) {#phase-0--pre-contact-configuration-ground-only}
 
 Aucune commande satellite. Configurer la station sol.
 
-### 0.1 Configurer la station sol et forcer le passage
+### 0.1 Configurer la station sol et forcer le passage {#01-configure-ground-station--override-pass}
 
 **Action:** Régler le paramètre de forçage de passage pour imposer `in_contact = True`
 
@@ -39,11 +39,11 @@ Aucune commande satellite. Configurer la station sol.
 
 ---
 
-## Phase 1 — Premier signal : réception de la télémesure du chargeur d'amorçage
+## Phase 1 — Premier signal : réception de la télémesure du chargeur d'amorçage {#phase-1--first-signal-bootloader-telemetry-reception}
 
 Le satellite est en mode chargeur d'amorçage (`sw_image = 0`). Seuls l'OBC et le RX TTC sont alimentés. La balise SID 11 est la seule télémesure disponible (7 paramètres, toutes les 30 s). Aucun SID du mode applicatif (1–6) n'est encore actif.
 
-### 1.1 Interroger le satellite (essai de connexion)
+### 1.1 Interroger le satellite (essai de connexion) {#11-ping-the-spacecraft-connection-test}
 
 **TC:** `CONNECTION_TEST` (Service 17, Subtype 1)
 
@@ -54,7 +54,7 @@ Le satellite est en mode chargeur d'amorçage (`sw_image = 0`). Seuls l'OBC et l
 - onglet **ttc** → `link_status` passe de 0 (NO LINK) à 1 (ACQUIRING) puis à 2 (LOCKED) ; `rssi` remonte de -120 dBm vers > -110 dBm
 - onglet **eps** → la ligne d'alimentation `ttc_tx` indique ON (maintien auto-TX activé)
 
-### 1.2 Vérifier la télémesure balise (SID 11)
+### 1.2 Vérifier la télémesure balise (SID 11) {#12-verify-beacon-telemetry-sid-11}
 
 **TC:** `HK_REQUEST(sid=11)` (Service 3, Subtype 27)
 
@@ -78,11 +78,11 @@ Le satellite est en mode chargeur d'amorçage (`sw_image = 0`). Seuls l'OBC et l
 
 ---
 
-## Phase 2 — Déploiement de l'antenne
+## Phase 2 — Déploiement de l'antenne {#phase-2--antenna-deployment}
 
 L'antenne est initialement repliée (`antenna_deployment_sensor = 1`). Même si vous disposez peut-être déjà d'un signal via l'antenne repliée, il faut la déployer pour obtenir la pleine marge de liaison.
 
-### 2.1 Déployer l'antenne
+### 2.1 Déployer l'antenne {#21-deploy-antenna}
 
 **TC:** `TTC_DEPLOY_ANTENNA` (Service 8, Subtype 1, func_id 69)
 
@@ -103,9 +103,9 @@ L'antenne est initialement repliée (`antenna_deployment_sensor = 1`). Même si 
 
 ---
 
-## Phase 3 — Amorçage de l'OBC sur l'image applicative
+## Phase 3 — Amorçage de l'OBC sur l'image applicative {#phase-3--boot-obc-to-application-image}
 
-### 3.1 OBC_BOOT_APP
+### 3.1 OBC_BOOT_APP {#31-obc_boot_app}
 
 **TC:** `OBC_BOOT_APP` (Service 8, Subtype 1, func_id 55)
 
@@ -122,11 +122,11 @@ L'antenne est initialement repliée (`antenna_deployment_sensor = 1`). Même si 
 
 ---
 
-## Phase 4 — Bilan de santé initial de la plateforme
+## Phase 4 — Bilan de santé initial de la plateforme {#phase-4--initial-platform-health-check}
 
 Le satellite est désormais en mode applicatif. Tous les SID sont disponibles. Tout vérifier avant de mettre les sous-systèmes sous tension.
 
-### 4.1 Demander toutes les données de servitude
+### 4.1 Demander toutes les données de servitude {#41-request-all-housekeeping}
 
 **Séquence de TC** (six commandes, envoyables en succession rapide) :
 
@@ -139,7 +139,7 @@ Le satellite est désormais en mode applicatif. Tous les SID sont disponibles. T
 | `HK_REQUEST(sid=5)` (S3.27) | 5 | Charge utile | **payload** |
 | `HK_REQUEST(sid=6)` (S3.27) | 6 | TTC | **ttc** |
 
-### 4.2 Vérifier l'état d'alimentation EPS
+### 4.2 Vérifier l'état d'alimentation EPS {#42-verify-eps-power-status}
 
 **Écran MCS : onglet eps**
 
@@ -153,7 +153,7 @@ Le satellite est désormais en mode applicatif. Tous les SID sont disponibles. T
 | `power_cons` | 0x0106 | ~8 W (OBC 6 W + RX 1,5 W) | < 30 W |
 | `eclipse_flag` | 0x0108 | 0 ou 1 | à noter pour le contexte |
 
-### 4.3 Vérifier l'état des commutateurs des lignes d'alimentation
+### 4.3 Vérifier l'état des commutateurs des lignes d'alimentation {#43-verify-power-line-switch-states}
 
 **Écran MCS : onglet eps → panneau Power Lines**
 
@@ -170,7 +170,7 @@ Le satellite est désormais en mode applicatif. Tous les SID sont disponibles. T
 
 Toutes les lignes sur OFF sont attendues — elles n'ont pas encore été mises sous tension.
 
-### 4.4 Vérifier l'état de l'OBDH
+### 4.4 Vérifier l'état de l'OBDH {#44-verify-obdh-status}
 
 **Écran MCS : onglet obdh**
 
@@ -184,7 +184,7 @@ Toutes les lignes sur OFF sont attendues — elles n'ont pas encore été mises 
 | `active_bus` | 0x030E | 0 (bus CAN A) |
 | `bus_a_status` | 0x030F | 0 (OK) |
 
-### 4.5 Vérifier la qualité de la liaison TTC
+### 4.5 Vérifier la qualité de la liaison TTC {#45-verify-ttc-link-quality}
 
 **Écran MCS : onglet ttc**
 
@@ -198,7 +198,7 @@ Toutes les lignes sur OFF sont attendues — elles n'ont pas encore été mises 
 | `frame_sync` | 0x0511 | 1 |
 | `antenna_deployed` | 0x0520 | 1 (si la phase 2 est faite) |
 
-### 4.6 Vérifier les températures de référence du TCS
+### 4.6 Vérifier les températures de référence du TCS {#46-verify-tcs-baseline-temperatures}
 
 **Écran MCS : onglet tcs → tableau Temperature Zones**
 
@@ -209,7 +209,7 @@ Toutes les lignes sur OFF sont attendues — elles n'ont pas encore été mises 
 | `temp_fpa` | 0x0408 | ~+11.5 °C (ambiante interne, non refroidi) | [-22.0, +14.0] °C (bande jaune) |
 | Températures des panneaux | 0x0400–0x0405 | plage 8–20 °C | [-40, +60] °C |
 
-### 4.7 Vérifier que l'AOCS et la charge utile sont éteints
+### 4.7 Vérifier que l'AOCS et la charge utile sont éteints {#47-verify-aocs-and-payload-are-off}
 
 **Écran MCS : onglet aocs** → `mode` (0x020F) = 0 (OFF). Roues non alimentées.
 **Écran MCS : onglet payload** → `mode` (0x0600) = 0 (OFF). C'est l'état attendu.
@@ -220,9 +220,9 @@ Toutes les lignes sur OFF sont attendues — elles n'ont pas encore été mises 
 
 ---
 
-## Phase 5 — Activation de la mise en mémoire de la télémesure (TM stockée)
+## Phase 5 — Activation de la mise en mémoire de la télémesure (TM stockée) {#phase-5--enable-telemetry-buffering-stored-tm}
 
-### 5.1 Activer les rapports HK périodiques pour tous les SID
+### 5.1 Activer les rapports HK périodiques pour tous les SID {#51-enable-periodic-hk-reporting-for-all-sids}
 
 **Séquence de TC :**
 
@@ -244,15 +244,15 @@ Toutes les lignes sur OFF sont attendues — elles n'ont pas encore été mises 
 
 ---
 
-## Phase 6 — Réglage du temps bord
+## Phase 6 — Réglage du temps bord {#phase-6--set-on-board-time}
 
-### 6.1 Demander le temps courant
+### 6.1 Demander le temps courant {#61-request-current-time}
 
 **TC:** `REQUEST_TIME` (Service 9, Subtype 2)
 
 **Écran MCS : onglet obdh** → le champ OBC Time (CUC) affiche l'horloge de bord courante. Avant SET_TIME, il affiche « 0 (not set) ». L'horloge SC TIME de la barre d'état supérieure affiche « NOT SET ».
 
-### 6.2 Envoyer le temps corrigé
+### 6.2 Envoyer le temps corrigé {#62-upload-corrected-time}
 
 Deux options dans le panneau **onglet obdh → TIME CORRELATION (S9)** :
 
@@ -275,11 +275,11 @@ saisir un horodatage ISO 8601 (p. ex. `2026-03-10T12:00:00Z`) dans le champ «�
 
 ---
 
-## Phase 7 — Mise sous tension séquentielle (réchauffeurs d'abord, puis AOCS)
+## Phase 7 — Mise sous tension séquentielle (réchauffeurs d'abord, puis AOCS) {#phase-7--sequential-power-on-heaters-first-then-aocs}
 
 Cette phase suit l'ordre de LEOP-007. Chaque étape consiste en une mise sous tension de ligne suivie d'une commande de mode.
 
-### 7.1 Réchauffeur de batterie sous tension
+### 7.1 Réchauffeur de batterie sous tension {#71-battery-heater-on}
 
 **TC:** `EPS_POWER_ON(line_idx=5)` (S8.1, func_id 19, data byte = 5)
 
@@ -290,7 +290,7 @@ Cette phase suit l'ordre de LEOP-007. Chaque étape consiste en une mise sous te
 - onglet **eps** → `power_cons` augmente d'environ 6 W
 - onglet **tcs** → `htr_battery` (0x040A) = 1 (actif lorsque le thermostat demande de la chaleur), `temp_battery` (0x0407) tend vers la consigne
 
-### 7.2 Réchauffeur de l'OBC sous tension
+### 7.2 Réchauffeur de l'OBC sous tension {#72-obc-heater-on}
 
 **TC:** `EPS_POWER_ON(line_idx=6)` (S8.1, func_id 19, data byte = 6)
 
@@ -301,7 +301,7 @@ Cette phase suit l'ordre de LEOP-007. Chaque étape consiste en une mise sous te
 - onglet **eps** → `power_cons` augmente d'environ 3 W
 - onglet **tcs** → `htr_obc` (0x040B) = 1 (actif)
 
-### 7.3 Alimentation des roues AOCS
+### 7.3 Alimentation des roues AOCS {#73-aocs-wheels-power-on}
 
 **TC:** `EPS_POWER_ON(line_idx=7)` (S8.1, func_id 19, data byte = 7)
 
@@ -311,7 +311,7 @@ Cette phase suit l'ordre de LEOP-007. Chaque étape consiste en une mise sous te
 - onglet **eps** → ligne d'alimentation `aocs_wheels` (0x0117) = 1 (ON)
 - onglet **eps** → `power_cons` augmente d'environ 12 W
 
-### 7.3a Activer les roues de réaction une à une
+### 7.3a Activer les roues de réaction une à une {#73a-enable-individual-reaction-wheels}
 
 Activer chaque roue individuellement (seules 3 roues sur 4 sont nécessaires à une solution de contrôle) :
 
@@ -330,7 +330,7 @@ Pour désactiver une roue donnée : `AOCS_DISABLE_WHEEL(wheel_idx=N)` (S8.1, fu
 
 **Note:** Tant que l'AOCS reste en mode OFF, les vitesses angulaires et les données YPR affichent 0 (aucune détermination d'attitude active). C'est normal — l'AOCS doit être dans un mode actif pour fournir les vitesses.
 
-### 7.4 Mode AOCS : DETUMBLE
+### 7.4 Mode AOCS : DETUMBLE {#74-aocs-set-mode-detumble}
 
 **TC:** `AOCS_SET_MODE(mode=2)` (S8.1, func_id 0, data byte = 2)
 
@@ -344,7 +344,7 @@ Pour désactiver une roue donnée : `AOCS_DISABLE_WHEEL(wheel_idx=N)` (S8.1, fu
 
 **Surveiller pendant plusieurs minutes :** les vitesses doivent décroître depuis le culbutage initial jusqu'à < 0.5°/s en 15 minutes.
 
-### 7.5 Vérifier le bilan de puissance après la mise sous tension de l'AOCS
+### 7.5 Vérifier le bilan de puissance après la mise sous tension de l'AOCS {#75-verify-power-budget-after-aocs-power-on}
 
 **Écran MCS : onglet eps**
 
@@ -361,9 +361,9 @@ Pour désactiver une roue donnée : `AOCS_DISABLE_WHEEL(wheel_idx=N)` (S8.1, fu
 
 ---
 
-## Phase 8 — Envoi du TLE pour la restitution d'orbite
+## Phase 8 — Envoi du TLE pour la restitution d'orbite {#phase-8--upload-tle-for-orbit-determination}
 
-### 8.1 Envoyer le TLE / vecteur d'état orbital
+### 8.1 Envoyer le TLE / vecteur d'état orbital {#81-upload-tle--orbit-state-vector}
 
 **Outil :** utiliser les outils d'orbite pour convertir un TLE ou un vecteur d'état au format de commande S20.1 :
 
@@ -391,9 +391,9 @@ L'outil produit des chaînes de commande hexadécimales pour des commandes SET_P
 
 ---
 
-## Phase 9 — Progression des modes AOCS : amortissement des vitesses → pointage solaire → nadir
+## Phase 9 — Progression des modes AOCS : amortissement des vitesses → pointage solaire → nadir {#phase-9--aocs-mode-progression-rate-damping--sun-pointing--nadir}
 
-### 9.1 Confirmer l'amortissement des vitesses
+### 9.1 Confirmer l'amortissement des vitesses {#91-confirm-rates-damped}
 
 **Écran MCS : onglet aocs** → panneau Body Rates
 
@@ -405,7 +405,7 @@ L'outil produit des chaînes de commande hexadécimales pour des commandes SET_P
 
 Consulter aussi le **graphique BODY RATES** (en bas de l'onglet aocs) pour confirmer la tendance — les vitesses doivent présenter une courbe de décroissance nette.
 
-### 9.2 Observer la transition AUTOMATIQUE vers COARSE_SUN (pointage sûr)
+### 9.2 Observer la transition AUTOMATIQUE vers COARSE_SUN (pointage sûr) {#92-observe-the-automatic-transition-to-coarse_sun-safe-pointing}
 
 **Aucune TC.** Une fois que les vitesses angulaires sont restées sous 0.5°/s pendant 30 s, l'AOCS passe
 de lui-même de DETUMBLE à COARSE_SUN — c'est une transition AUTOMATIQUE
@@ -421,7 +421,7 @@ jamais « vérifier mode = 3 » quelques minutes après la tenue du verrouil
 - Le panneau CSS Sun Vector affiche un vecteur Soleil valide (composantes X/Y/Z)
 - onglet **eps** → `power_gen` doit augmenter à mesure que les générateurs font face au Soleil
 
-### 9.3 Télécharger la TM différée — premier contrôle sur une orbite complète
+### 9.3 Télécharger la TM différée — premier contrôle sur une orbite complète {#93-download-delayed-tm--first-whole-orbit-check}
 
 **Action:** Utiliser les boutons de vidage de TM S15 de chaque onglet de sous-système pour récupérer la télémesure stockée.
 
@@ -436,9 +436,9 @@ jamais « vérifier mode = 3 » quelques minutes après la tenue du verrouil
 - les températures sont restées dans la plage pendant l'éclipse ;
 - le SoC de la batterie s'est rétabli après la sortie d'éclipse ;
 - aucun redémarrage ni événement inattendu ;
-- l'AOCS a maintenu le pointage pendant l'éclipse (le mode eclipse_propagate doit s'engager automatiquement).
+- l'AOCS a maintenu le pointage pendant l'éclipse (le mode ECLIPSE (8) doit s'engager automatiquement).
 
-### 9.4 Contrôler les signes et facteurs d'échelle de l'AOCS
+### 9.4 Contrôler les signes et facteurs d'échelle de l'AOCS {#94-check-aocs-signs-and-scaling}
 
 Avec les données d'une orbite complète, vérifier que :
 - les vitesses des roues respectent la convention de signe (positif = rotation avant) ;
@@ -448,12 +448,12 @@ Avec les données d'une orbite complète, vérifier que :
 
 **Écran MCS : onglet aocs** — recouper à l'aide des graphiques Body Rates et Attitude Error.
 
-### 9.5 Transition vers NOMINAL_NADIR (pointage nadir)
+### 9.5 Transition vers NOMINAL (pointage nadir) {#95-transition-to-nominal-nadir-pointing}
 
 **TC:** `AOCS_SET_MODE(mode=4)` (S8.1, func_id 0, data byte = 4)
 
 **Écran MCS : onglet aocs**
-- Mode = 4 (NOMINAL_NADIR)
+- Mode = 4 (NOMINAL)
 - `att_error` (0x0217) → < 1.0° en 2 minutes, puis < 0.1° une fois stabilisé
 - Les vitesses des roues de réaction s'ajustent pour maintenir le pointage nadir
 - onglet **eps** → `power_gen` doit être proche du maximum avec un angle solaire optimal
@@ -464,9 +464,9 @@ Avec les données d'une orbite complète, vérifier que :
 
 ---
 
-## Phase 10 — Vérification complémentaire des données sur une orbite complète
+## Phase 10 — Vérification complémentaire des données sur une orbite complète {#phase-10--further-whole-orbit-data-verification}
 
-### 10.1 Attendre une orbite complète, puis refaire un vidage
+### 10.1 Attendre une orbite complète, puis refaire un vidage {#101-wait-for-full-orbit-then-dump-again}
 
 **Action:** Laisser le satellite effectuer au moins une orbite complète (~95 min) en pointage nadir, puis vider de nouveau toute la TM stockée.
 
@@ -480,7 +480,7 @@ Avec les données d'une orbite complète, vérifier que :
 | Santé de l'OBC | **obdh** | Charge CPU stable, aucun redémarrage, tampon sans remplissage excessif |
 | Qualité de liaison | **ttc** | RSSI/marge réguliers pendant les passages sol |
 
-### 10.2 Contrôler les événements et les alarmes
+### 10.2 Contrôler les événements et les alarmes {#102-check-events-and-alarms}
 
 **Écran MCS : onglet overview** → le panneau des alarmes affiche les alarmes actives. Il doit y en avoir zéro.
 
@@ -488,9 +488,9 @@ Avec les données d'une orbite complète, vérifier que :
 
 ---
 
-## Phase 11 — Activation du GPS et vérification du démarrage à froid
+## Phase 11 — Activation du GPS et vérification du démarrage à froid {#phase-11--enable-gps-and-verify-cold-start}
 
-### 11.1 Activer le récepteur GPS
+### 11.1 Activer le récepteur GPS {#111-enable-gps-receiver}
 
 **TC:** `S2_AOCS_GPS_RECEIVER(device_id=0x020F, state=1)` (S2.1) — mise sous tension du récepteur GPS
 
@@ -510,7 +510,7 @@ Avec les données d'une orbite complète, vérifier que :
 
 **GO/NO-GO:** GPS verrouillé, position cohérente avec l'orbite propagée à partir du TLE.
 
-### 11.2 Synchroniser l'horloge de bord sur le temps GPS
+### 11.2 Synchroniser l'horloge de bord sur le temps GPS {#112-synchronise-onboard-clock-with-gps-time}
 
 **TC:** `OBC_GPS_TIME_SYNC` (S8.1, func_id 80)
 
@@ -527,9 +527,9 @@ Avec les données d'une orbite complète, vérifier que :
 
 ---
 
-## Phase 12 — Recette en orbite des senseurs stellaires
+## Phase 12 — Recette en orbite des senseurs stellaires {#phase-12--star-tracker-commissioning}
 
-### 12.1 Mettre sous tension le senseur stellaire 1
+### 12.1 Mettre sous tension le senseur stellaire 1 {#121-power-on-star-tracker-1}
 
 **TC:** `ST1_POWER(on=1)` (S8.1, func_id 4, data byte = 1)
 
@@ -538,7 +538,7 @@ Avec les données d'une orbite complète, vérifier que :
 - `ST1 Stars` doit indiquer ≥ 5 étoiles suivies en 90 s
 - `att_error` (0x0217) doit s'améliorer (le senseur stellaire offre une précision de l'ordre de la seconde d'arc)
 
-### 12.2 Mettre sous tension le senseur stellaire 2 (redondant)
+### 12.2 Mettre sous tension le senseur stellaire 2 (redondant) {#122-power-on-star-tracker-2-redundant}
 
 **TC:** `ST2_POWER(on=1)` (S8.1, func_id 5, data byte = 1)
 
@@ -546,17 +546,17 @@ Avec les données d'une orbite complète, vérifier que :
 - `ST2 Status` passe à TRACKING
 - Recoupement : les deux senseurs doivent s'accorder sur l'attitude
 
-### 12.3 Sélectionner le senseur stellaire principal
+### 12.3 Sélectionner le senseur stellaire principal {#123-select-primary-star-tracker}
 
 **TC:** `ST_SELECT(unit=1)` (S8.1, func_id 6, data byte = 1) — sélectionner ST1 comme principal
 
-### 12.4 Couper ST2 (retour au nominal — un seul senseur actif)
+### 12.4 Couper ST2 (retour au nominal — un seul senseur actif) {#124-power-off-st2-return-to-nominal--one-tracker-active}
 
 **TC:** `ST2_POWER(on=0)` (S8.1, func_id 5, data byte = 0)
 
 Le bon fonctionnement de ST2 est désormais vérifié ; revenir à l'exploitation sur un seul senseur pour économiser de la puissance. ST2 reste disponible comme secours actif.
 
-### 12.5 Transition vers FINE_POINT
+### 12.5 Transition vers FINE_POINT {#125-transition-to-fine_point}
 
 **TC:** `AOCS_SET_MODE(mode=5)` (S8.1, func_id 0, data byte = 5)
 
@@ -571,9 +571,9 @@ Le bon fonctionnement de ST2 est désormais vérifié ; revenir à l'exploitat
 
 ---
 
-## Phase 13 — Vérification des équipements redondants
+## Phase 13 — Vérification des équipements redondants {#phase-13--redundant-equipment-checkout}
 
-### 13.1 Contrôle du bus CAN de secours
+### 13.1 Contrôle du bus CAN de secours {#131-backup-can-bus-check}
 
 **TC:** `OBC_SELECT_BUS(bus=1)` (S8.1, func_id 54, data byte = 1) — basculer sur le bus B
 
@@ -586,7 +586,7 @@ Le bon fonctionnement de ST2 est désormais vérifié ; revenir à l'exploitat
 
 **Verify:** `active_bus` = 0, `bus_a_status` (0x030F) = 0 (OK)
 
-### 13.2 Contrôle du transpondeur redondant
+### 13.2 Contrôle du transpondeur redondant {#132-redundant-transponder-check}
 
 **TC:** `TTC_SWITCH_REDUNDANT` (func_id 64)
 
@@ -599,9 +599,9 @@ Le bon fonctionnement de ST2 est désormais vérifié ; revenir à l'exploitat
 
 **Verify:** `ttc_mode` = 0, liaison verrouillée.
 
-### 13.3 Contrôle de santé du magnétomètre (non redondé — aucune redondance à exercer)
+### 13.3 Contrôle de santé du magnétomètre (non redondé — aucune redondance à exercer) {#133-magnetometer-health-check-single-string--no-redundancy-to-exercise}
 
-EO-Sat-1 n'embarque QU'UN magnétomètre 3 axes (décision du propriétaire 2026-08c) — comme pour les
+EOSAT-1 n'embarque QU'UN magnétomètre 3 axes (décision du propriétaire 2026-08c) — comme pour les
 gyromètres, il n'y a ni rechange ni MAG_SELECT. Cette étape vérifie que l'unique unité est
 saine au lieu d'exercer un basculement qui n'existe pas. (Une commande `MAG_SELECT` obsolète
 — S8, fonction 7 — est désormais refusée avec un code explicatif 0x0007.)
@@ -618,15 +618,15 @@ la contourner.
 
 ---
 
-## Phase 14 — Vérification des télécommandes datées
+## Phase 14 — Vérification des télécommandes datées {#phase-14--time-tagged-command-verification}
 
-### 14.1 Envoyer une télécommande datée d'essai
+### 14.1 Envoyer une télécommande datée d'essai {#141-upload-a-test-time-tagged-command}
 
 **TC:** Envoi via le service 11 — une commande sans conséquence (p. ex. `HK_REQUEST(sid=1)`) programmée à une heure future connue (p. ex. dans 5 minutes).
 
 **Écran MCS : onglet commanding** → l'historique des commandes doit montrer l'envoi S11 accepté.
 
-### 14.2 Vérifier l'exécution pendant le passage
+### 14.2 Vérifier l'exécution pendant le passage {#142-verify-execution-in-pass}
 
 **Surveiller :** à l'heure programmée, guetter l'arrivée automatique du paquet HK S3.27.
 
@@ -634,7 +634,7 @@ la contourner.
 - onglet **commanding** → la télécommande datée affiche l'état « EXECUTED »
 - onglet **eps** → des données HK EPS fraîches arrivent à l'heure programmée
 
-### 14.3 Vérifier l'exécution hors passage
+### 14.3 Vérifier l'exécution hors passage {#143-verify-execution-out-of-pass}
 
 **Action:** Envoyer une autre télécommande datée programmée pendant une interruption de la couverture. Après le contact suivant, vider la TM stockée et vérifier que la commande s'est exécutée.
 
@@ -648,9 +648,9 @@ la contourner.
 
 ---
 
-## Phase 15 — Mise sous tension et recette en orbite de la charge utile
+## Phase 15 — Mise sous tension et recette en orbite de la charge utile {#phase-15--payload-power-on-and-commissioning}
 
-### 15.1 Alimenter la ligne de la charge utile
+### 15.1 Alimenter la ligne de la charge utile {#151-power-payload-line}
 
 **TC:** `EPS_POWER_ON(line_idx=3)` (S8.1, func_id 19, data byte = 3)
 
@@ -658,7 +658,7 @@ la contourner.
 - onglet **eps** → ligne d'alimentation `payload` (0x0113) = 1 (ON)
 - onglet **eps** → `power_cons` augmente d'environ 8–10 W
 
-### 15.2 Passer la charge utile en STANDBY
+### 15.2 Passer la charge utile en STANDBY {#152-set-payload-to-standby}
 
 **TC:** `PAYLOAD_SET_MODE(mode=1)` (S8.1, func_id 26, data byte = 1)
 
@@ -670,7 +670,7 @@ la contourner.
 - `store_used` (0x0604) = 0 %
 - `data_rate` (0x0608) renseigné
 
-### 15.3 Alimenter le refroidisseur du FPA
+### 15.3 Alimenter le refroidisseur du FPA {#153-power-fpa-cooler}
 
 **TC:** `EPS_POWER_ON(line_idx=4)` (S8.1, func_id 19, data byte = 4)
 
@@ -678,7 +678,7 @@ la contourner.
 - onglet **eps** → ligne d'alimentation `fpa_cooler` (0x0114) = 1 (ON)
 - onglet **eps** → `power_cons` augmente d'environ 8–12 W
 
-### 15.4 Activer le refroidisseur du FPA
+### 15.4 Activer le refroidisseur du FPA {#154-activate-fpa-cooler}
 
 **TC:** `FPA_COOLER(on=1)` (S8.1, func_id 43, data byte = 1) — octets transmis `2B 01`
 
@@ -698,7 +698,7 @@ nécessite jamais de valeur brute en complément à deux. Relecture : `payload.
 - T+20 min : < -10 °C
 - T+30 min : stable à -15 °C ± 2 °C
 
-### 15.5 Première lumière — prise d'une image d'essai
+### 15.5 Première lumière — prise d'une image d'essai {#155-first-light--capture-test-image}
 
 Prérequis : AOCS en FINE_POINT (phase 12.5), FPA stable à la consigne.
 
@@ -730,9 +730,9 @@ même plan de réserver à l'avance la descente (`PAYLOAD_DOWNLOAD_IMAGE` y fait
 
 ---
 
-## Phase 16 — Configuration finale et remise aux opérations nominales
+## Phase 16 — Configuration finale et remise aux opérations nominales {#phase-16--final-configuration-and-handover-to-nominal-ops}
 
-### 16.1 Vérification finale du bilan de puissance
+### 16.1 Vérification finale du bilan de puissance {#161-final-power-budget-verification}
 
 **Écran MCS : onglet eps**
 
@@ -743,7 +743,7 @@ même plan de réserver à l'avance la descente (`PAYLOAD_DOWNLOAD_IMAGE` y fait
 | Marge | positive en moyenne sur l'orbite |
 | `bat_soc` | > 60 % et stable/en charge |
 
-### 16.2 Confirmer l'état de tous les sous-systèmes
+### 16.2 Confirmer l'état de tous les sous-systèmes {#162-confirm-all-subsystem-states}
 
 **Écran MCS : onglet overview** — tous les indicateurs de santé des sous-systèmes doivent être nominaux (verts).
 
@@ -756,13 +756,13 @@ même plan de réserver à l'avance la descente (`PAYLOAD_DOWNLOAD_IMAGE` y fait
 | TTC | Transpondeur principal, liaison verrouillée |
 | Charge utile | STANDBY (mode 1), FPA à la consigne |
 
-### 16.3 Passer la phase du satellite à NOMINAL
+### 16.3 Passer la phase du satellite à NOMINAL {#163-set-spacecraft-phase-to-nominal}
 
 Déclarer COMMISSIONING puis NOMINAL avec `SYS_SET_MISSION_PHASE(phase=5)` puis `(phase=6)` (S8.1 fonction 120) ; rien ne fait passer automatiquement `spacecraft_phase` (0x0129) au-delà de 4. Vérifier dans l'onglet **overview**.
 
 ---
 
-## Synthèse : nombre de commandes par poste
+## Synthèse : nombre de commandes par poste {#summary-command-count-by-position}
 
 | Poste | Commandes clés | Onglets MCS à surveiller |
 |----------|-------------|-------------------|
@@ -775,7 +775,7 @@ Déclarer COMMISSIONING puis NOMINAL avec `SYS_SET_MISSION_PHASE(phase=5)` puis 
 
 ---
 
-## Référence des outils
+## Référence des outils {#tools-reference}
 
 | Outil | Port | Fonction |
 |------|------|---------|

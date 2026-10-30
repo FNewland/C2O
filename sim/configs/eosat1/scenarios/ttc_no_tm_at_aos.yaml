@@ -30,8 +30,8 @@ expected_responses:
   - { category: isolate, description: "Confirm ground station is nominal — antenna tracking, uplink power, receiver OK" }
   - { category: isolate, description: "Check TTC TX power line status via EPS HK" }
   - { category: command, description: "Verify transponder is powered — EPS_POWER_ON(line_index=2) if ttc_tx off" }
-  - { category: command, description: "Command PA on — TTC_PA_ON (func_id 53)" }
-  - { category: command, description: "Check antenna deployment flag and deploy if stowed (func_id 56)" }
-  - { category: command, description: "Switch transponder if primary unresponsive — TTC_SWITCH_REDUNDANT (func_id 51)" }
+  - { category: command, description: "Command PA on — TTC_PA_ON (func_id 66)" }
+  - { category: command, description: "Check antenna deployment flag and deploy if stowed (TTC_DEPLOY_ANTENNA, func_id 69)" }
+  - { category: command, description: "Switch transponder if primary unresponsive — TTC_SWITCH_REDUNDANT (func_id 64)" }
   - { category: detect, description: "Monitor link budget params (RSSI, BER, Eb/N0) after each step" }
   - { category: recover, description: "Restore telemetry downlink and verify link quality" }

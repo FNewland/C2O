@@ -1,8 +1,8 @@
-# SpaceMissionSimulation Installation Guide
+# SpaceMissionSimulation Installation Guide {#spacemissionsimulation-installation-guide}
 
 **Manual-Scope:** system — training-system documentation, not part of the flight operations manual.
 
-## Quick Start
+## Quick Start {#quick-start}
 
 Clone the repository, set up a virtual environment, install packages, and run the simulator.
 
@@ -18,7 +18,7 @@ git clone <repo-url>; cd SpaceMissionSimulation; python -m venv .venv; .\.venv\S
 
 ---
 
-## Prerequisites
+## Prerequisites {#prerequisites}
 
 - **Python 3.11+** (3.11 recommended, 3.12/3.13 compatible)
 - **pip** (bundled with Python)
@@ -29,27 +29,27 @@ git clone <repo-url>; cd SpaceMissionSimulation; python -m venv .venv; .\.venv\S
 
 ---
 
-## Platform-Specific Instructions
+## Platform-Specific Instructions {#platform-specific-instructions}
 
-### Linux (Ubuntu/Debian)
+### Linux (Ubuntu/Debian) {#linux-ubuntudebian}
 
 ```bash
 sudo apt update && sudo apt install python3.11 python3.11-venv python3-pip git
 ```
 
-### Linux (Fedora/RHEL)
+### Linux (Fedora/RHEL) {#linux-fedorarhel}
 
 ```bash
 sudo dnf install python3.11 git
 ```
 
-### macOS
+### macOS {#macos}
 
 ```bash
 brew install python@3.11 git
 ```
 
-### Windows
+### Windows {#windows}
 
 1. Download Python 3.11 from [python.org](https://www.python.org/downloads/)
    - During installation, check **"Add Python to PATH"**
@@ -58,7 +58,7 @@ brew install python@3.11 git
 
 ---
 
-## Installation Steps (All Platforms)
+## Installation Steps (All Platforms) {#installation-steps-all-platforms}
 
 1. **Clone the repository:**
    ```bash
@@ -98,15 +98,15 @@ brew install python@3.11 git
 
 ---
 
-## Running the Simulator
+## Running the Simulator {#running-the-simulator}
 
-### Linux/macOS
+### Linux/macOS {#linuxmacos}
 
 ```bash
 bash start.sh
 ```
 
-### Windows
+### Windows {#windows-1}
 
 Run each service separately:
 
@@ -123,7 +123,7 @@ python -m smo_planner.server --config configs/eosat1/ --port 9091
 
 ---
 
-## Service Ports
+## Service Ports {#service-ports}
 
 | Service | Port | URL |
 |---------|------|-----|
@@ -135,7 +135,7 @@ python -m smo_planner.server --config configs/eosat1/ --port 9091
 
 ---
 
-## Offline Installation (Cyberrange)
+## Offline Installation (Cyberrange) {#offline-installation-cyberrange}
 
 For environments without internet access:
 
@@ -154,7 +154,7 @@ For environments without internet access:
 
 ---
 
-## Verification
+## Verification {#verification}
 
 1. **Check all services load:**
    - Open each URL listed in the [Service Ports](#service-ports) section
@@ -173,9 +173,9 @@ For environments without internet access:
 
 ---
 
-## Troubleshooting
+## Troubleshooting {#troubleshooting}
 
-### Port Conflicts
+### Port Conflicts {#port-conflicts}
 
 If a service fails to start due to port already in use:
 
@@ -191,13 +191,13 @@ netstat -ano | findstr :8080
 
 Kill the conflicting process or change the port when starting the service.
 
-### Chrome HTTPS Redirect
+### Chrome HTTPS Redirect {#chrome-https-redirect}
 
 If Chrome automatically redirects to HTTPS:
 - Use `http://127.0.0.1:PORT` instead of `localhost:PORT`
 - Or disable HTTPS redirect in browser settings
 
-### Python Version Issues
+### Python Version Issues {#python-version-issues}
 
 Verify your Python version:
 ```bash
@@ -205,7 +205,7 @@ python3 --version
 ```
 Must be **3.11 or higher**. If needed, specify the full path: `python3.11`.
 
-### Missing Modules
+### Missing Modules {#missing-modules}
 
 Ensure your virtual environment is activated:
 ```bash
@@ -220,7 +220,7 @@ pip install -e packages/smo-common
 pip install -e packages/smo-simulator -e packages/smo-mcs -e packages/smo-planner
 ```
 
-### Orbit Tools Won't Start
+### Orbit Tools Won't Start {#orbit-tools-wont-start}
 
 Install the optional dependencies manually:
 ```bash
@@ -229,7 +229,7 @@ pip install sgp4 numpy aiohttp
 
 ---
 
-## Configuration
+## Configuration {#configuration}
 
 Mission configuration files are located in `configs/eosat1/`:
 
@@ -243,6 +243,6 @@ Modify these files to customize the mission, orbit, and subsystem behavior.
 
 ---
 
-## Support
+## Support {#support}
 
 For issues or questions, please refer to the project documentation or contact the development team.

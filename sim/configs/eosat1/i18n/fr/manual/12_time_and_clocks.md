@@ -1,4 +1,4 @@
-# EOSAT-1 — Temps et horloges
+# EOSAT-1 — Temps et horloges {#eosat-1-time-and-clocks}
 
 **Référence du document :** EOSAT1-UM-TIME-012
 **Édition :** 2.0
@@ -7,7 +7,7 @@
 
 ---
 
-## 1. Vue d'ensemble
+## 1. Vue d'ensemble {#1-overview}
 
 Les opérations d'EOSAT-1 font intervenir **deux horloges qui peuvent être en désaccord**, plus un
 compteur dérivé :
@@ -28,7 +28,7 @@ une horloge de mission. Elle n'est légitime que pour trois usages exactement :
 de l'affichage, les délais d'attente réseau, et les noms des journaux et fichiers de séance. Si un affichage du temps
 mission suit l'horloge de votre poste au lieu du temps sol, c'est une anomalie — signalez-la.
 
-## 2. Les horloges
+## 2. Les horloges {#2-the-clocks}
 
 | Horloge | Détenteur | Définition | Comportement |
 |---|---|---|---|
@@ -54,7 +54,7 @@ Règles qui en découlent :
    Elle est lue au chargement de la configuration et transmise à la couche paquets ; le littéral
    Python n'est qu'une valeur de repli pour fonctionner sans arborescence de configuration.
 
-## 3. Le format de temps CUC
+## 3. Le format de temps CUC {#3-the-cuc-time-format}
 
 Le temps bord circule sous la forme d'un CUC ECSS (*CCSDS Unsegmented Time Code*) :
 
@@ -88,7 +88,7 @@ Conséquences utiles à connaître en console :
   le champ de données est décalé de deux octets et le CRC échoue. Supprimer
   les vidages antérieurs à la migration plutôt que d'essayer de les lire.
 
-## 4. `time_ref` — comment l'OBC croit connaître l'heure
+## 4. `time_ref` — comment l'OBC croit connaître l'heure {#4-time_ref--how-the-obc-believes-it-knows-the-time}
 
 `obdh.time_ref` (**0x0A13**, SID HK 4) est la déclaration propre de l'OBC sur sa
 référence de temps. Lisez-la avant de lire l'horloge.
@@ -112,7 +112,7 @@ Paramètres associés, tous dans le **SID HK 4 (plateforme/OBDH, période de 8 
 `obdh.uptime` (`0x0308`) compte les secondes depuis l'**amorçage**, et non depuis l'époque. Il
 sert à repérer un redémarrage et à contrôler une marche ; ce n'est jamais un horodatage.
 
-## 5. Le modèle de dérive
+## 5. Le modèle de dérive {#5-the-drift-model}
 
 L'oscillateur est un TCXO réaliste. Sa dérive effective est tirée **une seule fois par exécution**
 dans le générateur aléatoire (RNG) initialisé de chaque modèle, de sorte qu'une graine donnée produit toujours la même horloge :
@@ -146,7 +146,7 @@ La dérive étant une *vitesse*, l'erreur mesurée croît avec
 `time_since_sync_s`. Un décalage de 3 secondes avec `time_since_sync_s` = 3 jours correspond à une
 horloge saine d'environ 12 ppm. Les mêmes 3 secondes dix minutes après une synchronisation, non.
 
-## 6. Asservissement GPS et maintien (holdover)
+## 6. Asservissement GPS et maintien (holdover) {#6-gps-discipline-and-holdover}
 
 * **`OBC_GPS_TIME_SYNC`** (S8, fonction 80) exige un point GPS 3D ou mieux —
   `aocs.gps_fix` (`0x0274`) >= 2. Sinon, la commande est refusée.
@@ -171,7 +171,7 @@ Un réglage sol et une synchronisation GPS ne sont **pas** la même opération 
 | nécessite un passage | oui — c'est une commande envoyée vers le bord | oui pour la commander, mais la réacquisition ultérieure est autonome |
 | disponible en mode chargeur d'amorçage | **non** — rejetée avant l'amorçage | non |
 
-## 7. Événements d'horloge
+## 7. Événements d'horloge {#7-clock-events}
 
 Chaque recalage de l'horloge lève un événement S5 portant le **saut signé en secondes** —
 un simple « heure réglée » ne dirait pas de combien l'horloge était décalée, ce qui est tout
@@ -190,7 +190,7 @@ SAFE_BOOT (événement `0x020F`), car la solution d'attitude a été calculée a
 une horloge qui vient de bouger. Il faut s'y attendre après un long maintien ou un redémarrage ; c'est
 un effet réel, pas un artefact.
 
-## 8. Comportement au redémarrage
+## 8. Comportement au redémarrage {#8-reboot-behaviour}
 
 **Le chargeur d'amorçage réinitialise l'horloge.** Sur `OBC_REBOOT`, ou en coupant puis en rétablissant
 la ligne EPS `obc` :
@@ -209,7 +209,7 @@ Une horloge qui indique une date de l'an 2000 ne trahit donc pas un bogue d'épo
 OBC non synchronisé. Vérifier `obdh.uptime` et `obdh.reboot_count` avant de conclure
 quoi que ce soit sur la dérive.
 
-## 9. Lire la corrélation en console
+## 9. Lire la corrélation en console {#9-reading-the-correlation-on-the-console}
 
 La console MCS affiche côte à côte :
 
@@ -236,7 +236,7 @@ transmis au sol, puisque le satellite ne peut pas mesurer l'erreur de sa propre 
 la déduit de la corrélation temporelle, et cette déduction est
 la réponse de l'exercice, pas un affichage opérationnel.
 
-## 10. Télécommandes datées (S11) et planificateur
+## 10. Télécommandes datées (S11) et planificateur {#10-time-tagged-commands-s11-and-the-planner}
 
 Le plan bord se déclenche sur l'**ONBOARD TIME**. C'est le plan propre au satellite,
 et il n'a rien d'autre sur quoi s'appuyer.
@@ -265,7 +265,7 @@ Si l'horloge n'a jamais été réglée (`time_ref = NONE`, encore proche de J200
 particulièrement prudent avec les étiquettes temporelles calculées directement à partir de l'époque : une telle étiquette
 peut se situer des décennies dans le futur de l'OBC, et la commande ne se déclenche tout simplement jamais.
 
-## 11. Le MET et son origine
+## 11. Le MET et son origine {#11-met-and-where-it-comes-from}
 
 `MET = ground_time - t0_epoch`. Il est calculé une seule fois et diffusé ; le MCS et le
 planificateur lisent tous deux cette valeur au lieu de la recalculer à partir de leur propre idée d'une
@@ -275,7 +275,7 @@ Le MET n'est pas une grandeur bord et n'est pas transmis au sol. Ne pas le confo
 `obdh.uptime`, qui compte depuis le dernier amorçage de l'OBC, ni avec l'accumulateur
 interne de temps écoulé du module FDIR.
 
-## 12. Mises en garde
+## 12. Mises en garde {#12-caveats}
 
 * **Mise en garde sur le redémarrage.** La source de temps sol est déterminée au démarrage du MCS ou du
   planificateur. La changer impose de redémarrer le service concerné.
@@ -284,7 +284,7 @@ interne de temps écoulé du module FDIR.
 * Rien d'autre que l'OBDH du satellite n'écrit le temps bord, et seule la
   référence de temps sol détient le temps sol.
 
-## 13. Diagnostic rapide
+## 13. Diagnostic rapide {#13-quick-diagnosis}
 
 | Symptôme | Que regarder | Cause probable |
 |---|---|---|
@@ -301,7 +301,7 @@ interne de temps écoulé du module FDIR.
 
 ---
 
-## Annexe A — Source de temps du système de formation
+## Annexe A — Source de temps du système de formation {#appendix-a--training-system-time-source}
 
 **Manual-Scope:** system — cette annexe ne s'applique que lorsque le segment sol
 est connecté au simulateur de formation au lieu d'un satellite. Elle n'a pas
@@ -312,7 +312,7 @@ Un réglage unique détermine si le **MCS** et le **planificateur** suivent le t
 simulé ou l'UTC réel. Il n'affecte **pas** le temps du satellite : le temps bord provient toujours
 de la télémesure et n'est jamais synthétisé au sol.
 
-### A.1 Ordre de priorité
+### A.1 Ordre de priorité {#a1-precedence}
 
 Pour chaque service (le premier l'emporte) :
 
@@ -329,7 +329,7 @@ Le paramètre associé `sim_state_url` (le point d'accès du simulateur interrog
 3. `sim_state_url:` dans `mission.yaml`
 4. Par défaut `http://<connect_host>:8080/api/state`
 
-### A.2 Configuration de mission
+### A.2 Configuration de mission {#a2-mission-config}
 
 ```yaml
 time_epoch: "2000-01-01T12:00:00"   # the CUC epoch — live config
@@ -337,7 +337,7 @@ time_source: sim                    # "sim" | "real"
 # sim_state_url: http://localhost:8080/api/state   # optional override
 ```
 
-### A.3 start.sh
+### A.3 start.sh {#a3-startsh}
 
 ```bash
 SMO_TIME_SOURCE="${SMO_TIME_SOURCE:-sim}"          # --real sets this to real
@@ -350,7 +350,7 @@ export SMO_SIM_STATE_URL="${SMO_SIM_STATE_URL:-http://localhost:8080/api/state}"
 
 La source de temps active est rappelée dans la bannière de démarrage.
 
-### A.4 Synchronisation en boucle fermée sur la simulation
+### A.4 Synchronisation en boucle fermée sur la simulation {#a4-closed-loop-sim-sync}
 
 En mode sim, l'horloge sol est synchronisée en boucle fermée sur le simulateur au lieu d'être
 reconstruite localement :

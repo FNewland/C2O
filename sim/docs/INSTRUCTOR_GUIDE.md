@@ -270,7 +270,7 @@ Parameters are grouped by subsystem:
 - Memory Used (%)
 - Storage Used (%)
 - Reboot count
-- Mode (NOMINAL, SAFE, BOOTLOADER)
+- Mode (NOMINAL, SAFE, EMERGENCY) and software image (`sw_image`: 0 = bootloader, 1 = application)
 
 #### TT&C (Telemetry, Tracking & Command)
 - Link Status (UP/DOWN)
@@ -561,7 +561,7 @@ should say so.
    - Click **REFRESH SCENARIOS** → Select "Post-Separation" → Click **START**
 
 2. **Monitor Initial State**:
-   - Observe Battery SoC = 95%, OBC mode = BOOTLOADER, AOCS mode = OFF
+   - Observe Battery SoC = 95%, OBC in the bootloader (`sw_image` = 0), AOCS mode = OFF
    - Angular rates ~1-2 deg/s from separation impulse
    - Watch the progress bar; scenario runs for 1 hour
 

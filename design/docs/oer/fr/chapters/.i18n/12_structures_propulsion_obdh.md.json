@@ -44,8 +44,8 @@
   },
   {
    "id": "chapter-12-structures-propulsion-and-on-board-data-handling/12-1-cubesat-structure-and-cds-compliance/12-1-5-launch-load-environment",
-   "en_hash": "07a1d4819cf4aa43",
-   "fr_hash": "78f7d8f911c610cc"
+   "en_hash": "4fa4c120a6a532cd",
+   "fr_hash": "fae87b2ec06d0092"
   },
   {
    "id": "chapter-12-structures-propulsion-and-on-board-data-handling/12-1-cubesat-structure-and-cds-compliance/12-1-6-structural-margin-of-safety",
@@ -174,8 +174,8 @@
   },
   {
    "id": "chapter-12-structures-propulsion-and-on-board-data-handling/summary",
-   "en_hash": "33f5de7809185640",
-   "fr_hash": "83a7d0d845e5edc3"
+   "en_hash": "5439ae4c9e4a1b89",
+   "fr_hash": "07cded701569d8f4"
   },
   {
    "id": "chapter-12-structures-propulsion-and-on-board-data-handling/problems",
@@ -188,5 +188,5 @@
    "fr_hash": "77e3ac8e36a14a68"
   }
  ],
- "en_commit": "3ea7113"
+ "en_commit": "c4a140a"
 }

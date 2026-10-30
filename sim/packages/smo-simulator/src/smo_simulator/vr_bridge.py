@@ -83,7 +83,24 @@ POINTING_NAMES = {0: "INERTIAL", 1: "NADIR", 2: "TARGET_TRACK", 3: "SUN"}
 ANTENNA_SENSOR_NAMES = {0: "UNKNOWN", 1: "STOWED", 2: "DEPLOYED",
                         3: "JAMMED"}
 
-# Static description sent once in `hello`. Bus dimensions follow the 6U
+# ── smo-vr/1 body frame vs the simulator body frame ──────────────────────
+# The ICD (docs/VR_INTERFACE_ICD.md §6) fixes the smo-vr/1 body axes as
+# +X along-track, +Y wing / SADA axis, +Z NADIR (imager), -Z zenith. Ruling Q4
+# (2026-10-30) turned the SIMULATOR's body frame over: +Z = zenith, -Z = nadir
+# (imager and radiator on -Z), +X along-track, +Y = +orbit normal. External
+# student teams build against smo-vr/1, so the bridge does not change the
+# interface: it re-expresses every body-frame quantity in the smo-vr/1 axes,
+# which are the simulator's body axes turned 180 deg about X:
+#     v_vr = VR_FROM_SIM_BODY @ v_sim
+# The same physical spacecraft therefore renders exactly as before. Because
+# that turn swaps +Y and -Y, the wing on the simulator's +Y face is the wing
+# on the smo-vr/1 -Y face (so wing_py/wing_my are exchanged on the wire), and
+# the SADA shaft angle about Y changes sign. Any move of the ICD itself to
+# the new convention is a breaking change and would be smo-vr/2.
+VR_FROM_SIM_BODY = np.diag([1.0, -1.0, -1.0])
+
+# Static description sent once in `hello`. Body axes here are the smo-vr/1
+# axes above (NOT the simulator's own). Bus dimensions follow the 6U
 # envelope in subsystems/eps.yaml (100 x 226 x 366 mm: the 366x226 face is
 # the X face, 366x100 the Y face, 226x100 the Z face). Wing and antenna
 # geometry is a MODELLING SUGGESTION — the simulator models their areas and
@@ -174,22 +191,26 @@ def build_vr_state(engine) -> dict:
     # attitude.quat_to_dcm is the ECI->body DCM (v_body = C v_eci); the same
     # scalar-last Hamilton quaternion, used as an ACTIVE rotation, takes body
     # vectors into ECI — i.e. it is the object's local-to-world rotation.
-    C = att.quat_to_dcm(q)
-    omega = np.degrees(np.asarray(getattr(a, "omega_true", None)
-                                  or [0.0, 0.0, 0.0], dtype=float))
+    # Re-express in the smo-vr/1 body axes (see VR_FROM_SIM_BODY).
+    C = VR_FROM_SIM_BODY @ att.quat_to_dcm(q)
+    q = att.dcm_to_quat(C)
+    omega = VR_FROM_SIM_BODY @ np.degrees(np.asarray(
+        getattr(a, "omega_true", None) or [0.0, 0.0, 0.0], dtype=float))
     aocs_mode = int(getattr(a, "mode", 0)) if a is not None else 0
     pointing = int(getattr(a, "pointing_frame", 1)) if a is not None else 1
 
     es = getattr(eps, "_state", None)
     sweep = float(getattr(eps, "_wing_deploy_time_s", 30.0) or 30.0)
     timer = float(getattr(es, "wing_deploy_timer", 0.0) or 0.0)
-    wing_py = _wing(bool(getattr(es, "wing_py_deployed", False)),
-                    bool(getattr(es, "wing_py_deploying", False)),
-                    timer, sweep)
-    wing_my = _wing(bool(getattr(es, "wing_my_deployed", False)),
+    # smo-vr/1 +Y is the simulator's -Y: the simulator's -Y wing is the
+    # smo-vr/1 +Y wing, and the shaft angle about Y changes sign.
+    wing_py = _wing(bool(getattr(es, "wing_my_deployed", False)),
                     bool(getattr(es, "wing_my_deploying", False)),
                     timer, sweep)
-    sada = float(getattr(es, "solar_array_drive_angle", 0.0) or 0.0)
+    wing_my = _wing(bool(getattr(es, "wing_py_deployed", False)),
+                    bool(getattr(es, "wing_py_deploying", False)),
+                    timer, sweep)
+    sada = -float(getattr(es, "solar_array_drive_angle", 0.0) or 0.0)
 
     ts = getattr(ttc, "_state", None)
     ant_truth = bool(getattr(ts, "antenna_deployed", False))

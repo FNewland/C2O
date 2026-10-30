@@ -9,294 +9,59 @@
   },
   {
    "id": "space-mission-operations-simulator-software-architecture",
-   "en_hash": "d5c0acf6ac4745d4",
-   "fr_hash": "29e35978a2b1e1c5"
+   "en_hash": "ded90b739de544c2",
+   "fr_hash": "448cea43fe12c140"
   },
   {
-   "id": "space-mission-operations-simulator-software-architecture/executive-summary",
-   "en_hash": "ea3062579471066d",
-   "fr_hash": "ad8062be3fa26cbd"
+   "id": "space-mission-operations-simulator-software-architecture/summary",
+   "en_hash": "2b92b7699c62e379",
+   "fr_hash": "a293bfa6e708eb73"
   },
   {
-   "id": "space-mission-operations-simulator-software-architecture/system-architecture-overview",
-   "en_hash": "a85ae7fc9aefb803",
-   "fr_hash": "dab98ae6de2326dd"
+   "id": "space-mission-operations-simulator-software-architecture/packages",
+   "en_hash": "87e6638ff1ddbf22",
+   "fr_hash": "2a65f9fe7e44aec0"
   },
   {
-   "id": "space-mission-operations-simulator-software-architecture/system-architecture-overview/microservice-topology",
-   "en_hash": "a207abcbb57d6119",
-   "fr_hash": "1895efec8c64ea34"
+   "id": "space-mission-operations-simulator-software-architecture/processes-and-ports",
+   "en_hash": "e047740e79867f3b",
+   "fr_hash": "5805af5123c5b026"
   },
   {
-   "id": "space-mission-operations-simulator-software-architecture/system-architecture-overview/service-specifications",
-   "en_hash": "2be0f8ef0b52c2f5",
-   "fr_hash": "a66802cec5248bdb"
+   "id": "space-mission-operations-simulator-software-architecture/packet-framing",
+   "en_hash": "03b527300b87a1f8",
+   "fr_hash": "d23e27619cc632dc"
   },
   {
-   "id": "space-mission-operations-simulator-software-architecture/system-architecture-overview/service-specifications/simulator-port-8080",
-   "en_hash": "b3745a3541e7935e",
-   "fr_hash": "eec75acea84dfa49"
+   "id": "space-mission-operations-simulator-software-architecture/topology",
+   "en_hash": "e81caae919f2d809",
+   "fr_hash": "4f78708309396134"
   },
   {
-   "id": "space-mission-operations-simulator-software-architecture/system-architecture-overview/service-specifications/mission-control-system-port-9090",
-   "en_hash": "658f97d705e37561",
-   "fr_hash": "defff30a5abd2850"
+   "id": "space-mission-operations-simulator-software-architecture/launch-profiles",
+   "en_hash": "f0b495329c3579ee",
+   "fr_hash": "c68a091467535ba7"
   },
   {
-   "id": "space-mission-operations-simulator-software-architecture/system-architecture-overview/service-specifications/mission-planner-port-9091",
-   "en_hash": "d1a2edb4d7552c68",
-   "fr_hash": "94ee5b53d8aa3b89"
+   "id": "space-mission-operations-simulator-software-architecture/inside-the-simulator",
+   "en_hash": "b114ed2be4eee7c4",
+   "fr_hash": "22a2da6c48a894d8"
   },
   {
-   "id": "space-mission-operations-simulator-software-architecture/system-architecture-overview/service-specifications/delayed-telemetry-viewer-port-8092",
-   "en_hash": "03d6ffefcb7532b9",
-   "fr_hash": "7e9e1c4c41055e99"
+   "id": "space-mission-operations-simulator-software-architecture/mcs-and-planner",
+   "en_hash": "5f09ceb30e75c60f",
+   "fr_hash": "4a1d82f7b12336cb"
   },
   {
-   "id": "space-mission-operations-simulator-software-architecture/system-architecture-overview/service-specifications/orbit-tools-port-8093",
-   "en_hash": "11b3142dd147e70d",
-   "fr_hash": "d2e7fb152f63ed5c"
+   "id": "space-mission-operations-simulator-software-architecture/configuration",
+   "en_hash": "c34ec05830584c2d",
+   "fr_hash": "194c2fd98beec62e"
   },
   {
-   "id": "space-mission-operations-simulator-software-architecture/package-architecture",
-   "en_hash": "139163c91539193e",
-   "fr_hash": "e5af11bfe9ab07f6"
-  },
-  {
-   "id": "space-mission-operations-simulator-software-architecture/package-architecture/smo-common-shared-library",
-   "en_hash": "9f07696bf8104544",
-   "fr_hash": "346685f1dea8c64f"
-  },
-  {
-   "id": "space-mission-operations-simulator-software-architecture/package-architecture/smo-simulator-core-engine",
-   "en_hash": "b35c6c94f57bbe53",
-   "fr_hash": "e546f85182034a43"
-  },
-  {
-   "id": "space-mission-operations-simulator-software-architecture/package-architecture/smo-mcs-mission-control",
-   "en_hash": "8717612fc09b0590",
-   "fr_hash": "b6ab861d19202fbc"
-  },
-  {
-   "id": "space-mission-operations-simulator-software-architecture/package-architecture/smo-planner-mission-planning",
-   "en_hash": "949ce06aef86b7dd",
-   "fr_hash": "502738803844bd7b"
-  },
-  {
-   "id": "space-mission-operations-simulator-software-architecture/package-architecture/smo-gateway-network-relay",
-   "en_hash": "13ee93e473fed4d1",
-   "fr_hash": "2b797e2a9c3174a8"
-  },
-  {
-   "id": "space-mission-operations-simulator-software-architecture/simulation-engine",
-   "en_hash": "209855e1d6741c55",
-   "fr_hash": "1b8a85ad22eef2bd"
-  },
-  {
-   "id": "space-mission-operations-simulator-software-architecture/simulation-engine/simulationengine-main-loop",
-   "en_hash": "aad1d309bbd06190",
-   "fr_hash": "ae261d59a7301971"
-  },
-  {
-   "id": "space-mission-operations-simulator-software-architecture/simulation-engine/timing-model",
-   "en_hash": "ca38dffe9192b369",
-   "fr_hash": "110a4d76585bf812"
-  },
-  {
-   "id": "space-mission-operations-simulator-software-architecture/simulation-engine/shared-parameter-store",
-   "en_hash": "f4b698c1b10a0ddc",
-   "fr_hash": "cff7a05a2b90043e"
-  },
-  {
-   "id": "space-mission-operations-simulator-software-architecture/simulation-engine/packet-queues",
-   "en_hash": "b2e26d692bc0231c",
-   "fr_hash": "207aaec42106493f"
-  },
-  {
-   "id": "space-mission-operations-simulator-software-architecture/pus-c-service-implementation",
-   "en_hash": "b65172d0c2416059",
-   "fr_hash": "7c1940e3eb76f37c"
-  },
-  {
-   "id": "space-mission-operations-simulator-software-architecture/pus-c-service-implementation/s8-function-dispatch",
-   "en_hash": "ffd10e8e5162d901",
-   "fr_hash": "831b51dd10753d5c"
-  },
-  {
-   "id": "space-mission-operations-simulator-software-architecture/subsystem-models",
-   "en_hash": "4d50261eaad72cd2",
-   "fr_hash": "6158452027b6187e"
-  },
-  {
-   "id": "space-mission-operations-simulator-software-architecture/subsystem-models/eps-electric-power-system-epsbasic-py",
-   "en_hash": "a964960ee8c74f6e",
-   "fr_hash": "81f27eec5d146876"
-  },
-  {
-   "id": "space-mission-operations-simulator-software-architecture/subsystem-models/aocs-attitude-and-orbit-control-system-aocsbasic-py",
-   "en_hash": "16f81bfd1d84fc8a",
-   "fr_hash": "f2188cfeb801c606"
-  },
-  {
-   "id": "space-mission-operations-simulator-software-architecture/subsystem-models/tcs-thermal-control-system-tcsbasic-py",
-   "en_hash": "4b3bed9baf77701a",
-   "fr_hash": "186d7d6d5e3b9864"
-  },
-  {
-   "id": "space-mission-operations-simulator-software-architecture/subsystem-models/obdh-on-board-data-handler-obdhbasic-py",
-   "en_hash": "8f275b7a96edb2b3",
-   "fr_hash": "b7926d8d8aad4fde"
-  },
-  {
-   "id": "space-mission-operations-simulator-software-architecture/subsystem-models/tt-c-telemetry-tracking-and-command-ttcbasic-py",
-   "en_hash": "20c0ae85bfb43f26",
-   "fr_hash": "c640db1da652a322"
-  },
-  {
-   "id": "space-mission-operations-simulator-software-architecture/subsystem-models/payload-imager-payloadbasic-py",
-   "en_hash": "0e140664a2233fe6",
-   "fr_hash": "60bc4c6aa90cb33f"
-  },
-  {
-   "id": "space-mission-operations-simulator-software-architecture/telemetry-architecture",
-   "en_hash": "8f724c4e689c05dd",
-   "fr_hash": "37e952c443a03733"
-  },
-  {
-   "id": "space-mission-operations-simulator-software-architecture/telemetry-architecture/housekeeping-sids-s3",
-   "en_hash": "b1169199a9d21916",
-   "fr_hash": "70581d6bb0028129"
-  },
-  {
-   "id": "space-mission-operations-simulator-software-architecture/telemetry-architecture/parameter-catalog",
-   "en_hash": "5c5856be18850f4d",
-   "fr_hash": "f2bde42ba8c4f7cc"
-  },
-  {
-   "id": "space-mission-operations-simulator-software-architecture/telemetry-architecture/hk-packet-structures",
-   "en_hash": "ad7e19e9611036c6",
-   "fr_hash": "41491d4868195634"
-  },
-  {
-   "id": "space-mission-operations-simulator-software-architecture/telemetry-architecture/tm-packet-format",
-   "en_hash": "333359b25b39cbff",
-   "fr_hash": "1beff51ae2cafa94"
-  },
-  {
-   "id": "space-mission-operations-simulator-software-architecture/fdir-architecture",
-   "en_hash": "004aa0329b338904",
-   "fr_hash": "3005c9a7070787c8"
-  },
-  {
-   "id": "space-mission-operations-simulator-software-architecture/fdir-architecture/on-board-monitoring-s12",
-   "en_hash": "b1f64eeee1c588cd",
-   "fr_hash": "e7b383d8469b9c27"
-  },
-  {
-   "id": "space-mission-operations-simulator-software-architecture/fdir-architecture/event-action-links-s19",
-   "en_hash": "efefb9d3955e8f3c",
-   "fr_hash": "f5afce05cd77f4ce"
-  },
-  {
-   "id": "space-mission-operations-simulator-software-architecture/fdir-architecture/advanced-fdir-manager",
-   "en_hash": "5e05acd1340e748c",
-   "fr_hash": "d0eddf51c8a9f599"
-  },
-  {
-   "id": "space-mission-operations-simulator-software-architecture/configuration-schema",
-   "en_hash": "ed1a416890c4b263",
-   "fr_hash": "00c0316dc058d47d"
-  },
-  {
-   "id": "space-mission-operations-simulator-software-architecture/configuration-schema/mission-yaml",
-   "en_hash": "ef79896dd048d53e",
-   "fr_hash": "ef79896dd048d53e"
-  },
-  {
-   "id": "space-mission-operations-simulator-software-architecture/mcs-web-interface",
-   "en_hash": "9e9c70c5cf82ed3f",
-   "fr_hash": "a39bf68442179505"
-  },
-  {
-   "id": "space-mission-operations-simulator-software-architecture/mcs-web-interface/dashboard-tabs",
-   "en_hash": "2274730d49e7630b",
-   "fr_hash": "7cb3542d02b8d5c3"
-  },
-  {
-   "id": "space-mission-operations-simulator-software-architecture/mcs-web-interface/position-based-access-control",
-   "en_hash": "aa2ba64e8813645a",
-   "fr_hash": "847f0918988e998d"
-  },
-  {
-   "id": "space-mission-operations-simulator-software-architecture/mcs-web-interface/websocket-subscription",
-   "en_hash": "850c856fdf6f67b3",
-   "fr_hash": "64c8041f641c98c8"
-  },
-  {
-   "id": "space-mission-operations-simulator-software-architecture/network-protocol",
-   "en_hash": "37b0e90785661dac",
-   "fr_hash": "6e5663d74bb68cc6"
-  },
-  {
-   "id": "space-mission-operations-simulator-software-architecture/network-protocol/tc-uplink-tcp-8001",
-   "en_hash": "5c420869a5de19f4",
-   "fr_hash": "14b71f02929e0247"
-  },
-  {
-   "id": "space-mission-operations-simulator-software-architecture/network-protocol/tm-downlink-tcp-8002",
-   "en_hash": "352096cfa90db038",
-   "fr_hash": "884e471f019ac35b"
-  },
-  {
-   "id": "space-mission-operations-simulator-software-architecture/network-protocol/instructor-interface-tcp-8003",
-   "en_hash": "4d2cc1a78e3f0e84",
-   "fr_hash": "9429e97fb933a9d0"
-  },
-  {
-   "id": "space-mission-operations-simulator-software-architecture/network-protocol/http-rest-port-8080",
-   "en_hash": "05f899b694b04444",
-   "fr_hash": "46c1964280b17014"
-  },
-  {
-   "id": "space-mission-operations-simulator-software-architecture/network-protocol/websocket-ws",
-   "en_hash": "125989b1fc4a8183",
-   "fr_hash": "b979b62457d6d4e7"
-  },
-  {
-   "id": "space-mission-operations-simulator-software-architecture/test-architecture",
-   "en_hash": "14e71c3a34bbf6ec",
-   "fr_hash": "f63f1055744b7984"
-  },
-  {
-   "id": "space-mission-operations-simulator-software-architecture/deployment-modes",
-   "en_hash": "f9e11987570607bb",
-   "fr_hash": "31c0f201b9ce28d2"
-  },
-  {
-   "id": "space-mission-operations-simulator-software-architecture/deployment-modes/standalone-single-host",
-   "en_hash": "4cc7a72561916f4b",
-   "fr_hash": "15736e55c7702319"
-  },
-  {
-   "id": "space-mission-operations-simulator-software-architecture/deployment-modes/distributed-multi-host",
-   "en_hash": "959536cab461c267",
-   "fr_hash": "680cbe4d7b7a4833"
-  },
-  {
-   "id": "space-mission-operations-simulator-software-architecture/deployment-modes/cyberrange-air-gapped",
-   "en_hash": "f34d95f611db343a",
-   "fr_hash": "dcd57e0f5729d9ea"
-  },
-  {
-   "id": "space-mission-operations-simulator-software-architecture/deployment-modes/development-editable-installs",
-   "en_hash": "15911d2d708790e3",
-   "fr_hash": "e070a26bf0e6902c"
-  },
-  {
-   "id": "space-mission-operations-simulator-software-architecture/conclusion",
-   "en_hash": "05f09533bbd2fc11",
-   "fr_hash": "c0f17c27cdf988eb"
+   "id": "space-mission-operations-simulator-software-architecture/related-documents",
+   "en_hash": "63032a9b917bae64",
+   "fr_hash": "2a116554721c102c"
   }
  ],
- "en_commit": "3e80564"
+ "en_commit": "c4a140a"
 }

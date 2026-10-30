@@ -1,4 +1,4 @@
-# Système de contrôle d'attitude et d'orbite (AOCS) d'EOSAT-1
+# Système de contrôle d'attitude et d'orbite (AOCS) d'EOSAT-1 {#eosat-1-attitude-and-orbit-control-system-aocs}
 
 **Référence du document :** EOSAT1-UM-AOCS-003
 **Édition :** 2.0
@@ -7,29 +7,29 @@
 
 ---
 
-## 1. Vue d'ensemble
+## 1. Vue d'ensemble {#1-overview}
 
 Le système de contrôle d'attitude et d'orbite (SCAO, position AOCS sur la console) assure la détermination et le
 contrôle d'attitude trois axes d'EOSAT-1. Il maintient le pointage nadir pendant les opérations nominales de prise de vue des océans,
 réalise l'amortissement des vitesses angulaires après la séparation et prend en charge les manœuvres de basculement pour l'acquisition de
 cibles hors nadir. L'OBC exécute le logiciel SCAO de restitution d'orbite (à l'aide du récepteur GPS
-de bord). Les manœuvres d'orbite (évitement de collision, compensation limitée de la traînée) utilisent le module
+de bord). Les manœuvres d'orbite (évitement de collision, compensation limitée de la traînée, poussée de retrait de service en fin de vie) utilisent le module
 propulsif 1U à monergol vert (S8, fonctions 108–118), l'AOCS maintenant l'attitude de poussée.
 
-## 2. Configuration matérielle
+## 2. Configuration matérielle {#2-hardware-configuration}
 
-### 2.1 Capteurs
+### 2.1 Capteurs {#21-sensors}
 
 | Capteur                       | Quantité | Fonction                                    |
 |-------------------------------|----------|---------------------------------------------|
-| Senseur stellaire (zénith)    | 1        | Référence d'attitude de haute précision (face -Z) |
-| Senseur stellaire (nadir)     | 1        | Référence d'attitude de haute précision (face +Z) |
+| Senseur stellaire (zénith)    | 1        | Référence d'attitude de haute précision (face +Z) |
+| Senseur stellaire 2 (incliné) | 1        | Référence d'attitude de haute précision (face +Z, inclinée de 45° vers +Y) |
 | Magnétomètre 3 axes           | 1        | Attitude grossière et champ magnétique (voie unique) |
 | Gyromètres à fibre optique    | 3        | Mesure des vitesses angulaires (axes satellite) |
 | Têtes de senseur solaire grossier | 6    | Direction du Soleil pour le mode survie (une par face) |
 | Récepteur GPS                 | 1        | Restitution d'orbite (antenne zénith)       |
 
-#### 2.1.1 Magnétomètre (voie unique)
+#### 2.1.1 Magnétomètre (voie unique) {#211-magnetometer-single-string}
 
 EOSAT-1 embarque UN seul magnétomètre fluxgate 3 axes sur un mât court — comme pour les
 gyromètres, il n'y a ni rechange ni commutation principal/secours. Une défaillance du magnétomètre est une
@@ -58,7 +58,7 @@ devient inefficace (la loi B-dot n'a plus d'entrée), la désaturation magnétiq
 détermination grossière TRIAD CSS+MAG se dégrade en une propagation CSS plus gyromètres. Aucune reprise
 n'est possible par l'opérateur : la mission se poursuit dans un mode d'attitude dégradé de façon permanente.
 
-#### 2.1.2 Senseurs solaires grossiers — configuration à 6 têtes
+#### 2.1.2 Senseurs solaires grossiers — configuration à 6 têtes {#212-coarse-sun-sensors--6-head-configuration}
 
 EOSAT-1 utilise 6 têtes individuelles de senseur solaire grossier (CSS), une montée sur chaque face
 du satellite. Chaque tête fournit un courant à réponse en cosinus, fonction de l'angle entre le
@@ -70,37 +70,40 @@ vecteur Soleil et la normale à la face :
 | CSS-2    | -X   | Opposée à la trace | 0x027B  |
 | CSS-3    | +Y   | Transverse à la trace | 0x027C |
 | CSS-4    | -Y   | Opposée à la transverse | 0x027D |
-| CSS-5    | +Z   | Nadir            | 0x027E   |
-| CSS-6    | -Z   | Zénith           | 0x027F   |
+| CSS-5    | +Z   | Zénith           | 0x027E   |
+| CSS-6    | -Z   | Nadir            | 0x027F   |
 
 Le logiciel AOCS calcule le vecteur Soleil en combinant, par projection géométrique, les réponses de toutes les
 têtes CSS éclairées. Au moins deux têtes éclairées sont nécessaires pour
 une détermination valide du vecteur Soleil. En éclipse (toutes les têtes dans l'ombre), le vecteur Soleil est propagé
 à partir de la dernière mesure valide à l'aide du modèle orbital.
 
-#### 2.1.3 Senseurs stellaires — géométrie des champs de vue zénith et nadir
+#### 2.1.3 Senseurs stellaires — axes de visée et géométrie des champs de vue {#213-star-cameras--boresights-and-fov-geometry}
 
-EOSAT-1 embarque deux senseurs stellaires montés sur des faces opposées :
+EOSAT-1 embarque deux senseurs stellaires, tous deux sur la face zénith (+Z), de sorte qu'aucun ne vise
+la Terre en pointage nadir nominal :
 
 | Senseur  | Face | Axe de visée | Demi-angle du FOV | Précision (3 sigma) |
 |----------|------|------------|----------------|---------------------|
-| ST-Zenith| -Z   | Zénith     | Cône de 15°    | 0,05°               |
-| ST-Nadir | +Z   | Nadir      | Cône de 15°    | 0,05°               |
+| ST1 (ST-Zenith) | +Z | Zénith (+Z) | Cône de 15° | 0,05°               |
+| ST2 (incliné)   | +Z | À 45° de +Z vers +Y | Cône de 15° | 0,05° |
+
++Y est le côté opposé au Soleil sur cette orbite (bêta d'environ −21° à −31°) : l'inclinaison éloigne donc ST2
+du Soleil lorsque ST1 risque l'éblouissement.
 
 **Zones d'éblouissement :** chaque senseur stellaire est ébloui lorsque le Soleil, le limbe terrestre ou la Lune entre
 dans son champ de vue (cône de 15° de demi-angle autour de l'axe de visée) :
 
 | Senseur   | Sources d'éblouissement                                    |
 |-----------|------------------------------------------------------------|
-| ST-Zenith | Soleil à moins de 15° de la direction du zénith            |
-| ST-Nadir  | Limbe terrestre toujours dans le FOV (pointage nadir) ; reflet du Soleil |
+| ST1       | Soleil à moins de 15° de la direction du zénith            |
+| ST2       | Soleil à moins de 15° de son axe de visée incliné ; limbe terrestre pendant les grands basculements |
 
-En pointage nadir nominal, ST-Zenith est la référence d'attitude principale (il vise à l'opposé de la
-Terre). ST-Nadir est généralement ébloui par la proximité de la Terre, mais devient utile pendant les manœuvres
-de basculement ou dans les attitudes hors nadir. Si les deux senseurs sont éblouis simultanément, l'attitude est
-propagée à l'aide des gyromètres pendant 60 secondes au plus.
+En pointage nadir nominal, ST1 est la référence d'attitude principale (il vise à l'opposé de la
+Terre) et ST2 sert de secours. Si les deux senseurs sont éblouis simultanément, l'attitude est
+propagée à l'aide des gyromètres pendant 60 secondes au plus.
 
-### 2.2 Actionneurs
+### 2.2 Actionneurs {#22-actuators}
 
 | Actionneur           | Quantité | Fonction                                    |
 |----------------------|----------|---------------------------------------------|
@@ -111,7 +114,7 @@ Les quatre roues de réaction sont disposées en pyramide, ce qui assure un cont
 avec tolérance à une panne. La plage nominale de vitesse des roues est de +/-4000 tr/min ; la limite
 jaune est fixée à +/-5000 tr/min afin de conserver une marge avant qu'une désaturation ne soit nécessaire.
 
-## 3. Modes AOCS
+## 3. Modes AOCS {#3-aocs-modes}
 
 Les codes de mode suivent le tableau de référence de `configs/eosat1/aocs/aocs_mode_codes.yaml`
 (cette section comportait auparavant une numérotation contradictoire à cinq modes ; elle a été
@@ -130,7 +133,7 @@ corrigée) :
 | 8       | ECLIPSE     | Maintien nadir sur la seule connaissance gyrométrique (sans mise à jour ST) |
 | 9       | INERTIAL    | Maintien d'un quaternion ECI commandé (étalonnage, stéréo) |
 
-### 3.1 Transitions de mode
+### 3.1 Transitions de mode {#31-mode-transitions}
 
 ```
 DETUMBLE --> COARSE_SUN --> NOMINAL <--> ECLIPSE
@@ -153,7 +156,7 @@ DETUMBLE --> COARSE_SUN --> NOMINAL <--> ECLIPSE
   en NOMINAL à la sortie d'éclipse.
 - Tout mode revient en **COARSE_SUN** lors d'un passage en mode survie déclenché par la FDIR.
 
-## 4. Paramètres de télémesure
+## 4. Paramètres de télémesure {#4-telemetry-parameters}
 
 | ID param. | Nom           | Unité    | Description                              |
 |----------|----------------|----------|------------------------------------------|
@@ -181,7 +184,7 @@ DETUMBLE --> COARSE_SUN --> NOMINAL <--> ECLIPSE
 | 0x021A   | rw3_temp       | °C       | Température de la roue de réaction 3     |
 | 0x021B   | rw4_temp       | °C       | Température de la roue de réaction 4     |
 
-## 5. Définition des limites
+## 5. Définition des limites {#5-limit-definitions}
 
 | Paramètre          | Jaune bas  | Jaune haut  | Rouge bas | Rouge haut |
 |--------------------|------------|-------------|---------|----------|
@@ -195,7 +198,7 @@ DETUMBLE --> COARSE_SUN --> NOMINAL <--> ECLIPSE
 Une erreur d'attitude persistante supérieure à 1 deg déclenche une alarme jaune. Des erreurs supérieures à 5 deg en
 mode NOMINAL conduisent la FDIR à commander une transition vers COARSE_SUN.
 
-## 6. Commandes
+## 6. Commandes {#6-commands}
 
 | Commande          | Service  | Paramètres             | Description                          |
 |-------------------|----------|------------------------|--------------------------------------|
@@ -205,7 +208,7 @@ mode NOMINAL conduisent la FDIR à commander une transition vers COARSE_SUN.
 | GET_PARAM         | S20,S3   | param_id (0x0200–021B) | Lire un paramètre AOCS individuel    |
 | SET_PARAM         | S20,S1   | param_id, value        | Modifier un paramètre de configuration AOCS |
 
-### 6.1 Procédure de désaturation
+### 6.1 Procédure de désaturation {#61-desaturation-procedure}
 
 1. Vérifier les vitesses de roue actuelles par la HK ou par `GET_PARAM` sur 0x0207–0x020A.
 2. Si une roue dépasse +/-4500 tr/min, programmer une désaturation.
@@ -214,7 +217,7 @@ mode NOMINAL conduisent la FDIR à commander une transition vers COARSE_SUN.
    type : 5–15 min avec le dipôle de 1,6 A·m² des barreaux).
 5. L'AOCS revient de manière autonome en NOMINAL à la fin de l'opération.
 
-## 7. Remarques d'exploitation
+## 7. Remarques d'exploitation {#7-operational-notes}
 
 1. Chaque senseur stellaire a besoin d'au moins 3 étoiles identifiées pour fournir une solution d'attitude valide.
    À la sortie d'éclipse (éblouissement par le Soleil), l'attitude est propagée à l'aide des seuls gyromètres pendant 60 s au plus.
@@ -236,7 +239,7 @@ mode NOMINAL conduisent la FDIR à commander une transition vers COARSE_SUN.
 6. Le récepteur GPS fournit la position et la vitesse pour la restitution d'orbite. Le logiciel
    SCAO utilise ces données pour la propagation d'orbite, mais n'effectue pas de contrôle d'orbite.
 
-## 8. Séquence de recette du SCAO
+## 8. Séquence de recette du SCAO {#8-adcs-commissioning-sequence}
 
 La séquence de recette du SCAO est réalisée pendant la transition de la LEOP vers les opérations
 nominales. Elle suit un ordre strict, afin de vérifier chaque composant avant d'activer le suivant :

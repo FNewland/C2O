@@ -1,4 +1,4 @@
-# EOSAT-1 On-Board Data Handling (OBDH)
+# EOSAT-1 On-Board Data Handling (OBDH) {#eosat-1-on-board-data-handling-obdh}
 
 **Document ID:** EOSAT1-UM-OBDH-005
 **Issue:** 2.0
@@ -7,16 +7,16 @@
 
 ---
 
-## 1. Overview
+## 1. Overview {#1-overview}
 
 The On-Board Data Handling (OBDH) subsystem provides central processing, data storage,
 telecommand decoding, telemetry formatting, and time management for the EOSAT-1 spacecraft.
 It consists of a cold-redundant On-Board Computer pair (OBC-A and OBC-B) with integrated mass
 memory, a hardware watchdog, and interfaces to all other subsystems via a dual CAN bus.
 
-## 2. Architecture
+## 2. Architecture {#2-architecture}
 
-### 2.1 On-Board Computer (Cold-Redundant A/B)
+### 2.1 On-Board Computer (Cold-Redundant A/B) {#21-on-board-computer-cold-redundant-ab}
 
 EOSAT-1 carries two identical OBCs in a cold-redundant configuration:
 
@@ -34,14 +34,14 @@ Both units are fed from the unswitchable `obc` PDM line (line 0), so the OBC is 
 after separation. Unit selection is internal to the OBC; OBC-B is normally off (cold standby).
 Both OBCs share access to the dual CAN bus for subsystem communication.
 
-### 2.2 Watchdog Timer
+### 2.2 Watchdog Timer {#22-watchdog-timer}
 
 The hardware watchdog requires a periodic heartbeat from the OBC application software. If
 the heartbeat is not received within 10 seconds, the watchdog initiates an OBC reset. After
-three consecutive watchdog resets, the OBC boots into BOOTLOADER mode and awaits ground
+three consecutive watchdog resets, the OBC stays in the bootloader (`sw_image` = 0) and awaits ground
 intervention.
 
-### 2.3 Mass Memory Management
+### 2.3 Mass Memory Management {#23-mass-memory-management}
 
 Mass memory is used for:
 
@@ -51,47 +51,55 @@ Mass memory is used for:
 
 The `mmm_used` parameter (0x0303) reports current memory utilisation as a percentage.
 
-## 3. OBC Modes
+## 3. OBC Modes {#3-obc-modes}
 
 | Mode ID | Mode Name    | Description                                          |
 |---------|--------------|------------------------------------------------------|
 | 0       | NOMINAL      | Full functionality, all subsystems active             |
 | 1       | SAFE         | Reduced operations, non-essential loads powered down  |
-| 2       | BOOTLOADER   | Minimal boot image, restricted commands, beacon only  |
+| 2       | EMERGENCY    | Commanded contingency mode (`OBC_SET_MODE` mode=2); watchdog held |
 
-### 3.1 Mode Transitions
+The OBC mode does not say which software is running. That is the separate software-image
+indicator `sw_image` (0x0311): **0 = bootloader**, 1 = application. Boot progress is in
+`boot_state` (0x0A15: 0 bootloader idle, 1 verifying the image CRC, 2 application running,
+3 last boot failed). An OBC in the bootloader is recognised by `sw_image` = 0, never by
+`obc_mode`, which reads 1 (SAFE) after a reboot.
+
+### 3.1 Mode Transitions {#31-mode-transitions}
 
 ```
-Power-on --> BOOTLOADER --> NOMINAL
-                 |             |
-                 |         SAFE <--> NOMINAL
-                 |             |
-                 +<--- 3x WD --+
+Power-on --> bootloader (sw_image=0) --> application (sw_image=1), NOMINAL
+                 |                             |
+                 |                  SAFE / EMERGENCY <--> NOMINAL
+                 |                             |
+                 +<--- 3x WD ------------------+
                  |
                  +<--- OBC crash/reset
 ```
 
-- **Power-on to BOOTLOADER**: Always. The OBC always boots into BOOTLOADER first.
-- **BOOTLOADER to NOMINAL**: Ground commanded via `OBC_BOOT_APP` (S8.1 func 55) after self-test.
+- **Power-on to bootloader**: Always. The OBC always boots into the bootloader first (`sw_image` = 0).
+- **Bootloader to application**: Ground commanded via `OBC_BOOT_APP` (S8.1 func 55) after self-test;
+  `sw_image` becomes 1 and the OBC mode NOMINAL (0).
   At first power-on the bootloader does NOT auto-transition — ground command is required. After a
   reboot it auto-attempts the application boot after 10 s unless `OBC_BOOT_INHIBIT` is set.
-- **NOMINAL to SAFE**: Ground commanded via `OBC_SET_MODE` (mode=1) or autonomous FDIR.
-- **SAFE to NOMINAL**: Ground commanded via `OBC_SET_MODE` (mode=0) after anomaly clearance.
-- **Any to BOOTLOADER**: Three consecutive watchdog resets or ground command (`OBC_REBOOT`, func 52).
-- **OBC crash to BOOTLOADER**: An unrecoverable software exception causes a reset, and after
-  3 consecutive resets, the OBC remains in BOOTLOADER awaiting ground intervention.
+- **NOMINAL to SAFE or EMERGENCY**: Ground commanded via `OBC_SET_MODE` (mode=1 or 2) or autonomous FDIR.
+- **SAFE or EMERGENCY to NOMINAL**: Ground commanded via `OBC_SET_MODE` (mode=0) after anomaly clearance.
+- **Any to bootloader**: Three consecutive watchdog resets or ground command (`OBC_REBOOT`, func 52).
+  `sw_image` returns to 0 and the OBC mode is set to SAFE (1).
+- **OBC crash to bootloader**: An unrecoverable software exception causes a reset, and after
+  3 consecutive resets, the OBC remains in the bootloader awaiting ground intervention.
 
-### 3.2 Bootloader State Machine
+### 3.2 Bootloader State Machine {#32-bootloader-state-machine}
 
-The BOOTLOADER mode is a minimal operating environment designed for spacecraft recovery.
+The bootloader is a minimal operating environment designed for spacecraft recovery.
 It provides limited functionality to ensure the spacecraft remains commandable.
-Telemetry in BOOTLOADER is routed from the dedicated **bootloader APID (0x002)** —
+Telemetry in the bootloader is routed from the dedicated **bootloader APID (0x002)** —
 distinct from the application APID (0x001). Only **SID 11 (Beacon)** is emitted;
 all onboard TM stores, AOCS, TCS, and payload operations are unavailable until the
 application software has booted (phase ≥ 4). An OBC reboot reverts the spacecraft
 to this bootloader/beacon-only state automatically.
 
-#### Bootloader Capabilities
+#### Bootloader Capabilities {#bootloader-capabilities}
 
 | Capability              | Available | Notes                                      |
 |-------------------------|-----------|--------------------------------------------|
@@ -99,13 +107,13 @@ to this bootloader/beacon-only state automatically.
 | Full housekeeping       | No        | Application-level HK not available         |
 | Command reception       | Yes       | Via dedicated PDM command channel           |
 | Command set             | Restricted | Only essential commands accepted           |
-| AOCS control            | No        | No attitude control in BOOTLOADER          |
+| AOCS control            | No        | No attitude control in the bootloader      |
 | Payload operations      | No        | Payload power off                          |
 | Subsystem commanding    | No        | Only OBC-internal commands                 |
 
-#### Restricted Command Set in BOOTLOADER
+#### Restricted Command Set in the Bootloader {#restricted-command-set-in-the-bootloader}
 
-Only the following commands are accepted in BOOTLOADER mode:
+Only the following commands are accepted while `sw_image` = 0:
 
 | Command              | Purpose                                          |
 |----------------------|--------------------------------------------------|
@@ -118,13 +126,14 @@ Only the following commands are accepted in BOOTLOADER mode:
 
 All other commands are rejected at acceptance with failure code 0x0006.
 
-#### Beacon Packet (SID 11)
+#### Beacon Packet (SID 11) {#beacon-packet-sid-11}
 
-The beacon packet transmitted in BOOTLOADER mode contains a minimal set of parameters:
+The beacon packet transmitted while the OBC runs the bootloader contains a minimal set of parameters:
 
 | Parameter       | Content                               |
 |-----------------|---------------------------------------|
-| obc_mode        | 2 (BOOTLOADER)                        |
+| obc_mode        | 0/1/2 — not a boot indicator          |
+| sw_image        | 0 (bootloader) — the boot indicator   |
 | obc_temp        | OBC board temperature                 |
 | bat_voltage     | Battery voltage                       |
 | bat_soc         | Battery state of charge               |
@@ -134,9 +143,9 @@ The beacon packet transmitted in BOOTLOADER mode contains a minimal set of param
 
 This beacon is transmitted at low rate (0.01 Hz) to conserve power and bandwidth.
 
-### 3.3 Bootloader to Application Transition
+### 3.3 Bootloader to Application Transition {#33-bootloader-to-application-transition}
 
-The transition from BOOTLOADER to application (NOMINAL) mode proceeds as follows:
+The transition from the bootloader to the application (`sw_image` 0 → 1, OBC mode NOMINAL) proceeds as follows:
 
 1. Ground receives beacon packet and verifies OBC health.
 2. Ground sends `OBC_BOOT_APP` (S8.1 func 55).
@@ -146,23 +155,23 @@ The transition from BOOTLOADER to application (NOMINAL) mode proceeds as follows
 6. Full housekeeping telemetry begins at 1 Hz.
 7. Ground verifies all telemetry parameters are nominal.
 
-If POST fails, the OBC remains in BOOTLOADER and generates a failure event. Ground must
+If POST fails, the OBC remains in the bootloader and generates a failure event. Ground must
 then investigate (see CTG-021, OBC Bootloader Recovery).
 
-### 3.4 OBC Crash Recovery Workflow
+### 3.4 OBC Crash Recovery Workflow {#34-obc-crash-recovery-workflow}
 
 When the OBC experiences an unrecoverable crash:
 
 1. **Crash detected**: Hardware watchdog timeout (no heartbeat for 10 seconds).
-2. **First reset**: OBC reboots into BOOTLOADER, then auto-attempts application boot.
+2. **First reset**: OBC reboots into the bootloader, then auto-attempts application boot.
 3. **Second reset**: Same as first. `reboot_count` increments.
-4. **Third reset**: OBC remains in BOOTLOADER mode permanently until ground command.
+4. **Third reset**: OBC remains in the bootloader permanently until ground command.
    No auto-boot attempt.
 5. **Ground recovery**: During next contact, ground observes beacon packet with
-   `obc_mode = 2` and elevated `reboot_count`. Ground investigates telemetry archive,
+   `sw_image = 0` and elevated `reboot_count`. Ground investigates telemetry archive,
    uploads software patch if needed, and commands `OBC_BOOT_APP` to restart.
 
-### 3.5 Safe Mode Behaviour
+### 3.5 Safe Mode Behaviour {#35-safe-mode-behaviour}
 
 In SAFE mode, the OBC:
 
@@ -172,7 +181,7 @@ In SAFE mode, the OBC:
 - Activates battery heater (the only active thermal element).
 - Maintains TTC link for ground commanding.
 
-### 3.6 CAN Bus Architecture and Failure Isolation
+### 3.6 CAN Bus Architecture and Failure Isolation {#36-can-bus-architecture-and-failure-isolation}
 
 EOSAT-1 uses a dual CAN bus (Bus A and Bus B) for internal communication between the OBC
 and all subsystems:
@@ -195,9 +204,9 @@ communication.
 5. If both buses fail, only the OBC internal functions remain operational — subsystem
    commanding is lost. This is a spacecraft emergency requiring immediate investigation.
 
-## 4. Telecommand Processing
+## 4. Telecommand Processing {#4-telecommand-processing}
 
-### 4.1 TC Counters
+### 4.1 TC Counters {#41-tc-counters}
 
 The OBDH maintains three telecommand counters:
 
@@ -210,13 +219,13 @@ The OBDH maintains three telecommand counters:
 A discrepancy between `tc_recv_count` and `tc_exec_count + tc_reject_count` indicates
 a processing anomaly and should be investigated.
 
-### 4.2 TC Authentication
+### 4.2 TC Authentication {#42-tc-authentication}
 
 All telecommands are validated using a CRC-16 checksum. Additionally, critical commands
 (mode changes, heater control) require a command authentication code. Commands failing
 validation are rejected and increment `tc_reject_count`.
 
-## 5. Telemetry Generation
+## 5. Telemetry Generation {#5-telemetry-generation}
 
 Housekeeping telemetry is generated at configurable rates:
 
@@ -224,16 +233,16 @@ Housekeeping telemetry is generated at configurable rates:
 |-----------|------------|-------------|-----------------------------|
 | NOMINAL   | 1 Hz       | 256 bytes   | All subsystem parameters    |
 | SAFE      | 0.1 Hz     | 128 bytes   | Essential parameters only   |
-| BOOTLOADER| 0.01 Hz    | 64 bytes    | OBC health only             |
+| Bootloader| 0.01 Hz    | 64 bytes    | OBC health only             |
 
 The `tm_pkt_count` parameter (0x0307) tracks the total number of telemetry packets generated
 since the last reboot.
 
-## 6. Telemetry Parameters
+## 6. Telemetry Parameters {#6-telemetry-parameters}
 
 | Param ID | Name            | Unit   | Description                          |
 |----------|-----------------|--------|--------------------------------------|
-| 0x0300   | obc_mode        | enum   | Current OBC mode (0/1/2)             |
+| 0x0300   | obc_mode        | enum   | OBC mode (0 NOMINAL, 1 SAFE, 2 EMERGENCY) |
 | 0x0301   | obc_temp        | deg C  | OBC board temperature                |
 | 0x0302   | cpu_load        | %      | OBC CPU utilisation                  |
 | 0x0303   | mmm_used        | %      | Mass memory utilisation              |
@@ -244,7 +253,7 @@ since the last reboot.
 | 0x0308   | uptime          | s      | Seconds since last OBC boot          |
 | 0x030A   | reboot_count    | count  | Total OBC reboots since deployment   |
 
-## 7. Limit Definitions
+## 7. Limit Definitions {#7-limit-definitions}
 
 | Parameter       | Yellow Low | Yellow High | Red Low | Red High |
 |-----------------|------------|-------------|---------|----------|
@@ -253,7 +262,7 @@ since the last reboot.
 A sustained CPU load above 85% indicates excessive processing demand and should prompt
 investigation of running tasks. Loads above 98% risk watchdog timeout.
 
-## 8. Commands
+## 8. Commands {#8-commands}
 
 | Command           | Service  | Parameters         | Description                        |
 |-------------------|----------|--------------------|------------------------------------|
@@ -263,13 +272,13 @@ investigation of running tasks. Loads above 98% risk watchdog timeout.
 | GET_PARAM         | S20,S3   | param_id           | Read individual OBDH parameter     |
 | SET_PARAM         | S20,S1   | param_id, value    | Modify OBDH configuration parameter|
 
-### 8.1 Time Management
+### 8.1 Time Management {#81-time-management}
 
 The OBC maintains on-board time in CCSDS Unsegmented Code (CUC) format: a 4-octet coarse
 field (1 s) and a 2-octet fine field (1/65536 s), see 12_time_and_clocks.md. Time is synchronised from ground using the `SET_TIME` command. Time drift is
 expected to be less than 1 ms/day due to the temperature-compensated crystal oscillator.
 
-## 9. Operational Notes
+## 9. Operational Notes {#9-operational-notes}
 
 1. After each OBC reboot, the `reboot_count` (0x030A) increments. Check `uptime` (0x0308)
    to confirm the OBC has not undergone an unexpected reset.

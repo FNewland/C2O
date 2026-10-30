@@ -1,4 +1,4 @@
-# EOSAT-1 Payload — Multispectral Imager
+# EOSAT-1 Payload — Multispectral Imager {#eosat-1-payload--multispectral-imager}
 
 **Document ID:** EOSAT1-UM-PLD-007
 **Issue:** 2.0
@@ -7,7 +7,7 @@
 
 ---
 
-## 1. Overview
+## 1. Overview {#1-overview}
 
 The EOSAT-1 payload is a nadir-mounted multispectral pushbroom imager optimised for ocean
 colour observation and current monitoring. It provides medium-resolution imagery across four
@@ -16,23 +16,23 @@ ocean colour science (chlorophyll absorption, water-leaving radiance, suspended 
 detection). It features a cooled focal plane array (FPA) for optimal signal-to-noise
 performance and scene-dependent onboard data compression.
 
-## 2. Instrument Characteristics
+## 2. Instrument Characteristics {#2-instrument-characteristics}
 
 | Parameter              | Value                          |
 |------------------------|--------------------------------|
 | Instrument Type        | Pushbroom multispectral imager |
 | Spectral Range         | 443–865 nm (VNIR)             |
 | Number of Bands        | 4 (Blue, Green, Red, NIR)     |
-| Ground Sampling Dist.  | ~33 m (at 513 km mean altitude) |
+| Ground Sampling Dist.  | ~33.4 m (at 513 km mean altitude) |
 | Swath Width            | ~273 km (at 513 km mean altitude) |
 | Detector Type          | CCD linear array               |
 | FPA Operating Temp     | -15 deg C (nominal)           |
 | Data Rate (raw)        | ~40 Mbps                       |
 | Compression Ratio      | 2:1 to 8:1 (scene-dependent)  |
 | Effective Data Rate    | ~5–20 Mbps (compressed)       |
-| Mounting               | Nadir face (+Z), boresight along +Z |
+| Mounting               | Nadir face (-Z), boresight along -Z |
 
-### 2.1 Spectral Bands — Ocean Colour Configuration
+### 2.1 Spectral Bands — Ocean Colour Configuration {#21-spectral-bands--ocean-colour-configuration}
 
 The spectral bands are selected specifically for ocean colour science and current monitoring:
 
@@ -49,22 +49,21 @@ ocean colour variations associated with current boundaries. The green band captu
 water-leaving radiance for turbidity mapping. The red and NIR bands provide atmospheric
 correction and land/sea discrimination.
 
-### 2.2 Altitude-Dependent Geometry
+### 2.2 Altitude-Dependent Geometry {#22-altitude-dependent-geometry}
 
 The imaging geometry scales with orbital altitude and follows from the 29.856 deg
 full FOV of the optics (8192 px x 5.5 um on an 84.5 mm telescope). The ground
 segment computes both quantities from the current orbit solution; over the 503–530 km orbit
 (mean 513 km, 2026-08 epoch/altitude ruling):
 
-| Parameter              | At 513 km (mean) | At 450 km (retired declaration) | Scaling            |
-|------------------------|------------------|---------------------------------|--------------------|
-| Ground Sampling Dist.  | ~33.4 m          | ~29.3 m                         | Proportional to alt|
-| Swath Width            | ~273 km          | ~240 km                         | Proportional to alt|
+| Parameter              | At 503 km (perigee) | At 513 km (mean) | At 530 km (apogee) | Scaling            |
+|------------------------|---------------------|------------------|--------------------|--------------------|
+| Ground Sampling Dist.  | ~32.7 m             | ~33.4 m          | ~34.5 m            | Proportional to alt|
+| Swath Width            | ~268 km             | ~273 km          | ~283 km            | Proportional to alt|
 
-The higher true altitude widens the swath and coarsens the GSD by ~14% relative to the
-figures historically quoted at 450 km.
+GSD = 5.5 um / 84.5 mm x altitude; swath = 2 x altitude x tan(14.928 deg).
 
-### 2.3 Scene-Dependent Compression
+### 2.3 Scene-Dependent Compression {#23-scene-dependent-compression}
 
 The onboard compression algorithm adapts its ratio based on scene content:
 
@@ -78,7 +77,7 @@ The onboard compression algorithm adapts its ratio based on scene content:
 The compression ratio is reported in telemetry and affects the data volume budget for
 downlink planning.
 
-### 2.4 Attitude-Quality Coupling
+### 2.4 Attitude-Quality Coupling {#24-attitude-quality-coupling}
 
 Image quality is directly coupled to the spacecraft attitude stability during acquisition:
 
@@ -94,7 +93,7 @@ attitude error exceeds 0.5 deg during acquisition, image quality is significantl
 and the data may not meet science requirements for ocean current detection. The FDIR rule
 PLD-02 will abort imaging if `att_error` exceeds 1 deg.
 
-## 3. Payload Modes
+## 3. Payload Modes {#3-payload-modes}
 
 | Mode ID | Mode Name  | Description                                           |
 |---------|------------|-------------------------------------------------------|
@@ -107,7 +106,7 @@ PLD-02 will abort imaging if `att_error` exceeds 1 deg.
 require a dedicated payload mode. Stored image data is downlinked via the TTC subsystem
 during ground contacts.
 
-### 3.1 Mode Transitions
+### 3.1 Mode Transitions {#31-mode-transitions}
 
 ```
 OFF --> STANDBY --> IMAGING --> STANDBY --> OFF
@@ -125,7 +124,7 @@ OFF --> STANDBY --> IMAGING --> STANDBY --> OFF
 - **IMAGING to STANDBY**: Ground commanded or autonomous at end of imaging window.
 - **STANDBY to OFF**: Ground commanded via `PAYLOAD_SET_MODE` (mode=0).
 
-### 3.2 Imaging Constraints
+### 3.2 Imaging Constraints {#32-imaging-constraints}
 
 | Constraint                   | Value / Condition                    |
 |------------------------------|--------------------------------------|
@@ -135,7 +134,7 @@ OFF --> STANDBY --> IMAGING --> STANDBY --> OFF
 | Required AOCS Mode           | NOMINAL (4) or FINE_POINT (5)        |
 | Required Attitude Error      | < 0.5 deg                            |
 
-## 4. Data Storage and Management
+## 4. Data Storage and Management {#4-data-storage-and-management}
 
 Acquired images are stored in the OBDH mass memory. Each image strip is assigned a
 sequence number and a CRC checksum for data integrity verification.
@@ -151,7 +150,7 @@ The `store_used` parameter (0x0604) indicates the percentage of mass memory occu
 by payload data. The `image_count` (0x0605) tracks the number of stored image files.
 The `checksum_errors` parameter (0x0609) counts data integrity failures.
 
-## 5. Telemetry Parameters
+## 5. Telemetry Parameters {#5-telemetry-parameters}
 
 | Param ID | Name            | Unit   | Description                          |
 |----------|-----------------|--------|--------------------------------------|
@@ -162,7 +161,7 @@ The `checksum_errors` parameter (0x0609) counts data integrity failures.
 | 0x0605   | image_count     | count  | Number of stored images              |
 | 0x0609   | checksum_errors | count  | Cumulative checksum error count      |
 
-## 6. Limit Definitions
+## 6. Limit Definitions {#6-limit-definitions}
 
 | Parameter       | Yellow Low | Yellow High | Red Low | Red High |
 |-----------------|------------|-------------|---------|----------|
@@ -178,7 +177,7 @@ node bands (03_tcs.md §6) shifted down the payload thermal chain:
 | Cold finger | 0x0601 `fpa_temp` | bracket **-0.5 K** |
 | Detector die | 0x0617 `detector_temp` | cold finger **+0.5 K** (self-heating) |
 
-### 6.1 FPA Temperature Interpretation
+### 6.1 FPA Temperature Interpretation {#61-fpa-temperature-interpretation}
 
 Limits answer "is the hardware healthy". Readiness answers "can I image".
 They are different questions and they used to be the same table, which is why
@@ -195,7 +194,7 @@ five files disagreed.
 - **Above +13.5 deg C**: yellow. Above **+17.0 deg C**: red — the radiator path
   has been lost, or a decontamination bake-out is running (0x0418).
 
-## 7. Commands
+## 7. Commands {#7-commands}
 
 | Command           | Service  | Parameters    | Description                          |
 |-------------------|----------|---------------|--------------------------------------|
@@ -204,7 +203,7 @@ five files disagreed.
 | GET_PARAM         | S20,S3   | param_id      | Read individual payload parameter    |
 | SET_PARAM         | S20,S1   | param_id, val | Modify payload config parameter      |
 
-### 7.1 Typical Imaging Sequence
+### 7.1 Typical Imaging Sequence {#71-typical-imaging-sequence}
 
 1. Verify spacecraft is in AOCS NOMINAL mode (4) with `att_error` < 0.5 deg.
 2. Verify battery SoC > 40% and sufficient mass memory available.
@@ -217,7 +216,7 @@ five files disagreed.
 7. At imaging window end, send `PAYLOAD_SET_MODE` (mode=1) to return to STANDBY.
 8. If no further imaging is planned, send `PAYLOAD_SET_MODE` (mode=0).
 
-## 8. Operational Notes
+## 8. Operational Notes {#8-operational-notes}
 
 1. The FPA cooler consumes 15 W. The total payload power budget in IMAGING mode is
    approximately 20.5 W (15 W cooler + 5.5 W imager; see 01_eps.md).
@@ -251,7 +250,7 @@ five files disagreed.
 
 ---
 
-## Commandable settings
+## Commandable settings {#commandable-settings}
 
 Every payload setting reachable over the wire, with its encoding.
 

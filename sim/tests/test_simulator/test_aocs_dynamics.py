@@ -249,7 +249,12 @@ class TestPointingPerformance:
 
     def test_nadir_tracking_pitch_rate(self):
         """In NOMINAL the body pitch rate settles at the orbit rate
-        (-0.063 °/s about body Y) and nadir_body_z → 1.
+        (+0.063 °/s about body Y) and nadir_body_z → -1.
+
+        Ruling Q4 (2026-10-30): body +Z = zenith, -Z = nadir, +Y = +orbit
+        normal (h = r x v), so the nadir-tracking body turns POSITIVELY about
+        +Y at the orbit rate and the nadir unit vector sits on -Z. (Under the
+        old LVLH-as-body convention both signs were the other way round.)
 
         The PHYSICS claim is on the TRUE rate. The published rate_pitch is
         the bias-corrected ESTIMATE, which legitimately carries whatever
@@ -261,10 +266,10 @@ class TestPointingPerformance:
         w_o = math.degrees(math.sqrt(
             att.MU_EARTH / ((6378.137 + 450.0) * 1000.0) ** 3))
         true_pitch = math.degrees(float(m._state.omega_true[1]))
-        assert true_pitch == pytest.approx(-w_o, rel=0.05)
+        assert true_pitch == pytest.approx(w_o, rel=0.05)
         # The estimate tracks the truth to within gyro bias + noise.
         assert m._state.rate_pitch == pytest.approx(true_pitch, abs=0.005)
-        assert p[0x02B2] == pytest.approx(1.0, abs=0.01)
+        assert p[0x02B2] == pytest.approx(-1.0, abs=0.01)
 
     def test_slew_30deg_completes_and_resumes_nominal(self):
         """A 30° slew completes (mode returns to NOMINAL) and the target is
@@ -310,7 +315,17 @@ class TestPointingPerformance:
             return float(np.linalg.norm(np.array(m._state.h_wheel) - h0))
         d_inertial = net_h_delta(MODE_INERTIAL)
         d_nadir = net_h_delta(MODE_NOMINAL)
-        assert d_inertial > d_nadir * 1.3, (d_inertial, d_nadir)
+        # Re-baselined for ruling Q4 (body +Z = zenith; the nominal attitude
+        # is the old one turned 180 deg about X). Measured, same seed:
+        #   old frame  INERTIAL 9.80e-4, NADIR 6.42e-4 N·m·s  (ratio 1.53)
+        #   new frame  INERTIAL 7.12e-4, NADIR 5.65e-4 N·m·s  (ratio 1.26)
+        # Gravity gradient and aero are unchanged by the flip (GG is
+        # quadratic in the nadir vector; the cp-cg offset is along X), but the
+        # body-fixed residual dipole and SRP plate now sit the other way
+        # round relative to the orbit. The physical claim — INERTIAL leaves
+        # clearly more secular momentum than NADIR — still holds; the margin
+        # is set against the new geometry.
+        assert d_inertial > d_nadir * 1.2, (d_inertial, d_nadir)
         assert d_nadir > 1e-5            # NADIR accumulates too (desats real)
 
     def test_detumble_converges_and_transitions(self):

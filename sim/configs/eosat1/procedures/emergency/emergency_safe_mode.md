@@ -51,15 +51,30 @@ disables all scheduled operations, and enables survival-only power distribution.
 ### Step 3 --- Verify AOCS Safe-Pointing
 **TC:** `HK_REQUEST(sid=2)` (Service 3, Subtype 27) --- AOCS housekeeping.
 **Check:** `aocs.mode` (0x020F) --- should be COARSE_SUN (3) or DETUMBLE (2).
-**If COARSE_SUN:** Verify `aocs.att_error` (0x0217) < 10 deg. Proceed to Step 4.
-**If DETUMBLE:** Monitor rates. If all rates < 0.1 deg/s, command COARSE_SUN:
-**TC:** `AOCS_SET_MODE(mode=3)` (Service 8, Subtype 1, func_id 0) --- COARSE_SUN.
-**If tumbling (rates > 2 deg/s):** Execute EMG-005 before continuing.
-**If AOCS OFF:** Command detumble first:
-**TC:** `AOCS_SET_MODE(mode=2)` (Service 8, Subtype 1, func_id 0) --- DETUMBLE.
-**GO/NO-GO:** AOCS in COARSE_SUN or actively detumbling with rates decreasing.
+**Note:** Do NOT command COARSE_SUN. The AOCS hands itself from DETUMBLE to
+COARSE_SUN automatically once the body rates have stayed below 0.5 deg/s for
+30 s (the same handover LEOP-005 observes). Commanding it is unnecessary, and a
+COARSE_SUN entered above the rate threshold will not hold.
+**BRANCH:** `aocs.mode == 0` -> GO `STEP-3-DETUMBLE` | NO-GO `STEP-3-WAIT` (timeout 10 s)
+**Note:** GO --- the AOCS is OFF: command DETUMBLE first. NO-GO --- the AOCS is
+already in a mode: command nothing and wait for the sun hold.
+
+**LABEL:** `STEP-3-DETUMBLE`
+**TC:** `AOCS_SET_MODE(mode=2)` (Service 8, Subtype 1, func_id 0) --- DETUMBLE (AOCS was OFF).
+
+**LABEL:** `STEP-3-WAIT`
+**BRANCH:** `aocs.mode == 3` -> GO `STEP-4` | NO-GO `STEP-3-EMG-005` (timeout 1800 s)
+**Note:** GO --- COARSE_SUN, either already held or reached by the automatic
+handover: go to Step 4, which verifies the sun pointing. NO-GO --- no COARSE_SUN
+after 30 min: the spacecraft is tumbling or the detumble is not converging.
+
+**LABEL:** `STEP-3-EMG-005`
+**Note:** Execute EMG-005 (Loss of Attitude) now. Resume this card at Step 4 only
+when EMG-005 has left the AOCS in COARSE_SUN.
+**GO/NO-GO:** EMG-005 complete and AOCS in COARSE_SUN --- resume at Step 4 -> GO `STEP-4` | NO-GO `STEP-END`
 
 ### Step 4 --- Verify Sun Acquisition and Power State
+**LABEL:** `STEP-4`
 **Verify:** `aocs.att_error` (0x0217) < 5.0 deg (sun-pointing achieved).
 **Verify:** `eps.sa_a_current` (0x0103) > 0.5A --- solar array A illuminated.
 **Verify:** `eps.sa_b_current` (0x0104) > 0.5A --- solar array B illuminated.
@@ -90,6 +105,7 @@ disables all scheduled operations, and enables survival-only power distribution.
 **GO/NO-GO:** Anomaly Review Board convenes to assess data and approve recovery plan.
 
 ### Step 7 --- Stabilisation Hold (Minimum 3 Orbits)
+**LABEL:** `STEP-7`
 **Duration:** Maintain emergency safe mode for minimum 3 orbits (~4.75 hours).
 **Monitor:** All critical parameters on every ground station pass.
 **Confirm:** No new anomalies, no additional OBC reboots, temperatures stable, power trending positive.
@@ -103,36 +119,41 @@ disables all scheduled operations, and enables survival-only power distribution.
 **TC:** `HEATER_OBC(on=1)` (Service 8, Subtype 1, func_id 41) --- restore OBC heater.
 **Verify:** `tcs.temp_obc` (0x0406) trending toward nominal range (-10 degC to +40 degC).
 **Verify:** `eps.power_cons` (0x0106) increase < 10W. Spacecraft remains power-positive.
-**GO/NO-GO:** Thermal subsystem nominal, power budget accommodates added load.
+**GO/NO-GO:** Thermal subsystem nominal, power budget accommodates added load; no new anomaly -> GO `STEP-R2` | NO-GO `STEP-7` (max 2)
 
 ### Recovery Orbit R+2 --- Restore Full AOCS (SoC > 40% Required)
+**LABEL:** `STEP-R2`
 **TC:** `OBC_SET_MODE(mode=1)` (Service 8, Subtype 1, func_id 50) --- OBC SAFE mode (from EMERGENCY).
 **Verify:** `obdh.mode` (0x0300) = SAFE (1) within 5s.
 **TC:** `AOCS_SET_MODE(mode=4)` (Service 8, Subtype 1, func_id 0) --- NOMINAL mode.
 **Verify:** `aocs.mode` (0x020F) = NOMINAL (4) within 5s.
 **Verify:** `aocs.att_error` (0x0217) < 1.0 deg within 20 minutes.
 **Verify:** `aocs.rw1_speed` (0x0207) through `aocs.rw4_speed` (0x020A) all within limits.
-**GO/NO-GO:** Full attitude control restored, all 4 wheels operational.
+**GO/NO-GO:** Full attitude control restored, all 4 wheels operational; no new anomaly -> GO `STEP-R3` | NO-GO `STEP-7` (max 2)
 
 ### Recovery Orbit R+3 --- Restore Thruster Heater and Full Thermal (SoC > 50% Required)
+**LABEL:** `STEP-R3`
 **TC:** `HEATER_THRUSTER(on=1)` (Service 8, Subtype 1, func_id 42) --- restore thruster heater.
 **Verify:** `eps.power_cons` (0x0106) within nominal budget (< 90W).
 **Verify:** All temperatures within nominal ranges.
-**GO/NO-GO:** Full thermal control restored, power margin adequate.
+**GO/NO-GO:** Full thermal control restored, power margin adequate; no new anomaly -> GO `STEP-R4` | NO-GO `STEP-7` (max 2)
 
 ### Recovery Orbit R+4 --- Restore OBC Nominal Mode (SoC > 55% Required)
+**LABEL:** `STEP-R4`
 **TC:** `OBC_SET_MODE(mode=0)` (Service 8, Subtype 1, func_id 50) --- OBC NOMINAL mode.
 **Verify:** `obdh.mode` (0x0300) = NOMINAL (0) within 5s.
 **Verify:** Onboard scheduling resumed, housekeeping at nominal rate.
 **Verify:** No anomalous reboot counter increments: `obdh.reboot_count` (0x030A) stable.
-**GO/NO-GO:** OBC nominal operations confirmed.
+**GO/NO-GO:** OBC nominal operations confirmed; no new anomaly -> GO `STEP-R5` | NO-GO `STEP-7` (max 2)
 
 ### Recovery Orbit R+5 --- Restore Payload (SoC > 60% Required)
+**LABEL:** `STEP-R5`
 **TC:** `PAYLOAD_SET_MODE(mode=1)` (Service 8, Subtype 1, func_id 26) --- payload STANDBY.
 **Verify:** `payload.mode` (0x0600) = STANDBY (1) within 10s.
 **Verify:** `eps.power_cons` (0x0106) within full operational budget (< 110W).
 **Verify:** Spacecraft remains power-positive across full orbit including eclipse.
-**GO/NO-GO:** Full nominal operations restored. Close emergency and resume mission timeline.
+**GO/NO-GO:** Full nominal operations restored; no new anomaly. Close emergency and resume mission timeline. -> GO `STEP-END` | NO-GO `STEP-7` (max 2)
+**LABEL:** `STEP-END`
 
 ## Recovery Timeline Summary
 | Phase | Orbit | SoC Gate | Duration from Emergency | Key Action |
@@ -148,7 +169,7 @@ disables all scheduled operations, and enables survival-only power distribution.
 - If OBC does not accept mode commands: request an OBC health report with `OBC_DIAGNOSTIC` (func_id 61) and, if the Flight Director authorises, reset with `OBC_REBOOT` (func_id 52), then re-command. If persistent, spacecraft remains in autonomous emergency mode until next OBC reboot cycle.
 - If multiple wheels failed during anomaly: remain in COARSE_SUN indefinitely. Nadir pointing requires minimum 3 wheels. Plan reduced-capability operations.
 - If SoC does not reach 30% within 10 orbits: possible solar array degradation. Reassess power budget for long-term reduced operations. Reference EMG-002.
-- If new anomaly occurs during recovery: halt recovery, return to Step 7 stabilisation hold, re-assess before continuing.
+- If new anomaly occurs during recovery: halt recovery, return to Step 7 stabilisation hold, re-assess before continuing. This is the NO-GO arm of each recovery-orbit gate and it is a bounded loop (max 2): if the same gate fails a third time, stop the staged recovery, hold emergency safe mode and convene the Anomaly Review Board.
 - If `obdh.reboot_count` (0x030A) continues incrementing: suspect OBC hardware fault. Maintain emergency mode, reduce commanding to minimum, plan OBC memory patch or cold redundancy switch if available.
 
 ## Post-Conditions

@@ -1,4 +1,4 @@
-# EOSAT-1 Fault Detection, Isolation and Recovery (FDIR)
+# EOSAT-1 Fault Detection, Isolation and Recovery (FDIR) {#eosat-1-fault-detection-isolation-and-recovery-fdir}
 
 **Document ID:** EOSAT1-UM-FDIR-009
 **Issue:** 2.0
@@ -7,7 +7,7 @@
 
 ---
 
-## 1. Overview
+## 1. Overview {#1-overview}
 
 The EOSAT-1 Fault Detection, Isolation and Recovery (FDIR) system provides autonomous
 onboard protection against anomalies that could endanger the spacecraft or its mission.
@@ -19,9 +19,9 @@ checking and PUS Service 19 (Event-Action) for automated response triggering. Bo
 services are evaluated on every on-board processing cycle, giving continuous
 monitoring coverage.
 
-## 2. FDIR Hierarchy
+## 2. FDIR Hierarchy {#2-fdir-hierarchy}
 
-### 2.1 Autonomy Levels
+### 2.1 Autonomy Levels {#21-autonomy-levels}
 
 | Level | Scope           | Response Time | Authority              | Example                     |
 |-------|-----------------|---------------|------------------------|-----------------------------|
@@ -30,7 +30,7 @@ monitoring coverage.
 | 2     | System level    | 10–60 s       | OBC FDIR application   | Mode transition, load shed  |
 | 3     | Ground level    | Minutes–hours | Flight control team    | Manual recovery procedures  |
 
-### 2.2 Design Philosophy
+### 2.2 Design Philosophy {#22-design-philosophy}
 
 - **Fail-safe**: Any unrecoverable anomaly results in a transition to a power-positive,
   thermally safe, and commandable state (Safe Mode).
@@ -39,7 +39,7 @@ monitoring coverage.
 - **Single-event tolerance**: The FDIR design tolerates a single failure without loss of
   spacecraft safety.
 
-## 3. Safe Mode Definition
+## 3. Safe Mode Definition {#3-safe-mode-definition}
 
 When a critical FDIR rule triggers a safe mode entry, the OBC executes the following
 sequence autonomously:
@@ -58,9 +58,9 @@ sequence autonomously:
 Safe mode is designed to be power-positive under all illumination conditions, ensuring
 the spacecraft can sustain itself indefinitely until ground intervention.
 
-## 4. FDIR Rules and Triggers
+## 4. FDIR Rules and Triggers {#4-fdir-rules-and-triggers}
 
-### 4.1 EPS Rules
+### 4.1 EPS Rules {#41-eps-rules}
 
 | Rule ID | Condition                      | Detection       | Response                    |
 |---------|--------------------------------|----------------|-----------------------------|
@@ -71,7 +71,7 @@ the spacecraft can sustain itself indefinitely until ground intervention.
 | EPS-05  | sa_current = 0 (both wings)    | 0x0103, 0x0104 | Safe mode entry             |
 | EPS-06  | bus_voltage > 29.5 V           | 0x0105 > 29.5  | Shunt excess power          |
 
-### 4.2 AOCS Rules
+### 4.2 AOCS Rules {#42-aocs-rules}
 
 | Rule ID | Condition                      | Detection       | Response                    |
 |---------|--------------------------------|----------------|-----------------------------|
@@ -81,16 +81,16 @@ the spacecraft can sustain itself indefinitely until ground intervention.
 | AOCS-04 | RW temp > 70 C                 | 0x0218–021B    | Reduce RW torque demand     |
 | AOCS-05 | Star tracker failure            | Validity flag  | Switch to gyro propagation  |
 
-### 4.3 OBDH Rules
+### 4.3 OBDH Rules {#43-obdh-rules}
 
 | Rule ID | Condition                      | Detection       | Response                    |
 |---------|--------------------------------|----------------|-----------------------------|
 | OBDH-01 | Watchdog timeout               | HW watchdog    | OBC reset                   |
-| OBDH-02 | 3 consecutive WD resets        | reboot_count   | Boot to BOOTLOADER          |
+| OBDH-02 | 3 consecutive WD resets        | reboot_count   | Stay in bootloader (`sw_image` = 0) |
 | OBDH-03 | cpu_load > 98%                 | 0x0302 > 98    | Task priority adjustment    |
 | OBDH-04 | mmm_used > 95%                 | 0x0303 > 95    | Inhibit payload acquisition |
 
-### 4.4 TCS Rules
+### 4.4 TCS Rules {#44-tcs-rules}
 
 | Rule ID | Condition                      | Detection       | Response                    |
 |---------|--------------------------------|----------------|-----------------------------|
@@ -105,23 +105,29 @@ used to be a bare `> 12 C`, which is *inside* the normal uncooled resting
 state (+11.5 C measured, +12.4 C peak): the rule would have powered off a
 payload that was correctly switched off already, on every orbit.
 
-### 4.5 TTC Rules
+### 4.5 TTC Rules {#45-ttc-rules}
 
 | Rule ID | Condition                      | Detection       | Response                    |
 |---------|--------------------------------|----------------|-----------------------------|
-| TTC-01  | No link for > 24 hours        | link_status    | Switch to redundant XPDR    |
+| TTC-01  | No valid telecommand for > 24 hours | link_status | Switch to redundant XPDR    |
 | TTC-02  | XPDR temp out of range         | 0x0507         | Switch transponder          |
 
-### 4.6 Payload Rules
+TTC-01 is a command-loss timer: 24 h without a valid telecommand. The value lives in
+`subsystems/ttc.yaml` as `cmd_loss_switch_timeout_s` (86400 s), next to the RSSI degradation
+threshold `cmd_loss_rssi_threshold_dbm` (-105 dBm). Event 0x0511 UPLINK_TIMEOUT reports
+an uplink timeout to the ground; a switchover can always be commanded from the ground
+(`TTC_SWITCH_REDUNDANT`, see `05_ttc.md` §6.1).
+
+### 4.6 Payload Rules {#46-payload-rules}
 
 | Rule ID | Condition                      | Detection       | Response                    |
 |---------|--------------------------------|----------------|-----------------------------|
 | PLD-01  | checksum_errors > threshold    | 0x0609         | Alert, inhibit imaging      |
 | PLD-02  | Imaging with att_error > 1 deg | 0x0217         | Abort imaging, go STANDBY   |
 
-## 5. Recovery Procedures
+## 5. Recovery Procedures {#5-recovery-procedures}
 
-### 5.1 Safe Mode Recovery (Level 3 — Ground)
+### 5.1 Safe Mode Recovery (Level 3 — Ground) {#51-safe-mode-recovery-level-3--ground}
 
 1. Establish ground contact and verify spacecraft telemetry.
 2. Review event log and FDIR trigger history.
@@ -131,26 +137,26 @@ payload that was correctly switched off already, on every orbit.
 6. Command `AOCS_SET_MODE` (mode=4) to return to NOMINAL (nadir).
 7. Reactivate payload and resume nominal operations.
 
-### 5.2 Transponder Recovery
+### 5.2 Transponder Recovery {#52-transponder-recovery}
 
 1. If primary transponder is unresponsive, send `TTC_SWITCH_REDUNDANT`.
 2. Wait 30 seconds for transponder warm-up.
 3. Verify link acquisition via `link_status` (0x0501).
 4. If redundant also fails, wait for next contact attempt (ground-initiated).
 
-### 5.3 AOCS Recovery from DETUMBLE
+### 5.3 AOCS Recovery from DETUMBLE {#53-aocs-recovery-from-detumble}
 
 1. Monitor body rates (0x0204–0x0206) decreasing towards zero.
 2. Once rates < 0.5 deg/s sustained for 30 s, AOCS autonomously transitions to COARSE_SUN.
 3. Ground commands `AOCS_SET_MODE` (mode=4) to enter NOMINAL (nadir) when ready.
 
-## 6. PUS Service 12 — Onboard Monitoring
+## 6. PUS Service 12 — Onboard Monitoring {#6-pus-service-12--onboard-monitoring}
 
 Service 12 implements the parameter monitoring framework used by the FDIR system. All
 monitoring definitions are evaluated on every on-board processing cycle
 (nominally 1 Hz), providing continuous limit-checking coverage.
 
-### 6.1 Monitoring Enforcement
+### 6.1 Monitoring Enforcement {#61-monitoring-enforcement}
 
 Each monitoring definition specifies:
 
@@ -171,7 +177,7 @@ corresponding Event ID. This event is:
 2. Delivered to the S19 event-action service for automated response.
 3. Made available to the MCS alarm journal for operator awareness.
 
-### 6.2 Monitoring Commands
+### 6.2 Monitoring Commands {#62-monitoring-commands}
 
 | Command           | Mnemonic          | Subtype | Description                                                |
 |-------------------|-------------------|---------|------------------------------------------------------------|
@@ -205,12 +211,12 @@ is `count(u16)` followed by `count` fixed 14-octet records:
 Limit *transitions* are reported separately, as TM(12,9) (limit entered) and
 TM(12,10) (returned to nominal).
 
-## 7. PUS Service 19 — Event-Action Triggering
+## 7. PUS Service 19 — Event-Action Triggering {#7-pus-service-19--event-action-triggering}
 
 Service 19 links S5 events (generated by S12 monitoring or other sources) to automated
 actions, implementing the autonomous FDIR response chain.
 
-### 7.1 Event-Action Mechanism
+### 7.1 Event-Action Mechanism {#71-event-action-mechanism}
 
 When an S5 event is raised:
 
@@ -219,7 +225,7 @@ When an S5 event is raised:
 3. The action execution is logged in the event buffer.
 4. The action can itself trigger further events, allowing cascaded responses.
 
-### 7.2 Event-Action Commands
+### 7.2 Event-Action Commands {#72-event-action-commands}
 
 | Command                | Subtype | Description                              |
 |------------------------|---------|------------------------------------------|
@@ -227,7 +233,7 @@ When an S5 event is raised:
 | Disable event-action   | S19.2   | Disable a specific event-action link     |
 | Report event-actions   | S19.8   | Report all active event-action definitions |
 
-### 7.3 Typical FDIR Chain Example
+### 7.3 Typical FDIR Chain Example {#73-typical-fdir-chain-example}
 
 ```
 S12 monitor: bat_soc < 25%
@@ -237,7 +243,7 @@ S12 monitor: bat_soc < 25%
         --> S5 event: SAFE_MODE_ENTERED
 ```
 
-## 8. Progressive Load Shed Thresholds
+## 8. Progressive Load Shed Thresholds {#8-progressive-load-shed-thresholds}
 
 The EPS FDIR implements a tiered load shedding strategy based on battery state of charge.
 Each threshold triggers progressively more aggressive power reduction:
@@ -253,7 +259,7 @@ Each level includes all actions from previous levels. Recovery from load sheddin
 ground-commanded activity — the FDIR does not automatically restore loads when SoC
 recovers.
 
-## 9. Contingency Response Matrix
+## 9. Contingency Response Matrix {#9-contingency-response-matrix}
 
 The following matrix cross-references contingency scenarios with the procedures used
 for detection and recovery:
@@ -262,7 +268,7 @@ for detection and recovery:
 |-----------------------------|-------------------------------|---------------------------------------|
 | TTC no telemetry            | No TM at expected AOS         | `procedures/contingency/no_telemetry_at_pass.md` |
 | Ground station antenna fail | Ground equipment monitoring    | `procedures/contingency/gs_antenna_failure.md` |
-| OBC stuck in bootloader     | Beacon SID 11 with mode=2     | `procedures/contingency/obc_bootloader_recovery.md` |
+| OBC stuck in bootloader     | Beacon SID 11 with `sw_image` = 0 | `procedures/contingency/obc_bootloader_recovery.md` |
 | Bus isolation required      | Multiple subsystem anomalies  | `procedures/contingency/bus_failure_isolation.md` |
 | Progressive load shed       | bat_soc crossing thresholds   | `procedures/contingency/progressive_load_shed.md` |
 | Solar panel loss             | Panel current = 0 sustained  | `procedures/contingency/solar_panel_loss_response.md` |
@@ -276,7 +282,7 @@ Each contingency procedure includes:
 - **Recovery actions**: Steps to restore nominal operations.
 - **GO/NO-GO checkpoints**: Decision points requiring Flight Director authorisation.
 
-## 10. FDIR Configuration
+## 10. FDIR Configuration {#10-fdir-configuration}
 
 FDIR thresholds and enable/disable flags are configurable via `SET_PARAM` commands.
 Each rule can be individually disabled for testing or commissioning purposes. Disabling
@@ -289,13 +295,13 @@ FDIR rules requires explicit ground authorisation and should be time-limited.
 | Attitude error red limit     | 2 deg   | Yes        |
 | Body rate red limit          | 2 deg/s | Yes        |
 | Watchdog timeout             | 10 s    | No         |
-| Link loss timeout            | 24 h    | Yes        |
+| Command-loss timeout (TTC-01) | 24 h   | Yes        |
 | Load shed level 1 threshold  | 50%     | Yes        |
 | Load shed level 2 threshold  | 35%     | Yes        |
 | Load shed level 3 threshold  | 25%     | Yes        |
 | Load shed level 4 threshold  | 15%     | Yes        |
 
-### 10.1 Phase Gating of FDIR Rules
+### 10.1 Phase Gating of FDIR Rules {#101-phase-gating-of-fdir-rules}
 
 Two mechanisms are gated on the mission phase (`eps.spacecraft_phase`, 0x0129):
 
@@ -324,7 +330,7 @@ holds is dropped and its persistence accumulator is reset, so falling back
 below the threshold — an OBC reboot to the bootloader, for instance — cannot
 leave a stale contingency behind.
 
-### 10.2 One Spacecraft Mode
+### 10.2 One Spacecraft Mode {#102-one-spacecraft-mode}
 
 `sat.mode` (0x0001) is the telemetered spacecraft mode word — the same value, on
 the same scale, that the MCS console header shows:
@@ -341,7 +347,7 @@ latches and ignored the phase gate, so a `GET_PARAM(0x0001)` reported NOMINAL
 while the console header reported SAFE throughout LEOP. There is now one
 derivation (`Engine._update_sc_mode`) and 0x0001 is written from it.
 
-## 11. Operational Notes
+## 11. Operational Notes {#11-operational-notes}
 
 1. After every safe mode entry, a detailed anomaly investigation must be completed before
    returning to nominal operations.

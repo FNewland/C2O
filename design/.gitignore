@@ -41,3 +41,14 @@ htmlcov/
 Active ECSS Standards_PDF-files (10Oct2025)/
 ECSS-Handbooks_(zip-file_October2023)/
 data/analysis/
+
+# Build output of the OER and course-book PDF builds (docs/oer/build_oer.py,
+# docs/build_course_books.py). docs/_render_math.py caches every rendered
+# equation as an SVG here; the SVGs already committed stay tracked, and new
+# cache entries are regenerated on demand by the next build, so they are not
+# committed.
+docs/assets/figures/_math/
+# OER intermediate: build_oer.py writes it and deletes it after each build, and
+# `make clean` removes it. The copy in git is a stale snapshot kept only because
+# it was committed; untrack it with `git rm --cached docs/oer/book.math.md`.
+docs/oer/book.math.md

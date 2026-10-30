@@ -49,23 +49,23 @@
   },
   {
    "id": "ctg-010-obdh-watchdog-recovery/procedure-steps/step-4-verify-data-integrity-and-onboard-storage",
-   "en_hash": "12c7b6c002b6731a",
-   "fr_hash": "8b0222882b507cf8"
+   "en_hash": "bde872aa7aa4da93",
+   "fr_hash": "2b6d5f343d2aa072"
   },
   {
    "id": "ctg-010-obdh-watchdog-recovery/procedure-steps/step-5-assess-root-cause-indicators",
-   "en_hash": "aa62187a33934aba",
-   "fr_hash": "23b4e79b280c6d5f"
+   "en_hash": "9ecd435e75ee9f25",
+   "fr_hash": "7a3a059224ddd410"
   },
   {
    "id": "ctg-010-obdh-watchdog-recovery/procedure-steps/step-6-restore-nominal-mode-if-obc-in-safe",
-   "en_hash": "b6ba09f4ccf0b706",
-   "fr_hash": "b68201bbe1d82731"
+   "en_hash": "349728aa378c1e73",
+   "fr_hash": "6312314eba90ec6b"
   },
   {
    "id": "ctg-010-obdh-watchdog-recovery/off-nominal-handling",
-   "en_hash": "d075a073fbfe3557",
-   "fr_hash": "9a6edeb993bdba46"
+   "en_hash": "650189181ba4d825",
+   "fr_hash": "cad3202aabec9470"
   },
   {
    "id": "ctg-010-obdh-watchdog-recovery/post-conditions",
@@ -73,5 +73,5 @@
    "fr_hash": "ece3a39741367ed6"
   }
  ],
- "en_commit": "3e80564"
+ "en_commit": "c4a140a"
 }

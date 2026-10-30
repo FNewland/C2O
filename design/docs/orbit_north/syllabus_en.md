@@ -27,8 +27,8 @@ adjustments will be confirmed in Brightspace.
 
 | Block | Dates | Days | Hours | Location |
 |-------|-------|------|-------|----------|
-| Week 1 — Canadian Context, CDF Intro & Concept Development | Thu – Fri 6 – 7 Aug 2026 | 2 | 09:00 – 17:00 | uOttawa, room TBC |
-| Week 2 — MCR, Regulatory & CDF Intensive | Mon – Fri 10 – 14 Aug 2026 | 5 | 09:00 – 17:00 | SpaceCDF lab |
+| Week 1 — Canadian Context, CDF Intro, Concept Development & Informal MCR | Thu – Fri 6 – 7 Aug 2026 | 2 | 09:00 – 17:00 | uOttawa, room TBC |
+| Week 2 — Regulatory, CDF Intensive & PDR-Style Review | Mon – Fri 10 – 14 Aug 2026 | 5 | 09:00 – 17:00 | SpaceCDF lab |
 | Week 3 — Operations & Mission Simulation | Mon – Fri 17 – 21 Aug 2026 | 5 | 09:00 – 17:00 | uOttawa Cyberrange |
 
 **Mode.** In-person. A Zoom link may be available for guest-speaker
@@ -73,13 +73,13 @@ space sector for students with no prior space background.
 morning, then opens the SpaceCDF platform on Thursday afternoon for a
 short regulatory teaser and the start of mission concept development.
 Friday is given over to mission architecture and concept work in the
-CDF, with a first touch on the risk register at end of day. Students
-are expected to do structured pre-work over the weekend in
-preparation for the Week 2 Mission Concept Review.
+CDF, with a first touch on the risk register, and closes with an
+informal Mission Concept Review (MCR) at end of day. Students are
+expected to do structured pre-work over the weekend to close the MCR
+actions before the concept is locked on Monday of Week 2.
 
-**Week 2 (5 days)** opens with the Mission Concept Review (MCR) on
-Monday morning, after which the team's MCR-approved concept is
-locked. Monday afternoon covers the Canadian regulatory landscape in
+**Week 2 (5 days)** opens on Monday morning with the closure of the
+MCR actions, after which the team's concept is locked. Monday afternoon covers the Canadian regulatory landscape in
 depth — the Remote Sensing Space Systems Act, spectrum licensing
 through ISED, export controls, debris mitigation, and registration. The
 remainder of the week is the SpaceCDF intensive: System-V briefing
@@ -87,7 +87,7 @@ and the requirements baseline on Tuesday (PRR and SRR are explicitly
 collapsed into CDF Day 1); power, AOCS, and thermal on Wednesday;
 comms, structure, and propulsion on Thursday with two formal trade
 studies; integration, V&V, cost, and risk closure on Friday morning;
-and a Preliminary Design Review (PDR) on Friday afternoon.
+and a PDR-style review (Preliminary Design Review) on Friday afternoon.
 
 The systems-engineering frameworks themselves — System-V, requirements
 engineering, functional decomposition, margin policy, trade studies,
@@ -260,9 +260,9 @@ rubrics will be posted in Brightspace at the start of the course.
 | Assessment | Type | GNG 3100 | SYS 5186 | Timing |
 |------------|------|---------:|---------:|--------|
 | Pre-course readiness quiz | Individual | 5 % | 3 % | Day 1, Week 1 |
-| Mission Concept Review (MCR) | Team + Individual | 15 % | 15 % | Day 1, Week 2 |
+| Mission Concept Review (MCR, informal) | Team + Individual | 15 % | 15 % | Day 2, Week 1 |
 | CDF daily worksheets and participation | Individual | 10 % | 5 % | Throughout Week 2 |
-| Preliminary Design Review (PDR) | Team + Individual | 20 % | 22 % | Day 5, Week 2 |
+| Preliminary Design Review (PDR-style review) | Team + Individual | 20 % | 22 % | Day 5, Week 2 |
 | Operations training quiz | Individual | 5 % | 2 % | Day 2, Week 3 |
 | Simulation performance — operator shift | Team | 15 % | 18 % | Days 3 – 4, Week 3 |
 | Observer critique report | Team + Individual | 10 % | 10 % | Days 3 – 4, Week 3 |
@@ -334,22 +334,22 @@ Learners are expected to take responsibility for their own success:
 Dates are indicative. Final dates and any adjustments will be confirmed
 in Brightspace.
 
-### Week 1 — Canadian Context, CDF Intro & Concept Development · Ottawa · 6 – 7 August 2026
+### Week 1 — Canadian Context, CDF Intro, Concept Development & Informal MCR · Ottawa · 6 – 7 August 2026
 
 | Day | AM | PM | Deliverables |
 |-----|----|----|--------------|
 | Thu 6 Aug | **Canadian Space Ecosystem & Course Onboarding.** Past — CSA history, Anik, Alouette, Radarsat, Canadarm. Present — MDA, Telesat, GHGSat, Kepler, NorthStar, university labs and student missions. Emerging — CSA STDP / FAST / CSEP, lunar Gateway, NEOSSat-class missions. Course onboarding, team formation, discipline-role assignment, SpaceCDF account provisioning, tool tour. | **Regulatory Teaser & CDF Intro.** 30-min regulatory awareness teaser; introduction to the SpaceCDF platform and concurrent design method. Teams open a mission file and begin concept work. | Pre-course quiz; team formed; mission area chosen |
-| Fri 7 Aug | **Mission Architecture & Concept Development (CDF).** Mission alternatives trade in the CDF; ConOps top-level v0; concept v0; first parametric budgets. | **Concept Refinement & Risk Register Open.** Continue concept work; open the CDF risk register (preliminary identification only). End-of-week consolidation and weekend pre-work briefing. | Concept v0; ConOps top-level v0; risk register opened |
+| Fri 7 Aug | **Mission Architecture & Concept Development (CDF).** Mission alternatives trade in the CDF; ConOps top-level v0; concept v0; first parametric budgets. | **Concept Refinement, Risk Register Open & Informal MCR.** Continue concept work; open the CDF risk register (preliminary identification only). Informal Mission Concept Review (MCR) at end of day: concept v0, ConOps v0 and the alternatives trade presented for feedback. Weekend pre-work briefing. | Concept v0; ConOps top-level v0; risk register opened; **informal MCR held** |
 
-### Week 2 — MCR, Regulatory & CDF Intensive · Ottawa · 10 – 14 August 2026
+### Week 2 — Regulatory, CDF Intensive & PDR-Style Review · Ottawa · 10 – 14 August 2026
 
 | Day | AM | PM | Deliverables |
 |-----|----|----|--------------|
-| Mon 10 Aug | **Mission Concept Review (MCR).** Concept v1; mission alternatives trade outcome; top-level requirements; programmatic envelope; risk register v0. | **Canadian Regulatory Landscape.** RSSSA; ITU coordination; Radiocommunication Act; ISED CPC-2-6-02 spectrum licensing; Canadian Export Control List; Controlled Goods Programme; ITAR overview; debris mitigation (IADC 25-year, FCC 5-year); UN Registration Convention. | **MCR delivered**; regulatory brief (team, 2 pp.); draft ISED application |
+| Mon 10 Aug | **MCR Action Closure & Concept Lock.** Concept v1; mission alternatives trade outcome; top-level requirements; programmatic envelope; risk register v0. | **Canadian Regulatory Landscape.** RSSSA; ITU coordination; Radiocommunication Act; ISED CPC-2-6-02 spectrum licensing; Canadian Export Control List; Controlled Goods Programme; ITAR overview; debris mitigation (IADC 25-year, FCC 5-year); UN Registration Convention. | **Concept v1 locked**; regulatory brief (team, 2 pp.); draft ISED application |
 | Tue 11 Aug | **CDF Day 1 — System-V & Requirements (PRR/SRR collapsed).** System-V briefing; tailoring matrix; lifecycle gate map. From mission objectives to SMART requirements; functional decomposition. First parametric budgets (mass, power, data, link). Power, AOCS, thermal commenced in the afternoon. | (continued) | CDF worksheet 1; requirements baseline; updated risk register |
 | Wed 12 Aug | **CDF Day 2 — Power, AOCS, Thermal.** Orbit selection trade. Solar array and battery sizing. Attitude determination and control selection. Thermal environment analysis and thermal-control concepts. | (continued) | CDF worksheet 2; subsystem trade decisions logged |
 | Thu 13 Aug | **CDF Day 3 — Comms, Structure, Propulsion + Trade Studies.** Link-budget calculation; ground-station planning. Frequency band selection and licensing implications via the CDF regulatory-check module. CubeSat structure selection and deployer compatibility. Propulsion trade. Two formal trade studies executed in the CDF trade-study module — link band and propulsion. Equipment selection in the SpaceCDF library; supplier mapping where possible. | (continued) | CDF worksheet 3; equipment selection list; two trade-study reports |
-| Fri 14 Aug | **CDF Day 4 — Integration, V&V, Cost, Risk Closure.** Interface matrix review; clean closure of mechanical, electrical, data, thermal interfaces. V&V matrix assignment by requirement. Environmental test planning. Cost estimation; bill of materials. Risk register closure; planning baseline review. | **Preliminary Design Review (PDR).** SpaceCDF optimiser run; ECSS-aligned document export (MRD, TS, VP); review and action-item capture. | CDF worksheet 4; interface & V&V matrices; cost; **PDR delivered**; ECSS document set |
+| Fri 14 Aug | **CDF Day 4 — Integration, V&V, Cost, Risk Closure.** Interface matrix review; clean closure of mechanical, electrical, data, thermal interfaces. V&V matrix assignment by requirement. Environmental test planning. Cost estimation; bill of materials. Risk register closure; planning baseline review. | **PDR-Style Review (Preliminary Design Review).** SpaceCDF optimiser run; ECSS-aligned document export (MRD, TS, VP); review and action-item capture. | CDF worksheet 4; interface & V&V matrices; cost; **PDR delivered**; ECSS document set |
 
 ### Week 3 — Operations & Mission Simulation · uOttawa Cyberrange · 17 – 21 August 2026
 

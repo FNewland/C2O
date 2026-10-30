@@ -648,7 +648,7 @@ class TestPhase9:
         assert aocs_mode == 3, f"AOCS mode should be 3 (COARSE_SUN), got {aocs_mode}"
 
     def test_transition_to_nadir(self):
-        """Phase 9.5: AOCS_SET_MODE(4) should transition to NOMINAL_NADIR."""
+        """Phase 9.5: AOCS_SET_MODE(4) should transition to NOMINAL."""
         eng = self._make_aocs_detumble_engine()
         _send_tc(eng, 8, 1, bytes([0, 3]))  # COARSE_SUN
         _run_ticks(eng, 10)
@@ -657,7 +657,7 @@ class TestPhase9:
         assert (1, 1) in svcs, f"AOCS_SET_MODE(4) should be accepted, got {svcs}"
         _run_ticks(eng, 5)
         aocs_mode = eng.params.get(0x020F, -1)
-        assert aocs_mode == 4, f"AOCS mode should be 4 (NOMINAL_NADIR), got {aocs_mode}"
+        assert aocs_mode == 4, f"AOCS mode should be 4 (NOMINAL), got {aocs_mode}"
 
 
 # ===================================================================

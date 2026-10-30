@@ -1,4 +1,4 @@
-# Détection, isolation et reprise des défaillances (FDIR) d'EOSAT-1
+# Détection, isolation et reprise des défaillances (FDIR) d'EOSAT-1 {#eosat-1-fault-detection-isolation-and-recovery-fdir}
 
 **Référence du document :** EOSAT1-UM-FDIR-009
 **Édition :** 2.0
@@ -7,7 +7,7 @@
 
 ---
 
-## 1. Vue d'ensemble
+## 1. Vue d'ensemble {#1-overview}
 
 Le système de détection, isolation et reprise des défaillances (FDIR) d'EOSAT-1 assure une protection
 bord autonome contre les anomalies susceptibles de mettre en danger le satellite ou sa mission.
@@ -19,9 +19,9 @@ des paramètres et le service PUS 19 (événement-action) pour le déclenchement
 services sont évalués à chaque cycle de traitement bord, ce qui assure une couverture
 de surveillance continue.
 
-## 2. Hiérarchie de la FDIR
+## 2. Hiérarchie de la FDIR {#2-fdir-hierarchy}
 
-### 2.1 Niveaux d'autonomie
+### 2.1 Niveaux d'autonomie {#21-autonomy-levels}
 
 | Niveau | Périmètre       | Temps de réaction | Autorité             | Exemple                     |
 |-------|-----------------|---------------|------------------------|-----------------------------|
@@ -30,7 +30,7 @@ de surveillance continue.
 | 2     | Système         | 10–60 s       | Application FDIR de l'OBC | Transition de mode, délestage |
 | 3     | Sol             | Minutes–heures | Équipe de contrôle du vol | Procédures de reprise manuelles |
 
-### 2.2 Principes de conception
+### 2.2 Principes de conception {#22-design-philosophy}
 
 - **Sécurité intrinsèque** : toute anomalie irrécupérable entraîne une transition vers un état à bilan de puissance positif,
   sûr sur le plan thermique et commandable (mode survie).
@@ -39,7 +39,7 @@ de surveillance continue.
 - **Tolérance à une panne** : la conception de la FDIR tolère une défaillance unique sans perte de la
   sécurité du satellite.
 
-## 3. Définition du mode survie
+## 3. Définition du mode survie {#3-safe-mode-definition}
 
 Lorsqu'une règle FDIR critique déclenche un passage en mode survie, l'OBC exécute de manière autonome
 la séquence suivante :
@@ -58,9 +58,9 @@ la séquence suivante :
 Le mode survie est conçu pour avoir un bilan de puissance positif dans toutes les conditions d'éclairement, ce qui garantit
 que le satellite peut se maintenir indéfiniment jusqu'à l'intervention du sol.
 
-## 4. Règles et déclencheurs FDIR
+## 4. Règles et déclencheurs FDIR {#4-fdir-rules-and-triggers}
 
-### 4.1 Règles EPS
+### 4.1 Règles EPS {#41-eps-rules}
 
 | ID de règle | Condition                  | Détection       | Réaction                    |
 |---------|--------------------------------|----------------|-----------------------------|
@@ -71,7 +71,7 @@ que le satellite peut se maintenir indéfiniment jusqu'à l'intervention du sol.
 | EPS-05  | sa_current = 0 (les deux ailes) | 0x0103, 0x0104 | Passage en mode survie     |
 | EPS-06  | bus_voltage > 29.5 V           | 0x0105 > 29.5  | Dériver l'excédent de puissance (shunt) |
 
-### 4.2 Règles AOCS
+### 4.2 Règles AOCS {#42-aocs-rules}
 
 | ID de règle | Condition                  | Détection       | Réaction                    |
 |---------|--------------------------------|----------------|-----------------------------|
@@ -81,16 +81,16 @@ que le satellite peut se maintenir indéfiniment jusqu'à l'intervention du sol.
 | AOCS-04 | Température de roue > 70 C     | 0x0218–021B    | Réduire la demande de couple des roues |
 | AOCS-05 | Défaillance du senseur stellaire | Indicateur de validité | Basculer sur la propagation gyrométrique |
 
-### 4.3 Règles OBDH
+### 4.3 Règles OBDH {#43-obdh-rules}
 
 | ID de règle | Condition                  | Détection       | Réaction                    |
 |---------|--------------------------------|----------------|-----------------------------|
 | OBDH-01 | Expiration du chien de garde   | Chien de garde matériel | Réinitialisation de l'OBC |
-| OBDH-02 | 3 réinitialisations consécutives par le chien de garde | reboot_count | Amorçage en BOOTLOADER |
+| OBDH-02 | 3 réinitialisations consécutives par le chien de garde | reboot_count | Maintien dans le chargeur d'amorçage (`sw_image` = 0) |
 | OBDH-03 | cpu_load > 98 %                 | 0x0302 > 98    | Ajustement des priorités des tâches |
 | OBDH-04 | mmm_used > 95 %                 | 0x0303 > 95    | Inhiber l'acquisition de la charge utile |
 
-### 4.4 Règles TCS
+### 4.4 Règles TCS {#44-tcs-rules}
 
 | ID de règle | Condition                  | Détection       | Réaction                    |
 |---------|--------------------------------|----------------|-----------------------------|
@@ -105,23 +105,29 @@ TCS-04 se déclenche sur l'**alarme S12** de 0x0408, dont la bande est dérivée
 (+11,5 °C mesurés, crête à +12,4 °C) : la règle aurait mis hors tension une
 charge utile déjà correctement éteinte, à chaque orbite.
 
-### 4.5 Règles TTC
+### 4.5 Règles TTC {#45-ttc-rules}
 
 | ID de règle | Condition                  | Détection       | Réaction                    |
 |---------|--------------------------------|----------------|-----------------------------|
-| TTC-01  | Pas de liaison depuis > 24 heures | link_status | Basculer sur le transpondeur redondant |
+| TTC-01  | Aucune télécommande valide depuis > 24 heures | link_status | Basculer sur le transpondeur redondant |
 | TTC-02  | Température du transpondeur hors plage | 0x0507  | Changer de transpondeur     |
 
-### 4.6 Règles charge utile
+TTC-01 est une minuterie de perte de commande : 24 h sans télécommande valide. La valeur figure dans
+`subsystems/ttc.yaml` sous la clé `cmd_loss_switch_timeout_s` (86400 s), à côté du seuil de dégradation du RSSI
+`cmd_loss_rssi_threshold_dbm` (-105 dBm). L'événement 0x0511 UPLINK_TIMEOUT signale
+au sol l'expiration du délai de liaison montante ; un basculement peut toujours être commandé depuis le sol
+(`TTC_SWITCH_REDUNDANT`, voir `05_ttc.md` §6.1).
+
+### 4.6 Règles charge utile {#46-payload-rules}
 
 | ID de règle | Condition                  | Détection       | Réaction                    |
 |---------|--------------------------------|----------------|-----------------------------|
 | PLD-01  | checksum_errors > seuil        | 0x0609         | Alerte, inhiber la prise de vue |
 | PLD-02  | Prise de vue avec att_error > 1 deg | 0x0217    | Interrompre la prise de vue, passer en STANDBY |
 
-## 5. Procédures de reprise
+## 5. Procédures de reprise {#5-recovery-procedures}
 
-### 5.1 Reprise après mode survie (niveau 3 — sol)
+### 5.1 Reprise après mode survie (niveau 3 — sol) {#51-safe-mode-recovery-level-3--ground}
 
 1. Établir le contact sol et vérifier la télémesure du satellite.
 2. Examiner le journal d'événements et l'historique des déclenchements FDIR.
@@ -131,26 +137,26 @@ charge utile déjà correctement éteinte, à chaque orbite.
 6. Commander `AOCS_SET_MODE` (mode=4) pour revenir en NOMINAL (nadir).
 7. Réactiver la charge utile et reprendre les opérations nominales.
 
-### 5.2 Reprise du transpondeur
+### 5.2 Reprise du transpondeur {#52-transponder-recovery}
 
 1. Si le transpondeur principal ne répond pas, envoyer `TTC_SWITCH_REDUNDANT`.
 2. Attendre 30 secondes la mise en température du transpondeur.
 3. Vérifier l'acquisition de la liaison par `link_status` (0x0501).
 4. Si le redondant est également défaillant, attendre la tentative de contact suivante (à l'initiative du sol).
 
-### 5.3 Reprise de l'AOCS depuis DETUMBLE
+### 5.3 Reprise de l'AOCS depuis DETUMBLE {#53-aocs-recovery-from-detumble}
 
 1. Surveiller la décroissance des vitesses angulaires (0x0204–0x0206) vers zéro.
 2. Dès que les vitesses restent < 0.5 deg/s pendant 30 s, l'AOCS passe de manière autonome en COARSE_SUN.
 3. Le sol commande `AOCS_SET_MODE` (mode=4) pour passer en NOMINAL (nadir) le moment venu.
 
-## 6. Service PUS 12 — surveillance bord
+## 6. Service PUS 12 — surveillance bord {#6-pus-service-12--onboard-monitoring}
 
 Le service 12 met en œuvre le cadre de surveillance des paramètres utilisé par le système FDIR. Toutes
 les définitions de surveillance sont évaluées à chaque cycle de traitement bord
 (1 Hz en nominal), ce qui assure une couverture continue du contrôle de limites.
 
-### 6.1 Application de la surveillance
+### 6.1 Application de la surveillance {#61-monitoring-enforcement}
 
 Chaque définition de surveillance précise :
 
@@ -171,7 +177,7 @@ l'ID d'événement correspondant. Cet événement est :
 2. transmis au service événement-action S19 pour une réaction automatique ;
 3. mis à disposition du journal des alarmes du MCS pour informer les opérateurs.
 
-### 6.2 Commandes de surveillance
+### 6.2 Commandes de surveillance {#62-monitoring-commands}
 
 | Commande          | Mnémonique        | Sous-type | Description                                              |
 |-------------------|-------------------|---------|------------------------------------------------------------|
@@ -205,12 +211,12 @@ se compose de `count(u16)` suivi de `count` enregistrements fixes de 14 octets�
 Les *transitions* de limites sont signalées séparément, par TM(12,9) (entrée en dépassement de limite) et
 TM(12,10) (retour au nominal).
 
-## 7. Service PUS 19 — déclenchement événement-action
+## 7. Service PUS 19 — déclenchement événement-action {#7-pus-service-19--event-action-triggering}
 
 Le service 19 relie les événements S5 (générés par la surveillance S12 ou par d'autres sources) à des actions
 automatiques, mettant ainsi en œuvre la chaîne de réaction FDIR autonome.
 
-### 7.1 Mécanisme événement-action
+### 7.1 Mécanisme événement-action {#71-event-action-mechanism}
 
 Lorsqu'un événement S5 est émis :
 
@@ -219,7 +225,7 @@ Lorsqu'un événement S5 est émis :
 3. L'exécution de l'action est consignée dans le tampon d'événements.
 4. L'action peut elle-même déclencher d'autres événements, ce qui permet des réactions en cascade.
 
-### 7.2 Commandes événement-action
+### 7.2 Commandes événement-action {#72-event-action-commands}
 
 | Commande               | Sous-type | Description                            |
 |------------------------|---------|------------------------------------------|
@@ -227,7 +233,7 @@ Lorsqu'un événement S5 est émis :
 | Désactiver un lien événement-action | S19.2 | Désactiver un lien événement-action donné |
 | Rapport des liens événement-action | S19.8 | Rapporter toutes les définitions événement-action actives |
 
-### 7.3 Exemple type de chaîne FDIR
+### 7.3 Exemple type de chaîne FDIR {#73-typical-fdir-chain-example}
 
 ```
 Surveillance S12 : bat_soc < 25%
@@ -237,7 +243,7 @@ Surveillance S12 : bat_soc < 25%
         --> Événement S5 : SAFE_MODE_ENTERED
 ```
 
-## 8. Seuils de délestage progressif
+## 8. Seuils de délestage progressif {#8-progressive-load-shed-thresholds}
 
 La FDIR de l'EPS met en œuvre une stratégie de délestage par niveaux, fondée sur l'état de charge de la batterie.
 Chaque seuil déclenche une réduction de puissance de plus en plus énergique :
@@ -253,7 +259,7 @@ Chaque niveau comprend toutes les actions des niveaux précédents. Le rétablis
 activité commandée depuis le sol — la FDIR ne réalimente pas automatiquement les charges lorsque le SoC
 remonte.
 
-## 9. Matrice de réaction aux contingences
+## 9. Matrice de réaction aux contingences {#9-contingency-response-matrix}
 
 La matrice suivante met en correspondance les scénarios de contingence et les procédures utilisées
 pour leur détection et leur reprise :
@@ -262,7 +268,7 @@ pour leur détection et leur reprise :
 |-----------------------------|-------------------------------|---------------------------------------|
 | Absence de télémesure TTC   | Aucune TM à l'AOS attendue    | `procedures/contingency/no_telemetry_at_pass.md` |
 | Panne d'antenne de station sol | Surveillance des équipements sol | `procedures/contingency/gs_antenna_failure.md` |
-| OBC bloqué en chargeur d'amorçage | Balise SID 11 avec mode=2 | `procedures/contingency/obc_bootloader_recovery.md` |
+| OBC bloqué en chargeur d'amorçage | Balise SID 11 avec `sw_image` = 0 | `procedures/contingency/obc_bootloader_recovery.md` |
 | Isolation de bus nécessaire | Anomalies sur plusieurs sous-systèmes | `procedures/contingency/bus_failure_isolation.md` |
 | Délestage progressif        | bat_soc franchissant les seuils | `procedures/contingency/progressive_load_shed.md` |
 | Perte d'un panneau solaire  | Courant du panneau = 0 de façon persistante | `procedures/contingency/solar_panel_loss_response.md` |
@@ -276,7 +282,7 @@ Chaque procédure de contingence comprend :
 - **les actions de reprise** : étapes de rétablissement des opérations nominales ;
 - **les points de contrôle GO/NO-GO** : points de décision soumis à l'autorisation du directeur de vol.
 
-## 10. Configuration de la FDIR
+## 10. Configuration de la FDIR {#10-fdir-configuration}
 
 Les seuils FDIR et les indicateurs d'activation/désactivation sont configurables par des commandes `SET_PARAM`.
 Chaque règle peut être désactivée individuellement à des fins d'essai ou de recette en orbite. La désactivation
@@ -289,13 +295,13 @@ de règles FDIR exige une autorisation explicite du sol et devrait être limité
 | Limite rouge d'erreur d'attitude | 2 deg | Oui      |
 | Limite rouge de vitesse angulaire | 2 deg/s | Oui   |
 | Délai du chien de garde      | 10 s    | Non        |
-| Délai de perte de liaison    | 24 h    | Oui        |
+| Délai de perte de commande (TTC-01) | 24 h | Oui    |
 | Seuil du niveau 1 de délestage | 50 %   | Oui        |
 | Seuil du niveau 2 de délestage | 35 %   | Oui        |
 | Seuil du niveau 3 de délestage | 25 %   | Oui        |
 | Seuil du niveau 4 de délestage | 15 %   | Oui        |
 
-### 10.1 Conditionnement des règles FDIR par la phase
+### 10.1 Conditionnement des règles FDIR par la phase {#101-phase-gating-of-fdir-rules}
 
 Deux mécanismes sont conditionnés par la phase de mission (`eps.spacecraft_phase`, 0x0129) :
 
@@ -324,7 +330,7 @@ détient est levé et son accumulateur de persistance est remis à zéro, de sor
 sous le seuil — un redémarrage de l'OBC vers le chargeur d'amorçage, par exemple — ne peut
 laisser derrière lui une contingence périmée.
 
-### 10.2 Un seul mode satellite
+### 10.2 Un seul mode satellite {#102-one-spacecraft-mode}
 
 `sat.mode` (0x0001) est le mot de mode satellite télémesuré — la même valeur, sur
 la même échelle, que celle affichée dans l'en-tête de la console du MCS :
@@ -341,7 +347,7 @@ FDIR et ignorait le conditionnement par la phase : un `GET_PARAM(0x0001)` renvo
 alors que l'en-tête de la console affichait SAFE pendant toute la LEOP. Il n'existe plus désormais qu'une seule
 dérivation (`Engine._update_sc_mode`), et 0x0001 est écrit à partir d'elle.
 
-## 11. Remarques d'exploitation
+## 11. Remarques d'exploitation {#11-operational-notes}
 
 1. Après chaque passage en mode survie, une analyse détaillée de l'anomalie doit être menée à bien avant
    le retour aux opérations nominales.

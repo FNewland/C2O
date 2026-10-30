@@ -8,7 +8,7 @@
 ## Purpose
 Respond to a propulsion FDIR trigger — low thrust, valve fault, leak, or tank
 pressure out of band — by isolating the propellant, bounding the remaining
-usable delta-V, and protecting the debris-avoidance reserve. On EO-Sat-1 the
+usable delta-V, and protecting the debris-avoidance reserve. On EOSAT-1 the
 propulsion system exists FOR collision avoidance: the recovery objective is
 not "fix the thruster", it is "know exactly how much CAM capability remains
 and keep it safe".

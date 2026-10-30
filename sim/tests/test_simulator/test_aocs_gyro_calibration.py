@@ -3,7 +3,7 @@
 Two complaints are pinned down here.
 
 **"There is no IMU power on command."** There is no IMU *power line* and there
-never will be — EO-Sat-1 flies three single-axis gyros with no redundant unit,
+never will be — EOSAT-1 flies three single-axis gyros with no redundant unit,
 powered individually as S2 devices 0x0206-0x0208. What was missing was any
 proof that those three device commands do something, and any way to see WHICH
 unit is off from telemetry (0x0294 only counts them). The first group below

@@ -1,17 +1,16 @@
 # COM-003 : Étalonnage des capteurs SCAO
 **Sous-système :** AOCS
 **Phase :** COMMISSIONING
-**Révision :** 3.0 --- 2026-08c : s'exécute AVANT COM-004. La condition préalable à
-l'étalonnage n'est plus un verrou de mode : c'est la configuration de l'estimateur
-elle-même (ST sélectionné suivant >= 5 étoiles ET `aocs.est_source` 0x02C1 bit 0 ---
-que COARSE_SUN atteint une fois au repos sous 0,25°/s) ainsi que tous les gyromètres
-alimentés et |vitesse - référence| <= 0.10 deg/s. Les roues ne sont PAS requises et sont
-encore désactivées lorsque cette fiche est exécutée.
+**Révision :** 3.0 --- s'exécute APRÈS COM-004, en NOMINAL contrôlé par les roues
+(décision de l'auteur Q16, 2026-10-30). La condition préalable à l'étalonnage est la
+configuration de l'estimateur elle-même (ST sélectionné suivant >= 5 étoiles ET
+`aocs.est_source` 0x02C1 bit 0) ainsi que tous les gyromètres alimentés et |vitesse - référence| <= 0.10 deg/s. Le verrou de 0.10 deg/s est conservé ; ce sont les roues qui le rendent atteignable.
 **Approuvé par :** Directeur des opérations de vol
 
-**État d'entrée :** état de sortie de COM-002 --- satellite dans le maintien COARSE_SUN laissé
-par la LEOP (roues DÉSACTIVÉES, `aocs.wheels_enabled` 0x0260 = 0), senseurs stellaires et
-gyromètres sur OFF, SID 2 transmis, phase de mission 5.
+**État d'entrée :** état de sortie de COM-004 --- les quatre roues ACTIVÉES
+(`aocs.wheels_enabled` 0x0260 = 4), AOCS en NOMINAL commandé sur les roues
+(`aocs.mode` 0x020F = 4, ou 8 en éclipse), senseurs stellaires et gyromètres sur OFF,
+SID 2 transmis, phase de mission 5.
 
 ## Objet
 Recetter la chaîne de détermination de l'AOCS : mettre en service les trois gyromètres,
@@ -19,7 +18,7 @@ intégrer un senseur stellaire dans la boucle de détermination, et exécuter l'
 des gyromètres à bord afin que la voie de vitesse soit compensée en biais avant que le satellite
 ne doive tenir un pointage fin.
 
-**Révision 2.0 — ce qui a changé et pourquoi.** La révision 1.0 de cette fiche était presque
+**Historique des révisions (1.0 → 3.0).** La révision 1.0 de cette fiche était presque
 entièrement inventée. Elle commandait l'étalonnage avec
 `SET_PARAM(param_id=0x0250, value=1)`, lisait l'état dans `0x0251` et le biais dans
 `0x0252-0x0254`, lançait un étalonnage du magnétomètre à `0x0260`, alimentait le
@@ -28,28 +27,33 @@ ces paramètres n'existe**, `SET_PARAM` ne peut de toute façon pas écrire une 
 n'existe aucun étalonnage du magnétomètre à bord. Un opérateur suivant l'ancienne
 fiche envoyait sept télécommandes sans effet, puis consignait des chiffres
 inventés. La vraie commande est `AOCS_GYRO_CALIBRATION` (Service 8, Subtype 1,
-func_id 13), et jusqu'à cette révision, elle n'était elle-même qu'un bouchon qui remettait à zéro un
-nombre interne et signalait un succès sans rien estimer.
+func_id 13), et jusqu'à la révision 2.0, elle n'était elle-même qu'un bouchon qui remettait à zéro un
+nombre interne et signalait un succès sans rien estimer. La révision
+3.0 (2026-08c) a remplacé le verrou de mode par la condition préalable de l'estimateur et exécutait
+la fiche avant COM-004, dans le maintien COARSE_SUN roues coupées. À l'époque du 2026-08-20,
+le contrôle par magnétocoupleurs seuls dans ce maintien oscille entre 0.1 et 0.4 deg/s
+en permanence et n'a jamais satisfait le verrou de 0.10 deg/s ; la décision de l'auteur du
+2026-10-30 (Q16) a donc placé la fiche après COM-004, où les roues tiennent NOMINAL
+assez calmement, et a conservé le verrou.
 
-**À propos de l'alimentation de l'IMU.** EO-Sat-1 emporte trois gyromètres mono-axe et **ni IMU
+**À propos de l'alimentation de l'IMU.** EOSAT-1 emporte trois gyromètres mono-axe et **ni IMU
 redondante ni ligne d'alimentation IMU**. Les unités sont alimentées individuellement en tant qu'équipements S2
 `S2_AOCS_GYROSCOPE_0/1/2` (identifiants d'équipement 0x0206, 0x0207, 0x0208 = 518, 519, 520),
 une par axe satellite. Il n'y a aucune télécommande « IMU ON » à chercher ; ces trois
 commandes d'équipement sont les seules.
 
 ## Prérequis
-- [ ] COM-001 et COM-002 terminées. COM-004 n'est PAS un prérequis --- cette fiche
-      s'exécute délibérément avec les roues désactivées (`aocs.wheels_enabled`
-      0x0260 == 0), ce qui est toute la raison d'être du changement de condition préalable
-      2026-08c : l'étalonnage du biais exige une tête de suivi alimentant le filtre et
-      des vitesses faibles, pas le contrôle par les roues
+- [ ] COM-001, COM-002 et COM-004 terminées. COM-004 EST un prérequis (décision
+      Q16) : les roues doivent être activées (`aocs.wheels_enabled` 0x0260 == 4)
+      et tenir NOMINAL, car le maintien par magnétocoupleurs roues coupées ne peut pas
+      garder les vitesses angulaires sous le verrou d'étalonnage de 0.10 deg/s
 - [ ] `eps.pl_aocs_wheels` (0x0117) == 1 — la ligne de l'ensemble AOCS est sur ON (LEOP-007)
 - [ ] `eps.bat_soc` (0x0101) > 60 %
 - [ ] OBC exécutant l'application (et non le chargeur d'amorçage)
 - [ ] Liaison bidirectionnelle en bande S active
 - [ ] Au moins 20 minutes de passage station sol restantes. L'étalonnage
-      lui-même est un arc de 300 s et la fiche maintient ensuite 300 s supplémentaires en NOMINAL ;
-      un passage court ne couvrira donc pas toute la procédure.
+      lui-même est un arc de 300 s et la fiche se termine par le contrôle de détermination de
+      cinq minutes de l'étape 10 ; un passage court ne couvrira donc pas toute la procédure.
 - [ ] **Pas** d'entrée ou de sortie d'éclipse dans les 10 prochaines minutes — l'AOCS
       passe en ECLIPSE (mode 8) au terminateur. C'est sans conséquence pour
       l'étalonnage (le senseur reste dans la boucle), mais cela modifie `aocs.mode`
@@ -101,18 +105,15 @@ de l'unité sélectionnée (`aocs.st_selected` 0x0244 la désigne) EST la validi
 **GO/NO-GO:** Le senseur sélectionné suit au moins cinq étoiles
 
 ### Étape 4 — Attendre que le senseur assiste l'estimateur (aucune commande de mode)
-**Action:** Rester dans le maintien COARSE_SUN. Une fois le véhicule au repos
-(|vitesse| < 0,25°/s) et le senseur sélectionné suivant >= 5 étoiles, le ST assiste
-le MEKF et le bit 0 de `aocs.est_source` (0x02C1) se positionne --- EN COARSE_SUN. C'est
-le changement de condition préalable 2026-08c : aucun mode de la famille NOMINAL n'est requis, et aucun
-mode n'est donc commandé ici. (DETUMBLE ne positionne jamais le bit 0 ; un étalonnage dans ce mode est
+**Action:** Rester dans le NOMINAL contrôlé par les roues laissé par COM-004. Une fois le
+véhicule au repos (|vitesse| < 0,25°/s) et le senseur sélectionné suivant
+>= 5 étoiles, le ST assiste le MEKF et le bit 0 de `aocs.est_source` (0x02C1) se positionne.
+Aucun mode n'est commandé ici : la condition préalable est la configuration de l'estimateur,
+pas le mode. (DETUMBLE ne positionne jamais le bit 0 ; un étalonnage dans ce mode est
 toujours refusé avec 0x0A03.)
-**Note:** Une fois le senseur intégré, le maintien COARSE_SUN se PROMEUT AUTOMATIQUEMENT vers le
-mode commandé (NOMINAL par défaut) après ~60 s de verrouillage solaire + suivi ---
-COARSE_SUN est un maintien, jamais une destination. Cette promotion est attendue PENDANT
-cette fiche et est sans conséquence pour l'étalonnage : les modes 3, 4 et 8 satisfont tous la
-condition préalable de l'estimateur une fois le bit 0 positionné. Ne pas vérifier mode == 3 après le
-maintien du verrouillage.
+**Note:** Au terminateur, NOMINAL passe la main à ECLIPSE (mode 8), puis la reprend. C'est
+sans conséquence pour l'étalonnage : les modes 4 et 8 satisfont tous deux la
+condition préalable de l'estimateur une fois le bit 0 positionné.
 **Verify:** `aocs.est_source` (0x02C1) bit 0 positionné sous 600s --- assistance ST
 **Verify:** `aocs.knowledge_err_3sig` (0x02A7) < 300 sous 600s --- arcsec
 **GO/NO-GO:** Senseur stellaire alimentant l'estimateur
@@ -148,18 +149,13 @@ Ce n'est ni instantané, ni une réinitialisation.
 stellaire dans la boucle (étapes 3-4), 0x0A04 = vitesse angulaire au-dessus de la limite
 d'étalonnage de 0.10 deg/s, 0x0A05 = un étalonnage est déjà en cours. Le même code est
 mémorisé dans `aocs.gyro_cal_reject` (0x02D0).
-**Note:** 0x0A04 est FRÉQUENT dans le maintien COARSE_SUN : le contrôle par magnétocoupleurs
-oscille jusqu'à ~0,2°/s. Attendre une période calme (toutes les vitesses < 0.08 deg/s sur le
-SID 2) et réessayer ; après la promotion automatique vers NOMINAL, le véhicule se stabilise et
-l'étalonnage démarre généralement du premier coup. Réessayer est la boucle nominale de la fiche,
-pas une anomalie.
-**⚠ 2026-08 (décision époque/altitude) :** au T-0 de mission redéfini
-(2026-08-20T12:00:00Z, orbite TLE réelle à ~513 km), le contrôle par MTQ roues coupées
-oscille entre 0,1 et 0,4°/s **en permanence** — des tentatives toutes les 10 s sur
-trois orbites n'ont jamais trouvé de période sous le verrou de 0.10 deg/s. Tant que le propriétaire
-n'a pas tranché (assouplir le verrou, autoriser un arc d'étalonnage sans activité MTQ, ou placer cette fiche
-après COM-004), s'attendre à ce que l'étape 6 soit refusée indéfiniment avec 0x0A04 à cette
-époque ; consigner les refus et faire remonter plutôt que de boucler sans fin.
+**Note:** En cas de retour 0x0A04, attendre une période calme (toutes les vitesses
+< 0.08 deg/s sur le SID 2) et réessayer. En NOMINAL contrôlé par les roues, le véhicule
+se stabilise sous le verrou et l'étalonnage démarre généralement du premier coup ; un
+refus signifie normalement qu'un basculement, une désaturation ou un transitoire de roue est encore
+en cours. C'est pourquoi la fiche s'exécute après COM-004 (décision Q16) : dans le
+maintien COARSE_SUN roues coupées, le contrôle par magnétocoupleurs oscille entre 0.1 et 0.4 deg/s à
+l'époque du 2026-08-20 et le verrou n'a jamais été satisfait.
 **GO/NO-GO:** Étalonnage RUNNING
 
 ### Étape 7 — Surveiller l'arc d'étalonnage
@@ -168,10 +164,9 @@ après COM-004), s'attendre à ce que l'étape 6 soit refusée indéfiniment ave
 **Verify:** `aocs.gyro_cal_progress` (0x02CA) >= 100 sous 330s
 **Note:** NE PAS effectuer de basculement, de désaturation ni de changement de mode pendant l'arc.
 Toute manœuvre au-dessus de la limite de repos de 0.10 deg/s interrompt l'étalonnage
-avec `AOCS_GYRO_CAL_ABORT` (0x0212) plutôt que de moyenner des valeurs absurdes. La
-promotion AUTOMATIQUE COARSE_SUN -> NOMINAL peut elle-même interrompre un arc en cours si
-le transitoire de promotion dépasse la limite --- c'est le cas d'abandon 0x0A04 ;
-réexécuter l'étalonnage (étape 6) une fois stabilisé (voir la conduite à tenir hors nominal ci-dessous).
+avec `AOCS_GYRO_CAL_ABORT` (0x0212) plutôt que de moyenner des valeurs absurdes. C'est le
+cas d'abandon 0x0A04 ; réexécuter l'étalonnage (étape 6) une fois stabilisé (voir la conduite
+à tenir hors nominal ci-dessous).
 **Note:** Pour abandonner délibérément l'exécution, envoyer
 `AOCS_GYRO_CALIBRATION(action=1, duration_s=0)` ; l'abandon est signalé avec le
 code 0x0A08.
@@ -231,8 +226,8 @@ un satellite réel ; c'est démontré dans le scénario de formation.
   commande `S2_AOCS_GYROSCOPE_n` correspondante et relancer l'étalonnage.
 - **Refus avec 0x0A03.** Le senseur stellaire n'est pas dans la boucle de détermination.
   Soit le senseur ne suit pas (`aocs.st1_status` 0x0240 != 2 — renouveler la
-  mise sous tension du senseur), soit l'AOCS est en DETUMBLE/COARSE_SUN, où le senseur
-  n'est pas du tout utilisé (commander de nouveau NOMINAL et l'attendre).
+  mise sous tension du senseur), soit il n'a pas encore rejoint l'estimateur : attendre le
+  bit 0 de `aocs.est_source` (0x02C1) (étape 4) et réessayer.
 - **Refus avec 0x0A04.** La vitesse angulaire dépasse 0.10 deg/s par rapport à la
   référence. Attendre la fin du basculement ou de la désaturation
   (`aocs.slew_state` 0x0292 = 0, `aocs.mode` 0x020F != 7) et réessayer.
@@ -278,9 +273,9 @@ un satellite réel ; c'est démontré dans le scénario de formation.
 ## État de sortie
 - Les trois gyromètres sur ON, les deux senseurs stellaires sur ON, ST1 sélectionné et en suivi
 - Étalonnage du biais des gyromètres COMPLETE/SUCCESS avec compensation appliquée
-- AOCS très probablement PROMU AUTOMATIQUEMENT en NOMINAL (mode 4, ou 8 en éclipse) --- l'effet
-  de bord attendu de la mise en service du senseur dans un maintien COARSE_SUN ;
-  roues toujours DÉSACTIVÉES (0x0260 = 0)
+- AOCS toujours dans le NOMINAL commandé sur les roues (mode 4, ou 8 en
+  éclipse), désormais avec le senseur stellaire dans la boucle de détermination ; roues ACTIVÉES
+  (0x0260 = 4)
 - Aucun état de ligne d'alimentation ni de TTC touché
 
-**PROCÉDURE SUIVANTE :** COM-004 (Vérification des actionneurs SCAO --- active les roues)
+**PROCÉDURE SUIVANTE :** COM-005 (Transitions de modes SCAO)

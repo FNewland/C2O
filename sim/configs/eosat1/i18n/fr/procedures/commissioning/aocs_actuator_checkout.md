@@ -1,17 +1,21 @@
 # COM-004 : Vérification des actionneurs SCAO
 **Sous-système :** AOCS
 **Phase :** COMMISSIONING
-**Révision :** 2.0 --- 2026-08c : état d'entrée corrigé (l'AOCS s'est désormais
-PROMU AUTOMATIQUEMENT hors de COARSE_SUN --- ne jamais supposer le maintien), et la
-règle d'ordonnancement est explicite : les roues sont ACTIVÉES (étape 1) avant toute
-« vérification de leur fonctionnement ». Aucune fiche en amont ne lit plus la télémesure des roues ; l'ancienne
+**Révision :** 2.1 --- 2026-10-30 (décision de l'auteur Q16) : cette fiche s'exécute désormais
+juste après COM-002, AVANT COM-003, depuis le maintien COARSE_SUN de la LEOP sans aucun
+senseur stellaire en service. Sans senseur, rien ne fait sortir l'AOCS de ce maintien ;
+la fiche active donc les roues puis COMMANDE NOMINAL (étape 1b) ; COM-003
+étalonne ensuite les gyromètres dans ce NOMINAL contrôlé par les roues. La révision 2.0
+(2026-08c) a rendu explicite la règle d'ordonnancement : les roues sont ACTIVÉES (étape 1)
+avant toute « vérification de leur fonctionnement ». Aucune fiche en amont ne lit plus la télémesure des roues ; l'ancienne
 étape de LEOP-002 « vérifier que les quatre roues répondent », qui s'exécutait avant même
 que les roues soient alimentées, a été supprimée.
 **Approuvé par :** Directeur des opérations de vol
 
-**État d'entrée :** état de sortie de COM-003 --- gyromètres étalonnés, ST1 sélectionné et
-en suivi, AOCS promu automatiquement en NOMINAL (mode 0x020F = 4, ou 8 en éclipse),
-roues toujours DÉSACTIVÉES (`aocs.wheels_enabled` 0x0260 = 0).
+**État d'entrée :** état de sortie de COM-002 --- satellite dans le maintien COARSE_SUN laissé
+par la LEOP (`aocs.mode` 0x020F = 3), roues DÉSACTIVÉES (`aocs.wheels_enabled`
+0x0260 = 0), senseurs stellaires et gyromètres sur OFF, SID 2 transmis, phase de
+mission 5.
 
 ## Objet
 Recetter individuellement les quatre roues de réaction. Effectuer des essais contrôlés de montée et
@@ -20,11 +24,13 @@ températures des roues et valider la capacité de gestion du moment cinétique 
 magnétocoupleurs.
 
 ## Prérequis
-- [ ] COM-003 (Étalonnage des capteurs SCAO) terminée — senseur stellaire actif
-- [ ] AOCS dans la famille NOMINAL (`aocs.mode` 0x020F = 4 ou 8). NE PAS s'attendre à
-      COARSE_SUN : c'est un maintien transitoire et le satellite en est sorti de lui-même
-      lorsque le senseur a été mis en service dans COM-003
-- [ ] Vitesses angulaires au repos (< 0.1 deg/s par axe)
+- [ ] COM-001 et COM-002 terminées. COM-003 n'est PAS un prérequis : elle s'exécute
+      après cette fiche (décision Q16)
+- [ ] AOCS dans le maintien COARSE_SUN de la LEOP (`aocs.mode` 0x020F = 3, ou 8 en
+      éclipse). Sans senseur stellaire en service, il ne se promeut pas de lui-même ; l'étape 1b
+      commande NOMINAL
+- [ ] Vitesses angulaires < 0.5 deg/s par axe. Le maintien par magnétocoupleurs seuls oscille entre
+      0.1 et 0.4 deg/s ; les roues le stabilisent
 - [ ] `eps.pl_aocs_wheels` (0x0117) == 1 — la ligne d'alimentation de l'ensemble est sur ON (LEOP-007).
       Les roues elles-mêmes sont encore DÉSACTIVÉES à ce stade ; l'étape 1 les active,
       et ce n'est QU'ALORS qu'une étape lit ou sollicite la télémesure des roues.
@@ -47,6 +53,17 @@ magnétocoupleurs.
 **Verify:** `aocs.rw4_enabled` (0x0257) == 1 sous 10s
 **Action:** Avec moins de trois des quatre roues activées, le satellite ne dispose d'aucun actionnement trois axes, et avec moins de deux, la règle FDIR de bord sur `aocs.wheels_enabled` fera passer l'AOCS en mode sûr dès que la phase de mission atteindra NOMINAL. Ne pas quitter cette fiche avec moins de trois roues activées.
 **GO/NO-GO:** Les quatre roues signalées activées
+
+### Étape 1b — Commander NOMINAL contrôlé par les roues
+**TC:** `AOCS_SET_MODE(mode=4)` (Service 8, Subtype 1, func_id 0) --- NOMINAL
+**Note:** Le simulateur accepte NOMINAL sans senseur stellaire ; la connaissance d'attitude
+reste sur la voie grossière Soleil/magnétomètre jusqu'à ce que COM-003 intègre le
+senseur dans l'estimateur. Cette commande mémorise aussi `aocs.commanded_mode`
+(0x0297) = 4.
+**Verify:** `aocs.mode` (0x020F) dans {4, 8} sous 300s --- 8 (ECLIPSE) est le
+passage de relais côté ombre du même état commandé
+**Verify:** `aocs.commanded_mode` (0x0297) = 4 sous 10s
+**GO/NO-GO:** AOCS en NOMINAL sur les roues
 
 ### Étape 2 — Consigner les vitesses de référence des roues
 **TC:** `HK_REQUEST(sid=2)` (Service 3, Subtype 27)
@@ -138,6 +155,7 @@ et non des températures de roues.
 ## État de sortie
 - Les quatre roues ACTIVÉES et sollicitées, moment cinétique déchargé (étape 8), AOCS dans
   la famille NOMINAL commandée, maintenant le pointage nadir sur roues
+- Senseurs stellaires et gyromètres toujours sur OFF (COM-003 les met en service)
 - Aucun état de ligne d'alimentation, de charge utile ni de TTC touché par cette fiche
 
 ## Postconditions
@@ -150,4 +168,4 @@ et non des températures de roues.
 - [ ] Désaturation du moment cinétique par magnétocoupleurs vérifiée
 - [ ] Rapport de recette des roues établi
 
-**PROCÉDURE SUIVANTE :** COM-005 (Transitions de modes SCAO)
+**PROCÉDURE SUIVANTE :** COM-003 (Étalonnage des capteurs SCAO --- étalonnage des gyromètres en NOMINAL contrôlé par les roues)

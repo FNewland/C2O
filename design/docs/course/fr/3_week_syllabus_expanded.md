@@ -81,7 +81,7 @@ du jour 1.*
 | **Mar.** | **Cadre réglementaire** | Licences de spectre d'ISDE au titre de la CPC-2-6-02. LSTS (Loi sur les systèmes de télédétection spatiale). Programme des marchandises contrôlées et contrôle des exportations. Notification à l'UIT par l'intermédiaire d'ISDE. Travaux pratiques : remplir une demande de licence de spectre auprès d'ISDE pour une mission type. |
 | **Mer.** | **Normes internationales et conformité** | Cadre des normes ECSS et adaptation. Vue d'ensemble des 17 processus du NASA SEH (voir la figure 2.3 du plan de cours). Cal Poly CDS Rev 14. Atténuation des débris spatiaux (25 ans selon l'IADC, 5 ans selon la FCC). Convention sur l'immatriculation de l'ONU. Travaux pratiques : remplir une matrice d'adaptation. |
 | **Jeu.** | **Besoins et opportunités de mission** | Identification des besoins de mission dans le contexte canadien (surveillance de l'Arctique, surveillance maritime, agriculture, gestion des ressources, connectivité). Analyse des parties prenantes. Dialogue avec les communautés autochtones et DNUDPA (UNDRIP). Atelier de rédaction de l'énoncé du problème. |
-| **Ven.** | **Compromis spatial / non spatial et concept** | Méthodologie des études de compromis (critères, pondérations, notation). Services existants (Radarsat, Sentinel, Planet) face à de nouvelles missions. Économie des constellations et analyses de rentabilité. Constitution des équipes, choix d'un besoin de mission et première analyse de compromis dans SpaceCDF. |
+| **Ven.** | **Compromis spatial / non spatial et concept** | Méthodologie des études de compromis (critères, pondérations, notation). Services existants (Radarsat, Sentinel, Planet) face à de nouvelles missions. Économie des constellations et analyses de rentabilité. Constitution des équipes, choix d'un besoin de mission et première analyse de compromis dans SpaceCDF. Revue informelle du concept de mission (MCR) : chaque équipe présente son besoin, ses objectifs et son concept pour recueillir des retours. |
 
 ### Liste de vérification réglementaire canadienne (livrable du mardi)
 
@@ -133,7 +133,7 @@ La semaine 2 est le **stage intensif en CDF**. Chaque équipe
 pluridisciplinaire converge vers une conception préliminaire complète
 de mission en cinq jours ouvrés, avec l'appui des modules de SpaceCDF
 consacrés au processus d'ingénierie système, au registre des risques
-et aux études de compromis. La PDR a lieu à la fin de la semaine.
+et aux études de compromis. Une revue de type PDR a lieu à la fin de la semaine ; la revue du concept de mission (MCR) s'est tenue de manière informelle le vendredi de la semaine 1.
 
 ![Chronologie du ConOps — du LEOP à la recette en orbite, aux opérations nominales et au retrait de service](../assets/figures/fig_conops_timeline.png)
 
@@ -145,11 +145,11 @@ vol.*
 
 | Jour | Thème | Activités |
 |-----|-------|-----------|
-| **Lun.** | **Cycle en V et exigences** | Étude approfondie du cycle en V. Exigences SMART dérivées des objectifs. Décomposition fonctionnelle. Les équipes saisissent le besoin de mission, utilisent les assistants d'orbite et de classe, et établissent le référentiel d'exigences dans SpaceCDF. |
-| **Mar.** | **Conception des sous-systèmes : puissance, SCAO, thermique** | Compromis sur le choix de l'orbite. Dimensionnement du générateur solaire et de la batterie. Fonctionnement par intermittence. Choix du contrôle d'attitude. Analyse de l'environnement thermique. Les équipes exécutent la boucle de conception et examinent les bilans paramétriques. |
-| **Mer.** | **Conception des sous-systèmes : communications, structure, propulsion** | Calcul du bilan de liaison. Choix de la bande de fréquences et conséquences en matière de licences, au moyen de la vérification réglementaire de SpaceCDF. Structure du CubeSat et choix du déployeur. Compromis sur la propulsion. Choix des équipements dans la bibliothèque de SpaceCDF. |
+| **Lun.** | **Cycle en V, exigences, orbite et architecture** | Étude approfondie du cycle en V. Exigences SMART dérivées des objectifs. Décomposition fonctionnelle. Compromis sur le choix de l'orbite. Architecture de mission : segments, interfaces, bilans. Les équipes saisissent le besoin de mission, utilisent les assistants d'orbite et de classe, et établissent le référentiel d'exigences dans SpaceCDF. |
+| **Mar.** | **Conception des sous-systèmes : puissance et thermique, SCAO et propulsion** | Dimensionnement du générateur solaire et de la batterie. Fonctionnement par intermittence. Analyse de l'environnement thermique. Choix du contrôle d'attitude. Compromis sur la propulsion. Les équipes exécutent la boucle de conception et examinent les bilans paramétriques. |
+| **Mer.** | **Conception des sous-systèmes : communications, structure et gestion bord des données** | Calcul du bilan de liaison. Choix de la bande de fréquences et conséquences en matière de licences, au moyen de la vérification réglementaire de SpaceCDF. Structure du CubeSat et choix du déployeur. Ordinateur de bord et gestion des données. Choix des équipements dans la bibliothèque de SpaceCDF. |
 | **Jeu.** | **Intégration, vérification, coûts** | Examen de la matrice d'interfaces. Affectation de la matrice V&V. Planification des essais d'environnement. Estimation des coûts (paramétrique + COTS). Nomenclature. Études de compromis sur les décisions clés. |
-| **Ven.** | **Revue de conception et optimisation** | Lancer l'optimiseur. Analyse de sensibilité. Revue de jalon (critères de la PDR). Résolution des conflits. Génération des documents ECSS (MRD, TS, VP). Dossiers réglementaires (UIT, LSTS le cas échéant). Chaque équipe présente sa conception préliminaire. |
+| **Ven.** | **Revue de conception et optimisation** | Lancer l'optimiseur. Analyse de sensibilité. Revue de jalon : revue de type PDR, selon les critères de la PDR. Résolution des conflits. Génération des documents ECSS (MRD, TS, VP). Dossiers réglementaires (UIT, LSTS le cas échéant). Chaque équipe présente sa conception préliminaire. |
 
 ### Premier aperçu des bilans que vous bouclerez
 
@@ -191,7 +191,7 @@ orange, 16–25 rouge. R5 (planning) se situe dans la bande orange ;
 R6 (SEU) est jaune, mais mérite l'attention en raison de la dimension
 conséquence.*
 
-> **Lectures attendues avant le mardi de la semaine 2.** SMAD4, chap. 9
+> **Lectures attendues avant le lundi de la semaine 2.** SMAD4, chap. 9
 > (choix de l'orbite) et chap. 10 (analyse de mission) — disponibles
 > localement dans Brightspace. ECSS-E-ST-32C (structures), §4 — [https://ecss.nl/](https://ecss.nl/).
 
@@ -220,7 +220,7 @@ programme d'opérations, les procédures et les dossiers de simulation.
 | Composante | Pondération | Description |
 |-----------|-------:|-------------|
 | Fiches d'exercices (quotidiennes) | 20 % | Remplies pendant les séances, retours formatifs |
-| Revue de conception (vendredi de la semaine 2) | 30 % | Présentation en équipe de la conception préliminaire |
+| Revue de conception de type PDR (vendredi de la semaine 2) | 30 % | Présentation en équipe de la conception préliminaire |
 | Performance en simulation (semaine 3) | 20 % | Opérations à la console, traitement des anomalies |
 | Présentation finale (vendredi de la semaine 3) | 30 % | Conception complète de la mission, concept d'opérations, retour d'expérience |
 

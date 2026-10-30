@@ -37,7 +37,7 @@ What changed and must be reflected:
   new gyro telemetry 0x0294-0x0296.
 - **IMU**: STAYS in the book. ~12 fabricated citations must go — see the list in
   §3 below.
-- **TT&C**: EO-Sat-1 now genuinely has two transmitters, S-band prime plus a
+- **TT&C**: EOSAT-1 now genuinely has two transmitters, S-band prime plus a
   separate UHF whip beacon. PA-off stops S-band TM while the beacon survives —
   that contrast is a teaching point worth making explicitly.
 - **Payload**: CALIBRATION mode (3); dark cal no longer needs IMAGING; absolute
@@ -165,7 +165,7 @@ the current tree, since Phase 1 changed the gyro wiring:
 | `:6149`, workbook `:1314` | `AOCS_EST_SET ss_imu` | does not exist; `AOCS_EST_RESET` (91) + `est_source` 0x02C1 |
 | `:6170` | "switching to redundant IMU" | no redundant unit — three axes, no spare |
 | `:6176` | `S2_TURN_OFF(line=imu)`; 0.02 deg/s threshold | device commands; reconcile against 2.8e-5 spec / 0.05 event / 0.5 S12 limit |
-| `:299` | "single-head star tracker" | EO-Sat-1 flies two (ST1/ST2, `ST_SELECT` func 6) |
+| `:299` | "single-head star tracker" | EOSAT-1 flies two (ST1/ST2, `ST_SELECT` func 6) |
 
 `instructor_book.md:100` advertises an "IMU drifts" scenario — Phase 1 added the
 `gyro_bias` injection to `aocs_sensor_cascade.yaml`, so verify and keep it.

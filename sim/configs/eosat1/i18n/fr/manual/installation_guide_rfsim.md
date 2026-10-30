@@ -1,4 +1,4 @@
-# Guide de démarrage EOSAT-1 — modes avec et sans RF
+# Guide de démarrage EOSAT-1 — modes avec et sans RF {#eosat-1-startup-guide--rf-and-non-rf-modes}
 
 **Manual-Scope:** system — documentation du système de formation, ne fait pas partie du manuel d'opérations de vol.
 
@@ -9,7 +9,7 @@
 
 ---
 
-## 1. Aide-mémoire
+## 1. Aide-mémoire {#1-quick-reference}
 
 | Mode | Commande | Ports MCS | Simulation RF | Interface radio |
 |------|---------|-----------|--------|-----------|
@@ -19,7 +19,7 @@
 
 ---
 
-## 2. Démarrage sans simulation RF (par défaut)
+## 2. Démarrage sans simulation RF (par défaut) {#2-starting-without-rf-simulation-default}
 
 C'est le mode d'exploitation standard. Les paquets circulent directement entre le
 simulateur et le MCS sur TCP, avec un tramage préfixé par la longueur.
@@ -47,7 +47,7 @@ Ni surdébit de tramage, ni simulation de canal. Convient pour :
 
 ---
 
-## 3. Démarrage avec simulation RF (mode FRAME)
+## 3. Démarrage avec simulation RF (mode FRAME) {#3-starting-with-rf-simulation-frame-mode}
 
 Le mode FRAME insère le tramage de transfert CCSDS entre le simulateur et le MCS.
 C'est le mode recommandé pour une formation réaliste au segment sol.
@@ -80,7 +80,7 @@ MCS (TC:8011) → pont RF → codage CLTU → modèle de canal → simulateur (T
 
 ---
 
-## 4. Démarrage avec simulation RF (mode RF)
+## 4. Démarrage avec simulation RF (mode RF) {#4-starting-with-rf-simulation-rf-mode}
 
 Le mode RF ajoute la modulation/démodulation BPSK au mode FRAME.
 Il se replie sur un modèle de canal fondé sur numpy si GNU Radio n'est pas installé.
@@ -104,7 +104,7 @@ SMO_RF_MODE=RF ./start.sh
 
 ---
 
-## 5. Passerelle RF autonome (utilisation avancée)
+## 5. Passerelle RF autonome (utilisation avancée) {#5-standalone-rf-bridge-advanced}
 
 La passerelle RF peut être lancée indépendamment de `start.sh` :
 
@@ -132,11 +132,11 @@ smo-mcs --config configs/eosat1/ --port 9090 --tm-port 8012 --tc-port 8011 &
 
 ---
 
-## 6. Tableau de bord du frontal radio
+## 6. Tableau de bord du frontal radio {#6-radio-front-end-dashboard}
 
 Ouvrir http://localhost:8094 en mode FRAME ou RF.
 
-### 6.1 Panneaux d'affichage
+### 6.1 Panneaux d'affichage {#61-display-panels}
 
 | Panneau | Affiche |
 |-------|-------|
@@ -150,7 +150,7 @@ Ouvrir http://localhost:8094 en mode FRAME ou RF.
 | **BPSK Constellation** | Nuage de points I/Q montrant la qualité des symboles démodulés |
 | **Ground Failure Injection** | Liste déroulante pour injecter/effacer des pannes du segment sol |
 
-### 6.2 Diagramme de constellation
+### 6.2 Diagramme de constellation {#62-constellation-diagram}
 
 Le nuage de points I/Q montre 128 symboles BPSK démodulés. À Eb/N0 élevé,
 les symboles se regroupent étroitement autour des points idéaux (+1,0) et (-1,0). À mesure que
@@ -165,9 +165,9 @@ les symboles tournent aléatoirement dans le plan I/Q.
 
 ---
 
-## 7. Injection de pannes
+## 7. Injection de pannes {#7-failure-injection}
 
-### 7.1 Pannes du segment spatial (via l'interface instructeur du simulateur)
+### 7.1 Pannes du segment spatial (via l'interface instructeur du simulateur) {#71-space-segment-failures-via-simulator-instructor}
 
 Elles s'injectent par l'interface instructeur du simulateur à
 http://localhost:8080/instructor ou par l'API HTTP :
@@ -210,7 +210,7 @@ curl -X POST http://localhost:8080/api/command -H 'Content-Type: application/jso
 | `receiver_degrade` | Hausse du facteur de bruit RX | 0.1–1.0 (= 0.5–5 dB) |
 | `antenna_deploy_failed` | Antenne bloquée, TX inhibé | 1.0 |
 
-### 7.2 Pannes du segment sol (via l'API radio)
+### 7.2 Pannes du segment sol (via l'API radio) {#72-ground-segment-failures-via-radio-api}
 
 Elles s'injectent par le tableau de bord radio web ou par l'API sur le port 8094.
 Elles dégradent l'Eb/N0 effectif vu par le synchroniseur de trames.
@@ -259,7 +259,7 @@ curl http://localhost:8094/api/failures
 L'amplitude va de 0.0 (aucun effet) à 1.0 (pénalité complète). Plusieurs
 pannes s'additionnent.
 
-### 7.3 Scénarios combinés
+### 7.3 Scénarios combinés {#73-combined-scenarios}
 
 La formation la plus réaliste combine pannes spatiales et pannes sol :
 
@@ -272,7 +272,7 @@ La formation la plus réaliste combine pannes spatiales et pannes sol :
 
 ---
 
-## 8. Référence de configuration
+## 8. Référence de configuration {#8-configuration-reference}
 
 Modifier `configs/eosat1/rfsim.yaml` pour changer les valeurs par défaut :
 
@@ -296,7 +296,7 @@ network:
 
 ---
 
-## 9. Dépannage
+## 9. Dépannage {#9-troubleshooting}
 
 | Problème | Cause | Correctif |
 |-------|-------|-----|

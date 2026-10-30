@@ -166,14 +166,14 @@ still disagree with those configs and should be fixed on the simulator side:
 ### Book-level items that need a human decision
 - **`facilitator_book_expanded.md` Part 1 flies a different spacecraft from Part
   2.** Part 1's running examples are a generic 3U SuperDove-class EO CubeSat at
-  500 km and a 1U "UniSat-1" at 400 km; EO-Sat-1 (6U, 450 km) only appears in
-  Part 2. Only the Chapter 4.1 equipment sheet was converted to EO-Sat-1. Whether
-  the whole of Part 1 should be re-anchored on EO-Sat-1 is a pedagogical
+  500 km and a 1U "UniSat-1" at 400 km; EOSAT-1 (6U, 450 km) only appears in
+  Part 2. Only the Chapter 4.1 equipment sheet was converted to EOSAT-1. Whether
+  the whole of Part 1 should be re-anchored on EOSAT-1 is a pedagogical
   decision, not a factual one. **D-2 was applied where it belonged** — the
   "no propulsion" arguments in Chapters 1.1-2.4 are UniSat-1's and are legitimate,
   so they were left; the Chapter 3.2 and 3.4 versions were rescoped.
 - **`learner_workbook_expanded.md` is a generic SpaceCDF design workbook**, not
-  an EO-Sat-1 operations workbook — no func_ids, no hex ids, no answer keys. It
+  an EOSAT-1 operations workbook — no func_ids, no hex ids, no answer keys. It
   got a numerical-correctness pass (a systematic +9 dB FSPL error through the
   whole reference table, from using 41.44 instead of 32.44 in the constant, and
   a 9 dB error in the worked link budget that a "let us recompute" note falsely
