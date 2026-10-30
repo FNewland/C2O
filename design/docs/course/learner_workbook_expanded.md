@@ -1978,7 +1978,7 @@ These are separate problems. You can know your orientation perfectly (great sens
 
 1. **As primary actuators** (missions needing only 2--5 deg pointing): MTQs alone provide 3-axis control, but only in LEO where Earth's magnetic field is strong. They cannot produce torque parallel to the local field vector, so control authority varies around the orbit.
 
-2. **As desaturation actuators** (all RW-based missions): Reaction wheels absorb disturbance torques by spinning up. Over time, they accumulate angular momentum and reach saturation (maximum spin speed). MTQs "dump" this stored momentum by generating opposing torque against Earth's magnetic field. This is done approximately once per orbit, taking 5--15 minutes.
+2. **As desaturation actuators** (all RW-based missions): Reaction wheels absorb disturbance torques by spinning up. Over time, they accumulate angular momentum and reach saturation (maximum spin speed). MTQs "dump" this stored momentum by generating opposing torque against Earth's magnetic field. This is done approximately once per orbit. Because the available magnetic torque is small and drops to zero along the local field direction, a full dump typically takes **tens of minutes (order 20--50 min)**, not a few minutes -- budget an imaging inhibit for the whole of it.
 
 **Reaction wheels -- why 4 wheels?** Three wheels (one per axis) provide minimum 3-axis control. A 4th wheel on a skew axis provides single-fault tolerance: if any one wheel fails, the remaining three still provide full 3-axis control.
 
@@ -2308,12 +2308,12 @@ A link budget is an accounting statement for your communication link. It adds up
 | **Frequency** | 435--438 MHz | 2200--2290 MHz | 8025--8400 MHz | 25.5--27.0 GHz |
 | **Bandwidth available** | 20 kHz | 5 MHz | 375 MHz | 1.5 GHz |
 | **Maximum data rate** | < 20 kbps | 0.1--10 Mbps | 10--400 Mbps | 100--2000 Mbps |
-| **FSPL at 500 km (nadir)** | 148 dB | 163 dB | 174 dB | 184 dB |
-| **FSPL at 1300 km (10 deg elev)** | 158 dB | 171 dB | 182 dB | 192 dB |
+| **FSPL at 500 km (nadir)** | 139 dB | 153 dB | 165 dB | 175 dB |
+| **FSPL at 1300 km (10 deg elev)** | 148 dB | 162 dB | 173 dB | 183 dB |
 | **Atmospheric loss** | ~0.1 dB | ~0.5 dB | ~1.0 dB | ~3--10 dB (rain!) |
 | **Typical spacecraft antenna** | Monopole (0 dBi) | Patch (6 dBi) | Horn/patch array (10--15 dBi) | Small dish/array (20+ dBi) |
 | **Ground antenna** | Yagi (10--13 dBi) | 3 m dish (35 dBi) | 3 m dish (45 dBi) | 1 m dish (45 dBi) |
-| **License type** | IARU coordination (free) | ISED/FCC ($30--45K) | ISED/FCC + ITU (higher) | Complex ITU filing |
+| **License type** | IARU coordination (free) | ISED/FCC (\$30--45K) | ISED/FCC + ITU (higher) | Complex ITU filing |
 | **License timeline** | ~6 months | 6--12 months | 12+ months | 12--18 months |
 | **Equipment availability** | Many COTS | Many COTS | Growing COTS | Emerging |
 | **Best for** | TT&C, telemetry, simple missions | Medium data rate, standard EO | High data rate, EO/SAR | Very high data rate |
@@ -2384,7 +2384,7 @@ UniSat-1 uses UHF amateur band at 437 MHz with 9600 bps downlink to an amateur g
 | 2 | TX Antenna Gain | Monopole | 0.0 | dBi |
 | 3 | TX Line Losses | Short cable run | -0.5 | dB |
 | 4 | **EIRP** | $-3.0 + 0.0 - 0.5$ | **-3.5** | dBW |
-| 5 | FSPL | $21.98 + 20\log_{10}(1.15 \times 10^6) + 20\log_{10}(437 \times 10^6) - 169.54$ | -155.5 | dB |
+| 5 | FSPL | $21.98 + 20\log_{10}(1.15 \times 10^6) + 20\log_{10}(437 \times 10^6) - 169.54$ | -146.5 | dB |
 | 6 | Atmospheric Loss | Minimal at UHF | -0.3 | dB |
 | 7 | Pointing Loss | Omni antenna, minimal | -0.5 | dB |
 | 8 | Polarisation Loss | RHCP-to-RHCP (cross-Yagi) | -0.5 | dB |
@@ -2392,28 +2392,34 @@ UniSat-1 uses UHF amateur band at 437 MHz with 9600 bps downlink to an amateur g
 | 10 | System Noise Temp | 600 K (amateur + LNA) = $10\log_{10}(600)$ | 27.8 | dBK |
 | 11 | **G/T** | $13.0 - 27.8$ | **-14.8** | dB/K |
 | 12 | Boltzmann Constant | | +228.6 | dBW/K/Hz |
-| 13 | **C/N$_0$** | $-3.5 - 155.5 - 0.3 - 0.5 - 0.5 + (-14.8) + 228.6$ | **+53.5** | dBHz |
+| 13 | **C/N$_0$** | $-3.5 - 146.5 - 0.3 - 0.5 - 0.5 + (-14.8) + 228.6$ | **+62.5** | dBHz |
 | 14 | Data Rate | 9600 bps = $10\log_{10}(9600)$ | 39.8 | dBbps |
-| 15 | **$E_b/N_0$ available** | $53.5 - 39.8$ | **+13.7** | dB |
-| 16 | $E_b/N_0$ required | QPSK + conv. code r=1/2 | 5.0 | dB |
+| 15 | **$E_b/N_0$ available** | $62.5 - 39.8$ | **+22.7** | dB |
+| 16 | $E_b/N_0$ required | GMSK + conv. code r=1/2 (K=7) | 5.0 | dB |
 | 17 | Implementation Loss | | 2.0 | dB |
-| 18 | **LINK MARGIN** | $13.7 - 5.0 - 2.0$ | **+6.7** | dB |
+| 18 | **LINK MARGIN** | $22.7 - 5.0 - 2.0$ | **+15.7** | dB |
 
-**Result:** Link closes with 6.7 dB margin (> 3 dB). **Pass.**
+**Result:** Link closes with 15.7 dB margin (> 3 dB). **Pass.**
 
 ### FSPL Calculation Detail
 
 $\text{FSPL} = 21.98 + 20\log_{10}(1.15 \times 10^6) + 20\log_{10}(437 \times 10^6) - 169.54$
 
-$= 21.98 + 121.21 + 172.81 - 169.54 = 146.46$ ... wait, let us recompute:
-
 $20\log_{10}(1.15 \times 10^6) = 20 \times 6.0607 = 121.2$ dB
 
 $20\log_{10}(437 \times 10^6) = 20 \times 8.640 = 172.8$ dB
 
-$\text{FSPL} = 21.98 + 121.2 + 172.8 - 169.54 = 146.4$ dB
+$\text{FSPL} = 21.98 + 121.2 + 172.8 - 169.54 = 146.5$ dB
 
-Note: The line-5 value of 155.5 dB uses the slant range in metres ($1.15 \times 10^6$ m) and frequency in Hz ($437 \times 10^6$ Hz) in the single-formula form: $20\log_{10}(4\pi \times 1.15 \times 10^6 \times 437 \times 10^6 / 3 \times 10^8) = 155.5$ dB. Both approaches give the same result when applied consistently.
+Check with the single-formula form, slant range in metres ($1.15 \times 10^6$ m) and frequency in Hz ($437 \times 10^6$ Hz):
+
+$20\log_{10}\!\left(4\pi \times 1.15 \times 10^6 \times 437 \times 10^6 / 3 \times 10^8\right) = 146.5$ dB
+
+And with the engineering form (range in km, frequency in MHz):
+
+$\text{FSPL} = 32.44 + 20\log_{10}(1150) + 20\log_{10}(437) = 32.44 + 61.2 + 52.8 = 146.5$ dB
+
+All three forms agree. **Common error:** using 41.44 instead of 32.44 in the km/MHz form adds a spurious 9 dB to every link budget. If your FSPL looks about 9 dB too high, check that constant first.
 
 ### Data Throughput
 
@@ -2421,7 +2427,7 @@ At 4800 bps useful throughput (9600 bps channel rate with r=1/2 FEC), a 7-minute
 
 $V_{\text{pass}} = 4800 \times 420 \times 0.85 = 1.71$ Mbit $= 214$ kB per pass
 
-With 4 passes/day: ~0.84 MB/day. The magnetometer generates ~1.13 MB/day -- marginal. May need a second ground station or data prioritisation.
+With 4 passes/day: ~0.86 MB/day. The magnetometer generates ~1.13 MB/day -- marginal. May need a second ground station or data prioritisation.
 
 ---
 
@@ -2640,7 +2646,7 @@ The CDS defines standard CubeSat form factors. All CubeSats must comply with the
 |------------|---------------|---------------|
 | Rail material | Hard anodised Al 7075-T6 or 6061-T6 | Prevents cold welding in vacuum; provides structural load path |
 | Rail cross-section | 8.5 x 8.5 mm minimum contact | Transmits launch loads through deployer rails |
-| Deployment switches | Minimum 1 per accessible rail face | Ensures spacecraft is powered off until deployed |
+| Deployment switches | Minimum 1 (on a rail standoff) | Ensures spacecraft is powered off until deployed |
 | RBF (Remove Before Flight) pin | Required | Physically disconnects batteries during ground handling |
 | No protrusions beyond rail envelope (stowed) | Required | Prevents jamming inside the deployer |
 | CG offset from geometric centre | <= 2 cm | Prevents uncontrolled tumbling at deployment; deployer balance |
@@ -2674,7 +2680,7 @@ START: Does my mission need propulsion?
   +-- Orbit altitude 500-700 km?
   |     Natural lifetime is 5-25+ years
   |     FCC 5-year rule: likely NON-COMPLIANT without active deorbit
-  |     --> PROPULSION REQUIRED for deorbit (50-150 m/s)
+  |     --> PROPULSION LIKELY REQUIRED for deorbit (50-150 m/s)
   |
   +-- Orbit altitude > 700 km?
   |     Natural lifetime is decades to centuries
@@ -2734,7 +2740,7 @@ Choose based on: How much $\Delta V$ do you need? How fast must the manoeuvre ha
 | Dimensions | 100 x 100 x 113.5 mm | 100 x 100 x 113.5 mm (ISIS 1U frame) | Y |
 | Maximum mass | 2.0 kg (CDS) / 1.33 kg (NanoRacks) | 1.0 kg target | Y |
 | Rail material | Hard anodised Al 7075-T6 | ISIS standard frame | Y |
-| Deployment switches | Min 1 per accessible face | 2 (ISIS standard) | Y |
+| Deployment switches | Min 1 | 2 (ISIS standard) | Y |
 | RBF pin | Required | Included | Y |
 | CG offset | <= 2 cm | < 1 cm (symmetric layout) | Y |
 | Protrusions (stowed) | None beyond rail envelope | UHF antenna stowed along rail | Y |
@@ -2753,7 +2759,7 @@ $F_{\text{axial}} = \frac{1.0 \times 9 \times 9.81}{4} = \frac{88.3}{4} = 22.1$ 
 
 $\sigma = \frac{22.1}{8.5 \times 10^{-3} \times 8.5 \times 10^{-3}} = \frac{22.1}{7.225 \times 10^{-5}} = 0.31$ MPa
 
-$\text{MoS}_y = \frac{503}{0.31 \times 1.25} - 1 = \frac{503}{0.39} - 1 = 1289 \gg 0$ **Pass** (by a very large margin)
+$\text{MoS}_y = \frac{503}{0.31 \times 1.25} - 1 = \frac{503}{0.3875} - 1 = 1297 \gg 0$ **Pass** (by a very large margin)
 
 **Key insight:** Quasi-static axial stress is never the critical case for CubeSats. The real structural risks are: (a) PCB solder joint fatigue from random vibration, (b) deployment mechanism reliability, (c) stiffness (fundamental frequency > 40 Hz).
 
@@ -2783,7 +2789,7 @@ Mass margin: 1330 - 690 = 640 g (48%). With 20% equipment margin + 20% system ma
 | Form factor: _____ U | Dimensions: _____ mm | _____ mm | Y / N |
 | Maximum mass | _____ kg (wet) | _____ kg | Y / N |
 | Rail material | | Hard anodised Al | Y / N |
-| Deployment switches | _____ (quantity) | Min 2 | Y / N |
+| Deployment switches | _____ (quantity) | Min 1 | Y / N |
 | RBF pin provided | Y / N | Required | Y / N |
 | No protrusions beyond rails (stowed) | Y / N | Required | Y / N |
 | CG within 2 cm of geometric centre | Estimated: _____ cm offset | <= 2 cm | Y / N |
@@ -4546,3 +4552,268 @@ _______________________________________________
 _______________________________________________
 
 _______________________________________________
+
+---
+
+# Final Review and Presentations
+
+*Moved from the textbook Part 2 wrap-up to the workbook so it sits with the worksheets it depends on.*
+
+
+> **Expected reading before this session.** SMAD4 Ch. 22 (optimization); Wertz et al. SME Ch. 9.
+
+
+
+**Prerequisites:** All previous sessions (complete design through simulation)
+**References:** ECSS-M-ST-10C Rev.1 section 6 (Reviews), NPR 7123.1D Appendix G, NASA SEH Rev 2 section 3.7, ECSS-E-ST-10C section 4 (Technical Dossier)
+
+---
+
+## Learning Objectives
+
+By the end of this session, participants will be able to:
+1. Prepare a complete design documentation package for review
+2. Conduct a design review presentation with evidence-based arguments
+3. Evaluate a peer team's design against gate criteria
+4. Provide constructive technical feedback using a structured rubric
+5. Identify lessons learned and articulate next steps for Phase B
+
+---
+
+## 1. Design Documentation Review
+Before presenting, each team must verify that their design documentation is complete and internally consistent.
+
+### Documentation Checklist
+
+| Document | Source in SpaceCDF | Status Check |
+|----------|-------------------|-------------|
+| Mission Requirements Document (MRD) | Exports -> ECSS Documents | All requirements baselined? |
+| Technical Specification (TS) | Exports -> ECSS Documents | All budgets captured? |
+| Concept of Operations (ConOps) | Exports -> ECSS Documents | All phases defined? |
+| Verification Plan (VP) | V&V Matrix tab | All requirements have methods? |
+| Bill of Materials (BOM) | Exports -> Design Data | All equipment listed with TRL? |
+| Risk Register | Worksheet 4.3 | All risks scored and mitigated? |
+| Interface Matrix (N^2) | Worksheet 4.3 | Interfaces identified? Conflicts resolved? |
+| Cost Estimate | Worksheet 4.4 | WBS complete? P80 computed? |
+| Operations Concept | ConOps Editor | Modes, FDIR, procedures defined? |
+| Sustainability Assessment | Sustainability Card | Debris compliance score? |
+
+### Internal Consistency Checks
+
+Before presenting, verify:
+
+| Check | How to Verify | Common Error |
+|-------|-------------|-------------|
+| Mass budget closes | Dashboard mass KPI: margin > 0% | Equipment added without updating budget |
+| Power budget closes | Dashboard power KPI: SA > loads in all modes | Eclipse mode power not checked |
+| Link budget closes | Link Budget tool: margin >= 3 dB | Rain attenuation not included |
+| Data budget closes | Data Budget: daily downlink >= daily generation | Assumed too many passes per day |
+| Cost is within ceiling | Cost tab: total <= allocated budget | Forgot launch cost or operations |
+| Requirements traceable | Every requirement maps to an objective | Orphan requirements (no parent objective) |
+| V&V complete | Every requirement has a method assigned | "TBD" entries remaining |
+| No unresolved conflicts | Dashboard: conflict count = 0 | Interface mismatches not addressed |
+
+### SpaceCDF Document Generation
+
+Navigate to **Exports** tab and generate all documents:
+1. ECSS Documents: MRD, TS, VP, ConOps, SEMP, IRD
+2. Design Data: BOM, Parametric Model Data
+3. Regulatory Filings: ITU API, RSSSA, Export Assessment, COPUOS, EOL Report
+4. Presentation: Summary slide data (auto-populated)
+
+---
+
+## 2. Presentation Structure
+Each team presents a 12-minute design review followed by 5 minutes of Q&A from the peer review board.
+
+*[Source: ECSS-M-ST-10C Rev.1 section 6; NPR 7123.1D Appendix G (Review Process)]*
+
+### Presentation Outline
+| Section | Duration | Content | Evidence |
+|---------|----------|---------|----------|
+| **1. Mission Need** | 2 min | Problem statement; stakeholders; objectives with MoPs | Mission Need step |
+| **2. Why Space?** | 2 min | Trade study results; why space beats alternatives | Mission Trade results |
+| **3. System Design** | 3 min | Architecture; orbit; key parameters; budget status | Dashboard, budgets |
+| **4. Equipment & Verification** | 2 min | Key equipment; BOM summary; V&V approach; test plan | BOM, V&V Matrix |
+| **5. Risk & Cost** | 2 min | Top 5 risks; cost estimate (P50/P80); schedule | Risk register, cost tab |
+| **6. Operations & Lessons** | 1 min | ConOps summary; FDIR; what would you change | ConOps, simulation debrief |
+
+### Presentation Best Practices
+
+**Slide design:**
+- One key message per slide
+- Data, not prose (budgets, trade tables, not paragraphs)
+- Include backup slides with detailed analyses for Q&A
+
+**Delivery:**
+- Lead with conclusions: "Our mass budget closes with 22% margin"
+- Show evidence for every claim: "Link budget analysis shows 4.2 dB margin at worst case"
+- Acknowledge risks honestly: "Antenna deployment is our highest risk at 12 (L3 x C4)"
+- For questions you cannot answer: "Good question -- we will take that as an action item"
+
+**Common pitfalls to avoid:**
+- Reading slides verbatim
+- Hiding known problems (review boards always find them)
+- Presenting analysis without stating assumptions
+- Spending too long on the mission description and rushing through technical results
+
+---
+
+## 3. Peer Review Process
+Each team acts as a review board for another team. This mirrors the real design review process where an independent board evaluates the project.
+
+### Review Board Roles
+
+| Role | Responsibility | Key Questions to Ask |
+|------|---------------|---------------------|
+| **Chair** | Manages review; ensures all criteria covered | "Let's systematically check each gate criterion" |
+| **Systems reviewer** | Evaluates overall architecture and budgets | "Do all budgets close? What is the minimum margin?" |
+| **Technical reviewer** | Evaluates subsystem design decisions | "Why did you choose this component over alternatives?" |
+| **Risk reviewer** | Evaluates risk management and V&V | "What is your highest risk? Is the mitigation adequate?" |
+| **Operations reviewer** | Evaluates ConOps, ground segment, regulatory | "What happens if you lose contact for 48 hours?" |
+
+### Gate Criteria Evaluation
+
+The review board evaluates the presenting team against PDR-level gate criteria:
+
+| # | Criterion | Score (0-2) | Notes |
+|---|-----------|------------|-------|
+| 1 | Mission need clearly justified | 0 = missing, 1 = partial, 2 = strong | Is the problem real? Is space the right answer? |
+| 2 | Requirements complete and traceable | 0/1/2 | All requirements linked to objectives? Verifiable? |
+| 3 | All budgets close with adequate margin | 0/1/2 | Mass, power, link, data, pointing -- all positive? |
+| 4 | Equipment selected with justified trades | 0/1/2 | BOM complete? TRL adequate? Trade studies documented? |
+| 5 | Interfaces defined and conflicts resolved | 0/1/2 | N^2 matrix? No unresolved conflicts? |
+| 6 | V&V approach defined for all requirements | 0/1/2 | Methods assigned? Test plan outlined? |
+| 7 | Risks identified with mitigations | 0/1/2 | Risk register with scores? Top risks mitigated? |
+| 8 | Cost estimate with WBS and P80 | 0/1/2 | Both parametric and bottom-up? Learning curve applied? |
+| 9 | ConOps and ground segment designed | 0/1/2 | Modes defined? FDIR architecture? Ground stations? |
+| 10 | Sustainability compliance | 0/1/2 | Debris compliance? FCC 5-year rule? Passivation plan? |
+
+### Review Board Questions Bank
+
+Standard questions for the review board to ask:
+
+- "Why is space the right answer? What alternatives were considered?"
+- "What is your mass margin? What drives it? What if the payload is 20% heavier than estimated?"
+- "Walk me through your link budget at worst case. What is the minimum margin?"
+- "What are your top 3 risks? What is the residual risk after mitigation?"
+- "Show me your data budget. Does it close with a single ground station?"
+- "What happens during a safe mode entry in eclipse? Does the thermal budget survive?"
+- "Which component has the lowest TRL? What is your qualification plan?"
+- "Have you started spectrum licensing? What is on the critical path?"
+- "What is your single-point failure list? Which ones have you accepted?"
+- "If you had 6 more months and 20% more budget, what would you change?"
+
+---
+
+## 4. Team Presentations
+### Instructions
+
+**Presentation Schedule:** 12 minutes presentation + 5 minutes Q&A per team.
+
+For 4 teams: allocate 17 min x 4 = 68 min. Adjust timing based on actual number of teams. If fewer than 4 teams, allow 15 min presentation + 8 min Q&A.
+
+**For the presenting team:**
+1. Present the 6-section outline above
+2. Use SpaceCDF live for demonstrations where helpful (show Dashboard, budgets)
+3. Respond to board questions with evidence
+
+**For the review board:**
+1. Complete the gate criteria evaluation form on Worksheet 5.4
+2. Ask at least 3 substantive questions
+3. Provide a GO / NO GO / GO WITH ACTIONS recommendation
+4. Document action items with responsible person and deadline
+
+**After each presentation:**
+- Chair announces the board's recommendation
+- Action items are recorded
+- Brief applause and transition to next team
+
+---
+
+## 5. Course Wrap-Up & Lessons Learned
+### Individual Reflection
+Each participant completes the self-assessment rubric on Worksheet 5.4, reflecting on their learning across all three weeks.
+
+### Team Lessons Learned
+Each team discusses and reports:
+
+1. **Most challenging design decision:** What trade-off was hardest to resolve? Why?
+2. **Biggest surprise:** What aspect of mission design was most different from expectations?
+3. **Tool feedback:** What SpaceCDF feature was most valuable? What was missing?
+4. **Process insight:** How did concurrent design change your approach to engineering?
+5. **If starting over:** What would you do differently in Week 1?
+
+### Key Takeaways from the Course
+| Week | Theme | Core Lesson |
+|------|-------|------------|
+| **Week 1** | Requirements & Architecture | Start with the problem, not the solution. Requirements define WHAT, not HOW. |
+| **Week 2** | Subsystem Design & Budgets | Engineering budgets are the language of systems engineering. Everything trades against everything. |
+| **Week 3** | Integration, Verification & Operations | Building the thing right (verification) and building the right thing (validation) matter as much as designing it. Operations reveal what analysis cannot. |
+
+### The Systems Engineering V-Model -- Completed
+
+```
+You started here:                          You finished here:
+                                           
+  Mission Need                               Mission Validated
+     |                                              ^
+     v                                              |
+  Requirements                              Requirements Verified
+     |                                              ^
+     v                                              |
+  System Design                             System Integrated (sim)
+     |                                              ^
+     v                                              |
+  Subsystem Design                          Subsystem V&V Planned
+     |                                              ^
+     v                                              |
+  Equipment Selected  ------>  Equipment Verified (BOM + compliance)
+  
+  Week 1-2 (left side)         Week 3 (right side)
+```
+
+*You have traversed the complete V-model: from mission need to verified, validated design.*
+
+### Next Steps for Participants
+
+- **SpaceCDF access** continues after the course
+- **Apply the methodology** to your own missions or projects
+- **Use the tool** for CDF-style studies with your team
+- **Refer to the Course Textbook** for session plans and appendices
+- **Share feedback** to improve the course for future cohorts
+
+### Course Evaluation
+
+Distribute the course evaluation form. Key questions:
+- Which session was most valuable? Least valuable?
+- What content should be added? Removed?
+- How effective was the simulation day?
+- Would you recommend this course to colleagues?
+- What is one thing you will do differently in your engineering practice as a result?
+
+---
+
+## Cited References
+
+| # | Reference | URL |
+|---|-----------|-----|
+| 1 | ECSS-M-ST-10C Rev.1 (Project Planning and Implementation) | https://ecss.nl/standard/ecss-m-st-10c-rev-1-project-planning-and-implementation/ |
+| 2 | NPR 7123.1D Appendix G (Review Process) | https://nodis3.gsfc.nasa.gov/displayDir.cfm?t=NPR&c=7123&s=1D |
+| 3 | NASA SEH Rev 2, section 3.7 (Technical Reviews) | https://www.nasa.gov/reference/systems-engineering-handbook/ |
+| 4 | ECSS-E-ST-10C (System Engineering) | https://ecss.nl/standard/ecss-e-st-10c-rev-1-system-engineering-general-requirements/ |
+
+---
+
+## Session Summary
+
+| Topic | Key Takeaway |
+|-------|-------------|
+| Documentation | Complete package: MRD, TS, ConOps, VP, BOM, Risk Register, Cost, Regulatory |
+| Consistency | All budgets must close; no unresolved conflicts; requirements fully traceable |
+| Presentation | 6 sections: need, justification, design, V&V, risk+cost, operations+lessons |
+| Peer review | Independent board evaluates against gate criteria; GO/NO GO/GO with actions |
+| Best practices | Lead with conclusions, show evidence, acknowledge risks, answer directly |
+| V-model | Course traverses full V: needs -> requirements -> design -> V&V -> validation |
+| Lessons learned | Document what worked, what failed, and what to change -- this is the real output |
+

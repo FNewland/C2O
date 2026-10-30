@@ -1,0 +1,32 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "${DRIVE_COURSE}/back_cover.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "spacecdf-a-course-textbook",
+   "en_hash": "9c32a52958c964e2",
+   "fr_hash": "1a6b5363cea42253"
+  },
+  {
+   "id": "spacecdf-a-course-textbook/what-this-volume-covers",
+   "en_hash": "2cbf6b330ae6b262",
+   "fr_hash": "4384e79cd5d0f0ad"
+  },
+  {
+   "id": "spacecdf-a-course-textbook/about-the-author",
+   "en_hash": "b4769dc95b8cbe5d",
+   "fr_hash": "0e7cbafdeb30e942"
+  },
+  {
+   "id": "spacecdf-a-course-textbook/licence-and-attribution",
+   "en_hash": "364ad897449880d3",
+   "fr_hash": "a4e8293d39fb0901"
+  }
+ ],
+ "en_commit": "c175838"
+}

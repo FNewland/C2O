@@ -1,0 +1,497 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "${DRIVE_COURSE}/orbit_north_week3_workbook.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "part-5-orbitnorth-week-3-workbook",
+   "en_hash": "95f7969fa02fda72",
+   "fr_hash": "ed801b69d777be97"
+  },
+  {
+   "id": "worksheet-wb-5-0-orientation-check",
+   "en_hash": "a0fb96f58cf7a13f",
+   "fr_hash": "fffc92706fc035b5"
+  },
+  {
+   "id": "worksheet-wb-5-0-orientation-check/section-a-mission-facts",
+   "en_hash": "065524d084ea2a8b",
+   "fr_hash": "ef2a4cff01d84134"
+  },
+  {
+   "id": "worksheet-wb-5-0-orientation-check/section-b-control-room-positions",
+   "en_hash": "52fc8af1d5ade0a5",
+   "fr_hash": "54da2f514cc845b8"
+  },
+  {
+   "id": "worksheet-wb-5-0-orientation-check/section-c-pre-week-reflection",
+   "en_hash": "2a4e534a02df700b",
+   "fr_hash": "d538c91a540e8436"
+  },
+  {
+   "id": "worksheet-wb-5-1-position-score-cards-round-robin",
+   "en_hash": "5afaa547800302df",
+   "fr_hash": "83945d72a10c3941"
+  },
+  {
+   "id": "worksheet-wb-5-1-position-score-cards-round-robin/5-1-1-flight-director",
+   "en_hash": "ce52113f383b82ef",
+   "fr_hash": "4c148d84afafe7b3"
+  },
+  {
+   "id": "worksheet-wb-5-1-position-score-cards-round-robin/5-1-2-spacon-fdir-systems",
+   "en_hash": "56a215cbc9cf9c95",
+   "fr_hash": "a4f6975b3e9e176a"
+  },
+  {
+   "id": "worksheet-wb-5-1-position-score-cards-round-robin/5-1-3-aocs-engineer",
+   "en_hash": "f57abb394e8f64d3",
+   "fr_hash": "dcb8f2deff171b42"
+  },
+  {
+   "id": "worksheet-wb-5-1-position-score-cards-round-robin/5-1-4-eps-engineer",
+   "en_hash": "a356615bfa38a601",
+   "fr_hash": "d94e735bb18564db"
+  },
+  {
+   "id": "worksheet-wb-5-1-position-score-cards-round-robin/5-1-5-thermal-engineer",
+   "en_hash": "549b1d18547d0e60",
+   "fr_hash": "28dd37234d36ef50"
+  },
+  {
+   "id": "worksheet-wb-5-1-position-score-cards-round-robin/5-1-6-tt-c-engineer",
+   "en_hash": "cc0af502335c7c69",
+   "fr_hash": "9f074051148a61cf"
+  },
+  {
+   "id": "worksheet-wb-5-1-position-score-cards-round-robin/5-1-7-payload-operations",
+   "en_hash": "4b971cefccf4458a",
+   "fr_hash": "7cbf8605328f0655"
+  },
+  {
+   "id": "worksheet-wb-5-1-position-score-cards-round-robin/5-1-8-fds-orbit-analyst",
+   "en_hash": "099b279439e08967",
+   "fr_hash": "a161f4e2c185282b"
+  },
+  {
+   "id": "worksheet-wb-5-1-position-score-cards-round-robin/5-1-9-ground-segment-engineer",
+   "en_hash": "e053808de841eeaa",
+   "fr_hash": "7e721d23ab71e874"
+  },
+  {
+   "id": "worksheet-wb-5-3-pp-day-1-pass-plan-team-exercise",
+   "en_hash": "87bd78b18c584328",
+   "fr_hash": "05e2f57fbc58a7d7"
+  },
+  {
+   "id": "worksheet-wb-5-3-pp-day-1-pass-plan-team-exercise/read-aloud-notes",
+   "en_hash": "04cc9462bd19d3fb",
+   "fr_hash": "3dd59ea502575d57"
+  },
+  {
+   "id": "worksheet-wb-5-4-vl-day-2-voice-loop-callout-drill",
+   "en_hash": "8c35ee015e914535",
+   "fr_hash": "de82f5718078bf66"
+  },
+  {
+   "id": "worksheet-wb-5-4-n001-nom-001-pass-startup-confirm-each-step",
+   "en_hash": "05600e81780da26f",
+   "fr_hash": "2987c71ce6315720"
+  },
+  {
+   "id": "worksheet-wb-5-4-c003-ctg-003-ttc-link-loss-recovery-confirm-each-step",
+   "en_hash": "12db53e9916cdff2",
+   "fr_hash": "37a4003ce84dc54f"
+  },
+  {
+   "id": "worksheet-wb-5-4-n012-nom-012-shift-handover-template",
+   "en_hash": "887f4732eda9469c",
+   "fr_hash": "39349ede303c4424"
+  },
+  {
+   "id": "worksheet-wb-5-4-fd-day-2-flight-dynamics-workshop",
+   "en_hash": "cf4158890d5301a1",
+   "fr_hash": "d2ef2fb480677c07"
+  },
+  {
+   "id": "worksheet-wb-5-4-fd-day-2-flight-dynamics-workshop/exercise-1-predict-next-three-aos-times",
+   "en_hash": "c2b29136a2ea47a8",
+   "fr_hash": "f3f4001478358ce2"
+  },
+  {
+   "id": "worksheet-wb-5-4-fd-day-2-flight-dynamics-workshop/exercise-2-pass-duration-vs-max-elevation",
+   "en_hash": "2458e8f8f224a4f1",
+   "fr_hash": "80c454b0d2b89e01"
+  },
+  {
+   "id": "worksheet-wb-5-4-fd-day-2-flight-dynamics-workshop/exercise-3-eclipse-arithmetic",
+   "en_hash": "17a4c6541278290b",
+   "fr_hash": "cfa69fbfc2798bc5"
+  },
+  {
+   "id": "worksheet-wb-5-4-q-day-2-operations-training-quiz-response-sheet",
+   "en_hash": "e859b6287fdab6bb",
+   "fr_hash": "6ae6843def9f7c18"
+  },
+  {
+   "id": "worksheet-wb-5-4-q-day-2-operations-training-quiz-response-sheet/voice-loop-discipline-3-qs",
+   "en_hash": "f2f850c02d3c3f10",
+   "fr_hash": "1370585f99930444"
+  },
+  {
+   "id": "worksheet-wb-5-4-q-day-2-operations-training-quiz-response-sheet/mcs-ui-navigation-3-qs",
+   "en_hash": "324a728b8a26f307",
+   "fr_hash": "8d7b857dc1de4692"
+  },
+  {
+   "id": "worksheet-wb-5-4-q-day-2-operations-training-quiz-response-sheet/telemetry-interpretation-limits-and-sids-3-qs",
+   "en_hash": "2e64b67d74afad18",
+   "fr_hash": "31f96b4b9746733e"
+  },
+  {
+   "id": "worksheet-wb-5-4-q-day-2-operations-training-quiz-response-sheet/procedure-structure-2-qs",
+   "en_hash": "20944f830253a5a0",
+   "fr_hash": "9e82d27452d587a7"
+  },
+  {
+   "id": "worksheet-wb-5-4-q-day-2-operations-training-quiz-response-sheet/anomaly-response-2-qs",
+   "en_hash": "2bdcf19640b6d4ee",
+   "fr_hash": "7d680b8c638fe71e"
+  },
+  {
+   "id": "worksheet-wb-5-4-q-day-2-operations-training-quiz-response-sheet/pass-timing-arithmetic-2-qs",
+   "en_hash": "38ca32a3de17e688",
+   "fr_hash": "e2faaa22fb890a57"
+  },
+  {
+   "id": "worksheet-wb-5-5-pb-day-3-leop-pre-pass-briefing-checklist",
+   "en_hash": "e3bafbdc1348bffb",
+   "fr_hash": "b8911907f6a824b4"
+  },
+  {
+   "id": "worksheet-wb-5-5-l001-leop-001-first-acquisition-of-signal-obc-boot-confirm-each-step",
+   "en_hash": "f1ff801884432932",
+   "fr_hash": "9e4edae276a57334"
+  },
+  {
+   "id": "worksheet-wb-5-5-l006-leop-006-time-synchronisation-confirm-each-step",
+   "en_hash": "bbb2474ea5a03efc",
+   "fr_hash": "f9f882a7634944e1"
+  },
+  {
+   "id": "worksheet-wb-5-5-l002-leop-002-initial-health-check-confirm-each-step",
+   "en_hash": "0508f6cbec832b7f",
+   "fr_hash": "d974b52e34fe249b"
+  },
+  {
+   "id": "worksheet-wb-5-5-l007-leop-007-sequential-power-on-confirm-each-step",
+   "en_hash": "69143abfd368f1da",
+   "fr_hash": "f4e1dc1cfc18a1f5"
+  },
+  {
+   "id": "worksheet-wb-5-5-l005-leop-005-sun-acquisition-optional-confirm-each-step",
+   "en_hash": "ce8daef762820508",
+   "fr_hash": "0b9aad957e859d88"
+  },
+  {
+   "id": "worksheet-wb-5-5-at-day-3-anomaly-ticket-3-copies",
+   "en_hash": "d9fdc65b5a951cec",
+   "fr_hash": "bc831a865ffe2b87"
+  },
+  {
+   "id": "worksheet-wb-5-5-at-day-3-anomaly-ticket-3-copies/ticket-copy-1",
+   "en_hash": "1106c59e4aae1b7d",
+   "fr_hash": "91657a9892f156ad"
+  },
+  {
+   "id": "worksheet-wb-5-5-at-day-3-anomaly-ticket-3-copies/ticket-copy-2",
+   "en_hash": "1b17623c12a275ce",
+   "fr_hash": "7903b1dfe1350277"
+  },
+  {
+   "id": "worksheet-wb-5-5-at-day-3-anomaly-ticket-3-copies/ticket-copy-3",
+   "en_hash": "306a51cadad428b9",
+   "fr_hash": "d36465bf0bc1dafc"
+  },
+  {
+   "id": "worksheet-wb-5-5-go-day-3-end-of-pass-go-no-go-scorecard",
+   "en_hash": "a9d0ec5df1ac58bf",
+   "fr_hash": "cc6d9a4d78bf34b5"
+  },
+  {
+   "id": "worksheet-wb-5-5-obs-day-3-observer-worksheets-axes-used-communications-technical",
+   "en_hash": "c75669216c4084bc",
+   "fr_hash": "2fbb0b5f05483a69"
+  },
+  {
+   "id": "worksheet-wb-5-5-obs-day-3-observer-worksheets-axes-used-communications-technical/observer-worksheet-communications-axis",
+   "en_hash": "8dc764b9a1ba7c1c",
+   "fr_hash": "c94052acb52bad32"
+  },
+  {
+   "id": "worksheet-wb-5-5-obs-day-3-observer-worksheets-axes-used-communications-technical/observer-worksheet-technical-axis",
+   "en_hash": "0b209487a316cbb2",
+   "fr_hash": "c2225a335d6d42b9"
+  },
+  {
+   "id": "worksheet-wb-5-5-ho-day-3-inter-pass-handover-turnover-form",
+   "en_hash": "f487421e4cb7e3f7",
+   "fr_hash": "ae5a1610d307a38c"
+  },
+  {
+   "id": "worksheet-wb-5-5-ho-day-3-inter-pass-handover-turnover-form/handover-position",
+   "en_hash": "342cc7acaaa7d395",
+   "fr_hash": "46a9aa606d07a144"
+  },
+  {
+   "id": "worksheet-wb-5-5-db-day-3-post-shift-debrief-reflection",
+   "en_hash": "c40f79f377ea12c5",
+   "fr_hash": "6473db5886ec09d2"
+  },
+  {
+   "id": "worksheet-wb-5-6-pb-day-4-commissioning-pre-pass-set-briefing",
+   "en_hash": "2c948460ac546913",
+   "fr_hash": "410888754b2da84b"
+  },
+  {
+   "id": "worksheet-wb-5-6-c001-com-001-eps-checkout-confirm-each-step",
+   "en_hash": "c15a6fda2eb9d2ca",
+   "fr_hash": "651bf02f8945d744"
+  },
+  {
+   "id": "worksheet-wb-5-6-c002-com-002-tcs-verification-confirm-each-step",
+   "en_hash": "e3d07c681b4b46a8",
+   "fr_hash": "6781db66645b2ca9"
+  },
+  {
+   "id": "worksheet-wb-5-6-c005-com-005-aocs-mode-transitions-confirm-each-step",
+   "en_hash": "e131bd0fceb2d655",
+   "fr_hash": "99824c7a2d738e5d"
+  },
+  {
+   "id": "worksheet-wb-5-6-c006-com-006-ttc-link-verification-confirm-each-step",
+   "en_hash": "f7abd4ee8e3db401",
+   "fr_hash": "e0e8278ef96bf8c2"
+  },
+  {
+   "id": "worksheet-wb-5-6-c007-com-007-obdh-checkout-confirm-each-step",
+   "en_hash": "a99bcab8c7c8a40d",
+   "fr_hash": "e5d6040c80b0420e"
+  },
+  {
+   "id": "worksheet-wb-5-6-c008-com-008-fdir-configuration-confirm-each-step",
+   "en_hash": "67dac3e37cca423e",
+   "fr_hash": "f7e41feabe0ee2b9"
+  },
+  {
+   "id": "worksheet-wb-5-6-c009-com-009-payload-power-on-confirm-each-step",
+   "en_hash": "efb428e0689af7a8",
+   "fr_hash": "d8686129e6de887e"
+  },
+  {
+   "id": "worksheet-wb-5-6-c010-com-010-fpa-cooler-activation-confirm-each-step-spans-eclipse",
+   "en_hash": "244532e57fd4b93a",
+   "fr_hash": "7955792e035653dc"
+  },
+  {
+   "id": "worksheet-wb-5-6-fpa-fpa-cool-down-monitor-sheet",
+   "en_hash": "8452bd870ca17786",
+   "fr_hash": "56f283e47ca31e7b"
+  },
+  {
+   "id": "worksheet-wb-5-6-c011-com-011-payload-calibration-confirm-each-step",
+   "en_hash": "77646e7ddf772b56",
+   "fr_hash": "c612003af630c078"
+  },
+  {
+   "id": "worksheet-wb-5-6-c012-com-012-first-light-confirm-each-step",
+   "en_hash": "b4e220e8db3c55c2",
+   "fr_hash": "a454f3085fd9bd1c"
+  },
+  {
+   "id": "worksheet-wb-5-6-fl-first-light-image-assessment",
+   "en_hash": "2f56d43bce0457cb",
+   "fr_hash": "adc8fd87c9b7d3b0"
+  },
+  {
+   "id": "worksheet-wb-5-6-ma-day-4-multi-anomaly-response-form",
+   "en_hash": "892734880e05dc2f",
+   "fr_hash": "bcd07010cc85e9fe"
+  },
+  {
+   "id": "worksheet-wb-5-6-go-day-4-pass-set-criteria-scorecard",
+   "en_hash": "bf63e3c970f51bd2",
+   "fr_hash": "a050a31695847c0f"
+  },
+  {
+   "id": "worksheet-wb-5-6-obs-day-4-observer-worksheets-axes-team-space-usage",
+   "en_hash": "e970b1e34e0a412c",
+   "fr_hash": "d79bb4bc62202f6f"
+  },
+  {
+   "id": "worksheet-wb-5-6-obs-day-4-observer-worksheets-axes-team-space-usage/observer-worksheet-team-axis",
+   "en_hash": "149fd654479b3cb5",
+   "fr_hash": "6984be70176f084b"
+  },
+  {
+   "id": "worksheet-wb-5-6-obs-day-4-observer-worksheets-axes-team-space-usage/observer-worksheet-space-usage-axis",
+   "en_hash": "a3cd2da253cf9007",
+   "fr_hash": "820f303963a9aecf"
+  },
+  {
+   "id": "worksheet-wb-5-6-ho-day-4-inter-pass-handover-turnover-form",
+   "en_hash": "51ca52b3b6b43cf5",
+   "fr_hash": "49b9a65edc3ee78b"
+  },
+  {
+   "id": "worksheet-wb-5-6-ho-day-4-inter-pass-handover-turnover-form/handover-position",
+   "en_hash": "f39c1ad68cac52c7",
+   "fr_hash": "2e621d7cca2ef1b6"
+  },
+  {
+   "id": "worksheet-wb-5-6-db-day-4-post-shift-debrief-reflection",
+   "en_hash": "a39d4230e8fba6b9",
+   "fr_hash": "6b93e007dc070564"
+  },
+  {
+   "id": "worksheet-wb-5-7-sa-day-5-personal-self-assessment",
+   "en_hash": "a4146b4cd838362b",
+   "fr_hash": "77f07c5f0e1964a4"
+  },
+  {
+   "id": "worksheet-wb-5-7-ll-cohort-lessons-learned-contribution",
+   "en_hash": "a7aaa94ba9e8fd02",
+   "fr_hash": "6aaed3538fbda4f5"
+  },
+  {
+   "id": "worksheet-wb-5-7-ll-cohort-lessons-learned-contribution/lesson-1",
+   "en_hash": "61a7eb16e296776e",
+   "fr_hash": "8f1b0d8f7e141f9d"
+  },
+  {
+   "id": "worksheet-wb-5-7-ll-cohort-lessons-learned-contribution/lesson-2",
+   "en_hash": "3603348e1c5587a0",
+   "fr_hash": "2b5d041d165637cd"
+  },
+  {
+   "id": "worksheet-wb-5-7-ll-cohort-lessons-learned-contribution/lesson-3",
+   "en_hash": "21c6c2b2cab7b512",
+   "fr_hash": "a62321644f7603fb"
+  },
+  {
+   "id": "worksheet-wb-5-7-wi-what-if-branch-reflection",
+   "en_hash": "b902a60c91800d1d",
+   "fr_hash": "804a1fbfb39138d8"
+  },
+  {
+   "id": "worksheet-wb-5-7-fr-final-mission-review-prep",
+   "en_hash": "8a6e897447987c99",
+   "fr_hash": "499016649d529568"
+  },
+  {
+   "id": "worksheet-wb-5-7-fr-final-mission-review-prep/section-1-mission-objectives",
+   "en_hash": "ee580c7477847534",
+   "fr_hash": "cd43e4dea9a9da9f"
+  },
+  {
+   "id": "worksheet-wb-5-7-fr-final-mission-review-prep/section-2-telemetry-summary-across-the-week",
+   "en_hash": "086742c2b5c7da54",
+   "fr_hash": "b663e72b1c53f826"
+  },
+  {
+   "id": "worksheet-wb-5-7-fr-final-mission-review-prep/section-3-anomalies-log",
+   "en_hash": "23b8039a3c4288e6",
+   "fr_hash": "dc7f61d9efe0b2ae"
+  },
+  {
+   "id": "worksheet-wb-5-7-fr-final-mission-review-prep/section-4-compliance-with-ecss-e-st-70-11c",
+   "en_hash": "11fde82c127dde77",
+   "fr_hash": "fb4699e4c31c9cf1"
+  },
+  {
+   "id": "worksheet-wb-5-7-fr-final-mission-review-prep/section-5-crew-performance-self-assessment",
+   "en_hash": "8483c30be304519f",
+   "fr_hash": "5bac558780dbee16"
+  },
+  {
+   "id": "worksheet-wb-5-7-fr-final-mission-review-prep/section-6-recommendations-for-next-cycle",
+   "en_hash": "2f15cbc212fefdb4",
+   "fr_hash": "f8c0b1e833b4bd60"
+  },
+  {
+   "id": "worksheet-wb-5-7-ce-course-evaluation",
+   "en_hash": "f148931308a83d1f",
+   "fr_hash": "3925698843154ac2"
+  },
+  {
+   "id": "appendix-wb-a-contingency-confirm-each-step-week-3-likely",
+   "en_hash": "fcd3618f4255d931",
+   "fr_hash": "090c311571ae0993"
+  },
+  {
+   "id": "appendix-wb-a-contingency-confirm-each-step-week-3-likely/ctg-001-under-voltage-load-shed",
+   "en_hash": "3e6094f00fdcb0f6",
+   "fr_hash": "22c3bcfc135c7023"
+  },
+  {
+   "id": "appendix-wb-a-contingency-confirm-each-step-week-3-likely/ctg-002-aocs-anomaly-recovery",
+   "en_hash": "3182f15c6c102e04",
+   "fr_hash": "3852bd70b435c7ab"
+  },
+  {
+   "id": "appendix-wb-a-contingency-confirm-each-step-week-3-likely/ctg-007-reaction-wheel-anomaly",
+   "en_hash": "311a49f9c3bd1a4d",
+   "fr_hash": "f6b552a92cf65171"
+  },
+  {
+   "id": "appendix-wb-a-contingency-confirm-each-step-week-3-likely/ctg-008-star-tracker-failure",
+   "en_hash": "4d2b557ee36ae887",
+   "fr_hash": "787d9c4edbf210fd"
+  },
+  {
+   "id": "appendix-wb-a-contingency-confirm-each-step-week-3-likely/ctg-010-obdh-watchdog-recovery",
+   "en_hash": "811f960c812408f7",
+   "fr_hash": "4c02b6bd21895eda"
+  },
+  {
+   "id": "appendix-wb-a-contingency-confirm-each-step-week-3-likely/ctg-012-overcurrent-response",
+   "en_hash": "1079c29905c13e51",
+   "fr_hash": "ccda7976880d7394"
+  },
+  {
+   "id": "appendix-wb-a-contingency-confirm-each-step-week-3-likely/ctg-015-corrupted-image-recovery",
+   "en_hash": "00318b18dba1e7dd",
+   "fr_hash": "0b121093d8cc9be4"
+  },
+  {
+   "id": "appendix-wb-a-contingency-confirm-each-step-week-3-likely/ctg-017-bus-failure-switchover",
+   "en_hash": "bebee9739eddb8de",
+   "fr_hash": "7f160715a01c275b"
+  },
+  {
+   "id": "appendix-wb-a-contingency-confirm-each-step-week-3-likely/ctg-019-no-telemetry-at-pass-start",
+   "en_hash": "81a0dd092581614a",
+   "fr_hash": "553912eb9e40fc08"
+  },
+  {
+   "id": "appendix-wb-a-contingency-confirm-each-step-week-3-likely/ctg-020-ground-station-antenna-failure",
+   "en_hash": "250dc5cceecd8171",
+   "fr_hash": "29af9c71a144e2dd"
+  },
+  {
+   "id": "appendix-wb-b-end-of-week-shift-log-cohort-copy",
+   "en_hash": "3acae31c046c6f7a",
+   "fr_hash": "a83379b02c33e9db"
+  },
+  {
+   "id": "appendix-wb-c-workbook-self-check",
+   "en_hash": "871ef21d246605f8",
+   "fr_hash": "b958b443620cc5fd"
+  }
+ ],
+ "en_commit": "c175838"
+}

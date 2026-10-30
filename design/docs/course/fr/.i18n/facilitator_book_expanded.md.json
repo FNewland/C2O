@@ -1,0 +1,3352 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "${DRIVE_COURSE}/facilitator_book_expanded.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "03d61e868eee4cd5",
+   "fr_hash": "836bff3c7629a085"
+  },
+  {
+   "id": "how-to-use-this-book",
+   "en_hash": "f1bf85e093f75dc6",
+   "fr_hash": "8c74620455dc484e"
+  },
+  {
+   "id": "acknowledgement-generative-ai-aig",
+   "en_hash": "c95e42c032f58786",
+   "fr_hash": "9f42a50555951c7e"
+  },
+  {
+   "id": "agents-positions-and-the-spacecdf-architecture",
+   "en_hash": "1bd88648951eef69",
+   "fr_hash": "24217a90b16621db"
+  },
+  {
+   "id": "design-reviews-and-the-spacecdf-exports",
+   "en_hash": "491ca1f0302f1fdb",
+   "fr_hash": "758c6f770ac5d196"
+  },
+  {
+   "id": "part-1-cubesat-design",
+   "en_hash": "276d03e2a61d16ab",
+   "fr_hash": "10d41f23d88425ef"
+  },
+  {
+   "id": "chapter-1-1-introduction-to-space-mission-design",
+   "en_hash": "b39549e6c1696ecb",
+   "fr_hash": "6c28cbacc9fa8c38"
+  },
+  {
+   "id": "chapter-1-1-introduction-to-space-mission-design/learning-objectives",
+   "en_hash": "1000ce3d3bc6d8f0",
+   "fr_hash": "9728804f39e095c2"
+  },
+  {
+   "id": "chapter-1-1-introduction-to-space-mission-design/1-what-is-a-concurrent-design-facility",
+   "en_hash": "9c1a8c8b7749e66e",
+   "fr_hash": "fbd64c86a6c95777"
+  },
+  {
+   "id": "chapter-1-1-introduction-to-space-mission-design/1-what-is-a-concurrent-design-facility/1-1-the-problem-with-sequential-design",
+   "en_hash": "5b56842975e5f561",
+   "fr_hash": "0a228c19fbff8714"
+  },
+  {
+   "id": "chapter-1-1-introduction-to-space-mission-design/1-what-is-a-concurrent-design-facility/1-2-esa-s-cdf-the-reference-model",
+   "en_hash": "293cc882fa0cc4c3",
+   "fr_hash": "48695a5f78738730"
+  },
+  {
+   "id": "chapter-1-1-introduction-to-space-mission-design/1-what-is-a-concurrent-design-facility/1-3-key-principles-of-concurrent-design",
+   "en_hash": "65e96b134a60b4b1",
+   "fr_hash": "f91676e0047680ed"
+  },
+  {
+   "id": "chapter-1-1-introduction-to-space-mission-design/1-what-is-a-concurrent-design-facility/1-4-spacecdf-a-web-based-cdf",
+   "en_hash": "5e39f4e701e94216",
+   "fr_hash": "44a2d53ac77233de"
+  },
+  {
+   "id": "chapter-1-1-introduction-to-space-mission-design/2-the-system-v-model",
+   "en_hash": "f3edf6d21ff40b6f",
+   "fr_hash": "c3b70f548aeb9f48"
+  },
+  {
+   "id": "chapter-1-1-introduction-to-space-mission-design/2-the-system-v-model/2-1-origin-and-purpose",
+   "en_hash": "59a61d0d218291df",
+   "fr_hash": "9ec1894c137093ce"
+  },
+  {
+   "id": "chapter-1-1-introduction-to-space-mission-design/2-the-system-v-model/2-2-v-model-diagram",
+   "en_hash": "a56ad4fe6b7260d6",
+   "fr_hash": "3d27791d325f4a16"
+  },
+  {
+   "id": "chapter-1-1-introduction-to-space-mission-design/2-the-system-v-model/2-3-left-side-top-down-decomposition",
+   "en_hash": "bf79d5222b34c4ce",
+   "fr_hash": "8e33260a94e2abf7"
+  },
+  {
+   "id": "chapter-1-1-introduction-to-space-mission-design/2-the-system-v-model/2-4-right-side-bottom-up-integration",
+   "en_hash": "ad3677d054239667",
+   "fr_hash": "622ef3a67f8d497e"
+  },
+  {
+   "id": "chapter-1-1-introduction-to-space-mission-design/2-the-system-v-model/2-5-horizontal-traceability",
+   "en_hash": "0be2438f98656d79",
+   "fr_hash": "fbe8af47e2605d02"
+  },
+  {
+   "id": "chapter-1-1-introduction-to-space-mission-design/2-the-system-v-model/2-6-iteration-and-the-se-engine",
+   "en_hash": "c050789bf3db15e1",
+   "fr_hash": "7829f17386425d6e"
+  },
+  {
+   "id": "chapter-1-1-introduction-to-space-mission-design/3-the-17-common-technical-processes",
+   "en_hash": "fec39f85f9cfd9d0",
+   "fr_hash": "e619207426de986d"
+  },
+  {
+   "id": "chapter-1-1-introduction-to-space-mission-design/3-the-17-common-technical-processes/3-1-overview",
+   "en_hash": "b35f4497fdbeb287",
+   "fr_hash": "7520a60685df0455"
+  },
+  {
+   "id": "chapter-1-1-introduction-to-space-mission-design/3-the-17-common-technical-processes/3-2-system-design-processes-1-4",
+   "en_hash": "a1be1f65f2a96848",
+   "fr_hash": "f6543e88ad5d9778"
+  },
+  {
+   "id": "chapter-1-1-introduction-to-space-mission-design/3-the-17-common-technical-processes/3-3-product-realisation-processes-5-9",
+   "en_hash": "ddde50347225a250",
+   "fr_hash": "45777dc07863f4a0"
+  },
+  {
+   "id": "chapter-1-1-introduction-to-space-mission-design/3-the-17-common-technical-processes/3-4-technical-management-processes-10-17",
+   "en_hash": "706b501896bf74a6",
+   "fr_hash": "2169bd939257763a"
+  },
+  {
+   "id": "chapter-1-1-introduction-to-space-mission-design/3-the-17-common-technical-processes/3-5-recursion-across-the-system-hierarchy",
+   "en_hash": "f21d0a5438655b0c",
+   "fr_hash": "74f4279ef93a8bf2"
+  },
+  {
+   "id": "chapter-1-1-introduction-to-space-mission-design/4-lifecycle-phases-and-review-gates",
+   "en_hash": "1cb97400205932bf",
+   "fr_hash": "fc35e2ec87065824"
+  },
+  {
+   "id": "chapter-1-1-introduction-to-space-mission-design/4-lifecycle-phases-and-review-gates/4-1-nasa-lifecycle-phases",
+   "en_hash": "353e946a976a1dd5",
+   "fr_hash": "410d351d066c53e0"
+  },
+  {
+   "id": "chapter-1-1-introduction-to-space-mission-design/4-lifecycle-phases-and-review-gates/4-2-lifecycle-phase-diagram",
+   "en_hash": "882124fec97d1221",
+   "fr_hash": "964629ebb4d863de"
+  },
+  {
+   "id": "chapter-1-1-introduction-to-space-mission-design/4-lifecycle-phases-and-review-gates/4-3-phase-details",
+   "en_hash": "dcc5da6b4e40bbaa",
+   "fr_hash": "1e4390d5fd8687e2"
+  },
+  {
+   "id": "chapter-1-1-introduction-to-space-mission-design/4-lifecycle-phases-and-review-gates/4-4-ecss-lifecycle-phases",
+   "en_hash": "25d49fa4a9351f41",
+   "fr_hash": "ceafea19eaeb34b5"
+  },
+  {
+   "id": "chapter-1-1-introduction-to-space-mission-design/4-lifecycle-phases-and-review-gates/4-5-review-gates-what-each-checks",
+   "en_hash": "f59fd817b49c4ede",
+   "fr_hash": "1399487a0d132045"
+  },
+  {
+   "id": "chapter-1-1-introduction-to-space-mission-design/5-cdf-engineering-positions",
+   "en_hash": "ddc14396f048c898",
+   "fr_hash": "e84f35532817597b"
+  },
+  {
+   "id": "chapter-1-1-introduction-to-space-mission-design/5-cdf-engineering-positions/5-1-position-overview",
+   "en_hash": "ce308251a33dcb7e",
+   "fr_hash": "33611da2d980dffd"
+  },
+  {
+   "id": "chapter-1-1-introduction-to-space-mission-design/5-cdf-engineering-positions/5-2-interface-conflicts",
+   "en_hash": "fa7596e6d6a78f77",
+   "fr_hash": "1899c7722625928d"
+  },
+  {
+   "id": "chapter-1-1-introduction-to-space-mission-design/6-session-summary",
+   "en_hash": "4c36cf4c42710ab5",
+   "fr_hash": "d43dd34486124be0"
+  },
+  {
+   "id": "chapter-1-1-introduction-to-space-mission-design/6-session-summary/1u-worked-example-unisat-1",
+   "en_hash": "90f2add45cdf3c4b",
+   "fr_hash": "b82f62953bc8de01"
+  },
+  {
+   "id": "chapter-1-1-introduction-to-space-mission-design/7-tool-exercise",
+   "en_hash": "8b8e574900e39ea4",
+   "fr_hash": "a82c6184720c272b"
+  },
+  {
+   "id": "chapter-1-1-introduction-to-space-mission-design/references",
+   "en_hash": "58d8898d5e96cf7e",
+   "fr_hash": "74c1aef08d35ca98"
+  },
+  {
+   "id": "chapter-1-2-the-canadian-space-ecosystem-regulatory-environment",
+   "en_hash": "fa05547780b8306c",
+   "fr_hash": "2d8b460c107d4133"
+  },
+  {
+   "id": "chapter-1-2-the-canadian-space-ecosystem-regulatory-environment/learning-objectives",
+   "en_hash": "5b1cb07729d360a1",
+   "fr_hash": "5fe81d71aabb2fc4"
+  },
+  {
+   "id": "chapter-1-2-the-canadian-space-ecosystem-regulatory-environment/part-1-the-canadian-space-ecosystem",
+   "en_hash": "9102498a3e59e714",
+   "fr_hash": "549f73ff075f50d8"
+  },
+  {
+   "id": "chapter-1-2-the-canadian-space-ecosystem-regulatory-environment/part-1-the-canadian-space-ecosystem/1-the-canadian-space-agency",
+   "en_hash": "b7dfdbeac41dcb0b",
+   "fr_hash": "e84cce7e9aab00ff"
+  },
+  {
+   "id": "chapter-1-2-the-canadian-space-ecosystem-regulatory-environment/part-1-the-canadian-space-ecosystem/1-the-canadian-space-agency/1-1-mandate-and-history",
+   "en_hash": "61b25a43851db052",
+   "fr_hash": "6c6c6ff141b2a7d4"
+  },
+  {
+   "id": "chapter-1-2-the-canadian-space-ecosystem-regulatory-environment/part-1-the-canadian-space-ecosystem/1-the-canadian-space-agency/1-2-csa-organisational-focus-areas",
+   "en_hash": "82fb32d0dedcbb6b",
+   "fr_hash": "2ff11702bf8beb0d"
+  },
+  {
+   "id": "chapter-1-2-the-canadian-space-ecosystem-regulatory-environment/part-1-the-canadian-space-ecosystem/1-the-canadian-space-agency/1-3-canadian-space-strategy-2019",
+   "en_hash": "c212c086507d58be",
+   "fr_hash": "e71cea0b43c51720"
+  },
+  {
+   "id": "chapter-1-2-the-canadian-space-ecosystem-regulatory-environment/part-1-the-canadian-space-ecosystem/2-canadian-space-industry-map",
+   "en_hash": "0ff76c34996b6536",
+   "fr_hash": "8bae43ca5aa820bc"
+  },
+  {
+   "id": "chapter-1-2-the-canadian-space-ecosystem-regulatory-environment/part-1-the-canadian-space-ecosystem/2-canadian-space-industry-map/2-1-industry-structure",
+   "en_hash": "bc4d908fb9c153a0",
+   "fr_hash": "3f73779b6f314842"
+  },
+  {
+   "id": "chapter-1-2-the-canadian-space-ecosystem-regulatory-environment/part-1-the-canadian-space-ecosystem/2-canadian-space-industry-map/2-2-key-canadian-space-capabilities",
+   "en_hash": "7026bc4cc41603a5",
+   "fr_hash": "db5cbfb711b27823"
+  },
+  {
+   "id": "chapter-1-2-the-canadian-space-ecosystem-regulatory-environment/part-1-the-canadian-space-ecosystem/2-canadian-space-industry-map/2-3-funding-programs",
+   "en_hash": "6852f2ff5aee9893",
+   "fr_hash": "877fececfdea9b3a"
+  },
+  {
+   "id": "chapter-1-2-the-canadian-space-ecosystem-regulatory-environment/part-1-the-canadian-space-ecosystem/3-comparison-with-other-national-models",
+   "en_hash": "8dc87cd0deffc575",
+   "fr_hash": "d1ba085be0709b0f"
+  },
+  {
+   "id": "chapter-1-2-the-canadian-space-ecosystem-regulatory-environment/part-1-the-canadian-space-ecosystem/4-canadian-space-in-the-international-context",
+   "en_hash": "c6326f9fee3beb9b",
+   "fr_hash": "24dc696f38f8ea0b"
+  },
+  {
+   "id": "chapter-1-2-the-canadian-space-ecosystem-regulatory-environment/part-1-the-canadian-space-ecosystem/4-canadian-space-in-the-international-context/4-1-international-partnerships",
+   "en_hash": "232b9e545a9d6c38",
+   "fr_hash": "a7eb8af21b60ee64"
+  },
+  {
+   "id": "chapter-1-2-the-canadian-space-ecosystem-regulatory-environment/part-1-the-canadian-space-ecosystem/4-canadian-space-in-the-international-context/4-2-the-canadian-niche-strategy",
+   "en_hash": "bd7e3ecc1b0abe02",
+   "fr_hash": "2d9ecd977cc9e1e2"
+  },
+  {
+   "id": "chapter-1-2-the-canadian-space-ecosystem-regulatory-environment/part-2-regulatory-environment",
+   "en_hash": "5c70a9361e120232",
+   "fr_hash": "0d0121d421ebd5e8"
+  },
+  {
+   "id": "chapter-1-2-the-canadian-space-ecosystem-regulatory-environment/part-2-regulatory-environment/5-regulatory-framework-overview",
+   "en_hash": "31102592e6f6a43d",
+   "fr_hash": "1fc83d436fb0aa19"
+  },
+  {
+   "id": "chapter-1-2-the-canadian-space-ecosystem-regulatory-environment/part-2-regulatory-environment/6-remote-sensing-space-systems-act-rsssa",
+   "en_hash": "95cbfd25cdb7952f",
+   "fr_hash": "f6506322b9199f01"
+  },
+  {
+   "id": "chapter-1-2-the-canadian-space-ecosystem-regulatory-environment/part-2-regulatory-environment/6-remote-sensing-space-systems-act-rsssa/6-1-purpose-and-scope",
+   "en_hash": "428efb4e46b2d79d",
+   "fr_hash": "43ab462df11b0e01"
+  },
+  {
+   "id": "chapter-1-2-the-canadian-space-ecosystem-regulatory-environment/part-2-regulatory-environment/6-remote-sensing-space-systems-act-rsssa/6-2-who-needs-a-licence",
+   "en_hash": "ad7fb06ab13ce297",
+   "fr_hash": "cc0d1161ff680ce4"
+  },
+  {
+   "id": "chapter-1-2-the-canadian-space-ecosystem-regulatory-environment/part-2-regulatory-environment/6-remote-sensing-space-systems-act-rsssa/6-3-licence-categories-and-conditions",
+   "en_hash": "1cc7881899c88551",
+   "fr_hash": "42ba633147990455"
+  },
+  {
+   "id": "chapter-1-2-the-canadian-space-ecosystem-regulatory-environment/part-2-regulatory-environment/6-remote-sensing-space-systems-act-rsssa/6-4-implications-for-cubesat-and-university-missions",
+   "en_hash": "1cd546fbcaffac8f",
+   "fr_hash": "54a84e1467ae8d91"
+  },
+  {
+   "id": "chapter-1-2-the-canadian-space-ecosystem-regulatory-environment/part-2-regulatory-environment/7-spectrum-management-and-licensing",
+   "en_hash": "196eb62e856b87dd",
+   "fr_hash": "0f40869e8ea98569"
+  },
+  {
+   "id": "chapter-1-2-the-canadian-space-ecosystem-regulatory-environment/part-2-regulatory-environment/7-spectrum-management-and-licensing/7-1-why-spectrum-licensing-matters",
+   "en_hash": "14a19f3c6062c0cb",
+   "fr_hash": "43f4cdf48e32f3b7"
+  },
+  {
+   "id": "chapter-1-2-the-canadian-space-ecosystem-regulatory-environment/part-2-regulatory-environment/7-spectrum-management-and-licensing/7-2-the-itu-framework",
+   "en_hash": "eef6a5ebad60fe5d",
+   "fr_hash": "7ef4250d9d98ee0d"
+  },
+  {
+   "id": "chapter-1-2-the-canadian-space-ecosystem-regulatory-environment/part-2-regulatory-environment/7-spectrum-management-and-licensing/7-3-common-satellite-frequency-bands",
+   "en_hash": "db3ebea73a1e76af",
+   "fr_hash": "aa1ce15bdad0a4c8"
+  },
+  {
+   "id": "chapter-1-2-the-canadian-space-ecosystem-regulatory-environment/part-2-regulatory-environment/7-spectrum-management-and-licensing/7-4-the-licensing-process-canada",
+   "en_hash": "5ded96ff24cbac60",
+   "fr_hash": "beb21bb2cf10b249"
+  },
+  {
+   "id": "chapter-1-2-the-canadian-space-ecosystem-regulatory-environment/part-2-regulatory-environment/7-spectrum-management-and-licensing/7-5-cubesat-specific-considerations",
+   "en_hash": "0859666f5eed37a6",
+   "fr_hash": "3196d46e41ed17f7"
+  },
+  {
+   "id": "chapter-1-2-the-canadian-space-ecosystem-regulatory-environment/part-2-regulatory-environment/8-export-control",
+   "en_hash": "5b6e765833c7023d",
+   "fr_hash": "a97d9fef36f5c526"
+  },
+  {
+   "id": "chapter-1-2-the-canadian-space-ecosystem-regulatory-environment/part-2-regulatory-environment/8-export-control/8-1-the-export-control-landscape",
+   "en_hash": "62a0d4b49aa99962",
+   "fr_hash": "58c7afbf876bef17"
+  },
+  {
+   "id": "chapter-1-2-the-canadian-space-ecosystem-regulatory-environment/part-2-regulatory-environment/8-export-control/8-2-canadian-export-controls-eipa",
+   "en_hash": "8bf2ca6fad45b62b",
+   "fr_hash": "5a6b55f779d13b57"
+  },
+  {
+   "id": "chapter-1-2-the-canadian-space-ecosystem-regulatory-environment/part-2-regulatory-environment/8-export-control/8-3-us-export-controls-itar-and-ear",
+   "en_hash": "5d7ce980a4ba867b",
+   "fr_hash": "52c220aeba0d7a11"
+  },
+  {
+   "id": "chapter-1-2-the-canadian-space-ecosystem-regulatory-environment/part-2-regulatory-environment/8-export-control/8-4-practical-implications-for-mission-design",
+   "en_hash": "f570f818f2893283",
+   "fr_hash": "ea2c2ffa5ea4a5bb"
+  },
+  {
+   "id": "chapter-1-2-the-canadian-space-ecosystem-regulatory-environment/session-summary",
+   "en_hash": "99865433d186f584",
+   "fr_hash": "8793b14657cab9f4"
+  },
+  {
+   "id": "chapter-1-2-the-canadian-space-ecosystem-regulatory-environment/references",
+   "en_hash": "c06fcdf62cf49b38",
+   "fr_hash": "1dd7cf5f26c48143"
+  },
+  {
+   "id": "chapter-1-3-international-standards-for-space-systems",
+   "en_hash": "f9498c882808d67e",
+   "fr_hash": "dd480c1a1924ffe6"
+  },
+  {
+   "id": "chapter-1-3-international-standards-for-space-systems/learning-objectives",
+   "en_hash": "730c5de3e6ca2afd",
+   "fr_hash": "4d4e5eace72b691b"
+  },
+  {
+   "id": "chapter-1-3-international-standards-for-space-systems/part-1-the-ecss-framework",
+   "en_hash": "fe6781471765bf9e",
+   "fr_hash": "87efcc19d86e50ee"
+  },
+  {
+   "id": "chapter-1-3-international-standards-for-space-systems/part-1-the-ecss-framework/1-why-standards-matter-in-space-engineering",
+   "en_hash": "4acb09e186ad5d48",
+   "fr_hash": "c4d1d822317af2ea"
+  },
+  {
+   "id": "chapter-1-3-international-standards-for-space-systems/part-1-the-ecss-framework/1-why-standards-matter-in-space-engineering/1-1-the-cost-of-non-compliance",
+   "en_hash": "3b282898fb657f7b",
+   "fr_hash": "3f4fb8a6ebb749e5"
+  },
+  {
+   "id": "chapter-1-3-international-standards-for-space-systems/part-1-the-ecss-framework/1-why-standards-matter-in-space-engineering/1-2-the-major-standard-frameworks",
+   "en_hash": "2c513de132abbaa0",
+   "fr_hash": "08250d06d545fe14"
+  },
+  {
+   "id": "chapter-1-3-international-standards-for-space-systems/part-1-the-ecss-framework/2-ecss-standard-hierarchy",
+   "en_hash": "1af199c72e2ced55",
+   "fr_hash": "2190136d0ff19a58"
+  },
+  {
+   "id": "chapter-1-3-international-standards-for-space-systems/part-1-the-ecss-framework/2-ecss-standard-hierarchy/2-1-structure",
+   "en_hash": "d40a31745e65e2f6",
+   "fr_hash": "6f912bac1987a01e"
+  },
+  {
+   "id": "chapter-1-3-international-standards-for-space-systems/part-1-the-ecss-framework/2-ecss-standard-hierarchy/2-2-the-four-branches",
+   "en_hash": "c22d1ee7b7d3c26f",
+   "fr_hash": "20006d437f35b4e1"
+  },
+  {
+   "id": "chapter-1-3-international-standards-for-space-systems/part-1-the-ecss-framework/2-ecss-standard-hierarchy/2-3-document-types",
+   "en_hash": "7ae0d82d05f4ab20",
+   "fr_hash": "55b236099df6466d"
+  },
+  {
+   "id": "chapter-1-3-international-standards-for-space-systems/part-1-the-ecss-framework/2-ecss-standard-hierarchy/2-4-tailoring",
+   "en_hash": "69a58cb60d80bb4a",
+   "fr_hash": "f74c09d8bef3f440"
+  },
+  {
+   "id": "chapter-1-3-international-standards-for-space-systems/part-1-the-ecss-framework/3-key-ecss-engineering-standards",
+   "en_hash": "fe3b45f6d115b309",
+   "fr_hash": "b05028ae733d520a"
+  },
+  {
+   "id": "chapter-1-3-international-standards-for-space-systems/part-1-the-ecss-framework/3-key-ecss-engineering-standards/3-1-systems-engineering-ecss-e-st-10c",
+   "en_hash": "4baee519bc785ee6",
+   "fr_hash": "8ac46f4ceeac89c1"
+  },
+  {
+   "id": "chapter-1-3-international-standards-for-space-systems/part-1-the-ecss-framework/3-key-ecss-engineering-standards/3-2-key-subsystem-standards",
+   "en_hash": "add29bd55edc5e19",
+   "fr_hash": "2050a5ecda90dab2"
+  },
+  {
+   "id": "chapter-1-3-international-standards-for-space-systems/part-1-the-ecss-framework/3-key-ecss-engineering-standards/3-3-structural-design-requirements-example",
+   "en_hash": "e3623465ce99c058",
+   "fr_hash": "48878cca80b9be22"
+  },
+  {
+   "id": "chapter-1-3-international-standards-for-space-systems/part-1-the-ecss-framework/4-nasa-standards-comparison",
+   "en_hash": "62022891f1ef5719",
+   "fr_hash": "c4a41df8b0817ca7"
+  },
+  {
+   "id": "chapter-1-3-international-standards-for-space-systems/part-1-the-ecss-framework/4-nasa-standards-comparison/4-1-nasa-technical-standards-architecture",
+   "en_hash": "817b02eab42b5668",
+   "fr_hash": "1acb5056389b704c"
+  },
+  {
+   "id": "chapter-1-3-international-standards-for-space-systems/part-1-the-ecss-framework/4-nasa-standards-comparison/4-2-cross-reference-table",
+   "en_hash": "7df317e07cfa6092",
+   "fr_hash": "ae443744a2cf4cd0"
+  },
+  {
+   "id": "chapter-1-3-international-standards-for-space-systems/part-2-launch-interfaces-debris-mitigation-international-law",
+   "en_hash": "1e7473750ba33189",
+   "fr_hash": "2de95fd5dc9d3377"
+  },
+  {
+   "id": "chapter-1-3-international-standards-for-space-systems/part-2-launch-interfaces-debris-mitigation-international-law/5-cds-rev-14-launch-vehicle-interface-standard",
+   "en_hash": "380eb7978a5f3fa3",
+   "fr_hash": "87b03e0144b0b1c8"
+  },
+  {
+   "id": "chapter-1-3-international-standards-for-space-systems/part-2-launch-interfaces-debris-mitigation-international-law/5-cds-rev-14-launch-vehicle-interface-standard/5-1-what-is-the-cds",
+   "en_hash": "bb6196173b117fa9",
+   "fr_hash": "27150f84ed3c28ec"
+  },
+  {
+   "id": "chapter-1-3-international-standards-for-space-systems/part-2-launch-interfaces-debris-mitigation-international-law/5-cds-rev-14-launch-vehicle-interface-standard/5-2-key-cds-requirements",
+   "en_hash": "2736cb64b3b08b57",
+   "fr_hash": "243deecc7db7fafd"
+  },
+  {
+   "id": "chapter-1-3-international-standards-for-space-systems/part-2-launch-interfaces-debris-mitigation-international-law/5-cds-rev-14-launch-vehicle-interface-standard/5-3-form-factors",
+   "en_hash": "8453b865c96fd135",
+   "fr_hash": "126fd9c887d8d955"
+  },
+  {
+   "id": "chapter-1-3-international-standards-for-space-systems/part-2-launch-interfaces-debris-mitigation-international-law/5-cds-rev-14-launch-vehicle-interface-standard/5-4-rideshare-launch-interfaces",
+   "en_hash": "d6b21c5d4af3560f",
+   "fr_hash": "f33e7dfae43706b3"
+  },
+  {
+   "id": "chapter-1-3-international-standards-for-space-systems/part-2-launch-interfaces-debris-mitigation-international-law/6-space-debris-mitigation",
+   "en_hash": "a386d847d4b5b5b3",
+   "fr_hash": "2a56778ef001505d"
+  },
+  {
+   "id": "chapter-1-3-international-standards-for-space-systems/part-2-launch-interfaces-debris-mitigation-international-law/6-space-debris-mitigation/6-1-the-debris-problem",
+   "en_hash": "f890a95c87ff7639",
+   "fr_hash": "77d20334c40c5d16"
+  },
+  {
+   "id": "chapter-1-3-international-standards-for-space-systems/part-2-launch-interfaces-debris-mitigation-international-law/6-space-debris-mitigation/6-2-debris-mitigation-guidelines-hierarchy",
+   "en_hash": "ec1f690d5ea87ad8",
+   "fr_hash": "a6be795c3109b024"
+  },
+  {
+   "id": "chapter-1-3-international-standards-for-space-systems/part-2-launch-interfaces-debris-mitigation-international-law/6-space-debris-mitigation/6-3-key-debris-mitigation-requirements",
+   "en_hash": "2e2decc065979e10",
+   "fr_hash": "3fbf10d66a693854"
+  },
+  {
+   "id": "chapter-1-3-international-standards-for-space-systems/part-2-launch-interfaces-debris-mitigation-international-law/6-space-debris-mitigation/6-4-post-mission-disposal-options",
+   "en_hash": "42db59f97b764324",
+   "fr_hash": "aab2d368efec734d"
+  },
+  {
+   "id": "chapter-1-3-international-standards-for-space-systems/part-2-launch-interfaces-debris-mitigation-international-law/6-space-debris-mitigation/6-5-practical-implications-for-mission-design",
+   "en_hash": "4f9983b34189eb8c",
+   "fr_hash": "41432fb2daaf53a4"
+  },
+  {
+   "id": "chapter-1-3-international-standards-for-space-systems/part-2-launch-interfaces-debris-mitigation-international-law/7-international-space-law-and-copuos",
+   "en_hash": "34ffa23381e3bd71",
+   "fr_hash": "0291aed59fed5dbf"
+  },
+  {
+   "id": "chapter-1-3-international-standards-for-space-systems/part-2-launch-interfaces-debris-mitigation-international-law/7-international-space-law-and-copuos/7-1-the-un-space-treaties",
+   "en_hash": "fe69e28a9803e66c",
+   "fr_hash": "e4c0146ae672da7a"
+  },
+  {
+   "id": "chapter-1-3-international-standards-for-space-systems/part-2-launch-interfaces-debris-mitigation-international-law/7-international-space-law-and-copuos/7-2-key-legal-principles-for-mission-design",
+   "en_hash": "4ab46f32d22ff5a8",
+   "fr_hash": "ab08e5a9e6f3c3d8"
+  },
+  {
+   "id": "chapter-1-3-international-standards-for-space-systems/part-2-launch-interfaces-debris-mitigation-international-law/7-international-space-law-and-copuos/7-3-copuos-long-term-sustainability-guidelines-2019",
+   "en_hash": "48b70f9c051b8725",
+   "fr_hash": "f8376a013f8ff7dd"
+  },
+  {
+   "id": "chapter-1-3-international-standards-for-space-systems/part-2-launch-interfaces-debris-mitigation-international-law/8-spacecdf-compliance-features",
+   "en_hash": "65b44c1500f8c004",
+   "fr_hash": "5a56f45d93a3096a"
+  },
+  {
+   "id": "chapter-1-3-international-standards-for-space-systems/session-summary",
+   "en_hash": "7f9c350324066359",
+   "fr_hash": "1f842922f3a2d68a"
+  },
+  {
+   "id": "chapter-1-3-international-standards-for-space-systems/references",
+   "en_hash": "2cb472909b7a1a89",
+   "fr_hash": "851bd9d5e0d77e44"
+  },
+  {
+   "id": "chapter-1-4-mission-needs-stakeholder-analysis-trade-studies",
+   "en_hash": "9154c6b3fd0cdcac",
+   "fr_hash": "bff62869f1dd13e7"
+  },
+  {
+   "id": "chapter-1-4-mission-needs-stakeholder-analysis-trade-studies/learning-objectives",
+   "en_hash": "e17229d3db9d2381",
+   "fr_hash": "04ecd6ec04d7d5ea"
+  },
+  {
+   "id": "chapter-1-4-mission-needs-stakeholder-analysis-trade-studies/part-1-mission-need-stakeholder-analysis",
+   "en_hash": "3f413e6b1b42ff50",
+   "fr_hash": "7475e9ae32def86e"
+  },
+  {
+   "id": "chapter-1-4-mission-needs-stakeholder-analysis-trade-studies/part-1-mission-need-stakeholder-analysis/1-the-problem-statement",
+   "en_hash": "3f0d7cd109b4aa98",
+   "fr_hash": "9a171f309ca55af7"
+  },
+  {
+   "id": "chapter-1-4-mission-needs-stakeholder-analysis-trade-studies/part-1-mission-need-stakeholder-analysis/1-the-problem-statement/1-1-why-start-with-the-problem",
+   "en_hash": "7aaa7c530131ba75",
+   "fr_hash": "9602bd64fbfef80f"
+  },
+  {
+   "id": "chapter-1-4-mission-needs-stakeholder-analysis-trade-studies/part-1-mission-need-stakeholder-analysis/1-the-problem-statement/1-2-structure-of-a-good-problem-statement",
+   "en_hash": "a1ec88658a6c85e6",
+   "fr_hash": "69588aab4e3c9b5e"
+  },
+  {
+   "id": "chapter-1-4-mission-needs-stakeholder-analysis-trade-studies/part-1-mission-need-stakeholder-analysis/1-the-problem-statement/1-3-good-vs-bad-problem-statements",
+   "en_hash": "299197d4aaf2c3ba",
+   "fr_hash": "9a73adbf8c496acd"
+  },
+  {
+   "id": "chapter-1-4-mission-needs-stakeholder-analysis-trade-studies/part-1-mission-need-stakeholder-analysis/1-the-problem-statement/1-4-the-what-vs-how-principle",
+   "en_hash": "9dd47027a8ae4f5d",
+   "fr_hash": "02ccc43478eff806"
+  },
+  {
+   "id": "chapter-1-4-mission-needs-stakeholder-analysis-trade-studies/part-1-mission-need-stakeholder-analysis/2-stakeholder-identification-analysis",
+   "en_hash": "08e975a9760221a9",
+   "fr_hash": "6f4a2878636e4d17"
+  },
+  {
+   "id": "chapter-1-4-mission-needs-stakeholder-analysis-trade-studies/part-1-mission-need-stakeholder-analysis/2-stakeholder-identification-analysis/2-1-who-is-a-stakeholder",
+   "en_hash": "9ae2299bc9042321",
+   "fr_hash": "ed82b04567690b69"
+  },
+  {
+   "id": "chapter-1-4-mission-needs-stakeholder-analysis-trade-studies/part-1-mission-need-stakeholder-analysis/2-stakeholder-identification-analysis/2-2-stakeholder-categories-for-space-missions",
+   "en_hash": "45bcfc9e492002db",
+   "fr_hash": "b91e8b8509cb1ecd"
+  },
+  {
+   "id": "chapter-1-4-mission-needs-stakeholder-analysis-trade-studies/part-1-mission-need-stakeholder-analysis/2-stakeholder-identification-analysis/2-3-stakeholder-analysis-matrix",
+   "en_hash": "200a591c120b5a79",
+   "fr_hash": "6c3904e7ce344e85"
+  },
+  {
+   "id": "chapter-1-4-mission-needs-stakeholder-analysis-trade-studies/part-1-mission-need-stakeholder-analysis/3-mission-objectives-and-the-moe-mop-tpm-hierarchy",
+   "en_hash": "d52f2f30326406e3",
+   "fr_hash": "427225ac929e7dd4"
+  },
+  {
+   "id": "chapter-1-4-mission-needs-stakeholder-analysis-trade-studies/part-1-mission-need-stakeholder-analysis/3-mission-objectives-and-the-moe-mop-tpm-hierarchy/3-1-from-need-to-objectives",
+   "en_hash": "965842f491260fbb",
+   "fr_hash": "11d7f74c8a605ddf"
+  },
+  {
+   "id": "chapter-1-4-mission-needs-stakeholder-analysis-trade-studies/part-1-mission-need-stakeholder-analysis/3-mission-objectives-and-the-moe-mop-tpm-hierarchy/3-2-writing-good-objectives",
+   "en_hash": "dbe898e56bf5adb9",
+   "fr_hash": "dfab4ea945743f71"
+  },
+  {
+   "id": "chapter-1-4-mission-needs-stakeholder-analysis-trade-studies/part-1-mission-need-stakeholder-analysis/3-mission-objectives-and-the-moe-mop-tpm-hierarchy/3-3-the-moe-mop-tpm-hierarchy",
+   "en_hash": "cc17b3e7299da89d",
+   "fr_hash": "9dbcf5a7557a68ab"
+  },
+  {
+   "id": "chapter-1-4-mission-needs-stakeholder-analysis-trade-studies/part-1-mission-need-stakeholder-analysis/4-from-need-to-design-the-flow",
+   "en_hash": "fb04a7cb66fbe16d",
+   "fr_hash": "402ac2d1eee07414"
+  },
+  {
+   "id": "chapter-1-4-mission-needs-stakeholder-analysis-trade-studies/part-2-trade-study-methodology",
+   "en_hash": "5b8d36ffd2497c6f",
+   "fr_hash": "7c960b75a852c747"
+  },
+  {
+   "id": "chapter-1-4-mission-needs-stakeholder-analysis-trade-studies/part-2-trade-study-methodology/5-decision-analysis-framework",
+   "en_hash": "a2839b5f250daa79",
+   "fr_hash": "0a06e302604133c7"
+  },
+  {
+   "id": "chapter-1-4-mission-needs-stakeholder-analysis-trade-studies/part-2-trade-study-methodology/5-decision-analysis-framework/5-1-process-17-decision-analysis",
+   "en_hash": "64c99d394ab2dcb4",
+   "fr_hash": "fd572b090236b677"
+  },
+  {
+   "id": "chapter-1-4-mission-needs-stakeholder-analysis-trade-studies/part-2-trade-study-methodology/5-decision-analysis-framework/5-2-the-five-elements-of-a-rigorous-trade-study",
+   "en_hash": "14162e94f2ec2af5",
+   "fr_hash": "806af3da65115dea"
+  },
+  {
+   "id": "chapter-1-4-mission-needs-stakeholder-analysis-trade-studies/part-2-trade-study-methodology/5-decision-analysis-framework/5-3-weighting-methods",
+   "en_hash": "03ddb4cbf679bf9d",
+   "fr_hash": "59be0206cbd3f228"
+  },
+  {
+   "id": "chapter-1-4-mission-needs-stakeholder-analysis-trade-studies/part-2-trade-study-methodology/5-decision-analysis-framework/5-4-scoring-methods",
+   "en_hash": "53c7a0936c32d612",
+   "fr_hash": "17adb844cab6b22a"
+  },
+  {
+   "id": "chapter-1-4-mission-needs-stakeholder-analysis-trade-studies/part-2-trade-study-methodology/5-decision-analysis-framework/5-5-weighted-score-calculation",
+   "en_hash": "1015280e3e44c6a0",
+   "fr_hash": "8ff79614c66bad2d"
+  },
+  {
+   "id": "chapter-1-4-mission-needs-stakeholder-analysis-trade-studies/part-2-trade-study-methodology/5-decision-analysis-framework/5-6-sensitivity-analysis",
+   "en_hash": "58f8bf4d56a61d06",
+   "fr_hash": "b56c202a7b81c812"
+  },
+  {
+   "id": "chapter-1-4-mission-needs-stakeholder-analysis-trade-studies/part-2-trade-study-methodology/6-space-vs-non-space-alternatives",
+   "en_hash": "8a6d78e87e3c0fcd",
+   "fr_hash": "e7c420a5d581ca38"
+  },
+  {
+   "id": "chapter-1-4-mission-needs-stakeholder-analysis-trade-studies/part-2-trade-study-methodology/6-space-vs-non-space-alternatives/6-1-the-most-important-trade-study",
+   "en_hash": "7c222c2ae4ac2219",
+   "fr_hash": "ecb28dc38d2c33c7"
+  },
+  {
+   "id": "chapter-1-4-mission-needs-stakeholder-analysis-trade-studies/part-2-trade-study-methodology/6-space-vs-non-space-alternatives/6-2-alternative-categories",
+   "en_hash": "158df10de20795dc",
+   "fr_hash": "300d90a2675837b5"
+  },
+  {
+   "id": "chapter-1-4-mission-needs-stakeholder-analysis-trade-studies/part-2-trade-study-methodology/6-space-vs-non-space-alternatives/6-3-decision-criteria-when-is-space-justified",
+   "en_hash": "a19a05c0d6b6e8a5",
+   "fr_hash": "9b7ece977df10af5"
+  },
+  {
+   "id": "chapter-1-4-mission-needs-stakeholder-analysis-trade-studies/part-2-trade-study-methodology/6-space-vs-non-space-alternatives/6-4-constellation-sizing",
+   "en_hash": "0a2cff8140e019b0",
+   "fr_hash": "9a0209379bc17375"
+  },
+  {
+   "id": "chapter-1-4-mission-needs-stakeholder-analysis-trade-studies/part-2-trade-study-methodology/7-documenting-the-trade-decision",
+   "en_hash": "8468fac4aeb0bd78",
+   "fr_hash": "a7f6b965a6fe7712"
+  },
+  {
+   "id": "chapter-1-4-mission-needs-stakeholder-analysis-trade-studies/part-3-concept-of-operations",
+   "en_hash": "d41b0c54360939b1",
+   "fr_hash": "bd78fe3663d6dbcb"
+  },
+  {
+   "id": "chapter-1-4-mission-needs-stakeholder-analysis-trade-studies/part-3-concept-of-operations/8-mission-architecture",
+   "en_hash": "e18c0b112231262c",
+   "fr_hash": "58842a157024052b"
+  },
+  {
+   "id": "chapter-1-4-mission-needs-stakeholder-analysis-trade-studies/part-3-concept-of-operations/8-mission-architecture/8-1-three-segments-of-a-space-mission",
+   "en_hash": "2785ec690fda95cd",
+   "fr_hash": "d1341ae691b78e09"
+  },
+  {
+   "id": "chapter-1-4-mission-needs-stakeholder-analysis-trade-studies/part-3-concept-of-operations/8-mission-architecture/8-2-data-interfaces-between-segments",
+   "en_hash": "f8ad53132b6b15df",
+   "fr_hash": "4eb0869a07546034"
+  },
+  {
+   "id": "chapter-1-4-mission-needs-stakeholder-analysis-trade-studies/part-3-concept-of-operations/8-mission-architecture/8-3-interactive-architecture-diagram",
+   "en_hash": "ceb142bc323ff689",
+   "fr_hash": "074a8102b4da01c8"
+  },
+  {
+   "id": "chapter-1-4-mission-needs-stakeholder-analysis-trade-studies/part-3-concept-of-operations/9-mission-phases-and-operational-modes",
+   "en_hash": "e14b086db076e49a",
+   "fr_hash": "25f5c2771f4f4070"
+  },
+  {
+   "id": "chapter-1-4-mission-needs-stakeholder-analysis-trade-studies/part-3-concept-of-operations/9-mission-phases-and-operational-modes/9-1-operational-mission-phases",
+   "en_hash": "ed9acfaf3fd5fa36",
+   "fr_hash": "419fe2d7e7088ac9"
+  },
+  {
+   "id": "chapter-1-4-mission-needs-stakeholder-analysis-trade-studies/part-3-concept-of-operations/9-mission-phases-and-operational-modes/9-2-operational-modes-and-power-budgets",
+   "en_hash": "2eff78b1600f17c3",
+   "fr_hash": "ca72aefb7dbc330e"
+  },
+  {
+   "id": "chapter-1-4-mission-needs-stakeholder-analysis-trade-studies/part-3-concept-of-operations/9-mission-phases-and-operational-modes/9-3-duty-cycling-and-power-analysis",
+   "en_hash": "1b6f61cc624a87ca",
+   "fr_hash": "9059a815d118bc81"
+  },
+  {
+   "id": "chapter-1-4-mission-needs-stakeholder-analysis-trade-studies/part-3-concept-of-operations/10-data-flow-pipeline",
+   "en_hash": "edff899f0bf945ad",
+   "fr_hash": "0dc320064a28041d"
+  },
+  {
+   "id": "chapter-1-4-mission-needs-stakeholder-analysis-trade-studies/part-3-concept-of-operations/10-data-flow-pipeline/10-1-end-to-end-data-flow",
+   "en_hash": "2ee1ff79bc8e6e1f",
+   "fr_hash": "be2ab124f555d6dc"
+  },
+  {
+   "id": "chapter-1-4-mission-needs-stakeholder-analysis-trade-studies/part-3-concept-of-operations/10-data-flow-pipeline/10-2-data-budget-balance",
+   "en_hash": "41b2f453a2960a0a",
+   "fr_hash": "b15fd400f1beca32"
+  },
+  {
+   "id": "chapter-1-4-mission-needs-stakeholder-analysis-trade-studies/part-3-concept-of-operations/11-conops-tool-exercise",
+   "en_hash": "b8759d07a625fcd0",
+   "fr_hash": "2f479834815e4937"
+  },
+  {
+   "id": "chapter-1-4-mission-needs-stakeholder-analysis-trade-studies/part-3-concept-of-operations/1u-worked-example-unisat-1",
+   "en_hash": "2598af05dd0dffef",
+   "fr_hash": "ab6b648981e8ed7b"
+  },
+  {
+   "id": "chapter-1-4-mission-needs-stakeholder-analysis-trade-studies/session-summary",
+   "en_hash": "74e1096e0e2df3db",
+   "fr_hash": "0a2325db090583ea"
+  },
+  {
+   "id": "chapter-1-4-mission-needs-stakeholder-analysis-trade-studies/references",
+   "en_hash": "690ab180eaffdf49",
+   "fr_hash": "a12a7fc641f78de2"
+  },
+  {
+   "id": "chapter-2-1-the-system-v-and-requirements-engineering",
+   "en_hash": "80d7d57db858088e",
+   "fr_hash": "80fa926b555d71e1"
+  },
+  {
+   "id": "chapter-2-1-the-system-v-and-requirements-engineering/references",
+   "en_hash": "b682a1832719c140",
+   "fr_hash": "39a271f7dfdaceb8"
+  },
+  {
+   "id": "chapter-2-1-the-system-v-and-requirements-engineering/learning-objectives",
+   "en_hash": "bef4644aec3e69fe",
+   "fr_hash": "2ea5c89a1a887fd7"
+  },
+  {
+   "id": "chapter-2-1-the-system-v-and-requirements-engineering/1-the-system-v-model-requirements-perspective",
+   "en_hash": "b2c8fb73637104e2",
+   "fr_hash": "7ee7e372e960e331"
+  },
+  {
+   "id": "chapter-2-1-the-system-v-and-requirements-engineering/1-the-system-v-model-requirements-perspective/phase-mapping-to-the-v",
+   "en_hash": "146d0e5bd3989c0a",
+   "fr_hash": "81657bbf736deb6f"
+  },
+  {
+   "id": "chapter-2-1-the-system-v-and-requirements-engineering/1-the-system-v-model-requirements-perspective/real-mission-example-planet-superdove",
+   "en_hash": "1a960f1fa0136eb6",
+   "fr_hash": "c43e1fe4c56968fa"
+  },
+  {
+   "id": "chapter-2-1-the-system-v-and-requirements-engineering/2-what-is-a-requirement",
+   "en_hash": "82e0506e9cf51561",
+   "fr_hash": "6ee8e5003424fff2"
+  },
+  {
+   "id": "chapter-2-1-the-system-v-and-requirements-engineering/2-what-is-a-requirement/the-shall-convention",
+   "en_hash": "2a510e5c8a0183b3",
+   "fr_hash": "527ce5b1d03432b1"
+  },
+  {
+   "id": "chapter-2-1-the-system-v-and-requirements-engineering/2-what-is-a-requirement/requirement-types",
+   "en_hash": "13bcf02f1da5f27a",
+   "fr_hash": "7bb9d64871481cf4"
+  },
+  {
+   "id": "chapter-2-1-the-system-v-and-requirements-engineering/2-what-is-a-requirement/requirements-vs-design-choices",
+   "en_hash": "f5b142d763274c4d",
+   "fr_hash": "f91da66f5c25f917"
+  },
+  {
+   "id": "chapter-2-1-the-system-v-and-requirements-engineering/3-the-smart-framework",
+   "en_hash": "295ef120edfe7e46",
+   "fr_hash": "fc91fea188e097f7"
+  },
+  {
+   "id": "chapter-2-1-the-system-v-and-requirements-engineering/3-the-smart-framework/nasa-seh-appendix-c-full-quality-checklist",
+   "en_hash": "3ff84328bd60a338",
+   "fr_hash": "dcb70a3c35a07caf"
+  },
+  {
+   "id": "chapter-2-1-the-system-v-and-requirements-engineering/3-the-smart-framework/common-anti-patterns",
+   "en_hash": "595e39242ac1a2e1",
+   "fr_hash": "af4b80044b1f56ed"
+  },
+  {
+   "id": "chapter-2-1-the-system-v-and-requirements-engineering/4-requirement-hierarchy-and-traceability",
+   "en_hash": "c08ce77bd4c3d018",
+   "fr_hash": "af9e737158a5278a"
+  },
+  {
+   "id": "chapter-2-1-the-system-v-and-requirements-engineering/4-requirement-hierarchy-and-traceability/hierarchy-structure",
+   "en_hash": "4b7d8cee066e7556",
+   "fr_hash": "a5aa7f8c36ab51fc"
+  },
+  {
+   "id": "chapter-2-1-the-system-v-and-requirements-engineering/4-requirement-hierarchy-and-traceability/level-definitions",
+   "en_hash": "310ca10e69637558",
+   "fr_hash": "31831b56e590179b"
+  },
+  {
+   "id": "chapter-2-1-the-system-v-and-requirements-engineering/4-requirement-hierarchy-and-traceability/traceability-rules",
+   "en_hash": "a92e42ec93057561",
+   "fr_hash": "cccb0e12fa0dfdf7"
+  },
+  {
+   "id": "chapter-2-1-the-system-v-and-requirements-engineering/4-requirement-hierarchy-and-traceability/splitting-compound-requirements",
+   "en_hash": "778ca201771db290",
+   "fr_hash": "1c1a71d0f406c9c7"
+  },
+  {
+   "id": "chapter-2-1-the-system-v-and-requirements-engineering/5-verification-methods-atid",
+   "en_hash": "0b2ab51827405a11",
+   "fr_hash": "4bf21a8e735e13a9"
+  },
+  {
+   "id": "chapter-2-1-the-system-v-and-requirements-engineering/5-verification-methods-atid/verification-method-selection-guide",
+   "en_hash": "57d8c51ec4023875",
+   "fr_hash": "79892d88df69e1c9"
+  },
+  {
+   "id": "chapter-2-1-the-system-v-and-requirements-engineering/5-verification-methods-atid/verification-by-project-phase",
+   "en_hash": "625e7df54148274f",
+   "fr_hash": "e07890fd24c62501"
+  },
+  {
+   "id": "chapter-2-1-the-system-v-and-requirements-engineering/6-worked-example-3u-earth-observation-cubesat",
+   "en_hash": "0951ce5f5f8dd9d0",
+   "fr_hash": "e820cb31744082fe"
+  },
+  {
+   "id": "chapter-2-1-the-system-v-and-requirements-engineering/6-worked-example-3u-earth-observation-cubesat/1u-worked-example-unisat-1",
+   "en_hash": "d7a1a06a360262db",
+   "fr_hash": "258e3cfd89a048cb"
+  },
+  {
+   "id": "chapter-2-1-the-system-v-and-requirements-engineering/7-spacecdf-exercise",
+   "en_hash": "029192fe94075811",
+   "fr_hash": "3d73c3b0a2fb31ce"
+  },
+  {
+   "id": "chapter-2-1-the-system-v-and-requirements-engineering/7-spacecdf-exercise/instructions",
+   "en_hash": "7ea31be06c92ef96",
+   "fr_hash": "86f54091a3770403"
+  },
+  {
+   "id": "chapter-2-1-the-system-v-and-requirements-engineering/7-spacecdf-exercise/exercise-tasks",
+   "en_hash": "7839d01b61cfcc03",
+   "fr_hash": "82cde5e725edd2ce"
+  },
+  {
+   "id": "chapter-2-1-the-system-v-and-requirements-engineering/key-equations-reference",
+   "en_hash": "56f5687b1cd2590f",
+   "fr_hash": "7dea23ea164a9f7a"
+  },
+  {
+   "id": "chapter-2-1-the-system-v-and-requirements-engineering/session-summary",
+   "en_hash": "a54028315912e4b3",
+   "fr_hash": "55dce8101d2f9572"
+  },
+  {
+   "id": "chapter-2-2-functional-decomposition-and-allocation",
+   "en_hash": "451dea1e1412ee5f",
+   "fr_hash": "c969b03da7a7857a"
+  },
+  {
+   "id": "chapter-2-2-functional-decomposition-and-allocation/references",
+   "en_hash": "7cdc19d106247e72",
+   "fr_hash": "3f08c136fbb3f1bd"
+  },
+  {
+   "id": "chapter-2-2-functional-decomposition-and-allocation/learning-objectives",
+   "en_hash": "0a5991324e06be5d",
+   "fr_hash": "e9c37f497ecc39f8"
+  },
+  {
+   "id": "chapter-2-2-functional-decomposition-and-allocation/1-what-is-functional-decomposition",
+   "en_hash": "0562ba7b41c00e2a",
+   "fr_hash": "b1bb608f66bd6e6a"
+  },
+  {
+   "id": "chapter-2-2-functional-decomposition-and-allocation/1-what-is-functional-decomposition/the-decomposition-flow",
+   "en_hash": "ac68f9a06ffbec8f",
+   "fr_hash": "88757955454e18c2"
+  },
+  {
+   "id": "chapter-2-2-functional-decomposition-and-allocation/1-what-is-functional-decomposition/function-types",
+   "en_hash": "821fdd6c4bd1e383",
+   "fr_hash": "fb6e040767390914"
+  },
+  {
+   "id": "chapter-2-2-functional-decomposition-and-allocation/1-what-is-functional-decomposition/universal-functions",
+   "en_hash": "e5b8aa112982637b",
+   "fr_hash": "03c37b1d88b11d18"
+  },
+  {
+   "id": "chapter-2-2-functional-decomposition-and-allocation/2-mission-type-specific-function-trees",
+   "en_hash": "23a6d32248db580e",
+   "fr_hash": "f4d3816a9ceae24b"
+  },
+  {
+   "id": "chapter-2-2-functional-decomposition-and-allocation/2-mission-type-specific-function-trees/earth-observation-optical-sar",
+   "en_hash": "8c8a6f9d5527a682",
+   "fr_hash": "531220e15d9fe775"
+  },
+  {
+   "id": "chapter-2-2-functional-decomposition-and-allocation/2-mission-type-specific-function-trees/communications-relay-store-and-forward-or-bent-pipe",
+   "en_hash": "383193589738cbc1",
+   "fr_hash": "1ac41f6047b0000a"
+  },
+  {
+   "id": "chapter-2-2-functional-decomposition-and-allocation/2-mission-type-specific-function-trees/ais-iot-receiver-passive",
+   "en_hash": "7962cd97ed22457f",
+   "fr_hash": "49b7b30d0a5d5f5d"
+  },
+  {
+   "id": "chapter-2-2-functional-decomposition-and-allocation/2-mission-type-specific-function-trees/ground-segment-functions",
+   "en_hash": "778e1e094cf8fb25",
+   "fr_hash": "d5cde93b5c7e6b8a"
+  },
+  {
+   "id": "chapter-2-2-functional-decomposition-and-allocation/3-allocation-to-subsystems",
+   "en_hash": "8a9a9206b8e4ec30",
+   "fr_hash": "ebf12f345da71041"
+  },
+  {
+   "id": "chapter-2-2-functional-decomposition-and-allocation/3-allocation-to-subsystems/allocation-rules",
+   "en_hash": "de3a425955391504",
+   "fr_hash": "db2c23c64a284039"
+  },
+  {
+   "id": "chapter-2-2-functional-decomposition-and-allocation/3-allocation-to-subsystems/multi-allocation-and-interface-identification",
+   "en_hash": "49e3db0df7d0c80d",
+   "fr_hash": "15d07441d1d0631d"
+  },
+  {
+   "id": "chapter-2-2-functional-decomposition-and-allocation/3-allocation-to-subsystems/derived-requirements-from-functions",
+   "en_hash": "84a2767f93fbbbb6",
+   "fr_hash": "f4c71c8c295052d5"
+  },
+  {
+   "id": "chapter-2-2-functional-decomposition-and-allocation/4-performance-criteria-and-coverage-analysis",
+   "en_hash": "1d2db6a91d4925ed",
+   "fr_hash": "db288c779fcf2afc"
+  },
+  {
+   "id": "chapter-2-2-functional-decomposition-and-allocation/4-performance-criteria-and-coverage-analysis/coverage-analysis",
+   "en_hash": "6fefc99e9ad50150",
+   "fr_hash": "76cd5a753c15231c"
+  },
+  {
+   "id": "chapter-2-2-functional-decomposition-and-allocation/4-performance-criteria-and-coverage-analysis/real-mission-example-capstone-coverage-gap",
+   "en_hash": "a1cea357884c47c1",
+   "fr_hash": "de1436068c17dcf3"
+  },
+  {
+   "id": "chapter-2-2-functional-decomposition-and-allocation/5-spacecdf-function-tree-exercise",
+   "en_hash": "78681b13f3b87316",
+   "fr_hash": "05e131826aa05719"
+  },
+  {
+   "id": "chapter-2-2-functional-decomposition-and-allocation/5-spacecdf-function-tree-exercise/instructions",
+   "en_hash": "8f2ad6eeee5258e2",
+   "fr_hash": "cd7203680cc92d8f"
+  },
+  {
+   "id": "chapter-2-2-functional-decomposition-and-allocation/5-spacecdf-function-tree-exercise/exercise-tasks",
+   "en_hash": "f63a913c0ad014ac",
+   "fr_hash": "df9ef2b90f6601c2"
+  },
+  {
+   "id": "chapter-2-2-functional-decomposition-and-allocation/worked-example-3u-eo-cubesat-function-tree",
+   "en_hash": "e6198726eacb1b35",
+   "fr_hash": "870082fae4a6dc15"
+  },
+  {
+   "id": "chapter-2-2-functional-decomposition-and-allocation/session-summary",
+   "en_hash": "801925c167f3c683",
+   "fr_hash": "709fad5e19e9b13b"
+  },
+  {
+   "id": "chapter-2-3-orbit-selection-and-mission-architecture",
+   "en_hash": "5b95b7787eef4ed6",
+   "fr_hash": "5ecc5d388b9c697e"
+  },
+  {
+   "id": "chapter-2-3-orbit-selection-and-mission-architecture/references",
+   "en_hash": "5903cce8212b9dea",
+   "fr_hash": "781ed11d00a338bd"
+  },
+  {
+   "id": "chapter-2-3-orbit-selection-and-mission-architecture/learning-objectives",
+   "en_hash": "593a22576afabda1",
+   "fr_hash": "b5140a568512c657"
+  },
+  {
+   "id": "chapter-2-3-orbit-selection-and-mission-architecture/1-keplerian-orbital-elements",
+   "en_hash": "cfdb8752ba1acc74",
+   "fr_hash": "05f5953574e3a5c3"
+  },
+  {
+   "id": "chapter-2-3-orbit-selection-and-mission-architecture/1-keplerian-orbital-elements/key-equations",
+   "en_hash": "e62e3b63b04de2f3",
+   "fr_hash": "5baa6612937e23c2"
+  },
+  {
+   "id": "chapter-2-3-orbit-selection-and-mission-architecture/2-worked-examples-orbital-computations",
+   "en_hash": "dfd838c5ca14fa58",
+   "fr_hash": "d311fd5a75b3e829"
+  },
+  {
+   "id": "chapter-2-3-orbit-selection-and-mission-architecture/3-orbit-selection-trade-offs",
+   "en_hash": "a4ea12af8d2b8ed1",
+   "fr_hash": "2ec5500e4baf3f6e"
+  },
+  {
+   "id": "chapter-2-3-orbit-selection-and-mission-architecture/3-orbit-selection-trade-offs/orbit-types-and-applications",
+   "en_hash": "9f4eb3b076b6bd5a",
+   "fr_hash": "940cd108ec3f8317"
+  },
+  {
+   "id": "chapter-2-3-orbit-selection-and-mission-architecture/3-orbit-selection-trade-offs/debris-compliance-rules",
+   "en_hash": "3b5fc8f3e6263f3f",
+   "fr_hash": "5c7521b1f3c51e2f"
+  },
+  {
+   "id": "chapter-2-3-orbit-selection-and-mission-architecture/3-orbit-selection-trade-offs/perturbation-effects",
+   "en_hash": "7ef83722c52b1815",
+   "fr_hash": "20ef1c8e00547452"
+  },
+  {
+   "id": "chapter-2-3-orbit-selection-and-mission-architecture/4-ground-coverage-and-revisit",
+   "en_hash": "cbe6567489ad6cea",
+   "fr_hash": "289d91589627c3ad"
+  },
+  {
+   "id": "chapter-2-3-orbit-selection-and-mission-architecture/4-ground-coverage-and-revisit/ground-station-contact-geometry",
+   "en_hash": "10f37a41c0a94710",
+   "fr_hash": "5fe4046182f16264"
+  },
+  {
+   "id": "chapter-2-3-orbit-selection-and-mission-architecture/4-ground-coverage-and-revisit/constellation-design",
+   "en_hash": "cfafa11b2505eead",
+   "fr_hash": "2cc161ab0bdbb494"
+  },
+  {
+   "id": "chapter-2-3-orbit-selection-and-mission-architecture/4-ground-coverage-and-revisit/constellation-coverage-and-revisit",
+   "en_hash": "3d8cdd3669e84848",
+   "fr_hash": "e571165d0b1b544d"
+  },
+  {
+   "id": "chapter-2-3-orbit-selection-and-mission-architecture/4-ground-coverage-and-revisit/downlinks-and-data-return",
+   "en_hash": "d1637bd8e05b8cd1",
+   "fr_hash": "bb1f0defa07fb389"
+  },
+  {
+   "id": "chapter-2-3-orbit-selection-and-mission-architecture/4-ground-coverage-and-revisit/inter-satellite-links-and-space-to-space-backhaul",
+   "en_hash": "2fc399c7c29cd454",
+   "fr_hash": "dc7ad5bb0df62283"
+  },
+  {
+   "id": "chapter-2-3-orbit-selection-and-mission-architecture/5-hohmann-transfer-and-deorbit",
+   "en_hash": "c7de227a8574379f",
+   "fr_hash": "b29d48753403b7ab"
+  },
+  {
+   "id": "chapter-2-3-orbit-selection-and-mission-architecture/6-radiation-environment",
+   "en_hash": "cd49c7ad03421ad3",
+   "fr_hash": "7a612676b65565da"
+  },
+  {
+   "id": "chapter-2-3-orbit-selection-and-mission-architecture/6-radiation-environment/total-ionising-dose-tid-by-orbit",
+   "en_hash": "6358bd85f3c3c838",
+   "fr_hash": "f29eaa9d6c38324a"
+  },
+  {
+   "id": "chapter-2-3-orbit-selection-and-mission-architecture/6-radiation-environment/south-atlantic-anomaly-saa",
+   "en_hash": "f125fa261fe11bbe",
+   "fr_hash": "58f52da77d0f48ff"
+  },
+  {
+   "id": "chapter-2-3-orbit-selection-and-mission-architecture/6-radiation-environment/1u-worked-example-unisat-1",
+   "en_hash": "0598bb7ded62bc8d",
+   "fr_hash": "a5bb7233a3fb5fe7"
+  },
+  {
+   "id": "chapter-2-3-orbit-selection-and-mission-architecture/7-spacecdf-orbit-trade-exercise",
+   "en_hash": "acb8a255216b188b",
+   "fr_hash": "d472d4088a1b7ed0"
+  },
+  {
+   "id": "chapter-2-3-orbit-selection-and-mission-architecture/7-spacecdf-orbit-trade-exercise/instructions",
+   "en_hash": "8e15f187e0a25abb",
+   "fr_hash": "c053517904401f2e"
+  },
+  {
+   "id": "chapter-2-3-orbit-selection-and-mission-architecture/7-spacecdf-orbit-trade-exercise/discussion-points",
+   "en_hash": "7089b09716cdf235",
+   "fr_hash": "4df4d95ceb5ab766"
+  },
+  {
+   "id": "chapter-2-3-orbit-selection-and-mission-architecture/session-summary",
+   "en_hash": "9d60162c5c04903c",
+   "fr_hash": "08bad29cfa95b218"
+  },
+  {
+   "id": "chapter-2-4-mission-architecture-segments-interfaces-and-budgets",
+   "en_hash": "061e320643ed8c45",
+   "fr_hash": "0509cc95051f50f0"
+  },
+  {
+   "id": "chapter-2-4-mission-architecture-segments-interfaces-and-budgets/references",
+   "en_hash": "01d0c5dbbaf54024",
+   "fr_hash": "68a0287b3b5db8e4"
+  },
+  {
+   "id": "chapter-2-4-mission-architecture-segments-interfaces-and-budgets/learning-objectives",
+   "en_hash": "6d018ccf03db7522",
+   "fr_hash": "0c22ae25c1e06b1c"
+  },
+  {
+   "id": "chapter-2-4-mission-architecture-segments-interfaces-and-budgets/1-mission-segment-decomposition",
+   "en_hash": "f6943b284201ac90",
+   "fr_hash": "7a2e4d06aac9ffc2"
+  },
+  {
+   "id": "chapter-2-4-mission-architecture-segments-interfaces-and-budgets/2-system-architecture-block-diagram",
+   "en_hash": "97becf2f16955a79",
+   "fr_hash": "820af9f8e12065ce"
+  },
+  {
+   "id": "chapter-2-4-mission-architecture-segments-interfaces-and-budgets/2-system-architecture-block-diagram/subsystem-roles-cubesat-reference",
+   "en_hash": "6bd2931d475e2792",
+   "fr_hash": "fe8f4ab26cc3c101"
+  },
+  {
+   "id": "chapter-2-4-mission-architecture-segments-interfaces-and-budgets/3-the-n-squared-interface-matrix",
+   "en_hash": "503d1a2f4550c8a7",
+   "fr_hash": "2ccb01ddbbb93c41"
+  },
+  {
+   "id": "chapter-2-4-mission-architecture-segments-interfaces-and-budgets/3-the-n-squared-interface-matrix/n-squared-matrix-structure",
+   "en_hash": "1126f86ee7618b98",
+   "fr_hash": "3fae3e7661547cfa"
+  },
+  {
+   "id": "chapter-2-4-mission-architecture-segments-interfaces-and-budgets/3-the-n-squared-interface-matrix/interface-types",
+   "en_hash": "f05485069fc59fa4",
+   "fr_hash": "612ef9d9077d8b25"
+  },
+  {
+   "id": "chapter-2-4-mission-architecture-segments-interfaces-and-budgets/3-the-n-squared-interface-matrix/common-cubesat-interface-concerns",
+   "en_hash": "7545d2f856c3aa77",
+   "fr_hash": "5b4380c93dd689d4"
+  },
+  {
+   "id": "chapter-2-4-mission-architecture-segments-interfaces-and-budgets/3-the-n-squared-interface-matrix/conflict-detection-and-resolution",
+   "en_hash": "ed844dd2b7f1b7d2",
+   "fr_hash": "bba6e285714ee654"
+  },
+  {
+   "id": "chapter-2-4-mission-architecture-segments-interfaces-and-budgets/3-the-n-squared-interface-matrix/writing-interface-requirements",
+   "en_hash": "6eac4db69e3c3dba",
+   "fr_hash": "9cebe546b2a0348b"
+  },
+  {
+   "id": "chapter-2-4-mission-architecture-segments-interfaces-and-budgets/4-engineering-budgets-mass-and-power",
+   "en_hash": "094b8b64b9ebda56",
+   "fr_hash": "7856c91953c8b6bc"
+  },
+  {
+   "id": "chapter-2-4-mission-architecture-segments-interfaces-and-budgets/4-engineering-budgets-mass-and-power/mass-budget",
+   "en_hash": "d3896fd12675bdf4",
+   "fr_hash": "5270bbee609c3c5d"
+  },
+  {
+   "id": "chapter-2-4-mission-architecture-segments-interfaces-and-budgets/4-engineering-budgets-mass-and-power/ecss-margin-policy-by-phase",
+   "en_hash": "6484a172767c9a00",
+   "fr_hash": "67a61125aaa26c03"
+  },
+  {
+   "id": "chapter-2-4-mission-architecture-segments-interfaces-and-budgets/4-engineering-budgets-mass-and-power/mode-based-power-budget",
+   "en_hash": "bad909f6210a8eee",
+   "fr_hash": "c2bed50c1113f3c2"
+  },
+  {
+   "id": "chapter-2-4-mission-architecture-segments-interfaces-and-budgets/4-engineering-budgets-mass-and-power/orbit-average-power",
+   "en_hash": "f92189228f6298d3",
+   "fr_hash": "bda733c5c7d4128d"
+  },
+  {
+   "id": "chapter-2-4-mission-architecture-segments-interfaces-and-budgets/4-engineering-budgets-mass-and-power/other-budget-types-preview",
+   "en_hash": "79061f7574d4b718",
+   "fr_hash": "6958d0fe740e541e"
+  },
+  {
+   "id": "chapter-2-4-mission-architecture-segments-interfaces-and-budgets/4-engineering-budgets-mass-and-power/1u-worked-example-unisat-1",
+   "en_hash": "10d7249b7b00a2cf",
+   "fr_hash": "abd5dd08d0bf9af8"
+  },
+  {
+   "id": "chapter-2-4-mission-architecture-segments-interfaces-and-budgets/4-engineering-budgets-mass-and-power/budget-types-and-where-they-live",
+   "en_hash": "c7c6d2f4183f5e75",
+   "fr_hash": "606c3d4e2f185937"
+  },
+  {
+   "id": "chapter-2-4-mission-architecture-segments-interfaces-and-budgets/5-spacecdf-exercise",
+   "en_hash": "9f8c3115470642fb",
+   "fr_hash": "04e7b0bcab50e8fe"
+  },
+  {
+   "id": "chapter-2-4-mission-architecture-segments-interfaces-and-budgets/5-spacecdf-exercise/instructions",
+   "en_hash": "55e9dd2bfd514cf5",
+   "fr_hash": "067278d1225fa52b"
+  },
+  {
+   "id": "chapter-2-4-mission-architecture-segments-interfaces-and-budgets/5-spacecdf-exercise/discussion-questions",
+   "en_hash": "267b0d4e8d17b933",
+   "fr_hash": "bd2ff173509f3e75"
+  },
+  {
+   "id": "chapter-2-4-mission-architecture-segments-interfaces-and-budgets/session-summary",
+   "en_hash": "8abd45ded7cdf114",
+   "fr_hash": "bee03574e9359a57"
+  },
+  {
+   "id": "chapter-3-1-power-system-and-thermal-control-design",
+   "en_hash": "7f63e9a6963e4d18",
+   "fr_hash": "dbafc33602fc2481"
+  },
+  {
+   "id": "chapter-3-1-power-system-and-thermal-control-design/references",
+   "en_hash": "9fdee91a548bdbfe",
+   "fr_hash": "36dedd16306f4935"
+  },
+  {
+   "id": "chapter-3-1-power-system-and-thermal-control-design/learning-objectives",
+   "en_hash": "84d31de73f3e40fc",
+   "fr_hash": "5bbab0637f54abcc"
+  },
+  {
+   "id": "chapter-3-1-power-system-and-thermal-control-design/1-electrical-power-system-architecture",
+   "en_hash": "29f182f2e8866fab",
+   "fr_hash": "ada66c446e760557"
+  },
+  {
+   "id": "chapter-3-1-power-system-and-thermal-control-design/1-electrical-power-system-architecture/eps-block-diagram",
+   "en_hash": "f47cfddf0d880b33",
+   "fr_hash": "7774558708577427"
+  },
+  {
+   "id": "chapter-3-1-power-system-and-thermal-control-design/1-electrical-power-system-architecture/solar-cell-physics",
+   "en_hash": "53e6e39a27476f79",
+   "fr_hash": "52034c2f5f4f1fe4"
+  },
+  {
+   "id": "chapter-3-1-power-system-and-thermal-control-design/1-electrical-power-system-architecture/body-mounted-vs-deployable-solar-arrays",
+   "en_hash": "68a1dad2788230c4",
+   "fr_hash": "9a03fd2e5d47a544"
+  },
+  {
+   "id": "chapter-3-1-power-system-and-thermal-control-design/1-electrical-power-system-architecture/architecture-types",
+   "en_hash": "0b2ce439bb5c96a5",
+   "fr_hash": "9a7570730abe30b1"
+  },
+  {
+   "id": "chapter-3-1-power-system-and-thermal-control-design/2-solar-array-sizing",
+   "en_hash": "93dcf9e2f8e70309",
+   "fr_hash": "8b12f7d380b651bb"
+  },
+  {
+   "id": "chapter-3-1-power-system-and-thermal-control-design/2-solar-array-sizing/cubesat-sa-power-reference",
+   "en_hash": "7c0fd9e6d01c2218",
+   "fr_hash": "68292ca32cfbc9b8"
+  },
+  {
+   "id": "chapter-3-1-power-system-and-thermal-control-design/3-battery-sizing",
+   "en_hash": "07acf65bcf3a479a",
+   "fr_hash": "59cd8173e6963cd9"
+  },
+  {
+   "id": "chapter-3-1-power-system-and-thermal-control-design/3-battery-sizing/li-ion-cell-chemistry-and-physics",
+   "en_hash": "c61a5b14b1c8bf2c",
+   "fr_hash": "1978a270bc34496f"
+  },
+  {
+   "id": "chapter-3-1-power-system-and-thermal-control-design/4-thermal-control-system",
+   "en_hash": "39cf776bb6c24f50",
+   "fr_hash": "d114b3ff36ccf3d6"
+  },
+  {
+   "id": "chapter-3-1-power-system-and-thermal-control-design/4-thermal-control-system/the-physics-of-spacecraft-thermal-control",
+   "en_hash": "ee87c3c6fe42399b",
+   "fr_hash": "a628ca00ede5fdbf"
+  },
+  {
+   "id": "chapter-3-1-power-system-and-thermal-control-design/4-thermal-control-system/thermal-environment-in-leo",
+   "en_hash": "f853cfd2018a348b",
+   "fr_hash": "ac6bcd3c8be977d4"
+  },
+  {
+   "id": "chapter-3-1-power-system-and-thermal-control-design/4-thermal-control-system/view-factors",
+   "en_hash": "0819a3572043a0e8",
+   "fr_hash": "d798c1b3f2ea781f"
+  },
+  {
+   "id": "chapter-3-1-power-system-and-thermal-control-design/4-thermal-control-system/thermal-balance-equation-full-derivation",
+   "en_hash": "19ce05975c480372",
+   "fr_hash": "412e8c6a85458286"
+  },
+  {
+   "id": "chapter-3-1-power-system-and-thermal-control-design/4-thermal-control-system/hot-case-and-cold-case",
+   "en_hash": "f70c0518a101bd1a",
+   "fr_hash": "e6580f1f632045ea"
+  },
+  {
+   "id": "chapter-3-1-power-system-and-thermal-control-design/4-thermal-control-system/surface-coatings-the-passive-thermal-toolbox",
+   "en_hash": "2b495cd4428a26b2",
+   "fr_hash": "642cfb4ba7b822c1"
+  },
+  {
+   "id": "chapter-3-1-power-system-and-thermal-control-design/4-thermal-control-system/mli-multi-layer-insulation-construction-and-physics",
+   "en_hash": "fcf483eae31082e9",
+   "fr_hash": "3f4b89455640697a"
+  },
+  {
+   "id": "chapter-3-1-power-system-and-thermal-control-design/4-thermal-control-system/heater-sizing",
+   "en_hash": "84905ca59ba27757",
+   "fr_hash": "cc955cea6afc209c"
+  },
+  {
+   "id": "chapter-3-1-power-system-and-thermal-control-design/4-thermal-control-system/heat-pipes-and-thermal-straps",
+   "en_hash": "7f471ef1f1caf6a8",
+   "fr_hash": "0c653326814a5600"
+  },
+  {
+   "id": "chapter-3-1-power-system-and-thermal-control-design/4-thermal-control-system/thermal-control-methods-summary",
+   "en_hash": "2744ea95342aeba4",
+   "fr_hash": "127d6388446e9d35"
+  },
+  {
+   "id": "chapter-3-1-power-system-and-thermal-control-design/4-thermal-control-system/ecss-thermal-margins",
+   "en_hash": "c470bc06cfea0c95",
+   "fr_hash": "688899956171bd89"
+  },
+  {
+   "id": "chapter-3-1-power-system-and-thermal-control-design/4-thermal-control-system/1u-worked-example-unisat-1",
+   "en_hash": "7b0630e45645166b",
+   "fr_hash": "e661f1d59a838967"
+  },
+  {
+   "id": "chapter-3-1-power-system-and-thermal-control-design/4-thermal-control-system/6u-reference-design-eo-sat-1-power-and-thermal-as-flown",
+   "en_hash": "0c446ab91bac4678",
+   "fr_hash": "3d5fdb855c3d3186"
+  },
+  {
+   "id": "chapter-3-1-power-system-and-thermal-control-design/5-real-mission-examples",
+   "en_hash": "91db870e078e9205",
+   "fr_hash": "45fa1789e31d05c1"
+  },
+  {
+   "id": "chapter-3-1-power-system-and-thermal-control-design/5-real-mission-examples/planet-superdove-eps",
+   "en_hash": "71ab5159fc4ec6cd",
+   "fr_hash": "92bab96d9f00b6ee"
+  },
+  {
+   "id": "chapter-3-1-power-system-and-thermal-control-design/5-real-mission-examples/capstone-thermal-design",
+   "en_hash": "3ea20cbd83d51ad2",
+   "fr_hash": "9a82b03a6bff0779"
+  },
+  {
+   "id": "chapter-3-1-power-system-and-thermal-control-design/6-spacecdf-exercise",
+   "en_hash": "9afc5ed014ce6378",
+   "fr_hash": "606d686f49e20c0f"
+  },
+  {
+   "id": "chapter-3-1-power-system-and-thermal-control-design/6-spacecdf-exercise/instructions",
+   "en_hash": "8bffbb6efb8e139c",
+   "fr_hash": "8f7876b0354f2f73"
+  },
+  {
+   "id": "chapter-3-1-power-system-and-thermal-control-design/6-spacecdf-exercise/worksheet-3-1-tasks",
+   "en_hash": "6ceecf9a9cd04c85",
+   "fr_hash": "5213155eaf3b2b43"
+  },
+  {
+   "id": "chapter-3-1-power-system-and-thermal-control-design/session-summary",
+   "en_hash": "67db34d4b706de3a",
+   "fr_hash": "0c4370828095653c"
+  },
+  {
+   "id": "chapter-3-2-attitude-orbit-control-aocs-and-propulsion",
+   "en_hash": "81ef0059861bbb8c",
+   "fr_hash": "c2d3f2c24d3828e0"
+  },
+  {
+   "id": "chapter-3-2-attitude-orbit-control-aocs-and-propulsion/references",
+   "en_hash": "705145ac73b2f5bb",
+   "fr_hash": "0809e9af671e7ce7"
+  },
+  {
+   "id": "chapter-3-2-attitude-orbit-control-aocs-and-propulsion/learning-objectives",
+   "en_hash": "a31003b211b76f5d",
+   "fr_hash": "a0eb8762e9c3b9e4"
+  },
+  {
+   "id": "chapter-3-2-attitude-orbit-control-aocs-and-propulsion/1-aocs-fundamentals",
+   "en_hash": "e422efd4db476d8c",
+   "fr_hash": "87ea590cfbe7a4ec"
+  },
+  {
+   "id": "chapter-3-2-attitude-orbit-control-aocs-and-propulsion/1-aocs-fundamentals/attitude-sensors-how-they-work",
+   "en_hash": "452daa49a40ef840",
+   "fr_hash": "983d8c414a53237f"
+  },
+  {
+   "id": "chapter-3-2-attitude-orbit-control-aocs-and-propulsion/1-aocs-fundamentals/attitude-sensors-how-they-work/star-trackers",
+   "en_hash": "e1992678ff9c0b0d",
+   "fr_hash": "555f192897e455cd"
+  },
+  {
+   "id": "chapter-3-2-attitude-orbit-control-aocs-and-propulsion/1-aocs-fundamentals/attitude-sensors-how-they-work/sun-sensors",
+   "en_hash": "840317b6f405a8dc",
+   "fr_hash": "ec0994cb4cbce6a4"
+  },
+  {
+   "id": "chapter-3-2-attitude-orbit-control-aocs-and-propulsion/1-aocs-fundamentals/attitude-sensors-how-they-work/magnetometers",
+   "en_hash": "a225e229a68cc303",
+   "fr_hash": "d7552c49ae1d206a"
+  },
+  {
+   "id": "chapter-3-2-attitude-orbit-control-aocs-and-propulsion/1-aocs-fundamentals/attitude-sensors-how-they-work/gyroscopes-rate-sensors",
+   "en_hash": "f29b5038d56f61da",
+   "fr_hash": "3ad7ad1910fafa52"
+  },
+  {
+   "id": "chapter-3-2-attitude-orbit-control-aocs-and-propulsion/1-aocs-fundamentals/attitude-sensors-how-they-work/gps-receivers-for-orbit-determination",
+   "en_hash": "77055a92da0d82ba",
+   "fr_hash": "def324a8306d8227"
+  },
+  {
+   "id": "chapter-3-2-attitude-orbit-control-aocs-and-propulsion/1-aocs-fundamentals/aocs-architecture-selection-by-pointing-requirement",
+   "en_hash": "fc31803cc507a752",
+   "fr_hash": "42318488221522e7"
+  },
+  {
+   "id": "chapter-3-2-attitude-orbit-control-aocs-and-propulsion/2-disturbance-torques",
+   "en_hash": "273fb9a7ddbc30be",
+   "fr_hash": "a19fc671601f4f21"
+  },
+  {
+   "id": "chapter-3-2-attitude-orbit-control-aocs-and-propulsion/2-disturbance-torques/gravity-gradient-torque",
+   "en_hash": "e0198679a5952fd2",
+   "fr_hash": "f6e025efb8127ce4"
+  },
+  {
+   "id": "chapter-3-2-attitude-orbit-control-aocs-and-propulsion/2-disturbance-torques/aerodynamic-torque",
+   "en_hash": "86294f5558a10ac3",
+   "fr_hash": "5718f448fdcd1c41"
+  },
+  {
+   "id": "chapter-3-2-attitude-orbit-control-aocs-and-propulsion/2-disturbance-torques/solar-radiation-pressure-torque",
+   "en_hash": "fae40e1ce4f0d72e",
+   "fr_hash": "27b471299a66c89a"
+  },
+  {
+   "id": "chapter-3-2-attitude-orbit-control-aocs-and-propulsion/2-disturbance-torques/residual-magnetic-dipole-torque",
+   "en_hash": "afc167cbfb3040db",
+   "fr_hash": "be29969e862f2a72"
+  },
+  {
+   "id": "chapter-3-2-attitude-orbit-control-aocs-and-propulsion/3-attitude-actuators-physics-and-sizing",
+   "en_hash": "76acfbbd2159b04d",
+   "fr_hash": "d6cc956455cbb33e"
+  },
+  {
+   "id": "chapter-3-2-attitude-orbit-control-aocs-and-propulsion/3-attitude-actuators-physics-and-sizing/reaction-wheels-physics-of-angular-momentum-storage",
+   "en_hash": "84fe20a36d10d50a",
+   "fr_hash": "8ef439c9bd4371aa"
+  },
+  {
+   "id": "chapter-3-2-attitude-orbit-control-aocs-and-propulsion/3-attitude-actuators-physics-and-sizing/reaction-wheel-configurations",
+   "en_hash": "2e8ccaf62d3c7f24",
+   "fr_hash": "8ff6f0c6e6c5eb95"
+  },
+  {
+   "id": "chapter-3-2-attitude-orbit-control-aocs-and-propulsion/3-attitude-actuators-physics-and-sizing/magnetorquers-physics-of-magnetic-torque-generation",
+   "en_hash": "a7e4baea7324abc4",
+   "fr_hash": "e13e08b5f63a0630"
+  },
+  {
+   "id": "chapter-3-2-attitude-orbit-control-aocs-and-propulsion/3-attitude-actuators-physics-and-sizing/control-moment-gyroscopes-cmgs-vs-reaction-wheels",
+   "en_hash": "c9ca700c219e9dd9",
+   "fr_hash": "5ec141597099d434"
+  },
+  {
+   "id": "chapter-3-2-attitude-orbit-control-aocs-and-propulsion/4-pointing-error-budget",
+   "en_hash": "fa58062f8ab7175f",
+   "fr_hash": "d9543f8d304dee54"
+  },
+  {
+   "id": "chapter-3-2-attitude-orbit-control-aocs-and-propulsion/4-pointing-error-budget/error-source-definitions-and-physics",
+   "en_hash": "67abc6cb69eca4ea",
+   "fr_hash": "e4065ce41907737b"
+  },
+  {
+   "id": "chapter-3-2-attitude-orbit-control-aocs-and-propulsion/5-momentum-management-and-desaturation",
+   "en_hash": "7fb3effdd6cb8289",
+   "fr_hash": "7d9742d070fb7a59"
+  },
+  {
+   "id": "chapter-3-2-attitude-orbit-control-aocs-and-propulsion/5-momentum-management-and-desaturation/wheel-configurations-3-1-redundancy",
+   "en_hash": "5b90513214ffbe9f",
+   "fr_hash": "e1c22845a00b9c1a"
+  },
+  {
+   "id": "chapter-3-2-attitude-orbit-control-aocs-and-propulsion/5-momentum-management-and-desaturation/1u-worked-example-unisat-1",
+   "en_hash": "47eb1538b828830d",
+   "fr_hash": "1e6574baab919fea"
+  },
+  {
+   "id": "chapter-3-2-attitude-orbit-control-aocs-and-propulsion/6-propulsion-system-design",
+   "en_hash": "530c9d5cb070847e",
+   "fr_hash": "c5c90f56e0afa9bb"
+  },
+  {
+   "id": "chapter-3-2-attitude-orbit-control-aocs-and-propulsion/6-propulsion-system-design/when-propulsion-is-required",
+   "en_hash": "3a1dac09fa7c394e",
+   "fr_hash": "ea97b0dc21c26dbf"
+  },
+  {
+   "id": "chapter-3-2-attitude-orbit-control-aocs-and-propulsion/6-propulsion-system-design/when-no-propulsion-is-needed-for-disposal",
+   "en_hash": "fa57226e472c2cb3",
+   "fr_hash": "19d23dbdd94b1bf2"
+  },
+  {
+   "id": "chapter-3-2-attitude-orbit-control-aocs-and-propulsion/6-propulsion-system-design/the-tsiolkovsky-rocket-equation-physics",
+   "en_hash": "f968231019435dc8",
+   "fr_hash": "1ec72f9357b4c514"
+  },
+  {
+   "id": "chapter-3-2-attitude-orbit-control-aocs-and-propulsion/6-propulsion-system-design/cubesat-propulsion-technologies-physics-and-comparison",
+   "en_hash": "0d225155041a47b6",
+   "fr_hash": "fb74606e88a09abf"
+  },
+  {
+   "id": "chapter-3-2-attitude-orbit-control-aocs-and-propulsion/6-propulsion-system-design/cubesat-propulsion-technologies-physics-and-comparison/cold-gas-propulsion",
+   "en_hash": "ad781cb1c6f29c74",
+   "fr_hash": "e38e7ed62be7b352"
+  },
+  {
+   "id": "chapter-3-2-attitude-orbit-control-aocs-and-propulsion/6-propulsion-system-design/cubesat-propulsion-technologies-physics-and-comparison/resistojet-warm-gas",
+   "en_hash": "14838fcc6fbf2d28",
+   "fr_hash": "5a7a208909e079d1"
+  },
+  {
+   "id": "chapter-3-2-attitude-orbit-control-aocs-and-propulsion/6-propulsion-system-design/cubesat-propulsion-technologies-physics-and-comparison/green-monopropellant",
+   "en_hash": "b5be40746a0cb7f8",
+   "fr_hash": "f0ccf988b9b65d96"
+  },
+  {
+   "id": "chapter-3-2-attitude-orbit-control-aocs-and-propulsion/6-propulsion-system-design/cubesat-propulsion-technologies-physics-and-comparison/electric-propulsion-electrospray-feep",
+   "en_hash": "e06777e8b6f90e4e",
+   "fr_hash": "2b647e52df23890c"
+  },
+  {
+   "id": "chapter-3-2-attitude-orbit-control-aocs-and-propulsion/6-propulsion-system-design/cubesat-propulsion-technologies-physics-and-comparison/electric-propulsion-hall-effect-thruster",
+   "en_hash": "c0f63976de0a011b",
+   "fr_hash": "da41278293846a0a"
+  },
+  {
+   "id": "chapter-3-2-attitude-orbit-control-aocs-and-propulsion/6-propulsion-system-design/cubesat-propulsion-technologies-physics-and-comparison/no-propulsion-passive-deorbit-strategies",
+   "en_hash": "faf945bb4d6f8adc",
+   "fr_hash": "8e7a1cef2f076397"
+  },
+  {
+   "id": "chapter-3-2-attitude-orbit-control-aocs-and-propulsion/6-propulsion-system-design/propulsion-system-comparison-table",
+   "en_hash": "0f6079d2940ed226",
+   "fr_hash": "2e2ca72eb5276b6d"
+  },
+  {
+   "id": "chapter-3-2-attitude-orbit-control-aocs-and-propulsion/6-propulsion-system-design/6u-reference-design-eo-sat-1-propulsion-as-flown",
+   "en_hash": "bbb6996dfe7e043a",
+   "fr_hash": "0a78c2cb139f59ae"
+  },
+  {
+   "id": "chapter-3-2-attitude-orbit-control-aocs-and-propulsion/7-spacecdf-exercise",
+   "en_hash": "029192fe94075811",
+   "fr_hash": "3d73c3b0a2fb31ce"
+  },
+  {
+   "id": "chapter-3-2-attitude-orbit-control-aocs-and-propulsion/7-spacecdf-exercise/instructions",
+   "en_hash": "c148ffc249aa264f",
+   "fr_hash": "efbe22d0bb47fd51"
+  },
+  {
+   "id": "chapter-3-2-attitude-orbit-control-aocs-and-propulsion/7-spacecdf-exercise/worksheet-3-2-tasks",
+   "en_hash": "e3c1b38d3c26477e",
+   "fr_hash": "bf13dc04b957b676"
+  },
+  {
+   "id": "chapter-3-2-attitude-orbit-control-aocs-and-propulsion/session-summary",
+   "en_hash": "9f72deb68804333e",
+   "fr_hash": "8f7345ba55b09526"
+  },
+  {
+   "id": "chapter-3-3-communications-and-link-budget-design",
+   "en_hash": "c37842571d1988a8",
+   "fr_hash": "1e79d162520fa323"
+  },
+  {
+   "id": "chapter-3-3-communications-and-link-budget-design/references",
+   "en_hash": "3082e780fa01d27b",
+   "fr_hash": "ce5a77798b5436a8"
+  },
+  {
+   "id": "chapter-3-3-communications-and-link-budget-design/learning-objectives",
+   "en_hash": "895d57417ae66698",
+   "fr_hash": "6f0347b0055052af"
+  },
+  {
+   "id": "chapter-3-3-communications-and-link-budget-design/1-the-link-budget-concept",
+   "en_hash": "886d0ac5204ec4b6",
+   "fr_hash": "98309ec2b5809d20"
+  },
+  {
+   "id": "chapter-3-3-communications-and-link-budget-design/1-the-link-budget-concept/link-budget-flow",
+   "en_hash": "8aa11d46e96eea51",
+   "fr_hash": "3ea0536eeddbe872"
+  },
+  {
+   "id": "chapter-3-3-communications-and-link-budget-design/1-the-link-budget-concept/decibel-refresher",
+   "en_hash": "d14b2420a7ec0c07",
+   "fr_hash": "8fa01399d4339a75"
+  },
+  {
+   "id": "chapter-3-3-communications-and-link-budget-design/2-complete-link-budget-equation",
+   "en_hash": "c43f606d629c796b",
+   "fr_hash": "b7c7ef7592f60bcd"
+  },
+  {
+   "id": "chapter-3-3-communications-and-link-budget-design/2-complete-link-budget-equation/complete-link-budget-table",
+   "en_hash": "e2959b0a50a7a0ce",
+   "fr_hash": "25eb92771f48594c"
+  },
+  {
+   "id": "chapter-3-3-communications-and-link-budget-design/3-antenna-types-physics-and-selection",
+   "en_hash": "00ba1de1c415fe78",
+   "fr_hash": "04c342c6077ef4e2"
+  },
+  {
+   "id": "chapter-3-3-communications-and-link-budget-design/3-antenna-types-physics-and-selection/antenna-types-for-spacecraft",
+   "en_hash": "e459620fed545421",
+   "fr_hash": "c879bd4097e841f9"
+  },
+  {
+   "id": "chapter-3-3-communications-and-link-budget-design/4-free-space-path-loss-by-band",
+   "en_hash": "a9ce1375721bfeb5",
+   "fr_hash": "969a25b525fbb488"
+  },
+  {
+   "id": "chapter-3-3-communications-and-link-budget-design/4-free-space-path-loss-by-band/slant-range-geometry",
+   "en_hash": "07041d49d7fdd6b6",
+   "fr_hash": "86ab5c96a61a4813"
+  },
+  {
+   "id": "chapter-3-3-communications-and-link-budget-design/4-free-space-path-loss-by-band/fspl-by-band-and-geometry",
+   "en_hash": "251cb46113a4b23d",
+   "fr_hash": "b34f13a710198f58"
+  },
+  {
+   "id": "chapter-3-3-communications-and-link-budget-design/5-frequency-band-selection-and-licensing",
+   "en_hash": "d18979f95a2bca82",
+   "fr_hash": "ff6233fafe5aac39"
+  },
+  {
+   "id": "chapter-3-3-communications-and-link-budget-design/5-frequency-band-selection-and-licensing/band-comparison-table",
+   "en_hash": "12c72eae9431174a",
+   "fr_hash": "be03f3ef5bebb564"
+  },
+  {
+   "id": "chapter-3-3-communications-and-link-budget-design/6-modulation-and-coding-physics-and-selection",
+   "en_hash": "ab5800496a8a972e",
+   "fr_hash": "e737fdcc914a6197"
+  },
+  {
+   "id": "chapter-3-3-communications-and-link-budget-design/6-modulation-and-coding-physics-and-selection/modulation-how-information-becomes-rf",
+   "en_hash": "9de28f9e05f56aa4",
+   "fr_hash": "10b941a3e4a9738b"
+  },
+  {
+   "id": "chapter-3-3-communications-and-link-budget-design/6-modulation-and-coding-physics-and-selection/forward-error-correction-fec-coding-gain",
+   "en_hash": "15d66bd4881d48c8",
+   "fr_hash": "7f764ea3fb4bfd06"
+  },
+  {
+   "id": "chapter-3-3-communications-and-link-budget-design/6-modulation-and-coding-physics-and-selection/complete-modulation-coding-table",
+   "en_hash": "262aa62653d6bdbd",
+   "fr_hash": "afd1002d6893f857"
+  },
+  {
+   "id": "chapter-3-3-communications-and-link-budget-design/7-ground-stations",
+   "en_hash": "47bccc994b5035ac",
+   "fr_hash": "5699f9810e49f1b7"
+  },
+  {
+   "id": "chapter-3-3-communications-and-link-budget-design/7-ground-stations/ground-station-types",
+   "en_hash": "907f9a932c2184bf",
+   "fr_hash": "f7ddf8bad2a59a65"
+  },
+  {
+   "id": "chapter-3-3-communications-and-link-budget-design/8-worked-examples-complete-link-budgets",
+   "en_hash": "bfeefcc251bc79f0",
+   "fr_hash": "9081b5be536433db"
+  },
+  {
+   "id": "chapter-3-3-communications-and-link-budget-design/8-worked-examples-complete-link-budgets/3u-eo-cubesat-s-band-downlink",
+   "en_hash": "64ef729b82d9bc38",
+   "fr_hash": "40ae354b52ea0c69"
+  },
+  {
+   "id": "chapter-3-3-communications-and-link-budget-design/8-worked-examples-complete-link-budgets/1u-worked-example-unisat-1",
+   "en_hash": "6e26f8833a43db7c",
+   "fr_hash": "b93a7b90228a4c4d"
+  },
+  {
+   "id": "chapter-3-3-communications-and-link-budget-design/8-worked-examples-complete-link-budgets/6u-reference-design-eo-sat-1-rf-as-flown",
+   "en_hash": "42ed2225eed5c67d",
+   "fr_hash": "ca0789efef3e3909"
+  },
+  {
+   "id": "chapter-3-3-communications-and-link-budget-design/9-data-budget",
+   "en_hash": "f403a2189b8e2e5d",
+   "fr_hash": "4533382ef3c5af47"
+  },
+  {
+   "id": "chapter-3-3-communications-and-link-budget-design/10-spacecdf-exercise",
+   "en_hash": "e857b5c6124356de",
+   "fr_hash": "ee5da2ace3eea754"
+  },
+  {
+   "id": "chapter-3-3-communications-and-link-budget-design/10-spacecdf-exercise/instructions",
+   "en_hash": "f96d32fc75c0f63d",
+   "fr_hash": "c1f8b01fcec956f4"
+  },
+  {
+   "id": "chapter-3-3-communications-and-link-budget-design/10-spacecdf-exercise/discussion-questions",
+   "en_hash": "070c56382e747ffb",
+   "fr_hash": "80cff9c7e3bd08f7"
+  },
+  {
+   "id": "chapter-3-3-communications-and-link-budget-design/session-summary",
+   "en_hash": "da261b51a99112e9",
+   "fr_hash": "525e474cbbb2e7e9"
+  },
+  {
+   "id": "chapter-3-4-spacecraft-structure-and-on-board-data-handling",
+   "en_hash": "11c0daff36a484f3",
+   "fr_hash": "a8125211f7c3dd76"
+  },
+  {
+   "id": "chapter-3-4-spacecraft-structure-and-on-board-data-handling/references",
+   "en_hash": "038fbcd9aa72ee16",
+   "fr_hash": "cbaa3ea62ce7c4be"
+  },
+  {
+   "id": "chapter-3-4-spacecraft-structure-and-on-board-data-handling/learning-objectives",
+   "en_hash": "b6f4cc7142463631",
+   "fr_hash": "332dba7829b1849d"
+  },
+  {
+   "id": "chapter-3-4-spacecraft-structure-and-on-board-data-handling/1-cubesat-structure-and-cds-compliance",
+   "en_hash": "5efce0fa7413df08",
+   "fr_hash": "4e565561d7384593"
+  },
+  {
+   "id": "chapter-3-4-spacecraft-structure-and-on-board-data-handling/1-cubesat-structure-and-cds-compliance/cds-dimensional-specifications",
+   "en_hash": "662d486bada40dcd",
+   "fr_hash": "b50d8cf99e1fe5b0"
+  },
+  {
+   "id": "chapter-3-4-spacecraft-structure-and-on-board-data-handling/1-cubesat-structure-and-cds-compliance/structural-materials",
+   "en_hash": "29143be7a2c11668",
+   "fr_hash": "702abe38f06009b4"
+  },
+  {
+   "id": "chapter-3-4-spacecraft-structure-and-on-board-data-handling/1-cubesat-structure-and-cds-compliance/key-cds-requirements",
+   "en_hash": "6a72605d806be335",
+   "fr_hash": "c3a946fd20cc0a24"
+  },
+  {
+   "id": "chapter-3-4-spacecraft-structure-and-on-board-data-handling/1-cubesat-structure-and-cds-compliance/pc-104-stack-architecture",
+   "en_hash": "afcaf518b8270797",
+   "fr_hash": "785f127b9f24ef97"
+  },
+  {
+   "id": "chapter-3-4-spacecraft-structure-and-on-board-data-handling/1-cubesat-structure-and-cds-compliance/launch-load-environment",
+   "en_hash": "f4697affc698759d",
+   "fr_hash": "f8e9ab8503fca89d"
+  },
+  {
+   "id": "chapter-3-4-spacecraft-structure-and-on-board-data-handling/1-cubesat-structure-and-cds-compliance/structural-margin-of-safety",
+   "en_hash": "c400a3d49cb6a2af",
+   "fr_hash": "f6de6dce9a8868e4"
+  },
+  {
+   "id": "chapter-3-4-spacecraft-structure-and-on-board-data-handling/1-cubesat-structure-and-cds-compliance/fundamental-frequency",
+   "en_hash": "cda320f1dccc773d",
+   "fr_hash": "c1aac09c46977001"
+  },
+  {
+   "id": "chapter-3-4-spacecraft-structure-and-on-board-data-handling/1-cubesat-structure-and-cds-compliance/launch-vehicle-interface-and-deployables",
+   "en_hash": "383fe00618f86341",
+   "fr_hash": "e54c01e32bdbbe28"
+  },
+  {
+   "id": "chapter-3-4-spacecraft-structure-and-on-board-data-handling/2-on-board-data-handling",
+   "en_hash": "8488e9d49c92b700",
+   "fr_hash": "3618aea37488eae6"
+  },
+  {
+   "id": "chapter-3-4-spacecraft-structure-and-on-board-data-handling/2-on-board-data-handling/obc-architecture-processor-selection",
+   "en_hash": "adb67b436045a7a4",
+   "fr_hash": "1bcfb1cc0c58b393"
+  },
+  {
+   "id": "chapter-3-4-spacecraft-structure-and-on-board-data-handling/2-on-board-data-handling/obc-architecture-processor-selection/flight-heritage-processors",
+   "en_hash": "713b0af5a22f0dc2",
+   "fr_hash": "dd859306f1f5bca7"
+  },
+  {
+   "id": "chapter-3-4-spacecraft-structure-and-on-board-data-handling/2-on-board-data-handling/obc-architecture-processor-selection/rtos-vs-bare-metal-vs-linux",
+   "en_hash": "9b36ed3fbfefac07",
+   "fr_hash": "daf64f9cc55a7109"
+  },
+  {
+   "id": "chapter-3-4-spacecraft-structure-and-on-board-data-handling/2-on-board-data-handling/data-storage-sizing",
+   "en_hash": "a55e7e623bfa5c3f",
+   "fr_hash": "a879dfa3c96f41fc"
+  },
+  {
+   "id": "chapter-3-4-spacecraft-structure-and-on-board-data-handling/2-on-board-data-handling/flight-software-functions",
+   "en_hash": "8ec4af37bc6d5918",
+   "fr_hash": "dee59b38fcde660c"
+  },
+  {
+   "id": "chapter-3-4-spacecraft-structure-and-on-board-data-handling/session-summary",
+   "en_hash": "44f340e9e835b1f6",
+   "fr_hash": "cbe5ac40fd84e0d0"
+  },
+  {
+   "id": "chapter-4-1-equipment-selection-bill-of-materials",
+   "en_hash": "3585188e71a32a9b",
+   "fr_hash": "eb80ad01804aa13a"
+  },
+  {
+   "id": "chapter-4-1-equipment-selection-bill-of-materials/learning-objectives",
+   "en_hash": "5c1a15881be8356d",
+   "fr_hash": "3720bf575c55ee9e"
+  },
+  {
+   "id": "chapter-4-1-equipment-selection-bill-of-materials/1-the-make-buy-reuse-decision",
+   "en_hash": "d57d91e4412651f2",
+   "fr_hash": "1da6b62325616e2e"
+  },
+  {
+   "id": "chapter-4-1-equipment-selection-bill-of-materials/1-the-make-buy-reuse-decision/decision-framework",
+   "en_hash": "ae0b5f16b19901ed",
+   "fr_hash": "5abdb97856b66b35"
+  },
+  {
+   "id": "chapter-4-1-equipment-selection-bill-of-materials/1-the-make-buy-reuse-decision/make-buy-reuse-trade-matrix",
+   "en_hash": "86b7c07606486164",
+   "fr_hash": "a222943089611eba"
+  },
+  {
+   "id": "chapter-4-1-equipment-selection-bill-of-materials/1-the-make-buy-reuse-decision/key-equations",
+   "en_hash": "9650b0914ae17b36",
+   "fr_hash": "6a22b2126b58d98c"
+  },
+  {
+   "id": "chapter-4-1-equipment-selection-bill-of-materials/1-the-make-buy-reuse-decision/worked-example",
+   "en_hash": "d807cfc15d75f15b",
+   "fr_hash": "e0f797e075312be1"
+  },
+  {
+   "id": "chapter-4-1-equipment-selection-bill-of-materials/2-technology-readiness-level-trl-assessment",
+   "en_hash": "0f4d61282b2c5fcf",
+   "fr_hash": "2cc73db45a614dda"
+  },
+  {
+   "id": "chapter-4-1-equipment-selection-bill-of-materials/2-technology-readiness-level-trl-assessment/trl-scale-with-decision-criteria",
+   "en_hash": "bc918bbcbab50c67",
+   "fr_hash": "11d164feef30ad17"
+  },
+  {
+   "id": "chapter-4-1-equipment-selection-bill-of-materials/2-technology-readiness-level-trl-assessment/trl-and-risk-relationship",
+   "en_hash": "a317695a97286b1d",
+   "fr_hash": "fb31beac696a3ac5"
+  },
+  {
+   "id": "chapter-4-1-equipment-selection-bill-of-materials/2-technology-readiness-level-trl-assessment/real-mission-example-marco-mars-cube-one",
+   "en_hash": "78dbf64e9e8804d5",
+   "fr_hash": "1b7cbd49a85b47a8"
+  },
+  {
+   "id": "chapter-4-1-equipment-selection-bill-of-materials/3-bill-of-materials-bom-construction",
+   "en_hash": "5eb4e645b7fbef10",
+   "fr_hash": "b50cfc595b6be13b"
+  },
+  {
+   "id": "chapter-4-1-equipment-selection-bill-of-materials/3-bill-of-materials-bom-construction/bom-structure",
+   "en_hash": "203a0bb8386b9fe2",
+   "fr_hash": "8c06763eba2a4755"
+  },
+  {
+   "id": "chapter-4-1-equipment-selection-bill-of-materials/3-bill-of-materials-bom-construction/bom-fields",
+   "en_hash": "2ccf0f67061f9ea0",
+   "fr_hash": "9d2713e179ed1648"
+  },
+  {
+   "id": "chapter-4-1-equipment-selection-bill-of-materials/3-bill-of-materials-bom-construction/spacecdf-bom-generation",
+   "en_hash": "9359b9d128634dc3",
+   "fr_hash": "b6fd6b044d215fa6"
+  },
+  {
+   "id": "chapter-4-1-equipment-selection-bill-of-materials/3-bill-of-materials-bom-construction/key-equations",
+   "en_hash": "4bdeb42951155f1f",
+   "fr_hash": "66c82169579775ec"
+  },
+  {
+   "id": "chapter-4-1-equipment-selection-bill-of-materials/3-bill-of-materials-bom-construction/worked-example",
+   "en_hash": "765f644e4f03d173",
+   "fr_hash": "a0856b888a3976cf"
+  },
+  {
+   "id": "chapter-4-1-equipment-selection-bill-of-materials/3-bill-of-materials-bom-construction/1u-worked-example-unisat-1",
+   "en_hash": "c89985443e03c33d",
+   "fr_hash": "97c57f595103a8fa"
+  },
+  {
+   "id": "chapter-4-1-equipment-selection-bill-of-materials/4-export-control-and-procurement",
+   "en_hash": "a90ac4bd69d7a93b",
+   "fr_hash": "efeb0faf72fb5d8b"
+  },
+  {
+   "id": "chapter-4-1-equipment-selection-bill-of-materials/4-export-control-and-procurement/export-control-regimes",
+   "en_hash": "8f7500eada9a44ac",
+   "fr_hash": "e7edbbc838ed9394"
+  },
+  {
+   "id": "chapter-4-1-equipment-selection-bill-of-materials/4-export-control-and-procurement/component-classification-decision",
+   "en_hash": "cd62cb5c3da5ac9e",
+   "fr_hash": "5c1c0a4810dc27d7"
+  },
+  {
+   "id": "chapter-4-1-equipment-selection-bill-of-materials/4-export-control-and-procurement/common-itar-controlled-cubesat-components",
+   "en_hash": "097cb38c19effea5",
+   "fr_hash": "fb91d99c58647519"
+  },
+  {
+   "id": "chapter-4-1-equipment-selection-bill-of-materials/4-export-control-and-procurement/procurement-workflow",
+   "en_hash": "9ecec200996d1a13",
+   "fr_hash": "c40a768639903675"
+  },
+  {
+   "id": "chapter-4-1-equipment-selection-bill-of-materials/4-export-control-and-procurement/real-mission-example-export-control-impact",
+   "en_hash": "a56ac05f74df47fe",
+   "fr_hash": "ab66cad4a0ce160a"
+  },
+  {
+   "id": "chapter-4-1-equipment-selection-bill-of-materials/5-interface-compatibility-verification",
+   "en_hash": "87b79208f528b2f4",
+   "fr_hash": "cd29df19c57754b2"
+  },
+  {
+   "id": "chapter-4-1-equipment-selection-bill-of-materials/5-interface-compatibility-verification/rf-chain-compatibility",
+   "en_hash": "54dfda4619c77df1",
+   "fr_hash": "e3dd18eecdf1875c"
+  },
+  {
+   "id": "chapter-4-1-equipment-selection-bill-of-materials/5-interface-compatibility-verification/electrical-interface-verification",
+   "en_hash": "6756be5cef62bbd9",
+   "fr_hash": "96c8552d056b8064"
+  },
+  {
+   "id": "chapter-4-1-equipment-selection-bill-of-materials/5-interface-compatibility-verification/mechanical-interface-verification",
+   "en_hash": "db12f1caec9e860a",
+   "fr_hash": "5fd36077dac412c6"
+  },
+  {
+   "id": "chapter-4-1-equipment-selection-bill-of-materials/6-equipment-selection-exercise",
+   "en_hash": "89b94d0f988d1f8a",
+   "fr_hash": "381b8be1f7e64c6e"
+  },
+  {
+   "id": "chapter-4-1-equipment-selection-bill-of-materials/6-equipment-selection-exercise/instructions",
+   "en_hash": "c57ca628b27bca9e",
+   "fr_hash": "3487e26f16f0e3e4"
+  },
+  {
+   "id": "chapter-4-1-equipment-selection-bill-of-materials/6-equipment-selection-exercise/component-trade-study",
+   "en_hash": "b6bbcce18962fada",
+   "fr_hash": "63b7c91360cba3e4"
+  },
+  {
+   "id": "chapter-4-1-equipment-selection-bill-of-materials/6-equipment-selection-exercise/real-mission-example-iridium-next-equipment-selection",
+   "en_hash": "93d1e4592947f7c0",
+   "fr_hash": "8f9c67e1b8d7a637"
+  },
+  {
+   "id": "chapter-4-1-equipment-selection-bill-of-materials/6-equipment-selection-exercise/worksheet-4-1-tasks",
+   "en_hash": "2e30945a9fa4e215",
+   "fr_hash": "97b93411f38792e7"
+  },
+  {
+   "id": "chapter-4-1-equipment-selection-bill-of-materials/7-spacecdf-budget-closure-check",
+   "en_hash": "28e577110b8c4541",
+   "fr_hash": "9a14aa4b78e9a38c"
+  },
+  {
+   "id": "chapter-4-1-equipment-selection-bill-of-materials/7-spacecdf-budget-closure-check/instructions",
+   "en_hash": "b96fd5bc4af1e7a2",
+   "fr_hash": "af0073cd4028673e"
+  },
+  {
+   "id": "chapter-4-1-equipment-selection-bill-of-materials/7-spacecdf-budget-closure-check/if-a-budget-does-not-close",
+   "en_hash": "21bc656063ed4ea9",
+   "fr_hash": "46ffaa83bef082d8"
+  },
+  {
+   "id": "chapter-4-1-equipment-selection-bill-of-materials/7-spacecdf-budget-closure-check/1u-worked-example-unisat-1",
+   "en_hash": "64e9290a3c02ef3f",
+   "fr_hash": "d0b019b5884f34ce"
+  },
+  {
+   "id": "chapter-4-1-equipment-selection-bill-of-materials/worked-example-complete-6u-eo-cubesat-equipment-list-eo-sat-1",
+   "en_hash": "834c4f2e5e75b18a",
+   "fr_hash": "7bbcdc46d5380c2a"
+  },
+  {
+   "id": "chapter-4-1-equipment-selection-bill-of-materials/cited-references",
+   "en_hash": "8088358bd41658a3",
+   "fr_hash": "3e9d05b4d598976d"
+  },
+  {
+   "id": "chapter-4-1-equipment-selection-bill-of-materials/session-summary",
+   "en_hash": "b3103136b944057e",
+   "fr_hash": "d12ef160a5b8f9b6"
+  },
+  {
+   "id": "chapter-4-2-verification-validation-matrix-and-compliance",
+   "en_hash": "103672415b0ec6cf",
+   "fr_hash": "a5db87e7eb52d2e1"
+  },
+  {
+   "id": "chapter-4-2-verification-validation-matrix-and-compliance/learning-objectives",
+   "en_hash": "05d75c8b1d840ba4",
+   "fr_hash": "e838821ecfe0bb0b"
+  },
+  {
+   "id": "chapter-4-2-verification-validation-matrix-and-compliance/1-verification-vs-validation-precise-definitions",
+   "en_hash": "5775d4ce6dc910ca",
+   "fr_hash": "3db860983780d18f"
+  },
+  {
+   "id": "chapter-4-2-verification-validation-matrix-and-compliance/1-verification-vs-validation-precise-definitions/the-critical-distinction",
+   "en_hash": "e2d5a69c66074e1d",
+   "fr_hash": "025a6d894e2ca7e2"
+  },
+  {
+   "id": "chapter-4-2-verification-validation-matrix-and-compliance/1-verification-vs-validation-precise-definitions/example",
+   "en_hash": "393ad906e4936e50",
+   "fr_hash": "e5397d0d21527c7f"
+  },
+  {
+   "id": "chapter-4-2-verification-validation-matrix-and-compliance/2-iadt-verification-methods-in-detail",
+   "en_hash": "0b011583db79edf3",
+   "fr_hash": "70ea60134b8deb7a"
+  },
+  {
+   "id": "chapter-4-2-verification-validation-matrix-and-compliance/2-iadt-verification-methods-in-detail/inspection-i",
+   "en_hash": "79cc5776266932fc",
+   "fr_hash": "ad8ba006f30ce7f8"
+  },
+  {
+   "id": "chapter-4-2-verification-validation-matrix-and-compliance/2-iadt-verification-methods-in-detail/analysis-a",
+   "en_hash": "ba1ce0bee0d25fa0",
+   "fr_hash": "bad79f294302069e"
+  },
+  {
+   "id": "chapter-4-2-verification-validation-matrix-and-compliance/2-iadt-verification-methods-in-detail/demonstration-d",
+   "en_hash": "90b798625c738348",
+   "fr_hash": "e23f01fc18d7df26"
+  },
+  {
+   "id": "chapter-4-2-verification-validation-matrix-and-compliance/2-iadt-verification-methods-in-detail/test-t",
+   "en_hash": "b6e6aa0c212bff28",
+   "fr_hash": "862fe45687481977"
+  },
+  {
+   "id": "chapter-4-2-verification-validation-matrix-and-compliance/2-iadt-verification-methods-in-detail/proto-flight-approach",
+   "en_hash": "4bfa1e7d5f8b2b76",
+   "fr_hash": "518fd036e15b01fc"
+  },
+  {
+   "id": "chapter-4-2-verification-validation-matrix-and-compliance/3-environmental-test-programme",
+   "en_hash": "76938e3319689608",
+   "fr_hash": "99b681c253999dc2"
+  },
+  {
+   "id": "chapter-4-2-verification-validation-matrix-and-compliance/3-environmental-test-programme/standard-environmental-test-sequence",
+   "en_hash": "671dcf2c3433c569",
+   "fr_hash": "d80dde31719ed4c1"
+  },
+  {
+   "id": "chapter-4-2-verification-validation-matrix-and-compliance/3-environmental-test-programme/sine-vibration-test-levels",
+   "en_hash": "964221fde9361faa",
+   "fr_hash": "367a9685eef31d00"
+  },
+  {
+   "id": "chapter-4-2-verification-validation-matrix-and-compliance/3-environmental-test-programme/random-vibration-test-levels",
+   "en_hash": "bb7fcc2af58ec3ba",
+   "fr_hash": "250a2ed9c56cb500"
+  },
+  {
+   "id": "chapter-4-2-verification-validation-matrix-and-compliance/3-environmental-test-programme/thermal-vacuum-test-profile",
+   "en_hash": "5ac1388f226de245",
+   "fr_hash": "04019968f0b9d796"
+  },
+  {
+   "id": "chapter-4-2-verification-validation-matrix-and-compliance/3-environmental-test-programme/emc-testing",
+   "en_hash": "bc19a00cff57bffb",
+   "fr_hash": "6ca105d012560226"
+  },
+  {
+   "id": "chapter-4-2-verification-validation-matrix-and-compliance/4-compliance-verification-matrix-construction",
+   "en_hash": "d6d002c1472ebab8",
+   "fr_hash": "df7f078fe08c7e68"
+  },
+  {
+   "id": "chapter-4-2-verification-validation-matrix-and-compliance/4-compliance-verification-matrix-construction/matrix-structure",
+   "en_hash": "877a1328b378c9b9",
+   "fr_hash": "a41bb82a5c933ce6"
+  },
+  {
+   "id": "chapter-4-2-verification-validation-matrix-and-compliance/4-compliance-verification-matrix-construction/iadt-assignment-decision-logic",
+   "en_hash": "2f4ac12dff7aa61b",
+   "fr_hash": "6a04d93d32307b82"
+  },
+  {
+   "id": "chapter-4-2-verification-validation-matrix-and-compliance/4-compliance-verification-matrix-construction/multiple-methods",
+   "en_hash": "e76e480e6153f3a6",
+   "fr_hash": "0403a6ac44b06749"
+  },
+  {
+   "id": "chapter-4-2-verification-validation-matrix-and-compliance/4-compliance-verification-matrix-construction/waiver-process",
+   "en_hash": "bf3b0358620ab906",
+   "fr_hash": "75607649cfd2b058"
+  },
+  {
+   "id": "chapter-4-2-verification-validation-matrix-and-compliance/5-spacecdf-v-v-matrix-exercise",
+   "en_hash": "3677f46ccf706401",
+   "fr_hash": "77b5eb20bde372a7"
+  },
+  {
+   "id": "chapter-4-2-verification-validation-matrix-and-compliance/5-spacecdf-v-v-matrix-exercise/instructions",
+   "en_hash": "0988d2bd5988ec0b",
+   "fr_hash": "c11a2eca7cbcab53"
+  },
+  {
+   "id": "chapter-4-2-verification-validation-matrix-and-compliance/5-spacecdf-v-v-matrix-exercise/worksheet-4-2-tasks",
+   "en_hash": "36dc11c0ec545820",
+   "fr_hash": "48d1b67d2f09e33c"
+  },
+  {
+   "id": "chapter-4-2-verification-validation-matrix-and-compliance/cited-references",
+   "en_hash": "f2e6f003cf90f8b8",
+   "fr_hash": "d861997f5fc09131"
+  },
+  {
+   "id": "chapter-4-2-verification-validation-matrix-and-compliance/session-summary",
+   "en_hash": "826bb0951b05109a",
+   "fr_hash": "db8dd7527ad4af97"
+  },
+  {
+   "id": "chapter-4-3-risk-interfaces-fmeca",
+   "en_hash": "f42ce40a2efbc54d",
+   "fr_hash": "cefc9455c80ca346"
+  },
+  {
+   "id": "chapter-4-3-risk-interfaces-fmeca/learning-objectives",
+   "en_hash": "1b77ce6fe23cb205",
+   "fr_hash": "c941542085025207"
+  },
+  {
+   "id": "chapter-4-3-risk-interfaces-fmeca/1-risk-management-process",
+   "en_hash": "7d8c17987b014b51",
+   "fr_hash": "c4f7df1af67698d6"
+  },
+  {
+   "id": "chapter-4-3-risk-interfaces-fmeca/1-risk-management-process/the-four-step-process",
+   "en_hash": "7946757056459b3f",
+   "fr_hash": "58baefbc75da0bd9"
+  },
+  {
+   "id": "chapter-4-3-risk-interfaces-fmeca/1-risk-management-process/risk-sources",
+   "en_hash": "0df89306aa84e5f0",
+   "fr_hash": "18ea34cacdc2ac42"
+  },
+  {
+   "id": "chapter-4-3-risk-interfaces-fmeca/2-the-5x5-risk-matrix",
+   "en_hash": "177b3d953b1a9d6d",
+   "fr_hash": "0f7541fd8507bb48"
+  },
+  {
+   "id": "chapter-4-3-risk-interfaces-fmeca/2-the-5x5-risk-matrix/likelihood-scale",
+   "en_hash": "70787abbff476ba5",
+   "fr_hash": "71d21fab60329ae6"
+  },
+  {
+   "id": "chapter-4-3-risk-interfaces-fmeca/2-the-5x5-risk-matrix/consequence-scale",
+   "en_hash": "4f760584f49b0348",
+   "fr_hash": "03e4ffa4cc5ad24f"
+  },
+  {
+   "id": "chapter-4-3-risk-interfaces-fmeca/2-the-5x5-risk-matrix/risk-score-and-classification",
+   "en_hash": "6f9a0097747dd59d",
+   "fr_hash": "e430b978aa8c1ce4"
+  },
+  {
+   "id": "chapter-4-3-risk-interfaces-fmeca/2-the-5x5-risk-matrix/risk-action-levels",
+   "en_hash": "5555fa2084c5c167",
+   "fr_hash": "525506ede1fe6b1c"
+  },
+  {
+   "id": "chapter-4-3-risk-interfaces-fmeca/2-the-5x5-risk-matrix/cubesat-specific-risk-examples",
+   "en_hash": "e88ec26c1f845e3d",
+   "fr_hash": "7a6de309551af462"
+  },
+  {
+   "id": "chapter-4-3-risk-interfaces-fmeca/2-the-5x5-risk-matrix/mitigation-strategies",
+   "en_hash": "cf203ec12d855c6e",
+   "fr_hash": "5aaf083637e14cdf"
+  },
+  {
+   "id": "chapter-4-3-risk-interfaces-fmeca/3-n-squared-n-2-interface-matrix",
+   "en_hash": "f296980a6561d35d",
+   "fr_hash": "09bec4f7fb21fb07"
+  },
+  {
+   "id": "chapter-4-3-risk-interfaces-fmeca/3-n-squared-n-2-interface-matrix/what-is-an-n-2-matrix",
+   "en_hash": "985e77b4c3396b96",
+   "fr_hash": "a998eced426ceb2d"
+  },
+  {
+   "id": "chapter-4-3-risk-interfaces-fmeca/3-n-squared-n-2-interface-matrix/n-2-matrix-example-6-subsystems",
+   "en_hash": "563ce11594b78421",
+   "fr_hash": "c5da613dc78dd308"
+  },
+  {
+   "id": "chapter-4-3-risk-interfaces-fmeca/3-n-squared-n-2-interface-matrix/interface-types",
+   "en_hash": "583c78adb403d999",
+   "fr_hash": "67b2d0af57992b90"
+  },
+  {
+   "id": "chapter-4-3-risk-interfaces-fmeca/3-n-squared-n-2-interface-matrix/interface-conflict-detection",
+   "en_hash": "1e443339e6a4774d",
+   "fr_hash": "f9161935ffa06cc1"
+  },
+  {
+   "id": "chapter-4-3-risk-interfaces-fmeca/3-n-squared-n-2-interface-matrix/worked-example-detecting-a-conflict",
+   "en_hash": "6836d1fc6b696a52",
+   "fr_hash": "25d77b6fd66f47e8"
+  },
+  {
+   "id": "chapter-4-3-risk-interfaces-fmeca/4-fmea-fmeca",
+   "en_hash": "de227dc0596b8587",
+   "fr_hash": "d67fa497a948ede2"
+  },
+  {
+   "id": "chapter-4-3-risk-interfaces-fmeca/4-fmea-fmeca/definitions",
+   "en_hash": "9bd0b8cfb55241c2",
+   "fr_hash": "18891e5f568e18ba"
+  },
+  {
+   "id": "chapter-4-3-risk-interfaces-fmeca/4-fmea-fmeca/fmea-fmeca-table-structure",
+   "en_hash": "59c3c228309d3281",
+   "fr_hash": "92764ca42f0851cd"
+  },
+  {
+   "id": "chapter-4-3-risk-interfaces-fmeca/4-fmea-fmeca/criticality-categories",
+   "en_hash": "9e7d8f25d04bb878",
+   "fr_hash": "668da9c7bdf0e039"
+  },
+  {
+   "id": "chapter-4-3-risk-interfaces-fmeca/4-fmea-fmeca/single-point-failure-spf-analysis",
+   "en_hash": "b7941f70928af519",
+   "fr_hash": "0b5a829a38e14e5a"
+  },
+  {
+   "id": "chapter-4-3-risk-interfaces-fmeca/4-fmea-fmeca/key-equations-reliability",
+   "en_hash": "b4711c43cf10f151",
+   "fr_hash": "2f030ce594327f0f"
+  },
+  {
+   "id": "chapter-4-3-risk-interfaces-fmeca/4-fmea-fmeca/worked-example-reaction-wheel-redundancy",
+   "en_hash": "174b61e9bdb0de4d",
+   "fr_hash": "17ee478ff652aa5e"
+  },
+  {
+   "id": "chapter-4-3-risk-interfaces-fmeca/4-fmea-fmeca/real-mission-example-hitomi-astro-h",
+   "en_hash": "845358f732ce5a71",
+   "fr_hash": "7918a7d90ff5df70"
+  },
+  {
+   "id": "chapter-4-3-risk-interfaces-fmeca/5-risk-interface-exercise",
+   "en_hash": "9e1ecb06111b5449",
+   "fr_hash": "8ac6b199b365b2fb"
+  },
+  {
+   "id": "chapter-4-3-risk-interfaces-fmeca/5-risk-interface-exercise/instructions",
+   "en_hash": "ba88aef0be206d37",
+   "fr_hash": "9f22bda14de41e83"
+  },
+  {
+   "id": "chapter-4-3-risk-interfaces-fmeca/5-risk-interface-exercise/discussion-prompts",
+   "en_hash": "56e1b861a1580fac",
+   "fr_hash": "32c4f58e92b30a8b"
+  },
+  {
+   "id": "chapter-4-3-risk-interfaces-fmeca/5-risk-interface-exercise/worksheet-4-3-tasks",
+   "en_hash": "6cebfe109a4802f7",
+   "fr_hash": "844bdc8ae920ddac"
+  },
+  {
+   "id": "chapter-4-3-risk-interfaces-fmeca/cited-references",
+   "en_hash": "881e9ea80b225b32",
+   "fr_hash": "4ab392fd2a7e6708"
+  },
+  {
+   "id": "chapter-4-3-risk-interfaces-fmeca/session-summary",
+   "en_hash": "12308e14c7c6b62f",
+   "fr_hash": "484f53e68882dce9"
+  },
+  {
+   "id": "chapter-4-4-cost-estimation-design-review",
+   "en_hash": "d75279db2e036fcf",
+   "fr_hash": "b2227057cd4c24e3"
+  },
+  {
+   "id": "chapter-4-4-cost-estimation-design-review/learning-objectives",
+   "en_hash": "9954eac88db847b4",
+   "fr_hash": "16f52494e0eaf48a"
+  },
+  {
+   "id": "chapter-4-4-cost-estimation-design-review/1-cost-estimation-methodologies",
+   "en_hash": "adea22a2bdb6af47",
+   "fr_hash": "ea1241fa598a17fd"
+  },
+  {
+   "id": "chapter-4-4-cost-estimation-design-review/1-cost-estimation-methodologies/three-primary-methods",
+   "en_hash": "09ff5b0ff23ee726",
+   "fr_hash": "fe39ecbdcf8c5731"
+  },
+  {
+   "id": "chapter-4-4-cost-estimation-design-review/1-cost-estimation-methodologies/parametric-cost-estimating-relationships-cers",
+   "en_hash": "09b3611a663abc3e",
+   "fr_hash": "60c343980f240fc1"
+  },
+  {
+   "id": "chapter-4-4-cost-estimation-design-review/1-cost-estimation-methodologies/cer-form-per-subsystem-illustrative",
+   "en_hash": "93ab67df9f3a57ca",
+   "fr_hash": "8fa4dfe43a597e7f"
+  },
+  {
+   "id": "chapter-4-4-cost-estimation-design-review/1-cost-estimation-methodologies/sscm-small-satellite-cost-model",
+   "en_hash": "d201e165cba35133",
+   "fr_hash": "331e0d9398b1cb50"
+  },
+  {
+   "id": "chapter-4-4-cost-estimation-design-review/1-cost-estimation-methodologies/cubesat-calibrated-pricing-spacecdf",
+   "en_hash": "d558aad6411d18a5",
+   "fr_hash": "4005b480ab9e68e9"
+  },
+  {
+   "id": "chapter-4-4-cost-estimation-design-review/1-cost-estimation-methodologies/worked-example-parametric-vs-bottom-up",
+   "en_hash": "463a9a804a24d28d",
+   "fr_hash": "9e2961d595d5c92b"
+  },
+  {
+   "id": "chapter-4-4-cost-estimation-design-review/2-cost-breakdown-structure-wbs",
+   "en_hash": "4432b61e723d2751",
+   "fr_hash": "67051797bb6b4b35"
+  },
+  {
+   "id": "chapter-4-4-cost-estimation-design-review/2-cost-breakdown-structure-wbs/standard-cubesat-wbs",
+   "en_hash": "dbc600d781b5e683",
+   "fr_hash": "e386b0d3b5f8afdc"
+  },
+  {
+   "id": "chapter-4-4-cost-estimation-design-review/2-cost-breakdown-structure-wbs/cost-by-phase",
+   "en_hash": "54999e64fdce5550",
+   "fr_hash": "422b1086951548ed"
+  },
+  {
+   "id": "chapter-4-4-cost-estimation-design-review/3-learning-curve-for-constellations",
+   "en_hash": "3d7ee191e14b8c17",
+   "fr_hash": "6a613ba11a002ae0"
+  },
+  {
+   "id": "chapter-4-4-cost-estimation-design-review/3-learning-curve-for-constellations/wright-s-learning-curve",
+   "en_hash": "92105b74b2aa796a",
+   "fr_hash": "b65f63fae07cf178"
+  },
+  {
+   "id": "chapter-4-4-cost-estimation-design-review/3-learning-curve-for-constellations/simplified-rule-of-thumb",
+   "en_hash": "87bbd30abd5966ae",
+   "fr_hash": "f5d526226945bc0a"
+  },
+  {
+   "id": "chapter-4-4-cost-estimation-design-review/3-learning-curve-for-constellations/worked-example-20-satellite-constellation",
+   "en_hash": "40d5fd876534832a",
+   "fr_hash": "dec499334d202b9a"
+  },
+  {
+   "id": "chapter-4-4-cost-estimation-design-review/4-cost-risk-and-confidence-levels",
+   "en_hash": "68996753620b1420",
+   "fr_hash": "742bd88ea21dd19a"
+  },
+  {
+   "id": "chapter-4-4-cost-estimation-design-review/4-cost-risk-and-confidence-levels/uncertainty-by-cost-element",
+   "en_hash": "32978e3bd84bf43c",
+   "fr_hash": "a7b91e9e4f7009d6"
+  },
+  {
+   "id": "chapter-4-4-cost-estimation-design-review/4-cost-risk-and-confidence-levels/confidence-levels",
+   "en_hash": "64598a7dddf1a450",
+   "fr_hash": "68aa26f11e4b616b"
+  },
+  {
+   "id": "chapter-4-4-cost-estimation-design-review/4-cost-risk-and-confidence-levels/1u-worked-example-unisat-1",
+   "en_hash": "d76c493a078dbce8",
+   "fr_hash": "d00e61073a9b001c"
+  },
+  {
+   "id": "chapter-4-4-cost-estimation-design-review/5-design-review-process",
+   "en_hash": "9e72f16b1d64eb3b",
+   "fr_hash": "9c1f67381ebdf69a"
+  },
+  {
+   "id": "chapter-4-4-cost-estimation-design-review/5-design-review-process/review-sequence",
+   "en_hash": "a1852a4262371406",
+   "fr_hash": "bcb4bb20428b2c89"
+  },
+  {
+   "id": "chapter-4-4-cost-estimation-design-review/5-design-review-process/gate-criteria-for-srr-phase-a-b",
+   "en_hash": "24dc345af51f7c69",
+   "fr_hash": "fc7b190789b7d7d4"
+  },
+  {
+   "id": "chapter-4-4-cost-estimation-design-review/5-design-review-process/gate-criteria-for-pdr-phase-b-c",
+   "en_hash": "d76275b25d97fe99",
+   "fr_hash": "298b2ea17777cde8"
+  },
+  {
+   "id": "chapter-4-4-cost-estimation-design-review/5-design-review-process/presentation-skills-for-reviews",
+   "en_hash": "34a86edfd4883a3d",
+   "fr_hash": "0780811099475f2b"
+  },
+  {
+   "id": "chapter-4-4-cost-estimation-design-review/6-cost-review-exercise",
+   "en_hash": "01a7869b181138f7",
+   "fr_hash": "b948a753a0f49398"
+  },
+  {
+   "id": "chapter-4-4-cost-estimation-design-review/6-cost-review-exercise/instructions",
+   "en_hash": "e999a92088d6b627",
+   "fr_hash": "448aa4fd640dc9af"
+  },
+  {
+   "id": "chapter-4-4-cost-estimation-design-review/6-cost-review-exercise/worksheet-4-4-tasks",
+   "en_hash": "9286f8ad92fe4c23",
+   "fr_hash": "11a0e1d1bf367bac"
+  },
+  {
+   "id": "chapter-4-4-cost-estimation-design-review/cited-references",
+   "en_hash": "9428d74e04128a15",
+   "fr_hash": "9142f705f01d63bb"
+  },
+  {
+   "id": "chapter-4-4-cost-estimation-design-review/session-summary",
+   "en_hash": "3da0845182b7a758",
+   "fr_hash": "bab79159117e610e"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference",
+   "en_hash": "a3dc7156cad6ccac",
+   "fr_hash": "d6b0d4bab5fadd79"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/systems-engineer",
+   "en_hash": "7a795fb9d305ab11",
+   "fr_hash": "92c6f7101bb88b9e"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/systems-engineer/decisions-you-own",
+   "en_hash": "96c6139c245b223a",
+   "fr_hash": "e76ae539a8b560a0"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/systems-engineer/what-you-need-to-know-first",
+   "en_hash": "e6e83cc2c416ede2",
+   "fr_hash": "6e41387d8e83922c"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/systems-engineer/formulas-charts-rules-of-thumb",
+   "en_hash": "f7deea9422ee9bac",
+   "fr_hash": "e0649c61c2160e07"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/systems-engineer/common-pitfalls",
+   "en_hash": "4b891382ea3178c2",
+   "fr_hash": "dbaa6768b58d184b"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/systems-engineer/references",
+   "en_hash": "72bd8e354182987d",
+   "fr_hash": "38bc8621b23e6351"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/mission-analyst",
+   "en_hash": "82788677457d1943",
+   "fr_hash": "25c567fecd1ff017"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/mission-analyst/decisions-you-own",
+   "en_hash": "675e094be01a196d",
+   "fr_hash": "4dc2c4fec753fca1"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/mission-analyst/what-you-need-to-know-first",
+   "en_hash": "8ee62f357c436380",
+   "fr_hash": "403a197bea1cb49f"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/mission-analyst/formulas-charts-rules-of-thumb",
+   "en_hash": "8c2a718cf643afc0",
+   "fr_hash": "3ac70915babb58fe"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/mission-analyst/common-pitfalls",
+   "en_hash": "55cce448042568c8",
+   "fr_hash": "28ee2aeff9d042ba"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/mission-analyst/references",
+   "en_hash": "1629a19b622e9022",
+   "fr_hash": "8a521f7e1b38fc1b"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/payload-engineer",
+   "en_hash": "ab6a0371dfde6b8e",
+   "fr_hash": "75db845e0d2c2de9"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/payload-engineer/decisions-you-own",
+   "en_hash": "f44ad49f10d6d0ee",
+   "fr_hash": "029d27393eea6c6d"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/payload-engineer/what-you-need-to-know-first",
+   "en_hash": "d9cfca7aa3c12629",
+   "fr_hash": "b1703d7dd253a07e"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/payload-engineer/formulas-charts-rules-of-thumb",
+   "en_hash": "aafaf1f0a32fc945",
+   "fr_hash": "a8710364b7d21035"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/payload-engineer/common-pitfalls",
+   "en_hash": "ee50e5b148ed5384",
+   "fr_hash": "daab32db37e6cd41"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/payload-engineer/references",
+   "en_hash": "5d1380e336b89538",
+   "fr_hash": "175ee6da0a81bd6e"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/power-engineer",
+   "en_hash": "2ae97ea730dbc32d",
+   "fr_hash": "fbdb245d66eb68fe"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/power-engineer/decisions-you-own",
+   "en_hash": "b4c68275f2d30616",
+   "fr_hash": "e3249dbe741c38bf"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/power-engineer/what-you-need-to-know-first",
+   "en_hash": "f49359032eff7fa1",
+   "fr_hash": "2ea6c669febe9b31"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/power-engineer/formulas-charts-rules-of-thumb",
+   "en_hash": "bc9a557ee0bf26c2",
+   "fr_hash": "84778132478b8c8b"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/power-engineer/common-pitfalls",
+   "en_hash": "508baa49ed1e373e",
+   "fr_hash": "31471f11576cf60b"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/power-engineer/references",
+   "en_hash": "1928617dc94efeca",
+   "fr_hash": "d519a6469074954d"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/aocs-engineer",
+   "en_hash": "9d533800eed4d063",
+   "fr_hash": "100f439e7e997bfb"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/aocs-engineer/decisions-you-own",
+   "en_hash": "1a47e0f8f9136ff6",
+   "fr_hash": "872eb31b850f3702"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/aocs-engineer/what-you-need-to-know-first",
+   "en_hash": "33ad44894562a039",
+   "fr_hash": "d578167c19721366"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/aocs-engineer/formulas-charts-rules-of-thumb",
+   "en_hash": "66b4df0e31a39024",
+   "fr_hash": "3e1619c6d5947ffb"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/aocs-engineer/common-pitfalls",
+   "en_hash": "5b210c0e84568cd7",
+   "fr_hash": "f4bde9d68bac21bb"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/aocs-engineer/references",
+   "en_hash": "95afd373f59918cd",
+   "fr_hash": "cdc705b047106565"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/thermal-engineer",
+   "en_hash": "67ae7507148ba9b5",
+   "fr_hash": "57afc69cdad54e26"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/thermal-engineer/decisions-you-own",
+   "en_hash": "f9735c2f12a954bc",
+   "fr_hash": "01831b681b41a436"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/thermal-engineer/what-you-need-to-know-first",
+   "en_hash": "6b4fb96deee9f2dc",
+   "fr_hash": "29254d9c4d0af05e"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/thermal-engineer/formulas-charts-rules-of-thumb",
+   "en_hash": "b274ca1fa11a7d7c",
+   "fr_hash": "da8911d7c4b546e5"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/thermal-engineer/common-pitfalls",
+   "en_hash": "aa9c1ad5b660794e",
+   "fr_hash": "bd01588ad4bd18ce"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/thermal-engineer/references",
+   "en_hash": "f1f2403b5451f62c",
+   "fr_hash": "8687089c459e0ea8"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/structures-engineer",
+   "en_hash": "3eaa7a0290aaeec0",
+   "fr_hash": "2332ce54e1b6d755"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/structures-engineer/decisions-you-own",
+   "en_hash": "22614261c3a800f4",
+   "fr_hash": "18797a52d067c0e0"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/structures-engineer/what-you-need-to-know-first",
+   "en_hash": "ed6139999ef92fb7",
+   "fr_hash": "6f0204e88f03b76c"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/structures-engineer/formulas-charts-rules-of-thumb",
+   "en_hash": "26ccf9f30ab5f4ac",
+   "fr_hash": "9b60861deb7459a5"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/structures-engineer/common-pitfalls",
+   "en_hash": "50f7cf9d020b186b",
+   "fr_hash": "e1aee23af66e7130"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/structures-engineer/references",
+   "en_hash": "fe992c57750c0839",
+   "fr_hash": "525a2acb2b70952c"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/propulsion-engineer",
+   "en_hash": "12041a2ef084adb8",
+   "fr_hash": "f2139131bded5978"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/propulsion-engineer/decisions-you-own",
+   "en_hash": "c3116d6455cc6ba3",
+   "fr_hash": "e224feb5e94dd3fc"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/propulsion-engineer/what-you-need-to-know-first",
+   "en_hash": "93502327d076284e",
+   "fr_hash": "37c1de37b7e3af31"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/propulsion-engineer/formulas-charts-rules-of-thumb",
+   "en_hash": "8abc5082e018934c",
+   "fr_hash": "e620d27d65891974"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/propulsion-engineer/common-pitfalls",
+   "en_hash": "e27ef27264fe8ae6",
+   "fr_hash": "13ad9d97bac3bcd4"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/propulsion-engineer/references",
+   "en_hash": "307b1848faed4fad",
+   "fr_hash": "bc1226a64a66b2f0"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/communications-engineer",
+   "en_hash": "e8cde7a697e8546f",
+   "fr_hash": "3cd8a2e77cb07ca0"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/communications-engineer/decisions-you-own",
+   "en_hash": "8ff6db63a444c0f2",
+   "fr_hash": "a768b71864727cad"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/communications-engineer/what-you-need-to-know-first",
+   "en_hash": "c70e531558d3484c",
+   "fr_hash": "f4a478b854b25520"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/communications-engineer/formulas-charts-rules-of-thumb",
+   "en_hash": "42e3219c0d7211ee",
+   "fr_hash": "d726c26990a1ca95"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/communications-engineer/common-pitfalls",
+   "en_hash": "3120eed982be612e",
+   "fr_hash": "f2cca63b91220ca6"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/communications-engineer/references",
+   "en_hash": "5e722dbf5546a14f",
+   "fr_hash": "8169fc3a6f42ed4c"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/obdh-software-engineer",
+   "en_hash": "9ea15de34e519f20",
+   "fr_hash": "5d4017821b336a01"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/obdh-software-engineer/decisions-you-own",
+   "en_hash": "60dc8309ce1bda07",
+   "fr_hash": "16c793dd7103cf34"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/obdh-software-engineer/what-you-need-to-know-first",
+   "en_hash": "702707e4fd185152",
+   "fr_hash": "f5fadb599f0eabec"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/obdh-software-engineer/formulas-charts-rules-of-thumb",
+   "en_hash": "7bde28cbce5e7b2e",
+   "fr_hash": "8ceab20aa5b3cc46"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/obdh-software-engineer/common-pitfalls",
+   "en_hash": "9e3500ec75eb8069",
+   "fr_hash": "1205ba62aade27a3"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/obdh-software-engineer/references",
+   "en_hash": "f676d1690bcf3f00",
+   "fr_hash": "9c60929f0b120e5f"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/operations-engineer",
+   "en_hash": "95f05d0587c60399",
+   "fr_hash": "d1384b2051d19820"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/operations-engineer/decisions-you-own",
+   "en_hash": "a45b2522bb1f1847",
+   "fr_hash": "eb6ca396968f349b"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/operations-engineer/what-you-need-to-know-first",
+   "en_hash": "44695302cff4b3e1",
+   "fr_hash": "40b7df93b04dcab0"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/operations-engineer/common-pitfalls",
+   "en_hash": "31751f6df4cf5d14",
+   "fr_hash": "67e3ca9afe8f4fb0"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/operations-engineer/references",
+   "en_hash": "f53df3c03a1beddb",
+   "fr_hash": "39312f53d6dc5c6a"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/ground-segment-engineer",
+   "en_hash": "36179a08a81359f6",
+   "fr_hash": "e26db5ceeaaf3633"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/ground-segment-engineer/decisions-you-own",
+   "en_hash": "3259ab6e31a60ac7",
+   "fr_hash": "6f67f25440926566"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/ground-segment-engineer/what-you-need-to-know-first",
+   "en_hash": "df26659a7f3687bf",
+   "fr_hash": "5897371ea245236f"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/ground-segment-engineer/common-pitfalls",
+   "en_hash": "974bb1c6bcbe1b64",
+   "fr_hash": "7f154881e913852e"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/ground-segment-engineer/references",
+   "en_hash": "3e5708ba44ec19fb",
+   "fr_hash": "47939f69d03e6e80"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/cost-schedule",
+   "en_hash": "74bc5a9ed2e14479",
+   "fr_hash": "471811159a65bf5b"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/cost-schedule/decisions-you-own",
+   "en_hash": "a8226e57acbe4e36",
+   "fr_hash": "cb57057ccb48b8a7"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/cost-schedule/common-pitfalls",
+   "en_hash": "99443addda6c980c",
+   "fr_hash": "5c94877236ee2a44"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/cost-schedule/references",
+   "en_hash": "bbb17d013308f2ad",
+   "fr_hash": "a2dd984f5580325c"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/compliance-regulatory-engineer",
+   "en_hash": "5f674592c5db7e92",
+   "fr_hash": "b1fd57dd5612f8f5"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/compliance-regulatory-engineer/decisions-you-own",
+   "en_hash": "7d7f164fe1f400b8",
+   "fr_hash": "81a2006122002755"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/compliance-regulatory-engineer/what-you-need-to-know-first",
+   "en_hash": "f511dfda8de1547b",
+   "fr_hash": "1e1f1542ff77b76f"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/compliance-regulatory-engineer/common-pitfalls",
+   "en_hash": "a9bc156ff9b33d77",
+   "fr_hash": "c37a5ab215e928d2"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/compliance-regulatory-engineer/references",
+   "en_hash": "3c862bf2e6827bd5",
+   "fr_hash": "a28d9edc85f810a0"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/project-manager",
+   "en_hash": "efd0b0c80f531dc0",
+   "fr_hash": "9d94bfe2a4dc94a5"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/project-manager/decisions-you-own",
+   "en_hash": "9e3c30dc078a7587",
+   "fr_hash": "e0b688aa4f8bb181"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/project-manager/what-you-need-to-know-first",
+   "en_hash": "24811bd82676ff59",
+   "fr_hash": "f0044477547220b1"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/project-manager/common-pitfalls",
+   "en_hash": "b0efacb493f186c4",
+   "fr_hash": "9c8ad923c426fd02"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/project-manager/references",
+   "en_hash": "2147ff3e462c050f",
+   "fr_hash": "188375532288fc13"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/user-representative",
+   "en_hash": "88ae07f234b723cf",
+   "fr_hash": "8f58bf6590fe88b9"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/user-representative/decisions-you-own",
+   "en_hash": "98cb17e07f2f76cf",
+   "fr_hash": "1065191f00ed7475"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/user-representative/what-you-need-to-know-first",
+   "en_hash": "d3a9a3484c1bc51b",
+   "fr_hash": "9f53dd0111bb0701"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/user-representative/common-pitfalls",
+   "en_hash": "bb585142967951ce",
+   "fr_hash": "e810e313e9103bee"
+  },
+  {
+   "id": "appendix-a-engineering-position-reference/user-representative/references",
+   "en_hash": "ee9fcac427e704c4",
+   "fr_hash": "abf2d22e26cf7e4b"
+  },
+  {
+   "id": "appendix-b-operations-position-reference",
+   "en_hash": "937b2bff4534ab60",
+   "fr_hash": "26991bb917b08687"
+  },
+  {
+   "id": "appendix-b-operations-position-reference/flight-director-fd",
+   "en_hash": "9ae73813eabfe5ae",
+   "fr_hash": "f382f721c417cf90"
+  },
+  {
+   "id": "appendix-b-operations-position-reference/spacecraft-controller-fdir-systems-spacon",
+   "en_hash": "12a948a9cb0dfea8",
+   "fr_hash": "9d6ccee376d5bed7"
+  },
+  {
+   "id": "appendix-b-operations-position-reference/aocs-engineer",
+   "en_hash": "5cc3eb9a5fe51129",
+   "fr_hash": "96f6837752816e27"
+  },
+  {
+   "id": "appendix-b-operations-position-reference/eps-engineer",
+   "en_hash": "62747af0f990c077",
+   "fr_hash": "821eb0a2042a4b10"
+  },
+  {
+   "id": "appendix-b-operations-position-reference/thermal-engineer",
+   "en_hash": "a01a443f2b11d4d8",
+   "fr_hash": "03f16c86e51669aa"
+  },
+  {
+   "id": "appendix-b-operations-position-reference/tt-c-comms-engineer",
+   "en_hash": "fc2587f56fa8c371",
+   "fr_hash": "e4d4726c37a77504"
+  },
+  {
+   "id": "appendix-b-operations-position-reference/payload-operations-engineer",
+   "en_hash": "88951706c85be2d1",
+   "fr_hash": "0415623289900324"
+  },
+  {
+   "id": "appendix-b-operations-position-reference/flight-dynamics-system-fds-orbit-analyst",
+   "en_hash": "71be2ebb958540e2",
+   "fr_hash": "1f2f5ebf1e07301e"
+  },
+  {
+   "id": "appendix-b-operations-position-reference/propulsion-engineer",
+   "en_hash": "6bf0a6b96d307925",
+   "fr_hash": "811e8cc8aaeccfa7"
+  },
+  {
+   "id": "appendix-b-operations-position-reference/ground-segment-engineer-network-controller",
+   "en_hash": "034dd5ddf77b6c18",
+   "fr_hash": "d85833cce6bdbacc"
+  },
+  {
+   "id": "appendix-b-operations-position-reference/mission-manager-customer-liaison",
+   "en_hash": "1fdd1b42656f5276",
+   "fr_hash": "d8386a63410627ca"
+  },
+  {
+   "id": "appendix-c-verification-and-first-principles-reference",
+   "en_hash": "789736bf6972dffd",
+   "fr_hash": "004dade64f0bf6a6"
+  },
+  {
+   "id": "appendix-c-verification-and-first-principles-reference/c-1-constants-used-earth",
+   "en_hash": "3ca5ac1f6c0f2077",
+   "fr_hash": "eeefaedfcefcc32a"
+  },
+  {
+   "id": "appendix-c-verification-and-first-principles-reference/c-2-kepler-s-third-law",
+   "en_hash": "c16b80ba2add2b6d",
+   "fr_hash": "1931fa09fe146a52"
+  },
+  {
+   "id": "appendix-c-verification-and-first-principles-reference/c-2-kepler-s-third-law/derivation",
+   "en_hash": "f346811743d06da7",
+   "fr_hash": "e011b2d610603df0"
+  },
+  {
+   "id": "appendix-c-verification-and-first-principles-reference/c-2-kepler-s-third-law/verification",
+   "en_hash": "daadace34651026f",
+   "fr_hash": "2c517cca8288ee9d"
+  },
+  {
+   "id": "appendix-c-verification-and-first-principles-reference/c-3-tsiolkovsky-rocket-equation",
+   "en_hash": "cf18eaaddd5bfe2e",
+   "fr_hash": "d93bfa8ac80d0510"
+  },
+  {
+   "id": "appendix-c-verification-and-first-principles-reference/c-3-tsiolkovsky-rocket-equation/derivation",
+   "en_hash": "6d1182661a43636f",
+   "fr_hash": "39095e30a4c157d5"
+  },
+  {
+   "id": "appendix-c-verification-and-first-principles-reference/c-3-tsiolkovsky-rocket-equation/verification",
+   "en_hash": "33dfaef3fe85c29a",
+   "fr_hash": "addebb7cead2b625"
+  },
+  {
+   "id": "appendix-c-verification-and-first-principles-reference/c-4-j2-nodal-regression",
+   "en_hash": "307a497a2f4247af",
+   "fr_hash": "52cea159aad1198b"
+  },
+  {
+   "id": "appendix-c-verification-and-first-principles-reference/c-4-j2-nodal-regression/derivation",
+   "en_hash": "6fc0ca26fa4fed69",
+   "fr_hash": "49b2c0dd7ef7ea46"
+  },
+  {
+   "id": "appendix-c-verification-and-first-principles-reference/c-4-j2-nodal-regression/sun-synchronous-condition",
+   "en_hash": "2781256da3f0e65f",
+   "fr_hash": "14db147fb4aa2677"
+  },
+  {
+   "id": "appendix-c-verification-and-first-principles-reference/c-4-j2-nodal-regression/verification",
+   "en_hash": "eda6e9cbe353c217",
+   "fr_hash": "6779d3066c21dbf8"
+  },
+  {
+   "id": "appendix-c-verification-and-first-principles-reference/c-5-eclipse-fraction-analytical-circular-orbit",
+   "en_hash": "0a042bfa504858dc",
+   "fr_hash": "cd4a0f18a5db00ef"
+  },
+  {
+   "id": "appendix-c-verification-and-first-principles-reference/c-5-eclipse-fraction-analytical-circular-orbit/derivation",
+   "en_hash": "2a7effa9f8df09ab",
+   "fr_hash": "8100987bc1eaa081"
+  },
+  {
+   "id": "appendix-c-verification-and-first-principles-reference/c-5-eclipse-fraction-analytical-circular-orbit/verification",
+   "en_hash": "fd595b06cb36f439",
+   "fr_hash": "8a089f625064ca78"
+  },
+  {
+   "id": "appendix-c-verification-and-first-principles-reference/c-6-free-space-path-loss",
+   "en_hash": "994a99018b1675ed",
+   "fr_hash": "806c4a24b0fbb9f5"
+  },
+  {
+   "id": "appendix-c-verification-and-first-principles-reference/c-6-free-space-path-loss/derivation",
+   "en_hash": "4f6e480096665122",
+   "fr_hash": "48b1366512918abb"
+  },
+  {
+   "id": "appendix-c-verification-and-first-principles-reference/c-6-free-space-path-loss/verification",
+   "en_hash": "c8df38dc1e36c2d5",
+   "fr_hash": "c30c3f0ab0cc4486"
+  },
+  {
+   "id": "appendix-c-verification-and-first-principles-reference/c-7-link-budget-algebra",
+   "en_hash": "c2e6e7e383194809",
+   "fr_hash": "9115a1319ee0e13e"
+  },
+  {
+   "id": "appendix-c-verification-and-first-principles-reference/c-7-link-budget-algebra/derivation",
+   "en_hash": "338ab2797d43b5a1",
+   "fr_hash": "9b48113c5b39e878"
+  },
+  {
+   "id": "appendix-c-verification-and-first-principles-reference/c-7-link-budget-algebra/verification",
+   "en_hash": "5c4336e7053db8c6",
+   "fr_hash": "7755b5d060a5b310"
+  },
+  {
+   "id": "appendix-c-verification-and-first-principles-reference/c-8-eb-n0-vs-ber",
+   "en_hash": "b0e01e98e85b61f8",
+   "fr_hash": "e0d0940bb4cd4c2a"
+  },
+  {
+   "id": "appendix-c-verification-and-first-principles-reference/c-8-eb-n0-vs-ber/derivation",
+   "en_hash": "d2b1c9e545ae5eb9",
+   "fr_hash": "75f3ae8d13405e95"
+  },
+  {
+   "id": "appendix-c-verification-and-first-principles-reference/c-8-eb-n0-vs-ber/verification",
+   "en_hash": "be69f0eafb4e266a",
+   "fr_hash": "33b0748eb47dea66"
+  },
+  {
+   "id": "appendix-c-verification-and-first-principles-reference/c-9-gsd-geometry",
+   "en_hash": "9ebee443f8763490",
+   "fr_hash": "239e16c4ea3d6fca"
+  },
+  {
+   "id": "appendix-c-verification-and-first-principles-reference/c-9-gsd-geometry/derivation-diffraction-limit",
+   "en_hash": "00269207d9db9edf",
+   "fr_hash": "e9a45438657dc78e"
+  },
+  {
+   "id": "appendix-c-verification-and-first-principles-reference/c-9-gsd-geometry/derivation-pixel-limit",
+   "en_hash": "e771b92ba2014228",
+   "fr_hash": "75ed90c10c134537"
+  },
+  {
+   "id": "appendix-c-verification-and-first-principles-reference/c-9-gsd-geometry/verification",
+   "en_hash": "27142a4be01bde00",
+   "fr_hash": "443f9a6832a0b198"
+  },
+  {
+   "id": "appendix-c-verification-and-first-principles-reference/c-10-radiative-thermal-equilibrium",
+   "en_hash": "76cb9b43a898554d",
+   "fr_hash": "c96efcc49b06409a"
+  },
+  {
+   "id": "appendix-c-verification-and-first-principles-reference/c-10-radiative-thermal-equilibrium/derivation",
+   "en_hash": "a68a3d1567286403",
+   "fr_hash": "3876540aca2ec676"
+  },
+  {
+   "id": "appendix-c-verification-and-first-principles-reference/c-10-radiative-thermal-equilibrium/verification",
+   "en_hash": "5e42a47d42e5f4db",
+   "fr_hash": "d39fcce61987da9a"
+  },
+  {
+   "id": "appendix-c-verification-and-first-principles-reference/c-11-solar-array-sizing-verification",
+   "en_hash": "ebb90f1f0c5b264f",
+   "fr_hash": "f6e27bac19c4a827"
+  },
+  {
+   "id": "appendix-c-verification-and-first-principles-reference/c-11-solar-array-sizing-verification/derivation",
+   "en_hash": "4ecebfbc87063f67",
+   "fr_hash": "002b53f6507c8faa"
+  },
+  {
+   "id": "appendix-c-verification-and-first-principles-reference/c-11-solar-array-sizing-verification/verification",
+   "en_hash": "31a997620b665aca",
+   "fr_hash": "bd001e26ccd0d93e"
+  },
+  {
+   "id": "appendix-c-verification-and-first-principles-reference/c-12-battery-sizing",
+   "en_hash": "c5524b1e2966fc3f",
+   "fr_hash": "38363d5410cfb4d1"
+  },
+  {
+   "id": "appendix-c-verification-and-first-principles-reference/c-12-battery-sizing/derivation",
+   "en_hash": "43ef869baba33692",
+   "fr_hash": "180c13c8c7e88aeb"
+  },
+  {
+   "id": "appendix-c-verification-and-first-principles-reference/c-12-battery-sizing/verification",
+   "en_hash": "cce4193475f2dd4b",
+   "fr_hash": "a4593031d59404df"
+  },
+  {
+   "id": "appendix-c-verification-and-first-principles-reference/c-13-margin-of-safety-structures",
+   "en_hash": "243617adeed32205",
+   "fr_hash": "2abc0bbc31753bdb"
+  },
+  {
+   "id": "appendix-c-verification-and-first-principles-reference/c-14-disturbance-torque-order-of-magnitude",
+   "en_hash": "78894f7ac31020b3",
+   "fr_hash": "92b4f9dd1c069f0f"
+  },
+  {
+   "id": "appendix-c-verification-and-first-principles-reference/c-14-disturbance-torque-order-of-magnitude/derivation-drag",
+   "en_hash": "f5ddecd6f247b5d6",
+   "fr_hash": "d00c2c3312899f48"
+  },
+  {
+   "id": "appendix-c-verification-and-first-principles-reference/c-14-disturbance-torque-order-of-magnitude/verification",
+   "en_hash": "7dc6f6142f2f8730",
+   "fr_hash": "da69759b13a19cd1"
+  },
+  {
+   "id": "appendix-c-verification-and-first-principles-reference/c-15-daily-data-volume-closure",
+   "en_hash": "63265e2262c65bbc",
+   "fr_hash": "517982b2cd369ad3"
+  },
+  {
+   "id": "appendix-c-verification-and-first-principles-reference/c-16-cross-method-verification-matrix",
+   "en_hash": "6e9a8ca146034b96",
+   "fr_hash": "d18d2deb0f7a15e3"
+  },
+  {
+   "id": "appendix-c-verification-and-first-principles-reference/c-17-key-references",
+   "en_hash": "472be39cff312dd3",
+   "fr_hash": "3c803c3714a0a762"
+  },
+  {
+   "id": "appendix-d-how-this-textbook-was-generated",
+   "en_hash": "0d3915ba4a746afa",
+   "fr_hash": "929a6b2188092af4"
+  },
+  {
+   "id": "appendix-d-how-this-textbook-was-generated/source-per-session-markdown-chapters",
+   "en_hash": "010af512a0581ded",
+   "fr_hash": "ab4d1cfec9a047de"
+  },
+  {
+   "id": "appendix-d-how-this-textbook-was-generated/voice-reorientation",
+   "en_hash": "65c1ebcf2e3589ce",
+   "fr_hash": "28353bcd26f1d49b"
+  },
+  {
+   "id": "appendix-d-how-this-textbook-was-generated/procedural-figure-generation",
+   "en_hash": "9603dbfaab2b7bd4",
+   "fr_hash": "e1fb8b3dc2e02bc9"
+  },
+  {
+   "id": "appendix-d-how-this-textbook-was-generated/numerical-worked-examples-generated-by-running-the-tool",
+   "en_hash": "769692414652df89",
+   "fr_hash": "21d74a39e68796c7"
+  },
+  {
+   "id": "appendix-d-how-this-textbook-was-generated/document-rendering",
+   "en_hash": "f2409c93554d31c8",
+   "fr_hash": "66bd0a48b2c716bc"
+  },
+  {
+   "id": "appendix-d-how-this-textbook-was-generated/validation-and-citation",
+   "en_hash": "7ccc2664c6e7b8a8",
+   "fr_hash": "034ef2a3adb0634d"
+  },
+  {
+   "id": "appendix-d-how-this-textbook-was-generated/what-this-means-for-learners",
+   "en_hash": "7695780c0ca2dd23",
+   "fr_hash": "0f7d1b68e9eeb9ea"
+  },
+  {
+   "id": "index",
+   "en_hash": "39d03483fdddc8f2",
+   "fr_hash": "d383512043225db8"
+  }
+ ],
+ "waivers": [
+  "chapter-1-2-the-canadian-space-ecosystem-regulatory-environment/part-1-the-canadian-space-ecosystem/2-canadian-space-industry-map/2-2-key-canadian-space-capabilities: numbers: missing in FR ['1']  extra in FR []",
+  "chapter-1-4-mission-needs-stakeholder-analysis-trade-studies/part-3-concept-of-operations/1u-worked-example-unisat-1: numbers: missing in FR ['3', '3', '3']  extra in FR []",
+  "chapter-2-1-the-system-v-and-requirements-engineering/3-the-smart-framework/common-anti-patterns: numbers: missing in FR ['2']  extra in FR []"
+ ],
+ "en_commit": "c175838"
+}
