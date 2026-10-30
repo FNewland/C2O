@@ -1,0 +1,82 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/nominal/data_rate_change.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "nom-011-data-rate-change",
+   "en_hash": "785fe5d9d5e34728",
+   "fr_hash": "c6df3528087beaa4"
+  },
+  {
+   "id": "nom-011-data-rate-change/objective",
+   "en_hash": "c71061fb43a61d5c",
+   "fr_hash": "4816039fa13689fc"
+  },
+  {
+   "id": "nom-011-data-rate-change/prerequisites",
+   "en_hash": "e5d66b8086e580b0",
+   "fr_hash": "48ac1a343cb45daf"
+  },
+  {
+   "id": "nom-011-data-rate-change/required-telemetry",
+   "en_hash": "45321792b6ec6389",
+   "fr_hash": "f09c0b4fc3ebd7e1"
+  },
+  {
+   "id": "nom-011-data-rate-change/required-commands",
+   "en_hash": "a922fd009514565d",
+   "fr_hash": "0f4cd99102673bfc"
+  },
+  {
+   "id": "nom-011-data-rate-change/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "nom-011-data-rate-change/procedure-steps/step-1-assess-current-link-conditions",
+   "en_hash": "89d027dcbc1dc3c7",
+   "fr_hash": "a63f9dd96bb9c03d"
+  },
+  {
+   "id": "nom-011-data-rate-change/procedure-steps/step-2-verify-the-gates-and-the-margin-for-the-target-tier",
+   "en_hash": "adc421504fd56964",
+   "fr_hash": "528e1db465fd54c5"
+  },
+  {
+   "id": "nom-011-data-rate-change/procedure-steps/step-3-enter-downlink-mode-high-only",
+   "en_hash": "e4935180b549d556",
+   "fr_hash": "07ab16d494421c1b"
+  },
+  {
+   "id": "nom-011-data-rate-change/procedure-steps/step-4-command-the-tier-change",
+   "en_hash": "26f53f3a94766a91",
+   "fr_hash": "ab95281596f2d807"
+  },
+  {
+   "id": "nom-011-data-rate-change/procedure-steps/step-5-verify-the-new-ber-is-acceptable",
+   "en_hash": "0f5cc40abdfdf438",
+   "fr_hash": "2c8ed8d6238f5b88"
+  },
+  {
+   "id": "nom-011-data-rate-change/procedure-steps/step-6-release-high-after-the-dump-high-only",
+   "en_hash": "7a3f50715bb2e7e3",
+   "fr_hash": "524cab94c049a9a6"
+  },
+  {
+   "id": "nom-011-data-rate-change/verification-criteria",
+   "en_hash": "f8e77fe012d44c3d",
+   "fr_hash": "abc8a0ba26a9f107"
+  },
+  {
+   "id": "nom-011-data-rate-change/contingency",
+   "en_hash": "68441693535870e1",
+   "fr_hash": "36d56d3ce28a0b3f"
+  }
+ ],
+ "en_commit": "3e80564"
+}

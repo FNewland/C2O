@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SMO Instructor — EOSAT-1</title>
+<title data-i18n>SMO Instructor — EOSAT-1</title>
 <!-- ==========================================================================
   SMO INSTRUCTOR — MODERN CONSOLE (design_2026-08 plan §2.4)
 
@@ -278,16 +278,16 @@ body.subpage #full-snapshot-container{ display:block; }
 </style>
 </head>
 <body>
-<a class="ds-skip" href="#centre-col">Skip to truth dashboard</a>
+<a class="ds-skip" href="#centre-col" data-i18n>Skip to truth dashboard</a>
 
 <!-- INSTRUCTOR accent strip: a projected instructor screen must never be
      mistaken for the operator console (plan §2.4). -->
-<div class="ds-instructor-strip">Instructor console — simulation ground truth · not an operator display</div>
+<div class="ds-instructor-strip" data-i18n>Instructor console — simulation ground truth · not an operator display</div>
 
 <header>
-  <div class="mark"><b>SMO INSTRUCTOR</b><span>EOSAT-1 SIMULATION</span></div>
-  <div class="clk"><label>Sim time</label><b class="num" id="sim-time">—</b></div>
-  <div class="hgroup" role="group" aria-label="Simulation speed">
+  <div class="mark"><b data-i18n>SMO INSTRUCTOR</b><span data-i18n>EOSAT-1 SIMULATION</span></div>
+  <div class="clk"><label data-i18n>Sim time</label><b class="num" id="sim-time">—</b></div>
+  <div class="hgroup" role="group" data-i18n-aria-label aria-label="Simulation speed">
     <span class="speed-group" id="speed-group">
       <button data-speed="0.5">0.5×</button>
       <button data-speed="1" class="on">1×</button>
@@ -297,31 +297,34 @@ body.subpage #full-snapshot-container{ display:block; }
       <button class="freeze" id="freeze-btn">FREEZE</button>
     </span>
   </div>
-  <span class="ds-badge" id="sc-mode-badge" title="Spacecraft mode (simulation truth)">SC —</span>
+  <span class="ds-badge" id="sc-mode-badge" data-i18n-title title="Spacecraft mode (simulation truth)">SC —</span>
+  <span class="ds-badge" id="vr-badge"
+        title="VR headset link (smo-vr/1): connected viewers and their status word. Details: /api/vr">VR —</span>
   <span id="scenario-chip"></span>
   <div class="grow"></div>
   <span class="ds-badge" id="param-completeness"
         title="Snapshot fields currently rendered/populated">—/—</span>
   <a class="ds-btn" id="config-tab-link" href="/config" target="_blank" rel="noopener"
-     title="Mission configuration editor — read-write (instructor only)">CONFIG</a>
+     data-i18n-title title="Mission configuration editor — read-write (instructor only)">CONFIG</a>
+  <span id="lang-toggle"></span>
   <span id="conn-chip"></span>
 </header>
 
 <main>
   <!-- ══ LEFT — SCENARIOS & SESSION ══ -->
   <div class="col" id="left-col">
-    <div class="col-head">Scenarios &amp; session</div>
+    <div class="col-head" data-i18n>Scenarios &amp; session</div>
 
     <section class="ds-card">
-      <h2>Scenarios <span class="r"><button class="ds-btn" id="refresh-scenarios"
-        title="Refresh scenario list">REFRESH</button></span></h2>
+      <h2 data-i18n>Scenarios <span class="r"><button class="ds-btn" id="refresh-scenarios"
+        data-i18n data-i18n-title title="Refresh scenario list">REFRESH</button></span></h2>
       <div class="bd">
-        <div id="scenario-list"><div class="no-data">Loading scenarios…</div></div>
+        <div id="scenario-list"><div class="no-data" data-i18n>Loading scenarios…</div></div>
         <div id="scenario-detail" hidden>
           <div class="note" id="scenario-briefing"></div>
           <div class="hgroup" style="margin-top:8px;">
-            <button class="ds-btn primary" id="btn-start-scenario">START</button>
-            <button class="ds-btn danger" id="btn-stop-scenario" disabled>STOP</button>
+            <button class="ds-btn primary" id="btn-start-scenario" data-i18n>START</button>
+            <button class="ds-btn danger" id="btn-stop-scenario" data-i18n disabled>STOP</button>
           </div>
         </div>
         <div id="scenario-progress" hidden>
@@ -330,7 +333,7 @@ body.subpage #full-snapshot-container{ display:block; }
             <span id="progress-remaining" class="num">--:--</span>
           </div>
           <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
-          <div class="note">Progress in SIM time — freezes with the sim.</div>
+          <div class="note" data-i18n>Progress in SIM time — freezes with the sim.</div>
         </div>
       </div>
     </section>
@@ -339,100 +342,100 @@ body.subpage #full-snapshot-container{ display:block; }
          previously an endpoint with no UI client. Shown after STOP (or
          auto-stop on duration_s) or on demand. -->
     <section class="ds-card" id="debrief-panel">
-      <h2>Debrief <span class="r"><button class="ds-btn" id="btn-fetch-debrief"
-        title="Fetch the debrief for the most recently finished scenario">FETCH</button></span></h2>
+      <h2 data-i18n>Debrief <span class="r"><button class="ds-btn" id="btn-fetch-debrief"
+        data-i18n data-i18n-title title="Fetch the debrief for the most recently finished scenario">FETCH</button></span></h2>
       <div class="bd" id="debrief-body">
-        <div class="no-data">No debrief yet — appears when a scenario ends
+        <div class="no-data" data-i18n>No debrief yet — appears when a scenario ends
         (STOP or its duration elapsing).</div>
       </div>
     </section>
 
     <section class="ds-card">
-      <h2>Breakpoints</h2>
+      <h2 data-i18n>Breakpoints</h2>
       <div class="bd">
         <div class="hgroup" style="margin-bottom:8px;">
           <input type="text" class="form-input" id="breakpoint-name"
-                 placeholder="Breakpoint name…" aria-label="Breakpoint name">
-          <button class="ds-btn primary" id="btn-save-bp">SAVE</button>
+                 data-i18n-placeholder placeholder="Breakpoint name…" data-i18n-aria-label aria-label="Breakpoint name">
+          <button class="ds-btn primary" id="btn-save-bp" data-i18n>SAVE</button>
         </div>
-        <div id="breakpoints-list"><div class="no-data">No breakpoints saved</div></div>
+        <div id="breakpoints-list"><div class="no-data" data-i18n>No breakpoints saved</div></div>
       </div>
     </section>
   </div>
 
   <!-- ══ CENTRE — TRUTH DASHBOARD ══ -->
   <div class="col" id="centre-col">
-    <div class="col-head" id="centre-head">Truth dashboard — simulation ground truth (bypasses RF link gating)</div>
+    <div class="col-head" id="centre-head" data-i18n>Truth dashboard — simulation ground truth (bypasses RF link gating)</div>
 
     <div class="sub-grid">
       <section class="ds-card" id="card-eps"><h2>EPS <span class="r" id="eps-mode">—</span></h2>
         <div class="bd">
-          <div class="prow"><span class="pl">Battery SoC</span><span class="pv"><span class="mini-bar" id="eps-soc-bar"><i></i></span><span id="eps-soc">—</span> %</span></div>
-          <div class="prow"><span class="pl">Bus voltage</span><span class="pv" id="eps-bus-v">— V</span></div>
-          <div class="prow"><span class="pl">Bat voltage</span><span class="pv" id="eps-bat-v">— V</span></div>
-          <div class="prow"><span class="pl">Bat temp</span><span class="pv" id="eps-bat-temp">— °C</span></div>
-          <div class="prow"><span class="pl">Power gen</span><span class="pv" id="eps-pgen">— W</span></div>
-          <div class="prow"><span class="pl">Power cons</span><span class="pv" id="eps-pcons">— W</span></div>
+          <div class="prow"><span class="pl" data-i18n>Battery SoC</span><span class="pv"><span class="mini-bar" id="eps-soc-bar"><i></i></span><span id="eps-soc">—</span> %</span></div>
+          <div class="prow"><span class="pl" data-i18n>Bus voltage</span><span class="pv" id="eps-bus-v">— V</span></div>
+          <div class="prow"><span class="pl" data-i18n>Bat voltage</span><span class="pv" id="eps-bat-v">— V</span></div>
+          <div class="prow"><span class="pl" data-i18n>Bat temp</span><span class="pv" id="eps-bat-temp">— °C</span></div>
+          <div class="prow"><span class="pl" data-i18n>Power gen</span><span class="pv" id="eps-pgen">— W</span></div>
+          <div class="prow"><span class="pl" data-i18n>Power cons</span><span class="pv" id="eps-pcons">— W</span></div>
           <div class="prow"><span class="pl">SA-A / SA-B</span><span class="pv" id="eps-sa">— / — A</span></div>
         </div>
       </section>
       <section class="ds-card" id="card-aocs"><h2>AOCS <span class="r" id="aocs-mode">—</span></h2>
         <div class="bd">
-          <div class="prow"><span class="pl">Att error</span><span class="pv" id="aocs-atterr">— °</span></div>
-          <div class="prow"><span class="pl">Rate roll</span><span class="pv" id="aocs-rr">— °/s</span></div>
-          <div class="prow"><span class="pl">Rate pitch</span><span class="pv" id="aocs-rp">— °/s</span></div>
-          <div class="prow"><span class="pl">Rate yaw</span><span class="pv" id="aocs-ry">— °/s</span></div>
+          <div class="prow"><span class="pl" data-i18n>Att error</span><span class="pv" id="aocs-atterr">— °</span></div>
+          <div class="prow"><span class="pl" data-i18n>Rate roll</span><span class="pv" id="aocs-rr">— °/s</span></div>
+          <div class="prow"><span class="pl" data-i18n>Rate pitch</span><span class="pv" id="aocs-rp">— °/s</span></div>
+          <div class="prow"><span class="pl" data-i18n>Rate yaw</span><span class="pv" id="aocs-ry">— °/s</span></div>
           <div class="prow"><span class="pl">RW 1 / 2</span><span class="pv" id="aocs-rw12">— / — rpm</span></div>
           <div class="prow"><span class="pl">RW 3 / 4</span><span class="pv" id="aocs-rw34">— / — rpm</span></div>
         </div>
       </section>
-      <section class="ds-card" id="card-tcs"><h2>TCS <span class="r" id="tcs-mode">THERMAL</span></h2>
+      <section class="ds-card" id="card-tcs"><h2>TCS <span class="r" id="tcs-mode" data-i18n>THERMAL</span></h2>
         <div class="bd">
-          <div class="prow"><span class="pl">OBC temp</span><span class="pv" id="tcs-obc">— °C</span></div>
-          <div class="prow"><span class="pl">Bat temp</span><span class="pv" id="tcs-bat">— °C</span></div>
-          <div class="prow"><span class="pl">FPA temp</span><span class="pv" id="tcs-fpa">— °C</span></div>
-          <div class="prow"><span class="pl">Htr bat</span><span class="pv" id="tcs-htr-bat">—</span></div>
-          <div class="prow"><span class="pl">Htr OBC</span><span class="pv" id="tcs-htr-obc">—</span></div>
-          <div class="prow"><span class="pl">Cooler FPA</span><span class="pv" id="tcs-cooler">—</span></div>
+          <div class="prow"><span class="pl" data-i18n>OBC temp</span><span class="pv" id="tcs-obc">— °C</span></div>
+          <div class="prow"><span class="pl" data-i18n>Bat temp</span><span class="pv" id="tcs-bat">— °C</span></div>
+          <div class="prow"><span class="pl" data-i18n>FPA temp</span><span class="pv" id="tcs-fpa">— °C</span></div>
+          <div class="prow"><span class="pl" data-i18n>Htr bat</span><span class="pv" id="tcs-htr-bat">—</span></div>
+          <div class="prow"><span class="pl" data-i18n>Htr OBC</span><span class="pv" id="tcs-htr-obc">—</span></div>
+          <div class="prow"><span class="pl" data-i18n>Cooler FPA</span><span class="pv" id="tcs-cooler">—</span></div>
         </div>
       </section>
       <section class="ds-card" id="card-obdh"><h2>OBDH <span class="r" id="obdh-mode">—</span></h2>
         <div class="bd">
-          <div class="prow"><span class="pl">CPU load</span><span class="pv"><span class="mini-bar" id="obdh-cpu-bar"><i></i></span><span id="obdh-cpu">—</span> %</span></div>
-          <div class="prow"><span class="pl">Memory</span><span class="pv"><span class="mini-bar" id="obdh-mem-bar"><i></i></span><span id="obdh-mem">—</span> %</span></div>
-          <div class="prow"><span class="pl">Reboots</span><span class="pv" id="obdh-reboots">—</span></div>
+          <div class="prow"><span class="pl" data-i18n>CPU load</span><span class="pv"><span class="mini-bar" id="obdh-cpu-bar"><i></i></span><span id="obdh-cpu">—</span> %</span></div>
+          <div class="prow"><span class="pl" data-i18n>Memory</span><span class="pv"><span class="mini-bar" id="obdh-mem-bar"><i></i></span><span id="obdh-mem">—</span> %</span></div>
+          <div class="prow"><span class="pl" data-i18n>Reboots</span><span class="pv" id="obdh-reboots">—</span></div>
         </div>
       </section>
       <!-- ONBOARD CLOCK — instructor ground truth (TIME_ARCHITECTURE.md
            Part B). The true onboard-vs-sim offset is NOT downlinked; it is
            shown here only, fed from /api/instructor/snapshot -> clock_truth. -->
-      <section class="ds-card" id="card-clock"><h2>Onboard clock truth <span class="r" id="clock-ref">—</span></h2>
+      <section class="ds-card" id="card-clock"><h2 data-i18n>Onboard clock truth <span class="r" id="clock-ref">—</span></h2>
         <div class="bd">
           <div class="prow"><span class="pl">SIM UTC</span><span class="pv" id="clock-sim-utc">—</span></div>
           <div class="prow"><span class="pl">OBC UTC</span><span class="pv" id="clock-obc-utc">—</span></div>
-          <div class="prow"><span class="pl">Since sync</span><span class="pv" id="clock-since-sync">—</span></div>
-          <div class="prow"><span class="pl">Drift (this run)</span><span class="pv" id="clock-drift">— ppm</span></div>
+          <div class="prow"><span class="pl" data-i18n>Since sync</span><span class="pv" id="clock-since-sync">—</span></div>
+          <div class="prow"><span class="pl" data-i18n>Drift (this run)</span><span class="pv" id="clock-drift">— ppm</span></div>
           <div class="prow" style="border-top:1px solid var(--line);margin-top:4px;padding-top:4px;">
-            <span class="pl" title="Ground truth — instructor only, never downlinked">TRUE OFFSET</span>
+            <span class="pl" data-i18n data-i18n-title title="Ground truth — instructor only, never downlinked">TRUE OFFSET</span>
             <span class="pv" id="clock-offset">— s</span>
           </div>
-          <div class="note">OBC − SIM. Instructor only: not downlinked, not in telemetry.</div>
+          <div class="note" data-i18n>OBC − SIM. Instructor only: not downlinked, not in telemetry.</div>
         </div>
       </section>
       <section class="ds-card" id="card-ttc"><h2>TT&amp;C <span class="r" id="ttc-mode">—</span></h2>
         <div class="bd">
-          <div class="prow"><span class="pl">Link</span><span class="pv" id="ttc-link">—</span></div>
+          <div class="prow"><span class="pl" data-i18n>Link</span><span class="pv" id="ttc-link">—</span></div>
           <div class="prow"><span class="pl">RSSI</span><span class="pv" id="ttc-rssi">— dBm</span></div>
-          <div class="prow"><span class="pl">Margin</span><span class="pv" id="ttc-margin">— dB</span></div>
-          <div class="prow"><span class="pl">Range</span><span class="pv" id="ttc-range">— km</span></div>
-          <div class="prow"><span class="pl">Elevation</span><span class="pv" id="ttc-elev">— °</span></div>
+          <div class="prow"><span class="pl" data-i18n>Margin</span><span class="pv" id="ttc-margin">— dB</span></div>
+          <div class="prow"><span class="pl" data-i18n>Range</span><span class="pv" id="ttc-range">— km</span></div>
+          <div class="prow"><span class="pl" data-i18n>Elevation</span><span class="pv" id="ttc-elev">— °</span></div>
         </div>
       </section>
-      <section class="ds-card" id="card-payload"><h2>Payload <span class="r" id="payload-mode">—</span></h2>
+      <section class="ds-card" id="card-payload"><h2 data-i18n>Payload <span class="r" id="payload-mode">—</span></h2>
         <div class="bd">
-          <div class="prow"><span class="pl">FPA temp</span><span class="pv" id="pl-fpa">— °C</span></div>
-          <div class="prow"><span class="pl">Storage</span><span class="pv"><span class="mini-bar" id="pl-store-bar"><i></i></span><span id="pl-store">—</span> %</span></div>
-          <div class="prow"><span class="pl">Images</span><span class="pv" id="pl-images">—</span></div>
+          <div class="prow"><span class="pl" data-i18n>FPA temp</span><span class="pv" id="pl-fpa">— °C</span></div>
+          <div class="prow"><span class="pl" data-i18n>Storage</span><span class="pv"><span class="mini-bar" id="pl-store-bar"><i></i></span><span id="pl-store">—</span> %</span></div>
+          <div class="prow"><span class="pl" data-i18n>Images</span><span class="pv" id="pl-images">—</span></div>
         </div>
       </section>
     </div>
@@ -450,22 +453,22 @@ body.subpage #full-snapshot-container{ display:block; }
 
     <!-- subsystem deep-dive launcher (?sub= links, propagating ?ui=) -->
     <section class="ds-card" id="launcher-card">
-      <h2>Subsystem deep-dive pages</h2>
+      <h2 data-i18n>Subsystem deep-dive pages</h2>
       <div class="bd"><div id="subsystem-launcher-buttons" class="launcher-grid">
-        <span class="no-data">Loading subsystem list…</span>
+        <span class="no-data" data-i18n>Loading subsystem list…</span>
       </div></div>
     </section>
 
     <div id="search-block">
       <div class="hgroup" style="margin-bottom:6px;">
         <input type="text" class="form-input" id="param-search"
-               placeholder="Search parameters (name or hex ID 0x0143)…"
-               aria-label="Parameter search">
-        <button class="ds-btn" id="btn-clear-search" title="Clear search">CLEAR</button>
+               data-i18n-placeholder placeholder="Search parameters (name or hex ID 0x0143)…"
+               data-i18n-aria-label aria-label="Parameter search">
+        <button class="ds-btn" id="btn-clear-search" data-i18n data-i18n-title title="Clear search">CLEAR</button>
       </div>
       <div id="param-search-results"></div>
       <button class="ds-btn wfull" id="btn-toggle-raw"
-              title="Show/hide the raw JSON of /api/instructor/snapshot">SHOW RAW SNAPSHOT</button>
+              data-i18n-title title="Show/hide the raw JSON of /api/instructor/snapshot">SHOW RAW SNAPSHOT</button>
       <div id="raw-snapshot-container"><pre id="raw-snapshot-json">Loading…</pre></div>
     </div>
 
@@ -481,7 +484,7 @@ body.subpage #full-snapshot-container{ display:block; }
 
   <!-- ══ RIGHT — INTERVENTIONS ══ -->
   <div class="col" id="right-col">
-    <div class="col-head">Interventions</div>
+    <div class="col-head" data-i18n>Interventions</div>
 
     <!-- Typed failure-injection form — every control GENERATED from
          GET /api/failure-catalog (bool→checkbox, enum→select/multi,
@@ -489,48 +492,48 @@ body.subpage #full-snapshot-container{ display:block; }
          control for a new failure: add a ParamSpec to the model's
          FAILURE_SPECS and it appears here, validated on both sides. -->
     <section class="ds-card">
-      <h2>Failure injection</h2>
+      <h2 data-i18n>Failure injection</h2>
       <div class="bd">
         <div class="form-group">
-          <label class="form-label" for="fail-subsystem">Subsystem</label>
+          <label class="form-label" for="fail-subsystem" data-i18n>Subsystem</label>
           <select class="form-select" id="fail-subsystem"></select>
         </div>
         <div class="form-group">
-          <label class="form-label" for="fail-type">Failure type</label>
+          <label class="form-label" for="fail-type" data-i18n>Failure type</label>
           <select class="form-select" id="fail-type"></select>
         </div>
         <div class="fail-effect" id="fail-effect"></div>
         <div id="fail-params"></div>
         <div class="form-group">
-          <span class="form-label">Onset</span>
+          <span class="form-label" data-i18n>Onset</span>
           <div class="radio-group">
-            <label class="radio-label"><input type="radio" name="fail-onset" value="step" checked> Step</label>
-            <label class="radio-label"><input type="radio" name="fail-onset" value="gradual"> Gradual</label>
-            <label class="radio-label"><input type="radio" name="fail-onset" value="intermittent"> Intermittent</label>
+            <label class="radio-label" data-i18n><input type="radio" name="fail-onset" value="step" checked> Step</label>
+            <label class="radio-label" data-i18n><input type="radio" name="fail-onset" value="gradual"> Gradual</label>
+            <label class="radio-label" data-i18n><input type="radio" name="fail-onset" value="intermittent"> Intermittent</label>
           </div>
         </div>
         <div class="form-group" id="onset-duration-group">
-          <label class="form-label" for="fail-onset-dur">Onset duration (s)</label>
+          <label class="form-label" for="fail-onset-dur" data-i18n>Onset duration (s)</label>
           <input type="number" class="form-input" id="fail-onset-dur" value="30" min="1" max="3600">
         </div>
         <div class="fail-error" id="fail-error" role="alert"></div>
-        <button class="ds-btn danger wfull" id="btn-inject">INJECT FAILURE</button>
+        <button class="ds-btn danger wfull" id="btn-inject" data-i18n>INJECT FAILURE</button>
       </div>
     </section>
 
     <section class="ds-card">
-      <h2>Active failures</h2>
+      <h2 data-i18n>Active failures</h2>
       <div class="bd">
-        <div id="failures-list"><div class="no-data">No active failures</div></div>
-        <button class="ds-btn wfull" id="btn-clear-all" style="margin-top:6px;">CLEAR ALL FAILURES</button>
+        <div id="failures-list"><div class="no-data" data-i18n>No active failures</div></div>
+        <button class="ds-btn wfull" id="btn-clear-all" style="margin-top:6px;" data-i18n>CLEAR ALL FAILURES</button>
       </div>
     </section>
 
     <section class="ds-card">
-      <h2>Mission phase &amp; separation</h2>
+      <h2 data-i18n>Mission phase &amp; separation</h2>
       <div class="bd">
         <div class="form-group">
-          <label class="form-label" for="phase-select">Spacecraft phase</label>
+          <label class="form-label" for="phase-select" data-i18n>Spacecraft phase</label>
           <select class="form-select" id="phase-select">
             <option value="0">0 — PRE_SEPARATION</option>
             <option value="1">1 — SEPARATION_TIMER</option>
@@ -541,28 +544,28 @@ body.subpage #full-snapshot-container{ display:block; }
             <option value="6" selected>6 — NOMINAL</option>
           </select>
         </div>
-        <button class="ds-btn wfull" id="btn-set-phase" style="margin-bottom:6px;">SET PHASE</button>
-        <button class="ds-btn danger wfull" id="btn-start-separation">START SEPARATION</button>
+        <button class="ds-btn wfull" id="btn-set-phase" style="margin-bottom:6px;" data-i18n>SET PHASE</button>
+        <button class="ds-btn danger wfull" id="btn-start-separation" data-i18n>START SEPARATION</button>
       </div>
     </section>
 
     <section class="ds-card">
-      <h2>Overrides</h2>
+      <h2 data-i18n>Overrides</h2>
       <div class="bd">
         <!-- Battery SoC override: the instructor editing the world to keep a
              lesson running — logged as an INSTRUCTOR OVERRIDE, never physics. -->
         <div class="form-group">
-          <label class="form-label" for="soc-override-input">Battery SoC %</label>
+          <label class="form-label" for="soc-override-input" data-i18n>Battery SoC %</label>
           <div class="hgroup">
             <input type="number" class="form-input" id="soc-override-input"
                    min="0" max="100" step="1" value="80">
-            <button class="ds-btn" id="btn-set-soc"
-                    title="Set battery SoC now (0–100 %) — logged as an instructor override">SET&nbsp;SoC</button>
+            <button class="ds-btn" id="btn-set-soc" data-i18n
+                    data-i18n-title title="Set battery SoC now (0–100 %) — logged as an instructor override">SET&nbsp;SoC</button>
           </div>
         </div>
         <!-- The ONE copy of OVERRIDE PASSES (classic had two). -->
         <button class="ds-btn wfull" id="btn-override"
-                title="Force ground contact (TM/TC available regardless of pass)">OVERRIDE PASSES</button>
+                data-i18n-title title="Force ground contact (TM/TC available regardless of pass)">OVERRIDE PASSES</button>
       </div>
     </section>
   </div>
@@ -572,10 +575,10 @@ body.subpage #full-snapshot-container{ display:block; }
 <div id="log-panel">
   <div class="log-head">
     <button class="ds-btn" id="btn-log-toggle" aria-expanded="true"
-            title="Collapse/expand the event log">▾ EVENT LOG</button>
-    <span class="note">timestamps in SIM time · 200-entry cap</span>
+            data-i18n-title title="Collapse/expand the event log">▾ EVENT LOG</button>
+    <span class="note" data-i18n>timestamps in SIM time · 200-entry cap</span>
     <div class="grow"></div>
-    <button class="ds-btn" id="clear-log" title="Clear log">CLEAR</button>
+    <button class="ds-btn" id="clear-log" data-i18n data-i18n-title title="Clear log">CLEAR</button>
   </div>
   <div id="event-log" role="log" aria-live="polite"></div>
 </div>

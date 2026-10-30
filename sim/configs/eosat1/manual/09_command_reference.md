@@ -6,7 +6,7 @@
 **Classification:** UNCLASSIFIED — Mission Operations
 
 > **GENERATED FILE — DO NOT EDIT BY HAND.**  
-> Generated from the telecommand database (`configs/eosat1/commands/tc_catalog.yaml`), the single source of wire truth for every telecommand argument. Every example hex string below is produced by the ground segment's own encoder, so this reference and the uplinked bytes cannot disagree. Regenerate after any change to the database.
+> Generated from the telecommand database (`configs/eosat1/commands/tc_catalog.yaml`), the single source of wire truth for every telecommand argument. Every example hex string below is produced by the ground segment's own encoder, so this reference and the uplinked bytes cannot disagree. Regenerate after any change to the database with `python tools/gen_command_reference.py`.
 
 ---
 

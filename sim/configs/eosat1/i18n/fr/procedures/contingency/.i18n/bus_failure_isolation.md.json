@@ -1,0 +1,77 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/contingency/bus_failure_isolation.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "ctg-022-can-bus-failure-isolation",
+   "en_hash": "0100733ea67fbf15",
+   "fr_hash": "223f7cfc636516de"
+  },
+  {
+   "id": "ctg-022-can-bus-failure-isolation/objective",
+   "en_hash": "dd62a853246f9e55",
+   "fr_hash": "80ce567b4bc00e2a"
+  },
+  {
+   "id": "ctg-022-can-bus-failure-isolation/prerequisites",
+   "en_hash": "8d812c4222fe6631",
+   "fr_hash": "2ffb1c1f8967764d"
+  },
+  {
+   "id": "ctg-022-can-bus-failure-isolation/required-telemetry",
+   "en_hash": "e7ea9a20fc092bdc",
+   "fr_hash": "d9f3dffce551ed5b"
+  },
+  {
+   "id": "ctg-022-can-bus-failure-isolation/required-commands",
+   "en_hash": "8dc0c47d079e349d",
+   "fr_hash": "98a9203a69e2f96f"
+  },
+  {
+   "id": "ctg-022-can-bus-failure-isolation/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "ctg-022-can-bus-failure-isolation/procedure-steps/step-1-detect-and-characterize-missing-housekeeping",
+   "en_hash": "2518c8a858f64d9e",
+   "fr_hash": "281eb07b1d97e605"
+  },
+  {
+   "id": "ctg-022-can-bus-failure-isolation/procedure-steps/step-2-diagnose-bus-status",
+   "en_hash": "001f87c4129bd5be",
+   "fr_hash": "599aeaefb4414e46"
+  },
+  {
+   "id": "ctg-022-can-bus-failure-isolation/procedure-steps/step-3-command-bus-switchover",
+   "en_hash": "3d41658469fec93d",
+   "fr_hash": "f0335e8586f7669f"
+  },
+  {
+   "id": "ctg-022-can-bus-failure-isolation/procedure-steps/step-4-verify-all-housekeeping-resumes-on-new-bus",
+   "en_hash": "01f68f93057afabd",
+   "fr_hash": "c6f4e2b995776939"
+  },
+  {
+   "id": "ctg-022-can-bus-failure-isolation/procedure-steps/step-5-post-switchover-assessment-and-documentation",
+   "en_hash": "cd2e9459afad8dbc",
+   "fr_hash": "b573c247cb521d31"
+  },
+  {
+   "id": "ctg-022-can-bus-failure-isolation/verification-criteria",
+   "en_hash": "caa512a8301c77aa",
+   "fr_hash": "ac6dfde83164cda2"
+  },
+  {
+   "id": "ctg-022-can-bus-failure-isolation/contingency",
+   "en_hash": "708cec869af319fa",
+   "fr_hash": "1a018baaec88ff72"
+  }
+ ],
+ "en_commit": "3e80564"
+}

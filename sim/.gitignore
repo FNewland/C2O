@@ -35,6 +35,7 @@ workspace/*.json
 workspace/reports/
 workspace/config-history/
 workspace/audit/
+workspace/link/
 
 # Runtime telemetry archive DB (generated; can grow >100MB — never commit)
 configs/data/tm_archive.db

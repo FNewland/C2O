@@ -38,14 +38,15 @@ plan for potential wheel recovery.
 **GO/NO-GO:** Wheel disabled and spacecraft rates bounded — proceed
 
 ### Step 3 — Command Three-Wheel Control Mode
-**TC:** `SET_PARAM(param_id=aocs.wheel_config, value=3)` (Service 20, Subtype 1)
+**Note:** There is no separate three-wheel mode command and no `aocs.wheel_config` parameter:
+`AOCS_DISABLE_WHEEL` in Step 2 is the whole 3-of-4 reconfiguration (as in CTG-026).
 **Verify:** AOCS control loop reconfigures within 15s (internal mode flag update)
 **Verify:** `aocs.att_error` (0x0217) begins converging back below 2.0 deg within 60s
 **Verify:** Three remaining wheel speeds are redistributing momentum appropriately
 **GO/NO-GO:** Three-wheel mode active and attitude converging — proceed
 
 ### Step 4 — Desaturate Remaining Wheels
-**TC:** `AOCS_DESATURATE` (Service 8, Subtype 1)
+**TC:** `AOCS_DESATURATE` (Service 8, Subtype 1, func_id 1)
 **Verify:** Active wheel speeds (three remaining) trending toward 0 rpm over 120s
 **Verify:** `aocs.rate_roll` (0x0204), `aocs.rate_pitch` (0x0205), `aocs.rate_yaw` (0x0206) — all < 0.5 deg/s during manoeuvre
 **Verify:** No wheel exceeds 5000 rpm during redistribution
@@ -70,9 +71,11 @@ plan for potential wheel recovery.
 **Action:** If anomaly was overtemperature: monitor `aocs.rw<N>_temp` passively for 2 orbits — if temp drops below 45 deg-C, wheel may be recoverable
 **Action:** If anomaly was speed oscillation: flag for bearing degradation analysis — wheel recovery requires ground authorisation
 **Action:** If anomaly was speed divergence: suspect driver electronics — do not re-enable without software patch or parameter update from ground
-**TC (Recovery attempt, ground-authorised only):** `SET_PARAM(param_id=aocs.rw<N>_enable, value=1)`
+**GO/NO-GO:** Ground has authorised a recovery attempt on the disabled wheel -> GO `STEP-7R` | NO-GO `STEP-END`
+**LABEL:** `STEP-7R`
+**TC:** `AOCS_ENABLE_WHEEL(wheel_idx=<N>)` (Service 8, Subtype 1, func_id 3) — recovery attempt, ground-authorised only
 **Verify:** Wheel spins up smoothly to commanded speed within 30s, no oscillation
-**GO/NO-GO:** If recovery successful, restore four-wheel config via `SET_PARAM(param_id=aocs.wheel_config, value=4)`. If recovery fails, maintain three-wheel ops.
+**GO/NO-GO:** If recovery successful, four-wheel control is restored (`aocs.rw<N>_enabled` = 1; `AOCS_ENABLE_WHEEL` is the whole restore, there is no wheel-configuration parameter). If recovery fails, maintain three-wheel ops.
 
 ## Off-Nominal Handling
 - If a second wheel fails during this procedure: Command `AOCS_SET_MODE(mode=2)` for DETUMBLE immediately and execute CTG-002 Step 7
@@ -81,6 +84,7 @@ plan for potential wheel recovery.
 - If three-wheel pointing error exceeds 3 deg: Reduce payload imaging requirements and notify mission planning
 
 ## Post-Conditions
+**LABEL:** `STEP-END`
 - [ ] Anomalous wheel identified and documented (RW1/2/3/4)
 - [ ] Three-wheel control mode confirmed stable
 - [ ] `aocs.att_error` (0x0217) < 1.5 deg in NOMINAL (nadir)

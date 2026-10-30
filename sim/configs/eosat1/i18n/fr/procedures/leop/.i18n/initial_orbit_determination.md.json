@@ -1,0 +1,82 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/leop/initial_orbit_determination.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "leop-003-initial-orbit-determination",
+   "en_hash": "29a45683a689b0ed",
+   "fr_hash": "84191ebef0b33cdc"
+  },
+  {
+   "id": "leop-003-initial-orbit-determination/purpose",
+   "en_hash": "afbbb96cb9fa7429",
+   "fr_hash": "eebcd10fda711f6a"
+  },
+  {
+   "id": "leop-003-initial-orbit-determination/prerequisites",
+   "en_hash": "d75acdb62b4b573a",
+   "fr_hash": "1b155511490900ec"
+  },
+  {
+   "id": "leop-003-initial-orbit-determination/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "leop-003-initial-orbit-determination/procedure-steps/step-1-verify-the-gps-navigation-solution-is-downlinking",
+   "en_hash": "f09bb0eae80427d3",
+   "fr_hash": "394668aed1c40fb0"
+  },
+  {
+   "id": "leop-003-initial-orbit-determination/procedure-steps/step-2-read-the-position-fix",
+   "en_hash": "453ab3beb44b4841",
+   "fr_hash": "21d8d37d8e57f905"
+  },
+  {
+   "id": "leop-003-initial-orbit-determination/procedure-steps/step-3-read-the-ecef-state-vector",
+   "en_hash": "bd293386ed29bef2",
+   "fr_hash": "04bc8122ea266bf9"
+  },
+  {
+   "id": "leop-003-initial-orbit-determination/procedure-steps/step-4-flight-dynamics-comparison",
+   "en_hash": "05f7e2fe83b6d92a",
+   "fr_hash": "ea88065f249f9ea9"
+  },
+  {
+   "id": "leop-003-initial-orbit-determination/procedure-steps/step-5-second-fix-consistency-check",
+   "en_hash": "36e6bdbff59f5bbb",
+   "fr_hash": "b7788acbf71ca33e"
+  },
+  {
+   "id": "leop-003-initial-orbit-determination/procedure-steps/step-6-distribute-the-orbit-determination-report",
+   "en_hash": "fcbbda72cee84b53",
+   "fr_hash": "e5cef212f8f2ccfd"
+  },
+  {
+   "id": "leop-003-initial-orbit-determination/procedure-steps/step-7-go-no-go-poll-and-end-of-leop-phase-declaration",
+   "en_hash": "0c80d07876bf8b33",
+   "fr_hash": "4791c02b780c6c1d"
+  },
+  {
+   "id": "leop-003-initial-orbit-determination/off-nominal-handling",
+   "en_hash": "68902c20806c66d9",
+   "fr_hash": "7b727a860a9b4145"
+  },
+  {
+   "id": "leop-003-initial-orbit-determination/exit-state",
+   "en_hash": "4386f661085d23b1",
+   "fr_hash": "2be01b0a50735685"
+  },
+  {
+   "id": "leop-003-initial-orbit-determination/post-conditions",
+   "en_hash": "a00190c74f2b7dea",
+   "fr_hash": "4bfe7abd0fe64f7f"
+  }
+ ],
+ "en_commit": "983af0f"
+}

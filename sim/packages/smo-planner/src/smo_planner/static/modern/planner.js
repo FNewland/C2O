@@ -39,8 +39,11 @@
  *   table + timeline redraw · 30 s main poll · 60 s terminator · 120 s track.
  * ============================================================================ */
 
-import { esc, poller } from "/static/shared/components.js";
+import { esc, poller, mountLangToggle } from "/static/shared/components.js";
 import { fmtUTC, fmtMET } from "/static/shared/format.js";
+// UI language (EN|FR) — see docs/i18n/UI_I18N_GUIDE.md. Identifiers never
+// go through t(); tText() for alert()/confirm()/canvas/textContent.
+import { I18n, t, tText, tdb, onLangChange } from "/static/shared/i18n.js";
 
 const $ = (id) => document.getElementById(id);
 
@@ -48,7 +51,8 @@ const $ = (id) => document.getElementById(id);
 let timeSource = null;          // null until /api/time-source resolves (P3)
 let simAnchorMs = null, simAnchorWallMs = null, simSpeed = 1.0;
 let metAnchorS = null;          // MET at the anchor instant; null = not served
-let clockDegraded = false, clockNote = "";
+let clockDegraded = false, clockNote = null;   // () => translated note | null
+const clockNoteText = () => (clockNote ? clockNote() : "");
 
 function simNow() {
   if (simAnchorMs === null) return Date.now();
@@ -106,18 +110,19 @@ function inclinationEstimateDeg() {
 function updateClock() {
   const now = simNowDate();
   $("utcClock").textContent = fmtUTC(now);
+  // English text is the i18n key
   const months = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
   $("utcDate").textContent =
-    `${String(now.getUTCDate()).padStart(2, "0")} ${months[now.getUTCMonth()]} ${now.getUTCFullYear()}`;
+    `${String(now.getUTCDate()).padStart(2, "0")} ${tText(months[now.getUTCMonth()])} ${now.getUTCFullYear()}`;
   const met = metNowS();
   const metEl = $("metReadout");
   if (met === null) {
     metEl.textContent = "MET —";
-    metEl.title = "MET is not published by the planner in this mode "
-      + "(real mode has no simulator MET — disposition L4)";
+    metEl.title = tText(
+      "MET is not published by the planner in this mode (real mode has no simulator MET — disposition L4)");
   } else {
     metEl.textContent = fmtMET(met);
-    metEl.title = "Mission elapsed time as published by the planner";
+    metEl.title = tText("Mission elapsed time as published by the planner");
   }
   updateClockBadge();
 }
@@ -125,15 +130,16 @@ function updateClock() {
 // P1: the badge names the clock; the speed tooltip is deliberately gone.
 function updateClockBadge() {
   const el = $("clockSourceBadge");
-  if (timeSource === null && !clockDegraded) { el.textContent = "—"; return; }
+  // planner.js owns this title (no data-i18n-title: applyDom would re-key the live text)
+  if (timeSource === null && !clockDegraded) { el.textContent = "—"; el.title = tText("Planner clock source"); return; }
   el.classList.remove("wall", "warn");
   if (clockDegraded) {
     el.classList.add("wall");
-    el.textContent = "WALL CLOCK";
-    el.title = clockNote || "Planner sim clock unavailable — showing browser wall clock";
+    el.textContent = tText("WALL CLOCK");
+    el.title = clockNoteText() || tText("Planner sim clock unavailable — showing browser wall clock");
   } else {
-    el.textContent = timeSource === "sim" ? "SIM TIME" : "UTC (REAL)";
-    el.title = "Clock source: " + timeSource;
+    el.textContent = timeSource === "sim" ? tText("SIM TIME") : tText("UTC (REAL)");
+    el.title = tText("Clock source: {{src}}", { src: timeSource });
   }
 }
 
@@ -141,9 +147,10 @@ function updateClockBadge() {
 function applyDataSourceBadges() {
   if (timeSource === null && !clockDegraded) return;
   const sim = timeSource === "sim";
-  const shortText = clockDegraded ? "WALL" : (sim ? "SIM" : "UTC");
-  const longText = clockDegraded ? "WALL CLOCK" : (sim ? "SIM CLOCK" : "REAL UTC");
-  const title = clockNote || ("Clock source: " + (timeSource || "unknown"));
+  const shortText = clockDegraded ? tText("WALL") : (sim ? tText("SIM") : "UTC");
+  const longText = clockDegraded ? tText("WALL CLOCK") : (sim ? tText("SIM CLOCK") : tText("REAL UTC"));
+  const title = clockNoteText()
+    || tText("Clock source: {{src}}", { src: timeSource || tText("unknown") });
   for (const id of ["mapDataBadge", "powerDataBadge", "dataDataBadge", "imagingDataBadge"]) {
     const el = $(id); el.textContent = shortText; el.title = title;
     el.classList.toggle("warn", clockDegraded);
@@ -170,16 +177,19 @@ async function loadTimeSource() {
     if (typeof data.speed === "number") simSpeed = data.speed;
     metAnchorS = (typeof data.met_s === "number") ? data.met_s : null;
     clockDegraded = !!(data.degraded || data.wall_clock_fallback);
-    clockNote = "";
+    clockNote = null;
     if (data.wall_clock_fallback) {
-      clockNote = "Simulator at " + (data.sim_state_url || "the configured URL")
-        + " is unreachable — planner is running on wall-clock UTC";
+      const url = data.sim_state_url;
+      clockNote = url
+        ? () => tText("Simulator at {{url}} is unreachable — planner is running on wall-clock UTC", { url })
+        : () => tText("Simulator at the configured URL is unreachable — planner is running on wall-clock UTC");
     } else if (data.degraded) {
-      clockNote = "Sim clock anchor is stale (" + data.anchor_age_s + " s old)";
+      const age = data.anchor_age_s;
+      clockNote = () => tText("Sim clock anchor is stale ({{age}} s old)", { age });
     }
   } catch (e) {
     clockDegraded = true;
-    clockNote = "Planner API unreachable — page is on browser wall clock";
+    clockNote = () => tText("Planner API unreachable — page is on browser wall clock");
   }
   applyDataSourceBadges();
   updateClockBadge();
@@ -197,13 +207,22 @@ async function loadPlannerConfig() {
   $("scPeriod").textContent = p ? "~" + p.toFixed(1) + " min" : "—";
   $("bbPeriod").textContent = p ? p.toFixed(1) + " min" : "—";
   $("bbRevDay").textContent = p ? (1440 / p).toFixed(2) : "—";
+  socHint();
+}
+
+/* SoC input placeholder/title: generic until the configured default is known. */
+function socHint() {
   const soc = plannerConfig && plannerConfig.budget
     && plannerConfig.budget.initial_soc_percent;
   const socEl = $("socInput");
-  if (typeof soc === "number" && !socEl.value) {
-    socEl.placeholder = "default " + soc + "%";
-    socEl.title = "State of charge the constraint check assumes. Leave blank "
-      + "to use the server's configured default (" + soc + "% from planner.yaml).";
+  if (typeof soc === "number") {
+    socEl.placeholder = tText("default {{soc}}%", { soc });
+    socEl.title = tText(
+      "State of charge the constraint check assumes. Leave blank to use the server's configured default ({{soc}}% from planner.yaml).",
+      { soc });
+  } else {
+    socEl.placeholder = tText("server default");
+    socEl.title = tText("State of charge the constraint check assumes. Leave blank to use the server's configured default.");
   }
 }
 
@@ -213,6 +232,9 @@ let trackLayers = [], gsMarkers = [], gsCircles = [], gsLabels = [];
 let scMarker = null, scFootprint = null, nightOverlay = null;
 
 function loadVendorMap() {
+  // index.html already loads it with a <script> tag; injecting it again threw
+  // "Identifier 'SMO_COASTLINE' has already been declared" on every load.
+  if (typeof window.SvgWorldMap !== "undefined") return Promise.resolve(true);
   return new Promise((resolve) => {
     const s = document.createElement("script");
     s.src = "/static/vendor/js/svg-world-map.js";
@@ -366,7 +388,7 @@ async function loadSpacecraftState() {
     + " / " + Math.abs(lon).toFixed(2) + "°" + (lon >= 0 ? "E" : "W");
   $("scAlt").textContent = scState.alt_km + " km";
   const badge = $("scStateBadge");
-  badge.innerHTML = "<span>" + (scState.in_eclipse ? "ECLIPSE" : "SUNLIT") + "</span>";
+  badge.innerHTML = "<span>" + (scState.in_eclipse ? t("ECLIPSE") : t("SUNLIT")) + "</span>";
   badge.classList.toggle("warn", !!scState.in_eclipse);
   updateSpacecraftMarker();
 }
@@ -438,10 +460,10 @@ async function pollAPIs() {
   const dot = $("apiDot"), txt = $("apiStatusText");
   if (contactsOk && scheduleOk) {
     dot.className = "api-dot connected";
-    txt.textContent = clockDegraded ? "API: connected (wall clock)" : "API: connected";
+    txt.textContent = clockDegraded ? tText("API: connected (wall clock)") : tText("API: connected");
   } else {
     dot.className = "api-dot error";
-    txt.textContent = "API: unavailable";
+    txt.textContent = tText("API: unavailable");
   }
   applyDataSourceBadges();
   drawTimeline();
@@ -525,17 +547,17 @@ function drawTimeline() {
   ctx.setLineDash([]);
   ctx.fillStyle = C("--alarm"); ctx.font = "bold 12px " + C("--mono");
   ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
-  ctx.fillText("NOW" + (clockDegraded ? " (wall clock)" : ""), mL + 3, mT - 6);
+  ctx.fillText(clockDegraded ? tText("NOW (wall clock)") : tText("NOW"), mL + 3, mT - 6);
 
   if (groundStations.length === 0 || contacts.length === 0) {
     ctx.fillStyle = C("--tx2"); ctx.font = "13px " + C("--mono");
     ctx.textAlign = "center"; ctx.textBaseline = "middle";
     ctx.fillText(
       groundStationsError
-        ? "Ground-station list unavailable — check /api/ground-stations"
+        ? tText("Ground-station list unavailable — check {{route}}", { route: "/api/ground-stations" })
         : (groundStations.length === 0
-          ? "No ground stations configured — check orbit.yaml"
-          : "No contact windows — check configuration"),
+          ? tText("No ground stations configured — check {{file}}", { file: "orbit.yaml" })
+          : tText("No contact windows — check configuration")),
       mL + pW / 2, mT + pH / 2);
   }
 }
@@ -548,7 +570,7 @@ function updateContactsTable() {
   const tbody = $("contactsBody");
   tbody.innerHTML = upcoming.map((c) => {
     const active = c.aos.getTime() <= now && c.los.getTime() >= now;
-    const status = active ? "IN PROGRESS" : "UPCOMING";
+    const status = active ? t("IN PROGRESS") : t("UPCOMING");
     return "<tr><td>" + esc(c.station) + "</td><td>" + fmtUTC(c.aos)
       + "</td><td>" + fmtUTC(c.los) + "</td><td>" + c.durationMin
       + " min</td><td>" + (typeof c.maxEl === "number" ? c.maxEl.toFixed(1) : esc(String(c.maxEl)))
@@ -560,11 +582,11 @@ function updateContactsTable() {
     + ":" + String(Math.floor((ms % 60000) / 1000)).padStart(2, "0");
   const next = contacts.find((c) => c.aos.getTime() > now);
   $("nextAos").textContent = next
-    ? next.station + " in " + mmss(next.aos.getTime() - now) : "—";
+    ? tText("{{station}} in {{t}}", { station: next.station, t: mmss(next.aos.getTime() - now) }) : "—";
   const ecl = eclipseIntervals().find(([a]) => a > now);
   const inEcl = eclipseIntervals().find(([a, b]) => a <= now && b > now);
-  $("nextEclipse").textContent = inEcl ? "in eclipse now"
-    : (ecl ? "in " + mmss(ecl[0] - now) : "—");
+  $("nextEclipse").textContent = inEcl ? tText("in eclipse now")
+    : (ecl ? tText("in {{t}}", { t: mmss(ecl[0] - now) }) : "—");
 }
 
 /* ── Activity schedule list (per-row EDIT + DELETE) ───────────────────── */
@@ -572,7 +594,7 @@ function updateActivityList() {
   const el = $("activityList");
   if (!schedule.length) {
     el.innerHTML = "<div style=\"color:var(--tx3);font-size:12px;padding:8px 2px\">"
-      + "No activities planned. Use ADD ACTIVITY, or load a standard activity set below.</div>";
+      + t("No activities planned. Use ADD ACTIVITY, or load a standard activity set below.") + "</div>";
     return;
   }
   el.innerHTML = schedule.map((a) => {
@@ -586,20 +608,20 @@ function updateActivityList() {
       + "<div><div class=\"nm\">" + esc(a.name)
       + " <span class=\"st\" style=\"color:" + stateCol + "\">" + esc(state) + "</span></div>"
       + "<div class=\"meta\">" + a.durationMin + " min · "
-      + esc(a.station || "no dependency") + " · " + esc(a.priority || "medium") + "</div></div>"
+      + (a.station ? esc(a.station) : t("no dependency")) + " · " + esc(a.priority || "medium") + "</div></div>"
       + "<div class=\"ops\">"
       + (a.id !== undefined && a.id !== null
         ? "<button class=\"ds-btn\" data-act=\"edit\" data-id=\"" + esc(a.id)
-          + "\" title=\"Edit start time / duration / priority\">EDIT</button>"
+          + "\" title=\"" + t("Edit start time / duration / priority") + "\">" + t("EDIT") + "</button>"
           + "<button class=\"ds-btn danger\" data-act=\"delete\" data-id=\"" + esc(a.id)
-          + "\" title=\"Delete activity\">&times;</button>"
+          + "\" title=\"" + t("Delete activity") + "\">&times;</button>"
         : "")
       + "</div></div>";
   }).join("");
 }
 
 async function deleteActivity(id) {
-  if (!confirm("Delete activity #" + id + "?")) return;
+  if (!confirm(tText("Delete activity #{{id}}?", { id }))) return;
   try {
     await fetch("/api/schedule/" + id, { method: "DELETE" });
     mainPoller.kick();
@@ -620,7 +642,7 @@ function utcInputValueToDate(v) {
 function updateStartTimeHint() {
   const hintEl = $("actStartTimeHint");
   const d = utcInputValueToDate($("actStartTime").value);
-  if (!d || isNaN(d.getTime())) { hintEl.textContent = "Enter a UTC start time."; return; }
+  if (!d || isNaN(d.getTime())) { hintEl.textContent = tText("Enter a UTC start time."); return; }
   let zone = "";
   try { zone = Intl.DateTimeFormat().resolvedOptions().timeZone || ""; } catch (e) { /* ok */ }
   const offMin = -d.getTimezoneOffset();
@@ -628,8 +650,9 @@ function updateStartTimeHint() {
   const abs = Math.abs(offMin);
   const offset = "UTC" + sign + String(Math.floor(abs / 60)).padStart(2, "0")
     + ":" + String(abs % 60).padStart(2, "0");
-  hintEl.textContent = d.toISOString().slice(0, 16).replace("T", " ")
-    + " UTC = " + d.toLocaleString() + " local (" + (zone ? zone + ", " : "") + offset + ")";
+  hintEl.textContent = tText("{{utc}} UTC = {{local}} local ({{zone}})", {
+    utc: d.toISOString().slice(0, 16).replace("T", " "),
+    local: d.toLocaleString(), zone: (zone ? zone + ", " : "") + offset });
 }
 
 let editingId = null;   // null = add mode; number = PUT /api/schedule/{id}
@@ -637,7 +660,7 @@ let editingId = null;   // null = add mode; number = PUT /api/schedule/{id}
 function openModal(activity) {
   editingId = activity ? activity.id : null;
   $("modalTitle").textContent = activity
-    ? "EDIT ACTIVITY #" + activity.id : "ADD ACTIVITY";
+    ? tText("EDIT ACTIVITY #{{id}}", { id: activity.id }) : tText("ADD ACTIVITY");
   $("editNote").style.display = activity ? "block" : "none";
   $("actType").disabled = !!activity;
   $("actStation").disabled = !!activity;
@@ -666,7 +689,7 @@ function closeModal() { $("modalOverlay").classList.remove("active"); editingId 
 async function submitActivity() {
   const startDate = utcInputValueToDate($("actStartTime").value);
   if (!startDate || isNaN(startDate.getTime())) {
-    alert("Could not read the start time — expected UTC YYYY-MM-DD HH:MM."); return;
+    alert(tText("Could not read the start time — expected UTC YYYY-MM-DD HH:MM.")); return;
   }
   const duration = parseInt($("actDuration").value, 10) || 15;
   const priority = $("actPriority").value || "medium";
@@ -680,7 +703,7 @@ async function submitActivity() {
           duration_s: duration * 60, priority }) });
     } else {
       const name = $("actType").value;
-      if (!name) { alert("Select an activity type."); return; }
+      if (!name) { alert(tText("Select an activity type.")); return; }
       res = await fetch("/api/schedule", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -691,10 +714,10 @@ async function submitActivity() {
     if (res.ok) { closeModal(); mainPoller.kick(); }
     else {
       const err = await res.json().catch(() => ({}));
-      alert("Could not save activity: " + (err.error || ("HTTP " + res.status)));
+      alert(tText("Could not save activity: {{reason}}", { reason: err.error || ("HTTP " + res.status) }));
     }
   } catch (e) {
-    alert("Could not save activity — planner API unreachable: " + e);
+    alert(tText("Could not save activity — planner API unreachable: {{e}}", { e: String(e) }));
   }
 }
 
@@ -706,29 +729,40 @@ async function loadActivityTypes() {
     activityTypes = (await res.json()).activity_types || [];
     if (activityTypes.length) {
       const sel = $("actType");
-      sel.innerHTML = "<option value=\"\">Select activity type…</option>";
+      const keep = sel.value;
+      sel.innerHTML = "<option value=\"\">" + t("Select activity type…") + "</option>";
       for (const at of activityTypes) {
         const opt = document.createElement("option");
         opt.value = at.name;
         opt.textContent = at.name.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
         sel.appendChild(opt);
       }
+      if (keep && [...sel.options].some((o) => o.value === keep)) sel.value = keep;
     }
   } catch (e) { /* keep static options */ }
 }
 
-function onActivityTypeChange() {
+function renderActTypeInfo() {
   const name = $("actType").value;
   const infoEl = $("actTypeInfo");
   const at = activityTypes.find((a) => a.name === name);
-  if (!at) { infoEl.style.display = "none"; return; }
+  if (!at) { infoEl.style.display = "none"; return null; }
   infoEl.style.display = "block";
   const dur = Math.round((at.duration_s || 0) / 60);
-  infoEl.innerHTML = esc(at.description || "") + "<br>Duration: " + dur
-    + " min | Power: " + (at.power_w || 0) + " W | Procedure: "
-    + esc(at.procedure_ref || "N/A")
-    + (at.pre_conditions && at.pre_conditions.length
-      ? "<br>Pre-conditions: " + esc(at.pre_conditions.join(", ")) : "");
+  const pre = (at.pre_conditions || []).map((p, i) =>
+    tdb("activity:" + at.name + ":pre_conditions." + i, p));
+  infoEl.innerHTML = esc(tdb("activity:" + at.name + ":description", at.description || ""))
+    + "<br>" + t("Duration: {{dur}} min | Power: {{power}} W | Procedure: {{proc}}", {
+      dur, power: at.power_w || 0, proc: at.procedure_ref || tText("N/A") })
+    + (pre.length
+      ? "<br>" + t("Pre-conditions: {{list}}", { list: pre.join(", ") }) : "");
+  return at;
+}
+
+function onActivityTypeChange() {
+  const at = renderActTypeInfo();
+  if (!at) return;
+  const dur = Math.round((at.duration_s || 0) / 60);
   $("actDuration").value = dur;
   $("actPriority").value = at.priority || "medium";
 }
@@ -740,12 +774,14 @@ async function loadPlanTemplates() {
     const data = await res.json();
     planTemplates = data.templates || [];
     const sel = $("templateSelect");
-    sel.innerHTML = "<option value=\"\">Standard activities…</option>";
-    for (const t of planTemplates) {
+    const keep = sel.value;
+    sel.innerHTML = "<option value=\"\">" + t("Standard activities…") + "</option>";
+    for (const tp of planTemplates) {
       const opt = document.createElement("option");
-      opt.value = t.id; opt.textContent = t.name + " (" + t.activity_count + ")";
-      opt.title = t.description || "";
-      if (t.id === data.default_template) opt.selected = true;
+      opt.value = tp.id;
+      opt.textContent = tdb("plan:" + tp.id + ":name", tp.name) + " (" + tp.activity_count + ")";
+      opt.title = tp.description ? tdb("plan:" + tp.id + ":description", tp.description) : "";
+      if (keep ? tp.id === keep : tp.id === data.default_template) opt.selected = true;
       sel.appendChild(opt);
     }
   } catch (e) { /* dropdown stays empty */ }
@@ -753,27 +789,28 @@ async function loadPlanTemplates() {
 
 async function loadStandardActivities() {
   const id = $("templateSelect").value;
-  if (!id) { alert("Select a standard activity set first."); return; }
+  if (!id) { alert(tText("Select a standard activity set first.")); return; }
   try {
     const res = await fetch("/api/schedule/load-template", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ template: id }) });
     const data = await res.json();
-    if (!res.ok) { alert("Could not load \"" + id + "\": " + (data.error || res.status)); return; }
-    let msg = "Loaded " + data.added + " activities from \"" + data.template + "\" at " + data.t0;
+    if (!res.ok) { alert(tText("Could not load \"{{id}}\": {{reason}}", { id, reason: data.error || res.status })); return; }
+    let msg = tText("Loaded {{n}} activities from \"{{template}}\" at {{t0}}",
+      { n: data.added, template: data.template, t0: data.t0 });
     if (data.warnings && data.warnings.length) msg += "\n\n" + data.warnings.join("\n");
     alert(msg);
     mainPoller.kick();
-  } catch (e) { alert("Could not load standard activities: " + e); }
+  } catch (e) { alert(tText("Could not load standard activities: {{e}}", { e: String(e) })); }
 }
 
 async function clearSchedule() {
-  if (!confirm("Remove every planned activity?")) return;
+  if (!confirm(tText("Remove every planned activity?"))) return;
   try {
     const res = await fetch("/api/schedule", { method: "DELETE" });
     const data = await res.json();
     if (data.removed !== undefined) mainPoller.kick();
-  } catch (e) { alert("Could not clear the schedule: " + e); }
+  } catch (e) { alert(tText("Could not clear the schedule: {{e}}", { e: String(e) })); }
 }
 
 async function loadGroundStations() {
@@ -804,30 +841,30 @@ async function validateSchedule() {
     const data = await res.json();
     if (data.valid) {
       el.className = "ok";
-      el.textContent = "Schedule valid (" + data.activity_count + " activities, no conflicts)";
+      el.textContent = tText("Schedule valid ({{n}} activities, no conflicts)", { n: data.activity_count });
     } else {
       el.className = "bad";
       el.innerHTML = data.issues.map((i) =>
-        "<div>" + esc(i.type) + ": " + esc(i.message)
-        + " (activity #" + esc(i.activity_id) + ")</div>").join("");
+        "<div>" + t("{{type}}: {{message}} (activity #{{id}})",
+          { type: i.type, message: i.message, id: i.activity_id }) + "</div>").join("");
     }
     el.style.display = "block";
     setTimeout(() => { el.style.display = "none"; }, 8000);
   } catch (e) {
-    el.className = "err"; el.textContent = "Validation failed: " + e;
+    el.className = "err"; el.textContent = tText("Validation failed: {{e}}", { e: String(e) });
   }
 }
 
 async function uploadToMCS() {
   const planned = schedule.filter((a) => a.state_name === "PLANNED" || !a.state_name);
-  if (!planned.length) { alert("No planned activities to upload"); return; }
+  if (!planned.length) { alert(tText("No planned activities to upload")); return; }
   const act = planned[0];
-  if (!act.id) { alert("Activity has no ID"); return; }
-  const useS11 = confirm(
-    "Schedule on-board (S11) at planned start time " + act.start_time
-    + "?\nOK = time-tagged on-board schedule.\nCancel = load as immediate MCS procedure.");
+  if (!act.id) { alert(tText("Activity has no ID")); return; }
+  const useS11 = confirm(tText(
+    "Schedule on-board ({{svc}}) at planned start time {{t}}?\nOK = time-tagged on-board schedule.\nCancel = load as immediate MCS procedure.",
+    { svc: "S11", t: act.start_time }));
   let stepMode = false;
-  if (!useS11) stepMode = confirm("Use step-by-step mode?");
+  if (!useS11) stepMode = confirm(tText("Use step-by-step mode?"));
   try {
     const res = await fetch("/api/schedule/upload", {
       method: "POST", headers: { "Content-Type": "application/json" },
@@ -835,19 +872,21 @@ async function uploadToMCS() {
         activity_id: act.id, mode: useS11 ? "s11" : "immediate",
         step_by_step: stepMode }) });
     const data = await res.json();
-    if (data.error) { alert("Upload failed: " + data.error); return; }
+    if (data.error) { alert(tText("Upload failed: {{e}}", { e: data.error })); return; }
     if (useS11) {
-      alert("Activity \"" + act.name + "\" scheduled on board: "
-        + (data.count !== undefined ? data.count : "?")
-        + " time-tagged command(s) at " + act.start_time
+      const nCmd = data.count !== undefined ? data.count : "?";
+      alert(tText("Activity \"{{name}}\" scheduled on board: {{n}} time-tagged command(s) at {{t}}",
+        { name: act.name, n: nCmd, t: act.start_time })
         + (data.skipped && data.skipped.length
-          ? "\n(" + data.skipped.length + " telemetry-check step(s) skipped — ground-only)" : ""));
+          ? "\n" + tText("({{n}} telemetry-check step(s) skipped — ground-only)",
+            { n: data.skipped.length }) : ""));
     } else {
-      alert("Activity \"" + act.name + "\" uploaded to MCS. "
-        + "Switch to the MCS Procedures page to execute.");
+      alert(tText(
+        "Activity \"{{name}}\" uploaded to MCS. Switch to the MCS Procedures page to execute.",
+        { name: act.name }));
     }
     mainPoller.kick();
-  } catch (e) { alert("Upload failed: " + e); }
+  } catch (e) { alert(tText("Upload failed: {{e}}", { e: String(e) })); }
 }
 
 /* ── Constraint validation (P5: explicit SoC, per-domain accordion) ───── */
@@ -860,21 +899,22 @@ function constraintUrl() {
 
 async function validateConstraints() {
   const el = $("constraintsResult");
-  el.innerHTML = "<span style=\"color:var(--tx3)\">Checking…</span>";
+  el.innerHTML = "<span style=\"color:var(--tx3)\">" + t("Checking…") + "</span>";
   try {
     const res = await fetch(constraintUrl());
     const data = await res.json();
     if (!res.ok || data.error) throw new Error(data.error || ("HTTP " + res.status));
     const head = data.valid
-      ? "<div class=\"v\" style=\"color:var(--tx2);font-weight:700\">VALID — no constraint violations</div>"
-      : "<div class=\"v error\" style=\"font-weight:700\">NOT VALID — "
-        + (data.error_count ?? "?") + " error(s), " + (data.warning_count ?? "?") + " warning(s)</div>";
+      ? "<div class=\"v\" style=\"color:var(--tx2);font-weight:700\">" + t("VALID — no constraint violations") + "</div>"
+      : "<div class=\"v error\" style=\"font-weight:700\">"
+        + t("NOT VALID — {{e}} error(s), {{w}} warning(s)",
+          { e: data.error_count ?? "?", w: data.warning_count ?? "?" }) + "</div>";
     const rows = (data.violations || []).slice(0, 12).map((v) =>
       "<div class=\"v " + esc(v.severity || "") + "\">[" + esc((v.severity || "?").toUpperCase())
-      + "] " + esc(v.activity_name || "System") + ": " + esc(v.message || "") + "</div>").join("");
+      + "] " + (v.activity_name ? esc(v.activity_name) : t("System")) + ": " + esc(v.message || "") + "</div>").join("");
     el.innerHTML = head + rows;
   } catch (e) {
-    el.innerHTML = "<div class=\"v error\">Constraint validation failed: " + esc(String(e)) + "</div>";
+    el.innerHTML = "<div class=\"v error\">" + t("Constraint validation failed: {{e}}", { e: String(e) }) + "</div>";
   }
 }
 
@@ -889,20 +929,20 @@ function renderDomainResult(data) {
       && k !== "error")
     .map(([k, v]) => "<div><span style=\"color:var(--tx3)\">" + esc(k) + "</span> "
       + esc(String(v)) + "</div>").join("");
-  return (rows || "<div style=\"color:var(--tx2)\">No violations reported.</div>") + scalars;
+  return (rows || "<div style=\"color:var(--tx2)\">" + t("No violations reported.") + "</div>") + scalars;
 }
 
 async function loadDomainConstraint(details) {
   const domain = details.dataset.domain;
   const bd = details.querySelector(".bd");
-  bd.textContent = "Checking…";
+  bd.textContent = tText("Checking…");
   try {
     const res = await fetch("/api/constraints/" + domain);
     const data = await res.json();
     if (!res.ok || data.error) throw new Error(data.error || ("HTTP " + res.status));
     bd.innerHTML = renderDomainResult(data);
   } catch (e) {
-    bd.innerHTML = "<span style=\"color:var(--alarm)\">Check failed: " + esc(String(e)) + "</span>";
+    bd.innerHTML = "<span style=\"color:var(--alarm)\">" + t("Check failed: {{e}}", { e: String(e) }) + "</span>";
   }
 }
 
@@ -922,9 +962,9 @@ function renderPowerBudget(b) {
   // state, never a confident 0 % / 100 % (server contract, plan §2.2).
   if (b.computable === false || b.final_soc === null || b.final_soc === undefined) {
     const reason = b.reason || warnings[0]
-      || "the planner returned no state-of-charge prediction";
+      || tText("the planner returned no state-of-charge prediction");
     panel.innerHTML = "<div class=\"nocompute\">"
-      + "<div class=\"t\">POWER BUDGET CANNOT BE COMPUTED</div>"
+      + "<div class=\"t\">" + t("POWER BUDGET CANNOT BE COMPUTED") + "</div>"
       + "<div class=\"r\">" + esc(reason) + "</div></div>";
     return;
   }
@@ -934,27 +974,27 @@ function renderPowerBudget(b) {
     : soc < minSoc ? "alarm" : soc < minSoc + 10 ? "warn" : "";
   let html = "";
   if (b.soc_saturated) {
-    html += "<div class=\"ds-banner warn\" style=\"margin-bottom:8px\">SoC saturated against a battery rail ("
-      + (b.soc_floor_hits || 0) + " at 0 %, " + (b.soc_ceiling_hits || 0)
-      + " at 100 %) — the figure below is a limit, not a prediction.</div>";
+    html += "<div class=\"ds-banner warn\" style=\"margin-bottom:8px\">"
+      + t("SoC saturated against a battery rail ({{lo}} at 0 %, {{hi}} at 100 %) — the figure below is a limit, not a prediction.",
+        { lo: b.soc_floor_hits || 0, hi: b.soc_ceiling_hits || 0 }) + "</div>";
   }
   html += "<div class=\"tiles\">"
-    + "<div class=\"tile\"><div class=\"k\">INITIAL SoC</div><div class=\"v num\">"
+    + "<div class=\"tile\"><div class=\"k\">" + t("INITIAL SoC") + "</div><div class=\"v num\">"
     + (b.initial_soc ?? 0).toFixed(1) + "%</div></div>"
-    + "<div class=\"tile\"><div class=\"k\">FINAL SoC (horizon)</div><div class=\"v num "
+    + "<div class=\"tile\"><div class=\"k\">" + t("FINAL SoC (horizon)") + "</div><div class=\"v num "
     + cls(b.final_soc) + "\">" + b.final_soc.toFixed(1) + "%</div></div></div>";
   if (minSoc !== null) {
     const w = Math.max(0, Math.min(100, b.final_soc));
     html += "<div class=\"fillbar " + (cls(b.final_soc) === "alarm" ? "a" : cls(b.final_soc) === "warn" ? "w" : "")
-      + "\" title=\"final SoC vs configured minimum " + minSoc + "%\">"
+      + "\" title=\"" + t("final SoC vs configured minimum {{min}}%", { min: minSoc }) + "\">"
       + "<div class=\"fl\" style=\"width:" + w + "%\"></div></div>"
-    + "<div class=\"kv-grid\"><b>min allowed</b><span>" + minSoc + "%</span>"
-    + "<b>charge / drain</b><span>" + (b.total_charge_wh ?? "—") + " / "
+    + "<div class=\"kv-grid\"><b>" + t("min allowed") + "</b><span>" + minSoc + "%</span>"
+    + "<b>" + t("charge / drain") + "</b><span>" + (b.total_charge_wh ?? "—") + " / "
     + (b.total_drain_wh ?? "—") + " Wh</span></div>";
   }
   const passes = b.pass_predictions || [];
   if (passes.length) {
-    html += "<div class=\"sect\">PASS SoC TIMELINE</div>";
+    html += "<div class=\"sect\">" + t("PASS SoC TIMELINE") + "</div>";
     for (const p of passes.slice(0, 5)) {
       html += "<div class=\"kv-grid\" style=\"grid-template-columns:1.2fr 1fr 1fr;"
         + "border-bottom:1px solid var(--line);padding:3px 0\">"
@@ -1040,12 +1080,12 @@ function computeFitVerdicts(d) {
 function fitChip(v) {
   if (!v) return "<span style=\"color:var(--tx3)\">—</span>";
   if (v.backlogMb <= 1e-6) {
-    return "<span style=\"color:var(--tx2)\">FIT (no backlog)</span>";
+    return "<span style=\"color:var(--tx2)\">" + t("FIT (no backlog)") + "</span>";
   }
   const r = v.ratio === null ? null : v.ratio.toFixed(2);
   return v.fits
-    ? "<span style=\"color:var(--tx2)\">FIT " + r + "&times;</span>"
-    : "<span style=\"color:var(--alarm);font-weight:700\">WILL NOT FIT"
+    ? "<span style=\"color:var(--tx2)\">" + t("FIT") + " " + r + "&times;</span>"
+    : "<span style=\"color:var(--alarm);font-weight:700\">" + t("WILL NOT FIT")
       + (r !== null ? " " + r + "&times;" : "") + "</span>";
 }
 
@@ -1060,8 +1100,8 @@ async function loadDataBudget() {
 function renderDataBudget(d) {
   const panel = $("dataBudgetPanel");
   if (d.utilization_percent === undefined) {
-    panel.innerHTML = "<div class=\"nocompute\"><div class=\"t\">DATA BUDGET UNAVAILABLE</div>"
-      + "<div class=\"r\">" + esc(d.reason || d.error || "no utilisation figure returned") + "</div></div>";
+    panel.innerHTML = "<div class=\"nocompute\"><div class=\"t\">" + t("DATA BUDGET UNAVAILABLE") + "</div>"
+      + "<div class=\"r\">" + esc(d.reason || d.error || tText("no utilisation figure returned")) + "</div></div>";
     return;
   }
   const util = d.utilization_percent || 0;
@@ -1069,35 +1109,36 @@ function renderDataBudget(d) {
     && plannerConfig.budget.warn_utilization_percent) ?? 90;
   const cls = util >= 100 ? "a" : util >= warnAt ? "w" : "";
   let html = "<div class=\"tile\" style=\"margin-bottom:8px\">"
-    + "<div class=\"k\">STORAGE UTILISATION</div>"
+    + "<div class=\"k\">" + t("STORAGE UTILISATION") + "</div>"
     + "<div class=\"fillbar " + cls + "\"><div class=\"fl\" style=\"width:"
     + Math.min(100, util) + "%\"></div></div>"
-    + "<div class=\"kv-grid\"><b>onboard</b><span>" + (d.onboard_data_mb || 0).toFixed(0)
+    + "<div class=\"kv-grid\"><b>" + t("onboard") + "</b><span>" + (d.onboard_data_mb || 0).toFixed(0)
     + " / " + (d.storage_capacity_mb || 0).toFixed(0) + " MB</span>"
-    + "<b>fill</b><span>" + util.toFixed(1) + "%</span></div></div>";
+    + "<b>" + t("fill") + "</b><span>" + util.toFixed(1) + "%</span></div></div>";
   html += "<div class=\"kv-grid\">"
-    + "<b>generate</b><span>" + (d.planned_generation_mb ?? 0).toFixed(0) + " MB</span>"
-    + "<b>downlink</b><span>" + (d.planned_downlink_mb ?? 0).toFixed(0) + " MB</span>"
-    + "<b>peak fill</b><span>" + (d.peak_onboard_mb ?? 0).toFixed(0) + " MB"
+    + "<b>" + t("generate") + "</b><span>" + (d.planned_generation_mb ?? 0).toFixed(0) + " MB</span>"
+    + "<b>" + t("downlink") + "</b><span>" + (d.planned_downlink_mb ?? 0).toFixed(0) + " MB</span>"
+    + "<b>" + t("peak fill") + "</b><span>" + (d.peak_onboard_mb ?? 0).toFixed(0) + " MB"
     + (d.peak_utilization_percent !== undefined ? " (" + d.peak_utilization_percent.toFixed(1) + "%)" : "")
-    + "</span><b>backlog</b><span>" + (d.backlog_growth_mb ?? 0).toFixed(0) + " MB</span>"
-    + "<b>pass capacity</b><span>" + (d.daily_downlink_capacity_mb ?? 0).toFixed(0) + " MB/day</span>"
-    + "<b>rate (eff.)</b><span>" + ((d.effective_downlink_rate_bps || 0) / 1000).toFixed(1) + " kbps</span>"
+    + "</span><b>" + t("backlog") + "</b><span>" + (d.backlog_growth_mb ?? 0).toFixed(0) + " MB</span>"
+    + "<b>" + t("pass capacity") + "</b><span>" + (d.daily_downlink_capacity_mb ?? 0).toFixed(0) + " MB/day</span>"
+    + "<b>" + t("rate (eff.)") + "</b><span>" + ((d.effective_downlink_rate_bps || 0) / 1000).toFixed(1) + " kbps</span>"
     + "</div>";
   html += "<div style=\"margin-top:6px;font-size:12px;font-weight:700;color:"
     + (d.plan_closes === false ? "var(--alarm)" : "var(--tx2)") + "\">"
     + (d.plan_closes === false
-      ? "PLAN DOES NOT CLOSE" + ((d.days_to_drain || 0) > 0
-        ? " — " + d.days_to_drain.toFixed(1) + " days of contact needed to drain" : "")
-      : "Plan closes") + "</div>";
+      ? t("PLAN DOES NOT CLOSE") + ((d.days_to_drain || 0) > 0
+        ? " — " + t("{{d}} days of contact needed to drain", { d: d.days_to_drain.toFixed(1) }) : "")
+      : t("Plan closes")) + "</div>";
   if (d.first_overflow_utc) {
-    html += "<div style=\"margin-top:4px;font-size:12px;color:var(--alarm)\">First overflow: "
-      + esc(d.first_overflow_utc) + " (" + (d.overflow_mb || 0).toFixed(0) + " MB lost)</div>";
+    html += "<div style=\"margin-top:4px;font-size:12px;color:var(--alarm)\">"
+      + t("First overflow: {{utc}} ({{mb}} MB lost)",
+        { utc: d.first_overflow_utc, mb: (d.overflow_mb || 0).toFixed(0) }) + "</div>";
   }
   // G3: fit verdicts from the planner's own budget machinery.
   const fit = computeFitVerdicts(d);
   if (fit && fit.dumps.length) {
-    html += "<div class=\"sect\">DUMP FIT — ACHIEVABLE vs BACKLOG</div>";
+    html += "<div class=\"sect\">" + t("DUMP FIT — ACHIEVABLE vs BACKLOG") + "</div>";
     for (const v of fit.dumps.slice(0, 5)) {
       const t = new Date(v.startMs);
       const hm = String(t.getUTCHours()).padStart(2, "0") + ":"
@@ -1109,23 +1150,23 @@ function renderDataBudget(d) {
         + "<span>" + v.achievableMb.toFixed(1) + " / "
         + v.backlogMb.toFixed(1) + " MB</span>"
         + "<span>" + (v.inPass ? fitChip(v)
-          : "<span style=\"color:var(--alarm);font-weight:700\">WILL NOT FIT"
-            + " — outside every pass</span>") + "</span></div>";
+          : "<span style=\"color:var(--alarm);font-weight:700\">"
+            + t("WILL NOT FIT — outside every pass") + "</span>") + "</span></div>";
     }
   }
   const passes = d.pass_downlink || [];
   if (passes.length) {
-    html += "<div class=\"sect\">PER-PASS DOWNLINK (NEXT 5)</div>";
+    html += "<div class=\"sect\">" + t("PER-PASS DOWNLINK (NEXT 5)") + "</div>";
     for (const p of passes.slice(0, 5)) {
       const v = fit ? fit.perPass.get(p.pass_id) : null;
       html += "<div class=\"kv-grid\" style=\"grid-template-columns:1.2fr .9fr .9fr .8fr .9fr;"
         + "border-bottom:1px solid var(--line);padding:3px 0\">"
         + "<span style=\"font-family:var(--sans)\">" + esc(p.gs_name) + "</span>"
         + "<span>" + (p.duration_s / 60).toFixed(1) + " min</span>"
-        + "<span>" + p.capacity_mb.toFixed(1) + " MB cap</span>"
+        + "<span>" + t("{{mb}} MB cap", { mb: p.capacity_mb.toFixed(1) }) + "</span>"
         + "<span>" + (p.dump_scheduled ? p.planned_dump_mb.toFixed(1) + " MB" : "—") + "</span>"
         + "<span>" + (p.dump_scheduled ? fitChip(v)
-          : "<span style=\"color:var(--tx3)\">no dump</span>") + "</span></div>";
+          : "<span style=\"color:var(--tx3)\">" + t("no dump") + "</span>") + "</span></div>";
     }
   }
   const warnings = d.warnings || [];
@@ -1147,8 +1188,8 @@ async function loadPassRollups() {
   const base = services && services.rfsim_url;
   if (!base) {
     el.innerHTML = "<span style=\"font-size:12px;color:var(--tx3)\">"
-      + "No rfsim URL configured (planning/planner.yaml "
-      + "services.rfsim_url) — achieved pass rollups are not shown.</span>";
+      + t("No rfsim URL configured ({{where}}) — achieved pass rollups are not shown.",
+        { where: "planning/planner.yaml services.rfsim_url" }) + "</span>";
     return;
   }
   try {
@@ -1160,12 +1201,12 @@ async function loadPassRollups() {
     let html = "";
     if (!last) {
       html += "<span style=\"font-size:12px;color:var(--tx3)\">"
-        + "No completed passes recorded yet.</span>";
+        + t("No completed passes recorded yet.") + "</span>";
     } else {
       const lock = last.locked
         ? ((last.lock_delay_s === null || last.lock_delay_s === undefined)
-          ? "locked" : "+" + Number(last.lock_delay_s).toFixed(1) + " s")
-        : "<span style=\"color:var(--alarm)\">no lock</span>";
+          ? t("locked") : "+" + Number(last.lock_delay_s).toFixed(1) + " s")
+        : "<span style=\"color:var(--alarm)\">" + t("no lock") + "</span>";
       const eb = (last.mean_eb_n0_db === null || last.mean_eb_n0_db === undefined)
         ? "—" : Number(last.mean_eb_n0_db).toFixed(1) + " dB";
       const fer = (last.fer === null || last.fer === undefined)
@@ -1174,27 +1215,27 @@ async function loadPassRollups() {
         || last.data_volume_bytes === undefined)
         ? "—" : (Number(last.data_volume_bytes) / 1024).toFixed(1) + " kB";
       html += "<div class=\"kv-grid\">"
-        + "<b>station</b><span>" + esc(last.gs_name || "?") + "</span>"
-        + "<b>lock delay</b><span>" + lock + "</span>"
-        + "<b>mean Eb/N0</b><span>" + eb + "</span>"
-        + "<b>FER</b><span>" + fer + "</span>"
-        + "<b>volume</b><span>" + vol + "</span>"
-        + "<b>duration</b><span>"
+        + "<b>" + t("station") + "</b><span>" + esc(last.gs_name || "?") + "</span>"
+        + "<b>" + t("lock delay") + "</b><span>" + lock + "</span>"
+        + "<b>" + t("mean {{q}}", { q: "Eb/N0" }) + "</b><span>" + eb + "</span>"
+        + "<b>" + t("FER") + "</b><span>" + fer + "</span>"
+        + "<b>" + t("volume") + "</b><span>" + vol + "</span>"
+        + "<b>" + t("duration") + "</b><span>"
         + (last.duration_s !== null && last.duration_s !== undefined
           ? Number(last.duration_s).toFixed(0) + " s" : "—") + "</span>"
         + "</div>";
     }
     if (data.active) {
       html += "<div style=\"margin-top:4px;font-size:12px;color:var(--info)\">"
-        + "Pass in progress: " + esc(data.active.gs_name || "?")
-        + (data.active.first_lock_ts === null ? " (not locked yet)" : " (locked)")
+        + (data.active.first_lock_ts === null
+          ? t("Pass in progress: {{gs}} (not locked yet)", { gs: data.active.gs_name || "?" })
+          : t("Pass in progress: {{gs}} (locked)", { gs: data.active.gs_name || "?" }))
         + "</div>";
     }
     el.innerHTML = html;
   } catch (e) {
     el.innerHTML = "<span style=\"font-size:12px;color:var(--warn)\">"
-      + "rfsim at " + esc(String(base))
-      + " unreachable — no achieved rollup.</span>";
+      + t("rfsim at {{base}} unreachable — no achieved rollup.", { base: String(base) }) + "</span>";
   }
 }
 
@@ -1206,18 +1247,20 @@ async function loadImagingTargets() {
     const targets = (await res.json()).targets || [];
     const el = $("imagingTargets");
     if (!targets.length) {
-      el.innerHTML = "<span style=\"font-size:12px;color:var(--tx3)\">No imaging targets configured.</span>";
+      el.innerHTML = "<span style=\"font-size:12px;color:var(--tx3)\">" + t("No imaging targets configured.") + "</span>";
       return;
     }
-    el.innerHTML = targets.map((t) => {
-      const nm = t.name || t.target_id || t.id || "?";
-      const where = (t.lat !== undefined && t.lon !== undefined)
-        ? t.lat.toFixed(2) + "°, " + t.lon.toFixed(2) + "°"
-        : (t.lat_min !== undefined
-          ? t.lat_min.toFixed(1) + "…" + (t.lat_max ?? 0).toFixed(1) + "°" : "");
+    el.innerHTML = targets.map((tg) => {
+      const tid = tg.target_id || tg.id;
+      const nm = tg.name ? (tid ? tdb("target:" + tid + ":name", tg.name) : tg.name)
+        : (tid || "?");
+      const where = (tg.lat !== undefined && tg.lon !== undefined)
+        ? tg.lat.toFixed(2) + "°, " + tg.lon.toFixed(2) + "°"
+        : (tg.lat_min !== undefined
+          ? tg.lat_min.toFixed(1) + "…" + (tg.lat_max ?? 0).toFixed(1) + "°" : "");
       return "<div class=\"tgt\"><span class=\"n\">" + esc(nm) + "</span>"
         + "<span>" + esc(where) + "</span>"
-        + "<span>" + esc(t.priority || "") + "</span></div>";
+        + "<span>" + esc(tg.priority || "") + "</span></div>";
     }).join("");
   } catch (e) { /* keep last */ }
 }
@@ -1234,7 +1277,7 @@ async function loadImagingOpportunities() {
 function renderImagingOpps() {
   const panel = $("imagingOpportunitiesPanel");
   if (!imagingOpps.length) {
-    panel.innerHTML = "<span style=\"font-size:12px;color:var(--tx3)\">No opportunities in the horizon.</span>";
+    panel.innerHTML = "<span style=\"font-size:12px;color:var(--tx3)\">" + t("No opportunities in the horizon.") + "</span>";
     return;
   }
   panel.innerHTML = imagingOpps.slice(0, 8).map((opp) => {
@@ -1243,15 +1286,16 @@ function renderImagingOpps() {
     const aim = (opp.access_lat !== undefined)
       ? opp.access_lat.toFixed(2) + "°, " + opp.access_lon.toFixed(2) + "°" : "";
     return "<div class=\"opp " + (opp.priority === "high" ? "high" : "") + "\">"
-      + "<div class=\"nm\">" + esc(opp.target_name) + "</div>"
-      + "<div class=\"meta\">" + fmtUTC(captureUtc) + "Z · " + dur + " min access</div>"
-      + "<div class=\"meta\">aim " + esc(aim) + " · off-nadir "
-      + (opp.off_nadir_deg !== undefined ? opp.off_nadir_deg.toFixed(1) : "?")
-      + "° · sun " + (opp.solar_elevation_deg !== undefined
-        ? opp.solar_elevation_deg.toFixed(0) : "?") + "°</div>"
+      + "<div class=\"nm\">" + esc(opp.target_id
+        ? tdb("target:" + opp.target_id + ":name", opp.target_name) : opp.target_name) + "</div>"
+      + "<div class=\"meta\">" + t("{{t}}Z · {{dur}} min access", { t: fmtUTC(captureUtc), dur }) + "</div>"
+      + "<div class=\"meta\">" + t("aim {{aim}} · off-nadir {{nadir}}° · sun {{sun}}°", {
+        aim, nadir: opp.off_nadir_deg !== undefined ? opp.off_nadir_deg.toFixed(1) : "?",
+        sun: opp.solar_elevation_deg !== undefined ? opp.solar_elevation_deg.toFixed(0) : "?" })
+      + "</div>"
       + "<button class=\"ds-btn\" style=\"margin-top:4px\" data-act=\"schedule-imaging\""
       + " data-target=\"" + esc(opp.target_id) + "\" data-start=\"" + esc(captureUtc)
-      + "\">SCHEDULE</button></div>";
+      + "\">" + t("SCHEDULE") + "</button></div>";
   }).join("");
 }
 
@@ -1260,12 +1304,12 @@ async function scheduleImagingActivity(targetId, startTime) {
     const res = await fetch("/api/imaging/schedule", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ target_id: targetId, start_time: startTime }) });
-    if (res.ok) { alert("Imaging activity scheduled."); mainPoller.kick(); }
+    if (res.ok) { alert(tText("Imaging activity scheduled.")); mainPoller.kick(); }
     else {
       const err = await res.json().catch(() => ({}));
-      alert("Failed to schedule imaging activity: " + (err.error || res.status));
+      alert(tText("Failed to schedule imaging activity: {{reason}}", { reason: err.error || res.status }));
     }
-  } catch (e) { alert("Error scheduling imaging activity: " + e); }
+  } catch (e) { alert(tText("Error scheduling imaging activity: {{e}}", { e: String(e) })); }
 }
 
 /* ── Wiring + init ────────────────────────────────────────────────────── */
@@ -1314,6 +1358,28 @@ function wire() {
 }
 
 async function init() {
+  await I18n.ready;            // English: immediate; else bounded catalog load
+  mountLangToggle($("lang-toggle"));
+  // Static markup (data-i18n*) is re-applied by i18n.js; everything built
+  // here in JS is rebuilt in the new language. Canvas text is not DOM.
+  // The budget / imaging / rollup panels are re-rendered by kicking the
+  // main poll (server data is refetched, never re-labelled in place).
+  onLangChange(() => {
+    updateClock(); applyDataSourceBadges(); socHint(); updateStartTimeHint();
+    if (editingId !== null) {
+      $("modalTitle").textContent = tText("EDIT ACTIVITY #{{id}}", { id: editingId });
+    } else if ($("modalOverlay").classList.contains("active")) {
+      $("modalTitle").textContent = tText("ADD ACTIVITY");
+    }
+    loadActivityTypes(); loadPlanTemplates(); renderActTypeInfo();
+    drawTimeline(); updateContactsTable(); updateActivityList();
+    for (const el of [$("scheduleValidation"), $("constraintsResult")]) el.innerHTML = "";
+    $("scheduleValidation").style.display = "none";
+    for (const d of document.querySelectorAll("details.cx[open]")) loadDomainConstraint(d);
+    mainPoller.kick(); scPoller.kick();
+  });
+  $("apiStatusText").textContent = tText("API: checking…");
+  socHint();
   wire();
   updateClock();
   setInterval(updateClock, 1000);                       // 1 s clock

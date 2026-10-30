@@ -12,7 +12,7 @@
 The Telemetry, Tracking and Command (TTC) subsystem provides the radio frequency
 communication link between EOSAT-1 and the ground segment. It supports telecommand
 reception, telemetry transmission, and ranging for orbit determination. The subsystem
-comprises a cold-redundant VHF/UHF transponder pair with a dedicated PDM command channel
+comprises a cold-redundant S-band transponder pair (plus a separate UHF beacon transmitter) with a dedicated PDM command channel
 for the receiver, burn wire deployable antennas, and low-rate/high-rate data modes.
 
 ## 2. Architecture
@@ -46,9 +46,9 @@ design feature ensures the spacecraft is always commandable:
 
 | Component          | Power Source                | Always On? |
 |--------------------|-----------------------------|------------|
-| Receiver (RX)      | Unswitchable PDM (UNSW-2)   | Yes        |
-| Transmitter (TX)   | Switchable PDM (SW-1)       | No         |
-| Power Amplifier    | Switchable PDM (SW-1)       | No         |
+| Receiver (RX)      | Unswitchable `ttc_rx` (line 1) | Yes     |
+| Transmitter (TX)   | Switchable `ttc_tx` (line 2) | No        |
+| Power Amplifier    | Switchable `ttc_tx` (line 2) | No        |
 
 After the last valid command decode, a 15-minute auto-off timer begins for the TX and PA
 switchable line. If no further commands are received within 15 minutes, the transmitter
@@ -241,7 +241,7 @@ EOSAT-1 uses a two-station ground network providing bipolar coverage:
 | Parameter          | Value                                      |
 |--------------------|--------------------------------------------|
 | Location           | 63.747 deg N, 68.518 deg W                 |
-| Antenna Diameter   | 3.7 m VHF/UHF                               |
+| Antenna Diameter   | 9.0 m S-band                                |
 | Min. Elevation     | 5 deg                                      |
 | Contacts/Day       | 2–4 (typical)                              |
 | Pass Duration      | 5–12 min                                   |
@@ -255,7 +255,7 @@ daily contacts with the ~513 km, 98 deg inclination orbit.
 | Parameter          | Value                                      |
 |--------------------|--------------------------------------------|
 | Location           | 72.012 deg S, 2.535 deg E                  |
-| Antenna Diameter   | 3.7 m VHF/UHF                               |
+| Antenna Diameter   | 7.3 m S-band                                |
 | Min. Elevation     | 5 deg                                      |
 | Contacts/Day       | 2–4 (typical)                              |
 | Pass Duration      | 5–10 min                                   |
@@ -272,7 +272,7 @@ Link margin varies between stations due to different slant range geometries:
 |-----------------------|--------------------|---------------------|
 | Typical max elevation | 20–70 deg          | 20–60 deg           |
 | Best-case margin      | > 10 dB            | > 10 dB             |
-| Worst-case margin     | ~3 dB (5 deg elev) | ~3 dB (5 deg elev)  |
+| Worst-case margin     | 34.5 dB (5 deg elev, HIGH tier) | 33.0 dB (5 deg elev, HIGH tier) |
 | Free space loss (513 km, 10 deg elev) | -164.0 dB | -164.0 dB      |
 
 EOSAT-1 typically has 4–8 ground contacts per day across both stations, providing
@@ -302,8 +302,8 @@ Schedule switchover commands with sufficient contact time remaining.
 
 ## 7. Operational Notes
 
-1. The TTC subsystem enters receive-only mode during spacecraft safe mode to conserve
-   power. Telemetry transmission continues on the LOW tier (16 kbps) — the configured
+1. The TTC subsystem does not go receive-only during spacecraft safe mode.
+   Telemetry transmission continues on the LOW tier (16 kbps) — the configured
    `safe_tier`. Safe mode does not cost you housekeeping; it costs you the ability to
    dump.
 2. The onboard GPS receiver provides position and velocity data for orbit determination,

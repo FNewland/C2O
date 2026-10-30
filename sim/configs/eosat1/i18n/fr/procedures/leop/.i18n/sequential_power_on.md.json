@@ -1,0 +1,82 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/leop/sequential_power_on.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "leop-007-sequential-power-on",
+   "en_hash": "c36dee4e31ebaf31",
+   "fr_hash": "ef36c92873a408e7"
+  },
+  {
+   "id": "leop-007-sequential-power-on/purpose",
+   "en_hash": "ea95cf1313bc2850",
+   "fr_hash": "4327a72720f20791"
+  },
+  {
+   "id": "leop-007-sequential-power-on/prerequisites",
+   "en_hash": "6cbd5872aef7c70e",
+   "fr_hash": "9d204f2d2c5f631f"
+  },
+  {
+   "id": "leop-007-sequential-power-on/what-this-card-does-not-power-and-who-does",
+   "en_hash": "a56c2de2ed7130e7",
+   "fr_hash": "656f28b177956ee5"
+  },
+  {
+   "id": "leop-007-sequential-power-on/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "leop-007-sequential-power-on/procedure-steps/step-1-verify-eps-baseline",
+   "en_hash": "5170ccc6dfcbb356",
+   "fr_hash": "f1df59a161478f1e"
+  },
+  {
+   "id": "leop-007-sequential-power-on/procedure-steps/step-2-energise-heater-lines-as-needed-conditional",
+   "en_hash": "25abc30f87da65fc",
+   "fr_hash": "93b12c55659f1c86"
+  },
+  {
+   "id": "leop-007-sequential-power-on/procedure-steps/step-3-energise-the-aocs-suite-line-and-enable-its-housekeeping",
+   "en_hash": "ca90fd771dc05ce6",
+   "fr_hash": "4bbe6358cc67631c"
+  },
+  {
+   "id": "leop-007-sequential-power-on/procedure-steps/step-4-enable-the-detumble-sensors-and-actuators-before-commanding-it",
+   "en_hash": "299e50c39748f0ee",
+   "fr_hash": "7241f2d613731e8a"
+  },
+  {
+   "id": "leop-007-sequential-power-on/procedure-steps/step-5-command-detumble-and-verify-on-the-magnetometer-telemetry",
+   "en_hash": "ed84c6074ba51d8d",
+   "fr_hash": "c8ea72664817b0d5"
+  },
+  {
+   "id": "leop-007-sequential-power-on/procedure-steps/step-6-confirm-the-exit-power-state",
+   "en_hash": "5ce79840489a0823",
+   "fr_hash": "e103c08354d001d8"
+  },
+  {
+   "id": "leop-007-sequential-power-on/off-nominal-handling",
+   "en_hash": "e5dff4b0e530ffce",
+   "fr_hash": "ae3761529f92fb8f"
+  },
+  {
+   "id": "leop-007-sequential-power-on/exit-state",
+   "en_hash": "fe94bab9e7c33d2d",
+   "fr_hash": "43c7433cbfcc4bef"
+  },
+  {
+   "id": "leop-007-sequential-power-on/post-conditions",
+   "en_hash": "d26cb26afc8182e0",
+   "fr_hash": "011d52389cc5f80f"
+  }
+ ],
+ "en_commit": "983af0f"
+}

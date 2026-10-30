@@ -29,7 +29,7 @@ above 40% SoC.
 **GO/NO-GO:** Telemetry confirms low-energy state — proceed with load shedding
 
 ### Step 2 — Shed Non-Essential Loads: Payload OFF
-**TC:** `PAYLOAD_SET_MODE(mode=0)` (Service 8, Subtype 1)
+**TC:** `PAYLOAD_SET_MODE(mode=0)` (Service 8, Subtype 1, func_id 26)
 **Verify:** `payload.mode` (0x0600) = 0 (OFF) within 10s
 **Verify:** `eps.power_cons` (0x0106) decreases by >= 15W within 15s
 **GO/NO-GO:** Payload confirmed OFF and power consumption reduced — proceed
@@ -55,7 +55,7 @@ above 40% SoC.
 **GO/NO-GO:** SoC increasing and battery temp nominal — continue monitoring until SoC > 40%
 
 ### Step 6 — Re-Enable Loads: Payload to Standby
-**TC:** `PAYLOAD_SET_MODE(mode=1)` (Service 8, Subtype 1)
+**TC:** `PAYLOAD_SET_MODE(mode=1)` (Service 8, Subtype 1, func_id 26)
 **Verify:** `payload.mode` (0x0600) = 1 (STANDBY) within 10s
 **Verify:** `eps.bat_soc` (0x0101) remains > 35% after load addition (allow 60s stabilisation)
 **Verify:** `eps.power_cons` (0x0106) increase is consistent with payload standby draw (~8W)
@@ -68,7 +68,7 @@ above 40% SoC.
 **GO/NO-GO:** Attitude nominal and SoC stable — proceed to restore OBC mode
 
 ### Step 8 — Restore OBC to Nominal Mode
-**TC:** `OBC_SET_MODE(mode=0)` (Service 8, Subtype 1)
+**TC:** `OBC_SET_MODE(mode=0)` (Service 8, Subtype 1, func_id 50)
 **Verify:** `obdh.mode` (0x0300) = 0 (NOMINAL) within 10s
 **Verify:** `eps.bat_soc` (0x0101) > 40%
 **Verify:** `eps.bus_voltage` (0x0105) > 28.0V

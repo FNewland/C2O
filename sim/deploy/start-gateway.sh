@@ -7,6 +7,10 @@
 # fanning out TM to all connected clients and aggregating TC upstream.
 #
 # Configure addresses in smo-env.conf before running.
+#
+# DEPRECATED: smo-gateway is replaced by smo-link (space-link agent + ground-
+# segment gateway). Use `SMO_PROFILE=space|ground ./start.sh` or
+# docker/compose.yaml; see docs/DEPLOYMENT.md §9. Kept until a later clean-up.
 # =============================================================================
 set -e
 

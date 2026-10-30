@@ -1,0 +1,82 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/contingency/obc_redundancy_switchover.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "ctg-011-obc-redundancy-switchover",
+   "en_hash": "8a4f1a3ef2089952",
+   "fr_hash": "14204d3f756c40c5"
+  },
+  {
+   "id": "ctg-011-obc-redundancy-switchover/objective",
+   "en_hash": "6c9cdcc3095ab42e",
+   "fr_hash": "1871bf4cb38dff98"
+  },
+  {
+   "id": "ctg-011-obc-redundancy-switchover/prerequisites",
+   "en_hash": "2bbef3a500c3176e",
+   "fr_hash": "3e6d803b6bf7df8d"
+  },
+  {
+   "id": "ctg-011-obc-redundancy-switchover/required-telemetry",
+   "en_hash": "0b341672d939cce5",
+   "fr_hash": "9a73181af08424f9"
+  },
+  {
+   "id": "ctg-011-obc-redundancy-switchover/required-commands",
+   "en_hash": "a9d85ded903af54f",
+   "fr_hash": "377ee27f9f263ca3"
+  },
+  {
+   "id": "ctg-011-obc-redundancy-switchover/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "ctg-011-obc-redundancy-switchover/procedure-steps/step-1-verify-obc-a-anomaly",
+   "en_hash": "862c08080bfbfb9f",
+   "fr_hash": "9c9d7bea2e3d7916"
+  },
+  {
+   "id": "ctg-011-obc-redundancy-switchover/procedure-steps/step-2-command-obc-switchover",
+   "en_hash": "818535d4b70adb89",
+   "fr_hash": "661cb8b6f04b07d9"
+  },
+  {
+   "id": "ctg-011-obc-redundancy-switchover/procedure-steps/step-3-verify-boot-to-bootloader",
+   "en_hash": "1ca2e79f91193b2c",
+   "fr_hash": "73355b173b269e54"
+  },
+  {
+   "id": "ctg-011-obc-redundancy-switchover/procedure-steps/step-4-verify-software-image-and-boot-application",
+   "en_hash": "da0ad1a1491ae907",
+   "fr_hash": "b9ec9b95598b8d7b"
+  },
+  {
+   "id": "ctg-011-obc-redundancy-switchover/procedure-steps/step-5-verify-all-subsystems-nominal",
+   "en_hash": "922a5ce027b70591",
+   "fr_hash": "3b76e569cbdc312a"
+  },
+  {
+   "id": "ctg-011-obc-redundancy-switchover/procedure-steps/step-6-post-switchover-documentation",
+   "en_hash": "542ce8cd0a704338",
+   "fr_hash": "3df021dba89c4543"
+  },
+  {
+   "id": "ctg-011-obc-redundancy-switchover/verification-criteria",
+   "en_hash": "4657341cc3e554fe",
+   "fr_hash": "e08d303930a87b9c"
+  },
+  {
+   "id": "ctg-011-obc-redundancy-switchover/contingency",
+   "en_hash": "528655ab92f13682",
+   "fr_hash": "7402ac22dc9137ac"
+  }
+ ],
+ "en_commit": "3e80564"
+}

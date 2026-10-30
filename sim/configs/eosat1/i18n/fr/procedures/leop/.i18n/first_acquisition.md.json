@@ -1,0 +1,92 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/leop/first_acquisition.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "leop-001-first-acquisition-of-signal-obc-boot",
+   "en_hash": "5fa4161d802e6970",
+   "fr_hash": "6d9996f1d1cc03e9"
+  },
+  {
+   "id": "leop-001-first-acquisition-of-signal-obc-boot/purpose",
+   "en_hash": "7bf41c51f39fa1f6",
+   "fr_hash": "57a56ac514680de8"
+  },
+  {
+   "id": "leop-001-first-acquisition-of-signal-obc-boot/prerequisites",
+   "en_hash": "23c86bb53b0dc559",
+   "fr_hash": "a20156f4877f37c6"
+  },
+  {
+   "id": "leop-001-first-acquisition-of-signal-obc-boot/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "leop-001-first-acquisition-of-signal-obc-boot/procedure-steps/step-1-configure-ground-station-receiver-for-the-scheduled-pass",
+   "en_hash": "963560f692752761",
+   "fr_hash": "87c0444dcfbc2c88"
+  },
+  {
+   "id": "leop-001-first-acquisition-of-signal-obc-boot/procedure-steps/step-2-send-first-uplink-connection-test",
+   "en_hash": "cf761daa7affb90e",
+   "fr_hash": "3369e0193de728f7"
+  },
+  {
+   "id": "leop-001-first-acquisition-of-signal-obc-boot/procedure-steps/step-3-verify-carrier-lock-and-link-quality",
+   "en_hash": "96242f77aacfc730",
+   "fr_hash": "077a537a2360f087"
+  },
+  {
+   "id": "leop-001-first-acquisition-of-signal-obc-boot/procedure-steps/step-4-confirm-obc-is-in-bootloader",
+   "en_hash": "6bb5f4eb8cb33730",
+   "fr_hash": "5a6547b1b280fdc3"
+  },
+  {
+   "id": "leop-001-first-acquisition-of-signal-obc-boot/procedure-steps/step-5-boot-obc-into-application-image",
+   "en_hash": "200adea08732511f",
+   "fr_hash": "a5772e0085ae7bac"
+  },
+  {
+   "id": "leop-001-first-acquisition-of-signal-obc-boot/procedure-steps/step-5a-clear-beacon-mode-and-move-to-the-low-rung",
+   "en_hash": "48446393463bbe98",
+   "fr_hash": "c9b45e9139623bf8"
+  },
+  {
+   "id": "leop-001-first-acquisition-of-signal-obc-boot/procedure-steps/step-6-note-the-unset-clock-do-not-sync-here",
+   "en_hash": "f654374a85380550",
+   "fr_hash": "e9bc0cdcfcab70a2"
+  },
+  {
+   "id": "leop-001-first-acquisition-of-signal-obc-boot/procedure-steps/step-7-request-eps-housekeeping-power-sanity-check",
+   "en_hash": "6f070fba45d1cb67",
+   "fr_hash": "7b0eb673abf72255"
+  },
+  {
+   "id": "leop-001-first-acquisition-of-signal-obc-boot/procedure-steps/step-8-log-and-report",
+   "en_hash": "96a3a50814518809",
+   "fr_hash": "ec9df1b17f41b797"
+  },
+  {
+   "id": "leop-001-first-acquisition-of-signal-obc-boot/off-nominal-handling",
+   "en_hash": "87dcc1bbaf36444d",
+   "fr_hash": "12f1e33e6a89c389"
+  },
+  {
+   "id": "leop-001-first-acquisition-of-signal-obc-boot/exit-state",
+   "en_hash": "4814bbdda257d0f8",
+   "fr_hash": "82e286c94e741886"
+  },
+  {
+   "id": "leop-001-first-acquisition-of-signal-obc-boot/post-conditions",
+   "en_hash": "9a561699e050e633",
+   "fr_hash": "255f3c828e6e48a7"
+  }
+ ],
+ "en_commit": "3e80564"
+}

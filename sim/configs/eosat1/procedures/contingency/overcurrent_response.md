@@ -109,11 +109,11 @@ non-switchable and cannot trip this way.
 
 ### Step 6: Verify Downstream Subsystem Recovery
 **Note:** Request housekeeping for the affected subsystem:
-**TC:** `HK_REQUEST(sid=2)` (Service 3, Subtype 27) — AOCS wheels:   — verify `aocs.mode` (0x020F), wheel speeds
-**TC:** `HK_REQUEST(sid=5)` (Service 3, Subtype 27) — Payload:   — verify `payload.mode` (0x0600)
-**TC:** `HK_REQUEST(sid=6)` (Service 3, Subtype 27) — TTC TX:   — verify `ttc.link_status` (0x0501) = 2 (LOCKED).
+**TC:** `HK_REQUEST(sid=2)` (Service 3, Subtype 27) — AOCS wheels: verify `aocs.mode` (0x020F) and wheel speeds
+**TC:** `HK_REQUEST(sid=5)` (Service 3, Subtype 27) — Payload: verify `payload.mode` (0x0600)
+**TC:** `HK_REQUEST(sid=6)` (Service 3, Subtype 27) — TTC TX: verify `ttc.link_status` (0x0501) = 2 (LOCKED).
   SID 6 is the TT&C structure; SID 5 is the payload.
-- Heaters: `HK_REQUEST(sid=3)` — verify heater status and temperatures
+**TC:** `HK_REQUEST(sid=3)` (Service 3, Subtype 27) — Heaters: verify heater status and temperatures
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — EPS housekeeping
 **Verify:** Downstream subsystem is functioning nominally.
 **Verify:** `eps.power_cons` (0x0106) reflects the re-added load.

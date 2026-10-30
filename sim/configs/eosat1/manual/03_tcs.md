@@ -31,7 +31,7 @@ isolation from the space environment. Key blanketed areas include:
 ### 2.2 Radiators
 
 Dedicated radiator panels are mounted on the -Y and +Y faces to reject waste heat.
-The radiator sizing is optimised for the nominal power dissipation of ~80 W.
+The radiator sizing is optimised for the nominal power dissipation of ~29 W (orbit-average, see 01_eps.md).
 
 | Radiator        | Location | Area     | Reject Capacity |
 |-----------------|----------|----------|-----------------|
@@ -61,11 +61,11 @@ The battery heater is controlled via the `HEATER_CONTROL` command (S8,S1) with p
 logic and will activate the heater if battery temperature falls below 5 deg C, overriding
 ground commands if temperatures approach red limits.
 
-**Note:** Unlike the original design, EOSAT-1 does not carry OBC or thruster heater
-circuits. The OBC is maintained within its thermal limits through passive means: internal
-power dissipation provides self-heating, and the MLI blankets and radiator sizing maintain
-the OBC within the qualified temperature range under all orbital conditions. There is no
-propulsion system on EOSAT-1, so no thruster heater is required.
+**Note:** EOSAT-1 also carries an OBC heater and a thruster heater. The OBC heater
+(`HEATER_OBC`, S8 func 41; status `htr_obc` 0x040B; 4 W on PDM line 6; thermostat ON +5 C /
+OFF +10 C) is a cold-case backstop: internal dissipation, MLI and radiator sizing normally keep
+the OBC in its qualified range. The thruster catalyst-bed heater (`HEATER_THRUSTER`, S8 func 42;
+status 0x041B; 12 W from the `prop` line) preheats the thruster before a manoeuvre.
 
 ### 3.2 Orientation for Passive Thermal Control
 
@@ -80,7 +80,7 @@ influence the thermal environment:
 | Eclipse-prep (thermal spin) | Distributes heat across faces before eclipse     |
 
 This orientation-based thermal control is particularly important during LEOP and contingency
-scenarios where active heater power must be conserved. In safe mode, the AOCS SAFE_POINT
+scenarios where active heater power must be conserved. In safe mode, the AOCS COARSE_SUN
 mode orients the spacecraft towards the Sun, providing passive heating.
 
 ### 3.3 Heater Failure Modes
@@ -105,11 +105,11 @@ draws up to 15 W and requires a 30-minute cooldown period from ambient temperatu
 | Cooler Type       | Stirling-cycle cryocooler    |
 | Target FPA Temp   | -15 deg C (nominal)          |
 | Cooldown Time     | ~30 min from ambient         |
-| Power Consumption | 10–15 W                      |
+| Power Consumption | 15 W                         |
 | Control           | Autonomous via payload mode   |
 
-The cooler is activated automatically when the payload transitions to STANDBY or IMAGING
-mode and deactivated when the payload is set to OFF.
+The cooler is activated automatically when the payload transitions to STANDBY, IMAGING or
+CALIBRATION mode and deactivated when the payload is set to OFF.
 
 ## 4. Temperature Zones
 
@@ -117,7 +117,7 @@ mode and deactivated when the payload is set to OFF.
 |----------------|------------------|------------------|------------------|
 | Battery        | 5–35 deg C       | 2–40 deg C       | 0–45 deg C       |
 | OBC            | 15–50 deg C      | 5–60 deg C       | 0–70 deg C       |
-| FPA Detector   | -18 to -12 deg C | -18 to 8 deg C   | -20 to 12 deg C  |
+| FPA Detector   | -18 to -12 deg C | -22 to 14 deg C  | -25.5 to 17.5 deg C |
 | Solar Panels   | -80 to 80 deg C  | —                | —                |
 | Structure      | -20 to 50 deg C  | —                | —                |
 
@@ -174,7 +174,7 @@ detector outside its operating envelope and the console should say so.
 
 ## 8. Panel Temperature Coupling to Solar Illumination
 
-The six body-mounted solar panels act as the primary thermal interface between the
+The five body-mounted solar panels (every face except -Z) act as the primary thermal interface between the
 spacecraft and the space environment. Panel temperatures are strongly coupled to solar
 illumination:
 

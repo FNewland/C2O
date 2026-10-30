@@ -54,10 +54,10 @@ the -15C setpoint band (`payload.fpa_ready` 0x0610 = 1 is the same statement)
 ### Step 3 — Verify Payload Ready for Imaging
 **TC:** `HK_REQUEST(sid=5)` (Service 3, Subtype 27)
 **Verify:** `payload.mode` (0x0600) = 1 (STANDBY) within 10s
-**TC:** `GET_PARAM(param_id=0x0604)` (Service 20, Subtype 3) — data interface status
-**Verify:** Data interface = READY (value 1) within 10s
-**TC:** `GET_PARAM(param_id=0x0605)` (Service 20, Subtype 3) — storage free
-**Verify:** Storage free > 500 MB (sufficient for test image) within 10s
+**TC:** `GET_PARAM(param_id=0x0604)` (Service 20, Subtype 3) — `payload.store_used` (store fill, %)
+**Verify:** `payload.store_used` (0x0604) < 97 % (at least 500 MB of the 20 GB store free for the test image) within 10s
+**TC:** `GET_PARAM(param_id=0x0605)` (Service 20, Subtype 3) — `payload.image_count`
+**Verify:** Record `payload.image_count` (0x0605) as the pre-capture baseline within 10s
 **GO/NO-GO:** Payload ready to transition to IMAGING
 
 ### Step 4 — Command Payload to IMAGING Mode
@@ -75,9 +75,9 @@ the -15C setpoint band (`payload.fpa_ready` 0x0610 = 1 is the same statement)
 **GO/NO-GO:** First image captured successfully
 
 ### Step 6 — Verify Image Data Written to Storage
-**TC:** `GET_PARAM(param_id=0x0605)` (Service 20, Subtype 3) — storage free
+**TC:** `GET_PARAM(param_id=0x0604)` (Service 20, Subtype 3) — `payload.store_used` (store fill, %)
 **Action:** Compare with pre-capture storage. Difference should correspond to image data volume.
-**Verify:** Storage free decreased by 50-200 MB (image stored) within 10s
+**Verify:** `payload.store_used` (0x0604) increased (image stored) within 10s
 **TC:** `GET_PARAM(param_id=0x060B)` (Service 20, Subtype 3) — `payload.mem_used_mb` (stored size of the new product)
 **Verify:** Image file size > 10 MB (not an empty or corrupted file) within 10s
 **GO/NO-GO:** Image data stored on mass memory
@@ -134,11 +134,11 @@ value; payload team assesses geometry, band presence, dead pixels, content.
 
 ## Off-Nominal Handling
 - If FINE_POINT not achieved before target overpass: the capture gate REQUIRES FINE_POINT with total error < 0.05 deg — it will refuse in NOMINAL. Re-run the fine-ready check, fix the named mask bit, and take the next overpass.
-- If payload does not transition to IMAGING (mode 2): Retry once. If persistent, check `GET_PARAM(param_id=0x0603)` self-test and `GET_PARAM(param_id=0x0601)` FPA temperature. Payload may refuse IMAGING if FPA not at setpoint. Return to STANDBY and troubleshoot.
+- If payload does not transition to IMAGING (mode 2): Retry once. If persistent, check `GET_PARAM(param_id=0x0603)` imager electronics temperature (`payload.imager_temp`) and `GET_PARAM(param_id=0x0601)` FPA temperature. Payload may refuse IMAGING if FPA not at setpoint. Return to STANDBY and troubleshoot.
 - If `payload.last_scene_id` does not advance: check the capture gates — `payload.mode` (0x0600) = 2, `payload.fpa_ready` (0x0610) = 1, `aocs.mode` (0x020F) = 5 FINE_POINT with total error (0x02AA) < 0.05 deg. A refused capture returns TM(1,8) naming the failed gate. If detector integration failed, retry capture. If persistent, check FPA electronics via `HK_REQUEST(sid=5)`. Power cycle payload if needed.
 - If image file size = 0 or very small (< 1 MB): Data write failure. Check mass memory interface. Retry capture. If storage full, delete test data and retry.
 - If preview shows fully dark image: Check if spacecraft was over nightside. Verify AOCS pointing was nadir. If dayside and dark, investigate FPA detector bias or shutter mechanism.
-- If the product is saturated (`payload.snr` 0x0616 collapses): the integration time is too long for the scene. Command `PAYLOAD_SET_INTEGRATION_TIME(blue=1.00, green=1.00, red=1.00, nir=1.00 ms)` (func_id 34, wire `22 00 64 00 64 00 64 00 64`) or reduce the gain with `PAYLOAD_SET_GAIN(gain=0.500)` (func_id 35, wire `23 01 F4`) and retry on the next opportunity.
+- If the product is saturated (`payload.snr` 0x0616 collapses): the integration time is too long for the scene. Command `PAYLOAD_SET_INTEGRATION_TIME(blue_ms=1.00, green_ms=1.00, red_ms=1.00, nir_ms=1.00)` (func_id 34, wire `22 00 64 00 64 00 64 00 64`) or reduce the gain with `PAYLOAD_SET_GAIN(gain=0.500)` (func_id 35, wire `23 01 F4`) and retry on the next opportunity.
 
 ## Post-Conditions
 - [ ] First image captured and stored on mass memory

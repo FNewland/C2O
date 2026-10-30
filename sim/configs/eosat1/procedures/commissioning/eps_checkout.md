@@ -38,9 +38,9 @@ for mission operations.
 ### Step 2 — Battery Voltage and State of Charge
 **TC:** `GET_PARAM(param_id=0x0100)` (Service 20, Subtype 3) — battery voltage
 **TC:** `GET_PARAM(param_id=0x0101)` (Service 20, Subtype 3) — battery SOC
-**Verify:** `eps.bat_voltage` (0x0100) in range [14.4V, 16.8V] within 10s
+**Verify:** `eps.bat_voltage` (0x0100) in range [21.5V, 29.2V] within 10s
 **Verify:** `eps.bat_soc` (0x0101) > 70% within 10s
-**Action:** Record values. Li-Ion 40Ah battery nominal voltage range is 14.4V (empty) to 16.8V (full).
+**Action:** Record values. Li-Ion 8S battery (100 Wh, 3 Ah) voltage range is 21.5V (empty) to 29.2V (full), nominal 26.4V.
 **GO/NO-GO:** Battery voltage and SOC within nominal range
 
 ### Step 3 — Solar Array Sunlit Performance
@@ -90,7 +90,7 @@ source, and it is restored to its entry state afterwards.
 
 ## Off-Nominal Handling
 - If bus voltage < 27.0V: Check battery SOC. If SOC < 30%, reduce loads immediately. Disable non-essential heaters. Verify sun-pointing attitude. If bus voltage < 26.0V, execute CTG-001 (load shed) and, with FD approval, `OBC_SET_MODE(mode=1)` — 1 is SAFE (0 is NOMINAL; the old text had the encoding backwards).
-- If power generation < 35W in sunlight with good sun-pointing: Check individual array string currents via `GET_PARAM(param_id=0x0112)` and `GET_PARAM(param_id=0x0113)`. If one wing underperforming, log anomaly. Assess single-wing power budget viability.
+- If power generation < 35W in sunlight with good sun-pointing: Check the per-wing currents via `GET_PARAM(param_id=0x0146)` (+Y wing) and `GET_PARAM(param_id=0x0147)` (−Y wing). If one wing underperforming, log anomaly. Assess single-wing power budget viability.
 - If battery SOC < 50% at end of eclipse: Reduce operational load. Defer commissioning activities requiring high power. Re-assess power budget.
 - If charge recovery rate below prediction: Check solar array degradation. Verify battery charge controller via `GET_PARAM(param_id=0x0109)`. If charge controller fault suspected, investigate redundant path.
 - If bus voltage oscillation detected: Check regulation mode via `GET_PARAM(param_id=0x010A)`. Log anomaly for EPS engineer review. If unstable, command `OBC_SET_MODE(mode=1)` (SAFE) with FD approval; restore with mode=0 (NOMINAL) after investigation.

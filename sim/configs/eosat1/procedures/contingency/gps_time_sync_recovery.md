@@ -91,8 +91,10 @@ exceeds 5 seconds, the AOCS will automatically trigger a protective transition t
 - Time jump was < 5 seconds or AOCS did not trigger protection
 - Proceed to Step 4 (verification only)
 **GO/NO-GO:** OBC time synchronized to GPS and AOCS mode status known — proceed to Step 4 or 5.
+**BRANCH:** `aocs.mode == 1` -> GO `STEP-5` | NO-GO `STEP-4` (timeout 10 s)
 
 ### Step 4: Verify Continued AOCS Operation (if not in SAFE_BOOT)
+**LABEL:** `STEP-4`
 **TC:** `HK_REQUEST(sid=2)` (Service 3, Subtype 27) — Request full AOCS housekeeping
 **Verify:** `aocs.mode` (0x020F) remains at pre-sync value (not SAFE_BOOT)
 **Verify:** `aocs.att_error` (0x0217) < threshold for current mode:
@@ -101,18 +103,20 @@ exceeds 5 seconds, the AOCS will automatically trigger a protective transition t
 **Verify:** Attitude rates within nominal envelope
 **Action:** Monitor AOCS for 2-3 orbits to confirm stable operation post-sync
 **GO/NO-GO:** AOCS operating nominally — time sync recovery complete. Exit procedure.
+**BRANCH:** `aocs.mode != 1` -> GO `STEP-END` | NO-GO `STEP-5` (timeout 10 s)
 
 ### Step 5: AOCS Re-Commissioning (if entered SAFE_BOOT)
+**LABEL:** `STEP-5`
 **Objective:** Transition AOCS from SAFE_BOOT through required commissioning phases to restore
-full attitude control capability. Follow the commissioning state machine defined in LEOP-004
-(AOCS Commissioning Walkthrough), phases 9 and 11.
+full attitude control capability. Follow the AOCS mode sequence of COM-005
+(AOCS Mode Transitions) and the NOMINAL declaration of COM-013.
 
 **Phase 9 — DETUMBLE Mode:**
 **TC:** `AOCS_SET_MODE(mode=2)` (Service 8, Subtype 1, func_id 0) — DETUMBLE
 **Rationale:** DETUMBLE uses magnetorquers and sun sensor to stabilize spacecraft rates.
-Reference: LEOP-004, Phase 9 — Initial Rate Damping.
+Reference: COM-005 (AOCS Mode Transitions), DETUMBLE entry.
 **Verify:** `aocs.mode` (0x020F) = 2 (DETUMBLE) within 10 seconds
-**Verify:** Angular rates begin decreasing: `aocs.rate_x`, `aocs.rate_y`, `aocs.rate_z` trending toward zero
+**Verify:** Angular rates begin decreasing: `aocs.rate_roll` (0x0204), `aocs.rate_pitch` (0x0205), `aocs.rate_yaw` (0x0206) trending toward zero
 **Monitor:** Duration: ~3-5 orbits in DETUMBLE (rates must decay to < 1 deg/s)
 **Verify:** Attitude error: `aocs.att_error` (0x0217) < 30 degrees
 **Wait:** Until rates < 0.5 deg/s and attitude is coarse sun-pointed.
@@ -124,7 +128,7 @@ Reference: LEOP-004, Phase 9 — Initial Rate Damping.
 **TC:** `AOCS_SET_MODE(mode=4)` (Service 8, Subtype 1, func_id 0) — NOMINAL — wait 30 seconds, verify `aocs.mode` = 4
 **TC:** `AOCS_SET_MODE(mode=5)` (Service 8, Subtype 1, func_id 0) — FINE_POINT — wait 30 seconds, verify `aocs.mode` = 5
 **Rationale:** Each transition allows attitude loop gain to re-establish at the new level.
-Reference: LEOP-004, Phase 11 — Fine Attitude Lock and Payload Commissioning.
+Reference: COM-005 (AOCS Mode Transitions) and COM-013 (ADCS Commissioning Closure & NOMINAL Declaration).
 **Verify:** After each transition, confirm `aocs.mode` equals the commanded value
 **Verify:** `aocs.att_error` (0x0217) reduces with each phase:
 - COARSE_SUN target: < 10 degrees
@@ -150,6 +154,7 @@ Reference: LEOP-004, Phase 11 — Fine Attitude Lock and Payload Commissioning.
 **GO/NO-GO:** All systems nominal, time synchronized, AOCS commissioned — recovery complete.
 
 ## Verification Criteria
+**LABEL:** `STEP-END`
 - [ ] GPS 3D fix confirmed (`aocs.gps_fix` 0x0274 = 3)
 - [ ] `obdh.obc_time` (0x0309) synchronised to GPS UTC within 1 s
 - [ ] AOCS mode either stable in pre-event mode OR successfully re-commissioned to FINE_POINT
@@ -173,6 +178,6 @@ Reference: LEOP-004, Phase 11 — Fine Attitude Lock and Payload Commissioning.
   behaviour.
 
 ## References
-- LEOP-004: AOCS Commissioning Walkthrough, Phase 9 (Initial Rate Damping) and Phase 11 (Fine Attitude Lock)
+- COM-005: AOCS Mode Transitions; COM-013: ADCS Commissioning Closure & NOMINAL Declaration
 - Data dictionary for GPS receiver, OBDH, and AOCS subsystems
-- EMG-005: AOCS Safe Mode Recovery (if AOCS re-commissioning fails)
+- EMG-005: Loss of Attitude (if AOCS re-commissioning fails)

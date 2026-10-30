@@ -1,0 +1,92 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/contingency/obc_bootloader_recovery.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "ctg-021-obc-bootloader-recovery",
+   "en_hash": "033c41f6151261d2",
+   "fr_hash": "4f678cd1eb9e77f1"
+  },
+  {
+   "id": "ctg-021-obc-bootloader-recovery/objective",
+   "en_hash": "e3238aa9c2319035",
+   "fr_hash": "7e05264aca05b33b"
+  },
+  {
+   "id": "ctg-021-obc-bootloader-recovery/prerequisites",
+   "en_hash": "d3adcadb9fc819f4",
+   "fr_hash": "eca60895ed1582ad"
+  },
+  {
+   "id": "ctg-021-obc-bootloader-recovery/required-telemetry",
+   "en_hash": "a62ba3eddbf564a6",
+   "fr_hash": "0f14fe87acdf8f70"
+  },
+  {
+   "id": "ctg-021-obc-bootloader-recovery/required-commands",
+   "en_hash": "443999b185aad07b",
+   "fr_hash": "c9e18afd9ef872ca"
+  },
+  {
+   "id": "ctg-021-obc-bootloader-recovery/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "ctg-021-obc-bootloader-recovery/procedure-steps/step-1-confirm-bootloader-state-and-record-diagnostics",
+   "en_hash": "cbe021b2203a943f",
+   "fr_hash": "4a3c3e33d10957ac"
+  },
+  {
+   "id": "ctg-021-obc-bootloader-recovery/procedure-steps/step-2-assess-reboot-cause-and-determine-recovery-path",
+   "en_hash": "5332f1383c55dcc3",
+   "fr_hash": "e406c8fa23b19f8c"
+  },
+  {
+   "id": "ctg-021-obc-bootloader-recovery/procedure-steps/step-3-attempt-application-boot",
+   "en_hash": "f9c124669434ad7a",
+   "fr_hash": "033a93f501e30967"
+  },
+  {
+   "id": "ctg-021-obc-bootloader-recovery/procedure-steps/step-3a-clear-beacon-mode-and-restore-the-low-rung",
+   "en_hash": "e157dda51cc719e3",
+   "fr_hash": "ef0c1397016de774"
+  },
+  {
+   "id": "ctg-021-obc-bootloader-recovery/procedure-steps/step-4-inhibit-auto-boot-and-check-memory-integrity",
+   "en_hash": "d9e4b1e88a188b00",
+   "fr_hash": "cd83abbd91423d3a"
+  },
+  {
+   "id": "ctg-021-obc-bootloader-recovery/procedure-steps/step-5-retry-application-boot-after-memory-verification",
+   "en_hash": "24ccc9fd3d15b4ec",
+   "fr_hash": "ea1b62426430bdd6"
+  },
+  {
+   "id": "ctg-021-obc-bootloader-recovery/procedure-steps/step-6-escalate-memory-reload-or-obc-switchover",
+   "en_hash": "6c70d77153db53eb",
+   "fr_hash": "0689f626bcb11e50"
+  },
+  {
+   "id": "ctg-021-obc-bootloader-recovery/procedure-steps/step-7-verify-all-subsystems-nominal",
+   "en_hash": "b973b31ecf1cc8ac",
+   "fr_hash": "4f74c39b1927d6af"
+  },
+  {
+   "id": "ctg-021-obc-bootloader-recovery/verification-criteria",
+   "en_hash": "153c733a81543e77",
+   "fr_hash": "488f210025a9760e"
+  },
+  {
+   "id": "ctg-021-obc-bootloader-recovery/contingency",
+   "en_hash": "9e09774a3b8e3080",
+   "fr_hash": "c1ecf00778e8d91c"
+  }
+ ],
+ "en_commit": "3e80564"
+}

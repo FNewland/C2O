@@ -1,0 +1,87 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/contingency/gps_time_sync_recovery.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "ctg-027-gps-time-synchronisation-and-aocs-recovery",
+   "en_hash": "936f320736a851ad",
+   "fr_hash": "bebc35feb8e45e3b"
+  },
+  {
+   "id": "ctg-027-gps-time-synchronisation-and-aocs-recovery/objective",
+   "en_hash": "edd974f9a9efbbe3",
+   "fr_hash": "8d514299eb8aa739"
+  },
+  {
+   "id": "ctg-027-gps-time-synchronisation-and-aocs-recovery/prerequisites",
+   "en_hash": "8595f523e027e722",
+   "fr_hash": "e0121c150b0c064c"
+  },
+  {
+   "id": "ctg-027-gps-time-synchronisation-and-aocs-recovery/required-telemetry",
+   "en_hash": "670fda073a10f2a3",
+   "fr_hash": "47498243f02357d8"
+  },
+  {
+   "id": "ctg-027-gps-time-synchronisation-and-aocs-recovery/required-commands",
+   "en_hash": "e9c99023324df241",
+   "fr_hash": "37e494e7a686e37b"
+  },
+  {
+   "id": "ctg-027-gps-time-synchronisation-and-aocs-recovery/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "ctg-027-gps-time-synchronisation-and-aocs-recovery/procedure-steps/step-1-verify-gps-3d-fix-status",
+   "en_hash": "1a11b9a8ca7dc6d9",
+   "fr_hash": "cf5f2bb7d9dc28d4"
+  },
+  {
+   "id": "ctg-027-gps-time-synchronisation-and-aocs-recovery/procedure-steps/step-2-record-current-aocs-mode",
+   "en_hash": "3fa0cc4254618883",
+   "fr_hash": "e94e13fb711c4997"
+  },
+  {
+   "id": "ctg-027-gps-time-synchronisation-and-aocs-recovery/procedure-steps/step-3-send-obc-gps-time-synchronisation-command",
+   "en_hash": "186c974688b256cc",
+   "fr_hash": "6dce2093d0593a09"
+  },
+  {
+   "id": "ctg-027-gps-time-synchronisation-and-aocs-recovery/procedure-steps/step-4-verify-continued-aocs-operation-if-not-in-safeboot",
+   "en_hash": "c543b1d05a13c450",
+   "fr_hash": "4b847f5e22fe87ed"
+  },
+  {
+   "id": "ctg-027-gps-time-synchronisation-and-aocs-recovery/procedure-steps/step-5-aocs-re-commissioning-if-entered-safeboot",
+   "en_hash": "349eb2c99486c39e",
+   "fr_hash": "9910af1488875aaf"
+  },
+  {
+   "id": "ctg-027-gps-time-synchronisation-and-aocs-recovery/procedure-steps/step-6-post-recovery-verification",
+   "en_hash": "b7a77ffdb1720971",
+   "fr_hash": "174bebb40b275578"
+  },
+  {
+   "id": "ctg-027-gps-time-synchronisation-and-aocs-recovery/verification-criteria",
+   "en_hash": "5fdc4877f06278bb",
+   "fr_hash": "eeb1f26f9eef54e3"
+  },
+  {
+   "id": "ctg-027-gps-time-synchronisation-and-aocs-recovery/contingency",
+   "en_hash": "47d62fc1138dba34",
+   "fr_hash": "f083462d8794b1a8"
+  },
+  {
+   "id": "ctg-027-gps-time-synchronisation-and-aocs-recovery/references",
+   "en_hash": "66322f8c8b1d0626",
+   "fr_hash": "f2c665744b260d49"
+  }
+ ],
+ "en_commit": "3e80564"
+}

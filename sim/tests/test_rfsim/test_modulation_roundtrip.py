@@ -192,3 +192,52 @@ class TestGFSKModulationIndex:
         a = Modulator(modulation=6, sps=8, gfsk_mod_index=0.9).modulate(b"\xA5" * 32)
         b = Modulator(modulation=6, sps=8, gfsk_mod_index=0.5).modulate(b"\xA5" * 32)
         assert np.allclose(a, b)
+
+
+class TestCPMPhasePerBit:
+    """Defect #135: the CPM path advanced the phase by pi*h/sps per bit (an
+    impulse per bit into a unit-sum Gaussian), i.e. GMSK ran at h = 1/16."""
+
+    @staticmethod
+    def _deg_per_bit(mod, h=0.5, sps=8):
+        y = Modulator(modulation=mod, sps=sps,
+                      gfsk_mod_index=h).modulate(b"\xFF" * 64)
+        ph = np.unwrap(np.angle(y))
+        return float(np.degrees(ph[20 * sps] - ph[10 * sps]) / 10)
+
+    @pytest.mark.parametrize("sps", [4, 8, 16])
+    def test_gmsk_is_90_degrees_per_bit_at_any_sps(self, sps):
+        assert self._deg_per_bit(6, sps=sps) == pytest.approx(90.0, abs=0.5)
+
+    @pytest.mark.parametrize("h", [0.35, 0.5, 1.0])
+    def test_gfsk_is_180h_degrees_per_bit(self, h):
+        assert self._deg_per_bit(7, h) == pytest.approx(180.0 * h, abs=0.5)
+
+    def test_gmsk_occupies_textbook_bandwidth(self):
+        """BT = 0.5 GMSK: 99 % power bandwidth ~1.04 x bit rate (it was
+        ~0.2 x with the defect)."""
+        data = bytes(np.random.default_rng(0).integers(0, 256, 4000,
+                                                       dtype=np.uint8))
+        z = Modulator(modulation=6, sps=8).modulate(data)
+        P = np.abs(np.fft.fftshift(np.fft.fft(z))) ** 2
+        c = np.cumsum(P) / P.sum()
+        f = np.fft.fftshift(np.fft.fftfreq(len(z))) * 8     # in units of Rb
+        bw = f[np.searchsorted(c, 0.995)] - f[np.searchsorted(c, 0.005)]
+        assert 0.9 < bw < 1.2
+
+
+class TestCPMConfigReachesTheTransmitter:
+    """Defect #136: rfsim.yaml pipeline.gfsk_mod_index / gmsk_bt were
+    validated but never passed to the TX modulator."""
+
+    def test_tx_uses_configured_index(self):
+        from smo_rfsim.pipeline.tx_chain import SpacecraftTX
+        tx = SpacecraftTX(modulation=7, gfsk_mod_index=0.8, gmsk_bt=0.3)
+        assert tx._modulator.gfsk_mod_index == 0.8
+        assert tx._modulator.gmsk_bt == 0.3
+
+    def test_coordinator_passes_pipeline_config(self):
+        import inspect
+        from smo_rfsim.pipeline import coordinator
+        src = inspect.getsource(coordinator)
+        assert "gfsk_mod_index=pc.gfsk_mod_index" in src

@@ -22,7 +22,7 @@ passes (~36 min max eclipse, minimum survival SoC = 10%).
 
 ### Step 1 --- Immediate Load Shedding
 **TC:** `PAYLOAD_SET_MODE(mode=0)` (Service 8, Subtype 1, func_id 26) --- payload OFF.
-**TC:** `HEATER_OBC(on=0)` (Service 8, Subtype 1, func_id 41) --- disable non-critical heaters.
+**TC:** `HEATER_OBC(on=0)` (Service 8, Subtype 1, func_id 41) --- OBC heater OFF (the only non-critical heater load; the battery heater stays on its thermostat).
 **Verify:** `payload.mode` (0x0600) = OFF within 5s.
 **Verify:** `eps.power_cons` (0x0106) decreases by >= 15W within 10s.
 **Rationale:** Reduce power consumption to extend battery endurance during tumble when solar array

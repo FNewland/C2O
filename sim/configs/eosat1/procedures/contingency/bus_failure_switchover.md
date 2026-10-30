@@ -96,7 +96,7 @@ the switchover. Expect a 5-10 s communication gap with subsystems.
 **Verify:** `payload.mode` (0x0600) — payload mode unchanged
 **Verify:** `obdh.cpu_load` (0x0302) — not anomalously high
 **Action:** Announce "ALL HK RESTORED" on the operations loop.
-**GO/NO-GO:** All subsystem HK received and nominal — procedure complete.
+**GO/NO-GO:** All subsystem HK received and nominal — proceed to the post-switchover assessment.
 
 ### Step 5: Post-Switchover Assessment
 **Action:** Log the bus failure event:

@@ -13,7 +13,9 @@
  * DESIGN RULES (PRINCIPLES.md):
  *  - Pure render functions: every render*() takes plain data and RETURNS AN
  *    HTML STRING (or SVG string). No DOM reads, no fetch, no globals, no
- *    Date.now(). Callers own insertion and diffing.
+ *    Date.now(). Callers own insertion and diffing. (The one read is the UI
+ *    language: prose goes through i18n.js t(); English output is unchanged.
+ *    Re-render on `smo:langchange` to switch.)
  *  - One idiom per concept (P5): there is exactly one stepper, one chip, one
  *    param triad, one AND table. Pages must not fork these.
  *  - Colour is never the only cue (P6): every state emitted here carries a
@@ -39,6 +41,8 @@
  *               `alarms[]` (see renderAlarmRow).
  *  - `evt`    — one MCS event entry (WS `event` messages / event log rows).
  * ============================================================================ */
+
+import { t, tText, getLang, setLang, onLangChange, LANGS } from "/static/shared/i18n.js";
 
 const ESC = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
 
@@ -136,7 +140,7 @@ export function renderParam(def, value, limits) {
     ? ` <span class="ds-age degraded">${esc(_age(limits.age_s))}</span>` : "";
   const bar = band
     ? renderDeviationBar(hasVal && !stale ? Number(value) : null, limits)
-    : `<span class="nolimit">no limit defined</span>`;
+    : `<span class="nolimit">${t("no limit defined")}</span>`;
   return `<div class="${cls}" data-param="${esc(d.hex || "")}"` +
          (d.description ? ` title="${esc(d.description)}"` : "") + `>` +
          `<span class="nm">${esc(d.name || d.hex || "?")}` +
@@ -164,7 +168,7 @@ export function renderParam(def, value, limits) {
  */
 export function renderDeviationBar(value, limits) {
   const band = _band(limits);
-  if (!band) return `<span class="nolimit">no limit defined</span>`;
+  if (!band) return `<span class="nolimit">${t("no limit defined")}</span>`;
   const { yellow_low: yl, yellow_high: yh, red_low: rl, red_high: rh } = band;
   // Display range: explicit lo/hi, else pad the outermost defined bound.
   const bounds = [yl, yh, rl, rh].filter((v) => v !== null && v !== undefined);
@@ -196,7 +200,8 @@ export function renderDeviationBar(value, limits) {
   const needle = hasVal
     ? `<span class="nd" style="left:${pct(Number(value)).toFixed(1)}%"></span>` : "";
   return `<div class="ds-devbar ${limitClass(state)}" tabindex="0" role="img" ` +
-         `aria-label="value ${hasVal ? _num(Number(value)) : "unknown"} of range ${_num(lo)} to ${_num(hi)}">` +
+         `aria-label="${esc(tText("value {{value}} of range {{lo}} to {{hi}}", {
+           value: hasVal ? _num(Number(value)) : tText("unknown"), lo: _num(lo), hi: _num(hi) }))}">` +
          segs + ticks + needle + `</div>`;
 }
 
@@ -292,7 +297,7 @@ export function renderAndTable(params, values) {
     const band = v.limits ? v.limits[hex] : null;
     const hasVal = val !== null && val !== undefined && Number.isFinite(Number(val));
     const st = v.states ? v.states[hex] : null;
-    const engTxt = disabled ? "NOT ENABLED"
+    const engTxt = disabled ? tText("NOT ENABLED")
       : stale || !hasVal ? "—"
       : (st && st[String(Math.round(Number(val)))] !== undefined
           ? `${st[String(Math.round(Number(val)))]} (${Math.round(Number(val))})`
@@ -322,8 +327,8 @@ export function renderAndTable(params, values) {
            `</tr>`;
   }).join("");
   return `<table class="ds-and"><thead><tr>` +
-         `<th>ID</th><th>Parameter</th><th>Raw</th><th>Eng</th>` +
-         `<th>Unit</th><th>OOL</th><th>Age</th>` +
+         `<th>ID</th><th>${t("Parameter")}</th><th>${t("Raw")}</th><th>${t("Eng")}</th>` +
+         `<th>${t("Unit")}</th><th>OOL</th><th>${t("Age")}</th>` +
          `</tr></thead><tbody>${rows}</tbody></table>`;
 }
 
@@ -426,12 +431,13 @@ export function renderAlarmRow(alarm) {
   const proc = a.procedure
     ? `<button class="ds-btn" data-act="procedure" ` +
       `data-proc="${esc(a.procedure.path || a.procedure.id || "")}">` +
-      `${esc(a.procedure.name || a.procedure.id || "PROCEDURE")}</button>` : "";
+      `${esc(a.procedure.name || a.procedure.id || tText("PROCEDURE"))}</button>` : "";
   const ack = a.acknowledged ? "" :
-    `<button class="ds-btn" data-act="ack" data-id="${esc(a.id)}">ACK</button>`;
+    `<button class="ds-btn" data-act="ack" data-id="${esc(a.id)}">${t("ACK")}</button>`;
   const msg = a.message ||
     (a.param_id !== undefined
-      ? `${a.status || "limit"} on 0x${Number(a.param_id).toString(16).toUpperCase().padStart(4, "0")}`
+      ? tText("{{status}} on {{param}}", { status: a.status || tText("limit"),
+        param: `0x${Number(a.param_id).toString(16).toUpperCase().padStart(4, "0")}` })
       : "");
   return `<div class="${cls}" data-id="${esc(a.id)}" role="row">` +
          `<span class="t num">${esc(a.utc || "")}</span>` +
@@ -464,7 +470,7 @@ export function renderEventRow(evt) {
   const cls = sevNum >= 3 ? "alarm" : sevNum === 2 ? "warn" : "info";
   const sevTxt = sevNum >= 4 ? "CRIT" : sevNum === 3 ? "HIGH" : sevNum === 2 ? "MED" : "INFO";
   const badge = e.instructor
-    ? ` <span class="ds-badge" title="injected by instructor (training)">INSTRUCTOR</span>` : "";
+    ? ` <span class="ds-badge" title="${esc(tText("injected by instructor (training)"))}">${t("INSTRUCTOR")}</span>` : "";
   return `<div class="ds-event-row ${cls}" role="row">` +
          `<span class="t num">${esc(e.utc || "")}</span>` +
          `<span class="sev">${sevTxt}</span>` +
@@ -531,7 +537,7 @@ export function bindSchematic(svgRoot, state) {
       // via state.param_states; a unit suffix on a state name is meaningless.
       const stt = st.param_states && st.param_states[hex];
       const code = hasFiniteNumber(val) ? Math.round(Number(val)) : null;
-      if (disabled) vl.textContent = "NOT ENABLED";
+      if (disabled) vl.textContent = tText("NOT ENABLED");
       else if (stale) vl.textContent = "—";
       else if (stt && code !== null && stt[String(code)] !== undefined) {
         vl.textContent = `${stt[String(code)]} (${code})`;
@@ -551,6 +557,68 @@ export function bindSchematic(svgRoot, state) {
       if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); go(); }
     });
   });
+}
+
+/* ── 9b. LANGUAGE TOGGLE (EN | FR) — additive 2026-10 (i18n S0) ─────────── */
+
+const LANG_NAMES = { en: "English", fr: "Français" };
+
+/**
+ * renderLangToggle(current, langs) -> html string
+ *
+ * Compact segmented pill "EN | FR" for a console top bar. Pure. The pressed
+ * segment (aria-pressed="true") is the current language; colour is not the
+ * only cue (pressed = raised fill + underline). Codes are identifiers and
+ * are never translated; each button carries its language's own name
+ * (`lang` + aria-label) so screen readers pronounce it correctly.
+ *
+ * @param {string} [current] — "en"|"fr" (default: i18n.js getLang()).
+ * @param {string[]} [langs] — default i18n.js LANGS.
+ * @returns {string} `<div class="ds-lang" role="group">...`
+ */
+export function renderLangToggle(current, langs) {
+  const cur = current || getLang();
+  return `<div class="ds-lang" role="group" aria-label="${esc(tText("Language"))}">` +
+    (langs || LANGS).map((l) =>
+      `<button type="button" data-lang="${esc(l)}" lang="${esc(l)}" ` +
+      `aria-pressed="${l === cur}" aria-label="${esc(LANG_NAMES[l] || l)}" ` +
+      `title="${esc(LANG_NAMES[l] || l)}">${esc(l.toUpperCase())}</button>`).join("") +
+    `</div>`;
+}
+
+/**
+ * mountLangToggle(host) -> host
+ *
+ * The second deliberately impure export: renders the toggle into `host`,
+ * wires click (and Left/Right arrow keys between the segments) to
+ * i18n.js setLang(), and re-renders on every `smo:langchange` so two
+ * toggles on one page stay in step. Tab/Enter/Space are native <button>.
+ *
+ * @param {Element|null} host — e.g. <span id="lang-toggle"> in the top bar.
+ */
+export function mountLangToggle(host) {
+  if (!host || host.__dsLangBound) return host;
+  host.__dsLangBound = true;
+  const draw = () => {
+    const had = host.contains(document.activeElement);
+    host.innerHTML = renderLangToggle(getLang());
+    if (had) { const b = host.querySelector('[aria-pressed="true"]'); if (b) b.focus(); }
+  };
+  host.addEventListener("click", (ev) => {
+    const b = ev.target.closest("[data-lang]");
+    if (b && b.getAttribute("aria-pressed") !== "true") setLang(b.getAttribute("data-lang"));
+  });
+  host.addEventListener("keydown", (ev) => {
+    if (ev.key !== "ArrowLeft" && ev.key !== "ArrowRight") return;
+    const bs = Array.from(host.querySelectorAll("[data-lang]"));
+    const i = bs.indexOf(document.activeElement);
+    if (i < 0) return;
+    ev.preventDefault();
+    bs[(i + (ev.key === "ArrowRight" ? 1 : bs.length - 1)) % bs.length].focus();
+  });
+  onLangChange(draw);
+  draw();
+  return host;
 }
 
 /* ── 10. TRANSPORT HELPERS ─────────────────────────────────────────────── */

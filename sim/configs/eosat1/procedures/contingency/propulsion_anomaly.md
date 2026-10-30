@@ -70,7 +70,7 @@ degradation — future burns re-planned with the measured performance factor.
 
 ### Step 5 --- Escalation
 **Evaluate:** RISING tank pressure (0x0807) that does not respond to heater
-safing threatens the burst disc: GO CTG-004 (Thermal Runaway response) and
+safing threatens the burst disc: GO CTG-004 (Thermal Exceedance) and
 prepare EMG-001 (Safe Mode) — safe mode disarms propulsion by rule 8005.
 
 ## Exit Criteria

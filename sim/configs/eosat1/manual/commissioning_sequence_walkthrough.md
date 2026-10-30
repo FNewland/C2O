@@ -66,15 +66,15 @@ The spacecraft is in bootloader (`sw_image = 0`). Only OBC + TTC RX are powered.
 |-----------|--------|----------|--------------|
 | `bat_voltage` | 0x0100 | ~26.4 V | **eps** tab → Battery panel |
 | `bat_soc` | 0x0101 | ~75% | **eps** tab → Battery panel |
-| `obc_mode` | 0x0300 | 0 (NOMINAL) | **obdh** tab → Mode field |
+| `obc_mode` | 0x0300 | 0 (not a boot indicator — read `sw_image`) | **obdh** tab → Mode field |
 | `reboot_count` | 0x030A | 0 | **obdh** tab → Reboot Count |
 | `sw_image` | 0x0311 | 0 (BOOTLOADER) | **obdh** tab → SW Image field |
 | `active_obc` | 0x030C | 0 (OBC-A) | **obdh** tab → Active OBC |
-| `spacecraft_phase` | 0x0129 | 0 (BOOTLOADER) | **overview** tab → Phase |
+| `spacecraft_phase` | 0x0129 | 3 (BOOTLOADER_OPS) | **overview** tab → Phase |
 
 **GO/NO-GO:** Beacon received, `sw_image = 0` confirmed, battery > 50%, link locked.
 
-**⚠ If this step fails:** See [Commissioning Contingency Procedures](10_commissioning_contingency_procedures.md#phase-1--first-signal) — covers no telemetry, link failure, unexpected OBC state.
+**⚠ If this step fails:** See [Commissioning Contingency Procedures](10_commissioning_contingency_procedures.md#phase-1--spacecraft-activation) — covers no telemetry, link failure, unexpected OBC state.
 
 ---
 
@@ -88,9 +88,7 @@ The antenna starts stowed (`antenna_deployment_sensor = 1`). Even though you may
 
 **Purpose:** Fires the burn-wire to release the antenna. One-shot, no parameters.
 
-**Note:** This command is in the TTC func_id range (63–78). It is allowed through the bootloader gate because func_id 69 is routed through the engine as a standard S8.1 function. However, check that the engine bootloader gate allows it — the current gate permits `{19, 20, 52, 53, 54, 55, 56, 57, 61}`. **func_id 69 is NOT in that set**, so this command will currently be rejected in bootloader phase. You have two options:
-1. Deploy antenna after OBC_BOOT_APP (Phase 3) when the full command set is available, OR
-2. Add func_id 69 to the engine bootloader-allowed set.
+**Note:** This command is in the TTC func_id range (63–78). It is allowed through the bootloader gate: the engine's bootloader subset is `{19, 20, 52, 53, 54, 55, 56, 57, 61, 66, 67, 69, 120}`, so func_id 69 is accepted before OBC_BOOT_APP.
 
 **MCS screen:**
 - **commanding** tab → S1.1 acceptance + S1.7 execution complete
@@ -99,7 +97,7 @@ The antenna starts stowed (`antenna_deployment_sensor = 1`). Even though you may
 
 **Verify:** `rssi` improves, `link_margin` (0x0503) > 3.0 dB.
 
-**GO/NO-GO:** Antenna deployed. If sensor reads 3 (PARTIAL/JAMMED), escalate — see CON-015 contingency.
+**GO/NO-GO:** Antenna deployed. If sensor reads 3 (PARTIAL/JAMMED), escalate — see CTG-019 (No Telemetry at Pass Start).
 
 **⚠ If this step fails:** See [Commissioning Contingency Procedures](10_commissioning_contingency_procedures.md#phase-2--antenna-deployment) — covers deploy failure, partial deployment, link quality issues.
 
@@ -116,11 +114,11 @@ The antenna starts stowed (`antenna_deployment_sensor = 1`). Even though you may
 **MCS screen:**
 - **commanding** tab → S1.1 acceptance within 5 s, then S1.7 execution complete within 15 s
 - **obdh** tab → `sw_image` (0x0311) transitions from 0 → 1 (APPLICATION)
-- **obdh** tab → `spacecraft_phase` (0x0129) should advance from 0
+- **obdh** tab → `spacecraft_phase` (0x0129) should advance from 3 to 4 (LEOP)
 
 **GO/NO-GO:** `sw_image = 1`. Full command set available. If `sw_image` stays 0, the application image may be corrupt — see Recovery Action 2 in EMG-003.
 
-**⚠ If this step fails:** See [Commissioning Contingency Procedures](10_commissioning_contingency_procedures.md#phase-3--boot-obc-to-application-image) — covers boot failure, corrupt image, reboot loops.
+**⚠ If this step fails:** See [Commissioning Contingency Procedures](10_commissioning_contingency_procedures.md#phase-3--obc-boot) — covers boot failure, corrupt image, reboot loops.
 
 ---
 
@@ -152,7 +150,7 @@ Now in application mode. All SIDs available. Check everything before powering on
 | `bat_soc` | 0x0101 | ~75% | > 50% |
 | `bat_temp` | 0x0102 | ~15°C | ∈ [0, 35]°C |
 | `power_gen` | 0x0107 | depends on sun | > 0 W if sunlit |
-| `power_cons` | 0x0106 | ~20 W (OBC 15W + RX 5W) | < 30 W |
+| `power_cons` | 0x0106 | ~8 W (OBC 6W + RX 1.5W) | < 30 W |
 | `eclipse_flag` | 0x0108 | 0 or 1 | note for context |
 
 ### 4.3 Verify Power Line Switch States
@@ -218,7 +216,7 @@ All OFF lines are expected — we haven't powered them on yet.
 
 **GO/NO-GO:** Platform healthy. Bus voltage nominal, battery charged, OBC in application mode, link locked, temperatures in range, all unpowered subsystems confirmed OFF.
 
-**⚠ If this step fails:** See [Commissioning Contingency Procedures](10_commissioning_contingency_procedures.md#phase-4--initial-platform-health-check) — covers voltage anomalies, thermal exceedance, bus faults.
+**⚠ If this step fails:** See [Commissioning Contingency Procedures](10_commissioning_contingency_procedures.md#phase-4--health-check) — covers voltage anomalies, thermal exceedance, bus faults.
 
 ---
 
@@ -250,7 +248,7 @@ All OFF lines are expected — we haven't powered them on yet.
 
 ### 6.1 Request Current Time
 
-**TC:** `TIME_REPORT_REQUEST` (Service 9, Subtype 2)
+**TC:** `REQUEST_TIME` (Service 9, Subtype 2)
 
 **MCS screen: obdh tab** → current OBC Time (CUC) field shows the current onboard clock. Before SET_TIME it will show "0 (not set)". The SC TIME clock in the top status bar will show "NOT SET".
 
@@ -271,7 +269,7 @@ Enter an ISO 8601 timestamp (e.g., `2026-03-10T12:00:00Z`) in the "Set Arbitrary
 - **obdh** tab → `OBC Time (CUC)` now shows the set UTC timestamp
 - **Top bar** → SC TIME clock updates to show the onboard time (HH:MM:SS UTC)
 - `uptime` (0x0308) continues incrementing independently
-- Request `TIME_REPORT_REQUEST` again to verify ground–spacecraft delta < 1.0 s
+- Request `REQUEST_TIME` again to verify ground–spacecraft delta < 1.0 s
 
 **GO/NO-GO:** On-board clock synchronised to UTC within 1 second. SC TIME clock active.
 
@@ -352,14 +350,14 @@ To disable a specific wheel: `AOCS_DISABLE_WHEEL(wheel_idx=N)` (S8.1, func_id 2,
 
 | Parameter | Expected After Step 7.3 |
 |-----------|------------------------|
-| `power_cons` | ~51 W (OBC ~15W + RX ~5W + TX ~12W + heaters ~9W + wheels ~12W) |
+| `power_cons` | ~40 W (OBC ~6W + RX ~1.5W + TX ~11W + heaters ~9W + wheels ~12W) |
 | `bus_voltage` | > 27.0 V |
 | `bat_soc` | still > 60% |
 | `power_gen` - `power_cons` | positive margin if sunlit |
 
 **GO/NO-GO:** All heaters active, AOCS in DETUMBLE, power budget positive.
 
-**⚠ If this step fails:** See [Commissioning Contingency Procedures](10_commissioning_contingency_procedures.md#phase-7--sequential-power-on) — covers overcurrent, EPS safe mode, wheel anomalies, AOCS mode failures.
+**⚠ If this step fails:** See [Commissioning Contingency Procedures](10_commissioning_contingency_procedures.md#phase-7--power-on-subsystems) — covers overcurrent, EPS safe mode, wheel anomalies, AOCS mode failures.
 
 ---
 
@@ -462,7 +460,7 @@ With whole-orbit data available, verify:
 
 **GO/NO-GO:** Nadir pointing achieved, attitude error < 1°, stable over multiple orbits.
 
-**⚠ If this step fails:** See [Commissioning Contingency Procedures](10_commissioning_contingency_procedures.md#phase-9--aocs-mode-progression) — covers rate damping failure, sensor loss, mode transition issues.
+**⚠ If this step fails:** See [Commissioning Contingency Procedures](10_commissioning_contingency_procedures.md#phase-9--aocs-mode-progression-detumble--nadir--sun-point) — covers rate damping failure, sensor loss, mode transition issues.
 
 ---
 
@@ -494,10 +492,10 @@ With whole-orbit data available, verify:
 
 ### 11.1 Enable GPS Receiver
 
-**TC:** `SET_PARAM(0x0230, 1)` (S20.1) — GPS receiver power ON
+**TC:** `S2_AOCS_GPS_RECEIVER(device_id=0x020F, state=1)` (S2.1) — GPS receiver power ON
 
 **MCS screen: aocs tab → Orbital Data panel**
-- GPS fix status should progress: 0 (no fix) → 1 (2D) → 3 (3D+velocity)
+- GPS fix status should progress: 0 (no fix) → 1 (2D) → 2 (3D) → 3 (3D+velocity)
 - `gps_num_sats` should increase from 0 toward ≥ 4
 - Latitude/longitude/altitude should populate with real values
 - A cold start may take 5–15 minutes for first fix
@@ -506,9 +504,9 @@ With whole-orbit data available, verify:
 
 | Parameter | Hex ID | Target |
 |-----------|--------|--------|
-| GPS fix | 0x0210 (approx) | 3 (3D+velocity) |
-| Satellites | 0x0232 | ≥ 4 |
-| Altitude | 0x0235 | ~500 km ± 20 km |
+| GPS fix | 0x0274 | 3 (3D+velocity) |
+| Satellites | 0x0276 | ≥ 4 |
+| Altitude | 0x0212 | ~513 km ± 20 km |
 
 **GO/NO-GO:** GPS locked, position consistent with TLE-propagated orbit.
 
@@ -550,7 +548,7 @@ With whole-orbit data available, verify:
 
 ### 12.3 Select Primary Star Tracker
 
-**TC:** `ST_SELECT(unit=0)` (S8.1, func_id 6, data byte = 0) — select ST1 as primary
+**TC:** `ST_SELECT(unit=1)` (S8.1, func_id 6, data byte = 1) — select ST1 as primary
 
 ### 12.4 Power Off ST2 (Return to Nominal — One Tracker Active)
 
@@ -569,7 +567,7 @@ ST2 is now verified working; return to single-tracker operations to save power. 
 
 **GO/NO-GO:** Fine pointing achieved with star tracker. This is the pointing accuracy needed for imaging.
 
-**⚠ If this step fails:** See [Commissioning Contingency Procedures](10_commissioning_contingency_procedures.md#phase-12--star-tracker-commissioning) — covers ST boot timeout, blinding, tracker failure.
+**⚠ If this step fails:** See [Commissioning Contingency Procedures](10_commissioning_contingency_procedures.md#phase-12--star-tracker-checkout) — covers ST boot timeout, blinding, tracker failure.
 
 ---
 
@@ -616,7 +614,7 @@ healthy rather than exercising a switchover that does not exist. (A stale
 degradation (B-dot and magnetic desaturation are blind) — raise it, do not
 work around it.
 
-**⚠ If this step fails:** See [Commissioning Contingency Procedures](10_commissioning_contingency_procedures.md#phase-13--redundant-equipment-checkout) — covers bus switchover failure, transponder issues, comms loss.
+**⚠ If this step fails:** See [Commissioning Contingency Procedures](10_commissioning_contingency_procedures.md#phase-13--redundancy-checkout) — covers bus switchover failure, transponder issues, comms loss.
 
 ---
 
@@ -646,7 +644,7 @@ work around it.
 
 **GO/NO-GO:** Time-tagged commanding works both in and out of coverage.
 
-**⚠ If this step fails:** See [Commissioning Contingency Procedures](10_commissioning_contingency_procedures.md#phase-14--time-tagged-command-verification) — covers schedule execution failure, BER anomalies.
+**⚠ If this step fails:** See [Commissioning Contingency Procedures](10_commissioning_contingency_procedures.md#phase-14--time-tagged-commands) — covers schedule execution failure, BER anomalies.
 
 ---
 
@@ -728,7 +726,7 @@ same plan pre-book the downlink (`PAYLOAD_DOWNLOAD_IMAGE` addresses it).
 
 **GO/NO-GO:** First image captured. Download and inspect on ground for quality.
 
-**⚠ If this step fails:** See [Commissioning Contingency Procedures](10_commissioning_contingency_procedures.md#phase-15--payload-power-on-and-commissioning) — covers payload power failure, FPA cooling issues, image capture failure.
+**⚠ If this step fails:** See [Commissioning Contingency Procedures](10_commissioning_contingency_procedures.md#phase-15--payload-commissioning) — covers payload power failure, FPA cooling issues, image capture failure.
 
 ---
 
@@ -760,7 +758,7 @@ same plan pre-book the downlink (`PAYLOAD_DOWNLOAD_IMAGE` addresses it).
 
 ### 16.3 Set Spacecraft Phase to NOMINAL
 
-The engine should automatically transition `spacecraft_phase` (0x0129) to 5 (COMMISSIONING) and then to the nominal ops phase once all conditions are met. Verify on the **overview** tab.
+Declare COMMISSIONING then NOMINAL with `SYS_SET_MISSION_PHASE(phase=5)` then `(phase=6)` (S8.1 func 120); nothing advances `spacecraft_phase` (0x0129) past 4 automatically. Verify on the **overview** tab.
 
 ---
 

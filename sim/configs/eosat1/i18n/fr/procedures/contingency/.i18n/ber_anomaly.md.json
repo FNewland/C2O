@@ -1,0 +1,77 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/contingency/ber_anomaly.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "ctg-014-ber-anomaly",
+   "en_hash": "683b3e83bc6783f5",
+   "fr_hash": "e0c1aa99bf242d5b"
+  },
+  {
+   "id": "ctg-014-ber-anomaly/objective",
+   "en_hash": "fdba516be43dbbd6",
+   "fr_hash": "d2c92710697d5654"
+  },
+  {
+   "id": "ctg-014-ber-anomaly/prerequisites",
+   "en_hash": "be76998d2ac1373a",
+   "fr_hash": "a962ea09a0b9d4c3"
+  },
+  {
+   "id": "ctg-014-ber-anomaly/required-telemetry",
+   "en_hash": "03b0bd2b0a7d2092",
+   "fr_hash": "6f68fd1daea0cc81"
+  },
+  {
+   "id": "ctg-014-ber-anomaly/required-commands",
+   "en_hash": "1535d2917a87cc68",
+   "fr_hash": "8bb8b4c1dddb7c35"
+  },
+  {
+   "id": "ctg-014-ber-anomaly/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "ctg-014-ber-anomaly/procedure-steps/step-1-characterize-ber-anomaly",
+   "en_hash": "ba0c84250e16af94",
+   "fr_hash": "c0ae08c50c459d89"
+  },
+  {
+   "id": "ctg-014-ber-anomaly/procedure-steps/step-2-check-power-amplifier-temperature",
+   "en_hash": "3a25ef057d573254",
+   "fr_hash": "eb5f3496b3f1a9a9"
+  },
+  {
+   "id": "ctg-014-ber-anomaly/procedure-steps/step-3-pa-overheating-thermal-mitigation",
+   "en_hash": "a51bc9130a13ca6e",
+   "fr_hash": "25f14413e4485168"
+  },
+  {
+   "id": "ctg-014-ber-anomaly/procedure-steps/step-4-step-down-the-rate-ladder",
+   "en_hash": "c09410ee867d56d7",
+   "fr_hash": "0e215942948e239c"
+  },
+  {
+   "id": "ctg-014-ber-anomaly/procedure-steps/step-5-try-transponder-switchover",
+   "en_hash": "5f356bf7dfb5e14f",
+   "fr_hash": "a8d6c349f18e4809"
+  },
+  {
+   "id": "ctg-014-ber-anomaly/verification-criteria",
+   "en_hash": "04e1150d8a685f9c",
+   "fr_hash": "d907253a2eda7fdf"
+  },
+  {
+   "id": "ctg-014-ber-anomaly/contingency",
+   "en_hash": "e605f64dd2bd6d02",
+   "fr_hash": "e589ae792eca427e"
+  }
+ ],
+ "en_commit": "3e80564"
+}

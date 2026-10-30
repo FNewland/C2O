@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SMO Radio — Ground Station Receiver</title>
+<title data-i18n>SMO Radio — Ground Station Receiver</title>
 <!--
   SMO RADIO — MODERN OPERATOR CONSOLE (design_2026-08)
 
@@ -62,18 +62,19 @@
 </style>
 </head>
 <body>
-<a class="ds-skip" href="#main-grid">Skip to receiver status</a>
+<a class="ds-skip" href="#main-grid" data-i18n>Skip to receiver status</a>
 
 <header>
-  <div class="mark"><b>SMO RADIO</b><span>Ground station receiver</span></div>
-  <span class="ds-badge" id="mode-badge" title="Bridge operating mode">MODE —</span>
-  <span class="ds-badge" id="mod-badge" title="Detected downlink scheme">—</span>
+  <div class="mark"><b>SMO RADIO</b><span data-i18n>Ground station receiver</span></div>
+  <span class="ds-badge" id="mode-badge" data-i18n-title title="Bridge operating mode">MODE —</span>
+  <span class="ds-badge" id="mod-badge" data-i18n-title title="Detected downlink scheme">—</span>
   <div class="grow"></div>
   <span id="feed-chip"><span class="ds-chip"><span>FEED —</span></span></span>
   <span class="num" id="last-update" style="font-size:12px;color:var(--tx3)">—</span>
+  <span id="lang-toggle"></span>
 </header>
 
-<div class="ds-banner stale" id="stale-banner" hidden>
+<div class="ds-banner stale" id="stale-banner" hidden data-i18n>
   RECEIVER FEED STALE — displayed values are the last received; charts have
   stopped appending.
 </div>
@@ -81,76 +82,76 @@
 <div class="grid" id="main-grid">
 
   <div class="ds-card">
-    <h2>Lock status</h2>
+    <h2 data-i18n>Lock status</h2>
     <div class="bd locks">
-      <div class="lk"><span class="rows k">SC transmitter</span><span id="sctx-chip"></span></div>
-      <div class="lk"><span class="rows k">Carrier</span><span id="carrier-chip"></span></div>
-      <div class="lk"><span class="rows k">Bit sync</span><span id="bitsync-chip"></span></div>
-      <div class="lk"><span class="rows k">Frame sync</span><span id="framesync-chip"></span></div>
+      <div class="lk"><span class="rows k" data-i18n>SC transmitter</span><span id="sctx-chip"></span></div>
+      <div class="lk"><span class="rows k" data-i18n>Carrier</span><span id="carrier-chip"></span></div>
+      <div class="lk"><span class="rows k" data-i18n>Bit sync</span><span id="bitsync-chip"></span></div>
+      <div class="lk"><span class="rows k" data-i18n>Frame sync</span><span id="framesync-chip"></span></div>
       <div>
-        <div class="rows k">Signal quality (Eb/N0 vs 15 dB ref)</div>
+        <div class="rows k" data-i18n>Signal quality (Eb/N0 vs 15 dB ref)</div>
         <div class="meter"><div id="signal-bar" class="fill" style="width:0%"></div></div>
       </div>
     </div>
   </div>
 
   <div class="ds-card">
-    <h2>RF measurements <span class="r" title="As measured at the receiver">measured</span></h2>
+    <h2 data-i18n>RF measurements <span class="r" data-i18n data-i18n-title title="As measured at the receiver">measured</span></h2>
     <div class="bd rows">
       <div class="row"><span class="k">RSSI</span><span class="v" id="rssi">—</span></div>
       <div class="row"><span class="k">Eb/N0</span><span class="v" id="ebn0">—</span></div>
-      <div class="row"><span class="k">BER</span><span class="v" id="ber">—</span></div>
-      <div class="row"><span class="k">Link margin</span><span class="v" id="margin">—</span></div>
-      <div class="row"><span class="k">RX SNR (EVM)</span><span class="v" id="pl-evm">—</span></div>
+      <div class="row"><span class="k" data-i18n>BER</span><span class="v" id="ber">—</span></div>
+      <div class="row"><span class="k" data-i18n>Link margin</span><span class="v" id="margin">—</span></div>
+      <div class="row"><span class="k" data-i18n>RX SNR (EVM)</span><span class="v" id="pl-evm">—</span></div>
       <div>
-        <div class="k">Link margin</div>
+        <div class="k" data-i18n>Link margin</div>
         <div class="meter"><div id="margin-bar" class="fill" style="width:0%"></div></div>
       </div>
     </div>
   </div>
 
   <div class="ds-card">
-    <h2>Dynamics <span class="r">tracking</span></h2>
+    <h2 data-i18n>Dynamics <span class="r" data-i18n>tracking</span></h2>
     <div class="bd rows">
-      <div class="row"><span class="k">Doppler (measured)</span><span class="v" id="doppler">—</span></div>
-      <div class="row"><span class="k">Range</span><span class="v" id="range">—</span></div>
-      <div class="row"><span class="k">Data rate</span><span class="v" id="datarate">—</span></div>
-      <div class="row"><span class="k">Prop delay</span><span class="v" id="delay">—</span></div>
-      <div class="row"><span class="k">Symbol rate</span><span class="v" id="pl-symrate">—</span></div>
-      <div class="row"><span class="k">Achieved TM</span><span class="v" id="pl-thr">—</span></div>
+      <div class="row"><span class="k" data-i18n>Doppler (measured)</span><span class="v" id="doppler">—</span></div>
+      <div class="row"><span class="k" data-i18n>Range</span><span class="v" id="range">—</span></div>
+      <div class="row"><span class="k" data-i18n>Data rate</span><span class="v" id="datarate">—</span></div>
+      <div class="row"><span class="k" data-i18n>Prop delay</span><span class="v" id="delay">—</span></div>
+      <div class="row"><span class="k" data-i18n>Symbol rate</span><span class="v" id="pl-symrate">—</span></div>
+      <div class="row"><span class="k" data-i18n>Achieved TM</span><span class="v" id="pl-thr">—</span></div>
     </div>
   </div>
 
   <div class="ds-card two-col">
-    <h2>Eb/N0 &amp; BER history</h2>
+    <h2 data-i18n>Eb/N0 &amp; BER history</h2>
     <div class="bd"><div class="chart-container"><canvas id="ebn0-chart"></canvas></div></div>
   </div>
 
   <div class="ds-card">
-    <h2>Frame counters</h2>
+    <h2 data-i18n>Frame counters</h2>
     <div class="bd">
       <div class="stat-row">
-        <div class="stat-box"><div id="good-frames" class="big">0</div><div class="lbl">Good frames</div></div>
-        <div class="stat-box"><div id="bad-frames" class="big a">0</div><div class="lbl">Bad frames</div></div>
+        <div class="stat-box"><div id="good-frames" class="big">0</div><div class="lbl" data-i18n>Good frames</div></div>
+        <div class="stat-box"><div id="bad-frames" class="big a">0</div><div class="lbl" data-i18n>Bad frames</div></div>
       </div>
       <div class="stat-row" style="margin-top:8px;">
-        <div class="stat-box"><div id="cltu-sent" class="big">0</div><div class="lbl">CLTU sent</div></div>
-        <div class="stat-box"><div id="cltu-ack" class="big">0</div><div class="lbl">CLTU ack</div></div>
+        <div class="stat-box"><div id="cltu-sent" class="big">0</div><div class="lbl" data-i18n>CLTU sent</div></div>
+        <div class="stat-box"><div id="cltu-ack" class="big">0</div><div class="lbl" data-i18n>CLTU ack</div></div>
       </div>
       <div style="margin-top:8px;">
-        <div class="rows k">Frame error rate</div>
+        <div class="rows k" data-i18n>Frame error rate</div>
         <div class="meter"><div id="fer-bar" class="fill" style="width:0%"></div></div>
       </div>
     </div>
   </div>
 
   <div class="ds-card two-col">
-    <h2>Frame rate <span class="r">frames/sec</span></h2>
+    <h2 data-i18n>Frame rate <span class="r" data-i18n>frames/sec</span></h2>
     <div class="bd"><div class="chart-container"><canvas id="frame-chart"></canvas></div></div>
   </div>
 
   <div class="ds-card">
-    <h2>Virtual channels</h2>
+    <h2 data-i18n>Virtual channels</h2>
     <div class="bd">
       <div class="vc-list">
         <span id="vc0-chip"></span>
@@ -158,13 +159,13 @@
         <span id="vc7-chip"></span>
       </div>
       <div class="rows" style="margin-top:10px;">
-        <div class="row"><span class="k">Uplink CLTU rate</span><span class="v" id="cltu-rate">—</span></div>
+        <div class="row"><span class="k" data-i18n>Uplink CLTU rate</span><span class="v" id="cltu-rate">—</span></div>
       </div>
     </div>
   </div>
 
   <div class="ds-card">
-    <h2>Baseband constellation <span class="r">I/Q</span></h2>
+    <h2 data-i18n>Baseband constellation <span class="r">I/Q</span></h2>
     <div class="bd">
       <canvas id="constellation" class="fixed" width="500" height="360"
               style="height:190px;background:var(--bg);border-radius:var(--r);"></canvas>
@@ -172,12 +173,12 @@
   </div>
 
   <div class="ds-card two-col">
-    <h2>Spectrum analyzer <span class="r">baseband</span></h2>
+    <h2 data-i18n>Spectrum analyzer <span class="r" data-i18n>baseband</span></h2>
     <div class="bd"><div class="chart-container"><canvas id="spectrum-chart"></canvas></div></div>
   </div>
 
   <div class="ds-card">
-    <h2>Eye diagram</h2>
+    <h2 data-i18n>Eye diagram</h2>
     <div class="bd">
       <canvas id="eye-diagram" class="fixed" width="400" height="300"
               style="height:160px;background:var(--bg);border-radius:var(--r);"></canvas>
@@ -185,30 +186,39 @@
   </div>
 
   <div class="ds-card">
-    <h2>Link budget <span class="r" title="Predicted from the configured link geometry">predicted</span></h2>
+    <h2 data-i18n>Link budget <span class="r" data-i18n data-i18n-title title="Predicted from the configured link geometry">predicted</span></h2>
     <div class="bd rows">
-      <div class="row"><span class="k">EIRP</span><span class="v" id="lb-eirp">—</span></div>
+      <div class="row"><span class="k" data-i18n>EIRP</span><span class="v" id="lb-eirp">—</span></div>
       <div class="row"><span class="k">FSPL</span><span class="v" id="lb-fspl">—</span></div>
       <div class="row"><span class="k">C/N0</span><span class="v" id="lb-cn0">—</span></div>
-      <div class="row"><span class="k">Coding gain</span><span class="v" id="lb-coding">—</span></div>
-      <div class="row"><span class="k">Frequency</span><span class="v" id="lb-freq">—</span></div>
-      <div class="row"><span class="k">Bandwidth</span><span class="v" id="lb-bw">—</span></div>
+      <div class="row"><span class="k" data-i18n>Coding gain</span><span class="v" id="lb-coding">—</span></div>
+      <div class="row"><span class="k" data-i18n>Frequency</span><span class="v" id="lb-freq">—</span></div>
+      <div class="row"><span class="k" data-i18n>Bandwidth</span><span class="v" id="lb-bw">—</span></div>
     </div>
   </div>
 
   <div class="ds-card">
-    <h2>Receiver diagnostics</h2>
+    <h2 data-i18n>Receiver diagnostics</h2>
     <div class="bd"><div id="diag-body" class="rows k">no data</div></div>
   </div>
 
 </div>
 
-<div id="footer">SMO Ground Segment — radio receiver console ·
-  <a href="/classic">classic page</a></div>
+<div id="footer" data-i18n>SMO Ground Segment — radio receiver console ·
+  <a href="/classic" data-i18n>classic page</a></div>
 
 <script type="module">
-import { renderChip, freshness } from "/static/shared/components.js";
+import { renderChip, freshness, mountLangToggle } from "/static/shared/components.js";
 import { fmtAge } from "/static/shared/format.js";
+// UI language (EN|FR) — docs/i18n/UI_I18N_GUIDE.md. The WS feed below
+// starts at once; only the toggle waits for the catalogs.
+import { I18n, t, tText, onLangChange } from "/static/shared/i18n.js";
+I18n.ready.then(() => {
+  mountLangToggle(document.getElementById("lang-toggle"));
+  renderDiagnostics(lastDiag);   // the "no data" placeholder, translated
+});
+// Regions redrawn on every WS message need nothing; these may sit idle.
+onLangChange(() => { renderDiagnostics(lastDiag); ebn0Chart.draw(); frameChart.draw(); });
 
 /* ── Mini chart (dependency-free canvas line chart, from the classic page,
       restyled to the design-system palette) ──────────────────────────── */
@@ -284,7 +294,8 @@ class MiniChart {
       ctx.fillStyle = color;
       ctx.fillRect(lx, 4, 12, 3);
       ctx.fillStyle = C_TX2;
-      ctx.fillText(this.labels[key] || key, lx + 15, 9);
+      const lbl = typeof this.labels[key] === "function" ? this.labels[key]() : this.labels[key];
+      ctx.fillText(lbl || key, lx + 15, 9);
       lx += 80;
     }
   }
@@ -293,13 +304,13 @@ class MiniChart {
 const ebn0Chart = new MiniChart("ebn0-chart", {
   keys: ["ebn0", "ber"], maxPoints: 120,
   colors: { ebn0: C_TX2, ber: C_ALRM },
-  labels: { ebn0: "Eb/N0 dB", ber: "BER log10" },
+  labels: { ebn0: "Eb/N0 dB", ber: () => tText("BER log10") },
   yMin: -12, yMax: 20
 });
 const frameChart = new MiniChart("frame-chart", {
   keys: ["good", "bad"], maxPoints: 120,
   colors: { good: C_TX2, bad: C_ALRM },
-  labels: { good: "Good/s", bad: "Bad/s" },
+  labels: { good: () => tText("Good/s"), bad: () => tText("Bad/s") },
   yMin: 0
 });
 
@@ -309,27 +320,33 @@ function lockChip(el, state) {
   const kind = state === "LOCKED" ? "ok"
              : state === "ACQUIRING" ? "warn" : "alarm";
   el.innerHTML = renderChip({ kind, label: state || "—",
-    dir: "down", title: "Receiver lock state" });
+    dir: "down", title: tText("Receiver lock state") });
 }
 function vcChip(el, label, vcActive, vcid, ts) {
   const age = ts - (vcActive[vcid] || 0);
   const f = freshness(age);
   const kind = f === "fresh" ? "ok" : f === "degraded" ? "warn" : "stale";
   el.innerHTML = renderChip({ kind, label,
-    title: "Last frame " + fmtAge(Math.min(age, 9e5)) });
+    title: tText("Last frame {{age}}", { age: fmtAge(Math.min(age, 9e5)) }) });
 }
 
 /* ── WS feed with display-wide freshness (P4) ──────────────────────────── */
 let lastGood = 0, lastBad = 0, lastCltu = 0, lastTs = 0;
 let lastMsgWall = 0;
+const FEED_LABEL = {   // freshness() word -> chip label
+  fresh: () => tText("FEED FRESH"),
+  degraded: () => tText("FEED DEGRADED"),
+  stale: () => tText("FEED STALE"),
+};
 
 setInterval(() => {
   const age = lastMsgWall ? (Date.now() - lastMsgWall) / 1000 : null;
   const f = freshness(age);
   const kind = f === "fresh" ? "ok" : f === "degraded" ? "warn" : "stale";
   $("feed-chip").innerHTML = renderChip({ kind,
-    label: "FEED " + f.toUpperCase(),
-    title: age === null ? "no data received yet" : "last message " + fmtAge(age) });
+    label: FEED_LABEL[f] ? FEED_LABEL[f]() : "FEED " + f.toUpperCase(),
+    title: age === null ? tText("no data received yet")
+                        : tText("last message {{age}}", { age: fmtAge(age) }) });
   $("stale-banner").hidden = f !== "stale";
   document.body.classList.toggle("stale-feed", f === "stale");
 }, 1000);
@@ -360,18 +377,18 @@ function render(d) {
   if (sctx) {
     const on = d.sc_tx_on;
     const ovrTitle = d.pass_override
-      ? "Instructor pass override ON — geometric visibility forced; TX state is still the spacecraft's own"
-      : "Spacecraft transmitter (tx_active from the sim)";
+      ? tText("Instructor pass override ON — geometric visibility forced; TX state is still the spacecraft's own")
+      : tText("Spacecraft transmitter ({{field}} from the sim)", { field: "tx_active" });
     if (on === true) {
       sctx.innerHTML = renderChip({ kind: "ok",
-        label: d.pass_override ? "RADIATING · OVR" : "RADIATING", title: ovrTitle });
+        label: d.pass_override ? tText("RADIATING") + " · OVR" : tText("RADIATING"), title: ovrTitle });
     } else if (on === false) {
       const why = d.sc_pa_on === false ? "TX OFF · PA OFF" : "TX OFF";
       sctx.innerHTML = renderChip({ kind: "alarm",
         label: d.pass_override ? why + " · OVR" : why, title: ovrTitle });
     } else {
       sctx.innerHTML = renderChip({ kind: "stale", label: "—",
-        title: "no sim feedback yet" });
+        title: tText("no sim feedback yet") });
     }
   }
   lockChip($("carrier-chip"), d.carrier_lock);
@@ -418,13 +435,13 @@ function render(d) {
   ebn0Chart.push({ ebn0: d.eb_n0_db, ber: d.ber_log10 });
 
   vcChip($("vc0-chip"), "VC0 RT HK", d.vc_active || {}, 0, d.timestamp);
-  vcChip($("vc1-chip"), "VC1 Playback", d.vc_active || {}, 1, d.timestamp);
-  vcChip($("vc7-chip"), "VC7 Idle", d.vc_active || {}, 7, d.timestamp);
+  vcChip($("vc1-chip"), tText("{{vc}} Playback", { vc: "VC1" }), d.vc_active || {}, 1, d.timestamp);
+  vcChip($("vc7-chip"), tText("{{vc}} Idle", { vc: "VC7" }), d.vc_active || {}, 7, d.timestamp);
 
   if (d.iq_samples && d.iq_samples.length > 0) {
     drawConstellation(d.iq_samples, d.modulation || 0);
   } else {
-    canvasNote("constellation", "No I/Q data");
+    canvasNote("constellation", tText("No I/Q data"));
   }
 
   const setTxt = (id, v) => { const e = $(id); if (e) e.textContent = v; };
@@ -436,18 +453,18 @@ function render(d) {
   setTxt("lb-bw", ((d.bandwidth_hz || 0) / 1e3).toFixed(1) + " kHz");
 
   if (d.mode !== "RF") {
-    canvasNote("spectrum-chart", "Spectrum: RF mode only (current mode: " + d.mode + ")");
-    canvasNote("eye-diagram", "Eye diagram: RF mode only");
+    canvasNote("spectrum-chart", tText("Spectrum: RF mode only (current mode: {{mode}})", { mode: d.mode }));
+    canvasNote("eye-diagram", tText("Eye diagram: RF mode only"));
   } else {
     if (d.spectrum_db && d.spectrum_db.length > 4) {
       drawSpectrum(d.spectrum_db, d.spectrum_freq_range_hz || 256000);
     } else {
-      canvasNote("spectrum-chart", "No spectrum data");
+      canvasNote("spectrum-chart", tText("No spectrum data"));
     }
     if (d.eye_i && d.eye_i.length > 4) {
       drawEyeDiagram(d.eye_i, d.eye_q || [], d.eye_sps || 8);
     } else {
-      canvasNote("eye-diagram", "No eye data");
+      canvasNote("eye-diagram", tText("No eye data"));
     }
   }
 
@@ -562,7 +579,7 @@ function drawEyeDiagram(eyeI, eyeQ, sps) {
   ctx.fillStyle = C_TX2;
   ctx.fillText("Q", 16, 12);
   ctx.fillStyle = C_WARN;
-  ctx.fillText("decision", w/2 + 4, 12);
+  ctx.fillText(tText("decision"), w/2 + 4, 12);
   ctx.fillStyle = C_TX3;
   ctx.fillText("+1", w - 18, h/2 - scale + 5);
   ctx.fillText("-1", w - 18, h/2 + scale + 5);
@@ -601,11 +618,13 @@ function drawConstellation(samples, modulation) {
   ctx.fillText(MOD_NAMES[modulation] || "BPSK", w - 60, h - 6);
 }
 
+let lastDiag = {};
 function renderDiagnostics(diag) {
+  lastDiag = diag;
   const el = $("diag-body");
   if (!el) return;
   const keys = Object.keys(diag);
-  if (keys.length === 0) { el.textContent = "no data"; return; }
+  if (keys.length === 0) { el.textContent = tText("no data"); return; }
   let html = '<div class="diag-grid">';
   for (const k of keys) {
     html += '<span class="k">' + k.replace(/_/g, " ") +

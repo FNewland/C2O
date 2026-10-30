@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SMO Radio — Channel Model (Instructor)</title>
+<title data-i18n>SMO Radio — Channel Model (Instructor)</title>
 <!--
   SMO RADIO — SIM-SIDE CHANNEL-MODEL VIEW (design_2026-08, MOVE-I)
 
@@ -50,16 +50,17 @@
 
 <!-- INSTRUCTOR accent strip: this screen is simulation ground truth and
      must never be mistaken for an operator display (house convention). -->
-<div class="ds-instructor-strip">Instructor — RF channel model · simulation ground truth · not an operator display</div>
+<div class="ds-instructor-strip" data-i18n>Instructor — RF channel model · simulation ground truth · not an operator display</div>
 
 <header>
-  <div class="mark"><b>SMO RADIO / CHANNEL MODEL</b><span>Injected link impairments — instructor only</span></div>
-  <span class="ds-badge" id="ctl-badge" title="Control plane state">CONTROL —</span>
+  <div class="mark"><b data-i18n>SMO RADIO / CHANNEL MODEL</b><span data-i18n>Injected link impairments — instructor only</span></div>
+  <span class="ds-badge" id="ctl-badge" data-i18n-title title="Control plane state">CONTROL —</span>
   <div class="grow"></div>
   <span class="num" id="last-update" style="font-size:12px;color:var(--tx3)">—</span>
+  <span id="lang-toggle"></span>
 </header>
 
-<div class="ds-banner warn" id="ctl-banner" hidden>
+<div class="ds-banner warn" id="ctl-banner" hidden data-i18n-html>
   Control plane disabled — start the bridge with <code>--radio-control</code>
   to inject impairments. The channel-model status below stays read-only.
 </div>
@@ -67,77 +68,77 @@
 <div class="grid">
 
   <div class="ds-card">
-    <h2>Channel model status <span class="r">injected truth</span></h2>
+    <h2 data-i18n>Channel model status <span class="r" data-i18n>injected truth</span></h2>
     <div class="bd rows">
       <div class="row"><span class="k">AWGN</span><span class="v" id="ch-awgn">—</span></div>
-      <div class="row"><span class="k">Phase noise</span><span class="v" id="ch-phasenoise">—</span></div>
-      <div class="row"><span class="k">Fading</span><span class="v" id="ch-fading">—</span></div>
-      <div class="row"><span class="k">Fading K</span><span class="v" id="ch-fading-k">—</span></div>
-      <div class="row"><span class="k">Interferers</span><span class="v" id="ch-interferers">—</span></div>
-      <div class="row"><span class="k">GS Eb/N0 penalty (injected)</span><span class="v" id="gs-penalty">—</span></div>
-      <div class="row"><span class="k">Manual overrides</span><span class="v" id="ch-overrides">—</span></div>
+      <div class="row"><span class="k" data-i18n>Phase noise</span><span class="v" id="ch-phasenoise">—</span></div>
+      <div class="row"><span class="k" data-i18n>Fading</span><span class="v" id="ch-fading">—</span></div>
+      <div class="row"><span class="k" data-i18n>Fading K</span><span class="v" id="ch-fading-k">—</span></div>
+      <div class="row"><span class="k" data-i18n>Interferers</span><span class="v" id="ch-interferers">—</span></div>
+      <div class="row"><span class="k" data-i18n>GS Eb/N0 penalty (injected)</span><span class="v" id="gs-penalty">—</span></div>
+      <div class="row"><span class="k" data-i18n>Manual overrides</span><span class="v" id="ch-overrides">—</span></div>
     </div>
   </div>
 
   <div class="ds-card">
-    <h2>Observed effect <span class="r">what the operator sees</span></h2>
+    <h2 data-i18n>Observed effect <span class="r" data-i18n>what the operator sees</span></h2>
     <div class="bd rows">
-      <div class="row"><span class="k">Eb/N0 at receiver</span><span class="v" id="fx-ebn0">—</span></div>
-      <div class="row"><span class="k">BER</span><span class="v" id="fx-ber">—</span></div>
-      <div class="row"><span class="k">Carrier lock</span><span class="v" id="fx-carrier">—</span></div>
-      <div class="row"><span class="k">Frame sync</span><span class="v" id="fx-frame">—</span></div>
-      <div class="row"><span class="k">Bad frames</span><span class="v" id="fx-bad">—</span></div>
+      <div class="row"><span class="k" data-i18n>Eb/N0 at receiver</span><span class="v" id="fx-ebn0">—</span></div>
+      <div class="row"><span class="k" data-i18n>BER</span><span class="v" id="fx-ber">—</span></div>
+      <div class="row"><span class="k" data-i18n>Carrier lock</span><span class="v" id="fx-carrier">—</span></div>
+      <div class="row"><span class="k" data-i18n>Frame sync</span><span class="v" id="fx-frame">—</span></div>
+      <div class="row"><span class="k" data-i18n>Bad frames</span><span class="v" id="fx-bad">—</span></div>
     </div>
   </div>
 
   <div class="ds-card full" id="config-panel">
-    <h2>Impairment injection <span class="r" id="cfg-state">control disabled</span></h2>
+    <h2 data-i18n>Impairment injection <span class="r" id="cfg-state">control disabled</span></h2>
     <div class="bd">
       <div class="ctl-grid">
         <label>Eb/N0 <span><b class="num" id="cfg-ebn0-val">10.0</b> dB</span>
           <input id="cfg-ebn0" type="range" min="-5" max="25" step="0.5" value="10"></label>
-        <label>Doppler ramp <span><b class="num" id="cfg-dopp-val">0</b> Hz</span>
+        <label data-i18n>Doppler ramp <span><b class="num" id="cfg-dopp-val">0</b> Hz</span>
           <input id="cfg-dopp" type="range" min="-60000" max="60000" step="500" value="0"></label>
-        <label>Modulation
+        <label data-i18n>Modulation
           <select id="cfg-mod">
             <option value="0">BPSK</option><option value="1">QPSK</option>
             <option value="2">8PSK</option><option value="3">OQPSK</option>
             <option value="4">16-APSK</option><option value="5">&pi;/4-DQPSK</option>
             <option value="6">GMSK</option><option value="7">GFSK</option>
           </select></label>
-        <label>Symbol rate (Bd)
+        <label data-i18n>Symbol rate (Bd)
           <input id="cfg-symrate" type="number" min="250" max="200000" step="250" value="32000"></label>
         <label class="inline"><input id="cfg-awgn" type="checkbox" checked> AWGN</label>
-        <label class="inline"><input id="cfg-pn" type="checkbox"> Phase noise</label>
-        <label>PN linewidth (Hz)
+        <label class="inline" data-i18n><input id="cfg-pn" type="checkbox"> Phase noise</label>
+        <label data-i18n>PN linewidth (Hz)
           <input id="cfg-pn-lw" type="number" min="0" max="10000" step="1" value="10"></label>
-        <label class="inline"><input id="cfg-fade" type="checkbox"> Rician fading</label>
-        <label>Fading K (dB)
+        <label class="inline" data-i18n><input id="cfg-fade" type="checkbox"> Rician fading</label>
+        <label data-i18n>Fading K (dB)
           <input id="cfg-fade-k" type="number" min="-30" max="40" step="1" value="10"></label>
-        <label>Fade rate (Hz)
+        <label data-i18n>Fade rate (Hz)
           <input id="cfg-fade-fd" type="number" min="0" max="1000" step="1" value="50"></label>
       </div>
       <div style="margin-top:14px;">
-        <div class="k" style="color:var(--tx3);font-size:12px;text-transform:uppercase;letter-spacing:1px;">Interferers</div>
+        <div class="k" style="color:var(--tx3);font-size:12px;text-transform:uppercase;letter-spacing:1px;" data-i18n>Interferers</div>
         <div class="ctl-grid" style="margin-top:6px;">
-          <label>Type
-            <select id="cfg-int-type"><option value="cw">CW</option><option value="wideband">Wideband</option></select></label>
-          <label>Offset (Hz)
+          <label data-i18n>Type
+            <select id="cfg-int-type"><option value="cw">CW</option><option value="wideband" data-i18n>Wideband</option></select></label>
+          <label data-i18n>Offset (Hz)
             <input id="cfg-int-off" type="number" step="500" value="20000"></label>
-          <label>Power (dBm)
+          <label data-i18n>Power (dBm)
             <input id="cfg-int-pwr" type="number" step="1" value="-35"></label>
-          <label>Bandwidth (Hz)
+          <label data-i18n>Bandwidth (Hz)
             <input id="cfg-int-bw" type="number" step="1000" value="50000"></label>
         </div>
         <div id="cfg-int-list" style="margin-top:6px;font-size:12.5px;color:var(--tx2);">none</div>
         <div style="margin-top:6px;">
-          <button id="cfg-int-add" class="ds-btn">Add interferer</button>
-          <button id="cfg-int-clear" class="ds-btn">Clear all</button>
+          <button id="cfg-int-add" class="ds-btn" data-i18n>Add interferer</button>
+          <button id="cfg-int-clear" class="ds-btn" data-i18n>Clear all</button>
         </div>
       </div>
       <div style="margin-top:14px;">
-        <button id="cfg-apply" class="ds-btn primary">Apply</button>
-        <button id="cfg-release" class="ds-btn">Release to sim</button>
+        <button id="cfg-apply" class="ds-btn primary" data-i18n>Apply</button>
+        <button id="cfg-release" class="ds-btn" data-i18n>Release to sim</button>
         <span id="cfg-msg" class="msg"></span>
       </div>
     </div>
@@ -145,8 +146,30 @@
 
 </div>
 
+<script type="module">
+// UI language (EN|FR) — docs/i18n/UI_I18N_GUIDE.md. This page's own script
+// below is a classic (non-module) script: it reaches the runtime through
+// window.SMO_I18N (same object as I18n) once this module has run, i.e.
+// from its DOMContentLoaded handler onwards.
+import { I18n } from "/static/shared/i18n.js";
+import { mountLangToggle } from "/static/shared/components.js";
+I18n.ready.then(() => {
+  mountLangToggle(document.getElementById("lang-toggle"));
+  if (typeof window.i18nRefresh === "function") window.i18nRefresh();
+});
+I18n.onLangChange(() => { if (typeof window.i18nRefresh === "function") window.i18nRefresh(); });
+</script>
 <script>
 const $ = (id) => document.getElementById(id);
+// i18n: window.SMO_I18N exists once the module above has run; until then
+// English with {{var}} filled in (same output as the runtime in EN).
+function tText(s, v) {
+  const I = window.SMO_I18N;
+  if (I && typeof I.tText === "function") return I.tText(s, v);
+  return v ? s.replace(/\{\{-?\s*(\w+)\s*\}\}/g, (m, k) => (k in v ? String(v[k]) : m)) : s;
+}
+let lastData = null;
+function i18nRefresh() { renderInterferers(); if (lastData) render(lastData); }
 let cfgInterferers = [];
 let cfgInitialised = false;
 
@@ -161,6 +184,7 @@ function connect() {
 connect();
 
 function render(d) {
+  lastData = d;
   // Channel-model truth
   const cfg = d.config || {};
   const ch = cfg.channel || {};
@@ -176,7 +200,7 @@ function render(d) {
   gsEl.style.color = gsPen > 3 ? "var(--alarm)" : gsPen > 0 ? "var(--warn)" : "";
   $("ch-overrides").textContent =
       (cfg.manual_overrides && cfg.manual_overrides.length)
-        ? cfg.manual_overrides.join(", ") : "none";
+        ? cfg.manual_overrides.join(", ") : tText("none");
 
   // Observed effect (feedback so the instructor sees what landed)
   $("fx-ebn0").textContent = d.eb_n0_db.toFixed(1) + " dB";
@@ -187,7 +211,7 @@ function render(d) {
 
   // Control plane state
   const badge = $("ctl-badge");
-  badge.textContent = d.control_enabled ? "CONTROL ENABLED" : "CONTROL DISABLED";
+  badge.textContent = d.control_enabled ? tText("CONTROL ENABLED") : tText("CONTROL DISABLED");
   badge.className = "ds-badge" + (d.control_enabled ? " warn" : "");
   $("ctl-banner").hidden = !!d.control_enabled;
   syncConfigPanel(d);
@@ -201,7 +225,7 @@ function syncConfigPanel(d) {
       "#config-panel input, #config-panel select, #config-panel button");
   controls.forEach((el) => { el.disabled = !d.control_enabled; });
   $("cfg-state").textContent =
-      d.control_enabled ? "control enabled" : "control disabled";
+      d.control_enabled ? tText("control enabled") : tText("control disabled");
   if (!d.control_enabled || cfgInitialised) return;
   cfgInitialised = true;
   const cfg = d.config || {};
@@ -223,7 +247,7 @@ function syncConfigPanel(d) {
 function renderInterferers() {
   const el = $("cfg-int-list");
   if (!el) return;
-  el.textContent = cfgInterferers.length === 0 ? "none"
+  el.textContent = cfgInterferers.length === 0 ? tText("none")
     : cfgInterferers.map((i) => i.type + " @ " +
         (i.freq_offset_hz ?? i.center_offset_hz ?? 0) + " Hz, " +
         i.power_dbm + " dBm").join(" | ");
@@ -236,10 +260,10 @@ async function postCfg(path, body) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body) });
     const j = await r.json();
-    msg.textContent = r.ok ? "applied" : ("error: " + (j.error || r.status));
+    msg.textContent = r.ok ? tText("applied") : tText("error: {{error}}", { error: j.error || r.status });
     msg.className = "msg " + (r.ok ? "ok" : "err");
   } catch (e) {
-    msg.textContent = "error: " + e;
+    msg.textContent = tText("error: {{error}}", { error: String(e) });
     msg.className = "msg err";
   }
 }

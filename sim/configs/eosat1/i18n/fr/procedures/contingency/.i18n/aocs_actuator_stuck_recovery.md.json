@@ -1,0 +1,87 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/contingency/aocs_actuator_stuck_recovery.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "ctg-026-aocs-actuator-stuck-recovery",
+   "en_hash": "5ebd030e5dc6f1a2",
+   "fr_hash": "7abf36189e72a4b8"
+  },
+  {
+   "id": "ctg-026-aocs-actuator-stuck-recovery/purpose",
+   "en_hash": "57c96924f6f86180",
+   "fr_hash": "9bf749261c00dd44"
+  },
+  {
+   "id": "ctg-026-aocs-actuator-stuck-recovery/prerequisites",
+   "en_hash": "99ddd3b17107dba2",
+   "fr_hash": "567e5865cb16f4d9"
+  },
+  {
+   "id": "ctg-026-aocs-actuator-stuck-recovery/required-telemetry",
+   "en_hash": "2a4813a73cc40dc9",
+   "fr_hash": "0b889efea8ff1521"
+  },
+  {
+   "id": "ctg-026-aocs-actuator-stuck-recovery/required-commands",
+   "en_hash": "970a96b912bba928",
+   "fr_hash": "a7d3d5339b5fc35d"
+  },
+  {
+   "id": "ctg-026-aocs-actuator-stuck-recovery/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "ctg-026-aocs-actuator-stuck-recovery/procedure-steps/step-1-detect-and-identify-the-stuck-wheel",
+   "en_hash": "e79205616ac8a1d9",
+   "fr_hash": "f40b4163e43247b8"
+  },
+  {
+   "id": "ctg-026-aocs-actuator-stuck-recovery/procedure-steps/step-2-disable-the-stuck-wheel",
+   "en_hash": "5e5675845379acba",
+   "fr_hash": "22a6e9f679d92aa0"
+  },
+  {
+   "id": "ctg-026-aocs-actuator-stuck-recovery/procedure-steps/step-3-command-three-wheel-control-mode",
+   "en_hash": "83ff196ab39ee8c1",
+   "fr_hash": "1e38356a3ac9fac3"
+  },
+  {
+   "id": "ctg-026-aocs-actuator-stuck-recovery/procedure-steps/step-4-perform-momentum-dump-with-magnetorquers",
+   "en_hash": "d4f4a295dc402547",
+   "fr_hash": "7d5c5ad31347ca2f"
+  },
+  {
+   "id": "ctg-026-aocs-actuator-stuck-recovery/procedure-steps/step-5-verify-stable-pointing-in-three-wheel-mode",
+   "en_hash": "e9093bc4988cedb9",
+   "fr_hash": "b38f0bd4467afad0"
+  },
+  {
+   "id": "ctg-026-aocs-actuator-stuck-recovery/procedure-steps/step-6-establish-three-wheel-operations-plan",
+   "en_hash": "6a51e3e14a755d47",
+   "fr_hash": "46b52cfdaf1d554d"
+  },
+  {
+   "id": "ctg-026-aocs-actuator-stuck-recovery/procedure-steps/step-7-wheel-recovery-attempt-ground-authorised-only",
+   "en_hash": "0f93b3895174c28e",
+   "fr_hash": "c5411cc6f109b9a4"
+  },
+  {
+   "id": "ctg-026-aocs-actuator-stuck-recovery/verification-criteria",
+   "en_hash": "c06f9744fa84f0f9",
+   "fr_hash": "4674de237fb34391"
+  },
+  {
+   "id": "ctg-026-aocs-actuator-stuck-recovery/off-nominal-handling",
+   "en_hash": "3914f99855256d96",
+   "fr_hash": "bfcb9e160d817612"
+  }
+ ],
+ "en_commit": "3e80564"
+}

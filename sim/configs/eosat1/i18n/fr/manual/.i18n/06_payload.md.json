@@ -1,0 +1,102 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/manual/06_payload.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "eosat-1-payload-multispectral-imager",
+   "en_hash": "d91a2e7bb7ccbdef",
+   "fr_hash": "b42d3afd66d77e95"
+  },
+  {
+   "id": "eosat-1-payload-multispectral-imager/1-overview",
+   "en_hash": "4ee3735df58f4693",
+   "fr_hash": "109ab7244aea6bc3"
+  },
+  {
+   "id": "eosat-1-payload-multispectral-imager/2-instrument-characteristics",
+   "en_hash": "5032d659597bbdef",
+   "fr_hash": "e1aa48b431b9ff12"
+  },
+  {
+   "id": "eosat-1-payload-multispectral-imager/2-instrument-characteristics/2-1-spectral-bands-ocean-colour-configuration",
+   "en_hash": "32092c4f30b4d956",
+   "fr_hash": "6038d23426689563"
+  },
+  {
+   "id": "eosat-1-payload-multispectral-imager/2-instrument-characteristics/2-2-altitude-dependent-geometry",
+   "en_hash": "0cf0f440414e8bcf",
+   "fr_hash": "800edaa7eb0de100"
+  },
+  {
+   "id": "eosat-1-payload-multispectral-imager/2-instrument-characteristics/2-3-scene-dependent-compression",
+   "en_hash": "53b7d442ad7dafa8",
+   "fr_hash": "3ea2a4793a61f797"
+  },
+  {
+   "id": "eosat-1-payload-multispectral-imager/2-instrument-characteristics/2-4-attitude-quality-coupling",
+   "en_hash": "755d06bf63ebdb98",
+   "fr_hash": "00ceabf41d055d57"
+  },
+  {
+   "id": "eosat-1-payload-multispectral-imager/3-payload-modes",
+   "en_hash": "bdb4ba0fd2796edd",
+   "fr_hash": "54f47bb0b06f77b0"
+  },
+  {
+   "id": "eosat-1-payload-multispectral-imager/3-payload-modes/3-1-mode-transitions",
+   "en_hash": "ac7a0fd32d5b22e9",
+   "fr_hash": "a5df740f4048d366"
+  },
+  {
+   "id": "eosat-1-payload-multispectral-imager/3-payload-modes/3-2-imaging-constraints",
+   "en_hash": "a679b0cf479e8908",
+   "fr_hash": "4886472340b98a96"
+  },
+  {
+   "id": "eosat-1-payload-multispectral-imager/4-data-storage-and-management",
+   "en_hash": "76d9d771cab1365e",
+   "fr_hash": "67516941dce007d8"
+  },
+  {
+   "id": "eosat-1-payload-multispectral-imager/5-telemetry-parameters",
+   "en_hash": "20d37ae71cee61af",
+   "fr_hash": "2372cb51636e866b"
+  },
+  {
+   "id": "eosat-1-payload-multispectral-imager/6-limit-definitions",
+   "en_hash": "2d07ff6c0181923b",
+   "fr_hash": "29aa95e56bb5c6a5"
+  },
+  {
+   "id": "eosat-1-payload-multispectral-imager/6-limit-definitions/6-1-fpa-temperature-interpretation",
+   "en_hash": "6fc7aea915b99a70",
+   "fr_hash": "55b1694582abf449"
+  },
+  {
+   "id": "eosat-1-payload-multispectral-imager/7-commands",
+   "en_hash": "8c5dc41bf9d92810",
+   "fr_hash": "b30bf0f97189d6e2"
+  },
+  {
+   "id": "eosat-1-payload-multispectral-imager/7-commands/7-1-typical-imaging-sequence",
+   "en_hash": "2e67fe0f77a2a51e",
+   "fr_hash": "d2e21fce97dc341d"
+  },
+  {
+   "id": "eosat-1-payload-multispectral-imager/8-operational-notes",
+   "en_hash": "71af40735b6062f6",
+   "fr_hash": "c6164c7a1eb96ca9"
+  },
+  {
+   "id": "eosat-1-payload-multispectral-imager/commandable-settings",
+   "en_hash": "4bbfa524b4ba1f4c",
+   "fr_hash": "b440df6f9a04b22e"
+  }
+ ],
+ "en_commit": "3e80564"
+}

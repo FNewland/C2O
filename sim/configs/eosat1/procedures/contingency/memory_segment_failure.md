@@ -47,8 +47,8 @@ previous known value. Calculate the number of newly failed segments.
 **Verify:** `payload.mem_used_mb` (0x060B) — record used capacity
 **Verify:** `payload.store_used` (0x0604) — record percentage
 **Verify:** `payload.checksum_errors` (0x0609) — record value (may correlate with segment failure)
-**Note:** Each memory segment corresponds to approximately 250 MB (total 20,000 MB / 80 segments).
-A single bad segment reduces capacity by approximately 1.25%.
+**Note:** Each memory segment corresponds to approximately 2,500 MB (total 20,000 MB / 8 segments).
+A single bad segment reduces capacity by 12.5%.
 **GO/NO-GO:** Segment failure confirmed — proceed to identification.
 
 ### Step 2: Identify Failed Segment
@@ -60,7 +60,7 @@ hosting the corrupted image is the likely failed segment.
 **TC:** `MEM_CHECK(memory_id=0, address=SEGMENT_START, length=SEGMENT_SIZE)` (Service 6, Subtype 9) — memory CRC check
 **Note:** (Service 6, Subtype 9) for each suspect segment.
 **Verify:** CRC check result — segments with CRC mismatch are confirmed bad.
-**Note:** Segment index ranges from 0 to 79. If the specific segment index is known
+**Note:** Segment index ranges from 0 to 7. If the specific segment index is known
 from onboard diagnostics, skip the manual CRC check.
 **GO/NO-GO:** Failed segment(s) identified — proceed to marking.
 
@@ -80,11 +80,11 @@ from onboard diagnostics, skip the manual CRC check.
 ### Step 4: Verify Reduced Capacity
 **TC:** `HK_REQUEST(sid=5)` (Service 3, Subtype 27) — Request payload housekeeping
 **Verify:** `payload.mem_total_mb` (0x060A) — confirm total reported capacity reflects
-reduction (expected decrease of ~250 MB per bad segment)
+reduction (expected decrease of ~2,500 MB per bad segment)
 **Verify:** `payload.store_used` (0x0604) — recalculate percentage based on new total capacity
 **Verify:** `payload.mem_used_mb` (0x060B) — confirm used memory is accurate
 **Action:** Calculate remaining usable capacity:
-- Usable capacity = Total capacity - (bad segments x 250 MB) - Used storage
+- Usable capacity = Total capacity - (bad segments x 2,500 MB) - Used storage
 - Remaining images = Usable capacity / 4 MB per raw image (`payload.yaml image_size_mb`;
   1-2.7 MB once the on-board CCSDS-123 compressor has run)
 **Note:** Record the updated capacity figures for the operations log.
@@ -95,7 +95,7 @@ reduction (expected decrease of ~250 MB per bad segment)
 - If remaining capacity supports all planned imaging: No plan change needed.
 - If remaining capacity is insufficient: Prioritize imaging targets. Consider
   scheduling data downlinks between imaging sessions to free storage.
-- If more than 10% of segments are bad (> 8 segments): Escalate to mission planning
+- If more than one segment is bad (> 1 of 8, over 12.5% of capacity): Escalate to mission planning
   team for long-term capacity assessment. Consider reducing image resolution or
   compression settings to reduce per-image storage.
 **Action:** Notify Flight Director of the updated capacity and any imaging plan changes.
@@ -119,7 +119,7 @@ reduction (expected decrease of ~250 MB per bad segment)
   Suspect radiation-induced latch-up or systematic memory failure. Command payload
   to OFF: `PAYLOAD_SET_MODE(mode=0)` (func_id 26). Power cycle payload after 60 s.
   If failures continue after power cycle, escalate to engineering team.
-- If more than 20% of segments are bad (> 16 segments): Payload memory is severely
+- If more than two segments are bad (> 2 of 8, over 25% of capacity): Payload memory is severely
   degraded. Assess whether the imager can still perform useful science. Consider
   operating in a reduced-capacity mode with immediate downlink after each capture.
 - If marking a segment fails (command rejected): Retry the command. If still rejected,

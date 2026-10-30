@@ -1,0 +1,72 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/commissioning/adcs_commissioning.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "com-013-adcs-commissioning-closure-nominal-declaration",
+   "en_hash": "55c7f576ba1579fb",
+   "fr_hash": "c0fb22890699f4ef"
+  },
+  {
+   "id": "com-013-adcs-commissioning-closure-nominal-declaration/purpose",
+   "en_hash": "e2aca5fa87d8d8a9",
+   "fr_hash": "ce20fa9a6f59c1db"
+  },
+  {
+   "id": "com-013-adcs-commissioning-closure-nominal-declaration/prerequisites",
+   "en_hash": "04abe9b543f41ca8",
+   "fr_hash": "ef661a989813e527"
+  },
+  {
+   "id": "com-013-adcs-commissioning-closure-nominal-declaration/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "com-013-adcs-commissioning-closure-nominal-declaration/procedure-steps/step-1-consolidated-aocs-end-state-readback",
+   "en_hash": "2cdb35326aa9f9da",
+   "fr_hash": "b135efe496c7548c"
+  },
+  {
+   "id": "com-013-adcs-commissioning-closure-nominal-declaration/procedure-steps/step-2-consolidated-platform-end-state-readback",
+   "en_hash": "e758035e2d6ea921",
+   "fr_hash": "8445a81b24bb40b9"
+  },
+  {
+   "id": "com-013-adcs-commissioning-closure-nominal-declaration/procedure-steps/step-3-consolidated-payload-end-state-readback",
+   "en_hash": "f3c236c30f5555a3",
+   "fr_hash": "02b174da238ebb14"
+  },
+  {
+   "id": "com-013-adcs-commissioning-closure-nominal-declaration/procedure-steps/step-4-declare-nominal-operations-phase-6",
+   "en_hash": "b81b49a341491fd9",
+   "fr_hash": "46b26ee5cab1aef9"
+  },
+  {
+   "id": "com-013-adcs-commissioning-closure-nominal-declaration/procedure-steps/step-5-hold-and-hand-over",
+   "en_hash": "fccf7bf3e939a17c",
+   "fr_hash": "48d7e5577164169b"
+  },
+  {
+   "id": "com-013-adcs-commissioning-closure-nominal-declaration/off-nominal-handling",
+   "en_hash": "a7e34c0ebc3006ed",
+   "fr_hash": "0dbc7c9b205f0ad3"
+  },
+  {
+   "id": "com-013-adcs-commissioning-closure-nominal-declaration/exit-state",
+   "en_hash": "8747fc7b568e4e9d",
+   "fr_hash": "c55463f466b01de7"
+  },
+  {
+   "id": "com-013-adcs-commissioning-closure-nominal-declaration/post-conditions",
+   "en_hash": "9ea9e694a9bd37ac",
+   "fr_hash": "4c735488e70ca893"
+  }
+ ],
+ "en_commit": "983af0f"
+}

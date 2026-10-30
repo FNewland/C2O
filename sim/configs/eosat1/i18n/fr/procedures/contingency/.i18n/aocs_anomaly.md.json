@@ -1,0 +1,77 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/contingency/aocs_anomaly.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "ctg-002-aocs-anomaly-recovery",
+   "en_hash": "adeaf44f6b8a2fc3",
+   "fr_hash": "3d4449c4f99e178d"
+  },
+  {
+   "id": "ctg-002-aocs-anomaly-recovery/purpose",
+   "en_hash": "525bb7bde76270f8",
+   "fr_hash": "546e728f767f4627"
+  },
+  {
+   "id": "ctg-002-aocs-anomaly-recovery/prerequisites",
+   "en_hash": "c2f8edcb29bcaa39",
+   "fr_hash": "7c299396a35d4b6c"
+  },
+  {
+   "id": "ctg-002-aocs-anomaly-recovery/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "ctg-002-aocs-anomaly-recovery/procedure-steps/step-1-assess-current-aocs-state",
+   "en_hash": "e9cf5232cf144597",
+   "fr_hash": "b73dbf41c01e4f49"
+  },
+  {
+   "id": "ctg-002-aocs-anomaly-recovery/procedure-steps/step-2-evaluate-reaction-wheel-health",
+   "en_hash": "6cde916ae3a7f2f8",
+   "fr_hash": "5a49be81d52ef3e5"
+  },
+  {
+   "id": "ctg-002-aocs-anomaly-recovery/procedure-steps/step-3-disable-failed-reaction-wheel",
+   "en_hash": "72254e6241561ad1",
+   "fr_hash": "3cc66fe3265d3e8e"
+  },
+  {
+   "id": "ctg-002-aocs-anomaly-recovery/procedure-steps/step-4-command-desaturation-manoeuvre",
+   "en_hash": "edf9badd2571d8da",
+   "fr_hash": "8addd780c1449cb7"
+  },
+  {
+   "id": "ctg-002-aocs-anomaly-recovery/procedure-steps/step-5-verify-body-rates-are-stable",
+   "en_hash": "5a8b86f5b903a92f",
+   "fr_hash": "7551900708aa6f33"
+  },
+  {
+   "id": "ctg-002-aocs-anomaly-recovery/procedure-steps/step-6-restore-nominal-mode-nadir-pointing",
+   "en_hash": "bd3f108e94d8b8d3",
+   "fr_hash": "1234baf137fb1c26"
+  },
+  {
+   "id": "ctg-002-aocs-anomaly-recovery/procedure-steps/step-7-escalation-command-detumble-if-multi-wheel-failure",
+   "en_hash": "bd5da6fa1499bed0",
+   "fr_hash": "4531408a5213a6fd"
+  },
+  {
+   "id": "ctg-002-aocs-anomaly-recovery/off-nominal-handling",
+   "en_hash": "083b9332502e5c88",
+   "fr_hash": "f684d7a694574c9e"
+  },
+  {
+   "id": "ctg-002-aocs-anomaly-recovery/post-conditions",
+   "en_hash": "7e9768c8751b3d07",
+   "fr_hash": "67da2601bb217949"
+  }
+ ],
+ "en_commit": "3e80564"
+}

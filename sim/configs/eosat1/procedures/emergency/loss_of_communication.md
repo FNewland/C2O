@@ -30,24 +30,29 @@ with decision gates at 6h, 12h, 24h, and 48h elapsed time since last contact.
 **Sequence:** Schedule uplink attempts on every visible pass (min elevation 5 deg) across
 Iqaluit and Troll in priority order based on maximum elevation.
 **Verify:** `ttc.rssi` (0x0502) > -125 dBm and `ttc.link_status` (0x0501) = 2 (LOCKED) within 30s of AOS.
-**GO/NO-GO:** If telemetry received on any station, exit emergency and transition to EMG-001 assessment. If no response after full ground station rotation, proceed to Step 3.
+**GO/NO-GO:** If telemetry received on any station, exit emergency and transition to EMG-001 assessment. If no response after full ground station rotation, proceed to Step 3. -> GO `STEP-END` | NO-GO `STEP-3`
 
 ### Step 3 --- Blind Command on Primary Transponder
+**LABEL:** `STEP-3`
 **TC:** `TTC_SWITCH_PRIMARY` (Service 8, Subtype 1, func_id 63) --- blind, repeated 3x with 10s spacing.
 **TC:** `HK_REQUEST(sid=6)` (Service 3, Subtype 27) --- transmitted 15s after switch command.
 **Verify:** `ttc.link_status` (0x0501) = 2 (LOCKED) within 45s.
 **Timing:** Execute at pass with elevation > 20 deg to maximise link margin.
 **GO/NO-GO:** If link acquired, proceed to full HK dump. If no response, proceed to Step 4.
+**BRANCH:** `ttc.link_status == 2` -> GO `STEP-END` | NO-GO `STEP-4` (timeout 45 s)
 
 ### Step 4 --- Blind Command on Redundant Transponder
+**LABEL:** `STEP-4`
 **TC:** `TTC_SWITCH_REDUNDANT` (Service 8, Subtype 1, func_id 64) --- blind, repeated 3x with 10s
 spacing. (Was annotated Subtype 2; every S8 function-perform is Subtype 1.)
 **TC:** `HK_REQUEST(sid=6)` (Service 3, Subtype 27) --- transmitted 15s after switch command.
 **Verify:** `ttc.link_status` (0x0501) = 2 (LOCKED) within 45s.
 **Timing:** Execute at next available high-elevation pass (> 20 deg).
 **GO/NO-GO:** If link acquired, remain on redundant transponder and assess primary. If no response, proceed to Step 5.
+**BRANCH:** `ttc.link_status == 2` -> GO `STEP-END` | NO-GO `STEP-5` (timeout 45 s)
 
 ### Step 5 --- Wait for Autonomous Recovery Timer
+**LABEL:** `STEP-5`
 **Action:** EOSAT-1 onboard autonomy triggers a communication recovery sequence after 6 hours
 of no ground contact. The spacecraft will cycle through transponder configurations and
 increase beacon power.
@@ -108,6 +113,7 @@ power-positive conditions resume (sunlit orbit phase with favourable beta angle)
 - If spacecraft orbit decayed significantly from predicted: re-acquire TLE from space surveillance network before next pass attempt.
 
 ## Post-Conditions
+**LABEL:** `STEP-END`
 - [ ] Two-way communication re-established on at least one transponder
 - [ ] `ttc.mode` (0x0500) confirmed in NOMINAL or SAFE
 - [ ] `ttc.link_status` (0x0501) = 2 (LOCKED) with stable `ttc.rssi` (0x0502) > -120 dBm

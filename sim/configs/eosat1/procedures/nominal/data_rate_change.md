@@ -72,13 +72,15 @@ confirms that the new bit error rate remains acceptable after the transition.
 **Verify:** `ttc.contact_elevation` (0x050A) --- record current elevation
 **Note:** If 0x0539 and 0x053A already disagree, a gate is refusing the commanded tier.
 Resolve that before commanding anything else — the ladder is not "stuck", it is obeying
-a rule, and 0x0520 / 0x053C / 0x050A say which one.
+a rule, and 0x0521 / 0x0520 / 0x053C say which one.
 **Note:** Record all values as pre-change baseline.
 **GO/NO-GO:** Link is active and stable --- proceed.
 
 ### Step 2 --- Verify the Gates and the Margin for the Target Tier
 **Action:** For a change **down to LOW (16 kbps)**: no gate and no minimum margin.
 LOW is the routine operations rate and is always acceptable. Skip to Step 4.
+**GO/NO-GO:** Target tier is LOW -> GO `STEP-4L` | NO-GO `STEP-2H`
+**LABEL:** `STEP-2H`
 **Action:** For a change **up to HIGH (128 kbps)**, all four must hold:
 - `ttc.antenna_deployed` (0x0520) = 1
 - `ttc.contact_elevation` (0x050A) >= 10.0 deg **and** staying above 10 deg for the
@@ -86,12 +88,12 @@ LOW is the routine operations rate and is always acceptable. Skip to Step 4.
 - `ttc.link_margin` (0x0503) > 3.0 dB and `ttc.eb_n0` (0x0519) > 10.0 dB
 - Ground station modem reconfigured for 64 kBd QPSK RS(255,223)
 **Note:** The tier step from LOW to HIGH is 9.03 dB of the link budget
-(`-10*log10(128000/16000)`). Margin at HIGH is 12 dB below margin at LOW at the same
-geometry — see `docs/LINK_BUDGET_AND_RATES.md` for the per-station table.
-**GO/NO-GO:** If any gate is open or margin <= 3.0 dB, do NOT proceed. Remain at LOW.
-Consider waiting for higher elevation before retrying.
+(`-10*log10(128000/16000)`). Margin at HIGH is about 10.5 dB below margin at LOW at the same
+geometry (the 9.03 dB rate step plus 1.5 dB of coding gain) — see `docs/LINK_BUDGET_AND_RATES.md` for the per-station table.
+**GO/NO-GO:** If any gate is open or margin <= 3.0 dB, do NOT proceed. Remain at LOW; consider waiting for higher elevation before retrying. -> GO `STEP-3` | NO-GO `STEP-END`
 
 ### Step 3 --- Enter DOWNLINK Mode (HIGH only)
+**LABEL:** `STEP-3`
 **TC:** `TTC_SET_DOWNLINK_MODE(on=1)` (Service 8, Subtype 1, func_id 79)
 **Verify:** `ttc.downlink_mode` (0x053C) = 1 within 5 s
 **Note:** DOWNLINK mode is the deliberate act that makes a bulk dump a planned pass
@@ -101,7 +103,10 @@ the rate.
 
 ### Step 4 --- Command the Tier Change
 **TC:** `TTC_SET_DATA_RATE(rate=1)` (Service 8, Subtype 1, func_id 65) --- select HIGH
+**BRANCH:** `ttc.tm_tier == 2` -> GO `STEP-4V` | NO-GO `STEP-4L` (timeout 10 s)
+**LABEL:** `STEP-4L`
 **TC:** `TTC_SET_DATA_RATE(rate=0)` (Service 8, Subtype 1, func_id 65) --- select LOW
+**LABEL:** `STEP-4V`
 **Note:** Send ONE of the two above. The legacy encoding is preserved verbatim:
 rate=0 has always meant "the low rate" and rate=1 "the high rate". They now land on the
 LOW and HIGH rungs of the ladder — usable operational rates — rather than on the two
@@ -128,8 +133,10 @@ allowing 30 s for BER to stabilize
 **Verify:** `ttc.eb_n0` (0x0519) > 8.0 dB
 **Action:** If BER >= -5, immediately revert to LOW (see Contingency).
 **GO/NO-GO:** BER acceptable at the new tier --- rate change complete.
+**BRANCH:** `ttc.downlink_mode == 1` -> GO `STEP-6` | NO-GO `STEP-END` (timeout 5 s)
 
 ### Step 6 --- Release HIGH After the Dump (HIGH only)
+**LABEL:** `STEP-6`
 **TC:** `TTC_SET_DATA_RATE(rate=0)` (Service 8, Subtype 1, func_id 65) --- back to LOW
 **TC:** `TTC_SET_DOWNLINK_MODE(on=0)` (Service 8, Subtype 1, func_id 79)
 **Verify:** `ttc.tm_data_rate` (0x0506) = 16000 bps within 10 s
@@ -139,6 +146,7 @@ not clear the commanded tier; the ACTIVE tier simply falls back to LOW, which is
 routine operations belong.
 
 ## Verification Criteria
+**LABEL:** `STEP-END`
 - [ ] `ttc.tm_data_rate` (0x0506) matches the commanded tier's rate
 - [ ] `ttc.tm_tier` (0x0539) = `ttc.tm_tier_cmd` (0x053A)
 - [ ] `ttc.tm_symbol_rate` (0x053B) matches the tier's modulation
@@ -150,12 +158,12 @@ routine operations belong.
 
 ## Contingency
 - If the tier command is rejected (S1.8, error 0x0007): read the failure text. It names
-  the gate — antenna stowed, DOWNLINK mode off, or elevation below 10 deg. Fix the gate
-  or accept LOW for this pass.
+  the gate — beacon mode latched, antenna stowed or DOWNLINK mode off (there is no on-board
+  elevation gate: the 10 deg rule is an MCS warning). Fix the gate or accept LOW for this pass.
 - If `ttc.tm_tier` (0x0539) stays below `ttc.tm_tier_cmd` (0x053A) after the command
-  was accepted: the elevation gate is demoting the ACTIVE tier as the pass descends.
-  This is expected behaviour near LOS; the commanded tier is retained and HIGH resumes
-  on the next pass above 10 deg. Do not re-command.
+  was accepted: a gate is demoting the ACTIVE tier (beacon mode latched, antenna stowed or
+  DOWNLINK mode off — 0x0521 / 0x0520 / 0x053C). The commanded tier is retained and HIGH
+  resumes once the gate clears. Do not re-command.
 - If carrier lock is lost during the change: wait 15 s for automatic re-acquisition.
   If not recovered, command back to LOW: `TTC_SET_DATA_RATE(rate=0)`. If still no lock,
   escalate to CTG-014 (BER Anomaly Investigation).

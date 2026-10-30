@@ -1,0 +1,87 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/contingency/overcurrent_response.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "ctg-012-overcurrent-response",
+   "en_hash": "ba95912f5caea820",
+   "fr_hash": "7b012ae531861f36"
+  },
+  {
+   "id": "ctg-012-overcurrent-response/objective",
+   "en_hash": "82e52f46f146c8fc",
+   "fr_hash": "43ccf3f1ca343643"
+  },
+  {
+   "id": "ctg-012-overcurrent-response/prerequisites",
+   "en_hash": "d2427aff18cdc642",
+   "fr_hash": "de24ce08ff872b5a"
+  },
+  {
+   "id": "ctg-012-overcurrent-response/required-telemetry",
+   "en_hash": "24453d334a464739",
+   "fr_hash": "dae52218a5298f5d"
+  },
+  {
+   "id": "ctg-012-overcurrent-response/required-commands",
+   "en_hash": "577cbb35609627b9",
+   "fr_hash": "b3ff3d3094ae63d1"
+  },
+  {
+   "id": "ctg-012-overcurrent-response/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "ctg-012-overcurrent-response/procedure-steps/step-1-identify-tripped-power-lines",
+   "en_hash": "26a6ec6d07c7ea46",
+   "fr_hash": "c97df9eab24e4f92"
+  },
+  {
+   "id": "ctg-012-overcurrent-response/procedure-steps/step-2-check-per-line-current-for-fault-assessment",
+   "en_hash": "2ebcea674887b4db",
+   "fr_hash": "96e9f5e10e8bcc25"
+  },
+  {
+   "id": "ctg-012-overcurrent-response/procedure-steps/step-3-isolate-fault-coordinate-with-affected-subsystem",
+   "en_hash": "3d5ef3af28796ed8",
+   "fr_hash": "3c39fbc5ce26db5a"
+  },
+  {
+   "id": "ctg-012-overcurrent-response/procedure-steps/step-4-reset-overcurrent-flag",
+   "en_hash": "aa89b1c3c764319e",
+   "fr_hash": "845fcddb1dc2402f"
+  },
+  {
+   "id": "ctg-012-overcurrent-response/procedure-steps/step-5-re-enable-power-line",
+   "en_hash": "9ea1e7a888bc895e",
+   "fr_hash": "34272a65e3669147"
+  },
+  {
+   "id": "ctg-012-overcurrent-response/procedure-steps/step-6-verify-downstream-subsystem-recovery",
+   "en_hash": "917e1d715881066e",
+   "fr_hash": "b0bf5287b7adba37"
+  },
+  {
+   "id": "ctg-012-overcurrent-response/verification-criteria",
+   "en_hash": "53bd44f9c6b990fe",
+   "fr_hash": "b2a1bc936d33bd2a"
+  },
+  {
+   "id": "ctg-012-overcurrent-response/contingency",
+   "en_hash": "a24a4aca0992dae4",
+   "fr_hash": "654d1ba6f0a1e064"
+  },
+  {
+   "id": "ctg-012-overcurrent-response/recovery-path-re-powering-shed-loads",
+   "en_hash": "ff3d6989d5306388",
+   "fr_hash": "2a26fa93111780b1"
+  }
+ ],
+ "en_commit": "3e80564"
+}

@@ -934,6 +934,14 @@ def main():
                         help="Radio web UI generation. House precedence: "
                              "--ui > SMO_UI env > default. Per-request "
                              "?ui=, /classic and /modern always available.")
+    # Upstream overrides (the ground profile points the bridge at the smo-link
+    # gateway, which may sit on non-default ports, e.g. start.sh --same-host).
+    parser.add_argument("--sim-host", default=None,
+                        help="Upstream TM/TC host (overrides network.sim_*_host)")
+    parser.add_argument("--sim-tm-port", type=int, default=None)
+    parser.add_argument("--sim-tc-port", type=int, default=None)
+    parser.add_argument("--sim-ws-url", default=None,
+                        help="Upstream spacecraft-state WebSocket, e.g. ws://127.0.0.1:8080/ws")
     parser.add_argument("-v", "--verbose", action="store_true")
     args = parser.parse_args()
 
@@ -952,6 +960,15 @@ def main():
         config.channel.eb_n0_db = args.eb_n0
     if args.radio_control:
         config.network.radio_control_enabled = True
+    if args.sim_host:
+        config.network.sim_tm_host = args.sim_host
+        config.network.sim_tc_host = args.sim_host
+    if args.sim_tm_port is not None:
+        config.network.sim_tm_port = args.sim_tm_port
+    if args.sim_tc_port is not None:
+        config.network.sim_tc_port = args.sim_tc_port
+    if args.sim_ws_url:
+        config.network.sim_ws_url = args.sim_ws_url
 
     bridge = RFSimBridge(config)
 

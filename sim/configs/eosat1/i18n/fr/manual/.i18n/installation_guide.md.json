@@ -1,0 +1,127 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/manual/installation_guide.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "spacemissionsimulation-installation-guide",
+   "en_hash": "24ccf52bddabe312",
+   "fr_hash": "52e19c54d47944ab"
+  },
+  {
+   "id": "spacemissionsimulation-installation-guide/quick-start",
+   "en_hash": "d7bd94748aa7eaf9",
+   "fr_hash": "b9c3dd49099a1b60"
+  },
+  {
+   "id": "spacemissionsimulation-installation-guide/prerequisites",
+   "en_hash": "7bd60615278a58c5",
+   "fr_hash": "18563d922ea465d5"
+  },
+  {
+   "id": "spacemissionsimulation-installation-guide/platform-specific-instructions",
+   "en_hash": "0740fafb3dd69e96",
+   "fr_hash": "db901ca1df2a2242"
+  },
+  {
+   "id": "spacemissionsimulation-installation-guide/platform-specific-instructions/linux-ubuntu-debian",
+   "en_hash": "1496159cedb38a70",
+   "fr_hash": "1496159cedb38a70"
+  },
+  {
+   "id": "spacemissionsimulation-installation-guide/platform-specific-instructions/linux-fedora-rhel",
+   "en_hash": "df0c0dc5242f1f01",
+   "fr_hash": "df0c0dc5242f1f01"
+  },
+  {
+   "id": "spacemissionsimulation-installation-guide/platform-specific-instructions/macos",
+   "en_hash": "18125b131903efb7",
+   "fr_hash": "18125b131903efb7"
+  },
+  {
+   "id": "spacemissionsimulation-installation-guide/platform-specific-instructions/windows",
+   "en_hash": "8fb88b3ab57d6a0a",
+   "fr_hash": "54e939897883c203"
+  },
+  {
+   "id": "spacemissionsimulation-installation-guide/installation-steps-all-platforms",
+   "en_hash": "c5e279d6184f7230",
+   "fr_hash": "a459f2c57f3eaa8f"
+  },
+  {
+   "id": "spacemissionsimulation-installation-guide/running-the-simulator",
+   "en_hash": "dcce252495dfd220",
+   "fr_hash": "b6806f8902789840"
+  },
+  {
+   "id": "spacemissionsimulation-installation-guide/running-the-simulator/linux-macos",
+   "en_hash": "6bbc2c7a8b631a3e",
+   "fr_hash": "6bbc2c7a8b631a3e"
+  },
+  {
+   "id": "spacemissionsimulation-installation-guide/running-the-simulator/windows",
+   "en_hash": "1795d755d8f03ece",
+   "fr_hash": "b30106f9cf2fba3d"
+  },
+  {
+   "id": "spacemissionsimulation-installation-guide/service-ports",
+   "en_hash": "6b78e888d2069cd1",
+   "fr_hash": "e983ec0652a76649"
+  },
+  {
+   "id": "spacemissionsimulation-installation-guide/offline-installation-cyberrange",
+   "en_hash": "09e58448c25c4d3c",
+   "fr_hash": "f68aea40d07cf108"
+  },
+  {
+   "id": "spacemissionsimulation-installation-guide/verification",
+   "en_hash": "47182910fcec774c",
+   "fr_hash": "2f3682a3d2222823"
+  },
+  {
+   "id": "spacemissionsimulation-installation-guide/troubleshooting",
+   "en_hash": "659a188b36f9c326",
+   "fr_hash": "42e17c1d6c6b24e4"
+  },
+  {
+   "id": "spacemissionsimulation-installation-guide/troubleshooting/port-conflicts",
+   "en_hash": "a7080e1bdac4004d",
+   "fr_hash": "c2f609371eeebdc3"
+  },
+  {
+   "id": "spacemissionsimulation-installation-guide/troubleshooting/chrome-https-redirect",
+   "en_hash": "ac01e20135232135",
+   "fr_hash": "89ce277cc965baa4"
+  },
+  {
+   "id": "spacemissionsimulation-installation-guide/troubleshooting/python-version-issues",
+   "en_hash": "855db66aa2aa863f",
+   "fr_hash": "2fd20902edf556a7"
+  },
+  {
+   "id": "spacemissionsimulation-installation-guide/troubleshooting/missing-modules",
+   "en_hash": "7efb4c89fba16e51",
+   "fr_hash": "39e56bafa7caa6e4"
+  },
+  {
+   "id": "spacemissionsimulation-installation-guide/troubleshooting/orbit-tools-won-t-start",
+   "en_hash": "5c3a39e35f197c76",
+   "fr_hash": "a94f5615c839cb38"
+  },
+  {
+   "id": "spacemissionsimulation-installation-guide/configuration",
+   "en_hash": "9ab7c9238543d702",
+   "fr_hash": "74742822bd7038d5"
+  },
+  {
+   "id": "spacemissionsimulation-installation-guide/support",
+   "en_hash": "8d050197b9499965",
+   "fr_hash": "3371a06e0e8f1ee6"
+  }
+ ],
+ "en_commit": "3e80564"
+}

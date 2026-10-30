@@ -30,7 +30,7 @@ every scheduled ground contact.
 **Verify:** `eps.bat_soc` (0x0101) > 50 % within 10 s
 **Verify:** `eps.bus_voltage` (0x0105) > 27.0 V within 10 s
 **Verify:** `eps.power_gen` (0x0107) > `eps.power_cons` (0x0106) (positive power margin)
-**GO/NO-GO:** If SoC < 50 % or bus voltage < 27 V, execute CTG-001 EPS Safe Mode
+**GO/NO-GO:** If SoC < 50 % or bus voltage < 27 V, execute CTG-005 EPS Safe Mode
 procedure. Do NOT proceed with payload operations.
 
 ### Step 3 --- Verify AOCS Pointing
@@ -85,7 +85,7 @@ and repeat verification. If redundant also fails, declare TTC anomaly.
 execute the relevant off-nominal procedure before continuing.
 
 ## Off-Nominal Handling
-- If `eps.bat_soc` < 30 %: Immediately execute CTG-001 EPS Safe Mode Recovery.
+- If `eps.bat_soc` < 30 %: Immediately execute CTG-005 EPS Safe Mode Recovery.
 - If `aocs.mode` = 2 (SAFE): Execute CTG-002 AOCS Anomaly Recovery.
 - If TTC primary and redundant both fail: Declare loss of comm; wait for next pass.
 - If `obdh.cpu_load` > 90 %: Investigate runaway process; consider OBC reset.

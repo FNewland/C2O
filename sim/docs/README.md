@@ -163,16 +163,16 @@ See what still needs work:
 
 | Metric | Count |
 |--------|-------|
-| PUS Services Implemented | 13 of 20 (65%) |
-| S8 Functions | 50+ across all subsystems |
-| Telemetry Parameters | 120+ with units/descriptions |
-| Event Types | 120+ with severity levels |
-| S12 Monitoring Rules | 25+ with thresholds |
-| S19 Event-Action Rules | 20+ autonomous responses |
-| FDIR Procedures | 51 (nominal, contingency, emergency, LEOP) |
+| PUS Services Implemented | 15 (S1–S3, S5, S6, S8, S9, S11–S13, S15, S17–S20) |
+| S8 Functions | 110+ across all subsystems |
+| Telemetry Parameters | 450+ with units/descriptions |
+| Event Types | 150+ with severity levels |
+| S12 Monitoring Rules | 41 with thresholds |
+| S19 Event-Action Rules | 32 autonomous responses |
+| FDIR Procedures | 67 (LEOP, commissioning, nominal, contingency, emergency) |
 | Failure Scenarios | 26+ with injection/recovery |
 | MCS Display Tabs | 7+ operational dashboards |
-| Configuration Files | 40+ YAML files |
+| Configuration Files | 90+ YAML files |
 
 ---
 
@@ -180,11 +180,8 @@ See what still needs work:
 
 | Limitation | Impact | Mitigation |
 |-----------|--------|-----------|
-| Service 2 (Device Access) not implemented | Cannot perform low-level device control (all via S8) | Use S8 functions, comprehensive coverage |
-| Service 18 (Procedures) defined but not auto-invoked | Procedures exist (51) but require manual triggering | Framework ready, can be activated if needed |
 | Memory model (S6) simplified | Cannot simulate true memory faults, SEU recovery | Acceptable for operations, hardcoded checksums |
-| Atmospheric losses not modeled | Link margin predictions don't include rain/gases | Clear-sky model sufficient for most cases |
-| No gravity gradient or SRP torques | AOCS dynamics slightly less realistic | Acceptable for attitude control testing |
+| Rain fade not modeled | Link margin predictions are clear-sky (gaseous loss scaled by cosec of elevation) | Clear-sky model sufficient for most cases |
 
 ---
 

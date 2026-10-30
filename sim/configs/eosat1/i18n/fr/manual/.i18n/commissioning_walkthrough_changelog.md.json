@@ -1,0 +1,22 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/manual/commissioning_walkthrough_changelog.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "commissioning-walkthrough-development-change-log",
+   "en_hash": "14854c8f489a69af",
+   "fr_hash": "8ed3e552c9e495ca"
+  },
+  {
+   "id": "commissioning-walkthrough-development-change-log/known-simulator-issues",
+   "en_hash": "8db67ee05db0ee13",
+   "fr_hash": "d87fadcc36ff483c"
+  }
+ ],
+ "en_commit": "983af0f"
+}

@@ -199,11 +199,6 @@ Breakpoints are used to:
 - **Build an exercise**: save a known-good starting state and hand every team
   the same spacecraft
 
-Breakpoints are used to:
-- **Resume Training**: Pause a scenario, save state, and resume later from that exact point
-- **Debug Failures**: Capture state before/after a failure and compare
-- **Teach Reference Points**: Show trainees the spacecraft state at key mission milestones
-
 ### Saving a Breakpoint
 
 1. In the right panel, enter a name in the **Breakpoint name...** field (e.g., "End of LEOP", "Before AOCS anomaly")
@@ -261,7 +256,7 @@ Parameters are grouped by subsystem:
 - Angular Rates (roll, pitch, yaw in deg/s)
 - Reaction Wheel speeds (RPM)
 - Sun sensor / Star tracker status
-- Control mode (OFF, DETUMBLE, SAFE_POINT, NADIR_POINT, TARGET_TRACK)
+- Control mode (OFF, SAFE_BOOT, DETUMBLE, COARSE_SUN, NOMINAL, FINE_POINT, SLEW, …)
 
 #### TCS (Thermal Control)
 - OBC, Battery, FPA Temperatures
@@ -322,8 +317,9 @@ From the right panel:
 2. Select a **Failure Type** (e.g., "solar_array_partial", "rw_bearing", "heater_stuck_on")
 3. Set **Magnitude** (0.0 = none, 1.0 = full failure)
 4. Choose **Onset** type:
-   - **Immediate**: Failure magnitude jumps to target instantly
+   - **Step**: Failure magnitude jumps to target instantly
    - **Gradual**: Magnitude ramps over "Onset Duration" seconds
+   - **Intermittent**: Failure switches on and off at random intervals
 5. Click **INJECT**
 
 ### Clearing Failures
@@ -542,7 +538,7 @@ should say so.
 
 ### Parameters Showing as "--" (No Data)
 - Ensure simulator is running and WebSocket is connected (check "WS CONNECTED" status)
-- Verify `/api/instructor/snapshot` endpoint is responding: `curl http://localhost:8000/api/instructor/snapshot`
+- Verify `/api/instructor/snapshot` endpoint is responding: `curl http://localhost:8080/api/instructor/snapshot`
 - Some parameters may be N/A in certain spacecraft modes (e.g., payload SNR when payload is OFF)
 
 ### Breakpoint Load Fails

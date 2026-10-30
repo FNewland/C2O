@@ -213,7 +213,8 @@ time-tagged scheduling; the transponder select is S8 function-perform func 64.
 tier** for each station. Compare against the baseline table at the head of this card
 (regenerate it with `python tools/link_budget_ladder.py` if the RF configuration has
 changed). Document any discrepancies. Establish the minimum operational elevation angle
-for each station, and confirm that the 10 deg HIGH-tier gate is enforced at each.
+for each station, and confirm that the MCS 10 deg HIGH-tier warning fires at each (a ground
+rule: the spacecraft does not reject HIGH on elevation).
 **GO/NO-GO:** Link budget verification complete
 
 ### Step 9 — Safe the Link
@@ -253,7 +254,7 @@ beacon only.
 - [ ] Redundant transponder verified — performance comparable to primary
 - [ ] RSSI vs elevation profile characterized
 - [ ] Link margin measured at LOW and HIGH, and the 10.5 dB rung step confirmed
-- [ ] HIGH-tier elevation gate verified by rejection below 10 deg
+- [ ] HIGH-tier 10 deg ground rule verified: the MCS warns below 10 deg (the spacecraft does not reject HIGH on elevation)
 - [ ] Spacecraft left at LOW with `ttc.downlink_mode` (0x053C) = 0 — COMMANDED by
       Step 9, not merely assumed
 - [ ] `ttc.antenna_deployed` (0x0520) = 1 and `ttc.beacon_mode` (0x0521) = 0

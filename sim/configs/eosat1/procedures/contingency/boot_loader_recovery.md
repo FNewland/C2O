@@ -49,37 +49,41 @@ memory reload to restore the application.
 **Verify:** `obdh.sw_image` (0x0311) = 0 (bootloader, application not running)
 **Verify:** `obdh.last_reboot_cause` (0x0316) — record the cause:
 - 0 = none (unexpected — should not be in bootloader without cause)
-- 1 = watchdog (application crashed, watchdog reset, bootloader did not auto-boot)
-- 2 = memory (memory error detected, boot aborted)
-- 3 = switchover (just switched OBC units)
-- 4 = commanded (operator-initiated reboot)
+- 1 = commanded (operator-initiated reboot)
+- 2 = watchdog (application crashed, watchdog reset, bootloader did not auto-boot)
+- 3 = memory (memory error detected, boot aborted)
+- 4 = switchover (just switched OBC units)
 **Verify:** `obdh.reboot_count` (0x030A) — record value
 **Verify:** `obdh.active_obc` (0x030C) — record which unit is active
 **Verify:** `obdh.temp` (0x0301) — within limits
 **Note:** If `last_reboot_cause` = 3 (memory), the application image may be corrupt.
-If cause = 1 (watchdog), the application may have crashed but the image could be intact.
+If cause = 2 (watchdog), the application may have crashed but the image could be intact.
 **GO/NO-GO:** Bootloader state confirmed — proceed to diagnosis.
 
 ### Step 2: Check Last Reboot Cause and Assess
 **Action:** Based on `obdh.last_reboot_cause`:
 
-**If cause = 1 (watchdog) or cause = 4 (commanded):**
+**If cause = 2 (watchdog) or cause = 1 (commanded):**
 - Application image may be intact but crashed during execution.
 - Proceed to Step 3 (attempt application boot).
 
-**If cause = 2 (memory):**
+**If cause = 3 (memory):**
 - Application image may be corrupt.
 - Proceed to Step 4 (memory check before boot attempt).
 
-**If cause = 3 (switchover):**
+**If cause = 4 (switchover):**
 - Normal condition after OBC switchover. Proceed to Step 3.
 
 **If cause = 0 (none):**
 - Unexpected bootloader state. Proceed cautiously to Step 4 (memory check).
 
 **GO/NO-GO:** Assessment complete — follow appropriate path.
+**BRANCH:** `obdh.last_reboot_cause == 3` -> GO `STEP-4` | NO-GO `STEP-2B` (timeout 10 s)
+**LABEL:** `STEP-2B`
+**BRANCH:** `obdh.last_reboot_cause == 0` -> GO `STEP-4` | NO-GO `STEP-3` (timeout 10 s)
 
 ### Step 3: Attempt Application Boot
+**LABEL:** `STEP-3`
 **TC:** `OBC_BOOT_APP` (Service 8, Subtype 1, func_id 55) — Command application boot
 **Verify:** Wait 30 s for application to initialize.
 **TC:** `HK_REQUEST(sid=4)` (Service 3, Subtype 27) — Request OBDH housekeeping
@@ -92,8 +96,10 @@ If cause = 1 (watchdog), the application may have crashed but the image could be
 **Action:** If `obdh.sw_image` still = 0 after 30 s:
 - Application failed to boot. Proceed to Step 4 (memory check).
 **GO/NO-GO:** Application boot succeeded — proceed to Step 3a. Or boot failed — proceed to Step 4.
+**BRANCH:** `obdh.sw_image == 1` -> GO `STEP-3A` | NO-GO `STEP-4` (timeout 30 s)
 
 ### Step 3a: Clear Beacon Mode and Restore the LOW Rung
+**LABEL:** `STEP-3A`
 **Note:** Booting the application does **NOT** clear beacon mode. Bootloader entry
 latched `ttc.beacon_mode` (0x0521) = 1 and it stays latched with the application
 running. While it is latched, the SAFE rung (1 000 bps, ex-BEACON) is the ONLY permitted tier and every
@@ -108,12 +114,14 @@ also raised as S5 event `0x030B COMMAND_REJECTED`.
 **Verify:** `ttc.tm_data_rate` (0x0506) = 16000 and `ttc.tm_tier` (0x0539) = 1 (LOW)
 **Action:** Re-configure the ground demodulator from 1 kBd to 16 kBd.
 **Note:** Gate order on the ladder — **beacon mode off** -> LOW selectable; **antenna
-deployed** (func 69) **+ DOWNLINK mode on** (func 79) **+ elevation >= 10 deg** -> HIGH
-selectable. All four gates report error `0x0007`, so read the failure notice, not the
+deployed** (func 69) **+ DOWNLINK mode on** (func 79) -> HIGH
+selectable (10 deg elevation is a ground rule: the MCS warns, the spacecraft does not refuse). All three on-board gates report error `0x0007`, so read the failure notice, not the
 code. Full list in `docs/LINK_BUDGET_AND_RATES.md` section 6.3.
 **GO/NO-GO:** Beacon mode cleared and downlink at LOW — proceed to Step 7.
+**BRANCH:** `ttc.beacon_mode == 0` -> GO `STEP-7` | NO-GO `STEP-END` (timeout 10 s)
 
 ### Step 4: Enable Boot Inhibit and Check Memory
+**LABEL:** `STEP-4`
 **TC:** `OBC_BOOT_INHIBIT(inhibit=1)` (Service 8, Subtype 1, func_id 56) — Inhibit auto-boot to prevent boot loop
 **Verify:** OBC remains in bootloader (no automatic boot attempts)
 **Note:** Perform memory CRC check on the application image region:
@@ -125,9 +133,10 @@ Adjust based on the actual memory map if different.
 - If CRC matches expected value: Image is intact. The boot failure may be due to a
   transient error. Proceed to Step 5 (retry boot).
 - If CRC does NOT match: Image is corrupt. Proceed to Step 6 (memory reload).
-**GO/NO-GO:** Memory check complete — follow appropriate path.
+**GO/NO-GO:** Memory check complete — CRC matches the expected value -> GO `STEP-5` | NO-GO `STEP-6`
 
 ### Step 5: Retry Application Boot After Memory Check
+**LABEL:** `STEP-5`
 **TC:** `OBC_BOOT_INHIBIT(inhibit=0)` (Service 8, Subtype 1, func_id 56) — Disable boot inhibit
 **TC:** `OBC_BOOT_APP` (Service 8, Subtype 1, func_id 55) — Command application boot
 **Verify:** Wait 30 s for application to initialize.
@@ -136,8 +145,10 @@ Adjust based on the actual memory map if different.
 **Verify:** `obdh.sw_version` (0x030B) — correct version
 **Action:** If boot succeeds, proceed to Step 3a (clear beacon mode) then Step 7. If boot fails again, proceed to Step 6.
 **GO/NO-GO:** Boot succeeded — go to Step 3a, then Step 7. Or boot failed again — proceed to Step 6.
+**BRANCH:** `obdh.sw_image == 1` -> GO `STEP-3A` | NO-GO `STEP-6` (timeout 30 s, max 1)
 
 ### Step 6: Attempt Memory Reload
+**LABEL:** `STEP-6`
 **TC:** `OBC_BOOT_INHIBIT(inhibit=1)` (Service 8, Subtype 1, func_id 56) — Ensure boot inhibit is active
 **Note:** Upload application software image to EEPROM via memory load commands:
 **TC:** `MEM_LOAD(memory_id=1, address=ADDR, data=BLOCK)` (Service 6, Subtype 2)
@@ -153,8 +164,10 @@ image size and uplink data rate).
 **Verify:** `obdh.sw_image` (0x0311) = 1 within 30 s
 **Action:** If boot succeeds, proceed to Step 3a (clear beacon mode) then Step 7. If boot fails, proceed to Contingency.
 **GO/NO-GO:** Memory reload and boot attempted — proceed to verification if successful.
+**BRANCH:** `obdh.sw_image == 1` -> GO `STEP-3A` | NO-GO `STEP-END` (timeout 30 s, max 1)
 
 ### Step 7: Verify All Subsystems Nominal
+**LABEL:** `STEP-7`
 **Note:** Request HK from all subsystems:
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — EPS
 **TC:** `HK_REQUEST(sid=2)` (Service 3, Subtype 27) — AOCS
@@ -175,6 +188,7 @@ image size and uplink data rate).
 **GO/NO-GO:** All subsystems nominal — recovery complete.
 
 ## Verification Criteria
+**LABEL:** `STEP-END`
 - [ ] `obdh.sw_image` (0x0311) = 1 (application running)
 - [ ] `obdh.sw_version` (0x030B) = correct application version
 - [ ] `obdh.mode` (0x0300) = 0 (NOMINAL)

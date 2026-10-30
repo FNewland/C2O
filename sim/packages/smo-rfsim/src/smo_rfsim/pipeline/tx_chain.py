@@ -42,7 +42,8 @@ class SpacecraftTX(threading.Thread):
                  sps: int = 8, rolloff: float = 0.35,
                  rs_enabled: bool = True, conv_enabled: bool = True,
                  output_buffer: SampleBuffer = None,
-                 packet_queue: queue.Queue = None):
+                 packet_queue: queue.Queue = None,
+                 gmsk_bt: float = 0.5, gfsk_mod_index: float = 0.5):
         super().__init__(daemon=True, name="SpacecraftTX")
         self._running = False
         self._transmitting = False  # PA off until link is established
@@ -58,7 +59,11 @@ class SpacecraftTX(threading.Thread):
         self._conv_enabled = conv_enabled
 
         # Modulation
-        self._modulator = Modulator(modulation=modulation, sps=sps, rolloff=rolloff)
+        # gmsk_bt / gfsk_mod_index come from rfsim.yaml `pipeline:` (defect
+        # #136: they were validated there but never reached the modulator).
+        self._modulator = Modulator(modulation=modulation, sps=sps,
+                                    rolloff=rolloff, gmsk_bt=gmsk_bt,
+                                    gfsk_mod_index=gfsk_mod_index)
         self._modulation = modulation
         self._symbol_rate = symbol_rate
         self._sps = sps

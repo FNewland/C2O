@@ -1,0 +1,107 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/manual/12_time_and_clocks.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "eosat-1-time-and-clocks",
+   "en_hash": "403435faf4a006eb",
+   "fr_hash": "a6a42ecdafde62a9"
+  },
+  {
+   "id": "eosat-1-time-and-clocks/1-overview",
+   "en_hash": "59d98af8e529ebf7",
+   "fr_hash": "29bd36fd0a5c7474"
+  },
+  {
+   "id": "eosat-1-time-and-clocks/2-the-clocks",
+   "en_hash": "ba3bc9b8e2db30be",
+   "fr_hash": "98106622f6e59847"
+  },
+  {
+   "id": "eosat-1-time-and-clocks/3-the-cuc-time-format",
+   "en_hash": "9d6adeccf4362e8a",
+   "fr_hash": "2f9160bcc96b2ee5"
+  },
+  {
+   "id": "eosat-1-time-and-clocks/4-timeref-how-the-obc-believes-it-knows-the-time",
+   "en_hash": "221dfea236c70364",
+   "fr_hash": "34fd8fdddaefd123"
+  },
+  {
+   "id": "eosat-1-time-and-clocks/5-the-drift-model",
+   "en_hash": "ce92c5ed47f75a1f",
+   "fr_hash": "0cbade830729eafd"
+  },
+  {
+   "id": "eosat-1-time-and-clocks/6-gps-discipline-and-holdover",
+   "en_hash": "1ddc04e736c87e70",
+   "fr_hash": "40fe3345e9e28513"
+  },
+  {
+   "id": "eosat-1-time-and-clocks/7-clock-events",
+   "en_hash": "4011910992b1090c",
+   "fr_hash": "a01899d2d350a5e4"
+  },
+  {
+   "id": "eosat-1-time-and-clocks/8-reboot-behaviour",
+   "en_hash": "653bb718c03997e8",
+   "fr_hash": "36b8f8f2b3c5758a"
+  },
+  {
+   "id": "eosat-1-time-and-clocks/9-reading-the-correlation-on-the-console",
+   "en_hash": "e0e15855774cf649",
+   "fr_hash": "2ac9bc5fea4578ad"
+  },
+  {
+   "id": "eosat-1-time-and-clocks/10-time-tagged-commands-s11-and-the-planner",
+   "en_hash": "654413077c488511",
+   "fr_hash": "710b1f51ee6f8679"
+  },
+  {
+   "id": "eosat-1-time-and-clocks/11-met-and-where-it-comes-from",
+   "en_hash": "5de6710d33c19b5f",
+   "fr_hash": "26cc61599a82648e"
+  },
+  {
+   "id": "eosat-1-time-and-clocks/12-caveats",
+   "en_hash": "474d3c60bd1ad577",
+   "fr_hash": "ad539e95e33a90d3"
+  },
+  {
+   "id": "eosat-1-time-and-clocks/13-quick-diagnosis",
+   "en_hash": "62edc2d004e4c5da",
+   "fr_hash": "5e93a61ebf0a67aa"
+  },
+  {
+   "id": "eosat-1-time-and-clocks/appendix-a-training-system-time-source",
+   "en_hash": "78ce00ae5a4f5fed",
+   "fr_hash": "6891f536f2c13987"
+  },
+  {
+   "id": "eosat-1-time-and-clocks/appendix-a-training-system-time-source/a-1-precedence",
+   "en_hash": "0dd87528e693d514",
+   "fr_hash": "469924e4c5f39d29"
+  },
+  {
+   "id": "eosat-1-time-and-clocks/appendix-a-training-system-time-source/a-2-mission-config",
+   "en_hash": "2815620b055523c4",
+   "fr_hash": "078a502ce8af99bc"
+  },
+  {
+   "id": "eosat-1-time-and-clocks/appendix-a-training-system-time-source/a-3-start-sh",
+   "en_hash": "374a570b0a7dbceb",
+   "fr_hash": "0a10f3a2781b336b"
+  },
+  {
+   "id": "eosat-1-time-and-clocks/appendix-a-training-system-time-source/a-4-closed-loop-sim-sync",
+   "en_hash": "ed363f0c7e682e67",
+   "fr_hash": "6267ba38c7e0f6dc"
+  }
+ ],
+ "en_commit": "3e80564"
+}

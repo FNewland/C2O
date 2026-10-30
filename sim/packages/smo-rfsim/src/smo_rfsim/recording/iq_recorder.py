@@ -122,6 +122,7 @@ class RecorderConfig:
     symbol_rate_hz: float = 9600.0
     rolloff: float = 0.35                    # RRC rolloff (PSK/APSK)
     gmsk_bt: float = 0.5                     # Gaussian BT (GMSK/GFSK)
+    gfsk_mod_index: float = 0.5              # GFSK index h (GMSK fixed 0.5)
     sps_internal: int = 8                   # oversampling used by the modulator
 
     # output
@@ -216,7 +217,8 @@ class BasebandRecorder:
     def _modulate(self) -> np.ndarray:
         cfg = self.cfg
         mod = Modulator(modulation=cfg.mod_index(), sps=cfg.sps_internal,
-                        rolloff=cfg.rolloff, gmsk_bt=cfg.gmsk_bt)
+                        rolloff=cfg.rolloff, gmsk_bt=cfg.gmsk_bt,
+                        gfsk_mod_index=cfg.gfsk_mod_index)
         bps = BITS_PER_SYMBOL.get(cfg.mod_index(), 1)
         n_symbols = int(math.ceil(cfg.duration_s * cfg.symbol_rate_hz))
         n_bits = n_symbols * bps
@@ -491,6 +493,10 @@ class BasebandRecorder:
                 "sps_internal": cfg.sps_internal,
                 "rolloff": cfg.rolloff,
                 "gmsk_bt": cfg.gmsk_bt,
+                "gfsk_mod_index": cfg.gfsk_mod_index,
+                # Defect #135: recordings made before the CPM fix carried
+                # an effective index of h/8; this marks the fixed build.
+                "cpm_phase_per_bit": "pi*h",
                 "data_source": cfg.data_source,
                 "frame_length": cfg.frame_length,
                 "random_seed": cfg.random_seed,

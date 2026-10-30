@@ -40,9 +40,13 @@
 import {
   esc, glyph, freshness, limitClass, renderParam, renderDeviationBar,
   renderSparkline, renderAndTable, renderChip, renderStepper, renderAlarmRow,
-  renderEventRow, bindSchematic, poller, wsClient,
+  renderEventRow, bindSchematic, poller, wsClient, mountLangToggle,
 } from "/static/shared/components.js";
 import { fmtUTC, fmtMET, fmtCUC, fmtAge, fmtHex } from "/static/shared/format.js";
+// UI language (EN|FR). t() for HTML strings, tText() for textContent;
+// identifiers (mnemonics, hex, modes, PUS labels) never go through t().
+// See docs/i18n/UI_I18N_GUIDE.md.
+import { I18n, t, tText, tdb, getLang, onLangChange } from "/static/shared/i18n.js";
 
 /* ═══ 1. TIME — the single time primitive ═════════════════════════════════ */
 /* simNow() = server-anchored mission clock, advancing at the published rate.
@@ -116,6 +120,7 @@ const S = {
   s11Schedule: null,
   armed: {},               // cmd name -> armed flag (arm→execute)
   chartStale: false,       // display-wide staleness gate verdict
+  chainOpen: "",           // alarm id of the open causal-chain overlay (re-render on language switch)
   // ── POSITION_NEEDS gap surfaces (G1–G9, G12, G15) ──
   faultGraph: null,        // /api/fault-graph (G6 first-out grouping)
   gonogoMatrix: null,      // /api/gonogo-matrix (G7 call-matrix context)
@@ -156,6 +161,7 @@ const RAIL = [
   ["diag", "PUS"], ["man", "MAN"],
 ];
 
+// English text is the i18n key: display via tText(POSITION_INFO[p].title).
 const POSITION_INFO = {
   flight_director: { title: "FLIGHT DIRECTOR" },
   eps_tcs: { title: "POWER & THERMAL" },
@@ -191,6 +197,11 @@ async function postJSON(url, body) {
   return { ok: r.ok, status: r.status, json: j };
 }
 function announce(msg) { setText("alert-live", msg); }
+/* Link-freshness word for the SEE card (server/verdict value stays English in logic). */
+function linkWord(w) {
+  return w === "FRESH" ? tText("FRESH") : w === "DEGRADED" ? tText("DEGRADED")
+    : w === "STALE" ? tText("STALE") : w;
+}
 function tsShort() { return fmtUTC(simNow(), { seconds: true }); }
 function paramVal(hexId) {
   const p = S.state.params;
@@ -401,9 +412,9 @@ export function scModeInfo() {
     return { label: SC_MODES[Number(obdh)] ?? String(obdh), src: "TM obdh.mode" };
   }
   if (S.timeMode === "sim" && S.state.sc_mode) {
-    return { label: String(S.state.sc_mode).toUpperCase(), src: "SIM (training)" };
+    return { label: String(S.state.sc_mode).toUpperCase(), src: tText("SIM (training)") };
   }
-  return { label: "—", src: "not downlinked" };
+  return { label: "—", src: tText("not downlinked") };
 }
 
 /* ═══ 4. TRANSPORT ════════════════════════════════════════════════════════ */
@@ -448,10 +459,11 @@ function handleTMPacket(pkt) {
     const sevMap = { 1: "info", 2: "warn", 3: "warn", 4: "alarm" };
     const msg = eventText(pkt.event);
     pushEvent({ ts, sev: pkt.event.rejection ? "warn" : (sevMap[pkt.event.severity] || "info"),
-      label: pkt.event.rejection ? "REJECT" : `EVT`, msg,
+      label: pkt.event.rejection ? "REJECT" : `EVT`, msg,   // tag codes; REJECT translated at render
       instructor: /^INSTRUCTOR OVERRIDE/.test(pkt.event.description || "") });
     routeEvent(msg, pkt.event.event_id);
-    if (pkt.event.severity >= 3) announce(`Alarm: event ${hex4(pkt.event.event_id)} — ${pkt.event.description || ""}`);
+    if (pkt.event.severity >= 3) announce(tText("Alarm: event {{id}} — {{desc}}",
+      { id: hex4(pkt.event.event_id), desc: pkt.event.description || "" }));   // on-board aux text: English
   }
   if (pkt.monitoring) {
     const m = pkt.monitoring;
@@ -468,7 +480,7 @@ function handleTMPacket(pkt) {
     const v = pkt.verification;
     const okSub = v.subtype === 1 || v.subtype === 7;
     pushEvent({ ts, sev: okSub ? "nom" : "alarm", label: `S1.${v.subtype}`,
-      msg: `TC(${v.tc_service},${v.tc_subtype}) ${okSub ? "OK" : "FAILED"}` +
+      msg: `TC(${v.tc_service},${v.tc_subtype}) ${okSub ? "OK" : tText("FAILED")}` +
            (v.code !== undefined ? ` code ${hex4(v.code)}` : "") });
     noteVerification(v);
   }
@@ -499,7 +511,7 @@ function handleAlarmMsg(alarm) {
   renderAlarmDrawer();
   updateSaHeader();
   if (isNew) playAlarmBeep();
-  announce(`Alarm: ${alarm.subsystem || ""} ${alarm.message || ""}`);
+  announce(tText("Alarm: {{sub}} {{msg}}", { sub: alarm.subsystem || "", msg: alarm.message || "" }));
 }
 function handleAlarmCleared(msg) {
   const ids = msg.ids || (msg.id !== undefined ? [msg.id] : []);
@@ -580,8 +592,8 @@ export function trainingChipState() {
     (S.timeMode === "unknown" && Number.isFinite(speed) && speed !== 1.0);
   if (S.timeMode === "real" || !simEvidence) return { visible: false, text: "" };
   const paused = Number.isFinite(speed) && speed === 0;
-  const text = paused ? "TRAINING · PAUSED"
-    : `TRAINING · SIM x${Number.isFinite(speed) ? speed : 1}`;
+  const text = paused ? tText("TRAINING · PAUSED")
+    : tText("TRAINING · SIM x{{speed}}", { speed: Number.isFinite(speed) ? speed : 1 });
   return { visible: true, text };
 }
 function updateTrainingChip() {
@@ -627,15 +639,17 @@ export function updateSaHeader() {
   const age = sa.last_frame_age_s;
   const fr = freshness(age);
   const link = (sa.link || fr).toUpperCase();
-  setText("sa-see-v", age === undefined || age === null ? "NO TM" : `${link} · ${fmtAge(age)}`);
+  setText("sa-see-v", age === undefined || age === null ? tText("NO TM") : `${linkWord(link)} · ${fmtAge(age)}`);
   const tierBits = [];
   if (sa.tm_tier_name || sa.tm_tier !== undefined) {
-    tierBits.push(`tier ${sa.tm_tier_name || sa.tm_tier}`);
-    if (sa.tm_tier_demoted) tierBits.push(`cmd ${sa.tm_tier_cmd_name || sa.tm_tier_cmd} — ${sa.tm_tier_demotion_reason || "demoted"}`);
+    // rate tiers (BEACON/LOW/HIGH) are identifiers; server reason text stays English
+    tierBits.push(tText("tier {{tier}}", { tier: String(sa.tm_tier_name || sa.tm_tier) }));
+    if (sa.tm_tier_demoted) tierBits.push(`cmd ${sa.tm_tier_cmd_name || sa.tm_tier_cmd} — ${sa.tm_tier_demotion_reason || tText("demoted")}`);
   }
   if (sa.store_fill_pct !== undefined && sa.store_fill_pct !== null)
-    tierBits.push(`store ${num(sa.store_fill_pct, 0)} % (${sa.store_fill_source || ""})`);
-  setText("sa-see-s", tierBits.join(" · ") || "awaiting HK");
+    tierBits.push(tText("store {{pct}} % ({{src}})",
+      { pct: num(sa.store_fill_pct, 0), src: sa.store_fill_source || "" }));
+  setText("sa-see-s", tierBits.join(" · ") || tText("awaiting HK"));
   saDot("sa-see-dot", fr === "fresh" ? "" : fr === "degraded" ? "w" : "stale");
   const seeCard = $("sa-see");
   if (seeCard) seeCard.className = "sacard" + (fr === "stale" ? " a-st" : fr === "degraded" ? " w" : "");
@@ -645,31 +659,34 @@ export function updateSaHeader() {
   const locks = [p["0x0510"], p["0x0511"], p["0x0512"]].map((v) => Number(v) >= 1);
   const inContact = !!st.in_contact || locks[2];
   const gs = st.active_gs_name || (st.ttc || {}).active_gs_name || "";
-  setText("sa-talk-v", inContact ? `LINK · ${gs || "IN CONTACT"}` : "NO CONTACT");
-  const lockTxt = `carrier ${locks[0] ? "✓" : "—"} · bit ${locks[1] ? "✓" : "—"} · frame ${locks[2] ? "✓" : "—"}`;
+  setText("sa-talk-v", inContact ? tText("LINK · {{gs}}", { gs: gs || tText("IN CONTACT") }) : tText("NO CONTACT"));
+  const lockTxt = tText("carrier {{c}} · bit {{b}} · frame {{f}}",
+    { c: locks[0] ? "✓" : "—", b: locks[1] ? "✓" : "—", f: locks[2] ? "✓" : "—" });
   const lastV = S.verifLog[0];
-  setText("sa-talk-s", lockTxt + (lastV ? ` · last TC ${lastV.verdict}` : ""));
+  setText("sa-talk-s", lockTxt + (lastV ? " · " + tText("last TC {{v}}", { v: lastV.verdict }) : ""));
   saDot("sa-talk-dot", inContact ? "" : "stale");
 
   // WELL — sc mode (TM-derived + provenance), alarm counts, load shed
   const mode = scModeInfo();
   const unack = st.unacked_alarms ?? sa.unacked_alarms ?? S.alarms.filter((a) => !a.acknowledged).length;
   const counts = alarmCounts();
-  setText("sa-well-v", `${mode.label} · ${counts.alarm} ALM ${counts.warn} WRN`);
+  setText("sa-well-v", tText("{{mode}} · {{alarm}} ALM {{warn}} WRN",
+    { mode: mode.label, alarm: counts.alarm, warn: counts.warn }));
   const shed = p["0x0134"];
   // G1: SoC-at-eclipse-exit is one of the two header-grade projections.
   // Valid -> the number (ground-derived); invalid -> nothing here (the EPS
   // page carries the full INVALID row with its reason — header space is
   // rationed).
   const socExit = derivedEntry("eps.soc_at_eclipse_exit_pred");
-  setText("sa-well-s", `mode src: ${mode.src} · ${unack} unacked` +
-    (Number(shed) > 0 ? ` · LOAD SHED L${shed}` : "") +
-    (socExit && socExit.valid ? ` · SoC@ecl-exit ${num(socExit.value, 0)} % (gnd)` : ""));
+  setText("sa-well-s", tText("mode src: {{src}} · {{n}} unacked", { src: mode.src, n: unack }) +
+    (Number(shed) > 0 ? " · " + tText("LOAD SHED L{{n}}", { n: shed }) : "") +
+    (socExit && socExit.valid
+      ? " · " + tText("SoC@ecl-exit {{v}} % (gnd)", { v: num(socExit.value, 0) }) : ""));
   saDot("sa-well-dot", counts.alarm ? "a" : counts.warn ? "w" : "");
   const wellCard = $("sa-well");
   if (wellCard) wellCard.className = "sacard" + (counts.alarm ? " a-st" : counts.warn ? " w" : "");
   setText("alarm-unack-n", String(unack));
-  setText("alarm-drawer-unack", `${unack} UNACK`);
+  setText("alarm-drawer-unack", tText("{{n}} UNACK", { n: unack }));
 
   updateNextCard();
 }
@@ -689,17 +706,22 @@ function updateNextCard() {
     const m = Math.floor(d / 60), s2 = Math.floor(d % 60);
     return `${String(m).padStart(2, "0")}:${String(s2).padStart(2, "0")}`;
   };
-  let v = "—", sub = "no pass schedule";
-  if (cur) { v = `LOS IN ${cd(cur.los_time ?? cur.los_utc)}`; sub = `${cur.ground_station || ""} pass in progress`; }
-  else if (next) { v = `AOS IN ${cd(next.aos_time ?? next.aos_utc)}`; sub = `${next.ground_station || ""}`; }
+  let v = "—", sub = tText("no pass schedule");
+  if (cur) {
+    v = tText("LOS IN {{t}}", { t: cd(cur.los_time ?? cur.los_utc) });
+    sub = tText("{{gs}} pass in progress", { gs: cur.ground_station || "" });
+  }
+  else if (next) { v = tText("AOS IN {{t}}", { t: cd(next.aos_time ?? next.aos_utc) }); sub = `${next.ground_station || ""}`; }
   const ecl = S.state.next_eclipse_s ?? (S.state.orbit || {}).next_eclipse_s;
-  if (ecl !== undefined && ecl !== null) sub += ` · eclipse in ${fmtAge(ecl)}`;
+  if (ecl !== undefined && ecl !== null) sub += " · " + tText("eclipse in {{t}}", { t: fmtAge(ecl) });
   // G1/G3: pass-fit ratio (backlog ÷ capacity) is the second header-grade
   // projection — it answers "will this pass be enough?" next to the AOS/LOS
   // countdown it depends on.
   const fit = derivedEntry("ttc.pass_fit_ratio");
   if (fit && fit.valid) {
-    sub += ` · fit ${num(fit.value, 2)} ${Number(fit.value) > 1.0 ? "WON'T FIT" : "fits"} (gnd)`;
+    sub += " · " + (Number(fit.value) > 1.0
+      ? tText("fit {{r}} WON'T FIT (gnd)", { r: num(fit.value, 2) })
+      : tText("fit {{r}} fits (gnd)", { r: num(fit.value, 2) }));
   }
   setText("sa-next-v", v);
   setText("sa-next-s", sub);
@@ -727,9 +749,8 @@ function updateContingency() {
   const el = $("contingency-banner");
   if (!el) return;
   el.classList.toggle("hide", !bad);
-  if (bad) el.textContent =
-    `CONTINGENCY — spacecraft mode ${mode.label} (source: ${mode.src}). ` +
-    `Open FDIR for recovery state; alarms drawer for the journal.`;
+  if (bad) el.textContent = tText("CONTINGENCY — spacecraft mode {{mode}} (source: {{src}}). Open FDIR for recovery state; alarms drawer for the journal.",
+    { mode: mode.label, src: mode.src });
 }
 
 /* ═══ 6. NAV — rail, pages, position filtering, keyboard ══════════════════ */
@@ -755,14 +776,22 @@ function buildRail() {
     navRelative(dir);
   });
 }
+// English text is the i18n key (rail tooltips; the rail codes OVR/EPS/... are identifiers).
+const PAGE_TITLES = { ovr: "Overview (L1)", eps: "Electrical power", tcs: "Thermal control",
+  aocs: "Attitude & orbit control", ttc: "Telemetry, tracking & command",
+  pld: "Payload", prp: "Propulsion", obd: "On-board data handling",
+  cmd: "Commanding", fdir: "FDIR", proc: "Procedures", trnd: "Trends",
+  diag: "PUS services — S3 HK · S11 schedule · S6 memory · S15 stores · S12 monitoring · S19 event-action · S9 time · parameters",
+  man: "Operations manual" };
 function pageTitle(id) {
-  return { ovr: "Overview (L1)", eps: "Electrical power", tcs: "Thermal control",
-    aocs: "Attitude & orbit control", ttc: "Telemetry, tracking & command",
-    pld: "Payload", prp: "Propulsion", obd: "On-board data handling",
-    cmd: "Commanding", fdir: "FDIR", proc: "Procedures", trnd: "Trends",
-    diag: "PUS services — S3 HK · S11 schedule · S6 memory · S15 stores · " +
-          "S12 monitoring · S19 event-action · S9 time · parameters",
-    man: "Operations manual" }[id] || id;
+  return PAGE_TITLES[id] ? tText(PAGE_TITLES[id]) : id;
+}
+/* Language switch: the rail is built once, so only its tooltips are redone. */
+function retitleRail() {
+  for (const [id] of RAIL) {
+    const b = id !== "|" ? $(`rail-${id}`) : null;
+    if (b) b.setAttribute("title", pageTitle(id));
+  }
 }
 function visiblePages() {
   return RAIL.filter(([id]) => id !== "|").map(([id]) => id)
@@ -807,7 +836,7 @@ export function applyPositionFilter() {
   renderManual();            // manual section filter
   if (S.page === "man") loadProcedureCards();   // cards are per position
   const pi = POSITION_INFO[S.position] || {};
-  setText("pos-detail", pi.title || S.position);
+  setText("pos-detail", pi.title ? tText(pi.title) : S.position);
 }
 
 function updateRailHealth() {
@@ -896,7 +925,7 @@ async function loadSchematics() {
 }
 function schematicMarkup(symbolId) {
   const sym = schematicsDoc && schematicsDoc[symbolId];
-  if (!sym) return `<div class="ds-banner stale">schematic unavailable</div>`;
+  if (!sym) return `<div class="ds-banner stale">${t("schematic unavailable")}</div>`;
   return `<div class="stage"><svg class="sc" viewBox="${esc(sym.viewBox)}" ` +
          `data-schematic="${esc(symbolId)}">${sym.body}</svg></div>`;
 }
@@ -923,10 +952,10 @@ function initSchematicNav() {
 
 function buildOverviewPage() {
   return `
-  <div class="pad" id="page-ovr" role="tabpanel" aria-label="Overview">
+  <div class="pad" id="page-ovr" role="tabpanel" aria-label="Overview" data-i18n-aria-label>
     <div class="row" style="justify-content:space-between">
-      <div><h1 class="pt">Spacecraft overview</h1>
-        <p class="sub">The schematic is the navigation — click the thing you are worried
+      <div><h1 class="pt" data-i18n>Spacecraft overview</h1>
+        <p class="sub" data-i18n>The schematic is the navigation — click the thing you are worried
         about. Position: <span id="pos-detail">—</span></p></div>
       <div class="row mono" id="ovr-orbit-bar" style="gap:16px;font-size:13px"></div>
     </div>
@@ -936,10 +965,10 @@ function buildOverviewPage() {
          scrolls at 1366x768 (plan §2.1 "L1/L2 fit ... without scroll"). -->
     <div class="g ovr-grid" style="grid-template-columns:minmax(0,1fr) 400px">
       <div class="g ovr-left">
-        <div class="ds-card ovr-schem-card"><h2>EOSAT-1 · functional schematic
-          <span class="r">grey is nominal — colour marks deviation (P1)</span></h2>
+        <div class="ds-card ovr-schem-card"><h2 data-i18n>EOSAT-1 · functional schematic
+          <span class="r" data-i18n>grey is nominal — colour marks deviation (P1)</span></h2>
           <div class="bd" id="ovr-schematic"></div></div>
-        <div class="ds-card"><h2>Contact windows (24 h)
+        <div class="ds-card"><h2 data-i18n>Contact windows (24 h)
           <span class="r" id="ovr-timeline-src">/api/contacts</span></h2>
           <div class="bd">
             <canvas id="ovr-timeline" height="64" style="width:100%"></canvas>
@@ -951,9 +980,9 @@ function buildOverviewPage() {
           </div></div>
       </div>
       <div class="g ovr-right" style="align-content:start">
-        <div class="ds-card"><h2>Ground track</h2>
+        <div class="ds-card"><h2 data-i18n>Ground track</h2>
           <div class="bd" id="ovr-map" style="min-height:180px"></div></div>
-        <div class="ds-card"><h2>System board <span class="r">/api/displays/system-overview</span></h2>
+        <div class="ds-card"><h2 data-i18n>System board <span class="r">/api/displays/system-overview</span></h2>
           <div class="bd" id="ovr-board"></div></div>
       </div>
     </div>
@@ -967,8 +996,8 @@ function updateOverview() {
     `LAT ${num(st.lat_deg ?? (st.orbit || {}).lat_deg, 2)}°`,
     `LON ${num(st.lon_deg ?? (st.orbit || {}).lon_deg, 2)}°`,
     `ALT ${num(st.alt_km ?? (st.orbit || {}).alt_km, 0)} km`,
-    (st.eclipse ?? paramVal("0x0108")) ? "ECLIPSE" : "SUNLIT",
-    st.in_contact ? "CONTACT" : "NO CONTACT",
+    (st.eclipse ?? paramVal("0x0108")) ? tText("ECLIPSE") : tText("SUNLIT"),
+    st.in_contact ? tText("CONTACT") : tText("NO CONTACT"),
   ];
   setHTML("ovr-orbit-bar", orbitBits.map((b) => `<span>${esc(b)}</span>`).join(""));
   // schematic
@@ -976,6 +1005,7 @@ function updateOverview() {
   if (host && !host.dataset.mounted && schematicsDoc) {
     host.innerHTML = schematicMarkup("sch-ovr");
     host.dataset.mounted = "1";
+    I18n.applyDom(host);          // SVG <text data-i18n> (schematics.svg) is markup: translate after mount
   }
   const mode = scModeInfo();
   const modeEl = document.getElementById("sch-ovr-mode");
@@ -1011,7 +1041,8 @@ function renderContactTimeline() {
   }
   ctx.fillStyle = "#E6E9ED"; ctx.fillRect(x(nowS) - 1, 8, 2, 48);
   ctx.fillStyle = "#8A93A0"; ctx.font = "10px monospace";
-  ctx.fillText("NOW", Math.min(W - 26, x(nowS) + 4), 16);
+  const nowLbl = tText("NOW");      // canvas: redrawn on every state tick
+  ctx.fillText(nowLbl, Math.min(W - 26 - 6 * Math.max(0, nowLbl.length - 3), x(nowS) + 4), 16);
   setHTML("ovr-timeline-legend", Object.keys(stations)
     .map((gs) => renderChip({ kind: "neutral", label: gs })).join(" "));
 }
@@ -1021,7 +1052,7 @@ function renderPassTable() {
     const aos = c.aos_time ?? c.aos_utc, los = c.los_time ?? c.los_utc;
     const dur = aos !== undefined && los !== undefined ? Math.round((los - aos) / 60) : null;
     const nowS = simNowSec();
-    const status = los < nowS ? "PAST" : aos <= nowS ? "IN PROGRESS" : "UPCOMING";
+    const status = los < nowS ? t("PAST") : aos <= nowS ? t("IN PROGRESS") : t("UPCOMING");
     return `<tr><td>${i + 1}</td><td>${esc(c.ground_station || "")}</td>
       <td class="mono">${fmtUTC(aos, { date: false })}</td>
       <td class="mono">${fmtUTC(los, { date: false })}</td>
@@ -1029,8 +1060,9 @@ function renderPassTable() {
       <td class="mono">${num(c.max_elevation, 0)}°</td><td>${status}</td></tr>`;
   }).join("");
   setHTML("ovr-pass-table",
-    `<thead><tr><th>#</th><th>Station</th><th>AOS</th><th>LOS</th><th>Dur</th><th>Max el</th><th>Status</th></tr></thead>` +
-    `<tbody>${rows || `<tr><td colspan="7">no pass schedule</td></tr>`}</tbody>`);
+    `<thead><tr><th>#</th><th>${t("Station")}</th><th>AOS</th><th>LOS</th><th>${t("Dur")}</th>` +
+    `<th>${t("Max el")}</th><th>${t("Status")}</th></tr></thead>` +
+    `<tbody>${rows || `<tr><td colspan="7">${t("no pass schedule")}</td></tr>`}</tbody>`);
 }
 
 let worldMap = null;
@@ -1042,10 +1074,10 @@ function renderGroundTrack() {
   const lon = st.lon_deg ?? (st.orbit || {}).lon_deg;
   if (typeof SvgWorldMap === "undefined") {
     // Vendor asset guard (plan R3): designed absence, never an exception.
-    host.innerHTML = `<div class="ds-banner stale">map library not installed
-      (/static/vendor/js/svg-world-map.js)</div>
+    host.innerHTML = `<div class="ds-banner stale">${t("map library not installed ({{path}})",
+      { path: "/static/vendor/js/svg-world-map.js" })}</div>
       <div class="mono" style="margin-top:8px;font-size:13px">
-      subsatellite point: ${num(lat, 2)}°, ${num(lon, 2)}°</div>`;
+      ${t("subsatellite point: {{lat}}°, {{lon}}°", { lat: num(lat, 2), lon: num(lon, 2) })}</div>`;
     return;
   }
   try {
@@ -1056,7 +1088,7 @@ function renderGroundTrack() {
     for (const gs of S.groundStations)
       worldMap.addMarker && worldMap.addMarker(gs.lat ?? gs.lat_deg, gs.lon ?? gs.lon_deg, { layer: "gs" });
   } catch (e) {
-    host.innerHTML = `<div class="ds-banner stale">map render failed — ${esc(String(e.message || e))}</div>`;
+    host.innerHTML = `<div class="ds-banner stale">${t("map render failed — {{err}}", { err: String(e.message || e) })}</div>`;
   }
 }
 
@@ -1075,9 +1107,9 @@ async function refreshSystemBoard() {
       <td class="mono">${esc(String(r.value ?? "—"))}</td><td>${esc(r.state || "")}</td></tr>`).join("");
     setHTML("ovr-board", `<div class="row">${chips}</div>` +
       (rows ? `<table class="plain" style="margin-top:8px"><tbody>${rows}</tbody></table>` : "") +
-      `<div style="font-size:12px;color:var(--tx3);margin-top:6px">source: /api/displays/system-overview</div>`);
+      `<div style="font-size:12px;color:var(--tx3);margin-top:6px">${t("source: {{src}}", { src: "/api/displays/system-overview" })}</div>`);
   } catch (e) {
-    setHTML("ovr-board", `<div class="ds-banner stale">system overview unavailable</div>`);
+    setHTML("ovr-board", `<div class="ds-banner stale">${t("system overview unavailable")}</div>`);
   }
 }
 
@@ -1091,7 +1123,7 @@ const L2 = {
     key: ["0x0101", "0x0105", "0x0100", "0x0109", "0x0102", "0x0135", "0x0120"],
     stepper: () => {
       const stage = Number(paramVal("0x0134"));
-      return { label: "Load shed ladder", src: "0x0134",
+      return { label: tText("Load shed ladder"), src: "0x0134",
         states: ["L0 NOMINAL", "L1 PAYLOAD", "L2 NON-ESS", "L3 SURVIVAL"],
         active: Number.isFinite(stage) ? stage : -1 };
     },
@@ -1099,7 +1131,7 @@ const L2 = {
       ["BUS", "0x0105", "V"], ["MPPT", "0x0122", ""], ["LOAD", "0x0148", "A"]] },
   tcs: { title: "Thermal control", sym: "sch-tcs",
     key: ["0x0406", "0x0407", "0x0408", "0x0409", "0x0411", "0x041A"],
-    stepper: () => ({ label: "FPA cooldown", src: "0x040C", states: ["OFF", "COOLING", "REGULATING"],
+    stepper: () => ({ label: tText("FPA cooldown"), src: "0x040C", states: ["OFF", "COOLING", "REGULATING"],
       active: Number(paramVal("0x040C")) > 0 ? (Number(paramVal("0x0425")) > 0 ? 2 : 1) : 0 }),
     equipment: [["HTR BAT", "0x040A", ""], ["HTR OBC", "0x040B", ""], ["COOLER FPA", "0x040C", ""],
       ["HTR THR", "0x041B", ""], ["DUTY BAT", "0x040E", "%"], ["DUTY OBC", "0x040F", "%"]] },
@@ -1112,7 +1144,7 @@ const L2 = {
       const cat = paramStates("0x020F");
       const names = cat ? Object.keys(cat).map(Number).sort((x, y) => x - y).map((k) => cat[String(k)])
                         : AOCS_MODES;
-      return { label: "AOCS mode chain", src: "0x020F", states: names,
+      return { label: tText("AOCS mode chain"), src: "0x020F", states: names,
         active: Number.isFinite(m) ? m : -1 };
     },
     equipment: [["RW1", "0x0207", "RPM"], ["RW2", "0x0208", "RPM"], ["RW3", "0x0209", "RPM"],
@@ -1124,14 +1156,14 @@ const L2 = {
       const locks = [paramVal("0x0510"), paramVal("0x0511"), paramVal("0x0512")]
         .map((v) => Number(v) >= 1);
       const active = locks[2] ? 3 : locks[1] ? 2 : locks[0] ? 1 : 0;
-      return { label: "Link lock chain", src: "0x0510",
-        states: ["NO SIGNAL", "CARRIER", "BIT", "FRAME"], active };
+      return { label: tText("Link lock chain"), src: "0x0510",
+        states: [tText("NO SIGNAL"), tText("CARRIER"), "BIT", tText("FRAME")], active };
     },
     equipment: [["XPDR", "0x0507", "°C"], ["PA", "0x050F", "°C"], ["PA ON", "0x0516", ""],
       ["BEACON", "0x0526", ""], ["TIER", "0x0539", ""], ["TIER CMD", "0x053A", ""]] },
   pld: { title: "Payload", sym: "sch-pld",
     key: ["0x0601", "0x0604", "0x0605", "0x0616", "0x0602", "0x060D"],
-    stepper: () => ({ label: "Instrument state", src: "0x0600",
+    stepper: () => ({ label: tText("Instrument state"), src: "0x0600",
       states: ["OFF", "STANDBY", "IMAGING", "CAL", "TRANSFER"],
       active: (() => { const m = Number(paramVal("0x0600")); return Number.isFinite(m) ? Math.min(m, 4) : -1; })() }),
     equipment: [["FPA", "0x0601", "°C"], ["COOLER", "0x0602", "W"], ["STORE", "0x0604", "%"],
@@ -1140,7 +1172,7 @@ const L2 = {
     key: ["0x0B01", "0x0B03", "0x0B04", "0x0B05", "0x0B0C", "0x0B16"],
     stepper: () => {
       const st2 = Number(paramVal("0x0B0D"));
-      return { label: "Burn sequence", src: "0x0B0D",
+      return { label: tText("Burn sequence"), src: "0x0B0D",
         states: ["IDLE", "ARMED", "BURNING", "COMPLETE"],
         active: Number.isFinite(st2) ? Math.min(st2, 3) : 0 };
     },
@@ -1148,7 +1180,7 @@ const L2 = {
       ["FCV", "0x0B08", ""], ["CATBED", "0x0B05", "°C"], ["INHIBIT", "0x0B15", ""]] },
   obd: { title: "On-board data handling", sym: "sch-obd",
     key: ["0x0302", "0x0303", "0x0312", "0x0313", "0x0319", "0x0308"],
-    stepper: () => ({ label: "Active OBC", src: "0x030C",
+    stepper: () => ({ label: tText("Active OBC"), src: "0x030C",
       states: ["OBC-A", "OBC-B"],
       active: Number(paramVal("0x030C")) === 1 ? 1 : 0 }),
     equipment: [["CPU", "0x0302", "%"], ["MEM", "0x0303", "%"], ["HKTM BUF", "0x0312", "%"],
@@ -1162,74 +1194,74 @@ function buildSubsystemPage(pageId) {
   <!-- l2-* classes (Agent 5 screenshot fix): L2 pages are viewport-fit —
        the two columns scroll internally, the work area itself never
        scrolls (plan §2.1 "L1/L2 fit 1366×768 without scroll"). -->
-  <div class="pad hide l2-page" id="page-${pageId}" role="tabpanel" aria-label="${esc(cfg.title)}">
+  <div class="pad hide l2-page" id="page-${pageId}" role="tabpanel" aria-label="${esc(cfg.title)}" data-i18n-aria-label>
     <div class="row" style="justify-content:space-between">
-      <div><h1 class="pt">${esc(cfg.title)}</h1>
-        <p class="sub">Level 2 · subsystem <span class="mono">${esc(sub)}</span> ·
-          <a href="#" data-alarm-filter="${esc(sub)}">alarms for this subsystem</a></p></div>
-      <button class="ibtn" data-page-nav="ovr">← Overview</button>
+      <div><h1 class="pt" data-i18n>${esc(cfg.title)}</h1>
+        <p class="sub"><span data-i18n>Level 2 · subsystem</span> <span class="mono">${esc(sub)}</span> ·
+          <a href="#" data-alarm-filter="${esc(sub)}" data-i18n>alarms for this subsystem</a></p></div>
+      <button class="ibtn" data-page-nav="ovr" data-i18n>← Overview</button>
     </div>
     <div class="guided-note" data-ann="${pageId}.schematic"></div>
     <div class="g l2-grid" style="grid-template-columns:minmax(0,1fr) 420px">
       <div class="g l2-col">
-        <div class="ds-card"><h2>Schematic <span class="r">click a block to navigate; values live</span></h2>
+        <div class="ds-card"><h2 data-i18n>Schematic <span class="r" data-i18n>click a block to navigate; values live</span></h2>
           <div class="bd" id="${pageId}-schematic"></div></div>
-        <div class="ds-card"><h2>Parameters <span class="r">AND — generated from /api/param-catalog (P10)</span></h2>
+        <div class="ds-card"><h2 data-i18n>Parameters <span class="r" data-i18n>AND — generated from /api/param-catalog (P10)</span></h2>
           <div class="bd scroll-y" style="max-height:300px" id="${pageId}-and"></div></div>
-        <div class="ds-card"><h2>Stored TM playback <span class="r">S15 dump → /api/tm-dump-data</span></h2>
+        <div class="ds-card"><h2 data-i18n>Stored TM playback <span class="r" data-i18n>S15 dump → /api/tm-dump-data</span></h2>
           <div class="bd" id="${pageId}-dump">
             <div class="row">
-              <button class="ds-btn" data-dump-request="${esc(sub)}">REQUEST DUMP (S15)</button>
-              <span id="${pageId}-dump-status" style="font-size:12px;color:var(--tx3)">no dump loaded</span>
+              <button class="ds-btn" data-dump-request="${esc(sub)}" data-i18n>REQUEST DUMP (S15)</button>
+              <span id="${pageId}-dump-status" style="font-size:12px;color:var(--tx3)"><span data-i18n>no dump loaded</span></span>
             </div>
             <canvas id="${pageId}-dump-chart" height="120" class="hide"></canvas>
             <input type="range" id="${pageId}-dump-scrub" class="hide" style="width:100%" min="0" max="100" value="100"
-              aria-label="Playback position">
+              aria-label="Playback position" data-i18n-aria-label>
           </div></div>
       </div>
       <div class="g l2-col" style="align-content:start">
-        <div class="ds-card"><h2>Key parameters</h2>
+        <div class="ds-card"><h2 data-i18n>Key parameters</h2>
           <div class="bd" id="${pageId}-params"></div></div>
         ${(DERIVED_BY_PAGE[pageId] || []).length || FIT_PAGES.includes(pageId) ? `
-        <div class="ds-card"><h2>Projections <span class="r">ground-derived · not downlinked</span></h2>
+        <div class="ds-card"><h2 data-i18n>Projections <span class="r" data-i18n>ground-derived · not downlinked</span></h2>
           <div class="bd">
             <div class="guided-note" data-ann="l2.derived"></div>
             ${FIT_PAGES.includes(pageId) ? `<div class="guided-note" data-ann="${pageId}.pass-fit"></div>` : ""}
             <div id="${pageId}-derived"></div>
           </div></div>` : ""}
-        ${pageId === "pld" ? `<div class="ds-card"><h2>Capture readiness (NOM-002)
-          <span class="r">gates from annotations.yaml</span></h2>
+        ${pageId === "pld" ? `<div class="ds-card"><h2 data-i18n>Capture readiness (NOM-002)
+          <span class="r" data-i18n>gates from annotations.yaml</span></h2>
           <div class="bd">
             <div class="guided-note" data-ann="pld.capture-gates"></div>
             <div id="pld-capture"></div>
           </div></div>` : ""}
-        ${pageId === "aocs" ? `<div class="ds-card"><h2>FINE-entry readiness
-          <span class="r">aocs.fine_ready 0x02C5 decoded</span></h2>
+        ${pageId === "aocs" ? `<div class="ds-card"><h2 data-i18n>FINE-entry readiness
+          <span class="r" data-i18n>aocs.fine_ready 0x02C5 decoded</span></h2>
           <div class="bd">
             <div class="guided-note" data-ann="aocs.fine-ready"></div>
             <div id="aocs-fineready"></div>
           </div></div>` : ""}
-        ${pageId === "prp" ? `<div class="ds-card"><h2>Arm interlocks
-          <span class="r">prop.arm_inhibit_mask 0x0B15 decoded</span></h2>
+        ${pageId === "prp" ? `<div class="ds-card"><h2 data-i18n>Arm interlocks
+          <span class="r" data-i18n>prop.arm_inhibit_mask 0x0B15 decoded</span></h2>
           <div class="bd">
             <div class="guided-note" data-ann="prp.arm-inhibit"></div>
             <div id="prp-inhibit"></div>
           </div></div>
-        <div class="ds-card"><h2>Loaded vs planned burn
-          <span class="r">TM 0x0B0E/0x0B10 vs planner orbit_manoeuvre</span></h2>
+        <div class="ds-card"><h2 data-i18n>Loaded vs planned burn
+          <span class="r" data-i18n>TM 0x0B0E/0x0B10 vs planner orbit_manoeuvre</span></h2>
           <div class="bd">
             <div class="guided-note" data-ann="prp.burn-plan"></div>
-            <div id="prp-burnplan">awaiting planner…</div>
+            <div id="prp-burnplan"><span data-i18n>awaiting planner…</span></div>
           </div></div>` : ""}
-        ${pageId === "ttc" ? `<div class="ds-card"><h2>Predicted vs measured link
+        ${pageId === "ttc" ? `<div class="ds-card"><h2 data-i18n>Predicted vs measured link
           <span class="r">/api/displays/link-prediction</span></h2>
           <div class="bd">
             <div class="guided-note" data-ann="ttc.link-overlay"></div>
             <div id="ttc-linkpred-now"></div>
             <canvas id="ttc-linkpred-chart" height="140" class="hide"></canvas>
           </div></div>
-        <div class="ds-card"><h2>Blind commanding (CON-004)
-          <span class="r">requires FD GO — armed toggle</span></h2>
+        <div class="ds-card"><h2 data-i18n>Blind commanding (CON-004)
+          <span class="r" data-i18n>requires FD GO — armed toggle</span></h2>
           <div class="bd">
             <div class="guided-note" data-ann="ttc.blind-tc"></div>
             <div class="row">
@@ -1239,19 +1271,19 @@ function buildSubsystemPage(pageId) {
           </div></div>` : ""}
         <div class="ds-card"><h2 id="${pageId}-stepper-title">Mode</h2>
           <div class="bd" id="${pageId}-stepper"></div></div>
-        <div class="ds-card"><h2>Equipment</h2>
+        <div class="ds-card"><h2 data-i18n>Equipment</h2>
           <div class="bd g" style="grid-template-columns:1fr 1fr" id="${pageId}-equip"></div></div>
-        <div class="ds-card"><h2>Command <span class="r">in place · position-gated (P9)</span></h2>
+        <div class="ds-card"><h2 data-i18n>Command <span class="r" data-i18n>in place · position-gated (P9)</span></h2>
           <div class="bd" id="${pageId}-quick">
             <div class="guided-note" data-ann="l2.quick-commands"></div>
             <div id="${pageId}-quick-list"></div></div></div>
-        ${pageId === "ttc" ? `<div class="ds-card"><h2>Ground station network
+        ${pageId === "ttc" ? `<div class="ds-card"><h2 data-i18n>Ground station network
           <span class="r">/api/ground-stations</span></h2>
-          <div class="bd" id="ttc-gs-panel">awaiting station list…</div></div>` : ""}
-        ${pageId === "eps" ? `<div class="ds-card"><h2>Power budget
+          <div class="bd" id="ttc-gs-panel"><span data-i18n>awaiting station list…</span></div></div>` : ""}
+        ${pageId === "eps" ? `<div class="ds-card"><h2 data-i18n>Power budget
           <span class="r">/api/displays/power-budget</span></h2>
-          <div class="bd" id="eps-power-budget">awaiting data…</div></div>` : ""}
-        <div class="ds-card"><h2>Events</h2>
+          <div class="bd" id="eps-power-budget"><span data-i18n>awaiting data…</span></div></div>` : ""}
+        <div class="ds-card"><h2 data-i18n>Events</h2>
           <div class="bd scroll-y" style="max-height:180px" id="${pageId}-events"></div></div>
       </div>
     </div>
@@ -1266,7 +1298,7 @@ function renderGsNetwork() {
   const host = $("ttc-gs-panel");
   if (!host) return;
   if (!S.groundStations.length) {
-    host.innerHTML = `<div class="ds-banner stale">station list unavailable (/api/ground-stations)</div>`;
+    host.innerHTML = `<div class="ds-banner stale">${t("station list unavailable ({{src}})", { src: "/api/ground-stations" })}</div>`;
     return;
   }
   const activeGs = (S.state.sa || {}).gs_in_contact ||
@@ -1275,7 +1307,7 @@ function renderGsNetwork() {
   host.innerHTML = `<table class="plain"><tbody>` + S.groundStations.map((g) => {
     const nm = g.name || g.id || "GS";
     const live = activeGs && nm === activeGs;
-    return `<tr><td>${live ? "●" : "○"} ${esc(nm)}${live ? " · IN CONTACT" : ""}</td>
+    return `<tr><td>${live ? "●" : "○"} ${esc(nm)}${live ? " · " + t("IN CONTACT") : ""}</td>
       <td class="mono">${num(g.lat_deg ?? g.lat, 1)}° / ${num(g.lon_deg ?? g.lon, 1)}°</td>
       <td class="mono">${live ? `EL ${num(el, 0)}° · ${num(rng, 0)} km` : "—"}</td></tr>`;
   }).join("") + `</tbody></table>`;
@@ -1288,20 +1320,20 @@ async function refreshPowerBudget() {
   if (!host || S.page !== "eps") return;
   try {
     const d = await getJSON("/api/displays/power-budget");
-    if (!d.has_data) { host.innerHTML = `<div class="ds-banner stale">no power telemetry yet</div>`; return; }
+    if (!d.has_data) { host.innerHTML = `<div class="ds-banner stale">${t("no power telemetry yet")}</div>`; return; }
     const row = (k2, v) => `<tr><td>${esc(k2)}</td><td class="mono">${esc(String(v ?? "—"))}</td></tr>`;
     const per = Object.entries(d.per_subsystem_power || {})
       .map(([k2, v]) => row(k2.toUpperCase(), `${num(v, 1)} W`)).join("");
     host.innerHTML = `<table class="plain"><tbody>` +
-      row("GENERATION", `${num(d.power_gen_w, 1)} W`) +
-      row("CONSUMPTION", `${num(d.power_cons_w, 1)} W`) +
-      row("MARGIN", `${num(d.power_margin_w, 1)} W`) +
+      row(tText("GENERATION"), `${num(d.power_gen_w, 1)} W`) +
+      row(tText("CONSUMPTION"), `${num(d.power_cons_w, 1)} W`) +
+      row(tText("MARGIN"), `${num(d.power_margin_w, 1)} W`) +
       row("SOC", `${num(d.battery_soc_percent, 1)} % (${esc(d.soc_trend || "")})`) +
-      row("LOAD SHED", esc(d.load_shedding_label || "—")) +
+      row(tText("LOAD SHED"), esc(d.load_shedding_label || "—")) +
       per + `</tbody></table>` +
       (d.breakdown_note ? `<div style="font-size:12px;color:var(--tx3);margin-top:6px">${esc(d.breakdown_note)}</div>` : "");
   } catch (e) {
-    host.innerHTML = `<div class="ds-banner stale">power budget unavailable</div>`;
+    host.innerHTML = `<div class="ds-banner stale">${t("power budget unavailable")}</div>`;
   }
 }
 
@@ -1312,6 +1344,7 @@ function updateSubsystemPage(pageId, full) {
   if (host && !host.dataset.mounted && schematicsDoc) {
     host.innerHTML = schematicMarkup(cfg.sym);
     host.dataset.mounted = "1";
+    I18n.applyDom(host);          // SVG <text data-i18n> in the mounted symbol
   }
   bindPageSchematic(pageId);
   // key param triads + embedded sparklines
@@ -1327,7 +1360,7 @@ function updateSubsystemPage(pageId, full) {
   const stpFr = stp.src ? paramFreshness(stp.src) : "fresh";
   const stpDead = stpFr === "stale" || stpFr === "disabled";
   setText(`${pageId}-stepper-title`,
-    stp.label + (stpDead ? (stpFr === "disabled" ? "  — HK DISABLED (TC 3,5)" : "  — STALE") : ""));
+    stp.label + (stpDead ? "  — " + (stpFr === "disabled" ? tText("HK DISABLED (TC 3,5)") : tText("STALE")) : ""));
   setHTML(`${pageId}-stepper`,
     renderStepper(stp.states, stpDead ? -1 : stp.active));
   // equipment cards
@@ -1362,10 +1395,10 @@ function updateSubsystemPage(pageId, full) {
   // POSITION_NEEDS gap surfaces on their owning pages
   renderDerivedCard(pageId);                                     // G1 + G3
   if (pageId === "aocs") setHTML("aocs-fineready",
-    renderBitmaskChips("0x02C5", { clearLabel: "READY FOR FINE" }));   // G2
+    renderBitmaskChips("0x02C5", { clearLabel: tText("READY FOR FINE") }));   // G2
   if (pageId === "prp") {
     setHTML("prp-inhibit",
-      renderBitmaskChips("0x0B15", { clearLabel: "ARM PERMITTED" }));  // G2
+      renderBitmaskChips("0x0B15", { clearLabel: tText("ARM PERMITTED") }));  // G2
     renderBurnCard();                                            // G9
   }
   if (pageId === "pld") renderCaptureCard();                     // G4 (+G2)
@@ -1373,7 +1406,7 @@ function updateSubsystemPage(pageId, full) {
   if (pageId === "ttc") renderGsNetwork();
   setHTML(`${pageId}-events`, (S.subsysEvents[sub] || []).slice(-30).reverse()
     .map((e) => `<div class="logrow">${esc(e)}</div>`).join("") ||
-    `<div class="logrow nom">No events</div>`);
+    `<div class="logrow nom">${t("No events")}</div>`);
 }
 
 /* ═══ 9b. POSITION-NEEDS GAP SURFACES (G1–G9, G12, G15) ═══════════════════ */
@@ -1395,6 +1428,7 @@ const DERIVED_BY_PAGE = {
   prp: ["prop.catbed_ready_eta"],
 };
 const FIT_PAGES = ["ttc", "pld"];           // G3 verdict line lives here
+// English text is the i18n key: display via tText(DERIVED_LABELS[name]).
 const DERIVED_LABELS = {
   "eps.soc_at_eclipse_exit_pred": "SoC at eclipse exit (predicted)",
   "eps.time_to_soc_yellow": "Time to SoC yellow limit",
@@ -1420,14 +1454,14 @@ export function fmtDerivedValue(ent) {
   return `${num(v, 1)}${u ? " " + u : ""}`;
 }
 const GND_MARK = (id) =>
-  `<span class="ds-badge" title="ground-derived ${esc(id || "0x08xx")} — computed by the MCS ` +
-  `from archive trend + orbit state; NOT downlinked from the spacecraft">GND</span>`;
+  `<span class="ds-badge" title="${t("ground-derived {{id}} — computed by the MCS from archive trend + orbit state; NOT downlinked from the spacecraft",
+    { id: id || "0x08xx" })}">${t("GND")}</span>`;
 export function renderDerivedRow(name) {
   const ent = derivedEntry(name);
-  const label = DERIVED_LABELS[name] || name;
+  const label = DERIVED_LABELS[name] ? tText(DERIVED_LABELS[name]) : name;
   if (!ent) {
-    return `<div class="logrow nom">${esc(label)} — no derived block in /api/state ` +
-           `(server predates POSITION_NEEDS G1?)</div>`;
+    return `<div class="logrow nom">${t("{{label}} — no derived block in /api/state (server predates POSITION_NEEDS G1?)",
+      { label })}</div>`;
   }
   const head = `<span style="font-size:12px;color:var(--tx3)">${esc(label)} ` +
                `<span class="mono">${esc(ent.id)}</span></span>`;
@@ -1435,7 +1469,7 @@ export function renderDerivedRow(name) {
     // The server NEVER sends a number when invalid; say why, prominently.
     return `<div class="row derived-row" style="justify-content:space-between;gap:6px">
       ${head}
-      <span style="font-size:12px;color:var(--stale)">INVALID — ${esc(ent.reason || "no reason given")}
+      <span style="font-size:12px;color:var(--stale)">${t("INVALID — {{reason}}", { reason: ent.reason || tText("no reason given") })}
         ${GND_MARK(ent.id)}</span></div>`;
   }
   return `<div class="row derived-row" style="justify-content:space-between;gap:6px">
@@ -1446,21 +1480,21 @@ export function renderDerivedRow(name) {
 /* — G3: the "will it fit" verdict line — */
 export function fitVerdictLine() {
   const ent = derivedEntry("ttc.pass_fit_ratio");
-  if (!ent) return `<div class="logrow nom">PASS FIT — no derived block</div>`;
+  if (!ent) return `<div class="logrow nom">${t("PASS FIT — no derived block")}</div>`;
   if (!ent.valid) {
-    return `<div class="logrow" style="color:var(--stale)">PASS FIT — INVALID: ` +
-           `${esc(ent.reason || "")} ${GND_MARK(ent.id)}</div>`;
+    return `<div class="logrow" style="color:var(--stale)">${t("PASS FIT — INVALID: {{reason}}", { reason: ent.reason || "" })}` +
+           ` ${GND_MARK(ent.id)}</div>`;
   }
   const r = Number(ent.value);
   const wont = r > 1.0;
   const tight = !wont && r > 0.9;
   const chip = renderChip({
     kind: wont ? "alarm" : tight ? "warn" : "ok",
-    label: wont ? "will NOT fit" : tight ? "fits (tight)" : "fits",
-    title: "backlog ÷ (tier rate × time to LOS); > 1.0 means the queued data will not move this pass",
+    label: wont ? tText("will NOT fit") : tight ? tText("fits (tight)") : tText("fits"),
+    title: tText("backlog ÷ (tier rate × time to LOS); > 1.0 means the queued data will not move this pass"),
   });
   return `<div class="row" style="gap:8px;align-items:center">
-    <span class="mono" style="font-size:14px;font-weight:600">PASS FIT ${num(r, 2)}</span>
+    <span class="mono" style="font-size:14px;font-weight:600">${t("PASS FIT {{r}}", { r: num(r, 2) })}</span>
     ${chip} ${GND_MARK(ent.id)}</div>`;
 }
 function renderDerivedCard(pageId) {
@@ -1469,7 +1503,7 @@ function renderDerivedCard(pageId) {
   const rows = (DERIVED_BY_PAGE[pageId] || []).map(renderDerivedRow).join("");
   const fit = FIT_PAGES.includes(pageId) ? fitVerdictLine() : "";
   host.innerHTML = rows + fit ||
-    `<div class="logrow nom">no projections for this subsystem</div>`;
+    `<div class="logrow nom">${t("no projections for this subsystem")}</div>`;
 }
 
 /* — G2: bitmask decoders (0x02C5 fine_ready, 0x0B15 arm_inhibit_mask) —
@@ -1497,14 +1531,14 @@ export function renderBitmaskChips(hexId, opts = {}) {
   const def = S.paramByHex[hexId] || {};
   const legend = parseBitLegend(def.description);
   if (!legend.length) {
-    return `<div class="ds-banner stale">no bit legend in the parameter catalogue for ` +
-           `${esc(hexId)} — cannot decode</div>`;
+    return `<div class="ds-banner stale">${t("no bit legend in the parameter catalogue for {{id}} — cannot decode",
+      { id: hexId })}</div>`;
   }
   const raw = paramVal(hexId);
   const stale = paramIsStale(hexId);
   if (raw === undefined || raw === null || stale) {
-    return `<div class="ds-banner stale">${esc(def.name || hexId)} not in current TM ` +
-           `(${stale ? "stale" : "never seen"}) — chips withheld rather than guessed</div>`;
+    return `<div class="ds-banner stale">${t("{{name}} not in current TM ({{why}}) — chips withheld rather than guessed",
+      { name: def.name || hexId, why: stale ? tText("stale") : tText("never seen") })}</div>`;
   }
   const mask = Number(raw) >>> 0;
   const legendMask = legend.reduce((a, b) => a | (1 << b.bit), 0);
@@ -1513,11 +1547,12 @@ export function renderBitmaskChips(hexId, opts = {}) {
     const set = (mask >> b.bit) & 1;
     return renderChip({ kind: set ? "alarm" : "ok",
       label: `b${b.bit} ${b.label}`,
-      title: set ? `bit ${b.bit} SET — ${b.label} is blocking/failing`
-                 : `bit ${b.bit} clear — ${b.label} OK` });
+      title: set ? tText("bit {{n}} SET — {{label}} is blocking/failing", { n: b.bit, label: b.label })
+                 : tText("bit {{n}} clear — {{label}} OK", { n: b.bit, label: b.label }) });
   }).join(" ");
   const verdict = renderChip({ kind: allClear ? "ok" : "alarm",
-    label: allClear ? (opts.clearLabel || "ALL CLEAR") : `${countBits(mask & legendMask)} BLOCKING` });
+    label: allClear ? (opts.clearLabel || tText("ALL CLEAR"))
+      : tText("{{count}} BLOCKING", { count: countBits(mask & legendMask) }) });
   return `<div class="row" style="gap:6px;margin-bottom:6px">
       <span class="mono" style="font-size:13px">${esc(def.name || hexId)} = 0x${mask.toString(16).toUpperCase().padStart(4, "0")}</span>
       ${verdict}</div>
@@ -1536,7 +1571,7 @@ export function evalCaptureGate(g) {
   const stale = paramIsStale(g.param);
   if (v === undefined || v === null || stale) {
     return { state: "unknown", actual: null,
-             why: stale ? "telemetry stale" : "parameter not in TM" };
+             why: stale ? tText("telemetry stale") : tText("parameter not in TM") };
   }
   const n = Number(v);
   let pass = false;
@@ -1549,7 +1584,7 @@ export function evalCaptureGate(g) {
     case "lt": pass = n < val; break;
     case "le": pass = n <= val; break;
     case "range": pass = n >= Number(g.min) && n <= Number(g.max); break;
-    default: return { state: "unknown", actual: n, why: `unknown op ${g.op}` };
+    default: return { state: "unknown", actual: n, why: tText("unknown op {{op}}", { op: String(g.op) }) };
   }
   return { state: pass ? "pass" : "fail", actual: n };
 }
@@ -1566,8 +1601,8 @@ function renderCaptureCard() {
   if (!host) return;
   const c = computeCaptureReadiness();
   if (!c.available) {
-    host.innerHTML = `<div class="ds-banner stale">no gate table — add ` +
-      `pld.capture-gates.gates to configs/&lt;mission&gt;/mcs/annotations.yaml</div>`;
+    host.innerHTML = `<div class="ds-banner stale">${t("no gate table — add {{key}} to {{file}}",
+      { key: "pld.capture-gates.gates", file: "configs/<mission>/mcs/annotations.yaml" })}</div>`;
     return;
   }
   const chips = c.rows.map((r) => renderChip({
@@ -1578,25 +1613,25 @@ function renderCaptureCard() {
     : c.composite === "NO-GO" ? "var(--alarm)" : "var(--stale)";
   host.innerHTML = `
     <div class="row" style="gap:10px;align-items:center;margin-bottom:6px">
-      <span class="mono" style="font-size:18px;font-weight:700;color:${cls}">${c.composite}</span>
-      <span style="font-size:12px;color:var(--tx3)">capture readiness — all gates from three subsystems, one verdict</span>
+      <span class="mono" style="font-size:18px;font-weight:700;color:${cls}">${c.composite === "UNKNOWN" ? t("UNKNOWN") : c.composite}</span>
+      <span style="font-size:12px;color:var(--tx3)">${t("capture readiness — all gates from three subsystems, one verdict")}</span>
     </div>
     <div class="row" style="gap:4px">${chips}</div>
-    <div style="margin-top:8px;font-size:12px;color:var(--tx3)">FINE-entry preconditions (aocs.fine_ready — PL4: bit4 set means a desat is coming):</div>
-    ${renderBitmaskChips("0x02C5", { clearLabel: "READY FOR FINE" })}`;
+    <div style="margin-top:8px;font-size:12px;color:var(--tx3)">${t("FINE-entry preconditions (aocs.fine_ready — PL4: bit4 set means a desat is coming):")}</div>
+    ${renderBitmaskChips("0x02C5", { clearLabel: tText("READY FOR FINE") })}`;
 }
 
 /* — G5: predicted-vs-measured link overlay (TTC page) — */
 async function loadLinkPrediction() {
   if (S.page !== "ttc") return;
   try { S.linkPred = await getJSON("/api/displays/link-prediction"); }
-  catch (e) { S.linkPred = { available: false, reason: "link-prediction endpoint unreachable" }; }
+  catch (e) { S.linkPred = { available: false, reason: tText("link-prediction endpoint unreachable") }; }
   renderLinkOverlay();
 }
 export function linkNowReadout() {
   const lp = S.linkPred;
   if (!lp || !lp.available) {
-    return { available: false, reason: (lp && lp.reason) || "no prediction loaded" };
+    return { available: false, reason: (lp && lp.reason) || tText("no prediction loaded") };
   }
   const tierIdx = Number(paramVal("0x0539"));
   const tierName = ["SAFE", "LOW", "HIGH"][tierIdx] ||
@@ -1620,7 +1655,7 @@ function renderLinkOverlay() {
   if (!host) return;
   const r = linkNowReadout();
   if (!r.available) {
-    host.innerHTML = `<div class="ds-banner stale">prediction unavailable — ${esc(r.reason)}</div>`;
+    host.innerHTML = `<div class="ds-banner stale">${t("prediction unavailable — {{reason}}", { reason: r.reason })}</div>`;
     const cv0 = $("ttc-linkpred-chart");
     if (cv0) cv0.classList.add("hide");
     return;
@@ -1628,13 +1663,14 @@ function renderLinkOverlay() {
   const dChip = r.delta === null ? "" : renderChip({
     kind: r.delta < -6 ? "alarm" : r.delta < -3 ? "warn" : "ok",
     label: `Δ ${r.delta >= 0 ? "+" : ""}${num(r.delta, 1)} dB`,
-    title: "measured minus predicted Eb/N0 at the current geometry — a large " +
-           "negative delta is a real loss (pointing, weather, hardware), not physics" });
+    title: tText("measured minus predicted Eb/N0 at the current geometry — a large negative delta is a real loss (pointing, weather, hardware), not physics") });
   host.innerHTML = `
     <div class="row" style="gap:8px;font-size:13px">
-      <span>${esc((r.pass || {}).gs_name || "")} ${esc((r.pass || {}).which || "")} pass · tier ${esc(r.tierName)}</span>
-      <span class="mono">predicted-now ${r.predicted === null ? "— (not in pass)" : num(r.predicted, 1) + " dB"}</span>
-      <span class="mono">measured-now ${r.measured === null ? "—" : num(r.measured, 1) + " dB"}</span>
+      <span>${t("{{gs}} {{which}} pass · tier {{tier}}",
+        { gs: (r.pass || {}).gs_name || "", which: (r.pass || {}).which || "", tier: String(r.tierName) })}</span>
+      <span class="mono">${t("predicted-now {{v}}",
+        { v: r.predicted === null ? tText("— (not in pass)") : num(r.predicted, 1) + " dB" })}</span>
+      <span class="mono">${t("measured-now {{v}}", { v: r.measured === null ? "—" : num(r.measured, 1) + " dB" })}</span>
       ${dChip}
     </div>`;
   drawLinkOverlayChart();
@@ -1653,10 +1689,10 @@ function drawLinkOverlayChart() {
   const r = linkNowReadout();
   const pred = series[r.tierName] || [];
   const datasets = [
-    { label: `predicted Eb/N0 (${r.tierName})`, pointRadius: 0, borderWidth: 1.2,
+    { label: tText("predicted Eb/N0 ({{tier}})", { tier: r.tierName }), pointRadius: 0, borderWidth: 1.2,
       borderDash: [5, 4], borderColor: "#8A93A0",
       data: pred.map((p) => ({ x: p[0] * 1000, y: p[1] })) },
-    { label: "measured Eb/N0 (0x0519)", pointRadius: 1.5, borderWidth: 1.5,
+    { label: tText("measured Eb/N0 (0x0519)"), pointRadius: 1.5, borderWidth: 1.5,
       borderColor: "#E6E9ED", showLine: true,
       data: S.linkMeasured.map((p) => ({ x: p.t * 1000, y: p.eb })) },
   ];
@@ -1742,21 +1778,22 @@ export function matchGonogoRow(label) {
 }
 export function renderGonogoMatrixRow(label) {
   if (S.gonogoMatrix && S.gonogoMatrix.available === false) {
-    return `<div class="logrow nom">call matrix unavailable — ${esc(S.gonogoMatrix.reason || "")}</div>`;
+    return `<div class="logrow nom">${t("call matrix unavailable — {{reason}}", { reason: S.gonogoMatrix.reason || "" })}</div>`;
   }
-  const row = matchGonogoRow(label);
+  const row = matchGonogoRow(label);     // matching runs on the English config text
   if (!row) {
-    return `<div class="logrow nom">no matching call-matrix row for this poll — ` +
-           `free-form poll; FD arbitrates per manual/10_desk_procedures.md</div>`;
+    return `<div class="logrow nom">${t("no matching call-matrix row for this poll — free-form poll; FD arbitrates per manual/10_desk_procedures.md")}</div>`;
   }
-  const who = (p) => (POSITION_INFO[p] || {}).title || String(p).toUpperCase();
+  const who = (p) => (POSITION_INFO[p] ? tText(POSITION_INFO[p].title) : String(p).toUpperCase());
   const responders = (Array.isArray(row.who_responds) ? row.who_responds : [row.who_responds])
     .map(who).join(", ");
+  // YAML-overlay key gonogo:<who_calls>.<row index>:<field> (configs/<mission>/i18n)
+  const gk = `gonogo:${row.who_calls}.${((S.gonogoMatrix && S.gonogoMatrix.matrix) || []).indexOf(row)}`;
   return `<div class="ds-card" style="margin-top:6px"><div class="bd" style="font-size:12.5px">
-    <b>${esc(row.situation)}</b>${row.critical ? " " + renderChip({ kind: "alarm", label: "CRITICAL" }) : ""}<br>
-    calls: <b>${esc(who(row.who_calls))}</b> · must respond: <b>${esc(responders)}</b><br>
-    FD: ${esc(row.fd_decision || "")}
-    <div style="color:var(--tx3);margin-top:2px">source: /api/gonogo-matrix (mcs/gonogo_matrix.yaml)</div>
+    <b>${esc(tdb(`${gk}:situation`, row.situation))}</b>${row.critical ? " " + renderChip({ kind: "alarm", label: tText("CRITICAL") }) : ""}<br>
+    ${t("calls: <b>{{who}}</b> · must respond: <b>{{resp}}</b>", { who: who(row.who_calls), resp: responders })}<br>
+    FD: ${esc(row.fd_decision ? tdb(`${gk}:fd_decision`, row.fd_decision) : "")}
+    <div style="color:var(--tx3);margin-top:2px">${t("source: {{src}}", { src: "/api/gonogo-matrix (mcs/gonogo_matrix.yaml)" })}</div>
   </div></div>`;
 }
 
@@ -1783,19 +1820,17 @@ export function renderConsoleLog() {
         `${e.source === "server" ? ` <span class="ds-badge">AUTO</span>` : ""} ` +
         `${esc(e.text || "")}${e.ref ? ` <span class="mono">(${esc(e.ref)})</span>` : ""}</div>`;
     }).join("");
-  host.innerHTML = rows || `<div class="logrow nom">console log empty — ` +
-    `TC sends, verdicts, acks and GO/NO-GO results are appended by the server; ` +
-    `MARK and notes by you</div>`;
+  host.innerHTML = rows || `<div class="logrow nom">${t("console log empty — TC sends, verdicts, acks and GO/NO-GO results are appended by the server; MARK and notes by you")}</div>`;
 }
 async function postConsoleEntry(kind) {
   const el = $("conlog-input");
   const typed = el ? el.value.trim() : "";
   const text = kind === "mark" ? (typed || "MARK") : typed;
-  if (!text) { announce("console log: type a note first"); return; }
+  if (!text) { announce(tText("console log: type a note first")); return; }
   const r = await postJSON("/api/console-log",
     { position: S.position, kind, text });
   if (r.ok && el) el.value = "";
-  announce(r.ok ? `logged (${kind})` : `console log rejected (${r.status})`);
+  announce(r.ok ? tText("logged ({{kind}})", { kind }) : tText("console log rejected ({{status}})", { status: r.status }));
   await loadConsoleLog();
   renderConsoleLog();
 }
@@ -1814,7 +1849,7 @@ async function loadBurnPlan() {
   const base = S.clientConfig.planner_url;
   if (!base) {
     S.burnPlan = { available: false,
-      reason: "planner_url not configured — confirm the burn plan by voice with FDS" };
+      reason: tText("planner_url not configured — confirm the burn plan by voice with FDS") };
     renderBurnCard();
     return;
   }
@@ -1827,7 +1862,7 @@ async function loadBurnPlan() {
   } catch (e) {
     // cross-origin / planner-down is a DESIGNED absent state (G9)
     S.burnPlan = { available: false,
-      reason: "planner unreachable (offline or cross-origin) — confirm the burn plan by voice with FDS" };
+      reason: tText("planner unreachable (offline or cross-origin) — confirm the burn plan by voice with FDS") };
   }
   renderBurnCard();
 }
@@ -1837,13 +1872,13 @@ function renderBurnCard() {
   const dvTm = Number(paramVal("0x0B0E"));
   const tTm = Number(paramVal("0x0B10"));
   const tmStale = paramIsStale("0x0B0E");
-  const tmRow = `<tr><td>LOADED (TM)</td>
+  const tmRow = `<tr><td>${t("LOADED (TM)")}</td>
     <td class="mono">${tmStale || !Number.isFinite(dvTm) ? "—" : num(dvTm, 2) + " m/s"}</td>
-    <td class="mono">${tmStale || !Number.isFinite(tTm) ? "—" : num(tTm, 0) + " s burn"}</td>
+    <td class="mono">${tmStale || !Number.isFinite(tTm) ? "—" : t("{{s}} s burn", { s: num(tTm, 0) })}</td>
     <td class="mono">0x0B0E / 0x0B10</td></tr>`;
   const bp = S.burnPlan;
   if (!bp) { host.innerHTML = `<table class="plain"><tbody>${tmRow}</tbody></table>` +
-    `<div class="logrow nom">planner not queried yet…</div>`; return; }
+    `<div class="logrow nom">${t("planner not queried yet…")}</div>`; return; }
   if (!bp.available) {
     host.innerHTML = `<table class="plain"><tbody>${tmRow}</tbody></table>` +
       `<div class="ds-banner stale">${esc(bp.reason)}</div>`;
@@ -1851,27 +1886,26 @@ function renderBurnCard() {
   }
   if (!bp.activity) {
     host.innerHTML = `<table class="plain"><tbody>${tmRow}</tbody></table>` +
-      `<div class="logrow nom">no orbit_manoeuvre activity in the plan` +
+      `<div class="logrow nom">${t("no orbit_manoeuvre activity in the plan")}` +
       `${Number.isFinite(dvTm) && dvTm > 0 && !tmStale
-        ? ` — a burn is LOADED on board with nothing planned: query FDS`
+        ? " — " + t("a burn is LOADED on board with nothing planned: query FDS")
         : ""}</div>`;
     return;
   }
   const a = bp.activity;
   const dvPlan = plannedBurnDv(a);
-  const planRow = `<tr><td>PLANNED (FDS)</td>
-    <td class="mono">${Number.isFinite(dvPlan) ? num(dvPlan, 2) + " m/s" : "— (no ΔV in activity)"}</td>
+  const planRow = `<tr><td>${t("PLANNED (FDS)")}</td>
+    <td class="mono">${Number.isFinite(dvPlan) ? num(dvPlan, 2) + " m/s" : t("— (no ΔV in activity)")}</td>
     <td class="mono">${a.start_time ? esc(String(a.start_time)) : "—"}</td>
     <td class="mono">${esc(a.procedure_ref || "")} #${a.id ?? "—"} ${esc(a.state_name || "")}</td></tr>`;
   const mism = burnMismatch(dvTm, dvPlan);
   const verdict = mism === null
-    ? `<div class="logrow nom">not comparable — ` +
-      `${tmStale || !Number.isFinite(dvTm) ? "no burn loaded in TM" : "activity carries no ΔV value"}; ` +
-      `cross-check with FDS on the loop</div>`
+    ? `<div class="logrow nom">${t("not comparable — {{why}}; cross-check with FDS on the loop",
+        { why: tmStale || !Number.isFinite(dvTm) ? tText("no burn loaded in TM") : tText("activity carries no ΔV value") })}</div>`
     : mism
-      ? `<div class="ds-banner alarm">MISMATCH — loaded ΔV ${num(dvTm, 2)} m/s ≠ planned ` +
-        `${num(dvPlan, 2)} m/s. Do NOT arm until FDS confirms which is right (PR4).</div>`
-      : `<div class="row" style="margin-top:4px">${renderChip({ kind: "ok", label: "LOADED = PLANNED" })}</div>`;
+      ? `<div class="ds-banner alarm">${t("MISMATCH — loaded ΔV {{tm}} m/s ≠ planned {{plan}} m/s. Do NOT arm until FDS confirms which is right (PR4).",
+          { tm: num(dvTm, 2), plan: num(dvPlan, 2) })}</div>`
+      : `<div class="row" style="margin-top:4px">${renderChip({ kind: "ok", label: tText("LOADED = PLANNED") })}</div>`;
   host.innerHTML = `<table class="plain"><tbody>${tmRow}${planRow}</tbody></table>${verdict}`;
 }
 
@@ -1883,10 +1917,10 @@ export function toggleBlindTc() {
     S.blindTc.enabled = false;
     postJSON("/api/console-log", { position: S.position, kind: "note",
       text: "BLIND-TC mode DISABLED — TM confirmation restored" });
-    announce("Blind-TC mode disabled");
+    announce(tText("Blind-TC mode disabled"));
   } else if (!S.blindTc.armPending) {
     S.blindTc.armPending = true;
-    announce("Blind-TC ARM — press again within 8 s to confirm. FD GO required (CON-004).");
+    announce(tText("Blind-TC ARM — press again within {{s}} s to confirm. FD GO required (CON-004).", { s: 8 }));
     blindArmTimer = setTimeout(() => { S.blindTc.armPending = false; renderBlindTc(); }, 8000);
   } else {
     if (blindArmTimer) { clearTimeout(blindArmTimer); blindArmTimer = null; }
@@ -1895,7 +1929,7 @@ export function toggleBlindTc() {
     postJSON("/api/console-log", { position: S.position, kind: "note",
       text: "BLIND-TC mode ENABLED (FD GO per CON-004) — subsequent commands are " +
             "sent WITHOUT TM confirmation and tagged BLIND until a readback confirms" });
-    announce("BLIND-TC MODE ENABLED — commands are now tagged BLIND");
+    announce(tText("BLIND-TC MODE ENABLED — commands are now tagged BLIND"));
   }
   renderBlindTc();
 }
@@ -1903,22 +1937,22 @@ function renderBlindTc() {
   const btn = $("ttc-blind-btn");
   const st = $("ttc-blind-status");
   if (btn) {
-    btn.textContent = S.blindTc.enabled ? "DISABLE BLIND-TC"
-      : S.blindTc.armPending ? "CONFIRM BLIND-TC (armed)" : "ENABLE BLIND-TC";
+    btn.textContent = S.blindTc.enabled ? tText("DISABLE BLIND-TC")
+      : S.blindTc.armPending ? tText("CONFIRM BLIND-TC (armed)") : tText("ENABLE BLIND-TC");
     btn.classList.toggle("armed", S.blindTc.armPending);
   }
   if (st) {
     st.innerHTML = S.blindTc.enabled
-      ? `<span class="blind-chip">BLIND-TC ACTIVE</span> commands go up without TM readback — log every send`
-      : S.blindTc.armPending ? "armed — second press enables (voice FD GO first)"
-      : "off — commands verify normally via S1 reports";
+      ? `<span class="blind-chip">${t("BLIND-TC ACTIVE")}</span> ${t("commands go up without TM readback — log every send")}`
+      : S.blindTc.armPending ? t("armed — second press enables (voice FD GO first)")
+      : t("off — commands verify normally via S1 reports");
   }
 }
 export function blindHistoryChip(h) {
   if (!h || !h.blind) return "";
   return h.blind === "confirmed"
-    ? `<span class="blind-chip confirmed" title="sent blind; a later TM readback (S1) confirmed it">BLIND ✓ TM</span>`
-    : `<span class="blind-chip" title="sent in blind-TC mode — NO telemetry confirmation yet (CON-004)">BLIND</span>`;
+    ? `<span class="blind-chip confirmed" title="${t("sent blind; a later TM readback (S1) confirmed it")}">BLIND ✓ TM</span>`
+    : `<span class="blind-chip" title="${t("sent in blind-TC mode — NO telemetry confirmation yet (CON-004)")}">BLIND</span>`;
 }
 
 /* — G15: baseline-vs-now health card (TRND page; baselines from
@@ -1932,7 +1966,8 @@ export function computeBaselineDeltas() {
   if (!t) return { available: false };
   const rows = Object.entries(t).map(([hexId, b]) => {
     const base = Number(b.value);
-    const label = b.label || (S.paramByHex[hexId] || {}).name || hexId;
+    const label = (b.label ? tdb(`baseline:${hexId}:label`, b.label) : "") ||
+      (S.paramByHex[hexId] || {}).name || hexId;
     const units = b.units || (S.paramByHex[hexId] || {}).units || "";
     const raw = paramVal(hexId);
     const stale = paramIsStale(hexId);
@@ -1956,15 +1991,15 @@ export function renderBaselineCard() {
   if (!host) return;
   const c = computeBaselineDeltas();
   if (!c.available) {
-    host.innerHTML = `<div class="ds-banner stale">no commissioning baseline — the instructor ` +
-      `fills trnd.baseline-health.baselines in configs/&lt;mission&gt;/mcs/annotations.yaml</div>`;
+    host.innerHTML = `<div class="ds-banner stale">${t("no commissioning baseline — the instructor fills {{key}} in {{file}}",
+      { key: "trnd.baseline-health.baselines", file: "configs/<mission>/mcs/annotations.yaml" })}</div>`;
     return;
   }
   const rows = c.rows.map((r) => {
     if (r.state === "no-tm") {
       return `<tr class="stale"><td>${esc(r.label)}</td><td class="mono">${esc(r.hexId)}</td>
         <td class="mono">${num(r.base, 2)}</td><td class="mono">—</td><td class="mono">—</td>
-        <td>${renderChip({ kind: "stale", label: "NO TM" })}</td></tr>`;
+        <td>${renderChip({ kind: "stale", label: tText("NO TM") })}</td></tr>`;
     }
     const driftTxt = r.drift === null ? `Δ ${num(r.delta, 3)} ${esc(r.units)}`
       : `${r.drift >= 0 ? "+" : ""}${num(r.drift, 1)} %`;
@@ -1972,14 +2007,14 @@ export function renderBaselineCard() {
       <td class="mono">${num(r.base, 2)}</td><td class="mono">${num(r.now, 2)} ${esc(r.units)}</td>
       <td class="mono">${driftTxt}</td>
       <td>${r.flag ? renderChip({ kind: "warn", label: ">5 % — NOM-011", dir: "down",
-        title: "degraded more than 5 % against the commissioning baseline — long-term trend review (NOM-011)" })
-        : renderChip({ kind: "ok", label: "in family" })}</td></tr>`;
+        title: tText("degraded more than 5 % against the commissioning baseline — long-term trend review (NOM-011)") })
+        : renderChip({ kind: "ok", label: tText("in family") })}</td></tr>`;
   }).join("");
   host.innerHTML = `<table class="plain">
-    <thead><tr><th>Metric</th><th>ID</th><th>Baseline</th><th>Now</th><th>Drift</th><th></th></tr></thead>
+    <thead><tr><th>${t("Metric")}</th><th>ID</th><th>${t("Baseline")}</th><th>${t("Now")}</th><th>${t("Drift")}</th><th></th></tr></thead>
     <tbody>${rows}</tbody></table>
-    <div style="font-size:12px;color:var(--tx3);margin-top:6px">baseline: commissioning snapshot ` +
-    `(annotations.yaml) · drift computed on the console, flagged &gt;5 % per NOM-011</div>`;
+    <div style="font-size:12px;color:var(--tx3);margin-top:6px">${t("baseline: commissioning snapshot ({{file}}) · drift computed on the console, flagged {{thr}} per NOM-011",
+      { file: "annotations.yaml", thr: ">5 %" })}</div>`;
 }
 
 /* ═══ 10. FRESHNESS — display-wide staleness gate (P4) ════════════════════ */
@@ -2058,24 +2093,25 @@ function catFieldDefault(f) {
  * reason the spacecraft would reject the value, or null when valid. */
 export function catFieldError(f, eng) {
   if (catFieldWidth(String(f.type || "uint8").toLowerCase()) == null) return null;
-  if (eng === "" || eng === null || eng === undefined) return `${f.name}: no value`;
+  if (eng === "" || eng === null || eng === undefined) return tText("{{name}}: no value", { name: f.name });
   const val = Number(eng);
-  if (!Number.isFinite(val)) return `${f.name}: not a number`;
+  if (!Number.isFinite(val)) return tText("{{name}}: not a number", { name: f.name });
   if (f.range && (val < f.range.min || val > f.range.max)) {
     const u = f.unit ? ` ${f.unit}` : "";
-    return `${f.name} = ${val}${u} is outside [${f.range.min} … ${f.range.max}]${u}` +
-      ` — the spacecraft will REJECT this (S1.8)`;
+    return tText("{{name}} = {{val}}{{u}} is outside [{{min}} … {{max}}]{{u}} — the spacecraft will REJECT this (S1.8)",
+      { name: f.name, val, u, min: String(f.range.min), max: String(f.range.max) });
   }
   const ct = String(catCal(f).type || "").toLowerCase();
   if (ct === "enum" && (f.enum || []).length) {
     if (!(f.enum || []).some((e) => Number(e.value) === Math.round(val)))
-      return `${f.name} = ${val} is not an enumerated value`;
+      return tText("{{name}} = {{val}} is not an enumerated value", { name: f.name, val });
   }
   if (ct === "bitfield" && (f.bits || []).length) {
     let allowed = 0;
     for (const b of f.bits) if (!b.reserved) allowed |= (1 << b.bit);
     if (Math.round(val) & ~allowed)
-      return `${f.name} = 0x${Math.round(val).toString(16).toUpperCase()} sets reserved bits`;
+      return tText("{{name}} = {{val}} sets reserved bits",
+        { name: f.name, val: `0x${Math.round(val).toString(16).toUpperCase()}` });
   }
   return null;
 }
@@ -2135,11 +2171,11 @@ export function encodeCatalogCommand(cmd, args) {
 }
 export function decodeCatalogArgs(cmd, hexStr) {
   const s2 = String(hexStr || "").replace(/[\s,]+/g, "");
-  if (s2.length % 2) return { ok: false, error: "odd number of hex digits" };
+  if (s2.length % 2) return { ok: false, error: tText("odd number of hex digits") };
   const bytes = [];
   for (let i = 0; i < s2.length; i += 2) {
     const b = parseInt(s2.substr(i, 2), 16);
-    if (isNaN(b)) return { ok: false, error: `bad hex at octet ${i / 2}` };
+    if (isNaN(b)) return { ok: false, error: tText("bad hex at octet {{i}}", { i: i / 2 }) };
     bytes.push(b);
   }
   const values = {};
@@ -2154,7 +2190,7 @@ export function decodeCatalogArgs(cmd, hexStr) {
       continue;
     }
     if (pos + w > bytes.length)
-      return { ok: false, error: `${bytes.length} byte(s) is too short for ${f.name}` };
+      return { ok: false, error: tText("{{n}} byte(s) is too short for {{name}}", { n: bytes.length, name: f.name }) };
     const dv = new DataView(new Uint8Array(bytes.slice(pos, pos + w)).buffer);
     const le = String(f.endian || "big").toLowerCase() === "little";
     let raw;
@@ -2170,7 +2206,7 @@ export function decodeCatalogArgs(cmd, hexStr) {
     pos += w;
   }
   if (pos !== bytes.length)
-    return { ok: false, error: `${bytes.length - pos} trailing byte(s)` };
+    return { ok: false, error: tText("{{n}} trailing byte(s)", { n: bytes.length - pos }) };
   return { ok: true, values };
 }
 export function sidToHex(sid) {
@@ -2184,83 +2220,84 @@ export function provenanceText(cmd) {
   if (cmd.func_id != null) head += ` func ${cmd.func_id} (0x${Number(cmd.func_id).toString(16).toUpperCase().padStart(2, "0")})`;
   const bits = [head];
   const exp = cmd.expected_data_bytes != null ? cmd.expected_data_bytes : cmd.expected_bytes;
-  if (exp != null) bits.push(`${exp} data bytes`);
-  else if (cmd.variable_length) bits.push(`variable length${cmd.minimum != null ? ` (≥${cmd.minimum} B)` : ""}`);
-  if (isCritical(cmd)) bits.push("CRITICAL — arm→execute");
+  if (exp != null) bits.push(tText("{{n}} data bytes", { n: exp }));
+  else if (cmd.variable_length) bits.push(tText("variable length") + (cmd.minimum != null ? ` (≥${cmd.minimum} B)` : ""));
+  if (isCritical(cmd)) bits.push(tText("CRITICAL — arm→execute"));
   else if (cmd.criticality) bits.push(String(cmd.criticality).toUpperCase());
   if (cmd.readback) {
     const rb = cmd.readback;
     if (rb && typeof rb === "object")
-      bits.push(`readback ${rb.description || ""}${rb.param_id != null ? ` (${fmtHex(rb.param_id, 4)})` : ""}`.trim());
-    else bits.push(`readback ${rb}`);
+      bits.push(tText("readback {{what}}",
+        { what: `${rb.description || ""}${rb.param_id != null ? ` (${fmtHex(rb.param_id, 4)})` : ""}` }).trim());
+    else bits.push(tText("readback {{what}}", { what: rb }));
   }
-  if (cmd.description) bits.push(cmd.description);
+  if (cmd.description) bits.push(tdb(`tc:${cmd.name}:description`, cmd.description));
   return bits.join(" · ");
 }
 
 function buildCmdPage() {
   return `
-  <div class="pad hide" id="page-cmd" role="tabpanel" aria-label="Commanding">
-    <h1 class="pt">Commanding</h1>
-    <p class="sub">PUS telecommand builder · verification is a stepper attached to the
+  <div class="pad hide" id="page-cmd" role="tabpanel" aria-label="Commanding" data-i18n-aria-label>
+    <h1 class="pt" data-i18n>Commanding</h1>
+    <p class="sub" data-i18n>PUS telecommand builder · verification is a stepper attached to the
       command, not a separate log (P9)</p>
     <div class="guided-note" data-ann="cmd.builder"></div>
     <div class="g" style="grid-template-columns:minmax(0,1fr) 420px;align-items:start">
       <div class="g">
-        <div class="ds-card"><h2>Command builder <span class="r" id="cmd-authority"></span></h2>
+        <div class="ds-card"><h2 data-i18n>Command builder <span class="r" id="cmd-authority"></span></h2>
           <div class="bd">
             <div class="row">
-              <div class="fld"><label for="cmd-catalog">Catalogue command</label>
+              <div class="fld"><label for="cmd-catalog" data-i18n>Catalogue command</label>
                 <select id="cmd-catalog" class="in" style="min-width:280px"></select></div>
-              <div class="fld"><label for="cmd-service">Service</label>
+              <div class="fld"><label for="cmd-service" data-i18n>Service</label>
                 <select id="cmd-service" class="in">
                   ${[3, 5, 6, 8, 9, 11, 12, 15, 17, 19, 20].map((s2) => `<option>${s2}</option>`).join("")}
                 </select></div>
-              <div class="fld"><label for="cmd-subtype">Subtype</label>
+              <div class="fld"><label for="cmd-subtype" data-i18n>Subtype</label>
                 <input id="cmd-subtype" class="in" type="number" min="1" max="255" value="1" style="width:70px"></div>
-              <div class="fld"><label for="cmd-name">Name</label>
-                <input id="cmd-name" class="in" placeholder="optional"></div>
+              <div class="fld"><label for="cmd-name" data-i18n>Name</label>
+                <input id="cmd-name" class="in" placeholder="optional" data-i18n-placeholder></div>
             </div>
             <div id="cmd-fields" class="g" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr));margin-top:8px"></div>
             <div id="cmd-raw-preview" class="mono" style="font-size:12px;color:var(--info);margin-top:6px"></div>
             <div id="cmd-field-errors" style="font-size:12px;color:var(--alarm)"></div>
             <div class="row" style="margin-top:8px">
-              <div class="fld" style="flex:1"><label for="cmd-data">Data (hex) — live from the fields; paste hex to decode; Enter sends</label>
+              <div class="fld" style="flex:1"><label for="cmd-data" data-i18n>Data (hex) — live from the fields; paste hex to decode; Enter sends</label>
                 <input id="cmd-data" class="in mono" placeholder="AA BB …"></div>
               <span id="cmd-bytes-chip" class="ds-badge"></span>
             </div>
             <div id="cmd-provenance" style="font-size:12px;color:var(--tx3);margin:6px 0"></div>
             <div class="row">
-              <button class="ds-btn" id="cmd-pack">PACK FROM FIELDS</button>
-              <button class="ds-btn" id="cmd-decode">DECODE HEX → FIELDS</button>
+              <button class="ds-btn" id="cmd-pack" data-i18n>PACK FROM FIELDS</button>
+              <button class="ds-btn" id="cmd-decode" data-i18n>DECODE HEX → FIELDS</button>
               <span style="flex:1"></span>
-              <button class="ds-btn arm" id="cmd-arm">ARM</button>
-              <button class="ds-btn primary" id="cmd-send" disabled>SEND</button>
+              <button class="ds-btn arm" id="cmd-arm" data-i18n>ARM</button>
+              <button class="ds-btn primary" id="cmd-send" disabled data-i18n>SEND</button>
             </div>
             <div id="cmd-verif-stepper" style="margin-top:10px"></div>
             <div id="cmd-result" style="font-size:12.5px;margin-top:6px"></div>
           </div></div>
-        <div class="ds-card"><h2>Quick commands <span class="r">position-gated; denied entries say who owns them</span></h2>
+        <div class="ds-card"><h2 data-i18n>Quick commands <span class="r" data-i18n>position-gated; denied entries say who owns them</span></h2>
           <div class="bd" id="cmd-quick"></div></div>
-        <div class="ds-card"><h2>Verification log <span class="r">/api/verification-log · 5 s</span></h2>
+        <div class="ds-card"><h2 data-i18n>Verification log <span class="r">/api/verification-log · 5 s</span></h2>
           <div class="bd scroll-y" style="max-height:200px" id="cmd-verif-log"></div></div>
       </div>
       <div class="g" style="align-content:start">
-        <div class="ds-card"><h2>Stored TM (S15) dump</h2><div class="bd">
+        <div class="ds-card"><h2 data-i18n>Stored TM (S15) dump</h2><div class="bd">
           <div class="row">
-            <div class="fld"><label for="s15-target">Subsystem</label>
+            <div class="fld"><label for="s15-target" data-i18n>Subsystem</label>
               <select id="s15-target" class="in">
                 ${["eps", "tcs", "aocs", "ttc", "payload", "prop", "obdh", "orbit", "all"]
                   .map((s2) => `<option>${s2}</option>`).join("")}</select></div>
-            <div class="fld"><label for="s15-store">Store id</label>
+            <div class="fld"><label for="s15-store" data-i18n>Store id</label>
               <select id="s15-store" class="in">
                 <option value="">auto</option><option>1</option><option>2</option><option>3</option><option>4</option>
               </select></div>
-            <button class="ds-btn" id="s15-dump">DUMP</button>
+            <button class="ds-btn" id="s15-dump" data-i18n>DUMP</button>
           </div>
           <div id="s15-result" style="font-size:12px;color:var(--tx3);margin-top:6px"></div>
         </div></div>
-        <div class="ds-card"><h2>HK SID control (S3)</h2><div class="bd">
+        <div class="ds-card"><h2 data-i18n>HK SID control (S3)</h2><div class="bd">
           <div class="row">
             <div class="fld"><label for="hk-sid">SID</label>
               <input id="hk-sid" class="in" type="number" min="1" value="1" style="width:70px"></div>
@@ -2270,7 +2307,7 @@ function buildCmdPage() {
           </div>
           <div id="hk-quick-result" style="font-size:12px;color:var(--tx3);margin-top:6px"></div>
         </div></div>
-        <div class="ds-card"><h2>Command history</h2>
+        <div class="ds-card"><h2 data-i18n>Command history</h2>
           <div class="bd scroll-y" style="max-height:280px" id="cmd-history"></div></div>
       </div>
     </div>
@@ -2287,7 +2324,7 @@ function renderCmdCatalogSelect() {
   const sel = $("cmd-catalog");
   if (!sel) return;
   const cur = sel.value;
-  sel.innerHTML = `<option value="">— raw service/subtype —</option>` +
+  sel.innerHTML = `<option value="">${t("— raw service/subtype —")}</option>` +
     S.tcCatalog.map((c) => `<option value="${esc(c.name)}"${c.allowed ? "" : " data-denied=\"1\""}>` +
       `${esc(c.name)} (S${c.service},${c.subtype})${c.allowed ? "" : " 🔒"}</option>`).join("");
   if (cur) sel.value = cur;
@@ -2298,16 +2335,19 @@ function renderCmdCatalogSelect() {
  * positions.yaml allowed_commands lists. */
 export function commandAuthority(cmdName) {
   const cmd = S.tcCatalog.find((c) => c.name === cmdName);
-  if (!cmd) return { allowed: false, text: "unknown command" };
+  if (!cmd) return { allowed: false, text: tText("unknown command") };
   if (cmd.allowed) return { allowed: true, text: "" };
   const owners = [];
   for (const [pos, p] of Object.entries(S.positions)) {
     const ac = p.allowed_commands;
-    if (ac === "all" || (Array.isArray(ac) && ac.includes(cmdName))) owners.push(p.label || pos);
+    if (ac === "all" || (Array.isArray(ac) && ac.includes(cmdName))) owners.push([pos, p.label || pos]);
   }
-  const owner = owners.filter((o) => o !== (S.positions[S.position] || {}).label);
+  // compare the English config labels; translate only for display
+  const owner = owners.filter(([, l]) => l !== (S.positions[S.position] || {}).label)
+    .map(([pos, l]) => (S.positions[pos] || {}).label ? tdb(`pos:${pos}:label`, l) : l);
   return { allowed: false,
-    text: `NOT PERMITTED — belongs to ${owner.length ? owner.join(", ") : "another position"}` };
+    text: tText("NOT PERMITTED — belongs to {{owner}}",
+      { owner: owner.length ? owner.join(", ") : tText("another position") }) };
 }
 
 /* Names that read far better as hex on an ops console (classic parity). */
@@ -2319,34 +2359,38 @@ const HEX_FIELD_NAMES = new Set([
  * (classic Phase E WP-4 parity): enum -> dropdown with the value NAMES,
  * bitfield -> one checkbox per bit, linear-calibrated / ranged numbers ->
  * engineering-unit number inputs with min/max/step, bytes -> hex tail. */
-export function cmdFieldWidget(f) {
+export function cmdFieldWidget(f, cmdName) {
   const cal = catCal(f);
   const ct = String(cal.type || "").toLowerCase();
   const unit = f.unit || f.units || "";
   const label = `${esc(f.name)}${unit ? ` (${esc(unit)})` : ""}`;
-  const title = esc(f.description || f.type || "");
+  // descriptions: YAML overlay tcarg/tcenum/tcbit:<cmd>.<field>[.<item>]:description
+  const ov = `${cmdName}.${f.name}`;
+  const title = esc(f.description ? tdb(`tcarg:${ov}:description`, f.description) : (f.type || ""));
   const dflt = catFieldDefault(f);
   if ((f.enum || []).length) {
     const opts = f.enum.map((e) =>
       `<option value="${esc(String(e.value))}"${String(e.value) === String(dflt) ? " selected" : ""}>` +
-      `${e.value} — ${esc(e.label)}${e.description ? ` (${esc(e.description)})` : ""}</option>`).join("");
+      `${e.value} — ${esc(e.label)}${e.description
+        ? ` (${esc(tdb(`tcenum:${ov}.${e.label ?? e.value}:description`, e.description))})` : ""}</option>`).join("");
     return `<div class="fld"><label>${label}</label>
       <select class="in" data-cmd-field="${esc(f.name)}" title="${title}">${opts}</select></div>`;
   }
   if (ct === "bitfield" && (f.bits || []).length) {
     const mask = Number(dflt) || 0;
     const rows = f.bits.map((b) => b.reserved
-      ? `<div style="color:var(--tx3)">bit${b.bit} reserved (0)</div>`
+      ? `<div style="color:var(--tx3)">${t("bit{{n}} reserved (0)", { n: b.bit })}</div>`
       : `<label style="display:block"><input type="checkbox" data-cmd-bit="${esc(f.name)}"
            data-bit="${b.bit}"${(mask >> b.bit) & 1 ? " checked" : ""}>
-           bit${b.bit} ${esc(b.name)}${b.description ? " — " + esc(b.description) : ""}</label>`).join("");
-    return `<div class="fld" data-cmd-bitfield="${esc(f.name)}"><label>${label} — flags</label>
+           bit${b.bit} ${esc(b.name)}${b.description
+             ? " — " + esc(tdb(`tcbit:${ov}.${b.name ?? b.bit}:description`, b.description)) : ""}</label>`).join("");
+    return `<div class="fld" data-cmd-bitfield="${esc(f.name)}"><label>${label} — ${t("flags")}</label>
       <div style="font-size:12px">${rows}
         <span class="mono" data-cmd-mask="${esc(f.name)}" style="color:var(--tx3)"></span></div></div>`;
   }
-  const t = String(f.type || "uint8").toLowerCase();
-  if (catFieldWidth(t) == null) {
-    return `<div class="fld"><label>${label} — hex bytes</label>
+  const ty = String(f.type || "uint8").toLowerCase();
+  if (catFieldWidth(ty) == null) {
+    return `<div class="fld"><label>${label} — ${t("hex bytes")}</label>
       <input class="in mono" data-cmd-field="${esc(f.name)}" placeholder="00 FF …"
         value="${f.default != null ? esc(String(f.default)) : ""}" title="${title}"></div>`;
   }
@@ -2359,7 +2403,7 @@ export function cmdFieldWidget(f) {
       <input class="in mono" data-cmd-field="${esc(f.name)}" value="${esc(String(dflt))}"
         placeholder="0xHHHH" title="${title}"></div>`;
   }
-  const step = t.indexOf("float") === 0 ? "0.01"
+  const step = ty.indexOf("float") === 0 ? "0.01"
     : ct === "linear" ? String(Math.abs(cal.scale != null ? cal.scale : 1)) : "1";
   return `<div class="fld"><label>${label}${hint}</label>
     <input class="in" type="number" step="${step}" data-cmd-field="${esc(f.name)}"
@@ -2381,7 +2425,7 @@ function updateCmdBuilder() {
     const auth = commandAuthority(cmd.name);
     if (authEl) { authEl.textContent = auth.text; authEl.style.color = auth.allowed ? "" : "var(--alarm)"; }
     // structured field editor (engineering units, enum names, validation)
-    setHTML("cmd-fields", (cmd.fields || []).map(cmdFieldWidget).join(""));
+    setHTML("cmd-fields", (cmd.fields || []).map((f) => cmdFieldWidget(f, cmd.name)).join(""));
     const critical = isCritical(cmd);
     if (armBtn) armBtn.classList.toggle("hide", !critical);
     if (sendBtn) sendBtn.disabled = !auth.allowed || (critical && !S.armed[cmd.name]);
@@ -2389,7 +2433,7 @@ function updateCmdBuilder() {
   } else {
     if (authEl) authEl.textContent = "";
     setHTML("cmd-fields", "");
-    setText("cmd-provenance", "raw command — no catalogue entry; length not validated");
+    setText("cmd-provenance", tText("raw command — no catalogue entry; length not validated"));
     setText("cmd-raw-preview", "");
     setText("cmd-field-errors", "");
     if (armBtn) armBtn.classList.add("hide");
@@ -2469,7 +2513,8 @@ function cmdReverseDecode() {
     const match = S.tcCatalog.find((c) => Number(c.service) === 8 &&
       Number(c.subtype) === 1 && Number(c.func_id) === fid);
     if (!match) {
-      setText("cmd-raw-preview", `✗ func 0x${fid.toString(16).toUpperCase().padStart(2, "0")} is not in the catalogue`);
+      setText("cmd-raw-preview", tText("✗ func {{id}} is not in the catalogue",
+        { id: `0x${fid.toString(16).toUpperCase().padStart(2, "0")}` }));
       return;
     }
     if (!cmd || cmd.name !== match.name) {
@@ -2485,13 +2530,14 @@ function cmdReverseDecode() {
   }
   if (!cmd || !Array.isArray(cmd.fields)) return;
   if (!cmd.fields.length) {
-    setText("cmd-raw-preview", body.length ? `✗ ${cmd.name} takes no arguments` : `DECODED ✓ ${cmd.name}`);
+    setText("cmd-raw-preview", body.length ? tText("✗ {{name}} takes no arguments", { name: cmd.name })
+      : tText("DECODED ✓ {{name}}", { name: cmd.name }));
     return;
   }
   const r = decodeCatalogArgs(cmd, body);
-  if (!r.ok) { setText("cmd-raw-preview", `✗ decode: ${r.error}`); return; }
+  if (!r.ok) { setText("cmd-raw-preview", tText("✗ decode: {{err}}", { err: r.error })); return; }
   applyDecodedValues(cmd, r.values);
-  setText("cmd-raw-preview", `DECODED ✓ ${cmd.name}`);
+  setText("cmd-raw-preview", tText("DECODED ✓ {{name}}", { name: cmd.name }));
   setText("cmd-field-errors", "");
   updateBytesChip();
 }
@@ -2542,18 +2588,19 @@ async function sendCommand() {
     const auth = commandAuthority(cmd.name);
     if (!auth.allowed) { setHTML("cmd-result", `<span style="color:var(--alarm)">${esc(auth.text)}</span>`); return; }
     if (isCritical(cmd) && !S.armed[cmd.name]) {
-      setHTML("cmd-result", `<span style="color:var(--warn)">critical command — ARM first</span>`);
+      setHTML("cmd-result", `<span style="color:var(--warn)">${t("critical command — ARM first")}</span>`);
       return;
     }
   }
-  setHTML("cmd-verif-stepper", renderStepper(["BUILD", "SENT", "ACCEPT (S1.1)", "EXEC (S1.7)"], 1));
+  setHTML("cmd-verif-stepper", renderStepper([tText("BUILD"), tText("SENT"), "ACCEPT (S1.1)", "EXEC (S1.7)"], 1));
   const r = await sendPus({
     service, subtype, data_hex: data, name, position: S.position });
   const ok = r.ok && (!r.json || r.json.status !== "rejected");
   // (history is recorded by sendPus() for every send, builder included)
+  const reason = (r.json && (r.json.reason || r.json.error)) || `HTTP ${r.status}`;   // server text: English
   setHTML("cmd-result", ok
-    ? `sent TC(${service},${subtype})${name ? " — " + esc(name) : ""}`
-    : `<span style="color:var(--alarm)">rejected — ${esc((r.json && (r.json.reason || r.json.error)) || `HTTP ${r.status}`)}</span>`);
+    ? t("sent {{tc}}", { tc: `TC(${service},${subtype})` }) + (name ? " — " + esc(name) : "")
+    : `<span style="color:var(--alarm)">${t("rejected — {{reason}}", { reason })}</span>`);
   if (cmd && isCritical(cmd)) { S.armed[cmd.name] = false; updateCmdBuilder(); const a = $("cmd-arm"); if (a) a.classList.remove("armed"); }
   renderBottomDrawer();
 }
@@ -2577,7 +2624,7 @@ function noteVerification(v) {
   const stepIdx = v.subtype === 1 ? 2 : v.subtype === 7 ? 3 : 2;
   const fail = !okSub;
   setHTML("cmd-verif-stepper", renderStepper(
-    ["BUILD", "SENT", fail && v.subtype === 2 ? { label: "ACCEPT (S1.1)", fail: true } : "ACCEPT (S1.1)",
+    [tText("BUILD"), tText("SENT"), fail && v.subtype === 2 ? { label: "ACCEPT (S1.1)", fail: true } : "ACCEPT (S1.1)",
      fail && v.subtype === 8 ? { label: "EXEC (S1.7)", fail: true } : "EXEC (S1.7)"], stepIdx));
   renderVerifLog();
 }
@@ -2585,7 +2632,7 @@ function renderVerifLog() {
   setHTML("cmd-verif-log", S.verifLog.map((v) =>
     `<div class="logrow ${v.verdict.includes("FAIL") ? "alarm" : ""}">` +
     `${esc(v.ts)} ${esc(v.verdict)} ${esc(v.text)}</div>`).join("") ||
-    `<div class="logrow nom">no verification reports yet</div>`);
+    `<div class="logrow nom">${t("no verification reports yet")}</div>`);
 }
 // EVERY telecommand this console sends goes out through here.
 //
@@ -2606,7 +2653,7 @@ async function sendPus(body) {
   const reason = (r.json && (r.json.reason || r.json.error)) || `HTTP ${r.status}`;
   noteHistory({ ts: tsShort(), name: b.name || `S${b.service},${b.subtype}`,
     service: b.service, subtype: b.subtype, data: b.data_hex || "",
-    verdict: ok ? "sent" : `rejected: ${reason}` });
+    verdict: ok ? tText("sent") : tText("rejected: {{reason}}", { reason }) });
   return r;
 }
 function noteHistory(h) {
@@ -2642,7 +2689,7 @@ function renderQuickCommands() {
     const auth = commandAuthority(q.command);
     const critical = isCritical(cmd);
     if (!auth.allowed) {
-      return `<span class="ds-chip off" title="${esc(auth.text)}">${esc(q.label || q.command)} — ${esc(auth.text)}</span>`;
+      return `<span class="ds-chip off" title="${esc(auth.text)}">${esc(quickLabel(q))} — ${esc(auth.text)}</span>`;
     }
     // data-quick carries the quick ENTRY name (unique), not the catalogue
     // command name: several quick entries share a command with different
@@ -2656,13 +2703,13 @@ function renderQuickCommands() {
     // console, silently, while the button reported success. An index cannot
     // collide -- fixed by construction, not by config hygiene.
     return `<button class="ds-btn ${critical ? "danger" : ""}" data-quick="${q._qi}"
-      title="${esc(provenanceText(cmd))}">${esc(q.label || q.command)}${critical ? " ⚠" : ""}</button>`;
+      title="${esc(provenanceText(cmd))}">${esc(quickLabel(q))}${critical ? " ⚠" : ""}</button>`;
   };
   setHTML("cmd-quick", Object.entries(groups).map(([g, qs]) =>
     `<div style="margin-bottom:8px"><div style="font-size:12px;letter-spacing:1px;color:var(--tx3);
-      text-transform:uppercase;margin-bottom:4px">${esc(g)}</div>
+      text-transform:uppercase;margin-bottom:4px">${esc(tdb(`qcgroup:${g}:group`, g))}</div>
       <div class="row">${qs.map(btn).join("")}</div></div>`).join("") ||
-    `<div class="logrow nom">no quick commands for this position</div>`);
+    `<div class="logrow nom">${t("no quick commands for this position")}</div>`);
   // per-subsystem in-place mirrors
   for (const pageId of SUB_PAGES) {
     const sub = PAGE_SUBSYSTEM[pageId];
@@ -2674,8 +2721,13 @@ function renderQuickCommands() {
     });
     setHTML(`${pageId}-quick-list`, mine.length
       ? `<div class="row">${mine.map(btn).join("")}</div>`
-      : `<div class="logrow nom">no quick commands for ${esc(sub)} — full builder on CMD</div>`);
+      : `<div class="logrow nom">${t("no quick commands for {{sub}} — full builder on CMD", { sub })}</div>`);
   }
+}
+
+/* Quick-command label: YAML overlay qc:<name|command>:label, else the mnemonic. */
+function quickLabel(q) {
+  return q.label ? tdb(`qc:${q.name || q.command}:label`, q.label) : q.command;
 }
 
 async function sendQuick(key) {
@@ -2695,7 +2747,7 @@ async function sendQuick(key) {
     // arm→execute in place: first press arms, second within 8 s executes
     if (!S.armed[key]) {
       S.armed[key] = true;
-      announce(`${q.label || cmd.name} ARMED — press again to execute`);
+      announce(tText("{{name}} ARMED — press again to execute", { name: q.label ? quickLabel(q) : cmd.name }));
       setTimeout(() => { S.armed[key] = false; }, 8000);
       return;
     }
@@ -2706,7 +2758,7 @@ async function sendQuick(key) {
   const data = encodeCatalogCommand(cmd, q.args || {});
   const r = await sendPus({
     service: cmd.service, subtype: cmd.subtype, data_hex: data, name: cmd.name, position: S.position });
-  announce(`${cmd.name} ${r.ok ? "sent" : "rejected"}`);
+  announce(r.ok ? tText("{{name}} sent", { name: cmd.name }) : tText("{{name}} rejected", { name: cmd.name }));
 }
 
 /* ═══ 12. DIAG (L4) — PUS service panels + PARAMS ═════════════════════════ */
@@ -2717,15 +2769,15 @@ const DIAG_TABS = [["s3", "S3 HK"], ["s11", "S11 SCHED"], ["s6", "S6 MEMORY"],
 
 function buildDiagPage() {
   return `
-  <div class="pad hide" id="page-diag" role="tabpanel" aria-label="Diagnostics">
+  <div class="pad hide" id="page-diag" role="tabpanel" aria-label="Diagnostics" data-i18n-aria-label>
     <div class="row" style="justify-content:space-between">
-      <div><h1 class="pt">PUS services</h1>
-        <p class="sub">All seven service panels from the classic PUS SERVICES tab —
+      <div><h1 class="pt" data-i18n>PUS services</h1>
+        <p class="sub" data-i18n>All seven service panels from the classic PUS SERVICES tab —
           S3 housekeeping · S11 scheduler · S6 memory · S15 stores · S12 monitoring ·
           S19 event-action · S9 time — plus the parameter catalog. S12/S19 tables are
           the same renderer FDIR mounts (one implementation, two mounts).</p></div>
-      <div class="fld"><label for="hdr-param-search">Parameter search (global)</label>
-        <input id="hdr-param-search" class="in" placeholder="name or 0xHHHH" style="min-width:240px"></div>
+      <div class="fld"><label for="hdr-param-search" data-i18n>Parameter search (global)</label>
+        <input id="hdr-param-search" class="in" placeholder="name or 0xHHHH" data-i18n-placeholder style="min-width:240px"></div>
     </div>
     <div class="guided-note" data-ann="diag.pus"></div>
     <div class="row" role="tablist" id="diag-tabs">
@@ -2849,9 +2901,9 @@ function hkObserved(sid) {
   const age = ages[String(sid)] !== undefined ? ages[String(sid)]
     : (meta.last_seen_age_s === null ? undefined : meta.last_seen_age_s);
   const interval = meta.interval_s || 60;
-  if (age === undefined || age === null) return { label: "NEVER SEEN", cls: "stale" };
-  if (age <= interval * 2.5 + 1) return { label: `PERIODIC · ${fmtAge(age)}`, cls: "ok" };
-  return { label: `SILENT · ${fmtAge(age)}`, cls: "warn" };
+  if (age === undefined || age === null) return { label: tText("NEVER SEEN"), cls: "stale" };
+  if (age <= interval * 2.5 + 1) return { label: tText("PERIODIC · {{age}}", { age: fmtAge(age) }), cls: "ok" };
+  return { label: tText("SILENT · {{age}}", { age: fmtAge(age) }), cls: "warn" };
 }
 function renderS3Panel() {
   const structures = ((S.hkStructures || {}).structures) || [];
@@ -2869,16 +2921,16 @@ function renderS3Panel() {
           <button class="ds-btn" data-s3="oneshot" data-sid="${s2.sid}">REQ</button></td></tr>`;
   }).join("");
   setHTML("diag-s3", `
-    <div class="ds-card"><h2>Housekeeping manager (S3)</h2><div class="bd">
+    <div class="ds-card"><h2>${t("Housekeeping manager (S3)")}</h2><div class="bd">
       <div class="row" style="margin-bottom:8px">
-        <button class="ds-btn" id="s3-req-all">REQUEST ALL (ONE-SHOT)</button>
-        <button class="ds-btn" id="s3-en-all">ENABLE ALL</button>
-        <button class="ds-btn" id="s3-dis-all">DISABLE ALL</button>
-        <button class="ds-btn" id="s3-reload">RELOAD DEFINITIONS</button>
+        <button class="ds-btn" id="s3-req-all">${t("REQUEST ALL (ONE-SHOT)")}</button>
+        <button class="ds-btn" id="s3-en-all">${t("ENABLE ALL")}</button>
+        <button class="ds-btn" id="s3-dis-all">${t("DISABLE ALL")}</button>
+        <button class="ds-btn" id="s3-reload">${t("RELOAD DEFINITIONS")}</button>
       </div>
-      <table class="plain"><thead><tr><th>SID</th><th>Name</th><th>APID</th><th>Interval</th>
-        <th>Params</th><th>Observed</th><th></th></tr></thead>
-        <tbody>${rows || `<tr><td colspan="7">no HK structures</td></tr>`}</tbody></table>
+      <table class="plain"><thead><tr><th>SID</th><th>${t("Name")}</th><th>APID</th><th>${t("Interval")}</th>
+        <th>${t("Params")}</th><th>${t("Observed")}</th><th></th></tr></thead>
+        <tbody>${rows || `<tr><td colspan="7">${t("no HK structures")}</td></tr>`}</tbody></table>
     </div></div>`);
 }
 async function s3Command(action, sid) {
@@ -2886,42 +2938,41 @@ async function s3Command(action, sid) {
   const [svc, sub] = map[action];
   await sendPus({ service: svc, subtype: sub,
     data_hex: sidToHex(sid), name: `HK_${action.toUpperCase()}_SID${sid}`, position: S.position });
-  announce(`S3 ${action} SID ${sid} sent`);
+  announce(tText("{{name}} sent", { name: `S3 ${action} SID ${sid}` }));
 }
 
 /* — S11 scheduler — */
 function renderS11Panel() {
   setHTML("diag-s11", `
-    <div class="ds-card"><h2>On-board schedule (S11)</h2><div class="bd">
+    <div class="ds-card"><h2>${t("On-board schedule (S11)")}</h2><div class="bd">
       <div class="row" style="margin-bottom:8px">
         <button class="ds-btn" data-s11="refresh">REFRESH LIST (11,17)</button>
         <button class="ds-btn" data-s11="enable">ENABLE (11,13)</button>
         <button class="ds-btn" data-s11="disable">DISABLE (11,9)</button>
-        <button class="ds-btn danger" data-s11="clear">CLEAR ALL</button>
+        <button class="ds-btn danger" data-s11="clear">${t("CLEAR ALL")}</button>
       </div>
       <div class="row">
-        <div class="fld"><label for="s11-mode">Time-tag mode</label>
+        <div class="fld"><label for="s11-mode">${t("Time-tag mode")}</label>
           <select id="s11-mode" class="in">
-            <option value="abs">Absolute UTC</option>
-            <option value="rel">Relative now+N min</option>
-            <option value="cuc">Raw CUC seconds</option></select></div>
-        <div class="fld"><label for="s11-time">Time value</label>
+            <option value="abs">${t("Absolute UTC")}</option>
+            <option value="rel">${t("Relative now+N min")}</option>
+            <option value="cuc">${t("Raw CUC seconds")}</option></select></div>
+        <div class="fld"><label for="s11-time">${t("Time value")}</label>
           <input id="s11-time" class="in mono" placeholder="YYYY-MM-DDTHH:MM:SS / min / s"></div>
-        <button class="ds-btn" id="s11-now">NOW</button>
-        <div class="fld"><label for="s11-cmd">Catalogue command</label>
+        <button class="ds-btn" id="s11-now">${t("NOW")}</button>
+        <div class="fld"><label for="s11-cmd">${t("Catalogue command")}</label>
           <select id="s11-cmd" class="in" style="min-width:220px">
-            <option value="">— raw svc,sub —</option>
+            <option value="">${t("— raw svc,sub —")}</option>
             ${S.tcCatalog.map((c) => `<option value="${esc(c.name)}">${esc(c.name)} (S${c.service},${c.subtype})</option>`).join("")}
           </select></div>
         <div class="fld"><label for="s11-svc">Svc,Sub</label>
           <input id="s11-svc" class="in mono" style="width:80px" placeholder="8,1"></div>
-        <div class="fld"><label for="s11-data">Data hex</label>
+        <div class="fld"><label for="s11-data">${t("Data hex")}</label>
           <input id="s11-data" class="in mono" placeholder="24 …"></div>
         <button class="ds-btn primary" id="s11-add">ADD (11,4)</button>
       </div>
       <div style="font-size:12px;color:var(--tx3);margin-top:4px">
-        Pick a catalogue command to pre-fill Svc,Sub and its default-argument hex
-        (build non-default arguments on the CMD page and paste the hex here).</div>
+        ${t("Pick a catalogue command to pre-fill Svc,Sub and its default-argument hex (build non-default arguments on the CMD page and paste the hex here).")}</div>
       <div id="s11-preview" class="mono" style="font-size:12px;color:var(--tx3);margin:6px 0"></div>
       <table class="plain" id="s11-table"></table>
     </div></div>`);
@@ -2994,18 +3045,19 @@ function renderS11Table() {
     <td class="mono">${esc(e.data || e.data_hex || "")}</td>
     <td><button class="ds-btn" data-s11-del="${e.id}">✕</button></td></tr>`;
   }).join("");
-  setHTML("s11-table", `<thead><tr><th>ID</th><th>Exec (UTC)</th><th>CUC</th><th>TC</th><th>Data</th><th></th></tr></thead>
-    <tbody>${rows || `<tr><td colspan="6">${sch ? "schedule empty" : "no schedule report — REFRESH (11,17)"}</td></tr>`}</tbody>` +
+  setHTML("s11-table", `<thead><tr><th>ID</th><th>${t("Exec (UTC)")}</th><th>CUC</th><th>TC</th><th>${t("Data")}</th><th></th></tr></thead>
+    <tbody>${rows || `<tr><td colspan="6">${sch ? t("schedule empty") : t("no schedule report — REFRESH (11,17)")}</td></tr>`}</tbody>` +
     (sch ? `<caption style="caption-side:bottom;text-align:left;font-size:12px;color:var(--tx3)">
-      schedule ${sch.enabled ? "ENABLED" : "DISABLED"} · ${sch.count ?? ((sch.entries || []).length)} entries` +
-      `${sch.next_id != null ? ` · next id ${sch.next_id}` : ""}</caption>` : ""));
+      ${t("schedule {{state}} · {{count}} entries", { state: sch.enabled ? tText("ENABLED") : tText("DISABLED"),
+        count: sch.count ?? ((sch.entries || []).length) })}` +
+      `${sch.next_id != null ? " · " + t("next id {{id}}", { id: sch.next_id }) : ""}</caption>` : ""));
 }
 async function s11Command(action) {
   const map = { refresh: [11, 17, ""], enable: [11, 13, ""], disable: [11, 9, ""], clear: [11, 3, ""] };
   const [svc, sub, data] = map[action];
   await sendPus({ service: svc, subtype: sub, data_hex: data,
     name: `S11_${action.toUpperCase()}`, position: S.position });
-  announce(`S11 ${action} sent`);
+  announce(tText("{{name}} sent", { name: `S11 ${action}` }));
   if (action === "refresh") setTimeout(loadS11Schedule, 800);
 }
 async function s11Add() {
@@ -3015,11 +3067,11 @@ async function s11Add() {
   const badTime = cuc === null;
   const badSvc = svcSub.length !== 2 || svcSub.some((x) => !Number.isFinite(x));
   if (badTime || badSvc) {
-    panelResult("s11-preview", "ADD refused — " + (
+    panelResult("s11-preview", tText("ADD refused — {{why}}", { why:
       badTime && badSvc
-        ? "no time value and no Svc,Sub. Pick a catalogue command (it fills both), or press NOW and type Svc,Sub."
-        : badTime ? "the time value is empty or unparseable for this time-tag mode. Press NOW for a starting point."
-        : "Svc,Sub is empty. Pick a catalogue command to fill it, or type it (e.g. 8,1)."), true);
+        ? tText("no time value and no Svc,Sub. Pick a catalogue command (it fills both), or press NOW and type Svc,Sub.")
+        : badTime ? tText("the time value is empty or unparseable for this time-tag mode. Press NOW for a starting point.")
+        : tText("Svc,Sub is empty. Pick a catalogue command to fill it, or type it (e.g. 8,1).") }), true);
     return;
   }
   const dataHex = String($("s11-data").value || "").replace(/[\s,]+/g, "");
@@ -3030,8 +3082,9 @@ async function s11Add() {
   await sendPus({ service: 11, subtype: 4, data_hex: payload,
     name: "S11_ADD", position: S.position });
   panelResult("s11-preview",
-    `ADD sent — CUC ${cuc} (0x${(cuc >>> 0).toString(16).toUpperCase()}), S${svcSub[0]},${svcSub[1]}` +
-    (dataHex ? ` + ${dataHex.length / 2} arg byte(s)` : ""), false);
+    tText("ADD sent — CUC {{cuc}} ({{hex}}), {{tc}}",
+      { cuc, hex: `0x${(cuc >>> 0).toString(16).toUpperCase()}`, tc: `S${svcSub[0]},${svcSub[1]}` }) +
+    (dataHex ? " " + tText("+ {{n}} arg byte(s)", { n: dataHex.length / 2 }) : ""), false);
 }
 async function s11Delete(id) {
   const v = Number(id) >>> 0;
@@ -3059,35 +3112,35 @@ export function crc16Ccitt(hexStr) {
 function renderS6Panel() {
   const regions = ((S.memoryMap || {}).regions) || [];
   setHTML("diag-s6", `
-    <div class="ds-card"><h2>Memory (S6)</h2><div class="bd">
+    <div class="ds-card"><h2>${t("Memory (S6)")}</h2><div class="bd">
       <div class="row">
-        <div class="fld"><label for="s6-region">Region</label>
+        <div class="fld"><label for="s6-region">${t("Region")}</label>
           <select id="s6-region" class="in">${regions.map((r) =>
             `<option value="${esc(String(r.start ?? r.address ?? 0))}">${esc(r.name || "region")}</option>`).join("")}
           </select></div>
-        <div class="fld"><label for="s6-addr">Address (hex)</label>
+        <div class="fld"><label for="s6-addr">${t("Address (hex)")}</label>
           <input id="s6-addr" class="in mono" value="0" style="width:110px"></div>
-        <div class="fld"><label for="s6-len">Length</label>
+        <div class="fld"><label for="s6-len">${t("Length")}</label>
           <input id="s6-len" class="in" type="number" value="64" style="width:80px"></div>
-        <div class="fld"><label for="s6-memid">Memory id</label>
+        <div class="fld"><label for="s6-memid">${t("Memory id")}</label>
           <input id="s6-memid" class="in" type="number" value="1" style="width:60px"></div>
         <button class="ds-btn" id="s6-dump">DUMP (6,5)</button>
         <button class="ds-btn" id="s6-crc">CRC CHECK (6,9)</button>
       </div>
       <div class="row" style="margin-top:8px">
-        <div class="fld" style="flex:1"><label for="s6-patch">Patch data (hex)</label>
+        <div class="fld" style="flex:1"><label for="s6-patch">${t("Patch data (hex)")}</label>
           <input id="s6-patch" class="in mono" placeholder="DE AD …"></div>
-        <input type="file" id="s6-file" aria-label="Patch file">
+        <input type="file" id="s6-file" aria-label="${t("Patch file")}">
         <button class="ds-btn" id="s6-load">1. LOAD (6,2)</button>
         <button class="ds-btn" id="s6-verify">2. VERIFY (6,9)</button>
         <button class="ds-btn" id="s6-readback">READ BACK (6,5)</button>
         <span id="s6-localcrc" class="mono" style="font-size:12px;color:var(--tx3)"></span>
       </div>
-      <table class="plain" style="margin-top:8px"><thead><tr><th>Region</th><th>Start</th><th>Size</th><th>Writable</th></tr></thead>
+      <table class="plain" style="margin-top:8px"><thead><tr><th>${t("Region")}</th><th>${t("Start")}</th><th>${t("Size")}</th><th>${t("Writable")}</th></tr></thead>
         <tbody>${regions.map((r) => `<tr><td>${esc(r.name || "")}</td>
           <td class="mono">0x${Number(r.start ?? r.address ?? 0).toString(16).toUpperCase().padStart(8, "0")}</td>
-          <td class="mono">${r.size ?? r.length ?? "—"}</td><td>${r.writable ? "yes" : "no"}</td></tr>`).join("") ||
-          `<tr><td colspan="4">memory map unavailable</td></tr>`}</tbody></table>
+          <td class="mono">${r.size ?? r.length ?? "—"}</td><td>${r.writable ? t("yes") : t("no")}</td></tr>`).join("") ||
+          `<tr><td colspan="4">${t("memory map unavailable")}</td></tr>`}</tbody></table>
       <div id="s6-dump-view" class="mono" style="font-size:12px;margin-top:8px;white-space:pre-wrap"></div>
       <div id="s6-check-view" class="mono" style="font-size:12px;margin-top:4px"></div>
     </div></div>`);
@@ -3105,7 +3158,7 @@ async function s6Command(subtype, extraHex) {
   const data = s6AddrBytes() + (extraHex ? " " + extraHex : "");
   await sendPus({ service: 6, subtype, data_hex: data,
     name: `S6_${subtype}`, position: S.position });
-  announce(`S6.${subtype} sent`);
+  announce(tText("{{name}} sent", { name: `S6.${subtype}` }));
 }
 function renderMemoryDump(d) {
   const bytes = d.data || d.bytes || [];
@@ -3115,7 +3168,7 @@ function renderMemoryDump(d) {
     hexRows.push(`0x${(Number(d.address) + i).toString(16).toUpperCase().padStart(8, "0")}  ` +
       chunk.map((b) => Number(b).toString(16).toUpperCase().padStart(2, "0")).join(" "));
   }
-  setHTML("s6-dump-view", esc(hexRows.join("\n")) || "empty dump");
+  setHTML("s6-dump-view", esc(hexRows.join("\n")) || t("empty dump"));
 }
 function renderMemoryCheck(c) {
   setHTML("s6-check-view", `CRC 0x${Number(c.address).toString(16).toUpperCase().padStart(8, "0")} ` +
@@ -3133,17 +3186,18 @@ function renderS15Panel() {
     ${stores.map(([id, nm]) => {
       const st2 = status.find((s3) => Number(s3.id) === id) || {};
       const detail = st2.count !== undefined
-        ? `${st2.count}${st2.capacity ? " / " + st2.capacity : ""} packets · ${st2.enabled ? "ENABLED" : "disabled"}${st2.circular ? " · circular" : ""}${st2.wrap_count ? ` · ${st2.wrap_count} wraps` : ""}`
+        ? `${st2.count}${st2.capacity ? " / " + st2.capacity : ""} ${tText("packets")} · ${st2.enabled ? tText("ENABLED") : tText("disabled")}` +
+          `${st2.circular ? " · " + tText("circular") : ""}${st2.wrap_count ? " · " + tText("{{n}} wraps", { n: st2.wrap_count }) : ""}`
         : "";
       return `<div class="ds-card"><h2>${id} · ${esc(st2.name || nm)}</h2><div class="bd">
-        <div class="mono" style="font-size:14px">${st2.fill_pct !== undefined ? num(st2.fill_pct, 1) + " % full" : "no report — REFRESH STATUS (15,13)"}
-          ${st2.overflow ? renderChip({ kind: "alarm", label: "OVERFLOW" }) : ""}</div>
+        <div class="mono" style="font-size:14px">${st2.fill_pct !== undefined ? t("{{v}} % full", { v: num(st2.fill_pct, 1) }) : t("no report — REFRESH STATUS (15,13)")}
+          ${st2.overflow ? renderChip({ kind: "alarm", label: tText("OVERFLOW") }) : ""}</div>
         ${detail ? `<div style="font-size:12px;color:var(--tx3)">${esc(detail)}</div>` : ""}
         <div class="row" style="margin-top:6px">
           <button class="ds-btn" data-s15st="enable" data-store="${id}">EN (15,1)</button>
           <button class="ds-btn" data-s15st="disable" data-store="${id}">DIS (15,2)</button>
           <button class="ds-btn" data-s15st="dump" data-store="${id}">DUMP (15,9)</button>
-          <button class="ds-btn danger" data-s15st="clear" data-store="${id}">CLEAR</button>
+          <button class="ds-btn danger" data-s15st="clear" data-store="${id}">${t("CLEAR")}</button>
         </div></div></div>`;
     }).join("")}
     </div>`);
@@ -3154,7 +3208,7 @@ async function s15StoreCommand(action, storeId) {
   const data = storeId ? (Number(storeId) & 0xFF).toString(16).toUpperCase().padStart(2, "0") : "";
   await sendPus({ service: 15, subtype, data_hex: data,
     name: `S15_${action.toUpperCase()}`, position: S.position });
-  announce(`S15 ${action} sent`);
+  announce(tText("{{name}} sent", { name: `S15 ${action}` }));
 }
 
 /* — S9 time — */
@@ -3163,23 +3217,23 @@ function renderS9Panel() {
   const cuc = fmtCUC(tc.sc_cuc_coarse, tc.sc_cuc_fine, tc.epoch);
   const stateCls = tc.offset_state === "alarm" ? "alarm" : tc.offset_state === "warning" ? "warn" : "ok";
   setHTML("diag-s9", `
-    <div class="ds-card"><h2>Time correlation (S9)</h2><div class="bd">
+    <div class="ds-card"><h2>${t("Time correlation (S9)")}</h2><div class="bd">
       <table class="plain"><tbody>
-        <tr><td>Ground (mission clock)</td><td class="mono">${fmtUTC(simNow(), { date: true })}</td></tr>
-        <tr><td>OBC UTC (TM 0x0309${tc.cuc_fine_available ? " + fine" : ""})</td><td class="mono">${esc(cuc.utc)}</td></tr>
-        <tr><td>OBC CUC raw</td><td class="mono">${esc(cuc.raw)}</td></tr>
-        <tr><td>Offset (sc − ground)</td><td class="mono">${tc.offset_s === null || tc.offset_s === undefined ? "—" : num(tc.offset_s, 3) + " s"}
-          ${renderChip({ kind: stateCls, label: (tc.offset_state || "unknown").toUpperCase() })}</td></tr>
-        <tr><td>Time reference</td><td class="mono">${esc(tc.time_ref_name || "—")}</td></tr>
-        <tr><td>Since last sync</td><td class="mono">${tc.never_synced ? "NEVER SYNCED" : fmtAge(tc.time_since_sync_s)}</td></tr>
+        <tr><td>${t("Ground (mission clock)")}</td><td class="mono">${fmtUTC(simNow(), { date: true })}</td></tr>
+        <tr><td>${t("OBC UTC ({{src}})", { src: `TM 0x0309${tc.cuc_fine_available ? " + " + tText("fine") : ""}` })}</td><td class="mono">${esc(cuc.utc)}</td></tr>
+        <tr><td>${t("OBC CUC raw")}</td><td class="mono">${esc(cuc.raw)}</td></tr>
+        <tr><td>${t("Offset (sc − ground)")}</td><td class="mono">${tc.offset_s === null || tc.offset_s === undefined ? "—" : num(tc.offset_s, 3) + " s"}
+          ${renderChip({ kind: stateCls, label: tc.offset_state && tc.offset_state !== "unknown" ? String(tc.offset_state).toUpperCase() : tText("UNKNOWN") })}</td></tr>
+        <tr><td>${t("Time reference")}</td><td class="mono">${esc(tc.time_ref_name || "—")}</td></tr>
+        <tr><td>${t("Since last sync")}</td><td class="mono">${tc.never_synced ? t("NEVER SYNCED") : fmtAge(tc.time_since_sync_s)}</td></tr>
       </tbody></table>
       <div class="row" style="margin-top:8px">
         <button class="ds-btn" id="s9-report">REQUEST TIME REPORT (9,2)</button>
-        <button class="ds-btn" id="s9-sync">SYNC TIME TO GROUND</button>
-        <div class="fld"><label for="s9-set">Set SC time (UTC)</label>
+        <button class="ds-btn" id="s9-sync">${t("SYNC TIME TO GROUND")}</button>
+        <div class="fld"><label for="s9-set">${t("Set SC time (UTC)")}</label>
           <input id="s9-set" class="in mono" placeholder="YYYY-MM-DDTHH:MM:SS"></div>
-        <button class="ds-btn" id="s9-set-now">NOW</button>
-        <button class="ds-btn" id="s9-set-send">SET SC TIME</button>
+        <button class="ds-btn" id="s9-set-now">${t("NOW")}</button>
+        <button class="ds-btn" id="s9-set-send">${t("SET SC TIME")}</button>
       </div>
       <div id="s9-preview" class="mono" style="font-size:12px;color:var(--tx3);margin-top:6px"></div>
     </div></div>`);
@@ -3201,7 +3255,7 @@ async function s9SetTime(iso) {
   const cuc = s9CucFor(iso);
   if (cuc === null) {
     panelResult("s9-preview",
-      "SET SC TIME refused — the time value is empty or unparseable. Press NOW to fill it.", true);
+      tText("SET SC TIME refused — the time value is empty or unparseable. Press NOW to fill it."), true);
     return;
   }
   const v = cuc >>> 0;
@@ -3210,7 +3264,7 @@ async function s9SetTime(iso) {
   await sendPus({ service: 9, subtype: 1, data_hex: data,
     name: "S9_SET_TIME", position: S.position });
   panelResult("s9-preview",
-    `SET SC TIME sent — CUC ${v} (0x${v.toString(16).toUpperCase().padStart(8, "0")})`, false);
+    tText("SET SC TIME sent — CUC {{cuc}} ({{hex}})", { cuc: v, hex: `0x${v.toString(16).toUpperCase().padStart(8, "0")}` }), false);
 }
 
 /* — PARAMS panel (classic ON-DEMAND TM tab relocated here) — */
@@ -3233,16 +3287,16 @@ function renderParamsPanel() {
         ? `<button class="ds-btn" data-od-get="${esc(p.hex)}">GET (20,3)</button>` : ""}</td></tr>`;
   }).join("");
   setHTML("diag-params", `
-    <div class="ds-card"><h2>Parameter catalog · TC(20,3) on-demand fetch</h2><div class="bd">
+    <div class="ds-card"><h2>${t("Parameter catalog · TC(20,3) on-demand fetch")}</h2><div class="bd">
       <div class="row" style="margin-bottom:6px">
-        <input id="params-filter" class="in" placeholder="filter…" value="${esc(paramsFilter)}">
-        <label style="font-size:12px"><input type="checkbox" id="params-od" ${paramsOnDemandOnly ? "checked" : ""}> on-demand only</label>
-        <button class="ds-btn" id="params-refresh">REFRESH</button>
-        <span style="font-size:12px;color:var(--tx3)">${list.length} parameters</span>
+        <input id="params-filter" class="in" placeholder="${t("filter…")}" value="${esc(paramsFilter)}">
+        <label style="font-size:12px"><input type="checkbox" id="params-od" ${paramsOnDemandOnly ? "checked" : ""}> ${t("on-demand only")}</label>
+        <button class="ds-btn" id="params-refresh">${t("REFRESH")}</button>
+        <span style="font-size:12px;color:var(--tx3)">${t("{{count}} parameters", { count: list.length })}</span>
       </div>
       <div class="scroll-y" style="max-height:420px">
-      <table class="plain"><thead><tr><th>ID</th><th>Name</th><th>Subsys</th><th>Unit</th>
-        <th>HK</th><th>OD</th><th>Value</th><th></th></tr></thead><tbody>${rows}</tbody></table>
+      <table class="plain"><thead><tr><th>ID</th><th>${t("Name")}</th><th>${t("Subsys")}</th><th>${t("Unit")}</th>
+        <th>HK</th><th>OD</th><th>${t("Value")}</th><th></th></tr></thead><tbody>${rows}</tbody></table>
       </div></div></div>`);
 }
 async function onDemandGet(hexId) {
@@ -3296,26 +3350,26 @@ export function renderS12Block(mount) {
         <button class="ds-btn" data-s12row="disable" data-mid="${m.mon_id ?? m.id}">DIS</button>
         <button class="ds-btn" data-s12row="delete" data-mid="${m.mon_id ?? m.id}">✕</button></td></tr>`).join("");
   return `
-    <div class="ds-card"><h2>On-board monitoring (S12) <span class="r">${mount} mount — one renderer</span></h2>
+    <div class="ds-card"><h2>${t("On-board monitoring (S12)")} <span class="r">${t("{{mount}} mount — one renderer", { mount })}</span></h2>
       <div class="bd">
       <div class="row" style="margin-bottom:6px">
         <button class="ds-btn" data-s12="refresh">REFRESH (12,12)</button>
         <button class="ds-btn" data-s12="enable">ENABLE MON (12,1)</button>
         <button class="ds-btn" data-s12="disable">DISABLE MON (12,2)</button>
-        <input class="in" data-s12filter placeholder="filter…" value="${esc(s12Filter)}">
-        <label style="font-size:12px"><input type="checkbox" data-s12ool ${s12OolOnly ? "checked" : ""}> out-of-limits only</label>
+        <input class="in" data-s12filter placeholder="${t("filter…")}" value="${esc(s12Filter)}">
+        <label style="font-size:12px"><input type="checkbox" data-s12ool ${s12OolOnly ? "checked" : ""}> ${t("out-of-limits only")}</label>
       </div>
       <div class="row" style="margin-bottom:6px">
-        <input class="in mono" id="s12-add-mid-${mount}" placeholder="mon id" style="width:70px">
-        <input class="in mono" id="s12-add-pid-${mount}" placeholder="param 0xHHHH" style="width:110px">
-        <select class="in" id="s12-add-type-${mount}"><option value="0">absolute</option><option value="1">delta</option></select>
-        <input class="in mono" id="s12-add-low-${mount}" placeholder="low" style="width:80px">
-        <input class="in mono" id="s12-add-high-${mount}" placeholder="high" style="width:80px">
+        <input class="in mono" id="s12-add-mid-${mount}" placeholder="${t("mon id")}" style="width:70px">
+        <input class="in mono" id="s12-add-pid-${mount}" placeholder="${t("param 0xHHHH")}" style="width:110px">
+        <select class="in" id="s12-add-type-${mount}"><option value="0">${t("absolute")}</option><option value="1">${t("delta")}</option></select>
+        <input class="in mono" id="s12-add-low-${mount}" placeholder="${t("low")}" style="width:80px">
+        <input class="in mono" id="s12-add-high-${mount}" placeholder="${t("high")}" style="width:80px">
         <button class="ds-btn" data-s12add="${mount}">ADD (12,5)</button>
       </div>
-      <table class="plain"><thead><tr><th>Mon</th><th>Param</th><th>Name</th><th>Check</th>
-        <th>Low</th><th>High</th><th>Value</th><th>En</th><th>State</th><th></th></tr></thead>
-        <tbody>${rows || `<tr><td colspan="10">no monitor table — REFRESH (12,12)</td></tr>`}</tbody></table>
+      <table class="plain"><thead><tr><th>${t("Mon")}</th><th>${t("Param")}</th><th>${t("Name")}</th><th>${t("Check")}</th>
+        <th>${t("Low")}</th><th>${t("High")}</th><th>${t("Value")}</th><th>En</th><th>${t("State")}</th><th></th></tr></thead>
+        <tbody>${rows || `<tr><td colspan="10">${t("no monitor table — REFRESH (12,12)")}</td></tr>`}</tbody></table>
       </div></div>`;
 }
 export function renderS19Block(mount) {
@@ -3330,7 +3384,7 @@ export function renderS19Block(mount) {
     <td class="mono">${r.ea_id ?? r.id ?? "—"}</td>
     <td>${esc(String(r.name || ""))}</td>
     <td>${esc(String(r.trigger_kind_name ||
-      (Number(r.trigger_kind) === 1 ? "S12 param" : "S5 event")))}</td>
+      (Number(r.trigger_kind) === 1 ? tText("S12 param") : tText("S5 event"))))}</td>
     <td class="mono">${esc(String(r.trigger_label || hex4(r.trigger_value ?? r.trigger_id)))}</td>
     <td>${esc(String(r.action || r.action_name || r.action_label ||
       (r.action_func_id != null ? `func ${r.action_func_id}` : "")))}</td>
@@ -3340,47 +3394,47 @@ export function renderS19Block(mount) {
         <button class="ds-btn" data-s19row="disable" data-eid="${r.ea_id ?? r.id}">DIS</button>
         <button class="ds-btn" data-s19row="delete" data-eid="${r.ea_id ?? r.id}">✕</button></td></tr>`).join("");
   return `
-    <div class="ds-card"><h2>Event-action rules (S19) <span class="r">${mount} mount — one renderer</span></h2>
+    <div class="ds-card"><h2>${t("Event-action rules (S19)")} <span class="r">${t("{{mount}} mount — one renderer", { mount })}</span></h2>
       <div class="bd">
       <div class="row" style="margin-bottom:6px">
         <button class="ds-btn" data-s19="refresh">REFRESH (19,8)</button>
-        <input class="in mono" id="s19-add-eid-${mount}" placeholder="EA id" style="width:70px">
+        <input class="in mono" id="s19-add-eid-${mount}" placeholder="${t("EA id")}" style="width:70px">
         <select class="in" id="s19-add-kind-${mount}">
-          <option value="0">0 — S5 event id</option><option value="1">1 — S12 parameter id</option></select>
-        <input class="in mono" id="s19-add-trig-${mount}" placeholder="trigger 0xHHHH" style="width:110px">
+          <option value="0">${t("0 — S5 event id")}</option><option value="1">${t("1 — S12 parameter id")}</option></select>
+        <input class="in mono" id="s19-add-trig-${mount}" placeholder="${t("trigger 0xHHHH")}" style="width:110px">
         <select class="in" id="s19-add-action-${mount}">${actions.map((a) => `<option>${esc(a)}</option>`).join("")}</select>
         <button class="ds-btn" data-s19add="${mount}">ADD RULE (19,1)</button>
       </div>
-      <table class="plain"><thead><tr><th>EA</th><th>Name</th><th>Kind</th><th>Trigger</th>
-        <th>Action</th><th>En</th><th>Fires</th><th></th></tr></thead>
-        <tbody>${rows || `<tr><td colspan="8">no rule table — REFRESH (19,8)</td></tr>`}</tbody></table>
+      <table class="plain"><thead><tr><th>EA</th><th>${t("Name")}</th><th>${t("Kind")}</th><th>${t("Trigger")}</th>
+        <th>${t("Action")}</th><th>En</th><th>${t("Fires")}</th><th></th></tr></thead>
+        <tbody>${rows || `<tr><td colspan="8">${t("no rule table — REFRESH (19,8)")}</td></tr>`}</tbody></table>
       </div></div>`;
 }
 
 function buildFdirPage() {
   return `
   <div class="pad hide" id="page-fdir" role="tabpanel" aria-label="FDIR">
-    <h1 class="pt">Fault detection, isolation &amp; recovery</h1>
-    <p class="sub">What the spacecraft <em>told</em> us (S5 / S12 / S19 / mode), plus recovery controls.</p>
+    <h1 class="pt" data-i18n>Fault detection, isolation &amp; recovery</h1>
+    <p class="sub" data-i18n-html>What the spacecraft <em>told</em> us (S5 / S12 / S19 / mode), plus recovery controls.</p>
     <div class="guided-note" data-ann="fdir.strip"></div>
-    <div class="ds-card"><h2>FDIR state</h2><div class="bd row" id="fdir-strip" style="gap:18px"></div></div>
+    <div class="ds-card"><h2 data-i18n>FDIR state</h2><div class="bd row" id="fdir-strip" style="gap:18px"></div></div>
     <div class="row" style="margin:10px 0">
-      <button class="ds-btn" id="fdir-refresh-all">REFRESH ALL</button>
+      <button class="ds-btn" id="fdir-refresh-all" data-i18n>REFRESH ALL</button>
       <button class="ds-btn" data-s12="refresh">REPORT MONITORS (12,12)</button>
       <button class="ds-btn" data-s19="refresh">REPORT RULES (19,8)</button>
       <button class="ds-btn" data-s12="enable">ENABLE MONITORING (12,1)</button>
       <button class="ds-btn" data-s12="disable">DISABLE MONITORING (12,2)</button>
-      <button class="ds-btn" id="fdir-ack-all">ACK ALL ALARMS</button>
+      <button class="ds-btn" id="fdir-ack-all" data-i18n>ACK ALL ALARMS</button>
     </div>
     <div id="fdir-autonomy-host"></div>
     <div class="g" style="grid-template-columns:1fr;margin-top:10px">
       <div id="fdir-s12"></div>
       <div id="fdir-s19"></div>
-      <div class="ds-card"><h2>Alarm / anomaly journal</h2><div class="bd">
+      <div class="ds-card"><h2 data-i18n>Alarm / anomaly journal</h2><div class="bd">
         <div class="row" style="font-size:12px;margin-bottom:6px">
           ${["s5:S5 events", "s12:S12 transitions", "s19:S19 rule fires", "tcrej:TC rejections", "mode:mode changes"]
             .map((x) => { const [k, l] = x.split(":");
-              return `<label><input type="checkbox" data-fdir-j="${k}" checked> ${l}</label>`; }).join(" ")}
+              return `<label data-i18n><input type="checkbox" data-fdir-j="${k}" checked> ${l}</label>`; }).join(" ")}
         </div>
         <div class="scroll-y" style="max-height:240px" id="fdir-journal"></div>
       </div></div>
@@ -3399,14 +3453,14 @@ function renderFdirPage() {
     (d.monitors || []).filter((m) => m.out_of_limits ||
       /viol|out/i.test(String(m.status || ""))).length;
   const strip = [
-    ["FDIR LEVEL", fst.fdir_level ?? d.fdir_level ?? paramVal("0x0700") ?? "—", ""],
-    ["SC MODE", mode.label, `src: ${mode.src}`],
-    ["LATCHED", (fst.safe_latched ?? d.latched_safe) ? "SAFE"
+    [tText("FDIR LEVEL"), fst.fdir_level ?? d.fdir_level ?? paramVal("0x0700") ?? "—", ""],
+    [tText("SC MODE"), mode.label, tText("src: {{src}}", { src: mode.src })],
+    [tText("LATCHED"), (fst.safe_latched ?? d.latched_safe) ? "SAFE"
       : (fst.emergency_latched ?? d.latched_emergency) ? "EMERG" : "—",
       fst.latch_source || ""],
-    ["LOAD SHED", fst.load_shed_stage ?? paramVal("0x0134") ?? "—", ""],
-    ["MONITORS OOL", oolCount, ""],
-    ["ACTIVE ALARMS", paramVal("0x0701") ?? (d.active_alarms || []).length, "TM 0x0701"],
+    [tText("LOAD SHED"), fst.load_shed_stage ?? paramVal("0x0134") ?? "—", ""],
+    [tText("MONITORS OOL"), oolCount, ""],
+    [tText("ACTIVE ALARMS"), paramVal("0x0701") ?? (d.active_alarms || []).length, "TM 0x0701"],
   ];
   setHTML("fdir-strip", strip.map(([k, v, s2]) => `
     <div><div style="font-size:12px;letter-spacing:1px;color:var(--tx3)">${esc(k)}</div>
@@ -3419,24 +3473,23 @@ function renderFdirPage() {
   if (host) {
     if (S.timeMode === "sim" && (S.state.sim_health || {}).fdir) {
       const a = S.state.sim_health.fdir;
-      host.innerHTML = `<div class="ds-card"><h2>SIMULATED ON-BOARD AUTONOMY
-        <span class="r">instructor truth — not downlinked</span></h2><div class="bd">
+      host.innerHTML = `<div class="ds-card"><h2>${t("SIMULATED ON-BOARD AUTONOMY")}
+        <span class="r">${t("instructor truth — not downlinked")}</span></h2><div class="bd">
         <div class="guided-note" data-ann="fdir.autonomy"></div>
         <div class="row" style="gap:18px">
-          <div>active faults: <b class="mono">${(a.active_faults || []).length}</b></div>
-          <div>pending cascades: <b class="mono">${(a.pending_cascades || []).length}</b></div>
-          <div>recovery attempts: <b class="mono">${(a.recovery_attempts || []).length || (a.recoveries || []).length || 0}</b></div>
+          <div>${t("active faults:")} <b class="mono">${(a.active_faults || []).length}</b></div>
+          <div>${t("pending cascades:")} <b class="mono">${(a.pending_cascades || []).length}</b></div>
+          <div>${t("recovery attempts:")} <b class="mono">${(a.recovery_attempts || []).length || (a.recoveries || []).length || 0}</b></div>
         </div>
         ${(a.procedures || []).map((p) => `<div style="margin-top:6px;font-size:12.5px">
-          ${esc(p.name || "on-board procedure")} — ${num(p.progress, 0)} %</div>`).join("")}
+          ${p.name ? esc(p.name) : t("on-board procedure")} — ${num(p.progress, 0)} %</div>`).join("")}
         </div></div>`;
       applyAnnotations();
     } else {
-      host.innerHTML = `<div class="ds-card"><h2>On-board autonomy — as telemetered</h2>
+      host.innerHTML = `<div class="ds-card"><h2>${t("On-board autonomy — as telemetered")}</h2>
         <div class="bd" style="font-size:13px;color:var(--tx2)">
-        A real spacecraft does not downlink its fault-cascade queue. The honest ground view is
-        what it <em>told</em> us: S5 events (drawer below), S12 monitor transitions (table),
-        S19 rule fires, and the mode itself (${esc(mode.label)}, ${esc(mode.src)}).</div></div>`;
+        ${t("A real spacecraft does not downlink its fault-cascade queue. The honest ground view is what it <em>told</em> us: S5 events (drawer below), S12 monitor transitions (table), S19 rule fires, and the mode itself ({{mode}}, {{src}}).",
+          { mode: mode.label, src: mode.src })}</div></div>`;
     }
   }
   setHTML("fdir-s12", renderS12Block("fdir"));
@@ -3456,70 +3509,70 @@ function renderFdirJournal() {
   }).slice(-80).reverse().map((e) => renderEventRow({
     severity: e.severity, subsystem: e.subsystem, utc: e.utc || fmtUTC(e.timestamp),
     description: e.text || e.message || e.description })).join("");
-  setHTML("fdir-journal", rows || `<div class="logrow nom">journal empty</div>`);
+  setHTML("fdir-journal", rows || `<div class="logrow nom">${t("journal empty")}</div>`);
 }
 
 /* ═══ 14. PROC — procedures ═══════════════════════════════════════════════ */
 
 function buildProcPage() {
   return `
-  <div class="pad hide" id="page-proc" role="tabpanel" aria-label="Procedures">
-    <h1 class="pt">Procedures</h1>
-    <p class="sub">Loader · step-by-step runner · document viewer · manual override · builder.
+  <div class="pad hide" id="page-proc" role="tabpanel" aria-label="Procedures" data-i18n-aria-label>
+    <h1 class="pt" data-i18n>Procedures</h1>
+    <p class="sub" data-i18n>Loader · step-by-step runner · document viewer · manual override · builder.
       Reachable from any alarm row (P7.6).</p>
     <div class="guided-note" data-ann="proc.runner"></div>
     <div class="g" style="grid-template-columns:minmax(0,1fr) 420px;align-items:start">
       <div class="g">
-        <div class="ds-card"><h2>Load &amp; run</h2><div class="bd">
+        <div class="ds-card"><h2 data-i18n>Load &amp; run</h2><div class="bd">
           <div class="row">
-            <div class="fld"><label for="proc-source">Source</label>
+            <div class="fld"><label for="proc-source" data-i18n>Source</label>
               <select id="proc-source" class="in">
-                <option value="activity">Activity type</option>
-                <option value="ops">Ops procedure</option>
-                <option value="saved">Saved procedure</option></select></div>
-            <div class="fld"><label for="proc-type">Procedure</label>
+                <option value="activity" data-i18n>Activity type</option>
+                <option value="ops" data-i18n>Ops procedure</option>
+                <option value="saved" data-i18n>Saved procedure</option></select></div>
+            <div class="fld"><label for="proc-type" data-i18n>Procedure</label>
               <select id="proc-type" class="in" style="min-width:260px"></select></div>
-            <label style="font-size:12px"><input type="checkbox" id="proc-stepwise" checked> step-by-step</label>
+            <label style="font-size:12px" data-i18n><input type="checkbox" id="proc-stepwise" checked> step-by-step</label>
           </div>
           <div class="row" style="margin-top:8px">
-            <button class="ds-btn primary" data-proc="load">LOAD</button>
-            <button class="ds-btn" data-proc="start">START</button>
-            <button class="ds-btn" data-proc="pause">PAUSE</button>
-            <button class="ds-btn" data-proc="resume">RESUME</button>
-            <button class="ds-btn" data-proc="step">STEP</button>
-            <button class="ds-btn" data-proc="skip">SKIP</button>
-            <button class="ds-btn danger" data-proc="abort">ABORT</button>
+            <button class="ds-btn primary" data-proc="load" data-i18n>LOAD</button>
+            <button class="ds-btn" data-proc="start" data-i18n>START</button>
+            <button class="ds-btn" data-proc="pause" data-i18n>PAUSE</button>
+            <button class="ds-btn" data-proc="resume" data-i18n>RESUME</button>
+            <button class="ds-btn" data-proc="step" data-i18n>STEP</button>
+            <button class="ds-btn" data-proc="skip" data-i18n>SKIP</button>
+            <button class="ds-btn danger" data-proc="abort" data-i18n>ABORT</button>
           </div>
           <div id="proc-exec-status" style="margin-top:10px"></div>
           <div class="scroll-y" style="max-height:220px;margin-top:6px" id="proc-exec-log"></div>
         </div></div>
-        <div class="ds-card"><h2>Procedure document</h2>
-          <div class="bd scroll-y" style="max-height:320px" id="proc-doc">select a procedure…</div></div>
+        <div class="ds-card"><h2 data-i18n>Procedure document</h2>
+          <div class="bd scroll-y" style="max-height:320px" id="proc-doc"><span data-i18n>select a procedure…</span></div></div>
       </div>
       <div class="g" style="align-content:start">
-        <div class="ds-card"><h2>Manual override <span class="r">arbitrary TC during a run</span></h2>
+        <div class="ds-card"><h2 data-i18n>Manual override <span class="r" data-i18n>arbitrary TC during a run</span></h2>
           <div class="bd"><div class="row">
             <input id="proc-ov-svc" class="in mono" placeholder="svc" style="width:60px">
             <input id="proc-ov-sub" class="in mono" placeholder="sub" style="width:60px">
-            <input id="proc-ov-data" class="in mono" placeholder="data hex" style="flex:1">
-            <button class="ds-btn" id="proc-ov-send">SEND OVERRIDE</button>
+            <input id="proc-ov-data" class="in mono" placeholder="data hex" data-i18n-placeholder style="flex:1">
+            <button class="ds-btn" id="proc-ov-send" data-i18n>SEND OVERRIDE</button>
           </div><div id="proc-ov-result" style="font-size:12px;color:var(--tx3);margin-top:6px"></div></div></div>
-        <div class="ds-card"><h2>Procedure builder</h2><div class="bd">
+        <div class="ds-card"><h2 data-i18n>Procedure builder</h2><div class="bd">
           <div class="row">
-            <input id="pb-name" class="in" placeholder="procedure name" style="flex:1">
+            <input id="pb-name" class="in" placeholder="procedure name" data-i18n-placeholder style="flex:1">
             <select id="pb-step-type" class="in">
-              <option value="command">Command</option><option value="tlm_check">Telemetry check</option>
-              <option value="wait">Wait</option><option value="gonogo">GO-NO-GO</option>
-              <option value="note">Note</option></select>
-            <button class="ds-btn" id="pb-add">+ ADD</button>
+              <option value="command" data-i18n>Command</option><option value="tlm_check" data-i18n>Telemetry check</option>
+              <option value="wait" data-i18n>Wait</option><option value="gonogo">GO-NO-GO</option>
+              <option value="note" data-i18n>Note</option></select>
+            <button class="ds-btn" id="pb-add" data-i18n>+ ADD</button>
           </div>
           <div id="pb-step-fields" class="row" style="margin-top:6px"></div>
           <ol id="pb-steps" style="margin:8px 0 0 18px;font-size:13px"></ol>
           <div class="row" style="margin-top:8px">
-            <button class="ds-btn" id="pb-save">SAVE PROCEDURE</button>
-            <button class="ds-btn" id="pb-run">RUN THESE STEPS</button>
-            <button class="ds-btn" id="pb-clear">CLEAR</button>
-            <select id="pb-saved" class="in"><option value="">— load saved —</option></select>
+            <button class="ds-btn" id="pb-save" data-i18n>SAVE PROCEDURE</button>
+            <button class="ds-btn" id="pb-run" data-i18n>RUN THESE STEPS</button>
+            <button class="ds-btn" id="pb-clear" data-i18n>CLEAR</button>
+            <select id="pb-saved" class="in"><option value="" data-i18n>— load saved —</option></select>
           </div>
           <div id="pb-result" style="font-size:12px;color:var(--tx3);margin-top:6px"></div>
         </div></div>
@@ -3546,11 +3599,11 @@ async function loadProcSources() {
       const d = await getJSON("/api/procedure/custom");
       opts = (d.procedures || []).map((p) => [p.id || p.name, p.name || p.id]);
       const saved = $("pb-saved");
-      if (saved) saved.innerHTML = `<option value="">— load saved —</option>` +
+      if (saved) saved.innerHTML = `<option value="">${t("— load saved —")}</option>` +
         opts.map(([v, l]) => `<option value="${esc(String(v))}">${esc(String(l))}</option>`).join("");
     }
     sel.innerHTML = opts.map(([v, l]) => `<option value="${esc(String(v))}">${esc(String(l))}</option>`).join("");
-  } catch (e) { sel.innerHTML = `<option value="">unavailable</option>`; }
+  } catch (e) { sel.innerHTML = `<option value="">${t("unavailable")}</option>`; }
   loadProcDoc();
 }
 async function loadProcDoc() {
@@ -3558,11 +3611,17 @@ async function loadProcDoc() {
   const v = $("proc-type") ? $("proc-type").value : "";
   if (src !== "ops" || !v) { return; }
   try {
-    const txt = await (await fetch(`/api/procedures/${encodeURIComponent(v)}`)).text();
-    // Same JSON-as-markdown defect as the manual viewer (2026-08-20).
-    setHTML("proc-doc", renderMarkdown(
-      (txt && typeof txt === "object") ? (txt.content_md || "") : txt));
-  } catch (e) { setHTML("proc-doc", "document unavailable"); }
+    // ?lang= is DISPLAY-only (i18n S0): the server returns the translated
+    // document when one exists, else English. Execution never reads this.
+    const txt = await (await fetch(
+      `/api/procedures/${encodeURIComponent(v)}?lang=${getLang()}`)).text();
+    // Same JSON-as-markdown defect as the manual viewer (2026-08-20): the
+    // response is the {title, content_md} envelope, not bare markdown.
+    let md = txt;
+    try { const j = JSON.parse(txt); if (j && typeof j === "object") md = j.content_md || ""; }
+    catch (e) { /* plain markdown */ }
+    setHTML("proc-doc", renderMarkdown(md));
+  } catch (e) { setHTML("proc-doc", t("document unavailable")); }
 }
 export function renderMarkdown(md) {
   // Small, safe markdown subset (headings, bold, code, lists) — classic parity.
@@ -3597,13 +3656,13 @@ async function procAction(action) {
     if (source === "activity") body.activity_type = id;
     if (source === "ops") body.path = id;
     const r = await postJSON("/api/procedure/load", body);
-    setHTML("proc-exec-status", r.ok ? "loaded" :
-      `<span style="color:var(--alarm)">load failed (${r.status})</span>`);
+    setHTML("proc-exec-status", r.ok ? t("loaded") :
+      `<span style="color:var(--alarm)">${t("load failed ({{status}})", { status: r.status })}</span>`);
     startProcPolling();
     return;
   }
   const r = await postJSON(`/api/procedure/${action}`, {});
-  if (!r.ok) setHTML("proc-exec-status", `<span style="color:var(--alarm)">${action} failed (${r.status})</span>`);
+  if (!r.ok) setHTML("proc-exec-status", `<span style="color:var(--alarm)">${t("{{action}} failed ({{status}})", { action, status: r.status })}</span>`);
   if (action === "start") startProcPolling();
 }
 function startProcPolling() {
@@ -3621,24 +3680,24 @@ function renderProcStatus() {
   const steps = st.steps || [];
   const idx = st.current_step ?? st.step_index ?? -1;
   setHTML("proc-exec-status",
-    `<div style="font-size:13px">${esc(st.name || st.procedure || "no procedure loaded")} — ` +
+    `<div style="font-size:13px">${esc(st.name || st.procedure || tText("no procedure loaded"))} — ` +
     `<b>${esc(String(st.state || st.status || "idle").toUpperCase())}</b></div>` +
-    renderStepper(steps.map((s2) => (s2.name || s2.description || "step")), Number(idx)));
+    renderStepper(steps.map((s2) => (s2.name || s2.description || tText("step"))), Number(idx)));
   setHTML("proc-exec-log", (st.log || []).slice(-50).reverse()
     .map((l) => `<div class="logrow">${esc(typeof l === "string" ? l : (l.text || JSON.stringify(l)))}</div>`).join(""));
 }
 function pbFieldMarkup() {
-  const t = $("pb-step-type") ? $("pb-step-type").value : "command";
+  const kind = $("pb-step-type") ? $("pb-step-type").value : "command";
   const f = {
     command: `<input class="in mono" id="pb-f-svc" placeholder="svc,sub" style="width:80px">
-      <input class="in mono" id="pb-f-data" placeholder="data hex" style="flex:1">`,
-    tlm_check: `<input class="in mono" id="pb-f-param" placeholder="param (name or 0xHHHH)" style="flex:1">
+      <input class="in mono" id="pb-f-data" placeholder="${t("data hex")}" style="flex:1">`,
+    tlm_check: `<input class="in mono" id="pb-f-param" placeholder="${t("param (name or 0xHHHH)")}" style="flex:1">
       <select class="in" id="pb-f-op"><option>==</option><option>&lt;</option><option>&gt;</option></select>
-      <input class="in mono" id="pb-f-val" placeholder="value" style="width:90px">`,
-    wait: `<input class="in" id="pb-f-wait" type="number" placeholder="seconds" style="width:110px">`,
-    gonogo: `<input class="in" id="pb-f-label" placeholder="poll label" style="flex:1">`,
-    note: `<input class="in" id="pb-f-note" placeholder="note text" style="flex:1">`,
-  }[t];
+      <input class="in mono" id="pb-f-val" placeholder="${t("value")}" style="width:90px">`,
+    wait: `<input class="in" id="pb-f-wait" type="number" placeholder="${t("seconds")}" style="width:110px">`,
+    gonogo: `<input class="in" id="pb-f-label" placeholder="${t("poll label")}" style="flex:1">`,
+    note: `<input class="in" id="pb-f-note" placeholder="${t("note text")}" style="flex:1">`,
+  }[kind];
   return f || "";
 }
 function pbAddStep() {
@@ -3663,14 +3722,14 @@ function renderPbSteps() {
 async function pbSave() {
   const r = await postJSON("/api/procedure/save",
     { name: $("pb-name").value || "unnamed", steps: pb.steps });
-  setText("pb-result", r.ok ? "saved" : `save failed (${r.status})`);
+  setText("pb-result", r.ok ? tText("saved") : tText("save failed ({{status}})", { status: r.status }));
   loadProcSources();
 }
 async function pbRun() {
   const r = await postJSON("/api/procedure/load",
     { source: "inline", name: $("pb-name").value || "builder steps",
       steps: pb.steps, step_by_step: true });
-  setText("pb-result", r.ok ? "loaded — use runner controls" : `run failed (${r.status})`);
+  setText("pb-result", r.ok ? tText("loaded — use runner controls") : tText("run failed ({{status}})", { status: r.status }));
   startProcPolling();
 }
 
@@ -3678,52 +3737,52 @@ async function pbRun() {
 
 function buildTrndPage() {
   return `
-  <div class="pad hide" id="page-trnd" role="tabpanel" aria-label="Trends">
-    <h1 class="pt">Trends</h1>
-    <p class="sub">Ground archive · eclipse/contact context · alarm &amp; event markers (P8)</p>
+  <div class="pad hide" id="page-trnd" role="tabpanel" aria-label="Trends" data-i18n-aria-label>
+    <h1 class="pt" data-i18n>Trends</h1>
+    <p class="sub" data-i18n>Ground archive · eclipse/contact context · alarm &amp; event markers (P8)</p>
     <div id="trnd-provenance"></div>
     <div class="guided-note" data-ann="trnd.archive"></div>
     <div class="g" style="grid-template-columns:280px minmax(0,1fr);align-items:start">
       <div class="g" style="align-content:start">
-        <div class="ds-card"><h2>Query</h2><div class="bd">
-          <div class="fld"><label for="trnd-window">Window</label>
+        <div class="ds-card"><h2 data-i18n>Query</h2><div class="bd">
+          <div class="fld"><label for="trnd-window" data-i18n>Window</label>
             <select id="trnd-window" class="in">
               <option value="900">15 m</option><option value="3600" selected>1 h</option>
               <option value="10800">3 h</option><option value="21600">6 h</option>
               <option value="43200">12 h</option><option value="86400">24 h</option>
-              <option value="604800">7 d</option></select></div>
-          <div class="fld" style="margin-top:6px"><label for="trnd-filter">Parameter filter</label>
-            <input id="trnd-filter" class="in" placeholder="filter…"></div>
+              <option value="604800" data-i18n>7 d</option></select></div>
+          <div class="fld" style="margin-top:6px"><label for="trnd-filter" data-i18n>Parameter filter</label>
+            <input id="trnd-filter" class="in" placeholder="filter…" data-i18n-placeholder></div>
           <div style="font-size:12px;margin-top:6px">
-            <label><input type="checkbox" id="trnd-bands" checked> limit bands</label><br>
-            <label><input type="checkbox" id="trnd-shade" checked> eclipse/contact shading</label><br>
-            <label><input type="checkbox" id="trnd-markers" checked> event + alarm markers</label><br>
-            <label><input type="checkbox" id="trnd-norm"> normalise 0–100 %</label>
+            <label data-i18n><input type="checkbox" id="trnd-bands" checked> limit bands</label><br>
+            <label data-i18n><input type="checkbox" id="trnd-shade" checked> eclipse/contact shading</label><br>
+            <label data-i18n><input type="checkbox" id="trnd-markers" checked> event + alarm markers</label><br>
+            <label data-i18n><input type="checkbox" id="trnd-norm"> normalise 0–100 %</label>
           </div>
           <div class="row" style="margin-top:8px">
-            <button class="ds-btn primary" id="trnd-refresh">REFRESH</button>
-            <button class="ds-btn" id="trnd-csv">EXPORT CSV</button>
+            <button class="ds-btn primary" id="trnd-refresh" data-i18n>REFRESH</button>
+            <button class="ds-btn" id="trnd-csv" data-i18n>EXPORT CSV</button>
           </div>
           <select id="trnd-params" class="in" multiple size="12" style="width:100%;margin-top:8px"
-            aria-label="Parameters to trend"></select>
+            aria-label="Parameters to trend" data-i18n-aria-label></select>
         </div></div>
-        <div class="ds-card"><h2>Subsystem playback</h2><div class="bd row">
+        <div class="ds-card"><h2 data-i18n>Subsystem playback</h2><div class="bd row">
           <select id="trnd-playback-sub" class="in">
             ${["eps", "tcs", "aocs", "ttc", "payload", "prop", "obdh"].map((s2) => `<option>${s2}</option>`).join("")}</select>
-          <button class="ds-btn" id="trnd-playback">LOAD SUBSYSTEM</button>
+          <button class="ds-btn" id="trnd-playback" data-i18n>LOAD SUBSYSTEM</button>
         </div></div>
       </div>
       <div class="g">
-        <div class="ds-card"><h2>Chart</h2><div class="bd">
+        <div class="ds-card"><h2 data-i18n>Chart</h2><div class="bd">
           <div id="trnd-chart-host"><canvas id="trnd-chart" height="240"></canvas></div></div></div>
-        <div class="ds-card"><h2>Alarms in window</h2>
+        <div class="ds-card"><h2 data-i18n>Alarms in window</h2>
           <div class="bd scroll-y" style="max-height:150px" id="trnd-alarms"></div></div>
-        <div class="ds-card"><h2>Events in window</h2>
+        <div class="ds-card"><h2 data-i18n>Events in window</h2>
           <div class="bd scroll-y" style="max-height:150px" id="trnd-events"></div></div>
-        <div class="ds-card"><h2>Command history (archived)</h2>
+        <div class="ds-card"><h2 data-i18n>Command history (archived)</h2>
           <div class="bd scroll-y" style="max-height:150px" id="trnd-cmds"></div></div>
-        <div class="ds-card"><h2>Baseline vs now — health (NOM-011)
-          <span class="r">baseline: annotations.yaml commissioning snapshot</span></h2>
+        <div class="ds-card"><h2 data-i18n>Baseline vs now — health (NOM-011)
+          <span class="r" data-i18n>baseline: annotations.yaml commissioning snapshot</span></h2>
           <div class="bd">
             <div class="guided-note" data-ann="trnd.baseline"></div>
             <div id="trnd-baseline"></div>
@@ -3739,9 +3798,9 @@ function archiveBanner(status, detail) {
   // four-state provenance: ok / unavailable / failed / legacy
   const map = {
     ok: ["", ""],
-    unavailable: ["stale", "ARCHIVE UNAVAILABLE — server has no archive database"],
-    failed: ["alarm", `ARCHIVE QUERY FAILED — ${detail || ""}`],
-    legacy: ["warn", "LEGACY ARCHIVE — schema predates provenance fields"],
+    unavailable: ["stale", tText("ARCHIVE UNAVAILABLE — server has no archive database")],
+    failed: ["alarm", tText("ARCHIVE QUERY FAILED — {{detail}}", { detail: detail || "" })],
+    legacy: ["warn", tText("LEGACY ARCHIVE — schema predates provenance fields")],
   };
   const [cls, text] = map[status] || map.failed;
   setHTML("trnd-provenance", text ? `<div class="ds-banner ${cls}">${esc(text)}</div>` : "");
@@ -3793,8 +3852,8 @@ function drawTrendChart(series) {
   const host = $("trnd-chart-host");
   if (typeof Chart === "undefined") {
     // vendor guard (R3): designed absence + textual latest values
-    if (host) host.innerHTML = `<div class="ds-banner stale">Chart.js not installed
-      (/static/vendor/js/chart.umd.min.js) — latest archive values:</div>` +
+    if (host) host.innerHTML = `<div class="ds-banner stale">${t("Chart.js not installed ({{path}}) — latest archive values:",
+      { path: "/static/vendor/js/chart.umd.min.js" })}</div>` +
       `<table class="plain">${series.filter((s2) => !s2.context).map((s2) => {
         const last = s2.rows[s2.rows.length - 1];
         return `<tr><td>${esc(s2.name)}</td><td class="mono">${last ? num(last.value ?? last[1], 3) : "—"}</td></tr>`;
@@ -3826,19 +3885,19 @@ async function loadArchiveTables(start, end) {
   try {
     const a = await getJSON(`/api/archive/alarms${q}`);
     setHTML("trnd-alarms", (a.alarms || a.rows || []).slice(-40).reverse().map((r) =>
-      renderAlarmRow({ ...r, utc: fmtUTC(r.timestamp) })).join("") || `<div class="logrow nom">none</div>`);
-  } catch (e) { setHTML("trnd-alarms", `<div class="logrow nom">archive alarms unavailable</div>`); }
+      renderAlarmRow({ ...r, utc: fmtUTC(r.timestamp) })).join("") || `<div class="logrow nom">${t("none")}</div>`);
+  } catch (e) { setHTML("trnd-alarms", `<div class="logrow nom">${t("archive alarms unavailable")}</div>`); }
   try {
     const ev = await getJSON(`/api/archive/events${q}`);
     setHTML("trnd-events", (ev.events || ev.rows || []).slice(-40).reverse().map((r) =>
-      renderEventRow({ ...r, utc: fmtUTC(r.timestamp) })).join("") || `<div class="logrow nom">none</div>`);
-  } catch (e) { setHTML("trnd-events", `<div class="logrow nom">archive events unavailable</div>`); }
+      renderEventRow({ ...r, utc: fmtUTC(r.timestamp) })).join("") || `<div class="logrow nom">${t("none")}</div>`);
+  } catch (e) { setHTML("trnd-events", `<div class="logrow nom">${t("archive events unavailable")}</div>`); }
   try {
     const c = await getJSON(`/api/archive/commands${q}`);
     setHTML("trnd-cmds", (c.commands || c.rows || []).slice(-40).reverse().map((r) =>
       `<div class="logrow">${fmtUTC(r.timestamp)} ${esc(r.name || `S${r.service},${r.subtype}`)} — ${esc(r.verdict || r.status || "")}</div>`).join("") ||
-      `<div class="logrow nom">none</div>`);
-  } catch (e) { setHTML("trnd-cmds", `<div class="logrow nom">archive commands unavailable</div>`); }
+      `<div class="logrow nom">${t("none")}</div>`);
+  } catch (e) { setHTML("trnd-cmds", `<div class="logrow nom">${t("archive commands unavailable")}</div>`); }
 }
 function exportTrendCsv() {
   const lines = ["series,ts,value"];
@@ -3868,23 +3927,23 @@ async function loadSubsystemPlayback() {
 
 function buildManPage() {
   return `
-  <div class="pad hide" id="page-man" role="tabpanel" aria-label="Manual">
-    <h1 class="pt">Operations manual</h1>
-    <p class="sub">Sections filtered to your position; search covers titles and body text.</p>
+  <div class="pad hide" id="page-man" role="tabpanel" aria-label="Manual" data-i18n-aria-label>
+    <h1 class="pt" data-i18n>Operations manual</h1>
+    <p class="sub" data-i18n>Sections filtered to your position; search covers titles and body text.</p>
     <div class="g" style="grid-template-columns:300px minmax(0,1fr);align-items:start">
-      <div class="ds-card"><h2>Contents</h2><div class="bd">
-        <input id="man-search" class="in" placeholder="search…" style="width:100%;margin-bottom:8px">
+      <div class="ds-card"><h2 data-i18n>Contents</h2><div class="bd">
+        <input id="man-search" class="in" placeholder="search…" data-i18n-placeholder style="width:100%;margin-bottom:8px">
         <div id="man-toc" class="scroll-y" style="max-height:480px"></div>
         <div class="sub" style="margin-top:6px">sections <span id="man-count">0/0</span></div></div></div>
       <div class="ds-card"><h2 id="man-title">—</h2>
-        <div class="bd scroll-y" style="max-height:560px" id="man-body">select a section…</div></div>
+        <div class="bd scroll-y" style="max-height:560px" id="man-body"><span data-i18n>select a section…</span></div></div>
     </div>
-    <div class="ds-card" style="margin-top:12px"><h2>Procedure cards — your position</h2>
+    <div class="ds-card" style="margin-top:12px"><h2 data-i18n>Procedure cards — your position</h2>
       <div class="bd">
         <div class="row" style="gap:10px;align-items:center;margin-bottom:8px">
-          <label class="sub"><input type="checkbox" id="pcard-mine-only" checked>
+          <label class="sub" data-i18n><input type="checkbox" id="pcard-mine-only" checked>
             only cards my position is required for</label>
-          <input id="pcard-search" class="in" placeholder="filter cards…" style="max-width:260px">
+          <input id="pcard-search" class="in" placeholder="filter cards…" data-i18n-placeholder style="max-width:260px">
           <span class="sub" id="pcard-count"></span>
         </div>
         <div id="pcard-list" class="scroll-y" style="max-height:520px"></div>
@@ -3933,26 +3992,28 @@ function renderProcedureCards() {
   const f = ($("pcard-search") ? $("pcard-search").value : "").toLowerCase();
   const cards = all.filter((c) => (!mineOnly || c.relevant) &&
     (!f || `${c.id} ${c.name} ${c.category}`.toLowerCase().includes(f)));
-  setText("pcard-count", `${cards.length}/${all.length} cards`);
+  setText("pcard-count", tText("{{n}}/{{m}} cards", { n: cards.length, m: all.length }));
   if (!cards.length) {
-    host.innerHTML = `<div class="logrow nom">no procedure cards for this position</div>`;
+    host.innerHTML = `<div class="logrow nom">${t("no procedure cards for this position")}</div>`;
     return;
   }
   host.innerHTML = cards.map((c) => {
     const open = S.procCardOpen === c.id;
+    // YAML overlay proc:<id>:name / proc:<id>:position_roles.<position>
     const roleLine = c.my_role
-      ? `<div class="sub" style="margin:2px 0 6px">Your role: ${esc(c.my_role)}</div>`
+      ? `<div class="sub" style="margin:2px 0 6px">${t("Your role: {{role}}",
+          { role: tdb(`proc:${c.id}:position_roles.${S.position}`, c.my_role) })}</div>`
       : (c.relevant
-          ? `<div class="sub" style="margin:2px 0 6px">Your position is required; no per-position role recorded for this card.</div>`
+          ? `<div class="sub" style="margin:2px 0 6px">${t("Your position is required; no per-position role recorded for this card.")}</div>`
           : "");
     const mineChip = c.my_step_count
-      ? `<span class="ds-badge">${c.my_step_count} step${c.my_step_count === 1 ? "" : "s"} yours</span>`
+      ? `<span class="ds-badge">${t("{{count}} step yours", { count: c.my_step_count, plural: "{{count}} steps yours" })}</span>`
       : "";
     const body = open ? `
       ${roleLine}
-      <div class="sub" style="margin-bottom:6px">Required: ${
-        esc((c.required_positions || []).join(", ") || "—")}</div>
-      <table class="plain man-tbl"><tr><th>#</th><th>Step</th><th>Owner</th></tr>
+      <div class="sub" style="margin-bottom:6px">${t("Required: {{list}}",
+        { list: (c.required_positions || []).join(", ") || "—" })}</div>
+      <table class="plain man-tbl"><tr><th>#</th><th>${t("Step")}</th><th>${t("Owner")}</th></tr>
       ${(c.steps || []).map((st) => {
         const own = (st.owners || []).join(", ");
         return `<tr class="${st.mine ? "pcard-mine" : ""}">
@@ -3960,13 +4021,11 @@ function renderProcedureCards() {
           <td>${st.mine ? "<b>" : ""}${esc(st.description || st.mnemonic || st.type)}${st.mine ? "</b>" : ""}</td>
           <td class="sub">${esc(own || "—")}</td></tr>`;
       }).join("")}</table>
-      <div class="sub" style="margin-top:6px">Highlighted steps are attributed by
-        commanding authority (func id). Unhighlighted steps are calls, checks, or
-        commands any position may send — not necessarily someone else's.</div>` : "";
+      <div class="sub" style="margin-top:6px">${t("Highlighted steps are attributed by commanding authority (func id). Unhighlighted steps are calls, checks, or commands any position may send — not necessarily someone else's.")}</div>` : "";
     return `<div class="ds-card" style="border-radius:6px;margin-bottom:6px"><div class="bd" style="padding:8px 10px">
-      <a href="#" data-pcard="${esc(c.id)}" style="font-weight:600">${esc(c.id)} — ${esc(c.name)}</a>
+      <a href="#" data-pcard="${esc(c.id)}" style="font-weight:600">${esc(c.id)} — ${esc(c.name ? tdb(`proc:${c.id}:name`, c.name) : c.name)}</a>
       ${mineChip}
-      <span class="sub"> ${esc(c.category || "")} · ${(c.steps || []).length} steps</span>
+      <span class="sub"> ${t("{{cat}} · {{count}} steps", { cat: c.category || "", count: (c.steps || []).length })}</span>
       ${body}</div></div>`;
   }).join("");
 }
@@ -3995,7 +4054,7 @@ function manualSectionsForPosition() {
            pos.manual_sections.some((m) => stem.includes(m));
   });
 }
-function manualTitle(s2) { return s2.name || s2.title || s2.path || "(untitled)"; }
+function manualTitle(s2) { return s2.name || s2.title || s2.path || tText("(untitled)"); }
 function renderManual() {
   const host = $("man-toc");
   if (!host) return;
@@ -4013,7 +4072,7 @@ function renderManual() {
     const on = path === cur ? ' style="font-weight:700"' : "";
     return `<div class="man-toc-item"><a href="#" data-man="${esc(path)}"${on}>` +
            `${esc(manualTitle(s2))}</a></div>`;
-  }).join("") || `<div class="logrow nom">no sections</div>`;
+  }).join("") || `<div class="logrow nom">${t("no sections")}</div>`;
   setText("man-count", `${secs.length}/${all.length}`);
 }
 async function openManualSection(path) {
@@ -4022,7 +4081,8 @@ async function openManualSection(path) {
   // nested path. Decode properly, encode per segment.
   try {
     const url = "/api/manual/" +
-      String(path).split("/").map(encodeURIComponent).join("/");
+      String(path).split("/").map(encodeURIComponent).join("/") +
+      "?lang=" + getLang();             // display-only translation (i18n S0)
     const data = await (await fetch(url)).json();
     const md = data.content_md || "";
     S.manualOpen = path;
@@ -4030,7 +4090,7 @@ async function openManualSection(path) {
     setText("man-title", data.title || path);
     setHTML("man-body", renderMarkdown(md));
     renderManual();                      // refresh active-item highlight
-  } catch (e) { setHTML("man-body", "section unavailable"); }
+  } catch (e) { setHTML("man-body", t("section unavailable")); }
 }
 
 /* ═══ 17. DRAWER — bottom log drawer ══════════════════════════════════════ */
@@ -4076,20 +4136,20 @@ export function renderBottomDrawer() {
   if (bdTab === "events") {
     const rows = S.events.filter(eventPassesFilter).slice(0, 120);
     setHTML("bdp-events",
-      (logLock.events ? `<span class="jump-chip" id="events-jump">${S.events.length} rows · jump to latest</span>` : "") +
-      rows.map((e) => `<div class="logrow ${e.sev}">${esc(e.ts)} [${esc(e.label)}] ${esc(e.msg)}` +
-        `${e.instructor && S.timeMode !== "real" ? ` <span class="ds-badge">INSTRUCTOR</span>` : ""}</div>`).join(""));
+      (logLock.events ? `<span class="jump-chip" id="events-jump">${t("{{n}} rows · jump to latest", { n: S.events.length })}</span>` : "") +
+      rows.map((e) => `<div class="logrow ${e.sev}">${esc(e.ts)} [${esc(e.label === "REJECT" ? tText("REJECT") : e.label)}] ${esc(e.msg)}` +
+        `${e.instructor && S.timeMode !== "real" ? ` <span class="ds-badge">${t("INSTRUCTOR")}</span>` : ""}</div>`).join(""));
   } else if (bdTab === "tm") {
     setHTML("bdp-tm", S.tmLog.slice(0, 120).map((r) => `<div class="logrow">${esc(r)}</div>`).join(""));
   } else if (bdTab === "cmdhist") {
     setHTML("bdp-cmdhist", S.cmdHistory.slice(0, 120).map(cmdHistoryRow).join("") ||
-      `<div class="logrow nom">no commands this session</div>`);
+      `<div class="logrow nom">${t("no commands this session")}</div>`);
   } else if (bdTab === "conlog") {
     renderConsoleLog();
   } else if (bdTab === "handover") {
     setHTML("handover-list", S.handover.map((h) =>
       `<div class="logrow">${esc(h.ts || "")} [${esc(h.position || "")}] ${esc(h.text || h.note || "")}</div>`).join("") ||
-      `<div class="logrow nom">no handover notes</div>`);
+      `<div class="logrow nom">${t("no handover notes")}</div>`);
   } else if (bdTab === "gonogo") {
     renderGoNoGo();
   }
@@ -4129,23 +4189,23 @@ function handleGoNoGo(msg) {
   S.goNoGo = msg;
   if (msg.type === "go_nogo_poll") {
     selectBdTab("gonogo");
-    announce(`GO/NO-GO poll: ${msg.label || ""} — respond from the drawer`);
+    announce(tText("GO/NO-GO poll: {{label}} — respond from the drawer", { label: msg.label || "" }));
   }
   renderGoNoGo();
 }
 export function renderGoNoGo() {
   const g = S.goNoGo;
-  if (!g) { setHTML("gonogo-status", `<div class="logrow nom">no active poll</div>`); return; }
+  if (!g) { setHTML("gonogo-status", `<div class="logrow nom">${t("no active poll")}</div>`); return; }
   const resp = g.responses || {};
   // G7: an open poll carries its call-matrix row — who calls, who must
   // respond, and the FD criticality note — beside the response buttons.
   const matrixHtml = g.active ? renderGonogoMatrixRow(g.label) : "";
   setHTML("gonogo-status",
     `<div style="font-size:13px;margin:4px 0"><b>${esc(g.label || "GO/NO-GO")}</b>` +
-    ` — ${g.active ? "OPEN" : (g.result ? `RESULT: ${esc(g.result)}` : "closed")}</div>` +
+    ` — ${g.active ? t("OPEN") : (g.result ? t("RESULT: {{r}}", { r: g.result }) : t("closed"))}</div>` +
     Object.entries(resp).map(([pos, r]) => renderChip({
       kind: r === "GO" ? "ok" : r === "NOGO" ? "alarm" : "warn",
-      label: `${(POSITION_INFO[pos] || {}).title || pos}: ${r}` })).join(" ") +
+      label: `${POSITION_INFO[pos] ? tText(POSITION_INFO[pos].title) : pos}: ${r}` })).join(" ") +
     matrixHtml);
 }
 async function goNoGoRespond(response) {
@@ -4182,25 +4242,24 @@ function alarmRowHtml(a) {
   const html = renderAlarmRow({ ...a, utc: a.utc || fmtUTC(a.timestamp) });
   // append the causal-chain link inside the action cell
   return html.replace(`</span></div>`,
-    `<button class="ds-btn" data-chain="${esc(String(a.id))}" title="causal chain (P9)">⛓</button></span></div>`);
+    `<button class="ds-btn" data-chain="${esc(String(a.id))}" title="${t("causal chain (P9)")}">⛓</button></span></div>`);
 }
 export function renderAlarmDrawer() {
   // G6: when ≥4 active alarms share fault-graph ancestry, collapse the
   // cascade to its first-out root; the consequents expand on demand.
   const { groups, rest } = groupAlarmsByAncestry(filteredAlarms(), S.faultGraph);
   const semantics = (S.faultGraph && S.faultGraph.edge_semantics) ||
-    "edges are inferred fault-to-fault ancestry from fdir/fault_propagation.yaml";
+    tText("edges are inferred fault-to-fault ancestry from fdir/fault_propagation.yaml");
   const groupHtml = groups.map((g) => {
     const gid = String(g.root.id);
     const open = !!S.alarmGroupsOpen[gid];
     return `<div class="alarm-group">
       <div class="alarm-group-hd">
-        <b>FIRST-OUT ROOT</b> ${esc(g.rootNode.id)}
-        <span> + ${g.consequents.length} consequent</span>
+        <b>${t("FIRST-OUT ROOT")}</b> ${esc(g.rootNode.id)}
+        <span> ${t("+ {{n}} consequent", { n: g.consequents.length })}</span>
         <button class="ds-btn" data-group="${esc(gid)}" aria-expanded="${open}">
-          ${open ? "collapse" : "expand"}</button>
-        <div class="alarm-group-note" title="${esc(semantics)}">grouping is INFERRED from the
-          ground fault-propagation model, not telemetered — verify with the S5 event order</div>
+          ${open ? t("collapse") : t("expand")}</button>
+        <div class="alarm-group-note" title="${esc(semantics)}">${t("grouping is INFERRED from the ground fault-propagation model, not telemetered — verify with the S5 event order")}</div>
       </div>
       ${alarmRowHtml(g.root)}
       ${open ? `<div class="alarm-group-kids">${g.consequents.map(alarmRowHtml).join("")}</div>` : ""}
@@ -4208,7 +4267,7 @@ export function renderAlarmDrawer() {
   }).join("");
   const rows = rest.map(alarmRowHtml).join("");
   setHTML("alarm-list", groupHtml + rows ||
-    `<div class="logrow nom" style="padding:14px">no alarms match the filters</div>`);
+    `<div class="logrow nom" style="padding:14px">${t("no alarms match the filters")}</div>`);
   updateRailHealth();
 }
 export function toggleAlarmDrawer(open) {
@@ -4237,7 +4296,7 @@ export async function ackAllAlarms() {
 }
 function ackFirstUnacked() {
   const a = filteredAlarms().find((x) => !x.acknowledged);
-  if (a) { ackAlarm(a.id); announce(`acknowledged ${a.subsystem || ""} ${a.message || a.id}`); }
+  if (a) { ackAlarm(a.id); announce(tText("acknowledged {{sub}} {{msg}}", { sub: a.subsystem || "", msg: String(a.message || a.id) })); }
 }
 async function loadAlarms() {
   try { S.alarms = (await getJSON("/api/alarms")).alarms || []; }
@@ -4259,49 +4318,50 @@ function openProcedureFromAlarm(procPath) {
 export async function openCausalChain(alarmId) {
   const a = S.alarms.find((x) => String(x.id) === String(alarmId));
   if (!a) return;
+  S.chainOpen = String(alarmId);      // re-rendered on a language switch
   toggleChain(true);
   const hexId = a.param_id !== undefined ? hex4(a.param_id) : null;
   const def = hexId ? S.paramByHex[hexId] : null;
-  let limitsHtml = `<i>no ground limit involved</i>`;
+  let limitsHtml = `<i>${t("no ground limit involved")}</i>`;
   try {
     const lim = await getJSON("/api/limits");
     const band = hexId ? lim.limits[hexId] : null;
     if (band) limitsHtml = renderDeviationBar(Number(a.value), band) +
-      `<div class="mono" style="font-size:12px;margin-top:14px">yellow ${num(band.yellow_low, 2)}…${num(band.yellow_high, 2)}` +
-      ` · red ${num(band.red_low, 2)}…${num(band.red_high, 2)} ${esc(band.units || "")}</div>`;
-  } catch (e) { limitsHtml = `<i>limits unavailable</i>`; }
+      `<div class="mono" style="font-size:12px;margin-top:14px">${t("yellow {{yl}}…{{yh}} · red {{rl}}…{{rh}} {{u}}",
+        { yl: num(band.yellow_low, 2), yh: num(band.yellow_high, 2), rl: num(band.red_low, 2),
+          rh: num(band.red_high, 2), u: band.units || "" })}</div>`;
+  } catch (e) { limitsHtml = `<i>${t("limits unavailable")}</i>`; }
   const end = simNowSec(), start = end - 1800;
   let cmdsHtml = "", evtsHtml = "";
   try {
     const c = await getJSON(`/api/archive/commands?start=${start}&end=${end}`);
     cmdsHtml = (c.commands || c.rows || []).slice(-8).reverse().map((r) =>
       `<div class="logrow">${fmtUTC(r.timestamp)} ${esc(r.name || `S${r.service},${r.subtype}`)} — ${esc(r.verdict || r.status || "")}</div>`).join("") ||
-      `<div class="logrow nom">no commands in the last 30 min</div>`;
-  } catch (e) { cmdsHtml = `<div class="logrow nom">command archive unavailable</div>`; }
+      `<div class="logrow nom">${t("no commands in the last 30 min")}</div>`;
+  } catch (e) { cmdsHtml = `<div class="logrow nom">${t("command archive unavailable")}</div>`; }
   try {
     const ev = await getJSON(`/api/archive/events?start=${start}&end=${end}`);
     evtsHtml = (ev.events || ev.rows || []).slice(-8).reverse().map((r) =>
       renderEventRow({ ...r, utc: fmtUTC(r.timestamp) })).join("") ||
-      `<div class="logrow nom">no S5 events in the last 30 min</div>`;
-  } catch (e) { evtsHtml = `<div class="logrow nom">event archive unavailable</div>`; }
+      `<div class="logrow nom">${t("no S5 events in the last 30 min")}</div>`;
+  } catch (e) { evtsHtml = `<div class="logrow nom">${t("event archive unavailable")}</div>`; }
   setHTML("chain-body", `
-    ${renderStepper(["COMMANDS (30 min)", "S5 EVENTS", "PARAMETER", "GROUND LIMIT", "ALARM"], 4)}
+    ${renderStepper([tText("COMMANDS (30 min)"), tText("S5 EVENTS"), tText("PARAMETER"), tText("GROUND LIMIT"), tText("ALARM")], 4)}
     <div class="g" style="grid-template-columns:1fr 1fr;margin-top:12px">
-      <div class="ds-card"><h2>1 · Recent commands</h2><div class="bd">${cmdsHtml}</div></div>
-      <div class="ds-card"><h2>2 · S5 events</h2><div class="bd">${evtsHtml}</div></div>
-      <div class="ds-card"><h2>3 · Parameter</h2><div class="bd">
-        ${def ? paramTriad(hexId) : `<i>no parameter attached to this alarm</i>`}</div></div>
-      <div class="ds-card"><h2>4 · Ground limit</h2><div class="bd">${limitsHtml}</div></div>
+      <div class="ds-card"><h2>${t("1 · Recent commands")}</h2><div class="bd">${cmdsHtml}</div></div>
+      <div class="ds-card"><h2>${t("2 · S5 events")}</h2><div class="bd">${evtsHtml}</div></div>
+      <div class="ds-card"><h2>${t("3 · Parameter")}</h2><div class="bd">
+        ${def ? paramTriad(hexId) : `<i>${t("no parameter attached to this alarm")}</i>`}</div></div>
+      <div class="ds-card"><h2>${t("4 · Ground limit")}</h2><div class="bd">${limitsHtml}</div></div>
     </div>
-    <div class="ds-card" style="margin-top:10px"><h2>5 · The alarm</h2><div class="bd">
+    <div class="ds-card" style="margin-top:10px"><h2>${t("5 · The alarm")}</h2><div class="bd">
       ${renderAlarmRow({ ...a, utc: a.utc || fmtUTC(a.timestamp) })}
-      <p style="font-size:12.5px;color:var(--tx2);margin-top:8px">Read the chain backwards:
-      did a command (1) or an on-board event (2) move the parameter (3) across the ground
-      limit (4) to raise this alarm (5)? This is the mental model the console teaches (P9).</p>
+      <p style="font-size:12.5px;color:var(--tx2);margin-top:8px">${t("Read the chain backwards: did a command (1) or an on-board event (2) move the parameter (3) across the ground limit (4) to raise this alarm (5)? This is the mental model the console teaches (P9).")}</p>
     </div></div>`);
 }
 function toggleChain(open) {
   const o = $("chain-overlay");
+  if (open === false) S.chainOpen = "";
   if (o) o.classList.toggle("open", open === undefined ? !o.classList.contains("open") : open);
 }
 function toggleHelp(open) {
@@ -4376,7 +4436,7 @@ function setTheme(light) {
 const dumpState = {};   // sub -> {rows, chart}
 async function requestTmDump(sub, storeId) {
   const r = await postJSON("/api/tm-dump", { subsystem: sub, store_id: storeId || undefined });
-  if (!r.ok) { announce(`dump request failed (${r.status})`); return; }
+  if (!r.ok) { announce(tText("dump request failed ({{status}})", { status: r.status })); return; }
   setTimeout(() => loadDumpData(sub), 1200);
 }
 async function loadDumpData(sub) {
@@ -4387,7 +4447,7 @@ async function loadDumpData(sub) {
     renderDumpChart(sub);
   } catch (e) {
     const pageId = Object.keys(PAGE_SUBSYSTEM).find((k) => PAGE_SUBSYSTEM[k] === sub);
-    if (pageId) setText(`${pageId}-dump-status`, "dump data unavailable");
+    if (pageId) setText(`${pageId}-dump-status`, tText("dump data unavailable"));
   }
 }
 function renderDumpChart(sub) {
@@ -4395,13 +4455,13 @@ function renderDumpChart(sub) {
   if (!pageId) return;
   const st = dumpState[sub];
   const statusEl = `${pageId}-dump-status`;
-  if (!st || !st.rows.length) { setText(statusEl, "dump empty"); return; }
-  setText(statusEl, `${st.rows.length} samples`);
+  if (!st || !st.rows.length) { setText(statusEl, tText("dump empty")); return; }
+  setText(statusEl, tText("{{n}} samples", { n: st.rows.length }));
   const cv = $(`${pageId}-dump-chart`);
   const scrub = $(`${pageId}-dump-scrub`);
   if (typeof Chart === "undefined") {
-    setText(statusEl, `${st.rows.length} samples — Chart.js not installed; latest: ` +
-      JSON.stringify(st.rows[st.rows.length - 1]).slice(0, 120));
+    setText(statusEl, tText("{{n}} samples — Chart.js not installed; latest: {{json}}",
+      { n: st.rows.length, json: JSON.stringify(st.rows[st.rows.length - 1]).slice(0, 120) }));
     return;
   }
   if (cv) cv.classList.remove("hide");
@@ -4448,6 +4508,11 @@ function renderCurrentPage(full) {
   if (full) applyAnnotations();
 }
 
+/* The page skeletons are built ONCE, in English, with data-i18n* marks on
+ * their static text; i18n.js translates them here and again on every language
+ * switch (setLang -> applyDom), so typed inputs and mounted schematics survive
+ * a switch. Everything rendered later goes through t()/tText() instead. The
+ * keys of those marks are listed in TEMPLATE_I18N_KEYS for `i18n check`. */
 function buildPages() {
   const host = $("pages");
   if (!host) return;
@@ -4456,7 +4521,60 @@ function buildPages() {
     SUB_PAGES.map(buildSubsystemPage).join("") +
     buildCmdPage() + buildFdirPage() + buildProcPage() +
     buildTrndPage() + buildDiagPage() + buildManPage();
+  I18n.applyDom(host);
 }
+// The data-i18n / -aria-label / -placeholder / -html texts of the page skeletons
+// above, listed for `i18n check` (its table scan reads <= 2000 chars per table).
+// i18n-keys
+const _TPL_KEYS_1 = [
+  "Overview", "Spacecraft overview",
+  "The schematic is the navigation — click the thing you are worried about. Position:",
+  "EOSAT-1 · functional schematic", "grey is nominal — colour marks deviation (P1)",
+  "Contact windows (24 h)", "Ground track", "System board", "Electrical power", "Thermal control",
+  "Attitude & orbit control", "Telemetry, tracking & command", "Payload", "Propulsion",
+  "On-board data handling", "Level 2 · subsystem", "alarms for this subsystem", "← Overview", "Schematic",
+  "click a block to navigate; values live", "Parameters", "AND — generated from /api/param-catalog (P10)",
+  "Stored TM playback", "S15 dump → /api/tm-dump-data", "REQUEST DUMP (S15)", "no dump loaded",
+  "Playback position", "Key parameters", "Projections", "ground-derived · not downlinked",
+  "Capture readiness (NOM-002)", "gates from annotations.yaml", "FINE-entry readiness",
+  "aocs.fine_ready 0x02C5 decoded", "Arm interlocks", "prop.arm_inhibit_mask 0x0B15 decoded",
+  "Loaded vs planned burn", "TM 0x0B0E/0x0B10 vs planner orbit_manoeuvre", "awaiting planner…",
+  "Predicted vs measured link", "Blind commanding (CON-004)", "requires FD GO — armed toggle", "Equipment",
+  "Command", "in place · position-gated (P9)", "Ground station network", "awaiting station list…",
+  "Power budget", "awaiting data…", "Events", "Commanding",
+  "PUS telecommand builder · verification is a stepper attached to the command, not a separate log (P9)",
+  "Command builder", "Catalogue command", "Service", "Subtype", "Name", "optional",
+];
+// i18n-keys
+const _TPL_KEYS_2 = [
+  "Data (hex) — live from the fields; paste hex to decode; Enter sends", "PACK FROM FIELDS",
+  "DECODE HEX → FIELDS", "ARM", "SEND", "Quick commands", "position-gated; denied entries say who owns them",
+  "Verification log", "Stored TM (S15) dump", "Subsystem", "Store id", "DUMP", "HK SID control (S3)",
+  "Command history", "Diagnostics", "PUS services",
+  "All seven service panels from the classic PUS SERVICES tab — S3 housekeeping · S11 scheduler · S6 memory · S15 stores · S12 monitoring · S19 event-action · S9 time — plus the parameter catalog. S12/S19 tables are the same renderer FDIR mounts (one implementation, two mounts).",
+  "Parameter search (global)", "name or 0xHHHH", "Fault detection, isolation & recovery",
+  "What the spacecraft <em>told</em> us (S5 / S12 / S19 / mode), plus recovery controls.", "FDIR state",
+  "REFRESH ALL", "ACK ALL ALARMS", "Alarm / anomaly journal", "S5 events", "S12 transitions",
+  "S19 rule fires", "TC rejections", "mode changes", "Procedures",
+  "Loader · step-by-step runner · document viewer · manual override · builder. Reachable from any alarm row (P7.6).",
+  "Load & run", "Source", "Activity type", "Ops procedure", "Saved procedure", "Procedure", "step-by-step",
+  "LOAD", "START", "PAUSE", "RESUME", "STEP", "SKIP", "ABORT", "Procedure document", "select a procedure…",
+  "Manual override", "arbitrary TC during a run", "data hex", "SEND OVERRIDE", "Procedure builder",
+  "procedure name", "Telemetry check", "Wait", "Note", "+ ADD", "SAVE PROCEDURE",
+];
+// i18n-keys
+const _TPL_KEYS_3 = [
+  "RUN THESE STEPS", "CLEAR", "— load saved —", "Trends",
+  "Ground archive · eclipse/contact context · alarm & event markers (P8)", "Query", "Window", "7 d",
+  "Parameter filter", "filter…", "limit bands", "eclipse/contact shading", "event + alarm markers",
+  "normalise 0–100 %", "REFRESH", "EXPORT CSV", "Parameters to trend", "Subsystem playback",
+  "LOAD SUBSYSTEM", "Chart", "Alarms in window", "Events in window", "Command history (archived)",
+  "Baseline vs now — health (NOM-011)", "baseline: annotations.yaml commissioning snapshot", "Manual",
+  "Operations manual", "Sections filtered to your position; search covers titles and body text.", "Contents",
+  "search…", "select a section…", "Procedure cards — your position",
+  "only cards my position is required for", "filter cards…",
+];
+const TEMPLATE_I18N_KEYS = [..._TPL_KEYS_1, ..._TPL_KEYS_2, ..._TPL_KEYS_3];
 
 function initDelegatedEvents() {
   document.addEventListener("click", (e) => {
@@ -4504,7 +4622,7 @@ function initDelegatedEvents() {
       const [svc, sub] = map[d.hk];
       return void sendPus({ service: svc, subtype: sub,
         data_hex: sidToHex(sid), name: `HK_${d.hk.toUpperCase()}_SID${sid}`, position: S.position })
-        .then(() => setText("hk-quick-result", `S3 ${d.hk} SID ${sid} sent`));
+        .then(() => setText("hk-quick-result", tText("{{name}} sent", { name: `S3 ${d.hk} SID ${sid}` })));
     }
     if (d.pbDel !== undefined) { pb.steps.splice(Number(d.pbDel), 1); return renderPbSteps(); }
   });
@@ -4527,7 +4645,8 @@ function initDelegatedEvents() {
     // every later character goes nowhere.
     else if (t.id === "params-filter") { paramsFilter = t.value; preservingUi("diag-params", renderParamsPanel); }
     else if (t.id === "hdr-param-search") { paramsFilter = t.value; selectDiagTab("params"); }
-    else if (t.id === "s6-patch") setText("s6-localcrc", `local CRC16 0x${crc16Ccitt(t.value).toString(16).toUpperCase().padStart(4, "0")}`);
+    else if (t.id === "s6-patch") setText("s6-localcrc", tText("local CRC16 {{crc}}",
+      { crc: `0x${crc16Ccitt(t.value).toString(16).toUpperCase().padStart(4, "0")}` }));
   });
   document.addEventListener("change", (e) => {
     const t = e.target;
@@ -4569,7 +4688,8 @@ function initDelegatedEvents() {
         const bytes = Array.from(new Uint8Array(buf));
         const hexStr = bytes.map((b) => b.toString(16).toUpperCase().padStart(2, "0")).join(" ");
         if ($("s6-patch")) $("s6-patch").value = hexStr;
-        setText("s6-localcrc", `local CRC16 0x${crc16Ccitt(hexStr).toString(16).toUpperCase().padStart(4, "0")}`);
+        setText("s6-localcrc", tText("local CRC16 {{crc}}",
+          { crc: `0x${crc16Ccitt(hexStr).toString(16).toUpperCase().padStart(4, "0")}` }));
       });
     }
   });
@@ -4636,12 +4756,12 @@ function initDelegatedEvents() {
     S.armed[cmd.name] = !S.armed[cmd.name];
     $("cmd-arm").classList.toggle("armed", !!S.armed[cmd.name]);
     updateCmdBuilder();
-    if (S.armed[cmd.name]) announce(`${cmd.name} ARMED — SEND now executes`);
+    if (S.armed[cmd.name]) announce(tText("{{name}} ARMED — SEND now executes", { name: cmd.name }));
   });
   on("cmd-pack", () => cmdLivePack());
   on("cmd-decode", () => cmdReverseDecode());
   on("s15-dump", () => requestTmDump($("s15-target").value, $("s15-store").value)
-    .then(() => setText("s15-result", `dump requested for ${$("s15-target").value}`)));
+    .then(() => setText("s15-result", tText("dump requested for {{sub}}", { sub: $("s15-target").value }))));
   on("s3-req-all", () => s3All("oneshot"));
   on("s3-en-all", () => s3All("enable"));
   on("s3-dis-all", () => s3All("disable"));
@@ -4672,7 +4792,7 @@ function initDelegatedEvents() {
     const r = await postJSON("/api/procedure/override-command", {
       service: Number($("proc-ov-svc").value), subtype: Number($("proc-ov-sub").value),
       data: $("proc-ov-data").value, position: S.position });
-    setText("proc-ov-result", r.ok ? "override sent" : `override rejected (${r.status})`);
+    setText("proc-ov-result", r.ok ? tText("override sent") : tText("override rejected ({{status}})", { status: r.status }));
   });
   on("pb-add", pbAddStep);
   on("pb-save", pbSave);
@@ -4741,13 +4861,15 @@ async function s19Add(mount) {
 async function loadPositions() {
   try {
     S.positions = (await getJSON("/api/positions")).positions || {};
-    const sel = $("pos-select");
-    if (sel) {
-      sel.innerHTML = Object.entries(S.positions).map(([id, p]) =>
-        `<option value="${esc(id)}">${esc(p.label || id)}</option>`).join("");
-      sel.value = S.position;
-    }
+    renderPosSelect();
   } catch (e) { /* offline */ }
+}
+function renderPosSelect() {
+  const sel = $("pos-select");
+  if (!sel) return;
+  sel.innerHTML = Object.entries(S.positions).map(([id, p]) =>
+    `<option value="${esc(id)}">${esc(p.label ? tdb(`pos:${id}:label`, p.label) : id)}</option>`).join("");
+  sel.value = S.position;
 }
 async function loadParamCatalog() {
   try {
@@ -4806,6 +4928,12 @@ async function loadVerifLogRest() {
 }
 
 async function boot() {
+  // Catalogs first (English: resolves at once, no fetch; otherwise bounded
+  // by i18n.js's load timeout) so the first render is already translated.
+  // Telemetry handling starts below with connectWS(), unaffected.
+  await I18n.ready;
+  mountLangToggle($("lang-toggle"));
+  onLangChange(onLanguageChange);
   buildRail();
   buildPages();
   initDelegatedEvents();
@@ -4850,6 +4978,56 @@ async function boot() {
   poller(loadBurnPlan, 30000).start();              // G9 — PROP page only
   poller(loadConsoleLog, 15000).start();            // G8 merged stream
   poller(loadFaultGraph, 120000).start();           // G6 — config changes rarely
+}
+
+/* Language switch (smo:langchange). Static markup with data-i18n* is
+ * re-applied by i18n.js itself; this re-renders the JS-built regions that do
+ * not refresh on the next telemetry tick. Translators (S1) extend it. */
+function onLanguageChange() {
+  loadProcDoc();                                          // ?lang= document
+  if (S.manualOpen) openManualSection(S.manualOpen);      // ?lang= manual
+  // JS-built regions (page skeletons were re-translated by applyDom already)
+  // mounted schematics (setLang's document-wide applyDom covers them too; explicit for clarity)
+  document.querySelectorAll("svg[data-schematic]").forEach((svg) => I18n.applyDom(svg));
+  const ovrMode = $("sch-ovr-mode");   // inside a data-i18n <text>; only re-set while OVR is showing
+  if (ovrMode) { const m = scModeInfo(); ovrMode.textContent = `${m.label} (${m.src})`; }
+  retitleRail();
+  renderPosSelect();
+  applyPositionFilter();          // position title, quick commands, manual TOC
+  renderCmdCatalogSelect();
+  refreshCmdBuilderText();        // not updateCmdBuilder(): that would drop typed field values
+  renderVerifLog();
+  renderCmdHistory();
+  renderBlindTc();
+  updateTrainingChip();
+  updateContingency();
+  updateSaHeader();
+  renderAlarmDrawer();
+  renderBottomDrawer();
+  renderGoNoGo();
+  renderProcStatus();
+  renderProcedureCards();
+  renderBaselineCard();
+  refreshSystemBoard();           // 5 s pollers: redo now rather than show stale wording
+  refreshPowerBudget();
+  const pbf = $("pb-step-fields");     // placeholders only; keep anything typed
+  if (pbf && !Array.from(pbf.querySelectorAll("input")).some((i) => i.value)) {
+    setHTML("pb-step-fields", pbFieldMarkup());
+  }
+  if (S.page === "proc") loadProcSources();
+  if (S.chainOpen) openCausalChain(S.chainOpen);
+  renderCurrentPage(true);
+}
+/* Language switch: re-word the builder's provenance/authority lines in place. */
+function refreshCmdBuilderText() {
+  const cmd = currentCatalogCmd();
+  const authEl = $("cmd-authority");
+  if (cmd) {
+    setText("cmd-provenance", provenanceText(cmd));
+    if (authEl) authEl.textContent = commandAuthority(cmd.name).text;
+  } else {
+    setText("cmd-provenance", tText("raw command — no catalogue entry; length not validated"));
+  }
 }
 
 /* Test hook: under the node harness (globalThis.__MCS_TEST__) nothing runs

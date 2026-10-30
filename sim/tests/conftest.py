@@ -7,7 +7,8 @@ from unittest.mock import MagicMock
 import pytest
 
 # Add package source directories to path for testing
-for pkg in ["smo-common", "smo-simulator", "smo-gateway", "smo-mcs", "smo-planner"]:
+for pkg in ["smo-common", "smo-simulator", "smo-gateway", "smo-mcs", "smo-planner",
+            "smo-link"]:
     src = Path(__file__).parent.parent / "packages" / pkg / "src"
     if src.exists() and str(src) not in sys.path:
         sys.path.insert(0, str(src))

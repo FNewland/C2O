@@ -41,8 +41,8 @@ The 98 deg inclination causes the orbital plane to precess eastward at approxima
 ### 2.2 Ground Track
 
 The ground track repeats approximately every 5 days. The sub-satellite point traces a
-sinusoidal pattern between latitudes +/- 82 deg (complement of the inclination). Adjacent
-ground tracks at the equator are separated by approximately 170 km. At the ~513 km mean
+sinusoidal pattern between latitudes +/- 82 deg (complement of the inclination). Successive
+ground tracks are ~2 630 km apart at the equator; the 5-day repeat grid spacing is ~525 km. At the ~513 km mean
 altitude the imager delivers a ~33 m ground sampling distance and a ~273 km swath
 (both scale linearly with altitude), well matched to ocean feature detection.
 
@@ -158,7 +158,7 @@ Orbit determination is performed using:
 - **Onboard GPS**: The zenith-mounted GPS receiver provides continuous position and velocity
   measurements (sub-satellite latitude, longitude, altitude). This is the primary orbit
   determination source.
-- **Ranging data**: Slant range measurements from the VHF/UHF transponder during contacts,
+- **Ranging data**: Slant range measurements from the S-band transponder during contacts,
   used for independent verification.
 - **Two-line elements (TLE)**: Published by space surveillance networks, used as backup.
 
@@ -166,13 +166,13 @@ The `range_km` (0x0509) and `contact_elevation` (0x050A) telemetry parameters pr
 real-time range and elevation data during ground contacts. The GPS-derived position is
 available in `sc_lat` (0x0210), `sc_lon` (0x0211), and `sc_alt` (0x0212).
 
-The OBC runs ADCS software for orbit determination only. There is no orbital control
-capability — EOSAT-1 does not carry a propulsion system.
+The OBC runs ADCS software for orbit determination. Orbit control is limited to
+ground-planned burns of the propulsion module (see §6).
 
 ## 6. Orbit Maintenance
 
-EOSAT-1 does NOT carry a propulsion system for orbit control or station-keeping. The satellite
-is a passive payload platform operating under natural orbital decay.
+EOSAT-1 carries a 1U green-monopropellant blowdown module (0.400 kg LMP-103S, ~67 m/s total delta-V;
+S8 funcs 108–118) for debris-avoidance manoeuvres and limited drag make-up. It is not a deorbit system.
 
 **Orbital Decay Characteristics:**
 
@@ -185,8 +185,8 @@ is a passive payload platform operating under natural orbital decay.
 
 **Operational Implications:**
 
-1. **No Orbit Correction Capability:** The mission has no thruster system. Altitude decay is
-   natural and unavoidable. Ground operations cannot perform station-keeping maneuvers.
+1. **Limited Orbit Correction Capability:** A single thruster supports drag make-up within the
+   delta-V budget (`subsystems/prop.yaml`). Plane changes and propulsive deorbit are out of scope.
 2. **Altitude Monitoring:** Continuous GPS-based altitude tracking is essential for:
    - Predicting mission end-of-life and deorbit window
    - Accurate ground track prediction (critical for imaging target planning)
@@ -220,7 +220,7 @@ Imaging opportunities are computed by the mission planner based on:
 
 1. **Orbital geometry**: Sub-satellite point within target region.
 2. **Solar illumination**: Target must be sunlit (solar elevation > 10 deg at target).
-3. **Spacecraft constraints**: Battery SoC > 40%, AOCS in NADIR_POINT, att_error < 0.5 deg.
+3. **Spacecraft constraints**: Battery SoC > 40%, AOCS in NOMINAL (4), att_error < 0.5 deg.
 4. **Data budget**: Sufficient mass memory and downlink capacity for the image data volume.
 5. **Contact timing**: Downlink pass available within a reasonable time after acquisition.
 

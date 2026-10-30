@@ -1,0 +1,72 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/nominal/momentum_management.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "nom-007-momentum-management",
+   "en_hash": "f3998b08303dae05",
+   "fr_hash": "d290846b6867bf09"
+  },
+  {
+   "id": "nom-007-momentum-management/purpose",
+   "en_hash": "aa0f1c1cd3ac4c17",
+   "fr_hash": "109f5fffe336dd2f"
+  },
+  {
+   "id": "nom-007-momentum-management/prerequisites",
+   "en_hash": "6f2fa8200da89780",
+   "fr_hash": "1a2157acc0403415"
+  },
+  {
+   "id": "nom-007-momentum-management/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "nom-007-momentum-management/procedure-steps/step-1-assess-reaction-wheel-momentum-state",
+   "en_hash": "081e5f712dac3d31",
+   "fr_hash": "b7d6df07f388d52f"
+  },
+  {
+   "id": "nom-007-momentum-management/procedure-steps/step-2-pre-desaturation-attitude-snapshot",
+   "en_hash": "41c7bb73b20a6890",
+   "fr_hash": "1d08170598848abe"
+  },
+  {
+   "id": "nom-007-momentum-management/procedure-steps/step-3-command-desaturation",
+   "en_hash": "734422503d87e256",
+   "fr_hash": "86fede70cb0ad1e1"
+  },
+  {
+   "id": "nom-007-momentum-management/procedure-steps/step-4-monitor-desaturation-progress",
+   "en_hash": "7bc6672123fa6508",
+   "fr_hash": "7c96cf041e352649"
+  },
+  {
+   "id": "nom-007-momentum-management/procedure-steps/step-5-confirm-the-automatic-return-to-the-pre-desat-mode",
+   "en_hash": "53f85416907704e6",
+   "fr_hash": "b5bf4e32f51d03ae"
+  },
+  {
+   "id": "nom-007-momentum-management/procedure-steps/step-6-post-desaturation-verification",
+   "en_hash": "00da7f92af0b437c",
+   "fr_hash": "1ff1277fe1157e02"
+  },
+  {
+   "id": "nom-007-momentum-management/off-nominal-handling",
+   "en_hash": "232de56612073aae",
+   "fr_hash": "2860810d05be31e2"
+  },
+  {
+   "id": "nom-007-momentum-management/post-conditions",
+   "en_hash": "1896fc1788e5ea0c",
+   "fr_hash": "3bf5a2ee59e76035"
+  }
+ ],
+ "en_commit": "983af0f"
+}

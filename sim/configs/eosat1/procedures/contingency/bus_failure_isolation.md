@@ -98,10 +98,15 @@ as likely cause) — proceed to switchover.
 **Action:** Notify all console positions: "CAN bus switchover imminent. Expect
 brief HK gap of 5-10 seconds."
 **Note:** Command switchover to the redundant bus:
+**BRANCH:** `obdh.active_bus == 0` -> GO `STEP-3A` | NO-GO `STEP-3B` (timeout 10 s)
+**LABEL:** `STEP-3A`
 **Note:** - If currently on Bus A (0x030E = 0):
 **TC:** `OBC_SELECT_BUS(bus=1)` (Service 8, Subtype 1, func_id 54) — switch to Bus B
+**BRANCH:** `obdh.active_bus == 1` -> GO `STEP-3V` | NO-GO `STEP-END` (timeout 15 s)
+**LABEL:** `STEP-3B`
 **Note:** - If currently on Bus B (0x030E = 1):
 **TC:** `OBC_SELECT_BUS(bus=0)` (Service 8, Subtype 1, func_id 54) — switch to Bus A
+**LABEL:** `STEP-3V`
 **CAUTION:** This command will briefly interrupt all CAN bus communications during
 the switchover. Subsystem HK will be unavailable for 5-10 seconds. This is normal.
 **Verify:** Wait 15 s for switchover to complete.
@@ -152,6 +157,7 @@ back to without engineering team approval and analysis.
 **GO/NO-GO:** Assessment complete, incident documented — procedure complete.
 
 ## Verification Criteria
+**LABEL:** `STEP-END`
 - [ ] `obdh.active_bus` (0x030E) reflects the new (redundant) bus
 - [ ] Failed bus status is ERROR: `obdh.bus_a_status` (0x030F) or `obdh.bus_b_status` (0x0310) = 1
 - [ ] All 6 subsystem HK reports received successfully on new bus

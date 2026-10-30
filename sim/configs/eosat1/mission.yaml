@@ -53,3 +53,13 @@ network:
   http_port: 8080
   sim_tick_hz: 1.0
   tm_max_clients: 8
+  # VR visualisation bridge (smo-vr/1 — docs/VR_INTERFACE_ICD.md). Streams
+  # position, attitude, sun direction and wing/antenna deployment to VR
+  # headsets; headsets may send a status word back (shown on the instructor
+  # console). Headsets on Wi-Fi need the LAN bind: ./start.sh --public.
+  # Override: smo-simulator --no-vr / --vr-port / --vr-ws-port, or SMO_VR=0,
+  # SMO_VR_PORT, SMO_VR_WS_PORT.
+  vr_enabled: true
+  vr_tcp_port: 8100
+  vr_ws_port: 8101
+  vr_max_rate_hz: 10.0

@@ -94,7 +94,7 @@ wing deployment.
 - If a wing fails to deploy (wing_status bit not set after 45s): Retry single wing with `EPS_DEPLOY_WING(wing=0)` for +Y or `EPS_DEPLOY_WING(wing=1)` for -Y — requires Flight Director approval. If retry fails, assess single-wing power budget viability (single wing provides ~32W in sunlight, marginal for nominal ops).
 - If both arrays deployed but power generation < 10W in sunlight: Verify spacecraft is actually in sunlight via Flight Dynamics. Check for excessive tumble rate reducing effective solar incidence. Prioritize LEOP-005 (Sun Acquisition) to stabilize attitude.
 - If wing currents asymmetric > 30%: Log anomaly. One wing may have partial deployment or string failure. Continue LEOP with reduced power budget. Schedule detailed EPS investigation during commissioning.
-- If `eps.bat_soc` dropping rapidly (> 2% per minute): Reduce spacecraft load — disable non-essential heaters via `HEATER_THRUSTER(on=0)`. Ensure AOCS detumble is using magnetorquers only (lower power). Prioritize sun acquisition.
+- If `eps.bat_soc` dropping rapidly (> 2% per minute): Reduce spacecraft load. Do not count on the thruster catbed heater: it is already OFF in LEOP (manual by default), so `HEATER_THRUSTER(on=0)` saves nothing. Ensure AOCS detumble is using magnetorquers only (lower power). Prioritize sun acquisition.
 
 ## Exit state
 - Both wings DEPLOYED (`eps.wing_status` 0x0144 = 0x03) and generating; full

@@ -1,0 +1,137 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/manual/11_rf_simulation.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "eosat-1-rf-simulation-layer",
+   "en_hash": "26970cc52c644802",
+   "fr_hash": "ac8509814566bb55"
+  },
+  {
+   "id": "eosat-1-rf-simulation-layer/1-purpose",
+   "en_hash": "111dd7f560ed0e86",
+   "fr_hash": "98ef8aad13d0ad5f"
+  },
+  {
+   "id": "eosat-1-rf-simulation-layer/2-operating-modes",
+   "en_hash": "81b415e7c74cb266",
+   "fr_hash": "dca0da3f1802b7b3"
+  },
+  {
+   "id": "eosat-1-rf-simulation-layer/2-operating-modes/2-1-packet-mode",
+   "en_hash": "d4a55a3596e857e8",
+   "fr_hash": "9f20a34482070a4b"
+  },
+  {
+   "id": "eosat-1-rf-simulation-layer/2-operating-modes/2-2-frame-mode",
+   "en_hash": "b26ecf418b1ee1c0",
+   "fr_hash": "868d756f7021ca06"
+  },
+  {
+   "id": "eosat-1-rf-simulation-layer/2-operating-modes/2-3-rf-mode",
+   "en_hash": "2e98b6a2fad5a663",
+   "fr_hash": "b2a1cbfa69d23cf8"
+  },
+  {
+   "id": "eosat-1-rf-simulation-layer/3-architecture",
+   "en_hash": "2ed7d876da901bd4",
+   "fr_hash": "97ca16b0131d0457"
+  },
+  {
+   "id": "eosat-1-rf-simulation-layer/4-ccsds-transfer-frame-details",
+   "en_hash": "61dcf7f03688fb9f",
+   "fr_hash": "aa2fc2ff84fafdc5"
+  },
+  {
+   "id": "eosat-1-rf-simulation-layer/4-ccsds-transfer-frame-details/4-1-tm-downlink-frames",
+   "en_hash": "9516245515a20988",
+   "fr_hash": "f5fc210fda1ff974"
+  },
+  {
+   "id": "eosat-1-rf-simulation-layer/4-ccsds-transfer-frame-details/4-2-virtual-channels",
+   "en_hash": "df970c80be95489e",
+   "fr_hash": "3180aaae080b850f"
+  },
+  {
+   "id": "eosat-1-rf-simulation-layer/4-ccsds-transfer-frame-details/4-3-tc-uplink-cltus",
+   "en_hash": "0b98973036b448eb",
+   "fr_hash": "841f1fe1808458bf"
+  },
+  {
+   "id": "eosat-1-rf-simulation-layer/4-ccsds-transfer-frame-details/4-4-channel-coding",
+   "en_hash": "2e025685abba3c41",
+   "fr_hash": "d7a45f2e0d497f17"
+  },
+  {
+   "id": "eosat-1-rf-simulation-layer/5-frame-synchronization",
+   "en_hash": "3f0885f8a88d2b34",
+   "fr_hash": "d77ec4c30ee31f03"
+  },
+  {
+   "id": "eosat-1-rf-simulation-layer/6-channel-model",
+   "en_hash": "9c83dbd12b1d00c4",
+   "fr_hash": "e10c987b11bb6fbe"
+  },
+  {
+   "id": "eosat-1-rf-simulation-layer/7-radio-front-end-display",
+   "en_hash": "07360cfba71d236c",
+   "fr_hash": "e6d844aa43d44147"
+  },
+  {
+   "id": "eosat-1-rf-simulation-layer/8-configuration",
+   "en_hash": "ec5402dd0a883c40",
+   "fr_hash": "f68f38ae550a897f"
+  },
+  {
+   "id": "eosat-1-rf-simulation-layer/9-startup",
+   "en_hash": "5279b58e54e552d5",
+   "fr_hash": "402edfe5df4b1910"
+  },
+  {
+   "id": "eosat-1-rf-simulation-layer/9-startup/9-1-via-environment-variable",
+   "en_hash": "c1c18096e58123a4",
+   "fr_hash": "e424210e195d7f52"
+  },
+  {
+   "id": "eosat-1-rf-simulation-layer/9-startup/9-2-via-cli",
+   "en_hash": "9709f1ccf301bf01",
+   "fr_hash": "88d957640d92e785"
+  },
+  {
+   "id": "eosat-1-rf-simulation-layer/9-startup/9-3-cli-options",
+   "en_hash": "9d809196e4b0791c",
+   "fr_hash": "42c926a0c2efdbb6"
+  },
+  {
+   "id": "eosat-1-rf-simulation-layer/10-training-scenarios",
+   "en_hash": "29bfa1bbb37de8c9",
+   "fr_hash": "b68fb3a17b3ffcc2"
+  },
+  {
+   "id": "eosat-1-rf-simulation-layer/10-training-scenarios/10-1-signal-degradation-exercise",
+   "en_hash": "a44534945db0b939",
+   "fr_hash": "f108daf7ea094de5"
+  },
+  {
+   "id": "eosat-1-rf-simulation-layer/10-training-scenarios/10-2-frame-sync-loss-and-recovery",
+   "en_hash": "ab01d33e28760f5f",
+   "fr_hash": "a02cbf6dce39e57b"
+  },
+  {
+   "id": "eosat-1-rf-simulation-layer/10-training-scenarios/10-3-cltu-uplink-errors",
+   "en_hash": "24054be281fac970",
+   "fr_hash": "418b81657fef1958"
+  },
+  {
+   "id": "eosat-1-rf-simulation-layer/11-related-documents",
+   "en_hash": "df6e549ede4ed123",
+   "fr_hash": "5e48e30ccbc9cc22"
+  }
+ ],
+ "en_commit": "3e80564"
+}

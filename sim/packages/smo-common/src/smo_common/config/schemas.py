@@ -67,6 +67,15 @@ class MissionConfig(StrictModel):
         description='Console generation served at "/": "classic" or "modern". '
                     'Overridden by SMO_UI env and --ui CLI; per-request ?ui= '
                     'wins over all.')
+    # ── UI language default (i18n packet S0, 2026-10) ──
+    # Default language of the MODERN consoles for a browser that has not
+    # chosen one (each browser's EN|FR toggle / ?lang= wins). Precedence:
+    # SMO_LANG env > this field > "en". API traffic stays English either way.
+    ui_lang: Optional[Literal["en", "fr"]] = Field(
+        default=None,
+        description='Default modern-UI language: "en" or "fr". Overridden by '
+                    'SMO_LANG env; per-browser toggle / ?lang= wins over all. '
+                    'None = English.')
     # Declared so mission.yaml's `network:` block (ports + sim_tick_hz) is
     # actually parsed instead of being dropped as an undeclared key. NetworkConfig
     # is defined below; the forward reference is resolved at class build time.
@@ -108,6 +117,13 @@ class NetworkConfig(StrictModel):
     http_port: int = 8080
     sim_tick_hz: float = 1.0
     tm_max_clients: int = 8
+    # VR visualisation bridge (smo-vr/1, docs/VR_INTERFACE_ICD.md): TCP
+    # newline-delimited JSON and WebSocket feeds of position / attitude / sun /
+    # deployment for external viewers. CLI and SMO_VR* env override these.
+    vr_enabled: bool = True
+    vr_tcp_port: int = 8100
+    vr_ws_port: int = 8101
+    vr_max_rate_hz: float = 10.0
 
 class GroundStationConfig(StrictModel):
     """Ground station definition."""

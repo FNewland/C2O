@@ -1,0 +1,62 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/contingency/propulsion_anomaly.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "ctg-028-propulsion-anomaly",
+   "en_hash": "6965dea870353c61",
+   "fr_hash": "93ae320bb3aef89d"
+  },
+  {
+   "id": "ctg-028-propulsion-anomaly/purpose",
+   "en_hash": "73146381f27203db",
+   "fr_hash": "6196d3d82e575d52"
+  },
+  {
+   "id": "ctg-028-propulsion-anomaly/entry-criteria",
+   "en_hash": "43a74b8034fc8c49",
+   "fr_hash": "a80e0e476cf9f83e"
+  },
+  {
+   "id": "ctg-028-propulsion-anomaly/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "ctg-028-propulsion-anomaly/procedure-steps/step-1-read-full-propulsion-telemetry",
+   "en_hash": "bd36ded28926ed28",
+   "fr_hash": "8c8488e0306bac7c"
+  },
+  {
+   "id": "ctg-028-propulsion-anomaly/procedure-steps/step-2-isolate",
+   "en_hash": "dd0291d9267c82de",
+   "fr_hash": "661838197b60d16b"
+  },
+  {
+   "id": "ctg-028-propulsion-anomaly/procedure-steps/step-3-bound-the-remaining-usable-delta-v",
+   "en_hash": "cc3a0665220ee7a4",
+   "fr_hash": "32add5b10ee91d8d"
+  },
+  {
+   "id": "ctg-028-propulsion-anomaly/procedure-steps/step-4-inhibit-and-ticket",
+   "en_hash": "5df62d1cd62e15e2",
+   "fr_hash": "c115f776bc6293b0"
+  },
+  {
+   "id": "ctg-028-propulsion-anomaly/procedure-steps/step-5-escalation",
+   "en_hash": "37cbfe7094bc916f",
+   "fr_hash": "151e8d9beeadbe57"
+  },
+  {
+   "id": "ctg-028-propulsion-anomaly/exit-criteria",
+   "en_hash": "c3cfd51667bfe39d",
+   "fr_hash": "cbc5ad1a93e1c0d7"
+  }
+ ],
+ "en_commit": "3e80564"
+}

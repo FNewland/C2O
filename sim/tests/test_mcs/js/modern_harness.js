@@ -5,9 +5,9 @@
 // which this file deliberately does NOT touch), the modern page is a real ES
 // module importing the frozen shared vocabulary from /static/shared/. This
 // harness:
-//   1. copies components.js + format.js (smo-common) and mcs.js into a temp
-//      dir, rewriting the absolute /static/shared/ import specifiers to
-//      relative ones;
+//   1. copies every shared ES module (smo-common ui/*.js: components.js,
+//      format.js, i18n.js) and mcs.js into a temp dir, rewriting the absolute
+//      /static/shared/ import specifiers to relative ones;
 //   2. installs a small DOM stub + fetch/localStorage/WebSocket stubs as
 //      globals and sets globalThis.__MCS_TEST__ so the module does not boot;
 //   3. dynamically imports the module and runs the caller's snippet with the
@@ -30,12 +30,20 @@ const SHARED = path.join(repo, 'packages', 'smo-common', 'src', 'smo_common', 'u
 const MODERN = path.join(repo, 'packages', 'smo-mcs', 'src', 'smo_mcs', 'static', 'modern');
 
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'mcs-modern-'));
-fs.copyFileSync(path.join(SHARED, 'components.js'), path.join(tmp, 'components.js'));
-fs.copyFileSync(path.join(SHARED, 'format.js'), path.join(tmp, 'format.js'));
-let src = fs.readFileSync(path.join(MODERN, 'mcs.js'), 'utf8');
-src = src.replace(/["']\/static\/shared\/components\.js["']/g, '"./components.js"')
-         .replace(/["']\/static\/shared\/format\.js["']/g, '"./format.js"');
-fs.writeFileSync(path.join(tmp, 'mcs.js'), src);
+// Every shared ES module (components.js, format.js, i18n.js, ...) is copied,
+// and every absolute /static/shared/<name>.js[?v=N] specifier — in mcs.js AND
+// in the shared modules themselves (components.js imports i18n.js) — is
+// rewritten to ./<name>.js. (Was: two hard-coded files; a new shared import
+// broke every harness-based test.)
+const rewriteShared = (code) =>
+  code.replace(/(["'])\/static\/shared\/([\w.-]+\.js)(\?[^"']*)?\1/g, '"./$2"');
+for (const f of fs.readdirSync(SHARED)) {
+  if (!f.endsWith('.js')) continue;
+  fs.writeFileSync(path.join(tmp, f),
+    rewriteShared(fs.readFileSync(path.join(SHARED, f), 'utf8')));
+}
+fs.writeFileSync(path.join(tmp, 'mcs.js'),
+  rewriteShared(fs.readFileSync(path.join(MODERN, 'mcs.js'), 'utf8')));
 
 // ---- minimal DOM ----------------------------------------------------------
 function mkEl(id) {

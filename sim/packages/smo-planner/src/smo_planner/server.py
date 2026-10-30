@@ -151,6 +151,16 @@ class PlannerServer:
             logger.warning("Unknown ui mode %r — falling back to classic",
                            self._ui_mode)
             self._ui_mode = "classic"
+        # UI language default (i18n S0): SMO_LANG env > mission `ui_lang:` >
+        # "en". Injected as <html data-default-lang> into the modern pages
+        # (index + /wide) only when not English; the browser's ?lang= /
+        # toggle wins. API text stays English.
+        from smo_common.i18n import server_default_lang
+        try:
+            _cfg_lang = _mc.ui_lang
+        except Exception:  # noqa: BLE001 — config never loaded
+            _cfg_lang = None
+        self._ui_lang = server_default_lang(mission_lang=_cfg_lang)
         # Sim-clock anchor cache (sim mode). anchor_sim_time + (wall-now -
         # anchor_wall)*speed = current sim time. Refreshed by _refresh_sim_anchor
         # at most ~1/s; falls back to last anchor then wall clock if unreachable.
@@ -587,6 +597,12 @@ class PlannerServer:
             return
         self._sim_anchor_refreshed_wall = wall
         payload = self._fetch_sim_state()
+        # Anchor at the fetch MID-POINT, not its start: the payload's sim_time
+        # is from somewhere inside the request, so stamping it with the start
+        # put the planner clock ahead by the whole fetch time x speed (a 0.5 s
+        # fetch at x60 = 30 s ahead of the simulator; found by the smo-link
+        # e2e test, tests/test_link/test_e2e.py).
+        wall = (wall + __import__("time").time()) / 2.0
         if not payload:
             self._sim_reachable = False
             return
@@ -910,6 +926,13 @@ class PlannerServer:
 
     def _serve_page(self, rel: str, missing_note: str):
         page = Path(__file__).parent / "static" / rel
+        lang = getattr(self, "_ui_lang", "en")
+        if page.exists() and rel.startswith("modern/") and lang != "en":
+            from smo_common.i18n import inject_default_lang
+            return web.Response(
+                text=inject_default_lang(page.read_text(encoding="utf-8"), lang),
+                content_type="text/html",
+                headers={"Cache-Control": "no-cache"})
         if page.exists():
             return web.FileResponse(
                 page, headers={"Cache-Control": "no-cache"})

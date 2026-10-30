@@ -1,0 +1,112 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/manual/10_desk_procedures.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "10-desk-based-procedure-assignments",
+   "en_hash": "5fee16ebbf27564f",
+   "fr_hash": "56c1accd4fe3118e"
+  },
+  {
+   "id": "10-desk-based-procedure-assignments/operator-positions",
+   "en_hash": "33a76b09a50eefed",
+   "fr_hash": "6a230c0558a0c95c"
+  },
+  {
+   "id": "10-desk-based-procedure-assignments/commissioning-procedures-by-desk",
+   "en_hash": "6db1011802b2ed12",
+   "fr_hash": "c8f73e10ab1a9f99"
+  },
+  {
+   "id": "10-desk-based-procedure-assignments/commissioning-procedures-by-desk/flight-director-overall-coordination",
+   "en_hash": "cabe553b6837adf8",
+   "fr_hash": "727ecfa7d083c735"
+  },
+  {
+   "id": "10-desk-based-procedure-assignments/commissioning-procedures-by-desk/epstcs-power-thermal",
+   "en_hash": "9c998714a706039a",
+   "fr_hash": "ce811e3af3384d57"
+  },
+  {
+   "id": "10-desk-based-procedure-assignments/commissioning-procedures-by-desk/aocs-flight-dynamics",
+   "en_hash": "817c214c5e9e4e0f",
+   "fr_hash": "31085deaa3e392ee"
+  },
+  {
+   "id": "10-desk-based-procedure-assignments/commissioning-procedures-by-desk/ttc-tt-c",
+   "en_hash": "fa35d60aa13be9d6",
+   "fr_hash": "0f02203d8e32b043"
+  },
+  {
+   "id": "10-desk-based-procedure-assignments/commissioning-procedures-by-desk/fdirsystems-fdir-systems",
+   "en_hash": "51293fb5f684ea9a",
+   "fr_hash": "fcd39aeed6830943"
+  },
+  {
+   "id": "10-desk-based-procedure-assignments/commissioning-procedures-by-desk/payloadops-payload-operations",
+   "en_hash": "9666d7850dd037fc",
+   "fr_hash": "12bcb1efcfd61387"
+  },
+  {
+   "id": "10-desk-based-procedure-assignments/contingency-procedures-by-desk",
+   "en_hash": "84526d6cf1cec560",
+   "fr_hash": "42f72e26d7bbe032"
+  },
+  {
+   "id": "10-desk-based-procedure-assignments/contingency-procedures-by-desk/epstcs-power-thermal-contingencies",
+   "en_hash": "1c32f174c2cfc59d",
+   "fr_hash": "70f525448fa73d07"
+  },
+  {
+   "id": "10-desk-based-procedure-assignments/contingency-procedures-by-desk/aocs-flight-dynamics-contingencies",
+   "en_hash": "364ab2cddecf1374",
+   "fr_hash": "3ddde06129cc4894"
+  },
+  {
+   "id": "10-desk-based-procedure-assignments/contingency-procedures-by-desk/ttc-tt-c-contingencies",
+   "en_hash": "eb31c4e9f54e683f",
+   "fr_hash": "822284ce0d0ec42d"
+  },
+  {
+   "id": "10-desk-based-procedure-assignments/contingency-procedures-by-desk/payloadops-payload-contingencies",
+   "en_hash": "f54cfc0a746917f0",
+   "fr_hash": "c950d0451eca08f7"
+  },
+  {
+   "id": "10-desk-based-procedure-assignments/contingency-procedures-by-desk/fdirsystems-obdh-systems-contingencies",
+   "en_hash": "9a74ac6e75dbc397",
+   "fr_hash": "dcab114ddddc97b9"
+  },
+  {
+   "id": "10-desk-based-procedure-assignments/mcs-interface-gaps-for-contingency-support",
+   "en_hash": "7cf0b45cc454d6fd",
+   "fr_hash": "b05a4f064c5c0711"
+  },
+  {
+   "id": "10-desk-based-procedure-assignments/mcs-interface-gaps-for-contingency-support/critical-gaps",
+   "en_hash": "8a05863f2f247068",
+   "fr_hash": "38bd47cc29fe77cc"
+  },
+  {
+   "id": "10-desk-based-procedure-assignments/mcs-interface-gaps-for-contingency-support/recommended-priority",
+   "en_hash": "349b38a4714048ac",
+   "fr_hash": "44ff9eaad4012c67"
+  },
+  {
+   "id": "10-desk-based-procedure-assignments/go-no-go-call-matrix",
+   "en_hash": "7d6d55feaf059f1f",
+   "fr_hash": "d7897d725e69a7cc"
+  },
+  {
+   "id": "10-desk-based-procedure-assignments/emergency-escalation-paths",
+   "en_hash": "ae8e87f1d2cdcb89",
+   "fr_hash": "775409f5a3847798"
+  }
+ ],
+ "en_commit": "3e80564"
+}

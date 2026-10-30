@@ -22,6 +22,7 @@ Usage::
 from __future__ import annotations
 
 import argparse
+import re
 import sys
 from pathlib import Path
 
@@ -223,7 +224,7 @@ def build_document(catalog) -> str:
     # function of its input, or every calendar day is a spurious diff.
     rev = source_revision([CONFIG / "commands" / "tc_catalog.yaml"])
     lines.append(f"**Source revision:** `tc_catalog.yaml@{rev}`  ")
-    lines.append("**Classification:** UNCLASSIFIED — For Simulation Use Only")
+    lines.append("**Classification:** UNCLASSIFIED — Mission Operations")
     lines.append("")
     lines.append("> **GENERATED FILE — DO NOT EDIT BY HAND.**  ")
     lines.append("> Generated from the telecommand database "
@@ -231,7 +232,8 @@ def build_document(catalog) -> str:
                  "source of wire truth for every telecommand argument. Every "
                  "example hex string below is produced by the ground segment's "
                  "own encoder, so this reference and the uplinked bytes cannot "
-                 "disagree. Regenerate after any change to the database.")
+                 "disagree. Regenerate after any change to the database "
+                 "with `python tools/gen_command_reference.py`.")
     lines.append("")
     lines.append("---")
     lines.append("")
@@ -342,13 +344,60 @@ def build_document(catalog) -> str:
     return "\n".join(lines)
 
 
-def build_payload_settings_table(catalog) -> str:
-    """The §Commandable settings block for manual/06_payload.md."""
+#: French labels for the generated payload block (configs/eosat1/i18n/fr/).
+#: The command descriptions come from the database overlay (db.yaml, keys
+#: ``tc:<NAME>:description``); only the fixed table furniture lives here.
+_LABELS = {
+    "en": {"header": "| Setting | Command | func_id | Wire form | Engineering range | Default | Readback |",
+           "no_args": "no arguments",
+           "readback": {}},
+    "fr": {"header": "| Réglage | Commande | func_id | Forme transmise | Plage physique | Défaut | Relecture |",
+           "no_args": "aucun argument",
+           "readback": {"(average)": "(moyenne)"}},
+}
+
+
+def load_fr_overlay(path: Path | None = None) -> dict[str, str]:
+    """``{command name: French description}`` from the i18n database overlay.
+
+    Only current translations are used: an entry whose ``en`` no longer
+    matches the catalogue (stale) or whose ``fr`` is empty falls back to the
+    English, exactly as the MCS client does.
+    """
+    path = path or (CONFIG / "i18n" / "fr" / "db.yaml")
+    if not path.exists():
+        return {}
+    data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    out: dict[str, tuple[str, str]] = {}
+    for e in data.get("entries") or []:
+        key = str(e.get("key", ""))
+        if key.startswith("tc:") and key.endswith(":description") and e.get("fr"):
+            out[key[3:-len(":description")]] = (str(e.get("en") or ""), str(e["fr"]))
+    return out
+
+
+def _setting_label(desc: str, limit: int = 80) -> str:
+    """First sentence of a command description, cut on a word boundary.
+
+    A fixed character cut ("...3 (CALI") gives a different fragment in each
+    language; a sentence is the same unit of meaning in English and French.
+    """
+    text = " ".join(str(desc).split())
+    first = re.split(r"(?<=[.!?])\s", text, maxsplit=1)[0]
+    if len(first) <= limit:
+        return first
+    cut = first[:limit].rsplit(" ", 1)[0].rstrip(" ,;:—-")
+    return cut + " …"
+
+
+def build_payload_settings_table(catalog, lang: str = "en",
+                                 fr_overlay: dict | None = None) -> str:
+    """The §Commandable settings block for manual/06_payload.md (or its FR copy)."""
+    lab = _LABELS[lang]
     payload = [c for c in catalog.commands
                if (c["service"], c["subtype"]) == (8, 1)
                and int(c["func_id"]) in list(range(26, 40)) + list(range(92, 96))]
-    lines = ["| Setting | Command | func_id | Wire form | Engineering range | Default | Readback |",
-             "|---|---|---|---|---|---|---|"]
+    lines = [lab["header"], "|---|---|---|---|---|---|---|"]
     for c in sorted(payload, key=lambda x: x["func_id"]):
         fields = c.get("fields") or []
         if fields:
@@ -361,12 +410,20 @@ def build_payload_settings_table(catalog) -> str:
             rng = "; ".join(_range_text(f) for f in fields)
             default = "; ".join(str(f.get("default")) for f in fields)
         else:
-            wire, rng, default = "no arguments", "—", "—"
+            wire, rng, default = lab["no_args"], "—", "—"
         rb = c.get("readback") or {}
-        rb_txt = (f"{rb.get('description', '')} (0x{int(rb['param_id']):04X})"
+        rb_desc = str(rb.get("description", ""))
+        for en_txt, loc_txt in lab["readback"].items():
+            rb_desc = rb_desc.replace(en_txt, loc_txt)
+        rb_txt = (f"{rb_desc} (0x{int(rb['param_id']):04X})"
                   if rb.get("param_id") is not None else "—")
+        desc = c.get("description", c["name"])
+        if lang != "en" and fr_overlay:
+            en_src, fr_txt = fr_overlay.get(c["name"], ("", ""))
+            if fr_txt and en_src.strip() == str(desc).strip():
+                desc = fr_txt
         lines.append(
-            f"| {_esc(c.get('description', c['name'])[:60])} | `{c['name']}` "
+            f"| {_esc(_setting_label(desc))} | `{c['name']}` "
             f"| {c['func_id']} (0x{int(c['func_id']):02X}) | {_esc(wire)} "
             f"| {_esc(rng)} | {_esc(default)} | {_esc(rb_txt)} |")
     return "\n".join(lines)
@@ -376,13 +433,22 @@ MARK_START = "<!-- BEGIN GENERATED: payload commandable settings -->"
 MARK_END = "<!-- END GENERATED: payload commandable settings -->"
 
 
-def update_payload_manual(catalog, path: Path) -> bool:
-    """Refresh the generated settings table inside manual/06_payload.md."""
-    text = path.read_text()
+def update_payload_manual(catalog, path: Path, lang: str = "en") -> bool:
+    """Refresh the generated settings table inside manual/06_payload.md.
+
+    With ``lang="fr"`` the French mirror (i18n/fr/manual/06_payload.md) is
+    refreshed from the same catalogue, its labels taken from the db overlay.
+    The French file is only ever updated in place (never appended to).
+    """
+    text = path.read_text(encoding="utf-8")
+    table = build_payload_settings_table(
+        catalog, lang, load_fr_overlay() if lang == "fr" else None)
     block = (f"{MARK_START}\n"
              "<!-- Generated by tools/gen_command_reference.py — do not edit by hand. -->\n\n"
-             f"{build_payload_settings_table(catalog)}\n\n"
+             f"{table}\n\n"
              f"{MARK_END}")
+    if lang != "en" and not (MARK_START in text and MARK_END in text):
+        return False
     if MARK_START in text and MARK_END in text:
         head = text.split(MARK_START)[0]
         tail = text.split(MARK_END)[1]
@@ -393,7 +459,7 @@ def update_payload_manual(catalog, path: Path) -> bool:
             "Every payload setting reachable over the wire, with its encoding.\n\n"
             + block + "\n")
     if new != text:
-        path.write_text(new)
+        path.write_text(new, encoding="utf-8")
         return True
     return False
 
@@ -410,18 +476,22 @@ def main() -> int:
     catalog = load_catalog(CONFIG)
     doc = build_document(catalog)
     out = Path(args.output)
-    payload_manual = CONFIG / "manual" / "06_payload.md"
+    payload_manuals = [(CONFIG / "manual" / "06_payload.md", "en"),
+                       (CONFIG / "i18n" / "fr" / "manual" / "06_payload.md", "fr")]
 
     if args.check:
         current = out.read_text() if out.exists() else ""
         stale = []
         if current != doc:
             stale.append(str(out))
-        if payload_manual.exists():
-            before = payload_manual.read_text()
-            update_payload_manual(catalog, payload_manual)
-            if payload_manual.read_text() != before:
-                payload_manual.write_text(before)   # restore; --check is read-only
+        for payload_manual, lang in payload_manuals:
+            if not payload_manual.exists():
+                continue
+            before = payload_manual.read_text(encoding="utf-8")
+            update_payload_manual(catalog, payload_manual, lang)
+            if payload_manual.read_text(encoding="utf-8") != before:
+                # restore; --check is read-only
+                payload_manual.write_text(before, encoding="utf-8")
                 stale.append(str(payload_manual))
         if stale:
             print("STALE (re-run tools/gen_command_reference.py):")
@@ -436,8 +506,9 @@ def main() -> int:
     print(f"Command reference generated: {out}")
     print(f"  Commands: {len(catalog.commands)}")
     print(f"  Quick commands: {len(catalog.quick_commands)}")
-    if payload_manual.exists() and update_payload_manual(catalog, payload_manual):
-        print(f"  Updated: {payload_manual}")
+    for payload_manual, lang in payload_manuals:
+        if payload_manual.exists() and update_payload_manual(catalog, payload_manual, lang):
+            print(f"  Updated: {payload_manual}")
     return 0
 
 

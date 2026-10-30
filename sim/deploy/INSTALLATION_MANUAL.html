@@ -325,7 +325,7 @@ li { margin-bottom: 4px; color: var(--text-dim); }
     <li><a href="#config">Configuration Reference</a></li>
     <li><a href="#single">Single-Machine Deployment</a></li>
     <li><a href="#distributed">Distributed Deployment</a></li>
-    <li><a href="#gateway">Gateway (Multi-Site MCS)</a></li>
+    <li><a href="#gateway">Gateway (Multi-Site MCS) — deprecated</a></li>
     <li><a href="#rfsim">RF Simulation Layer</a></li>
     <li><a href="#tools">Auxiliary Tools</a></li>
     <li><a href="#widescreen">Wide-Screen Planner Display</a></li>
@@ -351,7 +351,7 @@ li { margin-bottom: 4px; color: var(--text-dim); }
   <tr><td><strong>Simulator</strong></td><td>smo-simulator</td><td>Spacecraft simulation engine with instructor UI</td><td>8001 (TC), 8002 (TM), 8080 (HTTP)</td></tr>
   <tr><td><strong>MCS</strong></td><td>smo-mcs</td><td>Mission Control System — 6 operator positions</td><td>9090 (HTTP/WS)</td></tr>
   <tr><td><strong>Planner</strong></td><td>smo-planner</td><td>Mission planning, scheduling, budgets, imaging</td><td>9091 (HTTP)</td></tr>
-  <tr><td><strong>Gateway</strong></td><td>smo-gateway</td><td>TM/TC relay for multi-site MCS deployments</td><td>10025 (TCP)</td></tr>
+  <tr><td><strong>Gateway</strong></td><td>smo-gateway</td><td><strong>Deprecated</strong> (replaced by smo-link). TM/TC relay for multi-site MCS deployments</td><td>10025 (TCP)</td></tr>
   <tr><td><strong>RF Sim</strong></td><td>smo-rfsim</td><td>CCSDS framing, channel coding, RF channel model</td><td>8011 (TC), 8012 (TM), 8094 (Radio)</td></tr>
 </table>
 
@@ -714,7 +714,7 @@ Machine D (Gateway):     192.168.1.103  [optional]
   Gateway    → :10025 (relays to Simulator)
 </div>
 
-<h3>5.4 Multi-Site with Gateway</h3>
+<h3>5.4 Multi-Site with Gateway (deprecated — use smo-link, §9)</h3>
 
 <div class="arch-diagram">
                     ┌─────────────┐
@@ -787,7 +787,7 @@ Machine D (Gateway):     192.168.1.103  [optional]
   <tr><td><code>PLANNER_REACHABLE_HOST</code></td><td>localhost</td><td>How the MCS can reach the planner</td></tr>
 </table>
 
-<h3>6.4 Gateway Settings</h3>
+<h3>6.4 Gateway Settings (deprecated — smo-gateway is replaced by smo-link)</h3>
 <table>
   <tr><th>Variable</th><th>Default</th><th>Description</th></tr>
   <tr><td><code>USE_GATEWAY</code></td><td>no</td><td>Set to "yes" to enable the gateway relay</td></tr>
@@ -923,7 +923,9 @@ PLANNER_REACHABLE_HOST="192.168.1.101"  # Machine B's own IP</code></pre>
 </div>
 
 <!-- ══════════════════════ 9. GATEWAY ══════════════════════ -->
-<h2 id="gateway">9. Gateway (Multi-Site MCS)</h2>
+<h2 id="gateway">9. Gateway (Multi-Site MCS) — deprecated</h2>
+
+<p><strong>Deprecated:</strong> <code>smo-gateway</code> is replaced by <strong><code>smo-link</code></strong> (space-link agent + ground-segment gateway over one outbound WebSocket). For a simulator and ground segment on different sites or over the internet, use the <code>start.sh</code> profiles (<code>SMO_PROFILE=space|ground</code>) or <code>docker/compose.yaml</code>; see <code>docs/DEPLOYMENT.md</code> §9, <code>docs/web_2026-10/LINK_DESIGN.md</code> and <code>deploy/gcp/README.md</code>. The gateway below still ships, unchanged, until a later clean-up removes it.</p>
 
 <p>The Gateway is a transparent TM/TC relay that allows multiple MCS instances to connect to a single simulator.</p>
 

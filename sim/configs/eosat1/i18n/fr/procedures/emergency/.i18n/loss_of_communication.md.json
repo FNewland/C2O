@@ -1,0 +1,87 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/emergency/loss_of_communication.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "emg-004-loss-of-communication",
+   "en_hash": "4bc320879c0a16d9",
+   "fr_hash": "6d85ca28dcc232bd"
+  },
+  {
+   "id": "emg-004-loss-of-communication/purpose",
+   "en_hash": "3fad60465330edde",
+   "fr_hash": "a87c5a3e1346e995"
+  },
+  {
+   "id": "emg-004-loss-of-communication/prerequisites",
+   "en_hash": "ea8ab07923afc1ef",
+   "fr_hash": "c749b74456411360"
+  },
+  {
+   "id": "emg-004-loss-of-communication/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "emg-004-loss-of-communication/procedure-steps/step-1-verify-ground-station-infrastructure",
+   "en_hash": "6defd4362c513491",
+   "fr_hash": "a09fef81e7675b16"
+  },
+  {
+   "id": "emg-004-loss-of-communication/procedure-steps/step-2-attempt-contact-on-all-available-ground-stations",
+   "en_hash": "0e399bde6f28d20c",
+   "fr_hash": "9008361a93ca3a32"
+  },
+  {
+   "id": "emg-004-loss-of-communication/procedure-steps/step-3-blind-command-on-primary-transponder",
+   "en_hash": "606f5ae1f80998be",
+   "fr_hash": "2f4a5dc327456375"
+  },
+  {
+   "id": "emg-004-loss-of-communication/procedure-steps/step-4-blind-command-on-redundant-transponder",
+   "en_hash": "f5bdcfa04887e6e1",
+   "fr_hash": "90ee2a45f0854925"
+  },
+  {
+   "id": "emg-004-loss-of-communication/procedure-steps/step-5-wait-for-autonomous-recovery-timer",
+   "en_hash": "1711379702041496",
+   "fr_hash": "02c0188f4c1eb87c"
+  },
+  {
+   "id": "emg-004-loss-of-communication/procedure-steps/step-6-polar-pass-focused-campaign-12h-threshold",
+   "en_hash": "1afc3c4d58904623",
+   "fr_hash": "c3a20b86b93c93a5"
+  },
+  {
+   "id": "emg-004-loss-of-communication/procedure-steps/step-7-emergency-network-escalation-24h-threshold",
+   "en_hash": "6c7edba77c702611",
+   "fr_hash": "b14566657e271fc2"
+  },
+  {
+   "id": "emg-004-loss-of-communication/procedure-steps/step-8-extended-loss-assessment-48h-threshold",
+   "en_hash": "8bb5dd0a66083d31",
+   "fr_hash": "cb051312d199eeb8"
+  },
+  {
+   "id": "emg-004-loss-of-communication/decision-tree-summary",
+   "en_hash": "c8975090e2e9d88e",
+   "fr_hash": "f87b074ca18bd2c5"
+  },
+  {
+   "id": "emg-004-loss-of-communication/off-nominal-handling",
+   "en_hash": "39880c590849f415",
+   "fr_hash": "3c70e08887261196"
+  },
+  {
+   "id": "emg-004-loss-of-communication/post-conditions",
+   "en_hash": "2072cfec6fd70949",
+   "fr_hash": "bf561b76262141ea"
+  }
+ ],
+ "en_commit": "3e80564"
+}

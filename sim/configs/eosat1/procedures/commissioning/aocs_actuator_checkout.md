@@ -45,7 +45,7 @@ magnetorquers.
 **Verify:** `aocs.rw2_enabled` (0x0255) == 1 within 10s
 **Verify:** `aocs.rw3_enabled` (0x0256) == 1 within 10s
 **Verify:** `aocs.rw4_enabled` (0x0257) == 1 within 10s
-**Action:** With fewer than two wheels enabled the spacecraft has no three-axis actuation and the on-board FDIR rule on `aocs.wheels_enabled` will safe the AOCS once the mission phase reaches NOMINAL. Do not leave this card with fewer than three wheels enabled.
+**Action:** With fewer than three of the four wheels enabled the spacecraft has no three-axis actuation, and with fewer than two the on-board FDIR rule on `aocs.wheels_enabled` will safe the AOCS once the mission phase reaches NOMINAL. Do not leave this card with fewer than three wheels enabled.
 **GO/NO-GO:** All four wheels report enabled
 
 ### Step 2 — Record Baseline Wheel Speeds

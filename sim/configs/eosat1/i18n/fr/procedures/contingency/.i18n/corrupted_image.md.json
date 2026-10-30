@@ -1,0 +1,82 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/contingency/corrupted_image.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "ctg-015-corrupted-image-recovery",
+   "en_hash": "a73ec88259979a08",
+   "fr_hash": "221c0fbecd4d0170"
+  },
+  {
+   "id": "ctg-015-corrupted-image-recovery/objective",
+   "en_hash": "a37bb8d3eb06e702",
+   "fr_hash": "3e128a81d5c76966"
+  },
+  {
+   "id": "ctg-015-corrupted-image-recovery/prerequisites",
+   "en_hash": "5700832c91671c85",
+   "fr_hash": "6631cdf57d7b4309"
+  },
+  {
+   "id": "ctg-015-corrupted-image-recovery/required-telemetry",
+   "en_hash": "a987afd01208daad",
+   "fr_hash": "345be7d44f74b7a6"
+  },
+  {
+   "id": "ctg-015-corrupted-image-recovery/required-commands",
+   "en_hash": "82d60a3876530803",
+   "fr_hash": "c989ed4c8282635b"
+  },
+  {
+   "id": "ctg-015-corrupted-image-recovery/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "ctg-015-corrupted-image-recovery/procedure-steps/step-1-detect-and-quantify-checksum-errors",
+   "en_hash": "15a76f23c02949ea",
+   "fr_hash": "fa37af4516d75fff"
+  },
+  {
+   "id": "ctg-015-corrupted-image-recovery/procedure-steps/step-2-check-fpa-temperature",
+   "en_hash": "e5bdd9570a26bf7b",
+   "fr_hash": "901cbdb38d4b0652"
+  },
+  {
+   "id": "ctg-015-corrupted-image-recovery/procedure-steps/step-3-fpa-warm-abort-imaging-and-cool-down",
+   "en_hash": "b80ad7dc2929bc2d",
+   "fr_hash": "a5c76150869bca3e"
+  },
+  {
+   "id": "ctg-015-corrupted-image-recovery/procedure-steps/step-4-check-memory-segments",
+   "en_hash": "c213add321887f3e",
+   "fr_hash": "ab0918355643c3bb"
+  },
+  {
+   "id": "ctg-015-corrupted-image-recovery/procedure-steps/step-5-delete-corrupted-image-and-re-capture",
+   "en_hash": "7cfd670eb612b4fe",
+   "fr_hash": "f0dcf8e0c9ab03ae"
+  },
+  {
+   "id": "ctg-015-corrupted-image-recovery/procedure-steps/step-6-post-capture-verification",
+   "en_hash": "fbcb4b2fe194db53",
+   "fr_hash": "653d3d9b71159f53"
+  },
+  {
+   "id": "ctg-015-corrupted-image-recovery/verification-criteria",
+   "en_hash": "dcd9a7aced58fc3e",
+   "fr_hash": "a80d3eb13ec415fb"
+  },
+  {
+   "id": "ctg-015-corrupted-image-recovery/contingency",
+   "en_hash": "1726738512cebe8b",
+   "fr_hash": "56793b7d7757ebde"
+  }
+ ],
+ "en_commit": "3e80564"
+}

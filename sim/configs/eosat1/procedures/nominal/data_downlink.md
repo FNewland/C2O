@@ -106,8 +106,10 @@ a "downlink" could complete in eclipse with the transmitter off.
 **Note:** If `ttc.link_margin` drops below 2.0 dB, stop requesting segments and
 go to Step 6; the transfer can be resumed at the next AOS from the same
 `transfer_id`.
+**BRANCH:** `ttc.link_margin < 2.0` -> GO `STEP-6` | NO-GO `STEP-5` (timeout 5 s)
 
 ### Step 5a --- Verify the Product Checksum
+**LABEL:** `STEP-5`
 **Action:** CRC-32 the reassembled product on the ground and compare with the
 value TM(13,2) reported in Step 3a.
 **Note:** This is a real check, not a formality. An `image_corrupt`-injected
@@ -124,6 +126,7 @@ and archived without errors.
 link conditions before continuing.
 
 ### Step 6 --- Terminate Downlink Session and Release the HIGH Tier
+**LABEL:** `STEP-6`
 **TC:** `S13_END_TRANSFER(transfer_id=T)` (Service 13, Subtype 5) --- close the session
 **Note:** Closing a FULLY-dumped session DELETES the product and returns its
 storage; a partial session leaves the product on board for the next pass.
@@ -175,7 +178,7 @@ and any frame-sync interruptions in the pass log.
 
 ## Post-Conditions
 - [ ] Payload returned to STANDBY mode
-- [ ] Storage usage reduced (Sf < S0)
+- [ ] Catalogued volume reduced (Vf < V0)
 - [ ] Ground station confirms data archived without corruption
 - [ ] TTC link maintained throughout (or gracefully recovered)
 - [ ] Pass log updated with downlink session summary

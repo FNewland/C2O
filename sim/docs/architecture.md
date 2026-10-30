@@ -48,7 +48,8 @@ The Space Mission Operations (SMO) platform simulates a complete ground segment 
 | **smo-mcs** | Mission Control System — operator UI | HTTP:9090 | smo-common, aiohttp |
 | **smo-rfsim** | RF simulation bridge — CCSDS framing, signal processing | TC:8011, TM:8012, Radio:8094 | smo-common, aiohttp, reedsolo |
 | **smo-planner** | Mission planning — pass scheduling, budgets | HTTP:9091 | smo-common, aiohttp, sgp4 |
-| **smo-gateway** | TM/TC relay for multi-site deployments | TCP:10025 | smo-common |
+| **smo-link** | Space link: agent (space side) + ground-segment gateway (GSG) over one WebSocket; see `docs/web_2026-10/LINK_DESIGN.md` | GSG: TM:8002, TC:8001, HTTP:8080 (loopback), link:9100 | smo-common, aiohttp |
+| **smo-gateway** | **Deprecated** (replaced by smo-link). Legacy TM/TC relay for multi-site deployments | TCP:10025 | smo-common |
 
 ## 3. Data Flows
 

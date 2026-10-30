@@ -1,0 +1,102 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/commissioning/payload_calibration.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "com-011-payload-calibration",
+   "en_hash": "60eefca14a78b418",
+   "fr_hash": "724398b63e3fe027"
+  },
+  {
+   "id": "com-011-payload-calibration/purpose",
+   "en_hash": "43e1b8a28f342f90",
+   "fr_hash": "9f23eba97f6e41f6"
+  },
+  {
+   "id": "com-011-payload-calibration/prerequisites",
+   "en_hash": "25dcdbc9ba05ed91",
+   "fr_hash": "7d94bafed9595478"
+  },
+  {
+   "id": "com-011-payload-calibration/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "com-011-payload-calibration/procedure-steps/step-1-verify-pre-calibration-state",
+   "en_hash": "41222589b8fc75a6",
+   "fr_hash": "b55123792b5677c1"
+  },
+  {
+   "id": "com-011-payload-calibration/procedure-steps/step-2-close-the-shutter-for-dark-frame-acquisition",
+   "en_hash": "56ab7745c0f374ff",
+   "fr_hash": "a6e1476b4fa5b54f"
+  },
+  {
+   "id": "com-011-payload-calibration/procedure-steps/step-3-capture-the-dark-frame-set",
+   "en_hash": "16753c22539087d5",
+   "fr_hash": "dbf018fd5faeb71d"
+  },
+  {
+   "id": "com-011-payload-calibration/procedure-steps/step-3a-capture-the-flat-field-set",
+   "en_hash": "dad15d2c929cf2c7",
+   "fr_hash": "f67bb613f82eec70"
+  },
+  {
+   "id": "com-011-payload-calibration/procedure-steps/step-4-verify-dark-frame-data-quality",
+   "en_hash": "30c77a4b39518778",
+   "fr_hash": "14145108fb13fef1"
+  },
+  {
+   "id": "com-011-payload-calibration/procedure-steps/step-5-open-the-shutter-and-return-to-standby",
+   "en_hash": "b4e6d275dfd24fd0",
+   "fr_hash": "9620d8e005ac1767"
+  },
+  {
+   "id": "com-011-payload-calibration/procedure-steps/step-6-prepare-for-calibration-site-overpass",
+   "en_hash": "2b208abc90a5d80e",
+   "fr_hash": "cb8877b18399b5db"
+  },
+  {
+   "id": "com-011-payload-calibration/procedure-steps/step-7-capture-calibration-site-image",
+   "en_hash": "d847b84caa5257f1",
+   "fr_hash": "c13c27fc5bcaebe5"
+  },
+  {
+   "id": "com-011-payload-calibration/procedure-steps/step-8-capture-second-calibration-image-different-integration-time",
+   "en_hash": "1957761604f560a4",
+   "fr_hash": "2b31d79dd9faa1a2"
+  },
+  {
+   "id": "com-011-payload-calibration/procedure-steps/step-9-return-payload-to-standby",
+   "en_hash": "34718dc627a39ceb",
+   "fr_hash": "6b42bea6dfdfcb81"
+  },
+  {
+   "id": "com-011-payload-calibration/procedure-steps/step-10-verify-data-stored-and-schedule-downlink",
+   "en_hash": "4774e1d3a5f185a8",
+   "fr_hash": "fa6e88e4597ee9a7"
+  },
+  {
+   "id": "com-011-payload-calibration/off-nominal-handling",
+   "en_hash": "6fc91ba5a7e266d1",
+   "fr_hash": "fca770d95b77e7d9"
+  },
+  {
+   "id": "com-011-payload-calibration/post-conditions",
+   "en_hash": "bf1e0005d2096a94",
+   "fr_hash": "03eaaed98dbd5eda"
+  },
+  {
+   "id": "com-011-payload-calibration/exit-state",
+   "en_hash": "d72dbc5ec449f816",
+   "fr_hash": "7f8c5f710caa7ba1"
+  }
+ ],
+ "en_commit": "983af0f"
+}

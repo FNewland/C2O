@@ -56,6 +56,12 @@ def create_instructor_app(engine, ui_mode: str | None = None) -> web.Application
                        resolved_ui)
         resolved_ui = "classic"
     app["ui_mode"] = resolved_ui
+    # UI language default (i18n S0): SMO_LANG env > mission `ui_lang:` > "en".
+    # Injected as <html data-default-lang> into the modern page only when not
+    # English; the browser's ?lang= / toggle wins.
+    from smo_common.i18n import mission_ui_lang, server_default_lang
+    app["ui_lang"] = server_default_lang(mission_lang=mission_ui_lang(
+        getattr(engine, "config_dir", None) or "configs/eosat1"))
 
     app.router.add_get("/", handle_index)
     # Explicit generation routes (plan §1.2): live A/B comparison in two tabs.
@@ -64,6 +70,8 @@ def create_instructor_app(engine, ui_mode: str | None = None) -> web.Application
     app.router.add_get("/ws", handle_ws)
     app.router.add_get("/api/state", handle_state)
     app.router.add_get("/api/instructor/snapshot", handle_instructor_snapshot)
+    # VR visualisation bridge (smo-vr/1): headset link status + latest frame.
+    app.router.add_get("/api/vr", handle_vr)
     app.router.add_post("/api/command", handle_command)
     app.router.add_get("/api/scenarios", handle_scenarios)
     app.router.add_get("/api/scenario/debrief", handle_scenario_debrief)
@@ -216,10 +224,15 @@ def _resolve_ui(request) -> str:
     return request.app.get("ui_mode", "classic")
 
 
-def _serve_index(mode: str):
+def _serve_index(mode: str, lang: str = "en"):
     static_dir = Path(__file__).parent / "static"
     index_file = (static_dir / "modern" / "index.html" if mode == "modern"
                   else static_dir / "index.html")
+    if index_file.exists() and mode == "modern" and lang != "en":
+        from smo_common.i18n import inject_default_lang
+        return web.Response(
+            text=inject_default_lang(index_file.read_text(encoding="utf-8"), lang),
+            content_type="text/html", headers={"Cache-Control": "no-cache"})
     if index_file.exists():
         # no-cache: a UI-mode flip must never be masked by a cached index (R9)
         return web.FileResponse(
@@ -238,7 +251,7 @@ def _serve_index(mode: str):
 
 
 async def handle_index(request):
-    return _serve_index(_resolve_ui(request))
+    return _serve_index(_resolve_ui(request), request.app.get("ui_lang", "en"))
 
 
 async def handle_index_classic(request):
@@ -248,7 +261,7 @@ async def handle_index_classic(request):
 
 async def handle_index_modern(request):
     """GET /modern — always the modern page (live A/B comparison)."""
-    return _serve_index("modern")
+    return _serve_index("modern", request.app.get("ui_lang", "en"))
 
 
 async def handle_ws(request):
@@ -294,6 +307,18 @@ async def handle_ws(request):
 async def handle_state(request):
     engine = request.app["engine"]
     return web.json_response(engine.get_state_summary())
+
+
+async def handle_vr(request):
+    """VR bridge status: who is connected, their status words, and the frame
+    the headsets are being sent (docs/VR_INTERFACE_ICD.md)."""
+    engine = request.app["engine"]
+    link = getattr(engine, "vr_link", None)
+    get = getattr(engine, "get_vr_state", None)
+    return web.json_response({
+        "link": link if link is not None else {"enabled": False},
+        "frame": get() if callable(get) else None,
+    })
 
 
 async def handle_command(request):

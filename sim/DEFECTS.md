@@ -147,6 +147,8 @@ creating GitHub issues.
 | 132 | Major    | Fixed      | Commanded FPA setpoint lost on breakpoint load                              |
 | 133 | Major    | Fixed      | FPA thermal envelope disagreed across five files; legal command read red    |
 | 134 | Critical | Fixed      | Commissioned HK SIDs silently switched off by a mission-phase declaration   |
+| 135 | Major    | Fixed      | GMSK/GFSK ran at 1/8 of their modulation index (π·h/sps per bit)             |
+| 136 | Minor    | Fixed      | `gfsk_mod_index` / `gmsk_bt` config never reached the TX modulator          |
 
 Severity key:
 - **Critical** — mission cannot operate safely without this

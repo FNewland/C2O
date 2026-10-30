@@ -185,21 +185,21 @@ GO/NO-GO gate.  They do not execute individual steps unless marked below.
 
 | Proc ID       | Title                            | Lead     | Support      | FD GO/NO-GO | Time-Critical |
 |---------------|----------------------------------|----------|--------------|-------------|---------------|
-| CON-002       | EPS Safe Mode Recovery           | eps_tcs  | all desks    | YES — each load restore step | No (recovery paced) |
-| CON-008       | Solar Array Degradation          | eps_tcs  | aocs         | YES — if payload duty reduction needed | No |
-| CON-019       | Progressive Load Shedding        | eps_tcs  | all desks    | YES — at each shed level | YES — eclipse countdown |
-| CON-020       | Solar Panel Loss Response        | eps_tcs  | aocs         | YES — if attitude optimisation needed | No |
-| PROC-EPS-OFF-001 | Overcurrent Response          | eps_tcs  | affected desk| YES — before OC flag reset | YES — 30s stability check |
-| PROC-EPS-OFF-002 | Undervoltage Load Shedding    | eps_tcs  | all desks    | YES — each shed/restore step | YES — bus declining |
-| PROC-EPS-OFF-003 | Battery Cell Failure          | eps_tcs  | fdir_systems | YES — before eclipse entry if margin negative | YES — eclipse timing |
-| CON-006       | Thermal Limit Exceedance         | eps_tcs  | affected desk| YES — before heater actuation or payload OFF | No (15-min monitor) |
-| CON-003       | Payload/FPA Thermal Anomaly      | eps_tcs  | payload_ops  | YES — before payload restart | No (cooldown timer) |
+| CTG-005       | EPS Safe Mode Recovery           | eps_tcs  | all desks    | YES — each load restore step | No (recovery paced) |
+| CTG-009       | Solar Array Degradation          | eps_tcs  | aocs         | YES — if payload duty reduction needed | No |
+| CTG-023       | Progressive Load Shedding        | eps_tcs  | all desks    | YES — at each shed level | YES — eclipse countdown |
+| CTG-024       | Solar Panel Loss Response        | eps_tcs  | aocs         | YES — if attitude optimisation needed | No |
+| CTG-012 | Overcurrent Response          | eps_tcs  | affected desk| YES — before OC flag reset | YES — 30s stability check |
+| CTG-001 | Undervoltage Load Shedding    | eps_tcs  | all desks    | YES — each shed/restore step | YES — bus declining |
+| CTG-013 | Battery Cell Failure          | eps_tcs  | fdir_systems | YES — before eclipse entry if margin negative | YES — eclipse timing |
+| CTG-004       | Thermal Limit Exceedance         | eps_tcs  | affected desk| YES — before heater actuation or payload OFF | No (15-min monitor) |
+| CTG-006       | Payload/FPA Thermal Anomaly      | eps_tcs  | payload_ops  | YES — before payload restart | No (cooldown timer) |
 
 **Key coordination pattern:** eps_tcs leads all power/thermal contingencies. During
-load shedding (CON-019, PROC-EPS-OFF-002), every affected desk must acknowledge
+load shedding (CTG-023, CTG-001), every affected desk must acknowledge
 before their equipment is shed, and FD authorises each level.
 
-**Progressive Load Shed callouts (CON-019):**
+**Progressive Load Shed callouts (CTG-023):**
 1. SoC < 50%: eps_tcs → payload_ops: "Payload OFF." FD GO.
 2. SoC < 35%: eps_tcs → payload_ops: "FPA Cooler OFF." FD GO.
 3. SoC < 25%: eps_tcs → ttc: "TX OFF — loss of downlink." FD GO.
@@ -212,17 +212,17 @@ before their equipment is shed, and FD authorises each level.
 
 | Proc ID       | Title                            | Lead | Support      | FD GO/NO-GO | Time-Critical |
 |---------------|----------------------------------|------|--------------|-------------|---------------|
-| CON-001       | AOCS Anomaly Recovery            | aocs | eps_tcs      | YES — if 2+ wheels failed | YES — attitude degrading |
-| CON-007       | RW Bearing/Speed Anomaly         | aocs | eps_tcs      | YES — before wheel disable | YES — attitude risk |
-| CON-021       | AOCS Sensor Cascade Failure      | aocs | payload_ops  | YES — fallback mode decision | YES — sensor switching |
-| CON-022       | Reaction Wheel Stuck Recovery    | aocs | fdir_systems | YES — before recovery attempt | No (2-orbit assessment) |
-| PROC-AOCS-OFF-001 | Star Tracker Failure         | aocs | payload_ops  | YES — if COARSE_SUN entered | YES — ST2 boot 60s |
+| CTG-002       | AOCS Anomaly Recovery            | aocs | eps_tcs      | YES — if 2+ wheels failed | YES — attitude degrading |
+| CTG-007       | RW Bearing/Speed Anomaly         | aocs | eps_tcs      | YES — before wheel disable | YES — attitude risk |
+| CTG-025       | AOCS Sensor Cascade Failure      | aocs | payload_ops  | YES — fallback mode decision | YES — sensor switching |
+| CTG-026       | Reaction Wheel Stuck Recovery    | aocs | fdir_systems | YES — before recovery attempt | No (2-orbit assessment) |
+| CTG-008 | Star Tracker Failure         | aocs | payload_ops  | YES — if COARSE_SUN entered | YES — ST2 boot 60s |
 
 **Key coordination pattern:** aocs leads all attitude contingencies. If pointing
 degrades below imaging threshold, payload_ops is notified to suspend operations.
 eps_tcs is consulted for power margin before enabling redundant sensors.
 
-**Star tracker failure callouts (PROC-AOCS-OFF-001):**
+**Star tracker failure callouts (CTG-008):**
 1. aocs: "ST1 failure confirmed. Powering ST2." — announce on ops loop
 2. aocs: "ST2 booting, 60s to acquisition." — FD acknowledges
 3. If ST2 fails: aocs → FD: "Dual ST failure. Requesting COARSE_SUN fallback." FD GO required.
@@ -234,16 +234,16 @@ eps_tcs is consulted for power margin before enabling redundant sensors.
 
 | Proc ID       | Title                            | Lead | Support      | FD GO/NO-GO | Time-Critical |
 |---------------|----------------------------------|------|--------------|-------------|---------------|
-| CON-004       | TT&C Link Loss Recovery          | ttc  | fdir_systems | YES — before blind commands | YES — pass window |
-| PROC-TTC-OFF-001 | BER Anomaly Investigation    | ttc  | eps_tcs      | YES — before xpdr switch | No |
-| PROC-TTC-OFF-002 | No TM at Pass Start          | ttc  | fdir_systems | YES — at each blind command step | YES — pass window |
-| PROC-TTC-OFF-003 | GS Antenna Failure           | ttc  | FD directly  | YES — alternate station coordination | YES — contact schedule |
+| CTG-003       | TT&C Link Loss Recovery          | ttc  | fdir_systems | YES — before blind commands | YES — pass window |
+| CTG-014 | BER Anomaly Investigation    | ttc  | eps_tcs      | YES — before xpdr switch | No |
+| CTG-019 | No TM at Pass Start          | ttc  | fdir_systems | YES — at each blind command step | YES — pass window |
+| CTG-020 | GS Antenna Failure           | ttc  | FD directly  | YES — alternate station coordination | YES — contact schedule |
 
 **Key coordination pattern:** ttc leads all RF/link contingencies. Blind command
 sequences require FD authorisation at each step. Link loss escalation to EMG-004
 after 2 consecutive failed passes.
 
-**No-TM-at-AOS callout sequence (PROC-TTC-OFF-002):**
+**No-TM-at-AOS callout sequence (CTG-019):**
 1. ttc: "No TM received at AOS+60s. GS confirms nominal."
 2. ttc → FD: "Request GO for blind HK." FD GO.
 3. ttc: "Blind HK sent. Waiting 30s."
@@ -258,9 +258,9 @@ after 2 consecutive failed passes.
 
 | Proc ID       | Title                            | Lead | Support      | FD GO/NO-GO | Time-Critical |
 |---------------|----------------------------------|------|--------------|-------------|---------------|
-| CON-003       | Payload/FPA Thermal Anomaly      | payload_ops | eps_tcs | YES — before payload restart | No (cooldown) |
-| PROC-PLI-OFF-001 | Corrupted Image Handling     | payload_ops | fdir_systems | NO — routine (report to FD after) | No |
-| PROC-PLI-OFF-002 | Memory Segment Failure       | payload_ops | fdir_systems | YES — if capacity < 50% | No |
+| CTG-006       | Payload/FPA Thermal Anomaly      | payload_ops | eps_tcs | YES — before payload restart | No (cooldown) |
+| CTG-015 | Corrupted Image Handling     | payload_ops | fdir_systems | NO — routine (report to FD after) | No |
+| CTG-016 | Memory Segment Failure       | payload_ops | fdir_systems | YES — if capacity < 50% | No |
 
 **Key coordination pattern:** payload_ops handles payload-specific anomalies.
 FPA thermal issues require eps_tcs to verify cooler power and TCS thermal state.
@@ -272,20 +272,20 @@ Memory failures may require mission replanning if capacity is significantly redu
 
 | Proc ID       | Title                            | Lead | Support      | FD GO/NO-GO | Time-Critical |
 |---------------|----------------------------------|------|--------------|-------------|---------------|
-| CON-005       | OBC Watchdog Reset Recovery      | fdir_systems | eps_tcs | YES — if repeated resets | YES — reboot loop risk |
-| PROC-OBC-OFF-001 | Boot Loader Recovery         | fdir_systems | all desks | YES — at each recovery step | YES — boot inhibit timing |
-| PROC-OBC-OFF-002 | CAN Bus Failure Switchover   | fdir_systems | all desks | YES — before bus switchover | YES — 10s HK gap |
-| PROC-OBC-OFF-003 | OBC Redundancy Switchover    | fdir_systems | all desks | YES — CRITICAL: zero redundancy after | YES — 60s TM gap |
-| PROC-OBDH-OFF-002 | OBC Bootloader Recovery     | fdir_systems | eps_tcs | YES — before image reload | YES — multi-contact |
-| PROC-OBDH-OFF-003 | CAN Bus Isolation            | fdir_systems | all desks | YES — before bus switchover | YES — 10s HK gap |
-| PROC-CON-011  | GPS Time Sync & AOCS Recovery    | fdir_systems | aocs | YES — if time jump > 5s | YES — AOCS may reset |
+| CTG-010       | OBC Watchdog Reset Recovery      | fdir_systems | eps_tcs | YES — if repeated resets | YES — reboot loop risk |
+| CTG-018 | Boot Loader Recovery         | fdir_systems | all desks | YES — at each recovery step | YES — boot inhibit timing |
+| CTG-017 | CAN Bus Failure Switchover   | fdir_systems | all desks | YES — before bus switchover | YES — 10s HK gap |
+| CTG-011 | OBC Redundancy Switchover    | fdir_systems | all desks | YES — CRITICAL: zero redundancy after | YES — 60s TM gap |
+| CTG-021 | OBC Bootloader Recovery     | fdir_systems | eps_tcs | YES — before image reload | YES — multi-contact |
+| CTG-022 | CAN Bus Isolation            | fdir_systems | all desks | YES — before bus switchover | YES — 10s HK gap |
+| CTG-027  | GPS Time Sync & AOCS Recovery    | fdir_systems | aocs | YES — if time jump > 5s | YES — AOCS may reset |
 
 **Key coordination pattern:** fdir_systems leads all OBDH contingencies. OBC and
 CAN bus failures affect ALL subsystems, so every desk must be on console and
 confirm their subsystem status after recovery. OBC switchover is the most critical
 — it leaves zero OBC redundancy.
 
-**OBC Redundancy Switchover callouts (PROC-OBC-OFF-003):**
+**OBC Redundancy Switchover callouts (CTG-011):**
 1. fdir_systems → FD: "Requesting OBC switchover to Unit B. This eliminates OBC redundancy." FD GO required.
 2. fdir_systems: "Switchover commanded. Expect 30-60s TM gap."
 3. ALL desks: "Subsystem status check." Each desk confirms their subsystem nominal on OBC-B.
@@ -302,16 +302,16 @@ procedure execution:
 
 | # | Gap | Impact | Affected Procedures |
 |---|-----|--------|---------------------|
-| 1 | **No eclipse countdown timer** | Load shed procedures need operators to know time to eclipse exit/entry | CON-019, PROC-EPS-OFF-002, PROC-EPS-OFF-003 |
-| 2 | **No load shed level indicator** | Progressive load shedding has 4 levels — no visual state | CON-019, PROC-EPS-OFF-002 |
+| 1 | **No eclipse countdown timer** | Load shed procedures need operators to know time to eclipse exit/entry | CTG-023, CTG-001, CTG-013 |
+| 2 | **No load shed level indicator** | Progressive load shedding has 4 levels — no visual state | CTG-023, CTG-001 |
 | 3 | **No cross-subsystem impact alerts** | When one subsystem fails, operators of dependent subsystems are not alerted | All OBC/CAN contingencies, load shedding |
 | 4 | **No procedure-step countdown** | Wait steps (30s, 60s, 120s) show no remaining time | All procedures with wait_s steps |
-| 5 | **No wing deployment status display** | Wing status (0x0144) not shown on any tab | CON-008, CON-020 |
+| 5 | **No wing deployment status display** | Wing status (0x0144) not shown on any tab | CTG-009, CTG-024 |
 | 6 | **No persistent command audit log** | Audit trail lost on server restart | All contingencies (post-incident review) |
 | 7 | **No alarm severity/date filter** | Cannot filter alarm journal by severity or time range | All contingencies requiring alarm triage |
 | 8 | **No per-position procedure restrictions** | Any position can execute any procedure | All — risk of wrong desk executing wrong procedure |
 | 9 | **No "contingency active" banner** | No visual indication to all operators that a contingency is in progress | All contingencies |
-| 10 | **No blind command tracking** | No special mode for commands sent without TM confirmation | CON-004, PROC-TTC-OFF-002 |
+| 10 | **No blind command tracking** | No special mode for commands sent without TM confirmation | CTG-003, CTG-019 |
 
 ### Recommended Priority
 
@@ -348,9 +348,9 @@ procedure execution:
 
 | From Contingency | Escalation Trigger | Emergency Procedure |
 |------------------|--------------------|---------------------|
-| CON-019 (Load Shed) | SoC < 10% or bus < 25V | EMG-001 Total Power Failure |
-| CON-004 (Link Loss) | 2 consecutive failed passes | EMG-004 Loss of Communication |
-| CON-001 (AOCS Anomaly) | 3+ wheel failure or rate > 5 deg/s | EMG-005 Loss of Attitude |
-| CON-006 (Thermal) | Red limit breach (any zone) | EMG-002 Thermal Runaway |
-| CON-005 (OBC Watchdog) | 3+ resets in 1 orbit | EMG-003 OBC Reboot (evaluate switchover) |
-| PROC-OBC-OFF-003 (Switchover) | OBC-B also fails | EMG-003 → EMG-001 cascade |
+| CTG-023 (Load Shed) | SoC < 10% or bus < 25V | EMG-002 Total Power Failure |
+| CTG-003 (Link Loss) | 2 consecutive failed passes | EMG-004 Loss of Communication |
+| CTG-002 (AOCS Anomaly) | 3+ wheel failure or rate > 5 deg/s | EMG-005 Loss of Attitude |
+| CTG-004 (Thermal) | Red limit breach (any zone) | EMG-006 Thermal Runaway |
+| CTG-010 (OBC Watchdog) | 3+ resets in 1 orbit | EMG-003 OBC Reboot (evaluate switchover) |
+| CTG-011 (Switchover) | OBC-B also fails | EMG-003 OBC Reboot |

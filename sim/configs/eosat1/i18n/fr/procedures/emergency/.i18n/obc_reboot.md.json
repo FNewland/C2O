@@ -1,0 +1,102 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/emergency/obc_reboot.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "emg-003-obc-reboot",
+   "en_hash": "adbd9cc2e11f3ecd",
+   "fr_hash": "4da5c18017351879"
+  },
+  {
+   "id": "emg-003-obc-reboot/purpose",
+   "en_hash": "e88b49ca8a6474d4",
+   "fr_hash": "b3029ced75297cd8"
+  },
+  {
+   "id": "emg-003-obc-reboot/prerequisites",
+   "en_hash": "87be4ff426ad71f1",
+   "fr_hash": "45575a312be3f649"
+  },
+  {
+   "id": "emg-003-obc-reboot/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "emg-003-obc-reboot/procedure-steps/step-1-pre-reboot-state-capture",
+   "en_hash": "c62f106053bf7851",
+   "fr_hash": "a3a100fb0ed6e6b4"
+  },
+  {
+   "id": "emg-003-obc-reboot/procedure-steps/step-2-suspend-payload-and-shed-non-critical-loads",
+   "en_hash": "c927c4a65b39952d",
+   "fr_hash": "e0da2cbfe01d519d"
+  },
+  {
+   "id": "emg-003-obc-reboot/procedure-steps/step-3-send-commanded-reboot",
+   "en_hash": "59e8c2ecfd998471",
+   "fr_hash": "9668eb67222c3e9e"
+  },
+  {
+   "id": "emg-003-obc-reboot/procedure-steps/step-4-wait-for-boot-sequence",
+   "en_hash": "cd4b09ce3cdb1134",
+   "fr_hash": "4c8b7ee675a4c300"
+  },
+  {
+   "id": "emg-003-obc-reboot/procedure-steps/step-4b-boot-obc-into-application-image",
+   "en_hash": "60a1c6d90e5dd391",
+   "fr_hash": "79587e21340721ed"
+  },
+  {
+   "id": "emg-003-obc-reboot/procedure-steps/step-5-verify-obc-heartbeat-and-mode",
+   "en_hash": "619ec3905d2889ae",
+   "fr_hash": "e9ea719b5a4e89cb"
+  },
+  {
+   "id": "emg-003-obc-reboot/procedure-steps/step-6-check-boot-source-and-active-obc",
+   "en_hash": "749e7759bfca8982",
+   "fr_hash": "9e2a8e76ba9b1699"
+  },
+  {
+   "id": "emg-003-obc-reboot/procedure-steps/step-7-re-enable-hk-reporting-and-verify-subsystem-communication",
+   "en_hash": "e3c6eaf1244f3c97",
+   "fr_hash": "1a66fc76929dce3e"
+  },
+  {
+   "id": "emg-003-obc-reboot/procedure-steps/step-8-restore-operational-mode-and-log-results",
+   "en_hash": "b87f411ebcec9298",
+   "fr_hash": "0f6bba8b0876bd9c"
+  },
+  {
+   "id": "emg-003-obc-reboot/recovery-actions",
+   "en_hash": "f252599925c6d183",
+   "fr_hash": "08537f2991c98576"
+  },
+  {
+   "id": "emg-003-obc-reboot/recovery-actions/recovery-action-1-obc-fails-to-boot-no-telemetry-after-120-s",
+   "en_hash": "8225bb8c72a65f13",
+   "fr_hash": "1bfaa51efc90d570"
+  },
+  {
+   "id": "emg-003-obc-reboot/recovery-actions/recovery-action-2-obc-boots-into-bootloader-only",
+   "en_hash": "1c602aa77ad40c4f",
+   "fr_hash": "946dc40e4e964fa6"
+  },
+  {
+   "id": "emg-003-obc-reboot/off-nominal-handling",
+   "en_hash": "e713015ae3204ae3",
+   "fr_hash": "d44f32e423ba4f54"
+  },
+  {
+   "id": "emg-003-obc-reboot/post-conditions",
+   "en_hash": "ddea8390e3fe9b52",
+   "fr_hash": "01018e2c2027bcb3"
+  }
+ ],
+ "en_commit": "3e80564"
+}

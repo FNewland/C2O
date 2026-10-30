@@ -186,7 +186,7 @@ lsof -i :8080
 
 **Windows (PowerShell):**
 ```powershell
-netstat -tulpn | grep 8080
+netstat -ano | findstr :8080
 ```
 
 Kill the conflicting process or change the port when starting the service.

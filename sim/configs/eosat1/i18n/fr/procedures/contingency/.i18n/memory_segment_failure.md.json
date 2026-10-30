@@ -1,0 +1,77 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/contingency/memory_segment_failure.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "ctg-016-memory-segment-failure",
+   "en_hash": "1f5310438c1f9107",
+   "fr_hash": "50da1ac23e40ebfd"
+  },
+  {
+   "id": "ctg-016-memory-segment-failure/objective",
+   "en_hash": "db082e86feb5ab4b",
+   "fr_hash": "17398abb248162b6"
+  },
+  {
+   "id": "ctg-016-memory-segment-failure/prerequisites",
+   "en_hash": "3263ee53f071e8e9",
+   "fr_hash": "42700c962bee3f37"
+  },
+  {
+   "id": "ctg-016-memory-segment-failure/required-telemetry",
+   "en_hash": "e8f41df4033eca7c",
+   "fr_hash": "2e12c57d34128702"
+  },
+  {
+   "id": "ctg-016-memory-segment-failure/required-commands",
+   "en_hash": "4d251b025cd13075",
+   "fr_hash": "956094ccb0f85185"
+  },
+  {
+   "id": "ctg-016-memory-segment-failure/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "ctg-016-memory-segment-failure/procedure-steps/step-1-detect-memory-segment-failure",
+   "en_hash": "88d7b8454584d7bd",
+   "fr_hash": "593d97d1fe8843f1"
+  },
+  {
+   "id": "ctg-016-memory-segment-failure/procedure-steps/step-2-identify-failed-segment",
+   "en_hash": "46c8f9a3cff11441",
+   "fr_hash": "fd8f9ad85b71aae0"
+  },
+  {
+   "id": "ctg-016-memory-segment-failure/procedure-steps/step-3-mark-bad-segment",
+   "en_hash": "48220b091058a17d",
+   "fr_hash": "1e5d12a67fcdf84c"
+  },
+  {
+   "id": "ctg-016-memory-segment-failure/procedure-steps/step-4-verify-reduced-capacity",
+   "en_hash": "f42a60965a58274f",
+   "fr_hash": "4764ea9ae5968523"
+  },
+  {
+   "id": "ctg-016-memory-segment-failure/procedure-steps/step-5-adjust-imaging-plan",
+   "en_hash": "149b08af0e3d290c",
+   "fr_hash": "8e45589b979c11bf"
+  },
+  {
+   "id": "ctg-016-memory-segment-failure/verification-criteria",
+   "en_hash": "0b9685ba42fb634c",
+   "fr_hash": "9d306af1b9a98f2e"
+  },
+  {
+   "id": "ctg-016-memory-segment-failure/contingency",
+   "en_hash": "5f700236fab3c337",
+   "fr_hash": "7258250f9fb8a2c4"
+  }
+ ],
+ "en_commit": "3e80564"
+}

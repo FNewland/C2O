@@ -99,12 +99,13 @@ estimate remaining capacity:
 - Available energy = bat_capacity_wh * (current_SoC/100 - 0.20)
   (reserve 20% SoC as minimum)
 - Margin = available energy - required energy
-**GO/NO-GO:** If margin > 0: Battery can survive eclipse at current load. If margin < 0:
-Load reduction required. Proceed to Step 4.
+**GO/NO-GO:** If margin > 0: Battery can survive eclipse at current load. If margin < 0: load reduction required. Proceed to Step 4. -> GO `STEP-5` | NO-GO `STEP-4`
 
 ### Step 4: Reduce Loads If Needed
+**LABEL:** `STEP-4`
 **Note:** If eclipse survival margin is negative, reduce loads in priority order:
-**TC:** `PAYLOAD_SET_MODE(mode=0)` (Service 8, Subtype 1, func_id 26) — Payload OFF (saves ~8-45 W)
+1. Payload OFF (saves ~8-45 W):
+**TC:** `PAYLOAD_SET_MODE(mode=0)` (Service 8, Subtype 1, func_id 26) — Payload OFF
    **Verify:** `payload.mode` (0x0600) = 0 within 10 s
 2. FPA cooler OFF (saves ~15 W): `FPA_COOLER(on=0)` (func_id 43)
    **Verify:** `tcs.cooler_fpa` (0x040C) = 0 within 5 s
@@ -120,6 +121,7 @@ but still protects against dangerously low temperatures.
 **GO/NO-GO:** Eclipse survival margin is now positive — proceed to monitoring.
 
 ### Step 5: Monitor Battery Through Eclipse (If Applicable)
+**LABEL:** `STEP-5`
 **Note:** If an eclipse is approaching or in progress, monitor battery at 60 s intervals:
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27)
 **Verify:** `eps.bat_voltage` (0x0100) — does NOT drop below 24.0 V

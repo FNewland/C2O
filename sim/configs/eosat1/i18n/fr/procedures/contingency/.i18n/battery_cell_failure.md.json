@@ -1,0 +1,82 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/contingency/battery_cell_failure.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "ctg-013-battery-cell-failure",
+   "en_hash": "9c3c5fa04a752c0d",
+   "fr_hash": "0b206a5ae1f7100d"
+  },
+  {
+   "id": "ctg-013-battery-cell-failure/objective",
+   "en_hash": "d5c45a38a367a281",
+   "fr_hash": "92c7c5dee899bf07"
+  },
+  {
+   "id": "ctg-013-battery-cell-failure/prerequisites",
+   "en_hash": "3d8b61bd3f9598f9",
+   "fr_hash": "869d572970abf98b"
+  },
+  {
+   "id": "ctg-013-battery-cell-failure/required-telemetry",
+   "en_hash": "4848fb873e423d0a",
+   "fr_hash": "e547ff0b83cad9ad"
+  },
+  {
+   "id": "ctg-013-battery-cell-failure/required-commands",
+   "en_hash": "7e1bce3a770fe6ff",
+   "fr_hash": "4aebbe49e9c428b7"
+  },
+  {
+   "id": "ctg-013-battery-cell-failure/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "ctg-013-battery-cell-failure/procedure-steps/step-1-detect-and-characterize-battery-voltage-anomaly",
+   "en_hash": "c6f408b5821819c5",
+   "fr_hash": "21a9a4d62bc4d2ae"
+  },
+  {
+   "id": "ctg-013-battery-cell-failure/procedure-steps/step-2-check-battery-temperature",
+   "en_hash": "e970cf1eddefb08b",
+   "fr_hash": "bbf842d9605920b0"
+  },
+  {
+   "id": "ctg-013-battery-cell-failure/procedure-steps/step-3-assess-remaining-battery-capacity",
+   "en_hash": "dcee608723a11c23",
+   "fr_hash": "bb433574b27b8829"
+  },
+  {
+   "id": "ctg-013-battery-cell-failure/procedure-steps/step-4-reduce-loads-if-needed",
+   "en_hash": "3d608feda49f3b66",
+   "fr_hash": "62cbf2d23d267c73"
+  },
+  {
+   "id": "ctg-013-battery-cell-failure/procedure-steps/step-5-monitor-battery-through-eclipse-if-applicable",
+   "en_hash": "2077aacf1fe1bd0c",
+   "fr_hash": "fa9e05a96931f895"
+  },
+  {
+   "id": "ctg-013-battery-cell-failure/procedure-steps/step-6-long-term-capacity-verification",
+   "en_hash": "a42b36b08c5bf583",
+   "fr_hash": "ef956882d9ae3607"
+  },
+  {
+   "id": "ctg-013-battery-cell-failure/verification-criteria",
+   "en_hash": "d9356037f052b076",
+   "fr_hash": "f0f45a0d5401a2b5"
+  },
+  {
+   "id": "ctg-013-battery-cell-failure/contingency",
+   "en_hash": "d06ed73ef238313f",
+   "fr_hash": "7858c6405ff8b7b2"
+  }
+ ],
+ "en_commit": "3e80564"
+}

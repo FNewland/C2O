@@ -1,0 +1,92 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/contingency/boot_loader_recovery.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "ctg-018-boot-loader-recovery",
+   "en_hash": "4c493236ae2d8008",
+   "fr_hash": "216c84bc66c2f537"
+  },
+  {
+   "id": "ctg-018-boot-loader-recovery/objective",
+   "en_hash": "82dc4f8069c0c004",
+   "fr_hash": "3a1752aacc4ddc13"
+  },
+  {
+   "id": "ctg-018-boot-loader-recovery/prerequisites",
+   "en_hash": "56e8f4d4003a5e12",
+   "fr_hash": "dad9e4c9f57afb8d"
+  },
+  {
+   "id": "ctg-018-boot-loader-recovery/required-telemetry",
+   "en_hash": "9f55ca2767894c86",
+   "fr_hash": "04a518ccbc7cea5b"
+  },
+  {
+   "id": "ctg-018-boot-loader-recovery/required-commands",
+   "en_hash": "eba9a0dd4bc58b6f",
+   "fr_hash": "e70f7b8146724e21"
+  },
+  {
+   "id": "ctg-018-boot-loader-recovery/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "ctg-018-boot-loader-recovery/procedure-steps/step-1-detect-bootloader-state",
+   "en_hash": "04ea5f13de2e2e41",
+   "fr_hash": "77fc14be8179bb1f"
+  },
+  {
+   "id": "ctg-018-boot-loader-recovery/procedure-steps/step-2-check-last-reboot-cause-and-assess",
+   "en_hash": "10aaf7ed415a29b3",
+   "fr_hash": "ae515eecfa980a88"
+  },
+  {
+   "id": "ctg-018-boot-loader-recovery/procedure-steps/step-3-attempt-application-boot",
+   "en_hash": "3ecb3fa01c3d6d00",
+   "fr_hash": "8707e75a9fbac6c7"
+  },
+  {
+   "id": "ctg-018-boot-loader-recovery/procedure-steps/step-3a-clear-beacon-mode-and-restore-the-low-rung",
+   "en_hash": "22f0cb58b3b85512",
+   "fr_hash": "39c6b8ebb23a6196"
+  },
+  {
+   "id": "ctg-018-boot-loader-recovery/procedure-steps/step-4-enable-boot-inhibit-and-check-memory",
+   "en_hash": "f19f7709085a236e",
+   "fr_hash": "8a0b4868ab8c0602"
+  },
+  {
+   "id": "ctg-018-boot-loader-recovery/procedure-steps/step-5-retry-application-boot-after-memory-check",
+   "en_hash": "d9d43f5e3d92e381",
+   "fr_hash": "0cc7e65411638048"
+  },
+  {
+   "id": "ctg-018-boot-loader-recovery/procedure-steps/step-6-attempt-memory-reload",
+   "en_hash": "7499ef4d1d12e201",
+   "fr_hash": "9bd2c608981a1703"
+  },
+  {
+   "id": "ctg-018-boot-loader-recovery/procedure-steps/step-7-verify-all-subsystems-nominal",
+   "en_hash": "47fd3edebca03f45",
+   "fr_hash": "4551ccf7bd9d943c"
+  },
+  {
+   "id": "ctg-018-boot-loader-recovery/verification-criteria",
+   "en_hash": "adbaa88437c9f773",
+   "fr_hash": "23cbe91a2a249d10"
+  },
+  {
+   "id": "ctg-018-boot-loader-recovery/contingency",
+   "en_hash": "c282ba5663af590b",
+   "fr_hash": "f6efceb20da12593"
+  }
+ ],
+ "en_commit": "3e80564"
+}

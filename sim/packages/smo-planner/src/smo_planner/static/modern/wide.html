@@ -53,7 +53,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SMO Planner — Wall Display</title>
+<title data-i18n>SMO Planner — Wall Display</title>
 <!-- NO vendor map script here, deliberately (decision 2026-08-19).
      /wide has exactly ONE ground-track renderer: the canvas in wide.js,
      with the offline Natural Earth basemap in wide-basemap.js. The page
@@ -142,6 +142,9 @@ section.blk.stale{ background:var(--hatch), var(--s1); }
 section.blk.stale>h2::after{ content:"STALE"; color:var(--tx2);
   font-size:18px; letter-spacing:2px; margin-left:auto;
   border:1px solid var(--line-2); border-radius:var(--r); padding:2px 10px; }
+/* i18n: CSS text cannot be translated, so wide.js copies the translated tag
+   into data-stale-label on every block heading (English: "STALE"). */
+section.blk.stale>h2[data-stale-label]::after{ content:attr(data-stale-label); }
 
 /* ── 1. Clock block (rail) ─────────────────────────────────────────── */
 #block-clock .date{ font-family:var(--mono); font-size:30px; color:var(--tx2); }
@@ -181,6 +184,9 @@ section.blk.stale>h2::after{ content:"STALE"; color:var(--tx2);
 #block-link .state{ font-size:max(28px,min(11cqw,50px)); font-weight:800;
   letter-spacing:1px; line-height:1.08; }
 #block-link .state.yes{ color:var(--info); }
+/* French "HORS CONTACT" is two characters longer than "NO CONTACT": keep it
+   on one line so the LAST PASS row is not pushed out of the block. */
+:root[lang="fr"] #block-link .state{ font-size:max(28px,min(9cqw,50px)); }
 #block-link .kv{ display:grid; grid-template-columns:auto 1fr; gap:5px 16px;
   font-size:20px; align-content:start; }
 #block-link .kv b{ color:var(--tx3); font-weight:400; letter-spacing:1px; }
@@ -239,7 +245,7 @@ section.blk.stale>h2::after{ content:"STALE"; color:var(--tx2);
 </head>
 <body>
 
-<div id="staleBanner" role="alert">
+<div id="staleBanner" role="alert" data-i18n>
   DISPLAY STALE — NO DATA FOR <span class="num" id="staleFor">—</span>
 </div>
 
@@ -250,7 +256,7 @@ section.blk.stale>h2::after{ content:"STALE"; color:var(--tx2);
 
     <!-- 1. Clock -->
     <section class="blk" id="block-clock">
-      <h2>TIME</h2>
+      <h2 data-i18n>TIME</h2>
       <div class="bd">
         <div class="date num" id="wDate">—</div>
         <div class="utc num" id="wUtc">--:--:--</div>
@@ -264,7 +270,7 @@ section.blk.stale>h2::after{ content:"STALE"; color:var(--tx2);
 
     <!-- 2. Next passes -->
     <section class="blk" id="block-passes">
-      <h2>NEXT PASSES</h2>
+      <h2 data-i18n>NEXT PASSES</h2>
       <div class="bd">
         <div class="next-label" id="wNextLabel">NEXT AOS</div>
         <div class="next-station" id="wNextStation">—</div>
@@ -275,16 +281,16 @@ section.blk.stale>h2::after{ content:"STALE"; color:var(--tx2);
 
     <!-- 3. Link status -->
     <section class="blk" id="block-link">
-      <h2>LINK</h2>
+      <h2 data-i18n>LINK</h2>
       <div class="bd" style="justify-content:space-between;">
         <div class="state" id="wLinkState">—</div>
         <div class="kv">
-          <b>STATION</b><span id="wLinkStation">—</span>
-          <b>ELEVATION</b><span id="wLinkElev">—</span>
-          <b>RANGE</b><span id="wLinkRange">—</span>
+          <b data-i18n>STATION</b><span id="wLinkStation">—</span>
+          <b data-i18n>ELEVATION</b><span id="wLinkElev">—</span>
+          <b data-i18n>RANGE</b><span id="wLinkRange">—</span>
           <!-- G14: achieved rollup of the last completed pass (rfsim store at
                the configured services.rfsim_url; unset = absent state). -->
-          <b>LAST PASS</b><span id="wLastPass">—</span>
+          <b data-i18n>LAST PASS</b><span id="wLastPass">—</span>
           <b>API</b><span><span class="api-dot" id="wApiDot"></span><span id="wApiText">checking</span></span>
         </div>
       </div>
@@ -301,18 +307,18 @@ section.blk.stale>h2::after{ content:"STALE"; color:var(--tx2);
            map needs every pixel, and a legend floated over Antarctica hid
            exactly the polar passes it was explaining. The orbit figure is
            filled in by wide.js from the DERIVED period. -->
-      <h2>GROUND TRACK <span id="wTrackLegend" class="legend">—</span></h2>
+      <h2 data-i18n>GROUND TRACK <span id="wTrackLegend" class="legend">—</span></h2>
       <div class="bd" style="padding:0;">
         <div class="cv">
           <canvas id="wTrackCanvas"></canvas>
-          <div id="wTrackSource">OFFLINE BASEMAP — NATURAL EARTH 110 M</div>
+          <div id="wTrackSource" data-i18n>OFFLINE BASEMAP — NATURAL EARTH 110 M</div>
         </div>
       </div>
     </section>
 
     <!-- 5. 24 h plan timeline -->
     <section class="blk" id="block-timeline">
-      <h2>PLAN — NEXT ORBIT, THEN 24 H</h2>
+      <h2 data-i18n>PLAN — NEXT ORBIT, THEN 24 H</h2>
       <div class="bd" style="padding:8px;">
         <canvas id="wTimeline"></canvas>
       </div>
@@ -320,17 +326,17 @@ section.blk.stale>h2::after{ content:"STALE"; color:var(--tx2);
 
     <!-- 6. Budget state — slim full-width strip under the plan. -->
     <section class="blk" id="block-budgets">
-      <h2>BUDGETS</h2>
+      <h2 data-i18n>BUDGETS</h2>
       <div class="bd">
         <div class="budstrip">
           <div class="bud" id="wPower">
-            <div class="k">POWER — FINAL SoC</div>
+            <div class="k" data-i18n>POWER — FINAL SoC</div>
             <div class="v num" id="wPowerVal">—</div>
             <div class="wbar" id="wPowerBar"><div class="fl" style="width:0%"></div></div>
             <div class="sub" id="wPowerSub">—</div>
           </div>
           <div class="bud" id="wData">
-            <div class="k">DATA — PEAK FILL</div>
+            <div class="k" data-i18n>DATA — PEAK FILL</div>
             <div class="v num" id="wDataVal">—</div>
             <div class="wbar" id="wDataBar"><div class="fl" style="width:0%"></div></div>
             <div class="sub" id="wDataSub">—</div>
@@ -341,8 +347,8 @@ section.blk.stale>h2::after{ content:"STALE"; color:var(--tx2);
                em-dash, never a number. -->
           <div class="bud" id="wMission">
             <div class="mrow">
-              <div class="k2">PASS FIT</div>
-              <div class="k2">SoC @ ECLIPSE EXIT</div>
+              <div class="k2" data-i18n>PASS FIT</div>
+              <div class="k2" data-i18n>SoC @ ECLIPSE EXIT</div>
               <div class="v2 num absent" id="wPassFit">—</div>
               <div class="v2 num absent" id="wSocExit">—</div>
             </div>

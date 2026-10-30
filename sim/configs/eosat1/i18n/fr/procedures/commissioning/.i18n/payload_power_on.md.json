@@ -1,0 +1,92 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/commissioning/payload_power_on.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "com-009-payload-power-on",
+   "en_hash": "fccf5b674fe5bf95",
+   "fr_hash": "a622e38116744df0"
+  },
+  {
+   "id": "com-009-payload-power-on/purpose",
+   "en_hash": "729b7af6add1c36c",
+   "fr_hash": "8ad0a47af78b22d3"
+  },
+  {
+   "id": "com-009-payload-power-on/prerequisites",
+   "en_hash": "f793a8d86175d97d",
+   "fr_hash": "4592c019940ed6e4"
+  },
+  {
+   "id": "com-009-payload-power-on/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "com-009-payload-power-on/procedure-steps/step-1-pre-power-on-eps-baseline",
+   "en_hash": "79f036795ff3484f",
+   "fr_hash": "6296b3c741421445"
+  },
+  {
+   "id": "com-009-payload-power-on/procedure-steps/step-2-verify-payload-currently-off",
+   "en_hash": "d2ddf904b4fd5d47",
+   "fr_hash": "944d313e2612d188"
+  },
+  {
+   "id": "com-009-payload-power-on/procedure-steps/step-3-energise-the-payload-line-then-command-standby",
+   "en_hash": "586e31505708db79",
+   "fr_hash": "ee10d6df520c6ccb"
+  },
+  {
+   "id": "com-009-payload-power-on/procedure-steps/step-4-verify-payload-power-draw",
+   "en_hash": "ae7aa3f544aac5e1",
+   "fr_hash": "15534fe572250b8b"
+  },
+  {
+   "id": "com-009-payload-power-on/procedure-steps/step-5-verify-payload-electronics-health",
+   "en_hash": "465aef1c5186913c",
+   "fr_hash": "004c3831d10b9f12"
+  },
+  {
+   "id": "com-009-payload-power-on/procedure-steps/step-6-check-fpa-temperature-pre-cooler",
+   "en_hash": "0a56ba00357cfe43",
+   "fr_hash": "23d2d542baf76944"
+  },
+  {
+   "id": "com-009-payload-power-on/procedure-steps/step-7-verify-payload-data-interface",
+   "en_hash": "a43b96710c35f7f1",
+   "fr_hash": "f6b58f33977a48e5"
+  },
+  {
+   "id": "com-009-payload-power-on/procedure-steps/step-8-maintain-standby-for-thermal-stabilization",
+   "en_hash": "b84540b0b5861210",
+   "fr_hash": "a6757ed65491b9e4"
+  },
+  {
+   "id": "com-009-payload-power-on/procedure-steps/step-9-log-payload-power-on-report",
+   "en_hash": "da09ee199d6413b2",
+   "fr_hash": "9f827db06e842304"
+  },
+  {
+   "id": "com-009-payload-power-on/off-nominal-handling",
+   "en_hash": "d835fd0a0f8a2cb9",
+   "fr_hash": "e474cf824ab4cdc0"
+  },
+  {
+   "id": "com-009-payload-power-on/post-conditions",
+   "en_hash": "9cf773f6bbe100da",
+   "fr_hash": "a95ca6ef6a1cf26f"
+  },
+  {
+   "id": "com-009-payload-power-on/exit-state",
+   "en_hash": "cd39cc20e7ff093a",
+   "fr_hash": "88218906d72b5eaa"
+  }
+ ],
+ "en_commit": "3e80564"
+}

@@ -108,7 +108,7 @@ trap the old card fell into.
 - If `tcs.temp_battery` < +5C and heater does not respond: There is NO redundant battery heater circuit: `subsystems/tcs.yaml` declares three
   circuits only — 0 battery, 1 obc, 2 thruster. Consider an attitude adjustment to
   increase solar heating, and shed loads to protect the cell. Alert thermal engineer.
-- If `tcs.temp_obc` > +45C: Verify sun-pointing attitude is not causing excessive solar heating on OBC panel. Consider temporary attitude offset. Check if heater stuck ON via `GET_PARAM(param_id=0x0412)`.
+- If `tcs.temp_obc` > +45C: Verify sun-pointing attitude is not causing excessive solar heating on OBC panel. Consider temporary attitude offset. Check if the OBC heater is stuck ON via `GET_PARAM(param_id=0x040B)` (`tcs.htr_obc`).
 - If eclipse temperatures drop faster than predicted: Thermal model may need updating. Check for MLI damage indicators. Increase heater duty cycle if approaching survival limits.
 - If FPA temperature reading invalid (outside the -25.5C to +17.5C S12 alarm band with the cooler off): cross-check `payload.fpa_temp` (0x0601), which reads the same physical chain 0.5 K colder. Agreement means the FPA really is out of band; disagreement points at one of the two sensors. If the TCS thermistor has failed, payload commissioning can proceed on 0x0601 with the loss of redundancy logged.
 - If thermal zones show unexpected asymmetry: May indicate partial MLI blanket detachment or view factor change. Document and monitor trend over multiple orbits.

@@ -1,0 +1,87 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/commissioning/aocs_mode_transitions.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "com-005-aocs-mode-transitions",
+   "en_hash": "6a1046acf297fa5f",
+   "fr_hash": "32a4eabba701718b"
+  },
+  {
+   "id": "com-005-aocs-mode-transitions/purpose",
+   "en_hash": "68cb8332033e4b4d",
+   "fr_hash": "ba439aedf7d1390b"
+  },
+  {
+   "id": "com-005-aocs-mode-transitions/prerequisites",
+   "en_hash": "5c718a1c6effa754",
+   "fr_hash": "fcefd53079259121"
+  },
+  {
+   "id": "com-005-aocs-mode-transitions/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "com-005-aocs-mode-transitions/procedure-steps/step-1-latch-the-commanded-mode-nominal",
+   "en_hash": "78301d953bf0723c",
+   "fr_hash": "6f47cc9ed4d6b9fd"
+  },
+  {
+   "id": "com-005-aocs-mode-transitions/procedure-steps/step-2-commanded-nominal-finepoint-gated",
+   "en_hash": "338c65e7a93efea2",
+   "fr_hash": "d0b6a6c4daf388ec"
+  },
+  {
+   "id": "com-005-aocs-mode-transitions/procedure-steps/step-3-commanded-finepoint-nominal",
+   "en_hash": "0067f82707c6d407",
+   "fr_hash": "abefe3bf196b48ab"
+  },
+  {
+   "id": "com-005-aocs-mode-transitions/procedure-steps/step-4-commanded-nominal-inertial-and-back",
+   "en_hash": "e5ec673b33f37734",
+   "fr_hash": "5c3d8d06e9544872"
+  },
+  {
+   "id": "com-005-aocs-mode-transitions/procedure-steps/step-5-automatic-coarsesun-is-a-hold-not-a-destination",
+   "en_hash": "010b93fbe446b93c",
+   "fr_hash": "498122323f749b75"
+  },
+  {
+   "id": "com-005-aocs-mode-transitions/procedure-steps/step-6-automatic-eclipse-handover-observed-in-passing",
+   "en_hash": "31f393118c7e0d54",
+   "fr_hash": "e402f7f38b14ae01"
+  },
+  {
+   "id": "com-005-aocs-mode-transitions/procedure-steps/step-7-commanded-with-automatic-exit-desaturation",
+   "en_hash": "269a8d47ba3f1826",
+   "fr_hash": "1ed3984113227b34"
+  },
+  {
+   "id": "com-005-aocs-mode-transitions/procedure-steps/step-8-document-the-transition-matrix",
+   "en_hash": "055fd4c5a093b98f",
+   "fr_hash": "01d9472b7d966418"
+  },
+  {
+   "id": "com-005-aocs-mode-transitions/off-nominal-handling",
+   "en_hash": "98e2d656ce8ddfef",
+   "fr_hash": "b525c176e50efec4"
+  },
+  {
+   "id": "com-005-aocs-mode-transitions/exit-state",
+   "en_hash": "d137c5ea3c22eb7e",
+   "fr_hash": "e50afdb3b9de3932"
+  },
+  {
+   "id": "com-005-aocs-mode-transitions/post-conditions",
+   "en_hash": "6050f3bed2730dfc",
+   "fr_hash": "613315a58324277e"
+  }
+ ],
+ "en_commit": "983af0f"
+}

@@ -78,7 +78,7 @@ capture, shown by `payload.readout_active` (0x0649) and reflected in
 `payload.mem_used_mb` (0x060B). (There are no `payload.line_rate` / `payload.data_rate`
 parameters; 0x0607 and 0x0608 are not allocated in `telemetry/parameters.yaml`.) Before the fix, IMAGING alone accreted about
 9.7 MB/s and filled the 20 GB store in ~33 minutes with zero captures, which is
-why this card's own teaching note below used to contradict the spacecraft.
+why an earlier teaching note on this card used to contradict the spacecraft.
 
 ### Step 5 --- Trigger the Acquisition(s)
 **TC:** `PAYLOAD_CAPTURE(scene_id=N, lines=2048)` (Service 8, Subtype 1, func_id 28)  \
@@ -104,8 +104,8 @@ notice names which gate refused it.
 **Verify:** `payload.store_used` (0x0604) < 95 % throughout session
 **Verify:** `aocs.att_error` (0x0217) remains < 0.1 deg throughout session
 **Verify:** `tcs.temp_fpa` (0x0408) remains < -10.0 C throughout session
-**Action:** If `payload.store_used` >= 95 %, immediately proceed to Step 6.
-**Action:** If `aocs.att_error` >= 0.5 deg, immediately proceed to Step 6.
+**Action:** If `payload.store_used` >= 95 %, terminate the session at once (Step 6).
+**Action:** If `aocs.att_error` >= 0.5 deg, terminate the session at once (Step 6).
 
 ### Step 6 --- Terminate Imaging Session
 **TC:** `PAYLOAD_SET_MODE(mode=1)` (Service 8, Subtype 1, func_id 26) --- command STANDBY
@@ -135,5 +135,5 @@ notice names which gate refused it.
 - [ ] Payload returned to STANDBY mode
 - [ ] Image count and storage usage logged
 - [ ] AOCS remained in fine-pointing throughout (att_error < 0.1 deg)
-- [ ] FPA temperature remained below -20.0 C throughout
+- [ ] FPA temperature remained at setpoint (<= -10.0 C) throughout
 - [ ] Pass log updated with imaging session summary

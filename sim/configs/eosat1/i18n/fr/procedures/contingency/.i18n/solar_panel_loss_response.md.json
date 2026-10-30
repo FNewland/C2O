@@ -1,0 +1,87 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/contingency/solar_panel_loss_response.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "ctg-024-solar-panel-loss-response",
+   "en_hash": "f69db094fe5998f0",
+   "fr_hash": "00b81d8fbb8f5e04"
+  },
+  {
+   "id": "ctg-024-solar-panel-loss-response/purpose",
+   "en_hash": "5bd2896818ae804f",
+   "fr_hash": "df2fe60dcacddfb4"
+  },
+  {
+   "id": "ctg-024-solar-panel-loss-response/prerequisites",
+   "en_hash": "48434a37d5288aca",
+   "fr_hash": "aad5895e9e3a79e8"
+  },
+  {
+   "id": "ctg-024-solar-panel-loss-response/required-telemetry",
+   "en_hash": "c1ee47770052f605",
+   "fr_hash": "e721021697d00780"
+  },
+  {
+   "id": "ctg-024-solar-panel-loss-response/required-commands",
+   "en_hash": "4b9cfeb1f5f42337",
+   "fr_hash": "2edc2a303c27b55a"
+  },
+  {
+   "id": "ctg-024-solar-panel-loss-response/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "ctg-024-solar-panel-loss-response/procedure-steps/step-1-detect-and-confirm-power-generation-anomaly",
+   "en_hash": "0c798baece928951",
+   "fr_hash": "024ecce90ac14529"
+  },
+  {
+   "id": "ctg-024-solar-panel-loss-response/procedure-steps/step-2-identify-affected-panels-via-per-panel-current-analysis",
+   "en_hash": "503ec3b66d44aa1d",
+   "fr_hash": "69befa77687ff869"
+  },
+  {
+   "id": "ctg-024-solar-panel-loss-response/procedure-steps/step-3-rule-out-attitude-error-as-root-cause",
+   "en_hash": "e5300878ee286221",
+   "fr_hash": "2a7ae8a4cc616c20"
+  },
+  {
+   "id": "ctg-024-solar-panel-loss-response/procedure-steps/step-4-recalculate-power-budget-with-degraded-generation",
+   "en_hash": "df5bed2d70baff56",
+   "fr_hash": "d9a19ce175cf37c3"
+  },
+  {
+   "id": "ctg-024-solar-panel-loss-response/procedure-steps/step-5-shed-loads-to-match-reduced-power-budget",
+   "en_hash": "2c491b0e1589d336",
+   "fr_hash": "fa7e594c954ac1bd"
+  },
+  {
+   "id": "ctg-024-solar-panel-loss-response/procedure-steps/step-6-consider-attitude-optimisation-for-power-recovery",
+   "en_hash": "63bbeafbe24d4c20",
+   "fr_hash": "950aba8d23803dbb"
+  },
+  {
+   "id": "ctg-024-solar-panel-loss-response/procedure-steps/step-7-establish-long-term-monitoring-and-operations-plan",
+   "en_hash": "719370cd30cf0c5d",
+   "fr_hash": "c472defd6fac4d09"
+  },
+  {
+   "id": "ctg-024-solar-panel-loss-response/verification-criteria",
+   "en_hash": "9cf484cfce2fb8e7",
+   "fr_hash": "cefcba372a4032ca"
+  },
+  {
+   "id": "ctg-024-solar-panel-loss-response/off-nominal-handling",
+   "en_hash": "37503bc0d453c5c5",
+   "fr_hash": "9be991bbd0966a4b"
+  }
+ ],
+ "en_commit": "3e80564"
+}

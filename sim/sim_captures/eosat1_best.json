@@ -9,7 +9,7 @@
   "iq_format": "complex64 (interleaved float32 I,Q), little-endian",
   "recorded_seconds": 30.0,
   "signal_confirmed": true,
-  "recorded_at_utc": "2026-07-05T19:25:00.604978+00:00",
+  "recorded_at_utc": "2026-09-25T18:03:25.931406+00:00",
   "source": "SIMULATED (smo-rfsim BasebandRecorder)",
   "simulation": {
     "modulation": "GFSK",
@@ -18,6 +18,8 @@
     "sps_internal": 8,
     "rolloff": 0.35,
     "gmsk_bt": 0.5,
+    "gfsk_mod_index": 0.5,
+    "cpm_phase_per_bit": "pi*h",
     "data_source": "ccsds",
     "frame_length": 223,
     "random_seed": 0,
@@ -91,7 +93,7 @@
       ],
       "sky_noise_fraction": 0.1,
       "sky_noise_slope": 2.5,
-      "wideband_snr_db": -0.8533500713746307,
+      "wideband_snr_db": -0.8533500713746314,
       "inband_snr_db_target": 12.0
     }
   }

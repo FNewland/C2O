@@ -1,0 +1,77 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/contingency/obdh_watchdog_recovery.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "ctg-010-obdh-watchdog-recovery",
+   "en_hash": "9c1379ee503dd85a",
+   "fr_hash": "5467eafd9b82e4c0"
+  },
+  {
+   "id": "ctg-010-obdh-watchdog-recovery/purpose",
+   "en_hash": "2fa55b98797bbaee",
+   "fr_hash": "0417e1889491c230"
+  },
+  {
+   "id": "ctg-010-obdh-watchdog-recovery/prerequisites",
+   "en_hash": "991cc22940de0e85",
+   "fr_hash": "dc9d84e88efbcc2c"
+  },
+  {
+   "id": "ctg-010-obdh-watchdog-recovery/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "ctg-010-obdh-watchdog-recovery/procedure-steps/step-1-confirm-watchdog-reset-occurrence",
+   "en_hash": "fd34bec8975a1d36",
+   "fr_hash": "b33c325afb748a4a"
+  },
+  {
+   "id": "ctg-010-obdh-watchdog-recovery/procedure-steps/step-1b-boot-obc-into-application-image-if-in-bootloader",
+   "en_hash": "c85dc9c4a6c64683",
+   "fr_hash": "952ae1f9f5f51265"
+  },
+  {
+   "id": "ctg-010-obdh-watchdog-recovery/procedure-steps/step-2-verify-obc-nominal-post-reboot-state",
+   "en_hash": "2f2bc661b75343d0",
+   "fr_hash": "b1043c67ffcdf915"
+  },
+  {
+   "id": "ctg-010-obdh-watchdog-recovery/procedure-steps/step-3-request-all-housekeeping-frames",
+   "en_hash": "76165f81697fb006",
+   "fr_hash": "4e7217eb3e015bef"
+  },
+  {
+   "id": "ctg-010-obdh-watchdog-recovery/procedure-steps/step-4-verify-data-integrity-and-onboard-storage",
+   "en_hash": "12c7b6c002b6731a",
+   "fr_hash": "8b0222882b507cf8"
+  },
+  {
+   "id": "ctg-010-obdh-watchdog-recovery/procedure-steps/step-5-assess-root-cause-indicators",
+   "en_hash": "aa62187a33934aba",
+   "fr_hash": "23b4e79b280c6d5f"
+  },
+  {
+   "id": "ctg-010-obdh-watchdog-recovery/procedure-steps/step-6-restore-nominal-mode-if-obc-in-safe",
+   "en_hash": "b6ba09f4ccf0b706",
+   "fr_hash": "b68201bbe1d82731"
+  },
+  {
+   "id": "ctg-010-obdh-watchdog-recovery/off-nominal-handling",
+   "en_hash": "d075a073fbfe3557",
+   "fr_hash": "9a6edeb993bdba46"
+  },
+  {
+   "id": "ctg-010-obdh-watchdog-recovery/post-conditions",
+   "en_hash": "98403135f87309fa",
+   "fr_hash": "ece3a39741367ed6"
+  }
+ ],
+ "en_commit": "3e80564"
+}

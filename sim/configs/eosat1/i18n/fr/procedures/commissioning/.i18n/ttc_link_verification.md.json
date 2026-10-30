@@ -1,0 +1,112 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/commissioning/ttc_link_verification.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "com-006-ttc-link-verification",
+   "en_hash": "e00446800da123a6",
+   "fr_hash": "048dd96605bb08fc"
+  },
+  {
+   "id": "com-006-ttc-link-verification/purpose",
+   "en_hash": "c3c8d45a1edcf16b",
+   "fr_hash": "831bc11ff0089779"
+  },
+  {
+   "id": "com-006-ttc-link-verification/link-margin-baselines-re-measured-2026-07-29",
+   "en_hash": "11b7143fc3ab559b",
+   "fr_hash": "e9d1fbc11941a884"
+  },
+  {
+   "id": "com-006-ttc-link-verification/prerequisites",
+   "en_hash": "36676eaeb5b7816f",
+   "fr_hash": "1ffccd1cc008d0b3"
+  },
+  {
+   "id": "com-006-ttc-link-verification/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "com-006-ttc-link-verification/procedure-steps/step-0-configure-the-s-band-chain-for-measurement",
+   "en_hash": "77227b4a7e2684af",
+   "fr_hash": "fcdfc66f5a71c628"
+  },
+  {
+   "id": "com-006-ttc-link-verification/procedure-steps/step-1-baseline-primary-transponder-performance",
+   "en_hash": "0390f58793176367",
+   "fr_hash": "be4480ff66bd67a7"
+  },
+  {
+   "id": "com-006-ttc-link-verification/procedure-steps/step-2-measure-rssi-vs-elevation-profile",
+   "en_hash": "61288bb447420224",
+   "fr_hash": "478fadf579653dba"
+  },
+  {
+   "id": "com-006-ttc-link-verification/procedure-steps/step-2a-baseline-each-rung-of-the-tm-rate-ladder",
+   "en_hash": "4209d93d41b2618f",
+   "fr_hash": "8a2227cde35fb1c6"
+  },
+  {
+   "id": "com-006-ttc-link-verification/procedure-steps/step-2b-exercise-the-ground-arm-through-policy-on-high-no-on-board-gate",
+   "en_hash": "f81c1bcd7acf47e6",
+   "fr_hash": "2643dc1db8f72257"
+  },
+  {
+   "id": "com-006-ttc-link-verification/procedure-steps/step-3-switch-to-redundant-transponder",
+   "en_hash": "df6eabb7e9582ae9",
+   "fr_hash": "264956b5faae6596"
+  },
+  {
+   "id": "com-006-ttc-link-verification/procedure-steps/step-4-redundant-transponder-performance-check",
+   "en_hash": "b3a080cdf3945d68",
+   "fr_hash": "65c1ccb09a01e425"
+  },
+  {
+   "id": "com-006-ttc-link-verification/procedure-steps/step-5-restore-primary-transponder",
+   "en_hash": "e93de1d38d6c1fe7",
+   "fr_hash": "d0c9134889c1e53b"
+  },
+  {
+   "id": "com-006-ttc-link-verification/procedure-steps/step-6-command-throughput-test",
+   "en_hash": "a1448fa304b92dae",
+   "fr_hash": "ba6ab40ed7e7e90e"
+  },
+  {
+   "id": "com-006-ttc-link-verification/procedure-steps/step-7-multi-station-verification-deferred-passes",
+   "en_hash": "b00753dfb37c2677",
+   "fr_hash": "60c941efd0f524a3"
+  },
+  {
+   "id": "com-006-ttc-link-verification/procedure-steps/step-8-compile-link-budget-report",
+   "en_hash": "b65f792e6ea7438b",
+   "fr_hash": "1fbce162a7df2771"
+  },
+  {
+   "id": "com-006-ttc-link-verification/procedure-steps/step-9-safe-the-link",
+   "en_hash": "bbc02b87725f2708",
+   "fr_hash": "b7b183001fd29189"
+  },
+  {
+   "id": "com-006-ttc-link-verification/off-nominal-handling",
+   "en_hash": "87e3dc508adabc74",
+   "fr_hash": "05e211a0085a6bc4"
+  },
+  {
+   "id": "com-006-ttc-link-verification/post-conditions",
+   "en_hash": "b2b5dd8dc17952d4",
+   "fr_hash": "91ccd83e6a1b002f"
+  },
+  {
+   "id": "com-006-ttc-link-verification/exit-state",
+   "en_hash": "15237980acde0a6b",
+   "fr_hash": "bad3dde81e56a8d0"
+  }
+ ],
+ "en_commit": "3e80564"
+}

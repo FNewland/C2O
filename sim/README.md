@@ -36,6 +36,7 @@ class. It never reaches the network.
 | Instructor console | `http://<host>:8080` | **instructor only** |
 | Configuration editor | `http://<host>:8080/config` | **instructor only** |
 | Scenario generator | `http://<host>:8096` | **instructor only** |
+| VR visualisation feed | `tcp://<host>:8100`, `ws://<host>:8101/vr` | VR headset teams — [`docs/VR_INTERFACE_ICD.md`](docs/VR_INTERFACE_ICD.md), kit in `tools/vr_stub/` |
 
 Full port map, firewall list and distributed-deployment shapes:
 [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
@@ -50,7 +51,8 @@ Full port map, firewall list and distributed-deployment shapes:
 | `smo-mcs` | The control room. Six operator positions, commanding, limit checking, alarms, trends, procedures, the delayed-TM archive |
 | `smo-planner` | Pass planning, ground track, imaging opportunities, resource budgets, constraint checking |
 | `smo-rfsim` | CCSDS framing, Reed–Solomon, BPSK/QPSK modulation, an RF channel model with impairments |
-| `smo-gateway` | TM/TC relay for multi-site deployments |
+| `smo-link` | Space link: the space-link agent and the ground-segment gateway (GSG) that join a simulator to a remote ground segment over one outbound WebSocket (`docs/web_2026-10/LINK_DESIGN.md`, `docs/DEPLOYMENT.md` §9) |
+| `smo-gateway` | **Deprecated** — replaced by `smo-link`. Legacy TM/TC relay for multi-site deployments, kept until a later clean-up |
 | `smo-common` | Shared protocol, configuration, orbit, reporting and state-serialisation code |
 
 Everything the spacecraft *is* lives in `configs/eosat1/` — the hardware sheet,

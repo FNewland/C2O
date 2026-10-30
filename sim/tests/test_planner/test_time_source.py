@@ -205,3 +205,30 @@ async def test_time_source_endpoint_reports_met():
     body = _json.loads(resp.body)
     assert body["met_s"] is not None
     assert abs(body["met_s"] - 7200.0) < 2.0
+
+
+def test_sim_anchor_stamped_at_fetch_midpoint_not_start():
+    """A slow sim-state fetch must not push the planner clock ahead.
+
+    The anchor's wall time used to be taken BEFORE the (blocking, up to
+    1.5 s) fetch, so the planner ran ahead of the simulator by the whole
+    fetch time x speed: 0.4 s at x60 = 24 s. Found by the smo-link e2e test.
+    """
+    payload = {"sim_time": "2030-06-15T12:00:00+00:00", "speed": 60.0}
+    server = _make_planner(time_source="sim")
+
+    def slow_fetch():
+        _time.sleep(0.4)
+        return payload
+    server._fetch_sim_state = slow_fetch
+    t0 = _time.time()
+    server._refresh_sim_anchor(force=True)
+    t1 = _time.time()
+    mid = (t0 + t1) / 2.0
+    assert abs(server._sim_anchor_wall - mid) < 0.05
+    # Right after the fetch the clock is ~half the fetch x speed past the
+    # payload (12 s), not the whole fetch (24 s).
+    server._refresh_sim_anchor = lambda force=False: None
+    ahead = (server._get_now()
+             - datetime(2030, 6, 15, 12, 0, 0, tzinfo=timezone.utc)).total_seconds()
+    assert 9.0 < ahead < 16.0, ahead

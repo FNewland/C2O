@@ -1,0 +1,97 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/contingency/undervoltage_loadshed.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "ctg-001-under-voltage-load-shed",
+   "en_hash": "571d353d2a66930f",
+   "fr_hash": "fd23a100a4522a8d"
+  },
+  {
+   "id": "ctg-001-under-voltage-load-shed/objective",
+   "en_hash": "a36a68a0b1e3b6eb",
+   "fr_hash": "cb97307a08c96cb5"
+  },
+  {
+   "id": "ctg-001-under-voltage-load-shed/prerequisites",
+   "en_hash": "b6ab8f9dacd52503",
+   "fr_hash": "172f3ca9b4069c11"
+  },
+  {
+   "id": "ctg-001-under-voltage-load-shed/required-telemetry",
+   "en_hash": "dc584819f8fb5c64",
+   "fr_hash": "ca9e1f4090faf7db"
+  },
+  {
+   "id": "ctg-001-under-voltage-load-shed/required-commands",
+   "en_hash": "fa104897983e53ee",
+   "fr_hash": "2a23a7d1697fd6fb"
+  },
+  {
+   "id": "ctg-001-under-voltage-load-shed/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "ctg-001-under-voltage-load-shed/procedure-steps/step-1-detect-and-confirm-undervoltage-condition",
+   "en_hash": "bfa32f592a864dfa",
+   "fr_hash": "62395d41ad6dca9a"
+  },
+  {
+   "id": "ctg-001-under-voltage-load-shed/procedure-steps/step-2-shed-load-priority-1-payload-off",
+   "en_hash": "f3448e2e38fa0067",
+   "fr_hash": "cd2aca1cc4b22ae4"
+  },
+  {
+   "id": "ctg-001-under-voltage-load-shed/procedure-steps/step-3-shed-load-priority-2-fpa-cooler-off",
+   "en_hash": "2f462f63bec9dd53",
+   "fr_hash": "eae0142cb44e92ea"
+  },
+  {
+   "id": "ctg-001-under-voltage-load-shed/procedure-steps/step-4-shed-load-priority-3-tx-transmitter-off",
+   "en_hash": "7c6741b680eca9a3",
+   "fr_hash": "02b1df1b5808ea2f"
+  },
+  {
+   "id": "ctg-001-under-voltage-load-shed/procedure-steps/step-5-shed-load-priority-4-reaction-wheels-off",
+   "en_hash": "5ff9b7edf5647e43",
+   "fr_hash": "7e220c6eb1619618"
+  },
+  {
+   "id": "ctg-001-under-voltage-load-shed/procedure-steps/step-5b-last-resort-obc-emergency-mode",
+   "en_hash": "079b7f7fcbf2e884",
+   "fr_hash": "df605da45991b418"
+  },
+  {
+   "id": "ctg-001-under-voltage-load-shed/procedure-steps/step-6-monitor-recovery",
+   "en_hash": "9c5d6e0506d43d5d",
+   "fr_hash": "33f7359cf1fd06d4"
+  },
+  {
+   "id": "ctg-001-under-voltage-load-shed/procedure-steps/step-7-restore-loads-in-reverse-priority-order",
+   "en_hash": "9690352c929c4689",
+   "fr_hash": "4a66a55b0b3a1664"
+  },
+  {
+   "id": "ctg-001-under-voltage-load-shed/verification-criteria",
+   "en_hash": "eacbb38d5a1b5e2c",
+   "fr_hash": "8878e8d13f7840b1"
+  },
+  {
+   "id": "ctg-001-under-voltage-load-shed/contingency",
+   "en_hash": "46f9494a27b873ec",
+   "fr_hash": "b59efc4685766702"
+  },
+  {
+   "id": "ctg-001-under-voltage-load-shed/recovery-path-re-powering-shed-loads",
+   "en_hash": "ff3d6989d5306388",
+   "fr_hash": "7425a0351c1744bc"
+  }
+ ],
+ "en_commit": "3e80564"
+}

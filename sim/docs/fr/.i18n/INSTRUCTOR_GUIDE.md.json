@@ -1,0 +1,252 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "docs/INSTRUCTOR_GUIDE.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "smo-simulator-instructor-operator-guide",
+   "en_hash": "41927b048f3fd73a",
+   "fr_hash": "502577e377813500"
+  },
+  {
+   "id": "smo-simulator-instructor-operator-guide/overview",
+   "en_hash": "c87db3fb67223906",
+   "fr_hash": "1feafb355dc135a4"
+  },
+  {
+   "id": "smo-simulator-instructor-operator-guide/what-changed-in-the-2026-08-build",
+   "en_hash": "df01de4417201ff9",
+   "fr_hash": "26f55f0587d9a4f2"
+  },
+  {
+   "id": "smo-simulator-instructor-operator-guide/scenarios",
+   "en_hash": "6f89d708391da60a",
+   "fr_hash": "51424f9b329bc8c2"
+  },
+  {
+   "id": "smo-simulator-instructor-operator-guide/scenarios/what-are-scenarios",
+   "en_hash": "e370cc19d1250c19",
+   "fr_hash": "0ce5cfd40489a694"
+  },
+  {
+   "id": "smo-simulator-instructor-operator-guide/scenarios/scenario-files",
+   "en_hash": "448e2ba2056f4e89",
+   "fr_hash": "27e79cc57496bcf5"
+  },
+  {
+   "id": "smo-simulator-instructor-operator-guide/scenarios/creating-a-scenario",
+   "en_hash": "8243d68c800947c3",
+   "fr_hash": "92d00b740b66be17"
+  },
+  {
+   "id": "smo-simulator-instructor-operator-guide/scenarios/using-a-scenario",
+   "en_hash": "efdd56f44e1b0b4e",
+   "fr_hash": "b61bd4fc277db8ae"
+  },
+  {
+   "id": "smo-simulator-instructor-operator-guide/scenarios/event-actions",
+   "en_hash": "38de8b9e06b62a88",
+   "fr_hash": "3a4eab1e93937831"
+  },
+  {
+   "id": "smo-simulator-instructor-operator-guide/breakpoints",
+   "en_hash": "0192c63fe9cc4fe2",
+   "fr_hash": "4759b95fb3a63d56"
+  },
+  {
+   "id": "smo-simulator-instructor-operator-guide/breakpoints/what-are-breakpoints",
+   "en_hash": "dd6ee61c0206fb03",
+   "fr_hash": "be415d4fda274d09"
+  },
+  {
+   "id": "smo-simulator-instructor-operator-guide/breakpoints/saving-a-breakpoint",
+   "en_hash": "d8bdf027030edfa4",
+   "fr_hash": "80d50533caed4418"
+  },
+  {
+   "id": "smo-simulator-instructor-operator-guide/breakpoints/loading-a-breakpoint",
+   "en_hash": "a0910b912e2c7ec0",
+   "fr_hash": "9a7c4763c2cde3a7"
+  },
+  {
+   "id": "smo-simulator-instructor-operator-guide/breakpoints/stored-breakpoints",
+   "en_hash": "b6b2b8cbc2403892",
+   "fr_hash": "341014f46ab401df"
+  },
+  {
+   "id": "smo-simulator-instructor-operator-guide/parameter-display",
+   "en_hash": "9dcc4b47e230d890",
+   "fr_hash": "7a9ccdc5f1fd5e5a"
+  },
+  {
+   "id": "smo-simulator-instructor-operator-guide/parameter-display/overview",
+   "en_hash": "03bb823aaf9db38b",
+   "fr_hash": "4f6030b9c5acd5a1"
+  },
+  {
+   "id": "smo-simulator-instructor-operator-guide/parameter-display/parameter-cards",
+   "en_hash": "06f6c25dcdd14f1e",
+   "fr_hash": "e6056b14951d9d85"
+  },
+  {
+   "id": "smo-simulator-instructor-operator-guide/parameter-display/parameter-cards/eps-electrical-power-system",
+   "en_hash": "a63c26e721ea8a8c",
+   "fr_hash": "d962fe0ccbdedb38"
+  },
+  {
+   "id": "smo-simulator-instructor-operator-guide/parameter-display/parameter-cards/aocs-attitude-orbit-control",
+   "en_hash": "3e9f5fd906b19352",
+   "fr_hash": "5613e696b035ca54"
+  },
+  {
+   "id": "smo-simulator-instructor-operator-guide/parameter-display/parameter-cards/tcs-thermal-control",
+   "en_hash": "8e5bbf0919d22851",
+   "fr_hash": "056196a61e440d63"
+  },
+  {
+   "id": "smo-simulator-instructor-operator-guide/parameter-display/parameter-cards/obdh-on-board-data-handling",
+   "en_hash": "e796e40b2776cc43",
+   "fr_hash": "4f3194c7420ade88"
+  },
+  {
+   "id": "smo-simulator-instructor-operator-guide/parameter-display/parameter-cards/tt-c-telemetry-tracking-command",
+   "en_hash": "40be3d3fe9d0e8ca",
+   "fr_hash": "dba4cfb2944f0e8a"
+  },
+  {
+   "id": "smo-simulator-instructor-operator-guide/parameter-display/parameter-cards/payload-imaging-system",
+   "en_hash": "659f52204c4c173b",
+   "fr_hash": "ed4a398f35af01ce"
+  },
+  {
+   "id": "smo-simulator-instructor-operator-guide/parameter-display/parameter-cards/orbit-info",
+   "en_hash": "8778e8d7ae372e5b",
+   "fr_hash": "a4f032cdb3ea0b55"
+  },
+  {
+   "id": "smo-simulator-instructor-operator-guide/parameter-display/parameter-search",
+   "en_hash": "cb47d7de72651d21",
+   "fr_hash": "e349ca379de50b7a"
+  },
+  {
+   "id": "smo-simulator-instructor-operator-guide/parameter-display/raw-snapshot-view",
+   "en_hash": "72e15dfbc72afba8",
+   "fr_hash": "e7736dbcdc2919d1"
+  },
+  {
+   "id": "smo-simulator-instructor-operator-guide/failure-injection",
+   "en_hash": "468234ddceb8d90e",
+   "fr_hash": "cced0daeca172643"
+  },
+  {
+   "id": "smo-simulator-instructor-operator-guide/failure-injection/injecting-failures",
+   "en_hash": "7139f8a6168b941b",
+   "fr_hash": "cf3884ff807f2389"
+  },
+  {
+   "id": "smo-simulator-instructor-operator-guide/failure-injection/clearing-failures",
+   "en_hash": "75648cdf8cace71f",
+   "fr_hash": "c16d38b2994ab799"
+  },
+  {
+   "id": "smo-simulator-instructor-operator-guide/failure-injection/failure-types-by-subsystem",
+   "en_hash": "7789e4856fa55e9b",
+   "fr_hash": "1bf1125d56158ee7"
+  },
+  {
+   "id": "smo-simulator-instructor-operator-guide/simulation-controls",
+   "en_hash": "e4db5aa0f4efe8e8",
+   "fr_hash": "19b4552a3af0b184"
+  },
+  {
+   "id": "smo-simulator-instructor-operator-guide/simulation-controls/time-controls",
+   "en_hash": "bcc8841ee5b968d8",
+   "fr_hash": "7abfe7a4c4f7fb07"
+  },
+  {
+   "id": "smo-simulator-instructor-operator-guide/simulation-controls/link-override",
+   "en_hash": "e02e6208c2882588",
+   "fr_hash": "a2a478012f8587c8"
+  },
+  {
+   "id": "smo-simulator-instructor-operator-guide/simulation-controls/event-log",
+   "en_hash": "d22ea2dd887de579",
+   "fr_hash": "709d9b72b76c769b"
+  },
+  {
+   "id": "smo-simulator-instructor-operator-guide/reproducibility-making-an-exercise-behave-twice",
+   "en_hash": "16262be0e4706761",
+   "fr_hash": "99ee4550c41694e7"
+  },
+  {
+   "id": "smo-simulator-instructor-operator-guide/configuration-editor-8080-config",
+   "en_hash": "c9ae451da6f6f59e",
+   "fr_hash": "6eb8bacf7825fcbd"
+  },
+  {
+   "id": "smo-simulator-instructor-operator-guide/reports-and-debrief-8080-reports-9090-reports",
+   "en_hash": "3cb1274e93e01f2a",
+   "fr_hash": "a0d326a51ef9d112"
+  },
+  {
+   "id": "smo-simulator-instructor-operator-guide/what-the-students-see-mcs-9090",
+   "en_hash": "1ccc437e393662b7",
+   "fr_hash": "850c8f42abf38e6a"
+  },
+  {
+   "id": "smo-simulator-instructor-operator-guide/fpa-thermal-what-to-teach-now",
+   "en_hash": "bd2e9d5ee6136d31",
+   "fr_hash": "d8af7f7f96debc1d"
+  },
+  {
+   "id": "smo-simulator-instructor-operator-guide/troubleshooting",
+   "en_hash": "59a1984d13619f08",
+   "fr_hash": "d000556acd74320d"
+  },
+  {
+   "id": "smo-simulator-instructor-operator-guide/troubleshooting/scenarios-not-loading",
+   "en_hash": "c8f72ecae412b5ae",
+   "fr_hash": "0b8801303a41f8ae"
+  },
+  {
+   "id": "smo-simulator-instructor-operator-guide/troubleshooting/parameters-showing-as-no-data",
+   "en_hash": "9732e08553c1ab27",
+   "fr_hash": "f8511bfd3d4357b5"
+  },
+  {
+   "id": "smo-simulator-instructor-operator-guide/troubleshooting/breakpoint-load-fails",
+   "en_hash": "ce7dbdb87897ee63",
+   "fr_hash": "e70be739cdcd9fb0"
+  },
+  {
+   "id": "smo-simulator-instructor-operator-guide/troubleshooting/failure-injection-not-taking-effect",
+   "en_hash": "35e90547bdb66ed4",
+   "fr_hash": "a8b0d08c0ca6b138"
+  },
+  {
+   "id": "smo-simulator-instructor-operator-guide/quick-start-example",
+   "en_hash": "ff27cb415d8c2211",
+   "fr_hash": "4ef743496f51716e"
+  },
+  {
+   "id": "smo-simulator-instructor-operator-guide/quick-start-example/training-scenario-post-separation-leop",
+   "en_hash": "3f7a6cc8881c1486",
+   "fr_hash": "850d2b698da820a1"
+  },
+  {
+   "id": "smo-simulator-instructor-operator-guide/advanced-api-endpoints",
+   "en_hash": "a41b4f345e439b75",
+   "fr_hash": "5c15de0877ca2308"
+  },
+  {
+   "id": "smo-simulator-instructor-operator-guide/glossary",
+   "en_hash": "1b413e50fc396b83",
+   "fr_hash": "e8f19b113b5a44d4"
+  }
+ ],
+ "en_commit": "3e80564"
+}

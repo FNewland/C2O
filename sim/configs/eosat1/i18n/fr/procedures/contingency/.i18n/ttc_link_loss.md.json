@@ -1,0 +1,72 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/contingency/ttc_link_loss.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "ctg-003-ttc-link-loss-recovery",
+   "en_hash": "38d71d3e698aab45",
+   "fr_hash": "04d2a1c562b01301"
+  },
+  {
+   "id": "ctg-003-ttc-link-loss-recovery/purpose",
+   "en_hash": "0ece4b010e735f2c",
+   "fr_hash": "06bc88b94cc19e7e"
+  },
+  {
+   "id": "ctg-003-ttc-link-loss-recovery/prerequisites",
+   "en_hash": "0970d99b474ea905",
+   "fr_hash": "ca9694f834e4a6d8"
+  },
+  {
+   "id": "ctg-003-ttc-link-loss-recovery/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "ctg-003-ttc-link-loss-recovery/procedure-steps/step-1-confirm-link-loss-is-not-a-ground-issue",
+   "en_hash": "8de3ed559b198fdd",
+   "fr_hash": "ac167b075190922c"
+  },
+  {
+   "id": "ctg-003-ttc-link-loss-recovery/procedure-steps/step-2-attempt-re-acquisition-on-primary-transponder",
+   "en_hash": "00ca26732efe9f0a",
+   "fr_hash": "f21c67fab686a593"
+  },
+  {
+   "id": "ctg-003-ttc-link-loss-recovery/procedure-steps/step-3-switch-to-redundant-transponder",
+   "en_hash": "178dff830c19f2f9",
+   "fr_hash": "c410472e7dc3c55c"
+  },
+  {
+   "id": "ctg-003-ttc-link-loss-recovery/procedure-steps/step-4-second-attempt-retry-primary-transponder",
+   "en_hash": "2564fd3142066372",
+   "fr_hash": "7cfeb4601b66b027"
+  },
+  {
+   "id": "ctg-003-ttc-link-loss-recovery/procedure-steps/step-5-verify-link-quality-and-subsystem-health",
+   "en_hash": "4bb6fad6a724a621",
+   "fr_hash": "d6c02453a6f982ad"
+  },
+  {
+   "id": "ctg-003-ttc-link-loss-recovery/procedure-steps/step-6-escalation-no-link-recovery",
+   "en_hash": "ae8c74ddfdab37bc",
+   "fr_hash": "076254e0ca841fec"
+  },
+  {
+   "id": "ctg-003-ttc-link-loss-recovery/off-nominal-handling",
+   "en_hash": "5fcdd5aa50f701b1",
+   "fr_hash": "75e3b36159df5568"
+  },
+  {
+   "id": "ctg-003-ttc-link-loss-recovery/post-conditions",
+   "en_hash": "c73b7771d5486add",
+   "fr_hash": "d1aaa876820b5a1b"
+  }
+ ],
+ "en_commit": "3e80564"
+}

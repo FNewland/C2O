@@ -1,0 +1,82 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/emergency/thermal_runaway.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "emg-006-thermal-runaway",
+   "en_hash": "ded738788d7beef4",
+   "fr_hash": "102244d0be2d449a"
+  },
+  {
+   "id": "emg-006-thermal-runaway/objective",
+   "en_hash": "43fd3eaeb1a4ca22",
+   "fr_hash": "8c62c4a42e4bd8d3"
+  },
+  {
+   "id": "emg-006-thermal-runaway/prerequisites",
+   "en_hash": "6c07683a48bd10d6",
+   "fr_hash": "513c50aa6cd884fe"
+  },
+  {
+   "id": "emg-006-thermal-runaway/required-telemetry",
+   "en_hash": "a0f41a5786603852",
+   "fr_hash": "60a4778cc888435b"
+  },
+  {
+   "id": "emg-006-thermal-runaway/required-commands",
+   "en_hash": "223504b3b183e7d8",
+   "fr_hash": "f14a27f4fc177921"
+  },
+  {
+   "id": "emg-006-thermal-runaway/procedure-steps",
+   "en_hash": "284b105bc120fb9b",
+   "fr_hash": "2736fb46dcb2596a"
+  },
+  {
+   "id": "emg-006-thermal-runaway/procedure-steps/step-1-detect-temperature-rise-and-identify-affected-zone",
+   "en_hash": "47c52919ce75c118",
+   "fr_hash": "bbe972ca1c9dc191"
+  },
+  {
+   "id": "emg-006-thermal-runaway/procedure-steps/step-2-command-heater-off-via-normal-command",
+   "en_hash": "f245324a6d943ac3",
+   "fr_hash": "67d7c118efb2f7ca"
+  },
+  {
+   "id": "emg-006-thermal-runaway/procedure-steps/step-3-command-manual-override-via-setpoint-change",
+   "en_hash": "316430a7a307d87a",
+   "fr_hash": "60772505bd247613"
+  },
+  {
+   "id": "emg-006-thermal-runaway/procedure-steps/step-4-shed-heater-power-line-via-eps",
+   "en_hash": "8c3b1e31b3d0424e",
+   "fr_hash": "1fa83d8e7183f507"
+  },
+  {
+   "id": "emg-006-thermal-runaway/procedure-steps/step-5-monitor-temperature-decrease",
+   "en_hash": "3d8a4dd5a81956f4",
+   "fr_hash": "4935faae488c3b3f"
+  },
+  {
+   "id": "emg-006-thermal-runaway/procedure-steps/step-6-post-event-assessment",
+   "en_hash": "f3fac87093d59f35",
+   "fr_hash": "017b651893358317"
+  },
+  {
+   "id": "emg-006-thermal-runaway/verification-criteria",
+   "en_hash": "65f8dd7f3626d9fa",
+   "fr_hash": "03adddd16326e2b7"
+  },
+  {
+   "id": "emg-006-thermal-runaway/contingency",
+   "en_hash": "96439cb6f8d48aca",
+   "fr_hash": "3a9d28ce27aa9125"
+  }
+ ],
+ "en_commit": "983af0f"
+}

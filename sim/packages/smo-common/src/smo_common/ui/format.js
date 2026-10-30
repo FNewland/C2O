@@ -164,6 +164,49 @@ export function fmtHex(value, width = 4) {
   return "0x" + v.toString(16).toUpperCase().padStart(width, "0");
 }
 
+/**
+ * fmtNum(x, digits) -> string   (additive 2026-10, i18n S0)
+ *
+ * ENGINEERING number: always "." as decimal separator, never grouped, in
+ * every UI language (owner ruling R5: operators type these back into
+ * command fields, where "," separates arguments). Use for telemetry values,
+ * limits, command arguments, anything an operator may copy.
+ *
+ * @param {number|null|undefined} x
+ * @param {number} [digits] — fixed decimals; omitted -> String(x).
+ * @returns {string} em-dash when x is null/undefined/not finite.
+ */
+export function fmtNum(x, digits) {
+  if (x === null || x === undefined || x === "" || !Number.isFinite(Number(x))) return "—";
+  const v = Number(x);
+  return digits === undefined ? String(v) : v.toFixed(digits);
+}
+
+/**
+ * fmtProse(x, digits, lang) -> string   (additive 2026-10, i18n S0)
+ *
+ * PROSE number in the UI language (French: decimal comma, U+202F grouping).
+ * Only for narrative text (help, dialog sentences, summaries) — never for a
+ * value an operator might type back (use fmtNum).
+ *
+ * @param {number|null|undefined} x
+ * @param {number} [digits] — fixed decimals (default: up to 3, trimmed).
+ * @param {string} [lang] — "en"|"fr"; default <html lang> (set by i18n.js).
+ * @returns {string} em-dash when x is not finite.
+ */
+export function fmtProse(x, digits, lang) {
+  if (x === null || x === undefined || x === "" || !Number.isFinite(Number(x))) return "—";
+  let l = lang;
+  if (!l) {
+    try { l = globalThis.document.documentElement.lang; } catch (e) { l = "en"; }
+  }
+  const loc = String(l || "en").toLowerCase().startsWith("fr") ? "fr-FR" : "en-GB";
+  const o = digits === undefined ? { maximumFractionDigits: 3 }
+    : { minimumFractionDigits: digits, maximumFractionDigits: digits };
+  try { return new Intl.NumberFormat(loc, o).format(Number(x)); }
+  catch (e) { return fmtNum(x, digits); }
+}
+
 /* ── internal ── */
 function _toDate(input) {
   if (input === null || input === undefined) return null;

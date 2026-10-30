@@ -28,10 +28,10 @@ EOSAT-1 carries two identical OBCs in a cold-redundant configuration:
 | Mass Memory          | 2 GB (Flash, EDAC protected)  | 2 GB (Flash, EDAC protected)  |
 | Operating System     | RTEMS (real-time)             | RTEMS (real-time)             |
 | Data Bus             | Dual CAN bus (A + B)          | Dual CAN bus (A + B)          |
-| PDM Line             | Unswitchable (UNSW-1)         | Switchable (SW-6)             |
+| PDM Line             | Unswitchable `obc` (line 0)   | Unswitchable `obc` (line 0)   |
 
-OBC-A is powered via an unswitchable PDM line, ensuring it is always operational after
-separation. OBC-B is on a switchable PDM line and is normally powered off (cold standby).
+Both units are fed from the unswitchable `obc` PDM line (line 0), so the OBC is always operational
+after separation. Unit selection is internal to the OBC; OBC-B is normally off (cold standby).
 Both OBCs share access to the dual CAN bus for subsystem communication.
 
 ### 2.2 Watchdog Timer
@@ -72,11 +72,12 @@ Power-on --> BOOTLOADER --> NOMINAL
 ```
 
 - **Power-on to BOOTLOADER**: Always. The OBC always boots into BOOTLOADER first.
-- **BOOTLOADER to NOMINAL**: Ground commanded via `OBC_SET_MODE` (mode=0) after self-test.
-  The bootloader does NOT auto-transition to application software — ground command is required.
+- **BOOTLOADER to NOMINAL**: Ground commanded via `OBC_BOOT_APP` (S8.1 func 55) after self-test.
+  At first power-on the bootloader does NOT auto-transition — ground command is required. After a
+  reboot it auto-attempts the application boot after 10 s unless `OBC_BOOT_INHIBIT` is set.
 - **NOMINAL to SAFE**: Ground commanded via `OBC_SET_MODE` (mode=1) or autonomous FDIR.
 - **SAFE to NOMINAL**: Ground commanded via `OBC_SET_MODE` (mode=0) after anomaly clearance.
-- **Any to BOOTLOADER**: Three consecutive watchdog resets or ground command (mode=2).
+- **Any to BOOTLOADER**: Three consecutive watchdog resets or ground command (`OBC_REBOOT`, func 52).
 - **OBC crash to BOOTLOADER**: An unrecoverable software exception causes a reset, and after
   3 consecutive resets, the OBC remains in BOOTLOADER awaiting ground intervention.
 
@@ -108,14 +109,14 @@ Only the following commands are accepted in BOOTLOADER mode:
 
 | Command              | Purpose                                          |
 |----------------------|--------------------------------------------------|
-| OBC_SET_MODE (0)     | Transition to APPLICATION/NOMINAL                |
-| OBC_SET_MODE (2)     | Stay in BOOTLOADER (no-op)                       |
-| SET_TIME             | Synchronise onboard clock                        |
-| HK_REQUEST (SID 11)  | Request beacon housekeeping packet               |
-| SW_UPLOAD            | Upload new application software image            |
-| SW_ACTIVATE          | Activate uploaded software image                 |
+| OBC_BOOT_APP (S8.1 func 55) | Boot the application image                 |
+| OBC_REBOOT, OBC_SWITCH_UNIT, OBC_SELECT_BUS, OBC_BOOT_INHIBIT, OBC_CLEAR_REBOOT_CNT, OBC_DIAGNOSTIC (S8.1 funcs 52–54, 56, 57, 61) | Bootloader maintenance |
+| SET_TIME (S9.1)      | Accepted, but fails at execution until the application runs — set time after OBC_BOOT_APP |
+| HK_REQUEST (SID 11), S17.1, S20.1/S20.3 | Beacon packet, connection test, parameter get/set |
+| EPS_POWER_ON / EPS_POWER_OFF (funcs 19/20), TTC_PA_ON / TTC_PA_OFF (66/67), TTC_DEPLOY_ANTENNA (69) | First-contact power lines, transmitter and antenna |
+| SYS_SET_MISSION_PHASE (func 120) | Mission-phase declaration (application phases refused until the OBC has booted) |
 
-All other commands are rejected with a `tc_reject_count` increment.
+All other commands are rejected at acceptance with failure code 0x0006.
 
 #### Beacon Packet (SID 11)
 
@@ -138,7 +139,7 @@ This beacon is transmitted at low rate (0.01 Hz) to conserve power and bandwidth
 The transition from BOOTLOADER to application (NOMINAL) mode proceeds as follows:
 
 1. Ground receives beacon packet and verifies OBC health.
-2. Ground sends `OBC_SET_MODE` (mode=0).
+2. Ground sends `OBC_BOOT_APP` (S8.1 func 55).
 3. OBC loads application software from flash memory.
 4. Application performs power-on self-test (POST).
 5. If POST passes, OBC transitions to NOMINAL mode.
@@ -146,7 +147,7 @@ The transition from BOOTLOADER to application (NOMINAL) mode proceeds as follows
 7. Ground verifies all telemetry parameters are nominal.
 
 If POST fails, the OBC remains in BOOTLOADER and generates a failure event. Ground must
-then investigate (potentially upload a patched application image via `SW_UPLOAD`).
+then investigate (see CTG-021, OBC Bootloader Recovery).
 
 ### 3.4 OBC Crash Recovery Workflow
 
@@ -159,14 +160,14 @@ When the OBC experiences an unrecoverable crash:
    No auto-boot attempt.
 5. **Ground recovery**: During next contact, ground observes beacon packet with
    `obc_mode = 2` and elevated `reboot_count`. Ground investigates telemetry archive,
-   uploads software patch if needed, and commands `OBC_SET_MODE` (mode=0) to restart.
+   uploads software patch if needed, and commands `OBC_BOOT_APP` to restart.
 
 ### 3.5 Safe Mode Behaviour
 
 In SAFE mode, the OBC:
 
 - Disables payload operations and power.
-- Commands AOCS to SAFE_POINT mode.
+- Commands AOCS to COARSE_SUN mode.
 - Reduces housekeeping telemetry rate to 0.1 Hz.
 - Activates battery heater (the only active thermal element).
 - Maintains TTC link for ground commanding.
@@ -264,8 +265,8 @@ investigation of running tasks. Loads above 98% risk watchdog timeout.
 
 ### 8.1 Time Management
 
-The OBC maintains on-board time in CCSDS Unsegmented Code (CUC) format with 1-second
-resolution. Time is synchronised from ground using the `SET_TIME` command. Time drift is
+The OBC maintains on-board time in CCSDS Unsegmented Code (CUC) format: a 4-octet coarse
+field (1 s) and a 2-octet fine field (1/65536 s), see 12_time_and_clocks.md. Time is synchronised from ground using the `SET_TIME` command. Time drift is
 expected to be less than 1 ms/day due to the temperature-compensated crystal oscillator.
 
 ## 9. Operational Notes

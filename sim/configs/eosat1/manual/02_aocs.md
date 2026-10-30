@@ -13,7 +13,8 @@ The Attitude and Orbit Control System (AOCS) provides three-axis attitude determ
 control for EOSAT-1. It maintains nadir-pointing during nominal ocean imaging operations,
 performs detumble after separation, and supports slew manoeuvres for off-nadir target
 acquisition. The OBC runs ADCS software for orbit determination (using the onboard GPS
-receiver) but does not perform orbital control manoeuvres — EOSAT-1 has no propulsion system.
+receiver). Orbit manoeuvres (collision avoidance, limited drag make-up) use the 1U
+green-monopropellant propulsion module (S8 funcs 108–118), with the AOCS holding the burn attitude.
 
 ## 2. Hardware Configuration
 

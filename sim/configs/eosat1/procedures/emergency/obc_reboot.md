@@ -126,7 +126,7 @@ unit. Escalate to OBDH engineer for investigation.
 **TC:** `HK_ENABLE(sid=1)` (Service 3, Subtype 5) --- enable EPS periodic reporting
 **TC:** `HK_ENABLE(sid=2)` (Service 3, Subtype 5) --- enable AOCS periodic reporting
 **TC:** `HK_ENABLE(sid=3)` (Service 3, Subtype 5) --- enable TCS periodic reporting
-**TC:** `HK_ENABLE(sid=5)` (Service 3, Subtype 5) --- enable TTC periodic reporting
+**TC:** `HK_ENABLE(sid=6)` (Service 3, Subtype 5) --- enable TTC periodic reporting
 **Verify:** Periodic HK packets from all enabled SIDs arriving within 30 s
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) --- request EPS housekeeping
 **Verify:** `eps.bus_voltage` (0x0105) > 28.0 V --- power bus nominal
@@ -192,7 +192,7 @@ and monitor for recurrence.
 ## Off-Nominal Handling
 - If `obdh.reboot_count` (0x030A) increments by > 1: The OBC may have experienced
   multiple reboot cycles (boot loop). Check `obdh.last_reboot_cause` (0x0316). If cause
-  is 1 (watchdog), the application may be crashing on startup. Attempt bootloader-only
+  is 2 (watchdog), the application may be crashing on startup. Attempt bootloader-only
   mode and select alternate image bank.
 - If `obdh.active_obc` (0x030C) changed unexpectedly: An autonomous OBC switchover
   occurred. The primary OBC may have a hardware fault. Log the event and proceed with

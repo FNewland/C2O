@@ -1,0 +1,46 @@
+[
+  {
+    "file": "EOSAT1-SIM_0_20260705T191709Z_401.4150MHz.cf32",
+    "truth": "GFSK 9600.0 Bd",
+    "snr_db": 10.0,
+    "doppler": "leo_scurve 9500.0",
+    "decoded": "not acquired",
+    "frames_ok": 0,
+    "frames_bad": 0,
+    "packets": 0,
+    "seconds": 84.3
+  },
+  {
+    "file": "eosat1_best.cf32",
+    "truth": "GFSK 9600.0 Bd",
+    "snr_db": 12.0,
+    "doppler": "leo_scurve 3000.0",
+    "decoded": "not acquired",
+    "frames_ok": 0,
+    "frames_bad": 0,
+    "packets": 0,
+    "seconds": 75.0
+  },
+  {
+    "file": "eosat1_tuned2.cf32",
+    "truth": "GFSK 9600.0 Bd",
+    "snr_db": 18.0,
+    "doppler": "constant 9500.0",
+    "decoded": "not acquired",
+    "frames_ok": 0,
+    "frames_bad": 0,
+    "packets": 0,
+    "seconds": 104.0
+  },
+  {
+    "file": "eosat1_tuned_bison.cf32",
+    "truth": "GFSK 9600.0 Bd",
+    "snr_db": 30.0,
+    "doppler": "leo_scurve 9500.0",
+    "decoded": "not acquired",
+    "frames_ok": 0,
+    "frames_bad": 0,
+    "packets": 0,
+    "seconds": 227.0
+  }
+]

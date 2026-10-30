@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SMO MCS — EOSAT-1 — Modern Console</title>
+<title data-i18n>SMO MCS — EOSAT-1 — Modern Console</title>
 <!-- ==========================================================================
   SMO MCS MODERN CONSOLE — shell (execution plan §2.1)
   Mockup B console shell + Mockup A ISA-101 component discipline + Mockup C
@@ -229,6 +229,7 @@ svg.sc{width:100%;display:block;max-height:min(46vh,500px);margin:0 auto}
    single 58 px line at 1366 px instead of wrapping to two. */
 @media(max-width:1500px){
   .hrow{gap:6px 8px}
+  .pos-wrap label{display:none}   /* SX: the select's aria-label names it; keeps "?" on row 1 at 1366 px (FR) */
   .clk b{font-size:13.5px}
   .mark span{display:none}
   .ibtn{padding:4px 7px;font-size:11.5px}
@@ -248,45 +249,46 @@ svg.sc{width:100%;display:block;max-height:min(46vh,500px);margin:0 auto}
 </style>
 </head>
 <body>
-<a class="ds-skip" href="#main">Skip to main content</a>
+<a class="ds-skip" href="#main" data-i18n>Skip to main content</a>
 
 <header id="top-bar">
   <div class="hrow">
-    <div class="mark"><div class="g">EO1</div><div><b>EOSAT-1</b><span>MCS · MODERN</span></div></div>
+    <div class="mark"><div class="g">EO1</div><div><b>EOSAT-1</b><span data-i18n>MCS · MODERN</span></div></div>
     <div class="clk"><label>UTC</label><b id="utc-clock" class="num">—</b></div>
     <div class="clk"><label>MET</label><b id="met-clock" class="num">—</b></div>
-    <div class="clk"><label>SC time</label><b id="sc-time-clock" class="num">—</b></div>
-    <span id="training-chip" class="ds-training hide" title="Ground clock is simulator time (training). Absent on a real mission.">TRAINING</span>
+    <div class="clk"><label data-i18n>SC time</label><b id="sc-time-clock" class="num">—</b></div>
+    <span id="training-chip" class="ds-training hide" data-i18n-title title="Ground clock is simulator time (training). Absent on a real mission.">TRAINING</span>
     <div class="grow"></div>
-    <div class="pos-wrap" id="pos-bar"><label for="pos-select">POSITION</label>
-      <select id="pos-select" aria-label="Console position"></select></div>
-    <button class="abtn" id="alarms-btn" aria-haspopup="dialog">
+    <div class="pos-wrap" id="pos-bar"><label for="pos-select" data-i18n>POSITION</label>
+      <select id="pos-select" data-i18n-aria-label aria-label="Console position"></select></div>
+    <button class="abtn" id="alarms-btn" aria-haspopup="dialog" data-i18n>
       <span class="n" id="alarm-unack-n">0</span> ALARMS</button>
-    <a class="ibtn" href="/dumps" target="_blank" rel="noopener">DELAYED&nbsp;TM</a>
-    <a class="ibtn" href="/reports" target="_blank" rel="noopener">REPORTS</a>
-    <button class="ibtn" id="guided-btn" aria-pressed="false"
+    <a class="ibtn" href="/dumps" target="_blank" rel="noopener" data-i18n>DELAYED&nbsp;TM</a>
+    <a class="ibtn" href="/reports" target="_blank" rel="noopener" data-i18n>REPORTS</a>
+    <button class="ibtn" id="guided-btn" aria-pressed="false" data-i18n data-i18n-title
       title="Guided teaching mode: numbered annotations explaining each display">GUIDED</button>
-    <button class="ibtn" id="grey-btn" aria-pressed="false"
+    <button class="ibtn" id="grey-btn" aria-pressed="false" data-i18n data-i18n-title
       title="Greyscale check: the console must stay operable without colour (P6)">GREY</button>
-    <button class="ibtn" id="theme-btn" aria-pressed="false" title="Light/dark theme">THEME</button>
-    <button class="ibtn" id="help-btn" title="Keyboard shortcuts and design notes">?</button>
-    <span id="ws-dot" role="img" aria-label="server link"></span>
+    <button class="ibtn" id="theme-btn" aria-pressed="false" data-i18n data-i18n-title title="Light/dark theme">THEME</button>
+    <span id="lang-toggle"></span>
+    <button class="ibtn" id="help-btn" data-i18n-title title="Keyboard shortcuts and design notes">?</button>
+    <span id="ws-dot" role="img" data-i18n-aria-label aria-label="server link"></span>
   </div>
   <div id="contingency-banner" class="ds-banner alarm hide" role="alert"></div>
   <div class="sa" id="sa-strip">
-    <div class="sacard" id="sa-see"><div class="q">Can I see it?</div><span class="sadot" id="sa-see-dot"></span>
-      <div class="a"><b id="sa-see-v">—</b><span id="sa-see-s">no telemetry yet</span></div></div>
-    <div class="sacard" id="sa-talk"><div class="q">Can I talk?</div><span class="sadot" id="sa-talk-dot"></span>
-      <div class="a"><b id="sa-talk-v">—</b><span id="sa-talk-s">no link data</span></div></div>
-    <div class="sacard" id="sa-well"><div class="q">Is it well?</div><span class="sadot" id="sa-well-dot"></span>
-      <div class="a"><b id="sa-well-v">—</b><span id="sa-well-s">no alarm data</span></div></div>
-    <div class="sacard" id="sa-next"><div class="q">What's next?</div><span class="sadot" id="sa-next-dot"></span>
-      <div class="a"><b id="sa-next-v">—</b><span id="sa-next-s">no schedule</span></div></div>
+    <div class="sacard" id="sa-see"><div class="q" data-i18n>Can I see it?</div><span class="sadot" id="sa-see-dot"></span>
+      <div class="a"><b id="sa-see-v">—</b><span id="sa-see-s"><span data-i18n>no telemetry yet</span></span></div></div>
+    <div class="sacard" id="sa-talk"><div class="q" data-i18n>Can I talk?</div><span class="sadot" id="sa-talk-dot"></span>
+      <div class="a"><b id="sa-talk-v">—</b><span id="sa-talk-s"><span data-i18n>no link data</span></span></div></div>
+    <div class="sacard" id="sa-well"><div class="q" data-i18n>Is it well?</div><span class="sadot" id="sa-well-dot"></span>
+      <div class="a"><b id="sa-well-v">—</b><span id="sa-well-s"><span data-i18n>no alarm data</span></span></div></div>
+    <div class="sacard" id="sa-next"><div class="q" data-i18n>What's next?</div><span class="sadot" id="sa-next-dot"></span>
+      <div class="a"><b id="sa-next-v">—</b><span id="sa-next-s"><span data-i18n>no schedule</span></span></div></div>
   </div>
 </header>
 
 <div class="shell">
-  <nav class="rail" id="nav-rail" aria-label="Pages"></nav>
+  <nav class="rail" id="nav-rail" aria-label="Pages" data-i18n-aria-label></nav>
   <main class="work" id="main" tabindex="-1">
     <!-- Page sections are generated by mcs.js into #pages -->
     <div id="pages"></div>
@@ -294,20 +296,20 @@ svg.sc{width:100%;display:block;max-height:min(46vh,500px);margin:0 auto}
 </div>
 
 <!-- collapsible bottom drawer: EVENTS / TM PACKETS / CMD HISTORY / HANDOVER / GO-NOGO -->
-<div id="bottom-drawer" role="region" aria-label="Console log drawer">
+<div id="bottom-drawer" role="region" data-i18n-aria-label aria-label="Console log drawer">
   <div class="bd-tabs" role="tablist" id="bd-tabs">
-    <button role="tab" data-bd="events" aria-selected="true">EVENTS</button>
-    <button role="tab" data-bd="tm" aria-selected="false">TM PACKETS</button>
-    <button role="tab" data-bd="cmdhist" aria-selected="false">CMD HISTORY</button>
-    <button role="tab" data-bd="conlog" aria-selected="false">LOG</button>
-    <button role="tab" data-bd="handover" aria-selected="false">HANDOVER</button>
+    <button role="tab" data-bd="events" aria-selected="true" data-i18n>EVENTS</button>
+    <button role="tab" data-bd="tm" aria-selected="false" data-i18n>TM PACKETS</button>
+    <button role="tab" data-bd="cmdhist" aria-selected="false" data-i18n>CMD HISTORY</button>
+    <button role="tab" data-bd="conlog" aria-selected="false" data-i18n>LOG</button>
+    <button role="tab" data-bd="handover" aria-selected="false" data-i18n>HANDOVER</button>
     <button role="tab" data-bd="gonogo" aria-selected="false" id="bd-tab-gonogo">GO/NO-GO</button>
     <span class="grow" style="flex:1"></span>
-    <select id="evt-sev-filter" class="in" style="padding:0 4px;font-size:12px" aria-label="Event severity filter">
-      <option value="all">All</option><option value="info">Info</option><option value="nom">Nominal</option>
-      <option value="warn">Warning</option><option value="alarm">High/Alarm</option><option value="warnplus">Warning+</option>
+    <select id="evt-sev-filter" class="in" style="padding:0 4px;font-size:12px" data-i18n-aria-label aria-label="Event severity filter">
+      <option value="all" data-i18n>All</option><option value="info" data-i18n>Info</option><option value="nom" data-i18n>Nominal</option>
+      <option value="warn" data-i18n>Warning</option><option value="alarm" data-i18n>High/Alarm</option><option value="warnplus" data-i18n>Warning+</option>
     </select>
-    <button id="bd-toggle" aria-expanded="false" title="Expand/collapse log drawer">▤</button>
+    <button id="bd-toggle" aria-expanded="false" data-i18n-title title="Expand/collapse log drawer">▤</button>
   </div>
   <div class="bd-body">
     <div class="bd-pane" id="bdp-events" role="tabpanel"></div>
@@ -319,31 +321,31 @@ svg.sc{width:100%;display:block;max-height:min(46vh,500px);margin:0 auto}
     <div class="bd-pane hide" id="bdp-conlog" role="tabpanel">
       <div class="guided-note" data-ann="drawer.conlog"></div>
       <div class="row" style="margin:4px 0">
-        <select id="conlog-kind" class="in" aria-label="Console log kind filter" style="font-size:12px">
-          <option value="all">All kinds</option><option value="tc">TC</option>
-          <option value="ack">Alarm ack</option><option value="shelve">Shelve</option>
-          <option value="procedure">Procedure</option><option value="gonogo">GO/NO-GO</option>
-          <option value="mark">Mark</option><option value="note">Note</option>
+        <select id="conlog-kind" class="in" data-i18n-aria-label aria-label="Console log kind filter" style="font-size:12px">
+          <option value="all" data-i18n>All kinds</option><option value="tc">TC</option>
+          <option value="ack" data-i18n>Alarm ack</option><option value="shelve" data-i18n>Shelve</option>
+          <option value="procedure" data-i18n>Procedure</option><option value="gonogo">GO/NO-GO</option>
+          <option value="mark" data-i18n>Mark</option><option value="note" data-i18n>Note</option>
         </select>
-        <input id="conlog-input" class="in" style="flex:1"
+        <input id="conlog-input" class="in" style="flex:1" data-i18n-placeholder
           placeholder="Console note… (Enter logs it as your position)">
-        <button class="ds-btn" data-conlog="note">NOTE</button>
-        <button class="ds-btn" data-conlog="mark" title="timestamped MARK in the mission log (book §7)">MARK</button>
+        <button class="ds-btn" data-conlog="note" data-i18n>NOTE</button>
+        <button class="ds-btn" data-conlog="mark" data-i18n data-i18n-title title="timestamped MARK in the mission log (book §7)">MARK</button>
       </div>
       <div id="conlog-list"></div>
     </div>
     <div class="bd-pane hide" id="bdp-handover" role="tabpanel">
       <div class="row" style="margin:4px 0">
-        <input id="handover-input" class="in" style="flex:1" placeholder="Handover note… (Enter to add)">
-        <button class="ds-btn" id="handover-add">ADD</button>
+        <input id="handover-input" class="in" style="flex:1" data-i18n-placeholder placeholder="Handover note… (Enter to add)">
+        <button class="ds-btn" id="handover-add" data-i18n>ADD</button>
       </div>
       <div id="handover-list"></div>
     </div>
     <div class="bd-pane hide" id="bdp-gonogo" role="tabpanel">
       <div class="guided-note" data-ann="gonogo.matrix"></div>
       <div class="row" style="margin:4px 0">
-        <input id="gonogo-label" class="in" placeholder="Poll label (e.g. BURN GO/NO-GO)">
-        <button class="ds-btn" id="gonogo-start">START POLL</button>
+        <input id="gonogo-label" class="in" data-i18n-placeholder placeholder="Poll label (e.g. BURN GO/NO-GO)">
+        <button class="ds-btn" id="gonogo-start" data-i18n>START POLL</button>
         <span class="grow" style="flex:1"></span>
         <button class="ds-btn" data-gonogo="GO">GO</button>
         <button class="ds-btn" data-gonogo="NOGO">NO-GO</button>
@@ -355,52 +357,52 @@ svg.sc{width:100%;display:block;max-height:min(46vh,500px);margin:0 auto}
 </div>
 
 <!-- docked non-modal alarm drawer -->
-<aside id="alarm-drawer" role="region" aria-label="Alarm journal">
+<aside id="alarm-drawer" role="region" data-i18n-aria-label aria-label="Alarm journal">
   <div class="hd">
-    <h2>Alarms</h2>
+    <h2 data-i18n>Alarms</h2>
     <span class="ds-badge alarm" id="alarm-drawer-unack">0 UNACK</span>
-    <select id="alarm-f-sub" class="in" aria-label="Filter subsystem">
-      <option value="">All subsystems</option>
+    <select id="alarm-f-sub" class="in" data-i18n-aria-label aria-label="Filter subsystem">
+      <option value="" data-i18n>All subsystems</option>
       <option value="eps">EPS</option><option value="tcs">TCS</option><option value="aocs">AOCS</option>
       <option value="ttc">TTC</option><option value="payload">PAYLOAD</option>
       <option value="prop">PROP</option><option value="obdh">OBDH</option>
     </select>
-    <select id="alarm-f-sev" class="in" aria-label="Filter severity">
-      <option value="0">All severities</option><option value="2">Medium+</option><option value="3">High only</option>
+    <select id="alarm-f-sev" class="in" data-i18n-aria-label aria-label="Filter severity">
+      <option value="0" data-i18n>All severities</option><option value="2" data-i18n>Medium+</option><option value="3" data-i18n>High only</option>
     </select>
-    <button class="ds-btn" id="alarm-ack-all">ACK ALL</button>
-    <a class="ibtn" href="/dumps" target="_blank" rel="noopener">ARCHIVE</a>
-    <button class="ds-btn" id="alarm-close" aria-label="Close alarm drawer">✕</button>
+    <button class="ds-btn" id="alarm-ack-all" data-i18n>ACK ALL</button>
+    <a class="ibtn" href="/dumps" target="_blank" rel="noopener" data-i18n>ARCHIVE</a>
+    <button class="ds-btn" id="alarm-close" data-i18n-aria-label aria-label="Close alarm drawer">✕</button>
   </div>
   <div class="guided-note" data-ann="alarms.first-out" style="margin:6px 12px"></div>
-  <div id="alarm-list" role="table" aria-label="Alarm rows"></div>
-  <div class="ft">Blink is reserved for unacknowledged P1 and stops on acknowledgement.
+  <div id="alarm-list" role="table" data-i18n-aria-label aria-label="Alarm rows"></div>
+  <div class="ft" data-i18n-html>Blink is reserved for unacknowledged P1 and stops on acknowledgement.
     <kbd class="ds-kbd">a</kbd> open · <kbd class="ds-kbd">k</kbd> ack first · click ⛓ for the causal chain.</div>
 </aside>
 
 <!-- causal chain screen (Mockup C spine) -->
 <div class="overlay" id="chain-overlay">
-  <div class="dlg" role="dialog" aria-modal="true" aria-label="Causal chain">
-    <h2>Causal chain <button class="ds-btn" id="chain-close" style="float:right">✕</button></h2>
+  <div class="dlg" role="dialog" aria-modal="true" data-i18n-aria-label aria-label="Causal chain">
+    <h2 data-i18n>Causal chain <button class="ds-btn" id="chain-close" style="float:right">✕</button></h2>
     <div id="chain-body"></div>
   </div>
 </div>
 
 <!-- keyboard help -->
 <div class="overlay" id="help-overlay">
-  <div class="dlg" role="dialog" aria-modal="true" aria-label="Keyboard shortcuts">
-    <h2>Keyboard &amp; design <button class="ds-btn" id="help-close" style="float:right">✕</button></h2>
+  <div class="dlg" role="dialog" aria-modal="true" data-i18n-aria-label aria-label="Keyboard shortcuts">
+    <h2 data-i18n>Keyboard &amp; design <button class="ds-btn" id="help-close" style="float:right">✕</button></h2>
     <div id="help-body">
       <table class="plain">
-        <tr><td><kbd class="ds-kbd">F6</kbd></td><td>cycle regions (header → rail → main → drawer)</td></tr>
-        <tr><td><kbd class="ds-kbd">←</kbd> <kbd class="ds-kbd">→</kbd></td><td>previous / next page on the nav rail</td></tr>
-        <tr><td><kbd class="ds-kbd">Esc</kbd></td><td>close dialog / drawer, else back to Overview</td></tr>
-        <tr><td><kbd class="ds-kbd">Enter</kbd></td><td>send (command data field) · add (handover note)</td></tr>
-        <tr><td><kbd class="ds-kbd">a</kbd></td><td>open the alarm drawer</td></tr>
-        <tr><td><kbd class="ds-kbd">k</kbd></td><td>acknowledge the first unacknowledged alarm</td></tr>
-        <tr><td><kbd class="ds-kbd">?</kbd></td><td>this dialog</td></tr>
+        <tr><td><kbd class="ds-kbd">F6</kbd></td><td data-i18n>cycle regions (header → rail → main → drawer)</td></tr>
+        <tr><td><kbd class="ds-kbd">←</kbd> <kbd class="ds-kbd">→</kbd></td><td data-i18n>previous / next page on the nav rail</td></tr>
+        <tr><td><kbd class="ds-kbd">Esc</kbd></td><td data-i18n>close dialog / drawer, else back to Overview</td></tr>
+        <tr><td><kbd class="ds-kbd">Enter</kbd></td><td data-i18n>send (command data field) · add (handover note)</td></tr>
+        <tr><td><kbd class="ds-kbd">a</kbd></td><td data-i18n>open the alarm drawer</td></tr>
+        <tr><td><kbd class="ds-kbd">k</kbd></td><td data-i18n>acknowledge the first unacknowledged alarm</td></tr>
+        <tr><td><kbd class="ds-kbd">?</kbd></td><td data-i18n>this dialog</td></tr>
       </table>
-      <p style="margin-top:12px;font-size:13px">
+      <p style="margin-top:12px;font-size:13px" data-i18n-html>
         Why does the console look like this? Read
         <a href="/static/modern/why-this-design.html" target="_blank" rel="noopener">why-this-design</a>
         — the teaching notes behind the grey-is-nominal rule, the four-question header,

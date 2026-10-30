@@ -1,0 +1,472 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "docs/OPERATIONS_GUIDE.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator",
+   "en_hash": "c9de3ed0d7051ca4",
+   "fr_hash": "3558659165cf2b5d"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/table-of-contents",
+   "en_hash": "95b90b6118f466a6",
+   "fr_hash": "664788395cdb7cc8"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/quick-start",
+   "en_hash": "6625104ede63ded4",
+   "fr_hash": "af1b02d056fd5002"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/simulator-startup",
+   "en_hash": "af80b54285bfae8f",
+   "fr_hash": "9299a7cb1387815e"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/simulator-startup/option-1-standard-mode-real-time-simulation",
+   "en_hash": "48d48d663bfc621c",
+   "fr_hash": "195849d4116b0e92"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/simulator-startup/option-2-accelerated-simulation-testing",
+   "en_hash": "884c76cafc9987f9",
+   "fr_hash": "33620abee853b7ac"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/simulator-startup/option-3-with-failure-scenario",
+   "en_hash": "ea931354314f509e",
+   "fr_hash": "efc7589d32476b17"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/simulator-startup/option-4-distributed-gateway-mode",
+   "en_hash": "eda54b90fce417ba",
+   "fr_hash": "a6d647afa126b350"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/mission-control-system-mcs",
+   "en_hash": "4bd5ab5e98b84b8c",
+   "fr_hash": "cf864076955e6a3a"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/mission-control-system-mcs/dashboard-layout",
+   "en_hash": "b4cdbadc456645ec",
+   "fr_hash": "8072a72b388092bc"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/mission-control-system-mcs/key-display-tabs",
+   "en_hash": "373a9dd6f52e2296",
+   "fr_hash": "f174bb2b2f73c59a"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/mission-control-system-mcs/situational-awareness-header",
+   "en_hash": "e59659ca4d77636a",
+   "fr_hash": "a51aff8bf9e0d098"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/mission-control-system-mcs/limit-colouring",
+   "en_hash": "1329bb13df63fd61",
+   "fr_hash": "4e790cf648a8ded6"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/telemetry-monitoring",
+   "en_hash": "f769f4d5a32717b3",
+   "fr_hash": "24e68989508513e2"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/telemetry-monitoring/enable-periodic-housekeeping",
+   "en_hash": "05c151c381fd1f94",
+   "fr_hash": "38896bc702877285"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/telemetry-monitoring/key-parameters-to-monitor",
+   "en_hash": "e802656780982fae",
+   "fr_hash": "e7d336b19d92b2c3"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/telemetry-monitoring/telemetry-plots",
+   "en_hash": "35c49bec29c839f2",
+   "fr_hash": "6640d9774a49eb63"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/commanding-the-spacecraft",
+   "en_hash": "636c8a33ba6cc98e",
+   "fr_hash": "dcbfc41a45c1dbf3"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/commanding-the-spacecraft/command-workflow",
+   "en_hash": "56df11b5cc8ffe15",
+   "fr_hash": "e669187ec2ceadbb"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/commanding-the-spacecraft/example-1-simple-mode-change",
+   "en_hash": "3a2b02ba5b42acc9",
+   "fr_hash": "dc83b81943e491e8"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/commanding-the-spacecraft/example-2-complex-command-imaging-pass",
+   "en_hash": "fd4623a0e26bf2a3",
+   "fr_hash": "da3da889e7ea7333"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/commanding-the-spacecraft/command-error-recovery",
+   "en_hash": "e01f3b49c6c3d71d",
+   "fr_hash": "391908e61488a194"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/mission-planner-usage",
+   "en_hash": "65f18e726cf76bb6",
+   "fr_hash": "a6e864e28053136c"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/mission-planner-usage/purpose",
+   "en_hash": "7efadd46f9d89786",
+   "fr_hash": "a32eb2b3217b1bde"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/mission-planner-usage/workflow",
+   "en_hash": "9d2130de0938616c",
+   "fr_hash": "e9b855fe3cca0996"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/mission-planner-usage/ground-station-integration",
+   "en_hash": "1a8eab3231ac78e6",
+   "fr_hash": "7fca69d29d0750d4"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/anomaly-response-procedures",
+   "en_hash": "fbba2af4efe1cfc4",
+   "fr_hash": "7ebc2e2d37c59eb2"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/anomaly-response-procedures/aocs-anomalies",
+   "en_hash": "64d731021070ca58",
+   "fr_hash": "9b646c8b40862def"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/anomaly-response-procedures/aocs-anomalies/reaction-wheel-overspeed",
+   "en_hash": "610613eef39e75c9",
+   "fr_hash": "be4d0600e44146ca"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/anomaly-response-procedures/aocs-anomalies/star-tracker-blinded",
+   "en_hash": "b8bfde3b580a105e",
+   "fr_hash": "4d394b9c7545f090"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/anomaly-response-procedures/aocs-anomalies/momentum-saturation",
+   "en_hash": "5aeecfa5ea17d152",
+   "fr_hash": "3205944b5a929837"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/anomaly-response-procedures/eps-anomalies",
+   "en_hash": "f76e2673e967cf7d",
+   "fr_hash": "b30d6c61f23c3daf"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/anomaly-response-procedures/eps-anomalies/battery-soc-critical",
+   "en_hash": "7d938b0e2d4e4d4e",
+   "fr_hash": "2d026b14d2e79377"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/anomaly-response-procedures/eps-anomalies/bus-undervoltage",
+   "en_hash": "1ebc235c80c1485c",
+   "fr_hash": "d8e9a0af92e589a9"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/anomaly-response-procedures/tcs-anomalies",
+   "en_hash": "ef9a5bb78c6c24c7",
+   "fr_hash": "097e33308573cb5c"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/anomaly-response-procedures/tcs-anomalies/fpa-overtemperature",
+   "en_hash": "86bb258c2636d739",
+   "fr_hash": "48906222b15f9476"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/anomaly-response-procedures/ttc-anomalies",
+   "en_hash": "e6cf7f4b7a909b83",
+   "fr_hash": "a9d8398964fbe19c"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/anomaly-response-procedures/ttc-anomalies/link-margin-critical",
+   "en_hash": "d7054b66207b587c",
+   "fr_hash": "fb0bcb5561269d7a"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/anomaly-response-procedures/ttc-anomalies/pa-overheat-shutdown",
+   "en_hash": "2e57eef799632f55",
+   "fr_hash": "3dc6d0d5d47fbc6a"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/common-operational-scenarios",
+   "en_hash": "af84a3bd48d62fbf",
+   "fr_hash": "37df9ae37fb3e3e4"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/common-operational-scenarios/scenario-1-standard-imaging-pass-60-minutes",
+   "en_hash": "3db4f621238e0105",
+   "fr_hash": "38ce7d8c7951b166"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/common-operational-scenarios/scenario-2-safe-mode-recovery-post-anomaly",
+   "en_hash": "08a1e60f01f78c44",
+   "fr_hash": "47f4ebf3fd9424f8"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/common-operational-scenarios/scenario-3-battery-low-in-eclipse-contingency",
+   "en_hash": "47657c62cf63d118",
+   "fr_hash": "22f2b750d637bf52"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/common-operational-scenarios/scenario-4-scheduled-maintenance-window",
+   "en_hash": "8e7f24c67a3aeac9",
+   "fr_hash": "6b058733b7464a13"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/trends-and-history",
+   "en_hash": "a3c6ce398fd1bb6b",
+   "fr_hash": "b595bf53e236182e"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/reports",
+   "en_hash": "ae4e1bff19f8c17e",
+   "fr_hash": "373d497eb68ead65"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/reports/the-number-worth-understanding",
+   "en_hash": "05faf13987b7821a",
+   "fr_hash": "1cc71138b769b31c"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/reports/period-selection",
+   "en_hash": "c674183c41cf17fc",
+   "fr_hash": "fe14e9ee7b71e367"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/browsing-the-configuration",
+   "en_hash": "310b7389e463f90f",
+   "fr_hash": "984e4c48fe92b2db"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/troubleshooting",
+   "en_hash": "659a188b36f9c326",
+   "fr_hash": "42e17c1d6c6b24e4"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/troubleshooting/mcs-won-t-connect-to-simulator",
+   "en_hash": "c1096e34ad72442f",
+   "fr_hash": "8fb35f9c611e6b9a"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/troubleshooting/commands-sent-but-no-response",
+   "en_hash": "392d46cb6eba8e52",
+   "fr_hash": "89da7d21448e3720"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/troubleshooting/anomalous-telemetry-values",
+   "en_hash": "38bbc7439355d84c",
+   "fr_hash": "1368cec44438e7bd"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/troubleshooting/s19-rules-not-triggering-autonomously",
+   "en_hash": "358bc9e97eb6471c",
+   "fr_hash": "a8fc6dc387de0285"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/training-scenarios",
+   "en_hash": "4142a53fc63dcc6f",
+   "fr_hash": "e9571edb942e9381"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/training-scenarios/beginner-hello-spacecraft-5-minutes",
+   "en_hash": "7ea655233e9e7c87",
+   "fr_hash": "9aac5110797a1bbf"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/training-scenarios/intermediate-power-management-crisis-30-minutes",
+   "en_hash": "21039ee50afecb5b",
+   "fr_hash": "f08382a53ded9ff3"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/training-scenarios/advanced-imaging-campaign-2-hours",
+   "en_hash": "92a68d643c7903b0",
+   "fr_hash": "2330130025fc2e2b"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/training-scenarios/expert-anomaly-response-drill-3-hours",
+   "en_hash": "d85b6dcabdea7724",
+   "fr_hash": "d602ae3e8f119493"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/appendix-common-commands-quick-reference",
+   "en_hash": "7ed7da9869513176",
+   "fr_hash": "49140eee72f5812b"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/appendix-common-commands-quick-reference/quickest-commands-1-second",
+   "en_hash": "fd0453b3dae5bfd3",
+   "fr_hash": "7df33f5d6adf9928"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/appendix-common-commands-quick-reference/slowest-commands-10-seconds",
+   "en_hash": "baa586e86a361854",
+   "fr_hash": "8f347bc1e27763c6"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/appendix-common-commands-quick-reference/most-critical-safety-limiting",
+   "en_hash": "a7403fd23fa7d8cd",
+   "fr_hash": "28b617c5619a3bd8"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/leop-commissioning-sequence",
+   "en_hash": "cd1029a69da05964",
+   "fr_hash": "f02068c4b6c8d983"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/leop-commissioning-sequence/overview",
+   "en_hash": "efda8ae046d792a2",
+   "fr_hash": "faa99ec7e78d5586"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/leop-commissioning-sequence/spacecraft-phases",
+   "en_hash": "6e4b57ba9a8be45b",
+   "fr_hash": "bf2594a9450a0695"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/leop-commissioning-sequence/ground-station-pass-schedule-chennai-launch",
+   "en_hash": "6a136a34b07ce759",
+   "fr_hash": "6a5a4fd4aeb34021"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/leop-commissioning-sequence/nominal-commissioning-sequence-73-steps",
+   "en_hash": "ad153978ecf13e9d",
+   "fr_hash": "b8b0992f7b992524"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/leop-commissioning-sequence/nominal-commissioning-sequence-73-steps/pass-1-separation-monitoring-troll-t-00-21",
+   "en_hash": "3fe55373044f06c6",
+   "fr_hash": "6dc862b5e43f7c45"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/leop-commissioning-sequence/nominal-commissioning-sequence-73-steps/pass-2-obc-boot-initial-power-troll-t-01-53",
+   "en_hash": "68510897f3a86f57",
+   "fr_hash": "349fa1ace2d8ba0c"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/leop-commissioning-sequence/nominal-commissioning-sequence-73-steps/pass-3-eps-commissioning-antenna-deploy-troll-t-03-25",
+   "en_hash": "4b6e60853b53f7d5",
+   "fr_hash": "eec5337c6451d997"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/leop-commissioning-sequence/nominal-commissioning-sequence-73-steps/pass-4-obdh-commissioning-troll-t-04-58",
+   "en_hash": "7a867039eb543929",
+   "fr_hash": "2412c9fb752e1329"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/leop-commissioning-sequence/nominal-commissioning-sequence-73-steps/pass-5-aocs-initial-checkout-troll-t-06-34",
+   "en_hash": "ec1493c5362c70bf",
+   "fr_hash": "29313e527a39421e"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/leop-commissioning-sequence/nominal-commissioning-sequence-73-steps/pass-6-aocs-commissioning-detumble-verify-iqaluit-t-09-04",
+   "en_hash": "c1609c52a97872bd",
+   "fr_hash": "ce9756721547d30f"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/leop-commissioning-sequence/nominal-commissioning-sequence-73-steps/pass-7-aocs-commissioning-fine-pointing-iqaluit-t-10-36",
+   "en_hash": "179d3525e2002307",
+   "fr_hash": "7d204ddda1fc82e8"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/leop-commissioning-sequence/nominal-commissioning-sequence-73-steps/pass-8-tcs-commissioning-iqaluit-t-12-09",
+   "en_hash": "7b9fd3e5e3f51386",
+   "fr_hash": "37ef63a33bf29b83"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/leop-commissioning-sequence/nominal-commissioning-sequence-73-steps/pass-9-payload-power-on-iqaluit-t-13-42",
+   "en_hash": "8cb97573971cf8aa",
+   "fr_hash": "6d6e75615d6b3502"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/leop-commissioning-sequence/nominal-commissioning-sequence-73-steps/pass-10-payload-configuration-troll-t-16-03",
+   "en_hash": "0a6200dfed42540d",
+   "fr_hash": "46305453a0c423c3"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/leop-commissioning-sequence/nominal-commissioning-sequence-73-steps/pass-11-payload-calibration-troll-t-17-35",
+   "en_hash": "82f58c58a3fd87ae",
+   "fr_hash": "dc25544cab46e92e"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/leop-commissioning-sequence/nominal-commissioning-sequence-73-steps/pass-12-fine-pointing-verification-iqaluit-t-18-14",
+   "en_hash": "847fece836f8ac9a",
+   "fr_hash": "28ce70e59171956d"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/leop-commissioning-sequence/nominal-commissioning-sequence-73-steps/pass-13-high-rate-downlink-test-troll-t-19-08",
+   "en_hash": "d06a8027ebdab1de",
+   "fr_hash": "7dc24ca28649f27e"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/leop-commissioning-sequence/nominal-commissioning-sequence-73-steps/pass-14-fdir-arming-system-test-iqaluit-t-19-45",
+   "en_hash": "cd4a0ecd81fd58ce",
+   "fr_hash": "8115c70ea65d982c"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/leop-commissioning-sequence/nominal-commissioning-sequence-73-steps/pass-15-first-operational-imaging-troll-t-20-40",
+   "en_hash": "c66f353566d7c5ad",
+   "fr_hash": "e8b983ff7b478e4e"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/leop-commissioning-sequence/nominal-commissioning-sequence-73-steps/pass-16-nominal-operations-transition-iqaluit-t-21-17",
+   "en_hash": "bcde8d7ee00338ec",
+   "fr_hash": "da346d9e3b2be1cd"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/leop-commissioning-sequence/contingency-procedures-summary",
+   "en_hash": "88c1e8793de13705",
+   "fr_hash": "53ec64de3ecce91d"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/leop-commissioning-sequence/contingency-procedures-summary/obc-boot-failure-phase-3-stuck",
+   "en_hash": "6c0fa626aae41764",
+   "fr_hash": "4e6bfd9e10fccd1c"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/leop-commissioning-sequence/contingency-procedures-summary/antenna-deploy-failure",
+   "en_hash": "2db5874825daeca9",
+   "fr_hash": "bad19d768204c72f"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/leop-commissioning-sequence/contingency-procedures-summary/detumble-failure-rates-not-decreasing",
+   "en_hash": "cfbd1e4252993a12",
+   "fr_hash": "3a0089245b702a74"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/leop-commissioning-sequence/contingency-procedures-summary/power-emergency-during-commissioning",
+   "en_hash": "81858ca7b6b79196",
+   "fr_hash": "b1664d1320b6dacd"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/leop-commissioning-sequence/contingency-procedures-summary/star-tracker-blind-both-units",
+   "en_hash": "733ded321b654085",
+   "fr_hash": "0b61e217c395636e"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/leop-commissioning-sequence/instructor-commands-for-leop-training",
+   "en_hash": "b53f730bf2ae8c60",
+   "fr_hash": "5595f6e7ce495fc3"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/support-documentation",
+   "en_hash": "9ace63329e541e71",
+   "fr_hash": "be0fc2c2cfac45ae"
+  }
+ ],
+ "en_commit": "3e80564"
+}

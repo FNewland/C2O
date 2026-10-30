@@ -1,0 +1,77 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/nominal/startup.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "nom-001-pass-startup",
+   "en_hash": "c7cf6d166fbf04a6",
+   "fr_hash": "c94ba79484296713"
+  },
+  {
+   "id": "nom-001-pass-startup/purpose",
+   "en_hash": "cd0e573e3900b983",
+   "fr_hash": "f88a3364f50156f1"
+  },
+  {
+   "id": "nom-001-pass-startup/prerequisites",
+   "en_hash": "111567d7745f397c",
+   "fr_hash": "3d5fb2a8b72fb4fc"
+  },
+  {
+   "id": "nom-001-pass-startup/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "nom-001-pass-startup/procedure-steps/step-1-verify-obc-status",
+   "en_hash": "ec5e37e93b7c866c",
+   "fr_hash": "fb93d6e1322227e9"
+  },
+  {
+   "id": "nom-001-pass-startup/procedure-steps/step-2-verify-eps-health",
+   "en_hash": "1104103969534e99",
+   "fr_hash": "8eb5410ff375eee2"
+  },
+  {
+   "id": "nom-001-pass-startup/procedure-steps/step-3-verify-aocs-pointing",
+   "en_hash": "98b520f5416ce296",
+   "fr_hash": "2789dbf8651a21e1"
+  },
+  {
+   "id": "nom-001-pass-startup/procedure-steps/step-4-establish-ttc-link",
+   "en_hash": "7f6f6fc9dc3b2934",
+   "fr_hash": "566aee32a856752c"
+  },
+  {
+   "id": "nom-001-pass-startup/procedure-steps/step-5-full-housekeeping-collection",
+   "en_hash": "7996766a574a31a0",
+   "fr_hash": "8ab9b4b16d563db2"
+  },
+  {
+   "id": "nom-001-pass-startup/procedure-steps/step-6-payload-preparation-if-imaging-or-downlink-planned",
+   "en_hash": "60a62983e3d39f30",
+   "fr_hash": "3be845bf3560e02e"
+  },
+  {
+   "id": "nom-001-pass-startup/procedure-steps/step-7-pass-readiness-declaration",
+   "en_hash": "f8cfcb5cc40b5e0e",
+   "fr_hash": "286c0df54c05d683"
+  },
+  {
+   "id": "nom-001-pass-startup/off-nominal-handling",
+   "en_hash": "5a468162f96b42ad",
+   "fr_hash": "a351613d3ed05a0c"
+  },
+  {
+   "id": "nom-001-pass-startup/post-conditions",
+   "en_hash": "a4af561ea331d9e4",
+   "fr_hash": "4d6271f1c5d7d847"
+  }
+ ],
+ "en_commit": "3e80564"
+}

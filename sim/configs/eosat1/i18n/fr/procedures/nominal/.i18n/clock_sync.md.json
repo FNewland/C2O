@@ -1,0 +1,77 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/nominal/clock_sync.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "nom-008-clock-synchronisation",
+   "en_hash": "9b5242ca7c3aa78e",
+   "fr_hash": "daa3ec92c610e4d9"
+  },
+  {
+   "id": "nom-008-clock-synchronisation/purpose",
+   "en_hash": "75ab7685807e13f5",
+   "fr_hash": "bc5350cf213c5a08"
+  },
+  {
+   "id": "nom-008-clock-synchronisation/prerequisites",
+   "en_hash": "bd9d2aaf25bc3c05",
+   "fr_hash": "197b0017d88b05da"
+  },
+  {
+   "id": "nom-008-clock-synchronisation/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "nom-008-clock-synchronisation/procedure-steps/step-1-read-the-onboard-clock-and-its-time-reference",
+   "en_hash": "2537097c9908ab54",
+   "fr_hash": "e3e1fe6932677994"
+  },
+  {
+   "id": "nom-008-clock-synchronisation/procedure-steps/step-2-assess-the-offset-against-expected-drift",
+   "en_hash": "14a02cedebf2bf7a",
+   "fr_hash": "420c2546bd57ca7c"
+  },
+  {
+   "id": "nom-008-clock-synchronisation/procedure-steps/step-3-prepare-the-time-correction",
+   "en_hash": "9e1fcf18d49d6356",
+   "fr_hash": "6073ddce305f92cf"
+  },
+  {
+   "id": "nom-008-clock-synchronisation/procedure-steps/step-4-send-the-time-correction",
+   "en_hash": "3efba9a2c0a6bd42",
+   "fr_hash": "91c4be9cab9c5fc1"
+  },
+  {
+   "id": "nom-008-clock-synchronisation/procedure-steps/step-5-verify-the-correction",
+   "en_hash": "7ad07de79e5080fe",
+   "fr_hash": "1000a93d5918f131"
+  },
+  {
+   "id": "nom-008-clock-synchronisation/procedure-steps/step-6-validate-the-clock-rate",
+   "en_hash": "798067d68f1d0577",
+   "fr_hash": "13f61b68276a600f"
+  },
+  {
+   "id": "nom-008-clock-synchronisation/procedure-steps/step-7-log-the-result",
+   "en_hash": "48b39766c3b75136",
+   "fr_hash": "972b6085c760e76f"
+  },
+  {
+   "id": "nom-008-clock-synchronisation/off-nominal-handling",
+   "en_hash": "eed947c6cceb74af",
+   "fr_hash": "83f59a3a1336f39e"
+  },
+  {
+   "id": "nom-008-clock-synchronisation/post-conditions",
+   "en_hash": "6b9ae2f8042977ac",
+   "fr_hash": "e8413e4bfd043404"
+  }
+ ],
+ "en_commit": "983af0f"
+}

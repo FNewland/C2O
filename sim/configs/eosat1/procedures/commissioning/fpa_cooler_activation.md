@@ -151,7 +151,7 @@ and above 1.0C indicates a degraded loop.
 
 ### Step 9 — Generate Cooler Activation Report
 **Action:** Compile complete cooldown curve (temperature vs time), cooler power consumption, thermal stability data, and eclipse performance. Distribute FPA Cooler Activation Report. FPA is now ready for imaging.
-**GO/NO-GO:** FPA cooler activated and stable — ready for COM-012
+**GO/NO-GO:** FPA cooler activated and stable — ready for COM-011 (Payload Calibration)
 
 ## Off-Nominal Handling
 - If FPA temperature not decreasing after 2 minutes: Verify cooler status via `GET_PARAM(param_id=0x040C)`. If `tcs.cooler_fpa` (0x040C) is 1 but `eps.pl_fpa_cooler` (0x0114) is 0, the

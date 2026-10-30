@@ -1,6 +1,6 @@
 # CHANGELOG — EOSAT-1 Spacecraft Simulator
 
-**Updated: 2026-08-01**
+**Updated: 2026-09-25**
 
 Release history. `DEFECTS.md` is the defect register and carries the
 per-defect detail; `docs/STATUS.md` carries what is still open.
@@ -8,6 +8,37 @@ per-defect detail; `docs/STATUS.md` carries what is still open.
 > This file went untouched from April to August 2026 while ~90 defects landed,
 > and `DEFECTS.md` became the de-facto changelog. The 2026-08 entry below
 > closes that gap.
+
+---
+
+## 2026-09-25 — Blind receiver (v2)
+
+A second, offline receiver next to the live one (`pipeline/rx_chain.py`,
+unchanged). Given only an I/Q recording and its sample rate, it works out the
+modulation, symbol rate, carrier, Doppler rate, coding, frame length and SCID,
+then decodes the pass in lagged chunks. Estimators rank the hypotheses; the
+CCSDS sync marker plus a valid FECF confirms one. See
+`docs/BLIND_RECEIVER_V2.md`.
+
+* `smo_rfsim/blind/`: front end, cyclostationary estimators, feed-forward
+  demodulators (BPSK, QPSK, OQPSK, 8PSK, π/4-DQPSK, FSK/GFSK/GMSK), ASM
+  lattice verifier, blind framing, and a vectorised soft-decision Viterbi
+  (~100× the pure-Python decoder; soft input is worth ~2 dB).
+* `smo-rfsim-blind decode | synth` CLI.
+* `tests/test_rfsim/test_blind_receiver.py`: 29 tests. They cover every
+  ladder tier, all four coding options, 1 dB SNR, an 800 Hz/s Doppler ramp,
+  in-band CW, 50 ppm clock error, no false acquisition in noise or on
+  unframed data, and a LOW→HIGH switch mid-pass.
+* **Defect #135 fixed:** `Modulator._modulate_cpm` advanced phase by π·h/sps
+  per bit instead of π·h, so GMSK/GFSK ran at h/8 (11.25° per bit). The NRZ
+  is now held for a full symbol before Gaussian filtering: 90° per bit, 1.03 ×
+  Rb occupied. **#136 fixed:** `rfsim.yaml` `gfsk_mod_index` / `gmsk_bt` now
+  reach the transmitter, and the recorder records and accepts the GFSK index
+  (`--gfsk-h`).
+* The `sim_captures/` recordings were regenerated from their own sidecars
+  (`tools/regenerate_captures.py`). Before the fix, 0/4 decoded; after, the
+  18 dB and 30 dB passes give >90 % of frames. The sweep is in
+  `docs/BLIND_RECEIVER_V2_SWEEP.md` (`tools/blind_sweep.py`).
 
 ---
 

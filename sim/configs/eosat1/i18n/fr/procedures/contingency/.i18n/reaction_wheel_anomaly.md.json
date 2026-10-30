@@ -1,0 +1,77 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/contingency/reaction_wheel_anomaly.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "ctg-007-reaction-wheel-anomaly",
+   "en_hash": "4f6d5d004d04d93b",
+   "fr_hash": "5d247e4d847574d4"
+  },
+  {
+   "id": "ctg-007-reaction-wheel-anomaly/purpose",
+   "en_hash": "dc997ba41bdb3b6d",
+   "fr_hash": "a846b754b81d7fe0"
+  },
+  {
+   "id": "ctg-007-reaction-wheel-anomaly/prerequisites",
+   "en_hash": "8849ebdd4b780152",
+   "fr_hash": "22c2dad680394ee8"
+  },
+  {
+   "id": "ctg-007-reaction-wheel-anomaly/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "ctg-007-reaction-wheel-anomaly/procedure-steps/step-1-identify-the-affected-reaction-wheel",
+   "en_hash": "fc63e34d3a4d0203",
+   "fr_hash": "a676baac86529f13"
+  },
+  {
+   "id": "ctg-007-reaction-wheel-anomaly/procedure-steps/step-2-disable-the-anomalous-wheel",
+   "en_hash": "10aca9ac3af26c7f",
+   "fr_hash": "106653b4a04ca325"
+  },
+  {
+   "id": "ctg-007-reaction-wheel-anomaly/procedure-steps/step-3-command-three-wheel-control-mode",
+   "en_hash": "529a7d30ab67e916",
+   "fr_hash": "47069fcbb6c2cc36"
+  },
+  {
+   "id": "ctg-007-reaction-wheel-anomaly/procedure-steps/step-4-desaturate-remaining-wheels",
+   "en_hash": "3ddd0a19c6f49823",
+   "fr_hash": "1afdc3b49b66ea11"
+  },
+  {
+   "id": "ctg-007-reaction-wheel-anomaly/procedure-steps/step-5-verify-stable-pointing-in-three-wheel-mode",
+   "en_hash": "e698ea2de36475a1",
+   "fr_hash": "046beb7b9363e66f"
+  },
+  {
+   "id": "ctg-007-reaction-wheel-anomaly/procedure-steps/step-6-confirm-nominal-mode-nadir-compatibility",
+   "en_hash": "9dd5c5dc668bd5cf",
+   "fr_hash": "d645ac6fb01eb5e5"
+  },
+  {
+   "id": "ctg-007-reaction-wheel-anomaly/procedure-steps/step-7-assess-wheel-recovery-feasibility",
+   "en_hash": "3b220fa08ff8d767",
+   "fr_hash": "56fecd4fa05db378"
+  },
+  {
+   "id": "ctg-007-reaction-wheel-anomaly/off-nominal-handling",
+   "en_hash": "cac3b2cf95af3e60",
+   "fr_hash": "bf912141b6c5b15c"
+  },
+  {
+   "id": "ctg-007-reaction-wheel-anomaly/post-conditions",
+   "en_hash": "8b384dfbc846b67c",
+   "fr_hash": "130cac916a3c353d"
+  }
+ ],
+ "en_commit": "3e80564"
+}

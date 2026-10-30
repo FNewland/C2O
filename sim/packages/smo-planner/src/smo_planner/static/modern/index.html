@@ -23,7 +23,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SMO Mission Planner</title>
+<title data-i18n>SMO Mission Planner</title>
 <!-- Vendor: the modern planner pages were missing this script tag
      (field report 2026-08-19, same defect as the MCS shell) -- the
      ground-track map rendered its "did not load" notice permanently
@@ -193,10 +193,10 @@ footer.bot .spacer{ flex:1; }
 </style>
 </head>
 <body>
-<a class="ds-skip" href="#panel-sched">Skip to activity schedule</a>
+<a class="ds-skip" href="#panel-sched" data-i18n>Skip to activity schedule</a>
 
 <header class="top">
-  <div class="brand">SMO <span>MISSION PLANNER</span></div>
+  <div class="brand">SMO <span data-i18n>MISSION PLANNER</span></div>
   <div class="clock">
     <span class="lbl">UTC</span>
     <span class="d num" id="utcDate">—</span>
@@ -211,56 +211,57 @@ footer.bot .spacer{ flex:1; }
   <div class="spacer"></div>
   <div class="hdr-kv"><span class="k">LAT / LON</span>
     <span class="v" id="scLatLon">—</span></div>
-  <div class="hdr-kv"><span class="k">ALTITUDE</span>
+  <div class="hdr-kv"><span class="k" data-i18n>ALTITUDE</span>
     <span class="v" id="scAlt">—</span></div>
   <!-- P4: period is derived from the served configuration, never a literal. -->
-  <div class="hdr-kv"><span class="k">PERIOD</span>
-    <span class="v" id="scPeriod" title="Derived from the configured orbit altitude (/api/config/planner)">—</span></div>
-  <div class="hdr-kv"><span class="k">MISSION</span>
+  <div class="hdr-kv"><span class="k" data-i18n>PERIOD</span>
+    <span class="v" id="scPeriod" data-i18n-title title="Derived from the configured orbit altitude (/api/config/planner)">—</span></div>
+  <div class="hdr-kv"><span class="k" data-i18n>MISSION</span>
     <span class="v"><a id="config-link" href="/config" target="_blank" rel="noopener"
-      style="color:inherit" title="Browse mission configuration (read-only)">CONFIG</a></span></div>
+      style="color:inherit" data-i18n-title title="Browse mission configuration (read-only)">CONFIG</a></span></div>
+  <span id="lang-toggle"></span>
 </header>
 
 <main>
   <!-- ── Ground track ─────────────────────────────────────────────── -->
   <section class="ds-card" id="panel-map">
-    <h2>GROUND TRACK <span class="r"><span class="ds-badge" id="mapDataBadge">—</span></span></h2>
+    <h2 data-i18n>GROUND TRACK <span class="r"><span class="ds-badge" id="mapDataBadge">—</span></span></h2>
     <div class="map-wrap">
       <div id="groundTrackMap"></div>
       <!-- Designed vendor-missing state (risk R3): the page says so instead
            of rendering a silent black rectangle. -->
       <div id="mapFallback">
-        <div class="big">MAP UNAVAILABLE — vendor assets missing</div>
-        <div class="why">/static/vendor/js/svg-world-map.js did not load.
-          Position, contacts and budgets remain live below.</div>
+        <div class="big" data-i18n>MAP UNAVAILABLE — vendor assets missing</div>
+        <div class="why">/static/vendor/js/svg-world-map.js <span data-i18n>did not load.
+          Position, contacts and budgets remain live below.</span></div>
       </div>
       <div class="map-overlay num" id="mapInfoOverlay">
         <span><b>LAT</b><span id="mapLat">—</span></span>
         <span><b>LON</b><span id="mapLon">—</span></span>
         <span><b>ALT</b><span id="mapAlt">—</span></span>
-        <span><b>BETA</b><span id="mapBeta">—</span></span>
+        <span><b data-i18n>BETA</b><span id="mapBeta">—</span></span>
       </div>
     </div>
     <div class="map-legend">
-      <span><span class="dot" style="background:var(--tx)"></span>Spacecraft</span>
-      <span><span class="dot" style="background:var(--info)"></span>Ground station</span>
-      <span><span class="sw" style="background:var(--warn)"></span>Sunlit track</span>
-      <span><span class="sw" style="background:var(--info)"></span>Eclipse track</span>
-      <span><span class="sw" style="background:var(--tx3);opacity:.5"></span>Past track (90 min)</span>
-      <span><span class="sw" style="background:#000;border:1px solid var(--line-2)"></span>Night side</span>
+      <span data-i18n><span class="dot" style="background:var(--tx)"></span>Spacecraft</span>
+      <span data-i18n><span class="dot" style="background:var(--info)"></span>Ground station</span>
+      <span data-i18n><span class="sw" style="background:var(--warn)"></span>Sunlit track</span>
+      <span data-i18n><span class="sw" style="background:var(--info)"></span>Eclipse track</span>
+      <span data-i18n><span class="sw" style="background:var(--tx3);opacity:.5"></span>Past track (90 min)</span>
+      <span data-i18n><span class="sw" style="background:#000;border:1px solid var(--line-2)"></span>Night side</span>
     </div>
   </section>
 
   <!-- ── Contact windows ──────────────────────────────────────────── -->
   <section class="ds-card" id="panel-contacts">
-    <h2>CONTACT WINDOWS — NEXT 24 H
+    <h2 data-i18n>CONTACT WINDOWS — NEXT 24 H
       <span class="r"><span class="ds-badge" id="contactDataBadge">—</span></span></h2>
     <div class="bd">
       <canvas id="timelineCanvas" height="180"></canvas>
-      <div class="sect">NEXT 5 CONTACTS</div>
+      <div class="sect" data-i18n>NEXT 5 CONTACTS</div>
       <table class="plain">
-        <thead><tr><th>STATION</th><th>AOS (UTC)</th><th>LOS (UTC)</th>
-          <th>DUR</th><th>MAX EL</th><th>STATUS</th></tr></thead>
+        <thead><tr><th data-i18n>STATION</th><th>AOS (UTC)</th><th>LOS (UTC)</th>
+          <th data-i18n>DUR</th><th data-i18n>MAX EL</th><th data-i18n>STATUS</th></tr></thead>
         <tbody id="contactsBody"></tbody>
       </table>
     </div>
@@ -268,58 +269,58 @@ footer.bot .spacer{ flex:1; }
 
   <!-- ── Activity schedule ────────────────────────────────────────── -->
   <section class="ds-card" id="panel-sched">
-    <h2>ACTIVITY SCHEDULE
+    <h2 data-i18n>ACTIVITY SCHEDULE
       <span class="r"><span class="ds-badge" id="activityDataBadge">—</span></span></h2>
     <div class="bd">
       <div id="activityList"></div>
       <div class="btn-row">
-        <button class="ds-btn primary grow" id="btnAddActivity">+ ADD ACTIVITY</button>
+        <button class="ds-btn primary grow" id="btnAddActivity" data-i18n>+ ADD ACTIVITY</button>
       </div>
       <div class="btn-row">
         <select class="ctl" id="templateSelect" style="flex:1;background:var(--s2);
           color:var(--tx);border:1px solid var(--line-2);border-radius:var(--r);
           padding:5px 7px;font-size:12px;">
-          <option value="">Standard activities…</option>
+          <option value="" data-i18n>Standard activities…</option>
         </select>
-        <button class="ds-btn" id="btnLoadTemplate"
+        <button class="ds-btn" id="btnLoadTemplate" data-i18n data-i18n-title
           title="Instantiate the selected template at the current planner time, on real passes">LOAD</button>
-        <button class="ds-btn" id="btnClearSchedule" title="Remove every activity">CLEAR</button>
+        <button class="ds-btn" id="btnClearSchedule" data-i18n data-i18n-title title="Remove every activity">CLEAR</button>
       </div>
       <div class="btn-row">
-        <button class="ds-btn grow" id="btnValidate">VALIDATE</button>
-        <button class="ds-btn grow" id="btnUpload">UPLOAD TO MCS</button>
+        <button class="ds-btn grow" id="btnValidate" data-i18n>VALIDATE</button>
+        <button class="ds-btn grow" id="btnUpload" data-i18n>UPLOAD TO MCS</button>
       </div>
       <div id="scheduleValidation" role="status"></div>
 
-      <div class="sect">CONSTRAINT VALIDATION</div>
+      <div class="sect" data-i18n>CONSTRAINT VALIDATION</div>
       <!-- P5: the SoC assumption is explicit and labelled. Blank = the
            server's configured default; the request then carries no
            battery_soc parameter. There is no hidden literal. -->
       <div class="soc-row">
-        <label for="socInput">Assumed battery SoC (%)</label>
+        <label for="socInput" data-i18n>Assumed battery SoC (%)</label>
         <input type="number" id="socInput" min="0" max="100" step="0.1"
                placeholder="server default"
                title="State of charge the constraint check assumes. Leave blank to use the server's configured default.">
-        <button class="ds-btn primary" id="btnValidateConstraints">VALIDATE CONSTRAINTS</button>
-        <span class="hint">Blank uses the planner's configured default
+        <button class="ds-btn primary" id="btnValidateConstraints" data-i18n>VALIDATE CONSTRAINTS</button>
+        <span class="hint" data-i18n>Blank uses the planner's configured default
           (shown once the configuration loads).</span>
       </div>
       <div id="constraintsResult" role="status"></div>
-      <div class="sect" style="margin-top:8px;">PER-DOMAIN BREAKDOWN</div>
+      <div class="sect" style="margin-top:8px;" data-i18n>PER-DOMAIN BREAKDOWN</div>
       <details class="cx" id="cx-power" data-domain="power">
-        <summary>POWER</summary><div class="bd">Expand to run the power constraint check.</div>
+        <summary data-i18n>POWER</summary><div class="bd"><span data-i18n>Expand to run the power constraint check.</span></div>
       </details>
       <details class="cx" id="cx-aocs" data-domain="aocs">
-        <summary>AOCS</summary><div class="bd">Expand to run the AOCS (slew / momentum) check.</div>
+        <summary>AOCS</summary><div class="bd"><span data-i18n>Expand to run the AOCS (slew / momentum) check.</span></div>
       </details>
       <details class="cx" id="cx-thermal" data-domain="thermal">
-        <summary>THERMAL</summary><div class="bd">Expand to run the thermal duty-cycle check.</div>
+        <summary data-i18n>THERMAL</summary><div class="bd"><span data-i18n>Expand to run the thermal duty-cycle check.</span></div>
       </details>
       <details class="cx" id="cx-data-volume" data-domain="data-volume">
-        <summary>DATA VOLUME</summary><div class="bd">Expand to run the data-volume / storage check.</div>
+        <summary data-i18n>DATA VOLUME</summary><div class="bd"><span data-i18n>Expand to run the data-volume / storage check.</span></div>
       </details>
       <details class="cx" id="cx-conflicts" data-domain="conflicts">
-        <summary>CONFLICTS</summary><div class="bd">Expand to run the resource-conflict check.</div>
+        <summary data-i18n>CONFLICTS</summary><div class="bd"><span data-i18n>Expand to run the resource-conflict check.</span></div>
       </details>
     </div>
   </section>
@@ -327,30 +328,30 @@ footer.bot .spacer{ flex:1; }
   <!-- ── Budgets + imaging ────────────────────────────────────────── -->
   <div id="col-budgets">
     <section class="ds-card" id="panel-power">
-      <h2>POWER BUDGET <span class="r"><span class="ds-badge" id="powerDataBadge">—</span></span></h2>
+      <h2 data-i18n>POWER BUDGET <span class="r"><span class="ds-badge" id="powerDataBadge">—</span></span></h2>
       <div class="bd" id="powerBudgetPanel"><div class="nocompute">
-        <div class="r">Waiting for /api/budget/power…</div></div></div>
+        <div class="r"><span data-i18n>Waiting for</span> /api/budget/power…</div></div></div>
     </section>
     <section class="ds-card" id="panel-data">
-      <h2>DATA BUDGET <span class="r"><span class="ds-badge" id="dataDataBadge">—</span></span></h2>
+      <h2 data-i18n>DATA BUDGET <span class="r"><span class="ds-badge" id="dataDataBadge">—</span></span></h2>
       <div class="bd" id="dataBudgetPanel"><div class="nocompute">
-        <div class="r">Waiting for /api/budget/data…</div></div></div>
+        <div class="r"><span data-i18n>Waiting for</span> /api/budget/data…</div></div></div>
       <!-- G14: achieved RF rollup of the last completed pass, read from the
            rfsim store at the CONFIGURED services.rfsim_url. Unset URL is a
            designed absent state (planner.js says so explicitly). -->
       <div class="bd" style="border-top:1px solid var(--line);">
-        <div class="sect" style="margin-top:0;">LAST PASS — ACHIEVED (RF)</div>
-        <div id="passRollupPanel"><span style="font-size:12px;color:var(--tx3)">
+        <div class="sect" style="margin-top:0;" data-i18n>LAST PASS — ACHIEVED (RF)</div>
+        <div id="passRollupPanel"><span style="font-size:12px;color:var(--tx3)" data-i18n>
           Waiting for configuration…</span></div>
       </div>
     </section>
     <section class="ds-card" id="panel-imaging">
-      <h2>IMAGING <span class="r"><span class="ds-badge" id="imagingDataBadge">—</span></span></h2>
+      <h2 data-i18n>IMAGING <span class="r"><span class="ds-badge" id="imagingDataBadge">—</span></span></h2>
       <div class="bd">
-        <div class="sect" style="margin-top:0;">TARGETS</div>
-        <div id="imagingTargets"><span style="font-size:12px;color:var(--tx3)">Waiting for /api/imaging/targets…</span></div>
-        <div class="sect">OPPORTUNITIES — NEXT 24 H</div>
-        <div id="imagingOpportunitiesPanel"><span style="font-size:12px;color:var(--tx3)">Waiting for /api/imaging/opportunities…</span></div>
+        <div class="sect" style="margin-top:0;" data-i18n>TARGETS</div>
+        <div id="imagingTargets"><span style="font-size:12px;color:var(--tx3)"><span data-i18n>Waiting for</span> /api/imaging/targets…</span></div>
+        <div class="sect" data-i18n>OPPORTUNITIES — NEXT 24 H</div>
+        <div id="imagingOpportunitiesPanel"><span style="font-size:12px;color:var(--tx3)"><span data-i18n>Waiting for</span> /api/imaging/opportunities…</span></div>
       </div>
     </section>
   </div>
@@ -359,19 +360,19 @@ footer.bot .spacer{ flex:1; }
 <footer class="bot">
   <!-- P4: served / derived values only. Anything the planner does not serve
        renders as an em-dash with a title saying why — never a literal. -->
-  <span class="it"><span class="k">PERIOD</span>
-    <span class="v" id="bbPeriod" title="Derived from the configured orbit altitude (/api/config/planner)">—</span></span>
-  <span class="it"><span class="k">INCLINATION</span>
-    <span class="v" id="bbIncl" title="Estimated from the served ground track (/api/ground-track)">—</span></span>
-  <span class="it"><span class="k">ECCENTRICITY</span>
-    <span class="v" id="bbEcc" title="Not served by the planner API — rendered honestly as absent">—</span></span>
-  <span class="it"><span class="k">REV/DAY</span>
-    <span class="v" id="bbRevDay" title="Derived from the configured orbit altitude (/api/config/planner)">—</span></span>
+  <span class="it"><span class="k" data-i18n>PERIOD</span>
+    <span class="v" id="bbPeriod" data-i18n-title title="Derived from the configured orbit altitude (/api/config/planner)">—</span></span>
+  <span class="it"><span class="k" data-i18n>INCLINATION</span>
+    <span class="v" id="bbIncl" data-i18n-title title="Estimated from the served ground track (/api/ground-track)">—</span></span>
+  <span class="it"><span class="k" data-i18n>ECCENTRICITY</span>
+    <span class="v" id="bbEcc" data-i18n-title title="Not served by the planner API — rendered honestly as absent">—</span></span>
+  <span class="it"><span class="k" data-i18n>REV/DAY</span>
+    <span class="v" id="bbRevDay" data-i18n-title title="Derived from the configured orbit altitude (/api/config/planner)">—</span></span>
   <span class="spacer"></span>
-  <span class="it"><span class="k">NEXT AOS</span>
+  <span class="it"><span class="k" data-i18n>NEXT AOS</span>
     <span class="v hi num" id="nextAos">—</span></span>
-  <span class="it"><span class="k">NEXT ECLIPSE</span>
-    <span class="v num" id="nextEclipse" title="From the served ground track's eclipse flags">—</span></span>
+  <span class="it"><span class="k" data-i18n>NEXT ECLIPSE</span>
+    <span class="v num" id="nextEclipse" data-i18n-title title="From the served ground track's eclipse flags">—</span></span>
   <span class="it"><span class="api-dot" id="apiDot"></span>
     <span class="v" id="apiStatusText">API: checking…</span></span>
 </footer>
@@ -381,17 +382,17 @@ footer.bot .spacer{ flex:1; }
      aria-labelledby="modalTitle">
   <div class="modal">
     <div class="mh"><span class="t" id="modalTitle">ADD ACTIVITY</span>
-      <button class="ds-btn" id="btnModalClose" aria-label="Close">&times;</button></div>
+      <button class="ds-btn" id="btnModalClose" data-i18n-aria-label aria-label="Close">&times;</button></div>
     <div class="mb">
       <div class="fg">
-        <label for="actType">Activity type</label>
+        <label for="actType" data-i18n>Activity type</label>
         <select class="ctl" id="actType">
-          <option value="">Select activity type…</option>
+          <option value="" data-i18n>Select activity type…</option>
         </select>
         <div id="actTypeInfo"></div>
       </div>
       <div class="fg">
-        <label for="actStartTime">Start time (UTC)</label>
+        <label for="actStartTime" data-i18n>Start time (UTC)</label>
         <input type="datetime-local" class="ctl" id="actStartTime">
         <!-- The classic page's proven UTC handling: the field is genuinely
              UTC (Date.UTC both ways); this hint is the ONLY use of the
@@ -399,30 +400,30 @@ footer.bot .spacer{ flex:1; }
         <div class="note num" id="actStartTimeHint"></div>
       </div>
       <div class="fg">
-        <label for="actDuration">Duration (minutes)</label>
-        <input type="number" class="ctl" id="actDuration" placeholder="e.g. 15" min="1" max="120">
+        <label for="actDuration" data-i18n>Duration (minutes)</label>
+        <input type="number" class="ctl" id="actDuration" data-i18n-placeholder placeholder="e.g. 15" min="1" max="120">
       </div>
       <div class="fg">
-        <label for="actPriority">Priority</label>
+        <label for="actPriority" data-i18n>Priority</label>
         <select class="ctl" id="actPriority">
-          <option value="">Select priority…</option>
-          <option value="high">High</option>
-          <option value="medium">Medium</option>
-          <option value="low">Low</option>
+          <option value="" data-i18n>Select priority…</option>
+          <option value="high" data-i18n>High</option>
+          <option value="medium" data-i18n>Medium</option>
+          <option value="low" data-i18n>Low</option>
         </select>
       </div>
       <div class="fg">
-        <label for="actStation">Ground station dependency</label>
+        <label for="actStation" data-i18n>Ground station dependency</label>
         <select class="ctl" id="actStation">
-          <option value="">None</option>
+          <option value="" data-i18n>None</option>
         </select>
       </div>
       <div class="note" id="editNote" style="display:none">
-        Editing updates start time, duration and priority
-        (PUT /api/schedule/&lt;id&gt;). Type and station are fixed at creation.
+        <span data-i18n>Editing updates start time, duration and priority</span>
+        (PUT /api/schedule/&lt;id&gt;). <span data-i18n>Type and station are fixed at creation.</span>
       </div>
     </div>
-    <div class="mf"><button class="ds-btn primary" id="btnModalSubmit">SUBMIT</button></div>
+    <div class="mf"><button class="ds-btn primary" id="btnModalSubmit" data-i18n>SUBMIT</button></div>
   </div>
 </div>
 

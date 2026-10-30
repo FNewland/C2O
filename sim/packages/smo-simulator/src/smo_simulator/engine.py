@@ -25,6 +25,7 @@ from smo_common.protocol.ecss_packet import CucTime
 from smo_simulator.tc_scheduler import TCScheduler
 from smo_simulator.tm_storage import OnboardTMStorage
 from smo_simulator.fdir import FaultPropagationRule
+from smo_simulator.vr_bridge import build_vr_state
 
 logger = logging.getLogger(__name__)
 
@@ -4414,11 +4415,22 @@ class SimulationEngine:
         except Exception as e:  # noqa: BLE001
             logger.warning("Instructor snapshot build failed: %s", e)
             instructor = None
+        # VR visualisation frame (smo-vr/1, docs/VR_INTERFACE_ICD.md). Built
+        # here for the same reason as the instructor snapshot: it reads the
+        # live quaternion, orbit and deployment state, which only this thread
+        # may touch. The VR bridge on the asyncio side reads the result.
+        try:
+            vr_state = build_vr_state(self)
+        except Exception as e:  # noqa: BLE001
+            logger.debug("VR state build failed: %s", e)
+            vr_state = None
         with self._params_lock:
             self._snapshot = snapshot
             self._snapshot_tick = self._tick_count
             if instructor is not None:
                 self._instructor_snapshot = instructor
+            if vr_state is not None:
+                self._vr_snapshot = vr_state
 
     def get_state_summary(self) -> dict:
         """Return the most recently published spacecraft state summary.
@@ -4433,6 +4445,12 @@ class SimulationEngine:
         if snapshot is None:
             return self._build_state_summary()
         return snapshot
+
+    def get_vr_state(self) -> dict | None:
+        """Latest published VR visualisation frame body (smo-vr/1), or None
+        before the first tick. Safe to call from any thread."""
+        with self._params_lock:
+            return getattr(self, '_vr_snapshot', None)
 
     def _build_state_summary(self) -> dict:
         """Build the state summary from live state. Tick-thread only.
@@ -4608,6 +4626,10 @@ class SimulationEngine:
             # downlinked telemetry, so the console tags it as coming from the
             # simulator rather than from the spacecraft.
             'fdir': self.fdir_status(),
+            # VR viewer link (smo-vr/1): connected headsets and their optional
+            # status word. Ground-side, set by the VR bridge (server.py); None
+            # when the bridge is not running.
+            'vr_link': getattr(self, 'vr_link', None),
             # Include raw params dict for MCS to access via param(id) function
             'params': p,
         }

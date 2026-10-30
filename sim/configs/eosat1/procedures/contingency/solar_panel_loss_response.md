@@ -81,10 +81,10 @@ attitude) will naturally show ~0 A and should not be flagged.
 
 ### Step 3: Rule Out Attitude Error as Root Cause
 **TC:** `HK_REQUEST(sid=2)` (Service 3, Subtype 27) — Request AOCS housekeeping
-**Verify:** `aocs.mode` (0x020F) = 3 (NOMINAL) or 2 (COARSE_SUN)
+**Verify:** `aocs.mode` (0x020F) = 4 (NOMINAL) or 3 (COARSE_SUN)
 **Verify:** `aocs.att_error` (0x0217) < 2.0 deg — confirms attitude is nominal
 **Action:** If `aocs.att_error` > 5.0 deg, the power shortfall may be caused by
-poor solar array illumination due to attitude error. Execute CTG-005 (AOCS Anomaly
+poor solar array illumination due to attitude error. Execute CTG-002 (AOCS Anomaly
 Recovery) first, then return to this procedure at Step 1.
 **Verify:** `aocs.rate_roll` (0x0204) < 0.1 deg/s — no unexpected rotation
 **Verify:** `aocs.rate_pitch` (0x0205) < 0.1 deg/s
@@ -103,11 +103,10 @@ Recovery) first, then return to this procedure at Step 1.
 - Net must be positive for sustainable operations
 **Action:** Project minimum battery SoC at end of next eclipse using degraded values.
 **Verify:** `eps.bat_soc` (0x0101) — record current value as baseline.
-**GO/NO-GO:** If orbit-averaged power budget is positive and projected minimum SoC
-> 25%, continue nominal operations with monitoring. If negative or SoC < 25%
-projected, proceed to Step 5.
+**GO/NO-GO:** If orbit-averaged power budget is positive and projected minimum SoC > 25%, continue nominal operations with monitoring. If negative or SoC < 25% projected, proceed to Step 5. -> GO `STEP-7` | NO-GO `STEP-5`
 
 ### Step 5: Shed Loads to Match Reduced Power Budget
+**LABEL:** `STEP-5`
 **Action:** Announce "Solar panel degradation confirmed — reducing power consumption
 to match available generation" on the operations loop.
 
@@ -115,16 +114,21 @@ to match available generation" on the operations loop.
 **TC:** `PAYLOAD_SET_MODE(mode=1)` (Service 8, Subtype 1, func_id 26) — reduce from IMAGING to STANDBY
 **Verify:** `payload.mode` (0x0600) = 1 (STANDBY) within 10 s
 **Verify:** `eps.power_cons` (0x0106) decreases by >= 12 W
+**GO/NO-GO:** Margin still insufficient after STANDBY -> GO `STEP-5B` | NO-GO `STEP-5D`
 
 **Step 5b — If margin still insufficient, disable FPA cooler:**
+**LABEL:** `STEP-5B`
 **TC:** `FPA_COOLER(on=0)` (Service 8, Subtype 1, func_id 43)
 **Verify:** `tcs.cooler_fpa` (0x040C) = 0 within 5 s
 **Verify:** `eps.power_cons` (0x0106) decreases by ~15 W
+**GO/NO-GO:** Margin still insufficient with the FPA cooler off -> GO `STEP-5C` | NO-GO `STEP-5D`
 
 **Step 5c — If margin still insufficient, shut down payload completely:**
+**LABEL:** `STEP-5C`
 **TC:** `PAYLOAD_SET_MODE(mode=0)` (Service 8, Subtype 1, func_id 26) — full payload OFF
 **Verify:** `payload.mode` (0x0600) = 0 (OFF) within 10 s
 
+**LABEL:** `STEP-5D`
 **Action:** Recalculate orbit-averaged power budget with reduced loads.
 **Verify:** `eps.power_cons` (0x0106) — confirm margin is positive.
 **GO/NO-GO:** Power budget is positive with at least 3 W reserve — proceed.
@@ -133,6 +137,8 @@ to match available generation" on the operations loop.
 **Action:** If the degraded panel(s) are on a face that receives maximum illumination
 in NOMINAL mode, consider temporarily switching to COARSE_SUN (sun-optimal) to
 maximise generation from undamaged panels.
+**GO/NO-GO:** Degraded panel(s) on the face lit in NOMINAL — try COARSE_SUN -> GO `STEP-6B` | NO-GO `STEP-7`
+**LABEL:** `STEP-6B`
 **TC:** `AOCS_SET_MODE(mode=3)` (Service 8, Subtype 1, func_id 0) — COARSE_SUN
 **Verify:** `aocs.mode` (0x020F) = 3 within 15 s
 **Action:** Wait 120 s for new attitude to stabilise, then request EPS HK.
@@ -144,6 +150,7 @@ this mode until battery is sufficiently charged. If no improvement, return to
 NOMINAL: `AOCS_SET_MODE(mode=4)`.
 
 ### Step 7: Establish Long-Term Monitoring and Operations Plan
+**LABEL:** `STEP-7`
 **Action:** Record the following as the new degraded baseline:
 - Per-panel currents (0x012B-0x0130) for each illuminated face
 - Total power generation in NOMINAL and COARSE_SUN modes
@@ -162,6 +169,7 @@ NOMINAL: `AOCS_SET_MODE(mode=4)`.
 complete.
 
 ## Verification Criteria
+**LABEL:** `STEP-END`
 - [ ] Affected panel(s) identified by face and degradation level documented
 - [ ] Attitude error ruled out as root cause
 - [ ] Power budget recalculated with degraded generation — confirmed positive
@@ -178,7 +186,7 @@ complete.
   cycling failure, or wiring degradation. Accelerate mission data downlink and
   plan for end-of-mission contingency.
 - If `eps.bat_soc` drops below 20% during investigation: Interrupt this procedure
-  and execute CTG-002 (Undervoltage Load Shed) or CTG-023 (Progressive Load Shed).
+  and execute CTG-001 (Under-Voltage Load Shed) or CTG-023 (Progressive Load Shed).
 - If attitude error was the cause and persists: The solar array shortfall is a
   symptom, not the root cause. Focus on AOCS recovery first.
 - If per-panel telemetry is inconsistent (e.g., illuminated face shows 0 A but

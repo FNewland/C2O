@@ -1,0 +1,92 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/commissioning/obdh_checkout.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "com-007-obdh-checkout",
+   "en_hash": "2958d14c9c14f22a",
+   "fr_hash": "a59c9c6dfd3450e0"
+  },
+  {
+   "id": "com-007-obdh-checkout/purpose",
+   "en_hash": "ab8c7eeabe5692a5",
+   "fr_hash": "a8657214e886b964"
+  },
+  {
+   "id": "com-007-obdh-checkout/prerequisites",
+   "en_hash": "d1f311f8f6b78ded",
+   "fr_hash": "3b583ad9aa66fd3f"
+  },
+  {
+   "id": "com-007-obdh-checkout/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "com-007-obdh-checkout/procedure-steps/step-1-verify-current-obc-mode",
+   "en_hash": "4c6912cc3bfa6c32",
+   "fr_hash": "cf8a0f1be0e816f7"
+  },
+  {
+   "id": "com-007-obdh-checkout/procedure-steps/step-2-check-cpu-utilization",
+   "en_hash": "c75b1888a3db3de1",
+   "fr_hash": "d526416b1fc8bf89"
+  },
+  {
+   "id": "com-007-obdh-checkout/procedure-steps/step-3-verify-memory-status",
+   "en_hash": "f9c4299a2001e7d1",
+   "fr_hash": "6a7ffad043a2fbc9"
+  },
+  {
+   "id": "com-007-obdh-checkout/procedure-steps/step-4-check-tc-tm-packet-counters",
+   "en_hash": "6252536d7decb65c",
+   "fr_hash": "518d0449a3dcaf4c"
+  },
+  {
+   "id": "com-007-obdh-checkout/procedure-steps/step-5-confirm-nominal-mode-services",
+   "en_hash": "8889844f47637b7f",
+   "fr_hash": "81147bc732ade301"
+  },
+  {
+   "id": "com-007-obdh-checkout/procedure-steps/step-6-verify-autonomous-hk-generation",
+   "en_hash": "492edfedb572c932",
+   "fr_hash": "073e59d911091908"
+  },
+  {
+   "id": "com-007-obdh-checkout/procedure-steps/step-7-verify-watchdog-timer",
+   "en_hash": "31dfdc5a01f8cd7f",
+   "fr_hash": "62c3a1b6fff108d3"
+  },
+  {
+   "id": "com-007-obdh-checkout/procedure-steps/step-8-test-obc-mode-excursion-nominal-safe-nominal",
+   "en_hash": "fd10f0e37879825f",
+   "fr_hash": "5a170e959c245cf1"
+  },
+  {
+   "id": "com-007-obdh-checkout/procedure-steps/step-9-record-obdh-baseline",
+   "en_hash": "a32206571cd87fc4",
+   "fr_hash": "4244c38a96ab50d7"
+  },
+  {
+   "id": "com-007-obdh-checkout/off-nominal-handling",
+   "en_hash": "d7bffc7983c78b0b",
+   "fr_hash": "137680ce7fb39b82"
+  },
+  {
+   "id": "com-007-obdh-checkout/exit-state",
+   "en_hash": "36b58a7f0f432eea",
+   "fr_hash": "a6515a5fae2219ca"
+  },
+  {
+   "id": "com-007-obdh-checkout/post-conditions",
+   "en_hash": "bd4df41958667033",
+   "fr_hash": "4d3ee08a3ce59952"
+  }
+ ],
+ "en_commit": "3e80564"
+}

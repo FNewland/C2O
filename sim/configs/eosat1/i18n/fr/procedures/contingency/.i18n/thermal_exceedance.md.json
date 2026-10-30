@@ -1,0 +1,82 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/contingency/thermal_exceedance.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "ctg-004-thermal-exceedance",
+   "en_hash": "4d6443a840ea5d52",
+   "fr_hash": "73c5736b5b5a3459"
+  },
+  {
+   "id": "ctg-004-thermal-exceedance/purpose",
+   "en_hash": "451dda32efe292e0",
+   "fr_hash": "09d5057f1e2b75bb"
+  },
+  {
+   "id": "ctg-004-thermal-exceedance/prerequisites",
+   "en_hash": "3080863cedc824d8",
+   "fr_hash": "4060a5ad16639483"
+  },
+  {
+   "id": "ctg-004-thermal-exceedance/prerequisites/thermal-yellow-limits-reference",
+   "en_hash": "3297c2767aecec31",
+   "fr_hash": "85a701fdabce660a"
+  },
+  {
+   "id": "ctg-004-thermal-exceedance/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "ctg-004-thermal-exceedance/procedure-steps/step-1-identify-affected-thermal-zone",
+   "en_hash": "9b5e98186e01ff91",
+   "fr_hash": "d1461882588b2db9"
+  },
+  {
+   "id": "ctg-004-thermal-exceedance/procedure-steps/step-2a-cold-case-enable-heater-for-affected-zone",
+   "en_hash": "cfe8b11cf15f0bbe",
+   "fr_hash": "f19fecf565f18f01"
+  },
+  {
+   "id": "ctg-004-thermal-exceedance/procedure-steps/step-2b-hot-case-reduce-thermal-load-in-affected-zone",
+   "en_hash": "2409db43e9132f62",
+   "fr_hash": "1810898e0a0774fc"
+  },
+  {
+   "id": "ctg-004-thermal-exceedance/procedure-steps/step-3-monitor-temperature-trend",
+   "en_hash": "835a93704849f673",
+   "fr_hash": "d3ab21f03341a04c"
+  },
+  {
+   "id": "ctg-004-thermal-exceedance/procedure-steps/step-4-adjust-heater-setpoints-or-escalate",
+   "en_hash": "ef0b5c66121a4b44",
+   "fr_hash": "76317834088a87a2"
+  },
+  {
+   "id": "ctg-004-thermal-exceedance/procedure-steps/step-5-confirm-recovery-and-restore-operations",
+   "en_hash": "348b7db8621ddfaf",
+   "fr_hash": "8b7c796db2e73e6b"
+  },
+  {
+   "id": "ctg-004-thermal-exceedance/off-nominal-handling",
+   "en_hash": "af45f66cb523478f",
+   "fr_hash": "71538e0016fa3574"
+  },
+  {
+   "id": "ctg-004-thermal-exceedance/post-conditions",
+   "en_hash": "6356c6144c0a658c",
+   "fr_hash": "da5cd448142dc910"
+  },
+  {
+   "id": "ctg-004-thermal-exceedance/recovery-path-re-powering-shed-loads",
+   "en_hash": "ff3d6989d5306388",
+   "fr_hash": "7425a0351c1744bc"
+  }
+ ],
+ "en_commit": "3e80564"
+}

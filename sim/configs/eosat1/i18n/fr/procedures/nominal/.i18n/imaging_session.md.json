@@ -1,0 +1,82 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/nominal/imaging_session.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "nom-002-imaging-session",
+   "en_hash": "97172195fb179fdd",
+   "fr_hash": "3f7d487466788635"
+  },
+  {
+   "id": "nom-002-imaging-session/purpose",
+   "en_hash": "7defc574868a58d8",
+   "fr_hash": "c5ce61ec5e5fbfaa"
+  },
+  {
+   "id": "nom-002-imaging-session/prerequisites",
+   "en_hash": "d2e9e29590f7ac6f",
+   "fr_hash": "933d13b317c4eb3d"
+  },
+  {
+   "id": "nom-002-imaging-session/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "nom-002-imaging-session/procedure-steps/step-1-verify-fine-pointing-performance",
+   "en_hash": "b4c0217fcab938fc",
+   "fr_hash": "59b3e777f37f9ec5"
+  },
+  {
+   "id": "nom-002-imaging-session/procedure-steps/step-2-verify-focal-plane-thermal-condition",
+   "en_hash": "43fda5b7f238f668",
+   "fr_hash": "66668443d2189496"
+  },
+  {
+   "id": "nom-002-imaging-session/procedure-steps/step-3-verify-storage-capacity",
+   "en_hash": "f19549403593b05c",
+   "fr_hash": "6b436cae417b9ce9"
+  },
+  {
+   "id": "nom-002-imaging-session/procedure-steps/step-4-command-imaging-mode",
+   "en_hash": "fb5608f1a1d084b1",
+   "fr_hash": "4e0bcc3bf6988e5f"
+  },
+  {
+   "id": "nom-002-imaging-session/procedure-steps/step-5-trigger-the-acquisitions",
+   "en_hash": "55c4748789f5a73d",
+   "fr_hash": "e4eb7db402b7f462"
+  },
+  {
+   "id": "nom-002-imaging-session/procedure-steps/step-5a-monitor-image-acquisition",
+   "en_hash": "40db9fca28a2de49",
+   "fr_hash": "7dc22bbcff201d26"
+  },
+  {
+   "id": "nom-002-imaging-session/procedure-steps/step-6-terminate-imaging-session",
+   "en_hash": "530f31e27f414781",
+   "fr_hash": "b854e7f9d97e03a7"
+  },
+  {
+   "id": "nom-002-imaging-session/procedure-steps/step-7-post-imaging-assessment",
+   "en_hash": "af4e42e4afffb23c",
+   "fr_hash": "ce4825bccfcf5472"
+  },
+  {
+   "id": "nom-002-imaging-session/off-nominal-handling",
+   "en_hash": "6dc6c4ec5b219e9e",
+   "fr_hash": "dc66c75d42bac6e0"
+  },
+  {
+   "id": "nom-002-imaging-session/post-conditions",
+   "en_hash": "7205335cd74d9ca3",
+   "fr_hash": "18b2e92a54e17bee"
+  }
+ ],
+ "en_commit": "3e80564"
+}

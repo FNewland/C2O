@@ -1,0 +1,162 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/manual/08_fdir.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "eosat-1-fault-detection-isolation-and-recovery-fdir",
+   "en_hash": "1f881e6d1697df9f",
+   "fr_hash": "c53a225d7fc00e7e"
+  },
+  {
+   "id": "eosat-1-fault-detection-isolation-and-recovery-fdir/1-overview",
+   "en_hash": "dfcabacfc18255f1",
+   "fr_hash": "5014c6020b5738b1"
+  },
+  {
+   "id": "eosat-1-fault-detection-isolation-and-recovery-fdir/2-fdir-hierarchy",
+   "en_hash": "406018083118c690",
+   "fr_hash": "cb3359e306f19de5"
+  },
+  {
+   "id": "eosat-1-fault-detection-isolation-and-recovery-fdir/2-fdir-hierarchy/2-1-autonomy-levels",
+   "en_hash": "4695a8798c73505f",
+   "fr_hash": "caeef66e03c95237"
+  },
+  {
+   "id": "eosat-1-fault-detection-isolation-and-recovery-fdir/2-fdir-hierarchy/2-2-design-philosophy",
+   "en_hash": "0751265175d660f8",
+   "fr_hash": "ee8b48c5b24cf4d3"
+  },
+  {
+   "id": "eosat-1-fault-detection-isolation-and-recovery-fdir/3-safe-mode-definition",
+   "en_hash": "acd8e8be5337902a",
+   "fr_hash": "1500919b46e251d2"
+  },
+  {
+   "id": "eosat-1-fault-detection-isolation-and-recovery-fdir/4-fdir-rules-and-triggers",
+   "en_hash": "293095256bd69697",
+   "fr_hash": "e2763ac32eeae587"
+  },
+  {
+   "id": "eosat-1-fault-detection-isolation-and-recovery-fdir/4-fdir-rules-and-triggers/4-1-eps-rules",
+   "en_hash": "157d03574c8f15c4",
+   "fr_hash": "4442ce99b5e203ac"
+  },
+  {
+   "id": "eosat-1-fault-detection-isolation-and-recovery-fdir/4-fdir-rules-and-triggers/4-2-aocs-rules",
+   "en_hash": "becee7298b381bdf",
+   "fr_hash": "536a3a985a385ed9"
+  },
+  {
+   "id": "eosat-1-fault-detection-isolation-and-recovery-fdir/4-fdir-rules-and-triggers/4-3-obdh-rules",
+   "en_hash": "ba352e45988300e8",
+   "fr_hash": "2e668385f346a48d"
+  },
+  {
+   "id": "eosat-1-fault-detection-isolation-and-recovery-fdir/4-fdir-rules-and-triggers/4-4-tcs-rules",
+   "en_hash": "fd5a302f78db6a4f",
+   "fr_hash": "0f930417562f09d8"
+  },
+  {
+   "id": "eosat-1-fault-detection-isolation-and-recovery-fdir/4-fdir-rules-and-triggers/4-5-ttc-rules",
+   "en_hash": "b96fbfae00441dbf",
+   "fr_hash": "c8a8af23ce5f84b5"
+  },
+  {
+   "id": "eosat-1-fault-detection-isolation-and-recovery-fdir/4-fdir-rules-and-triggers/4-6-payload-rules",
+   "en_hash": "244c1e35fba6d82d",
+   "fr_hash": "e5524d8ba365dedd"
+  },
+  {
+   "id": "eosat-1-fault-detection-isolation-and-recovery-fdir/5-recovery-procedures",
+   "en_hash": "df4bc5975cb1ed3f",
+   "fr_hash": "07f68501264e41c8"
+  },
+  {
+   "id": "eosat-1-fault-detection-isolation-and-recovery-fdir/5-recovery-procedures/5-1-safe-mode-recovery-level-3-ground",
+   "en_hash": "fa7cba36ba68179d",
+   "fr_hash": "402b1a0f19a78228"
+  },
+  {
+   "id": "eosat-1-fault-detection-isolation-and-recovery-fdir/5-recovery-procedures/5-2-transponder-recovery",
+   "en_hash": "b7c371e8fc85a4ac",
+   "fr_hash": "6938bb21cd731e91"
+  },
+  {
+   "id": "eosat-1-fault-detection-isolation-and-recovery-fdir/5-recovery-procedures/5-3-aocs-recovery-from-detumble",
+   "en_hash": "1bff16b8b486dadc",
+   "fr_hash": "aa6551078565fd8f"
+  },
+  {
+   "id": "eosat-1-fault-detection-isolation-and-recovery-fdir/6-pus-service-12-onboard-monitoring",
+   "en_hash": "0d4ebb48c91452e3",
+   "fr_hash": "b99575323ed524e2"
+  },
+  {
+   "id": "eosat-1-fault-detection-isolation-and-recovery-fdir/6-pus-service-12-onboard-monitoring/6-1-monitoring-enforcement",
+   "en_hash": "51d8378281d6f81e",
+   "fr_hash": "86ca486011a6d8b7"
+  },
+  {
+   "id": "eosat-1-fault-detection-isolation-and-recovery-fdir/6-pus-service-12-onboard-monitoring/6-2-monitoring-commands",
+   "en_hash": "07c7dac80f8445cd",
+   "fr_hash": "3c8ac0282574e27f"
+  },
+  {
+   "id": "eosat-1-fault-detection-isolation-and-recovery-fdir/7-pus-service-19-event-action-triggering",
+   "en_hash": "6b196549ba6e5532",
+   "fr_hash": "61aa59af95470f01"
+  },
+  {
+   "id": "eosat-1-fault-detection-isolation-and-recovery-fdir/7-pus-service-19-event-action-triggering/7-1-event-action-mechanism",
+   "en_hash": "8ebfe832458797f5",
+   "fr_hash": "cce67372a0eb853e"
+  },
+  {
+   "id": "eosat-1-fault-detection-isolation-and-recovery-fdir/7-pus-service-19-event-action-triggering/7-2-event-action-commands",
+   "en_hash": "94cdab64dabc8f67",
+   "fr_hash": "9ea8ca0fe02e0722"
+  },
+  {
+   "id": "eosat-1-fault-detection-isolation-and-recovery-fdir/7-pus-service-19-event-action-triggering/7-3-typical-fdir-chain-example",
+   "en_hash": "5699e8caa114f83a",
+   "fr_hash": "7581547a6ac9eda2"
+  },
+  {
+   "id": "eosat-1-fault-detection-isolation-and-recovery-fdir/8-progressive-load-shed-thresholds",
+   "en_hash": "8470801ead94e672",
+   "fr_hash": "fe023541de6e0e11"
+  },
+  {
+   "id": "eosat-1-fault-detection-isolation-and-recovery-fdir/9-contingency-response-matrix",
+   "en_hash": "179141c717fdda46",
+   "fr_hash": "4ea386bd1f24b947"
+  },
+  {
+   "id": "eosat-1-fault-detection-isolation-and-recovery-fdir/10-fdir-configuration",
+   "en_hash": "27e972176be1e80d",
+   "fr_hash": "96a024250f90b639"
+  },
+  {
+   "id": "eosat-1-fault-detection-isolation-and-recovery-fdir/10-fdir-configuration/10-1-phase-gating-of-fdir-rules",
+   "en_hash": "43dcd20a2378b5cb",
+   "fr_hash": "7fef986e1b2bd386"
+  },
+  {
+   "id": "eosat-1-fault-detection-isolation-and-recovery-fdir/10-fdir-configuration/10-2-one-spacecraft-mode",
+   "en_hash": "8020928e82ec59ec",
+   "fr_hash": "97464089681ae027"
+  },
+  {
+   "id": "eosat-1-fault-detection-isolation-and-recovery-fdir/11-operational-notes",
+   "en_hash": "17ba6ede2c3486ec",
+   "fr_hash": "b7250ddca774dd55"
+  }
+ ],
+ "en_commit": "3e80564"
+}

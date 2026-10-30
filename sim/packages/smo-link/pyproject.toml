@@ -1,0 +1,21 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "smo-link"
+version = "0.2.0"
+description = "SMO space link — space-link agent (client) and ground-station gateway (GSG, server) over one WebSocket"
+requires-python = ">=3.10"
+dependencies = [
+    "smo-common",
+    "aiohttp>=3.9",
+]
+
+[project.scripts]
+smo-link-agent = "smo_link.agent:main"
+smo-link-gateway = "smo_link.gateway:main"
+smo-link-token = "smo_link.token:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/smo_link"]

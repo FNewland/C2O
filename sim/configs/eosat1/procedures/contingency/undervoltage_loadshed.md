@@ -138,11 +138,14 @@ available solar array power.
 
 ### Step 7: Restore Loads in Reverse Priority Order
 **Note:** Re-enable loads one at a time, waiting 5 min between each to verify stability:
-**TC:** `EPS_POWER_ON(line_index=7)` (Service 8, Subtype 1, func_id 19) — AOCS wheels:    — verify `aocs.mode` (0x020F)
+**TC:** `EPS_POWER_ON(line_index=7)` (Service 8, Subtype 1, func_id 19) — 1. AOCS wheels: verify `aocs.mode` (0x020F)
    returns to controllable mode. May need `AOCS_SET_MODE(mode=3)` for COARSE_SUN first.
-2. TX transmitter: `TTC_PA_ON` (func_id 66) — verify `ttc.pa_on` (0x0516) = 1
-3. FPA cooler: `FPA_COOLER(on=1)` (func_id 43) — verify `tcs.cooler_fpa` (0x040C) = 1
-4. Payload to STANDBY: `PAYLOAD_SET_MODE(mode=1)` (func_id 26) — verify `payload.mode` = 1
+**GO/NO-GO:** Bus stable for 5 min with the AOCS wheels restored — restore the next load
+**TC:** `TTC_PA_ON` (Service 8, Subtype 1, func_id 66) — 2. TX transmitter: verify `ttc.pa_on` (0x0516) = 1
+**GO/NO-GO:** Bus stable for 5 min with the transmitter restored — restore the next load
+**TC:** `FPA_COOLER(on=1)` (Service 8, Subtype 1, func_id 43) — 3. FPA cooler: verify `tcs.cooler_fpa` (0x040C) = 1
+**GO/NO-GO:** Bus stable for 5 min with the FPA cooler restored — restore the next load
+**TC:** `PAYLOAD_SET_MODE(mode=1)` (Service 8, Subtype 1, func_id 26) — 4. Payload to STANDBY: verify `payload.mode` = 1
 **Verify:** After each load addition, confirm `eps.bus_voltage` (0x0105) remains > 27.5 V
 and `eps.bat_soc` (0x0101) remains > 35%.
 **GO/NO-GO:** All loads restored and power budget positive — procedure complete.

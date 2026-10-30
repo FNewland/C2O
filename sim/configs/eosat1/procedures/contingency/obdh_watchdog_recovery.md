@@ -28,12 +28,15 @@ assesses whether the root cause is transient or systemic.
 
 ### Step 1b — Boot OBC into Application Image (if in Bootloader)
 **Verify:** `obdh.sw_image` (0x0311) — if 0 (BOOTLOADER), the watchdog reset left the OBC in the bootloader and only boot/maintenance funcs are accepted.
-**TC (conditional):** `OBC_BOOT_APP` (Service 8, Subtype 1, func_id 55) — issue if `obdh.sw_image` = 0
+**BRANCH:** `obdh.sw_image == 0` -> GO `STEP-1B-BOOT` | NO-GO `STEP-2` (timeout 10 s)
+**LABEL:** `STEP-1B-BOOT`
+**TC:** `OBC_BOOT_APP` (Service 8, Subtype 1, func_id 55) — issue only if `obdh.sw_image` = 0
 **Verify:** S1.1 acceptance + S1.7 execution complete within 15 s
 **Verify:** `obdh.sw_image` (0x0311) = 1 (APPLICATION) within 15 s
 **GO/NO-GO:** Application image running before any HK_ENABLE / OBC_SET_MODE TCs are issued.
 
 ### Step 2 — Verify OBC Nominal Post-Reboot State
+**LABEL:** `STEP-2`
 **TC:** `HK_REQUEST(sid=4)` (Service 3, Subtype 27)
 **Verify:** `obdh.mode` (0x0300) = 0 (NOMINAL) — if mode = 1 (SAFE), OBC detected an issue during re-init
 **Verify:** `obdh.cpu_load` (0x0302) < 70% — elevated load may indicate boot loop or stuck process
@@ -49,14 +52,14 @@ assesses whether the root cause is transient or systemic.
 **TC:** `HK_REQUEST(sid=5)` (Service 3, Subtype 27) — Payload
 **Verify:** All six HK frames received within 30s
 **Verify:** No subsystem is in an unexpected mode or reporting out-of-limit parameters
-**GO/NO-GO:** All subsystems reporting nominal — proceed. Any anomalies trigger respective CON procedures.
+**GO/NO-GO:** All subsystems reporting nominal — proceed. Any anomalies trigger the respective CTG procedures.
 
 ### Step 4 — Verify Data Integrity and Onboard Storage
 **TC:** `HK_REQUEST(sid=3)` (Service 3, Subtype 27)
 **Verify:** Onboard time is consistent with ground reference (drift < 2s acceptable after reboot)
 **Verify:** Stored telecommand queue status — confirm no commands were lost
 **Verify:** Mass memory partition status — confirm science data and HK archives are intact
-**GO/NO-GO:** Data integrity confirmed — proceed. If time drift > 5s, perform time synchronisation via `SET_PARAM(param_id=obdh.utc_correction, value=<delta>)`.
+**GO/NO-GO:** Data integrity confirmed — proceed. If time drift > 5s, perform time synchronisation with `SET_TIME(cuc_seconds=<T_corrected>)` (Service 9, Subtype 1), as CTG-021 does, or `OBC_GPS_TIME_SYNC` (func_id 80) when the GPS has a fix.
 
 ### Step 5 — Assess Root Cause Indicators
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27)
@@ -67,7 +70,7 @@ assesses whether the root cause is transient or systemic.
 **GO/NO-GO:** If root cause appears transient (SEU, brief voltage dip): log and continue nominal. If systemic (repeated high CPU, memory error): proceed to Step 6.
 
 ### Step 6 — Restore Nominal Mode if OBC in SAFE
-**TC:** `OBC_SET_MODE(mode=0)` (Service 8, Subtype 1)
+**TC:** `OBC_SET_MODE(mode=0)` (Service 8, Subtype 1, func_id 50)
 **Verify:** `obdh.mode` (0x0300) = 0 (NOMINAL) within 10s
 **Verify:** `obdh.cpu_load` (0x0302) remains < 70% after transition
 **Verify:** `aocs.mode` (0x020F) — confirm AOCS has not been disrupted by mode change

@@ -1,0 +1,167 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "docs/README.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "eosat-1-spacecraft-simulator-documentation",
+   "en_hash": "7739a449cf0a9d90",
+   "fr_hash": "d13bb61d8d1ecb57"
+  },
+  {
+   "id": "eosat-1-spacecraft-simulator-documentation/new-in-the-2026-08-build",
+   "en_hash": "e9f99563124bd7a9",
+   "fr_hash": "0bd8d3ab2d1c0679"
+  },
+  {
+   "id": "eosat-1-spacecraft-simulator-documentation/quick-navigation",
+   "en_hash": "4664642d5ea664d5",
+   "fr_hash": "0373c45362572c75"
+  },
+  {
+   "id": "eosat-1-spacecraft-simulator-documentation/quick-navigation/for-mission-operators",
+   "en_hash": "bfb3de22ebaef4d0",
+   "fr_hash": "c1e7c4f2c10faedf"
+  },
+  {
+   "id": "eosat-1-spacecraft-simulator-documentation/quick-navigation/for-instructors-running-the-suite-on-a-server",
+   "en_hash": "21a0bbbc9e15a274",
+   "fr_hash": "d0d60f39a5c63552"
+  },
+  {
+   "id": "eosat-1-spacecraft-simulator-documentation/quick-navigation/for-command-control-engineers",
+   "en_hash": "42486b8714d54882",
+   "fr_hash": "7cbd61c2b6837143"
+  },
+  {
+   "id": "eosat-1-spacecraft-simulator-documentation/quick-navigation/for-system-architects",
+   "en_hash": "42301dd658c9458a",
+   "fr_hash": "beadae266d162f69"
+  },
+  {
+   "id": "eosat-1-spacecraft-simulator-documentation/quick-navigation/for-project-managers-reviewers",
+   "en_hash": "2e54d9560c6db73f",
+   "fr_hash": "16b2d3d843835799"
+  },
+  {
+   "id": "eosat-1-spacecraft-simulator-documentation/quick-navigation/for-gap-analysis-planning",
+   "en_hash": "332a5ade9949f448",
+   "fr_hash": "2c871246fe9f9a9b"
+  },
+  {
+   "id": "eosat-1-spacecraft-simulator-documentation/documentation-overview",
+   "en_hash": "928c0f407bc357a3",
+   "fr_hash": "e6e7e529623f1503"
+  },
+  {
+   "id": "eosat-1-spacecraft-simulator-documentation/documentation-overview/architecture-design",
+   "en_hash": "6c5cd94a26d0df9c",
+   "fr_hash": "e6e18aa8086ca948"
+  },
+  {
+   "id": "eosat-1-spacecraft-simulator-documentation/documentation-overview/operations-training",
+   "en_hash": "7f92cfb7ee70f2f8",
+   "fr_hash": "a1a023818d269cfe"
+  },
+  {
+   "id": "eosat-1-spacecraft-simulator-documentation/documentation-overview/change-management",
+   "en_hash": "a4a9fdfb4547c5eb",
+   "fr_hash": "d36c45a5aa231a6f"
+  },
+  {
+   "id": "eosat-1-spacecraft-simulator-documentation/feature-summary",
+   "en_hash": "e3bc399e4a72f8a4",
+   "fr_hash": "eb9487d7fd7d2cf6"
+  },
+  {
+   "id": "eosat-1-spacecraft-simulator-documentation/feature-summary/complete-features-april-2026",
+   "en_hash": "9918f27544d84ff0",
+   "fr_hash": "fb217abb29a5c9e4"
+  },
+  {
+   "id": "eosat-1-spacecraft-simulator-documentation/key-metrics",
+   "en_hash": "47cac9feb4def9a2",
+   "fr_hash": "65f2badc30fcf58b"
+  },
+  {
+   "id": "eosat-1-spacecraft-simulator-documentation/current-limitations",
+   "en_hash": "d63a658dddf54084",
+   "fr_hash": "94f63be8b5f3fa25"
+  },
+  {
+   "id": "eosat-1-spacecraft-simulator-documentation/getting-started",
+   "en_hash": "c6144136c5fdde00",
+   "fr_hash": "84a53e703a1b0c5a"
+  },
+  {
+   "id": "eosat-1-spacecraft-simulator-documentation/getting-started/step-1-start-the-simulator",
+   "en_hash": "37f0b3a3b8d06e1d",
+   "fr_hash": "3a59b7e87b227691"
+  },
+  {
+   "id": "eosat-1-spacecraft-simulator-documentation/getting-started/step-2-start-the-mcs",
+   "en_hash": "8bdca63f920127f8",
+   "fr_hash": "ebe7d751f084b847"
+  },
+  {
+   "id": "eosat-1-spacecraft-simulator-documentation/getting-started/step-3-open-web-browser",
+   "en_hash": "6149ee7bb16824a4",
+   "fr_hash": "fdcf721825ad3e6d"
+  },
+  {
+   "id": "eosat-1-spacecraft-simulator-documentation/getting-started/step-4-send-first-command",
+   "en_hash": "a6c0c1ed11fbf583",
+   "fr_hash": "72cc221e3323d856"
+  },
+  {
+   "id": "eosat-1-spacecraft-simulator-documentation/documentation-statistics",
+   "en_hash": "60d3a7d8e4f92a8e",
+   "fr_hash": "78d03dc79f569855"
+  },
+  {
+   "id": "eosat-1-spacecraft-simulator-documentation/file-structure",
+   "en_hash": "33e2cfd677d1a794",
+   "fr_hash": "c928c471d78a5e66"
+  },
+  {
+   "id": "eosat-1-spacecraft-simulator-documentation/related-configuration-code",
+   "en_hash": "0c509dd9343ff106",
+   "fr_hash": "67d71e39d9b6fadd"
+  },
+  {
+   "id": "eosat-1-spacecraft-simulator-documentation/revision-history",
+   "en_hash": "d41257aa0ba3e02b",
+   "fr_hash": "5a5699ddfa35e47b"
+  },
+  {
+   "id": "eosat-1-spacecraft-simulator-documentation/quick-reference",
+   "en_hash": "6f593da4f790feff",
+   "fr_hash": "c8827270e0a5ea0d"
+  },
+  {
+   "id": "eosat-1-spacecraft-simulator-documentation/quick-reference/for-operators",
+   "en_hash": "1949783c7a7b0ec3",
+   "fr_hash": "d3ab46d74c0cd60e"
+  },
+  {
+   "id": "eosat-1-spacecraft-simulator-documentation/quick-reference/for-engineers",
+   "en_hash": "764fd887f866777f",
+   "fr_hash": "33d8212cb68df2fd"
+  },
+  {
+   "id": "eosat-1-spacecraft-simulator-documentation/quick-reference/for-architects",
+   "en_hash": "4ec13337d293b883",
+   "fr_hash": "4a1edf04f7712464"
+  },
+  {
+   "id": "eosat-1-spacecraft-simulator-documentation/support",
+   "en_hash": "0634b0dcb978a4aa",
+   "fr_hash": "91e8f0d75198fcaf"
+  }
+ ],
+ "en_commit": "3e80564"
+}

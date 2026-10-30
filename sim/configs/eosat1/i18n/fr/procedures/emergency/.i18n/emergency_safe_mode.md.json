@@ -1,0 +1,122 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/emergency/emergency_safe_mode.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "emg-001-emergency-safe-mode",
+   "en_hash": "25c025d2dcbbc8bd",
+   "fr_hash": "8625fe06f742bb5f"
+  },
+  {
+   "id": "emg-001-emergency-safe-mode/purpose",
+   "en_hash": "cc22aec8c39c02e1",
+   "fr_hash": "2f4953692099f8d8"
+  },
+  {
+   "id": "emg-001-emergency-safe-mode/prerequisites",
+   "en_hash": "48d8d3c962667f35",
+   "fr_hash": "7d79e3f4f4f0554e"
+  },
+  {
+   "id": "emg-001-emergency-safe-mode/trigger-conditions-any-two-or-more",
+   "en_hash": "c7e8284cd1ba95a8",
+   "fr_hash": "77489cc1da1fc1f1"
+  },
+  {
+   "id": "emg-001-emergency-safe-mode/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "emg-001-emergency-safe-mode/procedure-steps/step-1-command-emergency-mode-if-not-already-autonomous",
+   "en_hash": "945e17eea4a092c0",
+   "fr_hash": "2edf8ea6922e6efb"
+  },
+  {
+   "id": "emg-001-emergency-safe-mode/procedure-steps/step-2-verify-automatic-load-shedding",
+   "en_hash": "6bdc828809769091",
+   "fr_hash": "674fe48763cc442f"
+  },
+  {
+   "id": "emg-001-emergency-safe-mode/procedure-steps/step-3-verify-aocs-safe-pointing",
+   "en_hash": "872545dfe55d0133",
+   "fr_hash": "8901b16a54d5c574"
+  },
+  {
+   "id": "emg-001-emergency-safe-mode/procedure-steps/step-4-verify-sun-acquisition-and-power-state",
+   "en_hash": "fd5235422a6208e3",
+   "fr_hash": "7791040043adc51e"
+  },
+  {
+   "id": "emg-001-emergency-safe-mode/procedure-steps/step-5-establish-stable-communication",
+   "en_hash": "52ffc69b16904add",
+   "fr_hash": "8dfd1c12fd27396a"
+  },
+  {
+   "id": "emg-001-emergency-safe-mode/procedure-steps/step-6-full-housekeeping-assessment",
+   "en_hash": "881d73bfaea04d9d",
+   "fr_hash": "f17e58df208f974f"
+  },
+  {
+   "id": "emg-001-emergency-safe-mode/procedure-steps/step-7-stabilisation-hold-minimum-3-orbits",
+   "en_hash": "88c0bec7b9f2dbe4",
+   "fr_hash": "e29271128e19da03"
+  },
+  {
+   "id": "emg-001-emergency-safe-mode/orbit-by-orbit-recovery-timeline",
+   "en_hash": "ebe1699ced1984bd",
+   "fr_hash": "c3f5a76382448eef"
+  },
+  {
+   "id": "emg-001-emergency-safe-mode/orbit-by-orbit-recovery-timeline/recovery-orbit-r-1-restore-thermal-control-soc-30-required",
+   "en_hash": "e08bf4047c7e1501",
+   "fr_hash": "e4775e2a49aa1f0f"
+  },
+  {
+   "id": "emg-001-emergency-safe-mode/orbit-by-orbit-recovery-timeline/recovery-orbit-r-2-restore-full-aocs-soc-40-required",
+   "en_hash": "69e4856e0a9ac703",
+   "fr_hash": "c33cdab9a6d1ac02"
+  },
+  {
+   "id": "emg-001-emergency-safe-mode/orbit-by-orbit-recovery-timeline/recovery-orbit-r-3-restore-thruster-heater-and-full-thermal-soc-50-required",
+   "en_hash": "73826cc9eb1762d2",
+   "fr_hash": "8d3481d876eb186f"
+  },
+  {
+   "id": "emg-001-emergency-safe-mode/orbit-by-orbit-recovery-timeline/recovery-orbit-r-4-restore-obc-nominal-mode-soc-55-required",
+   "en_hash": "73c0ace4b07ce6dc",
+   "fr_hash": "f1be318d9d194995"
+  },
+  {
+   "id": "emg-001-emergency-safe-mode/orbit-by-orbit-recovery-timeline/recovery-orbit-r-5-restore-payload-soc-60-required",
+   "en_hash": "bce2fbd7f3b61543",
+   "fr_hash": "b4f2935c394eb1f1"
+  },
+  {
+   "id": "emg-001-emergency-safe-mode/recovery-timeline-summary",
+   "en_hash": "057c578a7c535a1a",
+   "fr_hash": "fe857bd4c34e27e2"
+  },
+  {
+   "id": "emg-001-emergency-safe-mode/off-nominal-handling",
+   "en_hash": "b74445f6c3657051",
+   "fr_hash": "fbe18f79ef686133"
+  },
+  {
+   "id": "emg-001-emergency-safe-mode/post-conditions",
+   "en_hash": "e4709038c6539d36",
+   "fr_hash": "69e48ec8aea6574d"
+  },
+  {
+   "id": "emg-001-emergency-safe-mode/recovery-path-re-powering-shed-loads",
+   "en_hash": "ff3d6989d5306388",
+   "fr_hash": "3fcce16901d10e1e"
+  }
+ ],
+ "en_commit": "3e80564"
+}

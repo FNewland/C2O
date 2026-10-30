@@ -1,0 +1,77 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/leop/sun_acquisition.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "leop-005-sun-acquisition",
+   "en_hash": "9d2442719191b167",
+   "fr_hash": "3e2587d1604eb057"
+  },
+  {
+   "id": "leop-005-sun-acquisition/purpose",
+   "en_hash": "c0175a91b66e957f",
+   "fr_hash": "097b3a9ff7a5a2f3"
+  },
+  {
+   "id": "leop-005-sun-acquisition/prerequisites",
+   "en_hash": "8adbddd7024d42dd",
+   "fr_hash": "fa6735ad02e3f23f"
+  },
+  {
+   "id": "leop-005-sun-acquisition/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "leop-005-sun-acquisition/procedure-steps/step-1-record-initial-body-rates",
+   "en_hash": "c30eed0debfc6e12",
+   "fr_hash": "252a6999b9f7769c"
+  },
+  {
+   "id": "leop-005-sun-acquisition/procedure-steps/step-2-monitor-rate-damping-observe-command-nothing",
+   "en_hash": "aabdc61221a8fbdf",
+   "fr_hash": "079195bc653a6d82"
+  },
+  {
+   "id": "leop-005-sun-acquisition/procedure-steps/step-3-observe-the-automatic-transition-to-coarsesun",
+   "en_hash": "d3585c951dd11745",
+   "fr_hash": "e6f5c315d1598fc9"
+  },
+  {
+   "id": "leop-005-sun-acquisition/procedure-steps/step-4-verify-the-sun-hold",
+   "en_hash": "fc1789fa848b64c9",
+   "fr_hash": "bbfe4089fa7c0d23"
+  },
+  {
+   "id": "leop-005-sun-acquisition/procedure-steps/step-5-verify-power-generation-in-the-hold",
+   "en_hash": "3603018707cb29a1",
+   "fr_hash": "271abf3159657b14"
+  },
+  {
+   "id": "leop-005-sun-acquisition/procedure-steps/step-6-log-final-aocs-state",
+   "en_hash": "f48a075fefe04cae",
+   "fr_hash": "f7ed88b31b2d64a3"
+  },
+  {
+   "id": "leop-005-sun-acquisition/off-nominal-handling",
+   "en_hash": "c4c5fd7d48cb071e",
+   "fr_hash": "ff0dbaeb3ac42959"
+  },
+  {
+   "id": "leop-005-sun-acquisition/exit-state",
+   "en_hash": "6b39c78809299b84",
+   "fr_hash": "1b08207cff3c1c00"
+  },
+  {
+   "id": "leop-005-sun-acquisition/post-conditions",
+   "en_hash": "997630f62c906368",
+   "fr_hash": "1ef324e28f1d5900"
+  }
+ ],
+ "en_commit": "983af0f"
+}

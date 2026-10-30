@@ -115,6 +115,8 @@ INSTRUCTOR_ROUTES = [
     "/api/scenarios", "/api/scenario/debrief", "/api/failures",
     "/api/failure-catalog", "/api/breakpoints", "/api/breakpoint/save",
     "/api/breakpoint/load",
+    # 2026-09-27 VR bridge (smo-vr/1): headset link status + latest frame.
+    "/api/vr",
 ]
 
 # Shared one-implementation-many-hosts registrars (mounted under /dumps,

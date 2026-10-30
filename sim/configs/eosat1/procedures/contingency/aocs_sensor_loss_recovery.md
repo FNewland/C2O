@@ -7,8 +7,8 @@
 ## Purpose
 Respond to the failure of one or more AOCS sensors (star trackers, coarse sun sensor
 heads, magnetometers). EOSAT-1 carries redundant attitude sensors: two star trackers
-(ST1/ST2), six coarse sun sensor heads (+X, -X, +Y, -Y, +Z, -Z), and two
-magnetometers (MAG-A, MAG-B). This procedure provides a systematic approach to
+(ST1/ST2) and six coarse sun sensor heads (+X, -X, +Y, -Y, +Z, -Z); its
+single magnetometer has no redundant unit. This procedure provides a systematic approach to
 detecting which sensor has failed, switching to redundant units where available,
 assessing cumulative impact on attitude determination capability, and deciding
 whether the remaining sensor suite supports mission operations or requires fallback
@@ -23,8 +23,8 @@ must be evaluated after each recovery action.
 - [ ] TT&C link active — `ttc.link_status` (0x0501) = 2 (LOCKED)
 - [ ] Flight Director notified of attitude sensor anomaly
 - [ ] Spacecraft bus power is nominal — `eps.bus_voltage` (0x0105) > 27.0 V
-- [ ] Procedure CTG-005 (AOCS Anomaly Recovery) has been reviewed for escalation paths
-- [ ] Procedure CTG-009 (Star Tracker Failure) has been reviewed for ST-specific steps
+- [ ] Procedure CTG-002 (AOCS Anomaly Recovery) has been reviewed for escalation paths
+- [ ] Procedure CTG-008 (Star Tracker Failure) has been reviewed for ST-specific steps
 
 ## Required Telemetry
 | Parameter | ID | Expected Value |
@@ -103,7 +103,7 @@ SILENTLY SELECTED ST1 — the failed unit — when the card meant ST2 (2026-08c)
 
 **Step 2c — Isolate Failed ST1:**
 **TC:** `ST1_POWER(on=0)` (Service 8, Subtype 1, func_id 4) — Power off ST1
-**Verify:** `aocs.st1_status` (0x0240) = 0 (OFF) within 5 s
+**Verify:** `aocs.st1_num_stars` (0x0241) = 0 within 5 s (`aocs.st1_status` can stay 4 = FAILED after power-off; see CTG-008 Step 4)
 **Verify:** `aocs.att_error` (0x0217) < 1.0 deg with ST2 providing attitude
 **Action:** Log: "ST1 FAILED — operating on ST2 only. No star tracker redundancy."
 **GO/NO-GO:** ST2 operational and providing valid attitude — proceed to next
@@ -222,7 +222,7 @@ NOMINAL, notify Flight Director and mission planning of reduced capability.
 **Verify:** `aocs.rate_pitch` (0x0205) < 0.1 deg/s
 **Verify:** `aocs.rate_yaw` (0x0206) < 0.1 deg/s
 **Verify:** Active star tracker (if available) continues tracking — `aocs.st*_num_stars` > 3
-**Verify:** Active magnetometer continues providing valid data
+**Verify:** The magnetometer continues providing valid data
 **Action:** Document all sensor states for the anomaly report:
 - Which sensors failed and at what time
 - Recovery actions taken
@@ -232,7 +232,7 @@ NOMINAL, notify Flight Director and mission planning of reduced capability.
 
 ## Verification Criteria
 - [ ] All failed sensors identified and documented
-- [ ] Redundant sensors activated where available (ST2, MAG-B)
+- [ ] Redundant sensors activated where available (ST2)
 - [ ] Failed sensors isolated (powered off) to prevent interference
 - [ ] AOCS operating in best available mode for remaining sensor suite
 - [ ] `aocs.att_error` (0x0217) within acceptable limits for current mode
@@ -246,15 +246,15 @@ NOMINAL, notify Flight Director and mission planning of reduced capability.
   This is a mission-degrading configuration — escalate to engineering team.
 - If ST2 does not reach TRACKING within 120 s: Power cycle ST2 — `ST2_POWER(on=0)`,
   wait 10 s, `ST2_POWER(on=1)`. If still fails, treat as dual ST failure.
-- If both magnetometers fail: Detumble mode is not possible (B-dot requires mag data).
+- If the magnetometer fails: Detumble mode is not possible (B-dot requires mag data).
   Reaction wheels can still provide attitude control if operational. Momentum cannot
   be dumped via magnetorquers. This is critical — plan for graceful momentum build-up.
-- If CSS and both magnetometers fail in eclipse: No attitude reference available.
+- If CSS and the magnetometer fail in eclipse: No attitude reference available.
   Spacecraft is uncontrolled until eclipse exit. Wait for sunlit phase — CSS should
   acquire sun vector if heads are functional. Command `AOCS_SET_MODE(mode=2)` in
   advance so DETUMBLE engages automatically when mag data returns.
 - If attitude error exceeds 10 deg during sensor switching: FDIR may trigger
-  autonomous safe mode. Allow safe mode entry, then recover using CTG-005
+  autonomous safe mode. Allow safe mode entry, then recover using CTG-002
   (AOCS Anomaly Recovery).
 - If power budget does not support redundant sensor power-on: Check
   `eps.bat_soc` (0x0101). If < 40%, do not power both star trackers simultaneously.

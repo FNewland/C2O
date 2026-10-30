@@ -40,6 +40,9 @@ class SimulatorServer:
                            or os.environ.get("SMO_BIND") or "0.0.0.0")
         self._running = False
         self.tm_packets_broadcast: int = 0
+        # VR visualisation bridge (smo-vr/1). None = disabled.
+        self._vr_cfg: dict | None = self._config.get("vr")
+        self.vr_bridge = None
 
     async def start(self) -> None:
         self._running = True
@@ -67,6 +70,12 @@ class SimulatorServer:
                     self._bind_host, self._tc_port, self._tm_port,
                     self._http_port)
 
+        # VR visualisation bridge. A port clash must not take the whole
+        # simulator down with it: the bridge is an optional ground-side feed,
+        # so a failure to bind is logged and reported as vr_link=None.
+        if self._vr_cfg:
+            await self._start_vr_bridge()
+
         # Run TM broadcast loop
         await asyncio.gather(
             tc_server.serve_forever(),
@@ -74,6 +83,33 @@ class SimulatorServer:
             self._tm_broadcast_loop(),
             self._ws_broadcast_loop(),
         )
+
+    async def _start_vr_bridge(self) -> None:
+        from smo_simulator.vr_bridge import VRBridge
+        cfg = self._vr_cfg or {}
+
+        def publish(summary: dict) -> None:
+            # Atomic rebind of a fresh dict — the tick thread reads it into
+            # the state summary; nothing mutates it afterwards.
+            self.engine.vr_link = summary
+
+        bridge = VRBridge(
+            self.engine.get_vr_state,
+            host=self._bind_host,
+            tcp_port=cfg.get("tcp_port"),
+            ws_port=cfg.get("ws_port"),
+            max_rate_hz=cfg.get("max_rate_hz", 10.0),
+            on_summary=publish,
+        )
+        try:
+            await bridge.start()
+        except OSError as e:
+            logger.error("VR bridge NOT started (%s). The simulator carries "
+                         "on without it; free the port or pass --vr-port / "
+                         "--vr-ws-port / --no-vr.", e)
+            await bridge.stop()
+            return
+        self.vr_bridge = bridge
 
     async def _handle_tc_client(self, reader, writer):
         addr = writer.get_extra_info('peername')
@@ -167,6 +203,18 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--port", type=int, default=None,
                         help="HTTP/WebSocket port for the instructor UI "
                              "(default $SMO_SIM_HTTP_PORT or 8080)")
+    parser.add_argument("--no-vr", action="store_true",
+                        help="Do not start the VR visualisation bridge "
+                             "(also: SMO_VR=0 or mission.yaml "
+                             "network.vr_enabled: false)")
+    parser.add_argument("--vr-port", type=int, default=None,
+                        help="VR bridge TCP (NDJSON) port (default "
+                             "$SMO_VR_PORT or mission.yaml network.vr_tcp_port"
+                             ", 8100)")
+    parser.add_argument("--vr-ws-port", type=int, default=None,
+                        help="VR bridge WebSocket port (default "
+                             "$SMO_VR_WS_PORT or mission.yaml "
+                             "network.vr_ws_port, 8101)")
     parser.add_argument("--ui", default=None, choices=["classic", "modern"],
                         help="Instructor console generation served at '/': "
                              "'classic' or 'modern'. Overrides SMO_UI env. "
@@ -183,6 +231,37 @@ def resolve_http_port(port: int | None, env: dict | None = None) -> int:
     return int(env.get("SMO_SIM_HTTP_PORT") or DEFAULT_HTTP_PORT)
 
 
+def resolve_vr_config(args, network, env: dict | None = None) -> dict | None:
+    """VR bridge settings: CLI > env > mission.yaml network > defaults.
+
+    Returns None when the bridge is disabled.
+    """
+    env = os.environ if env is None else env
+    enabled = bool(getattr(network, "vr_enabled", True))
+    if str(env.get("SMO_VR", "")).strip().lower() in ("0", "false", "no",
+                                                      "off"):
+        enabled = False
+    if getattr(args, "no_vr", False):
+        enabled = False
+    if not enabled:
+        return None
+
+    def pick(cli, env_key, cfg_attr, default):
+        if cli is not None:
+            return int(cli)
+        if env.get(env_key):
+            return int(env[env_key])
+        return int(getattr(network, cfg_attr, default))
+
+    return {
+        "tcp_port": pick(getattr(args, "vr_port", None), "SMO_VR_PORT",
+                         "vr_tcp_port", 8100),
+        "ws_port": pick(getattr(args, "vr_ws_port", None), "SMO_VR_WS_PORT",
+                        "vr_ws_port", 8101),
+        "max_rate_hz": float(getattr(network, "vr_max_rate_hz", 10.0)),
+    }
+
+
 def main():
     args = build_parser().parse_args()
 
@@ -191,9 +270,11 @@ def main():
     http_port = resolve_http_port(args.port)
 
     engine = SimulationEngine(config_dir=args.config, speed=args.speed)
+    network = getattr(getattr(engine, "_mission_cfg", None), "network", None)
     server = SimulatorServer(engine, config={
         "tc_port": 8001, "tm_port": 8002, "http_port": http_port,
         "bind_host": args.host, "ui_mode": args.ui,
+        "vr": resolve_vr_config(args, network),
     })
     asyncio.run(server.start())
 

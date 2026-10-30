@@ -1,0 +1,92 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/commissioning/fpa_cooler_activation.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "com-010-fpa-cooler-activation",
+   "en_hash": "cca02686410ba9df",
+   "fr_hash": "a3167164f217b6e1"
+  },
+  {
+   "id": "com-010-fpa-cooler-activation/purpose",
+   "en_hash": "03866307999848fc",
+   "fr_hash": "386da2594cb0c48d"
+  },
+  {
+   "id": "com-010-fpa-cooler-activation/prerequisites",
+   "en_hash": "74539534e450907e",
+   "fr_hash": "6ced91e844202d98"
+  },
+  {
+   "id": "com-010-fpa-cooler-activation/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "com-010-fpa-cooler-activation/procedure-steps/step-1-record-pre-activation-thermal-state",
+   "en_hash": "5f2abd5af5052c4a",
+   "fr_hash": "aabf3fb6bdd26ddc"
+  },
+  {
+   "id": "com-010-fpa-cooler-activation/procedure-steps/step-2-enable-fpa-cooler",
+   "en_hash": "b918758fe7497bc2",
+   "fr_hash": "d789e3bc1628ee0a"
+  },
+  {
+   "id": "com-010-fpa-cooler-activation/procedure-steps/step-3-verify-cooler-power-draw",
+   "en_hash": "c03208acac1eff71",
+   "fr_hash": "91da583039bac397"
+  },
+  {
+   "id": "com-010-fpa-cooler-activation/procedure-steps/step-4-monitor-cooldown-first-5-minutes",
+   "en_hash": "f15f263865f51904",
+   "fr_hash": "66b29c8a2b5660a3"
+  },
+  {
+   "id": "com-010-fpa-cooler-activation/procedure-steps/step-5-monitor-settling-5-15-minutes",
+   "en_hash": "91e0b0ecbf055d06",
+   "fr_hash": "1cf18e5c6d487133"
+  },
+  {
+   "id": "com-010-fpa-cooler-activation/procedure-steps/step-6-verify-operational-temperature-reached",
+   "en_hash": "961ede6287a3d78d",
+   "fr_hash": "4473190642c85672"
+  },
+  {
+   "id": "com-010-fpa-cooler-activation/procedure-steps/step-7-verify-temperature-stability",
+   "en_hash": "fce231829b514cf0",
+   "fr_hash": "82a912139acc7b02"
+  },
+  {
+   "id": "com-010-fpa-cooler-activation/procedure-steps/step-8-monitor-through-eclipse-if-applicable",
+   "en_hash": "a0a9941881697eb3",
+   "fr_hash": "da56c4c3371645bb"
+  },
+  {
+   "id": "com-010-fpa-cooler-activation/procedure-steps/step-9-generate-cooler-activation-report",
+   "en_hash": "4cdd7c5e80fafe5a",
+   "fr_hash": "9f00eeab2a088991"
+  },
+  {
+   "id": "com-010-fpa-cooler-activation/off-nominal-handling",
+   "en_hash": "491d4592a0a3db68",
+   "fr_hash": "8eda72825388ea1c"
+  },
+  {
+   "id": "com-010-fpa-cooler-activation/post-conditions",
+   "en_hash": "e83a6199a6b98223",
+   "fr_hash": "400c9715704e24fa"
+  },
+  {
+   "id": "com-010-fpa-cooler-activation/exit-state",
+   "en_hash": "16433a597d1ea835",
+   "fr_hash": "00405028673f282b"
+  }
+ ],
+ "en_commit": "3e80564"
+}

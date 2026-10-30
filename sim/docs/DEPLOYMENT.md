@@ -24,13 +24,15 @@ Companion documents:
 
 ## 1. Deployment shapes
 
-There are three shapes, in increasing order of pain:
+There are three single-site shapes, in increasing order of pain, plus the
+split-over-the-internet shape D:
 
 | Shape | What it is | When to use it |
 |---|---|---|
 | **A — Single machine** | Everything on one laptop; the browser is on the same box. | Development, solo practice, marking. |
 | **B — Server + client browsers** | One server runs every service; students run *only a browser*. | **The classroom. Use this one.** |
 | **C — Distributed services** | Simulator on one host, MCS on another, planner on a third. | Multi-room exercises, a "remote ground station" demo. |
+| **D — Split over the internet** | Simulator (space side) anywhere, ground segment on a cloud host, joined by one outbound WebSocket (`smo-link`). | Remote or online classes. See [§9](#9-split-deployment-over-the-internet-smo-link). |
 
 Shape B needs no shared filesystem, no student-side install and no per-student
 configuration. Shape C does need care about where files land — see [§5.4](#54-shape-c-simulator-and-mcs-on-different-hosts).
@@ -47,6 +49,7 @@ configuration. Shape C does need care about where files land — see [§5.4](#54
 | Simulator — TM downlink | `smo-simulator` | **8002** TCP | `$SMO_BIND` | Telemetry broadcast. MCS connects here. |
 | Simulator — instructor UI + API | `smo-simulator` | **8080** HTTP/WS | `$SMO_BIND` | Instructor console, breakpoints, failures, scenarios, `/dumps`, **`/config` — the configuration editor, read-write**, **`/reports` — the report generator**. |
 | MCS — operator UI + API | `smo-mcs` | **9090** HTTP/WS | `$SMO_BIND` | **The students' door.** Displays, commanding, TRENDS, alarms, `/dumps`, **`/reports`**, **`/config` (read-only browser)**. |
+| Simulator — VR bridge | `smo-simulator` | **8100** TCP, **8101** WS | `$SMO_BIND` | `smo-vr/1` visualisation feed for VR headsets (position, attitude, sun, deployments) + optional headset status line. `--no-vr` / `SMO_VR=0` to disable. [`VR_INTERFACE_ICD.md`](VR_INTERFACE_ICD.md) |
 | Planner | `smo-planner` | **9091** HTTP | `$SMO_BIND` | Pass planning, ground track. `/wide` for ultra-wide screens; `/config` read-only. |
 | Delayed TM viewer | `tools/delayed_tm_viewer.py` | **8092** HTTP | `127.0.0.1`, **`0.0.0.0` only with `--public`** | Rich decode/plots of dump files, and the standalone report generator. Optional. |
 | Orbit tools | `tools/orbit_tools.py` | **8093** HTTP | `0.0.0.0` (always) | TLE / state-vector → TC converter. Started only if `sgp4`, `numpy` and `aiohttp` import; the banner says `NOT RUNNING` otherwise. |
@@ -93,7 +96,13 @@ With `--rf`, `start.sh` starts the MCS with `--connect localhost:8012
 
 | Service | Port | Binds to | Purpose |
 |---|---|---|---|
-| Gateway (`smo-gateway`) | **10025** TCP | `$GATEWAY_BIND` (default `0.0.0.0`) | TM/TC relay fan-out for several MCS instances. `USE_GATEWAY="yes"` in `deploy/smo-env.conf`. |
+| Gateway (`smo-gateway`) — **deprecated** | **10025** TCP | `$GATEWAY_BIND` (default `0.0.0.0`) | TM/TC relay fan-out for several MCS instances. `USE_GATEWAY="yes"` in `deploy/smo-env.conf`. |
+
+> **Deprecated:** `smo-gateway` (and `deploy/start-gateway.sh`, `USE_GATEWAY`)
+> is replaced by **`smo-link`** — the space-link agent and the ground-segment
+> gateway (GSG), [§9](#9-split-deployment-over-the-internet-smo-link). The old
+> gateway is TM-only in practice and never reconnects. It still ships, unchanged,
+> until a later clean-up pass removes it; do not build new deployments on it.
 
 `deploy/start-all.sh` starts the simulator, MCS, planner, (optionally) the
 gateway **and, since Phase G, the same auxiliary viewers on 8092–8097 that
@@ -121,10 +130,11 @@ For **shape B**, open inbound TCP on the server:
 9091     Planner        ← if students do pass planning
 8092-8097               ← only if you run the auxiliary tools for students
 8094                    ← only with --rf, for the radio dashboard
+8100-8101               ← only for VR headsets (smo-vr/1, read-only feed)
 ```
 
 For **shape C**, additionally open, on the simulator host, **8001** and **8002**
-(or **8011**/**8012** with RF, or **10025** for the gateway) to the MCS host
+(or **8011**/**8012** with RF, or **10025** for the deprecated gateway) to the MCS host
 only. These are raw TM/TC sockets with no authentication — do not expose them
 to students or to an untrusted network.
 
@@ -397,3 +407,75 @@ mutating routes do not exist on those hosts, they are not merely disabled.
 | MCS shows no telemetry at all | MCS cannot reach the simulator's TM socket. | Check `MCS_TM_HOST`/`MCS_TM_PORT` (or `--connect`), and that 8002 (or 8012/10025) is open between the hosts. |
 | Planner panels empty in the MCS | `SMO_PLANNER_URL` points at `localhost` from the MCS's point of view. | Set `PLANNER_REACHABLE_HOST` in `deploy/smo-env.conf`, or export `SMO_PLANNER_URL` before starting the MCS. |
 | A breakpoint saved last week is missing | `workspace/breakpoints/` was cleared, or the simulator is running from a different working directory. | Start the simulator from the repository root, as all the start scripts do. |
+
+---
+
+## 9. Split deployment over the internet (smo-link)
+
+Shape D runs the **simulator on the space side** (a laptop behind NAT, or a
+cloud container) and the **ground segment on a ground host** (normally a cloud
+VM), connected by **one outbound WebSocket** from the space-link agent to the
+ground-segment gateway (GSG). No inbound port is needed on the space side, and
+the MCS, planner, RF bridge, tools and simulator run unchanged: the GSG offers
+them the simulator's TM (8002), TC (8001) and HTTP (8080, `/api/state` plus the
+instructor proxy) on its loopback.
+
+- **Design and wire protocol (binding spec):** `docs/web_2026-10/LINK_DESIGN.md`
+  — §4 environment variables, §5 launch profiles, §7 security.
+- **Cloud runbook (WP-0, Google Cloud Toronto):** `deploy/gcp/README.md` — VM
+  without external IP, load balancer, IAP on the human UIs, IAP **off** on
+  `/link` only, Cloud Armor, issuing a link session secret.
+
+### 9.1 With `start.sh` profiles
+
+```bash
+# ground host — the first run creates workspace/link/session.env (session id +
+# secret, mode 600, git-ignored); copy that file to the space host's checkout
+SMO_PROFILE=ground ./start.sh [--rf] [--public]
+
+# space host
+SMO_PROFILE=space SMO_LINK_URL=wss://<ground-host>/link ./start.sh
+
+# both on one machine (trying it out): ground side's stand-in ports move to
+# 18001/18002/18080 and the agent dials ws://127.0.0.1:9100/link
+SMO_PROFILE=ground ./start.sh --same-host
+SMO_PROFILE=space  ./start.sh --same-host
+```
+
+`SMO_LINK_SESSION` and `SMO_LINK_SECRET` (or `SMO_LINK_SECRET_FILE`), when
+set, take precedence over the file; `python -m smo_link.token new` issues a
+pair. `SMO_LINK_ENV_FILE` points at a different credentials file.
+
+| Profile | Starts | Readiness |
+|---|---|---|
+| `all` (default) | Everything, exactly as before profiles existed. | Simulator `/api/state` |
+| `space` | Simulator, then the agent (`python -m smo_link.agent`) once `/api/state` answers; scenario generator 8096 and ADCS viewer 8097. | Simulator `/api/state` |
+| `ground` | GSG (`python -m smo_link.gateway`) first; after its TM port opens: RF bridge (with `--rf`), MCS 9090, planner 9091, delayed-TM viewer 8092, orbit tools 8093, doc viewer 8095. | GSG `/healthz`, then GSG TM port |
+
+`SMO_LINK_SECRET_FILE` may replace `SMO_LINK_SECRET`; a missing variable stops
+`start.sh` before anything is launched. In `ground`, `--public`/`SMO_BIND` opens
+the MCS, planner and tools as usual, but the GSG's TM/TC/HTTP listeners stay on
+`SMO_GSG_BIND` (default `127.0.0.1`) — never public by default. Only the link
+listener (`SMO_GSG_LINK_BIND:SMO_GSG_LINK_PORT`, default `0.0.0.0:9100`) faces
+the network: it accepts only an agent that passes the HMAC upgrade check AND
+the mutual challenge-response, and every later frame carries a MAC
+(`docs/web_2026-10/LINK_DESIGN.md` §3.3). The agent refuses plaintext `ws://`
+to anything but a loopback/private address unless `SMO_LINK_ALLOW_INSECURE=1`. No simulator may run on a
+ground host: the GSG owns 8001/8002/8080 there. With `--rf` the GSG must keep
+those default ports on 127.0.0.1, because `rfsim.yaml` fixes the RF bridge's
+upstream.
+
+### 9.2 With Docker
+
+One image (`docker/Dockerfile`) and `docker/compose.yaml` with profiles
+`space` (sim + agent), `ground` (GSG + MCS + planner + tools; add `rf` for the
+RF bridge) and `local-demo` (both sides on one compose network; also the
+cloud-simulator provider). Copy `docker/space.env.example` /
+`docker/ground.env.example` to `.env` files and see the header of
+`compose.yaml`. On the ground host, 9090, 9091, 8080 (instructor proxy) and
+9100 (link) are published on `SMO_PUBLISH_ADDR`, which defaults to
+**`127.0.0.1`**: none of them has a login of its own (the MCS sends TCs), so
+they reach the network only when you set `SMO_PUBLISH_ADDR` deliberately — on
+GCP to the VM's internal IP, with the firewall limited to the load-balancer
+ranges and IAP (`deploy/gcp/README.md`). The GSG's TM/TC ports bind 127.0.0.1
+inside the ground namespace and are never published.

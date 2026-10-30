@@ -1,0 +1,92 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/manual/02_aocs.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "eosat-1-attitude-and-orbit-control-system-aocs",
+   "en_hash": "f8faf94f15bf33bf",
+   "fr_hash": "002ebdff0c27512a"
+  },
+  {
+   "id": "eosat-1-attitude-and-orbit-control-system-aocs/1-overview",
+   "en_hash": "c65e89b6139d2021",
+   "fr_hash": "2068a3adf478d240"
+  },
+  {
+   "id": "eosat-1-attitude-and-orbit-control-system-aocs/2-hardware-configuration",
+   "en_hash": "ffe51048b47401c8",
+   "fr_hash": "b9a95e8bf0423c50"
+  },
+  {
+   "id": "eosat-1-attitude-and-orbit-control-system-aocs/2-hardware-configuration/2-1-sensors",
+   "en_hash": "23c50c65a6306e65",
+   "fr_hash": "83c23dedb62257f7"
+  },
+  {
+   "id": "eosat-1-attitude-and-orbit-control-system-aocs/2-hardware-configuration/2-1-sensors/2-1-1-magnetometer-single-string",
+   "en_hash": "8c4320f4f76593da",
+   "fr_hash": "d9186f8f7e21df1a"
+  },
+  {
+   "id": "eosat-1-attitude-and-orbit-control-system-aocs/2-hardware-configuration/2-1-sensors/2-1-2-coarse-sun-sensors-6-head-configuration",
+   "en_hash": "0983cd51134e66ac",
+   "fr_hash": "ee28f55ae30cc7ff"
+  },
+  {
+   "id": "eosat-1-attitude-and-orbit-control-system-aocs/2-hardware-configuration/2-1-sensors/2-1-3-star-cameras-zenith-and-nadir-fov-geometry",
+   "en_hash": "bd359f7a412ed63e",
+   "fr_hash": "6277bb182e864179"
+  },
+  {
+   "id": "eosat-1-attitude-and-orbit-control-system-aocs/2-hardware-configuration/2-2-actuators",
+   "en_hash": "be72f43448070021",
+   "fr_hash": "95696e284565ca8e"
+  },
+  {
+   "id": "eosat-1-attitude-and-orbit-control-system-aocs/3-aocs-modes",
+   "en_hash": "4ed876aa0b905d2e",
+   "fr_hash": "d10056277e095cd7"
+  },
+  {
+   "id": "eosat-1-attitude-and-orbit-control-system-aocs/3-aocs-modes/3-1-mode-transitions",
+   "en_hash": "1ec523030c9c3e95",
+   "fr_hash": "8d990ab05cb7a6bc"
+  },
+  {
+   "id": "eosat-1-attitude-and-orbit-control-system-aocs/4-telemetry-parameters",
+   "en_hash": "9a9011858564bf1c",
+   "fr_hash": "df2c09c3b3286f10"
+  },
+  {
+   "id": "eosat-1-attitude-and-orbit-control-system-aocs/5-limit-definitions",
+   "en_hash": "83497166b62f6281",
+   "fr_hash": "bd12081dbe518a0c"
+  },
+  {
+   "id": "eosat-1-attitude-and-orbit-control-system-aocs/6-commands",
+   "en_hash": "7399508fc5eab45a",
+   "fr_hash": "6cf857c045aaed50"
+  },
+  {
+   "id": "eosat-1-attitude-and-orbit-control-system-aocs/6-commands/6-1-desaturation-procedure",
+   "en_hash": "6272bb2213e52beb",
+   "fr_hash": "bb5d828aef2c0003"
+  },
+  {
+   "id": "eosat-1-attitude-and-orbit-control-system-aocs/7-operational-notes",
+   "en_hash": "70d59073753a049d",
+   "fr_hash": "a9edc211da90f68a"
+  },
+  {
+   "id": "eosat-1-attitude-and-orbit-control-system-aocs/8-adcs-commissioning-sequence",
+   "en_hash": "e58c1b7d1104f5cc",
+   "fr_hash": "21bc5b65cb6b15f9"
+  }
+ ],
+ "en_commit": "3e80564"
+}

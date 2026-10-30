@@ -1,6 +1,6 @@
 # PUS Service Reference — EOSAT-1 Spacecraft Simulator
 
-**ECSS-E-70-41C Standard Compliance**
+**ECSS-E-ST-70-41C Standard Compliance**
 
 This document provides a complete reference for all PUS (Packet Utilization Standard) services implemented in the EOSAT-1 simulator. Use this guide to understand how to command the spacecraft and interpret telemetry responses.
 
@@ -27,7 +27,7 @@ This document provides a complete reference for all PUS (Packet Utilization Stan
 
 ---
 
-## Service Overview
+## Service Overview {#service-overview}
 
 | Service | Subtypes implemented (TC → TM) | Purpose | Subsystems |
 |---------|-------------------------------|---------|-----------|
@@ -36,7 +36,7 @@ This document provides a complete reference for all PUS (Packet Utilization Stan
 | S3 | 1, 2, 3, 4, 5, 6, 27, 31 → 25 | Periodic telemetry data collection | All |
 | S5 | 5, 6, 7, 8 → 1, 2, 3, 4 | Autonomous event generation | All |
 | S6 | 2, 5, 9 → 6, 10 | Onboard memory dump/load/check | OBDH |
-| S8 | 1 (func_id 0–84, 100–107) → — | Direct function/command execution | All |
+| S8 | 1 (func_id 0–98, 100–120) → — | Direct function/command execution | All |
 | S9 | 1, 2 → 2 | Spacecraft time sync & correlation | OBDH, TTC |
 | S11 | 4, 7, 9, 11, 13, 17 → 5, 18 | Telecommand scheduling with timing | OBDH |
 | S12 | 1, 2, 3, 4, 6, 7, 12 → 9, 10, 13 | Parameter threshold monitoring | All |
@@ -58,7 +58,7 @@ no S1.2 rejection).
 
 ---
 
-## Service 1: Request Verification
+## Service 1: Request Verification {#service-1-request-verification}
 
 **Purpose:** Provide command acceptance, execution status, and completion reports.
 
@@ -179,7 +179,7 @@ scenario needs the noise gone.
 
 ---
 
-## Service 2: Device Access
+## Service 2: Device Access {#service-2-device-access}
 
 **Purpose:** Switch individual on-board devices on and off below the level of
 the subsystem function commands (Service 8), and read back their state. This is
@@ -204,7 +204,7 @@ comment but not implemented** — they are accepted and ignored.
 
 ---
 
-## Service 3: Housekeeping
+## Service 3: Housekeeping {#service-3-housekeeping}
 
 **Purpose:** Request or receive periodic telemetry data (HK reports).
 
@@ -271,7 +271,7 @@ eps.power_margin_w     [W]      Generation - consumption
 aocs.att_q1, q2, q3, q4  [—]    Attitude quaternion (xyzw)
 aocs.rate_roll/pitch/yaw [deg/s] Angular velocity
 aocs.rw1/2/3/4_speed     [RPM]  Reaction wheel speeds
-aocs.mode                 [0-8]  AOCS mode (0=off, 1=safe, etc.)
+aocs.mode                 [0-9]  AOCS mode (0=off, 1=safe_boot, etc.)
 aocs.total_momentum       [Nms]  System angular momentum
 aocs.att_error           [deg]  Pointing error magnitude
 ```
@@ -288,7 +288,7 @@ ttc.ber                [—]    Bit error rate (1e-6 to 1e-4)
 
 ---
 
-## Service 5: Event Reporting
+## Service 5: Event Reporting {#service-5-event-reporting}
 
 **Purpose:** Report autonomous spacecraft events (alarms, state changes, sensor anomalies).
 
@@ -316,7 +316,7 @@ ttc.ber                [—]    Bit error rate (1e-6 to 1e-4)
 0x0201: RW_OVERSPEED
   Severity: MEDIUM (yellow alert)
   When: Reaction wheel speed exceeds ±5000 RPM
-  Action: Disable overspecc wheel or trigger desaturation
+  Action: Disable overspeed wheel or trigger desaturation
 
 0x0401: TCS_OVERTEMP_ALARM
   Severity: HIGH (red alert)
@@ -356,7 +356,7 @@ Message [0-256 bytes]: Optional event-specific data
 
 ---
 
-## Service 6: Memory Management
+## Service 6: Memory Management {#service-6-memory-management}
 
 **Purpose:** Load/dump/verify onboard memory (SRAM, EEPROM).
 
@@ -397,7 +397,7 @@ Limitations: Simplified, does not reflect real memory state
 
 ---
 
-## Service 8: Function Management
+## Service 8: Function Management {#service-8-function-management}
 
 **Purpose:** Execute spacecraft functions (commands to each subsystem).
 
@@ -413,14 +413,14 @@ Data: function-specific parameters
 
 | Func ID | Name | Parameters | Effect |
 |---------|------|-----------|--------|
-| 0 | AOCS_SET_MODE | mode (0-8) | Set operational mode (safe, detumble, fine point, etc.) |
+| 0 | AOCS_SET_MODE | mode (0-9) | Set operational mode (safe, detumble, fine point, etc.) |
 | 1 | AOCS_DESATURATE | — | Start reaction wheel desaturation sequence |
 | 2 | AOCS_DISABLE_WHEEL | wheel_idx (0-3) | Disable specific reaction wheel |
 | 3 | AOCS_ENABLE_WHEEL | wheel_idx (0-3) | Enable specific reaction wheel |
 | 4 | ST1_POWER | on (0/1) | Power on/off star tracker 1 |
 | 5 | ST2_POWER | on (0/1) | Power on/off star tracker 2 |
-| 6 | ST_SELECT | unit (0/1) | Select primary star tracker (0=ST1, 1=ST2) |
-| 7 | MAG_SELECT | unit (0/1) | Select magnetometer source |
+| 6 | ST_SELECT | unit (1/2) | Select primary star tracker (1=ST1, 2=ST2; 0 is refused) |
+| 7 | MAG_SELECT (retired) | — | Removed: a single magnetometer is fitted; refused with 0x0007 |
 | 8 | RW_SET_SPEED_BIAS | wheel, bias_rpm | Set reaction wheel speed bias |
 | 9 | MTQ_ENABLE | enable (0/1) | Enable/disable magnetorquers |
 | 10 | AOCS_SLEW_TO | q_x, q_y, q_z, q_w, rate_dps | Slew to target quaternion |
@@ -430,26 +430,29 @@ Data: function-specific parameters
 | 14 | AOCS_RW_RAMP_DOWN | wheel_idx/255, target_rpm | Gracefully reduce wheel speed |
 | 15 | AOCS_SET_DEADBAND | deadband_deg | Set attitude error deadband |
 
-**EPS Functions (func_id 16-25):**
+**EPS Functions (func_id 16-25, 81-83):**
 
 | Func ID | Name | Parameters | Effect |
 |---------|------|-----------|--------|
 | 16 | EPS_PAYLOAD_MODE | mode (0=off, 1=standby, 2=imaging) | Control payload power |
-| 17 | EPS_SWITCH_LOAD | line (0-7), state (0/1) | Switch individual power line |
-| 18 | EPS_BATTERY_HEATER | setpoint_C (float) | Set battery heater temperature |
-| 19 | EPS_CHARGE_RATE | rate_A (float) | Override battery charge rate |
-| 20 | EPS_SOLAR_DRIVE | angle_deg (float) | Set solar array drive angle |
-| 21 | EPS_EMERGENCY_SHED | — | Trigger emergency load shedding |
-| 22 | EPS_BUS_ISOLATION | — | Isolate failing bus segment |
-| 23 | EPS_LOAD_SHED_STAGE_1 | — | Activate stage 1 (non-critical loads) |
-| 24 | EPS_LOAD_SHED_STAGE_2 | — | Activate stage 2 (payload, TTC) |
-| 25 | EPS_LOAD_SHED_STAGE_3 | — | Activate stage 3 (AOCS only) |
+| 17 | EPS_FPA_COOLER | on (0/1) | Enable/disable FPA cooler |
+| 18 | EPS_TRANSPONDER_TX | on (0/1) | Enable/disable transponder TX |
+| 19 | EPS_POWER_ON | line_index (0-8; 8 = prop) | Switch power line ON |
+| 20 | EPS_POWER_OFF | line_index (0-8; 8 = prop) | Switch power line OFF |
+| 21 | EPS_RESET_OC_FLAG | line_index (0-8; 8 = prop) | Reset overcurrent trip flag and re-enable line |
+| 22 | EPS_SWITCH_LOAD | load_id (0-7), state (0/1) | Switch individual power load on/off |
+| 23 | EPS_SET_CHARGE_RATE | rate_a (float, A; 0=auto) | Override battery charge rate |
+| 24 | EPS_SOLAR_ARRAY_DRIVE | angle_deg (int16, centi-degrees, -9000..9000) | Set solar array drive angle |
+| 25 | EPS_EMERGENCY_LOAD_SHED | stage (0-3) | Immediate load shedding to the given stage |
+| 81 | EPS_DEPLOY_WING | wing (0=+Y, 1=-Y, 2=both) | Deploy solar wing (burn wire) |
+| 82 | EPS_WING_STATUS | — | Query solar wing deployment status |
+| 83 | EPS_SET_MODE | mode (0=nominal, 1=safe, 2=emergency) | Set EPS operating mode |
 
 **Payload Functions (func_id 26-39):**
 
 | Func ID | Name | Parameters | Effect |
 |---------|------|-----------|--------|
-| 26 | PAYLOAD_SET_MODE | mode (0=off, 1=standby, 2=imaging) | Set payload operating mode |
+| 26 | PAYLOAD_SET_MODE | mode (0=off, 1=standby, 2=imaging, 3=calibration) | Set payload operating mode |
 | 27 | PAYLOAD_SET_SCENE | scene_id (uint16) | Set scene ID for imaging |
 | 28 | PAYLOAD_CAPTURE | scene_id, lines | Trigger image capture |
 | 29 | PAYLOAD_DOWNLOAD_IMAGE | scene_id | Queue image for downlink |
@@ -497,27 +500,29 @@ Data: function-specific parameters
 | 61 | OBC_DIAGNOSTIC | — | Request OBC health diagnostic |
 | 62 | OBC_ERROR_LOG | — | Request recent error log |
 
-**TTC Functions (func_id 63-79):**
+**TTC Functions (func_id 63-79, 97-98):**
 
 | Func ID | Name | Parameters | Effect |
 |---------|------|-----------|--------|
 | 63 | TTC_SWITCH_PRIMARY | — | Switch to primary transponder |
 | 64 | TTC_SWITCH_REDUNDANT | — | Switch to redundant transponder |
-| 65 | TTC_SET_DATA_RATE | rate (uint8 tier code: 0=LOW, 1=HIGH, 255=BEACON) | Select a rung of the TM data-rate ladder — see below |
+| 65 | TTC_SET_DATA_RATE | rate (uint8 tier code: 0=LOW, 1=HIGH, 255=SAFE) | Select a rung of the TM data-rate ladder — see below |
 | 66 | TTC_PA_ON | — | Enable power amplifier |
 | 67 | TTC_PA_OFF | — | Disable power amplifier |
 | 68 | TTC_SET_TX_POWER | level uint8 (0=LOW 1.0 W, 1=NOMINAL 2.0 W, 2=HIGH 5.0 W) | Select an SSPA operating point. Discrete steps only; an unknown code is rejected with S1.8 error 0x0003, never clamped. The old '2 = 8 W' exceeded pa_max_power_w = 5.0 W and was never executable. |
 | 69 | TTC_DEPLOY_ANTENNA | — | Deploy antenna (burn-wire) |
 | 70 | TTC_SET_BEACON_MODE | on (0/1) | Enable/disable beacon mode |
 | 71 | TTC_CMD_CHANNEL_START | — | Start command channel (15-min) |
-| 72 | TTC_SET_UL_FREQ | freq_mhz (2000-2100) | Set uplink frequency |
-| 73 | TTC_SET_DL_FREQ | freq_mhz (8400-8500) | Set downlink frequency |
-| 74 | TTC_SET_MODULATION | mode (0=BPSK, 1=QPSK) | Set modulation mode |
+| 72 | TTC_SET_UL_FREQ | freq_mhz (2025-2110) | Set uplink frequency |
+| 73 | TTC_SET_DL_FREQ | freq_mhz (2200-2290) | Set downlink frequency |
+| 74 | TTC_SET_MODULATION | mode (0=BPSK, 1=QPSK, 2=8PSK, 3=OQPSK) | Set modulation mode |
 | 75 | TTC_SET_RX_GAIN | agc_db (-100 to 0) | Set receiver AGC target |
 | 76 | TTC_RANGING_START | — | Begin ranging sequence |
 | 77 | TTC_RANGING_STOP | — | Stop ranging sequence |
 | 78 | TTC_SET_COHERENT_MODE | mode (0/1) | Select coherent/non-coherent |
 | 79 | TTC_SET_DOWNLINK_MODE | on (uint8, 0/1) | Enter/leave DOWNLINK (payload-dump) mode — the mode gate on the HIGH tier |
+| 97 | TTC_BEACON_TX_ON | — | Switch the UHF beacon transmitter on |
+| 98 | TTC_BEACON_TX_OFF | — | Switch the UHF beacon transmitter off (removes the last independent downlink) |
 
 #### Func 65 — TTC_SET_DATA_RATE and the TM rate ladder
 
@@ -528,8 +533,8 @@ Func 65 takes **one uint8** carrying a tier `command_code`:
 | Code | Tier | Rate | Modulation / coding | Symbol rate | Selectable? |
 |------|------|------|---------------------|-------------|-------------|
 | `0x00` | LOW | 16 000 bps | BPSK, conv(7,1/2)+RS | 16 kBd | Always. **The routine operations rate** and the safe-mode / FDIR fallback |
-| `0x01` | HIGH | 128 000 bps | QPSK, RS(255,223) | 64 kBd | Only with the antenna deployed, DOWNLINK mode on (func 79) and elevation >= 10 deg |
-| `0xFF` | BEACON | 1 000 bps | BPSK, conv(7,1/2)+RS | 1 kBd | **Not** by this command — entered by func 70 (`TTC_SET_BEACON_MODE`) or by the bootloader |
+| `0x01` | HIGH | 128 000 bps | QPSK, RS(255,223) | 64 kBd | Only with the antenna deployed and DOWNLINK mode on (func 79); 10 deg minimum elevation is a ground rule (MCS warning), not an on-board gate |
+| `0xFF` | SAFE | 1 000 bps | BPSK, conv(7,1/2)+RS | 1 kBd | **Not** by this command — entered by func 70 (`TTC_SET_BEACON_MODE`) or by the bootloader |
 
 **The legacy encoding is preserved verbatim.** `rate=0` has always meant "the low rate"
 and `rate=1` "the high rate"; they now select LOW and HIGH. Existing procedures, OBCPs
@@ -543,8 +548,8 @@ unrecognised tier code gives error `0x0003`. Nothing is silently substituted.
 
 **Commanded vs active.** Func 65 sets the COMMANDED tier (`ttc.tm_tier_cmd`, 0x053A).
 The TT&C tick resolves the ACTIVE tier (`ttc.tm_tier`, 0x0539) from it by walking down
-the ladder until every gate is satisfied, so HIGH auto-reverts as a pass drops below
-10 deg and resumes on the next pass without re-commanding.
+the ladder until every gate is satisfied, so HIGH auto-reverts when a gate closes (e.g.
+DOWNLINK mode left) and resumes when it reopens without re-commanding.
 
 Related telemetry: `ttc.tm_data_rate` (0x0506, active bit rate), `ttc.tm_tier` (0x0539),
 `ttc.tm_tier_cmd` (0x053A), `ttc.tm_symbol_rate` (0x053B), `ttc.downlink_mode` (0x053C).
@@ -585,7 +590,7 @@ tier simply falls back to LOW until DOWNLINK mode is re-entered.
 
 ---
 
-## Service 9: Time Management
+## Service 9: Time Management {#service-9-time-management}
 
 **Purpose:** Synchronize spacecraft time with ground time.
 
@@ -596,7 +601,7 @@ tier simply falls back to LOW until DOWNLINK mode is re-entered.
 
 ---
 
-## Service 11: Activity Scheduling
+## Service 11: Activity Scheduling {#service-11-activity-scheduling}
 
 **Purpose:** Schedule telecommands for execution at specific times.
 
@@ -669,7 +674,7 @@ wait on or branch upon telemetry.
 
 ---
 
-## Service 12: On-Board Monitoring
+## Service 12: On-Board Monitoring {#service-12-on-board-monitoring}
 
 **Purpose:** Autonomous parameter threshold monitoring. Violations generate a
 TM(12,9) check-transition report, an S5 event, and may trigger an S19 action.
@@ -730,14 +735,14 @@ When it recovers (violated → OK):
 
 The event id is `0x9000 | param_id`, **not** `0x8000 + param_id`.
 
-**Example Flow — Battery SoC Warning:**
+**Example Flow — Battery SoC Critical:**
 
 ```
-Battery SoC drops from 22% to 18%
+Battery SoC drops from 12% to 9%
   ↓
-S12 rule: "EPS_BATTERY_SOC_WARNING" detects < 20%
+S12 rule: "EPS Battery SoC Critical" detects < 10%
   ↓
-S5 event: 0x0101 (BATTERY_SOC_WARNING) generated
+S5 event: 0x0102 (BATTERY_SOC_CRITICAL) generated
   ↓
 S19 rule: "Battery SoC critical → Payload off" matches
   ↓
@@ -752,7 +757,7 @@ MCS displays alert: Battery critical, Payload disabled
 
 ---
 
-## Service 13: Large Data Transfer
+## Service 13: Large Data Transfer {#service-13-large-data-transfer}
 
 **Purpose:** Efficient block-based download of large telemetry (payload images).
 
@@ -782,7 +787,7 @@ MCS displays alert: Battery critical, Payload disabled
 | Init | 1 | TC → — | Start transfer session |
 | Data | 3 | TC → TM | Request/receive data block |
 | End | 5 | TC → — | Finalize transfer |
-| Abort | 7 | TC → — | Cancel transfer (error recovery) |
+| Status | 9 | TC → TM | Report transfer status (S13_REPORT_STATUS) |
 
 **Example Flow — Image Download:**
 
@@ -804,7 +809,7 @@ Ground: S13.5 end transfer
   Parameters: transfer_id=1
   Response: S1.7 (transfer complete, total_bytes=2097152)
 
-Result: 2 MB image downloaded in ~10 seconds over 1 Mbps link
+Result: 2 MB image downloaded in ~131 s at HIGH (128 kbit/s)
 ```
 
 **Features:**
@@ -817,7 +822,7 @@ Result: 2 MB image downloaded in ~10 seconds over 1 Mbps link
 
 ---
 
-## Service 15: TM Storage
+## Service 15: TM Storage {#service-15-tm-storage}
 
 **Purpose:** Onboard storage and replay of telemetry packets.
 
@@ -901,7 +906,7 @@ TM response to S15.13. See format above.
 
 ---
 
-## Service 17: Connection Test
+## Service 17: Connection Test {#service-17-connection-test}
 
 **Purpose:** Validate command link (NOOP echo test).
 
@@ -923,7 +928,7 @@ arrival of TM(17,2) proves the OBC accepted and executed a telecommand.
 
 ---
 
-## Service 18: On-Board Control Procedures
+## Service 18: On-Board Control Procedures {#service-18-on-board-control-procedures}
 
 **Purpose:** Load, start, stop and monitor OBCPs — small step programs the OBC
 runs autonomously, without ground in the loop. The step interpreter lives in
@@ -950,7 +955,7 @@ object). See `docs/OBCP_GUIDE.md` for authoring procedures.
 
 ---
 
-## Service 19: Event-Action
+## Service 19: Event-Action {#service-19-event-action}
 
 **Purpose:** Autonomous response to events without ground intervention.
 
@@ -1026,7 +1031,7 @@ s19_rules:
 
 ---
 
-## Service 20: Parameter Management
+## Service 20: Parameter Management {#service-20-parameter-management}
 
 **Purpose:** Adjust telecommand parameters (gains, offsets, constants), and
 read any catalogued parameter on demand.
@@ -1141,7 +1146,7 @@ Response:
 MCS: S3 request HK_Payload (SID=5)
 Response:
   Storage used: 1200 MB (image added)
-  FPA temp: -8°C (nominal)
+  FPA temp: -15°C (setpoint)
   Cooler: ON
   Compression ratio: 4.2:1
 ```
@@ -1189,14 +1194,13 @@ Status: Slew complete, fine point attitude achieved
 
 | Code | Meaning | Recovery |
 |------|---------|----------|
-| 0x0001 | Invalid command format | Check parameter types and ranges |
-| 0x0002 | Unsupported function | Verify function ID is implemented |
-| 0x0003 | Command rejected (safety) | Check spacecraft state, power, thermal |
-| 0x0004 | Hardware failure | Check FDIR status, may require recovery |
-| 0x0005 | Execution failure | Check S1.4 report for details |
-| 0x0006 | Resource unavailable | Wait for resource (scheduler, transfer slot) |
-| 0x0007 | Invalid parameter range | Adjust parameter value within limits |
-| 0x0008 | Timeout | Command execution exceeded time limit |
+| 0x0001 | Generic failure / unknown service | Check the service type and packet format |
+| 0x0002 | Unknown subtype | Verify the subtype is implemented for that service |
+| 0x0003 | Invalid parameter or data length | Check parameter types, count and ranges |
+| 0x0004 | Subsystem unpowered or unreachable | Power the unit; check FDIR status |
+| 0x0005 | Invalid in the current mode | Change mode first; read the S1.8 failure text |
+| 0x0006 | Not permitted in bootloader | Boot the application first (OBC_BOOT_APP, func 55) |
+| 0x0007 | Not permitted in the current state | Read the S1.8 failure text for the open gate |
 
 **Example — Safe Mode Transition Failed:**
 
@@ -1204,7 +1208,7 @@ Status: Slew complete, fine point attitude achieved
 MCS: Send S8 func_id=0 (AOCS_SET_MODE), mode=1 (safe)
 
 Response:
-  S1.2: Acceptance failure (error_code=0x0003)
+  S1.2: Acceptance failure (error_code=0x0007)
   Message: "AOCS mode transition rejected: wheels not desaturated"
 
 Troubleshooting:
@@ -1281,7 +1285,7 @@ sheds the two least-essential loads, or all of them, in one command.
 
 ## References
 
-- ECSS-E-70-41C: Telemetry and Telecommand Packet Utilization Standard
+- ECSS-E-ST-70-41C: Telemetry and Telecommand Packet Utilization Standard
 - EOSAT-1 Configuration: `configs/eosat1/commands/tc_catalog.yaml`
 - Event Definitions: `configs/eosat1/events/event_catalog.yaml`
 - Monitoring Rules: `configs/eosat1/monitoring/s12_definitions.yaml`

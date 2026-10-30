@@ -145,7 +145,7 @@ disables all scheduled operations, and enables survival-only power distribution.
 | Payload standby | R+5 recovery | > 60% | ~12.6h | Mission resumed |
 
 ## Off-Nominal Handling
-- If OBC does not accept mode commands: attempt OBC reset via `HK_REQUEST(sid=3)` diagnostic, then re-command. If persistent, spacecraft remains in autonomous emergency mode until next OBC reboot cycle.
+- If OBC does not accept mode commands: request an OBC health report with `OBC_DIAGNOSTIC` (func_id 61) and, if the Flight Director authorises, reset with `OBC_REBOOT` (func_id 52), then re-command. If persistent, spacecraft remains in autonomous emergency mode until next OBC reboot cycle.
 - If multiple wheels failed during anomaly: remain in COARSE_SUN indefinitely. Nadir pointing requires minimum 3 wheels. Plan reduced-capability operations.
 - If SoC does not reach 30% within 10 orbits: possible solar array degradation. Reassess power budget for long-term reduced operations. Reference EMG-002.
 - If new anomaly occurs during recovery: halt recovery, return to Step 7 stabilisation hold, re-assess before continuing.

@@ -1,0 +1,77 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/leop/initial_health_check.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "leop-002-initial-health-check",
+   "en_hash": "e6c6f2458702ba9f",
+   "fr_hash": "a88bb939d4f7f183"
+  },
+  {
+   "id": "leop-002-initial-health-check/purpose",
+   "en_hash": "cbca50e8e6a6a116",
+   "fr_hash": "dbdff81b2514bbe2"
+  },
+  {
+   "id": "leop-002-initial-health-check/prerequisites",
+   "en_hash": "b3c2495928481a48",
+   "fr_hash": "30c2a0ded802ad0e"
+  },
+  {
+   "id": "leop-002-initial-health-check/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "leop-002-initial-health-check/procedure-steps/step-1-request-full-eps-housekeeping",
+   "en_hash": "06040c128220fc67",
+   "fr_hash": "af71b6c97e046fb5"
+  },
+  {
+   "id": "leop-002-initial-health-check/procedure-steps/step-2-confirm-the-unpowered-subsystems-are-dark",
+   "en_hash": "6eebef1b2b8bf9e3",
+   "fr_hash": "dbb3601a454c906c"
+  },
+  {
+   "id": "leop-002-initial-health-check/procedure-steps/step-3-request-thermal-housekeeping",
+   "en_hash": "5275f366ae66a5ae",
+   "fr_hash": "74836cff54ef3be3"
+  },
+  {
+   "id": "leop-002-initial-health-check/procedure-steps/step-4-request-obdh-housekeeping",
+   "en_hash": "87b358eb0f576400",
+   "fr_hash": "76822976595fcaed"
+  },
+  {
+   "id": "leop-002-initial-health-check/procedure-steps/step-5-request-tt-c-housekeeping",
+   "en_hash": "af28dfbcdb395705",
+   "fr_hash": "53bedf06fe2f4f91"
+  },
+  {
+   "id": "leop-002-initial-health-check/procedure-steps/step-6-compile-health-assessment-report",
+   "en_hash": "82db72465c5753b0",
+   "fr_hash": "1312b8425a47c97e"
+  },
+  {
+   "id": "leop-002-initial-health-check/off-nominal-handling",
+   "en_hash": "9a4b95e514b84f69",
+   "fr_hash": "6df1d9a203c30ede"
+  },
+  {
+   "id": "leop-002-initial-health-check/exit-state",
+   "en_hash": "7d35cca9e327bed0",
+   "fr_hash": "1b7f31e365fdbc85"
+  },
+  {
+   "id": "leop-002-initial-health-check/post-conditions",
+   "en_hash": "50647fc7af104b9d",
+   "fr_hash": "3d773426e95d2f57"
+  }
+ ],
+ "en_commit": "3e80564"
+}

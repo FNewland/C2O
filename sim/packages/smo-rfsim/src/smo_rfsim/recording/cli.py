@@ -61,7 +61,8 @@ def build_config(a: argparse.Namespace) -> RecorderConfig:
     )
     return RecorderConfig(
         modulation=a.mod, symbol_rate_hz=a.baud, rolloff=a.rolloff,
-        gmsk_bt=a.bt, sps_internal=a.sps, sample_rate_hz=a.fs,
+        gmsk_bt=a.bt, gfsk_mod_index=a.gfsk_h, sps_internal=a.sps,
+        sample_rate_hz=a.fs,
         duration_s=a.duration, data_source=a.data, frame_length=a.frame_length,
         random_seed=a.seed, satellite=a.sat, norad=a.norad,
         nominal_downlink_hz=a.freq, mode_label=a.mode_label, impairments=imp,
@@ -78,6 +79,8 @@ def main(argv=None) -> int:
     p.add_argument("--baud", type=float, default=9600.0, help="symbol rate (Bd)")
     p.add_argument("--rolloff", type=float, default=0.35, help="RRC rolloff")
     p.add_argument("--bt", type=float, default=0.5, help="Gaussian BT (GMSK/GFSK)")
+    p.add_argument("--gfsk-h", type=float, default=0.5,
+                   help="GFSK modulation index (GMSK is fixed at 0.5)")
     p.add_argument("--sps", type=int, default=8, help="modulator oversampling")
     p.add_argument("--fs", type=float, default=250000.0, help="output sample rate (Hz)")
     p.add_argument("--duration", type=float, default=30.0, help="seconds")

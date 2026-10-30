@@ -28,4 +28,8 @@ markers = [
     # Browser E2E against a live stack (tests/test_e2e_browser). Excluded
     # from the default run: every test self-skips unless SMO_E2E=1 is set.
     "e2e: Playwright browser tests against a live stack (needs SMO_E2E=1)",
+    # smo-link end to end (tests/test_link/test_e2e.py): real sim, agent,
+    # fault proxy, GSG, MCS and planner in one process, ~30-60 s.
+    # Deselect with `-m "not link_e2e"`.
+    "link_e2e: smo-link end-to-end stack (sim, agent, fault proxy, GSG, MCS, planner)",
 ]

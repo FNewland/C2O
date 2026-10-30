@@ -187,8 +187,8 @@ script. The catalog entry is retained for advanced/raw use.
   the step interpreter (no step-level parameter substitution).
 * Delays are relative and monotonic; there is no absolute-time step (use S11 to
   time-tag the `OBCP_START` itself if a procedure must begin at a fixed CUC).
-* Pre-existing, *not* an OBCP issue: the TTC set-TM-rate function (S8 func 65)
-  reaches the model, but the TTC tick recomputes `tm_data_rate` from
-  `data_rate_mode`, which no telecommand can set. The high rate is therefore
-  not reachable from the ground today, whether commanded directly or from an
-  OBCP.
+* Not an OBCP limitation (the earlier rate defect is fixed): the TTC set-TM-rate
+  function (S8 func 65, `TTC_SET_DATA_RATE`) sets `data_rate_mode`, the commanded
+  tier from which the TTC tick resolves `tm_data_rate`. HIGH additionally needs
+  DOWNLINK mode (S8 func 79) and a deployed antenna, whether commanded directly
+  or from an OBCP.

@@ -1,0 +1,97 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/contingency/progressive_load_shed.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "ctg-023-progressive-load-shed",
+   "en_hash": "c7a24867e8b87442",
+   "fr_hash": "8c72ac8a096f9b30"
+  },
+  {
+   "id": "ctg-023-progressive-load-shed/purpose",
+   "en_hash": "e066cfc154810d72",
+   "fr_hash": "dffae7cff31e22f5"
+  },
+  {
+   "id": "ctg-023-progressive-load-shed/prerequisites",
+   "en_hash": "ec1a5d16d36bcc34",
+   "fr_hash": "d27ea6881f92be2f"
+  },
+  {
+   "id": "ctg-023-progressive-load-shed/required-telemetry",
+   "en_hash": "9023d0d3f12f41e9",
+   "fr_hash": "a6296899403dde7d"
+  },
+  {
+   "id": "ctg-023-progressive-load-shed/required-commands",
+   "en_hash": "fc1fba8d4d3679e5",
+   "fr_hash": "7dd7af34ec8237a3"
+  },
+  {
+   "id": "ctg-023-progressive-load-shed/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "ctg-023-progressive-load-shed/procedure-steps/step-1-confirm-extended-eclipse-and-establish-baseline",
+   "en_hash": "be52220a0c47fba7",
+   "fr_hash": "d48b8c138e8a3950"
+  },
+  {
+   "id": "ctg-023-progressive-load-shed/procedure-steps/step-2-soc-50-shed-load-priority-1-payload-off",
+   "en_hash": "e11f2d9c781c80e6",
+   "fr_hash": "3a7fbd4a01372e71"
+  },
+  {
+   "id": "ctg-023-progressive-load-shed/procedure-steps/step-3-soc-35-shed-load-priority-2-fpa-cooler-off",
+   "en_hash": "1a847c8f7fa44679",
+   "fr_hash": "e67430bb46aa7d6e"
+  },
+  {
+   "id": "ctg-023-progressive-load-shed/procedure-steps/step-4-soc-25-shed-load-priority-3-ttc-transmitter-off",
+   "en_hash": "8df5cb08d6032c44",
+   "fr_hash": "06af90826ce17db4"
+  },
+  {
+   "id": "ctg-023-progressive-load-shed/procedure-steps/step-5-soc-15-shed-load-priority-4-aocs-wheels-off-emergency",
+   "en_hash": "0a1b7b4bd5a29a5a",
+   "fr_hash": "9a932ab790e56642"
+  },
+  {
+   "id": "ctg-023-progressive-load-shed/procedure-steps/step-6-monitor-for-eclipse-exit-and-battery-recovery",
+   "en_hash": "45bc5030296914b0",
+   "fr_hash": "6b98b3d2953c344f"
+  },
+  {
+   "id": "ctg-023-progressive-load-shed/procedure-steps/step-7-restore-loads-in-reverse-priority-order",
+   "en_hash": "368df651d8baf309",
+   "fr_hash": "859ec105694dece8"
+  },
+  {
+   "id": "ctg-023-progressive-load-shed/procedure-steps/step-8-post-recovery-verification",
+   "en_hash": "3b5d224e48a91f83",
+   "fr_hash": "5113a4ee11e3ad87"
+  },
+  {
+   "id": "ctg-023-progressive-load-shed/verification-criteria",
+   "en_hash": "6073767793e2302a",
+   "fr_hash": "5ffed28c7682a8e3"
+  },
+  {
+   "id": "ctg-023-progressive-load-shed/off-nominal-handling",
+   "en_hash": "379dd5e2c23c5232",
+   "fr_hash": "8fd4c9635f79d16c"
+  },
+  {
+   "id": "ctg-023-progressive-load-shed/recovery-path-re-powering-shed-loads",
+   "en_hash": "ff3d6989d5306388",
+   "fr_hash": "2a26fa93111780b1"
+  }
+ ],
+ "en_commit": "3e80564"
+}

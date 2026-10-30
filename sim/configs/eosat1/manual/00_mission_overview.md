@@ -51,11 +51,11 @@ EOSAT-1 is a 6U cubesat with three-axis stabilised platform and the following pr
 
 | Subsystem                          | Abbreviation | Description                                      |
 |------------------------------------|--------------|--------------------------------------------------|
-| Electrical Power Subsystem         | EPS          | 28V regulated bus, 6 body-mounted GaAs panels, Li-Ion battery, cold-redundant PDM |
-| Attitude and Orbit Control System  | AOCS         | 4 reaction wheels, dual magnetometers (A/B), 2 star cameras, 6 CSS heads, gyros |
+| Electrical Power Subsystem         | EPS          | 28V regulated bus, 5 body-mounted GaAs panels + 2 deployable wings, Li-Ion battery, cold-redundant PDM |
+| Attitude and Orbit Control System  | AOCS         | 4 reaction wheels, 1 magnetometer (single string), 2 star cameras, 6 CSS heads, gyros |
 | On-Board Data Handling             | OBDH         | Cold-redundant OBC (A/B), dual CAN bus, mass memory, TC/TM processing |
 | Thermal Control Subsystem          | TCS          | Passive MLI/radiators, battery heaters (active), orientation-based passive thermal |
-| Telemetry, Tracking and Command    | TTC          | Cold-redundant VHF/UHF transponder, dedicated PDM command channel, burn wire antenna |
+| Telemetry, Tracking and Command    | TTC          | Cold-redundant S-band transponder, UHF beacon transmitter, dedicated PDM command channel, burn wire antenna |
 | Payload                            | PLD          | Multispectral imager (4 ocean colour bands), nadir-mounted |
 
 ### 4.1 Spacecraft Coordinate Frame
@@ -67,19 +67,20 @@ The spacecraft body frame is defined as:
 - **+Z**: Nadir (towards Earth in nominal attitude); nadir star camera and payload mounted here
 - **-Z**: Zenith; zenith star camera and GPS antenna mounted here
 
-Each of the six body faces (+X, -X, +Y, -Y, +Z, -Z) carries a body-mounted solar panel and
-a coarse sun sensor head. Deployable solar wings on the +Y and -Y faces (0.24 m2 each)
-extend the total solar collection area from 0.30 m2 (stowed) to 0.78 m2 (deployed).
+Each of the six body faces (+X, -X, +Y, -Y, +Z, -Z) carries a coarse sun sensor head; five of
+them (all but -Z) carry a body-mounted solar panel. Deployable solar wings on the +Y and -Y faces
+(0.120 m2 of cells each) extend the total solar collection area from 0.198 m2 (stowed) to
+0.438 m2 (deployed).
 
 ### 4.2 Mass and Power Budget
 
 | Parameter        | Value          |
 |------------------|----------------|
 | Dry Mass         | ~12 kg (6U)   |
-| Peak Power Gen.  | ~40 W (sunlit, wings deployed) |
-| Avg. Power Cons. | ~20 W          |
-| Battery Capacity | 40 Ah @ 28V    |
-| OBC Power        | 15 W           |
+| Peak Power Gen.  | ~89 W (sunlit, wings deployed and sun-tracking, BOL) |
+| Avg. Power Cons. | ~29 W (NOMINAL, orbit-average) |
+| Battery Capacity | 100 Wh, 3 Ah (8S1P), 21.5–29.2 V |
+| OBC Power        | 6 W            |
 
 ### 4.3 Redundancy Architecture
 
@@ -90,7 +91,7 @@ EOSAT-1 employs cold redundancy for critical subsystems:
 | OBC             | A/B (cold)    | Ground command or FDIR after 3 watchdog resets|
 | Transponder     | Primary/Redundant (cold) | Ground command or FDIR after link loss |
 | PDM             | A/B path (cold) | Ground command                              |
-| Magnetometer    | A/B (cold)    | Ground command                                |
+| Magnetometer    | None (single unit) | Loss ends B-dot detumble and magnetic desaturation |
 | Star Camera     | Zenith/Nadir  | Automatic selection based on FOV availability |
 
 ## 5. Ground Segment
@@ -111,7 +112,7 @@ EOSAT-1 uses a two-station ground segment providing polar coverage in both hemis
   Provides complementary TT&C and data dump coverage for southern passes, reducing the
   maximum gap between ground contacts.
 
-All ground stations communicate via VHF/UHF (449 MHz uplink / 401.5 MHz downlink). Typical
+All ground stations communicate in S-band (2025 MHz uplink / 2200 MHz downlink). Typical
 contact durations range from 5 to 12 minutes depending on pass geometry and maximum
 elevation angle. The two-station network provides approximately 4-8 contacts per day with
 a maximum gap of approximately 4-6 hours between contacts.
@@ -176,7 +177,8 @@ work:
 2. **Telecommand acceptance** — at phase ≤ 3 the OBC is in the bootloader and
    only the bootloader command subset is accepted (S17.1, S9.1, S3 beacon HK,
    S20.1/3, and S8.1 funcs 19/20, 52–57, 61, 66/67, 69, 120). Everything else
-   is refused at acceptance with failure code 0x0006.
+   is refused at acceptance with failure code 0x0006. S9.1 (`SET_TIME`) passes
+   this gate but fails at execution until `OBC_BOOT_APP` has run.
 3. **The derived spacecraft mode** — `sc_mode`, and its telemetered copy
    `sat.mode` (0x0001), is forced to SAFE at any phase below 6 regardless of
    spacecraft health. The console header cannot read NOMINAL until NOMINAL has
@@ -254,17 +256,17 @@ set and beacon-only telemetry (SID 11). The LEOP sequence proceeds as follows:
    Verify successful boot via full housekeeping telemetry.
 3. **Detumble**: AOCS operates in DETUMBLE mode using magnetorquers. Monitor body rates
    converging to below 0.5 deg/s.
-4. **Sun Acquisition**: AOCS transitions to SAFE_POINT mode using CSS and magnetorquers
+4. **Sun Acquisition**: AOCS transitions to COARSE_SUN mode (3) using CSS and magnetorquers
    for sun-pointing.
 5. **Sequential Power-On**: Enable subsystems one at a time, verifying health at each step.
 6. **ADCS Commissioning**: Commission attitude sensors and actuators in sequence (see
    `09_leop.md` for detailed procedure).
 7. **Transition to Nominal**: After all GO/NO-GO checkpoints pass, command transition to
-   NADIR_POINT mode and begin nominal operations.
+   AOCS NOMINAL mode (4) and begin nominal operations.
 
 ### 6.3 Nominal Operations Concept
 
-In nominal operations the spacecraft maintains nadir-pointing attitude (NADIR_POINT mode)
+In nominal operations the spacecraft maintains nadir-pointing attitude (AOCS mode NOMINAL, 4)
 for ocean current monitoring. Imaging targets are planned based on ocean current regions
 of interest and scheduled on a pass-by-pass basis accounting for power and data budgets.
 The payload is activated approximately 60 seconds before the imaging window and returned
@@ -291,7 +293,7 @@ Typical daily operations include:
 | Orbit Operations                  | `07_orbit_ops.md`      |
 | FDIR Reference                    | `08_fdir.md`           |
 | LEOP Operations Guide             | `09_leop.md`           |
-| Command and Telemetry Reference   | `10_command_reference.md` |
+| Command and Telemetry Reference   | `09_command_reference.md` |
 
 ---
 

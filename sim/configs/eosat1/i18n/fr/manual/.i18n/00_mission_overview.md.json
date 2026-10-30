@@ -1,0 +1,102 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/manual/00_mission_overview.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "eosat-1-mission-overview",
+   "en_hash": "2f9960892097c8b7",
+   "fr_hash": "b1caa83a5f24f020"
+  },
+  {
+   "id": "eosat-1-mission-overview/1-purpose",
+   "en_hash": "ffeb05259782c56a",
+   "fr_hash": "83f74a7c90860bea"
+  },
+  {
+   "id": "eosat-1-mission-overview/2-mission-objectives",
+   "en_hash": "40c8cf6ecd5446e5",
+   "fr_hash": "c7d2dc99804112e8"
+  },
+  {
+   "id": "eosat-1-mission-overview/3-orbit-parameters",
+   "en_hash": "9a7977a3da93edf5",
+   "fr_hash": "87af4061fe9e4f7e"
+  },
+  {
+   "id": "eosat-1-mission-overview/4-spacecraft-bus-overview",
+   "en_hash": "7c809503cb8ded2b",
+   "fr_hash": "6ebf0092fae4e47f"
+  },
+  {
+   "id": "eosat-1-mission-overview/4-spacecraft-bus-overview/4-1-spacecraft-coordinate-frame",
+   "en_hash": "09ff2bd20b789872",
+   "fr_hash": "04f07c03aa85c763"
+  },
+  {
+   "id": "eosat-1-mission-overview/4-spacecraft-bus-overview/4-2-mass-and-power-budget",
+   "en_hash": "6f57f6b12d3296b6",
+   "fr_hash": "ab2d358723d2e192"
+  },
+  {
+   "id": "eosat-1-mission-overview/4-spacecraft-bus-overview/4-3-redundancy-architecture",
+   "en_hash": "fdb42bb482647c67",
+   "fr_hash": "39aec1c541d15a3e"
+  },
+  {
+   "id": "eosat-1-mission-overview/5-ground-segment",
+   "en_hash": "2bc8ef32f6e77a1f",
+   "fr_hash": "6d05de2c3b8338d7"
+  },
+  {
+   "id": "eosat-1-mission-overview/5-ground-segment/5-1-ground-stations",
+   "en_hash": "9bab7b2d4267225e",
+   "fr_hash": "b23d25db6d29aa7d"
+  },
+  {
+   "id": "eosat-1-mission-overview/5-ground-segment/5-2-mission-control-system",
+   "en_hash": "2b40f6a8d337c3ce",
+   "fr_hash": "38a9f0b5e6adc330"
+  },
+  {
+   "id": "eosat-1-mission-overview/5-ground-segment/5-3-operator-positions",
+   "en_hash": "03a6cec0bc5044d2",
+   "fr_hash": "0573e4b8ce2a6777"
+  },
+  {
+   "id": "eosat-1-mission-overview/6-mission-phases",
+   "en_hash": "9790374b653dd50d",
+   "fr_hash": "d16800b4337542c9"
+  },
+  {
+   "id": "eosat-1-mission-overview/6-mission-phases/6-0-the-on-board-mission-phase-and-what-it-gates",
+   "en_hash": "fdae69cf085561a0",
+   "fr_hash": "a61fa82cd1fdf896"
+  },
+  {
+   "id": "eosat-1-mission-overview/6-mission-phases/6-1-separation-sequence",
+   "en_hash": "777ab3c042d5c94b",
+   "fr_hash": "f4facb21486be181"
+  },
+  {
+   "id": "eosat-1-mission-overview/6-mission-phases/6-2-leop-concept",
+   "en_hash": "8c8a06374fef2525",
+   "fr_hash": "5bab4dd176b9192f"
+  },
+  {
+   "id": "eosat-1-mission-overview/6-mission-phases/6-3-nominal-operations-concept",
+   "en_hash": "bd09f7867dffa0d9",
+   "fr_hash": "1ea2fb4dd9d252bf"
+  },
+  {
+   "id": "eosat-1-mission-overview/7-related-documents",
+   "en_hash": "8b5d0cf1875127a3",
+   "fr_hash": "14841eeda3ceaf10"
+  }
+ ],
+ "en_commit": "3e80564"
+}

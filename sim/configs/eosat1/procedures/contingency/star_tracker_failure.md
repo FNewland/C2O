@@ -147,7 +147,7 @@ anomaly report — they leave the spacecraft in materially different configurati
 ## Verification Criteria
 - [ ] `aocs.st2_status` (0x0243) = 2 (TRACKING) — if ST2 switchover successful
 - [ ] `aocs.att_error` (0x0217) < 0.1 deg — fine pointing restored (ST2 case)
-- [ ] `aocs.st1_status` (0x0240) = 0 (OFF) — failed unit isolated
+- [ ] `aocs.st_selected` (0x0244) = 2 and ST1 isolated (`aocs.st1_num_stars` (0x0241) = 0; `aocs.st1_status` may still read 4 = FAILED, see Step 4)
 - [ ] OR `aocs.mode` (0x020F) = 3 (COARSE_SUN) — if both STs failed
 - [ ] Body rates within limits (< 0.01 deg/s for fine pointing, < 1.0 deg/s for COARSE_SUN)
 - [ ] No FDIR safe mode triggers during the switchover

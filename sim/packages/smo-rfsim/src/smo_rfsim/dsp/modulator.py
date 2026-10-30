@@ -280,9 +280,13 @@ class Modulator:
         # NRZ encoding: 0 → -1, 1 → +1
         nrz = 2.0 * bits.astype(np.float64) - 1.0
 
-        # Upsample NRZ to sample rate
-        upsampled = np.zeros(len(nrz) * self.sps)
-        upsampled[::self.sps] = nrz
+        # Hold each NRZ level for a full symbol (rectangular frequency
+        # pulse), THEN Gaussian-filter it. Defect #135: this used to place a
+        # single impulse per bit and zeros between, so with the unit-sum
+        # Gaussian each bit carried 1/sps of its frequency area and the
+        # phase advanced pi*h/sps per bit (11.25 deg for GMSK at sps=8)
+        # instead of pi*h (90 deg) — an effective index of h/8.
+        upsampled = np.repeat(nrz, self.sps)
 
         # Gaussian pulse shaping (frequency domain)
         freq_shaped = np.convolve(upsampled, self._gaussian, mode='same')
@@ -290,7 +294,9 @@ class Modulator:
         # Modulation index: h = 0.5 for GMSK (MSK-family, CCSDS 401.0-B
         # 2.4.17B), configurable for GFSK.
         h = 0.5 if self.modulation == 6 else self.gfsk_mod_index
-        # Instantaneous phase = cumulative integral of frequency
+        # Instantaneous phase = cumulative integral of frequency. A symbol's
+        # frequency pulse now has area sps (samples), so each symbol moves
+        # the phase by exactly +/- pi*h.
         phase = np.cumsum(freq_shaped) * (math.pi * h / self.sps) + self._gmsk_phase
         self._gmsk_phase = phase[-1] if len(phase) > 0 else self._gmsk_phase
         self._gmsk_phase %= (2 * math.pi)

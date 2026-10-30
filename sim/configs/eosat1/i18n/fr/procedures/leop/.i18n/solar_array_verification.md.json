@@ -1,0 +1,87 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/leop/solar_array_verification.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "leop-004-solar-array-verification",
+   "en_hash": "9b65b6e1dd492d9c",
+   "fr_hash": "63cf9b6223b5209e"
+  },
+  {
+   "id": "leop-004-solar-array-verification/purpose",
+   "en_hash": "d5ae6daded239b59",
+   "fr_hash": "5255f50c1112b5fd"
+  },
+  {
+   "id": "leop-004-solar-array-verification/prerequisites",
+   "en_hash": "e43a6d772078738b",
+   "fr_hash": "d4452473999a3f07"
+  },
+  {
+   "id": "leop-004-solar-array-verification/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "leop-004-solar-array-verification/procedure-steps/step-0-command-wing-deployment",
+   "en_hash": "d4f6947cf0d6497b",
+   "fr_hash": "d0c97c55fc967dc9"
+  },
+  {
+   "id": "leop-004-solar-array-verification/procedure-steps/step-1-request-detailed-eps-telemetry",
+   "en_hash": "5843ca2f147cc03b",
+   "fr_hash": "5b984cb966d29c17"
+  },
+  {
+   "id": "leop-004-solar-array-verification/procedure-steps/step-2-check-y-wing-deployment-status-and-current",
+   "en_hash": "5a56dfe278be4283",
+   "fr_hash": "4f73cb980e14dd3a"
+  },
+  {
+   "id": "leop-004-solar-array-verification/procedure-steps/step-3-check-y-wing-deployment-status-and-current",
+   "en_hash": "5510e037bf646fd8",
+   "fr_hash": "9c278fb4e8c64cae"
+  },
+  {
+   "id": "leop-004-solar-array-verification/procedure-steps/step-4-measure-total-power-generation",
+   "en_hash": "f191c1cbc16745ce",
+   "fr_hash": "8e840f2b4206d2e7"
+  },
+  {
+   "id": "leop-004-solar-array-verification/procedure-steps/step-5-monitor-power-through-eclipse-transition-if-applicable",
+   "en_hash": "522fbd49757e1bff",
+   "fr_hash": "f49362064f63d057"
+  },
+  {
+   "id": "leop-004-solar-array-verification/procedure-steps/step-6-verify-wing-symmetry",
+   "en_hash": "660e25ce3398be5d",
+   "fr_hash": "68da735f966d94ef"
+  },
+  {
+   "id": "leop-004-solar-array-verification/procedure-steps/step-7-estimate-power-budget-margin",
+   "en_hash": "73c5a5d56c2d3a6d",
+   "fr_hash": "224a10914a493004"
+  },
+  {
+   "id": "leop-004-solar-array-verification/off-nominal-handling",
+   "en_hash": "7e9e88d37f18b921",
+   "fr_hash": "0241d73ea3147b75"
+  },
+  {
+   "id": "leop-004-solar-array-verification/exit-state",
+   "en_hash": "bbee5b7231ebbe4d",
+   "fr_hash": "ce6fe953a0159d5e"
+  },
+  {
+   "id": "leop-004-solar-array-verification/post-conditions",
+   "en_hash": "4eb2e45694c925a3",
+   "fr_hash": "7c81318c38639b75"
+  }
+ ],
+ "en_commit": "3e80564"
+}

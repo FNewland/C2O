@@ -73,7 +73,9 @@ class PipelineCoordinator:
             rs_enabled=cc.rs_enabled,
             conv_enabled=cc.convolutional_enabled,
             output_buffer=self._tx_to_channel,
-            packet_queue=self._tm_packet_queue)
+            packet_queue=self._tm_packet_queue,
+            gmsk_bt=pc.gmsk_bt,
+            gfsk_mod_index=pc.gfsk_mod_index)
 
         # Channel stage — full SpaceLinkChannel impairment chain
         bps = BITS_PER_SYMBOL.get(modulation, 1)

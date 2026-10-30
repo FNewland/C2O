@@ -1,0 +1,87 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/emergency/loss_of_attitude.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "emg-005-loss-of-attitude",
+   "en_hash": "84639eedfa9e1294",
+   "fr_hash": "735fce6bb7adbb9f"
+  },
+  {
+   "id": "emg-005-loss-of-attitude/purpose",
+   "en_hash": "0264a17f13d5e51d",
+   "fr_hash": "b87c819071e709e8"
+  },
+  {
+   "id": "emg-005-loss-of-attitude/prerequisites",
+   "en_hash": "977c2af8227fca89",
+   "fr_hash": "5211c2cb75912e13"
+  },
+  {
+   "id": "emg-005-loss-of-attitude/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "emg-005-loss-of-attitude/procedure-steps/step-1-immediate-load-shedding",
+   "en_hash": "959ad06c6ca3898a",
+   "fr_hash": "4474fd45d58fb45d"
+  },
+  {
+   "id": "emg-005-loss-of-attitude/procedure-steps/step-2-command-detumble-mode",
+   "en_hash": "4a57e04ed25d7e9c",
+   "fr_hash": "caa29e1a6f77c9bb"
+  },
+  {
+   "id": "emg-005-loss-of-attitude/procedure-steps/step-3-assess-reaction-wheel-status",
+   "en_hash": "d63c5a239438d504",
+   "fr_hash": "ae85c20018ec1261"
+  },
+  {
+   "id": "emg-005-loss-of-attitude/procedure-steps/step-4-monitor-rate-reduction-orbit-1",
+   "en_hash": "6b1a30a52b58532b",
+   "fr_hash": "eaad457a380bee58"
+  },
+  {
+   "id": "emg-005-loss-of-attitude/procedure-steps/step-5-monitor-rate-reduction-orbit-2",
+   "en_hash": "e430a25e0d81387d",
+   "fr_hash": "6bc998bf20d3c7da"
+  },
+  {
+   "id": "emg-005-loss-of-attitude/procedure-steps/step-6-confirm-detumble-complete",
+   "en_hash": "f1d46b3083d88660",
+   "fr_hash": "d406cb61c12d86cd"
+  },
+  {
+   "id": "emg-005-loss-of-attitude/procedure-steps/step-7-command-safe-sun-pointing",
+   "en_hash": "0c4fbd9e5c200f64",
+   "fr_hash": "3982f153e14e427e"
+  },
+  {
+   "id": "emg-005-loss-of-attitude/procedure-steps/step-8-verify-power-positive-state",
+   "en_hash": "aca63d5e41bf9454",
+   "fr_hash": "ffa920c82e28b2c6"
+  },
+  {
+   "id": "emg-005-loss-of-attitude/timing-constraints",
+   "en_hash": "3342e57acccdea87",
+   "fr_hash": "85ee7d31ee1f92cd"
+  },
+  {
+   "id": "emg-005-loss-of-attitude/off-nominal-handling",
+   "en_hash": "f289cd6c42af1d8f",
+   "fr_hash": "c0840dcacd0b179c"
+  },
+  {
+   "id": "emg-005-loss-of-attitude/post-conditions",
+   "en_hash": "9b2976b82872025c",
+   "fr_hash": "85468175d8f7b15e"
+  }
+ ],
+ "en_commit": "3e80564"
+}

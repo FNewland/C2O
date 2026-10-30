@@ -1,0 +1,132 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/manual/07_orbit_ops.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "eosat-1-orbit-operations",
+   "en_hash": "ded725fd7c3b872e",
+   "fr_hash": "777946e5f8faa4fb"
+  },
+  {
+   "id": "eosat-1-orbit-operations/1-overview",
+   "en_hash": "a26c77bb4c794ce8",
+   "fr_hash": "73a54770dec0a75e"
+  },
+  {
+   "id": "eosat-1-orbit-operations/2-orbit-definition",
+   "en_hash": "b521075f7ca67e9d",
+   "fr_hash": "c8f2095a53130229"
+  },
+  {
+   "id": "eosat-1-orbit-operations/2-orbit-definition/2-1-sun-synchronous-properties",
+   "en_hash": "50d9f06ff2a7f7da",
+   "fr_hash": "a2e3772c546dd049"
+  },
+  {
+   "id": "eosat-1-orbit-operations/2-orbit-definition/2-2-ground-track",
+   "en_hash": "a17e6e8904fa4b89",
+   "fr_hash": "f3a280ffa51dbe98"
+  },
+  {
+   "id": "eosat-1-orbit-operations/3-eclipse-cycle",
+   "en_hash": "5d4a8b828a971418",
+   "fr_hash": "5738d70dbd616c1f"
+  },
+  {
+   "id": "eosat-1-orbit-operations/3-eclipse-cycle/3-1-eclipse-geometry",
+   "en_hash": "2f1cbe1fc1ab3836",
+   "fr_hash": "4ce09b1792a0af81"
+  },
+  {
+   "id": "eosat-1-orbit-operations/3-eclipse-cycle/3-2-seasonal-variation",
+   "en_hash": "33eeba8e8c2ea48f",
+   "fr_hash": "1a1229c912807104"
+  },
+  {
+   "id": "eosat-1-orbit-operations/3-eclipse-cycle/3-3-eclipse-operational-impact",
+   "en_hash": "6e7cdd24fc18134c",
+   "fr_hash": "cdbeb7cef62c1f72"
+  },
+  {
+   "id": "eosat-1-orbit-operations/4-ground-station-contact-geometry",
+   "en_hash": "00471a93e2ec0867",
+   "fr_hash": "f8070d27227d331a"
+  },
+  {
+   "id": "eosat-1-orbit-operations/4-ground-station-contact-geometry/4-1-station-locations",
+   "en_hash": "d6f2399530f6a4c5",
+   "fr_hash": "05bbbef2c8eaa2cf"
+  },
+  {
+   "id": "eosat-1-orbit-operations/4-ground-station-contact-geometry/4-2-typical-pass-profile",
+   "en_hash": "a030f30d07f388ab",
+   "fr_hash": "7b4e46831885eb2f"
+  },
+  {
+   "id": "eosat-1-orbit-operations/4-ground-station-contact-geometry/4-3-contact-duration-vs-maximum-elevation",
+   "en_hash": "b5ee3c937501814b",
+   "fr_hash": "304f5b5c54d35e03"
+  },
+  {
+   "id": "eosat-1-orbit-operations/4-ground-station-contact-geometry/4-4-visibility-and-scheduling",
+   "en_hash": "48af133255cbe40b",
+   "fr_hash": "d11b5d7fcb8406fc"
+  },
+  {
+   "id": "eosat-1-orbit-operations/5-orbit-determination",
+   "en_hash": "c24652b9a01f9c7f",
+   "fr_hash": "d556b1bb54c3782e"
+  },
+  {
+   "id": "eosat-1-orbit-operations/6-orbit-maintenance",
+   "en_hash": "4d9b16a2b7c8a437",
+   "fr_hash": "0e5c9c9908da6f4f"
+  },
+  {
+   "id": "eosat-1-orbit-operations/7-imaging-target-planning-for-ocean-currents",
+   "en_hash": "3b0a792681d5c392",
+   "fr_hash": "cf5978bbb02c783e"
+  },
+  {
+   "id": "eosat-1-orbit-operations/7-imaging-target-planning-for-ocean-currents/7-1-target-ocean-regions",
+   "en_hash": "a0cf2bcef91b841f",
+   "fr_hash": "6998ac27450cbbf2"
+  },
+  {
+   "id": "eosat-1-orbit-operations/7-imaging-target-planning-for-ocean-currents/7-2-imaging-opportunity-computation",
+   "en_hash": "16ece491fa154320",
+   "fr_hash": "9f95fe473ac32342"
+  },
+  {
+   "id": "eosat-1-orbit-operations/8-pass-based-scheduling",
+   "en_hash": "7ef29363c446157c",
+   "fr_hash": "76cd0dcc457075ad"
+  },
+  {
+   "id": "eosat-1-orbit-operations/8-pass-based-scheduling/8-1-pass-types",
+   "en_hash": "b4003abe2c1d4e1a",
+   "fr_hash": "61d8250b4b3125ee"
+  },
+  {
+   "id": "eosat-1-orbit-operations/8-pass-based-scheduling/8-2-scheduling-constraints",
+   "en_hash": "d2e8a035d307a4f2",
+   "fr_hash": "00b7fbbdd8dc2660"
+  },
+  {
+   "id": "eosat-1-orbit-operations/8-pass-based-scheduling/8-3-power-and-data-budget-tracking",
+   "en_hash": "ff532034a1319f71",
+   "fr_hash": "b235c06839a9b248"
+  },
+  {
+   "id": "eosat-1-orbit-operations/9-relevant-telemetry",
+   "en_hash": "5bf62f4456962694",
+   "fr_hash": "1423a0b3c8a1725e"
+  }
+ ],
+ "en_commit": "3e80564"
+}

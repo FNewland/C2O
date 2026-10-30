@@ -33,6 +33,8 @@ class ScenarioDefinition:
     # Applied to the simulator when the scenario starts (phase, speed, SoC,
     # pass override, power lines, params, pre-injected failures).
     initial_conditions: dict[str, Any] = field(default_factory=dict)
+    # YAML file stem: the stable id the i18n overlay keys use (scn:<id>:name).
+    file_id: str = ""
 
 
 # Actions the scenario engine can actually execute. Anything else is a
@@ -209,6 +211,7 @@ class ScenarioEngine:
                     events=events,
                     expected_responses=data.get("expected_responses", []),
                     initial_conditions=data.get("initial_conditions", {}) or {},
+                    file_id=path.stem,
                 )
                 if defn.name in self._scenarios:
                     self._record_issue(path.name, defn.name, -1,
@@ -250,8 +253,10 @@ class ScenarioEngine:
                 logger.debug("Could not emit scenario load issue: %s", e)
 
     def list_scenarios(self) -> list[dict]:
+        # "id" (YAML file stem) is additive: the instructor UI looks up the
+        # French overlay by it (scn:<id>:name / :briefing); "name" stays the key.
         return [{"name": s.name, "difficulty": s.difficulty, "duration_s": s.duration_s,
-                 "briefing": s.briefing}
+                 "briefing": s.briefing, "id": s.file_id or s.name}
                 for s in self._scenarios.values()]
 
     def start(self, name: str) -> bool:

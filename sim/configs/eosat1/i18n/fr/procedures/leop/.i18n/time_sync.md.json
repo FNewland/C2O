@@ -1,0 +1,87 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/leop/time_sync.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "leop-006-time-synchronisation",
+   "en_hash": "0972fade85ab6a52",
+   "fr_hash": "daffa0994e16ab01"
+  },
+  {
+   "id": "leop-006-time-synchronisation/purpose",
+   "en_hash": "df1a213798fff572",
+   "fr_hash": "6f9db6590d7782ef"
+  },
+  {
+   "id": "leop-006-time-synchronisation/prerequisites",
+   "en_hash": "aa26562c6521c6f3",
+   "fr_hash": "e7dde8348b302fe7"
+  },
+  {
+   "id": "leop-006-time-synchronisation/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "leop-006-time-synchronisation/procedure-steps/step-1-verify-obc-status-and-communication",
+   "en_hash": "0bff86e74f5b6715",
+   "fr_hash": "802bf2a2008057b9"
+  },
+  {
+   "id": "leop-006-time-synchronisation/procedure-steps/step-2-read-the-clock-its-reference-and-the-slant-range",
+   "en_hash": "99f71f2236cfda1e",
+   "fr_hash": "1a5021fb6cfb76d7"
+  },
+  {
+   "id": "leop-006-time-synchronisation/procedure-steps/step-3-calculate-the-time-delta",
+   "en_hash": "9e7fd2912ece61fb",
+   "fr_hash": "60a93cae2037d9d2"
+  },
+  {
+   "id": "leop-006-time-synchronisation/procedure-steps/step-4-send-the-time-update-command",
+   "en_hash": "a78448b1b4496f69",
+   "fr_hash": "fb2e7460d4766962"
+  },
+  {
+   "id": "leop-006-time-synchronisation/procedure-steps/step-5-verify-time-accuracy",
+   "en_hash": "e495f18f3d76b9d3",
+   "fr_hash": "c0addf83e8e680a1"
+  },
+  {
+   "id": "leop-006-time-synchronisation/procedure-steps/step-6-validate-the-clock-rate",
+   "en_hash": "ec38d5e42eeec7f0",
+   "fr_hash": "ab3c01f72750834f"
+  },
+  {
+   "id": "leop-006-time-synchronisation/procedure-steps/step-6a-path-b-gps-time-discipline-once-the-receiver-has-a-fix",
+   "en_hash": "3d3a5b6f0d5ae639",
+   "fr_hash": "d83d21cae3ec109d"
+  },
+  {
+   "id": "leop-006-time-synchronisation/procedure-steps/step-7-confirm-time-stamping-and-log-the-result",
+   "en_hash": "f2064aca82e66f37",
+   "fr_hash": "aa237cd9cfd23e0b"
+  },
+  {
+   "id": "leop-006-time-synchronisation/off-nominal-handling",
+   "en_hash": "1986f3f8c0522077",
+   "fr_hash": "a6a4cbb01c227450"
+  },
+  {
+   "id": "leop-006-time-synchronisation/exit-state",
+   "en_hash": "58e26acdfc53f3b3",
+   "fr_hash": "76558a9a2df30805"
+  },
+  {
+   "id": "leop-006-time-synchronisation/post-conditions",
+   "en_hash": "ba1c7d741addece2",
+   "fr_hash": "1926580074b69d8a"
+  }
+ ],
+ "en_commit": "3e80564"
+}

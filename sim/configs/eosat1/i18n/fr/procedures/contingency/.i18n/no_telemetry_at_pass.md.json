@@ -1,0 +1,87 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/contingency/no_telemetry_at_pass.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "ctg-019-no-telemetry-at-pass-start",
+   "en_hash": "3a43b924a2d03172",
+   "fr_hash": "93348c7ed5e64677"
+  },
+  {
+   "id": "ctg-019-no-telemetry-at-pass-start/objective",
+   "en_hash": "0d45e3d1c3590f1a",
+   "fr_hash": "61fb0e8a23d86e34"
+  },
+  {
+   "id": "ctg-019-no-telemetry-at-pass-start/prerequisites",
+   "en_hash": "482c9dcb348a2e57",
+   "fr_hash": "088c58c3dcebbabe"
+  },
+  {
+   "id": "ctg-019-no-telemetry-at-pass-start/required-telemetry",
+   "en_hash": "3ae71779033064ae",
+   "fr_hash": "1880a213fa05fa73"
+  },
+  {
+   "id": "ctg-019-no-telemetry-at-pass-start/required-commands",
+   "en_hash": "1aa3f9ba4903c3ae",
+   "fr_hash": "56e272a35803b521"
+  },
+  {
+   "id": "ctg-019-no-telemetry-at-pass-start/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "ctg-019-no-telemetry-at-pass-start/procedure-steps/step-1-confirm-ground-station-is-nominal",
+   "en_hash": "ee1e3ab2353fc5fc",
+   "fr_hash": "9d8eaa042e5b8b5f"
+  },
+  {
+   "id": "ctg-019-no-telemetry-at-pass-start/procedure-steps/step-2-check-ttc-tx-power-line-status",
+   "en_hash": "ea6c638dfdb54422",
+   "fr_hash": "6faa273a1e613e17"
+  },
+  {
+   "id": "ctg-019-no-telemetry-at-pass-start/procedure-steps/step-3-command-transponder-switch-blind",
+   "en_hash": "f9f239ecf2ef4bb7",
+   "fr_hash": "77c44d91a0f3fa7a"
+  },
+  {
+   "id": "ctg-019-no-telemetry-at-pass-start/procedure-steps/step-4-command-pa-on-blind",
+   "en_hash": "f3dd500ef9212832",
+   "fr_hash": "d3fadfc2b86476e2"
+  },
+  {
+   "id": "ctg-019-no-telemetry-at-pass-start/procedure-steps/step-5-check-antenna-deployment-and-deploy-if-needed",
+   "en_hash": "412f7e5da21a6e0e",
+   "fr_hash": "aa6864b50ff629f0"
+  },
+  {
+   "id": "ctg-019-no-telemetry-at-pass-start/procedure-steps/step-6-verify-link-quality-and-subsystem-health",
+   "en_hash": "ee56d21e2a736f6b",
+   "fr_hash": "7a424ce95eca8c40"
+  },
+  {
+   "id": "ctg-019-no-telemetry-at-pass-start/procedure-steps/step-7-escalation-no-link-recovery",
+   "en_hash": "785a3d0e9d91f899",
+   "fr_hash": "f2b6363661757d65"
+  },
+  {
+   "id": "ctg-019-no-telemetry-at-pass-start/verification-criteria",
+   "en_hash": "df61fcede5758478",
+   "fr_hash": "fbe9fd6e1287e794"
+  },
+  {
+   "id": "ctg-019-no-telemetry-at-pass-start/contingency",
+   "en_hash": "a055165b72434664",
+   "fr_hash": "2e10ab8643774508"
+  }
+ ],
+ "en_commit": "3e80564"
+}

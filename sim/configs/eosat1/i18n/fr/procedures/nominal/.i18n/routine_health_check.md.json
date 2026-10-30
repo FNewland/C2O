@@ -1,0 +1,82 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/nominal/routine_health_check.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "nom-009-routine-health-check",
+   "en_hash": "e5b8edd224596895",
+   "fr_hash": "4602ebba1075f35d"
+  },
+  {
+   "id": "nom-009-routine-health-check/purpose",
+   "en_hash": "576b224a8c11b8fd",
+   "fr_hash": "0d71ece7d36e86f2"
+  },
+  {
+   "id": "nom-009-routine-health-check/prerequisites",
+   "en_hash": "caedd0b0adeaad07",
+   "fr_hash": "edc0f9f0e600dc7f"
+  },
+  {
+   "id": "nom-009-routine-health-check/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "nom-009-routine-health-check/procedure-steps/step-1-request-all-housekeeping-packets",
+   "en_hash": "be28e329ca86744e",
+   "fr_hash": "060131d2d66ad2e3"
+  },
+  {
+   "id": "nom-009-routine-health-check/procedure-steps/step-2-eps-health-assessment",
+   "en_hash": "302913e4106c4623",
+   "fr_hash": "efb7bbf797a4c953"
+  },
+  {
+   "id": "nom-009-routine-health-check/procedure-steps/step-3-aocs-health-assessment",
+   "en_hash": "db134438bbddfe08",
+   "fr_hash": "9ac7ed3b6ab29e24"
+  },
+  {
+   "id": "nom-009-routine-health-check/procedure-steps/step-4-tcs-health-assessment",
+   "en_hash": "63215eaba50f6e6c",
+   "fr_hash": "bae6ee2dbbbb819f"
+  },
+  {
+   "id": "nom-009-routine-health-check/procedure-steps/step-5-obdh-health-assessment",
+   "en_hash": "366f3f67f21e53c9",
+   "fr_hash": "11a5cdc5a72d637a"
+  },
+  {
+   "id": "nom-009-routine-health-check/procedure-steps/step-6-ttc-health-assessment",
+   "en_hash": "6c8684ba0f145c1c",
+   "fr_hash": "bcf5f4d1a1466eba"
+  },
+  {
+   "id": "nom-009-routine-health-check/procedure-steps/step-7-payload-health-assessment",
+   "en_hash": "ed5aa92a53eaae0d",
+   "fr_hash": "fbddddc6a57c4b8a"
+  },
+  {
+   "id": "nom-009-routine-health-check/procedure-steps/step-8-summary-and-anomaly-logging",
+   "en_hash": "ce156759c1281d1a",
+   "fr_hash": "abf9001eb8b8cef7"
+  },
+  {
+   "id": "nom-009-routine-health-check/off-nominal-handling",
+   "en_hash": "c4744e710cd47886",
+   "fr_hash": "5e1a22de22336c61"
+  },
+  {
+   "id": "nom-009-routine-health-check/post-conditions",
+   "en_hash": "7725f2cbabab6df8",
+   "fr_hash": "ac0b6a8f7fd3ad68"
+  }
+ ],
+ "en_commit": "3e80564"
+}

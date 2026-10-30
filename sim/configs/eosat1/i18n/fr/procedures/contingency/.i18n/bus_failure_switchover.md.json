@@ -1,0 +1,77 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/contingency/bus_failure_switchover.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "ctg-017-bus-failure-switchover",
+   "en_hash": "7f3a4955a005079e",
+   "fr_hash": "adb19e0b6165274e"
+  },
+  {
+   "id": "ctg-017-bus-failure-switchover/objective",
+   "en_hash": "fc80aa99b101b8dc",
+   "fr_hash": "185411ba627d2cc4"
+  },
+  {
+   "id": "ctg-017-bus-failure-switchover/prerequisites",
+   "en_hash": "c732aafacf5bc54e",
+   "fr_hash": "d93509a9dec540a6"
+  },
+  {
+   "id": "ctg-017-bus-failure-switchover/required-telemetry",
+   "en_hash": "ddd2fec3b6464c72",
+   "fr_hash": "07864f5136f97ec6"
+  },
+  {
+   "id": "ctg-017-bus-failure-switchover/required-commands",
+   "en_hash": "736391089dfbef22",
+   "fr_hash": "40afadd84ec3713e"
+  },
+  {
+   "id": "ctg-017-bus-failure-switchover/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "ctg-017-bus-failure-switchover/procedure-steps/step-1-detect-missing-housekeeping",
+   "en_hash": "611a17e076275bfa",
+   "fr_hash": "b1ac9468c1e39fa1"
+  },
+  {
+   "id": "ctg-017-bus-failure-switchover/procedure-steps/step-2-check-bus-status",
+   "en_hash": "9a6e4cd10d9ef2d1",
+   "fr_hash": "6c541b234a77ab32"
+  },
+  {
+   "id": "ctg-017-bus-failure-switchover/procedure-steps/step-3-command-bus-switchover",
+   "en_hash": "72c101e1ec294e62",
+   "fr_hash": "3b2ec1d370f4688f"
+  },
+  {
+   "id": "ctg-017-bus-failure-switchover/procedure-steps/step-4-verify-all-housekeeping-resumes",
+   "en_hash": "b575d86509b8b410",
+   "fr_hash": "a45cc606e1a0845f"
+  },
+  {
+   "id": "ctg-017-bus-failure-switchover/procedure-steps/step-5-post-switchover-assessment",
+   "en_hash": "2ded56385bd43ca1",
+   "fr_hash": "e1f2816fdaaadd7f"
+  },
+  {
+   "id": "ctg-017-bus-failure-switchover/verification-criteria",
+   "en_hash": "15c17fc41d76a96e",
+   "fr_hash": "0d95936539381d9f"
+  },
+  {
+   "id": "ctg-017-bus-failure-switchover/contingency",
+   "en_hash": "db6f9c07cd248f66",
+   "fr_hash": "2b524bb21a96d1a4"
+  }
+ ],
+ "en_commit": "3e80564"
+}

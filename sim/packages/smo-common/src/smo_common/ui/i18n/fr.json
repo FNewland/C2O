@@ -1,0 +1,18 @@
+{
+  "no limit defined": "aucune limite définie",
+  "value {{value}} of range {{lo}} to {{hi}}": "valeur {{value}} sur la plage {{lo}} à {{hi}}",
+  "unknown": "inconnue",
+  "NOT ENABLED": "NON ACTIVÉ",
+  "Parameter": "Paramètre",
+  "Raw": "Brute",
+  "Eng": "Phys.",
+  "Unit": "Unité",
+  "Age": "Âge",
+  "PROCEDURE": "PROCÉDURE",
+  "ACK": "ACQ.",
+  "{{status}} on {{param}}": "{{status}} sur {{param}}",
+  "limit": "limite",
+  "injected by instructor (training)": "injecté par l’instructeur (formation)",
+  "INSTRUCTOR": "INSTRUCTEUR",
+  "Language": "Langue"
+}

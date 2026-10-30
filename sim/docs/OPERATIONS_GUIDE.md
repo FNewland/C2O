@@ -116,7 +116,7 @@ python -m smo_mcs --simulator-host gateway.corp.net:6789 --mcs-port 8080
 ```
 Spacecraft: EOSAT-1
 Phase: Nominal Operations
-Orbit: 98.2° sun-synchronous, 705 km altitude
+Orbit: 98.0° sun-synchronous, ~513 km mean altitude
 
 Attitude:
   Quaternion: (0.001, 0.707, -0.002, 0.707)
@@ -130,7 +130,7 @@ Power:
 
 Thermal:
   Hottest Zone: OBC (+32°C)
-  FPA: -8°C (Operational)
+  FPA: -15°C (Operational)
 ```
 
 **Telemetry Plot (top-right):**
@@ -220,8 +220,8 @@ Effect: EPS HK packets sent every 4 seconds
 | `eps.bat_soc` | 0-100% | < 10% (CRITICAL) | EPS |
 | `eps.bus_voltage` | 25-35 V | < 25V (CRITICAL) | EPS |
 | `aocs.att_error` | 0-180° | > 1° (WARNING) | AOCS |
-| `aocs.total_momentum` | -100 to +100 Nms | > 90 Nms (WARNING) | AOCS |
-| `tcs.fpa_temp` | -20 to 0°C | > -3°C (ALARM) | TCS |
+| `aocs.total_momentum` | 0-0.06 Nms | envelope > 70% (`aocs.h_env_frac` 0x02BA, WARNING) | AOCS |
+| `tcs.fpa_temp` | -20 to 0°C | > -3°C blocks imaging; > +14°C (WARNING) | TCS |
 | `ttc.link_margin` | 0-15 dB | < 3 dB (CRITICAL) | TTC |
 | `ttc.pa_temp` | 20-80°C | > 65°C (SHUTDOWN) | TTC |
 
@@ -229,9 +229,9 @@ Effect: EPS HK packets sent every 4 seconds
 
 | Parameter | Typical | Watch For |
 |-----------|---------|-----------|
-| `eps.power_gen` | 1000-1500 W | Degradation trend |
-| `eps.power_cons` | 800-1200 W | Spike anomalies |
-| `aocs.rw_speed` (all 4) | 0-2000 RPM | Imbalance, overspeed |
+| `eps.power_gen` | 0-89 W (orbit average ~40 W) | Degradation trend |
+| `eps.power_cons` | ~28 W orbit average | Spike anomalies |
+| `aocs.rw_speed` (all 4) | ±1200 RPM bias (limit 5500) | Imbalance, overspeed |
 | `tcs.battery_temp` | -5 to +40°C | > 45°C (heater off) |
 | `ttc.ber` | < 1e-6 | Rising trend |
 
@@ -341,7 +341,7 @@ Status: Transition complete, spacecraft safe
 - T-5 min: Set AOCS to fine point
 - T-2 min: Enable imaging on payload
 - T+0 min: Capture image (60 sec)
-- T+65 min: Download image via ground station
+- T+30 min: Download image via ground station
 
 **Step 1: Pre-Pass Preparation (T-5 min)**
 
@@ -355,7 +355,7 @@ MCS Command 2: Enable payload
   Response: S1 reports, mode change event
 
 MCS Command 3: Set cooler temperature
-  S8 func_id=36 (PAYLOAD_COOLER_SETPOINT), temp=-8°C
+  S8 func_id=36 (PAYLOAD_COOLER_SETPOINT), temp=-15°C
   Response: S1 reports
 ```
 
@@ -751,7 +751,7 @@ MCS Command: Reduce power consumption
      Reduce TTC transmitter power
      Response: S1 reports
 
-  3. S8 func_id=25 (EPS_LOAD_SHED_STAGE_3)
+  3. S8 func_id=25 (EPS_EMERGENCY_LOAD_SHED), stage=3
      Activate maximum load shedding
      Response: S1 reports
 
@@ -791,7 +791,7 @@ MCS: Monitor FPA cooldown
 MCS Plot: FPA temperature vs. time
   T+0 min:   FPA = -1°C (overtemp)
   T+5 min:   FPA = -4°C (recovering)
-  T+10 min:  FPA = -8°C (nominal range)
+  T+10 min:  FPA = -15°C (at setpoint)
 
 When cooled to nominal:
   S5.040A FPA_THERMAL_READY event fires
@@ -915,7 +915,7 @@ MCS Actions:
 
 ```
 T+0s:   Anomaly detected (S5.0201 RW_OVERSPEED)
-        S19 rule: disable overspecc wheel
+        S19 rule: disable overspeed wheel
         Mode: Fine point → Coarse sun (CSS + mag)
 
 T+30s:  MCS operator checks S5 event log
@@ -975,7 +975,7 @@ MCS Monitoring:
   T+60: SoC = 6% (critical, eclipse exit in 5 min)
 
 MCS Command: Emergency load shedding stage 2
-  S8 func_id=24 (EPS_LOAD_SHED_STAGE_2)
+  S8 func_id=25 (EPS_EMERGENCY_LOAD_SHED), stage=2
   Effect: TTC TX power OFF, AOCS wheels OFF
   Power consumption: 400 W → 150 W
 
@@ -1507,8 +1507,8 @@ The following timeline assumes a Chennai/Sriharikota launch into a southward-des
 |------|---------|---------|--------------|
 | 11 | S8.1 TTC_DEPLOY_ANTENNA | 69 | S1.7 complete, S5 event |
 | 12 | S3.27 request SID 6 (TTC) | — | link_margin improved |
-| 13 | S8.1 EPS_SWITCH_LOAD (line 0, on) | 17 | Power line 0 active |
-| 14 | S8.1 EPS_SWITCH_LOAD (line 1, on) | 17 | Power line 1 active |
+| 13 | S8.1 EPS_SWITCH_LOAD (line 0, on) | 22 | Power line 0 active |
+| 14 | S8.1 EPS_SWITCH_LOAD (line 1, on) | 22 | Power line 1 active |
 | 15 | S3.27 request SID 1 (EPS) | — | power_gen > 0W (sunlit) |
 | 16 | S8.1 TTC_SET_DATA_RATE (rate=0, LOW) | 65 | S1.7, ttc.tm_data_rate = 16000 bps — the routine operations tier |
 | 17 | S8.1 TTC_PA_ON | 66 | PA enabled, link margin up |
@@ -1569,8 +1569,8 @@ The following timeline assumes a Chennai/Sriharikota launch into a southward-des
 
 | Step | Command | func_id | Verification |
 |------|---------|---------|--------------|
-| 34 | S8.1 ST_SELECT (unit 0) | 6 | Primary ST selected |
-| 35 | S8.1 MAG_SELECT (unit 0) | 7 | Primary mag selected |
+| 34 | S8.1 ST_SELECT (unit 1) | 6 | Primary ST selected |
+| 35 | S3.27 request SID 2 (AOCS) | — | aocs.mag_enabled (0x025C) = 1 (single magnetometer) |
 | 36 | S8.1 AOCS_SET_MODE (nadir) | 0 | mode=4, nadir pointing |
 | 37 | S3.27 request SID 2 (AOCS) | — | att_error < 0.5° |
 | 38 | S8.1 AOCS_SET_MODE (fine point) | 0 | mode=5, fine pointing |
@@ -1620,7 +1620,7 @@ The following timeline assumes a Chennai/Sriharikota launch into a southward-des
 | 52 | S8.1 PAYLOAD_SET_BAND_CONFIG | 33 | All 4 bands enabled |
 | 53 | S8.1 PAYLOAD_SET_INTEGRATION_TIME | 34 | Per-band times set |
 | 54 | S8.1 PAYLOAD_SET_GAIN | 35 | Gain nominal |
-| 55 | S8.1 PAYLOAD_COOLER_SETPOINT | 36 | Target -8°C |
+| 55 | S8.1 PAYLOAD_COOLER_SETPOINT | 36 | Target -15°C |
 | 56 | S8.1 PAYLOAD_SET_COMPRESSION | 39 | Auto compression |
 
 **GO/NO-GO:** All bands configured, integration times verified, compression active.
@@ -1660,7 +1660,7 @@ The following timeline assumes a Chennai/Sriharikota launch into a southward-des
 | Step | Command | func_id | Verification |
 |------|---------|---------|--------------|
 | 63a | S8.1 TTC_SET_DOWNLINK_MODE (on=1) | 79 | ttc.downlink_mode = 1 — the mode gate on HIGH |
-| 64 | S8.1 TTC_SET_DATA_RATE (rate=1, HIGH) | 65 | ttc.tm_data_rate = 128000 bps, ttc.tm_tier = ttc.tm_tier_cmd = 2. Requires elevation >= 10 deg |
+| 64 | S8.1 TTC_SET_DATA_RATE (rate=1, HIGH) | 65 | ttc.tm_data_rate = 128000 bps, ttc.tm_tier = ttc.tm_tier_cmd = 2. 10 deg is a ground rule (MCS warns below 10 deg); on board HIGH needs antenna deployed, DOWNLINK mode and beacon mode off |
 | 65 | S13.1 Initiate test transfer | — | Transfer session open |
 | 66 | S13.3 Request data blocks | — | Blocks received, CRC OK |
 | 67 | S13.5 End transfer | — | Transfer complete |
@@ -1734,9 +1734,9 @@ The following timeline assumes a Chennai/Sriharikota launch into a southward-des
 ```
 1. S8.1 func_id=26 (PAYLOAD_SET_MODE), mode=0     — payload off
 2. S8.1 func_id=43 (FPA_COOLER), on=0             — cooler off
-3. S8.1 func_id=23 (EPS_LOAD_SHED_STAGE_1)        — non-critical loads off
+3. S8.1 func_id=25 (EPS_EMERGENCY_LOAD_SHED), stage=1 — non-critical loads off
 4. Wait for eclipse exit, monitor SoC recovery
-5. If SoC < 5% → S8.1 func_id=25 (EPS_LOAD_SHED_STAGE_3)
+5. If SoC < 5% → S8.1 func_id=25 (EPS_EMERGENCY_LOAD_SHED), stage=3
 6. Resume commissioning when SoC > 30%
 ```
 

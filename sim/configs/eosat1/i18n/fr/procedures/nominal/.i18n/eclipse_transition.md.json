@@ -1,0 +1,92 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/nominal/eclipse_transition.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "nom-010-eclipse-transition",
+   "en_hash": "91a4fb266acd4ea6",
+   "fr_hash": "0fb8a77f32162c44"
+  },
+  {
+   "id": "nom-010-eclipse-transition/objective",
+   "en_hash": "3c4460d6b0aaba7c",
+   "fr_hash": "58666ae409ba52d9"
+  },
+  {
+   "id": "nom-010-eclipse-transition/prerequisites",
+   "en_hash": "a71e20b08f61f6da",
+   "fr_hash": "eedc8f6a5f38b347"
+  },
+  {
+   "id": "nom-010-eclipse-transition/required-telemetry",
+   "en_hash": "24388e5ce742957f",
+   "fr_hash": "2e3a2f5fe226f3a1"
+  },
+  {
+   "id": "nom-010-eclipse-transition/required-commands",
+   "en_hash": "03b53405bd07d51d",
+   "fr_hash": "64dcba76c9412309"
+  },
+  {
+   "id": "nom-010-eclipse-transition/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "nom-010-eclipse-transition/procedure-steps/step-1-verify-battery-state-of-charge",
+   "en_hash": "e7d30a19ca21d7cc",
+   "fr_hash": "586079386e65f28c"
+  },
+  {
+   "id": "nom-010-eclipse-transition/procedure-steps/step-2-verify-and-adjust-heater-setpoints-for-eclipse",
+   "en_hash": "374d8c055d775bde",
+   "fr_hash": "98b910c11ac9ceea"
+  },
+  {
+   "id": "nom-010-eclipse-transition/procedure-steps/step-3-disable-fpa-cooler-to-conserve-power",
+   "en_hash": "7b6adc69319aa831",
+   "fr_hash": "7c58996b8c395b0b"
+  },
+  {
+   "id": "nom-010-eclipse-transition/procedure-steps/step-4-verify-aocs-eclipse-mode-transition",
+   "en_hash": "b2ee95037147a45a",
+   "fr_hash": "4bccf3f53b92300c"
+  },
+  {
+   "id": "nom-010-eclipse-transition/procedure-steps/step-5-monitor-bus-voltage-during-eclipse-entry",
+   "en_hash": "18bf8eec07c5ee4f",
+   "fr_hash": "21a79c1fcbbadd0a"
+  },
+  {
+   "id": "nom-010-eclipse-transition/procedure-steps/step-6-monitor-thermal-conditions-during-eclipse",
+   "en_hash": "5073cfb9cfa1ab38",
+   "fr_hash": "af4f7be0af5d4b53"
+  },
+  {
+   "id": "nom-010-eclipse-transition/procedure-steps/step-7-verify-power-generation-resumes-after-eclipse-exit",
+   "en_hash": "c5191ba1b8e00f44",
+   "fr_hash": "02079c964af9194d"
+  },
+  {
+   "id": "nom-010-eclipse-transition/procedure-steps/step-8-restore-nominal-configuration",
+   "en_hash": "7bc9c1edd4d79091",
+   "fr_hash": "4ddc44bc56ebb0a6"
+  },
+  {
+   "id": "nom-010-eclipse-transition/verification-criteria",
+   "en_hash": "83e34ebcaf780bac",
+   "fr_hash": "a20cc7a8cb039e3a"
+  },
+  {
+   "id": "nom-010-eclipse-transition/contingency",
+   "en_hash": "46ad1dcb02f29bc5",
+   "fr_hash": "913d780de571cd04"
+  }
+ ],
+ "en_commit": "3e80564"
+}

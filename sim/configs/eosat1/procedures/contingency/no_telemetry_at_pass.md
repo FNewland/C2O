@@ -69,6 +69,8 @@ is confirmed nominal.
 The purpose is to trigger downlink activity and check for faint signal.
 **Action:** Wait 30 s and check ground station receiver for any signal indication.
 **Action:** If ground receiver detects a weak carrier, proceed to Step 4 (PA investigation).
+**GO/NO-GO:** Ground receiver detects a weak carrier -> GO `STEP-4` | NO-GO `STEP-2B`
+**LABEL:** `STEP-2B`
 **Action:** If no signal at all, assess whether the TTC TX power line may be off.
 **Note:** The `eps.pl_ttc_tx` (0x0112) parameter indicates TX power line state, but this
 requires a working downlink to read. If the TX power line was tripped by an overcurrent
@@ -77,35 +79,44 @@ event, the transponder has no power to transmit.
 this commands the TTC TX power line ON.
 **Verify:** Wait 30 s for transponder to power up and re-acquire.
 **Verify:** Check ground station receiver for downlink carrier.
-**GO/NO-GO:** If signal appears, proceed to Step 6 (link verification). If still no signal, proceed to Step 3.
+**GO/NO-GO:** If signal appears, proceed to Step 6 (link verification). If still no signal, proceed to Step 3. -> GO `STEP-6` | NO-GO `STEP-3`
 
 ### Step 3: Command Transponder Switch (Blind)
+**LABEL:** `STEP-3`
 **Note:** The primary transponder may have failed. Attempt blind switchover:
 **TC:** `TTC_SWITCH_REDUNDANT` (Service 8, Subtype 1, func_id 64) — blind command
 **Verify:** Wait 45 s for redundant transponder power-up and frequency lock.
 **Verify:** Check ground station receiver for downlink carrier on redundant transponder frequency.
 **Action:** If signal detected on redundant: proceed to Step 6 (link verification).
+**GO/NO-GO:** Signal detected on the redundant transponder -> GO `STEP-6` | NO-GO `STEP-3B`
+**LABEL:** `STEP-3B`
 **Note:** Only if the redundant transponder produced no signal either.
 **TC:** `TTC_SWITCH_PRIMARY` (Service 8, Subtype 1, func_id 63) — revert to the primary transponder
 **Action:** Wait 30 s.
 **GO/NO-GO:** If neither transponder produces signal, proceed to Step 4 (PA check).
 
 ### Step 4: Command PA ON (Blind)
+**LABEL:** `STEP-4`
 **Note:** The PA may be disabled. Send blind PA enable command:
 **TC:** `TTC_PA_ON` (Service 8, Subtype 1, func_id 66)
 **Verify:** Wait 15 s for PA power-up.
 **Verify:** Check ground station receiver for downlink carrier.
 **Action:** If signal detected: proceed to Step 6 (link verification).
+**GO/NO-GO:** Signal detected after PA ON -> GO `STEP-6` | NO-GO `STEP-4B`
+**LABEL:** `STEP-4B`
 **Note:** If no signal: the PA enable may not have taken effect. Try cycling the PA:
 **TC:** `TTC_PA_OFF` (Service 8, Subtype 1, func_id 67) — wait 10 s
 **TC:** `TTC_PA_ON` (Service 8, Subtype 1, func_id 66) — wait 15 s
 **Verify:** Check ground station receiver for downlink carrier.
-**GO/NO-GO:** If signal detected, proceed to Step 6. If still no signal, proceed to Step 5.
+**GO/NO-GO:** If signal detected, proceed to Step 6. If still no signal, proceed to Step 5. -> GO `STEP-6` | NO-GO `STEP-5`
 
 ### Step 5: Check Antenna Deployment and Deploy If Needed
+**LABEL:** `STEP-5`
 **Action:** If the spacecraft is in early mission (post-separation) or the antenna
 deployment status is uncertain, the antennas may still be stowed. A stowed antenna
 will produce a severely attenuated signal (>20 dB loss).
+**GO/NO-GO:** Antenna deployment status genuinely uncertain or known to be stowed -> GO `STEP-5D` | NO-GO `STEP-7`
+**LABEL:** `STEP-5D`
 **Note:** Send the blind antenna deployment command. The mnemonic is
 `TTC_DEPLOY_ANTENNA` (singular) and the function is **69**.
 **DANGER — corrected 2026-08b:** this card previously named `func_id 56`.
@@ -125,10 +136,10 @@ goes to 1 and `ttc.antenna_deployment_sensor` (0x0536) reads 2 (DEPLOYED);
 the pyro continuity is already faulty and the command will not fire.
 **Verify:** Check ground station receiver for downlink carrier. Antenna deployment should
 produce a dramatic improvement in signal level (15-25 dB gain increase).
-**GO/NO-GO:** If signal detected, proceed to Step 6 (link verification). If still no
-signal after all RF chain checks, proceed to Step 7 (escalation).
+**GO/NO-GO:** If signal detected, proceed to Step 6 (link verification). If still no signal after all RF chain checks, proceed to Step 7 (escalation). -> GO `STEP-6` | NO-GO `STEP-7`
 
 ### Step 6: Verify Link Quality and Subsystem Health
+**LABEL:** `STEP-6`
 **TC:** `HK_REQUEST(sid=6)` (Service 3, Subtype 27) — Request TTC housekeeping
 **Verify:** `ttc.link_status` (0x0501) = 2 (LOCKED)
 **Verify:** `ttc.rssi` (0x0502) > -90 dBm (nominal signal strength)
@@ -149,18 +160,20 @@ signal after all RF chain checks, proceed to Step 7 (escalation).
 - Step 3: Primary transponder failure, now on redundant
 - Step 4: PA was disabled
 - Step 5: Antennas were stowed
-**GO/NO-GO:** Link margin > 3 dB, all subsystems nominal — recovery complete.
+**GO/NO-GO:** Link margin > 3 dB, all subsystems nominal — recovery complete. -> GO `STEP-END` | NO-GO `STEP-7`
 
 ### Step 7: Escalation — No Link Recovery
+**LABEL:** `STEP-7`
 **Action:** Log all blind commands sent with timestamps.
 **Action:** Notify Flight Director and Mission Director of sustained no-TM condition.
 **Action:** Confirm spacecraft autonomous safe mode timer is active (24h no-contact trigger).
 **Action:** Schedule next available ground station pass for re-acquisition attempt.
-**TC:** `TTC_SET_TX_POWER(level=2)` (Service 8, Subtype 1, func_id 68) — Consider increasing TX power for next attempt: prepare — high power mode for improved link budget.
+**TC:** `TTC_SET_TX_POWER(level=2)` (Service 8, Subtype 1, func_id 68) — high power mode for the next attempt, for an improved link budget.
 **GO/NO-GO:** If no link after two consecutive pass attempts, escalate to EMG-004
 (Loss of Communication Emergency).
 
 ## Verification Criteria
+**LABEL:** `STEP-END`
 - [ ] `ttc.link_status` (0x0501) = 2 (LOCKED link established)
 - [ ] `ttc.rssi` (0x0502) > -90 dBm
 - [ ] `ttc.link_margin` (0x0503) > 3.0 dB
@@ -182,7 +195,7 @@ signal after all RF chain checks, proceed to Step 7 (escalation).
   mechanism may have failed (burn-wire did not fire, antenna stuck). This is a
   permanent hardware failure. Rely on stub antenna with reduced link budget.
 - If OBC is found in SAFE or EMERGENCY mode after link restoration: Execute
-  CTG-010 (OBDH Watchdog Recovery) or CTG-010 as appropriate before resuming
+  CTG-010 (OBDH Watchdog Recovery) or CTG-011 (OBC Redundancy Switchover) as appropriate before resuming
   nominal operations.
 - If signal is intermittent (toggling on/off): Suspect attitude issue causing
   antenna null pattern. Request AOCS telemetry: check `aocs.att_error` (0x0217)

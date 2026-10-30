@@ -47,7 +47,7 @@ sequence autonomously:
 | Step | Action                                          | Subsystem |
 |------|-------------------------------------------------|-----------|
 | 1    | Set OBC mode to SAFE                            | OBDH      |
-| 2    | Command AOCS to SAFE_POINT mode                 | AOCS      |
+| 2    | Command AOCS to COARSE_SUN mode (3)             | AOCS      |
 | 3    | Power off payload                               | PLD       |
 | 4    | Shed non-essential loads                        | EPS       |
 | 5    | Activate essential heaters (battery, OBC)       | TCS       |
@@ -75,7 +75,7 @@ the spacecraft can sustain itself indefinitely until ground intervention.
 
 | Rule ID | Condition                      | Detection       | Response                    |
 |---------|--------------------------------|----------------|-----------------------------|
-| AOCS-01 | att_error > 2 deg (sustained)  | 0x0217 > 2     | Transition to SAFE_POINT    |
+| AOCS-01 | att_error > 2 deg (sustained)  | 0x0217 > 2     | Transition to COARSE_SUN    |
 | AOCS-02 | Body rate > 2 deg/s            | 0x0204–0206    | Transition to DETUMBLE      |
 | AOCS-03 | RW speed > 5500 RPM            | 0x0207–020A    | Initiate desaturation       |
 | AOCS-04 | RW temp > 70 C                 | 0x0218–021B    | Reduce RW torque demand     |
@@ -128,7 +128,7 @@ payload that was correctly switched off already, on every orbit.
 3. Identify and resolve root cause of the anomaly.
 4. Verify all subsystem parameters are within nominal limits.
 5. Command `OBC_SET_MODE` (mode=0) to return to NOMINAL.
-6. Command `AOCS_SET_MODE` (mode=0) to return to NADIR_POINT.
+6. Command `AOCS_SET_MODE` (mode=4) to return to NOMINAL (nadir).
 7. Reactivate payload and resume nominal operations.
 
 ### 5.2 Transponder Recovery
@@ -141,8 +141,8 @@ payload that was correctly switched off already, on every orbit.
 ### 5.3 AOCS Recovery from DETUMBLE
 
 1. Monitor body rates (0x0204–0x0206) decreasing towards zero.
-2. Once rates < 0.5 deg/s sustained for 30 s, AOCS autonomously transitions to SAFE_POINT.
-3. Ground commands `AOCS_SET_MODE` (mode=0) to enter NADIR_POINT when ready.
+2. Once rates < 0.5 deg/s sustained for 30 s, AOCS autonomously transitions to COARSE_SUN.
+3. Ground commands `AOCS_SET_MODE` (mode=4) to enter NOMINAL (nadir) when ready.
 
 ## 6. PUS Service 12 — Onboard Monitoring
 
@@ -245,7 +245,7 @@ Each threshold triggers progressively more aggressive power reduction:
 | SoC Threshold | FDIR Level | Actions                                               |
 |---------------|------------|-------------------------------------------------------|
 | < 50%         | Level 1    | Inhibit payload imaging; reduce HK rate to 0.5 Hz     |
-| < 35%         | Level 2    | Command AOCS to SAFE_POINT; shed non-essential loads   |
+| < 35%         | Level 2    | Command AOCS to COARSE_SUN; shed non-essential loads   |
 | < 25%         | Level 3    | Safe mode entry; only essential loads remain           |
 | < 15%         | Level 4    | Emergency mode; OBC + TTC only; all other loads off    |
 
@@ -260,14 +260,14 @@ for detection and recovery:
 
 | Scenario                    | Detection Method              | Procedure File                        |
 |-----------------------------|-------------------------------|---------------------------------------|
-| TTC no telemetry            | No TM at expected AOS         | `contingency_ttc_no_tm.yaml`          |
-| Ground station antenna fail | Ground equipment monitoring    | `contingency_gs_antenna_failure.yaml` |
-| OBC stuck in bootloader     | Beacon SID 11 with mode=2     | `contingency_obc_bootloader.yaml`     |
-| Bus isolation required      | Multiple subsystem anomalies  | `contingency_bus_isolation.yaml`      |
-| Progressive load shed       | bat_soc crossing thresholds   | `contingency_progressive_load_shed.yaml` |
-| Solar panel loss             | Panel current = 0 sustained  | `contingency_solar_panel_loss.yaml`   |
-| AOCS sensor cascade failure | Multiple sensor invalids      | `contingency_aocs_sensor_cascade.yaml`|
-| AOCS actuator stuck         | Wheel speed constant despite command | `contingency_actuator_stuck.yaml` |
+| TTC no telemetry            | No TM at expected AOS         | `procedures/contingency/no_telemetry_at_pass.md` |
+| Ground station antenna fail | Ground equipment monitoring    | `procedures/contingency/gs_antenna_failure.md` |
+| OBC stuck in bootloader     | Beacon SID 11 with mode=2     | `procedures/contingency/obc_bootloader_recovery.md` |
+| Bus isolation required      | Multiple subsystem anomalies  | `procedures/contingency/bus_failure_isolation.md` |
+| Progressive load shed       | bat_soc crossing thresholds   | `procedures/contingency/progressive_load_shed.md` |
+| Solar panel loss             | Panel current = 0 sustained  | `procedures/contingency/solar_panel_loss_response.md` |
+| AOCS sensor cascade failure | Multiple sensor invalids      | `procedures/contingency/aocs_sensor_loss_recovery.md` |
+| AOCS actuator stuck         | Wheel speed constant despite command | `procedures/contingency/aocs_actuator_stuck_recovery.md` |
 
 Each contingency procedure includes:
 - **Entry criteria**: How to recognise the scenario.

@@ -1,0 +1,102 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/nominal/software_upload.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "nom-006-software-upload",
+   "en_hash": "54c32d1c5e687593",
+   "fr_hash": "80169d4c5fdc66eb"
+  },
+  {
+   "id": "nom-006-software-upload/purpose",
+   "en_hash": "3aea875705b9dc71",
+   "fr_hash": "bea90d5f3c21b3ca"
+  },
+  {
+   "id": "nom-006-software-upload/prerequisites",
+   "en_hash": "2b4f7edf0897cf13",
+   "fr_hash": "e034e6336abb3c8c"
+  },
+  {
+   "id": "nom-006-software-upload/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "nom-006-software-upload/procedure-steps/step-1-pre-upload-health-assessment",
+   "en_hash": "14afcad511680e14",
+   "fr_hash": "aca85b7dfc8643be"
+  },
+  {
+   "id": "nom-006-software-upload/procedure-steps/step-2-halt-non-critical-onboard-tasks",
+   "en_hash": "59d9b9a203890464",
+   "fr_hash": "8b766de0c910106a"
+  },
+  {
+   "id": "nom-006-software-upload/procedure-steps/step-3-initiate-memory-load-session",
+   "en_hash": "da1f67f33afd817b",
+   "fr_hash": "72de29f4b61c155d"
+  },
+  {
+   "id": "nom-006-software-upload/procedure-steps/step-4-upload-data-segments",
+   "en_hash": "d1766625c3002cde",
+   "fr_hash": "8d56f124c8c31297"
+  },
+  {
+   "id": "nom-006-software-upload/procedure-steps/step-5-verify-checksum-integrity",
+   "en_hash": "995297ccb1486fcc",
+   "fr_hash": "ddbd1aa653ff2c34"
+  },
+  {
+   "id": "nom-006-software-upload/procedure-steps/step-6-activate-new-software-image-if-full-image-replacement",
+   "en_hash": "b375db78f33c4d66",
+   "fr_hash": "67f5b77802a050d1"
+  },
+  {
+   "id": "nom-006-software-upload/procedure-steps/step-7-confirm-boot-into-new-software",
+   "en_hash": "aaa7f3be9308084c",
+   "fr_hash": "370b14389d9bb2b8"
+  },
+  {
+   "id": "nom-006-software-upload/procedure-steps/step-8-post-upload-verification-and-restore-operations",
+   "en_hash": "8fb7f8c5e5362280",
+   "fr_hash": "b7960ba162216743"
+  },
+  {
+   "id": "nom-006-software-upload/recovery-actions",
+   "en_hash": "f252599925c6d183",
+   "fr_hash": "08537f2991c98576"
+  },
+  {
+   "id": "nom-006-software-upload/recovery-actions/recovery-action-1-checksum-mismatch-corrupt-upload",
+   "en_hash": "93e17cf251920936",
+   "fr_hash": "f7a17cf5192564f4"
+  },
+  {
+   "id": "nom-006-software-upload/recovery-actions/recovery-action-2-boot-failure-obc-in-bootloader",
+   "en_hash": "21911ef89c893d6a",
+   "fr_hash": "b7bce7a0cf6a7706"
+  },
+  {
+   "id": "nom-006-software-upload/recovery-actions/recovery-action-3-link-loss-during-upload",
+   "en_hash": "8f8c6c72b0877a72",
+   "fr_hash": "e4fb0b0807fba81d"
+  },
+  {
+   "id": "nom-006-software-upload/off-nominal-handling",
+   "en_hash": "acb8f88a908038b8",
+   "fr_hash": "fd5be8459c36fe6f"
+  },
+  {
+   "id": "nom-006-software-upload/post-conditions",
+   "en_hash": "107284f73a60bcbb",
+   "fr_hash": "3716c1c7a5130874"
+  }
+ ],
+ "en_commit": "3e80564"
+}

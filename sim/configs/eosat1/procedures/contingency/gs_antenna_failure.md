@@ -56,11 +56,10 @@ shortened contact window.
 - IF/baseband processing
 **Note:** A 30 dB signal drop with a healthy spacecraft strongly indicates a ground
 station equipment failure (antenna drive failure, LNA failure, or feed fault).
-**GO/NO-GO:** Ground station equipment failure confirmed (or strongly suspected) —
-proceed to Step 2. If spacecraft-side suspected, follow CTG-019 or
-CTG-003 instead.
+**GO/NO-GO:** Ground station equipment failure confirmed (or strongly suspected) — proceed to Step 2. If spacecraft-side suspected, follow CTG-019 or CTG-003 instead. -> GO `STEP-2` | NO-GO `STEP-END`
 
 ### Step 2: Attempt Local Ground Station Recovery
+**LABEL:** `STEP-2`
 **Action:** Check if the antenna can be reset or re-pointed:
 - Issue antenna controller reset if available
 - Command re-acquisition of satellite track
@@ -72,10 +71,10 @@ CTG-003 instead.
 **Note:** While attempting GS recovery, the spacecraft continues to transmit normally.
 No data is being lost onboard — the HK and payload data continue to be stored in
 the spacecraft mass memory.
-**GO/NO-GO:** If GS recovers, resume pass operations and log incident. If GS does
-NOT recover within 2 minutes, proceed to Step 3.
+**GO/NO-GO:** If GS recovers, resume pass operations and log incident. If GS does NOT recover within 2 minutes, proceed to Step 3. -> GO `STEP-END` | NO-GO `STEP-3`
 
 ### Step 3: Notify Flight Director and Assess Impact
+**LABEL:** `STEP-3`
 **Action:** Report to Flight Director:
 - "GS [station name] antenna failure confirmed at [time]. No spacecraft anomaly.
   Spacecraft is healthy, transmitting normally. Ground cannot receive."
@@ -87,10 +86,10 @@ NOT recover within 2 minutes, proceed to Step 3.
 **Action:** If critical commands were pending:
 - Can they wait until the next scheduled pass?
 - Is there an alternate station with overlapping or near-term visibility?
-**GO/NO-GO:** Impact assessed — if critical operations are pending, proceed to
-Step 4 immediately. If no urgent need, proceed to Step 5 (replanning).
+**GO/NO-GO:** Impact assessed — if critical operations are pending, proceed to Step 4 immediately. If no urgent need, proceed to Step 5 (replanning). -> GO `STEP-4` | NO-GO `STEP-5`
 
 ### Step 4: Coordinate Switch to Alternate Ground Station
+**LABEL:** `STEP-4`
 **Action:** Request Flight Director to authorize contact via alternate ground station.
 **Action:** Check next available pass windows at alternate stations:
 - Troll (Antarctica) — check visibility window
@@ -111,6 +110,7 @@ normal operations including any pre-loaded onboard schedule.
 in safe autonomous state.
 
 ### Step 5: Replan Contact Schedule
+**LABEL:** `STEP-5`
 **Action:** Work with Flight Director to replan the contact schedule:
 - Remove the failed station from near-term schedule until repair is confirmed
 - Add replacement passes at alternate stations
@@ -132,6 +132,7 @@ in safe autonomous state.
 **GO/NO-GO:** Schedule replanned, incident logged — procedure complete.
 
 ## Verification Criteria
+**LABEL:** `STEP-END`
 - [ ] Ground station failure confirmed as root cause (not spacecraft)
 - [ ] Flight Director notified and impact assessed
 - [ ] Alternate station coordinated (if critical operations were pending)

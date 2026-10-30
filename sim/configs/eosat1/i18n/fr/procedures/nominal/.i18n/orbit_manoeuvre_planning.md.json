@@ -1,0 +1,62 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/nominal/orbit_manoeuvre_planning.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "nom-004-orbit-maintenance-manoeuvre-planning",
+   "en_hash": "2baf61a4d1f5ff50",
+   "fr_hash": "51d35449b4778261"
+  },
+  {
+   "id": "nom-004-orbit-maintenance-manoeuvre-planning/purpose",
+   "en_hash": "7a4ebf8a6d3e11ce",
+   "fr_hash": "a49af9165c20ade7"
+  },
+  {
+   "id": "nom-004-orbit-maintenance-manoeuvre-planning/prerequisites",
+   "en_hash": "3fe57d366465072c",
+   "fr_hash": "360d99b6d63904ac"
+  },
+  {
+   "id": "nom-004-orbit-maintenance-manoeuvre-planning/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "nom-004-orbit-maintenance-manoeuvre-planning/procedure-steps/step-1-fds-manoeuvre-design",
+   "en_hash": "2e10d5074d89f343",
+   "fr_hash": "e4b3b0a18f27a2df"
+  },
+  {
+   "id": "nom-004-orbit-maintenance-manoeuvre-planning/procedure-steps/step-2-propulsion-health-check",
+   "en_hash": "32e2c6b7349e5a5e",
+   "fr_hash": "037e0d8a418c9ed2"
+  },
+  {
+   "id": "nom-004-orbit-maintenance-manoeuvre-planning/procedure-steps/step-3-flight-director-authorisation",
+   "en_hash": "77eae40e450f6f56",
+   "fr_hash": "bd54654b98d3fe57"
+  },
+  {
+   "id": "nom-004-orbit-maintenance-manoeuvre-planning/procedure-steps/step-4-s11-time-tagged-upload",
+   "en_hash": "c88cf9f0433aaeb1",
+   "fr_hash": "be524f5be5e7d4a1"
+  },
+  {
+   "id": "nom-004-orbit-maintenance-manoeuvre-planning/procedure-steps/step-5-handover-to-execution",
+   "en_hash": "22ceac264dbc49f8",
+   "fr_hash": "3789af5d232fc0cc"
+  },
+  {
+   "id": "nom-004-orbit-maintenance-manoeuvre-planning/deviations",
+   "en_hash": "0e44fe6077887c8f",
+   "fr_hash": "a302e7c1e8444ed9"
+  }
+ ],
+ "en_commit": "3e80564"
+}

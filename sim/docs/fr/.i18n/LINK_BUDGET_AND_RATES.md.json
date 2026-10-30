@@ -1,0 +1,152 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "docs/LINK_BUDGET_AND_RATES.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "eo-sat-1-link-budget-and-the-tm-data-rate-ladder",
+   "en_hash": "f227d760278074bd",
+   "fr_hash": "947bfffea955df25"
+  },
+  {
+   "id": "eo-sat-1-link-budget-and-the-tm-data-rate-ladder/1-why-a-spacecraft-has-more-than-one-downlink-rate",
+   "en_hash": "1dd0d53f9fbd0d41",
+   "fr_hash": "136f63a3cd8ce685"
+  },
+  {
+   "id": "eo-sat-1-link-budget-and-the-tm-data-rate-ladder/2-the-ladder-as-shipped",
+   "en_hash": "d8d80a8932e6be73",
+   "fr_hash": "6b87303763377c41"
+  },
+  {
+   "id": "eo-sat-1-link-budget-and-the-tm-data-rate-ladder/2-the-ladder-as-shipped/2-1-safe-1-kbps-the-lifeline-renamed-from-beacon-2026-08c",
+   "en_hash": "92543c28d77d4455",
+   "fr_hash": "3f19b6e3125a70ea"
+  },
+  {
+   "id": "eo-sat-1-link-budget-and-the-tm-data-rate-ladder/2-the-ladder-as-shipped/2-2-low-16-kbps-where-the-spacecraft-actually-lives",
+   "en_hash": "b75b8186f7a4879f",
+   "fr_hash": "45a2397d4a6f2624"
+  },
+  {
+   "id": "eo-sat-1-link-budget-and-the-tm-data-rate-ladder/2-the-ladder-as-shipped/2-3-high-128-kbps-earned-per-dump",
+   "en_hash": "bd8b1143c1b09c9e",
+   "fr_hash": "0961973d17eb1ab5"
+  },
+  {
+   "id": "eo-sat-1-link-budget-and-the-tm-data-rate-ladder/2-the-ladder-as-shipped/2-4-why-the-steps-are-16-and-8",
+   "en_hash": "f4ef95418970f24f",
+   "fr_hash": "c7e0a31207e29001"
+  },
+  {
+   "id": "eo-sat-1-link-budget-and-the-tm-data-rate-ladder/3-modulation-and-coding-two-independent-levers",
+   "en_hash": "78b77f1eaec8480c",
+   "fr_hash": "66750429b3e8aece"
+  },
+  {
+   "id": "eo-sat-1-link-budget-and-the-tm-data-rate-ladder/4-the-margin-table",
+   "en_hash": "7c1806b5930f182a",
+   "fr_hash": "eb92710180ac801c"
+  },
+  {
+   "id": "eo-sat-1-link-budget-and-the-tm-data-rate-ladder/4-the-margin-table/4-1-reading-the-table",
+   "en_hash": "dbdcc25790277bda",
+   "fr_hash": "37cdf6b7d13c6fd5"
+  },
+  {
+   "id": "eo-sat-1-link-budget-and-the-tm-data-rate-ladder/4-the-margin-table/4-2-the-margin-table-is-drawn-at-one-pa-setting",
+   "en_hash": "cc6426206cf588fa",
+   "fr_hash": "a0704f84e1fc2c88"
+  },
+  {
+   "id": "eo-sat-1-link-budget-and-the-tm-data-rate-ladder/4-the-margin-table/4-3-the-ceiling-is-regulation-not-physics",
+   "en_hash": "7daaa215ec810f98",
+   "fr_hash": "4e03dbe0295a00c5"
+  },
+  {
+   "id": "eo-sat-1-link-budget-and-the-tm-data-rate-ladder/5-what-the-ladder-does-to-mission-planning",
+   "en_hash": "5db6bc1ef3772f4b",
+   "fr_hash": "89d23470eef5074b"
+  },
+  {
+   "id": "eo-sat-1-link-budget-and-the-tm-data-rate-ladder/5-what-the-ladder-does-to-mission-planning/5-1-one-image-is-most-of-a-pass",
+   "en_hash": "1c38f0ce12a36811",
+   "fr_hash": "cbc7b641fea5d9be"
+  },
+  {
+   "id": "eo-sat-1-link-budget-and-the-tm-data-rate-ladder/5-what-the-ladder-does-to-mission-planning/5-2-housekeeping-alone-is-a-third-of-the-low-rate-network",
+   "en_hash": "817767f056bcdfbe",
+   "fr_hash": "4a6eb59d7c357e26"
+  },
+  {
+   "id": "eo-sat-1-link-budget-and-the-tm-data-rate-ladder/5-what-the-ladder-does-to-mission-planning/5-3-a-pass-spent-dumping-is-a-pass-not-spent-otherwise",
+   "en_hash": "68fc1217dc564a9b",
+   "fr_hash": "810d9dd09c051385"
+  },
+  {
+   "id": "eo-sat-1-link-budget-and-the-tm-data-rate-ladder/6-operating-the-ladder",
+   "en_hash": "bbc5df3423e6058a",
+   "fr_hash": "e4c4ca3375105c3d"
+  },
+  {
+   "id": "eo-sat-1-link-budget-and-the-tm-data-rate-ladder/6-operating-the-ladder/6-1-commands",
+   "en_hash": "166ca1154a875814",
+   "fr_hash": "7f1b2bba41973f57"
+  },
+  {
+   "id": "eo-sat-1-link-budget-and-the-tm-data-rate-ladder/6-operating-the-ladder/6-2-telemetry-and-the-active-vs-commanded-distinction",
+   "en_hash": "535f940df2b01e99",
+   "fr_hash": "47a60ae67ed6fa59"
+  },
+  {
+   "id": "eo-sat-1-link-budget-and-the-tm-data-rate-ladder/6-operating-the-ladder/6-3-how-to-change-rate-and-why-a-change-can-be-refused",
+   "en_hash": "5315c053178b767c",
+   "fr_hash": "11342e93d8ca363a"
+  },
+  {
+   "id": "eo-sat-1-link-budget-and-the-tm-data-rate-ladder/7-changing-the-numbers",
+   "en_hash": "15f37943553bee25",
+   "fr_hash": "bc64ac601248c052"
+  },
+  {
+   "id": "eo-sat-1-link-budget-and-the-tm-data-rate-ladder/8-further-reading",
+   "en_hash": "1e47fe34510eb837",
+   "fr_hash": "bc69530f393bb4fe"
+  },
+  {
+   "id": "eo-sat-1-link-budget-and-the-tm-data-rate-ladder/9-the-other-transmitter-the-uhf-bootloader-beacon",
+   "en_hash": "0279b7590338a97f",
+   "fr_hash": "5dea7958a64f6577"
+  },
+  {
+   "id": "eo-sat-1-link-budget-and-the-tm-data-rate-ladder/9-the-other-transmitter-the-uhf-bootloader-beacon/9-1-why-a-second-radio-at-all",
+   "en_hash": "93f9831350f60877",
+   "fr_hash": "0fe843c716fc0443"
+  },
+  {
+   "id": "eo-sat-1-link-budget-and-the-tm-data-rate-ladder/9-the-other-transmitter-the-uhf-bootloader-beacon/9-2-what-it-is",
+   "en_hash": "11a488de58a99033",
+   "fr_hash": "039e06e6fdce9ea7"
+  },
+  {
+   "id": "eo-sat-1-link-budget-and-the-tm-data-rate-ladder/9-the-other-transmitter-the-uhf-bootloader-beacon/9-3-the-budget-and-the-contrast-that-is-the-whole-lesson",
+   "en_hash": "449746ddcc2a787f",
+   "fr_hash": "babfe5d62a127af9"
+  },
+  {
+   "id": "eo-sat-1-link-budget-and-the-tm-data-rate-ladder/9-the-other-transmitter-the-uhf-bootloader-beacon/9-4-what-it-gates-and-what-it-does-not",
+   "en_hash": "9c3ca13480ad6559",
+   "fr_hash": "310a6021c52270ff"
+  },
+  {
+   "id": "eo-sat-1-link-budget-and-the-tm-data-rate-ladder/9-the-other-transmitter-the-uhf-bootloader-beacon/9-5-three-things-called-beacon-and-how-to-keep-them-apart",
+   "en_hash": "6d614e7841a66901",
+   "fr_hash": "a23d6353ec7413ab"
+  }
+ ],
+ "en_commit": "3e80564"
+}

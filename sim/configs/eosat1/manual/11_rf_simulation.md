@@ -228,7 +228,7 @@ smo-rfsim --config configs/eosat1/rfsim.yaml --mode FRAME --radio-web
 | Document                        | Description                    |
 |---------------------------------|--------------------------------|
 | EOSAT1-UM-MIS-001 (Section 00) | Mission Overview               |
-| EOSAT1-UM-TTC-006 (Section 06) | TTC Subsystem                  |
+| EOSAT1-UM-TTC-006 (Section 05) | TTC Subsystem                  |
 | EOSAT1-UM-CMD-009 (Section 09) | Command Reference              |
 | CCSDS 132.0-B-3                 | TM Space Data Link Protocol    |
 | CCSDS 232.0-B-4                 | TC Space Data Link Protocol    |

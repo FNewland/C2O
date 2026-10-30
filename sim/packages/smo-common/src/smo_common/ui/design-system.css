@@ -360,3 +360,19 @@ table.ds-and{ width:100%; border-collapse:collapse; font-size:13px; }
 .ds-node.off .vl{ fill:var(--tx3); }
 .ds-node[data-nav]{ cursor:pointer; }
 .ds-node[data-nav]:hover rect.bx{ stroke:var(--info); }
+
+/* 4.11 Language toggle (renderLangToggle / mountLangToggle) — additive
+   2026-10 (i18n S0). Same weight as the top-bar .ibtn buttons: grey at rest
+   (ISA-101 — no saturated colour for a normal state); the current language
+   is shown by a raised fill, bright text AND an underline (P6: never colour
+   alone). Codes are identifiers (EN/FR) and are never translated. */
+.ds-lang{ display:inline-flex; flex:0 0 auto; border:1px solid var(--line-2);
+  border-radius:var(--r); overflow:hidden; }
+.ds-lang button{ font:600 12px/1 var(--mono); letter-spacing:.6px;
+  padding:5px 8px; background:transparent; color:var(--tx3); border:0;
+  cursor:pointer; }
+.ds-lang button+button{ border-left:1px solid var(--line-2); }
+.ds-lang button:hover{ background:var(--s2); color:var(--tx); }
+.ds-lang button[aria-pressed="true"]{ background:var(--s3); color:var(--val);
+  box-shadow:inset 0 -2px 0 var(--info); cursor:default; }
+.ds-lang button:focus-visible{ outline:2px solid var(--info); outline-offset:-2px; }

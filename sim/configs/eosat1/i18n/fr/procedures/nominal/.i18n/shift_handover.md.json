@@ -1,0 +1,77 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/nominal/shift_handover.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "nom-012-shift-handover",
+   "en_hash": "65fb2b8fa2ad8ffd",
+   "fr_hash": "463b424ebbe72901"
+  },
+  {
+   "id": "nom-012-shift-handover/objective",
+   "en_hash": "654b3e46fcdd8dec",
+   "fr_hash": "af0c99e954f5d5ab"
+  },
+  {
+   "id": "nom-012-shift-handover/prerequisites",
+   "en_hash": "56fe12029be47e3b",
+   "fr_hash": "9944cf026a22eac2"
+  },
+  {
+   "id": "nom-012-shift-handover/required-telemetry",
+   "en_hash": "388191cce8c23007",
+   "fr_hash": "f320e50fade99c67"
+  },
+  {
+   "id": "nom-012-shift-handover/required-commands",
+   "en_hash": "e9bac130bbaba8de",
+   "fr_hash": "a9fbb609c60b6158"
+  },
+  {
+   "id": "nom-012-shift-handover/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "nom-012-shift-handover/procedure-steps/step-1-review-all-subsystem-states",
+   "en_hash": "70f9a423d3d1cf37",
+   "fr_hash": "939dbfecb2e2cbab"
+  },
+  {
+   "id": "nom-012-shift-handover/procedure-steps/step-2-check-pending-alarms-and-anomalies",
+   "en_hash": "e8bc5ac76eb432ca",
+   "fr_hash": "66a5535e96d37985"
+  },
+  {
+   "id": "nom-012-shift-handover/procedure-steps/step-3-review-upcoming-ground-station-contacts",
+   "en_hash": "4ffbaca3a59e3a02",
+   "fr_hash": "c14af31a12d478ae"
+  },
+  {
+   "id": "nom-012-shift-handover/procedure-steps/step-4-verify-stored-commands-and-schedule",
+   "en_hash": "712eeb38d62bf60f",
+   "fr_hash": "ffa9c7e1f2e9c444"
+  },
+  {
+   "id": "nom-012-shift-handover/procedure-steps/step-5-formal-handover-declaration",
+   "en_hash": "34d76022592a061e",
+   "fr_hash": "c0cb04e5b5d39d71"
+  },
+  {
+   "id": "nom-012-shift-handover/verification-criteria",
+   "en_hash": "18bb3ae25aee34ec",
+   "fr_hash": "0a6e5b850542e711"
+  },
+  {
+   "id": "nom-012-shift-handover/contingency",
+   "en_hash": "cdcaa4181ae9b7a5",
+   "fr_hash": "29c977d0032ceba0"
+  }
+ ],
+ "en_commit": "983af0f"
+}

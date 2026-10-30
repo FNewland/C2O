@@ -1,0 +1,77 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/contingency/gs_antenna_failure.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "ctg-020-ground-station-antenna-failure",
+   "en_hash": "93e808a8582eb3c8",
+   "fr_hash": "c149781dbc277a5a"
+  },
+  {
+   "id": "ctg-020-ground-station-antenna-failure/objective",
+   "en_hash": "691490e625f0b122",
+   "fr_hash": "4cdc48f4c92708a0"
+  },
+  {
+   "id": "ctg-020-ground-station-antenna-failure/prerequisites",
+   "en_hash": "da64083e3c3b6624",
+   "fr_hash": "b9e5003ea307a795"
+  },
+  {
+   "id": "ctg-020-ground-station-antenna-failure/required-telemetry",
+   "en_hash": "9e0dddede7bc4984",
+   "fr_hash": "63c1be8186008ec3"
+  },
+  {
+   "id": "ctg-020-ground-station-antenna-failure/required-commands",
+   "en_hash": "a83eca2fc4e43011",
+   "fr_hash": "33ea0f79f9ed55bb"
+  },
+  {
+   "id": "ctg-020-ground-station-antenna-failure/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "ctg-020-ground-station-antenna-failure/procedure-steps/step-1-confirm-signal-loss-is-not-spacecraft-side",
+   "en_hash": "3c8321d995e6cd9e",
+   "fr_hash": "6bcfa990c032df34"
+  },
+  {
+   "id": "ctg-020-ground-station-antenna-failure/procedure-steps/step-2-attempt-local-ground-station-recovery",
+   "en_hash": "ee560cf0ef088dd0",
+   "fr_hash": "c61517b8cb2e91e6"
+  },
+  {
+   "id": "ctg-020-ground-station-antenna-failure/procedure-steps/step-3-notify-flight-director-and-assess-impact",
+   "en_hash": "112fdf92c0cded7e",
+   "fr_hash": "d26cf94c431d40ee"
+  },
+  {
+   "id": "ctg-020-ground-station-antenna-failure/procedure-steps/step-4-coordinate-switch-to-alternate-ground-station",
+   "en_hash": "68fb484632571d41",
+   "fr_hash": "7a676fc4fd05e0f7"
+  },
+  {
+   "id": "ctg-020-ground-station-antenna-failure/procedure-steps/step-5-replan-contact-schedule",
+   "en_hash": "85a3b6b86e9b137a",
+   "fr_hash": "95ee4804e6ba582c"
+  },
+  {
+   "id": "ctg-020-ground-station-antenna-failure/verification-criteria",
+   "en_hash": "f6f4b4b350b4d451",
+   "fr_hash": "6059cd19b1a48ed9"
+  },
+  {
+   "id": "ctg-020-ground-station-antenna-failure/contingency",
+   "en_hash": "afb5daddbccf111f",
+   "fr_hash": "fe11362a3d81e71e"
+  }
+ ],
+ "en_commit": "3e80564"
+}

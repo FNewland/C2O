@@ -23,13 +23,13 @@ subsystems of interest for the current operations timeline.
 ## Procedure Steps
 
 ### Step 1 --- Read Current HK Configuration
-**TC:** `HK_ENABLE(sid=1)` (Service 3, Subtype 5) --- request EPS HK structure report
-**TC:** `HK_ENABLE(sid=2)` (Service 3, Subtype 5) --- request AOCS HK structure report
-**TC:** `HK_ENABLE(sid=3)` (Service 3, Subtype 5) --- request TCS HK structure report
-**TC:** `HK_ENABLE(sid=4)` (Service 3, Subtype 5) --- request OBDH HK structure report
-**TC:** `HK_ENABLE(sid=5)` (Service 3, Subtype 5) --- request Payload HK structure report
-**TC:** `HK_ENABLE(sid=6)` (Service 3, Subtype 5) --- request TT&C HK structure report
-**Verify:** Configuration reports received for all 6 SIDs within 15 s
+**TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) --- one-shot EPS HK report
+**TC:** `HK_REQUEST(sid=2)` (Service 3, Subtype 27) --- one-shot AOCS HK report
+**TC:** `HK_REQUEST(sid=3)` (Service 3, Subtype 27) --- one-shot TCS HK report
+**TC:** `HK_REQUEST(sid=4)` (Service 3, Subtype 27) --- one-shot OBDH HK report
+**TC:** `HK_REQUEST(sid=5)` (Service 3, Subtype 27) --- one-shot Payload HK report
+**TC:** `HK_REQUEST(sid=6)` (Service 3, Subtype 27) --- one-shot TT&C HK report
+**Verify:** HK reports received for all 6 SIDs within 15 s (S3.27 is a one-shot read; S3.5 `HK_ENABLE` would switch periodic reporting on, and there is no structure-report subtype)
 **Note:** The SID map is fixed by `telemetry/hk_structures.yaml`: **1 EPS, 2 AOCS, 3 TCS,
 4 OBDH/Platform, 5 Payload, 6 TT&C, 7 AOCS determination, 8 EPS-extended, 9 PROP,
 11 Beacon.** Only SIDs **1 and 11** are enabled at power-up
@@ -67,7 +67,7 @@ every other SID must be commanded on with `HK_ENABLE` (S3.5).
 **TC:** `HK_ENABLE(sid=6)` (Service 3, Subtype 5) --- enable TT&C periodic reporting
 **Verify:** Command acceptance for each ENABLE within 5 s
 **Note:** SIDs 1 (EPS), 2 (AOCS), 4 (OBDH) and 6 (TT&C) are the core set kept enabled
-during nominal operations. Only SID 1 survives a reboot enabled — the rest must be
+during nominal operations. Only SIDs 1 and 11 (beacon) come back enabled after a reboot — the rest must be
 re-commanded after every application boot.
 **GO/NO-GO:** Core SIDs enabled and reporting.
 
@@ -84,9 +84,10 @@ capacity during long non-contact periods. Monitor buffer fill level.
 **GO/NO-GO:** Optional SIDs configured per current operations plan.
 
 ### Step 5 --- Verify New Configuration Active
-**TC:** `HK_ENABLE(sid=1)` (Service 3, Subtype 5) --- re-read EPS config
-**TC:** `HK_ENABLE(sid=2)` (Service 3, Subtype 5) --- re-read AOCS config
-**Action:** Verify reported intervals match commanded values for all modified SIDs.
+**TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) --- one-shot EPS HK report
+**TC:** `HK_REQUEST(sid=2)` (Service 3, Subtype 27) --- one-shot AOCS HK report
+**TC:** `HK_REQUEST(sid=4)` (Service 3, Subtype 27) --- one-shot OBDH HK report (TM counters, buffer fill)
+**Action:** Verify the periodic packet spacing matches the commanded intervals for all modified SIDs.
 **Verify:** Periodic HK packets arriving at expected rates (observe TM packet count
 `obdh.tm_pkt_count` (0x0307) incrementing at the expected aggregate rate).
 **Verify:** `obdh.hktm_buf_fill` (0x0312) stable or decreasing (not accumulating backlog).
@@ -116,9 +117,9 @@ enabled SIDs are arriving at the configured intervals.
 - If stale data in HK packets (values not changing): The parameter source subsystem may be
   off or unresponsive. Check subsystem mode and power status. Do not confuse a stable
   parameter with a stale one --- verify with a one-shot request (Service 3, Subtype 27).
-- If configuration reverts after OBC reboot: The new intervals may not have been saved to
-  non-volatile memory. Use `SAVE_CONFIG` command to persist the HK configuration if
-  available, or re-apply after each boot.
+- If configuration reverts after OBC reboot: HK configuration is not persisted and there
+  is no save-configuration command in the catalogue. Re-apply this procedure after each
+  application boot.
 
 ## Post-Conditions
 - [ ] HK collection intervals set to the target profile (contact/standby/eclipse)

@@ -1,0 +1,47 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "docs/PROPULSION_GUIDE.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "eo-sat-1-propulsion-guide-phase-d",
+   "en_hash": "e0e2e20c4ca51166",
+   "fr_hash": "ef9870a9c1c69632"
+  },
+  {
+   "id": "eo-sat-1-propulsion-guide-phase-d/hardware",
+   "en_hash": "56a22c8739b7ef7e",
+   "fr_hash": "68f2f92c6d2eb05e"
+  },
+  {
+   "id": "eo-sat-1-propulsion-guide-phase-d/state-machine-and-interlocks",
+   "en_hash": "fc6ffe60bb8f3b8c",
+   "fr_hash": "e8d55a51506d6bba"
+  },
+  {
+   "id": "eo-sat-1-propulsion-guide-phase-d/orbit-integration-the-part-that-makes-it-real",
+   "en_hash": "90472a7e855a7878",
+   "fr_hash": "90b868079e7e6f21"
+  },
+  {
+   "id": "eo-sat-1-propulsion-guide-phase-d/power-and-thermal",
+   "en_hash": "b241f4cf7cea69b3",
+   "fr_hash": "9f8b6ad04888bb1e"
+  },
+  {
+   "id": "eo-sat-1-propulsion-guide-phase-d/interfaces",
+   "en_hash": "d76202dcb389f738",
+   "fr_hash": "fcb99489d1e0fa41"
+  },
+  {
+   "id": "eo-sat-1-propulsion-guide-phase-d/model-limitations-taught-not-simulated",
+   "en_hash": "850eb362644d2e2c",
+   "fr_hash": "80997d9716099bb2"
+  }
+ ],
+ "en_commit": "983af0f"
+}

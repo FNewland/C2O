@@ -1,0 +1,92 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/commissioning/aocs_actuator_checkout.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "com-004-aocs-actuator-checkout",
+   "en_hash": "d631610e8c57ae6d",
+   "fr_hash": "942912de6a6ac901"
+  },
+  {
+   "id": "com-004-aocs-actuator-checkout/purpose",
+   "en_hash": "c2caff70721f930a",
+   "fr_hash": "28ea47ff7dd49aff"
+  },
+  {
+   "id": "com-004-aocs-actuator-checkout/prerequisites",
+   "en_hash": "73ae10ceabf2a44c",
+   "fr_hash": "4442918d1ec07ffa"
+  },
+  {
+   "id": "com-004-aocs-actuator-checkout/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "com-004-aocs-actuator-checkout/procedure-steps/step-1-enable-the-four-reaction-wheels",
+   "en_hash": "bf90e5a70996bdbc",
+   "fr_hash": "a6c60f7387b990e5"
+  },
+  {
+   "id": "com-004-aocs-actuator-checkout/procedure-steps/step-2-record-baseline-wheel-speeds",
+   "en_hash": "8e086c884905ff7d",
+   "fr_hash": "eb345baeae744544"
+  },
+  {
+   "id": "com-004-aocs-actuator-checkout/procedure-steps/step-3-reaction-wheel-1-spin-up-test",
+   "en_hash": "87995553b2e48a3b",
+   "fr_hash": "b585cb2d3df2dd05"
+  },
+  {
+   "id": "com-004-aocs-actuator-checkout/procedure-steps/step-4-reaction-wheel-2-spin-up-test",
+   "en_hash": "1f962448a890aa56",
+   "fr_hash": "43e9ae3ed327a7e1"
+  },
+  {
+   "id": "com-004-aocs-actuator-checkout/procedure-steps/step-5-reaction-wheel-3-spin-up-test",
+   "en_hash": "837bd8641bbb1daf",
+   "fr_hash": "b396f4e6e316d7e5"
+  },
+  {
+   "id": "com-004-aocs-actuator-checkout/procedure-steps/step-6-reaction-wheel-4-spin-up-test",
+   "en_hash": "8ea882a24dd04252",
+   "fr_hash": "deb81b8a4af39b44"
+  },
+  {
+   "id": "com-004-aocs-actuator-checkout/procedure-steps/step-7-check-wheel-temperatures",
+   "en_hash": "5df2db639ed6b919",
+   "fr_hash": "c207e8972e7dae69"
+  },
+  {
+   "id": "com-004-aocs-actuator-checkout/procedure-steps/step-8-momentum-desaturation-test",
+   "en_hash": "aea17fc9ab45ea28",
+   "fr_hash": "a15a5d8cd6710fec"
+  },
+  {
+   "id": "com-004-aocs-actuator-checkout/procedure-steps/step-9-compile-wheel-commissioning-report",
+   "en_hash": "403510ab00b2a203",
+   "fr_hash": "10cdc2383ea09d40"
+  },
+  {
+   "id": "com-004-aocs-actuator-checkout/off-nominal-handling",
+   "en_hash": "95f5dc7c98de3813",
+   "fr_hash": "1dd969fee823b54b"
+  },
+  {
+   "id": "com-004-aocs-actuator-checkout/exit-state",
+   "en_hash": "80f2cac1f7dd7546",
+   "fr_hash": "84bb79a1cccfcf19"
+  },
+  {
+   "id": "com-004-aocs-actuator-checkout/post-conditions",
+   "en_hash": "2d86cc6be732d4a3",
+   "fr_hash": "470cb88e013037c5"
+  }
+ ],
+ "en_commit": "3e80564"
+}

@@ -1,0 +1,77 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/contingency/solar_array_degradation.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "ctg-009-solar-array-degradation",
+   "en_hash": "779d348d43fb5dac",
+   "fr_hash": "42dcbcc51b40c0d5"
+  },
+  {
+   "id": "ctg-009-solar-array-degradation/purpose",
+   "en_hash": "fabf7227be0234fa",
+   "fr_hash": "7b101976a09385c1"
+  },
+  {
+   "id": "ctg-009-solar-array-degradation/prerequisites",
+   "en_hash": "1294bcc61c97a194",
+   "fr_hash": "886cfad31479ffca"
+  },
+  {
+   "id": "ctg-009-solar-array-degradation/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "ctg-009-solar-array-degradation/procedure-steps/step-1-quantify-the-degradation",
+   "en_hash": "05800971a61b330b",
+   "fr_hash": "fd44ce111e280e7a"
+  },
+  {
+   "id": "ctg-009-solar-array-degradation/procedure-steps/step-2-compare-sa-a-versus-sa-b-performance",
+   "en_hash": "bfee9b28bda78fbf",
+   "fr_hash": "ec4b9644001ce24f"
+  },
+  {
+   "id": "ctg-009-solar-array-degradation/procedure-steps/step-3-verify-attitude-is-not-the-cause",
+   "en_hash": "518649dfbe0465f0",
+   "fr_hash": "9be39dabb3fc22ab"
+  },
+  {
+   "id": "ctg-009-solar-array-degradation/procedure-steps/step-4-recalculate-power-budget",
+   "en_hash": "81ddf93b01a387cc",
+   "fr_hash": "058017d6c62ae17c"
+  },
+  {
+   "id": "ctg-009-solar-array-degradation/procedure-steps/step-5-reduce-loads-to-match-degraded-power-budget",
+   "en_hash": "d3fdb7b768312d79",
+   "fr_hash": "8e170e2759460c60"
+  },
+  {
+   "id": "ctg-009-solar-array-degradation/procedure-steps/step-6-optimise-attitude-for-solar-array-illumination",
+   "en_hash": "bd296ba2d4d25020",
+   "fr_hash": "e6591fd9211b1c1d"
+  },
+  {
+   "id": "ctg-009-solar-array-degradation/procedure-steps/step-7-establish-long-term-monitoring-plan",
+   "en_hash": "d612ed65ddae4536",
+   "fr_hash": "2d9ebcb25e2e2ce6"
+  },
+  {
+   "id": "ctg-009-solar-array-degradation/off-nominal-handling",
+   "en_hash": "8655e973348b43cc",
+   "fr_hash": "26642a09e1f7f600"
+  },
+  {
+   "id": "ctg-009-solar-array-degradation/post-conditions",
+   "en_hash": "2df3040cad964fec",
+   "fr_hash": "dc82d78bc70ba839"
+  }
+ ],
+ "en_commit": "3e80564"
+}

@@ -22,9 +22,12 @@
  * ========================================================================== */
 
 import {
-  esc, renderChip, renderEventRow, poller, wsClient,
+  esc, renderChip, renderEventRow, poller, wsClient, mountLangToggle,
 } from "/static/shared/components.js?v=1";
 import { fmtUTC, fmtHex } from "/static/shared/format.js?v=1";
+// UI language (EN|FR) — see docs/i18n/UI_I18N_GUIDE.md. Import i18n.js
+// WITHOUT a ?v= query (state is shared via globalThis either way).
+import { I18n, t, tText, tdb, onLangChange } from "/static/shared/i18n.js";
 
 /* ── constants ─────────────────────────────────────────────────────────── */
 
@@ -39,6 +42,10 @@ const LINK_STATUS = { 0: "DOWN", 1: "UP" };
 const SC_MODES = { 0: "SAFE", 1: "NOMINAL", 2: "SCIENCE", 3: "EMERGENCY" };
 const PHASE_NAMES = ["PRE_SEPARATION", "SEPARATION_TIMER", "INITIAL_POWER_ON",
                      "BOOTLOADER_OPS", "LEOP", "COMMISSIONING", "NOMINAL"];
+// Scenario difficulty (YAML `difficulty:`): display label only, never compared.
+// English text is the i18n key
+const DIFFICULTY_LABELS = { ADVANCED: "ADVANCED", BASIC: "BASIC", BEGINNER: "BEGINNER",
+                            INTERMEDIATE: "INTERMEDIATE" };
 
 /* ── state ─────────────────────────────────────────────────────────────── */
 
@@ -68,6 +75,13 @@ function formatDuration(totalSec) {
   return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
 
+/** Scenario difficulty for display; unknown values pass through untranslated. */
+function difficultyLabel(d) {
+  if (!d) return "?";
+  const en = DIFFICULTY_LABELS[String(d).toUpperCase()];
+  return en ? tText(en) : String(d);
+}
+
 function simNowMs() {
   if (!state || !state.sim_time) return null;
   const t = Date.parse(state.sim_time);
@@ -80,11 +94,11 @@ function simClock() {
 }
 
 function showToast(msg, type) {
-  const t = $("toast");
-  t.textContent = msg;
-  t.className = (type || "") + " show";
+  const el = $("toast");
+  el.textContent = msg;
+  el.className = (type || "") + " show";
   clearTimeout(showToast._t);
-  showToast._t = setTimeout(() => t.classList.remove("show"), 2500);
+  showToast._t = setTimeout(() => el.classList.remove("show"), 2500);
 }
 
 /* ── API (single command channel: POST /api/command) ───────────────────── */
@@ -133,10 +147,12 @@ function addLog(severity, source, message) {
 
 /* ── WebSocket — INBOUND ONLY ──────────────────────────────────────────── */
 
+let wsUp = false;
 function setConn(up) {
+  wsUp = up;
   $("conn-chip").innerHTML = renderChip(
-    up ? { kind: "ok", label: "WS CONNECTED" }
-       : { kind: "stale", label: "WS DISCONNECTED" });
+    up ? { kind: "ok", label: tText("WS CONNECTED") }
+       : { kind: "stale", label: tText("WS DISCONNECTED") });
 }
 
 function startWs() {
@@ -144,7 +160,7 @@ function startWs() {
   // Return value deliberately unused: no instructor command is ever sent on
   // the WS — POST /api/command is the single outbound channel.
   wsClient(`${proto}//${location.host}/ws`, {
-    _open: () => { setConn(true); addLog("info", "SYSTEM", "WebSocket connected"); },
+    _open: () => { setConn(true); addLog("info", "SYSTEM", tText("WebSocket connected")); },
     _close: () => setConn(false),
     event: (msg) => {
       addLog(msg.severity || "info", msg.source || msg.subsystem || "SIM",
@@ -152,9 +168,9 @@ function startWs() {
     },
     state_update: (msg) => { if (msg.state) state = msg.state; },
     failure_injected: (msg) =>
-      addLog("high", "FAIL", `Injected: ${msg.subsystem}/${msg.failure}`),
+      addLog("high", "FAIL", tText("Injected: {{what}}", { what: `${msg.subsystem}/${msg.failure}` })),
     failure_cleared: (msg) =>
-      addLog("info", "FAIL", `Cleared: ${msg.failure_id}`),
+      addLog("info", "FAIL", tText("Cleared: {{id}}", { id: msg.failure_id })),
   });
 }
 
@@ -264,16 +280,18 @@ function buildSnapshotTabs() {
 
 /** Deep-dive launcher: one link per snapshot tab. ?sub= COMPOSES with ?ui= —
  *  the current ui override (if any) is propagated so a deep-dive opened from
- *  /?ui=modern stays modern. */
+ *  /?ui=modern stays modern. ?lang= is carried the same way (i18n S4). */
 function populateSubsystemLauncher() {
   const root = $("subsystem-launcher-buttons");
   if (!root) return;
   const ui = new URLSearchParams(location.search).get("ui");
+  const lang = new URLSearchParams(location.search).get("lang");
   root.innerHTML = "";
   for (const tab of snapshotTabs) {
     const a = document.createElement("a");
     const q = new URLSearchParams({ sub: tab.id });
     if (ui) q.set("ui", ui);
+    if (lang) q.set("lang", lang);
     a.href = "?" + q.toString();
     a.target = "_blank";
     a.rel = "noopener";
@@ -334,7 +352,7 @@ function updateCompletenessCounter() {
   }
   const el = $("param-completeness");
   el.textContent = `${populated}/${total}`;
-  el.title = `${populated} of ${total} snapshot fields populated`;
+  el.title = tText("{{populated}} of {{total}} snapshot fields populated", { populated, total });
   el.classList.toggle("warn", total > 0 && populated / total < 0.95);
 }
 
@@ -381,7 +399,7 @@ function performParameterSearch() {
     ? matches.map((m) =>
         `<div class="hit"><span class="k">${esc(m.id)}</span>` +
         `<span>${esc(formatParamValue(m.value))}</span></div>`).join("")
-    : `<div class="no-data">No parameters found</div>`;
+    : `<div class="no-data">${t("No parameters found")}</div>`;
   results.style.display = "block";
 }
 
@@ -394,17 +412,23 @@ async function loadScenarios() {
   renderScenarios();
 }
 
+/* Display text only: sc.name stays the command/compare key (start_scenario).
+ * The overlay is keyed by the YAML file stem the API returns as sc.id. */
+function scnName(sc) { return sc.id ? tdb(`scn:${sc.id}:name`, sc.name) : sc.name; }
+function scnLabel(name) { const sc = scenarios.find((x) => x.name === name); return sc ? scnName(sc) : name; }
+function scnBriefing(sc) { return sc.id && sc.briefing ? tdb(`scn:${sc.id}:briefing`, sc.briefing) : sc.briefing; }
+
 function renderScenarios() {
   const list = $("scenario-list");
   if (!scenarios.length) {
-    list.innerHTML = `<div class="no-data">No scenarios available</div>`;
+    list.innerHTML = `<div class="no-data">${t("No scenarios available")}</div>`;
     return;
   }
   list.innerHTML = scenarios.map((sc, i) => `
     <div class="scenario-item ${selectedScenario === i ? "selected" : ""}
          ${activeScenarioName === sc.name ? "active" : ""}" data-index="${i}">
-      <div>${esc(sc.name)}</div>
-      <div class="sd"><span>${esc(sc.difficulty || "?")}</span>
+      <div>${esc(scnName(sc))}</div>
+      <div class="sd"><span>${esc(difficultyLabel(sc.difficulty))}</span>
         <span class="num">${formatDuration(sc.duration_s || 0)}</span></div>
     </div>`).join("");
   list.querySelectorAll(".scenario-item").forEach((el) =>
@@ -416,7 +440,7 @@ function selectScenario(idx) {
   const sc = scenarios[idx];
   if (!sc) return;
   $("scenario-detail").hidden = false;
-  $("scenario-briefing").textContent = sc.briefing || "No briefing available.";
+  $("scenario-briefing").textContent = scnBriefing(sc) || tText("No briefing available.");
   $("btn-start-scenario").disabled = (activeScenarioName === sc.name);
   $("btn-stop-scenario").disabled = (activeScenarioName !== sc.name);
   renderScenarios();
@@ -428,7 +452,7 @@ async function startScenario() {
   if (!sc) return;
   const res = await sendCommand({ type: "start_scenario", scenario: sc.name });
   if (res && res.status !== "ok") {
-    showToast(`Scenario start refused: ${res.message || "unknown"}`, "error");
+    showToast(tText("Scenario start refused: {{reason}}", { reason: res.message || tText("unknown") }), "error");
     return;
   }
   activeScenarioName = sc.name;
@@ -436,8 +460,8 @@ async function startScenario() {
   $("btn-start-scenario").disabled = true;
   $("btn-stop-scenario").disabled = false;
   $("scenario-progress").hidden = false;
-  addLog("info", "SCENARIO", `Started: ${sc.name}`);
-  showToast(`Scenario "${sc.name}" started`, "success");
+  addLog("info", "SCENARIO", tText("Started: {{name}}", { name: scnName(sc) }));
+  showToast(tText("Scenario \"{{name}}\" started", { name: scnName(sc) }), "success");
   renderScenarios();
 }
 
@@ -446,10 +470,10 @@ async function stopScenario() {
   const name = activeScenarioName;
   const res = await sendCommand({ type: "stop_scenario" });
   if (res && res.status !== "ok") {
-    showToast(`Stop refused: ${res.message || "unknown"}`, "error");
+    showToast(tText("Stop refused: {{reason}}", { reason: res.message || tText("unknown") }), "error");
     return;
   }
-  addLog("info", "SCENARIO", `Stopped: ${name}`);
+  addLog("info", "SCENARIO", tText("Stopped: {{name}}", { name: scnLabel(name) }));
   activeScenarioName = null;
   scenarioStartSimMs = null;
   $("btn-start-scenario").disabled = false;
@@ -462,14 +486,15 @@ async function stopScenario() {
 
 /* ── DEBRIEF (new — wires the previously-unreferenced endpoint) ────────── */
 
+let lastDebrief;              // undefined: static markup still shown
 function renderDebrief(d) {
+  lastDebrief = d;
   const body = $("debrief-body");
   if (!d) {
-    body.innerHTML = `<div class="no-data">No debrief available yet — appears
-      when a scenario ends (STOP or its duration elapsing).</div>`;
+    body.innerHTML = `<div class="no-data">${t("No debrief available yet — appears when a scenario ends (STOP or its duration elapsing).")}</div>`;
     return;
   }
-  const t = (v) => (v == null ? "—" : `${Number(v).toFixed(1)} s`);
+  const secs = (v) => (v == null ? "—" : `${Number(v).toFixed(1)} s`);
   const responses = (d.responses || []).map((r) =>
     `<div class="prow"><span class="pl">${esc(r.category || "?")}` +
     `${r.description ? " — " + esc(r.description) : ""}</span>` +
@@ -477,15 +502,15 @@ function renderDebrief(d) {
   ).join("");
   body.innerHTML = `
     <table>
-      <tr><td>Scenario</td><td>${esc(d.name || "—")}</td></tr>
-      <tr><td>Duration</td><td>${t(d.duration_s)}</td></tr>
-      <tr><td>Score</td><td>${d.score_pct != null ? Number(d.score_pct).toFixed(0) + " %" : "—"}</td></tr>
-      <tr><td>MTTD (detect)</td><td>${t(d.mttd_s)}</td></tr>
-      <tr><td>MTTI (isolate)</td><td>${t(d.mtti_s)}</td></tr>
-      <tr><td>MTTR (recover)</td><td>${t(d.mttr_s)}</td></tr>
+      <tr><td>${t("Scenario")}</td><td>${esc(d.name || "—")}</td></tr>
+      <tr><td>${t("Duration")}</td><td>${secs(d.duration_s)}</td></tr>
+      <tr><td>${t("Score")}</td><td>${d.score_pct != null ? Number(d.score_pct).toFixed(0) + " %" : "—"}</td></tr>
+      <tr><td>${t("MTTD (detect)")}</td><td>${secs(d.mttd_s)}</td></tr>
+      <tr><td>${t("MTTI (isolate)")}</td><td>${secs(d.mtti_s)}</td></tr>
+      <tr><td>${t("MTTR (recover)")}</td><td>${secs(d.mttr_s)}</td></tr>
     </table>
-    ${responses ? `<div class="note" style="margin-top:6px;">Operator responses</div>${responses}`
-                : `<div class="note" style="margin-top:6px;">No operator responses recorded.</div>`}`;
+    ${responses ? `<div class="note" style="margin-top:6px;">${t("Operator responses")}</div>${responses}`
+                : `<div class="note" style="margin-top:6px;">${t("No operator responses recorded.")}</div>`}`;
 }
 
 /** Poll GET /api/scenario/debrief. Also the authority for the header
@@ -496,20 +521,20 @@ async function fetchDebrief(announce) {
   try { d = await apiGet("/api/scenario/debrief"); } catch (e) { return; }
   const chip = $("scenario-chip");
   if (d.active && d.current) {
-    chip.innerHTML = renderChip({ kind: "warn", label: `SCENARIO: ${d.current}`,
-                                  title: "A training scenario is running" });
+    chip.innerHTML = renderChip({ kind: "warn", label: tText("SCENARIO: {{name}}", { name: scnLabel(d.current) }),
+                                  title: tText("A training scenario is running") });
     if (activeScenarioName !== d.current) {
       activeScenarioName = d.current;   // page reload during a run
       if (scenarioStartSimMs == null) $("scenario-progress").hidden = false;
       renderScenarios();
     }
   } else {
-    chip.innerHTML = renderChip({ kind: "neutral", label: "NO SCENARIO" });
+    chip.innerHTML = renderChip({ kind: "neutral", label: tText("NO SCENARIO") });
     if (debriefWasActive && !d.active) {
       // active -> finished transition (auto-stop or STOP elsewhere)
       announce = true;
       if (activeScenarioName) {
-        addLog("info", "SCENARIO", `Ended: ${activeScenarioName}`);
+        addLog("info", "SCENARIO", tText("Ended: {{name}}", { name: scnLabel(activeScenarioName) }));
         activeScenarioName = null;
         scenarioStartSimMs = null;
         $("btn-start-scenario").disabled = false;
@@ -522,7 +547,7 @@ async function fetchDebrief(announce) {
   debriefWasActive = !!d.active;
   if (d.debrief) {
     renderDebrief(d.debrief);
-    if (announce) showToast("Scenario debrief available", "success");
+    if (announce) showToast(tText("Scenario debrief available"), "success");
   } else if (announce) {
     renderDebrief(null);
   }
@@ -534,8 +559,8 @@ async function loadFailureCatalog() {
   let data = null;
   try { data = await apiGet("/api/failure-catalog"); } catch (e) { data = null; }
   if (!data || !Array.isArray(data.subsystems)) {
-    addLog("high", "FAIL", "Failure catalogue unavailable — injection form disabled");
-    $("fail-subsystem").innerHTML = `<option value="">(catalogue unavailable)</option>`;
+    addLog("high", "FAIL", tText("Failure catalogue unavailable — injection form disabled"));
+    $("fail-subsystem").innerHTML = `<option value="">${t("(catalogue unavailable)")}</option>`;
     return;
   }
   failureCatalog = data;
@@ -624,7 +649,7 @@ function updateFailureParams() {
   if (spec.magnitude) html.push(renderParamControl(spec.magnitude, "fail-mag"));
   (spec.params || []).forEach((p) => html.push(renderParamControl(p, "fail-p")));
   if (!spec.reversible && spec.notes) {
-    html.push(`<div class="fail-effect">NOT FULLY REVERSIBLE — ${esc(spec.notes)}</div>`);
+    html.push(`<div class="fail-effect">${t("NOT FULLY REVERSIBLE — {{notes}}", { notes: spec.notes })}</div>`);
   }
   $("fail-params").innerHTML = html.join("");
 }
@@ -644,7 +669,7 @@ function readParamControl(p, idPrefix) {
   if (p.type === "enum") {
     if (p.multi) {
       const vals = Array.from(el.selectedOptions).map((o) => o.value);
-      if (!vals.length) return { ok: false, reason: `${where}: select at least one` };
+      if (!vals.length) return { ok: false, reason: tText("{{where}}: select at least one", { where }) };
       return { ok: true, value: vals };
     }
     if (el.value === "") return { ok: true, skip: true };
@@ -652,21 +677,21 @@ function readParamControl(p, idPrefix) {
   }
   const raw = (el.value || "").trim();
   if (raw === "") {
-    if (p.required) return { ok: false, reason: `${where} is required` };
+    if (p.required) return { ok: false, reason: tText("{{where}} is required", { where }) };
     return { ok: true, skip: true };
   }
   if (p.type === "int" || p.type === "float") {
     const num = Number(raw);
-    if (!Number.isFinite(num)) return { ok: false, reason: `${where} must be a number (got "${raw}")` };
+    if (!Number.isFinite(num)) return { ok: false, reason: tText("{{where}} must be a number (got \"{{raw}}\")", { where, raw }) };
     if (p.type === "int" && !Number.isInteger(num)) {
-      return { ok: false, reason: `${where} must be a whole number (got ${num})` };
+      return { ok: false, reason: tText("{{where}} must be a whole number (got {{num}})", { where, num }) };
     }
     const u = p.unit ? ` ${p.unit}` : "";
     if (p.min !== undefined && p.min !== null && num < p.min) {
-      return { ok: false, reason: `${where} must be >= ${p.min}${u} (got ${num}${u})` };
+      return { ok: false, reason: tText("{{where}} must be >= {{min}}{{u}} (got {{num}}{{u}})", { where, min: p.min, u, num }) };
     }
     if (p.max !== undefined && p.max !== null && num > p.max) {
-      return { ok: false, reason: `${where} must be <= ${p.max}${u} (got ${num}${u})` };
+      return { ok: false, reason: tText("{{where}} must be <= {{max}}{{u}} (got {{num}}{{u}})", { where, max: p.max, u, num }) };
     }
     return { ok: true, value: num };
   }
@@ -681,7 +706,7 @@ function updateOnsetDurationVisibility() {
 
 async function injectFailure() {
   const spec = currentFailureSpec;
-  if (!spec) { setInjectError("No failure selected (catalogue not loaded)."); return; }
+  if (!spec) { setInjectError(tText("No failure selected (catalogue not loaded).")); return; }
   let subsystem = $("fail-subsystem").value;
   if (subsystem === "adcs") subsystem = "aocs";   // legacy alias
   const onset = document.querySelector("input[name=\"fail-onset\"]:checked").value;
@@ -703,15 +728,15 @@ async function injectFailure() {
 
   const res = await sendCommand(payload);
   if (res && res.status !== "ok") {
-    setInjectError(`REJECTED: ${res.message || "unknown reason"}`);
-    showToast("Injection rejected — see the reason above", "error");
+    setInjectError(tText("REJECTED: {{reason}}", { reason: res.message || tText("unknown reason") }));
+    showToast(tText("Injection rejected — see the reason above"), "error");
     return;
   }
   const describe = Object.keys(payload)
     .filter((k) => !["type", "subsystem", "failure", "onset", "onset_duration_s"].includes(k))
     .map((k) => `${k}=${JSON.stringify(payload[k])}`).join(" ");
   addLog("high", "INJECT", `${subsystem}/${spec.name} ${describe} onset=${onset}`);
-  showToast(`Failure injected: ${subsystem}/${spec.name}`, "error");
+  showToast(tText("Failure injected: {{what}}", { what: `${subsystem}/${spec.name}` }), "error");
   failuresPoll.kick();   // don't wait up to 5 s for the next cycle
 }
 
@@ -720,7 +745,7 @@ async function injectFailure() {
 function renderFailures(failures) {
   const list = $("failures-list");
   if (!failures || !failures.length) {
-    list.innerHTML = `<div class="no-data">No active failures</div>`;
+    list.innerHTML = `<div class="no-data">${t("No active failures")}</div>`;
     return;
   }
   list.innerHTML = failures.map((f) => {
@@ -731,9 +756,9 @@ function renderFailures(failures) {
       <div class="failure-item" data-id="${esc(id)}">
         <div class="fh">
           <span class="fname">${esc((f.subsystem || "").toUpperCase())} / ${esc(f.failure || f.type || "")}</span>
-          <button class="ds-btn" data-act="clear-failure" data-id="${esc(id)}">CLEAR</button>
+          <button class="ds-btn" data-act="clear-failure" data-id="${esc(id)}">${t("CLEAR")}</button>
         </div>
-        <div class="fmeta"><span>mag ${magPct}%</span><span class="num">${elapsed}</span></div>
+        <div class="fmeta"><span>${t("mag {{pct}}%", { pct: magPct })}</span><span class="num">${elapsed}</span></div>
       </div>`;
   }).join("");
 }
@@ -741,21 +766,21 @@ function renderFailures(failures) {
 async function clearFailure(id) {
   const res = await sendCommand({ type: "failure_clear", failure_id: id });
   if (res && res.status !== "ok") {
-    showToast(`Clear refused: ${res.message || "unknown"}`, "error");
+    showToast(tText("Clear refused: {{reason}}", { reason: res.message || tText("unknown") }), "error");
     return;
   }
-  addLog("info", "FAIL", `Clearing failure: ${id}`);
+  addLog("info", "FAIL", tText("Clearing failure: {{id}}", { id }));
   failuresPoll.kick();
 }
 
 async function clearAllFailures() {
   const res = await sendCommand({ type: "failure_clear_all" });
   if (res && res.status !== "ok") {
-    showToast(`Clear-all refused: ${res.message || "unknown"}`, "error");
+    showToast(tText("Clear-all refused: {{reason}}", { reason: res.message || tText("unknown") }), "error");
     return;
   }
-  addLog("info", "FAIL", "Clearing all failures");
-  showToast("All failures cleared", "success");
+  addLog("info", "FAIL", tText("Clearing all failures"));
+  showToast(tText("All failures cleared"), "success");
   failuresPoll.kick();
 }
 
@@ -764,26 +789,26 @@ async function clearAllFailures() {
 async function setSpacecraftPhase() {
   const phase = parseInt($("phase-select").value, 10);
   if (!Number.isInteger(phase) || phase < 0 || phase > 6) {
-    showToast("Phase must be 0-6", "error");
+    showToast(tText("Phase must be 0-6"), "error");
     return;
   }
   const res = await sendCommand({ type: "set_phase", phase });
   if (res && res.status !== "ok") {
-    showToast(`Refused: ${res.message || "unknown"}`, "error");
+    showToast(tText("Refused: {{reason}}", { reason: res.message || tText("unknown") }), "error");
     return;
   }
   addLog("high", "PHASE", `set_phase ${phase} (${PHASE_NAMES[phase]})`);
-  showToast(`Phase set: ${phase} ${PHASE_NAMES[phase]}`, "success");
+  showToast(tText("Phase set: {{phase}} {{name}}", { phase, name: PHASE_NAMES[phase] }), "success");
 }
 
 async function startSeparation() {
   const res = await sendCommand({ type: "start_separation" });
   if (res && res.status !== "ok") {
-    showToast(`Refused: ${res.message || "unknown"}`, "error");
+    showToast(tText("Refused: {{reason}}", { reason: res.message || tText("unknown") }), "error");
     return;
   }
   addLog("high", "PHASE", "start_separation");
-  showToast("Separation sequence started", "success");
+  showToast(tText("Separation sequence started"), "success");
 }
 
 /* ── overrides ─────────────────────────────────────────────────────────── */
@@ -793,26 +818,26 @@ async function toggleOverride() {
   const newState = !(state && state.override_passes);
   const res = await sendCommand({ type: "override_passes", enabled: newState });
   if (res && res.status !== "ok") {
-    showToast(`Refused: ${res.message || "unknown"}`, "error");
+    showToast(tText("Refused: {{reason}}", { reason: res.message || tText("unknown") }), "error");
     return;
   }
   addLog(newState ? "low" : "info", "OVERRIDE",
-         newState ? "Pass override ENABLED" : "Pass override DISABLED");
+         newState ? tText("Pass override ENABLED") : tText("Pass override DISABLED"));
 }
 
 async function setBatterySoc() {
   const soc = parseFloat($("soc-override-input").value);
   if (!isFinite(soc) || soc < 0 || soc > 100) {
-    showToast("Battery SoC override must be 0-100 %", "error");
+    showToast(tText("Battery SoC override must be 0-100 %"), "error");
     return;
   }
   const res = await sendCommand({ type: "set_battery_soc", soc_pct: soc });
   if (res && res.status !== "ok") {
-    showToast(`Refused: ${res.message || "unknown"}`, "error");
+    showToast(tText("Refused: {{reason}}", { reason: res.message || tText("unknown") }), "error");
     return;
   }
-  addLog("low", "OVERRIDE", `Battery SoC override -> ${soc} %`);
-  showToast(`Battery SoC set to ${soc} %`, "success");
+  addLog("low", "OVERRIDE", tText("Battery SoC override -> {{soc}} %", { soc }));
+  showToast(tText("Battery SoC set to {{soc}} %", { soc }), "success");
 }
 
 /* ── speed group (one stepper: 0.5/1/2/5/10x + FREEZE) ─────────────────── */
@@ -820,7 +845,7 @@ async function setBatterySoc() {
 async function setSpeed(speed) {
   const res = await sendCommand({ type: "set_speed", value: speed });
   if (res && res.status !== "ok") {
-    showToast(`Refused: ${res.message || "unknown"}`, "error");
+    showToast(tText("Refused: {{reason}}", { reason: res.message || tText("unknown") }), "error");
     return;
   }
   $$("#speed-group button[data-speed]").forEach((b) =>
@@ -831,15 +856,15 @@ async function toggleFreeze() {
   const next = !frozen;
   const res = await sendCommand({ type: next ? "freeze" : "resume" });
   if (res && res.status !== "ok") {
-    showToast(`Refused: ${res.message || "unknown"}`, "error");
+    showToast(tText("Refused: {{reason}}", { reason: res.message || tText("unknown") }), "error");
     return;
   }
   frozen = next;
   const btn = $("freeze-btn");
-  btn.textContent = frozen ? "RESUME" : "FREEZE";
+  btn.textContent = frozen ? tText("RESUME") : tText("FREEZE");
   btn.classList.toggle("on", frozen);
   addLog(frozen ? "low" : "info", "SIM",
-         frozen ? "Simulation FROZEN" : "Simulation RESUMED");
+         frozen ? tText("Simulation FROZEN") : tText("Simulation RESUMED"));
 }
 
 /* ── breakpoints ───────────────────────────────────────────────────────── */
@@ -850,11 +875,11 @@ async function saveBreakpoint() {
   $("breakpoint-name").value = "";
   const res = await apiPost("/api/breakpoint/save", { name });
   if (res && res.status !== "saved") {
-    showToast(`Breakpoint save failed: ${res.error || res.message || "unknown"}`, "error");
+    showToast(tText("Breakpoint save failed: {{reason}}", { reason: res.error || res.message || tText("unknown") }), "error");
     return;
   }
-  addLog("info", "BRKPT", `Saved: "${name}"`);
-  showToast(`Breakpoint "${name}" saved`, "success");
+  addLog("info", "BRKPT", tText("Saved: \"{{name}}\"", { name }));
+  showToast(tText("Breakpoint \"{{name}}\" saved", { name }), "success");
   setTimeout(refreshBreakpoints, 1200);
 }
 
@@ -873,16 +898,16 @@ async function refreshBreakpoints() {
 function renderBreakpoints() {
   const list = $("breakpoints-list");
   if (!breakpoints.length) {
-    list.innerHTML = `<div class="no-data">No breakpoints saved</div>`;
+    list.innerHTML = `<div class="no-data">${t("No breakpoints saved")}</div>`;
     return;
   }
   list.innerHTML = breakpoints.map((bp) => `
     <div class="failure-item bp">
       <div class="fh">
         <span class="fname">${esc(bp.name)}</span>
-        <button class="ds-btn" data-act="load-breakpoint" data-name="${esc(bp.name)}">LOAD</button>
+        <button class="ds-btn" data-act="load-breakpoint" data-name="${esc(bp.name)}">${t("LOAD")}</button>
       </div>
-      <div class="fmeta"><span>tick ${bp.tick}</span>
+      <div class="fmeta"><span>${t("tick {{n}}", { n: bp.tick })}</span>
         <span class="num">${bp.time ? fmtUTC(bp.time, { date: true }) : ""}</span></div>
     </div>`).join("");
 }
@@ -890,11 +915,11 @@ function renderBreakpoints() {
 async function loadBreakpoint(name) {
   const res = await apiPost("/api/breakpoint/load", { name });
   if (res && res.status !== "loaded") {
-    showToast(`Breakpoint load failed: ${res.error || res.message || "unknown"}`, "error");
+    showToast(tText("Breakpoint load failed: {{reason}}", { reason: res.error || res.message || tText("unknown") }), "error");
     return;
   }
-  addLog("info", "BRKPT", `Loaded: "${name}"`);
-  showToast(`Breakpoint "${name}" loaded`, "success");
+  addLog("info", "BRKPT", tText("Loaded: \"{{name}}\"", { name }));
+  showToast(tText("Breakpoint \"{{name}}\" loaded", { name }), "success");
 }
 
 /* ── truth dashboard render (1 Hz, from /api/state) ────────────────────── */
@@ -938,6 +963,31 @@ function onOff(id, on) {
                                   : { kind: "off", label: "OFF" });
 }
 
+/* VR headset link (smo-vr/1, docs/VR_INTERFACE_ICD.md). The return line is
+ * optional, so a connected headset that never replies is NO_REPLY (neutral),
+ * not a fault; DEGRADED / SILENT warn, ERROR alarms. */
+function renderVrBadge(link) {
+  const b = $("vr-badge");
+  if (!b) return;
+  if (!link || link.enabled === false) {
+    b.textContent = "VR OFF";
+    b.className = "ds-badge";
+    b.title = tText("VR bridge not running (--no-vr, SMO_VR=0 or port in use)");
+    return;
+  }
+  const n = link.n_clients || 0;
+  const overall = link.overall || "NO_CLIENTS";
+  b.textContent = n ? `VR ${n} ${overall.replace("_", " ")}` : "VR —";
+  b.className = "ds-badge" + (overall === "ERROR" ? " alarm"
+    : (overall === "DEGRADED" || overall === "SILENT") ? " warn" : "");
+  const rows = (link.clients || []).map((c) =>
+    `${c.team || c.peer} [${c.transport}] ${c.health}` +
+    (c.status_word_hex ? ` ${c.status_word_hex}` : "") +
+    (c.text ? ` — ${c.text}` : ""));
+  b.title = tText("VR bridge TCP:{{tcp}} WS:{{ws}}", { tcp: link.tcp_port, ws: link.ws_port }) + "\n" +
+    (rows.length ? rows.join("\n") : tText("no headsets connected"));
+}
+
 function renderDashboard() {
   if (!state) return;
 
@@ -953,6 +1003,8 @@ function renderDashboard() {
   badge.textContent = "SC " + mode;
   badge.className = "ds-badge" + (mode === "EMERGENCY" ? " alarm"
     : mode === "SAFE" ? " warn" : "");
+
+  renderVrBadge(state.vr_link);
 
   // EPS
   const eps = state.eps || {};
@@ -1021,15 +1073,15 @@ function renderDashboard() {
   $("orb-lon").textContent = fmt(state.lon, 4) + "°";
   $("orb-alt").textContent = fmt(state.alt_km, 2) + " km";
   $("orb-eclipse").innerHTML = renderChip(state.in_eclipse
-    ? { kind: "off", label: "ECLIPSE" } : { kind: "ok", label: "SUNLIGHT" });
+    ? { kind: "off", label: tText("ECLIPSE") } : { kind: "ok", label: tText("SUNLIGHT") });
   $("orb-contact").innerHTML = renderChip(state.in_contact
     ? { kind: "ok", label: state.ground_station_name
-        ? "CONTACT: " + state.ground_station_name.toUpperCase() : "CONTACT" }
-    : { kind: "off", label: "NO CONTACT" });
+        ? tText("CONTACT: {{gs}}", { gs: state.ground_station_name.toUpperCase() }) : tText("CONTACT") }
+    : { kind: "off", label: tText("NO CONTACT") });
 
   // OVERRIDE PASSES — the single copy; label reflects engine truth.
   const ob = $("btn-override");
-  ob.textContent = state.override_passes ? "OVERRIDE ON" : "OVERRIDE PASSES";
+  ob.textContent = state.override_passes ? tText("OVERRIDE ON") : tText("OVERRIDE PASSES");
   ob.classList.toggle("danger", !!state.override_passes);
 
   // phase select mirrors engine truth when the user is not mid-change
@@ -1089,7 +1141,7 @@ function updateClockTruth() {
   setPv("clock-obc-utc", c.obc_time_s != null
     ? fmtUTC(new Date(CUC_EPOCH_MS + c.obc_time_s * 1000), { date: true }) : "—");
   setPv("clock-since-sync", c.time_since_sync_s == null
-    ? "never synced" : formatClockAge(c.time_since_sync_s));
+    ? tText("never synced") : formatClockAge(c.time_since_sync_s));
   setPv("clock-drift", c.drift_ppm == null ? "— ppm" : fmt(c.drift_ppm, 2) + " ppm");
   if (c.offset_s == null) {
     setPv("clock-offset", "— s");
@@ -1124,12 +1176,62 @@ const failuresPoll = poller(async () => {
   await fetchDebrief(false);
 }, 5000);
 
+/* ── language: JS-owned labels (static markup is re-keyed by I18n) ────── */
+
+/** Write every label the JS owns (button states, subpage chrome) in the
+ *  current language, then rebuild the JS-built regions that are not
+ *  re-rendered on each poll. Called once at init and on smo:langchange.
+ *  In English every string is the literal the page always wrote. */
+function relabel(changed) {
+  const q = new URLSearchParams(location.search);
+  const requestedSub = q.get("sub");
+  const back = $("subpage-back");
+  if (back) {
+    const backQ = new URLSearchParams();
+    if (q.get("ui")) backQ.set("ui", q.get("ui"));
+    if (q.get("lang")) backQ.set("lang", q.get("lang"));
+    back.href = "/" + (backQ.toString() ? "?" + backQ.toString() : "");
+    back.textContent = tText("← Back to dashboard");
+  }
+  $("full-snapshot-title").textContent = requestedSub
+    ? tText("SUBSYSTEM DEEP-DIVE — {{sub}}", { sub: requestedSub.toUpperCase() })
+    : tText("Full simulator state");
+  $("freeze-btn").textContent = frozen ? tText("RESUME") : tText("FREEZE");
+  const collapsed = $("log-panel").classList.contains("collapsed");
+  $("btn-log-toggle").textContent = (collapsed ? "▸" : "▾") + " " + tText("EVENT LOG");
+  const showing = $("raw-snapshot-container").style.display === "block";
+  $("btn-toggle-raw").textContent = showing ? tText("HIDE RAW SNAPSHOT") : tText("SHOW RAW SNAPSHOT");
+  if (!snapshot) $("raw-snapshot-json").textContent = tText("Loading…");
+  setConn(wsUp);
+  if (scenarios.length) renderScenarios();
+  if (selectedScenario != null && scenarios[selectedScenario]) {
+    $("scenario-briefing").textContent =
+      scnBriefing(scenarios[selectedScenario]) || tText("No briefing available.");
+  }
+  if (lastDebrief !== undefined) renderDebrief(lastDebrief);
+  if (!changed) return;
+  // the irreversibility notice only — re-rendering the generated failure
+  // form would throw away values the instructor has typed
+  const irrev = document.querySelector("#fail-params .fail-effect");
+  if (irrev && currentFailureSpec) {
+    irrev.textContent = tText("NOT FULLY REVERSIBLE — {{notes}}", { notes: currentFailureSpec.notes });
+  }
+  renderBreakpoints();
+  if (snapshotTabsBuilt) populateSubsystemLauncher();
+  if (state) renderDashboard();
+  updateCompletenessCounter();
+  fetchDebrief(false);   // scenario chip
+}
+
 /* ── init ──────────────────────────────────────────────────────────────── */
 
-function init() {
-  // ?sub= subpage deep-dive mode (preserved exactly, composing with ?ui=):
-  // hide the dashboard chrome, render only the requested snapshot tab
-  // full-width with a back link.
+async function init() {
+  await I18n.ready;            // English: immediate; else bounded catalog load
+  mountLangToggle($("lang-toggle"));
+  onLangChange(() => relabel(true));
+  // ?sub= subpage deep-dive mode (preserved exactly, composing with ?ui=
+  // and ?lang=): hide the dashboard chrome, render only the requested
+  // snapshot tab full-width with a back link.
   const q = new URLSearchParams(location.search);
   const requestedSub = q.get("sub");
   if (requestedSub) {
@@ -1137,15 +1239,14 @@ function init() {
     const cont = $("full-snapshot-container");
     const back = document.createElement("a");
     back.className = "subpage-back";
-    const backQ = new URLSearchParams();
-    if (q.get("ui")) backQ.set("ui", q.get("ui"));
-    back.href = "/" + (backQ.toString() ? "?" + backQ.toString() : "");
-    back.textContent = "← Back to dashboard";
+    back.id = "subpage-back";
     cont.parentNode.insertBefore(back, cont);
-    $("full-snapshot-title").textContent =
-      "SUBSYSTEM DEEP-DIVE — " + requestedSub.toUpperCase();
+    // the JS owns the title from here on: stop the DOM pass re-keying it
+    const titleEl = document.querySelector("title");
+    if (titleEl) titleEl.removeAttribute("data-i18n");
     document.title = "SMO — " + requestedSub.toUpperCase();
   }
+  relabel();
 
   // header controls
   $$("#speed-group button[data-speed]").forEach((btn) =>
@@ -1195,7 +1296,7 @@ function init() {
     const panel = $("log-panel");
     const collapsed = panel.classList.toggle("collapsed");
     $("btn-log-toggle").setAttribute("aria-expanded", String(!collapsed));
-    $("btn-log-toggle").textContent = (collapsed ? "▸" : "▾") + " EVENT LOG";
+    $("btn-log-toggle").textContent = (collapsed ? "▸" : "▾") + " " + tText("EVENT LOG");
   });
 
   // parameter search + raw snapshot
@@ -1208,19 +1309,19 @@ function init() {
     const container = $("raw-snapshot-container");
     const showing = container.style.display === "block";
     container.style.display = showing ? "none" : "block";
-    $("btn-toggle-raw").textContent = showing ? "SHOW RAW SNAPSHOT" : "HIDE RAW SNAPSHOT";
+    $("btn-toggle-raw").textContent = showing ? tText("SHOW RAW SNAPSHOT") : tText("HIDE RAW SNAPSHOT");
     if (!showing) updateRawSnapshot();
   });
 
   setConn(false);
-  $("scenario-chip").innerHTML = renderChip({ kind: "neutral", label: "NO SCENARIO" });
+  $("scenario-chip").innerHTML = renderChip({ kind: "neutral", label: tText("NO SCENARIO") });
   loadScenarios();
   loadFailureCatalog();
   startWs();
   statePoll.start();
   snapshotPoll.start();
   failuresPoll.start();
-  addLog("info", "SYSTEM", "Instructor console (modern) initialised");
+  addLog("info", "SYSTEM", tText("Instructor console (modern) initialised"));
 }
 
 if (document.readyState === "loading") {

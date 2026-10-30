@@ -1,0 +1,77 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "docs/VR_INTERFACE_ICD.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "vr-visualisation-interface-icd-smo-vr-1",
+   "en_hash": "f27611c5660dc6c9",
+   "fr_hash": "14fe75ffa72da424"
+  },
+  {
+   "id": "vr-visualisation-interface-icd-smo-vr-1/1-purpose",
+   "en_hash": "148799a54f1d5875",
+   "fr_hash": "72f7074b4a88a1fc"
+  },
+  {
+   "id": "vr-visualisation-interface-icd-smo-vr-1/2-transports",
+   "en_hash": "8e23a16f042075ac",
+   "fr_hash": "cf4c8f21749249b1"
+  },
+  {
+   "id": "vr-visualisation-interface-icd-smo-vr-1/3-message-flow",
+   "en_hash": "566a240f7a895d1b",
+   "fr_hash": "9439fc8f3082554e"
+  },
+  {
+   "id": "vr-visualisation-interface-icd-smo-vr-1/4-hello-server-client-once",
+   "en_hash": "b7e8ee2167313c43",
+   "fr_hash": "d0e493c4ec7d23ef"
+  },
+  {
+   "id": "vr-visualisation-interface-icd-smo-vr-1/5-state-server-client-1-hz",
+   "en_hash": "1c7f626e3d9c40c1",
+   "fr_hash": "52e55cb626c20785"
+  },
+  {
+   "id": "vr-visualisation-interface-icd-smo-vr-1/6-frames-and-conventions",
+   "en_hash": "52db3d4c0ee065a0",
+   "fr_hash": "c41a3627c8223611"
+  },
+  {
+   "id": "vr-visualisation-interface-icd-smo-vr-1/6-frames-and-conventions/converting-to-engine-frames",
+   "en_hash": "67772e442de3c064",
+   "fr_hash": "922430e6f90f5c6d"
+  },
+  {
+   "id": "vr-visualisation-interface-icd-smo-vr-1/6-frames-and-conventions/scene-building-tips-not-requirements",
+   "en_hash": "958e9539e316894d",
+   "fr_hash": "0d75c37ca17b6d05"
+  },
+  {
+   "id": "vr-visualisation-interface-icd-smo-vr-1/7-status-client-server-optional",
+   "en_hash": "6735b96c2210751f",
+   "fr_hash": "3b4367971e990f7a"
+  },
+  {
+   "id": "vr-visualisation-interface-icd-smo-vr-1/8-rules-for-a-robust-client",
+   "en_hash": "162efdb30119fd09",
+   "fr_hash": "7a289d802052f180"
+  },
+  {
+   "id": "vr-visualisation-interface-icd-smo-vr-1/9-flat-files",
+   "en_hash": "364c03656784b01e",
+   "fr_hash": "8581d2aa779a38ae"
+  },
+  {
+   "id": "vr-visualisation-interface-icd-smo-vr-1/10-known-limitations-issue-1",
+   "en_hash": "3a18e78e48e7e7a4",
+   "fr_hash": "9348f6d0eb5aeda9"
+  }
+ ],
+ "en_commit": "983af0f"
+}

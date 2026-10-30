@@ -1,0 +1,87 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/contingency/eps_safe_mode.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "ctg-005-eps-safe-mode",
+   "en_hash": "d221edf1897d28cd",
+   "fr_hash": "8c87db3e88d7553b"
+  },
+  {
+   "id": "ctg-005-eps-safe-mode/purpose",
+   "en_hash": "3368c609a96930b6",
+   "fr_hash": "979dd98055dcbf8d"
+  },
+  {
+   "id": "ctg-005-eps-safe-mode/prerequisites",
+   "en_hash": "d1775eb05314e06d",
+   "fr_hash": "b1f4f5dfc7fe5943"
+  },
+  {
+   "id": "ctg-005-eps-safe-mode/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "ctg-005-eps-safe-mode/procedure-steps/step-1-verify-safe-mode-entry-and-eps-state",
+   "en_hash": "c1a5d335a78d25fa",
+   "fr_hash": "031d0566be885ac5"
+  },
+  {
+   "id": "ctg-005-eps-safe-mode/procedure-steps/step-2-shed-non-essential-loads-payload-off",
+   "en_hash": "01d6c6700177bd04",
+   "fr_hash": "12f00f72cacad433"
+  },
+  {
+   "id": "ctg-005-eps-safe-mode/procedure-steps/step-3-verify-aocs-is-in-minimum-power-configuration",
+   "en_hash": "8b18bc7e5e4e87ba",
+   "fr_hash": "074c34f765b170b2"
+  },
+  {
+   "id": "ctg-005-eps-safe-mode/procedure-steps/step-4-assess-solar-array-performance",
+   "en_hash": "2b970bd11b20fd1c",
+   "fr_hash": "0cac30873846efd2"
+  },
+  {
+   "id": "ctg-005-eps-safe-mode/procedure-steps/step-5-monitor-battery-recovery-during-sunlit-phase",
+   "en_hash": "edd2d93fbb733379",
+   "fr_hash": "0f830245ccee0ef9"
+  },
+  {
+   "id": "ctg-005-eps-safe-mode/procedure-steps/step-6-re-enable-loads-payload-to-standby",
+   "en_hash": "138ca4877017fbc9",
+   "fr_hash": "56827a3c720f87bc"
+  },
+  {
+   "id": "ctg-005-eps-safe-mode/procedure-steps/step-7-restore-nominal-aocs-mode",
+   "en_hash": "0c8f022dd91edaa4",
+   "fr_hash": "992864748e8003c6"
+  },
+  {
+   "id": "ctg-005-eps-safe-mode/procedure-steps/step-8-restore-obc-to-nominal-mode",
+   "en_hash": "16d95c60bb5e9db8",
+   "fr_hash": "a9fda38a9b0ae503"
+  },
+  {
+   "id": "ctg-005-eps-safe-mode/off-nominal-handling",
+   "en_hash": "fe83c32b601cd681",
+   "fr_hash": "a497f50a2e0ce811"
+  },
+  {
+   "id": "ctg-005-eps-safe-mode/post-conditions",
+   "en_hash": "98272796fcb9cb35",
+   "fr_hash": "ef2dd78dacbd65e7"
+  },
+  {
+   "id": "ctg-005-eps-safe-mode/recovery-path-re-powering-shed-loads",
+   "en_hash": "ff3d6989d5306388",
+   "fr_hash": "9154a20412ea27ef"
+  }
+ ],
+ "en_commit": "3e80564"
+}

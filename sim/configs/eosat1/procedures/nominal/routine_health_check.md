@@ -39,7 +39,7 @@ and serves as the primary tool for early anomaly detection and trend analysis.
 **Flag:** If SoC trending downward over multiple passes, investigate power balance.
 
 ### Step 3 --- AOCS Health Assessment
-**Verify:** `aocs.mode` (0x020F) = 0 (NOMINAL / NOMINAL)
+**Verify:** `aocs.mode` (0x020F) = 4 (NOMINAL)
 **Verify:** `aocs.att_error` (0x0217) < 1.0 deg
 **Verify:** `aocs.rate_roll` (0x0204) < 0.05 deg/s
 **Verify:** `aocs.rate_pitch` (0x0205) < 0.05 deg/s
@@ -49,7 +49,7 @@ and serves as the primary tool for early anomaly detection and trend analysis.
 **Verify:** |`aocs.rw3_speed`| (0x0209) < 5000 RPM
 **Verify:** |`aocs.rw4_speed`| (0x020A) < 5000 RPM
 **Trend:** Compare wheel speeds with previous pass. Monotonic increase indicates
-  insufficient desaturation --- schedule NOM-005.
+  insufficient desaturation --- schedule NOM-007 (Momentum Management).
 **Flag:** If any wheel > 4500 RPM, recommend immediate desaturation.
 
 ### Step 4 --- TCS Health Assessment

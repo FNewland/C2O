@@ -54,7 +54,7 @@ the upload process. It will be restored in Step 8.
 **GO/NO-GO:** Non-critical tasks suspended. OBC resources available for upload.
 
 ### Step 3 --- Initiate Memory Load Session
-**TC:** `MEM_LOAD(memory_id=1, address=ADDR, data=BLOCK)` (Service 6, Subtype 2) --- start load
+**TC:** `MEM_LOAD(memory_id=1, address=ADDR, data=BLOCK)` (Service 6, Subtype 2) --- first block (S6.2 has no load session: each MEM_LOAD writes one block)
 **Action:** Specify the target memory base address for the patch (provided by OBDH engineer).
 **Action:** Specify the total length in bytes of the patch file.
 **Verify:** Command acceptance within 5 s
@@ -87,7 +87,7 @@ memory DUMP and then verified a checksum that was never computed.
 **Action:** Compare reported onboard CRC-32 with the ground-computed CRC-32.
 **Verify:** Checksums match exactly (bit-for-bit)
 **Critical:** If checksums do NOT match, the upload is CORRUPT. Do NOT proceed to
-activation. Execute Recovery Action 1 (erase and re-upload or abort).
+activation. Execute Recovery Action 1 (re-upload; do not boot the image).
 **GO/NO-GO:** Checksum verified --- uploaded image integrity confirmed.
 
 ### Step 6 --- Activate New Software Image (If Full Image Replacement)
@@ -145,7 +145,7 @@ checksum, any anomalies observed.
    (func 55) succeeds, and that command verifies the application CRC over
    a 10 s window before it will transition. A corrupt region is
    overwritten by the next `MEM_LOAD`, not erased by a separate command.
-3. Verify memory region cleared.
+3. Do not wait for the region to be cleared: it stays as loaded until the next `MEM_LOAD` overwrites it.
 4. Investigate cause: link degradation during upload? Buffer overflow? Segment re-ordering?
 5. If cause identified and correctable: restart from Step 3 with improved conditions.
 6. If cause unknown: abort procedure. The existing software remains active and unaffected.

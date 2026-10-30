@@ -12,7 +12,7 @@ applies appropriate thermal control actions (heater activation for cold cases, l
 for hot cases), and monitors the temperature trend until the zone returns within nominal range.
 
 ## Prerequisites
-- [ ] TCS telemetry (SID 4) is being received at >= 0.5 Hz
+- [ ] TCS telemetry (SID 3) is being received at >= 0.5 Hz
 - [ ] Thermal limit database is available on console (ref: EOSAT1-TCS-LIM-001)
 - [ ] EPS has sufficient power margin for heater activation — `eps.bat_soc` (0x0101) > 25%
 - [ ] Current orbit beta angle and eclipse duration are known from Flight Dynamics
@@ -36,45 +36,76 @@ for hot cases), and monitors the temperature trend until the zone returns within
 
 ### Step 2A — Cold Case: Enable Heater for Affected Zone
 **Condition:** Zone temperature is below cold yellow limit
-**TC (Battery cold):** `HEATER_BATTERY(on=1)` (Service 8, Subtype 1, func_id 40)
+**BRANCH:** `tcs.temp_battery < 2` -> GO `STEP-2A-BAT` | NO-GO `STEP-2A-OBC` (timeout 10 s)
+**LABEL:** `STEP-2A-BAT`
+**Note:** Battery cold:
+**TC:** `HEATER_BATTERY(on=1)` (Service 8, Subtype 1, func_id 40)
 **Verify:** `tcs.htr_battery` (0x040A) = 1 (ON) within 5s
-**TC (OBC cold):** `HEATER_OBC(on=1)` (Service 8, Subtype 1, func_id 41)
+**LABEL:** `STEP-2A-OBC`
+**BRANCH:** `tcs.temp_obc < -5` -> GO `STEP-2A-OBCON` | NO-GO `STEP-2B` (timeout 10 s)
+**LABEL:** `STEP-2A-OBCON`
+**Note:** OBC cold:
+**TC:** `HEATER_OBC(on=1)` (Service 8, Subtype 1, func_id 41)
 **Verify:** `tcs.htr_obc` (0x040B) = 1 (ON) within 5s
 **Verify:** `eps.power_cons` (0x0106) increases by expected heater draw (3-7W per circuit)
 **GO/NO-GO:** Heater confirmed active and power budget can sustain — proceed to monitoring
 
 ### Step 2B — Hot Case: Reduce Thermal Load in Affected Zone
+**LABEL:** `STEP-2B`
 **Condition:** Zone temperature is above hot yellow limit
-**TC (FPA hot):** `PAYLOAD_SET_MODE(mode=0)` (Service 8, Subtype 1) — remove electronics heat load
+**BRANCH:** `tcs.temp_fpa > -15` -> GO `STEP-2B-FPA` | NO-GO `STEP-2B-OBC` (timeout 10 s)
+**LABEL:** `STEP-2B-FPA`
+**Note:** FPA hot:
+**TC:** `PAYLOAD_SET_MODE(mode=0)` (Service 8, Subtype 1, func_id 26) — remove electronics heat load
 **Verify:** `payload.mode` (0x0600) = 0 (OFF) within 10s
+**LABEL:** `STEP-2B-OBC`
 **TC (OBC hot):** `SET_PARAM(param_id=obdh.task_shed, value=1)` — reduce CPU load to lower dissipation
 **Verify:** `obdh.cpu_load` (0x0302) decreases within 30s
-**Action (Battery hot):** Verify `tcs.htr_battery` (0x040A) = 0 (OFF); if ON, command `HEATER_BATTERY(on=0)`
+**BRANCH:** `tcs.temp_battery > 42` -> GO `STEP-2B-BAT` | NO-GO `STEP-3` (timeout 10 s)
+**LABEL:** `STEP-2B-BAT`
+**Note:** Battery hot: verify `tcs.htr_battery` (0x040A) = 0 (OFF); if ON, switch it off:
+**BRANCH:** `tcs.htr_battery == 1` -> GO `STEP-2B-BATOFF` | NO-GO `STEP-3` (timeout 10 s)
+**LABEL:** `STEP-2B-BATOFF`
+**TC:** `HEATER_BATTERY(on=0)` (Service 8, Subtype 1, func_id 40)
+**Verify:** `tcs.htr_battery` (0x040A) = 0 (OFF) within 5s
 **GO/NO-GO:** Load reduction actions confirmed — proceed to monitoring
 
 ### Step 3 — Monitor Temperature Trend
-**TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — repeat every 60s for 15 minutes
+**LABEL:** `STEP-3`
+**TC:** `HK_REQUEST(sid=3)` (Service 3, Subtype 27) — TCS housekeeping; repeat every 60s for 15 minutes
+**TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — EPS housekeeping (battery SoC)
 **Verify:** Affected zone temperature trending toward nominal range at >= 0.2 deg-C/min
 **Verify:** No other zones drifting into yellow limits as a secondary effect
 **Verify:** `eps.bat_soc` (0x0101) > 20% — heater operation is not depleting battery excessively
-**GO/NO-GO:** Temperature trending nominal — continue monitoring. If no improvement after 15 min, proceed to Step 4.
+**GO/NO-GO:** Temperature trending nominal — continue monitoring. If no improvement after 15 min, proceed to Step 4. -> GO `STEP-5` | NO-GO `STEP-4`
 
 ### Step 4 — Adjust Heater Setpoints or Escalate
-**TC (Cold case):** `HEATER_SET_SETPOINT(circuit=<0 battery | 1 obc | 2 thruster>, on_temp=<current +5 C>, off_temp=<current +5 C>)` (Service 8, Subtype 1, func_id 44)  
+**LABEL:** `STEP-4`
+**GO/NO-GO:** Cold case — raise the heater thermostat -> GO `STEP-4C` | NO-GO `STEP-4H`
+**LABEL:** `STEP-4C`
+**TC:** `HEATER_SET_SETPOINT(circuit=<0 battery | 1 obc | 2 thruster>, on_temp=<current +5 C>, off_temp=<on_temp +5 C>)` (Service 8, Subtype 1, func_id 44)  
 **Wire:** `2C <circuit:uint8> <on_temp:float32> <off_temp:float32>` — e.g. circuit 0, on 5.0 / off 10.0 C = `2C 00 40 A0 00 00 41 20 00 00`
 **Note:** There is no `tcs.htr_<zone>_setpoint` parameter — heater thermostats are reconfigured by S8 func 44, not by S20 parameter write.
 **Verify:** Heater duty cycle increases (more frequent ON cycles observed in telemetry)
-**TC (Hot case):** If temperature still rising, command `AOCS_SET_MODE(mode=3)` (Service 8, Subtype 1, func_id 0) for COARSE_SUN to optimise spacecraft attitude for thermal dissipation
+**LABEL:** `STEP-4H`
+**GO/NO-GO:** Hot case and temperature still rising — go to COARSE_SUN -> GO `STEP-4HS` | NO-GO `STEP-4E`
+**LABEL:** `STEP-4HS`
+**TC:** `AOCS_SET_MODE(mode=3)` (Service 8, Subtype 1, func_id 0) — COARSE_SUN, to optimise spacecraft attitude for thermal dissipation
 **Verify:** `aocs.mode` (0x020F) = 3 within 15s
-**GO/NO-GO:** If temperature stabilises within additional 15 min, proceed to Step 5. If red limit approached, escalate to EMG-002.
+**LABEL:** `STEP-4E`
+**GO/NO-GO:** If temperature stabilises within additional 15 min, proceed to Step 5. If red limit approached, escalate to EMG-002. -> GO `STEP-5` | NO-GO `STEP-END`
 
 ### Step 5 — Confirm Recovery and Restore Operations
-**TC:** `HK_REQUEST(sid=4)` (Service 3, Subtype 27)
+**LABEL:** `STEP-5`
+**TC:** `HK_REQUEST(sid=3)` (Service 3, Subtype 27)
 **Verify:** All zone temperatures within nominal (green) range
 **Note:** Only if heaters were enabled for the cold case. Circuits: 0 battery,
 1 obc, 2 thruster. Wire bytes for the battery circuit are `2D 00`.
+**GO/NO-GO:** Heaters were enabled for the cold case -> GO `STEP-5A` | NO-GO `STEP-5B`
+**LABEL:** `STEP-5A`
 **TC:** `HEATER_AUTO_MODE(circuit=0)` (Service 8, Subtype 1, func_id 45) — battery circuit back to thermostat
-**Action:** If loads were shed for hot case, re-enable per CTG-005 load restoration sequence
+**LABEL:** `STEP-5B`
+**Action:** If loads were shed for hot case, re-enable them in the LEOP-007 (Sequential Power-On) order, as in the CTG-023 (Progressive Load Shed) restoration steps
 **GO/NO-GO:** All temperatures nominal and operations restored — recovery complete
 
 ## Off-Nominal Handling
@@ -84,6 +115,7 @@ for hot cases), and monitors the temperature trend until the zone returns within
 - If multiple zones simultaneously exceed limits: Suspect orbital geometry change or AOCS anomaly — check `aocs.mode` (0x020F) and execute CTG-002 if attitude is off-nominal
 
 ## Post-Conditions
+**LABEL:** `STEP-END`
 - [ ] All thermal zones within nominal (green) limits
 - [ ] Heater states documented (auto/manual/off for each circuit)
 - [ ] Power budget re-assessed with any new heater loads

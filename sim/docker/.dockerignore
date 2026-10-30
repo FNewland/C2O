@@ -1,0 +1,29 @@
+# Build context is the repository root (docker build -f docker/Dockerfile .).
+# Docker reads <context>/.dockerignore, or with BuildKit the per-Dockerfile
+# file docker/Dockerfile.dockerignore — a symlink to this file, so the rules
+# apply without touching the repository root. (Unverified on every builder:
+# if yours ignores the symlink, the build still works, just with a larger
+# context; the Dockerfile COPYs only the directories it needs.)
+# Keep in step with docker/config-hash.sh, which skips the same litter.
+.git
+.gitignore
+.venv
+.venv-*
+venv
+wheels
+**/__pycache__
+**/*.pyc
+**/*.egg-info
+**/.DS_Store
+**/._*
+**/.pytest_cache
+workspace
+data
+recording
+configs/data
+tests
+docs
+deploy
+scripts
+docker/*.env
+!docker/*.env.example

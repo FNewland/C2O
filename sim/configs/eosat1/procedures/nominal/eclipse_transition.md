@@ -63,13 +63,13 @@ and reassess after one additional sunlit pass.
 **Verify:** `tcs.temp_obc` (0x0406) > 10 C
 **Note:** If battery temperature margin is tight (< 8 C), raise battery heater
 **TC:** `HEATER_SET_SETPOINT(circuit=0, on_temp=3.0, off_temp=8.0)` (Service 8, Subtype 1, func_id 44) — setpoint
-**Note:** If OBC temperature margin is tight (< 12 C), raise OBC heater
-**TC:** `HEATER_SET_SETPOINT(circuit=1, on_temp=8.0, off_temp=13.0)` (Service 8, Subtype 1, func_id 44) — setpoint
+**Note:** If OBC temperature margin is tight (< 12 C), raise the OBC heater setpoint:
+**TC:** `HEATER_SET_SETPOINT(circuit=1, on_temp=8.0, off_temp=13.0)` (Service 8, Subtype 1, func_id 44) — OBC heater ON 8 C / OFF 13 C
 **GO/NO-GO:** Heater setpoints configured for eclipse cold phase — proceed.
 
 ### Step 3: Disable FPA Cooler to Conserve Power
-**Note:** If payload is in STANDBY or OFF, disable FPA cooler to reduce eclipse
-**TC:** `FPA_COOLER(on=0)` (Service 8, Subtype 1, func_id 43) — power draw
+**Note:** If payload is in STANDBY or OFF, disable FPA cooler to reduce eclipse power draw:
+**TC:** `FPA_COOLER(on=0)` (Service 8, Subtype 1, func_id 43) — FPA cooler OFF
 **Verify:** `tcs.cooler_fpa` (0x040C) = 0 (OFF) within 5 s
 **Verify:** `eps.power_cons` (0x0106) decreases by ~15 W
 **Note:** FPA cooler will be re-enabled after eclipse exit when power budget is positive.

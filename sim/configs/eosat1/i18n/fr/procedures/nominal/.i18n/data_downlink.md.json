@@ -1,0 +1,87 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/nominal/data_downlink.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "nom-003-data-downlink",
+   "en_hash": "9e8db297ed0e51ff",
+   "fr_hash": "c4140867a24e028b"
+  },
+  {
+   "id": "nom-003-data-downlink/purpose",
+   "en_hash": "b53cfc0a7a3dc6c7",
+   "fr_hash": "b788ac47a7baa6a3"
+  },
+  {
+   "id": "nom-003-data-downlink/prerequisites",
+   "en_hash": "0e92edde07e5ed30",
+   "fr_hash": "9d348be437fefe48"
+  },
+  {
+   "id": "nom-003-data-downlink/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "nom-003-data-downlink/procedure-steps/step-1-confirm-link-quality",
+   "en_hash": "14f6197a96b7c184",
+   "fr_hash": "724a480045d1758e"
+  },
+  {
+   "id": "nom-003-data-downlink/procedure-steps/step-2-record-baseline-storage-state",
+   "en_hash": "e5d66958dc4655f2",
+   "fr_hash": "0e7661c3599e82bd"
+  },
+  {
+   "id": "nom-003-data-downlink/procedure-steps/step-3-raise-the-link-to-high",
+   "en_hash": "5f81bf91b74634e1",
+   "fr_hash": "9212c6a1d461e3eb"
+  },
+  {
+   "id": "nom-003-data-downlink/procedure-steps/step-3a-open-the-s13-transfer",
+   "en_hash": "fd7e2a8ffaf06d33",
+   "fr_hash": "5a4477b446e96863"
+  },
+  {
+   "id": "nom-003-data-downlink/procedure-steps/step-4-walk-the-segments-and-monitor-progress",
+   "en_hash": "735ffbadacb7f825",
+   "fr_hash": "b54c3204f7bf4a15"
+  },
+  {
+   "id": "nom-003-data-downlink/procedure-steps/step-5a-verify-the-product-checksum",
+   "en_hash": "2772ae5905449579",
+   "fr_hash": "08b2f52a94ff4f0b"
+  },
+  {
+   "id": "nom-003-data-downlink/procedure-steps/step-5-verify-ground-reception",
+   "en_hash": "b883f2300f517170",
+   "fr_hash": "2a5bf730b14fe3aa"
+  },
+  {
+   "id": "nom-003-data-downlink/procedure-steps/step-6-terminate-downlink-session-and-release-the-high-tier",
+   "en_hash": "c2608b607672e285",
+   "fr_hash": "425e4919969efe8d"
+  },
+  {
+   "id": "nom-003-data-downlink/procedure-steps/step-7-post-downlink-assessment",
+   "en_hash": "c9e935a7d5cf832e",
+   "fr_hash": "c8cf382f5f9e95d3"
+  },
+  {
+   "id": "nom-003-data-downlink/off-nominal-handling",
+   "en_hash": "ce2723715b79902b",
+   "fr_hash": "790323f489758756"
+  },
+  {
+   "id": "nom-003-data-downlink/post-conditions",
+   "en_hash": "0efde37ed375b15f",
+   "fr_hash": "25f2150e274fb71b"
+  }
+ ],
+ "en_commit": "3e80564"
+}

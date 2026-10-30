@@ -1,0 +1,278 @@
+# SMO split deployment over smo-link (docs/web_2026-10/LINK_DESIGN.md §5).
+#
+# Run from the repository root:
+#   export SMO_CONFIG_HASH=$(docker/config-hash.sh)
+#
+#   space host (laptop / cloud-sim container):
+#     cp docker/space.env.example docker/space.env      # fill URL/session/secret
+#     docker compose -f docker/compose.yaml --profile space up -d --build
+#
+#   ground host (cloud VM, behind the GCP load balancer — deploy/gcp/README.md):
+#     cp docker/ground.env.example docker/ground.env    # same session/secret
+#     docker compose -f docker/compose.yaml --profile ground up -d --build
+#     ... add `--profile rf` for the RF bridge (and set SMO_MCS_TM_PORT=8012,
+#         SMO_MCS_TC_PORT=8011 in ground.env so the MCS goes through it)
+#
+#   everything on one host (also the cloud-simulator provider):
+#     cp docker/ground.env.example docker/ground.env
+#     docker compose -f docker/compose.yaml --profile local-demo up -d --build
+#     (the agent dials ws://gsg:9100/link on the compose network)
+#
+# Networking model
+# - Ground processes share the GSG's network namespace (network_mode
+#   service:gsg), so the MCS, planner and RF bridge reach the GSG's TM/TC/HTTP
+#   on 127.0.0.1:8002/8001/8080 exactly as they reach a simulator in start.sh
+#   (rfsim's upstream is fixed in rfsim.yaml). The space agent shares the
+#   simulator's namespace the same way.
+# - The GSG's TM/TC listeners (8002/8001) bind 127.0.0.1 inside the shared
+#   namespace (only the MCS, planner and RF bridge in it can reach them) and
+#   are NEVER published. Listeners that must be published bind 0.0.0.0 inside
+#   their container (a published port cannot reach a loopback-only socket).
+# - Ports published on the ground host: MCS 9090, planner 9091, GSG HTTP 8080
+#   (instructor proxy) and link 9100. NONE of them has its own login (MCS can
+#   send TCs), so they publish on SMO_PUBLISH_ADDR, which DEFAULTS TO
+#   127.0.0.1 (review H4). Only on the GCP VM set SMO_PUBLISH_ADDR to the VM's
+#   INTERNAL IP, with the VPC firewall admitting only the Google load-balancer
+#   ranges and IAP (deploy/gcp/README.md); never 0.0.0.0 on a host with a
+#   public or campus address (Docker-published ports bypass ufw).
+#   Tool viewers and the radio UI are published on the host's loopback only
+#   (reach them through an IAP SSH tunnel).
+
+name: smo
+
+x-image: &image
+  image: smo-suite:${SMO_CONFIG_HASH:-dev}
+  build:
+    context: ..
+    dockerfile: docker/Dockerfile
+    args:
+      SMO_CONFIG_HASH: ${SMO_CONFIG_HASH:-unknown}
+      SMO_VERSION: ${SMO_VERSION:-dev}
+  init: true
+  restart: unless-stopped
+  security_opt:
+    - no-new-privileges:true
+  cap_drop: [ALL]
+
+# Healthcheck probe (python:3.13-slim has no curl).
+x-probe: &probe
+  interval: 10s
+  timeout: 5s
+  retries: 5
+  start_period: 30s
+
+x-space-env: &space-env
+  env_file:
+    - path: ./space.env
+      required: false
+
+x-ground-env: &ground-env
+  env_file:
+    - path: ./ground.env
+      required: false
+
+services:
+
+  # ───────────────────────────── space side ─────────────────────────────
+  sim:
+    <<: [*image, *space-env]
+    profiles: [space, local-demo]
+    command: >-
+      smo-simulator --config configs/eosat1/ --host 0.0.0.0 --port 8080 --ui modern
+    environment:
+      SMO_BIND: 0.0.0.0
+      SMO_SIM_HTTP_PORT: "8080"
+      SMO_VR: "0"
+    volumes:
+      - space-workspace:/opt/smo/workspace
+      - space-dumps:/opt/smo/workspace/dumps
+    ports:
+      # Instructor console of the simulator itself, host loopback only. In
+      # the ground profile the same console is reached via the GSG proxy.
+      - "127.0.0.1:${SMO_SIM_PUBLISH_PORT:-8180}:8080"
+    healthcheck:
+      <<: *probe
+      test: ["CMD", "python", "-c", "import urllib.request,sys; urllib.request.urlopen('http://127.0.0.1:8080/api/state', timeout=4); sys.exit(0)"]
+
+  # Space-link agent (space profile): dials SMO_LINK_URL from space.env.
+  agent:
+    <<: [*image, *space-env]
+    profiles: [space]
+    command: ["smo-link-agent"]
+    network_mode: "service:sim"
+    depends_on:
+      sim:
+        condition: service_healthy
+    environment:
+      SMO_SIM_HOST: 127.0.0.1
+      SMO_SIM_TM_PORT: "8002"
+      SMO_SIM_TC_PORT: "8001"
+      SMO_SIM_HTTP_PORT: "8080"
+    volumes:
+      - space-workspace:/opt/smo/workspace
+
+  # Same agent for local-demo: session/secret come from ground.env (both ends
+  # must share them) and the link is the compose-network GSG.
+  agent-demo:
+    <<: [*image, *ground-env]
+    profiles: [local-demo]
+    command: ["smo-link-agent"]
+    network_mode: "service:sim"
+    depends_on:
+      sim:
+        condition: service_healthy
+      gsg:
+        condition: service_healthy
+    environment:
+      SMO_LINK_URL: ws://gsg:9100/link
+      SMO_SIM_HOST: 127.0.0.1
+      SMO_SIM_TM_PORT: "8002"
+      SMO_SIM_TC_PORT: "8001"
+      SMO_SIM_HTTP_PORT: "8080"
+      # The agent refuses plaintext ws:// to a hostname. Here the "network" is
+      # the compose bridge on one machine, so allow it explicitly.
+      SMO_LINK_ALLOW_INSECURE: "1"
+    volumes:
+      - space-workspace:/opt/smo/workspace
+
+  # ───────────────────────────── ground side ────────────────────────────
+  gsg:
+    <<: [*image, *ground-env]
+    profiles: [ground, local-demo]
+    command: ["smo-link-gateway"]
+    environment:
+      # TM/TC on loopback: reachable only from this shared namespace.
+      SMO_GSG_BIND: 127.0.0.1
+      # HTTP (instructor proxy) and link listen on the container interface
+      # so they can be published (on SMO_PUBLISH_ADDR, see above).
+      SMO_GSG_HTTP_BIND: 0.0.0.0
+      SMO_GSG_TM_PORT: "8002"
+      SMO_GSG_TC_PORT: "8001"
+      SMO_GSG_HTTP_PORT: "8080"
+      SMO_GSG_LINK_BIND: 0.0.0.0
+      SMO_GSG_LINK_PORT: "9100"
+    volumes:
+      - ground-workspace:/opt/smo/workspace
+      - ground-dumps:/opt/smo/workspace/dumps
+    # Every ground process shares this namespace, so its ports are published
+    # here. Behind the GCP LB: 9090, 9091, 8080 via IAP; 9100 (/link) IAP off.
+    # Default 127.0.0.1: nothing is reachable from the network until you
+    # deliberately set SMO_PUBLISH_ADDR (the VM's internal IP on GCP).
+    ports:
+      - "${SMO_PUBLISH_ADDR:-127.0.0.1}:9090:9090"     # MCS
+      - "${SMO_PUBLISH_ADDR:-127.0.0.1}:9091:9091"     # planner
+      - "${SMO_PUBLISH_ADDR:-127.0.0.1}:8080:8080"     # GSG HTTP: instructor proxy, /healthz, /link-status
+      - "${SMO_PUBLISH_ADDR:-127.0.0.1}:9100:9100"     # GSG link (agent only)
+      - "127.0.0.1:8092:8092"                       # delayed-TM viewer
+      - "127.0.0.1:8093:8093"                       # orbit tools
+      - "127.0.0.1:8094:8094"                       # radio status (rf profile)
+      - "127.0.0.1:8095:8095"                       # documentation viewer
+    healthcheck:
+      <<: *probe
+      # /healthz AND the TM listener: rfsim connects to TM exactly once.
+      test: ["CMD", "python", "-c", "import urllib.request,socket,sys; urllib.request.urlopen('http://127.0.0.1:8080/healthz', timeout=4); socket.create_connection(('127.0.0.1', 8002), 2).close(); sys.exit(0)"]
+
+  mcs:
+    <<: [*image, *ground-env]
+    profiles: [ground, local-demo]
+    network_mode: "service:gsg"
+    depends_on:
+      gsg:
+        condition: service_healthy
+    # SMO_MCS_TM_PORT / SMO_MCS_TC_PORT (ground.env): 8002/8001 = the GSG,
+    # 8012/8011 = through the RF bridge (rf profile).
+    command:
+      - sh
+      - -c
+      - >-
+        exec smo-mcs --config configs/eosat1/ --port 9090 --host 0.0.0.0
+        --connect 127.0.0.1:$${SMO_MCS_TM_PORT:-8002} --tc-port $${SMO_MCS_TC_PORT:-8001}
+        --time-source $${SMO_TIME_SOURCE:-sim} --ui $${SMO_UI:-modern}
+    environment:
+      SMO_BIND: 0.0.0.0
+      SMO_SIM_STATE_URL: http://127.0.0.1:8080/api/state
+      SMO_PLANNER_URL: http://127.0.0.1:9091
+    volumes:
+      - ground-workspace:/opt/smo/workspace
+      - ground-dumps:/opt/smo/workspace/dumps
+      - ground-archive:/var/lib/smo/archive
+    healthcheck:
+      <<: *probe
+      test: ["CMD", "python", "-c", "import urllib.request,sys; urllib.request.urlopen('http://127.0.0.1:9090/', timeout=4); sys.exit(0)"]
+
+  planner:
+    <<: [*image, *ground-env]
+    profiles: [ground, local-demo]
+    network_mode: "service:gsg"
+    depends_on:
+      gsg:
+        condition: service_healthy
+    command:
+      - sh
+      - -c
+      - >-
+        exec smo-planner --config configs/eosat1/ --port 9091 --host 0.0.0.0
+        --connect-host 127.0.0.1 --time-source $${SMO_TIME_SOURCE:-sim} --ui $${SMO_UI:-modern}
+    environment:
+      SMO_BIND: 0.0.0.0
+      SMO_SIM_STATE_URL: http://127.0.0.1:8080/api/state
+      SMO_MCS_URL: http://127.0.0.1:9090
+    volumes:
+      - ground-workspace:/opt/smo/workspace
+    healthcheck:
+      <<: *probe
+      test: ["CMD", "python", "-c", "import urllib.request,sys; urllib.request.urlopen('http://127.0.0.1:9091/api/schedule', timeout=4); sys.exit(0)"]
+
+  # RF bridge: only with `--profile rf` (plus ground or local-demo). Started
+  # after the GSG is healthy, i.e. after its TM port is open (rfsim never
+  # reconnects TM). Upstream comes from configs/eosat1/rfsim.yaml (127.0.0.1).
+  rfsim:
+    <<: [*image, *ground-env]
+    profiles: [rf]
+    network_mode: "service:gsg"
+    depends_on:
+      gsg:
+        condition: service_healthy
+    command:
+      - sh
+      - -c
+      - exec smo-rfsim --config configs/eosat1/rfsim.yaml --mode $${SMO_RF_MODE:-FRAME} --radio-web
+    volumes:
+      - ground-workspace:/opt/smo/workspace
+
+  dtm-viewer:
+    <<: [*image, *ground-env]
+    profiles: [ground, local-demo]
+    network_mode: "service:gsg"
+    depends_on:
+      gsg:
+        condition: service_healthy
+    command: ["python", "tools/delayed_tm_viewer.py", "--port", "8092", "--dumps", "/opt/smo/workspace/dumps", "--public"]
+    volumes:
+      - ground-workspace:/opt/smo/workspace
+      - ground-dumps:/opt/smo/workspace/dumps
+
+  orbit-tools:
+    <<: [*image, *ground-env]
+    profiles: [ground, local-demo]
+    network_mode: "service:gsg"
+    depends_on:
+      gsg:
+        condition: service_started
+    command: ["python", "tools/orbit_tools.py", "--serve", "--port", "8093"]
+
+  doc-viewer:
+    <<: [*image, *ground-env]
+    profiles: [ground, local-demo]
+    network_mode: "service:gsg"
+    depends_on:
+      gsg:
+        condition: service_started
+    command: ["python", "tools/doc_viewer.py", "--port", "8095", "--docs", "configs/eosat1"]
+
+volumes:
+  space-workspace:     # sim breakpoints / config history, agent link state (dumps_acked.json)
+  space-dumps:         # S15 dumps written by the simulator, shipped by the agent
+  ground-workspace:    # reports, rfsim pass roll-ups
+  ground-dumps:        # dumps received by the GSG; read by MCS /dumps and the viewer
+  ground-archive:      # MCS SQLite TM archive (SMO_TM_ARCHIVE)

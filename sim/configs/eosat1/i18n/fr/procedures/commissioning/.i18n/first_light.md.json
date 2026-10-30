@@ -1,0 +1,92 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/commissioning/first_light.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "com-012-first-light",
+   "en_hash": "a6d3182196c06f2c",
+   "fr_hash": "fec1274e09d2125b"
+  },
+  {
+   "id": "com-012-first-light/purpose",
+   "en_hash": "643ab73f1e636eee",
+   "fr_hash": "b1fea4b696329228"
+  },
+  {
+   "id": "com-012-first-light/prerequisites",
+   "en_hash": "12981c8e4f080106",
+   "fr_hash": "9540436bac8c1a73"
+  },
+  {
+   "id": "com-012-first-light/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "com-012-first-light/procedure-steps/step-1-transition-aocs-to-finepoint",
+   "en_hash": "5db223b5c10f327d",
+   "fr_hash": "b0ecb5b6823e12ff"
+  },
+  {
+   "id": "com-012-first-light/procedure-steps/step-2-verify-fpa-temperature-before-imaging",
+   "en_hash": "9e9274c765bd99de",
+   "fr_hash": "d373b4feee479770"
+  },
+  {
+   "id": "com-012-first-light/procedure-steps/step-3-verify-payload-ready-for-imaging",
+   "en_hash": "33e0332c7292592b",
+   "fr_hash": "b1fb77940f175361"
+  },
+  {
+   "id": "com-012-first-light/procedure-steps/step-4-command-payload-to-imaging-mode",
+   "en_hash": "29f18fe87464d2b9",
+   "fr_hash": "ebca815b0a6fa4ed"
+  },
+  {
+   "id": "com-012-first-light/procedure-steps/step-5-trigger-first-image-capture",
+   "en_hash": "88056b1aaf411a30",
+   "fr_hash": "32672ac6af6cd6d2"
+  },
+  {
+   "id": "com-012-first-light/procedure-steps/step-6-verify-image-data-written-to-storage",
+   "en_hash": "1833f6371d10a8c5",
+   "fr_hash": "0d0402ea24e8951e"
+  },
+  {
+   "id": "com-012-first-light/procedure-steps/step-7-return-payload-to-standby",
+   "en_hash": "f962cec0d2c5b436",
+   "fr_hash": "615a50cbc5e21d16"
+  },
+  {
+   "id": "com-012-first-light/procedure-steps/step-8-downlink-the-product-over-service-13",
+   "en_hash": "955b1e7f43e161e6",
+   "fr_hash": "7ea00bc9c9ce82cd"
+  },
+  {
+   "id": "com-012-first-light/procedure-steps/step-9-first-light-assessment",
+   "en_hash": "4d297ec3718dd2a0",
+   "fr_hash": "3c9e2fc4b5d12583"
+  },
+  {
+   "id": "com-012-first-light/off-nominal-handling",
+   "en_hash": "9b6d8efe6c4e7aec",
+   "fr_hash": "dd76df6dfd1769cf"
+  },
+  {
+   "id": "com-012-first-light/post-conditions",
+   "en_hash": "6036b346d6d63098",
+   "fr_hash": "f183e379d2138556"
+  },
+  {
+   "id": "com-012-first-light/exit-state",
+   "en_hash": "15aaca743a6d9e7b",
+   "fr_hash": "ea1ed5cb17dea23a"
+  }
+ ],
+ "en_commit": "3e80564"
+}

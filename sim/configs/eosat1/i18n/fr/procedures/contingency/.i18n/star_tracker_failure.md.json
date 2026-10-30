@@ -1,0 +1,82 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/contingency/star_tracker_failure.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "ctg-008-star-tracker-failure",
+   "en_hash": "686c1f0d27001c6f",
+   "fr_hash": "83e49c3de743c8ba"
+  },
+  {
+   "id": "ctg-008-star-tracker-failure/objective",
+   "en_hash": "f3616c5870035f4a",
+   "fr_hash": "6e27f78dce1a4e42"
+  },
+  {
+   "id": "ctg-008-star-tracker-failure/prerequisites",
+   "en_hash": "718781be2dc5a83d",
+   "fr_hash": "0fdf0a60cd503218"
+  },
+  {
+   "id": "ctg-008-star-tracker-failure/required-telemetry",
+   "en_hash": "0cb62340d9244905",
+   "fr_hash": "6f7d38369055018e"
+  },
+  {
+   "id": "ctg-008-star-tracker-failure/required-commands",
+   "en_hash": "3b27e3beb07d8687",
+   "fr_hash": "0bd7b427a537ac25"
+  },
+  {
+   "id": "ctg-008-star-tracker-failure/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "ctg-008-star-tracker-failure/procedure-steps/step-1-confirm-star-tracker-1-failure",
+   "en_hash": "87030aeefeff5a6b",
+   "fr_hash": "2d61404ce48f4523"
+  },
+  {
+   "id": "ctg-008-star-tracker-failure/procedure-steps/step-2-power-on-star-tracker-2",
+   "en_hash": "6e4732ab4bf8a802",
+   "fr_hash": "b9e7018c7454634f"
+  },
+  {
+   "id": "ctg-008-star-tracker-failure/procedure-steps/step-3-select-star-tracker-2-as-primary",
+   "en_hash": "8eb993b5bdcaa146",
+   "fr_hash": "d95dabc190d3482f"
+  },
+  {
+   "id": "ctg-008-star-tracker-failure/procedure-steps/step-4-isolate-failed-star-tracker-1",
+   "en_hash": "897b1d8cfd148ab3",
+   "fr_hash": "1662c07899befee9"
+  },
+  {
+   "id": "ctg-008-star-tracker-failure/procedure-steps/step-5-fallback-both-star-trackers-failed-enter-coarsesun-mode",
+   "en_hash": "ce7207e86d6655a3",
+   "fr_hash": "8433552464d2156c"
+  },
+  {
+   "id": "ctg-008-star-tracker-failure/procedure-steps/step-6-end-of-procedure",
+   "en_hash": "2520b062ed937a8d",
+   "fr_hash": "a58c80723a540f17"
+  },
+  {
+   "id": "ctg-008-star-tracker-failure/verification-criteria",
+   "en_hash": "3efa884e9ac92c3c",
+   "fr_hash": "f7be58505c0e2a67"
+  },
+  {
+   "id": "ctg-008-star-tracker-failure/contingency",
+   "en_hash": "4c5c3bad83cc515c",
+   "fr_hash": "ea82bc53ca9ea834"
+  }
+ ],
+ "en_commit": "3e80564"
+}

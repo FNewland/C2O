@@ -198,6 +198,17 @@ class MCSServer:
             logger.warning("Unknown ui mode %r — falling back to classic",
                            self._ui_mode)
             self._ui_mode = "classic"
+        # ── UI language default (i18n S0) ─────────────────────────────
+        # Mirrors the ui switch: SMO_LANG env > mission-config `ui_lang:` >
+        # "en". Only a DEFAULT — each browser's toggle / ?lang= wins. Exposed
+        # as <html data-default-lang> on the modern index (English: file
+        # served unchanged) and additively as /api/client-config `ui_lang`.
+        from smo_common.i18n import server_default_lang
+        try:
+            _cfg_lang = _mc.ui_lang
+        except Exception:
+            _cfg_lang = None
+        self._ui_lang = server_default_lang(mission_lang=_cfg_lang)
         # Default sim-state port comes from the shared NetworkConfig schema
         # (or SMO_SIM_HTTP_PORT env) rather than a hard-coded literal, so the
         # MCS source carries no simulator-HTTP back-channel constant (HA-006).
@@ -3109,6 +3120,14 @@ class MCSServer:
 
     def _serve_index(self, mode: str):
         index_file = self._index_file_for(mode)
+        lang = getattr(self, "_ui_lang", "en")
+        if index_file.exists() and mode == "modern" and lang != "en":
+            from smo_common.i18n import inject_default_lang
+            return web.Response(
+                text=inject_default_lang(
+                    index_file.read_text(encoding="utf-8"), lang),
+                content_type="text/html",
+                headers={"Cache-Control": "no-cache"})
         if index_file.exists():
             return web.FileResponse(
                 index_file, headers={"Cache-Control": "no-cache"})
@@ -4161,13 +4180,35 @@ class MCSServer:
             return web.json_response({"error": "Invalid path"}, status=403)
         if not target.exists() or not target.is_file():
             return web.json_response({"error": "Not found"}, status=404)
+        return self._md_doc_response(request, target, rel_path)
+
+    def _md_doc_response(self, request, target: Path, rel_path: str):
+        """JSON {title, content_md} for one procedure/manual Markdown file.
+
+        Additive ``?lang=fr`` (i18n S0): DISPLAY ONLY — serves
+        ``<cfg>/i18n/fr/<procedures|manual>/<same path>`` when that
+        translation exists, else the English file; the response then also
+        carries ``lang`` (the language actually served). Without ``?lang``
+        the response is byte-for-byte what it always was. Procedure
+        EXECUTION never comes through here (the runner reads English).
+        """
+        lang = None
+        if "lang" in request.query:
+            from smo_common.i18n import localized_md_path, resolve_lang
+            want = resolve_lang(request, "en")
+            src = localized_md_path(target, want, self.config_dir.resolve())
+            lang = want if src != target else "en"
+            target = src
         content = target.read_text(encoding="utf-8")
         title = (
             content.split("\n", 1)[0].lstrip("# ").strip()
             if content
             else rel_path
         )
-        return web.json_response({"title": title, "content_md": content})
+        body = {"title": title, "content_md": content}
+        if lang is not None:
+            body["lang"] = lang
+        return web.json_response(body)
 
     async def _handle_manual_list(self, request):
         """The FLIGHT OPERATIONS manual.
@@ -4202,13 +4243,7 @@ class MCSServer:
             return web.json_response({"error": "Invalid path"}, status=403)
         if not target.exists() or not target.is_file():
             return web.json_response({"error": "Not found"}, status=404)
-        content = target.read_text(encoding="utf-8")
-        title = (
-            content.split("\n", 1)[0].lstrip("# ").strip()
-            if content
-            else rel_path
-        )
-        return web.json_response({"title": title, "content_md": content})
+        return self._md_doc_response(request, target, rel_path)
 
     # ── Procedure builder save/load ──────────────────────────────────
 
@@ -4887,6 +4922,9 @@ class MCSServer:
             # Resolved time source ("sim" | "real") so the modern page can
             # decide TRAINING-chip visibility locally (additive; Agent 5).
             "time_source": self._time_source,
+            # Server DEFAULT UI language (i18n S0; additive). The browser's
+            # own choice (?lang= / toggle) wins; API text stays English.
+            "ui_lang": getattr(self, "_ui_lang", "en"),
             "staleness": dict(self._staleness_policy),
             "param_cadence": {
                 f"0x{pid:04X}": [ent["interval_s"], *ent["sids"]]

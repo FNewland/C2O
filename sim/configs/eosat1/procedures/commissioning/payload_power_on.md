@@ -20,7 +20,7 @@ the baseline payload state required for subsequent cooler activation and imaging
 - [ ] COM-001 through COM-008 completed — platform fully commissioned
 - [ ] AOCS holding attitude in the NOMINAL family: `aocs.mode` (0x020F) = 4
       (or 8 in eclipse). Codes per `configs/eosat1/aocs/aocs_mode_codes.yaml`.
-- [ ] `eps.bat_soc` (0x0101) > 75% (payload power-on adds ~15W load)
+- [ ] `eps.bat_soc` (0x0101) > 75% (payload STANDBY adds ~2.4 W; the 15 W FPA cooler follows in COM-010)
 - [ ] `eps.power_gen` (0x0107) > 40W (sunlit phase, wings deployed)
 - [ ] OBC in NOMINAL mode
 - [ ] `tcs.temp_fpa` (0x0408) in range [+5C, +25C] (ambient, pre-cooler)
@@ -111,7 +111,7 @@ imagery from the store's baseline fill.
 ### Step 8 — Maintain STANDBY for Thermal Stabilization
 **Action:** Hold payload in STANDBY for 10 minutes to allow electronics thermal stabilization. Monitor payload and platform temperatures.
 **TC:** `HK_REQUEST(sid=3)` (Service 3, Subtype 27) — at T+5 min
-**TC:** `HK_REQUEST(sid=6)` (Service 3, Subtype 27) — at T+10 min
+**TC:** `HK_REQUEST(sid=3)` (Service 3, Subtype 27) — at T+10 min
 **TC:** `HK_REQUEST(sid=5)` (Service 3, Subtype 27) — Payload housekeeping
 **Verify:** `tcs.temp_obc` (0x0406) stable (not affected by payload heat) within 10s
 **Verify:** `payload.fpa_temp` (0x0601) stable within 10s
@@ -119,7 +119,7 @@ imagery from the store's baseline fill.
 **GO/NO-GO:** Payload thermally stable in STANDBY
 
 ### Step 9 — Log Payload Power-On Report
-**Action:** Record all power-on telemetry including timing, power draw, firmware version, self-test results, FPA temperature, and data interface status. Distribute Payload Power-On Report.
+**Action:** Record all power-on telemetry including timing, power draw, imager status word, imager temperature, FPA temperature, and store baseline. Distribute Payload Power-On Report.
 **GO/NO-GO:** Payload successfully powered on in STANDBY — ready for COM-010
 
 ## Off-Nominal Handling
@@ -128,7 +128,7 @@ imagery from the store's baseline fill.
   Step 3's `EPS_POWER_ON(line_index=3)`, and a mode command without it reverts on
   the next tick. If power ON but payload unresponsive, power off via `PAYLOAD_SET_MODE(mode=0)` and escalate.
 - If bus voltage drops below 27.0V on payload power-on: Immediately power off payload via `PAYLOAD_SET_MODE(mode=0)`. Check battery SOC. If SOC < 60%, wait for higher charge state. If bus regulation issue, investigate EPS before retry.
-- If the imager status word shows a fault: record it via `GET_PARAM(param_id=0x0611)`. Power off payload via `PAYLOAD_SET_MODE(mode=0)`. Do not proceed to cooler activation. Escalate to payload engineer with self-test diagnostic data.
+- If the imager status word shows a fault: record it via `GET_PARAM(param_id=0x0611)`. Power off payload via `PAYLOAD_SET_MODE(mode=0)`. Do not proceed to cooler activation. Escalate to payload engineer with the imager status word.
 - If payload power draw > 5 W in STANDBY (against a ~2.4 W budget): Unexpected current draw may indicate electronics fault. Monitor for 5 minutes. If trending upward, power off payload. If stable at higher-than-expected level, consult payload manufacturer specifications.
 - If the FPA temperature reading is anomalous: cross-check against the TCS node
   `tcs.temp_fpa` (0x0408), which is the same physical node published by the TCS
@@ -147,7 +147,7 @@ imagery from the store's baseline fill.
 
 ## Exit state
 - Payload line ON, payload in STANDBY (`payload.mode` 0x0600 = 1), SID 5
-  enabled and emitting
+  readable on request (`HK_REQUEST(sid=5)`); periodic SID 5 is enabled by NOM-005 when imaging is planned
 - NOTE: since Phase 4 EVERY cooler command path --- including the
   `PAYLOAD_SET_MODE` used here (funcs 16/17/26/43 and S2 device 0x0601) ---
   energises EPS line 4, so `eps.pl_fpa_cooler` (0x0114) may already read 1 at

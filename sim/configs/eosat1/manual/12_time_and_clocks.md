@@ -219,7 +219,7 @@ The MCS console shows, side by side:
 * **`time_ref`** — NONE / GROUND / GPS / HOLDOVER;
 * **time since sync** — `obdh.time_since_sync_s`, or "never".
 
-The number that matters is the **offset**, `ONBOARD - SIM UTC`; the console
+The number that matters is the **offset**, `ONBOARD - GROUND UTC`; the console
 flags it once it exceeds the display threshold. Both readings age: the onboard
 value is only as fresh as the last SID 4 packet, so at an 8 s cadence expect up
 to ~8 s of staleness plus light time. That is why NOM-008 has you request a
@@ -312,7 +312,7 @@ A single setting selects whether the **MCS** and **Planner** follow simulation
 time or real UTC. It does **not** affect spacecraft time: onboard time always
 comes from telemetry and is never synthesised on the ground.
 
-### 12.1 Precedence
+### A.1 Precedence
 
 For each service (first wins):
 
@@ -329,7 +329,7 @@ The companion `sim_state_url` (the simulator endpoint polled for `sim_time`,
 3. `sim_state_url:` in `mission.yaml`
 4. Default `http://<connect_host>:8080/api/state`
 
-### 12.2 Mission config
+### A.2 Mission config
 
 ```yaml
 time_epoch: "2000-01-01T12:00:00"   # the CUC epoch — live config
@@ -337,7 +337,7 @@ time_source: sim                    # "sim" | "real"
 # sim_state_url: http://localhost:8080/api/state   # optional override
 ```
 
-### 12.3 start.sh
+### A.3 start.sh
 
 ```bash
 SMO_TIME_SOURCE="${SMO_TIME_SOURCE:-sim}"          # --real sets this to real
@@ -350,7 +350,7 @@ export SMO_SIM_STATE_URL="${SMO_SIM_STATE_URL:-http://localhost:8080/api/state}"
 
 The active time source is echoed in the startup banner.
 
-### 12.4 Closed-loop sim sync
+### A.4 Closed-loop sim sync
 
 In sim mode the ground clock is closed-loop synced to the simulator rather than
 reconstructed locally:

@@ -8,7 +8,7 @@
 > budget and what it does and does not gate. §4 gains a note that the S-band
 > EIRP is now derived from the commanded PA power rather than being a
 > constant, so `TTC_SET_TX_POWER` moves the margin table. §6.3's recovery
-> sequence gains the `TTC_PA_ENABLE` step it had always been missing.
+> sequence gains the `TTC_PA_ON` step it had always been missing.
 
 **Applies to:** `configs/eosat1/subsystems/ttc.yaml` (`tm_rate_tiers`), and everything
 downstream of it: the simulator, the RF chain, the mission planner, the mission control
@@ -200,7 +200,7 @@ shipped configuration. The tool and the flight model cannot drift apart.
 **Assumptions** (all from `configs/eosat1/subsystems/ttc.yaml`): 513 km orbit (TLE-true
 mean altitude, 2026-08 epoch/altitude ruling), 2200 MHz
 downlink, EIRP 10 dBW **at the NOMINAL 2 W PA setting** + 3 dBi spacecraft patch = 13 dBW
-(see §4.3 — the EIRP is no longer a constant), atmospheric 0.5 dB at zenith
+(see §4.2 — the EIRP is no longer a constant), atmospheric 0.5 dB at zenith
 scaled by cosec(ε) below 30°, polarisation 0.3 dB, implementation 2.0 dB, G/T de-rated
 −1.5 dB below 10° and −0.5 dB below 30°, required Eb/N₀ 9.6 dB uncoded less the tier's
 coding gain.
@@ -262,8 +262,8 @@ Modelling a fake cliff at 10° would have been easier to explain and less honest
 
 | Step | Rate ratio | Rate term | Coding change | Predicted | Measured (Iqaluit @5°) |
 |------|-----------:|----------:|---------------|----------:|----------------------:|
-| SAFE → LOW | 16× | −12.04 dB | none | −12.04 dB | 57.8 − 45.7 = **−12.1 dB** |
-| LOW → HIGH | 8× | −9.03 dB | conv+RS 7.5 → RS 6.0 dB | −10.53 dB | 45.7 − 35.2 = **−10.5 dB** |
+| SAFE → LOW | 16× | −12.04 dB | none | −12.04 dB | 57.0 − 45.0 = **−12.0 dB** |
+| LOW → HIGH | 8× | −9.03 dB | conv+RS 7.5 → RS 6.0 dB | −10.53 dB | 45.0 − 34.5 = **−10.5 dB** |
 
 If a measured set does not show those two steps, the fault is in the model, not in the
 link. That check is what COM-006 Step 2a exists to perform.
@@ -284,9 +284,9 @@ EIRP(P) = eirp_dbw + 10·log₁₀(P / pa_ref_power_w)      pa_ref_power_w = 2.0
 
 | `TTC_SET_TX_POWER` level | RF out | ΔEIRP | LOW rung at Iqaluit, 5° |
 |---|---:|---:|---:|
-| 0 `LOW` | 1.0 W | −3.01 dB | 42.7 dB |
-| 1 `NOMINAL` | 2.0 W | 0.00 dB | **45.7 dB** |
-| 2 `HIGH` | 5.0 W | +3.98 dB | 49.7 dB |
+| 0 `LOW` | 1.0 W | −3.01 dB | 42.0 dB |
+| 1 `NOMINAL` | 2.0 W | 0.00 dB | **45.0 dB** |
+| 2 `HIGH` | 5.0 W | +3.98 dB | 49.0 dB |
 
 Subtract 3.01 dB from any figure in §4 to read it at the LOW PA setting, or add
 3.98 dB to read it at HIGH.
@@ -465,7 +465,7 @@ four different gates all report `0x0007`.
 | 1 | Tier code must be a real tier | any | `0x0003` | `Invalid TM rate/tier <x>. Valid: 0=LOW(16000 bps), 1=HIGH(128000 bps), …` |
 | 2 | **Beacon mode forces the beacon tier** | LOW, HIGH | `0x0007` | `TM rate is forced to the beacon tier in beacon mode (LOW refused)` |
 | 3 | SAFE is bootloader-only | SAFE (`0xFF`) | `0x0007` | `SAFE is a bootloader-only tier (1000 bps); not selectable in nominal operations` |
-| 4 | Antenna must be deployed | LOW, HIGH | `0x0007` | `HIGH (128000 bps) requires a deployed antenna` |
+| 4 | Antenna must be deployed | HIGH | `0x0007` | `HIGH (128000 bps) requires a deployed antenna` |
 | 5 | DOWNLINK/dump mode must be on | HIGH | `0x0007` | `HIGH (128000 bps) requires DOWNLINK/dump mode (TTC_SET_DOWNLINK_MODE)` |
 | — | TT&C TX power line must be on | any | `0x0004` | rejected earlier, at *acceptance*: `S8 func_id 65: power line 'ttc_tx' is OFF` |
 
@@ -489,8 +489,8 @@ cosec atmospheric loss and the G/T de-rate.
 *Select LOW (routine operations) after a boot or a recovery:*
 
 ```
-1. S8.1 func 19  EPS_POWER_LINE_ON, line 'ttc_tx'   (if not already on)
-2. S8.1 func 66  TTC_PA_ENABLE                      ← the step that was missing
+1. S8.1 func 19  EPS_POWER_ON, line_index = 2 (ttc_tx)   (if not already on)
+2. S8.1 func 66  TTC_PA_ON                          ← the step that was missing
 3. S8.1 func 70  TTC_SET_BEACON_MODE, on = 0        ← clears gate 2
 4. S8.1 func 69  TTC_DEPLOY_ANTENNA                 (once, LEOP; gate 4)
 5. S8.1 func 65  TTC_SET_DATA_RATE, rate = 0x00     → LOW, 16 kbps
@@ -536,7 +536,7 @@ indefinitely and the tier-demotion display could never clear.
 bootloader, or that was put into beacon mode by a contingency, is still in beacon mode
 after the application is running — and gate 2 refuses *both* LOW and HIGH until
 `TTC_SET_BEACON_MODE off` is sent. Whether the application boot should clear beacon mode
-automatically is an open design question; today it does not, deliberately, so step 2
+automatically is an open design question; today it does not, deliberately, so step 3
 above is mandatory. LEOP-002 and CON-BOOT walk through it.
 
 ---
@@ -690,17 +690,18 @@ effect:
 | Term | UHF vs S-band | Why |
 |---|---:|---|
 | Free-space path loss | **+14.03 dB to UHF** | 20·log₁₀(2200/437.5); five times the wavelength |
-| Atmosphere | +0.69 dB to UHF | 0.2 dB vs 0.5 dB at zenith; UHF is far below the water line |
+| Transmitter power | −10.0 dB to UHF | 1 W into the dipole (0 dBW) vs 10 dBW S-band EIRP at the NOMINAL PA setting |
+| Atmosphere | +1.72 dB to UHF | 1.15 dB vs 2.87 dB at 5° (0.2 dB vs 0.5 dB at zenith); UHF is far below the water line |
 | Spacecraft antenna | −3.0 dB to UHF | 0 dBi omni dipole vs a 3 dBi patch |
 | Polarisation | −2.7 dB to UHF | a linear dipole on a possibly-tumbling spacecraft against a circular ground antenna is a 3 dB nominal mismatch, not 0.3 dB |
 | Ground-station G/T | **−28.0 dB to UHF** | a 9 m professional dish is 28 dB better than a university Yagi |
-| **Net** | **−28.0 dB** | |
+| **Net** | **−27.95 dB** | |
 
 Two lessons a student should take from that table. First, **the frequency choice is not
 the dominant term** — UHF wins 14 dB of path loss and then hands back twice that in
 ground-station gain, because the aperture you can build scales with wavelength on both
 ends and the ground end is where the money is. Second, **the beacon closes anyway, by
-30 dB**, because it asks for 1 kbps instead of 16, and it asks a station you can build in
+about 29 dB**, because it asks for 1 kbps instead of 16, and it asks a station you can build in
 a university car park. It is a deliberately modest link doing a deliberately modest job,
 and that is what makes it survivable.
 
@@ -717,7 +718,7 @@ SID 11 carries seven parameters: battery voltage and SoC, OBC mode, reboot count
 software image, active OBC — and, since 2026-08b, **`ttc.pa_on`**. That last byte is the
 point of the whole exercise. When Franz's original symptom happens in reverse — no
 telemetry at a pass — the one packet you still get tells you whether the S-band PA is off,
-which turns a silent spacecraft into a one-command fix (`TTC_PA_ENABLE`, §6.3 step 2).
+which turns a silent spacecraft into a one-command fix (`TTC_PA_ON`, §6.3 step 2).
 
 At 1 kbps a 29-byte SID 11 packet takes 0.23 s, so the beacon's transmit duty cycle is
 **0.75 %** and its orbit-average draw is **13 mW**. `eps.yaml` already books it:

@@ -20,6 +20,9 @@
  * ============================================================================ */
 
 import { fmtUTC, fmtMET } from "/static/shared/format.js";
+// UI language. Wall display: NO toggle and no localStorage — ?lang= (or the
+// server default) only, so a shared browser cannot flip the wall by accident.
+import { I18n, t, tText } from "/static/shared/i18n.js";
 
 import { LAND } from "./wide-basemap.js";
 
@@ -249,20 +252,20 @@ function renderMission() {
   if (dFit && dFit.valid && typeof dFit.value === "number") {
     setVal(fitEl, dFit.value.toFixed(2) + "×",
       dFit.value < 1 ? "alarm" : "");
-    notes.push("fit: MCS derived");
+    notes.push(tText("fit: MCS derived"));
     fitDone = true;
   } else if (dFit && !dFit.valid) {
-    notes.push("fit invalid: " + (dFit.reason || "?"));
+    notes.push(tText("fit invalid: {{reason}}", { reason: dFit.reason || "?" }));
   }
   if (!fitDone) {
     const pf = plannerPassFit();
     if (pf && !isStale("budgets") && !isStale("schedule")) {
       if (pf.backlogMb <= 1e-6) {
-        setVal(fitEl, "FIT");
-        notes.push("no backlog (" + pf.gs + ")");
+        setVal(fitEl, tText("FIT"));
+        notes.push(tText("no backlog ({{gs}})", { gs: pf.gs }));
       } else if (pf.ratio !== null) {
         setVal(fitEl, pf.ratio.toFixed(2) + "×", pf.fits ? "" : "alarm");
-        notes.push("fit: planner budget, next dump pass " + pf.gs);
+        notes.push(tText("fit: planner budget, next dump pass {{gs}}", { gs: pf.gs }));
       }
       fitDone = true;
     }
@@ -277,11 +280,11 @@ function renderMission() {
       && plannerConfig.budget.min_soc_percent) ?? null;
     setVal(socEl, dSoc.value.toFixed(1) + "%",
       minSoc !== null && dSoc.value < minSoc ? "alarm" : "");
-    notes.push("SoC: MCS derived");
+    notes.push(tText("SoC: MCS derived"));
   } else {
     setVal(socEl, "—");
-    if (dSoc && !dSoc.valid) notes.push("SoC invalid: " + (dSoc.reason || "?"));
-    else if (!(services && services.mcs_url)) notes.push("no MCS URL configured");
+    if (dSoc && !dSoc.valid) notes.push(tText("SoC invalid: {{reason}}", { reason: dSoc.reason || "?" }));
+    else if (!(services && services.mcs_url)) notes.push(tText("no MCS URL configured"));
   }
   sub.textContent = notes.join(" · ") || "—";
 
@@ -289,13 +292,13 @@ function renderMission() {
   const lp = $("wLastPass");
   if (stale || !lastRollup) {
     lp.textContent = (services && services.rfsim_url)
-      ? "—" : "not configured";
+      ? "—" : tText("not configured");
   } else {
     const r = lastRollup;
     const lock = r.locked
       ? ((r.lock_delay_s === null || r.lock_delay_s === undefined)
-        ? "locked" : "lock +" + Number(r.lock_delay_s).toFixed(1) + " s")
-      : "NO LOCK";
+        ? tText("locked") : tText("lock +{{s}} s", { s: Number(r.lock_delay_s).toFixed(1) }))
+      : tText("NO LOCK");
     const eb = (r.mean_eb_n0_db === null || r.mean_eb_n0_db === undefined)
       ? "—" : Number(r.mean_eb_n0_db).toFixed(1) + " dB";
     const vol = (r.data_volume_bytes === null
@@ -354,7 +357,7 @@ function derivedOrbitPeriod() {
     // Sanity band: anything outside 60..240 min is not a LEO nodal period
     // (a sampling artefact), so fall through to Kepler rather than draw it.
     if (ms > 60 * 60000 && ms < 240 * 60000) {
-      return { ms, source: "node crossings" };
+      return { ms, source: "node crossings", label: () => tText("node crossings") };
     }
   }
   // -- fallback: Kepler from the reported mean altitude -----------------
@@ -369,7 +372,8 @@ function derivedOrbitPeriod() {
   if (alt === null || alt <= 0) return null;
   const a = EARTH_MEAN_R_KM + alt;
   const ms = 2 * Math.PI * Math.sqrt((a * a * a) / MU_EARTH_KM3_S2) * 1000;
-  return { ms, source: "Kepler from mean altitude" };
+  return { ms, source: "Kepler from mean altitude",
+    label: () => tText("Kepler from mean altitude") };
 }
 
 /* ── Watchdog (risk R7) ───────────────────────────────────────────────── */
@@ -406,23 +410,24 @@ function renderClock() {
     return;
   }
   const now = new Date(simNow());
+  // English text is the i18n key
   const months = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
   $("wDate").textContent = String(now.getUTCDate()).padStart(2, "0") + " "
-    + months[now.getUTCMonth()] + " " + now.getUTCFullYear() + " UTC";
+    + tText(months[now.getUTCMonth()]) + " " + now.getUTCFullYear() + " UTC";
   $("wUtc").textContent = fmtUTC(now);
   const met = (metAnchorS !== null && simAnchorMs !== null)
     ? metAnchorS + (simNow() - simAnchorMs) / 1000 : null;
   $("wMet").textContent = met === null ? "MET —" : fmtMET(met);
   const badge = $("wClockBadge");
   badge.classList.toggle("wall", clockDegraded);
-  badge.textContent = clockDegraded ? "WALL CLOCK"
-    : timeSource === "sim" ? "SIM TIME"
-    : timeSource === "real" ? "UTC (REAL)" : "—";
+  badge.textContent = clockDegraded ? tText("WALL CLOCK")
+    : timeSource === "sim" ? tText("SIM TIME")
+    : timeSource === "real" ? tText("UTC (REAL)") : "—";
   // TRAINING chip: rendered ONLY when the time source is the simulator.
   const chip = $("trainingChip");
   if (timeSource === "sim" && !clockDegraded) {
     chip.classList.add("on");
-    chip.textContent = "TRAINING — SIM TIME x" + (simSpeed || 1);
+    chip.textContent = tText("TRAINING — SIM TIME x{{speed}}", { speed: simSpeed || 1 });
   } else {
     chip.classList.remove("on");
   }
@@ -441,7 +446,7 @@ function renderPasses() {
   };
   if (stale) {
     $("wNextStation").textContent = "—"; $("wCountdown").textContent = "—";
-    $("wNextLabel").textContent = "NEXT AOS";
+    $("wNextLabel").textContent = tText("NEXT AOS");
     $("wPassList").innerHTML = "";
     return;
   }
@@ -449,25 +454,26 @@ function renderPasses() {
   const next = contacts.filter((c) => c.aos > now).sort((a, b) => a.aos - b.aos)[0];
   const cd = $("wCountdown");
   if (active) {
-    $("wNextLabel").textContent = "IN CONTACT — LOS";
+    $("wNextLabel").textContent = tText("IN CONTACT — LOS");
     $("wNextStation").textContent = active.station;
     cd.textContent = mmss(active.los - now);
     cd.classList.add("los");
   } else if (next) {
-    $("wNextLabel").textContent = "NEXT AOS";
+    $("wNextLabel").textContent = tText("NEXT AOS");
     $("wNextStation").textContent = next.station;
     cd.textContent = mmss(next.aos - now);
     cd.classList.remove("los");
   } else {
-    $("wNextLabel").textContent = "NEXT AOS";
-    $("wNextStation").textContent = "NO CONTACTS";
+    $("wNextLabel").textContent = tText("NEXT AOS");
+    $("wNextStation").textContent = tText("NO CONTACTS");
     cd.textContent = "—";
     cd.classList.remove("los");
   }
   const upcoming = contacts.filter((c) => c.los > now)
     .sort((a, b) => a.aos - b.aos).slice(0, 5);
   $("wPassList").innerHTML =
-    "<div class=\"pass head\"><span>STATION</span><span>AOS</span><span>LOS</span><span>MAX EL</span></div>"
+    "<div class=\"pass head\"><span>" + t("STATION") + "</span><span>AOS</span><span>LOS</span><span>"
+    + t("MAX EL", { context: "wall" }) + "</span></div>"
     + upcoming.map((c) =>
       "<div class=\"pass\"><span class=\"st\">" + c.station + "</span>"
       + "<span>" + fmtUTC(c.aos, { seconds: false }) + "</span>"
@@ -554,13 +560,15 @@ function renderTimeline() {
   ctx.textAlign = "left"; ctx.textBaseline = "top";
   ctx.font = "700 18px " + C("--sans");
   ctx.fillStyle = C("--tx3");
-  ctx.fillText("NEXT ORBIT", mL, mT);
-  const hdrW = ctx.measureText("NEXT ORBIT").width;
+  const nextOrbit = tText("NEXT ORBIT");
+  ctx.fillText(nextOrbit, mL, mT);
+  const hdrW = ctx.measureText(nextOrbit).width;
   if (per) {
     ctx.font = "18px " + C("--mono");
     ctx.fillStyle = C("--tx2");
-    ctx.fillText((per.ms / 60000).toFixed(1) + " MIN — DERIVED FROM "
-      + per.source.toUpperCase(), mL + hdrW + 18, mT);
+    ctx.fillText(tText("{{min}} MIN — DERIVED FROM {{source}}", {
+      min: (per.ms / 60000).toFixed(1), source: per.label().toUpperCase() }),
+    mL + hdrW + 18, mT);
   }
   // Row names live in a left gutter, not on top of the bars: on the old
   // single-lane layout "CONTACTS" sat over the first hour of data.
@@ -586,8 +594,8 @@ function renderTimeline() {
     ctx.font = "18px " + C("--sans");
     ctx.fillStyle = C("--tx3");
     ctx.textAlign = "left"; ctx.textBaseline = "middle";
-    ctx.fillText("CONTACTS", mL, dTop + rowH / 2);
-    ctx.fillText("ACTIVITIES", mL, dTop + rowH * 1.5);
+    ctx.fillText(tText("CONTACTS"), mL, dTop + rowH / 2);
+    ctx.fillText(tText("ACTIVITIES"), mL, dTop + rowH * 1.5);
   }
 
   // Bar + label writer, shared by both detail rows. Labels are 21 px and
@@ -640,7 +648,7 @@ function renderTimeline() {
     .filter((c) => c.los > now && c.aos < dEnd)
     .sort((a, b) => a.aos - b.aos)
     .map((c) => ({ start: c.aos, end: c.los,
-      label: (c.aos <= now && c.los >= now ? "IN CONTACT " : "")
+      label: (c.aos <= now && c.los >= now ? tText("IN CONTACT") + " " : "")
         + c.station.toUpperCase() + "  " + hhmm(c.aos)
         + (typeof c.maxEl === "number" ? "  " + c.maxEl.toFixed(0) + "°" : "") }));
   const nearActs = schedule
@@ -658,11 +666,11 @@ function renderTimeline() {
   ctx.font = "18px " + C("--sans"); ctx.fillStyle = C("--tx3");
   ctx.textAlign = "right"; ctx.textBaseline = "middle";
   if (!nearContacts.length) {
-    haloText(ctx, "NO CONTACTS THIS ORBIT", plotL + plotW - 4,
+    haloText(ctx, tText("NO CONTACTS THIS ORBIT"), plotL + plotW - 4,
       dTop + rowH / 2, C("--tx3"), C("--bg"));
   }
   if (!nearActs.length) {
-    haloText(ctx, "NO ACTIVITIES THIS ORBIT", plotL + plotW - 4,
+    haloText(ctx, tText("NO ACTIVITIES THIS ORBIT"), plotL + plotW - 4,
       dTop + rowH * 1.5, C("--tx3"), C("--bg"));
   }
 
@@ -719,11 +727,11 @@ function renderTimeline() {
   ctx.font = "18px " + C("--sans"); ctx.fillStyle = C("--tx3");
   ctx.textAlign = "left"; ctx.textBaseline = "middle";
   const ovLabelX = gut ? mL : plotL + 4;
-  haloText(ctx, "ECLIPSE", ovLabelX, bandEcl.y + bandEcl.h / 2,
+  haloText(ctx, tText("ECLIPSE"), ovLabelX, bandEcl.y + bandEcl.h / 2,
     C("--tx3"), C("--bg"));
-  haloText(ctx, "CONTACTS", ovLabelX, bandC.y + bandC.h / 2,
+  haloText(ctx, tText("CONTACTS"), ovLabelX, bandC.y + bandC.h / 2,
     C("--tx3"), C("--bg"));
-  haloText(ctx, "ACTIVITIES", ovLabelX, bandA.y + bandA.h / 2,
+  haloText(ctx, tText("ACTIVITIES"), ovLabelX, bandA.y + bandA.h / 2,
     C("--tx3"), C("--bg"));
 
   // Now-markers (redrawn every second with the whole canvas).
@@ -872,11 +880,9 @@ function renderTrackCanvas() {
   const now = simNow();
   const per = derivedOrbitPeriod();
   // Map key, in the block header (the map itself keeps all of its pixels).
-  $("wTrackLegend").textContent =
-    "\u2014 SOLID = NOW\u2192+1 ORBIT"
-    + (per ? " (" + (per.ms / 60000).toFixed(1) + " MIN)" : "")
-    + " \u00b7 DOTTED = LATER \u00b7 \u25b2 STATION"
-    + " \u00b7 \u25cf AOS \u00b7 \u25cb LOS";
+  $("wTrackLegend").textContent = tText(
+    "\u2014 SOLID = NOW\u2192+1 ORBIT{{per}} \u00b7 DOTTED = LATER \u00b7 \u25b2 STATION \u00b7 \u25cf AOS \u00b7 \u25cb LOS",
+    { per: per ? " (" + (per.ms / 60000).toFixed(1) + " MIN)" : "" });
   // ONE orbit boundary for the whole page: the same derivedOrbitPeriod()
   // the PLAN block labels against. Everything up to it (this revolution and
   // the next one it runs into) is drawn solid; everything after it is
@@ -1110,13 +1116,13 @@ function renderBudgets() {
   if (stale || !powerBudget) {
     pv.textContent = "—"; pv.className = "v num";
     pb.querySelector(".fl").style.width = "0%";
-    ps.textContent = stale ? "—" : "waiting for /api/budget/power";
+    ps.textContent = stale ? "—" : tText("waiting for {{route}}", { route: "/api/budget/power" });
   } else if (powerBudget.computable === false || powerBudget.final_soc == null) {
     // The designed cannot-compute state — never a 0 % / 100 % bar.
-    pv.textContent = "N/C"; pv.className = "v num warn";
+    pv.textContent = tText("N/C"); pv.className = "v num warn";
     pb.querySelector(".fl").style.width = "0%";
     ps.textContent = (powerBudget.reason
-      || (powerBudget.warnings || [])[0] || "cannot compute").substring(0, 90);
+      || (powerBudget.warnings || [])[0] || tText("cannot compute")).substring(0, 90);
     ps.className = "reason";
   } else {
     const soc = powerBudget.final_soc;
@@ -1130,16 +1136,16 @@ function renderBudgets() {
       + "%\"></div>" + (minSoc !== null
         ? "<div class=\"tick\" style=\"left:" + minSoc + "%\"></div>" : "");
     ps.className = "sub";
-    ps.textContent = "initial " + (powerBudget.initial_soc ?? 0).toFixed(0) + "%"
-      + (minSoc !== null ? " · min " + minSoc + "%" : "")
-      + (powerBudget.soc_saturated ? " · SATURATED (limit, not prediction)" : "");
+    ps.textContent = tText("initial {{soc}}%", { soc: (powerBudget.initial_soc ?? 0).toFixed(0) })
+      + (minSoc !== null ? " · " + tText("min {{soc}}%", { soc: minSoc }) : "")
+      + (powerBudget.soc_saturated ? " · " + tText("SATURATED (limit, not prediction)") : "");
   }
 
   const dv = $("wDataVal"), db = $("wDataBar"), dsub = $("wDataSub");
   if (stale || !dataBudget || dataBudget.utilization_percent === undefined) {
     dv.textContent = "—"; dv.className = "v num";
     db.querySelector(".fl").style.width = "0%";
-    dsub.textContent = stale ? "—" : "waiting for /api/budget/data";
+    dsub.textContent = stale ? "—" : tText("waiting for {{route}}", { route: "/api/budget/data" });
   } else {
     const peak = dataBudget.peak_utilization_percent ?? dataBudget.utilization_percent;
     const cls = peak >= 100 ? "alarm" : peak >= warnFill ? "warn" : "";
@@ -1149,7 +1155,7 @@ function renderBudgets() {
     db.querySelector(".fl").style.width = Math.max(0, Math.min(100, peak)) + "%";
     dsub.textContent = (dataBudget.peak_onboard_mb ?? 0).toFixed(0) + " / "
       + (dataBudget.storage_capacity_mb ?? 0).toFixed(0) + " MB · "
-      + (dataBudget.plan_closes === false ? "PLAN DOES NOT CLOSE" : "plan closes");
+      + (dataBudget.plan_closes === false ? tText("PLAN DOES NOT CLOSE") : tText("plan closes"));
     dsub.style.color = dataBudget.plan_closes === false ? "var(--alarm)" : "";
   }
 }
@@ -1165,7 +1171,7 @@ function renderLink() {
     $("wLinkRange").textContent = "—";
   } else {
     const inC = !!scState.in_contact;
-    st.textContent = inC ? "IN CONTACT" : "NO CONTACT";
+    st.textContent = inC ? tText("IN CONTACT") : tText("NO CONTACT");
     st.className = "state" + (inC ? " yes" : "");
     $("wLinkStation").textContent = scState.active_gs || "—";
     $("wLinkElev").textContent = scState.gs_elevation_deg != null
@@ -1176,7 +1182,7 @@ function renderLink() {
   const dot = $("wApiDot"), txt = $("wApiText");
   const silent = lastAnyOk === 0 || Date.now() - lastAnyOk > 30000;
   dot.className = "api-dot " + (silent ? "error" : (apiOk ? "connected" : "error"));
-  txt.textContent = silent ? "unavailable" : (apiOk ? "connected" : "degraded");
+  txt.textContent = silent ? tText("unavailable") : (apiOk ? tText("connected") : tText("degraded"));
 }
 
 /* ── Timers (the ONLY drivers on this page) ───────────────────────────── */
@@ -1188,6 +1194,11 @@ function tick1s() {
 }
 
 async function init() {
+  await I18n.init({ storage: false });
+  // The per-block STALE tag is CSS ::after text; give it the translated word.
+  for (const h2 of document.querySelectorAll("section.blk>h2")) {
+    h2.setAttribute("data-stale-label", tText("STALE"));
+  }
   await fetchConfig();
   await Promise.all([fetchTimeSource(), fetchContacts(), fetchLink()]);
   await Promise.all([fetchSchedule(), fetchBudgets(), fetchTrack(),

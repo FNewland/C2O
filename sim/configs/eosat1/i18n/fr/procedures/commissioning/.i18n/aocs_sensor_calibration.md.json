@@ -1,0 +1,97 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/commissioning/aocs_sensor_calibration.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "com-003-aocs-sensor-calibration",
+   "en_hash": "aad9c4672a5fe650",
+   "fr_hash": "0f08e9f8df9bdd6e"
+  },
+  {
+   "id": "com-003-aocs-sensor-calibration/purpose",
+   "en_hash": "07f1e1efa0fe2e75",
+   "fr_hash": "d27994cc9f8bf24f"
+  },
+  {
+   "id": "com-003-aocs-sensor-calibration/prerequisites",
+   "en_hash": "3e1c47f0d0be9787",
+   "fr_hash": "c62049b3cbce1528"
+  },
+  {
+   "id": "com-003-aocs-sensor-calibration/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "com-003-aocs-sensor-calibration/procedure-steps/step-1-enable-the-aocs-determination-housekeeping",
+   "en_hash": "fe4731f33dab1efb",
+   "fr_hash": "35ae6e388ed82083"
+  },
+  {
+   "id": "com-003-aocs-sensor-calibration/procedure-steps/step-2-confirm-all-three-gyro-units-are-powered",
+   "en_hash": "ab48997cda79811f",
+   "fr_hash": "6ec35e0ce1516f7c"
+  },
+  {
+   "id": "com-003-aocs-sensor-calibration/procedure-steps/step-3-bring-a-star-tracker-into-the-determination-loop",
+   "en_hash": "f70a52c798ad1cda",
+   "fr_hash": "d11f26f12a851d87"
+  },
+  {
+   "id": "com-003-aocs-sensor-calibration/procedure-steps/step-4-wait-for-the-tracker-to-aid-the-estimator-no-mode-command",
+   "en_hash": "276c95cb4aed502d",
+   "fr_hash": "f71cb9ddac3fbebf"
+  },
+  {
+   "id": "com-003-aocs-sensor-calibration/procedure-steps/step-5-record-the-pre-calibration-bias",
+   "en_hash": "5694b07eac11c149",
+   "fr_hash": "b34b1f2777b52842"
+  },
+  {
+   "id": "com-003-aocs-sensor-calibration/procedure-steps/step-6-command-the-gyro-bias-calibration",
+   "en_hash": "79f794093c191a4f",
+   "fr_hash": "281fbff4380edebf"
+  },
+  {
+   "id": "com-003-aocs-sensor-calibration/procedure-steps/step-7-monitor-the-calibration-arc",
+   "en_hash": "67ebd18c299e1257",
+   "fr_hash": "7e3f0c841d6f6d50"
+  },
+  {
+   "id": "com-003-aocs-sensor-calibration/procedure-steps/step-8-verify-the-calibration-result",
+   "en_hash": "0d1ba25307b90a35",
+   "fr_hash": "5645e9eeb1045620"
+  },
+  {
+   "id": "com-003-aocs-sensor-calibration/procedure-steps/step-9-confirm-the-compensation-took-effect",
+   "en_hash": "6e3b5d3c8af0a07e",
+   "fr_hash": "3c5a4b88133ac87b"
+  },
+  {
+   "id": "com-003-aocs-sensor-calibration/procedure-steps/step-10-post-calibration-determination-check",
+   "en_hash": "42d83329abb08bf2",
+   "fr_hash": "6b7c2f071c07ad1d"
+  },
+  {
+   "id": "com-003-aocs-sensor-calibration/off-nominal-handling",
+   "en_hash": "7e885ae74e55f445",
+   "fr_hash": "fd23a106dba6588a"
+  },
+  {
+   "id": "com-003-aocs-sensor-calibration/post-conditions",
+   "en_hash": "4e8e00c837834e2f",
+   "fr_hash": "48f14f5eca2f8619"
+  },
+  {
+   "id": "com-003-aocs-sensor-calibration/exit-state",
+   "en_hash": "cc7edf2d57e66d5b",
+   "fr_hash": "339bc7d74c77b407"
+  }
+ ],
+ "en_commit": "983af0f"
+}

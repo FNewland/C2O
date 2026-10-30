@@ -133,7 +133,7 @@ The spacecraft is now ready for ground acquisition.
 
 Before the expected first contact window:
 
-1. Configure ground station antenna for VHF/UHF acquisition at predicted AOS azimuth/elevation.
+1. Configure ground station antenna for S-band acquisition at predicted AOS azimuth/elevation.
 2. Set the demodulator to the SAFE tier: 1 kBd, BPSK, conv(7,1/2)+RS. This is the only
    waveform the bootloader transmits; a demodulator configured for the LOW tier (16 kBd)
    will not lock it.
@@ -158,8 +158,8 @@ The beacon packet (SID 11) contains minimal but critical health information:
 1. Acquire beacon signal at AOS. Verify carrier lock on ground receiver.
 2. Decode beacon packet (SID 11). Record all parameter values.
 3. Verify spacecraft health from beacon parameters (see table above).
-4. Uplink time synchronisation command (`SET_TIME`) to correct onboard clock.
-5. Verify time sync by checking next beacon packet timestamp.
+4. Do not uplink `SET_TIME` yet: S9.1 is accepted in the bootloader but fails at execution.
+5. Record the beacon timestamp offset; the clock is set after `OBC_BOOT_APP` (LEOP-006).
 
 **GO/NO-GO Checkpoint 2: First Contact Health Assessment**
 - Criteria: Beacon received, all parameters nominal, OBC in BOOTLOADER.
@@ -184,20 +184,20 @@ Only the following commands are accepted:
 
 | Command              | Use During LEOP                                   |
 |----------------------|---------------------------------------------------|
-| OBC_SET_MODE (0)     | Boot application software                        |
-| SET_TIME             | Synchronise onboard clock                        |
-| HK_REQUEST (SID 11)  | Request immediate beacon packet (vs. waiting 100 s) |
-| SW_UPLOAD            | Upload software patch (if needed)                 |
-| SW_ACTIVATE          | Activate uploaded software (if needed)            |
+| OBC_BOOT_APP (S8.1 func 55) | Boot application software                 |
+| SET_TIME (S9.1)      | Accepted, but fails at execution until the application runs — set time after OBC_BOOT_APP (LEOP-006) |
+| HK_REQUEST (SID 11)  | Request immediate beacon packet (vs. waiting 30 s) |
+| OBC_REBOOT, OBC_SWITCH_UNIT, OBC_SELECT_BUS, OBC_BOOT_INHIBIT, OBC_CLEAR_REBOOT_CNT, OBC_DIAGNOSTIC (funcs 52–54, 56, 57, 61); S17.1; S20.1/S20.3 | Bootloader maintenance, connection test, parameter get/set |
+| EPS_POWER_ON / EPS_POWER_OFF (19/20), TTC_PA_ON / TTC_PA_OFF (66/67), TTC_DEPLOY_ANTENNA (69), SYS_SET_MISSION_PHASE (120) | First-contact power lines, transmitter, antenna and mission phase |
 
-All other commands will be rejected. Do not attempt subsystem commanding in BOOTLOADER.
+All other commands will be rejected at acceptance with failure code 0x0006. Do not attempt subsystem commanding in BOOTLOADER.
 
 ## 6. Application Boot and Verification
 
 ### 6.1 Boot Procedure
 
 1. Verify beacon health is nominal (Checkpoint 2 passed).
-2. Send `OBC_SET_MODE` (mode=0) to command transition from BOOTLOADER to APPLICATION.
+2. Send `OBC_BOOT_APP` (S8.1 func 55) to command transition from BOOTLOADER to APPLICATION.
 3. Wait 30 seconds for application software to load and perform POST.
 4. Monitor for the appearance of full housekeeping telemetry (SID 1-6).
 5. If no HK appears within 60 seconds, the application boot may have failed.
@@ -222,7 +222,7 @@ If the application fails to start:
 
 1. Wait for OBC to fall back to BOOTLOADER (3 consecutive watchdog resets).
 2. Assess reboot_count in beacon packet.
-3. Consider uploading a patched application via `SW_UPLOAD`.
+3. Follow CTG-021 (OBC Bootloader Recovery); there is no `SW_UPLOAD` command.
 4. If patch is not available, maintain spacecraft in BOOTLOADER with beacon mode
    until a patch can be prepared and uplinked during subsequent contacts.
 
@@ -266,7 +266,7 @@ margin for subsystem activation.
 1. Request EPS HK and verify `power_gen` (0x0107) has increased.
 2. Confirm `wing_status` (0x0144) = 0x03 (both wings deployed).
 3. Compare total power generation against prediction for deployed configuration
-   (total area 0.78 m2 vs. 0.30 m2 stowed).
+   (total area 0.438 m2 vs. 0.198 m2 stowed).
 4. Record deployment times and power readings in LEOP log.
 
 ### 6A.5 Off-Nominal: Wing Deployment Failure
@@ -424,18 +424,18 @@ control loops.
 1. Command AOCS to DETUMBLE mode (if not already).
 2. If rates are already near zero, introduce a small perturbation via magnetorquers.
 3. Verify magnetorquer-based rate damping converges to < 0.5 deg/s.
-4. Verify autonomous transition to SAFE_POINT when rates are sufficiently low.
+4. Verify autonomous transition to COARSE_SUN (mode 3) when rates are sufficiently low.
 
 #### Step 9: Sun-Pointing Verification
 
-1. In SAFE_POINT mode, verify spacecraft orients +Y towards the Sun.
+1. In COARSE_SUN mode, verify spacecraft orients +X towards the Sun.
 2. Monitor `att_error` converging towards zero.
 3. Verify CSS-derived Sun vector and star camera attitude are consistent.
 4. Monitor power generation — confirm `power_gen` increases as Sun-pointing improves.
 
 #### Step 10: Nadir-Pointing Test
 
-1. Command AOCS to NADIR_POINT mode via `AOCS_SET_MODE` (mode=0).
+1. Command AOCS to NOMINAL (nadir) mode via `AOCS_SET_MODE` (mode=4).
 2. Verify attitude transitions to nadir-pointing.
 3. Monitor `att_error` — should converge to < 0.1 deg within 5 minutes.
 4. Verify reaction wheel speeds remain within nominal range.
@@ -454,7 +454,7 @@ Before declaring the spacecraft operational, verify the following:
 | Item | Check                                    | Status Required           |
 |------|------------------------------------------|---------------------------|
 | 1    | OBC mode                                 | NOMINAL (mode=0)          |
-| 2    | AOCS mode                                | NADIR_POINT (mode=0)      |
+| 2    | AOCS mode                                | NOMINAL (mode=4)          |
 | 3    | Attitude error                           | < 0.5 deg (sustained)     |
 | 4    | Battery SoC                              | > 60%                     |
 | 5    | Power margin                             | power_gen > power_cons    |
@@ -543,9 +543,9 @@ If the OBC cannot transition from BOOTLOADER to APPLICATION:
 
 1. Request beacon packet via `HK_REQUEST` (SID 11).
 2. Check `reboot_count` — if elevated, the application may be crashing.
-3. Attempt `OBC_SET_MODE` (mode=0) again.
-4. If repeated failures, prepare a software patch for upload via `SW_UPLOAD`.
-5. Refer to `contingency_obc_bootloader.yaml` for detailed recovery procedure.
+3. Attempt `OBC_BOOT_APP` (S8.1 func 55) again.
+4. If repeated failures, keep the OBC in the bootloader (`OBC_BOOT_INHIBIT`) and investigate.
+5. Refer to CTG-021 (`procedures/contingency/obc_bootloader_recovery.md`) for detailed recovery procedure.
 
 ### 10.3 Excessive Tumble Rates
 

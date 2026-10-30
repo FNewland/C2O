@@ -1,0 +1,72 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/commissioning/fdir_configuration.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "com-008-fdir-configuration-protection-functions",
+   "en_hash": "dd96181ef2bf3928",
+   "fr_hash": "34c0a49ebecd19f0"
+  },
+  {
+   "id": "com-008-fdir-configuration-protection-functions/purpose",
+   "en_hash": "608ec7799d532b4b",
+   "fr_hash": "21f663fb510578f3"
+  },
+  {
+   "id": "com-008-fdir-configuration-protection-functions/prerequisites",
+   "en_hash": "f9ce0ec91f66e163",
+   "fr_hash": "b9825be9d42b6eef"
+  },
+  {
+   "id": "com-008-fdir-configuration-protection-functions/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "com-008-fdir-configuration-protection-functions/procedure-steps/step-1-enable-and-inventory-the-s12-monitoring-service",
+   "en_hash": "d0af57f376fae512",
+   "fr_hash": "ac06a48210287d32"
+  },
+  {
+   "id": "com-008-fdir-configuration-protection-functions/procedure-steps/step-2-inventory-the-s19-event-action-table",
+   "en_hash": "c74655177c291680",
+   "fr_hash": "b8f8ea8868e8edb7"
+  },
+  {
+   "id": "com-008-fdir-configuration-protection-functions/procedure-steps/step-3-read-the-fdir-summary-telemetry",
+   "en_hash": "5834344749299011",
+   "fr_hash": "d64d6fe0cf610635"
+  },
+  {
+   "id": "com-008-fdir-configuration-protection-functions/procedure-steps/step-4-functional-test-commanded-load-shed-latch",
+   "en_hash": "668114a31b984db8",
+   "fr_hash": "1251f25555aee3fb"
+  },
+  {
+   "id": "com-008-fdir-configuration-protection-functions/procedure-steps/step-5-confirm-no-residual-protection-state",
+   "en_hash": "02b0dfbe80ff408e",
+   "fr_hash": "bffffdfad887657e"
+  },
+  {
+   "id": "com-008-fdir-configuration-protection-functions/off-nominal-handling",
+   "en_hash": "21910b6c0e672408",
+   "fr_hash": "02a2d56414193cd4"
+  },
+  {
+   "id": "com-008-fdir-configuration-protection-functions/exit-state",
+   "en_hash": "51baea2f039d26a5",
+   "fr_hash": "de934c8fc7d88dce"
+  },
+  {
+   "id": "com-008-fdir-configuration-protection-functions/post-conditions",
+   "en_hash": "b6ff63b17dae9200",
+   "fr_hash": "2b565a6fff12c2f7"
+  }
+ ],
+ "en_commit": "983af0f"
+}

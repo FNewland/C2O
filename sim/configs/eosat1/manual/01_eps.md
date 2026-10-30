@@ -10,8 +10,8 @@
 ## 1. Overview
 
 The Electrical Power Subsystem (EPS) generates, stores, regulates, and distributes electrical
-power to all spacecraft subsystems. It comprises six body-mounted GaAs solar panels (one per
-spacecraft face), two deployable solar wings on the +/-Y faces, a lithium-ion battery, a
+power to all spacecraft subsystems. It comprises five body-mounted GaAs solar panels (every
+spacecraft face except -Z), two deployable solar wings on the +/-Y faces, a lithium-ion battery, a
 cold-redundant Power Distribution Module (PDM) with switchable and unswitchable lines, and
 associated harness.
 
@@ -119,8 +119,8 @@ burn wire restraint mechanism. Deployment is commanded via S8 function managemen
 | Parameter            | Value                      |
 |----------------------|----------------------------|
 | Chemistry            | Lithium-Ion (Li-Ion)       |
-| Nominal Voltage      | 28 V                       |
-| Capacity             | 100 Wh (3.6 Ah at 28 V)    |
+| Nominal Voltage      | 26.4 V model (28.8 V datasheet); range 21.5–29.2 V |
+| Capacity             | 100 Wh (3 Ah, 8S1P)        |
 | Reference part       | GomSpace NanoPower BPX, 8S-1P: 100 Wh, 3 Ah, 28.8 V nominal, ~500 g, 18650 cells |
 | Coulombic efficiency | 0.94 (charge acceptance)   |
 | Depth of Discharge   | Max 35% (nominal ops)      |
@@ -221,7 +221,7 @@ period after launcher separation:
 |------------|------------------------------------------------|---------------------|
 | NOMINAL    | All subsystems, payload standby                | ~29 W orbit-average |
 | NOMINAL+IMAGING | As above plus imager and FPA cooler on duty | ~33 W orbit-average |
-| SAFE       | OBC, TTC, TCS heaters, AOCS (safe point)       | ~20 W               |
+| SAFE       | OBC, TTC, TCS heaters, AOCS (COARSE_SUN)       | ~20 W               |
 | EMERGENCY  | OBC, TTC essential only                        | ~11 W               |
 | ECLIPSE    | Battery-only supply, non-essential loads shed  | ~25 W               |
 
@@ -361,7 +361,7 @@ if `bat_temp` falls below 5 deg C.
 
 ### 8.1 Per-Panel Degradation and Loss
 
-EOSAT-1 uses six body-mounted panels plus two deployable wings on the +/-Y faces. The loss
+EOSAT-1 uses five body-mounted panels plus two deployable wings on the +/-Y faces. The loss
 of a single panel or wing reduces total power generation depending on which element is
 affected and the current attitude. The impact depends on which face is lost:
 
@@ -384,7 +384,7 @@ When battery state of charge declines, the EPS FDIR implements progressive load 
 | SoC Threshold | Action                                              |
 |---------------|-----------------------------------------------------|
 | < 50%         | Payload operations inhibited                        |
-| < 35%         | Non-essential loads shed (AOCS to SAFE_POINT)       |
+| < 35%         | Non-essential loads shed (AOCS to COARSE_SUN)       |
 | < 25%         | Safe mode entry                                     |
 | < 15%         | Emergency mode (OBC + TTC only)                     |
 

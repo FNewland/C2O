@@ -358,62 +358,16 @@ ServiceDispatcher routes all incoming TeleCommands (APID 0x0001) to 14 implement
 
 ### S8 Function Dispatch
 
-Function IDs span six subsystem domains with two-stage authorization gate:
+Function IDs span seven subsystem domains with two-stage authorization gate. The complete,
+generated list is `09_command_reference.md` (from `commands/tc_catalog.yaml`); the ranges are:
 
-**AOCS (0–15):**
-- 0: Mode DETUMBLE
-- 1: Mode SUN_SAFE
-- 2: Mode COARSE_POINTING
-- 3: Mode FINE_POINTING
-- 4: Mode TARGET_TRACKING
-- 5: Enable Reaction Wheels
-- 6: Disable Reaction Wheels
-- 7: Enable Star Tracker 1
-- 8: Disable Star Tracker 1
-- 9: Enable Star Tracker 2
-- 10: Disable Star Tracker 2
-- 11: GPS Sync Time
-- 12–15: Reserved
-
-**EPS (16–25):**
-- 16: Power Line ON (Payload)
-- 17: Power Line OFF (Payload)
-- 18: Power Line ON (FPA Cooler)
-- 19: Power Line OFF (FPA Cooler)
-- 20: Battery Heater ON
-- 21: Battery Heater OFF
-- 22: OBC Heater ON
-- 23: OBC Heater OFF
-- 24: Reaction Wheels Heater ON
-- 25: Reaction Wheels Heater OFF
-
-**Payload (26–39):**
-- 26: Imager Power ON
-- 27: Imager Power OFF
-- 28: Imager Calibration
-- 29–39: Reserved
-
-**TCS (40–49):**
-- 40: Thermal Mode NOMINAL
-- 41: Thermal Mode SURVIVAL
-- 42–49: Reserved
-
-**OBDH (50–62):**
-- 50: Reboot OBC
-- 51: Reboot Memory
-- 52–62: Reserved
-
-**TTC (63–78):**
-- 63: Transponder ON
-- 64: Transponder OFF
-- 65: TX OFF
-- 66: TX ON
-- 67: RX OFF
-- 68: RX ON
-- 69: Data Rate 4.8 kbps
-- 70: Data Rate 19.2 kbps
-- 71: Data Rate 76.8 kbps
-- 72–78: Reserved
+- **AOCS:** 0–15, 84–91, 96 (0 `AOCS_SET_MODE`, 2/3 wheel disable/enable, 4/5 ST1/ST2 power, 6 `ST_SELECT`; 7 is retired)
+- **EPS:** 16–25, 81–83 (19/20 `EPS_POWER_ON`/`EPS_POWER_OFF`, 81 `EPS_DEPLOY_WING`)
+- **Payload:** 26–39, 92–95, 119 (26 `PAYLOAD_SET_MODE`, 28 `PAYLOAD_CAPTURE`)
+- **TCS:** 40–49 (40 `HEATER_BATTERY`, 41 `HEATER_OBC`, 42 `HEATER_THRUSTER`, 43 `FPA_COOLER`)
+- **OBDH:** 50–62, 80 (55 `OBC_BOOT_APP`, 80 `OBC_GPS_TIME_SYNC`)
+- **TTC:** 63–79, 97–98 (65 `TTC_SET_DATA_RATE`, 69 `TTC_DEPLOY_ANTENNA`, 97/98 UHF beacon)
+- **Propulsion:** 108–118; legacy aliases 100–107; 120 `SYS_SET_MISSION_PHASE`
 
 **Authority Gate:**
 
@@ -447,7 +401,7 @@ Each subsystem inherits from `SubsystemModel` (abstract base in smo-common) and 
 
 **State Variables:**
 - Battery: SoC [0–100%], voltage [23–34V], current [±50A]
-- Solar array: 6 panels with sun-relative attitude weighting
+- Solar array: 5 body-mounted panels + 2 deployable wings, with sun-relative attitude weighting
 - Power lines: 8 channels (5 switchable, 3 non-switchable)
 - Load profile: Current draw per bus
 - Thermal mode: Affects battery heater duty cycle
@@ -469,15 +423,15 @@ Each subsystem inherits from `SubsystemModel` (abstract base in smo-common) and 
 - Attitude: Quaternion (q0, q1, q2, q3) normalized
 - Angular rates: ω [deg/s] in body frame
 - Pointing error: Euler angles vs. target
-- Mode FSM: 9 modes (OFF, DETUMBLE, SUN_SAFE, COARSE_POINTING, FINE_POINTING, TARGET_TRACKING, SLEW, SAFE, BOOT)
+- Mode FSM: 10 modes (OFF, SAFE_BOOT, DETUMBLE, COARSE_SUN, NOMINAL, FINE_POINT, SLEW, DESAT, ECLIPSE, INERTIAL; `aocs/aocs_mode_codes.yaml`)
 
 **Hardware Models:**
 - Star Trackers: 2× cold redundant; boot timer scales with dt_sim; angular accuracy ±0.05°
 - Coarse Sun Sensor: 8 analog channels; accuracy ±3°
 - Gyroscopes: Bias drift (~0.1°/hr); noise floor ~0.01°/s
 - Reaction Wheels: 4× tetrahedron config; angular momentum saturation; desaturation via magnetorquers
-- Magnetometers: 2× redundant; Earth field model
-- GPS Receiver: Fix quality (0=no fix, 1=SPS, 2=DGPS); PDOP [1–10]; num satellites [0–12]
+- Magnetometer: 1 (single string); Earth field model
+- GPS Receiver: Fix type (0=none, 1=2D, 2=3D, 3=3D+vel); PDOP [1–10]; num satellites [0–12]
 
 **Detumble Mode Logic:**
 ```python
@@ -541,7 +495,7 @@ OFF → BOOT (bootloader 30 s) → check software CRC
 - Event log: Circular buffer, 64 KB
 - TC scheduler queue: Up to 100 time-tagged TCs
 
-### TTC (TeleTeleCommunications) — `ttc_basic.py`
+### TT&C (Telemetry, Tracking and Command) — `ttc_basic.py`
 
 **State Variables:**
 - Link budget: RSSI [dBm], lock state (locked/unlocked), data rate [kbps]
@@ -601,7 +555,7 @@ else:
 | 4 | Platform | 1 Hz | Spacecraft phase, uptime, orbit position/velocity, eclipse flag, ground station contact pass |
 | 5 | Payload | 1 Hz | Imager mode, image count, data volume, storage utilization, FPA temperature |
 | 6 | TTC | 1 Hz | RSSI, lock state, data rate, antenna pointing loss, contact elevation, modulation mode |
-| 11 | Beacon | 10 Hz | Battery SoC, mode, time, spacecraft health summary (paced downlink during contact) |
+| 11 | Beacon | every 30 s | Battery SoC, mode, time, spacecraft health summary (paced downlink during contact) |
 
 ### Parameter Catalog
 
@@ -660,8 +614,8 @@ SID_1_EPS:
 Byte Offset  |  Field                      |  Length (bytes)
 ─────────────┼─────────────────────────────┼─────────────────
    0–5       |  CCSDS Primary Header       |  6
-   6–9       |  PUS-C Secondary Header     |  4
-   10–(N-1)  |  Data Field (HK SID data)   |  Variable
+   6–14      |  PUS-C Secondary Header     |  9
+   15–(N-1)  |  Data Field (HK SID data)   |  Variable
    N–(N+1)   |  Error Control (CRC)        |  2
 ```
 
@@ -696,21 +650,21 @@ Each HK tick, compare all parameters to thresholds; generate S5 events on transi
 
 ### Event-Action Links (S19)
 
-Autonomous TC injection rules defined in `configs/eosat1/monitoring/event_actions.yaml`:
+Autonomous TC injection rules defined in `configs/eosat1/monitoring/s19_rules.yaml` (schematic example below; see that file for the real rule format):
 
 ```yaml
 event_52:  # Battery SoC Low Alarm
   actions:
-    - send_tc: S8.1 func_id=20   # Battery Heater OFF
-    - send_tc: S8.1 func_id=17   # Payload Power OFF
-    - send_tc: S8.1 func_id=19   # FPA Cooler Power OFF
+    - send_tc: S8.1 func_id=40   # HEATER_BATTERY(on=0)
+    - send_tc: S8.1 func_id=26   # PAYLOAD_SET_MODE(mode=0)
+    - send_tc: S8.1 func_id=43   # FPA_COOLER(on=0)
   delay_sec: 2
   max_repeat: 1
   
 event_61:  # Temperature High Alarm (OBC)
   actions:
-    - send_tc: S8.1 func_id=41   # Thermal Mode SURVIVAL
-    - send_tc: S8.1 func_id=1    # AOCS Mode SUN_SAFE
+    - send_tc: S8.1 func_id=41   # HEATER_OBC(on=0)
+    - send_tc: S8.1 func_id=0    # AOCS_SET_MODE(mode=3) COARSE_SUN
   delay_sec: 5
   max_repeat: 3
 ```
@@ -791,11 +745,11 @@ configs/eosat1/
 spacecraft:
   name: EOSAT-1
   form_factor: 6U_CubeSat
-  dry_mass_kg: 6.5
+  dry_mass_kg: 12.0
   apid: 0x0001
   
-pus_version: 3.0  # ECSS-E-ST-70-41C
-time_epoch: "2024-01-01T00:00:00Z"
+pus_version: 2  # PUS-C, ECSS-E-ST-70-41C
+time_epoch: "2000-01-01T12:00:00"   # J2000
 
 operators:
   flight_director:
@@ -834,21 +788,23 @@ Single-page application (SPA) with tabbed navigation and real-time telemetry sub
 
 ### Position-Based Access Control
 
-Six flight positions with function_id restrictions:
+Seven flight positions with function_id restrictions (`mcs/positions.yaml`):
 
 ```yaml
 flight_director:
-  func_ids_allowed: [0–78]      # Unrestricted
+  allowed_commands: all          # Unrestricted
 eps_tcs:
-  func_ids_allowed: [16–25, 40–49]   # EPS + TCS only
+  func_ids_allowed: [16–25, 40–49, 81–83, 100–107]   # EPS + TCS
 aocs:
-  func_ids_allowed: [0–15]       # AOCS only
+  func_ids_allowed: [0–15, 84–91, 96]   # AOCS only
 ttc:
-  func_ids_allowed: [63–78]      # TTC only
+  func_ids_allowed: [63–79]      # TTC only
 payload_ops:
-  func_ids_allowed: [26–39]      # Payload only
+  func_ids_allowed: [26–39, 92–95, 119]   # Payload only
 fdir_systems:
-  func_ids_allowed: [all with audit log]  # Any, but logged
+  func_ids_allowed: [50–62, 80, 97, 98]   # OBDH, GPS time sync, UHF beacon
+propulsion:
+  func_ids_allowed: [42, 108–118]   # Catbed heater + propulsion
 ```
 
 ### WebSocket Subscription
@@ -911,7 +867,7 @@ hardcoded the old whole-second CUC layout is wrong. Use
 
 **Output Rate:**
 - Nominal: 1 HK packet/sec per SID at 1 Hz tick rate
-- Contact mode: Beacon packets at 10 Hz
+- Beacon (SID 11): one packet every 30 s
 - Paced dump (S15): Configurable dump rate (e.g., 50 kbps)
 
 ### Instructor Interface (TCP:8003)

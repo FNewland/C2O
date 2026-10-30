@@ -91,8 +91,15 @@ def resolve_ui_mode(ui_mode: str | None = None) -> str:
     return mode
 
 
-def _serve_page(rel: str, missing_note: str):
+def _serve_page(rel: str, missing_note: str, lang: str = "en"):
     page = STATIC_DIR / rel
+    if page.exists() and rel.startswith("modern/") and lang != "en":
+        # i18n S0: server default UI language for browsers that have not
+        # chosen one (SMO_LANG env). English pages are served unchanged.
+        from smo_common.i18n import inject_default_lang
+        return web.Response(
+            text=inject_default_lang(page.read_text(encoding="utf-8"), lang),
+            content_type="text/html", headers={"Cache-Control": "no-cache"})
     if page.exists():
         return web.FileResponse(page, headers={"Cache-Control": "no-cache"})
     return web.Response(
@@ -103,35 +110,40 @@ def _serve_page(rel: str, missing_note: str):
         headers={"Cache-Control": "no-cache"})
 
 
-def _serve_index(mode: str):
+def _serve_index(mode: str, lang: str = "en"):
     if mode == "modern":
         return _serve_page("modern/index.html",
-                           "modern UI assets not installed")
+                           "modern UI assets not installed", lang)
     return _serve_page("radio.html", "static/radio.html not found")
 
 
 def _add_page_routes(app: web.Application, ui_mode: str | None = None):
     """Index / classic / modern / sim page routes + static mounts."""
     resolved = resolve_ui_mode(ui_mode)
+    try:
+        from smo_common.i18n import server_default_lang
+        lang = server_default_lang()          # SMO_LANG env > "en"
+    except ImportError:                              # pragma: no cover
+        lang = "en"
 
     def _request_ui(request) -> str:
         q = (request.query.get("ui") or "").strip().lower()
         return q if q in ("classic", "modern") else resolved
 
     async def index_handler(request):
-        return _serve_index(_request_ui(request))
+        return _serve_index(_request_ui(request), lang)
 
     async def classic_handler(request):
         return _serve_index("classic")
 
     async def modern_handler(request):
-        return _serve_index("modern")
+        return _serve_index("modern", lang)
 
     async def sim_handler(request):
         # Instructor-only channel-model view. Simulation truth: the
         # operator page must never link here.
         return _serve_page("modern/sim.html",
-                           "sim view assets not installed")
+                           "sim view assets not installed", lang)
 
     app.router.add_get("/", index_handler)
     app.router.add_get("/classic", classic_handler)

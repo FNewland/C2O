@@ -16,7 +16,7 @@ and link restoration before escalating to emergency autonomous operations.
 - [ ] Orbit prediction is current (propagated within last 6 hours) and AOS/LOS times are valid
 - [ ] Ground station RF chain has been verified nominal (uplink power, frequency, polarisation)
 - [ ] At least 5 minutes of pass time remaining for recovery attempt
-- [ ] Emergency procedure EMG-001 is available for escalation
+- [ ] Emergency procedure EMG-004 is available for escalation
 
 ## Procedure Steps
 
@@ -32,22 +32,28 @@ and link restoration before escalating to emergency autonomous operations.
 **Verify:** `ttc.link_status` (0x0501) = 2 (LOCKED) within 30s
 **Verify:** `ttc.rssi` (0x0502) > -95 dBm if link restores
 **GO/NO-GO:** If link restores, proceed to Step 5 for health check. If no response, proceed to Step 3.
+**BRANCH:** `ttc.link_status == 2` -> GO `STEP-5` | NO-GO `STEP-3` (timeout 30 s)
 
 ### Step 3 — Switch to Redundant Transponder
+**LABEL:** `STEP-3`
 **TC:** `TTC_SWITCH_REDUNDANT` (Service 8, Subtype 1) — blind command
 **Action:** Wait 45s for redundant transponder power-up and frequency lock
 **Verify:** `ttc.link_status` (0x0501) = 2 (LOCKED) within 45s
 **Verify:** `ttc.mode` (0x0500) indicates redundant unit active
 **GO/NO-GO:** If link restores on redundant, proceed to Step 5. If no response, proceed to Step 4.
+**BRANCH:** `ttc.link_status == 2` -> GO `STEP-5` | NO-GO `STEP-4` (timeout 45 s)
 
 ### Step 4 — Second Attempt: Retry Primary Transponder
+**LABEL:** `STEP-4`
 **TC:** `TTC_SWITCH_PRIMARY` (Service 8, Subtype 1) — blind command
 **Action:** Wait 45s for primary transponder re-initialisation
 **Verify:** `ttc.link_status` (0x0501) = 2 (LOCKED) within 45s
 **GO/NO-GO:** If link restores, proceed to Step 5. If still no link after both transponders attempted, proceed to Step 6 (Escalation).
+**BRANCH:** `ttc.link_status == 2` -> GO `STEP-5` | NO-GO `STEP-6` (timeout 45 s)
 
 ### Step 5 — Verify Link Quality and Subsystem Health
-**TC:** `HK_REQUEST(sid=5)` (Service 3, Subtype 27)
+**LABEL:** `STEP-5`
+**TC:** `HK_REQUEST(sid=6)` (Service 3, Subtype 27)
 **Verify:** `ttc.link_status` (0x0501) = 2 (LOCKED)
 **Verify:** `ttc.rssi` (0x0502) > -90 dBm (nominal signal strength)
 **Verify:** `ttc.link_margin` (0x0503) > 3.0 dB
@@ -57,24 +63,26 @@ and link restoration before escalating to emergency autonomous operations.
 **TC:** `HK_REQUEST(sid=6)` (Service 3, Subtype 27) — TT&C housekeeping
 **Verify:** `eps.bus_voltage` (0x0105) > 27.0V — confirm no EPS anomaly caused the link loss
 **Verify:** `obdh.mode` (0x0300) — confirm OBC did not enter safe/emergency mode
-**GO/NO-GO:** Link margin > 3 dB and all subsystems nominal — recovery complete
+**GO/NO-GO:** Link margin > 3 dB and all subsystems nominal — recovery complete -> GO `STEP-END` | NO-GO `STEP-6`
 
 ### Step 6 — Escalation: No Link Recovery
+**LABEL:** `STEP-6`
 **Action:** Log the failed recovery attempt with timestamps of all blind commands sent
 **Action:** Notify Mission Director and Flight Dynamics of sustained link loss
 **Action:** Schedule next available ground station pass for re-acquisition attempt
 **Action:** If spacecraft has autonomous safe mode timer (24h no-contact), confirm onboard timer is running
-**GO/NO-GO:** If no link after two consecutive passes, escalate to EMG-001 (Loss of Communication Emergency)
+**GO/NO-GO:** If no link after two consecutive passes, escalate to EMG-004 (Loss of Communication)
 
 ## Off-Nominal Handling
 - If link restores but RSSI < -95 dBm or margin < 1.5 dB: Step the TM rate ladder down to LOW (16 kbps) via `TTC_SET_DATA_RATE(rate=0)` (func_id 65) to improve margin. LOW is the routine operations rung — the link keeps full housekeeping, it just cannot dump
-- If OBC is found in SAFE mode after link restoration: Execute CTG-005 or CTG-010 as appropriate before resuming nominal operations
-- If redundant transponder also fails: Spacecraft will rely on autonomous safe mode; coordinate multi-station recovery campaign via EMG-001
+- If OBC is found in SAFE mode after link restoration: Execute CTG-010 (OBDH Watchdog Recovery) before resuming nominal operations
+- If redundant transponder also fails: Spacecraft will rely on autonomous safe mode; coordinate multi-station recovery campaign via EMG-004
 - If link is intermittent (toggling): Suspect antenna deployment anomaly or attitude issue — request AOCS telemetry and check `aocs.att_error` (0x0217)
 
 ## Post-Conditions
+**LABEL:** `STEP-END`
 - [ ] `ttc.link_status` (0x0501) = 2 (LOCKED)
 - [ ] `ttc.link_margin` (0x0503) > 3.0 dB
 - [ ] Active transponder identified and logged
 - [ ] Root cause documented (ground issue, transponder failure, attitude, or EPS)
-- [ ] If unrecovered: EMG-001 escalation initiated with next pass plan
+- [ ] If unrecovered: EMG-004 escalation initiated with next pass plan

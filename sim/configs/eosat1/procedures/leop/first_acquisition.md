@@ -12,7 +12,7 @@ no contact established yet. This is the first card of LEOP.
 
 ## Purpose
 Establish first command path with EOSAT-1 following separation, exit the
-OBDH bootloader into the application image, and synchronise on-board time.
+OBDH bootloader into the application image, and record the still-unset on-board clock (LEOP-006 synchronises it).
 At cold boot the spacecraft is dark on the downlink: only the receiver
 (`ttc_rx`) and OBC (`obc`) lines are energised. The transmitter
 (`ttc_tx`), all heaters, AOCS wheels, payload and FPA cooler lines are
@@ -83,7 +83,7 @@ application-running platform.
 **TC:** `HK_ENABLE(sid=6)` (Service 3, Subtype 5) — TT&C periodic housekeeping
 **Verify:** Periodic SIDs 3, 4 and 6 begin appearing within one structure interval (SID 3 = 60 s, SID 4 = 8 s, SID 6 = 8 s). SIDs 2 (AOCS) and 5 (Payload) are enabled in LEOP-007 once their owning lines are powered.
 **Note:** Booting the application does **NOT** clear beacon mode. `ttc.beacon_mode` (0x0521) stays 1 and the spacecraft stays on the BEACON rung until it is cleared explicitly in Step 5a. Until then every `TTC_SET_DATA_RATE` is REFUSED with S1.8 error `0x0007` and the failure notice "TM rate is forced to the beacon tier in beacon mode (LOW refused)".
-**GO/NO-GO:** Application image running, full PUS service set available — proceed to Step 5a before changing rate
+**GO/NO-GO:** Application image running, full PUS service set available — Step 5a (clear beacon mode) comes before any rate change
 
 ### Step 5a — Clear Beacon Mode and Move to the LOW Rung
 **TC:** `TTC_SET_BEACON_MODE(on=0)` (Service 8, Subtype 1, func_id 70)
@@ -133,7 +133,7 @@ boot-then-sync logic is written exactly once. This card sends no time command.
 - OBC in application image (`obdh.sw_image` 0x0311 = 1); mission phase = 4
   (LEOP, advanced automatically by the boot)
 - Beacon mode cleared (`ttc.beacon_mode` 0x0521 = 0), downlink on the LOW rung
-  (`ttc.tm_tier` 0x0539 = 1); HK SIDs 1, 3, 4, 6, 11 enabled — SIDs 2/5/7/12
+  (`ttc.tm_tier` 0x0539 = 1); HK SIDs 1, 3, 4, 6, 11 enabled — SIDs 2/5/7/8/9/12
   stay disabled until the card that powers their subsystem enables them
 - Clock still UNSET (`obdh.time_ref` 0x0A13 = 0) — synced in LEOP-006
 - All heaters, AOCS, payload, cooler and prop lines still OFF; nothing beyond

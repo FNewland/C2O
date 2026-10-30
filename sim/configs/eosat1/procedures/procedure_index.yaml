@@ -485,7 +485,7 @@ procedures:
     position_roles:
       flight_director: "Authorize recovery actions"
       aocs: "Diagnose and recover AOCS"
-    command_services: [3, 8, 20]
+    command_services: [3, 8]
 
   - id: CTG-003
     name: "TTC Link Loss Recovery"
@@ -536,7 +536,7 @@ procedures:
     position_roles:
       flight_director: "Authorize RW recovery"
       aocs: "Diagnose RW issue, switch to backup"
-    command_services: [3, 8, 20]
+    command_services: [3, 8]
 
   # Runnable from 2026-08b. A redundancy switchover with a genuine telemetry
   # predicate (`aocs.st2_status`, 0x0243). Flat, the runner would select a star
@@ -749,7 +749,7 @@ procedures:
       flight_director: "Authorize actuator recovery"
       aocs: "Power-cycle actuator, switch to 3-wheel mode if needed"
       eps_tcs: "Cycle actuator power line"
-    command_services: [3, 8, 20]
+    command_services: [3, 8]
 
   - id: CTG-027
     name: "GPS Time Synchronisation and AOCS Recovery"

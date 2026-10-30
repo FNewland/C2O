@@ -12,7 +12,7 @@ battery life and prevent deep discharge damage. Once eclipse ends and battery be
 recovering, loads are restored in reverse priority order with stability verification
 at each step.
 
-This procedure differs from CTG-002 (Undervoltage Load Shed) in that it is triggered
+This procedure differs from CTG-001 (Under-Voltage Load Shed) in that it is triggered
 by declining SoC rather than a voltage threshold, and includes explicit GO/NO-GO
 checkpoints at each shedding level to allow the Flight Director to make informed
 decisions about the pace and depth of load shedding.
@@ -73,7 +73,7 @@ monitoring" on the operations loop.
 to threshold monitoring.
 
 ### Step 2: SoC < 50% — Shed Load Priority 1 (Payload OFF)
-**TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — Monitor `eps.bat_soc` (0x0101) at 60 s intervals via
+**TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — EPS housekeeping; monitor `eps.bat_soc` (0x0101) at 60 s intervals
 **Trigger:** When `eps.bat_soc` < 50%:
 **Action:** Announce "SoC below 50% — shedding payload" on the operations loop.
 **TC:** `PAYLOAD_SET_MODE(mode=0)` (Service 8, Subtype 1, func_id 26) — Command payload to OFF
@@ -194,12 +194,12 @@ threshold + 10% margin.
 ### Step 8: Post-Recovery Verification
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — EPS housekeeping
 **TC:** `HK_REQUEST(sid=2)` (Service 3, Subtype 27) — AOCS housekeeping
-**TC:** `HK_REQUEST(sid=2)` (Service 3, Subtype 27) — AOCS housekeeping
+**TC:** `HK_REQUEST(sid=3)` (Service 3, Subtype 27) — TCS housekeeping
 **TC:** `HK_REQUEST(sid=5)` (Service 3, Subtype 27) — Payload housekeeping
 **Verify:** `eps.bus_voltage` (0x0105) > 28.0 V
 **Verify:** `eps.bat_soc` (0x0101) > 55% and trending upward
 **Verify:** `eps.power_gen` (0x0107) > `eps.power_cons` (0x0106) — positive margin
-**Verify:** `aocs.mode` (0x020F) = nominal mode (3 = NOMINAL if restored)
+**Verify:** `aocs.mode` (0x020F) = 4 (NOMINAL) if restored, or 3 (COARSE_SUN) if still holding
 **Verify:** `payload.mode` (0x0600) = 1 (STANDBY)
 **Verify:** All subsystem temperatures within nominal ranges
 **GO/NO-GO:** All systems restored and nominal — procedure complete.
@@ -225,7 +225,7 @@ threshold + 10% margin.
   or manoeuvre error.
 - If power does not recover after eclipse exit: Suspect solar array failure. Check
   per-panel currents `eps.sa_px_current` (0x012B) through `eps.sa_mz_current`
-  (0x0130). If all near zero, escalate to CTG-009 (Solar Array Degradation Response).
+  (0x0130). If all near zero, escalate to CTG-009 (Solar Array Degradation).
 - If loads cannot be restored without SoC declining again: The spacecraft may be
   in a persistent negative power budget. Reduce operational duty cycle, disable
   payload imaging, and operate in power-conservation mode. Coordinate with mission

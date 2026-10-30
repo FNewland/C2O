@@ -1,0 +1,77 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/contingency/payload_anomaly.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "ctg-006-payload-anomaly",
+   "en_hash": "ce13179df2777d5a",
+   "fr_hash": "aea49c19834e8e98"
+  },
+  {
+   "id": "ctg-006-payload-anomaly/purpose",
+   "en_hash": "539b6e6baaa3c851",
+   "fr_hash": "cfe831c7e60ac811"
+  },
+  {
+   "id": "ctg-006-payload-anomaly/prerequisites",
+   "en_hash": "565a270b97a13554",
+   "fr_hash": "dde6162b0f7eac4b"
+  },
+  {
+   "id": "ctg-006-payload-anomaly/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "ctg-006-payload-anomaly/procedure-steps/step-1-confirm-fpa-temperature-exceedance",
+   "en_hash": "b012378d499983fc",
+   "fr_hash": "03a176c0e834664b"
+  },
+  {
+   "id": "ctg-006-payload-anomaly/procedure-steps/step-2-command-payload-off",
+   "en_hash": "b024f0c1cf9d5126",
+   "fr_hash": "9bdf0b48bc9d7f36"
+  },
+  {
+   "id": "ctg-006-payload-anomaly/procedure-steps/step-3-verify-cooler-status-and-power",
+   "en_hash": "b2fbd2d29a4f4400",
+   "fr_hash": "77c43a4a67a1cad5"
+  },
+  {
+   "id": "ctg-006-payload-anomaly/procedure-steps/step-4-monitor-cooldown-period",
+   "en_hash": "de7f669dc476d450",
+   "fr_hash": "1c8488a689a11642"
+  },
+  {
+   "id": "ctg-006-payload-anomaly/procedure-steps/step-5-restart-payload-in-standby",
+   "en_hash": "7615f42ec39b2486",
+   "fr_hash": "1fe0dce12882c1cc"
+  },
+  {
+   "id": "ctg-006-payload-anomaly/procedure-steps/step-6-validate-imaging-readiness",
+   "en_hash": "c624f4e80aeff67f",
+   "fr_hash": "35bda71ec35b3484"
+  },
+  {
+   "id": "ctg-006-payload-anomaly/off-nominal-handling",
+   "en_hash": "efc28b78c1ae5839",
+   "fr_hash": "34c70fa6754b2ad3"
+  },
+  {
+   "id": "ctg-006-payload-anomaly/post-conditions",
+   "en_hash": "f1548838381a0ded",
+   "fr_hash": "3772f06c66533eb2"
+  },
+  {
+   "id": "ctg-006-payload-anomaly/recovery-path-re-powering-shed-loads",
+   "en_hash": "ff3d6989d5306388",
+   "fr_hash": "2a26fa93111780b1"
+  }
+ ],
+ "en_commit": "3e80564"
+}

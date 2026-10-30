@@ -49,9 +49,9 @@ proceeding.
 **GO/NO-GO:** Memory healthy with no uncorrectable errors
 
 ### Step 4 — Check TC/TM Packet Counters
-**TC:** `GET_PARAM(param_id=0x0310)` (Service 20, Subtype 3) — TC received counter
-**TC:** `GET_PARAM(param_id=0x0311)` (Service 20, Subtype 3) — TC rejected counter
-**TC:** `GET_PARAM(param_id=0x0312)` (Service 20, Subtype 3) — TM generated counter
+**TC:** `GET_PARAM(param_id=0x0304)` (Service 20, Subtype 3) — TC received counter (`obdh.tc_rx_count`)
+**TC:** `GET_PARAM(param_id=0x0306)` (Service 20, Subtype 3) — TC rejected counter (`obdh.tc_rej_count`)
+**TC:** `GET_PARAM(param_id=0x0307)` (Service 20, Subtype 3) — TM generated counter (`obdh.tm_pkt_count`)
 **Verify:** TC received counter > 0 (should match ground log) within 10s
 **Verify:** TC rejected counter = 0 (no invalid commands sent) within 10s
 **Verify:** TM generated counter > 0 and incrementing within 10s
@@ -76,9 +76,9 @@ nothing).
 
 ### Step 7 — Verify Watchdog Timer
 **TC:** `GET_PARAM(param_id=0x0305)` (Service 20, Subtype 3) — watchdog status
-**TC:** `GET_PARAM(param_id=0x0306)` (Service 20, Subtype 3) — last reset cause
+**TC:** `GET_PARAM(param_id=0x0316)` (Service 20, Subtype 3) — last reboot cause (`obdh.last_reboot_cause`)
 **Verify:** Watchdog status = ENABLED (value 1) within 10s
-**Verify:** Last reset cause = POWER_ON (value 0) — no unexpected resets within 10s
+**Verify:** Last reboot cause = 0 (none) — no unexpected resets within 10s
 **GO/NO-GO:** Watchdog active, no anomalous resets recorded
 
 ### Step 8 — Test OBC Mode Excursion (NOMINAL -> SAFE -> NOMINAL)
@@ -98,10 +98,10 @@ believing it was NOMINAL, and handed every subsequent card a SAFE OBC.
 
 ## Off-Nominal Handling
 - If `obdh.cpu_load` > 60%: Investigate running tasks via `GET_PARAM(param_id=0x0307)` (task list). If unexpected task consuming resources, consider targeted task kill after Flight Director approval. Do not reboot unless CPU > 90%.
-- If EDAC multi-bit errors > 0: Memory corruption detected. Attempt memory scrub via `SET_PARAM(param_id=0x0308, value=1)`. If errors persist, identify affected memory region. May require fallback to redundant OBC.
+- If EDAC multi-bit errors > 0: Memory corruption detected. Attempt a memory scrub with `OBC_MEMORY_SCRUB` (Service 8, Subtype 1, func_id 51). If errors persist, identify affected memory region. May require fallback to redundant OBC.
 - If OBC mode transition fails: Retry command once. If still fails, check TC acceptance status. Verify command authentication. If NOMINAL mode unreachable, continue commissioning in SAFE mode with manual HK requests.
 - If watchdog status = DISABLED: Re-enable via `SET_PARAM(param_id=0x0305, value=1)`. Investigate why watchdog was disabled — may indicate recovery from earlier fault.
-- If TC rejected counter > 0: Review ground command log for any invalid sequences. Reset counter via `SET_PARAM(param_id=0x0311, value=0)` after investigation.
+- If TC rejected counter > 0: Review ground command log for any invalid sequences. After investigation, record the counter value as the new baseline (there is no counter-reset command; never write 0x0311, which is `obdh.sw_image`).
 - If last reset cause != POWER_ON: Investigate reset cause code. If brownout or watchdog reset occurred during LEOP, review corresponding telemetry timeline. Document in anomaly log.
 
 ## Exit state

@@ -76,8 +76,10 @@ atmospheric attenuation and low gain. Wait for higher elevation before declaring
 - If PA parameters are all nominal: The issue may be ground-segment or interference
   related. Proceed to Step 4 (rate reduction) as mitigation.
 **GO/NO-GO:** PA assessment complete — follow appropriate branch.
+**BRANCH:** `ttc.pa_temp > 55` -> GO `STEP-3` | NO-GO `STEP-4` (timeout 10 s)
 
 ### Step 3: PA Overheating — Thermal Mitigation
+**LABEL:** `STEP-3`
 **Note:** If PA temperature > 55 C, reduce thermal load:
 **TC:** `TTC_PA_OFF` (Service 8, Subtype 1, func_id 67) — Command PA off
 **Note:** Wait 120 s for cooldown
@@ -86,29 +88,38 @@ atmospheric attenuation and low gain. Wait for higher elevation before declaring
 **TC:** `TTC_PA_ON` (Service 8, Subtype 1, func_id 66) — Command PA back on
 **Note:** **Verify:** `ttc.pa_on` (0x0516) = 1 within 5 s
 **Note:** If PA temperature is still > 50 C after PA-on, reduce TX power level:
+**BRANCH:** `ttc.pa_temp > 50` -> GO `STEP-3B` | NO-GO `STEP-3C` (timeout 10 s)
+**LABEL:** `STEP-3B`
 **TC:** `TTC_SET_TX_POWER(level=0)` (Service 8, Subtype 1, func_id 68) — set to low power (1 W)
+**LABEL:** `STEP-3C`
 **Verify:** `ttc.pa_temp` (0x050F) stabilizing
 **Verify:** `ttc.ber` (0x050C) — check if BER improves with cooler PA
 **Note:** If PA overheating persists, follow EMG-006 for thermal investigation
 of the transponder zone.
 **GO/NO-GO:** If BER improved, continue monitoring. If not, proceed to Step 4.
+**BRANCH:** `ttc.ber < -5` -> GO `STEP-END` | NO-GO `STEP-4` (timeout 30 s)
 
 ### Step 4: Step Down the Rate Ladder
+**LABEL:** `STEP-4`
 **Note:** Only worth doing if the ACTIVE tier (0x0539) is above LOW. A step from HIGH
 (128 kbps) to LOW (16 kbps) buys 9.03 dB of Eb/N0 — the `-10*log10(R)` term — and also
 changes the waveform from QPSK RS(255,223) to BPSK conv(7,1/2)+RS, worth a further
 1.5 dB of coding gain. If the link is already at LOW there is no operational rung below
 it: SAFE (1 kbps, ex-BEACON) is the bootloader lifeline and is not commandable here, so skip to Step 5.
+**BRANCH:** `ttc.tm_tier > 1` -> GO `STEP-4H` | NO-GO `STEP-5` (timeout 10 s)
+**LABEL:** `STEP-4H`
 **TC:** `TTC_SET_DATA_RATE(rate=0)` (Service 8, Subtype 1, func_id 65) — Step down to LOW
-**TC:** `TTC_SET_DATA_RATE(rate=0)` (Service 8, Subtype 1, func_id 65)
 **Verify:** `ttc.tm_data_rate` (0x0506) = 16000 bps within 10 s
 **Verify:** `ttc.tm_tier` (0x0539) = 1 (LOW) and equal to `ttc.tm_tier_cmd` (0x053A)
 **Verify:** `ttc.tm_symbol_rate` (0x053B) = 16000 Bd (BPSK)
 **Verify:** `ttc.carrier_lock` (0x0510) = 1
 **Verify:** `ttc.bit_sync` (0x0511) = 1
 **Action:** If a dump was in progress, release the gate as well:
+**BRANCH:** `ttc.downlink_mode == 1` -> GO `STEP-4D` | NO-GO `STEP-4W` (timeout 10 s)
+**LABEL:** `STEP-4D`
 **TC:** `TTC_SET_DOWNLINK_MODE(on=0)` (Service 8, Subtype 1, func_id 79)
 **Verify:** `ttc.downlink_mode` (0x053C) = 0
+**LABEL:** `STEP-4W`
 **Note:** Wait 30 s for BER to stabilize, then request TTC housekeeping:
 **TC:** `HK_REQUEST(sid=6)` (Service 3, Subtype 27)
 **Verify:** `ttc.ber` (0x050C) < -5 (BER improved at the lower rung)
@@ -121,8 +132,10 @@ it: SAFE (1 kbps, ex-BEACON) is the bootloader lifeline and is not commandable h
 **Action:** If BER did NOT improve at LOW: the issue is deeper than data rate.
 Proceed to Step 5 (transponder switchover).
 **GO/NO-GO:** If BER acceptable at LOW, monitor and log. If not, proceed to Step 5.
+**BRANCH:** `ttc.ber < -5` -> GO `STEP-END` | NO-GO `STEP-5` (timeout 30 s)
 
 ### Step 5: Try Transponder Switchover
+**LABEL:** `STEP-5`
 **TC:** `TTC_SWITCH_REDUNDANT` (Service 8, Subtype 1, func_id 64) — Switch to redundant transponder
 **Verify:** Wait 15 s for redundant transponder to initialize
 **TC:** `HK_REQUEST(sid=6)` (Service 3, Subtype 27) — Request TTC housekeeping
@@ -133,13 +146,17 @@ Proceed to Step 5 (transponder switchover).
 **Verify:** `ttc.xpdr_temp` (0x0507) — record redundant transponder temperature
 **Action:** If BER improved on redundant transponder: The primary transponder is degraded.
 Log as hardware anomaly. Continue operations on redundant unit.
+**BRANCH:** `ttc.ber < -5` -> GO `STEP-END` | NO-GO `STEP-5B` (timeout 30 s)
+**LABEL:** `STEP-5B`
 **Note:** If BER NOT improved: Issue is likely external (interference, ground segment,
-**TC:** `TTC_SWITCH_PRIMARY` (Service 8, Subtype 1, func_id 63) — or antenna issue). Revert to primary transponder:   .
+or antenna issue). Revert to primary transponder:
+**TC:** `TTC_SWITCH_PRIMARY` (Service 8, Subtype 1, func_id 63)
 **Note:** Continue at LOW (16 kbps) and escalate for ground segment investigation.
 **GO/NO-GO:** Transponder assessment complete. Log findings and proceed with best
 configuration.
 
 ## Verification Criteria
+**LABEL:** `STEP-END`
 - [ ] `ttc.ber` (0x050C) < -5 (acceptable BER restored)
 - [ ] `ttc.carrier_lock` (0x0510) = 1
 - [ ] `ttc.bit_sync` (0x0511) = 1 and `ttc.frame_sync` (0x0512) = 1

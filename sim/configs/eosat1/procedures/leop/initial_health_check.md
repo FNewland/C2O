@@ -7,7 +7,7 @@ COM-004 where the wheels are actually enabled)
 **Approved:** Flight Operations Director
 
 **Entry state:** LEOP-001 exit state --- application image running, link on the
-LOW rung, HK SIDs 1/3/4/6 enabled, clock unset. AOCS (`aocs_wheels`), payload,
+LOW rung, HK SIDs 1/3/4/6/11 enabled, clock unset. AOCS (`aocs_wheels`), payload,
 FPA-cooler, heater and prop lines all OFF.
 
 ## Purpose

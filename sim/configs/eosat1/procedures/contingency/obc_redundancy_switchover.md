@@ -51,7 +51,7 @@ loads correctly, and verifies all subsystems return to nominal operation.
 **Verify:** `obdh.mode` (0x0300) — record current mode
 **Verify:** `obdh.reboot_count` (0x030A) — record value (elevated if watchdog reboots)
 **Verify:** `obdh.last_reboot_cause` (0x0316) — record cause:
-- 0 = none, 1 = watchdog, 2 = memory, 3 = switchover, 4 = commanded
+- 0 = none, 1 = commanded, 2 = watchdog, 3 = memory, 4 = switchover
 **Verify:** `obdh.cpu_load` (0x0302) — record value (may be anomalously high)
 **Verify:** `obdh.active_obc` (0x030C) = 0 (OBC-A is active)
 **Verify:** `obdh.obc_b_status` (0x030D) = 1 (OBC-B is in STANDBY and available)
@@ -85,8 +85,7 @@ If `obdh.reboot_count` > 4, FDIR may have already triggered safe mode.
 
 ### Step 4: Verify Software Image and Boot Application
 **Note:** Verify the application software image is valid before booting:
-**TC:** `HK_REQUEST(sid=4)` (Service 3, Subtype 27) — check `obdh.sw_version` (0x030B) is available in bootloader
-**Note:** context (may report bootloader version).
+**TC:** `HK_REQUEST(sid=4)` (Service 3, Subtype 27) — check `obdh.sw_version` (0x030B) is available in bootloader context (may report bootloader version).
 **TC:** `OBC_BOOT_APP` (Service 8, Subtype 1, func_id 55) — Command application boot
 **Verify:** Wait 30 s for application to initialize.
 **TC:** `HK_REQUEST(sid=4)` (Service 3, Subtype 27) — Request OBDH housekeeping
@@ -112,8 +111,8 @@ during the switchover. If so, restore to nominal mode after confirming stability
 **Verify:** `payload.mode` (0x0600) — record mode. Payload may have gone to OFF during
 switchover. Restore to STANDBY after confirming OBC stability.
 **Verify:** `ttc.link_status` (0x0501) = 2 (LOCKED)
-**Note:** If `obdh.mode` (0x0300) = 1 (SAFE), restore to NOMINAL when all subsystems
-**TC:** `OBC_SET_MODE(mode=0)` (Service 8, Subtype 1, func_id 50) — are confirmed
+**Note:** If `obdh.mode` (0x0300) = 1 (SAFE), restore to NOMINAL once all subsystems are confirmed:
+**TC:** `OBC_SET_MODE(mode=0)` (Service 8, Subtype 1, func_id 50) — OBC to NOMINAL
 **Verify:** `obdh.mode` (0x0300) = 0 (NOMINAL) within 10 s
 **GO/NO-GO:** All subsystems nominal on OBC-B — switchover complete.
 
@@ -148,8 +147,8 @@ OBC redundancy. Any failure of OBC-B is mission-critical.
   auto-boot cycling, then `OBC_BOOT_APP` manually.
 - If `obdh.sw_image` remains 0 (stuck in bootloader): Application image may be corrupt.
   Follow CTG-018 (Boot Loader Recovery) for memory check and recovery.
-- If OBC-B boots but immediately enters repeated reboots: Command `OBC_BOOT_INHIBIT
-  (inhibit=1)` to stay in bootloader. Investigate from bootloader. May need to upload
+- If OBC-B boots but immediately enters repeated reboots: Command
+  `OBC_BOOT_INHIBIT(inhibit=1)` to stay in bootloader. Investigate from bootloader. May need to upload
   fresh application image via `MEM_LOAD`.
 - If subsystems do not resume HK after OBC-B boots: CAN bus may also be affected.
   Follow CTG-017 (CAN Bus Failure Switchover) to check and switch bus.

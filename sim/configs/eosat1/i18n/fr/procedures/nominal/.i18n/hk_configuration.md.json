@@ -1,0 +1,72 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/nominal/hk_configuration.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "nom-005-hk-configuration",
+   "en_hash": "aa846d3670d29cfc",
+   "fr_hash": "36b1cd58d5646e4a"
+  },
+  {
+   "id": "nom-005-hk-configuration/purpose",
+   "en_hash": "15999d55e920b8e5",
+   "fr_hash": "cf6b918791dfecc2"
+  },
+  {
+   "id": "nom-005-hk-configuration/prerequisites",
+   "en_hash": "266aaf4b847ea13c",
+   "fr_hash": "7e0ffce79d12946b"
+  },
+  {
+   "id": "nom-005-hk-configuration/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "nom-005-hk-configuration/procedure-steps/step-1-read-current-hk-configuration",
+   "en_hash": "05502d4c20cd90e7",
+   "fr_hash": "26fbeaf46f8a3e08"
+  },
+  {
+   "id": "nom-005-hk-configuration/procedure-steps/step-2-modify-hk-collection-intervals",
+   "en_hash": "9564fdf99c28ca88",
+   "fr_hash": "be95a1eb50b114a2"
+  },
+  {
+   "id": "nom-005-hk-configuration/procedure-steps/step-3-enable-required-hk-sids",
+   "en_hash": "f617eafbead496f1",
+   "fr_hash": "eb4926ffcf4df591"
+  },
+  {
+   "id": "nom-005-hk-configuration/procedure-steps/step-4-enable-or-disable-optional-sids-based-on-phase",
+   "en_hash": "db965cd4d097e834",
+   "fr_hash": "d206e4d9fcf218dc"
+  },
+  {
+   "id": "nom-005-hk-configuration/procedure-steps/step-5-verify-new-configuration-active",
+   "en_hash": "3c9d6acbee7d63db",
+   "fr_hash": "c6ccdd3010ec069e"
+  },
+  {
+   "id": "nom-005-hk-configuration/procedure-steps/step-6-confirm-periodic-reports-arriving",
+   "en_hash": "db63ad2d03e58091",
+   "fr_hash": "845501217ee5b7f9"
+  },
+  {
+   "id": "nom-005-hk-configuration/off-nominal-handling",
+   "en_hash": "e9ce2fac06bba337",
+   "fr_hash": "bba3e303911d0afb"
+  },
+  {
+   "id": "nom-005-hk-configuration/post-conditions",
+   "en_hash": "531c60aa9c506b38",
+   "fr_hash": "50e972ebb3bfb615"
+  }
+ ],
+ "en_commit": "3e80564"
+}

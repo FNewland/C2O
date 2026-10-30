@@ -70,8 +70,10 @@ same scene suggest a systematic issue.
 - If `payload.fpa_temp` < -25.0 C and `payload.fpa_ready` = 1: FPA is nominal.
   Proceed to Step 4 (check memory).
 **GO/NO-GO:** FPA assessment complete — follow appropriate branch.
+**BRANCH:** `payload.fpa_ready == 1` -> GO `STEP-4` | NO-GO `STEP-3` (timeout 10 s)
 
 ### Step 3: FPA Warm — Abort Imaging and Cool Down
+**LABEL:** `STEP-3`
 **Note:** Only if `payload.mode` (0x0600) = 2 (IMAGING). Mode 3 is CALIBRATION
 and is aborted by the same command; mode 1 is already STANDBY and needs nothing.
 **TC:** `PAYLOAD_SET_MODE(mode=1)` (Service 8, Subtype 1, func_id 26) — abort to STANDBY
@@ -79,17 +81,18 @@ and is aborted by the same command; mode 1 is already STANDBY and needs nothing.
 **Note:** Verify cooler is active: If `tcs.cooler_fpa` (0x040C) = 0, enable:
 **TC:** `FPA_COOLER(on=1)` (Service 8, Subtype 1, func_id 43)
 **Verify:** `tcs.cooler_fpa` (0x040C) = 1 within 5 s
-**TC:** `HK_REQUEST(sid=6)` (Service 3, Subtype 27) — Monitor FPA temperature cooldown at 60 s intervals
+**TC:** `HK_REQUEST(sid=5)` (Service 3, Subtype 27) — Payload housekeeping; monitor FPA temperature cooldown at 60 s intervals
 **TC:** `HK_REQUEST(sid=3)` (Service 3, Subtype 27) — TCS housekeeping
-**TC:** `HK_REQUEST(sid=5)` (Service 3, Subtype 27) — Payload housekeeping
 **Verify:** `payload.fpa_temp` (0x0601) trending downward toward target (-5 C cooler
 setpoint, operational threshold -25 C)
 **Note:** Cooldown from ambient (~5 C) to operational (< -25 C) takes approximately
 100-150 s per the thermal model (tau ~100 s).
 **Action:** Wait until `payload.fpa_temp` < -25.0 C and `payload.fpa_ready` = 1
 **GO/NO-GO:** FPA cooled to operational temperature — proceed to Step 5 (re-capture).
+**BRANCH:** `payload.fpa_ready == 1` -> GO `STEP-5` | NO-GO `STEP-END` (timeout 300 s)
 
 ### Step 4: Check Memory Segments
+**LABEL:** `STEP-4`
 **TC:** `HK_REQUEST(sid=5)` (Service 3, Subtype 27) — Request payload housekeeping
 **Verify:** `payload.mem_segments_bad` (0x0612) — record current value
 **Verify:** `payload.store_used` (0x0604) — record storage usage
@@ -103,6 +106,7 @@ setpoint, operational threshold -25 C)
 **GO/NO-GO:** Memory assessment complete — proceed to re-capture if appropriate.
 
 ### Step 5: Delete Corrupted Image and Re-Capture
+**LABEL:** `STEP-5`
 **TC:** `PAYLOAD_DELETE_IMAGE(scene_id=N)` (Service 8, Subtype 1, func_id 30) — Delete the corrupted image
 where N is the affected scene ID from Step 1.
 **Verify:** `payload.store_used` (0x0604) decreases (storage freed)
@@ -131,6 +135,7 @@ it is stamped on board from the propagated sub-satellite point at shutter open.
 (thermal / memory / transient), and re-capture result.
 
 ## Verification Criteria
+**LABEL:** `STEP-END`
 - [ ] Root cause identified (FPA thermal, memory segment, or transient)
 - [ ] Corrupted image deleted from storage
 - [ ] Re-captured image (if window available) has no checksum errors

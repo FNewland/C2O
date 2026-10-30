@@ -1,0 +1,82 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/commissioning/eps_checkout.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "com-001-eps-power-system-checkout",
+   "en_hash": "72367d067246b1c4",
+   "fr_hash": "734ed8cbd42fafb9"
+  },
+  {
+   "id": "com-001-eps-power-system-checkout/purpose",
+   "en_hash": "fd8cb72f2b8ade6a",
+   "fr_hash": "82b3abe396965675"
+  },
+  {
+   "id": "com-001-eps-power-system-checkout/prerequisites",
+   "en_hash": "a90165ef7d5daf04",
+   "fr_hash": "2a24ff4a878404e2"
+  },
+  {
+   "id": "com-001-eps-power-system-checkout/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "com-001-eps-power-system-checkout/procedure-steps/step-1-baseline-bus-voltage-measurement",
+   "en_hash": "fb2a0fefb47dfc1e",
+   "fr_hash": "9ae7cd5ea80e2b2d"
+  },
+  {
+   "id": "com-001-eps-power-system-checkout/procedure-steps/step-2-battery-voltage-and-state-of-charge",
+   "en_hash": "a22fc60a79dfd8f1",
+   "fr_hash": "46a2191056648271"
+  },
+  {
+   "id": "com-001-eps-power-system-checkout/procedure-steps/step-3-solar-array-sunlit-performance",
+   "en_hash": "d6f213390aaab731",
+   "fr_hash": "db1713aad2e93c00"
+  },
+  {
+   "id": "com-001-eps-power-system-checkout/procedure-steps/step-4-eclipse-discharge-monitoring",
+   "en_hash": "1cebee684b1834b9",
+   "fr_hash": "a96ed988c8e24c45"
+  },
+  {
+   "id": "com-001-eps-power-system-checkout/procedure-steps/step-5-eclipse-exit-charge-recovery",
+   "en_hash": "16420225134e0c11",
+   "fr_hash": "27d7e7d9507f9457"
+  },
+  {
+   "id": "com-001-eps-power-system-checkout/procedure-steps/step-6-power-budget-verification",
+   "en_hash": "1216af5e30a37940",
+   "fr_hash": "67a7bb9f0c4e4223"
+  },
+  {
+   "id": "com-001-eps-power-system-checkout/procedure-steps/step-7-bus-voltage-regulation-under-load-transient",
+   "en_hash": "ae6e41c110d52e87",
+   "fr_hash": "e5a8a458dc8a05ba"
+  },
+  {
+   "id": "com-001-eps-power-system-checkout/off-nominal-handling",
+   "en_hash": "d2033ad2fe3e6d98",
+   "fr_hash": "3ae820918235a0b5"
+  },
+  {
+   "id": "com-001-eps-power-system-checkout/post-conditions",
+   "en_hash": "a11b4aeef3788b2f",
+   "fr_hash": "ac629f1487ae5473"
+  },
+  {
+   "id": "com-001-eps-power-system-checkout/exit-state",
+   "en_hash": "11ba0b623afc4c7f",
+   "fr_hash": "17e43cc1a8dd3741"
+  }
+ ],
+ "en_commit": "3e80564"
+}

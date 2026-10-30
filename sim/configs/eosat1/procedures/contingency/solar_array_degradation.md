@@ -27,9 +27,10 @@ power budget throughout each orbit.
 **Verify:** `eps.sa_b_current` (0x0104) — record value and compare to predicted (expected > 1.0A at optimal)
 **Verify:** `eps.power_gen` (0x0107) — record total generation
 **Action:** Calculate percentage shortfall: (predicted - actual) / predicted x 100 for each array
-**GO/NO-GO:** If shortfall > 20% on either array during confirmed sunlit phase, proceed. If < 20%, log for trend monitoring only.
+**GO/NO-GO:** If shortfall > 20% on either array during confirmed sunlit phase, proceed. If < 20%, log for trend monitoring only. -> GO `STEP-2` | NO-GO `STEP-END`
 
 ### Step 2 — Compare SA-A versus SA-B Performance
+**LABEL:** `STEP-2`
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — sample 3 times at 30s intervals
 **Action:** Compute SA-A to SA-B current ratio (nominal ratio is 0.9 to 1.1)
 **Verify:** `eps.sa_a_current` (0x0103) and `eps.sa_b_current` (0x0104) — determine if degradation is on one or both arrays
@@ -38,7 +39,7 @@ power budget throughout each orbit.
 
 ### Step 3 — Verify Attitude Is Not the Cause
 **TC:** `HK_REQUEST(sid=2)` (Service 3, Subtype 27)
-**Verify:** `aocs.mode` (0x020F) = 3 (NOMINAL) or 2 (COARSE_SUN)
+**Verify:** `aocs.mode` (0x020F) = 4 (NOMINAL) or 3 (COARSE_SUN)
 **Verify:** `aocs.att_error` (0x0217) < 2.0 deg — large attitude error could reduce array illumination
 **Action:** If attitude error > 5 deg, execute CTG-002 first, then reassess array performance
 **GO/NO-GO:** Attitude confirmed nominal — degradation is intrinsic to array hardware or environment
@@ -50,12 +51,15 @@ power budget throughout each orbit.
 **Action:** Compute power margin = generation - consumption (must be > 0W averaged over orbit)
 **Action:** Compute worst-case eclipse energy deficit using degraded generation values
 **Verify:** `eps.bat_soc` (0x0101) — project minimum SoC at end of next eclipse
-**GO/NO-GO:** If projected minimum SoC > 25%, continue nominal ops with monitoring. If < 25%, proceed to Step 5.
+**GO/NO-GO:** If projected minimum SoC > 25%, continue nominal ops with monitoring. If < 25%, proceed to Step 5. -> GO `STEP-7` | NO-GO `STEP-5`
 
 ### Step 5 — Reduce Loads to Match Degraded Power Budget
+**LABEL:** `STEP-5`
 **TC:** `PAYLOAD_SET_MODE(mode=1)` (Service 8, Subtype 1) — reduce from IMAGING to STANDBY
 **Verify:** `payload.mode` (0x0600) = 1 (STANDBY) within 10s
 **Verify:** `eps.power_cons` (0x0106) decreases by >= 12W
+**GO/NO-GO:** Margin still insufficient after STANDBY -> GO `STEP-5B` | NO-GO `STEP-6`
+**LABEL:** `STEP-5B`
 **Note:** Only if the margin is still insufficient after STANDBY.
 **TC:** `PAYLOAD_SET_MODE(mode=0)` (Service 8, Subtype 1, func_id 26) — full payload shutdown
 **Note:** The thruster catbed heater is `HEATER_THRUSTER` (func 42, argument
@@ -67,6 +71,7 @@ would have switched the wrong circuit.
 **GO/NO-GO:** Power margin is positive with at least 3W reserve — proceed
 
 ### Step 6 — Optimise Attitude for Solar Array Illumination
+**LABEL:** `STEP-6`
 **TC:** `AOCS_SET_MODE(mode=3)` (Service 8, Subtype 1, func_id 0) — COARSE_SUN for sun-optimal orientation
 **Verify:** `aocs.mode` (0x020F) = 3 within 15s
 **Verify:** `eps.sa_a_current` (0x0103) and `eps.sa_b_current` (0x0104) — observe improvement in current
@@ -74,6 +79,7 @@ would have switched the wrong circuit.
 **GO/NO-GO:** Generation improved sufficiently to maintain positive margin — proceed to monitoring
 
 ### Step 7 — Establish Long-Term Monitoring Plan
+**LABEL:** `STEP-7`
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — baseline measurement
 **Action:** Record SA-A current, SA-B current, power generation, and SoC as new baseline
 **Action:** Schedule daily trend comparison for array current vs prediction over next 7 days
@@ -84,6 +90,7 @@ would have switched the wrong circuit.
 **GO/NO-GO:** Monitoring plan established and operations plan adjusted — recovery complete
 
 ## Off-Nominal Handling
+**LABEL:** `STEP-END`
 - If both arrays drop below 0.2A during sunlit phase: Suspect total array failure or severe attitude error — execute CTG-005 (EPS Safe Mode Recovery) immediately
 - If SoC drops below 20% during this procedure: Interrupt and execute CTG-005
 - If attitude error is the root cause: Execute CTG-002, then re-enter this procedure at Step 1

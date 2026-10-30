@@ -41,17 +41,18 @@ control with any three operational wheels at slightly relaxed pointing accuracy.
 | aocs.rate_roll | 0x0204 | Body roll rate |
 | aocs.rate_pitch | 0x0205 | Body pitch rate |
 | aocs.rate_yaw | 0x0206 | Body yaw rate |
-| aocs.mtq_x | 0x020B | Magnetorquer X dipole |
-| aocs.mtq_y | 0x020C | Magnetorquer Y dipole |
-| aocs.mtq_z | 0x020D | Magnetorquer Z dipole |
-| aocs.mag_valid | 0x0230 | Magnetometer validity (needed for desaturation) |
+| aocs.mag_x | 0x020B | Measured magnetic field X (magnetometer) |
+| aocs.mag_y | 0x020C | Measured magnetic field Y (magnetometer) |
+| aocs.mag_z | 0x020D | Measured magnetic field Z (magnetometer) |
+| aocs.mag_enabled | 0x025C | Magnetometer valid/enabled (needed for desaturation) |
 
 ## Required Commands
 | Command | Service | Subtype | Func ID | Description |
 |---|---|---|---|---|
 | HK_REQUEST | 3 | 27 | — | Request one-shot HK report |
 | SET_PARAM | 20 | 1 | — | Set onboard parameter |
-| AOCS_3W_MODE | 8 | 1 | 5 | Configure three-wheel control mode |
+| AOCS_DISABLE_WHEEL | 8 | 1 | 2 | Disable (isolate) one reaction wheel — 3-of-4 control |
+| AOCS_ENABLE_WHEEL | 8 | 1 | 3 | Re-enable a reaction wheel |
 | AOCS_SET_MODE | 8 | 1 | 0 | Set AOCS mode |
 | AOCS_DESATURATE | 8 | 1 | 1 | Command magnetorquer momentum dump |
 
@@ -79,7 +80,7 @@ to confirm seizure diagnosis.
 the control loop tries to command the unresponsive wheel.
 **GO/NO-GO:** Exactly one wheel identified as stuck (speed frozen + temperature
 rising). Note the wheel index (0-3 = RW-1 through RW-4). If multiple wheels are
-stuck, escalate to CTG-005 Step 7 (multi-wheel failure).
+stuck, escalate to CTG-002 Step 7 (multi-wheel failure).
 
 ### Step 2: Disable the Stuck Wheel
 **Note:** Disable the seized wheel to remove it from the control loop:
@@ -99,9 +100,9 @@ immediately for safe attitude, then continue with Step 3 from DETUMBLE mode.
 to three-wheel reconfiguration.
 
 ### Step 3: Command Three-Wheel Control Mode
-**Action:** Command AOCS to three-wheel mode, excluding the failed wheel:
-`AOCS_3W_MODE(exclude_wheel=<N>)` (Service 8, Subtype 1, func_id 5)
-where N is the disabled wheel index (0-3).
+**Note:** There is no separate three-wheel mode command. The 3-of-4 isolation is
+`AOCS_DISABLE_WHEEL(wheel_idx=<N>)` (Service 8, Subtype 1, func_id 2), already sent in Step 2;
+the control loop now runs on the remaining three wheels. Restore with `AOCS_ENABLE_WHEEL` (func_id 3), Step 7.
 **Verify:** Wait 15 s for the control loop to reconfigure.
 **TC:** `HK_REQUEST(sid=2)` (Service 3, Subtype 27) — Request AOCS housekeeping
 **Verify:** `aocs.att_error` (0x0217) — should begin converging. Target < 2.0 deg
@@ -183,8 +184,8 @@ the bearing may not be permanently seized.
 **Action:** Monitor for 5 minutes at commanded speed.
 **Verify:** Speed is stable (no jitter > +/- 100 RPM)
 **Verify:** Temperature is stable and < 50 deg-C
-**Note:** If recovery successful, restore four-wheel configuration:
-**TC:** `SET_PARAM(param_id=aocs.wheel_config, value=4)` (Service 20, Subtype 1)
+**Note:** If recovery successful, four-wheel control is already restored: `AOCS_ENABLE_WHEEL`
+is the whole restore (there is no `aocs.wheel_config` parameter to write).
 **Verify:** `aocs.att_error` (0x0217) improves to < 1.0 deg within 120 s
 **Note:** If recovery fails (speed stalls, temperature spikes, oscillation):
 **TC:** `AOCS_DISABLE_WHEEL(wheel_idx=N)` (Service 8, Subtype 1, func_id 2) — Immediately disable wheel again
@@ -206,7 +207,7 @@ ops confirmed as permanent configuration.
 ## Off-Nominal Handling
 - If a second wheel fails during this procedure: Command `AOCS_SET_MODE(mode=2)`
   (DETUMBLE) immediately. Two-wheel control does not provide three-axis pointing.
-  Escalate to CTG-005 Step 7 and EMG-005 (Loss of Attitude). This is mission-critical.
+  Escalate to CTG-002 Step 7 and EMG-005 (Loss of Attitude). This is mission-critical.
 - If attitude error exceeds 10 deg during wheel disable: Command
   `AOCS_SET_MODE(mode=3)` (COARSE_SUN) immediately. Wait for rates to stabilise
   below 0.5 deg/s before attempting three-wheel mode.
@@ -222,7 +223,7 @@ ops confirmed as permanent configuration.
   `EPS_POWER_OFF(line_index=7)` (func_id 20) — note this disables ALL wheels on
   that power line. If wheels are on separate lines, isolate only the affected wheel
   via SET_PARAM.
-- If magnetometer is not valid (needed for desaturation): Switch to redundant mag
-  first — `MAG_SELECT(select=1)` (func_id 7). If both mags are invalid,
+- If magnetometer is not valid (needed for desaturation): EO-Sat-1 has one magnetometer
+  and no redundant unit — power-cycle it via S2 device 0x0209. If it stays invalid,
   desaturation via magnetorquers is not possible. Momentum will accumulate until
   wheel saturation forces safe mode.

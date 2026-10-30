@@ -59,9 +59,9 @@ conflicts). Confirm power: preheat + burn inside daylight.
 **GO/NO-GO:** FD authorises the manoeuvre vector and the execution pass.
 
 ### Step 4 --- S11 Time-Tagged Upload
-**TC:** `SCHEDULE_TC(exec_time_cuc=T, tc_data=TC)` (Service 11, Subtype 4) --- time-tag `PROP_SET_BURN` at T-5 min
+**TC:** `SCHEDULE_TC(exec_time_cuc=T-300, tc_data=TC)` (Service 11, Subtype 4) --- time-tag `PROP_SET_BURN` at T-5 min
 **Note:** `tc_data` is the COMPLETE inner telecommand packet, not a mnemonic: build `PROP_SET_BURN` first and embed its bytes.
-**TC:** `SCHEDULE_TC(exec_time_cuc=T, tc_data=TC)` (Service 11, Subtype 4) --- time-tag `PROP_ARM` at T-2 min
+**TC:** `SCHEDULE_TC(exec_time_cuc=T-120, tc_data=TC)` (Service 11, Subtype 4) --- time-tag `PROP_ARM` at T-2 min
 **Note:** `tc_data` is the COMPLETE inner telecommand packet, not a mnemonic: build `PROP_ARM` first and embed its bytes.
 **TC:** `SCHEDULE_TC(exec_time_cuc=T, tc_data=TC)` (Service 11, Subtype 4) --- time-tag `PROP_EXECUTE` at T-0
 **Note:** `tc_data` is the COMPLETE inner telecommand packet, not a mnemonic: build `PROP_EXECUTE` first and embed its bytes.

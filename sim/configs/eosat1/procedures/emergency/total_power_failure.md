@@ -50,13 +50,13 @@ The battery heater thermostat requires this power line to operate.
 this is sent unconditionally rather than being a hidden branch.
 **TC:** `EPS_POWER_ON(line_index=5)` (Service 8, Subtype 1, func_id 19) — battery heater power line
 **TC:** `HEATER_BATTERY(on=1)` (Service 8, Subtype 1, func_id 40) --- ensure battery heater
-is enabled but under thermostat control only (activates below -5 degC, deactivates above 0 degC).
+is enabled but under thermostat control only (activates below +5 degC, deactivates above +10 degC).
 **Verify:** `eps.pl_htr_bat` (0x0115) = 1 (power line ON) — prerequisite for thermostat operation.
 **Verify:** `tcs.htr_battery` (0x040A) = THERMOSTAT mode.
 **Verify:** `tcs.temp_battery` (0x0407) within survival range (-10 degC to +45 degC).
 **Rationale:** Battery must not freeze during eclipse but heater must not run continuously at this power state.
 The power line must be ON for the thermostat to engage.
-**GO/NO-GO:** Battery temperature > -5 degC (heater not drawing power in sunlit phase) and `eps.pl_htr_bat` = 1.
+**GO/NO-GO:** Battery temperature > +5 degC (heater not drawing power in sunlit phase) and `eps.pl_htr_bat` = 1.
 
 ### Step 3 --- Command OBC Emergency Mode
 **TC:** `OBC_SET_MODE(mode=2)` (Service 8, Subtype 1, func_id 50) --- EMERGENCY mode.
@@ -89,7 +89,7 @@ generation rate to 1/60s, disables non-essential data recording.
 **Monitor:** `eps.bus_voltage` (0x0105) throughout eclipse --- must remain > 25.0V.
 **Monitor:** `tcs.temp_battery` (0x0407) --- verify battery heater thermostat activates if needed.
 **Duration:** Eclipse lasts ~34–36 minutes at the ~513 km SSO.
-**Expected drain:** ~32W x 35 min = ~19 Wh consumed. Battery capacity ~120 Wh, so ~16% SoC consumed.
+**Expected drain:** ~32W x 35 min = ~19 Wh consumed. Battery capacity 100 Wh, so ~19% SoC consumed.
 **GO/NO-GO:** Bus voltage remains > 25.0V throughout eclipse. If voltage drops below 25.0V,
 under-voltage protection will disconnect non-essential buses automatically.
 
