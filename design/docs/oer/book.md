@@ -1,0 +1,10477 @@
+# How to use this book
+
+This is an open textbook on the design of small spacecraft by the concurrent-engineering method — the way a Concurrent Design Facility (CDF) takes a mission from a stated need to a reviewed baseline, with every subsystem sized in the same room, from the same shared design state, at the same time. It is written for final-year undergraduates, graduate students and early-career engineers who have an engineering background but have not yet designed a spacecraft, and for anyone who wants to understand how the pieces of a mission — orbit, power, attitude, communications, structure, operations, cost, regulation — constrain one another.
+
+The book is organised in five parts, one appendix and a short back matter. Parts I–III are the main text, nineteen chapters that follow a mission from need to operations; Parts IV and V are reference material to be dipped into.
+
+**Part I — Foundations and Design (Chapters 1–8)** lays the foundations: the concurrent-design method and the systems-engineering framework it sits inside (Chapter 1), the regulatory and industrial environment of a Canadian mission (Chapter 2), the international standards a project must apply (Chapter 3), mission needs, stakeholders, trade studies and the concept of operations (Chapter 4), requirements (Chapter 5), functional decomposition (Chapter 6), orbit selection and the space environment (Chapter 7), and the mission architecture with its segments, interfaces and engineering budgets (Chapter 8).
+
+**Part II — Subsystem Design (Chapters 9–12)** sizes the subsystems — power and thermal (Chapter 9), attitude and orbit control (Chapter 10), communications and link budgets (Chapter 11), and structures, propulsion and on-board data handling (Chapter 12).
+
+**Part III — Integration, Verification and Operations (Chapters 13–19)** takes the design through equipment selection and the bill of materials (Chapter 13), verification and validation (Chapter 14), risk, interface control and FMECA (Chapter 15), cost estimation and design reviews (Chapter 16), the ground segment (Chapter 17), mission operations and FDIR (Chapter 18), and finally the rehearsal of a mission before launch (Chapter 19).
+
+Every chapter of Parts I–III follows the same pattern: a short list of recommended background reading, learning objectives, numbered sections, a summary, a set of problems and a reference list. The problems mix conceptual questions, calculations and small design tasks; most can be done with a calculator or a spreadsheet, and a few invite you to use a concurrent-design tool of your choice.
+
+**Part IV — Engineering Position Reference** is a briefing for each of the sixteen engineering positions that sit around a CDF table: what decisions that position owns, what it needs to know from the others before it can decide, the equations and rules of thumb it uses (cross-referenced to Parts I–III rather than restated), the pitfalls that catch first-time designers, and where to read more. Read the briefing for the position you are about to take, and skim one adjacent to it.
+
+**Part V — First-Principles Derivations** derives, from first principles, the equations that the chapters apply — Kepler's third law, the rocket equation, J₂ nodal regression, the eclipse fraction, free-space path loss and the link-budget algebra, bit-error-rate curves, ground sample distance, radiative equilibrium, solar-array and battery sizing, margin of safety, disturbance torques and the daily data-volume closure — each with a worked sanity check against a published value. Use it when you want to know *why* a formula has the form it has, or when a reviewer asks you to show your working.
+
+**Appendix A** describes the open-source concurrent-design tool, SpaceCDF, with which the numerical examples in this book were computed. **The back matter** holds a note on how the book was produced, its licence, an acknowledgement of the generative-AI assistance used in preparing it, and a colophon.
+
+### The two running examples
+
+Two spacecraft recur throughout the book so that the chapters can build on one another's numbers.
+
+- **EOSat-3U** is a 3U Earth-observation CubeSat in a 500 km Sun-synchronous orbit, carrying a multispectral imager and an S-band downlink, with three-axis attitude control. It is the primary worked example of the subsystem chapters (power, attitude, communications, structure) and of the budget, verification, risk, cost and operations chapters that follow. Where a chapter says "the 3U EO CubeSat", this is the spacecraft meant.
+- **UniSat-1** is a 1U technology demonstrator carrying a MEMS magnetometer, with passive magnetic stabilisation, a UHF link and no propulsion. It is introduced in Chapter 1 §1.7 as the deliberately simpler second example; each later chapter closes with a short "Returning to UniSat-1" section that applies the chapter's method to it. Because UniSat-1 is small enough to hold in your head, it is a good vehicle for the end-of-chapter problems.
+
+The two are never interchangeable: numbers quoted for the 3U EO CubeSat are not UniSat-1 numbers, and vice versa.
+
+### Recommended background reading
+
+The book assumes an engineering background — mechanics, basic electromagnetism, elementary thermodynamics and the calculus that goes with them — but no prior spacecraft design. The following references are cited throughout and are worth having to hand:
+
+- NASA, *Systems Engineering Handbook* (SP-2016-6105 Rev 2), §1–§3 for the systems-engineering framework. [https://www.nasa.gov/reference/systems-engineering-handbook/](https://www.nasa.gov/reference/systems-engineering-handbook/)
+- NASA, *NPR 7123.1D — Systems Engineering Processes and Requirements*, §3. [https://nodis3.gsfc.nasa.gov/](https://nodis3.gsfc.nasa.gov/)
+- NASA, *CubeSat 101: Basic Concepts and Processes for First-Time CubeSat Developers*. [https://www.nasa.gov/wp-content/uploads/2017/03/nasa_csli_cubesat_101_508.pdf](https://www.nasa.gov/wp-content/uploads/2017/03/nasa_csli_cubesat_101_508.pdf)
+- Wertz, Everett and Puschell (eds), *Space Mission Engineering: The New SMAD*, Microcosm Press, 2011 — cited as "SMAD4" throughout.
+- ECSS, the European Cooperation for Space Standardization standards, in particular ECSS-E-ST-10C (system engineering), ECSS-M-ST-10C (project planning) and ECSS-E-ST-10-02C (verification). [https://ecss.nl/](https://ecss.nl/)
+- Vallado, *Fundamentals of Astrodynamics and Applications*, 4th edition, for the orbital mechanics of Chapter 7 and Part V.
+
+Each chapter opens with a shorter, topic-specific list.
+
+### How the numerical examples were produced
+
+Every numerical worked example in this book — the EOSat-3U and UniSat-1 budgets, the orbit timings, the link-budget closures, the thermal cases, the cost roll-ups — was computed with the open-source SpaceCDF tool described in Appendix A, from mission descriptors that are published with the tool, and then checked by hand against the equations given in the text and derived in Part V. The figures are generated procedurally by scripts kept alongside the book's sources, so that a figure can be regenerated when a number changes. Where this edition's editors found and corrected an arithmetic slip in an earlier version, the corrected value is used consistently in every chapter that quotes it. Readers who wish to reproduce or extend an example will find the details in the back matter.
+
+### Conventions
+
+The book uses SI units, UK spelling, and the constants $R_E = 6378.137$ km, $\mu = 398\,600.44$ km³/s², $J_2 = 1.0826 \times 10^{-3}$, $g_0 = 9.80665$ m/s² and $k = -228.6$ dBW/K/Hz throughout (Part V, V.1 lists the full set with sources). Verification methods are abbreviated ATIR(D) — Analysis, Test, Inspection, Review of design, and Demonstration where it is used. Vendor products named in worked examples are representative examples, not endorsements, and any prices quoted are indicative for 2026.
+
+
+# Part I — Foundations and Design
+
+# Chapter 1 — Concurrent Design and the Systems Engineering Framework
+
+> **Recommended background.** NASA Systems Engineering Handbook (SP-2016-6105 Rev 2) §1–§3 — [https://www.nasa.gov/reference/systems-engineering-handbook/](https://www.nasa.gov/reference/systems-engineering-handbook/); NPR 7123.1D §3. An undergraduate engineering background is assumed; no prior spacecraft design experience is required.
+
+## Learning objectives
+
+By the end of this chapter, you will be able to:
+
+1. Describe the purpose and structure of a Concurrent Design Facility (CDF) and contrast it with sequential design
+2. Explain the System-V model and its two sides (decomposition and integration)
+3. List the 17 common technical processes defined in NPR 7123.1D and explain their recursive application
+4. Map NASA lifecycle phases (Pre-A through F) to ECSS phases and identify the key review gates
+5. Identify the role of each CDF engineering position and the parameters it owns
+
+---
+
+## 1.1 What is a Concurrent Design Facility?
+
+### 1.1.1 The problem with sequential design
+
+Consider the question: how is spacecraft design traditionally done?
+
+Traditional spacecraft design follows a **sequential (waterfall) approach**: one discipline completes its work, documents it, and passes the design to the next discipline. This method dominated the space industry from the 1960s through the 1990s. Its limitations are well documented:
+
+- **Interface mismatches** discovered late in integration, requiring costly redesign
+- **Budget overruns** in mass, power, and cost not caught until formal reviews
+- **Long iteration cycles** — months between design reviews with limited inter-discipline feedback
+- **Knowledge silos** — critical design rationale locked in individual engineers' notes
+- **Rework costs** — the cost of correcting an error increases by roughly an order of magnitude per lifecycle phase (the "1-10-100 rule")
+
+The aerospace industry's response was **concurrent engineering (CE)**, also called Integrated Product Development (IPD) or Integrated Concurrent Engineering (ICE). The core idea: bring all disciplines together to work simultaneously on a shared parametric model, resolving conflicts in real time rather than discovering them in review.
+
+> **Industry practice.** Boeing's Phantom Works implemented concurrent engineering for the X-32 Joint Strike Fighter demonstrator in the late 1990s, reducing design iteration time from weeks to hours. JPL's Team X has been performing rapid mission assessments since 1995, completing Pre-Phase A studies in as little as one week. ESA's CDF, established in November 1998 at ESTEC (Noordwijk, Netherlands), became the most widely replicated model for space-specific concurrent design.
+
+### 1.1.2 ESA's CDF — the reference model
+
+ESA's Concurrent Design Facility pioneered the approach for space missions and has been widely replicated at space agencies worldwide (DLR, CNES, JAXA, CSA, and over 60 universities).
+
+| Parameter | Value |
+|-----------|-------|
+| Established | November 1998, ESTEC, Noordwijk, NL |
+| Team size | 15–25 domain specialists per study |
+| Design-session format | 3–4 hour focused design sessions, typically 2 per week |
+| Study duration | 3–6 weeks for a complete Phase 0/A mission assessment |
+| Tooling | Originally Excel-based IDM; now Open Concurrent Design Tool (OCDT) |
+| Output | Complete mission feasibility assessment: mass, power, cost, risk, schedule |
+| Track record | 200+ studies completed by 20th anniversary (2018) |
+| Cost savings | Studies completed in ~1/5 the time and ~1/3 the cost of the traditional approach |
+
+[Source: ESA CDF official documentation; Bandecchi et al., "The ESA/ESTEC Concurrent Design Facility", ESA Bulletin No. 107, 2001]
+
+### 1.1.3 Key principles of concurrent design
+
+**Shared parametric model.** All disciplines read from and write to a common data model. When the power engineer changes the solar array area, the structures engineer immediately sees the mass impact, and the thermal engineer sees the changed radiator view factor. This eliminates the "frozen interface document" problem.
+
+**Scoped parameter ownership.** Each engineering position "owns" a defined set of parameters. Only the power engineer can modify EPS parameters; only the AOCS engineer can modify attitude control parameters. This prevents conflicting edits while maintaining concurrent access.
+
+**Real-time conflict detection.** When parameter changes create conflicts (e.g., mass budget exceeded, link margin negative), the system flags them immediately. The systems engineer arbitrates.
+
+**Design convergence through iteration.** A CDF study typically converges through 3–5 major iterations, with each design session refining the design toward closure. The parametric model propagates changes automatically, so the team sees the system-level impact of every decision.
+
+### 1.1.4 Concurrent design in software
+
+The CDF concept does not require a physical room. A web-based concurrent-design tool can implement the same principles so that a distributed team shares one live model. The numerical examples in this book were produced with one such tool, SpaceCDF, which is described neutrally in Appendix A; the mapping between CDF principles and software features is summarised below.
+
+| Principle | Software implementation |
+|-----------|------------------------|
+| Shared model | Real-time synchronisation; all participants see live updates |
+| Parameter ownership | 16 engineering positions with scoped editing rights (§1.5) |
+| Design convergence | Background design agents that propagate parametric relationships (sizing and analysis) |
+| Conflict detection | Automated constraint engine over inter-parameter connections |
+| Document generation | ECSS-style exports with full traceability |
+| Review gates | Automated gate-criteria evaluation for MCR, SRR, SDR, PDR and CDR (§1.4) |
+
+**Think about it.** Concurrent design accelerates convergence, but speed has a cost. Where might a tightly coupled team converge *too* quickly — on an architecture nobody questioned, or on a budget that only closed because everyone adjusted their numbers at once? Problem 1 asks you to weigh these risks against the advantages.
+
+---
+
+## 1.2 The System-V model
+
+### 1.2.1 Origin and purpose
+
+The "Vee" (V) model is the foundational framework for systems engineering. It appears in NASA SEH Section 2.3 (Figure 2.3-1), in ECSS-E-ST-10C, and in ISO/IEC 15288. It is not a project schedule — it is a **logical model** showing the relationship between decomposition (breaking the problem down) and integration (building and verifying the solution).
+
+The V-model answers two fundamental questions:
+
+1. **Left side (top-down):** How do we decompose the mission need into buildable components?
+2. **Right side (bottom-up):** How do we verify that what we built satisfies the original need?
+
+The key insight is **horizontal traceability**: every element on the left side has a corresponding verification or validation activity on the right side, connected at the same level of abstraction. Figure 1.1 shows the model; the left and right branches are tabulated in §1.2.2 and §1.2.3.
+
+![System-V model: decomposition on the left, integration and verification on the right.](../assets/figures/fig_system_v.png)
+
+**Figure 1.1** — The System-V model (after NASA SEH Figure 2.3-1). The left branch decomposes the mission need into components; the right branch integrates and verifies at matching levels; the horizontal links are the traceability between a requirement and the activity that verifies it.
+
+### 1.2.2 Left side: top-down decomposition
+
+The left side of the V answers "how do we break the problem down into solvable pieces?"
+
+| Level | Activity | Key question | Output |
+|-------|----------|-------------|--------|
+| 1. Mission need | Define the problem and concept of operations | What problem are we solving? For whom? | ConOps, problem statement, MoEs |
+| 2. Stakeholder requirements | Capture needs of all stakeholders | What must the system achieve? (WHAT, not HOW) | Stakeholder requirements baseline |
+| 3. System architecture | Define segments, elements, interfaces | How is the system structured? | System architecture, ICDs |
+| 4. Subsystem design | Design each subsystem to meet allocated requirements | How does each subsystem work? | Subsystem specifications |
+| 5. Component selection | Choose or design lowest-level components | Which hardware/software fulfils each need? | Component specifications, BoM |
+
+### 1.2.3 Right side: bottom-up integration
+
+The right side answers "how do we verify that what we built satisfies the original need?"
+
+| Level | Activity | Key question | Verification method |
+|-------|----------|-------------|-------------------|
+| 5. Component verification | Test each component against its spec | Does each part work? | Inspection, test |
+| 4. Subsystem verification | Integrate and test each subsystem | Do subsystems meet allocated requirements? | Test, analysis |
+| 3. Integration and test | Assemble the system and test interfaces | Do the subsystems work together? | Test, demonstration |
+| 2. System verification | Verify system against requirements | Does the system meet all requirements? | Test, analysis, inspection, demonstration |
+| 1. Mission validation | Validate against the original need | Does it solve the original problem? | Operations, user acceptance |
+
+### 1.2.4 Horizontal traceability
+
+The horizontal links in Figure 1.1 represent **horizontal traceability** — the principle that every element on the left must have a corresponding verification or validation activity on the right:
+
+- Each **requirement** (left) has a **verification method** (right): analysis, test, inspection or review of design, plus the demonstration that NASA practice adds — abbreviated ATIR(D) throughout this book (Chapter 14 treats the methods in detail)
+- Each **design decision** (left) has a **test or analysis** (right) to confirm it works
+- This traceability is captured in the **Requirements Verification Matrix (RVM)**
+
+> **Key equation.** The traceability completeness metric is
+>
+> $$T_c = \frac{N_{\text{verified}}}{N_{\text{total requirements}}} \times 100\%$$
+>
+> A target of $T_c = 100\%$ is required at CDR. At PDR, $T_c \geq 90\%$ is typical.
+
+**Key insight:** the V is not a timeline — it is a *correspondence map*. The left branch asks "what must be done?" at increasing levels of detail. The right branch asks "did we do it?" at corresponding levels. Each horizontal row is a matched pair.
+
+### 1.2.5 Phase mapping to the V
+
+Although the V is not a schedule, each of its levels is worked predominantly in particular lifecycle phases (the phases themselves are defined in §1.4). The mapping is given in Table 1.1.
+
+**Table 1.1** — Mapping of V-model levels to NASA lifecycle phases.
+
+| V-level | Left branch (decomposition) | Right branch (verification) | NASA phase |
+|---------|---------------------------|---------------------------|------------|
+| Top | Stakeholder needs and objectives | Operational validation (does the mission deliver value?) | Pre-A / E |
+| Mission | Mission-level requirements | Mission-level V&V (commissioning, in-orbit checkout) | A / E |
+| System | System-level requirements | System integration and test (end-to-end) | B / D |
+| Subsystem | Subsystem requirements | Subsystem qualification and acceptance test | C / D |
+| Bottom | Implementation (detailed design, build) | Component acceptance | C–D |
+
+### 1.2.6 Real mission example: Planet SuperDove
+
+Planet's SuperDove constellation (2020–present) illustrates the V-model in commercial practice:
+
+| Level | Requirement (left) | Verification (right) |
+|-------|-------------------|---------------------|
+| Stakeholder | "Daily global coverage at < 5 m for agricultural analytics" | In-orbit validation: coverage maps, user feedback |
+| Mission | "Revisit ≤ 1 day at ±60° latitude" | Constellation coverage simulation confirmed |
+| System | "GSD ≤ 3.7 m at 475 km SSO" | End-to-end imaging test from orbit |
+| Subsystem | "Telescope aperture ≥ 90 mm, 8 spectral bands" | Instrument calibration on ground and in orbit |
+
+*[Source: Planet Labs, "Planet Imagery Product Specifications," 2023]*
+
+### 1.2.7 Iteration and the SE engine
+
+The V is not a single pass. Real design iterates — requirements change as design constraints are discovered, and design parameters feed back to refine requirements. This iterative loop is captured in the concept of the **"SE engine"** (NASA SEH Section 2.1): the 17 common technical processes applied recursively at every level of the system hierarchy. These processes are the subject of §1.3.
+
+[Source: NASA SEH Section 2.3, Figure 2.3-1; INCOSE Systems Engineering Handbook, 4th Edition, Section 3.2]
+
+---
+
+## 1.3 The 17 common technical processes
+
+### 1.3.1 Overview
+
+NASA's NPR 7123.1D defines 17 processes that apply recursively at every level of the system hierarchy. They are grouped into three categories, collectively called the **"SE engine"**. These processes are not sequential — they execute concurrently and iteratively, which is precisely what a CDF facilitates. Figure 1.2 shows the three groups as a pyramid; the following subsections tabulate each process.
+
+![NASA SEH 17 common technical processes, grouped as system design, product realisation and technical management.](../assets/figures/fig_seh_processes.png)
+
+**Figure 1.2** — The 17 common technical processes of NPR 7123.1D, grouped into system design (1–4), product realisation (5–9) and technical management (10–17).
+
+[Source: NPR 7123.1D Chapter 3; NASA SEH Section 2.1, Figure 2.1-1]
+
+### 1.3.2 System design processes (1–4)
+
+These processes decompose the problem into a solution. They correspond to the left side of the V-model.
+
+| # | Process | Key activity | Key output | NASA SEH reference |
+|---|---------|-------------|------------|-------------------|
+| 1 | **Stakeholder Expectations Definition** | Elicit needs, define ConOps, establish MoEs | Stakeholder requirements baseline | Section 4.1 |
+| 2 | **Technical Requirements Definition** | Write "shall" statements, define MoPs and TPMs | Technical requirements baseline | Section 4.2 |
+| 3 | **Logical Decomposition** | Functional analysis, behavioural modelling, derived requirements | Functional architecture | Section 4.3 |
+| 4 | **Design Solution Definition** | Trade studies, select among alternatives, produce baseline design | Design solution baseline | Section 4.4 |
+
+### 1.3.3 Product realisation processes (5–9)
+
+These processes build, verify, and deliver the solution. They correspond to the right side of the V-model.
+
+| # | Process | Key activity | Key output | NASA SEH reference |
+|---|---------|-------------|------------|-------------------|
+| 5 | **Product Implementation** | Make, buy, code, or reuse lowest-level products | Hardware/software products | Section 5.1 |
+| 6 | **Product Integration** | Assemble per integration plan, verify interfaces | Integrated system | Section 5.2 |
+| 7 | **Product Verification** | Confirm product meets technical requirements (ATIR(D)) | Verification evidence | Section 5.3 |
+| 8 | **Product Validation** | Confirm product meets stakeholder expectations | Validation evidence | Section 5.4 |
+| 9 | **Product Transition** | Deliver, deploy, hand over to operations | Operational system | Section 5.5 |
+
+### 1.3.4 Technical management processes (10–17)
+
+These processes manage the engineering work and apply throughout the lifecycle.
+
+| # | Process | Key activity | Governing document |
+|---|---------|-------------|-------------------|
+| 10 | **Technical Planning** | SEMP, subsidiary plans, WBS | NPR 7123.1D Section 3.10 |
+| 11 | **Requirements Management** | Baselining, traceability, change control | NPR 7123.1D Section 3.11 |
+| 12 | **Interface Management** | ICDs, IRDs, internal and external interfaces | NPR 7123.1D Section 3.12 |
+| 13 | **Technical Risk Management** | Identification, assessment, mitigation per NPR 8000.4 | NPR 8000.4B |
+| 14 | **Configuration Management** | Baselines, CM plan, CCBs | NPR 7120.5F Chapter 4 |
+| 15 | **Technical Data Management** | Data rights, retention, dissemination | NPR 7123.1D Section 3.15 |
+| 16 | **Technical Assessment** | TPMs, reviews, EVM, health checks | NPR 7123.1D Section 3.16 |
+| 17 | **Decision Analysis** | Structured alternative selection (trade studies) | NASA SEH Section 6.8 |
+
+### 1.3.5 Recursion across the system hierarchy
+
+A critical property of the 17 processes is that they apply **recursively** at every level of the system hierarchy, as Figure 1.3 illustrates.
+
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 420" style="max-width:760px; font-family: sans-serif;">
+  <defs>
+    <marker id="recArrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="#1f4e79"/>
+    </marker>
+  </defs>
+  <!-- Nested levels -->
+  <rect x="20" y="20" width="720" height="380" rx="14" fill="none" stroke="#1f4e79" stroke-width="2"/>
+  <text x="40" y="46" font-size="14" font-weight="bold" fill="#1f4e79">Mission level</text>
+  <text x="40" y="64" font-size="11" fill="#444">mission requirements · ConOps · validation</text>
+
+  <rect x="60" y="80" width="640" height="300" rx="12" fill="none" stroke="#2e6da4" stroke-width="2"/>
+  <text x="80" y="106" font-size="14" font-weight="bold" fill="#2e6da4">System level</text>
+  <text x="80" y="124" font-size="11" fill="#444">system requirements · architecture · verification</text>
+
+  <rect x="100" y="140" width="560" height="220" rx="10" fill="none" stroke="#4a8fcf" stroke-width="2"/>
+  <text x="120" y="166" font-size="14" font-weight="bold" fill="#4a8fcf">Subsystem level</text>
+  <text x="120" y="184" font-size="11" fill="#444">subsystem requirements · design · testing</text>
+
+  <rect x="140" y="200" width="480" height="140" rx="8" fill="none" stroke="#7fb3e6" stroke-width="2"/>
+  <text x="160" y="226" font-size="14" font-weight="bold" fill="#4a8fcf">Component level</text>
+  <text x="160" y="244" font-size="11" fill="#444">component specifications · procurement · acceptance</text>
+
+  <!-- Central recursive cycle -->
+  <path d="M 430 300 a 40 40 0 1 1 -0.1 -0.1" fill="none" stroke="#1f4e79" stroke-width="3" marker-end="url(#recArrow)"/>
+  <text x="430" y="304" text-anchor="middle" font-size="11" font-weight="bold" fill="#1f4e79">17 SE</text>
+  <text x="430" y="318" text-anchor="middle" font-size="11" font-weight="bold" fill="#1f4e79">processes</text>
+
+  <!-- Side annotation -->
+  <text x="520" y="280" font-size="11" fill="#444">same processes,</text>
+  <text x="520" y="296" font-size="11" fill="#444">different scope, detail</text>
+  <text x="520" y="312" font-size="11" fill="#444">and duration at each level</text>
+</svg>
+
+**Figure 1.3** — Recursion of the SE engine. The same 17 processes execute at the mission, system, subsystem and component levels, each with its own requirements baseline, design and verification evidence.
+
+At each level, the same processes execute but with different scope, detail, and duration. In a CDF environment, multiple levels are often worked concurrently — the systems engineer manages the mission and system levels while subsystem engineers work their respective domains.
+
+> **Industry practice.** On the James Webb Space Telescope (JWST), requirements management (Process 11) was applied at five levels of the system hierarchy simultaneously: Observatory, Optical Telescope Element, Integrated Science Instrument Module, individual instruments (NIRSpec, MIRI, NIRCam, FGS), and components (detectors, mechanisms). Each level had its own requirements baseline, traceability matrix, and verification plan. The total requirements count exceeded 10,000.
+
+---
+
+## 1.4 Lifecycle phases and review gates
+
+### 1.4.1 NASA lifecycle phases
+
+NASA defines seven lifecycle phases for space flight projects, governed by NPR 7120.5F. Each phase has specific objectives, activities, and exit criteria evaluated at formal review gates called Key Decision Points (KDPs). Figure 1.4 shows the phases and the review gates between them; Table 1.2 details each phase.
+
+![Lifecycle phases Pre-A through F and the review gates between them.](../assets/figures/fig_lifecycle.png)
+
+**Figure 1.4** — NASA space-flight project lifecycle (NPR 7120.5F): phases Pre-A through F and the review gates that separate them. Concurrent-design studies of the kind described in this book cover Pre-Phase A through Phase C.
+
+[Source: NPR 7120.5F Chapter 2; NASA SEH Chapter 3]
+
+### 1.4.2 Phase details
+
+**Table 1.2** — NASA lifecycle phases, exit reviews and key outputs.
+
+| Phase | Name | Primary activity | Exit review | Key outputs |
+|-------|------|-----------------|-------------|-------------|
+| **Pre-A** | Concept Studies | Identify need, explore feasibility, develop ConOps | MCR | Mission concept, preliminary ConOps, feasibility assessment |
+| **A** | Concept and Technology Development | Develop requirements, mature technology to TRL 4+ | SRR/SDR | Requirements baseline, technology development plan |
+| **B** | Preliminary Design and Technology Completion | Preliminary design, close preliminary budgets, TRL 6+ | PDR | Preliminary design, budget allocations, test plans |
+| **C** | Final Design and Fabrication | Detailed design, build hardware, TRL 8 | CDR | Detailed drawings, as-built documentation, flight hardware |
+| **D** | Assembly, Integration and Test, Launch | System AIT, environmental testing, launch | TRR, QR, ORR, FRR | Tested flight system, launch readiness |
+| **E** | Operations and Sustainment | Operate the mission, produce data products | PLAR | Science data, operational lessons |
+| **F** | Closeout | Decommission, passivate, dispose, lessons learned | DR | Disposal confirmation, final report |
+
+**Key Decision Points (KDPs):** These are go/no-go authority decisions between phases, lettered A through F. They are distinct from technical reviews — KDPs are management decisions informed by technical review outcomes. For projects exceeding $250M (USD), KDP-C requires a Joint Confidence Level (JCL) analysis per NPR 7120.5F.
+
+### 1.4.3 ECSS lifecycle phases
+
+ECSS defines a similar but not identical lifecycle. The phase letters conveniently align, but the entry/exit criteria and review content differ.
+
+[Source: ECSS-M-ST-10C Rev.1, Section 5.3]
+
+| ECSS phase | Name | NASA equivalent | Key difference |
+|-----------|------|----------------|----------------|
+| 0 | Mission Analysis / Needs Identification | Pre-A | ECSS Phase 0 includes formal mission analysis |
+| A | Feasibility | A | ECSS-A focuses on demonstrating feasibility |
+| B | Preliminary Definition (B1/B2) | B | ECSS splits into B1 (system) and B2 (detailed) |
+| C | Detailed Definition | C | Similar scope |
+| D | Qualification and Production | D | ECSS-D emphasises qualification models |
+| E | Utilisation | E | Similar scope |
+| F | Disposal | F | ECSS-F explicitly addresses passivation |
+
+### 1.4.4 Review gates — what each checks
+
+Table 1.3 is the canonical list of review gates used throughout this book. Chapter 16 gives the detailed entry and exit criteria for each gate and discusses how to present a design at a review board.
+
+**Table 1.3** — Review gates, the question each answers, and the evidence required.
+
+| Review | Full name | Phase transition | Key question | Required evidence |
+|--------|-----------|------------------|-------------|-------------------|
+| **MCR** | Mission Concept Review | Pre-A → A | Is the mission need justified? Is space the right answer? | Problem statement, stakeholder analysis, alternatives analysis, ConOps draft |
+| **SRR** | System Requirements Review | A | Are requirements complete, consistent, traceable, and verifiable? | Requirements baseline, traceability matrix, risk register, preliminary ConOps |
+| **SDR** | System Design Review | A → B | Does the system architecture satisfy the requirements? | System architecture, functional decomposition, interface definitions |
+| **PDR** | Preliminary Design Review | B → C | Does the preliminary design meet all requirements? | Design description, budget status (mass/power/cost), risk mitigation plans |
+| **CDR** | Critical Design Review | C → D | Is the design complete and ready for fabrication? | Detailed drawings, analysis results, test plans, all budgets closed with positive margins |
+| **TRR** | Test Readiness Review | D | Is the system ready for formal testing? | Test procedures, facility readiness, acceptance criteria |
+| **QR** | Qualification Review | D | Has the qualification programme demonstrated that the design meets its requirements with margin? | Qualification test results, non-conformance closure, waivers, as-qualified baseline |
+| **FRR** | Flight Readiness Review | D → E | Is everything ready for launch? | All tests passed, waivers documented, launch procedures verified |
+
+> **Industry practice.** RADARSAT-2 (MDA/CSA, launched 2007) went through all NASA-equivalent review gates over a 6-year development. The CDR alone involved over 400 review items and 50 reviewers across 3 weeks. The mission exceeded its 7-year design life, operating for over 15 years — a testament to thorough verification at each gate.
+
+---
+
+## 1.5 CDF engineering positions
+
+### 1.5.1 Position overview
+
+In a CDF study, each engineering position owns a set of parameters and is responsible for its domain's design decisions. Table 1.4 lists the 16 positions used throughout this book. Part IV gives a full briefing for each position — the decisions it owns, the equations it uses and the pitfalls it should watch for.
+
+**Table 1.4** — The 16 CDF engineering positions, their responsibilities and the parameters they own.
+
+| Position | Responsibility | Key owned parameters | Primary interfaces |
+|----------|---------------|---------------------|-------------------|
+| **Systems Engineer** | Overall architecture, budgets, margins, conflict resolution | Mass margin, power margin, system-level budgets | All positions |
+| **Project Manager** | Schedule, budget authority, risk owner; chairs the design session | Schedule, cost cap, risk register, review-gate decisions | Systems Engineer, Cost, all positions |
+| **Mission Analyst** | Orbit design, coverage analysis, ground station access | Altitude, inclination, RAAN, eclipse fraction, contact time | Comms, Payload, Ground |
+| **Payload Lead** | Instrument performance, data generation rates | GSD, spectral bands, data rate, FOV, SNR | Mission Analyst, Power, AOCS, Comms |
+| **Power Engineer** | Solar arrays, batteries, EPS architecture, duty cycling | SA area, battery capacity, bus voltage, DoD | All (power is a universal constraint) |
+| **AOCS Engineer** | Attitude sensors, actuators, pointing modes | Pointing accuracy, slew rate, wheel momentum, sensor suite | Payload, Structures, Propulsion |
+| **Thermal Engineer** | Temperature control, radiators, heaters, coatings | Max/min temperatures, radiator area, heater power, thermal margin | Structures, Power, Payload |
+| **Comms Engineer** | Link budget, transponder, antenna, spectrum licensing | Link margin, data rate, frequency band, EIRP, G/T | Mission Analyst, Payload, Ground |
+| **Propulsion Engineer** | Δv budget, thruster selection, propellant mass | Isp, propellant mass, total impulse, thrust vector | Mission Analyst, AOCS, Structures |
+| **Structures Engineer** | Primary structure, mechanisms, launch loads | Structure mass, natural frequency, margin of safety | All (mass is a universal constraint) |
+| **Cost Engineer** | WBS, cost estimating relationships, schedule | Total cost, per-subsystem cost, launch cost, risk-adjusted cost | Systems Engineer, all subsystems |
+| **Compliance Engineer** | Standards, frequency licensing, export control | Standard applicability, ITAR/EAR status, filing status | All |
+| **User Representative** | End-user needs, data product requirements | Data format, latency, accessibility, coverage | Payload, Comms, Ground |
+| **Mission Operations** | Ground ops concept, staffing, automation | Contact schedule, automation level, anomaly procedures | Comms, Ground, Systems |
+| **Ground Segment** | Ground stations, data processing pipeline | Station network, processing latency, archive capacity | Comms, Mission Ops, User Rep |
+| **Software Engineer** | Flight software, FDIR, TC/TM interfaces | FSW architecture, command dictionary, FDIR rules | OBC, AOCS, Comms, Payload |
+
+### 1.5.2 Interface conflicts
+
+The most productive CDF design sessions are those where **interface conflicts** are identified and resolved. Common conflict patterns:
+
+| Conflict | Positions involved | Resolution approach |
+|----------|--------------------|-------------------|
+| Mass budget exceeded | Systems, Structures, all subsystems | Re-allocate margins, descope payload, select lighter components |
+| Power budget exceeded | Systems, Power, Payload, Comms | Adjust duty cycles, increase SA area, reduce payload power |
+| Pointing requirement vs actuator capability | Payload, AOCS, Structures | Relax pointing requirement, add fine steering mirror, improve isolation |
+| Downlink capacity vs data generation | Comms, Payload, Ground | Add ground stations, increase TX power, reduce data rate, add compression |
+| Volume constraint vs thermal rejection | Structures, Thermal, Payload | Redesign radiator location, add deployable radiator, reduce heat dissipation |
+
+---
+
+## 1.6 Working the lifecycle in a concurrent-design study
+
+A concurrent-design study does not replace the lifecycle of §1.4; it compresses the early part of it. A typical Phase 0/A study takes the mission from a stated need to a converged concept with closed mass, power, link and cost budgets — the evidence required at MCR and SRR in Table 1.3 — and a well-run Phase B study carries the same model forward to the PDR evidence. The chapters that follow are organised in the order in which a concurrent-design team encounters the work:
+
+- **Chapters 2–3** set the regulatory and standards context within which every design decision must sit.
+- **Chapters 4–8** work the left side of the V from mission need (Chapter 4) through requirements (Chapter 5), functional decomposition (Chapter 6), orbit selection (Chapter 7) and mission architecture with its engineering budgets (Chapter 8).
+- **Chapters 9–12** size the subsystems — power and thermal, attitude control, communications, and structures, propulsion and data handling.
+- **Chapters 13–19** cover equipment selection, verification and validation, risk and interfaces, cost and reviews, and the ground and operations segments that complete the right side of the V.
+
+Each chapter identifies which of the 17 processes it exercises and which review gate its outputs feed.
+
+---
+
+## 1.7 The running examples
+
+Two spacecraft are used as running examples throughout this book. The primary example is a **3U Earth-observation (EO) CubeSat** — a multispectral imager for agricultural monitoring, sized in detail from Chapter 4 onwards. Alongside it, we use a second, deliberately simpler spacecraft: **UniSat-1**, a 1U CubeSat technology demonstrator designed by a university team. This is the simplest realistic spacecraft design.
+
+**Mission:** Demonstrate a novel MEMS-based magnetometer for space weather monitoring from LEO.
+
+**Why 1U?** The 1U form factor (100 × 100 × 113.5 mm, up to 1.33 kg) is the smallest standard CubeSat and the entry point for many university and educational missions. It forces extreme design discipline — every gram, every milliwatt, and every cubic centimetre matters.
+
+| Parameter | Value |
+|-----------|-------|
+| Form factor | 1U (100 × 100 × 113.5 mm) |
+| Mass limit | 1.33 kg (CDS Rev 14) |
+| Target mass | 1.0 kg |
+| Orbit | 400 km circular, 51.6° (ISS rideshare) |
+| Design lifetime | 6 months |
+| Payload | MEMS magnetometer (50 g, 0.2 W, < 1 kbps) |
+| Comms | UHF 437 MHz, 9600 bps |
+| Power | ~2 W orbit average (body-mounted solar cells) |
+| AOCS | Passive magnetic (permanent magnet + hysteresis rods) |
+| Propulsion | None (natural deorbit in ~1 year) |
+| Estimated cost | 50–200 kEUR (indicative, 2026) |
+| Development time | 6–12 months |
+
+UniSat-1 illustrates that a meaningful space mission can be accomplished with just five subsystems (EPS, OBC, Comms, Structure, Payload), no active attitude control, no propulsion, and no thermal hardware beyond surface coatings. As the book progresses, each chapter will show how the same design processes apply to UniSat-1, but with radically simpler solutions at every step. Later chapters introduce it with the phrase "Returning to UniSat-1".
+
+---
+
+## Summary
+
+| Topic | Key takeaway |
+|-------|-------------|
+| CDF | Concurrent multi-discipline design resolves conflicts in real time; a shared parametric model with scoped ownership is what makes this possible |
+| System-V | Left side decomposes (need to components); right side integrates (build to validate); horizontal traceability links them |
+| 17 processes | Recursive at every system level; grouped as Design (1–4), Realisation (5–9), Management (10–17) |
+| Lifecycle phases | Pre-A through F with KDP gates; ECSS phases approximately align; concurrent-design studies cover Pre-A through C |
+| Review gates | Each gate answers a specific question with required evidence (Table 1.3); gate criteria can be evaluated automatically where the evidence is numerical |
+| Positions | Each owns a parameter domain; conflicts arise at interfaces; the systems engineer arbitrates |
+| Running examples | A 3U EO CubeSat and UniSat-1, a 1U magnetometer demonstrator, are carried through every chapter |
+
+---
+
+## Problems
+
+1. **Concurrent versus sequential design.** List three advantages that concurrent design offers over sequential (waterfall) design, and three risks that it introduces (consider, for example, groupthink and premature convergence). For each risk, propose one practice a systems engineer could adopt to mitigate it.
+
+2. **Sketching the V.** Sketch the V-model from memory and label each of its five levels on both branches. Add the horizontal traceability links and name one verification method (from ATIR(D)) appropriate to each level.
+
+3. **Cost of late change.** Using the "1-10-100 rule" of §1.1.1, an interface mismatch that would cost 2 kEUR to correct in Phase A is discovered during environmental testing in Phase D. Estimate the cost of correcting it, stating your assumptions about how many phase boundaries the error has crossed. What does this imply about the value of a Phase A concurrent-design study whose cost is roughly 1/3 of a conventional study?
+
+4. **The SE engine and software.** For each of the 17 common technical processes in §1.3, state whether a concurrent-design tool or spreadsheet can support it *directly* (by computing or checking something), *indirectly* (by recording the result of human judgement), or *not at all*. Which processes require the most human judgement, and why?
+
+5. **Automating a gate.** The MCR requires the evidence listed in Table 1.3. Classify each item of evidence as (a) something that can be auto-evaluated from a parametric model (e.g., a budget closing with positive margin) or (b) something that requires review by an engineer. For one item in category (b), write the question a reviewer would have to answer.
+
+6. **Traceability completeness.** A 3U EO CubeSat project has 48 requirements, of which 41 have an assigned and completed verification method. Compute the traceability completeness $T_c$. Is the project ready for PDR by the rule of thumb in §1.2.4? How many further requirements must be verified before CDR?
+
+7. **Phase identification.** For each of the following activities, identify the NASA lifecycle phase in which it principally occurs and the review gate whose evidence it feeds: (a) a thermal-vacuum test of the flight model; (b) a trade study between a 500 km and a 600 km sun-synchronous orbit; (c) passivation of the battery at end of life; (d) closing the mass budget with 15 % system margin; (e) writing the first draft of the ConOps; (f) release of detailed manufacturing drawings.
+
+8. **Position interactions.** For a 3U EO CubeSat with a multispectral imager, an S-band downlink and three-axis attitude control, identify the three pairs of positions in Table 1.4 that you expect to interact most frequently, and explain the parameter each pair contends over. Where do you expect the most difficult trade-off, and why?
+
+9. **Positions for a small team.** Returning to UniSat-1, which has only five subsystems and no active attitude control or propulsion: which of the 16 positions are still needed, which can be combined, and which are not needed at all? Propose a team of five people and allocate the positions between them. How does the CDF process change when the team is this small?
+
+10. **A V-model table for UniSat-1.** Following the SuperDove example of §1.2.6, write a four-row table (stakeholder, mission, system, subsystem) giving one requirement on the left branch and its matching verification activity on the right branch for UniSat-1. Use the parameters in §1.7.
+
+---
+
+## References
+
+1. NASA, *Systems Engineering Handbook* (SP-2016-6105 Rev 2), 2016. [https://www.nasa.gov/reference/systems-engineering-handbook/](https://www.nasa.gov/reference/systems-engineering-handbook/)
+2. NASA, *NPR 7123.1D — Systems Engineering Processes and Requirements*, 2020. [https://nodis3.gsfc.nasa.gov/displayDir.cfm?Internal_ID=N_PR_7123_001D_](https://nodis3.gsfc.nasa.gov/displayDir.cfm?Internal_ID=N_PR_7123_001D_)
+3. NASA, *NPR 7120.5F — NASA Space Flight Program and Project Management Requirements*, 2021. [https://nodis3.gsfc.nasa.gov/displayDir.cfm?Internal_ID=N_PR_7120_005F_](https://nodis3.gsfc.nasa.gov/displayDir.cfm?Internal_ID=N_PR_7120_005F_)
+4. ECSS, *ECSS-M-ST-10C Rev.1 — Space Project Management*, 2009. [https://ecss.nl/standard/ecss-m-st-10c-rev-1-space-project-management-6-march-2009/](https://ecss.nl/standard/ecss-m-st-10c-rev-1-space-project-management-6-march-2009/)
+5. INCOSE, *Systems Engineering Handbook*, 4th Edition, 2015. [https://www.incose.org/products-and-publications/se-handbook](https://www.incose.org/products-and-publications/se-handbook)
+6. Bandecchi, M. et al., "The ESA/ESTEC Concurrent Design Facility", *ESA Bulletin* No. 107, 2001. [https://www.esa.int/esapub/bulletin/bullet107/bul107_2.pdf](https://www.esa.int/esapub/bulletin/bullet107/bul107_2.pdf)
+7. ESA, "20 Years of Concurrent Design at ESA", 2018. [https://www.esa.int/Enabling_Support/Space_Engineering_Technology/CDF/What_is_the_CDF](https://www.esa.int/Enabling_Support/Space_Engineering_Technology/CDF/What_is_the_CDF)
+8. Wertz, J.R. et al., *Space Mission Engineering: The New SMAD* (SMAD4), Microcosm Press, 2011. [https://www.microcosminc.com/](https://www.microcosminc.com/)
+9. Planet Labs, *Planet Imagery Product Specifications*, 2023.
+
+
+# Chapter 2 — The Canadian Space Ecosystem and Regulatory Environment
+
+> **Recommended background.** NASA Systems Engineering Handbook §4.1 (stakeholder expectations); SMAD4 Ch. 1 (mission objectives); the Canadian statutes listed in the References, in particular the Remote Sensing Space Systems Act and the Radiocommunication Act. This chapter builds on the lifecycle phases and review gates of Chapter 1.
+
+## Learning objectives
+
+By the end of this chapter, you will be able to:
+
+1. Describe the Canadian Space Agency's mandate and organisational structure
+2. Map the Canadian space industry ecosystem — prime contractors, SMEs, universities, and funding programmes
+3. Identify the regulatory bodies that govern space activities in Canada (CSA, ISED, GAC, DND)
+4. Explain the RSSSA licensing process for remote sensing satellites
+5. Describe the spectrum licensing process through ISED and ITU coordination
+6. Identify Canadian export control obligations under EIPA, ITAR, and EAR
+
+---
+
+## 2.1 The Canadian Space Agency
+
+### 2.1.1 Mandate and history
+
+The Canadian Space Agency (CSA) was established by the *Canadian Space Agency Act* (S.C. 1990, c. 13) with the mandate to "promote the peaceful use and development of space, to advance the knowledge of space through science and to ensure that space science and technology provide social and economic benefits for Canadians."
+
+| Milestone | Year | Significance |
+|-----------|------|-------------|
+| Alouette 1 | 1962 | Canada becomes the 3rd nation to build and design a satellite |
+| Hermes (CTS) | 1976 | World's first high-power direct broadcast satellite (CSA/NASA) |
+| Canadarm | 1981 | Robotic arm for Space Shuttle; established Canada's space robotics dominance |
+| CSA established | 1990 | Canadian Space Agency Act creates the agency |
+| RADARSAT-1 | 1995 | First Canadian Earth observation satellite; C-band SAR |
+| Canadarm2 | 2001 | ISS robotic arm; continues robotics legacy |
+| RADARSAT-2 | 2007 | Commercial SAR satellite (MDA); RSSSA applies |
+| RADARSAT Constellation Mission (RCM) | 2019 | Three C-band SAR satellites; maritime surveillance, disaster management |
+| Lunar Gateway participation | 2019–2026 | Canada committed as partner; in March 2026 NASA paused Gateway "in its current form" (widely reported as a cancellation) in favour of a lunar surface base |
+| Canadarm3 | In development | Next-generation autonomous robotics begun for the Lunar Gateway; as of late 2026 being repurposed by the CSA for lunar-surface operations under Artemis |
+
+[Source: CSA, "Canada's Space Milestones", www.asc-csa.gc.ca; Gateway and Canadarm3 status as of late 2026 from References 12–13]
+
+### 2.1.2 CSA organisational focus areas
+
+The CSA is headquartered in Saint-Hubert, Quebec, and organises its activities around three strategic priorities:
+
+| Priority | Activities | Key programmes |
+|----------|-----------|-------------|
+| **Space Exploration** | ISS operations, Artemis lunar exploration (Canadarm3 technologies repurposed for lunar-surface operations), astronaut programme | Lunar Exploration Accelerator Program (LEAP) |
+| **Space Utilisation** | Earth observation, satellite communications, GNSS augmentation | RADARSAT, SmartEarth, eHealth |
+| **Space Science and Technology** | Astronomy, planetary science, technology development | CASTOR, JWST/NIRISS, space health |
+
+### 2.1.3 Canadian Space Strategy (2019)
+
+*Exploration, Imagination, Innovation: A New Space Strategy for Canada* (2019) committed $2.05B over 24 years and established five priorities:
+
+1. Ensure astronaut health and well-being in deep space
+2. Develop and use advanced AI and robotics in space
+3. Connect rural and remote Canadians through next-generation satellite communications
+4. Use space data and technology to manage natural resources sustainably
+5. Position the Canadian space sector for the future
+
+> **Industry practice.** The $150M Lunar Exploration Accelerator Program (LEAP) specifically targets Canadian SMEs and universities to develop technologies for lunar surface science, health, AI, and robotics. This "pull-through" model — where a strategic government investment creates opportunities for industry — is a hallmark of the Canadian space ecosystem.
+
+---
+
+## 2.2 Canadian space industry map
+
+### 2.2.1 Industry structure
+
+The Canadian space industry generated approximately $2.7B in revenue (2022) and employs ~12,000 people. It is structured in tiers, and a representative map of the organisations a Canadian mission interacts with is shown in Figure 2.1.
+
+![Representative stakeholder map for Canadian space missions: agency, primes, subsystem suppliers, SMEs, academia and regulators.](../assets/figures/fig_canadian_sector.png)
+
+**Figure 2.1** — Representative stakeholder map for Canadian missions: the agency and funding bodies, the industry tiers, academia and the regulators that a mission must engage.
+
+| Tier | Role | Key players | Revenue share |
+|------|------|-------------|--------------|
+| **Tier 1: Primes** | System integration, large platforms, constellation operations | MDA Space, Telesat, SFL (U of T) | ~60 % |
+| **Tier 2: Subsystem/Component** | Subsystem design, specialised components, ground systems | Honeywell Canada, ABB, Magellan Aerospace, NGC Aerospace | ~25 % |
+| **Tier 3: SMEs and Startups** | Niche technologies, applications, data analytics | GHGSat, NorthStar, Kepler Communications, Wyvern | ~10 % |
+| **Tier 4: Academia** | R&D, training, technology incubation | U of T (SFL), York U, UBC, U of Calgary, Western | ~5 % |
+
+Company names in this chapter are representative examples, not endorsements.
+
+### 2.2.2 Key Canadian space capabilities
+
+Canada has world-leading capabilities in several domains:
+
+| Capability | Key player(s) | Notable missions | Global standing |
+|-----------|--------------|-----------------|----------------|
+| **Space robotics** | MDA Space | Canadarm, Canadarm2, Dextre, Canadarm3 | World leader |
+| **SAR Earth observation** | MDA Space, CSA | RADARSAT-1/2/RCM | Top 3 globally |
+| **Satellite communications** | Telesat | Anik fleet, Telesat Lightspeed (LEO constellation) | Pioneer in GEO DBS |
+| **Small satellite systems** | SFL (U of T) | MOST, NEOSSat, GHGSat-D, BRITE | Top university lab globally |
+| **GHG monitoring** | GHGSat | GHGSat constellation (methane) | World's only commercial GHG monitoring constellation |
+| **Optical instruments** | ABB, Honeywell | JWST/FGS-NIRISS, OSIRIS-REx laser altimeter | Tier 1 instrument builder |
+| **Star trackers/AOCS** | NGC Aerospace/Honeywell | Numerous missions | Widely used sensors |
+
+### 2.2.3 Funding programmes
+
+Canadian space activities are funded through several mechanisms (values indicative, 2026):
+
+| Programme | Administered by | Scope | Typical value |
+|---------|----------------|-------|--------------|
+| **Space Technology Development Program (STDP)** | CSA | TRL advancement for flight heritage | $100K–$3M per project |
+| **Class Grants and Contributions** | CSA | Space science, awareness, STEM | Variable |
+| **LEAP** | CSA | Lunar technology development | Up to $3M per project |
+| **IRAP** | NRC | SME innovation support | $50K–$1M |
+| **SIF** | ISED | Strategic innovation projects | $10M–$100M+ |
+| **DRDC contracts** | DND | Dual-use technology | Classified–$10M |
+| **NSERC / CFI** | Federal | Academic research infrastructure | $50K–$5M |
+
+> **Industry practice.** GHGSat (Montreal) progressed from a CSA-funded technology demonstrator (GHGSat-D "Claire", launched 2016) to a commercial constellation of 12+ satellites monitoring methane emissions from individual industrial facilities. This trajectory — government seed funding enabling commercial scale-up — is the canonical Canadian space industry growth model.
+
+---
+
+## 2.3 Comparison with other national models
+
+Understanding Canada's space ecosystem requires comparing it with partner agencies:
+
+| Parameter | Canada (CSA) | USA (NASA) | Europe (ESA) | Japan (JAXA) |
+|-----------|-------------|-----------|-------------|-------------|
+| Annual budget (approx.) | ~$300M CAD | ~$25B USD | ~€7.5B | ~$1.5B USD |
+| Staff | ~670 | ~18,000 | ~2,300 | ~1,500 |
+| Launch capability | None (uses partners) | SLS, commercial (SpaceX, ULA) | Ariane 6, Vega-C | H3, Epsilon |
+| Key strength | Robotics, SAR, instruments | Full spectrum | Science, EO, navigation | Rockets, science, ISS (Kibo) |
+| Industry model | Government seed + commercial scale | Government prime + commercial | *Juste retour* (geographic return) | Government-led + commercial |
+
+Canada's lack of indigenous launch capability means all Canadian satellites launch on foreign vehicles, which has implications for export control (§2.8).
+
+---
+
+## 2.4 Canadian space in the international context
+
+### 2.4.1 International partnerships
+
+Canada participates in space through multilateral and bilateral agreements:
+
+| Partnership | Canadian contribution | Canadian benefit |
+|------------|----------------------|-----------------|
+| **ISS** | Canadarm2, Dextre, SPDM | Astronaut access, research time, technology demonstrations |
+| **Artemis** (Lunar Gateway until its March 2026 pause) | Canadarm3, repurposed for lunar-surface operations (2026) | Astronaut flights, lunar science access |
+| **Copernicus (ESA)** | Data access agreement | Free access to Sentinel data for Canadian users |
+| **COSPAS-SARSAT** | Canadian ground stations, MEOSAR payloads | Search and rescue capability for Canadian territory |
+| **Five Eyes** | Intelligence sharing, dual-use technology | Access to allied space intelligence capabilities |
+
+### 2.4.2 The Canadian niche strategy
+
+Canada has historically pursued a "niche excellence" strategy: rather than attempting full-spectrum space capability, Canada develops world-class expertise in specific domains (robotics, SAR, instruments) and trades access to these capabilities for partnership in larger programmes.
+
+> **Key equation.** The "partnership leverage ratio" — informal but useful — describes how Canada trades capability for access:
+>
+> $$L = \frac{V_{\text{access}}}{C_{\text{contribution}}}$$
+>
+> where $V_{\text{access}}$ is the value of programme access obtained and $C_{\text{contribution}}$ is the cost of Canada's contribution. For the ISS, Canada's Canadarm2/Dextre contribution (~\$2B CAD over 30 years) provides access to a \$150B+ programme, yielding $L \approx 75$. This is the highest leverage ratio of any ISS partner.
+
+---
+
+## 2.5 Regulatory framework overview
+
+Space activities in Canada are governed by multiple federal bodies. There is no single "Space Act" — instead, regulation is distributed across several statutes. Figure 2.2 shows the bodies a single space activity must satisfy and the statute each one administers; the table below gives the detail.
+
+![Canadian space regulatory framework: a central space-activity node connected to the five federal regulators and three international bodies.](../assets/figures/fig_regulatory_framework.png)
+
+**Figure 2.2** — The Canadian space regulatory framework. A single space activity is regulated by five federal bodies under separate statutes (CSA, ISED, GAC, DND/DRDC and, for launch, Transport Canada in future), while the international instruments of the ITU, UN COPUOS and the MTCR reach the mission through ISED, treaty obligations and the Export Control List administered by GAC.
+
+| Regulatory body | Statute | What it regulates | Relevance to mission design |
+|----------------|---------|-------------------|---------------------------|
+| **CSA** | Canadian Space Agency Act | Space programme coordination, policy | Mission approval, funding |
+| **ISED** | Radiocommunication Act | Radio spectrum allocation, licensing | Frequency licensing for all RF transmissions |
+| **ISED** | Remote Sensing Space Systems Act (RSSSA) | Operation of remote sensing satellites | Licensing for any satellite that images Earth |
+| **GAC** | Export and Import Permits Act (EIPA) | Export control of strategic goods | Export permits for satellite technology |
+| **GAC** | Controlled Goods Program | Access to controlled (ITAR/CG) goods | Personnel security clearances |
+| **DND/DRDC** | National Defence Act | Dual-use technology, military space | Classification, security requirements |
+| **Transport Canada** | (No current statute) | Launch operations (future) | Canada has no domestic launch regulation yet |
+
+---
+
+## 2.6 Remote Sensing Space Systems Act (RSSSA)
+
+### 2.6.1 Purpose and scope
+
+The RSSSA (S.C. 2005, c. 45) regulates the operation of remote sensing satellites from Canada. It was enacted primarily in response to the commercialisation of RADARSAT-2 (the first Canadian commercial EO satellite) and addresses national security and foreign policy concerns related to Earth imagery.
+
+[Source: Government of Canada, RSSSA, https://laws-lois.justice.gc.ca/eng/acts/r-5.4/]
+
+### 2.6.2 Who needs a licence?
+
+An RSSSA licence is required for any person or entity that:
+
+- **Operates** a remote sensing space system from Canada, or
+- **Controls** the collection or distribution of remote sensing data from a Canadian system
+
+This applies regardless of where the satellite is manufactured or launched. If it is operated from Canadian soil, RSSSA applies.
+
+### 2.6.3 Licence categories and conditions
+
+| Licence type | Scope | Typical conditions |
+|-------------|-------|-------------------|
+| **System Operating Licence** | Operate a remote sensing satellite system | Data handling plan, priority access for Canadian government, shutter control provisions |
+| **Interoperability Arrangements** | Share data with foreign entities | Approval for each foreign government or commercial partner |
+
+Key conditions typically imposed:
+
+| Condition | Description | Rationale |
+|-----------|-------------|-----------|
+| **Priority access** | Government of Canada can request priority imaging of any area | National security |
+| **Shutter control** | Government can restrict imaging of specified areas | National security, diplomatic relations |
+| **Data disposition** | Approved plan for data storage, distribution, and destruction | Prevent unauthorised access |
+| **System disposal** | Plan for end-of-life decommissioning | Space debris mitigation |
+| **Raw data protection** | Restrictions on distribution of unprocessed data | Prevent circumvention of controls |
+
+### 2.6.4 Implications for CubeSat and university missions
+
+Even small CubeSat missions with cameras must comply with RSSSA if they produce images of Earth. Key considerations:
+
+| Parameter | Threshold | Implication |
+|-----------|-----------|------------|
+| GSD | No formal threshold in the Act | All resolutions require licensing |
+| Orbit type | Any orbit imaging Earth | LEO, MEO, GEO all in scope |
+| Data distribution | Any distribution of imagery | Must have approved data handling plan |
+| Foreign participation | Any foreign access to data | Requires interoperability arrangement |
+
+> **Industry practice.** MDA's RADARSAT-2 operates under an RSSSA licence that includes shutter control provisions. During the 2010 Haiti earthquake response, the Government of Canada exercised priority access to direct RADARSAT-2 to image the disaster zone within hours. This demonstrates both the operational utility and the regulatory mechanism of RSSSA.
+
+---
+
+## 2.7 Spectrum management and licensing
+
+### 2.7.1 Why spectrum licensing matters
+
+Every satellite that transmits or receives radio signals requires spectrum authorisation. This is not optional — unauthorised RF transmission is illegal in all ITU member states and can result in harmful interference to other systems.
+
+The process involves two levels:
+
+1. **National:** ISED (Innovation, Science and Economic Development Canada) issues the radio licence
+2. **International:** ITU (International Telecommunication Union) coordinates the frequency filing to prevent interference with other national administrations
+
+### 2.7.2 The ITU framework
+
+The International Telecommunication Union allocates spectrum globally through the Radio Regulations (RR), updated at World Radiocommunication Conferences (WRC) every 3–4 years.
+
+| ITU concept | Description | Relevance |
+|-------------|-------------|-----------|
+| **Frequency allocation** | Spectrum divided among radio services (Fixed Satellite, Mobile, Earth Exploration Satellite, etc.) | Determines which bands are available for a given mission type |
+| **ITU Regions** | Region 1 (Europe/Africa), Region 2 (Americas), Region 3 (Asia/Pacific) | Canada is in Region 2; allocations may differ by region |
+| **Coordination** | Bilateral/multilateral agreements to avoid interference | Required before a new satellite system can operate |
+| **Notification** | Formal filing with the ITU Radiocommunication Bureau (BR) | Records the satellite system in the Master International Frequency Register (MIFR) |
+
+### 2.7.3 Common satellite frequency bands
+
+| Band | Frequency range | Typical use | Key characteristics |
+|------|----------------|-------------|-------------------|
+| **UHF** | 400–450 MHz | CubeSat TT&C, AIS, ADS-B | Simple antennas, low data rate (1–9.6 kbps), crowded |
+| **L-band** | 1.5–1.6 GHz | GNSS, mobile satellite service | Navigation, SAR beacons |
+| **S-band** | 2.0–2.3 GHz | TT&C (uplink and downlink) | Standard for housekeeping; moderate antenna gain required |
+| **C-band** | 3.7–4.2 / 5.9–6.4 GHz | Legacy GEO comms (DBS), SAR (RADARSAT) | Being repurposed for 5G in some countries |
+| **X-band** | 8.025–8.4 GHz | EO payload data downlink | Higher data rates (10–150 Mbps); requires tracking antenna on ground |
+| **Ka-band** | 26.5–40 GHz | High-throughput data downlink, inter-satellite links | Very high data rates (100+ Mbps); rain attenuation significant |
+
+Whether a given allocation delivers enough performance is a link-budget question; the link budget equation and its margin criteria are developed in Chapter 11.
+
+### 2.7.4 The licensing process (Canada)
+
+The ISED spectrum licensing process for a satellite system follows the steps in Table 2.1. The timeline is long relative to a CubeSat development schedule, which is why spectrum work must start in Phase A. Figure 2.3 overlays the regulatory lead times on a 30-month Phase A–D schedule: the ITU coordination bar alone is as long as the whole development programme.
+
+![Gantt chart of the regulatory steps for a Canadian CubeSat overlaid on a 30-month Phase A–D schedule.](../assets/figures/fig_licensing_timeline.png)
+
+**Figure 2.3** — Indicative licensing timeline for a Canadian CubeSat (PDR at month 9, CDR at month 18, launch at month 30, as in Problem 4). The ISED pre-application and technical review and the ITU API filing follow Table 2.1; ITU coordination, at two to seven years, is the critical path and may run past launch (hatched); the RSSSA operating licence applies only to Earth-imaging missions; export permits (EIPA, and an ITAR TAA if US-origin parts are used) must be in hand before the spacecraft ships to the launch site.
+
+**Table 2.1** — ISED/ITU spectrum licensing steps and indicative durations.
+
+| Step | Activity | Duration | Documents |
+|------|----------|----------|-----------|
+| 1 | Pre-application consultation with ISED | 2–4 weeks | Preliminary technical description |
+| 2 | Formal application submission | — | ISED application form, technical annex |
+| 3 | ISED technical review | 3–6 months | Interference analysis, coordination requirements |
+| 4 | ITU filing (Advance Publication Information — API) | — | ITU API filing (submitted by ISED on Canada's behalf) |
+| 5 | ITU coordination with affected administrations | 2–7 years | Coordination agreements |
+| 6 | ITU notification and recording in MIFR | — | MIFR entry |
+| 7 | ISED licence issuance | — | Radio licence |
+
+### 2.7.5 CubeSat-specific considerations
+
+Many CubeSat operators use amateur radio frequencies (VHF/UHF) during development but must transition to commercial bands for operational missions, especially if there is any commercial data distribution.
+
+| Approach | Licensing path | Limitations |
+|----------|---------------|-------------|
+| **Amateur radio (VHF/UHF)** | IARU coordination; national amateur licence | No commercial use; data must be freely available; limited power/bandwidth |
+| **Commercial UHF** | ISED commercial licence; ITU coordination | Low data rate; crowded band; longer licensing timeline |
+| **S-band TT&C** | ISED licence; SFCG coordination | Standard path; moderate timeline (6–12 months) |
+| **X-band payload** | ISED licence; ITU coordination | Higher data rate; requires tracking ground station |
+
+> **Industry practice.** Kepler Communications (Toronto) initially operated its first pathfinder satellites on Ku-band for store-and-forward IoT data relay. Obtaining Ku-band spectrum rights required coordination with incumbent GEO operators, a process that took over 2 years. The lesson: begin spectrum licensing as early as Phase A.
+
+---
+
+## 2.8 Export control
+
+### 2.8.1 The export control landscape
+
+Satellite technology is controlled goods in most countries due to dual-use (civil/military) applications. Canadian space companies and universities must navigate three overlapping regimes:
+
+| Regime | Administered by | Scope | Key list |
+|--------|----------------|-------|----------|
+| **EIPA** (Canada) | Global Affairs Canada (GAC) | Canadian-origin goods and technology | Export Control List (ECL), Groups 1–7 |
+| **ITAR** (USA) | US State Department (DDTC) | US-origin defence articles and services | US Munitions List (USML), Category XV (spacecraft) |
+| **EAR** (USA) | US Commerce Department (BIS) | US-origin dual-use goods and technology | Commerce Control List (CCL), ECCN 9Axx |
+
+### 2.8.2 Canadian export controls (EIPA)
+
+The Export and Import Permits Act requires an export permit for goods on Canada's Export Control List (ECL). Space-relevant ECL groups:
+
+| ECL group | Description | Examples |
+|-----------|-------------|---------|
+| Group 1 | Dual-use goods (Wassenaar Arrangement) | Radiation-hardened electronics, space-qualified components |
+| Group 2 | Munitions (defence goods) | Military satellite systems, encrypted comms |
+| Group 4 | Nuclear-related (NSG) | RTGs, nuclear propulsion components |
+| Group 6 | Missile technology (MTCR) | Complete rocket systems, guidance systems, propulsion |
+| Group 7 | Chemical/biological weapons | Not typically space-relevant |
+
+### 2.8.3 US export controls (ITAR and EAR)
+
+Any mission using US-origin components (which includes nearly all commercial space electronics) must comply with US export controls:
+
+**ITAR (International Traffic in Arms Regulations):**
+
+- USML Category XV covers spacecraft and related articles
+- Requires a Technical Assistance Agreement (TAA) or Manufacturing License Agreement (MLA)
+- Applies to US-origin defence articles regardless of where they are located
+- Violation penalties: up to $1M per violation and 20 years imprisonment
+
+**EAR (Export Administration Regulations):**
+
+- Controls dual-use items (commercial space components, software, technology)
+- Uses Export Control Classification Numbers (ECCNs)
+- Requires a licence for export to most countries (except Canada for many items under bilateral agreements)
+- The US–Canada Defence Production Sharing Agreement provides some exemptions
+
+### 2.8.4 Practical implications for mission design
+
+| Design decision | Export control implication |
+|----------------|--------------------------|
+| Using US-origin reaction wheels | EAR licence may be required; ITAR if military-grade |
+| Collaborating with a non-Five Eyes university | TAA required for ITAR-controlled technical data |
+| Launching on a non-US rocket | ITAR Technology Transfer Agreement for US components on foreign launcher |
+| Open-sourcing satellite software | Must verify no controlled algorithms (e.g., encryption above EAR thresholds) |
+| Hosting a foreign payload | May require export permit under EIPA and/or ITAR approval |
+| Publishing detailed design in a paper | Technical data review required if ITAR-controlled components discussed |
+
+> **Industry practice.** MDA's export of RADARSAT-2 ground segment technology to international partners required extensive EIPA permitting and ITAR compliance review (since US-origin components were embedded in the system). The process took 18+ months and required dedicated compliance staff. Even university CubeSat projects using US-origin COTS components must track their ECCN classifications.
+
+---
+
+## Summary
+
+| Topic | Key takeaway |
+|-------|-------------|
+| CSA mandate | Promote peaceful use of space; niche excellence strategy (robotics, SAR, instruments) |
+| Industry structure | 4-tier ecosystem; government seed funding enables commercial scale-up |
+| RSSSA | Any remote sensing satellite operated from Canada requires a licence; includes shutter control |
+| Spectrum licensing | Two-level process (ISED national + ITU international); start in Phase A; 2+ year timeline |
+| Export control | Three overlapping regimes (EIPA, ITAR, EAR); nearly all missions encounter US controls |
+| Key lesson | Regulatory compliance is not optional — it shapes design decisions from the earliest phases |
+
+---
+
+## Problems
+
+1. **Engaging the ecosystem.** A university team is developing a 3U Earth-observation CubeSat with a multispectral imager for crop monitoring. Using §2.2, identify which industry tier(s) the team would engage for (a) the imager, (b) the attitude-control sensors, (c) launch brokerage and (d) data distribution. Which CSA or federal funding programmes in §2.2.3 might apply at each lifecycle phase, and which capabilities would most likely have to be sourced internationally?
+
+2. **RSSSA applicability.** Decide, with reasons, whether an RSSSA licence is required for each of the following, and list the licence conditions from §2.6.3 that would most affect the design: (a) the 3U EO CubeSat above, operated from a Canadian university ground station; (b) UniSat-1, the 1U magnetometer demonstrator of Chapter 1 §1.7, which carries no camera; (c) a Canadian-built imaging satellite operated entirely from a partner's ground station in Germany; (d) a Canadian start-up that buys raw imagery from a foreign satellite and resells processed products.
+
+3. **Band selection.** Using §2.7.3 and §2.7.5, choose a frequency band (or bands) for TT&C and for payload downlink for (a) UniSat-1, which must downlink about 1 MB per day, and (b) the 3U EO CubeSat, which must downlink at least 2 GB per day. For each choice, state the licensing path, the expected licensing timeline and one design consequence on the ground segment.
+
+4. **Licensing on the critical path.** A CubeSat project plans PDR at month 9, CDR at month 18 and launch at month 30 after kick-off. Using the durations in Table 2.1, construct a timeline showing when the ISED pre-application, formal application, and ITU API filing must occur for the radio licence to be in hand before launch, assuming the shortest plausible ITU coordination period. Which regulatory step is on the critical path, and what happens to the schedule if coordination takes the longest duration in the table?
+
+5. **Export control scenario.** The 3U EO CubeSat uses a US-origin reaction-wheel assembly and a US-origin GNSS receiver, will be launched on an Indian PSLV, and includes a visiting researcher from a non-Five Eyes country on the design team. Identify every export-control obligation from §2.8 that applies, name the regime and instrument (permit, TAA, ECCN classification, etc.) for each, and propose two design or programmatic changes that would reduce the compliance burden.
+
+6. **Partnership leverage.** Using the leverage ratio of §2.4.2, estimate $L$ for Canada's Canadarm3 contribution to Artemis (committed to the Lunar Gateway in 2019; repurposed for lunar-surface operations after NASA paused Gateway in March 2026), stating your assumptions for $C_{\text{contribution}}$ and $V_{\text{access}}$. Discuss two limitations of the ratio as a decision metric, including what happens to $V_{\text{access}}$ when the partner restructures the programme, and propose one refinement.
+
+7. **Comparing national models.** From the comparison in §2.3, identify two consequences for a Canadian mission design team of (a) the absence of domestic launch capability and (b) the small agency budget relative to NASA or ESA. How does ESA's *juste retour* model change the way a European team would approach supplier selection compared with a Canadian team?
+
+8. **Regulation as a design driver.** For each of the three regulatory regimes in this chapter (RSSSA, spectrum, export control), write one requirement — in the "shall" form of Chapter 5 — that the 3U EO CubeSat must satisfy, and identify the lifecycle phase (Chapter 1 §1.4) by which the corresponding evidence must exist.
+
+---
+
+## References
+
+1. Government of Canada, *Canadian Space Agency Act* (S.C. 1990, c. 13). [https://laws-lois.justice.gc.ca/eng/acts/c-11.2/](https://laws-lois.justice.gc.ca/eng/acts/c-11.2/)
+2. Government of Canada, *Remote Sensing Space Systems Act* (S.C. 2005, c. 45). [https://laws-lois.justice.gc.ca/eng/acts/r-5.4/](https://laws-lois.justice.gc.ca/eng/acts/r-5.4/)
+3. Government of Canada, *Radiocommunication Act* (R.S.C., 1985, c. R-2). [https://laws-lois.justice.gc.ca/eng/acts/r-2/](https://laws-lois.justice.gc.ca/eng/acts/r-2/)
+4. Government of Canada, *Export and Import Permits Act* (R.S.C., 1985, c. E-19). [https://laws-lois.justice.gc.ca/eng/acts/e-19/](https://laws-lois.justice.gc.ca/eng/acts/e-19/)
+5. ISED Canada, *Spectrum Management and Telecommunications*. [https://www.ic.gc.ca/eic/site/smt-gst.nsf/eng/home](https://www.ic.gc.ca/eic/site/smt-gst.nsf/eng/home)
+6. ITU, *Radio Regulations*, Edition 2020. [https://www.itu.int/pub/R-REG-RR](https://www.itu.int/pub/R-REG-RR)
+7. CSA, *Exploration, Imagination, Innovation: A New Space Strategy for Canada*, 2019. [https://www.asc-csa.gc.ca/eng/publications/space-strategy-for-canada.asp](https://www.asc-csa.gc.ca/eng/publications/space-strategy-for-canada.asp)
+8. CSA, *State of the Canadian Space Sector Report*, 2022. [https://www.asc-csa.gc.ca/eng/publications/state.asp](https://www.asc-csa.gc.ca/eng/publications/state.asp)
+9. US Department of State, *International Traffic in Arms Regulations* (22 CFR 120–130). [https://www.ecfr.gov/current/title-22/chapter-I/subchapter-M](https://www.ecfr.gov/current/title-22/chapter-I/subchapter-M)
+10. US Department of Commerce, *Export Administration Regulations* (15 CFR 730–774). [https://www.ecfr.gov/current/title-15/subtitle-B/chapter-VII/subchapter-C](https://www.ecfr.gov/current/title-15/subtitle-B/chapter-VII/subchapter-C)
+11. NASA, *Systems Engineering Handbook* (SP-2016-6105 Rev 2), 2016. [https://www.nasa.gov/reference/systems-engineering-handbook/](https://www.nasa.gov/reference/systems-engineering-handbook/)
+12. NASA, "NASA Unveils Initiatives to Achieve America's National Space Policy" (Gateway paused "in its current form"), news release, 24 March 2026. [https://www.nasa.gov/news-release/nasa-unveils-initiatives-to-achieve-americas-national-space-policy/](https://www.nasa.gov/news-release/nasa-unveils-initiatives-to-achieve-americas-national-space-policy/)
+13. MDA Space, "MDA Space responds to Canadian Space Agency announcement on Canadarm3" (CSA repurposing of Canadarm3 for lunar-surface operations), 6 August 2026. [https://mda.space/article/mda-space-responds-to-canadian-space-agency-announcement-on-canadarm3](https://mda.space/article/mda-space-responds-to-canadian-space-agency-announcement-on-canadarm3)
+
+
+# Chapter 3 — International Standards for Space Systems
+
+> **Recommended background.** ECSS-S-ST-00C (the ECSS system description); NASA Systems Engineering Handbook §6.5; the CubeSat Design Specification Rev 14; IADC Space Debris Mitigation Guidelines. This chapter builds on the SE framework of Chapter 1 and the Canadian regulatory context of Chapter 2.
+
+## Learning objectives
+
+By the end of this chapter, you will be able to:
+
+1. Describe the ECSS standard framework and its hierarchical structure (Management, Engineering, Product Assurance, Sustainability)
+2. Compare ECSS and NASA standards and identify equivalences
+3. Explain the CDS Rev 14 interface standard and its role in launch vehicle integration
+4. Apply space debris mitigation guidelines (IADC, ISO 24113, FCC 5-year rule) to mission design
+5. Describe the role of COPUOS and the Outer Space Treaty framework
+6. Set up compliance tracking for a small spacecraft mission and identify which checks can be automated
+
+---
+
+## 3.1 Why standards matter in space engineering
+
+### 3.1.1 The cost of non-compliance
+
+Space missions operate in an environment where failures are catastrophic, repair is impossible, and the consequences of interference or debris affect all space users. Standards exist to:
+
+1. **Ensure mission safety and reliability** — by codifying lessons learned from decades of space operations
+2. **Enable interoperability** — by defining common interfaces, data formats, and protocols
+3. **Reduce cost** — by providing proven design approaches rather than re-inventing solutions
+4. **Satisfy regulatory requirements** — by demonstrating compliance with national and international obligations
+5. **Facilitate technology transfer** — by establishing a common engineering language
+
+> **Industry practice.** The loss of the Mars Climate Orbiter (1999) is the canonical example of what happens without rigorous interface standards. Lockheed Martin's ground software produced thruster force data in pound-force seconds, while NASA's navigation software expected newton-seconds. The spacecraft entered the Martian atmosphere at 57 km altitude instead of the planned 226 km and was destroyed. Total loss: $327.6M. This failure directly led to NASA's strengthening of Process 12 (Interface Management) in NPR 7123.1D. The lesson: standards and interface control are not bureaucratic overhead — they are mission-critical.
+
+### 3.1.2 The major standard frameworks
+
+Three major standard frameworks govern space activities globally:
+
+| Framework | Scope | Typical adopter | Document count |
+|-----------|-------|----------------|---------------|
+| **ECSS** (European Cooperation for Space Standardization) | Full lifecycle, all disciplines | ESA, European industry, CSA (partial) | 144 standards + 56 handbooks |
+| **NASA Technical Standards** | NASA programmes and projects | NASA centres, US contractors | NPR/NPD/NASA-STD series |
+| **ISO TC 20/SC 14** | Space systems and operations | International (reference standard) | ~40 standards |
+
+These frameworks are not mutually exclusive. Many missions (including Canadian ones) adopt a tailored combination: ECSS for systems engineering and product assurance, NASA standards for specific technical domains, and ISO for debris mitigation.
+
+---
+
+## 3.2 ECSS standard hierarchy
+
+### 3.2.1 Structure
+
+The ECSS system organises standards into four branches, each with three levels. Figure 3.1 shows the hierarchy and the principal standards in each branch.
+
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" style="max-width:800px; font-family: sans-serif;">
+  <!-- Title -->
+  <text x="400" y="28" text-anchor="middle" font-size="15" font-weight="bold" fill="#1a1a2e">ECSS standard hierarchy</text>
+
+  <!-- Top level: ECSS-S (System) -->
+  <rect x="300" y="45" width="200" height="40" rx="6" fill="#37474f" stroke="#263238" stroke-width="2"/>
+  <text x="400" y="70" text-anchor="middle" font-size="12" fill="white" font-weight="bold">ECSS-S: System level</text>
+
+  <!-- Branch boxes -->
+  <rect x="30" y="130" width="160" height="40" rx="6" fill="#1565c0" stroke="#0d47a1" stroke-width="2"/>
+  <text x="110" y="155" text-anchor="middle" font-size="11" fill="white" font-weight="bold">M: Management</text>
+
+  <rect x="220" y="130" width="160" height="40" rx="6" fill="#2e7d32" stroke="#1b5e20" stroke-width="2"/>
+  <text x="300" y="155" text-anchor="middle" font-size="11" fill="white" font-weight="bold">E: Engineering</text>
+
+  <rect x="410" y="130" width="160" height="40" rx="6" fill="#e65100" stroke="#bf360c" stroke-width="2"/>
+  <text x="490" y="155" text-anchor="middle" font-size="11" fill="white" font-weight="bold">Q: Product Assurance</text>
+
+  <rect x="600" y="130" width="160" height="40" rx="6" fill="#6a1b9a" stroke="#4a148c" stroke-width="2"/>
+  <text x="680" y="155" text-anchor="middle" font-size="11" fill="white" font-weight="bold">U: Sustainability</text>
+
+  <!-- Connecting lines from S to branches -->
+  <line x1="350" y1="85" x2="110" y2="130" stroke="#555" stroke-width="1.5"/>
+  <line x1="380" y1="85" x2="300" y2="130" stroke="#555" stroke-width="1.5"/>
+  <line x1="420" y1="85" x2="490" y2="130" stroke="#555" stroke-width="1.5"/>
+  <line x1="450" y1="85" x2="680" y2="130" stroke="#555" stroke-width="1.5"/>
+
+  <!-- Level descriptions for M branch -->
+  <rect x="10" y="195" width="180" height="30" rx="4" fill="#e3f2fd" stroke="#1565c0" stroke-width="1"/>
+  <text x="100" y="215" text-anchor="middle" font-size="9" fill="#0d47a1">ST: Standard (SHALL)</text>
+
+  <rect x="10" y="235" width="180" height="30" rx="4" fill="#e3f2fd" stroke="#1565c0" stroke-width="1"/>
+  <text x="100" y="255" text-anchor="middle" font-size="9" fill="#0d47a1">HB: Handbook (guidance)</text>
+
+  <rect x="10" y="275" width="180" height="30" rx="4" fill="#e3f2fd" stroke="#1565c0" stroke-width="1"/>
+  <text x="100" y="295" text-anchor="middle" font-size="9" fill="#0d47a1">TM: Technical Memo</text>
+
+  <!-- Key M standards -->
+  <text x="20" y="325" font-size="9" fill="#333" font-weight="bold">Key M standards:</text>
+  <text x="20" y="340" font-size="8" fill="#555">ECSS-M-ST-10C: Project Management</text>
+  <text x="20" y="353" font-size="8" fill="#555">ECSS-M-ST-40C: Configuration Mgmt</text>
+  <text x="20" y="366" font-size="8" fill="#555">ECSS-M-ST-80C: Risk Management</text>
+
+  <!-- Level descriptions for E branch -->
+  <rect x="205" y="195" width="190" height="30" rx="4" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1"/>
+  <text x="300" y="215" text-anchor="middle" font-size="9" fill="#1b5e20">ST: Standard (SHALL)</text>
+
+  <rect x="205" y="235" width="190" height="30" rx="4" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1"/>
+  <text x="300" y="255" text-anchor="middle" font-size="9" fill="#1b5e20">HB: Handbook (guidance)</text>
+
+  <!-- Key E standards -->
+  <text x="210" y="290" font-size="9" fill="#333" font-weight="bold">Key E standards:</text>
+  <text x="210" y="305" font-size="8" fill="#555">ECSS-E-ST-10C: SE General</text>
+  <text x="210" y="318" font-size="8" fill="#555">ECSS-E-ST-20C: Electrical &amp; Electronic</text>
+  <text x="210" y="331" font-size="8" fill="#555">ECSS-E-ST-31C: Thermal Control</text>
+  <text x="210" y="344" font-size="8" fill="#555">ECSS-E-ST-32C: Structures</text>
+  <text x="210" y="357" font-size="8" fill="#555">ECSS-E-ST-33-01C: Mechanisms</text>
+  <text x="210" y="370" font-size="8" fill="#555">ECSS-E-ST-35C: Propulsion</text>
+  <text x="210" y="383" font-size="8" fill="#555">ECSS-E-ST-40C: Software</text>
+  <text x="210" y="396" font-size="8" fill="#555">ECSS-E-ST-50C: Communications</text>
+  <text x="210" y="409" font-size="8" fill="#555">ECSS-E-ST-60C: Control</text>
+  <text x="210" y="422" font-size="8" fill="#555">ECSS-E-ST-70C: Ground Systems</text>
+
+  <!-- Key Q standards -->
+  <text x="415" y="195" font-size="9" fill="#333" font-weight="bold">Key Q standards:</text>
+  <text x="415" y="210" font-size="8" fill="#555">ECSS-Q-ST-10C: PA Management</text>
+  <text x="415" y="223" font-size="8" fill="#555">ECSS-Q-ST-20C: QA</text>
+  <text x="415" y="236" font-size="8" fill="#555">ECSS-Q-ST-30C: Dependability</text>
+  <text x="415" y="249" font-size="8" fill="#555">ECSS-Q-ST-40C: Safety</text>
+  <text x="415" y="262" font-size="8" fill="#555">ECSS-Q-ST-60C: EEE Components</text>
+  <text x="415" y="275" font-size="8" fill="#555">ECSS-Q-ST-70C: Materials &amp; Processes</text>
+
+  <!-- Key U standards -->
+  <text x="605" y="195" font-size="9" fill="#333" font-weight="bold">Key U standards:</text>
+  <text x="605" y="210" font-size="8" fill="#555">ECSS-U-AS-10C: Adoption Notice</text>
+  <text x="605" y="223" font-size="8" fill="#555">for ISO 24113 (debris mitigation)</text>
+  <text x="605" y="248" font-size="8" fill="#555">ECSS-U-AS-10C Rev.2:</text>
+  <text x="605" y="261" font-size="8" fill="#555">Space sustainability requirements</text>
+
+  <!-- Legend -->
+  <rect x="500" y="380" width="280" height="55" rx="4" fill="#fff9c4" stroke="#f9a825" stroke-width="1"/>
+  <text x="510" y="397" font-size="9" fill="#333" font-weight="bold">Naming convention:</text>
+  <text x="510" y="412" font-size="8" fill="#555">ECSS-[Branch]-[Type]-[Number][Level]</text>
+  <text x="510" y="425" font-size="8" fill="#555">Example: ECSS-E-ST-10C = Engineering-Standard-10-Level C</text>
+</svg>
+
+**Figure 3.1** — The ECSS standard hierarchy: the system-level ECSS-S documents, the four branches (M, E, Q, U), the three document types (ST, HB, TM) and the principal standards in each branch.
+
+### 3.2.2 The four branches
+
+| Branch | Code | Scope | Example standard |
+|--------|------|-------|-----------------|
+| **Management** | M | Project management, planning, reviews, configuration management, risk management | ECSS-M-ST-10C Rev.1 (Space Project Management) |
+| **Engineering** | E | Technical disciplines: systems, structures, thermal, EPS, comms, AOCS, software, ground | ECSS-E-ST-10C (Systems Engineering General Requirements) |
+| **Product Assurance** | Q | Quality, reliability, safety, EEE components, materials, contamination | ECSS-Q-ST-10C (Product Assurance Management) |
+| **Sustainability** | U | Space debris mitigation, end-of-life disposal, space environment protection | ECSS-U-AS-10C Rev.2 (adoption of ISO 24113) |
+
+### 3.2.3 Document types
+
+| Type | Code | Meaning | Obligation |
+|------|------|---------|-----------|
+| **Standard** | ST | Contains "shall" requirements — mandatory when invoked | Must comply or formally request a waiver |
+| **Handbook** | HB | Contains guidance, best practices, worked examples | Advisory — not mandatory but strongly recommended |
+| **Technical Memorandum** | TM | Contains background information, state of the art | Informative only |
+
+### 3.2.4 Tailoring
+
+A critical concept in ECSS (and all standard frameworks) is **tailoring** — the process of selecting which standards and which requirements within those standards apply to a given project.
+
+ECSS-S-ST-00C defines three tailoring levels:
+
+| Tailoring level | Description | Typical application |
+|----------------|-------------|-------------------|
+| **Full application** | All requirements of the invoked standard apply | Large ESA missions (Sentinel, JUICE) |
+| **Partial application** | Selected clauses apply; others are waived with rationale | Medium missions, CSA projects |
+| **Not applicable** | Standard is not invoked for this project | CubeSat missions, technology demonstrators |
+
+The tailoring rationale is documented in the **Product Assurance and Safety Plan (PASP)** and the **Systems Engineering Management Plan (SEMP)**.
+
+> **Key equation.** The cost of standards compliance scales non-linearly with mission class. A rough relationship observed in ESA studies:
+>
+> $$C_{\text{compliance}} \approx k \cdot M_{SC}^{0.7} \cdot N_{\text{standards}}^{0.3}$$
+>
+> where $M_{SC}$ is the spacecraft dry mass (kg), $N_{\text{standards}}$ is the number of invoked standards, and $k$ is a constant dependent on the organisation's maturity. For a 10 kg CubeSat invoking 5 standards, compliance costs are roughly 5–10 % of mission cost. For a 1000 kg satellite invoking 40 standards, compliance costs can reach 15–20 %.
+
+---
+
+## 3.3 Key ECSS engineering standards
+
+### 3.3.1 Systems engineering (ECSS-E-ST-10C)
+
+This is the master engineering standard, equivalent to NASA's NPR 7123.1D. It defines:
+
+- System engineering processes and activities
+- Requirements engineering (writing, verification, traceability)
+- Functional analysis and decomposition
+- Interface management
+- Configuration management (technical aspects)
+
+| ECSS-E-ST-10C concept | NASA equivalent | Key difference |
+|----------------------|----------------|----------------|
+| System requirements specification | Technical requirements baseline | ECSS requires a formal Requirements Specification Document (RSD) |
+| Functional analysis | Logical decomposition (Process 3) | Similar scope |
+| Verification matrix | Requirements verification matrix | ECSS uses a formal DRD (Document Requirements Definition) |
+| Design justification file | Design solution baseline | ECSS requires a DJF that traces every design decision |
+
+### 3.3.2 Key subsystem standards
+
+| Standard | Discipline | Key requirements | NASA equivalent |
+|----------|-----------|-----------------|----------------|
+| ECSS-E-ST-20C | Electrical and Electronic | EPS design, grounding, EMC, harness | NASA-STD-4003A (EEE), NASA-HDBK-4001 |
+| ECSS-E-ST-31C | Thermal Control | Thermal design, analysis, testing | NASA-STD-5001B (Structural Design) |
+| ECSS-E-ST-32C | Structures | Structural design, factors of safety, testing | NASA-STD-5001B, GEVS (GSFC-STD-7000A) |
+| ECSS-E-ST-33-01C | Mechanisms | Mechanism design, testing, lubrication | NASA-STD-5017 |
+| ECSS-E-ST-35C | Propulsion | Propulsion system design, testing | — |
+| ECSS-E-ST-40C | Software | SW development, verification, FDIR | NASA-STD-8739.8 |
+| ECSS-E-ST-50C | Communications | Comms system design, link budget, protocols | CCSDS standards |
+| ECSS-E-ST-60C | Control | AOCS design, pointing, navigation | — |
+| ECSS-E-ST-70C | Ground Systems | Ground segment design, operations | CCSDS standards |
+
+### 3.3.3 Structural design requirements (example)
+
+To illustrate the depth of ECSS standards, consider the structural design requirements from ECSS-E-ST-32C:
+
+| Requirement | Value | Rationale |
+|-------------|-------|-----------|
+| Factor of Safety (FoS) — yield | $\geq 1.25$ | Prevent permanent deformation under limit loads |
+| Factor of Safety — ultimate | $\geq 1.5$ | Prevent structural failure under ultimate loads |
+| Qualification loads | $1.25 \times$ limit loads | Demonstrate margin beyond expected environment |
+| First natural frequency (axial) | $> 25$ Hz typical (launcher-dependent) | Avoid coupling with launcher modes |
+| First natural frequency (lateral) | $> 10$ Hz typical (launcher-dependent) | Avoid coupling with launcher modes |
+
+> **Key equation.** The margin of safety (MoS) is defined as
+>
+> $$MoS = \frac{\sigma_{\text{allowable}}}{FoS \times \sigma_{\text{applied}}} - 1$$
+>
+> A positive MoS ($MoS > 0$) indicates the structure meets the requirement. A MoS of 0.0 means the structure exactly meets the requirement with no margin to spare.
+>
+> Example: If the allowable stress is 280 MPa, the applied stress is 150 MPa, and the FoS is 1.5:
+>
+> $$MoS = \frac{280}{1.5 \times 150} - 1 = \frac{280}{225} - 1 = 0.244$$
+>
+> The structural use of this margin, and its derivation, are developed in Chapter 12 §12.1.6 and Part V §V.13.
+
+---
+
+## 3.4 NASA standards comparison
+
+### 3.4.1 NASA technical standards architecture
+
+NASA's standards are organised differently from ECSS. Key document types:
+
+| Type | Code | Example | Obligation |
+|------|------|---------|-----------|
+| **NASA Policy Directive** | NPD | NPD 8700.1 (Safety and Mission Assurance) | Mandatory for all NASA programmes |
+| **NASA Procedural Requirement** | NPR | NPR 7123.1D (SE Processes) | Mandatory; defines processes and requirements |
+| **NASA Technical Standard** | NASA-STD | NASA-STD-5001B (Structural Design) | Mandatory when invoked |
+| **NASA Handbook** | NASA-HDBK | NASA-HDBK-4001 (EEE Parts) | Advisory guidance |
+| **Special Publication** | SP | SP-2016-6105 (SEH) | Reference text |
+
+### 3.4.2 Cross-reference table
+
+| Domain | ECSS standard | NASA standard | ISO standard |
+|--------|--------------|--------------|-------------|
+| Systems Engineering | ECSS-E-ST-10C | NPR 7123.1D, SP-2016-6105 | ISO 15288 |
+| Project Management | ECSS-M-ST-10C | NPR 7120.5F | ISO 21500 |
+| Configuration Management | ECSS-M-ST-40C | NPR 7120.5F Ch. 4 | ISO 10007 |
+| Risk Management | ECSS-M-ST-80C | NPR 8000.4B | ISO 31000 |
+| Structural Design | ECSS-E-ST-32C | NASA-STD-5001B | — |
+| Debris Mitigation | ECSS-U-AS-10C | NASA-STD-8719.14A | ISO 24113 |
+| Cleanliness | ECSS-Q-ST-70-01C | NASA-SN-C-0005 | ISO 14644 |
+| Software | ECSS-E-ST-40C | NASA-STD-8739.8 | ISO 12207 |
+
+---
+
+## 3.5 CDS Rev 14 — launch vehicle interface standard
+
+### 3.5.1 What is the CDS?
+
+The **CubeSat Design Specification (CDS)**, maintained by the California Polytechnic State University (Cal Poly) and updated by the CubeSat community, defines the mechanical, electrical, and operational interfaces between CubeSats and their deployment systems (P-PODs, ISIPOD, etc.).
+
+[Source: CDS Rev 14, 2022, available via Cal Poly CubeSat Program]
+
+### 3.5.2 Key CDS requirements
+
+| Parameter | CDS Rev 14 requirement | Rationale |
+|-----------|----------------------|-----------|
+| **Unit dimensions** | $100 \times 100 \times 113.5$ mm per U | Standard deployer rail spacing |
+| **Mass per U** | $\leq 2.0$ kg (with waiver up to 2.66 kg for some deployers) | Deployer spring mechanism limits |
+| **Rail material** | Hard-anodised aluminium (7075 or 6061-T6) | Deployer contact surface compatibility |
+| **Centre of gravity** | Within 2 cm of geometric centre | Deployment dynamics, tumble rate control |
+| **Deployables** | Must be constrained during launch; no protrusion beyond CubeSat envelope | Protect adjacent payloads in deployer |
+| **Separation springs** | Prohibited on CubeSat (deployer provides) | Standardised deployment mechanism |
+| **RF silence** | No RF transmission until 30 minutes after deployment | Avoid interference with launch vehicle |
+| **Deployment switches** | Minimum 1 per deployable; 2 for redundancy | Prevent premature deployment |
+| **Battery charge state** | Fully charged (recommended); charging from deployer not available | No power interface with deployer |
+| **Propulsion** | If present: must be inhibited by 3 independent inhibits; no toxic propellants | Safety of primary payload and deployer |
+
+### 3.5.3 Form factors
+
+| Form factor | Dimensions (mm) | Mass limit | Typical applications |
+|------------|-----------------|------------|---------------------|
+| 1U | 100 × 100 × 113.5 | 2.0 kg | Technology demonstrators, IoT nodes |
+| 1.5U | 100 × 100 × 170.2 | 3.0 kg | Enhanced technology demonstrators |
+| 2U | 100 × 100 × 227.0 | 4.0 kg | Simple instruments, store-and-forward |
+| 3U | 100 × 100 × 340.5 | 6.0 kg | Standard EO/science missions |
+| 6U | 100 × 226.3 × 366.0 | 12.0 kg | Advanced EO, communications |
+| 12U | 226.3 × 226.3 × 366.0 | 24.0 kg | High-performance missions |
+| 16U | 226.3 × 226.3 × 454.0 | 32.0 kg | Near-microsatellite capability |
+
+### 3.5.4 Rideshare launch interfaces
+
+For non-CubeSat smallsats (microsatellites 10–200 kg), the interface standard depends on the launch provider (representative examples, not endorsements):
+
+| Launch provider | Interface standard | Adapter type | Key document |
+|----------------|-------------------|-------------|-------------|
+| SpaceX (Rideshare) | ESPA-class | 15" or 24" ESPA port | SpaceX Rideshare User's Guide |
+| Rocket Lab (Electron) | Custom separation system | Rocket Lab-provided | Electron Payload User's Guide |
+| Arianespace (Vega-C) | ASAP-S | Multi-payload adapter | Vega-C User Manual |
+| ISRO (PSLV) | Custom adapter | ISRO-provided | PSLV User Manual |
+
+> **Industry practice.** Planet Labs' SuperDove constellation (150+ satellites) uses a standardised 3U-plus form factor that is CDS-compliant but extends the standard with a custom deployer arrangement for batch deployment. Each SuperDove satellite (mass ~5.8 kg) carries a multispectral imager with 8 bands and ~3 m GSD. The standardisation of the bus design enabled a manufacturing rate of 2+ satellites per week — only possible because the CDS provides a stable interface baseline.
+
+---
+
+## 3.6 Space debris mitigation
+
+### 3.6.1 The debris problem
+
+As of 2025, there are approximately:
+
+- **36,500+** tracked objects larger than 10 cm in Earth orbit
+- **1,000,000+** estimated objects 1–10 cm (untracked, lethal to spacecraft)
+- **130,000,000+** estimated objects 1 mm–1 cm (can damage components)
+
+The debris population is growing due to collisions (the Kessler Syndrome), anti-satellite tests (e.g., Chinese ASAT 2007: 3,500+ tracked fragments), and the rapid growth of mega-constellations.
+
+[Source: ESA Space Debris Office, Annual Report 2024; NASA ODPO Orbital Debris Quarterly News]
+
+### 3.6.2 Debris mitigation guidelines hierarchy
+
+| Level | Document | Scope | Status |
+|-------|----------|-------|--------|
+| **International voluntary** | IADC Space Debris Mitigation Guidelines (Rev 3, 2021) | Global best practice | Advisory; adopted by COPUOS |
+| **International standard** | ISO 24113:2023 | Requirements for debris mitigation | Standard; invoked by many agencies |
+| **European standard** | ECSS-U-AS-10C Rev.2 | ECSS adoption notice for ISO 24113 | Mandatory for ESA missions |
+| **US regulation** | FCC 47 CFR 25.114(d)(14) | Post-mission disposal for US-licensed satellites | Legally binding for FCC licensees |
+| **NASA standard** | NASA-STD-8719.14A | NASA process for limiting orbital debris | Mandatory for NASA missions |
+| **ESA requirement** | ESA/ADMIN/IPOL(2023)2 | Clean Space requirements | Mandatory for ESA missions (2023+) |
+
+### 3.6.3 Key debris mitigation requirements
+
+| Requirement | Source | Value | Notes |
+|-------------|--------|-------|-------|
+| **Post-mission disposal** | IADC, ISO 24113 | $\leq 25$ years | Voluntary guideline; being tightened |
+| **Post-mission disposal** | FCC (2024+) | $\leq 5$ years | Legally binding for FCC-licensed satellites |
+| **Probability of successful disposal** | ISO 24113 | $\geq 0.9$ | Must demonstrate reliability of deorbit mechanism |
+| **Casualty risk on re-entry** | NASA-STD-8719.14A | $\leq 1:10{,}000$ per event | Drives material selection and design-for-demise |
+| **Collision avoidance probability** | IADC | $< 10^{-4}$ per year (cumulative) | Drives orbit selection and manoeuvre capability |
+| **Passivation** | ISO 24113, ECSS-U-AS-10C | All stored energy sources depleted at EOL | Batteries, pressure vessels, wheels, RF |
+
+### 3.6.4 Post-mission disposal options
+
+| Method | Applicable orbit | Mechanism | Time to re-entry |
+|--------|-----------------|-----------|------------------|
+| **Atmospheric drag (natural)** | LEO < 600 km | Natural orbital decay | Months to years |
+| **Atmospheric drag (augmented)** | LEO < 700 km | Drag sail, drag tether | Weeks to years |
+| **Propulsive deorbit** | LEO | Thrusters lower perigee to ~200 km | Days |
+| **Graveyard orbit** | GEO | Raise orbit ~300 km above GEO | Indefinite (not re-entry) |
+| **Heliocentric disposal** | Beyond GEO | Escape Earth orbit | N/A |
+
+The decisive parameter is orbital lifetime. Figure 3.2 shows how lifetime varies with altitude for representative ballistic coefficients, together with the IADC 25-year and FCC 5-year limits; the equations below give a first estimate, and Chapter 7 treats the atmospheric-drag environment in detail.
+
+![Orbital lifetime versus altitude for representative ballistic coefficients, with the FCC 5-year and IADC 25-year limits.](../assets/figures/fig_orbital_lifetime.png)
+
+**Figure 3.2** — Orbital lifetime versus initial circular altitude for representative ballistic coefficients. The horizontal lines mark the FCC 5-year and IADC 25-year post-mission disposal limits; the altitude at which a given spacecraft's curve crosses each line is the highest orbit it may occupy without active deorbit capability.
+
+> **Key equation.** The orbital lifetime of a satellite in LEO due to atmospheric drag is approximately
+>
+> $$\tau \approx \frac{C_D \cdot A \cdot \rho \cdot a^2}{2m} \cdot \text{(complex integral)}$$
+>
+> A simpler rule of thumb for circular orbits:
+>
+> $$\tau_{\text{years}} \approx \frac{h - 200}{30} \cdot \frac{m / A}{50}$$
+>
+> where $h$ is altitude in km, $m$ is mass in kg, and $A$ is the cross-sectional area in m². This is very approximate; actual lifetime depends on solar activity (which modulates atmospheric density at high altitudes), drag coefficient, and orbit eccentricity. Use NASA's DAS (Debris Assessment Software) or ESA's DRAMA tool for accurate predictions.
+>
+> More precisely, the ballistic coefficient is
+>
+> $$B = \frac{m}{C_D \cdot A}$$
+>
+> Lower $B$ (lighter, larger area) means faster re-entry. A 3U CubeSat ($m \approx 4$ kg, $A \approx 0.03$ m², $C_D \approx 2.2$) at 400 km has $B \approx 61$ kg/m² and will re-enter within ~1–3 years depending on solar cycle.
+
+### 3.6.5 Practical implications for mission design
+
+| Design decision | Debris mitigation impact |
+|----------------|--------------------------|
+| Orbit altitude selection | Altitudes > 600 km require active deorbit; > 700 km strongly discouraged for non-manoeuvrable spacecraft |
+| Propulsion system | Required for altitudes > 500–600 km to meet 25-year (or 5-year FCC) rule |
+| Passivation design | Must design battery disconnect, pressure relief, wheel spin-down circuits |
+| Material selection | Aluminium structures preferred for design-for-demise; titanium and carbon fibre survive re-entry |
+| Collision avoidance | Manoeuvre capability or conjunction assessment service (e.g., 18th SDS, ESA SSA) needed |
+
+> **Industry practice.** OneWeb (648 satellites at 1200 km) carries propulsion on every satellite specifically for end-of-life deorbit, since natural decay from 1200 km would take centuries. Each satellite carries sufficient propellant for multiple collision avoidance manoeuvres plus a complete deorbit burn to lower perigee below 300 km. The deorbit operation takes approximately 3 months per satellite.
+
+---
+
+## 3.7 International space law and COPUOS
+
+### 3.7.1 The UN space treaties
+
+The legal framework for space activities is established by five UN treaties negotiated under the Committee on the Peaceful Uses of Outer Space (COPUOS):
+
+| Treaty | Year | Key provisions | Ratification |
+|--------|------|----------------|-------------|
+| **Outer Space Treaty (OST)** | 1967 | Space is free for exploration; no national appropriation; states responsible for national activities; liability for damage | 114 parties (incl. Canada) |
+| **Rescue Agreement** | 1968 | Return astronauts and space objects | 99 parties |
+| **Liability Convention** | 1972 | Launching state liable for damage on Earth (absolute) and in space (fault-based) | 98 parties |
+| **Registration Convention** | 1976 | States must register space objects with UN | 72 parties |
+| **Moon Agreement** | 1979 | Moon and celestial bodies are "common heritage of mankind" | 18 parties (NOT US, Russia, China) |
+
+### 3.7.2 Key legal principles for mission design
+
+| Principle | Source | Implication |
+|-----------|--------|------------|
+| **State responsibility** | OST Art. VI | The Government of Canada is internationally responsible for all Canadian space activities, including private/university missions |
+| **Authorisation and supervision** | OST Art. VI | Canada must authorise and continuously supervise all non-governmental space activities (this is why RSSSA exists — Chapter 2 §2.6) |
+| **Liability** | Liability Convention | Canada (as launching state) is liable for damage caused by Canadian satellites; absolute liability on Earth, fault-based in space |
+| **Registration** | Registration Convention | Canada must register all space objects with the UN; CSA maintains the Canadian registry |
+| **Non-contamination** | OST Art. IX | Must avoid harmful contamination of space and celestial bodies (planetary protection) |
+| **Due regard** | OST Art. IX | Must conduct activities with "due regard" for other states' interests (debris mitigation) |
+
+### 3.7.3 COPUOS Long-Term Sustainability Guidelines (2019)
+
+In 2019, COPUOS adopted 21 guidelines for the long-term sustainability of outer space activities. These are voluntary but politically significant:
+
+| Guideline category | Count | Key points |
+|--------------------|----|------------|
+| Policy and regulatory | 7 | Adopt national regulatory frameworks, register space objects, share SSA data |
+| Safety of operations | 4 | Conjunction assessment, collision avoidance, re-entry risk assessment |
+| International cooperation | 4 | Share debris mitigation best practices, coordinate spectrum use |
+| Scientific and technical | 6 | Improve debris models, develop removal technology, research space weather effects |
+
+[Source: A/74/20, Report of COPUOS, 2019, Annex II]
+
+---
+
+## 3.8 Compliance tracking in a concurrent-design study
+
+In a concurrent-design team the **Compliance Engineer** position (Chapter 1, Table 1.4; Part IV) owns the standards, licensing and export-control status of the design. The position maintains a compliance register with, at minimum, the items in Table 3.1. Some of these checks can be computed directly from the shared parametric model — orbital lifetime from altitude, mass and area; CDS mass, dimensions and centre-of-gravity limits — and a concurrent-design tool can flag them automatically whenever a parameter changes. Others are inherently manual: licence filings, export classifications and the applicability of a standard are matters of judgement and paperwork that the register records but cannot decide.
+
+**Table 3.1** — Items in a mission compliance register and the degree to which each can be automated.
+
+| Item | What it tracks | Automation level |
+|---------|---------------|-----------------|
+| **Standard applicability matrix** | Which ECSS/NASA/ISO standards apply to this mission, and at what tailoring level | Semi-automated (suggested from mission type; confirmed by judgement) |
+| **Debris mitigation compliance** | Post-mission lifetime, passivation plan, casualty risk | Automated (calculated from orbit and mass) |
+| **RSSSA checklist** | Licence requirements for Canadian remote sensing missions | Manual (checklist with guidance) |
+| **Spectrum filing status** | ISED/ITU filing progress | Manual (status tracking) |
+| **Export control classification** | ECCN/USML classification of key components | Manual (per component) |
+| **CDS compliance** | Mechanical/electrical interface compliance with CDS Rev 14 | Semi-automated (checks mass, dimensions, CG) |
+
+---
+
+## Summary
+
+| Topic | Key takeaway |
+|-------|-------------|
+| ECSS framework | Four branches (M, E, Q, U); three document types (ST, HB, TM); tailoring is essential |
+| NASA standards | Organised as NPD/NPR/NASA-STD/NASA-HDBK; broadly equivalent to ECSS |
+| CDS Rev 14 | Defines CubeSat mechanical/electrical/operational interfaces; compliance is required for rideshare launch |
+| Debris mitigation | IADC 25-year rule; FCC 5-year rule (2024+); passivation required; drives orbit and propulsion design |
+| International law | OST establishes state responsibility; Canada liable for all Canadian space activities |
+| COPUOS | 21 sustainability guidelines (2019); voluntary but increasingly influential |
+| Compliance tracking | Owned by the Compliance Engineer position; automated where the check is numerical, manual where it is a filing or a judgement |
+
+---
+
+## Problems
+
+1. **Interfaces and the Mars Climate Orbiter.** Identify which of the 17 common technical processes of Chapter 1 §1.3 failed in the Mars Climate Orbiter loss, and write the interface requirement (in the "shall" form of Chapter 5) that, had it been in the interface control document and verified, would have prevented the loss. Which verification method (ATIR(D)) would you assign to it?
+
+2. **Tailoring a standards set.** For a 3U Earth-observation CubeSat built by a university team with a modest budget, select five ECSS standards from Figure 3.1 to invoke. For each, state the tailoring level (full, partial, not applicable), give a one-sentence rationale, and name the document (PASP or SEMP) in which the rationale would be recorded. Identify one standard you deliberately did *not* invoke and explain the risk you accept by omitting it.
+
+3. **Compliance cost scaling.** Using the relationship in §3.2.4, compute the ratio of compliance cost between a 1000 kg satellite invoking 40 standards and a 10 kg CubeSat invoking 5 standards, assuming the same $k$. If mission cost scales roughly as $M_{SC}^{0.9}$, is the quoted rise in compliance cost from 5–10 % to 15–20 % of mission cost consistent with the equation? Comment on what the exponents imply about where compliance effort should be concentrated for small missions.
+
+4. **Margin of safety.** A CubeSat rail is machined from aluminium 7075-T6 (yield allowable 503 MPa, ultimate allowable 572 MPa). Analysis gives an applied stress of 310 MPa at limit load. Compute the margin of safety against yield (FoS 1.25) and against ultimate (FoS 1.5) using §3.3.3. Which case governs? What applied stress would reduce the governing margin to zero, and what qualification load (in multiples of limit load) would the structure then have to survive?
+
+5. **CDS compliance audit.** Returning to UniSat-1 (Chapter 1 §1.7): the design has a mass of 1.0 kg, a centre of gravity 1.5 cm from the geometric centre along the long axis, a deployable UHF tape antenna, and a transmitter that must remain silent after deployment. Check each row of §3.5.2 against the design and state whether it is compliant, non-compliant or needs a design feature added. Repeat for a 3U EO CubeSat of 4.2 kg with deployable solar panels and a cold-gas propulsion module.
+
+6. **Orbital lifetime and the 5-year rule.** (a) Use the rule of thumb in §3.6.4 to estimate the orbital lifetime of a 3U CubeSat ($m = 4$ kg, $A = 0.03$ m²) at 400, 500 and 600 km, and of UniSat-1 ($m = 1$ kg, $A = 0.01$ m²) at 400 km. (b) Compare your 400 km result with the ballistic-coefficient statement in the same section ("~1–3 years") and with Figure 3.2. The estimates disagree; explain why a rule of thumb that ignores solar activity and atmospheric density can be wrong by a large factor, and state which source you would rely on at a design review (the physics-based calculation of Chapter 7 §7.3.3 gives ≈ 9 months at 400 km and ≈ 5 yr at 500 km for the 3U case). (c) Estimate, from Figure 3.2, the highest circular altitude at which the 3U CubeSat could operate without propulsion and still meet the FCC 5-year rule.
+
+7. **Passivation.** List every stored-energy source on a 3U EO CubeSat that carries a lithium-ion battery, three reaction wheels, a cold-gas propulsion module and an S-band transmitter. For each, state the passivation action required by ISO 24113 at end of life and the design feature (circuit, valve, command) that enables it. Which of these actions must still work after the primary flight computer has failed?
+
+8. **Launching state and liability.** A Canadian university CubeSat is launched on an Indian PSLV under a contract brokered by a Dutch company and, three years later, collides with a defunct Russian upper stage. Using §3.7, identify which states are "launching states" under the Liability Convention, whether absolute or fault-based liability applies, and which state must have registered the CubeSat. What does OST Art. VI imply about the university's obligations to the Government of Canada before launch?
+
+9. **Building a compliance register.** For the 3U EO CubeSat, build a compliance register in the format of Table 3.1 with at least eight rows, covering standards applicability, debris mitigation, RSSSA, spectrum, export control and CDS. For each row, state the parameter(s) in the shared design model it depends on, whether the check can be automated, and the lifecycle phase (Chapter 1 §1.4) by which it must be closed.
+
+---
+
+## References
+
+1. ECSS, *ECSS-S-ST-00C — Space Standardization: Policy and Organisation*, 2020. [https://ecss.nl/standard/ecss-s-st-00c-space-standardization-policy-and-organisation/](https://ecss.nl/standard/ecss-s-st-00c-space-standardization-policy-and-organisation/)
+2. ECSS, *ECSS-E-ST-10C — System Engineering General Requirements*, 2009. [https://ecss.nl/standard/ecss-e-st-10c-system-engineering-general-requirements/](https://ecss.nl/standard/ecss-e-st-10c-system-engineering-general-requirements/)
+3. ECSS, *ECSS-E-ST-32C Rev.1 — Structural General Requirements*, 2008. [https://ecss.nl/standard/ecss-e-st-32c-rev-1-structural-general-requirements/](https://ecss.nl/standard/ecss-e-st-32c-rev-1-structural-general-requirements/)
+4. ECSS, *ECSS-U-AS-10C Rev.2 — Adoption Notice of ISO 24113*, 2023. [https://ecss.nl/standard/ecss-u-as-10c-rev-2/](https://ecss.nl/standard/ecss-u-as-10c-rev-2/)
+5. ISO, *ISO 24113:2023 — Space Systems: Space Debris Mitigation Requirements*, 2023. [https://www.iso.org/standard/82450.html](https://www.iso.org/standard/82450.html)
+6. IADC, *IADC-02-01 Rev 3 — Space Debris Mitigation Guidelines*, 2021. [https://www.iadc-home.org/documents_public/](https://www.iadc-home.org/documents_public/)
+7. Cal Poly, *CubeSat Design Specification (CDS) Rev 14*, 2022. [https://www.cubesat.org/cubesatinfo](https://www.cubesat.org/cubesatinfo)
+8. NASA, *Systems Engineering Handbook* (SP-2016-6105 Rev 2), 2016. [https://www.nasa.gov/reference/systems-engineering-handbook/](https://www.nasa.gov/reference/systems-engineering-handbook/)
+9. NASA, *NASA-STD-8719.14A — Process for Limiting Orbital Debris*, 2019. [https://standards.nasa.gov/standard/oce/nasa-std-871914](https://standards.nasa.gov/standard/oce/nasa-std-871914)
+10. UNOOSA, *A/74/20 — Report of COPUOS*, 2019. [https://www.unoosa.org/oosa/en/ourwork/copuos/2019/index.html](https://www.unoosa.org/oosa/en/ourwork/copuos/2019/index.html)
+11. UNOOSA, *Outer Space Treaty*, 1967. [https://www.unoosa.org/oosa/en/ourwork/spacelaw/treaties/outerspacetreaty.html](https://www.unoosa.org/oosa/en/ourwork/spacelaw/treaties/outerspacetreaty.html)
+12. UNOOSA, *COPUOS Guidelines for the Long-term Sustainability of Outer Space Activities*, 2019. [https://www.unoosa.org/oosa/en/ourwork/topics/long-term-sustainability-of-outer-space-activities.html](https://www.unoosa.org/oosa/en/ourwork/topics/long-term-sustainability-of-outer-space-activities.html)
+13. ESA, *Space Debris Mitigation Compliance Verification Guidelines* (ESSB-HB-U-002), 2023. [https://technology.esa.int/upload/media/47ypgb5qwq.pdf](https://technology.esa.int/upload/media/47ypgb5qwq.pdf)
+14. FCC, *47 CFR 25.114 — Satellite Applications*. [https://www.ecfr.gov/current/title-47/chapter-I/subchapter-B/part-25](https://www.ecfr.gov/current/title-47/chapter-I/subchapter-B/part-25)
+
+
+# Chapter 4 — Mission Needs, Stakeholders, Trade Studies and Concept of Operations
+
+> **Recommended background.** NASA Systems Engineering Handbook §4.1, §4.4 and §6.8, Appendix C (How to Write a Good Requirement) and Appendix S (ConOps outline); NPR 7123.1D §3.2.1 (Process 1), §3.2.4 (Process 4) and §3.5.8 (Process 17); ECSS-E-ST-10C §5.1; SMAD4 Ch. 1–3 and Ch. 14. This chapter builds on the V-model and the 17 processes of Chapter 1 and on the regulatory and standards context of Chapters 2 and 3.
+
+## Learning objectives
+
+By the end of this chapter, you will be able to:
+
+1. Write a clear problem statement that defines the mission need without prescribing a solution
+2. Identify and categorise mission stakeholders using a structured analysis matrix
+3. Define mission objectives with measurable success criteria and trace them through the MoE/MoP/TPM hierarchy
+4. Structure and execute a trade study using weighted scoring methods (Decision Analysis — Process 17)
+5. Evaluate space versus non-space alternatives objectively and document the decision rationale
+6. Design a Concept of Operations (ConOps) including mission phases, operational modes, and data flow
+7. Capture a mission concept — need, objectives, alternatives and ConOps outline — in a form that a concurrent-design team can work from
+
+---
+
+## 4.1 The problem statement
+
+### 4.1.1 Why start with the problem?
+
+NASA SEH Section 4.1.1 states: *"Clearly define the problem before solving it."*
+
+The single most common failure mode in mission design is not technical — it is **solving the wrong problem**. Teams jump to solutions ("we need a 6U CubeSat at 500 km") before articulating the actual need ("agricultural monitoring in sub-Saharan Africa requires 10 m resolution multispectral imagery every 5 days"). This premature commitment to a solution:
+
+- Closes off potentially superior alternatives (commercial data purchase, aerial surveys, ground sensors)
+- Introduces unnecessary constraints that drive up cost and risk
+- Makes it impossible to evaluate mission success (success against what?)
+- Violates the fundamental SE principle of **WHAT before HOW**
+
+[Source: NASA SEH Section 4.1; NASA SEH Appendix C — "How to Write a Good Requirement"]
+
+### 4.1.2 Structure of a good problem statement
+
+A rigorous problem statement answers four questions:
+
+| Question | Content | Example |
+|----------|---------|---------|
+| **What is the problem?** | The capability gap — what is missing or inadequate | "Lack of timely, affordable multispectral imagery at sufficient resolution and revisit" |
+| **Who is affected?** | Stakeholders and end users who suffer from the gap | "Agricultural monitoring agencies in sub-Saharan Africa" |
+| **What is the impact?** | Consequence of not solving it — quantified if possible | "Delayed or inaccurate crop assessments affecting food aid allocation for 300M people" |
+| **What constraints exist?** | Budget, schedule, political, regulatory, or technical limitations | "Budget: < $10M total mission cost; timeline: 3 years to first data" |
+
+### 4.1.3 Good versus bad problem statements
+
+**Example — GOOD:**
+> "Agricultural monitoring agencies in sub-Saharan Africa lack timely, affordable access to multispectral imagery at sufficient resolution ($\leq 10$ m) and revisit rate ($\leq 5$ days) to support crop yield prediction and food security planning. Current Sentinel-2 data provides 10 m resolution but only 5-day revisit at the equator, and cloud cover reduces usable observations to approximately 60 %. The consequence is delayed or inaccurate crop assessments affecting food aid allocation for 300 million people. Budget constraint: total mission cost $< \$10$M; first data delivery within 3 years."
+
+**Example — BAD:**
+> "We need a 6U CubeSat with a multispectral imager at 500 km SSO."
+
+The bad example prescribes a solution (6U CubeSat, SSO), specifies a design parameter (500 km), and says nothing about the actual problem. It is a **solution statement**, not a problem statement.
+
+### 4.1.4 The WHAT versus HOW principle
+
+At the mission need level, everything should describe **WHAT** is needed, not **HOW** to achieve it:
+
+| WHAT (correct at this stage) | HOW (premature at this stage) |
+|------------------------------|-------------------------------|
+| "10 m resolution imagery" | "Use a 15 cm aperture telescope" |
+| "Daily revisit at equator" | "Deploy a Walker delta constellation of 12 satellites" |
+| "Data within 6 hours of acquisition" | "Use X-band downlink at 150 Mbps to 3 ground stations" |
+| "Total cost under $10M" | "Use COTS components exclusively" |
+| "5-year operational lifetime" | "Select radiation-hardened components" |
+
+The HOW column is not wrong — these are all reasonable design decisions. But they belong in later phases (Phase A/B), not in the problem statement. Fixing the HOW prematurely eliminates design freedom and may lead to suboptimal solutions.
+
+**Think about it.** Take any one line of the HOW column and list the design options it silently closes off. A 15 cm aperture, for instance, rules out a synthetic-aperture radar, a hosted payload on a larger bus, and buying the imagery from a commercial provider — before anyone has asked whether those would serve the farmers better.
+
+---
+
+## 4.2 Stakeholder identification and analysis
+
+### 4.2.1 Who is a stakeholder?
+
+NASA SEH Section 4.1.2 defines stakeholders as "all parties who have a legitimate interest in the system throughout its lifecycle." This is broader than just the end user — it includes everyone who affects or is affected by the mission.
+
+### 4.2.2 Stakeholder categories for space missions
+
+| Category | Examples | Typical needs | Typical constraints |
+|----------|---------|---------------|-------------------|
+| **End users** | Scientists, farmers, shipping companies, emergency responders | Data quality, resolution, latency, format, accessibility | Data rights, training, infrastructure |
+| **Operators** | Mission control centre, ground station operators | Operability, automation level, staffing, training | Budget for operations, personnel availability |
+| **Sponsors / funders** | Space agency (CSA), university, commercial investor, DND | Return on investment, schedule adherence, risk profile | Budget cap, political timelines, reporting requirements |
+| **Regulatory** | ISED, ITU, FCC, export control (GAC) | Compliance with spectrum, debris, RSSSA, export regulations | Licensing timelines, filing requirements |
+| **Launch provider** | SpaceX, Rocket Lab, ISRO, Arianespace | CDS compliance, mass/volume limits, schedule, payment | Interface requirements, launch window, manifesting |
+| **Ground segment** | KSAT, SSC, SatNOGS, own stations | Frequency compatibility, data volume, contact time | Station availability, geographic coverage |
+| **Data consumers** | Archives (e.g., EODMS), APIs, partner agencies | Data format (NetCDF, GeoTIFF), metadata standards, timeliness | Format standards, distribution agreements |
+| **General public** | Taxpayers (for government-funded missions) | Value for money, transparency, societal benefit | Political expectations, public engagement |
+| **Orbital environment** | Other satellite operators, debris community | Debris mitigation, spectrum cleanliness, collision avoidance | IADC guidelines, ISO 24113, FCC 5-year rule |
+
+Company names here are representative examples, not endorsements.
+
+### 4.2.3 Stakeholder analysis matrix
+
+For each stakeholder, capture five attributes:
+
+| Attribute | Description | Scale |
+|-----------|-------------|-------|
+| **Name / role** | Who are they? | Text |
+| **Needs** | What do they require from the mission? | Text (specific, measurable where possible) |
+| **Constraints** | What limitations do they impose? | Text (mandatory vs desirable) |
+| **Priority** | How critical is satisfying this stakeholder? | Primary (must satisfy) / Secondary (should satisfy) / Tertiary (nice to have) |
+| **Influence** | How much power do they have over the mission? | High / Medium / Low |
+
+> **Industry practice.** For the RADARSAT Constellation Mission (RCM), the stakeholder analysis identified over 20 distinct stakeholder groups, including DND (maritime surveillance), Environment Canada (sea ice monitoring), Agriculture and Agri-Food Canada (crop monitoring), Natural Resources Canada (forestry), Public Safety Canada (disaster response), and international partners. Each stakeholder had different priority imaging modes, coverage requirements, and data latency needs. The systems engineering challenge was to design a 3-satellite constellation that satisfied all these needs within a single system architecture — a classic example of multi-stakeholder optimisation.
+
+---
+
+## 4.3 Mission objectives and the MoE/MoP/TPM hierarchy
+
+### 4.3.1 From need to objectives
+
+Objectives translate the problem statement into specific, testable goals. Each objective must have:
+
+| Attribute | Description | Example |
+|-----------|-------------|---------|
+| **Text** | Clear statement of what the mission will achieve | "Provide 10 m GSD multispectral imagery over the target region" |
+| **Priority** | Primary (mission fails without) or secondary (desirable) | Primary |
+| **Measurable criterion** | How you know the objective is met — a number with a unit | "GSD $\leq$ 10 m at nadir, 4+ spectral bands, revisit $\leq$ 5 days" |
+| **Type** | Category of objective | Observation, communication, navigation, science, technology demonstration |
+
+### 4.3.2 Writing good objectives
+
+| Good objective | Why it is good |
+|---------------|---------------|
+| "Provide 10 m GSD multispectral imagery with 4+ bands for the target region (30° S–30° N), with $\leq$ 5-day revisit and $\leq$ 24 h data latency" | Specific (10 m, 4 bands, geographic scope), measurable (all criteria have numbers and units), relevant to agriculture, achievable with CubeSat technology |
+| "Achieve 99.5 % AIS ship detection probability in the North Atlantic within 30 minutes of ship transmission" | Specific (AIS, North Atlantic), measurable (99.5 %, 30 min), relevant to maritime safety |
+
+| Bad objective | Why it is bad |
+|--------------|-------------|
+| "Take pictures from space" | Not specific, not measurable, no criterion for success |
+| "Build a 3U CubeSat" | This is a solution, not an objective — it says nothing about what the mission should accomplish |
+| "Demonstrate new technology" | What technology? What does "demonstrate" mean? How do you know it succeeded? |
+
+### 4.3.3 The MoE / MoP / TPM hierarchy
+
+These three measures form a chain from operational need to tracked design parameter:
+
+[Source: NASA SEH Section 4.1.4, Section 4.2.4, Section 6.7.3]
+
+| Measure | What it measures | Who sets it | Example | When evaluated |
+|---------|-----------------|-------------|---------|---------------|
+| **MoE** (Measure of Effectiveness) | How well the system satisfies the operational need | Users / stakeholders | "% of crop assessments delivered within 5 days of acquisition" | Phase E (operations) |
+| **MoP** (Measure of Performance) | Technical performance of the system | Systems engineer | "GSD $\leq$ 10 m at nadir" | Phase C/D (verification) |
+| **TPM** (Technical Performance Measure) | Design parameter tracked over time | Design team | "Current best estimate of imager mass vs allocation (1.5 kg target)" | All phases (continuous) |
+
+The hierarchy flows downward, as Figure 4.1 shows for the agricultural-monitoring example: the stakeholder need is measured by an MoE, stated as a mission objective, measured by an MoP, written as a technical requirement and tracked through the design as a TPM.
+
+![Vertical chain from stakeholder need through MoE, objective, MoP and requirement to TPM, with an agricultural-monitoring example at each level.](../assets/figures/fig_moe_mop_tpm.png)
+
+**Figure 4.1** — From stakeholder need to tracked design parameter. Each level of the chain is shown with its agricultural-monitoring example, the party that owns the measure and the lifecycle phase in which it is evaluated: MoEs belong to the users and are evaluated in operations, MoPs to the systems engineer and are verified in Phase C/D, and TPMs to the design team and are tracked in every phase.
+
+> **Key equation.** Measures of Effectiveness often involve probability and time, connecting to system-level performance:
+>
+> $$MoE = P_{\text{detection}} \times P_{\text{data delivery}} \times f(T_{\text{latency}})$$
+>
+> For an Earth observation mission:
+>
+> $$MoE_{\text{coverage}} = \frac{A_{\text{imaged per revisit}}}{A_{\text{total target}}} \times (1 - P_{\text{cloud}})$$
+>
+> where $A_{\text{imaged per revisit}}$ depends on swath width and orbit ground track spacing, $A_{\text{total target}}$ is the target area, and $P_{\text{cloud}}$ is the cloud cover probability.
+
+---
+
+## 4.4 From need to design: the flow
+
+Figure 4.2 shows how the mission need flows through to design decisions without the need itself prescribing the design.
+
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 520" style="max-width:700px; font-family: sans-serif;">
+  <text x="350" y="25" text-anchor="middle" font-size="14" font-weight="bold" fill="#1a1a2e">From mission need to design decision</text>
+
+  <!-- Level 1: Problem -->
+  <rect x="50" y="45" width="600" height="45" rx="6" fill="#e8eaf6" stroke="#3949ab" stroke-width="2"/>
+  <text x="70" y="63" font-size="10" font-weight="bold" fill="#1a237e">PROBLEM</text>
+  <text x="70" y="78" font-size="9" fill="#333">"Need 10 m imagery, 5-day revisit, &lt; $10M" — describes WHAT is needed</text>
+
+  <!-- Arrow -->
+  <line x1="350" y1="90" x2="350" y2="110" stroke="#555" stroke-width="2" marker-end="url(#arrowDown)"/>
+  <text x="370" y="105" font-size="8" fill="#888" font-style="italic">objectives derived</text>
+
+  <!-- Level 2: Objective -->
+  <rect x="50" y="115" width="600" height="45" rx="6" fill="#c5cae9" stroke="#3949ab" stroke-width="2"/>
+  <text x="70" y="133" font-size="10" font-weight="bold" fill="#1a237e">OBJECTIVE</text>
+  <text x="70" y="148" font-size="9" fill="#333">"Provide 10 m GSD multispectral imagery with ≤ 5-day revisit" — measurable goal</text>
+
+  <!-- Arrow -->
+  <line x1="350" y1="160" x2="350" y2="180" stroke="#555" stroke-width="2" marker-end="url(#arrowDown)"/>
+  <text x="370" y="175" font-size="8" fill="#888" font-style="italic">mission trade (Process 17)</text>
+
+  <!-- Level 3: Trade Decision -->
+  <rect x="50" y="185" width="600" height="45" rx="6" fill="#fff9c4" stroke="#f9a825" stroke-width="2"/>
+  <text x="70" y="203" font-size="10" font-weight="bold" fill="#e65100">TRADE DECISION</text>
+  <text x="70" y="218" font-size="9" fill="#333">"Dedicated CubeSat — existing services don't meet revisit and resolution together" — justified choice</text>
+
+  <!-- Arrow -->
+  <line x1="350" y1="230" x2="350" y2="250" stroke="#555" stroke-width="2" marker-end="url(#arrowDown)"/>
+  <text x="370" y="245" font-size="8" fill="#888" font-style="italic">requirements derived</text>
+
+  <!-- Level 4: Requirement -->
+  <rect x="50" y="255" width="600" height="45" rx="6" fill="#e8f5e9" stroke="#2e7d32" stroke-width="2"/>
+  <text x="70" y="273" font-size="10" font-weight="bold" fill="#1b5e20">REQUIREMENT</text>
+  <text x="70" y="288" font-size="9" fill="#333">"The system shall achieve GSD ≤ 10 m at nadir" — verifiable "shall" statement</text>
+
+  <!-- Arrow -->
+  <line x1="350" y1="300" x2="350" y2="320" stroke="#555" stroke-width="2" marker-end="url(#arrowDown)"/>
+  <text x="370" y="315" font-size="8" fill="#888" font-style="italic">design analysis</text>
+
+  <!-- Level 5: Design Choice -->
+  <rect x="50" y="325" width="600" height="45" rx="6" fill="#e3f2fd" stroke="#1565c0" stroke-width="2"/>
+  <text x="70" y="343" font-size="10" font-weight="bold" fill="#0d47a1">DESIGN CHOICE</text>
+  <text x="70" y="358" font-size="9" fill="#333">"SSO 500 km gives 10 m GSD with 15 cm aperture" — now we specify HOW</text>
+
+  <!-- Arrow -->
+  <line x1="350" y1="370" x2="350" y2="390" stroke="#555" stroke-width="2" marker-end="url(#arrowDown)"/>
+  <text x="370" y="385" font-size="8" fill="#888" font-style="italic">equipment selection</text>
+
+  <!-- Level 6: Equipment -->
+  <rect x="50" y="395" width="600" height="45" rx="6" fill="#fce4ec" stroke="#c62828" stroke-width="2"/>
+  <text x="70" y="413" font-size="10" font-weight="bold" fill="#b71c1c">EQUIPMENT</text>
+  <text x="70" y="428" font-size="9" fill="#333">"Selected: XYZ telescope, 15 cm aperture, 1.5 kg, 8 W" — component-level HOW</text>
+
+  <!-- Side annotation -->
+  <rect x="50" y="460" width="220" height="40" rx="4" fill="#e0e0e0" stroke="#9e9e9e" stroke-width="1"/>
+  <text x="160" y="477" text-anchor="middle" font-size="9" fill="#333" font-weight="bold">At each level the team decides.</text>
+  <text x="160" y="490" text-anchor="middle" font-size="8" fill="#666">The design tool supports; it does not dictate.</text>
+
+  <defs>
+    <marker id="arrowDown" markerWidth="8" markerHeight="6" refX="4" refY="6" orient="auto">
+      <path d="M0,0 L4,6 L8,0" fill="#555"/>
+    </marker>
+  </defs>
+</svg>
+
+**Figure 4.2** — From mission need to design decision. The problem and objective describe WHAT is needed; the trade decision justifies the chosen approach; only from the requirement level downward does the team specify HOW.
+
+At each level in this hierarchy, the design team makes decisions informed by analysis and trade studies. A concurrent-design tool supports this process with parametric calculations and automated constraint checking, but the team retains decision authority.
+
+---
+
+## 4.5 Decision analysis framework
+
+### 4.5.1 Process 17: Decision Analysis
+
+NASA SEH Process 17 (Decision Analysis) provides the framework for structured alternative evaluation. Every major design decision should follow this process to ensure decisions are auditable, traceable, and defensible.
+
+[Source: NASA SEH Section 6.8, Process 17: Decision Analysis]
+
+### 4.5.2 The five elements of a rigorous trade study
+
+| Element | Description | Pitfall to avoid |
+|---------|-------------|-----------------|
+| **1. Decision statement** | What are we deciding? Framed as a question. | Too broad ("What should we build?") or too narrow ("Which reaction wheel?") for the current phase |
+| **2. Alternatives** | What are the options? Minimum 3, including "do nothing" | Straw-man alternatives designed to lose; failure to include obvious options |
+| **3. Criteria** | What matters? Performance, cost, schedule, risk, compliance | Missing a critical criterion; criteria that overlap (double-counting) |
+| **4. Weightings** | How important is each criterion? Normalised to sum to 1.0 | All criteria weighted equally (means nothing matters more than anything else); weights set after seeing scores |
+| **5. Scoring** | How well does each alternative perform? | Inconsistent scoring scale; anchoring bias; group conformity |
+
+### 4.5.3 Weighting methods
+
+| Method | Procedure | Best when | Limitations |
+|--------|-----------|-----------|------------|
+| **Pairwise comparison** | Compare criteria two at a time; count wins. Weight = wins / total comparisons | Small number of criteria ($< 8$) | Circular preferences possible; does not capture magnitude |
+| **Swing weighting** | For each criterion, assess the value of moving from worst to best case. Normalise. | Criteria have different units and scales | Requires clear understanding of worst/best cases |
+| **Direct assignment** | Team discusses and agrees on weights | Quick preliminary assessment | Subjective; dominated by vocal team members |
+| **AHP (Analytic Hierarchy Process)** | Pairwise comparison on a 1–9 ratio scale; compute eigenvector | Complex decisions with many stakeholders | Mathematically complex; consistency check needed |
+
+> **Key equation (pairwise comparison).** For $n$ criteria, there are $\frac{n(n-1)}{2}$ pairwise comparisons. The raw weight of criterion $i$ is
+>
+> $$w_i^{\text{raw}} = \sum_{j \neq i} p_{ij}$$
+>
+> where $p_{ij} = 1$ if criterion $i$ is preferred over $j$, 0.5 for a tie, and 0 if $j$ is preferred. The normalised weight is
+>
+> $$w_i = \frac{w_i^{\text{raw}}}{\sum_{k=1}^{n} w_k^{\text{raw}}}$$
+
+### 4.5.4 Scoring methods
+
+| Type | Description | Example | When to use |
+|------|-------------|---------|-------------|
+| **Quantitative** | Numeric value normalised to 0–1 | Mass: 5 kg scores 0.8, 10 kg scores 0.4 | When hard numbers exist |
+| **Qualitative** | Verbal rating mapped to number | "Excellent" = 1.0, "Good" = 0.75, "Fair" = 0.5, "Poor" = 0.25 | When only expert judgement is available |
+| **Threshold (go/no-go)** | Pass/fail gate applied before scoring | "TRL $\geq 6$ required" — below threshold is eliminated | Non-negotiable requirements |
+
+### 4.5.5 Weighted score calculation
+
+For each alternative $a$ across $n$ criteria:
+
+> **Key equation.**
+>
+> $$S(a) = \sum_{c=1}^{n} w_c \cdot s(a,c)$$
+>
+> where $w_c$ is the normalised weight of criterion $c$ and $s(a,c)$ is the normalised score (0–1) of alternative $a$ on criterion $c$.
+>
+> For "higher is better" criteria:
+>
+> $$s(a,c) = \frac{v(a,c) - v_{\min}(c)}{v_{\max}(c) - v_{\min}(c)}$$
+>
+> For "lower is better" criteria:
+>
+> $$s(a,c) = 1 - \frac{v(a,c) - v_{\min}(c)}{v_{\max}(c) - v_{\min}(c)}$$
+
+### 4.5.6 Sensitivity analysis
+
+A trade study result is only meaningful if it is **robust** — i.e., the ranking does not change with small perturbations in weights or scores. Sensitivity analysis tests this:
+
+| Method | Procedure | What it reveals |
+|--------|-----------|----------------|
+| **Weight perturbation** | Vary each weight by $\pm 20\%$, re-normalise, re-score | Which criteria are "swing" criteria that could flip the outcome |
+| **Score perturbation** | Vary each score by $\pm 1$ level, re-calculate | Which scores are the most uncertain and impactful |
+| **Threshold analysis** | For each criterion, find the weight at which the 2nd-place alternative overtakes the 1st | How much the weights would need to change to reverse the decision |
+
+> **Industry practice.** For the Iridium NEXT constellation (66 operational + 6 on-orbit spares), the initial trade study for the constellation architecture compared Walker Delta, Walker Star, and hybrid configurations across 12 criteria including global coverage, revisit time, inter-satellite link geometry, launch cost, and orbital debris risk. Sensitivity analysis revealed that the ranking was robust for all weight perturbations up to $\pm 30\%$, giving high confidence in the selected Walker Star configuration at 780 km altitude.
+
+---
+
+## 4.6 Space versus non-space alternatives
+
+### 4.6.1 The most important trade study
+
+Before committing to building a satellite, teams must honestly evaluate whether existing solutions meet the need. This is the most important trade study in the mission lifecycle because it determines whether the entire project should proceed.
+
+### 4.6.2 Alternative categories
+
+| Category | Examples | Strengths | Weaknesses |
+|----------|---------|-----------|-----------|
+| **Existing free data** | Copernicus Sentinel-2, Landsat 8/9 | Zero acquisition cost, proven quality, long archive | Fixed resolution/revisit, no tasking control |
+| **Commercial data purchase** | Planet (SuperDove), Maxar (WorldView), ICEYE (SAR) | High resolution, fast tasking, no development risk | Ongoing cost, data rights limitations, vendor dependency |
+| **Aerial (drones/aircraft)** | Survey drones, P-3 Orion, Twin Otter | Very high resolution ($< 1$ m), flexible scheduling | Limited area coverage, weather dependent, regulatory constraints |
+| **Ground sensors** | IoT networks, weather stations, tide gauges | Continuous monitoring, low per-unit cost | Point measurements only, no spatial coverage |
+| **Dedicated satellite** | New CubeSat, SmallSat, or microsatellite | Full control, custom instrument, IP ownership | High cost ($2–50M), development risk, 2–5 year schedule |
+| **Constellation** | Multiple dedicated satellites | Global coverage, short revisit ($< 1$ day) | Much higher cost, operational complexity |
+| **Hosted payload** | Payload on another operator's bus | Lower cost, shared bus risk | Compromised orbit, limited control, schedule dependency |
+
+### 4.6.3 Decision criteria: when is space justified?
+
+**Space is likely NOT the right answer when:**
+
+- Existing free data (Sentinel-2, Landsat) meets resolution and revisit needs
+- Coverage requirement is local (drones or aircraft are cheaper and higher resolution)
+- Data rate is very low (ground sensors with cellular/satellite IoT backhaul suffice)
+- Budget does not support minimum viable satellite cost (~$2M for a basic 3U CubeSat, indicative 2026)
+- Technology readiness is too low for the available schedule
+
+**Space is likely justified when:**
+
+- Global or wide-area coverage is needed simultaneously
+- Persistent monitoring is required (24/7 or very frequent revisit $< 5$ days)
+- User needs data ownership and control over acquisition scheduling
+- No existing service provides the required measurement type (e.g., specific wavelength, polarisation)
+- Regulatory or sovereignty requirements demand national control over the sensor
+
+### 4.6.4 Constellation sizing
+
+For missions requiring short revisit, the number of satellites drives cost:
+
+> **Key equation.** For a Walker Delta constellation at altitude $h$ with half-swath angle $\eta$, the number of orbital planes $P$ and satellites per plane $S$ needed for revisit time $T_{\text{rev}}$ is approximately
+>
+> $$P \times S \geq \frac{2\pi R_E}{v_{\text{ground}} \times T_{\text{rev}} \times \tan(\eta)}$$
+>
+> where $v_{\text{ground}} \approx 7.1$ km/s (ground track velocity at 500 km) and $\eta$ is related to the instrument swath width $W$ by $\eta = W / (2 R_E)$ for small angles.
+>
+> More practically, constellation cost scales sub-linearly due to learning curves:
+>
+> $$C_{\text{total}} = C_1 \times \sum_{i=1}^{N} i^{\log_2(L)}$$
+>
+> where $C_1$ is the first unit cost, $N$ is the number of satellites, and $L$ is the learning curve factor (typically 0.90–0.95 for small batches, 0.85 for large batches like Planet's SuperDove). Chapter 16 develops the learning curve further in the context of cost estimation.
+
+---
+
+## 4.7 Documenting the trade decision
+
+Every trade study must produce an **auditable decision record**. NASA SEH Process 17 requires documentation of:
+
+| Element | Content | Purpose |
+|---------|---------|---------|
+| **Decision statement** | What was decided | Clarity |
+| **Alternatives considered** | All options evaluated, including rejected ones | Completeness |
+| **Criteria and weights** | What mattered and how much | Transparency |
+| **Scoring rationale** | Why each alternative received its score | Auditability |
+| **Result and recommendation** | The selected alternative and its total score | Decision record |
+| **Sensitivity analysis** | Robustness of the result | Confidence |
+| **Risks of selected option** | What could go wrong with the chosen approach | Risk awareness |
+| **Responsible person and date** | Who decided and when | Accountability |
+
+> **Industry practice.** The Canadian Hydrographic Service evaluated commercial SAR data (ICEYE, Capella) versus a dedicated satellite for Arctic maritime surveillance. The trade study documented 8 alternatives across 11 criteria, with weights set by a stakeholder panel including DND, Transport Canada, and CCG. The decision to use RCM data supplemented by commercial SAR tasking — rather than building a new satellite — saved an estimated $100M while meeting 90 % of the maritime domain awareness requirements.
+
+---
+
+## 4.8 Concept of Operations
+
+A **Concept of Operations (ConOps)** describes how the mission will be operated to deliver what the objectives demand: which elements exist, what phases the mission passes through, which modes the spacecraft occupies and how data flows from instrument to user. It is the bridge between the objectives of §4.3 and the requirements of Chapter 5, and it is the first document a concurrent-design team needs in order to size anything. NASA SEH Appendix S gives a complete outline; this section covers the four elements that drive early design.
+
+### 4.8.1 Three segments of a space mission
+
+Every space mission comprises three segments that must be designed together: the **space segment** (platform, payload and the communications that connect them to the ground), the **ground segment** (ground operations — commanding, telemetry, orbit determination — and the payload data centre that receives, processes and archives the data), and the **user segment** (the data products, services, portals and training through which the end users obtain value). The ConOps names each segment's elements and the interfaces between them — TM/TC on S-band, payload data on X- or Ka-band, orbit metadata and processed products over terrestrial networks. The detailed decomposition of the segments, their interfaces and the block diagram of the space segment are the subject of Chapter 8 §8.1; the ground segment itself is designed in Chapter 17. At the ConOps stage it is enough to draw an architecture diagram with the segments, the external systems they depend on (GNSS, relay satellites, in-situ sensors) and every connection labelled with its data type and frequency band.
+
+### 4.8.2 Mission phases
+
+The operational phases of the mission — distinct from the development phases of Chapter 1 §1.4 — are shown in Figure 4.3 and tabulated below. Each has its own activities, duration and dominant risks, and the ConOps must say what the spacecraft and ground segment do in each.
+
+![Mission operations timeline from LEOP through commissioning, nominal and extended operations to disposal.](../assets/figures/fig_conops_timeline.png)
+
+**Figure 4.3** — Mission operations timeline for a typical CubeSat mission: LEOP, commissioning, nominal and extended operations, and disposal, with indicative durations.
+
+| Phase | Duration (typical CubeSat) | Activities | Key risks |
+|-------|--------------------------|------------|-----------|
+| **LEOP** | 1–3 days | Deployment, antenna deploy, first contact, initial health check | Deployment failure, tumbling, no contact |
+| **Commissioning** | 2–4 weeks | Subsystem checkout, calibration, first light, orbit determination | Anomalies, calibration issues |
+| **Nominal ops** | Months to years | Routine acquisition, downlink, orbit maintenance | Component degradation, anomalies |
+| **Extended ops** | Beyond design life | Continued operations with degraded performance | Solar array degradation, propellant depletion |
+| **Disposal** | Days to months | Passivation, deorbit manoeuvre or natural decay | Failure of deorbit system |
+
+### 4.8.3 Operational modes
+
+An **operational mode** is a defined configuration of the spacecraft: which subsystems are active, how it is pointed, how much power it draws and what data flows. Modes exist because a CubeSat cannot do everything at once — generation is limited to roughly 7–25 W for a 3U with deployable panels — and because the operators and the on-board FDIR logic need a small number of well-understood states to command and to fall back to. A safe mode with the minimum load and a Sun-pointing attitude is the anchor; the science, downlink and manoeuvre modes add load on top of it. Table 4.1 illustrates the concept with three of the modes of the 3U EO CubeSat running example; the complete mode table for the spacecraft, the transitions between modes and the FDIR rules that trigger them are given in Chapter 18.
+
+**Table 4.1** — Illustrative operational modes for the 3U EO CubeSat running example (full table, with the nominal/standby mode at 4 W, in Chapter 18).
+
+| Mode | Subsystems active | Pointing | Power | Data flow |
+|------|-------------------|----------|-------|-----------|
+| **Safe** | EPS, OBC, TTC (beacon), AOCS (coarse) | Sun-pointing | 2 W | Beacon only |
+| **Imaging** | + Payload, AOCS (fine pointing) | Nadir or target | 8 W | Instrument → OBC storage |
+| **Downlink** | + TTC (full TX power) | Ground station track | 10 W | OBC → TX → ground station |
+
+### 4.8.4 Duty cycling
+
+Not all modes can run simultaneously, and the orbit timeline determines what can happen when. For a typical 95-minute orbit at 500 km SSO:
+
+- 60 min sunlight, 35 min eclipse
+- ~10 min imaging per orbit (~10 % duty cycle)
+- ~8 min downlink per pass (1–2 passes per day over a single ground station)
+- ~42 min in the nominal/standby mode
+- 35 min eclipse (battery-powered)
+
+The orbit-average power demand is the duty-cycle-weighted sum of the mode powers, and it — together with the eclipse duration — is what sizes the solar array and the battery. The ConOps therefore has to state the duty cycle of every mode. The sizing equations themselves, and the worked UniSat-1 power budget, are given in Chapter 9 §9.2–§9.3.
+
+[Source: Wertz et al., SMAD4, Chapter 11; ECSS-E-ST-20C power budget methodology]
+
+### 4.8.5 Data flow
+
+The ConOps must trace the data from instrument to user. Figure 4.4 shows the end-to-end pipeline and the parameter that sizes each stage:
+
+![Horizontal data pipeline from instrument through on-board storage, downlink, ground reception, L0–L2 processing and archive to user delivery.](../assets/figures/fig_data_pipeline.png)
+
+**Figure 4.4** — The end-to-end data pipeline, grouped by segment. The space segment generates, stores and downlinks the data; the ground segment receives, processes (L0 → L1 → L2) and archives it; the user segment receives the products. The key sizing parameter of each stage is written beneath it, and the pipeline is sustainable only if the daily downlink capacity equals or exceeds the daily data generated.
+
+| Stage | Key parameter | Sized by |
+|-------|--------------|---------|
+| Data generation | GB/day | Payload data rate $\times$ imaging duty cycle |
+| On-board storage | GB | Must hold $\geq 1$ day of data ($2\times$ for margin) |
+| Downlink per pass | GB/pass | Link data rate $\times$ contact time per pass |
+| Processing | hours | Algorithm complexity, compute infrastructure |
+| User delivery | hours | Archive API, network bandwidth |
+
+For the system to be sustainable, the daily downlink capacity must equal or exceed the daily data generation; if it does not, data accumulates on board and storage eventually fills. The levers are the link data rate, the number of passes, the contact time per pass and the data generated (duty cycle, on-board compression, selective downlink). The data budget that quantifies this balance is developed in Chapter 11 §11.9, and on-board storage sizing in Chapter 12.
+
+---
+
+## 4.9 Returning to UniSat-1: why 1U rather than 2U or 3U?
+
+The UniSat-1 team must justify the choice of a 1U form factor for their MEMS magnetometer technology demonstration. This is a classic Process 17 (Decision Analysis) exercise.
+
+**Decision statement:** "What CubeSat form factor best supports a MEMS magnetometer technology demonstration within the university's budget and schedule constraints?"
+
+**Alternatives** (costs indicative, 2026):
+
+| Alternative | Mass limit | Internal volume | Typical cost | Development time |
+|-------------|-----------|-----------------|-------------|----------|
+| 1U | 1.33 kg | ~1000 cm³ | 50–200 kEUR | 6–12 months |
+| 2U | 2.66 kg | ~2000 cm³ | 100–400 kEUR | 12–18 months |
+| 3U | 4.0 kg | ~3000 cm³ | 200–800 kEUR | 18–24 months |
+
+**Criteria and scoring:**
+
+| Criterion | Weight | 1U | 2U | 3U | Rationale |
+|-----------|--------|-----|-----|-----|-----------|
+| Cost | 0.35 | 1.0 | 0.5 | 0.2 | University budget is 150 kEUR total |
+| Schedule | 0.25 | 1.0 | 0.6 | 0.3 | Must launch within 12 months |
+| Payload fits | 0.20 | 0.8 | 1.0 | 1.0 | MEMS sensor is 50 g, 0.2 W — fits easily in 1U |
+| Design simplicity | 0.10 | 1.0 | 0.7 | 0.5 | Smaller team, fewer subsystems |
+| Data return | 0.10 | 0.5 | 0.7 | 1.0 | More volume allows better comms, but 9600 bps is sufficient for < 1 kbps payload |
+| **Weighted total** | | **0.91** | **0.67** | **0.50** | |
+
+**Result:** 1U wins decisively. The MEMS magnetometer payload (50 g, 0.2 W, < 1 kbps) has no need for the extra volume, mass, or power that 2U/3U would provide. The additional cost and schedule of a larger bus are unjustified.
+
+**Sensitivity check:** Suppose the sponsor cares much less about cost and schedule than the team assumed, and the weights are changed to cost 0.15, schedule 0.15 and data return 0.40 (payload fit and simplicity unchanged). The totals become 0.76 (1U), 0.72 (2U) and 0.73 (3U): 1U still ranks first, but the margin shrinks from 0.24 to 0.03. Data return is therefore the *swing criterion* — the decision is robust to the weights the team actually holds, but a stakeholder who valued data volume above all else could reasonably reach a different answer, and the decision record should say so.
+
+**Key lesson:** Do not over-design the bus for a simple payload. The 1U form factor imposes healthy constraints that force the team to focus on the mission objective rather than adding unnecessary capability.
+
+---
+
+## Summary
+
+| Topic | Key takeaway |
+|-------|-------------|
+| Problem statement | Defines WHAT is needed, not HOW to solve it; answers what, who, impact, constraints |
+| Stakeholder analysis | Identify all parties with legitimate interest; capture needs, constraints, priority, influence |
+| Objectives | Must be specific, measurable, and traceable to stakeholder needs via the MoE/MoP/TPM chain |
+| Trade study structure | 5 elements: decision, alternatives, criteria, weights, scores; must include sensitivity analysis |
+| Space vs non-space | Existing services may already meet the need — evaluate honestly before committing to build |
+| Decision documentation | Every trade decision must have auditable rationale per Process 17 |
+| ConOps | Three segments (space, ground, user); phases from LEOP to disposal; operational modes and their duty cycles drive the power budget (Chapter 9) |
+| Data pipeline | Daily downlink capacity must equal or exceed daily data generation (Chapter 11) |
+
+---
+
+## Problems
+
+1. **Rewriting a solution statement.** A sponsor's brief reads: "We want a 6U CubeSat with a hyperspectral camera at 550 km sun-synchronous orbit to look at algal blooms in the Great Lakes." Rewrite this as a problem statement that answers the four questions of §4.1.2, inventing plausible figures for impact and constraints. Then list three alternatives to a dedicated satellite that your problem statement leaves open and the brief had closed off.
+
+2. **Stakeholder analysis.** For a 3U Earth-observation CubeSat providing weekly NDVI imagery of the Canadian prairies to a provincial agriculture ministry, identify at least six stakeholders from at least five of the categories in §4.2.2 and complete the five-attribute matrix of §4.2.3 for each. Identify one pair of stakeholders whose needs conflict and propose how the conflict might be resolved at the objective level.
+
+3. **MoE/MoP/TPM chain.** Trace the full hierarchy of §4.3.3 — stakeholder need, MoE, mission objective, MoP, technical requirement, TPM — for (a) the crop-monitoring objective in §4.3.2 and (b) the AIS ship-detection objective. For each TPM, state the current-best-estimate quantity, its allocation and who in Table 1.4 owns it.
+
+4. **Pairwise weighting (warm-up).** Practise the pairwise comparison method of §4.5.3 by weighting four criteria for a lunch-restaurant choice — taste, cost, healthiness, speed — using your own preferences, then score three options on a 0–1 scale and compute the weighted total. Afterwards, repeat the exercise for the five criteria of §4.9 and compare the weights you obtain with those the UniSat-1 team assigned by direct assignment.
+
+5. **Weighted scoring and sensitivity.** Three imaging payloads are being compared for the 3U EO CubeSat: A (mass 1.2 kg, power 6 W, GSD 8 m, TRL 8, cost 120 kEUR), B (0.9 kg, 4 W, 12 m, TRL 9, 60 kEUR) and C (1.5 kg, 9 W, 5 m, TRL 6, 200 kEUR). Using the criteria mass, power, GSD, TRL and cost with weights 0.15, 0.15, 0.30, 0.20, 0.20, normalise each criterion with the equations of §4.5.5 (identify which are "higher is better"), compute the weighted score of each alternative, and rank them. Then perform a weight-perturbation sensitivity analysis of ±20 % on each weight in turn and report whether the ranking ever changes. Finally, apply a threshold criterion "TRL ≥ 7" and state how the result changes.
+
+6. **Space or not?** A conservation authority wants to monitor the water level of 40 reservoirs across Ontario once per day with 10 cm accuracy, with a 5-year budget of $3M. Using §4.6, evaluate at least four alternative categories against this need, state which you would recommend and why, and write the decision record of §4.7 for your recommendation (including at least two risks of the selected option).
+
+7. **Constellation sizing.** Using §4.6.4, estimate the number of satellites needed for a 1-day revisit at the equator with a 50 km swath at 500 km altitude. Then estimate the total cost of that constellation if the first unit costs \$4M and the learning-curve factor is 0.90, and compare with a factor of 0.85. How much of the total is saved by the learning curve in each case compared with $N \times C_1$?
+
+8. **ConOps for UniSat-1.** Write a one-page ConOps outline for UniSat-1 (Chapter 1 §1.7): the three segments and their connections, the five operational phases with durations appropriate to a 6-month 1U mission, and a mode table in the format of Table 4.1 with at least three modes, estimating the power of each mode from the subsystem values given in Chapter 1 §1.7. Which modes exist for UniSat-1 that the 3U EO CubeSat also has, and which 3U modes does UniSat-1 not need?
+
+9. **Orbit-average power from duty cycles.** Using the 95-minute orbit timeline of §4.8.4 and the mode powers of Table 4.1 (take the nominal/standby mode as 4 W and the eclipse load as 3.5 W, as in Chapter 8 Table 8.4 and Chapter 18 Table 18.1), compute the orbit-average power demand of the 3U EO CubeSat as the duty-cycle-weighted sum of the mode powers. If the imaging duty cycle is doubled to 20 %, by how much does the orbit-average demand rise? What two design parameters would the Power Engineer in Table 1.4 then have to revisit (see Chapter 9)?
+
+10. **Data balance.** The 3U EO CubeSat imager generates 150 Mbps while imaging for 10 minutes per orbit over 15 orbits per day, and the S-band downlink delivers 2 Mbps over two 8-minute passes per day with 80 % protocol efficiency. Compute the daily data generated and the daily downlink capacity, state whether the system balances, and — if not — rank the four levers listed in §4.8.5 by how much each would have to change to close the gap. Which lever would you pull first, and what other budgets (Chapter 8) would it affect?
+
+---
+
+## References
+
+1. NASA, *Systems Engineering Handbook* (SP-2016-6105 Rev 2), 2016, Sections 4.1, 4.4, 6.8, Appendix C and Appendix S. [https://www.nasa.gov/reference/systems-engineering-handbook/](https://www.nasa.gov/reference/systems-engineering-handbook/)
+2. NASA, *NPR 7123.1D — Systems Engineering Processes and Requirements*, 2020, Sections 3.2.1, 3.2.4 and 3.5.8. [https://nodis3.gsfc.nasa.gov/displayDir.cfm?Internal_ID=N_PR_7123_001D_](https://nodis3.gsfc.nasa.gov/displayDir.cfm?Internal_ID=N_PR_7123_001D_)
+3. ECSS, *ECSS-E-ST-10C — System Engineering General Requirements*, 2009, Section 5.1. [https://ecss.nl/standard/ecss-e-st-10c-system-engineering-general-requirements/](https://ecss.nl/standard/ecss-e-st-10c-system-engineering-general-requirements/)
+4. ECSS, *ECSS-M-ST-10C Rev.1 — Space Project Management*, 2009, Section 5.3. [https://ecss.nl/standard/ecss-m-st-10c-rev-1-space-project-management-6-march-2009/](https://ecss.nl/standard/ecss-m-st-10c-rev-1-space-project-management-6-march-2009/)
+5. Wertz, J.R. et al., *Space Mission Engineering: The New SMAD* (SMAD4), Microcosm Press, 2011, Chapters 1–3 and 14. [https://www.microcosminc.com/](https://www.microcosminc.com/)
+6. Saaty, T.L., *The Analytic Hierarchy Process*, McGraw-Hill, 1980. [https://doi.org/10.1016/0377-2217(90)90057-I](https://doi.org/10.1016/0377-2217(90)90057-I)
+
+
+# Chapter 5 — Requirements Engineering
+
+> **Recommended background.** NASA Systems Engineering Handbook Appendix C — How to Write a Good Requirement; ECSS-E-ST-10C §5.5; ECSS-E-ST-10-06C §5. This chapter assumes that a mission need, stakeholder analysis and concept of operations exist (Chapter 4) and builds on the V-model of Chapter 1.
+
+## Learning objectives
+
+By the end of this chapter, you will be able to:
+
+1. Explain how requirements flow down the left side of the System-V while verification flows up the right side
+2. Write requirements that satisfy the SMART criteria and express WHAT, not HOW
+3. Classify requirements by type: functional, performance, interface, constraint, and environmental
+4. Construct a three-level requirement hierarchy (mission, system, subsystem) with bidirectional traceability
+5. Assign verification methods (ATIR(D)) to requirements and justify each choice
+6. Generate, validate and manage a requirement set for a small spacecraft, whether in a concurrent-design tool or a spreadsheet
+
+---
+
+## 5.1 Requirements on the System-V
+
+Recall the System-V of Chapter 1 (Figure 1.1). The left branch decomposes stakeholder needs into mission, system and subsystem requirements at increasing levels of detail; the right branch integrates and verifies at the corresponding levels, so that every horizontal row of the V is a matched pair — a requirement and the test or analysis campaign that confirms it. The phase mapping (Table 1.1) and the SuperDove example (§1.2.6) showed how a commercial constellation works this correspondence in practice. This chapter works the *top of the left branch*: how to write the requirements that the rest of the design will be decomposed from, how to organise them into a traceable hierarchy, and how to assign to each the verification method that will later close its row of the V.
+
+*[Source: NASA SEH Fig. 3-1; ECSS-E-ST-10C Rev.1 Fig. 5-1; INCOSE SEH 5th ed. Fig. 2.7]*
+
+---
+
+## 5.2 What is a requirement?
+
+*[Source: NASA SEH Sec. 4.2; ECSS-E-ST-10-06C Sec. 5.2]*
+
+A requirement is a **formal, verifiable statement of what the system must do or how well it must perform**. It is expressed as a "shall" statement with a measurable threshold.
+
+### 5.2.1 The shall convention
+
+Requirements use contractually precise language:
+
+| Keyword | Meaning | Contractual force |
+|---------|---------|-------------------|
+| **"Shall"** | Mandatory requirement — must be met | Binding |
+| **"Should"** | Goal or guideline — desired but not mandatory | Advisory |
+| **"Will"** | Statement of fact or intent — not a requirement | Informational |
+
+**Example:**
+> "The system **shall** achieve a ground sample distance of 10 m or better at nadir from the operational orbit."
+
+This is testable: GSD can be computed from optical geometry and verified from calibration imagery.
+
+### 5.2.2 Requirement types
+
+| Type | Definition | Example |
+|------|-----------|---------|
+| **Functional** | What the system must *do* (a capability) | "The system shall acquire multispectral imagery of the target area" |
+| **Performance** | How *well* it must do it (quantified) | "The system shall achieve GSD ≤ 10 m at nadir" |
+| **Interface** | Boundary agreements between elements | "The EPS shall provide a 5.0 V ± 0.25 V regulated bus to all subsystems" |
+| **Constraint** | Non-negotiable external limits | "The system total mass shall not exceed 6.0 kg" |
+| **Environmental** | Survival conditions | "The system shall survive launch loads of 9 g axial and 4 g lateral" |
+
+*[Source: NASA SEH Appendix C, Table C-1; ECSS-E-ST-10-06C Sec. 5.2.2]*
+
+### 5.2.3 Requirements versus design choices
+
+| Requirement (WHAT) | Design choice (HOW) |
+|--------------------|---------------------|
+| "The system shall achieve GSD ≤ 10 m" | "Use a 150 mm aperture telescope" |
+| "The system shall survive launch loads" | "Use aluminium 7075-T6 structure" |
+| "The system shall provide ≥ 3 dB link margin" | "Use S-band with a 2 W transmitter" |
+| "The system shall deorbit within 5 years of EOL" | "Include a cold-gas propulsion system" |
+| "The system shall operate for ≥ 3 years" | "Use rad-tolerant components" |
+
+**Key principle:** Requirements constrain the solution space without specifying the solution. This preserves design freedom for the trade studies of Chapter 4 and the architecture decisions of Chapter 8.
+
+---
+
+## 5.3 The SMART framework
+
+While NASA Appendix C provides a detailed quality checklist, the SMART acronym serves as a rapid quality screen:
+
+| Letter | Meaning | Test question |
+|--------|---------|---------------|
+| **S** | Specific | Does it address exactly one concern? Is it unambiguous? |
+| **M** | Measurable | Does it have a numeric threshold with units? Can it be verified? |
+| **A** | Achievable | Is it technically feasible with current or near-term technology? |
+| **R** | Relevant | Does it trace to a stakeholder need or higher-level objective? |
+| **T** | Traceable | Can you identify its parent (where it came from) and its children (how it will be verified)? |
+
+### 5.3.1 NASA SEH Appendix C: full quality checklist
+
+*[Source: NASA SEH Appendix C — "How to Write a Good Requirement"]*
+
+The full NASA checklist adds criteria beyond SMART:
+
+1. **Single requirement per statement** — no compound "and" requirements
+2. **Positive form** — state what the system SHALL DO, not what it shall NOT do
+3. **Active voice** — "The system shall…" not "It is required that…"
+4. **No implementation** — avoid naming specific hardware, software, or methods
+5. **Verifiable** — must be provable by analysis, test, inspection, review of design or demonstration
+6. **No TBDs** — every threshold must have a value (even if it changes later)
+7. **Consistent** — no contradictions with other requirements in the set
+8. **Bounded** — tolerance or range specified where appropriate
+
+### 5.3.2 Common anti-patterns
+
+| Anti-pattern | Problem | Better version |
+|-------------|---------|----------------|
+| "The spacecraft shall operate at 500 km altitude" | Prescribes orbit (design choice) | "The system shall provide global coverage with revisit ≤ 5 days at ±60° latitude" |
+| "The spacecraft shall use triple-junction GaAs solar cells" | Prescribes technology | "The EPS shall generate ≥ 15 W EOL with ≤ 0.5 m² array area" |
+| "The system shall use AX.25 protocol" | Prescribes implementation | "The TTC system shall provide reliable command reception with BER ≤ $10^{-6}$" |
+| "The spacecraft shall be a 3U CubeSat" | Prescribes form factor | "The system shall have total mass ≤ 6 kg and fit within a standard 3U deployer envelope" |
+
+**Exception:** Interface requirements ARE specific because they define contractual boundaries:
+> "The EPS shall provide 28 V ± 2 V regulated bus voltage to all subsystems."
+
+This is acceptable because bus voltage is a negotiated interface agreement, not a unilateral design choice.
+
+---
+
+## 5.4 Requirement hierarchy and traceability
+
+Requirements exist at multiple levels, each decomposed from the level above. Every requirement must trace bidirectionally. Figure 5.1 shows the hierarchy for an agricultural-monitoring mission.
+
+### 5.4.1 Hierarchy structure
+
+![Requirement hierarchy tree: stakeholder need, mission requirement MR-001, three system requirements, three subsystem requirements and the component level beneath them.](../assets/figures/fig_requirement_hierarchy.png)
+
+**Figure 5.1** — Requirement hierarchy for an agricultural-monitoring EO mission: a stakeholder need derives a mission requirement (MR-001), which decomposes into system requirements for the payload, AOCS and link, each of which derives a subsystem requirement; the component level beneath (dashed) is where the subsystem requirements are allocated to individual parts. Every requirement traces upward to its parent and downward to its children (§5.4.3).
+
+### 5.4.2 Level definitions
+
+| Level | Scope | Written by | Verified by |
+|-------|-------|-----------|-------------|
+| **Mission** | What the mission achieves (MoE-derived) | Systems engineer and stakeholders | Operational validation |
+| **System** | What the system must do (MoP-derived) | Systems engineer | System-level integration and test |
+| **Subsystem** | What each subsystem must provide | Subsystem engineers | Subsystem qualification and acceptance |
+| **Component** | What each component must meet | Component engineers | Component acceptance testing |
+
+### 5.4.3 Traceability rules
+
+Every requirement must trace in three directions:
+
+1. **Upward:** to its parent requirement or objective (WHY does this exist?)
+2. **Downward:** to child requirements or design parameters (HOW is it decomposed?)
+3. **Horizontally:** to a verification method (HOW will it be confirmed?)
+
+This three-axis traceability is captured in the **Requirements Traceability Matrix (RTM)**.
+
+There are no equations in requirements engineering per se, but one relationship governs traceability completeness — the same metric introduced as $T_c$ in Chapter 1 §1.2.4:
+
+$$\text{Coverage} = \frac{N_{\text{verified requirements}}}{N_{\text{total requirements}}} \times 100\%$$
+
+Target: 100 % coverage — every requirement must have at least one assigned verification method and one parent traceability link.
+
+*[Source: NASA SEH Sec. 6.2 (Process 11: Requirements Management); ECSS-E-ST-10C Sec. 5.2]*
+
+### 5.4.4 Splitting compound requirements
+
+A compound requirement that addresses multiple concerns must be split for independent verification:
+
+| Compound (poor) | Split (correct) |
+|-----------------|-----------------|
+| "The system shall provide 10 m GSD with 5-day revisit and 24 h latency" | MR-001: "GSD ≤ 10 m" **+** MR-002: "Revisit ≤ 5 days" **+** MR-003: "Latency ≤ 24 h" |
+| "The EPS shall provide positive power margin in all modes including eclipse" | SR-PWR-001: "Positive margin in sunlit modes" **+** SR-PWR-002: "Positive margin in eclipse" **+** SR-PWR-003: "Battery DoD ≤ 30 % in worst-case eclipse" |
+
+**Rationale:** Each split requirement can be verified independently. If GSD passes but revisit fails, the team knows exactly what to fix without ambiguity.
+
+---
+
+## 5.5 Verification methods — ATIR(D)
+
+*[Source: ECSS-E-ST-10-02C Rev.1 Sec. 5.3; NASA SEH Sec. 5.3]*
+
+Every requirement must have an assigned verification method. ECSS-E-ST-10-02C defines four methods — analysis, test, inspection and review of design — and NASA practice adds demonstration; this book abbreviates the set as ATIR(D). Chapter 14 describes how each method is planned and executed.
+
+| Method | Code | What it proves | When used |
+|--------|------|---------------|-----------|
+| **Analysis** | A | Requirement satisfied by mathematical model, simulation, or similarity | Phase B–C; when testing is impractical or cost-prohibitive |
+| **Test** | T | Requirement satisfied by physical measurement | Phase C–D; when proof requires hardware in a controlled environment |
+| **Inspection** | I | Requirement confirmed by visual or physical examination | Physical characteristics (dimensions, labels, markings, mass) |
+| **Review of design** | R | Requirement confirmed by examination of drawings, schematics or documentation | Design features that can be established from the records (e.g., use of approved parts, redundancy present) |
+| **Demonstration** | D | Requirement confirmed by operational exercise | Functional requirements proven by executing procedures |
+
+### 5.5.1 Verification method selection guide
+
+| Requirement type | Typical method | Rationale |
+|-----------------|---------------|-----------|
+| Mass ≤ X kg | **I** (weigh it) | Direct physical measurement |
+| Pointing ≤ Y° | **A** (simulation) + **T** (TVAC/HITL) | Analysis first, confirmed by test |
+| Link margin ≥ 3 dB | **A** (link budget analysis) | Full test requires satellite in orbit |
+| Survival at launch loads | **T** (vibration test) | Must physically prove structural integrity |
+| Data latency ≤ 24 h | **D** (end-to-end ops exercise) | Pipeline is procedural — demonstrate it works |
+| Operating temperature range | **T** (thermal vacuum test) | Thermal environment must be simulated |
+| Software FDIR logic | **D** (fault injection test) | Demonstrate correct autonomous response |
+| Redundant power path present | **R** (schematic review) | Established from the design record |
+
+### 5.5.2 Verification by project phase
+
+| Phase | Verification activities |
+|-------|------------------------|
+| **B** | Analysis verification (models, simulations, budgets, trade studies) |
+| **C** | Design verification (detailed analysis, breadboard testing, qualification) |
+| **D** | Acceptance testing (flight hardware), system integration, environmental test |
+| **E** | In-orbit validation (commissioning, calibration, operational checkout) |
+
+---
+
+## 5.6 Worked examples
+
+### 5.6.1 Deriving requirements for the 3U EO CubeSat
+
+> **Worked example — Deriving requirements for a 3U EO CubeSat**
+>
+> **Stakeholder need:** "Monitor crop health across the Canadian prairies with weekly updates."
+>
+> **Step 1 — Mission requirement:**
+> MR-001: "The system shall provide NDVI-capable imagery with GSD ≤ 10 m and revisit ≤ 7 days over 49–54° N, 100–115° W."
+>
+> **Step 2 — System requirements (decomposed):**
+>
+> - SR-PL-001: "The payload shall acquire imagery in at least RED (630–690 nm) and NIR (760–900 nm) bands."
+> - SR-AOCS-001: "The AOCS shall provide pointing accuracy ≤ 0.5° (3σ) during imaging."
+> - SR-LINK-001: "The comms system shall downlink ≥ 2 GB per day to a Canadian ground station."
+> - SR-PWR-001: "The EPS shall provide positive power margin in all operational modes."
+>
+> **Step 3 — Subsystem requirements (derived):**
+>
+> - SSR-PL-001a: "The telescope aperture shall be ≥ 80 mm." [Derived from GSD + altitude]
+> - SSR-AOCS-001a: "The star tracker shall provide ≤ 30 arcsec attitude knowledge." [Derived from pointing budget]
+> - SSR-LINK-001a: "The X-band transmitter shall provide ≥ 2 W RF output power." [Derived from link budget]
+>
+> **Step 4 — Verification assignment:**
+>
+> | Requirement | Method | Phase | Rationale |
+> |-------------|--------|-------|-----------|
+> | MR-001 (GSD + revisit) | A + D | B + E | Analysis during design; demonstrated from orbit |
+> | SR-PL-001 (spectral bands) | T | D | Spectral calibration in lab |
+> | SR-AOCS-001 (pointing) | A + T | B + D | Simulation then hardware-in-loop test |
+> | SR-LINK-001 (downlink) | A | B | Link budget analysis |
+> | SSR-PL-001a (aperture) | I | D | Physical measurement |
+
+### 5.6.2 Returning to UniSat-1
+
+> **Worked example — Deriving requirements for a 1U technology demonstrator**
+>
+> **Stakeholder need:** "Demonstrate the feasibility of a MEMS-based magnetometer for space weather monitoring in LEO."
+>
+> **Step 1 — Mission requirements:**
+>
+> | ID | Requirement | Type | Rationale |
+> |----|------------|------|-----------|
+> | MR-001 | "The system shall measure the local magnetic field vector with resolution ≤ 10 nT at 1 Hz sampling rate for a minimum of 6 months." | Performance | Minimum science return for technology validation |
+> | MR-002 | "The system total mass shall not exceed 1.33 kg." | Constraint | CDS Rev 14, 1U mass limit |
+> | MR-003 | "The system shall downlink at least 1 MB of magnetometer data per day." | Performance | Sufficient for statistical analysis of sensor performance |
+> | MR-004 | "The system shall operate for a minimum of 6 months in LEO." | Performance | Minimum mission duration for seasonal variation coverage |
+>
+> **Step 2 — System requirements (decomposed):**
+>
+> - SR-PWR-001: "The EPS shall provide orbit-average power ≥ 2 W to all subsystems."
+> - SR-PWR-002: "The battery shall provide ≥ 10 Wh capacity."
+> - SR-LINK-001: "The comms system shall provide a downlink data rate ≥ 9600 bps."
+> - SR-LINK-002: "The comms system shall achieve link margin ≥ 3 dB at 10° minimum elevation."
+> - SR-OBC-001: "The OBC shall consume ≤ 0.5 W average power."
+> - SR-STR-001: "The structure shall comply with CDS Rev 14, 1U envelope (100 × 100 × 113.5 mm)."
+>
+> **Step 3 — Subsystem requirements (derived):**
+>
+> - SSR-PWR-001a: "Body-mounted solar cells shall generate ≥ 2 W orbit-average power accounting for eclipse and geometry." [Derived from power budget]
+> - SSR-LINK-001a: "The UHF transmitter shall provide ≥ 0.5 W RF output at 437 MHz." [Derived from link budget]
+>
+> **Step 4 — Verification assignment:**
+>
+> | Requirement | Method | Phase | Rationale |
+> |-------------|--------|-------|-----------|
+> | MR-001 (magnetometer performance) | T + D | D + E | Ground calibration then in-orbit demonstration |
+> | MR-002 (mass ≤ 1.33 kg) | I | D | Weigh the flight unit |
+> | SR-PWR-001 (orbit-average power) | A | B | Power budget analysis |
+> | SR-LINK-001 (9600 bps downlink) | A + D | B + E | Link budget analysis; demonstrated from orbit |
+> | SR-STR-001 (CDS compliance) | I | D | Physical measurement against CDS template |
+>
+> **Key difference from 3U:** The 1U requirement set is much smaller (~15–20 requirements vs ~40–60 for a 3U EO mission). There are no pointing requirements, no imaging requirements, and no propulsion requirements. This makes the verification campaign significantly simpler and cheaper.
+
+---
+
+## Summary
+
+| Topic | Key takeaway |
+|-------|-------------|
+| System-V model | Left branch decomposes requirements; right branch integrates and verifies at matching levels (Figure 1.1) |
+| Shall statements | Formal, verifiable, single-concern statements |
+| WHAT not HOW | Requirements preserve design freedom; design choices come later in trade studies |
+| SMART | Specific, Measurable, Achievable, Relevant, Traceable |
+| Requirement types | Functional, performance, interface, constraint, environmental |
+| Hierarchy | Mission → System → Subsystem with bidirectional traceability (up, down, horizontal) |
+| Splitting | One concern per requirement for independent verification |
+| ATIR(D) | Analysis, Test, Inspection, Review of design (+ Demonstration) — assigned per requirement per phase |
+
+---
+
+## Problems
+
+1. **WHAT, not HOW.** Each of the following statements prescribes an implementation. Rewrite each as a requirement that preserves design freedom, and state what stakeholder need or higher-level requirement it should trace to. (a) "The spacecraft shall use a deployable UHF tape-measure antenna." (b) "The payload shall be mounted on the +Z face." (c) "The OBC shall run FreeRTOS." (d) "The spacecraft shall carry four reaction wheels."
+
+2. **Splitting compound requirements.** Split each of the following into single-concern requirements with identifiers, and explain for one of them what ambiguity would arise if the compound form failed verification. (a) "The ground segment shall receive, process and distribute imagery within 6 h of acquisition with 99 % availability." (b) "The thermal control subsystem shall keep the battery between 0 °C and 40 °C and the payload detector below −10 °C during imaging."
+
+3. **Classification.** Classify each of the following as functional, performance, interface, constraint or environmental, and justify the classification: (a) "The spacecraft shall survive a total ionising dose of 10 krad(Si)." (b) "The spacecraft shall transmit housekeeping telemetry." (c) "The payload shall deliver image data to the OBC over SpaceWire at 100 Mbps." (d) "The spacecraft shall be delivered for launch no later than 24 months after contract signature." (e) "The AOCS shall settle to within 0.1° of the commanded attitude within 60 s of a 30° slew." (f) "The spacecraft total mass shall not exceed 4.0 kg."
+
+4. **Verification assignment.** For a 3U EO CubeSat with a 90 mm aperture multispectral imager and an S-band downlink, write five requirements — one at mission level, two at system level and two at subsystem level — and assign to each a verification method (A, T, I, R or D) and a target phase (B, C, D or E). Justify every choice in one sentence, following the format of §5.6.1 Step 4.
+
+5. **A hierarchy from a new need.** A coastal authority states the need: "Know, within one hour, the position of every vessel over 300 tonnes within 200 nautical miles of the coast." Derive one mission requirement, at least three system requirements (covering payload, communications and power) and at least two subsystem requirements, with identifiers and explicit parent links. Which of your requirements are performance and which are functional?
+
+6. **SMART audit.** Each of the following requirements fails at least one SMART criterion or one item of the NASA checklist of §5.3.1. Identify the failure and rewrite the requirement. (a) "The spacecraft shall have good pointing performance." (b) "The link margin shall be TBD dB." (c) "The spacecraft shall not fail." (d) "It is required that the imaging mode be entered." (e) "The system shall provide 5 m GSD and 10 bands and daily revisit."
+
+7. **Coverage metric.** A requirement set contains 52 requirements. 44 have an assigned verification method; 49 have a parent traceability link; 41 have both. Compute the coverage as defined in §5.4.3 and state whether the set meets the target. Which requirements should the systems engineer examine first, and why?
+
+8. **Deriving a subsystem requirement from a mission requirement.** Returning to UniSat-1, mission requirement MR-003 demands at least 1 MB of magnetometer data per day and SR-LINK-001 provides 9600 bps. (a) Compute the minimum total daily contact time required, assuming the link is used at 100 % efficiency. (b) Repeat assuming 60 % protocol efficiency and that only half of each pass is usable at ≥ 10° elevation. (c) Write the resulting derived requirement on the ground segment (minimum contact minutes per day), with its parent link and verification method.
+
+9. **Interface requirements.** Explain why "The EPS shall provide 28 V ± 2 V regulated bus voltage to all subsystems" is an acceptable requirement even though it specifies a number that looks like a design choice. Write two further interface requirements for the 3U EO CubeSat — one data interface between payload and OBC and one mechanical interface between the spacecraft and its deployer — and identify which positions in Table 1.4 must agree each one.
+
+10. **Right-sizing the requirement set.** The worked examples suggest ~15–20 requirements for a 1U demonstrator and ~40–60 for a 3U EO mission. For each of the following changes to UniSat-1, state which new requirements (type and level) would be needed and estimate how many: (a) adding a 1-axis magnetorquer for passive-to-active detumbling; (b) adding a second, redundant magnetometer; (c) extending the design lifetime from 6 months to 2 years.
+
+---
+
+## References
+
+1. NASA, *Systems Engineering Handbook* (NASA/SP-2016-6105 Rev 2), 2016, Ch. 4.2 and Appendix C. [https://www.nasa.gov/reference/systems-engineering-handbook/](https://www.nasa.gov/reference/systems-engineering-handbook/)
+2. ECSS, *ECSS-E-ST-10-06C: Technical Requirements Specification*, 2009, Sec. 5. [https://ecss.nl/standard/ecss-e-st-10-06c-technical-requirements-specification/](https://ecss.nl/standard/ecss-e-st-10-06c-technical-requirements-specification/)
+3. ECSS, *ECSS-E-ST-10C Rev.1: Space Engineering — System Engineering General Requirements*, 2017, Sec. 5.2. [https://ecss.nl/standard/ecss-e-st-10c-rev-1-system-engineering-general-requirements/](https://ecss.nl/standard/ecss-e-st-10c-rev-1-system-engineering-general-requirements/)
+4. ECSS, *ECSS-E-ST-10-02C Rev.1: Space Engineering — Verification*, 2018, Sec. 5.3. [https://ecss.nl/standard/ecss-e-st-10-02c-rev-1-verification-1-february-2018/](https://ecss.nl/standard/ecss-e-st-10-02c-rev-1-verification-1-february-2018/)
+5. Wertz, J.R., Everett, D.F. and Puschell, J.J., *Space Mission Engineering: The New SMAD*, Microcosm Press, 2011, Ch. 3–4. [https://www.microcosminc.com/](https://www.microcosminc.com/)
+6. INCOSE, *Systems Engineering Handbook*, 5th ed., 2023, Ch. 2.3.5. [https://www.incose.org/products-and-publications/se-handbook](https://www.incose.org/products-and-publications/se-handbook)
+
+
+# Chapter 6 — Functional Decomposition and Allocation
+
+> **Recommended background.** NASA Systems Engineering Handbook §4.3 (Logical Decomposition); ECSS-E-ST-10C Rev.1 §5.3; INCOSE Systems Engineering Handbook 5th ed. §2.3.5. This chapter assumes a validated requirement set exists (Chapter 5) and builds on the V-model of Chapter 1.
+
+## Learning objectives
+
+By the end of this chapter, you will be able to:
+
+1. Explain the purpose of functional decomposition in bridging requirements to design
+2. Decompose mission objectives into a hierarchical function tree (three or more levels)
+3. Categorise functions by type (observe, communicate, navigate, point, power, protect, store, process, support)
+4. Allocate functions to subsystem domains, including multi-allocation for shared responsibilities
+5. Derive requirements from functional analysis
+6. Identify and resolve coverage gaps (leaf functions without linked requirements)
+7. Build and validate a function architecture for a small spacecraft, whether in a concurrent-design tool or a spreadsheet
+
+---
+
+## 6.1 What is functional decomposition?
+
+*[Source: NASA SEH Sec. 4.3 — Process 3: Logical Decomposition]*
+
+Functional decomposition answers one question: **"What must the system DO to satisfy the requirements?"**
+
+It creates a bridge between requirements (WHAT the system must achieve) and physical design (HOW it will be built). Functions describe *actions* the system must perform, without specifying the physical hardware or software that will perform them. In the V-model of Chapter 1 (Figure 1.1) this is the step between the system requirements and the architecture: the requirements of Chapter 5 are decomposed here into functions, and the functions are allocated to the subsystems whose boundaries and interfaces are defined in Chapter 8.
+
+### 6.1.1 The decomposition flow
+
+Figure 6.1 shows the three layers and the direction of flow. Objectives and requirements state what is needed; functional analysis states what the system must do; the physical architecture states what will do it.
+
+<svg viewBox="0 0 800 360" xmlns="http://www.w3.org/2000/svg" style="max-width:700px; font-family: sans-serif; font-size: 12px;">
+  <!-- Boxes -->
+  <rect x="250" y="10" width="300" height="40" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+  <text x="400" y="35" text-anchor="middle" fill="#1e40af" font-weight="bold">Objectives &amp; Requirements</text>
+  <!-- Arrow -->
+  <line x1="400" y1="50" x2="400" y2="80" stroke="#64748b" stroke-width="2" marker-end="url(#arrowhead6)"/>
+  <rect x="250" y="80" width="300" height="40" rx="6" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+  <text x="400" y="105" text-anchor="middle" fill="#92400e" font-weight="bold">Functional Analysis (WHAT)</text>
+  <line x1="400" y1="120" x2="400" y2="150" stroke="#64748b" stroke-width="2" marker-end="url(#arrowhead6)"/>
+  <rect x="250" y="150" width="300" height="40" rx="6" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+  <text x="400" y="175" text-anchor="middle" fill="#166534" font-weight="bold">Physical Architecture (HOW)</text>
+  <!-- Side annotations -->
+  <text x="570" y="70" fill="#64748b" font-size="11">Bridges the gap</text>
+  <!-- Function tree below -->
+  <rect x="100" y="230" width="180" height="30" rx="4" fill="#fef3c7" stroke="#d97706"/>
+  <text x="190" y="250" text-anchor="middle" fill="#92400e" font-size="11">F-001: Acquire Imagery</text>
+  <!-- Children -->
+  <line x1="190" y1="260" x2="100" y2="290" stroke="#d97706"/>
+  <line x1="190" y1="260" x2="280" y2="290" stroke="#d97706"/>
+  <line x1="190" y1="260" x2="460" y2="290" stroke="#d97706"/>
+  <rect x="20" y="290" width="160" height="26" rx="4" fill="#fff7ed" stroke="#d97706"/>
+  <text x="100" y="308" text-anchor="middle" fill="#92400e" font-size="10">F-002: Point at target</text>
+  <rect x="200" y="290" width="160" height="26" rx="4" fill="#fff7ed" stroke="#d97706"/>
+  <text x="280" y="308" text-anchor="middle" fill="#92400e" font-size="10">F-003: Capture image data</text>
+  <rect x="380" y="290" width="160" height="26" rx="4" fill="#fff7ed" stroke="#d97706"/>
+  <text x="460" y="308" text-anchor="middle" fill="#92400e" font-size="10">F-004: Store data onboard</text>
+  <!-- Universal functions -->
+  <rect x="580" y="230" width="180" height="30" rx="4" fill="#e0e7ff" stroke="#4f46e5"/>
+  <text x="670" y="250" text-anchor="middle" fill="#3730a3" font-size="11">Universal Functions</text>
+  <text x="670" y="280" text-anchor="middle" fill="#3730a3" font-size="10">F-010: Generate power</text>
+  <text x="670" y="296" text-anchor="middle" fill="#3730a3" font-size="10">F-020: Maintain thermal env</text>
+  <text x="670" y="312" text-anchor="middle" fill="#3730a3" font-size="10">F-030: Survive launch</text>
+  <text x="670" y="328" text-anchor="middle" fill="#3730a3" font-size="10">F-040: TTC with ground</text>
+  <text x="670" y="344" text-anchor="middle" fill="#3730a3" font-size="10">F-050: Dispose at EOL</text>
+  <defs><marker id="arrowhead6" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#64748b"/></marker></defs>
+</svg>
+
+**Figure 6.1** — The decomposition flow from objectives and requirements, through functional analysis (WHAT), to the physical architecture (HOW). Below: the top of an Earth-observation function tree and the five universal functions every spacecraft performs.
+
+### 6.1.2 Function types
+
+Every spacecraft function falls into one of these categories:
+
+| Type | Verb | Description | Example |
+|------|------|-------------|---------|
+| **Observe** | Sense/measure | Acquire data from the environment | Capture multispectral imagery, receive AIS signals |
+| **Communicate** | Transfer | Move information between elements | Downlink science data, uplink telecommands |
+| **Navigate** | Determine/control position | Know or change the orbit | Perform orbit maintenance manoeuvre |
+| **Point** | Orient | Control spacecraft attitude | Nadir pointing during imaging, target tracking |
+| **Power** | Generate/store/distribute | Provide electrical energy | Solar power generation, battery charge management |
+| **Protect** | Maintain environment | Keep components within limits | Thermal control, radiation shielding |
+| **Store** | Record | Buffer data for later use | On-board solid-state data recording |
+| **Process** | Transform | Convert data between forms | On-board image compression, L0 framing |
+| **Support** | Provide structure | Mechanical integrity | Survive launch loads, deploy mechanisms |
+
+### 6.1.3 Universal functions
+
+Regardless of mission type, **every spacecraft** must perform these five functions:
+
+1. **Generate electrical power** (solar, RTG, battery)
+2. **Maintain thermal environment** (passive/active thermal control)
+3. **Survive the launch environment** (structural loads, vibration, shock)
+4. **Communicate with ground for TTC** (telemetry, tracking, command)
+5. **Dispose of the spacecraft at end of life** (deorbit, graveyard, passivation)
+
+Because they are universal, these five functions should appear in every function tree before any mission-specific analysis begins; a concurrent-design tool will typically generate them automatically for every mission.
+
+---
+
+## 6.2 Mission-type-specific function trees
+
+Different mission types produce fundamentally different primary function trees. The universal functions remain the same; it is the mission-specific branch that differentiates.
+
+### 6.2.1 Earth observation (optical/SAR)
+
+```
+F-001: Acquire imagery of target area
+  ├── F-002: Point instrument at target
+  ├── F-003: Capture image data (expose detector / SAR pulse)
+  ├── F-004: Store acquired data onboard
+  └── F-005: Downlink data to ground station
+```
+
+**Real example — Planet SuperDove:** F-001 decomposes into 8-band pushbroom acquisition, on-board radiometric correction, lossless compression, and X-band downlink. Each sub-function traces to specific SuperDove requirements (3.7 m GSD, 8 spectral bands, 200 Mbps downlink).
+
+### 6.2.2 Communications relay (store-and-forward or bent-pipe)
+
+```
+F-001: Relay communications between users
+  ├── F-002: Receive uplink signal from user terminal
+  ├── F-003: Process and route data (store-and-forward or bent-pipe)
+  └── F-004: Transmit downlink signal to destination terminal or gateway
+```
+
+**Real example — Astrocast (IoT):** F-001 decomposes into L-band receive (from IoT devices), on-board message deduplication and store-and-forward, and UHF/S-band downlink to gateway stations. Each message is ≤ 160 bytes.
+
+*[Source: Astrocast, "Astrocast Network Overview," astrocast.com]*
+
+### 6.2.3 AIS/IoT receiver (passive)
+
+```
+F-001: Receive and process signals of interest
+  ├── F-002: Receive AIS/IoT signals (passive — no uplink transmission)
+  ├── F-003: Decode and validate messages
+  ├── F-004: Store processed data onboard
+  └── F-005: Downlink to ground for distribution
+```
+
+### 6.2.4 Ground segment functions
+
+Missions that include ground-side processing need ground-domain functions:
+
+```
+F-G01: Receive satellite data at ground station
+F-G02: Process data pipeline (L0 → L1 → L2 products)
+F-G03: Archive and distribute data products to users
+F-G04: Operate mission control centre (planning, commanding, monitoring)
+```
+
+Ground functions are allocated to ground domains (ground station, ground processing, ground sensor) in exactly the same way that space functions are allocated to subsystems; the ground segment architecture that hosts them is developed in Chapter 17.
+
+---
+
+## 6.3 Allocation to subsystems
+
+Each function must be **allocated** to one or more responsible subsystem domains. This allocation defines system boundaries and, critically, identifies **interfaces** wherever a function is shared. Those interfaces are the entries of the N² matrix built in Chapter 8 §8.3.
+
+### 6.3.1 Allocation rules
+
+| Function | Typical allocation | Multi-allocation? |
+|----------|-------------------|-------------------|
+| Acquire imagery | Payload | No (single owner) |
+| Point at target | AOCS | No |
+| Store data | OBC/Data Handling | No |
+| Downlink data | Comms + AOCS | **Yes** — comms for RF chain, AOCS for antenna pointing |
+| Generate power | EPS | No |
+| Maintain thermal | Thermal | No |
+| Relay communications | Payload + Comms | **Yes** — boundary depends on architecture |
+| Survive launch | Structure | No |
+| Dispose at EOL | Propulsion (or Ops) | No (or multi if drag-sail) |
+
+### 6.3.2 Multi-allocation and interface identification
+
+When a function is allocated to more than one subsystem, it creates an **interface** that must be explicitly managed.
+
+**Example — "Downlink data to ground station":**
+
+| Responsible subsystem | Contribution | Interface created |
+|-----------------------|-------------|-------------------|
+| Comms (Link) | Transponder, antenna, modulation, RF chain | Comms ↔ AOCS (antenna pointing) |
+| AOCS | Antenna pointing towards ground station during pass | Comms ↔ Data Handling (packet routing) |
+| Data Handling | Data packaging, prioritisation, CCSDS framing | Data Handling ↔ AOCS (pass scheduling) |
+
+In a function table, multi-allocation is recorded simply by listing every contributing domain against the function; the discipline lies in then naming one **owner** and treating the others as **contributors**.
+
+**Think about it.** For each multi-allocated function in a design, where should the system boundary be drawn? Who "owns" the function, and who is a "contributor"? The answer determines who writes the interface requirement — and who is accountable when the interface fails at integration.
+
+### 6.3.3 Derived requirements from functions
+
+Each allocated function generates **derived requirements** — requirements not explicitly stated by stakeholders but necessary for the function to work:
+
+| Function | Derived requirement | Derivation logic |
+|----------|-------------------|------------------|
+| "Point instrument at target" | "AOCS shall provide ≤ 0.1° pointing accuracy during imaging" | From GSD requirement + optical geometry |
+| "Store data onboard" | "OBDH shall provide ≥ 32 GB solid-state storage" | From data rate × orbit period × missed-pass margin |
+| "Downlink within daily contact window" | "TX shall provide ≥ 50 Mbps effective data rate" | From daily data volume / total contact time |
+| "Generate power in all modes" | "SA shall produce ≥ 15 W EOL" | From worst-case sunlit power demand + recharge |
+
+*[Source: NASA SEH Sec. 4.3.3 — derived requirements from functional allocation]*
+
+---
+
+## 6.4 Performance criteria and coverage analysis
+
+Each leaf function (a function with no sub-functions) must have **performance criteria** — quantitative thresholds that define "how well" the function must be performed:
+
+| Function | Performance criteria |
+|----------|---------------------|
+| Acquire imagery | GSD ≤ 10 m; SNR ≥ 100:1; ≥ 4 spectral bands |
+| Point at target | Accuracy ≤ 0.1°; stability ≤ 0.01°/s; slew rate ≥ 1°/s |
+| Downlink data | Link margin ≥ 3 dB; daily throughput ≥ 5 GB |
+| Generate power | Positive margin in all modes; battery DoD ≤ 30 % |
+| Maintain thermal env | All components within operating range with ≥ 5 °C margin |
+
+Performance criteria form the quantitative basis for subsystem-level requirements.
+
+### 6.4.1 Coverage analysis
+
+**Every leaf function** must trace to at least one requirement. If it does not, there is a **coverage gap** — the function is defined but has no verification path.
+
+A coverage check classifies each leaf function into one of three states:
+
+- **Covered:** the function has at least one linked requirement
+- **Gap:** no requirement is linked — a coverage gap has been detected
+- **Conflict:** the function conflicts with an existing requirement
+
+A concurrent-design tool will usually display these states as badges on the function tree; in a spreadsheet, a simple count of linked requirement IDs per leaf function achieves the same thing.
+
+### 6.4.2 Real mission example: CAPSTONE coverage gap
+
+NASA's CAPSTONE mission (2022, Advanced Space) experienced a coverage gap during development: the "maintain attitude during trajectory correction manoeuvre" function initially had no formal pointing requirement during burns. This gap was identified during functional review and led to the derivation of SSR-AOCS-007: "The AOCS shall maintain pointing accuracy ≤ 2° during all propulsive manoeuvres."
+
+*[Source: Advanced Space, "CAPSTONE Mission Overview," 2022]*
+
+---
+
+## 6.5 Worked example: 3U EO CubeSat function tree
+
+> **Function tree for an agricultural-monitoring 3U CubeSat (EOSat-3U)**
+>
+>
+>     F-001: Acquire multispectral imagery
+>       ├── F-002: Point telescope at target area (AOCS)
+>       ├── F-003: Expose detector and capture image frames (Payload)
+>       ├── F-004: Compress and store image data (OBC)
+>       └── F-005: Downlink stored data to ground station (Comms + AOCS)
+>     
+>     F-010: Generate electrical power (EPS)
+>       ├── F-011: Convert solar energy to electrical (SA)
+>       ├── F-012: Store energy for eclipse (Battery)
+>       └── F-013: Regulate and distribute power (EPS board)
+>     
+>     F-020: Maintain thermal environment (Thermal)
+>       ├── F-021: Reject waste heat from electronics (Radiator)
+>       └── F-022: Maintain battery temperature during eclipse (Heater)
+>     
+>     F-030: Survive launch environment (Structure)
+>     F-040: Communicate with ground for TTC (Comms)
+>     F-050: Dispose at end of life (Propulsion/Ops)
+>
+> **Derived requirements from F-002 (Point telescope at target):**
+>
+> - SSR-AOCS-001: "The AOCS shall achieve ≤ 0.5° pointing accuracy during imaging mode"
+> - SSR-AOCS-002: "The AOCS shall achieve pointing stability ≤ 0.01°/s during imaging"
+>
+> **Multi-allocation for F-005 (Downlink data):**
+>
+> - Comms subsystem: owns RF chain (transponder, antenna, modulation)
+> - AOCS subsystem: provides antenna pointing towards ground station
+> - Interface: AOCS must receive pass-schedule triggers from OBC to initiate slew to ground-station pointing
+
+Returning to UniSat-1, the 1U magnetometer demonstrator of Chapter 1 §1.7: its tree has the same five universal functions, but the mission branch reduces to "F-001: Measure the geomagnetic field vector" with sub-functions to sample the MEMS magnetometer, time-stamp and store the samples, and downlink them over UHF. There is no "point" function at all — which is why, in Chapter 10, UniSat-1 needs no active attitude control.
+
+---
+
+## Summary
+
+| Topic | Key takeaway |
+|-------|-------------|
+| Functional decomposition | Bridges requirements (WHAT) to design (HOW) by identifying system actions |
+| Function types | Observe, Communicate, Navigate, Point, Power, Protect, Store, Process, Support |
+| Universal functions | Power, thermal, launch survival, TTC, disposal — every spacecraft needs all five |
+| Mission-specific trees | EO: acquire/point/store/downlink; Comms: receive/route/transmit; AIS: receive/decode/store |
+| Allocation | Each function assigned to subsystem domain(s); multi-allocation creates interfaces |
+| Derived requirements | Functions generate new requirements not stated by stakeholders |
+| Coverage analysis | Every leaf function must trace to at least one requirement — no gaps allowed |
+
+## Problems
+
+1. **Three-level tree.** For a 3U Earth-observation CubeSat whose mission objective is to map crop health over a mid-latitude agricultural region, build a function tree with at least three levels of decomposition and at least twelve leaf functions. Include the five universal functions. Classify every leaf function by type using the table of §6.1.2.
+
+2. **Derived requirements.** For each leaf function in your tree from Problem 1, write one derived requirement with a measurable threshold and a one-line derivation logic in the style of §6.3.3. Identify which of your thresholds you can justify from physics now and which must wait for a subsystem sizing calculation (Chapters 9–12).
+
+3. **Traceability table.** Construct a function-to-requirement traceability table with at least eight entries. Then deliberately remove two requirements and show how a coverage check would flag the resulting gaps.
+
+4. **Multi-allocation boundary.** The function "Downlink stored data to ground station" is allocated to Comms, AOCS and Data Handling. Propose an owner and contributors, name the three interfaces created, and write one interface requirement (in the "shall" form of Chapter 5) for the interface you consider most likely to cause an integration problem. Explain why.
+
+5. **Mission-type contrast.** Write the mission-specific branch of the function tree for (a) a store-and-forward IoT relay and (b) a passive AIS receiver. Which functions appear in one but not the other, and what hardware does the difference eliminate from the AIS mission?
+
+6. **UniSat-1.** Returning to UniSat-1 (Chapter 1 §1.7), write its complete function tree. Identify which universal function is satisfied without a dedicated subsystem, and explain how the absence of a "point" function propagates to the attitude-control architecture (anticipating Chapter 10).
+
+7. **Coverage gap case.** The CAPSTONE case in §6.4.2 shows a function with no requirement. Give two further examples of functions on a small Earth-observation satellite that are easily left without a requirement, and for each write the requirement that closes the gap.
+
+## References
+
+1. NASA, *Systems Engineering Handbook* (NASA/SP-2016-6105 Rev 2), 2016, §4.3 (Process 3: Logical Decomposition). https://www.nasa.gov/reference/systems-engineering-handbook/
+2. ECSS, *ECSS-E-ST-10C Rev.1: System Engineering General Requirements*, 2017, §5.3. https://ecss.nl/standard/ecss-e-st-10c-rev-1-system-engineering-general-requirements/
+3. INCOSE, *Systems Engineering Handbook*, 5th ed., 2023, §2.3.5.3. https://www.incose.org/products-and-publications/se-handbook
+4. Wertz, Everett & Puschell, *Space Mission Engineering: The New SMAD*, 2011, Ch. 2. https://www.space.com/smad
+5. Blanchard & Fabrycky, *Systems Engineering and Analysis*, 5th ed., 2010, Ch. 3. https://www.pearson.com/en-us/subject-catalog/p/systems-engineering-and-analysis/P200000003502
+6. Advanced Space, *CAPSTONE Mission Overview*, 2022. https://advancedspace.com/capstone/
+7. Astrocast, *Astrocast Network Overview*. https://www.astrocast.com
+
+
+# Chapter 7 — Orbit Selection and the Space Environment
+
+> **Recommended background.** SMAD4 Ch. 5–7 (orbit and mission geometry); Vallado, *Fundamentals of Astrodynamics and Applications*, Ch. 2 and 9; ECSS-E-ST-10-04C (space environment); ECSS-U-AS-10C Rev.2 (debris mitigation). The derivations of Kepler's third law, the J₂ nodal regression and the eclipse fraction are given in Part V (§V.2, §V.4, §V.5); this chapter uses the results.
+
+## Learning objectives
+
+By the end of this chapter, you will be able to:
+
+1. Define the six Keplerian orbital elements and reduce them to the three that matter for circular LEO design
+2. Calculate orbital period, velocity, and eclipse fraction for circular orbits, including the dependence on the solar β-angle
+3. Compute the Sun-synchronous inclination from the J₂ nodal precession
+4. Evaluate orbit trade-offs across altitude, coverage, lifetime, radiation, and debris compliance, and estimate orbital lifetime from first principles
+5. Apply the Hohmann transfer ΔV equations for orbit raising and deorbit
+6. Score candidate orbits against mission-appropriate criteria and defend the selection
+
+---
+
+## 7.1 Keplerian orbital elements
+
+Six parameters (the *classical orbital elements*) fully describe the size, shape, and orientation of an orbit, plus the satellite's position on it.
+
+*[Source: Vallado, Ch. 2; Curtis, Ch. 2]*
+
+| Element | Symbol | Physical meaning | Typical range |
+|---------|--------|-----------------|---------------|
+| Semi-major axis | $a$ | Size of the orbit | 6578–42 164 km (LEO to GEO) |
+| Eccentricity | $e$ | Shape (0 = circle, 0 < e < 1 = ellipse) | 0–0.001 for LEO circular |
+| Inclination | $i$ | Tilt of orbit plane from equatorial plane | 0–180° |
+| RAAN | $\Omega$ | Orientation of ascending node in equatorial plane | 0–360° |
+| Argument of perigee | $\omega$ | Orientation of perigee within orbit plane | 0–360° |
+| True anomaly | $\nu$ | Satellite position along the orbit | 0–360° |
+
+For **circular LEO** missions (the most common CubeSat orbit type), the key design parameters reduce to three: **altitude** ($h$), **inclination** ($i$), and **LTAN** (local time of ascending node, for Sun-synchronous orbits). Figure 7.1 sketches the geometry.
+
+<svg viewBox="0 0 500 400" xmlns="http://www.w3.org/2000/svg" style="max-width:450px; font-family: sans-serif; font-size: 11px;">
+  <!-- Earth -->
+  <circle cx="250" cy="200" r="80" fill="#bfdbfe" stroke="#2563eb" stroke-width="2"/>
+  <text x="250" y="205" text-anchor="middle" fill="#1e3a5f" font-size="12">Earth</text>
+  <!-- Equatorial plane -->
+  <ellipse cx="250" cy="200" rx="160" ry="30" fill="none" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="420" y="195" fill="#94a3b8" font-size="10">Equatorial plane</text>
+  <!-- Orbit ellipse (tilted) -->
+  <ellipse cx="250" cy="185" rx="160" ry="120" fill="none" stroke="#dc2626" stroke-width="2" transform="rotate(-15, 250, 185)"/>
+  <!-- Ascending node -->
+  <circle cx="405" cy="195" r="5" fill="#dc2626"/>
+  <text x="415" y="200" fill="#dc2626" font-weight="bold">AN</text>
+  <!-- Labels -->
+  <text x="250" y="50" text-anchor="middle" fill="#dc2626" font-weight="bold">Orbit plane (inclined)</text>
+  <line x1="250" y1="200" x2="250" y2="100" stroke="#16a34a" stroke-width="1" stroke-dasharray="3,2"/>
+  <text x="260" y="145" fill="#16a34a" font-size="10">i (inclination)</text>
+  <!-- RAAN arrow -->
+  <path d="M 330 200 A 80 15 0 0 1 370 195" fill="none" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="345" y="220" fill="#7c3aed" font-size="10">Ω (RAAN)</text>
+  <!-- Satellite -->
+  <rect x="310" y="88" width="12" height="8" fill="#f59e0b" stroke="#92400e"/>
+  <text x="330" y="95" fill="#92400e" font-size="10">Satellite</text>
+</svg>
+
+**Figure 7.1** — Orbit geometry: the inclined orbit plane, the equatorial plane, the ascending node (AN), inclination $i$ and right ascension of the ascending node $\Omega$.
+
+### 7.1.1 Key equations
+
+Throughout this book the Earth constants are $R_E = 6378.137$ km (WGS-84 equatorial radius), $\mu = 398\,600.44$ km³/s² $= 3.986\,00 \times 10^{14}$ m³/s² and $J_2 = 1.0826 \times 10^{-3}$ (Part V §V.1).
+
+> **Key equations — orbital mechanics fundamentals**
+>
+> **Orbital period** (circular orbit; Part V §V.2):
+> $$T = 2\pi \sqrt{\frac{a^3}{\mu}}$$
+> where $a = R_E + h$ is the semi-major axis.
+>
+> **Orbital velocity** (circular):
+> $$v = \sqrt{\frac{\mu}{a}}$$
+>
+> **Sun-synchronous inclination** ($J_2$-driven RAAN precession of 360° per year; Part V §V.4):
+> $$\cos i = -\frac{2 \dot{\Omega}_{\text{req}} \, a^{7/2}}{3 R_E^2 \, J_2 \, \sqrt{\mu}}$$
+> where $\dot{\Omega}_{\text{req}} = \dfrac{2\pi}{365.25 \times 86\,400} = 1.991 \times 10^{-7}$ rad/s.
+
+### 7.1.2 Eclipse fraction and the β-angle
+
+Whether, and for how long, a circular orbit passes through Earth's shadow depends on the **solar β-angle**: the angle between the Sun vector and the orbit plane. It is obtained from the orbit orientation and the Sun's position (right ascension $\alpha_\odot$, declination $\delta_\odot$):
+
+$$\sin\beta = \cos\delta_\odot \sin i \sin(\Omega - \alpha_\odot) + \sin\delta_\odot \cos i$$
+
+Because $\Omega$ precesses and the Sun moves along the ecliptic, β varies through the year. For a Sun-synchronous orbit the precession tracks the Sun, so β stays within a narrow band fixed by the LTAN (a dawn–dusk orbit has $|\beta|$ near 90° and is almost never eclipsed; a 10:30 LTAN orbit has $|\beta|$ of order 20–30°). For an ISS-like orbit β sweeps a wide range and can reach the fully sunlit condition for a few days at a time.
+
+> **Key equation — eclipse fraction (circular orbit, cylindrical shadow; Part V §V.5)**
+>
+> Define the shadow half-angle seen from the orbit, $\beta^* = \arcsin\!\left(\dfrac{R_E}{R_E + h}\right)$. For $|\beta| < \beta^*$,
+> $$f_{\text{ecl}} = \frac{1}{\pi} \arccos\left(\frac{\sqrt{h^2 + 2 R_E h}}{(R_E + h)\cos\beta}\right)$$
+> and for $|\beta| \geq \beta^*$ the orbit is fully sunlit ($f_{\text{ecl}} = 0$).
+>
+> **Corollary — worst case, β = 0** (Sun in the orbit plane). Since $\sqrt{h^2 + 2R_E h}/(R_E + h) = \sqrt{1 - (R_E/(R_E+h))^2} = \cos\beta^*$, the maximum eclipse fraction is simply
+> $$f_{\text{ecl,max}} = \frac{\beta^*}{\pi} = \frac{1}{\pi}\arcsin\!\left(\frac{R_E}{R_E + h}\right)$$
+> This is the value used for power sizing in Chapter 9 unless the mission's β-angle history is known to exclude β = 0.
+
+Figure 7.2 shows both halves of this behaviour: the annual β-angle envelope for an ISS-like orbit and a 10:30 LTAN Sun-synchronous orbit (left), and the eclipse fraction as a function of β, with its plateau near β = 0 and its sharp fall to zero at $\beta^*$ (right).
+
+![β-angle envelope over a year and eclipse fraction versus β.](../assets/figures/fig_beta_eclipse.png)
+
+**Figure 7.2** — Left: annual β-angle envelope for an ISS-like orbit (51.6°, 400 km) and a 10:30 LTAN Sun-synchronous orbit (98°, 600 km). Right: eclipse fraction versus β for the same two orbits; the plateau at low |β| is the worst-case value used for power sizing, and the orbit is fully sunlit beyond $\beta^*$ (≈ 70° at 400 km, ≈ 66° at 600 km).
+
+---
+
+## 7.2 Worked examples: orbital computations
+
+> **Worked example — 500 km circular LEO**
+>
+> **Given:** $h = 500$ km, circular orbit.
+>
+> **Step 1 — Semi-major axis:**
+> $a = 6378.137 + 500 = 6878.137$ km $= 6.878 \times 10^6$ m
+>
+> **Step 2 — Orbital period:**
+> $a^3 = 6878.137^3 = 3.254 \times 10^{11}$ km³; $\quad a^3/\mu = 3.254 \times 10^{11} / 398\,600.44 = 8.163 \times 10^{5}$ s²
+>
+> $T = 2\pi \sqrt{8.163 \times 10^{5}} = 2\pi \times 903.5 = 5677$ s $\approx$ **94.6 min**
+>
+> **Step 3 — Orbital velocity:**
+> $v = \sqrt{\dfrac{398\,600.44}{6878.137}} = \sqrt{57.95} =$ **7.613 km/s**
+>
+> **Step 4 — Shadow half-angle and maximum eclipse fraction (β = 0):**
+> $\beta^* = \arcsin\!\left(\dfrac{6378.137}{6878.137}\right) = \arcsin(0.9273) = 68.0°$
+>
+> Check via the general form: $\sqrt{h^2 + 2R_E h} = \sqrt{500^2 + 2 \times 6378.137 \times 500} = \sqrt{6\,628\,137} = 2574.5$ km; $\;2574.5/6878.137 = 0.3743$; $\;\arccos(0.3743) = 68.0°$ ✓
+>
+> $f_{\text{ecl,max}} = 68.0/180 =$ **0.378** (37.8 %)
+>
+> **Step 5 — Eclipse and sunlight duration:**
+> $t_{\text{ecl}} = 94.6 \times 0.378 =$ **35.8 min**; $\quad t_{\text{sun}} = 94.6 - 35.8 =$ **58.8 min**
+>
+> **Step 6 — Sun-synchronous inclination:**
+> $a^{7/2} = a^3 \sqrt{a} = 3.254 \times 10^{20} \times 2622.6 = 8.534 \times 10^{23}$ (SI units)
+>
+> Numerator: $2 \times 1.991 \times 10^{-7} \times 8.534 \times 10^{23} = 3.398 \times 10^{17}$
+>
+> Denominator: $3 \times (6.378137 \times 10^6)^2 \times 1.0826 \times 10^{-3} \times \sqrt{3.986 \times 10^{14}} = 3 \times 4.068 \times 10^{13} \times 1.0826 \times 10^{-3} \times 1.9965 \times 10^{7} = 2.638 \times 10^{18}$
+>
+> $\cos i = -\dfrac{3.398 \times 10^{17}}{2.638 \times 10^{18}} = -0.1288 \Rightarrow i \approx$ **97.4°**
+
+> **Check — 450 km Sun-synchronous orbit** (the altitude used for the Part V §V.2 verification):
+> $a = 6828.137$ km; $a^3/\mu = 3.1835 \times 10^{11}/398\,600.44 = 7.987 \times 10^{5}$ s²; $\sqrt{\cdot} = 893.7$ s; $T = 2\pi \times 893.7 = 5615$ s $\approx$ **93.6 min**. Using the older $R_E = 6371$ km value gives 93.5 min; the difference is below 0.2 % but every number in this book uses 6378.137 km so that the chapters agree.
+
+---
+
+## 7.3 Orbit selection trade-offs
+
+The orbit is the single most impactful early design decision. It cascades to every subsystem.
+
+*[Source: SMAD, Ch. 7; Wertz et al., "Reducing Space Mission Cost," Ch. 3]*
+
+| Parameter | Lower altitude (300–400 km) | Higher altitude (600–800 km) |
+|-----------|------------------------------|-------------------------------|
+| **GSD** | Better (shorter range to target) | Worse (longer range) |
+| **Orbital lifetime** | Short (months to a few years, natural decay) | Long (25–100+ years) |
+| **Debris compliance** | Easy (FCC 5-year rule met naturally) | May require active deorbit propulsion |
+| **Radiation (TID)** | Lower (2–5 krad/yr) | Higher (10–20 krad/yr above 700 km) |
+| **Launch cost** | Lower ΔV to orbit | Slightly higher |
+| **Link budget** | Better (shorter slant range) | Worse (longer path loss) |
+| **Coverage/swath** | Narrower per pass | Wider per pass |
+| **Atmospheric drag** | Significant (limits lifetime) | Negligible above ~700 km |
+| **Eclipse fraction (β = 0)** | ~38–39 % | ~35–37 % |
+
+### 7.3.1 Orbit types and applications
+
+| Orbit | Altitude | Inclination | Best for | Real example |
+|-------|----------|-------------|----------|-------------|
+| **LEO (non-SSO)** | 300–600 km | Any | Technology demos, ISS deployment | Many CubeSats |
+| **SSO** | 400–800 km | 97–99° | EO (consistent solar illumination) | Planet SuperDove (475 km) |
+| **ISS orbit** | ~410 km | 51.6° | ISS-deployed CubeSats | NanoRacks deployments |
+| **MEO** | 2000–20 200 km | Various | Navigation | GPS (20 200 km) |
+| **GEO** | 35 786 km | 0° | Comms, weather | Anik F2 (Telesat) |
+| **HEO (Molniya)** | 500–40 000 km | 63.4° | High-latitude coverage | Meridian (Russia) |
+| **Lunar NRHO** | 1500–70 000 km | Lunar | Cislunar operations | CAPSTONE (NASA/Advanced Space) |
+
+### 7.3.2 Debris compliance rules
+
+| Rule | Requirement | Applies to |
+|------|------------|-----------|
+| **IADC guideline** (2021) | Post-mission disposal within 25 years | International (voluntary but expected) |
+| **FCC rule** (2024+) | Post-mission disposal within **5 years** | All FCC-licensed LEO satellites |
+| **ECSS-U-AS-10C Rev.2** | Compliance with IADC + ESA Zero Debris Charter | ESA missions |
+| **ISED (Canada)** | Currently 25-year rule; tightening under review | Canadian-licensed satellites |
+
+**Critical altitude boundaries for FCC 5-year compliance** (typical CubeSat ballistic coefficients, mean solar activity):
+
+| Altitude | Natural lifetime | FCC compliant? | Action needed |
+|----------|-----------------|---------------|---------------|
+| < 450 km | < 5 years | Yes | None (natural decay) |
+| 450–550 km | 5–20 years | Marginal | Drag augmentation may suffice |
+| 550–650 km | 20–50 years | **No** | Active deorbit (propulsion or drag sail) |
+| > 700 km | > 100 years | **No** | Propulsion mandatory; ESA Zero Debris zone |
+
+*[Source: IADC-02-01 Rev 3, Sec. 5.3.2; FCC 22-74; ECSS-U-AS-10C Rev.2]*
+
+### 7.3.3 Orbital lifetime from first principles
+
+Chapter 3 §3.6.4 introduced the ballistic coefficient $B = m/(C_D A)$, the lifetime-versus-altitude chart (Figure 3.2) and a quick rule of thumb. The rule of thumb is a curve fit for mid-altitude, moderate-$B$ spacecraft and badly overestimates lifetime below about 500 km (it returns ~18 years at 400 km for a 4 kg, 0.03 m² 3U CubeSat, which is wrong by more than an order of magnitude). The physically based estimate is short and worth doing properly.
+
+For a circular orbit, drag removes semi-major axis at the rate
+
+$$\frac{da}{dt} = -\sqrt{\mu a}\,\frac{\rho}{B}, \qquad B = \frac{m}{C_D A}$$
+
+(this follows from the per-orbit decrement $\Delta a = -2\pi\,\rho\,a^2/B$ divided by the period). Because atmospheric density falls roughly exponentially with altitude, $\rho \propto e^{-h/H}$ with scale height $H$, almost all of the remaining lifetime is spent within the first scale height below the initial altitude, so
+
+$$\tau \approx \frac{H}{|da/dt|_{h_0}} = \frac{H\,B}{\rho(h_0)\sqrt{\mu a}}$$
+
+> **Worked example — 3U CubeSat lifetime at 400 km and 500 km**
+>
+> **Given:** $m = 4$ kg, tumbling-average area $A = 0.03$ m², $C_D = 2.2$, so $B = 4/(2.2 \times 0.03) = 60.6$ kg/m².
+>
+> **400 km, mean solar activity:** $\rho \approx 2.8 \times 10^{-12}$ kg/m³, $H \approx 58$ km.
+> $\sqrt{\mu a} = \sqrt{3.986 \times 10^{14} \times 6.778 \times 10^{6}} = 5.20 \times 10^{10}$ m²/s
+> $|da/dt| = 5.20 \times 10^{10} \times 2.8 \times 10^{-12} / 60.6 = 2.4 \times 10^{-3}$ m/s $= 207$ m/day $= 76$ km/yr
+> $\tau \approx 58 / 76 \approx 0.76$ yr $\approx$ **9 months**
+>
+> Across the solar cycle the density at 400 km varies by roughly a factor of 8 ($\sim 1 \times 10^{-12}$ at solar minimum to $\sim 8 \times 10^{-12}$ at solar maximum), so the lifetime ranges from about **3 months (solar maximum) to about 2 years (solar minimum)**.
+>
+> **500 km, mean solar activity:** $\rho \approx 5 \times 10^{-13}$ kg/m³, $H \approx 65$ km, $\sqrt{\mu a} = 5.24 \times 10^{10}$ m²/s.
+> $|da/dt| = 5.24 \times 10^{10} \times 5 \times 10^{-13} / 60.6 = 4.3 \times 10^{-4}$ m/s $= 13.6$ km/yr; $\quad \tau \approx 65/13.6 \approx$ **5 years** (roughly 2–12 years across the cycle).
+>
+> **Reading the result.** At 400 km a 3U CubeSat re-enters naturally in about a year and needs no deorbit device; at 500 km the design sits on the FCC 5-year boundary and the answer depends on the launch date within the solar cycle. For a precise figure use a density model (NRLMSISE-00 or JB2008) and numerical propagation — but the estimate above is accurate to within a factor of two, which is enough to decide whether a deorbit subsystem is required.
+
+### 7.3.4 Perturbation effects
+
+| Perturbation | Cause | Effect on orbit | Design impact |
+|-------------|-------|----------------|---------------|
+| **$J_2$ (Earth oblateness)** | Equatorial bulge | RAAN precession, argument of perigee drift | Enables Sun-synchronous; frozen orbits at $\omega = 90°$ |
+| **Atmospheric drag** | Residual atmosphere | Semi-major axis decay, eventual re-entry | Limits lifetime below ~600 km; drives propulsion need |
+| **Solar radiation pressure** | Photon momentum | Eccentricity oscillations, orbit perturbation | Significant for large A/m ratio (drag sails, large SA) |
+| **Third-body (Moon/Sun)** | Gravitational pull | Long-period oscillations in $e$, $i$ | Significant for GEO and HEO; negligible for LEO |
+| **Magnetic field** | Lorentz force on charged S/C | Very small drag-like effect | Negligible for most missions |
+
+---
+
+## 7.4 Ground coverage and revisit
+
+> **Key equations — ground coverage**
+>
+> **Swath width** (nadir-pointing sensor with half-cone angle $\theta$):
+> $$W_{\text{swath}} = 2h \tan\theta$$
+>
+> **Ground-track spacing** (single satellite in LEO). Earth rotates beneath the orbit by $\omega_E T$ per revolution; for $T = 94.6$ min,
+> $$\Delta_{\text{lon}} = \frac{360°}{86\,164 \text{ s}} \times 5677 \text{ s} \approx 23.7° \approx 2640 \text{ km at the equator}$$
+> (for a Sun-synchronous orbit the nodal precession adds about 0.07° per orbit in the opposite sense — negligible here).
+>
+> **Revisit time** (approximate, single satellite, swath narrower than the track spacing):
+> $$t_{\text{revisit}} \approx \frac{\Delta_{\text{lon}}}{W_{\text{swath}}} \times T_{\text{orbit}}$$
+>
+> **Constellation revisit** ($N$ identical satellites, evenly phased):
+> $$t_{\text{revisit,constellation}} \approx \frac{t_{\text{revisit,single}}}{N}$$
+
+**Example — SuperDove constellation:** Planet operates ~200 SuperDove satellites. With a ~24 km swath at 475 km the single-satellite revisit at the equator would be $(2640/24) \times 94.6$ min $\approx 110$ orbits $\approx 7$ days; with multiple orbital planes the constellation achieves daily global revisit.
+
+Figure 7.3 shows one and a half revolutions of a 600 km Sun-synchronous ground track. Each successive ascending-node crossing is displaced westward by $\Delta_{\text{lon}}$, the track reaches latitude $\pm(180° - i) \approx \pm 82°$, and a mid-latitude site such as Ottawa is overflown on only a fraction of the daily passes — which is why the swath, not the orbit alone, sets the revisit.
+
+![Ground track of a 600 km Sun-synchronous orbit.](../assets/figures/fig_ground_track.png)
+
+**Figure 7.3** — Ground track of a 600 km Sun-synchronous orbit ($i = 97.79°$) over one and a half revolutions. Successive tracks shift westward by the Earth rotation during one orbit (≈ 24°); the maximum latitude reached is $180° - i$.
+
+### 7.4.1 Ground-station contact geometry
+
+The length of a pass depends on the minimum elevation angle $\varepsilon_{\min}$ at which the station can track (typically 5–10°). The Earth central angle from the station to the satellite at that elevation is
+
+$$\lambda_{\max} = \arccos\!\left(\frac{R_E}{R_E + h}\cos\varepsilon_{\min}\right) - \varepsilon_{\min}$$
+
+and the longest (overhead) pass lasts approximately
+
+$$t_{\text{contact,max}} \approx \frac{T}{\pi}\,\lambda_{\max} \quad (\lambda_{\max} \text{ in radians})$$
+
+> **Example — 500 km, $\varepsilon_{\min} = 10°$:** $\dfrac{R_E}{R_E+h}\cos 10° = 0.9273 \times 0.9848 = 0.9132$; $\arccos(0.9132) = 24.0°$; $\lambda_{\max} = 24.0° - 10° = 14.0° = 0.245$ rad; $t_{\text{contact,max}} = (5677/\pi) \times 0.245 \approx 442$ s $\approx$ **7.4 min**. With a 5° mask the same orbit gives $\lambda_{\max} = 17.5°$ and about 9.2 min.
+
+**Rules of thumb** for LEO at 500 km with a 10° mask: maximum pass ≈ 7–8 min (overhead), average pass ≈ 5 min, and 4–6 usable passes per day from a mid-latitude station. Chapter 17 develops the full pass geometry (slant range, Doppler and elevation profile) for the ground-segment design.
+
+---
+
+## 7.5 Hohmann transfer and deorbit
+
+> **Key equations — Hohmann transfer** (Part V §V.3 gives the LEO → GEO sanity check)
+>
+> The minimum-energy two-impulse transfer between coplanar circular orbits of radii $r_1$ and $r_2$:
+>
+> $$\Delta V_1 = \sqrt{\frac{\mu}{r_1}} \left(\sqrt{\frac{2r_2}{r_1 + r_2}} - 1\right)$$
+>
+> $$\Delta V_2 = \sqrt{\frac{\mu}{r_2}} \left(1 - \sqrt{\frac{2r_1}{r_1 + r_2}}\right)$$
+>
+> $$\Delta V_{\text{total}} = |\Delta V_1| + |\Delta V_2|$$
+
+Figure 7.4 illustrates the geometry for the classic LEO-to-GEO case: a burn at perigee raises apogee to the target radius, and a second burn at apogee circularises. The same equations, with $r_2 < r_1$, describe a deorbit burn.
+
+![Hohmann transfer from 400 km LEO to GEO.](../assets/figures/fig_hohmann.png)
+
+**Figure 7.4** — Hohmann transfer from a 400 km circular orbit to GEO: $\Delta V_1 \approx 2.40$ km/s at perigee, $\Delta V_2 \approx 1.46$ km/s at apogee, total ≈ 3.85 km/s, transfer time ≈ 5.3 h. Part V §V.3 reproduces these numbers.
+
+> **Worked example — deorbit from 600 km to a 200 km re-entry perigee**
+>
+> $r_1 = 6378.137 + 600 = 6978.137$ km, $\quad r_2 = 6378.137 + 200 = 6578.137$ km
+>
+> $\sqrt{\mu/r_1} = \sqrt{398\,600.44/6978.137} = \sqrt{57.12} = 7.558$ km/s
+>
+> $\sqrt{\dfrac{2r_2}{r_1 + r_2}} = \sqrt{\dfrac{13\,156.27}{13\,556.27}} = \sqrt{0.9705} = 0.9851$
+>
+> $\Delta V_1 = 7.558 \times (0.9851 - 1) = 7.558 \times (-0.0149) = -0.112$ km/s
+>
+> $\Delta V_{\text{deorbit}} \approx$ **112 m/s** (only the first burn is needed — once perigee is inside the dense atmosphere, drag completes the job)
+
+This deorbit ΔV is a critical input to the propulsion sizing in Chapter 12 and to the debris-compliance decision of §7.3.2.
+
+---
+
+## 7.6 Radiation environment
+
+*[Source: ECSS-E-ST-10-04C Rev.1; SMAD, Ch. 8.1]*
+
+### 7.6.1 Total ionising dose (TID) by orbit
+
+The dose a spacecraft accumulates in LEO is dominated by the trapped protons of the inner Van Allen belt, which it crosses in the South Atlantic Anomaly (§7.6.2); it rises steeply with altitude and falls with shielding thickness. Figure 7.5 shows the trend for the three shielding thicknesses a CubeSat designer can realistically choose between, and the table beneath gives the values by orbit behind 2 mm of aluminium.
+
+![Total ionising dose per year versus altitude for 1, 2 and 4 mm aluminium shielding, with the table ranges marked.](../assets/figures/fig_tid_altitude.png)
+
+**Figure 7.5** — Trapped-proton total ionising dose versus altitude for 1, 2 and 4 mm of aluminium shielding. The 2 mm curve is an illustrative fit through the ranges of the table below (grey bars); halving the shielding roughly doubles or triples the dose, doubling it roughly halves the dose. Below about 600 km commercial electronics survive multi-year missions with modest shielding; above it radiation becomes a design driver.
+
+| Orbit | TID (krad/year behind 2 mm Al) | Electronics class |
+|-------|-------------------------------|-------------------|
+| ISS (410 km, 51.6°) | 2–5 | Commercial COTS OK |
+| SSO 500 km | 5–10 | Commercial / rad-tolerant |
+| SSO 800 km | 10–20 | Rad-tolerant recommended |
+| MEO 2000 km | 50–100 | Rad-hard required |
+| GEO 35 786 km | 10–20 | Rad-hard required |
+
+**Rule of thumb:** Below 600 km in LEO, commercial COTS electronics can survive 3-year missions with modest shielding (2–3 mm Al equivalent). Above 600 km, radiation becomes a significant design driver and component cost escalates.
+
+### 7.6.2 South Atlantic Anomaly (SAA)
+
+At 200–600 km altitude over South America, trapped protons from the inner Van Allen belt dip to lower altitudes. The SAA causes:
+
+- Single-event upsets (SEU) in memory
+- Single-event latch-ups (SEL) in CMOS
+- Increased background noise in optical detectors
+
+Mitigation: error-correcting memory (EDAC), watchdog timers, latch-up protection circuits.
+
+---
+
+## 7.7 Worked example: UniSat-1 orbit selection
+
+Returning to UniSat-1, the 1U demonstrator of Chapter 1 §1.7: it selects the ISS orbit (400 km, 51.6°) not by optimisation but by **access**. Deployment from the ISS via a commercial deployer is the cheapest and most accessible launch opportunity for a university 1U CubeSat.
+
+> **Worked example — orbital parameters at 400 km, 51.6°**
+>
+> **Step 1 — Semi-major axis:**
+> $a = 6378.137 + 400 = 6778.137$ km $= 6.778 \times 10^6$ m
+>
+> **Step 2 — Orbital period:**
+> $a^3/\mu = 3.114 \times 10^{11}/398\,600.44 = 7.813 \times 10^{5}$ s²; $\quad T = 2\pi \times 883.9 = 5554$ s $\approx$ **92.6 min**
+>
+> **Step 3 — Orbital velocity:**
+> $v = \sqrt{398\,600.44/6778.137} = \sqrt{58.81} =$ **7.669 km/s**
+>
+> **Step 4 — Maximum eclipse fraction (β = 0):**
+> $\beta^* = \arcsin(6378.137/6778.137) = \arcsin(0.9410) = 70.2°$; $\quad f_{\text{ecl,max}} = 70.2/180 \approx$ **0.390** (39.0 %)
+>
+> **Step 5 — Eclipse and sunlight duration:**
+> $t_{\text{ecl}} = 92.6 \times 0.390 \approx$ **36 min**; $\quad t_{\text{sun}} = 92.6 - 36 \approx$ **56.5 min**
+>
+> **Step 6 — Lifetime** (§7.3.3): $m = 1.3$ kg, $A = 0.01$ m², $B = 1.3/(2.2 \times 0.01) = 59$ kg/m² — almost the same ballistic coefficient as the 3U case, so the same answer: **about 9 months at mean solar activity, 3 months to 2 years across the cycle.**
+
+**Why this orbit works for UniSat-1:**
+
+| Factor | 400 km / 51.6° | Impact on UniSat-1 |
+|--------|-------------------|-------------------|
+| Launch cost | Lowest (ISS resupply rideshare) | Fits university budget |
+| Orbital lifetime | ~9 months at mean activity (natural decay) | Covers the 6-month mission at mean or low solar activity; compliant with FCC 5-year rule without propulsion |
+| Radiation | Low (~2–3 krad/yr behind 2 mm Al) | COTS electronics safe for 6-month mission |
+| Inclination | 51.6° | Adequate latitude coverage for space-weather science |
+| Eclipse | ~36 min (~39 % of orbit) | Manageable with 10 Wh battery |
+| Ground contacts | Mid-latitude stations: ~4–6 passes/day | Sufficient for 9600 bps UHF downlink |
+
+**What this orbit does NOT provide:**
+
+- Sun-synchronous lighting (not needed — magnetometer is not an optical instrument)
+- Polar coverage (acceptable — 51.6° covers the majority of magnetic-field variation)
+- Long lifetime (acceptable — the 6-month design life is within the natural lifetime at mean solar activity, but see below)
+
+**No propulsion trade:** At 400 km, atmospheric drag causes natural re-entry within roughly a year. UniSat-1 therefore needs no propulsion system for either orbit maintenance or debris compliance. This eliminates an entire subsystem — a major simplification for a 1U mission. The one risk the lifetime estimate exposes is **launch timing**: deployed at solar maximum, a 1U at 400 km may re-enter in about three months, shorter than the 6-month mission. The mission plan should either accept a shortened mission in that case or ask for a slightly higher deployment altitude.
+
+---
+
+## Summary
+
+| Topic | Key takeaway |
+|-------|-------------|
+| Keplerian elements | Six parameters define the orbit; for LEO: altitude + inclination + LTAN |
+| Key formulae | $T = 2\pi\sqrt{a^3/\mu}$; $v = \sqrt{\mu/a}$; eclipse fraction from geometry and β-angle |
+| Eclipse | $f_{\text{ecl}}$ depends on β; worst case at β = 0 is $\beta^*/\pi$ (≈ 38 % at 500 km, 39 % at 400 km) |
+| Sun-synchronous | Requires specific inclination (~97.4° at 500 km) using $J_2$ precession |
+| Perturbations | $J_2$ enables SSO; drag limits lifetime; SRP affects high-A/m satellites |
+| Trade-offs | Lower altitude = better GSD and link but shorter lifetime and more drag |
+| Lifetime | $\tau \approx H B/(\rho \sqrt{\mu a})$: ~9 months at 400 km, ~5 years at 500 km for a CubeSat; strongly solar-cycle dependent |
+| Debris rules | FCC 5-year, IADC 25-year; above ~550 km requires active deorbit |
+| Hohmann transfer | $\Delta V_{\text{deorbit}} \approx 110$ m/s from 600 km; critical propulsion input |
+| Radiation | Below 600 km: COTS OK; above: rad-tolerant/hard needed; SAA causes SEU |
+| Cascade | Orbit choice affects every subsystem — highest-leverage design decision |
+
+## Problems
+
+1. **Orbit basics.** For circular orbits at 350, 550 and 700 km, compute the period, velocity, shadow half-angle $\beta^*$ and worst-case eclipse fraction. Tabulate the results and comment on how weakly the eclipse fraction depends on altitude compared with the lifetime.
+
+2. **β-angle and power.** A 3U Earth-observation CubeSat is in a 550 km Sun-synchronous orbit with 10:30 LTAN; assume its β-angle stays between 15° and 35° through the year. Compute the eclipse fraction at β = 15°, 25° and 35° and compare with the β = 0 corollary. By what percentage would the battery sized in Chapter 9 be oversized if the β = 0 value were used?
+
+3. **Sun-synchronous inclination.** Compute the Sun-synchronous inclination at 400, 600 and 800 km. Plot (or tabulate) $i$ against altitude and explain, using the $a^{7/2}$ dependence, why higher orbits need a more retrograde inclination.
+
+4. **Lifetime and the solar cycle.** A 6U CubeSat ($m = 10$ kg, tumbling-average area 0.06 m², $C_D = 2.2$) is to be deployed at 500 km. Using the method of §7.3.3 with densities of $2 \times 10^{-13}$, $5 \times 10^{-13}$ and $2 \times 10^{-12}$ kg/m³ (solar minimum, mean, maximum), estimate the lifetime in each case. Does the mission comply with the FCC 5-year rule without a deorbit device? What would you recommend?
+
+5. **Rule of thumb versus physics.** Apply the Chapter 3 §3.6.4 rule of thumb to the 400 km, 4 kg, 0.03 m² case and compare with the §7.3.3 result. Over what altitude range do the two agree to within a factor of two, and why does the rule fail at low altitude?
+
+6. **Deorbit ΔV.** Compute the single-burn deorbit ΔV from 500 km and from 700 km to a 200 km perigee. If the spacecraft instead carries a drag sail that raises its area from 0.03 m² to 1.0 m², estimate the new lifetime at 700 km (take $\rho \approx 2 \times 10^{-14}$ kg/m³ and $H \approx 90$ km) and compare the two deorbit strategies in terms of mass and risk.
+
+7. **Coverage.** A single satellite at 500 km carries an imager with a 3° half-cone angle. Compute the swath, the ground-track spacing, and the approximate equatorial revisit time. How many evenly phased satellites would be needed for a two-day revisit?
+
+8. **Contact time.** For a 400 km orbit and a station with a 5° elevation mask, compute the maximum pass duration. If the average pass is about 60 % of the maximum and the station sees five passes per day, how many minutes of contact are available daily, and (anticipating Chapter 11) what data rate would be needed to downlink 500 MB per day?
+
+9. **Orbit scoring.** Define a weighted scoring scheme (weights summing to 1) over GSD, revisit, lifetime/debris compliance, radiation and launch cost, and score three candidate orbits (400 km ISS, 500 km SSO, 700 km SSO) for (a) an optical Earth-observation mission and (b) a magnetometer science mission like UniSat-1. Explain why the winning orbit differs, and what happens to the ranking if the lifetime weight is doubled.
+
+## References
+
+1. Vallado, D., *Fundamentals of Astrodynamics and Applications*, 4th ed., 2013, Ch. 2–6, 9. https://celestrak.org/software/vallado-sw.php
+2. Wertz, Everett & Puschell, *Space Mission Engineering: The New SMAD*, 2011, Ch. 5–7. https://www.space.com/smad
+3. Curtis, H., *Orbital Mechanics for Engineering Students*, 4th ed., 2020, Ch. 2–4. https://www.elsevier.com/books/orbital-mechanics-for-engineering-students/curtis/978-0-08-102133-0
+4. NASA, *Systems Engineering Handbook*, 2016, §4.4 (Process 4: Design Solution Definition). https://www.nasa.gov/reference/systems-engineering-handbook/
+5. ECSS, *ECSS-E-ST-10-04C Rev.1: Space Environment*, 2020. https://ecss.nl/standard/ecss-e-st-10-04c-rev-1-space-environment-15-june-2020/
+6. ECSS, *ECSS-U-AS-10C Rev.2: Space Debris Mitigation Requirements*, 2023. https://ecss.nl/standard/ecss-u-as-10c-rev-2-space-debris-mitigation-requirements/
+7. IADC, *Space Debris Mitigation Guidelines*, IADC-02-01 Rev 3, 2021. https://www.iadc-home.org/documents_public/
+8. FCC, *Report and Order FCC 22-74: Space Innovation (5-year rule)*, 2022. https://www.fcc.gov/document/fcc-adopts-new-5-year-rule-deorbiting-satellites
+9. Wertz, J. R., *Mission Geometry: Orbit and Constellation Design and Management*, 2001 (eclipse geometry, eq. 5.24). https://www.springer.com
+10. Picone, Hedin, Drob & Aikin, "NRLMSISE-00 empirical model of the atmosphere," *J. Geophys. Res.* 107, 2002. https://doi.org/10.1029/2002JA009430
+
+
+# Chapter 8 — Mission Architecture: Segments, Interfaces and Engineering Budgets
+
+> **Recommended background.** NASA Systems Engineering Handbook §4.4 (Design Solution Definition) and §6.3 (Interface Management); ECSS-E-ST-10-24C (Interface management); ECSS-E-HB-10-02A §5.2 and ECSS-E-ST-10-02C (margin philosophy); SMAD4 Ch. 10–11. This chapter assumes requirements (Chapter 5), functions (Chapter 6) and an orbit (Chapter 7) have been defined.
+
+## Learning objectives
+
+By the end of this chapter, you will be able to:
+
+1. Decompose a space mission into its constituent segments (space, ground, launch, user)
+2. Construct a system architecture block diagram with subsystem boundaries
+3. Identify and classify all subsystem-to-subsystem interfaces using an N² matrix, and detect interface conflicts
+4. Write formal interface requirements for critical subsystem pairs
+5. Construct a mass budget with the two-level ECSS margin policy and a mode-based power budget
+6. Read a set of budget indicators (margin by budget, margin by mode) and decide whether a design closes
+
+---
+
+## 8.1 Mission segment decomposition
+
+*[Source: NASA SEH Sec. 4.4; ECSS-E-ST-10C Sec. 5.4; SMAD, Ch. 1]*
+
+Every space mission decomposes into segments, each with distinct functions and interfaces. Chapter 4 §4.8.1 introduced the segments at the ConOps level; this section is the canonical treatment. Figure 8.1 shows the four segments and the links between them.
+
+<svg viewBox="0 0 800 300" xmlns="http://www.w3.org/2000/svg" style="max-width:700px; font-family: sans-serif; font-size: 12px;">
+  <!-- Space Segment -->
+  <rect x="50" y="20" width="200" height="110" rx="8" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+  <text x="150" y="45" text-anchor="middle" fill="#1e40af" font-weight="bold" font-size="14">Space Segment</text>
+  <text x="150" y="65" text-anchor="middle" fill="#1e40af" font-size="10">Spacecraft bus</text>
+  <text x="150" y="80" text-anchor="middle" fill="#1e40af" font-size="10">Payload instrument(s)</text>
+  <text x="150" y="95" text-anchor="middle" fill="#1e40af" font-size="10">Subsystems (EPS, AOCS, TTC...)</text>
+  <text x="150" y="110" text-anchor="middle" fill="#1e40af" font-size="10">Flight software</text>
+  <!-- Ground Segment -->
+  <rect x="300" y="170" width="200" height="110" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+  <text x="400" y="195" text-anchor="middle" fill="#166534" font-weight="bold" font-size="14">Ground Segment</text>
+  <text x="400" y="215" text-anchor="middle" fill="#166534" font-size="10">Ground station(s)</text>
+  <text x="400" y="230" text-anchor="middle" fill="#166534" font-size="10">Mission control centre</text>
+  <text x="400" y="245" text-anchor="middle" fill="#166534" font-size="10">Data processing pipeline</text>
+  <text x="400" y="260" text-anchor="middle" fill="#166534" font-size="10">Operations team</text>
+  <!-- Launch Segment -->
+  <rect x="550" y="20" width="200" height="80" rx="8" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+  <text x="650" y="45" text-anchor="middle" fill="#92400e" font-weight="bold" font-size="14">Launch Segment</text>
+  <text x="650" y="65" text-anchor="middle" fill="#92400e" font-size="10">Launch vehicle</text>
+  <text x="650" y="80" text-anchor="middle" fill="#92400e" font-size="10">Deployer (e.g., ISIPOD)</text>
+  <!-- User Segment -->
+  <rect x="550" y="170" width="200" height="80" rx="8" fill="#fce7f3" stroke="#db2777" stroke-width="2"/>
+  <text x="650" y="195" text-anchor="middle" fill="#9d174d" font-weight="bold" font-size="14">User Segment</text>
+  <text x="650" y="215" text-anchor="middle" fill="#9d174d" font-size="10">End users</text>
+  <text x="650" y="235" text-anchor="middle" fill="#9d174d" font-size="10">Data products / applications</text>
+  <!-- RF link between space and ground -->
+  <line x1="250" y1="100" x2="300" y2="200" stroke="#64748b" stroke-width="2" stroke-dasharray="6,3"/>
+  <text x="260" y="155" fill="#64748b" font-size="10" transform="rotate(-35, 260, 155)">RF Link (TTC + Data)</text>
+  <!-- Launch to space -->
+  <line x1="550" y1="60" x2="250" y2="60" stroke="#d97706" stroke-width="2"/>
+  <text x="400" y="52" text-anchor="middle" fill="#d97706" font-size="10">Deploy</text>
+  <!-- Ground to user -->
+  <line x1="500" y1="230" x2="550" y2="210" stroke="#64748b" stroke-width="1.5"/>
+  <text x="530" y="215" fill="#64748b" font-size="10">Data</text>
+</svg>
+
+**Figure 8.1** — The four mission segments and their principal links: the launch segment deploys the space segment; space and ground segments exchange telemetry, telecommands and data over RF; the ground segment delivers data products to the user segment.
+
+| Segment | Elements | Key interfaces |
+|---------|----------|---------------|
+| **Space** | Spacecraft bus, payload, flight software | To ground (RF), to launch (mechanical/electrical) |
+| **Ground** | Ground station, MCC, data processing | To space (RF), to user (network) |
+| **Launch** | Launch vehicle, deployer, adapter | To space (mechanical, electrical inhibits) |
+| **User** | End users, applications, data consumers | To ground (data products) |
+
+The ground segment is designed in Chapter 17 and operated in Chapter 18; the launch interface (deployer, inhibits, the CubeSat Design Specification) is treated with the structure in Chapter 12.
+
+---
+
+## 8.2 System architecture block diagram
+
+The system block diagram shows the internal architecture of the space segment — all subsystems and their data, power and mechanical connections. Figure 8.2 is the reference CubeSat architecture used for the 3U EO CubeSat running example (EOSat-3U) throughout Chapters 9–12.
+
+<svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg" style="max-width:750px; font-family: sans-serif; font-size: 11px;">
+  <!-- Central bus -->
+  <rect x="300" y="200" width="200" height="60" rx="6" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+  <text x="400" y="225" text-anchor="middle" fill="#92400e" font-weight="bold">OBC / Data Handling</text>
+  <text x="400" y="245" text-anchor="middle" fill="#92400e" font-size="10">I2C / SPI / CAN bus</text>
+  <!-- EPS -->
+  <rect x="50" y="30" width="160" height="55" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+  <text x="130" y="52" text-anchor="middle" fill="#1e40af" font-weight="bold">EPS</text>
+  <text x="130" y="70" text-anchor="middle" fill="#1e40af" font-size="10">SA + Battery + Regulator</text>
+  <!-- Power bus lines -->
+  <line x1="130" y1="85" x2="130" y2="160" stroke="#dc2626" stroke-width="2"/>
+  <line x1="50" y1="160" x2="750" y2="160" stroke="#dc2626" stroke-width="2"/>
+  <text x="400" y="153" text-anchor="middle" fill="#dc2626" font-size="10" font-weight="bold">Power Bus (3.3 V / 5 V / Battery)</text>
+  <!-- AOCS -->
+  <rect x="50" y="310" width="160" height="55" rx="6" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+  <text x="130" y="332" text-anchor="middle" fill="#166534" font-weight="bold">AOCS</text>
+  <text x="130" y="350" text-anchor="middle" fill="#166534" font-size="10">RW + MTQ + ST + SS</text>
+  <line x1="210" y1="335" x2="300" y2="230" stroke="#64748b" stroke-width="1.5"/>
+  <!-- Comms -->
+  <rect x="590" y="310" width="160" height="55" rx="6" fill="#e0e7ff" stroke="#4f46e5" stroke-width="2"/>
+  <text x="670" y="332" text-anchor="middle" fill="#3730a3" font-weight="bold">Comms (TTC)</text>
+  <text x="670" y="350" text-anchor="middle" fill="#3730a3" font-size="10">TX + RX + Antenna</text>
+  <line x1="590" y1="335" x2="500" y2="230" stroke="#64748b" stroke-width="1.5"/>
+  <!-- Payload -->
+  <rect x="590" y="30" width="160" height="55" rx="6" fill="#fce7f3" stroke="#db2777" stroke-width="2"/>
+  <text x="670" y="52" text-anchor="middle" fill="#9d174d" font-weight="bold">Payload</text>
+  <text x="670" y="70" text-anchor="middle" fill="#9d174d" font-size="10">Telescope / Sensor</text>
+  <line x1="590" y1="60" x2="500" y2="220" stroke="#64748b" stroke-width="1.5"/>
+  <!-- Thermal -->
+  <rect x="300" y="400" width="200" height="45" rx="6" fill="#fef9c3" stroke="#ca8a04" stroke-width="2"/>
+  <text x="400" y="420" text-anchor="middle" fill="#854d0e" font-weight="bold">Thermal</text>
+  <text x="400" y="437" text-anchor="middle" fill="#854d0e" font-size="10">Heaters + MLI + Radiators</text>
+  <line x1="400" y1="400" x2="400" y2="260" stroke="#64748b" stroke-width="1" stroke-dasharray="4,3"/>
+  <!-- Structure (background) -->
+  <rect x="30" y="10" width="740" height="470" rx="10" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="8,4"/>
+  <text x="400" y="490" text-anchor="middle" fill="#94a3b8" font-size="12">Structure (primary + secondary)</text>
+  <!-- Power taps -->
+  <line x1="130" y1="160" x2="130" y2="310" stroke="#dc2626" stroke-width="1" stroke-dasharray="3,2"/>
+  <line x1="670" y1="160" x2="670" y2="310" stroke="#dc2626" stroke-width="1" stroke-dasharray="3,2"/>
+  <line x1="670" y1="85" x2="670" y2="160" stroke="#dc2626" stroke-width="1" stroke-dasharray="3,2"/>
+  <line x1="400" y1="160" x2="400" y2="200" stroke="#dc2626" stroke-width="1" stroke-dasharray="3,2"/>
+</svg>
+
+**Figure 8.2** — Reference CubeSat system block diagram: the OBC at the centre of the data bus, the EPS feeding a regulated power bus to every subsystem, and the structure enclosing all of them.
+
+### 8.2.1 Subsystem roles (CubeSat reference)
+
+| Subsystem | Abbreviation | Primary function | Typical mass fraction |
+|-----------|-------------|-----------------|----------------------|
+| **Payload** | PL | Mission-specific sensing or communication | 25–40 % |
+| **Electrical Power System** | EPS | Generate, store, distribute electrical power | 15–25 % |
+| **Attitude & Orbit Control** | AOCS | Determine and control attitude; orbit knowledge | 8–15 % |
+| **Communications (TTC)** | LINK / TTC | Telemetry downlink, telecommand uplink, data downlink | 5–10 % |
+| **On-Board Computer** | OBC / C&DH | Command execution, data handling, flight software | 2–5 % |
+| **Thermal Control** | TCS | Maintain all components within temperature limits | 1–5 % |
+| **Structure** | STR | Mechanical support, launch load path, CDS compliance | 15–25 % |
+| **Propulsion** | PROP | Orbit manoeuvres, deorbit (if required) | 0–15 % |
+| **Harness** | HAR | Electrical interconnections | 3–7 % |
+
+---
+
+## 8.3 The N² interface matrix
+
+*[Source: NASA SEH Sec. 6.3 — Process 12: Interface Management; ECSS-E-ST-10-24C]*
+
+Interface problems are the leading cause of integration failures. NASA SEH states: "Most system failures can be traced back to interface problems." The N² matrix, popularised by NASA and ESA concurrent-design practice, is the standard tool for finding every interface before it finds you. This section is the book's canonical treatment; Chapter 15 returns to interfaces as a source of risk.
+
+### 8.3.1 N² matrix structure
+
+For a system with $N$ subsystems, the N² matrix is an $N \times N$ grid where:
+
+- **Diagonal cells** contain the subsystem names (EPS, AOCS, Comms, Thermal, Structure, Propulsion, OBC, Payload)
+- **Off-diagonal cells** contain the interfaces between subsystems
+- **Cell $(i, j)$** = outputs FROM subsystem $i$ TO subsystem $j$ (read across the row)
+- **Cell $(j, i)$** = outputs FROM subsystem $j$ TO subsystem $i$ (read down the column)
+
+For 8 subsystems there are $8 \times 7 / 2 = 28$ potential interface pairs (56 directed cells). A typical CubeSat has 18–22 active pairs.
+
+### 8.3.2 A six-subsystem example
+
+The table below is a complete N² matrix for a six-subsystem CubeSat. Each cell is read as "what the row subsystem delivers to the column subsystem".
+
+| FROM ↓ / TO → | EPS | OBC | AOCS | TTC | Payload | Structure |
+|---|---|---|---|---|---|---|
+| **EPS** | *[EPS]* | 28 V bus; 5 V reg; I²C HK | 28 V bus; 5 V reg; I²C HK | 28 V bus; 5 V reg; I²C HK | 28 V bus; 5 V reg; I²C HK | Mounting bolts |
+| **OBC** | Power commands; telemetry | *[OBC]* | Commands (I²C/SPI) | TC data (UART) | Commands (SPI/UART) | — |
+| **AOCS** | Power request | Attitude data; AOCS HK | *[AOCS]* | Attitude for antenna pointing | Attitude data for pointing | Mount; vibration |
+| **TTC** | Power request | RX data; command forwarding | — | *[TTC]* | — | Antenna mount |
+| **Payload** | Power request | Science data; payload HK | Pointing request | — | *[Payload]* | FOV clearance |
+| **Structure** | — | — | Sensor mounting | Antenna mounting | Payload mounting | *[Structure]* |
+
+**Table 8.1** — N² matrix for a six-subsystem CubeSat. Row = source, column = destination.
+
+### 8.3.3 Interface types
+
+Every entry in the matrix is tagged with one or more interface types. The letter codes below are used throughout the book (Chapter 15 uses the same codes in the interface-risk register).
+
+| Type | Code | Description | Examples |
+|------|------|-------------|----------|
+| **Mechanical** | M | Physical attachment, loads, alignment tolerances, thermal straps, alignment pins | Payload mounting to structure face |
+| **Electrical / power** | E | Power connections, bus voltage, switched lines | 28 V bus, 5 V regulated, switched lines to all subsystems |
+| **Thermal** | T | Heat transfer paths, conductive and radiative coupling | Transponder waste heat to radiator panel |
+| **Data** | D | Digital bus (I²C, SPI, UART, CAN, RS-422) | OBC commands to AOCS controller |
+| **RF** | R | Intentional RF paths (coaxial cable, waveguide) and electromagnetic coupling | TX emissions coupling into payload receiver |
+| **Optical** | O | Light paths, field-of-view clearance, stray light | Star tracker FOV clearance from solar array |
+| **Software** | S | Command interfaces, telemetry packet definitions, mode transitions | OBC-to-AOCS command dictionary |
+
+**Table 8.2** — Interface-type codes used throughout this book.
+
+Figure 8.3 shows a colour-coded N² matrix for an eight-subsystem 6U CubeSat using these codes. Notice how the Power row is almost entirely E (every subsystem draws power), the Data/OBC row and column are mostly D, and the sparse M, T, R and O entries are the ones most likely to be forgotten.
+
+![N² interface matrix for a 6U CubeSat.](../assets/figures/fig_n2_matrix.png)
+
+**Figure 8.3** — Illustrative N² interface matrix for an eight-subsystem 6U CubeSat, colour-coded by interface type (M mechanical, E electrical, T thermal, D data, R RF, O optical, S software — Table 8.2). Diagonal cells name the subsystems; off-diagonal cells are read row → column.
+
+### 8.3.4 Common CubeSat interface concerns
+
+| Interface pair | Types | Key concern |
+|----------------|-------|-------------|
+| EPS ↔ AOCS | E | Bus voltage compatibility; reaction-wheel peak power draw |
+| EPS ↔ Comms | E | TX peak power demand (~6–10 W); switched-line allocation |
+| EPS ↔ Thermal | E, T | SA thermal coupling; radiator vs SA area competition on external faces |
+| EPS ↔ Payload | E | Peak power switching; duty-cycle coordination |
+| Structure ↔ AOCS | M | Reaction wheel and star tracker mounting alignment; vibration isolation |
+| Structure ↔ Payload | M, O | Payload alignment stability; optical FOV clearance |
+| OBC ↔ AOCS | D, S | Attitude data for payload pointing; mode-transition commands |
+| OBC ↔ Comms | D, S | Telemetry packet routing; telecommand distribution |
+| OBC ↔ Payload | D, S | Science-data acquisition trigger; instrument commanding |
+| Comms ↔ Payload | R | **EMC:** TX conducted/radiated emissions vs payload receiver sensitivity |
+| Comms ↔ AOCS | R, O | Antenna pattern vs star tracker FOV; antenna pointing coordination |
+| Thermal ↔ Payload | T | Detector cooling requirement; operating temperature limits |
+| AOCS ↔ Payload | M | Reaction-wheel micro-vibration vs payload pointing stability (jitter) |
+
+### 8.3.5 Conflict detection and resolution
+
+An **interface conflict** exists when two subsystems have incompatible expectations at their shared boundary. Typical cases:
+
+- Subsystem A expects to send 28 V but subsystem B only accepts 5 V (E)
+- Subsystem A uses I²C but subsystem B only has SPI or RS-422 (D)
+- Subsystem A transmits in S-band but subsystem B's antenna is X-band (R)
+- Subsystem A mounts on the +Z face but the structure has no mounting provision on +Z (M)
+
+Many of these are mechanical checks — compare the two sides of every cell for voltage, protocol, band and location — and a concurrent-design tool with a constraint engine will flag them automatically as equipment is selected. The remainder require engineering judgement, which is where the severity classification helps.
+
+**Severity classification:**
+
+| Severity | Description | Example | Required action |
+|----------|-------------|---------|----------------|
+| **Critical** | Design cannot close without resolution | EMC: TX radiation prevents payload operation | Must resolve before PDR |
+| **Major** | Significant impact on design margin | Radiator area competes with SA area | Mitigation plan required by PDR |
+| **Minor** | Manageable with minor adjustment | Star tracker FOV partially blocked by stowed antenna | Accommodation analysis |
+
+**Resolution options:**
+
+1. **Relocate:** Move a component to avoid the conflict (e.g., star tracker to a different face)
+2. **Shield/isolate:** Add EMC shielding, vibration isolators, thermal insulation
+3. **Time-division:** Schedule conflicting activities to avoid simultaneity (e.g., no TX during imaging)
+4. **Accept risk:** Document residual risk and margin impact in the risk register (Chapter 15)
+
+> **Worked example — detecting a data-protocol conflict**
+>
+> *Problem:* The OBC sends commands to the reaction wheels via I²C. The selected reaction-wheel unit (a Blue Canyon RWP100 — a representative example, not an endorsement) uses RS-422. Cell (OBC → AOCS) of the N² matrix therefore reads "commands, I²C" on one side of the boundary and "commands, RS-422" on the other: a D-type interface conflict.
+>
+> *Resolution options:*
+>
+> 1. Select a different reaction wheel that supports I²C
+> 2. Add an I²C-to-RS-422 bridge (additional component, mass, cost and failure point)
+> 3. Select a different OBC that supports RS-422
+>
+> *Severity:* Major — the design can close with option 2, but at a cost in mass, harness and reliability. The conflict is recorded in the interface register with its resolution and owner, and the resolution becomes an interface requirement (below). In a concurrent-design tool with equipment-level protocol data this conflict appears as a warning the moment the wheel is selected.
+
+### 8.3.6 Writing interface requirements
+
+For each significant interface, write formal requirements in the "shall" form of Chapter 5:
+
+**Example — EPS ↔ all subsystems:**
+```
+IR-PWR-001: "The EPS shall provide regulated bus voltages of
+             3.3 V ± 0.1 V and 5.0 V ± 0.25 V to all subsystems."
+IR-PWR-002: "Each subsystem shall not exceed its allocated power
+             draw without EPS coordination."
+```
+
+**Example — Comms ↔ Payload (EMC):**
+```
+IR-EMC-001: "TX conducted emissions shall be below −60 dBm in the
+             payload receiver band (1.5–1.6 GHz) during imaging mode."
+IR-EMC-002: "TX and payload acquisition shall not operate simultaneously
+             unless IR-EMC-001 is verified by test."
+```
+
+**Example — OBC ↔ AOCS (data), from the worked example:**
+```
+IR-DAT-003: "The OBC shall command the reaction-wheel assembly over
+             RS-422 at 115.2 kbit/s via the I²C-to-RS-422 bridge;
+             the bridge shall be powered from the AOCS switched line."
+```
+
+---
+
+## 8.4 Engineering budgets: mass and power
+
+*[Source: ECSS-E-HB-10-02A Sec. 5.2; ECSS-E-ST-10-02C; SMAD, Ch. 10–11]*
+
+Engineering budgets are the quantitative backbone of the design. They answer: **"Will this design close?"**
+
+### 8.4.1 Mass budget
+
+> **Key equations — mass budget**
+>
+> **Mass margin:**
+> $$\text{Margin}_{\%} = \frac{M_{\text{allocation}} - M_{\text{MEV}}}{M_{\text{allocation}}} \times 100\,\%$$
+>
+> where MEV = Maximum Expected Value = CBE + maturity margins (equipment level), to which the system-level margin is added before comparison with the allocation.
+>
+> **Status thresholds:** Green: > 20 % | Amber: 10–20 % | Red: < 10 % | Exceeded: < 0 %
+
+| Term | Definition |
+|------|-----------|
+| **CBE** (Current Best Estimate) | Best estimate of actual mass based on current knowledge |
+| **MEV** (Maximum Expected Value) | CBE + equipment maturity margin = worst-case expected mass |
+| **Equipment maturity margin** | Applied per component based on design maturity (TRL / heritage) |
+| **System margin** | Applied at system level as management reserve, decreasing with project phase |
+
+### 8.4.2 The ECSS margin policy — two levels
+
+The ECSS margin philosophy has **two levels**, and both must be applied. First, each piece of equipment carries a **maturity margin** that depends on how well its mass is known; second, the project carries a **system-level margin** on the summed MEV that depends on the lifecycle phase (Chapter 1 §1.4). Table 8.3 is the single statement of the policy used throughout this book; Part IV and later chapters refer to it rather than restating the numbers.
+
+| Level | Basis | Margin |
+|-------|-------|--------|
+| **Equipment maturity** | Off-the-shelf, flown, unmodified | 5 % |
+| | Off-the-shelf with minor modification | 10 % |
+| | New design or major modification | 20 % |
+| **System level, by phase** | Phase 0 / A (concept, feasibility) | 20 % |
+| | Phase B (preliminary definition) | 15 % |
+| | Phase C (detailed definition) | 10 % |
+| | Phase D (qualification and production) | 5 % |
+
+**Table 8.3** — Canonical ECSS mass-margin schedule: equipment maturity margins (applied per item to obtain MEV) plus a system-level margin by phase (applied to the summed MEV). Source: ECSS-E-HB-10-02A §5.2 and the margin philosophy of ECSS-E-ST-10-02C.
+
+The two levels compound. For a Phase A design in which most equipment is new (20 % maturity margin), the total allowance above CBE is $1.20 \times 1.20 - 1 \approx 44\,\%$; by Phase C with largely flight-proven equipment it falls to roughly $1.05 \times 1.10 - 1 \approx 16\,\%$, and in Phase D, when masses are measured, to about 5 %. Figure 8.4 shows this shrinking envelope alongside a typical dry-mass distribution.
+
+![Mass distribution and ECSS margin policy by phase.](../assets/figures/fig_mass_budget.png)
+
+**Figure 8.4** — Left: typical dry-mass distribution for an 8.5 kg CubeSat-class spacecraft (structure, power and payload dominate). Right: the compound equipment-plus-system margin envelope by phase, illustrating how the allowance above CBE shrinks as the design matures (Table 8.3).
+
+> **Worked example — EOSat-3U mass budget (Phase A)**
+>
+> All equipment is treated as new design (20 % maturity margin); system margin 20 % (Phase A).
+>
+> | Subsystem | CBE (kg) | Equipment margin (20 %) | MEV (kg) |
+> |-----------|---------|---------------------|---------|
+> | Payload | 1.50 | 0.30 | 1.80 |
+> | EPS | 0.75 | 0.15 | 0.90 |
+> | AOCS | 0.55 | 0.11 | 0.66 |
+> | Comms (TTC) | 0.25 | 0.05 | 0.30 |
+> | OBC | 0.08 | 0.02 | 0.10 |
+> | Thermal | 0.05 | 0.01 | 0.06 |
+> | Structure | 0.35 | 0.07 | 0.42 |
+> | Harness | 0.15 | 0.03 | 0.18 |
+> | **Dry total** | **3.68** | | **4.42** |
+> | System margin (20 %) | | | **0.88** |
+> | **Dry MEV + system margin** | | | **5.30** |
+> | Propellant | | | 0.00 |
+> | **Wet mass** | | | **5.30** |
+> | **Launcher allocation** | | | **6.00** (3U limit) |
+> | **Mass margin** | | | **0.70 kg (11.7 %)** — Amber |
+>
+> The 3.68 kg CBE is the parametric estimate that Chapter 12 later replaces with a bottom-up equipment list.
+
+### 8.4.3 Mode-based power budget
+
+The power budget is computed **per operational mode** because not all subsystems draw power simultaneously. The modes are those of the ConOps (Chapter 4 §4.8.3; the full mode table with transitions and FDIR triggers is in Chapter 18). The table below is the per-subsystem breakdown for EOSat-3U; its totals (Safe 2 W, Nominal 4 W, Imaging 8 W, Downlink 10 W) are the values used in Chapters 4, 9 and 18.
+
+| Subsystem | Safe (W) | Nominal (W) | Imaging (W) | Downlink (W) | Eclipse (W) |
+|-----------|---------|---------|-------------|-------------|-------------|
+| OBC | 1.0 | 1.0 | 1.0 | 1.0 | 1.0 |
+| AOCS | 0.3 | 1.5 | 2.5 | 2.0 | 1.5 |
+| Payload | 0 | 0 | 3.5 | 0 | 0 |
+| Comms (RX always on; TX in downlink) | 0.2 | 0.5 | 0.5 | 6.0 | 0.5 |
+| Thermal (heaters) | 0.5 | 1.0 | 0.5 | 1.0 | 0.5 |
+| **Total** | **2.0** | **4.0** | **8.0** | **10.0** | **3.5** |
+
+**Table 8.4** — EOSat-3U mode-based power budget. The eclipse column is the nominal mode with the thermal and AOCS loads of the eclipse arc; it is the $P_{\text{ecl}}$ used for battery sizing in Chapter 9.
+
+### 8.4.4 Orbit-average power
+
+> **Key equation — orbit-average power**
+>
+> $$P_{\text{avg}} = \sum_{\text{modes}} \left(P_{\text{mode}} \times \text{duty}_{\text{mode}}\right)$$
+>
+> **Example for the 94.6-min, 500 km orbit of Chapter 7 (58.8 min sunlight, 35.8 min eclipse):**
+>
+> | Mode | Power (W) | Duty (%) | Contribution (W) |
+> |------|----------|----------|-------------------|
+> | Nominal (sunlit) | 4.0 | 45 % | 1.80 |
+> | Imaging | 8.0 | 10 % | 0.80 |
+> | Downlink | 10.0 | 7 % | 0.70 |
+> | Eclipse | 3.5 | 38 % | 1.33 |
+> | **Total** | | **100 %** | **4.63 W** |
+
+The orbit-average demand is what the solar array must deliver on average; the peak sunlit mode (10 W) and the eclipse load (3.5 W) are what size the array and the battery respectively (Chapter 9 §9.2–§9.3).
+
+### 8.4.5 Other budget types (preview)
+
+Each of the remaining budgets is developed in its own chapter:
+
+| Budget | Key equation | Chapter |
+|--------|-------------|---------|
+| **Link** | $\text{Margin} = \text{EIRP} - \text{FSPL} + G/T - k - 10\log_{10}(R_b) - E_b/N_0$ | 11 |
+| **Pointing** | $\theta_{\text{total}} = \sqrt{\sum \theta_i^2}$ (RSS) | 10 |
+| **ΔV** | $\Delta V = I_{sp} \cdot g_0 \cdot \ln(m_0/m_f)$ (Tsiolkovsky) | 12 |
+| **Data** | Daily downlink capacity ≥ daily generation | 11 |
+
+---
+
+## 8.5 Worked example: UniSat-1 architecture
+
+Returning to UniSat-1, the 1U demonstrator of Chapter 1 §1.7: it shows that a 1U CubeSat can be built with a radically simplified architecture compared with the 3U EO mission. Several subsystems are eliminated entirely.
+
+| Subsystem | EOSat-3U | UniSat-1 (1U) | Rationale for elimination |
+|-----------|--------------|---------------|--------------------------|
+| **EPS** | Required | **Required** | Always needed |
+| **OBC** | Required | **Required** | Always needed (minimal: MSP430 or ARM Cortex-M class) |
+| **Comms** | S-band + X-band | **UHF only** | 9600 bps is sufficient for < 1 kbps payload data |
+| **Structure** | Required | **Required** | Always needed (COTS 1U frame) |
+| **Payload** | Telescope (complex) | **MEMS magnetometer** (simple: 50 g, 0.2 W) | — |
+| **AOCS** | Star tracker + RWs + MTQs | **Eliminated** | Passive magnetic only (permanent magnet + hysteresis rods, treated as structure, not a subsystem) |
+| **Thermal** | MLI + heaters | **Eliminated** | Passive coatings only; 400 km LEO thermal environment is benign for a 6-month mission |
+| **Propulsion** | May be needed | **Eliminated** | 400 km orbit decays naturally in under a year (Chapter 7 §7.7); no orbit maintenance needed |
+| **Harness** | Significant | **Minimal** | Only 3–4 board-to-board connections via PC/104 stack |
+
+**N² matrix — drastically reduced:** For UniSat-1 the interface matrix shrinks from 28 potential pairs (8 subsystems) to just 10 pairs (5 subsystems). The active interfaces are:
+
+| Interface pair | Types | Key concern |
+|----------------|-------|-------------|
+| EPS ↔ OBC | E, D | Power regulation, housekeeping telemetry |
+| EPS ↔ Comms | E | TX peak power (~0.5 W — small relative to budget) |
+| EPS ↔ Payload | E | Payload switching (0.2 W — trivial) |
+| OBC ↔ Comms | D, S | TM/TC packet routing |
+| OBC ↔ Payload | D | Magnetometer data acquisition (I²C or SPI) |
+| Structure ↔ All | M | Mounting, CDS rail compliance |
+
+**Mass budget (Phase A):**
+
+| Subsystem | CBE (g) | Equipment margin (20 %) | MEV (g) |
+|-----------|---------|---------------------|---------|
+| Payload (MEMS magnetometer) | 50 | 10 | 60 |
+| EPS (board + battery + body-mounted cells) | 250 | 50 | 300 |
+| OBC (MSP430/Cortex-M board) | 30 | 6 | 36 |
+| Comms (UHF transceiver + antenna) | 80 | 16 | 96 |
+| Structure (1U frame) | 200 | 40 | 240 |
+| Passive magnetic AOCS (magnet + rods) | 30 | 6 | 36 |
+| Harness | 50 | 10 | 60 |
+| **Dry total** | **690** | | **828** |
+| System margin (20 %) | | | **166** |
+| **Dry MEV + system margin** | | | **994** |
+| **CDS allocation** | | | **1330** |
+| **Mass margin** | | | **336 g (25.3 %)** — Green |
+
+**Power budget (all modes use the same simple duty cycle):**
+
+| Mode | Power (W) | Duty (%) | Contribution (W) |
+|------|----------|----------|-------------------|
+| Idle (OBC + beacon) | 0.7 | 50 % | 0.35 |
+| Science (+ magnetometer) | 0.9 | 10 % | 0.09 |
+| Downlink (+ UHF TX) | 1.2 | 5 % | 0.06 |
+| Eclipse (OBC only) | 0.5 | 35 % | 0.18 |
+| **Orbit average** | | **100 %** | **0.68 W** |
+
+With ~2 W available from body-mounted cells, the power margin is substantial (~1.3 W, or 66 %). This is one of the luxuries of a simple payload on a 1U bus.
+
+**Key architectural insight:** The UniSat-1 architecture is so simple that a small team (3–5 people) can design, build, test and operate it. This makes it ideal for a university or educational programme. The concurrent-design process still applies — but the design loops are shorter and the trade space is narrower.
+
+---
+
+## Summary
+
+| Topic | Key takeaway |
+|-------|-------------|
+| Mission segments | Space, Ground, Launch, User — each with defined interfaces |
+| System architecture | Block diagram shows subsystems, data buses, power distribution |
+| N² matrix | Maps all 28 potential interface pairs; 7 types (M, E, T, D, R, O, S); read row → column |
+| Interface conflicts | Detect by comparing both sides of every cell; severity (critical/major/minor); 4 resolution options |
+| Interface requirements | Formal boundary agreements; must be verifiable |
+| Mass budget | CBE + equipment maturity margin = MEV; + system margin; compare to allocation |
+| ECSS margins | Two levels: equipment 5/10/20 % by maturity; system 20/15/10/5 % by phase (Table 8.3) |
+| Power budget | Mode-based; duty cycling gives orbit-average; SA must cover peak + recharge |
+| Budget closure | Negative margin = design does not close; reduce demand or increase allocation |
+
+## Problems
+
+1. **Segments and interfaces.** For a 3U Earth-observation CubeSat that delivers imagery to agricultural users through a commercial ground-station network, list every segment, the elements in each, and the interface between each pair of segments with its type code (Table 8.2). Which segment interface is governed by a document the mission team does not control?
+
+2. **Build an N² matrix.** Construct the full 8 × 8 N² matrix for the reference architecture of Figure 8.2 (Payload, EPS, AOCS, Comms, OBC, Thermal, Structure, Harness). Fill every active cell with the item delivered and its type code(s). Count the active pairs and compare with the 18–22 typical range.
+
+3. **Conflict detection.** In your matrix from Problem 2, introduce three conflicts: a voltage mismatch, a protocol mismatch and a field-of-view obstruction. For each, classify the severity, choose a resolution option, and write the interface requirement that records the resolution.
+
+4. **EMC interface.** The comms transmitter radiates 2 W at 2.2 GHz and the payload includes a GNSS receiver at 1.575 GHz. Explain why this is an R-type conflict even though the frequencies differ, propose two resolution options from §8.3.5, and write a verifiable interface requirement for the one you select.
+
+5. **Mass budget by phase.** Take the EOSat-3U CBE values of §8.4.2 and recompute the mass margin against a 6.0 kg allocation for Phase B (assume the payload and AOCS are now off-the-shelf with minor modification, the rest new design) and for Phase C (all equipment off-the-shelf unmodified). At which phase does the budget turn green?
+
+6. **Allocation sensitivity.** The launch provider reduces the 3U allocation from 6.0 kg to 5.5 kg. Using the Phase A budget of §8.4.2, compute the new margin and status. Identify the two subsystems whose CBE reduction would most quickly restore a 10 % margin and state how much each must lose.
+
+7. **Mode-based power.** Using Table 8.4, compute the orbit-average power for a 92.6-min ISS-type orbit (36 min eclipse) in which imaging occupies 15 % and downlink 5 % of the orbit. Then recompute for a dawn–dusk Sun-synchronous orbit with no eclipse. By how much does the average demand change, and which subsystem rows are affected?
+
+8. **UniSat-1 interfaces.** Write the complete 5 × 5 N² matrix for UniSat-1 (§8.5), including the Structure row and column, and tag every cell with type codes. Identify the single interface you would verify by test rather than by inspection, and justify.
+
+9. **Budget tightness.** A design shows mass margin 12 %, power margin in imaging mode 4 %, link margin 6 dB and pointing margin 60 %. Which budget is tightest, what single design change would most improve it, and which other budgets would that change affect (trace the coupling through the N² matrix)?
+
+## References
+
+1. NASA, *Systems Engineering Handbook* (NASA/SP-2016-6105 Rev 2), 2016, §4.4 (Process 4) and §6.3 (Process 12: Interface Management). https://www.nasa.gov/reference/systems-engineering-handbook/
+2. ECSS, *ECSS-E-ST-10-24C: Interface Management*, 2015. https://ecss.nl/standard/ecss-e-st-10-24c-interface-management/
+3. ECSS, *ECSS-E-HB-10-02A: Verification Guidelines*, 2010, §5.2 (Mass Margins). https://ecss.nl/hbstms/ecss-e-hb-10-02a-verification-guidelines/
+4. ECSS, *ECSS-E-ST-10-02C Rev.1: Verification*, 2018. https://ecss.nl/standard/ecss-e-st-10-02c-rev-1-verification-1-february-2018/
+5. Wertz, Everett & Puschell, *Space Mission Engineering: The New SMAD*, 2011, Ch. 10–11. https://www.space.com/smad
+6. ECSS, *ECSS-E-ST-20C Rev.1: Electrical and Electronic*, 2019 (power budgets). https://ecss.nl/standard/ecss-e-st-20c-electrical-and-electronic/
+7. ECSS, *ECSS-E-ST-10C Rev.1: System Engineering General Requirements*, 2017, §5.4. https://ecss.nl/standard/ecss-e-st-10c-rev-1-system-engineering-general-requirements/
+
+
+# Part II — Subsystem Design
+
+# Chapter 9 — Electrical Power and Thermal Control
+
+> **Recommended background.** SMAD4 Ch. 11.4 (power) and 11.5 (thermal); ECSS-E-ST-20C §5 (electrical); ECSS-E-ST-31C (thermal control); Patel, *Spacecraft Power Systems*, Ch. 3–4; Gilmore, *Spacecraft Thermal Control Handbook*, Vol. 1, Ch. 1–4. This chapter uses the orbit of Chapter 7 (period, eclipse fraction) and the mode-based power budget of Chapter 8 §8.4.3; the sizing equations are derived from first principles in Part V (§V.10–§V.12).
+
+## Learning objectives
+
+By the end of this chapter, you will be able to:
+
+1. Size a solar array from mission power demand, eclipse profile, and degradation
+2. Size a battery from eclipse energy demand, depth of discharge, and cycle-life requirements
+3. Compute orbit-average power using duty-cycle analysis
+4. Explain EPS architecture (DET vs PPT, MPPT, bus regulation) and articulate the physics of each
+5. Perform first-order thermal balance analysis (hot case and cold case) with full radiative derivation
+6. Select thermal control methods and apply ECSS thermal margins
+7. Explain MLI construction, heat-pipe operation, and heater sizing
+8. Check a power and thermal design for closure in every operational mode
+
+---
+
+## 9.1 Electrical power system architecture
+
+*[Source: SMAD, Ch. 11.4; ECSS-E-ST-20C; Patel, Ch. 3]*
+
+The EPS is the "utility company" of the spacecraft. It must continuously supply regulated power to all subsystems through every operational mode, including eclipse. Unlike terrestrial power systems, a spacecraft EPS cannot draw from a grid — the solar array, battery, and power-conditioning electronics must form a fully self-contained, autonomous energy system with zero maintenance for the mission lifetime. Figure 9.1 shows the reference architecture.
+
+<svg viewBox="0 0 800 300" xmlns="http://www.w3.org/2000/svg" style="max-width:700px; font-family: sans-serif; font-size: 11px;">
+  <!-- Solar Array -->
+  <rect x="30" y="100" width="120" height="60" rx="4" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+  <text x="90" y="125" text-anchor="middle" fill="#92400e" font-weight="bold">Solar Array</text>
+  <text x="90" y="142" text-anchor="middle" fill="#92400e" font-size="10">GaAs 29.5 %</text>
+  <text x="90" y="155" text-anchor="middle" fill="#92400e" font-size="9">1361 W/m²</text>
+  <!-- MPPT -->
+  <rect x="200" y="100" width="100" height="60" rx="4" fill="#e0e7ff" stroke="#4f46e5" stroke-width="2"/>
+  <text x="250" y="125" text-anchor="middle" fill="#3730a3" font-weight="bold">MPPT</text>
+  <text x="250" y="142" text-anchor="middle" fill="#3730a3" font-size="10">Regulator</text>
+  <line x1="150" y1="130" x2="200" y2="130" stroke="#64748b" stroke-width="2" marker-end="url(#arr9)"/>
+  <!-- Bus -->
+  <line x1="300" y1="130" x2="480" y2="130" stroke="#dc2626" stroke-width="3"/>
+  <text x="390" y="120" text-anchor="middle" fill="#dc2626" font-weight="bold">Regulated Bus (3.3 V / 5 V / Batt)</text>
+  <!-- Battery -->
+  <rect x="330" y="200" width="120" height="55" rx="4" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+  <text x="390" y="222" text-anchor="middle" fill="#166534" font-weight="bold">Battery</text>
+  <text x="390" y="239" text-anchor="middle" fill="#166534" font-size="10">Li-ion, DoD 30 %</text>
+  <line x1="390" y1="200" x2="390" y2="133" stroke="#16a34a" stroke-width="2"/>
+  <text x="408" y="175" fill="#16a34a" font-size="9">charge/discharge</text>
+  <!-- Loads -->
+  <rect x="520" y="40" width="110" height="35" rx="4" fill="#dbeafe" stroke="#2563eb"/>
+  <text x="575" y="62" text-anchor="middle" fill="#1e40af" font-size="10">Payload (SW)</text>
+  <rect x="520" y="85" width="110" height="35" rx="4" fill="#dbeafe" stroke="#2563eb"/>
+  <text x="575" y="107" text-anchor="middle" fill="#1e40af" font-size="10">AOCS (SW)</text>
+  <rect x="520" y="130" width="110" height="35" rx="4" fill="#dbeafe" stroke="#2563eb"/>
+  <text x="575" y="152" text-anchor="middle" fill="#1e40af" font-size="10">Comms TX (SW)</text>
+  <rect x="520" y="175" width="110" height="35" rx="4" fill="#dbeafe" stroke="#2563eb"/>
+  <text x="575" y="197" text-anchor="middle" fill="#1e40af" font-size="10">OBC (always on)</text>
+  <rect x="520" y="220" width="110" height="35" rx="4" fill="#dbeafe" stroke="#2563eb"/>
+  <text x="575" y="242" text-anchor="middle" fill="#1e40af" font-size="10">Heaters (thermo)</text>
+  <!-- Switch lines -->
+  <line x1="480" y1="57" x2="520" y2="57" stroke="#64748b" stroke-width="1.5"/>
+  <line x1="480" y1="102" x2="520" y2="102" stroke="#64748b" stroke-width="1.5"/>
+  <line x1="480" y1="147" x2="520" y2="147" stroke="#64748b" stroke-width="1.5"/>
+  <line x1="480" y1="192" x2="520" y2="192" stroke="#64748b" stroke-width="1.5"/>
+  <line x1="480" y1="237" x2="520" y2="237" stroke="#64748b" stroke-width="1.5"/>
+  <line x1="480" y1="57" x2="480" y2="237" stroke="#64748b" stroke-width="1.5"/>
+  <text x="490" y="30" fill="#64748b" font-size="10">Switched lines</text>
+  <text x="490" y="42" fill="#64748b" font-size="9">(SW = switchable)</text>
+  <defs><marker id="arr9" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#64748b"/></marker></defs>
+</svg>
+
+**Figure 9.1** — Reference CubeSat EPS: solar array, maximum-power-point tracker, regulated bus, battery, and switched load lines.
+
+### 9.1.1 Solar cell physics
+
+A photovoltaic cell converts photon energy into electrical energy via the photovoltaic effect. When a photon with energy $E = h\nu \geq E_g$ (where $E_g$ is the semiconductor bandgap) strikes the cell, it promotes an electron from the valence band to the conduction band, creating an electron–hole pair. The built-in electric field at the p–n junction sweeps carriers to opposite terminals, producing a voltage ($V_{oc}$) and current ($I_{sc}$).
+
+**Single-junction vs multi-junction cells:**
+
+A single-junction cell (e.g., silicon, $E_g = 1.12$ eV) can only absorb photons with $E \geq E_g$. Photons with $E < E_g$ pass through unabsorbed; photons with $E \gg E_g$ lose excess energy as heat (thermalisation loss). The theoretical maximum efficiency for a single-junction cell under AM0 (space) illumination is approximately 31 % (Shockley–Queisser limit).
+
+Multi-junction (MJ) cells stack two or three p–n junctions of different semiconductor materials, each tuned to absorb a different portion of the solar spectrum:
+
+| Cell technology | Structure | Bandgaps (eV) | AM0 efficiency | Temp. coefficient | Flight heritage |
+|----------------|-----------|---------------|----------------|------------------|-----------------|
+| **Monocrystalline Si** | Single junction | 1.12 | 16–18 % | −0.45 %/°C | Extensive (ISS, many LEO) |
+| **GaAs single-junction** | Single junction | 1.42 | 22–24 % | −0.21 %/°C | Moderate |
+| **InGaP/GaAs dual-junction** | 2-junction | 1.86 / 1.42 | 26–28 % | −0.20 %/°C | Moderate |
+| **InGaP/GaAs/Ge triple-junction** | 3-junction (lattice-matched) | 1.86 / 1.42 / 0.67 | 28–30 % | −0.19 %/°C | Extensive (> 90 % of modern S/C) |
+| **InGaP/GaAs/InGaAs IMM** | 3-junction (inverted metamorphic) | 1.86 / 1.42 / 1.0 | 32–33 % | −0.18 %/°C | Growing |
+
+*[Source: vendor triple-junction cell datasheets; Green et al., "Solar Cell Efficiency Tables," Progress in Photovoltaics, version 62, 2023. Vendor products named in this chapter are representative examples, not endorsements.]*
+
+**Why triple-junction GaAs dominates space:** The AM0 solar spectrum (above the atmosphere) is richer in UV and blue photons than the AM1.5 terrestrial spectrum. Triple-junction cells capture this energy across three bandgaps. The top cell (InGaP, $E_g = 1.86$ eV) absorbs blue/UV, the middle cell (GaAs, $E_g = 1.42$ eV) absorbs visible, and the bottom cell (Ge, $E_g = 0.67$ eV) absorbs near-IR. Each junction contributes voltage in series, while current is limited by the lowest-current junction (current-matching constraint).
+
+**Temperature effects:** In orbit, solar cells operate at 40–80 °C depending on mounting and orbit. Cell efficiency decreases with temperature due to increased intrinsic carrier concentration (which reduces $V_{oc}$). The temperature coefficient for triple-junction GaAs is approximately −0.19 %/°C relative — meaning a cell rated at 29.5 % at 28 °C drops to approximately 28.5 % at 80 °C. This must be included in power budget calculations:
+
+$$\eta_{\text{cell}}(T) = \eta_{\text{ref}} \times [1 + \beta_T (T - T_{\text{ref}})]$$
+
+where $\beta_T \approx -0.0019$ /°C for triple-junction GaAs and $T_{\text{ref}} = 28$ °C (standard test conditions). (The subscript distinguishes this coefficient from the orbit β-angle of Chapter 7.)
+
+**Degradation mechanisms:** Solar cells degrade in orbit due to:
+
+- **Radiation damage:** Energetic protons and electrons (trapped in the Van Allen belts and from solar particle events) displace atoms in the crystal lattice, creating recombination centres that reduce minority-carrier lifetime and thus current. Degradation is characterised as equivalent 1 MeV electron fluence. Typical rates: 2–3 %/year in LEO, 5–8 %/year in MEO (through the proton belt), 1–2 %/year in GEO.
+- **UV darkening:** Ultraviolet radiation darkens cover-glass adhesive over time, reducing transmission.
+- **Micrometeoroid erosion:** Gradual pitting of cover glass reduces optical transmission.
+- **Electrostatic discharge (ESD):** In GEO or polar orbits, differential charging can cause arcing between cells, permanently damaging interconnects.
+
+Cover glass (typically ceria-doped borosilicate, 100–150 µm thick) mitigates radiation and UV effects. The combined degradation factor is:
+
+$$L_d = (1 - \delta)^n$$
+
+where $\delta = 0.025$ (2.5 %/year for triple-junction GaAs in LEO with standard cover glass) and $n$ = mission lifetime in years.
+
+### 9.1.2 Body-mounted vs deployable solar arrays
+
+**Body-mounted cells** are bonded directly to the spacecraft's external panels. They are the simplest and most reliable option (no deployment mechanism, no hinges, no drive motors) but are severely area-limited.
+
+| Mounting | Advantages | Disadvantages | Typical power |
+|----------|-----------|---------------|--------------|
+| **Body-mounted** | No mechanism risk, no power for tracking, low mass, low cost | Limited area (satellite surface only), poor illumination geometry for nadir-pointing S/C, high cell temperature | 1U: ~2 W, 3U: ~7 W, 6U: ~12 W |
+| **Fixed deployable** | 2–4× more area, better Sun angle, lower cell temperature (radiative cooling from back side) | Deployment mechanism (single point of failure), aerodynamic drag increase, structural dynamics | 3U: ~15–25 W, 6U: ~30–48 W |
+| **Tracking deployable** | Optimal Sun incidence ($\cos\theta \approx 1$), maximum power | SADM (Solar Array Drive Mechanism) adds mass/cost/complexity, continuous power for motor | Large S/C: 100+ W |
+
+**Real mission examples:**
+
+- **Planet SuperDove (3U+):** Body-mounted + two fixed deployable wings. ~25 W BOL. The deployables are spring-hinged panels that fold against the 3U body during launch and deploy after ejection from the dispenser.
+- **ASTERIA (6U, JPL):** Dual deployable arrays, 48 W BOL, triple-junction GaAs cells on commercial deployable panels.
+- **ISS-deployed 1U CubeSats:** Body-mounted only, 2–3 W. Adequate for simple sensor missions with low duty cycles.
+
+### 9.1.3 Architecture types
+
+| Architecture | How it works (physics) | Efficiency | Complexity | Typical use |
+|-------------|----------------------|-----------|-----------|------------|
+| **DET** (Direct Energy Transfer) | SA connects directly to bus; a shunt regulator diverts excess current to a resistor bank (dissipated as heat) when SA output exceeds load. No series regulator between SA and bus. Voltage varies with illumination. | 80–85 % (shunt losses) | Low | Heritage GEO spacecraft, some CubeSats |
+| **PPT / MPPT** (Peak Power Tracking) | A DC–DC converter (typically boost or buck-boost) between SA and bus continuously adjusts its input impedance to operate the SA at its maximum power point (MPP). Uses perturb-and-observe or incremental-conductance algorithm. Extracts 10–15 % more power than DET, especially at off-nominal temperatures and end of life. | 90–95 % | Medium | Most modern CubeSats |
+| **Unregulated bus** | Battery connects directly to the power bus through protection FETs only. Bus voltage equals battery voltage (3.0 V at empty to 4.2 V at full per cell, or 6.0–8.4 V for 2S). Subsystems must tolerate voltage variation. | Highest (no regulator losses) | Lowest | Very simple CubeSats, 1U missions |
+| **Regulated bus** | DC–DC converters create fixed voltage rails (3.3 V, 5 V, 12 V) from battery/SA input. Subsystems see constant voltage regardless of battery state. Adds ~5–10 % losses in regulators but greatly simplifies subsystem design. | Good (85–90 % overall) | Medium | Most CubeSat COTS EPS boards |
+
+**MPPT physics:** A solar cell's I–V curve has a distinct "knee" where the maximum power ($P = I \times V$) is extracted. At open circuit ($I = 0$), voltage is maximum but power is zero. At short circuit ($V = 0$), current is maximum but power is zero. The MPP sits at approximately 75–80 % of $V_{oc}$ and 90–95 % of $I_{sc}$. Temperature shifts the I–V curve (higher $T$ moves $V_{oc}$ left), so the MPP moves. An MPPT controller dynamically tracks this point, typically updating every 0.1–1 s. Common CubeSat MPPT converters achieve 95–97 % tracking efficiency.
+
+**Battery charge regulation:** The EPS must prevent overcharging (which causes lithium plating, gas generation and thermal runaway in Li-ion cells) and overdischarging (which causes copper dissolution from the negative current collector, permanently damaging the cell). Modern CubeSat EPS boards implement:
+
+- **CC–CV charging:** Constant-current charging until cell voltage reaches 4.2 V, then constant-voltage taper until current drops below C/20
+- **Under-voltage lockout:** Bus disconnect when cell voltage falls below 3.0 V (or 2.8 V for emergency)
+- **Cell balancing:** For multi-cell series configurations (2S or higher), passive or active balancing circuits keep cells within 50 mV of each other
+- **Temperature cut-offs:** Charging inhibited below 0 °C and above 45 °C (Li-ion charging below 0 °C causes lithium plating)
+
+**CubeSat standard:** Most commercial EPS boards use MPPT + regulated bus with 3.3 V and 5 V rails, plus an unregulated battery rail (6.0–8.4 V for 2S Li-ion).
+
+---
+
+## 9.2 Solar array sizing
+
+The sizing chain below is the canonical form used throughout this book; Part V §V.11 derives it from the orbit energy balance and shows its equivalence to the eclipse-fraction form found in some references.
+
+> **Key equations — solar array sizing**
+>
+> **Step 1: Orbit-average power demand** (Chapter 8 §8.4.4):
+> $$P_{\text{avg}} = \sum_{\text{modes}} P_{\text{mode}} \times f_{\text{duty,mode}}$$
+>
+> **Step 2: Array end-of-life power requirement.** During the sunlit arc ($t_{\text{sun}}$) the array must deliver the sunlit load through the daytime path and, at the same time, put back into the battery the energy the eclipse load ($P_{\text{ecl}}$ over $t_{\text{ecl}}$) took out, through the charge–store–discharge path:
+> $$P_{\text{SA,EOL}} = \frac{\dfrac{P_{\text{sun}}\, t_{\text{sun}}}{\eta_{\text{sun}}} + \dfrac{P_{\text{ecl}}\, t_{\text{ecl}}}{\eta_{\text{ecl}}}}{t_{\text{sun}}}$$
+> where $P_{\text{sun}}$ is the peak sunlit-mode demand (the array must cover the worst sunlit mode, not the average), $\eta_{\text{sun}}$ is the array-to-load path efficiency in sunlight (regulator only, ≈ 0.90) and $\eta_{\text{ecl}} = \eta_{\text{charge}} \times \eta_{\text{discharge}} \times \eta_{\text{regulator}}$ is the array-to-battery-to-load path efficiency (≈ 0.92 × 0.95 × 0.90 ≈ 0.79 for a typical CubeSat EPS). Using a lumped $\eta_{\text{ecl}} \approx 0.90$ is common in textbooks but slightly optimistic.
+>
+> **Step 3: Beginning-of-life power, accounting for degradation and temperature:**
+> $$P_{\text{SA,BOL}} = \frac{P_{\text{SA,EOL}}}{L_d \times L_T}$$
+> where $L_d = (1 - \delta)^n$ is the radiation degradation factor ($\delta = 0.025$/yr for TJ GaAs in LEO) and $L_T = 1 + \beta_T (T_{\text{cell}} - T_{\text{ref}})$ is the temperature derating factor ($\beta_T = -0.0019$/°C, $T_{\text{ref}} = 28$ °C, $T_{\text{cell}}$ typically 60–80 °C in LEO). For a cell operating at 65 °C: $L_T = 1 + (-0.0019)(65 - 28) = 0.930$ (7 % power loss from temperature).
+>
+> **Step 4: Array area:**
+> $$A_{\text{SA}} = \frac{P_{\text{SA,BOL}}}{\eta_{\text{cell}} \times S \times \cos\theta \times f_{\text{pack}} \times f_{\text{cover}}}$$
+> where:
+>
+> - $\eta_{\text{cell}} = 0.295$ (triple-junction GaAs efficiency at AM0, 28 °C — STC rating)
+> - $S = 1361$ W/m² (solar constant at 1 AU, Kopp & Lean 2011)
+> - $\theta$ = **Sun incidence angle on the array** (angle between the array normal and the Sun vector). It is 0° for a Sun-tracking array. For a body-fixed panel on a nadir-pointed spacecraft it is set by the orbit β-angle of Chapter 7: a panel whose normal is perpendicular to the orbit plane sees a constant $\theta = 90° - |\beta|$, while a panel whose normal lies in the orbit plane (the zenith face) sees $\cos\theta = \cos\beta\cos\nu$ varying through the sunlit arc, so its sunlit-arc average is used. A deployable wing canted toward the Sun on a Sun-synchronous orbit typically achieves an effective orbit-averaged $\theta$ of 20–25°.
+> - $f_{\text{pack}} = 0.85$–$0.90$ (cell packing factor — fraction of panel area covered by cells; gaps for interconnects, edge clearance and harness routing)
+> - $f_{\text{cover}} = 0.97$ (cover-glass transmission loss, typically 2–4 %)
+>
+> **Step 5: Array mass:**
+> $$m_{\text{SA}} = A_{\text{SA}} \times \sigma_{\text{SA}} + m_{\text{mechanism}}$$
+> where $\sigma_{\text{SA}}$ is the areal density of the panel: body-mounted (cells on Al substrate) ≈ 2.0–2.5 kg/m²; rigid deployable (Al honeycomb/CFRP) ≈ 1.5–2.0 kg/m²; flexible deployable ≈ 0.8–1.2 kg/m²; $m_{\text{mechanism}}$ (hinge, spring, hold-down) typically 0.1–0.3 kg per panel for CubeSats.
+
+Figure 9.2 shows what the sizing equation is balancing: generation is a near-rectangular pulse over the sunlit arc, while the load is a stack of always-on bus power, heater power, and the short imaging and downlink peaks — some of which fall in eclipse and must be drawn from the battery.
+
+![Power generation and stacked load profile over one orbit.](../assets/figures/fig_power_modes.png)
+
+**Figure 9.2** — Top: solar-array generation across one orbit (sunlit arc and eclipse). Bottom: illustrative stacked load profile by subsystem, with imaging and downlink peaks superimposed on the always-on bus and heater loads. The array must deliver the sunlit load and recharge the eclipse energy within the sunlit arc.
+
+> **Worked example — EOSat-3U solar array**
+>
+> **Given** (Chapter 7 §7.2 and Chapter 8 Table 8.4): 500 km Sun-synchronous orbit, $T = 94.6$ min, $t_{\text{sun}} = 58.8$ min, $t_{\text{ecl}} = 35.8$ min; peak sunlit demand $P_{\text{sun}} = 10.0$ W (downlink mode), $P_{\text{ecl}} = 3.5$ W; mission lifetime 3 years; cell temperature 65 °C; one deployable panel with effective orbit-averaged $\theta = 23°$; $\eta_{\text{sun}} = 0.90$, $\eta_{\text{ecl}} = 0.92 \times 0.95 \times 0.90 = 0.786$.
+>
+> **Step 2 — EOL array power:**
+> $\dfrac{P_{\text{sun}}}{\eta_{\text{sun}}} = \dfrac{10.0}{0.90} = 11.11$ W $\qquad \dfrac{P_{\text{ecl}}\, t_{\text{ecl}}}{\eta_{\text{ecl}}\, t_{\text{sun}}} = \dfrac{3.5 \times 35.8}{0.786 \times 58.8} = \dfrac{125.3}{46.2} = 2.71$ W
+>
+> $P_{\text{SA,EOL}} = 11.11 + 2.71 = 13.82$ W
+>
+> **Step 3 — BOL power, 3-year degradation and temperature:**
+> $L_d = (1 - 0.025)^3 = 0.9269$; $\quad L_T = 1 + (-0.0019)(65 - 28) = 0.930$
+>
+> $P_{\text{SA,BOL}} = \dfrac{13.82}{0.9269 \times 0.930} = \dfrac{13.82}{0.862} = 16.0$ W
+>
+> **Step 4 — Array area:**
+> $A_{\text{SA}} = \dfrac{16.0}{0.295 \times 1361 \times \cos 23° \times 0.85 \times 0.97} = \dfrac{16.0}{0.295 \times 1361 \times 0.9205 \times 0.85 \times 0.97} = \dfrac{16.0}{304.7} = 0.0526$ m²
+>
+> This is approximately 23 cm × 23 cm — achievable with a single deployable panel on a 3U CubeSat (commercial 3U deployable wings provide up to ~0.06 m² each).
+>
+> **Step 5 — Array mass (deployable, rigid):**
+> $m_{\text{SA}} = 0.0526 \times 1.8 + 0.15 = 0.095 + 0.15 = 0.25$ kg (panel + mechanism)
+>
+> **Comparison with Planet SuperDove:** The actual SuperDove uses body-mounted cells plus two deployable wings, achieving ~25 W BOL. The 16 W BOL from one panel calculated here is consistent — SuperDove's higher power supports continuous imaging plus S-band downlink simultaneously.
+>
+> **A caution on the inputs.** Chapter 12 §12.5.3 shows that the equipment-level imaging load comes to ≈ 10 W; the sizing here uses the 8 W parametric allocation of Table 8.4 (and the 10 W downlink peak) and must be re-run once equipment is selected — a typical CDF iteration.
+
+Figure 9.3 generalises the calculation as a nomograph: for given cell efficiency, degradation, Sun angle and path efficiency, the required EOL array area is read directly from the orbit-average load and the eclipse fraction.
+
+![Solar-array sizing nomograph.](../assets/figures/fig_solar_array.png)
+
+**Figure 9.3** — Solar-array sizing nomograph following the §9.2 chain. Left: BOL array power against orbit-average load for three eclipse fractions (Steps 2–3, with $\eta_{\text{sun}} = 0.90$, $\eta_{\text{ecl}} = 0.79$ and $L_d L_T = 0.86$); the eclipse fraction raises the requirement because the eclipse energy must be recharged within the sunlit arc. Right: array area from Step 4, $A = P_{\text{BOL}}/(\eta_{\text{cell}} S \cos\theta f_{\text{pack}} f_{\text{cover}})$, for three Sun angles, with the EOSat-3U point (16.0 W BOL → 0.053 m² at θ = 23°) marked.
+
+### 9.2.1 CubeSat array power reference
+
+| Configuration | 1U | 3U | 6U | 12U |
+|--------------|-----|-----|-----|------|
+| Body-mounted only | ~2 W | ~7 W | ~12 W | ~20 W |
+| Single deployable | ~4 W | ~15 W | ~30 W | ~55 W |
+| Dual deployable | — | ~25 W | ~48 W | ~100 W |
+| Quad deployable | — | — | ~80 W | ~180 W |
+
+*[Source: vendor datasheets; ASTERIA 6U confirmed 48 W BOL; Dove/SuperDove confirmed ~25 W]*
+
+---
+
+## 9.3 Battery sizing
+
+### 9.3.1 Li-ion cell chemistry and physics
+
+All modern spacecraft batteries use lithium-ion (Li-ion) chemistry. During discharge, lithium ions migrate from the graphite anode (negative electrode) through an organic electrolyte and polymer separator to the lithium metal-oxide cathode (positive electrode), while electrons flow through the external circuit doing work. During charging, the process reverses.
+
+**Common cathode chemistries used in space:**
+
+| Chemistry | Cathode | Nominal voltage | Energy density | Cycle life (30 % DoD) | Thermal stability | Space heritage |
+|-----------|---------|----------------|---------------|----------------------|-------------------|----------------|
+| **LCO** (LiCoO₂) | Cobalt oxide | 3.7 V | 150–200 Wh/kg | ~10 000 | Moderate | ISS, many CubeSats (18650 cells) |
+| **NMC** (LiNiMnCoO₂) | Nickel-manganese-cobalt | 3.7 V | 170–250 Wh/kg | ~5 000 | Moderate | Growing heritage |
+| **LFP** (LiFePO₄) | Iron phosphate | 3.2 V | 90–120 Wh/kg | ~50 000 | Excellent | Niche (when cycle life is paramount) |
+| **NCA** (LiNiCoAlO₂) | Nickel-cobalt-aluminium | 3.6 V | 200–260 Wh/kg | ~3 000 | Lower | Limited space heritage |
+
+*[Source: Ratnakumar et al., NASA JPL; space-qualified cell datasheets; commercial 18650 specifications]*
+
+**Cell form factors:**
+
+- **18650 cylindrical:** 18 mm diameter, 65 mm long. The workhorse of CubeSat missions, 2500–3350 mAh per cell depending on type; energy 9–12 Wh per cell.
+- **Pouch cells:** Custom dimensions, higher energy density (~250 Wh/kg) but require external structural support. Used in some 6U+ missions and all large spacecraft.
+- **Prismatic cells:** Rigid case, intermediate between cylindrical and pouch. Used in some mission-specific designs.
+
+**Cell configuration:**
+
+Cells are arranged in series (S) to increase voltage and parallel (P) to increase capacity:
+
+- **1S (single cell):** 3.0–4.2 V bus. Used for very simple 1U CubeSats.
+- **2S (two in series):** 6.0–8.4 V bus. Standard for most CubeSats.
+- **2S2P (two series, two parallel):** 6.0–8.4 V bus, double capacity (~38 Wh with four 18650 cells). Used for higher-energy missions.
+
+**Protection circuits:** Every flight battery pack includes:
+
+- **Cell voltage monitoring:** Per-cell voltage measurement to detect over/under-voltage
+- **Over-current protection:** Current-sense resistors + MOSFET switches to disconnect at overcurrent (prevents short-circuit thermal runaway)
+- **Temperature monitoring:** Thermistors on each cell; inhibit charging below 0 °C and above 45 °C
+- **Heater circuit:** Kapton heater on the battery pack, thermostatically controlled, to maintain cells above minimum charging temperature during eclipse
+
+**Capacity fade model:** Li-ion cells lose capacity over time due to solid-electrolyte-interphase (SEI) growth on the anode. A simplified calendar + cycling fade model:
+
+$$C(t, N) = C_0 \times (1 - \alpha \sqrt{t}) \times (1 - \beta_c \cdot N \cdot \text{DoD}^{\gamma})$$
+
+where $C_0$ = initial capacity, $t$ = time (years), $N$ = number of cycles, $\alpha \approx 0.02$ (calendar fade), $\beta_c \approx 3 \times 10^{-6}$, $\gamma \approx 2.1$ (cycling fade). For LEO at 30 % DoD, this gives approximately 5–8 % capacity loss per year — consistent with flight data from ISS battery replacements and CubeSat fleet telemetry.
+
+### 9.3.2 Sizing equations
+
+> **Key equations — battery sizing**
+>
+> **Required battery energy:**
+> $$E_{\text{bat}} = \frac{P_{\text{ecl}} \times t_{\text{ecl}}}{\text{DoD} \times \eta_{\text{dis}}}$$
+> where DoD is the maximum depth of discharge, $\eta_{\text{dis}} = 0.95$ (discharge efficiency, accounting for internal-resistance $I^2R$ losses), and $t_{\text{ecl}}$ is in hours.
+>
+> **Battery mass:**
+> $$m_{\text{bat}} = \frac{E_{\text{bat}}}{e_{\text{specific}}}$$
+> where $e_{\text{specific}} = 150$–$200$ Wh/kg for packaged Li-ion 18650 cells (cell-level energy density is higher, but packaging adds ~30 % mass).
+>
+> **Cycle life vs DoD** (Li-ion 18650, LCO chemistry):
+>
+> | DoD | Typical cycle life | Suitable mission duration | Annual eclipses (LEO, 15/day) |
+> |-----|-------------------|--------------------------|-------------------------------|
+> | 80 % | ~500 cycles | < 1 month | 450 |
+> | 50 % | ~2 000 cycles | < 4 months | 1 800 |
+> | 30 % | ~10 000 cycles | 1–2 years | 5 475 |
+> | 20 % | ~30 000 cycles | 3–5 years | 10 950 |
+> | 10 % | ~100 000 cycles | > 7 years | 38 325 |
+>
+> **Design rule of thumb:** For a multi-year LEO mission, start with 20–30 % DoD. For a short technology demonstration (< 6 months), 40–50 % DoD is acceptable and significantly reduces battery size, mass and cost.
+
+Figure 9.4 shows the cycle-life curves behind this table for three Li-ion families, with the 1-, 5- and 10-year LEO cycle counts marked.
+
+![Battery cycle life versus depth of discharge.](../assets/figures/fig_battery_dod.png)
+
+**Figure 9.4** — Cycles to end of life versus depth of discharge for heritage LCO, aerospace NCA/NMC and LFP cells. Horizontal lines mark the cycle counts of 1-, 5- and 10-year LEO missions at ~15 eclipses per day; the 30 % DoD design point is typical for a multi-year mission.
+
+> **Worked example — EOSat-3U battery**
+>
+> **Given:** $P_{\text{ecl}} = 3.5$ W, $t_{\text{ecl}} = 35.8$ min $= 0.597$ h, DoD $= 0.25$ (conservative for a 3-year mission), $\eta_{\text{dis}} = 0.95$.
+>
+> **Step 1 — Required battery energy:**
+> $E_{\text{bat}} = \dfrac{3.5 \times 0.597}{0.25 \times 0.95} = \dfrac{2.09}{0.2375} = 8.8$ Wh
+>
+> **Step 2 — Apply the Phase A system margin (20 %, Table 8.3):**
+> $E_{\text{bat,spec}} \geq 8.8 \times 1.20 = 10.6$ Wh. Specify **minimum 11 Wh**, ideally **20 Wh** for operational flexibility.
+>
+> **Step 3 — Verify cycle life:**
+> 3-year mission at $1440/94.6 = 15.2$ orbits/day gives $3 \times 365 \times 15.2 \approx 16\,650$ eclipses. At 25 % DoD, Li-ion 18650 cells provide ~20 000 cycles. **Margin ≈ 20 %. Pass.**
+>
+> Including capacity fade: after 3 years, ~15–20 % capacity loss from calendar + cycling ageing. Effective DoD increases to $0.25/0.82 = 0.30$ — still within the 10 000-cycle regime. **Acceptable with monitoring.**
+>
+> **Step 4 — Battery mass:**
+> $m_{\text{bat}} = \dfrac{20}{170} = 0.12$ kg (using 170 Wh/kg for packaged 18650 cells)
+>
+> **Step 5 — Battery volume:**
+> Two 18650 cells in 2S1P: approximately 34 mL, fitting easily within a 3U stack.
+>
+> **Comparison with Planet SuperDove:** SuperDove carries approximately 20 Wh in a 2S2P configuration (4 cells), consistent with this sizing. The actual operating DoD is estimated at 10–15 % per eclipse, giving substantial cycle-life margin for the multi-year constellation replenishment cadence.
+
+**Failure modes to watch for:**
+
+- **Thermal runaway:** If a cell is overcharged, mechanically damaged, or experiences an internal short, the exothermic decomposition of the cathode material can lead to thermal runaway (self-heating > heat dissipation), potentially reaching 600+ °C. Mitigation: cell-level fuses, per-cell voltage monitoring, thermal cut-offs.
+- **Lithium plating:** Charging below 0 °C causes metallic lithium to deposit on the anode surface rather than intercalating into graphite. This is irreversible, reduces capacity, and can cause internal shorts. Mitigation: battery heater + thermostat + software lockout.
+- **Capacity imbalance:** In series configurations, the weakest cell limits the pack. If cells age at different rates, the weakest cell hits under-voltage lockout while others still have capacity. Mitigation: cell-balancing circuits, matched cell lots.
+
+---
+
+## 9.4 Thermal control system
+
+*[Source: ECSS-E-ST-31C; Gilmore, Ch. 1–4; SMAD, Ch. 11.5]*
+
+Figure 9.5 summarises the energy balance this section develops: four heat inputs (direct solar, Earth albedo, Earth infrared and the spacecraft's own electrical dissipation) and a single output, radiation to deep space, with the hot- and cold-case conditions that bound the design.
+
+![Thermal energy-balance schematic of a CubeSat in LEO with solar, albedo, Earth-IR and internal inputs, radiation to space, and hot-case and cold-case annotations.](../assets/figures/fig_thermal_schematic.png)
+
+**Figure 9.5** — Thermal energy balance of a CubeSat in LEO. Direct solar flux, Earth albedo and Earth infrared are absorbed according to the coating properties $\alpha_s$ and $\varepsilon$ and the view factors; internal dissipation adds the electrical power converted to heat; the only outlet is radiation to deep space, $\varepsilon \sigma A_{\text{rad}} T^4$. The hot case combines perihelion Sun, maximum dissipation, end-of-life coatings and maximum albedo; the cold case is eclipse in safe mode with beginning-of-life coatings and minimum Earth infrared (§9.4.5).
+
+### 9.4.1 The physics of spacecraft thermal control
+
+Spacecraft thermal control is fundamentally different from terrestrial thermal engineering because **there is no convection in vacuum**. The only heat transfer mechanisms are:
+
+1. **Conduction:** Heat flow through solid material, governed by Fourier's law: $\dot{Q} = -kA \dfrac{dT}{dx}$. Critical within the spacecraft structure and between components and mounting surfaces.
+2. **Radiation:** Heat transfer via electromagnetic radiation, governed by the Stefan–Boltzmann law: $\dot{Q} = \varepsilon \sigma A T^4$. This is the **only** mechanism for rejecting heat to the environment.
+
+There is no convective cooling. A component that overheats cannot be cooled by a fan. All waste heat must be conducted to a radiating surface and then radiated to space. This is the central constraint of spacecraft thermal design.
+
+### 9.4.2 Thermal environment in LEO
+
+A spacecraft in LEO experiences four thermal inputs and one thermal sink:
+
+| Source | Flux | Direction | Variability |
+|--------|------|-----------|-------------|
+| **Direct solar** | $S = 1361 \pm 1$ W/m² (at 1 AU) | Sun-facing surfaces only | Seasonal (±3.3 % due to Earth's orbital eccentricity: $S_{\text{perihelion}} = 1414$ W/m² in January, $S_{\text{aphelion}} = 1322$ W/m² in July) |
+| **Earth albedo** | $\alpha_E \times S \approx 0.30 \times 1361 \approx 408$ W/m² | Earth-facing surfaces (nadir) | Varies with cloud cover, surface type (0.06 for ocean to 0.80 for fresh snow); orbit-average range 0.25–0.35 |
+| **Earth infrared** | $q_{\text{IR}} \approx 240$ W/m² (orbit average) | Earth-facing surfaces (nadir) | Range 200–270 W/m² depending on latitude, season, cloud cover |
+| **Internal dissipation** | $Q_{\text{int}} = P_{\text{dissipated}}$ | From electronics waste heat | Varies with operational mode; nearly all electrical power eventually becomes heat |
+| **Deep space** (sink) | $T_{\text{space}} \approx 2.7$ K (CMB) | Zenith-facing radiator surfaces | Effectively 0 K for engineering purposes |
+
+### 9.4.3 View factors
+
+The fraction of a surface's radiative "view" that sees each thermal source is critical for accurate thermal modelling. For a flat nadir-facing surface in LEO:
+
+$$F_{\text{Earth}} = \frac{1}{1 + (h/R_E)^2 + 2(h/R_E)} = \left(\frac{R_E}{R_E + h}\right)^2$$
+
+where $h$ is the altitude and $R_E = 6378.137$ km. For a 500 km orbit: $F_{\text{Earth}} = (6378.137/6878.137)^2 = 0.860$. The nadir face sees 86 % Earth and 14 % deep space. The zenith face sees 100 % deep space (assuming no self-shadowing). Side faces see a mix.
+
+At higher altitudes $F_{\text{Earth}}$ decreases: at 800 km it is 0.79, at 35 786 km (GEO) it is only 0.023 — which is why GEO thermal design is dominated by solar flux and internal dissipation, not Earth IR and albedo.
+
+### 9.4.4 Thermal balance equation
+
+> **Key equations — thermal equilibrium** (Part V §V.10)
+>
+> At steady state, the absorbed heat equals the radiated heat:
+> $$Q_{\text{in}} = Q_{\text{out}}$$
+>
+> **Absorbed heat (expanded):**
+> $$Q_{\text{in}} = \underbrace{\alpha_s \cdot A_{\text{sun}} \cdot S}_{\text{direct solar}} + \underbrace{\alpha_s \cdot A_{\text{alb}} \cdot F_{\text{alb}} \cdot \alpha_E \cdot S}_{\text{Earth albedo}} + \underbrace{\varepsilon \cdot A_{\text{IR}} \cdot F_{\text{IR}} \cdot q_{\text{IR}}}_{\text{Earth IR}} + \underbrace{Q_{\text{int}}}_{\text{internal dissipation}}$$
+>
+> **Radiated heat:**
+> $$Q_{\text{out}} = \varepsilon \cdot \sigma \cdot A_{\text{rad}} \cdot T^4$$
+>
+> where:
+>
+> - $\alpha_s$ = solar absorptance of surface coating (dimensionless, 0–1)
+> - $\varepsilon$ = infrared emittance of surface coating (dimensionless, 0–1)
+> - $\sigma = 5.670 \times 10^{-8}$ W/m²/K⁴ (Stefan–Boltzmann constant)
+> - $A_{\text{sun}}$, $A_{\text{alb}}$, $A_{\text{IR}}$, $A_{\text{rad}}$ = projected areas for each flux (m²)
+> - $F_{\text{alb}}$, $F_{\text{IR}}$ = view factors to Earth for albedo and IR surfaces
+> - $T$ = equilibrium temperature (K)
+>
+> **Note on $\alpha_s$ vs $\varepsilon$:** Solar absorptance ($\alpha_s$) is measured over the solar spectrum (0.2–2.5 µm, peak at 0.5 µm visible). Infrared emittance ($\varepsilon$) is measured over the thermal IR spectrum (3–50 µm, peak at ~10 µm for room-temperature objects). These are **different spectral ranges**, so $\alpha_s \neq \varepsilon$ for most real surfaces. This decoupling is the basis of all passive thermal control: by choosing the $\alpha_s/\varepsilon$ ratio, the designer controls the equilibrium temperature.
+>
+> **Solving for equilibrium temperature:**
+> $$T = \left(\frac{Q_{\text{absorbed}} + Q_{\text{internal}}}{\varepsilon \sigma A_{\text{rad}}}\right)^{1/4}$$
+>
+> This equation is valid only for a single isothermal node (lumped-parameter model). For multi-node thermal models (needed for any real spacecraft), the heat balance is solved simultaneously for all nodes using numerical thermal-analysis software.
+
+### 9.4.5 Hot case and cold case
+
+| Case | Conditions | Design concern |
+|------|-----------|----------------|
+| **Hot case** | Maximum solar exposure ($S = 1414$ W/m², perihelion), all subsystems active (max $Q_{\text{int}}$), worst Sun angle (max $A_{\text{sun}}$), EOL coatings ($\alpha_s$ increased by UV darkening), max albedo (0.35) | Components exceed maximum operating temperature |
+| **Cold case** | Eclipse (no solar), minimum power dissipation (safe mode, min $Q_{\text{int}}$), BOL coatings ($\alpha_s$ at its lowest), minimum Earth IR (200 W/m²), deep-space view | Components fall below minimum operating temperature |
+
+**Design philosophy:** The thermal engineer designs to keep all components within their qualified temperature range under both worst-case hot and worst-case cold conditions, with ECSS-mandated margins applied.
+
+### 9.4.6 Surface coatings — the passive thermal toolbox
+
+| Coating | $\alpha_s$ (BOL) | $\alpha_s$ (EOL, 5 yr LEO) | $\varepsilon$ | $\alpha_s/\varepsilon$ (BOL) | Use case |
+|---------|-----------|---------------------------|--------------|------------------------|----------|
+| White paint (AZ-93, S13G-LO) | 0.14–0.20 | 0.25–0.35 | 0.89–0.92 | 0.16–0.22 | Radiator surfaces (stay cool; low solar absorption, high IR emission) |
+| Black paint (Aeroglaze Z306) | 0.95 | 0.95 | 0.89 | 1.07 | Internal surfaces (maximise radiative exchange between components) |
+| Gold tape (2 mil Kapton + VDA) | 0.22–0.25 | 0.25–0.30 | 0.03–0.05 | 5.0–7.5 | MLI outer layer, thermal isolation |
+| Bare aluminium (polished) | 0.10–0.15 | 0.15–0.20 | 0.03–0.05 | 2.5–4.0 | Reflective surfaces, low emissivity |
+| Alodine (chromate conversion on Al) | 0.35–0.40 | 0.40–0.50 | 0.12–0.16 | 2.5–3.0 | Moderate thermal control, structural surfaces |
+| Anodised aluminium (clear or black) | 0.30–0.50 | 0.35–0.55 | 0.75–0.86 | 0.4–0.65 | CubeSat external structure (standard finish per CDS) |
+| MLI blanket (effective) | 0.05–0.15 | 0.10–0.20 | 0.02–0.05 | ~3 | Thermal isolation of sensitive components |
+| Solar cells (with cover glass) | 0.75–0.92 | 0.78–0.92 | 0.80–0.85 | ~1.0 | SA surfaces (high absorption is unavoidable; cells get hot) |
+| OSR (Optical Solar Reflector) | 0.05–0.08 | 0.08–0.12 | 0.78–0.80 | 0.06–0.10 | High-performance radiators (large S/C, GEO) |
+
+**Key design insight:** A surface with low $\alpha_s/\varepsilon$ (e.g., white paint: 0.2) stays cool because it reflects most solar energy but efficiently radiates thermal IR. A surface with high $\alpha_s/\varepsilon$ (e.g., gold tape: 6.0) stays warm because it absorbs solar energy but barely radiates. This is why white paint is used on radiators and gold or MLI for insulation. Figure 9.6 plots the equilibrium temperature of a flat plate in LEO against this ratio.
+
+![Radiative thermal equilibrium versus α/ε.](../assets/figures/fig_thermal_balance.png)
+
+**Figure 9.6** — Orbit-average equilibrium temperature of a flat plate in LEO as a function of $\alpha_s/\varepsilon$, with common coatings marked. White paint sits well below the electronics operating band, black paint near its upper edge; the dashed line is the eclipse-only (no Sun) temperature.
+
+**Coating degradation:** UV radiation darkens most white paints over time, increasing $\alpha_s$ while leaving $\varepsilon$ nearly unchanged. The ratio $\alpha_s/\varepsilon$ therefore rises, and the surface runs hotter at EOL. The consequence for worst-case analysis is easy to get backwards: BOL white paint has the *lowest* $\alpha_s$, so the **cold case is most conservative with BOL properties**, while the **hot case is most conservative with EOL properties** after $\alpha_s$ has increased. Both cases must be run with the properties that make them worst.
+
+### 9.4.7 MLI (multi-layer insulation) — construction and physics
+
+MLI blankets are the most common thermal insulation on spacecraft. They work by minimising both radiation and conduction heat transfer through multiple reflective layers separated by low-conductance spacers.
+
+**Construction (typical MLI blanket):**
+
+1. **Outer cover:** 1 mil (25 µm) aluminised Kapton (VDA — vapour-deposited aluminium on one side). Provides mechanical protection and low solar absorptance.
+2. **Inner reflective layers:** 10–20 layers of 0.25 mil (6 µm) double-aluminised Mylar (DAM). Each layer reflects IR radiation, and the vacuum gaps between layers have zero convection.
+3. **Spacer material:** Dacron or Nomex netting between each DAM layer, preventing conductive contact between adjacent reflective sheets.
+4. **Inner cover:** 1 mil aluminised Kapton, protecting the inner layers.
+
+**Effective emissivity:** An ideal MLI blanket with $N$ reflective layers has an effective emissivity of:
+
+$$\varepsilon_{\text{eff}} = \frac{1}{2/\varepsilon_{\text{inner}} + (N-1)(2/\varepsilon_{\text{layer}} - 1)}$$
+
+For 20 layers of DAM ($\varepsilon_{\text{layer}} = 0.03$): $\varepsilon_{\text{eff}} \approx 0.002$. In practice, real MLI achieves $\varepsilon_{\text{eff}} = 0.01$–$0.03$ due to seams, penetrations (harness, mounting) and edge effects. The ratio of actual to theoretical performance is typically 2–5× worse.
+
+**CubeSat MLI challenges:** CubeSats have limited surface area and many penetrations (connectors, antennas, sensors, solar cells), making it difficult to achieve good MLI performance. Most CubeSats in LEO do not use MLI — they rely on the moderate thermal environment (Earth IR provides a "warm floor") and surface coatings. MLI becomes essential for deep-space CubeSats (e.g., MarCO, CAPSTONE) or missions with sensitive payloads (IR detectors, laser systems).
+
+### 9.4.8 Heater sizing
+
+When passive thermal control cannot prevent a component from falling below its minimum temperature (typically during eclipse or safe mode), electrical heaters are required.
+
+> **Key equations — heater sizing**
+>
+> **Required heater power** (to maintain minimum temperature during the worst cold case):
+> $$P_{\text{heater}} = \varepsilon \sigma A_{\text{rad}} T_{\text{min}}^4 - Q_{\text{environment,cold}} - Q_{\text{internal,cold}}$$
+> where $T_{\text{min}}$ is the minimum allowable temperature of the component (in kelvin).
+>
+> **Heater types for CubeSats:**
+>
+> - **Kapton foil heaters:** Etched-foil resistance elements laminated between Kapton sheets. Flexible, thin (0.2–0.5 mm), lightweight (2–10 g each). Typical power 0.5–5 W per heater. Bond directly to the component surface with pressure-sensitive adhesive.
+> - **Cartridge heaters:** Cylindrical, inserted into drilled holes. Higher power density but heavier and less common on CubeSats.
+>
+> **Thermostat control:** Simple bimetallic thermostats switch heaters on/off at set temperatures (e.g., on at −5 °C, off at +5 °C). Mass ~2 g each. For higher reliability, software-controlled heaters using temperature-sensor feedback and EPS switches are preferred on modern CubeSats — but this requires the OBC to be running, which may not be the case in safe mode.
+
+### 9.4.9 Heat pipes and thermal straps
+
+**Heat pipes** are passive two-phase heat-transfer devices that transport large amounts of thermal energy with very small temperature differences. They are widely used on larger spacecraft and are beginning to appear on 6U+ CubeSats.
+
+**How a heat pipe works:**
+
+1. Working fluid (ammonia, methanol, or water) evaporates at the hot end (evaporator), absorbing latent heat
+2. Vapour travels through the hollow pipe core to the cold end (condenser)
+3. At the condenser, vapour releases latent heat and condenses back to liquid
+4. Liquid returns to the evaporator via capillary action in a wick structure (sintered metal, axial grooves, or screen mesh)
+5. The process is continuous, passive (no moving parts, no power), and can transport 10–100 W across 20–50 cm with < 5 °C temperature difference
+
+**Thermal conductance of a heat pipe:** Effective thermal conductivity is 10 000–100 000 W/m/K (compared with copper at 400 W/m/K and aluminium at 237 W/m/K). A 6 mm diameter ammonia heat pipe can transport ~30 W over 30 cm with < 3 °C gradient.
+
+**Thermal straps** are flexible conductive links (braided copper, graphite fibre, or pyrolytic graphite sheet) used to conduct heat between components that cannot be rigidly connected (e.g., across a hinge or between a vibration-isolated payload and the spacecraft bus). Typical conductance: 0.5–5 W/K.
+
+| Heat transport method | Conductance | Mass | Power | Orientation sensitivity | CubeSat use |
+|----------------------|-------------|------|-------|------------------------|------------|
+| Aluminium conduction | ~0.5–2 W/K per path | Part of structure | 0 W | None | Always (inherent) |
+| Copper thermal strap | 1–5 W/K | 10–50 g | 0 W | None | Occasional (6U+) |
+| Heat pipe (ammonia) | 5–50 W/K | 20–100 g | 0 W | Gravity-dependent (must test in relevant orientation) | Rare (6U+, some 3U) |
+| Pumped fluid loop | 50–500 W/K | 500+ g | 5–20 W | None | Large S/C only |
+
+### 9.4.10 Thermal control methods summary
+
+| Method | Type | Mass impact | Typical use | Key design parameter |
+|--------|------|-------------|------------|---------------------|
+| **Surface coatings** | Passive | Negligible | Always — select $\alpha_s/\varepsilon$ ratio per face | $\alpha_s/\varepsilon$ ratio |
+| **MLI blankets** | Passive | 0.5–2.0 kg/m² | Insulate sensitive components from environment | Number of layers, $\varepsilon_{\text{eff}}$ |
+| **Radiators** | Passive | Part of structure | Reject internal waste heat to deep space | Radiator area, $\varepsilon$, view to space |
+| **Heaters** | Active | 0.005–0.02 kg each | Maintain minimum temperature during eclipse/safe mode | Power, thermostat set point |
+| **Heat pipes** | Passive | 0.02–0.10 kg each | Transport heat from source to radiator | Working fluid, $Q_{\text{max}}$, orientation |
+| **Thermal straps** | Passive | 0.01–0.05 kg each | Flexible conductive link across joints/hinges | Conductance (W/K) |
+| **Louvres** | Active | 0.1–0.5 kg | Variable-conductance radiators (rare on CubeSats) | Open/close temperature range |
+
+### 9.4.11 ECSS thermal margins
+
+*[Source: ECSS-E-ST-31C, Table 5-1]*
+
+| Level | Hot margin (above predicted max) | Cold margin (below predicted min) |
+|-------|----------------------------------|-----------------------------------|
+| **Qualification** | Predicted + 15 °C | Predicted − 15 °C |
+| **Acceptance** | Predicted + 10 °C | Predicted − 10 °C |
+| **Operating** | Predicted + 5 °C | Predicted − 5 °C |
+
+These margins ensure that thermal-model uncertainties (typically ±5–10 °C for simplified models, ±2–5 °C for detailed correlated models) do not cause in-orbit temperature exceedances.
+
+> **Worked example — EOSat-3U single-node thermal analysis**
+>
+> **Hot case (sunlit, peak mode, perihelion, EOL coatings):**
+>
+> Simplified single-node model. 3U CubeSat, nadir-pointing.
+>
+> - Sun-facing area (+Z, zenith-facing 3U panel): $A_{\text{sun}} = 0.034$ m²
+> - SA surfaces (Sun-facing): $\alpha_s = 0.85$, $\varepsilon = 0.82$ (solar-cell properties)
+> - Nadir face (−Z): $A_{\text{nadir}} = 0.034$ m², anodised Al ($\alpha_s = 0.45$ EOL, $\varepsilon = 0.82$)
+> - Side faces (4×): $A_{\text{side}} = 4 \times 0.01$ m² $= 0.04$ m², anodised Al
+> - Internal dissipation (peak mode, 10 W downlink — Table 8.4): $Q_{\text{int}} = 10.0$ W. Essentially all electrical power drawn by the loads ends as heat inside the spacecraft; the RF power actually radiated by the antenna (a watt or two) is the only exception and is conservatively ignored here.
+>
+> $Q_{\text{solar}} = 0.85 \times 0.034 \times 1414 = 40.9$ W — but much of this is converted to electricity by the cells, so the net thermal input through the array is $Q_{\text{solar,thermal}} = \alpha_s A S (1 - \eta_{\text{cell}}) = 0.85 \times 0.034 \times 1414 \times 0.705 = 28.8$ W
+>
+> $Q_{\text{albedo}} = 0.45 \times 0.034 \times 0.35 \times 1414 = 7.6$ W
+>
+> $Q_{\text{Earth IR}} = 0.82 \times 0.034 \times 270 = 7.5$ W (nadir face, hot-case Earth IR)
+>
+> Total $Q_{\text{in}} \approx 28.8 + 7.6 + 7.5 + 10.0 = 53.9$ W
+>
+> Total radiating area (all six faces, less the array area, which is a net absorber, and allowing for partial Earth blockage of the nadir face): $A_{\text{rad}} \approx 0.066$ m²; average emissivity $\varepsilon_{\text{avg}} \approx 0.82$
+>
+> $T_{\text{hot}} = \left(\dfrac{53.9}{0.82 \times 5.67 \times 10^{-8} \times 0.066}\right)^{1/4} = \left(\dfrac{53.9}{3.07 \times 10^{-9}}\right)^{1/4} = (1.756 \times 10^{10})^{1/4} = 364$ K $= +91$ °C
+>
+> **This exceeds most component limits!** However, this simplified calculation overestimates the temperature because it treats the satellite as a single isothermal node and lumps the solar-cell absorption on the zenith face into it. In practice:
+>
+> - The zenith face (solar cells) runs hotter than the bus
+> - Internal components are conductively coupled to all faces, including the cold nadir face
+> - A multi-node model typically predicts peak internal temperatures of +40 to +55 °C for this scenario
+>
+> **Thermal engineer's response:** If the single-node calculation exceeds 60 °C, a detailed multi-node thermal model is required. The simplified calculation is a screening tool, not a design tool.
+>
+> **Cold case (eclipse, safe mode, aphelion, BOL coatings):**
+>
+> - No solar flux, no albedo
+> - Earth IR only: $Q_{\text{Earth IR}} = 0.82 \times 0.034 \times 200 = 5.58$ W (cold case: 200 W/m²)
+> - Internal dissipation (safe mode, Table 8.4): $Q_{\text{int}} = 2.0$ W
+> - Total $Q_{\text{in}} = 5.58 + 2.0 = 7.58$ W
+>
+> $T_{\text{cold}} = \left(\dfrac{7.58}{0.82 \times 5.67 \times 10^{-8} \times 0.070}\right)^{1/4} = \left(\dfrac{7.58}{3.25 \times 10^{-9}}\right)^{1/4} = (2.33 \times 10^{9})^{1/4} = 220$ K $= -53$ °C
+>
+> **This is too cold** for Li-ion batteries (min −20 °C operating, min 0 °C charging) and most COTS electronics (min −40 °C) — *if* the spacecraft had time to reach steady state.
+>
+> **Steady-state heater check.** To hold the whole spacecraft at $T_{\text{min}} = -10$ °C $= 263$ K would require
+> $Q_{\text{heater}} = \varepsilon \sigma A_{\text{rad}} T_{\text{min}}^4 - Q_{\text{in}} = 3.25 \times 10^{-9} \times 263^4 - 7.58 = 15.6 - 7.58 = 8.0$ W
+>
+> An 8 W heater in eclipse would exceed the battery capacity. But this is an isothermal whole-spacecraft calculation: in reality the battery sits inside the bus, partially insulated by the structure and surrounding boards, and a targeted heater of 0.5–1.0 W on the battery pack, with some MLI wrapping, is typically sufficient. More importantly, the eclipse is only 36 minutes long and the structure's thermal mass prevents the satellite from approaching steady state at all.
+>
+> **Transient check.** In eclipse the net cooling rate is $Q_{\text{out}} - Q_{\text{in}}$. At eclipse entry, $T = 293$ K (+20 °C):
+>
+> $Q_{\text{out}} = 0.82 \times 5.67 \times 10^{-8} \times 0.070 \times 293^4 = 3.25 \times 10^{-9} \times 7.37 \times 10^{9} = 24.0$ W
+>
+> $Q_{\text{net cooling}} = 24.0 - 7.58 = 16.4$ W
+>
+> For a 5 kg spacecraft with aluminium-dominated thermal mass ($c_p \approx 900$ J/kg/K):
+> $\Delta T = \dfrac{Q_{\text{net}} \times t}{m \times c_p} = \dfrac{16.4 \times 2150}{5.0 \times 900} = \dfrac{35\,260}{4500} = 7.8$ °C drop in 36 minutes
+>
+> So from +20 °C, the satellite cools to about +12 °C after one eclipse — well within limits (and the linear estimate is itself conservative, since $Q_{\text{out}}$ falls as $T^4$ as the spacecraft cools). **No heater needed for the bus; a battery heater only if the battery is thermally isolated from the bus.**
+>
+> **ECSS margin check — payload detector:**
+> Predicted maximum temperature of the payload detector = 42 °C.
+>
+> - Operating limit = 50 °C. Margin = 50 − 42 = 8 °C > 5 °C. **Pass.**
+> - Qualification test: must test at 42 + 15 = 57 °C. If the qualification limit is 60 °C: **Pass.**
+>
+> Predicted minimum temperature of the battery = −8 °C during the worst eclipse.
+>
+> - Operating limit = −10 °C. Margin = −8 − (−10) = 2 °C < 5 °C. **Fail — inadequate margin.**
+> - **Action:** Add a 0.5 W survival heater with thermostat set to −5 °C, or add MLI around the battery pack.
+
+---
+
+## 9.5 Worked example: UniSat-1 power and thermal
+
+Returning to UniSat-1, the 1U demonstrator of Chapter 1 §1.7, in the 400 km ISS orbit of Chapter 7 §7.7 (period 92.6 min, 56.5 min sunlight, 36 min eclipse).
+
+**Power sizing: body-mounted only.** UniSat-1 uses body-mounted solar cells on all five Sun-exposed faces (the sixth face carries the deployment-switch interface). With no deployable panels, the power system is simpler, lighter and cheaper — but severely power-limited.
+
+> **Worked example — UniSat-1 solar array**
+>
+> **Given:** Body-mounted cells on 5 faces of a 1U (100 × 100 mm each). $P_{\text{ecl}} = 0.5$ W (OBC only), $P_{\text{sun}} = 1.2$ W (science and downlink overlap avoided by scheduling). Mission lifetime 6 months. Cell temperature 55 °C (body-mounted cells run cooler on a 1U owing to good thermal coupling to the bus mass).
+>
+> **Step 1 — Effective illuminated area:**
+> With passive magnetic attitude (slow tumble ~1°/s), on average only ~1.5 faces are well illuminated at any instant. Effective average area:
+> $A_{\text{eff}} \approx 1.5 \times (0.10 \times 0.10) = 0.015$ m²
+>
+> **Step 2 — Array BOL power (with temperature derating):**
+> $L_T = 1 + (-0.0019)(55 - 28) = 0.949$
+>
+> $P_{\text{SA,BOL}} = \eta_{\text{cell}} \times L_T \times S \times A_{\text{eff}} \times f_{\text{pack}} = 0.295 \times 0.949 \times 1361 \times 0.015 \times 0.80 = 4.57$ W (illuminated peak)
+>
+> **Step 3 — Orbit-average power available:**
+> $P_{\text{avg,avail}} = P_{\text{SA,BOL}} \times \dfrac{t_{\text{sun}}}{T} \times \eta_{\text{EPS}} = 4.57 \times \dfrac{56.5}{92.6} \times 0.85 = 2.37$ W
+>
+> After 6-month degradation ($(1 - 0.025)^{0.5} = 0.987$): $P_{\text{avg,EOL}} = 2.37 \times 0.987 = 2.34$ W
+>
+> **Step 4 — Power demand (orbit average):** From Chapter 8 §8.5: $P_{\text{avg,demand}} = 0.68$ W.
+>
+> **Power margin:** $2.34 - 0.68 = 1.66$ W (**71 % margin**). Even with conservative geometry assumptions, the budget closes comfortably.
+>
+> **Note on body-mounted arrays and tumbling:** The key uncertainty in 1U body-mounted power is the attitude. With passive magnetic stabilisation the satellite aligns roughly with Earth's magnetic field, providing more predictable illumination than a random tumble; however, the effective area varies significantly around the orbit as the field direction changes with latitude. The 1.5-face average is conservative — a Monte Carlo simulation of illumination geometry over many orbits typically yields a more optimistic 1.7–1.9 effective-face average.
+
+> **Worked example — UniSat-1 battery**
+>
+> **Given:** $P_{\text{ecl}} = 0.5$ W, $t_{\text{ecl}} = 36$ min $= 0.60$ h, DoD $= 0.50$ (acceptable for a 6-month mission: ~2 740 cycles), $\eta_{\text{dis}} = 0.95$.
+>
+> $E_{\text{bat}} = \dfrac{0.5 \times 0.60}{0.50 \times 0.95} = \dfrac{0.30}{0.475} = 0.63$ Wh
+>
+> With margin: specify minimum **10 Wh** — the smallest COTS CubeSat battery pack with flight heritage.
+>
+> **Cycle-count check:** 6 months at 15.5 orbits/day ≈ 2 800 eclipses. At 50 % DoD, Li-ion cells comfortably survive > 2 000 cycles. **Pass.**
+>
+> **Actual operating DoD:** With a 10 Wh battery and 0.63 Wh per eclipse, actual DoD = 0.63/10 = **6.3 %** per eclipse. At this DoD, cycle life exceeds 100 000 cycles. **Battery degradation is negligible** over the 6-month mission.
+>
+> **Key insight:** The 10 Wh battery is massively oversized for the actual eclipse demand. This is common in 1U missions — the minimum COTS battery available provides far more capacity than needed. The excess capacity provides excellent margin and enables recovery from anomalies (multiple missed sunlit periods).
+
+**Thermal: passive only.** UniSat-1 uses no heaters, no MLI and no active thermal control. This is justified by three factors:
+
+1. **Low altitude (400 km):** Strong Earth IR flux (~240 W/m²) provides a warm floor, preventing extreme cold cases
+2. **Short mission (6 months):** No long-term coating degradation to worry about
+3. **Tolerant components:** COTS electronics typically operate from −20 °C to +60 °C; the 400 km LEO thermal environment stays within −10 °C to +45 °C for a 1U with standard aluminium/anodised surfaces
+
+> **Quick thermal check — UniSat-1 cold case (transient)**
+>
+> Worst eclipse, all subsystems off except OBC (0.5 W internal dissipation):
+>
+> - Earth IR absorbed: $\varepsilon \times A_{\text{nadir}} \times q_{\text{IR}} = 0.85 \times 0.01 \times 240 = 2.04$ W
+> - Internal dissipation: 0.5 W
+> - Total heat in: 2.54 W
+>
+> Steady-state temperature (if the eclipse were infinite):
+> $T_{\text{steady}} = \left(2.54 / (0.85 \times 5.67 \times 10^{-8} \times 0.045)\right)^{1/4} = 195$ K $= -78$ °C
+>
+> **This looks alarming** — but the eclipse is only 36 minutes, and the thermal mass prevents the satellite from reaching steady state.
+>
+> **Transient analysis:** Starting at $T_0 = +20$ °C (293 K) at eclipse entry:
+>
+> $Q_{\text{rad,out}} = 0.85 \times 5.67 \times 10^{-8} \times 0.045 \times 293^4 = 2.17 \times 10^{-9} \times 7.37 \times 10^{9} = 16.0$ W
+>
+> Net cooling: $16.0 - 2.54 = 13.5$ W
+>
+> Linear estimate: $\Delta T = \dfrac{Q_{\text{net}} \times t}{m \times c_p} = \dfrac{13.5 \times 36 \times 60}{1.0 \times 900} = \dfrac{29\,160}{900} = 32$ °C
+>
+> The linear estimate is conservative — as the satellite cools, the radiated power drops as $T^4$, so the actual cooling slows. A more accurate estimate gives $\Delta T \approx 20$–$25$ °C, resulting in a minimum temperature of about −5 to −10 °C.
+>
+> **Conclusion:** The 1U at 400 km reaches approximately −5 to −10 °C during the worst-case eclipse, starting from a warm sunlit entry. This is within COTS operating limits (−20 °C to +60 °C for most components) and within the battery discharge range. **No heaters needed.** The short eclipse and the strong Earth IR flux at 400 km make passive thermal control viable for a 1U mission.
+
+---
+
+## 9.6 Real mission examples
+
+### 9.6.1 Planet SuperDove EPS
+
+| Parameter | Value | Design rationale |
+|-----------|-------|-----------------|
+| Form factor | 3U+, ~5 kg | Flock constellation; dispenser-compatible |
+| SA configuration | Body-mounted + two deployable wings | ~25 W BOL needed for continuous imaging + S-band downlink |
+| SA cells | Triple-junction GaAs | Standard space-grade, 29.5 % AM0 |
+| Battery | Li-ion, ~20 Wh (2S2P 18650) | Supports ~3.5 W eclipse load for 35 min at < 20 % DoD |
+| Bus voltage | Unregulated 7.2–8.4 V (2S) + regulated 3.3 V, 5 V | Standard CubeSat EPS architecture |
+| Peak demand | ~18 W (imaging mode) | Multispectral imager + star tracker + reaction wheels + OBC |
+| Orbit | 475 km SSO, ~94 min period | Sun-synchronous for consistent lighting |
+| Eclipse | ~35 min max, ~3 W demand | OBC + AOCS only during eclipse; no imaging or downlink |
+| Thermal | Body-mounted radiator panels + battery heater | Passive thermal control; battery heater for eclipse charging margin |
+
+*[Source: Planet Labs conference presentations; Salas et al., "SuperDove Constellation," SSC 2021]*
+
+### 9.6.2 CAPSTONE thermal design
+
+NASA's CAPSTONE (12U, 25 kg) operates in a near-rectilinear halo orbit (NRHO) around the Moon with extreme thermal cycling:
+
+- Perilune: strong Earth/Moon IR + solar
+- Apolune: deep-space cold, long shadow periods (up to 12+ hours)
+- Thermal control: MLI wrapping (10-layer DAM blankets), heaters on propulsion lines (to prevent propellant freezing), passive radiator panels with white paint (AZ-93)
+- Battery heaters: 5 W total, thermostatically controlled, critical for survival during long eclipses
+- Operating temperature range: −20 °C to +50 °C for electronics; propulsion lines maintained above +5 °C
+
+*[Source: Advanced Space, "CAPSTONE Design Overview," SmallSat Conference 2022]*
+
+---
+
+## Summary
+
+| Topic | Key takeaway |
+|-------|-------------|
+| Solar cell physics | Triple-junction GaAs (InGaP/GaAs/Ge) achieves 28–30 % AM0; multi-junction stacking captures a broader solar spectrum |
+| Temperature effects | Cells lose ~0.19 %/°C (relative); operating at 65 °C costs ~7 % power vs STC |
+| Degradation | Radiation damage: $(1-\delta)^n$, $\delta \approx 2.5$ %/yr LEO; cover glass mitigates proton/electron damage |
+| EPS architecture | MPPT + regulated bus is the CubeSat standard; MPPT extracts 10–15 % more power than DET |
+| SA sizing | $P_{\text{SA,EOL}} = (P_{\text{sun}} t_{\text{sun}}/\eta_{\text{sun}} + P_{\text{ecl}} t_{\text{ecl}}/\eta_{\text{ecl}})/t_{\text{sun}}$; derate for degradation $L_d$ and temperature $L_T$ |
+| SA area | $A = P_{\text{BOL}} / (\eta_{\text{cell}} \cdot S \cdot \cos\theta \cdot f_{\text{pack}} \cdot f_{\text{cover}})$; θ from the array geometry and the orbit β-angle |
+| Battery chemistry | Li-ion (LCO/NMC): 150–200 Wh/kg packaged; 3.0–4.2 V per cell; CC–CV charging |
+| Battery sizing | $E = P_{\text{ecl}} \cdot t_{\text{ecl}} / (\text{DoD} \cdot \eta_{\text{dis}})$; DoD 20–30 % for multi-year LEO |
+| Battery failure modes | Thermal runaway (overcharge), lithium plating (cold charge), capacity imbalance (series cells) |
+| SA power reference | Body-mounted: 2–20 W; single deployable: 4–55 W; dual deployable: 25–100 W (1U–12U, §9.2.1) |
+| Thermal physics | No convection in vacuum; radiation ($\varepsilon \sigma T^4$) is the only mechanism for heat rejection |
+| Thermal balance | $Q_{\text{in}} = Q_{\text{out}}$; solve for $T = (Q/\varepsilon\sigma A)^{1/4}$ (single node); multi-node for real design |
+| $\alpha_s/\varepsilon$ ratio | Low ratio = cold surface (radiator); high ratio = warm surface (insulation) |
+| MLI construction | VDA Kapton outer + 10–20 DAM layers + Dacron spacers; $\varepsilon_{\text{eff}} = 0.01$–$0.03$ |
+| Heater sizing | $P_{\text{heater}} = \varepsilon\sigma A T_{\text{min}}^4 - Q_{\text{env}} - Q_{\text{int}}$; Kapton foil heaters, thermostat control |
+| Thermal margins | ECSS: ±5 °C operating, ±10 °C acceptance, ±15 °C qualification |
+| Transient effects | Thermal mass ($mc_p$) prevents reaching steady state during short eclipses; a 1U at 400 km cools ~20–25 °C in a 36-min eclipse |
+
+## Problems
+
+1. **Array sizing.** A 3U Earth-observation CubeSat in a 550 km Sun-synchronous orbit (compute $T$, $t_{\text{sun}}$ and $t_{\text{ecl}}$ at β = 0 using Chapter 7) has a peak sunlit demand of 12 W and an eclipse load of 4 W. Size the solar array for a 4-year mission with cells at 70 °C and an effective Sun angle of 25°, showing all five steps. What array area and mass result?
+
+2. **Path efficiency sensitivity.** Repeat the EOSat-3U worked example of §9.2 with the lumped $\eta_{\text{ecl}} = 0.90$ in place of 0.786, and with $\eta_{\text{sun}} = 1$ (no daytime regulator loss). By what percentage does the required BOL power change in each case? Which assumption would you accept at Phase A, and why?
+
+3. **Sun angle and β.** For the EOSat-3U orbit (10:30 LTAN, assume β between 20° and 30° through the year), compare the orbit-averaged $\cos\theta$ of (a) a side-mounted panel whose normal is perpendicular to the orbit plane and (b) the zenith face. Which mounting gives more energy per orbit, and how does the answer change for a dawn–dusk (β ≈ 85°) orbit?
+
+4. **Battery sizing and cycle life.** Size the battery for the spacecraft of Problem 1 at 20 % and 35 % DoD. For each, compute the number of eclipse cycles over 4 years and check against the cycle-life table. Which DoD would you choose, and what battery mass does it imply at 170 Wh/kg?
+
+5. **Orbit-average closure.** Using the mode table of Chapter 8 Table 8.4 and the duty cycles of §8.4.4, confirm the orbit-average demand of 4.63 W. Then compute the orbit-average power the array of §9.2 actually delivers (BOL power × sunlit fraction × $\eta_{\text{sun}}$) and show whether the orbit-energy balance closes at BOL and at EOL.
+
+6. **Hot-case screening.** Repeat the single-node hot-case calculation of §9.4.11 for a spacecraft whose zenith face is white-painted structure ($\alpha_s = 0.30$ EOL, $\varepsilon = 0.90$) instead of solar cells, with the array moved to a deployable wing that is thermally decoupled from the bus. What single-node temperature results, and what does the comparison tell you about where the array should be mounted from a thermal point of view?
+
+7. **Transient cooling.** Integrate the eclipse cool-down of §9.4.11 numerically (time steps of 2 minutes, recomputing $Q_{\text{out}}$ at each step) and compare the result with the 7.8 °C linear estimate. Then repeat for the 1U UniSat-1 case and compare with the 20–25 °C quoted in §9.5.
+
+8. **Heater sizing.** A battery pack of 0.15 kg (effective $c_p = 1000$ J/kg/K) is wrapped in MLI with $\varepsilon_{\text{eff}} = 0.03$ and radiating area 0.01 m², and enters eclipse at +15 °C. Estimate its cool-down over 36 minutes with no heater, and size a thermostat-controlled heater that holds it above 0 °C. What fraction of the eclipse energy budget of §9.3 does the heater consume?
+
+9. **ECSS margins.** The predicted temperature range for a star tracker is −18 °C to +48 °C and its operating limits are −30 °C to +60 °C. Check the operating margin, state the acceptance and qualification test temperatures, and decide whether the design passes. If the qualification limit of the unit is +60 °C, what must change?
+
+10. **UniSat-1 trade.** Suppose UniSat-1 adds a single deployable 1U panel (0.01 m², $\theta$ ≈ 30° average). Recompute the orbit-average power available and the margin. Then list the three new interfaces (Chapter 8 §8.3) and the one new failure mode the panel introduces, and argue whether the extra 1 W is worth it for a magnetometer mission.
+
+## References
+
+1. Wertz, Everett & Puschell, *Space Mission Engineering: The New SMAD*, 2011, Ch. 11.4 (EPS), Ch. 11.5 (Thermal). https://www.space.com/smad
+2. ECSS, *ECSS-E-ST-20C Rev.1: Electrical and Electronic*, 2019. https://ecss.nl/standard/ecss-e-st-20c-electrical-and-electronic/
+3. ECSS, *ECSS-E-ST-31C: Thermal Control*, 2008 (reissued 2020). https://ecss.nl/standard/ecss-e-st-31c-thermal-control/
+4. Patel, M. R., *Spacecraft Power Systems*, CRC Press, 2005, Ch. 3–8. https://www.taylorfrancis.com/books/mono/10.1201/9781420038217/spacecraft-power-systems-mukund-patel
+5. Gilmore, D. G. (ed.), *Spacecraft Thermal Control Handbook, Vol. 1: Fundamental Technologies*, 2nd ed., Aerospace Press, 2002. https://arc.aiaa.org/doi/book/10.2514/4.104503
+6. Gilmore, D. G. (ed.), *Spacecraft Thermal Control Handbook, Vol. 2: Cryogenics*, 2003. https://arc.aiaa.org/doi/book/10.2514/4.104515
+7. Ratnakumar, B. V. et al., *Lithium-Ion Batteries for Space*, NASA JPL, 2003. https://trs.jpl.nasa.gov
+8. Kopp, G. & Lean, J. L., "A new, lower value of total solar irradiance," *Geophys. Res. Lett.* 38, 2011. https://doi.org/10.1029/2010GL045777
+9. Green, M. A. et al., "Solar cell efficiency tables (version 62)," *Progress in Photovoltaics* 31, 2023. https://doi.org/10.1002/pip.3726
+10. Salas, J. et al., "SuperDove constellation," Small Satellite Conference, 2021. https://digitalcommons.usu.edu/smallsat/
+11. Advanced Space, "CAPSTONE design overview," Small Satellite Conference, 2022. https://digitalcommons.usu.edu/smallsat/
+
+
+# Chapter 10 — Attitude and Orbit Control
+
+> **Recommended background.** SMAD4 Ch. 11.1 (ADCS); Markley & Crassidis, *Fundamentals of Spacecraft Attitude Determination and Control*, Ch. 1–3; Sidi, *Spacecraft Dynamics and Control*, Ch. 4–9; ECSS-E-ST-60-10C (control performance). This chapter uses the orbit of Chapter 7 and the mass, power and interface framework of Chapter 8; the reaction-wheel momentum relations are derived in Part V §V.14.
+
+## Learning objectives
+
+By the end of this chapter, you will be able to:
+
+1. Explain the distinction between attitude determination and attitude control and the physics of each sensor and actuator type
+2. Select an AOCS hardware architecture based on pointing requirements
+3. Compute a pointing error budget using root-sum-square (RSS) combination
+4. Calculate disturbance torques from gravity gradient, aerodynamic drag, solar radiation pressure, and residual magnetic dipole
+5. Size actuators (reaction wheels, magnetorquers) for the computed disturbance environment with worked equations
+6. Explain the physics of momentum storage, saturation, and desaturation
+7. Compare control moment gyroscopes with reaction wheels and articulate when each is appropriate
+8. Verify an AOCS design against its pointing requirement
+
+---
+
+## 10.1 AOCS fundamentals
+
+*[Source: SMAD, Ch. 11.1; Markley & Crassidis, Ch. 1–3]*
+
+The AOCS performs two distinct functions:
+
+| Function | Purpose | Hardware |
+|----------|---------|---------|
+| **Attitude determination** (AD) | Know the spacecraft's orientation relative to a reference frame | Sensors: star tracker, sun sensors, magnetometer, gyroscope, Earth sensor, GPS receiver |
+| **Attitude control** (AC) | Change or maintain the spacecraft's orientation | Actuators: reaction wheels, magnetorquers, thrusters, control moment gyros |
+
+**The attitude state:** A spacecraft's attitude is its orientation in 3D space relative to a reference frame (typically J2000 Earth-centred inertial, or the local-vertical/local-horizontal frame for nadir-pointing missions). The attitude is described by a rotation (quaternion, direction-cosine matrix, or Euler angles) plus angular velocity $\vec{\omega}$. Euler's equation of rotational motion governs the dynamics:
+
+$$\mathbf{I} \dot{\vec{\omega}} + \vec{\omega} \times (\mathbf{I} \vec{\omega}) = \vec{T}_{\text{external}} + \vec{T}_{\text{control}}$$
+
+where $\mathbf{I}$ is the spacecraft inertia tensor, $\vec{T}_{\text{external}}$ is the sum of disturbance torques, and $\vec{T}_{\text{control}}$ is the actuator torque. The $\vec{\omega} \times (\mathbf{I} \vec{\omega})$ term is the gyroscopic coupling — it means that rotating about one axis can induce motion about other axes if the inertia tensor is not spherically symmetric.
+
+The closed loop is the same for every architecture in this chapter (Figure 10.1): sensors measure, an estimator fuses the measurements into an attitude and rate estimate, a controller computes the torque needed to drive the error to zero, and actuators apply it to the spacecraft — while the disturbance torques of §10.2 push back.
+
+![AOCS control-loop block diagram: reference attitude, controller, actuators, spacecraft dynamics with disturbance torques injected, sensors and Kalman-filter estimator in the feedback path.](../assets/figures/fig_aocs_loop.png)
+
+**Figure 10.1** — The AOCS closed loop. The controller turns the error between the commanded and estimated attitude into a torque demand, the actuators apply it, and Euler's equation governs the response of the spacecraft together with the external disturbance torques injected at the plant. Sensors measure the true attitude with noise and bias, and a Kalman-filter estimator fuses those measurements into the attitude and rate estimate fed back to the summing junction.
+
+### 10.1.1 Attitude sensors — how they work
+
+Vendor products named in this chapter are representative examples, not endorsements; prices are indicative (2026).
+
+#### Star trackers
+
+A star tracker is the most accurate attitude sensor available, providing absolute attitude knowledge to arcsecond-level accuracy.
+
+**How it works:**
+
+1. A CMOS or CCD detector (typically 1024 × 1024 to 2048 × 2048 pixels) images a patch of sky through a wide-angle lens (typically 15–25° FOV)
+2. The on-board processor detects bright point sources (stars) in the image, computing their centroid positions to sub-pixel accuracy using Gaussian fitting
+3. The processor matches the observed pattern of star positions against an on-board star catalogue (typically Hipparcos or Tycho-2, containing 3 000–10 000 stars, stored in a k-d tree or hash table for fast lookup)
+4. The "lost in space" algorithm identifies the star pattern without any prior attitude knowledge (first acquisition), typically taking 1–5 seconds
+5. Once identified, the processor computes a quaternion rotation from the catalogue (inertial) frame to the camera (body) frame
+6. In tracking mode, the processor tracks known stars frame-to-frame, providing updates at 1–10 Hz with 3–10 arcsec accuracy (1σ, per axis)
+
+**Key specifications:**
+
+| Parameter | Typical CubeSat star tracker | Large S/C star tracker |
+|-----------|------------------------------|----------------------|
+| Accuracy (1σ, boresight) | 5–15 arcsec | 0.5–3 arcsec |
+| Accuracy (1σ, roll) | 30–100 arcsec | 5–20 arcsec |
+| FOV | 10–15° circular | 15–25° circular |
+| Update rate | 2–5 Hz | 5–20 Hz |
+| Sensitivity | Stars to magnitude 6–7 | Stars to magnitude 8–10 |
+| Mass | 50–350 g | 1–5 kg |
+| Power | 0.5–2 W | 5–15 W |
+| Products | Blue Canyon NST (350 g), Sinclair SS-411 (90 g), CubeSpace CubeStar (50 g) | Sodern Hydra, Leonardo AA-STR |
+
+*[Source: vendor star-tracker datasheets; ECSS-E-ST-60-20C]*
+
+**Exclusion zones:** Star trackers cannot operate when bright objects are in or near the FOV:
+
+- **Sun:** Exclusion angle typically 25–45° (direct sunlight saturates the detector and can cause permanent damage to some sensor types)
+- **Earth (illuminated limb):** Exclusion angle typically 25–35° (Earth's brightness overwhelms star signals)
+- **Moon:** Exclusion angle typically 10–15°
+- **Stray light:** Internal reflections from nearby spacecraft structure can create false stars
+
+**Implication for mission design:** A nadir-pointing spacecraft in LEO always has the Earth within ~65° of one hemisphere. The star tracker must be mounted on a face that never points toward Earth (typically the zenith or anti-velocity face). If the Sun is near the orbital plane (β-angle near 0, Chapter 7 §7.1.2), the star tracker may be periodically blinded. Two star trackers mounted on different faces provide redundancy and eliminate single-axis exclusion-zone gaps. These constraints are O-type interfaces in the N² matrix of Chapter 8.
+
+**Why star trackers are the most accurate:** Other sensors measure vectors to specific objects (Sun, Earth, magnetic field) — each provides only 2 of the 3 attitude degrees of freedom (direction but not roll around that vector). A star tracker measures multiple star directions simultaneously, providing a full 3-axis attitude fix from a single measurement. The accuracy is limited by optical diffraction, centroiding noise, and catalogue accuracy — all of which are extremely well characterised.
+
+#### Sun sensors
+
+Sun sensors determine the direction to the Sun, providing 2-axis attitude information (the Sun vector in the body frame). They are simple, reliable, radiation-tolerant, and low-power.
+
+**Coarse sun sensors (photodiode-based):**
+A coarse sun sensor consists of one or more photodiodes behind a mask or window. The photocurrent is proportional to the cosine of the incidence angle:
+
+$$I = I_0 \cos\theta$$
+
+A set of 6 coarse sun sensors (one per face of the spacecraft) determines the Sun direction to 2–5° accuracy by comparing the photocurrents from each face. The face with the highest current is Sun-facing; the ratio between adjacent faces gives the angle.
+
+**Fine sun sensors (linear array or quadrant detector):**
+A fine sun sensor uses a slit mask above a linear photodiode array (similar to a miniature sundial). Sunlight passes through the slit and illuminates a specific position on the array, which is proportional to the incidence angle. Fine sun sensors achieve 0.1–1.0° accuracy.
+
+| Type | Accuracy | FOV | Mass | Power | Products |
+|------|----------|-----|------|-------|----------|
+| Coarse (photodiode) | 2–5° | ~hemisphere | 1–5 g | < 1 mW | NewSpace NCSS-SA05, Solar MEMS nanoSSOC-A60 |
+| Fine (analogue, slit + array) | 0.1–0.5° | 60–120° | 5–30 g | 10–50 mW | NewSpace NFSS-411, Solar MEMS nanoSSOC-D60 |
+| Digital (APS detector + slit) | 0.01–0.05° | 60–120° | 30–50 g | 50–200 mW | TNO micro digital sun sensor |
+
+*[Source: vendor sun-sensor datasheets]*
+
+**Why every spacecraft needs sun sensors:** Sun sensors are the only sensor guaranteed to work in any attitude, at any rate, in any environment (LEO, GEO, deep space). They are the primary sensor for safe mode: when the spacecraft tumbles, the OBC reboots, or the star tracker is blinded, the sun sensors can determine the Sun direction and enable the spacecraft to orient its solar arrays for power generation. Without sun sensors, a spacecraft that enters safe mode may not recover power.
+
+#### Magnetometers
+
+A magnetometer measures the local geomagnetic field vector $\vec{B}$ in the body frame. By comparing the measured $\vec{B}$ to a model of Earth's magnetic field (IGRF — International Geomagnetic Reference Field) at the known orbit position, the spacecraft attitude can be determined.
+
+**How it works:**
+
+- **Fluxgate magnetometer:** A ferromagnetic core is periodically driven into saturation by an excitation coil. The presence of an external magnetic field creates an asymmetry in the saturation waveform, which is detected by a sense coil. Three orthogonal fluxgate elements provide the 3-axis field vector. Resolution: 1–10 nT. Accuracy: ±200–500 nT (limited by spacecraft residual magnetic-dipole contamination).
+- **Magnetoresistive (AMR/GMR):** Thin-film magnetic sensors. Smaller and cheaper than fluxgates but noisier and less stable. Common in COTS CubeSat magnetometers.
+
+**Attitude determination from magnetometers:**
+
+- A single magnetometer measurement provides the magnetic-field direction in the body frame (2 DOF, analogous to a sun sensor providing the Sun direction)
+- Comparing with the IGRF model gives attitude, but accuracy is limited by IGRF model uncertainty (~100 nT in LEO), spacecraft residual magnetic-dipole contamination (can be 1000+ nT close to electronics), and the fact that only 2 DOF are available per measurement (no roll determination around the field vector)
+- Magnetometer-only attitude determination: ~5–10° accuracy
+- Magnetometer + sun sensor (combined): ~1–3° accuracy (the two independent vectors provide a full 3-axis solution via TRIAD or the q-method)
+
+**Residual dipole contamination:** Every electronic circuit creates a magnetic field. Current loops, permanent magnets in motors, magnetised structural components, and battery cells all contribute to the spacecraft's residual magnetic dipole. This contaminates the magnetometer reading. Mitigation: mount the magnetometer on a deployable boom (10–30 cm from the bus), use magnetically clean design practices (twisted pairs, balanced current loops), and perform a residual-dipole calibration in orbit by comparing magnetometer readings during eclipse (no solar-array current) with sunlit readings.
+
+| Parameter | Typical CubeSat magnetometer |
+|-----------|------------------------------|
+| Range | ±60 000 nT (sufficient for LEO: B ~20 000–50 000 nT) |
+| Resolution | 10–100 nT |
+| Accuracy (after calibration) | 200–1000 nT |
+| Mass | 5–30 g |
+| Power | 10–50 mW |
+| Products | NewSpace NMAG, PNI RM3100, Honeywell HMC5883L |
+
+#### Gyroscopes (rate sensors)
+
+Gyroscopes measure angular velocity $\vec{\omega}$ rather than absolute attitude. They provide high-bandwidth rate information for control loops and bridge the gap between star-tracker updates.
+
+**Types used on CubeSats:**
+
+- **MEMS gyroscope:** Vibrating structure (tuning fork or ring) whose Coriolis force is proportional to rotation rate. Small, cheap (< 50 EUR per axis, indicative), low power. Bias drift: 1–10°/h.
+- **MEMS IMU (6-axis):** Combined 3-axis accelerometer + 3-axis gyroscope. Mass 5–15 g. Very common in CubeSats.
+- **Fibre-optic gyroscope (FOG):** Much better stability (bias drift 0.01–1°/h) but larger, heavier (200+ g) and more expensive. Used on high-end CubeSats and small satellites.
+
+**Why gyroscopes drift:** MEMS gyroscopes have a non-zero bias (a constant offset in the measured rate even when stationary) that changes with temperature and time. Integrating angular rate to get attitude ($\theta = \int \omega \, dt$) accumulates this bias error linearly. A 1°/h bias drift means the attitude estimate drifts 1° per hour. Star trackers provide absolute attitude corrections that reset this drift — the combination of star tracker (low rate, absolute) and gyroscope (high rate, relative) via a Kalman filter is the standard approach for high-performance attitude determination.
+
+#### GPS receivers for orbit determination
+
+GPS receivers determine the spacecraft's **position and velocity** (orbit determination), not attitude (though multi-antenna GPS can provide coarse attitude).
+
+**How it works in LEO:**
+
+- GPS satellites orbit at ~20 200 km altitude; LEO spacecraft orbit below them at 300–800 km
+- GPS signals travel downward through the ionosphere to the LEO receiver
+- The receiver must use a specialised correlator that handles Doppler shifts up to ±40 kHz (LEO relative velocity ~7.5 km/s vs GPS satellite velocity ~3.9 km/s)
+- Typical accuracy: 5–20 m position, 0.1–0.5 m/s velocity (single frequency, C/A code)
+- Dual-frequency GPS with carrier phase: sub-metre position accuracy
+
+**Why GPS matters for AOCS:** Accurate orbit knowledge is needed for nadir pointing (knowing where "down" is requires knowing position), ground-target tracking, IGRF evaluation (magnetometer attitude determination needs position input) and orbit-manoeuvre planning.
+
+| Parameter | Typical CubeSat GPS receiver |
+|-----------|------------------------------|
+| Position accuracy | 5–20 m (C/A code) |
+| Velocity accuracy | 0.1–0.5 m/s |
+| Time accuracy | 100 ns |
+| Altitude limit | Typically 600 km (verify that COCOM limits are removed) |
+| Mass | 15–30 g |
+| Power | 0.5–1.0 W |
+| Products | SkyFox Labs piNAV-NG, NovAtel OEM719, Hemisphere V200 |
+
+### 10.1.2 AOCS architecture selection by pointing requirement
+
+| Pointing requirement | Architecture | Sensors | Actuators | Mass | Power | Cost (indicative, 2026) |
+|---------------------|-------------|---------|-----------|------|-------|------|
+| > 5° | Passive magnetic | None (or 1 magnetometer) | Permanent magnet + hysteresis rods | ~0.05 kg | 0 W | ~2 kEUR |
+| 2–5° | B-dot detumble + magnetic pointing | 3-axis magnetometer + coarse sun sensors | 3-axis magnetorquers | ~0.10 kg | 0.2 W | ~8 kEUR |
+| 0.1–2° | Active 3-axis (RW + sensors) | Fine sun sensors + magnetometer + (optional gyro) | 3–4 RW + 3 MTQ for desaturation | ~0.50 kg | 2–4 W | ~35 kEUR |
+| < 0.1° | Fine pointing (RW + star tracker) | Star tracker + fine sun sensors + magnetometer + gyro | 4 RW + 3 MTQ | ~0.80 kg | 3–5 W | ~55 kEUR |
+| < 0.01° | Very fine pointing | Dual star trackers + MEMS gyro + fine sun sensors + magnetometer | 4 RW + 3 MTQ | ~1.20 kg | 4–6 W | ~80 kEUR |
+
+**Real mission examples:**
+
+| Mission | Form factor | Pointing req. | Architecture | AOCS mass | Key sensor |
+|---------|------------|-------------|-------------|-----------|------------|
+| **Astrocast** (3U, IoT) | 3U | ~5° | MTQ + sun sensors + magnetometer | 0.1 kg | Sun sensors |
+| **Planet SuperDove** (3U+, EO) | 3U+ | ~0.1° | 4 RW + ST + 3 MTQ + 6 sun sensors | 0.8 kg | Star tracker |
+| **CAPSTONE** (12U, cislunar nav) | 12U | ~0.05° | 4 RW + ST + sun sensors + IMU | ~1.0 kg | Star tracker + IMU |
+| **ASTERIA** (6U, exoplanet) | 6U | ~0.003° (10 arcsec) | 4 RW + ST + fine guidance sensor | ~1.2 kg | Custom fine-guidance camera |
+
+*[Source: Pong et al., "ASTERIA: Achieving 10-arcsecond Pointing on a 6U CubeSat," SSC 2018]*
+
+---
+
+## 10.2 Disturbance torques
+
+In LEO, four external torques disturb the spacecraft attitude. The AOCS must counteract them continuously. Understanding the source and magnitude of each disturbance is essential for sizing actuators.
+
+*[Source: SMAD, Ch. 11.1; Sidi, Ch. 5; Wertz 1999, Ch. 11]*
+
+### 10.2.1 Gravity-gradient torque
+
+**Physics:** A spacecraft in orbit experiences a non-uniform gravitational field — the side closer to Earth is pulled more strongly than the far side. For an elongated body, this differential pull creates a torque that tends to align the long axis with the local vertical (nadir direction). This is the principle behind gravity-gradient stabilisation.
+
+> **Key equation — gravity-gradient torque**
+>
+> $$T_{gg} = \frac{3\mu}{2a^3} |I_z - I_x| \sin(2\theta)$$
+>
+> where $\mu = 3.986 \times 10^{14}$ m³/s², $a = R_E + h$ (semi-major axis in metres), $I_z$, $I_x$ are the principal moments of inertia about the maximum and minimum axes (kg m²), and $\theta$ is the angle between the long axis and the local vertical. Worst case occurs at $\theta = 45°$, where $\sin(2\theta) = 1$.
+>
+> For a body with $I_z \approx I_x$ (a cube), $T_{gg} \approx 0$ — this is why 1U CubeSats experience minimal gravity-gradient torque.
+
+### 10.2.2 Aerodynamic torque
+
+**Physics:** At LEO altitudes (200–600 km), residual atmospheric molecules collide with the spacecraft surface. The force acts through the centre of pressure (cp), which generally does not coincide with the centre of mass (cm). The offset creates a torque.
+
+> **Key equation — aerodynamic torque**
+>
+> $$T_{\text{aero}} = \frac{1}{2} \rho v^2 C_D A_{\text{ref}} \, d_{cp-cm}$$
+>
+> where:
+>
+> - $\rho$ = atmospheric density (kg/m³) — varies by orders of magnitude with altitude, solar activity (F10.7) and local time:
+>    - 300 km: $\rho \approx 2 \times 10^{-11}$ (solar min) to $3 \times 10^{-10}$ (solar max)
+>    - 400 km: $\rho \approx 4 \times 10^{-12}$ to $1 \times 10^{-11}$
+>    - 500 km: $\rho \approx 6 \times 10^{-13}$ to $5 \times 10^{-12}$
+>    - 600 km: $\rho \approx 1 \times 10^{-13}$ to $8 \times 10^{-13}$
+> - $v$ = orbital velocity (7.61 km/s at 500 km, Chapter 7)
+> - $C_D \approx 2.0$–$2.3$ (free-molecular-flow drag coefficient; 2.2 is standard for flat plates)
+> - $A_{\text{ref}}$ = cross-sectional area perpendicular to velocity (m²)
+> - $d_{cp-cm}$ = offset between centre of pressure and centre of mass (m); typically 0.5–5 cm for CubeSats depending on deployable configuration
+
+### 10.2.3 Solar radiation pressure torque
+
+**Physics:** Sunlight carries momentum. When photons strike a surface, they transfer momentum ($p = E/c$ for absorption, $p = 2E/c$ for specular reflection). The resulting force acts through the centre of solar pressure, which may not coincide with the cm.
+
+> **Key equation — SRP torque**
+>
+> $$T_{\text{SRP}} = \frac{S}{c} A_s (1 + q) \, d_{sp-cm}$$
+>
+> where $S = 1361$ W/m², $c = 3 \times 10^8$ m/s, $S/c = 4.54 \times 10^{-6}$ N/m² (solar radiation pressure at 1 AU), $A_s$ = illuminated area (m²), $q$ = surface reflectance (0 for a perfect absorber, 1 for a perfect specular reflector), and $d_{sp-cm}$ = offset between the solar-pressure centre and the centre of mass (m).
+>
+> **Note:** SRP torque is tiny in LEO compared with aerodynamic and magnetic torques. It becomes the dominant disturbance in GEO and deep space (where there is no atmosphere and the magnetic field is weak).
+
+### 10.2.4 Residual magnetic dipole torque
+
+**Physics:** A spacecraft with a net magnetic dipole moment $\vec{M}$ (from current loops in wiring, permanent magnets in reaction-wheel motors, magnetised ferromagnetic components) interacts with Earth's magnetic field $\vec{B}$ to produce a torque:
+
+> **Key equation — magnetic dipole torque**
+>
+> $$\vec{T}_{\text{mag}} = \vec{M} \times \vec{B}$$
+>
+> Magnitude: $T_{\text{mag}} = M \cdot B \cdot \sin\alpha$
+>
+> where $M$ = spacecraft residual magnetic dipole moment (A m²), $B$ = local geomagnetic field strength (T): LEO (400–600 km) $B \approx 2$–$5 \times 10^{-5}$ T (strongest near the poles, weakest near the equator); GEO $B \approx 1 \times 10^{-7}$ T; $\alpha$ = angle between $\vec{M}$ and $\vec{B}$.
+>
+> **Typical CubeSat residual dipole moments:**
+>
+> | Source | Dipole moment (A m²) | Notes |
+> |--------|-------------------------|-------|
+> | Reaction-wheel motor | 0.005–0.02 per wheel | Permanent magnets in brushless motor |
+> | Solar-array wiring | 0.001–0.01 | Current loops from SA to EPS |
+> | Battery cells | 0.001–0.005 | Nickel in cell casing |
+> | Unshielded cables | 0.005–0.05 | Depends on routing and length |
+> | **Total (typical 3U)** | **0.01–0.10** | Varies significantly with design |
+>
+> **Why magnetic torque dominates for CubeSats:** COTS electronics are not designed for magnetic cleanliness. Short wiring runs create small but unbalanced current loops. Reaction-wheel motors contain permanent magnets. The result is a residual dipole of 0.01–0.1 A m², which in a 30 µT field produces $3 \times 10^{-7}$ to $3 \times 10^{-6}$ N m — often larger than gravity-gradient or SRP torques.
+
+> **Worked example — disturbance torques for EOSat-3U at 500 km**
+>
+> **Spacecraft properties:** 3U (100 × 100 × 340 mm), mass 5 kg, $I_z = 0.035$ kg m² (long axis), $I_x = 0.007$ kg m² (short axis), $A_{\text{ref}} = 0.034$ m² (3U face), $d_{cp-cm} = 0.02$ m (deployable panel offsets the cm from the geometric centre). Orbit: $a = 6878.137$ km, $v = 7613$ m/s (Chapter 7 §7.2).
+>
+> **Gravity gradient** (worst case, $\theta = 45°$):
+> $T_{gg} = \dfrac{3 \times 3.986 \times 10^{14}}{2 \times (6.878 \times 10^{6})^3} \times |0.035 - 0.007| \times 1 = \dfrac{1.196 \times 10^{15}}{6.508 \times 10^{20}} \times 0.028 = 1.84 \times 10^{-6} \times 0.028 = 5.1 \times 10^{-8}$ N m
+>
+> **Aerodynamic** (at 500 km, solar minimum, $\rho \approx 6 \times 10^{-13}$ kg/m³):
+> $F_{\text{aero}} = 0.5 \times 6 \times 10^{-13} \times 7613^2 \times 2.2 \times 0.034 = 1.30 \times 10^{-6}$ N
+>
+> $T_{\text{aero}} = F_{\text{aero}} \times d_{cp-cm} = 1.30 \times 10^{-6} \times 0.02 = 2.6 \times 10^{-8}$ N m
+>
+> Note: at solar maximum ($\rho \approx 5 \times 10^{-12}$), this increases by ~8× to $2.2 \times 10^{-7}$ N m.
+>
+> **Solar radiation pressure:**
+> $F_{\text{SRP}} = \dfrac{1361}{3 \times 10^8} \times 0.034 \times 1.5 = 2.31 \times 10^{-7}$ N
+>
+> $T_{\text{SRP}} = F_{\text{SRP}} \times d_{sp-cm} = 2.31 \times 10^{-7} \times 0.02 = 4.6 \times 10^{-9}$ N m
+>
+> **Residual magnetic dipole** ($M = 0.05$ A m², $B = 3 \times 10^{-5}$ T):
+> $T_{\text{mag}} = 0.05 \times 3 \times 10^{-5} = 1.5 \times 10^{-6}$ N m
+>
+> **Summary:**
+>
+> | Source | Torque (N m) | Rank | Notes |
+> |--------|-------------|------|-------|
+> | Gravity gradient | $5.1 \times 10^{-8}$ | 3rd | Small because a 3U is not very elongated |
+> | Aerodynamic (solar min) | $2.6 \times 10^{-8}$ | 4th | Increases 8× at solar max |
+> | Solar radiation pressure | $4.6 \times 10^{-9}$ | 5th | Negligible at LEO |
+> | Residual magnetic dipole | $1.5 \times 10^{-6}$ | **1st** | **Dominates by > 10×** |
+> | **Total (worst-case sum)** | $\approx 1.6 \times 10^{-6}$ | | Conservative estimate |
+> | **Total (RSS)** | $\approx 1.5 \times 10^{-6}$ | | More realistic (uncorrelated sources) |
+>
+> **Key finding:** The residual magnetic dipole dominates for CubeSats because of COTS electronics and short wiring runs. **Magnetic cleanliness matters.** Reducing the residual dipole from 0.05 to 0.01 A m² (achievable with careful wire routing, twisted pairs and degaussing) would reduce the total disturbance by 5×.
+
+---
+
+## 10.3 Attitude actuators — physics and sizing
+
+### 10.3.1 Reaction wheels — physics of angular-momentum storage
+
+A reaction wheel is a flywheel (typically a brass or steel ring, 20–200 g for CubeSats) spun by a brushless DC motor. By Newton's third law, changing the wheel's angular momentum produces an equal and opposite torque on the spacecraft:
+
+$$\vec{H}_{\text{total}} = \vec{H}_{\text{spacecraft}} + \vec{H}_{\text{wheels}} = \text{constant}$$
+
+If the wheel speeds up ($\Delta H_{\text{wheel}} > 0$), the spacecraft receives an equal and opposite angular-momentum change ($\Delta H_{\text{SC}} = -\Delta H_{\text{wheel}}$), causing it to rotate. The control torque is:
+
+$$T_{\text{control}} = \frac{dH_{\text{wheel}}}{dt} = I_{\text{wheel}} \cdot \dot{\omega}_{\text{wheel}}$$
+
+where $I_{\text{wheel}}$ is the wheel's moment of inertia and $\dot{\omega}_{\text{wheel}}$ its angular acceleration.
+
+**Momentum storage:** The maximum angular momentum a wheel can store is:
+
+$$H_{\text{max}} = I_{\text{wheel}} \times \omega_{\text{max}}$$
+
+For a representative 10 mN m s CubeSat wheel: $I_{\text{wheel}} \approx 1.5 \times 10^{-5}$ kg m², $\omega_{\text{max}} \approx 6000$ rpm $= 628$ rad/s, giving $H_{\text{max}} = 0.0094$ N m s $\approx 10$ mN m s.
+
+**Saturation:** As disturbance torques act on the spacecraft, the reaction wheels absorb angular momentum. Over time, the wheel speed increases until it reaches $\omega_{\text{max}}$ (saturation). At saturation, the wheel can no longer absorb momentum in that direction, and control authority is lost. The time to saturation from zero speed is:
+
+$$t_{\text{sat}} = \frac{H_{\text{max}}}{T_{\text{disturbance}}} = \frac{10 \times 10^{-3}}{1.5 \times 10^{-6}} = 6667 \text{ s} \approx 111 \text{ minutes}$$
+
+This is approximately 1.2 orbits — so the wheels would saturate after about one orbit without desaturation. This is why magnetorquers are essential companions to reaction wheels.
+
+**The zero-crossing problem:** When a reaction wheel passes through zero speed (reversing direction), the static friction in the bearings creates a "dead zone" where the wheel cannot produce smooth, continuous torque. This causes a brief loss of control authority and increased jitter. Mitigations:
+
+- **Bias momentum:** Operate all wheels with a positive bias speed (e.g., 500 rpm), so they never cross zero during normal operations
+- **4-wheel pyramid configuration:** The skewed geometry means individual wheels reverse less frequently
+- **Lubrication:** Space-rated bearings use solid or vapour-deposited lubricants (MoS₂, Braycote) that minimise static friction
+
+**Jitter:** Reaction-wheel imbalance (mass asymmetry in the flywheel) creates vibrations at the spin frequency and its harmonics. For imaging missions, this jitter degrades image quality. Jitter amplitude depends on wheel speed, imbalance mass, and the spacecraft's structural transfer function. Typical CubeSat reaction-wheel jitter: 5–20 arcsec at the payload, depending on isolation.
+
+### 10.3.2 Reaction-wheel configurations
+
+| Configuration | Description | Pros | Cons | Use |
+|--------------|------------|------|------|-----|
+| **3 orthogonal** | One wheel per body axis (X, Y, Z) | Minimum mass, simple control | No redundancy; single wheel failure = loss of 1-axis control | Low-cost missions with short lifetime |
+| **3 + 1 skew** | 3 orthogonal + 1 on a skew axis (e.g., [1,1,1] direction) | Single-fault tolerant; the skew wheel + remaining 2 provide 3-axis control | Slightly more complex control-law distribution | **Standard for CubeSats** |
+| **4-wheel pyramid** | 4 wheels tilted ~20–30° from body axes, symmetrically arranged | Optimal torque/momentum distribution; single-fault tolerant; reduced zero-crossings | More complex mounting, heavier | High-performance missions, agile S/C |
+
+Figure 10.2 shows the four-wheel pyramid geometry: each spin axis is raised by the cant angle β above the body X–Y plane, and the four axes are spaced 90° apart in azimuth along ±X and ±Y.
+
+![Four-wheel reaction-wheel pyramid: oblique view of the body frame with four canted spin axes, and a top view showing the 90° azimuth spacing.](../assets/figures/fig_rw_pyramid.png)
+
+**Figure 10.2** — Four-wheel pyramid geometry, drawn for β = 30°. Left: the four wheel spin axes w1–w4, each raised by the cant angle β above the body X–Y plane; right: the view along +Z, showing the 90° azimuth spacing along +X, +Y, −X and −Y. The unit vector of each spin axis in the body frame is the corresponding column of the distribution matrix $\mathbf{D}$ below, so with all four wheels running the torque capability is $2\cos\beta$ times a single wheel about X or Y and $4\sin\beta$ about Z.
+
+The **distribution matrix** maps wheel torques to body-frame torques:
+
+$$\vec{T}_{\text{body}} = \mathbf{D} \cdot \vec{T}_{\text{wheels}}$$
+
+For a 4-wheel pyramid with cant angle $\beta$ (here the wheel cant angle, not the orbit β-angle):
+
+$$\mathbf{D} = \begin{bmatrix} \cos\beta & 0 & -\cos\beta & 0 \\ 0 & \cos\beta & 0 & -\cos\beta \\ \sin\beta & \sin\beta & \sin\beta & \sin\beta \end{bmatrix}$$
+
+> **Key equations — reaction-wheel sizing**
+>
+> **Torque requirement** (to counteract disturbances and provide slewing capability):
+> $$T_{\text{RW,min}} \geq k \times T_{\text{disturbance,total}}$$
+> where $k \geq 2$ is the control margin factor (typically 2–5 to provide adequate control bandwidth and slewing performance).
+>
+> **Momentum-storage requirement** (accumulation between desaturation cycles):
+> $$H_{\text{required}} = T_{\text{disturbance}} \times \frac{t_{\text{desat}}}{2}$$
+> where $t_{\text{desat}}$ is the time between magnetorquer desaturation events (typically one half-orbit to one orbit). The factor of ½ accounts for the average (sinusoidal disturbance torques average to half their peak over a quarter orbit).
+>
+> **Slew rate** (for agile/imaging missions):
+> $$\dot{\theta}_{\text{max}} = \frac{H_{\text{RW,max}}}{I_{\text{axis}}}$$
+>
+> For a 3U CubeSat with a 10 mN m s wheel and $I_{\text{axis}} = 0.035$ kg m²:
+> $\dot{\theta}_{\text{max}} = 0.010 / 0.035 = 0.286$ rad/s $= 16.4°$/s — more than adequate for target-to-target slewing.
+>
+> **Slew time for a given angle** (torque-limited, triangular rate profile):
+> $$t_{\text{slew}} = 2\sqrt{\frac{\theta_{\text{slew}} \cdot I_{\text{axis}}}{T_{\text{RW}}}}$$
+>
+> For a 90° (1.57 rad) slew with $T = 1.0$ mN m and $I = 0.035$ kg m²:
+> $t_{\text{slew}} = 2\sqrt{\dfrac{1.57 \times 0.035}{0.001}} = 2\sqrt{54.95} = 14.8$ s
+>
+> This formula assumes the wheel never reaches its momentum limit during the slew; if $T_{\text{RW}} \cdot t_{\text{slew}}/2 > H_{\text{max}}$ the slew becomes momentum-limited and the spacecraft coasts at $\dot{\theta}_{\text{max}}$ for the middle portion, which takes longer.
+
+> **Worked example — reaction-wheel sizing for EOSat-3U**
+>
+> **Given:** $T_{\text{disturbance}} = 1.5 \times 10^{-6}$ N m (from §10.2), desaturation interval = 1 orbit (5677 s), pointing requirement = 0.1°, slew requirement = 90° in < 60 s.
+>
+> **Torque requirement:**
+> $T_{\text{RW,min}} = 3 \times 1.5 \times 10^{-6} = 4.5 \times 10^{-6}$ N m $= 0.0045$ mN m
+>
+> This is a very low torque requirement. The smallest available CubeSat wheel (0.23 mN m) exceeds it by 50×. The sizing driver is actually the slew rate and momentum storage, not the disturbance-rejection torque.
+>
+> **Momentum storage:**
+> $H_{\text{required}} = 1.5 \times 10^{-6} \times \dfrac{5677}{2} = 4.26 \times 10^{-3}$ N m s $= 4.26$ mN m s
+>
+> **Slew-time check with candidate wheels** (representative examples, not endorsements):
+>
+> | Product class | Torque (mN m) | Momentum (mN m s) | Mass (g) | 90° slew (s) | Momentum margin |
+> |---------|--------------|-------------------|----------|----------------|-----------------|
+> | Micro wheel (e.g., Hyperion RW-0.01) | 0.23 | 1.0 | 30 | ≈ 59 s (momentum-limited: the 1 mN m s limit is reached after 4.3 s and the slew coasts at 1.6°/s) | −3.26 mN m s (FAIL) |
+> | Small wheel (e.g., Blue Canyon RW210) | 1.0 | 10 | 55 | 14.8 s | +5.74 mN m s (135 %) |
+> | Small wheel (e.g., CubeSpace RW3-1.0) | 1.0 | 15 | 50 | 14.8 s | +10.74 mN m s (252 %) |
+> | Medium wheel (e.g., Blue Canyon RW400) | 4.0 | 40 | 120 | 7.4 s | +35.74 mN m s (839 %) |
+>
+> The micro wheel fails the momentum-storage requirement (it would saturate in well under one orbit) and the slew requirement is marginal. The 10 mN m s small wheel provides 135 % margin and a 14.8 s slew. **Selected: 10 mN m s class wheel.**
+>
+> **Configuration:** 4 wheels (3 + 1 skew) for single-fault tolerance. Total wheel mass: 4 × 55 g = 220 g.
+
+### 10.3.3 Magnetorquers — physics of magnetic torque generation
+
+A magnetorquer (MTQ) is simply a coil of wire (or a ferromagnetic rod wrapped with wire). When current flows through the coil, it creates a magnetic dipole moment:
+
+$$\vec{m} = N \cdot I \cdot A \cdot \hat{n}$$
+
+where $N$ = number of turns, $I$ = current (A), $A$ = coil cross-sectional area (m²), and $\hat{n}$ is the coil normal direction.
+
+This magnetic dipole interacts with Earth's geomagnetic field $\vec{B}$ to produce a torque:
+
+$$\vec{T}_{\text{MTQ}} = \vec{m} \times \vec{B}$$
+
+The torque is **perpendicular** to both the dipole moment and the magnetic field. This has a critical implication: **a magnetorquer cannot produce torque parallel to the local magnetic-field vector.** At any instant, only 2 of 3 axes can be torqued. Over a full orbit, as the field direction rotates, all 3 axes become accessible — but not simultaneously.
+
+**Magnetorquer types for CubeSats:**
+
+| Type | Dipole moment | Mass | Power | Form factor | Products |
+|------|--------------|------|-------|-------------|----------|
+| **Air-core coil** (PCB trace) | 0.01–0.05 A m² | 1–5 g | 0.1–0.3 W | Flat PCB, integrates into solar-panel substrate | ZARM Technik MTC-1, custom |
+| **Air-core rod** (wound wire) | 0.05–0.50 A m² | 10–30 g | 0.2–0.5 W | Cylindrical, 60–100 mm long | CubeSpace CubeMAG, NewSpace NTQS |
+| **Ferromagnetic-core rod** | 0.2–5.0 A m² | 20–100 g | 0.3–1.0 W | Cylindrical with mu-metal core, 60–100 mm long | ZARM Technik MTQ-1, ISIS iMTQ |
+
+The ferromagnetic core concentrates the magnetic flux, providing 5–20× more dipole moment per unit current than an air-core coil of the same size. However, ferromagnetic cores can retain residual magnetism after power-off, contributing to the spacecraft's residual magnetic dipole.
+
+**Why magnetorquers cannot point (only detumble and desaturate):**
+
+The torque $\vec{T} = \vec{m} \times \vec{B}$ is always perpendicular to $\vec{B}$. This means:
+
+1. You cannot generate torque about the $\vec{B}$ direction at any given instant
+2. The achievable torque direction changes continuously as the spacecraft orbits (because $\vec{B}$ rotates)
+3. Pointing control requires torque in any direction at any time — magnetorquers cannot provide this
+
+Magnetorquers are excellent for:
+
+- **Detumbling:** The B-dot controller ($\vec{m} = -k \dot{\vec{B}}$) brakes spacecraft rotation by opposing the change in the measured B-field. Works regardless of attitude.
+- **Desaturation:** Systematically dumping momentum from reaction wheels by applying the correct dipole moment: $\vec{m} = -k (\vec{H}_{\text{wheel}} \times \hat{B})$
+- **Coarse pointing** (2–10°): Possible over time using model-predictive control that plans the dipole commands over a full orbit, exploiting the field rotation. But accuracy is limited.
+
+> **Key equations — magnetorquer sizing**
+>
+> **Desaturation torque:**
+> $$T_{\text{MTQ}} = m_{\text{dipole}} \times B \times \sin\alpha$$
+>
+> Average torque over an orbit (accounting for varying $\alpha$): $T_{\text{MTQ,avg}} \approx 0.7 \times m_{\text{dipole}} \times B_{\text{avg}}$
+>
+> **Desaturation time** (to dump one wheel from full momentum):
+> $$t_{\text{dump}} = \frac{H_{\text{wheel}}}{T_{\text{MTQ,avg}}}$$
+>
+> **Design requirement:** $t_{\text{dump}}$ must fit within the portion of the orbit where the field geometry is favourable and no imaging is scheduled — in practice, well under one orbit.
+
+> **Worked example — magnetorquer sizing for EOSat-3U**
+>
+> **Given:** wheel momentum = 10 mN m s, $B_{\text{avg}} = 3 \times 10^{-5}$ T.
+>
+> **Option 1: air-core rod** ($m = 0.2$ A m²):
+> $T_{\text{MTQ,avg}} = 0.7 \times 0.2 \times 3 \times 10^{-5} = 4.2 \times 10^{-6}$ N m
+>
+> $t_{\text{dump}} = \dfrac{10 \times 10^{-3}}{4.2 \times 10^{-6}} = 2381$ s $\approx 40$ min
+>
+> This is approximately 42 % of one orbit period. **Acceptable** — desaturation can be scheduled once per orbit during the non-imaging portion.
+>
+> **Disturbance-rejection check:** The MTQ average torque ($4.2 \times 10^{-6}$ N m) is 2.8× the total disturbance torque ($1.5 \times 10^{-6}$ N m). The MTQ can dump momentum faster than it accumulates. **Pass.**
+>
+> **Configuration:** 3 MTQ rods, one per body axis (X, Y, Z). This ensures torque can be generated about any two axes at any given time. Total MTQ mass: 3 × 30 g = 90 g.
+
+### 10.3.4 Control moment gyroscopes vs reaction wheels
+
+**CMGs** are an alternative momentum-exchange device used on large, agile spacecraft. A CMG consists of a spinning flywheel mounted on a gimbal. Instead of changing the wheel speed (as in a reaction wheel), the CMG changes the direction of the angular-momentum vector by rotating the gimbal. This produces a gyroscopic output torque:
+
+$$T_{\text{CMG}} = H_{\text{wheel}} \times \dot{\delta}$$
+
+where $H_{\text{wheel}}$ is the constant wheel momentum and $\dot{\delta}$ is the gimbal rate.
+
+**The torque-amplification effect:** For a CMG wheel spinning at high speed ($H = 1$–$100$ N m s), even a slow gimbal rate ($\dot{\delta} = 1$ rad/s) produces a large output torque ($T = 1$–$100$ N m). This is orders of magnitude more than a reaction wheel of similar mass. CMGs are "torque machines"; reaction wheels are "momentum machines."
+
+| Parameter | Reaction wheel | CMG (single gimbal) |
+|-----------|---------------|---------------------|
+| Output torque | $T = I_w \dot{\omega}_w$ (low, 0.001–10 N m) | $T = H_w \dot{\delta}$ (high, 0.1–1000+ N m) |
+| Control complexity | Simple (speed command) | Complex (gimbal singularity avoidance) |
+| Mass efficiency | Lower torque/kg | Higher torque/kg (10–100×) |
+| Failure mode | Bearing wear, motor failure | Gimbal lock (singularity), bearing wear |
+| Typical use | CubeSats, small satellites, non-agile | Large agile satellites, ISS, Earth observation with rapid retargeting |
+| CubeSat status | Standard (many COTS products) | Emerging (micro-CMG products, research prototypes) |
+
+**When to use CMGs:** spacecraft requiring rapid slewing (> 3°/s for large spacecraft); large moments of inertia where reaction-wheel torque is insufficient; missions requiring frequent retargeting (video from orbit, rapid-revisit EO).
+
+**When to use reaction wheels:** CubeSats and small satellites (adequate torque, simpler control, more COTS options); missions with modest agility requirements (< 10°/s slew for CubeSats); cost-constrained missions (CMGs are significantly more expensive).
+
+The ISS uses four 4600 kg CMGs, each storing 3500 N m s of momentum, to maintain attitude without propellant. The Pléiades Neo Earth-observation satellites use CMGs for rapid retargeting between imaging strips.
+
+---
+
+## 10.4 Pointing error budget
+
+*[Source: ECSS-E-ST-60-10C; SMAD, Ch. 11.1]*
+
+The pointing error budget combines all independent error sources using root-sum-square (RSS) to determine the total pointing uncertainty. This is a statistical combination assuming errors are uncorrelated and normally distributed.
+
+**ECSS pointing performance taxonomy:**
+
+| Term | Definition | Measured over |
+|------|-----------|---------------|
+| **APE** (Absolute Performance Error) | Total error between actual pointing and commanded pointing | Single measurement |
+| **RPE** (Relative Performance Error) | Variation in pointing over a short time (jitter/stability) | Measurement window (e.g., integration time) |
+| **MPE** (Mean Performance Error) | Systematic bias in pointing | Long-term average |
+
+For most CubeSat missions, APE is the primary requirement. RPE matters for long-exposure imaging (e.g., ASTERIA's 10-arcsec stability over 20-minute exposures).
+
+> **Key equations — pointing error budget (RSS)**
+>
+> $$\theta_{\text{APE}} = \sqrt{\theta_{\text{sensor}}^2 + \theta_{\text{actuator}}^2 + \theta_{\text{alignment}}^2 + \theta_{\text{thermal}}^2 + \theta_{\text{jitter}}^2 + \theta_{\text{orbit}}^2 + \theta_{\text{timing}}^2}$$
+>
+> The result must satisfy:
+> $$\theta_{\text{APE}} \leq \theta_{\text{requirement}}$$
+
+### 10.4.1 Error source definitions and physics
+
+| Source | Description | Physics | Typical values (star tracker) | Typical values (sun sensor) |
+|--------|------------|---------|------------------------------|----------------------------|
+| **Sensor accuracy** | Intrinsic measurement noise of attitude sensor | Photon noise, centroiding error, optical distortion | 3–15 arcsec (0.001–0.004°) | 0.5–2° |
+| **Actuator resolution** | Minimum controllable torque step; control-loop dead band | Motor cogging torque, driver quantisation, control bandwidth | 2–5 arcsec (0.001°) | N/A (MTQ: 1–5°) |
+| **Alignment knowledge** | Misalignment between sensor boresight and payload boresight; measured during I&T | Mechanical tolerances, shimming, bonding accuracy, measurement uncertainty | 30–60 arcsec (0.01–0.02°) | 0.5° |
+| **Thermal distortion** | Structural deformation with temperature changes; orbital thermal cycling | CTE mismatch between materials, temperature gradients across structure | 10–30 arcsec (0.003–0.01°) | 0.1° |
+| **Jitter** | High-frequency vibration from reaction wheels, mechanisms | Wheel imbalance forces at spin frequency and harmonics, structural resonances | 5–20 arcsec (0.001–0.006°) | N/A |
+| **Orbit knowledge** | Uncertainty in satellite position (affects nadir pointing vector computation) | GPS accuracy, propagation error between GPS fixes | 1–5 arcsec (< 0.001°) | 0.05° |
+| **Timing** | Time-stamping error between sensor read and actuator command | Clock synchronisation, interrupt latency, bus communication delay | 1–3 arcsec (< 0.001°) | 0.01° |
+
+Figure 10.3 shows a pointing budget drawn as a waterfall: each contributor as a bar, grouped into knowledge, control and alignment terms, with the group RSS values and the allocation line. The worked example below builds the same kind of budget for EOSat-3U.
+
+![Pointing error budget waterfall.](../assets/figures/fig_pointing_tree.png)
+
+**Figure 10.3** — Pointing error budget for a star-tracker/reaction-wheel small satellite, drawn as a waterfall of 1σ contributions grouped into knowledge, control and alignment terms (values in millidegrees). The group RSS values and the total RSS are compared against the allocation; the alignment group dominates, as it does in the worked example below.
+
+> **Worked example — pointing budget for EOSat-3U (star tracker + reaction wheels)**
+>
+> | Error source | Value (°) | Value (arcsec) | Value² (°²) | Notes |
+> |-------------|------------|----------------|---------------|-------|
+> | Star-tracker accuracy | 0.003 | 10.8 | $9.0 \times 10^{-6}$ | CubeSat-class star tracker, 1σ boresight |
+> | Reaction-wheel resolution | 0.001 | 3.6 | $1.0 \times 10^{-6}$ | Motor cogging + control dead band |
+> | Alignment knowledge | 0.020 | 72 | $4.0 \times 10^{-4}$ | **Dominant** — shimmed to 1 arcmin |
+> | Thermal distortion | 0.010 | 36 | $1.0 \times 10^{-4}$ | Al structure, 40 °C orbital range |
+> | RW jitter | 0.005 | 18 | $2.5 \times 10^{-5}$ | At 3000 rpm, no isolation mount |
+> | Orbit knowledge (GPS) | 0.001 | 3.6 | $1.0 \times 10^{-6}$ | GPS fix every 10 s |
+> | Timing error | 0.001 | 3.6 | $1.0 \times 10^{-6}$ | < 1 ms timestamp sync |
+> | **RSS total** | $\sqrt{5.37 \times 10^{-4}}$ = **0.023°** | **83 arcsec** | | |
+>
+> **Requirement:** 0.1° (3σ) — typical for a 5 m GSD imager at 500 km (where 0.1° corresponds to ~870 m pointing error on the ground, or ~175 pixels for a 5 m GSD sensor).
+>
+> **Margin:** 0.1 − 0.023 = 0.077° (77 % margin) — **comfortable**.
+>
+> **Key insight:** Alignment knowledge (0.020° = 72 arcsec) dominates the budget at 74 % of the RSS variance. Improving the star-tracker accuracy from 10 to 3 arcsec would change the RSS total from 83 to 82.3 arcsec — a negligible improvement. **Budget-driven design** means investing effort in the dominant term: better alignment calibration (e.g., on-orbit calibration using ground targets) would have far more impact than upgrading any sensor.
+>
+> To achieve < 0.01° (36 arcsec) pointing, the alignment must be improved to < 0.005° (18 arcsec), which requires precision optical alignment during I&T and/or on-orbit alignment calibration.
+
+---
+
+## 10.5 Momentum management and desaturation
+
+Disturbance torques cause angular momentum to accumulate in reaction wheels over time. Without management, wheels saturate and lose control authority. Understanding this cycle is essential for AOCS design.
+
+**The momentum lifecycle:**
+
+1. **Accumulation:** External disturbance torques (gravity gradient, aero, SRP, magnetic) act on the spacecraft body. The control loop commands the reaction wheels to counteract these torques, absorbing the angular momentum. Wheel speed increases (or decreases) at a rate of $\dot{H} = T_{\text{disturbance}}$.
+
+2. **Monitoring:** The OBC monitors wheel speeds. When any wheel exceeds a threshold (typically 80 % of maximum), a desaturation manoeuvre is triggered.
+
+3. **Desaturation:** The OBC activates the magnetorquers to generate a torque that opposes the stored wheel momentum. The algorithm computes the optimal dipole command:
+
+$$\vec{m}_{\text{cmd}} = -k_d (\vec{H}_{\text{wheel}} \times \hat{B})$$
+
+where $k_d$ is the desaturation gain and $\hat{B}$ is the unit magnetic-field vector. This produces a torque $\vec{T} = \vec{m} \times \vec{B}$ in the direction that reduces $\vec{H}_{\text{wheel}}$.
+
+4. **Completion:** Wheel speeds return to near zero (or bias speed). The cycle repeats.
+
+Figure 10.4 shows the accumulation side of this cycle for the EOSat-3U case of §10.2, whose disturbance budget is dominated by the residual magnetic dipole rather than by drag, with the saturation lines of three wheel sizes, together with the order-of-magnitude ranking of disturbance sources.
+
+![Reaction-wheel momentum accumulation and disturbance torque magnitudes.](../assets/figures/fig_rw_momentum.png)
+
+**Figure 10.4** — Left: accumulated wheel momentum versus orbits since the last desaturation for the EOSat-3U case of §10.2 (1.5 µN m total disturbance at 500 km), against the capacity of 1, 10 and 40 mN m s wheels; the shaded band spans a 0.5–1.5× uncertainty on the residual dipole. The 10 mN m s wheel saturates after roughly one orbit, hence the once-per-orbit desaturation of §10.5. Right: the §10.2 disturbance torques — the residual magnetic dipole dominates by more than ten times, which is why the CubeSat case is magnetically rather than drag dominated.
+
+**Desaturation constraints:**
+
+- MTQs can only generate torque **perpendicular** to the local magnetic-field vector. They cannot dump momentum parallel to $\vec{B}$.
+- Near the magnetic equator, $\vec{B}$ is nearly horizontal (north-pointing). MTQs can effectively dump momentum about the pitch and roll axes but not yaw.
+- Near the magnetic poles, $\vec{B}$ is nearly vertical. MTQs can dump pitch and yaw but not roll.
+- Over a full orbit, the field direction rotates sufficiently to dump all three axes. But at any instant, one axis is poorly controllable.
+- A multi-pass desaturation strategy (spreading the dump over a full orbit) is more efficient than a single-point dump.
+
+**Typical desaturation frequency for CubeSats:**
+
+- At 500 km with 1.5 µN m total disturbance and 10 mN m s wheels: one desaturation per orbit (every ~95 minutes)
+- Duration: 5–15 minutes per cycle
+- Power: 0.5–1.5 W during desaturation (3 MTQ rods active)
+- During desaturation, pointing accuracy degrades slightly (the MTQ torques perturb the attitude). Imaging should be inhibited during desaturation — a mode-transition rule that belongs in the ConOps (Chapter 18).
+
+### 10.5.1 Wheel configurations — 3 + 1 redundancy
+
+The standard 4-wheel configuration provides full 3-axis control with one spare:
+
+- **3 wheels** in the body X, Y, Z axes provide minimum control
+- **4th wheel** on a skew axis (typically [1,1,1] normalised, or cant angle 20–30° from each axis) provides redundancy and enhanced torque distribution
+- If one wheel fails, the remaining three (including the skew wheel) maintain 3-axis control with reduced but adequate authority
+
+**4-wheel torque envelope:** With 4 wheels in a pyramid configuration, the maximum torque in any body direction is:
+
+$$T_{\text{max,body}} = \sqrt{2} \cdot T_{\text{wheel}} \approx 1.41 \times T_{\text{wheel}}$$
+
+for the optimal distribution. This is better than the 3-orthogonal configuration where $T_{\text{max,body}} = T_{\text{wheel}}$ along any axis.
+
+---
+
+## 10.6 Worked example: UniSat-1 passive magnetic stabilisation
+
+Returning to UniSat-1, the 1U demonstrator of Chapter 1 §1.7: it does not have an active AOCS. Instead, it uses **passive magnetic stabilisation** — the simplest and cheapest attitude-control method, requiring zero power and minimal mass.
+
+**How it works — physics:**
+
+1. **Permanent magnet:** A small bar magnet (typically AlNiCo or NdFeB, ~10–20 g, dipole moment $M_p = 0.1$–$1.0$ A m²) is embedded along one body axis (say, the Z-axis). In Earth's magnetic field $\vec{B}$, the magnet experiences a restoring torque:
+
+$$\vec{T}_{\text{restoring}} = \vec{M}_p \times \vec{B}$$
+
+This torque acts to align the magnet axis with the local field direction, analogous to a compass needle aligning with magnetic north. The restoring torque is maximum when the magnet is perpendicular to the field ($\alpha = 90°$) and zero when aligned ($\alpha = 0$).
+
+For $M_p = 0.5$ A m² and $B = 3 \times 10^{-5}$ T: $T_{\text{max}} = 0.5 \times 3 \times 10^{-5} = 1.5 \times 10^{-5}$ N m. This is ~10× larger than any environmental disturbance torque, ensuring stable alignment.
+
+2. **Hysteresis rods:** Two or more strips of magnetically soft material (e.g., Permalloy, HyMu-80, ~5–10 g each, dimensions ~60 × 1 × 1 mm) are mounted perpendicular to the permanent magnet. As the satellite oscillates around the field-aligned equilibrium, the external field component along the hysteresis rod alternates, driving the rod material around its B–H hysteresis loop. The area enclosed by the hysteresis loop represents energy dissipated per cycle as heat in the rod material. This extracts kinetic energy from the satellite's oscillation, damping it over time.
+
+The energy dissipated per oscillation cycle is:
+
+$$E_{\text{dissipated}} = V_{\text{rod}} \times \oint H \, dB$$
+
+where $V_{\text{rod}}$ is the rod volume and $\oint H \, dB$ is the area of the hysteresis loop. For HyMu-80 material, typical energy density is ~100 J/m³ per cycle.
+
+**Damping time constant:** From initial tumble (~10°/s after deployment) to settled oscillation (~1–5° amplitude), the damping process typically takes hours to days, depending on the hysteresis-rod material, volume, and the initial tumble rate.
+
+**Performance:**
+
+| Parameter | Passive magnetic | Active (RW + ST) |
+|-----------|-----------------|------------------|
+| Pointing accuracy | ~10–15° (to local B-field) | < 0.1° (to inertial frame) |
+| Settling time | Hours to days after deployment | Minutes after mode transition |
+| Residual tumble rate | ~1–5°/s (damped from initial ~10°/s) | < 0.01°/s |
+| Power | 0 W | 3–5 W |
+| Mass | ~30–50 g | 500–800 g |
+| Cost (indicative, 2026) | ~2 kEUR | ~55 kEUR |
+| Failure modes | Demagnetisation (radiation, temperature) | Motor failure, bearing wear, software bugs |
+
+**Why this works for UniSat-1:** The MEMS magnetometer payload does not require accurate pointing. In fact, it benefits from being in a slowly rotating state because this provides magnetic-field measurements across multiple directions, improving the scientific data quality. The magnetometer can measure the field vector regardless of spacecraft orientation.
+
+**No pointing budget needed:** Since there is no payload pointing requirement — recall that the UniSat-1 function tree of Chapter 6 has no "point" function — there is no need for a pointing error budget. This eliminates the star tracker, reaction wheels, magnetorquers (as actuators), sun sensors, and gyroscopes — removing the most expensive and power-hungry subsystem from the design.
+
+> **Disturbance environment for a 1U at 400 km:**
+>
+> | Source | Torque (N m) | Calculation | Notes |
+> |--------|-------------|-------------|-------|
+> | Gravity gradient | ~$1 \times 10^{-8}$ | $\frac{3\mu}{2a^3} \Delta I$; $\Delta I \approx 0.001$ kg m² for a 1U | Small because nearly cubic ($I_z \approx I_x$) |
+> | Aerodynamic | ~$3 \times 10^{-8}$ | $\frac{1}{2}\rho v^2 C_D A d$; $\rho(400 \text{ km}) \approx 5 \times 10^{-12}$ | Higher $\rho$ at 400 km than 500 km |
+> | Solar radiation pressure | ~$1 \times 10^{-9}$ | $\frac{S}{c} A (1+q) d$; $A = 0.01$ m² | Small area |
+> | Permanent magnet (restoring) | ~$1 \times 10^{-5}$ | $M_p \times B \times \sin\alpha$ | **Dominant** — this IS the control torque |
+>
+> The permanent-magnet restoring torque (~$10^{-5}$ N m) is three orders of magnitude larger than all disturbances combined. This ensures the satellite remains approximately field-aligned.
+
+**Limitation:** Passive magnetic stabilisation provides alignment to the *local* magnetic field, which rotates as the satellite orbits. The satellite does not point at nadir, the Sun, or any fixed direction. For missions requiring Earth-pointing or Sun-tracking, active AOCS is mandatory. For UniSat-1's magnetometer mission, this is not a limitation — it is a feature.
+
+---
+
+## Summary
+
+| Topic | Key takeaway |
+|-------|-------------|
+| AD vs AC | Determination = know orientation (sensors); control = change orientation (actuators) |
+| Star trackers | Pattern-match stars against catalogue; 3–15 arcsec accuracy; exclusion zones (Sun 25–45°, Earth 25–35°); most accurate sensor |
+| Sun sensors | Coarse (photodiode, 2–5°) or fine (slit + array, 0.1°); essential for safe mode; every S/C needs them |
+| Magnetometers | Measure $\vec{B}$ field; compare with IGRF model; 5–10° accuracy alone; residual dipole contamination is the key error source |
+| GPS receivers | Orbit determination (position/velocity), not attitude; 5–20 m accuracy in LEO; needed for nadir-pointing computation |
+| Gyroscopes | Measure angular rate $\vec{\omega}$; MEMS drift 1–10°/h; combined with star tracker via Kalman filter for high-bandwidth estimation |
+| Architecture selection | Driven by pointing requirement: passive magnetic for > 5°; MTQ for 2–5°; RW + ST for < 0.1° |
+| Disturbance torques | Gravity gradient, aero, SRP, magnetic dipole; **magnetic dipole dominates for CubeSats** |
+| Reaction-wheel physics | $H = I_w \omega_w$; $T = dH/dt$; saturation occurs when $\omega \rightarrow \omega_{\text{max}}$; zero-crossing jitter |
+| RW sizing | Torque ≥ 2× disturbance; momentum ≥ half-orbit accumulation; check slew time (torque- or momentum-limited) |
+| Magnetorquer physics | $\vec{T} = \vec{m} \times \vec{B}$; torque always perpendicular to $\vec{B}$; cannot point, only detumble/desaturate |
+| MTQ sizing | Desaturation torque must exceed disturbance accumulation rate; dump time well under one orbit |
+| CMGs vs RWs | CMGs: torque amplification ($T = H \dot{\delta}$), for large/agile S/C; RWs: simpler, cheaper, standard for CubeSats |
+| Pointing budget | RSS of 7 independent sources; alignment knowledge typically dominates; improve the dominant term |
+| Budget-driven design | Investing in the smallest error source has negligible impact on the total; focus on the dominant term |
+| Redundancy | 4-wheel (3 + 1 skew) provides single-fault tolerance; distribution matrix maps wheels to body torques |
+| Momentum management | MTQs dump momentum against Earth's $\vec{B}$-field; ~once per orbit; 5–15 min; imaging inhibited during dump |
+
+## Problems
+
+1. **Architecture selection.** For (a) a 3U Earth-observation CubeSat requiring 0.05° pointing, (b) a 6U store-and-forward relay requiring 3° antenna pointing, and (c) UniSat-1, select an AOCS architecture from §10.1.2, list the sensors and actuators, and estimate mass, power and indicative cost. Justify each choice in two sentences.
+
+2. **Disturbance torques.** Compute all four disturbance torques for a 6U CubeSat (12 kg, 0.06 m² reference area, $I_z = 0.10$ kg m², $I_x = 0.03$ kg m², cp–cm offset 3 cm, residual dipole 0.08 A m²) at 400 km (solar maximum) and at 700 km. Rank them in each case and identify the altitude at which aerodynamic torque overtakes the magnetic torque.
+
+3. **Magnetic cleanliness.** Using the EOSat-3U worked example, recompute the total disturbance torque, the momentum-storage requirement and the desaturation duty if the residual dipole is reduced to 0.01 A m². How much smaller a wheel would suffice, and what would it save in mass and power?
+
+4. **Reaction-wheel sizing.** A 3U CubeSat must perform a 60° slew in under 20 s and hold pointing between desaturations spaced one orbit apart at 550 km. With $I_{\text{axis}} = 0.04$ kg m² and a total disturbance of $2 \times 10^{-6}$ N m, compute the required torque, the required momentum, and check both torque-limited and momentum-limited slew times for the wheel classes in §10.3.2. Which wheel do you select?
+
+5. **Momentum-limited slew.** Derive the slew time for the case in which the wheel reaches $H_{\text{max}}$ before the half-way point: show that $t_{\text{slew}} = \theta I/H_{\text{max}} + H_{\text{max}}/T_{\text{RW}}$ and verify the ≈ 59 s figure quoted for the micro wheel in §10.3.2.
+
+6. **Magnetorquer sizing.** Size a magnetorquer set to dump 15 mN m s of wheel momentum within 25 minutes at 500 km ($B_{\text{avg}} = 3 \times 10^{-5}$ T). What dipole moment is needed, which magnetorquer type from §10.3.3 provides it, and what is the power cost per orbit if desaturation occurs once per orbit?
+
+7. **Pointing budget.** Build the RSS pointing budget for a 3U Earth-observation CubeSat with a fine sun sensor and magnetometer (no star tracker) and reaction wheels, using the sun-sensor column of §10.4.1. Does it meet a 0.5° requirement? Identify the dominant term and the single most cost-effective improvement.
+
+8. **Budget-driven design.** In the EOSat-3U pointing budget, the alignment term is 0.020°. Show quantitatively that halving the alignment error reduces the RSS more than eliminating every other term combined. Then determine the alignment knowledge required to meet a 0.02° (3σ) requirement with the remaining terms unchanged.
+
+9. **Star-tracker accommodation.** A nadir-pointing 3U CubeSat in a 10:30 LTAN Sun-synchronous orbit mounts its star tracker on the zenith face. Using the exclusion angles of §10.1.1 and the β-angle behaviour of Chapter 7 §7.1.2, argue whether the Sun ever enters the exclusion zone, and propose a second mounting face that eliminates any outage. Record the resulting entries in the N² matrix of Chapter 8.
+
+10. **UniSat-1 damping.** Estimate how many oscillation cycles UniSat-1's hysteresis rods (two rods of 60 × 1 × 1 mm, 100 J/m³ per cycle) need to remove the rotational kinetic energy of a 1.3 kg 1U ($I \approx 0.002$ kg m²) tumbling at 10°/s. If the oscillation period is of order one orbit, how long does settling take, and what does this imply for the start of science operations?
+
+## References
+
+1. Wertz, Everett & Puschell, *Space Mission Engineering: The New SMAD*, 2011, Ch. 11.1 (ADCS). https://www.space.com/smad
+2. Markley, F. L. & Crassidis, J. L., *Fundamentals of Spacecraft Attitude Determination and Control*, Springer, 2014. https://link.springer.com/book/10.1007/978-1-4939-0802-8
+3. Sidi, M. J., *Spacecraft Dynamics and Control*, Cambridge University Press, 1997, Ch. 4–9. https://www.cambridge.org/core/books/spacecraft-dynamics-and-control/82B47C7B6E2AA53BFAADAF26C2A79F14
+4. Hughes, P. C., *Spacecraft Attitude Dynamics*, Wiley, 1986 (Dover reprint 2004). https://store.doverpublications.com
+5. Wertz, J. R. & Larson, W. J. (eds.), *Space Mission Analysis and Design*, 3rd ed., 1999, Ch. 11 (ADCS). https://www.springer.com
+6. ECSS, *ECSS-E-ST-60-10C: Control Performance*, 2008. https://ecss.nl/standard/ecss-e-st-60-10c-control-performance/
+7. ECSS, *ECSS-E-ST-60-20C Rev.2: Star sensor terminology and performance specification*, 15 May 2019. https://ecss.nl/standard/ecss-e-st-60-20c-rev-2-star-sensor-terminology-and-performance-specification-15-may-2019/
+8. Pong, C. M. et al., "ASTERIA: Achieving 10-arcsecond pointing on a 6U CubeSat," Small Satellite Conference, 2018. https://digitalcommons.usu.edu/smallsat/
+9. Blue Canyon Technologies, *XACT ADCS and reaction-wheel datasheets*, 2023 (representative example). https://www.bluecanyontech.com
+10. CubeSpace, *ADCS Product Catalogue*, 2023 (representative example). https://www.cubespace.co.za
+
+
+# Chapter 11 — Communications and Link Budgets
+
+> **Recommended background.** SMAD4 Ch. 13 (Communications); ECSS-E-ST-50-05C (Radio frequency and modulation); CCSDS 131.0-B-4 (TM synchronisation and channel coding); Pratt, Bostian & Allnutt, *Satellite Communications*, Ch. 4; Maral & Bousquet, *Satellite Communications Systems*, Ch. 5. This chapter uses the orbit and contact geometry of Chapter 7, the ground-segment functions of Chapter 6, the pointing capability of Chapter 10 and the regulatory framework of Chapter 2; the free-space path loss and link-budget algebra are derived from first principles in Part V §V.6–V.8.
+
+## Learning objectives
+
+By the end of this chapter, you will be able to:
+
+1. Construct a complete link budget from first principles (in decibels)
+2. Compute free-space path loss for any frequency and slant range
+3. Select an appropriate frequency band based on data rate, licensing and equipment availability
+4. Explain the physics of each antenna type and compute antenna gain and beamwidth
+5. Choose a modulation and coding scheme based on required $E_b/N_0$ and spectral efficiency
+6. Explain the physical basis for coding gain and why forward error correction is essential for space links
+7. Size an antenna (gain, beamwidth, mass) for the selected frequency
+8. Determine data throughput and verify that the data budget closes
+9. Identify ground-station options and compute contact geometry
+10. Compute a link budget by hand and check it against a concurrent-design tool or spreadsheet
+
+Vendor products named in this chapter are representative examples, not endorsements; prices and licensing fees are indicative (2026).
+
+---
+
+## 11.1 The link budget concept
+
+*[Source: SMAD, Ch. 13; ECSS-E-ST-50-05C; Roddy, Ch. 4]*
+
+The link budget is the accounting statement for the communication link. Every gain and every loss from transmitter to receiver is tallied in **decibels (dB)** to determine whether the link "closes" — meaning the received signal is strong enough to decode with an acceptable error rate.
+
+The fundamental question: **does the received signal have enough energy per bit, relative to the noise, to achieve the required bit error rate?** This is quantified by $E_b/N_0$ — the ratio of energy per information bit to noise spectral density.
+
+### 11.1.1 Link budget flow
+
+Figure 11.1 shows the chain: the transmitter's power, antenna gain and line losses combine into an EIRP; the channel removes path, atmospheric and pointing losses; the receiver's antenna gain and noise temperature set its figure of merit $G/T$; and the demodulator compares the available $E_b/N_0$ with what the chosen modulation and coding require. What is left is the margin.
+
+<svg viewBox="0 0 800 200" xmlns="http://www.w3.org/2000/svg" style="max-width:750px; font-family: sans-serif; font-size: 11px;">
+  <!-- TX -->
+  <rect x="20" y="60" width="100" height="80" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+  <text x="70" y="85" text-anchor="middle" fill="#1e40af" font-weight="bold">Transmitter</text>
+  <text x="70" y="100" text-anchor="middle" fill="#1e40af" font-size="9">P_TX (dBW)</text>
+  <text x="70" y="115" text-anchor="middle" fill="#1e40af" font-size="9">G_TX (dBi)</text>
+  <text x="70" y="130" text-anchor="middle" fill="#1e40af" font-size="9">L_TX (dB)</text>
+  <!-- EIRP label -->
+  <rect x="145" y="80" width="70" height="30" rx="4" fill="#fef3c7" stroke="#d97706"/>
+  <text x="180" y="100" text-anchor="middle" fill="#92400e" font-weight="bold" font-size="10">EIRP</text>
+  <line x1="120" y1="100" x2="145" y2="95" stroke="#64748b" stroke-width="1.5" marker-end="url(#a3)"/>
+  <!-- Path -->
+  <rect x="240" y="60" width="120" height="80" rx="6" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+  <text x="300" y="85" text-anchor="middle" fill="#991b1b" font-weight="bold">Channel losses</text>
+  <text x="300" y="100" text-anchor="middle" fill="#991b1b" font-size="9">FSPL (dB)</text>
+  <text x="300" y="115" text-anchor="middle" fill="#991b1b" font-size="9">Atmospheric (dB)</text>
+  <text x="300" y="130" text-anchor="middle" fill="#991b1b" font-size="9">Pointing, polarisation (dB)</text>
+  <line x1="215" y1="100" x2="240" y2="100" stroke="#64748b" stroke-width="1.5" marker-end="url(#a3)"/>
+  <!-- RX -->
+  <rect x="390" y="60" width="110" height="80" rx="6" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+  <text x="445" y="85" text-anchor="middle" fill="#166534" font-weight="bold">Receiver</text>
+  <text x="445" y="100" text-anchor="middle" fill="#166534" font-size="9">G_RX (dBi)</text>
+  <text x="445" y="115" text-anchor="middle" fill="#166534" font-size="9">T_sys (K)</text>
+  <text x="445" y="130" text-anchor="middle" fill="#166534" font-size="9">G/T (dB/K)</text>
+  <line x1="360" y1="100" x2="390" y2="100" stroke="#64748b" stroke-width="1.5" marker-end="url(#a3)"/>
+  <!-- Result -->
+  <rect x="530" y="60" width="120" height="80" rx="6" fill="#e0e7ff" stroke="#4f46e5" stroke-width="2"/>
+  <text x="590" y="85" text-anchor="middle" fill="#3730a3" font-weight="bold">Demodulator</text>
+  <text x="590" y="100" text-anchor="middle" fill="#3730a3" font-size="9">Eb/N0 available (dB)</text>
+  <text x="590" y="115" text-anchor="middle" fill="#3730a3" font-size="9">Eb/N0 required (dB)</text>
+  <text x="590" y="130" text-anchor="middle" fill="#3730a3" font-size="9">Implementation loss (dB)</text>
+  <line x1="500" y1="100" x2="530" y2="100" stroke="#64748b" stroke-width="1.5" marker-end="url(#a3)"/>
+  <!-- Margin -->
+  <rect x="680" y="70" width="90" height="55" rx="6" fill="#d1fae5" stroke="#059669" stroke-width="3"/>
+  <text x="725" y="93" text-anchor="middle" fill="#065f46" font-weight="bold" font-size="13">MARGIN</text>
+  <text x="725" y="112" text-anchor="middle" fill="#065f46" font-size="11">≥ 3 dB</text>
+  <line x1="650" y1="100" x2="680" y2="97" stroke="#64748b" stroke-width="1.5" marker-end="url(#a3)"/>
+  <defs><marker id="a3" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#64748b"/></marker></defs>
+</svg>
+
+**Figure 11.1** — The link chain from transmitter to demodulator. Each block contributes gains (positive) or losses (negative) in decibels; the margin is what remains after the demodulator's requirement has been met.
+
+### 11.1.2 Decibel refresher
+
+All link-budget terms are in decibels to convert multiplication and division into addition and subtraction:
+
+| Conversion | Formula | Example |
+|-----------|---------|---------|
+| Watts to dBW | $P_{\text{dBW}} = 10 \log_{10}(P_W)$ | 2 W = +3.0 dBW |
+| Milliwatts to dBm | $P_{\text{dBm}} = 10 \log_{10}(P_{mW})$ | 1 W = +30 dBm |
+| dBW to watts | $P_W = 10^{P_{\text{dBW}}/10}$ | −3 dBW = 0.5 W |
+| Ratio to dB | $G_{\text{dB}} = 10 \log_{10}(G)$ | Gain of 100 = 20 dB |
+| dBW vs dBm | dBm = dBW + 30 | 0 dBW = 30 dBm |
+
+**Common power values:**
+
+| Power | dBW | dBm |
+|-------|-----|-----|
+| 0.1 W | −10.0 | +20.0 |
+| 0.5 W | −3.0 | +27.0 |
+| 1 W | 0.0 | +30.0 |
+| 2 W | +3.0 | +33.0 |
+| 5 W | +7.0 | +37.0 |
+| 10 W | +10.0 | +40.0 |
+
+---
+
+## 11.2 The complete link budget equation
+
+> **Key equations — link budget (dB form)**
+>
+> **EIRP** (effective isotropic radiated power):
+> $$\text{EIRP} = P_{TX} + G_{TX} - L_{TX} \quad \text{(dBW)}$$
+>
+> EIRP represents the power that an isotropic antenna would need to radiate to produce the same signal strength in the direction of maximum antenna gain. It combines the transmitter power, antenna gain (directivity), and cable/filter losses.
+>
+> **Free-space path loss:**
+> $$\text{FSPL} = 20\log_{10}\left(\frac{4\pi d}{\lambda}\right) = 20\log_{10}\left(\frac{4\pi d f}{c}\right) \quad \text{(dB)}$$
+> where $d$ = slant range (m), $f$ = frequency (Hz), $c = 3 \times 10^8$ m/s.
+>
+> **Physical interpretation:** FSPL is not "energy absorption" — no energy is lost. It is the geometric spreading of radiated power over a sphere of radius $d$. An isotropic antenna radiates equally in all directions, so the power per unit area at distance $d$ is $P/(4\pi d^2)$. The $\lambda^2$ dependence arises because a receive antenna's effective aperture scales as $A_{\text{eff}} = G\lambda^2/(4\pi)$ — at higher frequencies the receive antenna "captures" less of the available flux (unless the antenna is physically larger). Part V §V.6 derives this from the Friis transmission equation.
+>
+> **Receiver figure of merit:**
+> $$G/T = G_{RX} - 10\log_{10}(T_{sys}) \quad \text{(dB/K)}$$
+>
+> $G/T$ is the single most important parameter of any receive station. It combines the antenna gain (signal capture) with the system noise temperature (noise floor). A high $G/T$ means good sensitivity.
+>
+> **System noise temperature** $T_{sys}$ includes:
+>
+> - Antenna noise temperature $T_A$ (depends on what the antenna "sees": sky ~10–50 K at zenith, ~150–300 K looking at Earth/ground)
+> - Feed/cable losses: $T_{\text{feed}} = T_{\text{physical}} (L-1)$ where $L$ = loss factor
+> - LNA noise temperature: $T_{\text{LNA}} = T_0 (F-1)$ where $F$ = noise figure, $T_0 = 290$ K
+> - Subsequent stages (reduced by LNA gain)
+>
+> Rule of thumb: $T_{sys} \approx 100$–$200$ K for a professional ground station with a cryogenic or low-noise LNA; $T_{sys} \approx 400$–$800$ K for an amateur station with a COTS LNA.
+>
+> **Carrier-to-noise density ratio** (the canonical form used throughout this book, including Part IV and Part V §V.7):
+> $$C/N_0 = \text{EIRP} - \text{FSPL} - L_{\text{atm}} - L_{\text{point}} - L_{\text{pol}} - L_{\text{rx}} + G/T - k \quad \text{(dBHz)}$$
+> where $k = -228.6$ dBW/K/Hz (Boltzmann's constant, $k = 1.381 \times 10^{-23}$ J/K, expressed in dB) and $L_{\text{rx}}$ is the receive-side feed and line loss between the antenna and the point at which $T_{sys}$ is referenced (often absorbed into $G/T$, in which case it is set to 0 dB in the line-by-line table).
+>
+> **Energy per bit to noise density:**
+> $$E_b/N_0 = C/N_0 - 10\log_{10}(R_b) \quad \text{(dB)}$$
+> where $R_b$ = data rate (bit/s). This is the fundamental quality metric: each bit needs a certain amount of energy ($E_b$) relative to the noise floor ($N_0$) to be correctly demodulated.
+>
+> **Link margin:**
+> $$\text{Margin} = E_b/N_{0,\text{available}} - E_b/N_{0,\text{required}} - L_{\text{implementation}} \quad \text{(dB)}$$
+>
+> **Requirement:** Margin ≥ 3 dB for Phase B and beyond (per ECSS-E-ST-50-05C; a 6 dB target is common in Phase A while the design is still fluid). This 3 dB margin covers:
+>
+> - Transmitter power variation (ageing, temperature)
+> - Antenna gain uncertainties
+> - Atmospheric scintillation
+> - Pointing error variations
+> - Ground station performance variation
+
+### 11.2.1 Complete link budget table
+
+| Line | Parameter | Formula / typical value | Unit | Physical meaning |
+|------|-----------|------------------------|------|-----------------|
+| 1 | TX power | $P_{TX}$ (e.g. 2 W = +3.0) | dBW | RF power from amplifier output |
+| 2 | TX antenna gain | $G_{TX}$ (e.g. +6.0 for patch) | dBi | Directivity relative to isotropic |
+| 3 | TX line losses | $L_{TX}$ (cables, filters: −1.5) | dB | Ohmic loss in RF cables and connectors |
+| 4 | **EIRP** | $= P_{TX} + G_{TX} - L_{TX}$ | dBW | Effective radiated power |
+| 5 | Free-space path loss | $\text{FSPL} = 20\log_{10}(4\pi d f/c)$ | dB | Geometric spreading + aperture effect |
+| 6 | Atmospheric loss | $L_{\text{atm}}$ (−0.3 to −3.0) | dB | Molecular absorption (O$_2$, H$_2$O) |
+| 7 | Pointing loss | $L_{\text{point}}$ (−0.5 to −3.0) | dB | Signal reduction from antenna mispointing |
+| 8 | Polarisation loss | $L_{\text{pol}}$ (−0.1 to −3.0) | dB | Mismatch between TX and RX polarisation |
+| 9 | RX antenna gain | $G_{RX}$ (e.g. +35 for 3 m dish) | dBi | Ground antenna directivity |
+| 10 | System noise temperature | $T_{sys}$ (e.g. 150 K = 21.8 dBK) | dBK | Total noise temperature of receive chain |
+| 11 | **G/T** | $= G_{RX} - 10\log_{10}(T_{sys})$ | dB/K | Receiver figure of merit |
+| 12 | Boltzmann constant | $k = -228.6$ | dBW/K/Hz | Thermal noise power spectral density |
+| 13 | **C/N$_0$** | $= \text{EIRP} - \text{FSPL} - L_{\text{atm}} - L_{\text{point}} - L_{\text{pol}} - L_{\text{rx}} + G/T - k$ | dBHz | Signal-to-noise density ratio |
+| 14 | Data rate | $10\log_{10}(R_b)$ | dBbit/s | Information throughput |
+| 15 | **$E_b/N_0$ available** | $= C/N_0 - 10\log_{10}(R_b)$ | dB | Available energy per bit |
+| 16 | $E_b/N_0$ required | From modulation/coding selection | dB | Minimum needed for target BER |
+| 17 | Implementation loss | Typically 1.5–2.5 dB | dB | Real vs ideal demodulator performance |
+| 18 | **LINK MARGIN** | $= E_b/N_{0,\text{avail}} - E_b/N_{0,\text{req}} - L_{\text{impl}}$ | dB | Must be ≥ 3 dB |
+
+---
+
+## 11.3 Antenna types — physics and selection
+
+*[Source: SMAD, Ch. 13; Balanis, *Antenna Theory: Analysis and Design*, 4th ed., 2016]*
+
+The antenna converts guided RF energy (in cables or waveguides) into radiated electromagnetic waves (and vice versa for receive). The key performance parameters are:
+
+- **Gain** ($G$): how much more signal the antenna concentrates in its beam direction compared with an isotropic radiator. Higher gain = narrower beam = more signal, but requires more precise pointing.
+- **Beamwidth** ($\theta_{3\text{dB}}$): the angular width of the main beam between the −3 dB (half-power) points.
+- **Polarisation:** linear (vertical/horizontal), circular (RHCP/LHCP) or elliptical.
+
+**Fundamental trade-off:** $G \propto 1/\theta_{3\text{dB}}^2$. A higher-gain antenna has a narrower beam and requires more precise pointing. For a spacecraft without accurate pointing, a low-gain omnidirectional antenna is mandatory. For a spacecraft with 0.1° pointing (Chapter 10), a high-gain directional antenna is feasible. Figure 11.2 contrasts the two extremes.
+
+![Antenna patterns: high-gain dish vs patch.](../assets/figures/fig_antenna_pattern.png)
+
+**Figure 11.2** — Gain patterns at 2.25 GHz of a 3 m parabolic dish (35 dBi; narrow 3° main lobe, pronounced sidelobes) and an S-band patch antenna (6 dBi; broad, near-hemispherical lobe). The dish needs AOCS pointing to within a fraction of its beamwidth; the patch tolerates tens of degrees of mispointing at the cost of about 25–30 dB of gain.
+
+### 11.3.1 Antenna types for spacecraft
+
+| Antenna type | Gain (dBi) | Beamwidth | Pointing needed? | Mass (CubeSat) | Physics |
+|-------------|-----------|-----------|-------------------|----------------|---------|
+| **Monopole/dipole** | 0–2 | ~omnidirectional (toroidal pattern) | No | 5–20 g (deployable wire) | Current distribution on a wire radiates; $\lambda/4$ monopole on ground plane or $\lambda/2$ dipole |
+| **Turnstile** | 0–3 | Hemispherical | No | 10–30 g | Two crossed dipoles fed 90° apart; produces circular polarisation |
+| **Patch (microstrip)** | 5–8 | 60–90° | Loose (~10°) | 10–50 g | Resonant conducting patch on dielectric substrate over ground plane; $\lambda/2$ patch at resonance |
+| **Patch array (2×2, 4×4)** | 10–18 | 15–40° | Moderate (~5°) | 50–200 g | Multiple patch elements with corporate feed network; gain = $G_{\text{element}} + 10\log_{10}(N)$ |
+| **Horn** | 15–25 | 10–25° | Yes (~2°) | 100–500 g | Flared waveguide; smooth aperture illumination gives low sidelobes |
+| **Parabolic reflector** | 25–45 | 1–5° | Yes (< 1°) | 500 g – 5 kg | Feed at focal point illuminates parabolic dish; $G = \eta_a (\pi D/\lambda)^2$ |
+| **Phased array** | 15–35 | Electronically steered, 1–30° | Electronic (no mechanical) | 200 g – 2 kg | Array of elements with individual phase shifters; beam steered by adjusting relative phases; no moving parts |
+
+**Monopole/dipole physics:** A quarter-wave monopole ($L = \lambda/4$) is the simplest antenna. At 437 MHz (UHF), $\lambda = 0.686$ m, so a monopole is 17.2 cm long — easily deployable from a CubeSat using a spring-loaded tape measure or nitinol wire. The radiation pattern is omnidirectional in the azimuthal plane (perpendicular to the wire) and null along the wire axis. Gain is approximately 0–2 dBi depending on the ground-plane size.
+
+**Patch antenna physics:** A microstrip patch antenna consists of a conducting patch (typically rectangular, $L \approx \lambda/2$ at the desired frequency) printed on a dielectric substrate (e.g. Rogers RT/duroid, $\varepsilon_r = 2.2$–$10.2$, thickness 1–3 mm) above a ground plane. The patch resonates at the frequency where its length equals $\lambda_{eff}/2$ (where $\lambda_{eff} = \lambda_0/\sqrt{\varepsilon_r}$). At S-band (2.25 GHz), a patch is approximately 40 × 40 mm — small enough to mount on a CubeSat face. Gain is typically 5–8 dBi with a hemispherical pattern. Circular polarisation is achieved by feeding two orthogonal modes 90° apart (dual-feed or corner-truncated patch).
+
+**Parabolic reflector physics:** A parabolic dish focuses incoming plane waves to its focal point (for receive) or collimates spherical waves from a feed at the focus into a parallel beam (for transmit). The gain depends on the dish diameter $D$ and the wavelength $\lambda$:
+
+> **Key equations — antenna**
+>
+> **Gain of a parabolic antenna:**
+> $$G = \eta_a \left(\frac{\pi D}{\lambda}\right)^2$$
+>
+> In dBi: $G_{\text{dBi}} = 10\log_{10}\left[\eta_a \left(\frac{\pi D}{\lambda}\right)^2\right]$
+>
+> where $\eta_a \approx 0.55$–$0.65$ (aperture efficiency, accounting for illumination taper, spillover, blockage and surface errors), $D$ = antenna diameter (m), $\lambda = c/f$.
+>
+> **Half-power beamwidth (HPBW):**
+> $$\theta_{3\text{dB}} \approx \frac{70\lambda}{D} \quad \text{(degrees)}$$
+>
+> **Patch antenna gain** (single element): typically 5–8 dBi, beamwidth ~60–90°
+>
+> **Patch array gain** ($N$ elements): $G_{\text{array}} = G_{\text{element}} + 10\log_{10}(N)$
+>
+> **Pointing loss** (when the antenna is mispointed by angle $\Delta\theta$):
+> $$L_{\text{point}} \approx -12 \left(\frac{\Delta\theta}{\theta_{3\text{dB}}}\right)^2 \quad \text{(dB)}$$
+>
+> This shows that a narrower beam (smaller $\theta_{3\text{dB}}$) is more sensitive to pointing errors.
+
+**Worked example — antenna gain at different bands for a 30 cm dish** ($\eta_a = 0.55$):
+
+| Band | Frequency | $\lambda$ (mm) | $D/\lambda$ | Gain (dBi) | HPBW (°) | Pointing requirement |
+|------|-----------|----------------|-------------|-----------|-----------|-------------|
+| S-band | 2.25 GHz | 133 | 2.25 | 14.4 | 31 | ~5° |
+| X-band | 8.4 GHz | 35.7 | 8.4 | 25.8 | 8.3 | ~1° |
+| Ka-band | 26 GHz | 11.5 | 26.1 | 35.7 | 2.7 | ~0.3° |
+
+This table illustrates the fundamental link between frequency, antenna size, gain and pointing requirement. At Ka-band, even a small dish provides high gain — but the beamwidth is so narrow that sub-degree pointing accuracy is essential. This is why Ka-band CubeSat links require a star-tracker and reaction-wheel AOCS (Chapter 10 §10.1).
+
+**Phased array physics:** A phased array consists of multiple antenna elements (patch, dipole or slot) arranged in a grid. Each element has an individual phase shifter (and sometimes amplitude control). By adjusting the relative phase between elements, the beam can be electronically steered without moving the antenna. The beam direction $\theta_s$ for element spacing $d$ and phase increment $\Delta\phi$ is
+
+$$\sin(\theta_s) = \frac{\Delta\phi \cdot \lambda}{2\pi d}$$
+
+Advantages: no moving parts, fast beam steering (microseconds), multiple simultaneous beams possible. Disadvantages: complex, expensive, high power consumption for active arrays, scan loss at wide angles ($\cos\theta_s$ factor). Phased arrays are used on Starlink satellites (Ka-band) and Iridium NEXT (L-band), and are emerging for CubeSats in Ka-band.
+
+---
+
+## 11.4 Free-space path loss by band
+
+FSPL increases with both frequency and distance. At a fixed slant range, higher-frequency bands lose more signal — but this is offset by the ability to use smaller, higher-gain antennas at higher frequencies.
+
+> **Key equations — FSPL (expanded form)**
+>
+> $$\text{FSPL (dB)} = 20\log_{10}(4\pi) + 20\log_{10}(d) + 20\log_{10}(f) - 20\log_{10}(c)$$
+> $$= 21.98 + 20\log_{10}(d_m) + 20\log_{10}(f_{Hz}) - 169.54$$
+>
+> **Practical form (with km and GHz):**
+> $$\text{FSPL (dB)} = 92.45 + 20\log_{10}(d_{km}) + 20\log_{10}(f_{GHz})$$
+
+Figure 11.3 plots this relation for five bands over the slant ranges of interest, from a few hundred kilometres (LEO overhead) to geostationary distance.
+
+![Free-space path loss vs slant range across bands.](../assets/figures/fig_fspl.png)
+
+**Figure 11.3** — Free-space path loss versus slant range (logarithmic) for VHF, UHF, S-, X- and Ka-band. Each doubling of range or of frequency adds 6 dB; the vertical markers show a 1000 km LEO slant range, a low-elevation polar pass and the direct GEO distance.
+
+### 11.4.1 Slant range geometry
+
+The slant range $d$ from a LEO spacecraft to a ground station depends on the orbit altitude $h$ and the elevation angle $\varepsilon$ above the horizon:
+
+$$d = R_E \left[\sqrt{\left(\frac{R_E + h}{R_E}\right)^2 - \cos^2(\varepsilon)} - \sin(\varepsilon)\right]$$
+
+With $R_E = 6378.137$ km, typical LEO orbits give:
+
+| Altitude | Elevation 90° (nadir) | Elevation 30° | Elevation 10° | Elevation 5° |
+|----------|------------------------|-------------------|-------------------|-------------------|
+| 400 km | 400 km | 740 km | 1440 km | 1800 km |
+| 500 km | 500 km | 910 km | 1695 km | 2080 km |
+| 600 km | 600 km | 1075 km | 1930 km | 2330 km |
+
+**Design rule:** Always compute the link budget at the **minimum elevation angle** (worst case), typically 5–10°. Below 5°, atmospheric losses increase sharply, ground clutter enters the antenna sidelobes, and the link is generally unusable.
+
+### 11.4.2 FSPL by band and geometry
+
+| Band | Centre frequency | FSPL at 500 km (nadir) | FSPL at 1695 km (10° elevation) | Difference |
+|------|-----------------|----------------------|-------------------------------|------------|
+| **VHF** | 146 MHz | 129.7 dB | 140.3 dB | 10.6 dB |
+| **UHF** | 437 MHz | 139.2 dB | 149.8 dB | 10.6 dB |
+| **S-band** | 2250 MHz | 153.5 dB | 164.1 dB | 10.6 dB |
+| **X-band** | 8200 MHz | 164.7 dB | 175.3 dB | 10.6 dB |
+| **Ka-band** | 26 GHz | 174.7 dB | 185.3 dB | 10.6 dB |
+
+**The elevation angle penalty:** Going from nadir to 10° elevation at 500 km increases FSPL by ~10.6 dB (the distance increases by a factor of 3.4; FSPL scales as $20\log_{10}(3.4) = 10.6$ dB). This is a significant loss and is why contact time at high elevations is much more valuable than contact time at low elevations.
+
+---
+
+## 11.5 Frequency band selection and licensing
+
+*[Source: ITU Radio Regulations, Articles 5 and 22; ISED RSS-SAT; FCC Part 25; IARU Satellite Frequency Coordination]*
+
+Band selection is a **design constraint** that affects data rate, antenna size, atmospheric losses, equipment availability, licensing cost and data policy. The choice of band is one of the earliest and most consequential decisions in mission design. The regulatory process itself is described in Chapter 2 §2.7; this section concentrates on the engineering consequences.
+
+### 11.5.1 Band comparison table
+
+| Band | Frequency range | Allocation | Max BW | Practical data rate | Atmospheric loss (10°) | Rain fade | Licensing (indicative, 2026) | Equipment availability |
+|------|----------------|-----------|--------|--------------------|--------------------------|-----------|-----------|-----------------------|
+| **VHF** | 144–146 MHz | Amateur | 15 kHz | < 9.6 kbit/s | 0.1 dB | None | IARU coordination (free, 3–6 months) | Many COTS, low cost |
+| **UHF** | 435–438 MHz | Amateur | 20 kHz | < 19.2 kbit/s | 0.2 dB | Negligible | IARU coordination (free, 3–6 months) | Many COTS, low cost |
+| **S-band** | 2200–2290 MHz | Space research/EES | 5 MHz | 0.1–10 Mbit/s | 0.5 dB | < 0.5 dB | ISED/FCC ($30–45K, 6–12 months) | Many COTS |
+| **X-band** | 8025–8400 MHz | EES | 375 MHz | 10–400 Mbit/s | 1.0 dB | 1–3 dB | ISED/FCC + ITU ($50–80K, 12+ months) | Growing COTS |
+| **Ka-band** | 25.5–27.0 GHz | EES/FSS | 1.5 GHz | 100–2000+ Mbit/s | 2–5 dB | 3–15 dB (location-dependent) | Complex ITU ($100K+, 18+ months) | Emerging COTS |
+
+*EES = Earth Exploration Satellite; FSS = Fixed Satellite Service*
+
+**Atmospheric attenuation physics:** The atmosphere absorbs and scatters RF energy. Molecular oxygen has a strong absorption line at 60 GHz (used for inter-satellite links where atmospheric penetration is not needed). Water vapour absorbs at 22.2 GHz (near Ka-band). At S-band and below, atmospheric losses are minimal (< 1 dB). At Ka-band, losses of 2–5 dB are typical at 10° elevation, and rain fade can add 3–15 dB in tropical regions.
+
+**Rain fade:** Raindrops scatter and absorb RF energy. The effect scales approximately as $f^2$ — negligible below 4 GHz, significant above 10 GHz, and severe above 20 GHz. Rain fade is characterised by the rain rate (mm/h) and the path length through rain. In tropical regions, rain rates of 50+ mm/h can cause 10+ dB additional loss at Ka-band. Mitigation: adaptive data rate (reduce rate during rain), site diversity (multiple ground stations), power control (increase TX power during fade). For Ka-band links, a rain-fade margin of 5–10 dB is typically included.
+
+**Amateur band regulations (IARU):**
+
+- Non-commercial, educational and experimental use only
+- Open data policy: all transmissions must be unencrypted and the protocol must be published
+- No commercial data or imagery downlink
+- Coordination through the IARU (International Amateur Radio Union): free but takes 3–6 months
+- Very popular for university CubeSats (low cost, no licence fees, large amateur community provides free ground-station support via the SatNOGS network)
+
+**Commercial band licensing:**
+
+- Requires national filing (FCC in the US, ISED in Canada, Ofcom in the UK, CNES/ANFR in France) plus ITU coordination for frequencies above 1 GHz
+- Costs (indicative, 2026): $30–45K for S-band (typical), $50–80K for X-band, $100K+ for Ka-band
+- Timeline: 6–12 months for S-band, 12–18 months for X-band, 18+ months for Ka-band
+- Commercial data can be encrypted and proprietary
+- Bandwidth allocation may be limited by the national authority
+
+### 11.5.2 Band selection decision tree
+
+```
+Required data rate?
+  ≤ 9.6 kbit/s AND non-commercial/educational → VHF/UHF amateur (IARU, free, 3–6 months)
+  ≤ 10 Mbit/s                                 → S-band commercial (ISED/FCC, $30–45K, 6–12 months)
+  ≤ 400 Mbit/s                                → X-band (ISED/FCC + ITU, $50–80K, 12+ months)
+  > 400 Mbit/s                                → Ka-band (complex ITU, $100K+, 18+ months, rain fade)
+```
+
+---
+
+## 11.6 Modulation and coding — physics and selection
+
+*[Source: CCSDS 131.0-B-4; Sklar, Ch. 7–8; Haykin, Ch. 10; DVB-S2 standard]*
+
+### 11.6.1 Modulation — how information becomes RF
+
+Modulation encodes digital data onto an RF carrier by varying the carrier's amplitude, frequency or phase.
+
+**Phase shift keying (PSK):** The most common modulation family for space communications. The carrier phase is shifted by discrete amounts to represent different bit patterns:
+
+- **BPSK (binary PSK):** 2 phase states (0° and 180°). Each symbol carries 1 bit. Spectral efficiency: 1 bit/s/Hz. Most robust to noise.
+- **QPSK (quadrature PSK):** 4 phase states (0°, 90°, 180°, 270°). Each symbol carries 2 bits. Spectral efficiency: 2 bit/s/Hz. Requires the same $E_b/N_0$ as BPSK but doubles the data rate for the same bandwidth. **The standard choice for most space links.**
+- **8PSK:** 8 phase states, 3 bits/symbol, spectral efficiency 3 bit/s/Hz. Requires ~3.5 dB more $E_b/N_0$ than QPSK for the same BER.
+- **16APSK:** 16 states (amplitude + phase), 4 bits/symbol, spectral efficiency 4 bit/s/Hz. Requires ~7 dB more $E_b/N_0$ than QPSK.
+
+**Frequency shift keying (FSK):** The carrier frequency is shifted between discrete values. Less spectrally efficient than PSK but more tolerant of amplifier non-linearity. Variants:
+
+- **FSK:** simple frequency switching.
+- **GFSK (Gaussian FSK):** a Gaussian filter smooths frequency transitions, reducing spectral spreading. Used by many CubeSat UHF radios (AX.25 protocol at 9600 bit/s).
+- **MSK (minimum shift keying):** a special case of FSK with the minimum frequency deviation that still allows coherent detection. Constant envelope (important for non-linear amplifiers). Spectral efficiency ~1 bit/s/Hz.
+
+**Why QPSK is preferred over BPSK for space links:** QPSK transmits 2 bits per symbol while requiring the same energy per bit as BPSK. This means QPSK achieves twice the data rate for the same bandwidth and the same $E_b/N_0$ performance. The only additional complexity is that the receiver must resolve 4 phase states instead of 2, which is trivial for modern digital receivers.
+
+Figure 11.4 shows the bit-error-rate curves that underlie the required $E_b/N_0$ values used in the rest of this chapter; Part V §V.8 gives the closed-form expressions behind them.
+
+![Eb/N0 vs BER for common modulations.](../assets/figures/fig_signal_noise.png)
+
+**Figure 11.4** — Bit error rate versus $E_b/N_0$ for BPSK/QPSK, 8-PSK and non-coherent FSK, with a representative concatenated (convolutional + Reed–Solomon) coded curve. The horizontal distance between the uncoded and coded curves at a given BER is the coding gain — about 5 dB at BER $10^{-5}$ for this scheme and more for LDPC codes.
+
+### 11.6.2 Forward error correction (FEC) — coding gain
+
+FEC adds redundant bits to the data stream before transmission. The receiver uses these redundant bits to detect and correct bit errors without retransmission. The improvement in $E_b/N_0$ requirement (compared with uncoded) is called the **coding gain**.
+
+**Why coding is essential for space links:** Space links operate at very low received signal power (femtowatts to picowatts). Without coding, the required $E_b/N_0$ for BER $10^{-6}$ is 10.5 dB. With LDPC coding, this drops to 2.0 dB — a coding gain of 8.5 dB. This is equivalent to increasing the TX power by 7×, or increasing the antenna diameter by 2.7×, or reducing the data rate by 7×. Coding achieves the same benefit at the cost of only a few watts of digital processing power.
+
+**Code types used in space communications:**
+
+| Code type | Code rate | Coding gain at BER $10^{-6}$ | Decoding complexity | Standard | Use |
+|-----------|-----------|-------------------------------|---------------------|----------|-----|
+| **Convolutional** (K = 7) | 1/2 | ~5.5 dB | Low (Viterbi decoder, hardware) | CCSDS | Legacy telecommand, AX.25 |
+| **Convolutional + RS** (concatenated) | ~0.44 | ~7.5 dB | Medium | CCSDS | Standard CCSDS telemetry (many heritage missions) |
+| **Turbo code** | 1/2 to 1/6 | ~8–10 dB | High (iterative decoder) | CCSDS | Deep-space links (Mars, Jupiter) |
+| **LDPC** (low-density parity check) | 1/2 | ~8.5 dB | Medium-high (iterative BP decoder) | CCSDS, DVB-S2 | Modern space downlinks, **recommended for CubeSats** |
+| **LDPC** | 3/4 | ~6.5 dB | Medium-high | CCSDS, DVB-S2 | Balanced performance and throughput |
+| **LDPC** | 7/8 | ~5.0 dB | Medium-high | DVB-S2 | Maximum throughput, strong signal |
+
+*[Source: CCSDS 131.0-B-4; DVB-S2 ETSI EN 302 307]*
+
+**Code rate $r$:** The ratio of information bits to total transmitted bits. A rate-1/2 code transmits 1 information bit for every 2 transmitted bits (50 % overhead). This means the channel data rate must be $R_{\text{channel}} = R_{\text{info}} / r$ — a rate-1/2 code requires twice the channel bandwidth for a given information rate.
+
+### 11.6.3 Complete modulation and coding table
+
+| Modulation + coding | $E_b/N_0$ required (BER $10^{-6}$) | Spectral efficiency (bit/s/Hz) | Typical use | Implementation |
+|--------------------|------------------------------------|-------------------------------|------------|----------------|
+| GMSK uncoded | 10.5 dB | ~1.0 | AX.25 amateur, legacy | Simple radio IC |
+| BPSK uncoded | 10.5 dB | 1.0 | Legacy telecommand | Simple |
+| QPSK uncoded | 10.5 dB | 2.0 | Simple telemetry | Moderate |
+| QPSK + conv (r = 1/2, K = 7) | 5.0 dB | 1.0 | Standard CCSDS TM | Hardware Viterbi |
+| QPSK + conv + RS (concatenated) | 3.0 dB | 0.88 | Heritage CCSDS | Hardware |
+| QPSK + LDPC (r = 1/2) | 2.0 dB | 1.0 | High-efficiency downlink | FPGA-based |
+| QPSK + LDPC (r = 3/4) | 4.0 dB | 1.5 | **Balanced — recommended** | FPGA-based |
+| QPSK + LDPC (r = 7/8) | 5.5 dB | 1.75 | Bandwidth-limited | FPGA-based |
+| 8PSK + LDPC (r = 3/4) | 6.5 dB | 2.25 | High-rate downlink | FPGA-based |
+| 16APSK + LDPC (r = 3/4) | 8.5 dB | 3.0 | Maximum throughput | FPGA-based |
+
+**Design guidance for CubeSats:**
+
+- **UHF amateur:** GMSK or AFSK (AX.25 protocol) at 1.2–9.6 kbit/s channel rate. Add convolutional coding if the link margin is tight.
+- **S-band:** QPSK + LDPC (r = 1/2 or r = 3/4). This is the sweet spot: 5.5–8.5 dB coding gain with manageable complexity. Most COTS S-band CubeSat transmitters (Endurosat, NanoAvionics, AAC Clyde — representative examples) support DVB-S2 or CCSDS LDPC natively.
+- **X-band / Ka-band:** 8PSK or 16APSK + LDPC for maximum spectral efficiency when bandwidth is limited.
+
+---
+
+## 11.7 Ground stations
+
+The ground station is half of the communication link. Its performance ($G/T$) directly determines the achievable data rate. Upgrading the ground station is often the cheapest way to improve link performance (compared with upgrading the spacecraft transmitter or antenna). The ground-segment architecture as a whole — stations, networks, mission control and data systems — is the subject of Chapter 17.
+
+### 11.7.1 Ground station types
+
+| Type | Antenna | G/T (S-band) | Cost (indicative, 2026) | Availability | Examples |
+|------|---------|-------------|------|-------------|---------|
+| **Amateur (SatNOGS)** | 10–15 dBi Yagi | −15 to −10 dB/K | Free (volunteer-operated) | Global network, 200+ stations | SatNOGS network |
+| **University** | 2–3 m dish | +10 to +15 dB/K | $50–200K (build) | Limited availability | Many universities have S-band stations |
+| **Commercial (small)** | 3–5 m dish | +15 to +25 dB/K | $500/pass or $5–20K/month | KSAT Lite, AWS Ground Station | KSAT, Amazon, Leaf Space |
+| **Commercial (large)** | 5–13 m dish | +25 to +35 dB/K | $1000/pass or $20–50K/month | SSC, KSAT, ATLAS | SSC (Esrange), KSAT (Svalbard), ATLAS (Fairbanks) |
+| **Deep Space Network** | 34–70 m dish | +45 to +60 dB/K | NASA-funded only | DSN (3 sites globally) | Goldstone, Canberra, Madrid |
+
+*[Source: KSAT Lite pricing 2024; AWS Ground Station pricing; SSC SmallSat ground segment]*
+
+### 11.7.2 Contact geometry and pass duration
+
+A LEO satellite is in view of a ground station for a limited time per orbit. The pass duration depends on the orbit altitude and the minimum usable elevation angle. Chapter 7 §7.4.1 gives the geometry: the Earth central angle from the station to the satellite at the elevation mask is
+
+$$\lambda_{\max} = \arccos\!\left(\frac{R_E}{R_E + h}\cos\varepsilon_{\min}\right) - \varepsilon_{\min}$$
+
+and the longest (overhead) pass lasts approximately $t_{\text{contact,max}} \approx (T/\pi)\,\lambda_{\max}$, with $T$ the orbital period. Passes that do not go overhead are shorter; the full elevation-versus-time profile of a pass is shown in Chapter 17 (see Figure 17.2).
+
+| Altitude | Min elevation | Max pass duration | Typical usable duration | Passes/day (mid-latitude) |
+|----------|--------------|-------------------|------------------------|--------------------------|
+| 400 km | 10° | ~6 min | ~5 min | 3–4 |
+| 500 km | 10° | ~7.4 min | ~6 min | 4–5 |
+| 600 km | 10° | ~8.5 min | ~7 min | 4–5 |
+| 800 km | 10° | ~10.5 min | ~9 min | 5–6 |
+
+The "usable duration" is shorter than the total pass because the link only closes above the minimum elevation angle, and the first and last 30–60 seconds are used for signal acquisition and link set-up.
+
+**Ground station selection criteria:**
+
+- **Location:** Polar stations (Svalbard at 78° N, McMurdo at 78° S) see every orbit of a polar/SSO satellite, providing 12+ contacts per day. Mid-latitude stations see only 3–5 passes. Equatorial stations see even fewer passes of polar satellites.
+- **G/T:** Determines the achievable data rate. A 3 dB improvement in G/T allows the data rate to be doubled.
+- **Licensing:** Must be compatible with the spacecraft frequency allocation
+- **Cost:** Ranges from free (SatNOGS, university) to $1000+/pass (commercial)
+- **Reliability:** SLA (service-level agreement) for commercial stations; university stations may have limited operator availability
+
+**EIRP (ground-station transmit, for uplink):** For telecommand uplink, the ground station transmits to the spacecraft. Ground-station EIRP is typically 40–60 dBW for commercial stations, sufficient for robust command links even with low-gain spacecraft receive antennas.
+
+---
+
+## 11.8 Worked examples: complete link budgets
+
+### 11.8.1 EOSat-3U — S-band downlink
+
+> **Worked example — S-band downlink for the 3U EO CubeSat (SuperDove-class)**
+>
+> **Scenario:** 500 km SSO, S-band (2250 MHz), 1 Mbit/s downlink, 10° minimum elevation (slant range 1695 km, §11.4.1), 3 m ground-station dish ($T_{sys} = 150$ K, $G_{RX} = 35$ dBi at S-band).
+>
+> | Line | Parameter | Value | Unit | Calculation / source |
+> |------|-----------|-------|------|--------------------|
+> | 1 | TX power (2 W) | +3.0 | dBW | COTS S-band transmitter |
+> | 2 | TX antenna gain (patch) | +6.0 | dBi | Single-element S-band patch |
+> | 3 | TX line losses | −1.5 | dB | 15 cm cable + connector |
+> | 4 | **EIRP** | **+7.5** | dBW | $3.0 + 6.0 - 1.5$ |
+> | 5 | FSPL (2250 MHz, 1695 km) | −164.1 | dB | $92.45 + 20\log_{10}(1695) + 20\log_{10}(2.25)$ |
+> | 6 | Atmospheric loss | −0.5 | dB | S-band, 10° elevation |
+> | 7 | Pointing loss | −1.0 | dB | 5° mispoint, 80° beamwidth patch |
+> | 8 | Polarisation loss (RHCP–RHCP) | −0.3 | dB | Minor axial-ratio mismatch |
+> | 9 | RX antenna gain (3 m dish) | +35.0 | dBi | $10\log_{10}(0.6 \times (\pi \times 3.0 / 0.133)^2)$ |
+> | 10 | System noise temperature (150 K) | 21.8 | dBK | Professional LNA + sky temperature (receive line loss included) |
+> | 11 | **G/T** | **+13.2** | dB/K | $35.0 - 21.8$ |
+> | 12 | Boltzmann constant | +228.6 | dBW/K/Hz | $-k$ in link equation |
+> | 13 | **C/N$_0$** | **+83.4** | dBHz | $7.5 - 164.1 - 0.5 - 1.0 - 0.3 + 13.2 + 228.6$ |
+> | 14 | Data rate (1 Mbit/s) | 60.0 | dBbit/s | $10\log_{10}(10^6)$ |
+> | 15 | **$E_b/N_0$ available** | **+23.4** | dB | $83.4 - 60.0$ |
+> | 16 | $E_b/N_0$ required (QPSK + LDPC r = 3/4) | 4.0 | dB | From modulation/coding table |
+> | 17 | Implementation loss | 2.0 | dB | Real demodulator vs ideal |
+> | 18 | **LINK MARGIN** | **+17.4** | dB | $23.4 - 4.0 - 2.0$ |
+>
+> **Result:** Link closes with 17.4 dB margin (requirement: ≥ 3 dB). **Pass.**
+>
+> **Design insight:** The generous margin shows that the link is power-rich at 1 Mbit/s. The data rate could be raised considerably:
+>
+> Maximum data rate at 3 dB margin: $E_b/N_0$ available at maximum rate $= 4.0 + 2.0 + 3.0 = 9.0$ dB, so with $C/N_0 = 83.4$ dBHz, $R_{b,\max} = 10^{(83.4 - 9.0)/10} = 10^{7.44} \approx$ **27 Mbit/s** on power grounds alone.
+>
+> In practice the S-band allocation, not the power, is the limit: a 5 MHz channel at 1.5 bit/s/Hz (QPSK + LDPC r = 3/4) carries at most about 7.5 Mbit/s. At 5 Mbit/s ($10\log_{10}(5 \times 10^6) = 67.0$ dBbit/s): $E_b/N_0 = 83.4 - 67.0 = 16.4$ dB; margin $= 16.4 - 4.0 - 2.0 = 10.4$ dB. **Pass.** The remaining 7 dB above the requirement is worth keeping as design margin at this stage, or it can be traded later for a lower-power transmitter (0.5 W instead of 2 W costs 6 dB and still closes with 4.4 dB) or a smaller ground dish. The 5 Mbit/s case is the one carried into the data budget of §11.9.
+
+Figure 11.5 shows this budget drawn as a waterfall. Reading it left to right, the gains lift the cumulative $C/N_0$ and the losses pull it down; the final value is compared with what the chosen modulation, coding and data rate require.
+
+![S-band downlink link-budget waterfall.](../assets/figures/fig_link_budget.png)
+
+**Figure 11.5** — Link-budget waterfall for the §11.8.1 S-band downlink (2 W transmitter, 6 dBi patch, 2.25 GHz over the 1695 km slant range at 10° elevation, 3 m ground dish at 150 K). Green bars are gains, orange bars are losses; the dashed line is the received $C/N_0$ of 83.4 dBHz and the dotted line the 73.0 dBHz required at 5 Mbit/s (QPSK + LDPC r = 3/4 plus 2 dB implementation loss). The gap between them is the 10.4 dB link margin.
+
+### 11.8.2 Returning to UniSat-1: UHF link budget at 437 MHz and 9600 bit/s
+
+UniSat-1 uses the UHF amateur band at 437 MHz with a ground station equipped with a 10 dBi Yagi antenna. This is the lowest-cost and simplest communication architecture available to CubeSat missions.
+
+> **Worked example — UHF downlink link budget for UniSat-1**
+>
+> **Scenario:** 400 km orbit, UHF (437 MHz), 9600 bit/s downlink (GMSK), 10° minimum elevation angle, amateur ground station with 10 dBi Yagi antenna, $T_{sys} = 600$ K (COTS LNA, coaxial cable losses, sky noise near the horizon).
+>
+> **Slant range at 10° elevation:** From 400 km altitude, the worst-case slant range at 10° elevation is 1440 km (§11.4.1).
+>
+> | Line | Parameter | Value | Unit | Notes |
+> |------|-----------|-------|------|-------|
+> | 1 | TX power (0.5 W) | −3.0 | dBW | Standard CubeSat UHF radio |
+> | 2 | TX antenna gain (monopole) | 0.0 | dBi | Quarter-wave monopole, ~omnidirectional |
+> | 3 | TX line losses | −0.5 | dB | Short cable to antenna |
+> | 4 | **EIRP** | **−3.5** | dBW | Low EIRP is the fundamental UHF challenge |
+> | 5 | FSPL (437 MHz, 1440 km) | −148.4 | dB | $92.45 + 20\log_{10}(1440) + 20\log_{10}(0.437)$ — ~16 dB less than S-band |
+> | 6 | Atmospheric loss | −0.3 | dB | UHF atmospheric loss is minimal |
+> | 7 | Pointing loss (omni antenna) | −0.5 | dB | Omni pattern — negligible |
+> | 8 | Polarisation loss (linear–linear) | −3.0 | dB | **Major loss** — Faraday rotation in the ionosphere rotates the polarisation randomly |
+> | 9 | RX antenna gain (10 dBi Yagi) | +10.0 | dBi | 5-element Yagi, manually tracked |
+> | 10 | System noise temperature (600 K) | 27.8 | dBK | Amateur station: warm LNA + cable loss |
+> | 11 | **G/T** | **−17.8** | dB/K | Low G/T is the ground-station limitation |
+> | 12 | Boltzmann constant | +228.6 | dBW/K/Hz | |
+> | 13 | **C/N$_0$** | **+55.1** | dBHz | $-3.5 - 148.4 - 0.3 - 0.5 - 3.0 - 17.8 + 228.6$ |
+> | 14 | Data rate (9600 bit/s) | 39.8 | dBbit/s | |
+> | 15 | **$E_b/N_0$ available** | **+15.3** | dB | |
+> | 16 | $E_b/N_0$ required (GMSK uncoded) | 10.5 | dB | |
+> | 17 | Implementation loss | 2.0 | dB | |
+>
+> **Margin = 15.3 − 10.5 − 2.0 = +2.8 dB. Below the 3 dB requirement — the link does not meet the specification**, and the −3.0 dB polarisation line is only an average: when the Faraday-rotated plane is near-orthogonal to the Yagi the loss can reach 20 dB or more, and the link drops out entirely.
+>
+> **Fix 1: Add FEC.** Convolutional coding (r = 1/2, K = 7):
+>
+> - $E_b/N_0$ required drops to **5.0 dB** (5.5 dB coding gain)
+> - Channel rate remains 9600 bit/s, but useful throughput is 4800 bit/s (half is redundancy)
+> - **Margin** = 15.3 − 5.0 − 2.0 = **+8.3 dB** — meets the requirement, but the Faraday fades remain.
+>
+> **Fix 2: Upgrade the ground antenna to a cross-Yagi (13 dBi) with circular polarisation:**
+>
+> - RX gain: +13.0 dBi (was +10.0) → +3.0 dB improvement
+> - Polarisation loss: −0.5 dB (was −3.0 dB, now RHCP-to-RHCP) → +2.5 dB improvement, and the deep fades disappear
+> - Net improvement: +5.5 dB
+> - New C/N$_0$: 60.6 dBHz
+> - New $E_b/N_0$ available: 60.6 − 39.8 = 20.8 dB
+> - **Margin** (with FEC) = 20.8 − 5.0 − 2.0 = **+13.8 dB** — **Pass**; even uncoded the margin would be 8.3 dB.
+>
+> **Polarisation loss physics:** At UHF (437 MHz), the ionosphere causes Faraday rotation of linearly polarised signals. The rotation angle depends on the total electron content (TEC) along the path and varies with time of day, solar activity and signal path. If the satellite transmits linear polarisation and the ground station receives with linear polarisation, the polarisation planes may be orthogonal at times, causing up to complete signal loss (theoretically infinite loss, practically 20+ dB fades). Using circular polarisation on at least one end (preferably both) eliminates Faraday rotation loss, reducing it to ~0.3–0.5 dB axial-ratio mismatch. **This is why circular polarisation is mandatory for reliable UHF satellite links.**
+>
+> **Final link budget summary (with FEC + cross-Yagi):** The coding is retained even though the circularly polarised link would close uncoded, because the amateur station's noise temperature, the monopole's pattern nulls and the station's tracking are all less certain than the budget assumes. The 13.8 dB margin absorbs those uncertainties; the cost is half the throughput.
+>
+> | Parameter | Value |
+> |-----------|-------|
+> | TX power | 0.5 W |
+> | TX antenna | Monopole (0 dBi) |
+> | Frequency | 437 MHz |
+> | Channel rate | 9600 bit/s |
+> | Useful throughput | 4800 bit/s (with r = 1/2 FEC) |
+> | Ground antenna | 13 dBi cross-Yagi, RHCP |
+> | Link margin | **+13.8 dB** |
+
+**Data throughput for UniSat-1:** At 4800 bit/s useful throughput, a pass with 5 minutes of usable contact (§11.7.2, 400 km) delivers:
+$V_{\text{pass}} = 4800 \times 300 \times 0.85 = 1.22$ Mbit $= 153$ kB per pass.
+
+The 0.85 factor accounts for protocol overhead (packet headers, acknowledgements, retransmissions, link set-up time).
+
+With 4 passes/day: $V_{\text{daily}} = 612$ kB/day $\approx$ **0.6 MB/day**. The magnetometer generates $< 1$ kbit/s $\times$ 600 s/orbit $\times$ 15 orbits $= 9$ Mbit/day $= 1.13$ MB/day. **The data budget does not close with a single ground station** — roughly eight passes a day are needed. The cheapest fix is more contact time: using the SatNOGS network (200+ volunteer stations worldwide) can provide 10+ additional contacts per day at no cost, since the open amateur protocol lets any station receive the data. The alternatives are to reduce the data (lower sampling rate or on-board averaging) or to drop the FEC and accept the smaller margin.
+
+**Key lesson from the UniSat-1 link budget:** UHF links are power-starved compared with S-band or X-band. The lower FSPL at 437 MHz (~16 dB less than S-band at a comparable elevation) does not compensate for the low TX power (0.5 W vs 2 W = 6 dB less), low antenna gain (0 dBi vs 6 dBi = 6 dB less), and the higher system noise temperature of amateur stations (600 K vs 150 K = 6 dB worse). FEC coding and circular polarisation are essential for closing a UHF CubeSat link.
+
+---
+
+## 11.9 Data budget
+
+The data budget determines whether the communication system can deliver all mission data to the ground. Even if the link budget closes, the mission fails if the total data volume exceeds the downlink capacity. Chapter 4 §4.8.5 introduced the concept as part of the ConOps data flow; this section quantifies it, and Chapter 12 §12.3.3 sizes the on-board storage that buffers the difference.
+
+> **Key equations — data budget**
+>
+> **Daily data generation:**
+> $$V_{\text{gen}} = R_{\text{payload}} \times t_{\text{imaging}} \times N_{\text{orbits}} \times f_{\text{compression}}$$
+>
+> **Daily downlink capacity** (the canonical form used throughout this book):
+> $$C_{\text{downlink}} = R \cdot N_{\text{passes}} \cdot t_{\text{contact}} \cdot \eta_{\text{protocol}}$$
+>
+> where $R$ is the useful (information) data rate, $N_{\text{passes}}$ the number of usable passes per day, $t_{\text{contact}}$ the usable contact time per pass and $\eta_{\text{protocol}} = 0.80$–$0.90$ accounts for packet overhead, retransmissions, link set-up time and handshaking. (Some texts write the capacity as $V_{\text{DL}}$; the quantity is the same.)
+>
+> **Data budget closure:**
+> $$C_{\text{downlink}} \geq V_{\text{gen}} \quad \text{(data budget closes)}$$
+>
+> **Backlog clearance time:** If a temporary excess $V_{\text{stored}}$ has accumulated in on-board storage (after an outage, say) and $C_{\text{downlink}} > V_{\text{gen}}$, the backlog clears in
+> $$t_{\text{clear}} = \frac{V_{\text{stored}}}{C_{\text{downlink}} - V_{\text{gen}}}$$
+> If $C_{\text{downlink}} < V_{\text{gen}}$ on a sustained basis, the backlog grows without limit — the mission cannot sustain its data generation rate.
+
+> **Worked example — data budget for the 3U EO CubeSat**
+>
+> **First estimate of generation:** 240 Mbit/s raw imaging data × 5 min/orbit × 15 orbits/day × 0.25 (4:1 JPEG2000 compression)
+> $= 240 \times 300 \times 15 \times 0.25 = 270\,000$ Mbit/day = **33.75 GB/day**
+>
+> That is far beyond any S-band downlink, and it is also unrealistic: not every orbit has a target. Assuming 4 imaging passes per day of 5 minutes each:
+>
+> $V_{\text{gen}} = 240 \times 10^6 \times 300 \times 4 \times 0.25 = 72\,000$ Mbit $= 9.0$ GB/day
+>
+> Still too high. Planet's SuperDove images for approximately 1–2 minutes per orbit over priority targets, compresses heavily (10:1 or more) and downlinks selectively.
+>
+> **Revised generation:** 240 Mbit/s × 1 min/pass × 4 passes/day × 0.10 (10:1 compression) $= 240 \times 60 \times 4 \times 0.10 = 5\,760$ Mbit = **720 MB/day**
+>
+> **Downlink capacity (S-band at 5 Mbit/s, §11.8.1):**
+> $C_{\text{downlink}} = 5 \times 10^6 \times 5 \times 360 \times 0.85 = 7\,650$ Mbit $= 956$ MB/day
+>
+> **Result:** 956 MB/day > 720 MB/day. **The data budget closes** with 33 % margin.
+>
+> **Sensitivity:** If the imaging duty cycle doubles (2 min/pass), generation rises to 1440 MB/day > 956 MB/day. Options: (a) X-band for a higher data rate, (b) additional ground stations, (c) more aggressive compression, (d) on-board data prioritisation and selection.
+
+Figure 11.6 puts these numbers in context: daily downlink capacity by band for a single polar ground station, against the daily production of representative payloads. A UHF link cannot even carry housekeeping for an imaging mission; S-band comfortably carries a single-band imager at 1–4 Mbit/s; SAR and hyperspectral payloads need X-band or better.
+
+![Daily downlink capacity by band — data budget closure check.](../assets/figures/fig_data_volume.png)
+
+**Figure 11.6** — Daily downlink capacity (GB/day, logarithmic) for five band and data-rate combinations, each assuming four 8-minute passes per day to a single polar ground station and no protocol overhead. Vertical lines mark the daily data production of representative payloads, from housekeeping-only (5 MB) to a compressed SAR (30 GB). A payload line to the right of a bar means that configuration cannot close the data budget.
+
+---
+
+## Summary
+
+| Topic | Key takeaway |
+|-------|-------------|
+| Link budget | $\text{Margin} = E_b/N_{0,\text{avail}} - E_b/N_{0,\text{req}} - L_{\text{impl}} \geq 3$ dB |
+| EIRP | $\text{EIRP} = P_{TX} + G_{TX} - L_{TX}$ — transmitter's effective power in the beam direction |
+| FSPL physics | Geometric spreading ($1/d^2$) + aperture scaling ($\lambda^2$); not energy absorption |
+| FSPL formula | $92.45 + 20\log_{10}(d_{km}) + 20\log_{10}(f_{GHz})$; increases 6 dB per doubling of frequency or distance |
+| Slant range | 1440 km at 400 km / 10° elevation; 1695 km at 500 km / 10°; nadir-to-10° costs ~10.6 dB |
+| G/T | Receiver figure of merit: antenna gain minus noise temperature; most important ground-station parameter |
+| Antenna types | Monopole (0 dBi, omni) to parabolic (25–45 dBi, narrow beam); gain vs pointing trade-off |
+| Antenna gain | $G = \eta_a (\pi D/\lambda)^2$; patch ~6 dBi; 3 m dish: 35 dBi at S-band; 30 cm dish: 14 dBi at S-band, 26 dBi at X-band |
+| Pointing loss | $-12(\Delta\theta/\theta_{3\text{dB}})^2$ dB; narrower beam = more sensitive to pointing errors |
+| Modulation | QPSK: 2 bits/symbol, same $E_b/N_0$ as BPSK but 2× spectral efficiency; **standard choice** |
+| FEC coding | LDPC (r = 3/4): $E_b/N_0 = 4.0$ dB, coding gain ~6.5 dB; **essential for space links** |
+| Coding gain | 5–10 dB improvement for free (just digital processing); equivalent to a 3–10× power increase |
+| UHF challenges | Low EIRP, Faraday rotation (use circular polarisation), high ground-station noise; FEC mandatory |
+| Band selection | UHF for < 9.6 kbit/s (free, amateur); S-band for < 10 Mbit/s; X-band for < 400 Mbit/s; Ka-band for > 400 Mbit/s |
+| Rain fade | Negligible below 4 GHz; 1–3 dB at X-band; 3–15 dB at Ka-band; add margin or adaptive rate |
+| Ground stations | G/T: amateur −15 dB/K, university +12 dB/K, commercial +25 dB/K; polar stations see every orbit |
+| Data budget | $C_{\text{downlink}} = R \cdot N_{\text{passes}} \cdot t_{\text{contact}} \cdot \eta_{\text{protocol}}$ must exceed daily generation; compression ratio is a key lever |
+| Licensing | Amateur (free, IARU, 3–6 months); S-band ($30–45K, 6–12 months); X-band ($50–80K, 12+ months), indicative 2026 |
+
+---
+
+## Problems
+
+1. **Decibel arithmetic.** Convert the following to the units requested: 4 W to dBW and dBm; −7 dBW to watts; a gain ratio of 2500 to dB; 27 dBm to watts. Then show, using the dB form of the link equation, why doubling the data rate reduces the link margin by exactly 3 dB.
+
+2. **Free-space path loss.** Compute the FSPL for (a) 437 MHz at 1440 km, (b) 2250 MHz at 1695 km and (c) 8.2 GHz at 2330 km, and check (b) against Figure 11.3. Then compute the slant range from a 550 km orbit at 5°, 10° and 30° elevation using the formula of §11.4.1 and state the FSPL penalty, in dB, of designing to a 5° mask instead of 10° at S-band.
+
+3. **Antenna sizing.** A ground station is to use a 1.2 m dish with $\eta_a = 0.6$. Compute its gain and half-power beamwidth at S-band (2.25 GHz) and X-band (8.2 GHz). If the station's tracking error is 0.5° (1σ), compute the pointing loss at each band and comment on whether the dish is usable at X-band without an upgraded pedestal.
+
+4. **X-band link budget.** Repeat the worked example of §11.8.1 for an X-band downlink: 8.2 GHz, 2 W transmitter, 12 dBi patch array on the spacecraft (beamwidth 30°, 3° mispointing), 1695 km slant range, 1.0 dB atmospheric loss, 0.3 dB polarisation loss, 3 m ground dish with $T_{sys} = 200$ K, 8PSK + LDPC r = 3/4 and 2 dB implementation loss. Find the maximum data rate at 3 dB margin and compare it with the S-band result. Is the limit set by power or by the allocated bandwidth?
+
+5. **Minimum transmitter power.** For the UniSat-1 link of §11.8.2 in its final configuration (cross-Yagi, RHCP, rate-1/2 convolutional code), find the lowest transmitter power that still gives a 3 dB margin. Then find the lowest power that closes uncoded at the full 9600 bit/s. State, in one sentence each, what else changes on the spacecraft when the transmitter power is reduced (Chapter 9) and why the uncoded option is riskier than the numbers suggest.
+
+6. **Faraday rotation.** Explain, with reference to the ionospheric total electron content, why a linearly polarised UHF link suffers random polarisation loss while an S-band link does not need the same treatment (the rotation angle scales as $1/f^2$). If UniSat-1's monopole were replaced by a turnstile antenna radiating RHCP, which line of the link budget changes and by how much?
+
+7. **Data budget closure.** A 3U Earth-observation CubeSat generates 1.2 GB/day after compression. Using $C_{\text{downlink}} = R \cdot N_{\text{passes}} \cdot t_{\text{contact}} \cdot \eta_{\text{protocol}}$ with $\eta_{\text{protocol}} = 0.85$ and 6 minutes of usable contact per pass, find the number of 5 Mbit/s S-band passes per day needed to close the budget. If only five passes are available, what minimum data rate is required, and which band of §11.5.1 would you select? Finally, after a three-day ground-station outage, how long does it take to clear the backlog at 5 Mbit/s and seven passes per day?
+
+8. **Band selection.** A commercial start-up proposes a 6U multispectral imager producing 25 GB/day and wants data on the ground within 6 hours of acquisition. Using the band comparison table, the decision tree of §11.5.2 and Figure 11.6, select a band, estimate the licensing cost and lead time (indicative), and identify the two spacecraft subsystems most affected by that choice (Chapters 9 and 10).
+
+9. **Ground-station trade.** Compare two options for the EOSat-3U mission: (a) a university 2.5 m station with $G/T = +12$ dB/K seeing four passes per day, and (b) a commercial polar station with $G/T = +25$ dB/K seeing twelve passes per day at an indicative \$500 per pass. For each, compute the maximum data rate at 3 dB margin (using the §11.8.1 budget with the new $G/T$) and the daily capacity. Which option delivers more data per year, and at what cost per gigabyte?
+
+10. **Coding versus hardware.** Show that replacing an uncoded QPSK link with QPSK + LDPC r = 1/2 at the same *information* rate is equivalent, in link margin, to increasing the transmitter power by a factor of 7, and state the price paid in channel bandwidth. For an S-band link limited to 5 MHz, which scheme in the table of §11.6.3 maximises the information rate while keeping the EOSat-3U margin of §11.8.1 above 3 dB?
+
+---
+
+## References
+
+1. Wertz, J. R., Everett, D. F. & Puschell, J. J. (eds.), *Space Mission Engineering: The New SMAD*, Microcosm Press, 2011, Ch. 13 (Communications). https://www.space.com/smad
+2. ECSS, *ECSS-E-ST-50-05C Rev. 2: Radio Frequency and Modulation*, 2011. https://ecss.nl/standard/ecss-e-st-50-05c-radio-frequency-and-modulation/
+3. CCSDS, *131.0-B-4: TM Synchronization and Channel Coding*, 2023. https://public.ccsds.org/Pubs/131x0b4.pdf
+4. ITU, *Radio Regulations*, 2020 (Articles 5 and 22). https://www.itu.int/en/publications/ITU-R/pages/default.aspx
+5. Maral, G. & Bousquet, M., *Satellite Communications Systems*, 6th ed., Wiley, 2020, Ch. 5. https://www.wiley.com/en-us/Satellite+Communications+Systems
+6. Roddy, D., *Satellite Communications*, 4th ed., McGraw-Hill, 2006, Ch. 4–6. https://www.mhprofessional.com
+7. Haykin, S., *Communication Systems*, 5th ed., Wiley, 2009. https://www.wiley.com
+8. Sklar, B., *Digital Communications: Fundamentals and Applications*, 2nd ed., Prentice Hall, 2001. https://www.pearson.com
+9. IARU, *Amateur Satellite Frequency Coordination*, 2023. https://www.iaru.org/satellite/
+10. Balanis, C. A., *Antenna Theory: Analysis and Design*, 4th ed., Wiley, 2016.
+11. ETSI, *EN 302 307: Digital Video Broadcasting (DVB); Second generation framing structure, channel coding and modulation systems (DVB-S2)*, 2014. https://www.etsi.org
+12. Pratt, T., Bostian, C. & Allnutt, J., *Satellite Communications*, 3rd ed., Wiley, 2019.
+
+
+# Chapter 12 — Structures, Propulsion and On-Board Data Handling
+
+> **Recommended background.** Cal Poly, *CubeSat Design Specification* Rev 14.1; SMAD4 Ch. 11.3 (Structures) and Ch. 17 (Propulsion); ECSS-E-ST-32C (Structural general requirements) and ECSS-E-ST-35C (Propulsion general requirements); Sutton & Biblarz, *Rocket Propulsion Elements*, Ch. 2–4; Sarafin, *Spacecraft Structures and Mechanisms*, Ch. 1–3. This chapter closes the subsystem-design sequence: it uses the deorbit ΔV of Chapter 7 §7.5, the mass budget and margin schedule of Chapter 8 §8.4 (Table 8.3), the power budget of Chapter 9 and the data budget of Chapter 11 §11.9. The Tsiolkovsky equation and the structural margin of safety are derived in Part V §V.3 and V.13.
+
+## Learning objectives
+
+By the end of this chapter, you will be able to:
+
+1. Verify CubeSat Design Specification (CDS) compliance for 1U–12U form factors
+2. Explain the structural load environment (quasi-static, vibration, shock) and its physical origins
+3. Compute the structural margin of safety for quasi-static launch loads
+4. Estimate the fundamental-frequency requirement and verify it against deployer specifications
+5. Apply the Tsiolkovsky rocket equation to compute propellant mass for a given $\Delta V$
+6. Explain the physics of each propulsion technology and select one based on mission requirements
+7. Select an on-board computer architecture based on processing, radiation and interface requirements
+8. Size on-board data storage from the data budget
+9. Assemble an equipment list from the subsystem designs and check that every engineering budget closes
+
+Vendor products named in this chapter are representative examples, not endorsements; prices are indicative (2026).
+
+---
+
+## 12.1 CubeSat structure and CDS compliance
+
+*[Source: Cal Poly CDS Rev 14.1, February 2022; ECSS-E-ST-32C]*
+
+### 12.1.1 CDS dimensional specifications
+
+| Form factor | Dimensions (mm) | Max mass (kg) | Internal volume (cm$^3$) | Typical deployer |
+|------------|-----------------|---------------|------------------------|-----------------|
+| 1U | 100 × 100 × 113.5 | 2.0 | ~1000 | ISIPOD, P-POD |
+| 1.5U | 100 × 100 × 170.2 | 3.0 | ~1500 | ISIPOD |
+| 2U | 100 × 100 × 227.0 | 4.0 | ~2000 | ISIPOD, P-POD |
+| 3U | 100 × 100 × 340.5 | 6.0 | ~3000 | P-POD, ISIPOD, NanoRacks NRCSD |
+| 6U | 100 × 226.3 × 366.0 | 12.0 | ~6000 | 6U deployer (Exolaunch, D-Orbit) |
+| 12U | 226.3 × 226.3 × 366.0 | 24.0 | ~12000 | 12U deployer (Exolaunch) |
+
+Figure 12.1 draws the 3U envelope to scale with the features the deployer interface depends on: the rails, their contact pads, the deployment switches, the remove-before-flight pin access, the protrusion allowance between the rails and the centre-of-gravity limit.
+
+![3U CubeSat envelope per CDS Rev 14 in side and end views, with rails, contact pads, deployment switches, RBF pin access, protrusion envelope and CG box.](../assets/figures/fig_cds_envelope.png)
+
+**Figure 12.1** — The 3U CubeSat envelope of the CubeSat Design Specification Rev 14, drawn to scale (dimensions in mm). Left, side view: the 100 × 100 × 340.5 mm body with its four hard-anodised rails, the rail-end contact pads that bear on the deployer, the two deployment switches on the −Z rail ends, the remove-before-flight pin access and the centre-of-gravity limit of 2 cm about the geometric centre. Right, end view: the 8.5 × 8.5 mm rail cross-sections and the 6.5 mm protrusion envelope permitted on the ±X and ±Y faces between the rails in the stowed configuration.
+
+### 12.1.2 Structural materials
+
+**CubeSat rail material: aluminium 7075-T6**
+
+This is the most commonly specified structural aluminium alloy for CubeSat rails. The CDS mandates hard-anodised aluminium for the rails (the four load-bearing edges that slide along the deployer guide channels).
+
+| Property | Al 7075-T6 | Al 6061-T6 | Ti-6Al-4V | CFRP (quasi-isotropic) |
+|----------|-----------|-----------|-----------|----------------------|
+| Density (kg/m$^3$) | 2810 | 2700 | 4430 | 1600 |
+| Yield strength $\sigma_y$ (MPa) | 503 | 276 | 880 | N/A (use ultimate) |
+| Ultimate strength $\sigma_u$ (MPa) | 572 | 310 | 950 | 500–800 |
+| Young's modulus $E$ (GPa) | 71.7 | 68.9 | 114 | 70–150 (direction-dependent) |
+| CTE (ppm/°C) | 23.6 | 23.1 | 8.6 | 0–2 (tuneable) |
+| Thermal conductivity (W/m/K) | 130 | 167 | 6.7 | 3–10 |
+
+*[Source: MMPDS / ASM Handbook; Hexcel HexPly datasheets]*
+
+**Why Al 7075-T6 for rails:**
+
+- High strength-to-weight ratio (superior to 6061-T6)
+- Hard anodisation provides a durable, low-friction surface finish for deployer guide-channel contact (reduces galling, provides electrical insulation)
+- Good machinability
+- Extensive flight heritage (virtually every CubeSat ever launched)
+- CTE-matched to the Al deployer structure (prevents differential thermal expansion binding)
+
+**Why not other materials for rails:**
+
+- **Titanium:** excellent strength but poor thermal conductivity (thermal hot spots), difficult to machine, risk of galling against the aluminium deployer
+- **CFRP:** cannot be anodised; CTE mismatch with the Al deployer causes binding at temperature extremes; poor electrical conductivity (grounding/bonding issues)
+- **Stainless steel:** too heavy; poor CTE match
+
+**Anodisation physics:** Anodisation is an electrochemical process that grows a hard aluminium oxide ($\text{Al}_2\text{O}_3$) layer on the surface. Hard anodisation (Type III) produces a 25–75 µm thick oxide layer with hardness of 60–70 HRC (harder than most steel). This layer provides wear resistance against deployer contact, electrical insulation (prevents arcing between satellite and deployer), corrosion resistance, and controlled surface optical properties ($\alpha_s \approx 0.3$–$0.5$, $\varepsilon \approx 0.8$–$0.85$ for clear anodise; $\alpha_s \approx 0.9$, $\varepsilon \approx 0.85$ for black anodise — see Chapter 9 §9.4).
+
+### 12.1.3 Key CDS requirements
+
+| Requirement | Specification | Physical rationale |
+|------------|---------------|-------------------|
+| Rail material | Hard-anodised aluminium (7075-T6 or 6061-T6) | Wear resistance, CTE match to deployer, electrical isolation |
+| Rail cross-section | 8.5 × 8.5 mm minimum contact area | Adequate bearing area for launch loads; prevents rail yielding under quasi-static acceleration |
+| Surface finish | All external surfaces anodised or non-outgassing coating | Prevent contamination of other payloads on the launch vehicle (molecular outgassing deposits on optics) |
+| Deployment switches | Minimum 1 on each accessible rail face (+X, −X) | Inhibit all spacecraft activity until fully deployed from the deployer (prevents inadvertent deployment, RF emissions in the fairing) |
+| Remove-before-flight (RBF) pin | Required; physically disables all power systems | Final safety inhibit; removed at the launch pad after integration; ensures zero RF emissions and zero deployment-actuator current until intentional removal |
+| Protrusions | None beyond the rail envelope in stowed configuration | Ensures clean ejection from the deployer; prevents snagging on guide rails or an adjacent CubeSat |
+| Centre of gravity | Within 2 cm of the geometric centre (per deployer ICD) | Prevents wobble during deployment ejection; ensures all CubeSats eject with similar tip-off rates |
+| Fundamental frequency | > 40 Hz first mode (typical deployer requirement) | Prevents dynamic coupling between satellite and launch-vehicle structural modes (which cluster at 10–30 Hz) |
+
+### 12.1.4 PC/104 stack architecture
+
+Most CubeSat avionics use the PC/104-compatible stack architecture, a heritage from the industrial embedded-computing standard adapted for space:
+
+**Physical specifications:**
+
+- **Board size:** 96 × 90 mm (standard) or 90 × 96 mm
+- **Connector:** 104-pin stack-through header (2 × 52 pins, 2.54 mm pitch) — the original PC/104 pinout carries power + I²C + SPI + UART + GPIO
+- **Stack spacing:** typically 10–15 mm between boards (constrained by component height and connector mating height)
+- **Stack capacity:** 1U accommodates ~4 boards; 3U accommodates ~12 boards (340 mm / ~28 mm per board slot)
+
+**What rides on the stack:**
+
+- EPS board (battery management, MPPT, power distribution)
+- OBC board (processor, memory, interfaces)
+- Communications board (UHF radio, or S-band transponder)
+- AOCS board (if integrated — some vendors combine IMU + magnetorquer driver + reaction-wheel interface on one PCB)
+- Payload interface board (ADC, sensor interfaces)
+
+**Mechanical concerns:**
+
+- Solder joints are the weakest point; random vibration causes fatigue cracking at heavy component leads (especially tall electrolytic capacitors, large connectors and crystal oscillators)
+- Board-to-board connectors must be properly preloaded (too loose = intermittent contact; too tight = difficult assembly/disassembly during integration and test)
+- Standoffs and spacers must be correctly torqued; a low-strength threadlocker (e.g. Loctite 222) is standard
+
+### 12.1.5 Launch load environment
+
+The launch environment subjects the satellite to loads from engine thrust, aerodynamic buffeting, stage separation and pyrotechnic events. The satellite must survive all of these without structural failure or functional degradation. The test programme that demonstrates this is described in Chapter 14 §14.3.
+
+| Load type | Physical source | Typical level | Duration | Frequency range | Verification method |
+|-----------|----------------|--------------|----------|----------------|---------------------|
+| **Quasi-static acceleration** | Engine thrust + aero-loading | 6–12 g axial, 2–4 g lateral | Seconds to minutes | 0 (static equivalent) | Analysis + sine vibration test |
+| **Sine vibration** | Low-frequency vehicle dynamics | 0.5–3 g (5–100 Hz) | Minutes | 5–100 Hz | Sine sweep test (3 axes) |
+| **Random vibration** | Acoustic noise + turbulent boundary layer | 5–15 g$_{\text{rms}}$ (20–2000 Hz) | 60–120 s per axis | 20–2000 Hz | Random vibration test (3 axes) |
+| **Shock** | Pyrotechnic separation events (stage separation, fairing separation, deployer spring release) | 500–2000 g at separation (high frequency) | < 10 ms | 100–10 000 Hz | Shock response spectrum (SRS) test |
+| **Acoustic** | Sound pressure from engine exhaust, aerodynamic noise | 120–140 dB (20–10 000 Hz) | Minutes | 20–10 000 Hz | Usually covered by random vibration for CubeSats |
+
+*[Source: ECSS-E-ST-10-03C; NASA GEVS (GSFC-STD-7000B); Falcon 9 Payload User's Guide; PSLV User's Guide]*
+
+**Random vibration PSD profile (typical CubeSat deployer level):**
+
+| Frequency (Hz) | ASD level (g$^2$/Hz) | Notes |
+|----------------|---------------------|-------|
+| 20 | 0.01 | Low-frequency start (ramp up) |
+| 50 | 0.04 | Ramp up at +6 dB/octave |
+| 100 | 0.04 | Flat region start |
+| 800 | 0.04 | Flat region end |
+| 2000 | 0.01 | Roll-off at −6 dB/octave |
+| **Overall** | **~7 g$_{\text{rms}}$** | Typical for CubeSat deployer qualification level |
+
+The flat region at 0.04 g$^2$/Hz from 100–800 Hz is where most structural damage occurs, because this is where PCB resonances and solder-joint fatigue are excited.
+
+**What fails during vibration testing:**
+
+1. **Solder joints:** heavy components (connectors, tall capacitors, transformers) with long lever arms crack at their solder joints. Mitigation: use surface-mount components, stake tall components with adhesive, use conformal coating.
+2. **Deployable mechanisms:** antenna hinges, solar-panel hold-down mechanisms and deployment springs can fail if not properly constrained. Mitigation: adequate preload on hold-down mechanisms, shock testing of release devices.
+3. **Optical components:** lenses and mirrors can shift or crack if not properly mounted with strain relief. Mitigation: RTV potting, flexure mounts.
+4. **Wire harness:** chafing against structure edges. Mitigation: edge radii > 1 mm, harness tie-downs every 50 mm, protective sleeving.
+
+### 12.1.6 Structural margin of safety
+
+This is the book's canonical statement of the margin of safety; Chapter 3 §3.3.3 introduced it as an example of ECSS depth, and Part V §V.13 derives the factor-of-safety logic.
+
+> **Key equations — structural margin of safety**
+>
+> $$\text{MoS} = \frac{\sigma_{\text{allowable}}}{\sigma_{\text{design}} \times \text{FoS}} - 1$$
+>
+> where:
+>
+> - $\sigma_{\text{allowable}}$ = material yield or ultimate strength (MPa)
+> - $\sigma_{\text{design}}$ = computed stress under design loads (MPa)
+> - FoS = factor of safety
+>
+> **Requirement:** MoS ≥ 0 for all load cases.
+>
+> **Factors of safety (ECSS-E-ST-32C / ECSS-E-ST-32-10C):**
+>
+> | Material / joint | Yield FoS | Ultimate FoS | Rationale |
+> |-----------------|----------|-------------|-----------|
+> | Metallic (Al 7075-T6) | 1.25 | 1.5 | Standard structural metals |
+> | Composite (CFRP) | 1.5 | 2.0 | Higher variability in laminate properties |
+> | Bonded joints | 1.5 | 2.0 | Bond strength is highly process-dependent |
+> | Pressurised systems | 1.5 | 2.0 | Burst hazard to other payloads |
+> | Mechanisms (single-use) | — | 2.0 | Must work first time; no test opportunity |
+>
+> **Design loads:** The design load includes the quasi-static acceleration (from the launch-vehicle user guide), multiplied by a dynamic amplification factor ($DAF \approx 1.25$–$1.5$) if the satellite's natural frequency is near any launch-vehicle forcing frequency.
+
+> **Worked example — axial load on a 3U CubeSat rail (SuperDove-class)**
+>
+> **Given:** 3U CubeSat, mass = 5 kg, axial launch load = 9 g (Falcon 9 typical), 4 rails (load shared equally), rail cross-section = 8.5 × 8.5 mm, material = Al 7075-T6 ($\sigma_y = 503$ MPa, $\sigma_u = 572$ MPa).
+>
+> **Step 1 — Design load per rail:**
+> $F = \dfrac{m \times n \times g_0}{4} = \dfrac{5 \times 9 \times 9.80665}{4} = \dfrac{441.3}{4} = 110.3$ N
+>
+> **Step 2 — Compressive stress:**
+> $\sigma = \dfrac{F}{A_{\text{rail}}} = \dfrac{110.3}{8.5 \times 10^{-3} \times 8.5 \times 10^{-3}} = \dfrac{110.3}{7.225 \times 10^{-5}} = 1.53$ MPa
+>
+> **Step 3 — Margin of safety (yield):**
+> $\text{MoS}_y = \dfrac{503}{1.53 \times 1.25} - 1 = \dfrac{503}{1.91} - 1 = 262 \gg 0$ — **Pass** (by a very large margin)
+>
+> **Step 4 — Margin of safety (ultimate):**
+> $\text{MoS}_u = \dfrac{572}{1.53 \times 1.5} - 1 = \dfrac{572}{2.30} - 1 = 248 \gg 0$ — **Pass**
+>
+> **Key insight:** For CubeSats, quasi-static axial stress on the rails is never the critical load case. The rails are massively over-designed for direct compression. The critical structural design drivers are usually:
+>
+> 1. **Stiffness** (fundamental frequency > 40 Hz) — driven by internal board and component mounting, not rail strength
+> 2. **Random-vibration fatigue** on PCB solder joints — the real failure mode
+> 3. **Deployment mechanism reliability** — spring force, latch engagement, alignment tolerances
+> 4. **CG location** — difficult to achieve with asymmetric payloads or propulsion tanks
+
+### 12.1.7 Fundamental frequency
+
+> **Key equations — fundamental frequency (simplified beam model)**
+>
+> For a cantilevered beam (simplified CubeSat model, clamped at the deployer interface):
+> $$f_1 = \frac{1.875^2}{2\pi L^2} \sqrt{\frac{EI}{\rho_L}}$$
+>
+> where $E$ = Young's modulus (Pa), $I$ = second moment of area (m$^4$), $\rho_L = \rho A_{\text{cross}}$ = mass per unit length (kg/m) and $L$ = length (m).
+>
+> **Requirement:** $f_1 > 40$ Hz (from the deployer ICD). Some deployers require $> 90$ Hz (e.g. NanoRacks NRCSD).
+>
+> **For a 3U CubeSat modelled as a cantilevered Al box beam:**
+>
+> - $L = 0.34$ m, $E = 72$ GPa, box wall thickness $t = 1.5$ mm
+> - $I \approx \dfrac{b^4 - (b-2t)^4}{12} = \dfrac{0.10^4 - 0.097^4}{12} = \dfrac{1.000 \times 10^{-4} - 0.885 \times 10^{-4}}{12} \approx 9.6 \times 10^{-7}$ m$^4$
+> - Linear mass: $\rho_L = m/L = 5/0.34 = 14.7$ kg/m
+>
+> $f_1 = \dfrac{3.516}{2\pi \times 0.34^2} \sqrt{\dfrac{72 \times 10^9 \times 9.6 \times 10^{-7}}{14.7}} = \dfrac{3.516}{0.726} \sqrt{4700} = 4.84 \times 68.6 \approx 330$ Hz
+>
+> **This easily exceeds 40 Hz.** The structure itself is very stiff. However, the actual first mode is usually determined by (a) the heaviest internal component on its mounting bracket (e.g. a 350 g star tracker cantilevered on a bracket), or (b) a deployable mechanism in its stowed configuration (e.g. a folded solar panel constrained only by a hold-down pin). **These local modes, not the overall structural mode, are typically the design concern.**
+
+---
+
+## 12.2 Propulsion system design
+
+*[Source: SMAD, Ch. 17; Sutton & Biblarz, Ch. 2–4; Goebel & Katz, *Fundamentals of Electric Propulsion*, 2008]*
+
+### 12.2.1 When propulsion is required
+
+| Need | Typical $\Delta V$ | Example scenario | Timeline |
+|------|-------------------|------------------|----------|
+| **Orbit maintenance** (drag compensation) | 5–15 m/s per year | LEO below 400 km in solar maximum | Continuous low thrust |
+| **Deorbit** (active disposal) | 50–150 m/s | Active disposal from > 600 km (FCC 5-year rule, Chapter 7 §7.3.2) | End of mission |
+| **Collision avoidance** | 1–5 m/s per event | Conjunction avoidance, 2–5 events per year for LEO | On demand, within hours |
+| **Constellation phasing** | 10–50 m/s | Spreading satellites into operational orbit slots | Weeks to months |
+| **Orbit raising** | 50–200 m/s | Transfer from deployment orbit to operational orbit | Weeks to months |
+| **Station-keeping** | 1–10 m/s per year | Maintain orbit altitude and phase | Periodic |
+
+**When no propulsion is needed:**
+
+- **Orbit < 500 km:** natural atmospheric decay provides FCC 5-year deorbit compliance (depends on ballistic coefficient and solar activity; see Chapter 7 §7.3.3)
+- **Low-cost technology demonstration:** limited lifetime acceptable, no orbit maintenance needed
+- **Constellation using differential drag for phasing** (e.g. Planet SuperDove adjusts its cross-section area to create differential drag, enabling free phasing manoeuvres)
+- **Budget-constrained missions** where propulsion cost, risk and mass exceed the benefit
+
+### 12.2.2 The Tsiolkovsky rocket equation — physics
+
+The rocket equation is the fundamental relationship governing all propulsive manoeuvres. It derives from conservation of momentum: the momentum of the exhaust equals the momentum change of the spacecraft. Part V §V.3 gives the derivation; Figure 12.2 plots the result.
+
+> **Key equations — Tsiolkovsky rocket equation**
+>
+> Starting from $F = \dot{m} v_e$ (thrust = mass flow rate × exhaust velocity) and integrating:
+>
+> $$\Delta V = v_e \ln\left(\frac{m_0}{m_f}\right) = I_{sp} \cdot g_0 \cdot \ln\left(\frac{m_0}{m_f}\right)$$
+>
+> Rearranged for propellant mass:
+> $$m_{\text{propellant}} = m_{\text{dry}} \times \left(e^{\Delta V / (I_{sp} \cdot g_0)} - 1\right)$$
+>
+> where:
+>
+> - $v_e = I_{sp} \times g_0$ = effective exhaust velocity (m/s)
+> - $I_{sp}$ = specific impulse (s) — the "fuel efficiency" of the thruster. Physically: how many seconds a thruster can produce 1 N of thrust from 1 kg of propellant under standard gravity. Higher $I_{sp}$ = less propellant needed.
+> - $g_0 = 9.80665$ m/s$^2$ — standard gravitational acceleration (conversion factor)
+> - $m_0$ = initial (wet) mass (kg) = $m_f + m_{\text{propellant}}$
+> - $m_f$ = final (dry) mass (kg) = spacecraft mass after all propellant is consumed
+>
+> **The tyranny of the rocket equation:** The propellant mass grows exponentially with $\Delta V / v_e$. For $\Delta V = v_e$ (one exhaust velocity's worth of $\Delta V$), 63 % of the initial mass must be propellant. For $\Delta V = 2 v_e$, 86 % must be propellant. This is why high-$I_{sp}$ systems are so valuable for large-$\Delta V$ missions — they increase the $v_e$ in the denominator, dramatically reducing the mass ratio.
+
+![Tsiolkovsky — Δv vs mass ratio for selected Isp.](../assets/figures/fig_tsiolkovsky.png)
+
+**Figure 12.2** — The Tsiolkovsky relation: achievable $\Delta V$ against mass ratio $m_0/m_f$ for representative specific impulses from cold gas to electric propulsion. For the ~100 m/s of a CubeSat deorbit burn the curves are nearly linear and the mass ratio is close to 1; for the kilometres per second of an orbit transfer the exponential takes over.
+
+### 12.2.3 CubeSat propulsion technologies — physics and comparison
+
+Figure 12.3 places the five technology families compared in this section on a map of specific impulse against thrust: chemical systems sit at the bottom right (high thrust, low $I_{sp}$), electric systems at the top left (high $I_{sp}$, very low thrust), and the power each needs while firing decides which of them a CubeSat bus can actually feed.
+
+![Log–log map of specific impulse versus thrust with labelled regions for cold gas, warm gas, green monopropellant, electrospray and Hall-effect thrusters and the three worked-example design points.](../assets/figures/fig_propulsion_map.png)
+
+**Figure 12.3** — Specific impulse versus thrust for CubeSat propulsion options. Each shaded region spans the $I_{sp}$ and thrust ranges of the §12.2.5 comparison table and is labelled with its power during firing; electrospray thrusters fit the 20–60 W a CubeSat can supply, whereas Hall-effect thrusters generally need more. The stars are the three §12.2.5 worked-example design points for a 112 m/s deorbit of a 5 kg spacecraft, at the $I_{sp}$ used in the example and a thrust representative of the products named in this section, annotated with the propellant mass each requires.
+
+#### Cold gas propulsion
+
+**Physics:** Compressed gas (N$_2$, xenon, R-236fa refrigerant or other) is stored in a tank at 1–30 MPa. When a valve opens, the gas expands through a nozzle, converting thermal/pressure energy to kinetic energy. No combustion, no heating, no chemical reaction.
+
+**Thrust:** $F = \dot{m} v_e + (p_e - p_a) A_e$. For a small converging nozzle, $v_e \approx \sqrt{2 c_p T_0}$ where $T_0$ is the tank temperature. For N$_2$ at 300 K: $v_e \approx 500$–$750$ m/s, giving $I_{sp} \approx 50$–$75$ s.
+
+**Advantages:** simplest system (no ignition, no power except the valve solenoid), fast response (millisecond valve opening), high reliability, no plume-contamination concerns.
+
+**Disadvantages:** low $I_{sp}$ (large propellant mass for a given $\Delta V$), bulky high-pressure tank, limited total impulse.
+
+**Products (representative):** VACCO MiPS (R-236fa, $I_{sp} = 40$ s, 4 thrusters, 0.3 kg dry), VACCO ArgoMoon (Xe cold gas), Bradford ECAPS cold gas.
+
+**Missions using cold gas:** MarCO (6U, JPL — used R-236fa cold gas for trajectory correction and attitude control en route to Mars), many ISS-deployed CubeSats for collision avoidance.
+
+#### Resistojet / warm gas
+
+**Physics:** Similar to cold gas, but the propellant is electrically heated before expansion through the nozzle. Heating increases the gas temperature $T_0$, which increases the exhaust velocity ($v_e \propto \sqrt{T_0}$). Common propellants: butane (C$_4$H$_{10}$), water (H$_2$O), ammonia (NH$_3$).
+
+**Butane propulsion:** Butane is stored as a liquid at its saturation pressure (~2 atm at 20 °C). When heated to 200–400 °C and expanded through a nozzle, it achieves $I_{sp} \approx 80$–$100$ s. The liquid storage is much denser than compressed gas, allowing more propellant in a smaller tank.
+
+**Advantages:** higher $I_{sp}$ than cold gas (~2×), dense liquid storage, moderate complexity.
+
+**Disadvantages:** requires electrical power for heating (5–15 W during firing), lower thrust than cold gas, potential for nozzle clogging if the propellant decomposes.
+
+**Products (representative):** Busek BGT-X5 (butane, $I_{sp} = 80$ s), NanoAvionics EPSS (butane, $I_{sp} = 85$ s), Pale Blue water resistojet ($I_{sp} = 70$–$80$ s).
+
+#### Green monopropellant
+
+**Physics:** A liquid propellant is injected into a catalyst bed where it decomposes exothermically, producing hot gases that expand through a nozzle. "Green" propellants are alternatives to hydrazine (N$_2$H$_4$) that are less toxic and easier to handle.
+
+| Propellant | Chemical | $I_{sp}$ (s) | Density (kg/m$^3$) | Toxicity | TRL | Heritage |
+|-----------|----------|-------------|-------------------|---------|-----|---------|
+| **Hydrazine** (N$_2$H$_4$) | Monopropellant, Shell 405 catalyst | 220–230 | 1010 | **Extremely toxic** (carcinogen) | 9 | 50+ years, thousands of missions |
+| **AF-M315E (ASCENT)** | HAN-based ionic liquid | 235–250 | 1460 | Low toxicity | 8 | GPIM demonstration (2019, NASA) |
+| **LMP-103S** | ADN-based ionic liquid | 225–235 | 1240 | Low toxicity | 8 | PRISMA demonstration (2010, SSC), SkySat |
+| **HTP (H$_2$O$_2$ 90 %)** | Hydrogen peroxide + silver catalyst | 150–165 | 1400 | Moderate (oxidiser) | 7 | Various small satellites |
+
+*[Source: Masse et al., "GPIM AF-M315E Propulsion System", AIAA 2019; Anflo et al., "Flight Demonstration of LMP-103S", AIAA 2011]*
+
+**Advantages:** high thrust (0.1–1 N for CubeSat systems), good $I_{sp}$ (220+ s), proven technology (heritage from hydrazine systems).
+
+**Disadvantages:** requires catalyst preheating (2–10 W, 10–30 min warm-up), higher system mass (tank + catalyst bed + valves + feed system), propellant-handling safety requirements (even "green" propellants require protective equipment), higher cost ($100K+ for flight units, indicative).
+
+**Products (representative):** Aerojet MPS-130 (AF-M315E, 1 N thrust, $I_{sp} = 235$ s, 3 kg system mass), Bradford HPGP (LMP-103S, 1 N, $I_{sp} = 230$ s).
+
+#### Electric propulsion — electrospray (FEEP)
+
+**Physics:** Field-emission electric propulsion (FEEP) uses a strong electric field (~$10^9$ V/m) at the tip of a needle or along the edge of a slit to ionise and extract metal atoms (typically indium or gallium) or ionic-liquid droplets. The ions are accelerated by an electric field to high velocities (10–50 km/s), producing very high $I_{sp}$.
+
+**How it works (indium FEEP):**
+
+1. Solid indium is heated to just above its melting point (157 °C) to form a liquid reservoir
+2. Capillary action draws liquid indium to an array of sharp emitter tips
+3. A high voltage (1–10 kV) between the emitter tips and an extractor grid creates an intense electric field at the tip apex
+4. The field ionises individual indium atoms via field evaporation
+5. The ions are accelerated through the extractor grid, creating a beam of In$^+$ ions at 20–40 km/s
+6. A neutraliser (typically a carbon-nanotube or thermionic emitter) emits electrons to neutralise the beam and prevent spacecraft charging
+
+**Performance:** $I_{sp} = 500$–$5000$ s (adjustable by varying the acceleration voltage), thrust = 0.01–1 mN, power = 20–60 W.
+
+**Advantages:** extremely high $I_{sp}$ (minimal propellant consumption), no pressurised tanks, compact solid-propellant storage, precise thrust control (useful for formation flying).
+
+**Disadvantages:** very low thrust (months-long burn times for significant $\Delta V$), requires significant power (20–60 W for ~0.5 mN thrust), plume contamination from metal ions (indium deposition on surfaces), limited heritage.
+
+**Products (representative):** Enpulsion NANO R3 (indium FEEP, 0.35 mN, $I_{sp} = 1000$–$5000$ s, 0.9 kg dry mass, < 40 W), Accion TILE (ionic-liquid electrospray, 0.1 mN, $I_{sp} = 1500$ s).
+
+**Missions using FEEP/electrospray:** LISA Pathfinder (ESA, precision formation flying, used colloid thrusters), SSTL NovaSAR-1 (Enpulsion NANO for orbit maintenance).
+
+#### Electric propulsion — Hall-effect thruster
+
+**Physics:** A Hall-effect thruster uses crossed electric and magnetic fields to ionise a neutral propellant gas (xenon, krypton or iodine) and accelerate the resulting ions to high velocity.
+
+**How it works:**
+
+1. Neutral propellant gas (Xe or I$_2$) is injected into an annular discharge channel
+2. A radial magnetic field (from permanent magnets or electromagnets) traps electrons in a Hall-current loop, preventing them from reaching the anode
+3. The trapped electrons collide with neutral gas atoms, ionising them
+4. The ions, being much heavier, are not significantly deflected by the magnetic field and are accelerated axially by the electric field (100–500 V) between anode and cathode
+5. An external cathode (hollow cathode or RF cathode) provides electrons for beam neutralisation and to sustain the discharge
+
+**Performance:** $I_{sp} = 800$–$3000$ s, thrust = 1–50 mN for CubeSat-scale systems, power = 50–300 W.
+
+**Advantages:** higher thrust than FEEP (newton range for larger systems), excellent $I_{sp}$, well-proven technology (GEO station-keeping heritage: Aerojet PPS-1350, Busek BHT-200).
+
+**Disadvantages:** requires significant power (> 50 W for CubeSat scale), heavy cathode assembly, xenon storage requires high-pressure tanks (100–300 bar), channel erosion limits lifetime.
+
+**Products (representative):** Exotrail ExoMG-nano (40 mN, $I_{sp} = 800$ s, 1.5 kg, 60 W), Busek BHT-200 (13 mN, $I_{sp} = 1370$ s, 1.0 kg, 200 W), Enpulsion MICRO (Hall thruster, iodine propellant, 1 mN, $I_{sp} = 1000$ s).
+
+**Iodine propulsion:** Iodine (I$_2$) is emerging as an alternative to xenon for Hall thrusters and gridded ion engines. Iodine is solid at room temperature (stored without a pressure vessel), has a density of 4940 kg/m$^3$ (vs xenon at ~1600 kg/m$^3$ at 100 bar), and has a similar atomic mass (127 vs 131). The Busek BIT-3 (iodine Hall thruster) and ThrustMe NPT30-I2 have demonstrated iodine propulsion in orbit.
+
+### 12.2.4 No propulsion — passive deorbit strategies
+
+For missions below ~500 km where propulsion is not needed for operations, passive deorbit can satisfy the FCC 5-year or IADC 25-year guidelines:
+
+| Method | Mechanism | Mass | Volume | Effectiveness | TRL |
+|--------|-----------|------|--------|--------------|-----|
+| **Atmospheric drag (natural)** | Below 500 km, atmospheric drag naturally decays the orbit | 0 | 0 | Depends on ballistic coefficient and solar cycle | 9 |
+| **Drag sail** | Deployable membrane increases cross-section area by 10–100× | 0.1–0.5 kg | 0.25–1U | Very effective above 600 km | 7–8 |
+| **Electrodynamic tether** | Conducting tether interacts with the geomagnetic field to decelerate | 0.2–0.5 kg | 0.5U | Moderate effectiveness; depends on orbital inclination | 6–7 |
+
+*[Source: Cranfield Icarus drag sail, 0.1 kg; NanoSail-D2, NASA; InflateSail, SSC]*
+
+### 12.2.5 Propulsion system comparison
+
+| Parameter | Cold gas (N$_2$) | Warm gas (butane) | Green monoprop (AF-M315E) | Electrospray (FEEP) | Hall effect (Xe) |
+|-----------|-----------------|------------------|--------------------------|--------------------|--------------------|
+| $I_{sp}$ (s) | 40–75 | 80–100 | 230–250 | 500–5000 | 800–3000 |
+| Thrust | 10–100 mN | 5–50 mN | 0.1–1 N | 0.01–1 mN | 1–50 mN |
+| Propellant mass (100 m/s, 5 kg dry spacecraft, at the $I_{sp}$ shown) | 0.93 kg (60 s) | 0.60 kg (90 s) | 0.22 kg (235 s) | 0.042 kg | 0.055 kg |
+| System dry mass | 0.3 kg | 0.5 kg | 3.0 kg | 0.9 kg | 1.5 kg |
+| **Total system mass** | **1.23 kg** | **1.10 kg** | **3.22 kg** | **0.94 kg** | **1.55 kg** |
+| Burn time (100 m/s) | Minutes | Minutes | Seconds | **Months** | Days–weeks |
+| Power during firing | < 1 W (valve) | 5–15 W | 2–10 W (preheat) | 20–60 W | 50–300 W |
+| Complexity | Low | Low–medium | High | Medium | High |
+| Cost (indicative, 2026) | ~15 kEUR | ~30 kEUR | ~120 kEUR | ~50 kEUR | ~80 kEUR |
+| TRL | 9 | 7–8 | 7–8 | 7–8 | 6–8 (CubeSat) |
+
+> **Worked example — propellant mass comparison for a propulsive deorbit (what-if)**
+>
+> EOSat-3U itself carries no propulsion: at 500 km it relies on natural decay, and Chapter 7 §7.3.3 shows that its orbital lifetime (≈ 5 yr) meets the disposal rule without a burn, so Chapter 18 defines no Manoeuvre mode for it. The question this example answers is therefore hypothetical — *if* a propulsive deorbit were required for a 3U at 600 km, what would it cost in mass?
+>
+> **Scenario:** 3U CubeSat, $m_{\text{dry}} = 5.0$ kg, deorbit from 600 km to a 200 km perigee ($\Delta V = 112$ m/s, Chapter 7 §7.5).
+>
+> **Cold gas** ($I_{sp} = 60$ s, $v_e = 588$ m/s):
+> $m_{\text{prop}} = 5.0 \times (e^{112/588} - 1) = 5.0 \times (e^{0.190} - 1) = 5.0 \times 0.210 =$ **1.05 kg**
+>
+> Total system: 1.05 + 0.3 = 1.35 kg = **23 % of the 6 kg CubeSat mass limit**
+>
+> **Green monopropellant** ($I_{sp} = 235$ s, $v_e = 2305$ m/s):
+> $m_{\text{prop}} = 5.0 \times (e^{112/2305} - 1) = 5.0 \times (e^{0.0486} - 1) = 5.0 \times 0.0498 =$ **0.249 kg**
+>
+> Total system: 0.249 + 3.0 = 3.25 kg = **54 % of mass limit** (the system is heavy even though the propellant is light)
+>
+> **Electrospray (FEEP)** ($I_{sp} = 1200$ s, $v_e = 11\,768$ m/s):
+> $m_{\text{prop}} = 5.0 \times (e^{112/11768} - 1) = 5.0 \times (e^{0.00952} - 1) = 5.0 \times 0.00956 =$ **0.048 kg**
+>
+> Total system: 0.048 + 0.9 = 0.95 kg = **16 % of mass limit** (lightest total, but takes months to execute)
+>
+> **Trade-off summary:** The electrospray system is the lightest overall because the high $I_{sp}$ minimises propellant mass and the dry mass is moderate. Cold gas uses the most propellant but has the lowest dry mass. Green monopropellant is dominated by its heavy feed system. **The optimal choice depends on the mission timeline:** if deorbit must happen quickly (days), cold gas or monopropellant; if months are acceptable, electric propulsion wins on mass.
+
+---
+
+## 12.3 On-board data handling
+
+### 12.3.1 OBC architecture — processor selection
+
+The on-board computer (OBC) is the spacecraft's brain, managing all data handling, commanding, telemetry generation and FDIR (fault detection, isolation and recovery — Chapter 18). Processor selection involves a fundamental trade between radiation tolerance, processing power, power consumption and cost.
+
+**Flight-heritage processors** (representative examples):
+
+| Processor | Architecture | Clock (MHz) | RAM | Radiation tolerance | Power (W) | TRL (space) | Cost (indicative, 2026) | Typical use |
+|-----------|-------------|-------------|-----|---------------|-----------|------------|------|------------|
+| **TI MSP430** | 16-bit RISC | 16–25 | 2–10 kB | Moderate (COTS, tested to 30 krad) | 0.005–0.01 | 9 | < 10 EUR | Ultra-low-power housekeeping, safe-mode OBC |
+| **ARM Cortex-M4** (STM32F4) | 32-bit ARM | 168 | 192 kB + ext | Low–moderate (COTS, 10–30 krad) | 0.05–0.20 | 8–9 | 10–20 EUR | **Standard CubeSat OBC**, TM/TC handling, ADCS control loop |
+| **ARM Cortex-M7** (STM32H7) | 32-bit ARM | 400–480 | 1 MB + ext | Low–moderate (COTS, 10–20 krad) | 0.1–0.5 | 7–8 | 15–30 EUR | Higher-performance CubeSat OBC, on-board image processing |
+| **ARM Cortex-A** (Linux-capable, e.g. NXP i.MX6) | 32/64-bit ARM | 500–1200 | 256 MB–1 GB DDR | Low (COTS, < 10 krad) | 1–3 | 6–7 | 20–50 EUR | Payload processing, AI/ML inference, Linux OS |
+| **Xilinx Zynq** (SoC: ARM + FPGA) | ARM Cortex-A9 + Artix-7 FPGA | 667 + programmable | 512 MB + FPGA fabric | Moderate (Zynq-7000) to high (Kintex rad-hard) | 2–5 | 7–8 | 100–500 EUR | High-throughput data processing, software-defined radio, image compression |
+| **LEON3/4** (rad-hard SPARC) | 32-bit SPARC | 50–250 | External | High (100–300 krad, SEL immune) | 1–3 | 9 | 10K–50K EUR | ESA heritage missions, GEO, deep space |
+| **RAD750** (BAE Systems) | 32-bit PowerPC | 200 | 128 MB | Very high (1 Mrad, SEL immune) | 5–10 | 9 | 200K+ EUR | NASA flagship missions (MRO, Curiosity, JWST) |
+
+*[Source: STMicroelectronics STM32 datasheets; Xilinx Zynq-7000 datasheet; Cobham Gaisler LEON3 datasheet]*
+
+### 12.3.2 Operating system and radiation effects
+
+**RTOS vs bare-metal vs Linux:**
+
+| Approach | OS | Pros | Cons | When to use |
+|----------|-----|------|------|------------|
+| **Bare-metal** | None (custom event loop) | Minimum overhead, deterministic timing, smallest code size | Hard to maintain, no task isolation, no file system | Ultra-simple 1U missions (MSP430) |
+| **RTOS** (FreeRTOS, ChibiOS, Zephyr) | Real-time OS | Deterministic scheduling, task isolation, mature ecosystem, small footprint (10–50 kB) | More complex than bare-metal; requires task-priority design | **Standard for CubeSat C&DH**: ADCS loop, TM/TC, mode management |
+| **Linux** (Yocto, Buildroot) | Full OS | Rich ecosystem (Python, networking, file system, device drivers), easy development | Non-deterministic (not suitable for hard real time), large footprint (50+ MB), power-hungry processor | Payload data processing, AI/ML, on-board image analysis |
+
+**Radiation effects on processors:** The space radiation environment (Chapter 7 §7.6) causes two categories of effects:
+
+1. **Total ionising dose (TID):** accumulated radiation damage from trapped protons/electrons and solar particles. Measured in rad(Si) or gray. Causes threshold-voltage shifts in CMOS transistors, increasing leakage current and eventually causing functional failure.
+    - LEO (500 km, 51.6°): ~1–5 krad/year behind 2 mm Al shielding
+    - LEO polar/SSO (800 km): ~5–10 krad/year
+    - MEO (through the proton belt): ~50–100 krad/year
+    - GEO: ~10–30 krad/year
+
+2. **Single-event effects (SEE):** a single energetic particle (proton or heavy ion) deposits enough charge in a transistor to flip a bit (SEU — single-event upset), latch a transistor (SEL — single-event latch-up, potentially destructive), or burn out a power device (SEB — single-event burnout).
+    - **SEU rate in LEO:** ~1–10 bit flips per day per GB of SRAM (highly variable with orbit and shielding)
+    - **SEL mitigation:** current-limiting resistors on power lines, latch-up detection circuits, watchdog resets
+    - **SEU mitigation:** error detection and correction (EDAC) on memory (Hamming codes, TMR — triple modular redundancy)
+
+**CubeSat approach to radiation:** Most CubeSats in LEO (< 600 km, < 3-year mission) use COTS processors with EDAC on memory and a watchdog timer. Total dose over a 3-year LEO mission is typically 3–15 krad, which most COTS ARM Cortex-M processors survive (tested and characterised, even if not guaranteed). For longer missions, higher orbits or critical applications, rad-tolerant or rad-hard processors are needed.
+
+### 12.3.3 Data storage sizing
+
+> **Key equations — data storage**
+>
+> $$S_{\text{required}} = V_{\text{daily}} \times N_{\text{days}} \times f_{\text{safety}}$$
+>
+> where $V_{\text{daily}}$ = daily data generation (from the data budget, Chapter 11 §11.9), $N_{\text{days}}$ = days between full downlinks (typically 1–3 for LEO), $f_{\text{safety}} = 2$ (to handle missed passes, ground-station outages and safe-mode periods).
+>
+> **Storage technologies:**
+>
+> | Technology | Capacity | Write speed | Radiation tolerance | Power | CubeSat use |
+> |-----------|----------|------------|---------------------|-------|------------|
+> | NOR flash | 4–256 MB | 1–5 MB/s | Moderate (10–50 krad) | Low | Code storage, boot ROM, critical parameters |
+> | NAND flash (SLC) | 1–128 GB | 10–50 MB/s | Low–moderate (5–20 krad) | Low | **Primary data storage** |
+> | NAND flash (MLC/TLC) | 32–512 GB | 50–200 MB/s | Low (< 10 krad) | Low | Maximum capacity (use EDAC and scrubbing) |
+> | SD card (industrial) | 4–128 GB | 10–50 MB/s | Low (< 5 krad) | Very low | Budget missions (risk: wear levelling + radiation = data loss) |
+> | MRAM | 1–64 MB | 10–50 MB/s | High (> 100 krad) | Very low | Critical parameters, non-volatile log |
+
+> **Worked example — storage for the 3U EO CubeSat**
+>
+> **Given:** daily generation = 720 MB and daily downlink capacity = 956 MB (Chapter 11 §11.9). The capacity exceeds generation, so in nominal operations the store empties every day; the storage must instead cover the *abnormal* case of several days without a successful downlink. Take $N_{\text{days}} = 3$ (a long weekend of ground-station outage, or a safe-mode period) and $f_{\text{safety}} = 2$:
+>
+> $S_{\text{required}} = 720 \times 3 \times 2 = 4320$ MB $\approx$ **4.3 GB**
+>
+> **Specify:** ≥ 8 GB NAND flash storage (the next standard size). The OBC selected in §12.5 includes 4 GB of NAND flash; adding an 8 GB SD card or an additional NAND chip provides adequate capacity. After a three-day outage the 2.2 GB backlog clears in $2160/(956 - 720) \approx 9$ days at the nominal downlink rate (Chapter 11 §11.9), which is why a safe-mode return procedure usually includes extra downlink passes.
+>
+> For a high-resolution imager generating 4.5 GB/day, the storage requirement is $4500 \times 3 \times 2 = 27$ GB. Specify ≥ 32 GB flash storage.
+
+### 12.3.4 Flight software functions
+
+| Function | Description | Typical execution rate | Criticality |
+|----------|------------|----------------------|-------------|
+| **Mode management** | Transition between Safe, Idle, Imaging, Downlink and Eclipse modes based on a state machine (Chapter 18) | Event-driven | **Critical** (incorrect transition = mission loss) |
+| **ADCS control loop** | Read sensors (star tracker, gyro, magnetometer), compute attitude estimate (Kalman filter), command actuators (PID controller) | 1–10 Hz | **Critical** (loss of pointing = loss of mission) |
+| **TM/TC handling** | Generate CCSDS telemetry packets, parse and execute telecommands | 1 Hz (TM), event-driven (TC) | **Critical** (loss of communication = loss of mission) |
+| **Data handling** | Payload data acquisition, compression (JPEG2000, CCSDS 122.0), buffering, downlink queue management | On demand | Important |
+| **FDIR** | Fault detection, isolation and recovery: watchdog timer, over-current protection, sensor consistency checks, autonomous safe-mode trigger | 1–10 Hz | **Critical** (must detect and recover from faults autonomously) |
+| **Housekeeping** | Monitor temperatures, voltages, currents, wheel speeds; log to non-volatile memory | 0.1–1 Hz | Important |
+| **Scheduling** | Time-tagged command execution: autonomous imaging over target, downlink preparation before ground pass, desaturation scheduling | 1 Hz | Important |
+| **Thermal control** | Read temperature sensors, control heaters (on/off thermostat or PID) | 0.1 Hz | Moderate (for heater-equipped missions) |
+
+---
+
+## 12.4 From sizing to equipment: selecting components
+
+The subsystem chapters (9–12) produce *sizes* — a solar-array area, a battery energy, a wheel momentum, a transmitter power, a storage capacity. The next step is to turn each size into a piece of hardware. Chapter 13 treats equipment selection and the bill of materials in full (make/buy/reuse, TRL, export control); this section gives the checks that belong with the sizing itself, because the moment real components replace parametric estimates is the moment the budgets change.
+
+**For each required category, select a component and verify:**
+
+- Does it fit within the subsystem mass allocation of Chapter 8 §8.4?
+- Is its power draw within the power budget for the operational modes in which it is on (Chapter 8 Table 8.4)?
+- Is the interface compatible (PC/104, I²C, SPI, CAN, RS-422 — Chapter 8 §8.3)?
+- Is the RF chain consistent (transponder band = antenna band = ground-station band — Chapter 11)?
+- Is the component qualified for the launch vibration environment of §12.1.5?
+- Does the quantity make sense (e.g. 4 reaction wheels, 3 magnetorquers — Chapter 10)?
+
+**Component trade study.** For contested selections — two or three credible candidates — run the formal tabular trade of Chapter 4 §4.5: define the criteria (mass, power, cost, TRL, heritage, performance), score each candidate on a 1–5 scale, apply weights, compute weighted scores and document the winner and the rationale.
+
+**Real mission example — Iridium NEXT equipment selection.** Iridium NEXT (Thales Alenia Space, 2017–2019) serves as a large-scale example of rigorous equipment selection. For the phased-array antenna:
+
+| Criterion | Weight | Candidate A (Thales) | Candidate B (Raytheon) |
+|-----------|--------|---------------------|----------------------|
+| Performance | 0.30 | 4.5 | 4.0 |
+| Mass | 0.20 | 3.5 | 4.0 |
+| Cost | 0.20 | 3.0 | 4.5 |
+| TRL | 0.15 | 5.0 | 4.0 |
+| Schedule | 0.15 | 4.0 | 3.5 |
+| **Weighted** | | **3.95** | **4.00** |
+
+The selection was ultimately Candidate A (Thales) because of contractual considerations beyond the numerical trade — illustrating that trade studies inform but do not dictate decisions.
+
+---
+
+## 12.5 Budget closure check
+
+Once every subsystem has real components, the engineering budgets of Chapter 8 are re-computed from the equipment list rather than from parametric estimates, and each one is checked against its limit. This is the natural end-point of the subsystem-design sequence and the entry condition for the integration and verification chapters that follow: a design in which any budget is negative is not ready to be verified.
+
+### 12.5.1 Method
+
+1. **Re-total every budget from the equipment list:** mass (with the two-level margin schedule of Chapter 8 Table 8.3), power per operational mode, link margin, data budget, pointing budget, structural margins and cost.
+2. **Compare parametric estimates with equipment-based totals** and record the difference; a change of more than about 10 % in any subsystem is a signal that the parametric model, the equipment choice or both need a second look.
+3. **Classify each budget** as green (margin comfortably above the phase requirement), amber (positive but below it) or red (negative).
+4. **Resolve every red before proceeding,** and carry every amber into the risk register (Chapter 15) with an owner and a mitigation.
+
+### 12.5.2 Worked example — EOSat-3U equipment list
+
+> Mass, power and cost columns are **line totals** (unit value × quantity); the unit value is given in the component description where it differs.
+>
+> | Category | Component (representative) | Qty | Mass (kg) | Power (W) | Cost (kEUR, indicative) | Interface |
+> |----------|-----------|-----|----------|----------|-------------|-----------|
+> | EPS board | GomSpace P31u (MPPT, 3.3 V/5 V/battery rails) | 1 | 0.10 | 0.5 | 8 | I²C |
+> | Battery | GomSpace BP4 (2S2P, 38 Wh, Li-ion 18650) | 1 | 0.20 | — | 5 | I²C (telemetry) |
+> | Solar panels | MMA HaWK deployable, 2 × (0.225 kg, ~12 W BOL, 12.5 kEUR) | 2 | 0.45 | — | 25 | Direct to EPS |
+> | OBC | GomSpace A3200 (ARM Cortex-A, Linux, 4 GB NAND) | 1 | 0.08 | 1.0 | 12 | I²C, SPI, UART |
+> | Reaction wheels | Blue Canyon RW210, 4 × (0.055 kg, 0.6 W, 8 kEUR; 1 mN m, 10 mN m s) | 4 | 0.22 | 2.4 | 32 | SPI |
+> | Magnetorquers | CubeSpace CubeMAG, 3 × (0.03 kg, 0.1 W, 3 kEUR; 0.2 A m$^2$) | 3 | 0.09 | 0.3 | 9 | I²C |
+> | Star tracker | Blue Canyon NST (10 arcsec accuracy, 2 Hz update) | 1 | 0.35 | 1.5 | 35 | SPI/UART |
+> | Sun sensors | NewSpace NFSS-411, 6 × (5 g, 0.01 W, 1 kEUR; 0.5°) | 6 | 0.03 | 0.06 | 6 | Analogue/I²C |
+> | Transponder | Endurosat S-band TX/RX (2 W RF, QPSK + LDPC, 1–5 Mbit/s) | 1 | 0.10 | 6.0 (TX) | 15 | SPI |
+> | Antenna | Endurosat S-band patch (6 dBi, RHCP) | 1 | 0.02 | — | 3 | RF coax |
+> | Payload | Custom telescope (multispectral, 5 m GSD) | 1 | 1.50 | 5.0 | 150 | LVDS/SPI |
+> | Structure | ISIS 3U frame (Al 7075-T6, hard anodised) | 1 | 0.30 | — | 8 | Mechanical |
+> | Harness | Custom cables, connectors, PC/104 stack | 1 | 0.15 | — | 5 | Various |
+> | **TOTAL** | | | **3.59** | **≈ 10.3 (imaging: payload + OBC + star tracker + wheels + EPS + magnetorquers + sun sensors)** | **313** | |
+>
+> **Parametric estimate from Chapter 8:** 3.68 kg CBE. **Equipment total:** 3.59 kg. Difference: −2 % (within the expected accuracy of parametric models).
+>
+> **Mass budget** (Phase A schedule of Chapter 8 Table 8.3, with a uniform 20 % equipment-maturity margin for simplicity):
+>
+> - CBE: 3.59 kg
+> - + 20 % equipment margin: 4.31 kg
+> - + 20 % system margin: 5.17 kg (MEV)
+> - CDS limit: 6.0 kg
+> - **Margin to limit: 0.83 kg (14 %)** — amber: acceptable for Phase A but tight for Phase B and beyond.
+
+### 12.5.3 Worked example — EOSat-3U closure table
+
+| Budget | Limit / requirement | Equipment-based value | Margin | Status | Source |
+|--------|--------------------|----------------------|--------|--------|--------|
+| Mass | 6.0 kg (CDS 3U) | MEV 5.17 kg (CBE 3.59 kg) | 0.83 kg (14 %) | Amber | §12.5.2, Table 8.3 |
+| Power — array | 16.0 W BOL required | ~24 W BOL (two deployable panels) | ~8 W (50 %) | Green | Chapter 9 §9.2 |
+| Power — imaging mode | 8.0 W allocation | ≈ 10.3 W from equipment list (payload 5.0, star tracker 1.5, 4 wheels 2.4, OBC 1.0, EPS 0.5, magnetorquers 0.3, sun sensors 0.06) | −2.3 W | **Red** | Chapter 8 Table 8.4 |
+| Battery | ≥ 11 Wh specified | 38 Wh (2S2P) | 27 Wh | Green | Chapter 9 §9.3 |
+| Link margin | ≥ 3 dB at 10° elevation | 10.4 dB at 5 Mbit/s | 7.4 dB | Green | Chapter 11 §11.8.1 |
+| Data budget | 720 MB/day generated | 956 MB/day capacity | 33 % | Green | Chapter 11 §11.9 |
+| Pointing | 0.1° (3σ) | 0.023° RSS | 77 % | Green | Chapter 10 §10.4 |
+| Structural | $f_1 > 40$ Hz; MoS ≥ 0 | ≈ 330 Hz global mode; MoS ≫ 0 | Large | Green (local modes to be verified by test) | §12.1.6–§12.1.7 |
+| Hardware cost | 320 kEUR ceiling (assumed for the example) | 313 kEUR | 7 kEUR (2 %) | **Red** (below the 10 % Phase A cost reserve) | §12.5.2 |
+
+The 313 kEUR hardware line is driven by the custom 150 kEUR telescope of the §12.5.2 list; the cost chapter's canonical EOSat-3U estimate (Chapter 16 §16.1.6), which assumes a COTS imager, puts hardware alone at ≈ 161–178 kEUR within a ≈ 457–490 kEUR mission total. The two are different payload choices, not an arithmetic disagreement, and the comparison in Chapter 13 §13.6 uses the Chapter 16 figures.
+
+Two red entries are instructive. The cost line shows the custom telescope consuming almost the whole ceiling with only 2 % to spare — well below the 10 % reserve a Phase A estimate should carry (Chapter 16 §16.4) — and is the first thing a review board would challenge. The parametric imaging-mode allocation of 8 W (Chapter 8 Table 8.4) was made before any component was chosen; the chosen star tracker and four wheels add up to more than the parametric AOCS estimate assumed. The design is not broken — the array delivers far more than 10 W in sunlight and the battery is large — but the mode table, the orbit-average power and the eclipse case of Chapter 9 all have to be re-run with the equipment numbers before the budget can be called closed. That re-run, and the decision whether to re-baseline the allocation or to duty-cycle the star tracker during imaging, is exactly what the closure check exists to force.
+
+### 12.5.4 If a budget does not close
+
+| Budget | Common fix | Impact | Typical mass/power/cost trade |
+|--------|-----------|--------|------------------------------|
+| **Mass** (negative) | Remove propulsion; select lighter components; reduce redundancy; move to a larger form factor | Risk / performance trade | Removing propulsion saves 0.5–1.5 kg |
+| **Power** (negative) | Add a deployable array; reduce payload duty cycle; select lower-power AOCS; schedule operations to avoid simultaneous loads | Cost / schedule trade | A deployable panel adds ~15 W but costs 0.3 kg + 25 kEUR (indicative) |
+| **Link** (negative) | Increase TX power; use a higher-gain antenna; reduce data rate; upgrade coding; upgrade the ground station | Mass / power trade | 3 dB gain from coding is "free"; 3 dB from a bigger antenna costs mass |
+| **Cost** (over ceiling) | Use COTS instead of rad-hard; remove propulsion; reduce the ground segment; use SatNOGS instead of commercial ground stations | Risk / capability trade | COTS vs rad-hard saves 10–100× on processor cost |
+| **Pointing** (insufficient) | Upgrade the star tracker; improve alignment calibration; add vibration isolation for wheels; reduce thermal gradients | Cost / complexity trade | Alignment improvement is usually cheapest |
+
+---
+
+## 12.6 Returning to UniSat-1: structure, OBDH and equipment list
+
+**CDS compliance for the 1U form factor.** The CubeSat Design Specification (CDS Rev 14) defines the 1U envelope:
+
+| Parameter | 1U specification | UniSat-1 design | Compliance |
+|-----------|-----------------|-----------------|------------|
+| Dimensions | 100.0 × 100.0 × 113.5 mm | 100.0 × 100.0 × 113.5 mm (ISIS 1U frame) | **Pass** |
+| Maximum mass | 2.0 kg (CDS Rev 14, ISIPOD) | 1.0 kg target (50 % margin to the 2 kg limit) | **Pass** |
+| Rail material | Hard-anodised Al 7075-T6 | Standard (part of the ISIS frame, 7075-T6, Type III anodise) | **Pass** |
+| Rail cross-section | 8.5 × 8.5 mm minimum | Standard (ISIS: 8.5 × 8.5 mm) | **Pass** |
+| Deployment switches | Min 1 per accessible face | 2 switches (ISIS standard, on +X/−X rail faces) | **Pass** |
+| RBF pin | Required | Included (ISIS standard, on −Z face) | **Pass** |
+| CG offset | ≤ 2 cm from geometric centre | < 1 cm (symmetric PCB stack layout, battery centred) | **Pass** |
+| Protrusions | None beyond rail envelope (stowed) | UHF monopole antenna stowed along the rail (spring-loaded, within envelope) | **Pass** |
+| Fundamental frequency | > 40 Hz first mode | ~600 Hz (a 1U Al structure is extremely stiff) | **Pass** |
+
+**Note on the CDS mass limit:** CDS Rev 14 specifies 2.0 kg as the 1U deployer limit for the ISIPOD. However, many deployer providers (e.g. NanoRacks, Exolaunch) specify 1.33 kg for 1U. Always check the specific deployer ICD. UniSat-1 targets 1.0 kg, well within either limit.
+
+**No propulsion:** At 400 km altitude, atmospheric drag provides natural deorbit. The ballistic coefficient for a 1U is
+
+$$B = \frac{m}{C_D \times A} = \frac{1.0}{2.2 \times 0.01} = 45.5 \text{ kg/m}^2$$
+
+Using the method of Chapter 7 §7.3.3 this gives an orbital lifetime of roughly 6–18 months depending on solar activity (F10.7 index). At solar maximum (F10.7 > 200) the denser atmosphere deorbits the satellite in about 6 months; at solar minimum (F10.7 ~ 70) the lifetime extends towards 18 months. Both are within the FCC 5-year rule and the IADC 25-year guideline without any propulsion system.
+
+**OBC selection rationale:** UniSat-1 uses a custom board based on the TI MSP430 (safe mode / housekeeping) + STM32F4 Cortex-M4 (main OBC). The MSP430 runs bare-metal firmware handling the watchdog, power monitoring and safe-mode recovery. The STM32F4 runs FreeRTOS handling TM/TC, magnetometer data acquisition and scheduling. The dual-processor architecture provides redundancy: if the STM32F4 fails (SEU, latch-up), the MSP430 can maintain safe-mode operations and respond to ground commands.
+
+**Data storage:** With 1.13 MB/day of magnetometer data (Chapter 11 §11.8.2) and 4800 bit/s useful downlink, on-board storage is not a bottleneck. A 4 MB NOR flash is adequate (it stores about 3.5 days of data as a buffer — enough to ride out the single-station contact shortfall identified in Chapter 11 while additional stations are brought in). No NAND flash and no SD card are needed.
+
+**Complete 1U equipment list:**
+
+> | # | Category | Component (representative) | Mass (g) | Power (W) | Cost (kEUR, indicative) | Qty | Interface |
+> |---|----------|-----------|----------|----------|-------------|-----|-----------|
+> | 1 | Structure | ISIS 1U CubeSat structure (Al 7075-T6) | 200 | — | 4.0 | 1 | Mechanical |
+> | 2 | EPS | GomSpace NanoPower P31us (EPS board + 2S Li-ion battery, 10 Wh) | 200 | 0.3 (quiescent) | 12.0 | 1 | I²C |
+> | 3 | Solar cells | Body-mounted triple-junction GaAs cells (5 faces) | 50 | — (generates power) | 8.0 | 5 | Direct to EPS |
+> | 4 | OBC | Custom MSP430 + STM32F4 board (with 4 MB NOR flash) | 30 | 0.3 | 3.0 | 1 | I²C, SPI, UART |
+> | 5 | Comms | UHF transceiver (NanoCom AX100, 0.5 W TX, 9600 bit/s) | 60 | 0.5 (TX) / 0.1 (RX) | 8.0 | 1 | SPI |
+> | 6 | Antenna | UHF monopole (deployable, $\lambda/4 = 17$ cm nitinol) | 20 | — | 2.0 | 1 | RF coax |
+> | 7 | Payload | MEMS magnetometer (custom PCB, PNI RM3100 sensor) | 50 | 0.2 | 5.0 | 1 | SPI |
+> | 8 | AOCS (passive) | Permanent magnet (AlNiCo, 0.5 A m$^2$) + 2 hysteresis rods (HyMu-80) | 30 | 0 | 1.0 | 1 | None (passive) |
+> | 9 | Harness | Internal cables, connectors, PC/104 stack header | 50 | — | 1.0 | 1 | Various |
+> | | **TOTAL** | | **690** | **~1.3 (peak TX)** | **~44** | | |
+>
+> **Mass budget** (Chapter 8 Table 8.3, Phase A):
+>
+> | Level | Mass (g) |
+> |-------|----------|
+> | CBE (current best estimate) | 690 |
+> | + 20 % equipment margin | 828 |
+> | + 20 % system margin | 994 |
+> | **MEV (maximum expected value)** | **994** |
+> | Deployer limit (ISIPOD) | 2000 |
+> | **Margin to limit** | **1006 g (50 %)** |
+>
+> **Power budget (worst case: TX mode in sunlight):**
+>
+> | Load | Power (W) |
+> |------|----------|
+> | OBC (STM32F4 + MSP430) | 0.3 |
+> | EPS quiescent | 0.3 |
+> | UHF TX | 0.5 |
+> | Magnetometer | 0.2 |
+> | **Total peak** | **1.3** |
+> | Array available (orbit average, EOL — Chapter 9 §9.5) | 2.3 |
+> | **Margin** | **1.0 W (43 %)** |
+>
+> **Key insight:** The entire UniSat-1 equipment list is 5 COTS components plus 2 custom boards (OBC and magnetometer PCB). Total hardware cost is ~44 kEUR — an order of magnitude less than a typical 3U mission. With labour, integration and test, launch and operations, the total mission cost is 80–150 kEUR (Chapter 13 §13.6 gives the breakdown). This demonstrates that a useful space mission can be built for less than the cost of a mid-range car.
+
+---
+
+## Summary
+
+| Topic | Key takeaway |
+|-------|-------------|
+| CDS compliance | Standard dimensions, Al 7075-T6 anodised rails (8.5 mm), deployment switches, RBF pin, CG limits |
+| Structural materials | Al 7075-T6: $\sigma_y = 503$ MPa, $E = 72$ GPa; anodisation for wear/insulation; CFRP not suitable for rails |
+| Launch loads | 6–12 g axial quasi-static, ~7 g$_{\text{rms}}$ random vibration (20–2000 Hz), 500–2000 g shock; PCB solder joints are the weak point |
+| Structural MoS | $\text{MoS} = \sigma_{\text{allow}}/(\sigma_{\text{design}} \times \text{FoS}) - 1 \geq 0$; FoS 1.25 yield / 1.5 ultimate (metallic) |
+| Frequency requirement | First mode > 40 Hz; CubeSat Al structures easily exceed this (~330 Hz for a 3U box beam); local modes (PCBs, deployables) are the risk |
+| Tsiolkovsky equation | $m_{\text{prop}} = m_{\text{dry}} \times (e^{\Delta V/(I_{sp} g_0)} - 1)$; exponential growth with $\Delta V / v_e$ |
+| Cold gas | $I_{sp}$ 40–75 s; simple, fast, reliable; heavy propellant penalty for $\Delta V > 30$ m/s |
+| Green monopropellant | $I_{sp}$ 225–250 s; high thrust (0.1–1 N); heavy feed system; AF-M315E and LMP-103S flight-proven |
+| Electrospray (FEEP) | $I_{sp}$ 500–5000 s; minimal propellant; months-long burns; 20–60 W power; indium or ionic liquid |
+| Hall thruster | $I_{sp}$ 800–3000 s; moderate thrust (1–50 mN); 50–300 W; iodine emerging as a xenon alternative |
+| Propulsion trades | High $I_{sp}$: less propellant, more dry mass, long burns; low $I_{sp}$: more propellant, lighter system, fast burns |
+| When to skip propulsion | Below 500 km (natural deorbit); technology demonstration; differential-drag constellation |
+| OBC processors | MSP430 (0.01 W, safe mode), Cortex-M4 (0.2 W, standard CubeSat), Zynq (3 W, high throughput), LEON3 (rad-hard, ESA) |
+| RTOS vs Linux | FreeRTOS for real-time C&DH (standard); Linux for payload processing (data-intensive) |
+| Radiation effects | TID: 1–10 krad/yr LEO; SEU: 1–10 bit flips/day/GB; mitigate with EDAC, watchdog, redundancy |
+| Data storage | $S = V_{\text{daily}} \times N_{\text{days}} \times 2$; SLC NAND flash for primary storage; NOR flash for code and critical parameters |
+| Equipment selection | Every selection re-checked against mass, power, interface and RF compatibility; trade study for contested selections |
+| Budget closure | All margins must be positive before integration and verification begin; mass margin > 10 % at Phase A; equipment-based totals replace parametric estimates |
+
+---
+
+## Problems
+
+1. **Rail stress and margin of safety.** A 6U CubeSat of 11 kg is launched with a 10 g axial quasi-static load and a dynamic amplification factor of 1.3. The load is shared by four Al 6061-T6 rails of 8.5 × 8.5 mm. Compute the design stress and the yield and ultimate margins of safety using the ECSS factors of §12.1.6. Then explain why a positive MoS of several hundred does not mean the structure is "over-designed".
+
+2. **Fundamental frequency.** Repeat the box-beam estimate of §12.1.7 for a 6U CubeSat (226 × 100 mm cross-section, $L = 0.34$ m, 11 kg) with 1.0 mm walls, treating the section as a rectangular tube and bending about its weak axis. Compare with the 40 Hz and 90 Hz deployer requirements. Then estimate the first mode of a 350 g star tracker mounted on a 40 mm aluminium bracket of 2 mm thickness treated as a cantilever, and state which of the two modes drives the design.
+
+3. **Rocket equation.** A 3U CubeSat with a 5.2 kg dry mass must provide 25 m/s of collision-avoidance ΔV over its life plus the 112 m/s deorbit burn of §12.2.5. Compute the propellant mass for butane ($I_{sp} = 85$ s), AF-M315E ($I_{sp} = 240$ s) and an iodine Hall thruster ($I_{sp} = 1000$ s), add the dry masses from the comparison table, and rank the options by total mass. Which would you choose if the deorbit must be complete within one month, and why?
+
+4. **Burn time and power.** For the FEEP option of §12.2.5 (0.35 mN, 40 W), compute the total burn time for the 112 m/s deorbit of a 5 kg spacecraft and the energy consumed. Using the orbit-average power of Chapter 9 §9.2 for the 3U EO CubeSat, decide whether the thruster can run continuously or must be duty-cycled, and estimate the calendar time to complete the manoeuvre.
+
+5. **Passive deorbit.** Using the ballistic-coefficient lifetime method of Chapter 7 §7.3.3, estimate the orbital lifetime of the EOSat-3U (5 kg, 0.03 m² frontal area) at 550 km, and the area of drag sail required to bring it below 5 years. Compare the sail's mass and stowed volume (table of §12.2.4) with the cold-gas system of §12.2.5 and recommend one.
+
+6. **Processor selection.** A 3U Earth-observation CubeSat must run a 10 Hz attitude control loop, compress 240 Mbit/s of raw imagery to 10:1 in near-real time, and survive a 3-year mission at 550 km SSO. Using the processor table of §12.3.1, propose an OBC architecture (one or two processors), justify the operating-system choice for each, and list the radiation mitigations you would apply.
+
+7. **Storage sizing.** A hyperspectral 6U CubeSat generates 60 GB/day and downlinks over X-band at 150 Mbit/s with six 8-minute passes per day at $\eta_{\text{protocol}} = 0.85$. Check whether the data budget closes (Chapter 11 §11.9), size the on-board storage for $N_{\text{days}} = 2$ and $f_{\text{safety}} = 2$, and select a storage technology from the table of §12.3.3 with a justification that mentions radiation.
+
+8. **Equipment-based versus parametric budgets.** In §12.5.3 the equipment-based imaging-mode power exceeds the parametric allocation. Re-run the orbit-average power of Chapter 8 §8.4.3 with the equipment values (imaging 10 W, other modes unchanged) and the mode duty cycles of Table 8.4, and decide whether the array of Chapter 9 §9.2 still closes. Then propose two design changes that would restore the 8 W allocation and state what each costs in another budget.
+
+9. **Budget closure for a modified mission.** Starting from the EOSat-3U equipment list of §12.5.2, add a cold-gas propulsion system (1.35 kg, 15 kEUR, < 1 W) to meet a 5-year disposal requirement. Re-compute the mass budget with the Phase A margins of Chapter 8 Table 8.3 and the cost, re-classify each line of the closure table of §12.5.3, and state which fix from §12.5.4 you would apply first.
+
+10. **UniSat-1 deployer change.** UniSat-1 is re-manifested on a deployer with a 1.33 kg limit and a 90 Hz first-mode requirement. Re-check every line of the compliance table of §12.6, recompute the mass margin, and identify the single component whose mass growth would most quickly threaten the new limit.
+
+---
+
+## References
+
+1. Cal Poly, *CubeSat Design Specification (CDS) Rev 14.1*, February 2022. https://www.cubesat.org/cubesatinfo
+2. Wertz, J. R., Everett, D. F. & Puschell, J. J. (eds.), *Space Mission Engineering: The New SMAD*, Microcosm Press, 2011, Ch. 11.3 (Structures), Ch. 17 (Propulsion). https://www.space.com/smad
+3. ECSS, *ECSS-E-ST-32C Rev. 1: Structural General Requirements*, 2008. https://ecss.nl/standard/ecss-e-st-32c-rev-1-structural-general-requirements/
+4. ECSS, *ECSS-E-ST-32-10C Rev. 2: Structural Factors of Safety for Spaceflight Hardware*, 2019. https://ecss.nl
+5. ECSS, *ECSS-E-ST-35C: Propulsion General Requirements*, 2008. https://ecss.nl/standard/ecss-e-st-35c-propulsion-general-requirements/
+6. ECSS, *ECSS-E-ST-10-03C: Testing*, 2012. https://ecss.nl/standard/ecss-e-st-10-03c-testing/
+7. Sarafin, T. P. (ed.), *Spacecraft Structures and Mechanisms: From Concept to Launch*, Springer, 1995. https://www.springer.com/gp/book/9780792334767
+8. Sutton, G. P. & Biblarz, O., *Rocket Propulsion Elements*, 9th ed., Wiley, 2017, Ch. 2–4. https://www.wiley.com/en-us/Rocket+Propulsion+Elements
+9. Goebel, D. M. & Katz, I., *Fundamentals of Electric Propulsion: Ion and Hall Thrusters*, Wiley, 2008.
+10. Masse, R. K. et al., "Enabling High Performance Green Propulsion for SmallSats", *AIAA Propulsion and Energy Forum*, 2019.
+11. Anflo, K. & Crowe, B., "In-Space Demonstration of an ADN-based Propulsion System", *AIAA Joint Propulsion Conference*, 2011.
+12. Enpulsion, *NANO R3 Thruster Datasheet*, 2023 (representative example). https://www.enpulsion.com/nano
+13. VACCO, *MiPS Propulsion System Datasheet*, 2023 (representative example). https://www.cubesat-propulsion.com
+14. NASA, *General Environmental Verification Standard (GEVS)*, GSFC-STD-7000B, 2021.
+15. Cobham Gaisler, *LEON3 Processor Datasheet*; STMicroelectronics, *STM32F4 Datasheet*; Xilinx, *Zynq-7000 SoC Datasheet* (representative examples).
+
+
+# Part III — Integration, Verification and Operations
+
+# Chapter 13 — Equipment Selection and Bill of Materials
+
+> **Recommended background.** SMAD4 Ch. 14 (Spacecraft subsystems and parts) and Ch. 20 (Cost modelling); NASA NPR 7123.1D Appendix E (Technology readiness levels); ECSS-E-HB-11A (TRL guidelines); ECSS-Q-ST-20C (Quality assurance); ECSS-E-ST-10-24C (Interface management); NASA SEH Rev 2 §6.8 (Decision analysis). This chapter assumes the subsystems have been sized (Chapters 9–12) and that candidate components have been identified for each; it turns those candidates into a procurable, traceable bill of materials. The trade-study method is that of Chapter 4 §4.5 and the interface codes are those of Chapter 8 Table 8.2.
+
+## Learning objectives
+
+By the end of this chapter, you will be able to:
+
+1. Apply a structured make/buy/reuse decision framework to component selection
+2. Evaluate COTS components against requirements using TRL and heritage criteria
+3. Construct a bill of materials (BOM) with full traceability to requirements
+4. Identify export-control constraints (ITAR, EAR, Canadian Controlled Goods) for selected equipment
+5. Verify interface compatibility (RF, electrical, mechanical) during component selection
+6. Track cumulative mass, power and cost budgets as selections are made
+
+Vendor products named in this chapter are representative examples, not endorsements; prices are indicative (2026).
+
+---
+
+## 13.1 The make/buy/reuse decision
+
+Before selecting any hardware, the project must decide the procurement strategy for each subsystem. This is a fundamental systems-engineering decision that affects cost, schedule, risk and performance.
+
+*[Source: NASA SEH Rev 2 §6.8 "Decision Analysis"; ECSS-M-ST-10C Rev. 1 §5.4]*
+
+### 13.1.1 Decision framework
+
+```
+For each subsystem or component:
+    1. Does a COTS product exist that meets the requirements?
+     → Yes: BUY (lowest risk, fastest schedule)
+     → No: continue
+    2. Does flight-proven hardware from a previous mission exist?
+     → Yes: REUSE (low risk, may need delta-qualification)
+     → No: continue
+    3. Can the requirement be met by modifying existing hardware?
+     → Yes: MODIFY (moderate risk, moderate schedule)
+     → No: MAKE (highest risk, longest schedule, most expensive)
+```
+
+### 13.1.2 Make/buy/reuse trade matrix
+
+| Factor | Buy (COTS) | Reuse (heritage) | Modify | Make (custom) |
+|--------|-----------|-------------------|--------|---------------|
+| **Cost (NRE)** | None | None–low | Moderate | High |
+| **Cost (recurring)** | Vendor price | Reproduction cost | Vendor + delta | Full development |
+| **Schedule** | 4–16 weeks lead | 8–24 weeks | 12–36 weeks | 12–48 months |
+| **Risk** | Low (if TRL ≥ 7) | Low (flight-proven) | Medium | High |
+| **Performance** | Fixed by vendor | Fixed by heritage | Tuneable | Fully customisable |
+| **IP ownership** | Vendor retains | May be shared | Negotiated | Full ownership |
+| **Qualification** | Vendor-provided data | Delta-qualification only | Partial re-qualification | Full qualification |
+
+### 13.1.3 Non-recurring engineering cost
+
+> **Key equation — non-recurring engineering (NRE) cost estimate:**
+>
+> $$C_{\text{NRE}} = N_{\text{hours}} \cdot r_{\text{hour}} + C_{\text{material}} + C_{\text{facility}} + C_{\text{test}}$$
+>
+> where $N_{\text{hours}}$ is the engineering labour, $r_{\text{hour}}$ the loaded hourly rate, and the remaining terms the material, facility and test costs of the development.
+>
+> For COTS: NRE is near zero (the vendor absorbs the development cost).
+> For custom: NRE can be 3–10× the unit recurring cost. Chapter 16 develops the cost-estimating relationships that put this in context.
+
+### 13.1.4 Worked example
+
+*Problem:* A 6U CubeSat mission needs a fine sun sensor with 0.1° accuracy. Three options:
+
+| Option | Type | Accuracy | Mass | Cost (indicative, 2026) | TRL | Lead time |
+|--------|------|----------|------|------|-----|-----------|
+| Bradford SSOC-D60 (representative) | COTS | 0.1° | 35 g | 15 kEUR | 9 | 8 weeks |
+| In-house photodiode array | Custom | 0.05° | 20 g | 8 kEUR + 400 h NRE | 4 | 12 months |
+| Modified heritage sensor | Reuse | 0.08° | 40 g | 6 kEUR + 80 h delta-qualification | 7 | 16 weeks |
+
+*Decision:* The COTS option meets the requirement, has TRL 9, the lowest schedule risk, and a total cost of 15 kEUR versus 8 kEUR + ~40 kEUR NRE (400 h at a loaded rate of ~100 EUR/h) for the custom option. **Buy.**
+
+---
+
+## 13.2 Technology readiness level (TRL) assessment
+
+TRL is the standard metric for technology maturity. It was developed by NASA in the 1970s and is now used universally in space programmes. Figure 13.1 shows the nine-step ladder.
+
+*[Source: NASA NPR 7123.1D Appendix E; ECSS-E-HB-11A "Technology Readiness Level (TRL) Guidelines"]*
+
+![Technology readiness level ladder.](../assets/figures/fig_trl.png)
+
+**Figure 13.1** — The nine technology readiness levels, from basic principles observed (TRL 1) to flight-proven (TRL 9), with the environment in which each level's evidence must be produced. The gap between TRL 6 and TRL 7 — from a relevant environment on the ground to the operational environment in space — is the one that costs the most to cross.
+
+### 13.2.1 TRL scale with decision criteria
+
+| TRL | Definition | Evidence required | CubeSat decision |
+|-----|-----------|-------------------|-----------------|
+| 1 | Basic principles observed | Published research | Do not select |
+| 2 | Technology concept formulated | Analytical studies | Do not select |
+| 3 | Experimental proof of concept | Laboratory measurements | Do not select |
+| 4 | Component validated in laboratory | Breadboard tested | High risk — avoid unless no alternative |
+| 5 | Component validated in relevant environment | Engineering model tested | Acceptable for technology-demonstrator missions |
+| 6 | System/subsystem model demonstrated in relevant environment | Prototype in relevant environment | Acceptable with risk mitigation |
+| 7 | System prototype demonstrated in operational environment | Prototype tested in space | Preferred minimum for CubeSats |
+| 8 | Actual system completed and qualified | Flight-qualified hardware | Strong preference |
+| 9 | Actual system flight-proven | Successful on-orbit operation | Lowest risk |
+
+### 13.2.2 TRL and risk relationship
+
+> **Risk reduction factor (empirical):**
+>
+> $$f_{\text{risk}} = 10^{-(\text{TRL} - 1)/3}$$
+>
+> | TRL | Risk factor | Interpretation |
+> |-----|------------|----------------|
+> | 3 | 0.22 | High probability of failure or redesign |
+> | 5 | 0.046 | Moderate risk |
+> | 7 | 0.010 | Low risk |
+> | 9 | 0.002 | Very low risk |
+>
+> *This empirical relationship (after SMAD4 Table 20-12) illustrates why TRL ≥ 6 is the typical threshold for mission-critical components.*
+
+### 13.2.3 Real mission example: MarCO (Mars Cube One)
+
+NASA's MarCO A and B (launched May 2018) were the first interplanetary CubeSats. They used:
+
+- Iris transponder (JPL, TRL 6 at selection — the first deep-space CubeSat radio)
+- COTS reaction wheels (Blue Canyon Technologies, TRL 9)
+- Custom deployable reflectarray antenna (JPL, TRL 5 at selection)
+
+The custom antenna was the highest-risk item. It required extensive development testing and was the last component to reach TRL 6 for CDR. This delayed the schedule by 4 months but ultimately succeeded.
+
+*Lesson: if you must fly a low-TRL component, it will dominate your schedule and risk register.*
+
+*[Source: Klesh, A. et al., "MarCO: Early Operations of the First CubeSats to Mars", 32nd Annual Small Satellite Conference, 2018; "Mars Cube One (MarCO) — Lessons Learned", 33rd Annual Small Satellite Conference, 2019]*
+
+---
+
+## 13.3 Bill of materials (BOM) construction
+
+The BOM is the definitive list of all hardware, software and consumables required to build the satellite. It is the bridge between design and procurement.
+
+### 13.3.1 BOM structure
+
+A properly structured BOM follows the work-breakdown-structure hierarchy; Figure 13.2 shows the same five levels with the roll-up columns that each parent node carries:
+
+```
+BOM level 0: Spacecraft (S/C-001)
+  BOM level 1: Subsystem (e.g. EPS-000)
+    BOM level 2: Assembly (e.g. EPS-SA-000 Solar array assembly)
+      BOM level 3: Component (e.g. EPS-SA-001 Solar cell string)
+        BOM level 4: Part (e.g. EPS-SA-001-01 Azur 3G30C cell)
+```
+
+![BOM hierarchy tree with roll-up columns](../assets/figures/fig_bom_tree.png)
+
+**Figure 13.2** — The BOM as an indented tree from spacecraft (level 0) to part (level 4), illustrated for the EPS branch of a 3U CubeSat with representative values. Each parent row rolls up its children: mass, power and cost are quantity-weighted sums, the TRL column carries the lowest TRL beneath it and the lead-time column the longest, so the spacecraft row shows at a glance which item (here the TRL 6 payload, 26 weeks) drives the risk and the schedule.
+
+### 13.3.2 BOM fields
+
+| Field | Description | Example |
+|-------|------------|---------|
+| **Item ID** | Unique hierarchical identifier | EPS-BAT-001 |
+| **Description** | Component name and model | GomSpace NanoPower P31u |
+| **Manufacturer** | Vendor name | GomSpace A/S |
+| **Part number** | Manufacturer part number | P31U-9-30 |
+| **Quantity** | Number required | 1 |
+| **Unit mass (g)** | Per-item mass | 94 |
+| **Unit power (W)** | Peak / average power draw | 0.5 / 0.2 |
+| **Unit cost (EUR)** | Procurement cost | 8 500 (indicative) |
+| **TRL** | Technology readiness level | 9 |
+| **Heritage** | Previous mission(s) flown | GOMX-3, GOMX-4 |
+| **Lead time** | Procurement lead time | 12 weeks |
+| **ECCN/USML** | Export classification | EAR99 |
+| **Status** | Selected / ordered / received / tested | Selected |
+
+In a concurrent-design tool the BOM is generated automatically from the equipment selections — each selected component becomes a BOM entry with its quantity, and the export carries both the parametric estimate and the actual COTS data side by side for comparison. Built by hand, the same table is the single source from which the mass, power and cost budgets are re-totalled (Chapter 12 §12.5).
+
+### 13.3.3 BOM mass total
+
+> **Key equation — BOM mass total:**
+>
+> $$M_{\text{BOM}} = \sum_i m_i\, q_i + M_{\text{harness}} + M_{\text{fasteners}} + M_{\text{margin}}$$
+>
+> where:
+>
+> - $m_i$ = unit mass of component $i$
+> - $q_i$ = quantity of component $i$
+> - $M_{\text{harness}}$ = harness mass (typically 5–8 % of dry mass for CubeSats)
+> - $M_{\text{fasteners}}$ = mechanical fasteners, standoffs, thermal hardware (~3–5 %)
+> - $M_{\text{margin}}$ = equipment and system margins per the two-level schedule of Chapter 8 Table 8.3 (20 % system margin at Phase A)
+
+### 13.3.4 Worked example — 6U CubeSat BOM summary
+
+The subsystem-level roll-up below is for a 6U Earth-observation CubeSat (the allocation line is the 6U deployer limit of Chapter 12 §12.1.1). Compare it with the 3U equipment list of Chapter 12 §12.5.2.
+
+| Subsystem | Components | Total mass (g) | Total power (W) | Total cost (kEUR, indicative) |
+|-----------|-----------|----------------|-----------------|-------------------|
+| Structure | Rails, panels, fasteners | 350 | 0 | 8.0 |
+| EPS | Solar array + battery + board | 420 | 0.5 | 18.0 |
+| OBC | Flight computer + storage | 80 | 1.2 | 10.0 |
+| AOCS | Star tracker + magnetorquers + reaction wheels | 550 | 4.5 | 45.0 |
+| TTC | S-band transceiver + patch antenna | 180 | 8.0 (TX) | 22.0 |
+| Thermal | MLI + heaters | 60 | 2.0 (peak) | 3.0 |
+| Payload | Multispectral imager | 800 | 12.0 | 65.0 |
+| Harness | Cables, connectors | 180 | 0 | 2.5 |
+| **Total** | | **2620** | **28.2 (peak)** | **173.5** |
+| Allocation (6U) | | 12 000 | 40.0 (array EOL) | 250.0 |
+| Margin | | 9380 (78 %) | 11.8 (30 %) | 76.5 (31 %) |
+
+The 78 % mass margin is typical of an early 6U design with a 3U-class payload: the form factor was chosen for volume and power, not mass. The two margins that matter are power (30 % with every load at peak simultaneously, which the mode table of Chapter 18 will show never happens) and cost (31 %, before the margins of Chapter 16 are applied).
+
+---
+
+## 13.4 Export control and procurement
+
+Export control is one of the most commonly overlooked aspects of CubeSat missions, especially for international teams. Violations carry severe penalties (criminal prosecution, programme cancellation). Chapter 2 §2.8 describes the Canadian regime; this section gives the engineer's view of what it means for component selection.
+
+*[Source: ITAR — 22 CFR Parts 120–130; EAR — 15 CFR Parts 730–774; Canadian Controlled Goods Program — Defence Production Act]*
+
+### 13.4.1 Export control regimes
+
+| Regime | Governing law | Applies to | Key concern for CubeSats |
+|--------|-------------|-----------|-------------------------|
+| **ITAR** | US Arms Export Control Act | Defence articles (USML Categories IV, XI, XV) | Star trackers, rad-hard processors, some GPS receivers |
+| **EAR** | US Export Administration Act | Dual-use items (CCL) | Most COTS space components (ECCN 9A515) |
+| **Canadian CGP** | Defence Production Act | Controlled goods in Canada | Handling US-origin ITAR items in Canadian facilities |
+| **Wassenaar** | Wassenaar Arrangement | Multilateral export controls | Encryption, high-accuracy GNSS, imaging sensors |
+
+### 13.4.2 Component classification decision
+
+```
+Is the component on the US Munitions List (USML)?
+  → Yes: ITAR-controlled. A DSP-5 licence is needed for export.
+     Categories: IV (launch vehicles), XI (military electronics),
+                 XV (spacecraft systems)
+  → No: check the Commerce Control List (CCL)
+     Is it classified under ECCN 9A515 (spacecraft)?
+       → Yes: EAR-controlled. May need a BIS licence.
+       → No: likely EAR99 (no licence required for most destinations)
+```
+
+### 13.4.3 Common ITAR-controlled CubeSat components
+
+| Component type | Why controlled | Alternative |
+|---------------|---------------|------------|
+| Radiation-hardened processors | Military-grade radiation tolerance | COTS processors with software mitigation (Chapter 12 §12.3.2) |
+| High-accuracy star trackers (< 1 arcsec) | Missile-guidance applicability | Lower-accuracy models (> 5 arcsec) |
+| Certain GPS/GNSS receivers | Above COCOM limits (> 18 km altitude, > 515 m/s) | Space-rated receivers with COCOM compliance |
+| Propulsion systems (some) | Missile technology | Cold-gas or water-based systems |
+| Encryption modules | Signals intelligence | Open-source encryption (may still need EAR review) |
+
+### 13.4.4 Procurement workflow
+
+```
+
+1. Requirements          → derive the component specification
+2. Market survey         → identify candidate COTS products
+3. Export classification → request the ECCN from the vendor
+4. Trade study           → score and rank candidates
+5. Request for quote     → obtain pricing and lead times
+6. Purchase order        → commit to procurement
+7. Incoming inspection   → verify against the purchase order and datasheet
+8. Integration           → install and functionally test
+```
+
+### 13.4.5 Real mission example: export-control impact
+
+The BRITE-Constellation (Austria/Canada/Poland) was a series of nanosatellites for stellar photometry. The Canadian BRITE satellites (UniBRITE and BRITE-Austria, built by UTIAS/SFL) required careful export-control management:
+
+- US-origin ITAR components required Technical Assistance Agreements (TAAs)
+- Controlled Goods registration was required for the Canadian team
+- Export permits were needed for shipping between Canada, Austria and the US launch site
+- Total regulatory compliance effort: ~6 person-months and 12+ months lead time
+
+*Lesson: start export classification immediately when components are identified. A single ITAR component can add 6–12 months to the schedule.*
+
+*[Source: Sarda, K. et al., "BRITE-Constellation Mission and Spacecraft", AIAA/USU Small Satellite Conference, 2014]*
+
+---
+
+## 13.5 Interface compatibility verification
+
+As components are selected, every interface must be verified for compatibility. The three interface categories that most often bite at selection time are RF (R), electrical (E) and mechanical (M), in the letter codes of Chapter 8 Table 8.2.
+
+### 13.5.1 RF chain compatibility
+
+The RF chain (transponder, cable, antenna) must be frequency-matched. This is the most common equipment incompatibility for CubeSat newcomers.
+
+| Rule | Correct example | Incorrect example |
+|------|----------------|-------------------|
+| **Band match** | S-band transponder + S-band patch antenna | S-band transponder + X-band horn |
+| **Impedance match** | 50 Ω transponder + 50 Ω cable + 50 Ω antenna | Mixed impedances cause reflections |
+| **Connector match** | SMA on transponder + SMA–SMA cable + SMA on antenna | SMA to N-type needs an adapter (loss) |
+| **Polarisation** | RHCP antenna + RHCP ground station | RHCP to LHCP causes > 20 dB cross-polarisation loss (Chapter 11 §11.8.2) |
+
+> **Key equations — impedance mismatch loss:**
+>
+> $$\Gamma = \frac{Z_{\text{load}} - Z_{\text{source}}}{Z_{\text{load}} + Z_{\text{source}}}$$
+>
+> $$\text{Return loss (dB)} = -20 \log_{10} |\Gamma|$$
+>
+> $$\text{Mismatch loss (dB)} = -10 \log_{10}\!\left(1 - |\Gamma|^2\right)$$
+>
+> For a 50 Ω source into a 75 Ω load:
+> $\Gamma = (75 - 50)/(75 + 50) = 0.2$; return loss $= -20 \log_{10}(0.2) = 14$ dB; mismatch loss $= -10 \log_{10}(1 - 0.04) = 0.18$ dB.
+>
+> A mismatch loss of this size is absorbed by the line-loss term $L_{TX}$ of the link budget (Chapter 11 §11.2); the return loss matters more, because the reflected power can damage a transmitter's output stage.
+
+A concurrent-design tool with band data on each component will flag a transponder and antenna in different bands as soon as the second one is selected; by hand, the check is one column in the BOM.
+
+### 13.5.2 Electrical interface verification
+
+| Parameter | Typical CubeSat | What to verify |
+|-----------|----------------|----------------|
+| Bus voltage | 3.3 V, 5 V, or unregulated (6–8.4 V Li-ion) | Component input-voltage range covers the bus voltage |
+| Peak current | Per switched-line limit (typically 1–3 A) | Component inrush current does not exceed the limit |
+| Data protocol | I²C, SPI, UART, CAN, RS-422 | All devices on the same bus use a compatible protocol (Chapter 8 §8.3.5 worked example) |
+| Connector | PC/104, Hirose, Harwin | Physical connector type matches or an adapter is planned |
+
+### 13.5.3 Mechanical interface verification
+
+| Parameter | CDS 3U requirement | Verification |
+|-----------|--------------------|----|
+| Dimensions | 100.0 ± 0.1 mm × 100.0 ± 0.1 mm × 340.5 ± 0.5 mm | Calliper measurement |
+| Rail profile | 8.5 × 8.5 mm ± 0.1 mm | Profile gauge |
+| Component stack height | ≤ 83 mm internal width per U | 3D model check |
+| CG location | Within 2 cm of the geometric centre | Mass-properties measurement |
+
+---
+
+## 13.6 Returning to UniSat-1: bill of materials and cost
+
+UniSat-1's BOM is remarkably short — only nine line items (eight components plus the harness). This simplicity is a major advantage for small teams with limited procurement experience. The equipment list itself was assembled in Chapter 12 §12.6; here it is restated in BOM form with the procurement fields added.
+
+> **UniSat-1 BOM (Phase B — vendor quotes obtained; representative examples, costs indicative 2026):**
+>
+> | Item ID | Component | Manufacturer | Part number | Qty | Unit mass (g) | Unit cost (kEUR) | TRL | ECCN | Lead (weeks) |
+> |---------|-----------|-------------|-------------|-----|---------------|-----------------|-----|------|-----------|
+> | STR-001 | 1U CubeSat structure | ISIS | ISIS-1U-STR | 1 | 200 | 4.0 | 9 | EAR99 | 8 |
+> | EPS-001 | NanoPower P31us (EPS + 10 Wh battery) | GomSpace | P31US-10 | 1 | 200 | 12.0 | 9 | EAR99 | 12 |
+> | EPS-SA-001 | Body-mounted GaAs solar cells | AzurSpace | 3G30C | 5 | 10 | 1.5 | 9 | EAR99 | 10 |
+> | OBC-001 | Custom flight computer (Cortex-M) | In-house | UNISAT-OBC-01 | 1 | 30 | 3.0 | 5 | EAR99 | — |
+> | COM-001 | UHF transceiver | GomSpace | NanoCom AX100 | 1 | 55 | 8.0 | 8 | EAR99 | 12 |
+> | COM-ANT-001 | UHF deployable antenna | Endurosat | UHF-ANT-S | 1 | 25 | 2.5 | 8 | EAR99 | 8 |
+> | PL-001 | MEMS magnetometer board | In-house | UNISAT-MAG-01 | 1 | 50 | 5.0 | 4 | EAR99 | — |
+> | AOCS-001 | Passive magnetic kit (magnet + rods) | NewSpace | PMAG-1U | 1 | 30 | 1.0 | 9 | EAR99 | 6 |
+> | HAR-001 | Internal harness | Custom | — | 1 | 50 | 1.0 | N/A | EAR99 | — |
+> | | **TOTALS** | | | | **690 g** | **~44 kEUR** | | | |
+
+**Cost summary (total mission, hardware + services; indicative 2026):**
+
+| WBS element | Cost (kEUR) | Notes |
+|-------------|------------|-------|
+| Hardware (BOM) | 44 | All COTS except OBC and payload |
+| OBC software | 5 | Student labour (costed at stipend rate) |
+| Payload calibration | 3 | University magnetometer laboratory |
+| Integration and test | 8 | Assembly + vibration test (university facility) |
+| Ground station | 5 | SatNOGS (free) + dedicated Yagi antenna purchase |
+| Launch (ISS deployment) | 15 | NanoRacks 1U deployment fee |
+| PM/SE/QA | 5 | Faculty supervision |
+| **TOTAL** | **~85 kEUR** | |
+
+**Comparison with the 3U EO mission:**
+
+| Metric | UniSat-1 (1U) | EOSat-3U |
+|--------|--------------|---------------|
+| BOM line items | 9 | ~15–20 |
+| Hardware cost | ~44 kEUR | ≈ 170 kEUR with a COTS imager (Chapter 16 §16.1.6); ≈ 313 kEUR with the custom telescope of Chapter 12 §12.5.2 |
+| Total mission cost | ~85 kEUR | ~490 kEUR |
+| Development time | 6–12 months | 18–24 months |
+| Team size | 3–5 people | 8–15 people |
+
+**Export control:** All UniSat-1 components are classified EAR99 (no licence required). There are no ITAR-controlled items because the mission uses no star trackers, no radiation-hardened processors and no propulsion with ITAR-restricted technology. This is a significant advantage for international university collaborations.
+
+**Make/buy/reuse decisions:**
+
+| Component | Decision | Rationale |
+|-----------|----------|-----------|
+| Structure | Buy (COTS) | ISIS 1U frame is flight-proven, TRL 9, low cost |
+| EPS | Buy (COTS) | GomSpace P31us is the de facto standard, TRL 9 |
+| OBC | Make (custom) | Minimal board using the university laboratory; lower cost than a COTS OBC for this simple application |
+| Comms | Buy (COTS) | GomSpace AX100, TRL 8, well documented |
+| Payload | Make (custom) | Novel MEMS sensor — this *is* the technology demonstration |
+| Passive AOCS | Buy (COTS) | Standard magnetic-stabilisation kit |
+
+> **Think about it.** The two "make" items on UniSat-1 are also the two lowest-TRL items (5 and 4). By the empirical relation of §13.2.2 they carry roughly 10 and 20 times the risk factor of the TRL 9 purchases. Where in the schedule should the project place the first end-to-end test of these two boards?
+
+---
+
+## Summary
+
+| Topic | Key takeaway |
+|-------|-------------|
+| Make/buy/reuse | Buy COTS first; reuse heritage second; make custom only when necessary |
+| NRE | $C_{\text{NRE}} = N_{\text{hours}} r_{\text{hour}} + C_{\text{material}} + C_{\text{facility}} + C_{\text{test}}$; custom NRE is 3–10× the unit cost |
+| TRL | Minimum TRL 6 for mission-critical components; TRL 7+ preferred for CubeSats; $f_{\text{risk}} = 10^{-(\text{TRL}-1)/3}$ |
+| BOM | Hierarchical list: subsystem → assembly → component → part, with full traceability |
+| Export control | Classify every component (EAR99 / ECCN / ITAR); start early — delays the programme |
+| RF compatibility | Band, impedance, connector and polarisation must all match across the RF chain |
+| Electrical | Bus voltage, data protocol and connector type verified per component |
+| Budget tracking | Running totals during selection; stop and resolve if an allocation is exceeded (Chapter 12 §12.5) |
+
+---
+
+## Problems
+
+1. **Make/buy/reuse.** A 3U Earth-observation CubeSat needs a reaction wheel delivering 10 mN m s. Options: a COTS wheel (TRL 9, 8 kEUR, 10 weeks); a wheel flown on a previous mission by the same team that needs a new bearing qualification (TRL 7, 4 kEUR + 60 h delta-qualification, 16 weeks); and an in-house design (TRL 3, 2 kEUR + 600 h NRE, 14 months). At a loaded rate of 100 EUR/h, compute the total cost of each option, apply the decision framework of §13.1.1, and state the decision. Then state the one circumstance in which the in-house option could be the right answer.
+
+2. **TRL and risk.** Using $f_{\text{risk}} = 10^{-(\text{TRL}-1)/3}$, compute the risk factor for every item of the UniSat-1 BOM (§13.6) and identify the two components that together account for most of the summed risk. Propose a development-test plan that raises each of them by one TRL before CDR, and estimate the calendar time.
+
+3. **BOM roll-up.** Build the level-1 BOM roll-up for the EOSat-3U equipment list of Chapter 12 §12.5.2: group the components by subsystem, total mass, peak power and cost, add harness (6 %) and fasteners (4 %) to the mass, and apply the Phase A margins of Chapter 8 Table 8.3. Compare the resulting MEV with the 6 kg CDS limit and with the 5.17 kg of Chapter 12 §12.5.2, and explain the difference.
+
+4. **Lead time as the critical path.** From the UniSat-1 BOM, identify the longest procurement lead time, then add 8 weeks of incoming inspection and integration and 6 weeks of environmental test. If the launch integration date is 40 weeks away, by which week must every purchase order be placed? Which two items, if late by four weeks, would miss the launch?
+
+5. **Export classification.** Classify each of the following for a Canadian university mission with a Polish partner: (a) a 5-arcsec COTS star tracker made in the USA; (b) a European-built GNSS receiver without COCOM limits removed; (c) a rad-hard LEON3 processor; (d) an open-source AES encryption library; (e) a Canadian-built magnetometer. For each, state the likely regime (ITAR, EAR 9A515, EAR99, or non-US), the licensing action, and the schedule impact.
+
+6. **RF chain check.** A 3U CubeSat selects an S-band transmitter (50 Ω, SMA, 2 W) and, by mistake, a 75 Ω cable assembly. Compute the reflection coefficient, return loss and mismatch loss at the cable input. Then, for the EOSat-3U link budget of Chapter 11 §11.8.1, state how much margin the mismatch costs and whether the error would have been caught by the link budget alone.
+
+7. **Electrical interface.** The chosen OBC provides a single I²C bus at 3.3 V and switched 5 V lines limited to 1.5 A. The candidate star tracker needs 5 V at 2.0 A inrush and talks RS-422. List every incompatibility, propose a fix for each (component change, adapter, or wiring), and identify which fixes add mass to the harness line of the BOM.
+
+8. **Interface audit from the N² matrix.** Using Chapter 8 Table 8.1 and the letter codes of Table 8.2, list every E, D and R interface of the TTC subsystem in the EOSat-3U equipment list of Chapter 12 §12.5.2 and, for each, write the single BOM field (voltage, protocol, connector, band or polarisation) that must agree on both sides.
+
+9. **Cost comparison.** Using the UniSat-1 cost summary of §13.6 and the EOSat-3U hardware cost of Chapter 12 §12.5.2, estimate the EOSat-3U total mission cost by scaling each non-hardware line (software, calibration, integration and test, ground station, launch, management) with a justified factor, and compare the result with the ~490 kEUR quoted. Which non-hardware line is most sensitive to your assumptions?
+
+10. **Design-for-procurement.** A rideshare opportunity moves the EOSat-3U launch forward by six months. Which selections in Chapter 12 §12.5.2 would you change to a shorter-lead or higher-TRL alternative, what performance would you give up, and how would the closure table of Chapter 12 §12.5.3 change?
+
+---
+
+## References
+
+1. NASA, *Technology Readiness Levels*, NPR 7123.1D Appendix E. https://www.nasa.gov/directorates/somd/space-communications-navigation-program/technology-readiness-levels/
+2. ECSS, *ECSS-E-HB-11A: Technology Readiness Level (TRL) Guidelines*, 2017. https://ecss.nl
+3. ECSS, *ECSS-Q-ST-20C Rev. 2: Quality Assurance*, 2023. https://ecss.nl/standard/ecss-q-st-20c-rev-2-quality-assurance-1-march-2023/
+4. ECSS, *ECSS-M-ST-10C Rev. 1: Project Planning and Implementation*, 2009. https://ecss.nl
+5. NASA, *Systems Engineering Handbook*, NASA/SP-2016-6105 Rev 2, §6.8. https://www.nasa.gov/reference/systems-engineering-handbook/
+6. US Department of State, Directorate of Defense Trade Controls (ITAR, 22 CFR 120–130). https://www.pmddtc.state.gov/
+7. US Department of Commerce, Bureau of Industry and Security (EAR, 15 CFR 730–774). https://www.bis.doc.gov/
+8. Public Services and Procurement Canada, *Controlled Goods Program*. https://www.tpsgc-pwgsc.gc.ca/pmc-cgp/
+9. Cal Poly, *CubeSat Design Specification Rev 14.1*, 2022. https://www.cubesat.org/s/CDS-REV14_1-2022-02-09.pdf
+10. Wertz, J. R., Everett, D. F. & Puschell, J. J. (eds.), *Space Mission Engineering: The New SMAD*, Microcosm Press, 2011, Ch. 14 and Ch. 20.
+11. Klesh, A. et al., "Mars Cube One (MarCO) — Lessons Learned", SSC19-WKII-07, 33rd Annual Small Satellite Conference, 2019.
+12. Sarda, K. et al., "BRITE-Constellation Mission and Spacecraft", AIAA/USU Small Satellite Conference, 2014.
+
+
+# Chapter 14 — Verification and Validation
+
+> **Recommended background.** ECSS-E-ST-10-02C Rev. 1 (Verification); ECSS-E-ST-10-03C (Testing); NASA SEH Rev 2 §5.3–5.4 (Product verification and validation); MIL-STD-1540E (Test requirements for launch, upper-stage and space vehicles); MIL-STD-461G (EMI/EMC). This chapter closes the right-hand side of the V-model introduced in Chapter 1 (Figure 1.1): the requirements of Chapter 5, each tagged with a verification method, now meet the hardware of Chapters 12 and 13. The launch-load environment that the test programme reproduces is described in Chapter 12 §12.1.5.
+
+## Learning objectives
+
+By the end of this chapter, you will be able to:
+
+1. Distinguish between verification and validation using the ECSS and NASA definitions
+2. Assign an appropriate verification method — analysis, test, inspection, review of design or demonstration, ATIR(D) — to each requirement using a decision logic
+3. Define environmental test levels derived from launch-vehicle interface specifications
+4. Construct a compliance verification matrix mapping every requirement to its method, level and phase
+5. Identify when waivers are appropriate and document the waiver rationale
+
+---
+
+## 14.1 Verification versus validation: precise definitions
+
+*[Source: ECSS-E-ST-10-02C Rev. 1 §4; NASA SEH Rev 2 §5.3 (Process 7: Product Verification) and §5.4 (Process 8: Product Validation)]*
+
+| | **Verification** | **Validation** |
+|--|-----------------|----------------|
+| **Question** | "Did we build the system right?" | "Did we build the right system?" |
+| **Checks against** | Requirements ("shall" statements) | Stakeholder needs and operational expectations |
+| **Standard** | ECSS-E-ST-10-02C | ECSS-E-ST-10-06C |
+| **Performed by** | Engineering team | Users, operators, stakeholders |
+| **When** | Throughout development (Phases B–D) | End of development + early operations (Phases D–E) |
+| **Methods** | ATIR(D): analysis, test, inspection, review of design, demonstration | Operational demonstration, user acceptance testing |
+| **Output** | Verification control document (VCD) | Validation report |
+
+### 14.1.1 The critical distinction
+
+A system can be **verified** (every requirement marked "pass") but still **fail validation** if the requirements were written incorrectly. This happens when:
+
+- Requirements were derived from misunderstood stakeholder needs
+- The operational environment differs from the assumptions
+- Edge cases were not captured in the requirements
+
+### 14.1.2 Example
+
+- **Requirement:** "The system shall achieve GSD ≤ 10 m from 500 km altitude"
+- **Verification (test):** calibration-target imagery at 500 km → measured GSD = 9.2 m → **verified**
+- **Validation:** users attempt crop assessment with 9.2 m imagery → "We can see field boundaries but cannot distinguish crop types; we needed GSD ≤ 5 m" → **not validated**
+
+*The requirement was met, but the stakeholder need was not satisfied because the requirement was insufficiently stringent. This is why the stakeholder analysis and the MoE/MoP/TPM hierarchy of Chapter 4 matter: validation is only as good as the needs that were captured at the start.*
+
+---
+
+## 14.2 The ATIR(D) verification methods in detail
+
+ECSS-E-ST-10-02C Rev. 1 §5.3 defines four verification methods — **test, analysis, review of design and inspection** — and NASA practice adds **demonstration** as a fifth. This book abbreviates the set as **ATIR(D)**, with the D in parentheses because ECSS folds demonstration into test. The ordering of the letters varies between documents; the methods are the same. Chapter 5 §5.5 introduced the five-row table; this section explains when each applies and what evidence it produces.
+
+*[Source: ECSS-E-ST-10-02C Rev. 1 §5.3; NASA SEH Rev 2 §5.3.2]*
+
+### 14.2.1 Analysis (A)
+
+**Definition:** Mathematical models, simulations, statistical analysis or heritage comparison demonstrate compliance with acceptable confidence. ECSS includes *verification by similarity* (heritage) under analysis.
+
+**When to use:**
+
+- Physical testing is impossible or impractical (orbital lifetime, radiation total ionising dose)
+- Early in development (Phase B) before hardware exists
+- To demonstrate margin (link budget, thermal model, structural FEA)
+- Statistical parameters (reliability prediction, debris casualty risk)
+- Requirements involving orbital mechanics or mission-level performance
+
+**Evidence produced:** Analysis report with model description, assumptions, inputs, results, uncertainty assessment and sensitivity analysis.
+
+**Examples for CubeSats:**
+
+- Orbital-mechanics analysis → verifies the revisit-time requirement (Chapter 7)
+- Thermal model (finite difference/finite element) → verifies temperatures within limits (Chapter 9 §9.4)
+- Link-budget calculation → verifies margin ≥ 3 dB at worst case (Chapter 11)
+- Structural FEA → verifies a positive margin of safety under launch loads (Chapter 12 §12.1.6)
+
+> **Margin of safety (structural)** — the canonical form is Chapter 12 §12.1.6:
+> $$\text{MoS} = \frac{\sigma_{\text{allowable}}}{\text{FoS} \times \sigma_{\text{applied}}} - 1 \geq 0 \quad \text{for all load cases}$$
+> with FoS = 1.25 (yield) and 1.5 (ultimate) for metallic structure per ECSS-E-ST-32-10C. An analysis report that verifies a structural requirement reports the MoS for every load case, not just the worst.
+
+### 14.2.2 Test (T)
+
+**Definition:** Physical hardware subjected to controlled conditions; measured performance compared quantitatively with the requirement thresholds.
+
+**When to use:**
+
+- Physical properties must be proven with quantitative measurement
+- Environmental survivability must be demonstrated (vibration, thermal vacuum, EMC)
+- End-to-end functional chains must be proven under representative conditions
+- Performance must be measured, not just observed
+
+**Test types by purpose:**
+
+| Test type | Purpose | Level | Phase | Loads/conditions |
+|-----------|---------|-------|-------|-----------------|
+| **Development** | Explore the design space, find problems early | Unit/breadboard | B | As needed |
+| **Qualification** | Prove the design withstands worst case + margin | Unit/system | C | Qualification levels (MPE + margin) |
+| **Acceptance** | Prove the flight hardware is defect-free | System | D | Acceptance levels (MPE) |
+| **Proto-flight** | Combined qualification + acceptance (single unit) | System | C/D | Qualification levels, acceptance duration |
+
+*MPE = maximum predicted environment.*
+
+**The proto-flight approach.** For CubeSats, the **proto-flight** approach is standard because building a separate qualification unit is prohibitively expensive. The flight unit is tested to **qualification levels** but for **acceptance duration**.
+
+*[Source: ECSS-E-ST-10-03C §5.4.2.3; MIL-STD-1540E §6.2.4]*
+
+**Rationale:** Qualification duration is longer and more stressful — this is acceptable for a dedicated qualification model that will not fly. For proto-flight, the shorter duration reduces fatigue-life consumption while still screening for workmanship defects.
+
+| Parameter | Qualification | Acceptance | Proto-flight |
+|-----------|-------------|-----------|-------------|
+| Vibration level | MPE + 3 dB | MPE | MPE + 3 dB |
+| Vibration duration | 2 min/axis | 1 min/axis | 1 min/axis |
+| TVAC temperature range | Predicted ± 15 °C | Predicted ± 10 °C | Predicted ± 10 °C |
+| TVAC cycles | 8 | 4 | 4–8 |
+
+### 14.2.3 Inspection (I)
+
+**Definition:** Visual or physical examination of the product, without operation or stimulation, to verify conformance to requirements.
+
+**When to use:**
+
+- Physical characteristics (dimensions, mass, surface finish, labelling)
+- Manufacturing workmanship (solder joints, cable routing, MLI installation)
+- Markings, identification and safety labels
+- Mechanical fit (deployer rail compliance)
+
+**Evidence produced:** Inspection report with photographs, measurements and a pass/fail checklist.
+
+**Examples for CubeSats:**
+
+- Mass measurement on a calibrated scale → verifies "$M_{\text{dry}} \leq 4.0$ kg"
+- Calliper measurement of the rail profile → verifies CDS dimensional compliance (Chapter 12 §12.1.3)
+- Visual inspection of antenna stowage → verifies no protrusions beyond the deployer envelope
+- Workmanship inspection of PCB solder joints → verifies IPC-A-610 Class 3
+
+### 14.2.4 Review of design (R)
+
+**Definition:** Verification by examination of design documentation — drawings, schematics, software design, analyses already performed, process records — to confirm that the design as documented satisfies the requirement. In ECSS-E-ST-10-02C this is a formal method in its own right, distinct from analysis: no new model is built; the evidence is the documented design.
+
+**When to use:**
+
+- Requirements on the existence or content of a document, process or plan ("a verification plan shall be produced", "the software shall be developed under ECSS-E-ST-40C")
+- Design features that are self-evident from the drawings (number of deployment switches, presence of an RBF pin, connector pin-out)
+- Requirements already covered by an approved heritage design
+
+**Evidence produced:** Review-of-design record citing the documents examined, with the reviewer's signature; typically closed at a design review (Chapter 16).
+
+**Examples for CubeSats:**
+
+- Inspection of the stack schematic → verifies "two independent deployment switches shall inhibit all power"
+- Examination of the software architecture document → verifies "the watchdog shall be implemented in hardware, independent of the main processor"
+
+### 14.2.5 Demonstration (D)
+
+**Definition:** The system is operated under controlled conditions to show that it performs as required, without requiring precise measurement of performance parameters.
+
+**When to use:**
+
+- Functional requirements ("the system shall deploy the antenna within 30 minutes of separation")
+- Operational procedures ("the system shall respond to a mode-change command within 5 seconds")
+- Software functional requirements ("FDIR shall autonomously switch to safe mode on loss of attitude")
+
+**Evidence produced:** Demonstration report with procedure, observations, photographs or video, and a pass/fail statement.
+
+**Examples for CubeSats:**
+
+- Antenna deployment test → demonstrates deployment within the time limit
+- Safe-mode entry test → demonstrates the autonomous FDIR response (Chapter 18)
+- Ground-station commanding test → demonstrates the full command chain (Chapter 17)
+
+---
+
+## 14.3 Environmental test programme
+
+*[Source: ECSS-E-ST-10-03C (Testing); launch-vehicle payload user's guides; MIL-STD-1540E]*
+
+### 14.3.1 Standard environmental test sequence
+
+The test sequence is designed so that each test stresses the hardware in a specific way, and functional tests between environmental tests detect any damage. Figure 14.1 shows the usual sequence for a proto-flight CubeSat.
+
+![Environmental test flow for a proto-flight CubeSat](../assets/figures/fig_test_flow.png)
+
+**Figure 14.1** — The standard environmental test sequence for a proto-flight CubeSat. Functional tests bracket every environmental test so that damage is attributed to the test that caused it; an anomaly after vibration is investigated and resolved before the hardware goes into the thermal-vacuum chamber. The qualification, acceptance and proto-flight levels of §14.2.2 are listed beside the vibration and thermal-vacuum steps.
+
+### 14.3.2 Sine vibration test levels
+
+*[Source: typical Falcon 9 Transporter rideshare payload user's guide]*
+
+Sine vibration simulates the low-frequency launch-vehicle structural modes (typically 5–100 Hz). These are quasi-static loads.
+
+| Frequency range (Hz) | Level | Notes |
+|----------------------|-------|-------|
+| 5–8 | 12.5 mm displacement (0–peak) | Displacement-controlled |
+| 8–100 | 1.25 g (0–peak) | Acceleration-controlled |
+| Sweep rate | 2 octaves/minute | Standard sweep rate |
+| Axes | 3 (X, Y, Z) | Sequential, one axis at a time |
+
+> **Sine vibration acceleration at the crossover frequency:**
+>
+> $$a = (2\pi f)^2\, d$$
+>
+> At $f = 8$ Hz, $d = 12.5$ mm $= 0.0125$ m:
+> $a = (2\pi \times 8)^2 \times 0.0125 = (50.27)^2 \times 0.0125 = 2527 \times 0.0125 = 31.6$ m/s$^2 = 3.22$ g
+>
+> *Note: the transition from displacement to acceleration control occurs where the displacement limit would exceed the acceleration limit. The actual crossover depends on the specific profile; in the profile above the controller limits the 8 Hz level to 1.25 g, so the displacement line governs only below the frequency at which $(2\pi f)^2 d = 1.25\,g_0$, i.e. about 5 Hz.*
+
+### 14.3.3 Random vibration test levels
+
+Random vibration simulates the broadband acoustic and mechanical environment during launch. Levels are specified as power spectral density (PSD) in g$^2$/Hz.
+
+| Frequency (Hz) | PSD level (g$^2$/Hz) | Notes |
+|----------------|---------------------|-------|
+| 20 | 0.01 | Start of profile |
+| 20–50 | +3 dB/octave ramp | Rising |
+| 50–800 | 0.04 (flat) | Maximum-level plateau |
+| 800–2000 | −6 dB/octave ramp | Falling |
+| 2000 | 0.004 | End of profile |
+| **Overall g$_{\text{rms}}$** | **~7.0 g$_{\text{rms}}$** | Qualification level |
+
+> **Computing the overall g$_{\text{rms}}$ from a PSD profile:**
+>
+> $$g_{\text{rms}} = \sqrt{\int_{f_1}^{f_2} \text{PSD}(f)\, df}$$
+>
+> For a flat PSD region: $g_{\text{rms,flat}} = \sqrt{\text{PSD}_{\text{flat}} \times (f_2 - f_1)}$
+>
+> Example: PSD = 0.04 g$^2$/Hz from 50–800 Hz:
+> $g_{\text{rms,flat}} = \sqrt{0.04 \times 750} = \sqrt{30} = 5.48$ g$_{\text{rms}}$
+>
+> The ramp sections and the flat section are summed in quadrature:
+> $$g_{\text{rms,total}} = \sqrt{g_{\text{rms,ramp1}}^2 + g_{\text{rms,flat}}^2 + g_{\text{rms,ramp2}}^2}$$
+> With the rising ramp contributing about 0.9 g$_{\text{rms}}$ and the falling ramp about 4.2 g$_{\text{rms}}$ (the integral of a sloped segment is evaluated in log–log form, or approximated by its mean level times its bandwidth), $g_{\text{rms,total}} \approx \sqrt{0.8 + 30 + 18} \approx 7.0$ g$_{\text{rms}}$.
+
+### 14.3.4 Thermal vacuum test profile
+
+| Parameter | Proto-flight level | Notes |
+|-----------|-------------------|-------|
+| Hot-case temperature | Predicted max + 10 °C | e.g. if the thermal model predicts +55 °C → test to +65 °C |
+| Cold-case temperature | Predicted min − 10 °C | e.g. if the thermal model predicts −20 °C → test to −30 °C |
+| Number of cycles | 4 minimum (proto-flight) | Start and end at hot; functional test at each extreme |
+| Vacuum level | < 10$^{-5}$ mbar | Space-representative vacuum |
+| Dwell time at extreme | ≥ 1 hour | Allow thermal stabilisation (< 1 °C/h gradient) |
+| Temperature transition rate | 1–3 °C/min | Limited by chamber capability |
+| Functional test | Full performance at hot and cold extremes | Subset functional at intermediate transitions |
+
+The ± 10 °C proto-flight band is the acceptance margin of the ECSS thermal-margin schedule in Chapter 9 §9.4.11; the predicted extremes come from the hot and cold cases of the thermal analysis.
+
+> **TVAC cycle duration estimate:**
+>
+> $$t_{\text{cycle}} = 2\,\frac{\Delta T}{\dot{T}_{\text{ramp}}} + 2\, t_{\text{dwell}} + 2\, t_{\text{functional}}$$
+>
+> Example: $\Delta T = 95$ °C (from −30 to +65 °C), ramp = 2 °C/min, dwell = 1 h, functional test = 2 h:
+> $t_{\text{cycle}} = 2 \times (95/2) + 2 \times 60 + 2 \times 120 = 95 + 120 + 240 = 455$ min $= 7.6$ h
+>
+> Total TVAC campaign (4 cycles + set-up): $\approx 4 \times 7.6 + 8 = 38.4$ h $\approx$ 5 working days of continuous chamber operation.
+
+### 14.3.5 EMC testing
+
+*[Source: MIL-STD-461G; ECSS-E-ST-20-07C]*
+
+| Test | Standard | Purpose |
+|------|----------|---------|
+| CE102 conducted emissions | MIL-STD-461G | Measure spurious conducted emissions on power lines |
+| RE102 radiated emissions | MIL-STD-461G | Measure unintentional RF radiation from the satellite |
+| CS101 conducted susceptibility | MIL-STD-461G | Verify immunity to power-line transients |
+| RS103 radiated susceptibility | MIL-STD-461G | Verify immunity to external RF fields |
+
+*Note: EMC testing is not always required for CubeSats. It depends on the launch provider and co-manifested payloads. Check the rideshare interface control document. The transmitter-to-payload coupling identified as an R-type interface concern in Chapter 8 §8.3.4 is the internal EMC case that a self-compatibility test addresses.*
+
+---
+
+## 14.4 Compliance verification matrix construction
+
+The verification matrix (also called the compliance matrix or verification cross-reference matrix, VCRM) is the central document linking every requirement to its verification evidence. It extends the requirements verification matrix of Chapter 5 §5.5 with the phase, level, responsibility, facility and status columns needed to plan and track the campaign.
+
+*[Source: ECSS-E-ST-10-02C Rev. 1 §6; DRD in Annex A]*
+
+### 14.4.1 Matrix structure
+
+| Req ID | Requirement text | Method | Phase | Level | Responsible | Facility | Status | Evidence |
+|--------|-----------------|--------|-------|-------|-------------|----------|--------|----------|
+| SYS-001 | $M_{\text{dry}} \leq 4.0$ kg | I | D | System | Structures | Clean room | Planned | Mass measurement report |
+| SYS-002 | Survive 7 g$_{\text{rms}}$ random vibration | T | C/D | System | Structures | Vibration laboratory | Planned | Vibration test report |
+| SYS-003 | GSD ≤ 10 m at 500 km | A | B | System | Payload | N/A | Planned | Optical analysis report |
+| SYS-004 | Link margin ≥ 3 dB | A | B | System | Comms | N/A | Planned | Link-budget analysis |
+| SYS-005 | Antenna deploys < 30 min | D | D | System | Mechanisms | Clean room | Planned | Deployment demonstration |
+| SYS-006 | Two independent deployment switches inhibit all power | R | B | System | EPS | N/A | Planned | Review of stack schematic |
+
+### 14.4.2 ATIR(D) assignment decision logic
+
+```
+Is it a physical property (mass, dimensions, surface finish)?
+  → Inspection (I), Phase D, system level
+
+Can it only be proven by quantitative measurement under controlled conditions?
+  → Test (T), Phase C/D, unit or system level
+
+Can it be demonstrated by operating the system (functional, not precision)?
+  → Demonstration (D), Phase D, system level
+    (ECSS records this as a test without quantitative measurement)
+
+Can it be shown with acceptable confidence through modelling or similarity?
+  → Analysis (A), Phase B/C, system level
+
+Is it a document, a process, a plan, or a design feature evident from the drawings?
+  → Review of design (R), Phase B
+```
+
+### 14.4.3 Multiple methods
+
+Some requirements need **both** analysis (early confidence) and test (final proof):
+
+| Requirement | Analysis (Phase B) | Test (Phase C/D) |
+|------------|-------------------|------------------|
+| Structural survival under launch loads | FEA with positive MoS | Vibration test — no damage |
+| Pointing accuracy ≤ 0.1° | Error-budget analysis (Chapter 10 §10.4) | On-orbit calibration measurement |
+| Thermal within limits (−20 to +55 °C) | Thermal model simulation | TVAC functional test at extremes |
+| RF link margin ≥ 3 dB | Link-budget calculation | RF compatibility test (if feasible) |
+
+In the matrix, list the **primary** method and note "confirmed by [secondary method] in Phase [X]".
+
+### 14.4.4 Waiver process
+
+When a requirement cannot be verified by the prescribed method, or cannot be met, a **waiver** is needed:
+
+| Waiver type | When used | Approval level |
+|-------------|-----------|---------------|
+| **Non-compliance** | Requirement cannot be met; accept the deviation | Project manager + customer |
+| **Method deviation** | A different verification method is used (e.g. analysis instead of test) | Systems engineer + quality |
+| **Tailoring** | Standard requirement not applicable to this mission | Systems engineer |
+
+**Waiver documentation must include:** requirement ID, deviation description, technical justification, risk assessment (in the terms of Chapter 15) and compensating measures.
+
+---
+
+## 14.5 Returning to UniSat-1: a verification matrix
+
+The requirements below are drawn from the UniSat-1 examples of Chapters 5, 9, 11 and 12. Each is assigned a method by the logic of §14.4.2.
+
+| Req ID | Requirement | Method | Phase | Level | Evidence |
+|--------|-------------|--------|-------|-------|----------|
+| US-SYS-001 | Wet mass ≤ 1.33 kg (deployer limit) | I | D | System | Calibrated-scale measurement |
+| US-SYS-002 | Conform to CDS Rev 14 1U envelope and rail profile | I | D | System | Calliper and profile-gauge report; deployer fit check |
+| US-STR-001 | First structural mode > 90 Hz | A, confirmed by T | B / C | System | Modal analysis; low-level sine survey before random vibration |
+| US-STR-002 | Survive 7 g$_{\text{rms}}$ random vibration without degradation | T | C/D | System | Pre/post functional comparison, vibration test report |
+| US-EPS-001 | Two deployment switches and an RBF pin inhibit all power | R, confirmed by D | B / D | System | Schematic review; inhibit demonstration with switches depressed |
+| US-COM-001 | Downlink margin ≥ 3 dB at 10° elevation | A | B | System | Link budget (Chapter 11 §11.8.2) |
+| US-COM-002 | Antenna deploys within 30 min of separation-switch release | D | D | System | Timed deployment demonstration (3 repetitions) |
+| US-THM-001 | Battery temperature within 0–45 °C charging limits in all modes | A, confirmed by T | B / C | System | Thermal analysis (Chapter 9 §9.5); TVAC with battery temperature monitored |
+| US-PL-001 | Magnetometer noise < 10 nT/√Hz at 1 Hz | T | C | Unit | Laboratory measurement in a shielded chamber |
+| US-OPS-001 | Autonomous safe-mode entry on bus under-voltage | D | D | System | Fault-injection demonstration with the flight software |
+
+Two features of this table are worth noting. First, the only requirements that need the environmental facilities of §14.3 are US-STR-002 and US-THM-001 — a single vibration and TVAC campaign of about two weeks verifies both, which is why those tests dominate the schedule and cost of a small mission's verification. Second, the two "make" items of Chapter 13 §13.6 (the OBC and the magnetometer board) carry the unit-level test and the fault-injection demonstration; the TRL risk identified there is retired by evidence here.
+
+---
+
+## Summary
+
+| Topic | Key takeaway |
+|-------|-------------|
+| V versus V | Verification = meets requirements (ATIR(D)); validation = meets stakeholder needs |
+| ATIR(D) | Analysis (models and similarity), test (quantitative), inspection (physical), review of design (documents and drawings), demonstration (functional) |
+| Proto-flight | CubeSats: a single flight unit tested to qualification levels for acceptance duration |
+| Sine vibration | 5–100 Hz, 1.25 g, quasi-static launch loads; $a = (2\pi f)^2 d$ at the displacement/acceleration crossover |
+| Random vibration | 20–2000 Hz, ~7 g$_{\text{rms}}$ overall ($g_{\text{rms}} = \sqrt{\int \text{PSD}\, df}$), broadband acoustic environment |
+| TVAC | Predicted extremes ± 10 °C, 4+ cycles, functional at each extreme; ~7.6 h per cycle |
+| Compliance matrix | Per requirement: method + phase + level + responsible + facility + status + evidence |
+| Waivers | Document the deviation, justification, risk and compensating measures |
+
+---
+
+## Problems
+
+1. **Verification or validation?** For each of the following, state whether it is a verification or a validation activity and justify the choice in one sentence: (a) measuring the dry mass of the flight unit; (b) an agricultural user assessing a sample image; (c) running the thermal model for the hot case; (d) a 30-day operations rehearsal with simulated anomalies (Chapter 19); (e) confirming that the GSD of on-orbit imagery is 9.2 m.
+
+2. **Method assignment.** Assign a primary ATIR(D) method, phase and level to each of these EOSat-3U requirements, using the logic of §14.4.2, and state the evidence produced: (a) the spacecraft shall provide ≥ 3 dB link margin at 10° elevation; (b) the solar arrays shall deploy within 10 minutes of separation; (c) the star-tracker boresight shall be aligned to the payload within 1 arcmin; (d) the flight software shall be developed under ECSS-E-ST-40C; (e) the spacecraft shall deorbit within 5 years of end of mission; (f) all external surfaces shall be anodised or coated with a non-outgassing finish.
+
+3. **Both analysis and test.** Choose three EOSat-3U requirements that need both analysis in Phase B and test in Phase C/D, and for each explain what the analysis can and cannot establish, what the test adds, and what happens to the matrix if the test is descoped for cost.
+
+4. **Sine profile.** A launch provider specifies 10 mm (0–peak) displacement from 4 Hz and 2.0 g (0–peak) up to 100 Hz. Compute the crossover frequency at which the two limits coincide, and the acceleration the test article would see at 4 Hz if the displacement limit were applied there. Explain why the controller must switch from displacement to acceleration control.
+
+5. **Random vibration g$_{\text{rms}}$.** A deployer specifies a random profile of 0.02 g$^2$/Hz flat from 20 to 1000 Hz, falling at −6 dB/octave to 2000 Hz. Compute the flat-section g$_{\text{rms}}$ and, treating the falling ramp as a straight line in linear PSD, estimate its contribution and the overall g$_{\text{rms}}$. Is the level above or below the ~7 g$_{\text{rms}}$ profile of §14.3.3?
+
+6. **TVAC planning.** The EOSat-3U thermal analysis (Chapter 9 §9.4) predicts −15 °C to +50 °C at the battery. State the proto-flight test temperatures, then compute the cycle duration for a 1.5 °C/min chamber, 1 h dwells and 90-minute functional tests, and the total campaign duration for six cycles plus 8 h of set-up. If the chamber costs 2 kEUR per day (indicative), what does the campaign cost, and how does this compare with the UniSat-1 integration-and-test budget of Chapter 13 §13.6?
+
+7. **Test sequence.** Explain why the random-vibration test precedes TVAC in §14.3.1 and why a functional test sits between them. What would be lost if the order were reversed? Name one defect that vibration reveals but TVAC does not, and one that TVAC reveals but vibration does not.
+
+8. **Proto-flight versus qualification model.** A mission is offered two options: build a qualification model and test it to full qualification levels and durations (adding 60 kEUR and 4 months), or proto-flight test the single flight unit. List the risks each option carries, and decide for (a) UniSat-1 and (b) a 12U commercial mission with a 2 MEUR payload. Justify each decision in terms of the consequence scale of Chapter 15.
+
+9. **Waiver.** The EOSat-3U EMC test (RE102) cannot be performed because no chamber is available before shipment. Write the waiver: requirement ID, deviation, technical justification based on Chapter 8 §8.3.4 and Chapter 11, a risk assessment on the 5×5 matrix of Chapter 15, and two compensating measures.
+
+10. **Compliance matrix audit.** A verification matrix for a 6U CubeSat has 142 requirements: 61 verified by analysis, 48 by test, 20 by inspection, 9 by review of design and 4 by demonstration. Twelve requirements have no method, and six "test" entries have no facility named. List the questions a reviewer should ask at CDR (Chapter 16), and estimate how many requirements can be closed before the environmental campaign starts.
+
+---
+
+## References
+
+1. ECSS, *ECSS-E-ST-10-02C Rev. 1: Verification*, 2018. https://ecss.nl/standard/ecss-e-st-10-02c-rev-1-verification/
+2. ECSS, *ECSS-E-ST-10-03C: Testing*, 2012. https://ecss.nl/standard/ecss-e-st-10-03c-testing/
+3. ECSS, *ECSS-E-ST-10-06C: Technical Requirements Specification*, 2009. https://ecss.nl
+4. ECSS, *ECSS-E-ST-32-10C Rev. 2: Structural Factors of Safety for Spaceflight Hardware*, 2019. https://ecss.nl
+5. ECSS, *ECSS-E-ST-20-07C Rev. 2: Electromagnetic Compatibility*, 2022. https://ecss.nl
+6. NASA, *Systems Engineering Handbook*, NASA/SP-2016-6105 Rev 2, §5.3–5.4. https://www.nasa.gov/reference/systems-engineering-handbook/
+7. US Department of Defense, *MIL-STD-1540E: Test Requirements for Launch, Upper-Stage and Space Vehicles*. https://quicksearch.dla.mil/qsDocDetails.aspx?ident_number=36197
+8. US Department of Defense, *MIL-STD-461G: Requirements for the Control of Electromagnetic Interference Characteristics of Subsystems and Equipment*. https://quicksearch.dla.mil/qsDocDetails.aspx?ident_number=35789
+9. NASA, *General Environmental Verification Standard (GEVS)*, GSFC-STD-7000B, 2021.
+10. Cal Poly, *CubeSat Design Specification Rev 14.1*, 2022. https://www.cubesat.org/s/CDS-REV14_1-2022-02-09.pdf
+11. SpaceX, *Rideshare Payload User's Guide*, 2024 (representative launch-vehicle interface specification). https://www.spacex.com/rideshare/
+
+
+# Chapter 15 — Risk Management, Interface Control and FMECA
+
+> **Recommended background.** ECSS-M-ST-80C (Risk management); ECSS-Q-ST-30-02C (Failure modes, effects and criticality analysis); ECSS-Q-ST-30C (Dependability); ECSS-E-ST-10-24C (Interface management); NASA SEH Rev 2 §6.4 (Technical risk management); NASA NPR 8000.4B (Agency risk management). This chapter assumes the equipment has been selected (Chapter 13) and the verification methods assigned (Chapter 14); it draws on the N² interface analysis of Chapter 8 §8.3 and feeds the cost-risk treatment of Chapter 16 and the FDIR design of Chapter 18.
+
+## Learning objectives
+
+By the end of this chapter, you will be able to:
+
+1. Construct and populate a risk register using a 5×5 likelihood–consequence matrix
+2. Treat the interfaces identified in an N² matrix as a source of risk and carry interface conflicts into the risk register
+3. Perform a simplified FMEA/FMECA for critical subsystems
+4. Identify single-point failures and compute series, parallel and $k$-of-$n$ reliability
+5. Classify risks and select appropriate mitigation strategies (accept, mitigate, transfer, avoid)
+
+Vendor products named in this chapter are representative examples, not endorsements.
+
+---
+
+## 15.1 Risk management process
+
+*[Source: ECSS-M-ST-80C (Risk Management); NASA SEH Rev 2 §6.4 (Process 13: Technical Risk Management)]*
+
+### 15.1.1 The four-step process
+
+Risk management is continuous throughout the project lifecycle. The four steps are:
+
+1. **Identify** — What can go wrong? (Brainstorming, checklists, historical data, expert judgement)
+2. **Assess** — How likely is it? How severe would the consequence be? (Scoring)
+3. **Mitigate** — What can we do to reduce the likelihood or the consequence? (Strategy selection)
+4. **Monitor** — Is the risk increasing, decreasing or stable? (Tracking, triggers, escalation)
+
+### 15.1.2 Risk sources
+
+| Source | Example risks |
+|--------|--------------|
+| **Technical** | Component failure, interface mismatch, performance shortfall, software defect |
+| **Schedule** | Component delivery delay, test facility unavailable, regulatory delay |
+| **Cost** | Component price increase, scope creep, test-campaign overrun |
+| **Programmatic** | Funding cut, personnel turnover, partner withdrawal |
+| **External** | Launch delay or failure, spectrum interference, export-control denial |
+
+---
+
+## 15.2 The 5×5 risk matrix
+
+The 5×5 matrix is the standard risk-scoring tool used across ESA, NASA and commercial space programmes. Figure 15.1 shows it in the ECSS-M-ST-80C form.
+
+### 15.2.1 Likelihood scale
+
+| Level | Likelihood | Description | Probability range |
+|-------|-----------|-------------|-------------------|
+| 1 | Remote | Very unlikely; no precedent in similar missions | < 5 % |
+| 2 | Unlikely | Could happen but improbable; has occurred rarely | 5–20 % |
+| 3 | Possible | Has happened on similar missions; credible scenario | 20–50 % |
+| 4 | Likely | Expected to occur at least once during the mission | 50–80 % |
+| 5 | Almost certain | Will almost certainly occur; multiple precedents | > 80 % |
+
+### 15.2.2 Consequence scale
+
+| Level | Consequence | Technical impact | Cost impact | Schedule impact |
+|-------|-----------|-----------------|-------------|----------------|
+| 1 | Negligible | No performance impact | < 1 % overrun | < 1 week slip |
+| 2 | Minor | Minor performance degradation; workaround exists | 1–5 % overrun | 1–4 week slip |
+| 3 | Moderate | Significant performance loss; mission degraded | 5–15 % overrun | 1–3 month slip |
+| 4 | Major | Mission capability severely degraded; partial loss | 15–30 % overrun | 3–6 month slip |
+| 5 | Catastrophic | Mission failure; total loss | > 30 % overrun | > 6 month slip or cancellation |
+
+### 15.2.3 Risk score and classification
+
+> **Risk score:**
+>
+> $$R = L \times C$$
+>
+> where $L$ = likelihood (1–5) and $C$ = consequence (1–5).
+
+| Likelihood ↓ / Consequence → | 1 | 2 | 3 | 4 | 5 |
+|---|---|---|---|---|---|
+| **5** | 5 (M) | 10 (H) | 15 (H) | 20 (C) | 25 (C) |
+| **4** | 4 (L) | 8 (M) | 12 (H) | 16 (C) | 20 (C) |
+| **3** | 3 (L) | 6 (M) | 9 (M) | 12 (H) | 15 (H) |
+| **2** | 2 (L) | 4 (L) | 6 (M) | 8 (M) | 10 (H) |
+| **1** | 1 (L) | 2 (L) | 3 (L) | 4 (L) | 5 (M) |
+
+- **L = Low (1–4):** accept and monitor
+- **M = Medium (5–9):** mitigate if cost-effective
+- **H = High (10–15):** active mitigation required
+- **C = Critical (16–25):** redesign or descope required
+
+![5×5 risk matrix (ECSS-M-ST-80C).](../assets/figures/fig_risk_matrix.png)
+
+**Figure 15.1** — The 5×5 likelihood–consequence matrix with the four acceptance bands (low, medium, high, critical) and representative CubeSat risks plotted at their scores. A mitigation moves a risk down (lower likelihood) or left (lower consequence); the register records both the pre- and post-mitigation position.
+
+### 15.2.4 CubeSat-specific risk examples
+
+| Risk | L | C | Score | Category | Typical mitigation |
+|------|---|---|-------|----------|-------------------|
+| Deployment mechanism failure (antenna, solar array) | 3 | 4 | 12 | High | Redundant mechanisms; 100+ ground test cycles |
+| Communication loss after separation | 2 | 5 | 10 | High | Beacon mode; timer-based antenna deployment; multiple ground stations |
+| ADCS does not achieve the pointing specification | 3 | 3 | 9 | Medium | Margin in the pointing budget; on-orbit calibration plan |
+| Power budget negative during eclipse | 2 | 4 | 8 | Medium | Conservative duty cycling; 20 % battery margin |
+| COTS component radiation failure (SEU/SEL) | 2 | 4 | 8 | Medium | Watchdog resets; latch-up protection circuits; EDAC |
+| Software bug causing spurious safe-mode entry | 4 | 2 | 8 | Medium | Extensive software testing; staged upload; safe mode must work independently |
+| Thermal exceedance (hot case) | 2 | 3 | 6 | Medium | Additional radiator area; duty-cycle limit |
+| Launch delay (vehicle failure) | 3 | 2 | 6 | Medium | Manifest on multiple vehicles; schedule buffer |
+| Spectrum licensing delay | 3 | 2 | 6 | Medium | Start filing 12+ months before the planned launch (Chapter 2 §2.7) |
+
+### 15.2.5 Mitigation strategies
+
+| Strategy | Description | When to use | Cost impact |
+|----------|-------------|-------------|-------------|
+| **Accept** | Risk is within tolerance; monitor only | Score 1–4 (low) | None |
+| **Mitigate** | Reduce $L$ or $C$ through design changes, testing or procedures | Score 5–15 | Moderate — cost of mitigation |
+| **Transfer** | Pass the risk to another party (insurance, supplier warranty) | Financial risk; operational risk | Premium or contract cost |
+| **Avoid** | Change the design to eliminate the risk entirely | Score 16–25 (critical) | May affect performance or cost |
+
+---
+
+## 15.3 Interfaces as a source of risk
+
+The N² matrix is constructed in Chapter 8 §8.3: Table 8.1 is the six-subsystem example, Table 8.2 defines the interface-type codes **M** (mechanical), **E** (electrical/power), **T** (thermal), **D** (data), **R** (RF), **O** (optical) and **S** (software), and §8.3.5 gives the conflict-detection checks and the I²C/RS-422 worked example. None of that is repeated here. What this section adds is the link from the interface register to the risk register.
+
+Every off-diagonal cell of the N² matrix is a place where two subsystems — and usually two engineers, and often two suppliers — must agree. NASA's experience that most system failures trace back to interface problems (Chapter 8 §8.3) is a statement about likelihood: an interface that has not been written down as a requirement has a high probability of being wrong at integration. Interfaces therefore enter the risk register in three ways:
+
+1. **Unresolved conflicts.** A conflict found by the checks of §8.3.5 (voltage, protocol, band, mounting location) that has not yet been resolved is a risk with $L$ = 4–5 and $C$ set by the severity class of §8.3.5 (critical → $C$ = 4–5, major → 3, minor → 2). It stays in the register until the resolution has become an interface requirement and been verified (Chapter 14).
+2. **Undocumented interfaces.** A cell that the N² matrix shows as active but for which no interface requirement or ICD entry exists is a risk in its own right, typically $L$ = 3, $C$ = 3 ("significant performance loss; mission degraded") — the classic case is the R-type coupling between the transmitter and the payload receiver, which no supplier datasheet covers.
+3. **Interface-driven failure modes.** The FMECA of §15.4 asks, for each item, "what happens at the boundary?" — a connector that unmates under vibration (M), a bus that is pulled low by one failed device (D), a radiator face that is shadowed by a deployed panel (T). Each of these is tagged with its letter code so that the owner of the interface, not just the owner of the item, sees it.
+
+The practical rule is that each interface risk is tagged with the N² cell it belongs to and its letter code, so that the register can be sorted by interface as well as by score. In a concurrent-design tool with a constraint engine the first category is generated automatically whenever an incompatible pair of components is selected; the second and third require the engineering judgement of the FMECA. Chapter 8 §8.3.6 gives the format of the interface requirement that closes an interface risk.
+
+---
+
+## 15.4 FMEA/FMECA
+
+*[Source: ECSS-Q-ST-30-02C (Failure Modes, Effects and Criticality Analysis); ECSS-Q-ST-30C (Dependability)]*
+
+### 15.4.1 Definitions
+
+- **FMEA** (failure mode and effects analysis): identifies failure modes, their causes and their effects on the system
+- **FMECA** (failure mode, effects and criticality analysis): FMEA plus a criticality ranking
+
+### 15.4.2 FMEA/FMECA table structure
+
+| Item | Function | Failure mode | Cause | Local effect | System effect | Severity | Detection | Compensating provision | Criticality |
+|------|----------|-------------|-------|-------------|---------------|----------|-----------|----------------------|------------|
+| OBC | Process commands, run flight software | Processor lock-up | SEU, firmware bug | No command processing | Loss of mission control | 5 | Housekeeping time-out | Watchdog reset; redundant OBC (if fitted) | 1 (SPF) |
+| Battery | Store energy | Cell short | Manufacturing defect | Reduced capacity | Shortened eclipse survival | 3 | Voltage monitoring | Cell balancing; margin in capacity | 2 |
+| Reaction wheel | Provide torque | Bearing seizure | Lubrication failure | Loss of one axis of control | Degraded pointing | 4 | Current anomaly | 4-wheel configuration (3 + 1 redundancy) | 3 (with redundancy) |
+| Antenna | Radiate RF | Deployment failure | Mechanism jam (M interface) | No antenna deployed | No communication | 5 | Beacon absence | Redundant deployment; burn wire + spring | 1 (SPF) |
+
+### 15.4.3 Criticality categories
+
+| Category | Definition | Action required |
+|----------|-----------|----------------|
+| **1 (Catastrophic)** | A single failure causes mission loss; no compensation | Redesign to add redundancy or accept with justification |
+| **2 (Critical)** | A single failure causes significant degradation | Mitigate (redundancy, operational workaround) |
+| **3 (Major)** | A single failure causes moderate degradation | Monitor; plan an operational workaround |
+| **4 (Minor)** | A single failure has negligible mission impact | Accept |
+
+Where a numerical ranking is wanted — in automotive and some commercial space practice — the **risk priority number** is used:
+
+$$\text{RPN} = S \times O \times D$$
+
+with severity $S$, occurrence $O$ and detectability $D$ each scored 1–10, so that a failure mode that is severe, frequent and hard to detect scores up to 1000. ECSS-Q-ST-30-02C uses the severity categories above together with a probability class rather than an RPN, but the two schemes rank the same failure modes in the same order.
+
+### 15.4.4 Single-point failure (SPF) analysis
+
+A **single-point failure** is any single component whose failure alone causes loss of mission. Identifying SPFs is a critical output of the FMECA.
+
+**Typical CubeSat single-point failures:**
+
+| Component | Why it is an SPF | Common mitigation |
+|-----------|-----------------|-------------------|
+| OBC (single processor) | No command processing → no mission | Watchdog timer + autonomous safe mode + EDAC memory |
+| Battery (single pack) | No stored energy → no eclipse survival | Cell-level monitoring; conservative DoD limit (< 20 %) |
+| Antenna (non-redundant deployment) | No RF link → no commanding or telemetry | Redundant deployment mechanisms (burn wire + spring) |
+| Solar array (deployment) | No power generation → mission loss within hours | Redundant deployment; hinge spring + motor backup |
+| EPS main board | No power distribution | Typically no mitigation (accepted SPF in CubeSats) |
+
+### 15.4.5 Key equations: reliability
+
+> **Series reliability (all components must work):**
+>
+> $$R_{\text{series}} = \prod_{i=1}^{n} R_i = R_1 \times R_2 \times \cdots \times R_n$$
+>
+> Example: 5 components each with $R = 0.99$: $R_{\text{series}} = 0.99^5 = 0.951$
+
+> **Parallel reliability (at least one must work — redundancy):**
+>
+> $$R_{\text{parallel}} = 1 - \prod_{i=1}^{n} (1 - R_i)$$
+>
+> For $n$ identical redundant units each with reliability $R$: $R_{\text{parallel}} = 1 - (1 - R)^n$
+>
+> Example: 2 redundant deployment mechanisms each with $R = 0.95$:
+> $R_{\text{parallel}} = 1 - (1 - 0.95)^2 = 1 - 0.05^2 = 1 - 0.0025 = 0.9975$
+
+> **$k$-of-$n$ redundancy (at least $k$ of $n$ identical units must work):**
+>
+> $$R_{k\text{-of-}n} = \sum_{i=k}^{n} \binom{n}{i} R^i (1 - R)^{n-i}$$
+
+> **Mean time between failures (MTBF):**
+>
+> $$\text{MTBF} = \frac{\text{total operating hours}}{\text{number of failures}}$$
+>
+> For a component with constant failure rate $\lambda$ (failures per hour): $\text{MTBF} = 1/\lambda$
+>
+> **Reliability over time (exponential model):**
+> $$R(t) = e^{-t/\text{MTBF}} = e^{-\lambda t}$$
+>
+> Example: MTBF = 50 000 h, mission duration = 8760 h (1 year):
+> $R = e^{-8760/50000} = e^{-0.1752} = 0.839$
+
+> **System availability:**
+>
+> $$A = \frac{\text{MTBF}}{\text{MTBF} + \text{MTTR}}$$
+>
+> where MTTR = mean time to repair (or recover, for a spacecraft).
+>
+> For a spacecraft with MTBF = 50 000 h and MTTR = 2 h (safe-mode recovery): $A = 50000/(50000 + 2) = 0.99996$
+
+### 15.4.6 Worked example: reaction-wheel redundancy
+
+*Problem:* A fine-pointing mission requires 3-axis attitude control. Each reaction wheel has $R = 0.98$ over the 2-year mission.
+
+*Configuration A — 3 wheels (no redundancy):*
+$$R_{\text{system}} = R^3 = 0.98^3 = 0.941$$
+
+*Configuration B — 4 wheels in 3-of-4 redundancy (1 spare), using the $k$-of-$n$ formula:*
+$$P(\geq 3 \text{ working}) = \binom{4}{4} R^4 + \binom{4}{3} R^3 (1 - R) = 0.98^4 + 4 \times 0.98^3 \times 0.02 = 0.9224 + 4 \times 0.9412 \times 0.02 = 0.9224 + 0.0753 = 0.9977$$
+
+*Adding one spare wheel improves the reliability from 0.941 to 0.998 — a significant improvement for a modest mass and cost increase. The pyramid geometry that lets any three of the four wheels span all three axes is described in Chapter 10 §10.3.* Figure 15.2 draws the two configurations as reliability block diagrams.
+
+![Reliability block diagrams for three wheels in series and four wheels in 3-of-4 voting](../assets/figures/fig_rbd_wheels.png)
+
+**Figure 15.2** — Reliability block diagrams for the reaction-wheel example. Left: three wheels in series, each with R = 0.98, give a system reliability of 0.98³ = 0.941 because any single failure ends three-axis control. Right: four wheels feeding a 3-of-4 voting block give 0.98⁴ + 4 × 0.98³ × 0.02 = 0.9977 ≈ 0.998, since the system survives any one failure.
+
+### 15.4.7 Real mission example: Hitomi (ASTRO-H)
+
+JAXA's Hitomi X-ray observatory was lost on 26 March 2016, just 37 days after launch, owing to a cascading failure in the AOCS subsystem:
+
+1. An incorrect parameter in the star tracker caused an erroneous attitude estimate
+2. The reaction wheels applied incorrect torques based on the bad estimate
+3. Thrusters fired to "correct" the (phantom) attitude error, causing rapid spin
+4. The satellite spun up beyond its structural limits, and the extensible optical bench broke off
+
+**Root cause:** software parameter error (unit conversion) + inadequate FDIR logic + no cross-check between attitude sensors.
+
+*Lesson: FMECA must consider cascading failures and common-cause failures, not just single-component failures. Software errors are failure modes too — and so are interfaces: the S-type interface between the ground-prepared parameter and the on-board estimator is where this failure began.*
+
+*[Source: JAXA Hitomi Investigation Report, 2016]*
+
+---
+
+## 15.5 Returning to UniSat-1: risk register and single-point failures
+
+The UniSat-1 design of Chapters 9–13 is simple enough for its full risk register to fit on one page. The five highest-scoring technical risks, with their owners from the position list of Chapter 1 Table 1.4:
+
+| ID | Risk | N² cell / code | L | C | Score | Strategy | Mitigation | Owner |
+|----|------|----------------|---|---|-------|----------|------------|-------|
+| R-01 | UHF monopole fails to deploy from its stowed position | Structure → TTC (M) | 3 | 5 | 15 (H) | Mitigate | Burn-wire release with spring backup; 50 deployment cycles in test; beacon on a secondary stub antenna | Structures |
+| R-02 | Data budget does not close with a single ground station (Chapter 11 §11.8.2) | TTC → Ground (R, D) | 4 | 3 | 12 (H) | Mitigate | Register with the SatNOGS network before launch; on-board averaging mode halves the data rate | Comms |
+| R-03 | Custom OBC (TRL 5) fails in the radiation environment | OBC (SEU/SEL) | 2 | 5 | 10 (H) | Mitigate | MSP430 safe-mode processor with independent watchdog; latch-up current limiting; EDAC on external RAM | OBDH |
+| R-04 | Magnetometer data corrupted by the on-board permanent magnet and the EPS switching noise | AOCS → Payload (M, E) | 3 | 3 | 9 (M) | Mitigate | Boom-less placement at the far corner of the stack; characterise the magnet's field in test and subtract it; shielded harness | Payload |
+| R-05 | Battery falls below 0 °C in eclipse and cannot charge | EPS ↔ Thermal (T) | 2 | 4 | 8 (M) | Mitigate | Battery heater with thermostat (Chapter 9 §9.5); TVAC verification of the cold case (Chapter 14 §14.5) | Thermal |
+
+**Single-point failures.** UniSat-1 has four: the EPS board, the single battery pack, the UHF transceiver and the antenna deployment. The first three are accepted with justification (a redundant EPS or radio would double the cost of the smallest subsystems and is not CubeSat practice); the fourth is mitigated by R-01. A series reliability estimate for the accepted chain — EPS 0.97, battery 0.98, transceiver 0.97 over one year — gives $R = 0.97 \times 0.98 \times 0.97 = 0.92$, which, combined with the 0.9975 of the redundant deployment, sets the mission's one-year success probability near 0.92. For an 85 kEUR technology demonstration that is acceptable; for the EOSat-3U mission the same calculation is what justifies the fourth reaction wheel.
+
+> **Think about it.** R-02 is the only risk in the register that was created by a budget, not by hardware. Which chapter's calculation would have to change for it to disappear, and what would that change cost?
+
+---
+
+## Summary
+
+| Topic | Key takeaway |
+|-------|-------------|
+| Risk process | Identify → assess → mitigate → monitor (continuous throughout the lifecycle) |
+| 5×5 matrix | $R = L \times C$; low (1–4), medium (5–9), high (10–15), critical (16–25) |
+| Strategies | Accept (low), mitigate (medium–high), transfer (financial), avoid (critical) |
+| Interfaces as risk | Every N² cell (Chapter 8 §8.3, Table 8.1) is a risk source; tag interface risks with the M/E/T/D/R/O/S code of Table 8.2 |
+| Interface conflicts | Protocol mismatch, voltage mismatch, band mismatch — detect early; unresolved conflicts enter the register |
+| FMECA | Failure mode → cause → local effect → system effect → severity → detection → mitigation → criticality (or $\text{RPN} = S \times O \times D$) |
+| SPF | Single-point failures must be identified, assessed, and accepted or mitigated |
+| Reliability | $R_{\text{series}} = \prod R_i$; $R_{\text{parallel}} = 1 - \prod(1 - R_i)$; $R_{k\text{-of-}n} = \sum_{i=k}^{n}\binom{n}{i}R^i(1-R)^{n-i}$; $R(t) = e^{-\lambda t}$ |
+
+---
+
+## Problems
+
+1. **Risk register.** Identify five technical risks for a 3U Earth-observation CubeSat with a deployable solar array, a star tracker and an S-band downlink. Score each on the 5×5 matrix, classify it, define a mitigation for any risk scoring ≥ 10, and assign an owner from the position list of Chapter 1 Table 1.4. Then re-score each risk after mitigation and show the moves on a sketch of Figure 15.1.
+
+2. **Consequence scales.** A component delivery slips by 10 weeks and adds 8 % to the hardware cost. Score the consequence on each of the three scales of §15.2.2 (technical, cost, schedule), and explain how a single consequence level is chosen when the three disagree.
+
+3. **Interface risks.** Using Chapter 8 Table 8.1, identify the three cells of the EOSat-3U N² matrix most likely to produce an interface risk, tag each with its letter code from Table 8.2, score it, and write the interface requirement (in the "shall" form of Chapter 8 §8.3.6) whose verification would close it.
+
+4. **FMECA.** Complete a four-row FMECA table, in the format of §15.4.2, for the EOSat-3U solar-array deployment mechanism, the S-band transmitter power amplifier, the OBC flash memory and the battery heater. Assign a severity, a detection means and a compensating provision to each, and state which rows are single-point failures.
+
+5. **Series and parallel reliability.** The EOSat-3U critical chain has seven items with one-year reliabilities 0.995, 0.99, 0.99, 0.98, 0.98, 0.97 and 0.96. Compute the series reliability. If the 0.96 item is duplicated in parallel, what is the new chain reliability, and what is the equivalent improvement if instead the 0.98 items are each raised to 0.995 by better screening? Which is cheaper, and why?
+
+6. **$k$-of-$n$.** A 6U CubeSat flies six solar-array strings and can meet its power requirement with any four. Each string has $R = 0.97$ over three years. Compute the probability that the power requirement is met. Repeat for five strings with four needed, and comment on the mass cost of the sixth string.
+
+7. **Exponential reliability.** A COTS reaction wheel has a quoted MTBF of 120 000 h. Compute its reliability over 1, 2 and 5 years, then the 3-of-4 system reliability at each duration. At what mission duration does a 3-of-4 set fall below the 0.95 that a single wheel offers at one year?
+
+8. **Availability.** A spacecraft enters safe mode on average every 400 h and takes 6 h to recover to nominal operations. Compute the availability. If the FDIR of Chapter 18 is improved so that recovery is autonomous and takes 30 minutes, what is the new availability, and how many additional imaging passes per year does that represent for a 4-pass-per-day mission?
+
+9. **Cascading failures.** Reconstruct the Hitomi sequence of §15.4.7 as a chain of FMECA rows, one per step, with the interface code (from Table 8.2) at which each step crossed a subsystem boundary. Identify the single cross-check that would have broken the chain earliest and estimate its implementation cost relative to the mission.
+
+10. **Accept or mitigate.** The UniSat-1 EPS board is an accepted single-point failure. Estimate the mass, cost and schedule of making it redundant (two boards, cross-strapped, with an isolation switch), re-score the risk, and decide whether the mitigation is justified for (a) UniSat-1 and (b) a commercial 3U mission with a 400 kEUR payload. Use the cost-impact column of §15.2.2 in the argument.
+
+---
+
+## References
+
+1. ECSS, *ECSS-M-ST-80C: Risk Management*, 2008. https://ecss.nl/standard/ecss-m-st-80c-risk-management-31-july-2008/
+2. ECSS, *ECSS-Q-ST-30-02C: Failure Modes, Effects (and Criticality) Analysis (FMEA/FMECA)*, 2009. https://ecss.nl/standard/ecss-q-st-30-02c-failure-mode-effects-and-criticality-analysis-fmeca-6-march-2009/
+3. ECSS, *ECSS-Q-ST-30C Rev. 1: Dependability*, 2017. https://ecss.nl/standard/ecss-q-st-30c-dependability/
+4. ECSS, *ECSS-E-ST-10-24C: Interface Management*, 2015. https://ecss.nl/standard/ecss-e-st-10-24c-interface-management/
+5. NASA, *Systems Engineering Handbook*, NASA/SP-2016-6105 Rev 2, §6.4. https://www.nasa.gov/reference/systems-engineering-handbook/
+6. NASA, *NPR 8000.4B: Agency Risk Management Procedural Requirements*, 2017. https://nodis3.gsfc.nasa.gov
+7. JAXA, *Hitomi (ASTRO-H) Anomaly Investigation Report*, 2016. https://global.jaxa.jp/press/2016/05/20160531_hitomi.html
+8. US Department of Defense, *MIL-HDBK-338B: Electronic Reliability Design Handbook*, 1998.
+9. O'Connor, P. & Kleyner, A., *Practical Reliability Engineering*, 5th ed., Wiley, 2012.
+
+
+# Chapter 16 — Cost Estimation and Design Reviews
+
+> **Recommended background.** NASA Cost Estimating Handbook v4.0 (Appendix C, cost estimating relationships); SMAD4 Chapter 20 (Cost); NPR 7120.5F (work breakdown structures); ECSS-M-ST-60C (Cost and schedule management); ECSS-M-ST-10C Rev. 1 §6 and NPR 7123.1D Appendix G (reviews). This chapter builds on the bill of materials and non-recurring engineering cost of Chapter 13, the verification matrix of Chapter 14 and the risk register of Chapter 15; the review gates themselves are defined in Chapter 1 Table 1.3.
+
+## Learning objectives
+
+By the end of this chapter, you will be able to:
+
+1. Estimate mission cost using parametric (CER), analogy and bottom-up methods, and state the accuracy of each
+2. Structure a work breakdown structure (WBS) for a CubeSat project and distribute cost across lifecycle phases
+3. Apply learning-curve effects to constellation cost estimation
+4. Express cost risk as a distribution and quote P50/P70/P80 confidence levels
+5. Prepare for a design review (SRR/PDR/CDR) against explicit gate criteria
+6. Present design evidence clearly, respond to review-board questions, and sit on a review board yourself
+
+Vendor products named in this chapter are representative examples, not endorsements; prices are indicative (2026) unless a fiscal year is stated.
+
+---
+
+## 16.1 Cost estimation methodologies
+
+*[Source: NASA CEH v4.0 Appendix C; SMAD4 Chapter 20; Aerospace Corp SSCM]*
+*[URL: https://www.nasa.gov/offices/ocfo/references-and-tools/ (NASA CEH)]*
+
+Cost is an engineering budget like mass or power: it has a current best estimate, a margin and an allocation, and it must close. The difference is that cost cannot be measured on a bench — it is *estimated*, and the quality of the estimate depends on how much of the design exists when the estimate is made.
+
+### 16.1.1 Three primary methods
+
+| Method | Description | Accuracy (1σ) | When to use | Data required |
+|--------|-------------|---------------|-------------|---------------|
+| **Parametric** | Cost estimating relationships (CERs) fitted to a historical database | ± 30–50 % | Phase 0/A (few details known) | Mass, power, mission type |
+| **Analogy** | Compare with a similar past mission, adjust for differences | ± 20–40 % | Phase A/B (reference mission available) | Detailed knowledge of the reference |
+| **Bottom-up** | Sum vendor quotes + labour estimates + facilities | ± 10–20 % | Phase B/C (detailed design) | BOM, vendor quotes, labour rates |
+
+The three methods are not alternatives but a sequence: the estimate narrows as the lifecycle proceeds, from a parametric band at mission-concept review to a bottom-up figure at CDR. Figure 16.1 shows this funnel — the uncertainty band narrows from ± 50 % to ± 10 % as the estimating method changes with design maturity.
+
+![Cost-estimate accuracy band narrowing from parametric to bottom-up](../assets/figures/fig_cost_funnel.png)
+
+**Figure 16.1** — Cost-estimate accuracy versus lifecycle phase. The ± 1σ band around the point estimate narrows from about ± 50 % at mission concept review to about ± 10 % at CDR as the estimating method moves from parametric (Phase 0/A) through analogy (A/B) to bottom-up (B/C/D); the review gates of Chapter 1 Table 1.3 are marked on the phase axis.
+
+### 16.1.2 Parametric cost estimating relationships (CERs)
+
+CERs express cost as a function of technical parameters, derived from regression analysis of historical data. The general form is
+
+$$C = a \, M^{\,b} \, f_{\text{complexity}}$$
+
+where $a$ is the regression coefficient, $M$ is the driving parameter (usually dry mass in kg, sometimes power in W or data rate), $b$ is the exponent (typically 0.5–1.0, so that cost grows more slowly than mass) and $f_{\text{complexity}}$ is an adjustment for mission difficulty. A CER is only as good as the database behind it: it must not be used outside the mass and technology range of the missions it was fitted to.
+
+### 16.1.3 USCM (Unmanned Space Vehicle Cost Model) CERs
+
+*[Source: SMAD4 Table 20-8; US Air Force USCM database]*
+
+| Subsystem | CER (FY2010 \$K) | Parameter | Typical $b$ |
+|-----------|-----------------|-----------|-------------|
+| Structure | $157\,M_{\text{struct}}^{0.83}$ | Dry mass (kg) | 0.83 |
+| Thermal | $394\,M_{\text{therm}}^{0.635}$ | Dry mass (kg) | 0.635 |
+| EPS | $62.7\,M_{\text{EPS}}^{1.00}$ | Dry mass (kg) | 1.00 |
+| TT&C | $545\,M_{\text{TTC}}^{0.761}$ | Dry mass (kg) | 0.761 |
+| AOCS | $464\,M_{\text{AOCS}}^{0.867}$ | Dry mass (kg) | 0.867 |
+| Propulsion | $17.8\,M_{\text{prop}}^{0.75}$ | Dry mass (kg) | 0.75 |
+| Integration and test | $10.4\,M_{\text{dry}}^{0.907}$ | Total dry mass (kg) | 0.907 |
+| Programme management | 12.3 % of hardware cost | — | — |
+| Systems engineering | 14.2 % of hardware cost | — | — |
+
+### 16.1.4 SSCM (Small Satellite Cost Model)
+
+The Aerospace Corporation SSCM was specifically calibrated for satellites below 500 kg. It provides more accurate estimates for CubeSats than USCM.
+
+*[Source: Aerospace Corp, "Small Satellite Cost Model (SSCM)", available through Aerospace TOR]*
+
+**Key SSCM adjustments for CubeSats:**
+
+- COTS hardware costs are catalogue prices, not mass-based CERs
+- Labour costs dominate for university and small-team projects
+- NRE depends heavily on mission uniqueness (Chapter 13 §13.1.3 gives the NRE equation)
+- Standard CERs (designed for > 100 kg) over-predict by 2–6× for the nano/micro class
+
+### 16.1.5 CubeSat-calibrated pricing: COTS flat prices versus CERs
+
+A practical hybrid approach uses COTS flat pricing for the nano/micro class and CERs for larger spacecraft. The comparison below shows why: for CubeSat-mass subsystems the CER is evaluated far below the mass range it was fitted to, and the fit breaks down.
+
+| Subsystem | CubeSat COTS cost (kEUR) | USCM CER (kEUR, at CubeSat mass) | Ratio |
+|-----------|--------------------------|-----------------------------------|-------|
+| EPS | 15 | 60 | CER 4× higher |
+| AOCS (fine) | 40 | 66 | CER 1.6× higher |
+| TT&C (S-band) | 20 | 25 | Similar |
+| OBC | 10 | 12 | Similar |
+| Structure | 8 | 3 | CER lower (minimum-order effect) |
+| Payload | 50 (variable) | 300 | CER 6× higher for COTS payloads |
+
+*This confirms that for CubeSats, COTS pricing is more reliable than parametric CERs for hardware cost.*
+
+### 16.1.6 Worked example: parametric versus bottom-up for the 3U EO CubeSat
+
+*EOSat-3U, 3U Earth-observation mission (representative vendors, indicative 2026 prices):*
+
+| WBS element | Parametric (kEUR) | Bottom-up (kEUR) | Notes |
+|-------------|-------------------|-------------------|-------|
+| Structure | 8 | 8.5 | ISIS 3U structure |
+| EPS | 18 | 16.2 | GomSpace P31u + solar array |
+| OBC | 12 | 10.0 | NanoAvionics SatBus |
+| AOCS | 45 | 42.0 | BCT XACT-15 |
+| TT&C | 22 | 20.5 | Endurosat S-band |
+| Thermal | 5 | 3.0 | Passive only |
+| Payload | 65 | 58.0 | Simera Sense xScape |
+| Harness | 3 | 2.5 | Custom cables |
+| **Hardware subtotal** | **178** | **160.7** | |
+| I&T (12 %) | 21 | 19.3 | |
+| Software (8 %) | 14 | 12.9 | |
+| PM/SE/MA (13 %) | 23 | 20.9 | |
+| Launch | 200 | 195.0 | Rideshare |
+| Ground (5 %) | 9 | 8.0 | Volunteer network + dedicated station |
+| Operations (3 yr) | 45 | 40.0 | 0.5 FTE |
+| **TOTAL** | **490** | **456.8** | |
+
+*The parametric estimate is ~7 % higher than bottom-up. This is expected: parametric includes inherent uncertainty and contingency.* The ~490 kEUR total is the figure carried in Chapter 13 §13.6 for the 1U-versus-3U comparison.
+
+---
+
+## 16.2 Cost breakdown structure (WBS)
+
+The work breakdown structure (WBS) is the hierarchical decomposition of all work required to complete the mission. It is the foundation for cost estimation, scheduling and management: every euro and every hour is booked against exactly one WBS element, so nothing is counted twice and nothing is forgotten.
+
+*[Source: NPR 7120.5F Appendix G; ECSS-M-ST-60C; NASA CEH v4.0 Appendix B]*
+
+### 16.2.1 Standard CubeSat WBS
+
+```
+WBS Level 1: Mission Total
+  1.0  Programme Management                5 %   (oversight, reviews, reporting)
+  2.0  Systems Engineering                 5 %   (budgets, interfaces, trade studies)
+  3.0  Mission Assurance                   3 %   (quality, reliability, parts)
+  4.0  Payload                            20 %   (instrument + calibration)
+    4.1  Payload instrument hardware
+    4.2  Payload software
+    4.3  Payload calibration and characterisation
+  5.0  Spacecraft Bus Hardware            30 %   (all subsystems)
+    5.1  Structure and mechanisms
+    5.2  EPS (solar array + battery + board)
+    5.3  AOCS (sensors + actuators)
+    5.4  TT&C (transponder + antenna)
+    5.5  OBC and data handling
+    5.6  Thermal control
+    5.7  Propulsion (if applicable)
+    5.8  Harness and cabling
+  6.0  Integration and Test               12 %   (assembly, environmental testing)
+    6.1  Assembly and integration
+    6.2  Environmental test campaign
+    6.3  Test facilities rental
+  7.0  Software (Flight + Ground)          8 %   (FSW, GSW, mission planning)
+    7.1  Flight software
+    7.2  Ground segment software
+    7.3  Mission planning tools
+  8.0  Launch Services                    10 %   (vehicle, deployer, integration)
+  9.0  Ground Segment                      5 %   (antennas, MCS, networks)
+  10.0 Operations (mission lifetime)       5 %   (staff, consumables, maintenance)
+```
+
+![Standard CubeSat WBS tree](../assets/figures/fig_wbs_tree.png)
+
+**Figure 16.2** — The standard CubeSat work breakdown structure as a tree: Mission Total branches to the ten Level-1 elements, each with its typical share of total cost, and 5.0 Spacecraft Bus Hardware is expanded to its eight Level-2 elements. The colours group the elements into management (1–3), space segment (4–6), software (7), launch (8) and ground and operations (9–10).
+
+The percentages (Figure 16.2) are typical of a university or small-company CubeSat and are a starting allocation, not a law: a mission with a custom payload will push 4.0 towards 35 %, and a mission bought as a turnkey bus will collapse 5.0 and 6.0 into a single procurement line.
+
+### 16.2.2 Cost by phase
+
+The distribution of cost across lifecycle phases matters for budgeting and cash flow:
+
+| Phase | % of total | Activities | Peak staffing |
+|-------|-----------|-----------|---------------|
+| 0/A (Concept) | 5–10 % | Studies, trade-offs, requirements | Low |
+| B (Preliminary design) | 15–20 % | PDR, detailed analysis, long-lead procurement | Growing |
+| C (Detailed design) | 30–40 % | CDR, manufacturing, software development | Peak |
+| D (Integration and test) | 20–25 % | Assembly, environmental testing, commissioning | High |
+| E (Operations) | 10–20 % | Routine operations, anomaly management | Low, steady |
+| F (Disposal) | 1–3 % | Decommissioning, de-orbit | Minimal |
+
+---
+
+## 16.3 Learning curve for constellations
+
+*[Source: SMAD4 §20.3; Wright's learning-curve theory (1936)]*
+
+When building multiple identical units, the cost per unit decreases because of manufacturing efficiency, reduced test time, bulk purchasing and labour learning. Chapter 4 §4.6.4 used the cumulative form of this effect to size a constellation budget; here we develop the unit form it rests on.
+
+### 16.3.1 Wright's learning curve
+
+The cost (or labour time) of the $n$-th unit is
+
+$$T_n = T_1 \, n^{\log_2 L}$$
+
+where $T_1$ is the first-unit cost, $L$ is the *learning rate* (0.90 for a "90 % curve") and the exponent $b = \log_2 L = \ln L / \ln 2$ is negative. Writing cost explicitly, $C_n = C_1\, n^{b}$:
+
+| Learning rate $L$ | $b = \log_2 L$ | Cost of 10th unit (% of 1st) |
+|--------------|-----|-----|
+| 95 % | −0.074 | 84 % |
+| 90 % | −0.152 | 70 % |
+| 85 % | −0.234 | 58 % |
+
+The total cost of $N$ units is the cumulative sum, which is the form used in Chapter 4:
+
+$$C_{\text{total}} = C_1 \sum_{i=1}^{N} i^{\log_2 L}
+\;\approx\; C_1\,\frac{N^{\,1+b}}{1+b} \quad\text{(continuous approximation)}$$
+
+The continuous approximation overestimates the sum by a few per cent for small $N$; use the exact sum when $N < 10$.
+
+### 16.3.2 Simplified rule of thumb
+
+> At a **90 % learning rate**, every time you **double** the number of units, the unit cost drops by **10 %**:
+>
+> Unit 1: EUR 800 k · Unit 2: EUR 720 k · Unit 4: EUR 648 k · Unit 8: EUR 583 k · Unit 16: EUR 525 k
+
+### 16.3.3 Worked example: 20-satellite constellation
+
+*First-unit cost (bus + payload + I&T): EUR 800 k. Learning rate: 90 % ($b = -0.152$). Totals use the exact cumulative sum.*
+
+| Units $N$ | $\sum_{i=1}^{N} i^{b}$ | Average unit cost | Total hardware | Calculation |
+|-------|---|--------------|----------------|------|
+| 1 | 1.000 | EUR 800 k | EUR 800 k | First unit |
+| 5 | 4.34 | EUR 694 k | EUR 3 470 k | $800 \times 4.34$ |
+| 10 | 8.00 | EUR 640 k | EUR 6 400 k | $800 \times 8.00$ |
+| 20 | 14.61 | EUR 584 k | EUR 11 690 k | $800 \times 14.61$ (continuous approx. gives 11 960 k) |
+
+Total constellation estimate:
+
+- 20 satellites, hardware: EUR 11.7 M
+- 2 spare units (built as units 21–22 at ≈ 0.63 × 800 k each): EUR 1.0 M
+- Launch (20 satellites × EUR 200 k rideshare): EUR 4.0 M
+- Ground segment: EUR 1.0 M
+- Operations (3 years): EUR 0.9 M
+- PM/SE/MA (10 % of the above): EUR 1.9 M
+- **Total: ≈ EUR 20.5 M**
+
+Without the learning curve the 22 units alone would cost EUR 17.6 M; the curve saves about EUR 4.9 M, which is the business case for building a constellation rather than a series of one-offs.
+
+---
+
+## 16.4 Cost risk and confidence levels
+
+Point estimates are misleading. Every cost estimate has uncertainty, and the standard practice is to express cost as a probability distribution rather than a single number.
+
+*[Source: NASA CEH v4.0 §2.3; JPL parametric estimation practice]*
+
+### 16.4.1 Uncertainty by cost element
+
+| Cost element | Distribution | Uncertainty (1σ) | Rationale |
+|-------------|-------------|----------------------|-----------|
+| COTS hardware | Normal | ± 10 % | Known pricing from vendor quotes |
+| Custom hardware | Lognormal | ± 30 % | Development uncertainty skews high |
+| Software | Triangular | ± 40 % | Hardest to estimate; frequent overruns |
+| Launch | Normal | ± 15 % | Published pricing; contract negotiation |
+| Operations | Uniform | ± 25 % | Staffing-level uncertainty |
+| I&T | Lognormal | ± 25 % | Test anomalies cause schedule and cost growth |
+
+Each WBS element is assigned a distribution; a Monte Carlo simulation draws from all of them and sums, producing a distribution of total cost. Its cumulative form is the **S-curve** of Figure 16.3 — the probability that the mission costs no more than a given amount — from which the confidence levels are read. Because lognormal and triangular elements are right-skewed, the point (current best) estimate falls to the *left* of P50: a single-number estimate is more likely to be exceeded than met.
+
+![Cost S-curve with P50, P70 and P80 marked](../assets/figures/fig_cost_scurve.png)
+
+**Figure 16.3** — Cost S-curve and confidence levels for the EOSat-3U bottom-up estimate of §16.1.6 (456.8 kEUR), from a Monte Carlo of 200 000 draws in which each cost element follows the distribution of the table above and the elements are independent. The result gives P50 ≈ 459 kEUR, P70 ≈ 479 kEUR and P80 ≈ 491 kEUR; the point estimate sits at about P47, slightly to the left of P50 because the custom-payload and integration elements are right-skewed, and the P50-to-P80 reserve is about 31 kEUR (7 %).
+
+For this mostly-COTS mission, whose largest element is a fixed-price launch, the per-element table gives P80 ≈ 1.07 × P50 — well below the 1.3 rule of thumb in §16.4.2. The difference is deliberate: the rule of thumb also covers the correlated, programme-level growth that per-element distributions do not capture (requirement changes, schedule slip that drives every labour line, a payload that turns out to need a second iteration), which is why the NASA Cost Estimating Handbook requires inter-element correlation to be modelled in a joint cost-and-schedule confidence analysis, and why the rule of thumb is still the better planning figure at Phase A.
+
+### 16.4.2 Confidence levels
+
+| Percentile | Meaning | Use |
+|-----------|---------|-----|
+| **P50** | 50 % probability of being at or below this cost | Project baseline; "expected" cost |
+| **P70** | 70 % probability | NASA standard commitment level (NPR 7120.5F) |
+| **P80** | 80 % probability | Conservative planning; typical for proposals |
+
+> **Rule of thumb for CubeSat missions:**
+>
+> $$P_{70} \approx 1.2\,P_{50}, \qquad P_{80} \approx 1.3\,P_{50}$$
+>
+> Example: if $P_{50} =$ EUR 500 k, then $P_{80} \approx$ EUR 650 k.
+>
+> *This approximation assumes moderate complexity and well-understood COTS hardware. For missions with custom payloads or new technology, use $P_{80} \approx 1.5\,P_{50}$.*
+
+The difference between P50 and the committed level is the **cost reserve**. It belongs to the project manager, not to the subsystem leads, and is released against the risk register of Chapter 15 — a risk that materialises draws on the reserve; a risk that is retired returns its share.
+
+### 16.4.3 Returning to UniSat-1: cost structure
+
+**Simple WBS, mostly COTS.** UniSat-1's cost structure is fundamentally different from that of larger missions because (a) nearly all hardware is COTS, so NRE is near zero, and (b) the team is small and university-based, so labour costs are low. Chapter 13 §13.6 gave the BOM-based cost summary (≈ 85 kEUR, without operations and with a single management line; the WBS estimate below adds both and comes to ≈ 91 kEUR); here the same mission is estimated by both methods against the WBS of §16.2.1 and carried to a P80 figure.
+
+> **UniSat-1 WBS cost estimate (parametric versus bottom-up; indicative 2026):**
+>
+> | WBS element | Parametric (kEUR) | Bottom-up (kEUR) | Notes |
+> |-------------|-------------------|-------------------|-------|
+> | 1.0 Programme management | 4 | 5 | Faculty oversight, 0.1 FTE × 12 months |
+> | 2.0 Systems engineering | 3 | 3 | Team lead |
+> | 3.0 Mission assurance | 1 | 1 | Minimal QA for a university mission |
+> | 4.0 Payload | 8 | 8 | MEMS sensor PCB + calibration |
+> | 5.0 Bus hardware | 39 | 38 | BOM in Chapter 13 §13.6 |
+> |   5.1 Structure | 4 | 4 | 1U frame |
+> |   5.2 EPS + solar array | 20 | 19.5 | EPS board + body-mounted cells |
+> |   5.3 AOCS (passive) | 1 | 1 | Magnet + hysteresis rods |
+> |   5.4 Comms (UHF) | 11 | 10.5 | Transceiver + antenna |
+> |   5.5 OBC | 3 | 3 | Custom Cortex-M board |
+> | 6.0 I&T | 8 | 8 | University clean room + vibration facility |
+> | 7.0 Software | 5 | 5 | FSW (RTOS) + GSW |
+> | 8.0 Launch | 15 | 15 | 1U ISS deployment |
+> | 9.0 Ground segment | 5 | 5 | Yagi antenna + volunteer network |
+> | 10.0 Operations (6 months) | 3 | 3 | Student operators, 0.2 FTE |
+> | **TOTAL (P50)** | **≈ 91** | **≈ 91** | |
+> | **P80 (× 1.3)** | **≈ 118** | **≈ 118** | Conservative estimate |
+
+**Key cost observations for 1U missions:**
+
+1. **Hardware is cheap.** Total COTS hardware cost is ≈ 36–44 kEUR. This is less than a single star tracker for a 3U mission.
+2. **NRE is minimal.** Only the OBC and payload require custom development. NRE is estimated at ≈ 8 kEUR (payload calibration + OBC board layout), compared with ≈ 50–150 kEUR for custom payloads on larger missions.
+3. **Launch cost is proportionally large.** At 15 kEUR, the launch represents ≈ 18 % of total cost. For a 3U mission at ≈ 200 kEUR launch cost, launch is ≈ 40 % of total. The 1U launch cost is low in absolute terms but still a significant fraction.
+4. **Labour dominates.** For a university team, the "free" student labour is the hidden cost. If students were costed at professional rates (≈ 50 EUR/h), the total labour cost would be ≈ 100–200 kEUR, far exceeding the hardware cost. This is typical of educational missions.
+5. **No cost drivers from complexity.** There is no AOCS software development, no deployable-mechanism qualification, no propulsion integration, no thermal-vacuum testing of heaters — all of which add 10–50 kEUR each on a 3U mission.
+
+**Learning-curve applicability.** If a university builds a series of 1U demonstrators (UniSat-1, UniSat-2, UniSat-3 …), a 90 % learning rate applies to the hardware and to the recurring labour (software, calibration, I&T, management ≈ 21 kEUR), while launch (15 kEUR) and ground segment (5 kEUR) are fixed:
+
+| Unit | Hardware cost (kEUR) | Total cost (kEUR) |
+|------|---------------------|-------------------|
+| UniSat-1 | 44 | 85 |
+| UniSat-2 | 40 | 79 |
+| UniSat-4 | 36 | 73 |
+| UniSat-8 | 32 | 67 |
+
+The asymptotic floor is dominated by launch cost (15 kEUR) and irreducible ground-segment and operations costs (≈ 8 kEUR), giving a minimum mission cost of ≈ 40–50 kEUR for repeat builds.
+
+---
+
+## 16.5 Design reviews: gate criteria and presentation
+
+Design reviews are formal decision gates at which the project demonstrates readiness to proceed to the next lifecycle phase. The sequence of gates — MCR, SDR, SRR, PDR, CDR, TRR, QR, FRR — and the key question each one answers are given in Chapter 1 Table 1.3 and are not repeated here. This section covers what a review *checks* and how to present at one.
+
+*[Source: NPR 7123.1D Appendix G; ECSS-M-ST-10C Rev. 1 §6; NASA SEH Rev 2 §3.7]*
+*[URL: https://www.nasa.gov/reference/systems-engineering-handbook/]*
+
+### 16.5.1 Gate criteria for SRR (Phase A → B)
+
+| # | Criterion | Priority | Evidence |
+|---|-----------|----------|----------|
+| 1 | All Level 0/1 requirements baselined | Must pass | Requirements document signed (Chapter 5) |
+| 2 | ConOps defined (all mission phases) | Must pass | ConOps document (Chapter 4, Chapter 18) |
+| 3 | Mission architecture trades completed | Must pass | Trade-study reports with rationale (Chapter 4 §4.6) |
+| 4 | Feasibility confirmed (all budgets positive) | Must pass | Mass, power, link budgets with margin (Chapter 8) |
+| 5 | Risk register established with mitigations | Must pass | Risk register with scores and plans (Chapter 15) |
+| 6 | Preliminary V&V approach defined | Should pass | Verification matrix with ATIR(D) methods assigned (Chapter 14) |
+| 7 | Schedule and cost estimate (P50/P80) | Must pass | Cost estimate with WBS (§16.2, §16.4) |
+| 8 | Interface requirements identified | Should pass | N² matrix or ICD outline (Chapter 8 §8.3) |
+
+### 16.5.2 Gate criteria for PDR (Phase B → C)
+
+| # | Criterion | Priority | Evidence |
+|---|-----------|----------|----------|
+| 1 | All requirements allocated to subsystems | Must pass | Requirements allocation matrix (Chapter 6) |
+| 2 | Preliminary design complete for all subsystems | Must pass | Design documents, block diagrams (Chapters 9–12) |
+| 3 | All budgets close with ≥ 20 % margin | Must pass | Mass, power, link, data, pointing budgets (Chapter 8 Table 8.3 for the margin schedule) |
+| 4 | Equipment selected (BOM) | Must pass | BOM with TRL, heritage, cost, lead time (Chapter 13) |
+| 5 | All interfaces defined (N² matrix) | Must pass | Interface control documents (Chapter 8 §8.3) |
+| 6 | Verification matrix complete with methods assigned | Must pass | Verification matrix (Chapter 14 §14.4) |
+| 7 | Risk register updated; no critical risks unmitigated | Must pass | Risk register (Chapter 15) |
+| 8 | Test plan outline approved | Should pass | Environmental test plan (Chapter 14 §14.3) |
+| 9 | Software architecture defined | Should pass | Software design document |
+| 10 | Cost estimate updated (bottom-up) | Must pass | Cost estimate with vendor quotes (§16.1.6) |
+
+A criterion marked *must pass* that fails produces a NO GO or a GO WITH ACTIONS; a *should pass* that fails produces an action item with an owner and a date.
+
+### 16.5.3 Presenting at a review
+
+**Do:**
+
+- Lead with the conclusion ("Mass budget closes with 22 % margin")
+- Show evidence, not just assertions ("Link-budget analysis shows 4.2 dB margin at worst case")
+- Acknowledge risks honestly ("Antenna deployment is our highest risk at L3 × C4 = 12")
+- State assumptions before results
+- Answer questions directly; say "I don't know — we will take an action" if needed
+
+**Do not:**
+
+- Read slides aloud
+- Hide problems (review boards always find them)
+- Present analysis without stating its assumptions
+- Skip backup slides — have the detailed data ready for the question-and-answer period
+- Spend the time on the mission description and rush the technical results
+
+---
+
+## 16.6 Conducting a review board
+
+An independent board — people who did not do the design — evaluates the project against the gate criteria. The independence is the point: the board exists to find what the team can no longer see. Sitting on a board is as much a skill as presenting to one.
+
+### 16.6.1 Review-board roles
+
+| Role | Responsibility | Key question to ask |
+|------|---------------|---------------------|
+| **Chair** | Manages the review; ensures all criteria are covered | "Let's systematically check each gate criterion." |
+| **Systems reviewer** | Evaluates overall architecture and budgets | "Do all budgets close? What is the minimum margin?" |
+| **Technical reviewer** | Evaluates subsystem design decisions | "Why did you choose this component over the alternatives?" |
+| **Risk reviewer** | Evaluates risk management and verification | "What is your highest risk? Is the mitigation adequate?" |
+| **Operations reviewer** | Evaluates ConOps, ground segment, regulatory status | "What happens if you lose contact for 48 hours?" |
+
+For a small board the Chair may also take one of the reviewer roles, but the Risk reviewer and the Technical reviewer should be different people: the first is looking for what could go wrong, the second for whether the design is right, and one person rarely does both well at once.
+
+### 16.6.2 Reviewer question bank
+
+Standard questions for the board to ask, each of which maps to a chapter of this book:
+
+- "Why is space the right answer? What alternatives were considered?" (Chapter 4)
+- "What is your mass margin? What drives it? What if the payload is 20 % heavier than estimated?" (Chapter 8)
+- "Walk me through your link budget at worst case. What is the minimum margin?" (Chapter 11)
+- "What are your top three risks? What is the residual risk after mitigation?" (Chapter 15)
+- "Show me your data budget. Does it close with a single ground station?" (Chapter 11 §11.9, Chapter 17)
+- "What happens during a safe-mode entry in eclipse? Does the thermal budget survive?" (Chapters 9, 18)
+- "Which component has the lowest TRL? What is your qualification plan?" (Chapters 13, 14)
+- "Have you started spectrum licensing? What is on the critical path?" (Chapter 2)
+- "What is your single-point-failure list? Which ones have you accepted?" (Chapter 15 §15.4.4)
+- "If you had six more months and 20 % more budget, what would you change?"
+
+### 16.6.3 Outcome
+
+The board closes with one of three recommendations — **GO**, **NO GO**, or **GO WITH ACTIONS** — announced by the Chair, together with a list of action items, each with a responsible person and a deadline. Actions are tracked to closure before the next gate; an action that is still open at the next review is itself a finding.
+
+---
+
+## Summary
+
+| Topic | Key takeaway |
+|-------|-------------|
+| Cost methods | Parametric (early, CERs), analogy (reference mission), bottom-up (vendor quotes); accuracy narrows from ± 50 % to ± 10 % through the lifecycle |
+| CubeSat costs | COTS pricing is often lower than CER predictions; use a hybrid approach |
+| WBS | Standard ten-element structure: PM, SE, MA, payload, bus, I&T, software, launch, ground, operations |
+| CERs | $C = a\,M^{b}\,f_{\text{complexity}}$; USCM/SSCM databases; CubeSats need calibrated CERs |
+| Learning curve | $T_n = T_1\,n^{\log_2 L}$; at a 90 % rate each doubling of quantity reduces unit cost by 10 % |
+| Cost risk | P50 (baseline), P70 (NASA commitment), P80 (conservative); $P_{80} \approx 1.3\,P_{50}$; the difference is the reserve |
+| Reviews | Gates per Chapter 1 Table 1.3; SRR and PDR criteria are explicit "must/should pass" lists with named evidence |
+| Presentation | Lead with conclusions, show evidence, acknowledge risks, answer directly |
+| Review board | Chair + systems, technical, risk and operations reviewers; GO / NO GO / GO WITH ACTIONS with tracked actions |
+
+---
+
+## Problems
+
+1. **Parametric estimate.** A 6U CubeSat has a structure mass of 1.2 kg, an EPS of 1.5 kg, a TT&C subsystem of 0.4 kg and an AOCS of 1.1 kg. Evaluate the USCM CERs of §16.1.3 for each subsystem (FY2010 $K), add programme management and systems engineering, and compare the result with a COTS bottom-up estimate built from the catalogue prices of §16.1.5. By what factor does the CER over-predict, and which subsystem is responsible for most of the difference?
+
+2. **WBS allocation.** A 3U Earth-observation CubeSat has a cost ceiling of 320 kEUR. Allocate it across the ten Level-1 WBS elements of §16.2.1 using the default percentages, then re-allocate for a mission whose payload is a custom hyperspectral imager with 60 kEUR of NRE (Chapter 13 §13.1.3). Which elements shrink to absorb the payload growth, and what does that imply for the test campaign?
+
+3. **Cost by phase.** Using the phase percentages of §16.2.2 and a total of 490 kEUR, draw the cumulative spend curve for the 3U mission over a 26-month development schedule (Phase 0/A 4 months, B 6, C 8, D 8, E 36 following). In which month does the project need its largest cash injection, and what happens to the curve if the launch (WBS 8.0) is paid 50 % at contract signature in Phase B?
+
+4. **Learning curve — exact versus approximate.** For first-unit cost $C_1 =$ 800 kEUR and learning rates of 95 %, 90 % and 85 %, compute the total cost of 8, 16 and 32 units using (a) the exact sum $C_1\sum i^{\log_2 L}$ and (b) the continuous approximation of §16.3.1. Tabulate the percentage error of (b) and state the smallest $N$ for which it is below 3 %.
+
+5. **Constellation business case.** Repeat the worked example of §16.3.3 for a 12-satellite constellation at an 85 % learning rate, with two spares, 250 kEUR launch per satellite and a 3-year operations cost of 1.2 MEUR. Compare the per-satellite cost with the single-satellite total of §16.1.6 and explain which WBS elements do *not* benefit from the learning curve.
+
+6. **P50/P80 by Monte Carlo.** Model the bottom-up column of §16.1.6 with the distributions and 1σ values of §16.4.1 (treat a triangular distribution as symmetric about the estimate and a lognormal as having its median at the estimate). Using a spreadsheet with 1 000 trials, estimate P50, P70 and P80 for the total, and compare the P80/P50 ratio with the 1.3 rule of thumb. Which single element contributes most of the spread?
+
+7. **Cost reduction.** Identify the three largest cost drivers in the bottom-up estimate of §16.1.6 and propose a package of changes that cuts the total by 20 % without changing the mission objectives. For each change, state which engineering budget (mass, power, link, data) or risk score moves, and in which direction.
+
+8. **SRR readiness.** For the UniSat-1 design developed in Chapters 5, 8, 9, 11, 13, 14 and 15, assess each SRR criterion of §16.5.1 as pass, partial or fail, name the evidence (section and table number), and write the action item — owner, deliverable, date — for each criterion that is not a clear pass.
+
+9. **Review board.** Form a five-person board using the roles of §16.6.1 to review the EOSat-3U closure table of Chapter 12 §12.5.3, which flags one red line (imaging-mode power). Write the five questions the board would ask, the evidence it would demand for each, and the recommendation (GO / NO GO / GO WITH ACTIONS) you would expect, with the action items.
+
+10. **Presentation.** Draft a six-slide outline for a PDR presentation of the 3U EO mission — mission need, why space, system design and budgets, equipment and verification, risk and cost, operations — and for each slide write the one-sentence conclusion that opens it, in the "lead with the conclusion" form of §16.5.3, with the figure or table of this book that would serve as its evidence.
+
+---
+
+## References
+
+1. NASA, *Cost Estimating Handbook*, version 4.0, 2015. https://www.nasa.gov/offices/ocfo/references-and-tools/
+2. Wertz, J. R., Everett, D. F. & Puschell, J. J. (eds.), *Space Mission Engineering: The New SMAD*, Microcosm Press, 2011, Chapter 20 (Cost).
+3. The Aerospace Corporation, *Small Satellite Cost Model (SSCM)*. https://www.aerospace.org/capabilities/small-satellite-cost-model
+4. NASA, *NPR 7120.5F: NASA Space Flight Program and Project Management Requirements*, 2021 (work breakdown structures). https://nodis3.gsfc.nasa.gov/displayDir.cfm?t=NPR&c=7120&s=5F
+5. ECSS, *ECSS-M-ST-60C: Cost and Schedule Management*, 2008. https://ecss.nl/standard/ecss-m-st-60c-cost-and-schedule-management/
+6. NASA, *NPR 7123.1D: NASA Systems Engineering Processes and Requirements*, Appendix G (Technical Review Process), 2023. https://nodis3.gsfc.nasa.gov/displayDir.cfm?t=NPR&c=7123&s=1D
+7. NASA, *Systems Engineering Handbook*, NASA/SP-2016-6105 Rev 2, §3.7 (Technical Reviews). https://www.nasa.gov/reference/systems-engineering-handbook/
+8. ECSS, *ECSS-M-ST-10C Rev. 1: Project Planning and Implementation*, 2009, §6 (Reviews). https://ecss.nl/standard/ecss-m-st-10c-rev-1-project-planning-and-implementation/
+9. Wright, T. P., "Factors Affecting the Cost of Airplanes", *Journal of the Aeronautical Sciences*, 3(4), 1936, pp. 122–128.
+
+
+# Chapter 17 — Ground Segment Architecture
+
+> **Recommended background.** ECSS-E-ST-70C (Ground systems and operations); CCSDS 131.0-B (TM synchronisation and channel coding), CCSDS 231.0-B (TC synchronisation and channel coding) and CCSDS 133.0-B (Space Packet Protocol); NASA DSN Telecommunications Link Design Handbook (810-005) for the large-aperture end of the scale. This chapter builds on the link budget and ground-station types of Chapter 11 (§11.7–§11.9), the pass geometry of Chapter 7 §7.4.1 and the ground-segment functions F-G01…F-G04 allocated in Chapter 6 §6.2.4; the lifecycle phases it operates within are those of Chapter 1 Figure 1.4.
+
+## Learning objectives
+
+By the end of this chapter, you will be able to:
+
+1. Describe the components of a ground-segment architecture (ground-station network, mission control system, flight dynamics, mission planning, data processing)
+2. Calculate ground-station contact time and data volume per pass for a given orbit and elevation mask
+3. Explain the CCSDS protocol stack for space communication and choose a forward-error-correction scheme
+4. Design a ground-station network for a given orbit and daily data-downlink requirement
+5. Construct a mission operations timeline from launch to end of life, with staffing by phase
+
+Vendor products and software named in this chapter are representative examples, not endorsements; prices are indicative (2026).
+
+---
+
+## 17.1 Ground segment architecture
+
+The ground segment is everything on the ground that supports the space mission. It is frequently underestimated in early mission design, yet it accounts for 5–15 % of total mission cost (Chapter 16 §16.2.1 allocates 5 % to the ground segment and a further 5 % to operations) and is critical to mission success: a spacecraft that cannot be commanded or whose data cannot be received has no mission.
+
+*[Source: ECSS-E-ST-70C (Ground Systems and Operations)]*
+*[URL: https://ecss.nl/standard/ecss-e-st-70c-ground-systems-and-operations/]*
+
+### 17.1.1 Ground-segment components
+
+Figure 17.1 shows the five functional blocks and the data network that joins them; the RF link to the space segment enters at the ground-station network, and mission products leave from the data-processing block to the user segment. Five functional blocks appear in every ground segment, however small; in a university CubeSat project they may all run on one computer in one room, but they are still five distinct functions with distinct interfaces.
+
+![Ground-segment block diagram](../assets/figures/fig_ground_segment.png)
+
+**Figure 17.1** — Ground-segment block diagram. The ground-station network, mission control system, flight dynamics system, mission planning system and data processing and archive are joined by a data network; the RF interface to the space segment enters at the ground-station network and mission products leave the data-processing block for the user segment.
+
+### 17.1.2 Ground-station components
+
+| Component | Function | Typical specification |
+|-----------|----------|---------------------|
+| **Antenna** | Transmit uplink commands, receive downlink telemetry | 3–13 m dish (S/X-band); Yagi/turnstile (UHF) |
+| **RF front-end** | Low-noise amplifier (LNA), power amplifier, filters | LNA noise figure < 1 dB; PA 50–500 W |
+| **Modem/baseband** | Modulation/demodulation, coding/decoding | CCSDS-compliant; BPSK/QPSK/8PSK |
+| **Tracking system** | Antenna pointing, Doppler tracking, ranging | Autotrack or programme-track |
+| **Data capture** | Record raw baseband data for post-processing | High-speed disk array |
+| **Timing** | GPS-disciplined oscillator for time synchronisation | < 1 µs accuracy |
+
+The ground-station types available to a CubeSat mission — volunteer networks, university dishes, commercial networks and (for deep space) the DSN — with their $G/T$ and indicative prices are tabulated in Chapter 11 §11.7.1 and are not repeated here.
+
+### 17.1.3 Mission control system (MCS)
+
+| Function | Description | Tools (representative) |
+|----------|------------|-------|
+| **Telemetry processing** | Decode, decommutate, display and archive TM packets | COSMOS, YAMCS, EGOS (ESA) |
+| **Telecommand generation** | Create, validate, encode and uplink TC packets | Same MCS tools |
+| **Pass scheduling** | Schedule antenna time, plan contact windows | STK, GMAT, custom schedulers |
+| **Monitoring and control** | Real-time health monitoring, limit checking, alarming | MCS dashboards |
+| **Anomaly management** | Detect, diagnose and resolve anomalies | Procedures + expert judgement (Chapter 18 §18.5) |
+
+### 17.1.4 Flight dynamics system (FDS)
+
+| Function | Description | Inputs |
+|----------|------------|--------|
+| **Orbit determination** | Compute the current orbit from tracking data | Range, Doppler, GPS (if on board) |
+| **Orbit prediction** | Propagate the orbit forward for pass planning | Current state vector, perturbation models (Chapter 7) |
+| **Manoeuvre planning** | Compute ΔV for orbit maintenance | Target orbit, propulsion model (Chapter 12 §12.2) |
+| **Conjunction assessment** | Predict close approaches with debris or other objects | TLE catalogue, own orbit |
+| **End-of-life planning** | Compute the de-orbit manoeuvre or passivation plan | Remaining propellant, target orbit (Chapter 3 §3.6) |
+
+For a CubeSat without propulsion the FDS collapses to orbit determination and prediction — typically from the published two-line elements, refined with on-board GPS if available — but conjunction assessment remains: a CubeSat that cannot manoeuvre still needs to know when it is at risk, if only to tell the other operator.
+
+---
+
+## 17.2 Ground-station contact analysis
+
+Understanding how much data can be transferred per pass is fundamental to mission design. The data budget depends on the contact geometry, the data rate and the pass duration.
+
+### 17.2.1 Contact geometry
+
+For a circular LEO orbit, the visibility of a ground station is determined by the minimum elevation angle $\varepsilon_{\min}$ at which the link is usable (typically 5–10°). The slant range at that elevation, which sets the worst-case free-space path loss in the link budget (Chapter 11 §11.4.1), is
+
+$$\rho = R_E \left[\sqrt{\left(\frac{R_E + h}{R_E}\right)^2 - \cos^2\varepsilon_{\min}} - \sin\varepsilon_{\min}\right]$$
+
+with $R_E = 6378.137$ km and $h$ the orbital altitude.
+
+> **Worked example — maximum slant range.** For $h = 500$ km and $\varepsilon_{\min} = 5°$:
+>
+> $(R_E + h)/R_E = 6878.137/6378.137 = 1.0784$, squared $= 1.1629$; $\cos^2 5° = 0.9924$; difference $= 0.1705$, square root $= 0.4129$; minus $\sin 5° = 0.0872$ gives $0.3258$;
+>
+> $\rho = 6378.137 \times 0.3258 \approx 2\,080$ km.
+>
+> At a 10° mask the same orbit gives 1 695 km — the value used in the EOSat-3U link budget of Chapter 11 §11.8.1.
+
+The pass duration follows from the Earth-central angle subtended by the visibility circle. Chapter 7 §7.4.1 gives
+
+$$\lambda_{\max} = \arccos\!\left(\frac{R_E}{R_E + h}\cos\varepsilon_{\min}\right) - \varepsilon_{\min}, \qquad t_{\text{contact,max}} \approx \frac{T}{\pi}\,\lambda_{\max}$$
+
+where $T$ is the orbital period and $\lambda_{\max}$ is in radians. This is the duration of an *overhead* pass; a pass whose peak elevation is lower is shorter.
+
+> **Worked example — maximum pass duration.** For the 500 km orbit ($T = 94.6$ min, Chapter 7 §7.7):
+>
+> at $\varepsilon_{\min} = 10°$: $\lambda_{\max} = \arccos(0.9273 \times 0.9848) - 10° = 24.0° - 10° = 14.0° = 0.245$ rad, so $t_{\max} \approx (94.6/\pi) \times 0.245 \approx 7.4$ min;
+>
+> at $\varepsilon_{\min} = 5°$: $\lambda_{\max} = 22.5° - 5° = 17.5° = 0.306$ rad, so $t_{\max} \approx 9.2$ min.
+>
+> *Typical average usable pass duration (not all passes are overhead, and the first and last 30–60 s are spent acquiring the link): ≈ 6 min.*
+
+Figure 17.2 shows the elevation-versus-time profile of a single pass. Three instants matter operationally: **AOS** (acquisition of signal, when the spacecraft rises above the mask), **TCA** (time of closest approach, maximum elevation and minimum slant range) and **LOS** (loss of signal). The high-rate portion of the pass, where the link margin is largest, is the central window above about 30° elevation; a pass whose peak elevation never reaches 30° may be usable only for housekeeping telemetry. The corresponding ground track — which passes over which stations — is shown in Chapter 7 Figure 7.3.
+
+![Pass elevation profile for an S-band contact](../assets/figures/fig_pass_geometry.png)
+
+**Figure 17.2** — Elevation-versus-time profile of a single S-band pass over a high-latitude station (Iqaluit, 63.7° N) for a 450 km sun-synchronous orbit, illustrative: AOS and LOS at the 5° mask, TCA at peak elevation, and the ≥ 30° window in which the high-rate downlink is scheduled.
+
+### 17.2.2 Data volume per pass
+
+$$V_{\text{pass}} = R \; t_{\text{contact}} \; \eta_{\text{protocol}}$$
+
+where $R$ is the downlink data rate (bit/s), $t_{\text{contact}}$ the usable contact duration (s) and $\eta_{\text{protocol}}$ the protocol efficiency (typically 0.85–0.95 for CCSDS framing; Chapter 11 §11.9 uses 0.80–0.90 to include link set-up and retransmission).
+
+> **Example:** $R = 2$ Mbit/s, $t = 360$ s (6 min average), $\eta = 0.9$:
+> $V_{\text{pass}} = 2 \times 10^6 \times 360 \times 0.9 = 648$ Mbit $= 81$ MB per pass.
+
+Summed over the usable passes in a day this is the daily downlink capacity $C_{\text{downlink}} = R\,N_{\text{passes}}\,t_{\text{contact}}\,\eta_{\text{protocol}}$ of Chapter 11 §11.9.
+
+### 17.2.3 Contact frequency
+
+| Orbit | Station latitude | Passes per day | Average usable duration | Daily volume at 2 Mbit/s |
+|-------|-------------|----------------|-------------|---------------------------|
+| 500 km SSO | 52° N (e.g. southern Ontario) | 3–5 | 6 min | 243–405 MB |
+| 500 km SSO | 69° N (e.g. Kiruna) | 6–8 | 7 min | 567–756 MB |
+| 500 km, 51.6° (ISS orbit) | 52° N | 2–4 | 5 min | 135–270 MB |
+| 500 km SSO | Volunteer network (global, UHF) | 10–15 | 5 min | 3.2–4.9 MB (at 9.6 kbit/s UHF) |
+
+*[Source: orbit-propagation simulations; validated against volunteer-network observation logs. Volumes recomputed from §17.2.2 with η = 0.9.]*
+
+The pattern is the one Chapter 11 §11.7.2 describes: a polar or sun-synchronous satellite is seen by a high-latitude station on almost every orbit, by a mid-latitude station only on the three to five orbits per day whose ground track passes within the visibility circle.
+
+### 17.2.4 Worked example: data-budget closure
+
+*Problem:* An Earth-observation mission generates 500 MB/day of imagery. Is a single ground station at 52° N sufficient with a 2 Mbit/s S-band downlink?
+
+*Calculation:*
+
+- Passes per day: ≈ 4 (500 km SSO from 52° N)
+- Average usable pass: 6 min = 360 s
+- Data per pass: $2 \times 10^6 \times 360 \times 0.9 / 8 = 81$ MB
+- Daily capacity: $4 \times 81 = 324$ MB
+- Required: 500 MB/day
+- **Shortfall: 176 MB/day — the budget does not close.**
+
+*Solutions:*
+
+1. Add a second ground station at high latitude (e.g. Kiruna → +6 passes → +567 MB)
+2. Increase the data rate (X-band at 10 Mbit/s → 405 MB/pass → easily sufficient; see Chapter 11 Problem 4 for the link-budget side)
+3. Reduce data generation (lower duty cycle or lower image resolution)
+4. Add on-board data compression (2:1 lossless → 250 MB/day required)
+5. Use a volunteer UHF network for additional passes (housekeeping only — the rate is too low for imagery)
+
+Each option moves a different budget: (1) moves cost, (2) moves power and the regulatory filing, (3) moves the mission requirement, (4) moves on-board processing and risk. The EOSat-3U data budget of Chapter 11 §11.9 closes at 5 Mbit/s with 5 passes/day (956 MB/day capacity against 720 MB/day generated) — option 2 applied within S-band.
+
+---
+
+## 17.3 CCSDS protocol stack
+
+The Consultative Committee for Space Data Systems (CCSDS) defines the standard protocols for space communication, analogous to TCP/IP for ground networks. Using them is not mandatory for a CubeSat, but it is what makes a commercial or agency ground station able to talk to the spacecraft without custom software.
+
+*[Source: CCSDS 131.0-B-4 (TM Synchronization and Channel Coding); CCSDS 231.0-B-4 (TC Synchronization and Channel Coding); CCSDS 133.0-B-2 (Space Packet Protocol)]*
+*[URL: https://public.ccsds.org/Pubs/131x0b4.pdf (freely available)]*
+
+### 17.3.1 Protocol layers
+
+| Layer | CCSDS standard | Function | Ground analogy |
+|-------|---------------|----------|----------------|
+| **Application** | CCSDS 133.0 (Space Packet) | Mission data and housekeeping packets | HTTP/application data |
+| **Network** | CCSDS 732.0 (AOS) or 132.0 (TM) | Virtual channels, multiplexing | IP routing |
+| **Data link** | CCSDS 131.0 (TM coding) / 231.0 (TC coding) | FEC, frame synchronisation, CRC | Ethernet |
+| **Physical** | CCSDS 401.0 (RF and modulation) | Modulation, frequency, power | Physical layer |
+
+### 17.3.2 Telemetry (TM) frame structure
+
+```
++--------+------------------+----+
+| Header | Data field       | EC |
+| 6 bytes| 1–1019 bytes     | 2 B|
++--------+------------------+----+
+  |
+  +-- Spacecraft ID (10 bits)
+  +-- Virtual channel ID (3 bits)
+  +-- Frame counter (8 bits)
+  +-- Frame length
+```
+
+The frame counter is what lets the ground detect a missing frame and request retransmission; the virtual-channel ID is what lets housekeeping and payload data share one RF link while being routed to different consumers on the ground.
+
+### 17.3.3 Forward error correction (FEC) options
+
+| Code | Rate | Coding gain (dB) | Use case |
+|------|------|------------------|----------|
+| Convolutional (7, 1/2) | 1/2 | 5.5 | Legacy CubeSats |
+| Reed–Solomon (255, 223) | 0.87 | 3.5 | Combined with convolutional |
+| Turbo (rate 1/2) | 1/2 | 7.5 | High-performance CubeSats |
+| LDPC (rate 7/8) | 7/8 | 6.0 | High data rate, bandwidth-efficient |
+
+*Modern CubeSats typically use LDPC coding for the downlink (high data rate) and convolutional + Reed–Solomon for the uplink (robustness priority).* The coding gain enters the link budget as a reduction in the required $E_b/N_0$ (Chapter 11 §11.6); the code rate reduces the useful information rate for a given channel rate, which is why the data-budget calculations of §17.2 use the *information* rate $R$.
+
+---
+
+## 17.4 Operations timeline construction
+
+The operations timeline defines all major activities from launch to end of life. It is part of the ConOps (Chapter 4 §4.8 for the concept; Chapter 18 for the operational detail) and drives ground-segment design: the number of stations, the staffing and the automation level all follow from it.
+
+### 17.4.1 Mission phases from the operations perspective
+
+| Phase | Duration | Key activities | Staffing |
+|-------|----------|---------------|---------|
+| **LEOP** | 0–72 hours | Separation, beacon acquisition, antenna/array deployment, initial health check | 24/7 (3 shifts) |
+| **Commissioning** | 1–4 weeks | Subsystem checkout, AOCS calibration, payload first light | 16/7 (2 shifts) |
+| **Early operations** | 1–3 months | Performance characterisation, procedure refinement | 8/5 (1 shift) |
+| **Nominal operations** | Mission lifetime | Routine science or service, orbit maintenance | 8/5 or automated |
+| **Extended operations** | If approved | Degraded-mode operations, reduced data | Part-time |
+| **End of life** | 1–4 weeks | Passivation, de-orbit manoeuvre, final telemetry | 8/5 |
+
+### 17.4.2 Operations timeline (Gantt style)
+
+Figure 17.3 lays the phases of §17.4.1 out against the calendar, with the staffing level beneath them.
+
+![Operations timeline for the first year](../assets/figures/fig_ops_timeline.png)
+
+**Figure 17.3** — Gantt-style operations timeline for the first year of a CubeSat mission: LEOP occupies the first 72 hours, commissioning runs to week 4, early operations to month 3 and nominal operations thereafter. The staffing profile beneath falls from 24/7 (three shifts) during LEOP to 16/7 (two shifts) during commissioning and to 8/5 — a single shift, or automated passes — from early operations onward.
+
+Staffing cost falls steeply after commissioning (Figure 17.3). The operations line of the WBS (Chapter 16 §16.2.1, 5 %) assumes this profile; a mission that stays at 16/7 because its procedures were never automated will exceed it within months.
+
+### 17.4.3 LEOP timeline detail
+
+| Time (after separation) | Activity | Success criterion |
+|------------------------|----------|-------------------|
+| T+0 s | Separation from deployer | Deployment switches released |
+| T+0 to T+30 min | Deployment-timer countdown (no RF) | Timer runs; all inhibits clear |
+| T+30 min | Antenna deployment | Beacon detected by ground station |
+| T+30 to T+60 min | Beacon acquisition | Carrier lock; beacon decoded |
+| T+1 h | First telemetry downlink | Housekeeping data received and validated |
+| T+1 to T+6 h | Initial health assessment | All subsystems reporting nominal housekeeping |
+| T+6 to T+12 h | Solar-array deployment (if separate) | Power generation confirmed |
+| T+12 to T+24 h | AOCS initialisation | Attitude determination active |
+| T+24 to T+48 h | AOCS calibration (magnetometer, sun sensor) | Pointing within coarse specification |
+| T+48 to T+72 h | Communication-chain validation (full duplex) | Uplink and downlink at operational rate |
+
+The 30-minute RF silence after deployment is a launch-provider requirement (Chapter 3 §3.5.2), not a design choice; the first pass may therefore occur before the spacecraft is allowed to transmit, and the LEOP plan must say what the team does with a silent first pass. Chapter 19 rehearses exactly this.
+
+---
+
+## 17.5 Sizing the ground segment
+
+Three questions size a CubeSat ground segment, in this order:
+
+1. **Does the data budget close with one station?** (§17.2.4; Chapter 11 §11.9.) If not, the choice is between a second station, a higher rate and less data — and the second station is usually bought, not built: a commercial network sells passes by the minute (Chapter 11 §11.7.1), which converts a capital cost into an operating cost that scales with the mission.
+2. **What is the minimum staffing that keeps the spacecraft safe?** A spacecraft whose FDIR (Chapter 18 §18.3) can hold safe mode indefinitely needs ground attention only at the next working day; one that cannot needs a 24/7 on-call rota from LEOP onwards, which costs more than any antenna.
+3. **Who else must be able to talk to it?** A spacecraft using CCSDS framing (§17.3) can be supported by any compliant station in an emergency; a spacecraft with a proprietary protocol depends on its own station working.
+
+A representative ground-segment budget for a 3U mission — one dedicated S-band station (≈ 50–200 kEUR to build, Chapter 11 §11.7.1), a volunteer UHF network for housekeeping, open-source MCS software and 0.5 FTE of operations — is the "Ground 8 kEUR + Operations 40 kEUR" pair in the bottom-up column of Chapter 16 §16.1.6, which assumes the station already exists.
+
+---
+
+## 17.6 Returning to UniSat-1: a minimum ground segment
+
+UniSat-1's ground segment is a single UHF Yagi station at the university plus the volunteer network (Chapter 13 §13.6 costs it at 5 kEUR). Chapter 11 §11.8.2 showed what that buys: at 400 km with a 10° mask the usable contact is about 5 min per pass (6.2 min maximum, Chapter 7 §7.4.1), giving 153 kB per pass and **0.61 MB/day against 1.13 MB/day generated** — the data budget does not close with one station.
+
+Working through §17.5 for UniSat-1:
+
+1. *Second station or higher rate?* The UHF link is power-limited and already uses FEC (Chapter 11 §11.8.2), so the rate cannot rise much; the volunteer network adds passes at zero cost but with no guarantee of availability. The realistic fix is on the generation side — an on-board averaging mode, or a lower magnetometer sampling rate outside the regions of scientific interest — which is a requirements change (Chapter 5 §5.6.2), not a ground-segment one. This is risk R-02 in the UniSat-1 register of Chapter 15 §15.5, and its mitigation is exactly that pair: register with the volunteer network, and halve the data rate on board.
+2. *Minimum staffing?* UniSat-1 has passive attitude control and a beacon-only safe mode that is power-positive (Chapter 9 §9.5), so it can wait days for attention: student operators at 0.2 FTE suffice.
+3. *Who else can talk to it?* The AX.25-style framing common on volunteer networks is not CCSDS, so no agency station can help in an emergency; the mission accepts this, and the acceptance should be recorded in the register as a risk in its own right.
+
+The LEOP timeline of §17.4.3 collapses for UniSat-1 to the first five rows: there is no array to deploy and no AOCS to calibrate, so commissioning is complete once the magnetometer returns plausible field values on the second day.
+
+---
+
+## Summary
+
+| Topic | Key takeaway |
+|-------|-------------|
+| Ground segment | Ground-station network + MCS + FDS + mission planning + data processing (§17.1.1) |
+| Contact analysis | Slant range at the elevation mask sets the worst-case FSPL; $t_{\max} \approx (T/\pi)\lambda_{\max}$ ≈ 7.4 min at 500 km / 10°; usable average ≈ 6 min |
+| Data volume | $V_{\text{pass}} = R\,t_{\text{contact}}\,\eta_{\text{protocol}}$; 2 Mbit/s × 6 min × 0.9 ≈ 81 MB per pass |
+| Data budget | Must close: daily generation ≤ daily downlink capacity; add a station, raise the rate, compress or generate less |
+| CCSDS | Standard stack: Space Packet, AOS/TM frames, FEC coding, RF modulation; coding gain reduces required $E_b/N_0$ |
+| Operations timeline | LEOP (24/7) → commissioning (16/7) → nominal (8/5 or automated); staffing drives operations cost |
+| LEOP | First 72 hours are critical: antenna deployment, beacon acquisition, health check, AOCS calibration |
+| UniSat-1 | One UHF station does not close the data budget; the fix is on the generation side |
+
+---
+
+## Problems
+
+1. **Slant range and pass duration.** For a 550 km circular orbit, compute the slant range at 5°, 10° and 20° elevation and the maximum pass duration at each mask (use $R_E = 6378.137$ km and $\mu = 398\,600.44$ km³/s²). Comment on the trade between a low mask (longer passes) and the FSPL penalty it carries into the link budget of Chapter 11.
+
+2. **Data volume per pass.** A 3U Earth-observation CubeSat downlinks at 5 Mbit/s with LDPC rate 7/8 coding and a CCSDS protocol efficiency of 0.85. For an average usable pass of 6 min, compute the useful data per pass. How many passes per day are needed to clear 1.2 GB/day of imagery, and from which station latitude in §17.2.3 is that achievable with one station?
+
+3. **Ground-station network design.** A 500 km SSO mission must downlink 2 GB/day. Design a station network — locations, antenna sizes, data rates — using the station types of Chapter 11 §11.7.1 and the pass counts of §17.2.3, for (a) minimum capital cost and (b) minimum operating cost over three years. State the annual cost of each and the point at which they cross.
+
+4. **LEOP timeline.** Construct an hourly LEOP timeline for the first 72 hours of a 3U CubeSat deployed from the ISS orbit (51.6°, 400 km) with a single station at 45° N. Mark every pass (you may assume four passes per day of 5 min each, clustered in two groups), state which activity of §17.4.3 is attempted on each, and identify the longest gap during which the spacecraft is unobserved.
+
+5. **Silent first pass.** The first pass after deployment occurs 20 minutes after separation, while the RF inhibit timer is still running. Write the decision tree the operations team follows for the next three passes if (a) a beacon is heard on pass 2, (b) nothing is heard on passes 2 and 3, and (c) a carrier is heard but no frames decode. For each branch, name the ground-segment component or spacecraft subsystem that is suspected first and the test that discriminates it.
+
+6. **Operations timeline and staffing.** Draft a weekly-resolution operations timeline for a 12-month EO mission following §17.4.2, then cost the staffing at 60 kEUR per FTE-year for the 24/7 → 16/7 → 8/5 profile. Recompute if commissioning slips from 4 weeks to 10 weeks. Which single automation investment most reduces the sensitivity to that slip?
+
+7. **FEC selection.** A UHF downlink closes with 2.8 dB of margin uncoded (Chapter 11 §11.8.2) against a 3 dB requirement. Using the coding gains of §17.3.3, choose a code that meets the requirement with the least loss of information rate, and compute the resulting daily data volume for 4 passes of 5 min. Then repeat the choice for an S-band link that is bandwidth-limited rather than power-limited, and explain why the answer differs.
+
+8. **Minimum ground segment.** Specify the minimum ground segment that could support the UniSat-1 mission of §17.6 — hardware, software, staffing and network membership — and estimate its cost. Then list what that minimum segment *cannot* do (ranging, conjunction response, high-rate recovery) and assign each gap a risk score on the 5×5 matrix of Chapter 15.
+
+9. **Safe mode on a weekend.** A 3U spacecraft enters safe mode at 03:00 on a Saturday; the next staffed contact is Monday 09:00. Using the safe-mode power of Chapter 18 Table 18.1 (2 W) and the battery of Chapter 9 §9.3 (20 Wh, at the depth-of-discharge limit used there), determine whether the spacecraft survives 54 hours of eclipses without ground intervention, and what minimum on-call arrangement, if any, the ground segment must provide.
+
+---
+
+## References
+
+1. ECSS, *ECSS-E-ST-70C: Ground Systems and Operations*, 2008. https://ecss.nl/standard/ecss-e-st-70c-ground-systems-and-operations/
+2. CCSDS, *TM Synchronization and Channel Coding*, CCSDS 131.0-B-4, 2022. https://public.ccsds.org/Pubs/131x0b4.pdf
+3. CCSDS, *Space Packet Protocol*, CCSDS 133.0-B-2, 2020. https://public.ccsds.org/Pubs/133x0b2.pdf
+4. CCSDS, *TC Synchronization and Channel Coding*, CCSDS 231.0-B-4, 2021. https://public.ccsds.org/Pubs/231x0b4.pdf
+5. SatNOGS, *Global Network of Satellite Ground Stations*. https://network.satnogs.org/
+6. NASA JPL, *DSN Telecommunications Link Design Handbook*, 810-005. https://deepspace.jpl.nasa.gov/dsndocs/810-005/
+7. Space Applications Services, *Yamcs Mission Control Software* (open source). https://yamcs.org/
+8. Wertz, J. R., Everett, D. F. & Puschell, J. J. (eds.), *Space Mission Engineering: The New SMAD*, Microcosm Press, 2011, Chapters 28–29 (Ground segment; Mission operations).
+
+
+# Chapter 18 — Mission Operations and FDIR
+
+> **Recommended background.** ECSS-E-ST-70-11C (Space segment operability); ECSS-E-ST-70-32C (Test and operations procedure language); ECSS-E-ST-70-41C (Packet utilisation standard); NASA Fault Management Handbook (NASA-HDBK-1002). This chapter builds on the *concept* of a ConOps — mission phases, segments and the idea of operational modes — introduced in Chapter 4 §4.8, on the ground-segment architecture and operations timeline of Chapter 17, on the per-mode power budget of Chapter 8 Table 8.4 and Chapter 9, and on the FMECA and single-point-failure analysis of Chapter 15. It supplies the operational detail: the full mode table, the mode-transition logic, the FDIR architecture, procedures and anomaly response.
+
+## Learning objectives
+
+By the end of this chapter, you will be able to:
+
+1. Structure a Concept of Operations document and specify operational modes with entry and exit conditions
+2. Draw the mode-transition state machine for a spacecraft and check that safe mode is reachable from every state
+3. Design an FDIR (fault detection, isolation and recovery) architecture with a hierarchy of autonomous responses
+4. Write operational procedures for routine and contingency operations in the ECSS-E-ST-70-32C structure
+5. Describe the anomaly-response process with escalation levels and document an anomaly
+
+Vendor products named in this chapter are representative examples, not endorsements.
+
+---
+
+## 18.1 The ConOps as an operations document
+
+The ConOps is the bridge between engineering design and operational reality. It describes *how* the system will be used, not just *what* it can do. Chapter 4 introduced it as a mission-definition artefact — the phases of the mission, the three segments and the notion that a spacecraft has modes — because those decisions shape the architecture. By the time the design reaches PDR the same document has acquired a second audience: the people who will fly the spacecraft. This chapter is written for them.
+
+*[Source: ECSS-E-ST-70-11C (Space Segment Operability); IEEE 1362 (Concept of Operations Document)]*
+
+### 18.1.1 ConOps structure
+
+A complete ConOps document covers:
+
+1. **Mission overview** — objectives, stakeholders, success criteria (Chapter 4)
+2. **System description** — space segment, ground segment, user segment (Chapter 8 §8.1, Chapter 17)
+3. **Operational scenarios** — nominal operations, contingency operations
+4. **Operational modes** — definition, transitions, constraints (§18.2)
+5. **Resource management** — power, data and propellant budgets over time (Chapters 9, 11, 12)
+6. **Communication plan** — contact schedule, data flow, latency requirements (Chapter 17 §17.2)
+7. **Staffing plan** — personnel, shifts, training requirements (Chapter 17 §17.4)
+8. **Maintenance and logistics** — software updates, ground-equipment maintenance
+
+Items 3, 4 and 8 are the ones that only operations people write well, and they are the ones most often missing at PDR.
+
+### 18.1.2 Autonomy: where the line falls
+
+Every ConOps embodies a decision about how much the spacecraft does on its own. The decision is driven by contact time — a LEO CubeSat is out of view of a single station about 85 % of the time (Chapter 17 §17.2.3) — and by staffing cost. The two reference points are:
+
+- **Ground-driven:** the spacecraft executes a time-tagged command schedule uploaded each day; any deviation is handled by entering safe mode and waiting. Simple flight software, expensive operations, slow recovery.
+- **On-board autonomy:** the spacecraft plans its own imaging from an uploaded target list, manages its own power and data, and recovers from most faults without the ground. Complex flight software, cheap operations, fast recovery.
+
+ESA's PROBA-2 (launched 2009 and still operating as of 2026) is the standard demonstration of where the second option leads for a small satellite: five operational modes (Standby, Science, Manoeuvre, Safe, Off), about 95 % of routine activities automated via an on-board timeline, four to six passes per day from a single station, and only two or three anomalies per year that need ground intervention after commissioning. The lesson is that investment in on-board autonomy pays back directly in operations cost. *[Source: ESA PROBA-2 Operations Team, "PROBA-2: Over a Decade of Operations", SpaceOps 2020]*
+
+---
+
+## 18.2 Operational modes
+
+Every spacecraft has a defined set of operational modes. Each mode specifies which subsystems are active, the power consumption and the data rates — and, critically, the conditions under which the spacecraft enters and leaves it.
+
+### 18.2.1 Mode table for the 3U EO CubeSat
+
+Table 18.1 is the canonical mode table for the 3U Earth-observation running example, **EOSat-3U**. The four power figures for Safe, Nominal, Imaging and Downlink are the same ones used in Chapter 4 Table 4.1 (the illustrative three-row version), in Chapter 8 Table 8.4 (the per-subsystem breakdown) and in the Chapter 9 array and battery sizing; the eclipse load is Chapter 8's 3.5 W. Chapter 12 §12.5.3 notes that the *equipment-based* imaging-mode load is nearer 10 W than the 8 W parametric allocation — a budget tension that the operations concept has to respect by limiting imaging duty cycle until the power design is re-run.
+
+**Table 18.1 — Operational modes of EOSat-3U (3U Earth-observation CubeSat, 500 km SSO)**
+
+| Mode | Description | Power (W) | Data rate | Typical duration | Entry condition |
+|------|------------|-----------|-----------|-----------------|----------------|
+| **Safe** | Minimum functionality; survival only; sun-pointing by magnetic control; payload and wheels off | 2.0 | Beacon only | Until the ground intervenes | Autonomous fault detection (FDIR Level 3) or ground command |
+| **Detumble** | Reduce angular rate after deployment with magnetorquers only | —, magnetorquers only | Housekeeping only (100 bit/s) | Minutes to hours | Post-separation; angular rate above threshold |
+| **Nominal (standby)** | Sun-pointing; all subsystems powered and ready; wheel desaturation runs here | 4.0 | Housekeeping telemetry (1 kbit/s) | Between activities | After detumble; idle periods |
+| **Imaging (science)** | Payload operating; fine pointing on wheels and star tracker | 8.0 | Science data to mass memory | Target-dependent (≈ 1 min per pass) | Scheduled; fine pointing achieved; battery state of charge above limit |
+| **Downlink** | High-rate S-band transfer to ground | 10.0 | 1–5 Mbit/s (Chapter 11 §11.8.1) | During ground contact (≈ 6 min) | Station in view; link established |
+| **Eclipse** | Reduced operations in shadow; heaters as required | 3.5 | Housekeeping only | ≈ 36 min per orbit (Chapter 7 §7.7) | Sun not in view |
+
+EOSat-3U has no propulsion, so there is no manoeuvre mode; momentum desaturation with the magnetorquers (Chapter 10 §10.5) is a sub-state of Nominal. A mission with propulsion adds a **Manoeuvre** mode (housekeeping only, strict attitude constraints, typically 15–25 W for a larger bus) with its own entry conditions.
+
+Two checks apply to every mode table:
+
+- **Safe mode must be power-positive in the worst case.** With the 2.0 W safe-mode load the EOSat-3U array of Chapter 9 §9.2 charges the battery even in a tumbling attitude; Chapter 9 §9.4.11 uses the same 2.0 W as the cold-case internal dissipation.
+- **Eclipse must be survivable from any mode.** The battery sizing of Chapter 9 §9.3 uses the 3.5 W eclipse load; if the spacecraft is still in Downlink when it enters shadow, the 10 W load must be shed within the battery's margin.
+
+### 18.2.2 Mode-transition state machine
+
+The mode table says what each mode is; the state machine of Figure 18.1 says how the spacecraft moves between them. Three properties are required of it: every state must have a path to Safe; Safe must have a path back to Nominal that *requires a ground command*; and no transition may depend on a resource (power, attitude knowledge) that the destination mode does not itself maintain.
+
+![EOSat-3U mode-transition state machine](../assets/figures/fig_mode_state_machine.png)
+
+**Figure 18.1** — Mode-transition state machine of EOSat-3U. Detumble is entered at separation and hands over to Nominal once the angular rate is below threshold; Imaging and Downlink are excursions from Nominal entered on schedule or on station contact and returning on completion; Eclipse is entered from Nominal, Imaging or Downlink when the Sun leaves the field of view and returns to Nominal when it reappears. A fault in any state leads to Safe mode, which is left only by ground command (or, if the rate limit is exceeded, by re-entering Detumble).
+
+Reading Figure 18.1: Detumble is entered once at separation and again from Safe if the rate limit is exceeded; Nominal is the hub; Imaging and Downlink are excursions from Nominal that return on completion or on loss of their entry condition; Safe is reachable from every state by a fault and is left only by ground command. A fault during Downlink does not return to Nominal and then fall to Safe — it goes straight to Safe, because the intermediate transition could be the thing that is broken.
+
+---
+
+## 18.3 FDIR architecture
+
+FDIR — fault detection, isolation and recovery — is the spacecraft's autonomous ability to detect failures, determine which component failed and take corrective action, all without ground intervention.
+
+*[Source: NASA Fault Management Handbook (NASA-HDBK-1002); ECSS-E-ST-70-11C §5.3]*
+*[URL: https://standards.nasa.gov/standard/NASA/NASA-HDBK-1002]*
+
+### 18.3.1 Why FDIR is critical for CubeSats
+
+- **Limited ground contact:** LEO CubeSats are out of view ≈ 85 % of the time
+- **No crewed intervention:** unlike the ISS, there is nobody on board to fix anything
+- **Thermal constraints:** a safe mode must hold thermal limits within minutes (Chapter 9 §9.4.11: the EOSat-3U cold case drops 7.8 °C in one 36-minute eclipse)
+- **Power constraints:** the battery can discharge completely in one eclipse without load shedding
+
+### 18.3.2 FDIR hierarchy
+
+FDIR is layered (Figure 18.2). Each level detects a class of fault, responds within a characteristic latency, and — if its response does not clear the fault — hands the problem up to the next level. The ground is the top level, which is why every autonomous action must be visible in telemetry and reversible by command.
+
+| Level | Detection | Response | Latency | Example |
+|-------|-----------|----------|---------|---------|
+| **0 — Hardware** | Built-in watchdog | Component reset | Milliseconds | Processor watchdog timer |
+| **1 — Unit** | Unit-level monitoring | Unit reconfiguration | Seconds | EPS over-current trip |
+| **2 — Subsystem** | Subsystem health check | Subsystem fallback mode | Seconds to minutes | Switch to backup star tracker |
+| **3 — System** | System-level anomaly detection | Mode change (enter Safe) | Minutes | Transition to safe mode |
+| **4 — Ground** | Human-in-the-loop diagnosis | Ground-command recovery | Hours to days | Anomaly investigation and patch |
+
+![FDIR hierarchy from hardware watchdog to ground](../assets/figures/fig_fdir_hierarchy.png)
+
+**Figure 18.2** — The FDIR hierarchy as a layered pyramid. Each layer, from the Level 0 hardware watchdog at the base to the Level 4 ground at the apex, has its own detection means, response and characteristic latency; a fault that a layer cannot clear escalates upward, and the ground can override any autonomous action because every one is visible in telemetry and reversible by command.
+
+### 18.3.3 FDIR decision flow
+
+```
+                    NOMINAL OPERATIONS
+                           |
+              Fault detected (Level 2–3)
+                           |
+                    +------v------+
+                    |  FAULT      |
+                    |  DETECTED   |
+                    +------+------+
+                           |
+              +------------+------------+
+              |                         |
+        Fault isolated            Cannot isolate
+              |                         |
+        +-----v-----+           +-------v------+
+        | ISOLATION  |           | SAFE MODE    |
+        | SUCCESS    |           | (Level 3)    |
+        +-----+------+           +-------+------+
+              |                          |
+        Recovery action            Wait for ground
+              |                    (Level 4)
+        +-----v-----+                   |
+        | RECOVERY   |           +------v-------+
+        | ATTEMPT    |           | GROUND       |
+        +-----+------+           | RECOVERY     |
+              |                  +------+-------+
+         Success / Fail                 |
+              |                    Command sequence
+        +-----v-----+                   |
+        | RETURN TO  |<----------------+
+        | NOMINAL    |
+        +------------+
+```
+
+The branch that matters is "cannot isolate". A spacecraft that cannot tell *which* unit has failed must not guess; it goes to Safe and lets the ground diagnose with the full telemetry history. The Hitomi loss of Chapter 15 §15.4.7 is the canonical example of an autonomous system acting on a wrong isolation.
+
+### 18.3.4 Common CubeSat FDIR rules
+
+| Fault | Detection method | Threshold | Response |
+|-------|-----------------|-----------|----------|
+| Processor lock-up | Watchdog timer | No heartbeat for 60 s | Hardware reset (Level 0) |
+| Battery under-voltage | EPS voltage monitor | $V_{\text{bat}} <$ 6.0 V | Load shedding; enter Safe |
+| Battery over-temperature | Temperature sensor | $T_{\text{bat}} >$ 45 °C | Disable charging; reduce loads |
+| Attitude loss | No attitude solution for 5 min | AOCS health-flag timeout | Enter Detumble |
+| Communication loss | No uplink for 48 h | Timer-based | Reset TT&C; revert to beacon mode |
+| Memory corruption | EDAC error count | > 10 uncorrectable errors/h | Memory scrub; reboot from backup image |
+| Solar-array current anomaly | Current sensor | $I_{\text{SA}} <$ expected − 30 % | Check attitude; enter Nominal (standby) |
+| Reaction-wheel over-speed | Wheel-speed monitor | $\omega >$ 6 000 rpm | Reduce momentum; desaturate (Chapter 10 §10.5) |
+
+Each rule should trace to a row of the FMECA (Chapter 15 §15.4): the FMECA says what can fail and how it would be detected; the FDIR rule says what the spacecraft does about it. The UniSat-1 register's R-03 (custom OBC in the radiation environment) is mitigated by exactly the first and sixth rows of this table.
+
+### 18.3.5 Key design principles
+
+1. **Safe mode must always work.** It is the last resort; it must be tested exhaustively, including from every other mode and in eclipse.
+2. **Fail operational, then fail safe.** Try to continue the mission before giving up.
+3. **No single fault should cause mission loss.** Cross-reference with the single-point-failure list of Chapter 15 §15.4.4.
+4. **Ground override.** Every autonomous action must be commandable — and *inhibitable* — from the ground.
+5. **Logging.** Record every fault event in non-volatile memory for post-analysis; an FDIR action that leaves no trace cannot be diagnosed.
+
+---
+
+## 18.4 Operational procedures
+
+*[Source: ECSS-E-ST-70-32C (Test and Operations Procedure Language); ECSS-E-ST-70-01C (On-board control procedures)]*
+
+### 18.4.1 Procedure types
+
+| Type | Purpose | Execution | Example |
+|------|---------|-----------|---------|
+| **Nominal** | Routine scheduled operations | Automated (timeline) or manual | Science observation sequence |
+| **Contingency** | Response to known anomaly types | Semi-automated; operator decision | Safe-mode recovery |
+| **Emergency** | Response to critical unexpected events | Manual; real-time decision | Communication-loss recovery |
+| **Maintenance** | Periodic calibration or updates | Scheduled manual | Magnetometer calibration |
+
+### 18.4.2 Procedure structure (ECSS-E-ST-70-32C)
+
+Each procedure has:
+
+1. **Identifier** — unique procedure number (e.g. NOM-SCI-001)
+2. **Purpose** — what the procedure accomplishes
+3. **Preconditions** — system state required before starting
+4. **Steps** — ordered list of actions, verifications and decisions
+5. **Expected results** — what should happen at each step
+6. **Recovery actions** — what to do if the expected results are not observed
+7. **Post-conditions** — system state after successful completion
+
+The discipline is in items 5 and 6: every step states what *should* be seen and what to do if it is not. A procedure without expected results is a wish list.
+
+### 18.4.3 Example: science observation procedure for EOSat-3U
+
+```
+Procedure: NOM-SCI-001 "Earth-observation target acquisition"
+Preconditions: Mode = Nominal, battery SoC > 60 %, target in field of view within 10 min
+
+Step 1: Verify AOCS mode = Fine pointing
+  Expected: AOCS status = FINE, pointing error < 0.1°
+  If not: wait 60 s, retry. If still not achieved → ABORT, remain in Nominal
+
+Step 2: Command payload power ON
+  Expected: payload housekeeping reports power = ON within 5 s
+  If not: retry power command. If 3 failures → ABORT, log anomaly
+
+Step 3: Wait for payload thermal stabilisation (90 s)
+  Expected: payload temperature within operational range
+
+Step 4: Command payload to imaging mode
+  Expected: payload status = IMAGING, frame counter incrementing
+
+Step 5: Wait for target acquisition (ground-predicted start time)
+  Expected: imaging starts at predicted time ± 5 s
+
+Step 6: Collect imagery for the scheduled duration
+
+Step 7: Command payload to standby
+  Expected: payload status = STANDBY
+
+Step 8: Command payload power OFF (if no more targets this orbit)
+  Expected: payload housekeeping reports power = OFF
+
+Post-conditions: Mode = Nominal, imagery stored in mass memory
+```
+
+A contingency procedure — safe-mode recovery, say — has the same shape but its preconditions are the *diagnosis*: "FDIR log read out and cause identified; cause cleared or inhibited; battery SoC > 80 %". Recovery without a diagnosis is the most common way to enter safe mode twice.
+
+---
+
+## 18.5 Anomaly response process
+
+*[Source: NASA-HDBK-1002 (Fault Management Handbook); ESA anomaly review board procedures]*
+
+### 18.5.1 Anomaly escalation levels
+
+| Level | Severity | Response time | Authority | Example |
+|-------|----------|--------------|-----------|---------|
+| **Green** | Informational | Next working day | Operations engineer | Minor parameter outside expected range |
+| **Yellow** | Warning | Within 4 hours | Lead operator | Subsystem performance degraded |
+| **Orange** | Serious | Within 1 hour | Flight director | Mode change required; mission impact |
+| **Red** | Critical | Immediate | Project manager + flight director | Mission-threatening; safe mode entered |
+
+### 18.5.2 Anomaly response workflow
+
+```
+
+1. DETECT:   Telemetry alarm or operator observation
+2. ASSESS:   Is this a known anomaly type? Check the procedures library
+             → Known:   execute the contingency procedure
+             → Unknown: continue to step 3
+3. DIAGNOSE: Gather additional telemetry, correlate events, form a hypothesis
+4. PLAN:     Develop the response plan (may require an anomaly review board)
+5. EXECUTE:  Implement recovery commands (verify each step)
+6. VERIFY:   Confirm the system has returned to the expected state
+7. DOCUMENT: Record anomaly, root cause, response and lessons learned
+```
+
+Two rules of thumb from agency practice: *rule out the ground first* (a silent spacecraft is more often a mis-pointed antenna or a wrong frequency than a dead transmitter), and *do not send a command you cannot verify* (every uplink in step 5 is followed by a telemetry check before the next).
+
+### 18.5.3 Anomaly report fields
+
+| Field | Description |
+|-------|------------|
+| **Anomaly ID** | Unique identifier (e.g. ANO-2026-042) |
+| **Date/time (UTC)** | When the anomaly was detected |
+| **Severity** | Green / Yellow / Orange / Red |
+| **Affected subsystem** | EPS, AOCS, TT&C, payload, … |
+| **Observation** | What was observed (telemetry values, trends) |
+| **Diagnosis** | Root-cause analysis |
+| **Action taken** | Commands sent, procedures executed |
+| **Result** | System state after the response |
+| **Status** | Open / resolved / under investigation |
+| **Lessons learned** | Preventive measures for the future |
+
+### 18.5.4 Real mission example: Kepler reaction-wheel failure
+
+NASA's Kepler space telescope lost reaction wheel 2 in July 2012, followed by wheel 4 in May 2013. The anomaly response:
+
+1. **Detection:** elevated friction torque in the wheel-2 housekeeping telemetry
+2. **Assessment:** known degradation signature; monitoring intensified
+3. **Failure:** wheel 2 ceased operation; the mission continued on three wheels
+4. **Second failure:** wheel 4 failed ten months later; two wheels remaining — insufficient for fine pointing
+5. **Recovery:** the engineering team developed the "K2" mission concept using solar radiation pressure as a "virtual third wheel"
+6. **Result:** K2 operated for more than four additional years, discovering 2 700+ exoplanet candidates
+
+*Lesson: creative operational workarounds can save missions. FDIR should be designed with graceful degradation, not just "safe mode or nothing" — which is the operational counterpart of the 3-of-4 wheel reliability argument in Chapter 15 §15.4.6.*
+
+*[Source: Howell et al., "The K2 Mission: Characterization and Early Results", PASP, 2014]*
+
+---
+
+## 18.6 Returning to UniSat-1: modes and FDIR for a 1U demonstrator
+
+UniSat-1 has passive magnetic attitude control, no wheels, no star tracker, a UHF beacon and a single payload — so most of Table 18.1 does not apply. Its mode set is three states:
+
+| Mode | Description | Power | Entry condition |
+|------|------------|-------|----------------|
+| **Safe (beacon)** | OBC and beacon only; payload off | Minimum, power-positive in any attitude (Chapter 9 §9.5) | Any FDIR trigger; also the state after every reset |
+| **Nominal** | Payload sampling at the science rate; housekeeping stored | Nominal load of Chapter 9 §9.5 | Ground command, after beacon health confirmed |
+| **Downlink** | UHF transmitter at full rate during a pass | Transmit load | Station in view; scheduled by uplinked pass list |
+
+There is no Detumble (the permanent magnet and hysteresis rods do that passively over days) and no Imaging (the magnetometer runs continuously in Nominal). The FDIR rules reduce to four: the watchdog reset, the battery under-voltage trip to Safe, the 48-hour no-uplink timer, and the EDAC scrub on the custom OBC — the last two being the mitigations recorded against risk R-03 in Chapter 15 §15.5. The safe-mode recovery procedure is one page long, and because Safe is power-positive and thermally benign, the spacecraft can sit in it for weeks: UniSat-1 can afford a student operations team precisely because its FDIR has nothing to do in a hurry.
+
+---
+
+## Summary
+
+| Topic | Key takeaway |
+|-------|-------------|
+| ConOps | Defines *how* the system is operated: modes, transitions, schedules, staffing; the concept is in Chapter 4, the operational detail here |
+| Operational modes | EOSat-3U (Table 18.1): Safe 2 W, Nominal 4 W, Imaging 8 W, Downlink 10 W, Eclipse 3.5 W; Safe must be power-positive, Eclipse survivable from any mode |
+| Mode transitions | Defined by entry/exit conditions; Safe reachable from every mode and left only by ground command |
+| FDIR | Five levels: hardware → unit → subsystem → system → ground; Safe is the last resort; "cannot isolate" goes to Safe, never guesses |
+| Procedures | Nominal, contingency, emergency, maintenance; every step has an expected result and a recovery action |
+| Anomaly response | Detect → assess → diagnose → plan → execute → verify → document; rule out the ground first |
+| Design principles | Safe mode must always work; fail operational before fail safe; ground override always; log everything |
+
+---
+
+## Problems
+
+1. **Mode table.** Construct the operational-mode table for a 6U CubeSat with a cold-gas propulsion system and an X-band downlink: at least six modes with power, data rate, typical duration and entry condition. Identify which mode has the highest power and check, using the battery-sizing method of Chapter 9 §9.3, whether the spacecraft could survive entering eclipse in that mode.
+
+2. **State machine.** Draw the mode-transition state machine for the spacecraft of Problem 1. Verify the three properties of §18.2.2 — Safe reachable from every state, Safe exited only by ground command, no transition dependent on a resource the destination does not maintain — and identify one transition in Figure 18.1 (§18.2.2) that would violate the third property if Eclipse were implemented as a full mode with its own attitude control.
+
+3. **Safe-mode power closure.** EOSat-3U enters Safe in a tumbling attitude. Using the solar-array area of Chapter 9 §9.2 and assuming the orbit-average projected area of a tumbling 3U is 40 % of its maximum, compute the orbit-average generated power at end of life and compare it with the 2.0 W safe-mode load plus the 3.5 W eclipse load for 36 minutes per orbit. Is Safe power-positive? If not, which safe-mode load would you remove first?
+
+4. **FDIR rule set.** Write five FDIR rules for the UniSat-1 mission (fault, detection method, threshold, response) in the format of §18.3.4, assigning each to a level of the hierarchy of §18.3.2. For each rule, cite the FMECA row or risk-register entry of Chapter 15 it responds to, and state how the ground can inhibit it.
+
+5. **Isolation versus safe mode.** A 3U spacecraft carries two redundant magnetometers whose readings disagree by 30 %. Design the Level-2 isolation logic that decides which one to trust, state what third source of information it needs, and specify the condition under which it must give up and go to Safe instead. Relate your answer to the Hitomi sequence of Chapter 15 §15.4.7.
+
+6. **Contingency procedure.** Write a safe-mode recovery procedure for EOSat-3U in the seven-part structure of §18.4.2, with at least eight steps, each with an expected result and a recovery action. The preconditions must include a diagnosis step; the post-conditions must leave the spacecraft in Nominal with the fault inhibited or cleared.
+
+7. **Anomaly report.** The EOSat-3U OBC reboot counter increments three times in ten minutes while the spacecraft is over the South Atlantic, after which FDIR enters Safe. Complete the anomaly report of §18.5.3 for this event, assign a severity level from §18.5.1 with justification, and propose the two telemetry channels that would most quickly discriminate a single-event upset from a software fault.
+
+8. **Autonomy trade.** Estimate the operations cost over three years for the 3U mission under the ground-driven and on-board-autonomy options of §18.1.2 (use 60 kEUR per FTE-year and the staffing profiles of Chapter 17 §17.4.1), and estimate the additional flight-software cost of the autonomous option using the software line of Chapter 16 §16.2.1. At what mission duration does autonomy pay for itself?
+
+9. **Weekend safe mode.** The spacecraft enters Safe on a Friday evening; the next staffed contact is Monday morning (≈ 60 hours, ≈ 38 orbits). Using Table 18.1 and the battery of Chapter 9 §9.3, decide whether EOSat-3U survives without intervention, then repeat for the case where Safe fails to shed the payload heater (an extra 1.5 W). State what the FDIR must guarantee for a mission with no weekend staffing to be acceptable.
+
+---
+
+## References
+
+1. ECSS, *ECSS-E-ST-70-11C: Space Segment Operability*, 2008. https://ecss.nl/standard/ecss-e-st-70-11c-space-segment-operability/
+2. ECSS, *ECSS-E-ST-70-32C: Test and Operations Procedure Language*, 2008. https://ecss.nl/standard/ecss-e-st-70-32c-test-and-operations-procedure-language/
+3. ECSS, *ECSS-E-ST-70-01C: Spacecraft On-board Control Procedures*, 2010. https://ecss.nl/standard/ecss-e-st-70-01c-spacecraft-on-board-control-procedures/
+4. ECSS, *ECSS-E-ST-70-41C: Telemetry and Telecommand Packet Utilization*, 2016. https://ecss.nl/standard/ecss-e-st-70-41c-telemetry-and-telecommand-packet-utilization/
+5. NASA, *Fault Management Handbook*, NASA-HDBK-1002, 2012. https://standards.nasa.gov/standard/NASA/NASA-HDBK-1002
+6. IEEE, *IEEE Std 1362-1998: Guide for Information Technology — System Definition — Concept of Operations (ConOps) Document*, 1998.
+7. ESA PROBA-2 Operations Team, "PROBA-2: Over a Decade of Operations", *SpaceOps 2020*. https://www.spaceops.org/
+8. Howell, S. B. et al., "The K2 Mission: Characterization and Early Results", *Publications of the Astronomical Society of the Pacific*, 126(938), 2014. https://doi.org/10.1086/676406
+
+
+# Chapter 19 — Rehearsing the Mission: Operations Simulation
+
+> **Recommended background.** ECSS-E-ST-70C (Ground systems and operations, §5 operations validation); ECSS-E-ST-70-11C (Space segment operability); ECSS-E-ST-70-32C (Procedures); the mission-operations chapters of SMAD. This chapter assumes the ground segment of Chapter 17 and the modes, FDIR rules and procedures of Chapter 18 exist on paper; its purpose is to find out whether they work before the spacecraft leaves the ground.
+
+## Learning objectives
+
+By the end of this chapter, you will be able to:
+
+1. Explain why space agencies rehearse operations before launch, and what a rehearsal finds that analysis cannot
+2. Structure an operations rehearsal through LEOP, commissioning, nominal operations and anomaly injection, at a fidelity appropriate to the project
+3. Allocate operations roles for a team of any size, including the simulation controller
+4. Select, script and inject anomaly scenarios from a reusable library, each with symptoms, expected diagnosis and recovery
+5. Run a structured debrief and feed its findings back into the ConOps, the FDIR rules, the procedures and the requirements
+
+---
+
+## 19.1 Why agencies rehearse
+
+A spacecraft is operated by people following procedures through a ground segment, and none of those three has flown before launch. Analysis can show that the power budget closes and that the FDIR rules are consistent; it cannot show that an operator at the end of a night shift will read the right telemetry page, that the safe-mode recovery procedure has a step whose expected result is unobservable, or that two roles both believe the other owns the decision to command a reset. Those are found by rehearsal.
+
+### 19.1.1 Agency practice
+
+- **ESA** runs a *simulation campaign* at ESOC for every mission in the months before launch: the flight-control team operates a software simulator of the spacecraft through LEOP and early operations, while a simulations officer injects faults into the simulator and the ground segment without warning. Campaigns run to dozens of simulation runs, and the launch is not approved until the team has recovered from the injected contingencies with the real procedures and the real control system. ECSS-E-ST-70C requires that the ground segment and the operations preparation be validated before launch; the simulation campaign is how the operations part of that requirement is met.
+- **NASA** and its centres run *operational readiness tests* (ORTs) and mission readiness tests in which the flight team, the ground network and the spacecraft (or its simulator) are exercised end to end against the launch timeline, with anomalies scripted by a test conductor. The flight-rules and procedure sets are frozen only after the ORTs are complete.
+- **Both** continue to rehearse after launch: before every critical event — orbit insertion, a landing, a safe-mode exit after a long outage — the team runs the sequence against the simulator first. The operating principle is *train like you fly, fly like you train*: the rehearsal uses the real consoles, the real procedures and the real voice loops, so that the only thing different on the day is the spacecraft.
+
+### 19.1.2 What a rehearsal finds
+
+Experience across agency and university missions gives a consistent list:
+
+| Finding | Typical example | Where it should have been caught |
+|---------|-----------------|------------------------------|
+| Procedure gaps | A step whose "expected result" is a telemetry point not in the housekeeping packet | Procedure review (Chapter 18 §18.4) |
+| FDIR gaps | A fault the rules detect but whose response leaves the spacecraft in a mode with no path to Safe | State-machine check (Chapter 18 §18.2.2) |
+| Role ambiguity | Two people both wait for the other to authorise a command; or both send one | ConOps staffing plan (Chapter 18 §18.1.1) |
+| Timeline optimism | The LEOP plan needs three activities on a five-minute pass | Operations timeline (Chapter 17 §17.4) |
+| Ground-segment faults | Wrong Doppler sign in the tracking software; a pass predicted from a stale element set | Ground-segment validation |
+| Design weaknesses | Safe mode is not power-positive in the tumbling attitude the rehearsal put it in | Power budget (Chapter 9) |
+
+The last row is the important one for a design textbook: the rehearsal is a *verification activity for the design*, late in Phase D, and its findings are requirement changes. Operations reveal what analysis cannot.
+
+### 19.1.3 Fidelity levels
+
+A rehearsal does not need a flight-software simulator to be useful. Four levels, in increasing cost:
+
+| Level | Spacecraft representation | Telemetry source | Suited to |
+|-------|---------------------------|------------------|-----------|
+| **Tabletop** | None; the simulation controller narrates state and reads out telemetry values | Prepared tables | Early Phase C; concept-level ConOps; any team |
+| **Spreadsheet model** | Power, data and mode state tracked in a spreadsheet the controller updates per orbit | Spreadsheet | Phase C/D; checking budgets under operations |
+| **Software simulator** | Flight-software model with a telemetry/telecommand interface to the real control system | Simulator | Phase D; procedure validation; agency standard |
+| **Hardware-in-the-loop** | Engineering model on the bench, fed by simulated sensors | Flight-like | Phase D; end-to-end validation; mission-critical procedures |
+
+This chapter is written so that it can be run at the first two levels by any team, and scaled to the upper two when the project has them. Everything in §19.3–§19.6 is independent of fidelity.
+
+---
+
+## 19.2 Structuring a rehearsal
+
+### 19.2.1 The elements
+
+Every operations rehearsal, from a two-hour tabletop to a three-month agency campaign, has the same five elements:
+
+1. **A simulated spacecraft** — at one of the fidelity levels of §19.1.3 — whose state evolves according to the mission's own mode table, power budget and data budget.
+2. **A simulation controller** ("the Universe"), who holds the script, advances simulated time, reads out telemetry, decides what the spacecraft does in response to each command, and injects the anomalies. The controller is not a member of the operations team and does not help it.
+3. **Compressed time.** Simulated time jumps between events; a 72-hour LEOP is rehearsed in an hour or two by playing only the passes and the decisions. The controller announces each jump ("it is now T+24 h; eight passes have occurred with nominal housekeeping").
+4. **A script** — the sequence of events, the telemetry the controller will read out at each, and the expected responses (§19.4).
+5. **A log**, kept in real time by a named role, of every event, telemetry readout, command and decision, with simulated and real time stamps. The log is the input to the debrief, and real-time logging is itself a skill being rehearsed: memory is unreliable under pressure.
+
+### 19.2.2 Phases
+
+A full rehearsal walks the operations timeline of Chapter 17 §17.4.1 in order, because each phase assumes the previous one succeeded:
+
+| Simulated time | Phase | What is rehearsed |
+|----------|-------|--------|
+| T+0 to T+1 h | LEOP | Separation, RF-inhibit timer, antenna deployment, beacon acquisition, first housekeeping, first uplink |
+| T+1 h to T+24 h | Early LEOP | Array deployment, AOCS initialisation, communication-chain validation |
+| T+1 to T+7 days | Commissioning | Subsystem checkout, AOCS calibration, payload first light, first data download |
+| T+7 to T+30 days | Early operations | Nominal science or service, procedure refinement |
+| *(any phase)* | Anomaly injection | Two or three scenarios from the library of §19.5, chosen for the mission |
+| T+30 days to T+1 year | Nominal operations | Metrics review against plan |
+| — | Debrief | §19.6 |
+
+A shorter rehearsal takes a subset: LEOP alone (the most time-critical phase, and the one the team will fly only once); or nominal operations with anomaly injection (the phase the team will fly for years). The anomaly injections are placed in whichever phase makes them hardest — a battery under-voltage is a different problem during commissioning, when the team has not yet seen a normal eclipse, than in month six.
+
+### 19.2.3 Pacing
+
+LEOP should feel time-pressured: passes are short, and decisions must be made before loss of signal or wait ninety minutes. Commissioning can be slower. Anomaly injection should be challenging but solvable with the team's own procedures — the aim is to test the procedures, not to defeat the team. The debrief should be given more time than seems necessary; it is where the findings are turned into changes.
+
+---
+
+## 19.3 Role allocation for any team size
+
+### 19.3.1 Operations roles
+
+The roles mirror a real flight-control team, scaled down. Each has a defined authority and a defined set of telemetry it watches.
+
+| Role | Responsibility | Authority | Watches |
+|------|---------------|-----------|---------|
+| **Flight director (FD)** | Overall decision authority; coordinates the team; declares anomaly severity (Chapter 18 §18.5.1) | GO/NO GO on every non-routine command | The whole picture; the clock |
+| **Spacecraft controller (SC)** | Sends commands; monitors housekeeping telemetry; executes procedures step by step | Routine commands within an approved procedure | Bus housekeeping; mode; FDIR flags |
+| **Ground-station operator (GSO)** | Antenna scheduling; link acquisition; signal quality | Ground-segment configuration | Carrier, Doppler, signal strength, frame lock |
+| **Payload operator (PO)** | Plans and executes observations; tracks the data budget | Payload commands within an approved procedure | Payload housekeeping; mass-memory fill |
+| **Flight dynamics (FDyn)** | Orbit knowledge; pass predictions; manoeuvre planning if there is propulsion; conjunction alerts | Element-set updates | Orbit, eclipse times, pass geometry |
+| **Anomaly logger** | Records every event, readout, command and decision with time stamps; maintains the anomaly report (Chapter 18 §18.5.3) | None — deliberately | Everything |
+| **Simulation controller** | Runs the script; advances time; injects anomalies; plays the spacecraft and the outside world | Absolute, over the simulated universe | The team |
+
+### 19.3.2 Scaling the team
+
+For smaller teams, combine roles; SC+GSO and PO+FDyn are natural pairings because each pair watches related telemetry. The flight director and the simulation controller must never be the same person, and the logger should not also be the flight director.
+
+| People available | Allocation |
+|------------------|-----------|
+| 2 | Simulation controller; one operator who is FD, SC, GSO, PO and logger at once (useful for a solo walk-through of a procedure, not for a team rehearsal) |
+| 3 | Simulation controller; FD + logger; SC + GSO + PO + FDyn |
+| 4 | Simulation controller; FD; SC + GSO; PO + FDyn + logger |
+| 5 | Simulation controller; FD; SC + GSO; PO + FDyn; logger |
+| 6–7 | Simulation controller; FD; SC; GSO; PO + FDyn; logger (+ a second controller to play the ground station) |
+| 8+ | All seven roles, plus a second shift — which allows the most instructive injection of all, a handover in the middle of an anomaly |
+
+### 19.3.3 Communication discipline
+
+Three rules borrowed from real control rooms, each of which the rehearsal will test:
+
+- **Every command is called before it is sent** ("SC to FD: request GO for payload power ON, step 2 of NOM-SCI-001") and acknowledged ("FD: GO").
+- **Every telemetry readout is stated with its expected range** ("bus voltage 7.8, expected 7.0 to 8.4, nominal"), so that the logger and the flight director hear the comparison, not just the number.
+- **Nobody acts outside a procedure without the flight director saying so.** Improvisation is sometimes right; silent improvisation never is.
+
+---
+
+## 19.4 Scripting the phases
+
+The scripts below are written for the 3U Earth-observation CubeSat, EOSat-3U, with the modes of Chapter 18 Table 18.1; the simulation controller adapts the telemetry values to the mission being rehearsed. Each entry gives the controller's narration, what the team is expected to do, and what a good response looks like.
+
+### 19.4.1 LEOP
+
+**[T+0 — Separation]** *"The satellite has separated from the deployer. Deployment switches have released. The 30-minute timer has started. You are in radio silence — no RF emission is allowed until the timer expires. What is the spacecraft doing right now?"*
+
+Expected: the timer is counting down; the battery is powering the OBC and nothing else; the spacecraft is tumbling at the separation rate; no deployments have occurred. A good team also states what it *cannot* know — the attitude, the battery state — and when it first will.
+
+**[T+30 min — Timer expires]** *"The timer has expired. The OBC has commanded antenna deployment. What do you expect to see, and from where?"*
+
+Expected: the antenna deployment command has been issued by the on-board sequence; the beacon should begin transmitting; nothing can be confirmed until a station is in view. The team should already know when the first pass is (flight dynamics) and whether it falls before or after T+30 min (Chapter 17 §17.4.3).
+
+**[T+35 min — First pass]** *"Your ground station has line of sight. The antenna operator reports: carrier detected at the expected frequency with a Doppler offset consistent with an approaching pass. Signal strength is −110 dBm. Is this what you expected?"*
+
+The team should verify that the carrier frequency matches the prediction (accounting for Doppler), that the signal strength is consistent with the link budget at the current slant range (Chapter 11 §11.8.1), and that the beacon data rate is as designed. A team that simply says "yes" has not checked.
+
+**[T+40 min — First telemetry]** *"Beacon lock achieved. You are receiving housekeeping. Here is the first frame:"*
+
+| Parameter | Value | Expected range | Status |
+|-----------|-------|---------------|--------|
+| Bus voltage | 7.8 V | 7.0–8.4 V | Nominal |
+| Battery state of charge | 72 % | > 50 % | Nominal |
+| Solar-array current | 0.45 A | 0.3–0.6 A | Nominal |
+| OBC temperature | 22 °C | −10 to +50 °C | Nominal |
+| Battery temperature | 19 °C | 0 to 45 °C | Nominal |
+| AOCS mode | Detumble | Expected | Nominal |
+| Angular rate | 3.2 °/s | Decreasing | Nominal |
+| Antenna status | Deployed | Expected | Nominal |
+| Beacon mode | Active | Expected | Nominal |
+| Uplink status | Not yet attempted | — | — |
+
+Expected: the spacecraft controller reads each value against its range aloud; the flight director declares LEOP step "first telemetry" complete; the logger records the frame. A controller who wants to make this harder changes one value — a battery temperature of −2 °C, say — and watches whether anyone notices.
+
+**[T+1 h — Uplink validation]** *"Send a no-operation command to verify the uplink chain."*
+
+Expected: the controller composes the command, verifies its encoding, calls it to the flight director, transmits, and waits for the acknowledgement counter in the next telemetry frame to increment. The uplink is not validated until that counter is seen.
+
+### 19.4.2 Commissioning
+
+**[Time jump: T+24 h]** *"Detumbling is complete. The AOCS is in sun-pointing mode. All housekeeping parameters have been nominal across eight passes. You are ready to begin commissioning. What is your first activity?"*
+
+Expected: AOCS calibration — magnetometer bias estimation, sun-sensor alignment verification — before anything that depends on attitude. A team that goes straight to the payload has skipped the step the payload's pointing will rely on.
+
+**[T+3 days — Payload first light]** *"The AOCS is calibrated and achieving 0.3° pointing. You are ready for payload first light. Walk me through your procedure."*
+
+The team executes its science-observation procedure (Chapter 18 §18.4.3) step by step, calling each expected result. The controller plays the spacecraft: for each step, either the expected result is reported or it is not, and the team must take the recovery action the procedure specifies. A procedure with no recovery action for a step is a finding.
+
+**[T+5 days — First data download]** *"The payload has captured 150 MB of imagery. Your next pass is 8 minutes above the mask. Can you download it all in one pass?"*
+
+Expected calculation (Chapter 17 §17.2.2): at 2 Mbit/s, 8 min and $\eta = 0.9$, the capacity is $2 \times 10^6 \times 480 \times 0.9 / 8 = 108$ MB — so no; two passes are needed, and the payload operator plans the sequence and states which data go first. A team that answers without calculating has not understood why the data budget exists.
+
+### 19.4.3 Nominal operations
+
+**[Time jump: T+30 days to T+1 year]** *"The mission has been operational for a month. Commissioning is complete. Review your operational metrics."*
+
+The team reports:
+
+- total data downlinked in 30 days versus plan
+- number of observations completed versus plan
+- anomalies encountered (from the injection exercise) and their status
+- current budget status: power margin, data margin, propellant remaining if applicable
+- orbit status: conjunction alerts, debris-compliance tracking (Chapter 3 §3.6)
+
+This is the moment at which the rehearsal checks whether the mission, operated as the ConOps describes, actually delivers what the requirements promised. A data return of 60 % of plan is a common and instructive result.
+
+---
+
+## 19.5 A library of anomaly scenarios
+
+Each scenario below is written as the simulation controller injects it, followed by the symptoms the team can observe, the diagnosis a well-prepared team should reach, the recovery it should execute, and the FDIR rule or design feature the scenario exercises. Choose two or three per rehearsal, appropriate to the mission — do not inject a propulsion anomaly into a mission without propulsion — and keep one in reserve for a team that resolves the first quickly.
+
+### 19.5.1 Battery under-voltage
+
+**Injection.** *"During eclipse you receive an alert: battery voltage has dropped to 6.2 V, below the 6.5 V warning threshold. Battery temperature is 5 °C. State of charge is estimated at 18 %."*
+
+**Symptoms.** Voltage below warning, state of charge far below the end-of-eclipse value the power budget predicts; low battery temperature reducing available capacity; possibly a mode change already executed by FDIR.
+
+**Expected diagnosis.** Consumption has exceeded generation over several orbits. Candidate causes: solar-array degradation or a string failure; an unexpected load (a heater stuck on, a payload left powered); battery degradation; an attitude that under-illuminates the array; a longer eclipse than planned (β-angle season, Chapter 7 §7.1.2). The discriminating telemetry is the array current trend over the last 24 hours against the attitude history.
+
+**Recovery.** Verify that FDIR has shed loads (payload off, non-essential heaters off); if not, command Safe manually. Then review the power trend and compare with the budget; do not leave Safe until generation exceeds consumption with margin and the cause is known.
+
+**Exercises.** The under-voltage rule of Chapter 18 §18.3.4; whether Safe is power-positive (Chapter 9 §9.2); whether the team can read a trend, not just a value.
+
+### 19.5.2 Communication loss
+
+**Injection.** *"You have received no telemetry for the last three scheduled passes (18 hours). The ground station reports pointing and frequency correct, but no carrier detected."*
+
+**Symptoms.** Silence. Nothing else — which is the point.
+
+**Expected diagnosis.** Rule out the ground first: antenna, LNA, modem, element set, Doppler sign. Then seek independent evidence — ask a volunteer network or another station whether anyone has heard the beacon. Then consider the spacecraft: transmitter failure, antenna not deployed, attitude loss (antenna pointed away), a power fault that has taken the transmitter down, an OBC hang. If the mission has a no-uplink timer (48 h in Chapter 18 §18.3.4), the spacecraft will reset its TT&C and revert to beacon on its own.
+
+**Recovery.** Fix or exclude the ground; configure a wide-beam antenna for a beacon search; wait for the timer-based reset; plan the uplink that follows it. The flight director must decide how long to wait before escalating to Red (Chapter 18 §18.5.1).
+
+**Exercises.** The communication-loss FDIR rule; the ground-segment fault tree; the team's discipline in not commanding blind.
+
+### 19.5.3 Loss of fine pointing
+
+**Injection.** *"Pointing error has increased from 0.1° to 5°. The star tracker reports 'no solution'. Reaction wheels are at 80 % of capacity."*
+
+**Symptoms.** Pointing degraded; attitude-determination source lost; momentum near saturation.
+
+**Expected diagnosis.** Star-tracker failure, optical contamination, Sun or Earth in its field of view, or a wheel approaching saturation that has driven the attitude away from the tracker's acquisition range. Check the coarse attitude from magnetometer and sun sensors — is it consistent with the last good tracker solution? Check the wheel-speed history — was momentum building before the tracker dropped out?
+
+**Recovery.** Command desaturation with the magnetorquers first (Chapter 10 §10.5); then switch to coarse pointing (sun sensors + magnetometer); then attempt tracker reacquisition. Assess the impact: can imaging continue in coarse pointing, and at what cost in image quality (Chapter 10 §10.4)?
+
+**Exercises.** The wheel over-speed rule; the subsystem-level (Level 2) fallback of Chapter 18 §18.3.2; graceful degradation versus safe mode.
+
+### 19.5.4 Unexpected safe-mode entry
+
+**Injection.** *"The satellite has autonomously entered Safe. The last telemetry before entry showed the OBC reboot counter incrementing three times in ten minutes. All other parameters were nominal."*
+
+**Symptoms.** Safe mode with no obvious hardware cause; a reboot cluster.
+
+**Expected diagnosis.** Repeated reboots suggest a single-event upset or a firmware fault. Was the spacecraft in the South Atlantic Anomaly (Chapter 7 §7.6)? Read the FDIR log from non-volatile memory for the fault triggers. Correlate with the orbit position and with any command sent just before.
+
+**Recovery.** Command exit from Safe only after the log has been read and the cause assigned; monitor for recurrence over several SAA passes; if it recurs, upload a software patch (or change the EDAC scrub rate) to improve upset robustness.
+
+**Exercises.** The watchdog and memory-corruption rules; the "recovery requires a diagnosis" precondition of Chapter 18 §18.4.3; the radiation design of Chapter 7 §7.6 and risk R-03 of Chapter 15 §15.5.
+
+### 19.5.5 Thermal exceedance
+
+**Injection.** *"Payload temperature has reached 58 °C during an observation, above the 55 °C operational limit. Battery temperature is 38 °C, approaching the 45 °C limit."*
+
+**Symptoms.** Payload over its operational limit; battery warming towards its limit; both during a sunlit observation.
+
+**Expected diagnosis.** The hot case has been exceeded. Is the radiator face Sun-pointed in the imaging attitude? Is the orbit in a high-β season the thermal model (Chapter 9 §9.4) did not cover? Has the imaging duty cycle crept above the value the thermal case assumed?
+
+**Recovery.** Disable the payload immediately; check and if necessary change the attitude; review the thermal model against the actual orbit geometry; reduce duty cycle and schedule observations for cooler orbit phases; if the model is wrong, update it and the operational constraints with it.
+
+**Exercises.** The battery over-temperature rule; whether the ConOps carries thermal constraints as operational limits; feedback from operations to the thermal design.
+
+### 19.5.6 Ground fault masquerading as a spacecraft fault
+
+**Injection.** *"On the pass you receive carrier and frames, but every frame fails its checksum. Signal strength is 6 dB lower than on the previous pass."*
+
+**Symptoms.** Link present but unusable; reduced signal.
+
+**Expected diagnosis.** A 6 dB loss with a lock still achieved points at the ground — a mis-pointed antenna, a wrong polarisation, a cable or LNA fault, rain — before the spacecraft. A spacecraft transmitter fault would more often give no carrier at all. Compare with another station if one is available.
+
+**Recovery.** Ground-segment checks between passes; a second station if available; if the loss persists across stations, revisit the spacecraft antenna and attitude.
+
+**Exercises.** Rule-out-the-ground discipline; the ground-station operator's role; the link margin of Chapter 11 §11.8.1 (is 6 dB within margin or not?).
+
+### 19.5.7 Mass memory full
+
+**Injection.** *"The payload operator reports that the mass memory is at 97 % and the next three passes are over the low-elevation station."*
+
+**Symptoms.** Storage nearly exhausted; downlink capacity for the next day below generation.
+
+**Expected diagnosis.** The data budget (Chapter 11 §11.9, Chapter 17 §17.2.4) is not closing at the current duty cycle and station schedule — possibly because a station outage, a missed pass or a higher-than-planned imaging rate has eaten the margin.
+
+**Recovery.** Prioritise: which data are downlinked first, which may be overwritten? Reduce the imaging duty cycle until the backlog clears; buy or borrow passes if the mission can; check the on-board storage sizing of Chapter 12 §12.3.3 against the outage assumption it was built on.
+
+**Exercises.** Data-budget management under operations; payload-operator judgement; the outage case in storage sizing.
+
+### 19.5.8 Command rejected
+
+**Injection.** *"The safe-mode exit command has been sent three times. Telemetry shows the command counter incrementing but the mode unchanged, and a 'command rejected' flag set."*
+
+**Symptoms.** Uplink works; the spacecraft refuses the command.
+
+**Expected diagnosis.** An on-board precondition is not met — a battery state-of-charge interlock, an attitude-knowledge flag, a FDIR inhibit still active — or the command is being sent with a wrong parameter or in a wrong mode. Read the rejection reason if the telemetry has one; if it does not, that is a finding.
+
+**Recovery.** Satisfy the precondition (wait for charge; clear the inhibit by its own command) rather than overriding it; override only on flight-director authority with the reason logged.
+
+**Exercises.** Procedure preconditions; the ground-override principle of Chapter 18 §18.3.5 and its limits; whether the telemetry tells the operator *why*.
+
+### 19.5.9 Shift handover during an anomaly
+
+**Injection** (teams with a second shift). *"It is the end of the shift. The battery under-voltage of §19.5.1 is still under investigation. Hand over."*
+
+**Symptoms.** None in the spacecraft; the hazard is in the team.
+
+**Expected response.** A structured handover: current mode, open anomalies and their severity, actions in progress and who owns them, next pass time and what is planned on it, outstanding decisions for the flight director. The incoming shift repeats it back.
+
+**Exercises.** The staffing plan of Chapter 18 §18.1.1; the log as the handover document; whether anything was known only in someone's head.
+
+### 19.5.10 Recording the response
+
+For each injected scenario the anomaly logger completes the response record, which is the Chapter 18 §18.5.3 report in its shortest form:
+
+| Field | What to record |
+|-------|---------------|
+| Time (simulated) | When the anomaly was detected |
+| Observation | Exact telemetry values and symptoms |
+| Initial assessment | Severity level (Green / Yellow / Orange / Red) and who declared it |
+| Diagnosis | Suspected root cause, and the telemetry that supports it |
+| Action taken | Commands sent, procedures executed, by whom, authorised by whom |
+| Result | System state after the response |
+| Follow-up required | Further investigation; procedure, FDIR or requirement updates |
+
+---
+
+## 19.6 The debrief
+
+The debrief is where the rehearsal pays for itself. It is run by someone other than the flight director, works from the log and the response records rather than from memory, and is organised around three questions.
+
+### 19.6.1 Three questions
+
+1. **What went well?** Which procedures worked as written? Which FDIR rules triggered correctly? Where did the team communicate effectively?
+2. **What could be improved?** Which procedures needed modification in real time? Were there gaps in the FDIR design? Where did decision-making slow down, and why — missing information, unclear authority, or an unobservable expected result?
+3. **Lessons for the design.** Did the rehearsal reveal a design weakness? Should any requirement change on the strength of operational experience? What additional autonomy would have helped, and what would it cost?
+
+### 19.6.2 Observations worth recording
+
+A useful debrief looks for specific behaviours rather than general impressions:
+
+- Did the team follow its procedures, or improvise — and when it improvised, was it right, and was it announced?
+- Did the flight director coordinate, or operate? (A flight director who is reading telemetry is not directing.)
+- Was the anomaly response systematic — detect, assess, diagnose, plan, execute, verify, document — or did it jump from symptom to command?
+- Was the log complete enough to reconstruct the anomaly afterwards?
+- Did anyone identify a design flaw during operations, and was it captured?
+
+### 19.6.3 Closing the loop
+
+Every finding becomes one of four kinds of change, each with an owner and a date:
+
+| Finding | Becomes | Goes to |
+|---------|---------|---------|
+| Procedure gap or error | Procedure revision | Operations (Chapter 18 §18.4) |
+| FDIR gap or wrong threshold | FDIR rule change | Flight software and the FMECA (Chapter 15, Chapter 18 §18.3) |
+| Role or authority ambiguity | ConOps staffing-plan revision | ConOps (Chapter 18 §18.1) |
+| Design weakness | Requirement change or waiver | Requirements and the risk register (Chapters 5, 15); the next review gate (Chapter 16) |
+
+A rehearsal whose findings are not tracked to closure was a rehearsal of the wrong thing.
+
+---
+
+## 19.7 Returning to UniSat-1: a rehearsal for a three-person team
+
+UniSat-1's operations team is three students, which §19.3.2 allocates as simulation controller; flight director + logger; and one operator covering spacecraft, ground station, payload and flight dynamics. The rehearsal is a tabletop (§19.1.3), because the spacecraft has three modes (Chapter 18 §18.6) and its state fits on one page.
+
+The script of §19.4 shortens accordingly: there is no array deployment and no AOCS calibration, so commissioning is complete once the magnetometer returns plausible field values on the second day; the first-data-download calculation uses the 5-minute UHF passes and 153 kB per pass of Chapter 11 §11.8.2, which makes the data-budget shortfall (risk R-02 of Chapter 15 §15.5) the natural subject of the nominal-operations metrics review. Of the scenario library, §19.5.1, §19.5.2, §19.5.4 and §19.5.6 apply directly; §19.5.3 does not (no wheels or tracker); and §19.5.8 is worth injecting because the custom OBC's interlocks are the least-tested part of the flight software. The debrief question that matters most for a mission with student operators is the first of §19.6.2: with one operator holding four roles, the procedures must be good enough to be followed exactly, because there is nobody to catch an improvisation.
+
+---
+
+## Summary
+
+| Topic | Key takeaway |
+|-------|-------------|
+| Why rehearse | Procedures, FDIR, roles and ground segment have never flown; rehearsal finds what analysis cannot; ESA simulation campaigns and NASA readiness tests are the models |
+| Fidelity | Tabletop → spreadsheet → software simulator → hardware-in-the-loop; the structure is the same at every level |
+| Elements | Simulated spacecraft, simulation controller, compressed time, script, real-time log |
+| Phases | LEOP (time-critical, flown once) → commissioning → early and nominal operations, with anomaly injection where it is hardest |
+| Roles | FD, SC, GSO, PO, FDyn, logger, simulation controller; combine SC+GSO and PO+FDyn for small teams; FD and controller never the same person |
+| Anomaly library | Nine scenarios, each with symptoms → diagnosis → recovery → what it exercises; choose for the mission, keep one in reserve |
+| Response | Detect, assess, diagnose, plan, execute, verify, document; rule out the ground first; never command blind |
+| Debrief | What went well, what to improve, lessons for the design; every finding becomes a tracked procedure, FDIR, ConOps or requirement change |
+
+---
+
+## Problems
+
+1. **Design a LEOP rehearsal.** For a 3U Earth-observation CubeSat deployed into a 500 km sun-synchronous orbit with one S-band station at 45° N, write the simulation controller's script for the first 24 hours: every pass (use Chapter 17 §17.2.3 for the count and duration), the telemetry read out on each, the activity of Chapter 17 §17.4.3 attempted on each, and the decision the team must make before loss of signal. Mark the pass on which you would inject a modified telemetry value, and say which.
+
+2. **Scale the team.** Allocate the roles of §19.3.1 for teams of 3, 5 and 8 people for the mission of Problem 1, and for each allocation identify the single communication failure most likely to occur (who waits for whom) and the rule of §19.3.3 that prevents it.
+
+3. **Write a scenario.** Add a tenth scenario to the library of §19.5 for a mission with cold-gas propulsion — a thruster that fails to produce the commanded ΔV during a collision-avoidance manoeuvre — in the same format: injection, symptoms, expected diagnosis, recovery, and what it exercises. Cite the flight-dynamics function of Chapter 17 §17.1.4 and the FDIR level of Chapter 18 §18.3.2 it tests.
+
+4. **Spreadsheet-fidelity model.** Specify the minimum spreadsheet model that lets a simulation controller play the EOSat-3U spacecraft credibly through §19.5.1 and §19.5.7: the state variables (mode, battery state of charge, mass-memory fill, wheel momentum), the per-orbit update rules from Chapter 18 Table 18.1 and Chapter 9, and the telemetry values derived from them. State which anomaly injections become mere parameter changes in this model.
+
+5. **Anomaly response record.** Run §19.5.4 against the UniSat-1 design (Chapter 18 §18.6) on paper, playing both the controller and the team, and complete the response record of §19.5.10. Then state which FDIR rule, which procedure precondition and which risk-register entry the exercise touched, and what you would change in each.
+
+6. **Safe-mode survival rehearsal.** Script a rehearsal whose only purpose is to test whether a mission can survive a safe-mode entry at the start of an unstaffed weekend (60 hours). List the telemetry the controller must generate per orbit, the decisions the team must make at the first staffed pass, and the pass/fail criterion. Use the EOSat-3U numbers of Chapter 18 Table 18.1 and the battery of Chapter 9 §9.3.
+
+7. **Debrief to design.** A rehearsal of the 3U mission produces these findings: (a) the safe-mode recovery procedure's step 4 expects a telemetry point that is only in the extended housekeeping packet; (b) the flight director and spacecraft controller both believed the other would decide on the desaturation command; (c) in the tumbling attitude the controller imposed, the orbit-average array power came out below the 2 W safe-mode load. Classify each finding using §19.6.3, write the change it becomes with an owner, and identify the review gate of Chapter 1 Table 1.3 at which each should be re-examined.
+
+8. **Fidelity trade.** For a university 3U mission with 18 months to launch and a flight-software team of two, estimate the effort (person-weeks) to reach each fidelity level of §19.1.3 and the classes of finding from §19.1.2 that each level can and cannot produce. Recommend a level, and say which single finding class you would be accepting not to catch before launch.
+
+---
+
+## References
+
+1. ECSS, *ECSS-E-ST-70C: Ground Systems and Operations*, 2008. https://ecss.nl/standard/ecss-e-st-70c-ground-systems-and-operations/
+2. ECSS, *ECSS-E-ST-70-11C: Space Segment Operability*, 2008. https://ecss.nl/standard/ecss-e-st-70-11c-space-segment-operability/
+3. ECSS, *ECSS-E-ST-70-32C: Test and Operations Procedure Language*, 2008. https://ecss.nl/standard/ecss-e-st-70-32c-test-and-operations-procedure-language/
+4. NASA, *Fault Management Handbook*, NASA-HDBK-1002, 2012. https://standards.nasa.gov/standard/NASA/NASA-HDBK-1002
+5. NASA Goddard Space Flight Center, *Rules for the Design, Development, Verification, and Operation of Flight Systems*, GSFC-STD-1000 (the "Gold Rules"), current revision. https://standards.nasa.gov/standard/GSFC/GSFC-STD-1000
+6. NASA, *Systems Engineering Handbook*, NASA/SP-2016-6105 Rev 2, §5.5 (Transition to operations) and §6.4. https://www.nasa.gov/reference/systems-engineering-handbook/
+7. ESA, *Operations: Mission Control*, European Space Operations Centre. https://www.esa.int/Enabling_Support/Operations
+8. Wertz, J. R. & Larson, W. J. (eds.), *Space Mission Analysis and Design*, 3rd ed., Microcosm/Kluwer, 1999, Chapter 14 (Mission Operations).
+9. Squibb, G. F., Boden, D. G. & Larson, W. J. (eds.), *Cost-Effective Space Mission Operations*, 2nd ed., McGraw-Hill, 2006.
+10. Wertz, J. R., Everett, D. F. & Puschell, J. J. (eds.), *Space Mission Engineering: The New SMAD*, Microcosm Press, 2011, Chapter 29 (Mission Operations).
+
+
+# Part IV — Engineering Position Reference
+
+This part is a background briefing for each engineering position at a concurrent-design table — the sixteen positions of Chapter 1 Table 1.4, including the Project Manager who chairs them. It is written for first-time CubeSat designers. For each position it covers:
+
+- **Decisions you own.** What you have to choose, in what order.
+- **What you need to know first.** Inputs you cannot decide without.
+- **Formulas, charts and rules of thumb.** Pointers to the equations, tables and figures of Parts I–III (and the derivations of Part V) rather than restatements of them, plus the rules of thumb that are not written down anywhere else.
+- **Common pitfalls.** What to watch for, especially the first time.
+- **References.** Standards and texts for the position.
+
+The briefings are two to four pages each and are self-contained. Read the one for the position you are about to take in full, and scan one adjacent to it: Power should scan Thermal, AOCS should scan Structures, Communications should scan Ground Segment, and everyone should scan Systems Engineer.
+
+---
+
+## Systems Engineer
+
+You hold the budgets, the gate, and the authority to call a trade.
+
+### Decisions you own
+
+1. **Margin policy for this study.** You set the per-budget margin targets for the current phase. The two-level mass-margin schedule (equipment maturity margin plus system-level margin, tightening from Phase 0/A to Phase D) is Chapter 8 Table 8.3; the same phase-by-phase tightening applies to power, link and Δv, typically from about 25 %, 6 dB and 25 % in Phase A to 5 %, 3 dB and 5 % at Phase D (typical values; the mass schedule is Table 8.3).
+2. **Budget closure decisions.** When power is over budget, you decide whether the team trades a payload duty cycle, a battery capacity, an array area, or an end-of-life lifetime.
+3. **Cross-domain conflict resolution.** When AOCS wants more reaction-wheel mass and Thermal wants the same area for a radiator, you convene the affected positions and arbitrate.
+4. **Gate-review readiness.** You judge whether the team is ready to enter the next review (Chapter 1 Table 1.3 lists the gates and their entry criteria; Chapter 16 §16.5 the evidence each one needs), and you sign the action items off.
+
+### What you need to know first
+
+- **Mission objectives** (SE process 1, Chapter 4) — the *why* drives the budgets you are closing.
+- **The V-model** and where each position sits on it (Chapter 1 Figure 1.1 and Table 1.1).
+- **The 17 NASA SEH processes** (Chapter 1 §1.3) — you will touch most of them every day.
+- **The current lifecycle phase** (Chapter 1 Figure 1.4 and Table 1.2) — which sets the margin policy.
+
+### Formulas, charts, rules of thumb
+
+- **Margin definition and the budget-closure test** — Chapter 8 §8.4; the margin schedule is Table 8.3 and the mass-distribution picture is Figure 8.4. Your job is to keep every budget under the column for the current phase.
+- **Interfaces** — the N² matrix of Chapter 8 §8.3 (Table 8.1, the type codes of Table 8.2, Figure 8.3). You own the matrix; the subsystem positions own the cells.
+- **Requirements traceability** — Chapter 5 §5.4. Every budget line should trace to a requirement; every requirement to a verification method (Chapter 14).
+- **Rule of thumb.** If a budget is within 2 % of its allocation at any review, treat it as *not closed*: the next equipment selection will move it by more than that.
+
+### Common pitfalls
+
+> **Watch out.** Resolving conflicts by averaging the two domains' requests *without* re-baselining the affected requirements is the classic systems-engineering failure mode. Always update the requirement before accepting the trade.
+
+> **Watch out.** Margin is not slack. Margin is uncertainty insurance. If you give the margin to anyone — to AOCS for an extra wheel, say — record it as a depletion of margin in the change log, not as a new allocation.
+
+> **Common mistake.** Letting individual subsystems consume their own margin so that nothing is held at system level. The system-level margin of Table 8.3 exists precisely because the subsystems' estimates are correlated.
+
+### References
+
+- NASA SEH (SP-2016-6105 Rev 2) — [https://www.nasa.gov/reference/systems-engineering-handbook/](https://www.nasa.gov/reference/systems-engineering-handbook/)
+- ECSS-M-ST-10C — Space project management — [https://ecss.nl/](https://ecss.nl/)
+- ECSS-E-ST-10C — System engineering general requirements — [https://ecss.nl/](https://ecss.nl/)
+- Wertz, Everett and Puschell, *Space Mission Engineering: The New SMAD* (2011), Ch. 2.
+- Larson and Wertz, *SMAD*, Ch. 1, 22.
+
+---
+
+## Project Manager
+
+You own the schedule, the money and the team's attention. The Systems Engineer decides what the design *is*; you decide when it is decided and by whom.
+
+### Decisions you own
+
+1. **Schedule baseline and priorities.** Milestones, dependencies, the critical path and where the schedule margin sits.
+2. **Resource allocation.** Which position gets whose time this week, and when a position is over-subscribed.
+3. **Review timing.** When the design is mature enough to hold the next gate (Chapter 1 Table 1.3) — and when it is not, however much the calendar says otherwise.
+4. **Risk acceptance** (with engineering concurrence). You chair the risk review and decide which risks are accepted, mitigated or escalated (Chapter 15 §15.1).
+5. **Scope changes.** Every stakeholder request for a change goes through you, with a cost and schedule impact attached before it is accepted.
+
+### What you need to know first
+
+- **The cost and schedule baseline** from the Cost Engineer (Chapter 16 §16.2 for the WBS, §16.4 for the cost-risk S-curve).
+- **The risk register** (Chapter 15 §15.2) — the top five risks and their owners.
+- **The interface agreements** between positions (Chapter 8 §8.3) — late interfaces are the usual cause of late schedules.
+- **Stakeholder expectations** as captured in Chapter 4 §4.2, so that a change request can be judged against what was actually agreed.
+
+### Formulas, charts, rules of thumb
+
+- **Earned value.** Track work done against time spent and money spent; a project that reports progress by calendar rather than by completed products is already late.
+- **Estimate at completion.** Chapter 16 §16.4 gives the P50/P80 treatment of cost risk; report the P80 to the sponsor and manage to the P50.
+- **Review-board conduct** — Chapter 16 §16.6 gives the board roles, the reviewer question bank and the GO / NO GO / GO WITH ACTIONS outcomes.
+- **Rule of thumb.** Schedule margin belongs at the *end* of the schedule, held by you; a milestone that is "on track" while its predecessors have consumed the float is not on track.
+
+### Common pitfalls
+
+> **Common mistake.** Not protecting the schedule margin — it is consumed by the early phases, where slipping feels cheap, and is missed in integration and test, where it is not.
+
+> **Watch out.** Accepting scope creep without a schedule and cost impact assessment. "Small" additions to the telemetry list, the test programme or the data products are the ones that compound.
+
+> **Common mistake.** Holding a review before the engineering products are mature, because the date was fixed months ago. A review that produces thirty actions has not saved time.
+
+### References
+
+- ECSS-M-ST-10C — Space project management — [https://ecss.nl/](https://ecss.nl/)
+- NASA NPR 7120.5F — Space flight program and project management requirements — [https://nodis3.gsfc.nasa.gov/](https://nodis3.gsfc.nasa.gov/)
+- Project Management Institute, *A Guide to the Project Management Body of Knowledge* (PMBOK Guide).
+
+---
+
+## Mission Analyst
+
+You own the mission's relationship with physics: the orbit, the ground track, the lighting conditions, the contact times.
+
+### Decisions you own
+
+1. **Orbit type and altitude.** LEO / SSO / MEO / GEO / HEO / lunar. Altitude to balance science return, lifetime, drag, radiation and launch cost (Chapter 7 §7.3).
+2. **Inclination.** Drives latitude coverage, ground-track repeat, and (with altitude) the Sun-synchronous condition.
+3. **LTAN / LTDN** for SSO missions — drives the β-angle envelope and the eclipse season.
+4. **Ground-station network.** Where to downlink, latency, coverage gaps (with Communications and Ground Segment).
+5. **Manoeuvre plan.** When to phase, how to maintain station, when to deorbit (with Propulsion).
+
+### What you need to know first
+
+- The mission's **science target** — Sun-glint avoidance? polar coverage? continuous Earth observation?
+- **Latitude band** of interest (polar Arctic monitoring forces an inclined or polar orbit).
+- **Lifetime target** and the regulatory framework (FCC 5-year / IADC 25-year — Chapter 3 §3.6, Chapter 7 §7.3.2).
+- **Launch availability** — a target launcher constrains both inclination and altitude.
+
+### Formulas, charts, rules of thumb
+
+- **Orbital period and velocity** — Chapter 7 §7.1.1; derived in Part V §V.2 and verified against known orbits in Figure D.1. For a 450 km orbit the period is 93.6 min; at 500 km it is 94.6 min.
+- **Sun-synchronous condition** — pick $i$ so that the J₂-driven nodal regression matches the Earth's mean motion about the Sun (0.9856°/day): Chapter 7 §7.3.4, derived in Part V §V.4 with the inclination-versus-altitude curves of Figure D.2. At 600 km, $i \approx 97.8°$; at 700 km, $\approx 98.2°$.
+- **Eclipse fraction** — the β-angle form of Chapter 7 §7.1.2, with the annual β envelope and the eclipse-fraction curves in Figure 7.2; derived in Part V §V.5. The worst case (longest eclipse) is at β = 0; above $\beta^* = \arcsin(R_E/(R_E+h))$ the orbit is fully sunlit.
+- **Orbital lifetime** — the physics-based estimate of Chapter 7 §7.3.3 (a 3U at 400 km: roughly 9 months, 3 months to 2 years across the solar cycle; at 500 km, roughly 5 years). The rule of thumb and the lifetime chart of Chapter 3 §3.6.4 / Figure 3.2 are a first screen only; §7.3.3 explains why the rule overestimates by more than ten times below about 500 km.
+- **Ground-station contact** — the pass-geometry formula and the 7.4 min maximum pass at 500 km / 10° mask are in Chapter 7 §7.4.1; the ground track is Figure 7.3; the pass profile is Chapter 17 Figure 17.2.
+- **Transfers and deorbit** — Hohmann in Chapter 7 §7.5 and Figure 7.4; the deorbit Δv (112 m/s from 600 km to a 200 km perigee) feeds Chapter 12 §12.2.
+
+### Common pitfalls
+
+> **Common mistake.** Picking an altitude by habit and assuming it is debris-compliant. At 500 km a 3U decays in roughly five years (two to twelve across the solar cycle); at 650–700 km the same spacecraft can exceed the 25-year limit, and a 5-year rule changes the picture entirely. Always confirm with Chapter 7 §7.3.3 and a propagation (GMAT or equivalent).
+
+> **Watch out.** Sun-glint angle for ocean-colour imaging changes with both season (β) and longitude. If your mission cares about Sun glint, build a year-long β / Sun-azimuth map before committing to an LTAN.
+
+> **Watch out.** Eclipse fraction and β are not yours alone: Power sizes the battery on the longest eclipse (Chapter 9 §9.3) and Thermal sizes the cold case on it (Chapter 9 §9.4). Publish the β envelope early and tell them when it changes.
+
+### References
+
+- Curtis, *Orbital Mechanics for Engineering Students* (3rd ed.).
+- Vallado, *Fundamentals of Astrodynamics and Applications* (4th ed.).
+- SMAD4 Ch. 9 (orbit selection).
+- Wertz, *Mission Geometry: Orbit and Constellation Design and Management* (2001).
+- NASA GMAT (open source) — [https://software.nasa.gov/software/GSC-17177-1](https://software.nasa.gov/software/GSC-17177-1).
+
+---
+
+## Payload Lead
+
+You own the science. The mission exists to do what your payload does, and every other subsystem ultimately serves yours.
+
+### Decisions you own
+
+1. **Payload concept and sensor type.** Optical / SAR / hyperspectral / radiometer / RF receiver / in-situ instrument.
+2. **Aperture and spectral bands.** Drives resolution, SNR, mass.
+3. **Operating concept.** Pushbroom vs whiskbroom vs framing; continuous vs target-cued.
+4. **Data rate and data volume per orbit.** This drives Communications and OBDH (Chapter 11 §11.9, Chapter 12 §12.3).
+5. **Calibration plan.** On-orbit sources, ground references, cadence.
+
+### What you need to know first
+
+- **The mission's measurable objective** (the MoP of Chapter 4 §4.3.3). For ocean colour you need certain bands at a certain SNR; for SAR a certain ground resolution and revisit; for AIS a certain detection probability.
+- **Orbit altitude** from the Mission Analyst — drives slant range, GSD and coverage.
+- **Mass and power available** — typically 30–50 % of the platform.
+
+### Formulas, charts, rules of thumb
+
+- **Ground sample distance.** The diffraction limit $1.22\,\lambda h/D$ and the pixel limit $p\,h/f$ are derived in Part V §V.9; the achievable GSD is the larger of the two. Figure D.3 plots both against aperture for visible imagers.
+- **SAR antenna length.** The along-track antenna length must exceed about twice the desired azimuth resolution — a rule of thumb that sizes the deployable before any detailed design.
+- **Data rate.** Pixels per line × bands × bit depth × line rate, then the daily volume against the downlink capacity of Chapter 11 §11.9 and Figure 11.6. Chapter 11 §11.8 shows the EOSat-3U case (956 MB/day capacity against 720 MB/day generated) and the UniSat-1 case, which does not close with one station.
+- **Payload mass.** A heritage relationship of the form $M \approx 20\,D^{1.5} + 2$ kg (D in metres) is a first screen for optical payloads; replace it with a vendor figure as soon as one exists (Chapter 13).
+
+### Common pitfalls
+
+> **Common mistake.** Sizing the payload aperture for the diffraction limit while the detector pixels are too coarse to use it. Match the two — pixel-limited and diffraction-limited GSDs should be comparable.
+
+> **Watch out.** Data volume per orbit grows with the aperture in two ways at once: more pixels and a faster line rate. Check the daily download capacity (Figure 11.6) before committing.
+
+> **Watch out.** Your pointing and stability requirement is the single input AOCS most needs from you (Chapter 10 §10.4), and it is the one most often given late. Give a number, with a confidence, in the first design loop.
+
+### References
+
+- SMAD4 Ch. 9 (payload).
+- Cracknell, *Introduction to Remote Sensing* (3rd ed.).
+- Rees, *Physical Principles of Remote Sensing* (3rd ed.).
+- Cumming and Wong, *Digital Processing of Synthetic Aperture Radar Data*.
+- ECSS-E-ST-10-04C — Space environment — [https://ecss.nl/](https://ecss.nl/).
+
+---
+
+## Power Engineer
+
+You own the orbit-by-orbit energy balance.
+
+### Decisions you own
+
+1. **Solar-array architecture.** Body-mounted vs deployable; gimballed vs fixed; technology (triple-junction GaAs vs Si).
+2. **Solar-array area** — at end of life, accounting for degradation, the β-angle range and the Sun incidence angle.
+3. **Battery capacity and DoD.** Cycle life vs eclipse depth.
+4. **Bus voltage and PCDU architecture.** Single vs dual bus; regulated vs unregulated; MPPT topology (Chapter 9 §9.1, Figure 9.1).
+5. **Power-mode duty cycle.** Maps to the ConOps modes (Chapter 18 Table 18.1).
+
+### What you need to know first
+
+- **Orbit** — drives the β-angle envelope and the eclipse fraction (Chapter 7 Figure 7.2).
+- **Load by mode** from every subsystem, and the mode duty cycles, so that you can form the orbit-average and the peak sunlit load (Chapter 8 Table 8.4).
+- **Mission lifetime** — drives cycle count and end-of-life degradation.
+
+### Formulas, charts, rules of thumb
+
+- **Solar-array sizing** — the five-step chain of Chapter 9 §9.2 (EOL power from the sunlit and eclipse loads, BOL power through the degradation and temperature factors, area through cell efficiency, Sun incidence angle, packing and cover-glass factors). Figure 9.2 shows what the balance is balancing; Figure 9.3 is the sizing nomograph. Part V §V.11 derives the chain and shows its equivalence to the eclipse-fraction form found in older references.
+- **Battery sizing** — Chapter 9 §9.3, with the cycle-life-versus-DoD curves of Figure 9.4. A 25–30 % DoD design point gives the cycles needed for a multi-year LEO mission with margin; heritage LCO chemistry needs deeper de-rating, LFP gives more headroom but is less mass-dense. Part V §V.12.
+- **Worked numbers** — EOSat-3U needs about 14 W of end-of-life array power and 0.053 m² of panel for a 10 W peak sunlit load (Chapter 9 §9.2); UniSat-1's are in §9.5.
+- **Rule of thumb.** The array must cover the *worst sunlit mode*, not the orbit average; the battery must cover the *longest eclipse at the highest eclipse load*, not the typical one.
+
+### Common pitfalls
+
+> **Watch out.** Sizing the array for beginning of life will starve the battery at end of life. Always compute at EOL with realistic degradation (about 2.5 % per year for triple-junction GaAs in LEO, plus the temperature derating of Chapter 9 §9.2).
+
+> **Common mistake.** Forgetting that the array only generates when the cells see the Sun — and that *which* cells see it changes through the year. β = 0° (Sun in the orbit plane) is the maximum-eclipse case: a zenith-facing body panel sees the Sun at normal incidence at orbit noon, but the eclipse is longest. At high |β| the eclipse shortens or disappears, but a panel whose normal lies in the orbit plane now sees the Sun at grazing incidence. Size across the whole β range of Figure 7.2, and state which panel and which season set the design point.
+
+> **Watch out.** Thermal and you compete for the same external area — radiator or cells. Settle the allocation of each face in the first design loop, not the last.
+
+### References
+
+- ECSS-E-ST-20C — Electrical and electronic — [https://ecss.nl/](https://ecss.nl/)
+- SMAD4 Ch. 11 (power).
+- Patel, *Spacecraft Power Systems*.
+- Brown, *Spacecraft Propulsion and Power Subsystems*.
+
+---
+
+## AOCS Engineer
+
+You own the spacecraft's pointing.
+
+### Decisions you own
+
+1. **Pointing requirement** — knowledge vs control vs stability, per axis (Chapter 10 §10.1).
+2. **Sensor suite** — Sun sensor / magnetometer / star tracker / GNSS receiver / IMU.
+3. **Actuator suite** — magnetorquer / reaction wheel / thruster.
+4. **Modes and transitions** — detumble, Sun acquisition, fine pointing, safe (with Operations: Chapter 18 §18.2).
+5. **Momentum management plan** — how often, with what (Chapter 10 §10.5).
+
+### What you need to know first
+
+- **Pointing requirement** from the Payload Lead (for example 0.05° 1σ for a pushbroom imager).
+- **Disturbance environment** at the chosen orbit (drag at 400 km vs 700 km; the magnetic field for a SSO) — Chapter 10 §10.2.
+- **Spacecraft inertia tensor** — Structures gives you this, and it changes every time the layout does.
+
+### Formulas, charts, rules of thumb
+
+- **Pointing budget** — the root-sum-square of knowledge, control and alignment terms, Chapter 10 §10.4, drawn as a waterfall in Figure 10.3. In the EOSat-3U budget the alignment term dominates; improve the dominant term, not the sensor.
+- **Disturbance torques** — gravity gradient, magnetic, solar pressure and drag in Chapter 10 §10.2; Part V §V.14 gives the order-of-magnitude drag estimate. For a 3U at 500 km the magnetic term dominates.
+- **Wheel sizing** — momentum capacity from the disturbance torque, the interval between desaturations and a margin factor, Chapter 10 §10.3 and §10.5; Figure 10.4 shows the accumulation for a larger spacecraft. Note the slew-time result of §10.3: a small wheel is momentum-limited, not torque-limited, so the torque-only slew formula underestimates the time.
+- **Rule of thumb.** Plan desaturation with the wheel. A wheel sized for fine pointing but not for unloading will saturate within a few orbits.
+
+### Common pitfalls
+
+> **Watch out.** Quaternion normalisation drift in flight software — even a 10⁻⁶ drift per second adds up. Renormalise every cycle.
+
+> **Common mistake.** Designing for fine pointing without sizing the magnetorquers for desaturation. Plan the desaturation strategy at the same time as the wheel.
+
+> **Watch out.** The Communications engineer's antenna choice depends on your pointing: a dish needs a fraction of its beamwidth, a patch tolerates tens of degrees (Chapter 11 Figure 11.2). Tell them what you can hold in *each* mode, including safe mode.
+
+### References
+
+- ECSS-E-ST-60-20C — Star sensor terminology and performance specification; ECSS-E-ST-60-10C — Control performance — [https://ecss.nl/](https://ecss.nl/).
+- Markley and Crassidis, *Fundamentals of Spacecraft Attitude Determination and Control*.
+- Sidi, *Spacecraft Dynamics and Control*.
+- SMAD4 Ch. 10.
+
+---
+
+## Thermal Engineer
+
+You keep every component inside its operating range across the hot, cold and transient cases.
+
+### Decisions you own
+
+1. **Hot-case / cold-case envelope** — defined in terms of β-angle, season, eclipse and internal heating (Chapter 9 §9.4).
+2. **Surface finishes (α, ε)** for each external panel and radiator.
+3. **MLI vs heaters** — passive insulation vs active control.
+4. **Heat-rejection topology** — radiator location and area.
+5. **Thermal interfaces** — conductive paths to and from each component.
+
+### What you need to know first
+
+- **Operating temperature ranges** for every component (the battery is the strictest, typically −5 to +25 °C while charging).
+- **Eclipse fraction and duration** from the Mission Analyst (Chapter 7 Figure 7.2).
+- **Internal dissipation map** by mode from Power (Chapter 8 Table 8.4): the cold case is safe mode in the longest eclipse, the hot case is the highest dissipating mode at the smallest β.
+
+### Formulas, charts, rules of thumb
+
+- **Energy balance and radiative equilibrium** — Chapter 9 §9.4: solar, albedo and Earth-IR inputs, internal dissipation, radiated output; the equilibrium temperature as a function of α/ε is Figure 9.6, with common finishes marked. Part V §V.10 derives the flat-plate form and works a white-paint example.
+- **Worked cases** — the EOSat-3U hot and cold cases, the steady-state heater power and the transient temperature drop over an eclipse are in Chapter 9 §9.4.11; UniSat-1 is in §9.5.
+- **Rule of thumb.** The α/ε ratio is the dominant design knob: white paint (α/ε ≈ 0.16) sits well below the electronics band, black paint near its upper edge, bare polished aluminium far above it.
+- **Rule of thumb.** Ten-layer MLI has an effective emittance ε* ≈ 0.03; fewer layers, less — and a CubeSat rarely has room for ten.
+
+### Common pitfalls
+
+> **Common mistake.** Using α and ε measured at room temperature for cold-case calculations — at −100 °C the emittance of many materials shifts. Cite the temperature of the source data.
+
+> **Watch out.** MLI is rated by its effective emittance ε*, not by the base material.
+
+> **Watch out.** The heater power you need in the cold case is Power's problem too: it lands in the eclipse load of Chapter 9 §9.3. Close that loop before the battery is sized.
+
+### References
+
+- ECSS-E-ST-31C — Thermal control — [https://ecss.nl/](https://ecss.nl/)
+- Gilmore, *Spacecraft Thermal Control Handbook*, Vol. I and II.
+- SMAD4 Ch. 12.
+
+---
+
+## Communications Engineer
+
+You move the bits — both ways.
+
+### Decisions you own
+
+1. **Frequency band** — UHF / S / X / Ka. Drives licensing, antenna size and path loss (Chapter 11 §11.5).
+2. **Modulation and coding** (Chapter 11 §11.6).
+3. **Antenna pattern** — high-gain dish vs patch vs deployable (Chapter 11 §11.3).
+4. **Ground-station network** — a single station vs a network (with Ground Segment, Chapter 17).
+5. **Link margin allocation** at each phase.
+
+### What you need to know first
+
+- **Daily data volume** from the Payload Lead.
+- **Latency requirement** — if any — from the User Representative.
+- **Pointing capability** from AOCS in every mode, including safe mode (drives the antenna pattern you can use).
+- **Regulatory constraints** for the chosen band (Chapter 2 §2.7; the Compliance Engineer owns the filing).
+
+### Formulas, charts, rules of thumb
+
+- **The link budget** — the canonical equation of Chapter 11 §11.2, $C/N_0 = \text{EIRP} - \text{FSPL} - L_{\text{atm}} - L_{\text{point}} - L_{\text{pol}} - L_{\text{rx}} + G/T - k$, with $k = -228.6$ dBW/K/Hz, and its derivation in Part V §V.7. Keep the polarisation and receive-line losses as separate lines even when they are small; a budget that omits them is the one that fails to close on the pad.
+- **Free-space path loss** — Chapter 11 §11.4 and Figure 11.3 (derived in Part V §V.6). Each doubling of range or frequency adds 6 dB. With $R_E = 6378.137$ km, the 10° elevation slant range is 1440 km at 400 km altitude and 1695 km at 500 km; going from nadir to 10° elevation costs 10.6 dB.
+- **Modulation and coding** — the BER curves of Figure 11.4 (Part V §V.8); a concatenated code buys about 5 dB at BER 10⁻⁵, LDPC more.
+- **Antenna patterns** — Figure 11.2: a dish needs AOCS pointing to a fraction of its beamwidth, a patch tolerates tens of degrees at the cost of 25–30 dB of gain.
+- **The waterfall** — Figure 11.5 shows a complete S-band budget read left to right: gains add, losses subtract, the gap to the required $C/N_0$ is the margin.
+- **Worked numbers** — Chapter 11 §11.8: the EOSat-3U S-band link closes with 10.4 dB margin at 5 Mbit/s and is bandwidth-limited rather than power-limited; the UniSat-1 UHF link needs forward error correction to meet its 3 dB requirement.
+
+### Common pitfalls
+
+> **Watch out.** Pointing loss is not negligible. For a 1° half-power beamwidth, a 0.3° pointing error costs about 1 dB; at 0.5° it costs about 3 dB.
+
+> **Common mistake.** Forgetting Doppler. A 2.2 GHz S-band link from a 7.5 km/s LEO spacecraft has about ±55 kHz of Doppler at the horizon — the receiver tracking has to follow it.
+
+> **Watch out.** A link that closes is not a data budget that closes. Check Chapter 11 §11.9 — passes per day, usable minutes per pass and protocol efficiency — before telling the Payload Lead the data rate is fine.
+
+### References
+
+- ECSS-E-ST-50-05C — Radio frequency and modulation — [https://ecss.nl/](https://ecss.nl/).
+- Pratt, Bostian and Allnutt, *Satellite Communications* (3rd ed.).
+- ITU-R Recommendations — [https://www.itu.int/en/ITU-R/](https://www.itu.int/en/ITU-R/).
+
+---
+
+## Propulsion Engineer
+
+You own the Δv. (Even if your CubeSat has none, you decide that.)
+
+### Decisions you own
+
+1. **Need for propulsion** — drag make-up? deorbit? phasing? formation? rendezvous? (Chapter 12 §12.2.)
+2. **Propellant choice** — cold gas / monopropellant / bipropellant / electric (Hall, ion, PPT, FEEP).
+3. **Thruster sizing** — thrust vs Isp vs power.
+4. **Total propellant mass** — the rocket equation.
+5. **Plume impingement and contamination plan.**
+
+### What you need to know first
+
+- **Δv budget** — the sum of all required manoeuvres with margin, from the Mission Analyst (Chapter 7 §7.5).
+- **Mission duration** — drives cumulative Δv for drag-dominated orbits.
+- **Available power** — drives electric-propulsion feasibility (a CubeSat with 20 W cannot run a 200 W Hall thruster).
+
+### Formulas, charts, rules of thumb
+
+- **The rocket equation** — Chapter 12 §12.2.2 and Figure 12.2 (Δv against mass ratio for representative Isp); derived in Part V §V.3. For the ~100 m/s of a CubeSat deorbit burn the curve is nearly linear; for an orbit transfer the exponential takes over.
+- **Worked numbers** — the deorbit case of Chapter 12 §12.2.5: 112 m/s from 600 km to a 200 km perigee, with the propellant mass for cold gas, monopropellant and electric options.
+- **Debris compliance** — natural lifetime from Chapter 7 §7.3.3 against the rules of §7.3.2; if the natural lifetime does not comply, the deorbit Δv is a requirement, not an option.
+
+### Common pitfalls
+
+> **Watch out.** Isp is a function of inlet conditions and nozzle expansion ratio. Quote the value at the operating point you will actually fly.
+
+> **Common mistake.** Confusing total mass ($m_0$) with dry mass ($m_f$) when applying the rocket equation — and forgetting that the propellant mass changes the structure's mass and the AOCS engineer's inertia tensor.
+
+### References
+
+- Sutton and Biblarz, *Rocket Propulsion Elements* (9th ed.).
+- ECSS-E-ST-35C — Propulsion general requirements — [https://ecss.nl/](https://ecss.nl/).
+- Goebel and Katz, *Fundamentals of Electric Propulsion*.
+
+---
+
+## Structures Engineer
+
+You make sure the spacecraft survives launch and on orbit, and that everyone else's hardware is mechanically interfaced.
+
+### Decisions you own
+
+1. **Primary structure topology** — monolithic, panel-and-rib, or additively manufactured.
+2. **Material selection** — Al, Ti, CFRP, sandwich.
+3. **Mass-budget closure with margin** (with the Systems Engineer: Chapter 8 §8.4 and Table 8.3).
+4. **Launch-load verification path** — analysis (FEA), test, or both (Chapter 14 §14.3).
+5. **Mechanical interfaces** — fastener pattern, deployer compatibility (Chapter 12 §12.1).
+
+### What you need to know first
+
+- **Launcher environment** — qualification levels for sine, random vibration and shock (Chapter 14 §14.3).
+- **Component mass and centre of gravity** — every subsystem provides this, and the inertia tensor goes to AOCS.
+- **The CubeSat Design Specification envelope** — rails, rail-end contact, deployment switches, centre-of-gravity limits (Chapter 12 §12.1).
+
+### Formulas, charts, rules of thumb
+
+- **Margin of safety** — the canonical definition and worked example are Chapter 12 §12.1.6 (Part V §V.13). For Al 7075-T6 the yield allowable is 503 MPa with a yield factor of safety of 1.25.
+- **First natural frequency** — above 100 Hz is the usual CubeSat requirement; the box-beam estimate for a 3U in Chapter 12 §12.1 gives about 330 Hz.
+- **Rail loads** — the quasi-static launch load on the rails with $g_0 = 9.80665$ m/s² is worked in Chapter 12 §12.1.
+- **Rule of thumb.** Fasteners, adhesives and harness add 5–10 % on top of the structural mass; carry them as a line in the mass budget from the first loop.
+
+### Common pitfalls
+
+> **Watch out.** Forgetting fastener and adhesive mass.
+
+> **Common mistake.** Sizing for static loads and missing the dynamic amplification at resonance under random vibration. Apply a Q-factor (typically 5–10) at the first mode.
+
+> **Watch out.** Every deployable (antenna, panel, boom) is a mechanism, and a mechanism is a single-point failure until the FMECA of Chapter 15 says otherwise.
+
+### References
+
+- ECSS-E-ST-32C — Structures — [https://ecss.nl/](https://ecss.nl/).
+- Sarafin, *Spacecraft Structures and Mechanisms*.
+- CubeSat Design Specification (CDS) Rev 14 — [https://www.cubesat.org/cds-announcement](https://www.cubesat.org/cds-announcement).
+- NASA GSFC-STD-7000 (GEVS).
+
+---
+
+## Cost Engineer
+
+You are the team's reality check.
+
+### Decisions you own
+
+1. **WBS structure** (Chapter 16 §16.2, after NPR 7120.5).
+2. **Cost-estimating method** — parametric early, analogy, bottom-up later (Chapter 16 §16.1).
+3. **Schedule baseline** — milestones, critical path, float (with the Project Manager).
+4. **Risk-adjusted estimates** — how to roll risk into both cost and schedule (Chapter 16 §16.4).
+
+### What you need to know first
+
+- **The bill of materials** from Chapter 13 — equipment costs, lead times and TRL (§13.2 for the TRL risk factor).
+- **Non-recurring engineering** — Chapter 13 §13.1.3 gives the NRE build-up; do not restate it in the parametric model.
+- **The number of units** — the learning curve of Chapter 16 §16.3 (with the exponent of Chapter 4 §4.6.4) changes the answer for a constellation.
+- **The programmatic ceiling** and what the sponsor counts as "cost" (launch, operations, ground segment in or out).
+
+### Formulas, charts, rules of thumb
+
+- **Cost-estimating relationships** and their accuracy by phase — Chapter 16 §16.1.
+- **Learning curve** — Chapter 16 §16.3: on a 90 % curve the tenth unit costs 70 % of the first, and twenty units cost 14.6 times the first, not twenty.
+- **Cost risk** — the P50/P80 S-curve of Chapter 16 §16.4; report P80, manage to P50.
+- **Worked numbers** — the EOSat-3U estimate in Chapter 16 §16.1 and the UniSat-1 roll-up (about 85 kEUR, indicative 2026) in Chapter 13 §13.6 and Chapter 16 §16.4.3.
+
+### Common pitfalls
+
+> **Common mistake.** Treating the parametric tool's output as the answer. The output is a starting point; tailor it for your mission and the launch market you are working in.
+
+> **Watch out.** CubeSat COTS prices date fast and are quoted without integration, test or spares. Mark every price with its year and what it includes.
+
+### References
+
+- NASA NPR 7120.5F — [https://nodis3.gsfc.nasa.gov/](https://nodis3.gsfc.nasa.gov/).
+- Wertz et al., *Space Mission Engineering*, Ch. 23 (cost).
+- SMAD4 Ch. 20.
+- NASA *Cost Estimating Handbook* — [https://www.nasa.gov/cost-estimating-handbook/](https://www.nasa.gov/cost-estimating-handbook/).
+
+---
+
+## Compliance Engineer
+
+You make sure the mission is allowed to fly — by the standards it has adopted, by the regulators who license it, and by the export-control regimes its parts came through.
+
+### Decisions you own
+
+1. **Standards applicability and tailoring.** Which ECSS / NASA standards apply and at what level — the tailoring matrix (Chapter 3 §3.2, after ECSS-S-ST-00-02C).
+2. **Frequency licensing strategy.** Amateur (IARU) vs commercial allocation; the ITU advance publication, the national filing and their lead times (Chapter 2 §2.7).
+3. **Export-control classification** for every component (ITAR / EAR / Canadian controlled goods), with Procurement (Chapter 2 §2.8, Chapter 13 §13.4).
+4. **Debris-mitigation compliance** — 25-year IADC, 5-year FCC where it applies, casualty risk (Chapter 3 §3.6, Chapter 7 §7.3.2).
+5. **Remote-sensing licence** under the RSSSA if the mission images the Earth (Chapter 2 §2.6), and registration of the object after launch (Chapter 3 §3.7).
+
+### What you need to know first
+
+- **The orbit and lifetime** from the Mission Analyst — the debris case stands or falls on it.
+- **The band, EIRP and ground stations** from Communications — the filing cannot start without them.
+- **The bill of materials** from Chapter 13 — origin and classification of every part.
+- **Payload resolution and data-distribution plan** from the Payload Lead and User Representative — these decide whether the RSSSA applies and at what level.
+
+### Formulas, charts, rules of thumb
+
+- **The compliance register** — the format of Chapter 3 Table 3.1: standard or regulation, the parameter it depends on, the phase by which it must be closed, the evidence.
+- **Licensing timeline** — the lead times of Chapter 2 §2.7.4; spectrum coordination is routinely the longest pole in a CubeSat schedule, and it starts before the design is frozen.
+- **Rule of thumb.** Every regulatory filing is a requirement with a verification method (Chapter 14): put it in the verification matrix with a date, not in a memo.
+
+### Common pitfalls
+
+> **Watch out.** Starting the frequency filing after the design is frozen. Coordination takes a year or more; a band change late in Phase B rewrites the link budget, the antenna and the licence.
+
+> **Common mistake.** Assuming a COTS part is export-free because it was bought from a catalogue. Classification follows the part's origin and its technology, not its price.
+
+> **Watch out.** Debris compliance is assessed on the spacecraft as flown — the deployed area, the final mass, the actual altitude — not on the Phase A numbers. Re-run it at every gate.
+
+### References
+
+- ECSS-S-ST-00-02C — Tailoring — [https://ecss.nl/](https://ecss.nl/).
+- ISED, *Client Procedures Circular CPC-2-6-02* (licensing of space stations) — [https://ised-isde.canada.ca/](https://ised-isde.canada.ca/).
+- *Remote Sensing Space Systems Act* (RSSSA) and regulations — [https://laws-lois.justice.gc.ca/](https://laws-lois.justice.gc.ca/).
+- ITU Radio Regulations, Article 9 (coordination) — [https://www.itu.int/pub/R-REG-RR](https://www.itu.int/pub/R-REG-RR).
+- IADC Space Debris Mitigation Guidelines — [https://www.iadc-home.org/](https://www.iadc-home.org/).
+
+---
+
+## User Representative
+
+You speak for the people who will use the data. The mission is a success when they say it is, not when the budgets close.
+
+### Decisions you own
+
+1. **Data product requirements** — format, resolution, accuracy, timeliness (with the Payload Lead: Chapter 4 §4.3).
+2. **User access methods** — API, portal, direct download (with Ground Segment: Chapter 17 §17.1).
+3. **Service levels** — availability, response time, data freshness.
+4. **Validation** that the system as designed meets what the stakeholders asked for (Chapter 14 §14.1 — validation is your word, verification is the engineers').
+5. **The user's voice in trade studies** — you sit on the trade-study panel of Chapter 4 §4.5 and score the options from the user's side.
+
+### What you need to know first
+
+- **Who the users are** — research, commercial, public, operational — and how they differ (Chapter 4 §4.2).
+- **What they do with the data today**, without this mission, so that you can state the need rather than the wish.
+- **The downlink and latency the system can actually deliver** (Chapter 11 §11.9, Chapter 17 §17.2), so that the service level you promise is one the mission can keep.
+
+### Formulas, charts, rules of thumb
+
+- **Need → objective → MoE → MoP → TPM** — the hierarchy of Chapter 4 §4.3.3 is your instrument; every data-product requirement should trace up to a measure of effectiveness the user recognises.
+- **The WHAT-not-HOW test** of Chapter 4 §4.1.4: if your requirement names an implementation, rewrite it.
+- **Rule of thumb.** A "nice to have" that cannot be traded away is a requirement; a requirement that nobody would miss is a nice-to-have. Sort them before the first trade study, not during it.
+
+### Common pitfalls
+
+> **Common mistake.** Not distinguishing between "nice to have" and actual requirements — and letting the engineers guess which is which.
+
+> **Watch out.** Specifying implementation details (a band, a file format, a satellite) instead of user needs (a latency, a coverage, an accuracy).
+
+> **Watch out.** Assuming unlimited bandwidth for data delivery. The daily volume the spacecraft can downlink (Figure 11.6) is the ceiling on what any user can receive, however good the portal.
+
+### References
+
+- NASA SEH §4.1 — Stakeholder expectations definition — [https://www.nasa.gov/reference/systems-engineering-handbook/](https://www.nasa.gov/reference/systems-engineering-handbook/).
+- ECSS-E-ST-10C §5.2 — Requirements engineering — [https://ecss.nl/](https://ecss.nl/).
+- ISO 9241 — Ergonomics of human-system interaction.
+
+---
+
+## Mission Operations Engineer
+
+You will fly the spacecraft after the team builds it — and you rehearse doing so before launch (Chapter 19).
+
+### Decisions you own
+
+1. **Operations concept** — staffing, automation level, shift structure (Chapter 18 §18.1).
+2. **Pass plan** — which procedures, in what order, every contact (Chapter 18 §18.4, Chapter 17 §17.4).
+3. **Anomaly response tree** — who calls what, when (Chapter 18 §18.5).
+4. **Telecommand and telemetry definition** — coordination with the Software Engineer.
+5. **LEOP sequence** — first contact, deployments, commissioning timeline (Chapter 19 §19.4).
+
+### What you need to know first
+
+- **The operational modes and their transitions** from the ConOps (Chapter 18 §18.2 and Table 18.1).
+- **Ground-station coverage** from the Mission Analyst and Ground Segment (Chapter 17 §17.2).
+- **The FDIR architecture** — what the spacecraft will do on its own before you hear about it (Chapter 18 §18.3).
+- **The procedure inventory** — LEOP, commissioning, nominal, contingency, emergency.
+
+### Formulas, charts, rules of thumb
+
+- **Contact time per day and data per pass** — Chapter 17 §17.2.3; a high-latitude station sees a SSO spacecraft on most orbits, a mid-latitude one on four to six.
+- **The anomaly library** — Chapter 19 §19.5 lists the symptoms, diagnoses and recoveries worth rehearsing (under-voltage, loss of contact, loss of fine pointing, unexpected safe mode, thermal exceedance, mass memory full, command rejected, and the ground fault that looks like a spacecraft fault).
+- **Rule of thumb.** The first eight hours after separation are the most critical of the mission; script them to the minute, and rehearse the script.
+
+### Common pitfalls
+
+> **Watch out.** Voice-loop discipline is the silent killer. Cross-talk that sounds harmless in rehearsal breaks down under real-time pressure.
+
+> **Common mistake.** Not planning for degraded operations — a single ground station, a partial deployment, office-hours staffing when the plan assumed 24/7.
+
+> **Watch out.** Seasonal and geometric gaps in station visibility; a station that is fine in the simulation may be unusable at the β-angles of launch season.
+
+### References
+
+- ECSS-E-ST-70C — Ground systems and operations — [https://ecss.nl/](https://ecss.nl/).
+- ECSS-E-ST-70-32C — Test and operations procedure language.
+- NASA-HDBK-1002 — Fault management handbook; GSFC-STD-1000 — Rules for the design, development, verification and operation of flight systems.
+
+---
+
+## Ground Segment Engineer
+
+You own the architecture between the antenna and the user.
+
+### Decisions you own
+
+1. **Ground-station network** — owned, leased or commercial; a single station or a network (Chapter 17 §17.1, §17.5).
+2. **Mission-control software** — open-source or commercial.
+3. **Archive and processing design** — L0 → L1 → L2 → distribution, and the latency of each step.
+4. **Pass-planning and scheduling tools.**
+5. **Cyber-security architecture** — command authentication, link encryption, network segregation.
+
+### What you need to know first
+
+- **Daily data volume** — drives bandwidth contracts and archive growth.
+- **Latency requirement** from the User Representative — drives station density.
+- **Mission classification** — defence and dual-use missions need different architectures from civil ones.
+- **The protocol stack** the spacecraft will speak (Chapter 17 §17.3).
+
+### Formulas, charts, rules of thumb
+
+- **Contact geometry** — Chapter 7 §7.4.1 and Chapter 17 §17.2: the pass profile of Figure 17.2, the maximum pass of 7.4 min at 500 km with a 10° mask, 9.2 min at 5°.
+- **Daily capacity** — the station-by-station volumes of Chapter 17 §17.2.3 and the closure against generation in §17.5; the UniSat-1 shortfall with one station is worked in §17.6.
+- **Rule of thumb.** Commercial ground-station pricing can flip the economics between bands and between a few long passes and many short ones; do the arithmetic at the data rate you will actually fly.
+
+### Common pitfalls
+
+> **Watch out.** Pricing models for ground-station-as-a-service charge by the minute or by the pass; the cheapest band on paper may not be the cheapest per megabyte.
+
+> **Common mistake.** Designing the ground segment after the space segment is frozen. The station network is part of the link budget (Chapter 11 §11.7) and part of the data budget (§11.9); it belongs in the first design loop.
+
+### References
+
+- CCSDS Mission Operations and cross-support standards — [https://public.ccsds.org/Pubs/](https://public.ccsds.org/Pubs/).
+- ECSS-E-ST-70C — Ground systems and operations — [https://ecss.nl/](https://ecss.nl/).
+- SMAD4 Ch. 14–15.
+
+---
+
+## Software Engineer (OBDH and flight software)
+
+You own the flight computer, the flight software, the telemetry list and the on-board half of FDIR.
+
+### Decisions you own
+
+1. **OBC architecture** — single board or redundant pair; system-on-chip vs discrete (Chapter 12 §12.3).
+2. **Bus topology** — CAN / I²C / SPI / RS-422 / SpaceWire (the interface types of Chapter 8 Table 8.2).
+3. **Memory architecture** — RAM, flash, mass memory, EDAC scheme (Chapter 12 §12.3.3 for sizing).
+4. **Flight-software architecture** — mode manager, AOCS control loop, TM/TC handler, FDIR rules (Chapter 18 §18.3).
+5. **Service set** — which CCSDS/PUS services to implement; the telecommand and telemetry dictionaries.
+
+### What you need to know first
+
+- **TM/TC volume** from each subsystem.
+- **Real-time loop rates** required by AOCS.
+- **The longest no-contact gap** — sizes the mass memory (Chapter 12 §12.3.3; EOSat-3U uses a three-day outage case).
+- **The ground software** it must talk to (Chapter 17 §17.3).
+
+### Formulas, charts, rules of thumb
+
+- **Mass-memory sizing** — longest contact gap × peak data rate × a margin of 1.5–2; Chapter 12 §12.3.3 works the EOSat-3U case.
+- **Watchdog timer** — typically 30 s for a CubeSat OBC; shorter for high-criticality threads. Chapter 15 §15.5 carries the OBC watchdog as risk R-03 for UniSat-1.
+- **EDAC overhead** — Hamming SECDED costs about 12.5 % for 64-bit words.
+- **Rule of thumb.** The I²C-versus-RS-422 interface example of Chapter 8 §8.3 is the shape of most OBDH interface conflicts: the bus is chosen for convenience and discovered to be wrong for noise or distance at integration.
+
+### Common pitfalls
+
+> **Watch out.** Telemetry-list overruns are the number-one late OBDH defect. Lock the list at SRR; treat any addition as a change-control item.
+
+> **Common mistake.** Writing FDIR rules that are not testable on the ground. Every rule in Chapter 18 §18.3 should have a test case in the verification matrix (Chapter 14 §14.4).
+
+### References
+
+- ECSS-E-ST-70-41C — Telemetry and telecommand packet utilisation (PUS) — [https://ecss.nl/](https://ecss.nl/).
+- ECSS-E-ST-40C — Software; ECSS-Q-ST-80C — Software product assurance — [https://ecss.nl/](https://ecss.nl/).
+- CCSDS 133.0-B — Space Packet Protocol — [https://public.ccsds.org/Pubs/](https://public.ccsds.org/Pubs/).
+
+
+# Part V — First-Principles Derivations
+
+This part derives, from first principles, the formulas applied in Parts I–III. Every derivation is paired with a worked sanity check against a published reference value, and — where the chapters do not already show it — with a plot of the formula in action.
+
+The aim is twofold: (a) to give the reader a place to look up the *why* behind any formula they are applying; (b) to provide a worked verification trail that a reviewer can audit at a design review. Where the same equation appears in a chapter of Parts I–III, the derivation here uses exactly the symbols of that chapter, so that the two can be read side by side.
+
+> **Standard reference.** The constants and conventions used throughout this part follow Vallado, *Fundamentals of Astrodynamics and Applications* (4th ed.) and the IERS Conventions 2010 — [https://www.iers.org/IERS/EN/Publications/TechnicalNotes/tn36.html](https://www.iers.org/IERS/EN/Publications/TechnicalNotes/tn36.html).
+
+---
+
+## V.1 — Constants used (Earth)
+
+| Symbol | Value | Meaning | Source |
+|--------|-------|---------|--------|
+| $\mu$ | 398 600.44 km³/s² | Earth gravitational parameter | IERS Conventions 2010 |
+| $R_E$ | 6378.137 km | Earth equatorial radius | WGS-84 |
+| $J_2$ | 1.0826 × 10⁻³ | Earth oblateness coefficient | Vallado §3.3 |
+| $\omega_E$ | 7.292 115 × 10⁻⁵ rad/s | Earth rotation rate | IERS |
+| $g_0$ | 9.806 65 m/s² | Standard gravity | ISO 80000-3 |
+| $S$ | 1361 W/m² | Solar constant at 1 AU | Kopp and Lean (2011); NASA SORCE |
+| $\sigma$ | 5.670 374 × 10⁻⁸ W/(m²·K⁴) | Stefan–Boltzmann constant | CODATA 2018 |
+| $k_B$ | 1.380 649 × 10⁻²³ J/K | Boltzmann constant | CODATA 2018 |
+| $k$ | −228.6 dBW/K/Hz | Boltzmann constant in link-budget units, $10\log_{10} k_B$ | derived |
+| $c$ | 2.997 924 58 × 10⁸ m/s | Speed of light | exact (SI) |
+
+These are the values used in every worked number in Parts I–III. In particular, all orbital quantities use $R_E = 6378.137$ km; older references that use a mean radius of 6371 km give periods about 0.1 min shorter at LEO altitudes.
+
+---
+
+## V.2 — Kepler's Third Law
+
+### Derivation
+
+For a circular orbit of radius $a$, centripetal acceleration equals gravitational attraction:
+
+$$ \frac{v^2}{a} = \frac{\mu}{a^2} $$
+
+Substitute $v = 2\pi a / T$ and solve for $T$:
+
+$$ T = 2\pi \sqrt{\frac{a^3}{\mu}} $$
+
+For elliptical orbits the same formula applies with $a$ the semi-major axis. The circular velocity is $v = \sqrt{\mu/a}$. These are the forms used in Chapter 7 §7.1.1.
+
+### Verification
+
+Figure D.1 overplots the analytical curve with the periods of known orbits.
+
+![Kepler's Third Law verified against known orbits.](../assets/figures/fig_kepler_proof.png)
+
+**Figure D.1** — The analytical period–altitude curve overplotted with known orbits (ISS, Sentinel-2, GPS, GEO). Agreement is to better than 0.5 %, the remaining error attributable to the $J_2$ secular correction not applied here. At GEO, $T = 1436$ min against the sidereal day of 23.93 h × 60 = 1436 min.
+
+**Worked sanity check.** For a 450 km Sun-synchronous orbit:
+
+$a = 6378.137 + 450 = 6828.137$ km;
+$a^3/\mu = 6828.137^3 / 398\,600.44 = 7.987 \times 10^5$ s²; $\sqrt{\,\cdot\,} = 893.7$ s;
+$T = 2\pi \times 893.7 = 5615$ s $= 93.6$ min.
+
+The same arithmetic at 500 km gives $a = 6878.137$ km and $T = 94.6$ min, and at 400 km gives 92.6 min — the values used throughout Chapter 7 and the subsystem chapters. Expressed as a mean motion, 93.6 min is 15.38 revolutions per day; the slightly lower figures quoted in two-line element sets for real spacecraft at this altitude (≈ 15.2–15.3 rev/day) reflect the $J_2$ perturbation of the nodal period, not an error in the formula.
+
+---
+
+## V.3 — Tsiolkovsky Rocket Equation
+
+### Derivation
+
+For a rocket with constant exhaust velocity $v_e$, momentum conservation between time $t$ and $t + dt$ gives
+
+$$ m\, dv = -v_e\, dm $$
+
+Integrate from $m_0$ (initial total mass) to $m_f$ (final dry mass):
+
+$$ \Delta V = v_e \ln \frac{m_0}{m_f} = I_{sp}\, g_0\, \ln \frac{m_0}{m_f} $$
+
+since $v_e = I_{sp}\, g_0$ by the definition of specific impulse. The propellant mass follows as $m_p = m_f\,(e^{\Delta V/(I_{sp} g_0)} - 1)$ and the total impulse as $I_{tot} = m_p\, I_{sp}\, g_0$. Chapter 12 §12.2.2 applies the equation and Figure 12.2 plots $\Delta V$ against mass ratio for representative specific impulses.
+
+### Verification
+
+**Worked sanity check.** Hohmann transfer from a 400 km circular orbit to GEO (the case plotted in Chapter 7 Figure 7.4):
+
+$r_1 = 6778.137$ km, $r_2 = 42\,164$ km, $a_t = (r_1 + r_2)/2 = 24\,471$ km.
+
+At perigee: $v_1 = \sqrt{\mu/r_1} = 7.669$ km/s; $v_p = \sqrt{\mu\,(2/r_1 - 1/a_t)} = 10.066$ km/s; $\Delta V_1 = 2.397$ km/s.
+
+At apogee: $v_2 = \sqrt{\mu/r_2} = 3.075$ km/s; $v_a = \sqrt{\mu\,(2/r_2 - 1/a_t)} = 1.618$ km/s; $\Delta V_2 = 1.456$ km/s.
+
+Total $\Delta V = 3.854$ km/s — matching Figure 7.4 (≈ 3.85 km/s); the rounded components sum to 3.853 km/s. For the deorbit case of Chapter 12 §12.2.5 (600 km circular to a 200 km perigee) the same vis-viva arithmetic gives 112 m/s.
+
+---
+
+## V.4 — $J_2$ Nodal Regression
+
+### Derivation
+
+The dominant secular perturbation from Earth's oblateness $J_2$ produces a nodal regression rate (Vallado eq. 9-37):
+
+$$ \dot{\Omega} = -\frac{3}{2}\, n\, J_2\, \left(\frac{R_E}{a(1-e^2)}\right)^2 \cos i $$
+
+where $n = \sqrt{\mu/a^3}$ is the mean motion. The minus sign means the node regresses for prograde orbits ($\cos i > 0$) and progresses for retrograde orbits ($\cos i < 0$).
+
+### Sun-synchronous condition
+
+For a Sun-synchronous orbit, set $\dot{\Omega}$ equal to Earth's mean motion around the Sun (360°/365.25 days = 0.9856°/day = 1.991 × 10⁻⁷ rad/s):
+
+$$ \cos i_{SSO} = -\frac{2\, \dot{\Omega}_\odot\, a^{7/2}\, (1-e^2)^2}{3\, J_2\, R_E^2\, \sqrt{\mu}} $$
+
+This is the condition applied in Chapter 7 §7.3.4.
+
+### Verification
+
+Figure D.2 shows the regression rate against inclination for several altitudes.
+
+![J₂ nodal regression rate versus inclination at several altitudes.](../assets/figures/fig_j2_nodal.png)
+
+**Figure D.2** — Nodal regression rate $\dot{\Omega}$ as a function of inclination for several altitudes. The dashed horizontal at 0.9856°/day is the Sun-synchronous target; its intersection with each altitude curve gives the Sun-synchronous inclination at that altitude (≈ 98.2° at 700 km).
+
+**Worked sanity check.** For 700 km circular ($e = 0$):
+
+$a = 7078.137$ km; $n = \sqrt{398\,600.44 / 7078.137^3} = 1.060 \times 10^{-3}$ rad/s;
+$\dot{\Omega}_\odot = 2\pi/(365.25 \times 86\,400) = 1.991 \times 10^{-7}$ rad/s;
+$\cos i = -(2 \times 1.991 \times 10^{-7} \times 7078.137^{7/2}) / (3 \times 1.0826 \times 10^{-3} \times 6378.137^2 \times \sqrt{398\,600.44}) = -0.143$;
+$i = \arccos(-0.143) = 98.2°$.
+
+At 600 km the same calculation gives 97.8°, and at 500 km 97.4° — the Chapter 7 values.
+
+---
+
+## V.5 — Eclipse Fraction (analytical, circular orbit)
+
+### Derivation
+
+For a circular orbit of altitude $h$, the spacecraft is in eclipse when the line to the Sun is occulted by the Earth (the cylindrical-shadow approximation, which neglects the penumbra). Let $\beta$ be the angle between the Sun vector and the orbit plane. Seen from the orbit, the Earth subtends a half-angle $\beta^* = \arcsin\!\big(R_E/(R_E+h)\big)$; for $|\beta| \ge \beta^*$ the orbit never crosses the shadow.
+
+For $|\beta| < \beta^*$, project the geometry onto the orbit plane. The shadow cylinder of radius $R_E$ cuts the orbit plane in an ellipse whose semi-minor axis (across the Sun line) is $R_E$ and whose semi-major axis (along the Sun line) is $R_E/\cos\beta$. The spacecraft, at radius $R_E + h$, is in shadow over the arc of orbit angle $2\phi$ for which its across-Sun-line distance is less than $R_E$ and its along-Sun-line position is on the anti-Sun side; solving the ellipse intersection gives
+
+$$ \cos\phi = \frac{\sqrt{h^2 + 2 R_E h}}{(R_E + h)\cos\beta} $$
+
+and hence the eclipse fraction of the orbit period (Wertz, *Mission Geometry*, eq. 5-24):
+
+$$ f_{ecl} = \frac{1}{\pi}\, \arccos\!\left(\frac{\sqrt{h^2 + 2 R_E h}}{(R_E + h) \cos\beta}\right), \qquad |\beta| < \beta^* $$
+
+with $f_{ecl} = 0$ for $|\beta| \ge \beta^*$. This is the form given in Chapter 7 §7.1.2.
+
+**Corollary ($\beta = 0$).** With the Sun in the orbit plane the argument becomes $\sqrt{h^2 + 2R_E h}/(R_E+h) = \cos\beta^*$, so
+
+$$ f_{ecl,max} = \frac{\beta^*}{\pi} = \frac{1}{\pi}\arcsin\!\left(\frac{R_E}{R_E + h}\right) $$
+
+— the maximum-eclipse case used for power and thermal sizing (Chapter 7 presents this as the corollary; Chapter 9 §9.2–§9.3 use it). The eclipse duration is $t_{ecl} = f_{ecl}\,T$.
+
+### Verification
+
+The annual $\beta$ envelope and the eclipse-fraction curves for an ISS-like orbit and a 600 km Sun-synchronous orbit are plotted in Chapter 7 Figure 7.2: both show the characteristic plateau at low $|\beta|$ and the sharp transition at $\beta^*$.
+
+**Worked sanity check.** ISS-like orbit, $h = 400$ km, $\beta = 0$:
+
+$\beta^* = \arcsin(6378.137 / 6778.137) = \arcsin(0.9410) = 70.2°$;
+$h^2 + 2 R_E h = 160\,000 + 5\,102\,510 = 5\,262\,510$ km²; $\sqrt{\,\cdot\,} = 2294.0$ km;
+argument $= 2294.0 / 6778.137 = 0.3384$; $\arccos(0.3384) = 70.2° = 1.2256$ rad;
+$f_{ecl} = 1.2256/\pi = 0.390 \approx 39\,\%$.
+
+This agrees with the corollary ($\beta^*/\pi = 70.2°/180° = 0.390$) and with the observed ISS maximum eclipse fraction of about 39 % (≈ 36 min of a 92.6 min orbit). At 500 km the same calculation gives $f_{ecl,max} = 0.378$, $t_{ecl} = 35.8$ min — the EOSat-3U values of Chapter 7 §7.2 and Chapter 9.
+
+---
+
+## V.6 — Free-Space Path Loss
+
+### Derivation
+
+An isotropic radiator of power $P_t$ at distance $d$ produces a power flux $P_t / (4\pi d^2)$. A receiving antenna of effective aperture $A_e$ captures $A_e$ times the flux, and antenna theory relates aperture to gain by $A_e = G_r \lambda^2 / (4\pi)$. With a directional transmit antenna of gain $G_t$ the received power is the Friis transmission equation:
+
+$$ P_r = P_t\, G_t\, G_r \left(\frac{\lambda}{4 \pi d}\right)^2 $$
+
+The free-space path loss is the inverse of the geometric term, in decibels:
+
+$$ \text{FSPL} = 20 \log_{10}\!\left(\frac{4 \pi d}{\lambda}\right) = 20 \log_{10}\!\left(\frac{4 \pi d f}{c}\right)\ \text{dB} $$
+
+No energy is absorbed: the $d^2$ term is spherical spreading and the $\lambda^2$ term is the shrinking capture area of a fixed-gain antenna at higher frequency. Each doubling of $d$ or of $f$ adds 6.02 dB. Chapter 11 §11.4 and Figure 11.3 plot the loss by band against slant range.
+
+### Verification
+
+**Worked sanity check.** S-band (2.2 GHz) at 1500 km slant range:
+
+$\lambda = c/f = 2.998 \times 10^8 / 2.2 \times 10^9 = 0.1363$ m;
+$\text{FSPL} = 20\log_{10}(4\pi \times 1.5 \times 10^6 / 0.1363) = 20\log_{10}(1.383 \times 10^8) = 162.8$ dB.
+
+For the EOSat-3U worked case of Chapter 11 §11.8 (2.25 GHz, 1695 km slant range at 10° elevation) the same formula gives 164.1 dB, which is the FSPL bar of the link-budget waterfall in Chapter 11 Figure 11.5.
+
+---
+
+## V.7 — Link-Budget Algebra
+
+### Derivation
+
+Write the Friis equation of V.6 in decibels and collect the transmitter terms into the effective isotropic radiated power, $\text{EIRP} = P_{TX} + G_{TX} - L_{TX}$ (dBW). Adding the losses that free space does not include — atmospheric absorption $L_{atm}$, antenna mispointing $L_{point}$, polarisation mismatch $L_{pol}$ and the receive-side feed and line loss $L_{rx}$ between the antenna and the point at which the system noise is referenced — the received carrier power is
+
+$$ C = \text{EIRP} - \text{FSPL} - L_{atm} - L_{point} - L_{pol} - L_{rx} + G_{RX} \quad \text{(dBW)} $$
+
+The noise power spectral density at the same reference point is $N_0 = k_B T_{sys}$ (W/Hz), or in decibels $N_0 = k + 10\log_{10} T_{sys}$ with $k = 10\log_{10}(1.380\,649 \times 10^{-23}) = -228.6$ dBW/K/Hz. Subtracting, and grouping the receive gain with the noise temperature into the figure of merit $G/T = G_{RX} - 10\log_{10} T_{sys}$ (dB/K), gives the canonical form of Chapter 11 §11.2:
+
+$$ \frac{C}{N_0} = \text{EIRP} - \text{FSPL} - L_{atm} - L_{point} - L_{pol} - L_{rx} + G/T - k \quad \text{(dBHz)} $$
+
+(Note the sign: subtracting a negative $k$ adds 228.6 dB.) The energy per bit follows by dividing by the bit rate, $E_b/N_0 = C/N_0 - 10\log_{10} R_b$, and the required $E_b/N_0$ depends on the modulation and coding (V.8, Figure 11.4). The link margin is
+
+$$ \text{Margin} = (E_b/N_0)_{available} - (E_b/N_0)_{required} - L_{impl} $$
+
+where $L_{impl}$ is the modem implementation loss. ECSS-E-ST-50-05C calls for at least 3 dB from Phase B onward; a 6 dB target is common in Phase A while the design is still fluid.
+
+### Verification
+
+The S-band waterfall of Chapter 11 Figure 11.5 (2 W transmitter, 6 dBi patch antenna, 2.25 GHz over 1695 km, 3 m ground dish at 150 K) reads left to right exactly as the equation above: gains add, losses subtract, and the final received $C/N_0$ closes at 83.4 dBHz against the 73.0 dBHz required at 5 Mbit/s, leaving the 10.4 dB margin. The EOSat-3U budget of Chapter 11 §11.8.1 is the same calculation line by line (EIRP 7.5 dBW, FSPL 164.1 dB, $C/N_0 = 83.4$ dBHz, margin 10.4 dB at 5 Mbit/s).
+
+---
+
+## V.8 — $E_b/N_0$ versus BER
+
+### Derivation
+
+For coherent BPSK over an additive white Gaussian noise channel, the bit-error probability is
+
+$$ P_b = \frac{1}{2}\,\mathrm{erfc}\!\left(\sqrt{\frac{E_b}{N_0}}\right) $$
+
+For QPSK with Gray coding the same expression applies per bit. For 8-PSK:
+
+$$ P_b \approx \frac{2}{3}\, Q\!\left(\sqrt{2 \tfrac{E_b}{N_0}}\, \sin\!\frac{\pi}{8}\right) $$
+
+For non-coherent FSK:
+
+$$ P_b = \frac{1}{2}\,e^{-E_b/(2 N_0)} $$
+
+Chapter 11 §11.6 and Figure 11.4 plot these curves together with a representative concatenated (convolutional + Reed–Solomon) coded curve, whose horizontal offset from the uncoded curve at a given BER is the coding gain — about 5 dB at BER $10^{-5}$ for that scheme, more for LDPC codes.
+
+### Verification
+
+**Sanity check.** BPSK at $E_b/N_0 = 9.6$ dB:
+
+$P_b = 0.5 \times \mathrm{erfc}(\sqrt{10^{0.96}}) = 0.5 \times \mathrm{erfc}(3.02) = 0.5 \times 1.9 \times 10^{-5} \approx 9.5 \times 10^{-6}$.
+
+The standard textbook value is $10^{-5}$ at 9.6 dB; the small difference is the resolution of the plot grid.
+
+---
+
+## V.9 — Ground Sample Distance Geometry
+
+### Derivation (diffraction limit)
+
+For an unobstructed circular aperture of diameter $D$, the first minimum of the Airy pattern lies at the half-angle
+
+$$ \theta_{Airy} = 1.22\, \frac{\lambda}{D} $$
+
+Projected onto the ground at range $h$ (nadir viewing from altitude $h$):
+
+$$ \text{GSD}_{diff} = \theta_{Airy}\, h = 1.22\, \frac{\lambda\, h}{D} $$
+
+### Derivation (pixel limit)
+
+A detector pixel of pitch $p$ at the focal plane subtends an angle $p/f$, where $f$ is the focal length. Projected at range $h$:
+
+$$ \text{GSD}_{pix} = \frac{p\, h}{f} $$
+
+The achievable GSD is the *larger* of the two — the system cannot resolve better than the optics allow, nor better than the detector samples. Matching the two (so that $p/f \approx 1.22\lambda/D$, i.e. an f-number of about $p/(1.22\lambda)$) is the design condition the Payload Lead briefing of Part IV warns about. Off-nadir, replace $h$ by the slant range.
+
+### Verification
+
+Figure D.3 plots both limits against aperture diameter.
+
+![GSD versus aperture diameter — diffraction and pixel limits.](../assets/figures/fig_gsd.png)
+
+**Figure D.3** — Ground sample distance against aperture diameter for visible imagers ($\lambda = 550$ nm) at four altitudes, with the diffraction limit as solid curves and the pixel limit at 500 km (6 µm pitch, $f/D = 5$) as the dashed line. Sentinel-2 heritage at 786 km: the diffraction limit for a 0.135 m aperture is ≈ 3.9 m, consistent with the published 10 m bands once the detector pitch and f-number are accounted for.
+
+**Worked sanity check.** A 3U CubeSat imager with $D = 90$ mm at $h = 500$ km: $\text{GSD}_{diff} = 1.22 \times 550 \times 10^{-9} \times 5 \times 10^5 / 0.09 = 3.7$ m; with $p = 5.5$ µm and $f = 500$ mm, $\text{GSD}_{pix} = 5.5 \times 10^{-6} \times 5 \times 10^5 / 0.5 = 5.5$ m — pixel-limited, so the achievable GSD is 5.5 m.
+
+---
+
+## V.10 — Radiative Thermal Equilibrium
+
+### Derivation
+
+Energy balance for a flat plate in steady state:
+
+Absorbed = Emitted.
+Absorbed = $\alpha_s\, S_{eff} + \varepsilon\, \phi_{IR}$ (solar input at the orbit-average effective flux $S_{eff}$, plus the Earth-IR contribution, absorbed at the IR emittance by Kirchhoff's law).
+Emitted = $\varepsilon\, \sigma\, T^4$ per unit radiating area.
+
+Solving for the equilibrium temperature:
+
+$$ T_{eq} = \left(\frac{\alpha_s\, S_{eff} + \varepsilon\, \phi_{IR}}{\sigma\, \varepsilon}\right)^{1/4} $$
+
+The ratio $\alpha_s/\varepsilon$ is the dominant design knob. Chapter 9 §9.4 gives the full balance with the albedo term, view factors and internal dissipation, and Figure 9.6 plots $T_{eq}$ against $\alpha_s/\varepsilon$ with common coatings marked.
+
+### Verification
+
+**Worked sanity check.** A white-painted radiator, $\alpha_s = 0.15$, $\varepsilon = 0.92$ ($\alpha_s/\varepsilon = 0.163$), one-sided, orbit-averaged at $\beta = 0$:
+
+solar: $S_{eff} \approx 1361/4 = 340$ W/m², absorbed $0.15 \times 340 = 51$ W/m²;
+Earth IR: $\phi_{IR} \approx 230/2 = 115$ W/m² seen by a nadir-facing plate at LEO, absorbed $0.92 \times 115 = 106$ W/m²;
+total absorbed = 157 W/m²;
+$T_{eq} = (157 / (0.92 \times 5.670 \times 10^{-8}))^{1/4} = (3.01 \times 10^9)^{1/4} = 234$ K $= -39$ °C.
+
+This matches Figure 9.6 at $\alpha_s/\varepsilon \approx 0.16$. The same balance with $\alpha_s/\varepsilon \approx 5$ (bare polished aluminium) gives roughly +120 °C — the reason bare metal is never left facing the Sun.
+
+---
+
+## V.11 — Solar Array Sizing
+
+### Derivation
+
+Consider one orbit of period $T = t_{sun} + t_{ecl}$. The array generates only during the sunlit arc $t_{sun}$; the loads run throughout. Let $P_{sun}$ be the peak sunlit-mode demand and $P_{ecl}$ the eclipse demand. Energy delivered to the loads over the orbit must be supplied by the array, through two paths of different efficiency: the direct array-to-load path in sunlight ($\eta_{sun}$, the regulator alone) and the array-to-battery-to-load path for the eclipse energy ($\eta_{ecl} = \eta_{charge}\,\eta_{discharge}\,\eta_{regulator}$). The energy balance over one orbit is therefore
+
+$$ P_{SA,EOL}\, t_{sun} = \frac{P_{sun}\, t_{sun}}{\eta_{sun}} + \frac{P_{ecl}\, t_{ecl}}{\eta_{ecl}} $$
+
+and, dividing by $t_{sun}$,
+
+$$ P_{SA,EOL} = \frac{\dfrac{P_{sun}\, t_{sun}}{\eta_{sun}} + \dfrac{P_{ecl}\, t_{ecl}}{\eta_{ecl}}}{t_{sun}} $$
+
+— the array power required at end of life (Chapter 9 §9.2, step 2). The array must deliver this at end of life, so the beginning-of-life rating is higher by the radiation degradation factor $L_d = (1-\delta)^n$ and the temperature derating $L_T = 1 + \beta_T (T_{cell} - T_{ref})$ (the cell temperature coefficient is written $\beta_T$ to avoid confusion with the orbit $\beta$-angle):
+
+$$ P_{SA,BOL} = \frac{P_{SA,EOL}}{L_d\, L_T} $$
+
+Finally the cells convert the solar flux $S$ at efficiency $\eta_{cell}$, reduced by the cosine of the Sun incidence angle $\theta$ on the array, the packing factor $f_{pack}$ and the cover-glass transmission $f_{cover}$:
+
+$$ A_{SA} = \frac{P_{SA,BOL}}{\eta_{cell}\, S\, \cos\theta\, f_{pack}\, f_{cover}} $$
+
+Here $\theta$ is the angle between the array normal and the Sun vector — zero for a Sun-tracking array; for a body-fixed panel on a nadir-pointed spacecraft it is set by the orbit $\beta$-angle (a panel whose normal is perpendicular to the orbit plane sees $\theta = 90° - |\beta|$ constantly; a zenith panel sees $\cos\theta = \cos\beta\cos\nu$ varying through the sunlit arc, so its sunlit-arc average is used). Chapter 9 §9.2 states the same chain and works the EOSat-3U numbers.
+
+### Equivalence to the eclipse-fraction form
+
+Many references write the sizing in terms of the eclipse fraction $f_{ecl} = t_{ecl}/T$ and sunlit fraction $f_{sun} = t_{sun}/T$, with a single orbit-average load $P_{avg}$ and a single degradation factor. Set $P_{sun} = P_{ecl} = P_{avg}$, absorb the sunlit-path efficiency into the load ($\eta_{sun} \to 1$), write $\eta_{ecl} \to \eta_{dis}$, and divide numerator and denominator of the first equation by $T$:
+
+$$ P_{SA} = P_{avg}\left(1 + \frac{f_{ecl}}{f_{sun}\, \eta_{dis}}\right) $$
+
+and, with $L_d L_T \to (1 - D_{deg})$ and $f_{pack} f_{cover}$ absorbed into $\eta_{cell}$,
+
+$$ A_{SA} = \frac{P_{avg}\left(1 + \dfrac{f_{ecl}}{f_{sun}\,\eta_{dis}}\right)}{S\, \eta_{cell}\, \cos\theta\, (1 - D_{deg})} $$
+
+The two forms are the same energy balance. The Chapter 9 form is preferred because it separates the peak sunlit mode from the eclipse mode (the array must cover the worst sunlit mode, not the average) and because it keeps the two path efficiencies distinct.
+
+### Verification
+
+The sizing nomograph of Chapter 9 Figure 9.3 is drawn in the eclipse-fraction form ($\eta_{cell} = 30$ %, 10 % EOL degradation, $\theta = 20°$, $\eta_{dis} = 85$ %): a 6U at 15 W orbit-average load needs about 870 cm² at end of life.
+
+**Worked check.** $P_{sun} = P_{ecl} = 15$ W, $t_{ecl}/t_{sun} = 0.35/0.65 = 0.538$, $\eta_{sun} = 1$, $\eta_{ecl} = 0.85$:
+
+$P_{SA} = 15 + 15 \times 0.538 / 0.85 = 15 + 9.5 = 24.5$ W during the sunlit arc;
+$A_{SA} = 24.5 / (1361 \times 0.30 \times \cos 20° \times 0.90) = 24.5 / 345.0 = 0.071$ m² $= 710$ cm².
+
+The nomograph reads about 870 cm² because it is drawn for orbit-averaged rather than sunlit-arc generation, the more conservative convention; the two agree to within that modelling choice. The EOSat-3U case of Chapter 9 §9.2 — $P_{sun} = 10$ W, $P_{ecl} = 3.5$ W, $t_{sun} = 58.8$ min, $t_{ecl} = 35.8$ min, $\eta_{sun} = 0.90$, $\eta_{ecl} = 0.786$ — gives $P_{SA,EOL} = 13.8$ W, $P_{SA,BOL} = 16.0$ W and $A_{SA} = 0.0526$ m².
+
+---
+
+## V.12 — Battery Sizing
+
+### Derivation
+
+The energy drawn from the battery during one eclipse is $E_{ecl} = P_{ecl}\, t_{ecl}$. The battery must supply this through the discharge path (efficiency $\eta_{dis}$) while using only the fraction DoD of its rated capacity, so that it reaches the required cycle life:
+
+$$ E_{bat} = \frac{P_{ecl}\, t_{ecl}}{\text{DoD}\, \eta_{dis}} $$
+
+— the form of Chapter 9 §9.3. The rated capacity in ampere-hours is $C = E_{bat} / V_{bus}$, and the mass follows from the specific energy of the chemistry. The cycle count is the number of eclipses over the mission (≈ 15 per day in LEO, about 5500 per year), which, through the cycle-life-versus-DoD curves of Chapter 9 Figure 9.4, sets the permissible DoD.
+
+### Verification
+
+**Worked check.** EOSat-3U, $P_{ecl} = 3.5$ W, $t_{ecl} = 35.8$ min $= 0.597$ h, DoD $= 25$ %, $\eta_{dis} = 0.95$:
+
+$E_{bat} = 3.5 \times 0.597 / (0.25 \times 0.95) = 2.09 / 0.2375 = 8.8$ Wh,
+
+as in Chapter 9 §9.3, where the requirement is rounded up with margin and a 20 Wh pack is selected. A three-year mission at 15 eclipses per day is about 16 000 cycles; Figure 9.4 shows that NCA/NMC cells reach this at 25–30 % DoD with margin, whereas heritage LCO cells need a shallower DoD.
+
+---
+
+## V.13 — Margin of Safety (structures)
+
+The structural margin of safety compares the allowable stress with the applied stress multiplied by the factor of safety:
+
+$$ \text{MoS} = \frac{\sigma_{allow}}{\text{FoS} \cdot \sigma_{applied}} - 1 $$
+
+A positive margin is compliant; zero is exactly at the allowable with the factor applied; negative is a failure of the requirement. Chapter 12 §12.1.6 is the canonical treatment (Chapter 3 §3.3.3 and Chapter 14 defer to it) and gives the ECSS-E-ST-32-10C factors.
+
+**Worked check.** Al 7075-T6, yield allowable $\sigma_{yield} = 503$ MPa, yield factor of safety 1.25, applied stress 200 MPa:
+
+$\text{MoS} = 503 / (1.25 \times 200) - 1 = 1.012$,
+
+i.e. 100 % positive margin. Compliant. (For the 3U box-beam of Chapter 12 §12.1 the first natural frequency, $f_1 \approx 330$ Hz, is checked separately against the 100 Hz requirement.)
+
+---
+
+## V.14 — Disturbance Torque Order-of-Magnitude
+
+### Derivation (aerodynamic drag)
+
+The drag force on an exposed area $A_{ref}$ is $\tfrac{1}{2}\rho V^2 C_D A_{ref}$; it acts at the centre of pressure, offset from the centre of mass by a lever arm $\ell$, giving the torque
+
+$$ T_{drag} = \tfrac{1}{2}\,\rho\, V^2\, C_D\, A_{ref}\, \ell $$
+
+where $\rho$ is the atmospheric density, $V$ the orbital velocity and $C_D \approx 2.2$. Chapter 10 §10.2 gives the companion expressions for gravity gradient, magnetic and solar-pressure torques and the EOSat-3U worked values.
+
+**Worked estimate.** A 6U CubeSat at 500 km, $\rho \approx 6 \times 10^{-13}$ kg/m³ (mean solar activity), $V = 7.61$ km/s, $A_{ref} = 0.06$ m², $C_D = 2.2$, $\ell = 0.02$ m:
+
+$T_{drag} \approx 0.5 \times 6 \times 10^{-13} \times 7610^2 \times 2.2 \times 0.06 \times 0.02 \approx 4.6 \times 10^{-8}$ N m.
+
+With a 10 cm lever arm (a deployed panel far off the centre of mass) the figure is five times larger; across the solar cycle $\rho$ at 500 km varies by more than an order of magnitude either way, which is why Chapter 10 Figure 10.4 shows a band rather than a line.
+
+### Verification
+
+Chapter 10 Figure 10.4 shows the accumulated wheel momentum against orbits since the last desaturation, and the order-of-magnitude disturbance torques by source, for a spacecraft of a few tens of kilograms; the EOSat-3U values of Chapter 10 §10.2 are roughly a tenth of those, and for a 3U at 500 km the magnetic torque, not drag, dominates. The reaction-wheel momentum capacity follows as $H \ge T_{dist}\, t_{desat}\, k_{margin}$ (Chapter 10 §10.3 and §10.5).
+
+---
+
+## V.15 — Daily Data Volume Closure
+
+The closure check between data generation (payload) and downlink capacity (communications) is a classic mission-design failure point. The payload generates $V_{gen} = R_{gen}\, t_{imaging}$ per day; the ground segment can receive, with $N_{passes}$ usable passes per day of average usable duration $t_{contact}$, at data rate $R$ and protocol efficiency $\eta_{protocol}$ (acknowledgements, framing, re-transmissions):
+
+$$ C_{downlink} = R \cdot N_{passes} \cdot t_{contact} \cdot \eta_{protocol} $$
+
+and the mission closes if
+
+$$ V_{gen} \le C_{downlink} $$
+
+This is the form of Chapter 11 §11.9. If the inequality fails, the options are a faster downlink (more bandwidth or a higher band), more stations or passes, on-board compression, or fewer images. Chapter 11 Figure 11.6 plots daily capacity by band against representative payload volumes: UHF closes only for housekeeping; S-band suits a multispectral imager; X-band is needed for SAR or hyperspectral data.
+
+**Worked check.** EOSat-3U at 5 Mbit/s with five 6-minute passes per day and $\eta_{protocol} = 0.85$: $C = 5 \times 10^6 \times 5 \times 360 \times 0.85 / 8 = 956$ MB/day against 720 MB/day generated — closes (the case of Chapter 11 §11.9 and Chapter 17 §17.2.4). UniSat-1 at 4800 bit/s with five minutes of usable contact per pass to a single station: 0.61 MB/day against 1.13 MB/day generated — does not close (Chapter 11 §11.8.2, Chapter 17 §17.6).
+
+---
+
+## V.16 — Cross-method verification matrix
+
+For a design review, every quantitative claim should be verified by at least two methods. The following matrix lists the two methods expected for each quantity derived in this part.
+
+| Quantity | Method 1 | Method 2 | Derivation |
+|----------|---------|---------|--------|
+| Orbital period | Kepler (analytical) | Numerical propagation (GMAT or equivalent) | V.2 |
+| SSO inclination | Analytical $J_2$ condition | Tabulated (SMAD4 Table 9-2) | V.4 |
+| Eclipse fraction | Analytical β-form | Numerical eclipse model | V.5 |
+| FSPL | $20\log_{10}(4\pi d/\lambda)$ | ITU-R P.525 | V.6 |
+| Link budget | Spreadsheet, line by line | Concurrent-design tool or vendor link calculator | V.7 |
+| GSD (diffraction) | $1.22\,\lambda h/D$ | Detailed optical ray-trace | V.9 |
+| GSD (pixel) | $p\,h/f$ | Detector data sheet | V.9 |
+| Thermal equilibrium | $\alpha_s/\varepsilon$ analytical | Thermal network model (ESATAN or equivalent) | V.10 |
+| Solar-array area | Orbit energy balance | Vendor sizing tool | V.11 |
+| Battery capacity | DoD and cycle-life curve | Vendor cycle test data | V.12 |
+| Margin of safety | Hand calculation | Finite-element analysis | V.13 |
+| Disturbance torque | First-principles estimate | Atmospheric model (NRLMSISE-00) with geometry | V.14 |
+| Data budget | $R\,N_{passes}\,t_{contact}\,\eta$ | Pass-by-pass simulation with the station schedule | V.15 |
+
+---
+
+## V.17 — Key references
+
+- **Vallado**, *Fundamentals of Astrodynamics and Applications*, 4th ed., Microcosm Press / Springer.
+- **Curtis**, *Orbital Mechanics for Engineering Students*, 3rd ed., Butterworth-Heinemann.
+- **Wertz**, *Mission Geometry: Orbit and Constellation Design and Management*, Microcosm Press.
+- **Wertz, Everett and Puschell**, *Space Mission Engineering: The New SMAD*, 2011.
+- **Larson and Wertz**, *Space Mission Analysis and Design*, 4th ed.
+- **Pratt, Bostian and Allnutt**, *Satellite Communications*, 3rd ed.
+- **Sutton and Biblarz**, *Rocket Propulsion Elements*, 9th ed.
+- **Gilmore**, *Spacecraft Thermal Control Handbook*, Vol. I and II.
+- **Sarafin**, *Spacecraft Structures and Mechanisms*.
+- **Markley and Crassidis**, *Fundamentals of Spacecraft Attitude Determination and Control*.
+- **Patel**, *Spacecraft Power Systems*.
+- **Kopp and Lean**, "A new, lower value of total solar irradiance", *Geophysical Research Letters* 38, 2011.
+- **NASA SEH (SP-2016-6105 Rev 2)** — [https://www.nasa.gov/reference/systems-engineering-handbook/](https://www.nasa.gov/reference/systems-engineering-handbook/).
+- **IERS Conventions 2010** — [https://www.iers.org/IERS/EN/Publications/TechnicalNotes/tn36.html](https://www.iers.org/IERS/EN/Publications/TechnicalNotes/tn36.html).
+- **CODATA 2018 fundamental constants** — [https://physics.nist.gov/cuu/Constants/](https://physics.nist.gov/cuu/Constants/).
+- **ITU-R P.525** (free-space attenuation) — [https://www.itu.int/rec/R-REC-P.525/en](https://www.itu.int/rec/R-REC-P.525/en).
+- **NRLMSISE-00 atmospheric model** — [https://ccmc.gsfc.nasa.gov/models/NRLMSIS~00/](https://ccmc.gsfc.nasa.gov/models/NRLMSIS~00/).
+- **NASA GMAT** — [https://software.nasa.gov/software/GSC-17177-1](https://software.nasa.gov/software/GSC-17177-1).
+
+
+# Appendix A — About the SpaceCDF Tool
+
+The numerical examples in this book were computed with SpaceCDF, an open-source concurrent-design tool for small spacecraft. This appendix describes it briefly and neutrally so that a reader can understand what produced the numbers, and reproduce or extend them. It is released under the MIT licence; the source code, the mission descriptors used for the examples in this book and the figure-generation scripts are available at <https://github.com/FNewland/SpaceCDF>. Nothing in Parts I–III depends on the tool: every method in the book can be applied with a spreadsheet, and the problems never require it.
+
+## A.1 Positions and design agents
+
+Two distinct concepts run through a concurrent-design study and are sometimes conflated. Disentangling them is essential before the first design loop.
+
+A **position** is a *human role* assigned to a person at a console in a Concurrent Design Facility — the Power Engineer, the AOCS Engineer, the Mission Analyst and so on. The tool defines the sixteen positions of Chapter 1 Table 1.4, each with scoped editing rights over a subset of the design parameters; Part IV gives a briefing for each.
+
+A **design agent** is a *computational solver* that runs in the background and converges a particular subsystem or analysis. The agents are grouped in two tiers:
+
+| Tier | Purpose | Agents |
+|---|---|---|
+| Tier 1 — Parametric sizing | Compute the design point of one subsystem from inputs supplied by the others | orbit · link · data · power · thermal · AOCS · propulsion · mass · structure |
+| Tier 2 — Cross-system analysis | Score, check or audit the converged design | cost · risk · reliability · debris · radiation · sustainability · volume · systems · conflicts · community · TRL |
+
+The Tier 1 agents implement the sizing chains of Chapters 7–12 — the orbit agent the period, eclipse and pass geometry of Chapter 7, the power agent the array and battery chain of Chapter 9, the link agent the budget of Chapter 11, and so on — using the same equations and constants as the text. The Tier 2 agents implement the checks of Chapters 3, 8 and 13–16: the margin schedule of Table 8.3, the debris rules, the TRL roll-up, the cost estimate and the risk register.
+
+Each agent publishes three things to the shared design state when it runs: its **parameters** (numbers with units, margin and confidence), its **rationale** (a short paragraph of reasoning in the terms of the relevant chapter) and a set of **assumptions** that downstream agents and reviewers can interrogate. Several agents also emit structured intermediates — the orbit agent a Δv breakdown, the link agent a full waterfall, the thermal agent hot- and cold-case node temperatures, the reliability agent a FMECA — and the exports surface these as tables and figures alongside the bare numbers.
+
+## A.2 The design loop and the human–agent handover
+
+A design loop runs every agent once, in dependency order, from the current design state. Because each agent reads the others' outputs, several loops are needed before the state stops changing; this is the computational analogue of the design iterations described in Chapter 1 §1.1.
+
+When a human position changes a value, that parameter becomes *sticky* in the design state and the agents do not overwrite it in subsequent loops. This is the formal handover between the human operator and the computational solver, and it is the reason a concurrent-design study converges quickly: the agents do the iterative arithmetic while the positions do the engineering judgement. A sticky value is also a recorded decision, with an owner, which is what a reviewer will ask for.
+
+## A.3 Reviews and exports
+
+A review gate is not merely a meeting. It is a document set whose existence and contents are agreed in advance, whose generation is traceable to a converged design state, and whose acceptance moves the project from one lifecycle phase to the next (Chapter 1 Table 1.3; Chapter 16 §16.5–§16.6). The tool treats each gate as the anchor of an export bundle: at each gate it exports a design-review pack containing the budgets with their margins, the orbit and architecture figures, the compliance matrix, the equipment list, the TRL roll-up, the risk matrix, the cost S-curve and the work-breakdown structure, with the contents growing from concept review to critical design review as the chapters of Parts I–III would lead one to expect — trade-study records and the verification matrix from preliminary design review onward, the test plan and qualification status at critical design review.
+
+In addition to the review packs the tool generates a family of data item descriptions in editable form: the mission requirements document, concept of operations, verification plan, systems engineering management plan, risk management plan, interface requirements document, test plan and bill of materials. Specialist reports cover the thermal analysis, the end-of-life deorbit plan, the remote-sensing licence application and the verification test programme. The figures in those exports are drawn by the same scripts, with the same conventions, as the figures in this book, so that a reader who has met a link waterfall in Chapter 11 will recognise the one in an exported review pack.
+
+## A.4 Reproducing the examples in this book
+
+Each running example (EOSat-3U and UniSat-1) is described by a mission descriptor file distributed with the tool. Running the design loop on a descriptor reproduces the budgets quoted in the corresponding chapters; the worked examples in the text then show the same numbers derived by hand from the equations of Parts I–III and Part V, which is the cross-method check that Part V §V.16 recommends for any design review. If an agent is updated and a worked-example number changes, the text can be checked against the tool's output and corrected in one place.
+
+
+# About this book
+
+*Concurrent Spacecraft Design* is an open textbook on the design of small spacecraft by the concurrent-engineering method. It takes a mission from a stated need, through requirements, orbit selection, architecture and subsystem sizing, to verification, cost, design review, the ground segment and operations, with two running CubeSat examples — a 3U Earth-observation spacecraft (EOSat-3U) and a 1U magnetometer demonstrator (UniSat-1) — carried through every chapter. Part IV briefs each engineering position at a concurrent-design table; Part V derives the equations from first principles.
+
+It is written for final-year undergraduates, graduate students and early-career engineers with an engineering background but no prior spacecraft design experience, and for practising engineers who want a compact, standards-referenced account of how the pieces of a mission constrain one another. Each chapter has learning objectives, a summary, problems and references; the problems need no software beyond a calculator or spreadsheet.
+
+**Reproducible figures.** Every plotted figure in this book is generated procedurally by a short script kept alongside the book's sources, from a reproducible numerical input. There are no hand-drawn plots: a figure can be regenerated when the underlying numbers change, and a reader who wants to see how a curve was computed can read the script that drew it. Schematic diagrams are drawn as vector graphics in the sources.
+
+**Tool-computed examples.** Every numerical worked example — the EOSat-3U and UniSat-1 budgets, the orbit timings, the link closures, the thermal cases, the cost roll-ups — was computed with the open-source SpaceCDF tool described in Appendix A, from mission descriptors published with it, and then checked by hand against the equations in the text and derived in Part V. Where the editors of this edition found an arithmetic slip in an earlier version, the corrected value is used consistently in every chapter that quotes it, and the derivation in Part V shows the corrected working. Readers who want to reproduce an example can run the published descriptor; readers who want to challenge one can follow the derivation.
+
+**Standards.** ECSS standards, NASA handbooks and the SMAD texts are cited at the point of use. Where a standard's wording and common practice differ — the verification methods of Chapter 14 are an example — the book says which is which.
+
+**Corrections and contributions.** This is a living document. Corrections, improved problems and new figures are welcome through the repository given in Appendix A; contributors are acknowledged in the next edition.
+
+---
+
+# Licence
+
+*Concurrent Spacecraft Design: An Open Textbook*, Franz Newland et al., is licensed under the Creative Commons Attribution 4.0 International Licence (CC BY 4.0).
+
+**Attribution.** When reusing or adapting this work, please attribute it as:
+
+> *Concurrent Spacecraft Design: An Open Textbook*, Franz Newland et al., CC BY 4.0.
+
+**You are free to:**
+
+- **Share** — copy and redistribute the material in any medium or format;
+- **Adapt** — remix, transform, and build upon the material for any purpose, even commercially.
+
+The licensor cannot revoke these freedoms as long as you follow the licence terms.
+
+**Under the following terms:**
+
+- **Attribution** — You must give appropriate credit, provide a link to the licence, and indicate if changes were made. You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.
+- **No additional restrictions** — You may not apply legal terms or technological measures that legally restrict others from doing anything the licence permits.
+
+You do not have to comply with the licence for elements of the material in the public domain or where your use is permitted by an applicable exception or limitation. No warranties are given. The licence may not give you all of the permissions necessary for your intended use; for example, other rights such as publicity, privacy, or moral rights may limit how you use the material.
+
+The full licence text is at [https://creativecommons.org/licenses/by/4.0/](https://creativecommons.org/licenses/by/4.0/).
+
+**Third-party material.** Standards, handbooks and papers quoted or summarised in this book remain the property of their publishers and are cited at the point of use. Vendor products named in worked examples are representative examples, not endorsements, and their trademarks belong to their owners. The AIG (Assisted by Generative AI) logo used in the acknowledgement below is published under its own CC BY-NC-SA 4.0 terms, which govern its reuse separately from the CC BY 4.0 licence of this book.
+
+---
+
+# Acknowledgement of generative AI
+
+This book was produced with the assistance of generative AI. The structure of the chapters, the conversion of earlier material into textbook prose, the drafting of problems, the figure-generation scripts and the document rendering were prepared with AI assistance, guided throughout by the ECSS standards, the NASA Systems Engineering Handbook and the SMAD references cited in the text. The numerical examples were computed by the SpaceCDF tool (Appendix A) and checked by hand. Editorial framing, the worked examples, the selection of what to include and omit, and responsibility for every claim in the book remain with the human authors.
+
+Attribution follows the AIG (Assisted by Generative AI) framework — Peters (2023), *Logos IA-EN*, CC BY-NC-SA 4.0 — [https://mpeters.uqo.ca/en/logos-ia-en-peters-2023/](https://mpeters.uqo.ca/en/logos-ia-en-peters-2023/). The AIG logo is used under its own licence terms, which differ from the licence of this book (see the Licence page above).
+
+Readers who adapt this book are encouraged to keep the same practice: say where generative AI was used and how. Declining to use AI is fine; using it without saying so is not.
+
+---
+
+# Colophon
+
+The book is written in Markdown, one file per chapter, with mathematics in LaTeX notation; the plotted figures are generated by matplotlib scripts kept with the sources, and the schematic diagrams are inline SVG. The chapters are concatenated in order, converted to HTML, and rendered to PDF by WeasyPrint. Fonts are the renderer's default sans-serif and serif families; the accent colour used in figures and headings is a neutral blue.

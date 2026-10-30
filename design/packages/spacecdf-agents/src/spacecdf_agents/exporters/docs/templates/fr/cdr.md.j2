@@ -1,0 +1,143 @@
+# {{ ctx.mission_name }} — Revue de définition critique (CDR)
+
+**Date du document :** {{ ctx.date }}
+**Étude :** {{ ctx.study_name }}
+**Généré par :** SpaceCDF, centre de conception concourante assisté par IA
+
+---
+
+## 1. Synthèse
+
+[À COMPLÉTER : texte de synthèse]
+
+## 2. Présentation du système
+
+### 2.1 Orbite
+
+| Paramètre | Valeur |
+|-----------|-------|
+| Type d'orbite | {{ ctx.orbit.orbit_type | upper }} |
+| Altitude | {{ ctx.orbit.altitude_km }} km |
+| Inclinaison | {{ ctx.orbit.inclination_deg }} deg |
+| Période orbitale | {{ '%.1f' | format(ctx.orbit.period_min or 0) }} min |
+| Fraction d'éclipse | {{ '%.2f' | format(ctx.orbit.eclipse_fraction or 0) }} |
+| Durée de la mission | {{ ctx.orbit.mission_duration_years }} ans |
+
+### 2.2 Satellite
+
+- Type de mission : {{ ctx.mission_type }}
+- Classe de satellite : {{ ctx.spacecraft_class }}
+- Nombre de satellites : {{ ctx.num_spacecraft }}
+
+## 3. Bilan de masse final
+
+{% set mass = ctx.budgets.get('mass', {}) %}
+| Sous-système | Équipement | Nominal (kg) | Marge % | Avec marge (kg) |
+|-----------|-----------|-------------:|---------:|-----------------:|
+{% for line in mass.get('lines', []) -%}
+| {{ line.subsystem }} | {{ line.equipment }} | {{ '%.2f' | format(line.nominal_value) }} | {{ '%.0f' | format(line.margin_percent) }} | {{ '%.2f' | format(line.nominal_value * (1 + line.margin_percent / 100)) }} |
+{% endfor -%}
+| **TOTAL** | | **{{ '%.2f' | format(mass.get('total_nominal', 0)) }}** | | **{{ '%.2f' | format(mass.get('total_with_margin', 0)) }}** |
+
+## 4. Bilan de puissance final
+
+{% set power = ctx.budgets.get('power', {}) %}
+| Sous-système | Équipement | Nominal (W) | Marge % | Avec marge (W) |
+|-----------|-----------|------------:|---------:|----------------:|
+{% for line in power.get('lines', []) -%}
+| {{ line.subsystem }} | {{ line.equipment }} | {{ '%.2f' | format(line.nominal_value) }} | {{ '%.0f' | format(line.margin_percent) }} | {{ '%.2f' | format(line.nominal_value * (1 + line.margin_percent / 100)) }} |
+{% endfor -%}
+| **TOTAL** | | **{{ '%.2f' | format(power.get('total_nominal', 0)) }}** | | **{{ '%.2f' | format(power.get('total_with_margin', 0)) }}** |
+
+## 5. Bilan de données
+
+{% set data = ctx.budgets.get('data', {}) %}
+| Sous-système | Source | Valeur | Unité |
+|-----------|--------|------:|------|
+{% for line in data.get('lines', []) -%}
+| {{ line.subsystem }} | {{ line.equipment }} | {{ '%.2f' | format(line.nominal_value) }} | {{ line.get('unit', '') }} |
+{% endfor %}
+
+## 6. Ventilation des coûts
+
+{% if ctx.cost %}
+| Niveau de confiance | Coût (MEUR) |
+|------------------|------------:|
+| P50 | {{ '%.1f' | format(ctx.cost.p50_meur) }} |
+| P70 | {{ '%.1f' | format(ctx.cost.p70_meur) }} |
+| P80 | {{ '%.1f' | format(ctx.cost.p80_meur) }} |
+| P90 | {{ '%.1f' | format(ctx.cost.p90_meur) }} |
+{% endif %}
+
+## 7. Matrice de conformité
+
+{% if ctx.compliance %}
+| ID exigence | Description | Valeur obtenue | Marge % | État |
+|----------------|-------------|---------:|---------:|--------|
+{% for v in ctx.compliance.verifications -%}
+| {{ v.requirement_id }} | {{ v.requirement_text }} | {{ v.achieved_value if v.achieved_value is not none else '—' }} | {{ '%.1f' | format(v.margin_percent) if v.margin_percent is not none else '—' }} | {{ v.status | upper }} |
+{% endfor %}
+
+Conformité : {{ ctx.compliance.compliant }} / {{ ctx.compliance.total_requirements }} ({{ '%.1f' | format(ctx.compliance.compliance_percent) }} %)
+{% endif %}
+
+## 8. Liste des équipements
+
+{% if ctx.equipment %}
+| Sous-système | Paramètre | Composant | Fabricant | TRL |
+|-----------|-----------|-----------|--------------|----:|
+{% for eq in ctx.equipment -%}
+| {{ eq.domain }} | {{ eq.parameter_id }} | {{ eq.equipment_name }} | {{ eq.get('manufacturer', '') }} | {{ eq.get('trl', '—') }} |
+{% endfor %}
+{% endif %}
+
+## 9. Évaluation du TRL
+
+{% if ctx.trl_assessments %}
+| Sous-système | Référence | Innovation | Recommandation |
+|-----------|----------|------------|----------------|
+{% for trl in ctx.trl_assessments -%}
+| {{ trl.subsystem }} | {{ trl.baseline_component }} ({{ trl.baseline_trl }}) | {{ trl.innovation_component or '—' }} ({{ trl.innovation_trl or '—' }}) | {{ trl.recommendation }} |
+{% endfor %}
+{% endif %}
+
+## 10. Études de compromis
+
+[À COMPLÉTER : synthèse des études de compromis menées pendant la conception détaillée, conclusions et justification des choix de conception.]
+
+## 11. Registre des risques
+
+{% if ctx.risks %}
+| N° | Risque | Gravité |
+|---|------|----------|
+{% for risk in ctx.risks -%}
+| {{ loop.index }} | {{ risk }} | — |
+{% endfor %}
+{% endif %}
+
+[À COMPLÉTER : risques résiduels reportés sur l'AIT et la mise en service, avec mesures de réduction.]
+
+## 12. Plan d'essais de vérification
+
+[À COMPLÉTER : philosophie de vérification et matrice d'essais.]
+
+### 12.1 Philosophie des modèles
+
+[À COMPLÉTER : modèles de développement, de qualification et de recette — STM/EM/QM/FM/PFM.]
+
+### 12.2 Matrice d'essais
+
+| ID exigence | Méthode | Niveau | Moyen d'essai | État |
+|----------------|--------|-------|----------|--------|
+{% if ctx.compliance and ctx.compliance.verifications -%}
+{% for v in ctx.compliance.verifications -%}
+| {{ v.requirement_id }} | analyse | système | — | prévu |
+{% endfor -%}
+{% endif %}
+
+### 12.3 Qualification et recette
+
+[À COMPLÉTER : campagne de qualification (vibrations, vide thermique, CEM, rayonnements) et critères de recette.]
+
+---
+*Généré par SpaceCDF, centre de conception concourante assisté par IA*

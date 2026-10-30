@@ -1,0 +1,86 @@
+id: 100kg_smallsat_eo
+name: "100 kg Small Satellite — Earth Observation"
+archetype: smallsat_eo
+description: >
+  100 kg-class smallsat carrying a high-resolution optical or SAR payload.
+  SSO, 5-year mission, propulsion for orbit maintenance + end-of-life deorbit.
+  Typical next step up from CubeSat class for commercial EO.
+
+typical_use_cases:
+  - High-resolution optical imaging (1-2 m GSD)
+  - Small SAR demonstrators
+  - NewSpace EO constellation member
+
+tags: [smallsat, sso, earth_observation, 100kg, commercial]
+
+target_phase: phase_a
+margin_policy_percent: 20.0
+
+applicable_ecss:
+  - ECSS-E-ST-10C Rev.1
+  - ECSS-E-ST-10-02C Rev.1
+  - ECSS-E-ST-10-03 Rev.1       # Testing
+  - ECSS-E-ST-10-04C Rev.1
+  - ECSS-E-ST-10-06C
+  - ECSS-E-ST-10-24C Rev.1
+  - ECSS-E-ST-31C               # Thermal
+  - ECSS-E-ST-32C Rev.1         # Structures
+  - ECSS-E-ST-35C Rev.1         # Propulsion
+  - ECSS-E-ST-50C Rev.2
+  - ECSS-E-ST-60-30C
+  - ECSS-M-ST-10C Rev.1
+  - ECSS-M-ST-40C Rev.1         # Config management
+  - ECSS-M-ST-80C
+  - ECSS-Q-ST-10C Rev.1         # PA management
+  - ECSS-Q-ST-30C Rev.1         # Dependability
+  - ECSS-Q-ST-30-02C
+  - ECSS-Q-ST-40C Rev.1         # Safety
+  - ECSS-Q-ST-60-15C Rev.1      # Radiation hardness assurance
+  - ECSS-U-AS-10C Rev.2
+
+requirements:
+  name: "100kg EO Smallsat"
+  mission_type: earth_observation
+  spacecraft_class: small
+  orbit:
+    orbit_type: sso
+    altitude_km: 550.0
+    inclination_deg: 97.6
+    eccentricity: 0.0
+    ltan: "10:30"
+    delta_v_insertion_ms: 50.0
+    delta_v_maintenance_ms: 30.0
+    mission_duration_years: 5.0
+    deorbit_required: true
+  payloads:
+    - name: "High-Resolution Imager"
+      type: optical_imager
+      mass_kg: 15.0
+      power_w: 80.0
+      power_peak_w: 150.0
+      data_rate_mbps: 800.0
+      data_volume_per_day_gb: 30.0
+      pointing_accuracy_deg: 0.02
+      pointing_stability_deg_s: 0.001
+      temperature_range_c: [-10.0, 35.0]
+      fov_deg: 2.0
+      duty_cycle_percent: 15.0
+      description: "1-2 m GSD panchromatic + 4-band multispectral"
+  design_lifetime_years: 5.0
+  reliability_target: 0.95
+  target_mass_kg: 120.0
+  target_cost_meur: 25.0
+  num_spacecraft: 1
+  ground_stations:
+    - "KSAT Svalbard"
+    - "KSAT Inuvik"
+
+equipment_hints:
+  - category: reaction_wheels
+    rationale: "4x medium-class wheels (>0.5 Nms) for 0.02° pointing"
+  - category: star_trackers
+    rationale: "Dual star trackers with orthogonal FOVs"
+  - category: thrusters
+    rationale: "Cold gas or hydrazine for orbit maintenance + deorbit Δv"
+  - category: transponders
+    rationale: "X-band payload downlink, S-band TTC"

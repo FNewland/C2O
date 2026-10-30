@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# i18n pre-commit hook: runs `i18n check` (non-strict) on the items touched by the
+# staged files only. Errors (broken parity, placeholders, identifiers, unknown FR
+# keys) block the commit; stale/missing French only warns.
+#
+# Install (from the repo root):
+#   ln -sf ../../tools/i18n/pre-commit .git/hooks/pre-commit
+# or, if you already have a pre-commit hook, add this line to it:
+#   tools/i18n/pre-commit || exit 1
+# Bypass once: git commit --no-verify
+set -euo pipefail
+root="$(git rev-parse --show-toplevel)"
+cd "$root"
+[ -f i18n.yaml ] || exit 0
+py="${PYTHON:-python3}"
+exec "$py" -m tools.i18n check --staged

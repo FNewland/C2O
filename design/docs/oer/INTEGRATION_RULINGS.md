@@ -1,0 +1,14 @@
+# Integration rulings (resolving XREF_NOTES open items)
+
+1. **Roles: 16, not 15.** Add a "Project Manager — schedule, budget authority, risk owner; chairs the design session" row to Ch 1 Table 1.4; change "fifteen" → "sixteen" wherever Ch 1 §1.5, Appendix A §A.1 and Part II intro count the positions. Part II keeps its PM briefing.
+2. **EOSat-3U has no propulsion.** Ch 18 stands (no Manoeuvre mode). Ch 12 §12.2.5's deorbit-propellant calculation is reframed as "if a propulsive deorbit were required for a 3U at 600 km …" (a what-if), and states that EOSat-3U at 500 km relies on natural decay (Ch 7 §7.3.3: ≈ 5 yr). Delete the Detumble power value in Table 18.1 (keep the row, power "—, magnetorquers only").
+3. **Ch 11 "Figure 17.x"** → "Figure 17.2" (the pass profile; Figure 17.1 is now the ground-segment block diagram added by the figure agent).
+4. **Cost mismatch Ch 13 §13.6 vs Ch 16 §16.1.6.** Ch 16 is canonical (hardware 161–178 kEUR; total 457–490 kEUR). In Ch 13 §13.6 change "Hardware cost ~290 kEUR" to "Hardware + I&T + software ≈ 290 kEUR (hardware alone ≈ 170 kEUR; see Chapter 16 §16.1.6)".
+5. **Ch 4 Problem 9 eclipse load** → 3.5 W (align with Table 8.4 / 18.1).
+6. **Ch 12 §12.5.3 red line (10 W equipment vs 8 W allocation)** — keep as the pedagogical point; add one sentence in Ch 9 §9.2 worked example: "Chapter 12 §12.5.3 shows that the equipment-level imaging load comes to ≈ 10 W; the sizing here uses the 8 W parametric allocation and must be re-run once equipment is selected — a typical CDF iteration."
+7. **Ch 17 "Chapter 3 §3.5" (30-min RF silence)** — verify against `03_international_standards.md`; use the correct section number.
+8. **Ch 18 "Ch 9 §9.4 cold case"** — verify section number in `09_power_and_thermal.md`.
+9. **Part II SE power/link/Δv margin sentence** — keep (Table 8.3 is mass-only); add a footnote-style parenthesis "(typical values; the mass schedule is Table 8.3)".
+10. **`fig_gsd.png` stays in Part III as Figure D.3.** No payload-sizing section is added in this edition.
+11. **Index** — dropped from this edition (WeasyPrint TOC suffices). Appendix B (answers) — not produced; remove any mention of it from front matter.
+12. **Part headings** — exactly three, each at the top of its first chapter file: `# Part I — Foundations and Design` (01), `# Part I (continued) — Subsystem Design` (09), `# Part I (continued) — Integration, Verification and Operations` (13). Rename to a cleaner scheme: **Part I — Foundations and Design (Ch 1–8)**, **Part II — Subsystem Design (Ch 9–12)**, **Part III — Integration, Verification and Operations (Ch 13–19)**, **Part IV — Engineering Position Reference**, **Part V — First-Principles Derivations**, then Appendix A and back matter. Update front matter "How to use this book" and every "Part II"/"Part III" cross-reference accordingly (Part II → Part IV; Part III → Part V; "Figure D.n" unchanged).

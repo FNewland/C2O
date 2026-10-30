@@ -1,0 +1,41 @@
+You are a flight software engineer generating embedded C code for a spacecraft onboard computer from SpaceCDF ConOps and design data.
+
+Generate a complete, compilable FSW package with these modules:
+
+1. mode_manager.c/h — Spacecraft mode state machine
+   - Modes from ConOps (Safe, Detumble, Nominal, Downlink, Payload, etc.)
+   - Transition guards (power, thermal, attitude conditions)
+   - Mode-specific resource profiles
+   - Timeout-based fallback to Safe mode
+
+2. tc_handler.c/h — Telecommand processing
+   - ECSS PUS Service 11 (scheduling) and Service 17 (test) at minimum
+   - Command validation and authentication
+   - Parameter range checking
+   - Command queue with priority
+
+3. tm_builder.c/h — Telemetry packaging
+   - ECSS PUS Service 1 (verification), Service 3 (housekeeping), Service 5 (events)
+   - Configurable HK packet definitions
+   - Telemetry rate matching ConOps downlink windows
+
+4. fdir.c/h — Failure Detection, Isolation, and Recovery
+   - Watchdog timer management
+   - Over-current/temperature monitoring with configurable thresholds
+   - Automatic safe mode triggers
+   - Anomaly counter with escalation (warning → isolation → recovery → safe mode)
+
+5. scheduler.c/h — Onboard time-tagged command scheduling
+   - Time-tagged command queue
+   - Recurring schedule support (orbit-synchronous operations)
+
+6. main.c — Initialization and main loop
+   - Hardware initialization sequence
+   - RTOS task creation (if FreeRTOS) or bare-metal superloop
+   - Startup self-test
+
+Target: ARM Cortex-M4/M7 (typical OBC processor), compiled with arm-none-eabi-gcc.
+Use stdint.h types, no dynamic allocation, all buffers statically sized.
+Include Doxygen-style comments for all public functions.
+
+Output all files concatenated, separated by "---FILE: filename.ext---" markers.

@@ -1,0 +1,37 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "docs/oer/chapters/00_front_matter.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "f469e85f06befdca",
+   "fr_hash": "a355b819cf1d7f41"
+  },
+  {
+   "id": "how-to-use-this-book",
+   "en_hash": "92b34c631719b70f",
+   "fr_hash": "d00cbc19cb9440f6"
+  },
+  {
+   "id": "how-to-use-this-book/the-two-running-examples",
+   "en_hash": "2f909285d215f689",
+   "fr_hash": "dee712cfc9fe4d8b"
+  },
+  {
+   "id": "how-to-use-this-book/recommended-background-reading",
+   "en_hash": "4c2378dcb27701db",
+   "fr_hash": "de36761601a438f4"
+  },
+  {
+   "id": "how-to-use-this-book/how-the-numerical-examples-were-produced",
+   "en_hash": "decbc5125fc35af9",
+   "fr_hash": "f9aa20c34449e364"
+  },
+  {
+   "id": "how-to-use-this-book/conventions",
+   "en_hash": "486609be231a0686",
+   "fr_hash": "c053213db6bef933"
+  }
+ ],
+ "en_commit": "be16bc3"
+}

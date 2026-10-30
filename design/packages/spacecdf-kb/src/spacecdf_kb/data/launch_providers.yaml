@@ -1,0 +1,116 @@
+# CubeSat Launch Provider Database — May 2026
+# Sources: SpaceX, Rocket Lab, Exolaunch, ISILaunch, D-Orbit, NanoRacks public data
+
+providers:
+  - id: spacex-transporter
+    name: SpaceX Transporter (Rideshare)
+    type: rideshare
+    vehicle: Falcon 9
+    orbit: SSO 525 km
+    capacity_kg: 50  # minimum buy
+    price_usd: 350000  # minimum buy up to 50 kg
+    price_per_kg_usd: 7000  # above 50 kg
+    cadence_per_year: 4
+    lead_time_months: 6-12
+    deployers: [CSD, ISIPOD, EXOpod]
+    notes: Most popular CubeSat rideshare. ~$350K minimum for up to 50 kg to SSO.
+
+  - id: rocketlab-electron
+    name: Rocket Lab Electron
+    type: dedicated
+    vehicle: Electron
+    orbit: Custom LEO/SSO
+    capacity_kg: 200  # to SSO
+    price_usd: 7500000
+    price_per_kg_usd: 37500
+    cadence_per_year: 12
+    lead_time_months: 6-18
+    deployers: [CSD]
+    notes: Dedicated launch with custom orbit selection. Premium pricing for responsive access.
+
+  - id: exolaunch
+    name: Exolaunch (Broker)
+    type: broker
+    vehicle: Various (F9, Vega-C)
+    orbit: SSO
+    capacity_kg: 100
+    price_usd: 250000  # typical 3U-6U
+    price_per_kg_usd: 5000
+    cadence_per_year: 6
+    lead_time_months: 9-18
+    deployers: [EXOpod Nova, EXOpod AIR]
+    notes: European broker. 280+ CubeSats deployed. EXOpod deployers.
+
+  - id: dorbit-ion
+    name: D-Orbit ION
+    type: space_tug
+    vehicle: ION Satellite Carrier (via F9/Vega)
+    orbit: Custom (per-satellite precision deployment)
+    capacity_kg: 160
+    price_usd: 100000  # per CubeSat slot
+    cadence_per_year: 4
+    lead_time_months: 12
+    deployers: [Internal ION dispenser]
+    notes: Space tug with per-satellite custom orbit placement. Good for constellation deployment.
+
+  - id: isillaunch
+    name: ISILaunch (ISIS)
+    type: broker
+    vehicle: Various (PSLV, F9, Vega)
+    orbit: SSO/LEO
+    capacity_kg: 50
+    price_usd: 200000  # typical 3U
+    cadence_per_year: 4
+    lead_time_months: 12-24
+    deployers: [ISIPOD]
+    notes: European broker. 300+ CubeSats launched. Most-flown ISIPOD deployers.
+
+  - id: nanorack-iss
+    name: NanoRacks ISS Deploy
+    type: iss_deploy
+    vehicle: Via Cygnus/Dragon to ISS
+    orbit: ISS (51.6° 410 km)
+    capacity_kg: 12  # per deployer
+    price_usd: 90000  # per U
+    price_per_kg_usd: 0
+    cadence_per_year: 6
+    lead_time_months: 6-12
+    deployers: [NRCSD, NRDD]
+    notes: ISS orbit only. ~$90K per U. Good for tech demos, educational missions.
+
+  - id: firefly-alpha
+    name: Firefly Alpha
+    type: dedicated
+    vehicle: Alpha
+    orbit: Custom LEO/SSO
+    capacity_kg: 745  # to SSO
+    price_usd: 15000000
+    cadence_per_year: 4
+    lead_time_months: 12-18
+    deployers: [Various]
+    notes: Dedicated small launcher. Returned to flight March 2026.
+
+  - id: isro-pslv
+    name: ISRO PSLV (Rideshare)
+    type: rideshare
+    vehicle: PSLV
+    orbit: SSO/LEO
+    capacity_kg: 100  # rideshare allocation
+    price_usd: 200000  # estimated per small sat
+    cadence_per_year: 4
+    lead_time_months: 12-18
+    deployers: [ISIPOD, Custom]
+    notes: Indian rideshare. Non-ITAR option. Via NewSpace India Limited (NSIL).
+
+cubesat_costs_by_size:
+  1U:
+    rideshare_usd: 50000-90000
+    iss_deploy_usd: 90000
+  3U:
+    rideshare_usd: 145000-250000
+    iss_deploy_usd: 270000
+  6U:
+    rideshare_usd: 250000-400000
+    iss_deploy_usd: 540000
+  12U:
+    rideshare_usd: 350000-550000

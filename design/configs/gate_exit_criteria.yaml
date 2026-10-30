@@ -1,0 +1,216 @@
+# Gate Review Exit Criteria
+#
+# Each gate has structured exit criteria with specific questions, required
+# evidence, and auto-evaluation rules. Aligned with NASA SEH §3.3-3.5
+# and ECSS-M-ST-10C Rev.1.
+#
+# Status modes:
+#   auto   — SpaceCDF can evaluate from the data model
+#   manual — Requires human assessment / sign-off
+#   hybrid — Auto-evaluated with human override
+
+phases:
+  pre_phase_a:
+    gate: MCR
+    gate_name: "Mission Concept Review"
+    purpose: >
+      Evaluate the feasibility and desirability of the proposed mission concept.
+      Confirm that the mission need is justified and that a viable concept exists.
+    authority: "Mission Directorate / Programme Manager"
+    exit_criteria:
+      # --- Mission Need ---
+      - id: MCR-EC-01
+        question: "Is the mission need clearly defined and justified?"
+        category: mission_need
+        evidence: "mission_need.problem_statement is not empty"
+        status: auto
+        priority: must_pass
+
+      - id: MCR-EC-02
+        question: "Are the key stakeholders identified with their needs and constraints?"
+        category: mission_need
+        evidence: "mission_need.stakeholders has >= 1 entry"
+        status: auto
+        priority: must_pass
+
+      - id: MCR-EC-03
+        question: "Are mission objectives defined with measurable success criteria?"
+        category: mission_need
+        evidence: "mission_need.objectives has >= 1 primary objective with measurable_criterion"
+        status: auto
+        priority: must_pass
+
+      # --- Alternatives ---
+      - id: MCR-EC-04
+        question: "Have alternative solutions been considered, including non-space options?"
+        category: alternatives
+        evidence: "mission_need.alternatives_considered has >= 2 entries including at least one non-space type"
+        status: auto
+        priority: must_pass
+
+      - id: MCR-EC-05
+        question: "Is the selected concept justified against the alternatives?"
+        category: alternatives
+        evidence: "mission_need.selected_alternative_id is set and selection_rationale is not empty"
+        status: auto
+        priority: must_pass
+
+      # --- ConOps ---
+      - id: MCR-EC-06
+        question: "Is a preliminary Concept of Operations documented?"
+        category: conops
+        evidence: "mission_need.conops_summary is not empty"
+        status: auto
+        priority: should_pass
+
+      # --- Feasibility ---
+      - id: MCR-EC-07
+        question: "Has a feasible system concept been identified?"
+        category: feasibility
+        evidence: "Design converges with positive mass and power margins"
+        status: auto
+        priority: must_pass
+
+      - id: MCR-EC-08
+        question: "Are preliminary cost and schedule estimates within constraints?"
+        category: feasibility
+        evidence: "cost.total_meur <= target_cost_meur (if target set)"
+        status: auto
+        priority: should_pass
+
+      # --- Risk ---
+      - id: MCR-EC-09
+        question: "Have initial technical risks been identified?"
+        category: risk
+        evidence: "risk.total_risks >= 0 (risk agent has executed)"
+        status: auto
+        priority: should_pass
+
+      - id: MCR-EC-10
+        question: "Is the mission concept compatible with debris mitigation requirements?"
+        category: sustainability
+        evidence: "debris.compliance_score >= 50"
+        status: auto
+        priority: should_pass
+
+  phase_a:
+    gate: SRR
+    gate_name: "System Requirements Review"
+    purpose: >
+      Evaluate whether the functional and performance requirements are complete,
+      feasible, and traceable to mission objectives. Confirm readiness to
+      proceed to preliminary design.
+    authority: "Project Manager / Chief Engineer"
+    exit_criteria:
+      - id: SRR-EC-01
+        question: "Are all mission objectives traced to system requirements?"
+        category: traceability
+        evidence: "Every objective has at least one traced_to_requirement"
+        status: auto
+        priority: must_pass
+
+      - id: SRR-EC-02
+        question: "Are system requirements complete, verifiable, and non-conflicting?"
+        category: requirements
+        evidence: "All requirements have verification_method and threshold"
+        status: auto
+        priority: must_pass
+
+      - id: SRR-EC-03
+        question: "Is the requirements compliance matrix populated?"
+        category: verification
+        evidence: "Compliance matrix has >= 80% verified or marginal"
+        status: auto
+        priority: must_pass
+
+      - id: SRR-EC-04
+        question: "Have all engineering positions answered their key questions?"
+        category: positions
+        evidence: "All must_answer questions have position answers"
+        status: auto
+        priority: should_pass
+
+      - id: SRR-EC-05
+        question: "Are cross-position conflicts identified and resolved or accepted?"
+        category: conflicts
+        evidence: "No critical conflicts unresolved"
+        status: auto
+        priority: must_pass
+
+      - id: SRR-EC-06
+        question: "Does the design close within mass, power, and cost budgets?"
+        category: budgets
+        evidence: "systems.mass_margin_percent >= 0 AND systems.power_margin_percent >= 0"
+        status: auto
+        priority: must_pass
+
+      - id: SRR-EC-07
+        question: "Is the Verification and Validation approach defined?"
+        category: verification
+        evidence: "VP document can be generated (compliance pipeline operational)"
+        status: auto
+        priority: should_pass
+
+      - id: SRR-EC-08
+        question: "Are technology readiness levels acceptable for the target phase?"
+        category: technology
+        evidence: "No subsystem below TRL 4 for Phase B entry"
+        status: hybrid
+        priority: should_pass
+
+      - id: SRR-EC-09
+        question: "Has the Systems Engineering Management Plan been baselined?"
+        category: management
+        evidence: "Manual: SEMP exists and is approved"
+        status: manual
+        priority: should_pass
+
+      - id: SRR-EC-10
+        question: "Is the mission sustainable (debris, EOL, casualty risk)?"
+        category: sustainability
+        evidence: "sustainability.score >= 55 AND debris.casualty_compliant == 1"
+        status: auto
+        priority: must_pass
+
+  phase_b1:
+    gate: PDR
+    gate_name: "Preliminary Design Review"
+    purpose: >
+      Evaluate whether the preliminary design meets requirements and can
+      proceed to detailed design. Confirm the design baseline is adequate.
+    authority: "Project Manager / Standing Review Board"
+    exit_criteria:
+      - id: PDR-EC-01
+        question: "Does the preliminary design satisfy all system requirements?"
+        category: design
+        evidence: "All requirements compliant or marginal with plan to close"
+        status: auto
+        priority: must_pass
+
+      - id: PDR-EC-02
+        question: "Are interface requirements defined between all subsystems?"
+        category: interfaces
+        evidence: "Manual: IRD/ICD exists for each external interface"
+        status: manual
+        priority: must_pass
+
+      - id: PDR-EC-03
+        question: "Are all subsystem mass, power, and data margins positive?"
+        category: budgets
+        evidence: "systems.mass_margin_percent >= 10 AND systems.power_margin_percent >= 10"
+        status: auto
+        priority: must_pass
+
+      - id: PDR-EC-04
+        question: "Has equipment been selected for all critical subsystems?"
+        category: equipment
+        evidence: "At least one KB component selected in each subsystem"
+        status: hybrid
+        priority: should_pass
+
+      - id: PDR-EC-05
+        question: "Is the reliability analysis acceptable?"
+        category: reliability
+        evidence: "reliability.mission_reliability >= reliability_target"
+        status: auto
+        priority: must_pass

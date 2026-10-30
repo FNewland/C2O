@@ -1,0 +1,135 @@
+---
+# Ground Segment Software — mission control systems and distributed networks
+# Focused on CubeSat / SmallSat ground station operators
+
+components:
+
+  - id: gs-sw-cosmos
+    name: COSMOS
+    manufacturer: Ball Aerospace
+    category: ground_software
+    mass_kg: 0
+    power_w: 0
+    cost_keur: 0
+    trl: 9
+    performance:
+      type: mission_control
+      standards: [CCSDS]
+      open_source: true
+      license: AGPL-3.0
+      language: Ruby
+      capabilities: [command, telemetry, scripting, limits_monitoring, data_viewer]
+    heritage_missions: [Ball Aerospace missions, many US university CubeSats]
+    notes: >
+      Original open-source command and telemetry system. Mature and
+      battle-tested. Superseded by OpenC3 but still widely deployed.
+
+  - id: gs-sw-openc3
+    name: OpenC3 (COSMOS successor)
+    manufacturer: OpenC3 Inc.
+    category: ground_software
+    mass_kg: 0
+    power_w: 0
+    cost_keur: 0
+    trl: 9
+    performance:
+      type: mission_control
+      standards: [CCSDS]
+      open_source: true
+      license: AGPL-3.0
+      language: Ruby / Python / JavaScript
+      deployment: Docker containers, cloud-native
+      capabilities: [command, telemetry, scripting, limits, calendar, data_extractor]
+    heritage_missions: [continuation of COSMOS user base, growing CubeSat adoption]
+    notes: >
+      Modern rewrite of COSMOS with web-based UI, containerised deployment,
+      and plugin architecture. Free open-source edition plus paid Enterprise
+      edition with support. Excellent documentation and active community.
+
+  - id: gs-sw-yamcs
+    name: Yamcs Mission Control
+    manufacturer: Space Applications Services
+    category: ground_software
+    mass_kg: 0
+    power_w: 0
+    cost_keur: 0
+    trl: 9
+    performance:
+      type: mission_control
+      standards: [CCSDS PUS, XTCE]
+      open_source: true
+      license: AGPL-3.0
+      language: Java
+      deployment: standalone or Docker
+      capabilities: [command, telemetry, archive, displays, scripting, parameter_db]
+    heritage_missions: [ESA (various), JUICE MAPPS, BepiColombo simulator]
+    notes: >
+      ESA-heritage open-source MCS used for both real missions and
+      simulators. Java-based with web UI. Strong CCSDS PUS support.
+      Active development and good European institutional adoption.
+
+  - id: gs-sw-scos2000
+    name: SCOS-2000
+    manufacturer: ESA / Telespazio
+    category: ground_software
+    mass_kg: 0
+    power_w: 0
+    cost_keur: 0
+    trl: 9
+    performance:
+      type: mission_control
+      standards: [CCSDS PUS, ECSS-E-ST-70-41C]
+      open_source: true
+      license: ESA Community Licence
+      language: C++ / Java
+      capabilities: [command, telemetry, mission_planning, flight_procedures]
+    heritage_missions: [Rosetta, Mars Express, Sentinel-1/2/3, LISA Pathfinder]
+    notes: >
+      ESA standard MCS for all ESA missions. Free but requires significant
+      expertise to configure. Overkill for simple CubeSat missions but
+      relevant for institutional operators or ESA-funded projects.
+
+  - id: gs-sw-bright-gssc
+    name: Bright Ascension GSSC (Generation-S)
+    manufacturer: Bright Ascension
+    category: ground_software
+    mass_kg: 0
+    power_w: 0
+    cost_keur: 50
+    trl: 9
+    performance:
+      type: mission_control
+      standards: [CCSDS PUS]
+      cloud: true
+      saas: true
+      capabilities: [command, telemetry, pass_scheduling, fleet_management]
+    heritage_missions: [Lacuna Space, Spire, multiple UK CubeSat missions]
+    notes: >
+      Cloud-native MCS designed specifically for CubeSats and SmallSats.
+      SaaS model reduces upfront cost. Integrates with Bright Ascension
+      flight software (GenerationOne OBCS). Good for commercial CubeSat
+      operators wanting managed ground software.
+
+  - id: gs-sw-satnogs
+    name: SatNOGS Network
+    manufacturer: Libre Space Foundation
+    category: ground_software
+    mass_kg: 0
+    power_w: 0
+    cost_keur: 0
+    trl: 8
+    performance:
+      type: distributed_ground_network
+      standards: [SatNOGS DB, community standard]
+      open_source: true
+      license: AGPL-3.0
+      station_count: 300+
+      global_coverage: true
+      capabilities: [observation_scheduling, waterfall_recording, telemetry_decoding, data_aggregation]
+    heritage_missions: [UPSat, QB50, FOSSASAT, hundreds of amateur CubeSats]
+    notes: >
+      Open-source distributed network of ground stations worldwide. Any
+      CubeSat operator can schedule observations on community stations.
+      Excellent for early orbit phase when you need global coverage but
+      only have one station. Also provides a platform for building your
+      own SatNOGS-compatible station.

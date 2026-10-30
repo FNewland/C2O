@@ -1,0 +1,69 @@
+---
+# Ground Timing and Frequency Reference Equipment
+# Focused on CubeSat / SmallSat ground station operators
+
+components:
+
+  - id: gs-time-gpsdo
+    name: GPS-Disciplined Oscillator
+    manufacturer: Microsemi (Microchip) / Trimble
+    category: ground_timing
+    mass_kg: 2
+    power_w: 15
+    cost_keur: 3
+    trl: 9
+    performance:
+      type: frequency_reference
+      output_frequency_mhz: 10
+      accuracy_ppb: 0.01
+      stability_1s: 1.0e-12
+      time_accuracy_ns: 50
+      gps_disciplined: true
+    heritage_missions: [Standard in all professional ground stations]
+    notes: >
+      Essential for coherent Doppler tracking and ranging. GPS-disciplined
+      10 MHz reference locks a high-quality OCXO to GPS timing. Microsemi
+      SyncServer S600/S650 or Trimble Thunderbolt are common choices.
+      Required for CCSDS-compliant ranging.
+
+  - id: gs-time-rubidium
+    name: Rubidium Frequency Standard
+    manufacturer: Stanford Research Systems (SRS) / Microsemi
+    category: ground_timing
+    mass_kg: 4
+    power_w: 40
+    cost_keur: 8
+    trl: 9
+    performance:
+      type: frequency_reference
+      output_frequency_mhz: 10
+      accuracy_ppb: 0.001
+      stability_1s: 2.0e-11
+      stability_100s: 3.0e-13
+      holdover_drift_per_day_ns: 500
+    heritage_missions: [ESA ESTRACK, KSAT, DSN (as backup)]
+    notes: >
+      Higher stability than GPSDO, especially over short intervals.
+      Maintains accuracy during GPS signal outages (holdover mode).
+      Used in professional ground stations where precise Doppler and
+      ranging measurements are critical. Often GPS-disciplined as well.
+
+  - id: gs-time-ntp
+    name: NTP Time Server (Stratum 1)
+    manufacturer: Meinberg / Galleon Systems
+    category: ground_timing
+    mass_kg: 1
+    power_w: 10
+    cost_keur: 1
+    trl: 9
+    performance:
+      type: time_distribution
+      protocol: NTP / PTP (IEEE 1588)
+      accuracy_ms: 1
+      gps_input: true
+    heritage_missions: [Lightweight CubeSat operations, university stations]
+    notes: >
+      Distributes GPS-derived time to MCS servers and workstations via
+      NTP. Sufficient accuracy for most CubeSat operations where precise
+      ranging is not required. Low-cost Raspberry Pi + GPS HAT can serve
+      as a basic Stratum-1 NTP server for ~$100.

@@ -1,0 +1,272 @@
+# ECSS Margin Philosophy Knowledge Base
+# Sources: ECSS-M-ST-10C (Space project management), ECSS-E-ST-10-02C,
+#          ECSS-E-HB-10-02A (Verification guidelines), ECSS Handbooks
+# Margins decrease as design maturity increases through project phases
+
+margin_philosophy:
+  description: >
+    ECSS defines design margins as the difference between the maximum expected
+    value of a parameter and the design value. Margins are applied to account
+    for uncertainties in the design process and are progressively reduced as
+    the design matures and is verified by analysis and test.
+
+  design_phases:
+    - id: phase_0_a
+      name: Phase 0/A - Mission Analysis / Feasibility
+      ecss_designation: "Phase 0/A"
+      description: Concept exploration and feasibility study
+      review_milestone: MDR/PRR
+
+    - id: phase_b1
+      name: Phase B1 - Preliminary Definition
+      ecss_designation: "Phase B1"
+      description: Preliminary system design
+      review_milestone: SRR
+
+    - id: phase_b2
+      name: Phase B2 - Detailed Definition
+      ecss_designation: "Phase B2"
+      description: Detailed design and technology maturation
+      review_milestone: PDR
+
+    - id: phase_cd
+      name: Phase C/D - Implementation
+      ecss_designation: "Phase C/D"
+      description: Detailed design, manufacturing, integration and verification
+      review_milestone: CDR
+
+    - id: phase_e
+      name: Phase E - Operations
+      ecss_designation: "Phase E"
+      description: In-orbit operations with as-built/measured values
+      review_milestone: FRR/LRR
+
+  # === Mass Margins ===
+  mass_margins:
+    description: >
+      System mass margin (also called maturity margin) applied at equipment,
+      subsystem, and system levels. Margin is applied on top of current best
+      estimate (CBE).
+    reference: ECSS-E-HB-10-02A Section 5.2
+
+    by_phase:
+      phase_0_a:
+        equipment_margin_percent: 20
+        system_margin_percent: 20
+        total_typical_percent: 44  # compounded
+        notes: Large uncertainty; many items estimated from parametric models
+
+      phase_b1:
+        equipment_margin_percent: 10
+        system_margin_percent: 20
+        total_typical_percent: 32
+        notes: Preliminary designs available; some heritage data
+
+      phase_b2:
+        equipment_margin_percent: 5
+        system_margin_percent: 15
+        total_typical_percent: 21
+        notes: Detailed designs; breadboard test data available
+
+      phase_cd:
+        equipment_margin_percent: 3
+        system_margin_percent: 10
+        total_typical_percent: 13
+        notes: Engineering/qualification model data available
+
+      phase_e:
+        equipment_margin_percent: 0
+        system_margin_percent: 5
+        total_typical_percent: 5
+        notes: As-built measured masses; residual system margin only
+
+    by_heritage:
+      off_the_shelf:
+        margin_percent: 3
+        notes: Flight-proven hardware with known mass
+      modified:
+        margin_percent: 10
+        notes: Existing design with modifications
+      new_development:
+        margin_percent: 20
+        notes: New design without heritage
+
+  # === Power Margins ===
+  power_margins:
+    description: >
+      Power budget margins account for uncertainties in power consumption
+      estimates and solar array degradation. Applied to both generation
+      and consumption sides.
+    reference: ECSS-E-ST-20C
+
+    by_phase:
+      phase_0_a:
+        equipment_margin_percent: 20
+        system_margin_percent: 20
+        solar_array_degradation_eol: 0.77
+        notes: Assume worst-case degradation over mission life
+
+      phase_b1:
+        equipment_margin_percent: 10
+        system_margin_percent: 20
+        solar_array_degradation_eol: 0.77
+
+      phase_b2:
+        equipment_margin_percent: 5
+        system_margin_percent: 15
+        solar_array_degradation_eol: 0.80
+
+      phase_cd:
+        equipment_margin_percent: 5
+        system_margin_percent: 10
+        solar_array_degradation_eol: 0.82
+
+      phase_e:
+        equipment_margin_percent: 0
+        system_margin_percent: 5
+        solar_array_degradation_eol: null  # measured in-orbit
+        notes: Use telemetry-derived values
+
+    operational_modes:
+      - mode: safe
+        description: Minimum power configuration for survival
+        margin_percent: 10
+        notes: Must maintain positive power balance in worst case eclipse
+
+      - mode: nominal
+        description: Standard science/operations mode
+        margin_percent: 15
+
+      - mode: peak
+        description: Short-duration high-power events (e.g., downlink, manoeuvre)
+        margin_percent: 10
+        notes: May draw from battery; time-limited
+
+  # === Data Rate / Link Budget Margins ===
+  link_margins:
+    description: >
+      Communication link budget margins account for atmospheric losses,
+      pointing errors, implementation losses, and other uncertainties.
+    reference: ECSS-E-ST-50-05C
+
+    by_phase:
+      phase_0_a:
+        system_margin_db: 6.0
+      phase_b1:
+        system_margin_db: 4.0
+      phase_b2:
+        system_margin_db: 3.0
+      phase_cd:
+        system_margin_db: 3.0
+      phase_e:
+        system_margin_db: 3.0
+        notes: Minimum operational margin
+
+    implementation_losses:
+      modulator_loss_db: 0.5
+      filter_loss_db: 0.3
+      cable_loss_db: 0.5
+      pointing_loss_db: 1.0
+      polarisation_loss_db: 0.3
+      notes: Added on top of system margin
+
+  # === Thermal Margins ===
+  thermal_margins:
+    description: >
+      Temperature margins between predicted extremes and qualification/acceptance limits.
+    reference: ECSS-E-ST-31C
+
+    qualification:
+      hot_margin_k: 15
+      cold_margin_k: 15
+      notes: Margin between predicted extreme and qualification temperature
+
+    acceptance:
+      hot_margin_k: 10
+      cold_margin_k: 10
+      notes: Margin between predicted extreme and acceptance temperature
+
+    operating:
+      hot_margin_k: 5
+      cold_margin_k: 5
+      notes: Margin between predicted extreme and operating limit
+
+  # === Propulsion / Delta-V Margins ===
+  propulsion_margins:
+    description: >
+      Delta-V budget margins account for navigation errors, orbit
+      determination uncertainties, and off-nominal dispersions.
+    reference: ECSS-E-ST-35C
+
+    by_phase:
+      phase_0_a:
+        deterministic_margin_percent: 10
+        stochastic_margin_sigma: 3.0
+        system_margin_percent: 25
+        notes: Large dispersion allowance in early phases
+
+      phase_b1:
+        deterministic_margin_percent: 5
+        stochastic_margin_sigma: 3.0
+        system_margin_percent: 15
+
+      phase_b2:
+        deterministic_margin_percent: 3
+        stochastic_margin_sigma: 3.0
+        system_margin_percent: 10
+
+      phase_cd:
+        deterministic_margin_percent: 2
+        stochastic_margin_sigma: 3.0
+        system_margin_percent: 5
+
+    manoeuvre_types:
+      orbit_insertion:
+        margin_percent: 5
+      station_keeping:
+        margin_percent: 10
+        notes: Per year, accounts for anomalous events
+      deorbit:
+        margin_percent: 15
+        notes: Higher margin for end-of-life reliability
+      collision_avoidance:
+        annual_delta_v_ms: 5.0
+        notes: Typical LEO allocation for conjunction avoidance
+
+  # === Data Storage Margins ===
+  data_storage_margins:
+    description: Onboard data storage margin philosophy
+    by_phase:
+      phase_0_a:
+        margin_percent: 100
+        notes: Double the estimated storage requirement
+      phase_b1:
+        margin_percent: 50
+      phase_b2:
+        margin_percent: 30
+      phase_cd:
+        margin_percent: 20
+
+  # === Schedule / Cost Margins ===
+  programmatic_margins:
+    description: >
+      Schedule and cost margins for programmatic risk management.
+      Not strictly ECSS-mandated but aligned with ECSS-M-ST-10C.
+
+    schedule:
+      phase_0_a:
+        margin_percent: 30
+      phase_b:
+        margin_percent: 20
+      phase_cd:
+        margin_percent: 15
+      notes: Applied to critical path duration
+
+    cost:
+      phase_0_a:
+        margin_percent: 30
+      phase_b:
+        margin_percent: 20
+      phase_cd:
+        margin_percent: 10
+      notes: ESA typically holds cost margin at programme level

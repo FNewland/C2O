@@ -1,0 +1,147 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "docs/oer/chapters/18_operations_and_fdir.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "chapter-18-mission-operations-and-fdir",
+   "en_hash": "b342a0b139664be9",
+   "fr_hash": "a1928d144b52c739"
+  },
+  {
+   "id": "chapter-18-mission-operations-and-fdir/learning-objectives",
+   "en_hash": "c1ecd4e1e6ff0366",
+   "fr_hash": "66e0de4cf128aaab"
+  },
+  {
+   "id": "chapter-18-mission-operations-and-fdir/18-1-the-conops-as-an-operations-document",
+   "en_hash": "241221851144ab5a",
+   "fr_hash": "6c7da579102fee01"
+  },
+  {
+   "id": "chapter-18-mission-operations-and-fdir/18-1-the-conops-as-an-operations-document/18-1-1-conops-structure",
+   "en_hash": "5872706e6ec2a3bf",
+   "fr_hash": "4b985de69c58d85f"
+  },
+  {
+   "id": "chapter-18-mission-operations-and-fdir/18-1-the-conops-as-an-operations-document/18-1-2-autonomy-where-the-line-falls",
+   "en_hash": "96f79439d9921033",
+   "fr_hash": "9382f381e567da97"
+  },
+  {
+   "id": "chapter-18-mission-operations-and-fdir/18-2-operational-modes",
+   "en_hash": "655415462cb58280",
+   "fr_hash": "4b46ce70191b8343"
+  },
+  {
+   "id": "chapter-18-mission-operations-and-fdir/18-2-operational-modes/18-2-1-mode-table-for-the-3u-eo-cubesat",
+   "en_hash": "513662ae7c3160b8",
+   "fr_hash": "b53186ee68f80710"
+  },
+  {
+   "id": "chapter-18-mission-operations-and-fdir/18-2-operational-modes/18-2-2-mode-transition-state-machine",
+   "en_hash": "99aa63c368d6ffed",
+   "fr_hash": "d31ffd25a9d894e3"
+  },
+  {
+   "id": "chapter-18-mission-operations-and-fdir/18-3-fdir-architecture",
+   "en_hash": "a612d3a1bf9385e7",
+   "fr_hash": "b670bdba50de5ae2"
+  },
+  {
+   "id": "chapter-18-mission-operations-and-fdir/18-3-fdir-architecture/18-3-1-why-fdir-is-critical-for-cubesats",
+   "en_hash": "9865daad6540fed3",
+   "fr_hash": "ca61c6692f8d0ed6"
+  },
+  {
+   "id": "chapter-18-mission-operations-and-fdir/18-3-fdir-architecture/18-3-2-fdir-hierarchy",
+   "en_hash": "cd4e8ea4e4cd8917",
+   "fr_hash": "9cea5e2c0f0e9279"
+  },
+  {
+   "id": "chapter-18-mission-operations-and-fdir/18-3-fdir-architecture/18-3-3-fdir-decision-flow",
+   "en_hash": "c04dfc29716feb6b",
+   "fr_hash": "ec59375f40584510"
+  },
+  {
+   "id": "chapter-18-mission-operations-and-fdir/18-3-fdir-architecture/18-3-4-common-cubesat-fdir-rules",
+   "en_hash": "4eab261de196d8ce",
+   "fr_hash": "58431136bb9afc9f"
+  },
+  {
+   "id": "chapter-18-mission-operations-and-fdir/18-3-fdir-architecture/18-3-5-key-design-principles",
+   "en_hash": "47c2ad94b31d510d",
+   "fr_hash": "6515d2cca21ebe62"
+  },
+  {
+   "id": "chapter-18-mission-operations-and-fdir/18-4-operational-procedures",
+   "en_hash": "f7f9e54e6bbded5b",
+   "fr_hash": "e113e1b3228d09d6"
+  },
+  {
+   "id": "chapter-18-mission-operations-and-fdir/18-4-operational-procedures/18-4-1-procedure-types",
+   "en_hash": "c3347e95680aa8fd",
+   "fr_hash": "4476e893be5d0a96"
+  },
+  {
+   "id": "chapter-18-mission-operations-and-fdir/18-4-operational-procedures/18-4-2-procedure-structure-ecss-e-st-70-32c",
+   "en_hash": "7b25cfef1505b90a",
+   "fr_hash": "9edf075ea5d26a7e"
+  },
+  {
+   "id": "chapter-18-mission-operations-and-fdir/18-4-operational-procedures/18-4-3-example-science-observation-procedure-for-eosat-3u",
+   "en_hash": "4c6531061ae03832",
+   "fr_hash": "80793c0b68f71b57"
+  },
+  {
+   "id": "chapter-18-mission-operations-and-fdir/18-5-anomaly-response-process",
+   "en_hash": "20ae42a2b1149041",
+   "fr_hash": "ad04c369e53cd267"
+  },
+  {
+   "id": "chapter-18-mission-operations-and-fdir/18-5-anomaly-response-process/18-5-1-anomaly-escalation-levels",
+   "en_hash": "6aa36c673ab48ef2",
+   "fr_hash": "00053c067ebd1348"
+  },
+  {
+   "id": "chapter-18-mission-operations-and-fdir/18-5-anomaly-response-process/18-5-2-anomaly-response-workflow",
+   "en_hash": "2b536633b67c16e9",
+   "fr_hash": "16875d95063ccbac"
+  },
+  {
+   "id": "chapter-18-mission-operations-and-fdir/18-5-anomaly-response-process/18-5-3-anomaly-report-fields",
+   "en_hash": "2e5c9ddc1df47a59",
+   "fr_hash": "3aa76ecd39fec8d8"
+  },
+  {
+   "id": "chapter-18-mission-operations-and-fdir/18-5-anomaly-response-process/18-5-4-real-mission-example-kepler-reaction-wheel-failure",
+   "en_hash": "409bd2da2359219a",
+   "fr_hash": "9faa25c0c23ef01c"
+  },
+  {
+   "id": "chapter-18-mission-operations-and-fdir/18-6-returning-to-unisat-1-modes-and-fdir-for-a-1u-demonstrator",
+   "en_hash": "d40864f29941b366",
+   "fr_hash": "0fbc4e811b52b7d2"
+  },
+  {
+   "id": "chapter-18-mission-operations-and-fdir/summary",
+   "en_hash": "5f3719f914c0e9c2",
+   "fr_hash": "ded38f804d2558f6"
+  },
+  {
+   "id": "chapter-18-mission-operations-and-fdir/problems",
+   "en_hash": "fa0220a542ecbb98",
+   "fr_hash": "6df295800c4a5f89"
+  },
+  {
+   "id": "chapter-18-mission-operations-and-fdir/references",
+   "en_hash": "493b56e9c362e934",
+   "fr_hash": "45047fdde1cf8df2"
+  }
+ ],
+ "en_commit": "3ea7113"
+}

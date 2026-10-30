@@ -1,0 +1,152 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "docs/oer/chapters/10_aocs.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "chapter-10-attitude-and-orbit-control",
+   "en_hash": "aa0e5c255cac0f2f",
+   "fr_hash": "aa3084c54bef0009"
+  },
+  {
+   "id": "chapter-10-attitude-and-orbit-control/learning-objectives",
+   "en_hash": "5f15a5b410b082ef",
+   "fr_hash": "649e3d31625f3bb9"
+  },
+  {
+   "id": "chapter-10-attitude-and-orbit-control/10-1-aocs-fundamentals",
+   "en_hash": "a776055705f997dc",
+   "fr_hash": "d881b8a6a914e5b3"
+  },
+  {
+   "id": "chapter-10-attitude-and-orbit-control/10-1-aocs-fundamentals/10-1-1-attitude-sensors-how-they-work",
+   "en_hash": "056471b31bb641ff",
+   "fr_hash": "ddfb37aad32b61b9"
+  },
+  {
+   "id": "chapter-10-attitude-and-orbit-control/10-1-aocs-fundamentals/10-1-1-attitude-sensors-how-they-work/star-trackers",
+   "en_hash": "bd609204948705fd",
+   "fr_hash": "c2e1291df760785d"
+  },
+  {
+   "id": "chapter-10-attitude-and-orbit-control/10-1-aocs-fundamentals/10-1-1-attitude-sensors-how-they-work/sun-sensors",
+   "en_hash": "f417512d73cbb30b",
+   "fr_hash": "28a65a5da5ef7cf6"
+  },
+  {
+   "id": "chapter-10-attitude-and-orbit-control/10-1-aocs-fundamentals/10-1-1-attitude-sensors-how-they-work/magnetometers",
+   "en_hash": "dc040e10ab73280d",
+   "fr_hash": "98e004e4487d41ac"
+  },
+  {
+   "id": "chapter-10-attitude-and-orbit-control/10-1-aocs-fundamentals/10-1-1-attitude-sensors-how-they-work/gyroscopes-rate-sensors",
+   "en_hash": "12ff1145c8533921",
+   "fr_hash": "2e549f966971e09c"
+  },
+  {
+   "id": "chapter-10-attitude-and-orbit-control/10-1-aocs-fundamentals/10-1-1-attitude-sensors-how-they-work/gps-receivers-for-orbit-determination",
+   "en_hash": "b1d434334a381d08",
+   "fr_hash": "c89142a7d51a25e9"
+  },
+  {
+   "id": "chapter-10-attitude-and-orbit-control/10-1-aocs-fundamentals/10-1-2-aocs-architecture-selection-by-pointing-requirement",
+   "en_hash": "e72439608a35d959",
+   "fr_hash": "b60a9c08d0158ba9"
+  },
+  {
+   "id": "chapter-10-attitude-and-orbit-control/10-2-disturbance-torques",
+   "en_hash": "31d81f10dd19b3a5",
+   "fr_hash": "8999803a8c39cfe0"
+  },
+  {
+   "id": "chapter-10-attitude-and-orbit-control/10-2-disturbance-torques/10-2-1-gravity-gradient-torque",
+   "en_hash": "8d0324da37dc0fec",
+   "fr_hash": "1a8c0d6ac3e5ab10"
+  },
+  {
+   "id": "chapter-10-attitude-and-orbit-control/10-2-disturbance-torques/10-2-2-aerodynamic-torque",
+   "en_hash": "febf9d72df50247a",
+   "fr_hash": "403a358b7396796c"
+  },
+  {
+   "id": "chapter-10-attitude-and-orbit-control/10-2-disturbance-torques/10-2-3-solar-radiation-pressure-torque",
+   "en_hash": "c86fd597ce55e9c8",
+   "fr_hash": "4a5a5edcfab0c894"
+  },
+  {
+   "id": "chapter-10-attitude-and-orbit-control/10-2-disturbance-torques/10-2-4-residual-magnetic-dipole-torque",
+   "en_hash": "8a349976d28b2d7f",
+   "fr_hash": "cad7e1288e473fd9"
+  },
+  {
+   "id": "chapter-10-attitude-and-orbit-control/10-3-attitude-actuators-physics-and-sizing",
+   "en_hash": "aff0d8d96d6424ed",
+   "fr_hash": "f98a20ef45c2da96"
+  },
+  {
+   "id": "chapter-10-attitude-and-orbit-control/10-3-attitude-actuators-physics-and-sizing/10-3-1-reaction-wheels-physics-of-angular-momentum-storage",
+   "en_hash": "7a8aeea3d6b1f1b9",
+   "fr_hash": "0434352d2550b216"
+  },
+  {
+   "id": "chapter-10-attitude-and-orbit-control/10-3-attitude-actuators-physics-and-sizing/10-3-2-reaction-wheel-configurations",
+   "en_hash": "2bffc0300c5f3fe3",
+   "fr_hash": "cd970bd99672c76f"
+  },
+  {
+   "id": "chapter-10-attitude-and-orbit-control/10-3-attitude-actuators-physics-and-sizing/10-3-3-magnetorquers-physics-of-magnetic-torque-generation",
+   "en_hash": "18c76a83214c505a",
+   "fr_hash": "180a4091c0b4dd59"
+  },
+  {
+   "id": "chapter-10-attitude-and-orbit-control/10-3-attitude-actuators-physics-and-sizing/10-3-4-control-moment-gyroscopes-vs-reaction-wheels",
+   "en_hash": "23830fc41ffc7bc2",
+   "fr_hash": "71876a584b964a17"
+  },
+  {
+   "id": "chapter-10-attitude-and-orbit-control/10-4-pointing-error-budget",
+   "en_hash": "6cea1e1cdd54f3ee",
+   "fr_hash": "e58b16c5a8375905"
+  },
+  {
+   "id": "chapter-10-attitude-and-orbit-control/10-4-pointing-error-budget/10-4-1-error-source-definitions-and-physics",
+   "en_hash": "6c8cd895f7cee387",
+   "fr_hash": "93987035f554a546"
+  },
+  {
+   "id": "chapter-10-attitude-and-orbit-control/10-5-momentum-management-and-desaturation",
+   "en_hash": "ed1a17b2515f1c0a",
+   "fr_hash": "8f84dd77c288789a"
+  },
+  {
+   "id": "chapter-10-attitude-and-orbit-control/10-5-momentum-management-and-desaturation/10-5-1-wheel-configurations-3-1-redundancy",
+   "en_hash": "5c9a24ae3a767595",
+   "fr_hash": "ff3ac00ed744a4a8"
+  },
+  {
+   "id": "chapter-10-attitude-and-orbit-control/10-6-worked-example-unisat-1-passive-magnetic-stabilisation",
+   "en_hash": "a50fc40836efea84",
+   "fr_hash": "2d137f4ba1ecdb71"
+  },
+  {
+   "id": "chapter-10-attitude-and-orbit-control/summary",
+   "en_hash": "e545fce7740e905e",
+   "fr_hash": "00f724b7cf7a2e99"
+  },
+  {
+   "id": "chapter-10-attitude-and-orbit-control/problems",
+   "en_hash": "afb900fb56eb0c39",
+   "fr_hash": "24120c8936e7e48c"
+  },
+  {
+   "id": "chapter-10-attitude-and-orbit-control/references",
+   "en_hash": "6b471835c2e391a6",
+   "fr_hash": "2afc44de1dcceaa5"
+  }
+ ],
+ "en_commit": "3ea7113"
+}

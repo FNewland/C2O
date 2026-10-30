@@ -1,0 +1,192 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "docs/oer/chapters/12_structures_propulsion_obdh.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "chapter-12-structures-propulsion-and-on-board-data-handling",
+   "en_hash": "1289286b0fe18753",
+   "fr_hash": "1bd9d4e050983bed"
+  },
+  {
+   "id": "chapter-12-structures-propulsion-and-on-board-data-handling/learning-objectives",
+   "en_hash": "ad154df2faf70329",
+   "fr_hash": "858c9ebfd906c97c"
+  },
+  {
+   "id": "chapter-12-structures-propulsion-and-on-board-data-handling/12-1-cubesat-structure-and-cds-compliance",
+   "en_hash": "9901bdd74b94821c",
+   "fr_hash": "23364a7bafad6b08"
+  },
+  {
+   "id": "chapter-12-structures-propulsion-and-on-board-data-handling/12-1-cubesat-structure-and-cds-compliance/12-1-1-cds-dimensional-specifications",
+   "en_hash": "d7e2bdc87396c9d1",
+   "fr_hash": "def0286eaca5fc22"
+  },
+  {
+   "id": "chapter-12-structures-propulsion-and-on-board-data-handling/12-1-cubesat-structure-and-cds-compliance/12-1-2-structural-materials",
+   "en_hash": "221310f93fb08aee",
+   "fr_hash": "38e526206c219db8"
+  },
+  {
+   "id": "chapter-12-structures-propulsion-and-on-board-data-handling/12-1-cubesat-structure-and-cds-compliance/12-1-3-key-cds-requirements",
+   "en_hash": "3a8a66ce4c2cead1",
+   "fr_hash": "61464d275378e352"
+  },
+  {
+   "id": "chapter-12-structures-propulsion-and-on-board-data-handling/12-1-cubesat-structure-and-cds-compliance/12-1-4-pc-104-stack-architecture",
+   "en_hash": "fc5c5bfae603ae36",
+   "fr_hash": "c21f528bb27b054c"
+  },
+  {
+   "id": "chapter-12-structures-propulsion-and-on-board-data-handling/12-1-cubesat-structure-and-cds-compliance/12-1-5-launch-load-environment",
+   "en_hash": "07a1d4819cf4aa43",
+   "fr_hash": "78f7d8f911c610cc"
+  },
+  {
+   "id": "chapter-12-structures-propulsion-and-on-board-data-handling/12-1-cubesat-structure-and-cds-compliance/12-1-6-structural-margin-of-safety",
+   "en_hash": "f08ee680d170b098",
+   "fr_hash": "5e116c5c07103ee3"
+  },
+  {
+   "id": "chapter-12-structures-propulsion-and-on-board-data-handling/12-1-cubesat-structure-and-cds-compliance/12-1-7-fundamental-frequency",
+   "en_hash": "025522308d682e4a",
+   "fr_hash": "779167f049477088"
+  },
+  {
+   "id": "chapter-12-structures-propulsion-and-on-board-data-handling/12-2-propulsion-system-design",
+   "en_hash": "b9c942e723d0ccd4",
+   "fr_hash": "c0e3b25bc6419017"
+  },
+  {
+   "id": "chapter-12-structures-propulsion-and-on-board-data-handling/12-2-propulsion-system-design/12-2-1-when-propulsion-is-required",
+   "en_hash": "302578877ad010f5",
+   "fr_hash": "7e662fa4732ceb67"
+  },
+  {
+   "id": "chapter-12-structures-propulsion-and-on-board-data-handling/12-2-propulsion-system-design/12-2-2-the-tsiolkovsky-rocket-equation-physics",
+   "en_hash": "dda6eea8910a9242",
+   "fr_hash": "dd46042e505dc34e"
+  },
+  {
+   "id": "chapter-12-structures-propulsion-and-on-board-data-handling/12-2-propulsion-system-design/12-2-3-cubesat-propulsion-technologies-physics-and-comparison",
+   "en_hash": "0013a809e5d1caa2",
+   "fr_hash": "9f9fdc94130c82f8"
+  },
+  {
+   "id": "chapter-12-structures-propulsion-and-on-board-data-handling/12-2-propulsion-system-design/12-2-3-cubesat-propulsion-technologies-physics-and-comparison/cold-gas-propulsion",
+   "en_hash": "5e6cf5b830af038b",
+   "fr_hash": "9834afe07d11138d"
+  },
+  {
+   "id": "chapter-12-structures-propulsion-and-on-board-data-handling/12-2-propulsion-system-design/12-2-3-cubesat-propulsion-technologies-physics-and-comparison/resistojet-warm-gas",
+   "en_hash": "1cdaeb6df2ed2f42",
+   "fr_hash": "7916720c6a489b17"
+  },
+  {
+   "id": "chapter-12-structures-propulsion-and-on-board-data-handling/12-2-propulsion-system-design/12-2-3-cubesat-propulsion-technologies-physics-and-comparison/green-monopropellant",
+   "en_hash": "0ae77749b534e174",
+   "fr_hash": "a9578cab0d840a61"
+  },
+  {
+   "id": "chapter-12-structures-propulsion-and-on-board-data-handling/12-2-propulsion-system-design/12-2-3-cubesat-propulsion-technologies-physics-and-comparison/electric-propulsion-electrospray-feep",
+   "en_hash": "f1f5b85feda6a338",
+   "fr_hash": "a92a0fe235da590a"
+  },
+  {
+   "id": "chapter-12-structures-propulsion-and-on-board-data-handling/12-2-propulsion-system-design/12-2-3-cubesat-propulsion-technologies-physics-and-comparison/electric-propulsion-hall-effect-thruster",
+   "en_hash": "819370172fd37066",
+   "fr_hash": "7863bf0cf2e9cdf5"
+  },
+  {
+   "id": "chapter-12-structures-propulsion-and-on-board-data-handling/12-2-propulsion-system-design/12-2-4-no-propulsion-passive-deorbit-strategies",
+   "en_hash": "c2069f9be99a65c9",
+   "fr_hash": "232bd1ead0d8470b"
+  },
+  {
+   "id": "chapter-12-structures-propulsion-and-on-board-data-handling/12-2-propulsion-system-design/12-2-5-propulsion-system-comparison",
+   "en_hash": "f09b9f422c4803c7",
+   "fr_hash": "5f3fdf26ebcbc2e5"
+  },
+  {
+   "id": "chapter-12-structures-propulsion-and-on-board-data-handling/12-3-on-board-data-handling",
+   "en_hash": "a6732571d85e0c51",
+   "fr_hash": "f546fc9522fab24b"
+  },
+  {
+   "id": "chapter-12-structures-propulsion-and-on-board-data-handling/12-3-on-board-data-handling/12-3-1-obc-architecture-processor-selection",
+   "en_hash": "80dfbe1fd3b867f7",
+   "fr_hash": "de1424e68e14402e"
+  },
+  {
+   "id": "chapter-12-structures-propulsion-and-on-board-data-handling/12-3-on-board-data-handling/12-3-2-operating-system-and-radiation-effects",
+   "en_hash": "6412ac0d0360f155",
+   "fr_hash": "d985dae531156537"
+  },
+  {
+   "id": "chapter-12-structures-propulsion-and-on-board-data-handling/12-3-on-board-data-handling/12-3-3-data-storage-sizing",
+   "en_hash": "f8c23309e82b6138",
+   "fr_hash": "e9c7d726bfad2f3a"
+  },
+  {
+   "id": "chapter-12-structures-propulsion-and-on-board-data-handling/12-3-on-board-data-handling/12-3-4-flight-software-functions",
+   "en_hash": "b69a765ebd33ab75",
+   "fr_hash": "c52a50e3917beb5f"
+  },
+  {
+   "id": "chapter-12-structures-propulsion-and-on-board-data-handling/12-4-from-sizing-to-equipment-selecting-components",
+   "en_hash": "c7447b0e30d64393",
+   "fr_hash": "10df0b37a5fccd3c"
+  },
+  {
+   "id": "chapter-12-structures-propulsion-and-on-board-data-handling/12-5-budget-closure-check",
+   "en_hash": "2dc28abf9694cb2b",
+   "fr_hash": "990f613c8b60693b"
+  },
+  {
+   "id": "chapter-12-structures-propulsion-and-on-board-data-handling/12-5-budget-closure-check/12-5-1-method",
+   "en_hash": "abbce34f425b483a",
+   "fr_hash": "e7e47b6b8481ab89"
+  },
+  {
+   "id": "chapter-12-structures-propulsion-and-on-board-data-handling/12-5-budget-closure-check/12-5-2-worked-example-eosat-3u-equipment-list",
+   "en_hash": "df9123e83e31f771",
+   "fr_hash": "90d3c8fd48964f21"
+  },
+  {
+   "id": "chapter-12-structures-propulsion-and-on-board-data-handling/12-5-budget-closure-check/12-5-3-worked-example-eosat-3u-closure-table",
+   "en_hash": "e176dd3d83e1f936",
+   "fr_hash": "23e4daefb2aecce3"
+  },
+  {
+   "id": "chapter-12-structures-propulsion-and-on-board-data-handling/12-5-budget-closure-check/12-5-4-if-a-budget-does-not-close",
+   "en_hash": "5b9d70578852c753",
+   "fr_hash": "531aae100280ed73"
+  },
+  {
+   "id": "chapter-12-structures-propulsion-and-on-board-data-handling/12-6-returning-to-unisat-1-structure-obdh-and-equipment-list",
+   "en_hash": "1ff9c15545403bfe",
+   "fr_hash": "e0cfb384dddbdf73"
+  },
+  {
+   "id": "chapter-12-structures-propulsion-and-on-board-data-handling/summary",
+   "en_hash": "33f5de7809185640",
+   "fr_hash": "83a7d0d845e5edc3"
+  },
+  {
+   "id": "chapter-12-structures-propulsion-and-on-board-data-handling/problems",
+   "en_hash": "e7281412b47e1554",
+   "fr_hash": "76588d30b898646c"
+  },
+  {
+   "id": "chapter-12-structures-propulsion-and-on-board-data-handling/references",
+   "en_hash": "32a7606099204e68",
+   "fr_hash": "77e3ac8e36a14a68"
+  }
+ ],
+ "en_commit": "3ea7113"
+}

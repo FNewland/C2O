@@ -1,0 +1,167 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "docs/oer/chapters/09_power_and_thermal.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "part-ii-subsystem-design",
+   "en_hash": "c834b49a8db4d23e",
+   "fr_hash": "561ae81f0e779d36"
+  },
+  {
+   "id": "chapter-9-electrical-power-and-thermal-control",
+   "en_hash": "38c4d33a3b05d43a",
+   "fr_hash": "b0e609766498e1e3"
+  },
+  {
+   "id": "chapter-9-electrical-power-and-thermal-control/learning-objectives",
+   "en_hash": "b9ca60a5f8078c3f",
+   "fr_hash": "c95bd2f8aad0375c"
+  },
+  {
+   "id": "chapter-9-electrical-power-and-thermal-control/9-1-electrical-power-system-architecture",
+   "en_hash": "be35f402c235da61",
+   "fr_hash": "ac0617def8f585e0"
+  },
+  {
+   "id": "chapter-9-electrical-power-and-thermal-control/9-1-electrical-power-system-architecture/9-1-1-solar-cell-physics",
+   "en_hash": "ced323fdb6f88fef",
+   "fr_hash": "a73fd8b53bf6cc87"
+  },
+  {
+   "id": "chapter-9-electrical-power-and-thermal-control/9-1-electrical-power-system-architecture/9-1-2-body-mounted-vs-deployable-solar-arrays",
+   "en_hash": "39d0faab8b43da7b",
+   "fr_hash": "d558c71b128c3108"
+  },
+  {
+   "id": "chapter-9-electrical-power-and-thermal-control/9-1-electrical-power-system-architecture/9-1-3-architecture-types",
+   "en_hash": "8643eefa92cc38e3",
+   "fr_hash": "0bc3f11e1feb128a"
+  },
+  {
+   "id": "chapter-9-electrical-power-and-thermal-control/9-2-solar-array-sizing",
+   "en_hash": "08a34d4cbcf559c9",
+   "fr_hash": "08e6f73deb834654"
+  },
+  {
+   "id": "chapter-9-electrical-power-and-thermal-control/9-2-solar-array-sizing/9-2-1-cubesat-array-power-reference",
+   "en_hash": "221d130324df3aa4",
+   "fr_hash": "c5fc40b64f5f3d4a"
+  },
+  {
+   "id": "chapter-9-electrical-power-and-thermal-control/9-3-battery-sizing",
+   "en_hash": "56d8490717790e4c",
+   "fr_hash": "eb9d20604036dc5e"
+  },
+  {
+   "id": "chapter-9-electrical-power-and-thermal-control/9-3-battery-sizing/9-3-1-li-ion-cell-chemistry-and-physics",
+   "en_hash": "65ef484e8e973268",
+   "fr_hash": "f5e4befbb6d2c3e0"
+  },
+  {
+   "id": "chapter-9-electrical-power-and-thermal-control/9-3-battery-sizing/9-3-2-sizing-equations",
+   "en_hash": "0471226549751c80",
+   "fr_hash": "52ea507d7b9ab789"
+  },
+  {
+   "id": "chapter-9-electrical-power-and-thermal-control/9-4-thermal-control-system",
+   "en_hash": "6e342aabfca8317c",
+   "fr_hash": "10e6412742e0e629"
+  },
+  {
+   "id": "chapter-9-electrical-power-and-thermal-control/9-4-thermal-control-system/9-4-1-the-physics-of-spacecraft-thermal-control",
+   "en_hash": "b075470c55b6b010",
+   "fr_hash": "59e01d66b6a8ceaf"
+  },
+  {
+   "id": "chapter-9-electrical-power-and-thermal-control/9-4-thermal-control-system/9-4-2-thermal-environment-in-leo",
+   "en_hash": "ee7b41e2bbd9d719",
+   "fr_hash": "9774c32110f89dd1"
+  },
+  {
+   "id": "chapter-9-electrical-power-and-thermal-control/9-4-thermal-control-system/9-4-3-view-factors",
+   "en_hash": "f1e4348a0e095e19",
+   "fr_hash": "fe7a4a7c152fa864"
+  },
+  {
+   "id": "chapter-9-electrical-power-and-thermal-control/9-4-thermal-control-system/9-4-4-thermal-balance-equation",
+   "en_hash": "0aabd74972edfd28",
+   "fr_hash": "73fc57f5eb863b5e"
+  },
+  {
+   "id": "chapter-9-electrical-power-and-thermal-control/9-4-thermal-control-system/9-4-5-hot-case-and-cold-case",
+   "en_hash": "6e50ce3a0a8e781c",
+   "fr_hash": "d6cfbe252b172a23"
+  },
+  {
+   "id": "chapter-9-electrical-power-and-thermal-control/9-4-thermal-control-system/9-4-6-surface-coatings-the-passive-thermal-toolbox",
+   "en_hash": "024c71b555637682",
+   "fr_hash": "dbe74bbe41a9aebd"
+  },
+  {
+   "id": "chapter-9-electrical-power-and-thermal-control/9-4-thermal-control-system/9-4-7-mli-multi-layer-insulation-construction-and-physics",
+   "en_hash": "736d876d29f79bdf",
+   "fr_hash": "d264d163b9649aa4"
+  },
+  {
+   "id": "chapter-9-electrical-power-and-thermal-control/9-4-thermal-control-system/9-4-8-heater-sizing",
+   "en_hash": "78822002ada17d62",
+   "fr_hash": "37535af78a858c82"
+  },
+  {
+   "id": "chapter-9-electrical-power-and-thermal-control/9-4-thermal-control-system/9-4-9-heat-pipes-and-thermal-straps",
+   "en_hash": "0f7f6ebe0698c6a8",
+   "fr_hash": "c097f1a1dc316d39"
+  },
+  {
+   "id": "chapter-9-electrical-power-and-thermal-control/9-4-thermal-control-system/9-4-10-thermal-control-methods-summary",
+   "en_hash": "109891abcec9bd59",
+   "fr_hash": "b5ab5410e6cf3795"
+  },
+  {
+   "id": "chapter-9-electrical-power-and-thermal-control/9-4-thermal-control-system/9-4-11-ecss-thermal-margins",
+   "en_hash": "3108d46897936e93",
+   "fr_hash": "de6d8561a480ed1f"
+  },
+  {
+   "id": "chapter-9-electrical-power-and-thermal-control/9-5-worked-example-unisat-1-power-and-thermal",
+   "en_hash": "ad5678fffeab9785",
+   "fr_hash": "d0f22f19958a654d"
+  },
+  {
+   "id": "chapter-9-electrical-power-and-thermal-control/9-6-real-mission-examples",
+   "en_hash": "a0ee19cc96576a94",
+   "fr_hash": "0f35b2f86f2ba889"
+  },
+  {
+   "id": "chapter-9-electrical-power-and-thermal-control/9-6-real-mission-examples/9-6-1-planet-superdove-eps",
+   "en_hash": "f3116cd374c77250",
+   "fr_hash": "bf0b67c3bab41a8c"
+  },
+  {
+   "id": "chapter-9-electrical-power-and-thermal-control/9-6-real-mission-examples/9-6-2-capstone-thermal-design",
+   "en_hash": "cc4eec7a89231844",
+   "fr_hash": "22c1afb819c9dab5"
+  },
+  {
+   "id": "chapter-9-electrical-power-and-thermal-control/summary",
+   "en_hash": "428ac46bac9b08cc",
+   "fr_hash": "d5394f9bab149f06"
+  },
+  {
+   "id": "chapter-9-electrical-power-and-thermal-control/problems",
+   "en_hash": "9e685c72509136b3",
+   "fr_hash": "ec4fedd9afa0f5fa"
+  },
+  {
+   "id": "chapter-9-electrical-power-and-thermal-control/references",
+   "en_hash": "0e67ca8ff9e0763d",
+   "fr_hash": "4ce43425bdd0f349"
+  }
+ ],
+ "en_commit": "3ea7113"
+}

@@ -1,0 +1,182 @@
+# Solar Cell Knowledge Base
+# Sources: manufacturer datasheets, IEEE PVSC proceedings, publicly available specifications
+# Efficiency values are BOL (beginning of life) AM0 at 28°C unless noted
+
+components:
+  - id: sc-azurspace-3g30a
+    name: 3G30A
+    manufacturer: Azur Space
+    category: solar_cell
+    technology: GaInP/GaAs/Ge triple-junction
+    mass_kg_per_m2: 0.84
+    cost_keur_per_m2: 120
+    trl: 9
+    heritage_missions:
+      - Sentinel-2
+      - MetOp-SG
+      - EnMAP
+    performance:
+      efficiency: 0.300
+      specific_power_w_kg: 480
+      radiation_degradation_per_year: 0.025
+      voc_v: 2.700
+      isc_a_per_cm2: 0.0177
+      temp_coefficient_pmax: -0.0020
+    notes: European standard triple-junction cell, most widely used in ESA missions
+
+  - id: sc-azurspace-4g32
+    name: 4G32C
+    manufacturer: Azur Space
+    category: solar_cell
+    technology: AlGaInP/AlGaAs/GaAs/GaInNAs four-junction
+    mass_kg_per_m2: 0.86
+    cost_keur_per_m2: 180
+    trl: 8
+    heritage_missions:
+      - Heinrich Hertz (planned)
+    performance:
+      efficiency: 0.322
+      specific_power_w_kg: 505
+      radiation_degradation_per_year: 0.020
+      voc_v: 3.420
+      isc_a_per_cm2: 0.0145
+      temp_coefficient_pmax: -0.0018
+    notes: Next-generation European four-junction cell
+
+  - id: sc-spectrolab-xtj-prime
+    name: XTJ Prime
+    manufacturer: Spectrolab (Boeing)
+    category: solar_cell
+    technology: InGaP/InGaAs/Ge triple-junction
+    mass_kg_per_m2: 0.84
+    cost_keur_per_m2: 130
+    trl: 9
+    heritage_missions:
+      - GPS III
+      - WGS
+      - GOES-R
+    performance:
+      efficiency: 0.305
+      specific_power_w_kg: 490
+      radiation_degradation_per_year: 0.025
+      voc_v: 2.720
+      isc_a_per_cm2: 0.0178
+      temp_coefficient_pmax: -0.0021
+    notes: Standard US triple-junction cell with extensive GEO heritage
+
+  - id: sc-spectrolab-xtj-hpa
+    name: XTJ-HPA
+    manufacturer: Spectrolab (Boeing)
+    category: solar_cell
+    technology: Multi-junction inverted metamorphic
+    mass_kg_per_m2: 0.85
+    cost_keur_per_m2: 200
+    trl: 8
+    heritage_missions:
+      - TBIRD
+    performance:
+      efficiency: 0.325
+      specific_power_w_kg: 520
+      radiation_degradation_per_year: 0.018
+      voc_v: 3.250
+      isc_a_per_cm2: 0.0155
+      temp_coefficient_pmax: -0.0017
+    notes: High-performance cell for next-generation US missions
+
+  - id: sc-cesi-ctj30
+    name: CTJ-30
+    manufacturer: CESI
+    category: solar_cell
+    technology: InGaP/GaAs/Ge triple-junction
+    mass_kg_per_m2: 0.84
+    cost_keur_per_m2: 115
+    trl: 9
+    heritage_missions:
+      - COSMO-SkyMed
+      - PRISMA
+    performance:
+      efficiency: 0.299
+      specific_power_w_kg: 478
+      radiation_degradation_per_year: 0.026
+      voc_v: 2.690
+      isc_a_per_cm2: 0.0176
+      temp_coefficient_pmax: -0.0021
+    notes: Italian triple-junction cell for ASI missions
+
+  - id: sc-solaero-ztj
+    name: ZTJ
+    manufacturer: SolAero Technologies
+    category: solar_cell
+    technology: InGaP/InGaAs/Ge triple-junction
+    mass_kg_per_m2: 0.84
+    cost_keur_per_m2: 125
+    trl: 9
+    heritage_missions:
+      - OSIRIS-REx
+      - InSight
+      - Parker Solar Probe
+    performance:
+      efficiency: 0.297
+      specific_power_w_kg: 475
+      radiation_degradation_per_year: 0.024
+      voc_v: 2.680
+      isc_a_per_cm2: 0.0176
+      temp_coefficient_pmax: -0.0021
+    notes: Proven cell for deep-space and planetary missions
+
+  - id: sc-solaero-imm4j
+    name: IMM4J-Alpha
+    manufacturer: SolAero Technologies
+    category: solar_cell
+    technology: Four-junction inverted metamorphic
+    mass_kg_per_m2: 0.42
+    cost_keur_per_m2: 250
+    trl: 7
+    heritage_missions: []
+    performance:
+      efficiency: 0.330
+      specific_power_w_kg: 1050
+      radiation_degradation_per_year: 0.015
+      voc_v: 3.500
+      isc_a_per_cm2: 0.0148
+      temp_coefficient_pmax: -0.0016
+    notes: Lightweight flexible blanket cell with record-class efficiency
+
+  - id: sc-sharp-3j
+    name: 3J-28
+    manufacturer: Sharp (JAXA heritage)
+    category: solar_cell
+    technology: InGaP/GaAs/Ge triple-junction
+    mass_kg_per_m2: 0.84
+    cost_keur_per_m2: 110
+    trl: 9
+    heritage_missions:
+      - Hayabusa2
+      - ALOS-2
+    performance:
+      efficiency: 0.285
+      specific_power_w_kg: 455
+      radiation_degradation_per_year: 0.027
+      voc_v: 2.640
+      isc_a_per_cm2: 0.0172
+      temp_coefficient_pmax: -0.0022
+    notes: Japanese triple-junction cell with JAXA deep-space heritage
+
+  - id: sc-microlink-flex
+    name: ELF
+    manufacturer: MicroLink Devices
+    category: solar_cell
+    technology: Epitaxial liftoff triple-junction
+    mass_kg_per_m2: 0.17
+    cost_keur_per_m2: 300
+    trl: 7
+    heritage_missions:
+      - DARPA RASCAL demo
+    performance:
+      efficiency: 0.295
+      specific_power_w_kg: 2400
+      radiation_degradation_per_year: 0.020
+      voc_v: 2.700
+      isc_a_per_cm2: 0.0175
+      temp_coefficient_pmax: -0.0020
+    notes: Ultra-lightweight flexible cell with record specific power

@@ -1,0 +1,254 @@
+{
+  "$schema_note": "SpaceCDF reference data library (SCDF-160 \u00a71.5). Own data; quantity kinds + SI-ish units used by parameter_definitions. Seeded by spacecdf_server.db.parameter_repo.seed_parameter_definitions().",
+  "version": 1,
+  "quantity_kinds": [
+    {
+      "name": "mass",
+      "unit": "kg",
+      "description": "Mass"
+    },
+    {
+      "name": "power",
+      "unit": "W",
+      "description": "Electrical power"
+    },
+    {
+      "name": "energy",
+      "unit": "Wh",
+      "description": "Electrical energy"
+    },
+    {
+      "name": "voltage",
+      "unit": "V",
+      "description": "Electric potential"
+    },
+    {
+      "name": "current",
+      "unit": "A",
+      "description": "Electric current"
+    },
+    {
+      "name": "data_rate",
+      "unit": "bps",
+      "description": "Data rate"
+    },
+    {
+      "name": "data_volume",
+      "unit": "bit",
+      "description": "Data volume"
+    },
+    {
+      "name": "length",
+      "unit": "m",
+      "description": "Length"
+    },
+    {
+      "name": "volume",
+      "unit": "cm3",
+      "description": "Volume"
+    },
+    {
+      "name": "area",
+      "unit": "m2",
+      "description": "Area"
+    },
+    {
+      "name": "temperature",
+      "unit": "K",
+      "description": "Thermodynamic temperature"
+    },
+    {
+      "name": "frequency",
+      "unit": "Hz",
+      "description": "Frequency"
+    },
+    {
+      "name": "delta_v",
+      "unit": "m/s",
+      "description": "Velocity increment"
+    },
+    {
+      "name": "cost",
+      "unit": "kEUR",
+      "description": "Cost (thousand euro)"
+    },
+    {
+      "name": "time",
+      "unit": "s",
+      "description": "Time / duration"
+    },
+    {
+      "name": "angle",
+      "unit": "deg",
+      "description": "Plane angle"
+    },
+    {
+      "name": "ratio",
+      "unit": "-",
+      "description": "Dimensionless ratio"
+    }
+  ],
+  "parameter_definitions": [
+    {
+      "name": "mass_kg",
+      "quantity_kind": "mass",
+      "unit": "kg",
+      "description": "Element mass (well-known column)",
+      "is_well_known": true
+    },
+    {
+      "name": "power_avg_w",
+      "quantity_kind": "power",
+      "unit": "W",
+      "description": "Average power consumption (well-known column)",
+      "is_well_known": true
+    },
+    {
+      "name": "power_peak_w",
+      "quantity_kind": "power",
+      "unit": "W",
+      "description": "Peak power consumption (well-known column)",
+      "is_well_known": true
+    },
+    {
+      "name": "volume_cm3",
+      "quantity_kind": "volume",
+      "unit": "cm3",
+      "description": "Envelope volume (well-known column)",
+      "is_well_known": true
+    },
+    {
+      "name": "cost_nre_keur",
+      "quantity_kind": "cost",
+      "unit": "kEUR",
+      "description": "Non-recurring cost (well-known column)",
+      "is_well_known": true
+    },
+    {
+      "name": "cost_recurring_keur",
+      "quantity_kind": "cost",
+      "unit": "kEUR",
+      "description": "Recurring cost per unit (well-known column)",
+      "is_well_known": true
+    },
+    {
+      "name": "energy_wh",
+      "quantity_kind": "energy",
+      "unit": "Wh",
+      "description": "Stored / consumed energy",
+      "is_well_known": false
+    },
+    {
+      "name": "bus_voltage_v",
+      "quantity_kind": "voltage",
+      "unit": "V",
+      "description": "Bus voltage",
+      "is_well_known": false
+    },
+    {
+      "name": "current_a",
+      "quantity_kind": "current",
+      "unit": "A",
+      "description": "Current draw",
+      "is_well_known": false
+    },
+    {
+      "name": "data_rate_bps",
+      "quantity_kind": "data_rate",
+      "unit": "bps",
+      "description": "Data rate",
+      "is_well_known": false
+    },
+    {
+      "name": "data_volume_bit",
+      "quantity_kind": "data_volume",
+      "unit": "bit",
+      "description": "Data volume per orbit / day",
+      "is_well_known": false
+    },
+    {
+      "name": "length_m",
+      "quantity_kind": "length",
+      "unit": "m",
+      "description": "Characteristic length",
+      "is_well_known": false
+    },
+    {
+      "name": "area_m2",
+      "quantity_kind": "area",
+      "unit": "m2",
+      "description": "Area (e.g. solar array, radiator)",
+      "is_well_known": false
+    },
+    {
+      "name": "temperature_k",
+      "quantity_kind": "temperature",
+      "unit": "K",
+      "description": "Operating temperature",
+      "is_well_known": false
+    },
+    {
+      "name": "temperature_min_k",
+      "quantity_kind": "temperature",
+      "unit": "K",
+      "description": "Minimum operating temperature",
+      "is_well_known": false
+    },
+    {
+      "name": "temperature_max_k",
+      "quantity_kind": "temperature",
+      "unit": "K",
+      "description": "Maximum operating temperature",
+      "is_well_known": false
+    },
+    {
+      "name": "frequency_hz",
+      "quantity_kind": "frequency",
+      "unit": "Hz",
+      "description": "Carrier / clock frequency",
+      "is_well_known": false
+    },
+    {
+      "name": "delta_v_mps",
+      "quantity_kind": "delta_v",
+      "unit": "m/s",
+      "description": "Delta-v capability / budget",
+      "is_well_known": false
+    },
+    {
+      "name": "duration_s",
+      "quantity_kind": "time",
+      "unit": "s",
+      "description": "Duration",
+      "is_well_known": false
+    },
+    {
+      "name": "pointing_deg",
+      "quantity_kind": "angle",
+      "unit": "deg",
+      "description": "Pointing accuracy",
+      "is_well_known": false
+    },
+    {
+      "name": "duty_cycle",
+      "quantity_kind": "ratio",
+      "unit": "-",
+      "description": "Duty cycle (0-1)",
+      "is_well_known": false
+    },
+    {
+      "name": "margin",
+      "quantity_kind": "ratio",
+      "unit": "-",
+      "description": "Margin (0-1)",
+      "is_well_known": false
+    },
+    {
+      "name": "efficiency",
+      "quantity_kind": "ratio",
+      "unit": "-",
+      "description": "Efficiency (0-1)",
+      "is_well_known": false
+    }
+  ]
+}

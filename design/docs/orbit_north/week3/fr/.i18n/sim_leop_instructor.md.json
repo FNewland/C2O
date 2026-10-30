@@ -1,0 +1,67 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "docs/orbit_north/week3/sim_leop_instructor.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "b2ad3cb032de45d1",
+   "fr_hash": "777be5c2228ec512"
+  },
+  {
+   "id": "wednesday-leop-simulation-instructor-pack",
+   "en_hash": "88ce1b1914430703",
+   "fr_hash": "a8ac55341293b165"
+  },
+  {
+   "id": "wednesday-leop-simulation-instructor-pack/1-day-at-a-glance",
+   "en_hash": "43cbca192f499c5c",
+   "fr_hash": "5289bc549d6eee82"
+  },
+  {
+   "id": "wednesday-leop-simulation-instructor-pack/2-scenario-configuration",
+   "en_hash": "bb30d156530943bd",
+   "fr_hash": "ebc87769c6aa59dc"
+  },
+  {
+   "id": "wednesday-leop-simulation-instructor-pack/3-procedure-expectations",
+   "en_hash": "443ee3676bdbdb04",
+   "fr_hash": "3f01c15927127f37"
+  },
+  {
+   "id": "wednesday-leop-simulation-instructor-pack/4-anomaly-injection-menu",
+   "en_hash": "bbd24c222e079500",
+   "fr_hash": "9953b5f6ad8871c9"
+  },
+  {
+   "id": "wednesday-leop-simulation-instructor-pack/4-anomaly-injection-menu/injection-cue-card",
+   "en_hash": "74899438fa92e8ca",
+   "fr_hash": "161d2c10f7341214"
+  },
+  {
+   "id": "wednesday-leop-simulation-instructor-pack/5-pass-operator-side-criteria",
+   "en_hash": "87885b021846052f",
+   "fr_hash": "2e116b553758b445"
+  },
+  {
+   "id": "wednesday-leop-simulation-instructor-pack/6-coaching-during-the-shift",
+   "en_hash": "4e877cd0a47e100b",
+   "fr_hash": "4e6ab41669d3faa7"
+  },
+  {
+   "id": "wednesday-leop-simulation-instructor-pack/7-debrief-joint",
+   "en_hash": "267f569cc8c37c0b",
+   "fr_hash": "b6bd7b7895bfbf8d"
+  },
+  {
+   "id": "wednesday-leop-simulation-instructor-pack/8-safety-and-red-lines",
+   "en_hash": "504962ee28461f82",
+   "fr_hash": "7931385c3b7b18d2"
+  },
+  {
+   "id": "wednesday-leop-simulation-instructor-pack/9-references-files",
+   "en_hash": "c79a904234ef7a5c",
+   "fr_hash": "c404d47c0798d646"
+  }
+ ],
+ "en_commit": "3ea7113"
+}

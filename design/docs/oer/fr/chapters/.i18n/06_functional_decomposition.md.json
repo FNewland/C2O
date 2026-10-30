@@ -1,0 +1,122 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "docs/oer/chapters/06_functional_decomposition.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "chapter-6-functional-decomposition-and-allocation",
+   "en_hash": "7ee0e5f4d507006a",
+   "fr_hash": "90bc9116741351a7"
+  },
+  {
+   "id": "chapter-6-functional-decomposition-and-allocation/learning-objectives",
+   "en_hash": "f110c1e6398c012a",
+   "fr_hash": "58cd3f46e5638321"
+  },
+  {
+   "id": "chapter-6-functional-decomposition-and-allocation/6-1-what-is-functional-decomposition",
+   "en_hash": "128f28b72def588f",
+   "fr_hash": "52881455bdc7d460"
+  },
+  {
+   "id": "chapter-6-functional-decomposition-and-allocation/6-1-what-is-functional-decomposition/6-1-1-the-decomposition-flow",
+   "en_hash": "e62a26db0530e568",
+   "fr_hash": "6557fbb06f045378"
+  },
+  {
+   "id": "chapter-6-functional-decomposition-and-allocation/6-1-what-is-functional-decomposition/6-1-2-function-types",
+   "en_hash": "75aaf7a0580ce859",
+   "fr_hash": "31780989b2897b7f"
+  },
+  {
+   "id": "chapter-6-functional-decomposition-and-allocation/6-1-what-is-functional-decomposition/6-1-3-universal-functions",
+   "en_hash": "72ce22a06ac48677",
+   "fr_hash": "af0fcfc861e57847"
+  },
+  {
+   "id": "chapter-6-functional-decomposition-and-allocation/6-2-mission-type-specific-function-trees",
+   "en_hash": "c62fc9e4ec39f179",
+   "fr_hash": "c966ddbb62904030"
+  },
+  {
+   "id": "chapter-6-functional-decomposition-and-allocation/6-2-mission-type-specific-function-trees/6-2-1-earth-observation-optical-sar",
+   "en_hash": "06329626426d9fb9",
+   "fr_hash": "cb296fe0e187d05f"
+  },
+  {
+   "id": "chapter-6-functional-decomposition-and-allocation/6-2-mission-type-specific-function-trees/6-2-2-communications-relay-store-and-forward-or-bent-pipe",
+   "en_hash": "84c5e22ae253372c",
+   "fr_hash": "217d539f9dd1ac2c"
+  },
+  {
+   "id": "chapter-6-functional-decomposition-and-allocation/6-2-mission-type-specific-function-trees/6-2-3-ais-iot-receiver-passive",
+   "en_hash": "56c5317fa74bf82b",
+   "fr_hash": "e29a744bc8821aeb"
+  },
+  {
+   "id": "chapter-6-functional-decomposition-and-allocation/6-2-mission-type-specific-function-trees/6-2-4-ground-segment-functions",
+   "en_hash": "76af6c01f8884d08",
+   "fr_hash": "a69d33d1b9ab2c0c"
+  },
+  {
+   "id": "chapter-6-functional-decomposition-and-allocation/6-3-allocation-to-subsystems",
+   "en_hash": "4746874499029f6b",
+   "fr_hash": "3d98dbce7041467e"
+  },
+  {
+   "id": "chapter-6-functional-decomposition-and-allocation/6-3-allocation-to-subsystems/6-3-1-allocation-rules",
+   "en_hash": "e58e88e5d8f0c633",
+   "fr_hash": "e280155b46959df9"
+  },
+  {
+   "id": "chapter-6-functional-decomposition-and-allocation/6-3-allocation-to-subsystems/6-3-2-multi-allocation-and-interface-identification",
+   "en_hash": "b2b63326adebc989",
+   "fr_hash": "0ec6eed07e6c1795"
+  },
+  {
+   "id": "chapter-6-functional-decomposition-and-allocation/6-3-allocation-to-subsystems/6-3-3-derived-requirements-from-functions",
+   "en_hash": "f0759e34fbfcaa1e",
+   "fr_hash": "f6ea12d32944d6c3"
+  },
+  {
+   "id": "chapter-6-functional-decomposition-and-allocation/6-4-performance-criteria-and-coverage-analysis",
+   "en_hash": "58813948c53499f8",
+   "fr_hash": "c0733191fffb9600"
+  },
+  {
+   "id": "chapter-6-functional-decomposition-and-allocation/6-4-performance-criteria-and-coverage-analysis/6-4-1-coverage-analysis",
+   "en_hash": "f1b9471692db56e7",
+   "fr_hash": "c98c382b76a6affa"
+  },
+  {
+   "id": "chapter-6-functional-decomposition-and-allocation/6-4-performance-criteria-and-coverage-analysis/6-4-2-real-mission-example-capstone-coverage-gap",
+   "en_hash": "959624a975299fe4",
+   "fr_hash": "a2e31f8969c71c92"
+  },
+  {
+   "id": "chapter-6-functional-decomposition-and-allocation/6-5-worked-example-3u-eo-cubesat-function-tree",
+   "en_hash": "2aa43fe013d3729f",
+   "fr_hash": "1723dd62c8e55313"
+  },
+  {
+   "id": "chapter-6-functional-decomposition-and-allocation/summary",
+   "en_hash": "af6b0273c5d8657e",
+   "fr_hash": "200fe0c87b7e497e"
+  },
+  {
+   "id": "chapter-6-functional-decomposition-and-allocation/problems",
+   "en_hash": "aebbb770f6c98f42",
+   "fr_hash": "457da54a78b67ddd"
+  },
+  {
+   "id": "chapter-6-functional-decomposition-and-allocation/references",
+   "en_hash": "1a65a3f050a01fb3",
+   "fr_hash": "c1e773448e432ae3"
+  }
+ ],
+ "en_commit": "3ea7113"
+}

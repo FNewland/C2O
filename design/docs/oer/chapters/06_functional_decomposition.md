@@ -1,0 +1,311 @@
+# Chapter 6 — Functional Decomposition and Allocation
+
+> **Recommended background.** NASA Systems Engineering Handbook §4.3 (Logical Decomposition); ECSS-E-ST-10C Rev.1 §5.3; INCOSE Systems Engineering Handbook 5th ed. §2.3.5. This chapter assumes a validated requirement set exists (Chapter 5) and builds on the V-model of Chapter 1.
+
+## Learning objectives
+
+By the end of this chapter, you will be able to:
+
+1. Explain the purpose of functional decomposition in bridging requirements to design
+2. Decompose mission objectives into a hierarchical function tree (three or more levels)
+3. Categorise functions by type (observe, communicate, navigate, point, power, protect, store, process, support)
+4. Allocate functions to subsystem domains, including multi-allocation for shared responsibilities
+5. Derive requirements from functional analysis
+6. Identify and resolve coverage gaps (leaf functions without linked requirements)
+7. Build and validate a function architecture for a small spacecraft, whether in a concurrent-design tool or a spreadsheet
+
+---
+
+## 6.1 What is functional decomposition?
+
+*[Source: NASA SEH Sec. 4.3 — Process 3: Logical Decomposition]*
+
+Functional decomposition answers one question: **"What must the system DO to satisfy the requirements?"**
+
+It creates a bridge between requirements (WHAT the system must achieve) and physical design (HOW it will be built). Functions describe *actions* the system must perform, without specifying the physical hardware or software that will perform them. In the V-model of Chapter 1 (Figure 1.1) this is the step between the system requirements and the architecture: the requirements of Chapter 5 are decomposed here into functions, and the functions are allocated to the subsystems whose boundaries and interfaces are defined in Chapter 8.
+
+### 6.1.1 The decomposition flow
+
+Figure 6.1 shows the three layers and the direction of flow. Objectives and requirements state what is needed; functional analysis states what the system must do; the physical architecture states what will do it.
+
+<svg viewBox="0 0 800 360" xmlns="http://www.w3.org/2000/svg" style="max-width:700px; font-family: sans-serif; font-size: 12px;">
+  <!-- Boxes -->
+  <rect x="250" y="10" width="300" height="40" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+  <text x="400" y="35" text-anchor="middle" fill="#1e40af" font-weight="bold">Objectives &amp; Requirements</text>
+  <!-- Arrow -->
+  <line x1="400" y1="50" x2="400" y2="80" stroke="#64748b" stroke-width="2" marker-end="url(#arrowhead6)"/>
+  <rect x="250" y="80" width="300" height="40" rx="6" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+  <text x="400" y="105" text-anchor="middle" fill="#92400e" font-weight="bold">Functional Analysis (WHAT)</text>
+  <line x1="400" y1="120" x2="400" y2="150" stroke="#64748b" stroke-width="2" marker-end="url(#arrowhead6)"/>
+  <rect x="250" y="150" width="300" height="40" rx="6" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+  <text x="400" y="175" text-anchor="middle" fill="#166534" font-weight="bold">Physical Architecture (HOW)</text>
+  <!-- Side annotations -->
+  <text x="570" y="70" fill="#64748b" font-size="11">Bridges the gap</text>
+  <!-- Function tree below -->
+  <rect x="100" y="230" width="180" height="30" rx="4" fill="#fef3c7" stroke="#d97706"/>
+  <text x="190" y="250" text-anchor="middle" fill="#92400e" font-size="11">F-001: Acquire Imagery</text>
+  <!-- Children -->
+  <line x1="190" y1="260" x2="100" y2="290" stroke="#d97706"/>
+  <line x1="190" y1="260" x2="280" y2="290" stroke="#d97706"/>
+  <line x1="190" y1="260" x2="460" y2="290" stroke="#d97706"/>
+  <rect x="20" y="290" width="160" height="26" rx="4" fill="#fff7ed" stroke="#d97706"/>
+  <text x="100" y="308" text-anchor="middle" fill="#92400e" font-size="10">F-002: Point at target</text>
+  <rect x="200" y="290" width="160" height="26" rx="4" fill="#fff7ed" stroke="#d97706"/>
+  <text x="280" y="308" text-anchor="middle" fill="#92400e" font-size="10">F-003: Capture image data</text>
+  <rect x="380" y="290" width="160" height="26" rx="4" fill="#fff7ed" stroke="#d97706"/>
+  <text x="460" y="308" text-anchor="middle" fill="#92400e" font-size="10">F-004: Store data onboard</text>
+  <!-- Universal functions -->
+  <rect x="580" y="230" width="180" height="30" rx="4" fill="#e0e7ff" stroke="#4f46e5"/>
+  <text x="670" y="250" text-anchor="middle" fill="#3730a3" font-size="11">Universal Functions</text>
+  <text x="670" y="280" text-anchor="middle" fill="#3730a3" font-size="10">F-010: Generate power</text>
+  <text x="670" y="296" text-anchor="middle" fill="#3730a3" font-size="10">F-020: Maintain thermal env</text>
+  <text x="670" y="312" text-anchor="middle" fill="#3730a3" font-size="10">F-030: Survive launch</text>
+  <text x="670" y="328" text-anchor="middle" fill="#3730a3" font-size="10">F-040: TTC with ground</text>
+  <text x="670" y="344" text-anchor="middle" fill="#3730a3" font-size="10">F-050: Dispose at EOL</text>
+  <defs><marker id="arrowhead6" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#64748b"/></marker></defs>
+</svg>
+
+**Figure 6.1** — The decomposition flow from objectives and requirements, through functional analysis (WHAT), to the physical architecture (HOW). Below: the top of an Earth-observation function tree and the five universal functions every spacecraft performs.
+
+### 6.1.2 Function types
+
+Every spacecraft function falls into one of these categories:
+
+| Type | Verb | Description | Example |
+|------|------|-------------|---------|
+| **Observe** | Sense/measure | Acquire data from the environment | Capture multispectral imagery, receive AIS signals |
+| **Communicate** | Transfer | Move information between elements | Downlink science data, uplink telecommands |
+| **Navigate** | Determine/control position | Know or change the orbit | Perform orbit maintenance manoeuvre |
+| **Point** | Orient | Control spacecraft attitude | Nadir pointing during imaging, target tracking |
+| **Power** | Generate/store/distribute | Provide electrical energy | Solar power generation, battery charge management |
+| **Protect** | Maintain environment | Keep components within limits | Thermal control, radiation shielding |
+| **Store** | Record | Buffer data for later use | On-board solid-state data recording |
+| **Process** | Transform | Convert data between forms | On-board image compression, L0 framing |
+| **Support** | Provide structure | Mechanical integrity | Survive launch loads, deploy mechanisms |
+
+### 6.1.3 Universal functions
+
+Regardless of mission type, **every spacecraft** must perform these five functions:
+
+1. **Generate electrical power** (solar, RTG, battery)
+2. **Maintain thermal environment** (passive/active thermal control)
+3. **Survive the launch environment** (structural loads, vibration, shock)
+4. **Communicate with ground for TTC** (telemetry, tracking, command)
+5. **Dispose of the spacecraft at end of life** (deorbit, graveyard, passivation)
+
+Because they are universal, these five functions should appear in every function tree before any mission-specific analysis begins; a concurrent-design tool will typically generate them automatically for every mission.
+
+---
+
+## 6.2 Mission-type-specific function trees
+
+Different mission types produce fundamentally different primary function trees. The universal functions remain the same; it is the mission-specific branch that differentiates.
+
+### 6.2.1 Earth observation (optical/SAR)
+
+```
+F-001: Acquire imagery of target area
+  ├── F-002: Point instrument at target
+  ├── F-003: Capture image data (expose detector / SAR pulse)
+  ├── F-004: Store acquired data onboard
+  └── F-005: Downlink data to ground station
+```
+
+**Real example — Planet SuperDove:** F-001 decomposes into 8-band pushbroom acquisition, on-board radiometric correction, lossless compression, and X-band downlink. Each sub-function traces to specific SuperDove requirements (3.7 m GSD, 8 spectral bands, 200 Mbps downlink).
+
+### 6.2.2 Communications relay (store-and-forward or bent-pipe)
+
+```
+F-001: Relay communications between users
+  ├── F-002: Receive uplink signal from user terminal
+  ├── F-003: Process and route data (store-and-forward or bent-pipe)
+  └── F-004: Transmit downlink signal to destination terminal or gateway
+```
+
+**Real example — Astrocast (IoT):** F-001 decomposes into L-band receive (from IoT devices), on-board message deduplication and store-and-forward, and UHF/S-band downlink to gateway stations. Each message is ≤ 160 bytes.
+
+*[Source: Astrocast, "Astrocast Network Overview," astrocast.com]*
+
+### 6.2.3 AIS/IoT receiver (passive)
+
+```
+F-001: Receive and process signals of interest
+  ├── F-002: Receive AIS/IoT signals (passive — no uplink transmission)
+  ├── F-003: Decode and validate messages
+  ├── F-004: Store processed data onboard
+  └── F-005: Downlink to ground for distribution
+```
+
+### 6.2.4 Ground segment functions
+
+Missions that include ground-side processing need ground-domain functions:
+
+```
+F-G01: Receive satellite data at ground station
+F-G02: Process data pipeline (L0 → L1 → L2 products)
+F-G03: Archive and distribute data products to users
+F-G04: Operate mission control centre (planning, commanding, monitoring)
+```
+
+Ground functions are allocated to ground domains (ground station, ground processing, ground sensor) in exactly the same way that space functions are allocated to subsystems; the ground segment architecture that hosts them is developed in Chapter 17.
+
+---
+
+## 6.3 Allocation to subsystems
+
+Each function must be **allocated** to one or more responsible subsystem domains. This allocation defines system boundaries and, critically, identifies **interfaces** wherever a function is shared. Those interfaces are the entries of the N² matrix built in Chapter 8 §8.3.
+
+### 6.3.1 Allocation rules
+
+| Function | Typical allocation | Multi-allocation? |
+|----------|-------------------|-------------------|
+| Acquire imagery | Payload | No (single owner) |
+| Point at target | AOCS | No |
+| Store data | OBC/Data Handling | No |
+| Downlink data | Comms + AOCS | **Yes** — comms for RF chain, AOCS for antenna pointing |
+| Generate power | EPS | No |
+| Maintain thermal | Thermal | No |
+| Relay communications | Payload + Comms | **Yes** — boundary depends on architecture |
+| Survive launch | Structure | No |
+| Dispose at EOL | Propulsion (or Ops) | No (or multi if drag-sail) |
+
+### 6.3.2 Multi-allocation and interface identification
+
+When a function is allocated to more than one subsystem, it creates an **interface** that must be explicitly managed.
+
+**Example — "Downlink data to ground station":**
+
+| Responsible subsystem | Contribution | Interface created |
+|-----------------------|-------------|-------------------|
+| Comms (Link) | Transponder, antenna, modulation, RF chain | Comms ↔ AOCS (antenna pointing) |
+| AOCS | Antenna pointing towards ground station during pass | Comms ↔ Data Handling (packet routing) |
+| Data Handling | Data packaging, prioritisation, CCSDS framing | Data Handling ↔ AOCS (pass scheduling) |
+
+In a function table, multi-allocation is recorded simply by listing every contributing domain against the function; the discipline lies in then naming one **owner** and treating the others as **contributors**.
+
+**Think about it.** For each multi-allocated function in a design, where should the system boundary be drawn? Who "owns" the function, and who is a "contributor"? The answer determines who writes the interface requirement — and who is accountable when the interface fails at integration.
+
+### 6.3.3 Derived requirements from functions
+
+Each allocated function generates **derived requirements** — requirements not explicitly stated by stakeholders but necessary for the function to work:
+
+| Function | Derived requirement | Derivation logic |
+|----------|-------------------|------------------|
+| "Point instrument at target" | "AOCS shall provide ≤ 0.1° pointing accuracy during imaging" | From GSD requirement + optical geometry |
+| "Store data onboard" | "OBDH shall provide ≥ 32 GB solid-state storage" | From data rate × orbit period × missed-pass margin |
+| "Downlink within daily contact window" | "TX shall provide ≥ 50 Mbps effective data rate" | From daily data volume / total contact time |
+| "Generate power in all modes" | "SA shall produce ≥ 15 W EOL" | From worst-case sunlit power demand + recharge |
+
+*[Source: NASA SEH Sec. 4.3.3 — derived requirements from functional allocation]*
+
+---
+
+## 6.4 Performance criteria and coverage analysis
+
+Each leaf function (a function with no sub-functions) must have **performance criteria** — quantitative thresholds that define "how well" the function must be performed:
+
+| Function | Performance criteria |
+|----------|---------------------|
+| Acquire imagery | GSD ≤ 10 m; SNR ≥ 100:1; ≥ 4 spectral bands |
+| Point at target | Accuracy ≤ 0.1°; stability ≤ 0.01°/s; slew rate ≥ 1°/s |
+| Downlink data | Link margin ≥ 3 dB; daily throughput ≥ 5 GB |
+| Generate power | Positive margin in all modes; battery DoD ≤ 30 % |
+| Maintain thermal env | All components within operating range with ≥ 5 °C margin |
+
+Performance criteria form the quantitative basis for subsystem-level requirements.
+
+### 6.4.1 Coverage analysis
+
+**Every leaf function** must trace to at least one requirement. If it does not, there is a **coverage gap** — the function is defined but has no verification path.
+
+A coverage check classifies each leaf function into one of three states:
+
+- **Covered:** the function has at least one linked requirement
+- **Gap:** no requirement is linked — a coverage gap has been detected
+- **Conflict:** the function conflicts with an existing requirement
+
+A concurrent-design tool will usually display these states as badges on the function tree; in a spreadsheet, a simple count of linked requirement IDs per leaf function achieves the same thing.
+
+### 6.4.2 Real mission example: CAPSTONE coverage gap
+
+NASA's CAPSTONE mission (2022, Advanced Space) experienced a coverage gap during development: the "maintain attitude during trajectory correction manoeuvre" function initially had no formal pointing requirement during burns. This gap was identified during functional review and led to the derivation of SSR-AOCS-007: "The AOCS shall maintain pointing accuracy ≤ 2° during all propulsive manoeuvres."
+
+*[Source: Advanced Space, "CAPSTONE Mission Overview," 2022]*
+
+---
+
+## 6.5 Worked example: 3U EO CubeSat function tree
+
+> **Function tree for an agricultural-monitoring 3U CubeSat (EOSat-3U)**
+>
+> ```
+> F-001: Acquire multispectral imagery
+>   ├── F-002: Point telescope at target area (AOCS)
+>   ├── F-003: Expose detector and capture image frames (Payload)
+>   ├── F-004: Compress and store image data (OBC)
+>   └── F-005: Downlink stored data to ground station (Comms + AOCS)
+>
+> F-010: Generate electrical power (EPS)
+>   ├── F-011: Convert solar energy to electrical (SA)
+>   ├── F-012: Store energy for eclipse (Battery)
+>   └── F-013: Regulate and distribute power (EPS board)
+>
+> F-020: Maintain thermal environment (Thermal)
+>   ├── F-021: Reject waste heat from electronics (Radiator)
+>   └── F-022: Maintain battery temperature during eclipse (Heater)
+>
+> F-030: Survive launch environment (Structure)
+> F-040: Communicate with ground for TTC (Comms)
+> F-050: Dispose at end of life (Propulsion/Ops)
+> ```
+>
+> **Derived requirements from F-002 (Point telescope at target):**
+> - SSR-AOCS-001: "The AOCS shall achieve ≤ 0.5° pointing accuracy during imaging mode"
+> - SSR-AOCS-002: "The AOCS shall achieve pointing stability ≤ 0.01°/s during imaging"
+>
+> **Multi-allocation for F-005 (Downlink data):**
+> - Comms subsystem: owns RF chain (transponder, antenna, modulation)
+> - AOCS subsystem: provides antenna pointing towards ground station
+> - Interface: AOCS must receive pass-schedule triggers from OBC to initiate slew to ground-station pointing
+
+Returning to UniSat-1, the 1U magnetometer demonstrator of Chapter 1 §1.7: its tree has the same five universal functions, but the mission branch reduces to "F-001: Measure the geomagnetic field vector" with sub-functions to sample the MEMS magnetometer, time-stamp and store the samples, and downlink them over UHF. There is no "point" function at all — which is why, in Chapter 10, UniSat-1 needs no active attitude control.
+
+---
+
+## Summary
+
+| Topic | Key takeaway |
+|-------|-------------|
+| Functional decomposition | Bridges requirements (WHAT) to design (HOW) by identifying system actions |
+| Function types | Observe, Communicate, Navigate, Point, Power, Protect, Store, Process, Support |
+| Universal functions | Power, thermal, launch survival, TTC, disposal — every spacecraft needs all five |
+| Mission-specific trees | EO: acquire/point/store/downlink; Comms: receive/route/transmit; AIS: receive/decode/store |
+| Allocation | Each function assigned to subsystem domain(s); multi-allocation creates interfaces |
+| Derived requirements | Functions generate new requirements not stated by stakeholders |
+| Coverage analysis | Every leaf function must trace to at least one requirement — no gaps allowed |
+
+## Problems
+
+1. **Three-level tree.** For a 3U Earth-observation CubeSat whose mission objective is to map crop health over a mid-latitude agricultural region, build a function tree with at least three levels of decomposition and at least twelve leaf functions. Include the five universal functions. Classify every leaf function by type using the table of §6.1.2.
+
+2. **Derived requirements.** For each leaf function in your tree from Problem 1, write one derived requirement with a measurable threshold and a one-line derivation logic in the style of §6.3.3. Identify which of your thresholds you can justify from physics now and which must wait for a subsystem sizing calculation (Chapters 9–12).
+
+3. **Traceability table.** Construct a function-to-requirement traceability table with at least eight entries. Then deliberately remove two requirements and show how a coverage check would flag the resulting gaps.
+
+4. **Multi-allocation boundary.** The function "Downlink stored data to ground station" is allocated to Comms, AOCS and Data Handling. Propose an owner and contributors, name the three interfaces created, and write one interface requirement (in the "shall" form of Chapter 5) for the interface you consider most likely to cause an integration problem. Explain why.
+
+5. **Mission-type contrast.** Write the mission-specific branch of the function tree for (a) a store-and-forward IoT relay and (b) a passive AIS receiver. Which functions appear in one but not the other, and what hardware does the difference eliminate from the AIS mission?
+
+6. **UniSat-1.** Returning to UniSat-1 (Chapter 1 §1.7), write its complete function tree. Identify which universal function is satisfied without a dedicated subsystem, and explain how the absence of a "point" function propagates to the attitude-control architecture (anticipating Chapter 10).
+
+7. **Coverage gap case.** The CAPSTONE case in §6.4.2 shows a function with no requirement. Give two further examples of functions on a small Earth-observation satellite that are easily left without a requirement, and for each write the requirement that closes the gap.
+
+## References
+
+1. NASA, *Systems Engineering Handbook* (NASA/SP-2016-6105 Rev 2), 2016, §4.3 (Process 3: Logical Decomposition). https://www.nasa.gov/reference/systems-engineering-handbook/
+2. ECSS, *ECSS-E-ST-10C Rev.1: System Engineering General Requirements*, 2017, §5.3. https://ecss.nl/standard/ecss-e-st-10c-rev-1-system-engineering-general-requirements/
+3. INCOSE, *Systems Engineering Handbook*, 5th ed., 2023, §2.3.5.3. https://www.incose.org/products-and-publications/se-handbook
+4. Wertz, Everett & Puschell, *Space Mission Engineering: The New SMAD*, 2011, Ch. 2. https://www.space.com/smad
+5. Blanchard & Fabrycky, *Systems Engineering and Analysis*, 5th ed., 2010, Ch. 3. https://www.pearson.com/en-us/subject-catalog/p/systems-engineering-and-analysis/P200000003502
+6. Advanced Space, *CAPSTONE Mission Overview*, 2022. https://advancedspace.com/capstone/
+7. Astrocast, *Astrocast Network Overview*. https://www.astrocast.com

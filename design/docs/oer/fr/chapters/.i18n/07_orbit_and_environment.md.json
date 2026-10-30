@@ -1,0 +1,117 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "docs/oer/chapters/07_orbit_and_environment.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "chapter-7-orbit-selection-and-the-space-environment",
+   "en_hash": "e4c6cb4c5ccb1949",
+   "fr_hash": "1da1ad9f6bd9d7f8"
+  },
+  {
+   "id": "chapter-7-orbit-selection-and-the-space-environment/learning-objectives",
+   "en_hash": "c4a12123e15ca249",
+   "fr_hash": "8972535990b3706f"
+  },
+  {
+   "id": "chapter-7-orbit-selection-and-the-space-environment/7-1-keplerian-orbital-elements",
+   "en_hash": "3b91635df0f59fbe",
+   "fr_hash": "41213ed8e2d0c67c"
+  },
+  {
+   "id": "chapter-7-orbit-selection-and-the-space-environment/7-1-keplerian-orbital-elements/7-1-1-key-equations",
+   "en_hash": "0eddef59e4653da4",
+   "fr_hash": "160711d2a291569b"
+  },
+  {
+   "id": "chapter-7-orbit-selection-and-the-space-environment/7-1-keplerian-orbital-elements/7-1-2-eclipse-fraction-and-the-angle",
+   "en_hash": "df6a02039d92033d",
+   "fr_hash": "12951d46c96d7036"
+  },
+  {
+   "id": "chapter-7-orbit-selection-and-the-space-environment/7-2-worked-examples-orbital-computations",
+   "en_hash": "9a4b4ac329a5e075",
+   "fr_hash": "a0e74c7c3a875d38"
+  },
+  {
+   "id": "chapter-7-orbit-selection-and-the-space-environment/7-3-orbit-selection-trade-offs",
+   "en_hash": "04c8cace46a8d32f",
+   "fr_hash": "8068aa6a6d3db2ff"
+  },
+  {
+   "id": "chapter-7-orbit-selection-and-the-space-environment/7-3-orbit-selection-trade-offs/7-3-1-orbit-types-and-applications",
+   "en_hash": "e20afe2b9c0bcbc6",
+   "fr_hash": "0ee09e4a45760c54"
+  },
+  {
+   "id": "chapter-7-orbit-selection-and-the-space-environment/7-3-orbit-selection-trade-offs/7-3-2-debris-compliance-rules",
+   "en_hash": "b684db1f90b58ccf",
+   "fr_hash": "b6aa2077c7142a98"
+  },
+  {
+   "id": "chapter-7-orbit-selection-and-the-space-environment/7-3-orbit-selection-trade-offs/7-3-3-orbital-lifetime-from-first-principles",
+   "en_hash": "6d8d28c6577034d6",
+   "fr_hash": "ef9a3595867123a3"
+  },
+  {
+   "id": "chapter-7-orbit-selection-and-the-space-environment/7-3-orbit-selection-trade-offs/7-3-4-perturbation-effects",
+   "en_hash": "0e13ba655663ee19",
+   "fr_hash": "ea12170d9efc4b14"
+  },
+  {
+   "id": "chapter-7-orbit-selection-and-the-space-environment/7-4-ground-coverage-and-revisit",
+   "en_hash": "70e0ae27f81cee12",
+   "fr_hash": "452c73c92f48b3d1"
+  },
+  {
+   "id": "chapter-7-orbit-selection-and-the-space-environment/7-4-ground-coverage-and-revisit/7-4-1-ground-station-contact-geometry",
+   "en_hash": "34d6746d71169210",
+   "fr_hash": "73d9b09d39549244"
+  },
+  {
+   "id": "chapter-7-orbit-selection-and-the-space-environment/7-5-hohmann-transfer-and-deorbit",
+   "en_hash": "cc99aaa114f2f720",
+   "fr_hash": "5329b40da9109004"
+  },
+  {
+   "id": "chapter-7-orbit-selection-and-the-space-environment/7-6-radiation-environment",
+   "en_hash": "2ce00349ce93a677",
+   "fr_hash": "bf08ed1aa40642bf"
+  },
+  {
+   "id": "chapter-7-orbit-selection-and-the-space-environment/7-6-radiation-environment/7-6-1-total-ionising-dose-tid-by-orbit",
+   "en_hash": "c635e7f4813ed88c",
+   "fr_hash": "2fbcd3248c11d942"
+  },
+  {
+   "id": "chapter-7-orbit-selection-and-the-space-environment/7-6-radiation-environment/7-6-2-south-atlantic-anomaly-saa",
+   "en_hash": "f88ab3e196f9d71a",
+   "fr_hash": "bf0231f2e8f04303"
+  },
+  {
+   "id": "chapter-7-orbit-selection-and-the-space-environment/7-7-worked-example-unisat-1-orbit-selection",
+   "en_hash": "f3b180de86c06d7b",
+   "fr_hash": "d60bd63c15e05a59"
+  },
+  {
+   "id": "chapter-7-orbit-selection-and-the-space-environment/summary",
+   "en_hash": "a6dbad35d12fe64d",
+   "fr_hash": "43eb5f11cd294b43"
+  },
+  {
+   "id": "chapter-7-orbit-selection-and-the-space-environment/problems",
+   "en_hash": "7cdd5f43b3fd203b",
+   "fr_hash": "3247f025257035a9"
+  },
+  {
+   "id": "chapter-7-orbit-selection-and-the-space-environment/references",
+   "en_hash": "878e02200d69f2cf",
+   "fr_hash": "d0248f214ce98ae1"
+  }
+ ],
+ "en_commit": "be16bc3"
+}

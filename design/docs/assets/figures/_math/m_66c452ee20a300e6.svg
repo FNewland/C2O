@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="11.35pt" height="13.525937pt" viewBox="0 0 11.35 13.525937" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-10-13T16:47:08.806308</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.10.9, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M -0 13.525937 
+L 11.35 13.525937 
+L 11.35 0 
+L -0 0 
+L -0 13.525937 
+z
+" style="fill: none"/>
+  </g>
+  <g id="text_1">
+   <!-- $\mathbf{D}$ -->
+   <g style="fill: #2d2d2c" transform="translate(1.44 9.798281) scale(0.11 -0.11)">
+    <defs>
+     <path id="Cmb10-44" d="M 219 0 
+L 219 325 
+L 819 325 
+L 819 4063 
+L 219 4063 
+L 219 4391 
+L 2591 4391 
+Q 3066 4391 3436 4214 
+Q 3806 4038 4051 3730 
+Q 4297 3422 4420 3019 
+Q 4544 2616 4544 2156 
+Q 4544 1709 4419 1317 
+Q 4294 925 4041 626 
+Q 3788 328 3422 164 
+Q 3056 0 2591 0 
+L 219 0 
+z
+M 1716 325 
+L 2344 325 
+Q 2644 325 2911 445 
+Q 3178 566 3334 794 
+Q 3500 1041 3539 1355 
+Q 3578 1669 3578 2156 
+Q 3578 2663 3539 2992 
+Q 3500 3322 3334 3572 
+Q 3231 3728 3072 3840 
+Q 2913 3953 2723 4008 
+Q 2534 4063 2344 4063 
+L 1716 4063 
+L 1716 325 
+z
+" transform="scale(0.015625)"/>
+    </defs>
+    <use xlink:href="#Cmb10-44" transform="translate(0 0.390625)"/>
+   </g>
+  </g>
+ </g>
+</svg>

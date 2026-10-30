@@ -1,0 +1,252 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "docs/course/COURSE_PLAN.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "spacecdf-mission-design-course-40-hour-programme",
+   "en_hash": "97cc8f0ddc66cb95",
+   "fr_hash": "f6d700b0e1933a80"
+  },
+  {
+   "id": "spacecdf-mission-design-course-40-hour-programme/course-title",
+   "en_hash": "838d5e1671bdeee7",
+   "fr_hash": "b00477e9a16d752a"
+  },
+  {
+   "id": "spacecdf-mission-design-course-40-hour-programme/audience",
+   "en_hash": "826c61ba4e3c5652",
+   "fr_hash": "b83449fe3d73090b"
+  },
+  {
+   "id": "spacecdf-mission-design-course-40-hour-programme/structure",
+   "en_hash": "6f9f4b5ff3755fc6",
+   "fr_hash": "95269838aeacaf0e"
+  },
+  {
+   "id": "spacecdf-mission-design-course-40-hour-programme/reference-documents",
+   "en_hash": "8bceb2279f418498",
+   "fr_hash": "27429ecf42ef72c7"
+  },
+  {
+   "id": "spacecdf-mission-design-course-40-hour-programme/day-1-mission-definition-concept-8-hours",
+   "en_hash": "b4b15c0f1c8034e7",
+   "fr_hash": "fe1d7dcc335256e4"
+  },
+  {
+   "id": "spacecdf-mission-design-course-40-hour-programme/day-1-mission-definition-concept-8-hours/session-1-1-introduction-to-space-mission-design-2-hrs",
+   "en_hash": "0f9271ad284e51c3",
+   "fr_hash": "f3ec4ee2099fedb6"
+  },
+  {
+   "id": "spacecdf-mission-design-course-40-hour-programme/day-1-mission-definition-concept-8-hours/session-1-2-mission-need-stakeholder-analysis-2-hrs",
+   "en_hash": "32777079d8f3a36f",
+   "fr_hash": "7209906540f8dca2"
+  },
+  {
+   "id": "spacecdf-mission-design-course-40-hour-programme/day-1-mission-definition-concept-8-hours/session-1-3-mission-trade-analysis-2-hrs",
+   "en_hash": "ba0851ff48975368",
+   "fr_hash": "0743421b09d6e853"
+  },
+  {
+   "id": "spacecdf-mission-design-course-40-hour-programme/day-1-mission-definition-concept-8-hours/session-1-4-concept-of-operations-2-hrs",
+   "en_hash": "7f1b5f1aa9c07a15",
+   "fr_hash": "ea59a87d4455ae54"
+  },
+  {
+   "id": "spacecdf-mission-design-course-40-hour-programme/day-2-requirements-functions-8-hours",
+   "en_hash": "dca5a32befb88f33",
+   "fr_hash": "7cbf602e8f568770"
+  },
+  {
+   "id": "spacecdf-mission-design-course-40-hour-programme/day-2-requirements-functions-8-hours/session-2-1-requirements-engineering-2-hrs",
+   "en_hash": "08988f31e17b3164",
+   "fr_hash": "dd1903508bc884b9"
+  },
+  {
+   "id": "spacecdf-mission-design-course-40-hour-programme/day-2-requirements-functions-8-hours/session-2-2-functional-decomposition-2-hrs",
+   "en_hash": "ad017faa475e9093",
+   "fr_hash": "e01215c80997ebf7"
+  },
+  {
+   "id": "spacecdf-mission-design-course-40-hour-programme/day-2-requirements-functions-8-hours/session-2-3-interface-management-2-hrs",
+   "en_hash": "b7e85cd3dc7c64ee",
+   "fr_hash": "c815453a6d54b0eb"
+  },
+  {
+   "id": "spacecdf-mission-design-course-40-hour-programme/day-2-requirements-functions-8-hours/session-2-4-design-budgets-introduction-2-hrs",
+   "en_hash": "9411c49412dc66bb",
+   "fr_hash": "c1081297148039f8"
+  },
+  {
+   "id": "spacecdf-mission-design-course-40-hour-programme/day-3-subsystem-design-8-hours",
+   "en_hash": "bbb77448eba3a3f6",
+   "fr_hash": "7c7ab388836d6e55"
+  },
+  {
+   "id": "spacecdf-mission-design-course-40-hour-programme/day-3-subsystem-design-8-hours/session-3-1-orbit-design-selection-2-hrs",
+   "en_hash": "12d51afed98613ad",
+   "fr_hash": "09d229464dc6d381"
+  },
+  {
+   "id": "spacecdf-mission-design-course-40-hour-programme/day-3-subsystem-design-8-hours/session-3-2-payload-communications-2-hrs",
+   "en_hash": "302b63225d54413a",
+   "fr_hash": "9439cb7c24d16186"
+  },
+  {
+   "id": "spacecdf-mission-design-course-40-hour-programme/day-3-subsystem-design-8-hours/session-3-3-power-aocs-thermal-2-hrs",
+   "en_hash": "817bf51e189d01cd",
+   "fr_hash": "1be9ab06efc0bcc2"
+  },
+  {
+   "id": "spacecdf-mission-design-course-40-hour-programme/day-3-subsystem-design-8-hours/session-3-4-structure-propulsion-data-handling-2-hrs",
+   "en_hash": "87f3665ff2242a2a",
+   "fr_hash": "e83001bb7d2bb62d"
+  },
+  {
+   "id": "spacecdf-mission-design-course-40-hour-programme/day-4-integration-verification-8-hours",
+   "en_hash": "0c5a7a26f154be8e",
+   "fr_hash": "5991e84a608d7fd5"
+  },
+  {
+   "id": "spacecdf-mission-design-course-40-hour-programme/day-4-integration-verification-8-hours/session-4-1-equipment-selection-integration-2-hrs",
+   "en_hash": "e01c547722dbcc5a",
+   "fr_hash": "a38542038911bb6a"
+  },
+  {
+   "id": "spacecdf-mission-design-course-40-hour-programme/day-4-integration-verification-8-hours/session-4-2-verification-validation-planning-2-hrs",
+   "en_hash": "52e808885abb3468",
+   "fr_hash": "acf1e9150dff7064"
+  },
+  {
+   "id": "spacecdf-mission-design-course-40-hour-programme/day-4-integration-verification-8-hours/session-4-3-risk-management-2-hrs",
+   "en_hash": "d4a4b57d6499d034",
+   "fr_hash": "fd5ea5561d128b1e"
+  },
+  {
+   "id": "spacecdf-mission-design-course-40-hour-programme/day-4-integration-verification-8-hours/session-4-4-cost-schedule-2-hrs",
+   "en_hash": "4ec6fe22ced4808e",
+   "fr_hash": "4d071fc538c31c3d"
+  },
+  {
+   "id": "spacecdf-mission-design-course-40-hour-programme/day-5-design-review-regulatory-8-hours",
+   "en_hash": "7fcd2c9c3ac845a9",
+   "fr_hash": "a035dce719a30b87"
+  },
+  {
+   "id": "spacecdf-mission-design-course-40-hour-programme/day-5-design-review-regulatory-8-hours/session-5-1-gate-review-preparation-2-hrs",
+   "en_hash": "87cc1bd151ef84df",
+   "fr_hash": "fb35961f98f09fb5"
+  },
+  {
+   "id": "spacecdf-mission-design-course-40-hour-programme/day-5-design-review-regulatory-8-hours/session-5-2-regulatory-licensing-2-hrs",
+   "en_hash": "2217322eb8c3f815",
+   "fr_hash": "1fd3f7009b7c89f2"
+  },
+  {
+   "id": "spacecdf-mission-design-course-40-hour-programme/day-5-design-review-regulatory-8-hours/session-5-3-launch-integration-2-hrs",
+   "en_hash": "97b392327af88718",
+   "fr_hash": "8a5a44ea60deece0"
+  },
+  {
+   "id": "spacecdf-mission-design-course-40-hour-programme/day-5-design-review-regulatory-8-hours/session-5-4-design-optimisation-final-review-2-hrs",
+   "en_hash": "aececbb1f2cb5ae6",
+   "fr_hash": "5619ed8c7d8068ff"
+  },
+  {
+   "id": "spacecdf-mission-design-course-40-hour-programme/assessment",
+   "en_hash": "fa79fe00f0b4ead8",
+   "fr_hash": "c8434fef0d32e214"
+  },
+  {
+   "id": "spacecdf-mission-design-course-40-hour-programme/per-position-deep-dives-appendices",
+   "en_hash": "3950b42adacc6be6",
+   "fr_hash": "096bce856d43136e"
+  },
+  {
+   "id": "spacecdf-mission-design-course-40-hour-programme/per-position-deep-dives-appendices/appendix-a-systems-engineer",
+   "en_hash": "c842ca69f96e4634",
+   "fr_hash": "9ef4f71740122c7a"
+  },
+  {
+   "id": "spacecdf-mission-design-course-40-hour-programme/per-position-deep-dives-appendices/appendix-b-mission-analyst",
+   "en_hash": "9302cff4449ba09f",
+   "fr_hash": "3b2e20d30bbda609"
+  },
+  {
+   "id": "spacecdf-mission-design-course-40-hour-programme/per-position-deep-dives-appendices/appendix-c-payload-engineer",
+   "en_hash": "9ad4043d5318b4c7",
+   "fr_hash": "849c5277f34c3873"
+  },
+  {
+   "id": "spacecdf-mission-design-course-40-hour-programme/per-position-deep-dives-appendices/appendix-d-power-engineer",
+   "en_hash": "bcfc15c9706f0f71",
+   "fr_hash": "bab66e566d8ac861"
+  },
+  {
+   "id": "spacecdf-mission-design-course-40-hour-programme/per-position-deep-dives-appendices/appendix-e-aocs-engineer",
+   "en_hash": "ae4772607406ae83",
+   "fr_hash": "b3c3a895aa9410b5"
+  },
+  {
+   "id": "spacecdf-mission-design-course-40-hour-programme/per-position-deep-dives-appendices/appendix-f-thermal-engineer",
+   "en_hash": "5afd62fc7bba8835",
+   "fr_hash": "91c7a0f39655693f"
+  },
+  {
+   "id": "spacecdf-mission-design-course-40-hour-programme/per-position-deep-dives-appendices/appendix-g-communications-engineer",
+   "en_hash": "3cbc00a49418aef5",
+   "fr_hash": "aea9a4b403cdb008"
+  },
+  {
+   "id": "spacecdf-mission-design-course-40-hour-programme/per-position-deep-dives-appendices/appendix-h-propulsion-engineer",
+   "en_hash": "cec771f6f70dd95f",
+   "fr_hash": "2db0655c373a530b"
+  },
+  {
+   "id": "spacecdf-mission-design-course-40-hour-programme/per-position-deep-dives-appendices/appendix-i-structures-engineer",
+   "en_hash": "badda6032f271577",
+   "fr_hash": "cc92560031c95477"
+  },
+  {
+   "id": "spacecdf-mission-design-course-40-hour-programme/per-position-deep-dives-appendices/appendix-j-cost-engineer",
+   "en_hash": "9fa8e135a22c5f5f",
+   "fr_hash": "403a46eb98965c8c"
+  },
+  {
+   "id": "spacecdf-mission-design-course-40-hour-programme/per-position-deep-dives-appendices/appendix-k-compliance-regulatory-engineer",
+   "en_hash": "dd7067f4983f3229",
+   "fr_hash": "a1e3805aa97fb068"
+  },
+  {
+   "id": "spacecdf-mission-design-course-40-hour-programme/per-position-deep-dives-appendices/appendix-l-ground-segment-engineer",
+   "en_hash": "df044eee3357297a",
+   "fr_hash": "8ea96f6017cc4c78"
+  },
+  {
+   "id": "spacecdf-mission-design-course-40-hour-programme/per-position-deep-dives-appendices/appendix-m-software-engineer",
+   "en_hash": "4d29345d48068fc6",
+   "fr_hash": "96ff97c03a0942e1"
+  },
+  {
+   "id": "spacecdf-mission-design-course-40-hour-programme/document-production-plan",
+   "en_hash": "ad3aa2f5353962ea",
+   "fr_hash": "cd700ba94c140868"
+  },
+  {
+   "id": "spacecdf-mission-design-course-40-hour-programme/document-production-plan/facilitator-s-book-400-pages",
+   "en_hash": "4a135b88f0cd5bb6",
+   "fr_hash": "f8755af42b2a0e3a"
+  },
+  {
+   "id": "spacecdf-mission-design-course-40-hour-programme/document-production-plan/learner-s-workbook-150-pages",
+   "en_hash": "7199135077842bcd",
+   "fr_hash": "acb8e5b6325c2843"
+  }
+ ],
+ "en_commit": "be16bc3"
+}

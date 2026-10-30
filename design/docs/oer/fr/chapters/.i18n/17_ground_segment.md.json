@@ -1,0 +1,137 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "docs/oer/chapters/17_ground_segment.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "chapter-17-ground-segment-architecture",
+   "en_hash": "62afb8a7b447c30f",
+   "fr_hash": "fd7643e7a4ffc00a"
+  },
+  {
+   "id": "chapter-17-ground-segment-architecture/learning-objectives",
+   "en_hash": "4d17e93a3f4c90d1",
+   "fr_hash": "57a8f65fb758574c"
+  },
+  {
+   "id": "chapter-17-ground-segment-architecture/17-1-ground-segment-architecture",
+   "en_hash": "832085c6a6f859a7",
+   "fr_hash": "64e07f919ef59ddc"
+  },
+  {
+   "id": "chapter-17-ground-segment-architecture/17-1-ground-segment-architecture/17-1-1-ground-segment-components",
+   "en_hash": "9568bc6c36d2e7b5",
+   "fr_hash": "247badbb59f6e845"
+  },
+  {
+   "id": "chapter-17-ground-segment-architecture/17-1-ground-segment-architecture/17-1-2-ground-station-components",
+   "en_hash": "8e7c00db75fd33b6",
+   "fr_hash": "a32622e2cf57d4c8"
+  },
+  {
+   "id": "chapter-17-ground-segment-architecture/17-1-ground-segment-architecture/17-1-3-mission-control-system-mcs",
+   "en_hash": "154a59548c01acb0",
+   "fr_hash": "e904a1b82e105ea7"
+  },
+  {
+   "id": "chapter-17-ground-segment-architecture/17-1-ground-segment-architecture/17-1-4-flight-dynamics-system-fds",
+   "en_hash": "80dec18393902823",
+   "fr_hash": "f467f5c2573b10c0"
+  },
+  {
+   "id": "chapter-17-ground-segment-architecture/17-2-ground-station-contact-analysis",
+   "en_hash": "c93c39814a62cc0c",
+   "fr_hash": "f82e34133a3f03cb"
+  },
+  {
+   "id": "chapter-17-ground-segment-architecture/17-2-ground-station-contact-analysis/17-2-1-contact-geometry",
+   "en_hash": "42fd744178a64429",
+   "fr_hash": "610e398bf3e665ee"
+  },
+  {
+   "id": "chapter-17-ground-segment-architecture/17-2-ground-station-contact-analysis/17-2-2-data-volume-per-pass",
+   "en_hash": "2353f94d77e5d109",
+   "fr_hash": "7312b51b68d1e89a"
+  },
+  {
+   "id": "chapter-17-ground-segment-architecture/17-2-ground-station-contact-analysis/17-2-3-contact-frequency",
+   "en_hash": "e9547df03d998ea3",
+   "fr_hash": "d524b9eae557088a"
+  },
+  {
+   "id": "chapter-17-ground-segment-architecture/17-2-ground-station-contact-analysis/17-2-4-worked-example-data-budget-closure",
+   "en_hash": "855643e0b45e611a",
+   "fr_hash": "62673346ba977e4d"
+  },
+  {
+   "id": "chapter-17-ground-segment-architecture/17-3-ccsds-protocol-stack",
+   "en_hash": "c16b6d45d0883b40",
+   "fr_hash": "84043bca31e97483"
+  },
+  {
+   "id": "chapter-17-ground-segment-architecture/17-3-ccsds-protocol-stack/17-3-1-protocol-layers",
+   "en_hash": "39fa41aa5e0530ab",
+   "fr_hash": "446c64dff344e051"
+  },
+  {
+   "id": "chapter-17-ground-segment-architecture/17-3-ccsds-protocol-stack/17-3-2-telemetry-tm-frame-structure",
+   "en_hash": "79388b875c082108",
+   "fr_hash": "cc893399ef6415e8"
+  },
+  {
+   "id": "chapter-17-ground-segment-architecture/17-3-ccsds-protocol-stack/17-3-3-forward-error-correction-fec-options",
+   "en_hash": "2e01e083b29c6afa",
+   "fr_hash": "6d38ee797cca15f2"
+  },
+  {
+   "id": "chapter-17-ground-segment-architecture/17-4-operations-timeline-construction",
+   "en_hash": "b82228c4c62927aa",
+   "fr_hash": "b0b20c32a258df86"
+  },
+  {
+   "id": "chapter-17-ground-segment-architecture/17-4-operations-timeline-construction/17-4-1-mission-phases-from-the-operations-perspective",
+   "en_hash": "859c16de78cc1052",
+   "fr_hash": "a41e6fb257e2368a"
+  },
+  {
+   "id": "chapter-17-ground-segment-architecture/17-4-operations-timeline-construction/17-4-2-operations-timeline-gantt-style",
+   "en_hash": "97e8fce59aaaac07",
+   "fr_hash": "475ce6fa187d75b1"
+  },
+  {
+   "id": "chapter-17-ground-segment-architecture/17-4-operations-timeline-construction/17-4-3-leop-timeline-detail",
+   "en_hash": "4d1123307b46bde9",
+   "fr_hash": "8f8d41593049febf"
+  },
+  {
+   "id": "chapter-17-ground-segment-architecture/17-5-sizing-the-ground-segment",
+   "en_hash": "5daf656d92f0ca2d",
+   "fr_hash": "203a1877ffa89cb5"
+  },
+  {
+   "id": "chapter-17-ground-segment-architecture/17-6-returning-to-unisat-1-a-minimum-ground-segment",
+   "en_hash": "fe41ab4b91bfd12b",
+   "fr_hash": "baa8a60530370845"
+  },
+  {
+   "id": "chapter-17-ground-segment-architecture/summary",
+   "en_hash": "73d4acdbd1d4fac2",
+   "fr_hash": "9ccc2243c40ae066"
+  },
+  {
+   "id": "chapter-17-ground-segment-architecture/problems",
+   "en_hash": "de385351713a12f1",
+   "fr_hash": "9bd06cee02eff25a"
+  },
+  {
+   "id": "chapter-17-ground-segment-architecture/references",
+   "en_hash": "35f1aa47ce1fabf9",
+   "fr_hash": "c25f6b1e0593b3e2"
+  }
+ ],
+ "en_commit": "3ea7113"
+}

@@ -1,0 +1,207 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "docs/oer/chapters/04_mission_needs_conops.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "chapter-4-mission-needs-stakeholders-trade-studies-and-concept-of-operations",
+   "en_hash": "945884da7297b828",
+   "fr_hash": "2b92bafbe04bc522"
+  },
+  {
+   "id": "chapter-4-mission-needs-stakeholders-trade-studies-and-concept-of-operations/learning-objectives",
+   "en_hash": "c356331c2874c92d",
+   "fr_hash": "7f9eaa022757986f"
+  },
+  {
+   "id": "chapter-4-mission-needs-stakeholders-trade-studies-and-concept-of-operations/4-1-the-problem-statement",
+   "en_hash": "9fcc20cf1eb7d10b",
+   "fr_hash": "46703eeb1ef5dd3a"
+  },
+  {
+   "id": "chapter-4-mission-needs-stakeholders-trade-studies-and-concept-of-operations/4-1-the-problem-statement/4-1-1-why-start-with-the-problem",
+   "en_hash": "b913c2e205fb445f",
+   "fr_hash": "c351486beff44924"
+  },
+  {
+   "id": "chapter-4-mission-needs-stakeholders-trade-studies-and-concept-of-operations/4-1-the-problem-statement/4-1-2-structure-of-a-good-problem-statement",
+   "en_hash": "dcecfefa59daa21a",
+   "fr_hash": "1260de4b62158ddc"
+  },
+  {
+   "id": "chapter-4-mission-needs-stakeholders-trade-studies-and-concept-of-operations/4-1-the-problem-statement/4-1-3-good-versus-bad-problem-statements",
+   "en_hash": "18370a81b088d734",
+   "fr_hash": "ca59140f174b97d1"
+  },
+  {
+   "id": "chapter-4-mission-needs-stakeholders-trade-studies-and-concept-of-operations/4-1-the-problem-statement/4-1-4-the-what-versus-how-principle",
+   "en_hash": "ca41e78985e0b492",
+   "fr_hash": "54928c696b44a16b"
+  },
+  {
+   "id": "chapter-4-mission-needs-stakeholders-trade-studies-and-concept-of-operations/4-2-stakeholder-identification-and-analysis",
+   "en_hash": "45b6dc496759f56e",
+   "fr_hash": "9ed504ee3e0e4e5d"
+  },
+  {
+   "id": "chapter-4-mission-needs-stakeholders-trade-studies-and-concept-of-operations/4-2-stakeholder-identification-and-analysis/4-2-1-who-is-a-stakeholder",
+   "en_hash": "e799526c8e9e15e3",
+   "fr_hash": "c73d1a1398180835"
+  },
+  {
+   "id": "chapter-4-mission-needs-stakeholders-trade-studies-and-concept-of-operations/4-2-stakeholder-identification-and-analysis/4-2-2-stakeholder-categories-for-space-missions",
+   "en_hash": "ea5b4c1eb9eb2c3c",
+   "fr_hash": "b8f66b34ba6b0459"
+  },
+  {
+   "id": "chapter-4-mission-needs-stakeholders-trade-studies-and-concept-of-operations/4-2-stakeholder-identification-and-analysis/4-2-3-stakeholder-analysis-matrix",
+   "en_hash": "6a364837a4a71a6c",
+   "fr_hash": "65ecc69e12b4dbae"
+  },
+  {
+   "id": "chapter-4-mission-needs-stakeholders-trade-studies-and-concept-of-operations/4-3-mission-objectives-and-the-moe-mop-tpm-hierarchy",
+   "en_hash": "b452aeece318938a",
+   "fr_hash": "dda4e4d24deb017a"
+  },
+  {
+   "id": "chapter-4-mission-needs-stakeholders-trade-studies-and-concept-of-operations/4-3-mission-objectives-and-the-moe-mop-tpm-hierarchy/4-3-1-from-need-to-objectives",
+   "en_hash": "f480a859e9a550a6",
+   "fr_hash": "d3e4f803ebc668a9"
+  },
+  {
+   "id": "chapter-4-mission-needs-stakeholders-trade-studies-and-concept-of-operations/4-3-mission-objectives-and-the-moe-mop-tpm-hierarchy/4-3-2-writing-good-objectives",
+   "en_hash": "ed3ecd27425d48a4",
+   "fr_hash": "db391749b9a78755"
+  },
+  {
+   "id": "chapter-4-mission-needs-stakeholders-trade-studies-and-concept-of-operations/4-3-mission-objectives-and-the-moe-mop-tpm-hierarchy/4-3-3-the-moe-mop-tpm-hierarchy",
+   "en_hash": "129b565510d2eda5",
+   "fr_hash": "7323fff2843988a5"
+  },
+  {
+   "id": "chapter-4-mission-needs-stakeholders-trade-studies-and-concept-of-operations/4-4-from-need-to-design-the-flow",
+   "en_hash": "7276fdc86e15a8df",
+   "fr_hash": "af685b5e5603c732"
+  },
+  {
+   "id": "chapter-4-mission-needs-stakeholders-trade-studies-and-concept-of-operations/4-5-decision-analysis-framework",
+   "en_hash": "e7719a742428c5f2",
+   "fr_hash": "41701b662871e0cd"
+  },
+  {
+   "id": "chapter-4-mission-needs-stakeholders-trade-studies-and-concept-of-operations/4-5-decision-analysis-framework/4-5-1-process-17-decision-analysis",
+   "en_hash": "6eaeaa1f26678c5b",
+   "fr_hash": "68596ed79fbb14b9"
+  },
+  {
+   "id": "chapter-4-mission-needs-stakeholders-trade-studies-and-concept-of-operations/4-5-decision-analysis-framework/4-5-2-the-five-elements-of-a-rigorous-trade-study",
+   "en_hash": "8b5ea4d623e3a18a",
+   "fr_hash": "9dfb93df6c82000c"
+  },
+  {
+   "id": "chapter-4-mission-needs-stakeholders-trade-studies-and-concept-of-operations/4-5-decision-analysis-framework/4-5-3-weighting-methods",
+   "en_hash": "82f8303f54919185",
+   "fr_hash": "2b3d2a4354aec356"
+  },
+  {
+   "id": "chapter-4-mission-needs-stakeholders-trade-studies-and-concept-of-operations/4-5-decision-analysis-framework/4-5-4-scoring-methods",
+   "en_hash": "089940644bae15a0",
+   "fr_hash": "0fe8e12537c78807"
+  },
+  {
+   "id": "chapter-4-mission-needs-stakeholders-trade-studies-and-concept-of-operations/4-5-decision-analysis-framework/4-5-5-weighted-score-calculation",
+   "en_hash": "147fa1712463a69e",
+   "fr_hash": "358adf0d75ed71ff"
+  },
+  {
+   "id": "chapter-4-mission-needs-stakeholders-trade-studies-and-concept-of-operations/4-5-decision-analysis-framework/4-5-6-sensitivity-analysis",
+   "en_hash": "2143df8f6c9da07f",
+   "fr_hash": "dd68ef24aa425492"
+  },
+  {
+   "id": "chapter-4-mission-needs-stakeholders-trade-studies-and-concept-of-operations/4-6-space-versus-non-space-alternatives",
+   "en_hash": "53f65be5a4dacf86",
+   "fr_hash": "ea9e715451b0705e"
+  },
+  {
+   "id": "chapter-4-mission-needs-stakeholders-trade-studies-and-concept-of-operations/4-6-space-versus-non-space-alternatives/4-6-1-the-most-important-trade-study",
+   "en_hash": "c892df0bd553d943",
+   "fr_hash": "3966bf483701d0a6"
+  },
+  {
+   "id": "chapter-4-mission-needs-stakeholders-trade-studies-and-concept-of-operations/4-6-space-versus-non-space-alternatives/4-6-2-alternative-categories",
+   "en_hash": "7239e2de7c70ebe2",
+   "fr_hash": "ecda38d1dba859f6"
+  },
+  {
+   "id": "chapter-4-mission-needs-stakeholders-trade-studies-and-concept-of-operations/4-6-space-versus-non-space-alternatives/4-6-3-decision-criteria-when-is-space-justified",
+   "en_hash": "514fa9d6651ae7fa",
+   "fr_hash": "decf00c6ef01ca39"
+  },
+  {
+   "id": "chapter-4-mission-needs-stakeholders-trade-studies-and-concept-of-operations/4-6-space-versus-non-space-alternatives/4-6-4-constellation-sizing",
+   "en_hash": "3e0db3c56c816f07",
+   "fr_hash": "ebfec539de9fb0ac"
+  },
+  {
+   "id": "chapter-4-mission-needs-stakeholders-trade-studies-and-concept-of-operations/4-7-documenting-the-trade-decision",
+   "en_hash": "be480975b122feda",
+   "fr_hash": "087207b597ba3800"
+  },
+  {
+   "id": "chapter-4-mission-needs-stakeholders-trade-studies-and-concept-of-operations/4-8-concept-of-operations",
+   "en_hash": "983b5e1286ebdac7",
+   "fr_hash": "207e4c7e9ed2c3e5"
+  },
+  {
+   "id": "chapter-4-mission-needs-stakeholders-trade-studies-and-concept-of-operations/4-8-concept-of-operations/4-8-1-three-segments-of-a-space-mission",
+   "en_hash": "6f846fedaa50f76e",
+   "fr_hash": "8ef41dde42e9a6d0"
+  },
+  {
+   "id": "chapter-4-mission-needs-stakeholders-trade-studies-and-concept-of-operations/4-8-concept-of-operations/4-8-2-mission-phases",
+   "en_hash": "fa0e5f06340f7bbe",
+   "fr_hash": "847e9cd57040ec0b"
+  },
+  {
+   "id": "chapter-4-mission-needs-stakeholders-trade-studies-and-concept-of-operations/4-8-concept-of-operations/4-8-3-operational-modes",
+   "en_hash": "058891bf0b3417c7",
+   "fr_hash": "95ee9a3d9c9513c5"
+  },
+  {
+   "id": "chapter-4-mission-needs-stakeholders-trade-studies-and-concept-of-operations/4-8-concept-of-operations/4-8-4-duty-cycling",
+   "en_hash": "7b0407076c3aa5cc",
+   "fr_hash": "66bdea4ba15ecae7"
+  },
+  {
+   "id": "chapter-4-mission-needs-stakeholders-trade-studies-and-concept-of-operations/4-8-concept-of-operations/4-8-5-data-flow",
+   "en_hash": "e5403aca54fa2fc8",
+   "fr_hash": "d242f2cab0766ced"
+  },
+  {
+   "id": "chapter-4-mission-needs-stakeholders-trade-studies-and-concept-of-operations/4-9-returning-to-unisat-1-why-1u-rather-than-2u-or-3u",
+   "en_hash": "2a3ce4b2bd551592",
+   "fr_hash": "c252057cc34f06db"
+  },
+  {
+   "id": "chapter-4-mission-needs-stakeholders-trade-studies-and-concept-of-operations/summary",
+   "en_hash": "cb51b29b1794ea0c",
+   "fr_hash": "0cf51dd6bd6c8d06"
+  },
+  {
+   "id": "chapter-4-mission-needs-stakeholders-trade-studies-and-concept-of-operations/problems",
+   "en_hash": "158e9157769921e6",
+   "fr_hash": "8d00aa04cbe0b928"
+  },
+  {
+   "id": "chapter-4-mission-needs-stakeholders-trade-studies-and-concept-of-operations/references",
+   "en_hash": "e6cf0ca4051dce47",
+   "fr_hash": "ff3743a3563bb1fe"
+  }
+ ],
+ "en_commit": "be16bc3"
+}

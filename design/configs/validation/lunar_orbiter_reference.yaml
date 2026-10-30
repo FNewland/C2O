@@ -1,0 +1,37 @@
+# Lunar Science Orbiter — reference design point
+#
+# Reference values from LADEE, LRO, Chandrayaan-1/2, KPLO, and SMAD4.
+
+template_id: lunar_orbiter
+description: "Lunar science orbiter @ 100 km polar LLO, dual instruments, 2-year mission"
+
+parameters:
+  mass.dry_mass_kg:
+    reference_value: 300.0
+    tolerance_percent: 50.0
+    citation: "LADEE ~248 kg dry, Chandrayaan-1 ~523 kg, LRO ~1018 kg; 300 kg class typical"
+
+  mass.wet_mass_kg:
+    reference_value: 430.0
+    tolerance_percent: 40.0
+    citation: "Significant prop for TLI+LOI; wet/dry ratio ~1.3-1.5 with biprop"
+
+  power.total_sunlight_w:
+    reference_value: 80.0
+    tolerance_percent: 60.0
+    citation: "Science payload 25+15 W + bus 30-50 W"
+
+  power.sa_power_eol_w:
+    reference_value: 150.0
+    tolerance_percent: 60.0
+    citation: "Deployable wings, sized for 45-min eclipse seasons"
+
+  cost.total_meur:
+    reference_value: 70.0
+    tolerance_percent: 50.0
+    citation: "LADEE ~280M USD, KPLO ~180M USD, Chandrayaan-1 ~80M USD"
+
+  orbit.period_s:
+    reference_value: 7066.0
+    tolerance_percent: 5.0
+    citation: "Physics: 100 km LLO period = 2π√((1837.4 km)³ / μ_moon) ≈ 7066 s (117.8 min)"

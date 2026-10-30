@@ -1,0 +1,177 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "docs/USER_GUIDE.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "spacecdf-user-guide",
+   "en_hash": "90f50cc05990f176",
+   "fr_hash": "a973991e0b0fd825"
+  },
+  {
+   "id": "spacecdf-user-guide/overview",
+   "en_hash": "3d0ca8cb333deecb",
+   "fr_hash": "2fa448e872a3842d"
+  },
+  {
+   "id": "spacecdf-user-guide/getting-started",
+   "en_hash": "c6144136c5fdde00",
+   "fr_hash": "84a53e703a1b0c5a"
+  },
+  {
+   "id": "spacecdf-user-guide/getting-started/installation",
+   "en_hash": "2a31a0612834ea0e",
+   "fr_hash": "e97753fee6053de6"
+  },
+  {
+   "id": "spacecdf-user-guide/getting-started/connecting-to-a-remote-instance",
+   "en_hash": "e81940d6c2c3a778",
+   "fr_hash": "cf2dfb75eafd9a54"
+  },
+  {
+   "id": "spacecdf-user-guide/workflow",
+   "en_hash": "7136000e494604c0",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "spacecdf-user-guide/workflow/step-1-mission-need",
+   "en_hash": "b67f73349190ffa5",
+   "fr_hash": "fced23fdd5b67ef8"
+  },
+  {
+   "id": "spacecdf-user-guide/workflow/step-2-concept-exploration",
+   "en_hash": "f8af7a71f2ae7c2e",
+   "fr_hash": "6cc6fe02ea95213a"
+  },
+  {
+   "id": "spacecdf-user-guide/workflow/step-3-requirements",
+   "en_hash": "5a168f23c84dbee3",
+   "fr_hash": "414f70dc96bdc65d"
+  },
+  {
+   "id": "spacecdf-user-guide/workflow/step-4-design-phase",
+   "en_hash": "b156c59ce7ac3426",
+   "fr_hash": "2ea51cdfbf04f098"
+  },
+  {
+   "id": "spacecdf-user-guide/key-features",
+   "en_hash": "9214cf33ff90e03f",
+   "fr_hash": "bc5c906e6259de40"
+  },
+  {
+   "id": "spacecdf-user-guide/key-features/dashboard",
+   "en_hash": "61be684ce7f21e29",
+   "fr_hash": "c09fe633f13e9ee4"
+  },
+  {
+   "id": "spacecdf-user-guide/key-features/equipment-browser",
+   "en_hash": "19b96cdb59cbe686",
+   "fr_hash": "56c58a0ef0861186"
+  },
+  {
+   "id": "spacecdf-user-guide/key-features/trade-studies",
+   "en_hash": "745401ac537d9bca",
+   "fr_hash": "7e4c89f7c22e4bc9"
+  },
+  {
+   "id": "spacecdf-user-guide/key-features/link-budget-tool",
+   "en_hash": "b2d7bb6591dd8fc0",
+   "fr_hash": "d0e14ee18439db2b"
+  },
+  {
+   "id": "spacecdf-user-guide/key-features/optimizer",
+   "en_hash": "129e1dd5f48c9a91",
+   "fr_hash": "bb89e51ef9a52de9"
+  },
+  {
+   "id": "spacecdf-user-guide/key-features/exports",
+   "en_hash": "9a55d39798e131dd",
+   "fr_hash": "f42009fa1e1a5012"
+  },
+  {
+   "id": "spacecdf-user-guide/key-features/cross-tool-reactivity",
+   "en_hash": "2a686a524ffe4712",
+   "fr_hash": "b094ebd271db6649"
+  },
+  {
+   "id": "spacecdf-user-guide/key-features/analyses-tab-workbench",
+   "en_hash": "d6384eb5e25e1c62",
+   "fr_hash": "991f52dcfa65b9f3"
+  },
+  {
+   "id": "spacecdf-user-guide/editing-parametric-data",
+   "en_hash": "344b4c3758cf160b",
+   "fr_hash": "0e91c3e8f37edb6d"
+  },
+  {
+   "id": "spacecdf-user-guide/updating-equipment-database",
+   "en_hash": "e286f75e483c2e36",
+   "fr_hash": "b24cb38aaef9f9d7"
+  },
+  {
+   "id": "spacecdf-user-guide/concurrent-design-sessions",
+   "en_hash": "2a542f90113fd584",
+   "fr_hash": "28e04d05457f479d"
+  },
+  {
+   "id": "spacecdf-user-guide/keyboard-shortcuts",
+   "en_hash": "40220e86f01ad72a",
+   "fr_hash": "d9501cd038949cf0"
+  },
+  {
+   "id": "spacecdf-user-guide/troubleshooting",
+   "en_hash": "5c85c81aa2006442",
+   "fr_hash": "194e4284430054c8"
+  },
+  {
+   "id": "spacecdf-user-guide/new-features-up6",
+   "en_hash": "4a9ca58093b0c4f1",
+   "fr_hash": "1d61f90d4f7aa0ca"
+  },
+  {
+   "id": "spacecdf-user-guide/new-features-up6/progressive-level-unlocking",
+   "en_hash": "0044c993cdddbbd1",
+   "fr_hash": "6ddf8a8630599d8d"
+  },
+  {
+   "id": "spacecdf-user-guide/new-features-up6/interactive-mission-architecture-editor",
+   "en_hash": "9dba91b598820cc8",
+   "fr_hash": "ba3dac2d1614bdf2"
+  },
+  {
+   "id": "spacecdf-user-guide/new-features-up6/system-architecture-selection",
+   "en_hash": "9a838702abfd1d94",
+   "fr_hash": "9327ddd79c88abdf"
+  },
+  {
+   "id": "spacecdf-user-guide/new-features-up6/engineering-budgets-unified-view",
+   "en_hash": "f30354c71ee472e0",
+   "fr_hash": "a3511bf57056f5e1"
+  },
+  {
+   "id": "spacecdf-user-guide/new-features-up6/constraint-propagation-engine",
+   "en_hash": "0c695cde14929d67",
+   "fr_hash": "aff18b2090487cf3"
+  },
+  {
+   "id": "spacecdf-user-guide/new-features-up6/project-management",
+   "en_hash": "abdf03a7d5c48c91",
+   "fr_hash": "f46bae6aa6287c68"
+  },
+  {
+   "id": "spacecdf-user-guide/new-features-up6/word-document-export",
+   "en_hash": "4a45a46798021325",
+   "fr_hash": "0140d02151cbd372"
+  },
+  {
+   "id": "spacecdf-user-guide/new-features-up6/session-persistence",
+   "en_hash": "6fa85c49fa058851",
+   "fr_hash": "d78c6131465d8833"
+  }
+ ],
+ "en_commit": "3ea7113"
+}
