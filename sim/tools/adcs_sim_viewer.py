@@ -458,7 +458,7 @@ hr{border:none;border-top:1px solid var(--bdr)}
 </head>
 <body>
 <header>
-  <span class="hlogo">EO-Sat-1</span>
+  <span class="hlogo">EOSAT-1</span>
   <div class="hsep"></div>
   <span class="hsub">ADCS Failure-Scenario Viewer &mdash; :8097 &mdash; physics: ADCS_failure_sim/cubesat_adcs_sim.py</span>
 </header>

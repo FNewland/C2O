@@ -14,8 +14,8 @@
   },
   {
    "id": "orbit-north/course-information",
-   "en_hash": "e208e414c949bbd1",
-   "fr_hash": "31ed38c634f46512"
+   "en_hash": "91ca459906a8047d",
+   "fr_hash": "cd28bd7015c876ab"
   },
   {
    "id": "orbit-north/instructor-information",
@@ -34,8 +34,8 @@
   },
   {
    "id": "orbit-north/additional-course-description",
-   "en_hash": "1d64b838d920ae1b",
-   "fr_hash": "ccffc4255ce1fc26"
+   "en_hash": "2787fc16e82e4e94",
+   "fr_hash": "8d5a26909deaacca"
   },
   {
    "id": "orbit-north/indigenous-affirmation",
@@ -84,8 +84,8 @@
   },
   {
    "id": "orbit-north/assessment-strategy",
-   "en_hash": "bd2c3667249819cc",
-   "fr_hash": "86590e75d0f3eaf1"
+   "en_hash": "f6589691e11a4eaa",
+   "fr_hash": "01c0e1987d48ea9b"
   },
   {
    "id": "orbit-north/time-commitment",
@@ -113,14 +113,14 @@
    "fr_hash": "52526e415eae11c8"
   },
   {
-   "id": "orbit-north/course-calendar/week-1-canadian-context-cdf-intro-concept-development-ottawa-6-7-august-2026",
-   "en_hash": "b7c5daf5810b7d50",
-   "fr_hash": "4b75945380c6937e"
+   "id": "orbit-north/course-calendar/week-1-canadian-context-cdf-intro-concept-development-informal-mcr-ottawa-6-7-august-2026",
+   "en_hash": "06fe20f36c8986d3",
+   "fr_hash": "1b1f87a09cecf3c3"
   },
   {
-   "id": "orbit-north/course-calendar/week-2-mcr-regulatory-cdf-intensive-ottawa-10-14-august-2026",
-   "en_hash": "ba94675c40ccc48d",
-   "fr_hash": "ebdb442ebe30fb1a"
+   "id": "orbit-north/course-calendar/week-2-regulatory-cdf-intensive-pdr-style-review-ottawa-10-14-august-2026",
+   "en_hash": "a4a068945b83c3d8",
+   "fr_hash": "71348588048b5aab"
   },
   {
    "id": "orbit-north/course-calendar/week-3-operations-mission-simulation-uottawa-cyberrange-17-21-august-2026",
@@ -143,5 +143,5 @@
    "fr_hash": "00ee79a5984c97ec"
   }
  ],
- "en_commit": "be16bc3"
+ "en_commit": "c4a140a"
 }

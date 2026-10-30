@@ -116,7 +116,7 @@ python -m smo_mcs --simulator-host gateway.corp.net:6789 --mcs-port 8080
 ```
 Spacecraft: EOSAT-1
 Phase: Nominal Operations
-Orbit: 98.0° sun-synchronous, ~513 km mean altitude
+Orbit: 97.39° sun-synchronous, ~513 km mean altitude, LTAN ~10:00
 
 Attitude:
   Quaternion: (0.001, 0.707, -0.002, 0.707)
@@ -284,7 +284,7 @@ Anomalie : marge < 3 dB → une règle S19 déclenche une hausse de puissance d
 ```
 MCS: Query HK_AOCS (S3 subtype 27, SID=2)
 Check:
-  - aocs.mode = 4 (nominal_nadir)
+  - aocs.mode = 4 (NOMINAL)
   - aocs.att_error < 0.5° (attitude good)
   - aocs.total_momentum < 50 Nms (wheels not saturated)
   - Power: eps.bus_voltage > 27V (sufficient power)
@@ -638,7 +638,7 @@ MCS: Check AOCS status
   S3 request HK_AOCS (SID=2)
   aocs.st1_status = 3 (blind)
   aocs.st2_status = 3 (blind)
-  aocs.mode = 4 (nominal_nadir, unsustainable without ST)
+  aocs.mode = 4 (NOMINAL, unsustainable without ST)
 
 MCS Commands:
   1. S8 func_id=0 (AOCS_SET_MODE), mode=3 (coarse_sun_pointing)
@@ -1424,7 +1424,7 @@ S13 subtype 1:  Transfer initiation (blocks other downlink activities)
 
 ### Vue d'ensemble
 
-La séquence de phase de lancement et de début d'orbite (LEOP) et de recette en orbite d'EOSAT-1 mène le satellite de la séparation jusqu'aux opérations nominales en 24 heures environ, sur 16 passages au-dessus des stations sol. Le satellite évolue sur une orbite héliosynchrone d'environ 513 km (altitude moyenne) inclinée à 98° (période d'environ 94,5 min, 15,24 révolutions/jour). Deux stations sol assurent la couverture : Troll (Antarctique, −72,012° S) et Iqaluit (Canada, 63,747° N).
+La séquence de phase de lancement et de début d'orbite (LEOP) et de recette en orbite d'EOSAT-1 mène le satellite de la séparation jusqu'aux opérations nominales en 24 heures environ, sur 16 passages au-dessus des stations sol. Le satellite évolue sur une orbite héliosynchrone d'environ 513 km (altitude moyenne) inclinée à 97,39°, de LTAN ~10:00 (période d'environ 94,5 min, 15,24 révolutions/jour). Le réseau compte cinq stations sol (Iqaluit, Troll, Svalbard, Inuvik, O'Higgins ; manuel 05 §5) ; la chronologie indicative ci-dessous n'en utilise que deux : Troll (Antarctique, −72,012° S) et Iqaluit (Canada, 63,747° N).
 
 ### Phases du satellite
 

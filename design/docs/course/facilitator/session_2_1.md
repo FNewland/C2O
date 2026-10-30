@@ -24,7 +24,7 @@ By the end of this session, participants will be able to:
 2. Write requirements that satisfy the SMART criteria and express WHAT, not HOW
 3. Classify requirements by type: functional, performance, interface, constraint, and environmental
 4. Construct a three-level requirement hierarchy (mission, system, subsystem) with bidirectional traceability
-5. Assign verification methods (ATID) to requirements and justify each choice
+5. Assign verification methods (ATIR(D)) to requirements and justify each choice
 6. Use SpaceCDF's Requirements tab to generate, validate, and manage requirements
 
 ---
@@ -241,16 +241,17 @@ A compound requirement that addresses multiple concerns must be split for indepe
 
 ---
 
-## 5. Verification Methods -- ATID
-*[Source: ECSS-E-ST-10-02C Rev.1 Sec. 5.3; NASA SEH Sec. 5.3]*
+## 5. Verification Methods -- ATIR(D)
+*[Source: ECSS-E-ST-10-02C Rev.1 §5.2.2; NASA SEH Sec. 5.3]*
 
-Every requirement must have an assigned verification method. The four standard methods (sometimes called ATRI or ATID) are:
+Every requirement must have an assigned verification method. ECSS-E-ST-10-02C Rev.1 §5.2.2.1 defines four methods -- test, analysis, review of design and inspection -- and counts demonstration as part of test; NASA practice lists demonstration as a separate fifth method. This book abbreviates the set as ATIR(D):
 
 | Method | Code | What It Proves | When Used |
 |--------|------|---------------|-----------|
 | **Analysis** | A | Requirement satisfied by mathematical model, simulation, or similarity | Phase B--C; when testing is impractical or cost-prohibitive |
 | **Test** | T | Requirement satisfied by physical measurement | Phase C--D; when proof requires hardware in a controlled environment |
 | **Inspection** | I | Requirement confirmed by visual or physical examination | Physical characteristics (dimensions, labels, markings, mass) |
+| **Review of design** | R | Requirement confirmed by examination of drawings, schematics or documentation | Design features that can be established from the records (e.g., use of approved parts, redundancy present) |
 | **Demonstration** | D | Requirement confirmed by operational exercise | Functional requirements proven by executing procedures |
 
 ### Verification Method Selection Guide
@@ -391,4 +392,4 @@ Every requirement must have an assigned verification method. The four standard m
 | Requirement types | Functional, performance, interface, constraint, environmental |
 | Hierarchy | Mission -> System -> Subsystem with bidirectional traceability (up, down, horizontal) |
 | Splitting | One concern per requirement for independent verification |
-| ATID | Analysis, Test, Inspection, Demonstration -- assigned per requirement per phase |
+| ATIR(D) | Analysis, Test, Inspection, Review of design (+ Demonstration) -- assigned per requirement per phase |

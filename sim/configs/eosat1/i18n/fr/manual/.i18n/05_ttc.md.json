@@ -9,104 +9,104 @@
   },
   {
    "id": "eosat-1-telemetry-tracking-and-command-ttc",
-   "en_hash": "32b3121dc6dad9b8",
-   "fr_hash": "8cbf1350eb0897d7"
+   "en_hash": "e68d2d0b4d6ee2b0",
+   "fr_hash": "a26236c49b6d7e2f"
   },
   {
    "id": "eosat-1-telemetry-tracking-and-command-ttc/1-overview",
-   "en_hash": "55554f9b12357011",
-   "fr_hash": "de53091d78eace2d"
+   "en_hash": "e5fa13eb8dda3215",
+   "fr_hash": "3a8cbb114700d4c2"
   },
   {
    "id": "eosat-1-telemetry-tracking-and-command-ttc/2-architecture",
-   "en_hash": "0cc3a538694210a4",
-   "fr_hash": "0cc3a538694210a4"
+   "en_hash": "d4fe2962b898e9ec",
+   "fr_hash": "d4fe2962b898e9ec"
   },
   {
-   "id": "eosat-1-telemetry-tracking-and-command-ttc/2-architecture/2-1-transponder-configuration",
-   "en_hash": "296f428679fa5fa0",
-   "fr_hash": "c7ce71bc4eafa13e"
+   "id": "eosat-1-telemetry-tracking-and-command-ttc/2-architecture/21-transponder-configuration",
+   "en_hash": "4cc2e9c4d9079843",
+   "fr_hash": "e882d376d3c8d034"
   },
   {
-   "id": "eosat-1-telemetry-tracking-and-command-ttc/2-architecture/2-2-dedicated-pdm-command-channel",
-   "en_hash": "456d80ea258ab3e3",
-   "fr_hash": "cd4de2fac7480d60"
+   "id": "eosat-1-telemetry-tracking-and-command-ttc/2-architecture/22-dedicated-pdm-command-channel",
+   "en_hash": "54e7dfd49bbcb87e",
+   "fr_hash": "1df9b3962acaaa7d"
   },
   {
-   "id": "eosat-1-telemetry-tracking-and-command-ttc/2-architecture/2-3-antenna-system-burn-wire-deployment",
-   "en_hash": "491e5dcd8b9fb724",
-   "fr_hash": "6ef185c4e700f097"
+   "id": "eosat-1-telemetry-tracking-and-command-ttc/2-architecture/23-antenna-system--burn-wire-deployment",
+   "en_hash": "168a1971590351cd",
+   "fr_hash": "cb5d6be3d9428bba"
   },
   {
-   "id": "eosat-1-telemetry-tracking-and-command-ttc/2-architecture/2-4-the-tm-data-rate-ladder",
-   "en_hash": "bb63e3b5c2cc5d06",
-   "fr_hash": "40c094bcba30fb77"
+   "id": "eosat-1-telemetry-tracking-and-command-ttc/2-architecture/24-the-tm-data-rate-ladder",
+   "en_hash": "357efdbc3d60d8ac",
+   "fr_hash": "1edea2c99a403262"
   },
   {
-   "id": "eosat-1-telemetry-tracking-and-command-ttc/2-architecture/2-5-beacon-packet-mode",
-   "en_hash": "ab5854ae0ced26c2",
-   "fr_hash": "9107a2e3633dc8e0"
+   "id": "eosat-1-telemetry-tracking-and-command-ttc/2-architecture/25-beacon-packet-mode",
+   "en_hash": "66b9a21ddd8c6a92",
+   "fr_hash": "1ac1a03a3f80fb42"
   },
   {
    "id": "eosat-1-telemetry-tracking-and-command-ttc/3-link-budget-summary",
-   "en_hash": "a42a5ba9d3bf42bd",
-   "fr_hash": "8670c97dcb071ae2"
+   "en_hash": "e0dfa32a916e93f1",
+   "fr_hash": "5287ce01f1bb6edf"
   },
   {
-   "id": "eosat-1-telemetry-tracking-and-command-ttc/3-link-budget-summary/3-1-uplink-ground-to-spacecraft",
-   "en_hash": "e7af1f22dc86ff96",
-   "fr_hash": "2cc251d5cc2e8c9a"
+   "id": "eosat-1-telemetry-tracking-and-command-ttc/3-link-budget-summary/31-uplink-ground-to-spacecraft",
+   "en_hash": "16dd64bf2ed91c6b",
+   "fr_hash": "eb99710120ef7cc4"
   },
   {
-   "id": "eosat-1-telemetry-tracking-and-command-ttc/3-link-budget-summary/3-2-downlink-spacecraft-to-ground",
-   "en_hash": "e6a0cd4a22fc48ea",
-   "fr_hash": "d04c3c6ea35a4aa8"
+   "id": "eosat-1-telemetry-tracking-and-command-ttc/3-link-budget-summary/32-downlink-spacecraft-to-ground",
+   "en_hash": "bde7e607b6ca9ec3",
+   "fr_hash": "68332667a4729216"
   },
   {
    "id": "eosat-1-telemetry-tracking-and-command-ttc/4-telemetry-parameters",
-   "en_hash": "01c5c2260e6fd91a",
-   "fr_hash": "0b06d57c517af35e"
+   "en_hash": "3c469319dd832b74",
+   "fr_hash": "a388c38afac2e47f"
   },
   {
    "id": "eosat-1-telemetry-tracking-and-command-ttc/5-ground-station-contacts",
-   "en_hash": "182b3fa7d5f2516c",
-   "fr_hash": "5a6a0e6fa8685b0b"
+   "en_hash": "66ef445b2ad36df1",
+   "fr_hash": "ee6d20bb8fb35cd8"
   },
   {
-   "id": "eosat-1-telemetry-tracking-and-command-ttc/5-ground-station-contacts/5-1-iqaluit-ground-station-nunavut-canada",
-   "en_hash": "dfa907aae5f429d6",
-   "fr_hash": "4e3f706729657291"
+   "id": "eosat-1-telemetry-tracking-and-command-ttc/5-ground-station-contacts/51-station-network",
+   "en_hash": "d16ac9cf01e1d626",
+   "fr_hash": "4a0095a6043c0bcb"
   },
   {
-   "id": "eosat-1-telemetry-tracking-and-command-ttc/5-ground-station-contacts/5-2-troll-ground-station-queen-maud-land-antarctica",
-   "en_hash": "b3b37d4f7e820867",
-   "fr_hash": "ec4cd8517bda7497"
+   "id": "eosat-1-telemetry-tracking-and-command-ttc/5-ground-station-contacts/52-station-roles",
+   "en_hash": "83fb71b0004edd60",
+   "fr_hash": "0df3cd555cdbcfe4"
   },
   {
-   "id": "eosat-1-telemetry-tracking-and-command-ttc/5-ground-station-contacts/5-3-per-station-link-budget",
-   "en_hash": "3b9bb07f8bcf99df",
-   "fr_hash": "3270843c6a712275"
+   "id": "eosat-1-telemetry-tracking-and-command-ttc/5-ground-station-contacts/53-per-station-link-budget",
+   "en_hash": "60c611970c7b377c",
+   "fr_hash": "97959f6d15cb34f4"
   },
   {
    "id": "eosat-1-telemetry-tracking-and-command-ttc/6-commands",
-   "en_hash": "45780d749f64eaa8",
-   "fr_hash": "db093e943757febb"
+   "en_hash": "449e976af12b4d57",
+   "fr_hash": "978e29278984c0e6"
   },
   {
-   "id": "eosat-1-telemetry-tracking-and-command-ttc/6-commands/6-1-transponder-switchover-procedure",
-   "en_hash": "7a19c19579856441",
-   "fr_hash": "95d19023c75a6052"
+   "id": "eosat-1-telemetry-tracking-and-command-ttc/6-commands/61-transponder-switchover-procedure",
+   "en_hash": "0a42881cb2b38d63",
+   "fr_hash": "dda6e86b9e430c05"
   },
   {
    "id": "eosat-1-telemetry-tracking-and-command-ttc/7-operational-notes",
-   "en_hash": "6dc8df3d5e1ba0be",
-   "fr_hash": "51c82685ddf6fb4f"
+   "en_hash": "53c4167b06e8eee9",
+   "fr_hash": "d878d5fb25472111"
   },
   {
    "id": "eosat-1-telemetry-tracking-and-command-ttc/8-failure-modes",
-   "en_hash": "4ff108022f648aee",
-   "fr_hash": "f236f8fce7c05b8c"
+   "en_hash": "ccc4a7ba13d1ca42",
+   "fr_hash": "331d028507540102"
   }
  ],
- "en_commit": "3e80564"
+ "en_commit": "c4a140a"
 }

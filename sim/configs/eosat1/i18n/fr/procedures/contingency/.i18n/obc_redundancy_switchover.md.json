@@ -74,9 +74,9 @@
   },
   {
    "id": "ctg-011-obc-redundancy-switchover/contingency",
-   "en_hash": "528655ab92f13682",
-   "fr_hash": "7402ac22dc9137ac"
+   "en_hash": "6c8596c645db954f",
+   "fr_hash": "eb0a8e14818cb9e4"
   }
  ],
- "en_commit": "3e80564"
+ "en_commit": "c4a140a"
 }

@@ -1,9 +1,9 @@
-# 10. Affectation des procédures par poste
+# 10. Affectation des procédures par poste {#10-desk-based-procedure-assignments}
 
 Cette section affecte chaque procédure de recette en orbite et de contingence à un
 poste opérateur précis et définit, pour chacune, les annonces GO/NO-GO requises.
 
-## Postes opérateurs
+## Postes opérateurs {#operator-positions}
 
 | ID du poste      | Nom de la console  | Sous-systèmes           | ID de fonction S8 |
 |------------------|--------------------|-------------------------|-------------------|
@@ -16,14 +16,14 @@ poste opérateur précis et définit, pour chacune, les annonces GO/NO-GO requis
 
 ---
 
-## Procédures de recette en orbite par poste
+## Procédures de recette en orbite par poste {#commissioning-procedures-by-desk}
 
-### Direction de vol (coordination d'ensemble)
+### Direction de vol (coordination d'ensemble) {#flight-director-overall-coordination}
 
 Le directeur de vol est maître de la chronologie de recette en orbite et autorise chaque
 jalon GO/NO-GO. Il n'exécute pas lui-même d'étapes, sauf mention contraire ci-dessous.
 
-### eps_tcs — Puissance et thermique
+### eps_tcs — Puissance et thermique {#eps_tcs--power--thermal}
 
 | ID proc.  | Titre                        | Pilote | Appui     | GO/NO-GO FD |
 |-----------|------------------------------|------|-------------|-------------|
@@ -60,7 +60,7 @@ jalon GO/NO-GO. Il n'exécute pas lui-même d'étapes, sauf mention contraire ci
 
 ---
 
-### aocs — Dynamique du vol
+### aocs — Dynamique du vol {#aocs--flight-dynamics}
 
 | ID proc.  | Titre                        | Pilote | Appui     | GO/NO-GO FD |
 |-----------|------------------------------|------|-------------|-------------|
@@ -98,7 +98,7 @@ jalon GO/NO-GO. Il n'exécute pas lui-même d'étapes, sauf mention contraire ci
 
 ---
 
-### ttc — TT&C
+### ttc — TT&C {#ttc--ttc}
 
 | ID proc.  | Titre                        | Pilote | Appui     | GO/NO-GO FD |
 |-----------|------------------------------|------|-------------|-------------|
@@ -117,7 +117,7 @@ jalon GO/NO-GO. Il n'exécute pas lui-même d'étapes, sauf mention contraire ci
 
 ---
 
-### fdir_systems — FDIR / Systèmes
+### fdir_systems — FDIR / Systèmes {#fdir_systems--fdir--systems}
 
 | ID proc.  | Titre                        | Pilote | Appui     | GO/NO-GO FD |
 |-----------|------------------------------|------|-------------|-------------|
@@ -144,7 +144,7 @@ jalon GO/NO-GO. Il n'exécute pas lui-même d'étapes, sauf mention contraire ci
 
 ---
 
-### payload_ops — Opérations charge utile
+### payload_ops — Opérations charge utile {#payload_ops--payload-operations}
 
 | ID proc.  | Titre                        | Pilote | Appui     | GO/NO-GO FD |
 |-----------|------------------------------|------|-------------|-------------|
@@ -179,9 +179,9 @@ jalon GO/NO-GO. Il n'exécute pas lui-même d'étapes, sauf mention contraire ci
 
 ---
 
-## Procédures de contingence par poste
+## Procédures de contingence par poste {#contingency-procedures-by-desk}
 
-### eps_tcs — Contingences puissance et thermique
+### eps_tcs — Contingences puissance et thermique {#eps_tcs--power--thermal-contingencies}
 
 | ID proc.      | Titre                            | Pilote   | Appui        | GO/NO-GO FD | Critique en temps |
 |---------------|----------------------------------|----------|--------------|-------------|---------------|
@@ -208,7 +208,7 @@ avant que ses équipements ne soient délestés, et le FD autorise chaque niveau
 
 ---
 
-### aocs — Contingences dynamique du vol
+### aocs — Contingences dynamique du vol {#aocs--flight-dynamics-contingencies}
 
 | ID proc.      | Titre                            | Pilote | Appui        | GO/NO-GO FD | Critique en temps |
 |---------------|----------------------------------|------|--------------|-------------|---------------|
@@ -230,7 +230,7 @@ eps_tcs est consulté sur la marge de puissance avant l'activation de capteurs r
 
 ---
 
-### ttc — Contingences TT&C
+### ttc — Contingences TT&C {#ttc--ttc-contingencies}
 
 | ID proc.      | Titre                            | Pilote | Appui        | GO/NO-GO FD | Critique en temps |
 |---------------|----------------------------------|------|--------------|-------------|---------------|
@@ -254,7 +254,7 @@ après 2 passages consécutifs en échec.
 
 ---
 
-### payload_ops — Contingences charge utile
+### payload_ops — Contingences charge utile {#payload_ops--payload-contingencies}
 
 | ID proc.      | Titre                            | Pilote | Appui        | GO/NO-GO FD | Critique en temps |
 |---------------|----------------------------------|------|--------------|-------------|---------------|
@@ -268,12 +268,11 @@ Les défaillances mémoire peuvent imposer une replanification de la mission si 
 
 ---
 
-### fdir_systems — Contingences OBDH / systèmes
+### fdir_systems — Contingences OBDH / systèmes {#fdir_systems--obdh--systems-contingencies}
 
 | ID proc.      | Titre                            | Pilote | Appui        | GO/NO-GO FD | Critique en temps |
 |---------------|----------------------------------|------|--------------|-------------|---------------|
 | CTG-010       | Reprise après réinitialisation par chien de garde de l'OBC | fdir_systems | eps_tcs | OUI — en cas de réinitialisations répétées | OUI — risque de boucle de redémarrage |
-| CTG-018 | Reprise par le chargeur d'amorçage | fdir_systems | tous les postes | OUI — à chaque étape de reprise | OUI — calage de l'inhibition d'amorçage |
 | CTG-017 | Basculement sur panne du bus CAN | fdir_systems | tous les postes | OUI — avant le basculement de bus | OUI — lacune HK de 10 s |
 | CTG-011 | Basculement sur l'OBC redondant | fdir_systems | tous les postes | OUI — CRITIQUE : plus aucune redondance ensuite | OUI — lacune TM de 60 s |
 | CTG-021 | Reprise par le chargeur d'amorçage de l'OBC | fdir_systems | eps_tcs | OUI — avant le rechargement de l'image | OUI — sur plusieurs contacts |
@@ -293,12 +292,12 @@ confirmer l'état de son sous-système après la reprise. Le basculement d'OBC e
 
 ---
 
-## Lacunes de l'interface MCS pour le soutien aux contingences
+## Lacunes de l'interface MCS pour le soutien aux contingences {#mcs-interface-gaps-for-contingency-support}
 
 Les fonctions MCS suivantes sont **absentes ou insuffisantes** pour une exécution correcte
 des procédures de contingence :
 
-### Lacunes critiques
+### Lacunes critiques {#critical-gaps}
 
 | N° | Lacune | Impact | Procédures concernées |
 |---|-----|--------|---------------------|
@@ -313,7 +312,7 @@ des procédures de contingence :
 | 9 | **Pas de bandeau « contingence active »** | Aucune indication visuelle signalant à tous les opérateurs qu'une contingence est en cours | Toutes les contingences |
 | 10 | **Pas de suivi des commandes en aveugle** | Pas de mode spécial pour les commandes envoyées sans confirmation par la TM | CTG-003, CTG-019 |
 
-### Priorités recommandées
+### Priorités recommandées {#recommended-priority}
 
 **P1 (à implémenter maintenant) :** n° 1 (compte à rebours d'éclipse), n° 2 (indicateur de délestage), n° 9 (bandeau de contingence)
 **P2 (à implémenter prochainement) :** n° 3 (alertes inter-sous-systèmes), n° 5 (état des ailes), n° 7 (filtres d'alarmes)
@@ -321,7 +320,7 @@ des procédures de contingence :
 
 ---
 
-## Matrice des annonces GO/NO-GO
+## Matrice des annonces GO/NO-GO {#gono-go-call-matrix}
 
 > **Remarque (G7) :** ce tableau est un MIROIR de la matrice lisible par machine de
 > `configs/eosat1/mcs/gonogo_matrix.yaml`, que le MCS sert à l'adresse
@@ -344,7 +343,7 @@ des procédures de contingence :
 
 ---
 
-## Chemins d'escalade vers les urgences
+## Chemins d'escalade vers les urgences {#emergency-escalation-paths}
 
 | Contingence d'origine | Déclencheur d'escalade | Procédure d'urgence |
 |------------------|--------------------|---------------------|

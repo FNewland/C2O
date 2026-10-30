@@ -9,8 +9,8 @@
   },
   {
    "id": "com-005-aocs-mode-transitions",
-   "en_hash": "6a1046acf297fa5f",
-   "fr_hash": "32a4eabba701718b"
+   "en_hash": "e15db3b9be6ef881",
+   "fr_hash": "41df40c6bfb7ed56"
   },
   {
    "id": "com-005-aocs-mode-transitions/purpose",
@@ -29,8 +29,8 @@
   },
   {
    "id": "com-005-aocs-mode-transitions/procedure-steps/step-1-latch-the-commanded-mode-nominal",
-   "en_hash": "78301d953bf0723c",
-   "fr_hash": "6f47cc9ed4d6b9fd"
+   "en_hash": "8a92cfcc65612632",
+   "fr_hash": "b6a977d44b24283f"
   },
   {
    "id": "com-005-aocs-mode-transitions/procedure-steps/step-2-commanded-nominal-finepoint-gated",
@@ -64,8 +64,8 @@
   },
   {
    "id": "com-005-aocs-mode-transitions/procedure-steps/step-8-document-the-transition-matrix",
-   "en_hash": "055fd4c5a093b98f",
-   "fr_hash": "01d9472b7d966418"
+   "en_hash": "615233007b120697",
+   "fr_hash": "215afb495dc21c59"
   },
   {
    "id": "com-005-aocs-mode-transitions/off-nominal-handling",
@@ -83,5 +83,5 @@
    "fr_hash": "613315a58324277e"
   }
  ],
- "en_commit": "983af0f"
+ "en_commit": "c4a140a"
 }

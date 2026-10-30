@@ -32,7 +32,7 @@ the planner take their own `--port`, so if 8080 is already in use
 on the teaching host, move the simulator rather than the clients:
 
 ```
-python -m smo_simulator --config configs/eosat1/ --port 8081 --speed 1.0
+smo-simulator --config configs/eosat1/ --port 8081 --speed 1.0
 ```
 
 Two operating rules that shape everything below:
@@ -43,7 +43,7 @@ Two operating rules that shape everything below:
   (S8.1 func 120; the FORCE flag permits a backwards move). The instructor
   console's `set_phase` (phases 0–6) is an instructor override for setting
   up or repairing a session, and `SET_PHASE` is not an alias of anything
-  — expect the team to send func 120 at the end of LEOP-007 and COM-013.
+  — expect the team to send func 120 at the end of LEOP-003 and COM-013.
 * Instructor commands (`set_speed`, `freeze`, `resume`, `inject`,
   `clear_failure`, `override_passes`, `set_phase`, the
   `scenario_*` calls, breakpoint save/load) go over the instructor
@@ -152,7 +152,7 @@ durations are the `duration_s` in the file.
 | `eps_progressive_load_shed.yaml` | Hard | 1800 s | Battery cell degrades, forces progressive shed | CTG-001 | Day 4 |
 | `eps_solar_panel_loss.yaml` | Hard | continuous | One solar array string fails | CTG-001 | Day 3 |
 | `eps_undervoltage.yaml` | Medium | continuous | Voltage drops below caution band | CTG-001 | Day 3 or 4 |
-| `first_contact.yaml` | (BP-2) | 5400 s | LEOP Day Start scenario | — | Day 3 |
+| `first_contact.yaml` | (BP-2) | 1800 s | LEOP Day Start scenario | — | Day 3 |
 | `fpa_overtemp.yaml` | Medium | 1200 s | FPA cooler under-spec: it cannot hold the commanded setpoint (default **−15 °C**; envelope −20 to 0 °C), so `payload.cooler_margin_k` (0x064B) goes ≤ 0 | CTG-004 | Day 4 |
 | `gs_antenna_failure.yaml` | Very hard | continuous | Primary GS antenna fails mid-pass | CTG-020 (**advisory** card — ground-side only, no spacecraft TCs) | Day 4 |
 | `gs_rf_degradation.yaml` | Easy | 600 s | BER climbs over the pass | CTG-014 / CTG-003 | Day 3 |
@@ -180,9 +180,11 @@ durations are the `duration_s` in the file.
 | `prop_burn_eclipse_power.yaml` | Hard | one-shot | Manoeuvre attempted into an eclipse power hole | CTG-028 / CTG-001 | Day 4 |
 | `prop_attitude_loss_mid_burn.yaml` | Very hard | one-shot | Attitude error exceeds the burn limit mid-firing; on-board abort | CTG-028 → CTG-002 | Day 4 |
 
-**EO-Sat-1 flies propulsion.** A 1U green monoprop, 66.9 m/s total,
-for debris avoidance and limited orbit maintenance (not end-of-life
-deorbit). Propulsion telecommands are S8 funcs 108–118, telemetry
+**EOSAT-1 flies propulsion.** A 1U green monoprop, 66.9 m/s total,
+for debris avoidance, limited orbit maintenance and the 34.3 m/s
+end-of-life perigee-lowering burn (NOM-014: perigee 513 → 390 km,
+re-entry in 1.5 years at mean solar activity, 4.2 at solar minimum;
+natural decay alone would take 5.0 and 14.2 years). Propulsion telecommands are S8 funcs 108–118, telemetry
 base 0x0B00, HK SID **9**. A burn re-fits the SGP4 element set, so
 passes and eclipses genuinely move afterwards (1 m/s gives Δa
 +1.800 km and −33.5 s at +24 h), and time acceleration is clamped
@@ -228,7 +230,7 @@ intent.
 
 # Chapter 2 — Mission Simulation Day (Instructor Walkthrough)
 
-> **Expected reading before this session.** Cal Poly CDS Rev 14 §5 (Launch ICD); SMAD4 Ch. 18.
+> **Expected reading before this session.** Open textbook *Concurrent Spacecraft Design* (OER), ch. 19, §§19.1–19.6 (why agencies rehearse, structuring a rehearsal, role allocation, scripting the phases, the anomaly library, the debrief); this book, ch. 5.10 (scenario catalogue); course textbook, Part 2 (*CubeSat Operations*), §8.1 (pass cycle overview); ECSS-E-ST-70C *Ground systems and operations* (31 July 2008), §5.5 *Operations teams build-up and training* and §5.6 *Operational validation* (simulations and rehearsals with the operational simulator, §5.6.2 b).
 
 
 
@@ -259,7 +261,7 @@ This session is a **hands-on simulation** of mission operations. The facilitator
 | **Spacecraft Controller (SC)** | Sends commands; monitors housekeeping telemetry | ConOps Editor, mode control |
 | **Ground Station Operator (GSO)** | Manages antenna scheduling; link acquisition | Data Budget, Link Budget |
 | **Payload Operator (PO)** | Plans and executes science observations | Payload parameters, data budget |
-| **Flight Dynamics (FD-nav)** | Monitors orbit; plans and calls the manoeuvres (EO-Sat-1 has a 1U green monoprop, 66.9 m/s) | Orbit parameters, PROP tab, sustainability |
+| **Flight Dynamics (FD-nav)** | Monitors orbit; plans and calls the manoeuvres (EOSAT-1 has a 1U green monoprop, 66.9 m/s) | Orbit parameters, PROP tab, sustainability |
 | **Anomaly Logger** | Documents all events, anomalies, and decisions | Worksheet 5.3 |
 
 *For smaller teams, combine roles: SC+GSO and PO+FD-nav are natural pairings.*
@@ -314,12 +316,12 @@ Teams should verify:
 | AOCS mode | `aocs.mode` (0x020F) | 2 (DETUMBLE) | Expected | Nominal |
 | Body rates | `aocs.rate_roll/pitch/yaw` (0x0204-06) | 1.4 deg/s | Decreasing | Nominal |
 | Running image | `obdh.sw_image` (0x0311) | 0 (BOOTLOADER) | Expected pre-boot | Nominal |
-| Antenna status | `ttc.antenna_deployed` (0x0520) | 0 (stowed) | deployed in LEOP-007 | -- |
+| Antenna status | `ttc.antenna_deployed` (0x0520) | 0 (stowed) | deployed in COM-006 | -- |
 | Beacon | `ttc.beacon_active` (0x0527) | 1 | Expected | Nominal |
 | Link status | `ttc.link_status` (0x0501) | 2 (LOCKED) | 2 = LOCKED | Nominal |
 | Uplink status | -- | Not yet attempted | -- | -- |
 
-Note the bus: EO-Sat-1 runs an **8S, 100 Wh** pack — 21.5 V empty,
+Note the bus: EOSAT-1 runs an **8S, 100 Wh** pack — 21.5 V empty,
 26.4 V nominal, 29.2 V full, with a ~28 V bus. A 7-8 V reading is
 a 2S CubeSat, not this spacecraft. FDIR undervoltage fires at
 **24.5 V**.
@@ -339,7 +341,7 @@ Teams should: compose command, verify encoding, transmit, wait for acknowledgeme
 **[Time Jump: T+24 hr]**
 *"Your satellite has completed detumbling. AOCS is in COARSE_SUN (mode 3). All HK parameters are nominal after 8 ground passes. You are ready to begin commissioning. What is your first activity?"*
 
-Expected: AOCS sensor calibration (COM-003) — magnetometer validity check (single unit, nothing to select), sun-sensor head health, and **on-board** gyro bias calibration with `AOCS_GYRO_CALIBRATION` (S8 func 13). There is no ground-computed bias upload.
+Expected: EPS and thermal checkouts (COM-001, COM-002), then the AOCS actuator checkout (COM-004): enable the four wheels and command wheel-controlled NOMINAL. Only then the AOCS sensor calibration (COM-003): gyros and a star tracker into the loop, then the **on-board** gyro bias calibration with `AOCS_GYRO_CALIBRATION` (S8 func 13). It is refused above 0.10 °/s of body rate, which the wheels-off COARSE_SUN hold cannot meet — that is why COM-004 comes first (ruling Q16). There is no ground-computed bias upload, and no magnetometer calibration (single unit, nothing to select).
 
 **[T+3 days -- Payload First Light]**
 *"AOCS is calibrated and holding NOMINAL (mode 4) at 0.3 degree attitude error. You are ready for payload first light. Walk me through your procedure."*
@@ -443,7 +445,7 @@ Teams report:
 - Total data downlinked in 30 days vs plan
 - Number of science observations completed vs plan
 - Any anomalies encountered (from injection exercise)
-- Current budget status: power margin (nominal orbit-average load ≈ 28.7 W against ≈ 38 W generation at worst beta), data margin, propellant remaining out of the 66.9 m/s total
+- Current budget status: power margin (nominal orbit-average load ≈ 28.8 W against ≈ 45.1 W generation at the worst-generation beta, β = −31.2°), data margin, propellant remaining out of the 66.9 m/s total
 - Orbit status: any conjunction alerts? Debris compliance on track?
 
 ### Debrief
@@ -469,7 +471,7 @@ Teams report:
 ### Preparation
 
 - Review each team's ConOps, FDIR rules, and procedures from Chapter 5.2
-- Select anomalies appropriate to the point the team has reached (e.g. don't inject a payload anomaly before COM-009 has powered the payload). EO-Sat-1 *does* have propulsion, so the `prop_*` scenarios are all in play once NOM-004 has been briefed.
+- Select anomalies appropriate to the point the team has reached (e.g. don't inject a payload anomaly before COM-009 has powered the payload). EOSAT-1 *does* have propulsion, so the `prop_*` scenarios are all in play once NOM-004 has been briefed.
 - Prepare HK data tables for each phase (modify the values in Section 2 to match the team's mission parameters)
 - Have backup anomalies ready if teams resolve injections quickly
 
@@ -582,8 +584,8 @@ Card format:
 
 - **Cue moment.** During LEOP-007 sequential power-on, inject
   on the line that's about to be enabled — `aocs_wheels`
-  (`line_index=7`) or `payload` (`line_index=3`). Or during
-  COM-009 payload power-on. Line indices run 0–8: 0 obc,
+  (`line_index=7`, step 3) — or during COM-009 payload power-on,
+  on `payload` (`line_index=3`). Line indices run 0–8: 0 obc,
   1 ttc_rx, 2 ttc_tx, 3 payload, 4 fpa_cooler, 5 htr_bat,
   6 htr_obc, 7 aocs_wheels, 8 prop.
 - **First indicator.** EPS sees the per-line current
@@ -610,9 +612,10 @@ Card format:
 
 ### 18.3 Reaction Wheel Stuck (Medium)
 
-- **Cue moment.** During LEOP-007 step 4 (wheels line energised
-  and AOCS booted into DETUMBLE). Inject `rw_seizure` on one wheel
-  as it spins up.
+- **Cue moment.** During COM-004, once the wheels are enabled and
+  the spacecraft is in wheel-controlled NOMINAL (the wheels stay
+  disabled through LEOP). Inject `rw_seizure` on one wheel as it
+  spins up.
 - **First indicator.** AOCS sees that wheel's speed
   (`aocs.rw2_speed`, 0x0208 for wheel index 1) pinned at 0 RPM
   while its current (`aocs.rw2_current`, 0x0251) stays high —
@@ -676,8 +679,8 @@ Card format:
 
 ### 18.5 OBC Watchdog Reset (Hard)
 
-- **Cue moment.** Mid-LEOP-007, around step 4 (wheels line and
-  AOCS boot). Inject `watchdog_reset` on obdh.
+- **Cue moment.** Mid-LEOP-007, around steps 3–5 (AOCS suite line,
+  magnetometer and magnetorquers, DETUMBLE). Inject `watchdog_reset` on obdh.
 - **First indicator.** All telemetry stops for ~15 s; then the
   UHF beacon comes back with the OBC in BOOTLOADER
   (`obdh.sw_image` 0x0311 = 0), `obdh.reboot_count` (0x030A)
@@ -707,7 +710,7 @@ Card format:
 
 ### 18.6 OBC Bus Failure (Hard)
 
-- **Cue moment.** During LEOP-007, after step 4 (wheels line
+- **Cue moment.** During LEOP-007, after step 3 (AOCS suite line
   energised, AOCS HK SID 2 appearing).
 - **First indicator.** AOCS HK SID 2 stops flowing; OBDH HK
   (SID 4) shows `obdh.bus_a_status` (0x030F) = 1 (ERROR) with

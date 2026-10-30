@@ -1,6 +1,6 @@
 {
  "tool_version": "1.0.0",
- "en_path": "${DRIVE_COURSE}/learner_workbook_expanded.md",
+ "en_path": "docs/course/learner_workbook_expanded.md",
  "sections": [
   {
    "id": "_preamble",
@@ -174,8 +174,8 @@
   },
   {
    "id": "worksheet-2-1-the-system-v-and-requirements-engineering/key-equations-reference",
-   "en_hash": "8f989d0b035f5347",
-   "fr_hash": "54de8947e0ea0496"
+   "en_hash": "66709a530f30cbec",
+   "fr_hash": "9022a03672c327b6"
   },
   {
    "id": "worksheet-2-1-the-system-v-and-requirements-engineering/part-a-system-v-mapping",
@@ -359,13 +359,13 @@
   },
   {
    "id": "worksheet-3-1-power-system-and-thermal-control-design/quick-reference-power-and-thermal-concepts/thermal-control-basics",
-   "en_hash": "95c8428aad11c667",
-   "fr_hash": "b48f3dbad32602d2"
+   "en_hash": "e7e3268df19ed0f0",
+   "fr_hash": "37e9c756670cae08"
   },
   {
    "id": "worksheet-3-1-power-system-and-thermal-control-design/key-equations-reference",
-   "en_hash": "b7f0fb1314c3a24a",
-   "fr_hash": "21111afb0f5d254a"
+   "en_hash": "60f5897506fe74b9",
+   "fr_hash": "e82b4f58cfb426ee"
   },
   {
    "id": "worksheet-3-1-power-system-and-thermal-control-design/worked-example-unisat-1-1u-power-and-thermal",
@@ -743,9 +743,9 @@
    "fr_hash": "5840b7a95dd3fdc4"
   },
   {
-   "id": "worksheet-4-2-verification-validation-planning/part-a-iadt-method-assignment",
-   "en_hash": "421924b56329ac96",
-   "fr_hash": "ec3195c0ccfa57b3"
+   "id": "worksheet-4-2-verification-validation-planning/part-a-atird-method-assignment",
+   "en_hash": "9cd32e151552605e",
+   "fr_hash": "55572d5b151b1928"
   },
   {
    "id": "worksheet-4-2-verification-validation-planning/part-b-dual-method-requirements",
@@ -1054,8 +1054,8 @@
   },
   {
    "id": "worksheet-5-4-final-review-presentations/part-f-self-assessment-rubric",
-   "en_hash": "58f1ce78747006e1",
-   "fr_hash": "f0e1fa2467f4bbb7"
+   "en_hash": "74d65d2891cd642d",
+   "fr_hash": "85d91839f32cc208"
   },
   {
    "id": "worksheet-5-4-final-review-presentations/notes-reflections",
@@ -1188,5 +1188,5 @@
   "worksheet-4-3-risk-interfaces-fmeca/part-b-5x5-risk-matrix-plot: numbers: missing in FR []  extra in FR ['5']",
   "worksheet-5-4-final-review-presentations/part-f-self-assessment-rubric: numbers: missing in FR []  extra in FR ['5']"
  ],
- "en_commit": "c175838"
+ "en_commit": "c4a140a"
 }

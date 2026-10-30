@@ -26,7 +26,7 @@ time_source: sim
 orbit:
   type: sun_synchronous
   altitude_km: 513.0  # mean geodetic altitude from the orbit.yaml TLE (owner ruling 2026-08)
-  inclination_deg: 98.0
+  inclination_deg: 97.39  # exact SSO for the TLE mean motion 15.24 rev/day; matches orbit.yaml (ruling Q2b, amended)
 
 payload:
   type: multispectral_imager

@@ -5,7 +5,7 @@ programme. It is the practical companion to Sessions 5.1 – 5.4
 (the operations-concepts material in Part 1).
 
 Part 2 is anchored on a single fictitious reference spacecraft —
-**EOSAT-1**, a 6-unit CubeSat in a 450 km Sun-synchronous orbit —
+**EOSAT-1**, a 6-unit CubeSat in a 513 km Sun-synchronous orbit —
 flown by the SpaceCDF cohort against an accompanying simulator.
 
 How to read Part 2:
@@ -73,9 +73,9 @@ Table 5.1 — Operational mission phases with duration, scope, and associated pr
 | Phase 4 — LEOP | 0–72 hrs | Sequential power-on; antenna deploy; detumble; sun acquisition | LEOP-003..007 |
 | Phase 5 — Commissioning | 1–4 weeks | Subsystem checkout; sensor calibration; payload power-on; First Light | COM-001..013 |
 | Phase 6 — Nominal operations | mission lifetime | Routine imaging, downlink, momentum management, eclipse transitions, orbit maintenance | NOM-001..013 |
-| (any phase) — Contingency | minutes to hours | FDIR rule fires; operator responds | CTG-001..028 |
+| (any phase) — Contingency | minutes to hours | FDIR rule fires; operator responds | CTG-001..030 |
 | (any phase) — Emergency | hours | Safe-mode entry; multi-system failure recovery | EMG-001..006 |
-| Disposal (not a modelled phase) | years | Passivation, then passive orbital decay | (mission-specific) |
+| Disposal (flown in phase 6, not a phase of its own) | weeks of burns, then 1.5–4.2 years of decay | Perigee-lowering burn to 390 km, passivation, then orbital decay | NOM-014 |
 
 The remainder of Part 2 walks each phase's nominal sequence, the
 common contingencies, and the operator checks for each. The
@@ -180,11 +180,12 @@ common failure modes.
 
 Operations is structured around **passes**: the orbital periods
 when the spacecraft is in contact with a ground station. The
-EOSAT-1 reference orbit (sun-synchronous, 450 km, 98°) produces
-8–12 minute passes over the five polar stations of the teaching
-baseline (Iqaluit, Troll, Svalbard, Inuvik and O'Higgins), with
-roughly 4–6 contacts per ground station per day depending on the
-exact node geometry.
+EOSAT-1 reference orbit (sun-synchronous, 513 km, 97.39°, LTAN
+10:00) produces passes of up to about 9 minutes (7.5 minutes on
+average) over the five polar stations of the teaching baseline
+(Iqaluit, Troll, Svalbard, Inuvik and O'Higgins), with roughly
+8–13 contacts per ground station per day depending on the
+station's latitude.
 
 Shifts are organised around the contact schedule. A LEOP shift in
 industry runs **24/7 with three eight-hour shifts** until phase 4
@@ -285,9 +286,9 @@ of the peer-review worksheet.
 ## 5.7 What we are flying — EOSAT-1 in 600 words
 
 EOSAT-1 is a **6-unit CubeSat** built in the uOttawa SmallSat lab,
-launched June 2026 into a sun-synchronous orbit at **450 km
-altitude, 98° inclination**, with a 14:00 local time of ascending
-node. Its mission: ocean-current monitoring along the Canadian
+launched June 2026 into a sun-synchronous orbit at **513 km
+altitude, 97.39° inclination**, with a 10:00 local time of ascending
+node, so it passes through Earth's shadow on every orbit. Its mission: ocean-current monitoring along the Canadian
 coastlines using a four-band multispectral imager (Bands at 443,
 560, 665, and 865 nm — blue, green, red, and near-infrared
 respectively, chosen to maximise sensitivity to dissolved organic
@@ -295,13 +296,16 @@ carbon and surface chlorophyll).
 
 The spacecraft is **12.0 kg dry** (12.40 kg wet, with 400 g of
 propellant). The orbit-average load with all nominal systems on is
-**≈ 28 W**; the peak instantaneous load during a payload pass is
+**≈ 28.8 W**; the peak instantaneous load during a payload pass is
 higher still once the imager, FPA cooler, and transmitter come on.
 The two deployable wings carry 0.120 m² of cells each and are
 rated **70.1 W BOL at β = 0**; whole-spacecraft peak generation,
 including the body panels, is **88.6 W**, and orbit-average
-generation at the worst beta angle at end of life is 38 W — a
-nominal margin of about +9 W, or 1.33×. Storage is a **100 Wh
+generation at end of life is 45.1 W at the worst-generation beta
+angle of the year (β = −31.2°) — a nominal margin of +16.3 W, or
+1.57×. Over the year β stays between −20.8° and −31.2°; because the
+array drive follows the Sun only to within cos β, the largest |β|
+gives the least generation, even though its eclipse is the shortest. Storage is a **100 Wh
 Li-ion pack** (GomSpace NanoPower BPX class, 8S-1P; `eps.yaml`
 `voltage_nom` 26.4 V, 29.2 V at 100 % SoC, 21.5 V at 0 %). *(These
 are flight-part-derived numbers: 12–18 W of orbit-average payload
@@ -331,8 +335,33 @@ performance is 0.021° mean on four wheels and 0.019° on a
 three-wheel degraded set.
 
 Orbit control is a **1U green monopropellant module**, 400 g of
-propellant, 66.9 m/s total delta-V, flown for debris avoidance and
-limited drag make-up. There is no propulsive disposal capability.
+propellant, 66.9 m/s total delta-V, flown for debris avoidance,
+limited drag make-up and the end-of-life disposal burn. With a
+ballistic coefficient of 77.9 kg/m², natural decay from 513 km takes
+5.0 years at mean solar activity and 14.2 years at solar minimum,
+which fails the 5-year post-mission disposal rule. The mission
+therefore ends with NOM-014: a retrograde perigee-lowering burn of
+34.3 m/s, flown as six burns of 5.72 m/s, takes the perigee from
+513 km to 390 km, after which re-entry takes 1.5 years at mean
+activity and 4.2 years at solar minimum. The ΔV budget
+(`prop.yaml`) needs 64.1 m/s — 15.1 m/s of drag make-up over two
+years at 513 km, 6.1 m/s of orbit and collision-avoidance work, the
+34.3 m/s disposal and 8.6 m/s of margin — against 66.9 m/s
+available (+4.4 %; +2.6 % against the integrated blowdown figure of
+65.8 m/s). From mid-mission at least 38 m/s stays reserved for
+disposal.
+
+These decay times come from the project's drag integration with the
+CIRA-72 exponential atmosphere, with solar minimum modelled as 0.35 ×
+that table. With NRLMSIS 2.1 and solar minimum held for years, decay
+from 390 km takes 7.2 years. The cross-check recorded in `prop.yaml`
+uses NRLMSIS 2.1 with global-mean density: F10.7 = 140 gives 4.7 years
+from 513 km, close to the 5.0, but a sustained F10.7 = 70 gives 33
+years — an upper bound, since a solar minimum does not last decades.
+A perigee of 360 km and 42.8 m/s would meet 5 years even under that
+bound, but the ΔV budget does not close. Two respectable atmosphere
+models disagree by years: that is the uncertainty a disposal plan has
+to carry.
 
 The **ground segment** is a five-station polar S-band network
 (the teaching baseline throughout Part 2):
@@ -366,9 +395,11 @@ Part 2 covers phases **3, 4, 5, and 6** in operational depth — LEOP,
 commissioning, and routine nominal operations. Phases 0–2 (launch,
 separation timer, initial power-on) happen before the first ground
 contact and are entirely autonomous. There is no disposal phase in
-the enumeration: EOSAT-1's propulsion is sized for debris
-avoidance and drag make-up only, and end-of-life disposal is
-passivation followed by passive decay.
+the enumeration: end-of-life disposal (NOM-014) is flown in phase 6,
+which the propulsion arm interlock requires. It is the
+perigee-lowering burns, then passivation (propellant depleted,
+propulsion inhibit latched, wheels stopped, charge regulator off,
+transmitters off), then orbital decay.
 
 The phase counter is `eps.spacecraft_phase` (0x0129), carried in
 HK SID 4. **Phase transitions are ground declarations** — the mission
@@ -435,11 +466,11 @@ Full URLs are in the References section at the end of this Part.
 
 ### 5.20 Mission Operations Concepts
 
-> **Expected reading before this session.** [ITU Radio Regulations](https://www.itu.int/pub/R-REG-RR) Article 21; ISED CPC-2-6-02; RSSSA — [https://laws-lois.justice.gc.ca/eng/acts/R-5.4/](https://laws-lois.justice.gc.ca/eng/acts/R-5.4/).
+> **Expected reading before this session.** Open textbook *Concurrent Spacecraft Design* (OER), ch. 18, §§18.1–18.5 (ConOps, operational modes, FDIR architecture, operational procedures, anomaly response); this book, §§5.2–5.5; ECSS-E-ST-70-11C *Space segment operability* — §4 *General requirements* (operability), §5.7 *On-board autonomy* and §5.7.5 *On-board fault management* (FDIR) (clause numbers from the 31 July 2008 issue; the current issue is Rev.1, 15 October 2025); NASA-HDBK-1002 *Fault Management Handbook* (Draft 2, 2 April 2012); NASA *Systems Engineering Handbook*, NASA/SP-2016-6105 Rev 2, Appendix S — *Concept of Operations Annotated Outline*.
 
 
 
-**Prerequisites:** §7.20 (ground segment architecture understood)
+**Prerequisites:** §7.20 and OER ch. 17 (ground segment architecture understood)
 **References:** ECSS-E-ST-70-11C (Space Segment Operability), ECSS-E-ST-70-32C (Procedures), ECSS-E-ST-70-41C (Packet Utilisation Standard), NPR 7120.5F, NASA Fault Management Handbook (NASA-HDBK-1002)
 
 ---
@@ -2194,7 +2225,7 @@ actuator control.
 | 4 | `ST1_POWER(on=0/1)` | Star tracker 1 power on/off |
 | 5 | `ST2_POWER(on=0/1)` | Star tracker 2 power on/off |
 | 6 | `ST_SELECT(unit=1/2)` | Select primary star tracker (1=ST1, 2=ST2; 0 is refused) — there are **two** heads |
-| 7 | *(retired)* | Formerly `MAG_SELECT`. EO-Sat-1 flies a **single** magnetometer, so there is nothing to select; func 7 is refused on board with 0x0007 |
+| 7 | *(retired)* | Formerly `MAG_SELECT`. EOSAT-1 flies a **single** magnetometer, so there is nothing to select; func 7 is refused on board with 0x0007 |
 | 8 | `RW_SET_SPEED_BIAS(wheel_idx=…, bias_rpm=… RPM)` | Wheel speed bias, float32. The bias is **added** to the wheel's current speed |
 | 9 | `MTQ_ENABLE(enable=0/1)` | Enable / disable magnetorquers |
 | 10 | `AOCS_SLEW_TO(q_x, q_y, q_z, q_w, rate_dps)` | Slew to target quaternion, five float32 |
@@ -2385,7 +2416,7 @@ parameters side by side: `ttc.tm_tier_cmd` (0x053A) is what you
 asked for and `ttc.tm_tier` (0x0539) is what is on air after the
 gates — a demotion shows as a disagreement between them.
 
-**Two transmitters, and they fail independently.** EO-Sat-1
+**Two transmitters, and they fail independently.** EOSAT-1
 carries an S-band prime chain (2025 MHz up / 2200 MHz down,
 2 W nominal, all real-time HK, playback, image dumps and S1
 verification) *and* a separate UHF whip beacon (437.5 MHz, 1 W
@@ -2402,10 +2433,10 @@ selected by func 70 — three different things sharing one word.
 
 ### Propulsion (func_id 108–118)
 
-Table 7.6g — S8 propulsion function IDs. EO-Sat-1 flies a 1U green
+Table 7.6g — S8 propulsion function IDs. EOSAT-1 flies a 1U green
 monopropellant module with **66.9 m/s** total delta-V, used for
-debris avoidance and limited orbit maintenance — not for
-end-of-life deorbit. These are owned by the Propulsion console.
+debris avoidance, limited orbit maintenance and the 34.3 m/s
+end-of-life perigee-lowering burn (NOM-014). These are owned by the Propulsion console.
 
 | Func ID | Name | Purpose |
 |---|---|---|
@@ -2528,12 +2559,7 @@ External references:
 
 ### 7.20 Chapter 20 — Ground Segment & Operations Architecture
 
-![Gate sequence at a glance.](../assets/figures/fig_lifecycle.png)
-
-*Gate sequence at a glance.*
-
-
-> **Expected reading before this session.** ECSS-M-ST-10C §6 — Review gates (≈ 60 min).
+> **Expected reading before this session.** Open textbook *Concurrent Spacecraft Design* (OER), ch. 17, §§17.1–17.4 (ground segment architecture, contact analysis, CCSDS protocol stack, operations timeline); this book, §7.1 and §7.3; ECSS-E-ST-70C *Ground systems and operations* (31 July 2008), §4.3 *Ground systems*; CCSDS 130.0-G-4 *Overview of Space Communications Protocols* (Green Book, Issue 4, April 2023, with Editorial Change 1, February 2024), sections 2–3; NASA *State-of-the-Art of Small Spacecraft Technology* (2026 edition, NASA/TP-20260003140), ch. 11 *Ground Data Systems and Mission Operations*.
 
 
 
@@ -2868,10 +2894,10 @@ verification telemetry, and the on-fail cross-reference.
 
 ## 8.1 Pass cycle overview
 
-A routine pass on a 450 km SSO spacecraft like EOSAT-1 lasts
-between 3 and 12 minutes depending on the maximum elevation of the
-node crossing — 3–5 min for a 5–10° grazing pass, 10–12 min for a
-near-overhead one, with a working mean around 6 minutes. Across
+A routine pass on a 513 km SSO spacecraft like EOSAT-1 lasts
+between 3 and 9.4 minutes depending on the maximum elevation of the
+node crossing — 3–5 min for a 5–10° grazing pass, about 9 min for a
+near-overhead one, with a measured mean of 7.5 minutes. Across
 the **five-station** network the spacecraft is in contact with
 some station on most orbits, often more than once. The
 operator-side timeline:
@@ -2927,9 +2953,11 @@ fewer, longer ones. See Figure 8.1.
 
 ### 8.2.1 Pass geometry — polar SSO over polar stations
 
-A sun-synchronous orbit at 450 km has a period of ~93.5 minutes
-and is flown **dawn-dusk**, with the local solar time at the
-ascending node held near 06:00/18:00. All five stations —
+A sun-synchronous orbit at 513 km has a period of ~94.5 minutes.
+EOSAT-1's is a **mid-morning** orbit, not a dawn–dusk one: the local
+solar time at the ascending node is held near **10:00**, so the
+spacecraft passes through Earth's shadow on every orbit (33.2 to
+35.2 minutes). All five stations —
 Svalbard (78.2° N), Inuvik (68.3° N), Iqaluit (63.7° N),
 Troll (72.0° S) and O'Higgins (63.3° S) — sit at high latitude,
 close to where the ground track converges, so most ascending or
@@ -2938,11 +2966,11 @@ footprint.
 
 Result, measured over 48 h from the mission epoch with
 `tools/pass_gap_analysis.py`: **103 passes in 48 h** — call it
-~50 per day — with a **median gap of 33 minutes** and a **worst
+~51 per day — with a **median gap of 33 minutes** and a **worst
 gap of 79 minutes**. (The two-station network the older courseware
-assumed gives 39 passes, an 84-minute median gap and a 148-minute
+assumed gives 40 passes, an 84-minute median gap and a 147-minute
 worst case; the five-station baseline is what this course uses
-throughout.) Pass duration runs **3 to 12 minutes** and maximum
+throughout.) Pass duration runs **3 to 9.4 minutes** and maximum
 elevation anywhere from the 5° mask to overhead, depending on the
 geometry of the node crossing. There is still no contact when the
 spacecraft is over the equator or mid-latitudes — radio-silence
@@ -2954,19 +2982,18 @@ tier is gated at **10° elevation**, so a pass that never rises
 above 10° is usable for commanding and 16 kbps housekeeping but
 carries no imagery at all.
 
-Worked example: at 450 km, the geometric horizon-to-horizon transit
+Worked example: at 513 km, the geometric horizon-to-horizon transit
 at maximum elevation (overhead) is
 
 $$ t_{transit} = 2 \cdot \arccos\left(\frac{R_E + h_{station}}{R_E + h_{sat}}\right) \cdot \frac{T_{orbit}}{2\pi} $$
 
-With $R_E = 6371$ km, $h_{sat} = 450$ km, $h_{station} \approx 0$,
-and $T_{orbit} = 5610$ s, the geometric transit is
-$\approx 10.9$ minutes. Adding the 5° elevation mask —
-$\lambda = \arccos\!\left(\frac{R_E\cos\varepsilon}{R_E+h}\right) - \varepsilon = 16.4°$,
-so a $32.8°$ arc — the usable overhead contact reduces to
-$\approx 8.5$ minutes. With the mask plus realistic
-mid-elevation passes the operational mean is closer to
-6 minutes.
+With $R_E = 6371$ km, $h_{sat} = 513$ km, $h_{station} \approx 0$,
+and $T_{orbit} = 5669$ s, the geometric transit is
+$\approx 11.7$ minutes. Adding the 5° elevation mask —
+$\lambda = \arccos\!\left(\frac{R_E\cos\varepsilon}{R_E+h}\right) - \varepsilon = 17.8°$,
+so a $35.6°$ arc — the usable overhead contact reduces to
+$\approx 9.3$ minutes. With the mask plus realistic
+mid-elevation passes the measured mean is 7.5 minutes.
 
 *Figure 8.1 — Schematic of one EOSAT-1 orbit with the five-station visibility cones (5° elevation mask). Lit and eclipsed segments are shaded.*
 
@@ -3023,13 +3050,14 @@ routine health check.
 - Downlink activity matches the image volume produced (rule of
   thumb: `image_size_mb` is 4 MB per imaging session; at the HIGH
   tier's 128 kbps that is 4 × 8 / 0.128 ≈ **250 s**, a little over
-  four minutes — a real bite out of a six-minute pass, and it
+  four minutes — a real bite out of a 7.5-minute average pass, and it
   needs DOWNLINK mode on and elevation above 10° for its whole
   duration).
 
 ## 8.6 MCS round-robin
 
-Seven configured consoles (§7.2), 12 minutes each. Each student
+Seven configured consoles (§7.2), 15 minutes each, after a
+15-minute briefing: the 13:00–15:00 block exactly. Each student
 visits all seven during the afternoon. At each station, the
 seat-holder reads the position's brief aloud (Chapter 6), then
 completes one position-specific task while watching live
@@ -3052,7 +3080,7 @@ round-robin — they are room roles rather than configured MCS
 consoles, and are held by the Mission Director or a designated
 operator throughout the day.
 
-A position-score card is in the workbook (WB-5.3-RR). The
+A position-score card is in the workbook (WB-5.1), one per console. The
 student writes one observation per station.
 
 ## 8.7 Pass-plan team exercise
@@ -3140,7 +3168,7 @@ operator — and run 10 paired callouts using the pattern
 `[ADDRESSEE], [SPEAKER] — [MESSAGE]`. Examples:
 
 - "AOCS, FD — pointing report."
-- "FD, AOCS — pointing 0.28° (NADIR), nominal."
+- "FD, AOCS — pointing 0.28° (NOMINAL), nominal."
 - "EPS, FD — eclipse-entry predictor."
 - "FD, EPS — eclipse-entry T+04:12, SoC at exit 78%."
 
@@ -3521,10 +3549,10 @@ Workshop run by the FDS-seat-holder for the team. Three exercises:
 $$ SoC_{exit} = SoC_{entry} - \frac{P_{avg} \cdot t_{eclipse}}{E_{battery}} \cdot 100\% $$
 
 where $P_{avg}$ is the average eclipse-phase load, $t_{eclipse}$ is in
-hours, and $E_{battery}$ is the battery energy. EO-Sat-1 flies a GomSpace
+hours, and $E_{battery}$ is the battery energy. EOSAT-1 flies a GomSpace
 NanoPower BPX 8S-1P, so $E_{battery} = 100$ Wh, and the orbit-average
-load at the *nominal* profile is 28.7 W (`docs/plan_2026-08b/POWER_SIZING.md`
-§6; 25.5 W quiescent, 32.5 W with imaging duty-cycled in). Use ~29 W unless
+load at the *nominal* profile is 28.8 W (`docs/plan_2026-08b/POWER_SIZING.md`
+§6; 25.6 W quiescent, 32.8 W with imaging duty-cycled in). Use ~29 W unless
 the pass plan says otherwise.
 
 Worked, for a ~35 min eclipse:
@@ -3772,16 +3800,18 @@ the end of the **Launch and Early Orbit Phase (LEOP)** —
 the period where the spacecraft transitions from phase 3
 (BOOTLOADER_OPS, just the OBC and the receiver energised and the
 bootloader image running) through phase 4 (LEOP) and out the far side
-into phase 5 (COMMISSIONING): every switchable power line on, the solar
-wings deployed, detumble converged, time synced. Note that the **S-band
+into phase 5 (COMMISSIONING): the solar wings deployed, the AOCS suite
+powered, detumble converged into the COARSE_SUN sun hold, time synced and
+the orbit determined. The payload, the cooler, the wheels and the star
+trackers stay off; they are commissioning's. Note that the **S-band
 antenna** deployment is *not* a LEOP step — it is COM-006 step 0
 (`TTC_DEPLOY_ANTENNA`, S8.1 func 69), because the LOW rung of the rate
 ladder does not require it and LEOP never needs HIGH. The phase codes are
 `eps.spacecraft_phase` (0x0129): 0 pre-separation, 1 separation timer,
 2 initial power-on, 3 bootloader ops, 4 LEOP, 5 commissioning, 6 nominal.
-The final declaration of phase 5 is made by the mission management team
-with the flight telecommand `SYS_SET_MISSION_PHASE(phase=5)` (S8 func 120);
-nothing on board advances the phase past 4 by itself.
+The final declaration of phase 5 is made at the end of LEOP-003, the last
+LEOP card, with the flight telecommand `SYS_SET_MISSION_PHASE(phase=5)`
+(S8 func 120); nothing on board advances the phase past 4 by itself.
 
 LEOP is the highest-stakes phase of the mission. It is the *first*
 time everything must work, with no opportunity to dry-run. A real
@@ -3815,7 +3845,7 @@ transmitter.
 
 AOCS is in **mode 0 (OFF)** — not detumbling, not even ticking — with
 residual tumble rates of roughly 1–2 °/s from the separation impulse.
-Detumble has *not* happened yet; it is commanded in LEOP-007 step 4.
+Detumble has *not* happened yet; it is commanded in LEOP-007 step 5.
 Battery SoC is 90 % (`simulation.yaml` `eps.initial.soc_pct`). The
 first Iqaluit AOS occurs at T+0 in the scenario.
 
@@ -3825,7 +3855,7 @@ mission management team can declare phase 5 (COMMISSIONING).
 
 ## 10.4 Procedure execution order
 
-The six LEOP procedures, in execution order, with predicted
+The seven LEOP procedures, in execution order, with predicted
 duration and lead position:
 
 Table 10.1 — LEOP procedure execution order with lead position, duration, and critical step.
@@ -3833,26 +3863,35 @@ Table 10.1 — LEOP procedure execution order with lead position, duration, and 
 | # | Procedure | Lead position | Duration (sim) | Critical step |
 |---|-----------|---------------|----------------|---------------|
 | 1 | LEOP-001 First Acquisition of Signal & OBC Boot | TT&C + SPACON | ~6 min | Step 5: `OBC_BOOT_APP`, then step 5a: clear beacon mode |
-| 2 | LEOP-002 Initial Health Check | SPACON + all positions | ~8 min | All subsystems report OK on SIDs 1–6 |
-| 3 | LEOP-007 Sequential Power-On | SPACON + EPS + AOCS | ~25 min commanding, plus detumble convergence | Step 4: `aocs_wheels` line ON, SID 2 enabled, mode → 2 DETUMBLE |
-| 4 | LEOP-004 Solar Array Verification | EPS | ~10 min | Step 0: `EPS_DEPLOY_WING(wing=2)`; step 6: wing symmetry |
-| 5 | LEOP-005 Sun Acquisition | AOCS | detumble-limited | Step 4: rates < 0.5 °/s; step 6: mode → 3 COARSE_SUN |
-| 6 | LEOP-006 Time Synchronisation | SPACON | ~3 min | Step 3: compute delta_t; step 5: residual < 1.0 s |
+| 2 | LEOP-002 Initial Health Check | SPACON + all positions | ~8 min | SIDs 1, 3, 4 and 6 in band; the AOCS, payload, cooler and prop lines confirmed OFF |
+| 3 | LEOP-004 Solar Array Verification | EPS | ~10 min | Step 0: `EPS_DEPLOY_WING(wing=2)`; step 6: wing symmetry |
+| 4 | LEOP-007 Sequential Power-On | SPACON + EPS + AOCS | one 8-min contact | Steps 3–5: AOCS suite line ON and SID 2 enabled; magnetometer, magnetorquers and GPS on; mode → 2 DETUMBLE |
+| 5 | LEOP-005 Sun Acquisition | AOCS | detumble-limited | Step 3: the automatic handover to 3 COARSE_SUN — observed, not commanded |
+| 6 | LEOP-006 Time Synchronisation | SPACON | ~5 min | Step 4: `SET_TIME`, residual < 1.0 s; step 6a: SID 12 and GPS discipline |
+| 7 | LEOP-003 Initial Orbit Determination | FDS + FD | ~15 min over two fixes | Step 7: `SYS_SET_MISSION_PHASE(phase=5, flags=0)` — the end of LEOP |
 
-Note the ordering. **LEOP-007 runs before -004, -005 and -006**, because
-under the cold-boot initial state those three need the wheels line
-powered and the OBC in the application image
-(`procedures/procedure_index.yaml`, LEOP block header comment).
-LEOP-001 already performs a first time set at its own step 6, so LEOP-006
-is the careful re-do — it is the card that computes the one-way light time
-from the slant range and cross-checks the time report against the
-housekeeping clock.
+Note the ordering. It is the one in `procedures/procedure_index.yaml`
+and in each card's entry and exit states. The wings are deployed
+(LEOP-004) straight after the health check, before anything else draws
+power. LEOP-007 then powers only what the rest of LEOP needs — heaters
+if their zones need heat, the AOCS suite line, the magnetometer, the
+magnetorquers and the GPS receiver — and commands DETUMBLE. The payload
+line and the FPA cooler are commissioning loads (COM-009, COM-010); the
+reaction wheels stay DISABLED until COM-004, and the star trackers and
+gyros stay off until COM-003. LEOP-005 commands nothing: the AOCS
+promotes itself from DETUMBLE to COARSE_SUN and, with no star tracker
+up, parks there. LEOP-006 sets the clock from the ground first and only
+then disciplines it to GPS; LEOP-001 deliberately does **not** set the
+clock (its step 6 only notes that it is unset).
 
-LEOP-003 (Initial Orbit Determination) runs autonomously from GPS lock and
-is not driven from the console. LEOP-004 is **Solar Array Verification**,
-not "Solar Array Deployment", and it does *not* describe something that
-already happened: at cold boot both wings are stowed
-(`eps.wing_status` 0x0144 = 0x00), and the card's step 0 actually commands
+LEOP-003 is a console procedure, not an autonomous one. It reads the
+GPS solution, hands the refined TLE to the ground tools — nothing is
+uploaded to the spacecraft — and ends LEOP with the phase-5
+declaration, the one telecommand that moves the spacecraft out of
+phase 4. LEOP-004 is **Solar Array Verification**, not "Solar Array
+Deployment", and it does *not* describe something that already
+happened: at cold boot both wings are stowed (`eps.wing_status` 0x0144
+= 0x00), and the card's step 0 actually commands
 `EPS_DEPLOY_WING(wing=2)`. Budget the time for it.
 
 ## 10.5 Per-position playbook for LEOP
@@ -3862,17 +3901,20 @@ already happened: at cold boot both wings are stowed
 - Pre-pass: confirm both teams' position assignments. Run a comm
   check on the loop.
 - Pass: poll for GO on every commanded action. Watch the phase
-  indicator. Authorise progression LEOP-001 → -002 → -007 → -004 →
-  -005 → -006.
-- Pass criterion: at LOS, every switchable line is energised, both wings
-  read deployed on `eps.wing_status` (0x0144), and AOCS is damping in
-  mode 2 or holding sun in mode 3. The advance to phase 5 is the
-  instructor's, on the console, when the FD's poll is unanimous.
+  indicator. Authorise progression LEOP-001 → -002 → -004 → -007 →
+  -005 → -006 → -003.
+- Pass criterion: at the end of LEOP both wings read deployed on
+  `eps.wing_status` (0x0144), the AOCS holds the sun in mode 3 on the
+  magnetorquers, the clock is referenced, the orbit is determined, and
+  the phase reads 5 after a unanimous poll and the
+  `SYS_SET_MISSION_PHASE(phase=5, flags=0)` telecommand (LEOP-003
+  step 7). Only the LEOP loads are on: the payload, cooler and prop
+  lines are OFF and the wheels are disabled.
 - Pitfalls: rushing into LEOP-007 before LEOP-002 confirms health.
-  Granting GO for the COARSE_SUN transition without polling AOCS for the
-  rate magnitude first. Treating the detumble wait as a schedule problem
-  to be commanded away — it is set by the physics of the B-dot law, and
-  the mode machine promotes itself when the rates are genuinely down.
+  Granting GO for a COARSE_SUN command at all — the handover is
+  automatic, set by the physics of the B-dot law, and the mode machine
+  promotes itself when the rates are genuinely down. Waiting for the
+  phase to advance by itself: nothing on board moves it past 4.
 
 ### SPACON
 
@@ -3893,8 +3935,8 @@ already happened: at cold boot both wings are stowed
   short telemetry gap there is normal. What is **not** automatic is the
   housekeeping: application boot re-applies
   `default_enabled_sids: [1, 11]`, so after the boot you have SID 1 and
-  SID 11 and nothing else until you send `HK_ENABLE` (S3.5) for each of
-  3, 4 and 6 — and later 2 and 5 in LEOP-007.
+  SID 11 and nothing else until you send `HK_ENABLE` (S3.5) for each of  3, 4 and 6 — then 2 in LEOP-007 and 12 in LEOP-006 (SID 5 waits
+  for the payload line: COM-009 requests it).
 - Pitfalls: declaring LEOP-001 complete without the `HK_ENABLE`s.
   Forgetting step 5a — booting the application does **not** clear beacon
   mode, and while `ttc.beacon_mode` (0x0521) is 1 every
@@ -3905,24 +3947,29 @@ already happened: at cold boot both wings are stowed
 - Pre-pass: review residual tumble rates from the scenario brief
   (~1–2 °/s, partially decayed from separation). Note that the AOCS
   model is not even ticking: the line is off and the mode is 0 (OFF).
-- Pass: passive until LEOP-007 step 4. Then take lead for the AOCS
-  boot-out-of-OFF: `HK_ENABLE(sid=2)` (S3.5) so you can see anything at
-  all, then `AOCS_SET_MODE(mode=2)` — DETUMBLE — with S8.1 **func 0**,
-  which is exempt from the subsystem mode gate and is therefore the
-  command that boots AOCS out of OFF.
-- Critical step: LEOP-007 step 4 and the wait that follows it. Detumble
-  is a magnetometer-driven B-dot law, and it is slow (see §10.11).
-  COARSE_SUN is not entered by hand at 2 °/s: the mode machine promotes
-  DETUMBLE → COARSE_SUN itself once the rate magnitude has been below
-  0.5 °/s for 30 consecutive seconds.
-- Pitfalls: commanding mode 3 before the rates are down and reading the
-  refusal as a fault. Reading a per-axis rate *increase* as a broken
-  control law — B-dot damps only the rate component perpendicular to the
-  local field, so energy genuinely moves between axes while the total
-  magnitude falls. Judge the law on the RSS of the three rates, never on
-  one axis. Magnetorquers are enabled with `MTQ_ENABLE` (S8.1
-  **func 9**), state in `aocs.mtq_enabled` (0x025E), duties at
-  0x0258–0x025A.
+- Pass: passive until LEOP-007 step 3. Then take the lead:
+  `HK_ENABLE(sid=2)` (S3.5) so that you can see anything at all; at
+  step 4 enable the two DETUMBLE legs —
+  `S2_AOCS_MAGNETOMETER(device_id=521, state=1)` and
+  `MTQ_ENABLE(enable=1)` (S8.1 **func 9**) — and the GPS receiver; at
+  step 5 send `AOCS_SET_MODE(mode=2)` — DETUMBLE — with S8.1
+  **func 0**, which is exempt from the subsystem mode gate and is
+  therefore the command that boots AOCS out of OFF. The mode command
+  refuses honestly if a leg is missing: `0x0A20` no magnetometer,
+  `0x0A21` no magnetorquers, `0x0004` line off.
+- Critical step: LEOP-007 step 5 and the wait that follows it, which
+  is LEOP-005. Detumble is a magnetometer-driven B-dot law, and it is
+  slow (see §10.11). COARSE_SUN is not entered by hand: the mode
+  machine promotes DETUMBLE → COARSE_SUN itself once the rate
+  magnitude has been below 0.5 °/s for 30 consecutive seconds. With no
+  star tracker powered it stays there until commissioning; the wheels
+  stay disabled until COM-004.
+- Pitfalls: commanding mode 3 at all. Reading a per-axis rate
+  *increase* as a broken control law — B-dot damps only the rate
+  component perpendicular to the local field, so energy genuinely moves
+  between axes while the total magnitude falls. Judge the law on the
+  RSS of the three rates, never on one axis. Magnetorquer state is in
+  `aocs.mtq_enabled` (0x025E), duties at 0x0258–0x025A.
 
 ### EPS
 
@@ -3931,17 +3978,20 @@ already happened: at cold boot both wings are stowed
   0 obc, 1 ttc_rx, 2 ttc_tx, 3 payload, 4 fpa_cooler, 5 htr_bat,
   6 htr_obc, 7 aocs_wheels, 8 prop. `EPS_POWER_ON` / `EPS_POWER_OFF` /
   `EPS_RESET_OC_FLAG` all take a `line_index` in 0–8.
-- Pass: as each new line is enabled in LEOP-007, watch the
-  per-line current draw (`eps.line_current_0`…`_7`, 0x0118–0x011F; line 8,
-  prop, is `eps.line_current_8`, 0x014B) and
-  the line flag (`eps.pl_*`, 0x0110–0x0117). Each new line is its own
-  small commanding event with FD GO. Note that EPS bills from the actual
-  actuator state, not from the line switch position — a heater line that
-  is on but thermostatted off does not draw its rated power.
-- Critical: LEOP-007 step 2 enables `htr_bat` with
-  `EPS_POWER_ON(line_index=5)` (S8.1, **func 19**); confirm
-  `eps.pl_htr_bat` (0x0115) = 1 and watch consumption rise by ~6 W and
-  the battery temperature trend toward the 5 °C set point.
+- Pass: lead LEOP-004 first — each wing draws ~2 A for 30 s while it
+  deploys. In LEOP-007, watch each new line's current draw
+  (`eps.line_current_0`…`_7`, 0x0118–0x011F; line 8, prop, is
+  `eps.line_current_8`, 0x014B) and the line flag (`eps.pl_*`,
+  0x0110–0x0117). Each new line is its own small commanding event with
+  FD GO. Note that EPS bills from the actual actuator state, not from
+  the line switch position — a heater line that is on but thermostatted
+  off does not draw its rated power.
+- Critical: LEOP-007 step 2 is conditional. `htr_bat`
+  (`EPS_POWER_ON(line_index=5)`, S8.1 **func 19**) goes on only if
+  `tcs.temp_battery` is below +5 °C, and `htr_obc` (`line_index=6`)
+  only if `tcs.temp_obc` is below 0 °C; log which lines were energised,
+  because COM-002 reads that record. Step 6 confirms that the payload,
+  cooler and prop lines are still OFF and that the margin is positive.
 - Pitfalls: not catching an unexpected current spike when a
   heater first energises (the inrush is normal; sustained high
   draw is not).
@@ -3950,8 +4000,9 @@ already happened: at cold boot both wings are stowed
 
 - Pre-pass: all zones passive (no heaters on); battery zone may
   be at lower end of band.
-- Pass: as each heater is enabled in LEOP-007, watch its zone's
-  temperature trend and the heater's duty cycle.
+- Pass: give EPS the battery and OBC zone temperatures before LEOP-007
+  step 2 — they decide whether either heater line goes on. If one does,
+  watch its zone's temperature trend and the heater's duty cycle.
 - Pitfalls: not noticing that the battery zone takes ~15 minutes
   to reach band after `htr_bat` first enables. Pre-judging the
   battery heater as "stuck off".
@@ -3980,12 +4031,12 @@ already happened: at cold boot both wings are stowed
 ### Payload
 
 - Pre-pass: payload line OFF, payload mode OFF, FPA cooler line OFF.
-- Pass: passive until LEOP-007 **steps 6 and 7**, which are yours. LEOP
-  does touch the payload: step 6 energises the payload line and commands
-  STANDBY with `PAYLOAD_SET_MODE(mode=1)` (S8.1, func 26) — not
-  `SET_PAYLOAD_MODE`, which the catalogue maps to a different command —
-  and enables SID 5; step 7 energises the cooler line and starts the
-  cooler with `FPA_COOLER(on=1)` (func 43).
+- Pass: passive for the whole of LEOP. LEOP-007 does not touch the
+  payload: the payload line, STANDBY with `PAYLOAD_SET_MODE(mode=1)`
+  (S8.1, func 26) — not `SET_PAYLOAD_MODE`, which the catalogue maps to
+  a different command — and SID 5 come in COM-009, and the cooler line
+  and `FPA_COOLER(on=1)` (func 43) in COM-010. LEOP-007 step 6 confirms
+  that the payload and cooler lines are still OFF.
 - Pitfalls: expecting the FPA to reach an arbitrary cold temperature. The
   commandable set-point envelope is **−20 °C to 0 °C**, default −15 °C,
   and readiness (`payload.fpa_ready`, 0x0610) follows the *active* set
@@ -3996,12 +4047,14 @@ already happened: at cold boot both wings are stowed
 
 - Pre-pass: produce the 24-hour pass schedule. Hand to FD,
   TT&C, Ground Segment.
-- Pass: passive until the OBC boots and GPS comes up. GPS is on the
-  AOCS side, so a fix is not available until the `aocs_wheels` line is
-  powered in LEOP-007 step 4; a cold start takes ~60 s from there.
-  Then refresh orbit determination with the first GPS fix.
+- Pass: passive until the GPS receiver is switched on in LEOP-007
+  step 4 (`S2_AOCS_GPS_RECEIVER`, on the AOCS suite line); a cold
+  start can take up to 15 min. SID 12 is enabled in LEOP-006. Then
+  lead LEOP-003: verify the fix, read the state vector, compare with
+  the launcher orbit and send the refined TLE to the ground tools.
 - Pitfalls: using the launch-vehicle-provided TLE rather than the
-  fresh GPS-derived state vector once GPS is live.
+  fresh GPS-derived state vector once GPS is live. Looking for a
+  command to upload the orbit on board — there is none.
 
 ### Ground Segment
 
@@ -4179,7 +4232,7 @@ Table 10.5 — LEOP-001 step 2 detail: first uplink via the S17 connection test.
 | Owner expected callout | "FD, TT&C — go for first uplink, S17.1." → execute → "FD, TT&C — S17 sent, awaiting S1 ack and S17.2 report." |
 | Action | In commanding panel: service S17, subservice 1, no payload. First-key. (No second-key required for S17 — it's connectivity test, low-risk.) |
 | Verification | Within 10 s: S1.1 acceptance ack received; within 10 s: S17.2 connection-test report received; `eps.pl_ttc_tx` (**0x0112**) reports 1 — the transmitter is auto-armed by the hold-down timer. |
-| Why this step | We have no idea yet whether the link works end-to-end. S17 is the cheapest, lowest-impact way to find out, and it is on the bootloader allow-list, so it is accepted before the application image is loaded. The acceptance ack confirms ground-to-spacecraft uplink; the connection-test reply confirms spacecraft-to-ground downlink. The **auto-TX hold-down** is the mechanism that makes the cold-boot downlink appear at all: any accepted TC autonomously powers the `ttc_tx` line ON for `simulation.yaml` `ttc.auto_tx_hold_s`, which EO-Sat-1 sets to **300 s (5 minutes)**, re-armed on every subsequent accepted TC. Go five minutes without commanding and the transmitter drops; send any TC to bring it back. |
+| Why this step | We have no idea yet whether the link works end-to-end. S17 is the cheapest, lowest-impact way to find out, and it is on the bootloader allow-list, so it is accepted before the application image is loaded. The acceptance ack confirms ground-to-spacecraft uplink; the connection-test reply confirms spacecraft-to-ground downlink. The **auto-TX hold-down** is the mechanism that makes the cold-boot downlink appear at all: any accepted TC autonomously powers the `ttc_tx` line ON for `simulation.yaml` `ttc.auto_tx_hold_s`, which EOSAT-1 sets to **300 s (5 minutes)**, re-armed on every subsequent accepted TC. Go five minutes without commanding and the transmitter drops; send any TC to bring it back. |
 | Common deviation | S1 ack received but no S17.2 — uplink works but downlink isn't decoded. Go to Step 3 (carrier-lock check) before declaring failure. |
 
 **Step 3 — Verify Carrier Lock and Link Quality**
@@ -4350,31 +4403,33 @@ For the observer team:
 
 ### LEOP-007 — Sequential Power-On (deep walkthrough)
 
-LEOP-007 is the longest LEOP procedure (~25 minutes of commanding, plus a
-detumble wait that is physics rather than workload) and the one with the
-most opportunities for things to go wrong. The procedure brings the
-spacecraft from "OBC booted, every switchable line OFF" to "ready for
-commissioning". It has **eight** steps, not sixteen; each power-line
-enable is a small ceremony: FD GO, owner first-key, SPACON verifies, log
+LEOP-007 powers only what the rest of LEOP needs, and nothing more.
+Its six steps fit one 8-minute contact; the detumble wait that follows
+is physics rather than workload, and it belongs to LEOP-005. The
+procedure brings the spacecraft from "wings deployed, every switchable
+line except `ttc_tx` OFF, AOCS OFF" to "AOCS in DETUMBLE on the
+magnetometer and magnetorquers, GPS acquiring". Each power-line enable
+is a small ceremony: FD GO, owner first-key, SPACON verifies, log
 entry, next line.
 
 #### Pre-step setup
 
-LEOP-007 starts only after LEOP-002 (Initial Health Check) has
-returned PASS. The team has:
+LEOP-007 starts after LEOP-004 (Solar Array Verification). The team
+has:
 
 - App SW running (`obdh.sw_image` 0x0311 = 1), beacon mode cleared,
   downlink on the LOW rung, HK SIDs 1, 3, 4, 6 and 11 streaming.
-- Time synced, residual < 1 s.
-- EPS SoC > 60 % and bus 27–29 V (step 1 verifies both). The steady-state
-  additions across the procedure are roughly +6 W for `htr_bat`, +3 W for
-  `htr_obc`, +12 W for the AOCS suite, +8 W for the payload and +15 W for
-  the FPA cooler, so SoC headroom genuinely matters.
+- Both wings deployed and generating (`eps.wing_status` 0x0144 = 0x03).
+- EPS SoC > 60 % and bus 26–30 V (step 1 verifies both). The
+  additions are modest: +~6 W for `htr_bat` and +~3 W for `htr_obc` if
+  their zones need heat, and +~12 W for the AOCS suite.
+- The clock still unset: time synchronisation is LEOP-006, after this
+  card.
 - No FDIR table to load: every rule is armed all the time, and individual
   event-action definitions are inhibited one at a time with `EA_DISABLE`
   (S19.5) and restored with `EA_ENABLE` (S19.4).
 
-#### Step-by-step playbook (eight steps)
+#### Step-by-step playbook (six steps)
 
 For each line-enable, the pattern is:
 
@@ -4388,22 +4443,24 @@ For each line-enable, the pattern is:
 
 The full table:
 
-Table 10.13 — LEOP-007 eight-step sequential power-on with owners, preconditions, and watch-fors.
+Table 10.13 — LEOP-007 six-step sequential power-on with owners, preconditions, and watch-fors.
 
 | # | Owner | Action | Pre-condition | Expected behaviour | Watch for |
 |---|-------|--------|---------------|---------------------|-----------|
-| 1 | EPS | Verify EPS baseline: `HK_REQUEST(sid=1)` (S3.27) | app SW running | `eps.bus_voltage` (0x0105) 27–29 V; `eps.bat_soc` (0x0101) > 60 %; `eps.power_gen` (0x0107) > 0 W | SoC below 60 % — hold, do not start the sequence |
-| 2 | EPS | Energise battery heater: `EPS_POWER_ON(line_index=5)` (S8.1, **func 19**) | bus stable, SoC > 60 % | `eps.pl_htr_bat` (0x0115) = 1 within 5 s; consumption +~6 W within 30 s; battery temp trending to the 5 °C set point within 120 s | sustained high current (heater short); no temp rise at all (heater open) |
-| 3 | EPS | Energise OBC heater: `EPS_POWER_ON(line_index=6)` (S8.1, func 19) | bus stable | `eps.pl_htr_obc` (0x0116) = 1 within 5 s; `tcs.temp_obc` (0x0406) trending to set point within 120 s; +~3 W | unexpected draw on an adjacent line |
-| 4 | EPS → AOCS | Energise the AOCS line and boot AOCS: `EPS_POWER_ON(line_index=7)`, then `HK_ENABLE(sid=2)` (**S3.5**), then `AOCS_SET_MODE(mode=2)` (S8.1, **func 0**) — DETUMBLE | htr_bat in band, OBC zone OK | `eps.pl_aocs_wheels` (0x0117) = 1; SID 2 emitting within one 4 s interval; `aocs.mode` (0x020F) = 2 within 10 s; `aocs.rate_roll/pitch/yaw` (0x0204–0x0206) falling within 60 s; +~12 W | mode stuck at 0 — the line write did not take; SID 2 silent — powering the line does **not** enable the SID |
-| 5 | AOCS | Commission sensors, then sun-point: `HK_REQUEST(sid=2)`; wait for rates < 0.5 °/s; `AOCS_SET_MODE(mode=3)` — COARSE_SUN | rates below the guard | `aocs.mag_enabled` (0x025C) = 1, field magnitude 25–65 µT; `aocs.mode` = 3 within 10 s; `aocs.att_error` (0x0217) falling within 120 s, < 5° | commanding mode 3 early; magnetometer invalid (B-dot is magnetometer-only — without it DETUMBLE does nothing) |
-| 6 | EPS → Payload | Energise payload and bring it to standby: `EPS_POWER_ON(line_index=3)`; `PAYLOAD_SET_MODE(mode=1)` (S8.1, **func 26**); `HK_ENABLE(sid=5)` | attitude stable | `eps.pl_payload` (0x0113) = 1; `payload.mode` (0x0600) = 1 within 10 s; SID 5 emitting within one 8 s interval; `payload.fpa_temp` (0x0601) ~ambient; +~8 W | using `SET_PAYLOAD_MODE`, which the catalogue maps to `EPS_PAYLOAD_MODE` (func **16**) — a different command from func 26 |
-| 7 | EPS → Payload | Energise and start the cooler: `EPS_POWER_ON(line_index=4)`; `FPA_COOLER(on=1)` (S8.1, **func 43**) | payload in STANDBY | `eps.pl_fpa_cooler` (0x0114) = 1; `payload.fpa_temp` falling toward the **−15 °C** default set point within 300 s; +~15 W | quoting a set point outside the commandable **−20 °C to 0 °C** envelope — a "< −25 °C" gate can never pass |
-| 8 | FD + SPACON | Final GO/NO-GO poll, then the **mission manager** declares the phase: `SYS_SET_MISSION_PHASE(phase=5, flags=0)` (S8.1, **func 120**) | all positions GO | `eps.spacecraft_phase` (0x0129) = 5 (COMMISSIONING) within 5 s | waiting for the phase to advance by itself — nothing on board moves it past 4 |
+| 1 | EPS | Verify EPS baseline: `HK_REQUEST(sid=1)` (S3.27) | app SW running, wings deployed | `eps.bus_voltage` (0x0105) 26–30 V; `eps.bat_soc` (0x0101) > 60 %; `eps.power_gen` (0x0107) > 0 W | SoC below 60 % — hold, do not start the sequence |
+| 2 | EPS + Thermal | Heater lines **as needed**: `EPS_POWER_ON(line_index=5)` (S8.1, **func 19**) only if `tcs.temp_battery` (0x0407) < +5 °C; `EPS_POWER_ON(line_index=6)` only if `tcs.temp_obc` (0x0406) < 0 °C | bus stable, SoC > 60 % | `eps.pl_htr_bat` (0x0115) / `eps.pl_htr_obc` (0x0116) = 1 within 5 s for each line energised; +~6 W / +~3 W | energising a heater the zone does not need; sustained high current (heater short) |
+| 3 | EPS → AOCS | Energise the AOCS suite line and enable its HK: `EPS_POWER_ON(line_index=7)`, then `HK_ENABLE(sid=2)` (**S3.5**) | step 2 done | `eps.pl_aocs_wheels` (0x0117) = 1; SID 2 emitting within one interval; +~12 W | expecting the wheels to come up — the line powers the suite, and `aocs.wheels_enabled` (0x0260) stays 0 until COM-004; SID 2 silent — powering the line does **not** enable the SID |
+| 4 | AOCS | Enable the DETUMBLE legs and the GPS receiver: `S2_AOCS_MAGNETOMETER(device_id=521, state=1)`; `MTQ_ENABLE(enable=1)` (S8.1, **func 9**); `S2_AOCS_GPS_RECEIVER(device_id=527, state=1)` | SID 2 emitting | `aocs.mtq_enabled` (0x025E) = 1 within 10 s; the GPS time to first fix starts | commanding DETUMBLE first — it is refused with `0x0A20` (no magnetometer) or `0x0A21` (no magnetorquers) |
+| 5 | AOCS | Command DETUMBLE: `AOCS_SET_MODE(mode=2)` (S8.1, **func 0**) | both legs enabled | `aocs.mode` (0x020F) = 2 within 10 s; `aocs.mag_enabled` (0x025C) = 1; `aocs.mag_field_total` (0x0277) 5–70 µT; rates (0x0204–0x0206) trending down within 60 s | refused with `0x0004` — the line write did not take; a zeroed field — the magnetometer is off and B-dot is blind |
+| 6 | EPS | Confirm the exit power state: `HK_REQUEST(sid=1)` | DETUMBLE active | `eps.pl_payload` (0x0113), `eps.pl_fpa_cooler` (0x0114), `eps.pl_prop` (0x014A) and `aocs.wheels_enabled` (0x0260) all 0; power margin positive | anything energised early — the payload line is COM-009's, the cooler line COM-010's |
+
+After step 6 the AOCS is damping. LEOP-005 observes the automatic
+handover to COARSE_SUN and LEOP-003 declares phase 5: nothing in
+LEOP-007 commands mode 3 or the phase.
 
 #### Why detumble takes so long
 
-Step 4 hands the spacecraft to DETUMBLE, and the wait that follows is the
+Step 5 hands the spacecraft to DETUMBLE, and the wait that follows is the
 part of LEOP that teams consistently misjudge, so it is worth being
 precise about the physics.
 
@@ -4456,39 +4513,39 @@ $k = 4\times10^{6}$ does not converge at all.
 
 #### Decision points worth simulating
 
-1. **Step 2 inrush is 1.2 A (about 3.4× the 0.35 A nominal).** Could be a real
-   subsystem fault, or could be cold-start in-rush. EPS recommends a
-   60 s hold to watch the trend; FD must decide. If the current drops
-   to nominal within 30 s, continue; if it stays high, invoke CTG-012
+1. **Step 2 inrush is 1.2 A (about 3.4× the 0.35 A nominal)** on a
+   heater line the cold battery zone needed. Could be a real subsystem
+   fault, or could be cold-start in-rush. EPS recommends a 60 s hold to
+   watch the trend; FD must decide. If the current drops to nominal
+   within 30 s, continue; if it stays high, invoke CTG-012
    (Overcurrent Response).
 
-2. **Step 4: SID 2 appears but one wheel reports an invalid speed.**
-   AOCS can either abandon LEOP-007 and invoke CTG-007 (Reaction Wheel
-   Anomaly), or continue: the wheels are in a four-wheel pyramid, and
-   **FINE pointing works on three**, with `fine_degraded` declared and a
-   wider deadband. Detumble itself does not need the wheels at all — it
-   is done entirely with the magnetorquers — so a wheel fault is not a
-   reason to stop step 4. Wheel speeds are read-only at 0x0207–0x020A;
-   the commanding paths are `RW_SET_SPEED_BIAS` (S8.1 func 8, and the
-   bias is **added** to the current speed) and `AOCS_RW_RAMP_DOWN`
-   (func 14, `wheel_idx` 255 = all).
+2. **Step 5: `AOCS_SET_MODE(mode=2)` is refused.** Read the failure
+   code before doing anything. `0x0004` means the AOCS suite line write
+   did not take — re-issue `EPS_POWER_ON(line_index=7)` and check
+   `eps.pl_aocs_wheels` (0x0117). `0x0A20` means no magnetometer and
+   `0x0A21` no magnetorquers: step 4 did not take. Re-sending the mode
+   command unchanged will be refused again for the same reason. There is
+   no redundant magnetometer. The wheels are irrelevant here: they are
+   still disabled, and detumble is done entirely with the magnetorquers.
 
-3. **Step 4/5: rates plateau at 0.6 °/s and stop falling.** Two
-   interpretations: the law is converging but the geometry is
-   momentarily poor (the rate is nearly parallel to **B**, so there is
-   little perpendicular component to damp); or the magnetometer has been
-   lost and B-dot is commanding nothing. Distinguish them: read
-   `aocs.mtq_x/y/z_duty` (0x0258–0x025A) and `aocs.mtq_enabled`
-   (0x025E). Non-zero duties with a stalled rate is geometry — wait a
-   few minutes for the field to sweep. Zero duties is a real fault.
+3. **After step 5 (LEOP-005): rates plateau at 0.6 °/s and stop
+   falling.** Two interpretations: the law is converging but the
+   geometry is momentarily poor (the rate is nearly parallel to **B**,
+   so there is little perpendicular component to damp); or the
+   magnetometer has been lost and B-dot is commanding nothing.
+   Distinguish them: read `aocs.mtq_x/y/z_duty` (0x0258–0x025A) and
+   `aocs.mtq_enabled` (0x025E). Non-zero duties with a stalled rate is
+   geometry — wait a few minutes for the field to sweep. Zero duties is
+   a real fault.
 
-4. **Step 7: the cooler will not reach the commanded set point.** Read
-   `payload.cooler_margin_k` (0x064B). A value ≤ 0 means the cooler
-   physically cannot reach that set point at the present sink
-   temperature and load — the FPA cooler is a miniature Stirling-class
-   cryocooler whose authority degrades with ΔT, not a Peltier stack that
-   will get there eventually. The answer is a warmer set point, not more
-   waiting.
+4. **After step 6: no GPS fix yet.** A cold start takes up to 15 minutes
+   from the step 4 power-on. Nothing in LEOP-007 waits for it: LEOP-006
+   sets the clock from the ground first and disciplines it to GPS only
+   once the fix is in, and LEOP-003 falls back to ground range and
+   Doppler if there is still no fix after 30 minutes. The decision is
+   not whether to wait, but whether anyone has started treating a
+   missing fix as a reason to hold.
 
 #### Common deviations
 
@@ -4496,23 +4553,25 @@ Table 10.14 — LEOP-007 common deviations with likely root causes and recovery 
 
 | Deviation | Likely root cause | Recovery |
 |-----------|-------------------|----------|
-| Step 2–3 nominal, step 4 draw sustained above expectation | Solar-array current variation masking the line's own step | Wait 30 s in the lit portion; EPS bills from actual actuator state, so compare against the line current, not the bus total |
-| SID 2 never appears after the `aocs_wheels` line goes on | The `HK_ENABLE(sid=2)` was never sent — powering a line does not enable its SID | Send `HK_ENABLE(sid=2)` (S3.5); SID 2 appears within one 4 s interval |
+| Step 2 nominal, step 3 draw sustained above expectation | Solar-array current variation masking the line's own step | Wait 30 s in the lit portion; EPS bills from actual actuator state, so compare against the line current, not the bus total |
+| SID 2 never appears after the `aocs_wheels` line goes on | The `HK_ENABLE(sid=2)` was never sent — powering a line does not enable its SID | Send `HK_ENABLE(sid=2)` (S3.5); SID 2 appears within one interval |
 | `AOCS_SET_MODE` refused with 0x0004 after the line-on | The EPS line write did not take | Re-issue `EPS_POWER_ON(line_index=7)`, verify `eps.pl_aocs_wheels` (0x0117) = 1, then retry the mode command |
+| `AOCS_SET_MODE` refused with 0x0A20 or 0x0A21 | The magnetometer or magnetorquer leg of step 4 did not take | Re-issue `S2_AOCS_MAGNETOMETER(device_id=521, state=1)` or `MTQ_ENABLE(enable=1)`, then retry |
 | One body-axis rate *increases* during detumble | Expected — B-dot damps only the perpendicular component, so energy moves between axes | Nothing. Judge the RSS, not the axis |
 | Body rates increase on all axes | Magnetorquer polarity inverted | Command `AOCS_SET_MODE(mode=0)` (OFF) immediately and investigate before re-entering DETUMBLE |
 | Detumble makes no progress at all and the rod duties read zero | Magnetometer lost — B-dot is a magnetometer-only law | Power-cycle the magnetometer (single unit, no spare to cross-strap to); the gyros being healthy tells you nothing here |
 
 #### Debrief prompts
 
-- Total LEOP-007 *commanding* duration (about 20–30 min), reported
-  separately from the detumble wait, which is physics and not the team's
-  to speed up.
+- Total LEOP-007 *commanding* duration (it fits one 8-minute contact),
+  reported separately from the detumble wait, which is physics and not
+  the team's to speed up.
 - Were all FD GO calls explicitly polled, or did any get a
   drive-by *"go ahead"*?
 - Were all current draws within the expected envelope on first
   read?
-- Did anyone read a single rising axis rate as a control-law failure?
+- Did anyone command COARSE_SUN rather than wait for it, or read a
+  single rising axis rate as a control-law failure?
 
 ---
 
@@ -4536,8 +4595,8 @@ the kind of error to hunt everywhere else in the book:
    so the range needed for the one-way light time never arrived.
 3. **Its OWLT figure was wrong by a factor of three.** `ttc.range_km` is
    the *geometric* slant range and is published whether or not a station
-   is in view: for the EO-Sat-1 reference orbit it reads about 6 530 km
-   out of contact and 1 000–2 000 km during a pass — i.e. **3–22 ms**, not
+   is in view: for the EOSAT-1 reference orbit it reads about 6 530 km
+   out of contact and 1 000–2 100 km during a pass — i.e. **3–22 ms**, not
    "2–8 ms". It is still negligible against the 1.0 s LEOP threshold,
    which is exactly why you record it and move on. A card that quotes a
    number the spacecraft never produces teaches the operator not to check.
@@ -4625,8 +4684,8 @@ Table 11.1 — Commissioning procedure execution across four passes with critica
 
 | Pass | Procedures | Critical activity |
 |---|---|---|
-| 1 | COM-001 EPS Checkout; COM-002 TCS Verification; COM-003 AOCS Sensor Calibration; COM-004 AOCS Actuator Checkout | Each of the four reaction wheels is biased in both directions and ramped back to zero |
-| 2 | COM-005 AOCS Mode Transitions; COM-006 TTC Link Verification; COM-007 OBDH Checkout; COM-008 FDIR Configuration | Spacecraft reaches NOMINAL (mode 4) for the first time; both rungs of the TM rate ladder are baselined; the nominal FDIR table arms |
+| 1 | COM-001 EPS Checkout; COM-002 TCS Verification; COM-004 AOCS Actuator Checkout; COM-003 AOCS Sensor Calibration | The four wheels are enabled and the spacecraft reaches wheel-controlled NOMINAL (mode 4) for the first time; each wheel is biased in both directions and ramped back to zero; then the gyro bias is calibrated on board in that NOMINAL |
+| 2 | COM-005 AOCS Mode Transitions; COM-006 TTC Link Verification; COM-007 OBDH Checkout; COM-008 FDIR Configuration | The AOCS mode ladder is exercised up to FINE_POINT; both rungs of the TM rate ladder are baselined; the protection stack (S12, S19, load-shed latch) is inventoried and tested |
 | 3 | COM-009 Payload Power-On; COM-010 FPA Cooler Activation | Cooler started — 15 W Stirling-class cryocooler drives the FPA from ~+11 °C to the −15 °C setpoint in about ten minutes |
 | 4 | COM-011 Payload Calibration; COM-012 First Light | Dark and flat sets taken in CALIBRATION mode (3), then one image of an ocean-current target captured and downlinked |
 
@@ -4672,9 +4731,10 @@ deferred-with-justification).
   is biased with `RW_SET_SPEED_BIAS` and returned to zero with
   `AOCS_RW_RAMP_DOWN`. Wheel speeds (0x0207–0x020A) are read-only
   telemetry; there is no `SET_PARAM` path to a wheel speed.
-- Pass 2 lead: COM-005 mode transition COARSE_SUN (3) → NOMINAL (4)
-  → FINE_POINT (5). Each transition is a separate TC and a separate
-  verification.
+- Pass 2 lead: COM-005 mode transitions NOMINAL (4) → FINE_POINT (5)
+  → NOMINAL (4), INERTIAL (9) and back, the COARSE_SUN (3) hold and
+  DESAT (7). Each commanded transition is a separate TC and a separate
+  verification; the automatic returns are observed, not commanded.
 - Pass 4 supporting: imaging requires FINE_POINT;
   AOCS commands `AOCS_SET_MODE(mode=5)` after
   `AOCS_FINE_READY_CHECK` reads `aocs.fine_ready` (0x02C5) = 0.
@@ -4745,11 +4805,11 @@ deferred-with-justification).
 - Pass 1 supporting: confirm orbit accuracy (the GPS fix from
   LEOP day's last pass is now several orbits old; refresh).
 - Pass 4 lead: compute the ground footprint for the chosen
-  ocean-current target — 240 km across-track swath, 60 km
+  ocean-current target — 273 km across-track swath, about 59 km
   along-track for the standard 2048-line strip. Hand to Payload for
   `PAYLOAD_CAPTURE` parameters.
-- Pitfalls: confusing the swath (240 km, a footprint width) with
-  the ground sample distance (29.3 m, a per-pixel figure). Both are
+- Pitfalls: confusing the swath (273 km, a footprint width) with
+  the ground sample distance (33.4 m, a per-pixel figure). Both are
   properties of the same instrument and neither substitutes for the
   other.
 
@@ -4857,7 +4917,7 @@ and accounted for correctly.
   modelled range; `eps.bat_soc` (0x0101) > 70%.
 - Why: the pack is a GomSpace NanoPower BPX 8S-1P — **100 Wh,
   3 Ah, 28.8 V nominal**, one 0.33 U box of 18650 cells. In the
-  EO-Sat-1 its terminal voltage runs from `soc_0_v` = 21.5 V
+  EOSAT-1 its terminal voltage runs from `soc_0_v` = 21.5 V
   empty to `soc_100_v` = 29.2 V full, nominal 26.4 V. It is an
   eight-cell series string, not a 4S pack, and it is what makes
   the ~28 V regulated bus possible. Do not confuse `eps.bat_voltage`
@@ -4871,8 +4931,8 @@ and accounted for correctly.
 - Verification: `eps.power_gen` (0x0107) in the sunlit band
   [40, 75] W.
 - Why: the array is 0.198 m² of body-mounted cells over five faces
-  (the −Z face carries the imager aperture and radiator and has no
-  cells) plus **0.120 m² of cells per deployable wing** on a
+  (the −Z face points at nadir, carries the imager aperture and
+  radiator, and has no cells) plus **0.120 m² of cells per deployable wing** on a
   single-axis drive — 0.438 m² of cells deployed in total. The
   plane-of-array constant after the full loss stack is 292 W/m²
   BOL and **267.9 W/m² at three-year EOL**, so the wings alone are
@@ -4895,10 +4955,10 @@ eclipse)
 - Verification: `eps.power_gen` ~0 W within 30 s of eclipse entry;
   SoC drop < 1.5%/min; `eps.bus_voltage` > 27.0 V mid-eclipse.
 - Why: this is the *survival* test. The orbit is 5669 s (94.5 min)
-  and the eclipse fraction over a year runs 0.302–0.367, so an
-  eclipse is **28.5 to 34.7 minutes**. Against a 100 Wh battery and
-  a ~28.7 W nominal orbit-average load, a 33-minute eclipse costs
-  about 15.8 % of SoC, i.e. ~0.5 %/min. The 1.5 %/min verification
+  and the eclipse fraction over the year runs 0.351–0.372, so
+  an eclipse is **33.2 to 35.2 minutes**. Against a 100 Wh battery
+  and a ~28.8 W nominal orbit-average load, a 34-minute eclipse costs
+  about 16.3 % of SoC, i.e. ~0.5 %/min. The 1.5 %/min verification
   is a ceiling, not an expectation: a reading near it means a load
   you did not command. The protection ladder below is monotonic —
   in-model shed at 25.0 V (~45 % SoC), FDIR `safe_mode_eps` at
@@ -4922,24 +4982,28 @@ eclipse)
 
 - EPS computes: average gen over the orbit, average consumption,
   end-of-eclipse SoC, margin.
-- "FD, EPS — orbit-average generation 38 watts, load 28.7 watts,
-  margin plus 9.3 watts, ratio 1.33. End-of-eclipse SoC predicted
+- "FD, EPS — orbit-average generation 45.1 watts, load 28.8 watts,
+  margin plus 16.3 watts, ratio 1.57. End-of-eclipse SoC predicted
   69 percent under nominal load. Healthy."
 - Verification: positive margin; end-of-eclipse SoC > 50%.
 - Why: even one positive orbit isn't proof — we want to predict
-  steady-state. The sizing case is EOL at the **worst beta (49.8°)**,
-  where orbit-average generation is 38.0 W. Against that:
+  steady-state. Over the year β runs from −20.8° to −31.2°. The
+  sizing case for generation is EOL at **β = −31.2°**, where
+  orbit-average generation is 45.1 W: the solar array drive follows
+  the Sun only to within cos β, so the largest |β| gives the least
+  generation even though its eclipse is the shortest. Against that:
 
   | Profile | Gen (W) | Load (W) | Margin (W) | Ratio |
   |---|---|---|---|---|
-  | quiescent | 38.0 | 25.5 | +12.5 | 1.49 |
-  | **nominal** | **38.0** | **28.7** | **+9.3** | **1.33** |
-  | nominal_imaging | 38.0 | 32.5 | +5.5 | 1.17 |
-  | manoeuvre | 38.0 | 32.0 | +6.0 | 1.19 |
-  | worst (abuse case) | 38.0 | 45.3 | −7.3 | 0.84 |
+  | quiescent | 45.1 | 25.6 | +19.5 | 1.76 |
+  | **nominal** | **45.1** | **28.8** | **+16.3** | **1.57** |
+  | nominal_imaging | 45.1 | 32.8 | +12.3 | 1.38 |
+  | manoeuvre | 45.1 | 32.1 | +12.9 | 1.40 |
+  | worst (abuse case) | 45.1 | 46.8 | −1.7 | 0.96 |
 
-  At the maximum-eclipse beta (24.2°) generation rises to 45.0 W and
-  the nominal case closes at 1.57×. The `worst` profile is
+  At β = −20.8°, the deepest discharge (the longest eclipse),
+  generation is 47.0 W and the nominal case closes at 1.63×. At
+  beginning of life the two figures are 49.1 W and 51.2 W. The `worst` profile is
   deliberately negative — it holds FINE for a whole orbit, runs the
   cooler continuously, images through eclipse and dumps at HIGH on
   every pass. **A 6U that could sustain that would need an array no
@@ -5052,16 +5116,19 @@ eclipse)
 
 Four reaction wheels in a pyramid (azimuths 45/135/225/315°,
 elevation 30° above the XY plane), plus three magnetorquer rods.
-The card commissions each wheel individually and then proves the
-magnetic momentum-dump path.
+The card enables the wheels, commands wheel-controlled NOMINAL,
+commissions each wheel individually and then proves the magnetic
+momentum-dump path.
 
 #### Pre-step setup
 
-- COM-003 (AOCS Sensor Calibration) complete — star trackers active.
-  There are **two** star trackers, ST1 and ST2, selected with
-  `ST_SELECT` (S8 func 6). This is not a single-head design.
-- `aocs.mode` (0x020F) = 3 (COARSE_SUN).
-- Body rates < 0.05 °/s on all axes, read from `aocs.rate_roll`
+- COM-001 and COM-002 complete; COM-003 has **not** run yet (ruling
+  Q16). Star trackers and gyros are still off — there are **two**
+  star trackers, ST1 and ST2, selected with `ST_SELECT` (S8 func 6),
+  and COM-003 brings them up after this card.
+- `aocs.mode` (0x020F) = 3 (COARSE_SUN), the LEOP hold; step 2 of the
+  card commands NOMINAL once the wheels are enabled.
+- Body rates < 0.5 °/s on all axes, read from `aocs.rate_roll`
   (0x0204), `aocs.rate_pitch` (0x0205), `aocs.rate_yaw` (0x0206).
   There is no `aocs.body_rates` parameter.
 - `eps.bat_soc` (0x0101) > 65%.
@@ -5074,7 +5141,7 @@ wheel-speed setpoints. The two commands that move a wheel are:
 
 - `RW_SET_SPEED_BIAS(wheel_idx, bias_rpm)` — Service 8,
   Subtype 1, **func_id 8**. The bias is **added to the wheel's
-  current speed**, so the Step 1 baseline is the reference for
+  current speed**, so the Step 3 baseline is the reference for
   every subsequent check. Biasing +2000 twice does not park the
   wheel at 2000 rpm; it parks it at baseline +4000.
 - `AOCS_RW_RAMP_DOWN(wheel_idx, target_rpm)` — Service 8,
@@ -5089,15 +5156,39 @@ misdiagnosis.
 
 #### Per-step playbook
 
-**Step 1 — Record baseline wheel speeds**
+**Step 1 — Enable the four wheels**
+
+- AOCS: "FD, AOCS — first-key `AOCS_ENABLE_WHEEL(wheel_idx=0)`",
+  then `wheel_idx` 1, 2 and 3 (S8 func_id 3), one command per wheel.
+- Verification: `aocs.wheels_enabled` (0x0260) = 4 within 10 s.
+- Why: the bootloader leaves every wheel DISABLED and nothing else in
+  the catalogue enables one. Do not leave the card with fewer than
+  three.
+
+**Step 2 — Command wheel-controlled NOMINAL**
+
+- AOCS: "FD, AOCS — first-key `AOCS_SET_MODE(mode=4)`, NOMINAL." FD
+  second-keys.
+- Verification: `aocs.mode` (0x020F) = 4 (or 8 in eclipse) within
+  300 s; `aocs.commanded_mode` (0x0297) = 4.
+- Why: nothing promotes the AOCS out of the LEOP COARSE_SUN hold
+  without a star tracker, so the card commands NOMINAL itself. The
+  simulator accepts it without a tracker; knowledge stays on the
+  coarse sun and magnetometer path until COM-003. This is the step
+  that makes COM-003 possible: its 0.10 °/s calibration gate is met in
+  wheel-controlled NOMINAL, never in the magnetorquer-only hold
+  (ruling Q16).
+
+**Step 3 — Record baseline wheel speeds**
 
 - AOCS: "FD, AOCS — `HK_REQUEST(sid=2)`. RW1 through RW4 reading
   plus 1180, minus 1210, plus 1195, minus 1205 rpm. Recorded as
   baseline."
-- Why: the nominal bias set is ±1200 rpm arranged so the *net body
-  momentum* is zero. Non-zero speeds in COARSE_SUN are expected.
+- Why: the newly enabled wheels pick up the control load at once, so
+  non-zero speeds in NOMINAL are expected; this baseline is the
+  reference for every check below.
 
-**Step 2–5 — Each wheel in turn**
+**Steps 4–5 — Each wheel in turn**
 
 - AOCS: "FD, AOCS — first-key `RW_SET_SPEED_BIAS(wheel_idx=0,
   bias_rpm=2000.0)`." FD second-keys.
@@ -5148,8 +5239,9 @@ misdiagnosis.
 
 ### COM-005 — AOCS Mode Transitions (deep walkthrough)
 
-The pivot from COARSE_SUN → NOMINAL → FINE_POINT. Each
-transition is a separate procedure inside this one.
+NOMINAL → FINE_POINT and back, then INERTIAL, the COARSE_SUN hold
+and DESAT. Since ruling Q16 the AOCS has been in NOMINAL since COM-004.
+Each transition is a separate procedure inside this one.
 
 **The mode codes are the ones in `aocs/aocs_mode_codes.yaml`, and
 nothing else:**
@@ -5172,7 +5264,7 @@ called SAFE_POINT or NOMINAL_POINT.
 
 **Step 1 — Confirm starting state**
 
-- AOCS: "FD, AOCS — mode 3 COARSE_SUN, body rates roll minus 0.02,
+- AOCS: "FD, AOCS — mode 4 NOMINAL, body rates roll minus 0.02,
   pitch plus 0.01, yaw minus 0.03 deg per second, all below the
   0.05 threshold."
 - Note: detumble is genuinely magnetometer-driven B-dot,
@@ -5182,7 +5274,7 @@ called SAFE_POINT or NOMINAL_POINT.
   that detumble is quick is wrong, which is precisely why it is
   finished before this card starts.
 
-**Step 2 — Transition to NOMINAL**
+**Step 2 — Latch NOMINAL**
 
 - AOCS: "FD, AOCS — first-key `AOCS_SET_MODE(mode=4)`, NOMINAL." FD
   second-keys.
@@ -5193,9 +5285,11 @@ called SAFE_POINT or NOMINAL_POINT.
   pointing achieved, `aocs.att_error` 0.42 deg."
 - Verification: `aocs.mode` (0x020F) = 4 within 60 s;
   `aocs.att_error` (0x0217) < 0.5° within 120 s.
-- Why: COARSE_SUN (3) is the *recoverable* attitude — sun on the
-  arrays, low body rates. We hold it before going to NOMINAL
-  because if NOMINAL fails we can fall back to it.
+- Why: the AOCS has flown NOMINAL since COM-004; the command latches
+  `aocs.commanded_mode` (0x0297) = 4, the return path every automatic
+  transition resolves against. COARSE_SUN (3) remains the
+  *recoverable* attitude — sun on the arrays, low body rates — to
+  fall back to if NOMINAL fails.
 
 **Step 3 — Check the FINE preconditions before commanding FINE**
 
@@ -5222,8 +5316,8 @@ called SAFE_POINT or NOMINAL_POINT.
 
 - AOCS: "FD, AOCS — knowledge error 0x02A7 reading 18 arcsec
   3-sigma, control error 0x02A8 0.0188 deg, RSS 0.020 deg on
-  0x02AA. Geolocation error 0x02C7 157 metres, about five ground
-  pixels at 29.3 metre GSD."
+  0x02AA. Geolocation error 0x02C7 180 metres, about five ground
+  pixels at 33.4 metre GSD."
 - The estimator sources in use are readable as a bitmask at
   `aocs.est_source` (0x02C1): bit 0 star tracker, bit 1 CSS,
   bit 2 magnetometer, bit 3 gyro. Gyro bias calibration is an
@@ -5291,7 +5385,7 @@ station in view, bit 6 antenna).
 - TT&C: "FD, TT&C — S-band chain configured, PA on, beacon tier
   released, antenna deployed, `tx_active` reads 1."
 
-**A teaching point that belongs here.** EO-Sat-1 has **two
+**A teaching point that belongs here.** EOSAT-1 has **two
 transmitters**: the S-band prime chain and a separate UHF whip
 beacon on the non-switchable `ttc_rx` line. Turning the PA off,
 or pulling the `ttc_tx` line, stops S-band telemetry — and the
@@ -5396,12 +5490,15 @@ S-band ladder) with `ttc.beacon_tx_on` (0x0526, the UHF
   (0 = bootloader, 1 = application), not a rejection counter.
   Reading it as one is a documented past defect.
 
-**Step 3 — Test S6 memory read on a known region**
+**Step 3 — Watchdog, then the mode excursion**
 
-- `MEM_DUMP` is **Service 6, Subtype 5**; `MEM_CHECK` is
-  Service 6, Subtype 9.
-- SPACON: "FD, SPACON — dumped 1 KB from the Boot ROM region at
-  0x00000000, CRC matches expected value, memory intact."
+- `OBC_DIAGNOSTIC` (S8 func 61) and `GET_PARAM(param_id=0x0316)`:
+  watchdog armed, `obdh.last_reboot_cause` = 0. The simulator card
+  does no S6 memory dump; memory health is the error and SEU
+  counters of step 1, read twice.
+- `OBC_SET_MODE(mode=1)`, then `OBC_SET_MODE(mode=0)` (S8 func 50).
+- SPACON: "FD, SPACON — watchdog armed, no resets; SAFE confirmed,
+  NOMINAL restored, `obdh.mode` reads 0."
 
 **Step 4 — Verify bus A/B health**
 
@@ -5413,7 +5510,7 @@ S-band ladder) with `ttc.beacon_tx_on` (0x0526, the UHF
 ### COM-008 — FDIR Configuration
 
 This is one of the most consequential commissioning steps. FDIR on
-EO-Sat-1 is not one mechanism but three, and the operator needs to
+EOSAT-1 is not one mechanism but three, and the operator needs to
 keep them apart:
 
 - **The FDIR rule set** (`subsystems/fdir.yaml`) — 17 parameter
@@ -5754,8 +5851,8 @@ a different family.)
   three-quarters of the pass."
 - "FD: FDS, target?"
 - FDS: "Target the Labrador Current outflow zone, scene centre
-  52.5 N, 51.2 W. Footprint 240 km across-track by 60 km
-  along-track for a 2048-line strip, 29.3 metre GSD. Sun glint
+  52.5 N, 51.2 W. Footprint 273 km across-track by 59 km
+  along-track for a 2048-line strip, 33.4 metre GSD. Sun glint
   angle 32 deg (acceptable), cloud cover 8 percent per latest
   forecast."
 - "FD: Ground Seg, downlink ready?"
@@ -5776,8 +5873,8 @@ a different family.)
 - (At trigger) "FD, Payload — acquiring."
 - (8.4 s later) "FD, Payload — strip complete." The commanded
   strip length is `lines / line_rate` = 2048 / 244 Hz =
-  **8.4 seconds**, which at the 7.14 km/s ground-track speed is
-  the 60 km along-track footprint FDS quoted.
+  **8.4 seconds**, which at the 7.06 km/s ground-track speed is
+  the 59 km along-track footprint FDS quoted.
 - Geolocation is stamped **on board** from the ephemeris at
   shutter open; it is not a commanded field.
 
@@ -5830,8 +5927,8 @@ a different family.)
 - Payload: "FD, Payload — image quality assessment: mean DN
   per band 1840 / 2102 / 1654 / 891 on the 12-bit 0–4095 scale,
   contrast within expected range. `aocs.geoloc_err_m` (0x02C7)
-  reads 157 metres at the 0.020 degree pointing error — about five
-  ground pixels at 29.3 metre GSD. IMAGE IS SCIENCE USABLE."
+  reads 180 metres at the 0.020 degree pointing error — about five
+  ground pixels at 33.4 metre GSD. IMAGE IS SCIENCE USABLE."
 - Mission Manager: "FD, MM — customer bulletin going out:
   EOSAT-1 First Light achieved at 14:32:18 UTC, target Labrador
   Current, downlink complete, science-usable image acquired."
@@ -5987,7 +6084,7 @@ safe-mode candidate for the Flight Director to adjudicate. Read it as
 the "decide" step of §12.2 rendered as a flow — the same recognise,
 preserve, isolate, decide logic, keyed on *how bad the condition is*.
 
-**Two scales, and they are not the same scale.** EO-Sat-1 reports
+**Two scales, and they are not the same scale.** EOSAT-1 reports
 an **FDIR severity** on a **0–4** scale (0 nothing, 1 INFO,
 2 WARNING, 3 ALARM, 4 CRITICAL) and an **autonomy level** on a
 **0–3** scale (0 unit/hardware, 1 subsystem software, 2 OBC FDIR
@@ -6040,8 +6137,10 @@ finding. The carded response walks the TTC link-loss recovery
 ladder — passive link test, data-rate reduction to LOW, FD-authorised
 tx-power increase — escalating to **EMG-004 Loss of Communication**
 only if none of the rungs restores the link. The spacecraft's own
-command-loss timer is the ultimate backstop: if the ground stays
-silent, the spacecraft will safe itself.
+24-hour command-loss timer is the ultimate backstop: if no valid
+telecommand arrives for 24 h, it switches to the other transponder
+(FDIR rule TTC-01; `cmd_loss_switch_timeout_s` in `ttc.yaml`). The
+simulator does not yet model the switch.
 
 **Power and EPS anomalies.** Bus over-current, bus under-voltage, or an
 uncommanded load. The preservation move is to protect the battery:
@@ -6226,22 +6325,23 @@ $$ t_{transit} = \frac{T_{orbit}}{\pi} \arccos\!\left(\frac{R_E + h_{station}}{R
 $$ T_{orbit} = \frac{86400}{15.24} = 5669\ \text{s} = 94.5\ \text{min} $$
 
 **Worked example — horizon to horizon.** With $R_E = 6371$ km and
-$h = 450$ km, $\frac{R_E}{R_E+h} = \frac{6371}{6821} = 0.93403$, and
-$\arccos(0.93403) = 20.93° = 0.36526$ rad. So
+$h = 513$ km, $\frac{R_E}{R_E+h} = \frac{6371}{6884} = 0.92548$, and
+$\arccos(0.92548) = 22.26° = 0.38850$ rad. So
 
-$$ t_{transit} = \frac{5669}{\pi}\times 0.36526 = 1804\times 0.36526 = 659\ \text{s} = 11.0\ \text{min} $$
+$$ t_{transit} = \frac{5669}{\pi}\times 0.38850 = 1804.5\times 0.38850 = 701\ \text{s} = 11.7\ \text{min} $$
 
 **With the 5° elevation mask** — which is what all five stations
 actually use — the usable half-angle is
 
 $$ \gamma = \arccos\!\left(\frac{R_E\cos\varepsilon}{R_E+h}\right) - \varepsilon
-        = \arccos(0.93047) - 5° = 21.48° - 5° = 16.48° $$
+        = \arccos(0.92196) - 5° = 22.79° - 5° = 17.79° $$
 
-$$ t_{contact} = \frac{2\gamma}{360°}\,T_{orbit} = \frac{32.97}{360}\times 5669 = 519\ \text{s} = 8.7\ \text{min} $$
+$$ t_{contact} = \frac{2\gamma}{360°}\,T_{orbit} = \frac{35.57}{360}\times 5669 = 560\ \text{s} = 9.3\ \text{min} $$
 
 That is the **overhead maximum**, and it agrees with the mission's
-measured 514 s longest pass. Real passes are mostly not overhead: the
-measured **mean pass over the five-station network is 447 s (7.5 min)**.
+measured 565 s longest pass (the altitude varies between 503 and
+530 km round the orbit). Real passes are mostly not overhead: the
+measured **mean pass over the five-station network is 450 s (7.5 min)**.
 Anyone quoting an eleven-minute working pass is quoting the geometric
 horizon figure and has forgotten the mask.
 
@@ -6252,10 +6352,10 @@ Measured over 48 h from the mission epoch:
 
 | Network | Passes / day | Median gap | Max gap |
 |---|---|---|---|
-| Iqaluit + Troll only | 19.5 | 84 min | 148 min |
-| **All five stations** | **51.5** | **33 min** | **79 min** |
+| Iqaluit + Troll only | 20.0 | 84 min | 147 min |
+| **All five stations** | **≈ 51** | **33 min** | **79 min** |
 
-That is roughly 23 300 seconds of contact per day, about 27 % of
+That is roughly 23 200 seconds of contact per day, about 27 % of
 the clock. Every planning exercise in this book assumes the
 five-station figures.
 
@@ -6268,8 +6368,8 @@ contact-schedule entry and confirm:
    the margin closes with tens of dB even at 5° — it is because
    the **HIGH tier is gated at 10°**, so a pass that never clears
    10° cannot carry an image dump at all.
-3. Pass duration is in family: 7–8.7 min for a good pass, 4–6 min
-   for a low one. A quoted duration above ~8.7 min at this altitude
+3. Pass duration is in family: 7–9.3 min for a good pass, 4–6 min
+   for a low one. A quoted duration above ~9.5 min at this altitude
    and mask is arithmetically impossible and means the schedule is
    wrong.
 
@@ -6288,34 +6388,35 @@ with $P_{avg}$ in W, $t_{eclipse}$ in hours, and $E_{battery}$ in Whr.
   8S-1P: 100 Wh, 3 Ah, 28.8 V nominal, ~500 g. One box, one real
   flight part.
 - $t_{eclipse}$. The orbit is 5669 s and the eclipse fraction swept
-  over a year runs **0.302 to 0.367**, so the eclipse is **28.5 to
-  34.7 min**. Take 33 min = 0.550 h as the working figure.
-- $P_{avg} = 28.7$ **W**, the orbit-average load in the nominal
+  over the year of the LTAN 10:00 orbit runs **0.351 to
+  0.372**, so the eclipse is **33.2 to 35.2 min**. Take 34 min =
+  0.567 h as the working figure.
+- $P_{avg} = 28.8$ **W**, the orbit-average load in the nominal
   profile. This is a **6U CubeSat**: 6 W of OBC and PDU, 1.5 W of
   always-on receive chain, 5 W of transmitter at the LOW tier
   (11 W at HIGH), 9 W of AOCS in NOMINAL, 2.4 W of payload in
   standby, 15 W of cooler when it runs. Nothing on this spacecraft
   draws 70 W.
 
-**Worked example.** Eclipse entry SoC = 85 %; $P_{avg} = 28.7$ W;
-$t_{eclipse} = 33$ min $= 0.550$ h; $E_{battery} = 100$ Whr:
+**Worked example.** Eclipse entry SoC = 85 %; $P_{avg} = 28.8$ W;
+$t_{eclipse} = 34$ min $= 0.567$ h; $E_{battery} = 100$ Whr:
 
-$$ SoC_{exit} = 85\% - \frac{28.7 \times 0.550}{100}\times 100\%
-  = 85\% - 15.8\% = 69.2\% $$
+$$ SoC_{exit} = 85\% - \frac{28.8 \times 0.567}{100}\times 100\%
+  = 85\% - 16.3\% = 68.7\% $$
 
-That is **15.8 Wh out of a 100 Wh pack**, a discharge rate of
-about **0.48 %/min**. Sanity-check it the other way: 28.7 W for
-0.55 h is 15.8 Wh, and 15.8 / 100 = 15.8 %. If your answer is not a
+That is **16.3 Wh out of a 100 Wh pack**, a discharge rate of
+about **0.48 %/min**. Sanity-check it the other way: 28.8 W for
+0.567 h is 16.3 Wh, and 16.3 / 100 = 16.3 %. If your answer is not a
 mid-teens percentage for a nominal orbit, you have used the wrong
 load or the wrong battery.
 
 **The same arithmetic at the deep end.** Take the `worst` profile
 — FINE held all orbit, cooler running continuously, imaging through
-eclipse, HIGH-tier dumps every pass — at 45.3 W over a 34.7 min
-(0.578 h) eclipse: $45.3 \times 0.578 = 26.2$ Wh, so SoC falls
-26.2 points, 85 % → 58.8 %. Still survivable for one orbit, but
+eclipse, HIGH-tier dumps every pass — at 46.8 W over a 35.2 min
+(0.587 h) eclipse: $46.8 \times 0.587 = 27.5$ Wh, so SoC falls
+27.5 points, 85 % → 57.5 %. Still survivable for one orbit, but
 that profile is generation-negative over the orbit as a whole
-(38.0 W generated against 45.3 W consumed), so it does not recover
+(45.1 W generated against 46.8 W consumed), so it does not recover
 and each orbit starts lower than the last. That is the shape of a
 power budget that does not close.
 
@@ -6374,10 +6475,10 @@ dominates is wasted pass time.**
 **Turn it into metres.** The spacecraft publishes
 `aocs.geoloc_err_m` (0x02C7) = altitude × total pointing error:
 
-$$ 450\ \text{km} \times 0.0201° \times \frac{\pi}{180} = 450000 \times 3.51\times10^{-4} = 158\ \text{m} $$
+$$ 513\ \text{km} \times 0.0201° \times \frac{\pi}{180} = 513000 \times 3.51\times10^{-4} = 180\ \text{m} $$
 
-— about five ground pixels at the instrument's 29.3 m GSD. At the
-0.05° gate it would be 393 m, about thirteen pixels.
+— about five ground pixels at the instrument's 33.4 m GSD. At the
+0.05° gate it would be 448 m, about thirteen pixels.
 
 **Operator working rule.** Before commanding
 `AOCS_SET_MODE(mode=5)` for imaging, run
@@ -6554,7 +6655,7 @@ The link is not power-limited, so the binding constraint is
 |---|---|---|
 | Raw channel time | **262.1 s** | 2097 s |
 | With the planner's 20 % protocol allowance | **327.7 s** | 2621 s |
-| As a fraction of the 447 s average pass | **73 %** | 586 % |
+| As a fraction of the 450 s average pass | **73 %** | 582 % |
 
 So one image is most of one pass, and the shipped `data_dump`
 activity is **330 s** long — one image, rounded up, and nothing
@@ -6589,15 +6690,23 @@ clear the gate.
 **Instrument geometry, since FDS will be asked for it.** The
 imager is a wide-field multispectral pushbroom: 8192 px across
 track at 5.5 µm pitch on an 84.5 mm focal length, giving a
-29.856° full field, a **240 km swath** and a **29.3 m GSD** from
-450 km. The standard capture is a **2048-line strip**:
-
-$$ 2048 \times 29.3\ \text{m} = 60.0\ \text{km along-track} $$
+29.856° full field, a **273 km swath** and a **33.4 m GSD** from
+513 km. The standard capture is a **2048-line strip**:
 
 $$ \frac{2048\ \text{lines}}{244\ \text{Hz}} = 8.4\ \text{s of scan} $$
 
-which at the 7.14 km/s ground-track speed is the same 60 km — the
-two derivations agree, which is the check to run. Focal-plane
+which at the 7.06 km/s ground-track speed is **59 km along-track**.
+The second derivation does not agree:
+
+$$ 2048 \times 33.4\ \text{m} = 68.4\ \text{km along-track} $$
+
+because the 244 Hz line rate was sized at the retired 450 km
+altitude (7.14 km/s ÷ 29.3 m). At 513 km successive lines are
+28.9 m apart along-track against a 33.4 m pixel across-track, so the
+image is slightly oversampled along-track; a velocity-matched rate
+would be about 211 Hz. `payload.yaml` records this as a known
+inconsistency. Running both derivations is still the check to run —
+here it tells you that the footprint to quote is 59 km. Focal-plane
 readout is 96 Mbps ($8192 \times 4\ \text{bands} \times 12\ \text{bit}
 \times 244\ \text{Hz}$), so the physical raw frame is 100.7 MB. The
 courseware uses **4 MB** for `image_size_mb` instead, deliberately
@@ -6608,7 +6717,7 @@ gap; know that it is there.
 ## 13.7 Wheel-saturation desat scheduling
 
 A reaction wheel's stored angular momentum is $H = I_{wheel}\,\omega$.
-EO-Sat-1 flies four **Sinclair RW-0.03-class** wheels in a pyramid
+EOSAT-1 flies four **Sinclair RW-0.03-class** wheels in a pyramid
 (azimuths 45/135/225/315°, elevation 30° above the XY plane), with
 $I_{wheel} = 5.2\times10^{-5}$ kg·m² and $\omega_{max} = 5500$ rpm:
 
@@ -6622,7 +6731,9 @@ wheels are in a pyramid, the *body-axis* authority is larger than
 one wheel: $2\cos30°\cos45°\,H \approx 0.037$ N·m·s about X and Y,
 and $2H = 0.060$ N·m·s about Z.
 
-**Disturbance torques** on a 6U with deployed wings at 450 km:
+**Disturbance torques** on a 6U with deployed wings at 513 km, as
+configured in `aocs.yaml` (the aerodynamic term uses a fixed density
+sized at 450 km, so it is conservative by about a factor of two):
 
 | Source | Magnitude | Character |
 |---|---|---|
@@ -6783,9 +6894,9 @@ Engineer · `[AOCS]` AOCS Engineer · `[MULTI]` multi-position.
 > that the SPACON files at end of shift. Adjust to your installation's
 > conventions if a deployment provides an electronic equivalent.
 
-The 67 procedures in the simulator split as 7 LEOP, 13
-commissioning, 13 nominal, 28 contingency, 6 emergency. The
-cards below cover the ~56 most consequential procedures across
+The 70 procedures in the simulator split as 7 LEOP, 13
+commissioning, 14 nominal, 30 contingency, 6 emergency. The
+cards below cover the ~57 most consequential procedures across
 the catalogue. Cards marked **"see §9.3 / §9.4 / §9.5"** for
 NOM-001, CTG-003 and NOM-012 hold the headline procedures; their
 full read-and-do checklists are in Chapter 9. The remainder of
@@ -6793,30 +6904,33 @@ the catalogue (mostly cleanup, scheduled maintenance and
 infrequent contingencies) is indexed in §14.6 with file
 references for at-console reading.
 
-> **Editor's note — which ID is on the card.** The LEOP,
-> commissioning and nominal cards carry the IDs of
-> `configs/eosat1/procedures/procedure_index.yaml` exactly, and two
-> of them moved when the book was reconciled against the simulator:
-> the orbit-manoeuvre **execution** card is **NOM-013** (simulator
-> NOM-005 is HK Configuration) and NOM-006 is Software Upload
-> (simulator NOM-008 is Clock Synchronisation). Six **contingency**
-> and five **emergency** numbers, however, name a different card in
-> the book from the one they name in the shipped index, and neither
-> side is being renumbered in this pass. The book keeps its own
-> numbering on those cards, each card carries the shipped ID in its
-> header note, and the two read-across tables — §14.5 for emergency,
-> §14.6 for contingency — are authoritative. **Read across before
-> opening a file or calling an ID on the voice loop.** The shipped
-> catalogue runs LEOP-001 to LEOP-007, COM-001 to COM-013, NOM-001 to
-> NOM-013, CTG-001 to CTG-028 and EMG-001 to EMG-006.
+> **Editor's note — which ID is on the card.** Every card in this
+> chapter carries the ID of
+> `configs/eosat1/procedures/procedure_index.yaml` exactly, so the ID
+> called on the voice loop is the file the MCS Procedures tab opens.
+> Two nominal IDs moved when the book was reconciled against the
+> simulator: the orbit-manoeuvre **execution** card is **NOM-013**
+> (simulator NOM-005 is HK Configuration) and NOM-006 is Software
+> Upload (simulator NOM-008 is Clock Synchronisation). The contingency
+> and emergency cards were renumbered to the simulator's IDs in
+> October 2026; the numbers used by earlier printings are listed in
+> the historical note at the end of §14.6. The book's two temporary
+> contingency cards, CTG-B01 and CTG-B02, are now simulator cards:
+> **CTG-029** Gyro Failure Recovery and **CTG-030** Telecommand
+> Rejection and Verification Failure. The shipped catalogue runs
+> LEOP-001 to LEOP-007, COM-001 to COM-013, NOM-001 to NOM-014,
+> CTG-001 to CTG-030 (CTG-018 retired in favour of CTG-021) and
+> EMG-001 to EMG-006.
 
 ## 14.1 LEOP procedure cards
 
 > **Editor's note — LEOP running order.** Under the cold-boot initial
-> state the order is **LEOP-001 → LEOP-002 → LEOP-007 → LEOP-004 →
-> LEOP-005 → LEOP-006 → LEOP-003**. LEOP-007 runs early because
-> everything after it needs the wheels line powered and the OBC in the
-> application image.
+> state the order is **LEOP-001 → LEOP-002 → LEOP-004 → LEOP-007 →
+> LEOP-005 → LEOP-006 → LEOP-003**. The wings are deployed (LEOP-004)
+> before anything else draws power; LEOP-007 powers only the AOCS
+> suite and commands DETUMBLE; LEOP-005 observes the automatic
+> handover to COARSE_SUN; LEOP-003 closes LEOP with the phase-5
+> declaration.
 
 <div class="procedure-card procedure-card-leop" markdown="1">
 
@@ -6837,7 +6951,7 @@ references for at-console reading.
 
 - IF S1.1 + S17.2 received AND `obdh.sw_image` = 1 AND SIDs 1, 3, 4, 6, 11 stream → procedure GO, continue to LEOP-002
 - IF S1.1 received but no S1.7 to the boot command within 30 s → CTG-010
-- IF no accepted TC by AOS+2 min → hold; if none by AOS+5 min → **EMG-003 Loss of Communication** (this book's numbering; the shipped file is **EMG-004**, `emergency/loss_of_communication.md` — see the read-across table in §14.5. Sim EMG-003 is OBC Reboot, so calling "EMG-003" at the console without the read-across fetches the wrong card)
+- IF no accepted TC by AOS+2 min → hold; if none by AOS+5 min → **EMG-004 Loss of Communication**
 
 | Step | Action | TC / Code | Confirm | Notes |
 |:----:|:-------|:----------|:--------|:------|
@@ -6869,13 +6983,13 @@ references for at-console reading.
 - Any single subsystem reports FAIL → invoke that subsystem's contingency (e.g. CTG-001 for EPS undervoltage, CTG-002 for AOCS) before proceeding
 - Multiple FAILs → hold LEOP entirely; FD considers EMG-001 safe-mode entry
 - One subsystem returns DEGRADED rather than FAIL → continue at FD discretion but log a watch-item
-- `HK_REQUEST(sid=5)` rejected with error `0x0004` → expected: the payload line is still OFF, and the rejection is the confirmation that the payload is dark
+- A line flag reads 1 for the AOCS, payload, cooler or `prop` line → something was energised early; record it and hold LEOP-004 until the FD has reviewed it
 
 **Decision tree:**
 
-- IF all positions return PASS → GO LEOP-007
+- IF all positions return PASS → GO LEOP-004
 - IF EPS FAIL → CTG-001 first, then re-run LEOP-002
-- IF AOCS FAIL → CTG-002, hold LEOP-007 power-on
+- IF a line is energised early → hold, FD review before LEOP-004
 - IF ≥ 2 FAIL → call FD, consider EMG-001
 
 | Step | Action | TC / Code | Confirm | Notes |
@@ -6884,9 +6998,9 @@ references for at-console reading.
 | 2 | Thermal: read all zone temperatures | `HK_REQUEST(sid=3)` (S3.27) | □ | `tcs.temp_obc` (0x0406) −5…+45 °C; `tcs.temp_battery` (0x0407) 0…+35 °C |
 | 3 | TT&C: confirm link parameters | `HK_REQUEST(sid=6)` (S3.27) | □ | `ttc.link_status` (0x0501) = 2; RSSI > −105 dBm; margin > 3.0 dB |
 | 4 | OBDH: confirm OBC running, no FDIR events | `HK_REQUEST(sid=4)` (S3.27) | □ | `obdh.mode` (0x0300) = 0 or 1; `obdh.cpu_load` (0x0302) < 70 % |
-| 5 | AOCS: confirm wheel telemetry present (line still OFF until LEOP-007) | `aocs.rw1_speed`…`rw4_speed` (0x0207–0x020A) | □ | Four wheels reporting. Telemetry is not enablement: the bootloader leaves every wheel DISABLED, so `aocs.wheels_enabled` (0x0260) = 0 here and stays 0 until COM-004 |
+| 5 | EPS: confirm the unpowered subsystems are dark | `eps.pl_aocs_wheels` (0x0117), `eps.pl_payload` (0x0113), `eps.pl_fpa_cooler` (0x0114), `eps.pl_prop` (0x014A) = 0 (SID 1) | □ | Do not request SIDs 2 or 5: they are not enabled yet and their units are unpowered, so the line flags are the health check. There is no AOCS mode and no wheel telemetry to read until LEOP-007 and COM-004 |
 | 6 | SPACON: consolidate single PASS/FAIL on voice loop | (mission log) | □ | "LEOP-002 PASS" or list of FAILs |
-| 7 | FD: GO/no-GO for LEOP-007 | (FD call) | □ | Recorded in log |
+| 7 | FD: GO/no-GO for LEOP-004 | (FD call) | □ | Recorded in log |
 
 </div>
 
@@ -6896,23 +7010,29 @@ references for at-console reading.
 
 <div class="procedure-card-header" markdown="1">[OB] LEOP-003 — Initial Orbit Determination</div>
 
-**Entry point:** After LEOP-004/005/006, spacecraft in COARSE_SUN with stable attitude; GPS receiver powered.
+**Entry point:** After LEOP-006 — this is the **last** LEOP card. COARSE_SUN sun hold; clock referenced (`obdh.time_ref` 0x0A13 = 1, 2 or 3); GPS receiver ON since LEOP-007 with `aocs.gps_fix` (0x0274) ≥ 2; HK SID 12 (GPS_NAV) enabled in LEOP-006.
 
-**Goal:** Obtain a first post-launch state vector from GPS, confirm the 450 km / 98.0° sun-synchronous insertion, and refresh the 24 h pass schedule.
+**Goal:** Verify the on-board GPS navigation solution, confirm the 513 km / 97.39° sun-synchronous insertion, hand the refined TLE to the ground tools, and declare the end of LEOP by commanding mission phase 5 (COMMISSIONING).
 
 **Possible negative outcomes / deviations:**
 
-- Fewer than 4 satellites tracked after 15 min → check antenna shadowing in the current attitude; GPS cold start in LEO can take 15 min; fall back to ground ranging from Iqaluit and Troll
-- State vector implausible vs separation prediction → flag to FDS; do not load a new pass plan until the vector is reviewed
-- Altitude outside [430, 470] km → check fix quality (`aocs.gps_pdop`, 0x0275) before declaring an insertion error
+- `aocs.gps_fix` < 2 → confirm the receiver is ON (`S2_AOCS_GPS_RECEIVER`, device 0x020F, LEOP-007); a cold start can take 15 min. After 30 min with no fix, fall back to ground range and Doppler from the station network; the phase declaration may proceed on a ground-tracked orbit with FD approval
+- SID 12 absent from the downlink → `HK_ENABLE(sid=12)` (S3.5) was missed in LEOP-006; re-issue it
+- Altitude outside the [495, 540] km check band → check fix quality (`aocs.gps_pdop`, 0x0275) and take a second fix; only outside [400, 550] km is the insertion itself suspect
+- Inclination more than 0.2° from 97.39° → flag to Flight Dynamics; sun-synchronous precession and lifetime are affected
+- `SYS_SET_MISSION_PHASE` refused → `0x0C03`: the OBC is back in the bootloader (re-run LEOP-001 step 5 and LEOP-006); `0x0C04`: a backwards declaration without FORCE
 
 | Step | Action | TC / Code | Confirm | Notes |
 |:----:|:-------|:----------|:--------|:------|
-| 1 | OBDH: verify GPS fix type and satellite count | `aocs.gps_fix` (0x0274) = 3 (3D+vel); `aocs.gps_num_sats` (0x0276) ≥ 4 | □ | `GET_PARAM` (S20.3) |
-| 2 | OBDH: read position fix | `aocs.gps_lat` (0x0210), `aocs.gps_lon` (0x0211), `aocs.gps_alt` (0x0212) | □ | Altitude in [430, 470] km |
-| 3 | FDS: ingest vector; propagate; compare with launcher predict | (FDS workflow) | □ | a ≈ 6821 km, e < 0.005, i within 0.1° of 98.0°, period 5600–5680 s |
-| 4 | OBDH: update the on-board propagator | `SET_PARAM(param_id=0x0240, value=EPOCH)` / `(param_id=0x0241, value=STATE)` (S20.1) | □ | S20.1 carries ONE float32 per command — upload component by component |
-| 5 | SPACON: publish refreshed schedule; brief FD on first nominal pass | (mission log) | □ | "LEOP-003 complete" |
+| 1 | FDS: verify the GPS navigation solution is downlinking | `HK_REQUEST(sid=12)` (S3.27) | □ | `aocs.gps_fix` (0x0274) ≥ 2; `aocs.gps_num_sats` (0x0276) ≥ 4; record `aocs.gps_pdop` (0x0275). Position reads zero below fix 2: wait for the fix, do not conclude anything |
+| 2 | FDS: read the position fix | `GET_PARAM(param_id=0x0210)`, `(param_id=0x0211)`, `(param_id=0x0212)` (S20.3) | □ | `aocs.gps_alt` (0x0212) in the [495, 540] km check band |
+| 3 | FDS: read the ECEF state vector | `GET_PARAM(param_id=0x0231)` … `(param_id=0x0236)` (S20.3) | □ | Position magnitude 6700–6950 km, velocity magnitude 7400–7900 m/s; record with the GPS timestamp |
+| 4 | FDS: compare with the launcher-predicted orbit | (FDS workflow) | □ | i within 0.2° of 97.39°, e < 0.01, LTAN within 15 min of 10:00; period against the TLE (15.24 rev/day, 5669 s) |
+| 5 | FDS: take a second fix 10 min later | `HK_REQUEST(sid=12)` (S3.27) | □ | `aocs.gps_alt` within 20 km of step 2; fix still ≥ 2 |
+| 6 | FDS: distribute the orbit determination report and the refined TLE to the ground tools | (planner, FDS, station network) | □ | The refined TLE updates pass prediction on the ground. **Nothing is uploaded to the spacecraft**: there is no command for an on-board orbit upload |
+| 7 | FD: GO/NO-GO poll, then declare COMMISSIONING | `SYS_SET_MISSION_PHASE(phase=5, flags=0)` (S8 func_id 120) | □ | **Critical**: read the argument back. `eps.spacecraft_phase` (0x0129) = 5 within 5 s; event `MISSION_PHASE_CHANGED` (0x0055) carries 4 → 5. This card is the only one that sends it. "LEOP-003 complete": LEOP is over |
+
+**Note — the mission phase is an interlock, not a label.** `SYS_SET_MISSION_PHASE` (S8 func_id 120, arguments `phase` 3–6 and `flags` bit 0 = FORCE) gates six mechanisms: which subsystems tick, telecommand acceptance (at phase ≤ 3 only the bootloader subset is accepted), the derived `sat.mode` (0x0001, pinned to SAFE below phase 6), arming of the advanced fault-propagation model, the phase-gated FDIR rules, and the propulsion arm interlock (`min_phase: 6`). Out-of-range is refused with `0x0C01`, phases 0–2 with `0x0C02`, an application phase while the OBC is still in the bootloader with `0x0C03`, and a backwards transition with `0x0C04` unless FORCE is set. This **supersedes** the earlier "phase transition is console-only" ruling: the telecommand exists and is the way it is done.
 
 </div>
 
@@ -6922,7 +7042,7 @@ references for at-console reading.
 
 <div class="procedure-card-header" markdown="1">[FE] LEOP-004 — Solar Array Verification</div>
 
-**Entry point:** After LEOP-007, in a sun-illuminated portion of the orbit, body rates < 0.5 °/s and SoC > 50 % (each wing draws ~2 A for 30 s while deploying).
+**Entry point:** After LEOP-002, in a sun-illuminated portion of the orbit, SoC > 50 % (each wing draws ~2 A for 30 s while deploying). The AOCS is not powered yet, so there is no rate telemetry: deployment is qualified against the launcher tip-off rates.
 
 **Goal:** Deploy the +Y and −Y wings, confirm deployment in telemetry, and verify per-wing current consistent with the predicted sun angle.
 
@@ -6930,7 +7050,7 @@ references for at-console reading.
 
 - A wing does not show DEPLOYED within 45 s → single-wing retry with `EPS_DEPLOY_WING(wing=0)` (+Y) or `(wing=1)` (−Y), FD approval required; assess the single-wing power budget if it fails
 - Wing currents asymmetric > 30 % → log anomaly; continue LEOP on a reduced power budget
-- Current oscillating with attitude → expected pre-detumble; re-verify after LEOP-005
+- Current oscillating with attitude → expected before detumble; re-verify after LEOP-005
 
 | Step | Action | TC / Code | Confirm | Notes |
 |:----:|:-------|:----------|:--------|:------|
@@ -6948,32 +7068,25 @@ references for at-console reading.
 
 <div class="procedure-card-header" markdown="1">[AOCS] LEOP-005 — Sun Acquisition</div>
 
-**Entry point:** After LEOP-004, AOCS in DETUMBLE (`aocs.mode` 0x020F = 2), SoC > 40 %.
+**Entry point:** After LEOP-007: AOCS in DETUMBLE (`aocs.mode` 0x020F = 2) on the magnetometer and magnetorquers, SID 2 downlinking, wheels DISABLED, SoC > 40 %.
 
-**Goal:** Confirm B-dot rate damping is converging, then transition to COARSE_SUN (mode 3) and hold a sun-pointing attitude for positive power balance.
+**Goal:** Observe B-dot rate damping and the **automatic** handover to COARSE_SUN (mode 3), then verify a power-positive sun hold. This card commands no mode change.
 
 **Possible negative outcomes / deviations:**
 
-- Rates not decreasing after 15 min → check magnetorquer enable (`aocs.mtq_enabled`, 0x025E); re-enter DETUMBLE; escalate to CTG-002 AOCS Anomaly
-- Attitude error not converging in COARSE_SUN → check coarse sun-sensor confidence (`aocs.css_sun_confidence`, 0x0215); if in eclipse, wait for the sunlit phase
-- A single wheel faults → AOCS flies on three wheels; log and continue, schedule wheel checkout in COM-004
-
-**Decision tree:**
-
-- IF all rates < 0.5 °/s → GO COARSE_SUN
-- IF `aocs.att_error` (0x0217) < 10° within 5 min of entry → GO LEOP-006
-- IF rates re-grow → hold in DETUMBLE; CTG-002
+- Rates not decreasing after 15 min → check `aocs.mtq_enabled` (0x025E) = 1 and `aocs.mag_enabled` (0x025C) = 1; if either has dropped, re-establish it as in LEOP-007 step 4 and re-command DETUMBLE with `AOCS_SET_MODE(mode=2)` (S8 func_id 0)
+- Rates below 0.5 °/s but no handover after 30 min → do **not** command mode 3; confirm the rates are below the guard on all three axes and sustained, then call the FD
+- Attitude error not converging in COARSE_SUN → check coarse sun-sensor confidence (`aocs.css_sun_confidence`, 0x0215); in eclipse, wait for the sunlit phase
+- Rates re-grow → CTG-002 AOCS Anomaly
 
 | Step | Action | TC / Code | Confirm | Notes |
 |:----:|:-------|:----------|:--------|:------|
-| 1 | AOCS: confirm DETUMBLE active | `HK_REQUEST(sid=2)` (S3.27); `aocs.mode` (0x020F) = 2 | □ | If not, `AOCS_SET_MODE(mode=2)` (S8 func_id 0) |
-| 2 | AOCS: record body rates and monitor damping | `aocs.rate_roll/pitch/yaw` (0x0204–0x0206) | □ | B-dot damping is slow: from a 14 °/s tumble the 0.5 °/s guard is reached at ~1166 s, full convergence ~3.5×10³ s |
-| 3 | AOCS: verify all axes below the exit guard | `aocs.rate_roll/pitch/yaw` (0x0204–0x0206) < 0.5 °/s | □ | Hold until true on all three axes |
-| 4 | AOCS: confirm wheels idle and ready | `aocs.rw1_speed`…`rw4_speed` (0x0207–0x020A) ≈ 0 RPM | □ | Wheel speeds are read-only telemetry |
-| 5 | AOCS: transition to COARSE_SUN | `AOCS_SET_MODE(mode=3)` (S8 func_id 0) | □ | `aocs.mode` (0x020F) = 3 within 30 s |
-| 6 | AOCS: monitor convergence | `aocs.att_error` (0x0217) < 10° within 300 s | □ | Sun-pointing achieved |
-| 7 | EPS: confirm improved generation | `eps.power_gen` (0x0107) > 40 W | □ | SoC stable or rising |
-| 8 | SPACON: log completion | (mission log) | □ | "LEOP-005 complete" |
+| 1 | AOCS: confirm DETUMBLE and record the initial rates | `HK_REQUEST(sid=2)` (S3.27) | □ | `aocs.mode` (0x020F) = 2; rates (0x0204–0x0206) recorded; 0.5–5 °/s per axis is typical after separation |
+| 2 | AOCS: monitor rate damping — command nothing | `HK_REQUEST(sid=2)` (S3.27) every 5 min | □ | All rates decreasing; B-dot roughly halves them every 10–15 min. A zeroed `aocs.mag_field_total` (0x0277) means B-dot is blind |
+| 3 | AOCS: observe the automatic handover to COARSE_SUN | (observe) | □ | Rates below 0.5 °/s for 30 s → `aocs.mode` = 3 by itself, within 1800 s. Do **not** command mode 3 |
+| 4 | AOCS: verify the sun hold | `HK_REQUEST(sid=2)` (S3.27) every 60 s for 5 min | □ | `aocs.att_error` (0x0217) < 15° within 600 s; `aocs.css_sun_confidence` (0x0215) > 0.5; rates < 0.5 °/s. The hold flies on magnetorquers, so expect degree-level wander |
+| 5 | EPS: verify power generation in the hold | `HK_REQUEST(sid=1)` (S3.27) | □ | `eps.power_gen` (0x0107) > 40 W; SoC stable or rising |
+| 6 | SPACON: log the final AOCS state; GO LEOP-006 | (mission log) | □ | "LEOP-005 complete". The spacecraft stays in COARSE_SUN: with no star tracker powered, nothing promotes it, and the wheels stay disabled until COM-004 |
 
 </div>
 
@@ -7006,6 +7119,7 @@ references for at-console reading.
 | 4 | SPACON: issue the time correction | `SET_TIME(cuc_seconds=T_corrected)` (S9.1) | □ | Argument goes INSIDE the backticks — a bare `SET_TIME` packs cuc_seconds = 0, an epoch reset. Confirm T_corrected is on the **J2000** epoch: a Unix timestamp is ~9.46e8 s too large and is accepted. Event `OBC_TIME_SET` (0x030C) carries the signed jump |
 | 5 | SPACON: verify residual | `REQUEST_TIME` (S9.2); `HK_REQUEST(sid=4)` (S3.27) | □ | Residual magnitude < 1.0 s; `obdh.time_ref` (0x0A13) now = 1 (GROUND) and `time_since_sync_s` (0x0A14) restarted from 4294967295; `obdh.mode` unchanged |
 | 6 | SPACON: validate clock rate over two reports | `REQUEST_TIME` (S9.2) | □ | drift_ppm = ((T_obc2 − T_obc1) − (T_gnd2 − T_gnd1))/interval × 1e6; accept < 100 ppm, expect ~12 ppm. Use the longest interval the pass allows — 12 ppm over 60 s is 0.7 ms and unresolvable. Meaningless if `time_ref` = 2 (GPS): that measures the discipline loop, not the oscillator |
+| 6a | SPACON: enable GPS navigation HK, then discipline the clock to GPS once the receiver has a fix | `HK_ENABLE(sid=12)` (S3.5); `OBC_GPS_TIME_SYNC` (S8 func_id 80) | □ | SID 12 is not enabled by default: without it LEOP-003 runs blind. Sync only with `aocs.gps_fix` (0x0274) ≥ 2; `obdh.time_ref` → 2 (GPS) within 15 s. Ground set first, GPS second: on a clock already within 1 s the GPS jump is milliseconds, far below the 5 s jump that forces the AOCS to SAFE_BOOT (CTG-027). No fix yet → send the sync on the next contact |
 | 7 | SPACON: log new drift baseline; GO LEOP-003 | (mission log) | □ | "LEOP-006 complete" |
 
 </div>
@@ -7016,46 +7130,29 @@ references for at-console reading.
 
 <div class="procedure-card-header" markdown="1">[MULTI] LEOP-007 — Sequential Power-On</div>
 
-**Entry point:** LEOP-002 PASS; auto-TX hold-down active; `obdh.sw_image` = 1; battery SoC > 60 %; bus 27–29 V; LEOP FDIR/event-action set armed and the nominal set disabled (`EA_DISABLE`, S19.5).
+**Entry point:** After LEOP-004: application image running (`obdh.sw_image` = 1), link on LOW, wings deployed and generating, every switchable line except `ttc_tx` OFF, AOCS OFF, spacecraft tumbling at tip-off rates; SoC > 60 %, bus 26–30 V.
 
-**Goal:** Energise every switchable power line in dependency order, boot AOCS out of OFF into DETUMBLE and then COARSE_SUN, bring the payload to STANDBY with the FPA cooler regulating, and enable the remaining HK structures.
+**Goal:** Power only what the rest of LEOP needs, in dependency order: the heater lines if their zones need heat, the AOCS suite line, the magnetometer, magnetorquers and GPS receiver, then DETUMBLE. The payload, the cooler, the wheels, the star trackers, the gyros and the `prop` line stay off; their commissioning cards bring them up.
 
 **Possible negative outcomes / deviations:**
 
-- Per-line overcurrent within 30 s of enable → CTG-012 Overcurrent Response; the line stays off; investigate before retry
-- Battery zone slow to enter band after heater enable → wait one full eclipse; if still cold, CTG-004 Thermal Exceedance
-- Reaction wheel stuck at enable → CTG-007 Reaction Wheel Anomaly; a 3-of-4 pyramid still spans R³ and flies FINE degraded (`aocs.fine_degraded`, 0x0299)
-- OBC watchdog reset mid-sequence → CTG-010; re-establish, re-arm the event-action set, resume
-- `AOCS_SET_MODE` rejected with `0x0004` after the line-on → the EPS write did not take; re-issue `EPS_POWER_ON`, verify `eps.pl_aocs_wheels` (0x0117), retry
-
-**Decision tree:**
-
-- IF any FDIR event of severity ≥ 3 fires during the sequence → STOP, address the contingency, FD GO to resume (FDIR severity runs 0–4 and is a different scale from autonomy level 0–3)
-- IF bus voltage drops below 26.5 V during enable → load shed (CTG-001) before continuing
-- IF rates increase in DETUMBLE → `AOCS_SET_MODE(mode=0)` and investigate magnetorquer polarity
+- `AOCS_SET_MODE(mode=2)` refused with `0x0004` → the line write did not take; re-issue `EPS_POWER_ON(line_index=7)`, verify `eps.pl_aocs_wheels` (0x0117), retry
+- Refused with `0x0A20` (no magnetometer) → re-issue `S2_AOCS_MAGNETOMETER(device_id=521, state=1)`; there is no redundant magnetometer
+- Refused with `0x0A21` (no magnetorquers) → re-issue `MTQ_ENABLE(enable=1)`
+- Rates increase in DETUMBLE → `AOCS_SET_MODE(mode=0)` and investigate the magnetometer and magnetorquer polarity
+- SoC below 40 % → stop, switch off the last line powered, wait for SoC > 60 %, resume; bus below 26 V → CTG-001
+- Per-line overcurrent within 30 s of enable → CTG-012 Overcurrent Response; the line stays off
 
 | Step | Action | TC / Code | Confirm | Notes |
 |:----:|:-------|:----------|:--------|:------|
-| 1 | SPACON: verify EPS baseline | `HK_REQUEST(sid=1)` (S3.27) | □ | Bus 27.0–29.0 V, SoC > 60 %, `eps.power_gen` > 0 W |
-| 2 | EPS: energise battery heater | `EPS_POWER_ON(line_index=5)` (S8 func_id 19) | □ | `eps.pl_htr_bat` (0x0115) = 1; +~6 W; battery trending to the 5 °C setpoint |
-| 3 | EPS: energise OBC heater | `EPS_POWER_ON(line_index=6)` (S8 func_id 19) | □ | `eps.pl_htr_obc` (0x0116) = 1; +~3 W |
-| 4 | EPS: energise the wheels line | `EPS_POWER_ON(line_index=7)` (S8 func_id 19) | □ | `eps.pl_aocs_wheels` (0x0117) = 1; the line only lets the model tick. It does **not** enable the wheels: `aocs.wheels_enabled` (0x0260) stays 0 until COM-004 sends `AOCS_ENABLE_WHEEL` per wheel. DETUMBLE and COARSE_SUN below are magnetic and do not need them |
-| 5 | SPACON: enable AOCS housekeeping | `HK_ENABLE(sid=2)` (S3.5) | □ | Powering a line does NOT enable its SID; SID 2 emits every 4 s |
-| 6 | AOCS: boot AOCS into DETUMBLE | `AOCS_SET_MODE(mode=2)` (S8 func_id 0) | □ | Func 0 is exempt from the mode gate; `aocs.mode` (0x020F) = 2; +~12 W |
-| 7 | AOCS: verify rates decreasing and magnetometer valid | `aocs.rate_roll/pitch/yaw` (0x0204–0x0206); `aocs.mag_enabled` (0x025C) | □ | Field magnitude 25–65 µT; damping is slow (see LEOP-005) |
-| 8 | AOCS: once all rates < 0.5 °/s, transition to COARSE_SUN | `AOCS_SET_MODE(mode=3)` (S8 func_id 0) | □ | `aocs.att_error` (0x0217) decreasing, < 5° |
-| 9 | EPS: energise the payload line | `EPS_POWER_ON(line_index=3)` (S8 func_id 19) | □ | `eps.pl_payload` (0x0113) = 1 |
-| 10 | Payload: command STANDBY | `PAYLOAD_SET_MODE(mode=1)` (S8 func_id 26) | □ | `payload.mode` (0x0600) = 1; +~8 W |
-| 11 | SPACON: enable payload housekeeping | `HK_ENABLE(sid=5)` (S3.5) | □ | SID 5 emits every 8 s; `payload.fpa_temp` (0x0601) valid |
-| 12 | EPS: energise the cooler line | `EPS_POWER_ON(line_index=4)` (S8 func_id 19) | □ | `eps.pl_fpa_cooler` (0x0114) = 1 |
-| 13 | Thermal: start the FPA cooler | `FPA_COOLER(on=1)` (S8 func_id 43) | □ | +~15 W; FPA trending to the −15 °C default setpoint |
-| 14 | SPACON: confirm the full HK set | SIDs 1, 2, 3, 4, 5, 6 (+ 11) streaming | □ | Only 1 and 11 are enabled at power-up |
-| 15 | FD: GO/NO-GO poll, then declare COMMISSIONING | `SYS_SET_MISSION_PHASE(phase=5, flags=0)` (S8 func_id 120) | □ | **A flight telecommand, not an instructor action** — the onboard state machine only automates the power-up chain 1→2→3→4, so phases 5 and 6 are ground declarations. Read back `eps.spacecraft_phase` (0x0129) = 5 within 5 s; event `MISSION_PHASE_CHANGED` (0x0055) carries 4 → 5. Criticality `critical` |
-| 16 | SPACON: log; hand to LEOP-004 | (mission log) | □ | "LEOP-007 complete" |
+| 1 | EPS: verify the EPS baseline | `HK_REQUEST(sid=1)` (S3.27) | □ | Bus 26–30 V, SoC > 60 %, `eps.power_gen` > 0 W |
+| 2 | EPS: energise the heater lines only if their zones need heat | `EPS_POWER_ON(line_index=5)` / `(line_index=6)` (S8 func_id 19) | □ | `htr_bat` only if `tcs.temp_battery` < +5 °C; `htr_obc` only if `tcs.temp_obc` < 0 °C. Log which lines were energised: COM-002 reads that record |
+| 3 | EPS: energise the AOCS suite line and enable its housekeeping | `EPS_POWER_ON(line_index=7)` (S8 func_id 19); `HK_ENABLE(sid=2)` (S3.5) | □ | `eps.pl_aocs_wheels` (0x0117) = 1. The line supplies the whole AOCS suite; it does **not** enable the wheels: `aocs.wheels_enabled` (0x0260) stays 0 until COM-004 |
+| 4 | AOCS: enable the DETUMBLE sensor and actuators, and the GPS receiver | `S2_AOCS_MAGNETOMETER(device_id=521, state=1)`; `MTQ_ENABLE(enable=1)` (S8 func_id 9); `S2_AOCS_GPS_RECEIVER(device_id=527, state=1)` | □ | `aocs.mtq_enabled` (0x025E) = 1. The GPS time to first fix starts now: LEOP-006 and LEOP-003 need it |
+| 5 | AOCS: command DETUMBLE | `AOCS_SET_MODE(mode=2)` (S8 func_id 0) | □ | `aocs.mode` (0x020F) = 2 within 10 s; `aocs.mag_enabled` (0x025C) = 1; `aocs.mag_field_total` (0x0277) 5–70 µT; rates (0x0204–0x0206) trending down within 60 s |
+| 6 | EPS: confirm the exit power state; GO LEOP-005 | `HK_REQUEST(sid=1)` (S3.27) | □ | `eps.pl_payload` (0x0113), `eps.pl_fpa_cooler` (0x0114), `eps.pl_prop` (0x014A) and `aocs.wheels_enabled` (0x0260) all 0; power margin positive. "LEOP-007 complete" |
 
-**Note.** The spacecraft has **nine** power lines, indices 0–8: `obc`, `ttc_rx`, `ttc_tx`, `payload`, `fpa_cooler`, `htr_bat`, `htr_obc`, `aocs_wheels`, `prop`. There is no IMU line and no AOCS-sensor line — the gyros are S2 devices `S2_AOCS_GYROSCOPE_0/1/2`. The `prop` line stays OFF here; it is energised only for manoeuvre preparation (NOM-004 / NOM-013).
-
-**Note — the mission phase is an interlock, not a label.** `SYS_SET_MISSION_PHASE` (S8 func_id 120, arguments `phase` 3–6 and `flags` bit 0 = FORCE) gates six mechanisms: which subsystems tick, telecommand acceptance (at phase ≤ 3 only the bootloader subset is accepted), the derived `sat.mode` (0x0001, pinned to SAFE below phase 6), arming of the advanced fault-propagation model, the phase-gated FDIR rules, and the propulsion arm interlock (`min_phase: 6`). Out-of-range is refused with `0x0C01`, phases 0–2 with `0x0C02`, an application phase while the OBC is still in the bootloader with `0x0C03`, and a backwards transition with `0x0C04` unless FORCE is set. This **supersedes** the earlier "phase transition is console-only" ruling: the telecommand exists and is the way it is done.
+**Note.** The spacecraft has **nine** power lines, indices 0–8: `obc`, `ttc_rx`, `ttc_tx`, `payload`, `fpa_cooler`, `htr_bat`, `htr_obc`, `aocs_wheels`, `prop`. There is no IMU line and no AOCS-sensor line — the gyros are S2 devices `S2_AOCS_GYROSCOPE_0/1/2`, powered in COM-003. The payload line is powered in COM-009, the cooler line in COM-010, and the `prop` line only for manoeuvre preparation (NOM-004 / NOM-013) and disposal (NOM-014). The COARSE_SUN transition is automatic and is observed in LEOP-005; the phase-5 declaration is LEOP-003 step 7.
 
 </div>
 
@@ -7063,28 +7160,35 @@ references for at-console reading.
 
 ## 14.2 Commissioning procedure cards
 
+> **Editor's note — commissioning running order (ruling Q16).**
+> COM-001 → COM-002 → **COM-004 → COM-003** → COM-005 → … → COM-010 →
+> COM-012 → COM-011 → COM-013. COM-004 enables the wheels and commands
+> NOMINAL; COM-003 then calibrates the gyros in that wheel-controlled
+> NOMINAL, because its 0.10 °/s gate cannot be met in the wheels-off
+> COARSE_SUN hold. The cards below stay in ID order.
+
 <div class="procedure-card procedure-card-commissioning" markdown="1">
 
 <div class="procedure-card-header" markdown="1">[FE] COM-001 — EPS Power System Checkout</div>
 
-**Entry point:** Start of commissioning pass 1, spacecraft steady in COARSE_SUN, SoC > 70 %.
+**Entry point:** Start of commissioning pass 1, spacecraft steady in the COARSE_SUN hold, phase 5, SoC > 70 %.
 
-**Goal:** Baseline bus voltage, battery SoC and array performance, characterise the eclipse discharge and recovery, and verify bus regulation under a commanded load transient.
+**Goal:** Baseline bus voltage, battery SoC and array performance, characterise the eclipse discharge and recovery, verify a positive orbit-average energy balance, and verify bus regulation under a commanded load transient.
 
 **Possible negative outcomes / deviations:**
 
-- Line fails to re-enable → CTG-012 Overcurrent Response; mark the line as failed; defer dependent commissioning
-- Bus voltage sags outside band under the load step → CTG-005 EPS Safe Mode; flag the charge regulator to FDS
-- Battery SoC trending down faster than predicted → CTG-001 Under-Voltage Load Shed; halt checkout
+- Bus voltage below 27.0 V → check SoC; below 26.0 V → CTG-001 Under-Voltage Load Shed and, with FD approval, `OBC_SET_MODE(mode=1)` (1 is SAFE)
+- Generation below 35 W in sunlight with good sun-pointing → read the per-wing currents (0x0146, 0x0147); log the anomaly and assess a single-wing budget
+- SoC below 50 % at the end of eclipse → reduce load and defer high-power commissioning
 
 | Step | Action | TC / Code | Confirm | Notes |
 |:----:|:-------|:----------|:--------|:------|
-| 1 | EPS: baseline bus, battery and SoC | `HK_REQUEST(sid=1)` (S3.27) | □ | Bus (0x0105) 27.5–28.5 V; `eps.bat_voltage` (0x0100) **26.9–29.2 V** at SoC > 70 % — the pack is 8S-1P, 100 Wh, 26.4 V nominal, with an OCV running 21.5 V at 0 % to 29.2 V at 100 %. Any 14.4–16.8 V band is a 4S figure and does not belong to this spacecraft |
-| 2 | EPS: measure sunlit array performance | `eps.power_gen` (0x0107) | □ | 40–65 W sun-pointed with wings deployed |
+| 1 | EPS: baseline bus, battery and SoC | `HK_REQUEST(sid=1)` (S3.27); `GET_PARAM(param_id=0x0100)`, `GET_PARAM(param_id=0x0101)` (S20.3) | □ | Bus (0x0105) 27.5–28.5 V; `eps.bat_voltage` (0x0100) **26.9–29.2 V** at SoC > 70 % — the pack is 8S-1P, 100 Wh, 26.4 V nominal, with an OCV running 21.5 V at 0 % to 29.2 V at 100 %. Any 14.4–16.8 V band is a 4S figure and does not belong to this spacecraft |
+| 2 | EPS: measure sunlit array performance | `HK_REQUEST(sid=1)` (S3.27) | □ | `eps.power_gen` (0x0107) 40–65 W sun-pointed with wings deployed |
 | 3 | EPS: monitor a full eclipse discharge | `HK_REQUEST(sid=1)` at entry / mid-eclipse | □ | Generation ≈ 0 W; SoC falling < 1.5 %/min; bus > 27.0 V |
-| 4 | EPS: monitor charge recovery after eclipse exit | `eps.power_gen` (0x0107), `eps.bat_soc` (0x0101) | □ | > 35 W within 60 s of exit; SoC rising |
-| 5 | EPS: bus regulation under a commanded load transient | `PAYLOAD_SET_MODE(mode=1)` then `PAYLOAD_SET_MODE(mode=0)` (S8 func_id 26) | □ | Bus stays 27.0–29.0 V, returns to 27.5–28.5 V |
-| 6 | EPS: cycle a non-critical line off → on | `EPS_POWER_OFF(line_index=N)` (S8 func_id 20) / `EPS_POWER_ON(line_index=N)` (func_id 19) | □ | `line_index` range is 0–8; one line at a time, watch the line current |
+| 4 | EPS: monitor charge recovery after eclipse exit | `HK_REQUEST(sid=1)` at exit + 5 min | □ | `eps.power_gen` (0x0107) > 35 W within 60 s of exit; `eps.bat_soc` (0x0101) rising |
+| 5 | EPS: verify the orbit-average energy balance | `GET_PARAM(param_id=0x0108)` (S20.3) | □ | Orbit-average generation > orbit-average consumption; end-of-eclipse SoC > 50 % |
+| 6 | EPS: bus regulation under a commanded load transient — the battery-heater line, not the payload | `EPS_POWER_ON(line_index=5)` (S8 func_id 19); then `EPS_POWER_OFF(line_index=5)` (func_id 20) only if the line was off at entry | □ | Record `eps.pl_htr_bat` (0x0115) first. Bus stays 26.5–29.5 V, returns to 27.0–29.0 V; line back to its entry state. The payload line is OFF until COM-009, so a payload mode command is no transient |
 | 7 | SPACON: record baselines for nominal-ops reference | (mission log) | □ | "COM-001 complete" |
 
 </div>
@@ -7095,25 +7199,25 @@ references for at-console reading.
 
 <div class="procedure-card-header" markdown="1">[SE] COM-002 — TCS Verification</div>
 
-**Entry point:** After COM-001 complete and GO.
+**Entry point:** After COM-001 complete and GO; COARSE_SUN hold, phase 5. Record `eps.pl_htr_bat` (0x0115) and `eps.pl_htr_obc` (0x0116) first — LEOP-007 step 2 may have energised one — as the entry state to restore.
 
-**Goal:** Exercise each heater circuit individually, verify zone temperature response, confirm the autonomous battery thermostat thresholds and check the FPA cooler interface before payload commissioning.
+**Goal:** Verify every thermal zone against its predicted range over a full orbit, exercise each heater circuit with its line powered, read the autonomous battery thermostat thresholds and check the FPA cooler interface before payload commissioning.
 
 **Possible negative outcomes / deviations:**
 
-- Heater enabled but no zone response within 5 min → CTG-004 Thermal Exceedance; mark heater suspect
-- Thermostat thresholds wrong → re-issue `HEATER_SET_SETPOINT` (S8 func_id 44); these are commands, not S20 parameters
+- Heater ON but no zone response within 3 min → check the line is really powered (a heater whose line is dark obeys the switch and heats nothing); then CTG-004 Thermal Exceedance; mark the heater suspect
+- Thermostat thresholds not +5 / +10 °C → raise an anomaly report; this card reads the thresholds, it does not change them
 - Two heaters share a fault signature → suspect a common bus; coordinate with EPS
 
 | Step | Action | TC / Code | Confirm | Notes |
 |:----:|:-------|:----------|:--------|:------|
-| 1 | Thermal: read all zones baseline | `HK_REQUEST(sid=3)` (S3.27) | □ | OBC (0x0406) −5…+45 °C; battery (0x0407) +5…+35 °C; FPA (0x0408) +8…+14 °C uncooled |
-| 2 | Thermal: exercise the battery heater | `HEATER_BATTERY(on=1)` / `(on=0)` (S8 func_id 40) | □ | `tcs.htr_battery` (0x040A) follows; battery temp rising within 180 s |
-| 3 | Thermal: exercise the OBC heater | `HEATER_OBC(on=1)` / `(on=0)` (S8 func_id 41) | □ | `tcs.htr_obc` (0x040B) follows; `tcs.temp_obc` stable or rising |
-| 4 | Thermal: exercise the thruster/catbed heater | `HEATER_THRUSTER(on=1)` / `(on=0)` (S8 func_id 42) | □ | Log on/off times and slopes |
-| 5 | Thermal: verify the autonomous battery thermostat | `HEATER_SET_SETPOINT(circuit=0, on_temp=5.0, off_temp=10.0)` (S8 func_id 44) | □ | ON at ≤ +5 °C, OFF at ≥ +10 °C; between them the previous state holds |
-| 6 | Thermal: FPA cooler interface check (pre-activation) | `tcs.cooler_fpa` (0x040C) = 0; `eps.pl_fpa_cooler` (0x0114) = 0 | □ | Record the uncooled FPA baseline for COM-010 |
-| 7 | SPACON: log; GO COM-003 | (mission log) | □ | "COM-002 complete" |
+| 1 | Thermal: read all zones baseline, then through sunlit phase and eclipse | `HK_REQUEST(sid=3)` (S3.27) | □ | OBC (0x0406) −5…+45 °C; battery (0x0407) +5…+35 °C; FPA (0x0408) +8…+14 °C uncooled |
+| 2 | Thermal: exercise the battery heater with its line powered | `EPS_POWER_ON(line_index=5)` (S8 func_id 19); `HEATER_BATTERY(on=1)` / `(on=0)` (S8 func_id 40); `EPS_POWER_OFF(line_index=5)` only if OFF at entry | □ | `eps.pl_htr_bat` (0x0115) = 1; battery temp rising or stable within 180 s; line restored |
+| 3 | Thermal: exercise the OBC heater with its line powered | `EPS_POWER_ON(line_index=6)`; `HEATER_OBC(on=1)` / `(on=0)` (S8 func_id 41); `EPS_POWER_OFF(line_index=6)` only if OFF at entry | □ | `eps.pl_htr_obc` (0x0116) = 1; `tcs.temp_obc` stable or rising within 120 s; line restored. Func 42 is the thruster catbed heater and stays untouched outside manoeuvre preparation |
+| 4 | Thermal: read the autonomous battery thermostat thresholds | `GET_PARAM(param_id=0x0410)`, `GET_PARAM(param_id=0x0411)` (S20.3) | □ | ON at +5 °C, OFF at +10 °C; between them the previous state holds |
+| 5 | Thermal: FPA cooler interface check (pre-activation) | `GET_PARAM(param_id=0x040C)`, `GET_PARAM(param_id=0x0114)` (S20.3) | □ | `tcs.cooler_fpa` = 0; `eps.pl_fpa_cooler` = 0; record the uncooled FPA baseline for COM-010 |
+| 6 | SPACON: compile the thermal baseline report | (mission log) | □ | Record the zone profiles and heater responses |
+| 7 | SPACON: log; GO COM-004 | (mission log) | □ | "COM-002 complete". COM-004 runs before COM-003 (ruling Q16) |
 
 </div>
 
@@ -7123,25 +7227,34 @@ references for at-console reading.
 
 <div class="procedure-card-header" markdown="1">[AOCS] COM-003 — AOCS Sensor Calibration</div>
 
-**Entry point:** During commissioning, after COM-001/002, AOCS in COARSE_SUN (mode 3) with rates < 0.1 °/s. COM-003 runs **before** the actuator checkout: COM-004's own prerequisite is "COM-003 complete, star tracker active".
+**Entry point:** After COM-004 (ruling Q16): all four wheels ENABLED (`aocs.wheels_enabled` 0x0260 = 4), AOCS in commanded NOMINAL on the wheels (`aocs.mode` 0x020F = 4, or 8 in eclipse), star trackers and gyro units OFF, SoC > 60 %, ≥ 20 min of pass remaining.
 
-**Goal:** Run the on-board gyro bias calibration, verify the magnetometer, bring up both star trackers and cross-check their solution against the coarse sensors.
+**Goal:** Bring the three gyro units and a star tracker into the determination loop, then run the on-board gyro bias calibration so that the rate channel is compensated before the spacecraft is asked to hold fine pointing.
+
+**Why after COM-004.** The calibration is refused while the body rate is more than **0.10 °/s** from the reference (`0x0A04`). In the wheels-off COARSE_SUN hold the magnetorquer-only control hunts at 0.1–0.4 °/s and never meets that gate; wheel-controlled NOMINAL does. The gate stays at 0.10 °/s.
 
 **Possible negative outcomes / deviations:**
 
-- Star-tracker / coarse-sensor disagreement > 5° → CTG-008 Star Tracker Failure; defer calibration
-- Gyro bias estimate out of family → store-and-flag; revisit after thermal stabilises. Note that an injected `gyro_bias` fault is a PERSISTENT offset and survives ticks until cleared
-- GPS fix quality poor → CTG-027 GPS Time Synchronisation and AOCS Recovery; check antenna shadowing
+- Refused with `0x0A02` → a gyro unit is off: read `aocs.gyro_units_mask` (0x02D1) and power it with the matching `S2_AOCS_GYROSCOPE_n` command
+- Refused with `0x0A03` → no star tracker in the loop: wait for `aocs.est_source` (0x02C1) bit 0 (step 4), or recover the tracker (CTG-008)
+- Refused with `0x0A04` → body rate above 0.10 °/s: wait for the slew, the desaturation or the wheel transient to end (`aocs.mode` ≠ 7) and retry
+- `AOCS_GYRO_CAL_ABORT` (0x0212) mid-arc → nothing was applied; fix the cause named in `aocs.gyro_cal_reject` (0x02D0) and re-run from step 6
+- Estimated bias above 0.5 °/s on any axis → do not accept it; re-run with `duration_s=900`; if it persists, raise an anomaly report and go to CTG-029
+- Tracker not acquired within 120 s → status 3 is BLIND (Sun or Moon in the field of view), not failed; wait, or select ST2 with `ST_SELECT(unit=2)`
+- There is no magnetometer calibration on board and no `MAG_SELECT` (func 7 is refused): the single magnetometer is used as it is
 
 | Step | Action | TC / Code | Confirm | Notes |
 |:----:|:-------|:----------|:--------|:------|
-| 1 | AOCS: record the pre-calibration state | `HK_REQUEST(sid=2)` (S3.27) | □ | `aocs.mode` (0x020F) = 3; rates (0x0204–0x0206) < 0.1 °/s — these still carry the bias |
-| 2 | AOCS: run the gyro bias calibration ON BOARD | `AOCS_GYRO_CALIBRATION` (S8 func_id 13) | □ | The estimate is computed on board over a quiescent period — there is no ground-computed bias upload |
-| 3 | AOCS: verify the three gyro units are powered | `aocs.gyro_units_on` (0x0294) = 3 | □ | Three axes, `S2_AOCS_GYROSCOPE_0/1/2`; there is no redundant unit and no IMU power line |
-| 4 | AOCS: verify the magnetometer | `aocs.mag_enabled` (0x025C) = 1; `aocs.mag_field_total` (0x0277) | □ | Field 25 000–65 000 nT. Single-string unit: there is no B magnetometer and no `MAG_SELECT` (func 7 is refused) |
-| 5 | AOCS: power both star trackers, select the prime | `ST1_POWER(on=1)` (func_id 4), `ST2_POWER(on=1)` (func_id 5), `ST_SELECT(unit=1)` (func_id 6) | □ | EO-Sat-1 flies TWO heads; `aocs.st1_status` (0x0240) / `aocs.st2_status` (0x0243) = 2 (TRACKING) |
-| 6 | AOCS: cross-check the ST solution against the coarse estimate | `aocs.att_error` (0x0217) | □ | Agreement within 5°; error falls below 1.0° once the tracker is in the loop |
-| 7 | SPACON: log; GO COM-004 | (mission log) | □ | "COM-003 complete" |
+| 1 | AOCS: enable the AOCS determination housekeeping | `HK_ENABLE(sid=2)`, `HK_ENABLE(sid=7)` (S3.5) | □ | SID 7 carries the calibration channels 0x02C9–0x02D0 every 4 s; without it the calibration runs blind |
+| 2 | AOCS: power all three gyro units | `S2_AOCS_GYROSCOPE_0(device_id=518, state=1)`, `S2_AOCS_GYROSCOPE_1(device_id=519, state=1)`, `S2_AOCS_GYROSCOPE_2(device_id=520, state=1)` (S2.1) | □ | `aocs.gyro_units_on` (0x0294) = 3; `aocs.gyro_units_mask` (0x02D1) = 7 (bit 0 X, bit 1 Y, bit 2 Z). No redundant unit and no IMU power line |
+| 3 | AOCS: power both star trackers, select ST1 | `ST1_POWER(on=1)` (func_id 4), `ST2_POWER(on=1)` (func_id 5), `ST_SELECT(unit=1)` (func_id 6) | □ | 1 = ST1, 2 = ST2, 0 is refused. `aocs.st1_status` (0x0240) = 2 and `aocs.st1_num_stars` (0x0241) ≥ 5 within 120 s; `aocs.st2_status` (0x0243) = 2 |
+| 4 | AOCS: wait for `aocs.est_source` bit 0 — no mode command | (observe) | □ | Stay in the NOMINAL left by COM-004. `aocs.est_source` (0x02C1) bit 0 (star tracker aiding) set within 600 s; `aocs.knowledge_err_3sig` (0x02A7) < 300 arcsec. The `0x0A03` gate is this bit, not the mode |
+| 5 | AOCS: record the pre-calibration bias | `HK_REQUEST(sid=2)` (S3.27) | □ | `aocs.gyro_bias_x/y/z` (0x0270–0x0272) and `aocs.gyro_bias_resid` (0x02D2); a few times 1e-5 °/s on a healthy unit |
+| 6 | AOCS: run the gyro bias calibration ON BOARD | `AOCS_GYRO_CALIBRATION(action=0, duration_s=300)` (S8 func_id 13) | □ | `aocs.gyro_cal_state` (0x02C9) = 1 (RUNNING) within 20 s. Refusal codes `0x0A01`–`0x0A05` are latched in 0x02D0; S1.7 arrives when the arc ends. There is no ground-computed bias upload |
+| 7 | AOCS: monitor the 300 s arc — no slew, desaturation or mode change | `HK_REQUEST(sid=7)` (S3.27) every 30 s | □ | `aocs.gyro_cal_progress` (0x02CA) ≥ 100 within 330 s |
+| 8 | AOCS: verify the result and record the bias | `GET_PARAM(param_id=0x02CB)` … `(param_id=0x02CD)` (S20.3) | □ | `aocs.gyro_cal_state` = 2 (COMPLETE), `aocs.gyro_cal_result` (0x02CF) = 1; each axis within ±0.5 °/s |
+| 9 | AOCS: confirm the compensation took effect | `HK_REQUEST(sid=2)`, `HK_REQUEST(sid=7)` (S3.27) | □ | `aocs.gyro_bias_resid` (0x02D2) < 0.005 °/s; `aocs.gyro_cal_comp_mag` (0x02CE) recorded |
+| 10 | AOCS: five-minute determination check; log; GO COM-005 | `HK_REQUEST(sid=7)` (S3.27) every 60 s for 5 min | □ | `aocs.knowledge_err_3sig` < 120 arcsec; `aocs.control_err` (0x02A8) < 1.0°. "COM-003 complete" |
 
 </div>
 
@@ -7151,9 +7264,9 @@ references for at-console reading.
 
 <div class="procedure-card-header" markdown="1">[AOCS] COM-004 — AOCS Actuator Checkout</div>
 
-**Entry point:** Commissioning pass 1, after COM-003 GO. AOCS in COARSE_SUN (`aocs.mode` 0x020F = 3), rates < 0.05 °/s, `eps.pl_aocs_wheels` (0x0117) = 1 from LEOP-007, SoC > 65 %, ≥ 20 min of pass remaining.
+**Entry point:** Commissioning pass 1, after COM-002 GO and **before** COM-003 (ruling Q16). AOCS in the LEOP COARSE_SUN hold (`aocs.mode` 0x020F = 3, or 8 in eclipse), wheels DISABLED, star trackers and gyros OFF, rates < 0.5 °/s, `eps.pl_aocs_wheels` (0x0117) = 1 from LEOP-007, SoC > 65 %, ≥ 20 min of pass remaining.
 
-**Goal:** **Enable the four reaction wheels** — nothing else in the catalogue does — then spin each one up and down against its baseline, read the wheel temperatures, and rehearse a magnetic desaturation.
+**Goal:** **Enable the four reaction wheels** — nothing else in the catalogue does — and command wheel-controlled NOMINAL; then spin each wheel up and down against its baseline, read the wheel temperatures and rehearse a magnetic desaturation. COM-003 then calibrates the gyros in this NOMINAL.
 
 **This is the card that hands attitude authority to the wheels.** The bootloader brings the spacecraft up with every wheel **DISABLED** and leaves them that way. Powering the `aocs_wheels` EPS line energises the drive electronics only; the separation is deliberate, so that a power-line switch can never silently return control authority to the loop. If this card is skipped, `aocs.wheels_enabled` (0x0260) stays 0, NOMINAL and FINE_POINT have no actuators, and the FDIR rule on `aocs.wheels_enabled < 2` safes the AOCS the moment the mission phase reaches NOMINAL.
 
@@ -7168,12 +7281,13 @@ references for at-console reading.
 | Step | Action | TC / Code | Confirm | Notes |
 |:----:|:-------|:----------|:--------|:------|
 | 1 | AOCS: enable the four reaction wheels, one command per wheel | `AOCS_ENABLE_WHEEL(wheel_idx=0)`, `(wheel_idx=1)`, `(wheel_idx=2)`, `(wheel_idx=3)` (S8 func_id 3) | □ | `aocs.wheels_enabled` (0x0260) = 4 and `aocs.rw1_enabled`…`rw4_enabled` (0x0254–0x0257) = 1 within 10 s. Nothing else in the catalogue enables a wheel |
-| 2 | AOCS: record baseline wheel speeds | `HK_REQUEST(sid=2)` (S3.27) | □ | 0x0207–0x020A; non-zero speeds in COARSE_SUN are normal — this baseline is the reference for every check below |
-| 3 | AOCS: spin each wheel up, through zero, and back | `RW_SET_SPEED_BIAS(wheel_idx=N, bias_rpm=2000.0)`, then `(bias_rpm=-4000.0)` (S8 func_id 8) | □ | The bias is **added to the wheel's current speed**. Baseline +1800…+2200 rpm within 60 s, then baseline −2200…−1800 rpm within 120 s; `aocs.att_error` (0x0217) < 5° throughout |
-| 4 | AOCS: return each wheel to zero | `AOCS_RW_RAMP_DOWN(wheel_idx=N, target_rpm=0.0)` (S8 func_id 14) | □ | < 100 rpm within 60 s. Speeds 0x0207–0x020A are READ-ONLY — they cannot be set with `SET_PARAM` |
-| 5 | AOCS: read the wheel temperatures | `GET_PARAM(param_id=0x0218)`…`(0x021B)` (S20.3) | □ | −10…+55 °C. 0x028A–0x028D are CSS head health percentages, **not** wheel temperatures |
-| 6 | AOCS: desaturation rehearsal on the magnetorquers | `AOCS_DESATURATE` (S8 func_id 1) | □ | Speeds trending toward 0 rpm; `aocs.att_error` < 5°. Budget the honest **20–50 min** dump window (see CTG-007), not the five to ten a rehearsal note might suggest |
-| 7 | SPACON: compile the wheel commissioning report; log; GO COM-005 | (mission log) | □ | "COM-004 complete"; post-condition `aocs.wheels_enabled` (0x0260) = 4 |
+| 2 | AOCS: command wheel-controlled NOMINAL | `AOCS_SET_MODE(mode=4)` (S8 func_id 0) | □ | `aocs.mode` (0x020F) = 4 (or 8 in eclipse) within 300 s; `aocs.commanded_mode` (0x0297) = 4. Accepted without a star tracker: attitude knowledge stays on the coarse sun and magnetometer path until COM-003 |
+| 3 | AOCS: record baseline wheel speeds | `HK_REQUEST(sid=2)` (S3.27) | □ | 0x0207–0x020A; the newly enabled wheels pick up the control load at once, so non-zero speeds are normal — this baseline is the reference for every check below |
+| 4 | AOCS: spin each wheel up, through zero, and back | `RW_SET_SPEED_BIAS(wheel_idx=N, bias_rpm=2000.0)`, then `(bias_rpm=-4000.0)` (S8 func_id 8) | □ | The bias is **added to the wheel's current speed**. Baseline +1800…+2200 rpm within 60 s, then baseline −2200…−1800 rpm within 120 s; `aocs.att_error` (0x0217) < 5° throughout |
+| 5 | AOCS: return each wheel to zero | `AOCS_RW_RAMP_DOWN(wheel_idx=N, target_rpm=0.0)` (S8 func_id 14) | □ | < 100 rpm within 60 s. Speeds 0x0207–0x020A are READ-ONLY — they cannot be set with `SET_PARAM` |
+| 6 | AOCS: read the wheel temperatures | `GET_PARAM(param_id=0x0218)`…`(0x021B)` (S20.3) | □ | −10…+55 °C. 0x028A–0x028D are CSS head health percentages, **not** wheel temperatures |
+| 7 | AOCS: desaturation rehearsal on the magnetorquers | `AOCS_DESATURATE` (S8 func_id 1) | □ | Speeds trending toward 0 rpm; `aocs.att_error` < 5°. Budget the honest **20–50 min** dump window (see CTG-007), not the five to ten a rehearsal note might suggest |
+| 8 | SPACON: compile the wheel commissioning report; log; GO COM-003 | (mission log) | □ | "COM-004 complete"; post-condition `aocs.wheels_enabled` (0x0260) = 4, AOCS in commanded NOMINAL |
 
 </div>
 
@@ -7183,30 +7297,27 @@ references for at-console reading.
 
 <div class="procedure-card-header" markdown="1">[AOCS] COM-005 — AOCS Mode Transitions</div>
 
-**Entry point:** Commissioning pass 1, after COM-004 GO — `aocs.wheels_enabled` (0x0260) = 4 (three is acceptable, degraded) — and with the LEOP event-action set still armed. Wheel-controlled modes cannot be flown before COM-004 has run.
+**Entry point:** After COM-003 GO: wheels enabled (`aocs.wheels_enabled` 0x0260 = 4; three is acceptable, degraded), star tracker in the loop, gyros calibrated, AOCS already in commanded NOMINAL (mode 4, or 8 in eclipse) since COM-004.
 
-**Goal:** Walk the mode ladder COARSE_SUN → NOMINAL → FINE_POINT and back, verifying settling and the pointing budget at each stage.
+**Goal:** Exercise every **commanded** transition the operations concept uses — NOMINAL → FINE_POINT → NOMINAL, NOMINAL → INERTIAL → NOMINAL, the COARSE_SUN hold, desaturation — and **observe** the automatic ones: the return from the hold, the eclipse handover and the end of DESAT. Command what is commanded, wait and verify what is automatic, and never verify the mode you have just left.
 
 **Possible negative outcomes / deviations:**
 
-- Rates re-grow on transition → CTG-002 AOCS Anomaly; revert to the previous mode
-- `AOCS_SET_MODE(mode=5)` refused with S1.8 → read `aocs.fine_ready` (0x02C5): a non-zero bitmask names the unmet precondition (bit 0 ST < 5 stars, bit 1 fewer than THREE wheels, bit 2 MEKF unconverged, bit 3 rates high, bit 4 momentum > 70 %, bit 5 propagate-only, bit 6 slew not idle 60 s)
-- Wheel momentum climbing during the sequence → NOM-007 desaturation
-
-**Decision tree:**
-
-- IF settling exceeds 5 min in any mode → hold, investigate before the next transition
-- IF `aocs.att_error` > 0.1° in FINE_POINT after 5 min → revert to NOMINAL; FD reviews the data
+- `AOCS_SET_MODE(mode=5)` refused with `0x0A22` → read `aocs.fine_ready` (0x02C5): a non-zero bitmask names the unmet precondition (bit 0 ST < 5 stars, bit 1 fewer than THREE wheels, bit 2 MEKF unconverged, bit 3 rates high, bit 4 momentum ≥ 70 %, bit 5 propagate-only or eclipse, bit 6 slew not idle 60 s); in eclipse, wait for the sunlit arc
+- No automatic promotion out of COARSE_SUN within the window → check CSS validity (eclipse blocks it), `aocs.att_error` < 15° and the tracker still tracking; recover the tracker (CTG-008) rather than forcing the mode
+- DESAT ends with `aocs.desat_ineffective` (0x029C) = 1 → magnetorquer authority could not unload in time; re-run over a polar arc
+- Rates re-grow on a transition → CTG-002 AOCS Anomaly
 
 | Step | Action | TC / Code | Confirm | Notes |
 |:----:|:-------|:----------|:--------|:------|
-| 1 | AOCS: confirm the starting state | `HK_REQUEST(sid=2)` (S3.27) | □ | `aocs.mode` (0x020F) = 3 (COARSE_SUN); error < 5° |
-| 2 | AOCS: command NOMINAL (nadir) | `AOCS_SET_MODE(mode=4)` (S8 func_id 0) | □ | Mode 4; error < 1.0° within 120 s; rates < 0.05 °/s |
-| 3 | AOCS: read the FINE precondition mask | `AOCS_FINE_READY_CHECK` (S8 func_id 89) | □ | `aocs.fine_ready` (0x02C5) = 0 |
-| 4 | AOCS: command FINE_POINT | `AOCS_SET_MODE(mode=5)` (S8 func_id 0) | □ | Mode 5; error < 0.1° within 300 s; rates < 0.01 °/s |
-| 5 | AOCS: hold FINE_POINT for the stability assessment | `HK_REQUEST(sid=2)` every 30 s for 5 min | □ | Error stays < 0.1°; `aocs.fine_degraded` (0x0299) recorded |
-| 6 | AOCS: revert down the ladder and restore | `AOCS_SET_MODE(mode=4)`, then `(mode=3)` (S8 func_id 0) | □ | Each reversion accepted and settled |
-| 7 | SPACON: log; GO COM-006 | (mission log) | □ | "COM-005 complete" |
+| 1 | AOCS: latch the commanded mode | `AOCS_SET_MODE(mode=4)` (S8 func_id 0) | □ | Already flying mode 4 since COM-004; the command latches `aocs.commanded_mode` (0x0297) = 4. Mode 4 or 8; error < 1.0° within 600 s on the sunlit side |
+| 2 | AOCS: NOMINAL → FINE_POINT through its gate | `AOCS_FINE_READY_CHECK` (S8 func_id 89); `AOCS_SET_MODE(mode=5)` (S8 func_id 0) | □ | `aocs.fine_ready` (0x02C5) = 0 first; then mode 5 within 30 s, error < 0.1° within 300 s |
+| 3 | AOCS: FINE_POINT → NOMINAL | `AOCS_SET_MODE(mode=4)` (S8 func_id 0) | □ | Mode 4 within 30 s; `aocs.commanded_mode` = 4 |
+| 4 | AOCS: NOMINAL → INERTIAL and back | `AOCS_SET_MODE(mode=9)`, then `(mode=4)` (S8 func_id 0) | □ | Mode 9 within 30 s, then mode 4 within 30 s. INERTIAL is the one operational mode that holds through the terminator |
+| 5 | AOCS: command the COARSE_SUN hold, then wait for the automatic return | `AOCS_SET_MODE(mode=3)` (S8 func_id 0) | □ | Mode 3 and `aocs.mode_demoted` (0x0298) = 1 within 30 s; then mode 4 by itself within 1800 s and the demotion flag back to 0. Verify the PROMOTED mode, not mode 3 |
+| 6 | AOCS: observe the eclipse handover in the archive | (archive) | □ | Mode 4 ↔ 8 at the terminator with `aocs.commanded_mode` = 4 throughout; no command |
+| 7 | AOCS: desaturation, which exits by itself | `AOCS_DESATURATE` (S8 func_id 1) | □ | Mode 7 (DESAT) within 30 s, then back to mode 4 within 900 s without a command |
+| 8 | SPACON: archive the transition matrix; log; GO COM-006 | (mission log) | □ | Each commanded row carries its TC and verify, each automatic row its trigger and time. "COM-005 complete" |
 
 </div>
 
@@ -7246,25 +7357,26 @@ references for at-console reading.
 
 <div class="procedure-card-header" markdown="1">[OB] COM-007 — OBDH Checkout</div>
 
-**Entry point:** Commissioning pass 2, after pass-startup health check.
+**Entry point:** After COM-006: AOCS in commanded NOMINAL, downlink LOW with the antenna deployed, OBC NOMINAL (`obdh.mode` 0x0300 = 0), SoC > 60 %.
 
-**Goal:** Verify CPU, memory and packet counters, exercise the OBC mode transitions, and confirm the watchdog is armed with no unexplained resets.
+**Goal:** Verify CPU, memory and packet counters, autonomous HK generation and the watchdog, exercise the OBC mode excursion NOMINAL → SAFE → NOMINAL, and **end in NOMINAL**.
 
 **Possible negative outcomes / deviations:**
 
-- Watchdog reported disabled or an unexpected reset cause → CTG-010 OBDH Watchdog Recovery
-- EDAC multi-bit errors non-zero → CTG-016 Memory Segment Failure; defer payload power-on
-- Mode transition not clean → suspect the OBC; CTG-011 OBC Redundancy Switchover
+- Watchdog reported disarmed or an unexpected reset cause → CTG-010 OBDH Watchdog Recovery
+- Memory error or SEU counter incrementing between reads → CTG-016 Memory Segment Failure; defer payload power-on
+- Mode transition fails → retry once; if NOMINAL is unreachable, continue in SAFE only with FD approval and raise an anomaly
 
 | Step | Action | TC / Code | Confirm | Notes |
 |:----:|:-------|:----------|:--------|:------|
-| 1 | OBDH: verify OBC mode and load | `HK_REQUEST(sid=4)` (S3.27) | □ | `obdh.mode` (0x0300) = 0 or 1; `obdh.cpu_load` (0x0302) 10–50 % |
-| 2 | OBDH: check memory health | `GET_PARAM(param_id=0x0303)`, `GET_PARAM(param_id=0x0304)` (S20.3) | □ | RAM < 70 %; EDAC multi-bit count = 0 |
-| 3 | OBDH: check TC/TM counters | `GET_PARAM(param_id=0x0310)` … `(0x0312)` (S20.3) | □ | TC rejected = 0; TM generated incrementing |
-| 4 | OBDH: exercise the mode transitions | `OBC_SET_MODE(mode=1)` then `(mode=0)` then `(mode=1)` (S8 func_id 50) | □ | Bidirectional and clean, within 15 s each |
-| 5 | OBDH: verify the watchdog and last reset cause | `GET_PARAM(param_id=0x0305)`, `GET_PARAM(param_id=0x0306)` (S20.3) | □ | Watchdog ENABLED; reset cause POWER_ON |
-| 6 | OBDH: memory read-back on a known region | `MEM_DUMP` (S6.5); `MEM_CHECK` (S6.9) | □ | Checksum compare — bit-perfect |
-| 7 | SPACON: log; GO COM-008 | (mission log) | □ | "COM-007 complete" |
+| 1 | OBDH: verify OBC mode | `HK_REQUEST(sid=4)` (S3.27) | □ | `obdh.mode` (0x0300) = 0 (NOMINAL). Encoding: 0 NOMINAL, 1 SAFE, 2 EMERGENCY |
+| 2 | OBDH: check CPU load | `GET_PARAM(param_id=0x0302)` (S20.3) | □ | `obdh.cpu_load` 10–50 % |
+| 3 | OBDH: check memory health | `GET_PARAM(param_id=0x0303)`, `GET_PARAM(param_id=0x031E)`, `GET_PARAM(param_id=0x0319)` (S20.3) | □ | `obdh.mmm_used` < 70 %; `obdh.mem_errors` and `obdh.seu_count` baselined and not incrementing between reads |
+| 4 | OBDH: check TC/TM counters | `GET_PARAM(param_id=0x0304)`, `GET_PARAM(param_id=0x0306)`, `GET_PARAM(param_id=0x0307)` (S20.3) | □ | TC received matches the ground log; TC rejected = 0; TM generated incrementing |
+| 5 | OBDH: verify autonomous HK generation | `GET_PARAM(param_id=0x0307)` before and after an interval | □ | `obdh.tm_pkt_count` has incremented |
+| 6 | OBDH: verify the watchdog and last reset cause | `OBC_DIAGNOSTIC` (S8 func_id 61); `GET_PARAM(param_id=0x0316)` (S20.3) | □ | Diagnostic reply: watchdog armed; `obdh.last_reboot_cause` = 0 (none) |
+| 7 | OBDH: mode excursion NOMINAL → SAFE → NOMINAL | `OBC_SET_MODE(mode=1)`, then `OBC_SET_MODE(mode=0)` (S8 func_id 50) | □ | `obdh.mode` = 1 within 15 s, then 0 within 15 s. The card must not end in SAFE |
+| 8 | SPACON: record the OBDH baseline; log; GO COM-008 | (mission log) | □ | "COM-007 complete" |
 
 </div>
 
@@ -7272,34 +7384,25 @@ references for at-console reading.
 
 <div class="procedure-card procedure-card-commissioning" markdown="1">
 
-<div class="procedure-card-header" markdown="1">[OB] COM-008 — FDIR Configuration & Test</div>
+<div class="procedure-card-header" markdown="1">[OB] COM-008 — FDIR Configuration & Protection Functions</div>
 
-**Entry point:** Commissioning pass 2, after COM-007 GO. **Critical:** FDIR is about to switch from the LEOP set to the nominal set.
+**Entry point:** After COM-007 GO: OBC NOMINAL (`obdh.mode` 0x0300 = 0), AOCS in commanded NOMINAL, downlink LOW, payload and cooler lines OFF, no load-shed latch (`eps.load_shed_stage` 0x0134 = 0), SoC > 70 %, link margin > 6 dB, FD approval for protection-function testing.
 
-**Goal:** Arm the nominal event-action set, verify the rule inventory, and round-trip test by inducing a benign condition and verifying that the correct rule fires, acts and clears.
+**Goal:** Confirm the on-board protection stack is configured and alive before the payload flies: the S12 monitoring service and its definitions, the S19 event-action table, the FDIR summary telemetry, and the commanded load-shed ladder with its latch. The card ends in exactly the state it started in.
 
 **Possible negative outcomes / deviations:**
 
-- Definition load fails → re-issue once; if persistent, CTG-010
-- Round-trip test fires the wrong rule → flag and review the FDIR configuration; do not proceed to COM-009 until clean
-- A rule fires immediately after arming → identify, disable that definition, raise a ticket
-
-**Decision tree:**
-
-- IF the inventory matches the manifest AND the round-trip is clean → GO COM-009
-- IF an unexpected rule fires within 60 s → hold, investigate; FD GO required to resume
-- IF the load fails twice → revert to the LEOP set; defer COM-008 to the next pass
+- TM(12,13) or TM(19,128) empty or missing definitions → reload from the operations database (`MON_ADD_DEF` / `EA_ADD` per the database record) and re-request the report
+- `eps.load_shed_stage` does not latch at step 4, or stage 0 re-powers a line → a shed-handler regression; record it, escalate, and do not proceed to payload commissioning
+- `fdir.level` (0x0700) ≠ 0 at step 3 or 5 → read the FDIR journal and clear the underlying cause; never disable the rule to pass the card
 
 | Step | Action | TC / Code | Confirm | Notes |
 |:----:|:-------|:----------|:--------|:------|
-| 1 | SPACON: snapshot the current definitions for rollback | `EA_REPORT_DEFS` (S19.8) | □ | LEOP set |
-| 2 | SPACON: arm the nominal definitions (one TC per definition) | `EA_ENABLE(ea_id=…)` (S19.4) | □ | The argument is `ea_id`, not `definition_id`. S1.7 within 5 s for each; `EA_DISABLE` is S19.5, `EA_ADD` S19.1 |
-| 3 | SPACON: verify the inventory against the manifest | `EA_REPORT_DEFS` (S19.8) | □ | All armed |
-| 3a | SPACON: read back the S12 monitoring table from the spacecraft | `MON_REPORT_DEFS` (S12.12) | □ | Returns **TM(12,13)**: `count` then one 14-octet record per definition — `mon_id`, `param_id`, `check_type` (0 absolute / 1 delta), `enabled`, `low_limit`, `high_limit`. This reads what the spacecraft actually holds, not what the ground database believes it uploaded; `mon_id` addresses the *definition*, so one parameter may carry a WARNING and an ALARM tier. Per-definition switches are `MON_ENABLE_DEF` (S12.3) / `MON_DISABLE_DEF` (S12.4); `MON_ENABLE` (S12.1) / `MON_DISABLE` (S12.2) are the whole-service switches |
-| 4 | SPACON: induce a benign trigger | `SET_PARAM(param_id=0x0324, value=0.01)` (S20.1) — lower the AOCS rate limit | □ | Controlled fault injection |
-| 5 | SPACON: verify the rule fires and the action executes | `HK_REQUEST(sid=2)`, `HK_REQUEST(sid=4)` (S3.27) | □ | Record the FDIR severity (scale 0–4) and, separately, the autonomy level (0–3) — they are different scales and never interchangeable |
-| 6 | SPACON: restore the threshold and recover | `SET_PARAM(param_id=0x0324, value=10.0)` (S20.1); `OBC_SET_MODE(mode=1)`; `AOCS_SET_MODE(mode=3)` | □ | `obdh.mode` = 1; `aocs.mode` (0x020F) = 3; error < 10° |
-| 7 | SPACON: verify no residual effects; log; FD GO COM-009 | `HK_REQUEST(sid=1)`, `HK_REQUEST(sid=2)` (S3.27) | □ | "COM-008 complete" |
+| 1 | SPACON: enable and inventory the S12 monitoring service | `MON_ENABLE` (S12.1); `MON_REPORT_DEFS` (S12.12) | □ | TM(12,13) within 10 s: `count`, then one record per definition (`mon_id`, `param_id`, `check_type`, `enabled`, limits). Compare with the operations database: every shipped definition present, none unexpected |
+| 2 | SPACON: inventory the S19 event-action table | `EA_REPORT_DEFS` (S19.8) | □ | TM(19,128) within 10 s. The momentum-management chain (S12 monitor on `aocs.h_env_frac` 0x02BA → ea_id 2001 → S8 func 1) and the TCS overtemp safing chain (ea 3003) present and enabled |
+| 3 | SPACON: read the FDIR summary telemetry | `GET_PARAM(param_id=0x0700)`, `GET_PARAM(param_id=0x0701)` (S20.3) | □ | `fdir.level` = 0 and `fdir.active_alarms` = 0: a clean baseline for the functional test |
+| 4 | EPS: functional test of the commanded load-shed latch | `EPS_EMERGENCY_LOAD_SHED(stage=1)`, then `(stage=0)` (S8 func_id 25) | □ | Record the line flags first. Stage 1: `eps.load_shed_stage` = 1 within 5 s (it LATCHES), event `LOAD_SHED_STAGE_1` (0x0106), `eps.pl_payload` (0x0113) = 0. Stage 0: latch back to 0, and no line re-powered. Never command stage 2 or 3 here: stage 3 sheds `ttc_tx` and drops this downlink |
+| 5 | SPACON: confirm no residual protection state; log; FD GO COM-009 | `GET_PARAM(param_id=0x0700)` (S20.3); `HK_REQUEST(sid=1)`, `HK_REQUEST(sid=4)` (S3.27) | □ | `fdir.level` = 0; `eps.load_shed_stage` = 0; `obdh.mode` = 0 (NOMINAL) — this card makes no OBC-mode excursion. "COM-008 complete" |
 
 </div>
 
@@ -7347,7 +7450,7 @@ references for at-console reading.
 
 **Goal:** Drive the FPA from ambient to the **−15 °C default setpoint** and confirm it is regulating there, with positive cooler margin.
 
-*(EO-Sat-1 carries a **miniature Stirling-class cryocooler**, not a
+*(EOSAT-1 carries a **miniature Stirling-class cryocooler**, not a
 thermo-electric stack. Its authority degrades with the temperature
 lift — `fpa_cooler_carnot_fraction` = 0.23 — so the achievable floor
 depends on the sink temperature and the imaging load. The commandable
@@ -7417,33 +7520,33 @@ would push far colder, and this card adopts the flight envelope.)*
 
 <div class="procedure-card-header" markdown="1">[MULTI] COM-012 — First Light</div>
 
-**Entry point:** Commissioning pass 4, after COM-011 GO. The headline procedure.
+**Entry point:** After COM-010 — COM-012 runs **before** COM-011, because calibration needs a verified imaging chain. Payload STANDBY, cooler running with `payload.fpa_ready` (0x0610) = 1 at −15 °C, AOCS in commanded NOMINAL, downlink LOW, SoC > 70 %, approaching a known ground target. The headline procedure.
 
-**Goal:** Acquire the first science image of a designated target and transfer it to the ground.
+**Goal:** Acquire the first science image, verify it is stored, and downlink it over the real Service-13 chain for a first quality assessment.
 
 **Possible negative outcomes / deviations:**
 
 - `payload.last_scene_quality` (0x060D) poor → CTG-015 Corrupted Image Recovery; re-acquire next pass
 - Pointing error > 0.1° during integration → image likely smeared; mark and re-acquire
 - AOCS / payload cascade (star tracker fails late) → CTG-008 → CTG-002, defer First Light, do not attempt repeats this shift
-- Transfer starts but the ground reports missing frames → CTG-014 BER Anomaly; re-queue the affected segments
+- Transfer starts but the ground reports missing frames → CTG-014 BER Anomaly; re-open the transfer
 
 **Decision tree:**
 
-- IF image acquired AND quality OK AND the transfer completes → declare **First Light**
+- IF image acquired AND stored AND the S13 transfer completes with a good checksum → declare **First Light**
 - IF the product is corrupt once → CTG-015; retry next pass (max 3 attempts per FD policy)
 - IF cascading AOCS / payload anomaly → defer formally; brief Mission Manager
 
 | Step | Action | TC / Code | Confirm | Notes |
 |:----:|:-------|:----------|:--------|:------|
-| 1 | FD: GO for First Light, on the loop | (FD call) | □ | Dual-keyed |
-| 2 | AOCS: confirm FINE_POINT | `HK_REQUEST(sid=2)` (S3.27) | □ | `aocs.mode` = 5; `aocs.att_error` (0x0217) < 0.1°; `aocs.total_pointing_err_3sig` (0x02AA) < 0.05° |
-| 3 | Payload: confirm readiness and command IMAGING | `PAYLOAD_SET_MODE(mode=2)` (S8 func_id 26) | □ | `payload.fpa_ready` (0x0610) = 1; `payload.mode` (0x0600) = 2 |
-| 4 | Payload: trigger the acquisition | `PAYLOAD_CAPTURE(scene_id=1, lines=2048)` (S8 func_id 28) | □ | The WHERE is set by the WHEN — time-tag with `SCHEDULE_TC` (S11.4) at the overpass; geolocation is stamped on board, not an argument |
-| 5 | Payload: confirm the product is stored | `payload.last_scene_id` (0x060C) = 1; `payload.image_count` (0x0605) incremented | □ | 2048 lines × 4 bands = 4.0 MB; record `payload.last_scene_quality` (0x060D) |
-| 6 | Payload: return to STANDBY, then transfer the product | `PAYLOAD_SET_MODE(mode=1)`; `PAYLOAD_INITIATE_TRANSFER(scene_id=1)` (S8 func_id 94) | □ | `payload.transfer_progress` (0x062E) → 100 % |
-| 7 | Ground Seg: verify the image received | (ground delivery) | □ | The image path is real end to end — a product that never appears did not get made |
-| 8 | FD: declare First Light | (mission log) | □ | "COM-012 complete" |
+| 1 | AOCS: go to FINE_POINT through its gate | `AOCS_FINE_READY_CHECK` (S8 func_id 89); `AOCS_SET_MODE(mode=5)` (S8 func_id 0) | □ | `aocs.mode` = 5 within 30 s; `aocs.total_pointing_err_3sig` (0x02AA) < 0.05° within 300 s; `aocs.att_error` (0x0217) < 0.1° |
+| 2 | Payload: verify FPA temperature and readiness | `GET_PARAM(param_id=0x0601)` (S20.3); `HK_REQUEST(sid=5)` (S3.27) | □ | `payload.fpa_temp` −16.5…−14.5 °C; `payload.mode` (0x0600) = 1; record `payload.image_count` (0x0605) and `payload.mem_used_mb` (0x060B) as baselines |
+| 3 | Payload: command IMAGING | `PAYLOAD_SET_MODE(mode=2)` (S8 func_id 26) | □ | `payload.mode` = 2 within 30 s |
+| 4 | Payload: trigger the acquisition | `PAYLOAD_CAPTURE(scene_id=1, lines=2048)` (S8 func_id 28) | □ | `payload.last_scene_id` (0x060C) = 1 within 30 s; `payload.image_count` incremented. Geolocation is stamped on board, not an argument |
+| 5 | Payload: confirm the product is stored | `GET_PARAM(param_id=0x0604)`, `GET_PARAM(param_id=0x060B)` (S20.3) | □ | `payload.store_used` increased; `payload.mem_used_mb` up 1.0–4.0 MB on the step 2 baseline (4 MB raw, 1.0–2.7 MB compressed) |
+| 6 | Payload: return to STANDBY | `PAYLOAD_SET_MODE(mode=1)` (S8 func_id 26) | □ | `payload.mode` = 1 within 15 s; cooler keeps running |
+| 7 | TT&C + Payload: downlink the product over S13 | `TTC_SET_DOWNLINK_MODE(on=1)`; `TTC_SET_DATA_RATE(rate=1)`; `S13_CREATE_TRANSFER(scene_id=1, size_mb=0)`; `S13_END_TRANSFER(transfer_id=T)`; then `TTC_SET_DATA_RATE(rate=0)`, `TTC_SET_DOWNLINK_MODE(on=0)` | □ | `ttc.tm_data_rate` (0x0506) = 128000 bps; `payload.transfer_active` (0x062D) = 1, `payload.transfer_progress` (0x062E) increasing, then 0x062D = 0; CRC-32 on the ground; back to 16000 bps |
+| 8 | AOCS: release FINE_POINT; FD declares First Light | `AOCS_SET_MODE(mode=4)` (S8 func_id 0) | □ | `aocs.mode` = 4 within 30 s; payload STANDBY, FPA still in band. "COM-012 complete" |
 
 </div>
 
@@ -7451,28 +7554,25 @@ would push far colder, and this card adopts the flight envelope.)*
 
 <div class="procedure-card procedure-card-commissioning" markdown="1">
 
-<div class="procedure-card-header" markdown="1">[AOCS] COM-013 — ADCS Full Commissioning</div>
+<div class="procedure-card-header" markdown="1">[AOCS] COM-013 — ADCS Commissioning Closure & NOMINAL Declaration</div>
 
-**Entry point:** After First Light declared, before nominal operations.
+**Entry point:** After COM-011 — the commissioning order ends COM-010, COM-012 First Light, COM-011 Payload Calibration, COM-013. Payload commissioned; AOCS in commanded NOMINAL with wheels enabled and gyros calibrated; downlink back at LOW; OBC NOMINAL; mission phase 5; SoC > 60 %.
 
-**Goal:** Verify sensor suite and actuator signs, characterise damping and pointing performance across the mode ladder, and close out commissioning.
+**Goal:** Close commissioning: read back the consolidated end state against each card's exit state **without re-testing anything**, poll all positions, and declare mission phase 6 (NOMINAL). Detumble, mode transitions, wheel and magnetorquer checks and the gyro calibration belong to LEOP-005, COM-003, COM-004 and COM-005, and are not repeated here.
 
 **Possible negative outcomes / deviations:**
 
-- Performance below spec on one axis → log and continue; flag for FDS performance review
-- Momentum builds during the slew set → NOM-007 desaturation; re-plan the remaining slews
-- Persistent pointing-budget excess → defer commissioning closeout; raise an anomaly to FD
+- Any readback in steps 1–3 fails → do NOT declare phase 6; return to the owning card's off-nominal section and re-establish its exit state first
+- `SYS_SET_MISSION_PHASE` refused → `0x0C03`: the OBC is in the bootloader (re-run LEOP-001 step 5 and LEOP-006); `0x0C04`: backwards without FORCE
+- `sat.mode` does not derive 1 after the declaration → an FDIR contingency is latched; read the FDIR journal and clear the cause — there is no TC that sets `sat.mode`
 
 | Step | Action | TC / Code | Confirm | Notes |
 |:----:|:-------|:----------|:--------|:------|
-| 1 | AOCS: verify the magnetometer | `aocs.mag_enabled` (0x025C) = 1; `aocs.mag_field_total` (0x0277) | □ | Magnitude 25–65 µT; single-string unit — no command, nothing to select |
-| 2 | AOCS: verify both star trackers and the GPS fix | `aocs.st1_status` (0x0240), `aocs.st2_status` (0x0243) = 2; `aocs.gps_alt` (0x0212) | □ | At least one head tracking; altitude 440–460 km |
-| 3 | AOCS: reaction wheel and magnetorquer sign checks | `RW_SET_SPEED_BIAS(wheel_idx=N, bias_rpm=…)` (func_id 8); `MTQ_ENABLE(enable=1)` (func_id 9) | □ | The bias is ADDED to the wheel's current speed; rate response in the correct axis and sign |
-| 4 | AOCS: rate-damping verification | `AOCS_SET_MODE(mode=2)` (func_id 0) | □ | Rates < 0.1 °/s; damping is magnetic and slow — allow the full convergence time |
-| 5 | AOCS: pointing ladder COARSE_SUN → NOMINAL | `AOCS_SET_MODE(mode=3)`, then `(mode=4)` (func_id 0) | □ | Error < 1° in NOMINAL within 300 s |
-| 6 | AOCS: desaturation rehearsal | `AOCS_DESATURATE` (S8 func_id 1) | □ | `aocs.mode` = 7 (DESAT); a dump takes tens of minutes (see NOM-007) |
-| 7 | FD: poll all positions, then declare NOMINAL operations | `SYS_SET_MISSION_PHASE(phase=6, flags=0)` (S8 func_id 120) | □ | COM-013 is the last commissioning card. `eps.spacecraft_phase` (0x0129) = 6 within 5 s; `sat.mode` (0x0001) = 1 within 10 s; event `MISSION_PHASE_CHANGED` (0x0055) carries 5 → 6 |
-| 8 | AOCS: compile the commissioning report; log | (ground tool / mission log) | □ | "COM-013 complete" |
+| 1 | AOCS: consolidated AOCS end-state readback | `HK_REQUEST(sid=2)` (S3.27) | □ | `aocs.mode` (0x020F) in {4, 5, 8}; `aocs.commanded_mode` (0x0297) = 4, `aocs.mode_demoted` (0x0298) = 0; `aocs.wheels_enabled` (0x0260) = 4; `aocs.gyro_units_mask` (0x02D1) = 7; `aocs.st1_status` (0x0240) = 2 with ≥ 5 stars; `aocs.mag_enabled` (0x025C) = 1; error < 1.0° on the sunlit side |
+| 2 | SPACON: consolidated platform end-state readback | `HK_REQUEST(sid=1)`, `HK_REQUEST(sid=4)`, `HK_REQUEST(sid=6)` (S3.27) | □ | `obdh.mode` (0x0300) = 0; LOW tier; `eps.load_shed_stage` (0x0134) = 0; bus 26.5–29.5 V; `obdh.time_ref` (0x0A13) ≠ 0 |
+| 3 | Payload: consolidated payload end-state readback | `HK_REQUEST(sid=5)` (S3.27) | □ | `payload.mode` (0x0600) = 1 (STANDBY); `payload.fpa_ready` (0x0610) = 1; `payload.transfer_active` (0x062D) = 0 |
+| 4 | FD: poll all positions, then declare NOMINAL operations | `SYS_SET_MISSION_PHASE(phase=6, flags=0)` (S8 func_id 120) | □ | COM-013 is the last commissioning card. `eps.spacecraft_phase` (0x0129) = 6 within 5 s; `sat.mode` (0x0001) = 1 within 10 s; event `MISSION_PHASE_CHANGED` (0x0055) carries 5 → 6 |
+| 5 | FD: hold NOMINAL through an orbit; hand over; log | (mission log) | □ | "COM-013 complete": commissioning closed. If the now-armed `aocs.att_error` FDIR rule demotes the AOCS, investigate the excursion before re-declaring anything |
 
 **Note — nothing on board advances the phase for you.** Below phase 6 the derived spacecraft mode (`sat.mode` 0x0001, and the console header) is pinned to SAFE regardless of spacecraft health, the advanced fault-propagation model and the phase-gated FDIR rules stay disarmed, and the propulsion interlock (`min_phase: 6`) refuses to arm any burn — so **NOM-013 cannot execute until this step has been sent**. Going back the other way is refused with `0x0C04` unless the FORCE flag is set (`flags` bit 0 = 1); if a declaration was premature, re-send with the flag and record why.
 
@@ -7482,16 +7582,16 @@ would push far colder, and this card adopts the flight envelope.)*
 
 ## 14.3 Nominal procedure cards
 
-> **Editor's note — the nominal set.** The simulator ships thirteen
-> nominal procedures. Ten are carded below; **NOM-005 HK
+> **Editor's note — the nominal set.** The simulator ships fourteen
+> nominal procedures. Eleven are carded below; **NOM-005 HK
 > Configuration**, **NOM-008 Clock Synchronisation** and **NOM-011
 > Data Rate Change** are short, single-position cards and are indexed
 > in §14.7 for at-console reading. Two further nominal activities —
 > **Pass Plan Upload** and **Long-Term Trend Review** — are real parts
 > of the nominal flow but ship no procedure file of their own; they
 > are carded here without a NOM number, and the flow references them
-> explicitly. Cards run in shipped-ID order, except that NOM-013 and
-> the two unnumbered ground cards sit immediately before the
+> explicitly. Cards run in shipped-ID order, except that NOM-013,
+> NOM-014 and the two unnumbered ground cards sit immediately before the
 > shift-handover card that closes the section.
 >
 > **NOM-008 in one paragraph, because the clock is new.** (It is one
@@ -7621,7 +7721,7 @@ would push far colder, and this card adopts the flight envelope.)*
 
 | Step | Action | TC / Code | Confirm | Notes |
 |:----:|:-------|:----------|:--------|:------|
-| 1 | FDS: design the manoeuvre | (FDS tool) | □ | Total budget is 66.9 m/s from the 1U green monoprop — debris avoidance and limited orbit maintenance, not deorbit |
+| 1 | FDS: design the manoeuvre | (FDS tool) | □ | Total budget is 66.9 m/s from the 1U green monoprop — debris avoidance and limited orbit maintenance; from mid-mission keep `prop.dv_remaining` (0x0B0C) ≥ 38 m/s for the NOM-014 disposal |
 | 2 | Propulsion: enable PROP housekeeping and check health | `HK_ENABLE(sid=9)` (S3.5) | □ | `prop.state` (0x0B00) = 0 (SAFED); `prop.tank_pressure` (0x0B01) in band |
 | 3 | FD: review and authorise the vector and the execution pass | (FD GO) | □ | Logged |
 | 4 | SPACON: time-tag the burn sequence | `SCHEDULE_TC(exec_time_cuc=T, tc_data=TC)` (S11.4) ×3 | □ | `PROP_SET_BURN` at T−5 min, `PROP_ARM` at T−2 min, `PROP_EXECUTE` at T−0 |
@@ -7786,6 +7886,41 @@ would push far colder, and this card adopts the flight envelope.)*
 
 <div class="procedure-card procedure-card-nominal" markdown="1">
 
+<div class="procedure-card-header" markdown="1">[FD] NOM-014 — End-of-Life Disposal (Perigee Lowering and Passivation)</div>
+
+**Entry point:** End of mission declared by the FD; imaging closed and the last science data downlinked. Mission phase 6 (the propulsion arm interlock needs it), `prop.dv_remaining` (0x0B0C) ≥ 38 m/s, propulsion healthy (`prop.state` 0x0B00 = 0, no latched inhibit, tank 6.0–24.0 bar), SoC > 55 %, FDS burn plan for six consecutive daylight burns.
+
+**Goal:** Lower the perigee from 513 km to 390 km with a 34.3 m/s retrograde burn, flown as six burns of 5.72 m/s at the same orbital position (which becomes the apogee), so that EOSAT-1 re-enters in about 1.5 years at mean solar activity and 4.2 years at solar minimum; then passivate. Natural decay from 513 km would take 5.0 years at mean activity and 14.2 years at solar minimum.
+
+**Possible negative outcomes / deviations:**
+
+- A burn aborts → NOM-013 step 5 and CTG-028; the partial ΔV is already in the orbit, and FDS re-plans the remaining burns from the new orbit
+- `prop.dv_remaining` below the plan → lower the perigee as far as the propellant allows (every 1 m/s retrograde lowers it by about 3.6 km) and report the achieved residual lifetime
+- Propulsion unusable at end of life → passivate (steps 9–12) and report the non-compliance: natural decay is about 5 years at mean activity and 14 at solar minimum
+- Solar-minimum lifetime still above 5 years after step 7 → a trim burn (step 6 again, smaller ΔV) before passivation
+- There is no DISPOSAL phase: the spacecraft stays in phase 6 throughout, because the arm interlock needs it
+
+| Step | Action | TC / Code | Confirm | Notes |
+|:----:|:-------|:----------|:--------|:------|
+| 1 | FDS: disposal plan; FD authorises | (FDS tool) | □ | Six burn epochs in daylight, ΔV per burn, retrograde quaternion; predicted perigee 513 → ~492 → ~471 → ~451 → ~431 → ~410 → 390 km |
+| 2 | Propulsion: health check | `HK_ENABLE(sid=9)` (S3.5) | □ | `prop.state` = 0; `prop.tank_pressure` (0x0B01) 6.0–24.0 bar; `prop.dv_remaining` ≥ 38 m/s; record `prop.arm_inhibit_mask` (0x0B15). Otherwise CTG-028 first |
+| 3 | Propulsion: raise the burn watchdog | `PROP_SET_LIMITS(att_err_max_deg=2.0, p_min_bar=4.0, catbed_max_c=350.0, t_burn_max_s=600.0)` (S8 func_id 115) | □ | Default watchdog is 300 s; an end-of-life 5.72 m/s burn lasts up to ~480 s. The other abort limits keep their defaults |
+| 4 | Propulsion: power, preheat and open the valves (T−25 min) | `EPS_POWER_ON(line_index=8)` (S8 func_id 19); `HEATER_THRUSTER(on=1)` (S8 func_id 42); `PROP_ISO_OPEN(branch=2)` (S8 func_id 113) | □ | `eps.pl_prop` (0x014A) = 1; `prop.latch_a_state` (0x0B06) = 1; `tcs.temp_thruster` (0x0409) ≥ 180 °C within 1500 s |
+| 5 | AOCS: retrograde inertial hold | `AOCS_SET_TARGET_QUAT(q_x=QX, q_y=QY, q_z=QZ, q_w=QW)` (S8 func_id 86); `AOCS_SET_MODE(mode=9)` (S8 func_id 0) | □ | 180° yaw so that the +X thrust axis points against the velocity. `aocs.mode` = 9 within 120 s; `aocs.att_error` < 0.5° within 600 s |
+| 6 | Propulsion: disposal burn — repeat steps 5 and 6 for each of the six burns | `PROP_SET_BURN(dv_m_s=5.72, direction=1, mode=1, t_start_cuc=0)` (S8 func_id 110); `PROP_ARM(arm_code=0xA5C3)` (S8 func_id 108); `PROP_EXECUTE` (S8 func_id 111); `PROP_DISARM` (S8 func_id 109) | □ | `prop.burn_time_cmd` (0x0B10) within 10 % of the FDS prediction; event `PROP_BURN_COMPLETE` (0x0804) within 600 s; `prop.burn_dv_achieved` (0x0B0F) within 2 % of 5.72; `prop.state` back to 0. Return to NOMINAL for the eclipse between burns |
+| 7 | FDS: confirm the disposal orbit | `HK_REQUEST(sid=12)` (S3.27) over one full orbit | □ | Minimum `aocs.gps_alt` (0x0212) 380–400 km; semi-major axis ~6830 km; residual lifetime < 5 years at solar minimum |
+| 8 | Propulsion: deplete the propellant | `PROP_SET_BURN(dv_m_s=DVREM, direction=1, mode=0, t_start_cuc=0)` (S8 func_id 110); `PROP_ARM(arm_code=0xA5C3)`; `PROP_EXECUTE` | □ | From the retrograde hold, in daylight; DVREM is the current `prop.dv_remaining`. `prop.propellant_mass` (0x0B02) < 5 g within 900 s; below 5 g the arm is refused (`0x0B03`) and the residue is recorded |
+| 9 | Propulsion: safe and inhibit | `PROP_DISARM`; `HEATER_THRUSTER(on=0)`; `PROP_INHIBIT_SET(on=1)` (S8 func_id 116); `EPS_POWER_OFF(line_index=8)` (S8 func_id 20) | □ | `prop.state` = 0; `prop.arm_inhibit_mask` bit 9 set; `eps.pl_prop` = 0. There is no tank-venting command: record the residual tank pressure (about 9–10 bar) in the disposal report |
+| 10 | Payload and AOCS: shut down, stop the wheels | `PAYLOAD_SET_MODE(mode=0)` (S8 func_id 26); `EPS_POWER_OFF(line_index=3)`; `AOCS_RW_RAMP_DOWN(wheel_idx=255, target_rpm=0)` (S8 func_id 14) | □ | `payload.mode` (0x0600) = 0; `aocs.total_momentum` (0x025B) < 0.01 within 120 s. No kinetic energy is left in the wheels |
+| 11 | EPS: passivate the battery | `S2_EPS_CHARGE_REGULATOR(device_id=271, state=0)` (S2.1) | □ | The arrays can no longer charge the battery; `eps.bat_soc` (0x0101) falling in sunlight. Send steps 11 and 12 in the same pass |
+| 12 | TT&C: RF silence — the last commands | `TTC_BEACON_TX_OFF` (S8 func_id 98); `TTC_PA_OFF` (S8 func_id 67); `EPS_TRANSPONDER_TX(on=0)` (S8 func_id 18) | □ | Loss of signal is the verification; confirm no carrier at the next two scheduled passes. File the disposal report. "NOM-014 complete" |
+
+</div>
+
+<div style="page-break-before: always"></div>
+
+<div class="procedure-card procedure-card-nominal" markdown="1">
+
 <div class="procedure-card-header" markdown="1">[FD] Pass Plan Upload (nominal flow — no shipped procedure file)</div>
 
 **Entry point:** New 24 h pass plan ready from FDS; uplink slot scheduled in the current or next pass. This activity sits between NOM-001 (pass startup) and the planned activities it schedules — chiefly NOM-002 imaging and NOM-003 downlink.
@@ -7878,15 +8013,15 @@ would push far colder, and this card adopts the flight envelope.)*
 
 **Goal:** Restore the battery from undervoltage by shedding least-critical loads first and waiting for sunlit charging.
 
-*(A ~28 V bus is unusual on a 6U CubeSat — 2S (8 V) is the more common architecture. EO-Sat-1 flies an **8S-1P** 100 Wh pack (26.4 V nominal, 29.2 V at 100 % SoC, 21.5 V at 0 %) on a 28 V bus; treat the voltage values as simulator-specific.)*
+*(A ~28 V bus is unusual on a 6U CubeSat — 2S (8 V) is the more common architecture. EOSAT-1 flies an **8S-1P** 100 Wh pack (26.4 V nominal, 29.2 V at 100 % SoC, 21.5 V at 0 %) on a 28 V bus; treat the voltage values as simulator-specific.)*
 
 *(This is one of the eight machine-runnable cards. Its shipped form is a four-rung branch ladder on a single parameter, `eps.bus_voltage` (0x0105) — run flat it would shed the payload, the cooler, the transmitter **and** the wheels on a spacecraft the first shed had already saved.)*
 
 **Possible negative outcomes / deviations:**
 
 - Voltage continues to drop after a shed rung → take the next rung down the ladder
-- Voltage does not recover once every rung has been taken → `OBC_SET_MODE(mode=2)` (EMERGENCY), then EMG-006 Total Power Failure
-- `eps.sa_a_current` (0x0103) and `eps.sa_b_current` (0x0104) both near zero after eclipse exit → array cause; go to CTG-013
+- Voltage does not recover once every rung has been taken → `OBC_SET_MODE(mode=2)` (EMERGENCY), then EMG-002 Total Power Failure
+- `eps.sa_a_current` (0x0103) and `eps.sa_b_current` (0x0104) both near zero after eclipse exit → array cause; go to CTG-009
 - Recovery achieved but root cause unclear → file anomaly; brief Mission Manager
 
 **Decision tree (the shipped ladder — each rung is a real branch step):**
@@ -7895,7 +8030,7 @@ would push far colder, and this card adopts the flight envelope.)*
 - ELSE shed the FPA cooler. IF V > 26.0 V → HOLD and monitor
 - ELSE shed the S-band PA. IF V > 25.5 V → HOLD and monitor
 - ELSE shed the reaction-wheel line (`line_index=7`). IF V > 25.0 V → HOLD and monitor
-- ELSE last resort → `OBC_SET_MODE(mode=2)` EMERGENCY; brief FD on EMG-006 readiness
+- ELSE last resort → `OBC_SET_MODE(mode=2)` EMERGENCY; brief FD on EMG-002 readiness
 
 | Step | Action | TC / Code | Confirm | Notes |
 |:----:|:-------|:----------|:--------|:------|
@@ -7922,14 +8057,14 @@ would push far colder, and this card adopts the flight envelope.)*
 
 **Possible negative outcomes / deviations:**
 
-- COARSE_SUN not achievable → CTG-008 (star tracker), CTG-007 (wheel) or EMG-002 Loss of Attitude
+- COARSE_SUN not achievable → CTG-008 (star tracker), CTG-007 (wheel) or EMG-005 Loss of Attitude
 - Root cause cascades (e.g. star tracker then gyro) → coordinate cascading CTGs; defer payload activities
 - Pointing returns within budget after transient → log; do not return to NOMINAL same pass; await trend review
 
 **Decision tree:**
 
 - IF star tracker faulted → CTG-008
-- IF one wheel anomalous → CTG-007; IF two or more → DETUMBLE (mode 2) and EMG-002
+- IF one wheel anomalous → CTG-007; IF two or more → DETUMBLE (mode 2) and EMG-005
 - IF `aocs.att_error` exceeds 15° at any step → DETUMBLE (mode 2) immediately
 - IF `eps.bus_voltage` (0x0105) < 26.5 V during recovery → CTG-001 first
 - IF transient cleared but root cause unidentified → hold COARSE_SUN one orbit; review
@@ -7954,33 +8089,31 @@ would push far colder, and this card adopts the flight envelope.)*
 
 **Entry point:** `ttc.link_status` (0x0501) = 0 (NO_LINK) persisting > 30 s after predicted AOS, or an established link dropping mid-pass. LOCKED is **2**, not 1.
 
-**Goal:** Restore the link by stepping through ground-side checks, transponder switchover, and rate/tx-power options before escalating.
+**Goal:** Restore the link by stepping through ground-side checks and the transponder switchover — primary, redundant, primary again — then verify link quality and subsystem health before escalating.
 
 **Possible negative outcomes / deviations:**
 
-- Link not recovered by end of pass → second consecutive missed pass triggers EMG-003 Loss of Communication
-- Recovery only at the LOW rung → re-queue downlink work; brief Mission Manager
+- Link not recovered by end of pass → second consecutive missed pass triggers EMG-004 Loss of Communication
+- Link back but margin < 3 dB → recovery is not complete; treat as marginal, re-queue downlink work and brief the FD
 - Ground antenna fault discovered mid-recovery → CTG-020 Ground Station Antenna Failure
 
 **Decision tree (abbreviated; see §9.4 for full):**
 
 - IF GS not tracking → CTG-020
 - IF GS tracking but no carrier → switch transponder (redundant, then back to primary)
-- IF link returns with RSSI < −95 dBm or margin < 1.5 dB → step the TM ladder down to LOW (16 kbps)
 - IF still no carrier → blind-command CTG-019 path
-- IF no recovery before LOS AND next pass also missed → EMG-003
+- IF no recovery before LOS AND next pass also missed → EMG-004
 
 **Full read-and-do checklist:** see §9.4, Table 9.3.
 
 | Step | Action | TC / Code | Confirm | Notes |
 |:----:|:-------|:----------|:--------|:------|
-| 1 | Ground Seg: verify the tracking station (and any other station in view) | (MPS panel) | □ | Five-station network; if not tracking, CTG-020 |
-| 2 | TT&C: blind HK request on the primary transponder | `HK_REQUEST(sid=6)` (S3.27) | □ | `ttc.link_status` (0x0501) = 2 within 30 s |
-| 3 | TT&C: switch to the redundant transponder (blind) | `TTC_SWITCH_REDUNDANT` (S8 func_id 64) | □ | Wait 45 s for power-up and lock |
-| 4 | TT&C: if still nothing, retry the primary (blind) | `TTC_SWITCH_PRIMARY` (S8 func_id 63) | □ | Wait 45 s |
-| 5 | TT&C: if locked but marginal, step the rate ladder down to LOW | `TTC_SET_DATA_RATE(rate=0)` (S8 func_id 65) | □ | `ttc.tm_data_rate` (0x0506) = 16000 bps |
-| 6 | TT&C: request tx power up (FD GO) | `TTC_SET_TX_POWER(level=…)` (S8 func_id 68) | □ | New level logged |
-| 7 | SPACON: if lock restored, re-baseline; if not by LOS, prepare EMG-003 | (mission log) | □ | Time of recovery / escalation |
+| 1 | Ground Seg: verify the tracking station (and any other station in view) | (MPS panel) | □ | Antenna tracking, uplink power, Doppler pre-compensation; five-station network; if not tracking, CTG-020 |
+| 2 | TT&C: blind HK request on the primary transponder | `HK_REQUEST(sid=6)` (S3.27) | □ | `ttc.link_status` (0x0501) = 2 within 30 s → step 5 |
+| 3 | TT&C: switch to the redundant transponder (blind) | `TTC_SWITCH_REDUNDANT` (S8 func_id 64) | □ | Wait 45 s for power-up and lock → step 5 if locked |
+| 4 | TT&C: if still nothing, retry the primary (blind) | `TTC_SWITCH_PRIMARY` (S8 func_id 63) | □ | Wait 45 s → step 5 if locked, step 6 if not |
+| 5 | TT&C + all: verify link quality and subsystem health | `HK_REQUEST(sid=6)`, `HK_REQUEST(sid=1)`, `HK_REQUEST(sid=4)` (S3.27) | □ | RSSI (0x0502) > −90 dBm; margin (0x0503) > 3.0 dB; record the active unit (`ttc.mode` 0x0500); bus > 27.0 V; `obdh.mode` not safe or emergency |
+| 6 | SPACON: if not recovered, log every blind command and escalate | (mission log) | □ | Notify the Mission Director and FDS; book the next pass; confirm the 24 h no-contact timer is running; two missed passes → EMG-004 |
 
 </div>
 
@@ -7996,7 +8129,7 @@ would push far colder, and this card adopts the flight envelope.)*
 
 **Possible negative outcomes / deviations:**
 
-- Hot exceedance still trending up after action → escalate to EMG-005 Thermal Runaway
+- Hot exceedance still trending up after action → escalate to EMG-006 Thermal Runaway
 - Cold exceedance not recovering → check heater health (CTG-012 if the line opened); consider load shedding to reroute power
 - Payload zone affected → safe the payload (`PAYLOAD_SET_MODE(mode=0)`) before the zone reaches the damage threshold
 - Battery above +45 °C or OBC above +60 °C → `OBC_SET_MODE(mode=2)` / `mode=1` and escalate immediately
@@ -8010,7 +8143,7 @@ would push far colder, and this card adopts the flight envelope.)*
 | 5 | Thermal: if no improvement, retune the thermostat | `HEATER_SET_SETPOINT(circuit=…, on_temp=…, off_temp=…)` (S8 func_id 44) | □ | Circuits 0 battery, 1 OBC, 2 thruster — there is **no** `tcs.htr_<zone>_setpoint` parameter |
 | 6 | Thermal: hot case still rising — reorient for dissipation | `AOCS_SET_MODE(mode=3)` (S8 func_id 0) | □ | `aocs.mode` (0x020F) = 3 (COARSE_SUN) |
 | 7 | Thermal: on recovery, hand the circuit back to the thermostat | `HEATER_AUTO_MODE(circuit=0)` (S8 func_id 45) | □ | Only if heaters were driven manually |
-| 8 | SPACON: file ticket; if hot zone still rising, EMG-005 | (mission log) | □ | "CTG-004 status" |
+| 8 | SPACON: file ticket; if hot zone still rising, EMG-006 | (mission log) | □ | "CTG-004 status" |
 
 </div>
 
@@ -8018,62 +8151,32 @@ would push far colder, and this card adopts the flight envelope.)*
 
 <div class="procedure-card procedure-card-contingency" markdown="1">
 
-<div class="procedure-card-header" markdown="1">[FE] CTG-005 — Battery Anomaly</div>
+<div class="procedure-card-header" markdown="1">[PE] CTG-006 — Payload Anomaly</div>
 
-*(Editor's note: the simulator ships this card as **CTG-013 Battery Cell Failure**, `contingency/battery_cell_failure.md`. Sim CTG-005 is EPS Safe Mode. Book numbering is retained here; use the simulator ID when opening the file.)*
+*(Editor's note: this is the simulator's **CTG-006 Payload Anomaly**, `contingency/payload_anomaly.md`, condensed. The shipped card is framed around the FPA thermal case; this version also covers payload mode-transition faults.)*
 
-**Entry point:** `eps.bat_voltage` (0x0100) more than 1.0 V below the value expected for the reported `eps.bat_soc` (0x0101), or a sudden voltage drop, or trend review flags degradation.
+**Entry point:** Payload mode does not transition as commanded; or `payload.fpa_temp` (0x0601) above −15 °C, or rising faster than 0.5 °C/min with the cooler active.
 
-**Goal:** Characterise the anomaly, confirm the battery is thermally safe, and decide whether the remaining capacity supports eclipse survival at the current load.
+**Goal:** Recover the payload to STANDBY, restore the thermal state, and identify whether the anomaly is software, command sequencing or hardware.
 
-**Possible negative outcomes / deviations:**
-
-- Voltage drops further during characterisation → CTG-001 load shed
-- `eps.bat_temp` (0x0102) above +40 °C → possible internal short; disable the battery heater and shed load; above +50 °C command EMERGENCY and follow EMG-006
-- `eps.bat_voltage` below 22.0 V → deep-discharge risk; shed everything but OBC and TT&C RX
-- Capacity loss exceeds mission margin → brief Mission Manager; FDS re-plans duty cycle
-
-**Note:** there is no cell-balance telecommand in `tc_catalog.yaml`, and no cell-level telemetry. The observable set is bus/battery voltage, SoC, temperature, current and `eps.bat_capacity_wh` (0x010A); the operator infers cell state from the voltage-versus-SoC deviation.
-
-| Step | Action | TC / Code | Confirm | Notes |
-|:----:|:-------|:----------|:--------|:------|
-| 1 | EPS: pull battery telemetry and compute expected V for the reported SoC | `HK_REQUEST(sid=1)` (S3.27) | □ | SID 1 is EPS; SID 8 is the EPS-extended structure |
-| 2 | EPS / Thermal: cross-check battery temperature | `HK_REQUEST(sid=3)` (S3.27) | □ | `eps.bat_temp` 0x0102 vs `tcs.temp_battery` 0x0407 |
-| 3 | EPS: if the battery is warm, disable its heater | `HEATER_BATTERY(on=0)` (S8 func_id 40) | □ | `tcs.htr_battery` (0x040A) = 0 |
-| 4 | EPS: compute the eclipse-survival margin on `eps.bat_capacity_wh` (0x010A) | (operator calc) | □ | Reserve 20 % SoC; eclipse ≈ 35 min |
-| 5 | EPS: if margin negative, shed payload, then cooler, then PA | `PAYLOAD_SET_MODE(mode=0)` / `FPA_COOLER(on=0)` / `TTC_PA_OFF` | □ | Recompute after each shed |
-| 6 | EPS / FDS: re-plan duty cycle if capacity reduced | (FDS tool) | □ | New pass plan |
-| 7 | SPACON: file ticket; brief Mission Manager | (mission log) | □ | "CTG-005 closed" |
-
-</div>
-
-<div style="page-break-before: always"></div>
-
-<div class="procedure-card procedure-card-contingency" markdown="1">
-
-<div class="procedure-card-header" markdown="1">[PR] CTG-006 — Propulsion Anomaly</div>
-
-*(Editor's note: the simulator ships this card as **CTG-028**, `contingency/propulsion_anomaly.md` — sim CTG-006 was already Payload Anomaly. Book numbering is retained here; the shipped card carries the same reconciliation note.)*
-
-**Entry point:** S12 alarm on `prop.tank_pressure` (0x0B01) — absolute band or the rate/DELTA monitor that catches a slow leak; or event PROP_VALVE_FAULT (0x080A), PROP_LEAK_DETECTED (0x080B), PROP_UNDERPERFORMANCE (0x080C), PROP_TANK_PRESSURE_HIGH (0x0807); or post-burn OD showing achieved ΔV < 90 % of plan (NOM-013 step 6).
-
-**Goal:** Isolate the propellant, **bound** the remaining usable ΔV and protect the collision-avoidance reserve. EO-Sat-1's 1U green monoprop (66.9 m/s total) exists for debris avoidance and limited orbit maintenance, so the objective is not "fix the thruster" — it is "know exactly how much CAM capability remains and keep it safe".
+**Payload modes:** 0 OFF, 1 STANDBY, 2 IMAGING, **3 CALIBRATION**.
 
 **Possible negative outcomes / deviations:**
 
-- A branch reporting 2 (fault) did not close — treat the propellant downstream of the stuck valve as lost
-- Pressure still falling after isolation → the leak is upstream of the latch valves; it cannot be isolated, only bounded
-- Bounded reserve below ~1 m/s → debris-avoidance capability is effectively lost; the conjunction posture changes
-- Rising tank pressure that does not respond to heater safing → CTG-004, and prepare EMG-001 (safe mode disarms propulsion by rule 8005)
+- Payload stuck in IMAGING with no exit → command OFF, then cycle the payload line (CTG-012-like) after FD GO
+- FPA above +10 °C at any step → payload OFF immediately; no restart without ground authorisation
+- Cooler will not activate → keep the payload OFF and run CTG-004 for zone assessment
+- Payload and TCS FPA sensors disagree by more than 5 °C → suspect a sensor; use the lower reading for safety decisions
 
 | Step | Action | TC / Code | Confirm | Notes |
 |:----:|:-------|:----------|:--------|:------|
-| 1 | Propulsion: bring up the PROP structure and capture full TM | `HK_ENABLE(sid=9)` (S3.5) | □ | SID 9 is PROP; SID 5 is Payload |
-| 2 | Propulsion: read state, pressure trend, mass, temps, valves, leak rate | (read SID 9) | □ | 0x0B00, 0x0B01, 0x0B02, 0x0B04/0x0B05, 0x0B06–0x0B08, 0x0B16 |
-| 3 | Propulsion: close both latch-valve branches | `PROP_ISO_CLOSE(branch=2)` (S8 func_id 114) | □ | `prop.latch_a_state` 0x0B06 and `latch_b_state` 0x0B07 = 0 |
-| 4 | Propulsion: bound the remaining usable ΔV | read `prop.dv_remaining` (0x0B0C), correct for failure mode | □ | Report the bounded CAM reserve to the FD |
-| 5 | Propulsion: latch the ground inhibit while the anomaly is open | `PROP_INHIBIT_SET(on=1)` (S8 func_id 116) | □ | `prop.arm_inhibit_mask` (0x0B15) bit 9 set |
-| 6 | SPACON: file ticket; FD decides on EMG-001 if cascading | (mission log) | □ | Clearing the inhibit (`PROP_INHIBIT_CLR`, func 117) needs a closed ticket + FD authority |
+| 1 | Payload: read current mode and FPA temperature | `HK_REQUEST(sid=5)` + `HK_REQUEST(sid=3)` (S3.27) | □ | `payload.mode` 0x0600; 0x0601 vs `tcs.temp_fpa` 0x0408 |
+| 2 | Payload: command OFF to clear the stuck state | `PAYLOAD_SET_MODE(mode=0)` (S8 func_id 26) | □ | 0x0600 = 0 within 10 s |
+| 3 | Payload / Thermal: confirm the cooler is running | (read SID 3) | □ | `tcs.cooler_fpa` (0x040C) = 1; miniature Stirling-class cryocooler |
+| 4 | Payload: monitor cooldown for up to 20 min | (read SIDs 3 and 5) | □ | ≥ 0.3 °C/min; settle below −20 °C |
+| 5 | Payload: restart in STANDBY | `PAYLOAD_SET_MODE(mode=1)` (S8 func_id 26) | □ | 0x0600 = 1; FPA stays below −18 °C |
+| 6 | Payload: if still stuck, cycle the payload line (FD GO) | `EPS_POWER_OFF(line_index=3)` / `EPS_POWER_ON(line_index=3)` (func_id 20 / 19) | □ | 30–60 s off; line 3 is payload |
+| 7 | SPACON: file ticket | (mission log) | □ | "CTG-006 closed" |
 
 </div>
 
@@ -8085,12 +8188,12 @@ would push far colder, and this card adopts the flight envelope.)*
 
 **Entry point:** Speed jitter > ±500 rpm over 10 s, unexpected speed divergence, speed > 6500 rpm, or wheel bearing temperature > 60 °C.
 
-**Goal:** Isolate the failed wheel, reconfigure to three-wheel control and confirm that NOMINAL (mode 4) nadir pointing remains achievable. EO-Sat-1 flies four wheels in a pyramid; **three are sufficient** — a 3-of-4 set still spans R³ and FINE_POINT runs degraded on it (`aocs.fine_degraded`, 0x0299).
+**Goal:** Isolate the failed wheel, reconfigure to three-wheel control and confirm that NOMINAL (mode 4) nadir pointing remains achievable. EOSAT-1 flies four wheels in a pyramid; **three are sufficient** — a 3-of-4 set still spans R³ and FINE_POINT runs degraded on it (`aocs.fine_degraded`, 0x0299).
 
 **Possible negative outcomes / deviations:**
 
 - Pointing budget not achievable with three wheels → COARSE_SUN (mode 3) and defer imaging
-- Two or more wheels affected → DETUMBLE (mode 2) and EMG-002 Loss of Attitude consideration
+- Two or more wheels affected → DETUMBLE (mode 2) and EMG-005 Loss of Attitude consideration
 - Wheel-stuck symptom actually due to bus failure → CTG-017 instead
 
 **Decision tree:**
@@ -8103,7 +8206,7 @@ would push far colder, and this card adopts the flight envelope.)*
 |:----:|:-------|:----------|:--------|:------|
 | 1 | AOCS: identify the affected wheel from speeds and temperatures | `HK_REQUEST(sid=2)` (S3.27) | □ | Speeds 0x0207–0x020A (read-only); temps 0x0218–0x021B |
 | 2 | AOCS: disable the affected wheel | `AOCS_DISABLE_WHEEL(wheel_idx=N)` (S8 func_id 2) | □ | Speed begins to decay within 10 s; rates stay < 1.0 °/s |
-| 3 | AOCS: reconfigure the control loop to three wheels | `SET_PARAM(param_id=aocs.wheel_config, value=3)` (S20.1) | □ | A config key, not a declared telemetry parameter — there is no readback id and no dedicated S8 function |
+| 3 | AOCS: confirm the loop has reconfigured to three wheels — no command | (observe, 15 s) | □ | `aocs.att_error` (0x0217) converging below 2.0° within 60 s. There is no three-wheel mode command and no `aocs.wheel_config` parameter: `AOCS_DISABLE_WHEEL` in step 2 is the whole reconfiguration |
 | 4 | AOCS: dump momentum on the remaining three | `AOCS_DESATURATE` (S8 func_id 1) | □ | Budget **20–50 min**, not minutes — see the note below |
 | 5 | AOCS: confirm nadir pointing in three-wheel mode | `AOCS_SET_MODE(mode=4)` (S8 func_id 0) | □ | `aocs.mode` (0x020F) = 4; error < 1.5° |
 | 6 | SPACON: file ticket; brief Mission Manager on agility impact | (mission log) | □ | "CTG-007 closed" |
@@ -8120,7 +8223,7 @@ would push far colder, and this card adopts the flight envelope.)*
 
 **Entry point:** `aocs.st1_status` (0x0240) = 4 (FAILED) with `aocs.st1_num_stars` (0x0241) = 0; or attitude-determination divergence. Status 3 is BLIND (sun/Moon/Earth-limb dazzle) — wait up to 120 s before declaring a failure.
 
-**Goal:** Switch to the redundant star tracker (ST2), and if that fails, fall back to the COARSE_SUN hold. EO-Sat-1 carries **two** star trackers, ST1 and ST2.
+**Goal:** Switch to the redundant star tracker (ST2), and if that fails, fall back to the COARSE_SUN hold. EOSAT-1 carries **two** star trackers, ST1 and ST2.
 
 *(This is one of the eight machine-runnable cards; the shipped version branches on `aocs.st2_status` (0x0243). Run flat, it would select a tracker that is not tracking, power off the only other one, and command the degraded fallback — all three, in that order.)*
 
@@ -8128,7 +8231,7 @@ would push far colder, and this card adopts the flight envelope.)*
 
 - ST2 acquires → return to the pre-failure mode; monitor; no star-tracker redundancy remains
 - ST2 does not reach TRACKING within 120 s → COARSE_SUN (mode 3); fine pointing is lost; payload imaging is not possible
-- CSS also invalid (eclipse) → DETUMBLE (mode 2) on magnetorquers and wait for sunlit phase; EMG-002 candidate
+- CSS also invalid (eclipse) → DETUMBLE (mode 2) on magnetorquers and wait for sunlit phase; EMG-005 candidate
 
 **Decision tree:**
 
@@ -8153,33 +8256,31 @@ would push far colder, and this card adopts the flight envelope.)*
 
 <div class="procedure-card procedure-card-contingency" markdown="1">
 
-<div class="procedure-card-header" markdown="1">[AOCS] CTG-009 — IMU / Gyro Anomaly</div>
+<div class="procedure-card-header" markdown="1">[FE] CTG-009 — Solar Array Degradation</div>
 
-*(Editor's note: there is no dedicated gyro card in the shipped set — the simulator's CTG-009 is Solar Array Degradation, and gyro handling lives inside CTG-025 AOCS Sensor Loss Recovery. This card is the book's own consolidation; every command and identifier below is drawn from `tc_catalog.yaml` and `parameters.yaml`.)*
+*(Editor's note: this is the simulator's **CTG-009 Solar Array Degradation**, `contingency/solar_array_degradation.md`, condensed.)*
 
-**Entry point:** Event GYRO_BIAS_HIGH (0x020B) fires, rate-channel inconsistency against the star tracker, or `aocs.gyro_saturated` (0x0295) = 1.
+**Entry point:** `eps.sa_a_current` (0x0103) or `eps.sa_b_current` (0x0104) more than 20 % below prediction during a confirmed sunlit phase, or trend review flags slow degradation.
 
-**Goal:** Identify the affected gyro channel, decide whether to keep it in the estimator, and continue attitude determination on the remaining sensors.
-
-**The three gyro numbers, and which one this card means.** The healthy steady-state bias sigma is **2.8e-5 °/s** (0.1 °/h) — that is the hardware specification, not an operational threshold. The first operator-visible alert is the **0.05 °/s** bias-magnitude threshold behind event 0x020B. The S12 per-axis WARNING limit on `aocs.gyro_bias_x/y/z` (0x0270–0x0272) is **±0.5 °/s**. This card acts on the **0.05 °/s event**: it is the earliest actionable signal, and by the time the ±0.5 °/s S12 limit trips the estimator has long since been affected. The book's old "0.02 °/s" figure appears nowhere in the tree.
-
-**There is no redundant IMU.** EO-Sat-1 carries three single-axis gyros and no spare — S2 devices `S2_AOCS_GYROSCOPE_0/1/2` at device IDs 0x0206, 0x0207 and 0x0208. There is no IMU power line, no cold-boot delay, and nothing to switch to: losing a channel means the estimator coasts that axis on CSS + magnetometer, which `aocs.gyro_units_on` (0x0294) makes visible.
+**Goal:** Confirm the anomaly, exclude transient causes (attitude, eclipse), and quantify mission impact.
 
 **Possible negative outcomes / deviations:**
 
-- All gyro channels off → the MEKF has no rate reference and coasts on CSS + MAG only; EMG-002 candidate
-- Bias unstable but below 0.05 °/s → flag; review against `aocs.gyro_temp` (0x0273) trend
-- Gyro-bias injection is a **persistent** offset — it survives ticks and breakpoints until explicitly cleared, so "wait and it will heal" is wrong. Injections are now **typed**: `gyro_bias` takes `axis` (0 roll / 1 pitch / 2 yaw / "all") and `bias` in °/s (default 0.05, range ±5), and an injection with parameters the spec does not declare is rejected with a reason rather than silently clamped — so the instructor's fault is exactly the axis and magnitude the debrief says it was
+- One wing only → mission still viable with reduced margin; FDS re-plans
+- Both arrays below 0.2 A in sunlight → CTG-005 EPS Safe Mode path immediately
+- Degradation faster than 5 % per day → accelerate downlink priorities; plan a reduced-power profile
+- SoC drops below 20 % during the investigation → interrupt and go to the EPS-safing path
 
 | Step | Action | TC / Code | Confirm | Notes |
 |:----:|:-------|:----------|:--------|:------|
-| 1 | AOCS: identify the affected axis from the bias estimates | `HK_REQUEST(sid=2)` (S3.27) | □ | `aocs.gyro_bias_x/y/z` 0x0270–0x0272 |
-| 2 | AOCS: check saturation and how many units are powered | (read SID 2) | □ | `aocs.gyro_saturated` 0x0295, `aocs.gyro_units_on` 0x0294 |
-| 3 | AOCS: attempt an on-board bias calibration | `AOCS_GYRO_CALIBRATION` (S8 func_id 13) | □ | Bias calibration is on-board — it is **not** a ground-computed upload |
-| 4 | AOCS: if a channel is unusable, power that gyro down | `S2_AOCS_GYROSCOPE_<n>(state=0)` (S2, subtype 1; device 0x0206/0x0207/0x0208) | □ | An S2 **device** command — there is no `imu` power line |
-| 5 | AOCS: re-initialise the estimator after the change | `AOCS_EST_RESET(mode=1)` (S8 func_id 91) | □ | 0 = cold (TRIAD/ST bootstrap), 1 = warm; confirm on `aocs.est_source` (0x02C1) |
-| 6 | AOCS: verify rate consistency against the star tracker | (read SID 2) | □ | Cross-check rates 0x0204–0x0206 |
-| 7 | SPACON: file ticket | (mission log) | □ | "CTG-009 closed" |
+| 1 | EPS: quantify the shortfall against prediction | `HK_REQUEST(sid=1)` (S3.27) | □ | 0x0103 / 0x0104 vs predicted; `eps.power_gen` 0x0107 |
+| 2 | EPS: compare A-to-B ratio over three samples 30 s apart | (read SID 1) | □ | Nominal ratio 0.9–1.1; one-sided = local failure |
+| 3 | AOCS: rule out attitude as the cause | `HK_REQUEST(sid=2)` (S3.27) | □ | `aocs.mode` (0x020F) = 4 (NOMINAL) or 3 (COARSE_SUN); `att_error` < 2° |
+| 4 | EPS: check wing deployment state | `GET_PARAM(param_id=0x0144)` (S20.3) | □ | `eps.wing_status`: bit0 +Y, bit1 −Y — also carried in SID 1 |
+| 5 | EPS: log per-wing current over a full orbit | (read SID 8) | □ | `eps.sa_wing_py_current` 0x0146, `sa_wing_my_current` 0x0147 (SID 8, 8 s cadence) |
+| 6 | EPS: shed to match the degraded budget if needed | `PAYLOAD_SET_MODE(mode=1)` then `(mode=0)`; `HEATER_THRUSTER(on=0)` (func_id 42) | □ | Target ≥ 3 W reserve |
+| 7 | EPS / FDS: re-budget power for the next 24 h | (FDS tool) | □ | Daily trend comparison for 7 days |
+| 8 | SPACON: file ticket; Mission Manager brief | (mission log) | □ | "CTG-009 closed" |
 
 </div>
 
@@ -8195,7 +8296,7 @@ would push far colder, and this card adopts the flight envelope.)*
 
 **Possible negative outcomes / deviations:**
 
-- OBC reboots again immediately → suspect SW corruption; consider EMG-004 OBC Reboot path
+- OBC reboots again immediately → suspect SW corruption; consider EMG-003 OBC Reboot path
 - FDIR table not restored after reboot → re-load nominal table (COM-008 sub-step)
 - Heater setpoints lost → re-apply per TCS baseline
 - Hardware-latched power lines preserved but software state lost → re-arm time-tagged schedules (NOM-008)
@@ -8203,7 +8304,7 @@ would push far colder, and this card adopts the flight envelope.)*
 **Decision tree:**
 
 - IF reboot clean and stable → CTG-010 recovers; raise ticket
-- IF `obdh.reboot_count` (0x030A) increments by more than 3 within one hour → boot loop; `OBC_SET_MODE(mode=2)` and EMG-004
+- IF `obdh.reboot_count` (0x030A) increments by more than 3 within one hour → boot loop; `OBC_SET_MODE(mode=2)` and EMG-003
 - IF table or setpoint loss cannot be restored → defer next pass commitments; FD review
 
 | Step | Action | TC / Code | Confirm | Notes |
@@ -8217,36 +8318,6 @@ would push far colder, and this card adopts the flight envelope.)*
 | 7 | SPACON: re-arm time-tagged schedules — **after** the clock is right | (S11) | □ | NOM-008 Clock Synchronisation. The onboard schedule fires on onboard time, so tags re-armed against a J2000 clock never fire |
 | 8 | SPACON: restore OBC NOMINAL if it came back in SAFE | `OBC_SET_MODE(mode=0)` (S8 func_id 50) | □ | `obdh.mode` (0x0300) = 0; CPU load < 70 % |
 | 9 | SPACON: file ticket; FD GO to resume | (mission log) | □ | "CTG-010 closed" |
-
-</div>
-
-<div style="page-break-before: always"></div>
-
-<div class="procedure-card procedure-card-contingency" markdown="1">
-
-<div class="procedure-card-header" markdown="1">[OB] CTG-011 — Mass Memory ECC / Storage Anomaly</div>
-
-*(Editor's note: the simulator ships this card as **CTG-016 Memory Segment Failure**, `contingency/memory_segment_failure.md`. Sim CTG-011 is OBC Redundancy Switchover. Book numbering is retained here.)*
-
-**Entry point:** `payload.mem_segments_bad` (0x0612) increases above its previous known value, usually alongside a rise in `payload.checksum_errors` (0x0609).
-
-**Goal:** Identify the affected memory segment, mark it as unusable, and re-plan imaging against the reduced capacity.
-
-**Possible negative outcomes / deviations:**
-
-- Bad-segment count rising quickly → suspect radiation latch-up; payload OFF, power-cycle after 60 s
-- Science data in the affected segment → the images are lost; log the scene IDs and coordinate re-acquisition
-- More than 10 % of segments bad → escalate to mission planning for a long-term capacity assessment
-
-| Step | Action | TC / Code | Confirm | Notes |
-|:----:|:-------|:----------|:--------|:------|
-| 1 | Payload: read the bad-segment count and storage figures | `HK_REQUEST(sid=5)` (S3.27) | □ | 0x0612, `payload.mem_total_mb` 0x060A, `mem_used_mb` 0x060B |
-| 2 | Payload: request the image catalogue to locate the segment | `PAYLOAD_GET_IMAGE_CATALOG` (S8 func_id 32) | □ | Corrupt scenes point at the failed segment |
-| 3 | Payload: CRC-check any suspect segment | `MEM_CHECK(memory_id, address, length)` (S6.9) | □ | Mismatch confirms the segment is bad |
-| 4 | Payload: mark the segment unusable | `PAYLOAD_MARK_BAD_SEGMENT(segment_id=N)` (S8 func_id 31) | □ | **N is 0–7** — `num_memory_segments: 8`; an index ≥ 8 is rejected |
-| 5 | Payload: delete any images stranded in the bad segment | `PAYLOAD_DELETE_IMAGE(scene_id=X)` (S8 func_id 30) | □ | Per affected scene |
-| 6 | Payload: verify reduced capacity against the imaging plan | `HK_REQUEST(sid=5)` (S3.27) | □ | SID 5 is Payload; SID 4 is OBDH |
-| 7 | SPACON: file ticket | (mission log) | □ | "CTG-011 closed" |
 
 </div>
 
@@ -8292,31 +8363,32 @@ would push far colder, and this card adopts the flight envelope.)*
 
 <div class="procedure-card procedure-card-contingency" markdown="1">
 
-<div class="procedure-card-header" markdown="1">[FE] CTG-013 — Solar Array Underperformance</div>
+<div class="procedure-card-header" markdown="1">[FE] CTG-013 — Battery Cell Failure</div>
 
-*(Editor's note: the simulator ships this card as **CTG-009 Solar Array Degradation**, `contingency/solar_array_degradation.md`. Sim CTG-013 is Battery Cell Failure. Book numbering is retained here.)*
+*(Editor's note: this is the simulator's **CTG-013 Battery Cell Failure**, `contingency/battery_cell_failure.md`, condensed.)*
 
-**Entry point:** `eps.sa_a_current` (0x0103) or `eps.sa_b_current` (0x0104) more than 20 % below prediction during a confirmed sunlit phase, or trend review flags slow degradation.
+**Entry point:** `eps.bat_voltage` (0x0100) more than 1.0 V below the value expected for the reported `eps.bat_soc` (0x0101), or a sudden voltage drop, or trend review flags degradation.
 
-**Goal:** Confirm the anomaly, exclude transient causes (attitude, eclipse), and quantify mission impact.
+**Goal:** Characterise the anomaly, confirm the battery is thermally safe, and decide whether the remaining capacity supports eclipse survival at the current load.
 
 **Possible negative outcomes / deviations:**
 
-- One wing only → mission still viable with reduced margin; FDS re-plans
-- Both arrays below 0.2 A in sunlight → CTG-005 EPS-safing path immediately
-- Degradation faster than 5 % per day → accelerate downlink priorities; plan a reduced-power profile
-- SoC drops below 20 % during the investigation → interrupt and go to the EPS-safing path
+- Voltage drops further during characterisation → CTG-001 load shed
+- `eps.bat_temp` (0x0102) above +40 °C → possible internal short; disable the battery heater and shed load; above +50 °C command EMERGENCY and follow EMG-002
+- `eps.bat_voltage` below 22.0 V → deep-discharge risk; shed everything but OBC and TT&C RX
+- Capacity loss exceeds mission margin → brief Mission Manager; FDS re-plans duty cycle
+
+**Note:** there is no cell-balance telecommand in `tc_catalog.yaml`, and no cell-level telemetry. The observable set is bus/battery voltage, SoC, temperature, current and `eps.bat_capacity_wh` (0x010A); the operator infers cell state from the voltage-versus-SoC deviation.
 
 | Step | Action | TC / Code | Confirm | Notes |
 |:----:|:-------|:----------|:--------|:------|
-| 1 | EPS: quantify the shortfall against prediction | `HK_REQUEST(sid=1)` (S3.27) | □ | 0x0103 / 0x0104 vs predicted; `eps.power_gen` 0x0107 |
-| 2 | EPS: compare A-to-B ratio over three samples 30 s apart | (read SID 1) | □ | Nominal ratio 0.9–1.1; one-sided = local failure |
-| 3 | AOCS: rule out attitude as the cause | `HK_REQUEST(sid=2)` (S3.27) | □ | `aocs.mode` (0x020F) = 4 (NOMINAL) or 3 (COARSE_SUN); `att_error` < 2° |
-| 4 | EPS: check wing deployment state | `GET_PARAM(param_id=0x0144)` (S20.3) | □ | `eps.wing_status`: bit0 +Y, bit1 −Y — also carried in SID 1 |
-| 5 | EPS: log per-wing current over a full orbit | (read SID 8) | □ | `eps.sa_wing_py_current` 0x0146, `sa_wing_my_current` 0x0147 (SID 8, 8 s cadence) |
-| 6 | EPS: shed to match the degraded budget if needed | `PAYLOAD_SET_MODE(mode=1)` then `(mode=0)`; `HEATER_THRUSTER(on=0)` (func_id 42) | □ | Target ≥ 3 W reserve |
-| 7 | EPS / FDS: re-budget power for the next 24 h | (FDS tool) | □ | Daily trend comparison for 7 days |
-| 8 | SPACON: file ticket; Mission Manager brief | (mission log) | □ | "CTG-013 closed" |
+| 1 | EPS: pull battery telemetry and compute expected V for the reported SoC | `HK_REQUEST(sid=1)` (S3.27) | □ | SID 1 is EPS; SID 8 is the EPS-extended structure |
+| 2 | EPS / Thermal: cross-check battery temperature | `HK_REQUEST(sid=3)` (S3.27) | □ | `eps.bat_temp` 0x0102 vs `tcs.temp_battery` 0x0407 |
+| 3 | EPS: if the battery is warm, disable its heater | `HEATER_BATTERY(on=0)` (S8 func_id 40) | □ | `tcs.htr_battery` (0x040A) = 0 |
+| 4 | EPS: compute the eclipse-survival margin on `eps.bat_capacity_wh` (0x010A) | (operator calc) | □ | Reserve 20 % SoC; eclipse ≈ 35 min |
+| 5 | EPS: if margin negative, shed payload, then cooler, then PA | `PAYLOAD_SET_MODE(mode=0)` / `FPA_COOLER(on=0)` / `TTC_PA_OFF` | □ | Recompute after each shed |
+| 6 | EPS / FDS: re-plan duty cycle if capacity reduced | (FDS tool) | □ | New pass plan |
+| 7 | SPACON: file ticket; brief Mission Manager | (mission log) | □ | "CTG-013 closed" |
 
 </div>
 
@@ -8378,7 +8450,7 @@ would push far colder, and this card adopts the flight envelope.)*
 | 1 | Payload: quantify the checksum errors and identify the scene | `HK_REQUEST(sid=5)` (S3.27) | □ | 0x0609 delta; `payload.last_scene_id` 0x060C |
 | 2 | Payload / Thermal: check FPA temperature | `HK_REQUEST(sid=3)` (S3.27) + SID 5 | □ | `payload.fpa_temp` 0x0601, `tcs.temp_fpa` 0x0408, `payload.fpa_ready` 0x0610 |
 | 3 | Payload: if the FPA is warm (> −20 °C), abort to STANDBY and cool | `PAYLOAD_SET_MODE(mode=1)` (func_id 26); `FPA_COOLER(on=1)` (func_id 43) | □ | Wait for < −25 °C and `fpa_ready` = 1 |
-| 4 | Payload: if a memory segment is implicated, hand off to CTG-011 | `payload.mem_segments_bad` (0x0612) | □ | Mark the segment before re-capturing |
+| 4 | Payload: if a memory segment is implicated, hand off to CTG-016 | `payload.mem_segments_bad` (0x0612) | □ | Mark the segment before re-capturing |
 | 5 | Payload: delete the corrupted image (canonical S8 path) | `PAYLOAD_DELETE_IMAGE(scene_id=X)` (S8 func_id 30) | □ | |
 | 6 | Payload + AOCS: re-plan acquisition for the next overflight | (FDS) | □ | Per decision tree |
 | 7 | SPACON: file ticket | (mission log) | □ | "CTG-015 closed" |
@@ -8389,31 +8461,28 @@ would push far colder, and this card adopts the flight envelope.)*
 
 <div class="procedure-card procedure-card-contingency" markdown="1">
 
-<div class="procedure-card-header" markdown="1">[PE] CTG-016 — Payload Mode Anomaly</div>
+<div class="procedure-card-header" markdown="1">[OB] CTG-016 — Memory Segment Failure</div>
 
-*(Editor's note: the simulator ships the equivalent card as **CTG-006 Payload Anomaly**, `contingency/payload_anomaly.md`, framed around the FPA thermal case. Sim CTG-016 is Memory Segment Failure. Book numbering is retained here.)*
+*(Editor's note: this is the simulator's **CTG-016 Memory Segment Failure**, `contingency/memory_segment_failure.md`, condensed.)*
 
-**Entry point:** Payload mode does not transition as commanded; or `payload.fpa_temp` (0x0601) above −15 °C, or rising faster than 0.5 °C/min with the cooler active.
+**Entry point:** `payload.mem_segments_bad` (0x0612) increases above its previous known value, usually alongside a rise in `payload.checksum_errors` (0x0609).
 
-**Goal:** Recover the payload to STANDBY, restore the thermal state, and identify whether the anomaly is software, command sequencing or hardware.
-
-**Payload modes:** 0 OFF, 1 STANDBY, 2 IMAGING, **3 CALIBRATION**.
+**Goal:** Identify the affected memory segment, mark it as unusable, and re-plan imaging against the reduced capacity.
 
 **Possible negative outcomes / deviations:**
 
-- Payload stuck in IMAGING with no exit → command OFF, then cycle the payload line (CTG-012-like) after FD GO
-- FPA above +10 °C at any step → payload OFF immediately; no restart without ground authorisation
-- Cooler will not activate → keep the payload OFF and run CTG-004 for zone assessment
-- Payload and TCS FPA sensors disagree by more than 5 °C → suspect a sensor; use the lower reading for safety decisions
+- Bad-segment count rising quickly → suspect radiation latch-up; payload OFF, power-cycle after 60 s
+- Science data in the affected segment → the images are lost; log the scene IDs and coordinate re-acquisition
+- More than 10 % of segments bad → escalate to mission planning for a long-term capacity assessment
 
 | Step | Action | TC / Code | Confirm | Notes |
 |:----:|:-------|:----------|:--------|:------|
-| 1 | Payload: read current mode and FPA temperature | `HK_REQUEST(sid=5)` + `HK_REQUEST(sid=3)` (S3.27) | □ | `payload.mode` 0x0600; 0x0601 vs `tcs.temp_fpa` 0x0408 |
-| 2 | Payload: command OFF to clear the stuck state | `PAYLOAD_SET_MODE(mode=0)` (S8 func_id 26) | □ | 0x0600 = 0 within 10 s |
-| 3 | Payload / Thermal: confirm the cooler is running | (read SID 3) | □ | `tcs.cooler_fpa` (0x040C) = 1; miniature Stirling-class cryocooler |
-| 4 | Payload: monitor cooldown for up to 20 min | (read SIDs 3 and 5) | □ | ≥ 0.3 °C/min; settle below −20 °C |
-| 5 | Payload: restart in STANDBY | `PAYLOAD_SET_MODE(mode=1)` (S8 func_id 26) | □ | 0x0600 = 1; FPA stays below −18 °C |
-| 6 | Payload: if still stuck, cycle the payload line (FD GO) | `EPS_POWER_OFF(line_index=3)` / `EPS_POWER_ON(line_index=3)` (func_id 20 / 19) | □ | 30–60 s off; line 3 is payload |
+| 1 | Payload: read the bad-segment count and storage figures | `HK_REQUEST(sid=5)` (S3.27) | □ | 0x0612, `payload.mem_total_mb` 0x060A, `mem_used_mb` 0x060B |
+| 2 | Payload: request the image catalogue to locate the segment | `PAYLOAD_GET_IMAGE_CATALOG` (S8 func_id 32) | □ | Corrupt scenes point at the failed segment |
+| 3 | Payload: CRC-check any suspect segment | `MEM_CHECK(memory_id, address, length)` (S6.9) | □ | Mismatch confirms the segment is bad |
+| 4 | Payload: mark the segment unusable | `PAYLOAD_MARK_BAD_SEGMENT(segment_id=N)` (S8 func_id 31) | □ | **N is 0–7** — `num_memory_segments: 8`; an index ≥ 8 is rejected |
+| 5 | Payload: delete any images stranded in the bad segment | `PAYLOAD_DELETE_IMAGE(scene_id=X)` (S8 func_id 30) | □ | Per affected scene |
+| 6 | Payload: verify reduced capacity against the imaging plan | `HK_REQUEST(sid=5)` (S3.27) | □ | SID 5 is Payload; SID 4 is OBDH |
 | 7 | SPACON: file ticket | (mission log) | □ | "CTG-016 closed" |
 
 </div>
@@ -8430,7 +8499,7 @@ would push far colder, and this card adopts the flight envelope.)*
 
 **Possible negative outcomes / deviations:**
 
-- Switchover does not restore HK → suspect dual-bus failure; EMG-004 candidate
+- Switchover does not restore HK → suspect dual-bus failure; EMG-003 candidate
 - Bus B fails subsequently → no further redundancy; flag mission constraint to Mission Manager
 - Switchover causes momentary subsystem reset → expected; verify each subsystem recovers
 
@@ -8455,35 +8524,6 @@ would push far colder, and this card adopts the flight envelope.)*
 
 <div class="procedure-card procedure-card-contingency" markdown="1">
 
-<div class="procedure-card-header" markdown="1">[OB] CTG-018 — TC Reject Rate Anomaly</div>
-
-*(Editor's note: there is no shipped card with this title — the simulator's CTG-018 is Boot Loader Recovery. This card is the book's own consolidation of the TC-rejection diagnostic; the identifiers below are drawn from `parameters.yaml` and `tc_catalog.yaml`.)*
-
-**Entry point:** `obdh.tc_rej_count` (0x0306) incrementing on commands the ground believes are valid.
-
-**Goal:** Identify the root cause (clock drift, gating, sequence-count desync) and restore clean commanding.
-
-**Possible negative outcomes / deviations:**
-
-- Clock drift cause → read `obdh.time_ref` (0x0A13) and `obdh.time_since_sync_s` (0x0A14) first: a large offset with a large time-since-sync is ordinary ~12 ppm drift, the same offset ten minutes after a sync is not. Run the time-sync path (LEOP-006; on-orbit, NOM-008 Clock Synchronisation). A rate near 500 ppm (≈ 43 s/day) is the instructor's typed `clock_drift` injection, which takes an explicit `ppm` overriding its severity
-- Rejections concentrated on power-gated commands → the two-stage TC power gate is doing its job; energise the line first
-- Rejections while `ttc.beacon_mode` (0x0521) = 1 → the beacon tier refuses LOW; clear beacon mode first (see CTG-021)
-- Rejections while the OBC is in the bootloader → only boot/maintenance funcs are accepted; `obdh.sw_image` (0x0311) = 0
-
-| Step | Action | TC / Code | Confirm | Notes |
-|:----:|:-------|:----------|:--------|:------|
-| 1 | SPACON: read the reject counter and OBC state | `HK_REQUEST(sid=4)` (S3.27) | □ | 0x0306; `obdh.mode` 0x0300; `obdh.sw_image` 0x0311 |
-| 2 | SPACON: correlate against the S1 failure notices and S5 events | (S1 / S5 log) | □ | e.g. failure code 0x0007, event 0x030B COMMAND_REJECTED |
-| 3 | SPACON: address the cause per reject reason | (per ticket) | □ | Boot the application / clear beacon mode / energise the line |
-| 4 | SPACON: re-test commanding with a connection test | `CONNECTION_TEST` (S17.1) | □ | Clean ack |
-| 5 | SPACON: file ticket | (mission log) | □ | "CTG-018 closed" |
-
-</div>
-
-<div style="page-break-before: always"></div>
-
-<div class="procedure-card procedure-card-contingency" markdown="1">
-
 <div class="procedure-card-header" markdown="1">[TT] CTG-019 — No Telemetry at Pass Start</div>
 
 **Entry point:** Expected AOS, no beacon and no HK after carrier expected; or beacon present but full HK never appears after OBC boot.
@@ -8493,13 +8533,13 @@ would push far colder, and this card adopts the flight envelope.)*
 **Possible negative outcomes / deviations:**
 
 - Spacecraft acks commands but no TM → blind-commanding posture; identify next pass as recovery
-- Neither acks nor TM → second pass also silent → EMG-003
+- Neither acks nor TM → second pass also silent → EMG-004
 - Geometry was wrong all along → re-check FDS predictions
 
 **Decision tree:**
 
-- IF S1 acks received → continue with blind commanding; do not invoke EMG-003 yet
-- IF no acks AND no TM → repeat link test; if still nothing by LOS, prepare EMG-003 for next pass
+- IF S1 acks received → continue with blind commanding; do not invoke EMG-004 yet
+- IF no acks AND no TM → repeat link test; if still nothing by LOS, prepare EMG-004 for next pass
 - IF beacon only, no full HK after `OBC_BOOT_APP` → this is usually **not** a fault: the engine re-applies `default_enabled_sids` = [1, 11] on application boot, so SIDs 2–6 must be re-enabled with `HK_ENABLE` (S3.5) before they stream. Send those first, then blind-command per CTG-019 if they still do not appear
 
 | Step | Action | TC / Code | Confirm | Notes |
@@ -8509,7 +8549,7 @@ would push far colder, and this card adopts the flight envelope.)*
 | 3 | TT&C: connection test (blind) | `CONNECTION_TEST` (S17.1) | □ | Watch for ack only |
 | 4 | TT&C: walk the RF chain blind — TX line, PA, antenna | `eps.pl_ttc_tx` 0x0112; `ttc.pa_on` 0x0516; `ttc.antenna_deployed` 0x0520 | □ | `EPS_POWER_ON(line_index=2)`, `TTC_PA_ON` (66) as needed |
 | 5 | SPACON: if acks present, continue procedures by blind commanding | (mission log) | □ | Reduced confirmations |
-| 6 | SPACON: if silent by LOS, file high-priority ticket; prepare EMG-003 for next pass | (mission log) | □ | "CTG-019 escalation" |
+| 6 | SPACON: if silent by LOS, file high-priority ticket; prepare EMG-004 for next pass | (mission log) | □ | "CTG-019 escalation" |
 
 </div>
 
@@ -8528,7 +8568,7 @@ would push far colder, and this card adopts the flight envelope.)*
 **Possible negative outcomes / deviations:**
 
 - Time-critical activity in the current pass lost → re-plan for the next AOS (Troll, Svalbard, Inuvik or O'Higgins)
-- Alternate station also degraded → EMG-003 candidate over the next two passes
+- Alternate station also degraded → EMG-004 candidate over the next two passes
 - Customer impact → Mission Manager bulletin
 
 | Step | Action | TC / Code | Confirm | Notes |
@@ -8623,10 +8663,10 @@ would push far colder, and this card adopts the flight envelope.)*
 
 **Possible negative outcomes / deviations:**
 
-- SoC still dropping after every rung → `OBC_SET_MODE(mode=2)` EMERGENCY, then EMG-006 Total Power Failure
+- SoC still dropping after every rung → `OBC_SET_MODE(mode=2)` EMERGENCY, then EMG-002 Total Power Failure
 - SoC below 10 % → deep-discharge risk; EMERGENCY immediately, brief the Mission Manager on likely capacity loss
 - Eclipse-exit recovery slower than predicted → hold the shed level one orbit; reassess
-- Power still not recovering after eclipse exit → check per-panel currents 0x012B–0x0130; if all near zero, CTG-013
+- Power still not recovering after eclipse exit → check per-panel currents 0x012B–0x0130; if all near zero, CTG-009
 
 **Decision tree (the shipped thresholds):**
 
@@ -8634,7 +8674,7 @@ would push far colder, and this card adopts the flight envelope.)*
 - IF SoC < 35 % → rung 2, FPA cooler OFF
 - IF SoC < 25 % → rung 3, S-band PA OFF (downlink lost; uplink and the UHF beacon survive)
 - IF SoC < 15 % → rung 4, reaction-wheel line OFF (active attitude control lost)
-- IF bus voltage still below 25.0 V with everything shed → `OBC_SET_MODE(mode=2)`, then EMG-006
+- IF bus voltage still below 25.0 V with everything shed → `OBC_SET_MODE(mode=2)`, then EMG-002
 
 | Step | Action | TC / Code | Confirm | Notes |
 |:----:|:-------|:----------|:--------|:------|
@@ -8655,7 +8695,7 @@ would push far colder, and this card adopts the flight envelope.)*
 
 <div class="procedure-card-header" markdown="1">[FE] CTG-024 — Solar Panel Loss Response</div>
 
-**Entry point:** Per-panel solar-array current trending to zero or significantly degraded; total `eps.power_gen` reduced. **Five body faces carry cells, not six:** −Z is the imager aperture and radiator (`mz_area_m2: 0.000`), so `eps.sa_mz_current` (0x0130) reads zero permanently and is never evidence of a panel failure. Panel areas are +X/−X 0.060 m², +Y/−Y 0.030 m², +Z 0.018 m², plus 0.120 m² of cells per deployable wing.
+**Entry point:** Per-panel solar-array current trending to zero or significantly degraded; total `eps.power_gen` reduced. **Five body faces carry cells, not six:** −Z is the nadir face, with the imager aperture and radiator (`mz_area_m2: 0.000`), so `eps.sa_mz_current` (0x0130) reads zero permanently and is never evidence of a panel failure. Panel areas are +X/−X 0.060 m², +Y/−Y 0.030 m², +Z 0.018 m², plus 0.120 m² of cells per deployable wing.
 
 **Goal:** Identify the failed panel, recalculate power budget for the new configuration, decide whether the mission proceeds at reduced duty or enters extended safe-state.
 
@@ -8694,7 +8734,7 @@ would push far colder, and this card adopts the flight envelope.)*
 
 **Goal:** Identify which sensor failed, switch to the redundant unit where one exists (star trackers only), assess whether the remaining suite still supports the mission's pointing requirement, and degrade the mode if not.
 
-**Redundancy inventory:** two star trackers (ST1/ST2), six CSS heads (+X, −X, +Y, −Y, +Z, −Z), **one magnetometer with no spare** and **three single-axis gyros with no spare**. The magnetometer and the gyro channels are the AOCS sensors with no redundant unit to select; see CTG-009 for the gyros.
+**Redundancy inventory:** two star trackers (ST1/ST2), six CSS heads (+X, −X, +Y, −Y, +Z, −Z), **one magnetometer with no spare** and **three single-axis gyros with no spare**. The magnetometer and the gyro channels are the AOCS sensors with no redundant unit to select; see CTG-029 for the gyros.
 
 **Possible negative outcomes / deviations:**
 
@@ -8709,7 +8749,7 @@ would push far colder, and this card adopts the flight envelope.)*
 - IF both ST fault → fall back to COARSE_SUN (mode 3); imaging suspended
 - IF magnetometer fault → power-cycle the single unit (`S2_AOCS_MAGNETOMETER`, device 0x0209); there is no second magnetometer to switch to
 - IF no ST and CSS invalid → DETUMBLE (mode 2)
-- IF cumulative loss exceeds the pointing budget → EMG-002
+- IF cumulative loss exceeds the pointing budget → EMG-005
 
 | Step | Action | TC / Code | Confirm | Notes |
 |:----:|:-------|:----------|:--------|:------|
@@ -8751,7 +8791,7 @@ would push far colder, and this card adopts the flight envelope.)*
 | 1 | AOCS: identify the stuck wheel from two speed samples 30 s apart | `HK_REQUEST(sid=2)` (S3.27) | □ | Speeds 0x0207–0x020A frozen or at 0 rpm |
 | 2 | AOCS: verify the wheel temperature trend | (read SID 2) | □ | Temps 0x0218–0x021B; rising = bearing seizure |
 | 3 | AOCS: disable the stuck wheel (dual-keyed) | `AOCS_DISABLE_WHEEL(wheel_idx=N)` (S8 func_id 2) | □ | FD second-key; rates stay < 1.0 °/s |
-| 4 | AOCS: reconfigure the control loop to three wheels | `SET_PARAM(param_id=aocs.wheel_config, value=3)` (S20.1) | □ | There is no `AOCS_3W_MODE` telecommand — S8 func 5 is `ST2_POWER`; a config key is the only route |
+| 4 | AOCS: confirm the loop has reconfigured to three wheels — no command | (observe, 15 s) | □ | There is no `AOCS_3W_MODE` telecommand (S8 func 5 is `ST2_POWER`) and no `aocs.wheel_config` parameter: `AOCS_DISABLE_WHEEL` in step 3 is the whole reconfiguration. Restore later with `AOCS_ENABLE_WHEEL` (func_id 3) |
 | 5 | AOCS: dump momentum on the surviving three | `AOCS_DESATURATE` (S8 func_id 1) | □ | MTQ duties 0x0258–0x025A non-zero during the dump |
 | 6 | AOCS: verify attitude stable in the new configuration | `AOCS_SET_MODE(mode=4)` (S8 func_id 0) | □ | `aocs.att_error` (0x0217) < 1.5° — relaxed from 1.0° for three-wheel ops |
 | 7 | SPACON: file ticket; mark the wheel PERMANENT_FAULT | (mission log) | □ | "CTG-026 closed"; desat now needed every 3–4 orbits, not 6–8 |
@@ -8798,20 +8838,108 @@ would push far colder, and this card adopts the flight envelope.)*
 
 <div style="page-break-before: always"></div>
 
+<div class="procedure-card procedure-card-contingency" markdown="1">
+
+<div class="procedure-card-header" markdown="1">[PR] CTG-028 — Propulsion Anomaly</div>
+
+*(Editor's note: this is the simulator's **CTG-028 Propulsion Anomaly**, `contingency/propulsion_anomaly.md`, condensed.)*
+
+**Entry point:** S12 alarm on `prop.tank_pressure` (0x0B01) — absolute band or the rate/DELTA monitor that catches a slow leak; or event PROP_VALVE_FAULT (0x080A), PROP_LEAK_DETECTED (0x080B), PROP_UNDERPERFORMANCE (0x080C), PROP_TANK_PRESSURE_HIGH (0x0807); or post-burn OD showing achieved ΔV < 90 % of plan (NOM-013 step 6).
+
+**Goal:** Isolate the propellant, **bound** the remaining usable ΔV and protect the collision-avoidance reserve. EOSAT-1's 1U green monoprop (66.9 m/s total) exists for debris avoidance, limited orbit maintenance and the 34.3 m/s end-of-life disposal burn (NOM-014), so the objective is not "fix the thruster" — it is "know exactly how much CAM capability remains and keep it safe".
+
+**Possible negative outcomes / deviations:**
+
+- A branch reporting 2 (fault) did not close — treat the propellant downstream of the stuck valve as lost
+- Pressure still falling after isolation → the leak is upstream of the latch valves; it cannot be isolated, only bounded
+- Bounded reserve below ~1 m/s → debris-avoidance capability is effectively lost; the conjunction posture changes
+- Rising tank pressure that does not respond to heater safing → CTG-004, and prepare EMG-001 (safe mode disarms propulsion by rule 8005)
+
+| Step | Action | TC / Code | Confirm | Notes |
+|:----:|:-------|:----------|:--------|:------|
+| 1 | Propulsion: bring up the PROP structure and capture full TM | `HK_ENABLE(sid=9)` (S3.5) | □ | SID 9 is PROP; SID 5 is Payload |
+| 2 | Propulsion: read state, pressure trend, mass, temps, valves, leak rate | (read SID 9) | □ | 0x0B00, 0x0B01, 0x0B02, 0x0B04/0x0B05, 0x0B06–0x0B08, 0x0B16 |
+| 3 | Propulsion: close both latch-valve branches | `PROP_ISO_CLOSE(branch=2)` (S8 func_id 114) | □ | `prop.latch_a_state` 0x0B06 and `latch_b_state` 0x0B07 = 0 |
+| 4 | Propulsion: bound the remaining usable ΔV | read `prop.dv_remaining` (0x0B0C), correct for failure mode | □ | Report the bounded CAM reserve to the FD |
+| 5 | Propulsion: latch the ground inhibit while the anomaly is open | `PROP_INHIBIT_SET(on=1)` (S8 func_id 116) | □ | `prop.arm_inhibit_mask` (0x0B15) bit 9 set |
+| 6 | SPACON: file ticket; FD decides on EMG-001 if cascading | (mission log) | □ | Clearing the inhibit (`PROP_INHIBIT_CLR`, func 117) needs a closed ticket + FD authority |
+
+</div>
+
+<div style="page-break-before: always"></div>
+
+<div class="procedure-card procedure-card-contingency" markdown="1">
+
+<div class="procedure-card-header" markdown="1">[AOCS] CTG-029 — Gyro Failure Recovery</div>
+
+*(Simulator card `contingency/gyro_failure.md`. It replaces the book's temporary CTG-B01 "IMU / Gyro Anomaly".)*
+
+**Entry point:** Event `GYRO_BIAS_HIGH` (0x020B) — the bias still present at the gyro output exceeds 0.05 °/s (`aocs.gyro_bias_resid` 0x02D2); or `aocs.gyro_units_mask` (0x02D1) ≠ 7, a unit is off; or `aocs.gyro_saturated` (0x0295) = 1; or the attitude estimate walking away (`aocs.att_error` 0x0217 growing) while the star tracker is out of the loop. Link up with ≥ 15 min of pass left, application image running, SoC > 40 %, no slew, desaturation or burn in the next 15 min.
+
+**Goal:** Identify the affected gyro channel, restore a bias-free rate reference with the on-board bias calibration and, if the channel cannot be recovered, isolate it and continue attitude determination on the remaining sensors.
+
+**What the simulator models.** EOSAT-1 carries three single-axis gyros, one per body axis, and **no redundant unit**: S2 devices `S2_AOCS_GYROSCOPE_0/1/2` (device IDs 0x0206, 0x0207, 0x0208 = 518, 519, 520). There is no IMU power line and nothing to switch to. An injected `gyro_bias` fault is a **persistent** offset on one axis or all three; it does not heal with time, and the calibration compensates it in the measurement chain without repairing the unit. A unit switched off is a dead channel. The three bias numbers are different quantities: healthy bias instability is about 3e-5 °/s (0.1 °/h), event 0x020B fires at **0.05 °/s** of residual bias, and the S12 limit on `aocs.gyro_bias_x/y/z` (0x0270–0x0272) is ±0.5 °/s. This card acts on the 0.05 °/s event, the earliest actionable signal.
+
+**Possible negative outcomes / deviations:**
+
+- All three units off or failed → no rate reference; the filter coasts on the star tracker, sun sensors and magnetometer. Hold NOMINAL if the tracker is valid, otherwise EMG-005 Loss of Attitude
+- Saturation (`aocs.gyro_saturated` = 1) → the vehicle is rotating faster than the gyro range: an attitude anomaly, not a gyro fault; CTG-002 first
+- Refused with `0x0A03` → no star tracker in the loop; recover it (CTG-008), wait for `aocs.est_source` (0x02C1) bit 0, retry. Refused with `0x0A04` → not quiescent; wait for the slew or desaturation to end (`aocs.mode` ≠ 6 and ≠ 7)
+- Bias returns after a good calibration → if it follows `aocs.gyro_temp` (0x0273), re-run after the thermal transient; at constant temperature it is a degrading unit — raise an anomaly report
+- Instructor removes an injected bias after a calibration → the stored compensation now over-corrects with the opposite sign; re-run step 4
+
+| Step | Action | TC / Code | Confirm | Notes |
+|:----:|:-------|:----------|:--------|:------|
+| 1 | AOCS: collect the gyro and determination telemetry; classify | `HK_REQUEST(sid=2)`, `HK_REQUEST(sid=7)` (S3.27) | □ | Record `aocs.gyro_units_on` (0x0294), `aocs.gyro_units_mask` (0x02D1), `aocs.gyro_saturated` (0x0295), `aocs.gyro_bias_x/y/z` (0x0270–0x0272), `aocs.gyro_bias_resid` (0x02D2), `aocs.gyro_temp` (0x0273). The axis whose bias stands out is the affected channel |
+| 2 | AOCS: protect the attitude estimate | (read SID 2 / SID 7) | □ | `aocs.est_source` (0x02C1) bit 0 set; `aocs.st1_status` (0x0240) = 2; `aocs.att_error` (0x0217) < 1.0°. Without a tracker in the loop a 0.05 °/s bias walks the estimate tens of degrees in ten minutes: recover the tracker first (CTG-008) |
+| 3 | AOCS: restore any unit that is off (only if 0x02D1 ≠ 7) | `S2_AOCS_GYROSCOPE_0(device_id=518, state=1)`, `S2_AOCS_GYROSCOPE_1(device_id=519, state=1)`, `S2_AOCS_GYROSCOPE_2(device_id=520, state=1)` (S2.1) | □ | Idempotent. `aocs.gyro_units_mask` = 7 and `aocs.gyro_units_on` = 3 within 20 s; a calibration with a dead channel is refused with `0x0A02` |
+| 4 | AOCS: run the on-board bias calibration | `AOCS_GYRO_CALIBRATION(action=0, duration_s=300)` (S8 func_id 13) | □ | Hold NOMINAL (mode 4, or 8 in eclipse), rates within 0.10 °/s. `aocs.gyro_cal_state` (0x02C9) = 1 within 20 s; refusal codes `0x0A01`–`0x0A05` in `aocs.gyro_cal_reject` (0x02D0); S1.7 arrives when the arc ends |
+| 5 | AOCS: monitor the calibration arc | `HK_REQUEST(sid=7)` (S3.27) every 30 s | □ | `aocs.gyro_cal_progress` (0x02CA) ≥ 100 within 330 s. An abort (`AOCS_GYRO_CAL_ABORT`, 0x0212) applies nothing: fix the cause and re-run step 4 |
+| 6 | AOCS: verify the result and record the bias | `GET_PARAM(param_id=0x02CB)` … `(param_id=0x02CD)` (S20.3) | □ | `aocs.gyro_cal_state` = 2, `aocs.gyro_cal_result` (0x02CF) = 1; each axis within ±0.5 °/s. Above that, do not accept the result: step 7 |
+| 7 | AOCS: isolate an unrecoverable channel (only if step 6 failed) | `S2_AOCS_GYROSCOPE_0(device_id=518, state=0)` (X shown; 519 Y, 520 Z); `AOCS_EST_RESET(mode=1)` (S8 func_id 91) | □ | Only for a bias above 0.5 °/s after a 900 s calibration, or two aborts in a row with `0x0A06`. The faulty bit clears in 0x02D1; `aocs.est_source` bit 0 still set within 60 s. That axis now relies on the tracker alone until the end of the mission |
+| 8 | AOCS: confirm the recovery; file the anomaly report | `HK_REQUEST(sid=2)`, `HK_REQUEST(sid=7)` (S3.27) | □ | `aocs.gyro_bias_resid` (0x02D2) < 0.005 °/s; `aocs.gyro_cal_comp_mag` (0x02CE) recorded; `aocs.knowledge_err_3sig` (0x02A7) < 120 arcsec and `aocs.control_err` (0x02A8) < 1.0° within 300 s. If a channel was isolated, check `aocs.fine_ready` (0x02C5) before the next imaging session. "CTG-029 closed" |
+
+</div>
+
+<div style="page-break-before: always"></div>
+
+<div class="procedure-card procedure-card-contingency" markdown="1">
+
+<div class="procedure-card-header" markdown="1">[OB] CTG-030 — Telecommand Rejection and Verification Failure</div>
+
+*(Simulator card `contingency/tc_rejection.md`. It replaces the book's temporary CTG-B02 "TC Reject Rate Anomaly".)*
+
+**Entry point:** An S1.2 acceptance failure or an S1.8 execution failure on a telecommand the ground believes is valid; `obdh.tc_rej_count` (0x0306) incrementing, or event `COMMAND_REJECTED` (0x030B); or a telecommand with **no** S1 report at all (verification time-out in the MCS command log). Link expected (inside a predicted pass); MCS command log available.
+
+**Goal:** Find why telecommands are refused or not verified, remove the cause and restore clean commanding. The card sends only HK requests and a connection test.
+
+**What the simulator reports.** Every refusal carries a 16-bit failure code and a reason text. The code is latched in `obdh.last_tc_error_code` (0x0315), and an on-board refusal also raises `COMMAND_REJECTED` (0x030B), naming the command, the stage and the code. At **acceptance** (S1.2): 0x0001 unknown service, 0x0002 unknown subtype, 0x0003 invalid parameter or length, 0x0004 target subsystem unpowered, 0x0005 uplink not available, 0x0006 not in the bootloader subset. At **execution** (S1.8): 0x0005 invalid in the current mode, 0x0007 not permitted in the current state, and the families 0x0021–0x0028 payload, 0x0A01–0x0A08 gyro calibration, 0x0A20–0x0A22 AOCS mode entry, 0x0B01–0x0B13 propulsion, 0x0C01–0x0C04 mission phase. Two cases are **not** rejections: 0x0005 at acceptance with no `COMMAND_REJECTED` event (the uplink had no command-channel lock, so the on-board software never saw the TC), and no S1 report at all (the TC never arrived, or it is a deferred-completion command — gyro calibration, application boot, burn — whose S1.7 comes when the action ends). Check which before re-sending anything.
+
+**Possible negative outcomes / deviations:**
+
+- The step 1 request itself gets no reply → a link problem, not a commanding one: CTG-003 TTC Link Loss Recovery, or CTG-019 if there is no telemetry at all
+- `CONNECTION_TEST` gets no reply → the uplink is not working; CTG-003
+- Rejections continue with a code nobody can explain → stop commanding, record the code, reason text and command, escalate to the FD; do not try other commands to work around it
+- Rejections after an OBC reboot → the OBC restarts in the bootloader (`obdh.sw_image` 0x0311 = 0): every application command is refused `0x0006` until the application is booted again (EMG-003, CTG-021)
+- Clock-dependent failures → a time-tagged command against a wrong on-board clock runs at the wrong time rather than being rejected; if `obdh.time_ref` (0x0A13) = 0 or `obdh.time_since_sync_s` (0x0A14) is large, resynchronise (NOM-008) before uploading a new schedule
+
+| Step | Action | TC / Code | Confirm | Notes |
+|:----:|:-------|:----------|:--------|:------|
+| 1 | FDIR/Systems: read the on-board command counters and state | `HK_REQUEST(sid=4)` (S3.27) | □ | Record `obdh.tc_rx_count` (0x0304), `obdh.tc_acc_count` (0x0305), `obdh.tc_rej_count` (0x0306), `obdh.last_tc_error_code` (0x0315), `obdh.sw_image` (0x0311: 0 bootloader, 1 application), `obdh.mode` (0x0300: 0 nominal, 1 safe, 2 emergency), `eps.spacecraft_phase` (0x0129) |
+| 2 | TT&C: check the uplink chain | `HK_REQUEST(sid=6)` (S3.27) | □ | `ttc.carrier_lock` (0x0510) = 1; `ttc.frame_sync` (0x0512) = 1; record `ttc.cmd_rx_count` (0x0513) and `ttc.beacon_mode` (0x0521). No S1 report and no change in 0x0513 → the TC never reached the spacecraft |
+| 3 | FDIR/Systems: classify every rejection by code and stage | (MCS command log; event 0x030B text) | □ | 0x0006 with `sw_image` = 0 → boot the application (LEOP-001 step 5, CTG-021). 0x0004 → switch the line on first. 0x0003 → rebuild the TC in the command builder. 0x0001 / 0x0002 → not implemented. 0x0005 / 0x0007 at execution → valid but not allowed now (for example beacon mode: clear it with `TTC_SET_BEACON_MODE`). 0x0Axx → CTG-029; 0x0Bxx → read `prop.arm_inhibit_mask` (0x0B15), NOM-013 or CTG-028; 0x0Cxx → mission-phase guards |
+| 4 | TT&C: test clean commanding | `CONNECTION_TEST` (S17.1); `HK_REQUEST(sid=4)` (S3.27) | □ | S1.1 and S1.7 within 10 s; `obdh.tc_acc_count` incremented, `obdh.tc_rej_count` unchanged |
+| 5 | FD: re-send the corrected telecommand once | (the corrected TC) | □ | Only after its cause has been removed; never repeat a refused TC unchanged. S1.1 and S1.7 received; `obdh.last_tc_error_code` unchanged. "CTG-030 closed" |
+
+</div>
+
+<div style="page-break-before: always"></div>
+
 ## 14.5 Emergency procedure cards
 
 *Emergency procedures must be read once during operator familiarisation but never invoked without explicit FD authorisation. Any approach to safe-mode entry begins with a voice-loop callout to the FD. The cards below give the canonical structure; the simulator's procedure files hold the full step lists.*
 
-*Editor's note — emergency card numbering. The book's EMG numbers and the simulator's do not line up, and neither is being renumbered. Read across before opening a file:*
-
-| Book card | Simulator ID | Simulator file |
-|:---|:---|:---|
-| EMG-001 Emergency Safe Mode | EMG-001 | `emergency/emergency_safe_mode.md` |
-| EMG-002 Loss of Attitude | **EMG-005** | `emergency/loss_of_attitude.md` |
-| EMG-003 Loss of Communication | **EMG-004** | `emergency/loss_of_communication.md` |
-| EMG-004 OBC Reboot | **EMG-003** | `emergency/obc_reboot.md` |
-| EMG-005 Thermal Runaway | **EMG-006** | `emergency/thermal_runaway.md` |
-| EMG-006 Total Power Failure | **EMG-002** | `emergency/total_power_failure.md` |
+*Every card below carries the simulator's EMG ID and matches the file of the same ID in `configs/eosat1/procedures/emergency/`. The numbering used by earlier printings is in the historical note at the end of §14.6.*
 
 <div class="procedure-card procedure-card-emergency" markdown="1">
 
@@ -8824,8 +8952,8 @@ would push far colder, and this card adopts the flight envelope.)*
 **Possible negative outcomes / deviations:**
 
 - Safe-mode entry itself triggers further FDIR → expected; allow autonomous protection to converge
-- Spacecraft tumbling (rates > 2 °/s) → run EMG-002 Loss of Attitude before continuing
-- Not power-positive after sun acquisition → EMG-006 Total Power Failure
+- Spacecraft tumbling (rates > 2 °/s) → run EMG-005 Loss of Attitude before continuing
+- Not power-positive after sun acquisition → EMG-002 Total Power Failure
 - Recovery from safe mode requires offline analysis; do not exit safe mode the same pass without explicit FD + Mission Manager authority
 
 | Step | Action | TC / Code | Confirm | Notes |
@@ -8845,31 +8973,29 @@ would push far colder, and this card adopts the flight envelope.)*
 
 <div class="procedure-card procedure-card-emergency" markdown="1">
 
-<div class="procedure-card-header" markdown="1">[AOCS] EMG-002 — Loss of Attitude</div>
+<div class="procedure-card-header" markdown="1">[FE] EMG-002 — Total Power Failure</div>
 
-**Entry point:** Any of `aocs.rate_roll` (0x0204), `rate_pitch` (0x0205) or `rate_yaw` (0x0206) above 2.0 °/s — the spacecraft is tumbling.
+**Entry point:** `eps.bat_soc` (0x0101) < 10 % **or** `eps.bus_voltage` (0x0105) < 26.0 V. The undervoltage chain in the tree is: FDIR undervoltage threshold **26.5 V** (`simulation.yaml` `eps.uv_threshold_v`), in-model automatic load shed at **25.0 V** (`eps.load_shed.bus_voltage_v`, restoring at 25.5 V, shedding payload → fpa_cooler → ttc_tx → aocs_wheels → prop), the `bus_critical_v` event at the same **25.0 V**, and the fault-propagation cascade at **23.0 V** — by then the spacecraft is safing itself. There is no 24.5 V rung; the FDIR SoC ladder is separate and runs at 30 / 20 / 10 %.
 
-**Goal:** Damp the rates with the magnetorquers, protect the power posture while the arrays are off-sun, and re-acquire the sun.
-
-**Detumble is slow, and that is correct.** DETUMBLE (mode 2) is a genuine magnetometer-driven B-dot law, `m = −k·dB/dt`, with the dipole saturating at 1.6 A·m² per axis. From a 14 °/s tumble it takes on the order of 3.5e3 s to converge, passing below the 0.5 °/s exit guard at around 1166 s. Expect roughly a halving of rate per orbit; plan for two orbits, not two minutes. Any claim of a fast detumble is wrong.
+**Goal:** Reach the minimum survival configuration, get the arrays sun-pointing, and wait for charging. **No load may be re-enabled until SoC exceeds 30 %**, confirmed on three consecutive samples.
 
 **Possible negative outcomes / deviations:**
 
-- Power posture worsens during recovery (arrays off-sun) → CTG-001 / EMG-006; below 10 % SoC command `OBC_SET_MODE(mode=2)`
-- Rates increasing rather than decreasing → suspect magnetic-model error or torquer polarity; command AOCS OFF, wait one orbit, re-attempt
-- Magnetometer invalid → B-dot is impossible; no detumble path until the magnetometer returns
-- Thermal exceedances develop during tumble → CTG-004 / EMG-005
+- Brown-out reaches the OBC → autonomous reboot likely; CTG-010 / EMG-003 follow-on
+- Battery does not recover even with all loads shed → mission-loss candidate; multi-orbit re-charge attempt
+- Rates above 2 °/s → the arrays cannot be pointed; run EMG-005 step 2 first
+- Solar arrays partially shadowed by attitude → cross with EMG-005
 
 | Step | Action | TC / Code | Confirm | Notes |
 |:----:|:-------|:----------|:--------|:------|
-| 1 | Payload / Thermal: shed immediately to extend battery endurance | `PAYLOAD_SET_MODE(mode=0)` (26); `HEATER_OBC(on=0)` (41) | □ | `eps.power_cons` (0x0106) < 60 W |
-| 2 | AOCS: command DETUMBLE (magnetorquers only) | `AOCS_SET_MODE(mode=2)` (S8 func_id 0) | □ | `aocs.mode` (0x020F) = 2; wheels are not required |
-| 3 | AOCS: monitor rate reduction across orbit 1 | `HK_REQUEST(sid=2)` (S3.27) | □ | All axes < 1.0 °/s by end of first orbit |
-| 4 | AOCS: monitor across orbit 2 | (read SID 2) | □ | All axes < 0.5 °/s and SoC > 15 % |
-| 5 | AOCS: confirm detumble complete | (read SID 2) | □ | All rates < 0.1 °/s sustained for 10 min |
-| 6 | AOCS: command sun acquisition | `AOCS_SET_MODE(mode=3)` (S8 func_id 0) | □ | COARSE_SUN; `aocs.att_error` (0x0217) < 5° within 15 min |
-| 7 | EPS: confirm power-positive, then hold two orbits | (read SID 1) | □ | Both arrays > 0.5 A; SoC trending up |
-| 8 | FD: brief Mission Manager; coordinate multi-orbit recovery if needed | (briefing) | □ | "EMG-002 active"; hand to EMG-001 for staged recovery |
+| 1 | FD: declare power emergency | (FD call) | □ | |
+| 2 | EPS: immediate shed, within 60 s | `PAYLOAD_SET_MODE(mode=0)` (26); `HEATER_OBC(on=0)` (41); `HEATER_THRUSTER(on=0)` (42) | □ | `eps.power_cons` (0x0106) < 50 W within 15 s |
+| 3 | Thermal: leave the battery heater on thermostat, line energised | `EPS_POWER_ON(line_index=5)` (19); `HEATER_BATTERY(on=1)` (40) | □ | `eps.pl_htr_bat` (0x0115) = 1 — the thermostat needs the line |
+| 4 | OBDH: command OBC EMERGENCY | `OBC_SET_MODE(mode=2)` (S8 func_id 50) | □ | `obdh.mode` (0x0300) = 2; HK generation drops to 1/60 s |
+| 5 | AOCS: sun acquisition for maximum generation | `AOCS_SET_MODE(mode=3)` (S8 func_id 0) | □ | COARSE_SUN; arrays > 0.3 A each |
+| 6 | EPS: monitor recovery through the sunlit phase and the next eclipse | (read SID 1) | □ | Bus must stay > 25.0 V through eclipse; recovery is slow |
+| 7 | EPS: hold the restore gate until SoC > 30 % | (read SID 1) | □ | Three consecutive samples; then OBC heater first |
+| 8 | FD: brief Mission Manager; multi-orbit recovery posture | (briefing) | □ | "EMG-002 active"; target ≥ 3 % net SoC gain per orbit |
 
 </div>
 
@@ -8877,37 +9003,7 @@ would push far colder, and this card adopts the flight envelope.)*
 
 <div class="procedure-card procedure-card-emergency" markdown="1">
 
-<div class="procedure-card-header" markdown="1">[TT] EMG-003 — Loss of Communication</div>
-
-**Entry point:** No telemetry for two or more consecutive pass windows (~3 h).
-
-**Goal:** Escalate in a structured way — ground segment, then blind commanding on each transponder, then autonomous-recovery assessment — with decision gates at 6 h, 12 h, 24 h and 48 h since last contact.
-
-**A silent S-band does not mean a silent spacecraft.** EO-Sat-1 carries two transmitters: the S-band prime and a separate UHF whip beacon. PA-off stops S-band telemetry while the beacon carries on sending HK SID 11 from the non-switchable `ttc_rx` line. Search for the beacon before concluding the spacecraft is dead.
-
-**Possible negative outcomes / deviations:**
-
-- Spacecraft autonomous recovery brings it back on the next pass → continue with CTG-010 post-recovery cleanup
-- Sustained silence beyond 48 h → declare formal loss; coordinate with industry partners on radio listening
-- Partial recovery (carrier only, no demod) → CTG-014 + CTG-003 path
-
-| Step | Action | TC / Code | Confirm | Notes |
-|:----:|:-------|:----------|:--------|:------|
-| 1 | Ground Seg: confirm every station, baseband and antenna configuration | (full GS check) | □ | Five-station network; receiver threshold to minimum (−130 dBm) |
-| 2 | TT&C: blind HK request on every visible pass, min elevation 5° | `HK_REQUEST(sid=6)` (S3.27) | □ | Prioritise by maximum elevation |
-| 3 | TT&C: blind switch to the primary transponder, 3× at 10 s spacing | `TTC_SWITCH_PRIMARY` (S8 func_id 63) | □ | Best on a pass above 20° elevation |
-| 4 | TT&C: blind switch to the redundant transponder, 3× at 10 s spacing | `TTC_SWITCH_REDUNDANT` (S8 func_id 64) | □ | Every S8 function-perform is subtype 1 |
-| 5 | TT&C: search for the UHF beacon at every predicted pass | (carrier search) | □ | Beacon tier, HK SID 11 — independent of the S-band PA |
-| 6 | FD: escalate to industry-partner radio listening beyond the 24 h gate | (external comm) | □ | |
-| 7 | FD: brief Mission Manager on customer comms strategy | (briefing) | □ | "EMG-003 active" |
-
-</div>
-
-<div style="page-break-before: always"></div>
-
-<div class="procedure-card procedure-card-emergency" markdown="1">
-
-<div class="procedure-card-header" markdown="1">[OB] EMG-004 — OBC Reboot</div>
+<div class="procedure-card-header" markdown="1">[OB] EMG-003 — OBC Reboot</div>
 
 **Entry point:** At least two independent indicators — `obdh.cpu_load` (0x0302) above 90 % sustained; `obdh.tc_rej_count` (0x0306) incrementing on valid commands; `obdh.mem_errors` (0x031E) rising; the OBC not responding to mode commands; or housekeeping stale for more than 30 s.
 
@@ -8928,7 +9024,7 @@ would push far colder, and this card adopts the flight envelope.)*
 | 5 | SPACON: boot the application image | `OBC_BOOT_APP` (S8 func_id 55) | □ | `obdh.sw_image` (0x0311) = 1. Booting the application does **not** restore the clock |
 | 6 | OBDH: if the OBC does not recover, switch units (dual-keyed) | `OBC_SWITCH_UNIT` (S8 func_id 53) | □ | Confirm `obdh.active_obc` (0x030C) changed |
 | 7 | SPACON: post-recovery, run full CTG-010 cleanup | per CTG-010 | □ | Includes `HK_ENABLE` for SIDs 2–6, clearing beacon mode, and a **clock re-sync**: the reboot returned the OBC to J2000 with `obdh.time_ref` (0x0A13) = 0 (NONE), so re-arm no time-tagged schedule until `SET_TIME` (S9.1) has been accepted |
-| 8 | FD: brief Mission Manager | (briefing) | □ | "EMG-004 closing" |
+| 8 | FD: brief Mission Manager | (briefing) | □ | "EMG-003 closing" |
 
 </div>
 
@@ -8936,7 +9032,69 @@ would push far colder, and this card adopts the flight envelope.)*
 
 <div class="procedure-card procedure-card-emergency" markdown="1">
 
-<div class="procedure-card-header" markdown="1">[SE] EMG-005 — Thermal Runaway</div>
+<div class="procedure-card-header" markdown="1">[TT] EMG-004 — Loss of Communication</div>
+
+**Entry point:** No telemetry for two or more consecutive pass windows (~3 h).
+
+**Goal:** Escalate in a structured way — ground segment, then blind commanding on each transponder, then autonomous-recovery assessment — with decision gates at 6 h, 12 h, 24 h and 48 h since last contact.
+
+**A silent S-band does not mean a silent spacecraft.** EOSAT-1 carries two transmitters: the S-band prime and a separate UHF whip beacon. PA-off stops S-band telemetry while the beacon carries on sending HK SID 11 from the non-switchable `ttc_rx` line. Search for the beacon before concluding the spacecraft is dead.
+
+**Possible negative outcomes / deviations:**
+
+- Spacecraft autonomous recovery brings it back on the next pass → continue with CTG-010 post-recovery cleanup
+- Sustained silence beyond 48 h → declare formal loss; coordinate with industry partners on radio listening
+- Partial recovery (carrier only, no demod) → CTG-014 + CTG-003 path
+
+| Step | Action | TC / Code | Confirm | Notes |
+|:----:|:-------|:----------|:--------|:------|
+| 1 | Ground Seg: confirm every station, baseband and antenna configuration | (full GS check) | □ | Five-station network; receiver threshold to minimum (−130 dBm) |
+| 2 | TT&C: blind HK request on every visible pass, min elevation 5° | `HK_REQUEST(sid=6)` (S3.27) | □ | Prioritise by maximum elevation |
+| 3 | TT&C: blind switch to the primary transponder, 3× at 10 s spacing | `TTC_SWITCH_PRIMARY` (S8 func_id 63) | □ | Best on a pass above 20° elevation |
+| 4 | TT&C: blind switch to the redundant transponder, 3× at 10 s spacing | `TTC_SWITCH_REDUNDANT` (S8 func_id 64) | □ | Every S8 function-perform is subtype 1 |
+| 5 | TT&C: search for the UHF beacon at every predicted pass | (carrier search) | □ | Beacon tier, HK SID 11 — independent of the S-band PA |
+| 6 | FD: escalate to industry-partner radio listening beyond the 24 h gate | (external comm) | □ | |
+| 7 | FD: brief Mission Manager on customer comms strategy | (briefing) | □ | "EMG-004 active" |
+
+</div>
+
+<div style="page-break-before: always"></div>
+
+<div class="procedure-card procedure-card-emergency" markdown="1">
+
+<div class="procedure-card-header" markdown="1">[AOCS] EMG-005 — Loss of Attitude</div>
+
+**Entry point:** Any of `aocs.rate_roll` (0x0204), `rate_pitch` (0x0205) or `rate_yaw` (0x0206) above 2.0 °/s — the spacecraft is tumbling.
+
+**Goal:** Damp the rates with the magnetorquers, protect the power posture while the arrays are off-sun, and re-acquire the sun.
+
+**Detumble is slow, and that is correct.** DETUMBLE (mode 2) is a genuine magnetometer-driven B-dot law, `m = −k·dB/dt`, with the dipole saturating at 1.6 A·m² per axis. From a 14 °/s tumble it takes on the order of 3.5e3 s to converge, passing below the 0.5 °/s exit guard at around 1166 s. Expect roughly a halving of rate per orbit; plan for two orbits, not two minutes. Any claim of a fast detumble is wrong.
+
+**Possible negative outcomes / deviations:**
+
+- Power posture worsens during recovery (arrays off-sun) → CTG-001 / EMG-002; below 10 % SoC command `OBC_SET_MODE(mode=2)`
+- Rates increasing rather than decreasing → suspect magnetic-model error or torquer polarity; command AOCS OFF, wait one orbit, re-attempt
+- Magnetometer invalid → B-dot is impossible; no detumble path until the magnetometer returns
+- Thermal exceedances develop during tumble → CTG-004 / EMG-006
+
+| Step | Action | TC / Code | Confirm | Notes |
+|:----:|:-------|:----------|:--------|:------|
+| 1 | Payload / Thermal: shed immediately to extend battery endurance | `PAYLOAD_SET_MODE(mode=0)` (26); `HEATER_OBC(on=0)` (41) | □ | `eps.power_cons` (0x0106) < 60 W |
+| 2 | AOCS: command DETUMBLE (magnetorquers only) | `AOCS_SET_MODE(mode=2)` (S8 func_id 0) | □ | `aocs.mode` (0x020F) = 2; wheels are not required |
+| 3 | AOCS: monitor rate reduction across orbit 1 | `HK_REQUEST(sid=2)` (S3.27) | □ | All axes < 1.0 °/s by end of first orbit |
+| 4 | AOCS: monitor across orbit 2 | (read SID 2) | □ | All axes < 0.5 °/s and SoC > 15 % |
+| 5 | AOCS: confirm detumble complete | (read SID 2) | □ | All rates < 0.1 °/s sustained for 10 min |
+| 6 | AOCS: command sun acquisition | `AOCS_SET_MODE(mode=3)` (S8 func_id 0) | □ | COARSE_SUN; `aocs.att_error` (0x0217) < 5° within 15 min |
+| 7 | EPS: confirm power-positive, then hold two orbits | (read SID 1) | □ | Both arrays > 0.5 A; SoC trending up |
+| 8 | FD: brief Mission Manager; coordinate multi-orbit recovery if needed | (briefing) | □ | "EMG-005 active"; hand to EMG-001 for staged recovery |
+
+</div>
+
+<div style="page-break-before: always"></div>
+
+<div class="procedure-card procedure-card-emergency" markdown="1">
+
+<div class="procedure-card-header" markdown="1">[SE] EMG-006 — Thermal Runaway</div>
 
 **Entry point:** A heater circuit stuck ON with its zone temperature rising uncontrollably, despite CTG-004 actions.
 
@@ -8946,7 +9104,7 @@ would push far colder, and this card adopts the flight envelope.)*
 
 **Possible negative outcomes / deviations:**
 
-- Battery zone runaway → loss of capacity / cell damage; may push toward EMG-006
+- Battery zone runaway → loss of capacity / cell damage; may push toward EMG-002
 - Payload zone runaway → permanent payload damage if not arrested; safe the payload immediately
 - Runaway driven by attitude (panel sun-stare) → coordinate with AOCS for a reorientation
 - Multiple zones runaway → EMG-001 candidate
@@ -8960,37 +9118,7 @@ would push far colder, and this card adopts the flight envelope.)*
 | 5 | All positions: shed every other load contributing heat to the zone | (per zone map) | □ | Including the payload if applicable |
 | 6 | Thermal: monitor the trend; if still rising, escalate to EMG-001 | (read SID 3) | □ | Decision logged |
 | 7 | Thermal: on recovery, restore the line and hand back to the thermostat | `EPS_POWER_ON(line_index=…)` (19); `HEATER_AUTO_MODE(circuit=…)` (45) | □ | Do not leave the battery without freeze protection |
-| 8 | FD: brief Mission Manager on potential hardware damage | (briefing) | □ | "EMG-005 active" |
-
-</div>
-
-<div style="page-break-before: always"></div>
-
-<div class="procedure-card procedure-card-emergency" markdown="1">
-
-<div class="procedure-card-header" markdown="1">[FE] EMG-006 — Total Power Failure</div>
-
-**Entry point:** `eps.bat_soc` (0x0101) < 10 % **or** `eps.bus_voltage` (0x0105) < 26.0 V. The undervoltage chain in the tree is: FDIR undervoltage threshold **26.5 V** (`simulation.yaml` `eps.uv_threshold_v`), in-model automatic load shed at **25.0 V** (`eps.load_shed.bus_voltage_v`, restoring at 25.5 V, shedding payload → fpa_cooler → ttc_tx → aocs_wheels → prop), the `bus_critical_v` event at the same **25.0 V**, and the fault-propagation cascade at **23.0 V** — by then the spacecraft is safing itself. There is no 24.5 V rung; the FDIR SoC ladder is separate and runs at 30 / 20 / 10 %.
-
-**Goal:** Reach the minimum survival configuration, get the arrays sun-pointing, and wait for charging. **No load may be re-enabled until SoC exceeds 30 %**, confirmed on three consecutive samples.
-
-**Possible negative outcomes / deviations:**
-
-- Brown-out reaches the OBC → autonomous reboot likely; CTG-010 / EMG-004 follow-on
-- Battery does not recover even with all loads shed → mission-loss candidate; multi-orbit re-charge attempt
-- Rates above 2 °/s → the arrays cannot be pointed; run EMG-002 step 2 first
-- Solar arrays partially shadowed by attitude → cross with EMG-002
-
-| Step | Action | TC / Code | Confirm | Notes |
-|:----:|:-------|:----------|:--------|:------|
-| 1 | FD: declare power emergency | (FD call) | □ | |
-| 2 | EPS: immediate shed, within 60 s | `PAYLOAD_SET_MODE(mode=0)` (26); `HEATER_OBC(on=0)` (41); `HEATER_THRUSTER(on=0)` (42) | □ | `eps.power_cons` (0x0106) < 50 W within 15 s |
-| 3 | Thermal: leave the battery heater on thermostat, line energised | `EPS_POWER_ON(line_index=5)` (19); `HEATER_BATTERY(on=1)` (40) | □ | `eps.pl_htr_bat` (0x0115) = 1 — the thermostat needs the line |
-| 4 | OBDH: command OBC EMERGENCY | `OBC_SET_MODE(mode=2)` (S8 func_id 50) | □ | `obdh.mode` (0x0300) = 2; HK generation drops to 1/60 s |
-| 5 | AOCS: sun acquisition for maximum generation | `AOCS_SET_MODE(mode=3)` (S8 func_id 0) | □ | COARSE_SUN; arrays > 0.3 A each |
-| 6 | EPS: monitor recovery through the sunlit phase and the next eclipse | (read SID 1) | □ | Bus must stay > 25.0 V through eclipse; recovery is slow |
-| 7 | EPS: hold the restore gate until SoC > 30 % | (read SID 1) | □ | Three consecutive samples; then OBC heater first |
-| 8 | FD: brief Mission Manager; multi-orbit recovery posture | (briefing) | □ | "EMG-006 active"; target ≥ 3 % net SoC gain per orbit |
+| 8 | FD: brief Mission Manager on potential hardware damage | (briefing) | □ | "EMG-006 active" |
 
 </div>
 
@@ -9000,9 +9128,9 @@ would push far colder, and this card adopts the flight envelope.)*
 
 See the simulator's
 `configs/eosat1/procedures/procedure_index.yaml` for the
-authoritative list of all **67** procedures with file paths:
-LEOP-001 to LEOP-007, COM-001 to COM-013, NOM-001 to **NOM-013**,
-CTG-001 to **CTG-028**, and EMG-001 to EMG-006. The following
+authoritative list of all **70** procedure IDs (69 active; CTG-018 is retired in favour of CTG-021) with file paths:
+LEOP-001 to LEOP-007, COM-001 to COM-013, NOM-001 to **NOM-014**,
+CTG-001 to **CTG-030**, and EMG-001 to EMG-006. The following
 procedures are referenced in pass plans but are not expanded into
 one-per-page cards in this catalogue because their steps are
 either routine cleanup (closeout logs, ticket triage, trend
@@ -9022,7 +9150,8 @@ export) or are placeholders awaiting simulator content:
   **NOM-008 is Clock Synchronisation** (`nominal/clock_sync.md`)
   — the two are commonly transposed, and any reference to
   "NOM-006 (clock_sync.md)" is wrong. **NOM-013 Orbit
-  Maintenance Manoeuvre Execution** closes the series. The book's
+  Maintenance Manoeuvre Execution** and **NOM-014 End-of-Life
+  Disposal** close the series. The book's
   two additional nominal cards, **Pass Plan Upload** and
   **Long-Term Trend Review**, have no shipped simulator
   counterpart and are no longer left free-floating: the pass plan
@@ -9039,30 +9168,18 @@ export) or are placeholders awaiting simulator content:
   The cards in this textbook are condensed; the simulator files
   carry the full step lists.
 
-**Book-to-simulator ID map for the contingency cards.** Several
-book CTG numbers name a different card in the shipped index.
-Nothing is being renumbered on either side; read across before
-opening a file.
-
-| Book card | Simulator ID | Simulator file |
-|:---|:---|:---|
-| CTG-005 Battery Anomaly | **CTG-013** | `contingency/battery_cell_failure.md` |
-| CTG-006 Propulsion Anomaly | **CTG-028** | `contingency/propulsion_anomaly.md` |
-| CTG-009 IMU / Gyro Anomaly | *(no shipped card; see CTG-025)* | `contingency/aocs_sensor_loss_recovery.md` |
-| CTG-011 Mass Memory ECC | **CTG-016** | `contingency/memory_segment_failure.md` |
-| CTG-013 Solar Array Underperformance | **CTG-009** | `contingency/solar_array_degradation.md` |
-| CTG-016 Payload Mode Anomaly | **CTG-006** | `contingency/payload_anomaly.md` |
-| CTG-018 TC Reject Rate Anomaly | *(no shipped card; sim CTG-018 is Boot Loader Recovery)* | — |
-
-All other book CTG numbers match the shipped index directly.
-Sim CTG-005 (EPS Safe Mode), CTG-011 (OBC Redundancy Switchover)
-and CTG-018 (Boot Loader Recovery) have no dedicated book card;
-their content is reachable through CTG-001, CTG-017/CTG-022 and
-CTG-021 respectively.
+Three simulator cards have no card of their own in this book:
+CTG-005 EPS Safe Mode (its content is reached through CTG-001),
+CTG-011 OBC Redundancy Switchover (through CTG-017 / CTG-022) and
+CTG-018 Boot Loader Recovery, which is retired in favour of CTG-021
+OBC Bootloader Recovery. The book's two former consolidations,
+CTG-B01 (IMU / Gyro Anomaly) and CTG-B02 (TC Reject Rate Anomaly),
+are now the simulator cards **CTG-029** Gyro Failure Recovery and
+**CTG-030** Telecommand Rejection and Verification Failure.
 
 **Eight cards are machine-runnable** from the MCS Procedures tab:
 NOM-002, NOM-003, NOM-004, NOM-008, NOM-009, CTG-001, CTG-008 and
-sim EMG-006 (Thermal Runaway — the book's EMG-005). NOM-002/003/004
+EMG-006 (Thermal Runaway). NOM-002/003/004
 and NOM-009 are linked to planner activity types
 (`imaging_pass`, `data_dump`, `orbit_manoeuvre`,
 `housekeeping_collection`); NOM-008, CTG-001, CTG-008 and the
@@ -9080,8 +9197,8 @@ the simulator procedure file directly before any commanding.
 
 **Three things in the tree that are newer than every printing of this book.**
 (1) The mission phase is now a **telecommand**,
-`SYS_SET_MISSION_PHASE` (S8 func_id 120): LEOP-007 step 15 declares
-COMMISSIONING (5) and COM-013 step 7 declares NOMINAL (6). Any
+`SYS_SET_MISSION_PHASE` (S8 func_id 120): LEOP-003 step 7 declares
+COMMISSIONING (5) and COM-013 step 4 declares NOMINAL (6). Any
 statement elsewhere that the phase is console-only, or that
 `SET_PHASE` is an alias of `OBC_BOOT_APP`, is superseded — that
 alias was removed. (2) The OBC carries an **independent clock**
@@ -9093,6 +9210,16 @@ this chapter ends in a re-sync. (3) The **reaction wheels must be
 explicitly enabled** with `AOCS_ENABLE_WHEEL` (S8 func_id 3) in
 COM-004; the bootloader leaves them off and nothing else turns
 them on.
+
+<small>*Historical note — numbering in earlier printings.* Before
+October 2026 this book numbered twelve contingency and emergency
+cards differently from the simulator. Old → current: EMG-002 →
+EMG-005, EMG-003 → EMG-004, EMG-004 → EMG-003, EMG-005 → EMG-006,
+EMG-006 → EMG-002; CTG-005 → CTG-013, CTG-006 → CTG-028, CTG-011 →
+CTG-016, CTG-013 → CTG-009, CTG-016 → CTG-006; the book-only cards
+CTG-009 (IMU / Gyro) and CTG-018 (TC Reject Rate) became CTG-B01 and
+CTG-B02, and in October 2026 the simulator cards CTG-029 and CTG-030.
+Every other ID was already the simulator's.</small>
 
 ---
 
@@ -9289,7 +9416,7 @@ Table 15.6 — AOCS — attitude & orbit control commands.
 
 | Command | Purpose |
 |---|---|
-| `AOCS_SET_MODE` | Set AOCS mode (0=OFF, 1=SAFE_BOOT, 2=DETUMBLE, 3=COARSE_SUN, 4=NOMINAL_NADIR, 5=FINE_POINT, 6=SLEW, 7=DESATURATION, 8=ECLIPSE_PROPAGATE, 9=INERTIAL). Mode 5 is refused with TM(1,8) unless the `aocs.fine_ready` precondition bitmask 0x02C5 reads 0 |
+| `AOCS_SET_MODE` | Set AOCS mode (0=OFF, 1=SAFE_BOOT, 2=DETUMBLE, 3=COARSE_SUN, 4=NOMINAL, 5=FINE_POINT, 6=SLEW, 7=DESAT, 8=ECLIPSE, 9=INERTIAL). Mode 5 is refused with TM(1,8) unless the `aocs.fine_ready` precondition bitmask 0x02C5 reads 0 |
 | `AOCS_DESATURATE` | Start wheel desaturation. A dump runs 20–50 min, inhibits imaging while it runs, has a timeout, and returns to the pre-desat mode |
 | `AOCS_DISABLE_WHEEL` | Disable specific reaction wheel (`wheel_idx` 0–3) |
 | `AOCS_ENABLE_WHEEL` | Enable specific reaction wheel |
@@ -9427,7 +9554,7 @@ Table 15.11 — TT&C — telemetry, tracking & command commands.
 | `TTC_BEACON_TX_ON` | Switch the UHF beacon **transmitter** on |
 | `TTC_BEACON_TX_OFF` | Switch the UHF beacon transmitter off — caution, this removes the lifeline |
 
-EO-Sat-1 flies **two transmitters**: an S-band prime chain and a
+EOSAT-1 flies **two transmitters**: an S-band prime chain and a
 separate UHF whip beacon at 437.5 MHz, 1 W into a dipole. The beacon
 emits HK SID 11 and only SID 11, whenever the S-band chain is not
 radiating. That is the teaching point behind `TTC_PA_OFF`: pull the
@@ -9438,9 +9565,9 @@ rather than a mystery.
 
 **PROP — propulsion**
 
-EO-Sat-1 carries a 1U green monopropellant module with 66.9 m/s of
-total delta-V, flown for debris avoidance and limited orbit
-maintenance. Arming is deliberately two-step, and a burn re-fits the
+EOSAT-1 carries a 1U green monopropellant module with 66.9 m/s of
+total delta-V, flown for debris avoidance, limited orbit
+maintenance and the end-of-life disposal burn (NOM-014). Arming is deliberately two-step, and a burn re-fits the
 element set, so passes and eclipses genuinely move afterwards.
 
 Table 15.12 — PROP — propulsion commands.
@@ -9572,8 +9699,8 @@ A strong AOCS engineer does this:
    yellow."
 2. **Predicts.** "At the present rate 0x02BA reaches the 90 %
    red inside the hour, control error goes to about 0.048 and
-   total to 0.051 deg. At 450 km that is a geolocation error
-   (0x02C7) of roughly 400 m, against a 29.3 m ground sample —
+   total to 0.051 deg. At 513 km that is a geolocation error
+   (0x02C7) of roughly 460 m, against a 33.4 m ground sample —
    more than a dozen pixels. That is not a science-grade
    product."
 3. **Recommends.** "FD, AOCS — recommend we command the desat
@@ -9599,8 +9726,9 @@ A strong EPS engineer does this:
 1. **Measures.** Reads every one of the nine line currents
    (0x0118–0x011F and 0x014B; the bus total is 0x0148), totals them.
    They sum to 29.3 W. Predicted orbit-average nominal is
-   28.7 W. Difference: 0.6 W steady-state extra draw — against
-   a nominal margin of only about +9 W, that is worth chasing.
+   28.8 W. Difference: 0.5 W steady-state extra draw — small
+   against the +16.3 W nominal margin, but unexplained, and that
+   is worth chasing.
 2. **Hunts the line.** Compares each line current to nominal:
    most are within 5%, but the `htr_bat` duty cycle is at
    18% when predicted 8%. Extra draw: ~0.4 W. Most of the
@@ -9704,8 +9832,8 @@ mission.
 
 First Light succeeds. Quality assessment passes — mean DN
 nominal, contrast nominal, geo-registration error 165 m, about
-six pixels at the imager's 29.3 m ground sample distance and
-inside budget. The strip is the full 240 km swath. Mission
+five pixels at the imager's 33.4 m ground sample distance and
+inside budget. The strip is the full 273 km swath. Mission
 Manager drafts the bulletin.
 
 A weak Payload operator celebrates and moves on. They miss

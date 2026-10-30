@@ -22,8 +22,14 @@
 # rule's chosen id does not agree with its own description (1001, 1002, 1003,
 # 2004) that is trigger drift, an FDIR-domain decision owned by Flight Ops; it
 # is recorded in tests/test_content/test_s19_rules_content.py (KNOWN_TRIGGER_DRIFT)
-# rather than silently "fixed" here. The same applies to the 13 rules whose
+# rather than silently "fixed" here. The same applies to the rules whose
 # action_func_id contradicts their description (KNOWN_MISROUTED).
+#
+# 2026-10-30: following the author's ruling on ea 3003 (OBC overtemp must put
+# the OBC in SAFE, not drive the battery heater), every rule whose function id
+# or missing argument bytes were unambiguous given its own description was
+# corrected: 3001, 3002, 3003, 4002, 5003, 5004, 6001, 6002. The rest
+# (1001-1005, 5001, 5002) stay pinned in KNOWN_MISROUTED for Flight Ops.
 #
 # Loaded at engine startup and registered with the S19 framework.
 
@@ -110,7 +116,8 @@ s19_rules:
     trigger:
       kind: param          # S12 monitor on 0x0408 TCS FPA temperature
       id: 0x0408   # was: TCS FPA temperature (from S12)
-    action_func_id: 20   # S8 func 20: Payload mode OFF
+    action_func_id: 20   # S8 func 20: EPS_POWER_OFF
+    action_data: [3]     # line 3 = payload. Without the byte the handler refused every firing (missing `line_index`), 2026-10-30.
     description: "TCS FPA Overtemp -> Payload Off"
     enabled: true
 
@@ -119,7 +126,7 @@ s19_rules:
     trigger:
       kind: param          # S12 monitor on 0x0407 TCS battery temperature
       id: 0x0407   # was: TCS Battery temperature (from S12)
-    action_func_id: 12   # S8 func 12: Transponder TX OFF (reduce power)
+    action_func_id: 67   # S8 func 67: TTC_PA_OFF (transponder TX off). Was func 12 = AOCS_BEGIN_ACQUISITION, misrouted (fixed 2026-10-30).
     description: "TCS Battery Overtemp -> Transponder TX Off"
     enabled: true
 
@@ -128,7 +135,8 @@ s19_rules:
     trigger:
       kind: param          # S12 monitor on 0x0406 TCS OBC temperature
       id: 0x0406   # was: TCS OBC temperature (from S12)
-    action_func_id: 40   # S8 func 40: OBDH set_mode SAFE
+    action_func_id: 50   # S8 func 50: OBC_SET_MODE. Was func 40 = HEATER_BATTERY with no argument (author ruling 2026-10-30).
+    action_data: [1]     # mode 1 = SAFE
     description: "TCS OBC Overtemp -> OBC Safe Mode"
     enabled: true
 
@@ -148,7 +156,7 @@ s19_rules:
     trigger:
       kind: param          # S12 monitor on 0x050F TTC PA temperature
       id: 0x050F   # was: TTC PA temperature (from S12)
-    action_func_id: 54   # S8 func 54: PA OFF
+    action_func_id: 67   # S8 func 67: TTC_PA_OFF. Was func 54 = OBC_SELECT_BUS with no argument (fixed 2026-10-30).
     description: "TTC PA Overheat -> PA Off"
     enabled: true
 
@@ -186,7 +194,7 @@ s19_rules:
     trigger:
       kind: param          # S12 monitor on 0x031E OBDH memory errors
       id: 0x031E   # was: OBDH memory errors (from S12)
-    action_func_id: 41   # S8 func 41: memory scrub
+    action_func_id: 51   # S8 func 51: OBC_MEMORY_SCRUB. Was func 41 = HEATER_OBC with no argument (fixed 2026-10-30).
     description: "OBDH Memory Errors -> Memory Scrub"
     enabled: true
 
@@ -195,7 +203,8 @@ s19_rules:
     trigger:
       kind: param          # S12 monitor on 0x0302 OBDH CPU load
       id: 0x0302   # was: OBDH CPU_load (from S12)
-    action_func_id: 40   # S8 func 40: set_mode SAFE
+    action_func_id: 50   # S8 func 50: OBC_SET_MODE. Was func 40 = HEATER_BATTERY with no argument — same defect as ea 3003 (fixed 2026-10-30).
+    action_data: [1]     # mode 1 = SAFE (cf. ruling Q12: CPU > 90 % -> OBC_SET_MODE(1))
     description: "OBDH CPU Overload -> Safe Mode"
     enabled: true
 
@@ -205,7 +214,8 @@ s19_rules:
     trigger:
       kind: param          # S12 monitor on 0x0604 payload storage used
       id: 0x0604   # was: Payload storage_used (from S12)
-    action_func_id: 20   # S8 func 20: Payload mode OFF
+    action_func_id: 20   # S8 func 20: EPS_POWER_OFF
+    action_data: [3]     # line 3 = payload. Without the byte the handler refused every firing (missing `line_index`), 2026-10-30.
     description: "Payload Storage Full -> Stop Imaging"
     enabled: true
 
@@ -214,7 +224,8 @@ s19_rules:
     trigger:
       kind: param          # S12 monitor on 0x0601 payload FPA temperature
       id: 0x0601   # was: Payload FPA temperature (from S12)
-    action_func_id: 21   # S8 func 21: set_scene (standby mode)
+    action_func_id: 26   # S8 func 26: PAYLOAD_SET_MODE. Was func 21 = EPS_RESET_OC_FLAG with no argument (fixed 2026-10-30).
+    action_data: [1]     # mode 1 = STANDBY
     description: "Payload FPA Overtemp -> Payload Standby"
     enabled: true
 

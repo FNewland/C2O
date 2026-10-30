@@ -181,7 +181,7 @@ et surveiller toute récurrence.
    envoyait `FUNC_PERFORM func_id=21`, qui correspond à `EPS_RESET_OC_FLAG`. Utiliser
    `OBC_SELECT_BUS` (func 54) pour le bus CAN et `OBC_SWITCH_UNIT` (func 53)
    pour l'OBC redondant ; une image applicative corrompue se récupère en
-   la rechargeant (CTG-018).
+   la rechargeant (CTG-021).
 3. **TC:** `OBC_REBOOT` (Service 8, Subtype 1, func_id 52) --- redémarrer.
 4. Attendre 90 s et vérifier que `obdh.sw_image` (0x0311) = 1 (application).
 5. En cas de réussite : le banc d'image principal est probablement corrompu. Programmer un rechargement du logiciel

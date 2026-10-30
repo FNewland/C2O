@@ -109,8 +109,8 @@
   },
   {
    "id": "smo-simulator-instructor-operator-guide/parameter-display/parameter-cards/obdh-on-board-data-handling",
-   "en_hash": "e796e40b2776cc43",
-   "fr_hash": "4f3194c7420ade88"
+   "en_hash": "543257fa41a6b6a3",
+   "fr_hash": "b465532a640cf6b4"
   },
   {
    "id": "smo-simulator-instructor-operator-guide/parameter-display/parameter-cards/tt-c-telemetry-tracking-command",
@@ -234,8 +234,8 @@
   },
   {
    "id": "smo-simulator-instructor-operator-guide/quick-start-example/training-scenario-post-separation-leop",
-   "en_hash": "3f7a6cc8881c1486",
-   "fr_hash": "850d2b698da820a1"
+   "en_hash": "8b4032ccf6d66f9e",
+   "fr_hash": "2c684ab86efcada6"
   },
   {
    "id": "smo-simulator-instructor-operator-guide/advanced-api-endpoints",
@@ -248,5 +248,5 @@
    "fr_hash": "e8f19b113b5a44d4"
   }
  ],
- "en_commit": "3e80564"
+ "en_commit": "c4a140a"
 }

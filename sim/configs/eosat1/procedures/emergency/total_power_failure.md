@@ -7,7 +7,7 @@
 ## Purpose
 Emergency procedure for EOSAT-1 when battery state of charge falls below 10% or bus voltage
 drops below 26V. This procedure defines immediate load shedding to reach minimum survival
-configuration (~45W), ensures solar array sun-pointing for maximum power generation, and
+configuration (~20W), ensures solar array sun-pointing for maximum power generation, and
 provides a staged recovery plan. No loads may be re-enabled until SoC exceeds 30%.
 
 ## Prerequisites
@@ -20,18 +20,21 @@ provides a staged recovery plan. No loads may be re-enabled until SoC exceeds 30
 ## Power Budget --- Minimum Survival Configuration
 | Subsystem | Component | Power (W) | Status |
 |---|---|---|---|
-| OBC | Flight computer (emergency mode) | 15 | ON --- essential |
-| TT&C | Transponder (receive only) | 5 | ON --- essential |
-| AOCS | Magnetorquers + sun sensor | 10 | ON --- for sun acquisition |
-| EPS | Power control unit | 5 | ON --- essential |
-| TCS | Battery heater (thermostat) | 8 | THERMOSTAT --- survival only |
+| OBC | Flight computer | 6 | ON --- essential |
+| TT&C | Receiver (RX) | 1.5 | ON --- essential |
+| AOCS | COARSE_SUN (magnetorquers + sun sensors) | 4 | ON --- for sun acquisition |
+| TCS | Battery heater, when the thermostat has it on | 8 | THERMOSTAT --- survival only |
 | Payload | Instrument | 0 | OFF |
 | TCS | OBC heater | 0 | OFF |
-| AOCS | Reaction wheels (standby) | 2 | STANDBY |
-| **Total** | | **~45W** | |
+| **Total** | | **~20W** | |
+| TT&C | Transmitter, in a pass only | +5 | ON during passes (~25W in a pass) |
+
+These are the loads the simulator bills (`subsystems/eps.yaml`: OBC 6 W, RX
+1.5 W, TX 5 W; battery heater 8 W; AOCS 4 W in COARSE_SUN). The < 50W GO
+limit used in Step 1 is the load-shed check, not the survival budget.
 
 Solar array capability at sun-pointing: ~64W (BOL, wings deployed, ~513 km SSO). Eclipse fraction: ~36–38%.
-Orbit-average power generation at sun-pointing: ~35W. Margin over survival: limited — careful load management required.
+Orbit-average power generation at sun-pointing: ~35W. Margin over survival: ~15W orbit-average — keep it by restoring nothing until the Step 8 gate.
 
 ## Procedure Steps
 
@@ -80,7 +83,7 @@ generation rate to 1/60s, disables non-essential data recording.
 **Monitor:** `eps.bus_voltage` (0x0105) --- must be stable or increasing.
 **Monitor:** `eps.bat_voltage` (0x0100) --- verify battery accepting charge (voltage > 27V).
 **Monitor:** `eps.power_gen` (0x0107) vs `eps.power_cons` (0x0106) --- confirm power-positive.
-**Expected:** At ~32W minimum load and ~64W peak generation (~35W orbit-average), SoC recovery will be slow — expect ~1% per sunlit phase (~60 min).
+**Expected:** At ~20W survival load (~25W in a pass) and ~64W peak generation (~35W orbit-average), the orbit-average margin is ~15W. Track the measured SoC trend: that, not this estimate, decides the recovery.
 **GO/NO-GO:** Power-positive state confirmed (generation > consumption).
 
 ### Step 6 --- Eclipse Monitoring (CRITICAL)
@@ -89,7 +92,7 @@ generation rate to 1/60s, disables non-essential data recording.
 **Monitor:** `eps.bus_voltage` (0x0105) throughout eclipse --- must remain > 25.0V.
 **Monitor:** `tcs.temp_battery` (0x0407) --- verify battery heater thermostat activates if needed.
 **Duration:** Eclipse lasts ~34–36 minutes at the ~513 km SSO.
-**Expected drain:** ~32W x 35 min = ~19 Wh consumed. Battery capacity 100 Wh, so ~19% SoC consumed.
+**Expected drain:** ~20W x 35 min = ~12 Wh consumed. Battery capacity 100 Wh, so ~12% SoC consumed.
 **GO/NO-GO:** Bus voltage remains > 25.0V throughout eclipse. If voltage drops below 25.0V,
 under-voltage protection will disconnect non-essential buses automatically.
 
@@ -114,7 +117,7 @@ under-voltage protection will disconnect non-essential buses automatically.
 ## Recovery Staging Thresholds
 | SoC Threshold | Allowed Action | Estimated Time from Emergency |
 |---|---|---|
-| < 10% | Survival loads only (~45W) | T+0 (entry condition) |
+| < 10% | Survival loads only (~20W) | T+0 (entry condition) |
 | 10--20% | No changes, monitoring only | T+3 to T+6 hours |
 | 20--30% | No changes, prepare recovery plan | T+6 to T+10 hours |
 | 30--40% | Restore OBC heater, increase TM rate | T+10 to T+14 hours |

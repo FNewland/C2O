@@ -92,17 +92,21 @@ _____________________________________________________________
 
 # Worksheet WB-5.1 — Position score cards (round-robin)
 
-**Use:** Monday afternoon 13:00 – 15:00. One card per position. As
-each station's 12-minute slot ends, write a one-sentence
+**Use:** Monday afternoon 13:00 – 15:00: a 15-minute briefing, then
+seven 15-minute stations, one per configured MCS console
+(`configs/eosat1/mcs/positions.yaml`). One card per console. As
+each station's 15-minute slot ends, write a one-sentence
 observation under "Insight" and a one-sentence question under
-"Question to ask".
+"Question to ask". Mission Manager and Ground Segment are room
+roles, not consoles; the ground-segment checks sit on the TT&C card.
 
 **Name:** _________________________________
 
 ## 5.1.1 Flight Director
 
 - **Task:** Run a GO/NO-GO round on the live dashboard. Poll three
-  positions for *go for NOOP heartbeat*; record the responses.
+  positions for *go for* `CONNECTION_TEST` (S17.1) — there is no
+  NOOP or heartbeat command on this spacecraft; record the responses.
 - **Polled positions:** _____________ , _____________ , _____________
 - **Responses recorded (verbatim):**
   - _____________________________________________
@@ -112,23 +116,27 @@ observation under "Insight" and a one-sentence question under
 - **Insight:** _________________________________________________
 - **Question to ask:** _________________________________________
 
-## 5.1.2 SPACON / FDIR & Systems
+## 5.1.2 Power & Thermal
 
-- **Task:** Walk through one FDIR rule on the FDIR panel; explain
-  its trigger, threshold, severity, and the contingency procedure
-  it points to.
-- **Rule name selected:** _____________________________
-- **Trigger parameter:** _____________________________
-- **Threshold:** ___________________   **Persistence:** _________
-- **Severity:** ____   **Recommended procedure:** ________________
+- **Task:** Predict battery SoC at exit of the next eclipse, then
+  identify which heater is at the highest duty cycle and predict
+  whether it will saturate next eclipse.
+- **SoC at eclipse entry:** ____ %   **Eclipse duration:** ____ min  (33.2–35.2 min over the year)
+- **Predicted SoC at exit:** ____ %   **(Method:** P_avg × t / E_batt,
+  with E_batt = **100 Wh** and the nominal orbit-average load  P_avg ≈ **28.8 W** **)**
+- **Cross-check vs eclipse model:** ☐ matches  ☐ off by ____ %
+- **Heater with highest duty:** _______________   **Duty:** ____ %
+- **Predicted next-eclipse duty:** ____ %   **Will saturate?** ☐ yes ☐ no
 - **Insight:** _________________________________________________
 - **Question to ask:** _________________________________________
 
-## 5.1.3 AOCS Engineer
+## 5.1.3 Flight Dynamics
 
 - **Task:** Read `aocs.att_error` (0x0217) and verify it is inside
   the NOMINAL (mode 4, nadir-tracking) budget of < 1.0°. In
-  FINE_POINT (mode 5) the budget is < 0.1°.
+  FINE_POINT (mode 5) the budget is < 0.1°. Then compute AOS, TCA
+  and LOS for the next Iqaluit pass and compare with the MPS
+  contact schedule.
 - **Reading:** ______ °   **In band?** ☐ yes  ☐ no
 - **AOCS mode (`aocs.mode` 0x020F):** ____ (0 OFF, 1 SAFE_BOOT,
   2 DETUMBLE, 3 COARSE_SUN, 4 NOMINAL, 5 FINE_POINT, 6 SLEW,
@@ -136,48 +144,32 @@ observation under "Insight" and a one-sentence question under
 - **Star tracker status** (`aocs.st1_status` 0x0240 / `aocs.st2_status`
   0x0243; 0=off, 1=boot, 2=tracking, 3=blind, 4=failed):
   ST1 ____  ST2 ____   **Selected** (`aocs.st_selected` 0x0244): ____
-- **Wheel speeds (RPM, read-only)** `aocs.rw1..rw4_speed`
-  (0x0207–0x020A): 1=____ 2=____ 3=____ 4=____
+- **Next Iqaluit pass:** AOS ______ TCA ______ LOS ______ max el ____ °
+- **MPS agreement:** ☐ exact  ☐ off by < 5 s  ☐ off by > 5 s
 - **Insight:** _________________________________________________
 - **Question to ask:** _________________________________________
 
-## 5.1.4 EPS Engineer
+## 5.1.4 TT&C
 
-- **Task:** Predict battery SoC at exit of the next eclipse.
-- **SoC at eclipse entry:** ____ %   **Eclipse duration:** ____ min
-- **Predicted SoC at exit:** ____ %   **(Method:** P_avg × t / E_batt,
-  with E_batt = **100 Wh** and the nominal orbit-average load
-  P_avg ≈ **28.7 W** **)**
-- **Cross-check vs eclipse model:** ☐ matches  ☐ off by ____ %
-- **Insight:** _________________________________________________
-- **Question to ask:** _________________________________________
-
-## 5.1.5 Thermal Engineer
-
-- **Task:** Identify which heater is currently at the highest
-  duty cycle. Predict whether it will saturate next eclipse.
-- **Heater with highest duty:** _______________   **Duty:** ____ %
-- **Predicted next-eclipse duty:** ____ %   **Will saturate?** ☐ yes ☐ no
-- **Other thermal concerns:** ___________________________________
-- **Insight:** _________________________________________________
-- **Question to ask:** _________________________________________
-
-## 5.1.6 TT&C Engineer
-
-- **Task:** Walk the TM rate ladder at AOS. The ladder has three
+- **Task:** Walk the TM rate ladder at AOS and confirm which ground
+  station is carrying the pass. The ladder has three
   rungs — **BEACON 1 kbps / LOW 16 kbps / HIGH 128 kbps**
   (`ttc.tm_data_rate` 0x0506 in bps, `ttc.tm_tier` 0x0539 =
   0/1/2). LOW is the routine operations rung; HIGH is for dumps
   only and needs DOWNLINK mode on (func 79) plus elevation ≥ 10°.
   BEACON is not selectable with `TTC_SET_DATA_RATE` (S8 func 65).
+  EOSAT-1 flies the **five-station** teaching baseline (`orbit.yaml`).
 - **Beacon rate (kbps):** ______   **Routine LOW rate (kbps):** ______
   **Dump HIGH rate (kbps):** ______
 - **Link margin post-transition (dB):** ______ (`ttc.link_margin` 0x0503)
 - **BER reading (`ttc.ber` 0x050C, log10):** ____________________
+- **Active station (`ttc.active_gs` 0x0523):** ______  ☐ Iqaluit
+  ☐ Troll ☐ Svalbard ☐ Inuvik ☐ O'Higgins
+- **Baseband config (rate, encoding):** ______________________
 - **Insight:** _________________________________________________
 - **Question to ask:** _________________________________________
 
-## 5.1.7 Payload Operations
+## 5.1.5 Payload Operations
 
 - **Task:** Schedule a single imaging session via MPS. Confirm FPA
   temperature is at setpoint before commanding.
@@ -191,28 +183,32 @@ observation under "Insight" and a one-sentence question under
 - **Insight:** _________________________________________________
 - **Question to ask:** _________________________________________
 
-## 5.1.8 FDS / Orbit Analyst
+## 5.1.6 FDIR / Systems
 
-- **Task:** Compute AOS, TCA, LOS for the next two Iqaluit passes.
-  Compare to the MPS contact schedule.
-- **Pass 1:** AOS ______ TCA ______ LOS ______ max el ____ °
-- **Pass 2:** AOS ______ TCA ______ LOS ______ max el ____ °
-- **MPS agreement:** ☐ exact  ☐ off by < 5 s  ☐ off by > 5 s
+- **Task:** Walk through one FDIR rule on the FDIR panel; explain
+  its trigger, threshold, severity, and the contingency procedure
+  it points to.
+- **Rule name selected:** _____________________________
+- **Trigger parameter:** _____________________________
+- **Threshold:** ___________________   **Persistence:** _________
+- **Severity:** ____   **Recommended procedure:** ________________
 - **Insight:** _________________________________________________
 - **Question to ask:** _________________________________________
 
-## 5.1.9 Ground Segment Engineer
+## 5.1.7 Propulsion
 
-- **Task:** Verify the network is tracking the spacecraft for the
-  next pass. EO-Sat-1 flies the **five-station** teaching baseline
-  (`orbit.yaml`). Note the baseband configuration in use.
-- **Iqaluit (63.75 N):** ☐ TRACKING ☐ NOT TRACKING
-- **Troll (72.01 S):** ☐ TRACKING ☐ NOT TRACKING
-- **Svalbard (78.23 N):** ☐ TRACKING ☐ NOT TRACKING
-- **Inuvik (68.32 N):** ☐ TRACKING ☐ NOT TRACKING
-- **O'Higgins (63.32 S):** ☐ TRACKING ☐ NOT TRACKING
-- **Active station (`ttc.active_gs` 0x0523):** ______
-- **Baseband config (rate, encoding):** ______________________
+- **Task:** Without commanding anything, read the propulsion state
+  and name the interlock that is currently blocking an arm. Role
+  brief: `configs/eosat1/mcs/role_analysis/propulsion_role.md`.
+- **State (`prop.state` 0x0B00; 0 SAFED, 1 ARMED, 2 FIRING,
+  3 INHIBIT):** ____
+- **Tank pressure (`prop.tank_pressure` 0x0B01, bar):** ______
+  **Propellant (`prop.propellant_mass` 0x0B02, g):** ______ / 400
+- **Arm interlock mask (`prop.arm_inhibit_mask` 0x0B15):** ______
+  **Bits set** (b0 catbed, b1 tank P, b2 propellant, b3 AOCS mode,
+  b4 att err, b5 SoC, b6 phase, b7 eclipse, b8 valves, b9 inhibit
+  latched, b10 no burn loaded): ______________________
+- **Gate blocking the arm, in words:** ______________________
 - **Insight:** _________________________________________________
 - **Question to ask:** _________________________________________
 
@@ -314,8 +310,8 @@ ___________________________________________________________________
 | 3 | SPACON | Open FDIR panel; identify the rule that fired | rule + `fdir.level` (0x0700) recorded | ☐ | |
 | 4 | TT&C | Blind `HK_REQUEST(sid=6)` (S3.27), then `CONNECTION_TEST` (S17.1) | If it responds, go to step 8 | ☐ | |
 | 5 | TT&C | If step 4 fails, blind `TTC_SWITCH_REDUNDANT` (S8 func 64), then `TTC_SWITCH_PRIMARY` (func 63) | `ttc.link_status` = 2 within 45 s | ☐ | |
-| 6 | TT&C | If still silent, step the ladder down: `TTC_SET_DATA_RATE(rate=0)` (S8 func 65) = LOW | `ttc.tm_data_rate` (0x0506) = 16000 bps; `ttc.tm_tier` (0x0539) = 1 | ☐ | |
-| 7 | TT&C | If still no response, recommend TX power increase | FD GO required; `TTC_SET_TX_POWER(level=2)` (S8 func 68); readback `ttc.tx_fwd_power` (0x050D, dBm) | ☐ | |
+| 6 | TT&C | Once locked, verify link quality and subsystem health: `HK_REQUEST(sid=6)`, `HK_REQUEST(sid=1)`, `HK_REQUEST(sid=4)` (S3.27) | RSSI (0x0502) > −90 dBm; margin (0x0503) > 3.0 dB; bus > 27.0 V; record the active transponder (`ttc.mode` 0x0500) | ☐ | |
+| 7 | TT&C | If still silent after both transponders: log every blind command, notify the Mission Director and FDS, book the next pass | 24 h no-contact timer confirmed running | ☐ | |
 | 8 | SPACON | Acknowledge FDIR rule, log recovery actions | FDIR cleared, log entry | ☐ | |
 | 9 | TT&C | File anomaly ticket. If no link after two consecutive passes, escalate **EMG-004** Loss of Communication | Ticket logged | ☐ | |
 
@@ -492,8 +488,9 @@ Pass mark: 11 of 15. Solutions on the back of the instructor pack.
   re-armed by every accepted TC) expire mid-procedure.
 - Trying `TTC_SET_DATA_RATE` before clearing beacon mode — refused with
   0x0007; application boot does **not** clear it.
-- Expecting SIDs 2 and 5 to appear after step 5 (they don't — they are
-  enabled in LEOP-007 once their lines are powered), or expecting any
+- Expecting SIDs 2 and 5 to appear after step 5 (they don't — SID 2 is
+  enabled in LEOP-007 and SID 5 in commissioning, once their lines are
+  powered), or expecting any
   SID other than 1 and 11 without an explicit `HK_ENABLE` (S3.5).
 
 **Exit criterion met?** ☐ yes ☐ no   **FD signature:** _______________
@@ -511,6 +508,7 @@ Pass mark: 11 of 15. Solutions on the back of the instructor pack.
 | 3 | Compute OWLT = `ttc.range_km` / 299792.458 × 1000 ms (expect **3–22 ms**), then Δt = T_obc − (T_gnd − OWLT) | OWLT (ms): ______  Δt (s): ______ | ☐ | |
 | 4 | Issue `SET_TIME(cuc_seconds=T_corrected)` (**S9.1**) — the argument goes *inside* the backticks; a bare `SET_TIME` packs cuc_seconds = 0, an epoch reset | ack + complete < 5 s, no S1.2 | ☐ | |
 | 5 | `REQUEST_TIME` (S9.2) again; verify residual < 1.0 s vs ground reference (LEOP threshold; NOM-008 tightens it in nominal ops) | residual (s): ______ | ☐ | |
+| 6 | Enable GPS navigation HK `HK_ENABLE(sid=12)` (S3.5); once `aocs.gps_fix` (0x0274) ≥ 2, discipline the clock with `OBC_GPS_TIME_SYNC` (S8.1 func **80**) — ground set first, GPS second | `obdh.time_ref` (0x0A13) = 2 (GPS) within 15 s; no fix yet → next contact | ☐ | |
 
 **Exit criterion met?** ☐ yes ☐ no
 
@@ -526,8 +524,8 @@ Pass mark: 11 of 15. Solutions on the back of the instructor pack.
 | EPS | EPS | eps | ☐ OK ☐ NOT-OK | ☐ | |
 | TCS | Thermal | tcs | ☐ OK ☐ NOT-OK | ☐ | |
 | TT&C | TT&C | ttc | ☐ OK ☐ NOT-OK | ☐ | |
-| AOCS | AOCS | aocs | ☐ OK ☐ NOT-OK | ☐ | |
-| Payload | Payload | payload | ☐ OK ☐ NOT-OK (typically OFF in LEOP) | ☐ | |
+| AOCS | AOCS | eps (line flag 0x0117) | ☐ dark (line OFF until LEOP-007) ☐ powered early | ☐ | |
+| Payload | Payload | eps (line flag 0x0113) | ☐ dark (line OFF until COM-009) ☐ powered early | ☐ | |
 
 **Consolidated PASS / FAIL:** ☐ PASS ☐ FAIL
 
@@ -541,8 +539,12 @@ Pass mark: 11 of 15. Solutions on the back of the instructor pack.
 
 **Operator (SPACON lead):**  ___________________
 
-LEOP-007 is the long one — ~25 minutes of careful per-line
-power-on. Each new line is a separate commanding event with FD GO.
+LEOP-007 powers only what the rest of LEOP needs — heaters if their
+zones need heat, the AOCS suite line, the magnetometer, magnetorquers
+and GPS receiver — and commands DETUMBLE. Steps 1–6 fit one
+8-minute contact. Each new line is a separate commanding event with
+FD GO. The payload, the cooler, the wheels, the star trackers and
+the gyros stay off: their commissioning cards bring them up.
 
 **Power-line index map** (`EPS_POWER_ON` / `EPS_POWER_OFF` /
 `EPS_RESET_OC_FLAG` all take `line_index`, range **0–8**):
@@ -553,43 +555,58 @@ the three gyros are S2 devices `S2_AOCS_GYROSCOPE_0/1/2`.
 
 | # | Owner | Action | Verification | ☐ done | Note |
 |---|-------|--------|--------------|:------:|------|
-| 1 | EPS | Verify EPS baseline: `HK_REQUEST(sid=1)` (S3.27) | `eps.bus_voltage` (0x0105) 27.0–29.0 V; `eps.bat_soc` (0x0101) > 60 %; `eps.power_gen` (0x0107) > 0 W | ☐ | |
-| 2 | EPS | Energise battery heater: `EPS_POWER_ON(line_index=5)` (S8.1 func_id **19**) | `eps.pl_htr_bat` (0x0115) = 1 < 5 s; consumption up ~6–8 W; `tcs.temp_battery` (0x0407) trending to the +5 °C setpoint | ☐ | |
-| 3 | EPS | Energise OBC heater: `EPS_POWER_ON(line_index=6)` (func 19) | `eps.pl_htr_obc` (0x0116) = 1 < 5 s; `tcs.temp_obc` (0x0406) trending; consumption up ~3–4 W | ☐ | |
-| 4 | EPS / AOCS | Energise wheels line and boot AOCS: `EPS_POWER_ON(line_index=7)` (func 19), then `HK_ENABLE(sid=2)` (**S3.5**), then `AOCS_SET_MODE(mode=2)` (S8.1 func_id **0**) — mode **2 = DETUMBLE** | `eps.pl_aocs_wheels` (0x0117) = 1; SID 2 emitting within one 4 s interval; `aocs.mode` (0x020F) = 2; `aocs.rate_roll/pitch/yaw` (0x0204–0x0206) decreasing; consumption up ~12 W | ☐ | |
-| 5 | AOCS | Commission sensors, then sun-point: `HK_REQUEST(sid=2)`; wait for all-axis rates < 0.5°/s; `AOCS_SET_MODE(mode=3)` (func 0) — mode **3 = COARSE_SUN** | `aocs.mag_enabled` (0x025C) = 1, field 25–65 µT; `aocs.mode` = 3; `aocs.att_error` (0x0217) decreasing to < 5° | ☐ | |
-| 6 | EPS / Payload | Energise payload line and go to STANDBY: `EPS_POWER_ON(line_index=3)` (func 19), `PAYLOAD_SET_MODE(mode=1)` (S8.1 func_id **26**), `HK_ENABLE(sid=5)` (S3.5) | `eps.pl_payload` (0x0113) = 1; `payload.mode` (0x0600) = 1 (STANDBY); SID 5 emitting; `payload.fpa_temp` (0x0601) valid ≈ ambient | ☐ | |
-| 7 | EPS / Payload | Energise cooler line and start the cooler: `EPS_POWER_ON(line_index=4)` (func 19), `FPA_COOLER(on=1)` (S8.1 func_id **43**) | `eps.pl_fpa_cooler` (0x0114) = 1 **and** `tcs.cooler_fpa` (0x040C) = 1 — both, or the cooler is not really running; `payload.fpa_temp` falling toward the −15 °C default setpoint; consumption up ~15 W | ☐ | |
-| 8 | FD / SPACON | GO/NO-GO poll across all positions. When GO is unanimous FD **declares COMMISSIONING by telecommand**: `SYS_SET_MISSION_PHASE(phase=5, flags=0)` (S8.1 func **120**) — nothing on board advances the phase past 4 | `eps.spacecraft_phase` (0x0129) = 5 (COMMISSIONING) < 5 s | ☐ | |
-| 9 | SPACON | Log all step times, rates and line currents | recorded | ☐ | |
+| 1 | EPS | Verify EPS baseline: `HK_REQUEST(sid=1)` (S3.27) | `eps.bus_voltage` (0x0105) 26–30 V; `eps.bat_soc` (0x0101) > 60 %; `eps.power_gen` (0x0107) > 0 W | ☐ | |
+| 2 | EPS | Heaters **only if needed**: `EPS_POWER_ON(line_index=5)` (S8.1 func_id **19**) if `tcs.temp_battery` (0x0407) < +5 °C; `EPS_POWER_ON(line_index=6)` if `tcs.temp_obc` (0x0406) < 0 °C | `eps.pl_htr_bat` (0x0115) / `eps.pl_htr_obc` (0x0116) = 1 for each line energised | ☐ | lines energised: ____ |
+| 3 | EPS / AOCS | Energise the AOCS suite line and enable its HK: `EPS_POWER_ON(line_index=7)` (func 19), then `HK_ENABLE(sid=2)` (**S3.5**) | `eps.pl_aocs_wheels` (0x0117) = 1; SID 2 emitting. The wheels stay DISABLED: `aocs.wheels_enabled` (0x0260) = 0 until COM-004 | ☐ | |
+| 4 | AOCS | Enable the DETUMBLE legs and the GPS receiver: `S2_AOCS_MAGNETOMETER(device_id=521, state=1)`, `MTQ_ENABLE(enable=1)` (S8.1 func_id **9**), `S2_AOCS_GPS_RECEIVER(device_id=527, state=1)` | `aocs.mtq_enabled` (0x025E) = 1 | ☐ | |
+| 5 | AOCS | Command DETUMBLE: `AOCS_SET_MODE(mode=2)` (S8.1 func_id **0**) — mode **2 = DETUMBLE** | `aocs.mode` (0x020F) = 2; `aocs.mag_enabled` (0x025C) = 1, field 5–70 µT; `aocs.rate_roll/pitch/yaw` (0x0204–0x0206) decreasing | ☐ | |
+| 6 | EPS | Confirm the exit power state: `HK_REQUEST(sid=1)` | `eps.pl_payload` (0x0113), `eps.pl_fpa_cooler` (0x0114), `eps.pl_prop` (0x014A) = 0; power margin positive | ☐ | |
+| 7 | SPACON | Log all step times, rates and line currents | recorded | ☐ | |
 
 **End-of-pass state:**
-- Phase (0x0129): ____   AOCS mode (0x020F): ____ (expect 3 COARSE_SUN)
-- Body rates roll/pitch/yaw (°/s): __/__/__   `aocs.att_error`: ____ °
-- Wheels enabled (`aocs.wheels_enabled` 0x0260): ____ of 4
-  Wheel speeds RW1–4 (RPM, 0x0207–0x020A): __/__/__/__
-- SoC: ____ %   `tcs.temp_battery`: ____ °C   `payload.fpa_temp`: ____ °C
-- SIDs periodic: 1 ☐ 2 ☐ 3 ☐ 4 ☐ 5 ☐ 6 ☐ 11 ☐
+- Phase (0x0129): ____ (expect 4 LEOP)   AOCS mode (0x020F): ____ (expect 2 DETUMBLE)
+- Body rates roll/pitch/yaw (°/s): __/__/__ (decreasing)
+- Wheels enabled (`aocs.wheels_enabled` 0x0260): ____ (expect 0)
+- SoC: ____ %   `tcs.temp_battery`: ____ °C
+- SIDs periodic: 1 ☐ 2 ☐ 3 ☐ 4 ☐ 6 ☐ 11 ☐
 
 **Exit criterion met?** ☐ yes ☐ no   **FD signature:** _______________
 
 ---
 
-# Worksheet WB-5.5-L005 — LEOP-005 Sun Acquisition (optional, confirm each step)
+# Worksheet WB-5.5-L005 — LEOP-005 Sun Acquisition (observe, confirm each step)
 
 **Operator (AOCS):**  ___________________
 
+This card commands **no** mode change: the handover from DETUMBLE to
+COARSE_SUN is automatic.
+
 | # | Action | Verification | ☐ done | Note |
 |---|--------|--------------|:------:|------|
-| 1 | Confirm DETUMBLE active and rates damping: `HK_REQUEST(sid=2)` (S3.27) | `aocs.mode` (0x020F) = 2 (DETUMBLE); rates roll/pitch/yaw: __/__/__ °/s | ☐ | |
-| 2 | Wait for B-dot convergence. This is **slow**: the 0.5°/s DETUMBLE exit guard takes ~1 200 s, and a full 14°/s separation tumble ~3.5e3 s. Dipole saturates at 1.6 A·m² per axis on three torquers | all axes < 0.5°/s | ☐ | |
-| 3 | Power a star tracker: `ST1_POWER(on=1)` (S8.1 func_id **4**) or `ST2_POWER(on=1)` (func **5**); select with `ST_SELECT` (func **6**) | `aocs.st1_status` (0x0240) / `aocs.st2_status` (0x0243) = 2 (tracking) within 30 s | ☐ | |
-| 4 | Transition AOCS to COARSE_SUN (`AOCS_SET_MODE(mode=3)`, func 0) — mode **3 = COARSE_SUN**, the sun-safe hold | `aocs.mode` = 3 within 30 s | ☐ | |
-| 5 | Wait for sun-acquisition settling | `aocs.att_error` (0x0217) < 5° and stable | ☐ | |
-| 6 | Verify power balance improved: `HK_REQUEST(sid=1)` | `eps.power_gen` (0x0107) > `eps.power_cons` (0x0106); margin `eps.power_margin_w` (0x0135): ____ W | ☐ | |
-| 7 | Log final attitude error | error: ____ ° | ☐ | |
+| 1 | Confirm DETUMBLE active and record the rates: `HK_REQUEST(sid=2)` (S3.27) | `aocs.mode` (0x020F) = 2 (DETUMBLE); rates roll/pitch/yaw: __/__/__ °/s | ☐ | |
+| 2 | Watch B-dot convergence — command nothing. This is **slow**: the 0.5°/s guard takes ~1 200 s, and a full 14°/s separation tumble ~3.5e3 s | rates decreasing on all axes; `aocs.mag_field_total` (0x0277) non-zero | ☐ | |
+| 3 | Observe the **automatic** handover: rates below 0.5°/s for 30 s → mode 3 by itself. Do **not** send `AOCS_SET_MODE(mode=3)` | `aocs.mode` = 3 (COARSE_SUN) within 1800 s | ☐ | time: ____ |
+| 4 | Verify the sun hold: `HK_REQUEST(sid=2)` every 60 s for 5 min | `aocs.att_error` (0x0217) < 15°; `aocs.css_sun_confidence` (0x0215) > 0.5; rates < 0.5°/s | ☐ | |
+| 5 | Verify power balance improved: `HK_REQUEST(sid=1)` | `eps.power_gen` (0x0107) > 40 W; margin `eps.power_margin_w` (0x0135): ____ W | ☐ | |
+| 6 | Log the final state. The spacecraft stays in COARSE_SUN: no star tracker is powered until COM-003 | error: ____ ° | ☐ | |
 
 **Exit criterion met?** ☐ yes ☐ no
+
+---
+
+# Worksheet WB-5.5-L003 — LEOP-003 Initial Orbit Determination and End of LEOP (confirm each step)
+
+**Operator (FDS, with the FD for step 5):**  ___________________
+
+| # | Action | Verification | ☐ done | Note |
+|---|--------|--------------|:------:|------|
+| 1 | Request the GPS navigation report: `HK_REQUEST(sid=12)` (S3.27) | `aocs.gps_fix` (0x0274) ≥ 2; `aocs.gps_num_sats` (0x0276) ≥ 4 | ☐ | PDOP: ____ |
+| 2 | Read the position: `GET_PARAM(param_id=0x0212)` (S20.3) and the ECEF state 0x0231–0x0236 | `aocs.gps_alt` 495–540 km | ☐ | alt: ____ km |
+| 3 | FDS: compare with the launcher-predicted orbit | i within 0.2° of 97.39°; e < 0.01; LTAN within 15 min of 10:00 | ☐ | i: ____ ° |
+| 4 | Send the refined TLE to the ground tools (planner, FDS, stations) — **nothing is uploaded to the spacecraft** | pass predictions refreshed | ☐ | |
+| 5 | FD: GO/NO-GO poll, then **declare COMMISSIONING by telecommand**: `SYS_SET_MISSION_PHASE(phase=5, flags=0)` (S8.1 func **120**) — nothing on board advances the phase past 4 | `eps.spacecraft_phase` (0x0129) = 5 (COMMISSIONING) < 5 s | ☐ | |
+
+**Exit criterion met?** ☐ yes ☐ no   **FD signature:** _______________
 
 ---
 
@@ -804,8 +821,8 @@ Print 9 copies (one per console position).
 | 3 | Solar array sunlit performance | `eps.power_gen` (0x0107) ∈ [40, 65] W (peak whole-spacecraft 88.6 W; wings 0.120 m² each at 267.9 W/m² EOL) | ☐ | ____ W |
 | 4 | Eclipse discharge monitoring | `power_gen` ~0 W < 30 s of entry; SoC drop < 1.5 %/min; `bus_voltage` > 27.0 V mid-eclipse | ☐ | |
 | 5 | Eclipse exit charge recovery | `power_gen` > 35 W < 60 s; SoC rising < 120 s | ☐ | |
-| 6 | Power budget verification — orbit-average gen > cons | nominal orbit-average load ≈ **28.7 W** against ≈ 38 W generation at worst beta (margin +9.3 W, ratio 1.33); end-of-eclipse SoC > 50 % on the **100 Wh** pack | ☐ | margin: ____ W |
-| 7 | Bus regulation under load transient — `PAYLOAD_SET_MODE(mode=1)` then `(mode=0)` (S8.1 func_id **26**) | bus stays in [27.0, 29.0] V, returns to [27.5, 28.5] V | ☐ | min V: ____ |
+| 6 | Power budget verification — orbit-average gen > cons | nominal orbit-average load ≈ **28.8 W** against ≈ 45.1 W generation at the worst-generation beta, β = −31.2° (margin +16.3 W, ratio 1.57; 1.38 while imaging); end-of-eclipse SoC > 50 % on the **100 Wh** pack | ☐ | margin: ____ W |
+| 7 | Bus regulation under load transient — record `eps.pl_htr_bat` (0x0115), then `EPS_POWER_ON(line_index=5)` (S8.1 func_id **19**), and `EPS_POWER_OFF(line_index=5)` (func **20**) only if the line was off at entry. Not the payload: its line is OFF until COM-009 | bus stays in [26.5, 29.5] V, returns to [27.0, 29.0] V; line back to its entry state | ☐ | min V: ____ |
 
 **Exit?** ☐ yes ☐ no   **GO COM-002:** ☐
 
@@ -816,8 +833,8 @@ Print 9 copies (one per console position).
 | # | Action | Expected | ☐ | Note |
 |---|--------|----------|:-:|------|
 | 1 | Thermal HK — `HK_REQUEST(sid=3)` (S3.27; SID 3 = TCS, 60 s cadence) | `tcs.temp_obc` (0x0406) ∈ [−5, +45] °C; `tcs.temp_battery` (0x0407) ∈ [+5, +35] °C; `tcs.temp_fpa` (0x0408) reported | ☐ | obc:__ bat:__ fpa:__ |
-| 2 | Exercise each heater individually for 5 min — `HEATER_BATTERY(on=1)` (S8.1 func **40**), `HEATER_OBC(on=1)` (func **41**) | duty `tcs.htr_duty_battery` (0x040E) / `tcs.htr_duty_obc` (0x040F) < 80 %; zone reaches setpoint | ☐ | |
-| 3 | Verify thermostatic control of battery zone (setpoint `tcs.setpoint_bat` 0x0330; restore with `HEATER_AUTO_MODE`, func **45**) | hysteresis between on/off observed on `tcs.htr_battery` (0x040A) | ☐ | |
+| 2 | Exercise each heater with its line powered — `EPS_POWER_ON(line_index=5)` then `HEATER_BATTERY(on=1)` / `(on=0)` (S8.1 func **40**); `EPS_POWER_ON(line_index=6)` then `HEATER_OBC(on=1)` / `(on=0)` (func **41**); switch each line back off only if it was off at entry | `eps.pl_htr_bat` (0x0115) / `eps.pl_htr_obc` (0x0116) = 1; zone temperature rising or stable; lines restored | ☐ | |
+| 3 | Read the autonomous battery thermostat thresholds — `GET_PARAM(param_id=0x0410)`, `GET_PARAM(param_id=0x0411)` (S20.3) | ON at +5 °C, OFF at +10 °C; the card reads them, it does not change them | ☐ | |
 | 4 | Confirm radiator performance via TCS zone response in eclipse | zones stable, no runaway | ☐ | |
 
 **Exit?** ☐ yes ☐ no   **GO COM-005:** ☐
@@ -833,11 +850,12 @@ Print 9 copies (one per console position).
 
 | # | Action | Expected | ☐ | Note |
 |---|--------|----------|:-:|------|
-| 1 | Confirm starting mode = COARSE_SUN (**3**) after LEOP-007 | `aocs.mode` (0x020F) = 3; `aocs.att_error` (0x0217) < 5°; `aocs.rate_roll` (0x0204) < 0.1°/s | ☐ | rates roll/pitch/yaw: __/__/__ |
-| 2 | Transition to NOMINAL (`AOCS_SET_MODE(mode=4)`) | mode = 4 within 30 s; att_error < 1.0° within 120 s; all three rates < 0.05°/s | ☐ | |
-| 3 | Read the FINE precondition mask: `AOCS_FINE_READY_CHECK` (S8.1 func **89**) | `aocs.fine_ready` (0x02C5) = 0. Bit 1 = *fewer than three* wheels — a 3-of-4 set still flies FINE, flagged at `aocs.fine_degraded` (0x0299) | ☐ | mask: ____ |
-| 4 | Transition to FINE_POINT (`AOCS_SET_MODE(mode=5)`) | mode = 5 within 30 s; att_error < 0.1° within 300 s; all rates < 0.01°/s | ☐ | error: ____ ° |
-| 5 | Step back down: 5 → 4 → 3 → 2 (DETUMBLE) → 3 | each `aocs.mode` readback matches the command; cross-check `aocs.commanded_mode` (0x0297) and `aocs.mode_demoted` (0x0298) | ☐ | |
+| 1 | Latch the commanded mode: `AOCS_SET_MODE(mode=4)` — the AOCS has flown NOMINAL since COM-004 | `aocs.mode` (0x020F) = 4 (or 8 in eclipse); `aocs.commanded_mode` (0x0297) = 4; att_error < 1.0° | ☐ | |
+| 2 | Read the FINE precondition mask: `AOCS_FINE_READY_CHECK` (S8.1 func **89**) | `aocs.fine_ready` (0x02C5) = 0. Bit 1 = *fewer than three* wheels — a 3-of-4 set still flies FINE, flagged at `aocs.fine_degraded` (0x0299) | ☐ | mask: ____ |
+| 3 | Transition to FINE_POINT (`AOCS_SET_MODE(mode=5)`), then back to NOMINAL (`AOCS_SET_MODE(mode=4)`) | mode = 5 within 30 s; att_error < 0.1° within 300 s; then mode = 4 within 30 s | ☐ | error: ____ ° |
+| 4 | INERTIAL and back: `AOCS_SET_MODE(mode=9)`, then `AOCS_SET_MODE(mode=4)` | mode 9, then mode 4, each within 30 s | ☐ | |
+| 5 | Command the COARSE_SUN hold (`AOCS_SET_MODE(mode=3)`), then **wait** for the automatic return | mode 3 and `aocs.mode_demoted` (0x0298) = 1; then mode 4 by itself within 1800 s and 0x0298 = 0 | ☐ | |
+| 6 | Desaturate: `AOCS_DESATURATE` (S8.1 func **1**) — DESAT exits by itself | mode 7 (DESAT), then back to 4 within 900 s with no command | ☐ | |
 
 **Exit?** ☐ yes ☐ no
 
@@ -867,9 +885,9 @@ LOW 16 kbps / HIGH 128 kbps**. BEACON is not selectable with
 
 | # | Action | Expected | ☐ | Note |
 |---|--------|----------|:-:|------|
-| 1 | Exercise the watchdog: `OBC_SET_WATCHDOG_PERIOD(period_ticks=N)` (S8.1 func **58**), `OBC_WATCHDOG_ENABLE` (func **59**) / `OBC_WATCHDOG_DISABLE` (func **60**). (There is no `OBC_WATCHDOG_KICK` command) | no reboot; `obdh.reboot_count` (0x030A) unchanged, `obdh.uptime` (0x0308) still incrementing | ☐ | |
+| 1 | Verify the watchdog: `OBC_DIAGNOSTIC` (S8.1 func **61**), `GET_PARAM(param_id=0x0316)` (S20.3). (There is no `OBC_WATCHDOG_KICK` command) | diagnostic reply: watchdog armed; `obdh.last_reboot_cause` = 0; `obdh.reboot_count` (0x030A) unchanged | ☐ | |
 | 2 | Read and verify mass-memory usage — `HK_REQUEST(sid=4)` (S3.27) | `obdh.mmm_used` (0x0303, %) as expected; payload store `payload.mem_used_mb` (0x060B) of `payload.mem_total_mb` (0x060A) | ☐ | used: ____ MB |
-| 3 | Test an S6 memory read on a known region: `MEM_DUMP(memory_id, address, length)` (**S6.5**); optionally `MEM_CHECK` (S6.9) | data matches the memory map | ☐ | |
+| 3 | Baseline the memory error and SEU counters — `GET_PARAM(param_id=0x031E)`, `GET_PARAM(param_id=0x0319)` (S20.3); then the mode excursion `OBC_SET_MODE(mode=1)`, `OBC_SET_MODE(mode=0)` (func **50**) | counters not incrementing between reads; `obdh.mode` (0x0300) back to 0 — the card ends in NOMINAL | ☐ | |
 | 4 | Verify bus A and bus B health | `obdh.bus_a_status` (0x030F) = 0 and `obdh.bus_b_status` (0x0310) = 0 (0 = OK); active bus at `obdh.active_bus` (0x030E) | ☐ | |
 
 **Exit?** ☐ yes ☐ no
@@ -893,8 +911,8 @@ the same scale and must never be conflated on the loop.
 | 1 | Read the FDIR state — `GET_PARAM(param_id=0x0700)` (S20.3) | `fdir.level` = 0 (0 nominal, 1 caution, 2 warning, 3 critical); `fdir.active_alarms` (0x0701) = 0 | ☐ | |
 | 2 | Review the rule set on the FDIR panel against `subsystems/fdir.yaml` | key thresholds confirmed: `eps.bus_voltage` < **24.5 V**, `eps.bat_soc` < 20 % / < 15 %, `aocs.att_error` > 5° sustained 420 s, `obdh.temp` > 65 °C | ☐ | count: ____ rules |
 | 3 | Enable/verify the S12 monitoring service — `MON_ENABLE` (**S12.1**), `MON_REPORT_DEFS` (S12.12) | definition list returned; alarms visible in the MCS | ☐ | |
-| 4 | Inject a benign test condition by narrowing one limit — `MON_ADD_DEF` (S12.6) or `SET_PARAM` (S20.1) — then restore it | the relevant rule triggers and clears; `fdir.level` returns to 0 | ☐ | rule: ____ |
-| 5 | Verify no autonomous action fired (test condition kept below the action threshold) | no mode change, no line opened, no safe-mode entry recorded | ☐ | |
+| 4 | Functional test of the commanded load-shed latch: `EPS_EMERGENCY_LOAD_SHED(stage=1)` (S8.1 func **25**), then `EPS_EMERGENCY_LOAD_SHED(stage=0)`. Never stage 2 or 3 here — stage 3 sheds `ttc_tx` | stage 1: `eps.load_shed_stage` (0x0134) = 1 and **latches**, event 0x0106; stage 0: back to 0 and **no line re-powered** | ☐ | |
+| 5 | Confirm no residual protection state: `GET_PARAM(param_id=0x0700)`, `HK_REQUEST(sid=1)`, `HK_REQUEST(sid=4)` | `fdir.level` = 0; `eps.load_shed_stage` = 0; `obdh.mode` (0x0300) = 0 — no OBC-mode excursion | ☐ | |
 
 **Exit?** ☐ yes ☐ no
 
@@ -1008,10 +1026,10 @@ shutter in the wrong position, 0x0027 lamp in the wrong state,
 | 1 | FD GO for First Light | recorded | ☐ | |
 | 2 | AOCS to FINE_POINT: `AOCS_FINE_READY_CHECK` (func 89), `AOCS_SET_MODE(mode=5)` (func 0) | `aocs.fine_ready` (0x02C5) = 0; `aocs.mode` (0x020F) = 5 | ☐ | |
 | 3 | Verify the FPA is at temperature | `payload.fpa_ready` (0x0610) = 1; `payload.fpa_temp` (0x0601) ∈ [−16.5, −14.5] °C | ☐ | T: ____ °C |
-| 4 | Set the four band integration times: `PAYLOAD_SET_INTEGRATION_TIME(blue_ms=, green_ms=, red_ms=, nir_ms=)` (S8.1 func **34**) | readback `payload.int_time_blue/green/red/nir` (0x0638–0x063B) | ☐ | ms: __/__/__/__ |
-| 5 | Command IMAGING and capture: `PAYLOAD_SET_MODE(mode=2)` (func **26**), then `PAYLOAD_CAPTURE(scene_id=1, lines=2048)` (S8.1 func **28**) | S1.1 accept + S1.7 complete; S5 event 0x0613 IMAGE_CAPTURED. 2048 lines at 244 Hz = 8.4 s = 60 km along-track | ☐ | scene: ____ |
+| 4 | Verify the payload is ready and record the baselines: `HK_REQUEST(sid=5)` (S3.27) | `payload.mode` (0x0600) = 1; `payload.store_used` (0x0604) < 97 %; record `payload.image_count` (0x0605) and `payload.mem_used_mb` (0x060B) | ☐ | count: ____ |
+| 5 | Command IMAGING and capture: `PAYLOAD_SET_MODE(mode=2)` (func **26**), then `PAYLOAD_CAPTURE(scene_id=1, lines=2048)` (S8.1 func **28**) | S1.1 accept + S1.7 complete; S5 event 0x0613 IMAGE_CAPTURED. 2048 lines at 244 Hz = 8.4 s ≈ 59 km along-track at 7.06 km/s | ☐ | scene: ____ |
 | 6 | Verify the product stored | `payload.mem_used_mb` (0x060B) increased; `payload.product_count` (0x0648) +1; size ≈ **4 MB** (`image_size_mb`, the courseware abstraction) | ☐ | ____ MB |
-| 7 | Return to STANDBY and start the transfer: `PAYLOAD_SET_MODE(mode=1)`, `PAYLOAD_INITIATE_TRANSFER(scene_id=1)` (S8.1 func **94**) | `payload.transfer_active` (0x062D) = 1; S5 event 0x0610 TRANSFER_START, then 0x0611 TRANSFER_COMPLETE | ☐ | rx time: ______ |
+| 7 | Return to STANDBY (`PAYLOAD_SET_MODE(mode=1)`), then downlink over Service 13: `TTC_SET_DOWNLINK_MODE(on=1)`, `TTC_SET_DATA_RATE(rate=1)`, `S13_CREATE_TRANSFER(scene_id=1, size_mb=0)` … `S13_END_TRANSFER(transfer_id=T)`, then back to LOW | 128000 bps; `payload.transfer_active` (0x062D) = 1, `payload.transfer_progress` (0x062E) rising, then 0x062D = 0; CRC-32 OK on the ground | ☐ | rx time: ______ |
 | 8 | Quality assessment (next pass if needed) | mean DN, contrast, geo-registration; `payload.last_scene_quality` (0x060D); `aocs.geoloc_err_m` (0x02C7) | ☐ | quality: ____ |
 
 **Exit?** ☐ yes ☐ no   **First Light declared?** ☐ yes ☐ formally deferred
@@ -1031,8 +1049,8 @@ shutter in the wrong position, 0x0027 lamp in the wrong state,
 | FPA temperature at acquisition (°C) | |
 | Integration time per band (ms), bands at 443/560/665/865 nm | / / / |
 | Image size (MB) — expect ~4 | |
-| Ground swath (km) — `payload.swath_width_km` (0x0619) | 240 |
-| GSD (m) — `payload.gsd_m` (0x0628) | 29.3 |
+| Ground swath (km) — `payload.swath_width_km` (0x0619) | 273 |
+| GSD (m) — `payload.gsd_m` (0x0628) | 33.4 |
 | Mean DN per band | |
 | Cloud cover (%) | |
 | Geo-registration error (m) — `aocs.geoloc_err_m` (0x02C7) | |
@@ -1401,7 +1419,7 @@ team has a ready-printed page to follow on the console.
 
 ## CTG-007 Reaction Wheel Anomaly
 
-EO-Sat-1 flies **four** wheels in a pyramid. Speeds are READ-ONLY
+EOSAT-1 flies **four** wheels in a pyramid. Speeds are READ-ONLY
 at `aocs.rw1..rw4_speed` (0x0207–0x020A); temps 0x0218–0x021B;
 currents 0x0250–0x0253; bearing health 0x0284–0x0287. Speed is
 commanded with `RW_SET_SPEED_BIAS` (S8.1 func **8** — the bias is
@@ -1419,7 +1437,7 @@ commanded with `RW_SET_SPEED_BIAS` (S8.1 func **8** — the bias is
 
 ## CTG-008 Star Tracker Failure
 
-EO-Sat-1 carries **two** star trackers, ST1 and ST2 — this is a
+EOSAT-1 carries **two** star trackers, ST1 and ST2 — this is a
 redundancy switch, not a single-head loss. There is no
 `AOCS_EST_SET` command and no `ss_imu` source name: the estimator
 source is the read-only bitmask `aocs.est_source` (**0x02C1**;
@@ -1550,7 +1568,7 @@ shift. Goes into cohort archive.
 At end of Week 3, the workbook should contain:
 
 - ☐ WB-5.0 orientation check (filled before Monday)
-- ☐ WB-5.1 nine position score cards (one per position)
+- ☐ WB-5.1 seven position score cards (one per MCS console)
 - ☐ WB-5.3-PP pass-plan exercise output
 - ☐ WB-5.4-VL voice-loop drill responses
 - ☐ WB-5.4-N001 NOM-001 confirm-each-step (one per pass)

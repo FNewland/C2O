@@ -32,7 +32,7 @@ le planificateur ont leur propre `--port` : si le port 8080 est déjà utilisé
 sur la machine d'enseignement, déplacez le simulateur plutôt que les clients :
 
 ```
-python -m smo_simulator --config configs/eosat1/ --port 8081 --speed 1.0
+smo-simulator --config configs/eosat1/ --port 8081 --speed 1.0
 ```
 
 Deux règles d'exploitation conditionnent tout ce qui suit :
@@ -43,7 +43,7 @@ Deux règles d'exploitation conditionnent tout ce qui suit :
   (S8.1 fonction 120 ; l'indicateur FORCE autorise un retour en arrière). La commande
   `set_phase` de la console instructeur (phases 0–6) est un forçage de l'enseignant pour
   préparer ou réparer une séance, et `SET_PHASE` n'est l'alias de rien
-  — attendez-vous à ce que l'équipe envoie la fonction 120 à la fin de LEOP-007 et de COM-013.
+  — attendez-vous à ce que l'équipe envoie la fonction 120 à la fin de LEOP-003 et de COM-013.
 * Les commandes instructeur (`set_speed`, `freeze`, `resume`, `inject`,
   `clear_failure`, `override_passes`, `set_phase`, les appels
   `scenario_*`, l'enregistrement et le chargement des points de reprise) passent par le canal HTTP
@@ -152,7 +152,7 @@ simulées sont la valeur `duration_s` du fichier.
 | `eps_progressive_load_shed.yaml` | Difficile | 1800 s | Un élément de batterie se dégrade, impose un délestage progressif | CTG-001 | jour 4 |
 | `eps_solar_panel_loss.yaml` | Difficile | continu | Panne d'une chaîne du générateur solaire | CTG-001 | jour 3 |
 | `eps_undervoltage.yaml` | Moyen | continu | La tension descend sous la plage d'attention | CTG-001 | jour 3 ou 4 |
-| `first_contact.yaml` | (BP-2) | 5400 s | Scénario de début de la journée LEOP | — | jour 3 |
+| `first_contact.yaml` | (BP-2) | 1800 s | Scénario de début de la journée LEOP | — | jour 3 |
 | `fpa_overtemp.yaml` | Moyen | 1200 s | Refroidisseur du FPA sous-performant : il ne peut pas tenir la consigne commandée (par défaut **−15 °C** ; enveloppe de −20 à 0 °C), de sorte que `payload.cooler_margin_k` (0x064B) devient ≤ 0 | CTG-004 | jour 4 |
 | `gs_antenna_failure.yaml` | Très difficile | continu | Panne de l'antenne sol principale en milieu de passage | CTG-020 (fiche **consultative** — côté sol uniquement, aucune TC vers le satellite) | jour 4 |
 | `gs_rf_degradation.yaml` | Facile | 600 s | Le TEB augmente au cours du passage | CTG-014 / CTG-003 | jour 3 |
@@ -180,9 +180,11 @@ simulées sont la valeur `duration_s` du fichier.
 | `prop_burn_eclipse_power.yaml` | Difficile | ponctuel | Manœuvre tentée dans un creux de puissance dû à l'éclipse | CTG-028 / CTG-001 | jour 4 |
 | `prop_attitude_loss_mid_burn.yaml` | Très difficile | ponctuel | L'erreur d'attitude dépasse la limite de poussée en cours d'allumage ; interruption à bord | CTG-028 → CTG-002 | jour 4 |
 
-**EO-Sat-1 embarque une propulsion.** Un système à monergol vert de 1U, 66,9 m/s au total,
-pour l'évitement de débris et un maintien d'orbite limité (pas pour la désorbitation
-en fin de vie). Les télécommandes de propulsion sont les fonctions S8 108–118, la base de
+**EOSAT-1 embarque une propulsion.** Un système à monergol vert de 1U, 66,9 m/s au total,
+pour l'évitement de débris, un maintien d'orbite limité et la poussée de 34,3 m/s
+d'abaissement du périgée en fin de vie (NOM-014 : périgée 513 → 390 km, rentrée en
+1,5 an à activité solaire moyenne, 4,2 ans au minimum solaire ; la seule
+décroissance naturelle prendrait 5,0 et 14,2 ans). Les télécommandes de propulsion sont les fonctions S8 108–118, la base de
 télémesure est 0x0B00, le SID de HK est le **9**. Une poussée réajuste le jeu d'éléments SGP4, de sorte que
 les passages et les éclipses se décalent réellement ensuite (1 m/s donne Δa
 +1,800 km et −33,5 s à +24 h), et l'accélération du temps est limitée
@@ -227,7 +229,7 @@ la charge cognitive dépasse l'intention pédagogique de la semaine de formation
 
 # Chapitre 2 — Journée de simulation de mission (déroulé pour l'enseignant)
 
-> **Lectures attendues avant cette séance.** Cal Poly CDS Rev 14, §5 (ICD de lancement) ; SMAD4, chap. 18.
+> **Lectures attendues avant cette séance.** Manuel en libre accès *Conception concourante d'engins spatiaux* (REL), chap. 19, §§ 19.1 à 19.6 (pourquoi les agences répètent, structurer une répétition, répartition des rôles, scénariser les phases, bibliothèque de scénarios d'anomalie, débriefing) ; ce guide, chap. 5.10 (catalogue des scénarios) ; manuel du cours, partie 2 (*Opérations d'un CubeSat*), §8.1 (vue d'ensemble du cycle de passage) ; ECSS-E-ST-70C *Ground systems and operations* (31 juillet 2008), §5.5 *Operations teams build-up and training* et §5.6 *Operational validation* (simulations et répétitions avec le simulateur opérationnel, §5.6.2 b).
 
 
 
@@ -258,7 +260,7 @@ Cette séance est une **simulation pratique** des opérations de mission. L'anim
 | **Contrôleur satellite (SC)** | Envoie les commandes ; surveille la télémesure de servitude | Éditeur de ConOps, commande des modes |
 | **Opérateur de station sol (GSO)** | Gère la programmation de l'antenne ; acquisition de la liaison | Bilan de données, bilan de liaison |
 | **Opérateur charge utile (PO)** | Planifie et exécute les observations scientifiques | Paramètres de la charge utile, bilan de données |
-| **Dynamique du vol (FD-nav)** | Surveille l'orbite ; planifie et annonce les manœuvres (EO-Sat-1 dispose d'une propulsion à monergol vert de 1U, 66,9 m/s) | Paramètres orbitaux, onglet PROP, durabilité |
+| **Dynamique du vol (FD-nav)** | Surveille l'orbite ; planifie et annonce les manœuvres (EOSAT-1 dispose d'une propulsion à monergol vert de 1U, 66,9 m/s) | Paramètres orbitaux, onglet PROP, durabilité |
 | **Secrétaire des anomalies** | Documente tous les événements, anomalies et décisions | Fiche 5.3 |
 
 *Pour les équipes plus petites, cumulez les rôles : SC+GSO et PO+FD-nav sont des associations naturelles.*
@@ -313,12 +315,12 @@ Les équipes doivent vérifier :
 | Mode SCAO | `aocs.mode` (0x020F) | 2 (DETUMBLE) | Attendu | Nominal |
 | Vitesses angulaires | `aocs.rate_roll/pitch/yaw` (0x0204-06) | 1.4 deg/s | En baisse | Nominal |
 | Image en cours d'exécution | `obdh.sw_image` (0x0311) | 0 (BOOTLOADER) | Attendu avant amorçage | Nominal |
-| État de l'antenne | `ttc.antenna_deployed` (0x0520) | 0 (repliée) | déployée dans LEOP-007 | -- |
+| État de l'antenne | `ttc.antenna_deployed` (0x0520) | 0 (repliée) | déployée dans COM-006 | -- |
 | Balise | `ttc.beacon_active` (0x0527) | 1 | Attendu | Nominal |
 | État de la liaison | `ttc.link_status` (0x0501) | 2 (LOCKED) | 2 = LOCKED | Nominal |
 | État de la liaison montante | -- | Pas encore tentée | -- | -- |
 
-Remarque sur le bus : EO-Sat-1 utilise une batterie **8S de 100 Wh** — 21,5 V à vide,
+Remarque sur le bus : EOSAT-1 utilise une batterie **8S de 100 Wh** — 21,5 V à vide,
 26,4 V en nominal, 29,2 V à pleine charge, avec un bus d'environ 28 V. Une lecture de 7-8 V
 correspond à un CubeSat 2S, pas à ce satellite. La FDIR de sous-tension se déclenche à
 **24,5 V**.
@@ -338,7 +340,7 @@ Les équipes doivent : composer la commande, vérifier le codage, l'émettre, a
 **[Saut dans le temps : T+24 h]**
 *« Votre satellite a terminé l'amortissement. Le SCAO est en COARSE_SUN (mode 3). Tous les paramètres HK sont nominaux après 8 passages sol. Vous êtes prêts à commencer la recette en orbite. Quelle est votre première activité ? »*
 
-Attendu : étalonnage des capteurs SCAO (COM-003) — contrôle de validité du magnétomètre (unité unique, rien à sélectionner), état des têtes du senseur solaire, et étalonnage **à bord** du biais gyrométrique avec `AOCS_GYRO_CALIBRATION` (S8 func 13). Il n'y a pas d'envoi d'un biais calculé au sol.
+Attendu : vérifications de l'EPS et de la thermique (COM-001, COM-002), puis vérification des actionneurs SCAO (COM-004) : activer les quatre roues et commander le NOMINAL piloté par les roues. Ensuite seulement, l'étalonnage des capteurs SCAO (COM-003) : gyroscopes et senseur stellaire dans la boucle, puis étalonnage **à bord** du biais gyrométrique avec `AOCS_GYRO_CALIBRATION` (S8 func 13). Il est refusé au-delà de 0,10 °/s de vitesse angulaire, ce que le maintien COARSE_SUN sans roues ne permet pas d'atteindre — c'est pourquoi COM-004 passe en premier (décision Q16). Il n'y a ni envoi d'un biais calculé au sol ni étalonnage du magnétomètre (unité unique, rien à sélectionner).
 
 **[T+3 jours -- Première lumière de la charge utile]**
 *« Le SCAO est étalonné et tient le mode NOMINAL (mode 4) avec une erreur d'attitude de 0,3 degré. Vous êtes prêts pour la première lumière de la charge utile. Détaillez-moi votre procédure. »*
@@ -442,7 +444,7 @@ Les équipes présentent :
 - le volume total de données transmises au sol en 30 jours par rapport au plan ;
 - le nombre d'observations scientifiques réalisées par rapport au plan ;
 - les anomalies rencontrées (lors de l'exercice d'injection) ;
-- l'état actuel des bilans : marge de puissance (charge nominale moyenne sur l'orbite ≈ 28,7 W pour une production ≈ 38 W au pire angle bêta), marge de données, ergol restant sur les 66,9 m/s au total ;
+- l'état actuel des bilans : marge de puissance (charge nominale moyenne sur l'orbite ≈ 28,8 W pour une production ≈ 45,1 W à l'angle bêta le moins productif, β = −31,2°), marge de données, ergol restant sur les 66,9 m/s au total ;
 - l'état de l'orbite : des alertes de conjonction ? La conformité aux règles sur les débris est-elle respectée ?
 
 ### Débriefing
@@ -468,7 +470,7 @@ Les équipes présentent :
 ### Préparation
 
 - Revoir le ConOps, les règles FDIR et les procédures de chaque équipe issus du chapitre 5.2
-- Choisir des anomalies adaptées au point atteint par l'équipe (p. ex. ne pas injecter d'anomalie charge utile avant que COM-009 ait mis la charge utile sous tension). EO-Sat-1 *dispose bien* d'une propulsion : les scénarios `prop_*` sont donc tous utilisables une fois NOM-004 présentée en briefing.
+- Choisir des anomalies adaptées au point atteint par l'équipe (p. ex. ne pas injecter d'anomalie charge utile avant que COM-009 ait mis la charge utile sous tension). EOSAT-1 *dispose bien* d'une propulsion : les scénarios `prop_*` sont donc tous utilisables une fois NOM-004 présentée en briefing.
 - Préparer les tableaux de données HK pour chaque phase (adapter les valeurs de la section 2 aux paramètres de mission de l'équipe)
 - Garder des anomalies de réserve si les équipes résolvent rapidement les injections
 
@@ -581,8 +583,8 @@ Format des cartes :
 
 - **Moment de déclenchement.** Pendant la mise sous tension séquentielle de LEOP-007, injecter
   sur la ligne sur le point d'être activée — `aocs_wheels`
-  (`line_index=7`) ou `payload` (`line_index=3`). Ou bien pendant la
-  mise sous tension de la charge utile de COM-009. Les indices de ligne vont de 0 à 8 : 0 obc,
+  (`line_index=7`, étape 3) — ou bien pendant la mise sous tension de la
+  charge utile de COM-009, sur `payload` (`line_index=3`). Les indices de ligne vont de 0 à 8 : 0 obc,
   1 ttc_rx, 2 ttc_tx, 3 payload, 4 fpa_cooler, 5 htr_bat,
   6 htr_obc, 7 aocs_wheels, 8 prop.
 - **Premier indice.** L'EPS voit le courant de la ligne
@@ -609,9 +611,10 @@ Format des cartes :
 
 ### 18.3 Roue de réaction bloquée (moyen)
 
-- **Moment de déclenchement.** Pendant l'étape 4 de LEOP-007 (ligne des roues alimentée
-  et SCAO amorcé en DETUMBLE). Injecter `rw_seizure` sur une roue
-  pendant sa mise en rotation.
+- **Moment de déclenchement.** Pendant COM-004, une fois les roues activées et
+  le satellite en NOMINAL piloté par les roues (les roues restent désactivées
+  pendant toute la LEOP). Injecter `rw_seizure` sur une roue pendant sa mise
+  en rotation.
 - **Premier indice.** L'AOCS voit la vitesse de cette roue
   (`aocs.rw2_speed`, 0x0208 pour l'indice de roue 1) bloquée à 0 tr/min
   tandis que son courant (`aocs.rw2_current`, 0x0251) reste élevé —
@@ -675,8 +678,8 @@ Format des cartes :
 
 ### 18.5 Réinitialisation de l'OBC par le chien de garde (difficile)
 
-- **Moment de déclenchement.** En plein LEOP-007, vers l'étape 4 (ligne des roues et
-  amorçage du SCAO). Injecter `watchdog_reset` sur obdh.
+- **Moment de déclenchement.** En plein LEOP-007, vers les étapes 3–5 (ligne de la
+  suite AOCS, magnétomètre et magnétocoupleurs, DETUMBLE). Injecter `watchdog_reset` sur obdh.
 - **Premier indice.** Toute la télémesure s'arrête pendant environ 15 s ; puis la
   balise UHF revient avec l'OBC en BOOTLOADER
   (`obdh.sw_image` 0x0311 = 0), `obdh.reboot_count` (0x030A)
@@ -706,8 +709,8 @@ Format des cartes :
 
 ### 18.6 Panne du bus de l'OBC (difficile)
 
-- **Moment de déclenchement.** Pendant LEOP-007, après l'étape 4 (ligne des roues
-  alimentée, apparition du SID 2 de HK SCAO).
+- **Moment de déclenchement.** Pendant LEOP-007, après l'étape 3 (ligne de la suite
+  AOCS alimentée, apparition du SID 2 de HK SCAO).
 - **Premier indice.** Le SID 2 de HK SCAO cesse d'arriver ; la HK OBDH
   (SID 4) montre `obdh.bus_a_status` (0x030F) = 1 (ERROR) avec
   `obdh.active_bus` (0x030E) = 0 (A).

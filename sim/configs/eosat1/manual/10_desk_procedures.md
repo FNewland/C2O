@@ -1,9 +1,9 @@
-# 10. Desk-Based Procedure Assignments
+# 10. Desk-Based Procedure Assignments {#10-desk-based-procedure-assignments}
 
 This section assigns all commissioning and contingency procedures to specific
 operator positions and defines GO/NO-GO call requirements for each.
 
-## Operator Positions
+## Operator Positions {#operator-positions}
 
 | Position ID      | Console Name       | Subsystems              | S8 Func IDs      |
 |------------------|--------------------|-------------------------|-------------------|
@@ -16,14 +16,14 @@ operator positions and defines GO/NO-GO call requirements for each.
 
 ---
 
-## Commissioning Procedures by Desk
+## Commissioning Procedures by Desk {#commissioning-procedures-by-desk}
 
-### Flight Director (overall coordination)
+### Flight Director (overall coordination) {#flight-director-overall-coordination}
 
 The Flight Director owns the commissioning timeline and authorises every
 GO/NO-GO gate.  They do not execute individual steps unless marked below.
 
-### eps_tcs — Power & Thermal
+### eps_tcs — Power & Thermal {#eps_tcs--power--thermal}
 
 | Proc ID   | Title                        | Lead | Support     | FD GO/NO-GO |
 |-----------|------------------------------|------|-------------|-------------|
@@ -60,7 +60,7 @@ GO/NO-GO gate.  They do not execute individual steps unless marked below.
 
 ---
 
-### aocs — Flight Dynamics
+### aocs — Flight Dynamics {#aocs--flight-dynamics}
 
 | Proc ID   | Title                        | Lead | Support     | FD GO/NO-GO |
 |-----------|------------------------------|------|-------------|-------------|
@@ -98,7 +98,7 @@ GO/NO-GO gate.  They do not execute individual steps unless marked below.
 
 ---
 
-### ttc — TT&C
+### ttc — TT&C {#ttc--ttc}
 
 | Proc ID   | Title                        | Lead | Support     | FD GO/NO-GO |
 |-----------|------------------------------|------|-------------|-------------|
@@ -117,7 +117,7 @@ GO/NO-GO gate.  They do not execute individual steps unless marked below.
 
 ---
 
-### fdir_systems — FDIR / Systems
+### fdir_systems — FDIR / Systems {#fdir_systems--fdir--systems}
 
 | Proc ID   | Title                        | Lead | Support     | FD GO/NO-GO |
 |-----------|------------------------------|------|-------------|-------------|
@@ -144,7 +144,7 @@ GO/NO-GO gate.  They do not execute individual steps unless marked below.
 
 ---
 
-### payload_ops — Payload Operations
+### payload_ops — Payload Operations {#payload_ops--payload-operations}
 
 | Proc ID   | Title                        | Lead | Support     | FD GO/NO-GO |
 |-----------|------------------------------|------|-------------|-------------|
@@ -179,9 +179,9 @@ GO/NO-GO gate.  They do not execute individual steps unless marked below.
 
 ---
 
-## Contingency Procedures by Desk
+## Contingency Procedures by Desk {#contingency-procedures-by-desk}
 
-### eps_tcs — Power & Thermal Contingencies
+### eps_tcs — Power & Thermal Contingencies {#eps_tcs--power--thermal-contingencies}
 
 | Proc ID       | Title                            | Lead     | Support      | FD GO/NO-GO | Time-Critical |
 |---------------|----------------------------------|----------|--------------|-------------|---------------|
@@ -208,7 +208,7 @@ before their equipment is shed, and FD authorises each level.
 
 ---
 
-### aocs — Flight Dynamics Contingencies
+### aocs — Flight Dynamics Contingencies {#aocs--flight-dynamics-contingencies}
 
 | Proc ID       | Title                            | Lead | Support      | FD GO/NO-GO | Time-Critical |
 |---------------|----------------------------------|------|--------------|-------------|---------------|
@@ -230,7 +230,7 @@ eps_tcs is consulted for power margin before enabling redundant sensors.
 
 ---
 
-### ttc — TT&C Contingencies
+### ttc — TT&C Contingencies {#ttc--ttc-contingencies}
 
 | Proc ID       | Title                            | Lead | Support      | FD GO/NO-GO | Time-Critical |
 |---------------|----------------------------------|------|--------------|-------------|---------------|
@@ -254,7 +254,7 @@ after 2 consecutive failed passes.
 
 ---
 
-### payload_ops — Payload Contingencies
+### payload_ops — Payload Contingencies {#payload_ops--payload-contingencies}
 
 | Proc ID       | Title                            | Lead | Support      | FD GO/NO-GO | Time-Critical |
 |---------------|----------------------------------|------|--------------|-------------|---------------|
@@ -268,12 +268,11 @@ Memory failures may require mission replanning if capacity is significantly redu
 
 ---
 
-### fdir_systems — OBDH / Systems Contingencies
+### fdir_systems — OBDH / Systems Contingencies {#fdir_systems--obdh--systems-contingencies}
 
 | Proc ID       | Title                            | Lead | Support      | FD GO/NO-GO | Time-Critical |
 |---------------|----------------------------------|------|--------------|-------------|---------------|
 | CTG-010       | OBC Watchdog Reset Recovery      | fdir_systems | eps_tcs | YES — if repeated resets | YES — reboot loop risk |
-| CTG-018 | Boot Loader Recovery         | fdir_systems | all desks | YES — at each recovery step | YES — boot inhibit timing |
 | CTG-017 | CAN Bus Failure Switchover   | fdir_systems | all desks | YES — before bus switchover | YES — 10s HK gap |
 | CTG-011 | OBC Redundancy Switchover    | fdir_systems | all desks | YES — CRITICAL: zero redundancy after | YES — 60s TM gap |
 | CTG-021 | OBC Bootloader Recovery     | fdir_systems | eps_tcs | YES — before image reload | YES — multi-contact |
@@ -293,12 +292,12 @@ confirm their subsystem status after recovery. OBC switchover is the most critic
 
 ---
 
-## MCS Interface Gaps for Contingency Support
+## MCS Interface Gaps for Contingency Support {#mcs-interface-gaps-for-contingency-support}
 
 The following MCS features are **missing or insufficient** for proper contingency
 procedure execution:
 
-### Critical Gaps
+### Critical Gaps {#critical-gaps}
 
 | # | Gap | Impact | Affected Procedures |
 |---|-----|--------|---------------------|
@@ -313,7 +312,7 @@ procedure execution:
 | 9 | **No "contingency active" banner** | No visual indication to all operators that a contingency is in progress | All contingencies |
 | 10 | **No blind command tracking** | No special mode for commands sent without TM confirmation | CTG-003, CTG-019 |
 
-### Recommended Priority
+### Recommended Priority {#recommended-priority}
 
 **P1 (implement now):** #1 (eclipse countdown), #2 (load shed indicator), #9 (contingency banner)
 **P2 (implement soon):** #3 (cross-subsystem alerts), #5 (wing status), #7 (alarm filters)
@@ -321,7 +320,7 @@ procedure execution:
 
 ---
 
-## GO/NO-GO Call Matrix
+## GO/NO-GO Call Matrix {#gono-go-call-matrix}
 
 > **Note (G7):** this table is a MIRROR of the machine-readable matrix in
 > `configs/eosat1/mcs/gonogo_matrix.yaml`, which the MCS serves at
@@ -344,7 +343,7 @@ procedure execution:
 
 ---
 
-## Emergency Escalation Paths
+## Emergency Escalation Paths {#emergency-escalation-paths}
 
 | From Contingency | Escalation Trigger | Emergency Procedure |
 |------------------|--------------------|---------------------|

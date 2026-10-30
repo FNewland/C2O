@@ -1,17 +1,17 @@
 # COM-003: AOCS Sensor Calibration
 **Subsystem:** AOCS
 **Phase:** COMMISSIONING
-**Revision:** 3.0 --- 2026-08c: runs BEFORE COM-004. The calibration
-precondition is no longer a mode gate: it is the estimator configuration
-itself (selected ST tracking >= 5 stars AND `aocs.est_source` 0x02C1 bit 0 ---
-which COARSE_SUN reaches once quiescent below 0.25 deg/s) plus all gyro units
-powered and |rate - reference| <= 0.10 deg/s. Wheels are NOT required and are
-still disabled when this card flies.
+**Revision:** 3.0 --- runs AFTER COM-004, in wheel-controlled NOMINAL
+(author ruling Q16, 2026-10-30). The calibration precondition is the estimator
+configuration itself (selected ST tracking >= 5 stars AND `aocs.est_source`
+0x02C1 bit 0) plus all gyro units powered and |rate - reference| <= 0.10 deg/s.
+The 0.10 deg/s gate is kept; the wheels are what make it reachable.
 **Approved:** Flight Operations Director
 
-**Entry state:** COM-002 exit state --- spacecraft in the COARSE_SUN hold left
-by LEOP (wheels DISABLED, `aocs.wheels_enabled` 0x0260 = 0), star trackers and
-gyro units OFF, SID 2 downlinking, mission phase 5.
+**Entry state:** COM-004 exit state --- all four wheels ENABLED
+(`aocs.wheels_enabled` 0x0260 = 4), AOCS in commanded NOMINAL on the wheels
+(`aocs.mode` 0x020F = 4, or 8 in eclipse), star trackers and gyro units OFF,
+SID 2 downlinking, mission phase 5.
 
 ## Purpose
 Commission the AOCS determination chain: bring all three gyro units on line,
@@ -19,7 +19,7 @@ bring a star tracker into the determination loop, and run the on-board gyro
 bias calibration so the rate channel is bias-compensated before the spacecraft
 is asked to hold fine pointing.
 
-**Revision 2.0 — what changed and why.** Revision 1.0 of this card was almost
+**Revision history (1.0 → 3.0).** Revision 1.0 of this card was almost
 entirely fabricated. It commanded the calibration with
 `SET_PARAM(param_id=0x0250, value=1)`, read status from `0x0251` and bias from
 `0x0252-0x0254`, started a magnetometer calibration at `0x0260`, powered the
@@ -28,28 +28,33 @@ those parameters exist**, `SET_PARAM` cannot write a command anyway, and there
 is no on-board magnetometer calibration at all. An operator following the old
 card sent seven telecommands that did nothing and then recorded made-up
 numbers. The real command is `AOCS_GYRO_CALIBRATION` (Service 8, Subtype 1,
-func_id 13), and until this revision it was itself a stub that zeroed an
-internal number and reported success without estimating anything.
+func_id 13), and until revision 2.0 it was itself a stub that zeroed an
+internal number and reported success without estimating anything. Revision
+3.0 (2026-08c) replaced the mode gate with the estimator precondition and flew
+the card before COM-004, in the wheels-off COARSE_SUN hold. At the 2026-08-20
+epoch the magnetorquer-only control in that hold hunts at 0.1-0.4 deg/s
+continuously and never met the 0.10 deg/s gate, so the author ruling of
+2026-10-30 (Q16) moved the card after COM-004, where the wheels hold NOMINAL
+quietly enough, and kept the gate.
 
-**On IMU power.** EO-Sat-1 carries three single-axis gyros and **no redundant
+**On IMU power.** EOSAT-1 carries three single-axis gyros and **no redundant
 IMU and no IMU power line**. The units are powered individually as S2 devices
 `S2_AOCS_GYROSCOPE_0/1/2` (device ids 0x0206, 0x0207, 0x0208 = 518, 519, 520),
 one per body axis. There is no "IMU ON" telecommand to look for; these three
 device commands are it.
 
 ## Prerequisites
-- [ ] COM-001 and COM-002 completed. COM-004 is NOT a prerequisite --- this card
-      deliberately runs with the wheels disabled (`aocs.wheels_enabled`
-      0x0260 == 0), which is the whole point of the 2026-08c precondition
-      change: bias calibration needs a tracking head feeding the filter and
-      low rates, not wheel control
+- [ ] COM-001, COM-002 and COM-004 completed. COM-004 IS a prerequisite (ruling
+      Q16): the wheels must be enabled (`aocs.wheels_enabled` 0x0260 == 4)
+      and holding NOMINAL, because the wheels-off magnetorquer hold cannot
+      keep the body rates under the 0.10 deg/s calibration gate
 - [ ] `eps.pl_aocs_wheels` (0x0117) == 1 — the AOCS suite line is ON (LEOP-007)
 - [ ] `eps.bat_soc` (0x0101) > 60 %
 - [ ] OBC running the application (not the bootloader)
 - [ ] Bidirectional S-band link active
 - [ ] At least 20 minutes of ground station pass remaining. The calibration
-      itself is a 300 s arc and the card holds a further 300 s of NOMINAL after
-      it, so a short pass will not cover the whole procedure.
+      itself is a 300 s arc and the card ends with the Step 10 five-minute
+      determination check, so a short pass will not cover the whole procedure.
 - [ ] **Not** in eclipse entry/exit within the next 10 minutes — the AOCS hands
       over to ECLIPSE (mode 8) at the terminator. That is harmless for the
       calibration (the tracker stays in the loop) but it changes `aocs.mode`
@@ -101,18 +106,15 @@ selected unit's status (`aocs.st_selected` 0x0244 picks it) IS the validity.
 **GO/NO-GO:** The selected tracker is tracking at least five stars
 
 ### Step 4 — Wait for the Tracker to Aid the Estimator (no mode command)
-**Action:** Stay in the COARSE_SUN hold. Once the vehicle is quiescent
-(|rate| < 0.25 deg/s) and the selected tracker holds >= 5 stars, the ST aids
-the MEKF and `aocs.est_source` (0x02C1) bit 0 sets --- IN COARSE_SUN. That is
-the 2026-08c precondition change: no NOMINAL-family mode is required, so no
-mode is commanded here. (DETUMBLE never sets bit 0; a calibration there is
-still refused with 0x0A03.)
-**Note:** Once the tracker joins, the COARSE_SUN hold will AUTO-PROMOTE to the
-commanded mode (fallback NOMINAL) after ~60 s of sun lock + tracking ---
-COARSE_SUN is a hold, never a destination. That promotion is expected DURING
-this card and is harmless to the calibration: modes 3, 4 and 8 all satisfy the
-estimator precondition once bit 0 is set. Do not verify mode == 3 after the
-lock holds.
+**Action:** Stay in the wheel-controlled NOMINAL left by COM-004. Once the
+vehicle is quiescent (|rate| < 0.25 deg/s) and the selected tracker holds
+>= 5 stars, the ST aids the MEKF and `aocs.est_source` (0x02C1) bit 0 sets.
+No mode is commanded here: the precondition is the estimator configuration,
+not the mode. (DETUMBLE never sets bit 0; a calibration there is still
+refused with 0x0A03.)
+**Note:** The terminator hands NOMINAL over to ECLIPSE (mode 8) and back. That
+is harmless to the calibration: modes 4 and 8 both satisfy the estimator
+precondition once bit 0 is set.
 **Verify:** `aocs.est_source` (0x02C1) bit 0 set within 600s --- ST aiding
 **Verify:** `aocs.knowledge_err_3sig` (0x02A7) < 300 within 600s --- arcsec
 **GO/NO-GO:** Star tracker feeding the estimator
@@ -148,18 +150,13 @@ It is not instantaneous and it is not a reset.
 tracker in the loop (Steps 3-4), 0x0A04 = body rate above the 0.10 deg/s
 calibration limit, 0x0A05 = a calibration is already running. The same code is
 latched in `aocs.gyro_cal_reject` (0x02D0).
-**Note:** 0x0A04 is COMMON in the COARSE_SUN hold: the magnetorquer control
-hunts at up to ~0.2 deg/s. Wait for a quiet spell (all rates < 0.08 deg/s on
-SID 2) and retry; after the auto-promotion to NOMINAL the vehicle settles and
-the calibration usually starts first time. Retrying is the card's nominal
-loop, not an anomaly.
-**⚠ 2026-08 (epoch/altitude ruling):** at the re-epoched mission T-0
-(2026-08-20T12:00:00Z, TLE-true ~513 km orbit) the wheels-off MTQ control
-hunts at 0.1–0.4 deg/s **continuously** — measured attempts every 10 s over
-three orbits never found a spell below the 0.10 deg/s gate. Until the owner
-rules (relax the gate, allow an MTQ-quiet calibration arc, or move this card
-after COM-004), expect Step 6 to refuse with 0x0A04 indefinitely at this
-epoch; record the refusals and escalate rather than looping forever.
+**Note:** If 0x0A04 is returned, wait for a quiet spell (all rates
+< 0.08 deg/s on SID 2) and retry. In wheel-controlled NOMINAL the vehicle
+settles below the gate and the calibration usually starts first time; a
+refusal normally means a slew, a desaturation or a wheel transient is still
+running. This is why the card flies after COM-004 (ruling Q16): in the
+wheels-off COARSE_SUN hold the magnetorquer control hunts at 0.1-0.4 deg/s at
+the 2026-08-20 epoch and the gate was never met.
 **GO/NO-GO:** Calibration RUNNING
 
 ### Step 7 — Monitor the Calibration Arc
@@ -168,10 +165,9 @@ epoch; record the refusals and escalate rather than looping forever.
 **Verify:** `aocs.gyro_cal_progress` (0x02CA) >= 100 within 330s
 **Note:** Do NOT slew, desaturate or command a mode change during the arc.
 Any manoeuvre above the 0.10 deg/s quiescence limit aborts the calibration
-with `AOCS_GYRO_CAL_ABORT` (0x0212) rather than average nonsense. The
-AUTOMATIC COARSE_SUN -> NOMINAL promotion may itself abort a running arc if
-the promotion transient exceeds the limit --- that is the 0x0A04 abort case;
-re-run from Step 6 once settled (off-nominal handling below).
+with `AOCS_GYRO_CAL_ABORT` (0x0212) rather than average nonsense. That is the
+0x0A04 abort case; re-run from Step 6 once settled (off-nominal handling
+below).
 **Note:** To abandon the run deliberately, send
 `AOCS_GYRO_CALIBRATION(action=1, duration_s=0)`; the abort is reported with
 code 0x0A08.
@@ -231,8 +227,8 @@ a real spacecraft; it is demonstrated in the training scenario.
   matching `S2_AOCS_GYROSCOPE_n` command and retry the calibration.
 - **Refused with 0x0A03.** The star tracker is not in the determination loop.
   Either the tracker is not tracking (`aocs.st1_status` 0x0240 != 2 — repeat the
-  tracker power-on) or the AOCS is in DETUMBLE/COARSE_SUN, where the tracker is
-  not used at all (re-command NOMINAL and wait for it).
+  tracker power-on) or it has not joined the estimator yet: wait for
+  `aocs.est_source` (0x02C1) bit 0 (Step 4) and retry.
 - **Refused with 0x0A04.** Body rate is above 0.10 deg/s relative to the
   reference. Wait for the slew or the desaturation to finish
   (`aocs.slew_state` 0x0292 = 0, `aocs.mode` 0x020F != 7) and retry.
@@ -278,9 +274,9 @@ a real spacecraft; it is demonstrated in the training scenario.
 ## Exit state
 - All three gyro units ON, both trackers ON, ST1 selected and tracking
 - Gyro bias calibration COMPLETE/SUCCESS with compensation applied
-- AOCS very likely AUTO-PROMOTED to NOMINAL (mode 4, or 8 in eclipse) --- the
-  expected side effect of bringing the tracker up in a COARSE_SUN hold;
-  wheels still DISABLED (0x0260 = 0)
+- AOCS still in the commanded NOMINAL on the wheels (mode 4, or 8 in
+  eclipse), now with the tracker in the determination loop; wheels ENABLED
+  (0x0260 = 4)
 - No power-line or TTC state touched
 
-**NEXT:** COM-004 (AOCS Actuator Checkout --- enables the wheels)
+**NEXT:** COM-005 (AOCS Mode Transitions)

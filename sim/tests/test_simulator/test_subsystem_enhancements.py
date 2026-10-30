@@ -345,15 +345,19 @@ class TestAOCSStarTrackerFOV:
         assert _ST_EXCLUSION_DEG == 15.0
 
     def test_st1_zenith_boresight(self):
-        """ST1 boresight is +Z (zenith)."""
-        # Verified from code: unit==1 -> boresight = (0,0,1)
-        boresight = (0, 0, 1)
-        assert boresight == (0, 0, 1)
+        """ST1 boresight is +Z, the zenith face (ruling Q4: +Z = zenith)."""
+        from smo_simulator.models.aocs_basic import _ST_BORESIGHTS
+        assert _ST_BORESIGHTS[1] == (0.0, 0.0, 1.0)
 
-    def test_st2_nadir_boresight(self):
-        """ST2 boresight is -Z (nadir)."""
-        boresight = (0, 0, -1)
-        assert boresight == (0, 0, -1)
+    def test_st2_canted_off_zenith_never_at_earth(self):
+        """ST2 sits on the zenith side (positive Z component), 45 deg off
+        +Z towards +Y. Before ruling Q4 it pointed at nadir (+Z then)."""
+        from smo_simulator.models.aocs_basic import _ST_BORESIGHTS
+        b = _ST_BORESIGHTS[2]
+        assert math.isclose(math.sqrt(sum(c * c for c in b)), 1.0)
+        assert b[2] > 0.0
+        assert math.degrees(math.acos(b[2])) == pytest.approx(45.0)
+        assert b[1] > 0.0 and b[0] == 0.0
 
     def test_st_blinding_check(self):
         """Sun within exclusion cone should blind the tracker."""

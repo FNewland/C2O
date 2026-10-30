@@ -9,129 +9,129 @@
   },
   {
    "id": "eosat-1-electrical-power-subsystem-eps",
-   "en_hash": "94aa1da3abe297a0",
-   "fr_hash": "ac4a11459705291b"
+   "en_hash": "f60379004fe6cc01",
+   "fr_hash": "7ee68d9e9db2650d"
   },
   {
    "id": "eosat-1-electrical-power-subsystem-eps/1-overview",
-   "en_hash": "4de8160369f2d62f",
-   "fr_hash": "f0e9b7c86b4feed9"
+   "en_hash": "05086ce2faa147cf",
+   "fr_hash": "58cbc481a8e609d3"
   },
   {
    "id": "eosat-1-electrical-power-subsystem-eps/2-architecture",
-   "en_hash": "0cc3a538694210a4",
-   "fr_hash": "0cc3a538694210a4"
+   "en_hash": "d4fe2962b898e9ec",
+   "fr_hash": "d4fe2962b898e9ec"
   },
   {
-   "id": "eosat-1-electrical-power-subsystem-eps/2-architecture/2-1-solar-panels-body-mounted-panels-and-deployable-wings",
-   "en_hash": "8e0c88da2b3f0fc5",
-   "fr_hash": "6334f465415843af"
+   "id": "eosat-1-electrical-power-subsystem-eps/2-architecture/21-solar-panels--body-mounted-panels-and-deployable-wings",
+   "en_hash": "fbdcfc13661ad2d2",
+   "fr_hash": "bf57e7020ee01fc5"
   },
   {
-   "id": "eosat-1-electrical-power-subsystem-eps/2-architecture/2-1-1-deployable-solar-wings",
-   "en_hash": "ff77e5181d7be343",
-   "fr_hash": "cf54ecdff6f540ce"
+   "id": "eosat-1-electrical-power-subsystem-eps/2-architecture/211-deployable-solar-wings",
+   "en_hash": "e480e906a25111bf",
+   "fr_hash": "e36847ae0f529ef5"
   },
   {
-   "id": "eosat-1-electrical-power-subsystem-eps/2-architecture/2-2-battery",
-   "en_hash": "d9301dcf9d870b52",
-   "fr_hash": "68c501cf4c1adadc"
+   "id": "eosat-1-electrical-power-subsystem-eps/2-architecture/22-battery",
+   "en_hash": "b468dcfa48d5c292",
+   "fr_hash": "1f8165e1975589b9"
   },
   {
-   "id": "eosat-1-electrical-power-subsystem-eps/2-architecture/2-3-power-distribution-module-pdm",
-   "en_hash": "cd361975288fc6e4",
-   "fr_hash": "c93a5f7d787047d2"
+   "id": "eosat-1-electrical-power-subsystem-eps/2-architecture/23-power-distribution-module-pdm",
+   "en_hash": "1e12013ecf33653a",
+   "fr_hash": "f5c7054a122806d1"
   },
   {
-   "id": "eosat-1-electrical-power-subsystem-eps/2-architecture/2-3-power-distribution-module-pdm/unswitchable-lines",
-   "en_hash": "a75adfe6269fe9dd",
-   "fr_hash": "d328a47e7ae32336"
+   "id": "eosat-1-electrical-power-subsystem-eps/2-architecture/23-power-distribution-module-pdm/unswitchable-lines",
+   "en_hash": "94f1e0fbc0654834",
+   "fr_hash": "f02532e80e94fd6a"
   },
   {
-   "id": "eosat-1-electrical-power-subsystem-eps/2-architecture/2-3-power-distribution-module-pdm/switchable-lines",
-   "en_hash": "60efcfebf5b248c3",
-   "fr_hash": "3a3ccb38f12c70ba"
+   "id": "eosat-1-electrical-power-subsystem-eps/2-architecture/23-power-distribution-module-pdm/switchable-lines",
+   "en_hash": "1a102b73f107010e",
+   "fr_hash": "bbfa3e8ac2669bde"
   },
   {
-   "id": "eosat-1-electrical-power-subsystem-eps/2-architecture/2-3-power-distribution-module-pdm/load-shed-order",
-   "en_hash": "bb91fd567c2ac6c4",
-   "fr_hash": "7b2ca192936a793e"
+   "id": "eosat-1-electrical-power-subsystem-eps/2-architecture/23-power-distribution-module-pdm/load-shed-order",
+   "en_hash": "822bc5270dc54480",
+   "fr_hash": "2f9c4f4eee5c1abe"
   },
   {
-   "id": "eosat-1-electrical-power-subsystem-eps/2-architecture/2-3-power-distribution-module-pdm/cold-redundant-pdm-path",
-   "en_hash": "b84e31e5a4d9ec1f",
-   "fr_hash": "4ceb18ade130814c"
+   "id": "eosat-1-electrical-power-subsystem-eps/2-architecture/23-power-distribution-module-pdm/cold-redundant-pdm-path",
+   "en_hash": "64b5b3deb41de173",
+   "fr_hash": "68f3fea017b4fc8b"
   },
   {
-   "id": "eosat-1-electrical-power-subsystem-eps/2-architecture/2-4-dedicated-pdm-command-channel",
-   "en_hash": "5bd3c74bc5fa92ab",
-   "fr_hash": "8d334342c3747679"
+   "id": "eosat-1-electrical-power-subsystem-eps/2-architecture/24-dedicated-pdm-command-channel",
+   "en_hash": "7a996ca3a1b75357",
+   "fr_hash": "48ab3cba1e0d5566"
   },
   {
-   "id": "eosat-1-electrical-power-subsystem-eps/2-architecture/2-5-separation-timer-circuit",
-   "en_hash": "a667e7a53acba243",
-   "fr_hash": "4c14fad4a775ac8b"
+   "id": "eosat-1-electrical-power-subsystem-eps/2-architecture/25-separation-timer-circuit",
+   "en_hash": "a5a4f3e2998af9ba",
+   "fr_hash": "6d1db14008381be2"
   },
   {
    "id": "eosat-1-electrical-power-subsystem-eps/3-power-modes",
-   "en_hash": "5f1588095c985182",
-   "fr_hash": "7998f9d5125d2f20"
+   "en_hash": "526c3ab621189809",
+   "fr_hash": "2d1d96e5693abf4c"
   },
   {
-   "id": "eosat-1-electrical-power-subsystem-eps/3-power-modes/3-1-power-budget-breakdown-nominal-subsystem-consumption",
-   "en_hash": "73fc8df90d17e93e",
-   "fr_hash": "76c7638414cb8ac4"
+   "id": "eosat-1-electrical-power-subsystem-eps/3-power-modes/31-power-budget-breakdown-nominal-subsystem-consumption",
+   "en_hash": "65f7e1af054ba053",
+   "fr_hash": "0f99384a66977f65"
   },
   {
-   "id": "eosat-1-electrical-power-subsystem-eps/3-power-modes/3-2-orbit-average-budget-worst-beta-eol",
-   "en_hash": "a9a5bca01a9f0b57",
-   "fr_hash": "fe33b9a6fa6014d0"
+   "id": "eosat-1-electrical-power-subsystem-eps/3-power-modes/32-orbit-average-budget-worst-beta-eol",
+   "en_hash": "fe2f317452878b56",
+   "fr_hash": "e97be056d76a9e6c"
   },
   {
    "id": "eosat-1-electrical-power-subsystem-eps/4-telemetry-parameters",
-   "en_hash": "19e5ae63c6d4c235",
-   "fr_hash": "be10b26e641e0be9"
+   "en_hash": "e6f2be3cff620448",
+   "fr_hash": "9c62a9b17156af4e"
   },
   {
    "id": "eosat-1-electrical-power-subsystem-eps/5-limit-definitions",
-   "en_hash": "4fcb05b58960f4af",
-   "fr_hash": "d06af0ed7b4fcdad"
+   "en_hash": "4ad61cb33748a169",
+   "fr_hash": "057683aa18aab072"
   },
   {
-   "id": "eosat-1-electrical-power-subsystem-eps/5-limit-definitions/5-1-limit-response",
-   "en_hash": "c55957d6653da914",
-   "fr_hash": "7996c95e603f9281"
+   "id": "eosat-1-electrical-power-subsystem-eps/5-limit-definitions/51-limit-response",
+   "en_hash": "f31e8e1f6a017d49",
+   "fr_hash": "d8309f166c292a1b"
   },
   {
    "id": "eosat-1-electrical-power-subsystem-eps/6-relevant-commands",
-   "en_hash": "7107c33c28793d1b",
-   "fr_hash": "2c5b46ef259c1d96"
+   "en_hash": "f5d4237536629d79",
+   "fr_hash": "f33013c97348ce8e"
   },
   {
-   "id": "eosat-1-electrical-power-subsystem-eps/6-relevant-commands/6-1-battery-heater-control",
-   "en_hash": "8a84244baf489083",
-   "fr_hash": "95fda3e5ca63d9fe"
+   "id": "eosat-1-electrical-power-subsystem-eps/6-relevant-commands/61-battery-heater-control",
+   "en_hash": "d7f85bcd3ed855f1",
+   "fr_hash": "31afe56f2eb3b595"
   },
   {
    "id": "eosat-1-electrical-power-subsystem-eps/7-operational-notes",
-   "en_hash": "31ddb565ab478727",
-   "fr_hash": "73fb7804938bf669"
+   "en_hash": "e2daa4d5ce75ba82",
+   "fr_hash": "3b787ed0246fb170"
   },
   {
    "id": "eosat-1-electrical-power-subsystem-eps/8-failure-modes",
-   "en_hash": "40c29f992d2d28af",
-   "fr_hash": "7860ff8e006bd7ea"
+   "en_hash": "9dfc8e65d3195cac",
+   "fr_hash": "472692d7023cdd41"
   },
   {
-   "id": "eosat-1-electrical-power-subsystem-eps/8-failure-modes/8-1-per-panel-degradation-and-loss",
-   "en_hash": "f8ca10da41a65dd4",
-   "fr_hash": "9d480f080dc5e98f"
+   "id": "eosat-1-electrical-power-subsystem-eps/8-failure-modes/81-per-panel-degradation-and-loss",
+   "en_hash": "d3cd5e134ea0aa69",
+   "fr_hash": "f4acba683f6bdf5d"
   },
   {
-   "id": "eosat-1-electrical-power-subsystem-eps/8-failure-modes/8-2-progressive-load-shed-thresholds",
-   "en_hash": "a39385decf609c54",
-   "fr_hash": "b149b601a3676740"
+   "id": "eosat-1-electrical-power-subsystem-eps/8-failure-modes/82-progressive-load-shed-thresholds",
+   "en_hash": "6f684a69fc5a9ed5",
+   "fr_hash": "6cef7a38a10a69c9"
   }
  ],
- "en_commit": "3e80564"
+ "en_commit": "c4a140a"
 }

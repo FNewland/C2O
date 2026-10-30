@@ -1,4 +1,4 @@
-# EOSAT-1 Attitude and Orbit Control System (AOCS)
+# EOSAT-1 Attitude and Orbit Control System (AOCS) {#eosat-1-attitude-and-orbit-control-system-aocs}
 
 **Document ID:** EOSAT1-UM-AOCS-003
 **Issue:** 2.0
@@ -7,29 +7,29 @@
 
 ---
 
-## 1. Overview
+## 1. Overview {#1-overview}
 
 The Attitude and Orbit Control System (AOCS) provides three-axis attitude determination and
 control for EOSAT-1. It maintains nadir-pointing during nominal ocean imaging operations,
 performs detumble after separation, and supports slew manoeuvres for off-nadir target
 acquisition. The OBC runs ADCS software for orbit determination (using the onboard GPS
-receiver). Orbit manoeuvres (collision avoidance, limited drag make-up) use the 1U
+receiver). Orbit manoeuvres (collision avoidance, limited drag make-up, the end-of-life disposal burn) use the 1U
 green-monopropellant propulsion module (S8 funcs 108–118), with the AOCS holding the burn attitude.
 
-## 2. Hardware Configuration
+## 2. Hardware Configuration {#2-hardware-configuration}
 
-### 2.1 Sensors
+### 2.1 Sensors {#21-sensors}
 
 | Sensor                        | Quantity | Function                                    |
 |-------------------------------|----------|---------------------------------------------|
-| Star Camera (Zenith)          | 1        | High-accuracy attitude reference (-Z face)  |
-| Star Camera (Nadir)           | 1        | High-accuracy attitude reference (+Z face)  |
+| Star Camera (Zenith)          | 1        | High-accuracy attitude reference (+Z face)  |
+| Star Camera 2 (canted)        | 1        | High-accuracy attitude reference (+Z face, canted 45 deg towards +Y) |
 | 3-Axis Magnetometer           | 1        | Coarse attitude and magnetic field (single-string) |
 | Fibre-Optic Gyros             | 3        | Angular rate measurement (body axes)         |
 | Coarse Sun Sensor Heads       | 6        | Sun direction for safe mode (one per face)   |
 | GPS Receiver                  | 1        | Orbit determination (zenith antenna)         |
 
-#### 2.1.1 Magnetometer (single-string)
+#### 2.1.1 Magnetometer (single-string) {#211-magnetometer-single-string}
 
 EOSAT-1 carries ONE 3-axis fluxgate magnetometer on a short boom — like the gyro
 fit, there is no spare and no prime/backup switch. A magnetometer failure is a
@@ -58,7 +58,7 @@ be ineffective (B-dot has no input), magnetic desaturation to refuse, and the
 coarse CSS+MAG TRIAD to degrade to CSS-plus-gyro coasting. There is no operator
 recovery: the mission continues in a permanently degraded attitude mode.
 
-#### 2.1.2 Coarse Sun Sensors — 6-Head Configuration
+#### 2.1.2 Coarse Sun Sensors — 6-Head Configuration {#212-coarse-sun-sensors--6-head-configuration}
 
 EOSAT-1 uses 6 individual coarse sun sensor (CSS) heads, one mounted on each spacecraft
 face. Each head provides a cosine-response current proportional to the angle between the
@@ -70,37 +70,40 @@ Sun vector and the face normal:
 | CSS-2    | -X   | Anti-track       | 0x027B   |
 | CSS-3    | +Y   | Cross-track      | 0x027C   |
 | CSS-4    | -Y   | Anti-cross       | 0x027D   |
-| CSS-5    | +Z   | Nadir            | 0x027E   |
-| CSS-6    | -Z   | Zenith           | 0x027F   |
+| CSS-5    | +Z   | Zenith           | 0x027E   |
+| CSS-6    | -Z   | Nadir            | 0x027F   |
 
 The AOCS software computes the Sun vector by combining the responses from all illuminated
 CSS heads using geometric projection. A minimum of two illuminated heads is required for
 a valid Sun vector determination. In eclipse (all heads dark), the Sun vector is propagated
 from the last valid measurement using the orbital model.
 
-#### 2.1.3 Star Cameras — Zenith and Nadir FOV Geometry
+#### 2.1.3 Star Cameras — Boresights and FOV Geometry {#213-star-cameras--boresights-and-fov-geometry}
 
-EOSAT-1 carries two star cameras mounted on opposing faces:
+EOSAT-1 carries two star cameras, both on the zenith (+Z) face, so that neither looks at
+the Earth in nominal nadir pointing:
 
 | Camera   | Face | Boresight  | FOV Half-Angle | Accuracy (3-sigma) |
 |----------|------|------------|----------------|---------------------|
-| ST-Zenith| -Z   | Zenith     | 15 deg cone    | 0.05 deg            |
-| ST-Nadir | +Z   | Nadir      | 15 deg cone    | 0.05 deg            |
+| ST1 (ST-Zenith) | +Z | Zenith (+Z) | 15 deg cone | 0.05 deg            |
+| ST2 (canted)    | +Z | 45 deg from +Z towards +Y | 15 deg cone | 0.05 deg |
+
++Y is the anti-sun side of this orbit (beta about −21 to −31 deg), so the cant keeps ST2
+away from the Sun when ST1 is at risk.
 
 **Blinding Zones:** Each star camera is blinded when the Sun, Earth limb, or Moon enters
 its field of view (15 deg half-angle cone around boresight):
 
 | Camera    | Blinding Sources                                           |
 |-----------|------------------------------------------------------------|
-| ST-Zenith | Sun within 15 deg of zenith direction                      |
-| ST-Nadir  | Earth limb always in FOV (nadir-pointing); Sun reflection  |
+| ST1       | Sun within 15 deg of the zenith direction                  |
+| ST2       | Sun within 15 deg of its canted boresight; Earth limb during large slews |
 
-In nominal nadir-pointing, ST-Zenith is the primary attitude reference (looking away from
-Earth). ST-Nadir is typically blinded by Earth proximity but becomes useful during slew
-manoeuvres or non-nadir attitudes. If both cameras are blinded simultaneously, attitude is
+In nominal nadir-pointing, ST1 is the primary attitude reference (looking away from
+Earth) and ST2 is the backup. If both cameras are blinded simultaneously, attitude is
 propagated using gyros for up to 60 seconds.
 
-### 2.2 Actuators
+### 2.2 Actuators {#22-actuators}
 
 | Actuator             | Quantity | Function                                    |
 |----------------------|----------|---------------------------------------------|
@@ -111,7 +114,7 @@ The four reaction wheels are arranged in a pyramid configuration providing full 
 control with single-fault tolerance. Nominal wheel speed range is +/-4000 RPM; the yellow
 limit is set at +/-5000 RPM to allow margin before desaturation is required.
 
-## 3. AOCS Modes
+## 3. AOCS Modes {#3-aocs-modes}
 
 Mode codes follow the canonical table in `configs/eosat1/aocs/aocs_mode_codes.yaml`
 (this section previously carried a contradictory five-mode numbering and has been
@@ -130,7 +133,7 @@ corrected):
 | 8       | ECLIPSE     | Nadir hold on gyro-only knowledge (no ST updates)       |
 | 9       | INERTIAL    | Hold a commanded ECI quaternion (calibration, stereo)   |
 
-### 3.1 Mode Transitions
+### 3.1 Mode Transitions {#31-mode-transitions}
 
 ```
 DETUMBLE --> COARSE_SUN --> NOMINAL <--> ECLIPSE
@@ -153,7 +156,7 @@ DETUMBLE --> COARSE_SUN --> NOMINAL <--> ECLIPSE
   to NOMINAL at eclipse exit.
 - Any mode reverts to **COARSE_SUN** on FDIR-triggered safe mode entry.
 
-## 4. Telemetry Parameters
+## 4. Telemetry Parameters {#4-telemetry-parameters}
 
 | Param ID | Name           | Unit     | Description                              |
 |----------|----------------|----------|------------------------------------------|
@@ -181,7 +184,7 @@ DETUMBLE --> COARSE_SUN --> NOMINAL <--> ECLIPSE
 | 0x021A   | rw3_temp       | deg C    | Reaction wheel 3 temperature             |
 | 0x021B   | rw4_temp       | deg C    | Reaction wheel 4 temperature             |
 
-## 5. Limit Definitions
+## 5. Limit Definitions {#5-limit-definitions}
 
 | Parameter          | Yellow Low | Yellow High | Red Low | Red High |
 |--------------------|------------|-------------|---------|----------|
@@ -195,7 +198,7 @@ DETUMBLE --> COARSE_SUN --> NOMINAL <--> ECLIPSE
 A sustained attitude error above 1 deg triggers a yellow alarm. Errors above 5 deg in
 NOMINAL mode will cause the FDIR to command a transition to COARSE_SUN.
 
-## 6. Commands
+## 6. Commands {#6-commands}
 
 | Command           | Service  | Parameters             | Description                          |
 |-------------------|----------|------------------------|--------------------------------------|
@@ -205,7 +208,7 @@ NOMINAL mode will cause the FDIR to command a transition to COARSE_SUN.
 | GET_PARAM         | S20,S3   | param_id (0x0200–021B) | Read individual AOCS parameter       |
 | SET_PARAM         | S20,S1   | param_id, value        | Modify AOCS configuration parameter  |
 
-### 6.1 Desaturation Procedure
+### 6.1 Desaturation Procedure {#61-desaturation-procedure}
 
 1. Verify current wheel speeds via HK or `GET_PARAM` for 0x0207–0x020A.
 2. If any wheel exceeds +/-4500 RPM, schedule desaturation.
@@ -214,7 +217,7 @@ NOMINAL mode will cause the FDIR to command a transition to COARSE_SUN.
    duration: 5–15 min at the 1.6 A·m² rod dipole).
 5. AOCS autonomously returns to NOMINAL upon completion.
 
-## 7. Operational Notes
+## 7. Operational Notes {#7-operational-notes}
 
 1. Each star camera requires a minimum of 3 identified stars for a valid attitude solution.
    During eclipse exit (Sun blinding), attitude is propagated using gyros only for up to 60 s.
@@ -236,7 +239,7 @@ NOMINAL mode will cause the FDIR to command a transition to COARSE_SUN.
 6. The GPS receiver provides position and velocity for orbit determination. The ADCS
    software uses this data for orbit propagation but does not perform orbital control.
 
-## 8. ADCS Commissioning Sequence
+## 8. ADCS Commissioning Sequence {#8-adcs-commissioning-sequence}
 
 The ADCS commissioning sequence is performed during the transition from LEOP to nominal
 operations. It follows a strict order to verify each component before enabling the next:

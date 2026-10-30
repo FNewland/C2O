@@ -25,7 +25,7 @@ steps = [
     ("Random vibration, 3 axes", "env"),
     ("Post-vibration functional test", "func"),
     ("Anomaly?", "dec"),
-    ("Thermal vacuum, 4–8 cycles\n(functional test at each extreme)", "env"),
+    ("Thermal vacuum, 4 cycles\n(functional test at each extreme)", "env"),
     ("Post-TVAC functional test", "func"),
     ("EMC test (if required)", "env"),
     ("Mass and CG measurement", "meas"),
@@ -109,11 +109,11 @@ note(yv, "Vibration levels",
      "Qualification: MPE + 3 dB, 2 min per axis\n"
      "Acceptance: MPE, 1 min per axis\n"
      "Proto-flight: MPE + 3 dB, 1 min per axis")
-yt = ypos["Thermal vacuum, 4–8 cycles\n(functional test at each extreme)"]
+yt = ypos["Thermal vacuum, 4 cycles\n(functional test at each extreme)"]
 note(yt, "Thermal-vacuum levels",
      "Qualification: predicted ± 15 °C, 8 cycles\n"
      "Acceptance: predicted ± 10 °C, 4 cycles\n"
-     "Proto-flight: predicted ± 10 °C, 4–8 cycles\n"
+     "Proto-flight: predicted ± 10 °C, 4 cycles\n"
      "Vacuum < 10⁻⁵ mbar; ≥ 1 h dwell at each extreme")
 
 # legend of box types

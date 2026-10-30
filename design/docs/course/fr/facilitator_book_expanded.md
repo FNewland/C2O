@@ -376,7 +376,7 @@ Tableau 1.1.4 — Niveaux d'intégration du cycle en V et méthodes de vérifica
 
 Les flèches orange en tirets du schéma représentent la **traçabilité horizontale** -- le principe selon lequel chaque élément de la branche gauche doit avoir une activité de vérification ou de validation correspondante sur la branche droite :
 
-- Chaque **exigence** (à gauche) a une **méthode de vérification** (à droite) : essai, analyse, inspection ou démonstration (ATID)
+- Chaque **exigence** (à gauche) a une **méthode de vérification** (à droite) : analyse, essai, inspection ou revue de conception, plus la démonstration qu'ajoute la pratique de la NASA (ATIR(D))
 - Chaque **décision de conception** (à gauche) a un **essai ou une analyse** (à droite) qui confirme qu'elle fonctionne
 - Cette traçabilité est consignée dans la **matrice de vérification des exigences (RVM)**
 
@@ -426,7 +426,7 @@ Tableau 1.1.6 — Processus de réalisation du produit de la NPR 7123.1D, qui co
 |---|---------|-------------|------------|-------------------|
 | 5 | **Mise en œuvre du produit** | Fabriquer, acheter, coder ou réutiliser les produits du niveau le plus bas | Produits matériels et logiciels | Section 5.1 |
 | 6 | **Intégration du produit** | Assembler selon le plan d'intégration, vérifier les interfaces | Système intégré | Section 5.2 |
-| 7 | **Vérification du produit** | Confirmer que le produit satisfait les exigences techniques (ATID) | Preuves de vérification | Section 5.3 |
+| 7 | **Vérification du produit** | Confirmer que le produit satisfait les exigences techniques (ATIR(D)) | Preuves de vérification | Section 5.3 |
 | 8 | **Validation du produit** | Confirmer que le produit répond aux attentes des parties prenantes | Preuves de validation | Section 5.4 |
 | 9 | **Transition du produit** | Livrer, déployer, transférer à l'exploitation | Système opérationnel | Section 5.5 |
 
@@ -923,6 +923,8 @@ Le Canada a historiquement suivi une stratégie d'« excellence de niche »�
 
 ## Partie 2 : cadre réglementaire
 ---
+
+> **Lectures attendues avant cette partie.** [Règlement des radiocommunications de l'UIT](https://www.itu.int/pub/R-REG-RR) (édition de 2024), article 21 — Services de Terre et services spatiaux partageant des bandes de fréquences au-dessus de 1 GHz ; ISDE CPC-2-6-02 — Procédure de présentation de demandes de licences de spectre pour les stations spatiales (version 7, avril 2026) ; Loi sur les systèmes de télédétection spatiale (LSTS) — [https://laws-lois.justice.gc.ca/eng/acts/R-5.4/](https://laws-lois.justice.gc.ca/eng/acts/R-5.4/).
 
 ### 5. Vue d'ensemble du cadre réglementaire
 Les activités spatiales au Canada relèvent de plusieurs organismes fédéraux. Il n'existe pas de « loi sur l'espace » unique -- la réglementation est au contraire répartie entre plusieurs lois :
@@ -1476,6 +1478,8 @@ Tableau 1.3.9 — Correspondance des normes ECSS, NASA et ISO dans les principau
 
 ## Partie 2 : interfaces de lancement, atténuation des débris et droit international
 ---
+
+> **Lectures attendues avant cette partie.** Cal Poly, *CubeSat Design Specification (1U – 12U)*, rév. 14.1 (CP-CDS-R14.1, février 2022), §4 — interface avec le déployeur et §5 — options des déployeurs ; Wertz et Larson, *Space Mission Analysis and Design*, 3e éd., chap. 18 — systèmes de lancement.
 
 ### 5. CDS Rev 14 -- norme d'interface avec le lanceur
 #### 5.1 Qu'est-ce que la CDS ?
@@ -2405,7 +2409,7 @@ Tableau 1.4.23 — Synthèse de la séance : points essentiels sur les besoins 
 2. Rédiger des exigences qui satisfont les critères SMART et expriment le QUOI, et non le COMMENT
 3. Classer les exigences par type : fonctionnelles, de performance, d'interface, de contrainte et d'environnement
 4. Construire une hiérarchie d'exigences à trois niveaux (mission, système, sous-système) avec une traçabilité bidirectionnelle
-5. Affecter des méthodes de vérification (ATID) aux exigences et justifier chaque choix
+5. Affecter des méthodes de vérification (ATIR(D)) aux exigences et justifier chaque choix
 6. Utiliser l'onglet Exigences de SpaceCDF pour générer, valider et gérer les exigences
 
 ---
@@ -2620,18 +2624,19 @@ Tableau 2.1.9 — Exigences composées reformulées en énoncés scindés vérif
 
 ---
 
-## 5. Méthodes de vérification -- ATID
-*[Source : ECSS-E-ST-10-02C Rev.1, sect. 5.3 ; [NASA SEH](https://www.nasa.gov/reference/systems-engineering-handbook/), sect. 5.3]*
+## 5. Méthodes de vérification -- ATIR(D)
+*[Source : ECSS-E-ST-10-02C Rev.1, §5.2.2 ; [NASA SEH](https://www.nasa.gov/reference/systems-engineering-handbook/), sect. 5.3]*
 
-Chaque exigence doit se voir affecter une méthode de vérification. Les quatre méthodes standard (abrégées ATID ici ; le chapitre 4.2 présente les quatre mêmes dans l'ordre IADT) sont :
+Chaque exigence doit se voir affecter une méthode de vérification. Le §5.2.2.1 de l'ECSS-E-ST-10-02C Rev.1 définit quatre méthodes -- essai, analyse, revue de conception et inspection -- et compte la démonstration dans l'essai ; la pratique de la NASA présente la démonstration comme une cinquième méthode distincte. Cet ouvrage abrège l'ensemble en ATIR(D), le D étant entre parenthèses pour cette raison :
 
-Tableau 2.1.10 — Méthodes de vérification par analyse, essai, inspection et démonstration, avec des conseils d'utilisation.
+Tableau 2.1.10 — Méthodes de vérification par analyse, essai, inspection, revue de conception et démonstration, avec des conseils d'utilisation.
 
 | Méthode | Code | Ce qu'elle prouve | Quand l'utiliser |
 |--------|------|---------------|-----------|
 | **Analyse** | A | Exigence satisfaite par modèle mathématique, simulation ou similarité | Phase B--C ; lorsque les essais sont irréalisables ou d'un coût prohibitif |
 | **Essai** | T | Exigence satisfaite par mesure physique | Phase C--D ; lorsque la preuve exige du matériel dans un environnement maîtrisé |
 | **Inspection** | I | Exigence confirmée par examen visuel ou physique | Caractéristiques physiques (dimensions, étiquettes, marquages, masse) |
+| **Revue de conception** | R | Exigence confirmée par l'examen des plans, des schémas ou de la documentation | Caractéristiques de conception établies à partir des dossiers (p. ex. emploi de composants approuvés, présence de redondance) |
 | **Démonstration** | D | Exigence confirmée par un exercice opérationnel | Exigences fonctionnelles prouvées par l'exécution de procédures |
 
 ### Guide de choix de la méthode de vérification
@@ -2780,7 +2785,7 @@ Tableau 2.1.14 — Synthèse de la séance : points essentiels sur le cycle en 
 | Types d'exigences | Fonctionnelle, de performance, d'interface, de contrainte, d'environnement |
 | Hiérarchie | Mission -> système -> sous-système, avec traçabilité bidirectionnelle (vers le haut, vers le bas, horizontale) |
 | Scission | Un seul point par exigence, pour une vérification indépendante |
-| ATID | Analyse, essai (*Test*), inspection, démonstration -- affectées par exigence et par phase |
+| ATIR(D) | Analyse, essai (*Test*), inspection, revue de conception (+ démonstration) -- affectées par exigence et par phase |
 
 # Chapitre 2.2 — Décomposition fonctionnelle et allocation
 
@@ -4479,9 +4484,9 @@ Tableau 3.1.10 — Moyens de contrôle thermique passifs et actifs : incidence 
 
 ### Marges thermiques de l'ECSS
 
-*[Source : ECSS-E-ST-31C, tableau 5-1]*
+*[Source : convention pédagogique propre à ce manuel ; les normes sont commentées sous le tableau]*
 
-Tableau 3.1.11 — Marges thermiques de l'ECSS pour les limites de température de qualification, de recette et de fonctionnement.
+Tableau 3.1.11 — Marges thermiques pour les limites de température de qualification, de recette et de fonctionnement (convention de ce manuel).
 
 | Phase | Marge chaude (au-dessus du maximum prédit) | Marge froide (en dessous du minimum prédit) |
 |-------|----------------------------------|-----------------------------------|
@@ -4490,6 +4495,8 @@ Tableau 3.1.11 — Marges thermiques de l'ECSS pour les limites de température 
 | **Fonctionnement** | Prédiction + 5 °C | Prédiction − 5 °C |
 
 Ces marges garantissent que les incertitudes du modèle thermique (typiquement $\pm 5$--$10$ °C pour les modèles simplifiés, $\pm 2$--$5$ °C pour les modèles détaillés corrélés) ne provoquent pas de dépassements de température en orbite.
+
+**Lien avec les normes.** L'ECSS-E-ST-31C ne tabule pas ces valeurs. Sa figure 3-1 définit l'enchaînement qui va de la température prédite, en passant par l'incertitude, aux températures de recette et de qualification ; elle laisse les marges à l'autorité système et précise qu'on n'applique normalement pas d'incertitude inférieure à 10 K avant un essai d'équilibre thermique. L'ECSS-E-ST-10-03C (tableaux 5-2 et 5-4) ajoute à cette plage une marge de recette de 5 °C et une marge de qualification de 5 °C, et le GSFC-STD-7000B §2.6 essaie une unité de protovol aux températures maximale et minimale prédites $\pm 10$ °C, pendant au moins 4 cycles. Le niveau de vide thermique en protovol du chapitre 4.2 (prévision $\pm 10$ °C) suit ces normes.
 
 > **Exemple résolu -- Analyse thermique complète d'un CubeSat 3U**
 >
@@ -4653,9 +4660,9 @@ UniSat-1 n'utilise ni réchauffeurs, ni MLI, ni contrôle thermique actif. Troi
 
 ---
 
-### Conception de référence 6U : puissance et thermique d'EO-Sat-1, telles que réalisées
+### Conception de référence 6U : puissance et thermique d'EOSAT-1, telles que réalisées
 
-Les exemples 1U et 3U ci-dessus sont des exercices de dimensionnement. EO-Sat-1 -- le
+Les exemples 1U et 3U ci-dessus sont des exercices de dimensionnement. EOSAT-1 -- le
 satellite 6U d'observation de la Terre qui sert de mission de référence tout au long de ce manuel -- est une
 conception *achevée* : ses valeurs peuvent donc être relevées plutôt qu'estimées. Chaque chiffre ci-dessous provient de la
 configuration de vol (`configs/eosat1/subsystems/eps.yaml`, `tcs.yaml`) et du
@@ -4683,7 +4690,7 @@ $19.2 / 0.0715 = 268$ W/m$^2$ délivrés. La chaîne de pertes et la fiche techn
 fournisseur de matériel de vol concordent à 0,1 W/m$^2$ près -- si le bilan de puissance d'un CubeSat est en désaccord
 avec le matériel, l'erreur porte donc presque toujours sur la *surface*, et non sur la physique.
 
-**Étape 2 -- surface de cellules.** EO-Sat-1 porte des cellules fixées sur la structure et deux
+**Étape 2 -- surface de cellules.** EOSAT-1 porte des cellules fixées sur la structure et deux
 ailes déployables orientables selon un axe :
 
 | Surface | Surface de cellules (m$^2$) | Remarque |
@@ -4698,8 +4705,12 @@ ailes déployables orientables selon un axe :
 
 Puissance nominale des ailes à $\beta = 0$, en BOL : $2 \times 0.120 \times 291.2 = 69.9$ W -- à comparer
 à la puissance annoncée du MMA eHaWK 6U+, « à partir de 72 W ». La production
-crête de l'ensemble du satellite est de 88,6 W ; la moyenne sur l'orbite en EOL est de 38,0 W pour l'angle bêta le plus défavorable
-(49,8°) et de 45,0 W pour l'angle bêta d'éclipse maximale (24,2°).
+crête de l'ensemble du satellite est de 88,6 W. Au cours de l'année, $\beta$ reste entre $-20.8$ et $-31.2$°, et
+comme l'entraînement du générateur ne suit le Soleil que sur un seul axe, la production
+suit $\cos\beta$. La production moyenne sur l'orbite en EOL est donc de **45,1 W** pour l'angle bêta de
+production la plus défavorable ($-31.2$°, le plus grand $|\beta|$ et l'éclipse la plus courte)
+et de 47,0 W pour l'angle bêta d'éclipse la plus longue ($-20.8$°) ; en BOL, ces deux
+valeurs sont de 49,1 W et 51,2 W.
 
 **Étape 3 -- la feuille de charges.** La PCDU comporte **neuf** lignes d'alimentation, d'indices 0--8.
 Deux sont non commutables ; **toutes les lignes commutables démarrent à l'état OFF** et doivent être
@@ -4728,11 +4739,15 @@ systèmes nominaux en marche, SCAO *compris*, évaluée en pointage nadir plutô
 
 | Profil | Production (W) | Charge (W) | Marge (W) | Rapport |
 |---------|--------:|---------:|-----------:|------:|
-| repos | 38,0 | 25,5 | +12,5 | 1,49 |
-| **nominal** | **38,0** | **28,7** | **+9,3** | **1,33** |
-| nominal avec prise de vue | 38,0 | 32,5 | +5,5 | 1,17 |
-| manœuvre | 38,0 | 32,0 | +6,0 | 1,19 |
-| le plus défavorable (cas abusif) | 38,0 | 45,3 | $-7.3$ | 0,84 |
+| repos | 45,1 | 25,6 | +19,5 | 1,76 |
+| **nominal** | **45,1** | **28,8** | **+16,3** | **1,57** |
+| nominal avec prise de vue | 45,1 | 32,8 | +12,3 | 1,38 |
+| manœuvre | 45,1 | 32,1 | +12,9 | 1,40 |
+| le plus défavorable (cas abusif) | 45,1 | 46,8 | $-1.7$ | 0,96 |
+
+Le tableau est établi en EOL à 3 ans, pour l'angle bêta de production la plus défavorable ($-31.2$°).
+Pour l'angle bêta d'éclipse la plus longue ($-20.8$°), la production est de 47,0 W et le profil
+nominal boucle à 1,63 ×.
 
 La ligne « le plus défavorable » est délibérément négative : elle maintient le pointage FINE pendant une orbite
 entière, fait fonctionner le refroidisseur en continu, prend des images pendant l'éclipse et vide la mémoire au
@@ -4742,49 +4757,51 @@ par intermittence** -- trois acquisitions d'environ 90 s par orbite, avec envir
 autour de chacune --, ce que modélise la ligne « nominal avec prise de vue ». C'est la
 leçon que l'exercice a pour objet d'enseigner.
 
-Recoupez les +9,3 W avec le matériel de vol : la plateforme 6U M6P de NanoAvionics
-annonce 12,5--17,5 W de puissance disponible pour la charge utile en suivi solaire. Une conception
+Recoupez les +16,3 W avec le matériel de vol : la plateforme 6U M6P de NanoAvionics
+annonce 12,5--17,5 W de puissance disponible pour la charge utile en suivi solaire, et la marge
+d'EOSAT-1 se situe dans cette plage. Une conception
 6U affichant +40 W de réserve pour la charge utile n'est pas bien conçue ; elle est
 mal spécifiée.
 
-> **Exemple résolu -- Énergie d'éclipse et dimensionnement de la batterie d'EO-Sat-1**
+> **Exemple résolu -- Énergie d'éclipse et dimensionnement de la batterie d'EOSAT-1**
 >
-> **Données :** SSO à 450 km, inclinaison de 98°, 15,24 révolutions par jour, donc $T = 86400/15.24 = 5669$ s
+> **Données :** SSO à 513 km (altitude moyenne), inclinaison de 97,39°, LTAN 10:00, 15,24 révolutions par jour, donc $T = 86400/15.24 = 5669$ s
 > $= 1.575$ h. Batterie : classe GomSpace NanoPower BPX, 8S-1P, **100 Wh**, 3 Ah,
 > 26,4 V nominaux dans le modèle de bus (29,2 V à 100 % de SoC, 21,5 V à 0 %), rendement de
 > charge 0,94, décroissance à tension constante à partir de 90 % de SoC.
 >
-> **Étape 1 -- durée de l'éclipse** (cas le plus défavorable, $\beta = 0$) :
-> $$f_{\text{ecl}} = \frac{1}{\pi}\arccos\!\left(\frac{\sqrt{h(2R_E + h)}}{(R_E + h)\cos\beta}\right) = \frac{1}{\pi}\arccos\!\left(\frac{\sqrt{450 \times 13192}}{6821}\right)$$
+> **Étape 1 -- durée de l'éclipse** (cas enveloppe, $\beta = 0$. Une orbite à LTAN 10:00 ne l'atteint jamais : le $\beta$ d'EOSAT-1 reste entre $-20.8$ et $-31.2$°, et le simulateur donne 33,2--35,2 min d'éclipse à chaque orbite, si bien que les 35,6 min ci-dessous sont prudentes d'environ 0,4 min) :
+> $$f_{\text{ecl}} = \frac{1}{\pi}\arccos\!\left(\frac{\sqrt{h(2R_E + h)}}{(R_E + h)\cos\beta}\right) = \frac{1}{\pi}\arccos\!\left(\frac{\sqrt{513 \times 13255}}{6884}\right)$$
 >
-> $= \frac{1}{\pi}\arccos(2436.5 / 6821) = \frac{1}{\pi}\arccos(0.3572) = \frac{69.08\degree}{180\degree} = 0.384$
+> $= \frac{1}{\pi}\arccos(2607.6 / 6884) = \frac{1}{\pi}\arccos(0.3788) = \frac{67.74\degree}{180\degree} = 0.376$
 >
-> Éclipse $= 0.384 \times 5669 = 2176$ s $= 36.3$ min ; ensoleillement $= 3493$ s $= 58.2$ min.
+> Éclipse $= 0.376 \times 5669 = 2133$ s $= 35.6$ min ; ensoleillement $= 3536$ s $= 58.9$ min.
 >
 > **Étape 2 -- charge en éclipse.** Charge utile, refroidisseur et émetteur sont éteints ; OBC 6,0 + `ttc_rx` 1,5
 > + `aocs_wheels` 12,0 = 19,5 W, plus le réchauffeur de batterie à un rapport cyclique de thermostat d'environ 50 %
 > ($8.0 \times 0.5 = 4.0$ W) = **23,5 W**.
 >
 > **Étape 3 -- énergie d'éclipse et DoD :**
-> $E_{\text{ecl}} = 23.5 \times (2176/3600) = 23.5 \times 0.6045 = 14.2$ Wh
+> $E_{\text{ecl}} = 23.5 \times (2133/3600) = 23.5 \times 0.5925 = 13.9$ Wh
 >
-> $DOD = 14.2 / 100 = \mathbf{14.2\%}$ par éclipse.
+> $DOD = 13.9 / 100 = \mathbf{13.9\%}$ par éclipse.
 >
 > **Étape 4 -- vérification de la recharge.** Énergie à réinjecter dans le pack :
-> $14.2 / 0.94 = 15.1$ Wh, sur 0,970 h d'ensoleillement $= 15.6$ W de puissance de charge dédiée.
+> $13.9 / 0.94 = 14.8$ Wh, sur 0,982 h d'ensoleillement $= 15.1$ W de puissance de charge dédiée.
 >
-> La production n'est recueillie qu'en phase éclairée ; la production moyenne en phase éclairée est donc de
-> $38.0 \times 1.575 / 0.970 = 61.7$ W. La charge en phase éclairée est de
-> $(28.7 \times 1.575 - 14.2)/0.970 = (45.2 - 14.2)/0.970 = 31.9$ W, ce qui laisse
-> $61.7 - 31.9 = 29.8$ W de puissance de charge pour 15,6 W requis.
-> **Marge de recharge de 1,9 ×. Bilan bouclé.**
+> La production n'est recueillie qu'en phase éclairée ; la production moyenne en phase éclairée,
+> en retenant la production la plus défavorable de 45,1 W avec l'éclipse enveloppe, est donc de
+> $45.1 \times 1.575 / 0.982 = 72.3$ W. La charge en phase éclairée est de
+> $(28.8 \times 1.575 - 13.9)/0.982 = (45.4 - 13.9)/0.982 = 32.1$ W, ce qui laisse
+> $72.3 - 32.1 = 40.2$ W de puissance de charge pour 15,1 W requis.
+> **Marge de recharge de 2,7 ×. Bilan bouclé.**
 >
 > **Étape 5 -- durée de vie en cycles.** Une mission de 3 ans à 15,24 orbites/jour représente
-> $3 \times 365 \times 15.24 = 16{,}688$ éclipses. Avec une DoD de 14 %, les éléments Li-ion se situent
+> $3 \times 365 \times 15.24 = 16{,}688$ éclipses. Avec une DoD de 13,9 %, les éléments Li-ion se situent
 > dans le régime des $> 30{,}000$ cycles. **Conforme, avec un facteur ~2 sur le nombre de cycles.**
 >
 > **Étape 6 -- pourquoi 100 Wh et non 30 Wh.** La seule demande en éclipse serait satisfaite
-> par un pack de 30 Wh à 47 % de DoD. Le pack de 100 Wh est dimensionné par le cas de
+> par un pack de 30 Wh à 46 % de DoD. Le pack de 100 Wh est dimensionné par le cas de
 > *contingence* -- survivre à une période éclairée perdue, encaisser un échec de déploiement et maintenir
 > le bus au-dessus de la tension de délestage pendant l'action de la FDIR --, et non par l'éclipse
 > nominale. Les niveaux de protection en découlent : dans le modèle, le délestage se déclenche à 25.0 V et
@@ -4792,7 +4809,7 @@ mal spécifiée.
 > avec une hystérésis de rétablissement de 0.5 V ; l'indicateur de sous-tension est à 26.5 V et
 > l'échelle de SoC de la FDIR à 30 / 20 / 10 %.
 
-**Thermique : ce qui est réellement actif.** EO-Sat-1 est passif, à l'exception de trois
+**Thermique : ce qui est réellement actif.** EOSAT-1 est passif, à l'exception de trois
 circuits de réchauffage et d'un refroidisseur :
 
 | Circuit | Puissance | Commande | Télémesure |
@@ -4964,7 +4981,7 @@ Tableau 3.1.13 — Synthèse de la séance : points clés de la conception de l
 | Marges thermiques | ECSS : ±5 °C en fonctionnement, ±10 °C en recette, ±15 °C en qualification |
 | Effets transitoires | L'inertie thermique ($mc_p$) empêche d'atteindre le régime permanent pendant les éclipses courtes ; un 1U à 400 km se refroidit de ~20--25 °C pendant une éclipse de 36 min |
 | Constante dans le plan du générateur | Condenser la chaîne de pertes en un seul nombre : $K = 291.2$ W/m$^2$ en BOL, **267,9 W/m$^2$ en EOL à 3 ans** pour le GaAs triple jonction ; recoupe une fiche technique de fournisseur à 0,1 W/m$^2$ près |
-| Confrontation à la réalité en 6U | 0,438 m$^2$ de cellules $\to$ 88,6 W en crête, 38,0 W en moyenne sur l'orbite en EOL pour une charge nominale de 28,7 W (+9,3 W, 1,33 ×) ; +40 W de réserve pour la charge utile sur un 6U signifient que le bilan est faux |
+| Confrontation à la réalité en 6U | 0,438 m$^2$ de cellules $\to$ 88,6 W en crête, 45,1 W en moyenne sur l'orbite en EOL, pour l'angle bêta le plus défavorable, pour une charge nominale de 28,8 W (+16,3 W, 1,57 ×) ; +40 W de réserve pour la charge utile sur un 6U signifient que le bilan est faux |
 | Lignes d'alimentation | Neuf lignes, d'indices 0--8 (`obc`, `ttc_rx`, `ttc_tx`, `payload`, `fpa_cooler`, `htr_bat`, `htr_obc`, `aocs_wheels`, `prop`) ; seules les deux premières sont non commutables et **toutes les lignes commutables démarrent à l'état OFF** |
 | Refroidissement du FPA | Une élévation de 27 K avec un $COP = 1.5$ dépasse les capacités de tout Peltier à un étage ($COP_{\max} = 0.88$) ; elle exige un **cryoréfrigérateur miniature de type Stirling** à ~23 % du rendement de Carnot, dont l'autorité *diminue* à mesure que l'élévation augmente |
 
@@ -5633,7 +5650,7 @@ $$T_{\text{max,body}} = \sqrt{2} \cdot T_{\text{wheel}} \approx 1.41 \times T_{\
 
 pour la répartition optimale. C'est mieux que la configuration à 3 roues orthogonales, où $T_{\text{max,body}} = T_{\text{wheel}}$ selon chaque axe.
 
-**Application à la conception de référence 6U.** EO-Sat-1 emporte une **pyramide de quatre roues**
+**Application à la conception de référence 6U.** EOSAT-1 emporte une **pyramide de quatre roues**
 (classe Sinclair RW-0.03 : 0,030 N m s chacune, 5500 tr/min au maximum) et trois
 magnétocoupleurs saturant à 1,6 A m$^2$ par axe. Côté détermination, il
 emporte **deux senseurs stellaires** (ST1/ST2, sélectionnables) et **trois gyroscopes
@@ -5739,8 +5756,10 @@ nécessaire **pour le retrait de service en fin de vie** :
 
 Un engin spatial qui satisfait toutes les lignes ci-dessus peut néanmoins avoir besoin d'une propulsion pour
 l'*évitement de débris* et le *maintien de l'orbite*, qui sont des besoins opérationnels et non
-des besoins de retrait de service. C'est précisément le cas de notre engin spatial de référence 6U, qui
-est traité à la fin de cette section.
+des besoins de retrait de service. Notre engin spatial de référence 6U est un cas limite instructif :
+à 513 km, il se situe juste au-dessus de la première ligne ; il lui faut donc une propulsion pour ces
+besoins opérationnels *et* pour une modeste poussée de retrait de service en fin de vie. Il est traité
+à la fin de cette section.
 
 ### L'équation de Tsiolkovski : physique
 
@@ -5913,21 +5932,44 @@ Tableau 3.2.17 — Comparaison des technologies de propulsion pour CubeSat : Is
 
 *Figure 3.2.2 — Rapport de masse d'ergols ($m_p/m_d$) en fonction du $\Delta V$ requis, d'après l'équation de Tsiolkovski $\Delta V = I_{sp} g_0 \ln(m_0/m_f)$, tracé pour cinq technologies de propulsion courantes sur CubeSat. Le repère à 113 m/s correspond au ΔV de désorbitation d'une orbite circulaire à 600 km vers un périgée à 200 km (exemple résolu ci-dessus). À faible ΔV, les écarts de masse d'ergols entre technologies sont modestes ; au-delà de ~500 m/s, la « tyrannie de l'équation de Tsiolkovski » commence à se faire sentir et la propulsion électrique à forte $I_{sp}$ devient le seul choix réaliste.*
 
-### Conception de référence 6U : propulsion d'EO-Sat-1 telle qu'elle a volé
+### Conception de référence 6U : propulsion d'EOSAT-1 telle qu'elle a volé
 
-EO-Sat-1 emporte un **module 1U à monergol vert fonctionnant en mode blowdown** (pression décroissante), et il vaut la peine
+EOSAT-1 emporte un **module 1U à monergol vert fonctionnant en mode blowdown** (pression décroissante), et il vaut la peine
 de préciser à quoi il sert, car la mauvaise réponse est la réponse
 intuitive.
 
-**Ce n'est pas un système de désorbitation.** Depuis 450 km, avec un coefficient balistique de
-77,9 kg/m$^2$, le déclin naturel prend 1,7 an à activité solaire moyenne et 4,8 ans au
-minimum solaire, ce qui respecte la règle des 5 ans de la FCC *quelles que soient* les conditions solaires, et
-0,2 an avec les ailes commandées perpendiculairement à l'écoulement. Une poussée de retrait de service
-propulsif (de 450 km jusqu'à un périgée de 300 km) coûterait 42,6 m/s et, compte tenu du
-profil de blowdown, consommerait pratiquement tout le réservoir. Le retrait de service est
-donc explicitement exclu de la conception.
+**Le déclin naturel ne suffit pas.** Depuis 513 km, avec un coefficient balistique de
+77,9 kg/m$^2$, le déclin naturel prend **5,0 ans** à activité solaire moyenne et
+**14,2 ans** au minimum solaire ; à lui seul, il ne respecte donc pas la règle des 5 ans.
+EOSAT-1 termine par conséquent sa mission par une **poussée rétrograde d'abaissement du
+périgée de 34,3 m/s**, qui fait passer le périgée de 513 km à **390 km**, exécutée en six poussées
+de 5,72 m/s. Depuis l'orbite de 513 x 390 km qui en résulte, la rentrée prend **1,5 an** à
+activité moyenne et **4,2 ans** au minimum solaire, ce qui respecte la règle dans les deux cas.
+(Méthode : intégration de la traînée propre au projet, avec l'atmosphère exponentielle
+CIRA-72 ; le minimum solaire est modélisé par 0,35 fois cette table.) La poussée se
+dimensionne comme une impulsion tangentielle unique au point de 513 km, qui devient l'apogée :
 
-**C'est un système d'évitement de débris et de maintien de l'orbite.** Ce sont des besoins
+$$\Delta V = \sqrt{\frac{\mu}{r_1}} - \sqrt{\mu\left(\frac{2}{r_1} - \frac{2}{r_1 + r_p}\right)} = 7605.4 - 7571.1 = 34.3 \text{ m/s}$$
+
+avec $r_1 = R_E + 513$ km et $r_p = R_E + 390$ km. Après les poussées, le satellite est
+passivé : l'ergol restant est épuisé, l'inhibition de la propulsion est verrouillée, les
+roues sont arrêtées, et le régulateur de charge et les émetteurs sont mis hors tension
+(fiche du simulateur NOM-014, End-of-Life Disposal).
+
+> **Incertitude de modèle -- pourquoi les marges et le choix du modèle comptent.** Le chiffre
+> de 4,2 ans ne vaut que ce que vaut l'atmosphère qui le produit. Refaites le calcul pour le
+> même périgée de 390 km avec NRLMSIS 2.1 en maintenant le minimum solaire pendant des années,
+> et la rentrée prend **7,2 ans** -- hors de la règle. Un périgée de **360 km**, soit **42,8 m/s**,
+> respecterait 5 ans même sous la borne d'un F10.7 = 70 maintenu, mais le bilan ne boucle pas :
+> cela ne tient pas dans le réservoir de 66,9 m/s en plus du bilan de la phase active. Aucun des deux modèles n'est
+> « la » réponse : une table exponentielle mise à l'échelle et un modèle empirique complet
+> maintenu à un minimum prolongé encadrent l'atmosphère future réelle, et l'écart entre eux
+> (4,2 contre 7,2 ans) dépasse la marge que laisse la règle. C'est pourquoi un plan de retrait
+> de service indique son modèle d'atmosphère et son hypothèse d'activité solaire, prévoit une
+> marge sur le $\Delta V$ et sur la réserve, et est replanifié en fonction du cycle solaire
+> observé avant la poussée.
+
+**C'est aussi un système d'évitement de débris et de maintien de l'orbite.** Ce sont des besoins
 opérationnels permanents que la traînée ne satisfait pas, et aucun déclin naturel ne
 remplace une manœuvre d'évitement de collision exécutée dans les quelques heures qui suivent
 une alerte de conjonction.
@@ -5948,12 +5990,16 @@ $v_e = 208 \times 9.80665 = 2040$ m/s, $m_0 = 12.40$ kg, $m_f = 12.00$ kg :
 
 $$\Delta V = 2040 \times \ln(12.40/12.00) = 2040 \times \ln(1.03333) = 2040 \times 0.032790 = 66.9 \text{ m/s}$$
 
-**Et vérifiez qu'il suffit.** Sur une phase active de deux ans : compensation de la traînée
-42,6 + ajustement du demi-grand axe et de la LTAN 3,0 + six évitements de collision à
-0,1 m/s chacun = 0,6 + recette en orbite et étalonnage 1,0 + contrôle de l'excentricité
-1,5 + marge 7,3 = **56,0 m/s nécessaires contre 66,9 m/s disponibles, soit +19,5 %**.
-C'est un véritable bilan propulsif qui boucle, assez serré pour que la poussée de retrait de service
-n'y trouve réellement pas sa place ; c'est pourquoi la conception le dit explicitement.
+**Et vérifiez qu'il suffit.** Sur une phase active de deux ans, retrait de service compris :
+compensation de la traînée 15,1 (à 513 km et à l'activité solaire de conception) + ajustement du
+demi-grand axe et de la LTAN 3,0 + six évitements de collision à 0,1 m/s chacun = 0,6 + recette
+en orbite et étalonnage 1,0 + contrôle de l'excentricité 1,5 + **retrait de service en fin de vie
+34,3** = 55,5 m/s, plus une marge de phase C de 5 % (2,8) et une réserve d'exploitation et de
+dispersion de 10 % (5,8) = **64,1 m/s nécessaires contre 66,9 m/s disponibles, soit +4,4 %**
+(+2,6 % par rapport aux 65,8 m/s obtenus en intégrant la courbe d'$I_{sp}$ du blowdown). C'est un
+véritable bilan propulsif qui boucle, et un bilan serré : la poussée de retrait de service en est
+la plus grosse ligne, si bien qu'au moins 38 m/s lui sont réservés à partir de la mi-mission et
+ne sont pas disponibles pour la compensation de la traînée.
 
 **Le couplage avec le SCAO est délibéré, et non un oubli.** L'unique propulseur
 pousse selon $+X$, qui, dans l'attitude nadir nominale, est orienté dans le sens de la vitesse. Une poussée *rétrograde*
@@ -6044,7 +6090,8 @@ Tableau 3.2.18 — Synthèse de la séance : points clés de la conception du S
 | Électronébulisation (FEEP) | $I_{sp}$ de 500--5000 s ; consommation d'ergols minimale ; poussées de plusieurs mois ; puissance de 20--60 W ; indium ou liquide ionique |
 | Propulseur à effet Hall | $I_{sp}$ de 800--3000 s ; poussée modérée (1--50 mN) ; 50--300 W ; l'iode s'impose comme alternative au Xe |
 | Compromis propulsifs | Forte $I_{sp}$ : moins d'ergols, plus de masse sèche, poussées longues ; faible $I_{sp}$ : plus d'ergols, système plus léger, poussées rapides |
-| Quand se passer de propulsion | Pour le retrait de service uniquement : sous 500 km (désorbitation naturelle) ; démonstration technologique ; constellation à traînée différentielle. L'évitement de débris et le maintien de l'orbite sont des besoins distincts : EO-Sat-1 emporte un module 1U à monergol vert de 66,9 m/s précisément pour ces besoins, et explicitement *pas* pour la désorbitation |
+| Quand se passer de propulsion | Pour le retrait de service uniquement : sous 500 km (désorbitation naturelle) ; démonstration technologique ; constellation à traînée différentielle. L'évitement de débris et le maintien de l'orbite sont des besoins distincts : EOSAT-1, à 513 km, emporte un module 1U à monergol vert de 66,9 m/s pour ces besoins *et* pour une poussée d'abaissement du périgée de 34,3 m/s en fin de vie (64,1 m/s nécessaires au total) |
+| Retrait de service depuis 513 km | Déclin naturel 5,0 ans (moyenne) / 14,2 ans (minimum solaire) : la règle des 5 ans n'est pas respectée ; une poussée de 34,3 m/s jusqu'à un périgée de 390 km donne 1,5 / 4,2 ans ; NRLMSIS 2.1 à un minimum prolongé donne 7,2 ans, si bien que le modèle et la marge comptent |
 
 # Chapitre 3.3 — Télécommunications et conception du bilan de liaison
 
@@ -6659,9 +6706,9 @@ Avec 4 passages par jour : $V_{\text{daily}} = 856$ ko/jour $\approx$ **0,86 M
 
 **Leçon clé du bilan de liaison d'UniSat-1 :** en UHF, l'affaiblissement en espace libre plus faible à 437 MHz ($20\log_{10}(2250/437) = 14.2$ dB de moins qu'en bande S) compense presque exactement la faible puissance d'émission (0,5 W contre 2 W = 6 dB), le faible gain d'antenne (0 dBi contre 6 dBi = 6 dB) et la température de bruit plus élevée des stations amateurs (600 K contre 150 K = 6 dB). Le résultat est une liaison *nominale* qui boucle, mais la **marge d'évanouissement face à la rotation de Faraday ionosphérique et à la scintillation pluviale ou atmosphérique est le véritable facteur dimensionnant**. Le codage FEC et la polarisation circulaire ne sont pas strictement nécessaires pour faire boucler la liaison nominale : ils servent à absorber les évanouissements de 10--20 dB qui se produisent de façon aléatoire pendant un passage polaire. Considérez-les comme des investissements en marge d'évanouissement, et non comme le seul moyen de faire tomber les chiffres juste.
 
-### Conception de référence 6U : chaîne RF d'EO-Sat-1 telle qu'elle a volé
+### Conception de référence 6U : chaîne RF d'EOSAT-1 telle qu'elle a volé
 
-EO-Sat-1 illustre le cas où le bilan de liaison cesse d'être la contrainte, et c'est
+EOSAT-1 illustre le cas où le bilan de liaison cesse d'être la contrainte, et c'est
 précisément là que réside la leçon.
 
 **Deux émetteurs, et non un seul.** C'est le fait structurel le plus important
@@ -6708,37 +6755,37 @@ se résorber. À 16 kbit/s, la HK temps réel est écoulée avec un rapport cyc
 orbite de HK enregistrée en un seul passage.
 
 **Cinq stations sol, et chaque échelon boucle partout.** Le
-référentiel pédagogique est le réseau complet de cinq stations. À 450 km, la géométrie est la suivante :
+référentiel pédagogique est le réseau complet de cinq stations. À 513 km, la géométrie est la suivante :
 
 | Élévation | Distance oblique | Affaiblissement en espace libre à 2200 MHz |
 |-----------|------------:|-----------------:|
-| 5° | 1944,5 km | 165,07 dB |
-| 10° | 1570,0 km | 163,22 dB |
-| 30° | 825,0 km | 157,63 dB |
-| 90° | 450,0 km | 152,36 dB |
+| 5° | 2111,7 km | 165,79 dB |
+| 10° | 1726,8 km | 164,04 dB |
+| 30° | 931,3 km | 158,68 dB |
+| 90° | 513,0 km | 153,50 dB |
 
 Marge de liaison à 5° d'élévation, la géométrie la plus défavorable que voie une station :
 
 | Station | G/T (dB/K) | BEACON | LOW | HIGH |
 |---------|-----------:|-------:|----:|-----:|
-| Inuvik | 22,0 | 59,8 | 47,7 | 37,2 |
-| Svalbard | 21,5 | 59,3 | 47,2 | 36,7 |
-| Iqaluit | 20,0 | 57,8 | 45,7 | 35,2 |
-| O'Higgins | 20,0 | 57,8 | 45,7 | 35,2 |
-| Troll | 18,5 | 56,3 | 44,2 | **33,7** |
+| Inuvik | 22,0 | 59,0 | 47,0 | 36,5 |
+| Svalbard | 21,5 | 58,5 | 46,5 | 36,0 |
+| Iqaluit | 20,0 | 57,0 | 45,0 | 34,5 |
+| O'Higgins | 20,0 | 57,0 | 45,0 | 34,5 |
+| Troll | 18,5 | 55,5 | 43,5 | **33,0** |
 
 Recalculez une cellule pour voir d'où viennent ces valeurs : Iqaluit, palier LOW, 5° :
 PIRE $= 10.0$ dBW (avec le PA nominal de 2 W) $+ 3.0$ dBi de patch $= 13.0$ dBW ;
 perte atmosphérique $0.25 \times \mathrm{cosec}(5\degree) = 2.87$ dB ;
 polarisation 0,3 dB ; G/T réduit de $-1.5$ dB sous 10°, soit $20.0 - 1.5 = 18.5$ dB/K.
 
-$$C/N_0 = 13.0 - 165.07 - 2.87 - 0.3 + 18.5 + 228.6 = 91.9 \text{ dBHz}$$
-$$E_b/N_0 = 91.9 - 10\log_{10}(16000) = 91.9 - 42.0 = 49.9 \text{ dB}$$
-$$\text{Marge} = 49.9 - (9.6 - 7.5) - 2.0 = \mathbf{45.7} \text{ dB}$$
+$$C/N_0 = 13.0 - 165.79 - 2.87 - 0.3 + 18.5 + 228.6 = 91.1 \text{ dBHz}$$
+$$E_b/N_0 = 91.1 - 10\log_{10}(16000) = 91.1 - 42.0 = 49.1 \text{ dB}$$
+$$\text{Marge} = 49.1 - (9.6 - 7.5) - 2.0 = \mathbf{45.0} \text{ dB}$$
 
 **Relisez ce tableau.** Le cas le plus défavorable de toute la matrice (le débit le plus élevé,
-la station la plus faible, l'élévation la plus basse) dispose encore de **33,7 dB** de marge. À
-450 km, vers une parabole polaire professionnelle, une liaison de 2 W en bande S n'est limitée en puissance par
+la station la plus faible, l'élévation la plus basse) dispose encore de **33,0 dB** de marge. À
+513 km, vers une parabole polaire professionnelle, une liaison de 2 W en bande S n'est limitée en puissance par
 rien. Si l'on vous a appris qu'un débit se choisit en cherchant l'endroit où la
 marge s'épuise, voici la situation réelle la plus courante, et elle enseigne une leçon
 plus difficile : **le débit se choisit en fonction de la politique d'exploitation, de la largeur de bande, de la puissance du PA, du coût thermique
@@ -6750,8 +6797,8 @@ $\geq 10$° plutôt qu'à un seuil de marge. Modéliser une fausse falaise aurai
 été plus facile à expliquer, et moins honnête.
 
 **L'élévation vaut plus que ne le laissent penser les échelles de débits.** Passer de 5° à 10°
-fait gagner environ 4,8 dB (1,85 dB d'affaiblissement de propagation, 1,43 dB d'atmosphère, 1,5 dB de réduction
-du G/T qui disparaît). Passer au zénith fait gagner 16,6 dB. Un opérateur attend un meilleur
+fait gagner environ 4,7 dB (1,75 dB d'affaiblissement de propagation, 1,43 dB d'atmosphère, 1,5 dB de réduction
+du G/T qui disparaît). Passer au zénith fait gagner 16,4 dB. Un opérateur attend un meilleur
 passage, pas un meilleur débit.
 
 *Une mise en garde honnête sur les valeurs absolues :* une PIRE de 10,0 dBW pour 2 W de puissance RF
@@ -6771,7 +6818,7 @@ bord et 2,7 dB de perte de polarisation supplémentaire. Les 12,0 dB gagnés e
 passant de 16 à 1 kbit/s compensent à peu près les 10,0 dB perdus entre le niveau
 d'émission configuré de 10,0 dBW en bande S et le 1 W (0 dBW) de la balise, et
 les deux liaisons utilisent le même codage conv + RS. Au net, la balise boucle avec
-1 W à 1 kbit/s avec environ **27 dB**, contre environ 46 dB pour l'échelon LOW en bande S
+1 W à 1 kbit/s avec environ **26 dB**, contre environ 45 dB pour l'échelon LOW en bande S
 à 16 kbit/s. Même physique, tout le reste différent, et la balise parvient encore
 au sol quand la chaîne principale n'y parvient plus.
 
@@ -6820,13 +6867,13 @@ Le bilan de données détermine si le système de télécommunications peut ache
 >
 > **Sensibilité :** si le rapport cyclique d'imagerie double (2 min/passage), la génération passe à 1440 Mo/jour > 956 Mo/jour. Options : (a) bande X pour un débit plus élevé, (b) stations sol supplémentaires, (c) compression plus agressive, (d) hiérarchisation/sélection des données à bord.
 
-> **Exemple résolu — ce que coûte une image d'EO-Sat-1 en temps de passage**
+> **Exemple résolu — ce que coûte une image d'EOSAT-1 en temps de passage**
 >
 > Le produit image du support de cours pèse 4 Mo. Au palier HIGH :
 >
 > $$t_{\text{dump}} = \frac{4 \times 1{,}048{,}576 \times 8}{128{,}000} = \frac{33{,}554{,}432}{128{,}000} = \mathbf{262 \text{ s}}$$
 >
-> Le passage moyen sur le réseau de cinq stations dure 448 s, si bien qu'**une image
+> Le passage moyen sur le réseau de cinq stations dure 450 s, si bien qu'**une image
 > occupe 58 % d'un passage moyen**. Deux images ne tiennent pas dans un passage. C'est
 > ce chiffre qui fait de la planification des passages la contrainte déterminante, plutôt que le bilan
 > de liaison : le tableau des marges ci-dessus dit que la liaison acheminera tout ce que vous lui demanderez,
@@ -6887,8 +6934,8 @@ Tableau 3.3.12 — Synthèse de la séance : points clés de la conception des 
 | Distance oblique | À 500 km, la distance oblique à 10° est de **1695 km, soit 3,4 fois** la distance au nadir : 10,6 dB d'affaiblissement supplémentaire, et non 8 dB |
 | Deux émetteurs | Une chaîne principale en bande S et une balise UHF distincte ne partagent aucun point de défaillance unique ; désactiver le PA bande S coupe toute la TM en bande S, tandis que la balise continue d'émettre |
 | Échelle de débits | 1 / 16 / 128 kbit/s ; chaque échelon coûte exactement le terme $-10\log_{10}(R_b)$ (12,0 dB, puis 10,5 dB en comptant le changement de codage) |
-| Quand la marge n'est pas la contrainte | Chaque échelon de l'échelle d'EO-Sat-1 boucle sur chacune des cinq stations avec 33,7--76,3 dB ; le débit est fixé par la politique d'exploitation, la largeur de bande, la puissance du PA, le coût thermique et la planification des passages, et non par une falaise de puissance |
-| Planification des passages | Une image de 4 Mo à 128 kbit/s prend 262 s, soit 58 % d'un passage moyen de 448 s ; l'horloge devient contraignante bien avant la liaison |
+| Quand la marge n'est pas la contrainte | Chaque échelon de l'échelle d'EOSAT-1 boucle sur chacune des cinq stations avec 33,0--75,4 dB ; le débit est fixé par la politique d'exploitation, la largeur de bande, la puissance du PA, le coût thermique et la planification des passages, et non par une falaise de puissance |
+| Planification des passages | Une image de 4 Mo à 128 kbit/s prend 262 s, soit 58 % d'un passage moyen de 450 s ; l'horloge devient contraignante bien avant la liaison |
 
 # Chapitre 3.4 — Structure du satellite et gestion bord des données
 
@@ -7037,20 +7084,20 @@ Tableau 3.4.4 — Catégories de charges au lancement : source physique, niveau
 
 *[Source : ECSS-E-ST-10-03C ; NASA GEVS (GSFC-STD-7000B) ; Falcon 9 Payload User's Guide ; PSLV User's Guide]*
 
-**Profil de DSP des vibrations aléatoires (niveau type d'un déployeur de CubeSat) :**
+**Profil de DSP des vibrations aléatoires (niveau minimal de qualité de fabrication du GEVS) :**
 
-Tableau 3.4.5 — Profil de densité spectrale d'accélération des vibrations aléatoires au niveau de qualification type d'un déployeur de CubeSat.
+Tableau 3.4.5 — Profil de densité spectrale d'accélération des vibrations aléatoires : niveau minimal de qualité de fabrication (*workmanship*) du GSFC-STD-7000B (GEVS), tableau 2.4-4.
 
 | Fréquence (Hz) | Niveau d'ASD (g$^2$/Hz) | Remarques |
 |----------------|---------------------|-------|
-| 20 | 0,01 | Début basse fréquence (montée) |
-| 50 | 0,04 | Montée à +6 dB/oct |
-| 100 | 0,04 | Début du palier |
-| 800 | 0,04 | Fin du palier |
-| 2000 | 0,01 | Décroissance à -6 dB/oct |
-| **Global** | **~7 grms** | Valeur type au niveau de qualification d'un déployeur de CubeSat |
+| 20 | 0,01 | Début basse fréquence |
+| 20--80 | +3 dB/oct | Montée |
+| 80--500 | 0,04 | Palier |
+| 500--2000 | -3 dB/oct | Décroissance |
+| 2000 | 0,01 | Fin du profil |
+| **Global** | **6,8 grms** | Niveau de qualité de fabrication (recette) ; le protovol est à +3 dB, soit environ 9,6 grms, pendant 1 min par axe |
 
-Le palier à 0,04 g$^2$/Hz entre 100 et 800 Hz est la zone où se produisent la plupart des dommages structuraux, car c'est là que sont excitées les résonances des circuits imprimés et la fatigue des joints de brasure.
+Le palier à 0,04 g$^2$/Hz entre 80 et 500 Hz est la zone où se produisent la plupart des dommages structuraux, car c'est là que sont excitées les résonances des circuits imprimés et la fatigue des joints de brasure. Les niveaux qui font foi pour un vol donné sont fixés par le manuel utilisateur du déployeur ou du lanceur ; n'utilisez ce profil que là où il les enveloppe.
 
 **Ce qui casse pendant les essais de vibrations :**
 1. **Joints de brasure :** les composants lourds (connecteurs, condensateurs hauts, transformateurs) à long bras de levier se fissurent au niveau de leurs brasures. Réduction du risque : utiliser des composants montés en surface, coller les composants hauts (Loctite 4860 ou équivalent), appliquer un vernis de tropicalisation.
@@ -7236,7 +7283,7 @@ Tableau 3.4.11 — Synthèse de la séance : points essentiels sur la structure
 |-------|-------------|
 | Conformité à la CDS | Dimensions normalisées, rails en Al 7075-T6 anodisé (8,5 mm), interrupteurs de déploiement, goupille RBF, limites de position du centre de gravité |
 | Matériaux de structure | Al 7075-T6 : $\sigma_y = 503$ MPa, $E = 72$ GPa ; anodisation pour l'usure et l'isolation ; PRFC inadapté aux rails |
-| Charges au lancement | 6--12 g en axial QS, 7 grms en vibrations aléatoires (20--2000 Hz), 500--2000 g en choc ; les joints de brasure des circuits imprimés sont le point faible |
+| Charges au lancement | 6--12 g en axial QS, 6,8 grms en vibrations aléatoires (20--2000 Hz ; 9,6 grms en protovol), 500--2000 g en choc ; les joints de brasure des circuits imprimés sont le point faible |
 | MoS structurale | $\text{MoS} = \sigma_{\text{allow}}/(\sigma_{\text{design}} \times \text{FoS}) - 1 \geq 0$ ; FoS 1,25 en élasticité / 1,5 en rupture (métaux) |
 | Exigence de fréquence | Premier mode > 40 Hz ; les structures de CubeSat en aluminium le dépassent facilement ; le risque vient des modes locaux (circuits imprimés, éléments déployables) |
 | Processeurs d'OBC | MSP430 (0,01 W, mode survie), Cortex-M4 (0,2 W, CubeSat standard), Zynq (3 W, haut débit), LEON3 (durci, ESA) |
@@ -7810,11 +7857,11 @@ Il en résulte une durée de vie orbitale d'environ 8--14 mois selon l'activit�
 
 ---
 
-## Exemple résolu : liste complète des équipements d'un CubeSat 6U d'OT (EO-Sat-1)
+## Exemple résolu : liste complète des équipements d'un CubeSat 6U d'OT (EOSAT-1)
 
 Voici la liste des équipements de vol du satellite de référence utilisé dans
-l'ensemble des chapitres consacrés aux opérations : EO-Sat-1, un imageur multispectral
-à grand champ au format 6U, sur une orbite héliosynchrone à 450 km. Chaque ligne
+l'ensemble des chapitres consacrés aux opérations : EOSAT-1, un imageur multispectral
+à grand champ au format 6U, sur une orbite héliosynchrone à 513 km (97,39°, LTAN 10:00). Chaque ligne
 correspond à une classe de pièces réelle, actuellement produite, et non à une valeur
 paramétrique provisoire ; c'est ce qui rend les totaux dignes d'être discutés.
 
@@ -7833,7 +7880,7 @@ paramétrique provisoire ; c'est ce qui rend les totaux dignes d'être discut�
 > | Senseur solaire | Ensemble de senseurs solaires grossiers (acquisition d'attitude et mode survie) | 0,06 | 0,01 | 4 | 1 jeu | Analogique/I$^2$C |
 > | Magnétomètre | Magnétomètre trois axes (MAG A / MAG B, paire redondante ; référence de l'amortissement B-dot) | 0,03 | 0,05 | 1 | 2 | I$^2$C |
 > | GNSS | Récepteur GPS + antenne patch (restitution d'orbite, référence de temps) | 0,12 | 1,0 | 8 | 1 | UART |
-> | Charge utile | Imageur à barrette (*pushbroom*) à grand champ de classe Simera Sense TriScape100 : 8192 px × 5,5 µm, f = 84,5 mm, champ total de 29,856° -> fauchée de 240 km, GSD de 29,3 m, fréquence ligne de 244 Hz, lecture brute à 96 Mbit/s | 1,45 | 5,5 (prise de vue) / 2,4 (veille) | 60 | 1 | LVDS/SPI |
+> | Charge utile | Imageur à barrette (*pushbroom*) à grand champ de classe Simera Sense TriScape100 : 8192 px × 5,5 µm, f = 84,5 mm, champ total de 29,856° -> fauchée de 273 km, GSD de 33,4 m à 513 km ; fréquence ligne de 244 Hz, lecture brute à 96 Mbit/s (dimensionnées pour l'ancienne valeur de 450 km) | 1,45 | 5,5 (prise de vue) / 2,4 (veille) | 60 | 1 | LVDS/SPI |
 > | Refroidisseur du FPA | Cryoréfrigérateur miniature de type Stirling sur le support du plan focal (consigne à -15 °C, ~23 % du rendement de Carnot) | 0,50 | 15,0 | 15 | 1 | Ligne EPS propre (`fpa_cooler`) |
 > | Émetteur | Émetteur-récepteur en bande S de classe Endurosat (chaîne principale) : 2 W RF max., 5 W DC au palier LOW, 11 W DC au palier HIGH, 1,2 W en réception au repos | 0,25 | 5,0 (LOW) / 11,0 (HIGH) | 15 | 1 | SPI |
 > | Antenne | Antenne patch en bande S (fixe sur la structure, RHCP) | 0,06 | -- | 3 | 1 | Coaxial RF |
@@ -7845,12 +7892,12 @@ paramétrique provisoire ; c'est ce qui rend les totaux dignes d'être discut�
 > | Ergols | Monergol vert, 0,400 kg -> $\Delta V$ total de 66,9 m/s | 0,40 | -- | -- | -- | -- |
 > | **TOTAL (humide, BOL)** | | **12,40** | | | | |
 >
-> **Remarque sur la puissance.** La colonne indique la demande par unité, et non une somme : EO-Sat-1
+> **Remarque sur la puissance.** La colonne indique la demande par unité, et non une somme : EOSAT-1
 > n'alimente jamais toutes les lignes simultanément. Les neuf lignes de l'EPS (0 `obc`, 1 `ttc_rx`, 2 `ttc_tx`,
 > 3 `payload`, 4 `fpa_cooler`, 5 `htr_bat`, 6 `htr_obc`, 7 `aocs_wheels`,
 > 8 `prop`) sont commutées en fonction du bilan moyen sur l'orbite : en fin de vie et
-> pour l'angle bêta le plus défavorable, le générateur fournit ~38 W en moyenne sur l'orbite face à une charge nominale
-> de ~29 W, soit une marge d'environ +9 W. Ajoutez une prise de vue continue, un refroidisseur
+> pour l'angle bêta le plus défavorable, le générateur fournit ~45 W en moyenne sur l'orbite face à une charge nominale
+> de ~29 W, soit une marge d'environ +16 W. Ajoutez une prise de vue continue, un refroidisseur
 > fonctionnant en permanence et des vidages au palier HIGH à chaque passage, et le bilan devient négatif --
 > c'est pourquoi la prise de vue fonctionne par intermittence (trois acquisitions de ~90 s par orbite, le
 > refroidisseur étant stabilisé autour d'elles) au lieu de fonctionner en continu.
@@ -7867,7 +7914,7 @@ paramétrique provisoire ; c'est ce qui rend les totaux dignes d'être discut�
 > - CBE à sec : 12,00 kg (dont 1,15 kg de masse sèche de propulsion)
 > - Ergols : 0,400 kg
 > - **Masse humide en BOL : 12,40 kg**
-> - Limite de référence de la CDS pour un 6U : 12,0 kg -- EO-Sat-1 se situe *au sommet* de la classe 6U,
+> - Limite de référence de la CDS pour un 6U : 12,0 kg -- EOSAT-1 se situe *au sommet* de la classe 6U,
 >   c'est donc l'ICD du distributeur qui fait foi : vérifiez la masse qualifiée du
 >   distributeur 6U concerné avant de supposer que le référentiel de la CDS s'applique.
 >
@@ -7921,7 +7968,7 @@ Tableau 4.1.17 — Synthèse de la séance : points essentiels sur la sélectio
 
 À l'issue de cette séance, vous serez en mesure de :
 1. distinguer la vérification de la validation à l'aide des définitions de l'ECSS et de la NASA ;
-2. affecter à chaque exigence les méthodes de vérification appropriées (IADT) au moyen d'une logique de décision ;
+2. affecter à chaque exigence les méthodes de vérification appropriées (ATIR(D)) au moyen d'une logique de décision ;
 3. définir les niveaux d'essais d'environnement à partir des spécifications de l'ICD du lanceur ;
 4. construire une matrice de vérification de conformité reliant chaque exigence à sa méthode, à son niveau et à sa phase ;
 5. déterminer quand une dérogation est appropriée et en documenter la justification.
@@ -7940,7 +7987,7 @@ Tableau 4.2.1 — Vérification et validation comparées selon la question posé
 | **Norme** | ECSS-E-ST-10-02C | ECSS-E-ST-10-06C |
 | **Réalisée par** | L'équipe d'ingénierie | Les utilisateurs, les opérateurs, les parties prenantes |
 | **Moment** | Tout au long du développement (phases B-D) | Fin du développement + début de l'exploitation (phases D-E) |
-| **Méthodes** | IADT (inspection, analyse, démonstration, essai) | Démonstration opérationnelle, essais de recette par les utilisateurs |
+| **Méthodes** | ATIR(D) (analyse, essai, inspection, revue de conception, démonstration) | Démonstration opérationnelle, essais de recette par les utilisateurs |
 | **Résultat** | Document de contrôle de la vérification (VCD) | Rapport de validation |
 
 ### La distinction essentielle
@@ -7960,10 +8007,10 @@ Un système peut être **vérifié** (chaque exigence notée « conforme »)
 
 ---
 
-## 2. Les méthodes de vérification IADT en détail
-La section 5.3 de l'ECSS-E-ST-10-02C Rev.1 définit quatre méthodes de vérification : essai, analyse, revue de conception et inspection. Remarque : ce chapitre enseigne l'ensemble de la NASA (IADT), qui comporte la démonstration à la place de la revue de conception ; l'inspection, l'analyse et l'essai sont identiques dans les deux.
+## 2. Les méthodes de vérification ATIR(D) en détail
+Le §5.2.2.1 de l'ECSS-E-ST-10-02C Rev.1 définit quatre méthodes de vérification : essai (démonstration comprise), analyse (similarité comprise), revue de conception et inspection. La pratique de la NASA présente la démonstration à part, comme cinquième méthode. Cet ouvrage utilise l'ensemble complet, abrégé ATIR(D) comme au chapitre 2.1 ; l'ordre dans lequel les méthodes sont décrites ci-dessous est sans importance.
 
-*[Source : ECSS-E-ST-10-02C Rev.1, section 5.3 ; disponible gratuitement sur [https://ecss.nl](https://ecss.nl)]*
+*[Source : ECSS-E-ST-10-02C Rev.1, §5.2.2 ; disponible gratuitement sur [https://ecss.nl](https://ecss.nl)]*
 
 ### Inspection (I)
 
@@ -8009,9 +8056,24 @@ La section 5.3 de l'ECSS-E-ST-10-02C Rev.1 définit quatre méthodes de vérif
 > La MoS doit être >= 0 pour tous les cas de charge.
 > Facteur_de_sécurité : 1,25 (élasticité), 1,5 (rupture), selon l'ECSS-E-ST-32-10C.
 
+### Revue de conception (R)
+
+**Définition :** examen de la documentation de conception -- plans, schémas, conception logicielle, analyses déjà réalisées, enregistrements de procédés -- afin de confirmer que la conception telle que documentée satisfait l'exigence. Dans l'ECSS-E-ST-10-02C, il s'agit d'une méthode formelle à part entière, distincte de l'analyse : aucun nouveau modèle n'est construit ; l'élément probant est la conception documentée.
+
+**Quand l'utiliser :**
+- Exigences portant sur l'existence ou le contenu d'un document, d'un processus ou d'un plan (« un plan de vérification doit être produit »)
+- Caractéristiques de conception évidentes à la lecture des plans (nombre d'interrupteurs de déploiement, présence d'une goupille RBF, brochage des connecteurs)
+- Exigences déjà couvertes par une conception héritée approuvée
+
+**Éléments produits :** procès-verbal de revue de conception citant les documents examinés, signé par le relecteur ; généralement clos lors d'une revue de conception.
+
+**Exemples pour les CubeSats :**
+- Examen du schéma de l'empilement -> vérifie « deux interrupteurs de déploiement indépendants doivent inhiber toute alimentation »
+- Examen du document d'architecture logicielle -> vérifie « le chien de garde doit être réalisé en matériel, indépendamment du processeur principal »
+
 ### Démonstration (D)
 
-**Définition :** le système est mis en fonctionnement dans des conditions maîtrisées pour montrer qu'il fonctionne comme exigé, sans qu'il soit nécessaire de mesurer précisément ses paramètres de performance.
+**Définition :** le système est mis en fonctionnement dans des conditions maîtrisées pour montrer qu'il fonctionne comme exigé, sans qu'il soit nécessaire de mesurer précisément ses paramètres de performance. L'ECSS-E-ST-10-02C enregistre une démonstration comme un essai ; la NASA la présente comme une méthode distincte.
 
 **Quand l'utiliser :**
 - exigences fonctionnelles (« le système doit déployer l'antenne dans les 30 minutes suivant la séparation ») ;
@@ -8050,7 +8112,7 @@ Tableau 4.2.2 — Quatre types d'essais (développement, qualification, recette,
 
 Pour les CubeSats, l'approche **protovol** est la norme, car construire une unité de qualification distincte serait d'un coût prohibitif. Le modèle de vol est soumis aux **niveaux de qualification**, mais pendant les **durées de recette**.
 
-*[Source : ECSS-E-ST-10-03C, section 5.4.2.3 ; MIL-STD-1540E, section 6.2.4]*
+*[Source : ECSS-E-ST-10-03C, §4.5.4 ; MIL-STD-1540E, section 6.2.4]*
 
 **Justification :** les durées de qualification sont plus longues et plus contraignantes -- ce qui est acceptable pour un modèle de qualification dédié qui ne volera pas. En protovol, la durée plus courte limite la consommation de la durée de vie en fatigue tout en permettant de détecter les défauts de fabrication.
 
@@ -8061,7 +8123,10 @@ Tableau 4.2.3 — Paramètres de vibrations et de TVAC comparés entre les campa
 | Niveau de vibrations | MPE + 3 dB | MPE | MPE + 3 dB |
 | Durée de vibrations | 2 min/axe | 1 min/axe | 1 min/axe |
 | Plage de température en TVAC | Prévue ± 15 °C | Prévue ± 10 °C | Prévue ± 10 °C |
-| Cycles de TVAC | 8 | 4 | 4-8 |
+| Cycles de TVAC | 8 | 4 | 4 |
+| Vitesse de balayage sinusoïdal | 2 oct/min | 4 oct/min | 4 oct/min |
+
+Les niveaux de protovol suivent les normes. Le GSFC-STD-7000B §2.6 essaie une unité de protovol aux températures maximale et minimale prédites ± 10 °C, avec au moins 4 cycles ; l'ECSS-E-ST-10-03C atteint les mêmes 10 °C avec sa marge de recette de 5 °C et sa marge de qualification de 5 °C sur la plage prédite. L'ECSS-E-ST-10-03C balaie en sinus à 2 oct/min en qualification (tableau 5-2) et à 4 oct/min en recette (tableau 5-4), et le protovol reprend les durées de recette, d'où 4 oct/min. Les colonnes de température de qualification et de recette sont celles du tableau 3.1.11 (chapitre 3.1).
 
 ---
 
@@ -8075,7 +8140,7 @@ Tableau 4.2.3 — Paramètres de vibrations et de TVAC comparés entre les campa
 
 ### Séquence type d'essais d'environnement
 
-La séquence d'essais est conçue de sorte que chaque essai sollicite le matériel d'une manière spécifique, et les essais fonctionnels intercalés entre les essais d'environnement détectent tout dommage.
+La séquence d'essais est conçue de sorte que chaque essai sollicite le matériel d'une manière spécifique, et les essais fonctionnels intercalés entre les essais d'environnement détectent tout dommage. Les niveaux ci-dessous sont des valeurs représentatives à des fins d'enseignement : les niveaux qui font foi pour un vol donné sont fixés par le manuel utilisateur du déployeur ou du lanceur.
 
 <!--
 SVG Description: Environmental Test Sequence Flow Diagram
@@ -8086,7 +8151,7 @@ A vertical flowchart with boxes connected by downward arrows:
 3. [Sine Vibration (3 axes)] ->
 4. [Random Vibration (3 axes)] ->
 5. [Post-Vibration Functional Test] ->
-6. [Thermal Vacuum (4-8 cycles)] ->
+6. [Thermal Vacuum (4 cycles)] ->
 7. [Post-TVAC Functional Test] ->
 8. [EMC Test (if required)] ->
 9. [Mass Properties Measurement] ->
@@ -8102,43 +8167,47 @@ Decision diamond after step 5: "Any anomaly?"
 
 ### Niveaux des essais de vibrations sinusoïdales
 
-*[Source : manuel utilisateur type (PUG) du lancement partagé Falcon 9 Transporter]*
+*[Source : enveloppe représentative d'un lancement partagé de CubeSats ; le manuel utilisateur du déployeur ou du lanceur fixe les niveaux qui font foi]*
 
 Les vibrations sinusoïdales simulent les modes structuraux basse fréquence du lanceur (généralement 5-100 Hz). Il s'agit de charges quasi statiques.
 
-Tableau 4.2.4 — Profil de vibrations sinusoïdales : gammes de fréquences, niveaux de déplacement et d'accélération, vitesse de balayage et axes.
+Tableau 4.2.4 — Profil de vibrations sinusoïdales : gamme de fréquences, niveau d'accélération, vitesse de balayage et axes.
 
 | Gamme de fréquences (Hz) | Niveau | Remarques |
 |----------------------|-------|-------|
-| 5 - 8 | Déplacement de 12,5 mm (0-crête) | Pilotage en déplacement |
-| 8 - 100 | 1,25 g (0-crête) | Pilotage en accélération |
-| Vitesse de balayage | 2 octaves/minute | Vitesse de balayage standard |
+| 5 - 100 | 1,25 g (0-crête) | Pilotage en accélération sur toute la bande ; pas de bande en déplacement |
+| Vitesse de balayage | 4 octaves/minute (protovol) | 2 oct/min est la vitesse de qualification |
 | Axes | 3 (X, Y, Z) | Successivement, un axe à la fois |
 
-> **Accélération sinusoïdale à la fréquence de transition :**
+> **Pourquoi il n'y a pas de bande en déplacement -- la fréquence de transition :**
 >
-> $$a = (2\pi f)^2 \cdot d$$
+> Pour une sinusoïde, l'amplitude d'accélération et l'amplitude de déplacement sont liées par $a = (2\pi f)^2 \cdot d$ ; la fréquence à laquelle une accélération donnée correspond à un déplacement donné est donc
 >
-> Pour $f = 8$ Hz, $d = 12.5$ mm $= 0.0125$ m :
+> $$f_c = \frac{1}{2\pi}\sqrt{\frac{a}{d}}.$$
 >
-> $$a = (2\pi \cdot 8)^2 \cdot 0.0125 = (50.27)^2 \cdot 0.0125 \approx 31.6~\text{m/s}^2 \approx 3.22~g.$$
+> Pour $a = 1.25~g = 12.26$ m/s$^2$ et une limite de course de pot vibrant typique $d = 12.5$ mm $= 0.0125$ m :
 >
-> *Remarque : le passage d'un balayage piloté en déplacement à un balayage piloté en accélération intervient là où la limite de déplacement dépasserait la limite d'accélération ; la fréquence de transition réelle dépend du profil considéré.*
+> $$f_c = \frac{1}{2\pi}\sqrt{\frac{12.26}{0.0125}} = \frac{31.3}{6.283} \approx 4.98~\text{Hz} \approx 5~\text{Hz}.$$
+>
+> *En dessous d'environ 5 Hz, maintenir 1,25 g exigerait plus de 12,5 mm de déplacement ; un profil qui descend plus bas en fréquence a donc besoin d'une bande pilotée en déplacement. Ce profil commence à 5 Hz : il est piloté en accélération sur toute sa bande.*
 
 ### Niveaux des essais de vibrations aléatoires
 
 Les vibrations aléatoires simulent l'environnement acoustique et mécanique à large bande pendant le lancement. Les niveaux sont spécifiés sous forme de densité spectrale de puissance (DSP) en g^2/Hz.
 
-Tableau 4.2.5 — Profil de DSP des vibrations aléatoires en g^2/Hz, avec le niveau global de qualification en gRMS.
+*[Source : GSFC-STD-7000B (GEVS), tableau 2.4-4, niveaux minimaux de qualité de fabrication des équipements ; tableau 2.4-1 pour le niveau et la durée en protovol]*
+
+Tableau 4.2.5 — Profil de DSP des vibrations aléatoires en g^2/Hz : niveau minimal de qualité de fabrication du GEVS, avec le niveau protovol.
 
 | Fréquence (Hz) | Niveau de DSP (g^2/Hz) | Remarques |
 |----------------|---------------------|-------|
 | 20 | 0,01 | Début du profil |
-| 20 - 50 | Rampe à +3 dB/octave | Montée |
-| 50 - 800 | 0,04 (palier) | Palier de niveau maximal |
-| 800 - 2000 | Rampe à -6 dB/octave | Descente |
-| 2000 | 0,004 | Fin du profil |
-| **gRMS global** | **~7,0 gRMS** | Niveau de qualification |
+| 20 - 80 | Rampe à +3 dB/octave | Montée |
+| 80 - 500 | 0,04 (palier) | Palier de niveau maximal |
+| 500 - 2000 | Rampe à -3 dB/octave | Descente |
+| 2000 | 0,01 | Fin du profil |
+| **gRMS global** | **6,8 gRMS** | Niveau de qualité de fabrication (recette) |
+| **Protovol** | **+3 dB : 9,6 gRMS** | DSP doublée à toutes les fréquences ; 1 min par axe, 3 axes |
 
 > **Calcul du gRMS global à partir du profil de DSP :**
 >
@@ -8148,13 +8217,23 @@ Tableau 4.2.5 — Profil de DSP des vibrations aléatoires en g^2/Hz, avec le ni
 >
 > $$g_{\text{RMS,flat}} = \sqrt{\text{PSD}_{\text{flat}} \cdot (f_2 - f_1)}$$
 >
-> Exemple : $\text{PSD} = 0.04~g^2/\text{Hz}$ de 50 à 800 Hz :
+> Exemple : $\text{PSD} = 0.04~g^2/\text{Hz}$ de 80 à 500 Hz :
 >
-> $$g_{\text{RMS,flat}} = \sqrt{0.04 \cdot 750} = \sqrt{30} \approx 5.48~g_{\text{RMS}}.$$
+> $$g_{\text{RMS,flat}} = \sqrt{0.04 \cdot 420} = \sqrt{16.8} \approx 4.10~g_{\text{RMS}}.$$
 >
 > Les contributions des rampes et du palier se combinent en somme quadratique :
 >
 > $$g_{\text{RMS,total}} = \sqrt{g_{\text{RMS,ramp1}}^2 + g_{\text{RMS,flat}}^2 + g_{\text{RMS,ramp2}}^2}.$$
+>
+> Un segment en pente est une droite en coordonnées log-log, $\text{PSD}(f) = P_1 (f/f_1)^n$ avec $n = (\text{dB/oct})/3.01$, et s'intègre exactement :
+>
+> $$\int_{f_1}^{f_2} \text{PSD}\,df = \frac{P_1 f_1}{n+1}\left[\left(\frac{f_2}{f_1}\right)^{n+1} - 1\right] \quad (n \neq -1), \qquad = P_1 f_1 \ln\frac{f_2}{f_1} \quad (n = -1).$$
+>
+> Pour le profil ci-dessus : rampe 20--80 Hz ($n = +1$) : $\frac{0.01 \cdot 20}{2}(4^2 - 1) = 1.50~g^2$ ; palier 80--500 Hz : $0.04 \cdot 420 = 16.80~g^2$ ; décroissance 500--2000 Hz ($n = -1$) : $0.04 \cdot 500 \cdot \ln 4 = 27.73~g^2$. Total $46.03~g^2$, d'où
+>
+> $$g_{\text{RMS}} = \sqrt{46.03} = 6.78 \approx 6.8~g_{\text{RMS}}.$$
+>
+> En protovol (+3 dB, DSP multipliée par 2), $g_{\text{RMS}} = \sqrt{92.06} = 9.59 \approx 9.6~g_{\text{RMS}}$.
 
 ### Profil de l'essai de vide thermique
 
@@ -8164,7 +8243,7 @@ Tableau 4.2.6 — Paramètres de vide thermique en protovol : températures, cy
 |-----------|-------------------|-------|
 | Température du cas chaud | Maximum prévu + 10 °C | P. ex. si le modèle thermique prévoit +55 °C -> essai à +65 °C |
 | Température du cas froid | Minimum prévu - 10 °C | P. ex. si le modèle thermique prévoit -20 °C -> essai à -30 °C |
-| Nombre de cycles | 4 minimum (protovol) | Début et fin en chaud ; essai fonctionnel à chaque extrême |
+| Nombre de cycles | 4 (protovol) | Début et fin en chaud ; essai fonctionnel à chaque extrême |
 | Niveau de vide | < 10^-5 mbar | Vide représentatif de l'espace |
 | Durée de palier à l'extrême | >= 1 heure | Permettre la stabilisation thermique (gradient < 1 °C/h) |
 | Vitesse de variation de température | 1-3 °C/min | Limitée par les capacités de l'enceinte |
@@ -8174,11 +8253,11 @@ Tableau 4.2.6 — Paramètres de vide thermique en protovol : températures, cy
 >
 > $$t_{\text{cycle}} = 2 \cdot \frac{\Delta T}{r_{\text{ramp}}} + 2\,t_{\text{dwell}} + 2\,t_{\text{functional}}$$
 >
-> Exemple : $\Delta T = 95\,°\text{C}$ (de $-30$ à $+65\,°\text{C}$), $r_{\text{ramp}} = 2\,°\text{C/min}$, $t_{\text{dwell}} = 1$ h, $t_{\text{functional}} = 2$ h :
+> Exemple : $\Delta T = 95\,°\text{C}$ (de $-30$ à $+65\,°\text{C}$), $r_{\text{ramp}} = 2\,°\text{C/min}$, $t_{\text{dwell}} = 1$ h, $t_{\text{functional}} = 2$ h :
 >
 > $$t_{\text{cycle}} = 2 \cdot \frac{95}{2}~\text{min} + 2 \cdot 60~\text{min} + 2 \cdot 120~\text{min} = 95 + 120 + 240 = 455~\text{min} \approx 7.6~\text{hr}.$$
 >
-> Campagne de TVAC complète (4 cycles + mise en place) : $\approx 4 \cdot 7.6 + 8 = 38.4$ h $\approx 5$ jours ouvrés.
+> Campagne de TVAC complète (4 cycles + mise en place) : $\approx 4 \cdot 7.6 + 8 = 38.4$ h $\approx 5$ jours ouvrés.
 
 ### Essais de CEM
 
@@ -8209,12 +8288,12 @@ Tableau 4.2.8 — Exemple de matrice de vérification reliant l'identifiant de l
 | Id. exigence | Texte de l'exigence | Méthode | Phase | Niveau | Responsable | Moyen | État | Éléments probants |
 |--------|-----------------|--------|-------|-------|-------------|----------|--------|----------|
 | SYS-001 | M_dry <= 4,0 kg | I | D | Système | Structures | Salle blanche | Prévu | Rapport de mesure de masse |
-| SYS-002 | Résister à 7 gRMS en aléatoire | T | C/D | Système | Structures | Laboratoire de vibrations | Prévu | Rapport d'essai de vibrations |
+| SYS-002 | Résister à 9,6 gRMS en aléatoire (protovol) | T | C/D | Système | Structures | Laboratoire de vibrations | Prévu | Rapport d'essai de vibrations |
 | SYS-003 | GSD <= 10 m à 500 km | A | B | Système | Charge utile | S. O. | Prévu | Rapport d'analyse optique |
 | SYS-004 | Marge de liaison >= 3 dB | A | B | Système | Communications | S. O. | Prévu | Analyse du bilan de liaison |
 | SYS-005 | Déploiement de l'antenne < 30 min | D | D | Système | Mécanismes | Salle blanche | Prévu | Démonstration de déploiement |
 
-### Logique de décision pour l'affectation IADT
+### Logique de décision pour l'affectation ATIR(D)
 
 ```
 S'agit-il d'une propriété physique (masse, dimensions, état de surface) ?
@@ -8225,16 +8304,13 @@ Ne peut-elle être prouvée que par une mesure quantitative en conditions maîtr
 
 Peut-elle être démontrée en faisant fonctionner le système (fonctionnel, pas de précision) ?
   -> Démonstration (D), phase D, niveau système
+     (l'ECSS l'enregistre comme un essai sans mesure quantitative)
 
-Peut-elle être établie avec une confiance suffisante par modélisation ?
+Peut-elle être établie avec une confiance suffisante par modélisation ou similarité ?
   -> Analyse (A), phase B/C, niveau système
 
-S'agit-il d'un document, d'un processus ou d'un plan ?
-  -> Revue de conception (R*), phase B
-  (* Remarque : la revue de conception est l'une des quatre méthodes ECSS formelles
-     (essai, analyse, revue de conception, inspection) ; l'ensemble de la NASA utilisé dans
-     ce chapitre (IADT) comporte la démonstration à la place, et les exigences vérifiées
-     à partir de la documentation de conception y relèvent de l'« Analyse ».)
+S'agit-il d'un document, d'un processus, d'un plan ou d'une caractéristique évidente sur les plans ?
+  -> Revue de conception (R), phase B
 ```
 
 ### Méthodes multiples
@@ -8274,19 +8350,19 @@ Tableau 4.2.10 — Types de dérogation (non-conformité, écart de méthode, ad
 1. Ouvrez l'onglet **Matrice V&V** (V&V Matrix) dans SpaceCDF.
 2. Les exigences sont renseignées automatiquement à partir de la conception.
 3. Pour chaque exigence, affectez :
-   - **Méthode :** I, A, D ou T (utilisez la logique de décision ci-dessus) ;
+   - **Méthode :** A, T, I, R ou D (utilisez la logique de décision ci-dessus) ;
    - **Phase :** à quel moment la vérification aura-t-elle lieu (B, C, D) ?
    - **Niveau :** unité, sous-système ou système ?
    - **État :** toutes les exigences doivent être à « Prévu » à ce stade.
 4. Utilisez les **boutons de filtre** pour afficher les exigences par type de méthode :
-   - Comptez : combien relèvent de l'analyse ? De l'essai ? De la démonstration ? De l'inspection ?
+   - Comptez : combien relèvent de l'analyse ? De l'essai ? De l'inspection ? De la revue de conception ? De la démonstration ?
    - Certaines exigences n'ont-elles aucune méthode affectée ?
 5. Repérez les exigences qui nécessitent **deux méthodes** (analyse en phase B + essai en phase D).
 6. Discutez-en avec votre équipe : quels essais sont les plus critiques ? Lesquels dimensionnent le calendrier de la campagne d'essais ?
 
 ### Travaux de la fiche d'exercices 4.2
 
-1. Affectez une méthode IADT à 10 exigences clés (justifiez chaque choix).
+1. Affectez une méthode ATIR(D) à 10 exigences clés (justifiez chaque choix).
 2. Identifiez 3 exigences qui nécessitent à la fois une analyse ET un essai.
 3. Spécifiez la séquence complète d'essais d'environnement de votre mission.
 4. Déterminez quels niveaux d'essai s'appliquent d'après le PUG du lanceur que vous avez retenu.
@@ -8311,16 +8387,16 @@ Tableau 4.2.11 — Références citées au chapitre 4.2 : vérification et essa
 
 ## Synthèse de la séance
 
-Tableau 4.2.12 — Points clés de la séance 4.2 : définitions de la V&V, IADT, protovol, niveaux d'environnement et dérogations.
+Tableau 4.2.12 — Points clés de la séance 4.2 : définitions de la V&V, ATIR(D), protovol, niveaux d'environnement et dérogations.
 
 | Thème | Point clé à retenir |
 |-------|-------------|
-| Vérification ou validation | Vérification = satisfait les exigences (IADT) ; validation = répond aux besoins des parties prenantes |
-| IADT | Inspection (physique), analyse (modèles), démonstration (fonctionnelle), essai (quantitatif) |
+| Vérification ou validation | Vérification = satisfait les exigences (ATIR(D)) ; validation = répond aux besoins des parties prenantes |
+| ATIR(D) | Analyse (modèles et similarité), essai (quantitatif), inspection (physique), revue de conception (documents et plans), démonstration (fonctionnelle) |
 | Protovol | CubeSats : un modèle de vol unique soumis aux niveaux de qualification, avec les durées de recette |
-| Vibrations sinusoïdales | 5-100 Hz, 1,25 g, charges quasi statiques au lancement |
-| Vibrations aléatoires | 20-2000 Hz, ~7 gRMS au global, environnement acoustique à large bande |
-| TVAC | Extrêmes prévus ± 10 °C, 4 cycles ou plus, essai fonctionnel à chaque extrême |
+| Vibrations sinusoïdales | 5-100 Hz, 1,25 g, 4 oct/min en protovol (2 oct/min en qualification), 3 axes, pas de bande en déplacement ; charges quasi statiques au lancement |
+| Vibrations aléatoires | 20-2000 Hz, 6,8 gRMS (qualité de fabrication du GEVS) ; protovol à +3 dB (environ 9,6 gRMS), 1 min/axe |
+| TVAC | Protovol à la prévision ± 10 °C (GSFC-STD-7000B / ECSS-E-ST-10-03C), 4 cycles, essai fonctionnel à chaque extrême ; ~7,6 h par cycle |
 | Matrice de conformité | Pour chaque exigence : méthode + phase + niveau + responsable + état + éléments probants |
 | Dérogations | Documenter l'écart, la justification, le risque et les mesures compensatoires |
 
@@ -8705,6 +8781,12 @@ Tableau 4.3.11 — Points clés de la séance 4.3 : processus de gestion des ri
 
 > **Lectures attendues avant cette séance.** NPR 7120.5F — WBS (≈ 30 min).
 
+![Vue d'ensemble de la séquence des jalons.](../assets/figures/fig_lifecycle.png)
+
+*Vue d'ensemble de la séquence des jalons.*
+
+> **Lectures attendues avant la revue de conception.** ECSS-M-ST-10C Rev.1 — *Project planning and implementation*, §4.4 (phasage du projet : les phases et leurs jalons de revue) et §5.4 (≈ 60 min) ; ECSS-M-ST-10-01C — *Organization and conduct of reviews* (lecture rapide).
+
 
 
 **Prérequis :** séances 4.1-4.3 (équipements sélectionnés, V&V planifiée, risques évalués)
@@ -8858,7 +8940,7 @@ WBS niveau 1 : total mission
     4.1  Matériel de l'instrument charge utile
     4.2  Logiciel charge utile
     4.3  Étalonnage et caractérisation de la charge utile
-  5.0  Matériel de la plateforme           30%    (tous les sous-systèmes)
+  5.0  Matériel de la plateforme           27%    (tous les sous-systèmes)
     5.1  Structure et mécanismes
     5.2  EPS (générateur solaire + batterie + carte)
     5.3  AOCS (capteurs + actionneurs)
@@ -10209,7 +10291,7 @@ en regard de son homologue de conception.
 > segment sol — l'activité diffère : en conception, vous *dimensionnez
 > et sélectionnez* ; en opérations, vous *surveillez, commandez et
 > réagissez* sur le satellite en vol. Les descriptions de postes
-> ci-dessous sont formulées pour EO-Sat-1 ; dans l'industrie réelle, les
+> ci-dessous sont formulées pour EOSAT-1 ; dans l'industrie réelle, les
 > frontières sont plus larges et plus floues.
 
 > **Postes et consoles.** Le MCS est livré avec **sept consoles configurées** —
@@ -10451,10 +10533,13 @@ de manœuvre (pour l'AOCS) et les alertes de conjonction (pour le FD).
 
 La console `propulsion`. Responsable du bilan de Δv, de la chaîne
 d'armement et de l'exécution des poussées sur le module 1U à monergol
-vert d'EO-Sat-1 : 0,400 kg d'ergol pour 66,9 m/s au total, dimensionné
-pour des manœuvres d'évitement de débris et une compensation limitée
-de la traînée. Ce n'est **pas** un système de désorbitation — le déclin
-naturel depuis 450 km satisfait déjà la règle de retrait de service —
+vert d'EOSAT-1 : 0,400 kg d'ergol pour 66,9 m/s au total, dimensionné
+pour des manœuvres d'évitement de débris, la compensation de la
+traînée et la poussée de retrait de service en fin de vie (64,1 m/s
+nécessaires au total). Le déclin naturel depuis 513 km ne respecte
+**pas** la règle des 5 ans au minimum solaire ; ce poste veille donc
+aussi à la réserve de retrait de service — au moins 38 m/s conservés
+pour la poussée d'abaissement du périgée de 34,3 m/s (NOM-014) —
 et le dire fait partie du dossier, ce n'est pas une réserve à son sujet.
 La dynamique du vol produit le vecteur de manœuvre ; ce poste
 l'exécute.
@@ -10573,10 +10658,10 @@ comme demi-grand axe.)
 résiduelle étant imputable à la correction séculaire du J₂, non
 appliquée ici. En GEO, T = 1436 min contre 23,93 h × 60 = 1436 min ✓.*
 
-**Contrôle de vraisemblance détaillé.** Pour l'altitude moyenne d'EO-Sat-1, 513 km :
+**Contrôle de vraisemblance détaillé.** Pour l'altitude moyenne d'EOSAT-1, 513 km :
 a = 6378,137 + 513 = 6891,137 km ;
 T = 2π √(6891,137³ / 398600,4418) = 2π × 906,1 = 5693 s = 94,9 min.
-D'après la définition de l'orbite d'EO-Sat-1 (`orbit.yaml`) : T = 60 × 24 / 15,24 =
+D'après la définition de l'orbite d'EOSAT-1 (`orbit.yaml`) : T = 60 × 24 / 15,24 =
 94,5 min — accord à ~0,4 % près, le résidu tenant à ce que 513 km est une altitude
 géodésique moyenne et non a − R_E (le mouvement moyen implique a = 6872 km). ✓
 
@@ -10821,19 +10906,22 @@ diffraction pour une ouverture de 0,135 m est ≈ 3,9 m, ce qui est
 cohérent avec les bandes à 10 m publiées une fois pris en compte le
 pas du détecteur et le choix du nombre d'ouverture.*
 
-**Contrôle de vraisemblance détaillé (EO-Sat-1).** L'instrument
-d'EO-Sat-1 est un push-broom avec p = 5,5 µm, f = 84,5 mm, 8192 pixels
-en travers de la trace, à h = 450 km :
-GSD_pix = 5,5e-6 × 450 000 / 0,0845 = 29,3 m.
-Demi-champ = arctan((8192 × 5,5 µm / 2) / 84,5 mm) = 14,928°, de sorte
+**Contrôle de vraisemblance détaillé (EOSAT-1).** L'instrument
+d'EOSAT-1 est un push-broom avec p = 5,5 µm, f = 84,5 mm, 8192 pixels
+en travers de la trace, à h = 513 km :
+GSD_pix = 5,5e-6 × 513 000 / 0,0845 = 33,4 m.
+Demi-champ = arctan((8192 × 5,5 µm / 2) / 84,5 mm) = 14,928°, de sorte
 que le champ total est de 29,856° et la fauchée de
-2 × 450 × tan 14,928° = 240 km. Des pixels carrés pour une vitesse
-sol de 7,14 km/s fixent la cadence ligne à 7140 / 29,3 = 244 Hz, et
-8192 px × 4 bandes × 12 bits × 244 Hz = 96 Mbit/s de lecture brute. ✓
-Une fauchée de 240 km depuis 450 km caractérise un instrument grand
+2 × 513 × tan 14,928° = 273 km. Des pixels carrés pour une vitesse
+sol de 7,04 km/s fixeraient la cadence ligne à 7040 / 33,4 = 211 Hz, et
+8192 px × 4 bandes × 12 bits × 211 Hz = 83 Mbit/s de lecture brute. ✓
+La configuration de vol lit toujours à 244 Hz (96 Mbit/s), valeur
+dimensionnée pour l'ancienne altitude de 450 km ; elle suréchantillonne
+donc d'environ 16 % le long de la trace.
+Une fauchée de 273 km depuis 513 km caractérise un instrument grand
 champ pour la couleur de l'océan : une GSD de quelques dizaines de
 mètres est donc la réponse physiquement cohérente — tenir une GSD de
-9 m sur toute cette fauchée exigerait ~26 600 pixels par bande.
+9 m sur toute cette fauchée exigerait ~30 300 pixels par bande.
 
 ---
 
@@ -11122,7 +11210,7 @@ manuel qui a introduit la physique sous-jacente.
 
 Chaque exemple numérique résolu de ce manuel — UniSat-1, l'exemple
 pédagogique de CubeSat 3U d'observation de la Terre, le satellite de
-référence 6U « EO-Sat-1 » que pilotent les chapitres d'opérations, les
+référence 6U « EOSAT-1 » que pilotent les chapitres d'opérations, les
 calculs de temps de passage sur la trace au sol,
 les bouclages de bilans de liaison, les dimensionnements de radiateurs
 thermiques — a été calculé en exécutant l'outil SpaceCDF lui-même, de
@@ -11299,7 +11387,7 @@ ce livre.
 <li>Essais CEM · <a class="idx-page" href="#emc-testing"></a></li>
 <li>Dégradation en fin de vie (EOL) · <a class="idx-page" href="#2-solar-array-sizing"></a></li>
 <li>Programme d'essais d'environnement · <a class="idx-page" href="#3-environmental-test-programme"></a></li>
-<li>EO-Sat-1 (satellite de référence) · <a class="idx-page" href="#57-what-we-are-flying-eosat-1-in-600-words"></a></li>
+<li>EOSAT-1 (satellite de référence) · <a class="idx-page" href="#57-what-we-are-flying-eosat-1-in-600-words"></a></li>
 <li>EPS (sous-système d'alimentation électrique) · <a class="idx-page" href="#1-electrical-power-system-architecture"></a></li>
 <li>Schéma fonctionnel de l'EPS · <a class="idx-page" href="#eps-block-diagram"></a></li>
 <li>Ingénieur EPS (poste de la salle de contrôle) · <a class="idx-page" href="#64-eps-engineer"></a></li>
@@ -11355,7 +11443,7 @@ ce livre.
 <div class="idx-letter">I</div>
 <ul>
 <li>Ligne directrice IADC des 25 ans sur les débris · <a class="idx-page" href="#62-debris-mitigation-guidelines-hierarchy"></a></li>
-<li>Méthodes de vérification IADT · <a class="idx-page" href="#2-iadt-verification-methods-in-detail"></a></li>
+<li>Méthodes de vérification ATIR(D) · <a class="idx-page" href="#2-atird-verification-methods-in-detail"></a></li>
 <li>Inclinaison (élément orbital) · <a class="idx-page" href="#1-keplerian-orbital-elements"></a></li>
 <li>Inspection (méthode de vérification) · <a class="idx-page" href="#inspection-i"></a></li>
 <li>Vérification de la compatibilité des interfaces · <a class="idx-page" href="#5-interface-compatibility-verification"></a></li>
@@ -11563,7 +11651,8 @@ ce livre.
 <div class="idx-letter">V</div>
 <ul>
 <li>Vérification par phase de projet · <a class="idx-page" href="#verification-by-project-phase"></a></li>
-<li>Méthodes de vérification (ATID/IADT) · <a class="idx-page" href="#5-verification-methods-atid"></a></li>
+<li>Méthodes de vérification (ATIR(D)) · <a class="idx-page" href="#5-verification-methods-atird"></a></li>
+<li>Revue de conception (méthode de vérification) · <a class="idx-page" href="#review-of-design-r"></a></li>
 <li>Vérification et validation · <a class="idx-page" href="#1-verification-vs-validation-precise-definitions"></a></li>
 <li>Facteurs de forme (thermique) · <a class="idx-page" href="#view-factors"></a></li>
 <li>Discipline de boucle vocale · <a class="idx-page" href="#chapter-9-voice-loop-discipline-and-procedure-execution"></a></li>

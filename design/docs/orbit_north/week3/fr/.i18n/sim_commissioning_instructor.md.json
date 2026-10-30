@@ -14,44 +14,44 @@
   },
   {
    "id": "thursday-commissioning-simulation-instructor-pack/1-day-at-a-glance",
-   "en_hash": "ad3f6cd2d17f8302",
-   "fr_hash": "b0cdd88ef48f7726"
+   "en_hash": "5dde20dae39a18d9",
+   "fr_hash": "d703a5e3b982fe05"
   },
   {
    "id": "thursday-commissioning-simulation-instructor-pack/2-scenario-configuration",
-   "en_hash": "d4d8e8fa294b0ca7",
-   "fr_hash": "e662fd3fb3d1a67f"
+   "en_hash": "e15d2e12bbe3d2aa",
+   "fr_hash": "a35c0eac615aaee5"
   },
   {
    "id": "thursday-commissioning-simulation-instructor-pack/3-procedure-expectations",
-   "en_hash": "91392bd7704a0eb7",
-   "fr_hash": "bb868c498d22f7e9"
+   "en_hash": "9f664e4e882cf293",
+   "fr_hash": "e385c016663c7e33"
   },
   {
    "id": "thursday-commissioning-simulation-instructor-pack/4-anomaly-injection-menu",
-   "en_hash": "8cda5df1c2667125",
-   "fr_hash": "f6b031b948ec7cbe"
+   "en_hash": "8fc2f14c862df5e6",
+   "fr_hash": "502ab4632116e908"
   },
   {
    "id": "thursday-commissioning-simulation-instructor-pack/5-pass-operator-side-criteria",
-   "en_hash": "3d904d5b9eee3997",
-   "fr_hash": "1f7371e451c1fb7b"
+   "en_hash": "3950ee5f7442baea",
+   "fr_hash": "b51992aeb9e7be95"
   },
   {
    "id": "thursday-commissioning-simulation-instructor-pack/6-coaching-during-the-shift",
-   "en_hash": "1ae5a28fd77bdb0e",
-   "fr_hash": "4f562f4f5ba2709e"
+   "en_hash": "d8938297fa278c38",
+   "fr_hash": "36bf7191678744ee"
   },
   {
    "id": "thursday-commissioning-simulation-instructor-pack/7-debrief",
-   "en_hash": "ff3e36ce72b18a24",
-   "fr_hash": "c34965d99b64967a"
+   "en_hash": "3ee1c915bf482b15",
+   "fr_hash": "f7bb6539ff7e27b9"
   },
   {
    "id": "thursday-commissioning-simulation-instructor-pack/8-safety-red-lines-references",
-   "en_hash": "69f6f13cc65978ee",
-   "fr_hash": "d0a265917eccf8aa"
+   "en_hash": "e7e2681c1d8a1eeb",
+   "fr_hash": "9172672b61339763"
   }
  ],
- "en_commit": "3ea7113"
+ "en_commit": "c4a140a"
 }

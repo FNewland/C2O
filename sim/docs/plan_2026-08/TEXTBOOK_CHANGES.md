@@ -1,9 +1,9 @@
 # Textbook — what must change
 
 **For:** the courseware author working on `orbit_north_week3.md` (Part 2, the
-EO-Sat-1 operations book), its workbook, the student procedure quick-reference
+EOSAT-1 operations book), its workbook, the student procedure quick-reference
 and the breakpoint spec. Part 1 (`facilitator_book_expanded.md`) is a generic
-design course and is only touched where it is quoted as EO-Sat-1 fact.
+design course and is only touched where it is quoted as EOSAT-1 fact.
 
 **Why now:** the 2026-08 build changed the spacecraft. Some of these entries
 are the book being wrong about a simulator that was always right; most are the
@@ -64,7 +64,7 @@ Everything below is derived from it and pinned by
 | T-21 | COM-010: cooler power **8.5 W**, fault threshold "only 5 W" | **15.0 W** (`subsystems/payload.yaml: fpa_cooler_power_w`, and EPS and TCS agree). Expect a **14–16 W** rise | BOOK | Fix both numbers; the fault threshold has to move with them |
 | T-22 | COM-010 hold "±2 °C of setpoint" | Measured 3σ about the setpoint is **0.5 K**. ±2 °C is 12σ — it would pass with a badly degraded loop | BOOK | Tighten to ±1.0 °C peak-to-peak, and say that below 0.5 °C is normal |
 | T-23 | §7.1 MCS figure shows `fpa_temp −58 °C` | Unreachable: the setpoint floor is −20 °C and the alarm low is −25.5 °C | BOOK | Regenerate the figure |
-| T-24 | §6.5 editor's note: "real multispectral imagers run near −50 °C (Stirling-class); EO-Sat-1 models a Peltier-class cooler clamped to [−20, 0] with an S12 target band of −15…−3" | The clamp is right; the "S12 target band" half is now wrong (see T-16/T-17) | BOOK | Keep the Stirling/Peltier framing — it is good teaching — and replace the band sentence |
+| T-24 | §6.5 editor's note: "real multispectral imagers run near −50 °C (Stirling-class); EOSAT-1 models a Peltier-class cooler clamped to [−20, 0] with an S12 target band of −15…−3" | The clamp is right; the "S12 target band" half is now wrong (see T-16/T-17) | BOOK | Keep the Stirling/Peltier framing — it is good teaching — and replace the band sentence |
 | T-25 | COM-002 "heater cycling within ±2 °C of setpoint" | The shipped thermostat bands are **4–5 °C wide** (battery on 1.0 / off 5.0 °C; OBC on 5.0 / off 10.0 °C) | BOOK | Fix to the real bands |
 | T-26 | FDIR TCS-04 "`fpa_temp` > 12 °C → power off payload" | Fires off the **S12 alarm** on 0x0408, i.e. outside −25.5…+17.5 °C. A bare "> 12 °C" sits *inside* the normal uncooled state and would power off a payload that is correctly off already | BOOK | Fix; `configs/eosat1/manual/08_fdir.md` has been corrected and is the reference |
 
@@ -91,7 +91,7 @@ Everything below is derived from it and pinned by
 | T-34 | `I_wheel = 1.5 × 10⁻⁵ kg·m²`, ω_max 5000 rpm, H_max 7.85 mN·m·s (§13.7) | A real 6U wheel, taken from a current product line, with the momentum budget, desat cadence and NOM-007 entry criterion derived from its datasheet. The old book value is a nanosat MEMS figure; the old sim value (0.005) was a 200-mm-class wheel | BUILD | Re-derive the whole §13.7 desaturation exercise. It was wrong by 333× against the old sim and is now wrong against the new one for a different reason |
 | T-35 | Wheel speed limits: 5000 rpm (§13.7), 7500 rpm (NOM-007 entry), 8000 rpm (§15.3) — **three limits in one book** | One set, in `aocs.yaml` and mirrored in the limits and monitors | BOOK | Pick up the shipped numbers; the internal inconsistency is the book's own |
 | T-36 | "a **single-head** star tracker" (§5.7) | Two heads: `ST1_POWER` (4), `ST2_POWER` (5), `ST_SELECT` (6), and CTG-008 depends on switching to the backup | BOOK | Fix §5.7 |
-| T-37 | "disturbance torque on a **3U at 500 km**" (§13.7); §13.8 "Z wheel at 4200 rpm, 70 %" | EO-Sat-1 is a **6U at 450 km**; 4200/5000 = **84 %** | BOOK | Fix the spacecraft class and the arithmetic |
+| T-37 | "disturbance torque on a **3U at 500 km**" (§13.7); §13.8 "Z wheel at 4200 rpm, 70 %" | EOSAT-1 is a **6U at 450 km**; 4200/5000 = **84 %** | BOOK | Fix the spacecraft class and the arithmetic |
 | T-38 | FINE_POINT gated at < 0.1° in the Ch 14 cards | FINE entry now has a **precondition bitmask (0x02C5)**: ST tracking ≥ 5 stars, all four wheels active, MEKF converged and sustained 30 s, \|ω\| < 0.01 °/s, momentum < 70 % of envelope, slew idle ≥ 60 s. `AOCS_SET_MODE(5)` is **refused with TM(1,8)** when unmet. The payload then **refuses to capture** unless FINE is held with pointing error < 0.05° | BUILD | New content, and it is the chain that makes fine pointing mean something. Add it to COM-005 and NOM-002 |
 | T-39 | Nothing about fidelity under time acceleration | Above **×60** the attitude fast loop is bypassed and `aocs.fidelity_mode` reads 1, with an S5 event | BUILD | Add a warning: **do not grade a pointing number taken from a run above ×60.** See `docs/DETERMINISM.md` |
 
@@ -101,7 +101,7 @@ Everything below is derived from it and pinned by
 
 | # | Book says | Now | Kind | Action |
 |---|---|---|---|---|
-| T-40 | The book is self-contradictory: §5.7 omits propulsion; §14.3 NOM-004/-005, §14.4 CTG-006 and §16.8 assume thrusters; `HEATER_THRUSTER` (42) is taught as live | EO-Sat-1 **now has propulsion**: a 1U green-monoprop (LMP-103S/ADN) module, 0.400 kg, thrust **0.33 N BOL → 0.14 N EOL**, Isp **220 → 196 s**, tank blowdown 22.0 → 9.33 bar, **total ΔV 66.9 m/s**, wet mass 1.55 kg. Funcs **108–118**, TM block **0x0B00**, events **0x0800**, a new EPS `prop` line last in the shed order, and `htr_thruster` is real | BUILD | §5.7 must describe the module. NOM-004, NOM-005 and CTG-006 become runnable procedures rather than aspiration. `docs/PROPULSION_GUIDE.md` is the reference |
+| T-40 | The book is self-contradictory: §5.7 omits propulsion; §14.3 NOM-004/-005, §14.4 CTG-006 and §16.8 assume thrusters; `HEATER_THRUSTER` (42) is taught as live | EOSAT-1 **now has propulsion**: a 1U green-monoprop (LMP-103S/ADN) module, 0.400 kg, thrust **0.33 N BOL → 0.14 N EOL**, Isp **220 → 196 s**, tank blowdown 22.0 → 9.33 bar, **total ΔV 66.9 m/s**, wet mass 1.55 kg. Funcs **108–118**, TM block **0x0B00**, events **0x0800**, a new EPS `prop` line last in the shed order, and `htr_thruster` is real | BUILD | §5.7 must describe the module. NOM-004, NOM-005 and CTG-006 become runnable procedures rather than aspiration. `docs/PROPULSION_GUIDE.md` is the reference |
 | T-41 | (nothing) | The thruster fires on **−X along +X body**, so a retrograde burn requires a deliberate **180° yaw**. The engine clamps `speed` to ≤ ×10 while FIRING and raises `PROP_SPEED_CLAMPED` | BUILD | This coupling is the teaching point of the whole module — at ×1000 a single tick is longer than a 32 s burn and the "abort on attitude error" lesson would be unobservable |
 | T-42 | (nothing) | A ΔV **propagates**: a measured TLE re-fit bumps `epoch_version` and invalidates the planner and MCS caches, so passes, eclipse, power and imaging opportunities all move | BUILD | Say so. A manoeuvre that did not change the pass plan would be cosmetic |
 | T-43 | §3.4 (Part 1) notes a 6U at 450 km decays inside the FCC 5-year rule | Still true, and it is the standing argument **against** carrying propulsion at all | DECIDE | The textbook audit's independent recommendation was to teach orbit maintenance as *the decision not to carry propulsion* plus a paper ΔV exercise. The module was built on Franz's explicit instruction. If the book keeps §3.4, it should address the tension head-on rather than leave two chapters disagreeing |

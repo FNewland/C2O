@@ -28,7 +28,7 @@ from smo_simulator.engine import SC_NOMINAL, SC_SAFE, SimulationEngine
 CONFIG_DIR = Path(__file__).resolve().parents[2] / "configs" / "eosat1"
 
 #: aocs.mode values that mean "flying the commissioned pointing mode".
-#: 4 NOMINAL_NADIR and 8 ECLIPSE_PROPAGATE are the same operational state
+#: 4 NOMINAL and 8 ECLIPSE are the same operational state
 #: either side of the terminator — the autonomous eclipse handover is expected.
 #: 3 COARSE_SUN / 2 DETUMBLE / 1 SAFE_BOOT / 0 OFF are the demotions that must
 #: not happen.

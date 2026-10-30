@@ -47,8 +47,24 @@ Chaque passage dure 90 min de temps réel / 90 min de temps simulé (vitesse 1
   durée du passage.
 - **Facteur d'accélération :** 1× (temps réel).
 
-[Claude Code : confirmer l'invocation du scénario en ligne de commande. Forme attendue :
-`sim run scenarios/first_contact.yaml --duration 5400 --inject <anomaly_yaml>`]
+Il n'existe pas de commande `sim run`. Démarrer une fois le simulateur
+(`smo-simulator --config configs/eosat1/ --speed 1`, ou `./start.sh`
+pour l'ensemble de la suite), puis lancer le scénario par le `name:` de son
+YAML — **First Contact** — depuis le panneau Scenarios de la console de
+l'enseignant, ou par l'API de l'enseignant sur le port du simulateur :
+
+```
+curl -X POST http://localhost:8080/api/command \
+     -H 'Content-Type: application/json' \
+     -d '{"type": "start_scenario", "scenario": "First Contact"}'
+```
+
+Lancer une anomalie du §4 de la même façon, par son nom, au moment prévu.
+Un seul scénario est actif à la fois : lancer l'anomalie remplace *First
+Contact* comme scénario actif mais conserve l'état du satellite, et les
+événements de l'anomalie se déroulent à partir de cet instant.
+`first_contact.yaml` déclare `duration_s: 1800` ; le passage dure aussi
+longtemps que l'enseignant laisse tourner l'horloge.
 
 ---
 
@@ -59,18 +75,22 @@ L'équipe d'opérateurs doit amener le satellite de la phase 3
 terminé), à peu près dans cet ordre :
 
 1. **LEOP-001** Première acquisition du signal et amorçage de l'OBC
-2. **LEOP-006** Synchronisation temporelle
-3. **(LEOP-002)** Bilan de santé initial
-4. **LEOP-007** Mise sous tension séquentielle (c'est la plus longue — réchauffeur
-   batterie, roues de réaction, amortissement par le SCAO ; voir la procédure pour la remarque
-   complète sur l'ordre)
-5. (Facultatif, si le temps le permet) **LEOP-005** Acquisition du Soleil
+2. **LEOP-002** Bilan de santé initial
+3. **LEOP-004** Vérification du générateur solaire (déploiement des ailes)
+4. **LEOP-007** Mise sous tension séquentielle (réchauffeurs si nécessaire, ligne de
+   la suite AOCS, magnétomètre, magnétocoupleurs et GPS, puis DETUMBLE ; les roues
+   restent désactivées jusqu'à COM-004)
+5. **LEOP-005** Acquisition du Soleil (observe le passage automatique en
+   COARSE_SUN)
+6. **LEOP-006** Synchronisation temporelle
+7. (Si le temps le permet) **LEOP-003** Restitution d'orbite initiale, qui clôt
+   la LEOP en déclarant la phase 5
 
 État final typique du passage 1 : phase 4, antennes déployées, logiciel applicatif en cours d'exécution,
 htr_bat ON, aocs_wheels ON, vitesses angulaires < 0,05 °/s.
 
-État final typique du passage 2 : identique, avec en plus le bus charge utile en attente, les jeux
-de règles de la FDIR vérifiés, prêt pour la recette en orbite du jeudi.
+État final typique du passage 2 : identique, en maintien au Soleil COARSE_SUN, horloge
+réglée ; la charge utile reste éteinte jusqu'à COM-009 ; prêt pour la recette en orbite du jeudi.
 
 ---
 
@@ -92,9 +112,13 @@ depuis l'interface opérateur du scénario en cours d'exécution.
 | Difficile | `obc_bus_failure.yaml` | Le bus CAN A tombe en pleine mise sous tension séquentielle | CTG-017 Basculement sur panne de bus |
 | Très difficile | `gs_antenna_failure.yaml` | Antenne d'Iqaluit dégradée en milieu de passage ; l'équipe doit reporter la fin du passage sur Troll | CTG-020 Panne d'antenne de station sol |
 
-[Claude Code : vérifier les noms de fichiers dans le simulateur. Les quatre scénarios
-*moyens* et *difficiles* figurent dans
-`scenarios/aocs_*.yaml`, `obc_*.yaml`, etc.]
+Les sept fichiers existent dans `configs/eosat1/scenarios/` (vérifié dans
+l'arborescence du simulateur le 2026-10-30). La console les affiche sous leur
+champ `name:` : *No Telemetry at AOS*, *LCL Overcurrent Trip*,
+*Reaction Wheel Stuck at Speed*, *Star Tracker Failure*, *OBC
+Watchdog Reset*, *CAN Bus A Failure* et *Ground Station Antenna
+Failure*. Le catalogue du guide de l'enseignant (§5.10.2) indique CTG-026
+à côté de CTG-007 pour `aocs_actuator_stuck.yaml`.
 
 ### Carte d'injection
 
@@ -107,7 +131,14 @@ Pour chaque injection, l'enseignant doit connaître :
    le passage ;
 4. **Cinq questions de débriefing** à poser après le passage.
 
-[Claude Code : produire une carte d'injection d'une page par scénario.]
+Les cartes d'aide des sept scénarios se trouvent dans le guide de l'enseignant,
+chapitre 18 : §18.1 Absence de TM en début de passage, §18.2 Surintensité
+sur une ligne d'alimentation, §18.3 Roue de réaction bloquée, §18.4 Panne du
+senseur stellaire, §18.5 Réinitialisation de l'OBC par le chien de garde,
+§18.6 Panne du bus de l'OBC et §18.7 Panne d'antenne de station sol. Chaque
+carte donne le moment de déclenchement, le premier indice, la procédure de
+reprise, le critère de réussite du passage et cinq questions de débriefing.
+Imprimer avant le quart les cartes qui serviront.
 
 ---
 

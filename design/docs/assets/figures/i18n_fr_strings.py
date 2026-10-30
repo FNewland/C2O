@@ -887,7 +887,7 @@ PER_FIGURE.update({
     "Random vibration, 3 axes": "Vibrations aléatoires, 3 axes",
     "Post-vibration functional test": "Essai fonctionnel après vibrations",
     "Anomaly?": "Anomalie ?",
-    "Thermal vacuum, 4–8 cycles\n(functional test at each extreme)": "Vide thermique, 4 à 8 cycles\n(essai fonctionnel à chaque extrême)",
+    "Thermal vacuum, 4 cycles\n(functional test at each extreme)": "Vide thermique, 4 cycles\n(essai fonctionnel à chaque extrême)",
     "Post-TVAC functional test": "Essai fonctionnel après TVAC",
     "EMC test (if required)": "Essai CEM (si exigé)",
     "Mass and CG measurement": "Mesure de masse et de CdG",
@@ -903,9 +903,9 @@ PER_FIGURE.update({
         "Qualification : MPE + 3 dB, 2 min par axe\nRecette : MPE, 1 min par axe\nProtovol : MPE + 3 dB, 1 min par axe",
     "Thermal-vacuum levels": "Niveaux de vide thermique",
     "Qualification: predicted ± 15 °C, 8 cycles\nAcceptance: predicted ± 10 °C, 4 cycles\n"
-    "Proto-flight: predicted ± 10 °C, 4–8 cycles\nVacuum < 10⁻⁵ mbar; ≥ 1 h dwell at each extreme":
+    "Proto-flight: predicted ± 10 °C, 4 cycles\nVacuum < 10⁻⁵ mbar; ≥ 1 h dwell at each extreme":
         "Qualification : prévision ± 15 °C, 8 cycles\nRecette : prévision ± 10 °C, 4 cycles\n"
-        "Protovol : prévision ± 10 °C, 4 à 8 cycles\nVide < 10⁻⁵ mbar ; palier ≥ 1 h à chaque extrême",
+        "Protovol : prévision ± 10 °C, 4 cycles\nVide < 10⁻⁵ mbar ; palier ≥ 1 h à chaque extrême",
     "Environmental test": "Essai d'environnement",
     "Functional test": "Essai fonctionnel",
     "Measurement / inspection": "Mesure / inspection",

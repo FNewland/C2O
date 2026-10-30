@@ -280,7 +280,7 @@ ground segment,segment sol,n.m.,,,IATE
 safe mode,mode survie,n.m.,,"UI enum label SAFE stays 'SAFE' in consoles",project
 attitude and orbit control system (AOCS),système de contrôle d'attitude et d'orbite (SCAO),n.m.,,"acronym SCAO in prose; keep AOCS in mnemonics",project
 link budget,bilan de liaison,n.m.,,,IATE
-EO-Sat-1,EO-Sat-1,,yes,"proper name",project
+EOSAT-1,EOSAT-1,,yes,"proper name",project
 PUS,PUS,,yes,"ECSS Packet Utilisation Standard; never translate",project
 ```
 

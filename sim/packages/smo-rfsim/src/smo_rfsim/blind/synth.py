@@ -1,6 +1,6 @@
 """Synthetic recordings for exercising the blind receiver.
 
-Produces a realistic SDR-style capture of an EO-Sat-1 downlink — real CCSDS
+Produces a realistic SDR-style capture of an EOSAT-1 downlink — real CCSDS
 TM frames carrying real ECSS packets, coded exactly as ``SpacecraftTX`` codes
 them (RS(255,223) blocks, optional conv(7,1/2), ASM), modulated by the
 suite's own ``Modulator`` and then passed through every impairment stage of
@@ -28,7 +28,7 @@ from ..recording.iq_recorder import (BasebandRecorder, ImpairmentConfig,
                                      RecorderConfig, fft_resample,
                                      _normalize_power)
 
-#: The EO-Sat-1 S-band ladder (configs/eosat1/subsystems/ttc.yaml), plus the
+#: The EOSAT-1 S-band ladder (configs/eosat1/subsystems/ttc.yaml), plus the
 #: UHF beacon. Channel bit rate, modulation index, coding.
 EOSAT1_TIERS = {
     "SAFE":   dict(bps=1000,   modulation=0, conv=True,  rs=True),
@@ -143,7 +143,7 @@ def synth_recording(tier: Optional[str] = "LOW", *, modulation: int = None,
                     seed: int = 0) -> tuple[np.ndarray, float, SynthTruth]:
     """Return ``(samples, sample_rate_hz, truth)``.
 
-    ``tier`` picks an EO-Sat-1 rung; any explicit keyword overrides it, so a
+    ``tier`` picks an EOSAT-1 rung; any explicit keyword overrides it, so a
     test can also build signals the ladder never flies (8PSK, GFSK, ...).
     """
     t = dict(EOSAT1_TIERS.get(tier or "", EOSAT1_TIERS["LOW"]))

@@ -1,4 +1,4 @@
-# EOSAT-1 Full Commissioning Sequence: Spacecraft OFF → Payload Operations
+# EOSAT-1 Full Commissioning Sequence: Spacecraft OFF → Payload Operations {#eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations}
 
 **Reference:** Cold-boot to fully commissioned, step by step.
 **Revision:** 2.0
@@ -8,7 +8,7 @@ This document walks through every command and telemetry verification from first 
 
 ---
 
-## MCS Tab Reference
+## MCS Tab Reference {#mcs-tab-reference}
 
 | Tab | What it shows |
 |-----|---------------|
@@ -25,11 +25,11 @@ This document walks through every command and telemetry verification from first 
 
 ---
 
-## Phase 0 — Pre-Contact Configuration (Ground Only)
+## Phase 0 — Pre-Contact Configuration (Ground Only) {#phase-0--pre-contact-configuration-ground-only}
 
 No spacecraft commands. Configure the ground station.
 
-### 0.1 Configure Ground Station & Override Pass
+### 0.1 Configure Ground Station & Override Pass {#01-configure-ground-station--override-pass}
 
 **Action:** Set pass override parameter to force `in_contact = True`
 
@@ -39,11 +39,11 @@ No spacecraft commands. Configure the ground station.
 
 ---
 
-## Phase 1 — First Signal: Bootloader Telemetry Reception
+## Phase 1 — First Signal: Bootloader Telemetry Reception {#phase-1--first-signal-bootloader-telemetry-reception}
 
 The spacecraft is in bootloader (`sw_image = 0`). Only OBC + TTC RX are powered. The beacon SID 11 is the only telemetry available (7 parameters, every 30 s). No application-mode SIDs (1–6) are active yet.
 
-### 1.1 Ping the Spacecraft (Connection Test)
+### 1.1 Ping the Spacecraft (Connection Test) {#11-ping-the-spacecraft-connection-test}
 
 **TC:** `CONNECTION_TEST` (Service 17, Subtype 1)
 
@@ -54,7 +54,7 @@ The spacecraft is in bootloader (`sw_image = 0`). Only OBC + TTC RX are powered.
 - **ttc** tab → `link_status` changes from 0 (NO LINK) to 1 (ACQUIRING) then 2 (LOCKED); `rssi` climbs from -120 dBm toward > -110 dBm
 - **eps** tab → power line `ttc_tx` shows ON (auto-TX hold-down activated)
 
-### 1.2 Verify Beacon Telemetry (SID 11)
+### 1.2 Verify Beacon Telemetry (SID 11) {#12-verify-beacon-telemetry-sid-11}
 
 **TC:** `HK_REQUEST(sid=11)` (Service 3, Subtype 27)
 
@@ -78,11 +78,11 @@ The spacecraft is in bootloader (`sw_image = 0`). Only OBC + TTC RX are powered.
 
 ---
 
-## Phase 2 — Antenna Deployment
+## Phase 2 — Antenna Deployment {#phase-2--antenna-deployment}
 
 The antenna starts stowed (`antenna_deployment_sensor = 1`). Even though you may already have signal via the stowed antenna, you need to deploy for full link margin.
 
-### 2.1 Deploy Antenna
+### 2.1 Deploy Antenna {#21-deploy-antenna}
 
 **TC:** `TTC_DEPLOY_ANTENNA` (Service 8, Subtype 1, func_id 69)
 
@@ -103,9 +103,9 @@ The antenna starts stowed (`antenna_deployment_sensor = 1`). Even though you may
 
 ---
 
-## Phase 3 — Boot OBC to Application Image
+## Phase 3 — Boot OBC to Application Image {#phase-3--boot-obc-to-application-image}
 
-### 3.1 OBC_BOOT_APP
+### 3.1 OBC_BOOT_APP {#31-obc_boot_app}
 
 **TC:** `OBC_BOOT_APP` (Service 8, Subtype 1, func_id 55)
 
@@ -122,11 +122,11 @@ The antenna starts stowed (`antenna_deployment_sensor = 1`). Even though you may
 
 ---
 
-## Phase 4 — Initial Platform Health Check
+## Phase 4 — Initial Platform Health Check {#phase-4--initial-platform-health-check}
 
 Now in application mode. All SIDs available. Check everything before powering on subsystems.
 
-### 4.1 Request All Housekeeping
+### 4.1 Request All Housekeeping {#41-request-all-housekeeping}
 
 **TC sequence** (six commands, can be sent rapidly):
 
@@ -139,7 +139,7 @@ Now in application mode. All SIDs available. Check everything before powering on
 | `HK_REQUEST(sid=5)` (S3.27) | 5 | Payload | **payload** |
 | `HK_REQUEST(sid=6)` (S3.27) | 6 | TTC | **ttc** |
 
-### 4.2 Verify EPS Power Status
+### 4.2 Verify EPS Power Status {#42-verify-eps-power-status}
 
 **MCS screen: eps tab**
 
@@ -153,7 +153,7 @@ Now in application mode. All SIDs available. Check everything before powering on
 | `power_cons` | 0x0106 | ~8 W (OBC 6W + RX 1.5W) | < 30 W |
 | `eclipse_flag` | 0x0108 | 0 or 1 | note for context |
 
-### 4.3 Verify Power Line Switch States
+### 4.3 Verify Power Line Switch States {#43-verify-power-line-switch-states}
 
 **MCS screen: eps tab → Power Lines panel**
 
@@ -170,7 +170,7 @@ Now in application mode. All SIDs available. Check everything before powering on
 
 All OFF lines are expected — we haven't powered them on yet.
 
-### 4.4 Verify OBDH Status
+### 4.4 Verify OBDH Status {#44-verify-obdh-status}
 
 **MCS screen: obdh tab**
 
@@ -184,7 +184,7 @@ All OFF lines are expected — we haven't powered them on yet.
 | `active_bus` | 0x030E | 0 (CAN Bus A) |
 | `bus_a_status` | 0x030F | 0 (OK) |
 
-### 4.5 Verify TTC Link Quality
+### 4.5 Verify TTC Link Quality {#45-verify-ttc-link-quality}
 
 **MCS screen: ttc tab**
 
@@ -198,7 +198,7 @@ All OFF lines are expected — we haven't powered them on yet.
 | `frame_sync` | 0x0511 | 1 |
 | `antenna_deployed` | 0x0520 | 1 (if Phase 2 done) |
 
-### 4.6 Verify TCS Baseline Temperatures
+### 4.6 Verify TCS Baseline Temperatures {#46-verify-tcs-baseline-temperatures}
 
 **MCS screen: tcs tab → Temperature Zones table**
 
@@ -209,7 +209,7 @@ All OFF lines are expected — we haven't powered them on yet.
 | `temp_fpa` | 0x0408 | ~+11.5°C (internal ambient, uncooled) | [-22.0, +14.0]°C (yellow band) |
 | Panel temps | 0x0400–0x0405 | 8–20°C range | [-40, +60]°C |
 
-### 4.7 Verify AOCS and Payload are OFF
+### 4.7 Verify AOCS and Payload are OFF {#47-verify-aocs-and-payload-are-off}
 
 **MCS screen: aocs tab** → `mode` (0x020F) = 0 (OFF). Wheels unpowered.
 **MCS screen: payload tab** → `mode` (0x0600) = 0 (OFF). This is expected.
@@ -220,9 +220,9 @@ All OFF lines are expected — we haven't powered them on yet.
 
 ---
 
-## Phase 5 — Enable Telemetry Buffering (Stored TM)
+## Phase 5 — Enable Telemetry Buffering (Stored TM) {#phase-5--enable-telemetry-buffering-stored-tm}
 
-### 5.1 Enable Periodic HK Reporting for All SIDs
+### 5.1 Enable Periodic HK Reporting for All SIDs {#51-enable-periodic-hk-reporting-for-all-sids}
 
 **TC sequence:**
 
@@ -244,15 +244,15 @@ All OFF lines are expected — we haven't powered them on yet.
 
 ---
 
-## Phase 6 — Set On-Board Time
+## Phase 6 — Set On-Board Time {#phase-6--set-on-board-time}
 
-### 6.1 Request Current Time
+### 6.1 Request Current Time {#61-request-current-time}
 
 **TC:** `REQUEST_TIME` (Service 9, Subtype 2)
 
 **MCS screen: obdh tab** → current OBC Time (CUC) field shows the current onboard clock. Before SET_TIME it will show "0 (not set)". The SC TIME clock in the top status bar will show "NOT SET".
 
-### 6.2 Upload Corrected Time
+### 6.2 Upload Corrected Time {#62-upload-corrected-time}
 
 Two options in the **obdh tab → TIME CORRELATION (S9)** panel:
 
@@ -275,11 +275,11 @@ Enter an ISO 8601 timestamp (e.g., `2026-03-10T12:00:00Z`) in the "Set Arbitrary
 
 ---
 
-## Phase 7 — Sequential Power-On (Heaters First, Then AOCS)
+## Phase 7 — Sequential Power-On (Heaters First, Then AOCS) {#phase-7--sequential-power-on-heaters-first-then-aocs}
 
 This follows LEOP-007 ordering. Each step is a power line ON followed by a mode command.
 
-### 7.1 Battery Heater ON
+### 7.1 Battery Heater ON {#71-battery-heater-on}
 
 **TC:** `EPS_POWER_ON(line_idx=5)` (S8.1, func_id 19, data byte = 5)
 
@@ -290,7 +290,7 @@ This follows LEOP-007 ordering. Each step is a power line ON followed by a mode 
 - **eps** tab → `power_cons` increases by ~6 W
 - **tcs** tab → `htr_battery` (0x040A) = 1 (active when thermostat demands heat), `temp_battery` (0x0407) trending toward setpoint
 
-### 7.2 OBC Heater ON
+### 7.2 OBC Heater ON {#72-obc-heater-on}
 
 **TC:** `EPS_POWER_ON(line_idx=6)` (S8.1, func_id 19, data byte = 6)
 
@@ -301,7 +301,7 @@ This follows LEOP-007 ordering. Each step is a power line ON followed by a mode 
 - **eps** tab → `power_cons` increases by ~3 W
 - **tcs** tab → `htr_obc` (0x040B) = 1 (active)
 
-### 7.3 AOCS Wheels Power ON
+### 7.3 AOCS Wheels Power ON {#73-aocs-wheels-power-on}
 
 **TC:** `EPS_POWER_ON(line_idx=7)` (S8.1, func_id 19, data byte = 7)
 
@@ -311,7 +311,7 @@ This follows LEOP-007 ordering. Each step is a power line ON followed by a mode 
 - **eps** tab → power line `aocs_wheels` (0x0117) = 1 (ON)
 - **eps** tab → `power_cons` increases by ~12 W
 
-### 7.3a Enable Individual Reaction Wheels
+### 7.3a Enable Individual Reaction Wheels {#73a-enable-individual-reaction-wheels}
 
 Enable each wheel individually (only 3 of 4 are required for a control solution):
 
@@ -330,7 +330,7 @@ To disable a specific wheel: `AOCS_DISABLE_WHEEL(wheel_idx=N)` (S8.1, func_id 2,
 
 **Note:** With AOCS still in OFF mode, body rates and YPR data show 0 (no attitude determination active). This is correct — the AOCS must be in an active mode to report rates.
 
-### 7.4 AOCS Set Mode: DETUMBLE
+### 7.4 AOCS Set Mode: DETUMBLE {#74-aocs-set-mode-detumble}
 
 **TC:** `AOCS_SET_MODE(mode=2)` (S8.1, func_id 0, data byte = 2)
 
@@ -344,7 +344,7 @@ To disable a specific wheel: `AOCS_DISABLE_WHEEL(wheel_idx=N)` (S8.1, func_id 2,
 
 **Monitor over several minutes:** Rates should decrease from initial tumble toward < 0.5°/s within 15 minutes.
 
-### 7.5 Verify Power Budget After AOCS Power-On
+### 7.5 Verify Power Budget After AOCS Power-On {#75-verify-power-budget-after-aocs-power-on}
 
 **MCS screen: eps tab**
 
@@ -361,9 +361,9 @@ To disable a specific wheel: `AOCS_DISABLE_WHEEL(wheel_idx=N)` (S8.1, func_id 2,
 
 ---
 
-## Phase 8 — Upload TLE for Orbit Determination
+## Phase 8 — Upload TLE for Orbit Determination {#phase-8--upload-tle-for-orbit-determination}
 
-### 8.1 Upload TLE / Orbit State Vector
+### 8.1 Upload TLE / Orbit State Vector {#81-upload-tle--orbit-state-vector}
 
 **Tool:** Use the orbit tools to convert TLE or state vector into S20.1 command format:
 
@@ -391,9 +391,9 @@ The tool outputs hex command strings for S20.1 SET_PARAM commands targeting:
 
 ---
 
-## Phase 9 — AOCS Mode Progression: Rate Damping → Sun Pointing → Nadir
+## Phase 9 — AOCS Mode Progression: Rate Damping → Sun Pointing → Nadir {#phase-9--aocs-mode-progression-rate-damping--sun-pointing--nadir}
 
-### 9.1 Confirm Rates Damped
+### 9.1 Confirm Rates Damped {#91-confirm-rates-damped}
 
 **MCS screen: aocs tab** → Body Rates panel
 
@@ -405,7 +405,7 @@ The tool outputs hex command strings for S20.1 SET_PARAM commands targeting:
 
 Also check the **BODY RATES chart** (bottom of aocs tab) for trending confirmation — rates should show a clear decay curve.
 
-### 9.2 Observe the AUTOMATIC Transition to COARSE_SUN (Safe Pointing)
+### 9.2 Observe the AUTOMATIC Transition to COARSE_SUN (Safe Pointing) {#92-observe-the-automatic-transition-to-coarse_sun-safe-pointing}
 
 **No TC.** Once the body rates have held below 0.5°/s for 30 s, the AOCS hands
 itself from DETUMBLE to COARSE_SUN — this is an AUTOMATIC transition
@@ -421,7 +421,7 @@ never "verify mode = 3" minutes after the lock holds.
 - CSS Sun Vector panel shows valid sun vector (X/Y/Z components)
 - **eps** tab → `power_gen` should increase as arrays face the sun
 
-### 9.3 Download Delayed TM — First Whole-Orbit Check
+### 9.3 Download Delayed TM — First Whole-Orbit Check {#93-download-delayed-tm--first-whole-orbit-check}
 
 **Action:** Use the S15 TM dump buttons on each subsystem tab to retrieve stored telemetry.
 
@@ -436,9 +436,9 @@ never "verify mode = 3" minutes after the lock holds.
 - Temperatures stayed in range through eclipse
 - Battery SoC recovered after eclipse exit
 - No unexpected reboots or events
-- AOCS held pointing through eclipse (eclipse_propagate mode should engage automatically)
+- AOCS held pointing through eclipse (ECLIPSE mode (8) should engage automatically)
 
-### 9.4 Check AOCS Signs and Scaling
+### 9.4 Check AOCS Signs and Scaling {#94-check-aocs-signs-and-scaling}
 
 With whole-orbit data available, verify:
 - Wheel speeds have correct sign convention (positive = forward rotation)
@@ -448,12 +448,12 @@ With whole-orbit data available, verify:
 
 **MCS screen: aocs tab** — use the Body Rates and Attitude Error charts to cross-reference.
 
-### 9.5 Transition to NOMINAL_NADIR (Nadir Pointing)
+### 9.5 Transition to NOMINAL (Nadir Pointing) {#95-transition-to-nominal-nadir-pointing}
 
 **TC:** `AOCS_SET_MODE(mode=4)` (S8.1, func_id 0, data byte = 4)
 
 **MCS screen: aocs tab**
-- Mode = 4 (NOMINAL_NADIR)
+- Mode = 4 (NOMINAL)
 - `att_error` (0x0217) → < 1.0° within 2 minutes, then < 0.1° when settled
 - Reaction wheel speeds adjust to maintain nadir pointing
 - **eps** tab → `power_gen` should be near maximum with optimal sun angle
@@ -464,9 +464,9 @@ With whole-orbit data available, verify:
 
 ---
 
-## Phase 10 — Further Whole-Orbit Data Verification
+## Phase 10 — Further Whole-Orbit Data Verification {#phase-10--further-whole-orbit-data-verification}
 
-### 10.1 Wait for Full Orbit, Then Dump Again
+### 10.1 Wait for Full Orbit, Then Dump Again {#101-wait-for-full-orbit-then-dump-again}
 
 **Action:** Let the spacecraft complete at least one full orbit (~95 min) in nadir pointing, then dump all stored TM again.
 
@@ -480,7 +480,7 @@ With whole-orbit data available, verify:
 | OBC health | **obdh** | CPU load stable, no reboots, buffer not filling excessively |
 | Link quality | **ttc** | Consistent RSSI/margin during ground passes |
 
-### 10.2 Check Events and Alarms
+### 10.2 Check Events and Alarms {#102-check-events-and-alarms}
 
 **MCS screen: overview tab** → Alarm panel shows active alarms. Should be zero.
 
@@ -488,9 +488,9 @@ With whole-orbit data available, verify:
 
 ---
 
-## Phase 11 — Enable GPS and Verify Cold Start
+## Phase 11 — Enable GPS and Verify Cold Start {#phase-11--enable-gps-and-verify-cold-start}
 
-### 11.1 Enable GPS Receiver
+### 11.1 Enable GPS Receiver {#111-enable-gps-receiver}
 
 **TC:** `S2_AOCS_GPS_RECEIVER(device_id=0x020F, state=1)` (S2.1) — GPS receiver power ON
 
@@ -510,7 +510,7 @@ With whole-orbit data available, verify:
 
 **GO/NO-GO:** GPS locked, position consistent with TLE-propagated orbit.
 
-### 11.2 Synchronise Onboard Clock with GPS Time
+### 11.2 Synchronise Onboard Clock with GPS Time {#112-synchronise-onboard-clock-with-gps-time}
 
 **TC:** `OBC_GPS_TIME_SYNC` (S8.1, func_id 80)
 
@@ -527,9 +527,9 @@ With whole-orbit data available, verify:
 
 ---
 
-## Phase 12 — Star Tracker Commissioning
+## Phase 12 — Star Tracker Commissioning {#phase-12--star-tracker-commissioning}
 
-### 12.1 Power On Star Tracker 1
+### 12.1 Power On Star Tracker 1 {#121-power-on-star-tracker-1}
 
 **TC:** `ST1_POWER(on=1)` (S8.1, func_id 4, data byte = 1)
 
@@ -538,7 +538,7 @@ With whole-orbit data available, verify:
 - `ST1 Stars` should show ≥ 5 tracked stars within 90 s
 - `att_error` (0x0217) should improve (star tracker gives arcsecond-class accuracy)
 
-### 12.2 Power On Star Tracker 2 (Redundant)
+### 12.2 Power On Star Tracker 2 (Redundant) {#122-power-on-star-tracker-2-redundant}
 
 **TC:** `ST2_POWER(on=1)` (S8.1, func_id 5, data byte = 1)
 
@@ -546,17 +546,17 @@ With whole-orbit data available, verify:
 - `ST2 Status` changes to TRACKING
 - Cross-check: both trackers should agree on attitude
 
-### 12.3 Select Primary Star Tracker
+### 12.3 Select Primary Star Tracker {#123-select-primary-star-tracker}
 
 **TC:** `ST_SELECT(unit=1)` (S8.1, func_id 6, data byte = 1) — select ST1 as primary
 
-### 12.4 Power Off ST2 (Return to Nominal — One Tracker Active)
+### 12.4 Power Off ST2 (Return to Nominal — One Tracker Active) {#124-power-off-st2-return-to-nominal--one-tracker-active}
 
 **TC:** `ST2_POWER(on=0)` (S8.1, func_id 5, data byte = 0)
 
 ST2 is now verified working; return to single-tracker operations to save power. ST2 remains available as hot spare.
 
-### 12.5 Transition to FINE_POINT
+### 12.5 Transition to FINE_POINT {#125-transition-to-fine_point}
 
 **TC:** `AOCS_SET_MODE(mode=5)` (S8.1, func_id 0, data byte = 5)
 
@@ -571,9 +571,9 @@ ST2 is now verified working; return to single-tracker operations to save power. 
 
 ---
 
-## Phase 13 — Redundant Equipment Checkout
+## Phase 13 — Redundant Equipment Checkout {#phase-13--redundant-equipment-checkout}
 
-### 13.1 Backup CAN Bus Check
+### 13.1 Backup CAN Bus Check {#131-backup-can-bus-check}
 
 **TC:** `OBC_SELECT_BUS(bus=1)` (S8.1, func_id 54, data byte = 1) — switch to Bus B
 
@@ -586,7 +586,7 @@ ST2 is now verified working; return to single-tracker operations to save power. 
 
 **Verify:** `active_bus` = 0, `bus_a_status` (0x030F) = 0 (OK)
 
-### 13.2 Redundant Transponder Check
+### 13.2 Redundant Transponder Check {#132-redundant-transponder-check}
 
 **TC:** `TTC_SWITCH_REDUNDANT` (func_id 64)
 
@@ -599,9 +599,9 @@ ST2 is now verified working; return to single-tracker operations to save power. 
 
 **Verify:** `ttc_mode` = 0, link locked.
 
-### 13.3 Magnetometer Health Check (single-string — no redundancy to exercise)
+### 13.3 Magnetometer Health Check (single-string — no redundancy to exercise) {#133-magnetometer-health-check-single-string--no-redundancy-to-exercise}
 
-EO-Sat-1 flies ONE 3-axis magnetometer (owner ruling 2026-08c) — like the gyro
+EOSAT-1 flies ONE 3-axis magnetometer (owner ruling 2026-08c) — like the gyro
 fit, there is no spare and no MAG_SELECT. This step verifies the one unit is
 healthy rather than exercising a switchover that does not exist. (A stale
 `MAG_SELECT` — S8 func 7 — is now refused with an explanatory 0x0007.)
@@ -618,15 +618,15 @@ work around it.
 
 ---
 
-## Phase 14 — Time-Tagged Command Verification
+## Phase 14 — Time-Tagged Command Verification {#phase-14--time-tagged-command-verification}
 
-### 14.1 Upload a Test Time-Tagged Command
+### 14.1 Upload a Test Time-Tagged Command {#141-upload-a-test-time-tagged-command}
 
 **TC:** Upload via Service 11 — a harmless command (e.g., `HK_REQUEST(sid=1)`) scheduled for a known future time (e.g., 5 minutes from now).
 
 **MCS screen: commanding tab** → command history should show the S11 upload accepted.
 
-### 14.2 Verify Execution In-Pass
+### 14.2 Verify Execution In-Pass {#142-verify-execution-in-pass}
 
 **Monitor:** At the scheduled time, watch for the S3.27 HK packet arriving automatically.
 
@@ -634,7 +634,7 @@ work around it.
 - **commanding** tab → the time-tagged command shows "EXECUTED" status
 - **eps** tab → fresh EPS HK data arrives at the scheduled time
 
-### 14.3 Verify Execution Out-of-Pass
+### 14.3 Verify Execution Out-of-Pass {#143-verify-execution-out-of-pass}
 
 **Action:** Upload another time-tagged command scheduled for during a gap in coverage. After the next contact, dump stored TM and verify the command executed.
 
@@ -648,9 +648,9 @@ work around it.
 
 ---
 
-## Phase 15 — Payload Power-On and Commissioning
+## Phase 15 — Payload Power-On and Commissioning {#phase-15--payload-power-on-and-commissioning}
 
-### 15.1 Power Payload Line
+### 15.1 Power Payload Line {#151-power-payload-line}
 
 **TC:** `EPS_POWER_ON(line_idx=3)` (S8.1, func_id 19, data byte = 3)
 
@@ -658,7 +658,7 @@ work around it.
 - **eps** tab → `payload` power line (0x0113) = 1 (ON)
 - **eps** tab → `power_cons` increases by ~8–10 W
 
-### 15.2 Set Payload to STANDBY
+### 15.2 Set Payload to STANDBY {#152-set-payload-to-standby}
 
 **TC:** `PAYLOAD_SET_MODE(mode=1)` (S8.1, func_id 26, data byte = 1)
 
@@ -670,7 +670,7 @@ work around it.
 - `store_used` (0x0604) = 0%
 - `data_rate` (0x0608) reporting
 
-### 15.3 Power FPA Cooler
+### 15.3 Power FPA Cooler {#153-power-fpa-cooler}
 
 **TC:** `EPS_POWER_ON(line_idx=4)` (S8.1, func_id 19, data byte = 4)
 
@@ -678,7 +678,7 @@ work around it.
 - **eps** tab → `fpa_cooler` power line (0x0114) = 1 (ON)
 - **eps** tab → `power_cons` increases by ~8–12 W
 
-### 15.4 Activate FPA Cooler
+### 15.4 Activate FPA Cooler {#154-activate-fpa-cooler}
 
 **TC:** `FPA_COOLER(on=1)` (S8.1, func_id 43, data byte = 1) — wire `2B 01`
 
@@ -698,7 +698,7 @@ requires a two's-complement raw. Readback: `payload.fpa_setpoint` (0x0631).
 - T+20 min: < -10°C
 - T+30 min: stable at -15°C ± 2°C
 
-### 15.5 First Light — Capture Test Image
+### 15.5 First Light — Capture Test Image {#155-first-light--capture-test-image}
 
 Prerequisites: AOCS in FINE_POINT (Phase 12.5), FPA stable at setpoint.
 
@@ -730,9 +730,9 @@ same plan pre-book the downlink (`PAYLOAD_DOWNLOAD_IMAGE` addresses it).
 
 ---
 
-## Phase 16 — Final Configuration and Handover to Nominal Ops
+## Phase 16 — Final Configuration and Handover to Nominal Ops {#phase-16--final-configuration-and-handover-to-nominal-ops}
 
-### 16.1 Final Power Budget Verification
+### 16.1 Final Power Budget Verification {#161-final-power-budget-verification}
 
 **MCS screen: eps tab**
 
@@ -743,7 +743,7 @@ same plan pre-book the downlink (`PAYLOAD_DOWNLOAD_IMAGE` addresses it).
 | Margin | positive orbit-average |
 | `bat_soc` | > 60% and stable/charging |
 
-### 16.2 Confirm All Subsystem States
+### 16.2 Confirm All Subsystem States {#162-confirm-all-subsystem-states}
 
 **MCS screen: overview tab** — all subsystem health indicators should show nominal (green).
 
@@ -756,13 +756,13 @@ same plan pre-book the downlink (`PAYLOAD_DOWNLOAD_IMAGE` addresses it).
 | TTC | Primary transponder, link locked |
 | Payload | STANDBY (mode 1), FPA at setpoint |
 
-### 16.3 Set Spacecraft Phase to NOMINAL
+### 16.3 Set Spacecraft Phase to NOMINAL {#163-set-spacecraft-phase-to-nominal}
 
 Declare COMMISSIONING then NOMINAL with `SYS_SET_MISSION_PHASE(phase=5)` then `(phase=6)` (S8.1 func 120); nothing advances `spacecraft_phase` (0x0129) past 4 automatically. Verify on the **overview** tab.
 
 ---
 
-## Summary: Command Count by Position
+## Summary: Command Count by Position {#summary-command-count-by-position}
 
 | Position | Key Commands | MCS Tabs to Watch |
 |----------|-------------|-------------------|
@@ -775,7 +775,7 @@ Declare COMMISSIONING then NOMINAL with `SYS_SET_MISSION_PHASE(phase=5)` then `(
 
 ---
 
-## Tools Reference
+## Tools Reference {#tools-reference}
 
 | Tool | Port | Purpose |
 |------|------|---------|

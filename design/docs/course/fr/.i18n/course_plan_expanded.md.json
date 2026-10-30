@@ -34,13 +34,13 @@
   },
   {
    "id": "course-plan/reference-standards-register",
-   "en_hash": "c970a72b6f3eb9e7",
-   "fr_hash": "f453fe1514ba4eb1"
+   "en_hash": "a9596feab21673cb",
+   "fr_hash": "2b8cc7c218f1fe97"
   },
   {
    "id": "course-plan/module-map-sessions-nasa-seh-ecss-spacecdf-screens",
-   "en_hash": "93cb636cd781876d",
-   "fr_hash": "351c70e15fb365fd"
+   "en_hash": "279bf28e26ac9813",
+   "fr_hash": "aaed1b9ac324d4cb"
   },
   {
    "id": "course-plan/course-gantt-40-hour-and-3-week-intensive-variants",
@@ -69,33 +69,33 @@
   },
   {
    "id": "course-plan/day-1-mission-definition-concept-8-h/session-1-4-concept-of-operations-2-h",
-   "en_hash": "e5f86ca1a36ea644",
-   "fr_hash": "26b7aff0072526ac"
+   "en_hash": "dd0bd4aa6e154581",
+   "fr_hash": "d02c841ca51256d0"
   },
   {
-   "id": "course-plan/day-2-requirements-functions-interfaces-8-h",
-   "en_hash": "f962d656868de006",
-   "fr_hash": "d2e03cf69776688f"
+   "id": "course-plan/day-2-requirements-functions-orbit-architecture-8-h",
+   "en_hash": "f9b8cedd3ba7ee97",
+   "fr_hash": "8920d0c135c520d6"
   },
   {
-   "id": "course-plan/day-2-requirements-functions-interfaces-8-h/session-2-1-requirements-engineering-2-h",
+   "id": "course-plan/day-2-requirements-functions-orbit-architecture-8-h/session-2-1-requirements-engineering-2-h",
    "en_hash": "d95743f03ff7d550",
    "fr_hash": "e4d0f45bf8f2b7f8"
   },
   {
-   "id": "course-plan/day-2-requirements-functions-interfaces-8-h/session-2-2-functions-decomposition-2-h",
+   "id": "course-plan/day-2-requirements-functions-orbit-architecture-8-h/session-2-2-functions-decomposition-2-h",
    "en_hash": "980ebcfb56bc995b",
    "fr_hash": "568ecaf23afdc087"
   },
   {
-   "id": "course-plan/day-2-requirements-functions-interfaces-8-h/session-2-3-interface-management-2-h",
-   "en_hash": "cb11a3ab5a521bf7",
-   "fr_hash": "21c34b239b1e46f8"
+   "id": "course-plan/day-2-requirements-functions-orbit-architecture-8-h/session-2-3-orbit-selection-mission-architecture-2-h",
+   "en_hash": "477cedaef2ecf49d",
+   "fr_hash": "84ac2fcadf3b0f5c"
   },
   {
-   "id": "course-plan/day-2-requirements-functions-interfaces-8-h/session-2-4-architecture-block-diagrams-2-h",
-   "en_hash": "d5219cc639e73ed0",
-   "fr_hash": "6fa570d1b40eebba"
+   "id": "course-plan/day-2-requirements-functions-orbit-architecture-8-h/session-2-4-mission-architecture-segments-interfaces-budgets-2-h",
+   "en_hash": "e5b1d9511eab7b98",
+   "fr_hash": "f05b32ec0b5be4d5"
   },
   {
    "id": "course-plan/day-3-subsystem-design-loop-8-h",
@@ -103,24 +103,24 @@
    "fr_hash": "f0161c36f926ff3f"
   },
   {
-   "id": "course-plan/day-3-subsystem-design-loop-8-h/session-3-1-power-eps-2-h",
-   "en_hash": "6841d3f992708664",
-   "fr_hash": "caa608708a96a47b"
+   "id": "course-plan/day-3-subsystem-design-loop-8-h/session-3-1-power-thermal-2-h",
+   "en_hash": "5612acf5a2e8b128",
+   "fr_hash": "12d933604d9cd3b0"
   },
   {
-   "id": "course-plan/day-3-subsystem-design-loop-8-h/session-3-2-structure-mechanisms-2-h",
-   "en_hash": "0803ed1f4dd419d3",
-   "fr_hash": "eb7004584978d95a"
+   "id": "course-plan/day-3-subsystem-design-loop-8-h/session-3-2-aocs-propulsion-2-h",
+   "en_hash": "7df021b31e306005",
+   "fr_hash": "4154d855c54f7e6a"
   },
   {
-   "id": "course-plan/day-3-subsystem-design-loop-8-h/session-3-3-thermal-2-h",
-   "en_hash": "14a5f9a9e7784ee5",
-   "fr_hash": "d29046f9d05dbead"
+   "id": "course-plan/day-3-subsystem-design-loop-8-h/session-3-3-communications-2-h",
+   "en_hash": "4700fb7ab56e1c43",
+   "fr_hash": "8d65f934fcf017aa"
   },
   {
-   "id": "course-plan/day-3-subsystem-design-loop-8-h/session-3-4-communications-2-h",
-   "en_hash": "eaf32cd2997bea40",
-   "fr_hash": "0671a1e6641817cf"
+   "id": "course-plan/day-3-subsystem-design-loop-8-h/session-3-4-structure-on-board-data-handling-2-h",
+   "en_hash": "21770b8982ebb256",
+   "fr_hash": "9a0d2990a70da3c3"
   },
   {
    "id": "course-plan/day-4-equipment-v-v-risk-cost-8-h",
@@ -134,8 +134,8 @@
   },
   {
    "id": "course-plan/day-4-equipment-v-v-risk-cost-8-h/session-4-2-verification-validation-planning-2-h",
-   "en_hash": "8b732c90cf3f3af9",
-   "fr_hash": "c084a46345d2c647"
+   "en_hash": "27d1ba0c6cce0de9",
+   "fr_hash": "cd43c81ca14427a7"
   },
   {
    "id": "course-plan/day-4-equipment-v-v-risk-cost-8-h/session-4-3-risk-management-2-h",
@@ -179,8 +179,8 @@
   },
   {
    "id": "course-plan/assessment/bloom-level-outcome-matrix",
-   "en_hash": "917089c45c2a6369",
-   "fr_hash": "a869047c5cfdddfa"
+   "en_hash": "b5e0907d7a7656b2",
+   "fr_hash": "c16db57836fa9076"
   },
   {
    "id": "course-plan/assessment/equipment-software-register",
@@ -199,8 +199,8 @@
   },
   {
    "id": "course-plan/per-position-deep-dives-appendices",
-   "en_hash": "466ff2362a1c2061",
-   "fr_hash": "f3baef985a4b6318"
+   "en_hash": "fd0ca392348dc1d6",
+   "fr_hash": "64aa026d71786dd7"
   },
   {
    "id": "course-plan/reference-list-live-links",
@@ -208,5 +208,5 @@
    "fr_hash": "78f36101907895e8"
   }
  ],
- "en_commit": "3ea7113"
+ "en_commit": "c4a140a"
 }

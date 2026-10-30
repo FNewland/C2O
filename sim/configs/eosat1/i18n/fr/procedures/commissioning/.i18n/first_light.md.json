@@ -39,8 +39,8 @@
   },
   {
    "id": "com-012-first-light/procedure-steps/step-3-verify-payload-ready-for-imaging",
-   "en_hash": "33e0332c7292592b",
-   "fr_hash": "b1fb77940f175361"
+   "en_hash": "7cff86b4a718be58",
+   "fr_hash": "f688fe48177e24e2"
   },
   {
    "id": "com-012-first-light/procedure-steps/step-4-command-payload-to-imaging-mode",
@@ -49,13 +49,13 @@
   },
   {
    "id": "com-012-first-light/procedure-steps/step-5-trigger-first-image-capture",
-   "en_hash": "88056b1aaf411a30",
-   "fr_hash": "32672ac6af6cd6d2"
+   "en_hash": "fdbee0f888147836",
+   "fr_hash": "e82b9b3ae7b81a0f"
   },
   {
    "id": "com-012-first-light/procedure-steps/step-6-verify-image-data-written-to-storage",
-   "en_hash": "1833f6371d10a8c5",
-   "fr_hash": "0d0402ea24e8951e"
+   "en_hash": "8a058f758788f403",
+   "fr_hash": "c5c68502abd4d5e5"
   },
   {
    "id": "com-012-first-light/procedure-steps/step-7-return-payload-to-standby",
@@ -74,8 +74,8 @@
   },
   {
    "id": "com-012-first-light/off-nominal-handling",
-   "en_hash": "9b6d8efe6c4e7aec",
-   "fr_hash": "dd76df6dfd1769cf"
+   "en_hash": "002957964514ae52",
+   "fr_hash": "8b0f4707f392d2c9"
   },
   {
    "id": "com-012-first-light/post-conditions",
@@ -88,5 +88,5 @@
    "fr_hash": "ea1ed5cb17dea23a"
   }
  ],
- "en_commit": "3e80564"
+ "en_commit": "c4a140a"
 }

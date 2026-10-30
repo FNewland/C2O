@@ -293,7 +293,7 @@ The Flight Director is listed as a `required_position` in the following procedur
 | CTG-014 | BER Anomaly | Authorize link reconfiguration | Data rate/power change |
 | CTG-016 | Memory Segment Failure | Authorize memory management | Segment remap |
 | CTG-017 | Bus Failure Switchover | Authorize bus switchover | CAN bus A/B selection |
-| CTG-018 | Boot Loader Recovery | Authorize boot recovery | Boot app vs. inhibit |
+| CTG-021 | Boot Loader Recovery | Authorize boot recovery | Boot app vs. inhibit |
 
 #### 4.1.5 Emergency Procedures (6 total, all FD-led)
 
@@ -587,7 +587,7 @@ The simulator (`packages/smo-simulator/`) must faithfully implement the followin
 - Battery DoD tracking and cycle counting
 
 **REQ-SIM-002:** AOCS model must simulate:
-- AOCS mode transitions: OFF -> SAFE_BOOT -> DETUMBLE -> COARSE_SUN -> NOMINAL_NADIR -> FINE_POINT -> SLEW -> DESATURATION -> ECLIPSE_PROPAGATE
+- AOCS mode transitions: OFF -> SAFE_BOOT -> DETUMBLE -> COARSE_SUN -> NOMINAL -> FINE_POINT -> SLEW -> DESATURATION -> ECLIPSE
 - Body rate damping in detumble mode (B-dot algorithm)
 - Attitude error convergence in pointing modes
 - Reaction wheel speed dynamics with momentum accumulation
@@ -671,9 +671,9 @@ The simulator (`packages/smo-simulator/`) must faithfully implement the followin
 ### 8.5 Orbit Model Fidelity
 
 **REQ-SIM-010:** The orbit model must faithfully simulate:
-- Sun-synchronous orbit at 500 km altitude, 97.4 deg inclination
-- ~94.6 minute orbital period
-- ~35 minute eclipse duration with seasonal variation
+- Sun-synchronous orbit at 513 km mean altitude, 97.39 deg inclination, LTAN ~10:00
+- ~94.5 minute orbital period
+- ~33–35 minute eclipse on every orbit
 - Contact windows for all 4 ground stations with realistic elevation profiles
 - Ground station handover timing
 - Doppler shift on S-band frequencies
@@ -1083,7 +1083,7 @@ As defined in `configs/eosat1/procedures/nominal/shift_handover.md`, the handove
 | File Path | Content | Relevance to FD |
 |---|---|---|
 | `configs/eosat1/mission.yaml` | APID (1), PUS version (2), time epoch | Packet identification |
-| `configs/eosat1/orbit.yaml` | TLE, altitude (500 km), inclination (97.4 deg), ground stations | Pass prediction |
+| `configs/eosat1/orbit.yaml` | TLE, altitude (513 km), inclination (97.39 deg), ground stations | Pass prediction |
 | `configs/eosat1/mcs/positions.yaml` | Position definitions, access control | FD authority model |
 | `configs/eosat1/mcs/displays.yaml` | Widget configurations per position | Display layout |
 | `configs/eosat1/mcs/limits.yaml` | Yellow/red limit thresholds | Alarm generation |

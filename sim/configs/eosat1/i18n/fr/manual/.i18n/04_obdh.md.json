@@ -9,129 +9,129 @@
   },
   {
    "id": "eosat-1-on-board-data-handling-obdh",
-   "en_hash": "1fb7de4cb6e448f9",
-   "fr_hash": "ca813926af7b0fa8"
+   "en_hash": "516677cad110f064",
+   "fr_hash": "8b0fe6ca7e939a70"
   },
   {
    "id": "eosat-1-on-board-data-handling-obdh/1-overview",
-   "en_hash": "8aef23bd09083deb",
-   "fr_hash": "30b00e38a2582a15"
+   "en_hash": "fab64c4abf3a3f50",
+   "fr_hash": "771b78bf2b6f08ed"
   },
   {
    "id": "eosat-1-on-board-data-handling-obdh/2-architecture",
-   "en_hash": "0cc3a538694210a4",
-   "fr_hash": "0cc3a538694210a4"
+   "en_hash": "d4fe2962b898e9ec",
+   "fr_hash": "d4fe2962b898e9ec"
   },
   {
-   "id": "eosat-1-on-board-data-handling-obdh/2-architecture/2-1-on-board-computer-cold-redundant-a-b",
-   "en_hash": "574e1c62ae2ff6af",
-   "fr_hash": "41707163a005b293"
+   "id": "eosat-1-on-board-data-handling-obdh/2-architecture/21-on-board-computer-cold-redundant-ab",
+   "en_hash": "089d5cdcd3c3d876",
+   "fr_hash": "d9e878e7fb19a45b"
   },
   {
-   "id": "eosat-1-on-board-data-handling-obdh/2-architecture/2-2-watchdog-timer",
-   "en_hash": "bb34b0c24e8f5596",
-   "fr_hash": "a1c6031fc9014dd0"
+   "id": "eosat-1-on-board-data-handling-obdh/2-architecture/22-watchdog-timer",
+   "en_hash": "33b41ef9ae407a6d",
+   "fr_hash": "9fbfc15b76db8499"
   },
   {
-   "id": "eosat-1-on-board-data-handling-obdh/2-architecture/2-3-mass-memory-management",
-   "en_hash": "9dfaa5e0c525cec7",
-   "fr_hash": "6eb41dfe1d16ee6e"
+   "id": "eosat-1-on-board-data-handling-obdh/2-architecture/23-mass-memory-management",
+   "en_hash": "092a38c5c8b812af",
+   "fr_hash": "4276455a541ad818"
   },
   {
    "id": "eosat-1-on-board-data-handling-obdh/3-obc-modes",
-   "en_hash": "8a7f4c16d776a18d",
-   "fr_hash": "f0188c1b08908c16"
+   "en_hash": "97fc0878654f620a",
+   "fr_hash": "019dbcb866fe5967"
   },
   {
-   "id": "eosat-1-on-board-data-handling-obdh/3-obc-modes/3-1-mode-transitions",
-   "en_hash": "fcc7da7e3d9b14dc",
-   "fr_hash": "248719b410866096"
+   "id": "eosat-1-on-board-data-handling-obdh/3-obc-modes/31-mode-transitions",
+   "en_hash": "16b5ce4a4ef1c278",
+   "fr_hash": "4b2c83e2190ee179"
   },
   {
-   "id": "eosat-1-on-board-data-handling-obdh/3-obc-modes/3-2-bootloader-state-machine",
-   "en_hash": "42d3452d2bfe1c4f",
-   "fr_hash": "542fb3cc78227374"
+   "id": "eosat-1-on-board-data-handling-obdh/3-obc-modes/32-bootloader-state-machine",
+   "en_hash": "b55f9cebf50da5c2",
+   "fr_hash": "91fb347c8a37cbab"
   },
   {
-   "id": "eosat-1-on-board-data-handling-obdh/3-obc-modes/3-2-bootloader-state-machine/bootloader-capabilities",
-   "en_hash": "90505b5c4c49c1ca",
-   "fr_hash": "edf31638dd32a795"
+   "id": "eosat-1-on-board-data-handling-obdh/3-obc-modes/32-bootloader-state-machine/bootloader-capabilities",
+   "en_hash": "8f4b084c7ad0f4e8",
+   "fr_hash": "65297ceec2eabff6"
   },
   {
-   "id": "eosat-1-on-board-data-handling-obdh/3-obc-modes/3-2-bootloader-state-machine/restricted-command-set-in-bootloader",
-   "en_hash": "fe67fd640a41c7e6",
-   "fr_hash": "1cfdab49023dfc31"
+   "id": "eosat-1-on-board-data-handling-obdh/3-obc-modes/32-bootloader-state-machine/restricted-command-set-in-the-bootloader",
+   "en_hash": "f866d2ac384a16d7",
+   "fr_hash": "76e9dc8d55440199"
   },
   {
-   "id": "eosat-1-on-board-data-handling-obdh/3-obc-modes/3-2-bootloader-state-machine/beacon-packet-sid-11",
-   "en_hash": "33fe437f08161d7a",
-   "fr_hash": "850632a63f81ed21"
+   "id": "eosat-1-on-board-data-handling-obdh/3-obc-modes/32-bootloader-state-machine/beacon-packet-sid-11",
+   "en_hash": "7339f36ca80c9da3",
+   "fr_hash": "573627a3ffee91b7"
   },
   {
-   "id": "eosat-1-on-board-data-handling-obdh/3-obc-modes/3-3-bootloader-to-application-transition",
-   "en_hash": "6afabc4971f43faa",
-   "fr_hash": "df8f78c55be4143a"
+   "id": "eosat-1-on-board-data-handling-obdh/3-obc-modes/33-bootloader-to-application-transition",
+   "en_hash": "302020b7cbdc5c4e",
+   "fr_hash": "011fabe366efec77"
   },
   {
-   "id": "eosat-1-on-board-data-handling-obdh/3-obc-modes/3-4-obc-crash-recovery-workflow",
-   "en_hash": "5f866ad11122fedf",
-   "fr_hash": "dd40ddeaed808e58"
+   "id": "eosat-1-on-board-data-handling-obdh/3-obc-modes/34-obc-crash-recovery-workflow",
+   "en_hash": "98a7a5ad8f768006",
+   "fr_hash": "23f40727ac8d1ea4"
   },
   {
-   "id": "eosat-1-on-board-data-handling-obdh/3-obc-modes/3-5-safe-mode-behaviour",
-   "en_hash": "48c026e990cf8961",
-   "fr_hash": "3a7e585ff71dcc39"
+   "id": "eosat-1-on-board-data-handling-obdh/3-obc-modes/35-safe-mode-behaviour",
+   "en_hash": "66f85dbad887a045",
+   "fr_hash": "78bc29da49de7af6"
   },
   {
-   "id": "eosat-1-on-board-data-handling-obdh/3-obc-modes/3-6-can-bus-architecture-and-failure-isolation",
-   "en_hash": "e4619d2796ce8a1e",
-   "fr_hash": "506f7016da0e90fd"
+   "id": "eosat-1-on-board-data-handling-obdh/3-obc-modes/36-can-bus-architecture-and-failure-isolation",
+   "en_hash": "d30ebcbccdd48da7",
+   "fr_hash": "5644f78fbe27bedf"
   },
   {
    "id": "eosat-1-on-board-data-handling-obdh/4-telecommand-processing",
-   "en_hash": "64a40f773ed778fd",
-   "fr_hash": "2c60d8b19653f953"
+   "en_hash": "5037f80e91680d26",
+   "fr_hash": "3a175903a89d55b9"
   },
   {
-   "id": "eosat-1-on-board-data-handling-obdh/4-telecommand-processing/4-1-tc-counters",
-   "en_hash": "bdaf8add8e01f772",
-   "fr_hash": "45f2e2f5245e8c34"
+   "id": "eosat-1-on-board-data-handling-obdh/4-telecommand-processing/41-tc-counters",
+   "en_hash": "d1615e7d16e1d286",
+   "fr_hash": "3a24ecbd963ed4b2"
   },
   {
-   "id": "eosat-1-on-board-data-handling-obdh/4-telecommand-processing/4-2-tc-authentication",
-   "en_hash": "345dc6421ae41962",
-   "fr_hash": "3684a87a2fd0334f"
+   "id": "eosat-1-on-board-data-handling-obdh/4-telecommand-processing/42-tc-authentication",
+   "en_hash": "2551e28f4bc33520",
+   "fr_hash": "e363f47fea0818df"
   },
   {
    "id": "eosat-1-on-board-data-handling-obdh/5-telemetry-generation",
-   "en_hash": "2d7b4bdaf1a2cb33",
-   "fr_hash": "c82b74715714527b"
+   "en_hash": "53c5bc900b24fe55",
+   "fr_hash": "c7a232283d78f69a"
   },
   {
    "id": "eosat-1-on-board-data-handling-obdh/6-telemetry-parameters",
-   "en_hash": "79fbdd67d91c4da7",
-   "fr_hash": "eb11c54b13807e65"
+   "en_hash": "8fbaa4da95856e8e",
+   "fr_hash": "32092563b106562c"
   },
   {
    "id": "eosat-1-on-board-data-handling-obdh/7-limit-definitions",
-   "en_hash": "702331ad187140bb",
-   "fr_hash": "714a2c360f990a40"
+   "en_hash": "7f6aa01859ba87aa",
+   "fr_hash": "688dca010cf2b246"
   },
   {
    "id": "eosat-1-on-board-data-handling-obdh/8-commands",
-   "en_hash": "fc5fb1544627bf55",
-   "fr_hash": "a0cf0c8391015094"
+   "en_hash": "40b1d0cd41064bc7",
+   "fr_hash": "3a4f9101605519a5"
   },
   {
-   "id": "eosat-1-on-board-data-handling-obdh/8-commands/8-1-time-management",
-   "en_hash": "99b56a66fef7593f",
-   "fr_hash": "79fa23d44b8b9d98"
+   "id": "eosat-1-on-board-data-handling-obdh/8-commands/81-time-management",
+   "en_hash": "f59b6296981a4d69",
+   "fr_hash": "80c512c8a84900a3"
   },
   {
    "id": "eosat-1-on-board-data-handling-obdh/9-operational-notes",
-   "en_hash": "92377c8013b2e4bb",
-   "fr_hash": "0a1a592cf0434897"
+   "en_hash": "3fedfbc67a3faaac",
+   "fr_hash": "4fd59bad5395d8ee"
   }
  ],
- "en_commit": "3e80564"
+ "en_commit": "c4a140a"
 }

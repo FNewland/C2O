@@ -180,5 +180,6 @@
   "ADVANCED": "AVANCÉ",
   "BASIC": "BASIQUE",
   "BEGINNER": "DÉBUTANT",
-  "INTERMEDIATE": "INTERMÉDIAIRE"
+  "INTERMEDIATE": "INTERMÉDIAIRE",
+  "Refused: {{reason}}": "Refusé : {{reason}}"
 }

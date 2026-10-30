@@ -1,4 +1,4 @@
-# Couche de simulation RF d'EOSAT-1
+# Couche de simulation RF d'EOSAT-1 {#eosat-1-rf-simulation-layer}
 
 **Manual-Scope:** system — documentation du système de formation, ne fait pas partie du manuel des opérations de vol.
 
@@ -9,14 +9,14 @@
 
 ---
 
-## 1. Objet
+## 1. Objet {#1-purpose}
 
 Le présent document décrit le pont de simulation RF (smo-rfsim), une couche facultative qui insère
 la mise en trames de transfert CCSDS et la simulation du canal RF entre le simulateur du satellite et le
 système de contrôle de mission (MCS). Il permet des scénarios de formation réalistes sur le segment sol, notamment
 la synchronisation de trames, la correction d'erreurs et les exercices de bilan de liaison.
 
-## 2. Modes de fonctionnement
+## 2. Modes de fonctionnement {#2-operating-modes}
 
 Le pont prend en charge trois modes de fonctionnement, sélectionnables par configuration ou par variable d'environnement :
 
@@ -26,13 +26,13 @@ Le pont prend en charge trois modes de fonctionnement, sélectionnables par conf
 | FRAME  | TF CCSDS + CLTU  | Inversion de bits selon le TEB | Python pur uniquement | <5 ms |
 | RF     | TF CCSDS + CLTU  | BPSK (GR/numpy) | gnuradio (facultatif) | ~50 ms |
 
-### 2.1 Mode PACKET
+### 2.1 Mode PACKET {#21-packet-mode}
 
 Relais TCP transparent. Le pont se contente de transmettre, sans aucun traitement, les paquets ECSS préfixés par leur longueur entre le
 simulateur et le MCS. C'est le mode par défaut ; il reproduit le comportement
 d'origine du système.
 
-### 2.2 Mode FRAME
+### 2.2 Mode FRAME {#22-frame-mode}
 
 Applique le protocole complet de mise en trames de transfert CCSDS :
 
@@ -46,14 +46,14 @@ Applique le protocole complet de mise en trames de transfert CCSDS :
   conformément à CCSDS 232.0-B-4, avec des blocs de code BCH(64,56). Les CLTU traversent le modèle de canal
   et sont décodées avec correction des erreurs sur un bit.
 
-### 2.3 Mode RF
+### 2.3 Mode RF {#23-rf-mode}
 
 Ajoute la modulation/démodulation BPSK à la chaîne du mode FRAME. Lorsque GNU Radio est installé,
 de véritables graphes de traitement du signal assurent la modulation, la mise en forme des impulsions en racine de cosinus surélevé,
 le CAG, la récupération de porteuse par boucle de Costas et la récupération d'horloge M&M. Lorsque GNU Radio n'est pas disponible,
 un simulateur de canal fondé sur numpy assure l'injection de bruit AWGN et le décalage de fréquence Doppler.
 
-## 3. Architecture
+## 3. Architecture {#3-architecture}
 
 ```
                     mode PACKET (contournement)
@@ -80,9 +80,9 @@ Simulateur ──TCP:8002──────────────────�
 
 Le MCS ne nécessite aucune modification de code — il se connecte aux ports 8012/8011 au lieu de 8002/8001.
 
-## 4. Détails des trames de transfert CCSDS
+## 4. Détails des trames de transfert CCSDS {#4-ccsds-transfer-frame-details}
 
-### 4.1 Trames TM descendantes
+### 4.1 Trames TM descendantes {#41-tm-downlink-frames}
 
 - **Longueur de trame :** 1115 octets (configurable, ASM non compris)
 - **ASM :** 4 octets (0x1ACFFC1D), placés en tête de chaque trame
@@ -90,7 +90,7 @@ Le MCS ne nécessite aucune modification de code — il se connecte aux ports 80
 - **Zone de données :** variable (longueur de trame - 6 d'en-tête - 2 de FECF)
 - **FECF :** 2 octets, CRC-16/CCITT-FALSE sur l'en-tête et la zone de données
 
-### 4.2 Canaux virtuels
+### 4.2 Canaux virtuels {#42-virtual-channels}
 
 | VCID | Usage              | Priorité |
 |------|--------------------|----------|
@@ -98,20 +98,20 @@ Le MCS ne nécessite aucune modification de code — il se connecte aux ports 80
 | 1    | Relecture de la TM enregistrée | Moyenne |
 | 7    | Remplissage (trames vides) | La plus basse |
 
-### 4.3 CLTU de liaison montante TC
+### 4.3 CLTU de liaison montante TC {#43-tc-uplink-cltus}
 
 - **Séquence de début :** 2 octets (0xEB90)
 - **Blocs de code :** 8 octets chacun (7 de données + 1 de parité BCH), BCH(64,56)
 - **Séquence de fin :** 8 octets (0xC5C5C5C5C5C5C579)
 - **Correction d'erreurs :** correction d'un bit par bloc de code
 
-### 4.4 Codage de canal
+### 4.4 Codage de canal {#44-channel-coding}
 
 - **Reed-Solomon :** RS(255,223) sur GF(2^8), correction de 16 symboles erronés
 - **Convolutif :** rendement 1/2, longueur de contrainte K=7 (G1=0x79, G2=0x5B)
 - **Décodeur de Viterbi :** décodeur en treillis add-compare-select en Python pur (64 états)
 
-## 5. Synchronisation de trames
+## 5. Synchronisation de trames {#5-frame-synchronization}
 
 Le synchroniseur de trames met en œuvre un modèle d'acquisition à trois états :
 
@@ -119,7 +119,7 @@ Le synchroniseur de trames met en œuvre un modèle d'acquisition à trois état
 2. **VERIFY :** confirme l'ASM à l'intervalle de trame attendu (configurable, 3 trames par défaut)
 3. **LOCK :** extrait les trames à cadence fixe ; le volant d'inertie (flywheel) tolère jusqu'à 4 absences consécutives
 
-## 6. Modèle de canal
+## 6. Modèle de canal {#6-channel-model}
 
 Le modèle de canal applique des dégradations configurables :
 
@@ -137,7 +137,7 @@ TEB = 0,5 × erfc(√(Eb/N0)).
 Lorsque le pont est connecté au WebSocket du simulateur (port 8080), il lit les paramètres de bilan de liaison
 du modèle TTC et met à jour le modèle de canal en temps réel.
 
-## 7. Affichage du frontal radio
+## 7. Affichage du frontal radio {#7-radio-front-end-display}
 
 L'interface web Radio (port 8094) affiche en temps réel l'état de la liaison RF :
 
@@ -148,7 +148,7 @@ L'interface web Radio (port 8094) affiche en temps réel l'état de la liaison R
 - **Canaux virtuels :** LED d'activité VC0/1/7
 - **Graphiques d'historique :** séries temporelles d'Eb/N0 et du TEB, nombre de trames par seconde
 
-## 8. Configuration
+## 8. Configuration {#8-configuration}
 
 La configuration est chargée depuis `configs/eosat1/rfsim.yaml` :
 
@@ -175,21 +175,21 @@ network:
   radio_port: 8094
 ```
 
-## 9. Démarrage
+## 9. Démarrage {#9-startup}
 
-### 9.1 Par variable d'environnement
+### 9.1 Par variable d'environnement {#91-via-environment-variable}
 
 ```bash
 SMO_RF_MODE=FRAME ./start.sh
 ```
 
-### 9.2 Par la ligne de commande
+### 9.2 Par la ligne de commande {#92-via-cli}
 
 ```bash
 smo-rfsim --config configs/eosat1/rfsim.yaml --mode FRAME --radio-web
 ```
 
-### 9.3 Options de la ligne de commande
+### 9.3 Options de la ligne de commande {#93-cli-options}
 
 | Option          | Description                          |
 |-----------------|--------------------------------------|
@@ -200,30 +200,30 @@ smo-rfsim --config configs/eosat1/rfsim.yaml --mode FRAME --radio-web
 | `--radio-web`  | Lancer le tableau de bord web sur radio_port |
 | `-v`            | Journalisation détaillée             |
 
-## 10. Scénarios de formation
+## 10. Scénarios de formation {#10-training-scenarios}
 
-### 10.1 Exercice de dégradation du signal
+### 10.1 Exercice de dégradation du signal {#101-signal-degradation-exercise}
 
 1. Démarrer en mode FRAME avec Eb/N0 = 12 dB (liaison propre)
 2. Réduire progressivement Eb/N0 et observer l'augmentation du TEB sur l'affichage Radio
 3. Vers ~6 dB, observer l'apparition des erreurs de trame (échecs du FECF)
 4. Vers ~3 dB, observer une perte de paquets importante ; le MCS affiche des données périmées
 
-### 10.2 Perte et reprise de la synchronisation de trames
+### 10.2 Perte et reprise de la synchronisation de trames {#102-frame-sync-loss-and-recovery}
 
 1. Partir d'une liaison propre à l'état LOCK
 2. Injecter des salves d'erreurs (Eb/N0 faible pendant quelques secondes) pour provoquer le passage LOCK → SEARCH
 3. Observer la transition de la LED de synchronisation de trames de Radio : vert → rouge → jaune → vert
 4. Vérifier que le MCS récupère et reprend l'affichage de la télémesure
 
-### 10.3 Erreurs sur les CLTU montantes
+### 10.3 Erreurs sur les CLTU montantes {#103-cltu-uplink-errors}
 
 1. Envoyer des télécommandes à travers le pont en mode FRAME
 2. Abaisser Eb/N0 pour injecter des erreurs dans les blocs de code des CLTU
 3. Observer la réussite de la correction BCH d'un bit (incrémentation du compteur CLTU Ack)
 4. Dégrader encore jusqu'à l'échec du décodage des CLTU (le compteur Ack cesse de s'incrémenter)
 
-## 11. Documents associés
+## 11. Documents associés {#11-related-documents}
 
 | Document                        | Description                    |
 |---------------------------------|--------------------------------|

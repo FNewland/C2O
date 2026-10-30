@@ -14,8 +14,8 @@
   },
   {
    "id": "week-3-simulator-breakpoint-specification/bp-1-nominal-post-commissioning-existing",
-   "en_hash": "481d1c4220fbb482",
-   "fr_hash": "7e7184742e081002"
+   "en_hash": "fce1c3ab90270343",
+   "fr_hash": "a2e15cdd6fec025d"
   },
   {
    "id": "week-3-simulator-breakpoint-specification/bp-2-leop-day-start-existing",
@@ -24,13 +24,13 @@
   },
   {
    "id": "week-3-simulator-breakpoint-specification/bp-3-commissioning-day-start-new-must-be-created",
-   "en_hash": "7cd6390aa84f5b22",
-   "fr_hash": "6852ccea4fd9d6ad"
+   "en_hash": "80e14bae2429c6c6",
+   "fr_hash": "0dd1b53ba524ad5d"
   },
   {
    "id": "week-3-simulator-breakpoint-specification/bp-4-end-of-sim-what-if-branch-optional",
-   "en_hash": "05c95db4a4f1c77b",
-   "fr_hash": "0e550899aff2e037"
+   "en_hash": "04fb40e188849aba",
+   "fr_hash": "6c51f377b20ae5d1"
   },
   {
    "id": "week-3-simulator-breakpoint-specification/appendix-scenario-file-conventions",
@@ -38,5 +38,5 @@
    "fr_hash": "4e882ee43627e3fc"
   }
  ],
- "en_commit": "3ea7113"
+ "en_commit": "c4a140a"
 }

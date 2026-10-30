@@ -1,6 +1,6 @@
 # Annexe A — À propos de l'outil SpaceCDF
 
-Les exemples numériques de ce manuel ont été calculés avec SpaceCDF, un outil libre de conception concourante pour petits engins spatiaux. Cette annexe le décrit brièvement et de façon neutre, afin que le lecteur puisse comprendre ce qui a produit les chiffres, et les reproduire ou les prolonger. L'outil est distribué sous licence MIT ; le code source, les descripteurs de mission utilisés pour les exemples de ce manuel et les scripts de génération des figures sont disponibles à l'adresse <https://github.com/FNewland/SpaceCDF>. Rien dans les parties I–III ne dépend de l'outil : toutes les méthodes du manuel peuvent être appliquées avec un tableur, et les exercices ne l'exigent jamais.
+Les exemples numériques de ce manuel ont été calculés avec SpaceCDF, un outil libre de conception concourante pour petits engins spatiaux. Cette annexe le décrit brièvement et de façon neutre, afin que le lecteur puisse comprendre ce qui a produit les chiffres, et les reproduire ou les prolonger. L'outil est distribué sous licence MIT ; le code source, les descripteurs de mission utilisés pour les exemples de ce manuel et les scripts de génération des figures sont disponibles dans le dossier `design/` du dépôt public C2O, <https://github.com/FNewland/C2O/tree/main/design>. Rien dans les parties I–III ne dépend de l'outil : toutes les méthodes du manuel peuvent être appliquées avec un tableur, et les exercices ne l'exigent jamais.
 
 ## A.1 Postes et agents de conception
 

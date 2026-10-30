@@ -29,7 +29,7 @@ def _make_aocs_nominal():
     from smo_simulator.models.aocs_basic import AOCSBasicModel
     model = AOCSBasicModel()
     model.configure({})
-    # Put AOCS in a powered, sensor-active mode (NOMINAL_NADIR = 4).
+    # Put AOCS in a powered, sensor-active mode (NOMINAL = 4).
     model.handle_command({"command": "set_mode", "mode": 4})
     return model
 

@@ -60,3 +60,14 @@ Rulings Franz gave on 2026-10-30. Each one is applied in English and French, and
 ## Context decided the same day
 - The combined repository is **C2O** (« Du Concept à l'Orbite » / "from Concept to Orbit"). It is public: one repository with full history, under the folders sim/, design/, portal/, deploy/ and docs/.
 - The web address is **c2o.live**.
+
+## Amendments (2026-10-30, after applying the rulings)
+These replace the earlier wording where they differ.
+
+| Q | Amended ruling | Why |
+|---|---|---|
+| 2b | **Inclination 97.39°**, the exact SSO value for the TLE mean motion of 15.24 rev/day. It replaces 97.45°, which was computed from altitude and still drifts the node about 0.4 h over 2 years. | SGP4 check during application |
+| 3 | **Disposal by an end-of-life perigee-lowering burn** with the existing thrusters, sized for re-entry within 5 years even at solar minimum. It is added to the ΔV budget, the procedures and the books. The earlier "1.7–4.8 years, no deorbit capability" was derived at 450 km. At 513 km natural decay is about 5 years at mean solar activity and about 14 years at solar minimum. | Re-derivation at 513 km |
+| 30 | **Proto-flight test levels follow the standards:** TVAC at predicted ±10 °C (ECSS-E-ST-10-03C / GEVS), and the sine sweep at 4 oct/min for proto-flight (2 oct/min is the qualification rate). Random stays GEVS workmanship, 6.78 grms, confirmed against GSFC-STD-7000B Table 2.4-4. | Standards check during application |
+| 22 | **The two ops-book cards with no simulator equivalent** (gyro failure, TC rejection) become real simulator procedure cards (EN+FR) with proper IDs, replacing the temporary CTG-B01/B02. | Author decision |
+| 4 | **VR interface:** the `smo-vr/1` wire axes are unchanged (+Z nadir). The VR bridge converts from the simulator's new +Z-zenith body frame, so student VR teams are unaffected. | Interface stability |

@@ -44,8 +44,8 @@
   },
   {
    "id": "ctg-004-thermal-exceedance/procedure-steps/step-2b-hot-case-reduce-thermal-load-in-affected-zone",
-   "en_hash": "2409db43e9132f62",
-   "fr_hash": "1810898e0a0774fc"
+   "en_hash": "186b32bb1a5bdcb8",
+   "fr_hash": "1a7d3d752fe58788"
   },
   {
    "id": "ctg-004-thermal-exceedance/procedure-steps/step-3-monitor-temperature-trend",
@@ -54,8 +54,8 @@
   },
   {
    "id": "ctg-004-thermal-exceedance/procedure-steps/step-4-adjust-heater-setpoints-or-escalate",
-   "en_hash": "ef0b5c66121a4b44",
-   "fr_hash": "76317834088a87a2"
+   "en_hash": "7218db179d300b83",
+   "fr_hash": "03d77f2de3b4907d"
   },
   {
    "id": "ctg-004-thermal-exceedance/procedure-steps/step-5-confirm-recovery-and-restore-operations",
@@ -64,8 +64,8 @@
   },
   {
    "id": "ctg-004-thermal-exceedance/off-nominal-handling",
-   "en_hash": "af45f66cb523478f",
-   "fr_hash": "71538e0016fa3574"
+   "en_hash": "653f0e7e1dab3375",
+   "fr_hash": "a0ea73f53445904d"
   },
   {
    "id": "ctg-004-thermal-exceedance/post-conditions",
@@ -78,5 +78,5 @@
    "fr_hash": "7425a0351c1744bc"
   }
  ],
- "en_commit": "3e80564"
+ "en_commit": "c4a140a"
 }

@@ -1,6 +1,6 @@
 {
  "tool_version": "1.0.0",
- "en_path": "${DRIVE_COURSE}/orbit_north_week3.md",
+ "en_path": "docs/course/orbit_north_week3.md",
  "sections": [
   {
    "id": "_preamble",
@@ -9,8 +9,8 @@
   },
   {
    "id": "part-2-cubesat-operations",
-   "en_hash": "7017c1e3c294ba52",
-   "fr_hash": "0b8053be608546eb"
+   "en_hash": "13eba3f35ddc386d",
+   "fr_hash": "45a30c3f0985fb32"
   },
   {
    "id": "chapter-5-operations-overview",
@@ -24,8 +24,8 @@
   },
   {
    "id": "chapter-5-operations-overview/5-2-the-arc-of-an-operational-mission",
-   "en_hash": "1bc2d416295f3f50",
-   "fr_hash": "d19be439925f2fb3"
+   "en_hash": "83a2ee338071a1f3",
+   "fr_hash": "7c32913fd5fa46c1"
   },
   {
    "id": "chapter-5-operations-overview/5-3-what-an-operator-must-be-able-to-do",
@@ -39,8 +39,8 @@
   },
   {
    "id": "chapter-5-operations-overview/5-5-how-the-team-works-passes-shifts-and-the-voice-loop",
-   "en_hash": "2f1cc92556f6206d",
-   "fr_hash": "42b8eecefffee519"
+   "en_hash": "7264cf4a04bb7453",
+   "fr_hash": "791e6c548b811338"
   },
   {
    "id": "chapter-5-operations-overview/5-6-the-control-room-physical-layout",
@@ -49,8 +49,8 @@
   },
   {
    "id": "chapter-5-operations-overview/5-7-what-we-are-flying-eosat-1-in-600-words",
-   "en_hash": "7b3167986b1d43e4",
-   "fr_hash": "675560c1016dd5e9"
+   "en_hash": "b0a9a1f88e5f2c8d",
+   "fr_hash": "6d1b7e1da02218c9"
   },
   {
    "id": "chapter-5-operations-overview/5-8-reading-guide",
@@ -59,8 +59,8 @@
   },
   {
    "id": "chapter-5-operations-overview/5-8-reading-guide/5-20-mission-operations-concepts",
-   "en_hash": "3d3576b8344ced36",
-   "fr_hash": "eeca433dc2b15912"
+   "en_hash": "defef761d592e117",
+   "fr_hash": "a9cd335c01777f9c"
   },
   {
    "id": "chapter-5-operations-overview/5-8-reading-guide/learning-objectives",
@@ -379,8 +379,8 @@
   },
   {
    "id": "chapter-7-tools-consoles-and-command-types/7-7-onboard-functions-s8-function-id-working-operator-subset/aocs-funcid-0-15-84-91-96",
-   "en_hash": "0697663534dc86cf",
-   "fr_hash": "5acfa666d3da9b63"
+   "en_hash": "44af6c9431d3019b",
+   "fr_hash": "86bbf3de150e2997"
   },
   {
    "id": "chapter-7-tools-consoles-and-command-types/7-7-onboard-functions-s8-function-id-working-operator-subset/eps-funcid-16-25-81-83",
@@ -404,13 +404,13 @@
   },
   {
    "id": "chapter-7-tools-consoles-and-command-types/7-7-onboard-functions-s8-function-id-working-operator-subset/tt-c-funcid-63-79-97-98",
-   "en_hash": "ec1a1aa172b82ffc",
-   "fr_hash": "5b373bae6fe6b470"
+   "en_hash": "1cd30e933c7cc89c",
+   "fr_hash": "d1902b40f0b7a6ad"
   },
   {
    "id": "chapter-7-tools-consoles-and-command-types/7-7-onboard-functions-s8-function-id-working-operator-subset/propulsion-funcid-108-118",
-   "en_hash": "886d277b8644b400",
-   "fr_hash": "e501d650191e63c7"
+   "en_hash": "3c5332edfb54a54d",
+   "fr_hash": "103a01dfdb90ffe0"
   },
   {
    "id": "chapter-7-tools-consoles-and-command-types/7-7-onboard-functions-s8-function-id-working-operator-subset/what-you-will-not-find-in-the-simulator",
@@ -434,8 +434,8 @@
   },
   {
    "id": "chapter-7-tools-consoles-and-command-types/7-10-where-to-read-more/7-20-chapter-20-ground-segment-operations-architecture",
-   "en_hash": "3a0b157b25c9b091",
-   "fr_hash": "5e930f5fc61b57f3"
+   "en_hash": "c9619ebb08d1d34b",
+   "fr_hash": "55fa75ca100cb687"
   },
   {
    "id": "chapter-7-tools-consoles-and-command-types/7-10-where-to-read-more/learning-objectives",
@@ -574,8 +574,8 @@
   },
   {
    "id": "chapter-8-pass-operations-routine/8-1-pass-cycle-overview",
-   "en_hash": "a1f7861eb895553a",
-   "fr_hash": "bf858c8245b12a3c"
+   "en_hash": "dc164f7bc6d051f4",
+   "fr_hash": "b6570998c66c01b3"
   },
   {
    "id": "chapter-8-pass-operations-routine/8-2-reference-spacecraft-and-pass-geometry",
@@ -584,8 +584,8 @@
   },
   {
    "id": "chapter-8-pass-operations-routine/8-2-reference-spacecraft-and-pass-geometry/8-2-1-pass-geometry-polar-sso-over-polar-stations",
-   "en_hash": "2dfca18f530270cb",
-   "fr_hash": "4d4c95eb378ddd4c"
+   "en_hash": "3a9ec60e376ed6c8",
+   "fr_hash": "fe0d588bf935a8f6"
   },
   {
    "id": "chapter-8-pass-operations-routine/8-5-mission-planning-system-hands-on",
@@ -604,13 +604,13 @@
   },
   {
    "id": "chapter-8-pass-operations-routine/8-5-mission-planning-system-hands-on/what-good-looks-like",
-   "en_hash": "47b2eff13624d7ff",
-   "fr_hash": "800aab29fada80ae"
+   "en_hash": "5a2614b5fbdcd2f8",
+   "fr_hash": "9fc46e79cdd72067"
   },
   {
    "id": "chapter-8-pass-operations-routine/8-6-mcs-round-robin",
-   "en_hash": "1110bdb0bda025c5",
-   "fr_hash": "a7b6e146230b021d"
+   "en_hash": "450626e7f4478e8f",
+   "fr_hash": "854c44dd69963c77"
   },
   {
    "id": "chapter-8-pass-operations-routine/8-7-pass-plan-team-exercise",
@@ -644,8 +644,8 @@
   },
   {
    "id": "chapter-9-voice-loop-discipline-and-procedure-execution/9-2-voice-loop-fundamentals/drill-1-addressing-pattern",
-   "en_hash": "f820a462316e8cdf",
-   "fr_hash": "31822704c1fdab3a"
+   "en_hash": "2d1aa647483ef57f",
+   "fr_hash": "a6154fc4a8d2865a"
   },
   {
    "id": "chapter-9-voice-loop-discipline-and-procedure-execution/9-2-voice-loop-fundamentals/drill-2-go-no-go-with-hold",
@@ -749,8 +749,8 @@
   },
   {
    "id": "chapter-9-voice-loop-discipline-and-procedure-execution/9-6-flight-dynamics-workshop",
-   "en_hash": "4914e6c1b6030cf5",
-   "fr_hash": "86a1d88d6a080983"
+   "en_hash": "7fcc1612894e83fc",
+   "fr_hash": "9d08d0da6fbb5ae8"
   },
   {
    "id": "chapter-9-voice-loop-discipline-and-procedure-execution/9-7-dry-run-1-nominal-pass-no-failures",
@@ -844,8 +844,8 @@
   },
   {
    "id": "chapter-10-leop-operations",
-   "en_hash": "1c98fa81514f80e3",
-   "fr_hash": "e9366cb9f05aa18f"
+   "en_hash": "12dfa9a9b8420381",
+   "fr_hash": "a8b2fcfbf55d9207"
   },
   {
    "id": "chapter-10-leop-operations/10-1-leop-phase-entry-conditions",
@@ -854,13 +854,13 @@
   },
   {
    "id": "chapter-10-leop-operations/10-3-mission-phase-brief",
-   "en_hash": "aeef0ba18f899828",
-   "fr_hash": "a2cdd0e1a63830bf"
+   "en_hash": "c0327efba2035961",
+   "fr_hash": "a1e9e5edc3ab3ce2"
   },
   {
    "id": "chapter-10-leop-operations/10-4-procedure-execution-order",
-   "en_hash": "41122b0925aea10e",
-   "fr_hash": "f97ca88159a2d64f"
+   "en_hash": "04408ed9d58304f5",
+   "fr_hash": "f843aca637af9b23"
   },
   {
    "id": "chapter-10-leop-operations/10-5-per-position-playbook-for-leop",
@@ -869,28 +869,28 @@
   },
   {
    "id": "chapter-10-leop-operations/10-5-per-position-playbook-for-leop/flight-director",
-   "en_hash": "2164c06768895f16",
-   "fr_hash": "ca321fc98cbd9a08"
+   "en_hash": "4d975e1b29120e9c",
+   "fr_hash": "791286924d085f67"
   },
   {
    "id": "chapter-10-leop-operations/10-5-per-position-playbook-for-leop/spacon",
-   "en_hash": "609af5754ad5e2eb",
-   "fr_hash": "b67e6b2e7c1f0a35"
+   "en_hash": "fa254c0f79dbfca8",
+   "fr_hash": "e0dbe67c1ce2300f"
   },
   {
    "id": "chapter-10-leop-operations/10-5-per-position-playbook-for-leop/aocs",
-   "en_hash": "b4e1f3c9b638b0e4",
-   "fr_hash": "2bf71ad9829be1d2"
+   "en_hash": "71030687793738b7",
+   "fr_hash": "ee48728d9fbd45cf"
   },
   {
    "id": "chapter-10-leop-operations/10-5-per-position-playbook-for-leop/eps",
-   "en_hash": "909c234bb7ed71d1",
-   "fr_hash": "ddfcb094b449c2bd"
+   "en_hash": "dda1b7e82126da58",
+   "fr_hash": "4fdbf3680a0c8462"
   },
   {
    "id": "chapter-10-leop-operations/10-5-per-position-playbook-for-leop/thermal",
-   "en_hash": "5dace6799940f028",
-   "fr_hash": "b4b7ddafd5d70add"
+   "en_hash": "9c85d72a0cd99145",
+   "fr_hash": "f212eb5fa9c592cb"
   },
   {
    "id": "chapter-10-leop-operations/10-5-per-position-playbook-for-leop/tt-c",
@@ -899,13 +899,13 @@
   },
   {
    "id": "chapter-10-leop-operations/10-5-per-position-playbook-for-leop/payload",
-   "en_hash": "b4125a5d7e18dcec",
-   "fr_hash": "2d80957c95f4b0ee"
+   "en_hash": "46ed49a6745d5202",
+   "fr_hash": "e4990443f6703d7c"
   },
   {
    "id": "chapter-10-leop-operations/10-5-per-position-playbook-for-leop/fds",
-   "en_hash": "0bf0cdac4bf6cdf7",
-   "fr_hash": "8fb9e2f7c8f1b1b0"
+   "en_hash": "c5d55984758215c6",
+   "fr_hash": "b18db83ab1a8ef25"
   },
   {
    "id": "chapter-10-leop-operations/10-5-per-position-playbook-for-leop/ground-segment",
@@ -949,8 +949,8 @@
   },
   {
    "id": "chapter-10-leop-operations/10-11-detailed-leop-procedure-walkthroughs/leop-001-first-acquisition-of-signal-obc-boot-deep-walkthrough/per-step-playbook",
-   "en_hash": "a49fa6bfac9a3807",
-   "fr_hash": "148950a080519ed7"
+   "en_hash": "17d4fc3805ead9aa",
+   "fr_hash": "c4a11c40339a2d47"
   },
   {
    "id": "chapter-10-leop-operations/10-11-detailed-leop-procedure-walkthroughs/leop-001-first-acquisition-of-signal-obc-boot-deep-walkthrough/common-deviations-and-fd-playbook",
@@ -969,43 +969,43 @@
   },
   {
    "id": "chapter-10-leop-operations/10-11-detailed-leop-procedure-walkthroughs/leop-007-sequential-power-on-deep-walkthrough",
-   "en_hash": "3892f5202a164387",
-   "fr_hash": "ab728b34a5df62b1"
+   "en_hash": "3e0027d4216908c4",
+   "fr_hash": "63eab1ead9df932c"
   },
   {
    "id": "chapter-10-leop-operations/10-11-detailed-leop-procedure-walkthroughs/leop-007-sequential-power-on-deep-walkthrough/pre-step-setup",
-   "en_hash": "c2c3d8a4d50dca00",
-   "fr_hash": "1e8f04bb8199cad2"
+   "en_hash": "2f413c8e887ef651",
+   "fr_hash": "7cada23802eb13d0"
   },
   {
-   "id": "chapter-10-leop-operations/10-11-detailed-leop-procedure-walkthroughs/leop-007-sequential-power-on-deep-walkthrough/step-by-step-playbook-eight-steps",
-   "en_hash": "a2e8ce9720975efa",
-   "fr_hash": "30fe4d5910bab04e"
+   "id": "chapter-10-leop-operations/10-11-detailed-leop-procedure-walkthroughs/leop-007-sequential-power-on-deep-walkthrough/step-by-step-playbook-six-steps",
+   "en_hash": "664ed9edb0948749",
+   "fr_hash": "e251023a084173a8"
   },
   {
    "id": "chapter-10-leop-operations/10-11-detailed-leop-procedure-walkthroughs/leop-007-sequential-power-on-deep-walkthrough/why-detumble-takes-so-long",
-   "en_hash": "7e6c5e1b40cbf709",
-   "fr_hash": "5d8d52a42a02fbf7"
+   "en_hash": "be41aa962d89e170",
+   "fr_hash": "c27fe3ff176134db"
   },
   {
    "id": "chapter-10-leop-operations/10-11-detailed-leop-procedure-walkthroughs/leop-007-sequential-power-on-deep-walkthrough/decision-points-worth-simulating",
-   "en_hash": "e82d8b3d0af3a2b1",
-   "fr_hash": "e09a95d93461bc2c"
+   "en_hash": "5453bfc4c036e210",
+   "fr_hash": "55c2703931accf9c"
   },
   {
    "id": "chapter-10-leop-operations/10-11-detailed-leop-procedure-walkthroughs/leop-007-sequential-power-on-deep-walkthrough/common-deviations",
-   "en_hash": "98eb6f61790d468c",
-   "fr_hash": "11075d845de09773"
+   "en_hash": "af58797e95e86305",
+   "fr_hash": "9845c53d38d5de38"
   },
   {
    "id": "chapter-10-leop-operations/10-11-detailed-leop-procedure-walkthroughs/leop-007-sequential-power-on-deep-walkthrough/debrief-prompts",
-   "en_hash": "80e610a796d94d2d",
-   "fr_hash": "3f0eccd83927e747"
+   "en_hash": "3ee4ca283d1e0882",
+   "fr_hash": "2a93648566a85fec"
   },
   {
    "id": "chapter-10-leop-operations/10-11-detailed-leop-procedure-walkthroughs/leop-006-time-synchronisation-the-step-everyone-gets-wrong",
-   "en_hash": "1e2b4a365fa8fb8d",
-   "fr_hash": "e23c7272c7280268"
+   "en_hash": "e101514313c89712",
+   "fr_hash": "706b5a9efd5b03a3"
   },
   {
    "id": "chapter-10-leop-operations/10-12-references",
@@ -1020,7 +1020,7 @@
   {
    "id": "chapter-11-commissioning-operations/11-1-commissioning-phase-entry-conditions",
    "en_hash": "799c81ad5a4a36f6",
-   "fr_hash": "27a394880d1f0d76"
+   "fr_hash": "2ec71b0b4c160d4c"
   },
   {
    "id": "chapter-11-commissioning-operations/11-3-mission-phase-brief",
@@ -1029,8 +1029,8 @@
   },
   {
    "id": "chapter-11-commissioning-operations/11-4-procedure-execution-order-across-4-passes",
-   "en_hash": "c89cdf83d405290d",
-   "fr_hash": "3aebf8fdf18804fa"
+   "en_hash": "8a1764cb1666573d",
+   "fr_hash": "5fbe09f4db482f1f"
   },
   {
    "id": "chapter-11-commissioning-operations/11-5-per-position-playbook-for-commissioning",
@@ -1049,8 +1049,8 @@
   },
   {
    "id": "chapter-11-commissioning-operations/11-5-per-position-playbook-for-commissioning/aocs",
-   "en_hash": "620ef80b3c27b56b",
-   "fr_hash": "148099e0e72dd7b0"
+   "en_hash": "024737dc106c7d8d",
+   "fr_hash": "9f40d9c4f8b42341"
   },
   {
    "id": "chapter-11-commissioning-operations/11-5-per-position-playbook-for-commissioning/eps",
@@ -1074,8 +1074,8 @@
   },
   {
    "id": "chapter-11-commissioning-operations/11-5-per-position-playbook-for-commissioning/fds",
-   "en_hash": "1e30b325164a7e28",
-   "fr_hash": "f359e6e759aaef30"
+   "en_hash": "c176e57b91bb16a1",
+   "fr_hash": "436eb6b74e77fc6f"
   },
   {
    "id": "chapter-11-commissioning-operations/11-5-per-position-playbook-for-commissioning/ground-segment",
@@ -1114,8 +1114,8 @@
   },
   {
    "id": "chapter-11-commissioning-operations/11-9-detailed-commissioning-procedure-walkthroughs/com-001-eps-checkout-deep-walkthrough/per-step-playbook",
-   "en_hash": "6f91cd3ef15e3d09",
-   "fr_hash": "036984095537a103"
+   "en_hash": "144ba783d04ab0ca",
+   "fr_hash": "217194ed4630a2d6"
   },
   {
    "id": "chapter-11-commissioning-operations/11-9-detailed-commissioning-procedure-walkthroughs/com-001-eps-checkout-deep-walkthrough/decision-points",
@@ -1139,23 +1139,23 @@
   },
   {
    "id": "chapter-11-commissioning-operations/11-9-detailed-commissioning-procedure-walkthroughs/com-004-aocs-actuator-checkout-deep-walkthrough",
-   "en_hash": "1e146dbeda47d543",
-   "fr_hash": "0ddf5dd1e8c3e277"
+   "en_hash": "f38e7477db9459e7",
+   "fr_hash": "5170609fea2fd4c1"
   },
   {
    "id": "chapter-11-commissioning-operations/11-9-detailed-commissioning-procedure-walkthroughs/com-004-aocs-actuator-checkout-deep-walkthrough/pre-step-setup",
-   "en_hash": "433932d41b57d839",
-   "fr_hash": "4e3e73f62eb5caf3"
+   "en_hash": "84ade2dfcdca10ce",
+   "fr_hash": "e039bcf5eca9be48"
   },
   {
    "id": "chapter-11-commissioning-operations/11-9-detailed-commissioning-procedure-walkthroughs/com-004-aocs-actuator-checkout-deep-walkthrough/the-commanding-path-read-this-before-the-steps",
-   "en_hash": "7ca61393bfff1013",
-   "fr_hash": "6aef59962a2ac169"
+   "en_hash": "a9182164235ab8f2",
+   "fr_hash": "5b63a24d98c379b0"
   },
   {
    "id": "chapter-11-commissioning-operations/11-9-detailed-commissioning-procedure-walkthroughs/com-004-aocs-actuator-checkout-deep-walkthrough/per-step-playbook",
-   "en_hash": "0fda5dc062835061",
-   "fr_hash": "2b7f83b20f49ac45"
+   "en_hash": "ea2aa42b1df287de",
+   "fr_hash": "905c12891ca15675"
   },
   {
    "id": "chapter-11-commissioning-operations/11-9-detailed-commissioning-procedure-walkthroughs/com-004-aocs-actuator-checkout-deep-walkthrough/decision-points",
@@ -1164,13 +1164,13 @@
   },
   {
    "id": "chapter-11-commissioning-operations/11-9-detailed-commissioning-procedure-walkthroughs/com-005-aocs-mode-transitions-deep-walkthrough",
-   "en_hash": "d0a6706c77973bcd",
-   "fr_hash": "218f1f2735fad049"
+   "en_hash": "9048f1fa5d3c856b",
+   "fr_hash": "5cd87cdf7a4f326f"
   },
   {
    "id": "chapter-11-commissioning-operations/11-9-detailed-commissioning-procedure-walkthroughs/com-005-aocs-mode-transitions-deep-walkthrough/per-step-playbook",
-   "en_hash": "e75a2e5be506dc29",
-   "fr_hash": "1848fc62de602e0a"
+   "en_hash": "0de12465d2d39bc4",
+   "fr_hash": "14cc623e4b129503"
   },
   {
    "id": "chapter-11-commissioning-operations/11-9-detailed-commissioning-procedure-walkthroughs/com-005-aocs-mode-transitions-deep-walkthrough/decision-points",
@@ -1184,8 +1184,8 @@
   },
   {
    "id": "chapter-11-commissioning-operations/11-9-detailed-commissioning-procedure-walkthroughs/com-006-ttc-link-verification/per-step-playbook",
-   "en_hash": "1fc8ce4e717946ed",
-   "fr_hash": "084da7812d6f3dcc"
+   "en_hash": "641f64fea35587e3",
+   "fr_hash": "9b76d39f2707e445"
   },
   {
    "id": "chapter-11-commissioning-operations/11-9-detailed-commissioning-procedure-walkthroughs/com-007-obdh-checkout",
@@ -1194,13 +1194,13 @@
   },
   {
    "id": "chapter-11-commissioning-operations/11-9-detailed-commissioning-procedure-walkthroughs/com-007-obdh-checkout/per-step-playbook",
-   "en_hash": "4490d5c7313eefdb",
-   "fr_hash": "5db90a76936c65e8"
+   "en_hash": "60ca3ad03fb9e8fb",
+   "fr_hash": "1c25396156a25763"
   },
   {
    "id": "chapter-11-commissioning-operations/11-9-detailed-commissioning-procedure-walkthroughs/com-008-fdir-configuration",
-   "en_hash": "497d8cf57c397682",
-   "fr_hash": "5a95330fd1b8cd59"
+   "en_hash": "c827a1e38b399c1b",
+   "fr_hash": "bb3ca66c8eafbf57"
   },
   {
    "id": "chapter-11-commissioning-operations/11-9-detailed-commissioning-procedure-walkthroughs/com-008-fdir-configuration/per-step-playbook",
@@ -1254,8 +1254,8 @@
   },
   {
    "id": "chapter-11-commissioning-operations/11-9-detailed-commissioning-procedure-walkthroughs/com-012-first-light-the-headline-procedure/per-step-playbook",
-   "en_hash": "5031b1b4ae39997d",
-   "fr_hash": "892e49853751ff04"
+   "en_hash": "22c7f84376fd6398",
+   "fr_hash": "ce3bd6ca758c6220"
   },
   {
    "id": "chapter-11-commissioning-operations/11-9-detailed-commissioning-procedure-walkthroughs/com-012-first-light-the-headline-procedure/decision-points",
@@ -1284,13 +1284,13 @@
   },
   {
    "id": "chapter-12-contingency-operations/12-3-anomaly-response-decision-tree",
-   "en_hash": "ea93e6766c30b0f3",
-   "fr_hash": "26699c7be905d9dd"
+   "en_hash": "7bbd296e242eec8c",
+   "fr_hash": "5931d52db95af59d"
   },
   {
    "id": "chapter-12-contingency-operations/12-4-classes-of-contingency",
-   "en_hash": "4c5d71864bca87f4",
-   "fr_hash": "2b831b715354f240"
+   "en_hash": "a5314e9b4ca31e12",
+   "fr_hash": "56a8637cbc9d154d"
   },
   {
    "id": "chapter-12-contingency-operations/12-5-per-position-contingency-responsibilities",
@@ -1314,18 +1314,18 @@
   },
   {
    "id": "chapter-13-operator-calculations-and-checks/13-2-pass-timing-arithmetic",
-   "en_hash": "5908fec71ae67ac3",
-   "fr_hash": "0e9be37d826ca5dc"
+   "en_hash": "fbac130adae0b90a",
+   "fr_hash": "73c10b2494089703"
   },
   {
    "id": "chapter-13-operator-calculations-and-checks/13-3-eclipse-exit-state-of-charge-prediction",
-   "en_hash": "13dfa60b0544f834",
-   "fr_hash": "57e20e6353fc587e"
+   "en_hash": "b713d013c95d2ed2",
+   "fr_hash": "08f4fa4c2f5ef45e"
   },
   {
    "id": "chapter-13-operator-calculations-and-checks/13-4-pointing-budget-rss",
-   "en_hash": "1f89519196791923",
-   "fr_hash": "aaa5149b5cf28a1e"
+   "en_hash": "991315760fe96a5a",
+   "fr_hash": "a37bc8de2ae8d58f"
   },
   {
    "id": "chapter-13-operator-calculations-and-checks/13-5-delayed-tm-gap-analysis",
@@ -1339,13 +1339,13 @@
   },
   {
    "id": "chapter-13-operator-calculations-and-checks/13-6-link-margin-sanity-check/13-6-1-data-volume-arithmetic",
-   "en_hash": "262c2e1651012d3f",
-   "fr_hash": "5be03dc5fb220339"
+   "en_hash": "ee5407d5f78c3c06",
+   "fr_hash": "c36566eb3c798b65"
   },
   {
    "id": "chapter-13-operator-calculations-and-checks/13-7-wheel-saturation-desat-scheduling",
-   "en_hash": "206bf9021c709b10",
-   "fr_hash": "a15220a8dde4a014"
+   "en_hash": "4fcbb7d72fbb5bf0",
+   "fr_hash": "a1b1a144ab65b41c"
   },
   {
    "id": "chapter-13-operator-calculations-and-checks/13-8-worked-shift-example-putting-them-all-together",
@@ -1359,38 +1359,38 @@
   },
   {
    "id": "chapter-14-procedure-catalogue-quick-reference-cards",
-   "en_hash": "82a2b3618c01c287",
-   "fr_hash": "bc79e87c2f6e346b"
+   "en_hash": "8771cb42bde29b5f",
+   "fr_hash": "127d0964d3c6727c"
   },
   {
    "id": "chapter-14-procedure-catalogue-quick-reference-cards/14-1-leop-procedure-cards",
-   "en_hash": "2a9902d6378f07dc",
-   "fr_hash": "1c34dc25046b2234"
+   "en_hash": "d68522a7a804569d",
+   "fr_hash": "90738c97ec152411"
   },
   {
    "id": "chapter-14-procedure-catalogue-quick-reference-cards/14-2-commissioning-procedure-cards",
-   "en_hash": "995bae3471cb757f",
-   "fr_hash": "8cf4470d15c3b2d8"
+   "en_hash": "1752181bca603c92",
+   "fr_hash": "cd3052b52d16c26b"
   },
   {
    "id": "chapter-14-procedure-catalogue-quick-reference-cards/14-3-nominal-procedure-cards",
-   "en_hash": "f23ee18e561e25a3",
-   "fr_hash": "26b4ca7c51f2fe62"
+   "en_hash": "2a1b94fcefccc587",
+   "fr_hash": "7f42f340def2c823"
   },
   {
    "id": "chapter-14-procedure-catalogue-quick-reference-cards/14-4-contingency-procedure-cards",
-   "en_hash": "84d1c6d69134260c",
-   "fr_hash": "97504a03ffe95d80"
+   "en_hash": "fa7cd9477328c450",
+   "fr_hash": "154b9b611e7b8292"
   },
   {
    "id": "chapter-14-procedure-catalogue-quick-reference-cards/14-5-emergency-procedure-cards",
-   "en_hash": "8cd3897384e0d6e1",
-   "fr_hash": "23100bb2c69e711a"
+   "en_hash": "296f424dca837c7c",
+   "fr_hash": "7f907f8e874b2de5"
   },
   {
    "id": "chapter-14-procedure-catalogue-quick-reference-cards/14-6-procedure-full-index",
-   "en_hash": "fea3d3bd35673c22",
-   "fr_hash": "0a62dd1f6ca0c204"
+   "en_hash": "988d15166c94705e",
+   "fr_hash": "9139788534b7452f"
   },
   {
    "id": "chapter-14-procedure-catalogue-quick-reference-cards/14-7-references",
@@ -1424,8 +1424,8 @@
   },
   {
    "id": "chapter-15-telemetry-fdir-monitoring-reference/15-5-command-reference-full-list-by-subsystem",
-   "en_hash": "516edda12809e4a5",
-   "fr_hash": "2d8adb6dc125c5f8"
+   "en_hash": "2908b291d718ebba",
+   "fr_hash": "b40e7a0f10d4d972"
   },
   {
    "id": "chapter-15-telemetry-fdir-monitoring-reference/15-6-references",
@@ -1449,13 +1449,13 @@
   },
   {
    "id": "chapter-16-per-position-deep-briefs-case-studies/16-3-aocs-case-study-the-pointing-budget-conversation",
-   "en_hash": "ae0e98f0993477c3",
-   "fr_hash": "76baec7d137c79ad"
+   "en_hash": "c7937aa3f5c86067",
+   "fr_hash": "0185ae04d19b8487"
   },
   {
    "id": "chapter-16-per-position-deep-briefs-case-studies/16-4-eps-case-study-the-parasitic-load-mystery",
-   "en_hash": "12377a6c10257f33",
-   "fr_hash": "6706c007263c369d"
+   "en_hash": "9ba2ba5bc934195c",
+   "fr_hash": "0485e8788ec2a21f"
   },
   {
    "id": "chapter-16-per-position-deep-briefs-case-studies/16-5-thermal-case-study-the-cooler-that-won-t-cool",
@@ -1469,8 +1469,8 @@
   },
   {
    "id": "chapter-16-per-position-deep-briefs-case-studies/16-7-payload-case-study-the-image-that-wasn-t-science",
-   "en_hash": "85b18376367ad94b",
-   "fr_hash": "4809d7aed3f010ee"
+   "en_hash": "4e73198f7890836a",
+   "fr_hash": "6e89f13d3f779850"
   },
   {
    "id": "chapter-16-per-position-deep-briefs-case-studies/16-8-fds-case-study-the-manoeuvre-that-wasn-t-needed",
@@ -1492,5 +1492,5 @@
   "chapter-10-leop-operations: numbers: missing in FR []  extra in FR ['24', '7']",
   "chapter-10-leop-operations: numbers: missing in FR []  extra in FR ['7', '24']"
  ],
- "en_commit": "c175838"
+ "en_commit": "c4a140a"
 }

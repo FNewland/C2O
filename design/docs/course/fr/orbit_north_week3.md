@@ -5,7 +5,7 @@ SpaceCDF. Elle est le complément pratique des séances 5.1 – 5.4
 (les notions de concepts d'opérations de la partie 1).
 
 La partie 2 s'appuie sur un unique satellite de référence fictif —
-**EOSAT-1**, un CubeSat de 6 unités sur une orbite héliosynchrone à 450 km —
+**EOSAT-1**, un CubeSat de 6 unités sur une orbite héliosynchrone à 513 km —
 que la promotion SpaceCDF pilote à l'aide d'un simulateur associé.
 
 Comment lire la partie 2 :
@@ -73,9 +73,9 @@ Tableau 5.1 — Phases opérationnelles de la mission, avec leur durée, leur p�
 | Phase 4 — LEOP | 0–72 h | Mise sous tension séquentielle ; déploiement de l'antenne ; amortissement des vitesses angulaires ; acquisition du Soleil | LEOP-003..007 |
 | Phase 5 — Recette en orbite | 1–4 semaines | Vérification des sous-systèmes ; étalonnage des capteurs ; mise sous tension de la charge utile ; première lumière | COM-001..013 |
 | Phase 6 — Opérations nominales | durée de vie de la mission | Prise de vue de routine, liaison descendante, gestion du moment cinétique, transitions d'éclipse, maintien de l'orbite | NOM-001..013 |
-| (toute phase) — Contingence | minutes à heures | Une règle FDIR se déclenche ; l'opérateur réagit | CTG-001..028 |
+| (toute phase) — Contingence | minutes à heures | Une règle FDIR se déclenche ; l'opérateur réagit | CTG-001..030 |
 | (toute phase) — Urgence | heures | Passage en mode survie ; reprise après défaillance de plusieurs systèmes | EMG-001..006 |
-| Retrait de service (phase non modélisée) | années | Passivation, puis déclin d'orbite passif | (propre à la mission) |
+| Retrait de service (exécuté en phase 6, pas une phase propre) | des semaines de poussées, puis 1,5 à 4,2 ans de décroissance | Poussée d'abaissement du périgée à 390 km, passivation, puis décroissance orbitale | NOM-014 |
 
 La suite de la partie 2 décrit la séquence nominale de chaque phase, les
 contingences courantes et les vérifications de l'opérateur pour chacune. Le
@@ -180,11 +180,12 @@ modes de défaillance courants.
 
 Les opérations s'organisent autour des **passages** : les périodes de l'orbite
 pendant lesquelles le satellite est en contact avec une station sol. L'orbite
-de référence d'EOSAT-1 (héliosynchrone, 450 km, 98°) produit des passages de
-8 à 12 minutes au-dessus des cinq stations polaires du référentiel
+de référence d'EOSAT-1 (héliosynchrone, 513 km, 97,39°, heure locale du nœud
+ascendant 10 h 00) produit des passages d'au plus 9 minutes environ
+(7,5 minutes en moyenne) au-dessus des cinq stations polaires du référentiel
 pédagogique (Iqaluit, Troll, Svalbard, Inuvik et O'Higgins), avec
-environ 4 à 6 contacts par station sol et par jour selon la
-géométrie exacte des nœuds.
+environ 8 à 13 contacts par station sol et par jour selon la
+latitude de la station.
 
 Les quarts s'organisent autour du planning des contacts. Dans l'industrie, un quart
 LEOP fonctionne **en continu (24/7) en trois quarts de huit heures** jusqu'à la fin de
@@ -285,9 +286,9 @@ de la fiche d'évaluation par les pairs.
 ## 5.7 Ce que nous pilotons — EOSAT-1 en 600 mots
 
 EOSAT-1 est un **CubeSat de 6 unités** construit au laboratoire SmallSat d'uOttawa,
-lancé en juin 2026 sur une orbite héliosynchrone à **450 km
-d'altitude et 98° d'inclinaison**, avec une heure locale du nœud ascendant
-de 14 h 00. Sa mission : la surveillance des courants océaniques le long des
+lancé en juin 2026 sur une orbite héliosynchrone à **513 km
+d'altitude et 97,39° d'inclinaison**, avec une heure locale du nœud ascendant
+de 10 h 00 ; il traverse donc l'ombre de la Terre à chaque orbite. Sa mission : la surveillance des courants océaniques le long des
 côtes canadiennes à l'aide d'un imageur multispectral à quatre bandes (bandes à 443,
 560, 665 et 865 nm — respectivement bleu, vert, rouge et proche infrarouge,
 choisies pour maximiser la sensibilité au carbone organique
@@ -295,13 +296,16 @@ dissous et à la chlorophylle de surface).
 
 Le satellite a une masse de **12,0 kg à sec** (12,40 kg en masse humide, avec 400 g
 d'ergol). La charge électrique moyenne sur l'orbite, tous les systèmes nominaux en marche, est
-de **≈ 28 W** ; la charge instantanée de crête pendant un passage charge utile est
+de **≈ 28,8 W** ; la charge instantanée de crête pendant un passage charge utile est
 plus élevée encore dès que l'imageur, le refroidisseur du FPA et l'émetteur sont allumés.
 Les deux ailes déployables portent chacune 0,120 m² de cellules et ont une
 puissance nominale de **70,1 W en BOL à β = 0** ; la production de crête de l'ensemble du satellite,
-panneaux de structure compris, est de **88,6 W**, et la production moyenne sur l'orbite
-pour l'angle bêta le plus défavorable en fin de vie est de 38 W — soit une
-marge nominale d'environ +9 W, ou 1,33×. Le stockage est assuré par une **batterie Li-ion
+panneaux de structure compris, est de **88,6 W**, et la production moyenne sur l'orbite en fin de vie
+est de 45,1 W à l'angle bêta le moins productif de l'année (β = −31,2°) —
+soit une marge nominale de +16,3 W, ou 1,57×. Sur l'année, β reste entre
+−20,8° et −31,2° ; comme l'entraînement du générateur ne suit le Soleil
+qu'à cos β près, le plus grand |β| donne la plus faible production, bien
+que son éclipse soit la plus courte. Le stockage est assuré par une **batterie Li-ion
 de 100 Wh** (classe GomSpace NanoPower BPX, 8S-1P ; `eps.yaml`
 `voltage_nom` 26,4 V, 29,2 V à 100 % de SoC, 21,5 V à 0 %). *(Ce
 sont des valeurs dérivées de composants de vol : 12–18 W de réserve de puissance
@@ -331,8 +335,32 @@ sont de 0,021° en moyenne sur quatre roues et de 0,019° sur un
 ensemble dégradé à trois roues.
 
 Le contrôle d'orbite est assuré par un **module de monergol vert de 1U**, 400 g
-d'ergol, 66,9 m/s de delta-V total, utilisé pour l'évitement de débris et une
-compensation limitée de la traînée. Il n'existe aucune capacité de retrait de service propulsif.
+d'ergol, 66,9 m/s de delta-V total, utilisé pour l'évitement de débris, une
+compensation limitée de la traînée et la poussée de retrait de service en fin de
+vie. Avec un coefficient balistique de 77,9 kg/m², la décroissance naturelle
+depuis 513 km prend 5,0 ans à activité solaire moyenne et 14,2 ans au minimum
+solaire, ce qui ne respecte pas la règle de retrait de service en 5 ans après la
+mission. La mission se termine donc par NOM-014 : une poussée rétrograde
+d'abaissement du périgée de 34,3 m/s, réalisée en six poussées de 5,72 m/s,
+amène le périgée de 513 km à 390 km ; la rentrée prend ensuite 1,5 an à activité
+moyenne et 4,2 ans au minimum solaire. Le bilan de ΔV (`prop.yaml`) demande
+64,1 m/s — 15,1 m/s de compensation de la traînée sur deux ans à 513 km, 6,1 m/s
+de travail d'orbite et d'évitement de collision, les 34,3 m/s du retrait de
+service et 8,6 m/s de marge — pour 66,9 m/s disponibles (+4,4 % ; +2,6 % par
+rapport à la valeur intégrée en mode « blowdown » de 65,8 m/s). À partir de la
+mi-mission, au moins 38 m/s restent réservés au retrait de service.
+
+Ces durées de décroissance proviennent de l'intégration de traînée du projet
+avec l'atmosphère exponentielle CIRA-72, le minimum solaire étant modélisé à
+0,35 × cette table. Avec NRLMSIS 2.1 et un minimum solaire maintenu pendant des
+années, la décroissance depuis 390 km prend 7,2 ans. La vérification croisée
+consignée dans `prop.yaml` utilise NRLMSIS 2.1 avec une densité moyenne globale :
+F10.7 = 140 donne 4,7 ans depuis 513 km, proche des 5,0, mais un F10.7 = 70
+maintenu donne 33 ans — une borne supérieure, car un minimum solaire ne dure
+pas des décennies. Un périgée de 360 km et 42,8 m/s respecterait 5 ans même
+sous cette borne, mais le bilan de ΔV ne boucle pas. Deux modèles
+d'atmosphère respectables divergent de plusieurs années : c'est l'incertitude
+qu'un plan de retrait de service doit absorber.
 
 Le **segment sol** est un réseau polaire de cinq stations en bande S
 (le référentiel pédagogique dans toute la partie 2) :
@@ -366,9 +394,11 @@ La partie 2 traite en détail opérationnel les phases **3, 4, 5 et 6** — LEOP
 recette en orbite et opérations nominales de routine. Les phases 0–2 (lancement,
 minuterie de séparation, mise sous tension initiale) se déroulent avant le premier contact
 sol et sont entièrement autonomes. L'énumération ne comporte aucune phase de retrait de service :
-la propulsion d'EOSAT-1 est dimensionnée uniquement pour l'évitement de débris
-et la compensation de la traînée, et le retrait de service en fin de vie consiste en une
-passivation suivie d'un déclin passif.
+le retrait de service en fin de vie (NOM-014) est exécuté en phase 6, ce
+qu'exige le verrouillage d'armement de la propulsion. Il comprend les poussées
+d'abaissement du périgée, puis la passivation (ergol épuisé, inhibition de la
+propulsion verrouillée, roues arrêtées, régulateur de charge coupé, émetteurs
+éteints), puis la décroissance orbitale.
 
 Le compteur de phase est `eps.spacecraft_phase` (0x0129), transporté dans
 la HK SID 4. **Les transitions de phase sont des déclarations du sol** — c'est l'équipe
@@ -435,11 +465,11 @@ Les URL complètes figurent dans la section Références à la fin de cette part
 
 ### 5.20 Concepts d'opérations de mission
 
-> **Lectures attendues avant cette séance.** [Règlement des radiocommunications de l'UIT](https://www.itu.int/pub/R-REG-RR), article 21 ; ISDE CPC-2-6-02 ; LSTS — [https://laws-lois.justice.gc.ca/eng/acts/R-5.4/](https://laws-lois.justice.gc.ca/eng/acts/R-5.4/).
+> **Lectures attendues avant cette séance.** Manuel en libre accès *Conception concourante d'engins spatiaux* (REL), chap. 18, §§ 18.1 à 18.5 (ConOps, modes opérationnels, architecture FDIR, procédures opérationnelles, traitement des anomalies) ; ce livre, §§ 5.2 à 5.5 ; ECSS-E-ST-70-11C *Space segment operability* — §4 *General requirements* (opérabilité), §5.7 *On-board autonomy* et §5.7.5 *On-board fault management* (FDIR) (numéros de clauses de l'édition du 31 juillet 2008 ; l'édition en vigueur est la Rev.1 du 15 octobre 2025) ; NASA-HDBK-1002 *Fault Management Handbook* (Draft 2, 2 avril 2012) ; NASA *Systems Engineering Handbook*, NASA/SP-2016-6105 Rev 2, annexe S — *Concept of Operations Annotated Outline*.
 
 
 
-**Prérequis :** §7.20 (architecture du segment sol assimilée)
+**Prérequis :** §7.20 et REL, chap. 17 (architecture du segment sol assimilée)
 **Références :** ECSS-E-ST-70-11C (*Space Segment Operability*), ECSS-E-ST-70-32C (*Procedures*), ECSS-E-ST-70-41C (*Packet Utilisation Standard*), NPR 7120.5F, NASA *Fault Management Handbook* (NASA-HDBK-1002)
 
 ---
@@ -2194,7 +2224,7 @@ des actionneurs.
 | 4 | `ST1_POWER(on=0/1)` | Marche/arrêt du senseur stellaire 1 |
 | 5 | `ST2_POWER(on=0/1)` | Marche/arrêt du senseur stellaire 2 |
 | 6 | `ST_SELECT(unit=1/2)` | Sélectionner le senseur stellaire principal (1=ST1, 2=ST2 ; 0 est refusé) — il y a **deux** têtes |
-| 7 | *(retirée)* | Anciennement `MAG_SELECT`. EO-Sat-1 embarque un **seul** magnétomètre : il n'y a rien à sélectionner ; la fonction 7 est refusée à bord avec 0x0007 |
+| 7 | *(retirée)* | Anciennement `MAG_SELECT`. EOSAT-1 embarque un **seul** magnétomètre : il n'y a rien à sélectionner ; la fonction 7 est refusée à bord avec 0x0007 |
 | 8 | `RW_SET_SPEED_BIAS(wheel_idx=…, bias_rpm=… RPM)` | Biais de vitesse de roue, float32. Le biais est **ajouté** à la vitesse actuelle de la roue |
 | 9 | `MTQ_ENABLE(enable=0/1)` | Activer / désactiver les magnétocoupleurs |
 | 10 | `AOCS_SLEW_TO(q_x, q_y, q_z, q_w, rate_dps)` | Basculement vers un quaternion cible, cinq float32 |
@@ -2385,7 +2415,7 @@ paramètres de palier : `ttc.tm_tier_cmd` (0x053A) est ce que vous
 avez demandé et `ttc.tm_tier` (0x0539) ce qui est réellement émis après les
 verrous — une rétrogradation se manifeste par un désaccord entre les deux.
 
-**Deux émetteurs, qui tombent en panne indépendamment.** EO-Sat-1
+**Deux émetteurs, qui tombent en panne indépendamment.** EOSAT-1
 emporte une chaîne principale en bande S (2025 MHz en montée / 2200 MHz en descente,
 2 W nominaux, toute la HK temps réel, la relecture, les vidages d'images et la vérification
 S1) *et* une balise UHF séparée à antenne fouet (437,5 MHz, 1 W
@@ -2402,10 +2432,10 @@ sélectionné par la fonction 70 — trois choses différentes qui partagent un 
 
 ### Propulsion (func_id 108–118)
 
-Tableau 7.6g — Identifiants de fonction S8 de la propulsion. EO-Sat-1 emporte un module de
+Tableau 7.6g — Identifiants de fonction S8 de la propulsion. EOSAT-1 emporte un module de
 monergol vert de 1U offrant **66,9 m/s** de delta-V total, utilisé pour
-l'évitement de débris et un maintien d'orbite limité — et non pour la
-désorbitation en fin de vie. Ces fonctions relèvent de la console propulsion.
+l'évitement de débris, un maintien d'orbite limité et la poussée de 34,3 m/s
+d'abaissement du périgée en fin de vie (NOM-014). Ces fonctions relèvent de la console propulsion.
 
 | Func ID | Nom | Rôle |
 |---|---|---|
@@ -2528,12 +2558,7 @@ Références externes :
 
 ### 7.20 Chapitre 20 — Architecture du segment sol et des opérations
 
-![Vue d'ensemble de la séquence des jalons.](../assets/figures/fig_lifecycle.png)
-
-*Vue d'ensemble de la séquence des jalons.*
-
-
-> **Lectures attendues avant cette séance.** ECSS-M-ST-10C §6 — Jalons de revue (≈ 60 min).
+> **Lectures attendues avant cette séance.** Manuel en libre accès *Conception concourante d'engins spatiaux* (REL), chap. 17, §§ 17.1 à 17.4 (architecture du segment sol, analyse des contacts, pile de protocoles CCSDS, chronologie des opérations) ; ce livre, §7.1 et §7.3 ; ECSS-E-ST-70C *Ground systems and operations* (31 juillet 2008), §4.3 *Ground systems* ; CCSDS 130.0-G-4 *Overview of Space Communications Protocols* (livre vert, version 4, avril 2023, avec la modification rédactionnelle 1 de février 2024), sections 2 et 3 ; NASA *State-of-the-Art of Small Spacecraft Technology* (édition 2026, NASA/TP-20260003140), chap. 11 *Ground Data Systems and Mission Operations*.
 
 
 
@@ -2870,10 +2895,10 @@ télémesure de vérification et renvoi en cas d'échec.
 
 ## 8.1 Vue d'ensemble du cycle de passage
 
-Pour un satellite en SSO à 450 km comme EOSAT-1, un passage de routine dure
-entre 3 et 12 minutes selon l'élévation maximale atteinte au
-survol du nœud : 3 à 5 min pour un passage rasant à 5–10°, 10 à 12 min pour un
-passage quasi zénithal, avec une moyenne de travail d'environ 6 minutes. Avec
+Pour un satellite en SSO à 513 km comme EOSAT-1, un passage de routine dure
+entre 3 et 9,4 minutes selon l'élévation maximale atteinte au
+survol du nœud : 3 à 5 min pour un passage rasant à 5–10°, environ 9 min pour un
+passage quasi zénithal, avec une moyenne mesurée de 7,5 minutes. Avec
 le réseau de **cinq stations**, le satellite est en contact avec
 au moins une station sur la plupart des orbites, souvent plusieurs fois. La
 chronologie côté opérateurs :
@@ -2929,9 +2954,11 @@ quelques passages plus longs. Voir la figure 8.1.
 
 ### 8.2.1 Géométrie des passages — SSO polaire au-dessus de stations polaires
 
-Une orbite héliosynchrone à 450 km a une période d'environ 93,5 minutes
-et est exploitée en configuration **aube-crépuscule**, l'heure solaire locale au
-nœud ascendant étant maintenue vers 06 h 00 / 18 h 00. Les cinq stations —
+Une orbite héliosynchrone à 513 km a une période d'environ 94,5 minutes.
+Celle d'EOSAT-1 est une orbite **de milieu de matinée**, et non aube-crépuscule :
+l'heure solaire locale au nœud ascendant est maintenue vers **10 h 00**, de sorte
+que le satellite traverse l'ombre de la Terre à chaque orbite (de 33,2 à
+35,2 minutes). Les cinq stations —
 Svalbard (78,2° N), Inuvik (68,3° N), Iqaluit (63,7° N),
 Troll (72,0° S) et O'Higgins (63,3° S) — sont situées à haute latitude,
 près de la zone où convergent les traces au sol, de sorte que la plupart des passages aux nœuds ascendants ou
@@ -2940,11 +2967,11 @@ station.
 
 Résultat, mesuré sur 48 h à partir de l'époque de la mission avec
 `tools/pass_gap_analysis.py` : **103 passages en 48 h** — soit
-environ 50 par jour — avec un **intervalle médian de 33 minutes** et un **intervalle
+environ 51 par jour — avec un **intervalle médian de 33 minutes** et un **intervalle
 maximal de 79 minutes**. (Le réseau à deux stations que supposaient les anciens supports de cours
-donne 39 passages, un intervalle médian de 84 minutes et un intervalle maximal de 148 minutes ;
+donne 40 passages, un intervalle médian de 84 minutes et un intervalle maximal de 147 minutes ;
 la configuration de référence à cinq stations est celle qu'utilise ce cours
-d'un bout à l'autre.) La durée d'un passage va de **3 à 12 minutes** et l'élévation maximale
+d'un bout à l'autre.) La durée d'un passage va de **3 à 9,4 minutes** et l'élévation maximale
 de la limite du masque de 5° jusqu'au zénith, selon la
 géométrie du survol du nœud. Il n'y a toujours aucun contact lorsque le
 satellite survole l'équateur ou les latitudes moyennes : les périodes de silence radio
@@ -2956,19 +2983,18 @@ n'est autorisé qu'au-dessus de **10° d'élévation**, de sorte qu'un passage q
 au-dessus de 10° est utilisable pour la commande et la télémesure de servitude à 16 kbit/s,
 mais ne transporte aucune image.
 
-Exemple résolu : à 450 km, la durée géométrique de visibilité d'horizon à horizon
+Exemple résolu : à 513 km, la durée géométrique de visibilité d'horizon à horizon
 pour l'élévation maximale (passage au zénith) est
 
 $$ t_{transit} = 2 \cdot \arccos\left(\frac{R_E + h_{station}}{R_E + h_{sat}}\right) \cdot \frac{T_{orbit}}{2\pi} $$
 
-Avec $R_E = 6371$ km, $h_{sat} = 450$ km, $h_{station} \approx 0$
-et $T_{orbit} = 5610$ s, la durée géométrique de visibilité est
-$\approx 10.9$ minutes. En ajoutant le masque d'élévation de 5° —
-$\lambda = \arccos\!\left(\frac{R_E\cos\varepsilon}{R_E+h}\right) - \varepsilon = 16.4°$,
-soit un arc de $32.8°$ — le contact utile au zénith tombe à
-$\approx 8.5$ minutes. Avec le masque et des passages réalistes
-à élévation moyenne, la moyenne opérationnelle est plutôt de
-6 minutes.
+Avec $R_E = 6371$ km, $h_{sat} = 513$ km, $h_{station} \approx 0$
+et $T_{orbit} = 5669$ s, la durée géométrique de visibilité est
+$\approx 11.7$ minutes. En ajoutant le masque d'élévation de 5° —
+$\lambda = \arccos\!\left(\frac{R_E\cos\varepsilon}{R_E+h}\right) - \varepsilon = 17.8°$,
+soit un arc de $35.6°$ — le contact utile au zénith tombe à
+$\approx 9.3$ minutes. Avec le masque et des passages réalistes
+à élévation moyenne, la moyenne mesurée est de 7,5 minutes.
 
 *Figure 8.1 — Schéma d'une orbite d'EOSAT-1 avec les cônes de visibilité des cinq stations (masque d'élévation de 5°). Les segments éclairés et en éclipse sont ombrés.*
 
@@ -3025,13 +3051,14 @@ bilan de santé de routine.
 - L'activité de liaison descendante correspond au volume d'image produit (règle
   empirique : `image_size_mb` vaut 4 Mo par séance de prise de vue ; au débit de 128 kbit/s du palier
   HIGH, cela fait 4 × 8 / 0,128 ≈ **250 s**, soit un peu plus de
-  quatre minutes — une part importante d'un passage de six minutes, qui
+  quatre minutes — une part importante d'un passage moyen de 7,5 minutes, qui
   exige en outre que le mode DOWNLINK soit activé et que l'élévation reste au-dessus de 10° pendant toute sa
   durée).
 
 ## 8.6 Rotation sur les postes MCS
 
-Sept consoles configurées (§7.2), 12 minutes chacune. Chaque étudiant
+Sept consoles configurées (§7.2), 15 minutes chacune, après un briefing
+de 15 minutes : exactement le créneau 13 h 00 – 15 h 00. Chaque étudiant
 passe par les sept au cours de l'après-midi. À chaque poste, la
 personne en place lit à voix haute la fiche du poste (chapitre 6), puis
 réalise une tâche propre au poste en observant la télémesure
@@ -3054,7 +3081,7 @@ rotation : ce sont des rôles de salle plutôt que des consoles MCS
 configurées, tenus par le directeur de mission ou par un opérateur
 désigné pendant toute la journée.
 
-Une fiche d'évaluation par poste figure dans le cahier d'exercices (WB-5.3-RR). L'étudiant
+Une fiche d'évaluation par poste figure dans le cahier d'exercices (WB-5.1), une par console. L'étudiant
 y note une observation par poste.
 
 ## 8.7 Exercice d'équipe : plan de passage
@@ -3142,7 +3169,7 @@ de sous-système — et enchaînent 10 annonces en binôme selon le schéma
 `[ADDRESSEE], [SPEAKER] — [MESSAGE]` (destinataire, émetteur, message). Exemples :
 
 - « AOCS, FD — pointing report. »
-- « FD, AOCS — pointing 0.28° (NADIR), nominal. »
+- « FD, AOCS — pointing 0.28° (NOMINAL), nominal. »
 - « EPS, FD — eclipse-entry predictor. »
 - « FD, EPS — eclipse-entry T+04:12, SoC at exit 78%. »
 
@@ -3523,10 +3550,10 @@ Atelier animé par la personne qui tient le poste FDS, à l'intention de l'équi
 $$ SoC_{exit} = SoC_{entry} - \frac{P_{avg} \cdot t_{eclipse}}{E_{battery}} \cdot 100\% $$
 
 où $P_{avg}$ est la charge électrique moyenne pendant l'éclipse, $t_{eclipse}$ est exprimé en
-heures et $E_{battery}$ est l'énergie de la batterie. EO-Sat-1 emporte une batterie GomSpace
+heures et $E_{battery}$ est l'énergie de la batterie. EOSAT-1 emporte une batterie GomSpace
 NanoPower BPX 8S-1P, donc $E_{battery} = 100$ Wh, et la charge
-moyenne sur l'orbite dans le profil *nominal* est de 28,7 W (`docs/plan_2026-08b/POWER_SIZING.md`,
-§6 ; 25,5 W au repos, 32,5 W avec la prise de vue en fonctionnement par intermittence). Utilisez environ 29 W sauf
+moyenne sur l'orbite dans le profil *nominal* est de 28,8 W (`docs/plan_2026-08b/POWER_SIZING.md`,
+§6 ; 25,6 W au repos, 32,8 W avec la prise de vue en fonctionnement par intermittence). Utilisez environ 29 W sauf
 indication contraire du plan de passage.
 
 Application, pour une éclipse d'environ 35 min :
@@ -3774,15 +3801,17 @@ la fin de la **phase de lancement et de début d'orbite (LEOP)**,
 période pendant laquelle le satellite passe de la phase 3
 (BOOTLOADER_OPS : seuls l'OBC et le récepteur sont alimentés et
 l'image du chargeur d'amorçage s'exécute) à la phase 4 (LEOP), puis en sort
-pour entrer en phase 5 (COMMISSIONING) : toutes les lignes d'alimentation commutables actives, les
-ailes solaires déployées, l'amortissement des vitesses angulaires (detumbling) convergé, le temps synchronisé. Notez que le déploiement de l'**antenne
+pour entrer en phase 5 (COMMISSIONING) : les ailes solaires déployées, la suite AOCS alimentée,
+l'amortissement des vitesses angulaires (detumbling) convergé vers le maintien au Soleil COARSE_SUN,
+le temps synchronisé et l'orbite restituée. La charge utile, le refroidisseur, les roues et les
+senseurs stellaires restent éteints ; ils relèvent de la recette en orbite. Notez que le déploiement de l'**antenne
 bande S** n'est *pas* une étape de la LEOP : c'est l'étape 0 de COM-006
 (`TTC_DEPLOY_ANTENNA`, S8.1 func 69), car l'échelon LOW de l'échelle
 de débits n'en a pas besoin et que la LEOP ne requiert jamais le échelon HIGH. Les codes de phase figurent dans
 `eps.spacecraft_phase` (0x0129) : 0 pré-séparation, 1 minuterie de séparation,
 2 mise sous tension initiale, 3 opérations sous chargeur d'amorçage, 4 LEOP, 5 recette en orbite, 6 nominal.
-La déclaration finale de la phase 5 revient à l'équipe de direction de la mission,
-avec la télécommande de vol `SYS_SET_MISSION_PHASE(phase=5)` (S8 fonction 120) ;
+La déclaration finale de la phase 5 se fait à la fin de LEOP-003, la dernière fiche
+de la LEOP, avec la télécommande de vol `SYS_SET_MISSION_PHASE(phase=5)` (S8 fonction 120) ;
 rien à bord ne fait avancer la phase au-delà de 4 de lui-même.
 
 La LEOP est la phase de la mission où les enjeux sont les plus élevés. C'est la *première*
@@ -3817,7 +3846,7 @@ l'émetteur.
 
 L'AOCS est en **mode 0 (OFF)** — il n'amortit pas les vitesses angulaires, il n'est même pas cadencé — avec
 des vitesses de culbutage résiduelles d'environ 1–2 °/s dues à l'impulsion de séparation.
-L'amortissement n'a *pas* encore eu lieu ; il est commandé à l'étape 4 de LEOP-007.
+L'amortissement n'a *pas* encore eu lieu ; il est commandé à l'étape 5 de LEOP-007.
 Le SoC de la batterie est de 90 % (`simulation.yaml` `eps.initial.soc_pct`). Le
 premier AOS au-dessus d'Iqaluit a lieu à T+0 dans le scénario.
 
@@ -3827,54 +3856,69 @@ l'équipe de direction de la mission peut déclarer la phase 5 (COMMISSIONING).
 
 ## 10.4 Ordre d'exécution des procédures
 
-Les six procédures LEOP, dans l'ordre d'exécution, avec leur durée
+Les sept procédures LEOP, dans leur ordre d'exécution, avec leur durée
 prévue et le poste pilote :
 
 Tableau 10.1 — Ordre d'exécution des procédures LEOP, avec poste pilote, durée et étape critique.
 
-| N° | Procédure | Poste pilote | Durée (simulée) | Étape critique |
+| N° | Procédure | Poste pilote | Durée (simulation) | Étape critique |
 |---|-----------|---------------|----------------|---------------|
-| 1 | LEOP-001 Première acquisition du signal et amorçage de l'OBC | TT&C + SPACON | ~6 min | Étape 5 : `OBC_BOOT_APP`, puis étape 5a : désactiver le mode balise |
-| 2 | LEOP-002 Bilan de santé initial | SPACON + tous les postes | ~8 min | Tous les sous-systèmes indiquent OK sur les SID 1–6 |
-| 3 | LEOP-007 Mise sous tension séquentielle | SPACON + EPS + AOCS | ~25 min de commande, plus la convergence de l'amortissement | Étape 4 : ligne `aocs_wheels` sur ON, SID 2 activé, mode → 2 DETUMBLE |
-| 4 | LEOP-004 Vérification du générateur solaire | EPS | ~10 min | Étape 0 : `EPS_DEPLOY_WING(wing=2)` ; étape 6 : symétrie des ailes |
-| 5 | LEOP-005 Acquisition du Soleil | AOCS | limitée par l'amortissement | Étape 4 : vitesses < 0.5 °/s ; étape 6 : mode → 3 COARSE_SUN |
-| 6 | LEOP-006 Synchronisation temporelle | SPACON | ~3 min | Étape 3 : calculer delta_t ; étape 5 : résidu < 1.0 s |
+| 1 | LEOP-001 Première acquisition du signal et amorçage de l'OBC | TT&C + SPACON | ~6 min | Étape 5 : `OBC_BOOT_APP`, puis étape 5a : lever le mode balise |
+| 2 | LEOP-002 Bilan de santé initial | SPACON + tous les postes | ~8 min | SID 1, 3, 4 et 6 dans la plage ; lignes AOCS, charge utile, refroidisseur et prop confirmées OFF |
+| 3 | LEOP-004 Vérification du générateur solaire | EPS | ~10 min | Étape 0 : `EPS_DEPLOY_WING(wing=2)` ; étape 6 : symétrie des ailes |
+| 4 | LEOP-007 Mise sous tension séquentielle | SPACON + EPS + AOCS | un contact de 8 min | Étapes 3–5 : ligne de la suite AOCS sous tension et SID 2 activé ; magnétomètre, magnétocoupleurs et GPS en service ; mode → 2 DETUMBLE |
+| 5 | LEOP-005 Acquisition du Soleil | AOCS | limitée par l'amortissement | Étape 3 : passage automatique en 3 COARSE_SUN — observé, non commandé |
+| 6 | LEOP-006 Synchronisation temporelle | SPACON | ~5 min | Étape 4 : `SET_TIME`, résidu < 1.0 s ; étape 6a : SID 12 et asservissement GPS |
+| 7 | LEOP-003 Restitution d'orbite initiale | FDS + FD | ~15 min sur deux points | Étape 7 : `SYS_SET_MISSION_PHASE(phase=5, flags=0)` — la fin de la LEOP |
 
-Notez l'ordre. **LEOP-007 s'exécute avant -004, -005 et -006**, car
-dans l'état initial de démarrage à froid ces trois procédures exigent que la ligne des roues
-soit alimentée et que l'OBC soit sur l'image applicative
-(`procedures/procedure_index.yaml`, commentaire d'en-tête du bloc LEOP).
-LEOP-001 effectue déjà un premier réglage de l'heure à sa propre étape 6 ; LEOP-006
-en est donc la reprise soignée : c'est la fiche qui calcule le temps de propagation aller
-à partir de la distance oblique et qui recoupe le rapport de temps avec
-l'horloge de la télémesure de servitude.
+Notez l'ordre. C'est celui de `procedures/procedure_index.yaml` et des
+états d'entrée et de sortie de chaque fiche. Les ailes sont déployées
+(LEOP-004) juste après le bilan de santé, avant que quoi que ce soit
+d'autre ne consomme. LEOP-007 n'alimente ensuite que ce dont le reste de
+la LEOP a besoin — les réchauffeurs si leurs zones ont besoin de chaleur,
+la ligne de la suite AOCS, le magnétomètre, les magnétocoupleurs et le
+récepteur GPS — et commande DETUMBLE. La ligne charge utile et le
+refroidisseur du FPA sont des charges de la recette en orbite (COM-009,
+COM-010) ; les roues de réaction restent DISABLED jusqu'à COM-004, et les
+senseurs stellaires et les gyroscopes restent éteints jusqu'à COM-003.
+LEOP-005 ne commande rien : l'AOCS passe de lui-même de DETUMBLE à
+COARSE_SUN et, sans senseur stellaire en service, y reste. LEOP-006 règle
+d'abord l'horloge depuis le sol, puis seulement l'asservit au GPS ;
+LEOP-001 ne règle volontairement **pas** l'horloge (son étape 6 se borne
+à noter qu'elle n'est pas réglée).
 
-LEOP-003 (restitution d'orbite initiale) s'exécute de façon autonome à partir de l'accrochage GPS et
-n'est pas pilotée depuis la console. LEOP-004 est la **vérification du générateur solaire**,
-et non son « déploiement », et elle ne décrit *pas* quelque chose qui
-a déjà eu lieu : au démarrage à froid, les deux ailes sont repliées
-(`eps.wing_status` 0x0144 = 0x00), et l'étape 0 de la fiche commande effectivement
-`EPS_DEPLOY_WING(wing=2)`. Prévoyez le temps nécessaire.
+LEOP-003 est une procédure menée en console, et non autonome. Elle lit la
+solution GPS, transmet le TLE affiné aux outils sol — rien n'est envoyé au
+satellite — et clôt la LEOP par la déclaration de la phase 5, la seule
+télécommande qui fait sortir le satellite de la phase 4. LEOP-004 est la
+**vérification du générateur solaire**, et non son « déploiement », et
+elle ne décrit *pas* quelque chose qui a déjà eu lieu : au démarrage à
+froid, les deux ailes sont repliées (`eps.wing_status` 0x0144 = 0x00), et
+l'étape 0 de la fiche commande réellement `EPS_DEPLOY_WING(wing=2)`.
+Prévoyez-en le temps.
 
 ## 10.5 Guide par poste pour la LEOP
 
 ### Directeur de vol
 
-- Avant le passage : confirmer l'affectation des postes des deux équipes. Effectuer un essai
-  de communication (« Comm check ») sur la boucle.
-- Pendant le passage : faire un tour de table GO pour chaque action commandée. Surveiller l'indicateur
-  de phase. Autoriser l'enchaînement LEOP-001 → -002 → -007 → -004 →
-  -005 → -006.
-- Critère de réussite : à la LOS, toutes les lignes commutables sont alimentées, les deux ailes
-  sont indiquées déployées dans `eps.wing_status` (0x0144), et l'AOCS amortit en
-  mode 2 ou maintient le pointage solaire en mode 3. Le passage en phase 5 revient à
-  l'instructeur, sur la console, lorsque le tour de table du FD est unanime.
-- Écueils : se précipiter sur LEOP-007 avant que LEOP-002 ait confirmé la santé du satellite.
-  Accorder le GO pour la transition vers COARSE_SUN sans avoir d'abord demandé à l'AOCS
-  la norme des vitesses angulaires. Traiter l'attente de l'amortissement comme un problème de planning
-  qu'une commande ferait disparaître : elle est fixée par la physique de la loi B-dot, et
-  l'automate de modes effectue lui-même la transition lorsque les vitesses ont réellement baissé.
+- Avant le passage : confirmer les affectations de poste des deux équipes.
+  Faire un contrôle de communication sur la boucle.
+- Pendant le passage : demander le GO pour chaque action commandée.
+  Surveiller l'indicateur de phase. Autoriser l'enchaînement LEOP-001 →
+  -002 → -004 → -007 → -005 → -006 → -003.
+- Critère du passage : à la fin de la LEOP, les deux ailes sont indiquées
+  déployées dans `eps.wing_status` (0x0144), l'AOCS maintient le Soleil en
+  mode 3 sur les magnétocoupleurs, l'horloge est référencée, l'orbite est
+  restituée, et la phase vaut 5 après un tour de table unanime et la
+  télécommande `SYS_SET_MISSION_PHASE(phase=5, flags=0)` (étape 7 de
+  LEOP-003). Seules les charges de la LEOP sont en service : les lignes
+  charge utile, refroidisseur et prop sont OFF et les roues désactivées.
+- Écueils : se précipiter sur LEOP-007 avant que LEOP-002 ait confirmé la
+  santé du satellite. Accorder un GO pour une commande COARSE_SUN, quelle
+  qu'elle soit — le passage est automatique, fixé par la physique de la loi
+  B-dot, et la machine de modes se promeut d'elle-même quand les vitesses
+  sont réellement descendues. Attendre que la phase avance d'elle-même :
+  rien à bord ne la fait passer au-delà de 4.
 
 ### SPACON
 
@@ -3895,8 +3939,8 @@ a déjà eu lieu : au démarrage à froid, les deux ailes sont repliées
   courte interruption de télémesure à ce moment est donc normale. Ce qui n'est **pas** automatique, c'est la
   télémesure de servitude : l'amorçage de l'application réapplique
   `default_enabled_sids: [1, 11]`, si bien qu'après l'amorçage vous disposez du SID 1 et du
-  SID 11 et de rien d'autre tant que vous n'avez pas envoyé `HK_ENABLE` (S3.5) pour chacun des SID
-  3, 4 et 6 — puis plus tard 2 et 5 dans LEOP-007.
+  SID 11 et de rien d'autre tant que vous n'avez pas envoyé `HK_ENABLE` (S3.5) pour chacun des SID  3, 4 et 6 — puis 2 dans LEOP-007 et 12 dans LEOP-006 (le SID 5 attend
+  la ligne charge utile : COM-009 le demande).
 - Écueils : déclarer LEOP-001 terminée sans les `HK_ENABLE`s.
   Oublier l'étape 5a : l'amorçage de l'application ne désactive **pas** le mode
   balise, et tant que `ttc.beacon_mode` (0x0521) vaut 1, toute
@@ -3904,59 +3948,78 @@ a déjà eu lieu : au démarrage à froid, les deux ailes sont repliées
 
 ### AOCS
 
-- Avant le passage : relire les vitesses de culbutage résiduelles dans le briefing du scénario
-  (~1–2 °/s, partiellement amorties depuis la séparation). Noter que le modèle
-  AOCS n'est même pas cadencé : la ligne est hors tension et le mode vaut 0 (OFF).
-- Pendant le passage : rôle passif jusqu'à l'étape 4 de LEOP-007. Prendre alors la main pour la sortie
-  de l'AOCS du mode OFF : `HK_ENABLE(sid=2)` (S3.5) pour pouvoir voir quoi que ce soit,
-  puis `AOCS_SET_MODE(mode=2)` — DETUMBLE — avec S8.1 **func 0**,
-  qui est exemptée du verrou de mode du sous-système et constitue donc la
-  commande qui fait sortir l'AOCS du mode OFF.
-- Étape critique : l'étape 4 de LEOP-007 et l'attente qui la suit. L'amortissement
-  repose sur une loi B-dot pilotée par le magnétomètre, et il est lent (voir §10.11).
-  On n'entre pas manuellement en COARSE_SUN à 2 °/s : l'automate de modes effectue
-  lui-même la transition DETUMBLE → COARSE_SUN dès que la norme de la vitesse angulaire est restée sous
-  0.5 °/s pendant 30 secondes consécutives.
-- Écueils : commander le mode 3 avant que les vitesses aient baissé et interpréter le
-  refus comme une panne. Interpréter une *augmentation* de vitesse sur un axe comme une loi
-  de commande défaillante : la loi B-dot n'amortit que la composante de la vitesse perpendiculaire au
-  champ local, de sorte que l'énergie passe réellement d'un axe à l'autre pendant que la norme
-  totale diminue. Jugez la loi sur la RSS des trois vitesses, jamais sur
-  un seul axe. Les magnétocoupleurs s'activent avec `MTQ_ENABLE` (S8.1
-  **func 9**) ; leur état figure dans `aocs.mtq_enabled` (0x025E), leurs rapports cycliques en
+- Avant le passage : examiner les vitesses de culbutage résiduelles du
+  briefing du scénario (~1–2 °/s, en partie amorties depuis la
+  séparation). Noter que le modèle AOCS ne s'exécute même pas : la ligne
+  est éteinte et le mode vaut 0 (OFF).
+- Pendant le passage : passif jusqu'à l'étape 3 de LEOP-007. Prendre
+  ensuite la main : `HK_ENABLE(sid=2)` (S3.5) pour voir quoi que ce soit ;
+  à l'étape 4, activer les deux éléments de DETUMBLE —
+  `S2_AOCS_MAGNETOMETER(device_id=521, state=1)` et
+  `MTQ_ENABLE(enable=1)` (S8.1 **func 9**) — ainsi que le récepteur GPS ;
+  à l'étape 5, envoyer `AOCS_SET_MODE(mode=2)` — DETUMBLE — avec S8.1
+  **func 0**, exemptée de la condition de mode du sous-système et donc la
+  commande qui fait sortir l'AOCS de OFF. La commande de mode refuse
+  franchement si un élément manque : `0x0A20` pas de magnétomètre,
+  `0x0A21` pas de magnétocoupleurs, `0x0004` ligne éteinte.
+- Étape critique : l'étape 5 de LEOP-007 et l'attente qui suit, qui est
+  LEOP-005. L'amortissement repose sur une loi B-dot pilotée par le
+  magnétomètre, et il est lent (voir le §10.11). On n'entre pas en
+  COARSE_SUN à la main : la machine de modes promeut d'elle-même DETUMBLE
+  → COARSE_SUN dès que la norme de la vitesse angulaire est restée sous
+  0,5 °/s pendant 30 secondes consécutives. Sans senseur stellaire sous
+  tension, elle y reste jusqu'à la recette en orbite ; les roues restent
+  désactivées jusqu'à COM-004.
+- Écueils : commander le mode 3, quel que soit le moment. Interpréter la
+  *hausse* de la vitesse sur un axe comme une loi de commande défaillante —
+  la loi B-dot n'amortit que la composante de la vitesse perpendiculaire
+  au champ local, si bien que l'énergie passe réellement d'un axe à
+  l'autre pendant que la norme totale décroît. Juger la loi sur la RSS des
+  trois vitesses, jamais sur un seul axe. L'état des magnétocoupleurs est
+  dans `aocs.mtq_enabled` (0x025E), leurs rapports cycliques en
   0x0258–0x025A.
 
 ### EPS
 
-- Avant le passage : SoC à 90 % ; `obc` et `ttc_rx` sous tension et non commutables ; toutes
-  les lignes commutables sur OFF. Il y a **neuf** lignes d'alimentation, d'indices 0 à 8 :
-  0 obc, 1 ttc_rx, 2 ttc_tx, 3 payload, 4 fpa_cooler, 5 htr_bat,
-  6 htr_obc, 7 aocs_wheels, 8 prop. `EPS_POWER_ON` / `EPS_POWER_OFF` /
-  `EPS_RESET_OC_FLAG` prennent toutes un `line_index` compris entre 0 et 8.
-- Pendant le passage : à mesure que chaque nouvelle ligne est activée dans LEOP-007, surveiller le
-  courant consommé par ligne (`eps.line_current_0`…`_7`, 0x0118–0x011F ; la ligne 8,
-  prop, est `eps.line_current_8`, 0x014B) et
-  l'indicateur de ligne (`eps.pl_*`, 0x0110–0x0117). Chaque nouvelle ligne constitue
-  un petit événement de commande à part entière, avec GO du FD. Notez que l'EPS comptabilise la consommation d'après l'état réel
-  des actionneurs, et non d'après la position du commutateur de ligne : une ligne de réchauffeur
-  alimentée mais coupée par son thermostat ne consomme pas sa puissance nominale.
-- Point critique : l'étape 2 de LEOP-007 active `htr_bat` avec
-  `EPS_POWER_ON(line_index=5)` (S8.1, **func 19**) ; confirmer
-  `eps.pl_htr_bat` (0x0115) = 1, puis surveiller la hausse de consommation d'environ 6 W et
-  l'évolution de la température de la batterie vers la consigne de 5 °C.
-- Écueils : ne pas repérer un pic de courant inattendu lorsqu'un
-  réchauffeur est alimenté pour la première fois (le courant d'appel est normal ; une consommation élevée
-  et prolongée ne l'est pas).
+- Avant le passage : SoC de 90 % ; `obc` et `ttc_rx` sous tension et non
+  commutables ; toutes les lignes commutables OFF. Il y a **neuf** lignes
+  d'alimentation, d'indices 0–8 : 0 obc, 1 ttc_rx, 2 ttc_tx, 3 payload,
+  4 fpa_cooler, 5 htr_bat, 6 htr_obc, 7 aocs_wheels, 8 prop.
+  `EPS_POWER_ON` / `EPS_POWER_OFF` / `EPS_RESET_OC_FLAG` prennent toutes
+  un `line_index` dans 0–8.
+- Pendant le passage : piloter d'abord LEOP-004 — chaque aile consomme
+  ~2 A pendant 30 s lors de son déploiement. Dans LEOP-007, surveiller la
+  consommation de chaque nouvelle ligne (`eps.line_current_0`…`_7`,
+  0x0118–0x011F ; la ligne 8, prop, est `eps.line_current_8`, 0x014B) et
+  l'indicateur de ligne (`eps.pl_*`, 0x0110–0x0117). Chaque nouvelle ligne
+  est un petit événement de commande à part entière, avec GO du FD. Noter
+  que l'EPS comptabilise d'après l'état réel des actionneurs, et non
+  d'après la position de l'interrupteur de ligne — une ligne de
+  réchauffeur sous tension mais coupée par le thermostat ne consomme pas
+  sa puissance nominale.
+- Point critique : l'étape 2 de LEOP-007 est conditionnelle. `htr_bat`
+  (`EPS_POWER_ON(line_index=5)`, S8.1 **func 19**) n'est mise sous tension
+  que si `tcs.temp_battery` est sous +5 °C, et `htr_obc` (`line_index=6`)
+  que si `tcs.temp_obc` est sous 0 °C ; consigner les lignes alimentées,
+  car COM-002 lit cet enregistrement. L'étape 6 confirme que les lignes
+  charge utile, refroidisseur et prop sont toujours OFF et que la marge est
+  positive.
+- Écueils : ne pas repérer un pic de courant inattendu à la première mise
+  sous tension d'un réchauffeur (l'appel de courant est normal ; une
+  consommation élevée durable ne l'est pas).
 
 ### Thermique
 
-- Avant le passage : toutes les zones sont passives (aucun réchauffeur actif) ; la zone de la batterie peut
-  se situer en bas de sa plage.
-- Pendant le passage : à mesure que chaque réchauffeur est activé dans LEOP-007, surveiller l'évolution de la
-  température de sa zone et le rapport cyclique du réchauffeur.
-- Écueils : ne pas remarquer que la zone de la batterie met environ 15 minutes
-  à rejoindre sa plage après la première activation de `htr_bat`. Conclure trop vite que le
-  réchauffeur de batterie est « bloqué à l'arrêt ».
+- Avant le passage : toutes les zones passives (aucun réchauffeur en
+  marche) ; la zone batterie peut se trouver en bas de plage.
+- Pendant le passage : donner à l'EPS les températures des zones batterie
+  et OBC avant l'étape 2 de LEOP-007 — ce sont elles qui décident si une
+  ligne de réchauffeur est mise sous tension. Si c'est le cas, suivre
+  l'évolution de la température de sa zone et le rapport cyclique du
+  réchauffeur.
+- Écueils : ne pas remarquer que la zone batterie met ~15 minutes à
+  rejoindre sa plage après la première activation de `htr_bat`. Juger
+  d'avance le réchauffeur batterie « bloqué à l'arrêt ».
 
 ### TT&C
 
@@ -3981,29 +4044,35 @@ a déjà eu lieu : au démarrage à froid, les deux ailes sont repliées
 
 ### Charge utile
 
-- Avant le passage : ligne de charge utile sur OFF, mode charge utile sur OFF, ligne du refroidisseur du FPA sur OFF.
-- Pendant le passage : rôle passif jusqu'aux **étapes 6 et 7** de LEOP-007, qui vous reviennent. La LEOP
-  concerne bien la charge utile : l'étape 6 alimente la ligne de charge utile, commande
-  le mode STANDBY avec `PAYLOAD_SET_MODE(mode=1)` (S8.1, func 26) — et non
-  `SET_PAYLOAD_MODE`, que le catalogue associe à une autre commande —
-  et active le SID 5 ; l'étape 7 alimente la ligne du refroidisseur et démarre le
-  cryoréfrigérateur avec `FPA_COOLER(on=1)` (func 43).
-- Écueils : s'attendre à ce que le FPA atteigne une température froide arbitraire. La
-  plage de consignes commandables va de **−20 °C à 0 °C**, avec −15 °C par défaut,
-  et l'état prêt (`payload.fpa_ready`, 0x0610) suit la consigne *active*,
-  et non une valeur fixe. Autre écueil : être distrait, ne pas être sur la boucle, et manquer
-  son tour lors d'un tour de table GO/NO-GO à l'échelle du système.
+- Avant le passage : ligne charge utile OFF, mode charge utile OFF, ligne
+  du refroidisseur du FPA OFF.
+- Pendant le passage : passif pendant toute la LEOP. LEOP-007 ne touche
+  pas à la charge utile : la ligne charge utile, le passage en STANDBY avec
+  `PAYLOAD_SET_MODE(mode=1)` (S8.1, func 26) — et non `SET_PAYLOAD_MODE`,
+  que le catalogue associe à une autre commande — et le SID 5 viennent
+  dans COM-009, la ligne du refroidisseur et `FPA_COOLER(on=1)` (func 43)
+  dans COM-010. L'étape 6 de LEOP-007 confirme que les lignes charge utile
+  et refroidisseur sont toujours OFF.
+- Écueils : s'attendre à ce que le FPA atteigne une température froide
+  arbitraire. L'enveloppe de consigne commandable va de **−20 °C à 0 °C**,
+  −15 °C par défaut, et la disponibilité (`payload.fpa_ready`, 0x0610)
+  suit la consigne *active*, et non une valeur fixe. Autre écueil : être
+  distrait, hors de la boucle, et manquer son tour lors d'un tour de table
+  GO/NO-GO général.
 
 ### FDS
 
-- Avant le passage : établir le planning des passages sur 24 heures. Le remettre au FD,
-  au TT&C et au segment sol.
-- Pendant le passage : rôle passif jusqu'à l'amorçage de l'OBC et la mise en service du GPS. Le GPS se trouve du
-  côté AOCS : aucune position n'est donc disponible tant que la ligne `aocs_wheels` n'est pas
-  alimentée à l'étape 4 de LEOP-007 ; un démarrage à froid prend ensuite environ 60 s.
-  Mettre alors à jour la restitution d'orbite avec la première position GPS.
-- Écueils : utiliser le TLE fourni par le lanceur au lieu du
-  vecteur d'état récent issu du GPS une fois celui-ci opérationnel.
+- Avant le passage : produire le planning des passages sur 24 heures. Le
+  remettre au FD, à la TT&C et au segment sol.
+- Pendant le passage : passif jusqu'à la mise en service du récepteur GPS
+  à l'étape 4 de LEOP-007 (`S2_AOCS_GPS_RECEIVER`, sur la ligne de la
+  suite AOCS) ; un démarrage à froid peut prendre jusqu'à 15 min. Le SID
+  12 est activé dans LEOP-006. Piloter ensuite LEOP-003 : vérifier le
+  point, lire le vecteur d'état, comparer à l'orbite du lanceur et envoyer
+  le TLE affiné aux outils sol.
+- Écueils : utiliser le TLE fourni par le lanceur au lieu du vecteur
+  d'état frais issu du GPS une fois celui-ci disponible. Chercher une
+  commande pour charger l'orbite à bord — il n'y en a pas.
 
 ### Segment sol
 
@@ -4181,7 +4250,7 @@ Tableau 10.5 — Détail de l'étape 2 de LEOP-001 : première liaison montante
 | Annonce attendue du responsable | « FD, TT&C — go for first uplink, S17.1. » → exécution → « FD, TT&C — S17 sent, awaiting S1 ack and S17.2 report. » |
 | Action | Dans le panneau de commande : service S17, sous-service 1, sans données d'application. Première clé. (Pas de seconde clé pour S17 : c'est un test de connectivité, à faible risque.) |
 | Vérification | Dans les 10 s : acquittement d'acceptation S1.1 reçu ; dans les 10 s : rapport de test de connexion S17.2 reçu ; `eps.pl_ttc_tx` (**0x0112**) indique 1 — l'émetteur est armé automatiquement par la temporisation de maintien. |
-| Raison d'être de l'étape | Nous ne savons pas encore si la liaison fonctionne de bout en bout. S17 est le moyen le moins coûteux et le moins intrusif de le vérifier, et il figure sur la liste des TC autorisées en mode amorçage : il est donc accepté avant le chargement de l'image applicative. L'acquittement d'acceptation confirme la liaison montante sol-bord ; la réponse au test de connexion confirme la liaison descendante bord-sol. La **maintien automatique de l'émetteur (auto-TX hold-down)** est le mécanisme qui fait apparaître la liaison descendante au démarrage à froid : toute TC acceptée met de façon autonome la ligne `ttc_tx` sous tension pendant la durée `simulation.yaml` `ttc.auto_tx_hold_s`, fixée pour EO-Sat-1 à **300 s (5 minutes)** et réarmée à chaque TC acceptée par la suite. Cinq minutes sans commande, et l'émetteur se coupe ; envoyez n'importe quelle TC pour le rétablir. |
+| Raison d'être de l'étape | Nous ne savons pas encore si la liaison fonctionne de bout en bout. S17 est le moyen le moins coûteux et le moins intrusif de le vérifier, et il figure sur la liste des TC autorisées en mode amorçage : il est donc accepté avant le chargement de l'image applicative. L'acquittement d'acceptation confirme la liaison montante sol-bord ; la réponse au test de connexion confirme la liaison descendante bord-sol. La **maintien automatique de l'émetteur (auto-TX hold-down)** est le mécanisme qui fait apparaître la liaison descendante au démarrage à froid : toute TC acceptée met de façon autonome la ligne `ttc_tx` sous tension pendant la durée `simulation.yaml` `ttc.auto_tx_hold_s`, fixée pour EOSAT-1 à **300 s (5 minutes)** et réarmée à chaque TC acceptée par la suite. Cinq minutes sans commande, et l'émetteur se coupe ; envoyez n'importe quelle TC pour le rétablir. |
 | Écart fréquent | Acquittement S1 reçu mais pas de S17.2 : la liaison montante fonctionne mais la liaison descendante n'est pas décodée. Passer à l'étape 3 (contrôle du verrouillage de la porteuse) avant de conclure à un échec. |
 
 **Étape 3 — Vérifier le verrouillage de la porteuse et la qualité de liaison**
@@ -4352,60 +4421,66 @@ Pour l'équipe d'observation :
 
 ### LEOP-007 — Mise sous tension séquentielle (déroulé approfondi)
 
-LEOP-007 est la procédure LEOP la plus longue (~25 minutes de commande, plus une
-attente d'amortissement qui relève de la physique et non de la charge de travail) et celle qui offre le
-plus d'occasions de dérapage. La procédure fait passer le
-satellite de l'état « OBC amorcé, toutes les lignes commutables sur OFF » à l'état « prêt pour la
-recette en orbite ». Elle comporte **huit** étapes, et non seize ; chaque activation
-de ligne d'alimentation est un petit cérémonial : GO du FD, première clé par le responsable, vérification par le SPACON, entrée
-dans la main courante, ligne suivante.
+LEOP-007 n'alimente que ce dont le reste de la LEOP a besoin, et rien de
+plus. Ses six étapes tiennent dans un contact de 8 minutes ; l'attente de
+l'amortissement qui suit relève de la physique et non de la charge de
+travail, et elle appartient à LEOP-005. La procédure fait passer le
+satellite de « ailes déployées, toutes les lignes commutables OFF sauf
+`ttc_tx`, AOCS sur OFF » à « AOCS en DETUMBLE sur le magnétomètre et les
+magnétocoupleurs, GPS en acquisition ». Chaque mise sous tension de ligne
+est une petite cérémonie : GO du FD, premier verrou du responsable,
+vérification par le SPACON, entrée au journal, ligne suivante.
 
 #### Préparation préalable
 
-LEOP-007 ne commence qu'une fois que LEOP-002 (bilan de santé initial) a
-renvoyé PASS. L'équipe dispose de :
+LEOP-007 commence après LEOP-004 (vérification du générateur solaire).
+L'équipe dispose de :
 
-- logiciel applicatif en cours d'exécution (`obdh.sw_image` 0x0311 = 1), mode balise désactivé,
-  liaison descendante sur l'échelon LOW, SID HK 1, 3, 4, 6 et 11 transmis ;
-- temps synchronisé, résidu < 1 s ;
-- SoC de l'EPS > 60 % et bus à 27–29 V (l'étape 1 vérifie les deux). Les augmentations
-  de consommation en régime établi au fil de la procédure sont d'environ +6 W pour `htr_bat`, +3 W pour
-  `htr_obc`, +12 W pour l'ensemble AOCS, +8 W pour la charge utile et +15 W pour
-  le refroidisseur du FPA : la réserve de SoC compte donc réellement ;
-- aucune table FDIR à charger : toutes les règles sont armées en permanence, et chaque
-  définition événement-action s'inhibe individuellement avec `EA_DISABLE`
-  (S19.5) et se rétablit avec `EA_ENABLE` (S19.4).
+- Logiciel applicatif en service (`obdh.sw_image` 0x0311 = 1), mode balise
+  levé, liaison descendante sur l'échelon LOW, SID de HK 1, 3, 4, 6 et 11
+  en flux.
+- Deux ailes déployées et productrices (`eps.wing_status` 0x0144 = 0x03).
+- SoC de l'EPS > 60 % et bus à 26–30 V (l'étape 1 vérifie les deux). Les
+  ajouts sont modestes : +~6 W pour `htr_bat` et +~3 W pour `htr_obc` si
+  leurs zones ont besoin de chaleur, et +~12 W pour la suite AOCS.
+- Une horloge toujours non réglée : la synchronisation temporelle est
+  LEOP-006, après cette fiche.
+- Aucune table FDIR à charger : toutes les règles sont armées en
+  permanence, et les définitions événement-action sont inhibées une à une
+  avec `EA_DISABLE` (S19.5) et rétablies avec `EA_ENABLE` (S19.4).
 
-#### Guide étape par étape (huit étapes)
+#### Guide étape par étape (six étapes)
 
-Pour chaque activation de ligne, le schéma est le suivant :
+Pour chaque mise sous tension de ligne, le schéma est le suivant :
 
-1. L'EPS fait une recommandation au FD : *« FD, EPS — recommend enable htr_bat. »*
-2. Le FD fait le tour de table : *« SPACON, AOCS, Thermal — go for htr_bat enable? »*
+1. L'EPS recommande au FD : *« FD, EPS — recommend enable htr_bat. »*
+2. Le FD interroge : *« SPACON, AOCS, Thermal — go for htr_bat enable? »*
 3. Chacun répond : *« FD, [POSITION] — go. »*
 4. Le FD : *« Go for htr_bat enable. »*
-5. L'EPS donne la première clé (pas de seconde clé pour les activations de ligne de routine).
-6. L'EPS annonce le courant : *« FD, EPS — htr_bat 0.35 A, nominal. »*
+5. L'EPS actionne le premier verrou (pas de second verrou pour les mises sous tension de routine).
+6. L'EPS annonce le courant : *« FD, EPS — htr_bat 0.35 A, nominal. »*
 7. Le SPACON vérifie et consigne : *« FD, SPACON — htr_bat verified, log entry. »*
 
 Le tableau complet :
 
-Tableau 10.13 — Mise sous tension séquentielle de LEOP-007 en huit étapes, avec responsables, préconditions et points de vigilance.
+Tableau 10.13 — Mise sous tension séquentielle de LEOP-007 en six étapes, avec responsables, préconditions et points de vigilance.
 
 | N° | Responsable | Action | Précondition | Comportement attendu | Points de vigilance |
 |---|-------|--------|---------------|---------------------|-----------|
-| 1 | EPS | Vérifier l'état de référence de l'EPS : `HK_REQUEST(sid=1)` (S3.27) | logiciel applicatif en cours d'exécution | `eps.bus_voltage` (0x0105) 27–29 V ; `eps.bat_soc` (0x0101) > 60 % ; `eps.power_gen` (0x0107) > 0 W | SoC inférieur à 60 % : suspendre, ne pas lancer la séquence |
-| 2 | EPS | Alimenter le réchauffeur de batterie : `EPS_POWER_ON(line_index=5)` (S8.1, **func 19**) | bus stable, SoC > 60 % | `eps.pl_htr_bat` (0x0115) = 1 dans les 5 s ; consommation +~6 W dans les 30 s ; température de la batterie évoluant vers la consigne de 5 °C dans les 120 s | courant élevé prolongé (réchauffeur en court-circuit) ; aucune hausse de température (réchauffeur en circuit ouvert) |
-| 3 | EPS | Alimenter le réchauffeur de l'OBC : `EPS_POWER_ON(line_index=6)` (S8.1, func 19) | bus stable | `eps.pl_htr_obc` (0x0116) = 1 dans les 5 s ; `tcs.temp_obc` (0x0406) évoluant vers la consigne dans les 120 s ; +~3 W | consommation inattendue sur une ligne voisine |
-| 4 | EPS → AOCS | Alimenter la ligne AOCS et amorcer l'AOCS : `EPS_POWER_ON(line_index=7)`, puis `HK_ENABLE(sid=2)` (**S3.5**), puis `AOCS_SET_MODE(mode=2)` (S8.1, **func 0**) — DETUMBLE | htr_bat dans sa plage, zone OBC correcte | `eps.pl_aocs_wheels` (0x0117) = 1 ; SID 2 émis dans un intervalle de 4 s ; `aocs.mode` (0x020F) = 2 dans les 10 s ; `aocs.rate_roll/pitch/yaw` (0x0204–0x0206) en baisse dans les 60 s ; +~12 W | mode bloqué à 0 : l'écriture de ligne n'a pas été prise en compte ; SID 2 muet : alimenter la ligne n'active **pas** le SID |
-| 5 | AOCS | Mettre en service les capteurs, puis pointer vers le Soleil : `HK_REQUEST(sid=2)` ; attendre des vitesses < 0.5 °/s ; `AOCS_SET_MODE(mode=3)` — COARSE_SUN | vitesses sous le seuil | `aocs.mag_enabled` (0x025C) = 1, norme du champ 25–65 µT ; `aocs.mode` = 3 dans les 10 s ; `aocs.att_error` (0x0217) en baisse dans les 120 s, < 5° | commander le mode 3 trop tôt ; magnétomètre invalide (la loi B-dot repose uniquement sur le magnétomètre : sans lui, DETUMBLE ne fait rien) |
-| 6 | EPS → charge utile | Alimenter la charge utile et la mettre en attente : `EPS_POWER_ON(line_index=3)` ; `PAYLOAD_SET_MODE(mode=1)` (S8.1, **func 26**) ; `HK_ENABLE(sid=5)` | attitude stable | `eps.pl_payload` (0x0113) = 1 ; `payload.mode` (0x0600) = 1 dans les 10 s ; SID 5 émis dans un intervalle de 8 s ; `payload.fpa_temp` (0x0601) ~ambiante ; +~8 W | utiliser `SET_PAYLOAD_MODE`, que le catalogue associe à `EPS_PAYLOAD_MODE` (func **16**), commande différente de func 26 |
-| 7 | EPS → charge utile | Alimenter et démarrer le refroidisseur : `EPS_POWER_ON(line_index=4)` ; `FPA_COOLER(on=1)` (S8.1, **func 43**) | charge utile en STANDBY | `eps.pl_fpa_cooler` (0x0114) = 1 ; `payload.fpa_temp` en baisse vers la consigne par défaut de **−15 °C** dans les 300 s ; +~15 W | citer une consigne hors de la plage commandable de **−20 °C à 0 °C** : un seuil « < −25 °C » ne peut jamais être atteint |
-| 8 | FD + SPACON | Tour de table GO/NO-GO final, puis le **responsable de mission** déclare la phase : `SYS_SET_MISSION_PHASE(phase=5, flags=0)` (S8.1, **func 120**) | tous les postes à GO | `eps.spacecraft_phase` (0x0129) = 5 (COMMISSIONING) dans les 5 s | attendre que la phase avance d'elle-même : rien à bord ne la fait passer au-delà de 4 |
+| 1 | EPS | Vérifier l'état de référence de l'EPS : `HK_REQUEST(sid=1)` (S3.27) | logiciel applicatif en service, ailes déployées | `eps.bus_voltage` (0x0105) 26–30 V ; `eps.bat_soc` (0x0101) > 60 % ; `eps.power_gen` (0x0107) > 0 W | SoC sous 60 % — attendre, ne pas lancer la séquence |
+| 2 | EPS + Thermique | Lignes de réchauffeurs **selon le besoin** : `EPS_POWER_ON(line_index=5)` (S8.1, **func 19**) seulement si `tcs.temp_battery` (0x0407) < +5 °C ; `EPS_POWER_ON(line_index=6)` seulement si `tcs.temp_obc` (0x0406) < 0 °C | bus stable, SoC > 60 % | `eps.pl_htr_bat` (0x0115) / `eps.pl_htr_obc` (0x0116) = 1 en 5 s pour chaque ligne alimentée ; +~6 W / +~3 W | alimenter un réchauffeur dont la zone n'a pas besoin ; courant élevé durable (court-circuit du réchauffeur) |
+| 3 | EPS → AOCS | Alimenter la ligne de la suite AOCS et activer sa HK : `EPS_POWER_ON(line_index=7)`, puis `HK_ENABLE(sid=2)` (**S3.5**) | étape 2 faite | `eps.pl_aocs_wheels` (0x0117) = 1 ; SID 2 émis en moins d'un intervalle ; +~12 W | s'attendre à voir les roues démarrer — la ligne alimente la suite, et `aocs.wheels_enabled` (0x0260) reste à 0 jusqu'à COM-004 ; SID 2 muet — alimenter la ligne n'active **pas** le SID |
+| 4 | AOCS | Activer les éléments de DETUMBLE et le récepteur GPS : `S2_AOCS_MAGNETOMETER(device_id=521, state=1)` ; `MTQ_ENABLE(enable=1)` (S8.1, **func 9**) ; `S2_AOCS_GPS_RECEIVER(device_id=527, state=1)` | SID 2 émis | `aocs.mtq_enabled` (0x025E) = 1 en 10 s ; le délai d'acquisition du premier point GPS commence | commander DETUMBLE d'abord — refus avec `0x0A20` (pas de magnétomètre) ou `0x0A21` (pas de magnétocoupleurs) |
+| 5 | AOCS | Commander DETUMBLE : `AOCS_SET_MODE(mode=2)` (S8.1, **func 0**) | deux éléments activés | `aocs.mode` (0x020F) = 2 en 10 s ; `aocs.mag_enabled` (0x025C) = 1 ; `aocs.mag_field_total` (0x0277) 5–70 µT ; vitesses (0x0204–0x0206) en baisse en 60 s | refus avec `0x0004` — l'écriture de la ligne n'a pas pris ; champ nul — le magnétomètre est éteint et la loi B-dot est aveugle |
+| 6 | EPS | Confirmer l'état d'alimentation de sortie : `HK_REQUEST(sid=1)` | DETUMBLE actif | `eps.pl_payload` (0x0113), `eps.pl_fpa_cooler` (0x0114), `eps.pl_prop` (0x014A) et `aocs.wheels_enabled` (0x0260) tous à 0 ; marge de puissance positive | toute mise sous tension prématurée — la ligne charge utile relève de COM-009, celle du refroidisseur de COM-010 |
+
+Après l'étape 6, l'AOCS amortit. LEOP-005 observe le passage automatique
+en COARSE_SUN et LEOP-003 déclare la phase 5 : rien dans LEOP-007 ne
+commande le mode 3 ni la phase.
 
 #### Pourquoi l'amortissement est si long
 
-L'étape 4 fait passer le satellite en DETUMBLE, et l'attente qui suit est la
+L'étape 5 fait passer le satellite en DETUMBLE, et l'attente qui suit est la
 partie de la LEOP que les équipes évaluent systématiquement mal ; il vaut donc la peine d'être
 précis sur la physique.
 
@@ -4458,38 +4533,43 @@ $k = 4\times10^{6}$ ne converge pas du tout.
 
 #### Points de décision à simuler
 
-1. **À l'étape 2, le courant d'appel atteint 1,2 A (environ 3,4 × la valeur nominale de 0,35 A).** Il peut s'agir d'une véritable
-   panne du sous-système, ou simplement du courant d'appel d'un démarrage à froid. L'EPS recommande une
-   attente de 60 s pour observer la tendance ; le FD doit décider. Si le courant redescend
-   à sa valeur nominale dans les 30 s, continuer ; s'il reste élevé, appliquer CTG-012
-   (traitement d'une surintensité).
+1. **L'appel de courant de l'étape 2 est de 1,2 A (environ 3,4 fois les
+   0,35 A nominaux)** sur une ligne de réchauffeur dont la zone batterie
+   froide avait besoin. Il peut s'agir d'un vrai défaut du sous-système ou
+   d'un appel de courant au démarrage à froid. L'EPS recommande d'attendre
+   60 s pour observer la tendance ; le FD doit décider. Si le courant
+   revient au nominal en 30 s, poursuivre ; s'il reste élevé, appliquer
+   CTG-012 (réponse à une surintensité).
 
-2. **À l'étape 4, le SID 2 apparaît, mais une roue indique une vitesse invalide.**
-   L'AOCS peut soit abandonner LEOP-007 et appliquer CTG-007 (anomalie de roue
-   de réaction), soit continuer : les roues sont montées en pyramide à quatre roues, et
-   **le pointage FINE fonctionne avec trois**, avec déclaration de `fine_degraded` et une
-   bande morte élargie. L'amortissement lui-même n'a aucunement besoin des roues : il
-   s'effectue entièrement avec les magnétocoupleurs. Une panne de roue n'est donc pas une
-   raison d'interrompre l'étape 4. Les vitesses de roue sont en lecture seule en 0x0207–0x020A ;
-   les voies de commande sont `RW_SET_SPEED_BIAS` (S8.1 func 8 ; le
-   biais est **ajouté** à la vitesse courante) et `AOCS_RW_RAMP_DOWN`
-   (func 14, `wheel_idx` 255 = toutes).
+2. **Étape 5 : `AOCS_SET_MODE(mode=2)` est refusée.** Lire le code d'échec
+   avant toute chose. `0x0004` signifie que l'écriture de la ligne de la
+   suite AOCS n'a pas pris — renvoyer `EPS_POWER_ON(line_index=7)` et
+   vérifier `eps.pl_aocs_wheels` (0x0117). `0x0A20` signifie pas de
+   magnétomètre et `0x0A21` pas de magnétocoupleurs : l'étape 4 n'a pas
+   pris. Renvoyer la commande de mode à l'identique sera de nouveau refusé
+   pour la même raison. Il n'existe pas de magnétomètre redondant. Les
+   roues n'ont rien à voir ici : elles sont encore désactivées, et
+   l'amortissement se fait entièrement avec les magnétocoupleurs.
 
-3. **Étape 4/5 : les vitesses plafonnent à 0,6 °/s et cessent de baisser.** Deux
-   interprétations : la loi converge mais la géométrie est
-   momentanément défavorable (la vitesse est presque parallèle à **B**, de sorte qu'il reste
-   peu de composante perpendiculaire à amortir) ; ou le magnétomètre a été
-   perdu et la loi B-dot ne commande plus rien. Pour les distinguer, lire
-   `aocs.mtq_x/y/z_duty` (0x0258–0x025A) et `aocs.mtq_enabled`
-   (0x025E). Des rapports cycliques non nuls avec une vitesse bloquée relèvent de la géométrie : attendre
-   quelques minutes que le champ balaie le satellite. Des rapports cycliques nuls signalent une véritable panne.
+3. **Après l'étape 5 (LEOP-005) : les vitesses plafonnent à 0,6 °/s et ne
+   baissent plus.** Deux interprétations : la loi converge mais la
+   géométrie est momentanément défavorable (la vitesse est presque
+   parallèle à **B**, il reste donc peu de composante perpendiculaire à
+   amortir) ; ou le magnétomètre a été perdu et la loi B-dot ne commande
+   plus rien. Les distinguer : lire `aocs.mtq_x/y/z_duty` (0x0258–0x025A)
+   et `aocs.mtq_enabled` (0x025E). Des rapports cycliques non nuls avec une
+   vitesse bloquée relèvent de la géométrie — attendre quelques minutes
+   que le champ tourne. Des rapports cycliques nuls signalent un vrai
+   défaut.
 
-4. **Étape 7 : le refroidisseur n'atteint pas la consigne commandée.** Lire
-   `payload.cooler_margin_k` (0x064B). Une valeur ≤ 0 signifie que le refroidisseur
-   ne peut physiquement pas atteindre cette consigne avec la température de puits
-   et la charge actuelles : le refroidisseur du FPA est un cryoréfrigérateur Stirling
-   miniature dont la capacité se dégrade avec ΔT, et non un empilement Peltier qui
-   finira par y arriver. La solution est une consigne plus chaude, et non une attente plus longue.
+4. **Après l'étape 6 : pas encore de point GPS.** Un démarrage à froid
+   prend jusqu'à 15 minutes depuis la mise sous tension de l'étape 4. Rien
+   dans LEOP-007 ne l'attend : LEOP-006 règle d'abord l'horloge depuis le
+   sol et ne l'asservit au GPS qu'une fois le point acquis, et LEOP-003 se
+   replie sur la distance et le Doppler mesurés au sol s'il n'y a toujours
+   pas de point après 30 minutes. La question n'est pas d'attendre ou non,
+   mais de savoir si quelqu'un a commencé à traiter l'absence de point
+   comme une raison de suspendre.
 
 #### Écarts fréquents
 
@@ -4497,23 +4577,26 @@ Tableau 10.14 — Écarts fréquents de LEOP-007, avec causes premières probabl
 
 | Écart | Cause première probable | Reprise |
 |-----------|-------------------|----------|
-| Étapes 2–3 nominales, consommation à l'étape 4 durablement supérieure aux attentes | Variation du courant du générateur solaire masquant l'échelon propre à la ligne | Attendre 30 s sur la partie éclairée de l'orbite ; l'EPS comptabilise d'après l'état réel des actionneurs : comparer donc au courant de la ligne, et non au total du bus |
-| Le SID 2 n'apparaît jamais après la mise sous tension de la ligne `aocs_wheels` | La commande `HK_ENABLE(sid=2)` n'a jamais été envoyée : alimenter une ligne n'active pas son SID | Envoyer `HK_ENABLE(sid=2)` (S3.5) ; le SID 2 apparaît dans un intervalle de 4 s |
-| `AOCS_SET_MODE` refusée avec 0x0004 après la mise sous tension de la ligne | L'écriture de ligne de l'EPS n'a pas été prise en compte | Renvoyer `EPS_POWER_ON(line_index=7)`, vérifier `eps.pl_aocs_wheels` (0x0117) = 1, puis renvoyer la commande de mode |
-| La vitesse sur un axe du satellite *augmente* pendant l'amortissement | Attendu : la loi B-dot n'amortit que la composante perpendiculaire, l'énergie passe donc d'un axe à l'autre | Rien. Juger la RSS, pas l'axe |
-| Les vitesses augmentent sur tous les axes | Polarité des magnétocoupleurs inversée | Commander immédiatement `AOCS_SET_MODE(mode=0)` (OFF) et analyser la cause avant de revenir en DETUMBLE |
-| L'amortissement ne progresse pas du tout et les rapports cycliques des barreaux sont nuls | Magnétomètre perdu : la loi B-dot repose uniquement sur le magnétomètre | Redémarrer le magnétomètre (unité unique, aucune rechange vers laquelle basculer) ; le bon état des gyroscopes ne vous apprend rien ici |
+| Étape 2 nominale, consommation à l'étape 3 durablement supérieure aux attentes | Variation du courant du générateur solaire masquant l'échelon propre à la ligne | Attendre 30 s sur la partie éclairée de l'orbite ; l'EPS comptabilise d'après l'état réel des actionneurs : comparer donc au courant de la ligne, et non au total du bus |
+| Le SID 2 n'apparaît jamais après la mise sous tension de la ligne `aocs_wheels` | `HK_ENABLE(sid=2)` n'a jamais été envoyée — alimenter une ligne n'active pas son SID | Envoyer `HK_ENABLE(sid=2)` (S3.5) ; le SID 2 apparaît en moins d'un intervalle |
+| `AOCS_SET_MODE` refusée avec 0x0004 après la mise sous tension | L'écriture de la ligne EPS n'a pas pris | Renvoyer `EPS_POWER_ON(line_index=7)`, vérifier `eps.pl_aocs_wheels` (0x0117) = 1, puis réessayer la commande de mode |
+| `AOCS_SET_MODE` refusée avec 0x0A20 ou 0x0A21 | L'élément magnétomètre ou magnétocoupleurs de l'étape 4 n'a pas pris | Renvoyer `S2_AOCS_MAGNETOMETER(device_id=521, state=1)` ou `MTQ_ENABLE(enable=1)`, puis réessayer |
+| La vitesse sur un axe *augmente* pendant l'amortissement | Attendu — la loi B-dot n'amortit que la composante perpendiculaire, l'énergie passe donc d'un axe à l'autre | Rien. Juger la RSS, pas l'axe |
+| Les vitesses augmentent sur tous les axes | Polarité des magnétocoupleurs inversée | Commander immédiatement `AOCS_SET_MODE(mode=0)` (OFF) et investiguer avant de revenir en DETUMBLE |
+| L'amortissement ne progresse pas du tout et les rapports cycliques des barreaux sont nuls | Magnétomètre perdu — la loi B-dot ne repose que sur le magnétomètre | Redémarrer le magnétomètre (unité unique, pas de rechange vers laquelle basculer) ; la bonne santé des gyroscopes n'apprend rien ici |
 
 #### Pistes de débriefing
 
-- Durée totale de *commande* de LEOP-007 (environ 20 à 30 min), indiquée
-  séparément de l'attente d'amortissement, qui relève de la physique et que l'équipe ne peut pas
-  accélérer.
-- Tous les GO du FD ont-ils fait l'objet d'un tour de table explicite, ou certains ont-ils reçu un
-  *« go ahead »* lancé au passage ?
-- Toutes les consommations de courant se situaient-elles dans l'enveloppe attendue dès la première
-  lecture ?
-- Quelqu'un a-t-il interprété la hausse de vitesse sur un seul axe comme une défaillance de la loi de commande ?
+- Durée totale de *commande* de LEOP-007 (elle tient dans un contact de
+  8 minutes), indiquée séparément de l'attente de l'amortissement, qui
+  relève de la physique et que l'équipe ne peut pas accélérer.
+- Tous les GO du FD ont-ils été explicitement demandés, ou certains
+  ont-ils été accordés au passage, d'un simple *« allez-y »* ?
+- Toutes les consommations étaient-elles dans l'enveloppe attendue à la
+  première lecture ?
+- Quelqu'un a-t-il commandé COARSE_SUN au lieu de l'attendre, ou
+  interprété la hausse de la vitesse sur un seul axe comme une défaillance
+  de la loi de commande ?
 
 ---
 
@@ -4537,8 +4620,8 @@ du type d'erreur à traquer partout ailleurs dans ce manuel :
    la distance nécessaire au temps de propagation aller n'arrivait donc jamais.
 3. **Sa valeur d'OWLT était fausse d'un facteur trois.** `ttc.range_km` est
    la distance oblique *géométrique* et elle est publiée qu'une station
-   soit en visibilité ou non : pour l'orbite de référence d'EO-Sat-1, elle vaut environ 6530 km
-   hors contact et 1000–2000 km pendant un passage, soit **3–22 ms**, et non
+   soit en visibilité ou non : pour l'orbite de référence d'EOSAT-1, elle vaut environ 6530 km
+   hors contact et 1000–2100 km pendant un passage, soit **3–22 ms**, et non
    « 2–8 ms ». Cela reste négligeable devant le seuil LEOP de 1.0 s,
    ce qui explique précisément pourquoi on la consigne avant de passer à la suite. Une fiche qui cite une
    valeur que le satellite ne produit jamais apprend à l'opérateur à ne pas vérifier.
@@ -4601,7 +4684,7 @@ de la première lumière).
 - **Passages prévus pendant le quart :** 4. Le référentiel pédagogique
   est le **réseau complet de cinq stations** (Iqaluit, Troll, Svalbard,
   Inuvik, O'Higgins) : les quatre passages du quart sont donc choisis
-  dans un réseau qui offre environ 51 passages par jour, avec un écart
+  dans un réseau qui offre environ 51 passages par jour, avec un écart
   médian de 33 min.
 - **Facteur d'accélération :** fixé par le directeur de mission.
 - **Le changement de phase est une déclaration du sol.** L'équipe de
@@ -4630,8 +4713,8 @@ Tableau 11.1 — Exécution des procédures de recette en orbite sur quatre pass
 
 | Passage | Procédures | Activité critique |
 |---|---|---|
-| 1 | COM-001 Vérification de l'EPS ; COM-002 Vérification du TCS ; COM-003 Étalonnage des capteurs SCAO ; COM-004 Vérification des actionneurs SCAO | Chacune des quatre roues de réaction est polarisée dans les deux sens puis ramenée à zéro |
-| 2 | COM-005 Transitions de modes SCAO ; COM-006 Vérification de la liaison TTC ; COM-007 Vérification de l'OBDH ; COM-008 Configuration de la FDIR | Le satellite atteint NOMINAL (mode 4) pour la première fois ; les deux échelons de l'échelle de débits TM sont caractérisés ; la table FDIR nominale s'arme |
+| 1 | COM-001 Vérification de l'EPS ; COM-002 Vérification du TCS ; COM-004 Vérification des actionneurs SCAO ; COM-003 Étalonnage des capteurs SCAO | Les quatre roues sont activées et le satellite atteint pour la première fois le NOMINAL piloté par les roues (mode 4) ; chaque roue est polarisée dans les deux sens puis ramenée à zéro ; le biais gyroscopique est ensuite étalonné à bord dans ce NOMINAL |
+| 2 | COM-005 Transitions de modes SCAO ; COM-006 Vérification de la liaison TTC ; COM-007 Vérification de l'OBDH ; COM-008 Configuration de la FDIR | L'échelle des modes AOCS est parcourue jusqu'à FINE_POINT ; les deux échelons de l'échelle de débits TM sont caractérisés ; la pile de protection (S12, S19, verrouillage du délestage) est inventoriée et testée |
 | 3 | COM-009 Mise sous tension de la charge utile ; COM-010 Activation du refroidisseur du FPA | Démarrage du refroidisseur — un cryoréfrigérateur de type Stirling de 15 W fait passer le FPA d'environ +11 °C à la consigne de −15 °C en une dizaine de minutes |
 | 4 | COM-011 Étalonnage de la charge utile ; COM-012 Première lumière | Séries d'obscurité et de champ plat acquises en mode CALIBRATION (3), puis une image d'une cible de courant océanique capturée et transmise au sol |
 
@@ -4683,9 +4766,11 @@ formel justifié).
   à zéro avec `AOCS_RW_RAMP_DOWN`. Les vitesses de roue (0x0207–0x020A)
   sont des télémesures en lecture seule ; il n'existe aucun chemin
   `SET_PARAM` vers une vitesse de roue.
-- Pilote au passage 2 : COM-005, transition de modes COARSE_SUN (3) →
-  NOMINAL (4) → FINE_POINT (5). Chaque transition fait l'objet d'une TC
-  distincte et d'une vérification distincte.
+- Pilote au passage 2 : COM-005, transitions de modes NOMINAL (4) →
+  FINE_POINT (5) → NOMINAL (4), INERTIAL (9) et retour, maintien
+  COARSE_SUN (3) et DESAT (7). Chaque transition commandée fait l'objet
+  d'une TC distincte et d'une vérification distincte ; les retours
+  automatiques s'observent, ils ne se commandent pas.
 - En appui au passage 4 : la prise de vue exige FINE_POINT ; l'AOCS
   envoie `AOCS_SET_MODE(mode=5)` après que
   `AOCS_FINE_READY_CHECK` a lu `aocs.fine_ready` (0x02C5) = 0.
@@ -4769,12 +4854,12 @@ formel justifié).
   GPS du dernier passage du jour de LEOP date maintenant de plusieurs
   orbites ; le rafraîchir).
 - Pilote au passage 4 : calculer l'empreinte au sol de la cible de
-  courant océanique choisie — fauchée de 240 km en travers de la trace,
-  60 km le long de la trace pour la bande standard de 2048 lignes. Les
+  courant océanique choisie — fauchée de 273 km en travers de la trace,
+  environ 59 km le long de la trace pour la bande standard de 2048 lignes. Les
   transmettre au poste Charge utile pour les paramètres de
   `PAYLOAD_CAPTURE`.
-- Écueils : confondre la fauchée (240 km, une largeur d'empreinte) avec
-  la distance d'échantillonnage au sol (GSD, 29,3 m, une grandeur par pixel). Ce sont deux
+- Écueils : confondre la fauchée (273 km, une largeur d'empreinte) avec
+  la distance d'échantillonnage au sol (GSD, 33,4 m, une grandeur par pixel). Ce sont deux
   propriétés du même instrument, et aucune ne remplace l'autre.
 
 ### Segment sol
@@ -4883,7 +4968,7 @@ régulée et comptabilisée correctement.
   la batterie ; `eps.bat_soc` (0x0101) > 70 %.
 - Pourquoi : la batterie est une GomSpace NanoPower BPX 8S-1P —
   **100 Wh, 3 Ah, 28,8 V nominaux**, un boîtier de 0,33 U d'éléments
-  18650. Sur EO-Sat-1, sa tension aux bornes va de `soc_0_v` = 21.5 V
+  18650. Sur EOSAT-1, sa tension aux bornes va de `soc_0_v` = 21.5 V
   à vide à `soc_100_v` = 29.2 V à pleine charge, 26,4 V en nominal. Il
   s'agit d'une chaîne de huit éléments en série, et non d'une batterie
   4S ; c'est elle qui rend possible le bus régulé d'environ 28 V. Ne pas
@@ -4898,7 +4983,7 @@ régulée et comptabilisée correctement.
 - Vérification : `eps.power_gen` (0x0107) dans la bande éclairée
   [40, 75] W.
 - Pourquoi : le générateur comprend 0,198 m² de cellules fixées sur
-  cinq faces de la structure (la face −Z porte l'ouverture de l'imageur
+  cinq faces de la structure (la face −Z, orientée vers le nadir, porte l'ouverture de l'imageur
   et le radiateur et n'a pas de cellules), plus **0,120 m² de cellules
   par aile déployable** sur un mécanisme d'entraînement à un axe — soit
   0,438 m² de cellules au total une fois déployé. La constante dans le
@@ -4926,10 +5011,10 @@ une éclipse)
   éclipse ; baisse du SoC < 1.5 %/min ; `eps.bus_voltage` > 27.0 V à
   mi-éclipse.
 - Pourquoi : c'est le test de *survie*. L'orbite dure 5669 s (94,5 min)
-  et la fraction d'éclipse varie sur l'année entre 0,302 et 0,367 ; une
-  éclipse dure donc **de 28,5 à 34,7 minutes**. Avec une batterie de
-  100 Wh et une charge nominale moyenne sur l'orbite d'environ 28,7 W,
-  une éclipse de 33 minutes coûte environ 15,8 % de SoC, soit environ
+  et la fraction d'éclipse varie sur l'année entre 0,351 et 0,372 ;
+  une éclipse dure donc **de 33,2 à 35,2 minutes**. Avec une batterie de
+  100 Wh et une charge nominale moyenne sur l'orbite d'environ 28,8 W,
+  une éclipse de 34 minutes coûte environ 16,3 % de SoC, soit environ
   0,5 %/min. Le seuil de vérification de 1,5 %/min est un plafond, pas
   une valeur attendue : une mesure proche de ce plafond révèle une
   charge que vous n'avez pas commandée. L'échelle de protection
@@ -4957,25 +5042,29 @@ une éclipse)
 
 - L'EPS calcule : production moyenne sur l'orbite, consommation
   moyenne, SoC en fin d'éclipse, marge.
-- « FD, EPS — orbit-average generation 38 watts, load 28.7 watts,
-  margin plus 9.3 watts, ratio 1.33. End-of-eclipse SoC predicted
+- « FD, EPS — orbit-average generation 45.1 watts, load 28.8 watts,
+  margin plus 16.3 watts, ratio 1.57. End-of-eclipse SoC predicted
   69 percent under nominal load. Healthy. »
 - Vérification : marge positive ; SoC en fin d'éclipse > 50 %.
 - Pourquoi : une seule orbite positive ne prouve rien — il faut prédire
-  le régime établi. Le cas dimensionnant est l'EOL au **bêta le plus
-  défavorable (49,8°)**, pour lequel la production moyenne sur l'orbite
-  vaut 38,0 W. En regard :
+  le régime établi. Sur l'année, β va de −20,8° à −31,2°. Le cas
+  dimensionnant pour la production est l'EOL à **β = −31,2°**, pour lequel
+  la production moyenne sur l'orbite vaut 45,1 W : l'entraînement du
+  générateur ne suit le Soleil qu'à cos β près, si bien que le plus
+  grand |β| donne la plus faible production, bien que son éclipse soit la plus
+  courte. En regard :
 
   | Profil | Production (W) | Charge (W) | Marge (W) | Rapport |
   |---|---|---|---|---|
-  | quiescent | 38,0 | 25,5 | +12,5 | 1,49 |
-  | **nominal** | **38,0** | **28,7** | **+9,3** | **1,33** |
-  | nominal_imaging | 38,0 | 32,5 | +5,5 | 1,17 |
-  | manoeuvre | 38,0 | 32,0 | +6,0 | 1,19 |
-  | worst (cas d'abus) | 38,0 | 45,3 | −7,3 | 0,84 |
+  | quiescent | 45,1 | 25,6 | +19,5 | 1,76 |
+  | **nominal** | **45,1** | **28,8** | **+16,3** | **1,57** |
+  | nominal_imaging | 45,1 | 32,8 | +12,3 | 1,38 |
+  | manoeuvre | 45,1 | 32,1 | +12,9 | 1,40 |
+  | worst (cas d'abus) | 45,1 | 46,8 | −1,7 | 0,96 |
 
-  Au bêta d'éclipse maximale (24,2°), la production monte à 45,0 W et
-  le cas nominal boucle à 1,57×. Le profil `worst` est volontairement
+  À β = −20,8°, la décharge la plus profonde (l'éclipse la plus longue),
+  la production est de 47,0 W et le cas nominal boucle à 1,63×. En début
+  de vie, ces deux valeurs sont 49,1 W et 51,2 W. Le profil `worst` est volontairement
   négatif — il maintient FINE pendant une orbite entière, fait tourner
   le refroidisseur en continu, prend des images pendant l'éclipse et
   vide la mémoire en HIGH à chaque passage. **Un 6U capable de tenir ce
@@ -5098,18 +5187,20 @@ une éclipse)
 
 Quatre roues de réaction en pyramide (azimuts 45/135/225/315°,
 élévation de 30° au-dessus du plan XY), plus trois barreaux
-magnétocoupleurs. La fiche recette chaque roue individuellement, puis
-démontre le fonctionnement de la voie magnétique de déchargement du
-moment cinétique.
+magnétocoupleurs. La fiche active les roues, commande le NOMINAL piloté
+par les roues, recette chaque roue individuellement, puis démontre le
+fonctionnement de la voie magnétique de déchargement du moment cinétique.
 
 #### Préparation préalable
 
-- COM-003 (Étalonnage des capteurs SCAO) terminée — senseurs stellaires
-  actifs. Il y a **deux** senseurs stellaires, ST1 et ST2, sélectionnés
-  avec `ST_SELECT` (S8 func 6). Ce n'est pas une conception à tête
-  unique.
-- `aocs.mode` (0x020F) = 3 (COARSE_SUN).
-- Vitesses angulaires < 0.05 °/s sur tous les axes, lues dans
+- COM-001 et COM-002 terminées ; COM-003 n'a **pas** encore été
+  exécutée (décision Q16). Senseurs stellaires et gyroscopes sont encore
+  éteints — il y a **deux** senseurs stellaires, ST1 et ST2, sélectionnés
+  avec `ST_SELECT` (S8 func 6), et COM-003 les met en service après
+  cette fiche.
+- `aocs.mode` (0x020F) = 3 (COARSE_SUN), le maintien de la LEOP ;
+  l'étape 2 de la fiche commande NOMINAL une fois les roues activées.
+- Vitesses angulaires < 0,5 °/s sur tous les axes, lues dans
   `aocs.rate_roll` (0x0204), `aocs.rate_pitch` (0x0205),
   `aocs.rate_yaw` (0x0206). Il n'existe pas de paramètre
   `aocs.body_rates`.
@@ -5124,7 +5215,7 @@ commandes qui font tourner une roue sont :
 
 - `RW_SET_SPEED_BIAS(wheel_idx, bias_rpm)` — Service 8,
   Subtype 1, **func_id 8**. La polarisation s'**ajoute à la vitesse
-  courante de la roue** : la référence de l'étape 1 sert donc de base à
+  courante de la roue** : la référence de l'étape 3 sert donc de base à
   toutes les vérifications suivantes. Polariser deux fois de +2000 ne
   place pas la roue à 2000 tr/min ; cela la place à la référence +4000.
 - `AOCS_RW_RAMP_DOWN(wheel_idx, target_rpm)` — Service 8,
@@ -5139,16 +5230,39 @@ diagnostic classique.
 
 #### Conduite étape par étape
 
-**Étape 1 — Consigner les vitesses de roue de référence**
+**Étape 1 — Activer les quatre roues**
+
+- AOCS : « FD, AOCS — first-key `AOCS_ENABLE_WHEEL(wheel_idx=0)` »,
+  puis `wheel_idx` 1, 2 et 3 (S8 func_id 3), une commande par roue.
+- Vérification : `aocs.wheels_enabled` (0x0260) = 4 en 10 s.
+- Pourquoi : le chargeur d'amorçage laisse toutes les roues DISABLED et
+  rien d'autre dans le catalogue n'en active une. Ne pas quitter la fiche
+  avec moins de trois roues.
+
+**Étape 2 — Commander le NOMINAL piloté par les roues**
+
+- AOCS : « FD, AOCS — first-key `AOCS_SET_MODE(mode=4)`, NOMINAL. » Le
+  FD valide en second.
+- Vérification : `aocs.mode` (0x020F) = 4 (ou 8 en éclipse) en 300 s ;
+  `aocs.commanded_mode` (0x0297) = 4.
+- Pourquoi : sans senseur stellaire, rien ne fait sortir l'AOCS du
+  maintien COARSE_SUN de la LEOP ; la fiche commande donc NOMINAL
+  elle-même. Le simulateur l'accepte sans senseur ; la connaissance
+  d'attitude reste sur la voie grossière Soleil–magnétomètre jusqu'à
+  COM-003. C'est cette étape qui rend COM-003 possible : son seuil
+  d'étalonnage de 0,10 °/s est atteint en NOMINAL piloté par les roues,
+  jamais dans le maintien par magnétocoupleurs seuls (décision Q16).
+
+**Étape 3 — Consigner les vitesses de roue de référence**
 
 - AOCS : « FD, AOCS — `HK_REQUEST(sid=2)`. RW1 through RW4 reading
   plus 1180, minus 1210, plus 1195, minus 1205 rpm. Recorded as
   baseline. »
-- Pourquoi : le jeu de polarisations nominal est de ±1200 tr/min,
-  disposé de sorte que le *moment cinétique net du satellite* soit nul.
-  Des vitesses non nulles en COARSE_SUN sont donc attendues.
+- Pourquoi : les roues tout juste activées reprennent aussitôt la charge
+  de contrôle, des vitesses non nulles en NOMINAL sont donc attendues ;
+  cette référence sert de base à tous les contrôles ci-dessous.
 
-**Étapes 2 à 5 — Chaque roue à tour de rôle**
+**Étapes 4 et 5 — Chaque roue à tour de rôle**
 
 - AOCS : « FD, AOCS — first-key `RW_SET_SPEED_BIAS(wheel_idx=0,
   bias_rpm=2000.0)`. » Le FD valide en second.
@@ -5174,7 +5288,7 @@ diagnostic classique.
 - Vérification : `aocs.mode` (0x020F) = 7 (DESAT) ;
   `aocs.h_body_mag` (0x02B9) en baisse vers la bande morte de
   5.0 × 10⁻⁴ N·m·s.
-- **Compter de 20 à 50 minutes**, et non cinq à dix. Voir le §13.7 pour
+- **Compter de 20 à 50 minutes**, et non cinq à dix. Voir le §13.7 pour
   en comprendre la raison.
 
 #### Points de décision
@@ -5202,8 +5316,9 @@ diagnostic classique.
 
 ### COM-005 — Transitions de modes SCAO (déroulement approfondi)
 
-Le pivot COARSE_SUN → NOMINAL → FINE_POINT. Chaque transition est une
-procédure distincte à l'intérieur de celle-ci.
+NOMINAL → FINE_POINT et retour, puis INERTIAL, le maintien COARSE_SUN
+et DESAT. Depuis la décision Q16, l'AOCS est en NOMINAL depuis COM-004.
+Chaque transition est une procédure distincte à l'intérieur de celle-ci.
 
 **Les codes de mode sont ceux de `aocs/aocs_mode_codes.yaml`, et aucun
 autre :**
@@ -5227,7 +5342,7 @@ NOMINAL_POINT.
 
 **Étape 1 — Confirmer l'état de départ**
 
-- AOCS : « FD, AOCS — mode 3 COARSE_SUN, body rates roll minus 0.02,
+- AOCS : « FD, AOCS — mode 4 NOMINAL, body rates roll minus 0.02,
   pitch plus 0.01, yaw minus 0.03 deg per second, all below the
   0.05 threshold. »
 - Remarque : l'amortissement repose réellement sur une loi B-dot
@@ -5238,7 +5353,7 @@ NOMINAL_POINT.
   l'amortissement est rapide est fausse, et c'est précisément pour cela
   qu'il est terminé avant le début de cette fiche.
 
-**Étape 2 — Transition vers NOMINAL**
+**Étape 2 — Verrouiller NOMINAL**
 
 - AOCS : « FD, AOCS — first-key `AOCS_SET_MODE(mode=4)`, NOMINAL. » Le
   FD valide en second.
@@ -5249,9 +5364,11 @@ NOMINAL_POINT.
   pointing achieved, `aocs.att_error` 0.42 deg. »
 - Vérification : `aocs.mode` (0x020F) = 4 en 60 s ;
   `aocs.att_error` (0x0217) < 0.5° en 120 s.
-- Pourquoi : COARSE_SUN (3) est l'attitude *récupérable* — Soleil sur
-  les panneaux, faibles vitesses angulaires. On la maintient avant de
-  passer en NOMINAL, car si NOMINAL échoue, on peut revenir à elle.
+- Pourquoi : l'AOCS vole en NOMINAL depuis COM-004 ; la commande verrouille
+  `aocs.commanded_mode` (0x0297) = 4, le chemin de retour sur lequel se
+  règle chaque transition automatique. COARSE_SUN (3) reste l'attitude
+  *récupérable* — Soleil sur les panneaux, faibles vitesses angulaires —
+  sur laquelle se replier si NOMINAL échoue.
 
 **Étape 3 — Contrôler les préconditions du mode FINE avant de le commander**
 
@@ -5280,8 +5397,8 @@ NOMINAL_POINT.
 
 - AOCS : « FD, AOCS — knowledge error 0x02A7 reading 18 arcsec
   3-sigma, control error 0x02A8 0.0188 deg, RSS 0.020 deg on
-  0x02AA. Geolocation error 0x02C7 157 metres, about five ground
-  pixels at 29.3 metre GSD. »
+  0x02AA. Geolocation error 0x02C7 180 metres, about five ground
+  pixels at 33.4 metre GSD. »
 - Les sources de l'estimateur en service se lisent sous forme de masque
   de bits dans `aocs.est_source` (0x02C1) : bit 0, senseur stellaire ;
   bit 1, CSS ; bit 2, magnétomètre ; bit 3, gyromètre. L'étalonnage du
@@ -5351,7 +5468,7 @@ station en visibilité ; bit 6, antenne).
 - TT&C : « FD, TT&C — S-band chain configured, PA on, beacon tier
   released, antenna deployed, `tx_active` reads 1. »
 
-**Un point pédagogique qui trouve sa place ici.** EO-Sat-1 possède
+**Un point pédagogique qui trouve sa place ici.** EOSAT-1 possède
 **deux émetteurs** : la chaîne principale en bande S et une balise UHF
 distincte à antenne fouet, sur la ligne non commutable `ttc_rx`. Couper
 le PA, ou ouvrir la ligne `ttc_tx`, arrête la télémesure en bande S —
@@ -5463,12 +5580,15 @@ l'*émetteur* UHF).
   non un compteur de rejets. L'avoir lu comme tel est un défaut passé
   documenté.
 
-**Étape 3 — Tester la lecture mémoire S6 sur une zone connue**
+**Étape 3 — Chien de garde, puis excursion de mode**
 
-- `MEM_DUMP` est le **Service 6, Subtype 5** ; `MEM_CHECK` est le
-  Service 6, Subtype 9.
-- SPACON : « FD, SPACON — dumped 1 KB from the Boot ROM region at
-  0x00000000, CRC matches expected value, memory intact. »
+- `OBC_DIAGNOSTIC` (S8 func 61) et `GET_PARAM(param_id=0x0316)` :
+  chien de garde armé, `obdh.last_reboot_cause` = 0. La fiche du
+  simulateur ne fait aucun vidage mémoire S6 ; la santé de la mémoire,
+  ce sont les compteurs d'erreurs et de SEU de l'étape 1, lus deux fois.
+- `OBC_SET_MODE(mode=1)`, puis `OBC_SET_MODE(mode=0)` (S8 func 50).
+- SPACON : « FD, SPACON — watchdog armed, no resets; SAFE confirmed,
+  NOMINAL restored, `obdh.mode` reads 0. »
 
 **Étape 4 — Vérifier l'état des bus A/B**
 
@@ -5480,7 +5600,7 @@ l'*émetteur* UHF).
 ### COM-008 — Configuration de la FDIR
 
 C'est l'une des étapes les plus lourdes de conséquences de la recette
-en orbite. Sur EO-Sat-1, la FDIR n'est pas un mécanisme unique mais
+en orbite. Sur EOSAT-1, la FDIR n'est pas un mécanisme unique mais
 trois, et l'opérateur doit bien les distinguer :
 
 - **Le jeu de règles FDIR** (`subsystems/fdir.yaml`) — 17 conditions
@@ -5839,8 +5959,8 @@ capture et forment une famille différente.)
   three-quarters of the pass. »
 - « FD: FDS, target? »
 - FDS : « Target the Labrador Current outflow zone, scene centre
-  52.5 N, 51.2 W. Footprint 240 km across-track by 60 km
-  along-track for a 2048-line strip, 29.3 metre GSD. Sun glint
+  52.5 N, 51.2 W. Footprint 273 km across-track by 59 km
+  along-track for a 2048-line strip, 33.4 metre GSD. Sun glint
   angle 32 deg (acceptable), cloud cover 8 percent per latest
   forecast. »
 - « FD: Ground Seg, downlink ready? »
@@ -5861,8 +5981,8 @@ capture et forment une famille différente.)
 - (Au déclenchement) « FD, Payload — acquiring. »
 - (8,4 s plus tard) « FD, Payload — strip complete. » La longueur de
   bande commandée vaut `lines / line_rate` = 2048 / 244 Hz =
-  **8,4 secondes**, ce qui, à la vitesse de défilement de la trace au
-  sol de 7,14 km/s, correspond à l'empreinte de 60 km le long de la
+  **8,4 secondes**, ce qui, à la vitesse de défilement de la trace au
+  sol de 7,06 km/s, correspond à l'empreinte de 59 km le long de la
   trace annoncée par le FDS.
 - La géolocalisation est horodatée **à bord** à partir des éphémérides
   à l'ouverture de l'obturateur ; ce n'est pas un champ commandé.
@@ -5916,8 +6036,8 @@ capture et forment une famille différente.)
 - Charge utile : « FD, Payload — image quality assessment: mean DN
   per band 1840 / 2102 / 1654 / 891 on the 12-bit 0–4095 scale,
   contrast within expected range. `aocs.geoloc_err_m` (0x02C7)
-  reads 157 metres at the 0.020 degree pointing error — about five
-  ground pixels at 29.3 metre GSD. IMAGE IS SCIENCE USABLE. »
+  reads 180 metres at the 0.020 degree pointing error — about five
+  ground pixels at 33.4 metre GSD. IMAGE IS SCIENCE USABLE. »
 - Responsable de mission : « FD, MM — customer bulletin going out:
   EOSAT-1 First Light achieved at 14:32:18 UTC, target Labrador
   Current, downlink complete, science-usable image acquired. »
@@ -6097,7 +6217,7 @@ lequel le directeur de vol doit statuer. Lisez-le comme l'étape
 reconnaître, préserver, isoler, décider, indexée sur *la gravité de la
 situation*.
 
-**Deux échelles, et ce ne sont pas les mêmes.** EO-Sat-1 signale une
+**Deux échelles, et ce ne sont pas les mêmes.** EOSAT-1 signale une
 **gravité FDIR** sur une échelle de **0 à 4** (0 rien, 1 INFO,
 2 WARNING, 3 ALARM, 4 CRITICAL) et un **niveau d'autonomie** sur une
 échelle de **0 à 3** (0 unité/matériel, 1 logiciel du sous-système,
@@ -6155,9 +6275,10 @@ l'échelle de reprise après perte de liaison TTC — test passif de la
 liaison, réduction du débit à LOW, augmentation de la puissance
 d'émission autorisée par le FD —, avec escalade vers **EMG-004 Perte de
 communication** seulement si aucun des échelons ne rétablit la
-liaison. Le minuteur de perte de commande du satellite lui-même est
-l'ultime filet de sécurité : si le sol reste silencieux, le satellite se
-mettra de lui-même en sécurité.
+liaison. Le minuteur de perte de commande de 24 heures du satellite lui-même est
+l'ultime filet de sécurité : si aucune télécommande valide n'arrive pendant 24 h,
+le satellite bascule sur l'autre transpondeur (règle FDIR TTC-01 ; `cmd_loss_switch_timeout_s`
+dans `ttc.yaml`). Le simulateur ne modélise pas encore ce basculement.
 
 **Anomalies d'alimentation et de l'EPS.** Surintensité sur le bus,
 sous-tension du bus ou charge non commandée. Le geste de préservation
@@ -6364,23 +6485,24 @@ $$ t_{transit} = \frac{T_{orbit}}{\pi} \arccos\!\left(\frac{R_E + h_{station}}{R
 $$ T_{orbit} = \frac{86400}{15.24} = 5669\ \text{s} = 94.5\ \text{min} $$
 
 **Exemple résolu — d'horizon à horizon.** Avec $R_E = 6371$ km et
-$h = 450$ km, $\frac{R_E}{R_E+h} = \frac{6371}{6821} = 0.93403$, et
-$\arccos(0.93403) = 20.93° = 0.36526$ rad. Donc
+$h = 513$ km, $\frac{R_E}{R_E+h} = \frac{6371}{6884} = 0.92548$, et
+$\arccos(0.92548) = 22.26° = 0.38850$ rad. Donc
 
-$$ t_{transit} = \frac{5669}{\pi}\times 0.36526 = 1804\times 0.36526 = 659\ \text{s} = 11.0\ \text{min} $$
+$$ t_{transit} = \frac{5669}{\pi}\times 0.38850 = 1804.5\times 0.38850 = 701\ \text{s} = 11.7\ \text{min} $$
 
 **Avec le masque d'élévation de 5°** — celui qu'utilisent réellement
 les cinq stations —, le demi-angle utile vaut
 
 $$ \gamma = \arccos\!\left(\frac{R_E\cos\varepsilon}{R_E+h}\right) - \varepsilon
-        = \arccos(0.93047) - 5° = 21.48° - 5° = 16.48° $$
+        = \arccos(0.92196) - 5° = 22.79° - 5° = 17.79° $$
 
-$$ t_{contact} = \frac{2\gamma}{360°}\,T_{orbit} = \frac{32.97}{360}\times 5669 = 519\ \text{s} = 8.7\ \text{min} $$
+$$ t_{contact} = \frac{2\gamma}{360°}\,T_{orbit} = \frac{35.57}{360}\times 5669 = 560\ \text{s} = 9.3\ \text{min} $$
 
 C'est le **maximum au zénith**, et il concorde avec le plus long
-passage mesuré de la mission, 514 s. Les passages réels ne sont, pour la
+passage mesuré de la mission, 565 s (l'altitude varie entre 503 et 530 km
+au fil de l'orbite). Les passages réels ne sont, pour la
 plupart, pas au zénith : la **durée moyenne mesurée d'un passage sur le
-réseau de cinq stations est de 447 s (7,5 min)**. Quiconque annonce un
+réseau de cinq stations est de 450 s (7,5 min)**. Quiconque annonce un
 passage utile de onze minutes cite la valeur géométrique d'horizon à
 horizon et a oublié le masque.
 
@@ -6392,10 +6514,10 @@ mission :
 
 | Réseau | Passages / jour | Écart médian | Écart max. |
 |---|---|---|---|
-| Iqaluit + Troll seules | 19,5 | 84 min | 148 min |
-| **Les cinq stations** | **51,5** | **33 min** | **79 min** |
+| Iqaluit + Troll seules | 20,0 | 84 min | 147 min |
+| **Les cinq stations** | **≈ 51** | **33 min** | **79 min** |
 
-Cela représente environ 23 300 secondes de contact par jour, soit
+Cela représente environ 23 200 secondes de contact par jour, soit
 environ 27 % du temps. Tous les exercices de planification de ce
 manuel supposent les valeurs du réseau de cinq stations.
 
@@ -6408,9 +6530,9 @@ passage, lire l'entrée du planning de contacts et confirmer que :
    — la marge boucle avec des dizaines de dB même à 5° —, mais du fait
    que le **palier HIGH est conditionné à 10°** : un passage qui ne
    dépasse jamais 10° ne peut donc porter aucun vidage d'image ;
-3. la durée du passage est dans la norme : 7 à 8,7 min pour un bon
+3. la durée du passage est dans la norme : 7 à 9,3 min pour un bon
    passage, 4 à 6 min pour un passage bas. Une durée annoncée supérieure
-   à environ 8,7 min à cette altitude et avec ce masque est
+   à environ 9,5 min à cette altitude et avec ce masque est
    arithmétiquement impossible et signifie que le planning est faux.
 
 ## 13.3 Prédiction de l'état de charge en sortie d'éclipse
@@ -6428,35 +6550,35 @@ avec $P_{avg}$ en W, $t_{eclipse}$ en heures et $E_{battery}$ en Wh.
 - $E_{battery} = 100$ **Wh**. La batterie est une GomSpace NanoPower BPX
   8S-1P : 100 Wh, 3 Ah, 28,8 V nominaux, environ 500 g. Un seul
   boîtier, un composant de vol réel.
-- $t_{eclipse}$. L'orbite dure 5669 s et la fraction d'éclipse varie sur
-  l'année **de 0,302 à 0,367** ; l'éclipse dure donc **de 28,5 à
-  34,7 min**. Prendre 33 min = 0,550 h comme valeur de travail.
-- $P_{avg} = 28.7$ **W**, la charge moyenne sur l'orbite dans le profil
+- $t_{eclipse}$. L'orbite dure 5669 s et la fraction d'éclipse varie, sur
+  l'année de l'orbite à 10 h 00, **de 0,351 à 0,372** ; l'éclipse dure
+  donc **de 33,2 à 35,2 min**. Prendre 34 min = 0,567 h comme valeur de travail.
+- $P_{avg} = 28.8$ **W**, la charge moyenne sur l'orbite dans le profil
   nominal. Il s'agit d'un **CubeSat 6U** : 6 W pour l'OBC et la PDU,
   1,5 W pour la chaîne de réception toujours alimentée, 5 W
   d'émetteur sur le palier LOW (11 W en HIGH), 9 W de SCAO en NOMINAL,
   2,4 W de charge utile en attente, 15 W de refroidisseur lorsqu'il
   fonctionne. Rien sur ce satellite ne consomme 70 W.
 
-**Exemple résolu.** SoC à l'entrée en éclipse = 85 % ; $P_{avg} = 28.7$ W ;
-$t_{eclipse} = 33$ min $= 0.550$ h ; $E_{battery} = 100$ Wh :
+**Exemple résolu.** SoC à l'entrée en éclipse = 85 % ; $P_{avg} = 28.8$ W ;
+$t_{eclipse} = 34$ min $= 0.567$ h ; $E_{battery} = 100$ Wh :
 
-$$ SoC_{exit} = 85\% - \frac{28.7 \times 0.550}{100}\times 100\%
-  = 85\% - 15.8\% = 69.2\% $$
+$$ SoC_{exit} = 85\% - \frac{28.8 \times 0.567}{100}\times 100\%
+  = 85\% - 16.3\% = 68.7\% $$
 
-Cela représente **15,8 Wh prélevés sur une batterie de 100 Wh**, soit un
+Cela représente **16,3 Wh prélevés sur une batterie de 100 Wh**, soit un
 rythme de décharge d'environ **0,48 %/min**. Vérifiez-le dans l'autre
-sens : 28,7 W pendant 0,55 h font 15,8 Wh, et 15,8 / 100 = 15,8 %. Si
+sens : 28,8 W pendant 0,567 h font 16,3 Wh, et 16,3 / 100 = 16,3 %. Si
 votre résultat n'est pas un pourcentage d'environ quinze pour une orbite
 nominale, vous avez utilisé la mauvaise charge ou la mauvaise batterie.
 
 **Le même calcul dans le cas extrême.** Prenons le profil `worst`
 — FINE maintenu toute l'orbite, refroidisseur en marche continue, prise
 de vue pendant l'éclipse, vidages en palier HIGH à chaque passage — à
-45,3 W sur une éclipse de 34,7 min (0,578 h) : $45.3 \times 0.578 = 26.2$ Wh ;
-le SoC baisse donc de 26,2 points, de 85 % à 58,8 %. C'est encore
+46,8 W sur une éclipse de 35,2 min (0,587 h) : $46.8 \times 0.587 = 27.5$ Wh ;
+le SoC baisse donc de 27,5 points, de 85 % à 57,5 %. C'est encore
 survivable sur une orbite, mais ce profil est déficitaire en production
-sur l'ensemble de l'orbite (38,0 W produits contre 45,3 W consommés) :
+sur l'ensemble de l'orbite (45,1 W produits contre 46,8 W consommés) :
 il ne se rétablit donc pas, et chaque orbite commence plus bas que la
 précédente. C'est le profil type d'un bilan de puissance qui ne boucle
 pas.
@@ -6520,10 +6642,10 @@ de passage.**
 **Convertir en mètres.** Le satellite publie
 `aocs.geoloc_err_m` (0x02C7) = altitude × erreur de pointage totale :
 
-$$ 450\ \text{km} \times 0.0201° \times \frac{\pi}{180} = 450000 \times 3.51\times10^{-4} = 158\ \text{m} $$
+$$ 513\ \text{km} \times 0.0201° \times \frac{\pi}{180} = 513000 \times 3.51\times10^{-4} = 180\ \text{m} $$
 
-— soit environ cinq pixels au sol pour la distance d'échantillonnage au sol (GSD) de 29,3 m de
-l'instrument. Au seuil de 0.05°, elle atteindrait 393 m, soit environ
+— soit environ cinq pixels au sol pour la distance d'échantillonnage au sol (GSD) de 33,4 m de
+l'instrument. Au seuil de 0.05°, elle atteindrait 448 m, soit environ
 treize pixels.
 
 **Règle de travail de l'opérateur.** Avant de commander
@@ -6715,7 +6837,7 @@ est le **temps**, et c'est ce que l'opérateur doit réellement calculer.
 |---|---|---|
 | Temps de canal brut | **262,1 s** | 2097 s |
 | Avec la provision protocolaire de 20 % du planificateur | **327,7 s** | 2621 s |
-| En fraction du passage moyen de 447 s | **73 %** | 586 % |
+| En fraction du passage moyen de 450 s | **73 %** | 582 % |
 
 Une image occupe donc la majeure partie d'un passage, et l'activité
 `data_dump` fournie dure **330 s** — une image, arrondie à l'excès, et
@@ -6752,16 +6874,24 @@ qui dépassent ce seuil.
 est un imageur multispectral à balayage de type « pushbroom » à grand
 champ : 8192 px en travers de la trace au pas de 5,5 µm, pour une
 focale de 84,5 mm, ce qui donne un champ total de 29,856°, une
-**fauchée de 240 km** et une **distance d'échantillonnage au sol (GSD) de 29,3 m** depuis
-450 km. La capture standard est une **bande de 2048 lignes** :
-
-$$ 2048 \times 29.3\ \text{m} = 60.0\ \text{km le long de la trace} $$
+**fauchée de 273 km** et une **distance d'échantillonnage au sol (GSD) de 33,4 m** depuis
+513 km. La capture standard est une **bande de 2048 lignes** :
 
 $$ \frac{2048\ \text{lignes}}{244\ \text{Hz}} = 8.4\ \text{s de balayage} $$
 
-ce qui, à la vitesse de défilement de la trace au sol de 7,14 km/s,
-donne les mêmes 60 km — les deux calculs concordent, et c'est
-précisément le contrôle à effectuer. La lecture du plan focal se fait à
+ce qui, à la vitesse de défilement de la trace au sol de 7,06 km/s,
+donne **59 km le long de la trace**. Le second calcul ne concorde pas :
+
+$$ 2048 \times 33.4\ \text{m} = 68.4\ \text{km le long de la trace} $$
+
+car la cadence de lignes de 244 Hz a été dimensionnée à l'ancienne altitude
+de 450 km (7,14 km/s ÷ 29,3 m). À 513 km, deux lignes successives sont
+espacées de 28,9 m le long de la trace pour un pixel de 33,4 m en travers
+de la trace : l'image est donc légèrement suréchantillonnée le long de la
+trace ; une cadence adaptée à la vitesse serait d'environ 211 Hz.
+`payload.yaml` consigne cette incohérence connue. Effectuer les deux calculs
+reste le contrôle à faire : ici, il indique que l'empreinte à annoncer est
+de 59 km. La lecture du plan focal se fait à
 96 Mbit/s ($8192 \times 4\ \text{bandes} \times 12\ \text{bit}
 \times 244\ \text{Hz}$) ; l'image brute physique fait donc 100,7 Mo. Le
 support de cours utilise à la place **4 Mo** pour `image_size_mb`,
@@ -6772,7 +6902,7 @@ délibérément et ouvertement : à 100,7 Mo, une image exigerait environ
 ## 13.7 Planification de la désaturation en cas de saturation des roues
 
 Le moment cinétique stocké dans une roue de réaction vaut $H = I_{wheel}\,\omega$.
-EO-Sat-1 emporte quatre roues **de classe Sinclair RW-0.03** en pyramide
+EOSAT-1 emporte quatre roues **de classe Sinclair RW-0.03** en pyramide
 (azimuts 45/135/225/315°, élévation de 30° au-dessus du plan XY), avec
 $I_{wheel} = 5.2\times10^{-5}$ kg·m² et $\omega_{max} = 5500$ tr/min :
 
@@ -6787,7 +6917,9 @@ pyramide, la capacité *selon les axes satellite* est supérieure à celle
 d'une roue : $2\cos30°\cos45°\,H \approx 0.037$ N·m·s autour de X et
 de Y, et $2H = 0.060$ N·m·s autour de Z.
 
-**Couples perturbateurs** sur un 6U aux ailes déployées à 450 km :
+**Couples perturbateurs** sur un 6U aux ailes déployées à 513 km, tels que
+configurés dans `aocs.yaml` (le terme aérodynamique utilise une densité fixe
+dimensionnée à 450 km ; il est donc prudent d'un facteur deux environ) :
 
 | Source | Amplitude | Nature |
 |---|---|---|
@@ -6957,9 +7089,9 @@ OBDH · `[AOCS]` ingénieur SCAO · `[MULTI]` multiposte.
 > SPACON classe en fin de quart. Adaptez ces règles aux conventions de votre
 > installation si un déploiement fournit un équivalent électronique.
 
-Les 67 procédures du simulateur se répartissent en 7 de LEOP, 13 de
-recette en orbite, 13 nominales, 28 de contingence et 6 d'urgence. Les
-fiches ci-dessous couvrent les quelque 56 procédures les plus lourdes de
+Les 70 procédures du simulateur se répartissent en 7 de LEOP, 13 de
+recette en orbite, 14 nominales, 30 de contingence et 6 d'urgence. Les
+fiches ci-dessous couvrent les quelque 57 procédures les plus lourdes de
 conséquences du catalogue. Les fiches marquées **« voir §9.3 / §9.4 / §9.5 »**
 pour NOM-001, CTG-003 et NOM-012 contiennent les procédures phares ; leurs
 listes de vérification complètes en mode « lire et faire » figurent au
@@ -6968,31 +7100,33 @@ en ordre, de la maintenance programmée et des contingences peu fréquentes)
 est répertorié au §14.6, avec les références des fichiers à consulter en
 console.
 
-> **Note de la rédaction — quel identifiant figure sur la fiche.** Les fiches
-> LEOP, de recette en orbite et nominales portent exactement les identifiants de
-> `configs/eosat1/procedures/procedure_index.yaml`, et deux
-> d'entre eux ont changé lors du rapprochement du livre avec le simulateur :
-> la fiche d'**exécution** de la manœuvre d'orbite est **NOM-013** (la
-> NOM-005 du simulateur est la configuration HK) et NOM-006 est le
-> chargement de logiciel (la NOM-008 du simulateur est la synchronisation
-> d'horloge). Six numéros de **contingence** et cinq numéros d'**urgence**
-> désignent toutefois dans le livre une fiche différente de celle qu'ils
-> désignent dans l'index livré, et aucun des deux côtés n'est renuméroté lors
-> de cette passe. Le livre conserve sa propre numérotation sur ces fiches,
-> chaque fiche porte l'identifiant livré dans la note de son en-tête, et les
-> deux tableaux de correspondance — §14.5 pour les urgences, §14.6 pour les
-> contingences — font foi. **Consultez la correspondance avant d'ouvrir un
-> fichier ou d'annoncer un identifiant sur la boucle vocale.** Le catalogue
-> livré va de LEOP-001 à LEOP-007, de COM-001 à COM-013, de NOM-001 à
-> NOM-013, de CTG-001 à CTG-028 et d'EMG-001 à EMG-006.
+> **Note de la rédaction — quel identifiant figure sur la fiche.** Chaque
+> fiche de ce chapitre porte exactement l'identifiant de
+> `configs/eosat1/procedures/procedure_index.yaml` ; l'identifiant
+> annoncé sur la boucle vocale est donc le fichier qu'ouvre l'onglet
+> Procédures du MCS. Deux identifiants nominaux ont changé lors du
+> rapprochement du livre avec le simulateur : la fiche d'**exécution**
+> de la manœuvre d'orbite est **NOM-013** (la NOM-005 du simulateur est
+> la configuration HK) et NOM-006 est le chargement de logiciel (la
+> NOM-008 du simulateur est la synchronisation d'horloge). Les fiches de
+> contingence et d'urgence ont été renumérotées selon les identifiants
+> du simulateur en octobre 2026 ; les numéros des tirages antérieurs
+> figurent dans la note historique à la fin du §14.6. Les deux fiches de
+> contingence provisoires du livre, CTG-B01 et CTG-B02, sont désormais
+> des fiches du simulateur : **CTG-029** Reprise après panne de gyroscope
+> et **CTG-030** Rejet de télécommande et échec de vérification. Le
+> catalogue livré va de LEOP-001 à LEOP-007, de COM-001 à COM-013, de
+> NOM-001 à NOM-014, de CTG-001 à CTG-030 (CTG-018 retirée au profit de
+> CTG-021) et d'EMG-001 à EMG-006.
 
 ## 14.1 Fiches de procédure LEOP
 
 > **Note de la rédaction — ordre d'exécution de la LEOP.** À partir de l'état
-> initial de démarrage à froid, l'ordre est **LEOP-001 → LEOP-002 → LEOP-007 → LEOP-004 →
-> LEOP-005 → LEOP-006 → LEOP-003**. LEOP-007 passe tôt parce que
-> tout ce qui suit exige que la ligne des roues soit alimentée et que l'OBC soit sur
-> l'image applicative.
+> initial de démarrage à froid, l'ordre est **LEOP-001 → LEOP-002 → LEOP-004 → LEOP-007 →
+> LEOP-005 → LEOP-006 → LEOP-003**. Les ailes sont déployées (LEOP-004)
+> avant que quoi que ce soit d'autre ne consomme ; LEOP-007 n'alimente que la
+> suite AOCS et commande DETUMBLE ; LEOP-005 observe le passage automatique
+> en COARSE_SUN ; LEOP-003 clôt la LEOP par la déclaration de la phase 5.
 
 <div class="procedure-card procedure-card-leop" markdown="1">
 
@@ -7013,7 +7147,7 @@ console.
 
 - SI S1.1 + S17.2 reçus ET `obdh.sw_image` = 1 ET les SID 1, 3, 4, 6, 11 arrivent → procédure GO, poursuivre avec LEOP-002
 - SI S1.1 reçu mais pas de S1.7 pour la commande d'amorçage en 30 s → CTG-010
-- SI aucune TC acceptée à AOS+2 min → attente (HOLD) ; si toujours rien à AOS+5 min → **EMG-003 Perte de communication** (numérotation de ce livre ; le fichier livré est **EMG-004**, `emergency/loss_of_communication.md` — voir le tableau de correspondance du §14.5. L'EMG-003 du simulateur est le redémarrage de l'OBC : annoncer « EMG-003 » en console sans consulter la correspondance fait ouvrir la mauvaise fiche)
+- SI aucune TC acceptée à AOS+2 min → attente (HOLD) ; si toujours rien à AOS+5 min → **EMG-004 Perte de communication**
 
 | Étape | Action | TC / code | Confirmation | Remarques |
 |:----:|:-------|:----------|:--------|:------|
@@ -7045,13 +7179,13 @@ console.
 - Un seul sous-système annonce FAIL → lancer la contingence de ce sous-système (p. ex. CTG-001 pour une sous-tension EPS, CTG-002 pour l'AOCS) avant de poursuivre
 - Plusieurs FAIL → suspendre entièrement la LEOP ; le FD envisage EMG-001, passage en mode survie
 - Un sous-système renvoie DEGRADED plutôt que FAIL → poursuivre à la discrétion du FD, mais consigner un point de surveillance
-- `HK_REQUEST(sid=5)` rejetée avec l'erreur `0x0004` → attendu : la ligne charge utile est encore OFF, et le rejet confirme que la charge utile est éteinte
+- Un indicateur de ligne vaut 1 pour la ligne AOCS, charge utile, refroidisseur ou `prop` → quelque chose a été alimenté trop tôt ; le consigner et suspendre LEOP-004 jusqu'à l'examen par le FD
 
 **Arbre de décision :**
 
-- SI tous les postes renvoient PASS → GO LEOP-007
+- SI tous les postes renvoient PASS → GO LEOP-004
 - SI FAIL EPS → CTG-001 d'abord, puis relancer LEOP-002
-- SI FAIL AOCS → CTG-002, suspendre la mise sous tension de LEOP-007
+- SI une ligne est alimentée trop tôt → suspendre, examen par le FD avant LEOP-004
 - SI ≥ 2 FAIL → appeler le FD, envisager EMG-001
 
 | Étape | Action | TC / code | Confirmation | Remarques |
@@ -7060,9 +7194,9 @@ console.
 | 2 | Thermique : lire toutes les températures de zone | `HK_REQUEST(sid=3)` (S3.27) | □ | `tcs.temp_obc` (0x0406) −5…+45 °C ; `tcs.temp_battery` (0x0407) 0…+35 °C |
 | 3 | TT&C : confirmer les paramètres de liaison | `HK_REQUEST(sid=6)` (S3.27) | □ | `ttc.link_status` (0x0501) = 2 ; RSSI > −105 dBm ; marge > 3.0 dB |
 | 4 | OBDH : confirmer que l'OBC tourne, sans événement FDIR | `HK_REQUEST(sid=4)` (S3.27) | □ | `obdh.mode` (0x0300) = 0 ou 1 ; `obdh.cpu_load` (0x0302) < 70 % |
-| 5 | AOCS : confirmer la présence de la télémesure des roues (ligne OFF jusqu'à LEOP-007) | `aocs.rw1_speed`…`rw4_speed` (0x0207–0x020A) | □ | Quatre roues présentes en télémesure. Télémesure ne veut pas dire activation : le chargeur d'amorçage laisse toutes les roues DISABLED, donc `aocs.wheels_enabled` (0x0260) = 0 ici et reste à 0 jusqu'à COM-004 |
+| 5 | EPS : confirmer que les sous-systèmes non alimentés sont éteints | `eps.pl_aocs_wheels` (0x0117), `eps.pl_payload` (0x0113), `eps.pl_fpa_cooler` (0x0114), `eps.pl_prop` (0x014A) = 0 (SID 1) | □ | Ne pas demander les SID 2 ou 5 : ils ne sont pas encore activés et leurs unités ne sont pas alimentées, ce sont donc les indicateurs de ligne qui servent de bilan de santé. Il n'y a ni mode AOCS ni télémesure des roues à lire avant LEOP-007 et COM-004 |
 | 6 | SPACON : consolider un PASS/FAIL unique sur la boucle vocale | (journal de mission) | □ | « LEOP-002 PASS » ou liste des FAIL |
-| 7 | FD : GO/no-GO pour LEOP-007 | (annonce du FD) | □ | Consigné au journal |
+| 7 | FD : GO/no-GO pour LEOP-004 | (annonce du FD) | □ | Consigné au journal |
 
 </div>
 
@@ -7072,23 +7206,29 @@ console.
 
 <div class="procedure-card-header" markdown="1">[OB] LEOP-003 — Restitution d'orbite initiale</div>
 
-**Point d'entrée :** après LEOP-004/005/006, satellite en COARSE_SUN avec une attitude stable ; récepteur GPS alimenté.
+**Point d'entrée :** après LEOP-006 — c'est la **dernière** fiche de la LEOP. Maintien au Soleil en COARSE_SUN ; horloge référencée (`obdh.time_ref` 0x0A13 = 1, 2 ou 3) ; récepteur GPS sous tension depuis LEOP-007 avec `aocs.gps_fix` (0x0274) ≥ 2 ; SID 12 de HK (GPS_NAV) activé dans LEOP-006.
 
-**Objectif :** obtenir du GPS un premier vecteur d'état après lancement, confirmer l'injection héliosynchrone à 450 km / 98.0° et rafraîchir le planning des passages sur 24 h.
+**Objectif :** vérifier la solution de navigation GPS de bord, confirmer l'injection héliosynchrone à 513 km / 97,39°, transmettre le TLE affiné aux outils sol et déclarer la fin de la LEOP en commandant la phase de mission 5 (COMMISSIONING).
 
 **Issues défavorables possibles / écarts :**
 
-- Moins de 4 satellites poursuivis après 15 min → vérifier le masquage de l'antenne dans l'attitude courante ; un démarrage à froid du GPS en LEO peut prendre 15 min ; se replier sur la mesure de distance sol depuis Iqaluit et Troll
-- Vecteur d'état invraisemblable par rapport à la prédiction de séparation → signaler au FDS ; ne pas charger de nouveau plan de passage avant la revue du vecteur
-- Altitude hors de [430, 470] km → vérifier la qualité du point (`aocs.gps_pdop`, 0x0275) avant de déclarer une erreur d'injection
+- `aocs.gps_fix` < 2 → confirmer que le récepteur est sous tension (`S2_AOCS_GPS_RECEIVER`, équipement 0x020F, LEOP-007) ; un démarrage à froid peut prendre 15 min. Sans point après 30 min, se replier sur la distance et le Doppler mesurés par le réseau de stations ; la déclaration de phase peut se faire sur une orbite restituée au sol avec l'accord du FD
+- SID 12 absent de la liaison descendante → `HK_ENABLE(sid=12)` (S3.5) a été omise dans LEOP-006 ; la renvoyer
+- Altitude hors de la plage de contrôle [495, 540] km → vérifier la qualité du point (`aocs.gps_pdop`, 0x0275) et prendre un second point ; l'injection elle-même n'est suspecte qu'en dehors de [400, 550] km
+- Inclinaison à plus de 0,2° de 97,39° → signaler à la dynamique du vol ; la précession héliosynchrone et la durée de vie sont touchées
+- `SYS_SET_MISSION_PHASE` refusée → `0x0C03` : l'OBC est revenu dans le chargeur d'amorçage (refaire l'étape 5 de LEOP-001 et LEOP-006) ; `0x0C04` : déclaration en arrière sans FORCE
 
 | Étape | Action | TC / code | Confirmation | Remarques |
 |:----:|:-------|:----------|:--------|:------|
-| 1 | OBDH : vérifier le type de point GPS et le nombre de satellites | `aocs.gps_fix` (0x0274) = 3 (3D+vel) ; `aocs.gps_num_sats` (0x0276) ≥ 4 | □ | `GET_PARAM` (S20.3) |
-| 2 | OBDH : lire la position | `aocs.gps_lat` (0x0210), `aocs.gps_lon` (0x0211), `aocs.gps_alt` (0x0212) | □ | Altitude dans [430, 470] km |
-| 3 | FDS : ingérer le vecteur ; propager ; comparer à la prédiction du lanceur | (chaîne de traitement FDS) | □ | a ≈ 6821 km, e < 0.005, i à 0.1° près de 98.0°, période 5600–5680 s |
-| 4 | OBDH : mettre à jour le propagateur de bord | `SET_PARAM(param_id=0x0240, value=EPOCH)` / `(param_id=0x0241, value=STATE)` (S20.1) | □ | S20.1 ne transporte qu'UN float32 par commande — envoyer composante par composante |
-| 5 | SPACON : publier le planning rafraîchi ; briefer le FD sur le premier passage nominal | (journal de mission) | □ | « LEOP-003 complete » |
+| 1 | FDS : vérifier que la solution de navigation GPS descend | `HK_REQUEST(sid=12)` (S3.27) | □ | `aocs.gps_fix` (0x0274) ≥ 2 ; `aocs.gps_num_sats` (0x0276) ≥ 4 ; consigner `aocs.gps_pdop` (0x0275). La position vaut zéro sous le point de type 2 : attendre le point, ne rien en conclure |
+| 2 | FDS : lire la position | `GET_PARAM(param_id=0x0210)`, `(param_id=0x0211)`, `(param_id=0x0212)` (S20.3) | □ | `aocs.gps_alt` (0x0212) dans la plage de contrôle [495, 540] km |
+| 3 | FDS : lire le vecteur d'état ECEF | `GET_PARAM(param_id=0x0231)` … `(param_id=0x0236)` (S20.3) | □ | Norme de la position 6700–6950 km, norme de la vitesse 7400–7900 m/s ; consigner avec l'horodatage GPS |
+| 4 | FDS : comparer à l'orbite prédite par le lanceur | (chaîne de traitement FDS) | □ | i à 0,2° près de 97,39°, e < 0,01, LTAN à 15 min près de 10 h 00 ; période comparée au TLE (15,24 tours/jour, 5669 s) |
+| 5 | FDS : prendre un second point 10 min plus tard | `HK_REQUEST(sid=12)` (S3.27) | □ | `aocs.gps_alt` à 20 km près de l'étape 2 ; point toujours ≥ 2 |
+| 6 | FDS : diffuser le rapport de restitution d'orbite et le TLE affiné aux outils sol | (planificateur, FDS, réseau de stations) | □ | Le TLE affiné met à jour la prédiction des passages au sol. **Rien n'est envoyé au satellite** : il n'existe aucune commande de chargement de l'orbite à bord |
+| 7 | FD : tour de table GO/NO-GO, puis déclarer COMMISSIONING | `SYS_SET_MISSION_PHASE(phase=5, flags=0)` (S8 func_id 120) | □ | **Critique** : relire l'argument. `eps.spacecraft_phase` (0x0129) = 5 en 5 s ; l'événement `MISSION_PHASE_CHANGED` (0x0055) indique 4 → 5. Cette fiche est la seule à l'envoyer. « LEOP-003 complete » : la LEOP est terminée |
+
+**Remarque — la phase de mission est un verrouillage, pas une étiquette.** `SYS_SET_MISSION_PHASE` (S8 func_id 120, arguments `phase` 3–6 et `flags` bit 0 = FORCE) conditionne six mécanismes : les sous-systèmes qui s'exécutent, l'acceptation des télécommandes (en phase ≤ 3, seul le sous-ensemble du chargeur d'amorçage est accepté), le `sat.mode` dérivé (0x0001, bloqué sur SAFE en dessous de la phase 6), l'armement du modèle avancé de propagation de défaillance, les règles FDIR conditionnées par la phase, et le verrouillage d'armement de la propulsion (`min_phase: 6`). Une valeur hors plage est refusée avec `0x0C01`, les phases 0–2 avec `0x0C02`, une phase applicative alors que l'OBC est encore dans le chargeur d'amorçage avec `0x0C03`, et une transition en arrière avec `0x0C04`, sauf si FORCE est positionné. Ceci **remplace** la décision antérieure selon laquelle « la transition de phase se fait uniquement en console » : la télécommande existe et c'est par elle que l'on procède.
 
 </div>
 
@@ -7098,7 +7238,7 @@ console.
 
 <div class="procedure-card-header" markdown="1">[FE] LEOP-004 — Vérification du générateur solaire</div>
 
-**Point d'entrée :** après LEOP-007, sur une portion éclairée de l'orbite, vitesses angulaires < 0.5 °/s et SoC > 50 % (chaque aile consomme ~2 A pendant 30 s lors du déploiement).
+**Point d'entrée :** après LEOP-002, sur une portion éclairée de l'orbite, SoC > 50 % (chaque aile consomme ~2 A pendant 30 s lors du déploiement). L'AOCS n'est pas encore alimenté, il n'y a donc aucune télémesure de vitesse angulaire : le déploiement est qualifié par rapport aux vitesses de séparation du lanceur.
 
 **Objectif :** déployer les ailes +Y et −Y, confirmer le déploiement en télémesure et vérifier que le courant de chaque aile est cohérent avec l'angle solaire prévu.
 
@@ -7124,32 +7264,25 @@ console.
 
 <div class="procedure-card-header" markdown="1">[AOCS] LEOP-005 — Acquisition du Soleil</div>
 
-**Point d'entrée :** après LEOP-004, AOCS en DETUMBLE (`aocs.mode` 0x020F = 2), SoC > 40 %.
+**Point d'entrée :** après LEOP-007 : AOCS en DETUMBLE (`aocs.mode` 0x020F = 2) sur le magnétomètre et les magnétocoupleurs, SID 2 en liaison descendante, roues DISABLED, SoC > 40 %.
 
-**Objectif :** confirmer que l'amortissement des vitesses angulaires par B-dot converge, puis passer en COARSE_SUN (mode 3) et tenir une attitude de pointage solaire pour un bilan de puissance positif.
+**Objectif :** observer l'amortissement des vitesses angulaires par la loi B-dot et le passage **automatique** en COARSE_SUN (mode 3), puis vérifier un maintien au Soleil à bilan de puissance positif. Cette fiche ne commande aucun changement de mode.
 
 **Issues défavorables possibles / écarts :**
 
-- Vitesses angulaires qui ne diminuent pas après 15 min → vérifier l'activation des magnétocoupleurs (`aocs.mtq_enabled`, 0x025E) ; repasser en DETUMBLE ; passer à CTG-002 Anomalie SCAO
-- Erreur d'attitude qui ne converge pas en COARSE_SUN → vérifier l'indice de confiance des senseurs solaires grossiers (`aocs.css_sun_confidence`, 0x0215) ; en éclipse, attendre la phase éclairée
-- Défaut d'une seule roue → l'AOCS vole sur trois roues ; consigner et poursuivre, programmer la vérification des roues dans COM-004
-
-**Arbre de décision :**
-
-- SI toutes les vitesses angulaires < 0.5 °/s → GO COARSE_SUN
-- SI `aocs.att_error` (0x0217) < 10° dans les 5 min suivant l'entrée → GO LEOP-006
-- SI les vitesses angulaires réaugmentent → rester en DETUMBLE ; CTG-002
+- Vitesses angulaires sans décroissance après 15 min → vérifier `aocs.mtq_enabled` (0x025E) = 1 et `aocs.mag_enabled` (0x025C) = 1 ; si l'un des deux est retombé, le rétablir comme à l'étape 4 de LEOP-007 et recommander DETUMBLE avec `AOCS_SET_MODE(mode=2)` (S8 func_id 0)
+- Vitesses sous 0,5 °/s mais aucun passage au bout de 30 min → ne **pas** commander le mode 3 ; confirmer que les vitesses sont sous le seuil sur les trois axes, de façon durable, puis appeler le FD
+- Erreur d'attitude qui ne converge pas en COARSE_SUN → vérifier la confiance des capteurs solaires grossiers (`aocs.css_sun_confidence`, 0x0215) ; en éclipse, attendre la phase éclairée
+- Les vitesses remontent → CTG-002 Anomalie SCAO
 
 | Étape | Action | TC / code | Confirmation | Remarques |
 |:----:|:-------|:----------|:--------|:------|
-| 1 | AOCS : confirmer que DETUMBLE est actif | `HK_REQUEST(sid=2)` (S3.27) ; `aocs.mode` (0x020F) = 2 | □ | Sinon, `AOCS_SET_MODE(mode=2)` (S8 func_id 0) |
-| 2 | AOCS : consigner les vitesses angulaires et surveiller l'amortissement | `aocs.rate_roll/pitch/yaw` (0x0204–0x0206) | □ | L'amortissement B-dot est lent : depuis un culbutage à 14 °/s, le seuil de 0.5 °/s est atteint à ~1166 s, la convergence complète à ~3.5×10³ s |
-| 3 | AOCS : vérifier que tous les axes sont sous le seuil de sortie | `aocs.rate_roll/pitch/yaw` (0x0204–0x0206) < 0.5 °/s | □ | Attendre que ce soit vrai sur les trois axes |
-| 4 | AOCS : confirmer que les roues sont au repos et prêtes | `aocs.rw1_speed`…`rw4_speed` (0x0207–0x020A) ≈ 0 tr/min | □ | Les vitesses de roue sont de la télémesure en lecture seule |
-| 5 | AOCS : passer en COARSE_SUN | `AOCS_SET_MODE(mode=3)` (S8 func_id 0) | □ | `aocs.mode` (0x020F) = 3 en 30 s |
-| 6 | AOCS : surveiller la convergence | `aocs.att_error` (0x0217) < 10° en 300 s | □ | Pointage solaire obtenu |
-| 7 | EPS : confirmer l'amélioration de la production | `eps.power_gen` (0x0107) > 40 W | □ | SoC stable ou en hausse |
-| 8 | SPACON : consigner la fin | (journal de mission) | □ | « LEOP-005 complete » |
+| 1 | AOCS : confirmer DETUMBLE et consigner les vitesses initiales | `HK_REQUEST(sid=2)` (S3.27) | □ | `aocs.mode` (0x020F) = 2 ; vitesses (0x0204–0x0206) consignées ; 0,5–5 °/s par axe est typique après la séparation |
+| 2 | AOCS : suivre l'amortissement — ne rien commander | `HK_REQUEST(sid=2)` (S3.27) toutes les 5 min | □ | Toutes les vitesses décroissent ; la loi B-dot les divise environ par deux toutes les 10–15 min. Un `aocs.mag_field_total` (0x0277) nul signifie que la loi B-dot est aveugle |
+| 3 | AOCS : observer le passage automatique en COARSE_SUN | (observation) | □ | Vitesses sous 0,5 °/s pendant 30 s → `aocs.mode` = 3 de lui-même, en 1800 s au plus. Ne **pas** commander le mode 3 |
+| 4 | AOCS : vérifier le maintien au Soleil | `HK_REQUEST(sid=2)` (S3.27) toutes les 60 s pendant 5 min | □ | `aocs.att_error` (0x0217) < 15° en 600 s ; `aocs.css_sun_confidence` (0x0215) > 0,5 ; vitesses < 0,5 °/s. Le maintien vole sur les magnétocoupleurs : s'attendre à une dérive de l'ordre du degré |
+| 5 | EPS : vérifier la production pendant le maintien | `HK_REQUEST(sid=1)` (S3.27) | □ | `eps.power_gen` (0x0107) > 40 W ; SoC stable ou en hausse |
+| 6 | SPACON : consigner l'état final de l'AOCS ; GO LEOP-006 | (journal de mission) | □ | « LEOP-005 complete ». Le satellite reste en COARSE_SUN : sans senseur stellaire sous tension, rien ne le promeut, et les roues restent désactivées jusqu'à COM-004 |
 
 </div>
 
@@ -7182,6 +7315,7 @@ console.
 | 4 | SPACON : envoyer la correction de temps | `SET_TIME(cuc_seconds=T_corrected)` (S9.1) | □ | L'argument se place À L'INTÉRIEUR des backticks — un `SET_TIME` nu encode cuc_seconds = 0, soit une remise à zéro sur l'époque. Confirmer que T_corrected est rapporté à l'époque **J2000** : un horodatage Unix est trop grand de ~9.46e8 s et il est accepté. L'événement `OBC_TIME_SET` (0x030C) porte le saut signé |
 | 5 | SPACON : vérifier le résidu | `REQUEST_TIME` (S9.2) ; `HK_REQUEST(sid=4)` (S3.27) | □ | Résidu en valeur absolue < 1.0 s ; `obdh.time_ref` (0x0A13) désormais = 1 (GROUND) et `time_since_sync_s` (0x0A14) reparti de 4294967295 ; `obdh.mode` inchangé |
 | 6 | SPACON : valider la marche de l'horloge sur deux rapports | `REQUEST_TIME` (S9.2) | □ | drift_ppm = ((T_obc2 − T_obc1) − (T_gnd2 − T_gnd1))/interval × 1e6 ; accepter < 100 ppm, attendre ~12 ppm. Utiliser l'intervalle le plus long que permet le passage — 12 ppm sur 60 s font 0.7 ms, ce qui n'est pas mesurable. Sans signification si `time_ref` = 2 (GPS) : on mesure alors la boucle d'asservissement, pas l'oscillateur |
+| 6a | SPACON : activer la HK de navigation GPS, puis asservir l'horloge au GPS dès que le récepteur a un point | `HK_ENABLE(sid=12)` (S3.5) ; `OBC_GPS_TIME_SYNC` (S8 func_id 80) | □ | Le SID 12 n'est pas activé par défaut : sans lui, LEOP-003 travaille à l'aveugle. Synchroniser seulement avec `aocs.gps_fix` (0x0274) ≥ 2 ; `obdh.time_ref` → 2 (GPS) en 15 s. Réglage sol d'abord, GPS ensuite : sur une horloge déjà à 1 s près, le saut GPS est de quelques millisecondes, bien en dessous du saut de 5 s qui force l'AOCS en SAFE_BOOT (CTG-027). Pas encore de point → envoyer la synchronisation au contact suivant |
 | 7 | SPACON : consigner la nouvelle référence de dérive ; GO LEOP-003 | (journal de mission) | □ | « LEOP-006 complete » |
 
 </div>
@@ -7192,46 +7326,29 @@ console.
 
 <div class="procedure-card-header" markdown="1">[MULTI] LEOP-007 — Mise sous tension séquentielle</div>
 
-**Point d'entrée :** LEOP-002 PASS ; maintien auto-TX actif ; `obdh.sw_image` = 1 ; SoC batterie > 60 % ; bus 27–29 V ; jeu FDIR/événement-action de LEOP armé et jeu nominal désactivé (`EA_DISABLE`, S19.5).
+**Point d'entrée :** après LEOP-004 : image applicative en service (`obdh.sw_image` = 1), liaison en LOW, ailes déployées et productrices, toutes les lignes commutables OFF sauf `ttc_tx`, AOCS sur OFF, satellite en culbutage aux vitesses de séparation ; SoC > 60 %, bus 26–30 V.
 
-**Objectif :** alimenter chaque ligne d'alimentation commutable dans l'ordre des dépendances, faire passer l'AOCS de OFF à DETUMBLE puis à COARSE_SUN, amener la charge utile en STANDBY avec le refroidisseur du FPA en régulation, et activer les structures HK restantes.
+**Objectif :** n'alimenter que ce dont le reste de la LEOP a besoin, dans l'ordre des dépendances : les lignes de réchauffeurs si leurs zones ont besoin de chaleur, la ligne de la suite AOCS, le magnétomètre, les magnétocoupleurs et le récepteur GPS, puis DETUMBLE. La charge utile, le refroidisseur, les roues, les senseurs stellaires, les gyroscopes et la ligne `prop` restent éteints ; leurs fiches de recette les mettent en service.
 
 **Issues défavorables possibles / écarts :**
 
-- Surintensité sur une ligne dans les 30 s suivant l'activation → CTG-012 Traitement d'une surintensité ; la ligne reste coupée ; analyser la cause avant toute nouvelle tentative
-- Zone batterie lente à entrer dans la plage après activation du réchauffeur → attendre une éclipse complète ; si elle reste froide, CTG-004 Dépassement thermique
-- Roue de réaction bloquée à l'activation → CTG-007 Anomalie de roue de réaction ; une pyramide à 3 roues sur 4 couvre toujours R³ et vole en FINE dégradé (`aocs.fine_degraded`, 0x0299)
-- Réinitialisation par le chien de garde de l'OBC en cours de séquence → CTG-010 ; rétablir, réarmer le jeu événement-action, reprendre
-- `AOCS_SET_MODE` rejetée avec `0x0004` après la mise sous tension de la ligne → l'écriture EPS n'a pas pris ; renvoyer `EPS_POWER_ON`, vérifier `eps.pl_aocs_wheels` (0x0117), réessayer
-
-**Arbre de décision :**
-
-- SI un événement FDIR de gravité ≥ 3 survient pendant la séquence → STOP, traiter la contingence, GO du FD pour reprendre (la gravité FDIR va de 0 à 4 et constitue une échelle différente du niveau d'autonomie 0–3)
-- SI la tension du bus descend sous 26.5 V pendant l'activation → délestage (CTG-001) avant de poursuivre
-- SI les vitesses angulaires augmentent en DETUMBLE → `AOCS_SET_MODE(mode=0)` et examiner la polarité des magnétocoupleurs
+- `AOCS_SET_MODE(mode=2)` refusée avec `0x0004` → l'écriture de la ligne n'a pas pris ; renvoyer `EPS_POWER_ON(line_index=7)`, vérifier `eps.pl_aocs_wheels` (0x0117), réessayer
+- Refus avec `0x0A20` (pas de magnétomètre) → renvoyer `S2_AOCS_MAGNETOMETER(device_id=521, state=1)` ; il n'existe pas de magnétomètre redondant
+- Refus avec `0x0A21` (pas de magnétocoupleurs) → renvoyer `MTQ_ENABLE(enable=1)`
+- Les vitesses augmentent en DETUMBLE → `AOCS_SET_MODE(mode=0)` et examiner la polarité du magnétomètre et des magnétocoupleurs
+- SoC sous 40 % → arrêter, couper la dernière ligne alimentée, attendre un SoC > 60 %, reprendre ; bus sous 26 V → CTG-001
+- Surintensité sur une ligne dans les 30 s suivant sa mise sous tension → CTG-012 Réponse à une surintensité ; la ligne reste éteinte
 
 | Étape | Action | TC / code | Confirmation | Remarques |
 |:----:|:-------|:----------|:--------|:------|
-| 1 | SPACON : vérifier la référence EPS | `HK_REQUEST(sid=1)` (S3.27) | □ | Bus 27.0–29.0 V, SoC > 60 %, `eps.power_gen` > 0 W |
-| 2 | EPS : alimenter le réchauffeur de batterie | `EPS_POWER_ON(line_index=5)` (S8 func_id 19) | □ | `eps.pl_htr_bat` (0x0115) = 1 ; +~6 W ; batterie qui tend vers la consigne de 5 °C |
-| 3 | EPS : alimenter le réchauffeur de l'OBC | `EPS_POWER_ON(line_index=6)` (S8 func_id 19) | □ | `eps.pl_htr_obc` (0x0116) = 1 ; +~3 W |
-| 4 | EPS : alimenter la ligne des roues | `EPS_POWER_ON(line_index=7)` (S8 func_id 19) | □ | `eps.pl_aocs_wheels` (0x0117) = 1 ; la ligne permet seulement au modèle de s'exécuter. Elle n'active **pas** les roues : `aocs.wheels_enabled` (0x0260) reste à 0 jusqu'à ce que COM-004 envoie `AOCS_ENABLE_WHEEL` pour chaque roue. DETUMBLE et COARSE_SUN ci-dessous sont magnétiques et n'en ont pas besoin |
-| 5 | SPACON : activer les données de servitude AOCS | `HK_ENABLE(sid=2)` (S3.5) | □ | Alimenter une ligne n'active PAS son SID ; le SID 2 est émis toutes les 4 s |
-| 6 | AOCS : démarrer l'AOCS en DETUMBLE | `AOCS_SET_MODE(mode=2)` (S8 func_id 0) | □ | La fonction 0 est exemptée du contrôle de mode ; `aocs.mode` (0x020F) = 2 ; +~12 W |
-| 7 | AOCS : vérifier que les vitesses angulaires diminuent et que le magnétomètre est valide | `aocs.rate_roll/pitch/yaw` (0x0204–0x0206) ; `aocs.mag_enabled` (0x025C) | □ | Module du champ 25–65 µT ; l'amortissement est lent (voir LEOP-005) |
-| 8 | AOCS : une fois toutes les vitesses angulaires < 0.5 °/s, passer en COARSE_SUN | `AOCS_SET_MODE(mode=3)` (S8 func_id 0) | □ | `aocs.att_error` (0x0217) en baisse, < 5° |
-| 9 | EPS : alimenter la ligne charge utile | `EPS_POWER_ON(line_index=3)` (S8 func_id 19) | □ | `eps.pl_payload` (0x0113) = 1 |
-| 10 | Charge utile : commander STANDBY | `PAYLOAD_SET_MODE(mode=1)` (S8 func_id 26) | □ | `payload.mode` (0x0600) = 1 ; +~8 W |
-| 11 | SPACON : activer les données de servitude de la charge utile | `HK_ENABLE(sid=5)` (S3.5) | □ | Le SID 5 est émis toutes les 8 s ; `payload.fpa_temp` (0x0601) valide |
-| 12 | EPS : alimenter la ligne du refroidisseur | `EPS_POWER_ON(line_index=4)` (S8 func_id 19) | □ | `eps.pl_fpa_cooler` (0x0114) = 1 |
-| 13 | Thermique : démarrer le refroidisseur du FPA | `FPA_COOLER(on=1)` (S8 func_id 43) | □ | +~15 W ; FPA qui tend vers la consigne par défaut de −15 °C |
-| 14 | SPACON : confirmer le jeu HK complet | SID 1, 2, 3, 4, 5, 6 (+ 11) en flux | □ | Seuls 1 et 11 sont activés à la mise sous tension |
-| 15 | FD : tour de table GO/NO-GO, puis déclarer COMMISSIONING | `SYS_SET_MISSION_PHASE(phase=5, flags=0)` (S8 func_id 120) | □ | **Une télécommande de vol, pas une action de l'instructeur** — la machine à états de bord n'automatise que la chaîne de mise sous tension 1→2→3→4 ; les phases 5 et 6 sont donc des déclarations du sol. Relire `eps.spacecraft_phase` (0x0129) = 5 en 5 s ; l'événement `MISSION_PHASE_CHANGED` (0x0055) porte 4 → 5. Criticité `critical` |
-| 16 | SPACON : consigner ; passer la main à LEOP-004 | (journal de mission) | □ | « LEOP-007 complete » |
+| 1 | EPS : vérifier l'état de référence de l'EPS | `HK_REQUEST(sid=1)` (S3.27) | □ | Bus 26–30 V, SoC > 60 %, `eps.power_gen` > 0 W |
+| 2 | EPS : alimenter les lignes de réchauffeurs seulement si leurs zones ont besoin de chaleur | `EPS_POWER_ON(line_index=5)` / `(line_index=6)` (S8 func_id 19) | □ | `htr_bat` seulement si `tcs.temp_battery` < +5 °C ; `htr_obc` seulement si `tcs.temp_obc` < 0 °C. Consigner les lignes alimentées : COM-002 lit cet enregistrement |
+| 3 | EPS : alimenter la ligne de la suite AOCS et activer sa télémesure de servitude | `EPS_POWER_ON(line_index=7)` (S8 func_id 19) ; `HK_ENABLE(sid=2)` (S3.5) | □ | `eps.pl_aocs_wheels` (0x0117) = 1. La ligne alimente toute la suite AOCS ; elle n'active **pas** les roues : `aocs.wheels_enabled` (0x0260) reste à 0 jusqu'à COM-004 |
+| 4 | AOCS : activer le capteur et les actionneurs de DETUMBLE, ainsi que le récepteur GPS | `S2_AOCS_MAGNETOMETER(device_id=521, state=1)` ; `MTQ_ENABLE(enable=1)` (S8 func_id 9) ; `S2_AOCS_GPS_RECEIVER(device_id=527, state=1)` | □ | `aocs.mtq_enabled` (0x025E) = 1. Le délai d'acquisition du premier point GPS commence maintenant : LEOP-006 et LEOP-003 en ont besoin |
+| 5 | AOCS : commander DETUMBLE | `AOCS_SET_MODE(mode=2)` (S8 func_id 0) | □ | `aocs.mode` (0x020F) = 2 en 10 s ; `aocs.mag_enabled` (0x025C) = 1 ; `aocs.mag_field_total` (0x0277) 5–70 µT ; vitesses (0x0204–0x0206) en baisse en 60 s |
+| 6 | EPS : confirmer l'état d'alimentation de sortie ; GO LEOP-005 | `HK_REQUEST(sid=1)` (S3.27) | □ | `eps.pl_payload` (0x0113), `eps.pl_fpa_cooler` (0x0114), `eps.pl_prop` (0x014A) et `aocs.wheels_enabled` (0x0260) tous à 0 ; marge de puissance positive. « LEOP-007 complete » |
 
-**Remarque.** Le satellite compte **neuf** lignes d'alimentation, d'indices 0–8 : `obc`, `ttc_rx`, `ttc_tx`, `payload`, `fpa_cooler`, `htr_bat`, `htr_obc`, `aocs_wheels`, `prop`. Il n'existe ni ligne IMU ni ligne de capteurs AOCS — les gyroscopes sont les équipements S2 `S2_AOCS_GYROSCOPE_0/1/2`. La ligne `prop` reste OFF ici ; elle n'est alimentée que pour la préparation des manœuvres (NOM-004 / NOM-013).
-
-**Remarque — la phase de mission est un verrouillage, pas une étiquette.** `SYS_SET_MISSION_PHASE` (S8 func_id 120, arguments `phase` 3–6 et `flags` bit 0 = FORCE) conditionne six mécanismes : les sous-systèmes qui s'exécutent, l'acceptation des télécommandes (en phase ≤ 3, seul le sous-ensemble du chargeur d'amorçage est accepté), le `sat.mode` dérivé (0x0001, bloqué sur SAFE en dessous de la phase 6), l'armement du modèle avancé de propagation de défaillance, les règles FDIR conditionnées par la phase, et le verrouillage d'armement de la propulsion (`min_phase: 6`). Une valeur hors plage est refusée avec `0x0C01`, les phases 0–2 avec `0x0C02`, une phase applicative alors que l'OBC est encore dans le chargeur d'amorçage avec `0x0C03`, et une transition en arrière avec `0x0C04`, sauf si FORCE est positionné. Ceci **remplace** la décision antérieure selon laquelle « la transition de phase se fait uniquement en console » : la télécommande existe et c'est par elle que l'on procède.
+**Remarque.** Le satellite compte **neuf** lignes d'alimentation, d'indices 0–8 : `obc`, `ttc_rx`, `ttc_tx`, `payload`, `fpa_cooler`, `htr_bat`, `htr_obc`, `aocs_wheels`, `prop`. Il n'existe ni ligne IMU ni ligne de capteurs AOCS — les gyroscopes sont les équipements S2 `S2_AOCS_GYROSCOPE_0/1/2`, alimentés dans COM-003. La ligne charge utile est alimentée dans COM-009, celle du refroidisseur dans COM-010, et la ligne `prop` seulement pour la préparation des manœuvres (NOM-004 / NOM-013) et le retrait de service (NOM-014). Le passage en COARSE_SUN est automatique et s'observe dans LEOP-005 ; la déclaration de la phase 5 est l'étape 7 de LEOP-003.
 
 </div>
 
@@ -7239,28 +7356,36 @@ console.
 
 ## 14.2 Fiches de procédure de recette en orbite
 
+> **Note de la rédaction — ordre d'exécution de la recette (décision Q16).**
+> COM-001 → COM-002 → **COM-004 → COM-003** → COM-005 → … → COM-010 →
+> COM-012 → COM-011 → COM-013. COM-004 active les roues et commande
+> NOMINAL ; COM-003 étalonne ensuite les gyroscopes dans ce NOMINAL piloté
+> par les roues, car son seuil de 0,10 °/s ne peut pas être atteint dans le
+> maintien COARSE_SUN sans roues. Les fiches ci-dessous restent dans l'ordre
+> des identifiants.
+
 <div class="procedure-card procedure-card-commissioning" markdown="1">
 
 <div class="procedure-card-header" markdown="1">[FE] COM-001 — Vérification de l'EPS</div>
 
-**Point d'entrée :** début du passage 1 de recette en orbite, satellite stabilisé en COARSE_SUN, SoC > 70 %.
+**Point d'entrée :** début du passage 1 de recette en orbite, satellite stable dans le maintien COARSE_SUN, phase 5, SoC > 70 %.
 
-**Objectif :** établir la référence de la tension du bus, du SoC batterie et des performances du générateur, caractériser la décharge en éclipse et la recharge, et vérifier la régulation du bus sous un transitoire de charge commandé.
+**Objectif :** établir la référence de la tension du bus, du SoC de la batterie et des performances du générateur, caractériser la décharge en éclipse et la recharge, vérifier un bilan énergétique moyen positif sur l'orbite, et vérifier la régulation du bus sous un transitoire de charge commandé.
 
 **Issues défavorables possibles / écarts :**
 
-- La ligne ne se réactive pas → CTG-012 Traitement d'une surintensité ; marquer la ligne comme défaillante ; reporter la recette qui en dépend
-- La tension du bus sort de la plage sous l'échelon de charge → CTG-005 Mode survie EPS ; signaler le régulateur de charge au FDS
-- Le SoC batterie baisse plus vite que prévu → CTG-001 Délestage sur sous-tension ; arrêter la vérification
+- Tension du bus sous 27,0 V → vérifier le SoC ; sous 26,0 V → CTG-001 Délestage sur sous-tension et, avec l'accord du FD, `OBC_SET_MODE(mode=1)` (1 correspond à SAFE)
+- Production inférieure à 35 W au soleil avec un bon pointage solaire → lire les courants de chaque aile (0x0146, 0x0147) ; consigner l'anomalie et évaluer un bilan sur une seule aile
+- SoC inférieur à 50 % en fin d'éclipse → réduire la charge et reporter la recette des activités gourmandes en énergie
 
 | Étape | Action | TC / code | Confirmation | Remarques |
 |:----:|:-------|:----------|:--------|:------|
-| 1 | EPS : établir la référence du bus, de la batterie et du SoC | `HK_REQUEST(sid=1)` (S3.27) | □ | Bus (0x0105) 27.5–28.5 V ; `eps.bat_voltage` (0x0100) **26.9–29.2 V** à SoC > 70 % — la batterie est en 8S-1P, 100 Wh, 26.4 V nominal, avec une tension à vide allant de 21.5 V à 0 % jusqu'à 29.2 V à 100 %. Toute plage de 14.4–16.8 V est une valeur de batterie 4S et ne concerne pas ce satellite |
-| 2 | EPS : mesurer les performances du générateur en phase éclairée | `eps.power_gen` (0x0107) | □ | 40–65 W en pointage solaire, ailes déployées |
-| 3 | EPS : surveiller une décharge sur une éclipse complète | `HK_REQUEST(sid=1)` à l'entrée / à mi-éclipse | □ | Production ≈ 0 W ; SoC en baisse < 1.5 %/min ; bus > 27.0 V |
-| 4 | EPS : surveiller la recharge après la sortie d'éclipse | `eps.power_gen` (0x0107), `eps.bat_soc` (0x0101) | □ | > 35 W dans les 60 s suivant la sortie ; SoC en hausse |
-| 5 | EPS : régulation du bus sous un transitoire de charge commandé | `PAYLOAD_SET_MODE(mode=1)` puis `PAYLOAD_SET_MODE(mode=0)` (S8 func_id 26) | □ | Le bus reste à 27.0–29.0 V, revient à 27.5–28.5 V |
-| 6 | EPS : couper puis remettre une ligne non critique | `EPS_POWER_OFF(line_index=N)` (S8 func_id 20) / `EPS_POWER_ON(line_index=N)` (func_id 19) | □ | `line_index` va de 0 à 8 ; une ligne à la fois, surveiller le courant de ligne |
+| 1 | EPS : référence du bus, de la batterie et du SoC | `HK_REQUEST(sid=1)` (S3.27) ; `GET_PARAM(param_id=0x0100)`, `GET_PARAM(param_id=0x0101)` (S20.3) | □ | Bus (0x0105) 27.5–28.5 V ; `eps.bat_voltage` (0x0100) **26.9–29.2 V** à SoC > 70 % — la batterie est une 8S-1P de 100 Wh, 26.4 V nominaux, avec une tension à vide allant de 21.5 V à 0 % à 29.2 V à 100 %. Toute plage de 14.4–16.8 V est une valeur de batterie 4S et ne concerne pas ce satellite |
+| 2 | EPS : mesurer les performances du générateur au soleil | `HK_REQUEST(sid=1)` (S3.27) | □ | `eps.power_gen` (0x0107) 40–65 W pointé Soleil, ailes déployées |
+| 3 | EPS : suivre une décharge d'éclipse complète | `HK_REQUEST(sid=1)` à l'entrée / à mi-éclipse | □ | Production ≈ 0 W ; SoC en baisse < 1.5 %/min ; bus > 27.0 V |
+| 4 | EPS : suivre la recharge après la sortie d'éclipse | `HK_REQUEST(sid=1)` à la sortie + 5 min | □ | `eps.power_gen` (0x0107) > 35 W dans les 60 s suivant la sortie ; `eps.bat_soc` (0x0101) en hausse |
+| 5 | EPS : vérifier le bilan énergétique moyen sur l'orbite | `GET_PARAM(param_id=0x0108)` (S20.3) | □ | Production moyenne sur l'orbite > consommation moyenne sur l'orbite ; SoC en fin d'éclipse > 50 % |
+| 6 | EPS : régulation du bus sous un transitoire de charge commandé — la ligne du réchauffeur batterie, et non la charge utile | `EPS_POWER_ON(line_index=5)` (S8 func_id 19) ; puis `EPS_POWER_OFF(line_index=5)` (func_id 20) seulement si la ligne était éteinte à l'entrée | □ | Consigner d'abord `eps.pl_htr_bat` (0x0115). Le bus reste à 26.5–29.5 V et revient à 27.0–29.0 V ; ligne revenue à son état d'entrée. La ligne charge utile est OFF jusqu'à COM-009 : une commande de mode de la charge utile ne constitue pas un transitoire |
 | 7 | SPACON : consigner les références pour les opérations nominales | (journal de mission) | □ | « COM-001 complete » |
 
 </div>
@@ -7271,25 +7396,25 @@ console.
 
 <div class="procedure-card-header" markdown="1">[SE] COM-002 — Vérification du TCS</div>
 
-**Point d'entrée :** après la fin de COM-001 et le GO.
+**Point d'entrée :** après la fin et le GO de COM-001 ; maintien COARSE_SUN, phase 5. Consigner d'abord `eps.pl_htr_bat` (0x0115) et `eps.pl_htr_obc` (0x0116) — l'étape 2 de LEOP-007 a pu en alimenter une — comme état d'entrée à rétablir.
 
-**Objectif :** solliciter chaque circuit de réchauffeur séparément, vérifier la réponse en température des zones, confirmer les seuils du thermostat autonome de la batterie et contrôler l'interface du refroidisseur du FPA avant la recette de la charge utile.
+**Objectif :** vérifier chaque zone thermique par rapport à sa plage prévue sur une orbite complète, exercer chaque circuit de réchauffeur avec sa ligne alimentée, lire les seuils du thermostat autonome de la batterie et vérifier l'interface du refroidisseur du FPA avant la recette de la charge utile.
 
 **Issues défavorables possibles / écarts :**
 
-- Réchauffeur activé mais aucune réponse de la zone en 5 min → CTG-004 Dépassement thermique ; déclarer le réchauffeur suspect
-- Seuils du thermostat erronés → renvoyer `HEATER_SET_SETPOINT` (S8 func_id 44) ; ce sont des commandes, pas des paramètres S20
-- Deux réchauffeurs présentent la même signature de défaut → suspecter un bus commun ; se coordonner avec l'EPS
+- Réchauffeur en marche mais aucune réaction de la zone en 3 min → vérifier que la ligne est réellement alimentée (un réchauffeur dont la ligne est éteinte obéit à l'interrupteur et ne chauffe rien) ; puis CTG-004 Dépassement thermique ; déclarer le réchauffeur suspect
+- Seuils du thermostat différents de +5 / +10 °C → émettre un rapport d'anomalie ; cette fiche lit les seuils, elle ne les modifie pas
+- Deux réchauffeurs présentant la même signature de défaut → soupçonner un bus commun ; se coordonner avec l'EPS
 
 | Étape | Action | TC / code | Confirmation | Remarques |
 |:----:|:-------|:----------|:--------|:------|
-| 1 | Thermique : relever la référence de toutes les zones | `HK_REQUEST(sid=3)` (S3.27) | □ | OBC (0x0406) −5…+45 °C ; batterie (0x0407) +5…+35 °C ; FPA (0x0408) +8…+14 °C non refroidi |
-| 2 | Thermique : solliciter le réchauffeur de batterie | `HEATER_BATTERY(on=1)` / `(on=0)` (S8 func_id 40) | □ | `tcs.htr_battery` (0x040A) suit ; température batterie en hausse en 180 s |
-| 3 | Thermique : solliciter le réchauffeur de l'OBC | `HEATER_OBC(on=1)` / `(on=0)` (S8 func_id 41) | □ | `tcs.htr_obc` (0x040B) suit ; `tcs.temp_obc` stable ou en hausse |
-| 4 | Thermique : solliciter le réchauffeur du propulseur / du lit catalytique | `HEATER_THRUSTER(on=1)` / `(on=0)` (S8 func_id 42) | □ | Consigner les instants de marche/arrêt et les pentes |
-| 5 | Thermique : vérifier le thermostat autonome de la batterie | `HEATER_SET_SETPOINT(circuit=0, on_temp=5.0, off_temp=10.0)` (S8 func_id 44) | □ | ON à ≤ +5 °C, OFF à ≥ +10 °C ; entre les deux, l'état précédent est maintenu |
-| 6 | Thermique : contrôle de l'interface du refroidisseur du FPA (avant activation) | `tcs.cooler_fpa` (0x040C) = 0 ; `eps.pl_fpa_cooler` (0x0114) = 0 | □ | Consigner la référence du FPA non refroidi pour COM-010 |
-| 7 | SPACON : consigner ; GO COM-003 | (journal de mission) | □ | « COM-002 complete » |
+| 1 | Thermique : lire la référence de toutes les zones, puis pendant la phase éclairée et l'éclipse | `HK_REQUEST(sid=3)` (S3.27) | □ | OBC (0x0406) −5…+45 °C ; batterie (0x0407) +5…+35 °C ; FPA (0x0408) +8…+14 °C non refroidi |
+| 2 | Thermique : exercer le réchauffeur batterie avec sa ligne alimentée | `EPS_POWER_ON(line_index=5)` (S8 func_id 19) ; `HEATER_BATTERY(on=1)` / `(on=0)` (S8 func_id 40) ; `EPS_POWER_OFF(line_index=5)` seulement si OFF à l'entrée | □ | `eps.pl_htr_bat` (0x0115) = 1 ; température batterie en hausse ou stable en 180 s ; ligne rétablie |
+| 3 | Thermique : exercer le réchauffeur de l'OBC avec sa ligne alimentée | `EPS_POWER_ON(line_index=6)` ; `HEATER_OBC(on=1)` / `(on=0)` (S8 func_id 41) ; `EPS_POWER_OFF(line_index=6)` seulement si OFF à l'entrée | □ | `eps.pl_htr_obc` (0x0116) = 1 ; `tcs.temp_obc` stable ou en hausse en 120 s ; ligne rétablie. La fonction 42 est le réchauffeur du lit catalytique du propulseur et reste intouchée hors préparation de manœuvre |
+| 4 | Thermique : lire les seuils du thermostat autonome de la batterie | `GET_PARAM(param_id=0x0410)`, `GET_PARAM(param_id=0x0411)` (S20.3) | □ | Mise en marche à +5 °C, arrêt à +10 °C ; entre les deux, l'état précédent est conservé |
+| 5 | Thermique : contrôle de l'interface du refroidisseur du FPA (avant activation) | `GET_PARAM(param_id=0x040C)`, `GET_PARAM(param_id=0x0114)` (S20.3) | □ | `tcs.cooler_fpa` = 0 ; `eps.pl_fpa_cooler` = 0 ; consigner la référence du FPA non refroidi pour COM-010 |
+| 6 | SPACON : rédiger le rapport de référence thermique | (journal de mission) | □ | Consigner les profils de zone et les réponses des réchauffeurs |
+| 7 | SPACON : consigner ; GO COM-004 | (journal de mission) | □ | « COM-002 complete ». COM-004 passe avant COM-003 (décision Q16) |
 
 </div>
 
@@ -7299,25 +7424,34 @@ console.
 
 <div class="procedure-card-header" markdown="1">[AOCS] COM-003 — Étalonnage des capteurs SCAO</div>
 
-**Point d'entrée :** pendant la recette en orbite, après COM-001/002, AOCS en COARSE_SUN (mode 3) avec des vitesses angulaires < 0.1 °/s. COM-003 se déroule **avant** la vérification des actionneurs : le prérequis propre à COM-004 est « COM-003 terminée, senseur stellaire actif ».
+**Point d'entrée :** après COM-004 (décision Q16) : les quatre roues ENABLED (`aocs.wheels_enabled` 0x0260 = 4), AOCS en NOMINAL commandé sur les roues (`aocs.mode` 0x020F = 4, ou 8 en éclipse), senseurs stellaires et gyroscopes OFF, SoC > 60 %, ≥ 20 min de passage restantes.
 
-**Objectif :** lancer l'étalonnage bord du biais des gyroscopes, vérifier le magnétomètre, mettre en service les deux senseurs stellaires et recouper leur solution avec les capteurs grossiers.
+**Objectif :** intégrer les trois gyroscopes et un senseur stellaire à la boucle de détermination, puis lancer l'étalonnage bord du biais gyroscopique, afin que la voie de vitesse soit compensée avant de demander au satellite de tenir un pointage fin.
+
+**Pourquoi après COM-004.** L'étalonnage est refusé tant que la vitesse angulaire s'écarte de plus de **0,10 °/s** de la référence (`0x0A04`). Dans le maintien COARSE_SUN sans roues, le contrôle par magnétocoupleurs seuls oscille entre 0,1 et 0,4 °/s et n'atteint jamais ce seuil ; le NOMINAL piloté par les roues l'atteint. Le seuil reste à 0,10 °/s.
 
 **Issues défavorables possibles / écarts :**
 
-- Désaccord senseur stellaire / capteurs grossiers > 5° → CTG-008 Panne du senseur stellaire ; reporter l'étalonnage
-- Estimation du biais gyroscopique atypique → enregistrer et signaler ; y revenir une fois la thermique stabilisée. Noter qu'une panne `gyro_bias` injectée est un décalage PERSISTANT, qui subsiste d'un pas de simulation à l'autre jusqu'à son effacement
-- Qualité médiocre du point GPS → CTG-027 Synchronisation temporelle GPS et reprise SCAO ; vérifier le masquage de l'antenne
+- Refus avec `0x0A02` → un gyroscope est éteint : lire `aocs.gyro_units_mask` (0x02D1) et l'alimenter avec la commande `S2_AOCS_GYROSCOPE_n` correspondante
+- Refus avec `0x0A03` → aucun senseur stellaire dans la boucle : attendre le bit 0 de `aocs.est_source` (0x02C1) (étape 4), ou rétablir le senseur (CTG-008)
+- Refus avec `0x0A04` → vitesse angulaire supérieure à 0,10 °/s : attendre la fin du basculement, de la désaturation ou du transitoire de roue (`aocs.mode` ≠ 7) et réessayer
+- `AOCS_GYRO_CAL_ABORT` (0x0212) en cours d'arc → rien n'a été appliqué ; corriger la cause indiquée par `aocs.gyro_cal_reject` (0x02D0) et reprendre à l'étape 6
+- Biais estimé supérieur à 0,5 °/s sur un axe → ne pas l'accepter ; relancer avec `duration_s=900` ; s'il persiste, émettre un rapport d'anomalie et passer à CTG-029
+- Senseur non accroché en 120 s → le statut 3 signifie BLIND (Soleil ou Lune dans le champ), pas une panne ; attendre, ou sélectionner ST2 avec `ST_SELECT(unit=2)`
+- Il n'existe ni étalonnage du magnétomètre à bord ni `MAG_SELECT` (la fonction 7 est refusée) : l'unique magnétomètre est utilisé tel quel
 
 | Étape | Action | TC / code | Confirmation | Remarques |
 |:----:|:-------|:----------|:--------|:------|
-| 1 | AOCS : consigner l'état avant étalonnage | `HK_REQUEST(sid=2)` (S3.27) | □ | `aocs.mode` (0x020F) = 3 ; vitesses angulaires (0x0204–0x0206) < 0.1 °/s — elles contiennent encore le biais |
-| 2 | AOCS : lancer l'étalonnage du biais gyroscopique À BORD | `AOCS_GYRO_CALIBRATION` (S8 func_id 13) | □ | L'estimation est calculée à bord sur une période calme — il n'y a pas d'envoi d'un biais calculé au sol |
-| 3 | AOCS : vérifier que les trois gyroscopes sont alimentés | `aocs.gyro_units_on` (0x0294) = 3 | □ | Trois axes, `S2_AOCS_GYROSCOPE_0/1/2` ; il n'y a ni unité redondante ni ligne d'alimentation IMU |
-| 4 | AOCS : vérifier le magnétomètre | `aocs.mag_enabled` (0x025C) = 1 ; `aocs.mag_field_total` (0x0277) | □ | Champ de 25 000–65 000 nT. Unité unique : il n'y a ni magnétomètre B ni `MAG_SELECT` (la fonction 7 est refusée) |
-| 5 | AOCS : alimenter les deux senseurs stellaires, sélectionner le principal | `ST1_POWER(on=1)` (func_id 4), `ST2_POWER(on=1)` (func_id 5), `ST_SELECT(unit=1)` (func_id 6) | □ | EO-Sat-1 embarque DEUX têtes ; `aocs.st1_status` (0x0240) / `aocs.st2_status` (0x0243) = 2 (TRACKING) |
-| 6 | AOCS : recouper la solution ST avec l'estimation grossière | `aocs.att_error` (0x0217) | □ | Concordance à 5° près ; l'erreur passe sous 1.0° une fois le senseur dans la boucle |
-| 7 | SPACON : consigner ; GO COM-004 | (journal de mission) | □ | « COM-003 complete » |
+| 1 | AOCS : activer la télémesure de servitude de détermination AOCS | `HK_ENABLE(sid=2)`, `HK_ENABLE(sid=7)` (S3.5) | □ | Le SID 7 transporte les voies d'étalonnage 0x02C9–0x02D0 toutes les 4 s ; sans lui, l'étalonnage se déroule à l'aveugle |
+| 2 | AOCS : alimenter les trois gyroscopes | `S2_AOCS_GYROSCOPE_0(device_id=518, state=1)`, `S2_AOCS_GYROSCOPE_1(device_id=519, state=1)`, `S2_AOCS_GYROSCOPE_2(device_id=520, state=1)` (S2.1) | □ | `aocs.gyro_units_on` (0x0294) = 3 ; `aocs.gyro_units_mask` (0x02D1) = 7 (bit 0 X, bit 1 Y, bit 2 Z). Ni unité redondante ni ligne d'alimentation IMU |
+| 3 | AOCS : alimenter les deux senseurs stellaires, sélectionner ST1 | `ST1_POWER(on=1)` (func_id 4), `ST2_POWER(on=1)` (func_id 5), `ST_SELECT(unit=1)` (func_id 6) | □ | 1 = ST1, 2 = ST2, 0 est refusé. `aocs.st1_status` (0x0240) = 2 et `aocs.st1_num_stars` (0x0241) ≥ 5 en 120 s ; `aocs.st2_status` (0x0243) = 2 |
+| 4 | AOCS : attendre le bit 0 de `aocs.est_source` — aucune commande de mode | (observation) | □ | Rester dans le NOMINAL laissé par COM-004. Bit 0 de `aocs.est_source` (0x02C1) (aide du senseur stellaire) positionné en 600 s ; `aocs.knowledge_err_3sig` (0x02A7) < 300 arcsec. La condition `0x0A03` est ce bit, et non le mode |
+| 5 | AOCS : consigner le biais avant étalonnage | `HK_REQUEST(sid=2)` (S3.27) | □ | `aocs.gyro_bias_x/y/z` (0x0270–0x0272) et `aocs.gyro_bias_resid` (0x02D2) ; quelques 1e-5 °/s sur une unité saine |
+| 6 | AOCS : lancer l'étalonnage du biais gyroscopique À BORD | `AOCS_GYRO_CALIBRATION(action=0, duration_s=300)` (S8 func_id 13) | □ | `aocs.gyro_cal_state` (0x02C9) = 1 (RUNNING) en 20 s. Les codes de refus `0x0A01`–`0x0A05` sont mémorisés dans 0x02D0 ; le S1.7 arrive à la fin de l'arc. Il n'y a pas d'envoi d'un biais calculé au sol |
+| 7 | AOCS : suivre l'arc de 300 s — ni basculement, ni désaturation, ni changement de mode | `HK_REQUEST(sid=7)` (S3.27) toutes les 30 s | □ | `aocs.gyro_cal_progress` (0x02CA) ≥ 100 en 330 s |
+| 8 | AOCS : vérifier le résultat et consigner le biais | `GET_PARAM(param_id=0x02CB)` … `(param_id=0x02CD)` (S20.3) | □ | `aocs.gyro_cal_state` = 2 (COMPLETE), `aocs.gyro_cal_result` (0x02CF) = 1 ; chaque axe à ±0,5 °/s |
+| 9 | AOCS : confirmer que la compensation a pris effet | `HK_REQUEST(sid=2)`, `HK_REQUEST(sid=7)` (S3.27) | □ | `aocs.gyro_bias_resid` (0x02D2) < 0,005 °/s ; `aocs.gyro_cal_comp_mag` (0x02CE) consigné |
+| 10 | AOCS : contrôle de la détermination sur cinq minutes ; consigner ; GO COM-005 | `HK_REQUEST(sid=7)` (S3.27) toutes les 60 s pendant 5 min | □ | `aocs.knowledge_err_3sig` < 120 arcsec ; `aocs.control_err` (0x02A8) < 1,0°. « COM-003 complete » |
 
 </div>
 
@@ -7327,9 +7461,9 @@ console.
 
 <div class="procedure-card-header" markdown="1">[AOCS] COM-004 — Vérification des actionneurs SCAO</div>
 
-**Point d'entrée :** passage 1 de recette en orbite, après le GO de COM-003. AOCS en COARSE_SUN (`aocs.mode` 0x020F = 3), vitesses angulaires < 0.05 °/s, `eps.pl_aocs_wheels` (0x0117) = 1 depuis LEOP-007, SoC > 65 %, ≥ 20 min de passage restantes.
+**Point d'entrée :** passage 1 de recette en orbite, après le GO de COM-002 et **avant** COM-003 (décision Q16). AOCS dans le maintien COARSE_SUN de la LEOP (`aocs.mode` 0x020F = 3, ou 8 en éclipse), roues DISABLED, senseurs stellaires et gyroscopes OFF, vitesses angulaires < 0,5 °/s, `eps.pl_aocs_wheels` (0x0117) = 1 depuis LEOP-007, SoC > 65 %, ≥ 20 min de passage restantes.
 
-**Objectif :** **activer les quatre roues de réaction** — aucune autre procédure du catalogue ne le fait —, puis faire monter et redescendre chacune en vitesse par rapport à sa référence, lire les températures des roues et répéter une désaturation magnétique.
+**Objectif :** **activer les quatre roues de réaction** — aucune autre procédure du catalogue ne le fait — et commander le NOMINAL piloté par les roues ; puis faire monter et redescendre chaque roue en vitesse par rapport à sa référence, lire les températures des roues et répéter une désaturation magnétique. COM-003 étalonne ensuite les gyroscopes dans ce NOMINAL.
 
 **C'est cette fiche qui confie l'autorité d'attitude aux roues.** Le chargeur d'amorçage démarre le satellite avec toutes les roues **DISABLED** et les laisse ainsi. Alimenter la ligne EPS `aocs_wheels` n'alimente que l'électronique de commande ; cette séparation est voulue, pour qu'une commutation de ligne d'alimentation ne puisse jamais rendre silencieusement l'autorité de commande à la boucle. Si l'on saute cette fiche, `aocs.wheels_enabled` (0x0260) reste à 0, NOMINAL et FINE_POINT n'ont aucun actionneur, et la règle FDIR sur `aocs.wheels_enabled < 2` fait passer l'AOCS en sécurité dès que la phase de mission atteint NOMINAL.
 
@@ -7344,12 +7478,13 @@ console.
 | Étape | Action | TC / code | Confirmation | Remarques |
 |:----:|:-------|:----------|:--------|:------|
 | 1 | AOCS : activer les quatre roues de réaction, une commande par roue | `AOCS_ENABLE_WHEEL(wheel_idx=0)`, `(wheel_idx=1)`, `(wheel_idx=2)`, `(wheel_idx=3)` (S8 func_id 3) | □ | `aocs.wheels_enabled` (0x0260) = 4 et `aocs.rw1_enabled`…`rw4_enabled` (0x0254–0x0257) = 1 en 10 s. Aucune autre commande du catalogue n'active une roue |
-| 2 | AOCS : consigner les vitesses de référence des roues | `HK_REQUEST(sid=2)` (S3.27) | □ | 0x0207–0x020A ; des vitesses non nulles en COARSE_SUN sont normales — cette référence sert à tous les contrôles ci-dessous |
-| 3 | AOCS : faire monter chaque roue en vitesse, la faire passer par zéro et revenir | `RW_SET_SPEED_BIAS(wheel_idx=N, bias_rpm=2000.0)`, puis `(bias_rpm=-4000.0)` (S8 func_id 8) | □ | Le biais **s'ajoute à la vitesse courante de la roue**. Référence +1800…+2200 tr/min en 60 s, puis référence −2200…−1800 tr/min en 120 s ; `aocs.att_error` (0x0217) < 5° tout du long |
-| 4 | AOCS : ramener chaque roue à zéro | `AOCS_RW_RAMP_DOWN(wheel_idx=N, target_rpm=0.0)` (S8 func_id 14) | □ | < 100 tr/min en 60 s. Les vitesses 0x0207–0x020A sont en LECTURE SEULE — elles ne peuvent pas être réglées avec `SET_PARAM` |
-| 5 | AOCS : lire les températures des roues | `GET_PARAM(param_id=0x0218)`…`(0x021B)` (S20.3) | □ | −10…+55 °C. 0x028A–0x028D sont les pourcentages de santé des têtes CSS, **pas** des températures de roues |
-| 6 | AOCS : répétition de désaturation sur les magnétocoupleurs | `AOCS_DESATURATE` (S8 func_id 1) | □ | Vitesses tendant vers 0 tr/min ; `aocs.att_error` < 5°. Prévoir honnêtement une fenêtre de déchargement de **20–50 min** (voir CTG-007), et non les cinq à dix qu'une note de répétition pourrait suggérer |
-| 7 | SPACON : rédiger le rapport de recette des roues ; consigner ; GO COM-005 | (journal de mission) | □ | « COM-004 complete » ; postcondition `aocs.wheels_enabled` (0x0260) = 4 |
+| 2 | AOCS : commander le NOMINAL piloté par les roues | `AOCS_SET_MODE(mode=4)` (S8 func_id 0) | □ | `aocs.mode` (0x020F) = 4 (ou 8 en éclipse) en 300 s ; `aocs.commanded_mode` (0x0297) = 4. Accepté sans senseur stellaire : la connaissance d'attitude reste sur la voie grossière Soleil–magnétomètre jusqu'à COM-003 |
+| 3 | AOCS : consigner les vitesses de référence des roues | `HK_REQUEST(sid=2)` (S3.27) | □ | 0x0207–0x020A ; les roues tout juste activées reprennent aussitôt la charge de contrôle, des vitesses non nulles sont donc normales — cette référence sert à tous les contrôles ci-dessous |
+| 4 | AOCS : faire monter chaque roue en vitesse, la faire passer par zéro et revenir | `RW_SET_SPEED_BIAS(wheel_idx=N, bias_rpm=2000.0)`, puis `(bias_rpm=-4000.0)` (S8 func_id 8) | □ | Le biais **s'ajoute à la vitesse courante de la roue**. Référence +1800…+2200 tr/min en 60 s, puis référence −2200…−1800 tr/min en 120 s ; `aocs.att_error` (0x0217) < 5° tout du long |
+| 5 | AOCS : ramener chaque roue à zéro | `AOCS_RW_RAMP_DOWN(wheel_idx=N, target_rpm=0.0)` (S8 func_id 14) | □ | < 100 tr/min en 60 s. Les vitesses 0x0207–0x020A sont en LECTURE SEULE — elles ne peuvent pas être réglées avec `SET_PARAM` |
+| 6 | AOCS : lire les températures des roues | `GET_PARAM(param_id=0x0218)`…`(0x021B)` (S20.3) | □ | −10…+55 °C. 0x028A–0x028D sont les pourcentages de santé des têtes CSS, **pas** des températures de roues |
+| 7 | AOCS : répétition de désaturation sur les magnétocoupleurs | `AOCS_DESATURATE` (S8 func_id 1) | □ | Vitesses tendant vers 0 tr/min ; `aocs.att_error` < 5°. Prévoir honnêtement une fenêtre de déchargement de **20–50 min** (voir CTG-007), et non les cinq à dix qu'une note de répétition pourrait suggérer |
+| 8 | SPACON : rédiger le rapport de recette des roues ; consigner ; GO COM-003 | (journal de mission) | □ | « COM-004 complete » ; postcondition `aocs.wheels_enabled` (0x0260) = 4, AOCS en NOMINAL commandé |
 
 </div>
 
@@ -7359,30 +7494,27 @@ console.
 
 <div class="procedure-card-header" markdown="1">[AOCS] COM-005 — Transitions de modes SCAO</div>
 
-**Point d'entrée :** passage 1 de recette en orbite, après le GO de COM-004 — `aocs.wheels_enabled` (0x0260) = 4 (trois est acceptable, en mode dégradé) — et avec le jeu événement-action de LEOP toujours armé. Les modes pilotés par les roues ne peuvent pas être utilisés avant l'exécution de COM-004.
+**Point d'entrée :** après le GO de COM-003 : roues activées (`aocs.wheels_enabled` 0x0260 = 4 ; trois est acceptable, en mode dégradé), senseur stellaire dans la boucle, gyroscopes étalonnés, AOCS déjà en NOMINAL commandé (mode 4, ou 8 en éclipse) depuis COM-004.
 
-**Objectif :** parcourir l'échelle des modes COARSE_SUN → NOMINAL → FINE_POINT et retour, en vérifiant la stabilisation et le bilan de pointage à chaque étape.
+**Objectif :** exercer chaque transition **commandée** utilisée par le concept d'opérations — NOMINAL → FINE_POINT → NOMINAL, NOMINAL → INERTIAL → NOMINAL, le maintien COARSE_SUN, la désaturation — et **observer** les transitions automatiques : le retour depuis le maintien, le passage en éclipse et la fin de DESAT. Commander ce qui se commande, attendre et vérifier ce qui est automatique, et ne jamais vérifier le mode que l'on vient de quitter.
 
 **Issues défavorables possibles / écarts :**
 
-- Les vitesses angulaires réaugmentent lors de la transition → CTG-002 Anomalie SCAO ; revenir au mode précédent
-- `AOCS_SET_MODE(mode=5)` refusée avec S1.8 → lire `aocs.fine_ready` (0x02C5) : un masque de bits non nul désigne la précondition non satisfaite (bit 0 ST < 5 étoiles, bit 1 moins de TROIS roues, bit 2 MEKF non convergé, bit 3 vitesses angulaires élevées, bit 4 moment cinétique > 70 %, bit 5 propagation seule, bit 6 basculement non inactif depuis 60 s)
-- Moment cinétique des roues en hausse pendant la séquence → désaturation NOM-007
-
-**Arbre de décision :**
-
-- SI la stabilisation dépasse 5 min dans un mode quelconque → attente (HOLD), analyser la situation avant la transition suivante
-- SI `aocs.att_error` > 0.1° en FINE_POINT après 5 min → revenir en NOMINAL ; le FD examine les données
+- `AOCS_SET_MODE(mode=5)` refusée avec `0x0A22` → lire `aocs.fine_ready` (0x02C5) : un masque non nul désigne la condition non remplie (bit 0 ST < 5 étoiles, bit 1 moins de TROIS roues, bit 2 MEKF non convergé, bit 3 vitesses élevées, bit 4 moment cinétique ≥ 70 %, bit 5 propagation seule ou éclipse, bit 6 basculement non inactif depuis 60 s) ; en éclipse, attendre l'arc éclairé
+- Pas de promotion automatique hors de COARSE_SUN dans la fenêtre → vérifier la validité des CSS (l'éclipse la bloque), `aocs.att_error` < 15° et la poursuite du senseur stellaire ; rétablir le senseur (CTG-008) plutôt que forcer le mode
+- DESAT se termine avec `aocs.desat_ineffective` (0x029C) = 1 → l'autorité des magnétocoupleurs n'a pas suffi à temps ; recommencer sur un arc polaire
+- Les vitesses remontent lors d'une transition → CTG-002 Anomalie SCAO
 
 | Étape | Action | TC / code | Confirmation | Remarques |
 |:----:|:-------|:----------|:--------|:------|
-| 1 | AOCS : confirmer l'état de départ | `HK_REQUEST(sid=2)` (S3.27) | □ | `aocs.mode` (0x020F) = 3 (COARSE_SUN) ; erreur < 5° |
-| 2 | AOCS : commander NOMINAL (nadir) | `AOCS_SET_MODE(mode=4)` (S8 func_id 0) | □ | Mode 4 ; erreur < 1.0° en 120 s ; vitesses angulaires < 0.05 °/s |
-| 3 | AOCS : lire le masque de préconditions FINE | `AOCS_FINE_READY_CHECK` (S8 func_id 89) | □ | `aocs.fine_ready` (0x02C5) = 0 |
-| 4 | AOCS : commander FINE_POINT | `AOCS_SET_MODE(mode=5)` (S8 func_id 0) | □ | Mode 5 ; erreur < 0.1° en 300 s ; vitesses angulaires < 0.01 °/s |
-| 5 | AOCS : tenir FINE_POINT pour l'évaluation de stabilité | `HK_REQUEST(sid=2)` toutes les 30 s pendant 5 min | □ | L'erreur reste < 0.1° ; `aocs.fine_degraded` (0x0299) consigné |
-| 6 | AOCS : redescendre l'échelle et rétablir | `AOCS_SET_MODE(mode=4)`, puis `(mode=3)` (S8 func_id 0) | □ | Chaque retour accepté et stabilisé |
-| 7 | SPACON : consigner ; GO COM-006 | (journal de mission) | □ | « COM-005 complete » |
+| 1 | AOCS : verrouiller le mode commandé | `AOCS_SET_MODE(mode=4)` (S8 func_id 0) | □ | Déjà en mode 4 depuis COM-004 ; la commande verrouille `aocs.commanded_mode` (0x0297) = 4. Mode 4 ou 8 ; erreur < 1,0° en 600 s sur le côté éclairé |
+| 2 | AOCS : NOMINAL → FINE_POINT par sa condition d'entrée | `AOCS_FINE_READY_CHECK` (S8 func_id 89) ; `AOCS_SET_MODE(mode=5)` (S8 func_id 0) | □ | D'abord `aocs.fine_ready` (0x02C5) = 0 ; puis mode 5 en 30 s, erreur < 0,1° en 300 s |
+| 3 | AOCS : FINE_POINT → NOMINAL | `AOCS_SET_MODE(mode=4)` (S8 func_id 0) | □ | Mode 4 en 30 s ; `aocs.commanded_mode` = 4 |
+| 4 | AOCS : NOMINAL → INERTIAL et retour | `AOCS_SET_MODE(mode=9)`, puis `(mode=4)` (S8 func_id 0) | □ | Mode 9 en 30 s, puis mode 4 en 30 s. INERTIAL est le seul mode opérationnel qui se maintient à travers le terminateur |
+| 5 | AOCS : commander le maintien COARSE_SUN, puis attendre le retour automatique | `AOCS_SET_MODE(mode=3)` (S8 func_id 0) | □ | Mode 3 et `aocs.mode_demoted` (0x0298) = 1 en 30 s ; puis mode 4 de lui-même en 1800 s et l'indicateur de rétrogradation revenu à 0. Vérifier le mode PROMU, et non le mode 3 |
+| 6 | AOCS : observer le passage en éclipse dans l'archive | (archive) | □ | Mode 4 ↔ 8 au terminateur, avec `aocs.commanded_mode` = 4 tout du long ; aucune commande |
+| 7 | AOCS : désaturation, qui se termine d'elle-même | `AOCS_DESATURATE` (S8 func_id 1) | □ | Mode 7 (DESAT) en 30 s, puis retour au mode 4 en 900 s sans commande |
+| 8 | SPACON : archiver la matrice des transitions ; consigner ; GO COM-006 | (journal de mission) | □ | Chaque ligne commandée porte sa TC et sa vérification, chaque ligne automatique son déclencheur et son heure. « COM-005 complete » |
 
 </div>
 
@@ -7422,25 +7554,26 @@ console.
 
 <div class="procedure-card-header" markdown="1">[OB] COM-007 — Vérification de l'OBDH</div>
 
-**Point d'entrée :** passage 2 de recette en orbite, après le bilan de santé d'ouverture de passage.
+**Point d'entrée :** après COM-006 : AOCS en NOMINAL commandé, liaison descendante en LOW avec l'antenne déployée, OBC en NOMINAL (`obdh.mode` 0x0300 = 0), SoC > 60 %.
 
-**Objectif :** vérifier les compteurs de CPU, de mémoire et de paquets, solliciter les transitions de mode de l'OBC et confirmer que le chien de garde est armé, sans réinitialisation inexpliquée.
+**Objectif :** vérifier la charge du processeur, la mémoire et les compteurs de paquets, la génération autonome de HK et le chien de garde, exercer l'excursion de mode de l'OBC NOMINAL → SAFE → NOMINAL, et **terminer en NOMINAL**.
 
 **Issues défavorables possibles / écarts :**
 
-- Chien de garde signalé désactivé ou cause de réinitialisation inattendue → CTG-010 Reprise après chien de garde OBDH
-- Compteur d'erreurs EDAC multibits non nul → CTG-016 Défaillance d'un segment mémoire ; reporter la mise sous tension de la charge utile
-- Transition de mode non franche → suspecter l'OBC ; CTG-011 Basculement sur l'OBC redondant
+- Chien de garde indiqué désarmé ou cause de réinitialisation inattendue → CTG-010 Reprise après chien de garde de l'OBDH
+- Compteur d'erreurs mémoire ou de SEU en hausse entre deux lectures → CTG-016 Défaillance d'un segment mémoire ; reporter la mise sous tension de la charge utile
+- La transition de mode échoue → réessayer une fois ; si NOMINAL reste inaccessible, ne poursuivre en SAFE qu'avec l'accord du FD et émettre un rapport d'anomalie
 
 | Étape | Action | TC / code | Confirmation | Remarques |
 |:----:|:-------|:----------|:--------|:------|
-| 1 | OBDH : vérifier le mode et la charge de l'OBC | `HK_REQUEST(sid=4)` (S3.27) | □ | `obdh.mode` (0x0300) = 0 ou 1 ; `obdh.cpu_load` (0x0302) 10–50 % |
-| 2 | OBDH : contrôler la santé de la mémoire | `GET_PARAM(param_id=0x0303)`, `GET_PARAM(param_id=0x0304)` (S20.3) | □ | RAM < 70 % ; compteur EDAC multibits = 0 |
-| 3 | OBDH : contrôler les compteurs TC/TM | `GET_PARAM(param_id=0x0310)` … `(0x0312)` (S20.3) | □ | TC rejetées = 0 ; TM générées en progression |
-| 4 | OBDH : solliciter les transitions de mode | `OBC_SET_MODE(mode=1)` puis `(mode=0)` puis `(mode=1)` (S8 func_id 50) | □ | Dans les deux sens et franches, en 15 s chacune |
-| 5 | OBDH : vérifier le chien de garde et la cause de la dernière réinitialisation | `GET_PARAM(param_id=0x0305)`, `GET_PARAM(param_id=0x0306)` (S20.3) | □ | Chien de garde ENABLED ; cause de réinitialisation POWER_ON |
-| 6 | OBDH : relecture mémoire d'une zone connue | `MEM_DUMP` (S6.5) ; `MEM_CHECK` (S6.9) | □ | Comparaison de somme de contrôle — identique au bit près |
-| 7 | SPACON : consigner ; GO COM-008 | (journal de mission) | □ | « COM-007 complete » |
+| 1 | OBDH : vérifier le mode de l'OBC | `HK_REQUEST(sid=4)` (S3.27) | □ | `obdh.mode` (0x0300) = 0 (NOMINAL). Codage : 0 NOMINAL, 1 SAFE, 2 EMERGENCY |
+| 2 | OBDH : vérifier la charge du processeur | `GET_PARAM(param_id=0x0302)` (S20.3) | □ | `obdh.cpu_load` 10–50 % |
+| 3 | OBDH : vérifier la santé de la mémoire | `GET_PARAM(param_id=0x0303)`, `GET_PARAM(param_id=0x031E)`, `GET_PARAM(param_id=0x0319)` (S20.3) | □ | `obdh.mmm_used` < 70 % ; `obdh.mem_errors` et `obdh.seu_count` relevés comme référence et stables entre deux lectures |
+| 4 | OBDH : vérifier les compteurs de TC et de TM | `GET_PARAM(param_id=0x0304)`, `GET_PARAM(param_id=0x0306)`, `GET_PARAM(param_id=0x0307)` (S20.3) | □ | TC reçues conformes au journal sol ; TC rejetées = 0 ; TM générées en hausse |
+| 5 | OBDH : vérifier la génération autonome de HK | `GET_PARAM(param_id=0x0307)` avant et après un intervalle | □ | `obdh.tm_pkt_count` a augmenté |
+| 6 | OBDH : vérifier le chien de garde et la dernière cause de réinitialisation | `OBC_DIAGNOSTIC` (S8 func_id 61) ; `GET_PARAM(param_id=0x0316)` (S20.3) | □ | Réponse du diagnostic : chien de garde armé ; `obdh.last_reboot_cause` = 0 (aucune) |
+| 7 | OBDH : excursion de mode NOMINAL → SAFE → NOMINAL | `OBC_SET_MODE(mode=1)`, puis `OBC_SET_MODE(mode=0)` (S8 func_id 50) | □ | `obdh.mode` = 1 en 15 s, puis 0 en 15 s. La fiche ne doit pas se terminer en SAFE |
+| 8 | SPACON : consigner la référence de l'OBDH ; consigner ; GO COM-008 | (journal de mission) | □ | « COM-007 complete » |
 
 </div>
 
@@ -7448,34 +7581,25 @@ console.
 
 <div class="procedure-card procedure-card-commissioning" markdown="1">
 
-<div class="procedure-card-header" markdown="1">[OB] COM-008 — Configuration et essai de la FDIR</div>
+<div class="procedure-card-header" markdown="1">[OB] COM-008 — Configuration de la FDIR et fonctions de protection</div>
 
-**Point d'entrée :** passage 2 de recette en orbite, après le GO de COM-007. **Critique :** la FDIR est sur le point de passer du jeu LEOP au jeu nominal.
+**Point d'entrée :** après le GO de COM-007 : OBC en NOMINAL (`obdh.mode` 0x0300 = 0), AOCS en NOMINAL commandé, liaison descendante en LOW, lignes charge utile et refroidisseur OFF, aucun verrouillage de délestage (`eps.load_shed_stage` 0x0134 = 0), SoC > 70 %, marge de liaison > 6 dB, accord du FD pour l'essai des fonctions de protection.
 
-**Objectif :** armer le jeu événement-action nominal, vérifier l'inventaire des règles, et réaliser un essai aller-retour en provoquant une condition bénigne pour vérifier que la bonne règle se déclenche, agit et retombe.
+**Objectif :** confirmer que la pile de protection de bord est configurée et vivante avant que la charge utile vole : le service de surveillance S12 et ses définitions, la table événement-action S19, la télémesure de synthèse FDIR, et l'échelle de délestage commandée avec son verrouillage. La fiche se termine exactement dans l'état où elle a commencé.
 
 **Issues défavorables possibles / écarts :**
 
-- Échec du chargement des définitions → renvoyer une fois ; si l'échec persiste, CTG-010
-- L'essai aller-retour déclenche la mauvaise règle → signaler et revoir la configuration FDIR ; ne pas aborder COM-009 tant que tout n'est pas propre
-- Une règle se déclenche immédiatement après l'armement → l'identifier, désactiver cette définition, ouvrir une fiche
-
-**Arbre de décision :**
-
-- SI l'inventaire correspond au manifeste ET l'aller-retour est propre → GO COM-009
-- SI une règle inattendue se déclenche dans les 60 s → attente (HOLD), analyser la cause ; GO du FD requis pour reprendre
-- SI le chargement échoue deux fois → revenir au jeu LEOP ; reporter COM-008 au passage suivant
+- TM(12,13) ou TM(19,128) vide, ou définitions manquantes → recharger depuis la base de données d'exploitation (`MON_ADD_DEF` / `EA_ADD` selon l'enregistrement de la base) et redemander le rapport
+- `eps.load_shed_stage` ne se verrouille pas à l'étape 4, ou l'étage 0 réalimente une ligne → régression du traitement du délestage ; la consigner, escalader, et ne pas passer à la recette de la charge utile
+- `fdir.level` (0x0700) ≠ 0 à l'étape 3 ou 5 → lire le journal FDIR et supprimer la cause sous-jacente ; ne jamais désactiver la règle pour valider la fiche
 
 | Étape | Action | TC / code | Confirmation | Remarques |
 |:----:|:-------|:----------|:--------|:------|
-| 1 | SPACON : relever les définitions actuelles en vue d'un retour arrière | `EA_REPORT_DEFS` (S19.8) | □ | Jeu LEOP |
-| 2 | SPACON : armer les définitions nominales (une TC par définition) | `EA_ENABLE(ea_id=…)` (S19.4) | □ | L'argument est `ea_id`, pas `definition_id`. S1.7 en 5 s pour chacune ; `EA_DISABLE` est S19.5, `EA_ADD` S19.1 |
-| 3 | SPACON : vérifier l'inventaire par rapport au manifeste | `EA_REPORT_DEFS` (S19.8) | □ | Toutes armées |
-| 3a | SPACON : relire la table de surveillance S12 depuis le satellite | `MON_REPORT_DEFS` (S12.12) | □ | Renvoie **TM(12,13)** : `count` puis un enregistrement de 14 octets par définition — `mon_id`, `param_id`, `check_type` (0 absolu / 1 delta), `enabled`, `low_limit`, `high_limit`. On lit ainsi ce que le satellite détient réellement, et non ce que la base de données sol croit avoir envoyé ; `mon_id` désigne la *définition*, si bien qu'un même paramètre peut porter un niveau WARNING et un niveau ALARM. Les commutateurs par définition sont `MON_ENABLE_DEF` (S12.3) / `MON_DISABLE_DEF` (S12.4) ; `MON_ENABLE` (S12.1) / `MON_DISABLE` (S12.2) sont les commutateurs du service entier |
-| 4 | SPACON : provoquer un déclenchement bénin | `SET_PARAM(param_id=0x0324, value=0.01)` (S20.1) — abaisser la limite de vitesse angulaire AOCS | □ | Injection de panne maîtrisée |
-| 5 | SPACON : vérifier que la règle se déclenche et que l'action s'exécute | `HK_REQUEST(sid=2)`, `HK_REQUEST(sid=4)` (S3.27) | □ | Consigner la gravité FDIR (échelle 0–4) et, séparément, le niveau d'autonomie (0–3) — ce sont des échelles différentes, jamais interchangeables |
-| 6 | SPACON : rétablir le seuil et reprendre | `SET_PARAM(param_id=0x0324, value=10.0)` (S20.1) ; `OBC_SET_MODE(mode=1)` ; `AOCS_SET_MODE(mode=3)` | □ | `obdh.mode` = 1 ; `aocs.mode` (0x020F) = 3 ; erreur < 10° |
-| 7 | SPACON : vérifier l'absence d'effets résiduels ; consigner ; GO du FD pour COM-009 | `HK_REQUEST(sid=1)`, `HK_REQUEST(sid=2)` (S3.27) | □ | « COM-008 complete » |
+| 1 | SPACON : activer et inventorier le service de surveillance S12 | `MON_ENABLE` (S12.1) ; `MON_REPORT_DEFS` (S12.12) | □ | TM(12,13) en 10 s : `count`, puis un enregistrement par définition (`mon_id`, `param_id`, `check_type`, `enabled`, limites). Comparer à la base de données d'exploitation : toutes les définitions livrées présentes, aucune inattendue |
+| 2 | SPACON : inventorier la table événement-action S19 | `EA_REPORT_DEFS` (S19.8) | □ | TM(19,128) en 10 s. La chaîne de gestion du moment cinétique (surveillance S12 sur `aocs.h_env_frac` 0x02BA → ea_id 2001 → fonction S8 1) et la chaîne de mise en sécurité en surchauffe du TCS (ea 3003) présentes et activées |
+| 3 | SPACON : lire la télémesure de synthèse FDIR | `GET_PARAM(param_id=0x0700)`, `GET_PARAM(param_id=0x0701)` (S20.3) | □ | `fdir.level` = 0 et `fdir.active_alarms` = 0 : une référence propre pour l'essai fonctionnel |
+| 4 | EPS : essai fonctionnel du verrouillage de délestage commandé | `EPS_EMERGENCY_LOAD_SHED(stage=1)`, puis `(stage=0)` (S8 func_id 25) | □ | Consigner d'abord les indicateurs de ligne. Étage 1 : `eps.load_shed_stage` = 1 en 5 s (il se VERROUILLE), événement `LOAD_SHED_STAGE_1` (0x0106), `eps.pl_payload` (0x0113) = 0. Étage 0 : verrouillage revenu à 0, et aucune ligne réalimentée. Ne jamais commander l'étage 2 ou 3 ici : l'étage 3 coupe `ttc_tx` et fait tomber cette liaison descendante |
+| 5 | SPACON : confirmer l'absence d'état de protection résiduel ; consigner ; GO du FD pour COM-009 | `GET_PARAM(param_id=0x0700)` (S20.3) ; `HK_REQUEST(sid=1)`, `HK_REQUEST(sid=4)` (S3.27) | □ | `fdir.level` = 0 ; `eps.load_shed_stage` = 0 ; `obdh.mode` = 0 (NOMINAL) — cette fiche ne fait aucune excursion de mode de l'OBC. « COM-008 complete » |
 
 </div>
 
@@ -7523,7 +7647,7 @@ console.
 
 **Objectif :** amener le FPA de la température ambiante à la **consigne par défaut de −15 °C** et confirmer qu'il y est régulé, avec une marge positive du refroidisseur.
 
-*(EO-Sat-1 embarque un **cryoréfrigérateur miniature de type Stirling**, et
+*(EOSAT-1 embarque un **cryoréfrigérateur miniature de type Stirling**, et
 non un empilement thermoélectrique. Son autorité se dégrade avec l'écart
 de température à franchir — `fpa_cooler_carnot_fraction` = 0.23 —, de sorte
 que la température plancher atteignable dépend de la température du puits
@@ -7594,33 +7718,33 @@ beaucoup plus bas, et cette fiche adopte l'enveloppe de vol.)*
 
 <div class="procedure-card-header" markdown="1">[MULTI] COM-012 — Première lumière</div>
 
-**Point d'entrée :** passage 4 de recette en orbite, après le GO de COM-011. La procédure phare.
+**Point d'entrée :** après COM-010 — COM-012 passe **avant** COM-011, car l'étalonnage exige une chaîne de prise de vue vérifiée. Charge utile en STANDBY, refroidisseur en marche avec `payload.fpa_ready` (0x0610) = 1 à −15 °C, AOCS en NOMINAL commandé, liaison descendante en LOW, SoC > 70 %, à l'approche d'une cible sol connue. La procédure phare.
 
-**Objectif :** acquérir la première image scientifique d'une cible désignée et la transférer au sol.
+**Objectif :** acquérir la première image scientifique, vérifier qu'elle est stockée, et la transmettre au sol par la vraie chaîne du service 13 pour une première évaluation de qualité.
 
 **Issues défavorables possibles / écarts :**
 
-- `payload.last_scene_quality` (0x060D) médiocre → CTG-015 Reprise après image corrompue ; refaire l'acquisition au passage suivant
-- Erreur de pointage > 0.1° pendant l'intégration → image probablement filée ; marquer et refaire l'acquisition
-- Cascade AOCS / charge utile (défaillance tardive du senseur stellaire) → CTG-008 → CTG-002, reporter la première lumière, ne pas tenter de nouvel essai pendant ce quart
-- Le transfert démarre mais le sol signale des trames manquantes → CTG-014 Anomalie de TEB ; remettre en file les segments concernés
+- `payload.last_scene_quality` (0x060D) médiocre → CTG-015 Reprise d'une image corrompue ; nouvelle acquisition au passage suivant
+- Erreur de pointage > 0.1° pendant l'intégration → image probablement floue ; la marquer et recommencer
+- Cascade AOCS / charge utile (le senseur stellaire tombe en panne tardivement) → CTG-008 → CTG-002, reporter la première lumière, ne pas tenter de répétition pendant ce quart
+- Le transfert démarre mais le sol signale des trames manquantes → CTG-014 Anomalie de TEB ; rouvrir le transfert
 
 **Arbre de décision :**
 
-- SI image acquise ET qualité OK ET transfert achevé → déclarer la **première lumière**
-- SI le produit est corrompu une fois → CTG-015 ; réessayer au passage suivant (3 tentatives au plus selon la règle du FD)
-- SI anomalie AOCS / charge utile en cascade → reporter formellement ; briefer le responsable de mission
+- SI image acquise ET stockée ET transfert S13 terminé avec une somme de contrôle correcte → déclarer la **première lumière**
+- SI le produit est corrompu une fois → CTG-015 ; réessayer au passage suivant (3 tentatives au maximum selon la règle du FD)
+- SI anomalie en cascade AOCS / charge utile → report formel ; informer le responsable de mission
 
 | Étape | Action | TC / code | Confirmation | Remarques |
 |:----:|:-------|:----------|:--------|:------|
-| 1 | FD : GO pour la première lumière, sur la boucle | (annonce du FD) | □ | Double validation |
-| 2 | AOCS : confirmer FINE_POINT | `HK_REQUEST(sid=2)` (S3.27) | □ | `aocs.mode` = 5 ; `aocs.att_error` (0x0217) < 0.1° ; `aocs.total_pointing_err_3sig` (0x02AA) < 0.05° |
-| 3 | Charge utile : confirmer la disponibilité et commander IMAGING | `PAYLOAD_SET_MODE(mode=2)` (S8 func_id 26) | □ | `payload.fpa_ready` (0x0610) = 1 ; `payload.mode` (0x0600) = 2 |
-| 4 | Charge utile : déclencher l'acquisition | `PAYLOAD_CAPTURE(scene_id=1, lines=2048)` (S8 func_id 28) | □ | Le OÙ est fixé par le QUAND — dater la TC avec `SCHEDULE_TC` (S11.4) à l'instant du survol ; la géolocalisation est apposée à bord, ce n'est pas un argument |
-| 5 | Charge utile : confirmer que le produit est stocké | `payload.last_scene_id` (0x060C) = 1 ; `payload.image_count` (0x0605) incrémenté | □ | 2048 lignes × 4 bandes = 4.0 Mo ; consigner `payload.last_scene_quality` (0x060D) |
-| 6 | Charge utile : revenir en STANDBY, puis transférer le produit | `PAYLOAD_SET_MODE(mode=1)` ; `PAYLOAD_INITIATE_TRANSFER(scene_id=1)` (S8 func_id 94) | □ | `payload.transfer_progress` (0x062E) → 100 % |
-| 7 | Segment sol : vérifier la réception de l'image | (livraison sol) | □ | La chaîne image est réelle de bout en bout — un produit qui n'apparaît jamais n'a pas été produit |
-| 8 | FD : déclarer la première lumière | (journal de mission) | □ | « COM-012 complete » |
+| 1 | AOCS : passer en FINE_POINT par sa condition d'entrée | `AOCS_FINE_READY_CHECK` (S8 func_id 89) ; `AOCS_SET_MODE(mode=5)` (S8 func_id 0) | □ | `aocs.mode` = 5 en 30 s ; `aocs.total_pointing_err_3sig` (0x02AA) < 0.05° en 300 s ; `aocs.att_error` (0x0217) < 0.1° |
+| 2 | Charge utile : vérifier la température du FPA et la disponibilité | `GET_PARAM(param_id=0x0601)` (S20.3) ; `HK_REQUEST(sid=5)` (S3.27) | □ | `payload.fpa_temp` −16.5…−14.5 °C ; `payload.mode` (0x0600) = 1 ; consigner `payload.image_count` (0x0605) et `payload.mem_used_mb` (0x060B) comme références |
+| 3 | Charge utile : commander IMAGING | `PAYLOAD_SET_MODE(mode=2)` (S8 func_id 26) | □ | `payload.mode` = 2 en 30 s |
+| 4 | Charge utile : déclencher l'acquisition | `PAYLOAD_CAPTURE(scene_id=1, lines=2048)` (S8 func_id 28) | □ | `payload.last_scene_id` (0x060C) = 1 en 30 s ; `payload.image_count` incrémenté. La géolocalisation est horodatée à bord, ce n'est pas un argument |
+| 5 | Charge utile : confirmer que le produit est stocké | `GET_PARAM(param_id=0x0604)`, `GET_PARAM(param_id=0x060B)` (S20.3) | □ | `payload.store_used` en hausse ; `payload.mem_used_mb` en hausse de 1.0–4.0 MB par rapport à la référence de l'étape 2 (4 MB brut, 1.0–2.7 MB compressé) |
+| 6 | Charge utile : revenir en STANDBY | `PAYLOAD_SET_MODE(mode=1)` (S8 func_id 26) | □ | `payload.mode` = 1 en 15 s ; le refroidisseur continue de tourner |
+| 7 | TT&C + charge utile : transmettre le produit par S13 | `TTC_SET_DOWNLINK_MODE(on=1)` ; `TTC_SET_DATA_RATE(rate=1)` ; `S13_CREATE_TRANSFER(scene_id=1, size_mb=0)` ; `S13_END_TRANSFER(transfer_id=T)` ; puis `TTC_SET_DATA_RATE(rate=0)`, `TTC_SET_DOWNLINK_MODE(on=0)` | □ | `ttc.tm_data_rate` (0x0506) = 128000 bit/s ; `payload.transfer_active` (0x062D) = 1, `payload.transfer_progress` (0x062E) en hausse, puis 0x062D = 0 ; CRC-32 au sol ; retour à 16000 bit/s |
+| 8 | AOCS : quitter FINE_POINT ; le FD déclare la première lumière | `AOCS_SET_MODE(mode=4)` (S8 func_id 0) | □ | `aocs.mode` = 4 en 30 s ; charge utile en STANDBY, FPA toujours dans sa plage. « COM-012 complete » |
 
 </div>
 
@@ -7628,28 +7752,25 @@ beaucoup plus bas, et cette fiche adopte l'enveloppe de vol.)*
 
 <div class="procedure-card procedure-card-commissioning" markdown="1">
 
-<div class="procedure-card-header" markdown="1">[AOCS] COM-013 — Recette complète du SCAO</div>
+<div class="procedure-card-header" markdown="1">[AOCS] COM-013 — Clôture de la recette SCAO et déclaration NOMINAL</div>
 
-**Point d'entrée :** après la déclaration de la première lumière, avant les opérations nominales.
+**Point d'entrée :** après COM-011 — l'ordre de recette se termine par COM-010, COM-012 Première lumière, COM-011 Étalonnage de la charge utile, COM-013. Charge utile recettée ; AOCS en NOMINAL commandé avec roues activées et gyroscopes étalonnés ; liaison descendante revenue en LOW ; OBC en NOMINAL ; phase de mission 5 ; SoC > 60 %.
 
-**Objectif :** vérifier la suite de capteurs et les signes des actionneurs, caractériser les performances d'amortissement et de pointage sur toute l'échelle des modes, et clore la recette en orbite.
+**Objectif :** clore la recette en orbite : relire l'état final consolidé par rapport à l'état de sortie de chaque fiche **sans rien réessayer**, faire le tour des postes et déclarer la phase de mission 6 (NOMINAL). L'amortissement, les transitions de modes, les contrôles des roues et des magnétocoupleurs et l'étalonnage des gyroscopes relèvent de LEOP-005, COM-003, COM-004 et COM-005, et ne sont pas répétés ici.
 
 **Issues défavorables possibles / écarts :**
 
-- Performances inférieures à la spécification sur un axe → consigner et poursuivre ; signaler pour la revue de performances du FDS
-- Le moment cinétique s'accumule pendant la série de basculements → désaturation NOM-007 ; replanifier les basculements restants
-- Dépassement persistant du bilan de pointage → reporter la clôture de la recette ; remonter une anomalie au FD
+- Une relecture des étapes 1–3 échoue → NE PAS déclarer la phase 6 ; revenir à la section hors nominal de la fiche concernée et rétablir d'abord son état de sortie
+- `SYS_SET_MISSION_PHASE` refusée → `0x0C03` : l'OBC est dans le chargeur d'amorçage (refaire l'étape 5 de LEOP-001 et LEOP-006) ; `0x0C04` : retour en arrière sans FORCE
+- `sat.mode` ne passe pas à 1 après la déclaration → une contingence FDIR est verrouillée ; lire le journal FDIR et supprimer la cause — aucune TC ne règle `sat.mode`
 
 | Étape | Action | TC / code | Confirmation | Remarques |
 |:----:|:-------|:----------|:--------|:------|
-| 1 | AOCS : vérifier le magnétomètre | `aocs.mag_enabled` (0x025C) = 1 ; `aocs.mag_field_total` (0x0277) | □ | Module 25–65 µT ; unité unique — aucune commande, rien à sélectionner |
-| 2 | AOCS : vérifier les deux senseurs stellaires et le point GPS | `aocs.st1_status` (0x0240), `aocs.st2_status` (0x0243) = 2 ; `aocs.gps_alt` (0x0212) | □ | Au moins une tête en poursuite ; altitude 440–460 km |
-| 3 | AOCS : contrôles de signe des roues de réaction et des magnétocoupleurs | `RW_SET_SPEED_BIAS(wheel_idx=N, bias_rpm=…)` (func_id 8) ; `MTQ_ENABLE(enable=1)` (func_id 9) | □ | Le biais S'AJOUTE à la vitesse courante de la roue ; réponse en vitesse angulaire sur le bon axe et avec le bon signe |
-| 4 | AOCS : vérification de l'amortissement des vitesses angulaires | `AOCS_SET_MODE(mode=2)` (func_id 0) | □ | Vitesses angulaires < 0.1 °/s ; l'amortissement est magnétique et lent — laisser tout le temps de convergence |
-| 5 | AOCS : échelle de pointage COARSE_SUN → NOMINAL | `AOCS_SET_MODE(mode=3)`, puis `(mode=4)` (func_id 0) | □ | Erreur < 1° en NOMINAL en 300 s |
-| 6 | AOCS : répétition de désaturation | `AOCS_DESATURATE` (S8 func_id 1) | □ | `aocs.mode` = 7 (DESAT) ; un déchargement prend plusieurs dizaines de minutes (voir NOM-007) |
-| 7 | FD : tour de table de tous les postes, puis déclarer les opérations NOMINAL | `SYS_SET_MISSION_PHASE(phase=6, flags=0)` (S8 func_id 120) | □ | COM-013 est la dernière fiche de recette en orbite. `eps.spacecraft_phase` (0x0129) = 6 en 5 s ; `sat.mode` (0x0001) = 1 en 10 s ; l'événement `MISSION_PHASE_CHANGED` (0x0055) porte 5 → 6 |
-| 8 | AOCS : rédiger le rapport de recette ; consigner | (outil sol / journal de mission) | □ | « COM-013 complete » |
+| 1 | AOCS : relecture consolidée de l'état final de l'AOCS | `HK_REQUEST(sid=2)` (S3.27) | □ | `aocs.mode` (0x020F) dans {4, 5, 8} ; `aocs.commanded_mode` (0x0297) = 4, `aocs.mode_demoted` (0x0298) = 0 ; `aocs.wheels_enabled` (0x0260) = 4 ; `aocs.gyro_units_mask` (0x02D1) = 7 ; `aocs.st1_status` (0x0240) = 2 avec ≥ 5 étoiles ; `aocs.mag_enabled` (0x025C) = 1 ; erreur < 1,0° sur le côté éclairé |
+| 2 | SPACON : relecture consolidée de l'état final de la plateforme | `HK_REQUEST(sid=1)`, `HK_REQUEST(sid=4)`, `HK_REQUEST(sid=6)` (S3.27) | □ | `obdh.mode` (0x0300) = 0 ; palier LOW ; `eps.load_shed_stage` (0x0134) = 0 ; bus 26,5–29,5 V ; `obdh.time_ref` (0x0A13) ≠ 0 |
+| 3 | Charge utile : relecture consolidée de l'état final de la charge utile | `HK_REQUEST(sid=5)` (S3.27) | □ | `payload.mode` (0x0600) = 1 (STANDBY) ; `payload.fpa_ready` (0x0610) = 1 ; `payload.transfer_active` (0x062D) = 0 |
+| 4 | FD : interroger tous les postes, puis déclarer les opérations NOMINAL | `SYS_SET_MISSION_PHASE(phase=6, flags=0)` (S8 func_id 120) | □ | COM-013 est la dernière fiche de recette en orbite. `eps.spacecraft_phase` (0x0129) = 6 en 5 s ; `sat.mode` (0x0001) = 1 en 10 s ; l'événement `MISSION_PHASE_CHANGED` (0x0055) indique 5 → 6 |
+| 5 | FD : tenir NOMINAL pendant une orbite ; passer la main ; consigner | (journal de mission) | □ | « COM-013 complete » : recette close. Si la règle FDIR sur `aocs.att_error`, désormais armée, rétrograde l'AOCS, examiner l'excursion avant de redéclarer quoi que ce soit |
 
 **Remarque — rien à bord ne fait avancer la phase à votre place.** En dessous de la phase 6, le mode satellite dérivé (`sat.mode` 0x0001, et l'en-tête de la console) est bloqué sur SAFE quel que soit l'état de santé du satellite, le modèle avancé de propagation de défaillance et les règles FDIR conditionnées par la phase restent désarmés, et le verrouillage de la propulsion (`min_phase: 6`) refuse d'armer toute poussée — **NOM-013 ne peut donc pas s'exécuter tant que cette étape n'a pas été envoyée**. Le retour en arrière est refusé avec `0x0C04` sauf si l'indicateur FORCE est positionné (`flags` bit 0 = 1) ; si une déclaration a été prématurée, la renvoyer avec l'indicateur et en consigner la raison.
 
@@ -7659,16 +7780,16 @@ beaucoup plus bas, et cette fiche adopte l'enveloppe de vol.)*
 
 ## 14.3 Fiches de procédure nominales
 
-> **Note de la rédaction — le jeu nominal.** Le simulateur est livré avec treize
-> procédures nominales. Dix font l'objet d'une fiche ci-dessous ; **NOM-005 Configuration
+> **Note de la rédaction — le jeu nominal.** Le simulateur est livré avec quatorze
+> procédures nominales. Onze font l'objet d'une fiche ci-dessous ; **NOM-005 Configuration
 > HK**, **NOM-008 Synchronisation de l'horloge** et **NOM-011
 > Changement de débit** sont des fiches courtes, à poste unique, répertoriées
 > au §14.7 pour consultation en console. Deux autres activités nominales —
 > le **chargement du plan de passage** et la **revue des tendances à long terme** — font réellement partie
 > du déroulement nominal mais ne sont livrées avec aucun fichier de procédure propre ; elles
 > font l'objet d'une fiche ici, sans numéro NOM, et le déroulement y fait
-> explicitement référence. Les fiches suivent l'ordre des identifiants livrés, à ceci près que NOM-013 et
-> les deux fiches sol non numérotées se placent immédiatement avant la
+> explicitement référence. Les fiches suivent l'ordre des identifiants livrés, à ceci près que NOM-013,
+> NOM-014 et les deux fiches sol non numérotées se placent immédiatement avant la
 > fiche de passation de consignes qui clôt la section.
 >
 > **NOM-008 en un paragraphe, parce que l'horloge est nouvelle.** (C'est l'une
@@ -7798,7 +7919,7 @@ beaucoup plus bas, et cette fiche adopte l'enveloppe de vol.)*
 
 | Étape | Action | TC / code | Confirmation | Remarques |
 |:----:|:-------|:----------|:--------|:------|
-| 1 | FDS : concevoir la manœuvre | (outil FDS) | □ | Le bilan total de delta-V est de 66.9 m/s avec le monergol vert 1U — évitement de débris et maintien d'orbite limité, pas de désorbitation |
+| 1 | FDS : concevoir la manœuvre | (outil FDS) | □ | Le bilan total de delta-V est de 66.9 m/s avec le monergol vert 1U — évitement de débris et maintien d'orbite limité ; à partir de la mi-mission, garder `prop.dv_remaining` (0x0B0C) ≥ 38 m/s pour le retrait de service NOM-014 |
 | 2 | Propulsion : activer les données de servitude PROP et contrôler la santé | `HK_ENABLE(sid=9)` (S3.5) | □ | `prop.state` (0x0B00) = 0 (SAFED) ; `prop.tank_pressure` (0x0B01) dans la plage |
 | 3 | FD : examiner et autoriser le vecteur et le passage d'exécution | (GO du FD) | □ | Consigné |
 | 4 | SPACON : dater la séquence de poussée | `SCHEDULE_TC(exec_time_cuc=T, tc_data=TC)` (S11.4) ×3 | □ | `PROP_SET_BURN` à T−5 min, `PROP_ARM` à T−2 min, `PROP_EXECUTE` à T−0 |
@@ -7963,6 +8084,41 @@ beaucoup plus bas, et cette fiche adopte l'enveloppe de vol.)*
 
 <div class="procedure-card procedure-card-nominal" markdown="1">
 
+<div class="procedure-card-header" markdown="1">[FD] NOM-014 — Retrait de service en fin de vie (abaissement du périgée et passivation)</div>
+
+**Point d'entrée :** fin de mission déclarée par le FD ; prise de vue close et dernières données scientifiques transmises au sol. Phase de mission 6 (le verrouillage d'armement de la propulsion l'exige), `prop.dv_remaining` (0x0B0C) ≥ 38 m/s, propulsion saine (`prop.state` 0x0B00 = 0, aucune inhibition verrouillée, réservoir à 6,0–24,0 bar), SoC > 55 %, plan FDS de six poussées consécutives de jour.
+
+**Objectif :** abaisser le périgée de 513 km à 390 km par une poussée rétrograde de 34,3 m/s, réalisée en six poussées de 5,72 m/s au même point de l'orbite (qui devient l'apogée), afin qu'EOSAT-1 rentre dans l'atmosphère en environ 1,5 an à activité solaire moyenne et 4,2 ans au minimum solaire ; puis passiver. La décroissance naturelle depuis 513 km prendrait 5,0 ans à activité moyenne et 14,2 ans au minimum solaire.
+
+**Issues défavorables possibles / écarts :**
+
+- Une poussée est interrompue → étape 5 de NOM-013 et CTG-028 ; le ΔV partiel est déjà dans l'orbite, et le FDS replanifie les poussées restantes depuis la nouvelle orbite
+- `prop.dv_remaining` inférieur au plan → abaisser le périgée autant que l'ergol le permet (chaque 1 m/s rétrograde l'abaisse d'environ 3,6 km) et rendre compte de la durée de vie résiduelle obtenue
+- Propulsion inutilisable en fin de vie → passiver (étapes 9–12) et signaler la non-conformité : la décroissance naturelle prend environ 5 ans à activité moyenne et 14 au minimum solaire
+- Durée de vie au minimum solaire encore supérieure à 5 ans après l'étape 7 → poussée de correction (à nouveau l'étape 6, ΔV plus faible) avant la passivation
+- Il n'existe pas de phase DISPOSAL : le satellite reste en phase 6 de bout en bout, car le verrouillage d'armement l'exige
+
+| Étape | Action | TC / code | Confirmation | Remarques |
+|:----:|:-------|:----------|:--------|:------|
+| 1 | FDS : plan de retrait de service ; autorisation du FD | (outil FDS) | □ | Six instants de poussée de jour, ΔV par poussée, quaternion rétrograde ; périgée prévu 513 → ~492 → ~471 → ~451 → ~431 → ~410 → 390 km |
+| 2 | Propulsion : contrôle de santé | `HK_ENABLE(sid=9)` (S3.5) | □ | `prop.state` = 0 ; `prop.tank_pressure` (0x0B01) 6,0–24,0 bar ; `prop.dv_remaining` ≥ 38 m/s ; consigner `prop.arm_inhibit_mask` (0x0B15). Sinon, CTG-028 d'abord |
+| 3 | Propulsion : relever le chien de garde de poussée | `PROP_SET_LIMITS(att_err_max_deg=2.0, p_min_bar=4.0, catbed_max_c=350.0, t_burn_max_s=600.0)` (S8 func_id 115) | □ | Le chien de garde par défaut est de 300 s ; une poussée de 5,72 m/s en fin de vie dure jusqu'à ~480 s. Les autres limites d'interruption gardent leurs valeurs par défaut |
+| 4 | Propulsion : alimentation, préchauffage et ouverture des vannes (T−25 min) | `EPS_POWER_ON(line_index=8)` (S8 func_id 19) ; `HEATER_THRUSTER(on=1)` (S8 func_id 42) ; `PROP_ISO_OPEN(branch=2)` (S8 func_id 113) | □ | `eps.pl_prop` (0x014A) = 1 ; `prop.latch_a_state` (0x0B06) = 1 ; `tcs.temp_thruster` (0x0409) ≥ 180 °C en 1500 s |
+| 5 | AOCS : maintien inertiel rétrograde | `AOCS_SET_TARGET_QUAT(q_x=QX, q_y=QY, q_z=QZ, q_w=QW)` (S8 func_id 86) ; `AOCS_SET_MODE(mode=9)` (S8 func_id 0) | □ | Lacet de 180° pour que l'axe de poussée +X pointe à l'opposé de la vitesse. `aocs.mode` = 9 en 120 s ; `aocs.att_error` < 0,5° en 600 s |
+| 6 | Propulsion : poussée de retrait de service — répéter les étapes 5 et 6 pour chacune des six poussées | `PROP_SET_BURN(dv_m_s=5.72, direction=1, mode=1, t_start_cuc=0)` (S8 func_id 110) ; `PROP_ARM(arm_code=0xA5C3)` (S8 func_id 108) ; `PROP_EXECUTE` (S8 func_id 111) ; `PROP_DISARM` (S8 func_id 109) | □ | `prop.burn_time_cmd` (0x0B10) à 10 % près de la prédiction FDS ; événement `PROP_BURN_COMPLETE` (0x0804) en 600 s ; `prop.burn_dv_achieved` (0x0B0F) à 2 % près de 5,72 ; `prop.state` revenu à 0. Revenir en NOMINAL pour l'éclipse entre deux poussées |
+| 7 | FDS : confirmer l'orbite de retrait de service | `HK_REQUEST(sid=12)` (S3.27) sur une orbite complète | □ | `aocs.gps_alt` (0x0212) minimal entre 380 et 400 km ; demi-grand axe ~6830 km ; durée de vie résiduelle < 5 ans au minimum solaire |
+| 8 | Propulsion : épuiser l'ergol | `PROP_SET_BURN(dv_m_s=DVREM, direction=1, mode=0, t_start_cuc=0)` (S8 func_id 110) ; `PROP_ARM(arm_code=0xA5C3)` ; `PROP_EXECUTE` | □ | Depuis le maintien rétrograde, de jour ; DVREM est la valeur courante de `prop.dv_remaining`. `prop.propellant_mass` (0x0B02) < 5 g en 900 s ; sous 5 g l'armement est refusé (`0x0B03`) et le résidu est consigné |
+| 9 | Propulsion : mise en sécurité et inhibition | `PROP_DISARM` ; `HEATER_THRUSTER(on=0)` ; `PROP_INHIBIT_SET(on=1)` (S8 func_id 116) ; `EPS_POWER_OFF(line_index=8)` (S8 func_id 20) | □ | `prop.state` = 0 ; bit 9 de `prop.arm_inhibit_mask` positionné ; `eps.pl_prop` = 0. Il n'existe pas de commande de dégazage du réservoir : consigner la pression résiduelle (environ 9–10 bar) dans le rapport de retrait de service |
+| 10 | Charge utile et AOCS : arrêt, arrêt des roues | `PAYLOAD_SET_MODE(mode=0)` (S8 func_id 26) ; `EPS_POWER_OFF(line_index=3)` ; `AOCS_RW_RAMP_DOWN(wheel_idx=255, target_rpm=0)` (S8 func_id 14) | □ | `payload.mode` (0x0600) = 0 ; `aocs.total_momentum` (0x025B) < 0,01 en 120 s. Il ne reste plus d'énergie cinétique dans les roues |
+| 11 | EPS : passiver la batterie | `S2_EPS_CHARGE_REGULATOR(device_id=271, state=0)` (S2.1) | □ | Les générateurs ne peuvent plus charger la batterie ; `eps.bat_soc` (0x0101) en baisse au soleil. Envoyer les étapes 11 et 12 dans le même passage |
+| 12 | TT&C : silence radio — les dernières commandes | `TTC_BEACON_TX_OFF` (S8 func_id 98) ; `TTC_PA_OFF` (S8 func_id 67) ; `EPS_TRANSPONDER_TX(on=0)` (S8 func_id 18) | □ | La perte du signal est la vérification ; confirmer l'absence de porteuse aux deux passages programmés suivants. Déposer le rapport de retrait de service. « NOM-014 complete » |
+
+</div>
+
+<div style="page-break-before: always"></div>
+
+<div class="procedure-card procedure-card-nominal" markdown="1">
+
 <div class="procedure-card-header" markdown="1">[FD] Chargement du plan de passage (déroulement nominal — aucun fichier de procédure livré)</div>
 
 **Point d'entrée :** nouveau plan de passage sur 24 h prêt, fourni par le FDS ; créneau d'envoi programmé dans le passage en cours ou le suivant. Cette activité se situe entre NOM-001 (ouverture de passage) et les activités planifiées qu'elle programme — principalement la prise de vue NOM-002 et le vidage NOM-003.
@@ -8055,15 +8211,15 @@ beaucoup plus bas, et cette fiche adopte l'enveloppe de vol.)*
 
 **Objectif :** sortir la batterie de la sous-tension en délestant d'abord les charges les moins critiques, puis en attendant la recharge en phase éclairée.
 
-*(Un bus d'environ 28 V est inhabituel sur un CubeSat 6U — l'architecture 2S (8 V) est plus courante. EO-Sat-1 embarque une batterie **8S-1P** de 100 Wh (26,4 V en nominal, 29,2 V à 100 % de SoC, 21,5 V à 0 %) sur un bus de 28 V ; considérez ces valeurs de tension comme propres au simulateur.)*
+*(Un bus d'environ 28 V est inhabituel sur un CubeSat 6U — l'architecture 2S (8 V) est plus courante. EOSAT-1 embarque une batterie **8S-1P** de 100 Wh (26,4 V en nominal, 29,2 V à 100 % de SoC, 21,5 V à 0 %) sur un bus de 28 V ; considérez ces valeurs de tension comme propres au simulateur.)*
 
 *(Il s'agit de l'une des huit fiches exécutables par la machine. Sa forme livrée est une échelle de branchements à quatre échelons sur un seul paramètre, `eps.bus_voltage` (0x0105) — exécutée sans ses branchements, elle délesterait la charge utile, le refroidisseur, l'émetteur **et** les roues d'un satellite que le premier délestage avait déjà sauvé.)*
 
 **Issues défavorables possibles / écarts :**
 
 - La tension continue de baisser après un échelon de délestage → passer à l'échelon suivant de l'échelle
-- La tension ne remonte pas une fois tous les échelons franchis → `OBC_SET_MODE(mode=2)` (EMERGENCY), puis EMG-006 Perte totale d'alimentation
-- `eps.sa_a_current` (0x0103) et `eps.sa_b_current` (0x0104) tous deux proches de zéro après la sortie d'éclipse → cause liée au générateur solaire ; voir CTG-013
+- La tension ne remonte pas une fois tous les échelons franchis → `OBC_SET_MODE(mode=2)` (EMERGENCY), puis EMG-002 Perte totale d'alimentation
+- `eps.sa_a_current` (0x0103) et `eps.sa_b_current` (0x0104) tous deux proches de zéro après la sortie d'éclipse → cause liée au générateur solaire ; voir CTG-009
 - Rétablissement obtenu mais cause première incertaine → ouvrir une fiche d'anomalie ; informer le responsable de mission
 
 **Arbre de décision (l'échelle livrée — chaque échelon est une véritable étape de branchement) :**
@@ -8072,7 +8228,7 @@ beaucoup plus bas, et cette fiche adopte l'enveloppe de vol.)*
 - SINON délester le refroidisseur FPA. SI V > 26.0 V → MAINTENIR et surveiller
 - SINON délester le PA bande S. SI V > 25.5 V → MAINTENIR et surveiller
 - SINON délester la ligne des roues de réaction (`line_index=7`). SI V > 25.0 V → MAINTENIR et surveiller
-- SINON dernier recours → `OBC_SET_MODE(mode=2)` EMERGENCY ; informer le FD de l'état de préparation d'EMG-006
+- SINON dernier recours → `OBC_SET_MODE(mode=2)` EMERGENCY ; informer le FD de l'état de préparation d'EMG-002
 
 | Étape | Action | TC / code | Confirmation | Remarques |
 |:----:|:-------|:----------|:--------|:------|
@@ -8099,14 +8255,14 @@ beaucoup plus bas, et cette fiche adopte l'enveloppe de vol.)*
 
 **Issues défavorables possibles / écarts :**
 
-- COARSE_SUN impossible à atteindre → CTG-008 (senseur stellaire), CTG-007 (roue) ou EMG-002 Perte d'attitude
+- COARSE_SUN impossible à atteindre → CTG-008 (senseur stellaire), CTG-007 (roue) ou EMG-005 Perte d'attitude
 - Causes premières en cascade (p. ex. senseur stellaire puis gyro) → coordonner les CTG en cascade ; reporter les activités charge utile
 - Le pointage revient dans le bilan après un transitoire → consigner ; ne pas revenir en NOMINAL au cours du même passage ; attendre la revue des tendances
 
 **Arbre de décision :**
 
 - SI le senseur stellaire est en défaut → CTG-008
-- SI une roue est anormale → CTG-007 ; SI deux ou plus → DETUMBLE (mode 2) et EMG-002
+- SI une roue est anormale → CTG-007 ; SI deux ou plus → DETUMBLE (mode 2) et EMG-005
 - SI `aocs.att_error` dépasse 15° à une étape quelconque → DETUMBLE (mode 2) immédiatement
 - SI `eps.bus_voltage` (0x0105) < 26.5 V pendant la reprise → CTG-001 d'abord
 - SI le transitoire a disparu mais que la cause première n'est pas identifiée → rester en COARSE_SUN pendant une orbite ; analyser
@@ -8127,37 +8283,35 @@ beaucoup plus bas, et cette fiche adopte l'enveloppe de vol.)*
 
 <div class="procedure-card procedure-card-contingency" markdown="1">
 
-<div class="procedure-card-header" markdown="1">[TT] CTG-003 — Rétablissement après perte de liaison TTC</div>
+<div class="procedure-card-header" markdown="1">[TT] CTG-003 — Reprise après perte de liaison TTC</div>
 
-**Point d'entrée :** `ttc.link_status` (0x0501) = 0 (NO_LINK) pendant plus de 30 s après l'AOS prévu, ou perte d'une liaison établie en cours de passage. LOCKED vaut **2**, et non 1.
+**Point d'entrée :** `ttc.link_status` (0x0501) = 0 (NO_LINK) persistant plus de 30 s après l'AOS prévue, ou une liaison établie qui tombe en cours de passage. LOCKED vaut **2**, et non 1.
 
-**Objectif :** rétablir la liaison en passant successivement par les vérifications côté sol, le basculement de transpondeur et les options de débit et de puissance d'émission, avant de faire remonter l'anomalie.
+**Objectif :** rétablir la liaison en parcourant les vérifications côté sol et le basculement de transpondeur — principal, redondant, puis de nouveau principal —, puis vérifier la qualité de la liaison et la santé des sous-systèmes avant d'escalader.
 
 **Issues défavorables possibles / écarts :**
 
-- Liaison non rétablie à la fin du passage → un deuxième passage manqué consécutif déclenche EMG-003 Perte de communication
-- Rétablissement uniquement sur l'échelon LOW → replanifier le travail de liaison descendante ; informer le responsable de mission
-- Panne d'antenne sol découverte en cours de rétablissement → CTG-020 Panne d'antenne de station sol
+- Liaison non rétablie en fin de passage → un deuxième passage manqué consécutif déclenche EMG-004 Perte de communication
+- Liaison revenue mais marge < 3 dB → la reprise n'est pas terminée ; la traiter comme marginale, replanifier le travail de liaison descendante et informer le FD
+- Défaut de l'antenne sol découvert en cours de reprise → CTG-020 Panne d'antenne de station sol
 
-**Arbre de décision (abrégé ; version complète au §9.4) :**
+**Arbre de décision (abrégé ; voir le §9.4 pour la version complète) :**
 
-- SI la station sol ne poursuit pas le satellite → CTG-020
+- SI la station sol ne poursuit pas → CTG-020
 - SI la station poursuit mais sans porteuse → basculer de transpondeur (redondant, puis retour au principal)
-- SI la liaison revient avec RSSI < −95 dBm ou marge < 1.5 dB → descendre l'échelle TM jusqu'à LOW (16 kbit/s)
-- SI toujours aucune porteuse → voie de commande en aveugle CTG-019
-- SI aucun rétablissement avant le LOS ET passage suivant également manqué → EMG-003
+- SI toujours pas de porteuse → voie de commande en aveugle CTG-019
+- SI aucune reprise avant la LOS ET passage suivant également manqué → EMG-004
 
-**Liste de vérification complète « lire et faire » :** voir le §9.4, tableau 9.3.
+**Liste de vérification complète en mode « lire et faire » :** voir le §9.4, tableau 9.3.
 
 | Étape | Action | TC / code | Confirmation | Remarques |
 |:----:|:-------|:----------|:--------|:------|
-| 1 | Segment sol : vérifier la station de poursuite (et toute autre station en visibilité) | (panneau MPS) | □ | Réseau de cinq stations ; en l'absence de poursuite, CTG-020 |
-| 2 | TT&C : demander la HK en aveugle sur le transpondeur principal | `HK_REQUEST(sid=6)` (S3.27) | □ | `ttc.link_status` (0x0501) = 2 en moins de 30 s |
-| 3 | TT&C : basculer sur le transpondeur redondant (en aveugle) | `TTC_SWITCH_REDUNDANT` (S8 func_id 64) | □ | Attendre 45 s la mise sous tension et le verrouillage |
-| 4 | TT&C : si toujours rien, réessayer le principal (en aveugle) | `TTC_SWITCH_PRIMARY` (S8 func_id 63) | □ | Attendre 45 s |
-| 5 | TT&C : si la liaison est verrouillée mais marginale, descendre l'échelle des débits jusqu'à LOW | `TTC_SET_DATA_RATE(rate=0)` (S8 func_id 65) | □ | `ttc.tm_data_rate` (0x0506) = 16000 bit/s |
-| 6 | TT&C : demander une augmentation de la puissance d'émission (GO du FD) | `TTC_SET_TX_POWER(level=…)` (S8 func_id 68) | □ | Nouveau niveau consigné |
-| 7 | SPACON : si le verrouillage est rétabli, recaler le référentiel ; faute de rétablissement avant le LOS, préparer EMG-003 | (journal de mission) | □ | Heure du rétablissement / de l'escalade |
+| 1 | Segment sol : vérifier la station de poursuite (et toute autre station en visibilité) | (panneau MPS) | □ | Poursuite de l'antenne, puissance montante, précompensation Doppler ; réseau de cinq stations ; en l'absence de poursuite, CTG-020 |
+| 2 | TT&C : demande de HK en aveugle sur le transpondeur principal | `HK_REQUEST(sid=6)` (S3.27) | □ | `ttc.link_status` (0x0501) = 2 en 30 s → étape 5 |
+| 3 | TT&C : basculer sur le transpondeur redondant (en aveugle) | `TTC_SWITCH_REDUNDANT` (S8 func_id 64) | □ | Attendre 45 s pour la mise sous tension et l'accrochage → étape 5 si accroché |
+| 4 | TT&C : si toujours rien, réessayer le principal (en aveugle) | `TTC_SWITCH_PRIMARY` (S8 func_id 63) | □ | Attendre 45 s → étape 5 si accroché, étape 6 sinon |
+| 5 | TT&C + tous : vérifier la qualité de la liaison et la santé des sous-systèmes | `HK_REQUEST(sid=6)`, `HK_REQUEST(sid=1)`, `HK_REQUEST(sid=4)` (S3.27) | □ | RSSI (0x0502) > −90 dBm ; marge (0x0503) > 3.0 dB ; consigner l'unité active (`ttc.mode` 0x0500) ; bus > 27.0 V ; `obdh.mode` ni en sécurité ni en urgence |
+| 6 | SPACON : en l'absence de reprise, consigner chaque commande en aveugle et escalader | (journal de mission) | □ | Prévenir le directeur de mission et le FDS ; réserver le passage suivant ; confirmer que la minuterie d'absence de contact de 24 h tourne ; deux passages manqués → EMG-004 |
 
 </div>
 
@@ -8173,7 +8327,7 @@ beaucoup plus bas, et cette fiche adopte l'enveloppe de vol.)*
 
 **Issues défavorables possibles / écarts :**
 
-- Dépassement chaud toujours en hausse après action → passer à EMG-005 Emballement thermique
+- Dépassement chaud toujours en hausse après action → passer à EMG-006 Emballement thermique
 - Dépassement froid sans rétablissement → vérifier l'état des réchauffeurs (CTG-012 si la ligne s'est ouverte) ; envisager un délestage pour réaffecter la puissance
 - Zone charge utile concernée → mettre la charge utile en sécurité (`PAYLOAD_SET_MODE(mode=0)`) avant que la zone n'atteigne le seuil d'endommagement
 - Batterie au-dessus de +45 °C ou OBC au-dessus de +60 °C → `OBC_SET_MODE(mode=2)` / `mode=1` et faire remonter l'anomalie immédiatement
@@ -8187,7 +8341,7 @@ beaucoup plus bas, et cette fiche adopte l'enveloppe de vol.)*
 | 5 | Thermique : en l'absence d'amélioration, régler à nouveau le thermostat | `HEATER_SET_SETPOINT(circuit=…, on_temp=…, off_temp=…)` (S8 func_id 44) | □ | Circuits 0 batterie, 1 OBC, 2 propulseur — il n'existe **pas** de paramètre `tcs.htr_<zone>_setpoint` |
 | 6 | Thermique : cas chaud toujours en hausse — réorienter le satellite pour dissiper | `AOCS_SET_MODE(mode=3)` (S8 func_id 0) | □ | `aocs.mode` (0x020F) = 3 (COARSE_SUN) |
 | 7 | Thermique : après rétablissement, rendre le circuit au thermostat | `HEATER_AUTO_MODE(circuit=0)` (S8 func_id 45) | □ | Uniquement si les réchauffeurs ont été pilotés manuellement |
-| 8 | SPACON : ouvrir une fiche ; si la zone chaude continue de monter, EMG-005 | (journal de mission) | □ | « CTG-004 status » |
+| 8 | SPACON : ouvrir une fiche ; si la zone chaude continue de monter, EMG-006 | (journal de mission) | □ | « CTG-004 status » |
 
 </div>
 
@@ -8195,62 +8349,32 @@ beaucoup plus bas, et cette fiche adopte l'enveloppe de vol.)*
 
 <div class="procedure-card procedure-card-contingency" markdown="1">
 
-<div class="procedure-card-header" markdown="1">[FE] CTG-005 — Anomalie batterie</div>
+<div class="procedure-card-header" markdown="1">[PE] CTG-006 — Anomalie charge utile</div>
 
-*(Note de la rédaction : le simulateur livre cette fiche sous la référence **CTG-013 Défaillance d'un élément de batterie**, `contingency/battery_cell_failure.md`. Dans le simulateur, CTG-005 correspond au mode survie EPS. La numérotation du livre est conservée ici ; utilisez l'identifiant du simulateur pour ouvrir le fichier.)*
+*(Note de la rédaction : il s'agit de la **CTG-006 Anomalie charge utile** du simulateur, `contingency/payload_anomaly.md`, sous forme condensée. La fiche livrée est centrée sur le cas thermique du FPA ; cette version couvre aussi les défauts de transition de mode de la charge utile.)*
 
-**Point d'entrée :** `eps.bat_voltage` (0x0100) inférieure de plus de 1.0 V à la valeur attendue pour la valeur `eps.bat_soc` (0x0101) rapportée, ou chute brutale de tension, ou dégradation signalée par la revue des tendances.
+**Point d'entrée :** le mode de la charge utile ne change pas comme commandé ; ou `payload.fpa_temp` (0x0601) au-dessus de −15 °C, ou en hausse de plus de 0.5 °C/min avec le refroidisseur actif.
 
-**Objectif :** caractériser l'anomalie, confirmer que la batterie est thermiquement sûre et décider si la capacité restante permet de survivre à l'éclipse avec la charge actuelle.
+**Objectif :** ramener la charge utile en STANDBY, rétablir l'état thermique et déterminer si l'anomalie est d'origine logicielle, liée au séquencement des commandes ou matérielle.
 
-**Issues défavorables possibles / écarts :**
-
-- La tension continue de baisser pendant la caractérisation → délestage CTG-001
-- `eps.bat_temp` (0x0102) au-dessus de +40 °C → court-circuit interne possible ; désactiver le réchauffeur batterie et délester ; au-dessus de +50 °C, commander EMERGENCY et suivre EMG-006
-- `eps.bat_voltage` sous 22.0 V → risque de décharge profonde ; tout délester sauf l'OBC et la réception TT&C (RX)
-- Perte de capacité supérieure à la marge mission → informer le responsable de mission ; le FDS replanifie le rapport cyclique
-
-**Remarque :** il n'existe aucune télécommande d'équilibrage des éléments dans `tc_catalog.yaml`, ni aucune télémesure au niveau des éléments. Les grandeurs observables sont la tension bus/batterie, le SoC, la température, le courant et `eps.bat_capacity_wh` (0x010A) ; l'opérateur déduit l'état des éléments de l'écart entre la tension et le SoC.
-
-| Étape | Action | TC / code | Confirmation | Remarques |
-|:----:|:-------|:----------|:--------|:------|
-| 1 | EPS : récupérer la télémesure batterie et calculer la tension attendue pour le SoC rapporté | `HK_REQUEST(sid=1)` (S3.27) | □ | SID 1 correspond à l'EPS ; SID 8 est la structure EPS étendue |
-| 2 | EPS / Thermique : recouper la température de la batterie | `HK_REQUEST(sid=3)` (S3.27) | □ | `eps.bat_temp` 0x0102 comparée à `tcs.temp_battery` 0x0407 |
-| 3 | EPS : si la batterie est chaude, désactiver son réchauffeur | `HEATER_BATTERY(on=0)` (S8 func_id 40) | □ | `tcs.htr_battery` (0x040A) = 0 |
-| 4 | EPS : calculer la marge de survie en éclipse sur `eps.bat_capacity_wh` (0x010A) | (calcul opérateur) | □ | Réserve de 20 % de SoC ; éclipse ≈ 35 min |
-| 5 | EPS : si la marge est négative, délester la charge utile, puis le refroidisseur, puis le PA | `PAYLOAD_SET_MODE(mode=0)` / `FPA_COOLER(on=0)` / `TTC_PA_OFF` | □ | Recalculer après chaque délestage |
-| 6 | EPS / FDS : replanifier le rapport cyclique si la capacité est réduite | (outil FDS) | □ | Nouveau plan de passage |
-| 7 | SPACON : ouvrir une fiche ; informer le responsable de mission | (journal de mission) | □ | « CTG-005 closed » |
-
-</div>
-
-<div style="page-break-before: always"></div>
-
-<div class="procedure-card procedure-card-contingency" markdown="1">
-
-<div class="procedure-card-header" markdown="1">[PR] CTG-006 — Anomalie de propulsion</div>
-
-*(Note de la rédaction : le simulateur livre cette fiche sous la référence **CTG-028**, `contingency/propulsion_anomaly.md` — dans le simulateur, CTG-006 était déjà Anomalie charge utile. La numérotation du livre est conservée ici ; la fiche livrée porte la même note de rapprochement.)*
-
-**Point d'entrée :** alarme S12 sur `prop.tank_pressure` (0x0B01) — plage absolue, ou surveillance de vitesse de variation/DELTA qui détecte une fuite lente ; ou événement PROP_VALVE_FAULT (0x080A), PROP_LEAK_DETECTED (0x080B), PROP_UNDERPERFORMANCE (0x080C), PROP_TANK_PRESSURE_HIGH (0x0807) ; ou restitution d'orbite (OD) après poussée montrant un ΔV obtenu inférieur à 90 % du plan (NOM-013, étape 6).
-
-**Objectif :** isoler l'ergol, **borner** le ΔV utilisable restant et protéger la réserve d'évitement de collision. Le monoergol vert 1U d'EO-Sat-1 (66,9 m/s au total) sert à l'évitement de débris et à un maintien d'orbite limité ; l'objectif n'est donc pas de « réparer le propulseur », mais de « savoir exactement quelle capacité de CAM subsiste et la préserver ».
+**Modes de la charge utile :** 0 OFF, 1 STANDBY, 2 IMAGING, **3 CALIBRATION**.
 
 **Issues défavorables possibles / écarts :**
 
-- Une branche signalant 2 (défaut) ne s'est pas fermée — considérer comme perdu l'ergol situé en aval de la vanne bloquée
-- Pression toujours en baisse après isolement → la fuite se situe en amont des vannes à verrouillage ; elle ne peut pas être isolée, seulement bornée
-- Réserve bornée inférieure à ~1 m/s → la capacité d'évitement de débris est de fait perdue ; la posture vis-à-vis des conjonctions change
-- Pression réservoir en hausse, insensible à la mise en sécurité des réchauffeurs → CTG-004, et préparer EMG-001 (le mode survie désarme la propulsion par la règle 8005)
+- Charge utile bloquée en IMAGING sans sortie possible → commander OFF, puis effectuer un cycle d'alimentation de la ligne charge utile (à la manière de CTG-012) après GO du FD
+- FPA au-dessus de +10 °C à une étape quelconque → charge utile OFF immédiatement ; aucun redémarrage sans autorisation du sol
+- Le refroidisseur ne s'active pas → laisser la charge utile OFF et exécuter CTG-004 pour évaluer la zone
+- Écart de plus de 5 °C entre les capteurs FPA de la charge utile et du TCS → suspecter un capteur ; retenir la valeur la plus basse pour les décisions de sécurité
 
 | Étape | Action | TC / code | Confirmation | Remarques |
 |:----:|:-------|:----------|:--------|:------|
-| 1 | Propulsion : activer la structure PROP et capturer la TM complète | `HK_ENABLE(sid=9)` (S3.5) | □ | SID 9 correspond à PROP ; SID 5 à la charge utile |
-| 2 | Propulsion : lire l'état, la tendance de pression, la masse, les températures, les vannes, le débit de fuite | (lire SID 9) | □ | 0x0B00, 0x0B01, 0x0B02, 0x0B04/0x0B05, 0x0B06–0x0B08, 0x0B16 |
-| 3 | Propulsion : fermer les deux branches de vannes à verrouillage | `PROP_ISO_CLOSE(branch=2)` (S8 func_id 114) | □ | `prop.latch_a_state` 0x0B06 et `latch_b_state` 0x0B07 = 0 |
-| 4 | Propulsion : borner le ΔV utilisable restant | lire `prop.dv_remaining` (0x0B0C), corriger selon le mode de défaillance | □ | Communiquer au FD la réserve CAM bornée |
-| 5 | Propulsion : verrouiller l'inhibition sol tant que l'anomalie est ouverte | `PROP_INHIBIT_SET(on=1)` (S8 func_id 116) | □ | `prop.arm_inhibit_mask` (0x0B15) bit 9 positionné |
-| 6 | SPACON : ouvrir une fiche ; le FD décide d'EMG-001 en cas de cascade | (journal de mission) | □ | La levée de l'inhibition (`PROP_INHIBIT_CLR`, func 117) exige une fiche close + l'autorité du FD |
+| 1 | Charge utile : lire le mode courant et la température du FPA | `HK_REQUEST(sid=5)` + `HK_REQUEST(sid=3)` (S3.27) | □ | `payload.mode` 0x0600 ; 0x0601 comparé à `tcs.temp_fpa` 0x0408 |
+| 2 | Charge utile : commander OFF pour sortir de l'état bloqué | `PAYLOAD_SET_MODE(mode=0)` (S8 func_id 26) | □ | 0x0600 = 0 en moins de 10 s |
+| 3 | Charge utile / Thermique : confirmer que le refroidisseur fonctionne | (lire SID 3) | □ | `tcs.cooler_fpa` (0x040C) = 1 ; cryoréfrigérateur miniature de type Stirling |
+| 4 | Charge utile : surveiller le refroidissement pendant 20 min au plus | (lire les SID 3 et 5) | □ | ≥ 0.3 °C/min ; stabilisation sous −20 °C |
+| 5 | Charge utile : redémarrer en STANDBY | `PAYLOAD_SET_MODE(mode=1)` (S8 func_id 26) | □ | 0x0600 = 1 ; le FPA reste sous −18 °C |
+| 6 | Charge utile : si elle reste bloquée, effectuer un cycle d'alimentation de la ligne charge utile (GO du FD) | `EPS_POWER_OFF(line_index=3)` / `EPS_POWER_ON(line_index=3)` (func_id 20 / 19) | □ | 30 à 60 s hors tension ; la ligne 3 est celle de la charge utile |
+| 7 | SPACON : ouvrir une fiche | (journal de mission) | □ | « CTG-006 closed » |
 
 </div>
 
@@ -8262,12 +8386,12 @@ beaucoup plus bas, et cette fiche adopte l'enveloppe de vol.)*
 
 **Point d'entrée :** gigue de vitesse > ±500 tr/min sur 10 s, divergence de vitesse inattendue, vitesse > 6500 tr/min, ou température de palier de roue > 60 °C.
 
-**Objectif :** isoler la roue défaillante, reconfigurer le contrôle sur trois roues et confirmer que le pointage nadir en NOMINAL (mode 4) reste atteignable. EO-Sat-1 embarque quatre roues en pyramide ; **trois suffisent** — un ensemble de 3 roues sur 4 engendre toujours R³, et FINE_POINT fonctionne en mode dégradé sur cet ensemble (`aocs.fine_degraded`, 0x0299).
+**Objectif :** isoler la roue défaillante, reconfigurer le contrôle sur trois roues et confirmer que le pointage nadir en NOMINAL (mode 4) reste atteignable. EOSAT-1 embarque quatre roues en pyramide ; **trois suffisent** — un ensemble de 3 roues sur 4 engendre toujours R³, et FINE_POINT fonctionne en mode dégradé sur cet ensemble (`aocs.fine_degraded`, 0x0299).
 
 **Issues défavorables possibles / écarts :**
 
 - Bilan de pointage inatteignable avec trois roues → COARSE_SUN (mode 3) et reporter les prises de vue
-- Deux roues ou plus concernées → DETUMBLE (mode 2) et envisager EMG-002 Perte d'attitude
+- Deux roues ou plus concernées → DETUMBLE (mode 2) et envisager EMG-005 Perte d'attitude
 - Symptôme de roue bloquée dû en réalité à une panne de bus → CTG-017 à la place
 
 **Arbre de décision :**
@@ -8280,7 +8404,7 @@ beaucoup plus bas, et cette fiche adopte l'enveloppe de vol.)*
 |:----:|:-------|:----------|:--------|:------|
 | 1 | AOCS : identifier la roue concernée à partir des vitesses et des températures | `HK_REQUEST(sid=2)` (S3.27) | □ | Vitesses 0x0207–0x020A (lecture seule) ; températures 0x0218–0x021B |
 | 2 | AOCS : désactiver la roue concernée | `AOCS_DISABLE_WHEEL(wheel_idx=N)` (S8 func_id 2) | □ | La vitesse commence à décroître en moins de 10 s ; les vitesses angulaires restent < 1.0 °/s |
-| 3 | AOCS : reconfigurer la boucle de contrôle sur trois roues | `SET_PARAM(param_id=aocs.wheel_config, value=3)` (S20.1) | □ | Clé de configuration, et non paramètre de télémesure déclaré — il n'existe ni identifiant de relecture ni fonction S8 dédiée |
+| 3 | AOCS : confirmer que la boucle s'est reconfigurée sur trois roues — aucune commande | (observation, 15 s) | □ | `aocs.att_error` (0x0217) qui converge sous 2,0° en 60 s. Il n'existe ni commande de mode à trois roues ni paramètre `aocs.wheel_config` : `AOCS_DISABLE_WHEEL` à l'étape 2 constitue toute la reconfiguration |
 | 4 | AOCS : décharger le moment cinétique sur les trois roues restantes | `AOCS_DESATURATE` (S8 func_id 1) | □ | Prévoir **20 à 50 min**, et non quelques minutes — voir la remarque ci-dessous |
 | 5 | AOCS : confirmer le pointage nadir en configuration trois roues | `AOCS_SET_MODE(mode=4)` (S8 func_id 0) | □ | `aocs.mode` (0x020F) = 4 ; erreur < 1.5° |
 | 6 | SPACON : ouvrir une fiche ; informer le responsable de mission de l'impact sur l'agilité | (journal de mission) | □ | « CTG-007 closed » |
@@ -8297,7 +8421,7 @@ beaucoup plus bas, et cette fiche adopte l'enveloppe de vol.)*
 
 **Point d'entrée :** `aocs.st1_status` (0x0240) = 4 (FAILED) avec `aocs.st1_num_stars` (0x0241) = 0 ; ou divergence de la détermination d'attitude. Le statut 3 correspond à BLIND (éblouissement par le Soleil, la Lune ou le limbe terrestre) — attendre jusqu'à 120 s avant de déclarer une panne.
 
-**Objectif :** basculer sur le senseur stellaire redondant (ST2) et, en cas d'échec, se replier sur l'attente COARSE_SUN. EO-Sat-1 embarque **deux** senseurs stellaires, ST1 et ST2.
+**Objectif :** basculer sur le senseur stellaire redondant (ST2) et, en cas d'échec, se replier sur l'attente COARSE_SUN. EOSAT-1 embarque **deux** senseurs stellaires, ST1 et ST2.
 
 *(Il s'agit de l'une des huit fiches exécutables par la machine ; la version livrée effectue un branchement sur `aocs.st2_status` (0x0243). Exécutée sans ses branchements, elle sélectionnerait un senseur qui ne poursuit pas, éteindrait le seul autre senseur et commanderait le repli dégradé — les trois, dans cet ordre.)*
 
@@ -8305,7 +8429,7 @@ beaucoup plus bas, et cette fiche adopte l'enveloppe de vol.)*
 
 - ST2 accroche → revenir au mode antérieur à la panne ; surveiller ; il ne reste plus aucune redondance de senseur stellaire
 - ST2 n'atteint pas TRACKING en 120 s → COARSE_SUN (mode 3) ; le pointage fin est perdu ; la prise de vue charge utile est impossible
-- CSS également invalides (éclipse) → DETUMBLE (mode 2) sur magnétocoupleurs et attendre la phase éclairée ; candidat à EMG-002
+- CSS également invalides (éclipse) → DETUMBLE (mode 2) sur magnétocoupleurs et attendre la phase éclairée ; candidat à EMG-005
 
 **Arbre de décision :**
 
@@ -8330,33 +8454,31 @@ beaucoup plus bas, et cette fiche adopte l'enveloppe de vol.)*
 
 <div class="procedure-card procedure-card-contingency" markdown="1">
 
-<div class="procedure-card-header" markdown="1">[AOCS] CTG-009 — Anomalie IMU / gyro</div>
+<div class="procedure-card-header" markdown="1">[FE] CTG-009 — Dégradation du générateur solaire</div>
 
-*(Note de la rédaction : l'ensemble livré ne comporte aucune fiche dédiée aux gyros — CTG-009 du simulateur est Dégradation du générateur solaire, et le traitement des gyros figure dans CTG-025 Reprise après perte de capteur SCAO. Cette fiche est une consolidation propre au livre ; chaque commande et chaque identifiant ci-dessous provient de `tc_catalog.yaml` et de `parameters.yaml`.)*
+*(Note de la rédaction : il s'agit de la **CTG-009 Dégradation du générateur solaire** du simulateur, `contingency/solar_array_degradation.md`, sous forme condensée.)*
 
-**Point d'entrée :** l'événement GYRO_BIAS_HIGH (0x020B) se déclenche, incohérence des voies de vitesse par rapport au senseur stellaire, ou `aocs.gyro_saturated` (0x0295) = 1.
+**Point d'entrée :** `eps.sa_a_current` (0x0103) ou `eps.sa_b_current` (0x0104) inférieur de plus de 20 % à la prévision pendant une phase éclairée confirmée, ou dégradation lente signalée par la revue des tendances.
 
-**Objectif :** identifier la voie de gyro concernée, décider de la conserver ou non dans l'estimateur, et poursuivre la détermination d'attitude sur les capteurs restants.
-
-**Les trois valeurs de gyro, et celle que vise cette fiche.** L'écart-type du biais en régime établi d'un gyro sain est de **2.8e-5 °/s** (0.1 °/h) — c'est la spécification du matériel, et non un seuil opérationnel. La première alerte visible par l'opérateur est le seuil de **0.05 °/s** sur la norme du biais, à l'origine de l'événement 0x020B. La limite S12 WARNING par axe sur `aocs.gyro_bias_x/y/z` (0x0270–0x0272) est de **±0.5 °/s**. Cette fiche agit sur **l'événement à 0.05 °/s** : c'est le signal exploitable le plus précoce, et lorsque la limite S12 de ±0.5 °/s se déclenche, l'estimateur est affecté depuis longtemps. L'ancienne valeur de « 0.02 °/s » du livre n'apparaît nulle part dans l'arbre.
-
-**Il n'y a pas d'IMU redondante.** EO-Sat-1 embarque trois gyros mono-axe et aucun de rechange — équipements S2 `S2_AOCS_GYROSCOPE_0/1/2`, aux identifiants d'équipement 0x0206, 0x0207 et 0x0208. Il n'existe ni ligne d'alimentation IMU, ni délai de démarrage à froid, ni rien vers quoi basculer : perdre une voie signifie que l'estimateur propage cet axe sur les CSS + le magnétomètre, ce que rend visible `aocs.gyro_units_on` (0x0294).
+**Objectif :** confirmer l'anomalie, écarter les causes transitoires (attitude, éclipse) et quantifier l'impact sur la mission.
 
 **Issues défavorables possibles / écarts :**
 
-- Toutes les voies gyro éteintes → le MEKF n'a plus de référence de vitesse et se propage sur CSS + MAG uniquement ; candidat à EMG-002
-- Biais instable mais inférieur à 0.05 °/s → signaler ; analyser au regard de la tendance de `aocs.gyro_temp` (0x0273)
-- L'injection de biais gyro est un décalage **persistant** — elle survit aux pas de simulation et aux points de reprise jusqu'à son effacement explicite ; « attendre que cela se résorbe » est donc une erreur. Les injections sont désormais **typées** : `gyro_bias` prend `axis` (0 roulis / 1 tangage / 2 lacet / "all") et `bias` en °/s (0.05 par défaut, plage ±5), et une injection dont les paramètres ne sont pas déclarés par la spécification est rejetée avec un motif au lieu d'être silencieusement écrêtée — la panne de l'instructeur porte donc exactement sur l'axe et l'amplitude qu'annonce le débriefing
+- Une seule aile concernée → mission toujours viable avec une marge réduite ; le FDS replanifie
+- Les deux générateurs sous 0.2 A en plein soleil → voie CTG-005 Mode survie EPS immédiatement
+- Dégradation supérieure à 5 % par jour → avancer les priorités de liaison descendante ; prévoir un profil de puissance réduite
+- SoC inférieur à 20 % pendant l'investigation → interrompre et basculer sur la voie de mise en sécurité EPS
 
 | Étape | Action | TC / code | Confirmation | Remarques |
 |:----:|:-------|:----------|:--------|:------|
-| 1 | AOCS : identifier l'axe concerné à partir des estimations de biais | `HK_REQUEST(sid=2)` (S3.27) | □ | `aocs.gyro_bias_x/y/z` 0x0270–0x0272 |
-| 2 | AOCS : vérifier la saturation et le nombre d'unités alimentées | (lire SID 2) | □ | `aocs.gyro_saturated` 0x0295, `aocs.gyro_units_on` 0x0294 |
-| 3 | AOCS : tenter un étalonnage du biais à bord | `AOCS_GYRO_CALIBRATION` (S8 func_id 13) | □ | L'étalonnage du biais s'effectue à bord — il ne s'agit **pas** d'un envoi de valeurs calculées au sol |
-| 4 | AOCS : si une voie est inutilisable, mettre ce gyro hors tension | `S2_AOCS_GYROSCOPE_<n>(state=0)` (S2, sous-type 1 ; équipement 0x0206/0x0207/0x0208) | □ | Commande d'**équipement** S2 — il n'existe pas de ligne d'alimentation `imu` |
-| 5 | AOCS : réinitialiser l'estimateur après la modification | `AOCS_EST_RESET(mode=1)` (S8 func_id 91) | □ | 0 = à froid (amorçage TRIAD/ST), 1 = à chaud ; confirmer sur `aocs.est_source` (0x02C1) |
-| 6 | AOCS : vérifier la cohérence des vitesses angulaires par rapport au senseur stellaire | (lire SID 2) | □ | Recouper les vitesses 0x0204–0x0206 |
-| 7 | SPACON : ouvrir une fiche | (journal de mission) | □ | « CTG-009 closed » |
+| 1 | EPS : quantifier le déficit par rapport à la prévision | `HK_REQUEST(sid=1)` (S3.27) | □ | 0x0103 / 0x0104 comparés à la prévision ; `eps.power_gen` 0x0107 |
+| 2 | EPS : comparer le rapport A/B sur trois échantillons espacés de 30 s | (lire SID 1) | □ | Rapport nominal 0.9–1.1 ; écart d'un seul côté = défaillance locale |
+| 3 | AOCS : écarter l'attitude comme cause | `HK_REQUEST(sid=2)` (S3.27) | □ | `aocs.mode` (0x020F) = 4 (NOMINAL) ou 3 (COARSE_SUN) ; `att_error` < 2° |
+| 4 | EPS : vérifier l'état de déploiement des ailes | `GET_PARAM(param_id=0x0144)` (S20.3) | □ | `eps.wing_status` : bit0 +Y, bit1 −Y — également transmis dans SID 1 |
+| 5 | EPS : consigner le courant de chaque aile sur une orbite complète | (lire SID 8) | □ | `eps.sa_wing_py_current` 0x0146, `sa_wing_my_current` 0x0147 (SID 8, cadence de 8 s) |
+| 6 | EPS : délester si nécessaire pour respecter le bilan dégradé | `PAYLOAD_SET_MODE(mode=1)` puis `(mode=0)` ; `HEATER_THRUSTER(on=0)` (func_id 42) | □ | Viser une réserve ≥ 3 W |
+| 7 | EPS / FDS : refaire le bilan de puissance pour les prochaines 24 h | (outil FDS) | □ | Comparaison quotidienne des tendances pendant 7 jours |
+| 8 | SPACON : ouvrir une fiche ; informer le responsable de mission | (journal de mission) | □ | « CTG-009 closed » |
 
 </div>
 
@@ -8372,7 +8494,7 @@ beaucoup plus bas, et cette fiche adopte l'enveloppe de vol.)*
 
 **Issues défavorables possibles / écarts :**
 
-- L'OBC redémarre de nouveau immédiatement → suspecter une corruption logicielle ; envisager la voie EMG-004 Redémarrage de l'OBC
+- L'OBC redémarre de nouveau immédiatement → suspecter une corruption logicielle ; envisager la voie EMG-003 Redémarrage de l'OBC
 - Table FDIR non restaurée après le redémarrage → recharger la table nominale (sous-étape de COM-008)
 - Consignes des réchauffeurs perdues → les réappliquer selon le référentiel TCS
 - Lignes d'alimentation verrouillées matériellement conservées mais état logiciel perdu → réarmer les programmes de commandes datées (NOM-008)
@@ -8380,7 +8502,7 @@ beaucoup plus bas, et cette fiche adopte l'enveloppe de vol.)*
 **Arbre de décision :**
 
 - SI le redémarrage est propre et stable → la reprise se fait par CTG-010 ; ouvrir une fiche
-- SI `obdh.reboot_count` (0x030A) augmente de plus de 3 en une heure → boucle d'amorçage ; `OBC_SET_MODE(mode=2)` et EMG-004
+- SI `obdh.reboot_count` (0x030A) augmente de plus de 3 en une heure → boucle d'amorçage ; `OBC_SET_MODE(mode=2)` et EMG-003
 - SI la perte de table ou de consignes ne peut être réparée → reporter les engagements du prochain passage ; analyse par le FD
 
 | Étape | Action | TC / code | Confirmation | Remarques |
@@ -8394,36 +8516,6 @@ beaucoup plus bas, et cette fiche adopte l'enveloppe de vol.)*
 | 7 | SPACON : réarmer les commandes datées — **après** avoir corrigé l'horloge | (S11) | □ | NOM-008 Synchronisation de l'horloge. Le planning bord se déclenche sur le temps bord : des commandes datées réarmées sur une horloge à J2000 ne s'exécutent jamais |
 | 8 | SPACON : rétablir l'OBC en NOMINAL s'il est revenu en SAFE | `OBC_SET_MODE(mode=0)` (S8 func_id 50) | □ | `obdh.mode` (0x0300) = 0 ; charge CPU < 70 % |
 | 9 | SPACON : ouvrir une fiche ; GO du FD pour la reprise | (journal de mission) | □ | « CTG-010 closed » |
-
-</div>
-
-<div style="page-break-before: always"></div>
-
-<div class="procedure-card procedure-card-contingency" markdown="1">
-
-<div class="procedure-card-header" markdown="1">[OB] CTG-011 — Anomalie ECC / stockage de la mémoire de masse</div>
-
-*(Note de la rédaction : le simulateur livre cette fiche sous la référence **CTG-016 Défaillance d'un segment mémoire**, `contingency/memory_segment_failure.md`. Dans le simulateur, CTG-011 est Basculement sur l'OBC redondant. La numérotation du livre est conservée ici.)*
-
-**Point d'entrée :** `payload.mem_segments_bad` (0x0612) dépasse sa dernière valeur connue, en général en même temps qu'une hausse de `payload.checksum_errors` (0x0609).
-
-**Objectif :** identifier le segment mémoire concerné, le marquer comme inutilisable et replanifier les prises de vue en fonction de la capacité réduite.
-
-**Issues défavorables possibles / écarts :**
-
-- Nombre de segments défectueux en hausse rapide → suspecter un verrouillage (latch-up) radio-induit ; charge utile OFF, cycle d'alimentation après 60 s
-- Données scientifiques dans le segment concerné → les images sont perdues ; consigner les identifiants de scène et coordonner une nouvelle acquisition
-- Plus de 10 % de segments défectueux → faire remonter à la planification de mission pour une évaluation de la capacité à long terme
-
-| Étape | Action | TC / code | Confirmation | Remarques |
-|:----:|:-------|:----------|:--------|:------|
-| 1 | Charge utile : lire le nombre de segments défectueux et les données de stockage | `HK_REQUEST(sid=5)` (S3.27) | □ | 0x0612, `payload.mem_total_mb` 0x060A, `mem_used_mb` 0x060B |
-| 2 | Charge utile : demander le catalogue d'images pour localiser le segment | `PAYLOAD_GET_IMAGE_CATALOG` (S8 func_id 32) | □ | Les scènes corrompues désignent le segment défaillant |
-| 3 | Charge utile : contrôler par CRC tout segment suspect | `MEM_CHECK(memory_id, address, length)` (S6.9) | □ | Une discordance confirme que le segment est défectueux |
-| 4 | Charge utile : marquer le segment comme inutilisable | `PAYLOAD_MARK_BAD_SEGMENT(segment_id=N)` (S8 func_id 31) | □ | **N vaut de 0 à 7** — `num_memory_segments: 8` ; un indice ≥ 8 est rejeté |
-| 5 | Charge utile : supprimer les images restées bloquées dans le segment défectueux | `PAYLOAD_DELETE_IMAGE(scene_id=X)` (S8 func_id 30) | □ | Pour chaque scène concernée |
-| 6 | Charge utile : vérifier la capacité réduite au regard du plan de prise de vue | `HK_REQUEST(sid=5)` (S3.27) | □ | SID 5 correspond à la charge utile ; SID 4 à l'OBDH |
-| 7 | SPACON : ouvrir une fiche | (journal de mission) | □ | « CTG-011 closed » |
 
 </div>
 
@@ -8469,31 +8561,32 @@ beaucoup plus bas, et cette fiche adopte l'enveloppe de vol.)*
 
 <div class="procedure-card procedure-card-contingency" markdown="1">
 
-<div class="procedure-card-header" markdown="1">[FE] CTG-013 — Sous-performance du générateur solaire</div>
+<div class="procedure-card-header" markdown="1">[FE] CTG-013 — Défaillance d'un élément de batterie</div>
 
-*(Note de la rédaction : le simulateur livre cette fiche sous la référence **CTG-009 Dégradation du générateur solaire**, `contingency/solar_array_degradation.md`. Dans le simulateur, CTG-013 est Défaillance d'un élément de batterie. La numérotation du livre est conservée ici.)*
+*(Note de la rédaction : il s'agit de la **CTG-013 Défaillance d'un élément de batterie** du simulateur, `contingency/battery_cell_failure.md`, sous forme condensée.)*
 
-**Point d'entrée :** `eps.sa_a_current` (0x0103) ou `eps.sa_b_current` (0x0104) inférieur de plus de 20 % à la prévision pendant une phase éclairée confirmée, ou dégradation lente signalée par la revue des tendances.
+**Point d'entrée :** `eps.bat_voltage` (0x0100) inférieure de plus de 1.0 V à la valeur attendue pour la valeur `eps.bat_soc` (0x0101) rapportée, ou chute brutale de tension, ou dégradation signalée par la revue des tendances.
 
-**Objectif :** confirmer l'anomalie, écarter les causes transitoires (attitude, éclipse) et quantifier l'impact sur la mission.
+**Objectif :** caractériser l'anomalie, confirmer que la batterie est thermiquement sûre et décider si la capacité restante permet de survivre à l'éclipse avec la charge actuelle.
 
 **Issues défavorables possibles / écarts :**
 
-- Une seule aile concernée → mission toujours viable avec une marge réduite ; le FDS replanifie
-- Les deux générateurs sous 0.2 A en plein soleil → voie de mise en sécurité EPS CTG-005 immédiatement
-- Dégradation supérieure à 5 % par jour → avancer les priorités de liaison descendante ; prévoir un profil de puissance réduite
-- SoC inférieur à 20 % pendant l'investigation → interrompre et basculer sur la voie de mise en sécurité EPS
+- La tension continue de baisser pendant la caractérisation → délestage CTG-001
+- `eps.bat_temp` (0x0102) au-dessus de +40 °C → court-circuit interne possible ; désactiver le réchauffeur batterie et délester ; au-dessus de +50 °C, commander EMERGENCY et suivre EMG-002
+- `eps.bat_voltage` sous 22.0 V → risque de décharge profonde ; tout délester sauf l'OBC et la réception TT&C (RX)
+- Perte de capacité supérieure à la marge mission → informer le responsable de mission ; le FDS replanifie le rapport cyclique
+
+**Remarque :** il n'existe aucune télécommande d'équilibrage des éléments dans `tc_catalog.yaml`, ni aucune télémesure au niveau des éléments. Les grandeurs observables sont la tension bus/batterie, le SoC, la température, le courant et `eps.bat_capacity_wh` (0x010A) ; l'opérateur déduit l'état des éléments de l'écart entre la tension et le SoC.
 
 | Étape | Action | TC / code | Confirmation | Remarques |
 |:----:|:-------|:----------|:--------|:------|
-| 1 | EPS : quantifier le déficit par rapport à la prévision | `HK_REQUEST(sid=1)` (S3.27) | □ | 0x0103 / 0x0104 comparés à la prévision ; `eps.power_gen` 0x0107 |
-| 2 | EPS : comparer le rapport A/B sur trois échantillons espacés de 30 s | (lire SID 1) | □ | Rapport nominal 0.9–1.1 ; écart d'un seul côté = défaillance locale |
-| 3 | AOCS : écarter l'attitude comme cause | `HK_REQUEST(sid=2)` (S3.27) | □ | `aocs.mode` (0x020F) = 4 (NOMINAL) ou 3 (COARSE_SUN) ; `att_error` < 2° |
-| 4 | EPS : vérifier l'état de déploiement des ailes | `GET_PARAM(param_id=0x0144)` (S20.3) | □ | `eps.wing_status` : bit0 +Y, bit1 −Y — également transmis dans SID 1 |
-| 5 | EPS : consigner le courant de chaque aile sur une orbite complète | (lire SID 8) | □ | `eps.sa_wing_py_current` 0x0146, `sa_wing_my_current` 0x0147 (SID 8, cadence de 8 s) |
-| 6 | EPS : délester si nécessaire pour respecter le bilan dégradé | `PAYLOAD_SET_MODE(mode=1)` puis `(mode=0)` ; `HEATER_THRUSTER(on=0)` (func_id 42) | □ | Viser une réserve ≥ 3 W |
-| 7 | EPS / FDS : refaire le bilan de puissance pour les prochaines 24 h | (outil FDS) | □ | Comparaison quotidienne des tendances pendant 7 jours |
-| 8 | SPACON : ouvrir une fiche ; informer le responsable de mission | (journal de mission) | □ | « CTG-013 closed » |
+| 1 | EPS : récupérer la télémesure batterie et calculer la tension attendue pour le SoC rapporté | `HK_REQUEST(sid=1)` (S3.27) | □ | SID 1 correspond à l'EPS ; SID 8 est la structure EPS étendue |
+| 2 | EPS / Thermique : recouper la température de la batterie | `HK_REQUEST(sid=3)` (S3.27) | □ | `eps.bat_temp` 0x0102 comparée à `tcs.temp_battery` 0x0407 |
+| 3 | EPS : si la batterie est chaude, désactiver son réchauffeur | `HEATER_BATTERY(on=0)` (S8 func_id 40) | □ | `tcs.htr_battery` (0x040A) = 0 |
+| 4 | EPS : calculer la marge de survie en éclipse sur `eps.bat_capacity_wh` (0x010A) | (calcul opérateur) | □ | Réserve de 20 % de SoC ; éclipse ≈ 35 min |
+| 5 | EPS : si la marge est négative, délester la charge utile, puis le refroidisseur, puis le PA | `PAYLOAD_SET_MODE(mode=0)` / `FPA_COOLER(on=0)` / `TTC_PA_OFF` | □ | Recalculer après chaque délestage |
+| 6 | EPS / FDS : replanifier le rapport cyclique si la capacité est réduite | (outil FDS) | □ | Nouveau plan de passage |
+| 7 | SPACON : ouvrir une fiche ; informer le responsable de mission | (journal de mission) | □ | « CTG-013 closed » |
 
 </div>
 
@@ -8555,7 +8648,7 @@ beaucoup plus bas, et cette fiche adopte l'enveloppe de vol.)*
 | 1 | Charge utile : quantifier les erreurs de somme de contrôle et identifier la scène | `HK_REQUEST(sid=5)` (S3.27) | □ | Variation de 0x0609 ; `payload.last_scene_id` 0x060C |
 | 2 | Charge utile / Thermique : vérifier la température du FPA | `HK_REQUEST(sid=3)` (S3.27) + SID 5 | □ | `payload.fpa_temp` 0x0601, `tcs.temp_fpa` 0x0408, `payload.fpa_ready` 0x0610 |
 | 3 | Charge utile : si le FPA est chaud (> −20 °C), interrompre vers STANDBY et refroidir | `PAYLOAD_SET_MODE(mode=1)` (func_id 26) ; `FPA_COOLER(on=1)` (func_id 43) | □ | Attendre < −25 °C et `fpa_ready` = 1 |
-| 4 | Charge utile : si un segment mémoire est en cause, passer la main à CTG-011 | `payload.mem_segments_bad` (0x0612) | □ | Marquer le segment avant de reprendre la vue |
+| 4 | Charge utile : si un segment mémoire est en cause, passer la main à CTG-016 | `payload.mem_segments_bad` (0x0612) | □ | Marquer le segment avant de reprendre la vue |
 | 5 | Charge utile : supprimer l'image corrompue (voie S8 canonique) | `PAYLOAD_DELETE_IMAGE(scene_id=X)` (S8 func_id 30) | □ | |
 | 6 | Charge utile + AOCS : replanifier l'acquisition pour le prochain survol | (FDS) | □ | Selon l'arbre de décision |
 | 7 | SPACON : ouvrir une fiche | (journal de mission) | □ | « CTG-015 closed » |
@@ -8566,31 +8659,28 @@ beaucoup plus bas, et cette fiche adopte l'enveloppe de vol.)*
 
 <div class="procedure-card procedure-card-contingency" markdown="1">
 
-<div class="procedure-card-header" markdown="1">[PE] CTG-016 — Anomalie de mode de la charge utile</div>
+<div class="procedure-card-header" markdown="1">[OB] CTG-016 — Défaillance d'un segment mémoire</div>
 
-*(Note de la rédaction : le simulateur livre la fiche équivalente sous la référence **CTG-006 Anomalie charge utile**, `contingency/payload_anomaly.md`, centrée sur le cas thermique du FPA. Dans le simulateur, CTG-016 est Défaillance d'un segment mémoire. La numérotation du livre est conservée ici.)*
+*(Note de la rédaction : il s'agit de la **CTG-016 Défaillance d'un segment mémoire** du simulateur, `contingency/memory_segment_failure.md`, sous forme condensée.)*
 
-**Point d'entrée :** le mode de la charge utile ne change pas comme commandé ; ou `payload.fpa_temp` (0x0601) au-dessus de −15 °C, ou en hausse de plus de 0.5 °C/min avec le refroidisseur actif.
+**Point d'entrée :** `payload.mem_segments_bad` (0x0612) dépasse sa dernière valeur connue, en général en même temps qu'une hausse de `payload.checksum_errors` (0x0609).
 
-**Objectif :** ramener la charge utile en STANDBY, rétablir l'état thermique et déterminer si l'anomalie est d'origine logicielle, liée au séquencement des commandes ou matérielle.
-
-**Modes de la charge utile :** 0 OFF, 1 STANDBY, 2 IMAGING, **3 CALIBRATION**.
+**Objectif :** identifier le segment mémoire concerné, le marquer comme inutilisable et replanifier les prises de vue en fonction de la capacité réduite.
 
 **Issues défavorables possibles / écarts :**
 
-- Charge utile bloquée en IMAGING sans sortie possible → commander OFF, puis effectuer un cycle d'alimentation de la ligne charge utile (à la manière de CTG-012) après GO du FD
-- FPA au-dessus de +10 °C à une étape quelconque → charge utile OFF immédiatement ; aucun redémarrage sans autorisation du sol
-- Le refroidisseur ne s'active pas → laisser la charge utile OFF et exécuter CTG-004 pour évaluer la zone
-- Écart de plus de 5 °C entre les capteurs FPA de la charge utile et du TCS → suspecter un capteur ; retenir la valeur la plus basse pour les décisions de sécurité
+- Nombre de segments défectueux en hausse rapide → suspecter un verrouillage (latch-up) radio-induit ; charge utile OFF, cycle d'alimentation après 60 s
+- Données scientifiques dans le segment concerné → les images sont perdues ; consigner les identifiants de scène et coordonner une nouvelle acquisition
+- Plus de 10 % de segments défectueux → faire remonter à la planification de mission pour une évaluation de la capacité à long terme
 
 | Étape | Action | TC / code | Confirmation | Remarques |
 |:----:|:-------|:----------|:--------|:------|
-| 1 | Charge utile : lire le mode courant et la température du FPA | `HK_REQUEST(sid=5)` + `HK_REQUEST(sid=3)` (S3.27) | □ | `payload.mode` 0x0600 ; 0x0601 comparé à `tcs.temp_fpa` 0x0408 |
-| 2 | Charge utile : commander OFF pour sortir de l'état bloqué | `PAYLOAD_SET_MODE(mode=0)` (S8 func_id 26) | □ | 0x0600 = 0 en moins de 10 s |
-| 3 | Charge utile / Thermique : confirmer que le refroidisseur fonctionne | (lire SID 3) | □ | `tcs.cooler_fpa` (0x040C) = 1 ; cryoréfrigérateur miniature de type Stirling |
-| 4 | Charge utile : surveiller le refroidissement pendant 20 min au plus | (lire les SID 3 et 5) | □ | ≥ 0.3 °C/min ; stabilisation sous −20 °C |
-| 5 | Charge utile : redémarrer en STANDBY | `PAYLOAD_SET_MODE(mode=1)` (S8 func_id 26) | □ | 0x0600 = 1 ; le FPA reste sous −18 °C |
-| 6 | Charge utile : si elle reste bloquée, effectuer un cycle d'alimentation de la ligne charge utile (GO du FD) | `EPS_POWER_OFF(line_index=3)` / `EPS_POWER_ON(line_index=3)` (func_id 20 / 19) | □ | 30 à 60 s hors tension ; la ligne 3 est celle de la charge utile |
+| 1 | Charge utile : lire le nombre de segments défectueux et les données de stockage | `HK_REQUEST(sid=5)` (S3.27) | □ | 0x0612, `payload.mem_total_mb` 0x060A, `mem_used_mb` 0x060B |
+| 2 | Charge utile : demander le catalogue d'images pour localiser le segment | `PAYLOAD_GET_IMAGE_CATALOG` (S8 func_id 32) | □ | Les scènes corrompues désignent le segment défaillant |
+| 3 | Charge utile : contrôler par CRC tout segment suspect | `MEM_CHECK(memory_id, address, length)` (S6.9) | □ | Une discordance confirme que le segment est défectueux |
+| 4 | Charge utile : marquer le segment comme inutilisable | `PAYLOAD_MARK_BAD_SEGMENT(segment_id=N)` (S8 func_id 31) | □ | **N vaut de 0 à 7** — `num_memory_segments: 8` ; un indice ≥ 8 est rejeté |
+| 5 | Charge utile : supprimer les images restées bloquées dans le segment défectueux | `PAYLOAD_DELETE_IMAGE(scene_id=X)` (S8 func_id 30) | □ | Pour chaque scène concernée |
+| 6 | Charge utile : vérifier la capacité réduite au regard du plan de prise de vue | `HK_REQUEST(sid=5)` (S3.27) | □ | SID 5 correspond à la charge utile ; SID 4 à l'OBDH |
 | 7 | SPACON : ouvrir une fiche | (journal de mission) | □ | « CTG-016 closed » |
 
 </div>
@@ -8607,7 +8697,7 @@ beaucoup plus bas, et cette fiche adopte l'enveloppe de vol.)*
 
 **Issues défavorables possibles / écarts :**
 
-- Le basculement ne rétablit pas la HK → suspecter une panne des deux bus ; candidat à EMG-004
+- Le basculement ne rétablit pas la HK → suspecter une panne des deux bus ; candidat à EMG-003
 - Le bus B tombe ensuite en panne → plus aucune redondance ; signaler la contrainte de mission au responsable de mission
 - Le basculement provoque une réinitialisation momentanée d'un sous-système → attendu ; vérifier que chaque sous-système se rétablit
 
@@ -8632,35 +8722,6 @@ beaucoup plus bas, et cette fiche adopte l'enveloppe de vol.)*
 
 <div class="procedure-card procedure-card-contingency" markdown="1">
 
-<div class="procedure-card-header" markdown="1">[OB] CTG-018 — Anomalie du taux de rejet des TC</div>
-
-*(Note de la rédaction : aucune fiche livrée ne porte ce titre — CTG-018 du simulateur est Reprise par le chargeur d'amorçage. Cette fiche est une consolidation propre au livre du diagnostic des rejets de TC ; les identifiants ci-dessous proviennent de `parameters.yaml` et de `tc_catalog.yaml`.)*
-
-**Point d'entrée :** `obdh.tc_rej_count` (0x0306) s'incrémente sur des commandes que le sol croit valides.
-
-**Objectif :** identifier la cause première (dérive d'horloge, conditionnement, désynchronisation du compteur de séquence) et rétablir une commande sans rejet.
-
-**Issues défavorables possibles / écarts :**
-
-- Cause : dérive d'horloge → lire d'abord `obdh.time_ref` (0x0A13) et `obdh.time_since_sync_s` (0x0A14) : un décalage important avec un temps écoulé depuis la synchronisation important correspond à la dérive ordinaire d'environ 12 ppm ; le même décalage dix minutes après une synchronisation ne l'est pas. Exécuter la voie de synchronisation temporelle (LEOP-006 ; en orbite, NOM-008 Synchronisation de l'horloge). Une dérive proche de 500 ppm (≈ 43 s/jour) correspond à l'injection typée `clock_drift` de l'instructeur, qui prend un `ppm` explicite prévalant sur sa gravité
-- Rejets concentrés sur des commandes conditionnées par l'alimentation → le verrou d'alimentation des TC à deux niveaux remplit son rôle ; mettre d'abord la ligne sous tension
-- Rejets alors que `ttc.beacon_mode` (0x0521) = 1 → l'échelon balise refuse LOW ; quitter d'abord le mode balise (voir CTG-021)
-- Rejets alors que l'OBC est dans le chargeur d'amorçage → seules les fonctions de démarrage/maintenance sont acceptées ; `obdh.sw_image` (0x0311) = 0
-
-| Étape | Action | TC / code | Confirmation | Remarques |
-|:----:|:-------|:----------|:--------|:------|
-| 1 | SPACON : lire le compteur de rejets et l'état de l'OBC | `HK_REQUEST(sid=4)` (S3.27) | □ | 0x0306 ; `obdh.mode` 0x0300 ; `obdh.sw_image` 0x0311 |
-| 2 | SPACON : corréler avec les notifications d'échec S1 et les événements S5 | (journal S1 / S5) | □ | P. ex. code d'échec 0x0007, événement 0x030B COMMAND_REJECTED |
-| 3 | SPACON : traiter la cause selon le motif de rejet | (selon la fiche) | □ | Démarrer l'application / quitter le mode balise / mettre la ligne sous tension |
-| 4 | SPACON : retester la commande par un test de connexion | `CONNECTION_TEST` (S17.1) | □ | Acquittement sans erreur |
-| 5 | SPACON : ouvrir une fiche | (journal de mission) | □ | « CTG-018 closed » |
-
-</div>
-
-<div style="page-break-before: always"></div>
-
-<div class="procedure-card procedure-card-contingency" markdown="1">
-
 <div class="procedure-card-header" markdown="1">[TT] CTG-019 — Absence de télémesure en début de passage</div>
 
 **Point d'entrée :** AOS attendu, mais ni balise ni HK après l'instant prévu de la porteuse ; ou balise présente, mais la HK complète n'apparaît jamais après le démarrage de l'OBC.
@@ -8670,13 +8731,13 @@ beaucoup plus bas, et cette fiche adopte l'enveloppe de vol.)*
 **Issues défavorables possibles / écarts :**
 
 - Le satellite acquitte les commandes mais aucune TM → posture de commande en aveugle ; désigner le passage suivant comme passage de rétablissement
-- Ni acquittements ni TM → passage suivant également silencieux → EMG-003
+- Ni acquittements ni TM → passage suivant également silencieux → EMG-004
 - La géométrie était erronée depuis le début → revérifier les prévisions du FDS
 
 **Arbre de décision :**
 
-- SI des acquittements S1 sont reçus → poursuivre par commande en aveugle ; ne pas encore invoquer EMG-003
-- SI aucun acquittement ET aucune TM → répéter le test de liaison ; si toujours rien au LOS, préparer EMG-003 pour le passage suivant
+- SI des acquittements S1 sont reçus → poursuivre par commande en aveugle ; ne pas encore invoquer EMG-004
+- SI aucun acquittement ET aucune TM → répéter le test de liaison ; si toujours rien au LOS, préparer EMG-004 pour le passage suivant
 - SI balise seule, sans HK complète après `OBC_BOOT_APP` → il ne s'agit généralement **pas** d'une panne : le moteur réapplique `default_enabled_sids` = [1, 11] au démarrage de l'application ; les SID 2 à 6 doivent donc être réactivés avec `HK_ENABLE` (S3.5) avant d'être transmis. Envoyer d'abord ces commandes, puis commander en aveugle selon CTG-019 s'ils n'apparaissent toujours pas
 
 | Étape | Action | TC / code | Confirmation | Remarques |
@@ -8686,7 +8747,7 @@ beaucoup plus bas, et cette fiche adopte l'enveloppe de vol.)*
 | 3 | TT&C : test de connexion (en aveugle) | `CONNECTION_TEST` (S17.1) | □ | Guetter uniquement l'acquittement |
 | 4 | TT&C : parcourir la chaîne RF en aveugle — ligne TX, PA, antenne | `eps.pl_ttc_tx` 0x0112 ; `ttc.pa_on` 0x0516 ; `ttc.antenna_deployed` 0x0520 | □ | `EPS_POWER_ON(line_index=2)`, `TTC_PA_ON` (66) selon les besoins |
 | 5 | SPACON : si des acquittements sont présents, poursuivre les procédures par commande en aveugle | (journal de mission) | □ | Confirmations réduites |
-| 6 | SPACON : si toujours silencieux au LOS, ouvrir une fiche haute priorité ; préparer EMG-003 pour le passage suivant | (journal de mission) | □ | « CTG-019 escalation » |
+| 6 | SPACON : si toujours silencieux au LOS, ouvrir une fiche haute priorité ; préparer EMG-004 pour le passage suivant | (journal de mission) | □ | « CTG-019 escalation » |
 
 </div>
 
@@ -8705,7 +8766,7 @@ beaucoup plus bas, et cette fiche adopte l'enveloppe de vol.)*
 **Issues défavorables possibles / écarts :**
 
 - Activité critique dans le temps perdue au cours du passage actuel → replanifier pour le prochain AOS (Troll, Svalbard, Inuvik ou O'Higgins)
-- Station de secours également dégradée → candidat à EMG-003 sur les deux passages suivants
+- Station de secours également dégradée → candidat à EMG-004 sur les deux passages suivants
 - Impact client → bulletin du responsable de mission
 
 | Étape | Action | TC / code | Confirmation | Remarques |
@@ -8800,10 +8861,10 @@ beaucoup plus bas, et cette fiche adopte l'enveloppe de vol.)*
 
 **Issues défavorables possibles / écarts :**
 
-- SoC toujours en baisse après chaque échelon → `OBC_SET_MODE(mode=2)` EMERGENCY, puis EMG-006 Perte totale d'alimentation
+- SoC toujours en baisse après chaque échelon → `OBC_SET_MODE(mode=2)` EMERGENCY, puis EMG-002 Perte totale d'alimentation
 - SoC inférieur à 10 % → risque de décharge profonde ; EMERGENCY immédiatement, informer le responsable de mission de la perte de capacité probable
 - Rétablissement en sortie d'éclipse plus lent que prévu → maintenir le niveau de délestage pendant une orbite ; réévaluer
-- Puissance toujours pas rétablie après la sortie d'éclipse → vérifier les courants par panneau 0x012B–0x0130 ; s'ils sont tous proches de zéro, CTG-013
+- Puissance toujours pas rétablie après la sortie d'éclipse → vérifier les courants par panneau 0x012B–0x0130 ; s'ils sont tous proches de zéro, CTG-009
 
 **Arbre de décision (les seuils livrés) :**
 
@@ -8811,7 +8872,7 @@ beaucoup plus bas, et cette fiche adopte l'enveloppe de vol.)*
 - SI SoC < 35 % → échelon 2, refroidisseur FPA OFF
 - SI SoC < 25 % → échelon 3, PA bande S OFF (liaison descendante perdue ; la liaison montante et la balise UHF subsistent)
 - SI SoC < 15 % → échelon 4, ligne des roues de réaction OFF (contrôle d'attitude actif perdu)
-- SI la tension du bus reste inférieure à 25.0 V alors que tout est délesté → `OBC_SET_MODE(mode=2)`, puis EMG-006
+- SI la tension du bus reste inférieure à 25.0 V alors que tout est délesté → `OBC_SET_MODE(mode=2)`, puis EMG-002
 
 | Étape | Action | TC / code | Confirmation | Remarques |
 |:----:|:-------|:----------|:--------|:------|
@@ -8832,7 +8893,7 @@ beaucoup plus bas, et cette fiche adopte l'enveloppe de vol.)*
 
 <div class="procedure-card-header" markdown="1">[FE] CTG-024 — Traitement de la perte d'un panneau solaire</div>
 
-**Point d'entrée :** courant d'un panneau du générateur solaire tendant vers zéro ou nettement dégradé ; `eps.power_gen` total réduit. **Cinq faces de la structure portent des cellules, et non six :** −Z accueille l'ouverture de l'imageur et le radiateur (`mz_area_m2: 0.000`) ; `eps.sa_mz_current` (0x0130) indique donc zéro en permanence et ne constitue jamais l'indice d'une panne de panneau. Les surfaces des panneaux sont de 0,060 m² pour +X/−X, 0,030 m² pour +Y/−Y, 0,018 m² pour +Z, plus 0,120 m² de cellules par aile déployable.
+**Point d'entrée :** courant d'un panneau du générateur solaire tendant vers zéro ou nettement dégradé ; `eps.power_gen` total réduit. **Cinq faces de la structure portent des cellules, et non six :** −Z, la face nadir, accueille l'ouverture de l'imageur et le radiateur (`mz_area_m2: 0.000`) ; `eps.sa_mz_current` (0x0130) indique donc zéro en permanence et ne constitue jamais l'indice d'une panne de panneau. Les surfaces des panneaux sont de 0,060 m² pour +X/−X, 0,030 m² pour +Y/−Y, 0,018 m² pour +Z, plus 0,120 m² de cellules par aile déployable.
 
 **Objectif :** identifier le panneau défaillant, recalculer le bilan de puissance pour la nouvelle configuration, décider si la mission se poursuit avec un cycle d'utilisation réduit ou passe dans un état sûr prolongé.
 
@@ -8871,7 +8932,7 @@ beaucoup plus bas, et cette fiche adopte l'enveloppe de vol.)*
 
 **Objectif :** identifier le capteur défaillant, basculer sur l'unité redondante lorsqu'elle existe (senseurs stellaires uniquement), évaluer si les capteurs restants permettent encore de satisfaire l'exigence de pointage de la mission, et dégrader le mode dans le cas contraire.
 
-**Inventaire des redondances :** deux senseurs stellaires (ST1/ST2), six têtes CSS (+X, −X, +Y, −Y, +Z, −Z), **un magnétomètre sans rechange** et **trois gyros mono-axe sans rechange**. Le magnétomètre et les voies de gyro sont les capteurs SCAO sans unité redondante à sélectionner ; voir CTG-009 pour les gyros.
+**Inventaire des redondances :** deux senseurs stellaires (ST1/ST2), six têtes CSS (+X, −X, +Y, −Y, +Z, −Z), **un magnétomètre sans rechange** et **trois gyros mono-axe sans rechange**. Le magnétomètre et les voies de gyro sont les capteurs SCAO sans unité redondante à sélectionner ; voir CTG-029 pour les gyros.
 
 **Issues défavorables possibles / écarts :**
 
@@ -8886,7 +8947,7 @@ beaucoup plus bas, et cette fiche adopte l'enveloppe de vol.)*
 - SI les deux ST sont en défaut → repli sur COARSE_SUN (mode 3) ; prises de vue suspendues
 - SI magnétomètre en défaut → redémarrer l'unité unique (`S2_AOCS_MAGNETOMETER`, équipement 0x0209) ; il n'existe pas de second magnétomètre vers lequel basculer
 - SI aucun ST et CSS invalides → DETUMBLE (mode 2)
-- SI la perte cumulée dépasse le bilan de pointage → EMG-002
+- SI la perte cumulée dépasse le bilan de pointage → EMG-005
 
 | Étape | Action | TC / code | Confirmation | Remarques |
 |:----:|:-------|:----------|:--------|:------|
@@ -8928,7 +8989,7 @@ beaucoup plus bas, et cette fiche adopte l'enveloppe de vol.)*
 | 1 | AOCS : identifier la roue bloquée à partir de deux échantillons de vitesse espacés de 30 s | `HK_REQUEST(sid=2)` (S3.27) | □ | Vitesses 0x0207–0x020A figées ou à 0 tr/min |
 | 2 | AOCS : vérifier la tendance de la température de la roue | (lire SID 2) | □ | Températures 0x0218–0x021B ; hausse = grippage du palier |
 | 3 | AOCS : désactiver la roue bloquée (double validation) | `AOCS_DISABLE_WHEEL(wheel_idx=N)` (S8 func_id 2) | □ | Deuxième validation par le FD ; vitesses angulaires < 1.0 °/s |
-| 4 | AOCS : reconfigurer la boucle de contrôle sur trois roues | `SET_PARAM(param_id=aocs.wheel_config, value=3)` (S20.1) | □ | Il n'existe pas de télécommande `AOCS_3W_MODE` — la fonction S8 5 est `ST2_POWER` ; une clé de configuration est la seule voie |
+| 4 | AOCS : confirmer que la boucle s'est reconfigurée sur trois roues — aucune commande | (observation, 15 s) | □ | Il n'existe ni télécommande `AOCS_3W_MODE` (la fonction S8 5 est `ST2_POWER`) ni paramètre `aocs.wheel_config` : `AOCS_DISABLE_WHEEL` à l'étape 3 constitue toute la reconfiguration. Rétablir plus tard avec `AOCS_ENABLE_WHEEL` (func_id 3) |
 | 5 | AOCS : décharger le moment cinétique sur les trois roues restantes | `AOCS_DESATURATE` (S8 func_id 1) | □ | Rapports cycliques MTQ 0x0258–0x025A non nuls pendant le déchargement |
 | 6 | AOCS : vérifier la stabilité de l'attitude dans la nouvelle configuration | `AOCS_SET_MODE(mode=4)` (S8 func_id 0) | □ | `aocs.att_error` (0x0217) < 1.5° — assoupli par rapport à 1.0° pour l'exploitation sur trois roues |
 | 7 | SPACON : ouvrir une fiche ; marquer la roue PERMANENT_FAULT | (journal de mission) | □ | « CTG-026 closed » ; une désaturation est désormais nécessaire toutes les 3 à 4 orbites, et non toutes les 6 à 8 |
@@ -8975,20 +9036,108 @@ beaucoup plus bas, et cette fiche adopte l'enveloppe de vol.)*
 
 <div style="page-break-before: always"></div>
 
+<div class="procedure-card procedure-card-contingency" markdown="1">
+
+<div class="procedure-card-header" markdown="1">[PR] CTG-028 — Anomalie de propulsion</div>
+
+*(Note de la rédaction : il s'agit de la **CTG-028 Anomalie de propulsion** du simulateur, `contingency/propulsion_anomaly.md`, sous forme condensée.)*
+
+**Point d'entrée :** alarme S12 sur `prop.tank_pressure` (0x0B01) — plage absolue, ou surveillance de vitesse de variation/DELTA qui détecte une fuite lente ; ou événement PROP_VALVE_FAULT (0x080A), PROP_LEAK_DETECTED (0x080B), PROP_UNDERPERFORMANCE (0x080C), PROP_TANK_PRESSURE_HIGH (0x0807) ; ou restitution d'orbite (OD) après poussée montrant un ΔV obtenu inférieur à 90 % du plan (NOM-013, étape 6).
+
+**Objectif :** isoler l'ergol, **borner** le ΔV utilisable restant et protéger la réserve d'évitement de collision. Le monoergol vert 1U d'EOSAT-1 (66,9 m/s au total) sert à l'évitement de débris, à un maintien d'orbite limité et à la poussée de retrait de service de 34,3 m/s en fin de vie (NOM-014) ; l'objectif n'est donc pas de « réparer le propulseur », mais de « savoir exactement quelle capacité de CAM subsiste et la préserver ».
+
+**Issues défavorables possibles / écarts :**
+
+- Une branche signalant 2 (défaut) ne s'est pas fermée — considérer comme perdu l'ergol situé en aval de la vanne bloquée
+- Pression toujours en baisse après isolement → la fuite se situe en amont des vannes à verrouillage ; elle ne peut pas être isolée, seulement bornée
+- Réserve bornée inférieure à ~1 m/s → la capacité d'évitement de débris est de fait perdue ; la posture vis-à-vis des conjonctions change
+- Pression réservoir en hausse, insensible à la mise en sécurité des réchauffeurs → CTG-004, et préparer EMG-001 (le mode survie désarme la propulsion par la règle 8005)
+
+| Étape | Action | TC / code | Confirmation | Remarques |
+|:----:|:-------|:----------|:--------|:------|
+| 1 | Propulsion : activer la structure PROP et capturer la TM complète | `HK_ENABLE(sid=9)` (S3.5) | □ | SID 9 correspond à PROP ; SID 5 à la charge utile |
+| 2 | Propulsion : lire l'état, la tendance de pression, la masse, les températures, les vannes, le débit de fuite | (lire SID 9) | □ | 0x0B00, 0x0B01, 0x0B02, 0x0B04/0x0B05, 0x0B06–0x0B08, 0x0B16 |
+| 3 | Propulsion : fermer les deux branches de vannes à verrouillage | `PROP_ISO_CLOSE(branch=2)` (S8 func_id 114) | □ | `prop.latch_a_state` 0x0B06 et `latch_b_state` 0x0B07 = 0 |
+| 4 | Propulsion : borner le ΔV utilisable restant | lire `prop.dv_remaining` (0x0B0C), corriger selon le mode de défaillance | □ | Communiquer au FD la réserve CAM bornée |
+| 5 | Propulsion : verrouiller l'inhibition sol tant que l'anomalie est ouverte | `PROP_INHIBIT_SET(on=1)` (S8 func_id 116) | □ | `prop.arm_inhibit_mask` (0x0B15) bit 9 positionné |
+| 6 | SPACON : ouvrir une fiche ; le FD décide d'EMG-001 en cas de cascade | (journal de mission) | □ | La levée de l'inhibition (`PROP_INHIBIT_CLR`, func 117) exige une fiche close + l'autorité du FD |
+
+</div>
+
+<div style="page-break-before: always"></div>
+
+<div class="procedure-card procedure-card-contingency" markdown="1">
+
+<div class="procedure-card-header" markdown="1">[AOCS] CTG-029 — Reprise après panne de gyroscope</div>
+
+*(Fiche du simulateur `contingency/gyro_failure.md`. Elle remplace la fiche provisoire CTG-B01 « Anomalie IMU / gyro » du livre.)*
+
+**Point d'entrée :** événement `GYRO_BIAS_HIGH` (0x020B) — le biais encore présent à la sortie du gyroscope dépasse 0,05 °/s (`aocs.gyro_bias_resid` 0x02D2) ; ou `aocs.gyro_units_mask` (0x02D1) ≠ 7, une unité est éteinte ; ou `aocs.gyro_saturated` (0x0295) = 1 ; ou l'estimation d'attitude qui dérive (`aocs.att_error` 0x0217 en hausse) alors que le senseur stellaire est hors de la boucle. Liaison établie avec ≥ 15 min de passage restantes, image applicative en service, SoC > 40 %, ni basculement, ni désaturation, ni poussée dans les 15 min.
+
+**Objectif :** identifier la voie gyroscopique touchée, rétablir une référence de vitesse sans biais grâce à l'étalonnage bord du biais et, si la voie est irrécupérable, l'isoler et poursuivre la détermination d'attitude sur les capteurs restants.
+
+**Ce que modélise le simulateur.** EOSAT-1 emporte trois gyroscopes mono-axe, un par axe du satellite, et **aucune unité redondante** : équipements S2 `S2_AOCS_GYROSCOPE_0/1/2` (identifiants 0x0206, 0x0207, 0x0208 = 518, 519, 520). Il n'y a ni ligne d'alimentation IMU ni unité vers laquelle basculer. Une panne `gyro_bias` injectée est un décalage **persistant** sur un axe ou sur les trois ; elle ne disparaît pas avec le temps, et l'étalonnage la compense dans la chaîne de mesure sans réparer l'unité. Une unité éteinte est une voie morte. Les trois valeurs de biais sont des grandeurs différentes : l'instabilité de biais d'une unité saine est d'environ 3e-5 °/s (0,1 °/h), l'événement 0x020B se déclenche à **0,05 °/s** de biais résiduel, et la limite S12 sur `aocs.gyro_bias_x/y/z` (0x0270–0x0272) est de ±0,5 °/s. Cette fiche agit sur l'événement à 0,05 °/s, le premier signal exploitable.
+
+**Issues défavorables possibles / écarts :**
+
+- Les trois unités éteintes ou en panne → aucune référence de vitesse ; le filtre se contente du senseur stellaire, des capteurs solaires et du magnétomètre. Tenir NOMINAL si le senseur est valide, sinon EMG-005 Perte d'attitude
+- Saturation (`aocs.gyro_saturated` = 1) → le satellite tourne plus vite que la plage du gyroscope : c'est une anomalie d'attitude, pas une panne de gyroscope ; CTG-002 d'abord
+- Refus avec `0x0A03` → aucun senseur stellaire dans la boucle ; le rétablir (CTG-008), attendre le bit 0 de `aocs.est_source` (0x02C1), réessayer. Refus avec `0x0A04` → satellite non au repos ; attendre la fin du basculement ou de la désaturation (`aocs.mode` ≠ 6 et ≠ 7)
+- Le biais revient après un bon étalonnage → s'il suit `aocs.gyro_temp` (0x0273), relancer après le transitoire thermique ; à température constante, l'unité se dégrade — émettre un rapport d'anomalie
+- L'instructeur retire un biais injecté après un étalonnage → la compensation mémorisée surcorrige désormais avec le signe opposé ; relancer l'étape 4
+
+| Étape | Action | TC / code | Confirmation | Remarques |
+|:----:|:-------|:----------|:--------|:------|
+| 1 | AOCS : recueillir la télémesure des gyroscopes et de détermination ; classer | `HK_REQUEST(sid=2)`, `HK_REQUEST(sid=7)` (S3.27) | □ | Consigner `aocs.gyro_units_on` (0x0294), `aocs.gyro_units_mask` (0x02D1), `aocs.gyro_saturated` (0x0295), `aocs.gyro_bias_x/y/z` (0x0270–0x0272), `aocs.gyro_bias_resid` (0x02D2), `aocs.gyro_temp` (0x0273). L'axe dont le biais se distingue est la voie touchée |
+| 2 | AOCS : protéger l'estimation d'attitude | (lecture des SID 2 / SID 7) | □ | Bit 0 de `aocs.est_source` (0x02C1) positionné ; `aocs.st1_status` (0x0240) = 2 ; `aocs.att_error` (0x0217) < 1,0°. Sans senseur dans la boucle, un biais de 0,05 °/s fait dériver l'estimation de plusieurs dizaines de degrés en dix minutes : rétablir d'abord le senseur (CTG-008) |
+| 3 | AOCS : rallumer toute unité éteinte (seulement si 0x02D1 ≠ 7) | `S2_AOCS_GYROSCOPE_0(device_id=518, state=1)`, `S2_AOCS_GYROSCOPE_1(device_id=519, state=1)`, `S2_AOCS_GYROSCOPE_2(device_id=520, state=1)` (S2.1) | □ | Idempotent. `aocs.gyro_units_mask` = 7 et `aocs.gyro_units_on` = 3 en 20 s ; un étalonnage avec une voie morte est refusé avec `0x0A02` |
+| 4 | AOCS : lancer l'étalonnage bord du biais | `AOCS_GYRO_CALIBRATION(action=0, duration_s=300)` (S8 func_id 13) | □ | Tenir NOMINAL (mode 4, ou 8 en éclipse), vitesses à 0,10 °/s près. `aocs.gyro_cal_state` (0x02C9) = 1 en 20 s ; codes de refus `0x0A01`–`0x0A05` dans `aocs.gyro_cal_reject` (0x02D0) ; le S1.7 arrive à la fin de l'arc |
+| 5 | AOCS : suivre l'arc d'étalonnage | `HK_REQUEST(sid=7)` (S3.27) toutes les 30 s | □ | `aocs.gyro_cal_progress` (0x02CA) ≥ 100 en 330 s. Un abandon (`AOCS_GYRO_CAL_ABORT`, 0x0212) n'applique rien : corriger la cause et relancer l'étape 4 |
+| 6 | AOCS : vérifier le résultat et consigner le biais | `GET_PARAM(param_id=0x02CB)` … `(param_id=0x02CD)` (S20.3) | □ | `aocs.gyro_cal_state` = 2, `aocs.gyro_cal_result` (0x02CF) = 1 ; chaque axe à ±0,5 °/s. Au-delà, ne pas accepter le résultat : étape 7 |
+| 7 | AOCS : isoler une voie irrécupérable (seulement si l'étape 6 a échoué) | `S2_AOCS_GYROSCOPE_0(device_id=518, state=0)` (X représenté ; 519 Y, 520 Z) ; `AOCS_EST_RESET(mode=1)` (S8 func_id 91) | □ | Seulement pour un biais supérieur à 0,5 °/s après un étalonnage de 900 s, ou deux abandons de suite avec `0x0A06`. Le bit fautif s'efface dans 0x02D1 ; bit 0 de `aocs.est_source` toujours positionné en 60 s. Cet axe ne dépend plus que du senseur stellaire jusqu'à la fin de la mission |
+| 8 | AOCS : confirmer la reprise ; déposer le rapport d'anomalie | `HK_REQUEST(sid=2)`, `HK_REQUEST(sid=7)` (S3.27) | □ | `aocs.gyro_bias_resid` (0x02D2) < 0,005 °/s ; `aocs.gyro_cal_comp_mag` (0x02CE) consigné ; `aocs.knowledge_err_3sig` (0x02A7) < 120 arcsec et `aocs.control_err` (0x02A8) < 1,0° en 300 s. Si une voie a été isolée, vérifier `aocs.fine_ready` (0x02C5) avant la prochaine séance de prise de vue. « CTG-029 closed » |
+
+</div>
+
+<div style="page-break-before: always"></div>
+
+<div class="procedure-card procedure-card-contingency" markdown="1">
+
+<div class="procedure-card-header" markdown="1">[OB] CTG-030 — Rejet de télécommande et échec de vérification</div>
+
+*(Fiche du simulateur `contingency/tc_rejection.md`. Elle remplace la fiche provisoire CTG-B02 « Anomalie du taux de rejet des TC » du livre.)*
+
+**Point d'entrée :** un échec d'acceptation S1.2 ou un échec d'exécution S1.8 sur une télécommande que le sol croit valide ; `obdh.tc_rej_count` (0x0306) qui augmente, ou l'événement `COMMAND_REJECTED` (0x030B) ; ou une télécommande sans **aucun** rapport S1 (délai de vérification dépassé dans le journal des commandes du MCS). Liaison attendue (dans un passage prédit) ; journal des commandes du MCS disponible.
+
+**Objectif :** trouver pourquoi des télécommandes sont refusées ou non vérifiées, supprimer la cause et rétablir une commande propre. La fiche n'envoie que des demandes de HK et un essai de connexion.
+
+**Ce que rapporte le simulateur.** Chaque refus porte un code d'échec sur 16 bits et un texte de motif. Le code est mémorisé dans `obdh.last_tc_error_code` (0x0315), et un refus à bord déclenche aussi `COMMAND_REJECTED` (0x030B), qui nomme la commande, l'étape et le code. À l'**acceptation** (S1.2) : 0x0001 service inconnu, 0x0002 sous-type inconnu, 0x0003 paramètre ou longueur invalide, 0x0004 sous-système cible non alimenté, 0x0005 liaison montante indisponible, 0x0006 hors du sous-ensemble du chargeur d'amorçage. À l'**exécution** (S1.8) : 0x0005 invalide dans le mode courant, 0x0007 non permise dans l'état courant, et les familles 0x0021–0x0028 charge utile, 0x0A01–0x0A08 étalonnage des gyroscopes, 0x0A20–0x0A22 entrée dans un mode AOCS, 0x0B01–0x0B13 propulsion, 0x0C01–0x0C04 phase de mission. Deux cas ne sont **pas** des rejets : 0x0005 à l'acceptation sans événement `COMMAND_REJECTED` (la liaison montante n'avait pas de verrouillage du canal de commande, le logiciel de bord n'a donc jamais vu la TC), et l'absence de tout rapport S1 (la TC n'est jamais arrivée, ou c'est une commande à achèvement différé — étalonnage des gyroscopes, amorçage de l'application, poussée — dont le S1.7 arrive à la fin de l'action). Déterminer lequel avant de renvoyer quoi que ce soit.
+
+**Issues défavorables possibles / écarts :**
+
+- La demande de l'étape 1 reste elle-même sans réponse → un problème de liaison, pas de commande : CTG-003 Reprise après perte de liaison TTC, ou CTG-019 s'il n'y a aucune télémesure
+- `CONNECTION_TEST` reste sans réponse → la liaison montante ne fonctionne pas ; CTG-003
+- Les rejets continuent avec un code que personne n'explique → arrêter de commander, consigner le code, le texte de motif et la commande, escalader au FD ; ne pas essayer d'autres commandes pour le contourner
+- Rejets après un redémarrage de l'OBC → l'OBC redémarre dans le chargeur d'amorçage (`obdh.sw_image` 0x0311 = 0) : toute commande applicative est refusée `0x0006` jusqu'au réamorçage de l'application (EMG-003, CTG-021)
+- Échecs liés à l'horloge → une commande horodatée calée sur une horloge de bord fausse s'exécute au mauvais moment au lieu d'être rejetée ; si `obdh.time_ref` (0x0A13) = 0 ou si `obdh.time_since_sync_s` (0x0A14) est grand, resynchroniser (NOM-008) avant de charger un nouveau programme
+
+| Étape | Action | TC / code | Confirmation | Remarques |
+|:----:|:-------|:----------|:--------|:------|
+| 1 | FDIR / systèmes : lire les compteurs de commandes et l'état de bord | `HK_REQUEST(sid=4)` (S3.27) | □ | Consigner `obdh.tc_rx_count` (0x0304), `obdh.tc_acc_count` (0x0305), `obdh.tc_rej_count` (0x0306), `obdh.last_tc_error_code` (0x0315), `obdh.sw_image` (0x0311 : 0 chargeur d'amorçage, 1 application), `obdh.mode` (0x0300 : 0 nominal, 1 sécurité, 2 urgence), `eps.spacecraft_phase` (0x0129) |
+| 2 | TT&C : vérifier la chaîne montante | `HK_REQUEST(sid=6)` (S3.27) | □ | `ttc.carrier_lock` (0x0510) = 1 ; `ttc.frame_sync` (0x0512) = 1 ; consigner `ttc.cmd_rx_count` (0x0513) et `ttc.beacon_mode` (0x0521). Ni rapport S1 ni variation de 0x0513 → la TC n'a jamais atteint le satellite |
+| 3 | FDIR / systèmes : classer chaque rejet par code et par étape | (journal des commandes du MCS ; texte de l'événement 0x030B) | □ | 0x0006 avec `sw_image` = 0 → amorcer l'application (étape 5 de LEOP-001, CTG-021). 0x0004 → mettre d'abord la ligne sous tension. 0x0003 → reconstruire la TC dans le constructeur de commandes. 0x0001 / 0x0002 → non implémenté. 0x0005 / 0x0007 à l'exécution → valide mais pas permise maintenant (par exemple le mode balise : le quitter avec `TTC_SET_BEACON_MODE`). 0x0Axx → CTG-029 ; 0x0Bxx → lire `prop.arm_inhibit_mask` (0x0B15), NOM-013 ou CTG-028 ; 0x0Cxx → conditions de phase de mission |
+| 4 | TT&C : vérifier une commande propre | `CONNECTION_TEST` (S17.1) ; `HK_REQUEST(sid=4)` (S3.27) | □ | S1.1 et S1.7 en 10 s ; `obdh.tc_acc_count` incrémenté, `obdh.tc_rej_count` inchangé |
+| 5 | FD : renvoyer une seule fois la télécommande corrigée | (la TC corrigée) | □ | Seulement après suppression de sa cause ; ne jamais répéter à l'identique une TC refusée. S1.1 et S1.7 reçus ; `obdh.last_tc_error_code` inchangé. « CTG-030 closed » |
+
+</div>
+
+<div style="page-break-before: always"></div>
+
 ## 14.5 Fiches de procédures d'urgence
 
 *Les procédures d'urgence doivent être lues une fois lors de la familiarisation des opérateurs, mais jamais invoquées sans autorisation explicite du FD. Toute approche d'un passage en mode survie commence par une annonce au FD sur la boucle vocale. Les fiches ci-dessous en donnent la structure canonique ; les fichiers de procédure du simulateur contiennent les listes d'étapes complètes.*
 
-*Note de la rédaction — numérotation des fiches d'urgence. Les numéros EMG du livre et ceux du simulateur ne concordent pas, et aucune des deux numérotations ne sera modifiée. Consultez la correspondance avant d'ouvrir un fichier :*
-
-| Fiche du livre | Identifiant simulateur | Fichier simulateur |
-|:---|:---|:---|
-| EMG-001 Mode survie d'urgence | EMG-001 | `emergency/emergency_safe_mode.md` |
-| EMG-002 Perte d'attitude | **EMG-005** | `emergency/loss_of_attitude.md` |
-| EMG-003 Perte de communication | **EMG-004** | `emergency/loss_of_communication.md` |
-| EMG-004 Redémarrage de l'OBC | **EMG-003** | `emergency/obc_reboot.md` |
-| EMG-005 Emballement thermique | **EMG-006** | `emergency/thermal_runaway.md` |
-| EMG-006 Perte totale d'alimentation | **EMG-002** | `emergency/total_power_failure.md` |
+*Chaque fiche ci-dessous porte l'identifiant EMG du simulateur et correspond au fichier du même identifiant dans `configs/eosat1/procedures/emergency/`. La numérotation des tirages antérieurs figure dans la note historique à la fin du §14.6.*
 
 <div class="procedure-card procedure-card-emergency" markdown="1">
 
@@ -9001,8 +9150,8 @@ beaucoup plus bas, et cette fiche adopte l'enveloppe de vol.)*
 **Issues défavorables possibles / écarts :**
 
 - Le passage en mode survie déclenche lui-même d'autres actions FDIR → attendu ; laisser converger la protection autonome
-- Satellite en culbutage (vitesses > 2 °/s) → exécuter EMG-002 Perte d'attitude avant de poursuivre
-- Bilan de puissance non positif après l'acquisition du Soleil → EMG-006 Perte totale d'alimentation
+- Satellite en culbutage (vitesses > 2 °/s) → exécuter EMG-005 Perte d'attitude avant de poursuivre
+- Bilan de puissance non positif après l'acquisition du Soleil → EMG-002 Perte totale d'alimentation
 - La sortie du mode survie exige une analyse hors ligne ; ne pas quitter le mode survie au cours du même passage sans autorisation explicite du FD et du responsable de mission
 
 | Étape | Action | TC / code | Confirmation | Remarques |
@@ -9022,31 +9171,29 @@ beaucoup plus bas, et cette fiche adopte l'enveloppe de vol.)*
 
 <div class="procedure-card procedure-card-emergency" markdown="1">
 
-<div class="procedure-card-header" markdown="1">[AOCS] EMG-002 — Perte d'attitude</div>
+<div class="procedure-card-header" markdown="1">[FE] EMG-002 — Perte totale d'alimentation</div>
 
-**Point d'entrée :** l'une des valeurs `aocs.rate_roll` (0x0204), `rate_pitch` (0x0205) ou `rate_yaw` (0x0206) supérieure à 2.0 °/s — le satellite est en culbutage.
+**Point d'entrée :** `eps.bat_soc` (0x0101) < 10 % **ou** `eps.bus_voltage` (0x0105) < 26.0 V. La chaîne de sous-tension de l'arbre est la suivante : seuil de sous-tension FDIR à **26.5 V** (`simulation.yaml` `eps.uv_threshold_v`), délestage automatique dans le modèle à **25.0 V** (`eps.load_shed.bus_voltage_v`, rétablissement à 25.5 V, délestage dans l'ordre payload → fpa_cooler → ttc_tx → aocs_wheels → prop), événement `bus_critical_v` au même seuil de **25.0 V**, et cascade de propagation de défaillance à **23.0 V** — à ce stade, le satellite se met lui-même en sécurité. Il n'existe pas d'échelon à 24.5 V ; l'échelle FDIR fondée sur le SoC est distincte et fonctionne à 30 / 20 / 10 %.
 
-**Objectif :** amortir les vitesses angulaires avec les magnétocoupleurs, protéger le bilan de puissance tant que les générateurs ne sont pas orientés vers le Soleil, et réacquérir le Soleil.
-
-**L'amortissement est lent, et c'est normal.** DETUMBLE (mode 2) est une véritable loi B-dot pilotée par le magnétomètre, `m = −k·dB/dt`, dont le dipôle sature à 1,6 A·m² par axe. Depuis une rotation de 14 °/s, la convergence demande de l'ordre de 3.5e3 s, avec un passage sous le seuil de sortie de 0.5 °/s vers 1166 s. Comptez environ une division par deux de la vitesse par orbite ; prévoyez deux orbites, et non deux minutes. Toute affirmation d'un amortissement rapide est fausse.
+**Objectif :** atteindre la configuration de survie minimale, orienter les générateurs vers le Soleil et attendre la recharge. **Aucune charge ne peut être réactivée avant que le SoC dépasse 30 %**, valeur confirmée sur trois échantillons consécutifs.
 
 **Issues défavorables possibles / écarts :**
 
-- Le bilan de puissance se dégrade pendant le rétablissement (générateurs hors Soleil) → CTG-001 / EMG-006 ; sous 10 % de SoC, commander `OBC_SET_MODE(mode=2)`
-- Vitesses en hausse au lieu de baisser → suspecter une erreur de modèle magnétique ou de polarité des magnétocoupleurs ; commander le SCAO sur OFF, attendre une orbite, réessayer
-- Magnétomètre invalide → la loi B-dot est impossible ; aucune voie d'amortissement tant que le magnétomètre n'est pas rétabli
-- Apparition de dépassements thermiques pendant la rotation → CTG-004 / EMG-005
+- La chute de tension atteint l'OBC → redémarrage autonome probable ; suites CTG-010 / EMG-003
+- La batterie ne se rétablit pas même avec toutes les charges délestées → candidat à la perte de mission ; tentative de recharge sur plusieurs orbites
+- Vitesses angulaires supérieures à 2 °/s → les générateurs ne peuvent pas être pointés ; exécuter d'abord l'étape 2 d'EMG-005
+- Générateurs solaires partiellement ombrés du fait de l'attitude → recouper avec EMG-005
 
 | Étape | Action | TC / code | Confirmation | Remarques |
 |:----:|:-------|:----------|:--------|:------|
-| 1 | Charge utile / Thermique : délester immédiatement pour prolonger l'autonomie de la batterie | `PAYLOAD_SET_MODE(mode=0)` (26) ; `HEATER_OBC(on=0)` (41) | □ | `eps.power_cons` (0x0106) < 60 W |
-| 2 | AOCS : commander DETUMBLE (magnétocoupleurs uniquement) | `AOCS_SET_MODE(mode=2)` (S8 func_id 0) | □ | `aocs.mode` (0x020F) = 2 ; les roues ne sont pas nécessaires |
-| 3 | AOCS : surveiller la réduction des vitesses au cours de l'orbite 1 | `HK_REQUEST(sid=2)` (S3.27) | □ | Tous les axes < 1.0 °/s à la fin de la première orbite |
-| 4 | AOCS : surveiller au cours de l'orbite 2 | (lire SID 2) | □ | Tous les axes < 0.5 °/s et SoC > 15 % |
-| 5 | AOCS : confirmer la fin de l'amortissement | (lire SID 2) | □ | Toutes les vitesses < 0.1 °/s pendant 10 min sans interruption |
-| 6 | AOCS : commander l'acquisition du Soleil | `AOCS_SET_MODE(mode=3)` (S8 func_id 0) | □ | COARSE_SUN ; `aocs.att_error` (0x0217) < 5° en moins de 15 min |
-| 7 | EPS : confirmer un bilan de puissance positif, puis maintenir pendant deux orbites | (lire SID 1) | □ | Les deux générateurs > 0.5 A ; SoC en hausse |
-| 8 | FD : informer le responsable de mission ; coordonner si nécessaire un rétablissement sur plusieurs orbites | (point de situation) | □ | « EMG-002 active » ; passer la main à EMG-001 pour le rétablissement par paliers |
+| 1 | FD : déclarer l'urgence puissance | (annonce du FD) | □ | |
+| 2 | EPS : délestage immédiat, en moins de 60 s | `PAYLOAD_SET_MODE(mode=0)` (26) ; `HEATER_OBC(on=0)` (41) ; `HEATER_THRUSTER(on=0)` (42) | □ | `eps.power_cons` (0x0106) < 50 W en moins de 15 s |
+| 3 | Thermique : laisser le réchauffeur batterie sous thermostat, ligne sous tension | `EPS_POWER_ON(line_index=5)` (19) ; `HEATER_BATTERY(on=1)` (40) | □ | `eps.pl_htr_bat` (0x0115) = 1 — le thermostat a besoin de la ligne |
+| 4 | OBDH : commander l'OBC en EMERGENCY | `OBC_SET_MODE(mode=2)` (S8 func_id 50) | □ | `obdh.mode` (0x0300) = 2 ; la génération de HK tombe à 1/60 s |
+| 5 | AOCS : acquisition du Soleil pour une production maximale | `AOCS_SET_MODE(mode=3)` (S8 func_id 0) | □ | COARSE_SUN ; générateurs > 0.3 A chacun |
+| 6 | EPS : surveiller le rétablissement pendant la phase éclairée et l'éclipse suivante | (lire SID 1) | □ | Le bus doit rester > 25.0 V pendant l'éclipse ; le rétablissement est lent |
+| 7 | EPS : maintenir le seuil de rétablissement jusqu'à SoC > 30 % | (lire SID 1) | □ | Trois échantillons consécutifs ; puis le réchauffeur OBC en premier |
+| 8 | FD : informer le responsable de mission ; posture de rétablissement sur plusieurs orbites | (point de situation) | □ | « EMG-002 active » ; viser un gain net de SoC ≥ 3 % par orbite |
 
 </div>
 
@@ -9054,37 +9201,7 @@ beaucoup plus bas, et cette fiche adopte l'enveloppe de vol.)*
 
 <div class="procedure-card procedure-card-emergency" markdown="1">
 
-<div class="procedure-card-header" markdown="1">[TT] EMG-003 — Perte de communication</div>
-
-**Point d'entrée :** aucune télémesure pendant au moins deux fenêtres de passage consécutives (~3 h).
-
-**Objectif :** monter en puissance par échelons successifs — segment sol, puis commande en aveugle sur chaque transpondeur, puis évaluation du rétablissement autonome — avec des jalons de décision à 6 h, 12 h, 24 h et 48 h depuis le dernier contact.
-
-**Une bande S silencieuse ne signifie pas un satellite silencieux.** EO-Sat-1 embarque deux émetteurs : l'émetteur principal en bande S et une balise UHF distincte à antenne fouet. La coupure du PA interrompt la télémesure en bande S, tandis que la balise continue d'émettre la HK SID 11 depuis la ligne non commutable `ttc_rx`. Recherchez la balise avant de conclure que le satellite est perdu.
-
-**Issues défavorables possibles / écarts :**
-
-- Le rétablissement autonome du satellite le ramène au passage suivant → poursuivre par la remise en ordre post-rétablissement CTG-010
-- Silence persistant au-delà de 48 h → déclarer formellement la perte ; coordonner l'écoute radio avec les partenaires industriels
-- Rétablissement partiel (porteuse seule, pas de démodulation) → voie CTG-014 + CTG-003
-
-| Étape | Action | TC / code | Confirmation | Remarques |
-|:----:|:-------|:----------|:--------|:------|
-| 1 | Segment sol : confirmer chaque station, la configuration bande de base et celle des antennes | (vérification complète des stations) | □ | Réseau de cinq stations ; seuil du récepteur au minimum (−130 dBm) |
-| 2 | TT&C : demander la HK en aveugle à chaque passage visible, élévation minimale 5° | `HK_REQUEST(sid=6)` (S3.27) | □ | Prioriser par élévation maximale |
-| 3 | TT&C : basculer en aveugle sur le transpondeur principal, 3 fois à 10 s d'intervalle | `TTC_SWITCH_PRIMARY` (S8 func_id 63) | □ | De préférence sur un passage à plus de 20° d'élévation |
-| 4 | TT&C : basculer en aveugle sur le transpondeur redondant, 3 fois à 10 s d'intervalle | `TTC_SWITCH_REDUNDANT` (S8 func_id 64) | □ | Toute exécution de fonction S8 utilise le sous-type 1 |
-| 5 | TT&C : rechercher la balise UHF à chaque passage prévu | (recherche de porteuse) | □ | Échelon balise, HK SID 11 — indépendant du PA bande S |
-| 6 | FD : étendre la recherche à l'écoute radio des partenaires industriels au-delà du jalon de 24 h | (communication externe) | □ | |
-| 7 | FD : informer le responsable de mission de la stratégie de communication envers le client | (point de situation) | □ | « EMG-003 active » |
-
-</div>
-
-<div style="page-break-before: always"></div>
-
-<div class="procedure-card procedure-card-emergency" markdown="1">
-
-<div class="procedure-card-header" markdown="1">[OB] EMG-004 — Redémarrage de l'OBC</div>
+<div class="procedure-card-header" markdown="1">[OB] EMG-003 — Redémarrage de l'OBC</div>
 
 **Point d'entrée :** au moins deux indicateurs indépendants — `obdh.cpu_load` (0x0302) durablement au-dessus de 90 % ; `obdh.tc_rej_count` (0x0306) s'incrémentant sur des commandes valides ; `obdh.mem_errors` (0x031E) en hausse ; OBC ne répondant pas aux commandes de mode ; ou données de servitude périmées depuis plus de 30 s.
 
@@ -9105,7 +9222,7 @@ beaucoup plus bas, et cette fiche adopte l'enveloppe de vol.)*
 | 5 | SPACON : démarrer l'image applicative | `OBC_BOOT_APP` (S8 func_id 55) | □ | `obdh.sw_image` (0x0311) = 1. Le démarrage de l'application ne restaure **pas** l'horloge |
 | 6 | OBDH : si l'OBC ne se rétablit pas, basculer d'unité (double validation) | `OBC_SWITCH_UNIT` (S8 func_id 53) | □ | Confirmer que `obdh.active_obc` (0x030C) a changé |
 | 7 | SPACON : après le rétablissement, exécuter la remise en ordre complète CTG-010 | selon CTG-010 | □ | Comprend `HK_ENABLE` pour les SID 2 à 6, la sortie du mode balise et une **resynchronisation de l'horloge** : le redémarrage a ramené l'OBC à J2000 avec `obdh.time_ref` (0x0A13) = 0 (NONE) ; ne réarmer donc aucune commande datée tant que `SET_TIME` (S9.1) n'a pas été accepté |
-| 8 | FD : informer le responsable de mission | (point de situation) | □ | « EMG-004 closing » |
+| 8 | FD : informer le responsable de mission | (point de situation) | □ | « EMG-003 closing » |
 
 </div>
 
@@ -9113,7 +9230,69 @@ beaucoup plus bas, et cette fiche adopte l'enveloppe de vol.)*
 
 <div class="procedure-card procedure-card-emergency" markdown="1">
 
-<div class="procedure-card-header" markdown="1">[SE] EMG-005 — Emballement thermique</div>
+<div class="procedure-card-header" markdown="1">[TT] EMG-004 — Perte de communication</div>
+
+**Point d'entrée :** aucune télémesure pendant au moins deux fenêtres de passage consécutives (~3 h).
+
+**Objectif :** monter en puissance par échelons successifs — segment sol, puis commande en aveugle sur chaque transpondeur, puis évaluation du rétablissement autonome — avec des jalons de décision à 6 h, 12 h, 24 h et 48 h depuis le dernier contact.
+
+**Une bande S silencieuse ne signifie pas un satellite silencieux.** EOSAT-1 embarque deux émetteurs : l'émetteur principal en bande S et une balise UHF distincte à antenne fouet. La coupure du PA interrompt la télémesure en bande S, tandis que la balise continue d'émettre la HK SID 11 depuis la ligne non commutable `ttc_rx`. Recherchez la balise avant de conclure que le satellite est perdu.
+
+**Issues défavorables possibles / écarts :**
+
+- Le rétablissement autonome du satellite le ramène au passage suivant → poursuivre par la remise en ordre post-rétablissement CTG-010
+- Silence persistant au-delà de 48 h → déclarer formellement la perte ; coordonner l'écoute radio avec les partenaires industriels
+- Rétablissement partiel (porteuse seule, pas de démodulation) → voie CTG-014 + CTG-003
+
+| Étape | Action | TC / code | Confirmation | Remarques |
+|:----:|:-------|:----------|:--------|:------|
+| 1 | Segment sol : confirmer chaque station, la configuration bande de base et celle des antennes | (vérification complète des stations) | □ | Réseau de cinq stations ; seuil du récepteur au minimum (−130 dBm) |
+| 2 | TT&C : demander la HK en aveugle à chaque passage visible, élévation minimale 5° | `HK_REQUEST(sid=6)` (S3.27) | □ | Prioriser par élévation maximale |
+| 3 | TT&C : basculer en aveugle sur le transpondeur principal, 3 fois à 10 s d'intervalle | `TTC_SWITCH_PRIMARY` (S8 func_id 63) | □ | De préférence sur un passage à plus de 20° d'élévation |
+| 4 | TT&C : basculer en aveugle sur le transpondeur redondant, 3 fois à 10 s d'intervalle | `TTC_SWITCH_REDUNDANT` (S8 func_id 64) | □ | Toute exécution de fonction S8 utilise le sous-type 1 |
+| 5 | TT&C : rechercher la balise UHF à chaque passage prévu | (recherche de porteuse) | □ | Échelon balise, HK SID 11 — indépendant du PA bande S |
+| 6 | FD : étendre la recherche à l'écoute radio des partenaires industriels au-delà du jalon de 24 h | (communication externe) | □ | |
+| 7 | FD : informer le responsable de mission de la stratégie de communication envers le client | (point de situation) | □ | « EMG-004 active » |
+
+</div>
+
+<div style="page-break-before: always"></div>
+
+<div class="procedure-card procedure-card-emergency" markdown="1">
+
+<div class="procedure-card-header" markdown="1">[AOCS] EMG-005 — Perte d'attitude</div>
+
+**Point d'entrée :** l'une des valeurs `aocs.rate_roll` (0x0204), `rate_pitch` (0x0205) ou `rate_yaw` (0x0206) supérieure à 2.0 °/s — le satellite est en culbutage.
+
+**Objectif :** amortir les vitesses angulaires avec les magnétocoupleurs, protéger le bilan de puissance tant que les générateurs ne sont pas orientés vers le Soleil, et réacquérir le Soleil.
+
+**L'amortissement est lent, et c'est normal.** DETUMBLE (mode 2) est une véritable loi B-dot pilotée par le magnétomètre, `m = −k·dB/dt`, dont le dipôle sature à 1,6 A·m² par axe. Depuis une rotation de 14 °/s, la convergence demande de l'ordre de 3.5e3 s, avec un passage sous le seuil de sortie de 0.5 °/s vers 1166 s. Comptez environ une division par deux de la vitesse par orbite ; prévoyez deux orbites, et non deux minutes. Toute affirmation d'un amortissement rapide est fausse.
+
+**Issues défavorables possibles / écarts :**
+
+- Le bilan de puissance se dégrade pendant le rétablissement (générateurs hors Soleil) → CTG-001 / EMG-002 ; sous 10 % de SoC, commander `OBC_SET_MODE(mode=2)`
+- Vitesses en hausse au lieu de baisser → suspecter une erreur de modèle magnétique ou de polarité des magnétocoupleurs ; commander le SCAO sur OFF, attendre une orbite, réessayer
+- Magnétomètre invalide → la loi B-dot est impossible ; aucune voie d'amortissement tant que le magnétomètre n'est pas rétabli
+- Apparition de dépassements thermiques pendant la rotation → CTG-004 / EMG-006
+
+| Étape | Action | TC / code | Confirmation | Remarques |
+|:----:|:-------|:----------|:--------|:------|
+| 1 | Charge utile / Thermique : délester immédiatement pour prolonger l'autonomie de la batterie | `PAYLOAD_SET_MODE(mode=0)` (26) ; `HEATER_OBC(on=0)` (41) | □ | `eps.power_cons` (0x0106) < 60 W |
+| 2 | AOCS : commander DETUMBLE (magnétocoupleurs uniquement) | `AOCS_SET_MODE(mode=2)` (S8 func_id 0) | □ | `aocs.mode` (0x020F) = 2 ; les roues ne sont pas nécessaires |
+| 3 | AOCS : surveiller la réduction des vitesses au cours de l'orbite 1 | `HK_REQUEST(sid=2)` (S3.27) | □ | Tous les axes < 1.0 °/s à la fin de la première orbite |
+| 4 | AOCS : surveiller au cours de l'orbite 2 | (lire SID 2) | □ | Tous les axes < 0.5 °/s et SoC > 15 % |
+| 5 | AOCS : confirmer la fin de l'amortissement | (lire SID 2) | □ | Toutes les vitesses < 0.1 °/s pendant 10 min sans interruption |
+| 6 | AOCS : commander l'acquisition du Soleil | `AOCS_SET_MODE(mode=3)` (S8 func_id 0) | □ | COARSE_SUN ; `aocs.att_error` (0x0217) < 5° en moins de 15 min |
+| 7 | EPS : confirmer un bilan de puissance positif, puis maintenir pendant deux orbites | (lire SID 1) | □ | Les deux générateurs > 0.5 A ; SoC en hausse |
+| 8 | FD : informer le responsable de mission ; coordonner si nécessaire un rétablissement sur plusieurs orbites | (point de situation) | □ | « EMG-005 active » ; passer la main à EMG-001 pour le rétablissement par paliers |
+
+</div>
+
+<div style="page-break-before: always"></div>
+
+<div class="procedure-card procedure-card-emergency" markdown="1">
+
+<div class="procedure-card-header" markdown="1">[SE] EMG-006 — Emballement thermique</div>
 
 **Point d'entrée :** un circuit de réchauffeur bloqué sur ON, avec une température de zone en hausse incontrôlée malgré les actions de CTG-004.
 
@@ -9123,7 +9302,7 @@ beaucoup plus bas, et cette fiche adopte l'enveloppe de vol.)*
 
 **Issues défavorables possibles / écarts :**
 
-- Emballement de la zone batterie → perte de capacité / endommagement des éléments ; peut conduire vers EMG-006
+- Emballement de la zone batterie → perte de capacité / endommagement des éléments ; peut conduire vers EMG-002
 - Emballement de la zone charge utile → dommage permanent à la charge utile s'il n'est pas enrayé ; mettre immédiatement la charge utile en sécurité
 - Emballement dû à l'attitude (panneau exposé en permanence au Soleil) → se coordonner avec l'AOCS pour une réorientation
 - Emballement de plusieurs zones → candidat à EMG-001
@@ -9137,37 +9316,7 @@ beaucoup plus bas, et cette fiche adopte l'enveloppe de vol.)*
 | 5 | Tous les postes : délester toute autre charge contribuant à l'échauffement de la zone | (selon la carte des zones) | □ | Y compris la charge utile le cas échéant |
 | 6 | Thermique : surveiller la tendance ; si elle continue de monter, passer à EMG-001 | (lire SID 3) | □ | Décision consignée |
 | 7 | Thermique : après rétablissement, rétablir la ligne et rendre la main au thermostat | `EPS_POWER_ON(line_index=…)` (19) ; `HEATER_AUTO_MODE(circuit=…)` (45) | □ | Ne pas laisser la batterie sans protection contre le gel |
-| 8 | FD : informer le responsable de mission des dommages matériels potentiels | (point de situation) | □ | « EMG-005 active » |
-
-</div>
-
-<div style="page-break-before: always"></div>
-
-<div class="procedure-card procedure-card-emergency" markdown="1">
-
-<div class="procedure-card-header" markdown="1">[FE] EMG-006 — Perte totale d'alimentation</div>
-
-**Point d'entrée :** `eps.bat_soc` (0x0101) < 10 % **ou** `eps.bus_voltage` (0x0105) < 26.0 V. La chaîne de sous-tension de l'arbre est la suivante : seuil de sous-tension FDIR à **26.5 V** (`simulation.yaml` `eps.uv_threshold_v`), délestage automatique dans le modèle à **25.0 V** (`eps.load_shed.bus_voltage_v`, rétablissement à 25.5 V, délestage dans l'ordre payload → fpa_cooler → ttc_tx → aocs_wheels → prop), événement `bus_critical_v` au même seuil de **25.0 V**, et cascade de propagation de défaillance à **23.0 V** — à ce stade, le satellite se met lui-même en sécurité. Il n'existe pas d'échelon à 24.5 V ; l'échelle FDIR fondée sur le SoC est distincte et fonctionne à 30 / 20 / 10 %.
-
-**Objectif :** atteindre la configuration de survie minimale, orienter les générateurs vers le Soleil et attendre la recharge. **Aucune charge ne peut être réactivée avant que le SoC dépasse 30 %**, valeur confirmée sur trois échantillons consécutifs.
-
-**Issues défavorables possibles / écarts :**
-
-- La chute de tension atteint l'OBC → redémarrage autonome probable ; suites CTG-010 / EMG-004
-- La batterie ne se rétablit pas même avec toutes les charges délestées → candidat à la perte de mission ; tentative de recharge sur plusieurs orbites
-- Vitesses angulaires supérieures à 2 °/s → les générateurs ne peuvent pas être pointés ; exécuter d'abord l'étape 2 d'EMG-002
-- Générateurs solaires partiellement ombrés du fait de l'attitude → recouper avec EMG-002
-
-| Étape | Action | TC / code | Confirmation | Remarques |
-|:----:|:-------|:----------|:--------|:------|
-| 1 | FD : déclarer l'urgence puissance | (annonce du FD) | □ | |
-| 2 | EPS : délestage immédiat, en moins de 60 s | `PAYLOAD_SET_MODE(mode=0)` (26) ; `HEATER_OBC(on=0)` (41) ; `HEATER_THRUSTER(on=0)` (42) | □ | `eps.power_cons` (0x0106) < 50 W en moins de 15 s |
-| 3 | Thermique : laisser le réchauffeur batterie sous thermostat, ligne sous tension | `EPS_POWER_ON(line_index=5)` (19) ; `HEATER_BATTERY(on=1)` (40) | □ | `eps.pl_htr_bat` (0x0115) = 1 — le thermostat a besoin de la ligne |
-| 4 | OBDH : commander l'OBC en EMERGENCY | `OBC_SET_MODE(mode=2)` (S8 func_id 50) | □ | `obdh.mode` (0x0300) = 2 ; la génération de HK tombe à 1/60 s |
-| 5 | AOCS : acquisition du Soleil pour une production maximale | `AOCS_SET_MODE(mode=3)` (S8 func_id 0) | □ | COARSE_SUN ; générateurs > 0.3 A chacun |
-| 6 | EPS : surveiller le rétablissement pendant la phase éclairée et l'éclipse suivante | (lire SID 1) | □ | Le bus doit rester > 25.0 V pendant l'éclipse ; le rétablissement est lent |
-| 7 | EPS : maintenir le seuil de rétablissement jusqu'à SoC > 30 % | (lire SID 1) | □ | Trois échantillons consécutifs ; puis le réchauffeur OBC en premier |
-| 8 | FD : informer le responsable de mission ; posture de rétablissement sur plusieurs orbites | (point de situation) | □ | « EMG-006 active » ; viser un gain net de SoC ≥ 3 % par orbite |
+| 8 | FD : informer le responsable de mission des dommages matériels potentiels | (point de situation) | □ | « EMG-006 active » |
 
 </div>
 
@@ -9177,9 +9326,9 @@ beaucoup plus bas, et cette fiche adopte l'enveloppe de vol.)*
 
 Consultez le fichier du simulateur
 `configs/eosat1/procedures/procedure_index.yaml`, qui fait foi, pour la
-liste des **67** procédures avec leurs chemins de fichier :
-LEOP-001 à LEOP-007, COM-001 à COM-013, NOM-001 à **NOM-013**,
-CTG-001 à **CTG-028** et EMG-001 à EMG-006. Les procédures
+liste des **70** identifiants de procédure (69 actifs ; CTG-018 est retirée au profit de CTG-021) avec leurs chemins de fichier :
+LEOP-001 à LEOP-007, COM-001 à COM-013, NOM-001 à **NOM-014**,
+CTG-001 à **CTG-030** et EMG-001 à EMG-006. Les procédures
 suivantes sont citées dans les plans de passage mais ne sont pas
 développées en fiches d'une page dans ce catalogue, car leurs étapes
 relèvent soit de la remise en ordre courante (journaux de clôture, tri des
@@ -9199,7 +9348,8 @@ fiches, export des tendances), soit de procédures provisoires en attente de con
   **NOM-008 est Synchronisation de l'horloge** (`nominal/clock_sync.md`)
   — les deux sont souvent intervertis, et toute référence à
   « NOM-006 (clock_sync.md) » est erronée. **NOM-013 Exécution d'une manœuvre
-  de maintien d'orbite** clôt la série. Les deux fiches nominales
+  de maintien d'orbite** et **NOM-014 Retrait de service en fin de
+  vie** closent la série. Les deux fiches nominales
   supplémentaires du livre, **Chargement du plan de passage** et
   **Revue des tendances à long terme**, n'ont pas d'équivalent livré dans le
   simulateur et ne sont plus laissées isolées : le chargement du plan
@@ -9216,30 +9366,19 @@ fiches, export des tendances), soit de procédures provisoires en attente de con
   Les fiches de ce manuel sont condensées ; les fichiers du simulateur
   contiennent les listes d'étapes complètes.
 
-**Correspondance des identifiants livre/simulateur pour les fiches de contingence.** Plusieurs
-numéros CTG du livre désignent une fiche différente dans l'index livré.
-Aucune renumérotation n'est prévue de part ni d'autre ; consultez la correspondance avant
-d'ouvrir un fichier.
-
-| Fiche du livre | Identifiant simulateur | Fichier simulateur |
-|:---|:---|:---|
-| CTG-005 Anomalie batterie | **CTG-013** | `contingency/battery_cell_failure.md` |
-| CTG-006 Anomalie de propulsion | **CTG-028** | `contingency/propulsion_anomaly.md` |
-| CTG-009 Anomalie IMU / gyro | *(aucune fiche livrée ; voir CTG-025)* | `contingency/aocs_sensor_loss_recovery.md` |
-| CTG-011 ECC de la mémoire de masse | **CTG-016** | `contingency/memory_segment_failure.md` |
-| CTG-013 Sous-performance du générateur solaire | **CTG-009** | `contingency/solar_array_degradation.md` |
-| CTG-016 Anomalie de mode de la charge utile | **CTG-006** | `contingency/payload_anomaly.md` |
-| CTG-018 Anomalie du taux de rejet des TC | *(aucune fiche livrée ; CTG-018 du simulateur est Reprise par le chargeur d'amorçage)* | — |
-
-Tous les autres numéros CTG du livre correspondent directement à l'index livré.
-Les fiches CTG-005 (Mode survie EPS), CTG-011 (Basculement sur l'OBC redondant)
-et CTG-018 (Reprise par le chargeur d'amorçage) du simulateur n'ont pas de fiche dédiée dans le livre ;
-leur contenu est accessible respectivement par CTG-001, CTG-017/CTG-022 et
-CTG-021.
+Trois fiches du simulateur n'ont pas de fiche propre dans ce livre :
+CTG-005 Mode survie EPS (son contenu est accessible par CTG-001),
+CTG-011 Basculement sur l'OBC redondant (par CTG-017 / CTG-022) et
+CTG-018 Reprise par le chargeur d'amorçage, retirée au profit de
+CTG-021 Reprise de l'OBC par le chargeur d'amorçage. Les deux anciennes
+consolidations du livre, CTG-B01 (Anomalie IMU / gyro) et CTG-B02 (Anomalie
+du taux de rejet des TC), sont désormais les fiches du simulateur
+**CTG-029** Reprise après panne de gyroscope et **CTG-030** Rejet de
+télécommande et échec de vérification.
 
 **Huit fiches sont exécutables par la machine** depuis l'onglet Procédures du MCS :
 NOM-002, NOM-003, NOM-004, NOM-008, NOM-009, CTG-001, CTG-008 et
-EMG-006 du simulateur (Emballement thermique — l'EMG-005 du livre). NOM-002/003/004
+EMG-006 (Emballement thermique). NOM-002/003/004
 et NOM-009 sont liées à des types d'activité du planificateur
 (`imaging_pass`, `data_dump`, `orbit_manoeuvre`,
 `housekeeping_collection`) ; NOM-008, CTG-001, CTG-008 et la fiche
@@ -9257,8 +9396,8 @@ le fichier de procédure du simulateur avant toute commande.
 
 **Trois éléments de l'arborescence, plus récents que toutes les éditions imprimées de ce livre.**
 (1) La phase de mission est désormais une **télécommande**,
-`SYS_SET_MISSION_PHASE` (S8 func_id 120) : l'étape 15 de LEOP-007 déclare
-COMMISSIONING (5) et l'étape 7 de COM-013 déclare NOMINAL (6). Toute
+`SYS_SET_MISSION_PHASE` (S8 func_id 120) : l'étape 7 de LEOP-003 déclare
+COMMISSIONING (5) et l'étape 4 de COM-013 déclare NOMINAL (6). Toute
 affirmation, ailleurs, selon laquelle la phase ne se règle qu'à la console, ou selon laquelle
 `SET_PHASE` est un alias d'`OBC_BOOT_APP`, est caduque — cet
 alias a été supprimé. (2) L'OBC dispose d'une **horloge indépendante**
@@ -9270,6 +9409,17 @@ ce chapitre se termine par une resynchronisation. (3) Les **roues de réaction d
 explicitement activées** avec `AOCS_ENABLE_WHEEL` (S8 func_id 3) dans
 COM-004 ; le chargeur d'amorçage les laisse désactivées et rien d'autre ne
 les active.
+
+<small>*Note historique — numérotation des tirages antérieurs.* Avant
+octobre 2026, ce livre numérotait douze fiches de contingence et
+d'urgence autrement que le simulateur. Ancien → actuel : EMG-002 →
+EMG-005, EMG-003 → EMG-004, EMG-004 → EMG-003, EMG-005 → EMG-006,
+EMG-006 → EMG-002 ; CTG-005 → CTG-013, CTG-006 → CTG-028, CTG-011 →
+CTG-016, CTG-013 → CTG-009, CTG-016 → CTG-006 ; les fiches propres au
+livre CTG-009 (IMU / gyro) et CTG-018 (taux de rejet des TC) sont
+devenues CTG-B01 et CTG-B02, puis, en octobre 2026, les fiches du simulateur
+CTG-029 et CTG-030. Tous les autres identifiants étaient
+déjà ceux du simulateur.</small>
 
 ---
 
@@ -9466,7 +9616,7 @@ Tableau 15.6 — Commandes AOCS — contrôle d'attitude et d'orbite.
 
 | Commande | Objet |
 |---|---|
-| `AOCS_SET_MODE` | Régler le mode AOCS (0=OFF, 1=SAFE_BOOT, 2=DETUMBLE, 3=COARSE_SUN, 4=NOMINAL_NADIR, 5=FINE_POINT, 6=SLEW, 7=DESATURATION, 8=ECLIPSE_PROPAGATE, 9=INERTIAL). Le mode 5 est refusé avec TM(1,8) tant que le masque de bits de préconditions `aocs.fine_ready` 0x02C5 n'est pas à 0 |
+| `AOCS_SET_MODE` | Régler le mode AOCS (0=OFF, 1=SAFE_BOOT, 2=DETUMBLE, 3=COARSE_SUN, 4=NOMINAL, 5=FINE_POINT, 6=SLEW, 7=DESAT, 8=ECLIPSE, 9=INERTIAL). Le mode 5 est refusé avec TM(1,8) tant que le masque de bits de préconditions `aocs.fine_ready` 0x02C5 n'est pas à 0 |
 | `AOCS_DESATURATE` | Lancer la désaturation des roues. Un déchargement dure de 20 à 50 min, inhibe la prise de vue pendant son déroulement, comporte un délai d'attente et revient au mode antérieur à la désaturation |
 | `AOCS_DISABLE_WHEEL` | Désactiver une roue de réaction donnée (`wheel_idx` 0–3) |
 | `AOCS_ENABLE_WHEEL` | Activer une roue de réaction donnée |
@@ -9604,7 +9754,7 @@ Tableau 15.11 — Commandes TT&C — télémesure, poursuite et télécommande.
 | `TTC_BEACON_TX_ON` | Allumer l'**émetteur** de la balise UHF |
 | `TTC_BEACON_TX_OFF` | Éteindre l'émetteur de la balise UHF — attention, cela supprime la ligne de vie |
 
-EO-Sat-1 embarque **deux émetteurs** : une chaîne principale en bande S et une
+EOSAT-1 embarque **deux émetteurs** : une chaîne principale en bande S et une
 balise UHF séparée sur antenne fouet, à 437,5 MHz, 1 W dans un dipôle. La balise
 émet le SID HK 11 et uniquement le SID 11, chaque fois que la chaîne en bande S
 n'émet pas. C'est l'enseignement à tirer de `TTC_PA_OFF` : coupez
@@ -9615,9 +9765,9 @@ plutôt qu'un mystère.
 
 **PROP — propulsion**
 
-EO-Sat-1 emporte un module de monergol vert 1U offrant 66,9 m/s de
-delta-V au total, utilisé pour l'évitement de débris et un maintien
-d'orbite limité. L'armement se fait volontairement en deux temps, et une poussée entraîne
+EOSAT-1 emporte un module de monergol vert 1U offrant 66,9 m/s de
+delta-V au total, utilisé pour l'évitement de débris, un maintien
+d'orbite limité et la poussée de retrait de service en fin de vie (NOM-014). L'armement se fait volontairement en deux temps, et une poussée entraîne
 un nouvel ajustement des éléments orbitaux : les passages et les éclipses se décalent donc réellement ensuite.
 
 Tableau 15.12 — Commandes PROP — propulsion.
@@ -9749,8 +9899,8 @@ Un ingénieur SCAO solide procède ainsi :
    à 70 %. »
 2. **Il anticipe.** « Au rythme actuel, 0x02BA atteint le rouge à 90 %
    dans l'heure, l'erreur de contrôle passe à environ 0.048 et
-   le total à 0.051 deg. À 450 km, cela donne une erreur de géolocalisation
-   (0x02C7) d'environ 400 m, pour une distance d'échantillonnage au sol (GSD) de 29,3 m —
+   le total à 0.051 deg. À 513 km, cela donne une erreur de géolocalisation
+   (0x02C7) d'environ 460 m, pour une distance d'échantillonnage au sol (GSD) de 33,4 m —
    plus d'une douzaine de pixels. Ce n'est pas un produit
    de qualité scientifique. »
 3. **Il recommande.** « FD, AOCS — je recommande de commander la désaturation
@@ -9776,8 +9926,9 @@ Un ingénieur EPS solide procède ainsi :
 1. **Il mesure.** Il relève chacun des neuf courants de ligne
    (0x0118–0x011F et 0x014B ; le total du bus est en 0x0148) et en fait la somme.
    Elle atteint 29,3 W. La consommation nominale moyenne sur l'orbite prévue est de
-   28,7 W. Différence : 0,6 W de consommation supplémentaire en régime permanent — face à
-   une marge nominale d'environ +9 W seulement, cela mérite d'être examiné.
+   28,8 W. Différence : 0,5 W de consommation supplémentaire en régime permanent — peu
+   de chose face à la marge nominale de +16,3 W, mais inexpliqué, et cela mérite
+   d'être examiné.
 2. **Il traque la ligne.** Il compare chaque courant de ligne à sa valeur nominale :
    la plupart sont à moins de 5 %, mais le rapport cyclique de `htr_bat` est à
    18 % alors que 8 % étaient prévus. Consommation supplémentaire : env. 0,4 W. L'essentiel
@@ -9881,8 +10032,8 @@ mission.
 
 La première lumière réussit. L'évaluation de la qualité est concluante — DN moyen
 nominal, contraste nominal, erreur de géoréférencement de 165 m, soit environ
-six pixels pour la distance d'échantillonnage au sol (GSD) de 29,3 m de l'imageur, et
-dans le bilan. La bande couvre toute la fauchée de 240 km. Le responsable
+cinq pixels pour la distance d'échantillonnage au sol (GSD) de 33,4 m de l'imageur, et
+dans le bilan. La bande couvre toute la fauchée de 273 km. Le responsable
 de mission rédige le bulletin.
 
 Un opérateur charge utile faible se réjouit et passe à autre chose. Il ne voit pas

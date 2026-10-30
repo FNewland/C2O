@@ -115,8 +115,8 @@ positions:
 
   # Phase D: Propulsion Engineer (facilitator book App A). Owns the dV
   # budget, arming and burn execution; Flight Dynamics (aocs position)
-  # produces the manoeuvre vector, Propulsion executes it. Debris-avoidance
-  # + drag-make-up scope only — no deorbit capability exists.
+  # produces the manoeuvre vector, Propulsion executes it. Debris avoidance,
+  # drag make-up and the end-of-life disposal burn (NOM-014, ruling Q3 amended).
   propulsion:
     display_name: "Propulsion"
     label: "Propulsion"

@@ -184,7 +184,7 @@ class PlanFlight:
         """Park at the start of a sunlit arc with at least `need_s` of it left.
 
         Placement is part of the plan: the propulsion ARM interlock refuses in
-        eclipse (INH_ECLIPSE) and the AOCS demotes to ECLIPSE_PROPAGATE, so an
+        eclipse (INH_ECLIPSE) and the AOCS demotes to ECLIPSE, so an
         activity whose BURN falls in umbra cannot fly however correct its
         commanding is. See orbit_manoeuvre's
         `timing.daylight_required_at_offset_s`.
@@ -609,7 +609,7 @@ class TestFlyTheDay:
             "the dump did not remove momentum"
         # The dump is over: DESAT (mode 7) has handed control back. It hands
         # back to the pre-desat COMMANDED mode, possibly via the automatic
-        # ECLIPSE_PROPAGATE hand-over if it finishes near umbra entry.
+        # ECLIPSE hand-over if it finishes near umbra entry.
         assert int(flight.p("aocs.mode")) in (4, 8), \
             "DESAT must return to the pre-desat mode"
         assert not flight.eng.subsystems["aocs"]._state.desat_ineffective, \

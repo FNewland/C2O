@@ -13,7 +13,7 @@ expected-reading: "Skim before each simulation day. Read in full any procedure y
 
 # Procedure Quick-Reference
 
-Twenty-five procedures students will most likely use during Week 3, in
+Twenty-seven procedures students will most likely use during Week 3, in
 one-card format. The full procedure files are the authoritative
 source — these cards are pointers, not substitutes.
 
@@ -28,7 +28,7 @@ plus the per-procedure files in subfolders.
 
 ## LEOP procedures
 
-[Claude Code: produce a one-page card per procedure. Use this template:]
+Each card follows this template; LEOP-001 is shown in full.
 
 > **LEOP-001 · First Acquisition of Signal & OBC Boot**
 > *Owner positions:* Flight Director · TT&C · FDIR/Systems
@@ -39,58 +39,71 @@ plus the per-procedure files in subfolders.
 > *Exit:* App SW running, full HK reporting.
 > *File:* `procedures/leop/first_acquisition.md`
 
-Cards required for this section:
-- LEOP-001 First Acquisition of Signal & OBC Boot
-- LEOP-002 Initial Health Check
-- LEOP-006 Time Synchronisation
-- LEOP-007 Sequential Power-On
+The other LEOP cards, one row each. The trigger is the card's entry condition. Top steps and the exit criterion are on the full card in textbook Part 2, §14.1;
+the file is the authority. LEOP-003 and LEOP-005 are for advanced
+students who reach them in the simulation.
 
-[Claude Code: also include LEOP-003 (Initial Orbit Determination)
-and LEOP-005 (Sun Acquisition) for advanced students who reach
-them in the simulation.]
+| ID · Title | Owner positions | Trigger | File |
+|---|---|---|---|
+| LEOP-002 · Initial Health Check | Flight Director · Power & Thermal · FDIR / Systems | Immediately after LEOP-001; SIDs 1, 3, 4, 6 and 11 streaming | `procedures/leop/initial_health_check.md` |
+| LEOP-007 · Sequential Power-On | Flight Director · Power & Thermal · Flight Dynamics · TT&C · FDIR / Systems | LEOP-004 done (wings deployed); `obdh.sw_image` = 1; SoC > 60 %. Powers only the AOCS suite and commands DETUMBLE | `procedures/leop/sequential_power_on.md` |
+| LEOP-005 · Sun Acquisition | Flight Director · Flight Dynamics | After LEOP-007; AOCS in DETUMBLE (mode 2); SoC > 40 %. Observes the automatic handover to COARSE_SUN | `procedures/leop/sun_acquisition.md` |
+| LEOP-006 · Time Synchronisation | Flight Director | After LEOP-005; application image running; `ttc.link_status` = 2 | `procedures/leop/time_sync.md` |
+| LEOP-003 · Initial Orbit Determination | Flight Director · Flight Dynamics · TT&C | After LEOP-006; COARSE_SUN; GPS fix and SID 12. Last LEOP card: refined TLE to the ground tools, then declares phase 5 | `procedures/leop/initial_orbit_determination.md` |
+
+Running order under the cold-boot initial state: LEOP-001 → LEOP-002 →
+LEOP-004 → LEOP-007 → LEOP-005 → LEOP-006 → LEOP-003 (textbook Part 2,
+§14.1).
 
 ---
 
 ## Commissioning procedures
 
-[Claude Code: one card per procedure listed below, same format as
-LEOP cards.]
+The trigger is the card's entry condition. Top steps and the exit criterion are on the full card in textbook Part 2, §14.2. COM-003 (AOCS Sensor Calibration),
+COM-004 (AOCS Actuator Checkout) and COM-013 are not on this list;
+see §14.2.
 
-- COM-001 EPS Checkout
-- COM-002 TCS Verification
-- COM-005 AOCS Mode Transitions
-- COM-006 TTC Link Verification
-- COM-007 OBDH Checkout
-- COM-008 FDIR Configuration
-- COM-009 Payload Power On
-- COM-010 FPA Cooler Activation
-- COM-011 Payload Calibration
-- COM-012 First Light
+| ID · Title | Owner positions | Trigger | File |
+|---|---|---|---|
+| COM-001 · EPS Checkout | Flight Director · Power & Thermal | Start of commissioning pass 1; COARSE_SUN; SoC > 70 % | `procedures/commissioning/eps_checkout.md` |
+| COM-002 · TCS Verification | Flight Director · Power & Thermal | After COM-001 GO | `procedures/commissioning/tcs_verification.md` |
+| COM-005 · AOCS Mode Transitions | Flight Director · Flight Dynamics | After COM-003 GO (wheels enabled in COM-004, gyros calibrated in COM-003) | `procedures/commissioning/aocs_mode_transitions.md` |
+| COM-006 · TTC Link Verification | Flight Director · TT&C | After COM-005 GO | `procedures/commissioning/ttc_link_verification.md` |
+| COM-007 · OBDH Checkout | Flight Director · FDIR / Systems | Commissioning pass 2, after the pass-startup health check | `procedures/commissioning/obdh_checkout.md` |
+| COM-008 · FDIR Configuration & Protection Functions | Flight Director · FDIR / Systems | After COM-007 GO; FDIR moves from the LEOP set to the nominal set | `procedures/commissioning/fdir_configuration.md` |
+| COM-009 · Payload Power On | Flight Director · Payload Operations · Power & Thermal | Nominal FDIR set armed; SoC > 75 %; generation > 40 W | `procedures/commissioning/payload_power_on.md` |
+| COM-010 · FPA Cooler Activation | Flight Director · Payload Operations · Power & Thermal | Immediately after COM-009 GO; payload in STANDBY | `procedures/commissioning/fpa_cooler_activation.md` |
+| COM-011 · Payload Calibration | Flight Director · Payload Operations | FPA in the −16.5…−14.5 °C band; `payload.fpa_ready` = 1 | `procedures/commissioning/payload_calibration.md` |
+| COM-012 · First Light | Flight Director · Payload Operations · Flight Dynamics | After COM-011 GO | `procedures/commissioning/first_light.md` |
 
 ---
 
 ## Nominal procedures
 
-[Claude Code: one card per procedure.]
+The trigger is the card's entry condition. Top steps and the exit criterion are on the full card in textbook Part 2, §14.3.
 
-- NOM-001 Pass Startup
-- NOM-002 Imaging Session
-- NOM-003 Data Downlink
-- NOM-009 Routine Health Check
-- NOM-012 Shift Handover
+| ID · Title | Owner positions | Trigger | File |
+|---|---|---|---|
+| NOM-001 · Pass Startup | Flight Director · TT&C | AOS at any of the five network stations | `procedures/nominal/startup.md` |
+| NOM-002 · Imaging Session | Payload Operations · Flight Dynamics | Scheduled imaging window opens; AOCS in or entering FINE_POINT | `procedures/nominal/imaging_session.md` |
+| NOM-003 · Data Downlink | TT&C · Payload Operations | AOS with products queued, usually right after NOM-001 | `procedures/nominal/data_downlink.md` |
+| NOM-009 · Routine Health Check | Flight Director | Every pass startup, within NOM-001; or ad hoc by the FD | `procedures/nominal/routine_health_check.md` |
+| NOM-012 · Shift Handover | Flight Director | End of shift | `procedures/nominal/shift_handover.md` |
 
 ---
 
 ## Contingency procedures (the most likely ones for Week 3)
 
-[Claude Code: one card per procedure.]
+The trigger is the card's entry condition. Top steps and the exit criterion are on the full card in textbook Part 2, §14.4.
 
-- CTG-001 Under-Voltage Load Shed
-- CTG-002 AOCS Anomaly Recovery
-- CTG-003 TTC Link Loss Recovery
-- CTG-007 Reaction Wheel Anomaly
-- CTG-012 Overcurrent Response
-- CTG-019 No Telemetry at Pass Start
+| ID · Title | Owner positions | Trigger | File |
+|---|---|---|---|
+| CTG-001 · Under-Voltage Load Shed | Flight Director · Power & Thermal | `eps.uv_flag` (0x010E) = 1, rule ea 1001 fires, or bus below 27.0 V | `procedures/contingency/undervoltage_loadshed.md` |
+| CTG-002 · AOCS Anomaly Recovery | Flight Director · Flight Dynamics | `aocs.att_error` (0x0217) > 5°, a wheel above 60 °C, or a star tracker BLIND | `procedures/contingency/aocs_anomaly.md` |
+| CTG-003 · TTC Link Loss Recovery | Flight Director · TT&C | `ttc.link_status` (0x0501) = 0 for > 30 s after AOS, or the link lost mid-pass | `procedures/contingency/ttc_link_loss.md` |
+| CTG-007 · Reaction Wheel Anomaly | Flight Director · Flight Dynamics | Speed jitter > ±500 rpm over 10 s, speed > 6500 rpm, or bearing above 60 °C | `procedures/contingency/reaction_wheel_anomaly.md` |
+| CTG-012 · Overcurrent Response | Flight Director · Power & Thermal | A trip bit set in `eps.oc_trip_flags` (0x010D) | `procedures/contingency/overcurrent_response.md` |
+| CTG-019 · No Telemetry at Pass Start | Flight Director · TT&C | No beacon and no HK at the expected AOS, or a beacon but no full HK after boot | `procedures/contingency/no_telemetry_at_pass.md` |
 
 ---
 
@@ -98,11 +111,12 @@ LEOP cards.]
 
 Brief mention only — students should know these exist:
 
-- EMG Emergency Safe Mode (`procedures/emergency/emergency_safe_mode.md`)
-- EMG Loss of Attitude
-- EMG Loss of Communication
-- EMG OBC Reboot
-- EMG Thermal Runaway
+- EMG-001 Emergency Safe Mode (`procedures/emergency/emergency_safe_mode.md`)
+- EMG-002 Total Power Failure (`total_power_failure.md`)
+- EMG-003 OBC Reboot (`obc_reboot.md`)
+- EMG-004 Loss of Communication (`loss_of_communication.md`)
+- EMG-005 Loss of Attitude (`loss_of_attitude.md`)
+- EMG-006 Thermal Runaway (`thermal_runaway.md`)
 
 If you find yourself reaching for any of these, **call the FD
 first**. These procedures have safe-mode entry as a step and you
@@ -112,11 +126,29 @@ do not invoke safe-mode without FD authorisation.
 
 ## How to read a procedure file
 
-[Claude Code: 200 words. The procedure files in the simulator follow a
-consistent structure. Walk through it using
-`procedures/leop/first_acquisition.md` as the example: front-matter,
-preconditions, steps with ownership column, verifications, exit
-criteria, troubleshooting.]
+Every procedure file has the same shape; textbook Part 2, §7.4,
+gives the template. Open `procedures/leop/first_acquisition.md`
+alongside this:
+
+1. **Header** — `# LEOP-001: First Acquisition of Signal & OBC Boot`,
+   then **Subsystem**, **Phase**, **Revision** and **Approved**. LEOP
+   cards also state an **Entry state** (here: cold boot, OBC in the
+   bootloader).
+2. **Purpose** — what the card achieves.
+3. **Prerequisites** — a checklist (`- [ ]`) that must all be true
+   before step 1.
+4. **Procedure Steps** — `### Step N — name`, built from bold labels
+   rather than a table: **TC** (the command with its arguments inside
+   the backticks, service and subtype beside it), **Action**,
+   **Verify** (mnemonic, hex id, threshold and timeout) and **Note**;
+   some cards add **GO/NO-GO** or **BRANCH**.
+5. **Off-Nominal Handling** — what to do when a verification fails,
+   usually naming a CTG or EMG card by ID.
+6. **Exit state** and **Post-Conditions** — the exit criterion.
+
+Ownership is not in the file. The positions that run a card are its
+`required_positions` in `procedure_index.yaml`, which the MCS
+Procedures tab shows.
 
 ---
 

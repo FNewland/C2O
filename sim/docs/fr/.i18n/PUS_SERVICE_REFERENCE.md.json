@@ -8,270 +8,270 @@
    "fr_hash": "e3b0c44298fc1c14"
   },
   {
-   "id": "pus-service-reference-eosat-1-spacecraft-simulator",
-   "en_hash": "ee37106e00d365ff",
-   "fr_hash": "89799e76d2311364"
+   "id": "pus-service-reference--eosat-1-spacecraft-simulator",
+   "en_hash": "3a5d3899a2518208",
+   "fr_hash": "aa3d1117345a9ee0"
   },
   {
-   "id": "pus-service-reference-eosat-1-spacecraft-simulator/table-of-contents",
-   "en_hash": "108a16f7068809bf",
-   "fr_hash": "71c0f5eaa252a860"
+   "id": "pus-service-reference--eosat-1-spacecraft-simulator/table-of-contents",
+   "en_hash": "b144189b64523b01",
+   "fr_hash": "17574bf7105ea454"
   },
   {
-   "id": "pus-service-reference-eosat-1-spacecraft-simulator/service-overview",
+   "id": "pus-service-reference--eosat-1-spacecraft-simulator/service-overview",
    "en_hash": "74503282d9101b86",
    "fr_hash": "4d28f64045015a9a"
   },
   {
-   "id": "pus-service-reference-eosat-1-spacecraft-simulator/service-1-request-verification",
+   "id": "pus-service-reference--eosat-1-spacecraft-simulator/service-1-request-verification",
    "en_hash": "d142e32aaa2cd858",
    "fr_hash": "b562041edff5122e"
   },
   {
-   "id": "pus-service-reference-eosat-1-spacecraft-simulator/service-1-request-verification/failure-reports-and-the-failure-notice-defect-87",
-   "en_hash": "970e488b86052b72",
-   "fr_hash": "f2a4678f0f4cb301"
+   "id": "pus-service-reference--eosat-1-spacecraft-simulator/service-1-request-verification/failure-reports-and-the-failure-notice-defect-87",
+   "en_hash": "d1c888d4e63f3a0f",
+   "fr_hash": "d7504a505c130354"
   },
   {
-   "id": "pus-service-reference-eosat-1-spacecraft-simulator/service-2-device-access",
+   "id": "pus-service-reference--eosat-1-spacecraft-simulator/service-2-device-access",
    "en_hash": "87e8a8dfd9eab6f9",
    "fr_hash": "c707bef353bd191a"
   },
   {
-   "id": "pus-service-reference-eosat-1-spacecraft-simulator/service-3-housekeeping",
+   "id": "pus-service-reference--eosat-1-spacecraft-simulator/service-3-housekeeping",
    "en_hash": "e4b54b3f0a12bb91",
    "fr_hash": "d6b8e10d3b74c9f4"
   },
   {
-   "id": "pus-service-reference-eosat-1-spacecraft-simulator/service-3-housekeeping/s3-subtype-27-request-one-shot-hk-report",
-   "en_hash": "cd20f9ae6b267d1c",
-   "fr_hash": "a82425f89afe0c94"
+   "id": "pus-service-reference--eosat-1-spacecraft-simulator/service-3-housekeeping/s3-subtype-27--request-one-shot-hk-report",
+   "en_hash": "f7476e9e16c5cce8",
+   "fr_hash": "356c201420c24b39"
   },
   {
-   "id": "pus-service-reference-eosat-1-spacecraft-simulator/service-3-housekeeping/s3-subtype-5-enable-periodic-hk",
-   "en_hash": "1c7b6b436715c469",
-   "fr_hash": "695878a909ec024a"
+   "id": "pus-service-reference--eosat-1-spacecraft-simulator/service-3-housekeeping/s3-subtype-5--enable-periodic-hk",
+   "en_hash": "e4884c8e692859ad",
+   "fr_hash": "8614b65358542f5d"
   },
   {
-   "id": "pus-service-reference-eosat-1-spacecraft-simulator/service-3-housekeeping/s3-subtype-6-disable-periodic-hk",
-   "en_hash": "aa19c686fe90fbed",
-   "fr_hash": "72ab8f5b7e5c08e9"
+   "id": "pus-service-reference--eosat-1-spacecraft-simulator/service-3-housekeeping/s3-subtype-6--disable-periodic-hk",
+   "en_hash": "fda688eadcf0e411",
+   "fr_hash": "7ace82ccc0d09ce6"
   },
   {
-   "id": "pus-service-reference-eosat-1-spacecraft-simulator/service-3-housekeeping/s3-subtype-31-change-hk-interval",
-   "en_hash": "4d4f9a59db397157",
-   "fr_hash": "f5a0dd911433c00f"
+   "id": "pus-service-reference--eosat-1-spacecraft-simulator/service-3-housekeeping/s3-subtype-31--change-hk-interval",
+   "en_hash": "fa03a6d5329a1362",
+   "fr_hash": "7a5186a308bcd047"
   },
   {
-   "id": "pus-service-reference-eosat-1-spacecraft-simulator/service-5-event-reporting",
+   "id": "pus-service-reference--eosat-1-spacecraft-simulator/service-5-event-reporting",
    "en_hash": "2d5eb6b32007f1b2",
    "fr_hash": "f5a0fff9d2428570"
   },
   {
-   "id": "pus-service-reference-eosat-1-spacecraft-simulator/service-5-event-reporting/s5-subtype-5-enable-event-type",
-   "en_hash": "ba2a99e2af9e908b",
-   "fr_hash": "213f014163a50c45"
+   "id": "pus-service-reference--eosat-1-spacecraft-simulator/service-5-event-reporting/s5-subtype-5--enable-event-type",
+   "en_hash": "7d232ccc47c79755",
+   "fr_hash": "0c44e46c092bbfae"
   },
   {
-   "id": "pus-service-reference-eosat-1-spacecraft-simulator/service-5-event-reporting/s5-subtype-6-disable-event-type",
-   "en_hash": "d96c5a80feca165b",
-   "fr_hash": "f7d470a8befca604"
+   "id": "pus-service-reference--eosat-1-spacecraft-simulator/service-5-event-reporting/s5-subtype-6--disable-event-type",
+   "en_hash": "3e20ffbdee98f4eb",
+   "fr_hash": "6688d1ebc94f10fc"
   },
   {
-   "id": "pus-service-reference-eosat-1-spacecraft-simulator/service-6-memory-management",
+   "id": "pus-service-reference--eosat-1-spacecraft-simulator/service-6-memory-management",
    "en_hash": "9733f39b9604c09d",
    "fr_hash": "eb072ec15cf7eb02"
   },
   {
-   "id": "pus-service-reference-eosat-1-spacecraft-simulator/service-6-memory-management/s6-subtype-2-load-memory",
-   "en_hash": "2bf0a8779899f44a",
-   "fr_hash": "9bf5aeaceebd0282"
+   "id": "pus-service-reference--eosat-1-spacecraft-simulator/service-6-memory-management/s6-subtype-2--load-memory",
+   "en_hash": "5d4641bbbd20aee3",
+   "fr_hash": "bae1dcc9f31ff459"
   },
   {
-   "id": "pus-service-reference-eosat-1-spacecraft-simulator/service-6-memory-management/s6-subtype-5-dump-memory",
-   "en_hash": "c376b638e602d284",
-   "fr_hash": "3109b665bf095659"
+   "id": "pus-service-reference--eosat-1-spacecraft-simulator/service-6-memory-management/s6-subtype-5--dump-memory",
+   "en_hash": "97232d1d3abf87cc",
+   "fr_hash": "f15a4bf9cdbdfbd6"
   },
   {
-   "id": "pus-service-reference-eosat-1-spacecraft-simulator/service-6-memory-management/s6-subtype-9-check-memory-crc",
-   "en_hash": "780bf68a9e313073",
-   "fr_hash": "0a9105d37b04bd4f"
+   "id": "pus-service-reference--eosat-1-spacecraft-simulator/service-6-memory-management/s6-subtype-9--check-memory-crc",
+   "en_hash": "13beed5f5ef4b179",
+   "fr_hash": "8e0e3dbef29d9613"
   },
   {
-   "id": "pus-service-reference-eosat-1-spacecraft-simulator/service-8-function-management",
+   "id": "pus-service-reference--eosat-1-spacecraft-simulator/service-8-function-management",
    "en_hash": "f69b85c051779ad3",
    "fr_hash": "7541e84fb9327a45"
   },
   {
-   "id": "pus-service-reference-eosat-1-spacecraft-simulator/service-8-function-management/func-65-ttcsetdatarate-and-the-tm-rate-ladder",
-   "en_hash": "834cd285936a70f2",
-   "fr_hash": "eac993d5502348fe"
+   "id": "pus-service-reference--eosat-1-spacecraft-simulator/service-8-function-management/func-65--ttc_set_data_rate-and-the-tm-rate-ladder",
+   "en_hash": "1e0464724857a6d5",
+   "fr_hash": "7cc7cfeb45fb1140"
   },
   {
-   "id": "pus-service-reference-eosat-1-spacecraft-simulator/service-8-function-management/func-79-ttcsetdownlinkmode",
-   "en_hash": "f2ce4e241b19d72c",
-   "fr_hash": "4b6da9c80cfec109"
+   "id": "pus-service-reference--eosat-1-spacecraft-simulator/service-8-function-management/func-79--ttc_set_downlink_mode",
+   "en_hash": "cce3e82ae94fc6bd",
+   "fr_hash": "fd7d41163bccb3c3"
   },
   {
-   "id": "pus-service-reference-eosat-1-spacecraft-simulator/service-9-time-management",
+   "id": "pus-service-reference--eosat-1-spacecraft-simulator/service-9-time-management",
    "en_hash": "de387790bbb065b1",
    "fr_hash": "7174d1584c4f609e"
   },
   {
-   "id": "pus-service-reference-eosat-1-spacecraft-simulator/service-11-activity-scheduling",
+   "id": "pus-service-reference--eosat-1-spacecraft-simulator/service-11-activity-scheduling",
    "en_hash": "d47c68c3a12dd485",
    "fr_hash": "7241e8a0bba96d1b"
   },
   {
-   "id": "pus-service-reference-eosat-1-spacecraft-simulator/service-12-on-board-monitoring",
+   "id": "pus-service-reference--eosat-1-spacecraft-simulator/service-12-on-board-monitoring",
    "en_hash": "aae860df658696a8",
    "fr_hash": "1cab8c1504d177c6"
   },
   {
-   "id": "pus-service-reference-eosat-1-spacecraft-simulator/service-13-large-data-transfer",
+   "id": "pus-service-reference--eosat-1-spacecraft-simulator/service-13-large-data-transfer",
    "en_hash": "f122b2e97919a40e",
    "fr_hash": "5017c7b2421389a1"
   },
   {
-   "id": "pus-service-reference-eosat-1-spacecraft-simulator/service-15-tm-storage",
+   "id": "pus-service-reference--eosat-1-spacecraft-simulator/service-15-tm-storage",
    "en_hash": "bc52bbb8ac3dcec8",
    "fr_hash": "b0c6f982b9a78dd8"
   },
   {
-   "id": "pus-service-reference-eosat-1-spacecraft-simulator/service-15-tm-storage/s15-subtype-1-enable-store",
-   "en_hash": "f120608c9c38886f",
-   "fr_hash": "78d0381b5226db18"
+   "id": "pus-service-reference--eosat-1-spacecraft-simulator/service-15-tm-storage/s15-subtype-1--enable-store",
+   "en_hash": "e562428f5c868ddb",
+   "fr_hash": "0f5604f1d4d971e4"
   },
   {
-   "id": "pus-service-reference-eosat-1-spacecraft-simulator/service-15-tm-storage/s15-subtype-2-disable-store",
-   "en_hash": "01f5b3aa2922e459",
-   "fr_hash": "4c206df55d377baa"
+   "id": "pus-service-reference--eosat-1-spacecraft-simulator/service-15-tm-storage/s15-subtype-2--disable-store",
+   "en_hash": "a69675442102f3b7",
+   "fr_hash": "fad0ba768c0e3a87"
   },
   {
-   "id": "pus-service-reference-eosat-1-spacecraft-simulator/service-15-tm-storage/s15-subtype-9-dump-store-paced",
-   "en_hash": "b68a5ed9c1e5a0ca",
-   "fr_hash": "f55c93ff612ba736"
+   "id": "pus-service-reference--eosat-1-spacecraft-simulator/service-15-tm-storage/s15-subtype-9--dump-store-paced",
+   "en_hash": "9c3b24c323b3b4c0",
+   "fr_hash": "b79501b8529c6bbd"
   },
   {
-   "id": "pus-service-reference-eosat-1-spacecraft-simulator/service-15-tm-storage/s15-subtype-11-delete-store",
-   "en_hash": "343a716422f10aac",
-   "fr_hash": "c091b2c47a7e7f56"
+   "id": "pus-service-reference--eosat-1-spacecraft-simulator/service-15-tm-storage/s15-subtype-11--delete-store",
+   "en_hash": "0533ea262135404e",
+   "fr_hash": "b4f7c317697c7255"
   },
   {
-   "id": "pus-service-reference-eosat-1-spacecraft-simulator/service-15-tm-storage/s15-subtype-13-status-request",
-   "en_hash": "a1ebfa9535a31ce1",
-   "fr_hash": "5a87f2b7132079f5"
+   "id": "pus-service-reference--eosat-1-spacecraft-simulator/service-15-tm-storage/s15-subtype-13--status-request",
+   "en_hash": "56440a07233613af",
+   "fr_hash": "7a487ce28df0f3ce"
   },
   {
-   "id": "pus-service-reference-eosat-1-spacecraft-simulator/service-15-tm-storage/s15-subtype-14-status-report",
-   "en_hash": "cb88754d30ba82d9",
-   "fr_hash": "c94cf8c5fa324725"
+   "id": "pus-service-reference--eosat-1-spacecraft-simulator/service-15-tm-storage/s15-subtype-14--status-report",
+   "en_hash": "8badc9768c6562af",
+   "fr_hash": "25660caf4b847f0f"
   },
   {
-   "id": "pus-service-reference-eosat-1-spacecraft-simulator/service-17-connection-test",
+   "id": "pus-service-reference--eosat-1-spacecraft-simulator/service-17-connection-test",
    "en_hash": "7127b4d886b6f5b7",
    "fr_hash": "d12075a97c61c6ce"
   },
   {
-   "id": "pus-service-reference-eosat-1-spacecraft-simulator/service-17-connection-test/s17-subtype-1-connection-test",
-   "en_hash": "7597492b831755ec",
-   "fr_hash": "b811457579e3b433"
+   "id": "pus-service-reference--eosat-1-spacecraft-simulator/service-17-connection-test/s17-subtype-1--connection-test",
+   "en_hash": "5f51ffdc4df1876c",
+   "fr_hash": "baea9d82c0f55305"
   },
   {
-   "id": "pus-service-reference-eosat-1-spacecraft-simulator/service-18-on-board-control-procedures",
+   "id": "pus-service-reference--eosat-1-spacecraft-simulator/service-18-on-board-control-procedures",
    "en_hash": "7603d1fb1d7752ba",
    "fr_hash": "af4a9687db697ac1"
   },
   {
-   "id": "pus-service-reference-eosat-1-spacecraft-simulator/service-19-event-action",
+   "id": "pus-service-reference--eosat-1-spacecraft-simulator/service-19-event-action",
    "en_hash": "b91b35772b4b8af2",
    "fr_hash": "52676c9bb12e79c7"
   },
   {
-   "id": "pus-service-reference-eosat-1-spacecraft-simulator/service-20-parameter-management",
+   "id": "pus-service-reference--eosat-1-spacecraft-simulator/service-20-parameter-management",
    "en_hash": "77523cc2a9f9d132",
    "fr_hash": "245520110bf18782"
   },
   {
-   "id": "pus-service-reference-eosat-1-spacecraft-simulator/commanding-from-the-mcs",
-   "en_hash": "c3b200ac59de9309",
-   "fr_hash": "9e0fc749d2f964af"
+   "id": "pus-service-reference--eosat-1-spacecraft-simulator/commanding-from-the-mcs",
+   "en_hash": "7d8b4b2b50da367e",
+   "fr_hash": "eb77b197e0eb8db3"
   },
   {
-   "id": "pus-service-reference-eosat-1-spacecraft-simulator/commanding-from-the-mcs/1-check-power-budget",
-   "en_hash": "71f29526b3beb9ac",
-   "fr_hash": "21bf3e59afc02ab5"
+   "id": "pus-service-reference--eosat-1-spacecraft-simulator/commanding-from-the-mcs/1-check-power-budget",
+   "en_hash": "09bb493c8495b58d",
+   "fr_hash": "32a25e5c0bebf02f"
   },
   {
-   "id": "pus-service-reference-eosat-1-spacecraft-simulator/commanding-from-the-mcs/2-set-attitude",
-   "en_hash": "b6613270a846165a",
-   "fr_hash": "52b879cf18c01cc8"
+   "id": "pus-service-reference--eosat-1-spacecraft-simulator/commanding-from-the-mcs/2-set-attitude",
+   "en_hash": "7ae05c7bef349407",
+   "fr_hash": "5a0e533d9e3818ec"
   },
   {
-   "id": "pus-service-reference-eosat-1-spacecraft-simulator/commanding-from-the-mcs/3-enable-imaging",
-   "en_hash": "5a105a58bc0da45f",
-   "fr_hash": "618b16e2225b15d3"
+   "id": "pus-service-reference--eosat-1-spacecraft-simulator/commanding-from-the-mcs/3-enable-imaging",
+   "en_hash": "d396a2b659eb2220",
+   "fr_hash": "6bfceaa4dbd6b220"
   },
   {
-   "id": "pus-service-reference-eosat-1-spacecraft-simulator/commanding-from-the-mcs/4-capture-image",
-   "en_hash": "d5da2778dac052ff",
-   "fr_hash": "c89124bca4f31254"
+   "id": "pus-service-reference--eosat-1-spacecraft-simulator/commanding-from-the-mcs/4-capture-image",
+   "en_hash": "e31ae7a73aa2e21e",
+   "fr_hash": "e07c000a6c84c5f9"
   },
   {
-   "id": "pus-service-reference-eosat-1-spacecraft-simulator/commanding-from-the-mcs/5-download-image",
-   "en_hash": "25c3e7538252c3ee",
-   "fr_hash": "ccddd4190a5207ac"
+   "id": "pus-service-reference--eosat-1-spacecraft-simulator/commanding-from-the-mcs/5-download-image",
+   "en_hash": "0eb16c8e3ca3632b",
+   "fr_hash": "90bc9c4b422d5532"
   },
   {
-   "id": "pus-service-reference-eosat-1-spacecraft-simulator/commanding-from-the-mcs/6-verify-status",
-   "en_hash": "c58c6c6f11197ff2",
-   "fr_hash": "e65f6f705bd66638"
+   "id": "pus-service-reference--eosat-1-spacecraft-simulator/commanding-from-the-mcs/6-verify-status",
+   "en_hash": "7365b1ad4c5301ac",
+   "fr_hash": "6c6be350be6d246e"
   },
   {
-   "id": "pus-service-reference-eosat-1-spacecraft-simulator/mcs-command-dialog-text-example",
-   "en_hash": "ec8f76ed6291688b",
-   "fr_hash": "9a8305f36cf0bc3e"
+   "id": "pus-service-reference--eosat-1-spacecraft-simulator/mcs-command-dialog-text-example",
+   "en_hash": "2fabb2fea4d93df8",
+   "fr_hash": "21f9fcfa3332be6d"
   },
   {
-   "id": "pus-service-reference-eosat-1-spacecraft-simulator/error-handling",
-   "en_hash": "2c39e2eb08925843",
-   "fr_hash": "6c9d51b3fad57ab4"
+   "id": "pus-service-reference--eosat-1-spacecraft-simulator/error-handling",
+   "en_hash": "cfdcea7af21f7467",
+   "fr_hash": "1e84a1444a4418bc"
   },
   {
-   "id": "pus-service-reference-eosat-1-spacecraft-simulator/quick-reference-common-command-sequences",
-   "en_hash": "176f571df2148da7",
-   "fr_hash": "38e9ef5bcbf85bed"
+   "id": "pus-service-reference--eosat-1-spacecraft-simulator/quick-reference--common-command-sequences",
+   "en_hash": "3ef6e87b948eb239",
+   "fr_hash": "3d6a51e22020f1ce"
   },
   {
-   "id": "pus-service-reference-eosat-1-spacecraft-simulator/quick-reference-common-command-sequences/safe-mode-recovery-after-anomaly",
-   "en_hash": "7f86b3d051f1003d",
-   "fr_hash": "d2da2c583773d863"
+   "id": "pus-service-reference--eosat-1-spacecraft-simulator/quick-reference--common-command-sequences/safe-mode-recovery-after-anomaly",
+   "en_hash": "d1c94f30a6d8985f",
+   "fr_hash": "ce8b05e0ed3d7fab"
   },
   {
-   "id": "pus-service-reference-eosat-1-spacecraft-simulator/quick-reference-common-command-sequences/load-shedding-power-emergency",
-   "en_hash": "8fb7697261f4ad69",
-   "fr_hash": "ac399b7eae2f420d"
+   "id": "pus-service-reference--eosat-1-spacecraft-simulator/quick-reference--common-command-sequences/load-shedding-power-emergency",
+   "en_hash": "9fc10661331f8ab4",
+   "fr_hash": "6e09f94e860f84f5"
   },
   {
-   "id": "pus-service-reference-eosat-1-spacecraft-simulator/quick-reference-common-command-sequences/momentum-desaturation",
-   "en_hash": "1f36c217ac411d45",
-   "fr_hash": "1cac57d5c9948e29"
+   "id": "pus-service-reference--eosat-1-spacecraft-simulator/quick-reference--common-command-sequences/momentum-desaturation",
+   "en_hash": "a911395cd079811c",
+   "fr_hash": "0ec0e2d63401ef90"
   },
   {
-   "id": "pus-service-reference-eosat-1-spacecraft-simulator/quick-reference-common-command-sequences/imaging-pass-automated",
-   "en_hash": "ab3f2bc5c4b0f3d6",
-   "fr_hash": "4dc9f8fbe509208d"
+   "id": "pus-service-reference--eosat-1-spacecraft-simulator/quick-reference--common-command-sequences/imaging-pass-automated",
+   "en_hash": "8f16ed1cd70d9206",
+   "fr_hash": "354e240516e5659f"
   },
   {
-   "id": "pus-service-reference-eosat-1-spacecraft-simulator/implementation-notes",
-   "en_hash": "24428ca07ad3f54e",
-   "fr_hash": "b39f442c5d175ed7"
+   "id": "pus-service-reference--eosat-1-spacecraft-simulator/implementation-notes",
+   "en_hash": "ff2adabb77e4ea7e",
+   "fr_hash": "716333501549ca02"
   },
   {
-   "id": "pus-service-reference-eosat-1-spacecraft-simulator/references",
-   "en_hash": "3f89b41b41b8f07e",
-   "fr_hash": "77d267c3732ba708"
+   "id": "pus-service-reference--eosat-1-spacecraft-simulator/references",
+   "en_hash": "dd77ce74e65ddb1e",
+   "fr_hash": "f9b410c9af7972da"
   }
  ],
- "en_commit": "3e80564"
+ "en_commit": "c4a140a"
 }

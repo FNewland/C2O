@@ -83,7 +83,7 @@ activity_types:
       - service: 8
         subtype: 1
         func_id: 0x00         # 0 = AOCS_SET_MODE (func 1 is DESATURATE)
-        params: [4]            # mode 4 = NOMINAL_NADIR
+        params: [4]            # mode 4 = NOMINAL
         description: "AOCS_SET_MODE_NOMINAL"
       - wait_s: 10
       - wait_for:
@@ -168,7 +168,7 @@ activity_types:
       - service: 8
         subtype: 1
         func_id: 0x00
-        params: [4]            # back to NOMINAL_NADIR
+        params: [4]            # back to NOMINAL
         description: "AOCS_SET_MODE_NOMINAL"
     # Machine-checked timing (see `timing:` on every type below and
     # ActivityScheduler.check_sequence_timing). 10+60+90+5+2+30 = 197 s of
@@ -556,7 +556,7 @@ activity_types:
       - service: 8
         subtype: 1
         func_id: 0x00          # 0 = AOCS_SET_MODE
-        params: [4]            # mode 4 = NOMINAL_NADIR — legal to dump from
+        params: [4]            # mode 4 = NOMINAL — legal to dump from
         description: "AOCS_SET_MODE_NOMINAL"
       - wait_s: 10
       - wait_for:
@@ -604,7 +604,7 @@ activity_types:
       - wait_s: 290
       # The dump has ENDED. Written as "not DESAT" rather than "== NOMINAL"
       # because the return path is to the pre-desat COMMANDED mode, and a
-      # desat that finishes near umbra entry hands over to ECLIPSE_PROPAGATE
+      # desat that finishes near umbra entry hands over to ECLIPSE
       # (mode 8) on the way — which is the mode machine working, not the dump
       # failing. `aocs.desat_ineffective` / the 0x0212 event say whether it
       # actually removed momentum.
@@ -812,7 +812,7 @@ activity_types:
       - service: 8
         subtype: 1
         func_id: 0x00          # 0 = AOCS_SET_MODE
-        params: [4]            # mode 4 = NOMINAL_NADIR
+        params: [4]            # mode 4 = NOMINAL
         description: "AOCS_SET_MODE_NOMINAL"
       - wait_s: 10
       - wait_for:
@@ -864,7 +864,7 @@ activity_types:
           timeout_s: 600
       # The ARM interlock reads the mode AT ARM TIME, and 20 minutes of
       # preheat is long enough for an eclipse entry to have demoted the AOCS
-      # to ECLIPSE_PROPAGATE (mode 8) since the lead-in. Re-assert the mode
+      # to ECLIPSE (mode 8) since the lead-in. Re-assert the mode
       # here so the interlock sees what the plan promised. Measured: without
       # this, PROP_ARM returned 0x0B04 with inhibit mask 0x488 — AOCS mode
       # AND eclipse — on a manoeuvre whose ACTIVITY start was in daylight but
@@ -931,7 +931,7 @@ activity_types:
       min_gap_after_s: 300
       # `requires_daylight` is about the BURN, not the activity start. The
       # ARM interlock refuses in eclipse (INH_ECLIPSE 0x0B08) and the AOCS
-      # demotes to ECLIPSE_PROPAGATE, so the sunlit arc has to still have
+      # demotes to ECLIPSE, so the sunlit arc has to still have
       # this much of it left when the activity STARTS. EOSAT-1's sunlit arc
       # is ~57 min, so a manoeuvre started less than ~21 min before umbra
       # entry cannot fly — which is a plan the scheduler can now reject

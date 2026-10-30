@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""EO-Sat-1 power-budget closure tool (Phase B, brief 01 Verification).
+"""EOSAT-1 power-budget closure tool (Phase B, brief 01 Verification).
 
 The durable, in-tree replacement for the one-off analyses that let the budget
 drift every time the config changed. Everything is DERIVED, nothing assumed:
@@ -149,10 +149,10 @@ def contact_stats(orbit_cfg: dict, sim_cfg: dict, epoch: datetime,
 # ─────────────────────────── frame ───────────────────────────
 
 def sun_body_lvlh(beta_deg: float, phase_deg: float) -> tuple[float, float, float]:
-    """Sun unit vector in the LVLH-aligned body frame (perfect nadir hold).
-
-    This is what the AOCS publishes at 0x02B3-B5 from the true attitude
-    quaternion while holding NOMINAL, and what EPS reads (eps_basic.py:405).
+    """Sun unit vector in the standard LVLH frame (z = nadir, y = -orbit
+    normal). Until ruling Q4 this WAS the body frame in NOMINAL; the body is
+    now LVLH turned 180 deg about X — use `sun_body_nominal` for what the
+    AOCS publishes at 0x02B3-B5 and EPS reads.
 
     P-d (2026-08b): the tool used to build the vector in the PRE-Phase-C
     synthetic frame — (cos b cos phi, cos b sin phi, sin b), "body Z on the
@@ -177,6 +177,26 @@ def sun_body_lvlh(beta_deg: float, phase_deg: float) -> tuple[float, float, floa
     ph = math.radians(phase_deg)
     return (math.cos(b) * math.sin(ph), -math.sin(b),
             -math.cos(b) * math.cos(ph))
+
+
+def sun_body_nominal(beta_deg: float, phase_deg: float) -> tuple[float, float, float]:
+    """Sun unit vector in the BODY frame while holding NOMINAL (perfect nadir
+    hold). This is what the AOCS publishes at 0x02B3-B5 and what EPS reads.
+
+    Ruling Q4 (2026-10-30): body +Z = zenith, -Z = nadir (imager and radiator
+    on -Z), +X ~ velocity, +Y = +orbit normal — LVLH turned 180 deg about X
+    (aocs_basic.nominal_body_dcm). So y and z are the LVLH components with
+    the sign flipped:
+
+        x_body =  cos(b) sin(phi)
+        y_body =  sin(b)
+        z_body =  cos(b) cos(phi)
+
+    Before the ruling the simulator used LVLH itself as the body attitude
+    (see `sun_body_lvlh`), which put the +Z body cells on the Earth side.
+    """
+    x, y, z = sun_body_lvlh(beta_deg, phase_deg)
+    return (x, -y, -z)
 
 
 # ─────────────────────────── profiles ───────────────────────────
@@ -325,7 +345,7 @@ def run_profile(cfg: dict, profile: str, epoch: datetime, orbits: int,
     for i in range(steps):
         t = i * dt
         st = prop.advance(dt)
-        # Sun vector in the TRUE LVLH body frame (see sun_body_lvlh). Published
+        # Sun vector in the nominal BODY frame (see sun_body_nominal). Published
         # at 0x02B3-B5 — the channel EPS actually prefers — and mirrored onto
         # the CSS composite 0x0245-47 for the fallback path.
         phase = AOCSBasicModel._orbit_phase_from_geometry(st)
@@ -333,7 +353,7 @@ def run_profile(cfg: dict, profile: str, epoch: datetime, orbits: int,
             params[0x02B3] = params[0x02B4] = params[0x02B5] = 0.0
             params[0x0245] = params[0x0246] = params[0x0247] = 0.0
         else:
-            sun_bx, sun_by, sun_bz = sun_body_lvlh(st.solar_beta_deg, phase)
+            sun_bx, sun_by, sun_bz = sun_body_nominal(st.solar_beta_deg, phase)
             params[0x02B3] = params[0x0245] = sun_bx
             params[0x02B4] = params[0x0246] = sun_by
             params[0x02B5] = params[0x0247] = sun_bz
@@ -435,7 +455,7 @@ def run_profile(cfg: dict, profile: str, epoch: datetime, orbits: int,
 
 def fmt_md(cstats, sweep, results, eol, worst, best) -> str:
     L = []
-    L.append("# EO-Sat-1 power budget (derived, not assumed)")
+    L.append("# EOSAT-1 power budget (derived, not assumed)")
     L.append("")
     L.append(f"Sizing case: {'EOL (full loss stack + aging)' if eol else 'BOL'}")
     L.append("")

@@ -6,11 +6,11 @@
 
 ---
 
-## Part A: IADT Method Assignment
+## Part A: ATIR(D) Method Assignment
 
 For 10 key requirements from your SpaceCDF V&V Matrix, assign the verification method and justify:
 
-| # | Req ID | Requirement Text (abbreviated) | Method (I/A/D/T) | Phase (B/C/D) | Level (Unit/Sub/Sys) | Justification |
+| # | Req ID | Requirement Text (abbreviated) | Method (A/T/I/R/D) | Phase (B/C/D) | Level (Unit/Sub/Sys) | Justification |
 |---|--------|-------------------------------|:-:|:-:|:-:|--------------|
 | 1 | | | | | | |
 | 2 | | | | | | |
@@ -23,7 +23,7 @@ For 10 key requirements from your SpaceCDF V&V Matrix, assign the verification m
 | 9 | | | | | | |
 | 10 | | | | | | |
 
-**Summary count:** Analysis: ___ / Test: ___ / Demonstration: ___ / Inspection: ___
+**Summary count:** Analysis: ___ / Test: ___ / Inspection: ___ / Review of design: ___ / Demonstration: ___
 
 ---
 

@@ -35,6 +35,27 @@ _DEG = math.pi / 180.0
 _RAD = 180.0 / math.pi
 _RPM2RAD = 2.0 * math.pi / 60.0
 
+# ── Body frame convention (owner ruling Q4, 2026-10-30) ──────────────────
+# Body +Z = ZENITH, -Z = NADIR in the nominal (nadir-pointing) attitude.
+# The imager boresight and the radiator are on -Z; the +Z face carries the
+# body-mounted cells (eps.yaml: pz has cells, mz has none), the zenith star
+# tracker and the GPS antenna. +X = along-track (velocity), so the -X-face
+# thruster still burns prograde (prop.yaml). +Y = +orbit normal (h = r x v),
+# which keeps the wing / SADA drive axis on the orbit normal.
+#
+# The standard LVLH frame (smo_common.attitude.lvlh_dcm) is z = nadir,
+# y = -orbit normal, x ~ velocity. The nominal body attitude is that frame
+# turned 180 deg about X: x_body = x_lvlh, y_body = -y_lvlh, z_body = -z_lvlh.
+# Phase C had used LVLH itself as the body target, which put the +Z cells on
+# the Earth-facing side and the -Z imager on the zenith side.
+BODY_FROM_LVLH = np.diag([1.0, -1.0, -1.0])
+
+
+def nominal_body_dcm(r_eci, v_eci) -> np.ndarray:
+    """ECI -> body DCM of the nominal nadir-pointing attitude:
+    -Z at nadir, +Z at zenith, +X ~ velocity, +Y = +orbit normal."""
+    return BODY_FROM_LVLH @ att.lvlh_dcm(r_eci, v_eci)
+
 
 @dataclass
 class AOCSState:
@@ -390,6 +411,21 @@ CSS_NORMALS = {
 # Star camera exclusion cone half-angle (degrees)
 _ST_EXCLUSION_DEG = 15.0
 
+# Star tracker boresights in body axes (ruling Q4: +Z zenith, -Z nadir).
+# Neither baffle may look at the Earth in nominal attitude (Earth's limb is
+# ~22 deg below the local horizontal at 513 km).
+#   ST1 — on the +Z (zenith) face, boresight straight up.
+#   ST2 — on the +Z face canted 45 deg towards +Y. +Y is the anti-sun side of
+#         this orbit: the 97.39 deg SSO at LTAN 10:00 holds beta between about
+#         -21 and -31 deg, so the sun stays on the -Y side all year. The cant
+#         keeps ST2 >= 60 deg from the sun in nominal pointing and >= 67 deg
+#         above the Earth's limb, and its sun geometry differs from ST1's.
+# Phase C had ST1 on -Z and ST2 on +Z, i.e. one tracker staring at the Earth.
+_ST_BORESIGHTS = {
+    1: (0.0, 0.0, 1.0),
+    2: (0.0, math.sqrt(0.5), math.sqrt(0.5)),
+}
+
 
 class AOCSBasicModel(SubsystemModel):
     """Enhanced AOCS with 9-mode state machine, dual star trackers,
@@ -412,7 +448,7 @@ class AOCSBasicModel(SubsystemModel):
         # 6U-class spacecraft; see configs/eosat1/subsystems/aocs.yaml for
         # the datasheet anchors (DECISIONS.md §4 resolution).
         self._mass_kg = 12.0
-        self._inertia = np.diag([0.180, 0.150, 0.060])   # kg·m², +Z boresight
+        self._inertia = np.diag([0.180, 0.150, 0.060])   # kg·m², Z = long axis (imager on -Z)
         self._inertia_inv = np.linalg.inv(self._inertia)
         self._rw_max_speed = 5500
         self._rw_desat_speed = 200
@@ -1045,9 +1081,7 @@ class AOCSBasicModel(SubsystemModel):
                 continue
 
             # status 2 (TRACKING) or 3 (BLIND) — check blinding
-            # FOV geometry (Phase C, consistent with the LVLH airframe where
-            # +Z is the nadir payload boresight — manual §2.1.3): ST1 zenith
-            # on -Z, ST2 nadir on +Z. The old assignment was inverted.
+            # FOV geometry: see _ST_BORESIGHTS (ruling Q4, +Z = zenith).
             # An INJECTED blinding is sticky: `_tick_star_trackers` recomputes
             # blinding from sun geometry every tick, so the injection's
             # `st{n}_status = 3` used to be overwritten on the very next tick
@@ -1057,12 +1091,8 @@ class AOCSBasicModel(SubsystemModel):
             blinded = unit in self._st_blind_units
             if not blinded and not orbit_state.in_eclipse:
                 sun_body = self._get_sun_body_vector(orbit_state)
-                if unit == 1:
-                    # ST1 zenith (-Z boresight)
-                    blinded = self._check_st_blinding(sun_body, (0, 0, -1))
-                else:
-                    # ST2 nadir (+Z boresight) — also susceptible to earth limb
-                    blinded = self._check_st_blinding(sun_body, (0, 0, 1))
+                blinded = self._check_st_blinding(
+                    sun_body, _ST_BORESIGHTS[unit])
 
             if blinded:
                 setattr(s, status_attr, 3)  # BLIND
@@ -1126,10 +1156,11 @@ class AOCSBasicModel(SubsystemModel):
             rmag_km = 6378.137 + alt_km
             phi = self._state.orbit_phase * _DEG
             vmag = math.sqrt(att.MU_EARTH / (rmag_km * 1000.0)) / 1000.0
-            # SSO-like inclination (98°) so the geomagnetic field rotates
-            # through the orbit plane — an equatorial synthetic orbit would
-            # be a degenerate geometry for magnetorquer control.
-            inc = math.radians(98.0)
+            # SSO inclination (97.39°, as in the orbit.yaml TLE) so the
+            # geomagnetic field rotates through the orbit plane — an
+            # equatorial synthetic orbit would be a degenerate geometry for
+            # magnetorquer control.
+            inc = math.radians(97.39)
             j_hat = np.array([0.0, math.cos(inc), math.sin(inc)])
             n_hat = np.array([0.0, -math.sin(inc), math.cos(inc)])
             x_hat = np.array([1.0, 0.0, 0.0])
@@ -1244,7 +1275,7 @@ class AOCSBasicModel(SubsystemModel):
         position and rotated through the TRUE attitude — rotating the
         spacecraft now rotates the measured field.
 
-        2026-08c (owner ruling, item 8): EO-Sat-1 flies a SINGLE 3-axis
+        2026-08c (owner ruling, item 8): EOSAT-1 flies a SINGLE 3-axis
         magnetometer — no redundant B unit, no prime/backup switch, exactly
         like the gyro fit. The old dual-mag A/B model (cross-strap, mag_select,
         S2 device 0x020A) fabricated a spare that does not exist; magnetometer
@@ -1591,17 +1622,20 @@ class AOCSBasicModel(SubsystemModel):
                 b = -env['r_m'] / np.linalg.norm(env['r_m'])
             else:
                 b = b / bmag
-            # z = boresight, x toward velocity projection
+            # -Z = imager boresight onto the target, x toward the velocity
+            # projection, y completes (ruling Q4: the imager is on -Z).
             x = env['v_ms'] - b * float(np.dot(env['v_ms'], b))
             xm = np.linalg.norm(x)
             x = x / xm if xm > 1e-6 else np.array([1.0, 0.0, 0.0])
-            y = np.cross(b, x)
-            C = np.vstack([x, y, b])
+            z = -b
+            y = np.cross(z, x)
+            C = np.vstack([x, y, z])
             q_ref = att.dcm_to_quat(C)
             return (q_ref, self._ref_rate_from_history('target', q_ref, dt))
-        # Default: LVLH nadir with orbit-rate feed-forward
-        C_li = att.lvlh_dcm(env['r_m'], env['v_ms'])
-        q_ref = att.dcm_to_quat(C_li)
+        # Default: nadir pointing (-Z at nadir, +Z at zenith) with orbit-rate
+        # feed-forward.
+        C_bi = nominal_body_dcm(env['r_m'], env['v_ms'])
+        q_ref = att.dcm_to_quat(C_bi)
         r = env['r_m']
         w_orb_eci = np.cross(r, env['v_ms']) / float(np.dot(r, r))
         w_ref = att.quat_to_dcm(self._est_quat()) @ w_orb_eci
@@ -2905,15 +2939,18 @@ class AOCSBasicModel(SubsystemModel):
         (cos b cos phi, cos b sin phi, sin b), body Z on the orbit normal".
         That has been false since Phase C: the CSS model reads
         `_true_sun_body()` off the attitude quaternion, and the body frame it
-        lands in when nadir-pointing is real LVLH (smo_common.attitude:
-        z = nadir, y = -orbit normal, x ~ velocity), in which
+        lands in when nadir-pointing is LVLH turned 180 deg about X
+        (ruling Q4, `nominal_body_dcm`: z = zenith, y = +orbit normal,
+        x ~ velocity), in which
 
-            sun_body = (cos b sin phi, -sin b, -cos b cos phi).
+            sun_body = (cos b sin phi, sin b, cos b cos phi).
 
-        The stale claim was copied into tools/power_budget.py, where it made
-        the tool over-read generation by ~28 % and invert the beta trend.
-        Anything reconstructing a synthetic sun vector from (beta, phi) must
-        use the LVLH form above — see tools/power_budget.sun_body_lvlh.
+        (Phase C used LVLH itself — z = nadir, y = -orbit normal — where the
+        last two components had the opposite sign.) The stale synthetic-frame
+        claim was copied into tools/power_budget.py, where it made the tool
+        over-read generation by ~28 % and invert the beta trend. Anything
+        reconstructing a synthetic sun vector from (beta, phi) must use the
+        body form above — see tools/power_budget.sun_body_nominal.
 
         Returns None when the orbit state has no ECI vectors (test stubs).
         """
@@ -3975,7 +4012,7 @@ class AOCSBasicModel(SubsystemModel):
             return {"success": True}
 
         elif command == "mag_select":
-            # 2026-08c (owner ruling, item 8): EO-Sat-1 flies ONE 3-axis
+            # 2026-08c (owner ruling, item 8): EOSAT-1 flies ONE 3-axis
             # magnetometer — there is no redundant unit to select, exactly
             # like the gyro fit. Refused honestly rather than pretending to
             # switch to hardware that does not exist. Power switching of the

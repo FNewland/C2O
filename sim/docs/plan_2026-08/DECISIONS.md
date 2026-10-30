@@ -4,7 +4,7 @@ Prepared 2026-07-31. These are the points where the audits found a genuine domai
 
 ---
 
-## 1. ⚠ Does EO-Sat-1 carry propulsion at all?
+## 1. ⚠ Does EOSAT-1 carry propulsion at all?
 
 **The tension.** Franz asked for orbit control. The propulsion audit designed it (1U green monoprop, 66.9 m/s ΔV, briefs 03). The *textbook* audit, working independently, recommended the opposite: **no propulsion**.
 

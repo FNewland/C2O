@@ -33,8 +33,15 @@ CLASSIC_PAGES = {
     # left holding a wrong-time-tag defect while only the modern page is fixed
     # (modern/mcs.js already appended the "Z"). Proof:
     # tests/test_mcs/test_s11_time_tag_timezone.py.
+    #
+    # RE-PINNED 2026-10-30 (author ruling Q33). The EN and FR manuals now carry
+    # explicit pandoc heading anchors `{#id}`, and the ruling requires the MCS
+    # manual viewer to hide them. The classic page is the fallback viewer, so
+    # its renderMarkdown() now turns the attribute block into the heading's id
+    # (not shown) and renders in-document `[text](#id)` links. Proof:
+    # tests/test_mcs/test_manual_heading_anchors.py.
     "packages/smo-mcs/src/smo_mcs/static/index.html":
-        "049d00b55de192552e48ea739bcd36f919d4423add347c3e7a91ed7252f6be01",
+        "aaffd294001d6d355dcf6825898e83195e039e040222f321cb39ca0b2166dc1b",
     "packages/smo-planner/src/smo_planner/static/index.html":
         "775196c579e52c4dffa04d082d02d13ad554e1d441b51e2ab3928f8c5fcf3b77",
     # rfsim radio page frozen 2026-08-18 (channel-model split: operator page

@@ -1,4 +1,4 @@
-# Sous-système d'alimentation électrique (EPS) d'EOSAT-1
+# Sous-système d'alimentation électrique (EPS) d'EOSAT-1 {#eosat-1-electrical-power-subsystem-eps}
 
 **Référence du document :** EOSAT1-UM-EPS-002
 **Édition :** 2.0
@@ -7,7 +7,7 @@
 
 ---
 
-## 1. Vue d'ensemble
+## 1. Vue d'ensemble {#1-overview}
 
 Le sous-système d'alimentation électrique (EPS) produit, stocke, régule et distribue la puissance
 électrique à tous les sous-systèmes du satellite. Il comprend cinq panneaux solaires GaAs fixés sur la structure (toutes les
@@ -15,31 +15,31 @@ faces du satellite sauf -Z), deux ailes solaires déployables sur les faces +/-Y
 module de distribution de puissance (PDM) en redondance froide doté de lignes commutables et non commutables, ainsi que
 le harnais associé.
 
-## 2. Architecture
+## 2. Architecture {#2-architecture}
 
-### 2.1 Panneaux solaires — panneaux fixés sur la structure et ailes déployables
+### 2.1 Panneaux solaires — panneaux fixés sur la structure et ailes déployables {#21-solar-panels--body-mounted-panels-and-deployable-wings}
 
 | Paramètre            | Valeur                     |
 |----------------------|----------------------------|
 | Configuration        | 5 panneaux fixés sur la structure + 2 ailes déployables (+/-Y) sur un mécanisme d'entraînement du générateur solaire à un axe |
 | Technologie des cellules | GaAs triple jonction (rendement de cellule de 29,5 %) |
-| Surface fixée sur la structure | 0,198 m² au total (configuration repliée) |
-| Surface totale déployée | 0,438 m² (panneaux de structure + les deux ailes) |
-| Surface d'une aile   | 0,12 m² de cellules par aile (+Y et -Y, 2 panneaux repliables de 209 x 342 mm) |
+| Surface fixée sur la structure | 0,198 m² au total (configuration repliée) |
+| Surface totale déployée | 0,438 m² (panneaux de structure + les deux ailes) |
+| Surface d'une aile   | 0,12 m² de cellules par aile (+Y et -Y, 2 panneaux repliables de 209 x 342 mm) |
 | Masse de l'ensemble aile | ~1,07 kg par aile, charnières et HDRM compris |
 | Puissance crête (BOL) | ~89 W instantanés, ailes en poursuite solaire à bêta = 0, entièrement déployées (ailes seules 70 W, conforme à la classe de puissance MMA eHaWK 6U) |
-| Moyenne sur l'orbite (BOL, nadir) | ~55 W à bêta = 24°, ~42 W à bêta = 50° (éclipse comprise) |
-| Performances EOL     | K = 267,2 W/m² de surface projetée (chaîne complète de pertes, EOL à 3 ans, sa_age_factor 0,9175) |
+| Moyenne sur l'orbite (BOL, nadir) | ~51 W à bêta = −21° (éclipse la plus longue), ~49 W à bêta = −31° (éclipse comprise) |
+| Performances EOL     | K = 267,2 W/m² de surface projetée (chaîne complète de pertes, EOL à 3 ans, sa_age_factor 0,9175) |
 | Tension de fonctionnement | 28 V (bus régulé)     |
 | Durée de déploiement d'une aile | ~30 s par aile (libération par fil thermofusible) |
 
 Cinq faces du satellite portent des panneaux solaires fixés sur la structure (la face -Z porte
 l'ouverture de l'imageur et le radiateur et n'a pas de cellules). Les ailes solaires déployables sont
 montées sur les faces +Y et -Y, sur un mécanisme d'entraînement du générateur solaire à un axe commun
-(SADA) dont l'axe de rotation est l'axe Y satellite — la normale à l'orbite dans le repère LVLH
-de pointage nadir (z = nadir, y = -normale à l'orbite). En configuration repliée, la
-surface totale de captation solaire est de 0,198 m² (panneaux de structure seuls). Après le déploiement
-des ailes, la surface totale atteint 0,438 m² (0,12 m² ajoutés par aile). La puissance
+(SADA) dont l'axe de rotation est l'axe Y satellite — la normale à l'orbite dans l'attitude
+nominale de pointage nadir (z = zénith, y = +normale à l'orbite, x ~ vitesse ; la face -Z regarde le nadir). En configuration repliée, la
+surface totale de captation solaire est de 0,198 m² (panneaux de structure seuls). Après le déploiement
+des ailes, la surface totale atteint 0,438 m² (0,12 m² ajoutés par aile). La puissance
 produite par chaque panneau de structure dépend de la projection en cosinus du vecteur Soleil
 sur la normale au panneau ; la paire d'ailes, lorsque le SADA est en poursuite, suit en continu
 la projection du Soleil perpendiculaire à l'axe d'entraînement (loi en cos bêta,
@@ -47,12 +47,12 @@ indépendante de la position sur l'orbite) :
 
 | Face du panneau | Orientation (repère de pointage nadir) | Remarques                     |
 |------------|------------------------------------|-------------------------------------|
-| +X         | Plan de l'orbite                   | Balaie la direction du Soleil à chaque orbite |
-| -X         | Plan de l'orbite                   | Balaie la direction du Soleil à chaque orbite |
-| +Y         | Plan de l'orbite (aile sur SADA)   | L'aile suit le Soleil lorsque le SADA est activé |
-| -Y         | Plan de l'orbite (aile sur SADA)   | L'aile suit le Soleil lorsque le SADA est activé |
-| +Z         | Normale à l'orbite                 | Éclairement continu en sin bêta      |
-| -Z         | Opposée à la normale à l'orbite    | Ouverture de l'imageur + radiateur, sans cellules |
+| +X         | Face avant (plan de l'orbite)      | Balaie la direction du Soleil à chaque orbite |
+| -X         | Face arrière (plan de l'orbite)    | Balaie la direction du Soleil à chaque orbite |
+| +Y         | Normale à l'orbite (aile sur SADA) | L'aile suit le Soleil lorsque le SADA est activé ; panneau de structure à l'ombre au bêta négatif d'EOSAT-1 |
+| -Y         | Opposée à la normale à l'orbite (aile sur SADA) | L'aile suit le Soleil lorsque le SADA est activé ; le panneau de structure reçoit un éclairement continu en sin bêta |
+| +Z         | Zénith (plan de l'orbite)          | Éclairé autour du midi orbital       |
+| -Z         | Nadir (plan de l'orbite)           | Ouverture de l'imageur + radiateur, sans cellules |
 
 La puissance produite par panneau se calcule ainsi :
 
@@ -82,16 +82,16 @@ exige une révolution par orbite, soit 0,064°/s : la marge est donc d'environ 
 opérations nominales ; un repositionnement commandé de 90° prend environ 90 s et apparaît sous forme de
 rampe sur 0x0133.
 
-### 2.1.1 Ailes solaires déployables
+### 2.1.1 Ailes solaires déployables {#211-deployable-solar-wings}
 
 Le satellite porte deux ailes solaires déployables, une sur chacune des faces +Y et -Y.
-Chaque aile ajoute 0,12 m² de surface de captation solaire et est maintenue en position repliée par un
+Chaque aile ajoute 0,12 m² de surface de captation solaire et est maintenue en position repliée par un
 mécanisme de retenue à fil thermofusible. Le déploiement est commandé par la gestion des fonctions S8 :
 
 | Paramètre            | Valeur                     |
 |----------------------|----------------------------|
 | Emplacement des ailes | Face +Y et face -Y (arbre SADA commun) |
-| Surface par aile     | 0,12 m² de cellules (0,143 m² géométriques, taux de remplissage ~84 %) |
+| Surface par aile     | 0,12 m² de cellules (0,143 m² géométriques, taux de remplissage ~84 %) |
 | Mécanisme de déploiement | Fil thermofusible (chauffage résistif) |
 | Durée de déploiement | ~30 secondes par aile      |
 | Commande de déploiement | EPS_DEPLOY_WING (func_id 81) |
@@ -114,7 +114,7 @@ mécanisme de retenue à fil thermofusible. Le déploiement est commandé par la
 - Dans la mesure du possible, déployer une aile à la fois afin de maîtriser la perturbation d'attitude.
 - Si une aile ne se déploie pas, une nouvelle tentative peut être commandée après un temps de refroidissement de 60 s.
 
-### 2.2 Batterie
+### 2.2 Batterie {#22-battery}
 
 | Paramètre            | Valeur                     |
 |----------------------|----------------------------|
@@ -126,7 +126,7 @@ mécanisme de retenue à fil thermofusible. Le déploiement est commandé par la
 | Profondeur de décharge | 35 % max. (opérations nominales) |
 | Méthode de charge    | CC/CV avec réduction progressive au-dessus de 90 % de SoC, coupure thermique |
 
-### 2.3 Module de distribution de puissance (PDM)
+### 2.3 Module de distribution de puissance (PDM) {#23-power-distribution-module-pdm}
 
 L'EPS utilise un module de distribution de puissance (PDM) en redondance froide qui porte **neuf** lignes
 d'alimentation : deux non commutables et sept commutables. L'ensemble des lignes, leur ordre et leurs
@@ -146,7 +146,7 @@ de la mission (`subsystems/eps.yaml`, `power_lines:`). L'argument `line_index` d
 | 7   | `aocs_wheels`  | Roues de réaction                      | Oui        | OFF              | `eps.pl_aocs_wheels` 0x0117 | `eps.line_current_7` 0x011F | 0.8 A |
 | 8   | `prop`         | Propulsion (réchauffeur du lit catalytique + pilotes de vannes) | Oui | OFF | `eps.pl_prop` 0x014A | `eps.line_current_8` 0x014B | 0.8 A |
 
-#### Lignes non commutables
+#### Lignes non commutables {#unswitchable-lines}
 
 Les lignes 0 (`obc`) et 1 (`ttc_rx`) sont alimentées en permanence après la séparation et ne peuvent pas
 être mises hors tension par commande. Elles garantissent que le traitement bord est toujours disponible et que le
@@ -155,7 +155,7 @@ automatiquement au cours de la phase POWER_STABILIZE, ce qui garantit que l'OBC 
 récepteur sont opérationnels avant tout contact sol. Leur état global est également
 publié sous la forme du masque de bits `eps.pdm_unsw_status` (0x012A).
 
-#### Lignes commutables
+#### Lignes commutables {#switchable-lines}
 
 Les lignes 2-8 peuvent être mises sous ou hors tension individuellement avec `EPS_POWER_ON(line_index=N)` /
 `EPS_POWER_OFF(line_index=N)`. La protection contre les surintensités est assurée sur chaque sortie aux
@@ -172,7 +172,7 @@ lignes dédiées à l'OBC redondant ou au transpondeur redondant : l'ensemble d
 (ligne 7), et la redondance de l'OBC et du transpondeur est interne à ces équipements au lieu de disposer d'une ligne
 PDM propre.
 
-#### Ordre de délestage
+#### Ordre de délestage {#load-shed-order}
 
 Le délestage sur sous-tension parcourt `LOAD_SHED_ORDER` depuis le début, priorité la plus basse
 en premier : `payload` → `fpa_cooler` → `ttc_tx` → `aocs_wheels` → `prop`. La propulsion est
@@ -189,13 +189,13 @@ réalimenter quoi que ce soit, et le rétablissement incombe à l'opérateur, li
 (`EPS_POWER_ON`). Le niveau commandé est verrouillé dans 0x0134 et les événements
 `LOAD_SHED_STAGE_1..3` (0x0106-0x0108) sont émis une fois par niveau franchi.
 
-#### Voie PDM en redondance froide
+#### Voie PDM en redondance froide {#cold-redundant-pdm-path}
 
 Une voie PDM redondante (PDM-B) fournit une voie de distribution de puissance de secours. PDM-B est
 normalement hors tension (redondance froide) et peut être activée par commande sol si PDM-A présente
 un défaut. Les deux voies PDM partagent la même topologie de lignes non commutables/commutables.
 
-### 2.4 Canal de commande PDM dédié
+### 2.4 Canal de commande PDM dédié {#24-dedicated-pdm-command-channel}
 
 Le récepteur du transpondeur est alimenté par un canal de commande PDM dédié,
 indépendant de la ligne commutable principale de l'émetteur et de l'amplificateur de puissance. Cette
@@ -204,7 +204,7 @@ conception garantit que le satellite reste commandable même lorsque l'émetteur
 la chaîne de réception ; l'émetteur et l'amplificateur de puissance sont sur une ligne commutable distincte,
 avec une minuterie d'extinction automatique de 15 minutes après le dernier décodage de commande, afin d'économiser l'énergie.
 
-### 2.5 Circuit de minuterie de séparation
+### 2.5 Circuit de minuterie de séparation {#25-separation-timer-circuit}
 
 L'EPS comprend un circuit matériel de minuterie de séparation qui impose la période de 30 minutes sans émission
 après la séparation du lanceur :
@@ -215,7 +215,7 @@ après la séparation du lanceur :
 4. À l'échéance de la minuterie, l'OBC commande le déploiement de l'antenne par fil thermofusible.
 5. La ligne commutable de l'émetteur est alors activée pour les émissions de balise.
 
-## 3. Modes de puissance
+## 3. Modes de puissance {#3-power-modes}
 
 | Mode       | Charges alimentées                             | Consommation type   |
 |------------|------------------------------------------------|---------------------|
@@ -225,7 +225,7 @@ après la séparation du lanceur :
 | EMERGENCY  | OBC, TTC essentiels uniquement                 | ~11 W               |
 | ECLIPSE    | Alimentation par la batterie seule, charges non essentielles délestées | ~25 W |
 
-### 3.1 Détail du bilan de puissance (consommation nominale des sous-systèmes)
+### 3.1 Détail du bilan de puissance (consommation nominale des sous-systèmes) {#31-power-budget-breakdown-nominal-subsystem-consumption}
 
 Chaque puissance indiquée ci-dessous est la valeur que `subsystems/eps.yaml` comptabilise ; elle est dérivée
 d'un composant de vol identifié — voir `docs/plan_2026-08b/POWER_SIZING.md` pour les
@@ -254,21 +254,26 @@ des chiffres de la fiche technique du TriScape100, et
 `tests/test_content/test_eps_config_manual_consistency.py` vérifie
 l'ordre comme les valeurs.
 
-### 3.2 Bilan moyen sur l'orbite (bêta le plus défavorable, EOL)
+### 3.2 Bilan moyen sur l'orbite (bêta le plus défavorable, EOL) {#32-orbit-average-budget-worst-beta-eol}
 
 Produit par `tools/power_budget.py`, qui fait tourner les modèles EPS et TCS de production
 sur l'orbite réelle propagée — et non par un tableur.
 
 | Profil | Production | Charge | Marge | Rapport |
 |---------|-----------|------|--------|-------|
-| repos            | 38,0 W | 25,5 W | +12,5 W | 1,49 |
-| nominal          | 38,0 W | 28,7 W | +9,3 W  | 1,33 |
-| nominal + prise de vue | 38,0 W | 32,5 W | +5,5 W | 1,17 |
-| manœuvre         | 38,0 W | 32,0 W | +6,0 W  | 1,19 |
+| repos            | 45,1 W | 25,6 W | +19,5 W | 1,76 |
+| nominal          | 45,1 W | 28,8 W | +16,3 W | 1,57 |
+| nominal + prise de vue | 45,1 W | 32,8 W | +12,3 W | 1,38 |
+| manœuvre         | 45,1 W | 32,1 W | +12,9 W | 1,40 |
 
 Le critère d'acceptation — la production moyenne sur l'orbite dépasse la charge moyenne sur l'orbite
-avec TOUS les systèmes nominaux sous tension, SCAO compris — est satisfait avec un rapport de 1,33x en pointage nadir NOMINAL
-à l'angle bêta le plus défavorable de l'année (49,8°), en EOL à 3 ans.
+avec TOUS les systèmes nominaux sous tension, SCAO compris — est satisfait avec un rapport de 1,57x en pointage nadir NOMINAL
+à l'angle bêta le plus défavorable de l'année pour la production (−31,2°), en EOL à 3 ans.
+Sur l'année, bêta reste entre −20,8° et −31,2° (fraction d'éclipse 0,351–0,372,
+33,2–35,2 min par orbite). L'entraînement suivant le Soleil, la production varie comme cos(bêta) :
+le |bêta| le plus grand est donc le cas de production le plus défavorable, bien que son éclipse soit la plus courte ;
+au bêta de l'éclipse la plus longue (−20,8°), la production EOL est de 47,0 W et le cas nominal est satisfait avec
+un rapport de 1,63x.
 
 **La prise de vue fonctionne par intermittence, et non en continu.** Le bilan ci-dessus suppose trois
 acquisitions de 90 secondes par orbite, le refroidisseur du FPA fonctionnant environ 20 minutes
@@ -280,7 +285,7 @@ Lors des transitions d'éclipse, le PCDU bascule de manière autonome de l'alime
 l'alimentation par la batterie. Le paramètre de télémesure `eclipse_flag` (0x0108) indique l'état
 d'éclairement courant.
 
-## 4. Paramètres de télémesure
+## 4. Paramètres de télémesure {#4-telemetry-parameters}
 
 | ID param. | Nom            | Unité  | Description                          |
 |----------|-----------------|--------|--------------------------------------|
@@ -298,7 +303,7 @@ d'éclairement courant.
 | 0x0144   | wing_status     | masque de bits | État de déploiement des ailes solaires (bit0=+Y, bit1=-Y) |
 | 0x0145   | wing_deploy_timer| s     | Minuterie de compte à rebours du déploiement des ailes |
 
-## 5. Définition des limites
+## 5. Définition des limites {#5-limit-definitions}
 
 | Paramètre     | Jaune bas  | Jaune haut  | Rouge bas | Rouge haut |
 |---------------|------------|-------------|---------|----------|
@@ -307,7 +312,7 @@ d'éclairement courant.
 | bat_temp (°C) | 2          | 40          | 0       | 45       |
 | bus_voltage (V)| 27        | 29          | 26.5    | 29.5     |
 
-### 5.1 Réaction aux dépassements de limites
+### 5.1 Réaction aux dépassements de limites {#51-limit-response}
 
 - **Dépassement jaune** : avertissement à l'opérateur ; analyser la tendance.
 - **Dépassement rouge (bat_soc < 15 %)** : la FDIR déclenche un délestage autonome et un éventuel
@@ -315,7 +320,7 @@ d'éclairement courant.
 - **Dépassement rouge (bat_temp)** : ajustement de la régulation des réchauffeurs ; si la température dépasse 45 °C,
   la charge de la batterie est inhibée.
 
-## 6. Commandes utiles
+## 6. Commandes utiles {#6-relevant-commands}
 
 | Commande          | Service  | Description                           |
 |-------------------|----------|---------------------------------------|
@@ -327,14 +332,14 @@ d'éclairement courant.
 | EPS_DEPLOY_WING   | S8,S1    | Déployer une aile solaire (func_id 81) |
 | EPS_WING_STATUS   | S8,S1    | Interroger l'état de déploiement des ailes (func_id 82) |
 
-### 6.1 Commande du réchauffeur de batterie
+### 6.1 Commande du réchauffeur de batterie {#61-battery-heater-control}
 
 Le réchauffeur de batterie se commande par la commande `HEATER_CONTROL` avec `circuit=battery`
 et `on=true/false`. Le réchauffeur maintient la température de la batterie au-dessus de 2 °C pendant l'éclipse.
 La régulation autonome du réchauffeur est mise en œuvre dans la logique FDIR du TCS et active le réchauffeur
 si `bat_temp` descend sous 5 °C.
 
-## 7. Remarques d'exploitation
+## 7. Remarques d'exploitation {#7-operational-notes}
 
 1. Pendant la LEOP, le fonctionnement du générateur solaire fixé sur la structure est confirmé en surveillant `sa_a_current`
    et `sa_b_current`. Le déploiement des ailes est confirmé en surveillant `wing_status`
@@ -347,7 +352,7 @@ si `bat_temp` descend sous 5 °C.
 4. La télémesure du PCDU est échantillonnée à 1 Hz et incluse dans le paquet de servitude de l'EPS
    (SID=1).
 
-## 8. Modes de défaillance
+## 8. Modes de défaillance {#8-failure-modes}
 
 | Défaillance              | Détection                      | Réaction autonome                |
 |--------------------------|--------------------------------|----------------------------------|
@@ -359,7 +364,7 @@ si `bat_temp` descend sous 5 °C.
 | Disjonction d'une sortie PDM | Surveillance individuelle du courant | Une nouvelle tentative automatique, puis isolation |
 | Défaillance de PDM-A     | Disjonctions de plusieurs sorties | Le sol commande le basculement sur PDM-B |
 
-### 8.1 Dégradation et perte panneau par panneau
+### 8.1 Dégradation et perte panneau par panneau {#81-per-panel-degradation-and-loss}
 
 EOSAT-1 utilise cinq panneaux fixés sur la structure plus deux ailes déployables sur les faces +/-Y. La perte
 d'un seul panneau ou d'une seule aile réduit la production de puissance totale selon l'élément
@@ -367,17 +372,18 @@ touché et l'attitude du moment. L'impact dépend de la face perdue :
 
 | Élément perdu      | Impact                                                       |
 |--------------------|--------------------------------------------------------------|
-| Aile +Y ou -Y      | Impact fort : surface de production principale en orbite aube-crépuscule |
+| Aile +Y ou -Y      | Impact fort : surface de production principale (suit le Soleil sur le SADA) |
 | Panneau de structure +Y ou -Y | Impact moyen à fort : faces de production principales |
-| -Z (zénith)        | Impact moyen : face à exposition solaire significative      |
+| +Z (zénith)        | Impact moyen : face à exposition solaire significative      |
 | +X ou -X           | Impact faible à moyen : faces de production secondaires     |
-| +Z (nadir)         | Impact faible : reçoit principalement l'éclairement de l'albédo |
+
+La face -Z (nadir) ne porte pas de cellules (ouverture de l'imageur et radiateur) : il n'y a donc pas de panneau -Z à perdre.
 
 Les opérateurs devraient surveiller la télémesure de courant de chaque panneau et la comparer à la prédiction
 du modèle solaire pour l'attitude courante. Un écart persistant supérieur à 20 % indique une dégradation
 du panneau qui impose de réévaluer le bilan de puissance.
 
-### 8.2 Seuils de délestage progressif
+### 8.2 Seuils de délestage progressif {#82-progressive-load-shed-thresholds}
 
 Lorsque l'état de charge de la batterie diminue, la FDIR de l'EPS applique un délestage progressif :
 

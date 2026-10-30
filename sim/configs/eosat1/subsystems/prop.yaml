@@ -1,31 +1,72 @@
 # EOSAT-1 Propulsion — 1U green-monopropellant blowdown module (Phase D)
 # =============================================================================
-# PURPOSE (Flight Director ruling): debris-avoidance manoeuvres (CAM) and
-# LIMITED orbit maintenance (drag make-up / SMA biasing). This is NOT an
-# end-of-life deorbit system: natural decay from 450 km at B = 77.9 kg/m2 is
-# 1.7 yr (mean solar activity), 4.8 yr (solar min) — inside the FCC 5-year
-# rule at every solar condition, and 0.2 yr with the wings commanded
-# broadside. A propulsive deorbit (450->300 km perigee) would cost 42.6 m/s —
-# a second complete propulsion system — and is explicitly excluded.
-# >>> 2026-08 CAUTION: those decay figures were derived at the retired 450 km
-# declaration. The TLE-true mean altitude is ~513 km (orbit.yaml), where
-# density is roughly half and natural decay is several times slower — the
-# solar-min case very likely EXCEEDS the FCC 5-year rule. The decay analysis
-# and the "no deorbit capability needed" ruling need re-deriving at 513 km;
-# OWNER decision, deliberately not taken in this sweep.
+# PURPOSE: debris-avoidance manoeuvres (CAM), LIMITED orbit maintenance (drag
+# make-up / SMA biasing) and — owner ruling Q3 as amended 2026-10-30 — the
+# END-OF-LIFE DISPOSAL BURN (NOM-014). The earlier "no deorbit capability"
+# ruling rested on decay figures derived at the retired 450 km declaration
+# (1.7 yr mean / 4.8 yr solar min); they do not hold at the TLE-true 513 km.
+#
+# DECAY METHOD (the one brief 03 used at 450 km, re-run at 513 km):
+#   circular-orbit decay da/dt = -rho*v*a/B (equivalently -2*a_D*a/v with
+#   a_D = rho*v^2/(2B)), B = m/(C_D*A) = 77.9 kg/m2, integrated down to 120 km;
+#   for an eccentric disposal orbit the orbit-averaged Gauss equations for a
+#   and e under tangential drag. Density: Vallado's CIRA-72 exponential
+#   atmosphere (Fundamentals of Astrodynamics, Table 8-4) for MEAN solar
+#   activity, and 0.35 x that table for SOLAR MINIMUM — the scaling that
+#   reproduces brief 03's own 4.8 yr from 450 km (mean: 1.67 yr, as brief 03).
+# Natural decay from 513 km, B = 77.9 kg/m2:
+#   mean solar activity  5.0 yr      solar minimum  14.2 yr  (> 5-yr rule)
+# Cross-check, NRLMSIS 2.1 (pymsis), global-mean density: F10.7 = 140 gives
+# 4.7 yr; a SUSTAINED F10.7 = 70 gives 33 yr — an upper bound, since a solar
+# minimum does not last decades.
+#
+# DISPOSAL BURN (sized for re-entry < 5 yr at SOLAR MINIMUM, ~20 % margin):
+#   lower the perigee from 513 km to 390 km with retrograde burns at one
+#   orbital position (which becomes the apogee):
+#     dV = sqrt(mu/r1) - sqrt(mu*(2/r1 - 2/(r1+rp))),  r1 = R_E + 513 km,
+#     rp = R_E + 390 km, mu = 398600.4418 km3/s2   ->  dV = 34.3 m/s
+#   Residual lifetime from 513 x 390 km: 1.5 yr (mean), 4.2 yr (solar min).
+#   NRLMSIS 2.1 cross-check from the 390 km perigee with a SUSTAINED
+#   F10.7 = 70: 7.2 yr (outside the rule; quoted in the books as the model-
+#   uncertainty teaching point).
+#   (5.0 yr at solar min needs 405 km / 30.1 m/s; 360 km / 42.8 m/s would
+#   meet 5 yr even under the sustained-F10.7-70 bound but does not close.)
+#   Flown as six 5.72 m/s burns (PROP_SET_BURN caps dv at 20 m/s; each burn
+#   is 320-480 s at end-of-life thrust, inside a 600 s watchdog raised with
+#   PROP_SET_LIMITS); then propellant depletion and passivation (NOM-014).
 #
 # Hardware sheet: LMP-103S/ADN-class monoprop, single thruster on the -X
 # face thrusting along +X body (= prograde in the nominal nadir attitude, so
 # a retrograde burn requires a deliberate 180-degree yaw — the AOCS coupling
 # is intentional). Blowdown 22.0 -> 9.33 bar (2.36:1), thrust 0.33 -> 0.14 N,
-# Isp 220 -> 196 s (208 s mean), 0.400 kg propellant = 66.9 m/s total dV.
+# Isp 220 -> 196 s (208 s mean), 0.400 kg propellant = 66.9 m/s total dV
+# (mean-Isp rocket equation; integrating the blowdown Isp(P) curve gives
+# 65.8 m/s, quoted below as the conservative capability).
 # The catalyst bed preheats at 12 W for ~20 min via HEATER_THRUSTER (S8
 # func 42, TCS circuit 2) before arming is permitted.
 #
-# dV budget framing (debris avoidance + drag make-up, 2-yr active phase):
-#   drag make-up 42.6 + SMA/LTAN biasing 3.0 + CAM (6 events) 0.6
-#   + commissioning/cal 1.0 + eccentricity control 1.5 + margins 7.3
-#   = 56.0 m/s required vs 66.9 m/s capability (+19.5 %).
+# dV budget (2-yr active phase + disposal, re-derived at 513 km 2026-10-30):
+#   drag make-up at 513 km, design case (F10.7 ~150 = 1.136 x CIRA-72 mean,
+#     brief 03's own design scaling): rho = 6.45e-13 kg/m3, v = 7605 m/s,
+#     a_D = 2.40e-7 m/s2 -> 7.6 m/s/yr                     2 yr   15.1
+#     (was 42.6 m/s, computed at 450 km with rho = 1.8e-12)
+#   SMA/LTAN biasing 3.0 + CAM (6 events) 0.6 + commissioning/cal 1.0
+#     + eccentricity control 1.5                                    6.1
+#   END-OF-LIFE DISPOSAL, 513 -> 390 km perigee                    34.3
+#   deterministic subtotal                                         55.5
+#   ECSS Phase-C margin 5 %                                         2.8
+#   ops / dispersion reserve 10 %                                   5.8
+#   TOTAL REQUIRED                                                 64.1 m/s
+#   capability 66.9 m/s (mean Isp): margin +2.8 m/s (+4.4 %)
+#   capability 65.8 m/s (blowdown-integrated): margin +1.7 m/s (+2.6 %)
+# Propellant check (blowdown model, burns in mission order): the active-phase
+# lines with their margins use 0.145 kg (tank to 14.7 bar); the 34.3 m/s
+# disposal then uses 0.211 kg at 196-205 s Isp, leaving 0.044 kg (0.011 kg
+# after the disposal share of the margins). Tank: 560 cm3 holds the 0.400 kg
+# load (323 cm3) with 237 cm3 ullage at 22 bar — no change to tank or load.
+# The budget closes, but thinly: drag make-up above the design case erodes it
+# first. Policy: keep prop.dv_remaining (0x0B0C) >= 38 m/s (disposal + 10 %)
+# reserved from mid-mission; that reserve is not available for drag make-up.
 #
 # Burn convention: finite burn integrated at <= 1 s sub-steps while FIRING;
 # the resulting dV is applied to the SGP4 orbit as a SINGLE IMPULSE at the
@@ -34,7 +75,7 @@
 # orbit epoch_version (0x0B19) so planner/MCS caches invalidate.
 #
 # OUT OF SCOPE (model limitations, taught not simulated): multi-thruster /
-# thrust-vector control; propulsive disposal; plane changes / direct
+# thrust-vector control; pressurant venting at passivation; plane changes / direct
 # inclination-LTAN control; orbit raising / phasing / rendezvous; closed-loop
 # autonomous orbit control; real conjunction screening (CAM is a scripted
 # scenario input); combustion/feed transients; non-isothermal blowdown;

@@ -8,80 +8,80 @@
    "fr_hash": "e3b0c44298fc1c14"
   },
   {
-   "id": "eosat-1-startup-guide-rf-and-non-rf-modes",
-   "en_hash": "5ddc635cf4d8a0f8",
-   "fr_hash": "29511a9aaa85d3a7"
+   "id": "eosat-1-startup-guide--rf-and-non-rf-modes",
+   "en_hash": "fa0fbf79d8a75562",
+   "fr_hash": "e89bdad565362032"
   },
   {
-   "id": "eosat-1-startup-guide-rf-and-non-rf-modes/1-quick-reference",
-   "en_hash": "4833f56c130ef083",
-   "fr_hash": "5349f193c688c1df"
+   "id": "eosat-1-startup-guide--rf-and-non-rf-modes/1-quick-reference",
+   "en_hash": "1dbd629e785c824a",
+   "fr_hash": "89d70ba16cb8a52d"
   },
   {
-   "id": "eosat-1-startup-guide-rf-and-non-rf-modes/2-starting-without-rf-simulation-default",
-   "en_hash": "b37a7438ff14f95f",
-   "fr_hash": "644dddf83d7816ae"
+   "id": "eosat-1-startup-guide--rf-and-non-rf-modes/2-starting-without-rf-simulation-default",
+   "en_hash": "aeb8a637c58fac5a",
+   "fr_hash": "39226106a88abd38"
   },
   {
-   "id": "eosat-1-startup-guide-rf-and-non-rf-modes/3-starting-with-rf-simulation-frame-mode",
-   "en_hash": "0a040156d3ce98b5",
-   "fr_hash": "ece1596454c520aa"
+   "id": "eosat-1-startup-guide--rf-and-non-rf-modes/3-starting-with-rf-simulation-frame-mode",
+   "en_hash": "ab8b13f152bf7ad5",
+   "fr_hash": "67109a219e21da7d"
   },
   {
-   "id": "eosat-1-startup-guide-rf-and-non-rf-modes/4-starting-with-rf-simulation-rf-mode",
-   "en_hash": "62b126425ea65ea4",
-   "fr_hash": "3fbbf23b9a4f19da"
+   "id": "eosat-1-startup-guide--rf-and-non-rf-modes/4-starting-with-rf-simulation-rf-mode",
+   "en_hash": "a1a3b02678eced08",
+   "fr_hash": "56da3ccd0db1093e"
   },
   {
-   "id": "eosat-1-startup-guide-rf-and-non-rf-modes/5-standalone-rf-bridge-advanced",
-   "en_hash": "1bc86d2909996177",
-   "fr_hash": "bc24aac417080269"
+   "id": "eosat-1-startup-guide--rf-and-non-rf-modes/5-standalone-rf-bridge-advanced",
+   "en_hash": "5fa6dfe510f5f9bb",
+   "fr_hash": "8b84ff3460018fb8"
   },
   {
-   "id": "eosat-1-startup-guide-rf-and-non-rf-modes/6-radio-front-end-dashboard",
-   "en_hash": "6d226e46b534cbc8",
-   "fr_hash": "e6900b9893aa0040"
+   "id": "eosat-1-startup-guide--rf-and-non-rf-modes/6-radio-front-end-dashboard",
+   "en_hash": "904327c1a7a4acdc",
+   "fr_hash": "a12490016ff80be4"
   },
   {
-   "id": "eosat-1-startup-guide-rf-and-non-rf-modes/6-radio-front-end-dashboard/6-1-display-panels",
-   "en_hash": "8f7e75259bacdd75",
-   "fr_hash": "8b3d693aecd3fec5"
+   "id": "eosat-1-startup-guide--rf-and-non-rf-modes/6-radio-front-end-dashboard/61-display-panels",
+   "en_hash": "00163a4c93758d2d",
+   "fr_hash": "b714b605f7aafeb9"
   },
   {
-   "id": "eosat-1-startup-guide-rf-and-non-rf-modes/6-radio-front-end-dashboard/6-2-constellation-diagram",
-   "en_hash": "b7d7c8c1edc5ecd5",
-   "fr_hash": "7a5573537e6414b6"
+   "id": "eosat-1-startup-guide--rf-and-non-rf-modes/6-radio-front-end-dashboard/62-constellation-diagram",
+   "en_hash": "4e591151d5b627e0",
+   "fr_hash": "ea77c8abb6a7f212"
   },
   {
-   "id": "eosat-1-startup-guide-rf-and-non-rf-modes/7-failure-injection",
-   "en_hash": "9d118ebb5a6f8a5a",
-   "fr_hash": "832006d33a05ff67"
+   "id": "eosat-1-startup-guide--rf-and-non-rf-modes/7-failure-injection",
+   "en_hash": "021c9bb6eb7fb468",
+   "fr_hash": "eff8d8adc7e8ec1f"
   },
   {
-   "id": "eosat-1-startup-guide-rf-and-non-rf-modes/7-failure-injection/7-1-space-segment-failures-via-simulator-instructor",
-   "en_hash": "7757515ce9af683c",
-   "fr_hash": "6c9d062bc21d1226"
+   "id": "eosat-1-startup-guide--rf-and-non-rf-modes/7-failure-injection/71-space-segment-failures-via-simulator-instructor",
+   "en_hash": "7123118fe860aa25",
+   "fr_hash": "1b9bc5894836f979"
   },
   {
-   "id": "eosat-1-startup-guide-rf-and-non-rf-modes/7-failure-injection/7-2-ground-segment-failures-via-radio-api",
-   "en_hash": "e18d13de7548fe76",
-   "fr_hash": "39c594c9967eac3d"
+   "id": "eosat-1-startup-guide--rf-and-non-rf-modes/7-failure-injection/72-ground-segment-failures-via-radio-api",
+   "en_hash": "145fb6d8ae306fbd",
+   "fr_hash": "6891b779fa37d976"
   },
   {
-   "id": "eosat-1-startup-guide-rf-and-non-rf-modes/7-failure-injection/7-3-combined-scenarios",
-   "en_hash": "a9501277a498bd05",
-   "fr_hash": "e3c78a89b5743ded"
+   "id": "eosat-1-startup-guide--rf-and-non-rf-modes/7-failure-injection/73-combined-scenarios",
+   "en_hash": "e937d76e8db2e57b",
+   "fr_hash": "421c5002d3034a81"
   },
   {
-   "id": "eosat-1-startup-guide-rf-and-non-rf-modes/8-configuration-reference",
-   "en_hash": "8c0f8f7328124568",
-   "fr_hash": "8228c95ef6a8f7e2"
+   "id": "eosat-1-startup-guide--rf-and-non-rf-modes/8-configuration-reference",
+   "en_hash": "8cd103ac045901ba",
+   "fr_hash": "e6d05b071d89c80b"
   },
   {
-   "id": "eosat-1-startup-guide-rf-and-non-rf-modes/9-troubleshooting",
-   "en_hash": "3d854dd2417c9e3e",
-   "fr_hash": "ef283e0fa2d1edd7"
+   "id": "eosat-1-startup-guide--rf-and-non-rf-modes/9-troubleshooting",
+   "en_hash": "0eee570180005dc7",
+   "fr_hash": "cdd647ae60c680c4"
   }
  ],
- "en_commit": "983af0f"
+ "en_commit": "c4a140a"
 }

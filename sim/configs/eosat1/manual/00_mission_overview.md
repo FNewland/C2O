@@ -1,4 +1,4 @@
-# EOSAT-1 Mission Overview
+# EOSAT-1 Mission Overview {#eosat-1-mission-overview}
 
 **Document ID:** EOSAT1-UM-MIS-001
 **Issue:** 2.0
@@ -7,13 +7,13 @@
 
 ---
 
-## 1. Purpose
+## 1. Purpose {#1-purpose}
 
 This document provides a top-level overview of the EOSAT-1 (Earth Observation Satellite 1) mission,
 including mission objectives, spacecraft configuration, orbit parameters, ground segment, and
 mission phases. It serves as the entry point into the EOSAT-1 spacecraft user manual suite.
 
-## 2. Mission Objectives
+## 2. Mission Objectives {#2-mission-objectives}
 
 EOSAT-1 is a 6U multispectral imaging cubesat in low-Earth orbit designed for ocean current
 monitoring and coastal zone observation. Primary mission objectives are:
@@ -27,25 +27,27 @@ monitoring and coastal zone observation. Primary mission objectives are:
 - Provide imaging data for ocean current velocity estimation, upwelling detection, and
   chlorophyll concentration mapping.
 
-## 3. Orbit Parameters
+## 3. Orbit Parameters {#3-orbit-parameters}
 
 | Parameter              | Value                        |
 |------------------------|------------------------------|
 | Orbit Type             | Sun-Synchronous (SSO)        |
 | Altitude               | ~513 km mean (503–530 km)    |
-| Inclination            | 98 deg                       |
-| LTAN                   | Dawn-dusk (~06:00/18:00 LT)  |
+| Inclination            | 97.39 deg                    |
+| LTAN                   | ~10:00 (mid-morning ascending node) |
 | Orbital Period         | ~94.5 min                    |
-| Eclipse Duration       | ~34–36 min (seasonal variation) |
+| Eclipse Duration       | ~33–35 min, every orbit (beta −20.8 to −31.2 deg) |
 | Repeat Cycle           | ~5 days                      |
-| Ground Track Velocity  | ~7.07 km/s                   |
+| Ground Track Velocity  | ~7.06 km/s                   |
 
 The ~513 km mean altitude keeps a ground sampling distance in the tens of metres,
-while maintaining a sun-synchronous orbit at 98 deg inclination. The dawn-dusk SSO provides
-favourable illumination conditions for the multispectral imager and maximises solar panel
-exposure, reducing the depth of discharge on the battery during eclipse periods.
+while maintaining a sun-synchronous orbit at 97.39 deg inclination, the exact sun-synchronous
+value for the TLE mean motion of 15.24 rev/day. The ~10:00 LTAN puts the daylit ascending pass in mid-morning, so ocean
+targets are imaged under consistent illumination on every revisit. This is not a dawn-dusk
+orbit: the beta angle stays between about −21 and −31 deg, the spacecraft is eclipsed on every
+orbit, and the battery goes through one charge-discharge cycle per orbit (about 15 a day).
 
-## 4. Spacecraft Bus Overview
+## 4. Spacecraft Bus Overview {#4-spacecraft-bus-overview}
 
 EOSAT-1 is a 6U cubesat with three-axis stabilised platform and the following primary subsystems:
 
@@ -58,21 +60,21 @@ EOSAT-1 is a 6U cubesat with three-axis stabilised platform and the following pr
 | Telemetry, Tracking and Command    | TTC          | Cold-redundant S-band transponder, UHF beacon transmitter, dedicated PDM command channel, burn wire antenna |
 | Payload                            | PLD          | Multispectral imager (4 ocean colour bands), nadir-mounted |
 
-### 4.1 Spacecraft Coordinate Frame
+### 4.1 Spacecraft Coordinate Frame {#41-spacecraft-coordinate-frame}
 
 The spacecraft body frame is defined as:
 
 - **+X**: Along-track (velocity vector in nominal nadir pointing)
-- **+Y**: Cross-track (towards the starboard solar panel)
-- **+Z**: Nadir (towards Earth in nominal attitude); nadir star camera and payload mounted here
-- **-Z**: Zenith; zenith star camera and GPS antenna mounted here
+- **+Y**: Cross-track, along the orbit normal (completes the right-handed set; solar array drive axis)
+- **+Z**: Zenith (away from Earth in nominal attitude); both star cameras (ST2 canted 45 deg towards +Y) and the GPS antenna mounted here
+- **-Z**: Nadir (towards Earth in nominal attitude); imager boresight and radiator mounted here
 
 Each of the six body faces (+X, -X, +Y, -Y, +Z, -Z) carries a coarse sun sensor head; five of
-them (all but -Z) carry a body-mounted solar panel. Deployable solar wings on the +Y and -Y faces
+them (all but -Z, which carries the imager aperture and the radiator) carry a body-mounted solar panel. Deployable solar wings on the +Y and -Y faces
 (0.120 m2 of cells each) extend the total solar collection area from 0.198 m2 (stowed) to
 0.438 m2 (deployed).
 
-### 4.2 Mass and Power Budget
+### 4.2 Mass and Power Budget {#42-mass-and-power-budget}
 
 | Parameter        | Value          |
 |------------------|----------------|
@@ -82,7 +84,7 @@ them (all but -Z) carry a body-mounted solar panel. Deployable solar wings on th
 | Battery Capacity | 100 Wh, 3 Ah (8S1P), 21.5–29.2 V |
 | OBC Power        | 6 W            |
 
-### 4.3 Redundancy Architecture
+### 4.3 Redundancy Architecture {#43-redundancy-architecture}
 
 EOSAT-1 employs cold redundancy for critical subsystems:
 
@@ -92,32 +94,37 @@ EOSAT-1 employs cold redundancy for critical subsystems:
 | Transponder     | Primary/Redundant (cold) | Ground command or FDIR after link loss |
 | PDM             | A/B path (cold) | Ground command                              |
 | Magnetometer    | None (single unit) | Loss ends B-dot detumble and magnetic desaturation |
-| Star Camera     | Zenith/Nadir  | Automatic selection based on FOV availability |
+| Star Camera     | ST1/ST2 (both on +Z) | Automatic selection based on FOV availability |
 
-## 5. Ground Segment
+## 5. Ground Segment {#5-ground-segment}
 
-### 5.1 Ground Stations
+### 5.1 Ground Stations {#51-ground-stations}
 
 | Station    | Location                    | Min Elevation | Primary Role       |
 |------------|-----------------------------|---------------|--------------------|
 | Iqaluit    | 63.747 N, 68.518 W          | 5 deg         | TT&C + Data Dump   |
 | Troll      | 72.012 S, 2.535 E           | 5 deg         | TT&C + Data Dump   |
+| Svalbard   | 78.230 N, 15.398 E          | 5 deg         | TT&C + Data Dump   |
+| Inuvik     | 68.320 N, 133.550 W         | 5 deg         | TT&C + Data Dump   |
+| O'Higgins  | 63.321 S, 57.901 W          | 5 deg         | TT&C + Data Dump   |
 
-EOSAT-1 uses a two-station ground segment providing polar coverage in both hemispheres:
+EOSAT-1 uses a five-station ground segment providing polar coverage in both hemispheres
+(canonical list in `orbit.yaml`):
 
-- **Iqaluit** (Nunavut, Canada): Northern hemisphere station at 63.747 deg N latitude.
-  Provides primary TT&C and science data downlink for northern passes. The high latitude
-  enables multiple contacts per day with the polar sun-synchronous orbit.
-- **Troll** (Queen Maud Land, Antarctica): Southern hemisphere station at 72.012 deg S latitude.
-  Provides complementary TT&C and data dump coverage for southern passes, reducing the
-  maximum gap between ground contacts.
+- **Northern hemisphere:** Svalbard (KSAT SvalSat, Norway, 78.230 deg N), Inuvik (Northwest
+  Territories, Canada, 68.320 deg N) and Iqaluit (Nunavut, Canada, 63.747 deg N). Svalbard sees
+  the most passes and the highest elevations and is the planner's first-priority downlink.
+- **Southern hemisphere:** Troll (Queen Maud Land, Antarctica, 72.012 deg S) and O'Higgins
+  (Antarctic Peninsula, 63.321 deg S), which cover the southern passes.
 
-All ground stations communicate in S-band (2025 MHz uplink / 2200 MHz downlink). Typical
-contact durations range from 5 to 12 minutes depending on pass geometry and maximum
-elevation angle. The two-station network provides approximately 4-8 contacts per day with
-a maximum gap of approximately 4-6 hours between contacts.
+All ground stations communicate in S-band (2025 MHz uplink / 2200 MHz downlink). At the
+~513 km altitude and the 5 deg mask a contact lasts at most about 10 minutes and about
+7–8 minutes on average, depending on pass geometry and maximum elevation angle. The
+five-station network provides about 51 contacts per day (Svalbard ~13, Troll ~11, Inuvik ~10.5,
+Iqaluit ~9, O'Higgins ~8) with a median gap of about 33 minutes and a maximum gap of about
+80 minutes between contacts (48 h measurement, `tools/pass_gap_analysis.py`).
 
-### 5.2 Mission Control System
+### 5.2 Mission Control System {#52-mission-control-system}
 
 The Mission Control System (MCS) provides:
 
@@ -130,7 +137,7 @@ The Mission Control System (MCS) provides:
 - GO/NO-GO coordination workflow for critical operations.
 - Contact window timeline with per-station visibility display.
 
-### 5.3 Operator Positions
+### 5.3 Operator Positions {#53-operator-positions}
 
 The MCS supports 6 operator positions with role-based access control:
 
@@ -143,7 +150,7 @@ The MCS supports 6 operator positions with role-based access control:
 | OBDH Operator     | OBDH         | OBC health, data handling, software mgmt     |
 | Payload Operator  | PLD          | Imaging operations and data management       |
 
-## 6. Mission Phases
+## 6. Mission Phases {#6-mission-phases}
 
 | Phase                | Duration       | Description                                          |
 |----------------------|----------------|------------------------------------------------------|
@@ -152,9 +159,9 @@ The MCS supports 6 operator positions with role-based access control:
 | Commissioning        | 3–30 days      | Subsystem checkout, ADCS calibration, payload activation |
 | Nominal Operations   | 30 days–EOM    | Routine ocean imaging, data downlink, orbit monitoring |
 | Extended Operations  | EOM+           | Reduced operations if mission is extended            |
-| Decommissioning      | Final phase    | Passivation and controlled deorbit                   |
+| Decommissioning      | Final phase    | Perigee-lowering burn to 390 km (34.3 m/s, NOM-014), then passivation; re-entry within 5 years |
 
-### 6.0 The On-Board Mission Phase — and What It Gates
+### 6.0 The On-Board Mission Phase — and What It Gates {#60-the-on-board-mission-phase--and-what-it-gates}
 
 The spacecraft carries the mission phase as live state, in `eps.spacecraft_phase`
 (0x0129):
@@ -228,7 +235,7 @@ remedy.
 Every accepted change raises the S5 event `MISSION_PHASE_CHANGED` (0x0055)
 carrying the from-phase and the to-phase.
 
-### 6.1 Separation Sequence
+### 6.1 Separation Sequence {#61-separation-sequence}
 
 The separation sequence from the launcher follows a 7-phase state machine:
 
@@ -245,14 +252,14 @@ The separation sequence from the launcher follows a 7-phase state machine:
 During the 30-minute timer wait, only the OBC (via unswitchable PDM line) and receiver
 (via dedicated PDM command channel) are powered. No RF transmissions occur.
 
-### 6.2 LEOP Concept
+### 6.2 LEOP Concept {#62-leop-concept}
 
-During LEOP, the spacecraft initially operates in BOOTLOADER mode with restricted command
+During LEOP, the OBC initially runs the bootloader (`sw_image` = 0) with a restricted command
 set and beacon-only telemetry (SID 11). The LEOP sequence proceeds as follows:
 
 1. **First Contact**: Ground acquires RF signal from beacon packet. Verify spacecraft health
    from beacon HK parameters.
-2. **Application Boot**: Ground commands transition from BOOTLOADER to application software.
+2. **Application Boot**: Ground commands the transition from the bootloader to the application software (`sw_image` 0 → 1).
    Verify successful boot via full housekeeping telemetry.
 3. **Detumble**: AOCS operates in DETUMBLE mode using magnetorquers. Monitor body rates
    converging to below 0.5 deg/s.
@@ -264,7 +271,7 @@ set and beacon-only telemetry (SID 11). The LEOP sequence proceeds as follows:
 7. **Transition to Nominal**: After all GO/NO-GO checkpoints pass, command transition to
    AOCS NOMINAL mode (4) and begin nominal operations.
 
-### 6.3 Nominal Operations Concept
+### 6.3 Nominal Operations Concept {#63-nominal-operations-concept}
 
 In nominal operations the spacecraft maintains nadir-pointing attitude (AOCS mode NOMINAL, 4)
 for ocean current monitoring. Imaging targets are planned based on ocean current regions
@@ -275,12 +282,12 @@ station passes.
 
 Typical daily operations include:
 
-- 4-8 ground contacts across Iqaluit and Troll stations
+- About 20 ground contacts across Iqaluit and Troll stations
 - 2-6 imaging opportunities over target ocean regions
 - Continuous housekeeping telemetry storage for playback during contacts
 - Power and data budget monitoring for next-orbit planning
 
-## 7. Related Documents
+## 7. Related Documents {#7-related-documents}
 
 | Document                          | Reference              |
 |-----------------------------------|------------------------|

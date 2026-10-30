@@ -138,7 +138,7 @@ common pitfalls, and references.
 - Select thermal control approach (passive coatings -> MLI -> heaters -> heat pipes)
 - Size radiators to reject waste heat in hot case
 - Size heaters to maintain minimum temperature in cold case (eclipse)
-- Verify ECSS thermal margins (±5°C operating, ±10°C acceptance, ±15°C qualification)
+- Verify thermal margins (book convention: ±5°C operating, ±10°C acceptance, ±15°C qualification; proto-flight TVAC at predicted ±10°C)
 - Coordinate with power on heater power budget and with structure on radiator mounting
 
 **Key Formulae:**

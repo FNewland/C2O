@@ -1,4 +1,4 @@
-# EOSAT-1 Electrical Power Subsystem (EPS)
+# EOSAT-1 Electrical Power Subsystem (EPS) {#eosat-1-electrical-power-subsystem-eps}
 
 **Document ID:** EOSAT1-UM-EPS-002
 **Issue:** 2.0
@@ -7,7 +7,7 @@
 
 ---
 
-## 1. Overview
+## 1. Overview {#1-overview}
 
 The Electrical Power Subsystem (EPS) generates, stores, regulates, and distributes electrical
 power to all spacecraft subsystems. It comprises five body-mounted GaAs solar panels (every
@@ -15,9 +15,9 @@ spacecraft face except -Z), two deployable solar wings on the +/-Y faces, a lith
 cold-redundant Power Distribution Module (PDM) with switchable and unswitchable lines, and
 associated harness.
 
-## 2. Architecture
+## 2. Architecture {#2-architecture}
 
-### 2.1 Solar Panels — Body-Mounted Panels and Deployable Wings
+### 2.1 Solar Panels — Body-Mounted Panels and Deployable Wings {#21-solar-panels--body-mounted-panels-and-deployable-wings}
 
 | Parameter            | Value                      |
 |----------------------|----------------------------|
@@ -28,7 +28,7 @@ associated harness.
 | Wing area            | 0.12 m2 of cells per wing (+Y and -Y, 2 folding panels of 209 x 342 mm) |
 | Wing assembly mass   | ~1.07 kg per wing incl. hinges and HDRM |
 | Peak Power (BOL)     | ~89 W instantaneous, wings sun-tracking at beta = 0, fully deployed (wings alone 70 W, matching the MMA eHaWK 6U class rating) |
-| Orbit-average (BOL, nadir) | ~55 W at beta = 24 deg, ~42 W at beta = 50 deg (incl. eclipse) |
+| Orbit-average (BOL, nadir) | ~51 W at beta = −21 deg (longest eclipse), ~49 W at beta = −31 deg (incl. eclipse) |
 | EOL performance      | K = 267.2 W/m2 of projected area (full loss stack, 3-year EOL, sa_age_factor 0.9175) |
 | Operating Voltage    | 28 V (regulated bus)       |
 | Wing deploy time     | ~30 s per wing (burn wire release) |
@@ -36,8 +36,8 @@ associated harness.
 Five spacecraft faces carry body-mounted solar panels (the -Z face carries the
 imager aperture and radiator and has no cells). Deployable solar wings are
 mounted on the +Y and -Y faces on a shared single-axis solar array drive
-(SADA) whose rotation axis is body Y — the orbit normal in the LVLH
-nadir-pointing frame (z = nadir, y = -orbit normal). When stowed, the
+(SADA) whose rotation axis is body Y — the orbit normal in the nominal
+nadir-pointing attitude (z = zenith, y = +orbit normal, x ~ velocity; the -Z face looks at nadir). When stowed, the
 total solar collection area is 0.198 m2 (body panels only). After wing
 deployment the total area is 0.438 m2 (0.12 m2 per wing added). Power
 generation per body panel depends on the cosine projection of the Sun vector
@@ -47,12 +47,12 @@ law, independent of orbit phase):
 
 | Panel Face | Orientation (nadir-pointing frame) | Notes                              |
 |------------|------------------------------------|-------------------------------------|
-| +X         | Orbit plane                        | Swept through the sun line each orbit |
-| -X         | Orbit plane                        | Swept through the sun line each orbit |
-| +Y         | Orbit plane (wing on SADA)         | Wing tracks the sun when SADA enabled |
-| -Y         | Orbit plane (wing on SADA)         | Wing tracks the sun when SADA enabled |
-| +Z         | Orbit normal                       | Continuous sin-beta illumination     |
-| -Z         | Anti orbit-normal                  | Imager aperture + radiator, no cells |
+| +X         | Ram (orbit plane)                  | Swept through the sun line each orbit |
+| -X         | Wake (orbit plane)                 | Swept through the sun line each orbit |
+| +Y         | Orbit normal (wing on SADA)        | Wing tracks the sun when SADA enabled; body panel dark at EOSAT-1's negative beta |
+| -Y         | Anti orbit-normal (wing on SADA)   | Wing tracks the sun when SADA enabled; body panel sees continuous sin-beta illumination |
+| +Z         | Zenith (orbit plane)               | Sunlit around orbit noon             |
+| -Z         | Nadir (orbit plane)                | Imager aperture + radiator, no cells |
 
 The per-panel power output is computed as:
 
@@ -82,7 +82,7 @@ needs one revolution per orbit = 0.064 deg/s, so there is ~15x margin in
 nominal ops; a commanded reposition of 90 deg takes ~90 s and is visible as a
 ramp on 0x0133.
 
-### 2.1.1 Deployable Solar Wings
+### 2.1.1 Deployable Solar Wings {#211-deployable-solar-wings}
 
 The spacecraft carries two deployable solar wings, one on each of the +Y and -Y faces.
 Each wing adds 0.12 m2 of solar collection area and is held in the stowed position by a
@@ -114,7 +114,7 @@ burn wire restraint mechanism. Deployment is commanded via S8 function managemen
 - Deploy one wing at a time when possible to manage attitude disturbance.
 - If a wing fails to deploy, a retry can be commanded after 60 s cooldown.
 
-### 2.2 Battery
+### 2.2 Battery {#22-battery}
 
 | Parameter            | Value                      |
 |----------------------|----------------------------|
@@ -126,7 +126,7 @@ burn wire restraint mechanism. Deployment is commanded via S8 function managemen
 | Depth of Discharge   | Max 35% (nominal ops)      |
 | Charge Method        | CC/CV taper above 90 % SoC, thermal cutoff |
 
-### 2.3 Power Distribution Module (PDM)
+### 2.3 Power Distribution Module (PDM) {#23-power-distribution-module-pdm}
 
 The EPS uses a cold-redundant Power Distribution Module (PDM) carrying **nine** power
 lines: two unswitchable and seven switchable. The line set, its ordering and its
@@ -146,7 +146,7 @@ configuration (`subsystems/eps.yaml`, `power_lines:`). The `line_index` argument
 | 7   | `aocs_wheels`  | Reaction wheels                        | Yes        | OFF              | `eps.pl_aocs_wheels` 0x0117 | `eps.line_current_7` 0x011F | 0.8 A |
 | 8   | `prop`         | Propulsion (catbed heater + valve drivers) | Yes    | OFF              | `eps.pl_prop` 0x014A | `eps.line_current_8` 0x014B | 0.8 A |
 
-#### Unswitchable Lines
+#### Unswitchable Lines {#unswitchable-lines}
 
 Lines 0 (`obc`) and 1 (`ttc_rx`) are permanently powered after separation and cannot be
 commanded off. These ensure that onboard processing is always available and the
@@ -155,7 +155,7 @@ automatically as part of the POWER_STABILIZE phase, guaranteeing that the OBC an
 receiver are operational before any ground contact. Their aggregate status is also
 published as the bitmask `eps.pdm_unsw_status` (0x012A).
 
-#### Switchable Lines
+#### Switchable Lines {#switchable-lines}
 
 Lines 2-8 can be individually commanded on/off with `EPS_POWER_ON(line_index=N)` /
 `EPS_POWER_OFF(line_index=N)`. Over-current protection is implemented per outlet at the
@@ -172,7 +172,7 @@ redundant-OBC or redundant-transponder lines: the whole AOCS suite is on `aocs_w
 (line 7), and OBC/transponder redundancy is internal to those units rather than a PDM
 line of its own.
 
-#### Load Shed Order
+#### Load Shed Order {#load-shed-order}
 
 Under-voltage load shedding walks `LOAD_SHED_ORDER` from the front, lowest priority
 first: `payload` → `fpa_cooler` → `ttc_tx` → `aocs_wheels` → `prop`. Propulsion is
@@ -189,13 +189,13 @@ re-powering anything, and restoration is the operator's job line by line
 (`EPS_POWER_ON`). The commanded stage is latched into 0x0134 and events
 `LOAD_SHED_STAGE_1..3` (0x0106-0x0108) fire once per stage crossed.
 
-#### Cold-Redundant PDM Path
+#### Cold-Redundant PDM Path {#cold-redundant-pdm-path}
 
 A redundant PDM path (PDM-B) provides an alternate power distribution path. PDM-B is
 normally unpowered (cold standby) and can be activated by ground command if PDM-A develops
 a fault. Both PDM paths share the same unswitchable/switchable line topology.
 
-### 2.4 Dedicated PDM Command Channel
+### 2.4 Dedicated PDM Command Channel {#24-dedicated-pdm-command-channel}
 
 The transponder receiver is powered through a dedicated PDM command channel that is
 independent of the main switchable line for the transmitter and power amplifier. This
@@ -204,7 +204,7 @@ design ensures that the spacecraft remains commandable even when the transmitter
 the receiver chain; the transmitter and power amplifier are on a separate switchable line
 with a 15-minute auto-off timer after the last command decode to conserve power.
 
-### 2.5 Separation Timer Circuit
+### 2.5 Separation Timer Circuit {#25-separation-timer-circuit}
 
 The EPS includes a hardware separation timer circuit that enforces the 30-minute no-transmit
 period after launcher separation:
@@ -215,7 +215,7 @@ period after launcher separation:
 4. After timer expiry, the OBC commands burn wire antenna deployment.
 5. The transmitter switchable line is then enabled for beacon transmissions.
 
-## 3. Power Modes
+## 3. Power Modes {#3-power-modes}
 
 | Mode       | Loads Powered                                  | Typical Consumption |
 |------------|------------------------------------------------|---------------------|
@@ -225,7 +225,7 @@ period after launcher separation:
 | EMERGENCY  | OBC, TTC essential only                        | ~11 W               |
 | ECLIPSE    | Battery-only supply, non-essential loads shed  | ~25 W               |
 
-### 3.1 Power Budget Breakdown (Nominal Subsystem Consumption)
+### 3.1 Power Budget Breakdown (Nominal Subsystem Consumption) {#31-power-budget-breakdown-nominal-subsystem-consumption}
 
 Every wattage below is the value `subsystems/eps.yaml` bills and is derived
 from a named flight part — see `docs/plan_2026-08b/POWER_SIZING.md` for the
@@ -254,21 +254,26 @@ a TriScape100 datasheet figure, and
 `tests/test_content/test_eps_config_manual_consistency.py` asserts the
 ordering as well as the values.
 
-### 3.2 Orbit-Average Budget (worst beta, EOL)
+### 3.2 Orbit-Average Budget (worst beta, EOL) {#32-orbit-average-budget-worst-beta-eol}
 
 Produced by `tools/power_budget.py`, which ticks the production EPS and TCS
 models over the real propagated orbit — not a spreadsheet.
 
 | Profile | Generation | Load | Margin | Ratio |
 |---------|-----------|------|--------|-------|
-| quiescent        | 38.0 W | 25.5 W | +12.5 W | 1.49 |
-| nominal          | 38.0 W | 28.7 W | +9.3 W  | 1.33 |
-| nominal + imaging| 38.0 W | 32.5 W | +5.5 W  | 1.17 |
-| manoeuvre        | 38.0 W | 32.0 W | +6.0 W  | 1.19 |
+| quiescent        | 45.1 W | 25.6 W | +19.5 W | 1.76 |
+| nominal          | 45.1 W | 28.8 W | +16.3 W | 1.57 |
+| nominal + imaging| 45.1 W | 32.8 W | +12.3 W | 1.38 |
+| manoeuvre        | 45.1 W | 32.1 W | +12.9 W | 1.40 |
 
 The acceptance criterion — orbit-average generation exceeds orbit-average load
-with ALL nominal systems on, including ADCS — closes at 1.33x in NOMINAL nadir
-pointing at the worst beta angle of the year (49.8 deg) at 3-year EOL.
+with ALL nominal systems on, including ADCS — closes at 1.57x in NOMINAL nadir
+pointing at the worst-generation beta angle of the year (−31.2 deg) at 3-year EOL.
+Over the year beta stays between −20.8 and −31.2 deg (eclipse fraction 0.351–0.372,
+33.2–35.2 min per orbit). With the drive tracking, generation follows cos(beta), so the
+largest |beta| is the worst generation case even though its eclipse is the shortest; at
+the longest-eclipse beta (−20.8 deg) EOL generation is 47.0 W and nominal closes at
+1.63x.
 
 **Imaging is duty-cycled, not continuous.** The budget above assumes three
 90-second captures per orbit with the FPA cooler running for ~20 minutes
@@ -280,7 +285,7 @@ During eclipse transitions, the PCDU autonomously switches from solar array to b
 supply. The `eclipse_flag` telemetry parameter (0x0108) indicates the current illumination
 state.
 
-## 4. Telemetry Parameters
+## 4. Telemetry Parameters {#4-telemetry-parameters}
 
 | Param ID | Name            | Unit   | Description                          |
 |----------|-----------------|--------|--------------------------------------|
@@ -298,7 +303,7 @@ state.
 | 0x0144   | wing_status     | bitmask| Solar wing deployment status (bit0=+Y, bit1=-Y) |
 | 0x0145   | wing_deploy_timer| s     | Wing deployment countdown timer      |
 
-## 5. Limit Definitions
+## 5. Limit Definitions {#5-limit-definitions}
 
 | Parameter     | Yellow Low | Yellow High | Red Low | Red High |
 |---------------|------------|-------------|---------|----------|
@@ -307,7 +312,7 @@ state.
 | bat_temp (C)  | 2          | 40          | 0       | 45       |
 | bus_voltage (V)| 27        | 29          | 26.5    | 29.5     |
 
-### 5.1 Limit Response
+### 5.1 Limit Response {#51-limit-response}
 
 - **Yellow violation**: Operator warning; investigate trend.
 - **Red violation (bat_soc < 15%)**: FDIR triggers autonomous load shedding and potential
@@ -315,7 +320,7 @@ state.
 - **Red violation (bat_temp)**: Heater control adjustment; if temperature exceeds 45 deg C,
   battery charging is inhibited.
 
-## 6. Relevant Commands
+## 6. Relevant Commands {#6-relevant-commands}
 
 | Command           | Service  | Description                           |
 |-------------------|----------|---------------------------------------|
@@ -327,14 +332,14 @@ state.
 | EPS_DEPLOY_WING   | S8,S1    | Deploy solar wing (func_id 81)        |
 | EPS_WING_STATUS   | S8,S1    | Query wing deployment status (func_id 82) |
 
-### 6.1 Battery Heater Control
+### 6.1 Battery Heater Control {#61-battery-heater-control}
 
 The battery heater is controlled via the `HEATER_CONTROL` command with `circuit=battery`
 and `on=true/false`. The heater maintains battery temperature above 2 deg C during eclipse.
 Autonomous heater control is implemented in the TCS FDIR logic and will activate the heater
 if `bat_temp` falls below 5 deg C.
 
-## 7. Operational Notes
+## 7. Operational Notes {#7-operational-notes}
 
 1. During LEOP, body-mounted solar array operation is confirmed by monitoring `sa_a_current`
    and `sa_b_current`. Deployable wing deployment is confirmed by monitoring `wing_status`
@@ -347,7 +352,7 @@ if `bat_temp` falls below 5 deg C.
 4. The PCDU telemetry is sampled at 1 Hz and included in the EPS housekeeping packet
    (SID=1).
 
-## 8. Failure Modes
+## 8. Failure Modes {#8-failure-modes}
 
 | Failure                  | Detection                      | Autonomous Response              |
 |--------------------------|--------------------------------|----------------------------------|
@@ -359,7 +364,7 @@ if `bat_temp` falls below 5 deg C.
 | PDM outlet trip          | Individual current monitoring  | Auto-retry once, then isolate    |
 | PDM-A failure            | Multiple outlet trips          | Ground commands switch to PDM-B  |
 
-### 8.1 Per-Panel Degradation and Loss
+### 8.1 Per-Panel Degradation and Loss {#81-per-panel-degradation-and-loss}
 
 EOSAT-1 uses five body-mounted panels plus two deployable wings on the +/-Y faces. The loss
 of a single panel or wing reduces total power generation depending on which element is
@@ -367,17 +372,18 @@ affected and the current attitude. The impact depends on which face is lost:
 
 | Lost Element       | Impact                                                       |
 |--------------------|--------------------------------------------------------------|
-| +Y or -Y wing      | High impact: major generation area in dawn-dusk orbit        |
+| +Y or -Y wing      | High impact: major generation area (sun-tracking on the SADA) |
 | +Y or -Y body panel| Moderate-high impact: primary generation faces               |
-| -Z (zenith)        | Moderate impact: significant solar exposure face             |
+| +Z (zenith)        | Moderate impact: significant solar exposure face             |
 | +X or -X           | Low-moderate impact: secondary generation faces              |
-| +Z (nadir)         | Low impact: primarily receives albedo illumination           |
+
+The -Z (nadir) face carries no cells (imager aperture and radiator), so there is no -Z panel to lose.
 
 Operators should monitor per-panel current telemetry and compare against the solar model
 prediction for the current attitude. A sustained discrepancy exceeding 20% indicates panel
 degradation requiring power budget re-assessment.
 
-### 8.2 Progressive Load Shed Thresholds
+### 8.2 Progressive Load Shed Thresholds {#82-progressive-load-shed-thresholds}
 
 When battery state of charge declines, the EPS FDIR implements progressive load shedding:
 

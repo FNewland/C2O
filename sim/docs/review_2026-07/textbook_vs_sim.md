@@ -1,6 +1,6 @@
 # Textbook vs Simulator — Capability Differences Report
 
-**Scope:** *SpaceCDF — A Course Textbook* (SCDF-TEXT-001 Issue 1, 546 pp.) vs the EO-Sat-1 / EOSAT-1 operations simulator (`SpaceMissionSimulation` repo, working tree as mounted 2026-07-28).
+**Scope:** *SpaceCDF — A Course Textbook* (SCDF-TEXT-001 Issue 1, 546 pp.) vs the EOSAT-1 / EOSAT-1 operations simulator (`SpaceMissionSimulation` repo, working tree as mounted 2026-07-28).
 **Sources:** `textbook_inventory.md` (book side), `integration_trace.md`, `design_issues.md`, `power_model_extract.md`, `scenario_config_inventory.md`, `test_strategy.md` (sim side), plus direct spot-checks of the repo (`configs/eosat1/**`, `packages/smo-*/**`) performed for this report. Sim citations are file:line in the repo; book citations are printed page numbers.
 **Premise:** the textbook deliberately teaches more than the simulator implements (Part 1 is a design course served by the separate SpaceCDF design tool). That breadth is not a defect. What this report makes explicit is (a) every capability the book teaches that the sim does not implement, (b) every place where book and sim both have a number and the numbers disagree, and (c) every explicit "the simulator does X" claim in the book checked against the code.
 

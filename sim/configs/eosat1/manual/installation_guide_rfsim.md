@@ -1,4 +1,4 @@
-# EOSAT-1 Startup Guide — RF and Non-RF Modes
+# EOSAT-1 Startup Guide — RF and Non-RF Modes {#eosat-1-startup-guide--rf-and-non-rf-modes}
 
 **Manual-Scope:** system — training-system documentation, not part of the flight operations manual.
 
@@ -9,7 +9,7 @@
 
 ---
 
-## 1. Quick Reference
+## 1. Quick Reference {#1-quick-reference}
 
 | Mode | Command | MCS Ports | RF Sim | Radio UI |
 |------|---------|-----------|--------|-----------|
@@ -19,7 +19,7 @@
 
 ---
 
-## 2. Starting Without RF Simulation (Default)
+## 2. Starting Without RF Simulation (Default) {#2-starting-without-rf-simulation-default}
 
 This is the standard operating mode. Packets flow directly between the
 simulator and MCS over TCP with length-prefix framing.
@@ -47,7 +47,7 @@ No framing overhead, no channel simulation. Suitable for:
 
 ---
 
-## 3. Starting With RF Simulation (FRAME Mode)
+## 3. Starting With RF Simulation (FRAME Mode) {#3-starting-with-rf-simulation-frame-mode}
 
 FRAME mode inserts CCSDS Transfer Framing between the simulator and MCS.
 This is the recommended mode for realistic ground segment training.
@@ -80,7 +80,7 @@ MCS (TC:8011) → RF Bridge → CLTU encoding → Channel model → Simulator (T
 
 ---
 
-## 4. Starting With RF Simulation (RF Mode)
+## 4. Starting With RF Simulation (RF Mode) {#4-starting-with-rf-simulation-rf-mode}
 
 RF mode adds BPSK modulation/demodulation on top of FRAME mode.
 Falls back to a numpy-based channel model if GNU Radio is not installed.
@@ -104,7 +104,7 @@ SMO_RF_MODE=RF ./start.sh
 
 ---
 
-## 5. Standalone RF Bridge (Advanced)
+## 5. Standalone RF Bridge (Advanced) {#5-standalone-rf-bridge-advanced}
 
 You can start the RF bridge independently of `start.sh`:
 
@@ -132,11 +132,11 @@ smo-mcs --config configs/eosat1/ --port 9090 --tm-port 8012 --tc-port 8011 &
 
 ---
 
-## 6. Radio Front-End Dashboard
+## 6. Radio Front-End Dashboard {#6-radio-front-end-dashboard}
 
 Open http://localhost:8094 when running in FRAME or RF mode.
 
-### 6.1 Display Panels
+### 6.1 Display Panels {#61-display-panels}
 
 | Panel | Shows |
 |-------|-------|
@@ -150,7 +150,7 @@ Open http://localhost:8094 when running in FRAME or RF mode.
 | **BPSK Constellation** | I/Q scatter plot showing demodulated symbol quality |
 | **Ground Failure Injection** | Drop-down to inject/clear ground segment failures |
 
-### 6.2 Constellation Diagram
+### 6.2 Constellation Diagram {#62-constellation-diagram}
 
 The I/Q scatter plot shows 128 demodulated BPSK symbols. At high Eb/N0,
 symbols cluster tightly around the ideal points (+1,0) and (-1,0). As
@@ -165,9 +165,9 @@ symbols rotate randomly in the I/Q plane.
 
 ---
 
-## 7. Failure Injection
+## 7. Failure Injection {#7-failure-injection}
 
-### 7.1 Space Segment Failures (via Simulator Instructor)
+### 7.1 Space Segment Failures (via Simulator Instructor) {#71-space-segment-failures-via-simulator-instructor}
 
 These are injected through the simulator's instructor interface at
 http://localhost:8080/instructor or via the HTTP API:
@@ -210,7 +210,7 @@ curl -X POST http://localhost:8080/api/command -H 'Content-Type: application/jso
 | `receiver_degrade` | RX noise figure increase | 0.1–1.0 (= 0.5–5 dB) |
 | `antenna_deploy_failed` | Antenna stuck, TX blocked | 1.0 |
 
-### 7.2 Ground Segment Failures (via Radio API)
+### 7.2 Ground Segment Failures (via Radio API) {#72-ground-segment-failures-via-radio-api}
 
 These are injected through the Radio web dashboard or API at port 8094.
 They degrade the effective Eb/N0 seen by the frame synchronizer.
@@ -259,7 +259,7 @@ curl http://localhost:8094/api/failures
 Magnitude ranges from 0.0 (no effect) to 1.0 (full penalty). Multiple
 failures stack additively.
 
-### 7.3 Combined Scenarios
+### 7.3 Combined Scenarios {#73-combined-scenarios}
 
 The most realistic training involves both space and ground failures:
 
@@ -272,7 +272,7 @@ The most realistic training involves both space and ground failures:
 
 ---
 
-## 8. Configuration Reference
+## 8. Configuration Reference {#8-configuration-reference}
 
 Edit `configs/eosat1/rfsim.yaml` to change defaults:
 
@@ -296,7 +296,7 @@ network:
 
 ---
 
-## 9. Troubleshooting
+## 9. Troubleshooting {#9-troubleshooting}
 
 | Issue | Cause | Fix |
 |-------|-------|-----|

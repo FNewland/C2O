@@ -250,7 +250,7 @@ class TestAOCSSensorRecovery:
         assert aocs._state.mag_valid is False
 
     def test_mag_select_refused_single_string(self):
-        """2026-08-19: EO-Sat-1 flies ONE magnetometer (owner ruling, no
+        """2026-08-19: EOSAT-1 flies ONE magnetometer (owner ruling, no
         redundancy). mag_select is kept only for the honest 0x0007 refusal;
         recovery from a mag failure is a power-cycle or the injection clear,
         exercised by the rewritten aocs_sensor_loss_recovery card."""

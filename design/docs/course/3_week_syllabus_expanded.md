@@ -75,7 +75,7 @@ see themselves in this picture is the central question of Day 1.*
 | **Tue** | **Regulatory Framework** | ISED spectrum licensing under CPC-2-6-02. RSSSA (Remote Sensing Space Systems Act). Canadian Controlled Goods Programme and export control. ITU filing through ISED. Practical: complete an ISED spectrum-licence application for a sample mission. |
 | **Wed** | **International Standards & Compliance** | ECSS standard framework and tailoring. NASA SEH 17 processes overview (see Figure 2.3 in the course plan). Cal Poly CDS Rev 14. Space-debris mitigation (IADC 25 yr, FCC 5 yr). UN Registration Convention. Practical: complete a tailoring matrix. |
 | **Thu** | **Mission Needs & Opportunities** | Identifying mission needs in the Canadian context (Arctic monitoring, maritime surveillance, agriculture, resource management, connectivity). Stakeholder analysis. Indigenous community engagement and UNDRIP. Problem-statement workshop. |
-| **Fri** | **Space vs Non-Space Trade & Concept** | Trade-study methodology (criteria, weightings, scoring). Existing services (Radarsat, Sentinel, Planet) vs new missions. Constellation economics and business cases. Teams form, select a mission need, and run an initial trade analysis in SpaceCDF. |
+| **Fri** | **Space vs Non-Space Trade & Concept** | Trade-study methodology (criteria, weightings, scoring). Existing services (Radarsat, Sentinel, Planet) vs new missions. Constellation economics and business cases. Teams form, select a mission need, and run an initial trade analysis in SpaceCDF. Informal mission concept review (MCR): each team presents its need, objectives and concept for feedback. |
 
 ### Canadian regulatory checklist (Tuesday deliverable)
 
@@ -125,8 +125,9 @@ see themselves in this picture is the central question of Day 1.*
 Week 2 is the **CDF intensive**. Each interdisciplinary team
 converges on a complete preliminary mission design across five
 working days, supported by SpaceCDF's embedded systems-engineering
-process, risk register, and trade-study modules. The PDR sits at
-end of week.
+process, risk register, and trade-study modules. A PDR-style review
+sits at the end of the week; the mission concept review (MCR) was
+held informally on the Friday of Week 1.
 
 ![ConOps timeline — LEOP through commissioning, nominal ops, and disposal](../assets/figures/fig_conops_timeline.png)
 
@@ -137,11 +138,11 @@ the design that will fly through this timeline.*
 
 | Day | Topic | Activities |
 |-----|-------|-----------|
-| **Mon** | **System-V & Requirements** | System-V model deep dive. SMART requirements from objectives. Functional decomposition. Teams enter mission need, run orbit/class advisors, generate the requirements baseline in SpaceCDF. |
-| **Tue** | **Subsystem Design: Power, AOCS, Thermal** | Orbit selection trade. Solar-array and battery sizing. Duty cycling. Attitude-control selection. Thermal environment analysis. Teams run the design loop and review parametric budgets. |
-| **Wed** | **Subsystem Design: Comms, Structure, Propulsion** | Link-budget calculation. Frequency-band selection and licensing implications via the SpaceCDF regulatory check. CubeSat structure and deployer selection. Propulsion trade. Equipment selection in the SpaceCDF library. |
+| **Mon** | **System-V, Requirements, Orbit & Architecture** | System-V model deep dive. SMART requirements from objectives. Functional decomposition. Orbit selection trade. Mission architecture: segments, interfaces, budgets. Teams enter mission need, run orbit/class advisors, generate the requirements baseline in SpaceCDF. |
+| **Tue** | **Subsystem Design: Power & Thermal, AOCS & Propulsion** | Solar-array and battery sizing. Duty cycling. Thermal environment analysis. Attitude-control selection. Propulsion trade. Teams run the design loop and review parametric budgets. |
+| **Wed** | **Subsystem Design: Comms, Structure & OBDH** | Link-budget calculation. Frequency-band selection and licensing implications via the SpaceCDF regulatory check. CubeSat structure and deployer selection. On-board computer and data handling. Equipment selection in the SpaceCDF library. |
 | **Thu** | **Integration, Verification, Cost** | Interface-matrix review. V&V matrix assignment. Environmental test planning. Cost estimation (parametric + COTS). Bill of materials. Trade studies on key decisions. |
-| **Fri** | **Design Review & Optimisation** | Run optimiser. Sensitivity analysis. Gate review (PDR criteria). Resolve conflicts. Generate ECSS documents (MRD, TS, VP). Regulatory filings (ITU, RSSSA if applicable). Each team presents its preliminary design. |
+| **Fri** | **Design Review & Optimisation** | Run optimiser. Sensitivity analysis. Gate review: a PDR-style review against the PDR criteria. Resolve conflicts. Generate ECSS documents (MRD, TS, VP). Regulatory filings (ITU, RSSSA if applicable). Each team presents its preliminary design. |
 
 ### A first look at the budgets you will close
 
@@ -180,7 +181,7 @@ coding: 1–2 green, 3–4 light green, 5–9 yellow, 10–15 amber, 16–25
 red. R5 (schedule) sits in the amber band; R6 (SEU) is yellow but
 deserves attention because of the consequence dimension.*
 
-> **Expected reading before Tuesday Wk 2.** SMAD4 Ch. 9 (orbit
+> **Expected reading before Monday Wk 2.** SMAD4 Ch. 9 (orbit
 > selection) and Ch. 10 (mission analysis) — locally cached on
 > Brightspace. ECSS-E-ST-32C (structures) §4 — [https://ecss.nl/](https://ecss.nl/).
 
@@ -209,7 +210,7 @@ procedures, and simulation packs.
 | Component | Weight | Description |
 |-----------|-------:|-------------|
 | Worksheets (daily) | 20 % | Completed during sessions, formative feedback |
-| Design Review (Week 2 Fri) | 30 % | Team presentation of preliminary design |
+| PDR-style Design Review (Week 2 Fri) | 30 % | Team presentation of preliminary design |
 | Simulation Performance (Week 3) | 20 % | Console operations, anomaly response |
 | Final Presentation (Week 3 Fri) | 30 % | Complete mission design, ops concept, lessons |
 

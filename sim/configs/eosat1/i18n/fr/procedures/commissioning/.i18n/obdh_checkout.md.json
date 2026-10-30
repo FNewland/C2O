@@ -39,8 +39,8 @@
   },
   {
    "id": "com-007-obdh-checkout/procedure-steps/step-3-verify-memory-status",
-   "en_hash": "f9c4299a2001e7d1",
-   "fr_hash": "6a7ffad043a2fbc9"
+   "en_hash": "c4de09921da39639",
+   "fr_hash": "627e4a937f8deeb5"
   },
   {
    "id": "com-007-obdh-checkout/procedure-steps/step-4-check-tc-tm-packet-counters",
@@ -54,13 +54,13 @@
   },
   {
    "id": "com-007-obdh-checkout/procedure-steps/step-6-verify-autonomous-hk-generation",
-   "en_hash": "492edfedb572c932",
-   "fr_hash": "073e59d911091908"
+   "en_hash": "244b6bd115364ff7",
+   "fr_hash": "1447617de3f9b1ea"
   },
   {
    "id": "com-007-obdh-checkout/procedure-steps/step-7-verify-watchdog-timer",
-   "en_hash": "31dfdc5a01f8cd7f",
-   "fr_hash": "62c3a1b6fff108d3"
+   "en_hash": "70debd820b35932d",
+   "fr_hash": "9efedd6d5f154f00"
   },
   {
    "id": "com-007-obdh-checkout/procedure-steps/step-8-test-obc-mode-excursion-nominal-safe-nominal",
@@ -69,13 +69,13 @@
   },
   {
    "id": "com-007-obdh-checkout/procedure-steps/step-9-record-obdh-baseline",
-   "en_hash": "a32206571cd87fc4",
-   "fr_hash": "4244c38a96ab50d7"
+   "en_hash": "cc3ab6ac7f531b6a",
+   "fr_hash": "2e7ecc2a77a42d42"
   },
   {
    "id": "com-007-obdh-checkout/off-nominal-handling",
-   "en_hash": "d7bffc7983c78b0b",
-   "fr_hash": "137680ce7fb39b82"
+   "en_hash": "2bfc4643d4874848",
+   "fr_hash": "7cfe362439646ee6"
   },
   {
    "id": "com-007-obdh-checkout/exit-state",
@@ -88,5 +88,5 @@
    "fr_hash": "4d3ee08a3ce59952"
   }
  ],
- "en_commit": "3e80564"
+ "en_commit": "c4a140a"
 }

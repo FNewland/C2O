@@ -1,21 +1,29 @@
-# EO-Sat-1 Propulsion Guide (Phase D)
+# EOSAT-1 Propulsion Guide (Phase D)
 
-**Scope ruling (Flight Director):** propulsion exists for **debris-avoidance
-manoeuvres** and **limited orbit maintenance** (drag make-up / semi-major-axis
-biasing). It is deliberately minimal. There is **no end-of-life deorbit
-capability and none is needed**: natural decay from 450 km at
-B = 77.9 kg/m² is 1.7 yr at mean solar activity (4.8 yr solar-min, 0.2 yr
-with the wings commanded broadside) — compliant with the FCC 5-year rule at
-every solar condition. A propulsive deorbit would cost 42.6+ m/s, a second
-complete propulsion system.
+**Scope:** propulsion exists for **debris-avoidance manoeuvres**, **limited
+orbit maintenance** (drag make-up / semi-major-axis biasing) and the
+**end-of-life disposal burn**. It is deliberately minimal.
 
-> **2026-08 caution:** the decay figures above were derived at the retired
-> 450 km altitude declaration. The TLE-true mean altitude is ~513 km
-> (orbit.yaml, 2026-08 epoch/altitude ruling), where atmospheric density is
-> roughly half and natural decay is several times slower — the solar-min case
-> very likely exceeds the FCC 5-year rule. The decay analysis, and with it
-> the standing "no deorbit capability" ruling, needs re-deriving at 513 km.
-> Owner decision pending; not re-derived in the 2026-08 config sweep.
+> **Author ruling Q3 (amended 2026-10-30):** disposal is by an end-of-life
+> perigee-lowering burn with the existing thruster, sized for re-entry within
+> 5 years even at solar minimum. The earlier "1.7–4.8 years, no deorbit
+> capability" was derived at 450 km.
+
+**Natural decay from 513 km** (B = 77.9 kg/m², drag decay integrated to 120 km
+with the CIRA-72 exponential atmosphere for mean activity and 0.35 × that for
+solar minimum, the method and scaling of the original sizing) is about
+**5.0 years at mean solar activity and 14 years at solar minimum** — outside
+the 5-year rule. Commanding the wings broadside (B ≈ 8.3 kg/m²) would bring it
+to about 0.5 / 1.5 years, but that needs a working attitude and is not
+modelled; it is a backup, not the plan.
+
+**Disposal burn (NOM-014):** lower the perigee from 513 km to **390 km** with
+**34.3 m/s** of retrograde ΔV, flown as six 5.72 m/s burns at the same orbital
+position (each 320–480 s at end-of-life thrust, with the burn watchdog raised
+to 600 s). Residual lifetime **~1.5 years (mean), ~4.2 years (solar
+minimum)**. Then deplete the propellant, latch the propulsion inhibit,
+spin down the wheels, switch off the battery charge regulator and silence the
+transmitters.
 
 ## Hardware
 
@@ -33,13 +41,17 @@ nominal nadir attitude; a retrograde burn requires a deliberate 180° yaw
 | Wet system | 1.55 kg (12.9 % of the 12 kg bus) |
 | **Total ΔV** | **66.9 m/s** |
 
-**ΔV budget (2-yr active phase, debris-avoidance + drag-makeup framing):**
-drag make-up 42.6 + SMA/LTAN biasing 3.0 + CAM (6 events × 0.1) 0.6 +
-commissioning/cal 1.0 + eccentricity control 1.5 + margins 7.3 =
-**56.0 m/s required** vs 66.9 capability (**+19.5 %**). The remaining
-envelope (`prop.dv_remaining`, 0x0B0C) is first a **collision-avoidance
-reserve**: below ~1 m/s the spacecraft has effectively lost its CAM
-capability and the conjunction posture changes.
+**ΔV budget (2-yr active phase + disposal, re-derived at 513 km):**
+drag make-up 15.1 (design solar activity at 513 km; it was 42.6 at 450 km) +
+SMA/LTAN biasing 3.0 + CAM (6 events × 0.1) 0.6 + commissioning/cal 1.0 +
+eccentricity control 1.5 + **disposal 34.3** = 55.5, plus margins 5 % (2.8) and
+10 % (5.8) = **64.1 m/s required** vs 66.9 capability (**+4.4 %**; +2.6 %
+against the 65.8 m/s obtained by integrating the blowdown Isp curve). The
+propellant and the tank close without change: the disposal uses ~0.21 kg of the
+0.400 kg load. The remaining envelope (`prop.dv_remaining`, 0x0B0C) is a
+**collision-avoidance and disposal reserve**: keep at least 38 m/s for the
+disposal burn; below ~1 m/s above that reserve the spacecraft has effectively
+lost its CAM capability and the conjunction posture changes.
 
 Typical burns: CAM 0.20 m/s ≈ 7.5 s; fortnightly drag make-up 0.85 m/s ≈
 32 s (BOL); all fit inside a pass. A 1.0 m/s prograde burn raises SMA
@@ -104,7 +116,8 @@ budget.
   envelope. **S19:** ea_id 8001–8006.
 - **Procedures:** **NOM-004** (planning, takes the reserved index gap),
   **NOM-013** (execution; the book's NOM-005 — sim NOM-005 was already HK
-  Configuration), **CTG-028** (anomaly; the book's CTG-006 — sim CTG-006 was
+  Configuration), **NOM-014** (end-of-life disposal: perigee lowering and
+  passivation), **CTG-028** (anomaly; the book's CTG-006 — sim CTG-006 was
   already Payload Anomaly; and "SID 5/propulsion" is SID 9 here). OBCP 4
   (`obcp/04_orbit_manoeuvre.yaml`) is the on-board timed sequence. Planner
   activity `orbit_manoeuvre`.
@@ -115,7 +128,9 @@ budget.
 ## Model limitations (taught, not simulated)
 
 One thruster, one axis — no TVC, no thruster desaturation (NOM-007 stays
-magnetorquer-only). No propulsive disposal, plane changes, orbit raising,
+magnetorquer-only). The disposal burn is flown as ordinary retrograde burns;
+the decay and re-entry that follow are not simulated, and there is no
+pressurant venting at passivation. No plane changes, orbit raising,
 phasing, rendezvous, closed-loop orbit control, or real conjunction
 screening (CAM is a scripted scenario input). No combustion/feed transients,
 non-isothermal blowdown, slosh/CG migration, or inertia-tensor coupling

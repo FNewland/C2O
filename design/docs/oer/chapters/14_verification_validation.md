@@ -16,7 +16,7 @@ By the end of this chapter, you will be able to:
 
 ## 14.1 Verification versus validation: precise definitions
 
-*[Source: ECSS-E-ST-10-02C Rev. 1 §4; NASA SEH Rev 2 §5.3 (Process 7: Product Verification) and §5.4 (Process 8: Product Validation)]*
+*[Source: ECSS-E-ST-10-02C Rev. 1 §4 and §5.2.2; NASA SEH Rev 2 §5.3 (Process 7: Product Verification) and §5.4 (Process 8: Product Validation)]*
 
 | | **Verification** | **Validation** |
 |--|-----------------|----------------|
@@ -47,9 +47,9 @@ A system can be **verified** (every requirement marked "pass") but still **fail 
 
 ## 14.2 The ATIR(D) verification methods in detail
 
-ECSS-E-ST-10-02C Rev. 1 §5.3 defines four verification methods — **test, analysis, review of design and inspection** — and NASA practice adds **demonstration** as a fifth. This book abbreviates the set as **ATIR(D)**, with the D in parentheses because ECSS folds demonstration into test. The ordering of the letters varies between documents; the methods are the same. Chapter 5 §5.5 introduced the five-row table; this section explains when each applies and what evidence it produces.
+ECSS-E-ST-10-02C Rev. 1 §5.2.2.1 defines four verification methods — **test, analysis, review of design and inspection** — and NASA practice adds **demonstration** as a fifth. This book abbreviates the set as **ATIR(D)**, with the D in parentheses because ECSS counts demonstration as part of test ("test (including demonstration)") while NASA lists it separately. The ordering of the letters varies between documents; the methods are the same. Chapter 5 §5.5 introduced the five-row table; this section explains when each applies and what evidence it produces.
 
-*[Source: ECSS-E-ST-10-02C Rev. 1 §5.3; NASA SEH Rev 2 §5.3.2]*
+*[Source: ECSS-E-ST-10-02C Rev. 1 §5.2.2; NASA SEH Rev 2 §5.3.2]*
 
 ### 14.2.1 Analysis (A)
 
@@ -97,7 +97,7 @@ ECSS-E-ST-10-02C Rev. 1 §5.3 defines four verification methods — **test, anal
 
 **The proto-flight approach.** For CubeSats, the **proto-flight** approach is standard because building a separate qualification unit is prohibitively expensive. The flight unit is tested to **qualification levels** but for **acceptance duration**.
 
-*[Source: ECSS-E-ST-10-03C §5.4.2.3; MIL-STD-1540E §6.2.4]*
+*[Source: ECSS-E-ST-10-03C §4.5.4; MIL-STD-1540E §6.2.4]*
 
 **Rationale:** Qualification duration is longer and more stressful — this is acceptable for a dedicated qualification model that will not fly. For proto-flight, the shorter duration reduces fatigue-life consumption while still screening for workmanship defects.
 
@@ -106,7 +106,10 @@ ECSS-E-ST-10-02C Rev. 1 §5.3 defines four verification methods — **test, anal
 | Vibration level | MPE + 3 dB | MPE | MPE + 3 dB |
 | Vibration duration | 2 min/axis | 1 min/axis | 1 min/axis |
 | TVAC temperature range | Predicted ± 15 °C | Predicted ± 10 °C | Predicted ± 10 °C |
-| TVAC cycles | 8 | 4 | 4–8 |
+| TVAC cycles | 8 | 4 | 4 |
+| Sine sweep rate | 2 oct/min | 4 oct/min | 4 oct/min |
+
+The proto-flight levels follow the standards. GSFC-STD-7000B §2.6 tests a proto-flight unit at the maximum and minimum predicted temperatures ± 10 °C, with at least 4 cycles; ECSS-E-ST-10-03C reaches the same 10 °C with its 5 °C acceptance and 5 °C qualification margins on the predicted range. ECSS-E-ST-10-03C sweeps sine at 2 oct/min for qualification (Table 5-2) and 4 oct/min for acceptance (Table 5-4), and proto-flight takes the acceptance duration, hence 4 oct/min. The qualification and acceptance temperature columns are those of Chapter 9 §9.4.11.
 
 ### 14.2.3 Inspection (I)
 
@@ -165,7 +168,7 @@ ECSS-E-ST-10-02C Rev. 1 §5.3 defines four verification methods — **test, anal
 
 ### 14.3.1 Standard environmental test sequence
 
-The test sequence is designed so that each test stresses the hardware in a specific way, and functional tests between environmental tests detect any damage. Figure 14.1 shows the usual sequence for a proto-flight CubeSat.
+The test sequence is designed so that each test stresses the hardware in a specific way, and functional tests between environmental tests detect any damage. Figure 14.1 shows the usual sequence for a proto-flight CubeSat. The levels in §14.3.2–14.3.4 are representative teaching values: the binding levels for a given flight are set by the deployer or launch-vehicle user's guide.
 
 ![Environmental test flow for a proto-flight CubeSat](../assets/figures/fig_test_flow.png)
 
@@ -173,38 +176,40 @@ The test sequence is designed so that each test stresses the hardware in a speci
 
 ### 14.3.2 Sine vibration test levels
 
-*[Source: typical Falcon 9 Transporter rideshare payload user's guide]*
+*[Source: representative CubeSat rideshare envelope; the deployer or launch-vehicle user's guide sets the binding levels]*
 
 Sine vibration simulates the low-frequency launch-vehicle structural modes (typically 5–100 Hz). These are quasi-static loads.
 
 | Frequency range (Hz) | Level | Notes |
 |----------------------|-------|-------|
-| 5–8 | 12.5 mm displacement (0–peak) | Displacement-controlled |
-| 8–100 | 1.25 g (0–peak) | Acceleration-controlled |
-| Sweep rate | 2 octaves/minute | Standard sweep rate |
+| 5–100 | 1.25 g (0–peak) | Acceleration-controlled over the whole band; no displacement band |
+| Sweep rate | 4 octaves/minute (proto-flight) | 2 oct/min is the qualification rate |
 | Axes | 3 (X, Y, Z) | Sequential, one axis at a time |
 
-> **Sine vibration acceleration at the crossover frequency:**
+> **Why there is no displacement band — the crossover frequency:**
 >
-> $$a = (2\pi f)^2\, d$$
+> For a sinusoid, $a = (2\pi f)^2\, d$, so the frequency at which a given acceleration corresponds to a given displacement is
 >
-> At $f = 8$ Hz, $d = 12.5$ mm $= 0.0125$ m:
-> $a = (2\pi \times 8)^2 \times 0.0125 = (50.27)^2 \times 0.0125 = 2527 \times 0.0125 = 31.6$ m/s$^2 = 3.22$ g
+> $$f_c = \frac{1}{2\pi}\sqrt{\frac{a}{d}}$$
 >
-> *Note: the transition from displacement to acceleration control occurs where the displacement limit would exceed the acceleration limit. The actual crossover depends on the specific profile; in the profile above the controller limits the 8 Hz level to 1.25 g, so the displacement line governs only below the frequency at which $(2\pi f)^2 d = 1.25\,g_0$, i.e. about 5 Hz.*
+> For $a = 1.25\,g_0 = 12.26$ m/s$^2$ and a typical shaker stroke limit $d = 12.5$ mm $= 0.0125$ m:
+> $f_c = \sqrt{12.26/0.0125}\,/\,2\pi = 31.3/6.283 = 4.98$ Hz $\approx 5$ Hz
+>
+> *Below about 5 Hz, holding 1.25 g would need more than 12.5 mm of displacement, so a profile reaching lower frequencies needs a displacement-controlled band. This profile starts at 5 Hz, so it is acceleration-controlled throughout.*
 
 ### 14.3.3 Random vibration test levels
 
-Random vibration simulates the broadband acoustic and mechanical environment during launch. Levels are specified as power spectral density (PSD) in g$^2$/Hz.
+Random vibration simulates the broadband acoustic and mechanical environment during launch. Levels are specified as power spectral density (PSD) in g$^2$/Hz. The profile below is the GSFC-STD-7000B (GEVS) component minimum workmanship level (Table 2.4-4); GEVS Table 2.4-1 sets the proto-flight level at +3 dB for 1 minute per axis.
 
 | Frequency (Hz) | PSD level (g$^2$/Hz) | Notes |
 |----------------|---------------------|-------|
 | 20 | 0.01 | Start of profile |
-| 20–50 | +3 dB/octave ramp | Rising |
-| 50–800 | 0.04 (flat) | Maximum-level plateau |
-| 800–2000 | −6 dB/octave ramp | Falling |
-| 2000 | 0.004 | End of profile |
-| **Overall g$_{\text{rms}}$** | **~7.0 g$_{\text{rms}}$** | Qualification level |
+| 20–80 | +3 dB/octave ramp | Rising |
+| 80–500 | 0.04 (flat) | Maximum-level plateau |
+| 500–2000 | −3 dB/octave ramp | Falling |
+| 2000 | 0.01 | End of profile |
+| **Overall g$_{\text{rms}}$** | **6.8 g$_{\text{rms}}$** | Workmanship (acceptance) level |
+| **Proto-flight** | **+3 dB: 9.6 g$_{\text{rms}}$** | PSD doubled at every frequency; 1 min per axis, 3 axes |
 
 > **Computing the overall g$_{\text{rms}}$ from a PSD profile:**
 >
@@ -212,12 +217,12 @@ Random vibration simulates the broadband acoustic and mechanical environment dur
 >
 > For a flat PSD region: $g_{\text{rms,flat}} = \sqrt{\text{PSD}_{\text{flat}} \times (f_2 - f_1)}$
 >
-> Example: PSD = 0.04 g$^2$/Hz from 50–800 Hz:
-> $g_{\text{rms,flat}} = \sqrt{0.04 \times 750} = \sqrt{30} = 5.48$ g$_{\text{rms}}$
+> Example: PSD = 0.04 g$^2$/Hz from 80–500 Hz:
+> $g_{\text{rms,flat}} = \sqrt{0.04 \times 420} = \sqrt{16.8} = 4.10$ g$_{\text{rms}}$
 >
 > The ramp sections and the flat section are summed in quadrature:
 > $$g_{\text{rms,total}} = \sqrt{g_{\text{rms,ramp1}}^2 + g_{\text{rms,flat}}^2 + g_{\text{rms,ramp2}}^2}$$
-> With the rising ramp contributing about 0.9 g$_{\text{rms}}$ and the falling ramp about 4.2 g$_{\text{rms}}$ (the integral of a sloped segment is evaluated in log–log form, or approximated by its mean level times its bandwidth), $g_{\text{rms,total}} \approx \sqrt{0.8 + 30 + 18} \approx 7.0$ g$_{\text{rms}}$.
+> A sloped segment is a straight line in log–log axes, $\text{PSD}(f) = P_1 (f/f_1)^n$ with $n = (\text{dB/oct})/3.01$, and integrates exactly to $\frac{P_1 f_1}{n+1}\left[(f_2/f_1)^{n+1} - 1\right]$ (or $P_1 f_1 \ln(f_2/f_1)$ when $n = -1$). The rising ramp ($n = +1$) gives $\frac{0.01 \times 20}{2}(4^2 - 1) = 1.50$ g$^2$, i.e. 1.22 g$_{\text{rms}}$, and the falling ramp ($n = -1$) gives $0.04 \times 500 \times \ln 4 = 27.73$ g$^2$, i.e. 5.27 g$_{\text{rms}}$, so $g_{\text{rms,total}} = \sqrt{1.50 + 16.80 + 27.73} = \sqrt{46.03} = 6.78 \approx 6.8$ g$_{\text{rms}}$. At proto-flight (+3 dB, PSD × 2), $\sqrt{92.06} = 9.59 \approx 9.6$ g$_{\text{rms}}$.
 
 ### 14.3.4 Thermal vacuum test profile
 
@@ -225,20 +230,20 @@ Random vibration simulates the broadband acoustic and mechanical environment dur
 |-----------|-------------------|-------|
 | Hot-case temperature | Predicted max + 10 °C | e.g. if the thermal model predicts +55 °C → test to +65 °C |
 | Cold-case temperature | Predicted min − 10 °C | e.g. if the thermal model predicts −20 °C → test to −30 °C |
-| Number of cycles | 4 minimum (proto-flight) | Start and end at hot; functional test at each extreme |
+| Number of cycles | 4 (proto-flight) | Start and end at hot; functional test at each extreme |
 | Vacuum level | < 10$^{-5}$ mbar | Space-representative vacuum |
 | Dwell time at extreme | ≥ 1 hour | Allow thermal stabilisation (< 1 °C/h gradient) |
 | Temperature transition rate | 1–3 °C/min | Limited by chamber capability |
 | Functional test | Full performance at hot and cold extremes | Subset functional at intermediate transitions |
 
-The ± 10 °C proto-flight band is the acceptance margin of the ECSS thermal-margin schedule in Chapter 9 §9.4.11; the predicted extremes come from the hot and cold cases of the thermal analysis.
+The ± 10 °C proto-flight band is the GSFC-STD-7000B §2.6 proto-flight margin (§14.2.2); the predicted extremes come from the hot and cold cases of the thermal analysis.
 
 > **TVAC cycle duration estimate:**
 >
 > $$t_{\text{cycle}} = 2\,\frac{\Delta T}{\dot{T}_{\text{ramp}}} + 2\, t_{\text{dwell}} + 2\, t_{\text{functional}}$$
 >
 > Example: $\Delta T = 95$ °C (from −30 to +65 °C), ramp = 2 °C/min, dwell = 1 h, functional test = 2 h:
-> $t_{\text{cycle}} = 2 \times (95/2) + 2 \times 60 + 2 \times 120 = 95 + 120 + 240 = 455$ min $= 7.6$ h
+> $t_{\text{cycle}} = 2 \times (95/2) + 2 \times 60 + 2 \times 120 = 95 + 120 + 240 = 455$ min $\approx 7.6$ h
 >
 > Total TVAC campaign (4 cycles + set-up): $\approx 4 \times 7.6 + 8 = 38.4$ h $\approx$ 5 working days of continuous chamber operation.
 
@@ -268,7 +273,7 @@ The verification matrix (also called the compliance matrix or verification cross
 | Req ID | Requirement text | Method | Phase | Level | Responsible | Facility | Status | Evidence |
 |--------|-----------------|--------|-------|-------|-------------|----------|--------|----------|
 | SYS-001 | $M_{\text{dry}} \leq 4.0$ kg | I | D | System | Structures | Clean room | Planned | Mass measurement report |
-| SYS-002 | Survive 7 g$_{\text{rms}}$ random vibration | T | C/D | System | Structures | Vibration laboratory | Planned | Vibration test report |
+| SYS-002 | Survive 9.6 g$_{\text{rms}}$ random vibration (proto-flight) | T | C/D | System | Structures | Vibration laboratory | Planned | Vibration test report |
 | SYS-003 | GSD ≤ 10 m at 500 km | A | B | System | Payload | N/A | Planned | Optical analysis report |
 | SYS-004 | Link margin ≥ 3 dB | A | B | System | Comms | N/A | Planned | Link-budget analysis |
 | SYS-005 | Antenna deploys < 30 min | D | D | System | Mechanisms | Clean room | Planned | Deployment demonstration |
@@ -330,7 +335,7 @@ The requirements below are drawn from the UniSat-1 examples of Chapters 5, 9, 11
 | US-SYS-001 | Wet mass ≤ 1.33 kg (deployer limit) | I | D | System | Calibrated-scale measurement |
 | US-SYS-002 | Conform to CDS Rev 14 1U envelope and rail profile | I | D | System | Calliper and profile-gauge report; deployer fit check |
 | US-STR-001 | First structural mode > 90 Hz | A, confirmed by T | B / C | System | Modal analysis; low-level sine survey before random vibration |
-| US-STR-002 | Survive 7 g$_{\text{rms}}$ random vibration without degradation | T | C/D | System | Pre/post functional comparison, vibration test report |
+| US-STR-002 | Survive 9.6 g$_{\text{rms}}$ (proto-flight) random vibration without degradation | T | C/D | System | Pre/post functional comparison, vibration test report |
 | US-EPS-001 | Two deployment switches and an RBF pin inhibit all power | R, confirmed by D | B / D | System | Schematic review; inhibit demonstration with switches depressed |
 | US-COM-001 | Downlink margin ≥ 3 dB at 10° elevation | A | B | System | Link budget (Chapter 11 §11.8.2) |
 | US-COM-002 | Antenna deploys within 30 min of separation-switch release | D | D | System | Timed deployment demonstration (3 repetitions) |
@@ -349,9 +354,9 @@ Two features of this table are worth noting. First, the only requirements that n
 | V versus V | Verification = meets requirements (ATIR(D)); validation = meets stakeholder needs |
 | ATIR(D) | Analysis (models and similarity), test (quantitative), inspection (physical), review of design (documents and drawings), demonstration (functional) |
 | Proto-flight | CubeSats: a single flight unit tested to qualification levels for acceptance duration |
-| Sine vibration | 5–100 Hz, 1.25 g, quasi-static launch loads; $a = (2\pi f)^2 d$ at the displacement/acceleration crossover |
-| Random vibration | 20–2000 Hz, ~7 g$_{\text{rms}}$ overall ($g_{\text{rms}} = \sqrt{\int \text{PSD}\, df}$), broadband acoustic environment |
-| TVAC | Predicted extremes ± 10 °C, 4+ cycles, functional at each extreme; ~7.6 h per cycle |
+| Sine vibration | 5–100 Hz, 1.25 g, 4 oct/min for proto-flight (2 oct/min for qualification), 3 axes, no displacement band (crossover $f_c = \sqrt{a/d}/2\pi \approx 5$ Hz at 12.5 mm); quasi-static launch loads |
+| Random vibration | 20–2000 Hz, GEVS workmanship 6.8 g$_{\text{rms}}$ ($g_{\text{rms}} = \sqrt{\int \text{PSD}\, df}$); proto-flight +3 dB, about 9.6 g$_{\text{rms}}$, 1 min per axis |
+| TVAC | Proto-flight at predicted ± 10 °C (GSFC-STD-7000B / ECSS-E-ST-10-03C), 4 cycles, functional at each extreme; ~7.6 h per cycle |
 | Compliance matrix | Per requirement: method + phase + level + responsible + facility + status + evidence |
 | Waivers | Document the deviation, justification, risk and compensating measures |
 
@@ -367,7 +372,7 @@ Two features of this table are worth noting. First, the only requirements that n
 
 4. **Sine profile.** A launch provider specifies 10 mm (0–peak) displacement from 4 Hz and 2.0 g (0–peak) up to 100 Hz. Compute the crossover frequency at which the two limits coincide, and the acceleration the test article would see at 4 Hz if the displacement limit were applied there. Explain why the controller must switch from displacement to acceleration control.
 
-5. **Random vibration g$_{\text{rms}}$.** A deployer specifies a random profile of 0.02 g$^2$/Hz flat from 20 to 1000 Hz, falling at −6 dB/octave to 2000 Hz. Compute the flat-section g$_{\text{rms}}$ and, treating the falling ramp as a straight line in linear PSD, estimate its contribution and the overall g$_{\text{rms}}$. Is the level above or below the ~7 g$_{\text{rms}}$ profile of §14.3.3?
+5. **Random vibration g$_{\text{rms}}$.** A deployer specifies a random profile of 0.02 g$^2$/Hz flat from 20 to 1000 Hz, falling at −6 dB/octave to 2000 Hz. Compute the flat-section g$_{\text{rms}}$ and, treating the falling ramp as a straight line in linear PSD, estimate its contribution and the overall g$_{\text{rms}}$. Is the level above or below the 6.8 g$_{\text{rms}}$ workmanship profile of §14.3.3?
 
 6. **TVAC planning.** The EOSat-3U thermal analysis (Chapter 9 §9.4) predicts −15 °C to +50 °C at the battery. State the proto-flight test temperatures, then compute the cycle duration for a 1.5 °C/min chamber, 1 h dwells and 90-minute functional tests, and the total campaign duration for six cycles plus 8 h of set-up. If the chamber costs 2 kEUR per day (indicative), what does the campaign cost, and how does this compare with the UniSat-1 integration-and-test budget of Chapter 13 §13.6?
 

@@ -9,359 +9,359 @@
   },
   {
    "id": "commissioning-contingency-procedures",
-   "en_hash": "e0061b80ce312241",
-   "fr_hash": "ade2935b603af8c7"
+   "en_hash": "b0dc40e62bb87199",
+   "fr_hash": "56b2d4d5e3faf3f3"
   },
   {
    "id": "commissioning-contingency-procedures/overview",
-   "en_hash": "90a9c70614266333",
-   "fr_hash": "7b3430718af8b440"
+   "en_hash": "d3645521846362b4",
+   "fr_hash": "75d9188ed03a37a2"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-0-first-contact-pass-1",
-   "en_hash": "42cf89965d908783",
-   "fr_hash": "cae5ac02f21ff29c"
+   "id": "commissioning-contingency-procedures/phase-0--first-contact-pass-1",
+   "en_hash": "01cc8884decdab7f",
+   "fr_hash": "3c03c5cfa228a582"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-0-first-contact-pass-1/failure-no-telemetry-received",
-   "en_hash": "8ebd14d25478b58a",
-   "fr_hash": "78c8ff289e3721f5"
+   "id": "commissioning-contingency-procedures/phase-0--first-contact-pass-1/failure-no-telemetry-received",
+   "en_hash": "c9ff39e4e9d156bf",
+   "fr_hash": "b9005a030a12c93b"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-0-first-contact-pass-1/failure-telemetry-received-but-ttc-link-won-t-lock",
-   "en_hash": "ad69c1a6e1cb0cea",
-   "fr_hash": "38c811fa6aff44c0"
+   "id": "commissioning-contingency-procedures/phase-0--first-contact-pass-1/failure-telemetry-received-but-ttc-link-wont-lock",
+   "en_hash": "ad3508c4b542f0ee",
+   "fr_hash": "4dfe5351423a9a44"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-0-first-contact-pass-1/failure-obc-in-unexpected-state-not-bootloader",
-   "en_hash": "f75bdb9b078b768f",
-   "fr_hash": "e10a8eb3a21c0d62"
+   "id": "commissioning-contingency-procedures/phase-0--first-contact-pass-1/failure-obc-in-unexpected-state-not-bootloader",
+   "en_hash": "e6cf8b0f6ea3ef87",
+   "fr_hash": "05f890a3572f4103"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-1-spacecraft-activation",
-   "en_hash": "3152bbd0688bb3b3",
-   "fr_hash": "65be9c921910bfa2"
+   "id": "commissioning-contingency-procedures/phase-1--spacecraft-activation",
+   "en_hash": "63d64786b450fbcd",
+   "fr_hash": "fcf19bd2e1c4b7a0"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-1-spacecraft-activation/failure-command-uplinking-fails",
-   "en_hash": "bbee524ded658ccd",
-   "fr_hash": "fcb35d17dc675bc9"
+   "id": "commissioning-contingency-procedures/phase-1--spacecraft-activation/failure-command-uplinking-fails",
+   "en_hash": "27bb0b3268d63d14",
+   "fr_hash": "c1bebdd59b161835"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-1-spacecraft-activation/failure-spacecraft-battery-not-responding-to-commands",
-   "en_hash": "b1e0d9c8696d8002",
-   "fr_hash": "4b9f5e9c51be9974"
+   "id": "commissioning-contingency-procedures/phase-1--spacecraft-activation/failure-spacecraft-battery-not-responding-to-commands",
+   "en_hash": "baa4dff449773a50",
+   "fr_hash": "8d92215a265db03d"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-2-antenna-deployment",
-   "en_hash": "e15f171323baa18d",
-   "fr_hash": "71cd6807c49a8de3"
+   "id": "commissioning-contingency-procedures/phase-2--antenna-deployment",
+   "en_hash": "53c55e79e68e537c",
+   "fr_hash": "9a58f4a06a19f9c2"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-2-antenna-deployment/failure-antenna-deployment-command-acknowledged-but-no-physical-deployment",
-   "en_hash": "0d2c5f03cb18f370",
-   "fr_hash": "219652e9eaca98a8"
+   "id": "commissioning-contingency-procedures/phase-2--antenna-deployment/failure-antenna-deployment-command-acknowledged-but-no-physical-deployment",
+   "en_hash": "e7bfbaabbe2e2588",
+   "fr_hash": "ccde9c932499a545"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-2-antenna-deployment/failure-antenna-deploys-but-link-quality-doesn-t-improve",
-   "en_hash": "0fe8afdd64360e21",
-   "fr_hash": "358522abd42c5181"
+   "id": "commissioning-contingency-procedures/phase-2--antenna-deployment/failure-antenna-deploys-but-link-quality-doesnt-improve",
+   "en_hash": "58f50973996dd2b1",
+   "fr_hash": "1e7d9da67af215a8"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-3-obc-boot",
-   "en_hash": "994a6dbccca9e765",
-   "fr_hash": "408b2ea5827dd408"
+   "id": "commissioning-contingency-procedures/phase-3--obc-boot",
+   "en_hash": "52d8b3528ce154a9",
+   "fr_hash": "6e5086a5d4698b89"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-3-obc-boot/failure-obc-remains-in-bootloader-after-boot-command",
-   "en_hash": "6c3472bfcc6be9e2",
-   "fr_hash": "d1d0e826d933b420"
+   "id": "commissioning-contingency-procedures/phase-3--obc-boot/failure-obc-remains-in-bootloader-after-boot-command",
+   "en_hash": "834a850f4ee88659",
+   "fr_hash": "ac8140c27d16ec6b"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-3-obc-boot/failure-obc-boots-successfully-but-reboots-within-minutes",
-   "en_hash": "bdbb0a03d444f4be",
-   "fr_hash": "272bc16f1f81ee0c"
+   "id": "commissioning-contingency-procedures/phase-3--obc-boot/failure-obc-boots-successfully-but-reboots-within-minutes",
+   "en_hash": "97e8b5060906844b",
+   "fr_hash": "9b7e5be5052447bc"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-3-obc-boot/failure-memory-segment-failure-detected-during-boot",
-   "en_hash": "7f47963714e4c477",
-   "fr_hash": "6171e5479fb92999"
+   "id": "commissioning-contingency-procedures/phase-3--obc-boot/failure-memory-segment-failure-detected-during-boot",
+   "en_hash": "46ec9f4b62e28a3e",
+   "fr_hash": "bfe9f38ec544301a"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-4-health-check",
-   "en_hash": "fd683f84596d7b1b",
-   "fr_hash": "44445b217a9d0117"
+   "id": "commissioning-contingency-procedures/phase-4--health-check",
+   "en_hash": "ddc0a55f76aaf245",
+   "fr_hash": "9d2523cc4ee2b6da"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-4-health-check/failure-battery-voltage-below-minimum-threshold",
-   "en_hash": "9f6f66e34b7439cd",
-   "fr_hash": "8d0bac6697afa925"
+   "id": "commissioning-contingency-procedures/phase-4--health-check/failure-battery-voltage-below-minimum-threshold",
+   "en_hash": "7839ccec44378647",
+   "fr_hash": "450bdf87395216e0"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-4-health-check/failure-battery-cell-failure-or-imbalance-detected",
-   "en_hash": "e39c858b57e75e73",
-   "fr_hash": "bf501a051d89eec5"
+   "id": "commissioning-contingency-procedures/phase-4--health-check/failure-battery-cell-failure-or-imbalance-detected",
+   "en_hash": "415557438b5f2ed3",
+   "fr_hash": "b32f2dc50dad20a3"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-4-health-check/failure-bus-voltage-out-of-range",
-   "en_hash": "8171d11a4d205840",
-   "fr_hash": "0c49b8fb2b50e6bd"
+   "id": "commissioning-contingency-procedures/phase-4--health-check/failure-bus-voltage-out-of-range",
+   "en_hash": "b69a388afec4deff",
+   "fr_hash": "a15c3eb50051da98"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-4-health-check/failure-temperature-out-of-range-subsystem",
-   "en_hash": "656a46203e1ba8f4",
-   "fr_hash": "f82d3bd0b895792c"
+   "id": "commissioning-contingency-procedures/phase-4--health-check/failure-temperature-out-of-range-subsystem",
+   "en_hash": "a6d0640aeb0d2e1d",
+   "fr_hash": "b9d015197e7fd618"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-5-tm-buffering-configuration",
-   "en_hash": "b4c567f035359458",
-   "fr_hash": "f5af9956198b1bd6"
+   "id": "commissioning-contingency-procedures/phase-5--tm-buffering-configuration",
+   "en_hash": "60e32e20ac3f552f",
+   "fr_hash": "c07ae355ba8146c4"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-5-tm-buffering-configuration/failure-housekeeping-not-flowing-after-enable-command",
-   "en_hash": "8cd8e458d9a9bfd8",
-   "fr_hash": "f5e261aaf99422f5"
+   "id": "commissioning-contingency-procedures/phase-5--tm-buffering-configuration/failure-housekeeping-not-flowing-after-enable-command",
+   "en_hash": "297b067cf696afbf",
+   "fr_hash": "cddb4e2a6cbdaa3b"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-5-tm-buffering-configuration/failure-buffer-fill-anomaly-or-excessive-buffer-usage",
-   "en_hash": "d4c4f1b2b2f00a5a",
-   "fr_hash": "079742542a7eaa2b"
+   "id": "commissioning-contingency-procedures/phase-5--tm-buffering-configuration/failure-buffer-fill-anomaly-or-excessive-buffer-usage",
+   "en_hash": "3685b42188919cc0",
+   "fr_hash": "f68c4d11977be6f8"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-6-set-time",
-   "en_hash": "2a1eab530fe25a65",
-   "fr_hash": "d8286abab723e5b1"
+   "id": "commissioning-contingency-procedures/phase-6--set-time",
+   "en_hash": "062317e7651d354e",
+   "fr_hash": "d2c863249b32625a"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-6-set-time/failure-time-set-command-rejected",
-   "en_hash": "a4444b84208eb609",
-   "fr_hash": "3b1c2dac57cb654a"
+   "id": "commissioning-contingency-procedures/phase-6--set-time/failure-time-set-command-rejected",
+   "en_hash": "8c59691570220dd4",
+   "fr_hash": "9ed29c8a746c201e"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-6-set-time/failure-time-sync-with-gps-causes-aocs-disruption",
-   "en_hash": "d6f6b0ae2db6eb59",
-   "fr_hash": "f8f69e62cbcc24aa"
+   "id": "commissioning-contingency-procedures/phase-6--set-time/failure-time-sync-with-gps-causes-aocs-disruption",
+   "en_hash": "9b44ca2dacf2f5d1",
+   "fr_hash": "749ff26ca54e7b57"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-7-power-on-subsystems",
-   "en_hash": "fc9412ac65211528",
-   "fr_hash": "10e3ac518f866f24"
+   "id": "commissioning-contingency-procedures/phase-7--power-on-subsystems",
+   "en_hash": "810c8b60e58bcf24",
+   "fr_hash": "381cdd9bbc9a33d5"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-7-power-on-subsystems/failure-power-line-won-t-switch-despite-command",
-   "en_hash": "e608458cf5c319ab",
-   "fr_hash": "c68bd78030bba125"
+   "id": "commissioning-contingency-procedures/phase-7--power-on-subsystems/failure-power-line-wont-switch-despite-command",
+   "en_hash": "fcb9ac0bc21e2552",
+   "fr_hash": "cb99caaeb6c34f52"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-7-power-on-subsystems/failure-overcurrent-trip-on-power-line",
-   "en_hash": "7023e6a0d27f8a76",
-   "fr_hash": "c8234490ffa776b5"
+   "id": "commissioning-contingency-procedures/phase-7--power-on-subsystems/failure-overcurrent-trip-on-power-line",
+   "en_hash": "8311b5c34076d065",
+   "fr_hash": "2da014f87e0df1fb"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-7-power-on-subsystems/failure-solar-array-issues-underperforming-or-intermittent",
-   "en_hash": "11236c1b3ee04e14",
-   "fr_hash": "00c09120a65dc9cf"
+   "id": "commissioning-contingency-procedures/phase-7--power-on-subsystems/failure-solar-array-issues-underperforming-or-intermittent",
+   "en_hash": "3bf65d4604087ffe",
+   "fr_hash": "783c24f469676879"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-7-power-on-subsystems/failure-eps-enters-safe-mode-unexpectedly",
-   "en_hash": "f57a4bce0169717c",
-   "fr_hash": "03dd4d0f5ffbf3d3"
+   "id": "commissioning-contingency-procedures/phase-7--power-on-subsystems/failure-eps-enters-safe-mode-unexpectedly",
+   "en_hash": "89bd8a8f02544523",
+   "fr_hash": "8e1f0b292bd6f28a"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-7-power-on-subsystems/failure-aocs-won-t-enter-detumble-mode",
-   "en_hash": "2bfa7b61da01b0d4",
-   "fr_hash": "fb6b179e9c50c620"
+   "id": "commissioning-contingency-procedures/phase-7--power-on-subsystems/failure-aocs-wont-enter-detumble-mode",
+   "en_hash": "67cadc753f540a8e",
+   "fr_hash": "720671723e50da53"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-7-power-on-subsystems/failure-reaction-wheel-stuck-or-unresponsive",
-   "en_hash": "58f91afd70b1c82a",
-   "fr_hash": "4effbf3e4e0f5515"
+   "id": "commissioning-contingency-procedures/phase-7--power-on-subsystems/failure-reaction-wheel-stuck-or-unresponsive",
+   "en_hash": "5fdf141ea0e84fd1",
+   "fr_hash": "6ac022fad86ac4ec"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-8-tle-upload-and-orbit-propagation",
-   "en_hash": "5ef59624fc963c26",
-   "fr_hash": "65e4dedeb4aa45e0"
+   "id": "commissioning-contingency-procedures/phase-8--tle-upload-and-orbit-propagation",
+   "en_hash": "b23e251c2a5fdf36",
+   "fr_hash": "6c3faf9698044c88"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-8-tle-upload-and-orbit-propagation/failure-orbit-state-does-not-propagate-correctly",
-   "en_hash": "92b747e913694522",
-   "fr_hash": "4c42e3efc8a543b6"
+   "id": "commissioning-contingency-procedures/phase-8--tle-upload-and-orbit-propagation/failure-orbit-state-does-not-propagate-correctly",
+   "en_hash": "f291d86255e887aa",
+   "fr_hash": "cb765f9b91a56004"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-9-aocs-mode-progression-detumble-nadir-sun-point",
-   "en_hash": "ec0b9079556b6dc8",
-   "fr_hash": "f9e1a69a220d90c6"
+   "id": "commissioning-contingency-procedures/phase-9--aocs-mode-progression-detumble--nadir--sun-point",
+   "en_hash": "9e232e706a0fb60f",
+   "fr_hash": "77a4cc1c5ca18518"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-9-aocs-mode-progression-detumble-nadir-sun-point/failure-attitude-rates-not-damping-during-detumble",
-   "en_hash": "c1fd0d151a09fb39",
-   "fr_hash": "63a026a14123ac8e"
+   "id": "commissioning-contingency-procedures/phase-9--aocs-mode-progression-detumble--nadir--sun-point/failure-attitude-rates-not-damping-during-detumble",
+   "en_hash": "084d021dcaf8ee29",
+   "fr_hash": "0ffb3c14e322db6f"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-9-aocs-mode-progression-detumble-nadir-sun-point/failure-sensor-loss-during-mode-transition",
-   "en_hash": "eec1ae8b5fb1b811",
-   "fr_hash": "142b94c18b42b32d"
+   "id": "commissioning-contingency-procedures/phase-9--aocs-mode-progression-detumble--nadir--sun-point/failure-sensor-loss-during-mode-transition",
+   "en_hash": "bbbeebf5663812b0",
+   "fr_hash": "bfed020381e71ac2"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-9-aocs-mode-progression-detumble-nadir-sun-point/failure-aocs-mode-transition-fails-cannot-reach-sun-point-or-nadir",
-   "en_hash": "30d400d5bbb264f4",
-   "fr_hash": "908e622da20b1590"
+   "id": "commissioning-contingency-procedures/phase-9--aocs-mode-progression-detumble--nadir--sun-point/failure-aocs-mode-transition-fails-cannot-reach-sun-point-or-nadir",
+   "en_hash": "b51ebd8209d8fe41",
+   "fr_hash": "300af73ede8260e9"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-10-whole-orbit-verification",
-   "en_hash": "d0cbc930661f4380",
-   "fr_hash": "24b0dcf57c6f0fc0"
+   "id": "commissioning-contingency-procedures/phase-10--whole-orbit-verification",
+   "en_hash": "ee1338f40a1984e1",
+   "fr_hash": "66f258ba8316026c"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-10-whole-orbit-verification/failure-thermal-runaway-detected",
-   "en_hash": "272d0676fdfce083",
-   "fr_hash": "c9e6f1f7a917c1ff"
+   "id": "commissioning-contingency-procedures/phase-10--whole-orbit-verification/failure-thermal-runaway-detected",
+   "en_hash": "49b0ddd47c0f12e2",
+   "fr_hash": "f382086f140646d9"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-10-whole-orbit-verification/failure-total-power-failure",
-   "en_hash": "ce39086f330be9ef",
-   "fr_hash": "41d1644379393f7e"
+   "id": "commissioning-contingency-procedures/phase-10--whole-orbit-verification/failure-total-power-failure",
+   "en_hash": "1f27fbcde39d0f1e",
+   "fr_hash": "57d4579407cf89aa"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-10-whole-orbit-verification/failure-unexpected-safe-mode-triggered",
-   "en_hash": "a42476ca2eeb2285",
-   "fr_hash": "fcd59f56ca00c62d"
+   "id": "commissioning-contingency-procedures/phase-10--whole-orbit-verification/failure-unexpected-safe-mode-triggered",
+   "en_hash": "2906a5d05e16dbfc",
+   "fr_hash": "14bddd586aa8020c"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-11-gps-activation-and-time-recovery",
-   "en_hash": "47d771fcaa7e5309",
-   "fr_hash": "87234de0574dc17c"
+   "id": "commissioning-contingency-procedures/phase-11--gps-activation-and-time-recovery",
+   "en_hash": "61ae4b3f452b753f",
+   "fr_hash": "90ff6a2f98fd4861"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-11-gps-activation-and-time-recovery/failure-gps-won-t-acquire-lock",
-   "en_hash": "347369544a454137",
-   "fr_hash": "50b623296aa703c8"
+   "id": "commissioning-contingency-procedures/phase-11--gps-activation-and-time-recovery/failure-gps-wont-acquire-lock",
+   "en_hash": "68ed7e61582983c7",
+   "fr_hash": "bce623212888efe3"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-11-gps-activation-and-time-recovery/failure-gps-time-sync-causes-aocs-reset-or-anomaly",
-   "en_hash": "06d0ee3e4ed5d344",
-   "fr_hash": "96b99fbe91875e4f"
+   "id": "commissioning-contingency-procedures/phase-11--gps-activation-and-time-recovery/failure-gps-time-sync-causes-aocs-reset-or-anomaly",
+   "en_hash": "78dac4352e2cc0b9",
+   "fr_hash": "ff1414a3e20aae0f"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-12-star-tracker-checkout",
-   "en_hash": "aa777ad4be37a721",
-   "fr_hash": "fe8546f68ad89510"
+   "id": "commissioning-contingency-procedures/phase-12--star-tracker-checkout",
+   "en_hash": "bd844a4004042cd0",
+   "fr_hash": "e8eba3d1678d5d38"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-12-star-tracker-checkout/failure-star-tracker-stays-in-boot-state",
-   "en_hash": "1d8f38555980ac1e",
-   "fr_hash": "e008a2a64dd7af2b"
+   "id": "commissioning-contingency-procedures/phase-12--star-tracker-checkout/failure-star-tracker-stays-in-boot-state",
+   "en_hash": "f610df81c9b52030",
+   "fr_hash": "4906aa6abb6f609c"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-12-star-tracker-checkout/failure-star-tracker-blinded-no-stars-visible",
-   "en_hash": "926c15a4939e0fcc",
-   "fr_hash": "b188e8611d2a0956"
+   "id": "commissioning-contingency-procedures/phase-12--star-tracker-checkout/failure-star-tracker-blinded-no-stars-visible",
+   "en_hash": "1dfff2ab05f64cc5",
+   "fr_hash": "3528b0d68b04f529"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-12-star-tracker-checkout/failure-star-tracker-hardware-failure",
-   "en_hash": "a7d80a44c7d77e66",
-   "fr_hash": "dcb6e15b3f4065cd"
+   "id": "commissioning-contingency-procedures/phase-12--star-tracker-checkout/failure-star-tracker-hardware-failure",
+   "en_hash": "9e7e452e41b7a5bc",
+   "fr_hash": "0f4f72ebfe800a0b"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-12-star-tracker-checkout/failure-both-star-trackers-fail-or-unavailable",
-   "en_hash": "87c9a986734e81e2",
-   "fr_hash": "7bed5e8e4ed9191e"
+   "id": "commissioning-contingency-procedures/phase-12--star-tracker-checkout/failure-both-star-trackers-fail-or-unavailable",
+   "en_hash": "19597678ac2323ae",
+   "fr_hash": "e97a04f5b06fc3e5"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-13-redundancy-checkout",
-   "en_hash": "0cc9136bd14077bb",
-   "fr_hash": "c48d50f1f5822f61"
+   "id": "commissioning-contingency-procedures/phase-13--redundancy-checkout",
+   "en_hash": "7aa423e113cd90e0",
+   "fr_hash": "77a81476df4889e0"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-13-redundancy-checkout/failure-bus-switchover-fails",
-   "en_hash": "7639e846bda97da6",
-   "fr_hash": "4210fdd882d3464e"
+   "id": "commissioning-contingency-procedures/phase-13--redundancy-checkout/failure-bus-switchover-fails",
+   "en_hash": "94532bde6c8e5a00",
+   "fr_hash": "7d8527d6f31e1a67"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-13-redundancy-checkout/failure-redundant-transponder-communication-fails",
-   "en_hash": "ed5eaf896a9b979c",
-   "fr_hash": "ca28b5074d271031"
+   "id": "commissioning-contingency-procedures/phase-13--redundancy-checkout/failure-redundant-transponder-communication-fails",
+   "en_hash": "015906c3c3990a28",
+   "fr_hash": "a7f4bea26fcc53cb"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-13-redundancy-checkout/failure-loss-of-communication-during-redundancy-test",
-   "en_hash": "c3c82c7b562e914f",
-   "fr_hash": "c9b0220c4ad941e7"
+   "id": "commissioning-contingency-procedures/phase-13--redundancy-checkout/failure-loss-of-communication-during-redundancy-test",
+   "en_hash": "db3ca01f54d1575c",
+   "fr_hash": "0e011355c0fb4724"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-14-time-tagged-commands",
-   "en_hash": "8ab1f6215cf97b43",
-   "fr_hash": "529424d180c1a391"
+   "id": "commissioning-contingency-procedures/phase-14--time-tagged-commands",
+   "en_hash": "8fc672c73a70de78",
+   "fr_hash": "1ca021adf59c5889"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-14-time-tagged-commands/failure-scheduled-command-does-not-execute-at-designated-time",
-   "en_hash": "4603b5454cd6a6ff",
-   "fr_hash": "a8cd4029ac8dc955"
+   "id": "commissioning-contingency-procedures/phase-14--time-tagged-commands/failure-scheduled-command-does-not-execute-at-designated-time",
+   "en_hash": "b8ab8cc668faa54e",
+   "fr_hash": "e297fd59a585224b"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-14-time-tagged-commands/failure-bit-error-rate-anomaly-during-command-uplink",
-   "en_hash": "5ebed1a1e0376b64",
-   "fr_hash": "be4ccdf396148ac3"
+   "id": "commissioning-contingency-procedures/phase-14--time-tagged-commands/failure-bit-error-rate-anomaly-during-command-uplink",
+   "en_hash": "f0f5c1fc98303d1b",
+   "fr_hash": "d6dc9de3e7a79bfd"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-15-payload-commissioning",
-   "en_hash": "297aa6cd1f270a13",
-   "fr_hash": "68809e1bb14793ff"
+   "id": "commissioning-contingency-procedures/phase-15--payload-commissioning",
+   "en_hash": "00499af0f3665a81",
+   "fr_hash": "a878e7f2671c0c36"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-15-payload-commissioning/failure-payload-won-t-power-on",
-   "en_hash": "2c4bb8dc6b3e53a6",
-   "fr_hash": "d04745505dc5a368"
+   "id": "commissioning-contingency-procedures/phase-15--payload-commissioning/failure-payload-wont-power-on",
+   "en_hash": "0e29cabc5e0ff1fc",
+   "fr_hash": "6f8ab7ac164982bd"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-15-payload-commissioning/failure-focal-plane-array-fpa-won-t-cool",
-   "en_hash": "b907c910983ba68b",
-   "fr_hash": "535bf7810841e7c6"
+   "id": "commissioning-contingency-procedures/phase-15--payload-commissioning/failure-focal-plane-array-fpa-wont-cool",
+   "en_hash": "16ef4dde096bb9ae",
+   "fr_hash": "1384cf585c5a7176"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-15-payload-commissioning/failure-payload-anomaly-or-malfunction",
-   "en_hash": "8d6a17897bd983a0",
-   "fr_hash": "d9acca2cdf65ea98"
+   "id": "commissioning-contingency-procedures/phase-15--payload-commissioning/failure-payload-anomaly-or-malfunction",
+   "en_hash": "214c0b11ea5d1b46",
+   "fr_hash": "76d22e42f9f1bba1"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-15-payload-commissioning/failure-image-capture-fails-or-no-image-data-received",
-   "en_hash": "02e943aa78d7b905",
-   "fr_hash": "fd5c86b2a8a956a3"
+   "id": "commissioning-contingency-procedures/phase-15--payload-commissioning/failure-image-capture-fails-or-no-image-data-received",
+   "en_hash": "d9e324a7cc9b85cd",
+   "fr_hash": "9cd86e11ee165748"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-16-handover-to-mission-operations",
-   "en_hash": "4a7ede32640e9ad2",
-   "fr_hash": "136373e113725f2b"
+   "id": "commissioning-contingency-procedures/phase-16--handover-to-mission-operations",
+   "en_hash": "80a56025d3dcd5a8",
+   "fr_hash": "8c633482ad7dca74"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-16-handover-to-mission-operations/failure-power-budget-negative-insufficient-generation",
-   "en_hash": "5d666adfeff6cb21",
-   "fr_hash": "870258c29d45c718"
+   "id": "commissioning-contingency-procedures/phase-16--handover-to-mission-operations/failure-power-budget-negative-insufficient-generation",
+   "en_hash": "66f4e0b3b00f5e61",
+   "fr_hash": "bbd44c562eeadb27"
   },
   {
-   "id": "commissioning-contingency-procedures/phase-16-handover-to-mission-operations/failure-subsystem-not-nominal-at-end-of-commissioning",
-   "en_hash": "ed7da253b3aa76c0",
-   "fr_hash": "44dab0abe245af61"
+   "id": "commissioning-contingency-procedures/phase-16--handover-to-mission-operations/failure-subsystem-not-nominal-at-end-of-commissioning",
+   "en_hash": "84dbb803d54a779f",
+   "fr_hash": "413d8e88a6697e82"
   },
   {
    "id": "commissioning-contingency-procedures/general-recovery-principles",
-   "en_hash": "22cc946a93a50a8d",
-   "fr_hash": "5045058f4a721165"
+   "en_hash": "2192567c459d1e61",
+   "fr_hash": "08f618bf693ada5d"
   },
   {
    "id": "commissioning-contingency-procedures/general-recovery-principles/when-any-procedure-fails",
-   "en_hash": "075bd00e6f4806f0",
-   "fr_hash": "70d5f88c4d60e9cc"
+   "en_hash": "1516fde9dcc45bec",
+   "fr_hash": "6e9dd7451620054b"
   },
   {
    "id": "commissioning-contingency-procedures/general-recovery-principles/communication-during-contingencies",
-   "en_hash": "80acefcbdc9d4f02",
-   "fr_hash": "408781d93cbfee4b"
+   "en_hash": "d067e18e6b58d429",
+   "fr_hash": "94778c87a5378644"
   },
   {
    "id": "commissioning-contingency-procedures/general-recovery-principles/post-recovery-steps",
-   "en_hash": "cb30c7b2e5d7951c",
-   "fr_hash": "3055027fe7c827b8"
+   "en_hash": "e0d75f0fd0a43aca",
+   "fr_hash": "8e3f4056189a3e94"
   }
  ],
- "en_commit": "3e80564"
+ "en_commit": "c4a140a"
 }

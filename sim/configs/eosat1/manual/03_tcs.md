@@ -1,4 +1,4 @@
-# EOSAT-1 Thermal Control Subsystem (TCS)
+# EOSAT-1 Thermal Control Subsystem (TCS) {#eosat-1-thermal-control-subsystem-tcs}
 
 **Document ID:** EOSAT1-UM-TCS-004
 **Issue:** 2.0
@@ -7,7 +7,7 @@
 
 ---
 
-## 1. Overview
+## 1. Overview {#1-overview}
 
 The Thermal Control Subsystem (TCS) maintains all spacecraft components within their
 allowable temperature ranges throughout the mission. EOSAT-1 uses primarily passive thermal
@@ -16,9 +16,9 @@ thermal control element. The OBC and other components rely on passive thermal ma
 through spacecraft orientation and internal heat dissipation. The focal plane array (FPA)
 cooler is managed as part of the payload subsystem.
 
-## 2. Passive Thermal Control
+## 2. Passive Thermal Control {#2-passive-thermal-control}
 
-### 2.1 Multi-Layer Insulation (MLI)
+### 2.1 Multi-Layer Insulation (MLI) {#21-multi-layer-insulation-mli}
 
 MLI blankets cover the majority of the spacecraft external surfaces, providing thermal
 isolation from the space environment. Key blanketed areas include:
@@ -28,7 +28,7 @@ isolation from the space environment. Key blanketed areas include:
 - OBC module enclosure
 - Payload electronics bay
 
-### 2.2 Radiators
+### 2.2 Radiators {#22-radiators}
 
 Dedicated radiator panels are mounted on the -Y and +Y faces to reject waste heat.
 The radiator sizing is optimised for the nominal power dissipation of ~29 W (orbit-average, see 01_eps.md).
@@ -38,15 +38,15 @@ The radiator sizing is optimised for the nominal power dissipation of ~29 W (orb
 | Primary (-Y)    | -Y face  | 0.25 m2  | ~50 W           |
 | Secondary (+Y)  | +Y face  | 0.15 m2  | ~30 W           |
 
-### 2.3 Surface Coatings
+### 2.3 Surface Coatings {#23-surface-coatings}
 
 External surfaces use a combination of white paint (high emissivity) on radiators and
 black Kapton on internal structure surfaces to promote radiative heat transfer within
 the spacecraft cavity.
 
-## 3. Active Thermal Control
+## 3. Active Thermal Control {#3-active-thermal-control}
 
-### 3.1 Battery Heater Circuit
+### 3.1 Battery Heater Circuit {#31-battery-heater-circuit}
 
 The battery heater is the only active thermal control element on EOSAT-1. All other
 components (OBC, structure, transponder) rely on passive thermal management through
@@ -67,7 +67,7 @@ OFF +10 C) is a cold-case backstop: internal dissipation, MLI and radiator sizin
 the OBC in its qualified range. The thruster catalyst-bed heater (`HEATER_THRUSTER`, S8 func 42;
 status 0x041B; 12 W from the `prop` line) preheats the thruster before a manoeuvre.
 
-### 3.2 Orientation for Passive Thermal Control
+### 3.2 Orientation for Passive Thermal Control {#32-orientation-for-passive-thermal-control}
 
 EOSAT-1 uses spacecraft orientation as a passive thermal control strategy. The AOCS
 attitude can be adjusted to present different faces to the Sun, allowing operators to
@@ -83,7 +83,7 @@ This orientation-based thermal control is particularly important during LEOP and
 scenarios where active heater power must be conserved. In safe mode, the AOCS COARSE_SUN
 mode orients the spacecraft towards the Sun, providing passive heating.
 
-### 3.3 Heater Failure Modes
+### 3.3 Heater Failure Modes {#33-heater-failure-modes}
 
 | Failure Mode    | Detection                           | Impact                          |
 |-----------------|-------------------------------------|---------------------------------|
@@ -94,7 +94,7 @@ If a stuck-on heater is detected, ground should command `HEATER_CONTROL` (circui
 on=false) and monitor. If the heater remains on, the PDM outlet feeding the heater circuit
 can be commanded off as an isolation measure.
 
-### 3.4 FPA Cooler
+### 3.4 FPA Cooler {#34-fpa-cooler}
 
 The focal plane array cooler is a miniature Stirling-cycle cryocooler that maintains the
 imager detector at its operational temperature of approximately -15 deg C. The cooler
@@ -111,7 +111,7 @@ draws up to 15 W and requires a 30-minute cooldown period from ambient temperatu
 The cooler is activated automatically when the payload transitions to STANDBY, IMAGING or
 CALIBRATION mode and deactivated when the payload is set to OFF.
 
-## 4. Temperature Zones
+## 4. Temperature Zones {#4-temperature-zones}
 
 | Zone           | Nominal Range    | Yellow Limits    | Red Limits       |
 |----------------|------------------|------------------|------------------|
@@ -121,7 +121,7 @@ CALIBRATION mode and deactivated when the payload is set to OFF.
 | Solar Panels   | -80 to 80 deg C  | —                | —                |
 | Structure      | -20 to 50 deg C  | —                | —                |
 
-## 5. Telemetry Parameters
+## 5. Telemetry Parameters {#5-telemetry-parameters}
 
 | Param ID | Name            | Unit   | Description                          |
 |----------|-----------------|--------|--------------------------------------|
@@ -129,8 +129,8 @@ CALIBRATION mode and deactivated when the payload is set to OFF.
 | 0x0401   | temp_panel_mx   | deg C  | -X panel temperature                 |
 | 0x0402   | temp_panel_py   | deg C  | +Y panel temperature                 |
 | 0x0403   | temp_panel_my   | deg C  | -Y panel temperature                 |
-| 0x0404   | temp_panel_pz   | deg C  | +Z panel temperature (nadir)         |
-| 0x0405   | temp_panel_mz   | deg C  | -Z panel temperature (zenith)        |
+| 0x0404   | temp_panel_pz   | deg C  | +Z panel temperature (zenith)        |
+| 0x0405   | temp_panel_mz   | deg C  | -Z panel temperature (nadir)         |
 | 0x0406   | temp_obc        | deg C  | OBC module temperature               |
 | 0x0407   | temp_battery    | deg C  | Battery pack temperature             |
 | 0x0408   | temp_fpa        | deg C  | Focal plane array temperature        |
@@ -139,7 +139,7 @@ CALIBRATION mode and deactivated when the payload is set to OFF.
 | 0x040B   | htr_obc         | bool   | OBC heater status (on/off)           |
 | 0x040C   | cooler_fpa      | bool   | FPA cooler status (on/off)           |
 
-## 6. Limit Definitions
+## 6. Limit Definitions {#6-limit-definitions}
 
 | Parameter       | Yellow Low | Yellow High | Red Low | Red High |
 |-----------------|------------|-------------|---------|----------|
@@ -163,7 +163,7 @@ anywhere in the commandable **-20…0 deg C** setpoint envelope
 (+50 deg C) will breach the red high — deliberately. You have taken the
 detector outside its operating envelope and the console should say so.
 
-## 7. Commands
+## 7. Commands {#7-commands}
 
 | Command           | Service  | Parameters              | Description                        |
 |-------------------|----------|-------------------------|------------------------------------|
@@ -172,7 +172,7 @@ detector outside its operating envelope and the console should say so.
 | GET_PARAM         | S20,S3   | param_id (0x0400–040C)  | Read individual TCS parameter      |
 | SET_PARAM         | S20,S1   | param_id, value         | Modify TCS configuration parameter |
 
-## 8. Panel Temperature Coupling to Solar Illumination
+## 8. Panel Temperature Coupling to Solar Illumination {#8-panel-temperature-coupling-to-solar-illumination}
 
 The five body-mounted solar panels (every face except -Z) act as the primary thermal interface between the
 spacecraft and the space environment. Panel temperatures are strongly coupled to solar
@@ -183,7 +183,7 @@ illumination:
 | Sunlit (direct)      | Panel temp rises towards +80 deg C (steady state)    |
 | Sunlit (oblique)     | Reduced heating; temp proportional to cos(sun angle) |
 | Eclipse (shadowed)   | Rapid cooling towards -80 deg C at ~5 deg C/min      |
-| Earth albedo only    | Mild heating on nadir face (+Z)                      |
+| Earth albedo only    | Mild heating on nadir face (-Z)                      |
 
 The thermal coupling mechanism works in both directions:
 
@@ -197,7 +197,7 @@ directly influence the battery compartment temperature (adjacent to the +Y/-Y pa
 the OBC module temperature. Operators should monitor panel temperatures during attitude
 manoeuvres to anticipate thermal transients.
 
-## 9. Operational Notes
+## 9. Operational Notes {#9-operational-notes}
 
 1. Eclipse entry causes a rapid temperature drop on exposed panels. The thermal gradient
    can reach 5 deg C/min on directly exposed surfaces.
@@ -215,7 +215,7 @@ manoeuvres to anticipate thermal transients.
    operations, the Flight Director should coordinate with Power/Thermal and AOCS operators
    to select an attitude that balances power generation and thermal constraints.
 
-## 10. Thermal Design Margins
+## 10. Thermal Design Margins {#10-thermal-design-margins}
 
 The thermal design provides at least 5 deg C margin to qualification limits under worst-case
 hot and cold conditions (end-of-life, worst-case eclipse duration, maximum/minimum solar flux).

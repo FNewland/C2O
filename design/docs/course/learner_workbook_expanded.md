@@ -896,8 +896,8 @@ _______________________________________________
 > **Requirement Quality (SMART):**
 > **S**pecific -- **M**easurable -- **A**chievable -- **R**elevant -- **T**raceable
 
-> **Verification Methods (ATID):**
-> **A**nalysis -- **T**est -- **I**nspection -- **D**emonstration
+> **Verification Methods (ATIR(D)):**
+> **A**nalysis -- **T**est -- **I**nspection -- **R**eview of design -- (**D**emonstration, which ECSS counts as test and NASA lists separately)
 
 ---
 
@@ -1672,7 +1672,7 @@ The Electrical Power System (EPS) is the spacecraft's power utility. A typical C
 
 In space, there is no air for convection. Heat transfer occurs only by **radiation** and **conduction**. A spacecraft reaches thermal equilibrium when absorbed heat (solar flux, Earth albedo, Earth IR, internal electronics waste heat) equals radiated heat (to deep space at ~3 K).
 
-**ECSS thermal margins (ECSS-E-ST-31C):** Operating $\pm$5 degC, Acceptance $\pm$10 degC, Qualification $\pm$15 degC. If the predicted temperature of any component is within 5 degC of its operating limit, you must add thermal control (heater, coating change, or radiator).
+**Thermal margins (the textbook's teaching convention, Table 3.1.11; proto-flight TVAC is at predicted $\pm$10 degC per GSFC-STD-7000B):** Operating $\pm$5 degC, Acceptance $\pm$10 degC, Qualification $\pm$15 degC. If the predicted temperature of any component is within 5 degC of its operating limit, you must add thermal control (heater, coating change, or radiator).
 
 ---
 
@@ -1688,7 +1688,7 @@ In space, there is no air for convection. Heat transfer occurs only by **radiati
 >
 > **Thermal equilibrium:** $T = \left(\frac{Q_{\text{abs}} + Q_{\text{int}}}{\varepsilon \sigma A_{\text{rad}}}\right)^{1/4}$ &nbsp;&nbsp; ($\sigma = 5.67 \times 10^{-8}$ W/m$^2$/K$^4$)
 >
-> **ECSS thermal margins:** Operating +/-5 degC, Acceptance +/-10 degC, Qualification +/-15 degC
+> **Thermal margins (textbook convention):** Operating +/-5 degC, Acceptance +/-10 degC, Qualification +/-15 degC
 
 ---
 
@@ -3164,11 +3164,11 @@ _______________________________________________
 
 ---
 
-## Part A: IADT Method Assignment
+## Part A: ATIR(D) Method Assignment
 
 For 10 key requirements from your SpaceCDF V&V Matrix, assign the verification method and justify:
 
-| # | Req ID | Requirement Text (abbreviated) | Method (I/A/D/T) | Phase (B/C/D) | Level (Unit/Sub/Sys) | Justification |
+| # | Req ID | Requirement Text (abbreviated) | Method (A/T/I/R/D) | Phase (B/C/D) | Level (Unit/Sub/Sys) | Justification |
 |---|--------|-------------------------------|:-:|:-:|:-:|--------------|
 | 1 | | | | | | |
 | 2 | | | | | | |
@@ -3181,7 +3181,7 @@ For 10 key requirements from your SpaceCDF V&V Matrix, assign the verification m
 | 9 | | | | | | |
 | 10 | | | | | | |
 
-**Summary count:** Analysis: ___ / Test: ___ / Demonstration: ___ / Inspection: ___
+**Summary count:** Analysis: ___ / Test: ___ / Inspection: ___ / Review of design: ___ / Demonstration: ___
 
 ---
 
@@ -4501,7 +4501,7 @@ Rate your own learning across the three weeks of the course. Be honest -- this i
 | Conduct a structured trade study with weighted criteria | | | |
 | Size subsystems using parametric models and engineering budgets | | | |
 | Select COTS equipment and verify interface compatibility | | | |
-| Construct a verification matrix with IADT methods | | | |
+| Construct a verification matrix with ATIR(D) methods | | | |
 | Assess risk using a 5x5 matrix and define mitigations | | | |
 | Estimate mission cost using parametric and bottom-up methods | | | |
 | Design a ground segment and calculate data budget | | | |

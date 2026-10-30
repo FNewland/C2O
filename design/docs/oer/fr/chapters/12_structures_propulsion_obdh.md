@@ -121,18 +121,18 @@ L'environnement de lancement soumet le satellite aux charges dues à la poussée
 
 *[Source : ECSS-E-ST-10-03C ; NASA GEVS (GSFC-STD-7000B) ; Falcon 9 Payload User's Guide ; PSLV User's Guide]*
 
-**Profil de DSP des vibrations aléatoires (niveau type d'un déployeur de CubeSat) :**
+**Profil de DSP des vibrations aléatoires (niveau minimal de qualité de fabrication du GSFC-STD-7000B, tableau 2.4-4) :**
 
 | Fréquence (Hz) | Niveau d'ASD (g$^2$/Hz) | Remarques |
 |----------------|---------------------|-------|
-| 20 | 0,01 | Début basse fréquence (montée) |
-| 50 | 0,04 | Montée à +6 dB/octave |
-| 100 | 0,04 | Début du palier |
-| 800 | 0,04 | Fin du palier |
-| 2000 | 0,01 | Décroissance à −6 dB/octave |
-| **Global** | **~7 g$_{\text{rms}}$** | Valeur type au niveau de qualification d'un déployeur de CubeSat |
+| 20 | 0,01 | Début basse fréquence |
+| 20–80 | +3 dB/octave | Montée |
+| 80–500 | 0,04 | Palier |
+| 500–2000 | −3 dB/octave | Décroissance |
+| 2000 | 0,01 | Fin du profil |
+| **Global** | **6,8 g$_{\text{rms}}$** | Niveau de qualité de fabrication (recette) ; le protovol est à +3 dB, soit environ 9,6 g$_{\text{rms}}$, pendant 1 min par axe (chapitre 14, §14.3.3) |
 
-Le palier à 0,04 g$^2$/Hz entre 100 et 800 Hz est la zone où se produisent la plupart des dommages structuraux, car c'est là que sont excitées les résonances des circuits imprimés et la fatigue des joints de brasure.
+Le palier à 0,04 g$^2$/Hz entre 80 et 500 Hz est la zone où se produisent la plupart des dommages structuraux, car c'est là que sont excitées les résonances des circuits imprimés et la fatigue des joints de brasure. Les niveaux qui font foi pour un vol donné sont fixés par le manuel utilisateur du déployeur ou du lanceur ; n'utilisez ce profil que là où il les enveloppe.
 
 **Ce qui casse pendant les essais de vibrations :**
 1. **Joints de brasure :** les composants lourds (connecteurs, condensateurs hauts, transformateurs) à long bras de levier se fissurent au niveau de leurs brasures. Réduction du risque : utiliser des composants montés en surface, coller les composants hauts, appliquer un vernis de tropicalisation.
@@ -671,7 +671,7 @@ Avec la méthode du chapitre 7, §7.3.3, on obtient une durée de vie orbitale d
 |-------|-------------|
 | Conformité à la CDS | Dimensions normalisées, rails en Al 7075-T6 anodisé (8,5 mm), interrupteurs de déploiement, goupille RBF, limites de position du centre de gravité |
 | Matériaux de structure | Al 7075-T6 : $\sigma_y = 503$ MPa, $E = 72$ GPa ; anodisation pour l'usure et l'isolation ; PRFC inadapté aux rails |
-| Charges au lancement | 6–12 g en axial quasi statique, ~7 g$_{\text{rms}}$ en vibrations aléatoires (20–2000 Hz), 500–2000 g en choc ; les joints de brasure des circuits imprimés sont le point faible |
+| Charges au lancement | 6–12 g en axial quasi statique, 6,8 g$_{\text{rms}}$ en vibrations aléatoires (20–2000 Hz ; 9,6 g$_{\text{rms}}$ en protovol), 500–2000 g en choc ; les joints de brasure des circuits imprimés sont le point faible |
 | MoS structurale | $\text{MoS} = \sigma_{\text{allow}}/(\sigma_{\text{design}} \times \text{FoS}) - 1 \geq 0$ ; FoS 1,25 en élasticité / 1,5 en rupture (métaux) |
 | Exigence de fréquence | Premier mode > 40 Hz ; les structures de CubeSat en aluminium le dépassent facilement (~330 Hz pour une poutre-caisson 3U) ; le risque vient des modes locaux (circuits imprimés, éléments déployables) |
 | Équation de Tsiolkovski | $m_{\text{prop}} = m_{\text{dry}} \times (e^{\Delta V/(I_{sp} g_0)} - 1)$ ; croissance exponentielle avec $\Delta V / v_e$ |

@@ -1,4 +1,4 @@
-# Mission Planner Audit — EO-Sat-1 Simulator Suite
+# Mission Planner Audit — EOSAT-1 Simulator Suite
 
 Read-only investigation, 2026-07-28. Repo: `/home/claude/repos/SpaceMissionSimulation`.
 All paths repo-relative. Line numbers verified by reading the cited files.

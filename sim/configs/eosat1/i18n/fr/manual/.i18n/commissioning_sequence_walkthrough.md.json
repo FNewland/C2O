@@ -8,360 +8,360 @@
    "fr_hash": "e3b0c44298fc1c14"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations",
-   "en_hash": "ab64f34f7256207e",
-   "fr_hash": "37875c29d3563d0d"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations",
+   "en_hash": "6af5e61301298a19",
+   "fr_hash": "f8c02387bc93306d"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/mcs-tab-reference",
-   "en_hash": "f1db8a64cd559ba7",
-   "fr_hash": "51b76e3aafe27464"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/mcs-tab-reference",
+   "en_hash": "0a1189883893dc4e",
+   "fr_hash": "a050c14b58bb3e3d"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-0-pre-contact-configuration-ground-only",
-   "en_hash": "ebd8c74c16345536",
-   "fr_hash": "48d1ca1c371fc919"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-0--pre-contact-configuration-ground-only",
+   "en_hash": "92882825eb3b0b52",
+   "fr_hash": "0265769384f04ee9"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-0-pre-contact-configuration-ground-only/0-1-configure-ground-station-override-pass",
-   "en_hash": "789ec19d06ca87d7",
-   "fr_hash": "194d54bb7cc9a892"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-0--pre-contact-configuration-ground-only/01-configure-ground-station--override-pass",
+   "en_hash": "9a87524f5dee4652",
+   "fr_hash": "77fa997a8eafac2c"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-1-first-signal-bootloader-telemetry-reception",
-   "en_hash": "8f294f6798670934",
-   "fr_hash": "fc04bef48ccfa3ce"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-1--first-signal-bootloader-telemetry-reception",
+   "en_hash": "28957ac1a2e33fe2",
+   "fr_hash": "39244e42c5e38b49"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-1-first-signal-bootloader-telemetry-reception/1-1-ping-the-spacecraft-connection-test",
-   "en_hash": "3074cf79a12c58a5",
-   "fr_hash": "dcd4a21367be1ef1"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-1--first-signal-bootloader-telemetry-reception/11-ping-the-spacecraft-connection-test",
+   "en_hash": "a11dbacc7baf22ac",
+   "fr_hash": "9cd21fd652afc6d7"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-1-first-signal-bootloader-telemetry-reception/1-2-verify-beacon-telemetry-sid-11",
-   "en_hash": "051327ccb3e96c1c",
-   "fr_hash": "884692c2f2dc248e"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-1--first-signal-bootloader-telemetry-reception/12-verify-beacon-telemetry-sid-11",
+   "en_hash": "b48150d57a9dc865",
+   "fr_hash": "a7fb651d1199bc1a"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-2-antenna-deployment",
-   "en_hash": "dd8a609f15b3d56f",
-   "fr_hash": "4980585df7686542"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-2--antenna-deployment",
+   "en_hash": "459b4c3c94aea23a",
+   "fr_hash": "25cd5dbe65fb0eb8"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-2-antenna-deployment/2-1-deploy-antenna",
-   "en_hash": "20e85fee83b1a1bb",
-   "fr_hash": "49ad1f3ef7edf4d5"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-2--antenna-deployment/21-deploy-antenna",
+   "en_hash": "46f6ffcd2674b248",
+   "fr_hash": "9790b1951419e38d"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-3-boot-obc-to-application-image",
-   "en_hash": "d4eaba03d8fbf178",
-   "fr_hash": "7bc97764155e10a3"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-3--boot-obc-to-application-image",
+   "en_hash": "37fb76d708769131",
+   "fr_hash": "72d853570b217725"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-3-boot-obc-to-application-image/3-1-obcbootapp",
-   "en_hash": "3b4cb768dd21e69c",
-   "fr_hash": "4970c389d030315d"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-3--boot-obc-to-application-image/31-obc_boot_app",
+   "en_hash": "7fcc16fec8ca9646",
+   "fr_hash": "7ea648b70c0e23ee"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-4-initial-platform-health-check",
-   "en_hash": "ed9ec52c9d60a9a2",
-   "fr_hash": "af368d0abd2c9780"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-4--initial-platform-health-check",
+   "en_hash": "1c2295bd834f0eda",
+   "fr_hash": "bec101bc9b39d46d"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-4-initial-platform-health-check/4-1-request-all-housekeeping",
-   "en_hash": "c033cdb07e0e0dbf",
-   "fr_hash": "f0a44ae4f66adf55"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-4--initial-platform-health-check/41-request-all-housekeeping",
+   "en_hash": "a1346220f8e4c2d9",
+   "fr_hash": "b29de4852d71a0ce"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-4-initial-platform-health-check/4-2-verify-eps-power-status",
-   "en_hash": "8ff1ec6af41bd472",
-   "fr_hash": "0449982feb26869a"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-4--initial-platform-health-check/42-verify-eps-power-status",
+   "en_hash": "40cee7cb0c291d74",
+   "fr_hash": "feb69bf093219386"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-4-initial-platform-health-check/4-3-verify-power-line-switch-states",
-   "en_hash": "45facea5df4472b9",
-   "fr_hash": "36fb9cd9f933f440"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-4--initial-platform-health-check/43-verify-power-line-switch-states",
+   "en_hash": "32bb331629c62490",
+   "fr_hash": "83481471696cd1d9"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-4-initial-platform-health-check/4-4-verify-obdh-status",
-   "en_hash": "3406803cbc4566d7",
-   "fr_hash": "59da3e5e17189fa3"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-4--initial-platform-health-check/44-verify-obdh-status",
+   "en_hash": "5278256210a8ee6e",
+   "fr_hash": "9ee9928e955d2a8a"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-4-initial-platform-health-check/4-5-verify-ttc-link-quality",
-   "en_hash": "caffad919ff4be59",
-   "fr_hash": "c6d474c3233ac9a9"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-4--initial-platform-health-check/45-verify-ttc-link-quality",
+   "en_hash": "c821db3d88cb1449",
+   "fr_hash": "f31d0daf148f13ec"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-4-initial-platform-health-check/4-6-verify-tcs-baseline-temperatures",
-   "en_hash": "6fe1b2169f6f7dd8",
-   "fr_hash": "90de8f5c1d1104b6"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-4--initial-platform-health-check/46-verify-tcs-baseline-temperatures",
+   "en_hash": "6a6b738bc8f5aba5",
+   "fr_hash": "1c480f4ba91cb7e5"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-4-initial-platform-health-check/4-7-verify-aocs-and-payload-are-off",
-   "en_hash": "44e7dc30c44e71e2",
-   "fr_hash": "3e3a71ab4a99f29e"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-4--initial-platform-health-check/47-verify-aocs-and-payload-are-off",
+   "en_hash": "68ae6c5b72016b9c",
+   "fr_hash": "c5b009e6f969b931"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-5-enable-telemetry-buffering-stored-tm",
-   "en_hash": "6ca82de827340979",
-   "fr_hash": "9e37f2977283e9a3"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-5--enable-telemetry-buffering-stored-tm",
+   "en_hash": "63272ed786a4c3db",
+   "fr_hash": "cae86b59968b812c"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-5-enable-telemetry-buffering-stored-tm/5-1-enable-periodic-hk-reporting-for-all-sids",
-   "en_hash": "f57d2e5558ee6702",
-   "fr_hash": "6cdca65f23877237"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-5--enable-telemetry-buffering-stored-tm/51-enable-periodic-hk-reporting-for-all-sids",
+   "en_hash": "b4345110d7399e1b",
+   "fr_hash": "f2fa05b2a8df663d"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-6-set-on-board-time",
-   "en_hash": "322ccfadf45ac1ad",
-   "fr_hash": "f1dfdc1f40d972fe"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-6--set-on-board-time",
+   "en_hash": "e5f7965d7be7cace",
+   "fr_hash": "30f139609c1301ed"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-6-set-on-board-time/6-1-request-current-time",
-   "en_hash": "5e29ca1b48883f08",
-   "fr_hash": "5606b7eed30b4e8c"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-6--set-on-board-time/61-request-current-time",
+   "en_hash": "3f6112c1516d5977",
+   "fr_hash": "43d85caa413266e5"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-6-set-on-board-time/6-2-upload-corrected-time",
-   "en_hash": "56c63981031fd2d0",
-   "fr_hash": "5b34bc78a8d185e3"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-6--set-on-board-time/62-upload-corrected-time",
+   "en_hash": "fc6b2fc1e7be3522",
+   "fr_hash": "f753e3214757119d"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-7-sequential-power-on-heaters-first-then-aocs",
-   "en_hash": "9809e909a4a4058b",
-   "fr_hash": "7623bae8190527e2"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-7--sequential-power-on-heaters-first-then-aocs",
+   "en_hash": "38a104406ece7c3b",
+   "fr_hash": "6d718eb33a5877c8"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-7-sequential-power-on-heaters-first-then-aocs/7-1-battery-heater-on",
-   "en_hash": "6196c3812de4d80e",
-   "fr_hash": "dab04ae3fc3c1cde"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-7--sequential-power-on-heaters-first-then-aocs/71-battery-heater-on",
+   "en_hash": "bdf5dbfac71448ca",
+   "fr_hash": "7afe49eb28fd5657"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-7-sequential-power-on-heaters-first-then-aocs/7-2-obc-heater-on",
-   "en_hash": "2fb0588410a9d442",
-   "fr_hash": "4ccd709ced5716c3"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-7--sequential-power-on-heaters-first-then-aocs/72-obc-heater-on",
+   "en_hash": "db915979418a0e33",
+   "fr_hash": "1429a5dea87c4508"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-7-sequential-power-on-heaters-first-then-aocs/7-3-aocs-wheels-power-on",
-   "en_hash": "f0f651ba7f74beed",
-   "fr_hash": "0f452224baccc3d1"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-7--sequential-power-on-heaters-first-then-aocs/73-aocs-wheels-power-on",
+   "en_hash": "a4f247f224e3758d",
+   "fr_hash": "43e625fa36d1a0d6"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-7-sequential-power-on-heaters-first-then-aocs/7-3a-enable-individual-reaction-wheels",
-   "en_hash": "98a5ce4e6d220e79",
-   "fr_hash": "a696facad0a93054"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-7--sequential-power-on-heaters-first-then-aocs/73a-enable-individual-reaction-wheels",
+   "en_hash": "b33f37345de3a4a1",
+   "fr_hash": "08011238292b713a"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-7-sequential-power-on-heaters-first-then-aocs/7-4-aocs-set-mode-detumble",
-   "en_hash": "3cbfc7ef185627ae",
-   "fr_hash": "ed31b74564094722"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-7--sequential-power-on-heaters-first-then-aocs/74-aocs-set-mode-detumble",
+   "en_hash": "ced450889878a67f",
+   "fr_hash": "0579fbd9e4068003"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-7-sequential-power-on-heaters-first-then-aocs/7-5-verify-power-budget-after-aocs-power-on",
-   "en_hash": "49bef1b7e024aeaf",
-   "fr_hash": "5da306c438bcbcfa"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-7--sequential-power-on-heaters-first-then-aocs/75-verify-power-budget-after-aocs-power-on",
+   "en_hash": "39cebd2ceb69e696",
+   "fr_hash": "0a953d95a729a11c"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-8-upload-tle-for-orbit-determination",
-   "en_hash": "7f23feaaba10e6a4",
-   "fr_hash": "17c90a012227e8e4"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-8--upload-tle-for-orbit-determination",
+   "en_hash": "6ed9615ae2faf979",
+   "fr_hash": "540864b174ae1a5b"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-8-upload-tle-for-orbit-determination/8-1-upload-tle-orbit-state-vector",
-   "en_hash": "164dd0fb55415bfd",
-   "fr_hash": "096d61db9fd0b9b6"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-8--upload-tle-for-orbit-determination/81-upload-tle--orbit-state-vector",
+   "en_hash": "82baa06900a1b4d6",
+   "fr_hash": "c1cbcdf90c5ab93b"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-9-aocs-mode-progression-rate-damping-sun-pointing-nadir",
-   "en_hash": "5215578fbd123014",
-   "fr_hash": "c54e12199d06421e"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-9--aocs-mode-progression-rate-damping--sun-pointing--nadir",
+   "en_hash": "15415609744074e8",
+   "fr_hash": "7f4c8d0df54499b6"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-9-aocs-mode-progression-rate-damping-sun-pointing-nadir/9-1-confirm-rates-damped",
-   "en_hash": "adf77e30b3bfa677",
-   "fr_hash": "e2bb37003c3ad7ec"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-9--aocs-mode-progression-rate-damping--sun-pointing--nadir/91-confirm-rates-damped",
+   "en_hash": "c08afc3d78147eb9",
+   "fr_hash": "ab44ca5e1519b332"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-9-aocs-mode-progression-rate-damping-sun-pointing-nadir/9-2-observe-the-automatic-transition-to-coarsesun-safe-pointing",
-   "en_hash": "dd826ab12795cb57",
-   "fr_hash": "cbdf48154e0e0f41"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-9--aocs-mode-progression-rate-damping--sun-pointing--nadir/92-observe-the-automatic-transition-to-coarse_sun-safe-pointing",
+   "en_hash": "5d58e61689bad52f",
+   "fr_hash": "23a79b8721ac8b21"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-9-aocs-mode-progression-rate-damping-sun-pointing-nadir/9-3-download-delayed-tm-first-whole-orbit-check",
-   "en_hash": "644bf4aabd940aa6",
-   "fr_hash": "f258b7121d43e2cd"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-9--aocs-mode-progression-rate-damping--sun-pointing--nadir/93-download-delayed-tm--first-whole-orbit-check",
+   "en_hash": "f47baf42d5cabfb0",
+   "fr_hash": "60a5812145caf1b7"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-9-aocs-mode-progression-rate-damping-sun-pointing-nadir/9-4-check-aocs-signs-and-scaling",
-   "en_hash": "5a42e342d345f4fa",
-   "fr_hash": "50d617d0da832cd5"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-9--aocs-mode-progression-rate-damping--sun-pointing--nadir/94-check-aocs-signs-and-scaling",
+   "en_hash": "e137814d1407141f",
+   "fr_hash": "d735e9cd0e68e999"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-9-aocs-mode-progression-rate-damping-sun-pointing-nadir/9-5-transition-to-nominalnadir-nadir-pointing",
-   "en_hash": "8cfa9ba9e5992c20",
-   "fr_hash": "6e63901b3c35f941"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-9--aocs-mode-progression-rate-damping--sun-pointing--nadir/95-transition-to-nominal-nadir-pointing",
+   "en_hash": "e0ca9d99a8b15bf6",
+   "fr_hash": "c8a556c39baef3ff"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-10-further-whole-orbit-data-verification",
-   "en_hash": "c0e246d1fd6623dd",
-   "fr_hash": "2924b594bd018d7f"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-10--further-whole-orbit-data-verification",
+   "en_hash": "c147bf7ab7ed5390",
+   "fr_hash": "b0ce566fac3fd117"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-10-further-whole-orbit-data-verification/10-1-wait-for-full-orbit-then-dump-again",
-   "en_hash": "af492ffce8cb66b3",
-   "fr_hash": "7bc0c1c6e6442eac"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-10--further-whole-orbit-data-verification/101-wait-for-full-orbit-then-dump-again",
+   "en_hash": "fa6c40a280a27178",
+   "fr_hash": "36355a479ebfacc6"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-10-further-whole-orbit-data-verification/10-2-check-events-and-alarms",
-   "en_hash": "9be61b80531627ce",
-   "fr_hash": "4effcd059dbb2d55"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-10--further-whole-orbit-data-verification/102-check-events-and-alarms",
+   "en_hash": "28c7d10828ed254a",
+   "fr_hash": "a6d00ea98d87c956"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-11-enable-gps-and-verify-cold-start",
-   "en_hash": "2b9515e37a3c895e",
-   "fr_hash": "0ecc1e469ada193e"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-11--enable-gps-and-verify-cold-start",
+   "en_hash": "0126f2469d4576df",
+   "fr_hash": "49a5447ceae105e3"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-11-enable-gps-and-verify-cold-start/11-1-enable-gps-receiver",
-   "en_hash": "1a145db28d85ec35",
-   "fr_hash": "7e26d8cccd3f21e9"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-11--enable-gps-and-verify-cold-start/111-enable-gps-receiver",
+   "en_hash": "be6e82854a6c7560",
+   "fr_hash": "b4028c40330777b2"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-11-enable-gps-and-verify-cold-start/11-2-synchronise-onboard-clock-with-gps-time",
-   "en_hash": "64d6532b3a7bda07",
-   "fr_hash": "e896e64aaab608bb"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-11--enable-gps-and-verify-cold-start/112-synchronise-onboard-clock-with-gps-time",
+   "en_hash": "3b129fc4c50fe00d",
+   "fr_hash": "632892cf3842cd22"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-12-star-tracker-commissioning",
-   "en_hash": "4b188e38cd99bf54",
-   "fr_hash": "fd9ff7912f3ad392"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-12--star-tracker-commissioning",
+   "en_hash": "f16538ac265a10c1",
+   "fr_hash": "b9f27dd1d369c6f4"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-12-star-tracker-commissioning/12-1-power-on-star-tracker-1",
-   "en_hash": "0ce77d664a85bbc6",
-   "fr_hash": "c3188e580dfbc5e2"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-12--star-tracker-commissioning/121-power-on-star-tracker-1",
+   "en_hash": "490bcf6b5e04826f",
+   "fr_hash": "5d9388d078b1e72a"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-12-star-tracker-commissioning/12-2-power-on-star-tracker-2-redundant",
-   "en_hash": "96fbf6b09e16f448",
-   "fr_hash": "ffe65f8101187b53"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-12--star-tracker-commissioning/122-power-on-star-tracker-2-redundant",
+   "en_hash": "1660445916f031a4",
+   "fr_hash": "612a905e4f8eabea"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-12-star-tracker-commissioning/12-3-select-primary-star-tracker",
-   "en_hash": "4811c458b86fd16d",
-   "fr_hash": "954f51ae842a26dc"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-12--star-tracker-commissioning/123-select-primary-star-tracker",
+   "en_hash": "6d57d7ac3095541e",
+   "fr_hash": "f77d4783c7f5d847"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-12-star-tracker-commissioning/12-4-power-off-st2-return-to-nominal-one-tracker-active",
-   "en_hash": "39748e26d7738223",
-   "fr_hash": "b55a766af0fb3f84"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-12--star-tracker-commissioning/124-power-off-st2-return-to-nominal--one-tracker-active",
+   "en_hash": "749545adc443a7d9",
+   "fr_hash": "970a250bc5b9cb9d"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-12-star-tracker-commissioning/12-5-transition-to-finepoint",
-   "en_hash": "56ae43b365d33409",
-   "fr_hash": "22c0fa926dfd6370"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-12--star-tracker-commissioning/125-transition-to-fine_point",
+   "en_hash": "8ccaf8af4a29077e",
+   "fr_hash": "471750b5ebf6c255"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-13-redundant-equipment-checkout",
-   "en_hash": "c564caad42e2dafe",
-   "fr_hash": "330ca708c8b1b081"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-13--redundant-equipment-checkout",
+   "en_hash": "7462af68703ff6b8",
+   "fr_hash": "8b90c3d5f2ff8c03"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-13-redundant-equipment-checkout/13-1-backup-can-bus-check",
-   "en_hash": "7de76cefdb0edab2",
-   "fr_hash": "01070c93457d2ec7"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-13--redundant-equipment-checkout/131-backup-can-bus-check",
+   "en_hash": "f383001163017e98",
+   "fr_hash": "4790bb0a3b90bef8"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-13-redundant-equipment-checkout/13-2-redundant-transponder-check",
-   "en_hash": "dc94981213c9032f",
-   "fr_hash": "a6f96301f35cb553"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-13--redundant-equipment-checkout/132-redundant-transponder-check",
+   "en_hash": "411c44716a3e42da",
+   "fr_hash": "cc5bdd6763e33b1c"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-13-redundant-equipment-checkout/13-3-magnetometer-health-check-single-string-no-redundancy-to-exercise",
-   "en_hash": "fbd8a54ddd84e4ce",
-   "fr_hash": "ab3da058cef06f71"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-13--redundant-equipment-checkout/133-magnetometer-health-check-single-string--no-redundancy-to-exercise",
+   "en_hash": "ac3efb9cdd1393f9",
+   "fr_hash": "0dec0cfb5bd42de9"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-14-time-tagged-command-verification",
-   "en_hash": "cde54cd169bcc2d6",
-   "fr_hash": "d38a0b5ebc6c3f2a"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-14--time-tagged-command-verification",
+   "en_hash": "145930cb6619ab78",
+   "fr_hash": "eab6654fd8a6d3ed"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-14-time-tagged-command-verification/14-1-upload-a-test-time-tagged-command",
-   "en_hash": "d45abd5f42f0d3e0",
-   "fr_hash": "8697875a14aad15a"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-14--time-tagged-command-verification/141-upload-a-test-time-tagged-command",
+   "en_hash": "8d9e22704a7a1514",
+   "fr_hash": "e0ae9cb16bb2c651"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-14-time-tagged-command-verification/14-2-verify-execution-in-pass",
-   "en_hash": "1d5c93cea363dc60",
-   "fr_hash": "3e2cfcae26596ee3"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-14--time-tagged-command-verification/142-verify-execution-in-pass",
+   "en_hash": "6cf42941d53961b1",
+   "fr_hash": "d4b97d80b046aab9"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-14-time-tagged-command-verification/14-3-verify-execution-out-of-pass",
-   "en_hash": "265bded31e5e2695",
-   "fr_hash": "dfa09afeed9ba58e"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-14--time-tagged-command-verification/143-verify-execution-out-of-pass",
+   "en_hash": "e298509239333808",
+   "fr_hash": "c955f37d795b3479"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-15-payload-power-on-and-commissioning",
-   "en_hash": "01ab9e69ce6dbb75",
-   "fr_hash": "5793865a2bd1d1df"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-15--payload-power-on-and-commissioning",
+   "en_hash": "80508eacb5fc760a",
+   "fr_hash": "d86bf9dbe7800da7"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-15-payload-power-on-and-commissioning/15-1-power-payload-line",
-   "en_hash": "75aaf3389f470594",
-   "fr_hash": "1191a1e8a9daa4a2"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-15--payload-power-on-and-commissioning/151-power-payload-line",
+   "en_hash": "5cb9a64533031c53",
+   "fr_hash": "c449f0ffac064e0b"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-15-payload-power-on-and-commissioning/15-2-set-payload-to-standby",
-   "en_hash": "c6fbb8e597b1ab1c",
-   "fr_hash": "f92152f00cdfe882"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-15--payload-power-on-and-commissioning/152-set-payload-to-standby",
+   "en_hash": "31915ca3d704fa3e",
+   "fr_hash": "72e1d239999f6120"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-15-payload-power-on-and-commissioning/15-3-power-fpa-cooler",
-   "en_hash": "486eb77d871f1bee",
-   "fr_hash": "13dbada23b49a211"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-15--payload-power-on-and-commissioning/153-power-fpa-cooler",
+   "en_hash": "2df80a0cd3fa59a4",
+   "fr_hash": "ca656b0ac5297a34"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-15-payload-power-on-and-commissioning/15-4-activate-fpa-cooler",
-   "en_hash": "de1b47986fcf73b5",
-   "fr_hash": "cf2ed5d0ca818cc6"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-15--payload-power-on-and-commissioning/154-activate-fpa-cooler",
+   "en_hash": "98138efea96212ec",
+   "fr_hash": "f3c230b67a427097"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-15-payload-power-on-and-commissioning/15-5-first-light-capture-test-image",
-   "en_hash": "16d09474bf8e083d",
-   "fr_hash": "eb0a99fb169ff175"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-15--payload-power-on-and-commissioning/155-first-light--capture-test-image",
+   "en_hash": "39fcd3de48e7ff9d",
+   "fr_hash": "5f96bf9cd96a2198"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-16-final-configuration-and-handover-to-nominal-ops",
-   "en_hash": "c05765847f74758b",
-   "fr_hash": "a68f7872f32ade30"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-16--final-configuration-and-handover-to-nominal-ops",
+   "en_hash": "8235324bfc18bb1e",
+   "fr_hash": "678cb1577299c2c4"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-16-final-configuration-and-handover-to-nominal-ops/16-1-final-power-budget-verification",
-   "en_hash": "9b4c8a0859901e12",
-   "fr_hash": "149e70ededd83848"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-16--final-configuration-and-handover-to-nominal-ops/161-final-power-budget-verification",
+   "en_hash": "04c3fef706732e8f",
+   "fr_hash": "f0c7f2a9f126a60f"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-16-final-configuration-and-handover-to-nominal-ops/16-2-confirm-all-subsystem-states",
-   "en_hash": "91332dd49044a556",
-   "fr_hash": "76f5973420697319"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-16--final-configuration-and-handover-to-nominal-ops/162-confirm-all-subsystem-states",
+   "en_hash": "b0fa6eb4c9b048f0",
+   "fr_hash": "9200119b0453ccd9"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/phase-16-final-configuration-and-handover-to-nominal-ops/16-3-set-spacecraft-phase-to-nominal",
-   "en_hash": "396f72f6b3e1ecb6",
-   "fr_hash": "dafd75817c6ee4a3"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-16--final-configuration-and-handover-to-nominal-ops/163-set-spacecraft-phase-to-nominal",
+   "en_hash": "e0d19f8081fa2039",
+   "fr_hash": "ac82c5ba022df219"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/summary-command-count-by-position",
-   "en_hash": "6b9471d453d14dff",
-   "fr_hash": "cad5489174a2a2c8"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/summary-command-count-by-position",
+   "en_hash": "098b54b8fe84ecf6",
+   "fr_hash": "d639a1ae0c741bbe"
   },
   {
-   "id": "eosat-1-full-commissioning-sequence-spacecraft-off-payload-operations/tools-reference",
-   "en_hash": "819d4a37321034c8",
-   "fr_hash": "e67093c8e572c46f"
+   "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/tools-reference",
+   "en_hash": "3864126070eca673",
+   "fr_hash": "2a99c955a0ad5e99"
   }
  ],
- "en_commit": "3e80564"
+ "en_commit": "c4a140a"
 }

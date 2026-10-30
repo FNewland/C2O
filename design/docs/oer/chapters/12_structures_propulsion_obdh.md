@@ -121,18 +121,18 @@ The launch environment subjects the satellite to loads from engine thrust, aerod
 
 *[Source: ECSS-E-ST-10-03C; NASA GEVS (GSFC-STD-7000B); Falcon 9 Payload User's Guide; PSLV User's Guide]*
 
-**Random vibration PSD profile (typical CubeSat deployer level):**
+**Random vibration PSD profile (GSFC-STD-7000B minimum workmanship level, Table 2.4-4):**
 
 | Frequency (Hz) | ASD level (g$^2$/Hz) | Notes |
 |----------------|---------------------|-------|
-| 20 | 0.01 | Low-frequency start (ramp up) |
-| 50 | 0.04 | Ramp up at +6 dB/octave |
-| 100 | 0.04 | Flat region start |
-| 800 | 0.04 | Flat region end |
-| 2000 | 0.01 | Roll-off at −6 dB/octave |
-| **Overall** | **~7 g$_{\text{rms}}$** | Typical for CubeSat deployer qualification level |
+| 20 | 0.01 | Low-frequency start |
+| 20–80 | +3 dB/octave | Ramp up |
+| 80–500 | 0.04 | Flat plateau |
+| 500–2000 | −3 dB/octave | Roll-off |
+| 2000 | 0.01 | End of profile |
+| **Overall** | **6.8 g$_{\text{rms}}$** | Workmanship (acceptance) level; proto-flight is +3 dB, about 9.6 g$_{\text{rms}}$, for 1 min per axis (Chapter 14 §14.3.3) |
 
-The flat region at 0.04 g$^2$/Hz from 100–800 Hz is where most structural damage occurs, because this is where PCB resonances and solder-joint fatigue are excited.
+The flat region at 0.04 g$^2$/Hz from 80–500 Hz is where most structural damage occurs, because this is where PCB resonances and solder-joint fatigue are excited. The binding levels for a given flight are set by the deployer or launch-vehicle user's guide; use this profile only where it envelops them.
 
 **What fails during vibration testing:**
 1. **Solder joints:** heavy components (connectors, tall capacitors, transformers) with long lever arms crack at their solder joints. Mitigation: use surface-mount components, stake tall components with adhesive, use conformal coating.
@@ -671,7 +671,7 @@ Using the method of Chapter 7 §7.3.3 this gives an orbital lifetime of roughly 
 |-------|-------------|
 | CDS compliance | Standard dimensions, Al 7075-T6 anodised rails (8.5 mm), deployment switches, RBF pin, CG limits |
 | Structural materials | Al 7075-T6: $\sigma_y = 503$ MPa, $E = 72$ GPa; anodisation for wear/insulation; CFRP not suitable for rails |
-| Launch loads | 6–12 g axial quasi-static, ~7 g$_{\text{rms}}$ random vibration (20–2000 Hz), 500–2000 g shock; PCB solder joints are the weak point |
+| Launch loads | 6–12 g axial quasi-static, 6.8 g$_{\text{rms}}$ random vibration (20–2000 Hz; 9.6 g$_{\text{rms}}$ proto-flight), 500–2000 g shock; PCB solder joints are the weak point |
 | Structural MoS | $\text{MoS} = \sigma_{\text{allow}}/(\sigma_{\text{design}} \times \text{FoS}) - 1 \geq 0$; FoS 1.25 yield / 1.5 ultimate (metallic) |
 | Frequency requirement | First mode > 40 Hz; CubeSat Al structures easily exceed this (~330 Hz for a 3U box beam); local modes (PCBs, deployables) are the risk |
 | Tsiolkovsky equation | $m_{\text{prop}} = m_{\text{dry}} \times (e^{\Delta V/(I_{sp} g_0)} - 1)$; exponential growth with $\Delta V / v_e$ |

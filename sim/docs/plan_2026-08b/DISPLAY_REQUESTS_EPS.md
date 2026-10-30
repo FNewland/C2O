@@ -21,7 +21,7 @@ elif self.power_margin_w < -10:   return "discharging"
 else:                             return "stable"
 ```
 
-EO-Sat-1's *entire* generation is ~85 W sunlit and ~38 W orbit-average, and
+EOSAT-1's *entire* generation is ~85 W sunlit and ~38 W orbit-average, and
 after the R1 re-sizing (POWER_SIZING.md) peak generation is 88.6 W. A +50 W
 margin is therefore reachable only in a quiescent, wings-deployed, low-beta,
 sunlit corner case. **In normal nominal operations — which is a real, healthy,

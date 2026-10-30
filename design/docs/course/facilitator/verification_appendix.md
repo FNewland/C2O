@@ -58,12 +58,12 @@ semi-major axis.)
 remaining error attributable to the J₂ secular correction not
 applied here. At GEO, T = 1436 min vs 23.93 h × 60 = 1436 min ✓.*
 
-**Worked sanity check.** For a 450 km SSO:
-a = 6378.137 + 450 = 6828.137 km;
-T = 2π √(6828.137³ / 398600.4418) = 2π × 894.8 = 5621 s = 93.7 min.
-From the simulator's `orbit.yaml` for EOSAT-1: T = 60 × 24 / 15.24 =
-94.5 min — agreement to ~1 %, with the residual due to mean motion
-being defined in revolutions per solar day. ✓
+**Worked sanity check.** For the EOSAT-1 mean altitude of 513 km:
+a = 6378.137 + 513 = 6891.137 km;
+T = 2π √(6891.137³ / 398600.4418) = 2π × 906.1 = 5693 s = 94.9 min.
+From the EOSAT-1 orbit definition (`orbit.yaml`): T = 60 × 24 / 15.24 =
+94.5 min — agreement to ~0.4 %, the residual being that 513 km is a mean
+geodetic altitude rather than a − R_E (the mean motion implies a = 6872 km). ✓
 
 ---
 

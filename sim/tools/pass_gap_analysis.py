@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""EO-Sat-1 multi-ground-station pass-gap analysis.
+"""EOSAT-1 multi-ground-station pass-gap analysis.
 
 Propagates the mission TLE for 48 h from the mission T-0 epoch, computes
 contact windows against ALL ground stations in configs/eosat1/orbit.yaml

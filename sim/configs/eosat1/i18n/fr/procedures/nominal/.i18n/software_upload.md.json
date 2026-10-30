@@ -14,8 +14,8 @@
   },
   {
    "id": "nom-006-software-upload/purpose",
-   "en_hash": "3aea875705b9dc71",
-   "fr_hash": "bea90d5f3c21b3ca"
+   "en_hash": "22e8416e07d2d4af",
+   "fr_hash": "8aaa2c5845f16f5f"
   },
   {
    "id": "nom-006-software-upload/prerequisites",
@@ -54,13 +54,13 @@
   },
   {
    "id": "nom-006-software-upload/procedure-steps/step-6-activate-new-software-image-if-full-image-replacement",
-   "en_hash": "b375db78f33c4d66",
-   "fr_hash": "67f5b77802a050d1"
+   "en_hash": "cff360f9876431a4",
+   "fr_hash": "675653d82224fde8"
   },
   {
    "id": "nom-006-software-upload/procedure-steps/step-7-confirm-boot-into-new-software",
-   "en_hash": "aaa7f3be9308084c",
-   "fr_hash": "370b14389d9bb2b8"
+   "en_hash": "736ceed3e6286610",
+   "fr_hash": "274433ab0ccdcfc3"
   },
   {
    "id": "nom-006-software-upload/procedure-steps/step-8-post-upload-verification-and-restore-operations",
@@ -79,8 +79,8 @@
   },
   {
    "id": "nom-006-software-upload/recovery-actions/recovery-action-2-boot-failure-obc-in-bootloader",
-   "en_hash": "21911ef89c893d6a",
-   "fr_hash": "b7bce7a0cf6a7706"
+   "en_hash": "80f2c200f2dfba93",
+   "fr_hash": "355cb22032d6e853"
   },
   {
    "id": "nom-006-software-upload/recovery-actions/recovery-action-3-link-loss-during-upload",
@@ -94,9 +94,9 @@
   },
   {
    "id": "nom-006-software-upload/post-conditions",
-   "en_hash": "107284f73a60bcbb",
-   "fr_hash": "3716c1c7a5130874"
+   "en_hash": "da92911bb8b553a8",
+   "fr_hash": "ceab7e4fabded2e0"
   }
  ],
- "en_commit": "3e80564"
+ "en_commit": "c4a140a"
 }

@@ -112,7 +112,7 @@ The ID together with the shipped English title is the key. All five families use
 | CTG-015 | Corrupted Image Recovery | Reprise après image corrompue | Récupération d'(une) image corrompue (O4a, O4b) |
 | CTG-016 | Memory Segment Failure | Défaillance d'un segment mémoire | — |
 | CTG-017 | Bus Failure Switchover | Basculement sur panne de bus | Basculement après panne de bus (O2) |
-| CTG-018 | Boot Loader Recovery | Reprise par le chargeur d'amorçage | Reprise du chargeur d'amorçage (O4b) |
+| CTG-018 (now CTG-021) | Boot Loader Recovery | Reprise par le chargeur d'amorçage | Reprise du chargeur d'amorçage (O4b) |
 | CTG-019 | No Telemetry at Pass Start | Absence de télémesure en début de passage | … au début du passage (P2a, W2); Absence de TM au début du passage (W2) → Absence de TM en début de passage |
 | CTG-020 | Ground Station Antenna Failure | Panne d'antenne de station sol | — |
 | CTG-021 | OBC Bootloader Recovery | Reprise par le chargeur d'amorçage de l'OBC | Reprise de l'OBC depuis le chargeur d'amorçage (O4b) |

@@ -20,8 +20,8 @@
 > **Requirement Quality (SMART):**
 > **S**pecific -- **M**easurable -- **A**chievable -- **R**elevant -- **T**raceable
 
-> **Verification Methods (ATID):**
-> **A**nalysis -- **T**est -- **I**nspection -- **D**emonstration
+> **Verification Methods (ATIR(D)):**
+> **A**nalysis -- **T**est -- **I**nspection -- **R**eview of design -- (**D**emonstration, which ECSS counts as test and NASA lists separately)
 
 ---
 

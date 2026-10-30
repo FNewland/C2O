@@ -84,8 +84,8 @@
   },
   {
    "id": "chapter-5-requirements-engineering/5-5-verification-methods-atird",
-   "en_hash": "8cc58c8125470f72",
-   "fr_hash": "6318d9c773814ec3"
+   "en_hash": "87cb741f9ef6de3a",
+   "fr_hash": "3540c518d2daf121"
   },
   {
    "id": "chapter-5-requirements-engineering/5-5-verification-methods-atird/5-5-1-verification-method-selection-guide",
@@ -124,9 +124,9 @@
   },
   {
    "id": "chapter-5-requirements-engineering/references",
-   "en_hash": "5e12e086ad8bc4ca",
-   "fr_hash": "a21ab9e71b479932"
+   "en_hash": "9214e047fd203830",
+   "fr_hash": "6779345732d52bdd"
   }
  ],
- "en_commit": "be16bc3"
+ "en_commit": "c4a140a"
 }

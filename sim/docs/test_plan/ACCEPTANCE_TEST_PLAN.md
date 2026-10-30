@@ -337,7 +337,7 @@ Each test loads and executes a procedure via the MCS API, verifying completion.
 |---------|-----------|------------------|
 | PROC-LEOP-001 | First Acquisition | sw_image=1, frame_sync locked |
 | PROC-LEOP-002 | Initial Health Check | All subsystem params in range |
-| PROC-LEOP-003 | Initial Orbit Determination | GPS tracking, altitude 450±10 km |
+| PROC-LEOP-003 | Initial Orbit Determination | GPS tracking, altitude 495–540 km |
 | PROC-LEOP-004 | Solar Array Verification | Both wings deployed, power > 20W |
 | PROC-LEOP-005 | Sun Acquisition | Rates < 0.5°/s, sun error < 30° |
 | PROC-LEOP-006 | Time Synchronisation | Clock delta < 1s |

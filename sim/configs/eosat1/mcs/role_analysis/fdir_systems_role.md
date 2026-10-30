@@ -39,7 +39,7 @@
 | OBC Redundancy Switchover | CTG-011 | Execute switchover, verify new OBC |
 | Memory Segment Failure | CTG-016 | Isolate bad segment, remap storage |
 | Bus Failure Switchover | CTG-017 | Switch CAN bus, verify communication |
-| Boot Loader Recovery | CTG-018 | Execute boot loader recovery sequence |
+| OBC Bootloader Recovery | CTG-021 | Execute bootloader recovery, verify app boot |
 
 ### Emergency
 
@@ -194,7 +194,7 @@ Available when OBC is in boot loader (sw_image=0). Minimal parameter set:
 | Watchdog recovery (CTG-010) | flight_director | FD authorizes; fdir_systems verifies OBC recovered, checks reboot_count and last_reboot_cause |
 | OBC switchover (CTG-011) | flight_director | FD authorizes OBC_SWITCH_UNIT; fdir_systems executes and verifies new OBC online |
 | Bus failure (CTG-017) | flight_director | FD authorizes OBC_SELECT_BUS; fdir_systems switches bus and verifies all nodes responding |
-| Boot loader recovery (CTG-018) | flight_director | FD authorizes; fdir_systems manages boot sequence (OBC_BOOT_INHIBIT, MEM_CHECK, OBC_BOOT_APP) |
+| OBC bootloader recovery (CTG-021) | flight_director | FD authorizes; fdir_systems manages boot sequence (OBC_BOOT_INHIBIT, MEM_CHECK, OBC_BOOT_APP) |
 | OBC reboot (EMG-003) | flight_director | FD authorizes OBC_REBOOT; fdir_systems executes and monitors recovery via SID 10 |
 
 ### FDIR Rules Managed by This Position

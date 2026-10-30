@@ -113,7 +113,7 @@ maps C to exactly one transfer-frame length:
 | conv(7,½) + RS | 2·1275 + 2 = 2552 |
 
 v2 decodes a frame under each option and keeps the one whose FECF checks.
-The SCID then comes out of the frame header. The EO-Sat-1 ladder is
+The SCID then comes out of the frame header. The EOSAT-1 ladder is
 recovered exactly:
 
 | Tier | Recovered | Frame air time |

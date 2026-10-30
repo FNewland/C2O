@@ -59,9 +59,10 @@ array_losses:
 obc_power_w: 6.0
 
 # Body-mounted panels + deployable wings on the +/-Y faces, single-axis solar
-# array drive about body Z (= orbit normal). 6U CDS envelope 100x226x366 mm —
+# array drive about body Y (= orbit normal). 6U CDS envelope 100x226x366 mm —
 # a box has only ONE pair of each face size (brief 01 F13); packing factors
-# 73-82 %. -Z carries the imager aperture and radiator: no cells.
+# 73-82 %. Body frame (ruling Q4): +Z = zenith, -Z = nadir in NOMINAL.
+# -Z carries the imager aperture and radiator: no cells. +Z (zenith) does.
 solar_panels:
   px_area_m2: 0.060    # 366x226 face, 73% packing
   mx_area_m2: 0.060
@@ -82,10 +83,15 @@ solar_panels:
   #   * Endurosat quote 19.2 W in LEO from one 0.0715 m2 panel = 268 W/m2
   #     delivered — which is this file's own EOL K (267.9). The loss stack was
   #     already right; only the AREA was fictional.
-  # Peak whole-spacecraft generation drops 123.8 -> 88.6 W, orbit-average at
-  # the worst beta (49.8 deg, EOL) 54.5 -> 39.6 W, against a 27.7 W nominal
-  # orbit-average load: R1's acceptance criterion (gen > load with ALL
-  # nominal systems on including ADCS) still closes at 1.43x.
+  # Peak whole-spacecraft generation drops 123.8 -> 88.6 W. (The 2026-08b
+  # orbit-average figures quoted here, 54.5 -> 39.6 W at beta 49.8 deg, were
+  # for an orbit EOSAT-1 no longer flies.) Re-measured 2026-10-30 with
+  # tools/power_budget.py on the 97.39 deg / LTAN 10:00 TLE: |beta| spans
+  # 20.8-31.2 deg over the year (eclipse fraction 0.351-0.372, 33.2-35.2 min).
+  # EOL orbit-average generation is 45.1 W at the worst-generation beta
+  # (-31.2 deg) and 47.0 W at the longest-eclipse beta (-20.8 deg) against
+  # a 28.8 W nominal load: R1's acceptance criterion (gen > load with ALL
+  # nominal systems on including ADCS) closes at 1.57x (worst case).
   # Derivation and citations: docs/plan_2026-08b/POWER_SIZING.md.
   wing_py_area_m2: 0.120
   wing_my_area_m2: 0.120
@@ -96,11 +102,12 @@ solar_panels:
   # the sun's projection perpendicular to the drive axis continuously
   # (cos beta), 1.56x the fixed-wing |sin phi| duty from the same area.
   sada_present: true
-  # Phase C: with the real LVLH attitude frame (+Z = nadir boresight) the
-  # orbit normal is the body ±Y axis (the wing mounting axis), so the drive
-  # rotates about Y. Phase B's synthetic frame had labelled the same
-  # geometric axis 'z' before an attitude existed.
-  sada_axis: y             # rotation axis = body Y = orbit normal (LVLH)
+  # In the nominal nadir-pointing attitude (ruling Q4: -Z = nadir imager
+  # boresight, +Z = zenith, +X ~ velocity) the orbit normal is the body ±Y
+  # axis (the wing mounting axis), so the drive rotates about Y. Phase B's
+  # synthetic frame had labelled the same geometric axis 'z' before an
+  # attitude existed.
+  sada_axis: y             # rotation axis = body Y = orbit normal
   sada_tracking: true      # false => wings frozen at solar_array_drive_angle
   sada_max_rate_deg_s: 1.0
 # ── Payload (2026-08b R1) ──────────────────────────────────────────────

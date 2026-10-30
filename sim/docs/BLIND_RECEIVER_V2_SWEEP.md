@@ -95,7 +95,7 @@ What the matrix shows:
 | 8PSK conv+RS | 12 dB | 12.1 dB | ~6 dB | ~6 dB |
 | GMSK conv+RS | 8 dB | 12.9 dB | ~3 dB coherent | ~10 dB |
 
-The rungs EO-Sat-1 flies (BPSK conv+RS, and QPSK with RS) are within about
+The rungs EOSAT-1 flies (BPSK conv+RS, and QPSK with RS) are within about
 2.5 dB of theory. The losses sit in the families the ladder does not fly, and they point
 straight at what to build next (§4).
 

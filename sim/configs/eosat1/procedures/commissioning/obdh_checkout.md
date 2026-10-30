@@ -41,12 +41,14 @@ proceeding.
 **GO/NO-GO:** CPU load within acceptable range
 
 ### Step 3 — Verify Memory Status
-**TC:** `GET_PARAM(param_id=0x0303)` (Service 20, Subtype 3) — RAM usage percentage
-**TC:** `GET_PARAM(param_id=0x0304)` (Service 20, Subtype 3) — EDAC error count
-**Verify:** RAM usage < 70% within 10s
-**Verify:** EDAC single-bit error count reported (record value) within 10s
-**Verify:** EDAC multi-bit error count = 0 within 10s
-**GO/NO-GO:** Memory healthy with no uncorrectable errors
+**TC:** `GET_PARAM(param_id=0x0303)` (Service 20, Subtype 3) — mass-memory usage (`obdh.mmm_used`)
+**TC:** `GET_PARAM(param_id=0x031E)` (Service 20, Subtype 3) — memory error count, correctable + uncorrectable (`obdh.mem_errors`)
+**TC:** `GET_PARAM(param_id=0x0319)` (Service 20, Subtype 3) — single-event upset counter (`obdh.seu_count`)
+**Verify:** Mass-memory usage < 70% within 10s
+**Verify:** `obdh.mem_errors` (0x031E) reported within 10s --- record as the baseline
+**Verify:** `obdh.seu_count` (0x0319) reported within 10s --- record as the baseline
+**Note:** 0x0304 is `obdh.tc_rx_count` (Step 4), not a memory error count.
+**GO/NO-GO:** Memory error and SEU counters baselined and not incrementing between reads
 
 ### Step 4 — Check TC/TM Packet Counters
 **TC:** `GET_PARAM(param_id=0x0304)` (Service 20, Subtype 3) — TC received counter (`obdh.tc_rx_count`)
@@ -68,16 +70,21 @@ nothing).
 
 ### Step 6 — Verify Autonomous HK Generation
 **Action:** In NOMINAL mode, OBC should generate periodic HK packets autonomously. Wait 60 seconds and verify TM counter increment without ground request.
-**TC:** `GET_PARAM(param_id=0x0312)` (Service 20, Subtype 3) — TM counter before
+**TC:** `GET_PARAM(param_id=0x0307)` (Service 20, Subtype 3) — TM counter before (`obdh.tm_pkt_count`)
 **Action:** Wait 60 seconds. Do not send any TCs.
-**TC:** `GET_PARAM(param_id=0x0312)` (Service 20, Subtype 3) — TM counter after
+**TC:** `GET_PARAM(param_id=0x0307)` (Service 20, Subtype 3) — TM counter after (`obdh.tm_pkt_count`)
+**Note:** 0x0307 is the TM packet counter. 0x0312 is the S15 HK store fill
+(`obdh.hktm_buf_fill`), which says nothing about TM generation.
 **Verify:** TM counter has incremented (autonomous HK active) within 10s
 **GO/NO-GO:** Autonomous housekeeping generation confirmed
 
 ### Step 7 — Verify Watchdog Timer
-**TC:** `GET_PARAM(param_id=0x0305)` (Service 20, Subtype 3) — watchdog status
+**TC:** `OBC_DIAGNOSTIC` (Service 8, Subtype 1, func_id 61) — OBC health report
 **TC:** `GET_PARAM(param_id=0x0316)` (Service 20, Subtype 3) — last reboot cause (`obdh.last_reboot_cause`)
-**Verify:** Watchdog status = ENABLED (value 1) within 10s
+**Verify:** OBC_DIAGNOSTIC reply byte 5 = 1 (watchdog armed) within 10s --- the reply
+carries mode (byte 0), CPU load (bytes 1-4) and the watchdog state (byte 5). The
+watchdog state is in this reply only; it is not a telemetry parameter (0x0305 is
+`obdh.tc_acc_count`).
 **Verify:** Last reboot cause = 0 (none) — no unexpected resets within 10s
 **GO/NO-GO:** Watchdog active, no anomalous resets recorded
 
@@ -93,14 +100,14 @@ believing it was NOMINAL, and handed every subsequent card a SAFE OBC.
 **GO/NO-GO:** Excursion bidirectional and clean, OBC restored to NOMINAL
 
 ### Step 9 — Record OBDH Baseline
-**Action:** Compile CPU load, memory usage, EDAC counters, TC/TM statistics, and watchdog status into OBDH Checkout Report. These form the baseline for anomaly detection during nominal operations.
+**Action:** Compile CPU load, memory usage, memory error and SEU counters, TC/TM statistics, and watchdog status into OBDH Checkout Report. These form the baseline for anomaly detection during nominal operations.
 **GO/NO-GO:** OBDH checkout complete — all parameters nominal
 
 ## Off-Nominal Handling
-- If `obdh.cpu_load` > 60%: Investigate running tasks via `GET_PARAM(param_id=0x0307)` (task list). If unexpected task consuming resources, consider targeted task kill after Flight Director approval. Do not reboot unless CPU > 90%.
-- If EDAC multi-bit errors > 0: Memory corruption detected. Attempt a memory scrub with `OBC_MEMORY_SCRUB` (Service 8, Subtype 1, func_id 51). If errors persist, identify affected memory region. May require fallback to redundant OBC.
+- If `obdh.cpu_load` > 60%: Investigate the CPU load trend (there is no task-list telemetry; 0x0307 is the TM packet counter). If unexpected task consuming resources, consider targeted task kill after Flight Director approval. Do not reboot unless CPU > 90%.
+- If `obdh.mem_errors` (0x031E) increments between reads: Memory corruption detected. Attempt a memory scrub with `OBC_MEMORY_SCRUB` (Service 8, Subtype 1, func_id 51). If errors persist, identify affected memory region. May require fallback to redundant OBC.
 - If OBC mode transition fails: Retry command once. If still fails, check TC acceptance status. Verify command authentication. If NOMINAL mode unreachable, continue commissioning in SAFE mode with manual HK requests.
-- If watchdog status = DISABLED: Re-enable via `SET_PARAM(param_id=0x0305, value=1)`. Investigate why watchdog was disabled — may indicate recovery from earlier fault.
+- If OBC_DIAGNOSTIC reply byte 5 = 0 (watchdog disarmed): Re-enable with `OBC_WATCHDOG_ENABLE` (Service 8, Subtype 1, func_id 59) and repeat the diagnostic. Investigate why watchdog was disabled — may indicate recovery from earlier fault.
 - If TC rejected counter > 0: Review ground command log for any invalid sequences. After investigation, record the counter value as the new baseline (there is no counter-reset command; never write 0x0311, which is `obdh.sw_image`).
 - If last reset cause != POWER_ON: Investigate reset cause code. If brownout or watchdog reset occurred during LEOP, review corresponding telemetry timeline. Document in anomaly log.
 

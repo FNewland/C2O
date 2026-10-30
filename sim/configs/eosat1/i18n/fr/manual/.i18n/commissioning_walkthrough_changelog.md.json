@@ -8,15 +8,15 @@
    "fr_hash": "e3b0c44298fc1c14"
   },
   {
-   "id": "commissioning-walkthrough-development-change-log",
-   "en_hash": "14854c8f489a69af",
-   "fr_hash": "8ed3e552c9e495ca"
+   "id": "commissioning-walkthrough--development-change-log",
+   "en_hash": "34c326ebbfdf5f08",
+   "fr_hash": "faaeac5e11c9b271"
   },
   {
-   "id": "commissioning-walkthrough-development-change-log/known-simulator-issues",
-   "en_hash": "8db67ee05db0ee13",
-   "fr_hash": "d87fadcc36ff483c"
+   "id": "commissioning-walkthrough--development-change-log/known-simulator-issues",
+   "en_hash": "25ba8b96c8780f17",
+   "fr_hash": "9eb03395f0d054a7"
   }
  ],
- "en_commit": "983af0f"
+ "en_commit": "c4a140a"
 }

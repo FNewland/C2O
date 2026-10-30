@@ -492,13 +492,13 @@ commands:
           - { value: 1, label: SAFE_BOOT }
           - { value: 2, label: DETUMBLE }
           - { value: 3, label: COARSE_SUN }
-          - { value: 4, label: NOMINAL_NADIR }
+          - { value: 4, label: NOMINAL }
           - { value: 5, label: FINE_POINT, description: "Refused with TM(1,8) unless aocs.fine_ready (0x02C5) == 0" }
           - { value: 6, label: SLEW }
-          - { value: 7, label: DESATURATION }
-          - { value: 8, label: ECLIPSE_PROPAGATE }
+          - { value: 7, label: DESAT }
+          - { value: 8, label: ECLIPSE }
           - { value: 9, label: INERTIAL }
-        description: "0=off,1=safe_boot,2=detumble,3=coarse_sun,4=nominal_nadir,5=fine_point,6=slew,7=desaturation,8=eclipse_propagate,9=inertial. Mode 5 is refused with TM(1,8) unless the aocs.fine_ready (0x02C5) precondition bitmask is 0."
+        description: "0=off,1=safe_boot,2=detumble,3=coarse_sun,4=nominal,5=fine_point,6=slew,7=desaturation,8=eclipse,9=inertial. Mode 5 is refused with TM(1,8) unless the aocs.fine_ready (0x02C5) precondition bitmask is 0."
   - name: AOCS_DESATURATE
     service: 8
     subtype: 1
@@ -2423,7 +2423,7 @@ quick_commands:
   - { group: "AOCS EQUIPMENT", label: "ST1 Off", command: ST1_POWER, name: ST1_OFF, args: { "on": 0 } }
   - { group: "AOCS EQUIPMENT", label: "ST2 On",  command: ST2_POWER, name: ST2_ON,  args: { "on": 1 } }
   - { group: "AOCS EQUIPMENT", label: "ST2 Off", command: ST2_POWER, name: ST2_OFF, args: { "on": 0 } }
-  # The three single-axis gyros. EO-Sat-1 has NO redundant IMU and NO IMU power
+  # The three single-axis gyros. EOSAT-1 has NO redundant IMU and NO IMU power
   # LINE — the units are S2 devices 0x0206-0x0208 (518-520), one per body axis,
   # and these buttons are the operator's only one-click power control for them.
   # They were missing from this list, so the console's AOCS EQUIPMENT panel

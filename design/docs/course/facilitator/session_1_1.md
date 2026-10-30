@@ -207,7 +207,7 @@ The right side answers "how do we verify that what we built satisfies the origin
 
 The orange dashed arrows in the diagram represent **horizontal traceability** -- the principle that every element on the left must have a corresponding verification/validation activity on the right:
 
-- Each **requirement** (left) has a **verification method** (right): test, analysis, inspection, or demonstration (TAID)
+- Each **requirement** (left) has a **verification method** (right): analysis, test, inspection or review of design, plus the demonstration that NASA practice adds (ATIR(D))
 - Each **design decision** (left) has a **test or analysis** (right) to confirm it works
 - This traceability is captured in the **Requirements Verification Matrix (RVM)**
 
@@ -253,7 +253,7 @@ These processes build, verify, and deliver the solution. They correspond to the 
 |---|---------|-------------|------------|-------------------|
 | 5 | **Product Implementation** | Make, buy, code, or reuse lowest-level products | Hardware/software products | Section 5.1 |
 | 6 | **Product Integration** | Assemble per integration plan, verify interfaces | Integrated system | Section 5.2 |
-| 7 | **Product Verification** | Confirm product meets technical requirements (TAID) | Verification evidence | Section 5.3 |
+| 7 | **Product Verification** | Confirm product meets technical requirements (ATIR(D)) | Verification evidence | Section 5.3 |
 | 8 | **Product Validation** | Confirm product meets stakeholder expectations | Validation evidence | Section 5.4 |
 | 9 | **Product Transition** | Deliver, deploy, hand over to operations | Operational system | Section 5.5 |
 

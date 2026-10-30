@@ -51,15 +51,30 @@ désactive toutes les opérations programmées et active la distribution de puis
 ### Étape 3 --- Vérifier le pointage sûr de l'AOCS
 **TC:** `HK_REQUEST(sid=2)` (Service 3, Subtype 27) --- données de servitude AOCS.
 **Contrôler :** `aocs.mode` (0x020F) --- doit être COARSE_SUN (3) ou DETUMBLE (2).
-**Si COARSE_SUN :** Vérifier `aocs.att_error` (0x0217) < 10 deg. L'étape 4 s'applique ensuite.
-**Si DETUMBLE :** Surveiller les vitesses. Si toutes les vitesses < 0.1 deg/s, commander COARSE_SUN :
-**TC:** `AOCS_SET_MODE(mode=3)` (Service 8, Subtype 1, func_id 0) --- COARSE_SUN.
-**En cas de culbutage (vitesses > 2 deg/s) :** Exécuter EMG-005 avant de continuer.
-**Si AOCS OFF :** Commander d'abord l'amortissement des vitesses angulaires :
-**TC:** `AOCS_SET_MODE(mode=2)` (Service 8, Subtype 1, func_id 0) --- DETUMBLE.
-**GO/NO-GO:** AOCS en COARSE_SUN ou en amortissement actif avec des vitesses décroissantes.
+**Note:** NE PAS commander COARSE_SUN. L'AOCS passe de lui-même de DETUMBLE à
+COARSE_SUN dès que les vitesses angulaires sont restées sous 0.5 deg/s pendant
+30 s (le même passage automatique que celui observé par LEOP-005). Le commander est
+inutile, et un COARSE_SUN engagé au-dessus du seuil de vitesse ne tient pas.
+**BRANCH:** `aocs.mode == 0` -> GO `STEP-3-DETUMBLE` | NO-GO `STEP-3-WAIT` (timeout 10 s)
+**Note:** GO --- l'AOCS est OFF : commander d'abord DETUMBLE. NO-GO --- l'AOCS est
+déjà dans un mode : ne rien commander et attendre la tenue de pointage solaire.
+
+**LABEL:** `STEP-3-DETUMBLE`
+**TC:** `AOCS_SET_MODE(mode=2)` (Service 8, Subtype 1, func_id 0) --- DETUMBLE (l'AOCS était OFF).
+
+**LABEL:** `STEP-3-WAIT`
+**BRANCH:** `aocs.mode == 3` -> GO `STEP-4` | NO-GO `STEP-3-EMG-005` (timeout 1800 s)
+**Note:** GO --- COARSE_SUN, déjà tenu ou atteint par le passage automatique :
+passer à l'étape 4, qui vérifie le pointage solaire. NO-GO --- pas de COARSE_SUN
+au bout de 30 min : le satellite culbute ou l'amortissement ne converge pas.
+
+**LABEL:** `STEP-3-EMG-005`
+**Note:** Exécuter EMG-005 (perte d'attitude) maintenant. Ne reprendre cette carte, à
+l'étape 4, que lorsque EMG-005 a laissé l'AOCS en COARSE_SUN.
+**GO/NO-GO:** EMG-005 terminée et AOCS en COARSE_SUN --- reprise à l'étape 4 -> GO `STEP-4` | NO-GO `STEP-END`
 
 ### Étape 4 --- Vérifier l'acquisition du Soleil et l'état de puissance
+**LABEL:** `STEP-4`
 **Verify:** `aocs.att_error` (0x0217) < 5.0 deg (pointage solaire obtenu).
 **Verify:** `eps.sa_a_current` (0x0103) > 0.5 A --- générateur solaire A éclairé.
 **Verify:** `eps.sa_b_current` (0x0104) > 0.5 A --- générateur solaire B éclairé.
@@ -89,7 +104,8 @@ désactive toutes les opérations programmées et active la distribution de puis
 **Consigner :** `eps.bat_voltage` (0x0100), `eps.bus_voltage` (0x0105) --- état complet de la puissance.
 **GO/NO-GO:** La commission d'examen des anomalies se réunit pour évaluer les données et approuver le plan de rétablissement.
 
-### Étape 7 --- Attente de stabilisation (3 orbites au minimum)
+### Étape 7 --- Attente de stabilisation (3 orbites au minimum)
+**LABEL:** `STEP-7`
 **Durée :** Maintenir le mode survie d'urgence pendant au moins 3 orbites (~4,75 heures).
 **Surveiller :** Tous les paramètres critiques à chaque passage sur une station sol.
 **Confirmer :** Aucune nouvelle anomalie, aucun redémarrage supplémentaire de l'OBC, températures stables, puissance en tendance positive.
@@ -103,36 +119,41 @@ désactive toutes les opérations programmées et active la distribution de puis
 **TC:** `HEATER_OBC(on=1)` (Service 8, Subtype 1, func_id 41) --- rétablir le réchauffeur OBC.
 **Verify:** `tcs.temp_obc` (0x0406) tendant vers la plage nominale (-10 °C à +40 °C).
 **Verify:** hausse de `eps.power_cons` (0x0106) < 10 W. Le bilan de puissance du satellite reste positif.
-**GO/NO-GO:** Sous-système thermique nominal, le bilan de puissance absorbe la charge ajoutée.
+**GO/NO-GO:** Sous-système thermique nominal, le bilan de puissance absorbe la charge ajoutée ; aucune nouvelle anomalie -> GO `STEP-R2` | NO-GO `STEP-7` (max 2)
 
-### Orbite de rétablissement R+2 --- Rétablir l'AOCS complet (SoC > 40 % requis)
+### Orbite de rétablissement R+2 --- Rétablir l'AOCS complet (SoC > 40 % requis)
+**LABEL:** `STEP-R2`
 **TC:** `OBC_SET_MODE(mode=1)` (Service 8, Subtype 1, func_id 50) --- OBC en mode SAFE (depuis EMERGENCY).
 **Verify:** `obdh.mode` (0x0300) = SAFE (1) sous 5 s.
 **TC:** `AOCS_SET_MODE(mode=4)` (Service 8, Subtype 1, func_id 0) --- mode NOMINAL.
 **Verify:** `aocs.mode` (0x020F) = NOMINAL (4) sous 5 s.
 **Verify:** `aocs.att_error` (0x0217) < 1.0 deg sous 20 minutes.
 **Verify:** `aocs.rw1_speed` (0x0207) à `aocs.rw4_speed` (0x020A) toutes dans les limites.
-**GO/NO-GO:** Contrôle d'attitude complet rétabli, les 4 roues opérationnelles.
+**GO/NO-GO:** Contrôle d'attitude complet rétabli, les 4 roues opérationnelles ; aucune nouvelle anomalie -> GO `STEP-R3` | NO-GO `STEP-7` (max 2)
 
-### Orbite de rétablissement R+3 --- Rétablir le réchauffeur du propulseur et le contrôle thermique complet (SoC > 50 % requis)
+### Orbite de rétablissement R+3 --- Rétablir le réchauffeur du propulseur et le contrôle thermique complet (SoC > 50 % requis)
+**LABEL:** `STEP-R3`
 **TC:** `HEATER_THRUSTER(on=1)` (Service 8, Subtype 1, func_id 42) --- rétablir le réchauffeur du propulseur.
 **Verify:** `eps.power_cons` (0x0106) dans le bilan nominal (< 90 W).
 **Verify:** toutes les températures dans les plages nominales.
-**GO/NO-GO:** Contrôle thermique complet rétabli, marge de puissance suffisante.
+**GO/NO-GO:** Contrôle thermique complet rétabli, marge de puissance suffisante ; aucune nouvelle anomalie -> GO `STEP-R4` | NO-GO `STEP-7` (max 2)
 
-### Orbite de rétablissement R+4 --- Rétablir le mode nominal de l'OBC (SoC > 55 % requis)
+### Orbite de rétablissement R+4 --- Rétablir le mode nominal de l'OBC (SoC > 55 % requis)
+**LABEL:** `STEP-R4`
 **TC:** `OBC_SET_MODE(mode=0)` (Service 8, Subtype 1, func_id 50) --- OBC en mode NOMINAL.
 **Verify:** `obdh.mode` (0x0300) = NOMINAL (0) sous 5 s.
 **Verify:** ordonnancement de bord repris, données de servitude à la cadence nominale.
 **Verify:** aucune incrémentation anormale du compteur de redémarrages : `obdh.reboot_count` (0x030A) stable.
-**GO/NO-GO:** Opérations nominales de l'OBC confirmées.
+**GO/NO-GO:** Opérations nominales de l'OBC confirmées ; aucune nouvelle anomalie -> GO `STEP-R5` | NO-GO `STEP-7` (max 2)
 
-### Orbite de rétablissement R+5 --- Rétablir la charge utile (SoC > 60 % requis)
+### Orbite de rétablissement R+5 --- Rétablir la charge utile (SoC > 60 % requis)
+**LABEL:** `STEP-R5`
 **TC:** `PAYLOAD_SET_MODE(mode=1)` (Service 8, Subtype 1, func_id 26) --- charge utile en STANDBY.
 **Verify:** `payload.mode` (0x0600) = STANDBY (1) sous 10 s.
 **Verify:** `eps.power_cons` (0x0106) dans le bilan opérationnel complet (< 110 W).
 **Verify:** le bilan de puissance du satellite reste positif sur une orbite complète, éclipse comprise.
-**GO/NO-GO:** Opérations nominales complètes rétablies. Clore l'urgence et reprendre le calendrier de la mission.
+**GO/NO-GO:** Opérations nominales complètes rétablies ; aucune nouvelle anomalie. Clore l'urgence et reprendre le calendrier de la mission. -> GO `STEP-END` | NO-GO `STEP-7` (max 2)
+**LABEL:** `STEP-END`
 
 ## Synthèse du calendrier de rétablissement
 | Phase | Orbite | Seuil de SoC | Durée depuis l'urgence | Action clé |
@@ -148,7 +169,7 @@ désactive toutes les opérations programmées et active la distribution de puis
 - Si l'OBC n'accepte pas les commandes de mode : demander un rapport de santé de l'OBC avec `OBC_DIAGNOSTIC` (func_id 61) et, si le directeur de vol l'autorise, le réinitialiser avec `OBC_REBOOT` (func_id 52), puis renvoyer la commande. Si le problème persiste, le satellite reste en mode d'urgence autonome jusqu'au prochain cycle de redémarrage de l'OBC.
 - Si plusieurs roues sont tombées en panne pendant l'anomalie : rester en COARSE_SUN indéfiniment. Le pointage nadir exige au moins 3 roues. Planifier des opérations à capacité réduite.
 - Si le SoC n'atteint pas 30 % en 10 orbites : dégradation possible du générateur solaire. Réévaluer le bilan de puissance pour des opérations réduites à long terme. Se reporter à EMG-002.
-- Si une nouvelle anomalie survient pendant le rétablissement : arrêter le rétablissement, se replacer dans l'attente de stabilisation (étape 7) et réévaluer avant de continuer.
+- Si une nouvelle anomalie survient pendant le rétablissement : arrêter le rétablissement, se replacer dans l'attente de stabilisation (étape 7) et réévaluer avant de continuer. C'est la branche NO-GO de chaque point de décision des orbites de rétablissement, et cette boucle est bornée (max 2) : si le même point de décision échoue une troisième fois, arrêter le rétablissement par étapes, maintenir le mode survie d'urgence et réunir le comité d'examen des anomalies.
 - Si `obdh.reboot_count` (0x030A) continue de s'incrémenter : soupçonner une panne matérielle de l'OBC. Maintenir le mode d'urgence, réduire les commandes au minimum, planifier un correctif mémoire de l'OBC ou un basculement sur la redondance froide si elle est disponible.
 
 ## Postconditions

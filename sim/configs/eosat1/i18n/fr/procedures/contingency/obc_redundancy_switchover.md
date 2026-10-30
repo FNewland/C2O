@@ -146,7 +146,7 @@ redondance d'OBC. Toute défaillance de l'OBC-B est critique pour la mission.
   dans une boucle d'amorçage. Essayer `OBC_BOOT_INHIBIT(inhibit=1)` (func_id 56) pour arrêter
   les cycles d'amorçage automatique, puis `OBC_BOOT_APP` manuellement.
 - Si `obdh.sw_image` reste à 0 (bloqué en chargeur d'amorçage) : l'image applicative est peut-être corrompue.
-  Suivre CTG-018 (reprise par le chargeur d'amorçage) pour le contrôle mémoire et la reprise.
+  Suivre CTG-021 (reprise par le chargeur d'amorçage de l'OBC) pour le contrôle mémoire et la reprise.
 - Si l'OBC-B s'amorce mais enchaîne aussitôt les redémarrages : commander
   `OBC_BOOT_INHIBIT(inhibit=1)` pour rester en chargeur d'amorçage. Poursuivre l'analyse depuis le chargeur d'amorçage. Il peut être nécessaire de charger
   une image applicative neuve via `MEM_LOAD`.

@@ -31,7 +31,7 @@ la sortie d'éclipse.
 | tcs.htr_obc | 0x040B | État du réchauffeur |
 | tcs.temp_battery | 0x0407 | Entre 0 et 40 °C |
 | tcs.temp_obc | 0x0406 | Entre 5 et 55 °C |
-| aocs.mode | 0x020F | 8 (ECLIPSE_PROPAGATE) pendant l'éclipse |
+| aocs.mode | 0x020F | 8 (ECLIPSE) pendant l'éclipse |
 | aocs.att_error | 0x0217 | < 1.0 deg |
 
 ## Commandes requises
@@ -77,7 +77,7 @@ et réévaluer après un passage éclairé supplémentaire.
 
 ### Étape 4 : Vérifier la transition de l'AOCS en mode éclipse
 **TC:** `AOCS_SET_MODE(mode=8)` (Service 8, Subtype 1, func_id 0) — commander l'AOCS en mode de propagation d'éclipse
-**Verify:** `aocs.mode` (0x020F) = 8 (ECLIPSE_PROPAGATE) sous 15 s
+**Verify:** `aocs.mode` (0x020F) = 8 (ECLIPSE) sous 15 s
 **Verify:** `aocs.att_error` (0x0217) < 1.0 deg
 **Note:** En mode de propagation d'éclipse, l'AOCS propage l'attitude sur les seuls gyroscopes, sans mise à jour
 par le senseur stellaire (celui-ci peut perdre la poursuite dans l'ombre de la Terre).
@@ -117,7 +117,7 @@ réchauffeurs.
 
 ### Étape 8 : Rétablir la configuration nominale
 **TC:** `AOCS_SET_MODE(mode=4)` (Service 8, Subtype 1, func_id 0) — ramener l'AOCS en pointage nadir nominal
-**Verify:** `aocs.mode` (0x020F) = 4 (NOMINAL_NADIR) sous 30 s
+**Verify:** `aocs.mode` (0x020F) = 4 (NOMINAL) sous 30 s
 **Verify:** `aocs.att_error` (0x0217) < 0.1 deg sous 300 s (phase C : la dérive d'éclipse sur gyroscopes seuls doit être réestimée et le correcteur PD reconverge dans son temps de stabilisation réel)
 **Note:** Uniquement si une prise de vue est prévue sur cette orbite — le refroidisseur est une charge de 15 W.
 **TC:** `FPA_COOLER(on=1)` (Service 8, Subtype 1, func_id 43) — réactiver le refroidisseur du FPA.

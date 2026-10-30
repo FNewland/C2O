@@ -1,4 +1,4 @@
-# EOSAT-1 LEOP Operations Guide
+# EOSAT-1 LEOP Operations Guide {#eosat-1-leop-operations-guide}
 
 **Document ID:** EOSAT1-UM-LEOP-010
 **Issue:** 1.0
@@ -7,14 +7,14 @@
 
 ---
 
-## 1. Purpose
+## 1. Purpose {#1-purpose}
 
 This document provides the complete operations guide for the Launch and Early Orbit Phase
 (LEOP) of the EOSAT-1 mission. It covers the separation sequence, first ground contact,
 bootloader operations, application boot, sequential subsystem power-on, ADCS commissioning,
 and the transition to nominal operations. All GO/NO-GO checkpoints are identified.
 
-## 2. LEOP Overview
+## 2. LEOP Overview {#2-leop-overview}
 
 **Definitive procedure-card order (2026-08c flow redesign).** The LEOP flight
 cards are executed in this order — NOT in card-number order — and each card
@@ -53,16 +53,16 @@ through the following major milestones:
 | Separation                 | T+0             | Launcher release, timer start        |
 | Antenna deployment         | T+30 min        | Burn wire activation                 |
 | First contact              | T+30 min to T+6 h | Beacon acquisition at Iqaluit or Troll |
-| Application boot           | First contact   | Transition from BOOTLOADER           |
+| Application boot           | First contact   | Transition from the bootloader           |
 | Detumble complete          | T+1 to T+12 h  | Body rates < 0.5 deg/s              |
 | Solar wing deployment      | T+2 to T+14 h  | Deploy +Y and -Y solar wings        |
 | Sequential power-on        | T+12 to T+24 h | Subsystem activation                 |
 | ADCS commissioning         | T+24 to T+72 h | Sensor/actuator checkout             |
 | Nominal transition         | T+48 to T+72 h | Full operational capability          |
 
-## 3. Separation Sequence
+## 3. Separation Sequence {#3-separation-sequence}
 
-### 3.1 Separation State Machine
+### 3.1 Separation State Machine {#31-separation-state-machine}
 
 The separation sequence follows a 7-phase state machine implemented in the OBC:
 
@@ -71,36 +71,36 @@ The separation sequence follows a 7-phase state machine implemented in the OBC:
 | PRE_SEPARATION    | Power-on (in launcher)     | —          | All systems off except timer circuit |
 | SEP_DETECTED      | Separation switch opens    | Instant    | Timer starts; unswitchable PDM on |
 | POWER_STABILIZE   | Unswitchable PDM active    | ~30 s      | OBC boots; RX powers on           |
-| TIMER_WAIT        | OBC boot complete          | ~30 min    | No RF transmissions; OBC in BOOTLOADER |
+| TIMER_WAIT        | OBC boot complete          | ~30 min    | No RF transmissions; OBC in the bootloader |
 | ANTENNA_DEPLOY    | 30-min timer expires       | ~60 s      | Burn wire commanded; antenna deploys |
 | BEACON_START      | Antenna deploy confirmed   | ~10 s      | TX enabled; beacon SID 11 on the SAFE tier (1 kbps; renamed from BEACON, 2026-08c) |
 | NOMINAL           | Beacon transmission active | —          | Ready for ground contact          |
 
-### 3.2 Unswitchable Line Power-On
+### 3.2 Unswitchable Line Power-On {#32-unswitchable-line-power-on}
 
 Upon separation detection, the unswitchable PDM lines activate automatically:
 
-- **UNSW-1 (OBC)**: The primary OBC (OBC-A) powers on and boots into BOOTLOADER mode.
+- **UNSW-1 (OBC)**: The primary OBC (OBC-A) powers on and boots into the bootloader.
 - **UNSW-2 (RX)**: The transponder receiver powers on, ready to accept ground commands
   via the dedicated PDM command channel.
 
 No ground command is required for these lines. They are hardwired to activate when the
 separation switch opens and the timer circuit initialises.
 
-### 3.3 30-Minute Timer Hold
+### 3.3 30-Minute Timer Hold {#33-30-minute-timer-hold}
 
 During the TIMER_WAIT phase:
 
-- The OBC is operational in BOOTLOADER mode but does not transmit.
+- The OBC is operational in the bootloader but does not transmit.
 - The receiver is powered and listening for commands (not expected pre-deployment).
 - All switchable PDM lines remain inhibited.
-- The spacecraft is tumbling freely (no attitude control in BOOTLOADER).
+- The spacecraft is tumbling freely (no attitude control in the bootloader).
 - Battery power supports this minimal configuration indefinitely.
 
 The 30-minute hold satisfies regulatory requirements prohibiting RF transmissions
 immediately after separation from the launcher.
 
-### 3.4 Antenna Deployment
+### 3.4 Antenna Deployment {#34-antenna-deployment}
 
 After the 30-minute timer expires:
 
@@ -112,7 +112,7 @@ After the 30-minute timer expires:
 5. If the primary burn wire fails to deploy the antenna, the OBC commands the
    redundant burn wire circuit after a 60-second timeout.
 
-### 3.5 Beacon Transmission Start
+### 3.5 Beacon Transmission Start {#35-beacon-transmission-start}
 
 Once the antenna is deployed:
 
@@ -127,9 +127,9 @@ The spacecraft is now ready for ground acquisition.
 - Criteria: Beacon transmission active, antenna deployed.
 - Decision: Proceed to first contact operations.
 
-## 4. First Contact — RF Acquisition
+## 4. First Contact — RF Acquisition {#4-first-contact--rf-acquisition}
 
-### 4.1 Ground Station Preparation
+### 4.1 Ground Station Preparation {#41-ground-station-preparation}
 
 Before the expected first contact window:
 
@@ -140,20 +140,20 @@ Before the expected first contact window:
 3. Load EOSAT-1 frequency plan (2200.0 MHz downlink, 2025.0 MHz uplink, S-band).
 4. Prepare pre-planned LEOP command sequence.
 
-### 4.2 Beacon TM Interpretation
+### 4.2 Beacon TM Interpretation {#42-beacon-tm-interpretation}
 
 The beacon packet (SID 11) contains minimal but critical health information:
 
 | Parameter       | Expected Value         | Concern If                        |
 |-----------------|------------------------|-----------------------------------|
-| obc_mode        | 2 (BOOTLOADER)         | Any other value                   |
+| sw_image        | 0 (bootloader)         | Any other value                   |
 | bat_voltage     | 27-29 V                | < 26 V (low battery)             |
 | bat_soc         | > 60%                  | < 40% (unexpected power drain)    |
 | obc_temp        | 10-40 deg C            | Outside range (thermal issue)     |
 | uptime          | ~1800+ s (30 min+)     | < 1800 s (recent reset)          |
 | reboot_count    | 0 or 1                 | > 1 (multiple resets, investigate)|
 
-### 4.3 First Contact Procedure
+### 4.3 First Contact Procedure {#43-first-contact-procedure}
 
 1. Acquire beacon signal at AOS. Verify carrier lock on ground receiver.
 2. Decode beacon packet (SID 11). Record all parameter values.
@@ -162,14 +162,14 @@ The beacon packet (SID 11) contains minimal but critical health information:
 5. Record the beacon timestamp offset; the clock is set after `OBC_BOOT_APP` (LEOP-006).
 
 **GO/NO-GO Checkpoint 2: First Contact Health Assessment**
-- Criteria: Beacon received, all parameters nominal, OBC in BOOTLOADER.
+- Criteria: Beacon received, all parameters nominal, OBC in the bootloader.
 - Decision: Proceed to application boot.
 
-## 5. Bootloader Operations
+## 5. Bootloader Operations {#5-bootloader-operations}
 
-### 5.1 Limited HK in BOOTLOADER
+### 5.1 Limited HK in the Bootloader {#51-limited-hk-in-the-bootloader}
 
-While in BOOTLOADER mode, **only SID 11 (Beacon)** is emitted, and it is sourced from the dedicated **bootloader APID (0x002)** — distinct from the application APID (0x001) used once the OBC application is running. This gives ground a clear, unambiguous signature of bootloader vs. application state:
+While in the bootloader, **only SID 11 (Beacon)** is emitted, and it is sourced from the dedicated **bootloader APID (0x002)** — distinct from the application APID (0x001) used once the OBC application is running. This gives ground a clear, unambiguous signature of bootloader vs. application state:
 
 - Beacon packet (SID 11) every 30 s on bootloader APID 0x002.
 - No TM storage exists — commanded dumps will fail, there are no stores to enable.
@@ -178,7 +178,7 @@ While in BOOTLOADER mode, **only SID 11 (Beacon)** is emitted, and it is sourced
 
 Full housekeeping telemetry (per-subsystem SIDs 1–6) and onboard TM stores come online only after the application software has booted successfully (phase 4). An OBC reboot at any later phase automatically reverts the spacecraft to this bootloader/beacon-only state until the application re-boots.
 
-### 5.2 Restricted Commands in BOOTLOADER
+### 5.2 Restricted Commands in the Bootloader {#52-restricted-commands-in-the-bootloader}
 
 Only the following commands are accepted:
 
@@ -190,20 +190,20 @@ Only the following commands are accepted:
 | OBC_REBOOT, OBC_SWITCH_UNIT, OBC_SELECT_BUS, OBC_BOOT_INHIBIT, OBC_CLEAR_REBOOT_CNT, OBC_DIAGNOSTIC (funcs 52–54, 56, 57, 61); S17.1; S20.1/S20.3 | Bootloader maintenance, connection test, parameter get/set |
 | EPS_POWER_ON / EPS_POWER_OFF (19/20), TTC_PA_ON / TTC_PA_OFF (66/67), TTC_DEPLOY_ANTENNA (69), SYS_SET_MISSION_PHASE (120) | First-contact power lines, transmitter, antenna and mission phase |
 
-All other commands will be rejected at acceptance with failure code 0x0006. Do not attempt subsystem commanding in BOOTLOADER.
+All other commands will be rejected at acceptance with failure code 0x0006. Do not attempt subsystem commanding in the bootloader.
 
-## 6. Application Boot and Verification
+## 6. Application Boot and Verification {#6-application-boot-and-verification}
 
-### 6.1 Boot Procedure
+### 6.1 Boot Procedure {#61-boot-procedure}
 
 1. Verify beacon health is nominal (Checkpoint 2 passed).
-2. Send `OBC_BOOT_APP` (S8.1 func 55) to command transition from BOOTLOADER to APPLICATION.
+2. Send `OBC_BOOT_APP` (S8.1 func 55) to command transition from the bootloader to the application.
 3. Wait 30 seconds for application software to load and perform POST.
 4. Monitor for the appearance of full housekeeping telemetry (SID 1-6).
 5. If no HK appears within 60 seconds, the application boot may have failed.
-   Check for beacon reappearance (indicating fallback to BOOTLOADER).
+   Check for beacon reappearance (indicating fallback to the bootloader).
 
-### 6.2 Post-Boot Verification
+### 6.2 Post-Boot Verification {#62-post-boot-verification}
 
 Once application software is running, verify:
 
@@ -216,35 +216,35 @@ Once application software is running, verify:
 | Bus voltage                    | bus_voltage      | 27-29 V                     |
 | TC processing                  | tc_exec_count    | Incrementing normally       |
 
-### 6.3 Recovery from Failed Boot
+### 6.3 Recovery from Failed Boot {#63-recovery-from-failed-boot}
 
 If the application fails to start:
 
-1. Wait for OBC to fall back to BOOTLOADER (3 consecutive watchdog resets).
+1. Wait for OBC to fall back to the bootloader (3 consecutive watchdog resets).
 2. Assess reboot_count in beacon packet.
 3. Follow CTG-021 (OBC Bootloader Recovery); there is no `SW_UPLOAD` command.
-4. If patch is not available, maintain spacecraft in BOOTLOADER with beacon mode
+4. If patch is not available, maintain spacecraft in the bootloader with beacon mode
    until a patch can be prepared and uplinked during subsequent contacts.
 
 **GO/NO-GO Checkpoint 3: Application Boot Successful**
 - Criteria: Full HK telemetry flowing, OBC in NOMINAL or SAFE mode.
 - Decision: Proceed to sequential power-on.
 
-## 6A. Solar Wing Deployment
+## 6A. Solar Wing Deployment {#6a-solar-wing-deployment}
 
 After application boot and initial detumble (body rates < 0.5 deg/s), the deployable
 solar wings on the +Y and -Y faces must be extended to provide full power generation
 capability. This step is performed before sequential power-on to ensure adequate power
 margin for subsystem activation.
 
-### 6A.1 Pre-Deployment Checks
+### 6A.1 Pre-Deployment Checks {#6a1-pre-deployment-checks}
 
 1. Verify application software is running (OBC mode = NOMINAL or SAFE).
 2. Verify body rates < 0.5 deg/s (detumble complete or sufficient).
 3. Verify battery SoC > 50% (wing deployment requires ~2 A per wing for 30 s).
 4. Request EPS HK (`HK_REQUEST SID=1`) and confirm nominal bus voltage.
 
-### 6A.2 Deploy +Y Wing
+### 6A.2 Deploy +Y Wing {#6a2-deploy-y-wing}
 
 1. Send `EPS_DEPLOY_WING` (func_id 81, wing=0) to deploy the +Y solar wing.
 2. Monitor `wing_deploy_timer` (0x0145) counting down from ~30 s.
@@ -253,7 +253,7 @@ margin for subsystem activation.
 5. Monitor `sa_py_current` (0x012D) for increased current if in sunlight.
 6. Wait 60 seconds for attitude transient to settle.
 
-### 6A.3 Deploy -Y Wing
+### 6A.3 Deploy -Y Wing {#6a3-deploy--y-wing}
 
 1. Send `EPS_DEPLOY_WING` (func_id 81, wing=1) to deploy the -Y solar wing.
 2. Monitor `wing_deploy_timer` (0x0145) counting down from ~30 s.
@@ -261,7 +261,7 @@ margin for subsystem activation.
 4. Verify `wing_status` (0x0144) bit 1 is set.
 5. Monitor `sa_my_current` (0x012E) for increased current if in sunlight.
 
-### 6A.4 Post-Deployment Verification
+### 6A.4 Post-Deployment Verification {#6a4-post-deployment-verification}
 
 1. Request EPS HK and verify `power_gen` (0x0107) has increased.
 2. Confirm `wing_status` (0x0144) = 0x03 (both wings deployed).
@@ -269,7 +269,7 @@ margin for subsystem activation.
    (total area 0.438 m2 vs. 0.198 m2 stowed).
 4. Record deployment times and power readings in LEOP log.
 
-### 6A.5 Off-Nominal: Wing Deployment Failure
+### 6A.5 Off-Nominal: Wing Deployment Failure {#6a5-off-nominal-wing-deployment-failure}
 
 If a wing fails to deploy (no event generated within 60 s, wing_status bit not set):
 
@@ -283,13 +283,13 @@ If a wing fails to deploy (no event generated within 60 s, wing_status bit not s
 - Criteria: Both wings deployed (wing_status = 0x03), power generation increased.
 - Decision: Proceed to sequential power-on.
 
-## 7. Sequential Power-On Procedure
+## 7. Sequential Power-On Procedure {#7-sequential-power-on-procedure}
 
 After application boot and solar wing deployment, subsystems are powered on one at a time
 to verify health and manage the power budget. The order is critical — each step must be
 verified before proceeding.
 
-### 7.1 Power-On Sequence
+### 7.1 Power-On Sequence {#71-power-on-sequence}
 
 | Step | Subsystem           | PDM Line | Verification                          | Power Impact |
 |------|---------------------|----------|---------------------------------------|--------------|
@@ -312,7 +312,7 @@ why steps 2-3 come first.
 | FPA cooler | COM-010 | ~15 W continuous; switching it on in LEOP burnt margin for days (owner finding) |
 | Propulsion line | NOM-004/NOM-013 | manoeuvre preparation only |
 
-### 7.2 Power Budget Monitoring
+### 7.2 Power Budget Monitoring {#72-power-budget-monitoring}
 
 After each power-on step, verify:
 
@@ -325,15 +325,15 @@ After each power-on step, verify:
   active on magnetometer + magnetorquers; wheels still disabled.
 - Decision: Proceed to LEOP-005 (observe the automatic sun acquisition).
 
-## 8. ADCS Commissioning Sequence
+## 8. ADCS Commissioning Sequence {#8-adcs-commissioning-sequence}
 
 The ADCS commissioning verifies each attitude determination and control component in a
 specific order: sensors first, then determination algorithms, then actuators, then
 control loops.
 
-### 8.1 Phase 1: Sensor Commissioning
+### 8.1 Phase 1: Sensor Commissioning {#81-phase-1-sensor-commissioning}
 
-#### Step 1: Magnetometer Calibration
+#### Step 1: Magnetometer Calibration {#step-1-magnetometer-calibration}
 
 1. Verify the magnetometer is powered and `aocs.mag_enabled` (0x025C) = 1.
 2. Record magnetometer readings over one full orbit.
@@ -341,7 +341,7 @@ control loops.
 4. Compute and upload calibration offsets if residuals exceed 500 nT.
 5. Verify calibrated readings match model to within 200 nT.
 
-#### Step 2: CSS Verification
+#### Step 2: CSS Verification {#step-2-css-verification}
 
 1. During sunlit portion, verify all 6 CSS heads are reporting non-zero values on
    illuminated faces.
@@ -351,16 +351,16 @@ control loops.
 4. Verify geometric consistency: opposite faces should have complementary readings
    (if one face sees the Sun, the opposite face should be dark).
 
-#### Step 3: Star Camera Commissioning
+#### Step 3: Star Camera Commissioning {#step-3-star-camera-commissioning}
 
 1. Ensure body rates are below 0.1 deg/s (detumble must be sufficient).
-2. Power on zenith star camera (ST-Zenith on -Z face).
+2. Power on zenith star camera (ST-Zenith on +Z face).
 3. Wait for star camera to perform lost-in-space acquisition (up to 60 seconds).
 4. Verify valid attitude quaternion output (all four components non-zero).
 5. Compare star camera attitude against Sun vector (from CSS) for consistency check.
-6. Verify star camera is not blinded (check Sun angle to -Z boresight > 15 deg).
+6. Verify star camera is not blinded (check Sun angle to +Z boresight > 15 deg).
 
-#### Step 4: Gyro Bias Calibration
+#### Step 4: Gyro Bias Calibration {#step-4-gyro-bias-calibration}
 
 1. With star camera providing valid attitude, enable gyro bias estimation algorithm.
 2. Accumulate calibration data for at least 10 minutes.
@@ -373,7 +373,7 @@ control loops.
 - Criteria: All sensors calibrated and providing valid data.
 - Decision: Proceed to attitude determination validation.
 
-### 8.2 Phase 2: Attitude Determination Validation
+### 8.2 Phase 2: Attitude Determination Validation {#82-phase-2-attitude-determination-validation}
 
 1. Verify fused attitude solution (combining star camera, magnetometer, gyros) is stable.
 2. Confirm `att_error` (0x0217) is computed and reasonable.
@@ -385,9 +385,9 @@ control loops.
 - Criteria: Stable attitude solution, consistent across sensors.
 - Decision: Proceed to actuator commissioning.
 
-### 8.3 Phase 3: Actuator Commissioning
+### 8.3 Phase 3: Actuator Commissioning {#83-phase-3-actuator-commissioning}
 
-#### Step 5: Magnetorquer Sign Check
+#### Step 5: Magnetorquer Sign Check {#step-5-magnetorquer-sign-check}
 
 1. Command a known current to each magnetorquer coil (X, Y, Z) individually.
 2. Observe the resulting torque on the spacecraft via gyro rate measurements.
@@ -396,7 +396,7 @@ control loops.
 4. Confirm no sign errors (wrong direction would indicate wiring issue).
 5. If a sign error is detected, update the magnetorquer polarity configuration in software.
 
-#### Step 6: Reaction Wheel Spin-Up Test
+#### Step 6: Reaction Wheel Spin-Up Test {#step-6-reaction-wheel-spin-up-test}
 
 1. Command each wheel individually to a low speed (+100 RPM).
 2. Verify wheel speed telemetry matches the commanded value.
@@ -405,7 +405,7 @@ control loops.
 5. Return all wheels to 0 RPM.
 6. Verify wheel temperatures remain nominal throughout.
 
-#### Step 7: Control Gain Verification
+#### Step 7: Control Gain Verification {#step-7-control-gain-verification}
 
 1. Enable the AOCS control law with conservative (low) gains.
 2. Command a small attitude offset (1 deg) and observe the response.
@@ -417,23 +417,23 @@ control loops.
 - Criteria: All actuators verified, correct direction and magnitude.
 - Decision: Proceed to active control tests.
 
-### 8.4 Phase 4: Active Control Validation
+### 8.4 Phase 4: Active Control Validation {#84-phase-4-active-control-validation}
 
-#### Step 8: Rate Damping Test
+#### Step 8: Rate Damping Test {#step-8-rate-damping-test}
 
 1. Command AOCS to DETUMBLE mode (if not already).
 2. If rates are already near zero, introduce a small perturbation via magnetorquers.
 3. Verify magnetorquer-based rate damping converges to < 0.5 deg/s.
 4. Verify autonomous transition to COARSE_SUN (mode 3) when rates are sufficiently low.
 
-#### Step 9: Sun-Pointing Verification
+#### Step 9: Sun-Pointing Verification {#step-9-sun-pointing-verification}
 
 1. In COARSE_SUN mode, verify spacecraft orients +X towards the Sun.
 2. Monitor `att_error` converging towards zero.
 3. Verify CSS-derived Sun vector and star camera attitude are consistent.
 4. Monitor power generation — confirm `power_gen` increases as Sun-pointing improves.
 
-#### Step 10: Nadir-Pointing Test
+#### Step 10: Nadir-Pointing Test {#step-10-nadir-pointing-test}
 
 1. Command AOCS to NOMINAL (nadir) mode via `AOCS_SET_MODE` (mode=4).
 2. Verify attitude transitions to nadir-pointing.
@@ -445,9 +445,9 @@ control loops.
 - Criteria: Nadir-pointing stable, all ADCS components verified.
 - Decision: Proceed to nominal transition.
 
-## 9. Transition to Nominal Operations
+## 9. Transition to Nominal Operations {#9-transition-to-nominal-operations}
 
-### 9.1 Pre-Transition Checklist
+### 9.1 Pre-Transition Checklist {#91-pre-transition-checklist}
 
 Before declaring the spacecraft operational, verify the following:
 
@@ -466,7 +466,7 @@ Before declaring the spacecraft operational, verify the following:
 | 11   | S12 monitoring enabled                   | All FDIR rules active     |
 | 12   | S19 event-actions enabled                | All automated responses active |
 
-### 9.2 Nominal Transition Command Sequence
+### 9.2 Nominal Transition Command Sequence {#92-nominal-transition-command-sequence}
 
 1. Verify pre-transition checklist (all items pass).
 2. Flight Director initiates GO/NO-GO poll of all positions.
@@ -509,7 +509,7 @@ gate inventory is in `00_mission_overview.md` §6.0.
 - Criteria: All checklist items passed, all positions report GO.
 - Decision: Spacecraft declared operational; LEOP phase complete; phase = 6.
 
-### 9.3 Post-LEOP Activities
+### 9.3 Post-LEOP Activities {#93-post-leop-activities}
 
 After the LEOP phase is complete, the following commissioning activities continue during
 the Commissioning phase:
@@ -524,9 +524,9 @@ the Commissioning phase:
 | Ground station contact optimisation| Day 3–10        | TTC operator   |
 | First science imaging              | Day 14–30       | PLD + FD       |
 
-## 10. Emergency Procedures During LEOP
+## 10. Emergency Procedures During LEOP {#10-emergency-procedures-during-leop}
 
-### 10.1 No Beacon After Separation
+### 10.1 No Beacon After Separation {#101-no-beacon-after-separation}
 
 If no beacon is received at the expected first contact:
 
@@ -537,9 +537,9 @@ If no beacon is received at the expected first contact:
 4. If no response after 24 hours of attempts, consider the possibility of antenna
    deployment failure and command the redundant burn wire circuit via blind uplink.
 
-### 10.2 OBC Stuck in BOOTLOADER
+### 10.2 OBC Stuck in the Bootloader {#102-obc-stuck-in-the-bootloader}
 
-If the OBC cannot transition from BOOTLOADER to APPLICATION:
+If the OBC cannot transition from the bootloader to the application:
 
 1. Request beacon packet via `HK_REQUEST` (SID 11).
 2. Check `reboot_count` — if elevated, the application may be crashing.
@@ -547,7 +547,7 @@ If the OBC cannot transition from BOOTLOADER to APPLICATION:
 4. If repeated failures, keep the OBC in the bootloader (`OBC_BOOT_INHIBIT`) and investigate.
 5. Refer to CTG-021 (`procedures/contingency/obc_bootloader_recovery.md`) for detailed recovery procedure.
 
-### 10.3 Excessive Tumble Rates
+### 10.3 Excessive Tumble Rates {#103-excessive-tumble-rates}
 
 If body rates exceed 5 deg/s after detumble attempt:
 

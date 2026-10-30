@@ -36,14 +36,14 @@ the *nominal-shift* example used for procedure familiarisation.
 
 **Spacecraft state.**
 
-- All antennas deployed; TT&C TX in low-rate beacon between passes,
-  high-rate during a contact.
+- All antennas deployed; TT&C on the LOW rung (16 kbps) for routine
+  contacts, HIGH (128 kbps) only for dumps above 10° elevation.
 - AOCS mode: NOMINAL (4, nadir pointing), body rates < 0.01 °/s, reaction wheels
   spun up.
 - EPS: battery 90% SoC, solar arrays nominal, all main power lines ON.
 - TCS: heaters cycling on thermostat, all zones in green band.
 - Payload: imager in STANDBY, FPA cooler at temperature.
-- OBDH: bootloader phase 5, app SW running, FDIR enabled.
+- OBDH: application image running (`obdh.sw_image` = 1), FDIR enabled.
 
 **Pass geometry.** The default in `nominal_ops.yaml` lets the orbit
 propagator generate natural passes. For Training Day 1 the
@@ -126,9 +126,7 @@ briefing: |
   is in phase 4 with FDIR configured for the LEOP-only fault set.
   Your shift covers the first 4 hours of commissioning across
   ~4 ground passes (compressed).
-  Goals for the shift:
-    1. Transition the spacecraft to phase 5 (COMMISSIONING).
-    2. Run COM-001 through COM-008 in order.
+  Goals for the shift:    1. Transition the spacecraft to phase 5 (COMMISSIONING) if LEOP-003 has not.    2. Run COM-001, COM-002, COM-004, COM-003, then COM-005 to COM-008.
     3. Power on the payload, cool the FPA, and complete COM-012
        (First Light) before LOS at end of pass 4.
 
@@ -144,8 +142,7 @@ initial_conditions:
     payload: false
     fpa_cooler: false
     prop: false
-  params:
-    0x020F: 3        # aocs.mode = COARSE_SUN (COM-005 takes it to NOMINAL 4)
+  params:    0x020F: 3        # aocs.mode = COARSE_SUN (COM-004 enables the wheels and commands NOMINAL 4)
     0x0600: 0        # payload.mode = OFF
 
 events:
@@ -161,7 +158,7 @@ events:
 
 expected_responses:
   - { category: command, description: "Declare COMMISSIONING: SYS_SET_MISSION_PHASE(phase=5) (S8 func_id 120)" }
-  - { category: command, description: "Run COM-001 EPS Checkout" }
+  - { category: command, description: "Run COM-001 EPS Checkout" }  - { category: command, description: "Run COM-004 AOCS Actuator Checkout, then COM-003 AOCS Sensor Calibration (ruling Q16)" }
   - { category: command, description: "Run COM-005 AOCS Mode Transitions" }
   - { category: command, description: "Run COM-006 TTC Link Verification" }
   - { category: command, description: "Run COM-008 FDIR Configuration — enable S12 monitoring (MON_ENABLE) and verify the S12/S19 rule sets; there is no table to load" }
@@ -188,14 +185,24 @@ before the team commits to safe-mode entry); during Friday wrap, the
 sim is restored from that snapshot and a different team commands
 the alternative branch. No new scenario file required.
 
-**Procedure.** Instructor uses the sim CLI:
+**Procedure.** There is no `sim` command-line tool. Breakpoints are
+saved and restored from the instructor console (the **Breakpoints**
+panel: SAVE, then LOAD against the saved name) or over the
+instructor HTTP API on the simulator port (default 8080,
+`$SMO_SIM_HTTP_PORT`):
 
 ```
-sim snapshot save snap_<scenario>_<event>
-sim snapshot restore snap_<scenario>_<event>
+curl -X POST http://localhost:8080/api/breakpoint/save \
+     -H 'Content-Type: application/json' -d '{"name": "snap_<scenario>_<event>"}'
+curl -X POST http://localhost:8080/api/breakpoint/load \
+     -H 'Content-Type: application/json' -d '{"name": "snap_<scenario>_<event>"}'
+curl http://localhost:8080/api/breakpoints
 ```
 
-[Claude Code: confirm exact CLI when expanding this section.]
+A saved breakpoint is written to `workspace/breakpoints/<name>.json`
+under the simulator's working directory, so it survives a restart.
+Save and load both run between simulation ticks, so a restore never
+lands mid-tick. See the instructor book, §5.10.1.
 
 ---
 

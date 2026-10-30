@@ -69,7 +69,7 @@ The Flight Director has authority over every LEOP procedure:
 | BER Anomaly | CTG-014 | Authorize link reconfiguration |
 | Memory Segment Failure | CTG-016 | Authorize memory management |
 | Bus Failure Switchover | CTG-017 | Authorize bus switchover |
-| Boot Loader Recovery | CTG-018 | Authorize boot recovery |
+| OBC Bootloader Recovery | CTG-021 | Authorize OBC recovery sequence |
 
 ### Emergency
 

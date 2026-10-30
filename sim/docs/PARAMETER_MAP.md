@@ -20,26 +20,26 @@ Columns:
 | | Count |
 |---|---:|
 | Catalogued parameters | 452 |
-| In at least one HK SID | 352 |
+| In at least one HK SID | 319 |
 | On-demand (S20-readable) | 125 |
 | Declared stubs (model does not compute) | 14 |
 | Ground limit bands | 52 |
-| S12 on-board monitors | 46 |
+| S12 on-board monitors | 41 |
 | Ground-derived pseudo-parameters (`derived.yaml`) | 11 |
 
 ## Housekeeping structures
 
 | SID | Name | Members |
 |---:|---|---:|
-| 1 | EPS | 54 |
-| 2 | AOCS | 86 |
+| 1 | EPS | 52 |
+| 2 | AOCS | 75 |
 | 3 | TCS | 17 |
 | 4 | Platform | 36 |
-| 5 | Payload | 31 |
-| 6 | TTC | 32 |
-| 7 | AOCS_DETERMINATION | 49 |
+| 5 | Payload | 29 |
+| 6 | TTC | 24 |
+| 7 | AOCS_DETERMINATION | 42 |
 | 8 | EPS Power Management | 14 |
-| 9 | PROP | 26 |
+| 9 | PROP | 23 |
 | 11 | Beacon | 7 |
 | 12 | GPS_NAV | 12 |
 
@@ -128,21 +128,21 @@ Columns:
 | `0x0281` | aocs.slew_progress | % | 2 |  |  |  |  |
 | `0x0282` | aocs.momentum_saturation_pct | % | 2 |  |  |  |  |
 | `0x0283` | aocs.attitude_source |  | 2 |  |  |  |  |
-| `0x0284` | aocs.rw1_bearing_health | % | 2 |  |  |  |  |
-| `0x0285` | aocs.rw2_bearing_health | % | 2 |  |  |  |  |
-| `0x0286` | aocs.rw3_bearing_health | % | 2 |  |  |  |  |
-| `0x0287` | aocs.rw4_bearing_health | % | 2 |  |  |  |  |
-| `0x0288` | aocs.css_head_health_px | % | 2 |  |  |  |  |
-| `0x0289` | aocs.css_head_health_mx | % | 2 |  |  |  |  |
-| `0x028A` | aocs.css_head_health_py | % | 2 |  |  |  |  |
-| `0x028B` | aocs.css_head_health_my | % | 2 |  |  |  |  |
-| `0x028C` | aocs.css_head_health_pz | % | 2 |  |  |  |  |
-| `0x028D` | aocs.css_head_health_mz | % | 2 |  |  |  |  |
+| `0x0284` | aocs.rw1_bearing_health | % |  |  |  |  |  |
+| `0x0285` | aocs.rw2_bearing_health | % |  |  |  |  |  |
+| `0x0286` | aocs.rw3_bearing_health | % |  |  |  |  |  |
+| `0x0287` | aocs.rw4_bearing_health | % |  |  |  |  |  |
+| `0x0288` | aocs.css_head_health_px | % |  |  |  |  |  |
+| `0x0289` | aocs.css_head_health_mx | % |  |  |  |  |  |
+| `0x028A` | aocs.css_head_health_py | % |  |  |  |  |  |
+| `0x028B` | aocs.css_head_health_my | % |  |  |  |  |  |
+| `0x028C` | aocs.css_head_health_pz | % |  |  |  |  |  |
+| `0x028D` | aocs.css_head_health_mz | % |  |  |  |  |  |
 | `0x028E` | aocs.rw_cmd_sum | Nm |  | yes |  |  |  |
 | `0x0292` | aocs.slew_state |  |  | yes |  |  |  |
 | `0x0294` | aocs.gyro_units_on |  | 2 |  |  |  |  |
 | `0x0295` | aocs.gyro_saturated |  | 2 |  |  |  |  |
-| `0x0296` | aocs.gyro_bias_injected | deg/s | 2 |  |  |  |  |
+| `0x0296` | aocs.gyro_bias_injected | deg/s |  |  |  |  |  |
 | `0x0297` | aocs.commanded_mode |  | 2 |  |  |  |  |
 | `0x0298` | aocs.mode_demoted |  | 2 |  |  |  |  |
 | `0x0299` | aocs.fine_degraded |  | 2 |  |  |  |  |
@@ -169,9 +169,9 @@ Columns:
 | `0x02B0` | aocs.nadir_body_x |  | 7 |  |  |  |  |
 | `0x02B1` | aocs.nadir_body_y |  | 7 |  |  |  |  |
 | `0x02B2` | aocs.nadir_body_z |  | 7 |  |  |  |  |
-| `0x02B3` | aocs.sun_body_true_x |  | 7 |  |  |  |  |
-| `0x02B4` | aocs.sun_body_true_y |  | 7 |  |  |  |  |
-| `0x02B5` | aocs.sun_body_true_z |  | 7 |  |  |  |  |
+| `0x02B3` | aocs.sun_body_true_x |  |  |  |  |  |  |
+| `0x02B4` | aocs.sun_body_true_y |  |  |  |  |  |  |
+| `0x02B5` | aocs.sun_body_true_z |  |  |  |  |  |  |
 | `0x02B6` | aocs.h_body_x | Nms | 7 |  |  |  |  |
 | `0x02B7` | aocs.h_body_y | Nms | 7 |  |  |  |  |
 | `0x02B8` | aocs.h_body_z | Nms | 7 |  |  |  |  |
@@ -180,15 +180,15 @@ Columns:
 | `0x02BB` | aocs.mtq_dipole_x | Am2 | 7 |  |  |  |  |
 | `0x02BC` | aocs.mtq_dipole_y | Am2 | 7 |  |  |  |  |
 | `0x02BD` | aocs.mtq_dipole_z | Am2 | 7 |  |  |  |  |
-| `0x02BE` | aocs.tau_dist_x | uNm | 7 |  |  |  |  |
-| `0x02BF` | aocs.tau_dist_y | uNm | 7 |  |  |  |  |
-| `0x02C0` | aocs.tau_dist_z | uNm | 7 |  |  |  |  |
+| `0x02BE` | aocs.tau_dist_x | uNm |  |  |  |  |  |
+| `0x02BF` | aocs.tau_dist_y | uNm |  |  |  |  |  |
+| `0x02C0` | aocs.tau_dist_z | uNm |  |  |  |  |  |
 | `0x02C1` | aocs.est_source |  | 7 |  |  |  |  |
 | `0x02C2` | aocs.est_innov_rej_count |  | 7 |  |  |  |  |
 | `0x02C3` | aocs.rate_stability_3sig | deg/s | 7 |  |  |  |  |
 | `0x02C4` | aocs.settle_time_s | s | 7 |  |  |  |  |
 | `0x02C5` | aocs.fine_ready |  | 7 |  |  |  |  |
-| `0x02C6` | aocs.fidelity_mode |  | 7 |  |  |  |  |
+| `0x02C6` | aocs.fidelity_mode |  |  |  |  |  |  |
 | `0x02C7` | aocs.geoloc_err_m | m | 7 |  |  |  |  |
 | `0x02C8` | aocs.power_w | W | 7 |  |  |  |  |
 | `0x02C9` | aocs.gyro_cal_state |  | 7 |  |  |  |  |
@@ -240,8 +240,8 @@ Columns:
 | `0x011F` | eps.line_current_7 | A | 1 |  | 0…0.7 / 0…0.8 |  |  |
 | `0x0120` | eps.bat_dod | % | 1 |  | 0…60 / 0…80 |  |  |
 | `0x0121` | eps.bat_cycles |  | 1 |  |  |  |  |
-| `0x0122` | eps.mppt_efficiency |  | 1 |  |  |  |  |
-| `0x0123` | eps.sa_age_factor |  | 1 |  |  |  |  |
+| `0x0122` | eps.mppt_efficiency |  |  |  |  |  |  |
+| `0x0123` | eps.sa_age_factor |  |  |  |  |  |  |
 | `0x0124` | eps.sa_a_degradation |  |  | yes |  |  |  |
 | `0x0125` | eps.sa_b_degradation |  |  | yes |  |  |  |
 | `0x0126` | eps.sa_lifetime_hours | h |  | yes |  |  |  |
@@ -350,14 +350,14 @@ Columns:
 | `0x060A` | payload.mem_total_mb | MB | 5 |  |  |  |  |
 | `0x060B` | payload.mem_used_mb | MB | 5 |  |  |  |  |
 | `0x060C` | payload.last_scene_id |  | 5 |  |  |  |  |
-| `0x060D` | payload.last_scene_quality | % | 5 |  |  |  |  |
+| `0x060D` | payload.last_scene_quality | % |  |  |  |  |  |
 | `0x0610` | payload.fpa_ready |  | 5 |  |  |  |  |
 | `0x0611` | payload.imager_status |  |  | yes |  |  | yes |
 | `0x0612` | payload.mem_segments_bad |  | 5 |  |  |  |  |
 | `0x0613` | payload.duty_cycle_pct | % |  | yes |  |  |  |
 | `0x0614` | payload.compression_ratio |  | 5 |  |  |  |  |
 | `0x0615` | payload.cal_lamp_on |  | 5 |  |  |  |  |
-| `0x0616` | payload.snr | dB | 5 |  | 30…55 / 20…60 | Payload SNR Low (25.0…100.0, WARNING) |  |
+| `0x0616` | payload.snr | dB |  |  | 30…55 / 20…60 |  |  |
 | `0x0617` | payload.detector_temp | C | 5 |  | -22…14 / -25.5…17.5 |  |  |
 | `0x0618` | payload.integration_time | ms |  | yes |  |  |  |
 | `0x0619` | payload.swath_width_km | km |  | yes |  |  |  |
@@ -427,11 +427,11 @@ Columns:
 | `0x0B13` | prop.total_on_time | s | 9 |  |  |  |  |
 | `0x0B14` | prop.abort_reason |  | 9 |  |  |  |  |
 | `0x0B15` | prop.arm_inhibit_mask |  | 9 |  |  |  |  |
-| `0x0B16` | prop.leak_rate | mg/s | 9 |  |  |  |  |
+| `0x0B16` | prop.leak_rate | mg/s |  |  |  |  |  |
 | `0x0B17` | prop.thrust_offset_torque | uNm |  | yes |  |  |  |
 | `0x0B18` | prop.sc_mass | kg | 9 |  |  |  |  |
-| `0x0B19` | prop.orbit_epoch_version |  | 9 |  |  |  |  |
-| `0x0B1A` | prop.sma_km | km | 9 |  |  |  |  |
+| `0x0B19` | prop.orbit_epoch_version |  |  |  |  |  |  |
+| `0x0B1A` | prop.sma_km | km |  |  |  |  |  |
 | `0x0B1B` | prop.power_draw | W |  | yes |  |  |  |
 
 ## spacecraft
@@ -502,14 +502,14 @@ Columns:
 | `0x040D` | ttc.pa_backup_temp | C |  | yes |  |  | yes |
 | `0x0500` | ttc.mode |  | 6 |  |  |  |  |
 | `0x0501` | ttc.link_status |  | 6 |  |  |  |  |
-| `0x0502` | ttc.rssi | dBm | 6 |  |  | TTC RSSI Low (-95.0…0.0, WARNING) |  |
-| `0x0503` | ttc.link_margin | dB | 6 |  |  | TTC Link Margin Critical (3.0…100.0, ALARM) |  |
+| `0x0502` | ttc.rssi | dBm |  |  |  |  |  |
+| `0x0503` | ttc.link_margin | dB |  |  |  |  |  |
 | `0x0506` | ttc.tm_data_rate | bps | 6 |  | 16000…128000 / 900…130000 |  |  |
 | `0x0507` | ttc.xpdr_temp | C | 6 |  |  |  |  |
 | `0x0508` | ttc.ranging_status |  | 6 |  |  |  |  |
-| `0x0509` | ttc.range_km | km | 6 |  |  |  |  |
-| `0x050A` | ttc.contact_elevation | deg | 6 |  |  |  |  |
-| `0x050C` | ttc.ber |  | 6 |  | -7…-5 / -8…-4 | TTC Bit Error Rate High (-5.0…0.0, WARNING) |  |
+| `0x0509` | ttc.range_km | km |  |  |  |  |  |
+| `0x050A` | ttc.contact_elevation | deg |  |  |  |  |  |
+| `0x050C` | ttc.ber |  |  |  | -7…-5 / -8…-4 |  |  |
 | `0x050D` | ttc.tx_fwd_power | dBm | 6 |  |  |  |  |
 | `0x050F` | ttc.pa_temp | C | 6 |  | 0…55 / -10…65 | TTC PA Overtemp (-10.0…60.0, ALARM) |  |
 | `0x0510` | ttc.carrier_lock |  | 6 |  |  |  |  |
@@ -517,10 +517,10 @@ Columns:
 | `0x0512` | ttc.frame_sync |  | 6 |  |  |  |  |
 | `0x0513` | ttc.cmd_rx_count |  | 6 |  |  |  |  |
 | `0x0516` | ttc.pa_on |  | 6, 11 |  |  |  |  |
-| `0x0519` | ttc.eb_n0 | dB | 6 |  |  | TTC Eb/N0 Low (4.0…100.0, WARNING) |  |
-| `0x051A` | ttc.agc_level | dB | 6 |  | -80…-30 / -100…-20 |  |  |
+| `0x0519` | ttc.eb_n0 | dB |  |  |  |  |  |
+| `0x051A` | ttc.agc_level | dB |  |  | -80…-30 / -100…-20 |  |  |
 | `0x051B` | ttc.doppler_hz | Hz | 6 |  |  |  |  |
-| `0x051C` | ttc.range_rate | m/s | 6 |  |  |  |  |
+| `0x051C` | ttc.range_rate | m/s |  |  |  |  |  |
 | `0x051D` | ttc.cmd_auth_status |  | 6 |  |  |  |  |
 | `0x051E` | ttc.total_bytes_tx | B | 6 |  |  |  |  |
 | `0x051F` | ttc.total_bytes_rx | B | 6 |  |  |  |  |

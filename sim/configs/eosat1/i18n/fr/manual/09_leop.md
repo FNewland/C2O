@@ -1,4 +1,4 @@
-# Guide des opérations LEOP d'EOSAT-1
+# Guide des opérations LEOP d'EOSAT-1 {#eosat-1-leop-operations-guide}
 
 **Référence du document :** EOSAT1-UM-LEOP-010
 **Édition :** 1.0
@@ -7,14 +7,14 @@
 
 ---
 
-## 1. Objet
+## 1. Objet {#1-purpose}
 
 Ce document constitue le guide d'opérations complet de la phase de lancement et de début d'orbite
 (LEOP) de la mission EOSAT-1. Il couvre la séquence de séparation, le premier contact sol,
 les opérations en mode chargeur d'amorçage, l'amorçage de l'application, la mise sous tension séquentielle des sous-systèmes, la recette en orbite du SCAO
 et la transition vers les opérations nominales. Tous les points de contrôle GO/NO-GO y sont identifiés.
 
-## 2. Vue d'ensemble de la LEOP
+## 2. Vue d'ensemble de la LEOP {#2-leop-overview}
 
 **Ordre définitif des fiches de procédure (refonte de l'enchaînement 2026-08c).** Les fiches de vol
 LEOP s'exécutent dans cet ordre — et NON dans l'ordre de leur numéro — ; chaque fiche
@@ -53,16 +53,16 @@ les grands jalons suivants :
 | Séparation                 | T+0             | Largage par le lanceur, démarrage de la minuterie |
 | Déploiement de l'antenne   | T+30 min        | Activation du fil thermofusible            |
 | Premier contact            | T+30 min à T+6 h | Acquisition de la balise à Iqaluit ou à Troll |
-| Amorçage de l'application  | Premier contact | Sortie du mode BOOTLOADER            |
+| Amorçage de l'application  | Premier contact | Sortie du chargeur d'amorçage        |
 | Fin de l'amortissement     | T+1 à T+12 h   | Vitesses angulaires < 0,5°/s         |
 | Déploiement des ailes solaires | T+2 à T+14 h | Déploiement des ailes solaires +Y et -Y |
 | Mise sous tension séquentielle | T+12 à T+24 h | Activation des sous-systèmes       |
 | Recette en orbite du SCAO  | T+24 à T+72 h  | Vérification des capteurs et actionneurs |
 | Transition vers le nominal | T+48 à T+72 h  | Pleine capacité opérationnelle       |
 
-## 3. Séquence de séparation
+## 3. Séquence de séparation {#3-separation-sequence}
 
-### 3.1 Machine à états de séparation
+### 3.1 Machine à états de séparation {#31-separation-state-machine}
 
 La séquence de séparation suit une machine à états à 7 phases implémentée dans l'OBC :
 
@@ -71,36 +71,36 @@ La séquence de séparation suit une machine à états à 7 phases implémentée
 | PRE_SEPARATION    | Mise sous tension (dans le lanceur) | —   | Tous les systèmes éteints sauf le circuit de minuterie |
 | SEP_DETECTED      | Ouverture du contact de séparation | Instantané | Démarrage de la minuterie ; PDM non commutable sous tension |
 | POWER_STABILIZE   | PDM non commutable actif   | ~30 s      | Amorçage de l'OBC ; mise sous tension du RX |
-| TIMER_WAIT        | Fin de l'amorçage de l'OBC | ~30 min    | Aucune émission RF ; OBC en BOOTLOADER |
+| TIMER_WAIT        | Fin de l'amorçage de l'OBC | ~30 min    | Aucune émission RF ; OBC dans le chargeur d'amorçage |
 | ANTENNA_DEPLOY    | Expiration de la minuterie de 30 min | ~60 s | Fil à chaud commandé ; déploiement de l'antenne |
 | BEACON_START      | Déploiement de l'antenne confirmé | ~10 s | TX activé ; balise SID 11 sur le palier SAFE (1 kbit/s ; anciennement BEACON, renommé en 2026-08c) |
 | NOMINAL           | Émission de la balise active | —        | Prêt pour le contact sol          |
 
-### 3.2 Mise sous tension des lignes non commutables
+### 3.2 Mise sous tension des lignes non commutables {#32-unswitchable-line-power-on}
 
 Dès la détection de la séparation, les lignes non commutables du PDM s'activent automatiquement :
 
-- **UNSW-1 (OBC)** : l'OBC principal (OBC-A) se met sous tension et s'amorce en mode BOOTLOADER.
+- **UNSW-1 (OBC)** : l'OBC principal (OBC-A) se met sous tension et s'amorce dans le chargeur d'amorçage.
 - **UNSW-2 (RX)** : le récepteur du transpondeur se met sous tension, prêt à accepter les commandes sol
   via le canal de commande dédié du PDM.
 
 Aucune commande sol n'est requise pour ces lignes. Elles sont câblées pour s'activer dès que
 le contact de séparation s'ouvre et que le circuit de minuterie s'initialise.
 
-### 3.3 Attente de 30 minutes sur minuterie
+### 3.3 Attente de 30 minutes sur minuterie {#33-30-minute-timer-hold}
 
 Pendant la phase TIMER_WAIT :
 
-- l'OBC fonctionne en mode BOOTLOADER mais n'émet pas ;
+- l'OBC fonctionne dans le chargeur d'amorçage mais n'émet pas ;
 - le récepteur est alimenté et à l'écoute des commandes (aucune n'est attendue avant le déploiement) ;
 - toutes les lignes commutables du PDM restent inhibées ;
-- le satellite est en culbutage libre (aucun contrôle d'attitude en BOOTLOADER) ;
+- le satellite est en culbutage libre (aucun contrôle d'attitude dans le chargeur d'amorçage) ;
 - la batterie alimente cette configuration minimale indéfiniment.
 
 L'attente de 30 minutes répond aux exigences réglementaires qui interdisent toute émission RF
 immédiatement après la séparation du lanceur.
 
-### 3.4 Déploiement de l'antenne
+### 3.4 Déploiement de l'antenne {#34-antenna-deployment}
 
 À l'expiration de la minuterie de 30 minutes :
 
@@ -112,7 +112,7 @@ immédiatement après la séparation du lanceur.
 5. Si le fil thermofusible principal ne parvient pas à déployer l'antenne, l'OBC commande le
    circuit de fil thermofusible redondant après un délai d'attente de 60 secondes.
 
-### 3.5 Début de l'émission de la balise
+### 3.5 Début de l'émission de la balise {#35-beacon-transmission-start}
 
 Une fois l'antenne déployée :
 
@@ -127,9 +127,9 @@ Le satellite est alors prêt pour l'acquisition sol.
 - Critères : émission de la balise active, antenne déployée.
 - Décision : poursuivre par les opérations de premier contact.
 
-## 4. Premier contact — acquisition RF
+## 4. Premier contact — acquisition RF {#4-first-contact--rf-acquisition}
 
-### 4.1 Préparation de la station sol
+### 4.1 Préparation de la station sol {#41-ground-station-preparation}
 
 Avant la fenêtre prévue du premier contact :
 
@@ -140,20 +140,20 @@ Avant la fenêtre prévue du premier contact :
 3. Charger le plan de fréquences d'EOSAT-1 (liaison descendante à 2200,0 MHz, liaison montante à 2025,0 MHz, bande S).
 4. Préparer la séquence de commandes LEOP planifiée à l'avance.
 
-### 4.2 Interprétation de la TM balise
+### 4.2 Interprétation de la TM balise {#42-beacon-tm-interpretation}
 
 Le paquet balise (SID 11) contient des informations de santé minimales mais essentielles :
 
 | Paramètre       | Valeur attendue        | Préoccupant si                    |
 |-----------------|------------------------|-----------------------------------|
-| obc_mode        | 2 (BOOTLOADER)         | Toute autre valeur                |
+| sw_image        | 0 (chargeur d'amorçage) | Toute autre valeur                |
 | bat_voltage     | 27-29 V                | < 26 V (batterie faible)          |
 | bat_soc         | > 60 %                 | < 40 % (consommation inattendue)  |
 | obc_temp        | 10-40 °C               | Hors plage (problème thermique)   |
 | uptime          | ~1800 s et plus (30 min et plus) | < 1800 s (réinitialisation récente) |
 | reboot_count    | 0 ou 1                 | > 1 (réinitialisations multiples, à analyser) |
 
-### 4.3 Procédure de premier contact
+### 4.3 Procédure de premier contact {#43-first-contact-procedure}
 
 1. Acquérir le signal de la balise à l'AOS. Vérifier le verrouillage de la porteuse sur le récepteur sol.
 2. Décoder le paquet balise (SID 11). Consigner toutes les valeurs des paramètres.
@@ -162,14 +162,14 @@ Le paquet balise (SID 11) contient des informations de santé minimales mais ess
 5. Relever l'écart d'horodatage de la balise ; l'horloge est réglée après `OBC_BOOT_APP` (LEOP-006).
 
 **Point de contrôle GO/NO-GO 2 : bilan de santé au premier contact**
-- Critères : balise reçue, tous les paramètres nominaux, OBC en BOOTLOADER.
+- Critères : balise reçue, tous les paramètres nominaux, OBC dans le chargeur d'amorçage.
 - Décision : poursuivre par l'amorçage de l'application.
 
-## 5. Opérations en mode chargeur d'amorçage
+## 5. Opérations en mode chargeur d'amorçage {#5-bootloader-operations}
 
-### 5.1 HK limitées en BOOTLOADER
+### 5.1 HK limitées dans le chargeur d'amorçage {#51-limited-hk-in-the-bootloader}
 
-En mode BOOTLOADER, **seul le SID 11 (balise)** est émis, et il provient de l'**APID dédié du chargeur d'amorçage (0x002)** — distinct de l'APID applicatif (0x001) utilisé une fois l'application de l'OBC en marche. Le sol dispose ainsi d'une signature claire et sans ambiguïté de l'état chargeur d'amorçage ou application :
+Dans le chargeur d'amorçage, **seul le SID 11 (balise)** est émis, et il provient de l'**APID dédié du chargeur d'amorçage (0x002)** — distinct de l'APID applicatif (0x001) utilisé une fois l'application de l'OBC en marche. Le sol dispose ainsi d'une signature claire et sans ambiguïté de l'état chargeur d'amorçage ou application :
 
 - paquet balise (SID 11) toutes les 30 s sur l'APID 0x002 du chargeur d'amorçage ;
 - aucun stockage de TM n'existe — les vidages commandés échouent, il n'y a aucune mémoire de paquets à activer ;
@@ -178,7 +178,7 @@ En mode BOOTLOADER, **seul le SID 11 (balise)** est émis, et il provient de l'*
 
 La télémesure de servitude complète (SID 1–6 par sous-système) et les mémoires de TM de bord ne deviennent disponibles qu'après l'amorçage réussi du logiciel applicatif (phase 4). Un redémarrage de l'OBC à n'importe quelle phase ultérieure ramène automatiquement le satellite dans cet état chargeur d'amorçage/balise seule jusqu'au réamorçage de l'application.
 
-### 5.2 Commandes restreintes en BOOTLOADER
+### 5.2 Commandes restreintes dans le chargeur d'amorçage {#52-restricted-commands-in-the-bootloader}
 
 Seules les commandes suivantes sont acceptées :
 
@@ -190,20 +190,20 @@ Seules les commandes suivantes sont acceptées :
 | OBC_REBOOT, OBC_SWITCH_UNIT, OBC_SELECT_BUS, OBC_BOOT_INHIBIT, OBC_CLEAR_REBOOT_CNT, OBC_DIAGNOSTIC (fonctions 52–54, 56, 57, 61) ; S17.1 ; S20.1/S20.3 | Maintenance du chargeur d'amorçage, test de connexion, lecture/écriture de paramètres |
 | EPS_POWER_ON / EPS_POWER_OFF (19/20), TTC_PA_ON / TTC_PA_OFF (66/67), TTC_DEPLOY_ANTENNA (69), SYS_SET_MISSION_PHASE (120) | Lignes d'alimentation, émetteur, antenne et phase de mission pour le premier contact |
 
-Toutes les autres commandes sont rejetées à l'acceptation avec le code d'échec 0x0006. Ne pas tenter de commander les sous-systèmes en BOOTLOADER.
+Toutes les autres commandes sont rejetées à l'acceptation avec le code d'échec 0x0006. Ne pas tenter de commander les sous-systèmes dans le chargeur d'amorçage.
 
-## 6. Amorçage de l'application et vérification
+## 6. Amorçage de l'application et vérification {#6-application-boot-and-verification}
 
-### 6.1 Procédure d'amorçage
+### 6.1 Procédure d'amorçage {#61-boot-procedure}
 
 1. Vérifier que la santé indiquée par la balise est nominale (point de contrôle 2 franchi).
-2. Envoyer `OBC_BOOT_APP` (S8.1 fonction 55) pour commander la transition de BOOTLOADER vers APPLICATION.
+2. Envoyer `OBC_BOOT_APP` (S8.1 fonction 55) pour commander la transition du chargeur d'amorçage vers l'application.
 3. Attendre 30 secondes que le logiciel applicatif se charge et exécute son POST.
 4. Surveiller l'apparition de la télémesure de servitude complète (SID 1-6).
 5. Si aucune HK n'apparaît dans les 60 secondes, l'amorçage de l'application a peut-être échoué.
-   Vérifier si la balise réapparaît (signe d'un repli en BOOTLOADER).
+   Vérifier si la balise réapparaît (signe d'un repli dans le chargeur d'amorçage).
 
-### 6.2 Vérification après amorçage
+### 6.2 Vérification après amorçage {#62-post-boot-verification}
 
 Une fois le logiciel applicatif en marche, vérifier :
 
@@ -216,35 +216,35 @@ Une fois le logiciel applicatif en marche, vérifier :
 | Tension du bus                 | bus_voltage      | 27-29 V                     |
 | Traitement des TC              | tc_exec_count    | S'incrémente normalement    |
 
-### 6.3 Reprise après un amorçage échoué
+### 6.3 Reprise après un amorçage échoué {#63-recovery-from-failed-boot}
 
 Si l'application ne démarre pas :
 
-1. Attendre que l'OBC se replie en BOOTLOADER (3 réinitialisations consécutives par chien de garde).
+1. Attendre que l'OBC se replie dans le chargeur d'amorçage (3 réinitialisations consécutives par chien de garde).
 2. Évaluer reboot_count dans le paquet balise.
 3. Suivre la CTG-021 (Reprise du chargeur d'amorçage de l'OBC) ; il n'existe pas de commande `SW_UPLOAD`.
-4. Si aucun correctif n'est disponible, maintenir le satellite en BOOTLOADER en mode balise
+4. Si aucun correctif n'est disponible, maintenir le satellite dans le chargeur d'amorçage en mode balise
    jusqu'à ce qu'un correctif puisse être préparé et envoyé lors des contacts suivants.
 
 **Point de contrôle GO/NO-GO 3 : amorçage de l'application réussi**
 - Critères : télémesure HK complète reçue, OBC en mode NOMINAL ou SAFE.
 - Décision : poursuivre par la mise sous tension séquentielle.
 
-## 6A. Déploiement des ailes solaires
+## 6A. Déploiement des ailes solaires {#6a-solar-wing-deployment}
 
 Après l'amorçage de l'application et l'amortissement initial (vitesses angulaires < 0,5°/s), les ailes
 solaires déployables des faces +Y et -Y doivent être déployées pour fournir la pleine capacité
 de production de puissance. Cette étape est réalisée avant la mise sous tension séquentielle afin de garantir une marge
 de puissance suffisante pour l'activation des sous-systèmes.
 
-### 6A.1 Contrôles avant déploiement
+### 6A.1 Contrôles avant déploiement {#6a1-pre-deployment-checks}
 
 1. Vérifier que le logiciel applicatif est en marche (mode OBC = NOMINAL ou SAFE).
 2. Vérifier que les vitesses angulaires sont < 0.5°/s (amortissement terminé ou suffisant).
 3. Vérifier que le SoC de la batterie est > 50 % (le déploiement d'une aile demande ~2 A pendant 30 s).
 4. Demander les HK EPS (`HK_REQUEST SID=1`) et confirmer que la tension du bus est nominale.
 
-### 6A.2 Déploiement de l'aile +Y
+### 6A.2 Déploiement de l'aile +Y {#6a2-deploy-y-wing}
 
 1. Envoyer `EPS_DEPLOY_WING` (func_id 81, wing=0) pour déployer l'aile solaire +Y.
 2. Surveiller le décompte de `wing_deploy_timer` (0x0145) à partir de ~30 s.
@@ -253,7 +253,7 @@ de puissance suffisante pour l'activation des sous-systèmes.
 5. Surveiller l'augmentation du courant `sa_py_current` (0x012D) si le satellite est éclairé.
 6. Attendre 60 secondes que le transitoire d'attitude s'amortisse.
 
-### 6A.3 Déploiement de l'aile -Y
+### 6A.3 Déploiement de l'aile -Y {#6a3-deploy--y-wing}
 
 1. Envoyer `EPS_DEPLOY_WING` (func_id 81, wing=1) pour déployer l'aile solaire -Y.
 2. Surveiller le décompte de `wing_deploy_timer` (0x0145) à partir de ~30 s.
@@ -261,7 +261,7 @@ de puissance suffisante pour l'activation des sous-systèmes.
 4. Vérifier que le bit 1 de `wing_status` (0x0144) est positionné.
 5. Surveiller l'augmentation du courant `sa_my_current` (0x012E) si le satellite est éclairé.
 
-### 6A.4 Vérification après déploiement
+### 6A.4 Vérification après déploiement {#6a4-post-deployment-verification}
 
 1. Demander les HK EPS et vérifier que `power_gen` (0x0107) a augmenté.
 2. Confirmer que `wing_status` (0x0144) = 0x03 (les deux ailes déployées).
@@ -269,7 +269,7 @@ de puissance suffisante pour l'activation des sous-systèmes.
    (surface totale de 0,438 m² contre 0,198 m² repliée).
 4. Consigner les heures de déploiement et les relevés de puissance dans le journal LEOP.
 
-### 6A.5 Hors nominal : échec du déploiement d'une aile
+### 6A.5 Hors nominal : échec du déploiement d'une aile {#6a5-off-nominal-wing-deployment-failure}
 
 Si une aile ne se déploie pas (aucun événement généré dans les 60 s, bit de wing_status non positionné) :
 
@@ -283,13 +283,13 @@ Si une aile ne se déploie pas (aucun événement généré dans les 60 s, bit 
 - Critères : les deux ailes déployées (wing_status = 0x03), production de puissance accrue.
 - Décision : poursuivre par la mise sous tension séquentielle.
 
-## 7. Procédure de mise sous tension séquentielle
+## 7. Procédure de mise sous tension séquentielle {#7-sequential-power-on-procedure}
 
 Après l'amorçage de l'application et le déploiement des ailes solaires, les sous-systèmes sont mis sous tension un par un
 pour vérifier leur santé et maîtriser le bilan de puissance. L'ordre est essentiel — chaque étape doit être
 vérifiée avant de continuer.
 
-### 7.1 Séquence de mise sous tension
+### 7.1 Séquence de mise sous tension {#71-power-on-sequence}
 
 | Étape | Sous-système        | Ligne PDM | Vérification                         | Impact sur la puissance |
 |------|---------------------|----------|---------------------------------------|--------------|
@@ -312,7 +312,7 @@ la place des étapes 2-3 en premier.
 | Refroidisseur du FPA | COM-010 | ~15 W en continu ; l'allumer en LEOP a consommé de la marge pendant des jours (constat du propriétaire) |
 | Ligne de propulsion | NOM-004/NOM-013 | uniquement pour la préparation des manœuvres |
 
-### 7.2 Surveillance du bilan de puissance
+### 7.2 Surveillance du bilan de puissance {#72-power-budget-monitoring}
 
 Après chaque étape de mise sous tension, vérifier que :
 
@@ -325,15 +325,15 @@ Après chaque étape de mise sous tension, vérifier que :
   actif sur magnétomètre + magnétocoupleurs ; roues toujours désactivées.
 - Décision : poursuivre avec LEOP-005 (observer l'acquisition automatique du Soleil).
 
-## 8. Séquence de recette en orbite du SCAO
+## 8. Séquence de recette en orbite du SCAO {#8-adcs-commissioning-sequence}
 
 La recette en orbite du SCAO vérifie chaque composant de détermination et de contrôle d'attitude dans un
 ordre précis : d'abord les capteurs, puis les algorithmes de détermination, puis les actionneurs, puis
 les boucles de commande.
 
-### 8.1 Phase 1 : recette des capteurs
+### 8.1 Phase 1 : recette des capteurs {#81-phase-1-sensor-commissioning}
 
-#### Étape 1 : étalonnage du magnétomètre
+#### Étape 1 : étalonnage du magnétomètre {#step-1-magnetometer-calibration}
 
 1. Vérifier que le magnétomètre est alimenté et que `aocs.mag_enabled` (0x025C) = 1.
 2. Enregistrer les mesures du magnétomètre sur une orbite complète.
@@ -341,7 +341,7 @@ les boucles de commande.
 4. Calculer et envoyer des décalages d'étalonnage si les résidus dépassent 500 nT.
 5. Vérifier que les mesures étalonnées concordent avec le modèle à 200 nT près.
 
-#### Étape 2 : vérification des CSS
+#### Étape 2 : vérification des CSS {#step-2-css-verification}
 
 1. Pendant la portion éclairée, vérifier que les 6 têtes CSS fournissent des valeurs non nulles sur
    les faces éclairées.
@@ -351,16 +351,16 @@ les boucles de commande.
 4. Vérifier la cohérence géométrique : des faces opposées doivent fournir des mesures complémentaires
    (si une face voit le Soleil, la face opposée doit être dans l'ombre).
 
-#### Étape 3 : recette de la caméra stellaire
+#### Étape 3 : recette de la caméra stellaire {#step-3-star-camera-commissioning}
 
 1. S'assurer que les vitesses angulaires sont inférieures à 0.1°/s (l'amortissement doit être suffisant).
-2. Mettre sous tension la caméra stellaire zénith (ST-Zenith sur la face -Z).
+2. Mettre sous tension la caméra stellaire zénith (ST-Zenith sur la face +Z).
 3. Attendre que la caméra stellaire effectue son acquisition « lost-in-space » (jusqu'à 60 secondes).
 4. Vérifier la validité du quaternion d'attitude fourni (les quatre composantes non nulles).
 5. Comparer l'attitude de la caméra stellaire au vecteur Soleil (issu des CSS) pour un contrôle de cohérence.
-6. Vérifier que la caméra stellaire n'est pas éblouie (angle du Soleil par rapport à l'axe de visée -Z > 15°).
+6. Vérifier que la caméra stellaire n'est pas éblouie (angle du Soleil par rapport à l'axe de visée +Z > 15°).
 
-#### Étape 4 : étalonnage du biais des gyromètres
+#### Étape 4 : étalonnage du biais des gyromètres {#step-4-gyro-bias-calibration}
 
 1. La caméra stellaire fournissant une attitude valide, activer l'algorithme d'estimation du biais des gyromètres.
 2. Accumuler des données d'étalonnage pendant au moins 10 minutes.
@@ -373,7 +373,7 @@ les boucles de commande.
 - Critères : tous les capteurs étalonnés et fournissant des données valides.
 - Décision : poursuivre par la validation de la détermination d'attitude.
 
-### 8.2 Phase 2 : validation de la détermination d'attitude
+### 8.2 Phase 2 : validation de la détermination d'attitude {#82-phase-2-attitude-determination-validation}
 
 1. Vérifier que la solution d'attitude fusionnée (caméra stellaire, magnétomètre, gyromètres) est stable.
 2. Confirmer que `att_error` (0x0217) est calculé et vraisemblable.
@@ -385,9 +385,9 @@ les boucles de commande.
 - Critères : solution d'attitude stable, cohérente d'un capteur à l'autre.
 - Décision : poursuivre par la recette des actionneurs.
 
-### 8.3 Phase 3 : recette des actionneurs
+### 8.3 Phase 3 : recette des actionneurs {#83-phase-3-actuator-commissioning}
 
-#### Étape 5 : contrôle du signe des magnétocoupleurs
+#### Étape 5 : contrôle du signe des magnétocoupleurs {#step-5-magnetorquer-sign-check}
 
 1. Commander un courant connu dans chaque bobine de magnétocoupleur (X, Y, Z), une à une.
 2. Observer le couple résultant sur le satellite à l'aide des mesures de vitesse des gyromètres.
@@ -396,7 +396,7 @@ les boucles de commande.
 4. Confirmer l'absence d'erreur de signe (un sens erroné indiquerait un problème de câblage).
 5. En cas d'erreur de signe, mettre à jour dans le logiciel la configuration de polarité des magnétocoupleurs.
 
-#### Étape 6 : essai de mise en rotation des roues de réaction
+#### Étape 6 : essai de mise en rotation des roues de réaction {#step-6-reaction-wheel-spin-up-test}
 
 1. Commander chaque roue, une à une, à faible vitesse (+100 tr/min).
 2. Vérifier que la télémesure de vitesse de roue correspond à la valeur commandée.
@@ -405,7 +405,7 @@ les boucles de commande.
 5. Ramener toutes les roues à 0 tr/min.
 6. Vérifier que les températures des roues restent nominales tout au long de l'essai.
 
-#### Étape 7 : vérification des gains de commande
+#### Étape 7 : vérification des gains de commande {#step-7-control-gain-verification}
 
 1. Activer la loi de commande AOCS avec des gains prudents (faibles).
 2. Commander un petit décalage d'attitude (1°) et observer la réponse.
@@ -417,23 +417,23 @@ les boucles de commande.
 - Critères : tous les actionneurs vérifiés, sens et amplitude corrects.
 - Décision : poursuivre par les essais de contrôle actif.
 
-### 8.4 Phase 4 : validation du contrôle actif
+### 8.4 Phase 4 : validation du contrôle actif {#84-phase-4-active-control-validation}
 
-#### Étape 8 : essai d'amortissement des vitesses
+#### Étape 8 : essai d'amortissement des vitesses {#step-8-rate-damping-test}
 
 1. Commander l'AOCS en mode DETUMBLE (s'il n'y est pas déjà).
 2. Si les vitesses sont déjà quasi nulles, introduire une petite perturbation au moyen des magnétocoupleurs.
 3. Vérifier que l'amortissement des vitesses par les magnétocoupleurs converge sous 0.5°/s.
 4. Vérifier la transition autonome vers COARSE_SUN (mode 3) lorsque les vitesses sont suffisamment faibles.
 
-#### Étape 9 : vérification du pointage solaire
+#### Étape 9 : vérification du pointage solaire {#step-9-sun-pointing-verification}
 
 1. En mode COARSE_SUN, vérifier que le satellite oriente sa face +X vers le Soleil.
 2. Surveiller la convergence de `att_error` vers zéro.
 3. Vérifier la cohérence entre le vecteur Soleil déduit des CSS et l'attitude de la caméra stellaire.
 4. Surveiller la production de puissance — confirmer que `power_gen` augmente à mesure que le pointage solaire s'améliore.
 
-#### Étape 10 : essai de pointage nadir
+#### Étape 10 : essai de pointage nadir {#step-10-nadir-pointing-test}
 
 1. Commander l'AOCS en mode NOMINAL (nadir) via `AOCS_SET_MODE` (mode=4).
 2. Vérifier la transition de l'attitude vers le pointage nadir.
@@ -445,9 +445,9 @@ les boucles de commande.
 - Critères : pointage nadir stable, tous les composants du SCAO vérifiés.
 - Décision : poursuivre par la transition vers le nominal.
 
-## 9. Transition vers les opérations nominales
+## 9. Transition vers les opérations nominales {#9-transition-to-nominal-operations}
 
-### 9.1 Liste de vérification avant transition
+### 9.1 Liste de vérification avant transition {#91-pre-transition-checklist}
 
 Avant de déclarer le satellite opérationnel, vérifier les points suivants :
 
@@ -466,7 +466,7 @@ Avant de déclarer le satellite opérationnel, vérifier les points suivants :
 | 11   | Surveillance S12 activée                 | Toutes les règles FDIR actives |
 | 12   | Événements-actions S19 activés           | Toutes les réponses automatiques actives |
 
-### 9.2 Séquence de commandes de transition vers le nominal
+### 9.2 Séquence de commandes de transition vers le nominal {#92-nominal-transition-command-sequence}
 
 1. Vérifier la liste de vérification avant transition (tous les points conformes).
 2. Le directeur de vol lance le tour de table GO/NO-GO de tous les postes.
@@ -509,7 +509,7 @@ des conditions figure dans `00_mission_overview.md` §6.0.
 - Critères : tous les points de la liste de vérification conformes, tous les postes annoncent GO.
 - Décision : satellite déclaré opérationnel ; phase LEOP terminée ; phase = 6.
 
-### 9.3 Activités après la LEOP
+### 9.3 Activités après la LEOP {#93-post-leop-activities}
 
 Une fois la phase LEOP terminée, les activités de recette suivantes se poursuivent pendant
 la phase de recette en orbite :
@@ -524,9 +524,9 @@ la phase de recette en orbite :
 | Optimisation des contacts avec les stations sol | Jours 3–10 | Opérateur TTC |
 | Premières prises de vue scientifiques | Jours 14–30  | PLD + FD       |
 
-## 10. Procédures d'urgence pendant la LEOP
+## 10. Procédures d'urgence pendant la LEOP {#10-emergency-procedures-during-leop}
 
-### 10.1 Pas de balise après la séparation
+### 10.1 Pas de balise après la séparation {#101-no-beacon-after-separation}
 
 Si aucune balise n'est reçue au premier contact prévu :
 
@@ -537,9 +537,9 @@ Si aucune balise n'est reçue au premier contact prévu :
 4. Sans réponse après 24 heures de tentatives, envisager une possible défaillance du déploiement
    de l'antenne et commander en aveugle le circuit de fil thermofusible redondant.
 
-### 10.2 OBC bloqué en BOOTLOADER
+### 10.2 OBC bloqué dans le chargeur d'amorçage {#102-obc-stuck-in-the-bootloader}
 
-Si l'OBC ne parvient pas à passer de BOOTLOADER à APPLICATION :
+Si l'OBC ne parvient pas à passer du chargeur d'amorçage à l'application :
 
 1. Demander un paquet balise via `HK_REQUEST` (SID 11).
 2. Contrôler `reboot_count` — s'il est élevé, l'application plante peut-être.
@@ -547,7 +547,7 @@ Si l'OBC ne parvient pas à passer de BOOTLOADER à APPLICATION :
 4. En cas d'échecs répétés, maintenir l'OBC en chargeur d'amorçage (`OBC_BOOT_INHIBIT`) et analyser.
 5. Se reporter à la CTG-021 (`procedures/contingency/obc_bootloader_recovery.md`) pour la procédure de reprise détaillée.
 
-### 10.3 Vitesses de culbutage excessives
+### 10.3 Vitesses de culbutage excessives {#103-excessive-tumble-rates}
 
 Si les vitesses angulaires dépassent 5°/s après une tentative d'amortissement :
 

@@ -41,12 +41,14 @@ de continuer.
 **GO/NO-GO:** Charge processeur dans la plage acceptable
 
 ### Étape 3 — Vérifier l'état de la mémoire
-**TC:** `GET_PARAM(param_id=0x0303)` (Service 20, Subtype 3) — pourcentage d'utilisation de la RAM
-**TC:** `GET_PARAM(param_id=0x0304)` (Service 20, Subtype 3) — nombre d'erreurs EDAC
-**Verify:** Utilisation de la RAM < 70 % sous 10s
-**Verify:** Nombre d'erreurs EDAC sur un bit rapporté (consigner la valeur) sous 10s
-**Verify:** Nombre d'erreurs EDAC multibits = 0 sous 10s
-**GO/NO-GO:** Mémoire saine, sans erreur non corrigible
+**TC:** `GET_PARAM(param_id=0x0303)` (Service 20, Subtype 3) — utilisation de la mémoire de masse (`obdh.mmm_used`)
+**TC:** `GET_PARAM(param_id=0x031E)` (Service 20, Subtype 3) — nombre d'erreurs mémoire, corrigibles + non corrigibles (`obdh.mem_errors`)
+**TC:** `GET_PARAM(param_id=0x0319)` (Service 20, Subtype 3) — compteur d'événements singuliers (`obdh.seu_count`)
+**Verify:** Utilisation de la mémoire de masse < 70 % sous 10s
+**Verify:** `obdh.mem_errors` (0x031E) rapporté sous 10s --- consigner comme référence
+**Verify:** `obdh.seu_count` (0x0319) rapporté sous 10s --- consigner comme référence
+**Note:** 0x0304 est `obdh.tc_rx_count` (étape 4), et non un nombre d'erreurs mémoire.
+**GO/NO-GO:** Compteurs d'erreurs mémoire et de SEU consignés comme référence, sans progression entre deux lectures
 
 ### Étape 4 — Contrôler les compteurs de paquets TC/TM
 **TC:** `GET_PARAM(param_id=0x0304)` (Service 20, Subtype 3) — compteur de TC reçues (`obdh.tc_rx_count`)
@@ -68,16 +70,21 @@ rien).
 
 ### Étape 6 — Vérifier la génération autonome des HK
 **Action:** En mode NOMINAL, l'OBC doit générer de façon autonome des paquets HK périodiques. Attendre 60 secondes et vérifier la progression du compteur de TM sans demande du sol.
-**TC:** `GET_PARAM(param_id=0x0312)` (Service 20, Subtype 3) — compteur de TM avant
+**TC:** `GET_PARAM(param_id=0x0307)` (Service 20, Subtype 3) — compteur de TM avant (`obdh.tm_pkt_count`)
 **Action:** Attendre 60 secondes. N'envoyer aucune TC.
-**TC:** `GET_PARAM(param_id=0x0312)` (Service 20, Subtype 3) — compteur de TM après
+**TC:** `GET_PARAM(param_id=0x0307)` (Service 20, Subtype 3) — compteur de TM après (`obdh.tm_pkt_count`)
+**Note:** 0x0307 est le compteur de paquets TM. 0x0312 est le taux de remplissage du stockage HK S15
+(`obdh.hktm_buf_fill`), qui ne dit rien de la génération de TM.
 **Verify:** Le compteur de TM a progressé (HK autonomes actives) sous 10s
 **GO/NO-GO:** Génération autonome des données de servitude confirmée
 
 ### Étape 7 — Vérifier le chien de garde
-**TC:** `GET_PARAM(param_id=0x0305)` (Service 20, Subtype 3) — état du chien de garde
+**TC:** `OBC_DIAGNOSTIC` (Service 8, Subtype 1, func_id 61) — rapport de santé de l'OBC
 **TC:** `GET_PARAM(param_id=0x0316)` (Service 20, Subtype 3) — cause du dernier redémarrage (`obdh.last_reboot_cause`)
-**Verify:** État du chien de garde = ENABLED (valeur 1) sous 10s
+**Verify:** octet 5 de la réponse OBC_DIAGNOSTIC = 1 (chien de garde armé) sous 10s --- la réponse
+contient le mode (octet 0), la charge processeur (octets 1-4) et l'état du chien de garde (octet 5).
+L'état du chien de garde ne figure que dans cette réponse ; ce n'est pas un paramètre de télémesure (0x0305 est
+`obdh.tc_acc_count`).
 **Verify:** Cause du dernier redémarrage = 0 (aucune) — aucune réinitialisation inattendue sous 10s
 **GO/NO-GO:** Chien de garde actif, aucune réinitialisation anormale enregistrée
 
@@ -93,14 +100,14 @@ en le croyant NOMINAL, et transmettait un OBC en SAFE à toutes les fiches suiva
 **GO/NO-GO:** Excursion propre dans les deux sens, OBC rétabli en NOMINAL
 
 ### Étape 9 — Consigner la référence de l'OBDH
-**Action:** Rassembler la charge processeur, l'utilisation mémoire, les compteurs EDAC, les statistiques TC/TM et l'état du chien de garde dans le rapport de vérification de l'OBDH. Ces valeurs constituent la référence pour la détection d'anomalies en opérations nominales.
+**Action:** Rassembler la charge processeur, l'utilisation mémoire, les compteurs d'erreurs mémoire et de SEU, les statistiques TC/TM et l'état du chien de garde dans le rapport de vérification de l'OBDH. Ces valeurs constituent la référence pour la détection d'anomalies en opérations nominales.
 **GO/NO-GO:** Vérification de l'OBDH terminée — tous les paramètres nominaux
 
 ## Conduite à tenir hors nominal
-- Si `obdh.cpu_load` > 60 % : examiner les tâches en cours via `GET_PARAM(param_id=0x0307)` (liste des tâches). Si une tâche inattendue consomme des ressources, envisager l'arrêt ciblé de cette tâche après accord du directeur de vol. Ne pas redémarrer sauf si la charge processeur dépasse 90 %.
-- Si des erreurs EDAC multibits > 0 : corruption mémoire détectée. Tenter un nettoyage mémoire avec `OBC_MEMORY_SCRUB` (Service 8, Subtype 1, func_id 51). Si les erreurs persistent, identifier la zone mémoire affectée. Un repli sur l'OBC redondant peut être nécessaire.
+- Si `obdh.cpu_load` > 60 % : examiner la tendance de la charge processeur (il n'existe aucune télémesure de liste des tâches ; 0x0307 est le compteur de paquets TM). Si une tâche inattendue consomme des ressources, envisager l'arrêt ciblé de cette tâche après accord du directeur de vol. Ne pas redémarrer sauf si la charge processeur dépasse 90 %.
+- Si `obdh.mem_errors` (0x031E) progresse entre deux lectures : corruption mémoire détectée. Tenter un nettoyage mémoire avec `OBC_MEMORY_SCRUB` (Service 8, Subtype 1, func_id 51). Si les erreurs persistent, identifier la zone mémoire affectée. Un repli sur l'OBC redondant peut être nécessaire.
 - Si une transition de mode de l'OBC échoue : renvoyer la commande une fois. En cas de nouvel échec, contrôler l'état d'acceptation de la TC. Vérifier l'authentification de la commande. Si le mode NOMINAL est inaccessible, poursuivre la recette en orbite en mode SAFE avec des demandes de HK manuelles.
-- Si l'état du chien de garde = DISABLED : le réactiver via `SET_PARAM(param_id=0x0305, value=1)`. Rechercher pourquoi le chien de garde était désactivé — cela peut indiquer un rétablissement après une panne antérieure.
+- Si l'octet 5 de la réponse OBC_DIAGNOSTIC = 0 (chien de garde désarmé) : le réactiver avec `OBC_WATCHDOG_ENABLE` (Service 8, Subtype 1, func_id 59) et refaire le diagnostic. Rechercher pourquoi le chien de garde était désactivé — cela peut indiquer un rétablissement après une panne antérieure.
 - Si le compteur de TC rejetées > 0 : examiner le journal des commandes sol à la recherche de séquences invalides. Après investigation, consigner la valeur du compteur comme nouvelle référence (il n'existe pas de commande de remise à zéro du compteur ; ne jamais écrire 0x0311, qui est `obdh.sw_image`).
 - Si la cause de la dernière réinitialisation != POWER_ON : examiner le code de cause de réinitialisation. Si une réinitialisation par sous-tension ou par chien de garde s'est produite pendant la LEOP, examiner la chronologie de télémesure correspondante. La documenter dans le journal des anomalies.
 

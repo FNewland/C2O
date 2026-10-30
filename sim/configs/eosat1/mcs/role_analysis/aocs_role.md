@@ -56,7 +56,7 @@
 
 | Command | func_id | Description | Fields |
 |---|---|---|---|
-| AOCS_SET_MODE | 0 | Set AOCS mode | mode: 0=off, 1=safe_boot, 2=detumble, 3=coarse_sun, 4=nominal_nadir, 5=fine_point, 6=slew, 7=desaturation, 8=eclipse_propagate |
+| AOCS_SET_MODE | 0 | Set AOCS mode | mode: 0=off, 1=safe_boot, 2=detumble, 3=coarse_sun, 4=nominal, 5=fine_point, 6=slew, 7=desat, 8=eclipse, 9=inertial |
 | AOCS_DESATURATE | 1 | Start wheel desaturation | (none) |
 | AOCS_DISABLE_WHEEL | 2 | Disable specific reaction wheel | wheel_idx (0-3) |
 | AOCS_ENABLE_WHEEL | 3 | Enable specific reaction wheel | wheel_idx (0-3) |
@@ -183,7 +183,7 @@
 
 The Flight Dynamics position provides GO/NO-GO input to the Flight Director for:
 
-- **Imaging readiness:** Confirm AOCS in fine_point or nominal_nadir mode, att_error within limits, all required RWs healthy, ST tracking with sufficient star count.
+- **Imaging readiness:** Confirm AOCS in fine_point or nominal mode, att_error within limits, all required RWs healthy, ST tracking with sufficient star count.
 - **Orbit maneuver execution:** Confirm orbit solution valid (GPS fix 3D), momentum within budget, schedule loaded and verified.
 - **Mode transitions:** Confirm current mode stable (time_in_mode sufficient, rates converged) before authorizing next mode step.
 - **Eclipse entry:** Confirm attitude stable, eclipse_propagate mode ready, momentum margin adequate for eclipse duration.

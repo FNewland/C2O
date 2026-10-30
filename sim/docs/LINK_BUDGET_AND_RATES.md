@@ -1,9 +1,9 @@
-# EO-Sat-1 Link Budget and the TM Data-Rate Ladder
+# EOSAT-1 Link Budget and the TM Data-Rate Ladder
 
 **Document ID:** EOSAT1-OPS-LINK-001
 **Issue:** 2.0 — 2026-08-12 (issue 1.0, 2026-07-29)
 
-> **What changed at issue 2.0.** EO-Sat-1 has two transmitters, not one.
+> **What changed at issue 2.0.** EOSAT-1 has two transmitters, not one.
 > §9 is new and describes the UHF bootloader beacon transmitter, its link
 > budget and what it does and does not gate. §4 gains a note that the S-band
 > EIRP is now derived from the commanded PA power rather than being a
@@ -43,7 +43,7 @@ time is scarce. But the top rate costs power, heat, occupied bandwidth and groun
 configuration, so it is not left switched on: it is *requested*, for a planned activity,
 on a pass chosen because its geometry supports it.
 
-EO-Sat-1 therefore flies a three-rung ladder. Each rung answers one of those three
+EOSAT-1 therefore flies a three-rung ladder. Each rung answers one of those three
 pressures, and nothing on the spacecraft, in the planner or on the console carries its own
 copy of the numbers — they all read `configs/eosat1/subsystems/ttc.yaml`.
 
@@ -87,7 +87,7 @@ backlog, rather than immediately, through a rejected command.
 
 **This is the routine operations rate.** It is also the safe-mode rate, the FDIR fallback
 and the rate that works with the antenna stowed. It is not a degraded mode and it is not
-a contingency; a healthy EO-Sat-1 in the middle of a nominal ops day is transmitting at
+a contingency; a healthy EOSAT-1 in the middle of a nominal ops day is transmitting at
 16 kbps.
 
 16 000 bps is derived, not chosen. The shipped `telemetry/hk_structures.yaml` defines the
@@ -366,7 +366,7 @@ The planner's data budget now reports per pass:
 
 * `high_fraction` — what proportion of the window sits above the 10° gate, derived from
   spherical geometry (`fraction_above_elevation`), not from a lookup table. A 30° pass
-  spends **76 %** of its window above 10°; a 12° pass only **47 %**; a 7° pass **none**,
+  spends **77 %** of its window above 10°; a 12° pass only **47 %**; a 7° pass **none**,
   and can never dump at HIGH at all.
 * `dump_capable` / `dump_tier` — whether the pass can hold HIGH, and which tier a dump
   booked on it would actually run at.
@@ -613,7 +613,7 @@ top tier, and no new code should read them.
 
 ## 9. The other transmitter — the UHF bootloader beacon
 
-Everything above §8 describes **one** radio: the S-band prime chain. EO-Sat-1 carries a
+Everything above §8 describes **one** radio: the S-band prime chain. EOSAT-1 carries a
 second one, and it is the more interesting of the two to a student, because it closes a
 completely different budget with completely different hardware to do a job the prime
 chain structurally cannot.

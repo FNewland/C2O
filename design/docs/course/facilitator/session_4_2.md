@@ -10,7 +10,7 @@
 
 By the end of this session, participants will be able to:
 1. Distinguish between verification and validation using the ECSS/NASA definitions
-2. Assign appropriate verification methods (IADT) to each requirement using a decision logic
+2. Assign appropriate verification methods (ATIR(D)) to each requirement using a decision logic
 3. Define environmental test levels derived from launch vehicle ICD specifications
 4. Construct a compliance verification matrix mapping every requirement to its method, level, and phase
 5. Identify when waivers are appropriate and document the waiver rationale
@@ -27,7 +27,7 @@ By the end of this session, participants will be able to:
 | **Standard** | ECSS-E-ST-10-02C | ECSS-E-ST-10-06C |
 | **Performed by** | Engineering team | Users, operators, stakeholders |
 | **When** | Throughout development (Phases B-D) | End of development + early operations (Phase D-E) |
-| **Methods** | IADT (Inspection, Analysis, Demonstration, Test) | Operational demonstration, user acceptance testing |
+| **Methods** | ATIR(D) (Analysis, Test, Inspection, Review of design, Demonstration) | Operational demonstration, user acceptance testing |
 | **Output** | Verification Control Document (VCD) | Validation report |
 
 ### The Critical Distinction
@@ -47,10 +47,10 @@ A system can be **verified** (every requirement marked "pass") but still **fail 
 
 ---
 
-## 2. IADT Verification Methods in Detail
-ECSS-E-ST-10-02C Rev.1 section 5.3 defines four verification methods. Note: ECSS uses "IADT" ordering; some NASA documents use "ATRI" -- the methods are identical.
+## 2. ATIR(D) Verification Methods in Detail
+ECSS-E-ST-10-02C Rev.1 §5.2.2.1 defines four verification methods: test (including demonstration), analysis (including similarity), review of design and inspection. NASA practice lists demonstration separately as a fifth method. This book uses the full set, abbreviated ATIR(D); review of design is described in the facilitator book, Chapter 4.2.
 
-*[Source: ECSS-E-ST-10-02C Rev.1 section 5.3; freely available from https://ecss.nl]*
+*[Source: ECSS-E-ST-10-02C Rev.1 §5.2.2; freely available from https://ecss.nl]*
 
 ### Inspection (I)
 
@@ -135,7 +135,7 @@ ECSS-E-ST-10-02C Rev.1 section 5.3 defines four verification methods. Note: ECSS
 
 For CubeSats, the **proto-flight** approach is standard because building a separate qualification unit is prohibitively expensive. The flight unit is tested to **qualification levels** but for **acceptance duration**.
 
-*[Source: ECSS-E-ST-10-03C section 5.4.2.3; MIL-STD-1540E section 6.2.4]*
+*[Source: ECSS-E-ST-10-03C §4.5.4; MIL-STD-1540E section 6.2.4]*
 
 **Rationale:** Qualification duration is longer and more stressful -- this is acceptable for a dedicated qualification model that will not fly. For proto-flight, the shorter duration reduces fatigue life consumption while still screening for workmanship defects.
 
@@ -144,7 +144,10 @@ For CubeSats, the **proto-flight** approach is standard because building a separ
 | Vibration level | MPE + 3 dB | MPE | MPE + 3 dB |
 | Vibration duration | 2 min/axis | 1 min/axis | 1 min/axis |
 | TVAC temperature range | Predicted +/- 15 C | Predicted +/- 10 C | Predicted +/- 10 C |
-| TVAC cycles | 8 | 4 | 4-8 |
+| TVAC cycles | 8 | 4 | 4 |
+| Sine sweep rate | 2 oct/min | 4 oct/min | 4 oct/min |
+
+The proto-flight levels follow the standards: GSFC-STD-7000B §2.6 (predicted +/- 10 C, at least 4 cycles) and ECSS-E-ST-10-03C (sine at 2 oct/min for qualification, Table 5-2, and 4 oct/min for acceptance, Table 5-4; proto-flight takes the acceptance duration).
 
 ---
 
@@ -164,7 +167,7 @@ A vertical flowchart with boxes connected by downward arrows:
 3. [Sine Vibration (3 axes)] ->
 4. [Random Vibration (3 axes)] ->
 5. [Post-Vibration Functional Test] ->
-6. [Thermal Vacuum (4-8 cycles)] ->
+6. [Thermal Vacuum (4 cycles)] ->
 7. [Post-TVAC Functional Test] ->
 8. [EMC Test (if required)] ->
 9. [Mass Properties Measurement] ->
@@ -199,7 +202,7 @@ Decision diamond after step 5: "Any anomaly?"
  +-----------+--------------+  Fail  | Investigate &     |
              | Pass                  | resolve           |
  +-----------v--------------+        +-------------------+
- | Thermal Vacuum Testing   |  <- 4-8 cycles, func at extremes
+ | Thermal Vacuum Testing   |  <- 4 cycles, func at extremes
  +-----------+--------------+
              |
  +-----------v--------------+
@@ -225,25 +228,24 @@ Decision diamond after step 5: "Any anomaly?"
 
 ### Sine Vibration Test Levels
 
-*[Source: Typical Falcon 9 Transporter Rideshare PUG]*
+*[Source: representative CubeSat rideshare envelope; the deployer or launch-vehicle user's guide sets the binding levels]*
 
 Sine vibration simulates the low-frequency launch vehicle structural modes (typically 5-100 Hz). These are quasi-static loads.
 
 | Frequency Range (Hz) | Level | Notes |
 |----------------------|-------|-------|
-| 5 - 8 | 12.5 mm displacement (0-peak) | Displacement-controlled |
-| 8 - 100 | 1.25 g (0-peak) | Acceleration-controlled |
-| Sweep rate | 2 octaves/minute | Standard sweep rate |
+| 5 - 100 | 1.25 g (0-peak) | Acceleration-controlled over the whole band; no displacement band |
+| Sweep rate | 4 octaves/minute (proto-flight) | 2 oct/min is the qualification rate |
 | Axes | 3 (X, Y, Z) | Sequential, one axis at a time |
 
-> **Sine Vibration Acceleration at Crossover Frequency:**
+> **Why there is no displacement band -- the crossover frequency:**
 >
-> a = (2 * pi * f)^2 * d
+> a = (2 * pi * f)^2 * d, so f_c = sqrt(a / d) / (2 * pi)
 >
-> At f = 8 Hz, d = 12.5 mm = 0.0125 m:
-> a = (2 * pi * 8)^2 * 0.0125 = (50.27)^2 * 0.0125 = 2526.6 * 0.0125 = 31.6 m/s^2 = 3.22 g
+> For a = 1.25 g = 12.26 m/s^2 and a typical shaker stroke limit d = 12.5 mm = 0.0125 m:
+> f_c = sqrt(12.26 / 0.0125) / (2 * pi) = 31.3 / 6.283 = 4.98 Hz, about 5 Hz
 >
-> *Note: The transition from displacement to acceleration control occurs where the displacement limit would exceed the acceleration limit. The actual crossover depends on the specific profile.*
+> *Below about 5 Hz, holding 1.25 g would need more than 12.5 mm of displacement. This profile starts at 5 Hz, so it is acceleration-controlled throughout.*
 
 ### Random Vibration Test Levels
 
@@ -252,11 +254,12 @@ Random vibration simulates the broadband acoustic and mechanical environment dur
 | Frequency (Hz) | PSD Level (g^2/Hz) | Notes |
 |----------------|---------------------|-------|
 | 20 | 0.01 | Start of profile |
-| 20 - 50 | +3 dB/octave ramp | Rising |
-| 50 - 800 | 0.04 (flat) | Maximum level plateau |
-| 800 - 2000 | -6 dB/octave ramp | Falling |
-| 2000 | 0.004 | End of profile |
-| **Overall gRMS** | **~7.0 gRMS** | Qualification level |
+| 20 - 80 | +3 dB/octave ramp | Rising |
+| 80 - 500 | 0.04 (flat) | Maximum level plateau |
+| 500 - 2000 | -3 dB/octave ramp | Falling |
+| 2000 | 0.01 | End of profile |
+| **Overall gRMS** | **6.8 gRMS** | GSFC-STD-7000B (GEVS) minimum workmanship level |
+| **Proto-flight** | **+3 dB: 9.6 gRMS** | PSD doubled at every frequency; 1 min per axis, 3 axes |
 
 > **Computing Overall gRMS from PSD Profile:**
 >
@@ -264,11 +267,13 @@ Random vibration simulates the broadband acoustic and mechanical environment dur
 >
 > For a flat PSD region: gRMS_flat = sqrt(PSD_flat x (f2 - f1))
 >
-> Example: PSD = 0.04 g^2/Hz from 50-800 Hz:
-> gRMS_flat = sqrt(0.04 x 750) = sqrt(30) = 5.48 gRMS
+> Example: PSD = 0.04 g^2/Hz from 80-500 Hz:
+> gRMS_flat = sqrt(0.04 x 420) = sqrt(16.8) = 4.10 gRMS
 >
 > The ramp sections and flat section are summed in quadrature:
 > gRMS_total = sqrt(gRMS_ramp1^2 + gRMS_flat^2 + gRMS_ramp2^2)
+>
+> Integrating each sloped segment in log-log form gives 1.50 g^2 (20-80 Hz) + 16.80 g^2 (80-500 Hz) + 27.73 g^2 (500-2000 Hz) = 46.03 g^2, so gRMS = 6.78, about 6.8; proto-flight (+3 dB, PSD x 2) gives sqrt(92.06) = 9.6 gRMS.
 
 ### Thermal Vacuum Test Profile
 
@@ -276,7 +281,7 @@ Random vibration simulates the broadband acoustic and mechanical environment dur
 |-----------|-------------------|-------|
 | Hot case temperature | Predicted max + 10 C | e.g., if thermal model predicts +55 C -> test to +65 C |
 | Cold case temperature | Predicted min - 10 C | e.g., if thermal model predicts -20 C -> test to -30 C |
-| Number of cycles | 4 minimum (proto-flight) | Start and end at hot; functional test at each extreme |
+| Number of cycles | 4 (proto-flight) | Start and end at hot; functional test at each extreme |
 | Vacuum level | < 10^-5 mbar | Space-representative vacuum |
 | Dwell time at extreme | >= 1 hour | Allow thermal stabilisation (< 1 C/hr gradient) |
 | Temperature transition rate | 1-3 C/min | Limited by chamber capability |
@@ -316,12 +321,12 @@ The Verification Matrix (also called Compliance Matrix or Verification Cross-Ref
 | Req ID | Requirement Text | Method | Phase | Level | Responsible | Facility | Status | Evidence |
 |--------|-----------------|--------|-------|-------|-------------|----------|--------|----------|
 | SYS-001 | M_dry <= 4.0 kg | I | D | System | Structures | Clean room | Planned | Mass measurement report |
-| SYS-002 | Survive 7 gRMS random | T | C/D | System | Structures | Vibe lab | Planned | Vibration test report |
+| SYS-002 | Survive 9.6 gRMS random (proto-flight) | T | C/D | System | Structures | Vibe lab | Planned | Vibration test report |
 | SYS-003 | GSD <= 10 m at 500 km | A | B | System | Payload | N/A | Planned | Optical analysis report |
 | SYS-004 | Link margin >= 3 dB | A | B | System | Comms | N/A | Planned | Link budget analysis |
 | SYS-005 | Antenna deploys < 30 min | D | D | System | Mechanisms | Clean room | Planned | Deployment demonstration |
 
-### IADT Assignment Decision Logic
+### ATIR(D) Assignment Decision Logic
 
 ```
 Is it a physical property (mass, dimensions, surface finish)?
@@ -333,15 +338,11 @@ Can it only be proven by quantitative measurement under controlled conditions?
 Can it be demonstrated by operating the system (functional, not precision)?
   -> Demonstration (D), Phase D, System level
 
-Can it be shown with acceptable confidence through modelling?
+Can it be shown with acceptable confidence through modelling or similarity?
   -> Analysis (A), Phase B/C, System level
 
-Is it a document, process, or plan?
-  -> Review of Design (R*), Phase B
-  (* Note: ECSS uses IADT; "Review" is sometimes used informally but is not
-     a formal ECSS method. Reviews are part of the verification process but
-     requirements verified by examining design documentation fall under
-     "Analysis" in strict ECSS usage.)
+Is it a document, a process, a plan, or a design feature evident from the drawings?
+  -> Review of design (R), Phase B
 ```
 
 ### Multiple Methods
@@ -377,19 +378,19 @@ When a requirement cannot be verified by the prescribed method, a **waiver** is 
 1. Navigate to the **V&V Matrix** tab in SpaceCDF
 2. Requirements are auto-populated from the design
 3. For each requirement, assign:
-   - **Method:** I, A, D, or T (use the decision logic above)
+   - **Method:** A, T, I, R or D (use the decision logic above)
    - **Phase:** When will verification occur (B, C, D)?
    - **Level:** Unit, subsystem, or system level?
    - **Status:** All should be "Planned" at this stage
 4. Use the **filter buttons** to view by method type:
-   - Count: How many are Analysis? Test? Demonstration? Inspection?
+   - Count: How many are Analysis? Test? Inspection? Review of design? Demonstration?
    - Are there any requirements with no method assigned?
 5. Identify requirements that need **two methods** (analysis in Phase B + test in Phase D)
 6. Discuss with your team: which tests are most critical? Which drive the test campaign schedule?
 
 ### Worksheet 4.2 Tasks
 
-1. Assign IADT method to 10 key requirements (justify each choice)
+1. Assign an ATIR(D) method to 10 key requirements (justify each choice)
 2. Identify 3 requirements that need both analysis AND test
 3. Specify the complete environmental test sequence for your mission
 4. Determine which test levels apply from your selected launch vehicle PUG
@@ -414,11 +415,11 @@ When a requirement cannot be verified by the prescribed method, a **waiver** is 
 
 | Topic | Key Takeaway |
 |-------|-------------|
-| V vs V | Verification = meets requirements (IADT); Validation = meets stakeholder needs |
-| IADT | Inspection (physical), Analysis (models), Demonstration (functional), Test (quantitative) |
+| V vs V | Verification = meets requirements (ATIR(D)); Validation = meets stakeholder needs |
+| ATIR(D) | Analysis (models and similarity), Test (quantitative), Inspection (physical), Review of design (documents and drawings), Demonstration (functional) |
 | Proto-flight | CubeSats: single flight unit tested to qualification levels, acceptance duration |
-| Sine vibration | 5-100 Hz, 1.25 g, quasi-static launch loads |
-| Random vibration | 20-2000 Hz, ~7 gRMS overall, broadband acoustic environment |
-| TVAC | Predicted extremes +/- 10 C, 4+ cycles, functional at each extreme |
+| Sine vibration | 5-100 Hz, 1.25 g, 4 oct/min for proto-flight (2 oct/min for qualification), 3 axes, no displacement band; quasi-static launch loads |
+| Random vibration | 20-2000 Hz, GEVS workmanship 6.8 gRMS; proto-flight +3 dB (about 9.6 gRMS), 1 min/axis |
+| TVAC | Proto-flight at predicted +/- 10 C (GSFC-STD-7000B / ECSS-E-ST-10-03C), 4 cycles, functional at each extreme; ~7.6 h per cycle |
 | Compliance matrix | Per requirement: method + phase + level + responsible + status + evidence |
 | Waivers | Document deviation, justification, risk, and compensating measures |

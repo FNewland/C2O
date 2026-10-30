@@ -244,8 +244,8 @@ def _orbit_tools_convert_tle(orbit: Page):
     """Enter EOSAT-1 TLE and convert to TC commands."""
     orbit.bring_to_front()
     time.sleep(0.5)
-    tle1 = "1 99001U 26001A   26068.50000000  .00000100  00000-0  10000-4 0  9990"
-    tle2 = "2 99001  98.0000 120.0000 0001200  90.0000 270.0000 15.24000000 00010"
+    tle1 = "1 99001U 26001A   26068.50000000  .00000100  00000-0  10000-4 0  9991"
+    tle2 = "2 99001  97.3900 120.0000 0001200  90.0000 270.0000 15.24000000 00016"
     try:
         orbit.fill("#tle1", tle1)
         orbit.fill("#tle2", tle2)

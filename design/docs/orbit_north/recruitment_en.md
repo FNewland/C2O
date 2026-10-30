@@ -44,21 +44,23 @@ straight to work. Thursday morning covers the past, present, and
 emerging Canadian sector; Thursday afternoon brings a short regulatory
 teaser and your first session in the SpaceCDF tool. Friday is mission
 architecture and concept work in the CDF, with the team's risk
-register opened at end of day.
+register opened and an informal **Mission Concept Review** at end of
+day.
 
-`Canadian sector`  ·  `SpaceCDF`  ·  `Mission concept`  ·  `Risk register`
+`Canadian sector`  ·  `SpaceCDF`  ·  `Mission concept`  ·  `Risk register`  ·  `MCR`
 
-### Week 2 — MCR, regulatory & CDF intensive  ·  10 – 14 August 2026
+### Week 2 — Regulatory, CDF intensive & PDR-style review  ·  10 – 14 August 2026
 
-Monday morning is the **Mission Concept Review**; Monday afternoon
-covers the Canadian regulatory landscape — RSSSA, ITU/ISED spectrum
+Monday morning closes the MCR actions and locks the concept; Monday
+afternoon covers the Canadian regulatory landscape — RSSSA, ITU/ISED spectrum
 coordination, export controls, debris mitigation, registration. The
 remainder of the week is the SpaceCDF intensive: requirements
 baseline, power, AOCS and thermal, communications, structure and
 propulsion, integration, V&V, cost, and risk closure — converging on
-a **Preliminary Design Review** on Friday afternoon.
+a **PDR-style review** (Preliminary Design Review) on Friday
+afternoon.
 
-`MCR`  ·  `RSSSA · ISED`  ·  `Subsystem design`  ·  `Trade studies`  ·  `PDR`
+`RSSSA · ISED`  ·  `Subsystem design`  ·  `Trade studies`  ·  `PDR`
 
 ### Week 3 — Operations & mission simulation  ·  17 – 21 August 2026
 

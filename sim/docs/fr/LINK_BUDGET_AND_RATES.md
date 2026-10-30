@@ -1,9 +1,9 @@
-# Bilan de liaison d'EO-Sat-1 et échelle de débits TM
+# Bilan de liaison d'EOSAT-1 et échelle de débits TM
 
 **Référence du document :** EOSAT1-OPS-LINK-001
 **Édition :** 2.0 — 2026-08-12 (édition 1.0, 2026-07-29)
 
-> **Ce qui a changé dans l'édition 2.0.** EO-Sat-1 possède deux émetteurs, et non un seul.
+> **Ce qui a changé dans l'édition 2.0.** EOSAT-1 possède deux émetteurs, et non un seul.
 > Le §9 est nouveau : il décrit l'émetteur de balise UHF du chargeur d'amorçage, son bilan
 > de liaison, et ce qu'il conditionne ou non. Le §4 reçoit une remarque indiquant que la PIRE
 > en bande S est désormais déduite de la puissance commandée du PA au lieu d'être une
@@ -43,7 +43,7 @@ de contact est rare. Mais le débit maximal coûte de la puissance, de la chaleu
 de station sol : il n'est donc pas laissé en service en permanence. Il est *demandé*, pour une activité planifiée,
 sur un passage choisi parce que sa géométrie le permet.
 
-EO-Sat-1 vole donc avec une échelle à trois échelons. Chaque échelon répond à l'une de ces trois
+EOSAT-1 vole donc avec une échelle à trois échelons. Chaque échelon répond à l'une de ces trois
 contraintes, et rien à bord, dans le planificateur ou sur la console ne détient sa propre
 copie des valeurs — tous lisent `configs/eosat1/subsystems/ttc.yaml`.
 
@@ -87,7 +87,7 @@ croissant, plutôt qu'immédiatement, par une commande rejetée.
 
 **C'est le débit des opérations courantes.** C'est aussi le débit du mode survie, le repli FDIR
 et le débit qui fonctionne avec l'antenne repliée. Ce n'est ni un mode dégradé ni
-une situation de contingence ; un EO-Sat-1 en bonne santé, au milieu d'une journée d'exploitation nominale, émet à
+une situation de contingence ; un EOSAT-1 en bonne santé, au milieu d'une journée d'exploitation nominale, émet à
 16 kbit/s.
 
 16 000 bit/s est un débit calculé, et non choisi. Le fichier livré `telemetry/hk_structures.yaml` définit les
@@ -366,7 +366,7 @@ Le bilan de données du planificateur rapporte désormais, pour chaque passage 
 
 * `high_fraction` — la proportion de la fenêtre située au-dessus du verrou de 10°, déduite de la
   géométrie sphérique (`fraction_above_elevation`), et non d'une table de correspondance. Un passage à 30°
-  passe **76 %** de sa fenêtre au-dessus de 10° ; un passage à 12°, seulement **47 %** ; un passage à 7°, **aucune partie**,
+  passe **77 %** de sa fenêtre au-dessus de 10° ; un passage à 12°, seulement **47 %** ; un passage à 7°, **aucune partie**,
   et ne peut jamais vider à HIGH ;
 * `dump_capable` / `dump_tier` — si le passage peut tenir HIGH, et à quel palier s'exécuterait réellement
   un vidage réservé sur ce passage ;
@@ -613,7 +613,7 @@ palier supérieur, et aucun nouveau code ne devrait les lire.
 
 ## 9. L'autre émetteur — la balise UHF du chargeur d'amorçage
 
-Tout ce qui précède le §8 décrit **une seule** radio : la chaîne principale en bande S. EO-Sat-1 en emporte une
+Tout ce qui précède le §8 décrit **une seule** radio : la chaîne principale en bande S. EOSAT-1 en emporte une
 seconde, et c'est la plus intéressante des deux pour un étudiant, car elle boucle un
 bilan complètement différent, avec un matériel complètement différent, pour remplir une mission que la chaîne
 principale ne peut structurellement pas assurer.

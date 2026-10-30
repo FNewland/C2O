@@ -1,4 +1,4 @@
-# On-board PUS Services & Procedures — Audit (EO-Sat-1 simulator suite)
+# On-board PUS Services & Procedures — Audit (EOSAT-1 simulator suite)
 
 Date: 2026-07-28. Repo: `/home/claude/repos/SpaceMissionSimulation` (container-local copy).
 READ-ONLY investigation. All line numbers verified against this working copy.

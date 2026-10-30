@@ -1,4 +1,4 @@
-# EOSAT-1 Time and Clocks
+# EOSAT-1 Time and Clocks {#eosat-1-time-and-clocks}
 
 **Document ID:** EOSAT1-UM-TIME-012
 **Issue:** 2.0
@@ -7,7 +7,7 @@
 
 ---
 
-## 1. Overview
+## 1. Overview {#1-overview}
 
 EOSAT-1 operations involve **two clocks that can disagree**, plus one derived
 count:
@@ -28,7 +28,7 @@ mission clock at all. It is legitimate for exactly three things: pacing display
 refresh, network timeouts, and session log/file names. If a mission-time display
 tracks your desk clock instead of ground time, that is a fault — report it.
 
-## 2. The clocks
+## 2. The clocks {#2-the-clocks}
 
 | Clock | Owner | Definition | Behaviour |
 |---|---|---|---|
@@ -54,7 +54,7 @@ Rules that follow:
    It is loaded at config load and pushed into the packet layer; the Python
    literal is only a fallback for running without a config tree.
 
-## 3. The CUC time format
+## 3. The CUC time format {#3-the-cuc-time-format}
 
 Onboard time travels as an ECSS CUC (CCSDS Unsegmented Time Code):
 
@@ -88,7 +88,7 @@ Consequences worth knowing at the console:
   the data field is misaligned by two octets and the CRC fails. Delete
   pre-migration dumps rather than trying to read them.
 
-## 4. `time_ref` — how the OBC believes it knows the time
+## 4. `time_ref` — how the OBC believes it knows the time {#4-time_ref--how-the-obc-believes-it-knows-the-time}
 
 `obdh.time_ref` (**0x0A13**, HK SID 4) is the OBC's own statement about its time
 reference. Read it before you read the clock.
@@ -112,7 +112,7 @@ Companion parameters, all in **HK SID 4 (Platform/OBDH, 8 s interval)**:
 `obdh.uptime` (`0x0308`) is seconds since **boot**, not since the epoch. It is
 useful for spotting a reboot and for a rate check; it is never a timestamp.
 
-## 5. The drift model
+## 5. The drift model {#5-the-drift-model}
 
 The oscillator is a plausible TCXO. Its actual drift is drawn **once per run**
 from the seeded per-model RNG, so a given seed always produces the same clock:
@@ -146,7 +146,7 @@ Because drift is a *rate*, the error you measure grows with
 `time_since_sync_s`. A 3-second offset with `time_since_sync_s` = 3 days is a
 healthy ~12 ppm clock. The same 3 seconds ten minutes after a sync is not.
 
-## 6. GPS discipline and holdover
+## 6. GPS discipline and holdover {#6-gps-discipline-and-holdover}
 
 * **`OBC_GPS_TIME_SYNC`** (S8, func 80) requires a 3D fix or better —
   `aocs.gps_fix` (`0x0274`) >= 2. Without it the command is refused.
@@ -171,7 +171,7 @@ A ground set and a GPS sync are **not** the same operation:
 | needs a pass | yes — it is an uplinked command | yes to command it, but re-acquisition afterwards is autonomous |
 | available in the bootloader | **no** — rejected pre-boot | no |
 
-## 7. Clock events
+## 7. Clock events {#7-clock-events}
 
 Every clock step raises an S5 event carrying the **signed jump in seconds** —
 "time set" alone would not tell you how far out the clock was, which is the
@@ -190,7 +190,7 @@ SAFE_BOOT (event `0x020F`), because the attitude solution was computed against
 a clock that has just moved. Expect it after a long holdover or a reboot; it is
 a real effect, not an artefact.
 
-## 8. Reboot behaviour
+## 8. Reboot behaviour {#8-reboot-behaviour}
 
 **The bootloader resets the clock.** On `OBC_REBOOT`, or on powering the `obc`
 EPS line off and on again:
@@ -209,7 +209,7 @@ A clock reading a date in the year 2000 is therefore not an epoch bug; it is an
 un-synced OBC. Check `obdh.uptime` and `obdh.reboot_count` before concluding
 anything about drift.
 
-## 9. Reading the correlation on the console
+## 9. Reading the correlation on the console {#9-reading-the-correlation-on-the-console}
 
 The MCS console shows, side by side:
 
@@ -236,7 +236,7 @@ downlinked: the spacecraft cannot measure its own clock error. The ground
 infers it from the time correlation, and that inference is
 the answer to the exercise, not an operational display.
 
-## 10. Time-tagged commands (S11) and the planner
+## 10. Time-tagged commands (S11) and the planner {#10-time-tagged-commands-s11-and-the-planner}
 
 The onboard schedule fires on **ONBOARD TIME**. It is the spacecraft's own
 schedule and has nothing else to run on.
@@ -265,7 +265,7 @@ If the clock has never been set (`time_ref = NONE`, still near J2000), be
 especially careful with time tags computed straight from the epoch: such a tag
 may be decades in the OBC's future, and the command simply never fires.
 
-## 11. MET and where it comes from
+## 11. MET and where it comes from {#11-met-and-where-it-comes-from}
 
 `MET = ground_time - t0_epoch`. It is computed once and distributed; the MCS and
 Planner both read that value rather than recomputing it from their own idea of a
@@ -275,7 +275,7 @@ MET is not an onboard quantity and is not downlinked. Do not confuse it with
 `obdh.uptime`, which counts from the last OBC boot, or with the FDIR module's
 internal elapsed-time accumulator.
 
-## 12. Caveats
+## 12. Caveats {#12-caveats}
 
 * **Restart caveat.** The ground time source is resolved when the MCS/Planner
   starts. Changing it requires restarting the affected service.
@@ -284,7 +284,7 @@ internal elapsed-time accumulator.
 * Nothing outside the spacecraft's OBDH writes onboard time, and only the
   ground time reference owns ground time.
 
-## 13. Quick diagnosis
+## 13. Quick diagnosis {#13-quick-diagnosis}
 
 | Symptom | Look at | Likely cause |
 |---|---|---|
@@ -301,7 +301,7 @@ internal elapsed-time accumulator.
 
 ---
 
-## Appendix A — Training-system time source
+## Appendix A — Training-system time source {#appendix-a--training-system-time-source}
 
 **Manual-Scope:** system — this appendix applies only when the ground segment
 is connected to the training simulator instead of a spacecraft. It has no
@@ -312,7 +312,7 @@ A single setting selects whether the **MCS** and **Planner** follow simulation
 time or real UTC. It does **not** affect spacecraft time: onboard time always
 comes from telemetry and is never synthesised on the ground.
 
-### A.1 Precedence
+### A.1 Precedence {#a1-precedence}
 
 For each service (first wins):
 
@@ -329,7 +329,7 @@ The companion `sim_state_url` (the simulator endpoint polled for `sim_time`,
 3. `sim_state_url:` in `mission.yaml`
 4. Default `http://<connect_host>:8080/api/state`
 
-### A.2 Mission config
+### A.2 Mission config {#a2-mission-config}
 
 ```yaml
 time_epoch: "2000-01-01T12:00:00"   # the CUC epoch — live config
@@ -337,7 +337,7 @@ time_source: sim                    # "sim" | "real"
 # sim_state_url: http://localhost:8080/api/state   # optional override
 ```
 
-### A.3 start.sh
+### A.3 start.sh {#a3-startsh}
 
 ```bash
 SMO_TIME_SOURCE="${SMO_TIME_SOURCE:-sim}"          # --real sets this to real
@@ -350,7 +350,7 @@ export SMO_SIM_STATE_URL="${SMO_SIM_STATE_URL:-http://localhost:8080/api/state}"
 
 The active time source is echoed in the startup banner.
 
-### A.4 Closed-loop sim sync
+### A.4 Closed-loop sim sync {#a4-closed-loop-sim-sync}
 
 In sim mode the ground clock is closed-loop synced to the simulator rather than
 reconstructed locally:

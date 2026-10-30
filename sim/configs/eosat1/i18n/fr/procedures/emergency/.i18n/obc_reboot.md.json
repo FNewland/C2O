@@ -84,8 +84,8 @@
   },
   {
    "id": "emg-003-obc-reboot/recovery-actions/recovery-action-2-obc-boots-into-bootloader-only",
-   "en_hash": "1c602aa77ad40c4f",
-   "fr_hash": "946dc40e4e964fa6"
+   "en_hash": "76dd0854ba169924",
+   "fr_hash": "738eea8f896f6e9f"
   },
   {
    "id": "emg-003-obc-reboot/off-nominal-handling",
@@ -98,5 +98,5 @@
    "fr_hash": "01018e2c2027bcb3"
   }
  ],
- "en_commit": "3e80564"
+ "en_commit": "c4a140a"
 }

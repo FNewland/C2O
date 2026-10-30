@@ -42,7 +42,7 @@ Recorded so they stop being re-raised.
 | A config-driven `DisplayEngine` | **Rejected.** `displays/engine.py` and `displays/widgets.py` were deleted in the 2026-08 build rather than revived; the trending capability they aspired to is the archive query API behind the TRENDS tab. |
 | A 3D attitude visualiser | **Not worth the effort** against the teaching mission. |
 | A second "wide" wall display | **Rejected.** The second planner UI was a divergence liability and is gone; `/wide` is now a CSS layout mode of the one page. |
-| Propulsion at all | **Built, on Franz's explicit instruction.** The textbook audit's independent recommendation was the opposite — a 6U at 450 km decays inside the FCC 5-year rule, so the honest answer for this mission class is *no propulsion* (2026-08 note: the TLE-truth ruling puts the real orbit at ~513 km, where decay is several times slower and the FCC argument needs re-deriving — see PROPULSION_GUIDE), taught as the decision not to carry it. The counter-argument is real and is recorded in `docs/plan_2026-08/` for the courseware to address. |
+| Propulsion at all | **Built, on Franz's explicit instruction.** The textbook audit's independent recommendation was the opposite — a 6U at this altitude decays inside the 5-year disposal rule, so the honest answer for this mission class is *no propulsion* (author ruling Q3, 2026-10-30: at 513 km, B = 77.9 kg/m², natural decay is 1.7–4.8 years per `subsystems/prop.yaml`, so "no dedicated deorbit capability" stands — see PROPULSION_GUIDE), taught as the decision not to carry it. The counter-argument is real and is recorded in `docs/plan_2026-08/` for the courseware to address. |
 
 ## Closed in the 2026-08 build
 

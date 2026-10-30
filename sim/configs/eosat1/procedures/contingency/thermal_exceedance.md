@@ -59,8 +59,15 @@ for hot cases), and monitors the temperature trend until the zone returns within
 **TC:** `PAYLOAD_SET_MODE(mode=0)` (Service 8, Subtype 1, func_id 26) — remove electronics heat load
 **Verify:** `payload.mode` (0x0600) = 0 (OFF) within 10s
 **LABEL:** `STEP-2B-OBC`
-**TC (OBC hot):** `SET_PARAM(param_id=obdh.task_shed, value=1)` — reduce CPU load to lower dissipation
-**Verify:** `obdh.cpu_load` (0x0302) decreases within 30s
+**BRANCH:** `tcs.temp_obc > 55` -> GO `STEP-2B-OBCHOT` | NO-GO `STEP-2B-BATCHK` (timeout 10 s)
+**LABEL:** `STEP-2B-OBCHOT`
+**Note:** OBC hot: switch the OBC heater off, then put the OBC in SAFE. There is
+no task-shedding parameter on board; OBC SAFE is the commanded reduction.
+**TC:** `HEATER_OBC(on=0)` (Service 8, Subtype 1, func_id 41) — OBC heater OFF
+**Verify:** `tcs.htr_obc` (0x040B) = 0 (OFF) within 5s
+**TC:** `OBC_SET_MODE(mode=1)` (Service 8, Subtype 1, func_id 50) — OBC SAFE
+**Verify:** `obdh.mode == 1` (0x0300, timeout 10 s) — SAFE
+**LABEL:** `STEP-2B-BATCHK`
 **BRANCH:** `tcs.temp_battery > 42` -> GO `STEP-2B-BAT` | NO-GO `STEP-3` (timeout 10 s)
 **LABEL:** `STEP-2B-BAT`
 **Note:** Battery hot: verify `tcs.htr_battery` (0x040A) = 0 (OFF); if ON, switch it off:
@@ -93,7 +100,22 @@ for hot cases), and monitors the temperature trend until the zone returns within
 **TC:** `AOCS_SET_MODE(mode=3)` (Service 8, Subtype 1, func_id 0) — COARSE_SUN, to optimise spacecraft attitude for thermal dissipation
 **Verify:** `aocs.mode` (0x020F) = 3 within 15s
 **LABEL:** `STEP-4E`
-**GO/NO-GO:** If temperature stabilises within additional 15 min, proceed to Step 5. If red limit approached, escalate to EMG-002. -> GO `STEP-5` | NO-GO `STEP-END`
+**GO/NO-GO:** If temperature stabilises within additional 15 min, proceed to Step 5. If red limit approached, escalate. -> GO `STEP-5` | NO-GO `STEP-4X`
+**LABEL:** `STEP-4X`
+**Note:** Escalation is decided by the affected zone's heater state. A heater
+that is ON in a zone above its hot limit is the thermal-runaway signature
+(EMG-006); with the heater OFF the heat is coming from elsewhere and the
+spacecraft goes to emergency safe mode (EMG-001). The machine-readable arm is
+the battery heater; for the OBC zone read `tcs.htr_obc` (0x040B) instead.
+**TC:** `HK_REQUEST(sid=3)` (Service 3, Subtype 27) — re-read the heater status
+**BRANCH:** `tcs.htr_battery == 1` -> GO `STEP-4X-EMG006` | NO-GO `STEP-4X-EMG001` (timeout 70 s)
+**LABEL:** `STEP-4X-EMG006`
+**Note:** Heater ON — execute EMG-006 (Thermal Runaway) now.
+**GO/NO-GO:** Handed over to EMG-006 -> GO `STEP-END` | NO-GO `STEP-END`
+**LABEL:** `STEP-4X-EMG001`
+**Note:** Heater OFF — execute EMG-001 (Emergency Safe Mode) now; its Step 1
+commands OBC EMERGENCY.
+**GO/NO-GO:** Handed over to EMG-001 -> GO `STEP-END` | NO-GO `STEP-END`
 
 ### Step 5 — Confirm Recovery and Restore Operations
 **LABEL:** `STEP-5`
@@ -109,7 +131,7 @@ for hot cases), and monitors the temperature trend until the zone returns within
 **GO/NO-GO:** All temperatures nominal and operations restored — recovery complete
 
 ## Off-Nominal Handling
-- If battery temperature exceeds +45 deg-C (red limit): Command `OBC_SET_MODE(mode=2)` for EMERGENCY — execute EMG-002
+- If battery temperature exceeds +45 deg-C (red limit): escalate on the battery heater state, as in Step 4 — heater ON (`tcs.htr_battery` (0x040A) = 1): execute EMG-006 (Thermal Runaway); heater OFF: execute EMG-001 (Emergency Safe Mode), which commands EMERGENCY
 - If OBC temperature exceeds +60 deg-C: Command `OBC_SET_MODE(mode=1)` for SAFE immediately
 - If heater circuit fails to activate: Suspect heater hardware failure, log anomaly, adjust attitude for passive thermal control
 - If multiple zones simultaneously exceed limits: Suspect orbital geometry change or AOCS anomaly — check `aocs.mode` (0x020F) and execute CTG-002 if attitude is off-nominal

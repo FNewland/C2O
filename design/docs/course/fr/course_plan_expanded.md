@@ -95,15 +95,15 @@ dont elle relève.*
 | NPR 7120.5F | *NASA Space Flight Program & Project Management* | Séances 1.1, 4.4, 5.1 |
 | ECSS-E-ST-10C Rev. 1 | Ingénierie spatiale — exigences générales | Toutes les séances |
 | ECSS-E-ST-10-02C Rev. 1 | Vérification | Séances 4.1, 4.2 |
-| ECSS-E-ST-10-24C | Gestion des interfaces | Séance 2.3 |
+| ECSS-E-ST-10-24C | Gestion des interfaces | Séance 2.4 |
 | ECSS-M-ST-10C Rev. 1 | Planification et management de projet | Séances 1.1, 4.4 |
 | ECSS-M-ST-80C | Gestion des risques | Séance 4.3 |
 | ECSS-Q-ST-30-02C | AMDE / AMDEC (FMEA / FMECA) | Séance 4.3 |
-| ECSS-E-ST-32C | Structures | Séance 3.2 |
-| ECSS-E-ST-31C | Contrôle thermique | Séance 3.3 |
-| ECSS-E-ST-50-05C | Radiofréquences et modulation | Séance 3.4 |
-| ECSS-U-AS-10C Rev. 2 | Atténuation des débris spatiaux | Séance 5.2 |
-| Cal Poly CDS Rev 14 | *CubeSat Design Specification* | Séances 3.2, 5.3 |
+| ECSS-E-ST-32C | Structures | Séance 3.4 |
+| ECSS-E-ST-31C | Contrôle thermique | Séance 3.1 |
+| ECSS-E-ST-50-05C | Radiofréquences et modulation | Séance 3.3 |
+| ECSS-U-AS-10C Rev. 2 | Atténuation des débris spatiaux | Séances 2.3, 5.2 |
+| Cal Poly CDS Rev 14 | *CubeSat Design Specification* | Séances 3.4, 5.3 |
 | CCSDS PUS | Norme d'utilisation des paquets (*Packet Utilization Standard*) | Séance 4.1, semaine 3 |
 | Règlement des radiocommunications de l'UIT | Attribution des fréquences et licences | Séance 5.2 |
 | ISDE CPC-2-6-02 | Licences de spectre des stations spatiales (Canada) | Séance 5.2 |
@@ -124,12 +124,12 @@ dont elle relève.*
 | 1 | 1.4 Concept d'opérations | Annexe S | E-ST-10C §5.4 | Onglet ConOps | Plan du ConOps |
 | 2 | 2.1 Ingénierie des exigences | §4.2 | E-ST-10C §5.5 | Onglet Exigences (Requirements) | Référentiel d'exigences |
 | 2 | 2.2 Fonctions et décomposition | §4.3 | E-ST-10C §5.6 | Onglet Fonctions (Functions) | Référentiel fonctionnel |
-| 2 | 2.3 Gestion des interfaces | §6.3 | E-ST-10-24C | Onglet Interfaces | Matrice N² |
-| 2 | 2.4 Architecture et schémas fonctionnels | §4.4 | E-ST-10C §5.7 | Dashboard | Schéma fonctionnel |
-| 3 | 3.1 Puissance et EPS | §4.4 | E-ST-20C | Onglet EPS | Dimensionnement solaire/batterie |
-| 3 | 3.2 Structure et mécanismes | §4.4 | E-ST-32C | Onglet Structure | Bilan de masse |
-| 3 | 3.3 Thermique | §4.4 | E-ST-31C | Onglet Thermal | Bilan thermique |
-| 3 | 3.4 Communications | §4.4 | E-ST-50-05C | Onglet Link Budget | Bilan de liaison |
+| 2 | 2.3 Choix de l'orbite et architecture de mission | §4.4 | U-AS-10C | Compromis d'orbite | Matrice de compromis d'orbite |
+| 2 | 2.4 Segments, interfaces et bilans | §6.3 | E-ST-10-24C | Onglet Interfaces, Dashboard | Matrice N², schéma fonctionnel, bilan de masse |
+| 3 | 3.1 Puissance et thermique | §4.4 | E-ST-20C, E-ST-31C | Onglet EPS, onglet Thermal | Dimensionnement solaire/batterie, bilan thermique |
+| 3 | 3.2 SCAO et propulsion | §4.4 | E-ST-60-30C, E-ST-35C | Onglet AOCS, Propulsion | Bilans de pointage et de Δv |
+| 3 | 3.3 Communications | §4.4 | E-ST-50-05C | Onglet Link Budget | Bilan de liaison |
+| 3 | 3.4 Structure et OBDH | §4.4 | E-ST-32C | Onglet Structure, Équipements | Bilan de masse, bilan de données |
 | 4 | 4.1 Choix des équipements | §6.5 | E-ST-10C §5.8 | Onglet Équipements (Equipment) | Nomenclature (BOM) |
 | 4 | 4.2 Planification de la V&V | §6.4 | E-ST-10-02C | V&V Matrix | Matrice de vérification |
 | 4 | 4.3 Gestion des risques | §6.6 | M-ST-80C | Onglet Risk | Registre des risques |
@@ -220,12 +220,12 @@ séances ne change pas.
 jour 1, le cours conçoit la mission au regard de cette chronologie.*
 
 > **Lectures attendues avant le jour 2.** SMAD4, chap. 4 – §6
-> (définition de la mission) ; annexe C du NASA SEH (*How to write a
+> (définition de la mission), chap. 9 (choix de l'orbite) ; annexe C du NASA SEH (*How to write a
 > good requirement*) — [https://www.nasa.gov/reference/systems-engineering-handbook/](https://www.nasa.gov/reference/systems-engineering-handbook/).
 
 ---
 
-## Jour 2 — Exigences, fonctions et interfaces (8 h)
+## Jour 2 — Exigences, fonctions, orbite et architecture (8 h)
 
 ### Séance 2.1 — Ingénierie des exigences (2 h)
 
@@ -251,47 +251,60 @@ jour 1, le cours conçoit la mission au regard de cette chronologie.*
   mission dans SpaceCDF.
 - **Fiche d'exercices :** matrice d'allocation des fonctions.
 
-### Séance 2.3 — Gestion des interfaces (2 h)
+### Séance 2.3 — Choix de l'orbite et architecture de mission (2 h)
 
-- NASA SEH, §6.3 (processus 12) — gestion des interfaces.
-- ECSS-E-ST-10-24C — documents d'exigences d'interface.
+- Éléments képlériens ; pour une LEO circulaire, altitude + inclinaison
+  + LTAN.
+- Types d'orbites et leurs compromis : LEO, SSO, MEO, GEO, HEO.
+- Couverture, revisite et géométrie de contact avec les stations sol.
+- Perturbations, durée de vie orbitale et conformité en matière de
+  débris (ECSS-U-AS-10C ; règle des 5 ans de la FCC).
+- Angle β et fraction d'éclipse — voir la figure 2.5 ; environnement
+  radiatif selon l'orbite.
+
+![Enveloppe de l'angle β et analyse de la fraction d'éclipse](../assets/figures/fig_beta_eclipse.png)
+
+*Figure 2.5 — Plage de l'angle β en fonction du jour de l'année (à
+gauche) et courbes analytiques de la fraction d'éclipse (à droite)
+pour une orbite de type ISS et une SSO à 600 km.*
+
+- **Exercice :** mener le compromis d'orbite dans SpaceCDF.
+- **Fiche d'exercices :** matrice de compromis pour le choix de l'orbite.
+
+### Séance 2.4 — Architecture de mission : segments, interfaces et bilans (2 h)
+
+- Décomposition de la mission en segments (spatial, sol, lancement,
+  utilisateur) et schéma fonctionnel du système ; flux de signaux et
+  flux de puissance.
+- NASA SEH, §6.3 (processus 12) — gestion des interfaces ;
+  ECSS-E-ST-10-24C — documents d'exigences d'interface.
 - La matrice N² et la classification des types d'interfaces
   (mécanique, électrique, thermique, données, RF, optique).
 
 ![Matrice d'interfaces N² d'un CubeSat 6U](../assets/figures/fig_n2_matrix.png)
 
-*Figure 2.5 — Matrice d'interfaces N² d'un CubeSat 6U. Les cellules
+*Figure 2.6 — Matrice d'interfaces N² d'un CubeSat 6U. Les cellules
 sont colorées selon le type d'interface : « D » = données,
 « E » = électrique, « M » = mécanique, « T » = thermique, « R » = RF,
 « O » = optique.*
 
-- **Exercice :** compléter la matrice N² de la mission de l'équipe
-  dans SpaceCDF.
+- Bilans d'ingénierie : consolidation de la masse et de la puissance
+  selon la politique de marges ECSS ; puissance par mode et puissance
+  moyenne sur l'orbite.
+- **Exercice :** compléter la matrice N² et le schéma fonctionnel des
+  sous-systèmes de la mission de l'équipe dans SpaceCDF.
 - **Fiche d'exercices :** projet d'exigences d'interface pour deux
-  paires.
+  paires ; modèle de bilan de masse avec politique de marges.
 
-### Séance 2.4 — Architecture et schémas fonctionnels (2 h)
-
-- Registres de décisions d'architecture.
-- Conventions des schémas fonctionnels ; flux de signaux et flux de
-  puissance.
-- Architecture de puissance ; architecture des données ; couplage
-  thermique.
-- **Exercice :** construire les schémas fonctionnels des
-  sous-systèmes dans SpaceCDF.
-- **Fiche d'exercices :** journal des décisions d'architecture
-  (3 entrées).
-
-> **Lectures attendues avant le jour 3.** SMAD4, chap. 9 (choix de
-> l'orbite), chap. 11 (puissance), chap. 12 (thermique), chap. 13
-> (structures). Toutes les sections citées sont disponibles dans
-> Brightspace.
+> **Lectures attendues avant le jour 3.** SMAD4, chap. 11 (puissance),
+> chap. 12 (thermique), chap. 13 (structures). Toutes les sections
+> citées sont disponibles dans Brightspace.
 
 ---
 
 ## Jour 3 — Boucle de conception des sous-systèmes (8 h)
 
-### Séance 3.1 — Puissance et EPS (2 h)
+### Séance 3.1 — Puissance et thermique (2 h)
 
 - Structure du bilan de puissance : bus / servitude / charge utile /
   communications / thermique / marge.
@@ -303,17 +316,53 @@ sont colorées selon le type d'interface : « D » = données,
 
 ![Profil de puissance sur une orbite — production et charges empilées](../assets/figures/fig_power_modes.png)
 
-*Figure 2.6 — Production (en haut) et charges empilées (en bas) sur
+*Figure 2.7 — Production (en haut) et charges empilées (en bas) sur
 une orbite. L'éclipse dimensionne la batterie ; les impulsions des
 communications et de la charge utile dimensionnent la puissance crête
 de la PCDU.*
 
-- **Exercice :** dimensionner le générateur solaire et la batterie
-  dans SpaceCDF.
-- **Fiche d'exercices :** feuille de dimensionnement de l'EPS, cas le
-  plus défavorable en fin de vie.
+- Analyse au premier ordre de l'équilibre radiatif ; enveloppe cas
+  chaud / cas froid (angle β et éclipse vus à la séance 2.3).
+- Contrôle thermique passif ou actif ; MLI ; réchauffeurs ; caloducs.
+- **Exercice :** dimensionner le générateur solaire et la batterie et
+  mener l'analyse de l'enveloppe thermique dans SpaceCDF.
+- **Fiche d'exercices :** feuille de dimensionnement de l'EPS (cas le
+  plus défavorable en fin de vie) ; bilan thermique avec rapport
+  cyclique des réchauffeurs.
 
-### Séance 3.2 — Structure et mécanismes (2 h)
+### Séance 3.2 — SCAO et propulsion (2 h)
+
+- Détermination d'attitude : capteurs (capteurs solaires,
+  magnétomètres, viseurs d'étoiles, gyromètres) et leur précision.
+- Contrôle d'attitude : magnéto-coupleurs ou roues de réaction ;
+  couples perturbateurs et gestion du moment cinétique.
+- Bilan de pointage (arbre d'erreurs RSS).
+- Options de propulsion : gaz froid, électrique, chimique ; quand se
+  passer de propulsion.
+- Allocation du bilan de Δv (Tsiolkovski).
+- **Exercice :** choisir l'architecture SCAO et examiner le bilan de
+  Δv dans SpaceCDF.
+- **Fiche d'exercices :** bilan de pointage et bilan de Δv.
+
+### Séance 3.3 — Communications (2 h)
+
+- Notions de base du bilan de liaison : PIRE, affaiblissement en
+  espace libre (FSPL), G/T, C/N₀ et Eb/N₀.
+- Choix de la bande de fréquences — UHF / S / X / Ka.
+- Modulation et codage : QPSK + LDPC (famille DVB-S2) pour le sol.
+- Bilan Doppler et de dérive Doppler pour un passage polaire.
+- Diagrammes de rayonnement des antennes et pointage ; volume de
+  données de la charge utile et capacité de liaison descendante.
+
+![Bilan de liaison descendante en bande S — cascade](../assets/figures/fig_link_budget.png)
+
+*Figure 2.8 — Bilan de liaison en cascade type. Le C/N₀ requis et la
+marge de liaison figurent toujours en bas à droite.*
+
+- **Exercice :** boucler le bilan de liaison dans SpaceCDF.
+- **Fiche d'exercices :** calculateur de bilan de liaison avec marge.
+
+### Séance 3.4 — Structure et gestion bord des données (2 h)
 
 - Cal Poly CDS Rev 14 — enveloppe structurale du CubeSat.
 - Charges au lancement : quasi statiques, vibrations sinusoïdales,
@@ -322,46 +371,16 @@ de la PCDU.*
 
 ![Bilan de masse — répartition et politique de marges ECSS](../assets/figures/fig_mass_budget.png)
 
-*Figure 2.7 — Répartition de la masse et échéancier des marges ECSS.
+*Figure 2.9 — Répartition de la masse et échéancier des marges ECSS.
 La marge composée (maturité des équipements × marge système de 20 %)
 démarre à +44 % en phase A et se resserre jusqu'à +5 % en phase D.*
 
-- **Exercice :** dimensionner la structure dans SpaceCDF.
-- **Fiche d'exercices :** bilan de masse avec colonne de marge.
-
-### Séance 3.3 — Thermique (2 h)
-
-- Analyse au premier ordre de l'équilibre radiatif.
-- Enveloppe cas chaud / cas froid.
-- Angle β et éclipse — voir la figure 2.8.
-- Contrôle thermique passif ou actif ; MLI ; réchauffeurs ; caloducs.
-
-![Enveloppe de l'angle β et analyse de la fraction d'éclipse](../assets/figures/fig_beta_eclipse.png)
-
-*Figure 2.8 — Plage de l'angle β en fonction du jour de l'année (à
-gauche) et courbes analytiques de la fraction d'éclipse (à droite)
-pour une orbite de type ISS et une SSO à 600 km.*
-
-- **Exercice :** analyse de l'enveloppe thermique dans SpaceCDF.
-- **Fiche d'exercices :** bilan thermique avec rapport cyclique des
-  réchauffeurs.
-
-### Séance 3.4 — Communications (2 h)
-
-- Notions de base du bilan de liaison : PIRE, affaiblissement en
-  espace libre (FSPL), G/T, C/N₀ et Eb/N₀.
-- Choix de la bande de fréquences — UHF / S / X / Ka.
-- Modulation et codage : QPSK + LDPC (famille DVB-S2) pour le sol.
-- Bilan Doppler et de dérive Doppler pour un passage polaire.
-- Diagrammes de rayonnement des antennes et pointage.
-
-![Bilan de liaison descendante en bande S — cascade](../assets/figures/fig_link_budget.png)
-
-*Figure 2.9 — Bilan de liaison en cascade type. Le C/N₀ requis et la
-marge de liaison figurent toujours en bas à droite.*
-
-- **Exercice :** boucler le bilan de liaison dans SpaceCDF.
-- **Fiche d'exercices :** calculateur de bilan de liaison avec marge.
+- Architecture de l'OBC, stockage des données et logiciel de vol ;
+  bus PC/104.
+- **Exercice :** dimensionner la structure et choisir l'OBC dans
+  SpaceCDF.
+- **Fiche d'exercices :** bilan de masse avec colonne de marge ; bilan
+  de stockage des données.
 
 > **Lectures attendues avant le jour 4.** SMAD4, chap. 17 (V&V) ; ECSS-E-ST-10-02C ; NASA NPR 8715.3 (sécurité des systèmes —
 > introduction seulement).
@@ -389,7 +408,7 @@ réduction des risques.*
 ### Séance 4.2 — Planification de la vérification et de la validation (2 h)
 
 - Processus 7 – 8 du NASA SEH.
-- ECSS-E-ST-10-02C — méthodes de vérification (A · T · R · I).
+- ECSS-E-ST-10-02C — méthodes de vérification, ATIR(D) : analyse, essai, inspection, revue de conception (+ démonstration).
 - Structure de la matrice de vérification.
 - Niveaux d'essai — unité → sous-système → système → recette →
   qualification.
@@ -501,8 +520,8 @@ position dans la matrice détermine la priorité de réduction.*
 | Restituer les 17 processus du SEH et la séquence des jalons | Mémoriser | Séances 1.1, 5.1 |
 | Expliquer le cycle en V et ses limites | Comprendre | Séances 1.1, 4.2 |
 | Appliquer les critères SMART pour dériver des exigences | Appliquer | Séance 2.1 |
-| Appliquer la matrice N² à un CubeSat réel | Appliquer | Séance 2.3 |
-| Analyser un bilan de liaison et identifier la perte dominante | Analyser | Séance 3.4 |
+| Appliquer la matrice N² à un CubeSat réel | Appliquer | Séance 2.4 |
+| Analyser un bilan de liaison et identifier la perte dominante | Analyser | Séance 3.3 |
 | Analyser un registre des risques et identifier les points de défaillance unique | Analyser | Séance 4.3 |
 | Évaluer des options de compromis et défendre une recommandation | Évaluer | Séances 1.3, 5.4 |
 | Créer une conception préliminaire complète de CubeSat | Créer | Revue finale du jour 5 |
@@ -554,15 +573,15 @@ se trouvent dans le Guide de l'animateur.
 | Poste | Responsable de (paramètres) | Pilote (séances) |
 |----------|-------------------|-------------------|
 | Ingénieur système | Marge de masse, marge de puissance, coût du système, TRL, score de santé | Toutes |
-| Analyste de mission | Orbite, trace au sol, durée de contact, éclipse, β | 1.4, 3.1 – 3.3 |
-| Ingénieur charge utile | Ouverture, GSD, débit, champ de vue | 1.2, 3.4 |
+| Analyste de mission | Orbite, trace au sol, durée de contact, éclipse, β | 1.4, 2.3, 3.1 |
+| Ingénieur charge utile | Ouverture, GSD, débit, champ de vue | 1.2, 3.3 |
 | Ingénieur puissance | Surface du générateur solaire, capacité de la batterie, topologie de l'EPS | 3.1 |
 | Ingénieur SCAO | Bilan de pointage, capacité des roues de réaction, choix des capteurs | 3.2, 4.3 |
-| Ingénieur thermique | Cas chaud/froid, surface des radiateurs, rapport cyclique des réchauffeurs | 3.3 |
-| Ingénieur structures | Bouclage du bilan de masse, déployeurs, mécanismes | 3.2 |
-| Ingénieur propulsion | Bilan de Δv, dimensionnement des propulseurs, masse d'ergols | (si nécessaire) |
-| Ingénieur télécommunications | Bilan de liaison, diagramme d'antenne, modulation | 3.4 |
-| OBDH / logiciel | OBC, architecture du logiciel de vol, FDIR, liste de télémesure | 4.1 |
+| Ingénieur thermique | Cas chaud/froid, surface des radiateurs, rapport cyclique des réchauffeurs | 3.1 |
+| Ingénieur structures | Bouclage du bilan de masse, déployeurs, mécanismes | 2.4, 3.4 |
+| Ingénieur propulsion | Bilan de Δv, dimensionnement des propulseurs, masse d'ergols | 3.2 (si nécessaire) |
+| Ingénieur télécommunications | Bilan de liaison, diagramme d'antenne, modulation | 3.3 |
+| OBDH / logiciel | OBC, architecture du logiciel de vol, FDIR, liste de télémesure | 3.4, 4.1 |
 | Opérations | Plan de passage, ConOps, arbre des anomalies | 1.4, 5.1 |
 | Segment sol | Stations sol, MCS, MPS, archive | 1.4, 5.1 |
 | Coûts / planning | WBS, CER, chemin critique | 4.4 |

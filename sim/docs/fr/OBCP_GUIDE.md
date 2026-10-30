@@ -1,6 +1,6 @@
 # Procédures de contrôle bord (OBCP) — service PUS 18
 
-EO-Sat-1 permet l'**exécution de scripts à bord** au moyen du service PUS 18. Une OBCP est une
+EOSAT-1 permet l'**exécution de scripts à bord** au moyen du service PUS 18. Une OBCP est une
 liste ordonnée d'étapes ; chaque étape associe un *délai relatif* à une *TC PUS complète*
 que le satellite s'applique à lui-même à l'expiration du délai. Comme les
 étapes s'exécutent à bord, une procédure continue de se dérouler après la LOS — contrairement au

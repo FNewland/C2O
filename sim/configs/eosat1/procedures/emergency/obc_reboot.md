@@ -181,7 +181,7 @@ and monitor for recurrence.
    sent `FUNC_PERFORM func_id=21`, which is `EPS_RESET_OC_FLAG`. Use
    `OBC_SELECT_BUS` (func 54) for the CAN bus and `OBC_SWITCH_UNIT` (func 53)
    for the redundant OBC; a corrupt application image is recovered by
-   re-uploading it (CTG-018).
+   re-uploading it (CTG-021).
 3. **TC:** `OBC_REBOOT` (Service 8, Subtype 1, func_id 52) --- reboot.
 4. Wait 90 s and verify `obdh.sw_image` (0x0311) = 1 (application).
 5. If successful: the primary image bank is likely corrupted. Schedule a software re-upload

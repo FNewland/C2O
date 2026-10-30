@@ -1,0 +1,102 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "configs/eosat1/procedures/nominal/eol_disposal.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "nom-014-end-of-life-disposal-perigee-lowering-and-passivation",
+   "en_hash": "54f1ff8691754b7d",
+   "fr_hash": "24d006bd3e2d85a5"
+  },
+  {
+   "id": "nom-014-end-of-life-disposal-perigee-lowering-and-passivation/purpose",
+   "en_hash": "4e59f10caf5a5b1c",
+   "fr_hash": "8d9f3ec5139ff5b2"
+  },
+  {
+   "id": "nom-014-end-of-life-disposal-perigee-lowering-and-passivation/prerequisites",
+   "en_hash": "87a73c790b42beff",
+   "fr_hash": "0d45f5950734ee25"
+  },
+  {
+   "id": "nom-014-end-of-life-disposal-perigee-lowering-and-passivation/procedure-steps",
+   "en_hash": "e9deaee9b2eda039",
+   "fr_hash": "a4f67ad0422702cd"
+  },
+  {
+   "id": "nom-014-end-of-life-disposal-perigee-lowering-and-passivation/procedure-steps/step-1-fds-disposal-plan",
+   "en_hash": "e3f6227b10c5c679",
+   "fr_hash": "3de793d28ae1af87"
+  },
+  {
+   "id": "nom-014-end-of-life-disposal-perigee-lowering-and-passivation/procedure-steps/step-2-propulsion-health-check",
+   "en_hash": "7fa082ab4114da68",
+   "fr_hash": "7736e08b5520cbd4"
+  },
+  {
+   "id": "nom-014-end-of-life-disposal-perigee-lowering-and-passivation/procedure-steps/step-3-raise-the-burn-watchdog",
+   "en_hash": "6ee4968b4be4f69e",
+   "fr_hash": "61033481c505d29e"
+  },
+  {
+   "id": "nom-014-end-of-life-disposal-perigee-lowering-and-passivation/procedure-steps/step-4-power-preheat-and-valves-t-25-min",
+   "en_hash": "93f3ceb520102bbb",
+   "fr_hash": "495e6657f1a3f439"
+  },
+  {
+   "id": "nom-014-end-of-life-disposal-perigee-lowering-and-passivation/procedure-steps/step-5-retrograde-attitude",
+   "en_hash": "528934500c70c1a0",
+   "fr_hash": "def13c4c10846226"
+  },
+  {
+   "id": "nom-014-end-of-life-disposal-perigee-lowering-and-passivation/procedure-steps/step-6-disposal-burn-repeat-for-each-of-the-six-burns",
+   "en_hash": "41419e3a4b1014b1",
+   "fr_hash": "060925947cdbe067"
+  },
+  {
+   "id": "nom-014-end-of-life-disposal-perigee-lowering-and-passivation/procedure-steps/step-7-confirm-the-disposal-orbit",
+   "en_hash": "7fe501c5cf3624d3",
+   "fr_hash": "e7f1481401bc6aef"
+  },
+  {
+   "id": "nom-014-end-of-life-disposal-perigee-lowering-and-passivation/procedure-steps/step-8-propellant-depletion",
+   "en_hash": "a4f70afa437388e6",
+   "fr_hash": "3be0b371eed5ada8"
+  },
+  {
+   "id": "nom-014-end-of-life-disposal-perigee-lowering-and-passivation/procedure-steps/step-9-propulsion-safing",
+   "en_hash": "afc5f178ac0b2a74",
+   "fr_hash": "531ed9a371eb9afe"
+  },
+  {
+   "id": "nom-014-end-of-life-disposal-perigee-lowering-and-passivation/procedure-steps/step-10-payload-and-attitude-shutdown",
+   "en_hash": "4290e00274da2115",
+   "fr_hash": "0789855d17aae493"
+  },
+  {
+   "id": "nom-014-end-of-life-disposal-perigee-lowering-and-passivation/procedure-steps/step-11-battery-passivation",
+   "en_hash": "4c825a3a59a45a2d",
+   "fr_hash": "0fb4fe484e6e0eba"
+  },
+  {
+   "id": "nom-014-end-of-life-disposal-perigee-lowering-and-passivation/procedure-steps/step-12-rf-silence-last-commands",
+   "en_hash": "56e571500d7fc053",
+   "fr_hash": "d58e39426e608e13"
+  },
+  {
+   "id": "nom-014-end-of-life-disposal-perigee-lowering-and-passivation/deviations",
+   "en_hash": "442f1ffb2ac46fe1",
+   "fr_hash": "4f32fd9d510c926f"
+  },
+  {
+   "id": "nom-014-end-of-life-disposal-perigee-lowering-and-passivation/post-conditions",
+   "en_hash": "b19bd74bdd7da3ee",
+   "fr_hash": "b5e23c1e6de38806"
+  }
+ ],
+ "en_commit": "c4a140a"
+}

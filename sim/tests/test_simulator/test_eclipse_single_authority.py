@@ -55,7 +55,7 @@ MODE_ECLIPSE = 8
 ORBIT_PERIOD_S = 5669.3
 ECLIPSE_FRACTION_T0 = 0.355
 ECLIPSE_DURATION_S_T0 = 2012.6
-BETA_DEG_T0 = -30.59
+BETA_DEG_T0 = -30.48   # re-measured 2026-10-30 on the 97.39 deg TLE (ruling Q2b amended)
 
 
 def _orbit_cfg() -> dict:

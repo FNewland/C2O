@@ -42,7 +42,7 @@ class PowerBudget:
 
         The thresholds used to be ``> +50 W`` for "charging" and ``< -10 W``
         for "discharging" — numbers calibrated for a spacecraft that does not
-        exist. EO-Sat-1's ENTIRE generation is ~85 W sunlit (88.6 W peak after
+        exist. EOSAT-1's ENTIRE generation is ~85 W sunlit (88.6 W peak after
         the R1 re-sizing) and ~38 W orbit-average, so a +50 W margin is
         reachable only in a quiescent, wings-deployed, low-beta, sunlit corner
         case. Normal nominal operations — a real, healthy, battery-charging

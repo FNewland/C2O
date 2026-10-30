@@ -7,7 +7,7 @@
 ## Objet
 Procédure d'urgence d'EOSAT-1 lorsque l'état de charge de la batterie tombe sous 10 % ou que la tension du bus
 descend sous 26 V. Cette procédure définit le délestage immédiat permettant d'atteindre la configuration minimale
-de survie (~45 W), assure le pointage solaire des générateurs pour une production de puissance maximale et
+de survie (~20 W), assure le pointage solaire des générateurs pour une production de puissance maximale et
 fournit un plan de rétablissement par étapes. Aucune charge ne peut être réactivée tant que le SoC n'a pas dépassé 30 %.
 
 ## Prérequis
@@ -20,18 +20,21 @@ fournit un plan de rétablissement par étapes. Aucune charge ne peut être réa
 ## Bilan de puissance --- configuration minimale de survie
 | Sous-système | Composant | Puissance (W) | État |
 |---|---|---|---|
-| OBC | Calculateur de vol (mode d'urgence) | 15 | ON --- essentiel |
-| TT&C | Transpondeur (réception seule) | 5 | ON --- essentiel |
-| AOCS | Magnétocoupleurs + senseur solaire | 10 | ON --- pour l'acquisition du Soleil |
-| EPS | Unité de contrôle de puissance | 5 | ON --- essentiel |
-| TCS | Réchauffeur batterie (thermostat) | 8 | THERMOSTAT --- survie uniquement |
+| OBC | Calculateur de vol | 6 | ON --- essentiel |
+| TT&C | Récepteur (RX) | 1.5 | ON --- essentiel |
+| AOCS | COARSE_SUN (magnétocoupleurs + senseurs solaires) | 4 | ON --- pour l'acquisition du Soleil |
+| TCS | Réchauffeur batterie, lorsque le thermostat l'enclenche | 8 | THERMOSTAT --- survie uniquement |
 | Charge utile | Instrument | 0 | OFF |
 | TCS | Réchauffeur OBC | 0 | OFF |
-| AOCS | Roues de réaction (en attente) | 2 | STANDBY |
-| **Total** | | **~45 W** | |
+| **Total** | | **~20 W** | |
+| TT&C | Émetteur, pendant un passage uniquement | +5 | ON pendant les passages (~25 W en passage) |
+
+Ce sont les charges que facture le simulateur (`subsystems/eps.yaml` : OBC 6 W, RX
+1.5 W, TX 5 W ; réchauffeur batterie 8 W ; AOCS 4 W en COARSE_SUN). La limite GO de < 50 W
+utilisée à l'étape 1 est le contrôle du délestage, pas le bilan de survie.
 
 Capacité des générateurs solaires en pointage solaire : ~64 W (début de vie, ailes déployées, SSO à ~513 km). Fraction d'éclipse : ~36–38 %.
-Puissance produite moyenne sur l'orbite en pointage solaire : ~35 W. Marge par rapport à la survie : limitée — gestion attentive des charges requise.
+Puissance produite moyenne sur l'orbite en pointage solaire : ~35 W. Marge par rapport à la survie : ~15 W en moyenne sur l'orbite — la préserver en ne rétablissant rien avant le seuil de l'étape 8.
 
 ## Déroulement
 
@@ -80,7 +83,7 @@ de production des données de servitude à 1/60 s et désactive l'enregistremen
 **Surveiller :** `eps.bus_voltage` (0x0105) --- doit être stable ou en hausse.
 **Surveiller :** `eps.bat_voltage` (0x0100) --- vérifier que la batterie accepte la charge (tension > 27 V).
 **Surveiller :** `eps.power_gen` (0x0107) par rapport à `eps.power_cons` (0x0106) --- confirmer le bilan de puissance positif.
-**Attendu :** Avec ~32 W de charge minimale et ~64 W de production de crête (~35 W en moyenne sur l'orbite), la remontée du SoC sera lente — compter ~1 % par phase éclairée (~60 min).
+**Attendu :** Avec ~20 W de charge de survie (~25 W en passage) et ~64 W de production de crête (~35 W en moyenne sur l'orbite), la marge moyenne sur l'orbite est d'environ 15 W. Suivre la tendance mesurée du SoC : c'est elle, et non cette estimation, qui décide du rétablissement.
 **GO/NO-GO:** Bilan de puissance positif confirmé (production > consommation).
 
 ### Étape 6 --- Surveillance de l'éclipse (CRITIQUE)
@@ -89,7 +92,7 @@ de production des données de servitude à 1/60 s et désactive l'enregistremen
 **Surveiller :** `eps.bus_voltage` (0x0105) pendant toute l'éclipse --- doit rester > 25.0 V.
 **Surveiller :** `tcs.temp_battery` (0x0407) --- vérifier que le thermostat du réchauffeur batterie s'enclenche si nécessaire.
 **Durée :** L'éclipse dure ~34–36 minutes sur la SSO à ~513 km.
-**Décharge attendue :** ~32 W x 35 min = ~19 Wh consommés. Capacité de la batterie 100 Wh, soit ~19 % de SoC consommés.
+**Décharge attendue :** ~20 W x 35 min = ~12 Wh consommés. Capacité de la batterie 100 Wh, soit ~12 % de SoC consommés.
 **GO/NO-GO:** Tension du bus maintenue > 25.0 V pendant toute l'éclipse. Si la tension descend sous 25.0 V,
 la protection contre les sous-tensions déconnecte automatiquement les bus non essentiels.
 
@@ -114,7 +117,7 @@ la protection contre les sous-tensions déconnecte automatiquement les bus non e
 ## Seuils du rétablissement par étapes
 | Seuil de SoC | Action autorisée | Temps estimé depuis l'urgence |
 |---|---|---|
-| < 10 % | Charges de survie uniquement (~45 W) | T+0 (condition d'entrée) |
+| < 10 % | Charges de survie uniquement (~20 W) | T+0 (condition d'entrée) |
 | 10--20 % | Aucun changement, surveillance uniquement | T+3 à T+6 heures |
 | 20--30 % | Aucun changement, préparer le plan de rétablissement | T+6 à T+10 heures |
 | 30--40 % | Rétablir le réchauffeur OBC, augmenter le débit TM | T+10 à T+14 heures |

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Catalogue xmlns="http://www.ecss.nl/smp/2019/Smdl" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Name="Payload" Creator="EOSAT-1 SMDL Generator" Version="1.0+590a05ec5309">
+<Catalogue xmlns="http://www.ecss.nl/smp/2019/Smdl" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Name="Payload" Creator="EOSAT-1 SMDL Generator" Version="1.0+4a992dbe3156">
   <Description>SMP2 model catalogue for Payload subsystem</Description>
   <Type Name="UInt8" Uuid="7981e083-ea41-5360-ad7d-c285223a099c" xsi:type="Integer" Size="1" Signed="false"/>
   <Type Name="UInt16" Uuid="64b04f7d-63c1-5e74-90d1-38d9516374dc" xsi:type="Integer" Size="2" Signed="false"/>
@@ -36,7 +36,7 @@
     <Field Name="payload_last_scene_id" Uuid="d4a7c371-c4df-5349-8bbc-88f00b37f2f8" Type="UInt16" Kind="Output" View="true">
       <Description>Last captured scene ID</Description>
     </Field>
-    <Field Name="payload_last_scene_quality" Uuid="aee371d2-455f-51c4-a089-b5f7da920049" Type="UInt8" Kind="Output" View="true">
+    <Field Name="payload_last_scene_quality" Uuid="aee371d2-455f-51c4-a089-b5f7da920049" Type="Float32" Kind="Output" View="true">
       <Description>Quality metric of last image [%]</Description>
     </Field>
     <Field Name="payload_fpa_ready" Uuid="9958c0f4-ee7b-53a7-818f-02d2a2a60ab2" Type="UInt8" Kind="Output" View="true">
@@ -54,7 +54,7 @@
     <Field Name="payload_cal_lamp_on" Uuid="159e53ab-6df0-5c13-a809-18f508aec86d" Type="UInt8" Kind="Output" View="true">
       <Description>Calibration lamp status (0=off, 1=on)</Description>
     </Field>
-    <Field Name="payload_snr" Uuid="2d498348-1373-51d4-bdf0-73b269bd4b58" Type="UInt16" Kind="Output" View="true">
+    <Field Name="payload_snr" Uuid="2d498348-1373-51d4-bdf0-73b269bd4b58" Type="Float32" Kind="Output" View="true">
       <Description>Signal-to-noise ratio [dB]</Description>
     </Field>
     <Field Name="payload_detector_temp" Uuid="0a5da8cb-47c8-5cdb-9b91-6f19681fa133" Type="Int16" Kind="Output" View="true">
@@ -266,9 +266,6 @@
     </EventSource>
     <EventSource Name="Payload Checksum Errors_WARNING" Uuid="68082a38-58a9-5cda-a359-f0cda8e84165">
       <Description>WARNING alarm for Payload Checksum Errors</Description>
-    </EventSource>
-    <EventSource Name="Payload SNR Low_WARNING" Uuid="672015d1-f0c9-5106-9a40-7a15e4f0894d">
-      <Description>WARNING alarm for Payload SNR Low</Description>
     </EventSource>
   </Model>
 </Catalogue>

@@ -19,8 +19,8 @@
   },
   {
    "id": "chapter-14-verification-and-validation/14-1-verification-versus-validation-precise-definitions",
-   "en_hash": "96f682a33acc4b13",
-   "fr_hash": "64f3f6a03d7f8c58"
+   "en_hash": "4aae0e41a3524a49",
+   "fr_hash": "9d3c7750467b7964"
   },
   {
    "id": "chapter-14-verification-and-validation/14-1-verification-versus-validation-precise-definitions/14-1-1-the-critical-distinction",
@@ -34,8 +34,8 @@
   },
   {
    "id": "chapter-14-verification-and-validation/14-2-the-atird-verification-methods-in-detail",
-   "en_hash": "f102042c7487be33",
-   "fr_hash": "01f0a874579eb13e"
+   "en_hash": "52f5d580bab263d7",
+   "fr_hash": "be6f24edf51f62ee"
   },
   {
    "id": "chapter-14-verification-and-validation/14-2-the-atird-verification-methods-in-detail/14-2-1-analysis-a",
@@ -44,8 +44,8 @@
   },
   {
    "id": "chapter-14-verification-and-validation/14-2-the-atird-verification-methods-in-detail/14-2-2-test-t",
-   "en_hash": "b84acd3320a2d3ce",
-   "fr_hash": "d2a864362028107a"
+   "en_hash": "dbcd3207ca2ebe16",
+   "fr_hash": "15621800ae360764"
   },
   {
    "id": "chapter-14-verification-and-validation/14-2-the-atird-verification-methods-in-detail/14-2-3-inspection-i",
@@ -69,23 +69,23 @@
   },
   {
    "id": "chapter-14-verification-and-validation/14-3-environmental-test-programme/14-3-1-standard-environmental-test-sequence",
-   "en_hash": "18c5fba51211e377",
-   "fr_hash": "4ecec37629c82928"
+   "en_hash": "84616bc89ace8be0",
+   "fr_hash": "0f2318dd7ac93015"
   },
   {
    "id": "chapter-14-verification-and-validation/14-3-environmental-test-programme/14-3-2-sine-vibration-test-levels",
-   "en_hash": "4f64ddea1d88f44e",
-   "fr_hash": "75b8c7c23e66ff32"
+   "en_hash": "95bdcf7c139b9025",
+   "fr_hash": "5be1cc81d0f0084e"
   },
   {
    "id": "chapter-14-verification-and-validation/14-3-environmental-test-programme/14-3-3-random-vibration-test-levels",
-   "en_hash": "7f52a23b7b220443",
-   "fr_hash": "977d241baa90b1d6"
+   "en_hash": "73709ddb3c6d4a55",
+   "fr_hash": "e0125f1ea48cb76c"
   },
   {
    "id": "chapter-14-verification-and-validation/14-3-environmental-test-programme/14-3-4-thermal-vacuum-test-profile",
-   "en_hash": "512dddada662733a",
-   "fr_hash": "a205f8d75d007524"
+   "en_hash": "25dd7e99cdb2863e",
+   "fr_hash": "6a0eb5e7394420a6"
   },
   {
    "id": "chapter-14-verification-and-validation/14-3-environmental-test-programme/14-3-5-emc-testing",
@@ -99,8 +99,8 @@
   },
   {
    "id": "chapter-14-verification-and-validation/14-4-compliance-verification-matrix-construction/14-4-1-matrix-structure",
-   "en_hash": "c1c3d1cf86d355d6",
-   "fr_hash": "bb54d61195e8e0c2"
+   "en_hash": "f5fed7fc4267f68f",
+   "fr_hash": "4e9f4bfc16df348d"
   },
   {
    "id": "chapter-14-verification-and-validation/14-4-compliance-verification-matrix-construction/14-4-2-atird-assignment-decision-logic",
@@ -119,18 +119,18 @@
   },
   {
    "id": "chapter-14-verification-and-validation/14-5-returning-to-unisat-1-a-verification-matrix",
-   "en_hash": "b4492f895c437994",
-   "fr_hash": "eb91bb943ed13e56"
+   "en_hash": "31ca3f4beda769cc",
+   "fr_hash": "4cdbc1bfd90e7c02"
   },
   {
    "id": "chapter-14-verification-and-validation/summary",
-   "en_hash": "42c011bd9cb354c8",
-   "fr_hash": "139306d14a260484"
+   "en_hash": "1b7655826bdebfaf",
+   "fr_hash": "5f68c3a5e3b280fe"
   },
   {
    "id": "chapter-14-verification-and-validation/problems",
-   "en_hash": "490096e9b6de6d03",
-   "fr_hash": "a0cea6d5d2f30b3e"
+   "en_hash": "c479260b85bbaf63",
+   "fr_hash": "44b07176d8367898"
   },
   {
    "id": "chapter-14-verification-and-validation/references",
@@ -138,5 +138,5 @@
    "fr_hash": "6cba8f46eec6e067"
   }
  ],
- "en_commit": "be16bc3"
+ "en_commit": "c4a140a"
 }

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Catalogue xmlns="http://www.ecss.nl/smp/2019/Smdl" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Name="AOCS" Creator="EOSAT-1 SMDL Generator" Version="1.0+590a05ec5309">
+<Catalogue xmlns="http://www.ecss.nl/smp/2019/Smdl" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Name="AOCS" Creator="EOSAT-1 SMDL Generator" Version="1.0+4a992dbe3156">
   <Description>SMP2 model catalogue for AOCS subsystem</Description>
   <Type Name="UInt8" Uuid="5f89f604-a171-5501-aa33-4d555fe61f64" xsi:type="Integer" Size="1" Signed="false"/>
   <Type Name="UInt16" Uuid="6ba6c296-ed3b-5fbe-8a66-31fe90cbfb0d" xsi:type="Integer" Size="2" Signed="false"/>
@@ -221,34 +221,34 @@
     <Field Name="aocs_attitude_source" Uuid="7a786c45-e755-53c7-a017-28dae0a8e126" Type="UInt8" Kind="Output" View="true">
       <Description>Attitude source (0=ST,1=CSS,2=Gyro)</Description>
     </Field>
-    <Field Name="aocs_rw1_bearing_health" Uuid="2ca33cbd-6a16-5c1e-841e-1c2d6f9431f0" Type="UInt16" Kind="Output" View="true">
+    <Field Name="aocs_rw1_bearing_health" Uuid="2ca33cbd-6a16-5c1e-841e-1c2d6f9431f0" Type="Float32" Kind="Output" View="true">
       <Description>Reaction wheel 1 bearing health [%]</Description>
     </Field>
-    <Field Name="aocs_rw2_bearing_health" Uuid="9a3ccd81-b393-5311-b9bb-580f8ba036af" Type="UInt16" Kind="Output" View="true">
+    <Field Name="aocs_rw2_bearing_health" Uuid="9a3ccd81-b393-5311-b9bb-580f8ba036af" Type="Float32" Kind="Output" View="true">
       <Description>Reaction wheel 2 bearing health [%]</Description>
     </Field>
-    <Field Name="aocs_rw3_bearing_health" Uuid="de23ca81-6661-5bec-bcb4-43fa198ae463" Type="UInt16" Kind="Output" View="true">
+    <Field Name="aocs_rw3_bearing_health" Uuid="de23ca81-6661-5bec-bcb4-43fa198ae463" Type="Float32" Kind="Output" View="true">
       <Description>Reaction wheel 3 bearing health [%]</Description>
     </Field>
-    <Field Name="aocs_rw4_bearing_health" Uuid="235eb3bf-051f-587e-a818-de66d5eb6928" Type="UInt16" Kind="Output" View="true">
+    <Field Name="aocs_rw4_bearing_health" Uuid="235eb3bf-051f-587e-a818-de66d5eb6928" Type="Float32" Kind="Output" View="true">
       <Description>Reaction wheel 4 bearing health [%]</Description>
     </Field>
-    <Field Name="aocs_css_head_health_px" Uuid="01451bc3-51f2-5b67-8b15-5380cd19e38e" Type="UInt16" Kind="Output" View="true">
+    <Field Name="aocs_css_head_health_px" Uuid="01451bc3-51f2-5b67-8b15-5380cd19e38e" Type="Float32" Kind="Output" View="true">
       <Description>CSS +X head health [%]</Description>
     </Field>
-    <Field Name="aocs_css_head_health_mx" Uuid="d4efd0a8-f108-5707-b4d2-223a21404279" Type="UInt16" Kind="Output" View="true">
+    <Field Name="aocs_css_head_health_mx" Uuid="d4efd0a8-f108-5707-b4d2-223a21404279" Type="Float32" Kind="Output" View="true">
       <Description>CSS -X head health [%]</Description>
     </Field>
-    <Field Name="aocs_css_head_health_py" Uuid="c2773b55-b038-5c10-91bf-ce7e3ffb78c0" Type="UInt16" Kind="Output" View="true">
+    <Field Name="aocs_css_head_health_py" Uuid="c2773b55-b038-5c10-91bf-ce7e3ffb78c0" Type="Float32" Kind="Output" View="true">
       <Description>CSS +Y head health [%]</Description>
     </Field>
-    <Field Name="aocs_css_head_health_my" Uuid="64703ccc-a3e6-5503-93f4-c4777b717c8f" Type="UInt16" Kind="Output" View="true">
+    <Field Name="aocs_css_head_health_my" Uuid="64703ccc-a3e6-5503-93f4-c4777b717c8f" Type="Float32" Kind="Output" View="true">
       <Description>CSS -Y head health [%]</Description>
     </Field>
-    <Field Name="aocs_css_head_health_pz" Uuid="3f8ab769-e80e-54c6-ba99-0087e9f5cf67" Type="UInt16" Kind="Output" View="true">
+    <Field Name="aocs_css_head_health_pz" Uuid="3f8ab769-e80e-54c6-ba99-0087e9f5cf67" Type="Float32" Kind="Output" View="true">
       <Description>CSS +Z head health [%]</Description>
     </Field>
-    <Field Name="aocs_css_head_health_mz" Uuid="0c0ba38b-a659-5479-bfe0-d7169f63bfa3" Type="UInt16" Kind="Output" View="true">
+    <Field Name="aocs_css_head_health_mz" Uuid="0c0ba38b-a659-5479-bfe0-d7169f63bfa3" Type="Float32" Kind="Output" View="true">
       <Description>CSS -Z head health [%]</Description>
     </Field>
     <Field Name="aocs_slew_state" Uuid="b18e65a8-cc6c-5bdb-93c6-41ebfdfc5c75" Type="Float32" Kind="Output" View="true">
@@ -311,13 +311,13 @@
     <Field Name="aocs_nadir_body_z" Uuid="72be4b09-676a-579e-ab34-8e118d432fd0" Type="Int16" Kind="Output" View="true">
       <Description>Nadir unit vector in body frame Z</Description>
     </Field>
-    <Field Name="aocs_sun_body_true_x" Uuid="3950078a-d358-5a94-8712-f898b41523a7" Type="Int16" Kind="Output" View="true">
+    <Field Name="aocs_sun_body_true_x" Uuid="3950078a-d358-5a94-8712-f898b41523a7" Type="Float32" Kind="Output" View="true">
       <Description>TRUE sun vector in body X (distinct from the CSS estimate 0x0245)</Description>
     </Field>
-    <Field Name="aocs_sun_body_true_y" Uuid="16eb6384-4968-527f-abe9-4078e22f262b" Type="Int16" Kind="Output" View="true">
+    <Field Name="aocs_sun_body_true_y" Uuid="16eb6384-4968-527f-abe9-4078e22f262b" Type="Float32" Kind="Output" View="true">
       <Description>TRUE sun vector in body Y</Description>
     </Field>
-    <Field Name="aocs_sun_body_true_z" Uuid="bdf4a7a5-98e3-5305-b60e-77e4e092b433" Type="Int16" Kind="Output" View="true">
+    <Field Name="aocs_sun_body_true_z" Uuid="bdf4a7a5-98e3-5305-b60e-77e4e092b433" Type="Float32" Kind="Output" View="true">
       <Description>TRUE sun vector in body Z</Description>
     </Field>
     <Field Name="aocs_h_body_x" Uuid="c3a61cec-d836-50b4-9cb7-6ee25824332b" Type="Int16" Kind="Output" View="true">
@@ -344,13 +344,13 @@
     <Field Name="aocs_mtq_dipole_z" Uuid="ccc4271e-bae1-5fc0-8aec-26dd6951126d" Type="Int16" Kind="Output" View="true">
       <Description>Commanded MTQ dipole Z [Am2]</Description>
     </Field>
-    <Field Name="aocs_tau_dist_x" Uuid="db1f6c8e-7377-59ad-80fe-6f7e825c1b49" Type="Int16" Kind="Output" View="true">
+    <Field Name="aocs_tau_dist_x" Uuid="db1f6c8e-7377-59ad-80fe-6f7e825c1b49" Type="Float32" Kind="Output" View="true">
       <Description>Total disturbance torque X (instructor insight) [uNm]</Description>
     </Field>
-    <Field Name="aocs_tau_dist_y" Uuid="9652e1dc-351f-517d-8586-5116b1be65b4" Type="Int16" Kind="Output" View="true">
+    <Field Name="aocs_tau_dist_y" Uuid="9652e1dc-351f-517d-8586-5116b1be65b4" Type="Float32" Kind="Output" View="true">
       <Description>Total disturbance torque Y [uNm]</Description>
     </Field>
-    <Field Name="aocs_tau_dist_z" Uuid="4d944106-d71b-5762-8271-8589c3e51a39" Type="Int16" Kind="Output" View="true">
+    <Field Name="aocs_tau_dist_z" Uuid="4d944106-d71b-5762-8271-8589c3e51a39" Type="Float32" Kind="Output" View="true">
       <Description>Total disturbance torque Z [uNm]</Description>
     </Field>
     <Field Name="aocs_est_source" Uuid="09c10a8e-f3fe-5632-8202-310aaaf4d9fe" Type="UInt8" Kind="Output" View="true">
@@ -368,7 +368,7 @@
     <Field Name="aocs_fine_ready" Uuid="7bc10e18-9d3f-57cf-afb9-77e1e8ce078a" Type="UInt8" Kind="Output" View="true">
       <Description>FINE-entry precondition bitmask (0 = ready): bit0 ST&lt;5 stars, bit1 &lt;3 wheels (a 3-of-4 pyramid still spans R^3 and flies FINE degraded — see aocs.fine_degraded 0x0299; two wheels cannot), bit2 MEKF unconverged, bit3 rates high, bit4 momentum &gt;70%, bit5 propagate-only, bit6 slew not idle 60s</Description>
     </Field>
-    <Field Name="aocs_fidelity_mode" Uuid="bf0973ec-ea4e-54f2-8c9d-5c19c8435aa7" Type="UInt8" Kind="Output" View="true">
+    <Field Name="aocs_fidelity_mode" Uuid="bf0973ec-ea4e-54f2-8c9d-5c19c8435aa7" Type="Float32" Kind="Output" View="true">
       <Description>0=full physics, 1=secular (accel bypass &gt;60x)</Description>
     </Field>
     <Field Name="aocs_geoloc_err_m" Uuid="64ec6d3c-0a35-564d-95c5-a6380d01191e" Type="UInt32" Kind="Output" View="true">
@@ -383,7 +383,7 @@
     <Field Name="aocs_gyro_saturated" Uuid="1bffbcf1-e498-58a8-95f3-c612b2c7221f" Type="UInt8" Kind="Output" View="true">
       <Description>1 = at least one gyro channel is at its measurement-range limit (rate knowledge lost on that axis)</Description>
     </Field>
-    <Field Name="aocs_gyro_bias_injected" Uuid="7d2a6f0c-7a93-546b-b8ba-6f6610a63183" Type="UInt16" Kind="Output" View="true">
+    <Field Name="aocs_gyro_bias_injected" Uuid="7d2a6f0c-7a93-546b-b8ba-6f6610a63183" Type="Float32" Kind="Output" View="true">
       <Description>Magnitude of the injected gyro-bias fault (instructor visibility; 0 in a healthy spacecraft) [deg/s]</Description>
     </Field>
     <Field Name="aocs_commanded_mode" Uuid="99407d6c-2e75-5491-a1ca-e79d2585465c" Type="UInt8" Kind="Output" View="true">
@@ -471,7 +471,7 @@
       <Description>RW command sum diagnostic [Nm]</Description>
     </Field>
     <Field Name="tc_AOCS_SET_MODE_mode" Uuid="b778717a-6b09-5ffb-b871-73f4d9e870a1" Type="UInt8" Kind="Input">
-      <Description>0=off,1=safe_boot,2=detumble,3=coarse_sun,4=nominal_nadir,5=fine_point,6=slew,7=desaturation,8=eclipse_propagate,9=inertial. Mode 5 is refused with TM(1,8) unless the aocs.fine_ready (0x02C5) precondition bitmask is 0. | default 4 | 0=OFF | 1=SAFE_BOOT | 2=DETUMBLE | 3=COARSE_SUN | 4=NOMINAL_NADIR | 5=FINE_POINT | 6=SLEW | 7=DESATURATION | 8=ECLIPSE_PROPAGATE | 9=INERTIAL</Description>
+      <Description>0=off,1=safe_boot,2=detumble,3=coarse_sun,4=nominal,5=fine_point,6=slew,7=desaturation,8=eclipse,9=inertial. Mode 5 is refused with TM(1,8) unless the aocs.fine_ready (0x02C5) precondition bitmask is 0. | default 4 | 0=OFF | 1=SAFE_BOOT | 2=DETUMBLE | 3=COARSE_SUN | 4=NOMINAL | 5=FINE_POINT | 6=SLEW | 7=DESAT | 8=ECLIPSE | 9=INERTIAL</Description>
     </Field>
     <Field Name="tc_AOCS_DISABLE_WHEEL_wheel_idx" Uuid="449e00c2-eafd-59de-8916-e7861aacf48d" Type="UInt8" Kind="Input">
       <Description>Wheel index (0-3)</Description>

@@ -40,7 +40,7 @@ par rapport aux prédictions pour l'angle solaire et la position orbitale actuel
 
 ### Étape 1 — Demander la télémesure EPS détaillée
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27)
-**Verify:** `eps.bus_voltage` (0x0105) dans la plage [27.0V, 29.5V] sous 10s
+**Verify:** `eps.bus_voltage` (0x0105) dans la plage [26.0V, 30.0V] sous 10s --- bus = min(29.0 V, tension batterie) : la plage suit donc la batterie, et non un rail régulé
 **Verify:** `eps.bat_soc` (0x0101) rapporté sous 10s
 **GO/NO-GO:** Télémesure EPS reçue normalement
 
@@ -94,7 +94,7 @@ déploiement des panneaux.
 - Si un panneau ne se déploie pas (bit de wing_status non positionné après 45s) : renvoyer la commande pour ce seul panneau avec `EPS_DEPLOY_WING(wing=0)` pour +Y ou `EPS_DEPLOY_WING(wing=1)` pour -Y — accord du directeur de vol requis. En cas de nouvel échec, évaluer la viabilité du bilan de puissance avec un seul panneau (un panneau fournit ~32W au Soleil, marginal pour les opérations nominales).
 - Si les deux générateurs sont déployés mais que la production est < 10W au Soleil : vérifier auprès de la dynamique du vol que le satellite est réellement au Soleil. Rechercher une vitesse de rotation excessive réduisant l'incidence solaire effective. Donner la priorité à LEOP-005 (Acquisition du Soleil) pour stabiliser l'attitude.
 - Si l'asymétrie des courants des panneaux dépasse 30 % : consigner une anomalie. Un panneau est peut-être partiellement déployé ou une chaîne est défaillante. Poursuivre la LEOP avec un bilan de puissance réduit. Programmer une investigation détaillée de l'EPS pendant la recette en orbite.
-- Si `eps.bat_soc` chute rapidement (> 2 % par minute) : réduire la charge du satellite. Ne pas compter sur le réchauffeur du lit catalytique du propulseur : il est déjà sur OFF en LEOP (mode manuel par défaut), donc `HEATER_THRUSTER(on=0)` n'économise rien. S'assurer que l'amortissement AOCS n'utilise que les magnétocoupleurs (consommation plus faible). Donner la priorité à l'acquisition du Soleil.
+- Si `eps.bat_soc` chute rapidement (> 2 % par minute) : réduire la charge du satellite. Ne pas compter sur le réchauffeur du lit catalytique du propulseur : il est déjà sur OFF en LEOP (mode manuel par défaut), donc `HEATER_THRUSTER(on=0)` n'économise rien. S'assurer que l'amortissement AOCS n'utilise que les magnétocoupleurs (consommation plus faible). Donner la priorité à l'acquisition du Soleil.
 
 ## État de sortie
 - Les deux panneaux DÉPLOYÉS (`eps.wing_status` 0x0144 = 0x03) et produisant de l'énergie ; la totalité

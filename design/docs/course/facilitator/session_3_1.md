@@ -513,7 +513,7 @@ When passive thermal control cannot prevent a component from falling below its m
 
 ### ECSS Thermal Margins
 
-*[Source: ECSS-E-ST-31C, Table 5-1]*
+*[Source: this book's teaching convention. ECSS-E-ST-31C Figure 3-1 defines the temperature chain and leaves the margins to the system authority; ECSS-E-ST-10-03C Tables 5-2/5-4 add 5 C acceptance and 5 C qualification margins; GSFC-STD-7000B §2.6 tests proto-flight at predicted +/- 10 C]*
 
 | Phase | Hot Margin (above predicted max) | Cold Margin (below predicted min) |
 |-------|----------------------------------|-----------------------------------|

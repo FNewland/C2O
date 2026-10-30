@@ -44,13 +44,13 @@
   },
   {
    "id": "emg-001-emergency-safe-mode/procedure-steps/step-3-verify-aocs-safe-pointing",
-   "en_hash": "872545dfe55d0133",
-   "fr_hash": "8901b16a54d5c574"
+   "en_hash": "611778fc71150f7e",
+   "fr_hash": "e148f5709a100a00"
   },
   {
    "id": "emg-001-emergency-safe-mode/procedure-steps/step-4-verify-sun-acquisition-and-power-state",
-   "en_hash": "fd5235422a6208e3",
-   "fr_hash": "7791040043adc51e"
+   "en_hash": "8656c524cb1bc372",
+   "fr_hash": "a0a16359b5de11e3"
   },
   {
    "id": "emg-001-emergency-safe-mode/procedure-steps/step-5-establish-stable-communication",
@@ -64,8 +64,8 @@
   },
   {
    "id": "emg-001-emergency-safe-mode/procedure-steps/step-7-stabilisation-hold-minimum-3-orbits",
-   "en_hash": "88c0bec7b9f2dbe4",
-   "fr_hash": "e29271128e19da03"
+   "en_hash": "960b4b5994408423",
+   "fr_hash": "8167dd18f50c373d"
   },
   {
    "id": "emg-001-emergency-safe-mode/orbit-by-orbit-recovery-timeline",
@@ -74,28 +74,28 @@
   },
   {
    "id": "emg-001-emergency-safe-mode/orbit-by-orbit-recovery-timeline/recovery-orbit-r-1-restore-thermal-control-soc-30-required",
-   "en_hash": "e08bf4047c7e1501",
-   "fr_hash": "e4775e2a49aa1f0f"
+   "en_hash": "bb0d5dfec33f293a",
+   "fr_hash": "1296fa571f22d3d8"
   },
   {
    "id": "emg-001-emergency-safe-mode/orbit-by-orbit-recovery-timeline/recovery-orbit-r-2-restore-full-aocs-soc-40-required",
-   "en_hash": "69e4856e0a9ac703",
-   "fr_hash": "c33cdab9a6d1ac02"
+   "en_hash": "45636be0c60adb5f",
+   "fr_hash": "40a9309702edc5cd"
   },
   {
    "id": "emg-001-emergency-safe-mode/orbit-by-orbit-recovery-timeline/recovery-orbit-r-3-restore-thruster-heater-and-full-thermal-soc-50-required",
-   "en_hash": "73826cc9eb1762d2",
-   "fr_hash": "8d3481d876eb186f"
+   "en_hash": "7a7e3a18db2fe1ea",
+   "fr_hash": "b7a0e0ca7de55d20"
   },
   {
    "id": "emg-001-emergency-safe-mode/orbit-by-orbit-recovery-timeline/recovery-orbit-r-4-restore-obc-nominal-mode-soc-55-required",
-   "en_hash": "73c0ace4b07ce6dc",
-   "fr_hash": "f1be318d9d194995"
+   "en_hash": "6a98b72617134f50",
+   "fr_hash": "d8723943ca8862c4"
   },
   {
    "id": "emg-001-emergency-safe-mode/orbit-by-orbit-recovery-timeline/recovery-orbit-r-5-restore-payload-soc-60-required",
-   "en_hash": "bce2fbd7f3b61543",
-   "fr_hash": "b4f2935c394eb1f1"
+   "en_hash": "45cb8dcecf101d04",
+   "fr_hash": "7a2ef88272889d57"
   },
   {
    "id": "emg-001-emergency-safe-mode/recovery-timeline-summary",
@@ -104,8 +104,8 @@
   },
   {
    "id": "emg-001-emergency-safe-mode/off-nominal-handling",
-   "en_hash": "b74445f6c3657051",
-   "fr_hash": "fbe18f79ef686133"
+   "en_hash": "f96612be52c45720",
+   "fr_hash": "8e6904390be5e17a"
   },
   {
    "id": "emg-001-emergency-safe-mode/post-conditions",
@@ -118,5 +118,5 @@
    "fr_hash": "3fcce16901d10e1e"
   }
  ],
- "en_commit": "3e80564"
+ "en_commit": "c4a140a"
 }

@@ -2,7 +2,7 @@
 
 **Document ID:** EOSAT1-UM-REF-010  
 **Issue:** 2.0  
-**Source revision:** `tc_catalog.yaml@56789adadfa8`  
+**Source revision:** `tc_catalog.yaml@99b7c2c45fe1`  
 **Classification:** UNCLASSIFIED — Mission Operations
 
 > **GENERATED FILE — DO NOT EDIT BY HAND.**  
@@ -268,14 +268,14 @@ Set AOCS mode
 | 1 | `SAFE_BOOT` |  |
 | 2 | `DETUMBLE` |  |
 | 3 | `COARSE_SUN` |  |
-| 4 | `NOMINAL_NADIR` |  |
+| 4 | `NOMINAL` |  |
 | 5 | `FINE_POINT` | Refused with TM(1,8) unless aocs.fine_ready (0x02C5) == 0 |
 | 6 | `SLEW` |  |
-| 7 | `DESATURATION` |  |
-| 8 | `ECLIPSE_PROPAGATE` |  |
+| 7 | `DESAT` |  |
+| 8 | `ECLIPSE` |  |
 | 9 | `INERTIAL` |  |
 
-- `mode` — 0=off,1=safe_boot,2=detumble,3=coarse_sun,4=nominal_nadir,5=fine_point,6=slew,7=desaturation,8=eclipse_propagate,9=inertial. Mode 5 is refused with TM(1,8) unless the aocs.fine_ready (0x02C5) precondition bitmask is 0.
+- `mode` — 0=off,1=safe_boot,2=detumble,3=coarse_sun,4=nominal,5=fine_point,6=slew,7=desaturation,8=eclipse,9=inertial. Mode 5 is refused with TM(1,8) unless the aocs.fine_ready (0x02C5) precondition bitmask is 0.
 
 Example: `00 04`  (mode=4)
 

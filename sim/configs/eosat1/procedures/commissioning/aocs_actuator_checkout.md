@@ -1,17 +1,21 @@
 # COM-004: AOCS Actuator Checkout
 **Subsystem:** AOCS
 **Phase:** COMMISSIONING
-**Revision:** 2.0 --- 2026-08c: entry state corrected (the AOCS has
-AUTO-PROMOTED out of COARSE_SUN by now --- never assume the hold), and the
-ordering rule is explicit: the wheels are ENABLED (Step 1) before anything
-"checks them working". No card upstream reads wheel telemetry any more; the
-old LEOP-002 "verify all four wheels responding" step, which ran before the
-wheels were even powered, is gone.
+**Revision:** 2.1 --- 2026-10-30 (author ruling Q16): this card now flies
+straight after COM-002, BEFORE COM-003, from the LEOP COARSE_SUN hold with no
+star tracker up. Nothing promotes the AOCS out of that hold without a tracker,
+so the card enables the wheels and then COMMANDS NOMINAL (Step 1b); COM-003
+then calibrates the gyros in this wheel-controlled NOMINAL. Revision 2.0
+(2026-08c) made the ordering rule explicit: the wheels are ENABLED (Step 1)
+before anything "checks them working". No card upstream reads wheel telemetry
+any more; the old LEOP-002 "verify all four wheels responding" step, which ran
+before the wheels were even powered, is gone.
 **Approved:** Flight Operations Director
 
-**Entry state:** COM-003 exit state --- gyros calibrated, ST1 selected and
-tracking, AOCS auto-promoted to NOMINAL (mode 0x020F = 4, or 8 in eclipse),
-wheels still DISABLED (`aocs.wheels_enabled` 0x0260 = 0).
+**Entry state:** COM-002 exit state --- spacecraft in the COARSE_SUN hold left
+by LEOP (`aocs.mode` 0x020F = 3), wheels DISABLED (`aocs.wheels_enabled`
+0x0260 = 0), star trackers and gyro units OFF, SID 2 downlinking, mission
+phase 5.
 
 ## Purpose
 Commission all four reaction wheels individually. Perform controlled spin-up and
@@ -20,11 +24,13 @@ temperatures, and validate momentum management (desaturation) capability using
 magnetorquers.
 
 ## Prerequisites
-- [ ] COM-003 (AOCS Sensor Calibration) completed — star tracker active
-- [ ] AOCS in the NOMINAL family (`aocs.mode` 0x020F = 4 or 8). Do NOT expect
-      COARSE_SUN: it is a transient hold and the spacecraft promoted itself
-      out of it when the tracker came up in COM-003
-- [ ] Body rates quiescent (< 0.1 deg/s per axis)
+- [ ] COM-001 and COM-002 completed. COM-003 is NOT a prerequisite: it runs
+      after this card (ruling Q16)
+- [ ] AOCS in the LEOP COARSE_SUN hold (`aocs.mode` 0x020F = 3, or 8 in
+      eclipse). With no tracker up it will not promote itself; Step 1b
+      commands NOMINAL
+- [ ] Body rates < 0.5 deg/s per axis. The magnetorquer-only hold hunts at
+      0.1-0.4 deg/s; the wheels settle it
 - [ ] `eps.pl_aocs_wheels` (0x0117) == 1 — the suite power line is ON (LEOP-007).
       The wheels themselves are still DISABLED at this point; Step 1 enables
       them, and only THEN does any step read or exercise wheel telemetry.
@@ -47,6 +53,17 @@ magnetorquers.
 **Verify:** `aocs.rw4_enabled` (0x0257) == 1 within 10s
 **Action:** With fewer than three of the four wheels enabled the spacecraft has no three-axis actuation, and with fewer than two the on-board FDIR rule on `aocs.wheels_enabled` will safe the AOCS once the mission phase reaches NOMINAL. Do not leave this card with fewer than three wheels enabled.
 **GO/NO-GO:** All four wheels report enabled
+
+### Step 1b — Command Wheel-Controlled NOMINAL
+**TC:** `AOCS_SET_MODE(mode=4)` (Service 8, Subtype 1, func_id 0) --- NOMINAL
+**Note:** The simulator accepts NOMINAL without a star tracker; attitude
+knowledge stays on the coarse sun/magnetometer path until COM-003 brings the
+tracker into the estimator. This command also latches `aocs.commanded_mode`
+(0x0297) = 4.
+**Verify:** `aocs.mode` (0x020F) in {4, 8} within 300s --- 8 (ECLIPSE) is the
+shadow-side handover of the same commanded state
+**Verify:** `aocs.commanded_mode` (0x0297) = 4 within 10s
+**GO/NO-GO:** AOCS in NOMINAL on the wheels
 
 ### Step 2 — Record Baseline Wheel Speeds
 **TC:** `HK_REQUEST(sid=2)` (Service 3, Subtype 27)
@@ -138,6 +155,7 @@ not wheel temperatures.
 ## Exit state
 - All four wheels ENABLED and exercised, momentum unloaded (Step 8), AOCS in
   commanded NOMINAL family holding nadir on wheels
+- Star trackers and gyro units still OFF (COM-003 brings them up)
 - No power-line, payload or TTC state touched by this card
 
 ## Post-Conditions
@@ -150,4 +168,4 @@ not wheel temperatures.
 - [ ] Momentum desaturation via magnetorquers verified
 - [ ] Wheel Commissioning Report generated
 
-**NEXT:** COM-005 (AOCS Mode Transitions)
+**NEXT:** COM-003 (AOCS Sensor Calibration --- gyro calibration in wheel-controlled NOMINAL)

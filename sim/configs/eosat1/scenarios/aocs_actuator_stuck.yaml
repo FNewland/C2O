@@ -22,5 +22,5 @@ expected_responses:
   - { category: detect, description: "Detect RW-1 speed anomaly — speed frozen, not responding to commands" }
   - { category: detect, description: "Detect RW-1 temperature rising due to bearing seizure" }
   - { category: isolate, description: "Confirm wheel 0 is seized by correlating speed freeze with temperature rise" }
-  - { category: recover, description: "Disable wheel 0, command 3-wheel mode (S8 func_id 5), perform momentum dump" }
+  - { category: recover, description: "Disable wheel 0 (AOCS_DISABLE_WHEEL, S8 func_id 2), continue on three wheels, perform momentum dump" }
   - { category: recover, description: "Verify stable pointing in 3-wheel mode with relaxed error tolerance" }

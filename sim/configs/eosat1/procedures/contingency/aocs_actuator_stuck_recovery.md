@@ -223,7 +223,7 @@ ops confirmed as permanent configuration.
   `EPS_POWER_OFF(line_index=7)` (func_id 20) — note this disables ALL wheels on
   that power line. If wheels are on separate lines, isolate only the affected wheel
   via SET_PARAM.
-- If magnetometer is not valid (needed for desaturation): EO-Sat-1 has one magnetometer
+- If magnetometer is not valid (needed for desaturation): EOSAT-1 has one magnetometer
   and no redundant unit — power-cycle it via S2 device 0x0209. If it stays invalid,
   desaturation via magnetorquers is not possible. Momentum will accumulate until
   wheel saturation forces safe mode.

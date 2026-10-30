@@ -8,40 +8,40 @@
    "fr_hash": "e3b0c44298fc1c14"
   },
   {
-   "id": "eo-sat-1-propulsion-guide-phase-d",
-   "en_hash": "e0e2e20c4ca51166",
-   "fr_hash": "ef9870a9c1c69632"
+   "id": "eosat-1-propulsion-guide-phase-d",
+   "en_hash": "d0d29680ab9315c9",
+   "fr_hash": "697e7f31d49c44ef"
   },
   {
-   "id": "eo-sat-1-propulsion-guide-phase-d/hardware",
-   "en_hash": "56a22c8739b7ef7e",
-   "fr_hash": "68f2f92c6d2eb05e"
+   "id": "eosat-1-propulsion-guide-phase-d/hardware",
+   "en_hash": "d14a58844614260c",
+   "fr_hash": "4816bbdd30fa6067"
   },
   {
-   "id": "eo-sat-1-propulsion-guide-phase-d/state-machine-and-interlocks",
+   "id": "eosat-1-propulsion-guide-phase-d/state-machine-and-interlocks",
    "en_hash": "fc6ffe60bb8f3b8c",
    "fr_hash": "e8d55a51506d6bba"
   },
   {
-   "id": "eo-sat-1-propulsion-guide-phase-d/orbit-integration-the-part-that-makes-it-real",
+   "id": "eosat-1-propulsion-guide-phase-d/orbit-integration-the-part-that-makes-it-real",
    "en_hash": "90472a7e855a7878",
    "fr_hash": "90b868079e7e6f21"
   },
   {
-   "id": "eo-sat-1-propulsion-guide-phase-d/power-and-thermal",
+   "id": "eosat-1-propulsion-guide-phase-d/power-and-thermal",
    "en_hash": "b241f4cf7cea69b3",
    "fr_hash": "9f8b6ad04888bb1e"
   },
   {
-   "id": "eo-sat-1-propulsion-guide-phase-d/interfaces",
-   "en_hash": "d76202dcb389f738",
-   "fr_hash": "fcb99489d1e0fa41"
+   "id": "eosat-1-propulsion-guide-phase-d/interfaces",
+   "en_hash": "fa581585de01f96d",
+   "fr_hash": "756b724094e93530"
   },
   {
-   "id": "eo-sat-1-propulsion-guide-phase-d/model-limitations-taught-not-simulated",
-   "en_hash": "850eb362644d2e2c",
-   "fr_hash": "80997d9716099bb2"
+   "id": "eosat-1-propulsion-guide-phase-d/model-limitations-taught-not-simulated",
+   "en_hash": "ad4f880a4b54302a",
+   "fr_hash": "4814c0ad35e8b30e"
   }
  ],
- "en_commit": "983af0f"
+ "en_commit": "c4a140a"
 }

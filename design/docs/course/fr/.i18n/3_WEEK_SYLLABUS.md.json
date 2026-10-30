@@ -19,13 +19,13 @@
   },
   {
    "id": "space-mission-design-operations-programme/3-week-intensive-monday-friday-9-00-16-00/week-1-canadian-space-landscape-regulatory-environment",
-   "en_hash": "b13c3b9ff1c06a69",
-   "fr_hash": "e691705ab385c5e8"
+   "en_hash": "7364ddd393339a30",
+   "fr_hash": "92093b7194fda043"
   },
   {
    "id": "space-mission-design-operations-programme/3-week-intensive-monday-friday-9-00-16-00/week-2-concurrent-design-facility-designing-a-mission",
-   "en_hash": "31a8acbe29f22fb8",
-   "fr_hash": "e3fe935e8673fa20"
+   "en_hash": "cb47b617a0d37e45",
+   "fr_hash": "eccfd36317ae28a9"
   },
   {
    "id": "space-mission-design-operations-programme/3-week-intensive-monday-friday-9-00-16-00/week-3-mission-operations-simulation",
@@ -34,8 +34,8 @@
   },
   {
    "id": "space-mission-design-operations-programme/3-week-intensive-monday-friday-9-00-16-00/assessment",
-   "en_hash": "1453ec72c2ca3c31",
-   "fr_hash": "1cd28ff8ff749544"
+   "en_hash": "ec39a29eda27d60a",
+   "fr_hash": "81b5c0a0ad73a742"
   },
   {
    "id": "space-mission-design-operations-programme/3-week-intensive-monday-friday-9-00-16-00/prerequisites",
@@ -53,5 +53,5 @@
    "fr_hash": "4febe0ac68a241a8"
   }
  ],
- "en_commit": "be16bc3"
+ "en_commit": "c4a140a"
 }

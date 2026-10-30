@@ -9,99 +9,99 @@
   },
   {
    "id": "eosat-1-time-and-clocks",
-   "en_hash": "403435faf4a006eb",
-   "fr_hash": "a6a42ecdafde62a9"
+   "en_hash": "e4bbbba4bcd64892",
+   "fr_hash": "11f251740a6a4d29"
   },
   {
    "id": "eosat-1-time-and-clocks/1-overview",
-   "en_hash": "59d98af8e529ebf7",
-   "fr_hash": "29bd36fd0a5c7474"
+   "en_hash": "92bc372db443c174",
+   "fr_hash": "0815325c5415605b"
   },
   {
    "id": "eosat-1-time-and-clocks/2-the-clocks",
-   "en_hash": "ba3bc9b8e2db30be",
-   "fr_hash": "98106622f6e59847"
+   "en_hash": "a3040184c260cddf",
+   "fr_hash": "543000a948fffccd"
   },
   {
    "id": "eosat-1-time-and-clocks/3-the-cuc-time-format",
-   "en_hash": "9d6adeccf4362e8a",
-   "fr_hash": "2f9160bcc96b2ee5"
+   "en_hash": "6d48a7d0f3c1356f",
+   "fr_hash": "585a780d0a621716"
   },
   {
-   "id": "eosat-1-time-and-clocks/4-timeref-how-the-obc-believes-it-knows-the-time",
-   "en_hash": "221dfea236c70364",
-   "fr_hash": "34fd8fdddaefd123"
+   "id": "eosat-1-time-and-clocks/4-time_ref--how-the-obc-believes-it-knows-the-time",
+   "en_hash": "8eb9baa75063b8ae",
+   "fr_hash": "05df5bb479b3bca5"
   },
   {
    "id": "eosat-1-time-and-clocks/5-the-drift-model",
-   "en_hash": "ce92c5ed47f75a1f",
-   "fr_hash": "0cbade830729eafd"
+   "en_hash": "dbef97db8e26e4cc",
+   "fr_hash": "c529216503f63d3b"
   },
   {
    "id": "eosat-1-time-and-clocks/6-gps-discipline-and-holdover",
-   "en_hash": "1ddc04e736c87e70",
-   "fr_hash": "40fe3345e9e28513"
+   "en_hash": "77d3c732c941db92",
+   "fr_hash": "b6e51690adf1c1af"
   },
   {
    "id": "eosat-1-time-and-clocks/7-clock-events",
-   "en_hash": "4011910992b1090c",
-   "fr_hash": "a01899d2d350a5e4"
+   "en_hash": "9d9fc7d7e717c6e3",
+   "fr_hash": "9d94ff7727a111da"
   },
   {
    "id": "eosat-1-time-and-clocks/8-reboot-behaviour",
-   "en_hash": "653bb718c03997e8",
-   "fr_hash": "36b8f8f2b3c5758a"
+   "en_hash": "ca455be0405ceafc",
+   "fr_hash": "ffe2eb24a08b65e2"
   },
   {
    "id": "eosat-1-time-and-clocks/9-reading-the-correlation-on-the-console",
-   "en_hash": "e0e15855774cf649",
-   "fr_hash": "2ac9bc5fea4578ad"
+   "en_hash": "acfdcfd3e575074e",
+   "fr_hash": "d225d79c0cde298c"
   },
   {
    "id": "eosat-1-time-and-clocks/10-time-tagged-commands-s11-and-the-planner",
-   "en_hash": "654413077c488511",
-   "fr_hash": "710b1f51ee6f8679"
+   "en_hash": "d141c9d5fc3865bf",
+   "fr_hash": "12dabe927827d717"
   },
   {
    "id": "eosat-1-time-and-clocks/11-met-and-where-it-comes-from",
-   "en_hash": "5de6710d33c19b5f",
-   "fr_hash": "26cc61599a82648e"
+   "en_hash": "c9d6be3b3aa51c09",
+   "fr_hash": "9d81ecc04a310285"
   },
   {
    "id": "eosat-1-time-and-clocks/12-caveats",
-   "en_hash": "474d3c60bd1ad577",
-   "fr_hash": "ad539e95e33a90d3"
+   "en_hash": "1efd398dcad59cc7",
+   "fr_hash": "a5d5acde3a82638a"
   },
   {
    "id": "eosat-1-time-and-clocks/13-quick-diagnosis",
-   "en_hash": "62edc2d004e4c5da",
-   "fr_hash": "5e93a61ebf0a67aa"
+   "en_hash": "975125f11663134d",
+   "fr_hash": "e8a99e1509145809"
   },
   {
-   "id": "eosat-1-time-and-clocks/appendix-a-training-system-time-source",
-   "en_hash": "78ce00ae5a4f5fed",
-   "fr_hash": "6891f536f2c13987"
+   "id": "eosat-1-time-and-clocks/appendix-a--training-system-time-source",
+   "en_hash": "c8a792427124b494",
+   "fr_hash": "d538c347bbc25b12"
   },
   {
-   "id": "eosat-1-time-and-clocks/appendix-a-training-system-time-source/a-1-precedence",
-   "en_hash": "0dd87528e693d514",
-   "fr_hash": "469924e4c5f39d29"
+   "id": "eosat-1-time-and-clocks/appendix-a--training-system-time-source/a1-precedence",
+   "en_hash": "a43a4f394254f1c4",
+   "fr_hash": "5a1932757508f196"
   },
   {
-   "id": "eosat-1-time-and-clocks/appendix-a-training-system-time-source/a-2-mission-config",
-   "en_hash": "2815620b055523c4",
-   "fr_hash": "078a502ce8af99bc"
+   "id": "eosat-1-time-and-clocks/appendix-a--training-system-time-source/a2-mission-config",
+   "en_hash": "5254226865eb9ff0",
+   "fr_hash": "ee37b37656bda0a4"
   },
   {
-   "id": "eosat-1-time-and-clocks/appendix-a-training-system-time-source/a-3-start-sh",
-   "en_hash": "374a570b0a7dbceb",
-   "fr_hash": "0a10f3a2781b336b"
+   "id": "eosat-1-time-and-clocks/appendix-a--training-system-time-source/a3-startsh",
+   "en_hash": "94b2ee9c9f8cacb4",
+   "fr_hash": "be4538947ce42cd0"
   },
   {
-   "id": "eosat-1-time-and-clocks/appendix-a-training-system-time-source/a-4-closed-loop-sim-sync",
-   "en_hash": "ed363f0c7e682e67",
-   "fr_hash": "6267ba38c7e0f6dc"
+   "id": "eosat-1-time-and-clocks/appendix-a--training-system-time-source/a4-closed-loop-sim-sync",
+   "en_hash": "5a77086a450d3668",
+   "fr_hash": "4488f91b11cddda2"
   }
  ],
- "en_commit": "3e80564"
+ "en_commit": "c4a140a"
 }

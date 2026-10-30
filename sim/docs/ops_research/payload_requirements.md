@@ -35,14 +35,18 @@ The Payload Operations Engineer is responsible for all aspects of the multispect
 |---|---|---|
 | Instrument type | Pushbroom multispectral imager | CCD linear array detector |
 | Spectral range | 450--900 nm (VNIR) | 4 discrete spectral bands |
-| Ground sampling distance | ~10 m at 500 km altitude | Drives attitude pointing requirement |
-| Swath width | ~60 km nominal (30 km in simulator model) | `swath_width_km` telemetry at 0x0619 |
+| Ground sampling distance | ~33.4 m at 513 km altitude (manual 06 §2.2) | Drives attitude pointing requirement |
+| Swath width | ~273 km at 513 km altitude (manual 06 §2.2) | `swath_width_km` telemetry at 0x0619 |
 | Detector operating temperature | -15 deg C nominal (-5 deg C in simulator) | `fpa_temp` at 0x0601 |
 | Raw data rate | ~40 Mbps (80 Mbps in simulator model) | Pre-compression |
 | Compression ratio | 4:1 lossy, configurable (2:1 in simulator) | `compression_ratio` at 0x0614 |
 | Effective compressed data rate | ~10 Mbps | Post-compression |
 | Line rate | 500 Hz | `line_rate` at 0x0607 |
 | Integration time | 2.0 ms (configurable) | `integration_time` at 0x0618 |
+
+> **Note (2026-10-30, author ruling Q1):** the orbit is 513 km, where the imager gives a
+> ~33.4 m GSD and a ~273 km swath. The 10 m GSD and 60 km swath used in the worked
+> figures later in this research document predate that ruling and are superseded.
 
 ### 2.2 Spectral Band Configuration for Ocean Color
 

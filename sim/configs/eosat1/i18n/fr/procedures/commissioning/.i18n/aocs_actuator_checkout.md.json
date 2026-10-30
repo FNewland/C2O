@@ -9,8 +9,8 @@
   },
   {
    "id": "com-004-aocs-actuator-checkout",
-   "en_hash": "d631610e8c57ae6d",
-   "fr_hash": "942912de6a6ac901"
+   "en_hash": "d486107014502c44",
+   "fr_hash": "4275eeabb626b140"
   },
   {
    "id": "com-004-aocs-actuator-checkout/purpose",
@@ -19,8 +19,8 @@
   },
   {
    "id": "com-004-aocs-actuator-checkout/prerequisites",
-   "en_hash": "73ae10ceabf2a44c",
-   "fr_hash": "4442918d1ec07ffa"
+   "en_hash": "102c878fe10eedf7",
+   "fr_hash": "9eed2fcafb724f24"
   },
   {
    "id": "com-004-aocs-actuator-checkout/procedure-steps",
@@ -31,6 +31,11 @@
    "id": "com-004-aocs-actuator-checkout/procedure-steps/step-1-enable-the-four-reaction-wheels",
    "en_hash": "bf90e5a70996bdbc",
    "fr_hash": "a6c60f7387b990e5"
+  },
+  {
+   "id": "com-004-aocs-actuator-checkout/procedure-steps/step-1b-command-wheel-controlled-nominal",
+   "en_hash": "ec425aebd88a3070",
+   "fr_hash": "2cfa12ceac93304b"
   },
   {
    "id": "com-004-aocs-actuator-checkout/procedure-steps/step-2-record-baseline-wheel-speeds",
@@ -79,14 +84,14 @@
   },
   {
    "id": "com-004-aocs-actuator-checkout/exit-state",
-   "en_hash": "80f2cac1f7dd7546",
-   "fr_hash": "84bb79a1cccfcf19"
+   "en_hash": "ff64557c73b71f26",
+   "fr_hash": "1146357cb6219004"
   },
   {
    "id": "com-004-aocs-actuator-checkout/post-conditions",
-   "en_hash": "2d86cc6be732d4a3",
-   "fr_hash": "470cb88e013037c5"
+   "en_hash": "1fe89f4a0adc7787",
+   "fr_hash": "d8d817b8c2456954"
   }
  ],
- "en_commit": "3e80564"
+ "en_commit": "c4a140a"
 }

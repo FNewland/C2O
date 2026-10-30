@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Catalogue xmlns="http://www.ecss.nl/smp/2019/Smdl" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Name="EPS" Creator="EOSAT-1 SMDL Generator" Version="1.0+590a05ec5309">
+<Catalogue xmlns="http://www.ecss.nl/smp/2019/Smdl" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Name="EPS" Creator="EOSAT-1 SMDL Generator" Version="1.0+4a992dbe3156">
   <Description>SMP2 model catalogue for EPS subsystem</Description>
   <Type Name="UInt8" Uuid="1b57882a-4b2d-53f8-a27f-be0563caa586" xsi:type="Integer" Size="1" Signed="false"/>
   <Type Name="UInt16" Uuid="5fcf9bfd-72b9-5f0c-b036-3cad6f5a8506" xsi:type="Integer" Size="2" Signed="false"/>
@@ -110,10 +110,10 @@
     <Field Name="eps_bat_cycles" Uuid="dda83f1d-817f-5351-97ed-7602774bbe56" Type="UInt16" Kind="Output" View="true">
       <Description>Battery charge/discharge cycle count</Description>
     </Field>
-    <Field Name="eps_mppt_efficiency" Uuid="1d27175e-a75a-524c-abcc-c452654101c8" Type="UInt16" Kind="Output" View="true">
+    <Field Name="eps_mppt_efficiency" Uuid="1d27175e-a75a-524c-abcc-c452654101c8" Type="Float32" Kind="Output" View="true">
       <Description>MPPT tracker efficiency</Description>
     </Field>
-    <Field Name="eps_sa_age_factor" Uuid="dd3dad54-2dae-5f6c-9058-5cea1c6ea021" Type="UInt16" Kind="Output" View="true">
+    <Field Name="eps_sa_age_factor" Uuid="dd3dad54-2dae-5f6c-9058-5cea1c6ea021" Type="Float32" Kind="Output" View="true">
       <Description>Solar array aging degradation factor</Description>
     </Field>
     <Field Name="eps_sa_a_degradation" Uuid="9f2100de-ae41-5494-9811-5c900974d925" Type="Float32" Kind="Output" View="true">

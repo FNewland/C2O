@@ -449,7 +449,7 @@ The FDIR/Systems operator configures and maintains all onboard FDIR rules. These
 | CTG-011 | OBC Redundancy Switchover | Execute OBC_SWITCH_UNIT, verify new OBC online, restore subsystems |
 | CTG-016 | Memory Segment Failure | Isolate bad segment, remap storage |
 | CTG-017 | Bus Failure Switchover | Switch CAN bus, verify all subsystem communication restored |
-| CTG-018 | Boot Loader Recovery | Diagnose boot failure, MEM_CHECK, MEM_LOAD, boot application |
+| CTG-021 | Boot Loader Recovery | Diagnose boot failure, MEM_CHECK, MEM_LOAD, boot application |
 
 #### Emergency
 
@@ -462,7 +462,7 @@ The FDIR/Systems operator configures and maintains all onboard FDIR rules. These
 **Requirements:**
 
 - **REQ-PROC-001:** All procedures involving `OBC_REBOOT` (func_id 42) and `OBC_SWITCH_UNIT` (func_id 43) shall require explicit Flight Director authorization before execution. These are classified as **critical** commands.
-- **REQ-PROC-002:** The boot loader recovery procedure (CTG-018) shall support the complete diagnostic path: detect bootloader state, assess reboot cause, attempt boot, inhibit auto-boot, memory check, memory reload, and redundant OBC switchover as last resort.
+- **REQ-PROC-002:** The boot loader recovery procedure (CTG-021) shall support the complete diagnostic path: detect bootloader state, assess reboot cause, attempt boot, inhibit auto-boot, memory check, memory reload, and redundant OBC switchover as last resort.
 - **REQ-PROC-003:** The bus failure switchover procedure (CTG-017) shall include: detection of missing HK from subsystems, bus status diagnosis, switchover command, and verification of all subsystem HK resumption.
 - **REQ-PROC-004:** After any OBC reboot or switchover, the operator shall verify: `sw_image`=1, correct `sw_version`, `cpu_load` < 50%, `mem_errors`=0, all subsystem HK received, and `reboot_count` incremented by exactly 1.
 
@@ -767,7 +767,7 @@ The FDIR/Systems position provides GO/NO-GO assessment to the Flight Director fo
 | Watchdog Recovery (CTG-010) | Flight Director | FD authorizes; FDIR/Systems verifies OBC recovered |
 | OBC Switchover (CTG-011) | Flight Director, all positions | FD authorizes critical command; all positions prepare for TM loss |
 | Bus Failure (CTG-017) | Flight Director | FD authorizes; FDIR/Systems switches bus, verifies nodes |
-| Boot Loader Recovery (CTG-018) | Flight Director | FD authorizes; FDIR/Systems manages boot sequence |
+| Boot Loader Recovery (CTG-021) | Flight Director | FD authorizes; FDIR/Systems manages boot sequence |
 | OBC Reboot (EMG-003) | Flight Director | FD authorizes critical command; FDIR/Systems executes and monitors |
 
 ---

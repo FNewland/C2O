@@ -49,10 +49,9 @@ attendue en PDR.
 
 ## À propos de l'auteur
 
-Franz Newland, docteur, est maître de conférences à la Faculté de
-génie de l'Université d'Ottawa, où il dirige l'École de conception et
-d'innovation pédagogique en génie (ECIPG) et le
-programme SpaceCDF.
+Franz Newland, docteur, est professeur agrégé à l'École de conception
+et d'innovation pédagogique en génie (ECIPG) de l'Université d'Ottawa,
+où il dirige le programme SpaceCDF.
 
 **Claude**, assistant de rédaction à base d'IA conçu par Anthropic, est
 crédité comme coauteur pour la rédaction des contenus, la consolidation

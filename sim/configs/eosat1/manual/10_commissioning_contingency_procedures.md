@@ -1,6 +1,6 @@
-# Commissioning Contingency Procedures
+# Commissioning Contingency Procedures {#commissioning-contingency-procedures}
 
-## Overview
+## Overview {#overview}
 
 This document serves as a companion reference to the **Commissioning Sequence Walkthrough** (commissioning_sequence_walkthrough.md). It maps each commissioning phase and its potential failure modes to the specific contingency and emergency procedures to follow when a step fails.
 
@@ -13,9 +13,9 @@ During commissioning, consult this document immediately when encountering unexpe
 
 ---
 
-## Phase 0 — First Contact (Pass 1)
+## Phase 0 — First Contact (Pass 1) {#phase-0--first-contact-pass-1}
 
-### Failure: No Telemetry Received
+### Failure: No Telemetry Received {#failure-no-telemetry-received}
 
 **Symptoms:**
 - MCS shows no received signal strength indicator (RSSI)
@@ -28,7 +28,7 @@ During commissioning, consult this document immediately when encountering unexpe
 
 ---
 
-### Failure: Telemetry Received but TTC Link Won't Lock
+### Failure: Telemetry Received but TTC Link Won't Lock {#failure-telemetry-received-but-ttc-link-wont-lock}
 
 **Symptoms:**
 - RSSI signal detected and stable
@@ -42,7 +42,7 @@ During commissioning, consult this document immediately when encountering unexpe
 
 ---
 
-### Failure: OBC in Unexpected State (Not Bootloader)
+### Failure: OBC in Unexpected State (Not Bootloader) {#failure-obc-in-unexpected-state-not-bootloader}
 
 **Symptoms:**
 - Telemetry received but beacon message unrecognized or corrupted
@@ -56,9 +56,9 @@ During commissioning, consult this document immediately when encountering unexpe
 
 ---
 
-## Phase 1 — Spacecraft Activation
+## Phase 1 — Spacecraft Activation {#phase-1--spacecraft-activation}
 
-### Failure: Command Uplinking Fails
+### Failure: Command Uplinking Fails {#failure-command-uplinking-fails}
 
 **Symptoms:**
 - Transmitted uplink command not acknowledged
@@ -71,7 +71,7 @@ During commissioning, consult this document immediately when encountering unexpe
 
 ---
 
-### Failure: Spacecraft Battery Not Responding to Commands
+### Failure: Spacecraft Battery Not Responding to Commands {#failure-spacecraft-battery-not-responding-to-commands}
 
 **Symptoms:**
 - No power draw change after EPS commands
@@ -84,9 +84,9 @@ During commissioning, consult this document immediately when encountering unexpe
 
 ---
 
-## Phase 2 — Antenna Deployment
+## Phase 2 — Antenna Deployment {#phase-2--antenna-deployment}
 
-### Failure: Antenna Deployment Command Acknowledged but No Physical Deployment
+### Failure: Antenna Deployment Command Acknowledged but No Physical Deployment {#failure-antenna-deployment-command-acknowledged-but-no-physical-deployment}
 
 **Symptoms:**
 - Deployment command echoed in telemetry
@@ -100,7 +100,7 @@ During commissioning, consult this document immediately when encountering unexpe
 
 ---
 
-### Failure: Antenna Deploys but Link Quality Doesn't Improve
+### Failure: Antenna Deploys but Link Quality Doesn't Improve {#failure-antenna-deploys-but-link-quality-doesnt-improve}
 
 **Symptoms:**
 - Antenna status shows DEPLOYED
@@ -114,13 +114,13 @@ During commissioning, consult this document immediately when encountering unexpe
 
 ---
 
-## Phase 3 — OBC Boot
+## Phase 3 — OBC Boot {#phase-3--obc-boot}
 
-### Failure: OBC Remains in Bootloader After Boot Command
+### Failure: OBC Remains in Bootloader After Boot Command {#failure-obc-remains-in-bootloader-after-boot-command}
 
 **Symptoms:**
 - Bootloader heartbeat continues after S1 boot command
-- OBC mode register shows BOOTLOADER_STATE
+- `sw_image` (0x0311) reads 0: the OBC is still in the bootloader
 - No attempt to load application image
 - Timeout occurs without fallback
 
@@ -130,7 +130,7 @@ During commissioning, consult this document immediately when encountering unexpe
 
 ---
 
-### Failure: OBC Boots Successfully but Reboots Within Minutes
+### Failure: OBC Boots Successfully but Reboots Within Minutes {#failure-obc-boots-successfully-but-reboots-within-minutes}
 
 **Symptoms:**
 - Telemetry shows OBC in NOMINAL mode initially
@@ -144,7 +144,7 @@ During commissioning, consult this document immediately when encountering unexpe
 
 ---
 
-### Failure: Memory Segment Failure Detected During Boot
+### Failure: Memory Segment Failure Detected During Boot {#failure-memory-segment-failure-detected-during-boot}
 
 **Symptoms:**
 - OBC reports memory EDAC errors in health telemetry
@@ -158,9 +158,9 @@ During commissioning, consult this document immediately when encountering unexpe
 
 ---
 
-## Phase 4 — Health Check
+## Phase 4 — Health Check {#phase-4--health-check}
 
-### Failure: Battery Voltage Below Minimum Threshold
+### Failure: Battery Voltage Below Minimum Threshold {#failure-battery-voltage-below-minimum-threshold}
 
 **Symptoms:**
 - Battery voltage telemetry < 26.0 V (or defined minimum)
@@ -174,7 +174,7 @@ During commissioning, consult this document immediately when encountering unexpe
 
 ---
 
-### Failure: Battery Cell Failure or Imbalance Detected
+### Failure: Battery Cell Failure or Imbalance Detected {#failure-battery-cell-failure-or-imbalance-detected}
 
 **Symptoms:**
 - Telemetry shows cell voltage spread > 0.5 V between cells
@@ -188,7 +188,7 @@ During commissioning, consult this document immediately when encountering unexpe
 
 ---
 
-### Failure: Bus Voltage Out of Range
+### Failure: Bus Voltage Out of Range {#failure-bus-voltage-out-of-range}
 
 **Symptoms:**
 - Primary bus voltage outside 28 V ± 4 V window
@@ -202,7 +202,7 @@ During commissioning, consult this document immediately when encountering unexpe
 
 ---
 
-### Failure: Temperature Out of Range (Subsystem)
+### Failure: Temperature Out of Range (Subsystem) {#failure-temperature-out-of-range-subsystem}
 
 **Symptoms:**
 - Subsystem temperature exceeds nominal limits (typically -20°C to +50°C)
@@ -216,9 +216,9 @@ During commissioning, consult this document immediately when encountering unexpe
 
 ---
 
-## Phase 5 — TM Buffering Configuration
+## Phase 5 — TM Buffering Configuration {#phase-5--tm-buffering-configuration}
 
-### Failure: Housekeeping Not Flowing After Enable Command
+### Failure: Housekeeping Not Flowing After Enable Command {#failure-housekeeping-not-flowing-after-enable-command}
 
 **Symptoms:**
 - Housekeeping enable command acknowledged
@@ -228,11 +228,11 @@ During commissioning, consult this document immediately when encountering unexpe
 
 **Procedure:** Verify OBC mode and subsystem status via direct telemetry read. Reference commissioning walkthrough Phase 5 diagnostics.
 
-**Recovery:** Confirm OBC is in NOMINAL mode (not BOOTLOADER or SAFE). Issue explicit HK start command with correct stream ID. Check S5 parameters are correctly set in OBC memory. If still no data, suspect OBC software issue—escalate to CTG-021.
+**Recovery:** Confirm the OBC is running the application (`sw_image` = 1) in NOMINAL mode (not SAFE). Issue explicit HK start command with correct stream ID. Check S5 parameters are correctly set in OBC memory. If still no data, suspect OBC software issue—escalate to CTG-021.
 
 ---
 
-### Failure: Buffer Fill Anomaly or Excessive Buffer Usage
+### Failure: Buffer Fill Anomaly or Excessive Buffer Usage {#failure-buffer-fill-anomaly-or-excessive-buffer-usage}
 
 **Symptoms:**
 - Buffer fill percentage increasing unexpectedly
@@ -246,9 +246,9 @@ During commissioning, consult this document immediately when encountering unexpe
 
 ---
 
-## Phase 6 — Set Time
+## Phase 6 — Set Time {#phase-6--set-time}
 
-### Failure: Time Set Command Rejected
+### Failure: Time Set Command Rejected {#failure-time-set-command-rejected}
 
 **Symptoms:**
 - S9.1 (`SET_TIME`) command rejected or not acknowledged
@@ -262,7 +262,7 @@ During commissioning, consult this document immediately when encountering unexpe
 
 ---
 
-### Failure: Time Sync with GPS Causes AOCS Disruption
+### Failure: Time Sync with GPS Causes AOCS Disruption {#failure-time-sync-with-gps-causes-aocs-disruption}
 
 **Symptoms:**
 - GPS time tag command issued successfully
@@ -276,9 +276,9 @@ During commissioning, consult this document immediately when encountering unexpe
 
 ---
 
-## Phase 7 — Power On (Subsystems)
+## Phase 7 — Power On (Subsystems) {#phase-7--power-on-subsystems}
 
-### Failure: Power Line Won't Switch Despite Command
+### Failure: Power Line Won't Switch Despite Command {#failure-power-line-wont-switch-despite-command}
 
 **Symptoms:**
 - Power-on command acknowledged
@@ -292,7 +292,7 @@ During commissioning, consult this document immediately when encountering unexpe
 
 ---
 
-### Failure: Overcurrent Trip on Power Line
+### Failure: Overcurrent Trip on Power Line {#failure-overcurrent-trip-on-power-line}
 
 **Symptoms:**
 - Power-on command triggers immediate current spike
@@ -306,7 +306,7 @@ During commissioning, consult this document immediately when encountering unexpe
 
 ---
 
-### Failure: Solar Array Issues (Underperforming or Intermittent)
+### Failure: Solar Array Issues (Underperforming or Intermittent) {#failure-solar-array-issues-underperforming-or-intermittent}
 
 **Symptoms:**
 - Solar array current lower than expected for sun angle
@@ -320,7 +320,7 @@ During commissioning, consult this document immediately when encountering unexpe
 
 ---
 
-### Failure: EPS Enters Safe Mode Unexpectedly
+### Failure: EPS Enters Safe Mode Unexpectedly {#failure-eps-enters-safe-mode-unexpectedly}
 
 **Symptoms:**
 - EPS subsystem suddenly in SAFE_MODE state
@@ -334,7 +334,7 @@ During commissioning, consult this document immediately when encountering unexpe
 
 ---
 
-### Failure: AOCS Won't Enter DETUMBLE Mode
+### Failure: AOCS Won't Enter DETUMBLE Mode {#failure-aocs-wont-enter-detumble-mode}
 
 **Symptoms:**
 - DETUMBLE mode command not acknowledged or rejected
@@ -348,7 +348,7 @@ During commissioning, consult this document immediately when encountering unexpe
 
 ---
 
-### Failure: Reaction Wheel Stuck or Unresponsive
+### Failure: Reaction Wheel Stuck or Unresponsive {#failure-reaction-wheel-stuck-or-unresponsive}
 
 **Symptoms:**
 - Reaction wheel speed command not resulting in speed change
@@ -362,9 +362,9 @@ During commissioning, consult this document immediately when encountering unexpe
 
 ---
 
-## Phase 8 — TLE Upload and Orbit Propagation
+## Phase 8 — TLE Upload and Orbit Propagation {#phase-8--tle-upload-and-orbit-propagation}
 
-### Failure: Orbit State Does Not Propagate Correctly
+### Failure: Orbit State Does Not Propagate Correctly {#failure-orbit-state-does-not-propagate-correctly}
 
 **Symptoms:**
 - S20 parameters appear accepted (no error response)
@@ -378,9 +378,9 @@ During commissioning, consult this document immediately when encountering unexpe
 
 ---
 
-## Phase 9 — AOCS Mode Progression (Detumble → Nadir → Sun-Point)
+## Phase 9 — AOCS Mode Progression (Detumble → Nadir → Sun-Point) {#phase-9--aocs-mode-progression-detumble--nadir--sun-point}
 
-### Failure: Attitude Rates Not Damping During Detumble
+### Failure: Attitude Rates Not Damping During Detumble {#failure-attitude-rates-not-damping-during-detumble}
 
 **Symptoms:**
 - Spacecraft angular rates remain high (> 5 deg/s)
@@ -394,7 +394,7 @@ During commissioning, consult this document immediately when encountering unexpe
 
 ---
 
-### Failure: Sensor Loss During Mode Transition
+### Failure: Sensor Loss During Mode Transition {#failure-sensor-loss-during-mode-transition}
 
 **Symptoms:**
 - Star tracker or rate gyro loses lock/signal
@@ -408,7 +408,7 @@ During commissioning, consult this document immediately when encountering unexpe
 
 ---
 
-### Failure: AOCS Mode Transition Fails (Cannot Reach Sun-Point or Nadir)
+### Failure: AOCS Mode Transition Fails (Cannot Reach Sun-Point or Nadir) {#failure-aocs-mode-transition-fails-cannot-reach-sun-point-or-nadir}
 
 **Symptoms:**
 - Mode transition command sent but not executed
@@ -422,9 +422,9 @@ During commissioning, consult this document immediately when encountering unexpe
 
 ---
 
-## Phase 10 — Whole-Orbit Verification
+## Phase 10 — Whole-Orbit Verification {#phase-10--whole-orbit-verification}
 
-### Failure: Thermal Runaway Detected
+### Failure: Thermal Runaway Detected {#failure-thermal-runaway-detected}
 
 **Symptoms:**
 - Temperature increasing uncontrollably in thermal zone
@@ -438,7 +438,7 @@ During commissioning, consult this document immediately when encountering unexpe
 
 ---
 
-### Failure: Total Power Failure
+### Failure: Total Power Failure {#failure-total-power-failure}
 
 **Symptoms:**
 - All subsystems lose power simultaneously
@@ -452,7 +452,7 @@ During commissioning, consult this document immediately when encountering unexpe
 
 ---
 
-### Failure: Unexpected Safe Mode Triggered
+### Failure: Unexpected Safe Mode Triggered {#failure-unexpected-safe-mode-triggered}
 
 **Symptoms:**
 - AOCS suddenly enters safe mode without command
@@ -466,9 +466,9 @@ During commissioning, consult this document immediately when encountering unexpe
 
 ---
 
-## Phase 11 — GPS Activation and Time Recovery
+## Phase 11 — GPS Activation and Time Recovery {#phase-11--gps-activation-and-time-recovery}
 
-### Failure: GPS Won't Acquire Lock
+### Failure: GPS Won't Acquire Lock {#failure-gps-wont-acquire-lock}
 
 **Symptoms:**
 - GPS receiver powered on but not reporting lock
@@ -482,7 +482,7 @@ During commissioning, consult this document immediately when encountering unexpe
 
 ---
 
-### Failure: GPS Time Sync Causes AOCS Reset or Anomaly
+### Failure: GPS Time Sync Causes AOCS Reset or Anomaly {#failure-gps-time-sync-causes-aocs-reset-or-anomaly}
 
 **Symptoms:**
 - GPS time-tag command executed
@@ -496,9 +496,9 @@ During commissioning, consult this document immediately when encountering unexpe
 
 ---
 
-## Phase 12 — Star Tracker Checkout
+## Phase 12 — Star Tracker Checkout {#phase-12--star-tracker-checkout}
 
-### Failure: Star Tracker Stays in BOOT State
+### Failure: Star Tracker Stays in BOOT State {#failure-star-tracker-stays-in-boot-state}
 
 **Symptoms:**
 - Star tracker power confirmed but not transitioning to IDLE
@@ -512,7 +512,7 @@ During commissioning, consult this document immediately when encountering unexpe
 
 ---
 
-### Failure: Star Tracker Blinded (No Stars Visible)
+### Failure: Star Tracker Blinded (No Stars Visible) {#failure-star-tracker-blinded-no-stars-visible}
 
 **Symptoms:**
 - Star tracker reports insufficient star count
@@ -526,7 +526,7 @@ During commissioning, consult this document immediately when encountering unexpe
 
 ---
 
-### Failure: Star Tracker Hardware Failure
+### Failure: Star Tracker Hardware Failure {#failure-star-tracker-hardware-failure}
 
 **Symptoms:**
 - Star tracker reports internal error code
@@ -540,7 +540,7 @@ During commissioning, consult this document immediately when encountering unexpe
 
 ---
 
-### Failure: Both Star Trackers Fail or Unavailable
+### Failure: Both Star Trackers Fail or Unavailable {#failure-both-star-trackers-fail-or-unavailable}
 
 **Symptoms:**
 - Primary and secondary star trackers both non-operational
@@ -554,9 +554,9 @@ During commissioning, consult this document immediately when encountering unexpe
 
 ---
 
-## Phase 13 — Redundancy Checkout
+## Phase 13 — Redundancy Checkout {#phase-13--redundancy-checkout}
 
-### Failure: Bus Switchover Fails
+### Failure: Bus Switchover Fails {#failure-bus-switchover-fails}
 
 **Symptoms:**
 - Switchover command acknowledged but not executed
@@ -570,7 +570,7 @@ During commissioning, consult this document immediately when encountering unexpe
 
 ---
 
-### Failure: Redundant Transponder Communication Fails
+### Failure: Redundant Transponder Communication Fails {#failure-redundant-transponder-communication-fails}
 
 **Symptoms:**
 - Switchover to secondary transponder commanded
@@ -584,7 +584,7 @@ During commissioning, consult this document immediately when encountering unexpe
 
 ---
 
-### Failure: Loss of Communication During Redundancy Test
+### Failure: Loss of Communication During Redundancy Test {#failure-loss-of-communication-during-redundancy-test}
 
 **Symptoms:**
 - Uplink command received but communication drops
@@ -598,9 +598,9 @@ During commissioning, consult this document immediately when encountering unexpe
 
 ---
 
-## Phase 14 — Time-Tagged Commands
+## Phase 14 — Time-Tagged Commands {#phase-14--time-tagged-commands}
 
-### Failure: Scheduled Command Does Not Execute at Designated Time
+### Failure: Scheduled Command Does Not Execute at Designated Time {#failure-scheduled-command-does-not-execute-at-designated-time}
 
 **Symptoms:**
 - Command uploaded and verified in schedule memory
@@ -614,7 +614,7 @@ During commissioning, consult this document immediately when encountering unexpe
 
 ---
 
-### Failure: Bit Error Rate Anomaly During Command Uplink
+### Failure: Bit Error Rate Anomaly During Command Uplink {#failure-bit-error-rate-anomaly-during-command-uplink}
 
 **Symptoms:**
 - Received command echo showing bit inversions
@@ -628,9 +628,9 @@ During commissioning, consult this document immediately when encountering unexpe
 
 ---
 
-## Phase 15 — Payload Commissioning
+## Phase 15 — Payload Commissioning {#phase-15--payload-commissioning}
 
-### Failure: Payload Won't Power On
+### Failure: Payload Won't Power On {#failure-payload-wont-power-on}
 
 **Symptoms:**
 - Payload power-on command acknowledged
@@ -644,7 +644,7 @@ During commissioning, consult this document immediately when encountering unexpe
 
 ---
 
-### Failure: Focal Plane Array (FPA) Won't Cool
+### Failure: Focal Plane Array (FPA) Won't Cool {#failure-focal-plane-array-fpa-wont-cool}
 
 **Symptoms:**
 - FPA power on but cooler not activated
@@ -658,7 +658,7 @@ During commissioning, consult this document immediately when encountering unexpe
 
 ---
 
-### Failure: Payload Anomaly or Malfunction
+### Failure: Payload Anomaly or Malfunction {#failure-payload-anomaly-or-malfunction}
 
 **Symptoms:**
 - Payload health telemetry shows error code
@@ -672,7 +672,7 @@ During commissioning, consult this document immediately when encountering unexpe
 
 ---
 
-### Failure: Image Capture Fails or No Image Data Received
+### Failure: Image Capture Fails or No Image Data Received {#failure-image-capture-fails-or-no-image-data-received}
 
 **Symptoms:**
 - Image capture command acknowledged
@@ -686,9 +686,9 @@ During commissioning, consult this document immediately when encountering unexpe
 
 ---
 
-## Phase 16 — Handover to Mission Operations
+## Phase 16 — Handover to Mission Operations {#phase-16--handover-to-mission-operations}
 
-### Failure: Power Budget Negative (Insufficient Generation)
+### Failure: Power Budget Negative (Insufficient Generation) {#failure-power-budget-negative-insufficient-generation}
 
 **Symptoms:**
 - Average power consumption exceeds solar generation capability
@@ -702,7 +702,7 @@ During commissioning, consult this document immediately when encountering unexpe
 
 ---
 
-### Failure: Subsystem Not Nominal at End of Commissioning
+### Failure: Subsystem Not Nominal at End of Commissioning {#failure-subsystem-not-nominal-at-end-of-commissioning}
 
 **Symptoms:**
 - One or more subsystem in DEGRADED or SAFE mode
@@ -716,9 +716,9 @@ During commissioning, consult this document immediately when encountering unexpe
 
 ---
 
-## General Recovery Principles
+## General Recovery Principles {#general-recovery-principles}
 
-### When Any Procedure Fails
+### When Any Procedure Fails {#when-any-procedure-fails}
 
 1. **Document:** Record all telemetry, commands issued, and timing
 2. **Escalate:** Contact Flight Director immediately; do not continue without guidance
@@ -726,14 +726,14 @@ During commissioning, consult this document immediately when encountering unexpe
 4. **Sequence:** Follow procedure exactly; do not skip steps or reorder
 5. **Cool-down:** Allow 10–30 minutes between failed attempts unless otherwise directed
 
-### Communication During Contingencies
+### Communication During Contingencies {#communication-during-contingencies}
 
 - Maintain real-time link with Flight Director during active recovery
 - Report status every 5 minutes if no progress
 - Use established voice net procedures (not uplinked commands)
 - Prepare contingency briefing for next pass if issue unresolved
 
-### Post-Recovery Steps
+### Post-Recovery Steps {#post-recovery-steps}
 
 - Return affected subsystem to nominal state after procedure completes
 - Run follow-up health check (Phase 4) to confirm stability

@@ -439,7 +439,7 @@ class BeaconConfig(StrictModel):
     TM rate ladder. Conflating the two is what left the mission with no
     beacon transmitter at all: BEACON was rung 0 of the S-band ladder, so
     switching the S-band PA off silenced the lifeline as well as the prime
-    chain. Every default below is the shipped EO-Sat-1 value and is sourced
+    chain. Every default below is the shipped EOSAT-1 value and is sourced
     to flight hardware in `configs/eosat1/subsystems/ttc.yaml`.
     """
 
@@ -511,6 +511,15 @@ class TTCConfig(StrictModel):
     gt_derate_below_10deg_db: float = 1.5
     gt_derate_below_30deg_db: float = 0.5
     required_eb_n0_db: float = 9.6
+
+    # ── Receiver auto-switch on command loss (author ruling Q7, 2026-10-30) ──
+    # Documented on-board behaviour (manual 05 §8 / 08 TTC-01): with no
+    # valid telecommand for this long the spacecraft switches to the other
+    # transponder. NOT SIMULATED YET — carried so the manuals and the
+    # simulator quote one number. The RSSI threshold is the FDIR "RSSI
+    # degradation" level of manual 05 §8.
+    cmd_loss_switch_timeout_s: float = Field(default=86400.0, gt=0)
+    cmd_loss_rssi_threshold_dbm: float = -105.0
 
     # ── UHF bootloader beacon transmitter (Franz's ruling R2, 2026-08b) ──
     # A second, physically separate radio: its own band, PA, antenna, budget
@@ -601,9 +610,10 @@ class PayloadConfig(StrictModel):
 class PropConfig(StrictModel):
     """subsystems/prop.yaml — 1U green-monoprop blowdown module (Phase D).
 
-    Sized for debris-avoidance manoeuvres and limited orbit maintenance
-    (drag make-up); NOT an end-of-life deorbit system — disposal is passive
-    decay from 450 km, inside the FCC 5-year rule.
+    Sized for debris-avoidance manoeuvres, limited orbit maintenance (drag
+    make-up) and the end-of-life perigee-lowering burn (ruling Q3 as amended:
+    513 -> 390 km perigee, 34.3 m/s, re-entry < 5 yr at solar minimum; see
+    the derivation in prop.yaml and procedure NOM-014).
     """
     model: str = "prop_basic"
     propellant: str = "LMP-103S/ADN"
@@ -762,7 +772,7 @@ class TCFieldDef(StrictModel):
     #: derived from field order; when present it must MATCH the derivation
     #: (asserted by tests/test_common/test_arg_schema.py).
     offset: int | None = None
-    #: Byte order. Declared, never assumed. 'big' everywhere on EO-Sat-1.
+    #: Byte order. Declared, never assumed. 'big' everywhere on EOSAT-1.
     endian: str = "big"
     #: Engineering unit the OPERATOR types/reads ("degC", "ms", "").
     unit: str = ""

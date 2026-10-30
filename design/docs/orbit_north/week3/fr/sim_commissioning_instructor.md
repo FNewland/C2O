@@ -33,7 +33,7 @@ de l'imageur multispectral.
 
 Chaque série de passages couvre environ 4 passages sol simulés en 2,5 h de temps réel,
 grâce à un multiplicateur de temps compressé (3×–5× entre les passages, 1× pendant
-les passages). Le simulateur gère les changements de vitesse.
+les passages). L'opérateur du simulateur change la vitesse à la main (§2).
 
 ---
 
@@ -48,7 +48,15 @@ les passages). Le simulateur gère les changements de vitesse.
 - **Facteur d'accélération :** piloté par l'enseignant ; 3× par défaut
   entre les passages, 1× pendant les passages.
 
-[Claude Code : confirmer les options en ligne de commande du simulateur pour le temps compressé.]
+Le seul paramètre de démarrage est `--speed` (1.0 par défaut). Pendant le
+quart, changer la vitesse avec les boutons de vitesse de la console de
+l'enseignant (0.5×, 1×, 2×, 5×, 10×) ou par l'API de l'enseignant, par ex.
+`{"type": "set_speed", "value": 3}` envoyé à `/api/command` pour un
+réglage à 3× que les boutons n'offrent pas. `simulation.yaml` plafonne
+toute demande à 1000×, et le simulateur se maintient à ≤ 10× pendant une
+poussée. Le simulateur ne change **pas** de vitesse de lui-même autour des
+passages : l'opérateur du simulateur s'en charge à la main, d'après le
+planning des contacts.
 
 ---
 
@@ -58,7 +66,9 @@ L'équipe doit mener la recette en orbite à peu près dans cet
 ordre sur les quatre passages :
 
 **Passage 1.** COM-001 Vérification de l'EPS · COM-002 Vérification du TCS ·
-COM-005 Transitions de modes SCAO (NADIR) · COM-006 Vérification de la liaison
+COM-004 Vérification des actionneurs SCAO (roues activées, NOMINAL commandé) ·
+COM-003 Étalonnage des capteurs SCAO (étalonnage des gyroscopes dans ce NOMINAL,
+décision Q16) · COM-005 Transitions de modes SCAO · COM-006 Vérification de la liaison
 TTC.
 
 **Passage 2.** COM-007 Vérification de l'OBDH · COM-008 Configuration de la FDIR
@@ -92,8 +102,37 @@ d'injection se trouvent dans `~/SpaceMissionSimulation/configs/eosat1/scenarios/
 | Difficile | `eps_progressive_load_shed.yaml` | La dégradation de la batterie impose un délestage progressif pendant l'activation du refroidisseur | CTG-001 Délestage sur sous-tension |
 | Très difficile | `aocs_wheel_failure.yaml` suivi de `transponder_failure.yaml` | Une roue se bloque en fin de passage 3, puis le transpondeur tombe en panne au passage suivant — traitement d'anomalies multiples | CTG-007 → CTG-003 |
 
-[Claude Code : produire une carte d'injection par scénario, sur le même modèle que
-le §4 de la journée LEOP.]
+Les cartes d'aide de six des sept scénarios se trouvent dans le guide de
+l'enseignant, chapitre 18 : `eps_overcurrent.yaml` §18.2 (injecter sur `payload`,
+`line_index=3`, pendant COM-009), `fpa_overtemp.yaml` §18.8,
+`payload_corrupt_image.yaml` §18.9, `aocs_sensor_cascade.yaml`
+§18.10, `eps_progressive_load_shed.yaml` §18.11 et la paire
+`aocs_wheel_failure.yaml` + `transponder_failure.yaml` §18.12.
+La septième figure ci-dessous, sur le même modèle.
+
+**`gs_rf_degradation.yaml` — Dégradation de la chaîne RF de la station sol (facile)**
+
+- **Moment de déclenchement.** La lancer une fois que COM-006 a établi la
+  marge de liaison de référence, pour que l'équipe dispose d'un repère. Ses
+  événements surviennent à T+60 s (`high_ber` côté satellite, amplitude 0.3,
+  en rampe sur 120 s), T+180 s (LNA sol, facteur de bruit +3 dB) et T+360 s
+  (dépointage de l'antenne sol, 3 dB). Le briefing du fichier demande le
+  pont RF en mode FRAME (`SMO_RF_MODE=FRAME ./start.sh`).
+- **Premier indice.** Le Eb/N0 (`ttc.eb_n0`, 0x0519) baisse et le TEB
+  (`ttc.ber`, 0x050C) monte sur l'affichage TT&C tandis que la marge de
+  liaison (`ttc.link_margin`, 0x0503) s'érode.
+- **Procédure de reprise.** CTG-014 Anomalie de TEB ; CTG-003 si la
+  liaison est perdue.
+- **Critère de réussite du passage.** L'équipe compare le RSSI (`ttc.rssi`,
+  0x0502) au Eb/N0 pour distinguer la dégradation côté satellite des deux
+  dégradations côté sol avant de commander quoi que ce soit à bord, et
+  ouvre une fiche par cause.
+- **Questions de débriefing.**
+  1. Quelle mesure vous a indiqué qu'une partie de la perte venait du sol ?
+  2. Quelqu'un a-t-il commandé le satellite pour corriger une panne au sol ?
+  3. Quand le poste TT&C a-t-il annoncé la tendance sur la boucle pour la première fois ?
+  4. Le vidage en palier HIGH a-t-il été reporté ou déplacé vers un autre passage ?
+  5. Que vérifieriez-vous en premier la prochaine fois ?
 
 ---
 
@@ -103,7 +142,7 @@ le §4 de la journée LEOP.]
 |-----------|---------------------|---------------------|
 | Phase passée à COMMISSIONING (5) | ✓ | ✓ |
 | Vérification de l'EPS terminée sans défaut | ✓ | ✓ |
-| Mode NADIR du SCAO atteint, pointage < 0,5° | ✓ | ✓ |
+| Mode NOMINAL (4) du SCAO atteint, pointage < 0,5° | ✓ | ✓ |
 | Jeux de règles de la FDIR activés et vérifiés (COM-008) | ✓ | ✓ |
 | Charge utile sous tension (ON) | ✓ | ✓ |
 | Refroidisseur du FPA à sa consigne (−15 °C) | ✓ | ✓ |
@@ -119,27 +158,47 @@ une image inexploitable, elle échoue.
 
 ## 6. Accompagnement pendant le quart
 
-[Claude Code : copier le §6 de `sim_leop_instructor.md` et l'adapter aux
-spécificités de la recette en orbite. Ajouter : surveiller la *qualité de la passation*
-entre les passages, car la continuité d'un passage à l'autre est plus difficile qu'au sein
-d'un même passage.]
+Comme le dossier LEOP, §6 : discipline de la boucle vocale, respect des
+procédures, indice au niveau du panneau FDIR après cinq minutes de blocage,
+et aucune pause pendant un passage. Deux ajouts propres à la recette en orbite :
+
+- **Changements de vitesse uniquement entre les passages.** La compression
+  relève de l'opérateur du simulateur, jamais de l'équipe, et l'horloge
+  tourne à 1× de l'AOS au LOS.
+- **Qualité de la passation entre passages.** À chaque changement de passage,
+  le FD rappelle les points ouverts, la procédure en cours et l'objectif du
+  passage suivant ; noter tout ce qui est oublié. La continuité d'un passage à
+  l'autre est plus difficile que la continuité au sein d'un passage, et la
+  première lumière en dépend.
 
 ---
 
 ## 7. Débriefing
 
-[Claude Code : même structure que le §7 de `sim_leop_instructor.md`, à
-la différence que les fiches d'observation utilisées aujourd'hui sont *Équipe*
-et *Occupation de l'espace* (les deux autres ont été utilisées le mercredi).]
+Même structure et mêmes durées que le dossier LEOP, §7 : retour à chaud
+(15 min), revue de l'anomalie (20 min), lecture des fiches d'évaluation par
+les pairs (20 min), synthèse des enseignements (15 min) et briefing pour
+vendredi (5 min). Les fiches d'observation utilisées aujourd'hui sont
+*Équipe* et *Occupation de l'espace* ; mercredi a utilisé *Communications* et
+*Technique*. Les questions de débriefing de chaque procédure se trouvent dans
+le manuel du cours, partie 2, §11.8.
 
 ---
 
 ## 8. Sécurité, lignes rouges, références
 
-[Claude Code : reprendre les §§8 – 9 de `sim_leop_instructor.md` et ajouter les
-fichiers propres à la journée de recette en orbite :
+La sécurité et les lignes rouges sont celles du dossier LEOP, §8 : aucune
+commande sans autorisation du FD, aucune pause du simulateur pour gagner un
+exercice (la compression entre passages est fixée par l'opérateur du
+simulateur, pas par l'équipe), et pas de FD silencieux.
 
-- `scenarios/commissioning_day_start.yaml` (NOUVEAU)
-- `procedures/commissioning/*.md`
-- Le fichier `mcs/role_analysis/payload_ops_role.md` (la journée sollicite fortement
-  les opérations charge utile).]
+Les références sont celles du dossier LEOP, §9, plus :
+
+- `configs/eosat1/scenarios/commissioning_day_start.yaml` (NOUVEAU,
+  rédigé par l'enseignant à partir de la spécification BP-3 ; absent du jeu
+  livré)
+- `configs/eosat1/procedures/commissioning/*.md`
+- `configs/eosat1/mcs/role_analysis/payload_ops_role.md` (la journée
+  sollicite fortement les opérations charge utile)
+- Manuel du cours, partie 2, chapitre 11 (opérations de recette en orbite), et
+  guide de l'enseignant, chapitre 18 (cartes d'aide)

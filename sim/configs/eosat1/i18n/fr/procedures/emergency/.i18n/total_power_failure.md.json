@@ -14,8 +14,8 @@
   },
   {
    "id": "emg-002-total-power-failure/purpose",
-   "en_hash": "63ac3432d6a4c07a",
-   "fr_hash": "d58ab487c2152625"
+   "en_hash": "040a7ea4189c1837",
+   "fr_hash": "e38e740981baecc6"
   },
   {
    "id": "emg-002-total-power-failure/prerequisites",
@@ -24,8 +24,8 @@
   },
   {
    "id": "emg-002-total-power-failure/power-budget-minimum-survival-configuration",
-   "en_hash": "e83097248f0c51b2",
-   "fr_hash": "836ad859fa136f1a"
+   "en_hash": "fb3f7933eb291933",
+   "fr_hash": "fce8bba66aa14b0e"
   },
   {
    "id": "emg-002-total-power-failure/procedure-steps",
@@ -54,13 +54,13 @@
   },
   {
    "id": "emg-002-total-power-failure/procedure-steps/step-5-monitor-power-recovery-first-sunlit-phase",
-   "en_hash": "57fc782c0c45ad4a",
-   "fr_hash": "ec758f0ed173fb99"
+   "en_hash": "bf764f717545ffcf",
+   "fr_hash": "ab2303b5aebdbfdd"
   },
   {
    "id": "emg-002-total-power-failure/procedure-steps/step-6-eclipse-monitoring-critical",
-   "en_hash": "e710d489ae736dd3",
-   "fr_hash": "e2c20b0957dcb43f"
+   "en_hash": "e239deca04580ba5",
+   "fr_hash": "de307e9e4ea97d31"
   },
   {
    "id": "emg-002-total-power-failure/procedure-steps/step-7-sustained-recovery-monitoring-orbits-2-5",
@@ -74,8 +74,8 @@
   },
   {
    "id": "emg-002-total-power-failure/recovery-staging-thresholds",
-   "en_hash": "9153d2f2109bc774",
-   "fr_hash": "93022ddec2960dc0"
+   "en_hash": "31e0e87aa2c88e59",
+   "fr_hash": "d9d314b956b59f80"
   },
   {
    "id": "emg-002-total-power-failure/off-nominal-handling",
@@ -93,5 +93,5 @@
    "fr_hash": "3fcce16901d10e1e"
   }
  ],
- "en_commit": "3e80564"
+ "en_commit": "c4a140a"
 }

@@ -1,4 +1,4 @@
-# EOSAT-1 RF Simulation Layer
+# EOSAT-1 RF Simulation Layer {#eosat-1-rf-simulation-layer}
 
 **Manual-Scope:** system — training-system documentation, not part of the flight operations manual.
 
@@ -9,14 +9,14 @@
 
 ---
 
-## 1. Purpose
+## 1. Purpose {#1-purpose}
 
 This document describes the RF Simulation Bridge (smo-rfsim), an optional layer that inserts
 CCSDS Transfer Framing and RF channel simulation between the spacecraft simulator and the
 Mission Control System (MCS). It enables realistic ground-segment training scenarios including
 frame synchronization, error correction, and link budget exercises.
 
-## 2. Operating Modes
+## 2. Operating Modes {#2-operating-modes}
 
 The bridge supports three operating modes, selectable via configuration or environment variable:
 
@@ -26,13 +26,13 @@ The bridge supports three operating modes, selectable via configuration or envir
 | FRAME  | CCSDS TF + CLTU  | BER bit-flip    | Pure Python only    | <5 ms   |
 | RF     | CCSDS TF + CLTU  | BPSK (GR/numpy) | gnuradio (optional) | ~50 ms  |
 
-### 2.1 PACKET Mode
+### 2.1 PACKET Mode {#21-packet-mode}
 
 Transparent TCP relay. The bridge simply forwards length-prefixed ECSS packets between the
 simulator and MCS with no processing. This is the default mode and matches the system's
 original behaviour.
 
-### 2.2 FRAME Mode
+### 2.2 FRAME Mode {#22-frame-mode}
 
 Applies the full CCSDS Transfer Framing protocol:
 
@@ -46,14 +46,14 @@ Applies the full CCSDS Transfer Framing protocol:
   per CCSDS 232.0-B-4, using BCH(64,56) code blocks. CLTUs pass through the channel model
   and are decoded with single-bit error correction.
 
-### 2.3 RF Mode
+### 2.3 RF Mode {#23-rf-mode}
 
 Adds BPSK modulation/demodulation to the FRAME mode chain. When GNU Radio is installed,
 real signal processing flowgraphs handle modulation, root-raised-cosine pulse shaping,
 AGC, Costas loop carrier recovery, and M&M clock recovery. When GNU Radio is not available,
 a numpy-based channel simulator provides AWGN noise injection and Doppler frequency offset.
 
-## 3. Architecture
+## 3. Architecture {#3-architecture}
 
 ```
                     PACKET mode (bypass)
@@ -80,9 +80,9 @@ Simulator ──TCP:8002──────────────────�
 
 The MCS requires no code changes — it connects to ports 8012/8011 instead of 8002/8001.
 
-## 4. CCSDS Transfer Frame Details
+## 4. CCSDS Transfer Frame Details {#4-ccsds-transfer-frame-details}
 
-### 4.1 TM Downlink Frames
+### 4.1 TM Downlink Frames {#41-tm-downlink-frames}
 
 - **Frame length:** 1115 bytes (configurable, without ASM)
 - **ASM:** 4 bytes (0x1ACFFC1D), prepended to each frame
@@ -90,7 +90,7 @@ The MCS requires no code changes — it connects to ports 8012/8011 instead of 8
 - **Data zone:** Variable (frame length - 6 header - 2 FECF)
 - **FECF:** 2 bytes, CRC-16/CCITT-FALSE over header + data zone
 
-### 4.2 Virtual Channels
+### 4.2 Virtual Channels {#42-virtual-channels}
 
 | VCID | Purpose            | Priority |
 |------|--------------------|----------|
@@ -98,20 +98,20 @@ The MCS requires no code changes — it connects to ports 8012/8011 instead of 8
 | 1    | Stored TM playback | Medium   |
 | 7    | Idle fill          | Lowest   |
 
-### 4.3 TC Uplink CLTUs
+### 4.3 TC Uplink CLTUs {#43-tc-uplink-cltus}
 
 - **Start sequence:** 2 bytes (0xEB90)
 - **Code blocks:** 8 bytes each (7 data + 1 BCH parity), BCH(64,56)
 - **Tail sequence:** 8 bytes (0xC5C5C5C5C5C5C579)
 - **Error correction:** Single-bit correction per code block
 
-### 4.4 Channel Coding
+### 4.4 Channel Coding {#44-channel-coding}
 
 - **Reed-Solomon:** RS(255,223) over GF(2^8), 16 symbol error correction
 - **Convolutional:** Rate 1/2, constraint length K=7 (G1=0x79, G2=0x5B)
 - **Viterbi decoder:** Pure-Python add-compare-select trellis decoder (64 states)
 
-## 5. Frame Synchronization
+## 5. Frame Synchronization {#5-frame-synchronization}
 
 The frame synchronizer implements a three-state acquisition model:
 
@@ -119,7 +119,7 @@ The frame synchronizer implements a three-state acquisition model:
 2. **VERIFY:** Confirms ASM at expected frame interval (configurable, default 3 frames)
 3. **LOCK:** Extracts frames at fixed cadence; flywheel allows up to 4 consecutive misses
 
-## 6. Channel Model
+## 6. Channel Model {#6-channel-model}
 
 The channel model applies configurable impairments:
 
@@ -137,7 +137,7 @@ BER = 0.5 × erfc(√(Eb/N0)).
 When the bridge is connected to the simulator's WebSocket (port 8080), it reads the TTC
 model's link budget parameters and updates the channel model in real time.
 
-## 7. Radio Front-End Display
+## 7. Radio Front-End Display {#7-radio-front-end-display}
 
 The Radio web UI (port 8094) displays real-time RF link status:
 
@@ -148,7 +148,7 @@ The Radio web UI (port 8094) displays real-time RF link status:
 - **Virtual channels:** VC0/1/7 activity LEDs
 - **History charts:** Eb/N0 and BER time series, frame rate per second
 
-## 8. Configuration
+## 8. Configuration {#8-configuration}
 
 Configuration is loaded from `configs/eosat1/rfsim.yaml`:
 
@@ -175,21 +175,21 @@ network:
   radio_port: 8094
 ```
 
-## 9. Startup
+## 9. Startup {#9-startup}
 
-### 9.1 Via Environment Variable
+### 9.1 Via Environment Variable {#91-via-environment-variable}
 
 ```bash
 SMO_RF_MODE=FRAME ./start.sh
 ```
 
-### 9.2 Via CLI
+### 9.2 Via CLI {#92-via-cli}
 
 ```bash
 smo-rfsim --config configs/eosat1/rfsim.yaml --mode FRAME --radio-web
 ```
 
-### 9.3 CLI Options
+### 9.3 CLI Options {#93-cli-options}
 
 | Option          | Description                          |
 |-----------------|--------------------------------------|
@@ -200,30 +200,30 @@ smo-rfsim --config configs/eosat1/rfsim.yaml --mode FRAME --radio-web
 | `--radio-web`  | Launch web dashboard on radio_port  |
 | `-v`            | Verbose logging                      |
 
-## 10. Training Scenarios
+## 10. Training Scenarios {#10-training-scenarios}
 
-### 10.1 Signal Degradation Exercise
+### 10.1 Signal Degradation Exercise {#101-signal-degradation-exercise}
 
 1. Start in FRAME mode with Eb/N0 = 12 dB (clean link)
 2. Gradually reduce Eb/N0 to observe increasing BER in Radio display
 3. At ~6 dB, observe frame errors beginning to appear (FECF failures)
 4. At ~3 dB, observe significant packet loss; MCS displays stale data
 
-### 10.2 Frame Sync Loss and Recovery
+### 10.2 Frame Sync Loss and Recovery {#102-frame-sync-loss-and-recovery}
 
 1. Start with clean link in LOCK state
 2. Inject burst errors (low Eb/N0 for a few seconds) to trigger LOCK → SEARCH
 3. Observe Radio frame sync LED transition: green → red → yellow → green
 4. Verify MCS recovers and resumes telemetry display
 
-### 10.3 CLTU Uplink Errors
+### 10.3 CLTU Uplink Errors {#103-cltu-uplink-errors}
 
 1. Send TC commands through the bridge in FRAME mode
 2. Lower Eb/N0 to inject errors into CLTU code blocks
 3. Observe BCH single-bit correction succeeding (CLTU Ack increments)
 4. Further degrade until CLTU decode fails (Ack stops incrementing)
 
-## 11. Related Documents
+## 11. Related Documents {#11-related-documents}
 
 | Document                        | Description                    |
 |---------------------------------|--------------------------------|

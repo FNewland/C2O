@@ -58,6 +58,8 @@ la bande de consigne de -15C (`payload.fpa_ready` 0x0610 = 1 exprime la même ch
 **Verify:** `payload.store_used` (0x0604) < 97 % (au moins 500 MB libres sur les 20 GB de la mémoire pour l'image d'essai) sous 10s
 **TC:** `GET_PARAM(param_id=0x0605)` (Service 20, Subtype 3) — `payload.image_count`
 **Verify:** Consigner `payload.image_count` (0x0605) comme référence avant acquisition sous 10s
+**TC:** `GET_PARAM(param_id=0x060B)` (Service 20, Subtype 3) — `payload.mem_used_mb` (mémoire charge utile utilisée au total, Mo)
+**Verify:** Consigner `payload.mem_used_mb` (0x060B) comme référence avant acquisition sous 10s
 **GO/NO-GO:** Charge utile prête à passer en IMAGING
 
 ### Étape 4 — Commander la charge utile en mode IMAGING
@@ -69,7 +71,7 @@ la bande de consigne de -15C (`payload.fpa_ready` 0x0610 = 1 exprime la même ch
 ### Étape 5 — Déclencher l'acquisition de la première image
 **TC:** `PAYLOAD_CAPTURE(scene_id=1, lines=2048)` (Service 8, Subtype 1, func_id 28) — déclencher l'acquisition de première lumière  
 **Octets émis :** `1C 00 01 08 00` (identifiant de produit 1 attribué par le sol ; la géolocalisation est apposée à bord à partir des éphémérides à l'ouverture de l'obturateur)
-**Action:** La charge utile acquiert une image multispectrale plein format. Le temps d'intégration est automatique, fondé sur l'estimation de la luminance de la scène. Volume de données attendu : 50-200 Mo selon la compression.
+**Action:** La charge utile acquiert une image multispectrale plein format. Le temps d'intégration est automatique, fondé sur l'estimation de la luminance de la scène. Volume de données attendu : une image fait 4 Mo brute et est stockée sur 1.0-2.7 Mo après compression à bord.
 **Verify:** `GET_PARAM(param_id=0x060C)` (Service 20, Subtype 3) — `payload.last_scene_id` = 1 sous 30 s
 **Verify:** `GET_PARAM(param_id=0x0605)` (Service 20, Subtype 3) — `payload.image_count` incrémenté à 1 sous 10 s
 **GO/NO-GO:** Première image acquise avec succès
@@ -78,8 +80,8 @@ la bande de consigne de -15C (`payload.fpa_ready` 0x0610 = 1 exprime la même ch
 **TC:** `GET_PARAM(param_id=0x0604)` (Service 20, Subtype 3) — `payload.store_used` (remplissage de la mémoire, %)
 **Action:** Comparer au stockage avant acquisition. La différence doit correspondre au volume de données de l'image.
 **Verify:** `payload.store_used` (0x0604) en hausse (image stockée) sous 10s
-**TC:** `GET_PARAM(param_id=0x060B)` (Service 20, Subtype 3) — `payload.mem_used_mb` (taille stockée du nouveau produit)
-**Verify:** Taille du fichier image > 10 MB (fichier ni vide ni corrompu) sous 10s
+**TC:** `GET_PARAM(param_id=0x060B)` (Service 20, Subtype 3) — `payload.mem_used_mb` (mémoire charge utile utilisée au total, Mo)
+**Verify:** La variation de `payload.mem_used_mb` (0x060B) depuis la référence de l'étape 3 est de 1.0-4.0 Mo sous 10s --- une image stockée (1.0-2.7 Mo compressée, au plus la trame brute de 4 Mo). 0x060B est la mémoire utilisée TOTALE ; seule la différence mesure le nouveau produit
 **GO/NO-GO:** Données d'image stockées en mémoire de masse
 
 ### Étape 7 — Ramener la charge utile en STANDBY
@@ -136,7 +138,7 @@ de la TM(13,2) ; l'équipe charge utile évalue la géométrie, la présence d
 - Si FINE_POINT n'est pas atteint avant le survol de la cible : le verrou d'acquisition EXIGE FINE_POINT avec une erreur totale < 0.05 deg — il refusera en NOMINAL. Relancer le contrôle de disponibilité FINE, corriger le bit de masque indiqué, et viser le survol suivant.
 - Si la charge utile ne passe pas en IMAGING (mode 2) : réessayer une fois. En cas de persistance, contrôler la température de l'électronique de l'imageur (`payload.imager_temp`) via `GET_PARAM(param_id=0x0603)` et la température du FPA via `GET_PARAM(param_id=0x0601)`. La charge utile peut refuser IMAGING si le FPA n'est pas à la consigne. Revenir en STANDBY et rechercher la cause.
 - Si `payload.last_scene_id` ne progresse pas : contrôler les verrous d'acquisition — `payload.mode` (0x0600) = 2, `payload.fpa_ready` (0x0610) = 1, `aocs.mode` (0x020F) = 5 FINE_POINT avec une erreur totale (0x02AA) < 0.05 deg. Une acquisition refusée renvoie une TM(1,8) nommant le verrou en défaut. Si l'intégration du détecteur a échoué, relancer l'acquisition. En cas de persistance, contrôler l'électronique du FPA via `HK_REQUEST(sid=5)`. Effectuer un cycle d'alimentation de la charge utile si nécessaire.
-- Si la taille du fichier image vaut 0 ou est très faible (< 1 MB) : échec d'écriture des données. Contrôler l'interface de la mémoire de masse. Relancer l'acquisition. Si le stockage est plein, supprimer les données d'essai et réessayer.
+- Si l'image stockée est vide ou très petite (variation de 0x060B < 0.5 Mo) : échec d'écriture des données. Contrôler l'interface de la mémoire de masse. Relancer l'acquisition. Si le stockage est plein, supprimer les données d'essai et réessayer.
 - Si l'aperçu montre une image entièrement sombre : vérifier si le satellite survolait le côté nuit. Vérifier que le pointage AOCS était nadir. Si l'image a été prise côté jour et reste sombre, examiner le biais du détecteur du FPA ou le mécanisme d'obturateur.
 - Si le produit est saturé (`payload.snr` 0x0616 s'effondre) : le temps d'intégration est trop long pour la scène. Commander `PAYLOAD_SET_INTEGRATION_TIME(blue_ms=1.00, green_ms=1.00, red_ms=1.00, nir_ms=1.00)` (func_id 34, octets `22 00 64 00 64 00 64 00 64`) ou réduire le gain avec `PAYLOAD_SET_GAIN(gain=0.500)` (func_id 35, octets `23 01 F4`) et réessayer à l'opportunité suivante.
 

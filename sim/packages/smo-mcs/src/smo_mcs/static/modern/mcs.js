@@ -3623,12 +3623,28 @@ async function loadProcDoc() {
     setHTML("proc-doc", renderMarkdown(md));
   } catch (e) { setHTML("proc-doc", t("document unavailable")); }
 }
+/* Explicit heading anchors (author ruling Q33, 2026-10-30): the EN and FR
+ * manuals carry pandoc-style `{#id}` attribute blocks at the end of heading
+ * lines, with the same id in both languages. The viewer uses the id as the
+ * heading's HTML id and never shows the `{#id}` text; `[text](#id)` links
+ * scroll to it (see the [data-man-anchor] click handler). */
+const MD_HEADING_ATTR = /[ \t]*\{#([A-Za-z0-9_][\w.:-]*)(?:[ \t][^}]*)?\}[ \t]*$/;
+function mdHeading(tag) {
+  return (_m, text) => {
+    const a = text.match(MD_HEADING_ATTR);
+    if (!a) return `<${tag}>${text}</${tag}>`;
+    return `<${tag} id="${a[1]}">${text.slice(0, a.index)}</${tag}>`;
+  };
+}
 export function renderMarkdown(md) {
-  // Small, safe markdown subset (headings, bold, code, lists) — classic parity.
+  // Small, safe markdown subset (headings, bold, code, lists, in-document
+  // links) — classic parity.
   let h = esc(md);
-  h = h.replace(/^### (.*)$/gm, "<h4>$1</h4>")
-       .replace(/^## (.*)$/gm, "<h3>$1</h3>")
-       .replace(/^# (.*)$/gm, "<h2>$1</h2>")
+  h = h.replace(/^### (.*)$/gm, mdHeading("h4"))
+       .replace(/^## (.*)$/gm, mdHeading("h3"))
+       .replace(/^# (.*)$/gm, mdHeading("h2"))
+       .replace(/\[([^\]\n]+)\]\(#([A-Za-z0-9_][\w.:-]*)\)/g,
+                '<a href="#$2" data-man-anchor="$2">$1</a>')
        .replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>")
        .replace(/`([^`]+)`/g, "<code>$1</code>")
        .replace(/^---+$/gm, "<hr>")
@@ -4074,6 +4090,14 @@ function renderManual() {
            `${esc(manualTitle(s2))}</a></div>`;
   }).join("") || `<div class="logrow nom">${t("no sections")}</div>`;
   setText("man-count", `${secs.length}/${all.length}`);
+}
+/** In-document `#id` link: scroll to the heading carrying that id inside the
+ * same rendered document (manual or procedure view), never the page hash. */
+function scrollToManualAnchor(link, id) {
+  const host = (link.closest && link.closest("#man-body, #proc-doc")) || document;
+  const target = host.querySelector(`[id="${id}"]`);
+  if (target && target.scrollIntoView) target.scrollIntoView({ block: "start" });
+  return target || null;
 }
 async function openManualSection(path) {
   // FIELD FIX 2026-08-20: this took .text() of a JSON response and rendered the
@@ -4578,9 +4602,10 @@ const TEMPLATE_I18N_KEYS = [..._TPL_KEYS_1, ..._TPL_KEYS_2, ..._TPL_KEYS_3];
 
 function initDelegatedEvents() {
   document.addEventListener("click", (e) => {
-    const t = e.target.closest ? e.target.closest("[data-page-nav],[data-quick],[data-alarm-filter],[data-dump-request],[data-chain],[data-act],[data-proc],[data-s3],[data-s11],[data-s11-del],[data-s12],[data-s12row],[data-s12add],[data-s19],[data-s19row],[data-s19add],[data-s15st],[data-od-get],[data-man],[data-gonogo],[data-hk],[data-pb-del],[data-diag],[data-bd],[data-blind-toggle],[data-group],[data-conlog]") : null;
+    const t = e.target.closest ? e.target.closest("[data-man-anchor],[data-page-nav],[data-quick],[data-alarm-filter],[data-dump-request],[data-chain],[data-act],[data-proc],[data-s3],[data-s11],[data-s11-del],[data-s12],[data-s12row],[data-s12add],[data-s19],[data-s19row],[data-s19add],[data-s15st],[data-od-get],[data-man],[data-gonogo],[data-hk],[data-pb-del],[data-diag],[data-bd],[data-blind-toggle],[data-group],[data-conlog]") : null;
     if (!t) return;
     const d = t.dataset;
+    if (d.manAnchor) { e.preventDefault(); return scrollToManualAnchor(t, d.manAnchor); }
     if (d.pageNav) return showPage(d.pageNav);
     if (d.blindToggle) return toggleBlindTc();
     if (d.group !== undefined) {
@@ -5039,7 +5064,7 @@ export const __test = {
   scModeInfo, commandAuthority, encodeCatalogCommand, decodeCatalogArgs,
   sidToHex, crc16Ccitt, s11CucSeconds, tmFreshness, handleState, handleTMPacket,
   handleAlarmMsg, renderBottomDrawer, annotationText, renderS12Block,
-  renderS19Block, renderMarkdown, provenanceText, updateTrainingChip,
+  renderS19Block, renderMarkdown, scrollToManualAnchor, provenanceText, updateTrainingChip,
   loadSchematics, updateRailHealth,
   catFieldError, catFormatEng, isCritical, cmdFieldWidget,
   renderS3Panel, renderS11Table, renderS15Panel, renderS6Panel, renderS9Panel,

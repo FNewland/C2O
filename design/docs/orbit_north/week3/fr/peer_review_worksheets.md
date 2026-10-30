@@ -60,7 +60,8 @@ Règles :
 
 ### Observé
 
-[Claude Code : produire une invite sous forme de tableau de 6 lignes avec ces intitulés de ligne]
+Inscrire une note par ligne : un horodatage pris sur l'horloge du simulateur,
+ce qui s'est passé et qui était concerné.
 
 | Élément | Note (horodatage · quoi · qui) |
 |------|------|
@@ -100,9 +101,17 @@ Règles :
 | Passation : moment, contenu, exhaustivité | |
 | Confusion silencieuse (un opérateur a fait une erreur parce que personne n'a rien dit) ? | |
 
-### Points forts · À améliorer · Recommandation précise
+### Points forts
 
-[Claude Code : mêmes trois blocs que la fiche 1.]
+(un ou deux comportements précis)
+
+### À améliorer
+
+(un ou deux comportements précis)
+
+### Recommandation précise
+
+(une phrase applicable)
 
 ---
 
@@ -121,9 +130,17 @@ Règles :
 | Déplacements dans la salle (impressions de procédures, eau) | |
 | Confort physique — chaises, écrans, posture | |
 
-### Points forts · À améliorer · Recommandation précise
+### Points forts
 
-[Claude Code : mêmes trois blocs.]
+(un ou deux comportements précis)
+
+### À améliorer
+
+(un ou deux comportements précis)
+
+### Recommandation précise
+
+(une phrase applicable)
 
 ---
 
@@ -142,9 +159,17 @@ Règles :
 | Utilisation du panneau FDIR — quelqu'un le surveillait-il ? | |
 | Résultat par rapport aux critères de passage | |
 
-### Points forts · À améliorer · Recommandation précise
+### Points forts
 
-[Claude Code : mêmes trois blocs.]
+(un ou deux comportements précis)
+
+### À améliorer
+
+(un ou deux comportements précis)
+
+### Recommandation précise
+
+(une phrase applicable)
 
 ---
 
@@ -179,10 +204,11 @@ le registre de retour d'expérience de la promotion.
 
 ## À quoi ressemble une bonne observation
 
-[Claude Code : produire un exemple de 250 mots. Montrer une fiche
-*Communications* fictive pour un passage LEOP, d'une bonne
-précision, comportant des horodatages et se terminant par une
-recommandation concrète. Elle sert de modèle remis aux étudiants le jour 1.]
+> **À FAIRE (auteur) :** Rédiger l'exemple résolu de 250 mots : une fiche
+> *Communications* remplie pour un passage LEOP, avec des observations
+> précises et horodatées, un ou deux comportements qui ont fonctionné et
+> un ou deux qui n'ont pas fonctionné, et une seule recommandation concrète
+> pour finir. C'est le modèle remis aux étudiants le jour 1.
 
 ---
 

@@ -819,8 +819,9 @@ class TCSBasicModel(SubsystemModel):
         shared_params[0x041A] = margin
 
         # Radiator panel temperatures (0x0420/0x0421). Simple derived nodes:
-        # the north/south radiator edges ride the -Z (space-facing) panel a
-        # few kelvin colder. Declared in parameters.yaml since Phase 5 but
+        # the north/south radiator edges ride the -Z panel (nadir-facing in
+        # NOMINAL; it carries the radiator and the imager aperture — ruling
+        # Q4) a few kelvin colder. Declared in parameters.yaml since Phase 5 but
         # never written; full radiator physics is deferred (WP-8 out-of-scope
         # note) — these are honest first-order proxies, not stubs.
         shared_params[0x0420] = s.temp_panel_mz - 4.0

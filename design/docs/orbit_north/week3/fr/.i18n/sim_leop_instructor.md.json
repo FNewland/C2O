@@ -19,23 +19,23 @@
   },
   {
    "id": "wednesday-leop-simulation-instructor-pack/2-scenario-configuration",
-   "en_hash": "bb30d156530943bd",
-   "fr_hash": "ebc87769c6aa59dc"
+   "en_hash": "4a27c7af8b736f06",
+   "fr_hash": "cc7455565c4ebd3d"
   },
   {
    "id": "wednesday-leop-simulation-instructor-pack/3-procedure-expectations",
-   "en_hash": "443ee3676bdbdb04",
-   "fr_hash": "3f01c15927127f37"
+   "en_hash": "9239988f62596bb5",
+   "fr_hash": "927c5c6718cfec79"
   },
   {
    "id": "wednesday-leop-simulation-instructor-pack/4-anomaly-injection-menu",
-   "en_hash": "bbd24c222e079500",
-   "fr_hash": "9953b5f6ad8871c9"
+   "en_hash": "ab47d129bfcf1215",
+   "fr_hash": "0f56434cd8366e4f"
   },
   {
    "id": "wednesday-leop-simulation-instructor-pack/4-anomaly-injection-menu/injection-cue-card",
-   "en_hash": "74899438fa92e8ca",
-   "fr_hash": "161d2c10f7341214"
+   "en_hash": "05025cb6dbd2dd1d",
+   "fr_hash": "49c313e84e7c9ae6"
   },
   {
    "id": "wednesday-leop-simulation-instructor-pack/5-pass-operator-side-criteria",
@@ -63,5 +63,5 @@
    "fr_hash": "c404d47c0798d646"
   }
  ],
- "en_commit": "3ea7113"
+ "en_commit": "c4a140a"
 }

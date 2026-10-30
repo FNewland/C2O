@@ -10,8 +10,9 @@ checksum comparison, and optionally activate the new image. This is a high-risk 
 requiring Flight Director authorisation and step-by-step execution with explicit GO/NO-GO
 gates. A failed upload or corrupted image could render the OBC inoperable, so multiple
 integrity checks are performed. The procedure supports both partial patches (applied to the
-running image) and full application image replacements (loaded into the alternate memory
-bank and activated via boot source switch).
+running image) and full application image replacements (loaded over the application image
+and booted with `OBC_BOOT_APP`). The OBC has one application image and no boot-bank
+selection: the previous image is not retained on board, and reverting means re-uploading it.
 
 ## Prerequisites
 - [ ] TTC link established with margin > 6 dB: `ttc.link_margin` (0x0503) > 6.0
@@ -98,19 +99,18 @@ followed) in the middle of a software upload. There is no separate
 "select boot source" function: `OBC_BOOT_APP` verifies the application CRC
 over 10 s and transitions `obdh.sw_image` (0x0311) to 1.
 **Verify:** Command acceptance within 5 s
-**Action:** The OBC will reconfigure the boot source register to point to the newly
-loaded image bank. The new image becomes active on the next boot.
+**Note:** There is no boot source register and no second image bank: the uploaded
+image IS the application image, and `OBC_BOOT_APP` boots it after its CRC check.
 **Note:** For patches applied to the running image, this step may be replaced with a
 direct patch-apply command. Consult OBDH engineer for patch-specific activation.
 **Verify:** `obdh.sw_image` (0x0311) still = 1 (application) --- no unintended reboot yet
-**GO/NO-GO:** Boot source configured. Ready for controlled reboot.
+**GO/NO-GO:** New image accepted by the CRC check. Ready for controlled reboot.
 
 ### Step 7 --- Confirm Boot Into New Software
 **TC:** `OBC_REBOOT` (Service 8, Subtype 1, func_id 52) --- command a controlled OBC restart
 **Note:** Was `FUNC_PERFORM func_id=30`, which is `PAYLOAD_DELETE_IMAGE`.
 **Action:** Wait for boot sequence --- OBC will be unresponsive for approximately 60 s.
 **Verify:** `obdh.mode` (0x0300) responds within 90 s of reboot command
-**Verify:** `obdh.sw_version` (0x030B) = expected new version number
 **Verify:** `obdh.sw_image` (0x0311) = 1 (application, not bootloader)
 **Verify:** `obdh.last_reboot_cause` (0x0316) = 1 (commanded)
 **Verify:** `obdh.active_obc` (0x030C) unchanged (same OBC unit as before)
@@ -157,11 +157,12 @@ checksum, any anomalies observed.
    source" command — the old card sent `FUNC_PERFORM func_id=21`, which is
    `EPS_RESET_OC_FLAG`. If the OBC will not leave the bootloader, use
    `OBC_BOOT_INHIBIT(inhibit=0)` (func 56) then `OBC_REBOOT` (func 52), and
-   follow CTG-018 Boot Loader Recovery.
-3. **TC:** `OBC_REBOOT` (Service 8, Subtype 1, func_id 52) --- command an OBC restart.
-4. Wait 90 s for boot into previous (known-good) application image.
-5. Verify `obdh.sw_version` (0x030B) = previous version and `obdh.sw_image` (0x0311) = 1.
-6. If OBC recovers: log failure, erase corrupt image, investigate root cause on ground.
+   follow CTG-021 OBC Bootloader Recovery.
+3. Re-upload the previous (known-good) image from the ground archive with `MEM_LOAD`,
+   repeating Steps 3-5 of this card with that image's segments and CRC-32.
+4. Boot it with `OBC_BOOT_APP` (func 55) and wait for the 10 s CRC window.
+5. Verify `obdh.sw_image` (0x0311) = 1 and the Step 5 checksum matches the previous image.
+6. If OBC recovers: log failure, investigate root cause on ground.
 7. If OBC remains in bootloader: escalate to Flight Director. Consider OBC redundancy
    switch to backup unit if available (`obdh.obc_b_status` (0x030D) = 1 STANDBY).
 
@@ -183,14 +184,14 @@ checksum, any anomalies observed.
   re-attempt only after root cause analysis of the reboot.
 
 ## Post-Conditions
-- [ ] OBC running the new software version: `obdh.sw_version` (0x030B) = target version
+- [ ] OBC running the uploaded application image: `obdh.sw_image` (0x0311) = 1 after `OBC_BOOT_APP`, with the Step 5 checksum verified
 - [ ] `obdh.mode` (0x0300) = NOMINAL (0)
 - [ ] All subsystems communicating normally via CAN bus
 - [ ] Onboard scheduling restored and operational
 - [ ] `obdh.mem_errors` (0x031E) = 0
 - [ ] Checksum of uploaded image verified correct
 - [ ] Upload log completed with version numbers, checksums, and duration
-- [ ] Previous software image retained as fallback in alternate memory bank
+- [ ] Previous image and its CRC-32 archived on the ground (reverting means re-uploading it)
 - [ ] Flight Director has signed off on successful upload
 
 ---

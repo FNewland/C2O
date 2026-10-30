@@ -1,4 +1,4 @@
-# EO-Sat-1 electrical sizing, re-derived from flown 6U hardware
+# EOSAT-1 electrical sizing, re-derived from flown 6U hardware
 
 **Date:** 2026-08-12 · **Batch:** 2026-08b Phase 2a · **Driver:** Franz's ruling R1
 
@@ -67,8 +67,8 @@ internally consistent, just applied to an array nobody could build.
 
 This is the honest reality check: a 6U with deployables has of order
 **12–18 W orbit-average left over for the payload** after the bus is fed. Our
-post-fix nominal margin (+15.1 W at worst beta, +17.7 W at max-eclipse beta;
-re-measured 2026-08 at the new epoch/513 km TLE-true altitude) sits
+post-fix nominal margin (+16.3 W at worst beta, +18.1 W at max-eclipse beta;
+re-measured 2026-10-30 on the 97.39 deg / LTAN 10:00 TLE, EOL) sits
 right inside that band. A design showing +40 W of payload headroom on a 6U is
 not a well-designed spacecraft; it is a mis-specified one.
 
@@ -197,22 +197,27 @@ Acceptance criterion (Franz, carried forward): **orbit-average generation must
 exceed orbit-average load with all nominal systems on, including ADCS**,
 judged against the NOMINAL/nadir case, not the sun-pointing case.
 
-`tools/power_budget.py --orbits 4`, EOL, worst beta (−30.6°, day 0).
-(Re-measured 2026-08 after the epoch move to 2026-08-20T12:00:00Z and the
-TLE-truth altitude ruling, ~513 km mean: the |beta| range over the year is now
-2.8–30.6°, eclipse fraction 0.356–0.383, so the worst generation case is
-milder than at the old March epoch — the margins below IMPROVED.)
+`tools/power_budget.py` (12 orbits), EOL, worst beta (−31.2°, day 345).
+(Re-measured 2026-10-30 on the shipped TLE: 513 km, LTAN 10:00, inclination
+97.39°, the exact sun-synchronous value for 15.24 rev/day — rulings Q2/Q2b as
+amended. The |beta| range over the year is 20.8–31.2°, eclipse fraction
+0.351–0.372 (33.2–35.2 min). The 2026-08 figures — |beta| 2.8–30.6°, eclipse
+fraction up to 0.383 — were measured on the 98.0° TLE, whose node drifted ~2 h
+of LTAN a year, and no longer apply.)
 
 | profile | gen W | load W | margin W | ratio |
 |---|---|---|---|---|
-| quiescent | 43.8 | 25.5 | +18.3 | 1.72 |
-| **nominal** | **43.8** | **28.7** | **+15.1** | **1.53** |
-| nominal_imaging | 43.8 | 32.6 | +11.2 | 1.34 |
-| manoeuvre | 43.8 | 32.0 | +11.8 | 1.37 |
-| worst (abuse) | 43.8 | 50.0 | −6.2 | 0.88 |
+| quiescent | 45.1 | 25.6 | +19.5 | 1.76 |
+| **nominal** | **45.1** | **28.8** | **+16.3** | **1.57** |
+| nominal_imaging | 45.1 | 32.8 | +12.3 | 1.38 |
+| manoeuvre | 45.1 | 32.1 | +12.9 | 1.40 |
+| worst (abuse) | 45.1 | 46.8 | −1.7 | 0.96 |
 
-At max-eclipse beta (−7.7°, day 290, eclipse fraction 0.383) generation is
-46.4 W and nominal closes at 1.61×. The tool's closure gate
+At max-eclipse beta (−20.8°, day 95, eclipse fraction 0.372) generation is
+47.0 W and nominal closes at 1.63×. With the drive tracking, generation follows
+cos(beta), so on this orbit the largest |beta| (shortest eclipse) is the worst
+generation case and the smallest |beta| the deepest discharge; both close.
+BOL: 49.1 W (worst beta) and 51.2 W (max eclipse). The tool's closure gate
 (`--min-margin-ratio 1.10`) exits 0.
 
 **The `worst` profile is deliberately negative.** It holds FINE pointing for a

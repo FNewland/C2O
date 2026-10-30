@@ -79,9 +79,9 @@
   },
   {
    "id": "ctg-026-aocs-actuator-stuck-recovery/off-nominal-handling",
-   "en_hash": "3914f99855256d96",
-   "fr_hash": "bfcb9e160d817612"
+   "en_hash": "5fbd15ffb9f599ed",
+   "fr_hash": "04536bded97e7d68"
   }
  ],
- "en_commit": "3e80564"
+ "en_commit": "c4a140a"
 }

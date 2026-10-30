@@ -12,11 +12,12 @@ bord sous forme de séquence de télécommandes datées S11. La dynamique du vol
 produit le vecteur de manœuvre ; l'ingénieur propulsion vérifie la santé du système ;
 le directeur de vol autorise l'exécution.
 
-La propulsion d'EO-Sat-1 est un module minimal 1U à monergol vert, dimensionné uniquement pour
-l'évitement de débris et un maintien d'orbite limité (66,9 m/s au total). Il n'y a
-pas de désorbitation propulsée : le retrait de service en fin de vie se fait par décroissance naturelle, ce qui respecte
-la règle des 5 ans de la FCC depuis cette orbite. Chaque poussée entame la réserve
-d'évitement de collision — le bilan de dV est un bilan de sécurité, pas une jauge de carburant.
+La propulsion d'EOSAT-1 est un module minimal 1U à monergol vert, dimensionné pour
+l'évitement de débris, un maintien d'orbite limité et la poussée de retrait de service en fin de vie
+(66,9 m/s au total). Depuis cette orbite, la décroissance naturelle prend environ 14 ans au minimum
+solaire : 34,3 m/s sont donc réservés à la poussée de retrait de service (NOM-014). Après toute poussée de
+routine, maintenir `prop.dv_remaining` (0x0B0C) à 38 m/s ou plus. Chaque poussée entame les réserves
+d'évitement de collision et de retrait de service — le bilan de dV est un bilan de sécurité, pas une jauge de carburant.
 
 ## Prérequis
 - [ ] Satellite en phase NOMINAL ; aucune mise en sécurité FDIR active

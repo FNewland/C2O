@@ -151,7 +151,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     s = sub.add_parser("synth", help="write a synthetic test recording")
     s.add_argument("--tier", default="LOW",
-                   help="EO-Sat-1 rung: SAFE, LOW, HIGH (default LOW)")
+                   help="EOSAT-1 rung: SAFE, LOW, HIGH (default LOW)")
     s.add_argument("--modulation", help="override: BPSK, QPSK, OQPSK, 8PSK,"
                                         " PI4DQPSK, GFSK")
     s.add_argument("--bps", type=float, help="override channel bit rate")

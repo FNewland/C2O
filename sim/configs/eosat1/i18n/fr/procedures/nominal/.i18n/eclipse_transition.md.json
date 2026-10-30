@@ -24,8 +24,8 @@
   },
   {
    "id": "nom-010-eclipse-transition/required-telemetry",
-   "en_hash": "24388e5ce742957f",
-   "fr_hash": "2e3a2f5fe226f3a1"
+   "en_hash": "691d60116c6e5494",
+   "fr_hash": "85dc0424ec8f4737"
   },
   {
    "id": "nom-010-eclipse-transition/required-commands",
@@ -54,8 +54,8 @@
   },
   {
    "id": "nom-010-eclipse-transition/procedure-steps/step-4-verify-aocs-eclipse-mode-transition",
-   "en_hash": "b2ee95037147a45a",
-   "fr_hash": "4bccf3f53b92300c"
+   "en_hash": "8c079dfd789624b3",
+   "fr_hash": "bc29fe5de01894c8"
   },
   {
    "id": "nom-010-eclipse-transition/procedure-steps/step-5-monitor-bus-voltage-during-eclipse-entry",
@@ -74,8 +74,8 @@
   },
   {
    "id": "nom-010-eclipse-transition/procedure-steps/step-8-restore-nominal-configuration",
-   "en_hash": "7bc9c1edd4d79091",
-   "fr_hash": "4ddc44bc56ebb0a6"
+   "en_hash": "3d3a7227c5f8c9b9",
+   "fr_hash": "54b0b25273d7e21d"
   },
   {
    "id": "nom-010-eclipse-transition/verification-criteria",
@@ -88,5 +88,5 @@
    "fr_hash": "913d780de571cd04"
   }
  ],
- "en_commit": "3e80564"
+ "en_commit": "c4a140a"
 }
