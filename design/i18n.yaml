@@ -4,8 +4,9 @@
 # to env_defaults. Missing roots (e.g. Drive not mounted) are reported, not fatal.
 
 env_defaults:
-  # Course books: the Google Drive copies (2026-08-21) are the source of truth, FR in its fr/ subdir.
-  DRIVE_COURSE: "~/Library/CloudStorage/GoogleDrive-<your-account>/My Drive/SpaceCDF/docs/course"
+  # Course books: the repository copies (docs/course, FR in docs/course/fr) are the source of
+  # truth since 2026-10-30 (copied from Drive). Set DRIVE_COURSE to check another copy instead.
+  DRIVE_COURSE: "docs/course"
 
 glossary: tools/i18n/glossary.csv
 style: tools/i18n/STYLE_FR.md
@@ -15,7 +16,7 @@ translate:
 
 # ---------------------------------------------------------------- Markdown
 docs:
-  # Facilitator book, ops book, learner/ops workbooks, instructor book, back cover … (Drive)
+  # Facilitator book, ops book, learner/ops workbooks, instructor book, back cover
   - {group: course-books, en: "${DRIVE_COURSE}/facilitator_book_expanded.md", fr: "${DRIVE_COURSE}/fr/facilitator_book_expanded.md"}
   - {group: course-books, en: "${DRIVE_COURSE}/orbit_north_week3.md", fr: "${DRIVE_COURSE}/fr/orbit_north_week3.md"}
   - {group: course-books, en: "${DRIVE_COURSE}/learner_workbook_expanded.md", fr: "${DRIVE_COURSE}/fr/learner_workbook_expanded.md"}

@@ -1,0 +1,1192 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "${DRIVE_COURSE}/learner_workbook_expanded.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "102ca04625f3b78b",
+   "fr_hash": "3891d3550fd095a5"
+  },
+  {
+   "id": "note-to-the-learner",
+   "en_hash": "fc32b18fd6192b3f",
+   "fr_hash": "2b3f2ba46b0ae410"
+  },
+  {
+   "id": "acknowledgement-generative-ai-aig",
+   "en_hash": "1b27c84644759ea6",
+   "fr_hash": "08df75ba83b72c1d"
+  },
+  {
+   "id": "worksheet-1-1-introduction-to-space-mission-design",
+   "en_hash": "3406547b2878cbc1",
+   "fr_hash": "d1877fccea121180"
+  },
+  {
+   "id": "worksheet-1-1-introduction-to-space-mission-design/part-a-the-17-se-processes-spacecdf-mapping",
+   "en_hash": "513828ebd614d947",
+   "fr_hash": "6575ebd222fefc33"
+  },
+  {
+   "id": "worksheet-1-1-introduction-to-space-mission-design/part-b-lifecycle-phase-identification",
+   "en_hash": "5d053d6d3fd4685e",
+   "fr_hash": "a903e4ffd3def8e9"
+  },
+  {
+   "id": "worksheet-1-1-introduction-to-space-mission-design/part-c-cdf-position-interaction-analysis",
+   "en_hash": "bc0e3615a23fd7c2",
+   "fr_hash": "47a3a360716584c4"
+  },
+  {
+   "id": "worksheet-1-1-introduction-to-space-mission-design/part-d-spacecdf-tool-exploration",
+   "en_hash": "8ed029c362af0571",
+   "fr_hash": "67bfda4b15998cd0"
+  },
+  {
+   "id": "worksheet-1-1-introduction-to-space-mission-design/part-e-v-model-sketch",
+   "en_hash": "307bf01d6af08154",
+   "fr_hash": "514cd00557530dba"
+  },
+  {
+   "id": "worksheet-1-1-introduction-to-space-mission-design/notes-reflections",
+   "en_hash": "fe3cefee6c23d5ed",
+   "fr_hash": "056d823cf31123c7"
+  },
+  {
+   "id": "worksheet-1-2-canadian-space-ecosystem-regulatory-environment",
+   "en_hash": "24a56783e736b97e",
+   "fr_hash": "ab42e0e4f84d2699"
+  },
+  {
+   "id": "worksheet-1-2-canadian-space-ecosystem-regulatory-environment/part-a-canadian-space-industry-mapping",
+   "en_hash": "8574dcf5ab18b8dc",
+   "fr_hash": "de28b7dc5bcc03f1"
+  },
+  {
+   "id": "worksheet-1-2-canadian-space-ecosystem-regulatory-environment/part-b-rsssa-compliance-assessment",
+   "en_hash": "c7ca1fb0c7e87cf3",
+   "fr_hash": "c6e3baebc37041b6"
+  },
+  {
+   "id": "worksheet-1-2-canadian-space-ecosystem-regulatory-environment/part-c-spectrum-licensing-plan",
+   "en_hash": "52d235c3d5858c02",
+   "fr_hash": "11fec8028506c1a5"
+  },
+  {
+   "id": "worksheet-1-2-canadian-space-ecosystem-regulatory-environment/part-d-export-control-classification",
+   "en_hash": "243bbe38b49b5f82",
+   "fr_hash": "ea3592074eead603"
+  },
+  {
+   "id": "worksheet-1-2-canadian-space-ecosystem-regulatory-environment/part-e-regulatory-timeline",
+   "en_hash": "cf4936325b9e9e70",
+   "fr_hash": "962808ff1107fcc1"
+  },
+  {
+   "id": "worksheet-1-2-canadian-space-ecosystem-regulatory-environment/notes-reflections",
+   "en_hash": "37d0cb9dd9b3236a",
+   "fr_hash": "33121d1ca11060bc"
+  },
+  {
+   "id": "worksheet-1-3-international-standards-for-space-systems",
+   "en_hash": "05422dcb88e82fbb",
+   "fr_hash": "e3e3385cbb7742ba"
+  },
+  {
+   "id": "worksheet-1-3-international-standards-for-space-systems/part-a-standard-applicability-matrix",
+   "en_hash": "3a9859f13edc6313",
+   "fr_hash": "4938ce87af966f86"
+  },
+  {
+   "id": "worksheet-1-3-international-standards-for-space-systems/part-b-cds-rev-14-compliance-checklist",
+   "en_hash": "6120e2cea8a2dac7",
+   "fr_hash": "801dea8431be8e36"
+  },
+  {
+   "id": "worksheet-1-3-international-standards-for-space-systems/part-c-debris-mitigation-compliance",
+   "en_hash": "f47939f156e113d0",
+   "fr_hash": "0f00a9ef25884285"
+  },
+  {
+   "id": "worksheet-1-3-international-standards-for-space-systems/part-d-structural-design-margins",
+   "en_hash": "cb6bc27174228742",
+   "fr_hash": "374f240e098b678a"
+  },
+  {
+   "id": "worksheet-1-3-international-standards-for-space-systems/part-e-spacecdf-compliance-panel",
+   "en_hash": "4ee723444a6ccdcb",
+   "fr_hash": "dce198f23121453e"
+  },
+  {
+   "id": "worksheet-1-3-international-standards-for-space-systems/notes-reflections",
+   "en_hash": "8478e2694bb369ff",
+   "fr_hash": "d1aeb16667fc6aa8"
+  },
+  {
+   "id": "worksheet-1-4-mission-needs-trade-studies-concept-of-operations",
+   "en_hash": "7c113c4f5fa5f411",
+   "fr_hash": "82774f27a9b85d83"
+  },
+  {
+   "id": "worksheet-1-4-mission-needs-trade-studies-concept-of-operations/part-a-stakeholder-analysis-matrix",
+   "en_hash": "69297dc0e7ff54bc",
+   "fr_hash": "be19e02fc5fba0d8"
+  },
+  {
+   "id": "worksheet-1-4-mission-needs-trade-studies-concept-of-operations/part-b-problem-statement",
+   "en_hash": "ec4e6537827a7a15",
+   "fr_hash": "491fc9dffc8cf186"
+  },
+  {
+   "id": "worksheet-1-4-mission-needs-trade-studies-concept-of-operations/part-c-mission-objectives",
+   "en_hash": "46c261d077f7d409",
+   "fr_hash": "ea60e3e37c4ade60"
+  },
+  {
+   "id": "worksheet-1-4-mission-needs-trade-studies-concept-of-operations/part-d-moe-mop-tpm-trace",
+   "en_hash": "1f581b0e11bc3078",
+   "fr_hash": "826b1c1f33e50137"
+  },
+  {
+   "id": "worksheet-1-4-mission-needs-trade-studies-concept-of-operations/part-e-trade-study-space-vs-non-space",
+   "en_hash": "d6a05bb6972bc44d",
+   "fr_hash": "841c4d946675b620"
+  },
+  {
+   "id": "worksheet-1-4-mission-needs-trade-studies-concept-of-operations/part-f-concept-of-operations-outline",
+   "en_hash": "34fb7a65e29b3108",
+   "fr_hash": "4c80e9a002e89457"
+  },
+  {
+   "id": "worksheet-1-4-mission-needs-trade-studies-concept-of-operations/part-g-spacecdf-tool-entry",
+   "en_hash": "e205987996b66295",
+   "fr_hash": "549c138698c49ed4"
+  },
+  {
+   "id": "worksheet-1-4-mission-needs-trade-studies-concept-of-operations/notes-reflections",
+   "en_hash": "cd9eab71442c73fa",
+   "fr_hash": "f6e0319252227b2f"
+  },
+  {
+   "id": "worksheet-2-1-the-system-v-and-requirements-engineering",
+   "en_hash": "a04096790ac8d71e",
+   "fr_hash": "f4f92187bb32b616"
+  },
+  {
+   "id": "worksheet-2-1-the-system-v-and-requirements-engineering/key-equations-reference",
+   "en_hash": "8f989d0b035f5347",
+   "fr_hash": "54de8947e0ea0496"
+  },
+  {
+   "id": "worksheet-2-1-the-system-v-and-requirements-engineering/part-a-system-v-mapping",
+   "en_hash": "8c62c60c22cb2660",
+   "fr_hash": "ea9276d8ea30f43a"
+  },
+  {
+   "id": "worksheet-2-1-the-system-v-and-requirements-engineering/part-b-requirement-quality-assessment",
+   "en_hash": "d614716835dab9db",
+   "fr_hash": "ff9084f2a04822ce"
+  },
+  {
+   "id": "worksheet-2-1-the-system-v-and-requirements-engineering/part-c-requirement-hierarchy-and-traceability",
+   "en_hash": "aef4ffa1265ace64",
+   "fr_hash": "7190af8d6e4805d4"
+  },
+  {
+   "id": "worksheet-2-1-the-system-v-and-requirements-engineering/part-d-splitting-compound-requirements",
+   "en_hash": "4cc9a8b768d61d5e",
+   "fr_hash": "71fe4bf7c8d9532a"
+  },
+  {
+   "id": "worksheet-2-1-the-system-v-and-requirements-engineering/part-e-spacecdf-requirements-generation",
+   "en_hash": "0e0c42687c34abaf",
+   "fr_hash": "e6ca1d59e306fd9f"
+  },
+  {
+   "id": "worksheet-2-1-the-system-v-and-requirements-engineering/notes-reflections",
+   "en_hash": "653cec0a564c9209",
+   "fr_hash": "3f1312bb531ef9bd"
+  },
+  {
+   "id": "worksheet-2-2-functional-decomposition-and-allocation",
+   "en_hash": "83904dbca959670d",
+   "fr_hash": "875a4b7f45afeba0"
+  },
+  {
+   "id": "worksheet-2-2-functional-decomposition-and-allocation/key-equations-reference",
+   "en_hash": "796e0c9d78e9d37b",
+   "fr_hash": "a524a791402008e4"
+  },
+  {
+   "id": "worksheet-2-2-functional-decomposition-and-allocation/part-a-mission-function-tree",
+   "en_hash": "526d5aa00f92e44b",
+   "fr_hash": "630a076aafd1337d"
+  },
+  {
+   "id": "worksheet-2-2-functional-decomposition-and-allocation/part-b-function-to-requirement-traceability",
+   "en_hash": "0d5a29ab33ef9c82",
+   "fr_hash": "13d2aea120d1c08c"
+  },
+  {
+   "id": "worksheet-2-2-functional-decomposition-and-allocation/part-c-multi-allocation-analysis",
+   "en_hash": "693cb484e8d56f8c",
+   "fr_hash": "3d9152e7124553eb"
+  },
+  {
+   "id": "worksheet-2-2-functional-decomposition-and-allocation/part-d-performance-criteria",
+   "en_hash": "5d202c74b16688f9",
+   "fr_hash": "073db16df17e60ac"
+  },
+  {
+   "id": "worksheet-2-2-functional-decomposition-and-allocation/part-e-spacecdf-coverage-check",
+   "en_hash": "99c0d974b97cd903",
+   "fr_hash": "9689f98432d1cd5b"
+  },
+  {
+   "id": "worksheet-2-2-functional-decomposition-and-allocation/notes-reflections",
+   "en_hash": "653cec0a564c9209",
+   "fr_hash": "3f1312bb531ef9bd"
+  },
+  {
+   "id": "worksheet-2-3-orbit-selection-and-mission-architecture",
+   "en_hash": "7e633115a942a014",
+   "fr_hash": "ed574fed3ba39924"
+  },
+  {
+   "id": "worksheet-2-3-orbit-selection-and-mission-architecture/key-equations-reference",
+   "en_hash": "640b2d1619b98fea",
+   "fr_hash": "e5190b4b7655617d"
+  },
+  {
+   "id": "worksheet-2-3-orbit-selection-and-mission-architecture/part-a-orbital-mechanics-calculations",
+   "en_hash": "6503ee050ac0d423",
+   "fr_hash": "0147d371e84a81e4"
+  },
+  {
+   "id": "worksheet-2-3-orbit-selection-and-mission-architecture/part-b-orbit-trade-matrix",
+   "en_hash": "3fc0cbd1ef4815ff",
+   "fr_hash": "1a62a9c052220a0e"
+  },
+  {
+   "id": "worksheet-2-3-orbit-selection-and-mission-architecture/part-c-debris-compliance",
+   "en_hash": "57ecd6cf96906ba1",
+   "fr_hash": "94c3e47917c29e09"
+  },
+  {
+   "id": "worksheet-2-3-orbit-selection-and-mission-architecture/part-d-downstream-cascade-analysis",
+   "en_hash": "0779092dd48e9c98",
+   "fr_hash": "0bba01b9ec162b30"
+  },
+  {
+   "id": "worksheet-2-3-orbit-selection-and-mission-architecture/part-e-discussion",
+   "en_hash": "098b4057bd5117bc",
+   "fr_hash": "a6f87c3b63a3d787"
+  },
+  {
+   "id": "worksheet-2-3-orbit-selection-and-mission-architecture/notes-reflections",
+   "en_hash": "653cec0a564c9209",
+   "fr_hash": "3f1312bb531ef9bd"
+  },
+  {
+   "id": "worksheet-2-4-mission-architecture-segments-interfaces-and-budgets",
+   "en_hash": "8cef491223bbbfed",
+   "fr_hash": "dd852d7c7ea1caf4"
+  },
+  {
+   "id": "worksheet-2-4-mission-architecture-segments-interfaces-and-budgets/key-equations-reference",
+   "en_hash": "7f11804f13d0bd04",
+   "fr_hash": "8f2649d5c7f45651"
+  },
+  {
+   "id": "worksheet-2-4-mission-architecture-segments-interfaces-and-budgets/part-a-mass-budget",
+   "en_hash": "be5cd91edcd3e38c",
+   "fr_hash": "91a1012c300386da"
+  },
+  {
+   "id": "worksheet-2-4-mission-architecture-segments-interfaces-and-budgets/part-b-power-budget-by-mode",
+   "en_hash": "4438352189ed5dcc",
+   "fr_hash": "7fed4d738b457b27"
+  },
+  {
+   "id": "worksheet-2-4-mission-architecture-segments-interfaces-and-budgets/part-c-interface-identification",
+   "en_hash": "2b6cc4721b6b824c",
+   "fr_hash": "878752eab61a4958"
+  },
+  {
+   "id": "worksheet-2-4-mission-architecture-segments-interfaces-and-budgets/part-d-conflict-resolution",
+   "en_hash": "7312995c223e92e7",
+   "fr_hash": "e23c24afcd8f3fd3"
+  },
+  {
+   "id": "worksheet-2-4-mission-architecture-segments-interfaces-and-budgets/part-e-budget-health-check",
+   "en_hash": "fb9b4810807cfc4b",
+   "fr_hash": "44f5529a9471d1de"
+  },
+  {
+   "id": "worksheet-2-4-mission-architecture-segments-interfaces-and-budgets/notes-reflections",
+   "en_hash": "653cec0a564c9209",
+   "fr_hash": "3f1312bb531ef9bd"
+  },
+  {
+   "id": "worksheet-3-1-power-system-and-thermal-control-design",
+   "en_hash": "865403830011395b",
+   "fr_hash": "93e85d1ffa7f3cb8"
+  },
+  {
+   "id": "worksheet-3-1-power-system-and-thermal-control-design/quick-reference-power-and-thermal-concepts",
+   "en_hash": "2098830adc5a827e",
+   "fr_hash": "916cbd88b0948b2f"
+  },
+  {
+   "id": "worksheet-3-1-power-system-and-thermal-control-design/quick-reference-power-and-thermal-concepts/what-is-a-solar-array",
+   "en_hash": "32de045d2e789309",
+   "fr_hash": "ce1f3287e0b52c47"
+  },
+  {
+   "id": "worksheet-3-1-power-system-and-thermal-control-design/quick-reference-power-and-thermal-concepts/body-mounted-vs-deployable-solar-arrays",
+   "en_hash": "0982a74164db18e4",
+   "fr_hash": "ede8ecc24c250a2d"
+  },
+  {
+   "id": "worksheet-3-1-power-system-and-thermal-control-design/quick-reference-power-and-thermal-concepts/how-batteries-work-in-space",
+   "en_hash": "bdf11c4222f512fc",
+   "fr_hash": "04b7931b2b91b863"
+  },
+  {
+   "id": "worksheet-3-1-power-system-and-thermal-control-design/quick-reference-power-and-thermal-concepts/what-does-the-eps-do",
+   "en_hash": "fced448614cdd48a",
+   "fr_hash": "52243f91528697ba"
+  },
+  {
+   "id": "worksheet-3-1-power-system-and-thermal-control-design/quick-reference-power-and-thermal-concepts/thermal-control-basics",
+   "en_hash": "95c8428aad11c667",
+   "fr_hash": "b48f3dbad32602d2"
+  },
+  {
+   "id": "worksheet-3-1-power-system-and-thermal-control-design/key-equations-reference",
+   "en_hash": "b7f0fb1314c3a24a",
+   "fr_hash": "21111afb0f5d254a"
+  },
+  {
+   "id": "worksheet-3-1-power-system-and-thermal-control-design/worked-example-unisat-1-1u-power-and-thermal",
+   "en_hash": "26825446efb57e03",
+   "fr_hash": "4dd3b732220b085b"
+  },
+  {
+   "id": "worksheet-3-1-power-system-and-thermal-control-design/worked-example-unisat-1-1u-power-and-thermal/solar-array-sizing-body-mounted",
+   "en_hash": "39972effa2de178a",
+   "fr_hash": "e4370de1bc574e0b"
+  },
+  {
+   "id": "worksheet-3-1-power-system-and-thermal-control-design/worked-example-unisat-1-1u-power-and-thermal/battery-sizing",
+   "en_hash": "a689759d4ffba214",
+   "fr_hash": "59e76bea7169429d"
+  },
+  {
+   "id": "worksheet-3-1-power-system-and-thermal-control-design/worked-example-unisat-1-1u-power-and-thermal/thermal-check-passive-only",
+   "en_hash": "8481defcabf5aabc",
+   "fr_hash": "23824e3e491bb369"
+  },
+  {
+   "id": "worksheet-3-1-power-system-and-thermal-control-design/part-a-solar-array-sizing",
+   "en_hash": "1179c434e95217f6",
+   "fr_hash": "ca78b4abab322267"
+  },
+  {
+   "id": "worksheet-3-1-power-system-and-thermal-control-design/part-b-battery-sizing",
+   "en_hash": "6f8573acba0fd8f6",
+   "fr_hash": "95493667678cf91e"
+  },
+  {
+   "id": "worksheet-3-1-power-system-and-thermal-control-design/part-c-thermal-analysis",
+   "en_hash": "28e89868c7066e81",
+   "fr_hash": "55606c74075b92c1"
+  },
+  {
+   "id": "worksheet-3-1-power-system-and-thermal-control-design/part-d-spacecdf-verification",
+   "en_hash": "7b8fcf9299ee40d6",
+   "fr_hash": "f0bc6a972da8c5cf"
+  },
+  {
+   "id": "worksheet-3-1-power-system-and-thermal-control-design/decision-justification",
+   "en_hash": "ebc8c78d8083d316",
+   "fr_hash": "998b19eac62a0f97"
+  },
+  {
+   "id": "worksheet-3-1-power-system-and-thermal-control-design/notes-reflections",
+   "en_hash": "5739bfe977d235b5",
+   "fr_hash": "960edd1a6e3d1d03"
+  },
+  {
+   "id": "worksheet-3-2-attitude-and-orbit-control-system-aocs",
+   "en_hash": "3b1b2233bc037f64",
+   "fr_hash": "6187c7254c58a857"
+  },
+  {
+   "id": "worksheet-3-2-attitude-and-orbit-control-system-aocs/quick-reference-aocs-concepts",
+   "en_hash": "c91ab365162b4978",
+   "fr_hash": "17c2bc461415515c"
+  },
+  {
+   "id": "worksheet-3-2-attitude-and-orbit-control-system-aocs/quick-reference-aocs-concepts/what-is-aocs",
+   "en_hash": "33bddd773c74737b",
+   "fr_hash": "ea7e0ad62280a412"
+  },
+  {
+   "id": "worksheet-3-2-attitude-and-orbit-control-system-aocs/quick-reference-aocs-concepts/sensors-how-do-we-know-where-we-are-pointing",
+   "en_hash": "18b6648d3be66ffd",
+   "fr_hash": "1b9c12ceffc256da"
+  },
+  {
+   "id": "worksheet-3-2-attitude-and-orbit-control-system-aocs/quick-reference-aocs-concepts/actuators-how-do-we-control-our-orientation",
+   "en_hash": "25ecf5b930730eab",
+   "fr_hash": "9e789cbdf1353485"
+  },
+  {
+   "id": "worksheet-3-2-attitude-and-orbit-control-system-aocs/quick-reference-aocs-concepts/aocs-architecture-decision-table",
+   "en_hash": "628b12de98096279",
+   "fr_hash": "1e7d8cb3ba1d8228"
+  },
+  {
+   "id": "worksheet-3-2-attitude-and-orbit-control-system-aocs/key-equations-reference",
+   "en_hash": "ae9f829146366257",
+   "fr_hash": "b823902d1165653d"
+  },
+  {
+   "id": "worksheet-3-2-attitude-and-orbit-control-system-aocs/worked-example-unisat-1-1u-aocs",
+   "en_hash": "6785836252771f8f",
+   "fr_hash": "562d239f13e47a7a"
+  },
+  {
+   "id": "worksheet-3-2-attitude-and-orbit-control-system-aocs/worked-example-unisat-1-1u-aocs/architecture-selection",
+   "en_hash": "1bcddc783a23a391",
+   "fr_hash": "fbf11926db081ed7"
+  },
+  {
+   "id": "worksheet-3-2-attitude-and-orbit-control-system-aocs/worked-example-unisat-1-1u-aocs/disturbance-torques-at-400-km",
+   "en_hash": "5a50fef588f72a62",
+   "fr_hash": "b63ff13dcb9e3676"
+  },
+  {
+   "id": "worksheet-3-2-attitude-and-orbit-control-system-aocs/part-a-aocs-architecture-selection",
+   "en_hash": "1d3f6113e3ae842f",
+   "fr_hash": "443775e12ae39e77"
+  },
+  {
+   "id": "worksheet-3-2-attitude-and-orbit-control-system-aocs/part-b-disturbance-torque-calculations",
+   "en_hash": "a21e150640e2ac82",
+   "fr_hash": "88a221c7f56f5a18"
+  },
+  {
+   "id": "worksheet-3-2-attitude-and-orbit-control-system-aocs/part-c-reaction-wheel-sizing",
+   "en_hash": "49aa851e90ca7071",
+   "fr_hash": "be852fbdac497fbd"
+  },
+  {
+   "id": "worksheet-3-2-attitude-and-orbit-control-system-aocs/part-d-pointing-error-budget",
+   "en_hash": "6c9c8fb9587218a6",
+   "fr_hash": "97878995c9e014d6"
+  },
+  {
+   "id": "worksheet-3-2-attitude-and-orbit-control-system-aocs/part-e-spacecdf-verification",
+   "en_hash": "051296b4e171b673",
+   "fr_hash": "a89243678dbc2863"
+  },
+  {
+   "id": "worksheet-3-2-attitude-and-orbit-control-system-aocs/decision-justification",
+   "en_hash": "aa33347ee6a77917",
+   "fr_hash": "77b1f47aa59395e6"
+  },
+  {
+   "id": "worksheet-3-2-attitude-and-orbit-control-system-aocs/notes-reflections",
+   "en_hash": "5739bfe977d235b5",
+   "fr_hash": "960edd1a6e3d1d03"
+  },
+  {
+   "id": "worksheet-3-3-communications-and-link-budget-design",
+   "en_hash": "60fdf723079e0e6f",
+   "fr_hash": "7e2ce2651e7cfffc"
+  },
+  {
+   "id": "worksheet-3-3-communications-and-link-budget-design/quick-reference-communications-concepts",
+   "en_hash": "b0502f398a116abe",
+   "fr_hash": "8fb2e09bf5fac2f5"
+  },
+  {
+   "id": "worksheet-3-3-communications-and-link-budget-design/quick-reference-communications-concepts/what-is-a-link-budget",
+   "en_hash": "b6864a5446d5792f",
+   "fr_hash": "84ede71f08514743"
+  },
+  {
+   "id": "worksheet-3-3-communications-and-link-budget-design/quick-reference-communications-concepts/what-each-term-in-the-link-budget-means",
+   "en_hash": "0478ae16b29015c9",
+   "fr_hash": "f8bf43d7a66c3c02"
+  },
+  {
+   "id": "worksheet-3-3-communications-and-link-budget-design/quick-reference-communications-concepts/frequency-band-comparison",
+   "en_hash": "8d17649e6e8d1e87",
+   "fr_hash": "c25872b4e9881790"
+  },
+  {
+   "id": "worksheet-3-3-communications-and-link-budget-design/quick-reference-communications-concepts/antenna-types",
+   "en_hash": "ef0a348873ca917a",
+   "fr_hash": "730b1312f64a5a74"
+  },
+  {
+   "id": "worksheet-3-3-communications-and-link-budget-design/quick-reference-communications-concepts/modulation-and-coding",
+   "en_hash": "a1fc4d6d857eb89a",
+   "fr_hash": "e99c4d914620e5ca"
+  },
+  {
+   "id": "worksheet-3-3-communications-and-link-budget-design/key-equations-reference",
+   "en_hash": "84ec7b6c5d8b98b2",
+   "fr_hash": "3c571c477f51f15e"
+  },
+  {
+   "id": "worksheet-3-3-communications-and-link-budget-design/worked-example-unisat-1-1u-uhf-link-budget",
+   "en_hash": "a1cf61afe7898e2b",
+   "fr_hash": "860aa392ff723d91"
+  },
+  {
+   "id": "worksheet-3-3-communications-and-link-budget-design/worked-example-unisat-1-1u-uhf-link-budget/step-by-step-link-budget",
+   "en_hash": "ba441a3915ce41ef",
+   "fr_hash": "6f4a944bb0eb612c"
+  },
+  {
+   "id": "worksheet-3-3-communications-and-link-budget-design/worked-example-unisat-1-1u-uhf-link-budget/fspl-calculation-detail",
+   "en_hash": "4e5d8b5a305bbc84",
+   "fr_hash": "0843ed85437ae69b"
+  },
+  {
+   "id": "worksheet-3-3-communications-and-link-budget-design/worked-example-unisat-1-1u-uhf-link-budget/data-throughput",
+   "en_hash": "948438230344f581",
+   "fr_hash": "eda5d8853fcc80b1"
+  },
+  {
+   "id": "worksheet-3-3-communications-and-link-budget-design/part-a-frequency-band-selection",
+   "en_hash": "c3687542be5f6dae",
+   "fr_hash": "8fb4748bc902cca1"
+  },
+  {
+   "id": "worksheet-3-3-communications-and-link-budget-design/part-b-complete-link-budget",
+   "en_hash": "ab41bca4dd01d2c5",
+   "fr_hash": "de57422bff6c722d"
+  },
+  {
+   "id": "worksheet-3-3-communications-and-link-budget-design/part-c-data-budget",
+   "en_hash": "3723db5a6bc91201",
+   "fr_hash": "9aec0290ea3900ed"
+  },
+  {
+   "id": "worksheet-3-3-communications-and-link-budget-design/part-d-spacecdf-comparison",
+   "en_hash": "edbfe3eea19114fd",
+   "fr_hash": "8285365b25914c69"
+  },
+  {
+   "id": "worksheet-3-3-communications-and-link-budget-design/part-e-modulation-and-coding-selection",
+   "en_hash": "29a0206e856d0720",
+   "fr_hash": "5b961fab1f7cc204"
+  },
+  {
+   "id": "worksheet-3-3-communications-and-link-budget-design/decision-justification",
+   "en_hash": "9f82078ea9a813cc",
+   "fr_hash": "2419f06ed1932bfd"
+  },
+  {
+   "id": "worksheet-3-3-communications-and-link-budget-design/notes-reflections",
+   "en_hash": "5739bfe977d235b5",
+   "fr_hash": "960edd1a6e3d1d03"
+  },
+  {
+   "id": "worksheet-3-4-structure-propulsion-and-equipment-selection",
+   "en_hash": "1d636aa4bd23cfe4",
+   "fr_hash": "89d0a1db6a9762eb"
+  },
+  {
+   "id": "worksheet-3-4-structure-propulsion-and-equipment-selection/quick-reference-structure-and-propulsion-concepts",
+   "en_hash": "c0003ffd9e1c4b9a",
+   "fr_hash": "2b763f50f6c283cd"
+  },
+  {
+   "id": "worksheet-3-4-structure-propulsion-and-equipment-selection/quick-reference-structure-and-propulsion-concepts/cubesat-design-specification-cds-rev-14-key-dimensions",
+   "en_hash": "3831159aa1048a60",
+   "fr_hash": "53df93e427d5e4e8"
+  },
+  {
+   "id": "worksheet-3-4-structure-propulsion-and-equipment-selection/quick-reference-structure-and-propulsion-concepts/structural-loads-and-margins",
+   "en_hash": "5c9b5bef19e84e58",
+   "fr_hash": "2575e9db22f64641"
+  },
+  {
+   "id": "worksheet-3-4-structure-propulsion-and-equipment-selection/quick-reference-structure-and-propulsion-concepts/propulsion-decision-tree",
+   "en_hash": "ec4f20e4aa21b48e",
+   "fr_hash": "4b42e2081f1b36e7"
+  },
+  {
+   "id": "worksheet-3-4-structure-propulsion-and-equipment-selection/quick-reference-structure-and-propulsion-concepts/propulsion-technologies-comparison",
+   "en_hash": "639dacec7b1b5bb8",
+   "fr_hash": "bb189f04ed04b41a"
+  },
+  {
+   "id": "worksheet-3-4-structure-propulsion-and-equipment-selection/key-equations-reference",
+   "en_hash": "34e81bad4fe87400",
+   "fr_hash": "878bd62204ed69e1"
+  },
+  {
+   "id": "worksheet-3-4-structure-propulsion-and-equipment-selection/worked-example-unisat-1-1u-structure-and-propulsion",
+   "en_hash": "5566ad9bcd7dcbcc",
+   "fr_hash": "2e18069e2232e1c2"
+  },
+  {
+   "id": "worksheet-3-4-structure-propulsion-and-equipment-selection/worked-example-unisat-1-1u-structure-and-propulsion/cds-compliance",
+   "en_hash": "65344f9c4da45432",
+   "fr_hash": "dffc3c241d6edd00"
+  },
+  {
+   "id": "worksheet-3-4-structure-propulsion-and-equipment-selection/worked-example-unisat-1-1u-structure-and-propulsion/propulsion-decision",
+   "en_hash": "aa61050e26104a26",
+   "fr_hash": "393683a23d5c4450"
+  },
+  {
+   "id": "worksheet-3-4-structure-propulsion-and-equipment-selection/worked-example-unisat-1-1u-structure-and-propulsion/structural-margin-axial-load",
+   "en_hash": "b6b76f3a565519d4",
+   "fr_hash": "5574a7335ebaf9fe"
+  },
+  {
+   "id": "worksheet-3-4-structure-propulsion-and-equipment-selection/worked-example-unisat-1-1u-structure-and-propulsion/equipment-list",
+   "en_hash": "95eac147db3e2b4a",
+   "fr_hash": "f316567d10d2173c"
+  },
+  {
+   "id": "worksheet-3-4-structure-propulsion-and-equipment-selection/part-a-cds-compliance-check",
+   "en_hash": "a3a4b04043597b7d",
+   "fr_hash": "c1d2332555015df1"
+  },
+  {
+   "id": "worksheet-3-4-structure-propulsion-and-equipment-selection/part-b-structural-margin-calculation",
+   "en_hash": "543e2daa188be834",
+   "fr_hash": "338bdf4362d3d16e"
+  },
+  {
+   "id": "worksheet-3-4-structure-propulsion-and-equipment-selection/part-c-propulsion-decision",
+   "en_hash": "b01fe8968aecc5fa",
+   "fr_hash": "2f722b771dee179f"
+  },
+  {
+   "id": "worksheet-3-4-structure-propulsion-and-equipment-selection/part-d-equipment-selection-log",
+   "en_hash": "f416f84e889d4e54",
+   "fr_hash": "73acd915cef97bba"
+  },
+  {
+   "id": "worksheet-3-4-structure-propulsion-and-equipment-selection/part-e-component-trade-study",
+   "en_hash": "f1a8fb1d010d4e36",
+   "fr_hash": "b46f989aa4c23139"
+  },
+  {
+   "id": "worksheet-3-4-structure-propulsion-and-equipment-selection/part-f-final-budget-health-check",
+   "en_hash": "4cbe11d59fbfc549",
+   "fr_hash": "94a0140ebf978aa8"
+  },
+  {
+   "id": "worksheet-3-4-structure-propulsion-and-equipment-selection/decision-justification",
+   "en_hash": "f752454cc5d52840",
+   "fr_hash": "14ac31e5235c536c"
+  },
+  {
+   "id": "worksheet-3-4-structure-propulsion-and-equipment-selection/notes-reflections",
+   "en_hash": "5739bfe977d235b5",
+   "fr_hash": "960edd1a6e3d1d03"
+  },
+  {
+   "id": "worksheet-4-1-equipment-selection-bill-of-materials",
+   "en_hash": "05dda99486c8065b",
+   "fr_hash": "56d2bae2fdd042c4"
+  },
+  {
+   "id": "worksheet-4-1-equipment-selection-bill-of-materials/part-a-make-buy-reuse-decisions",
+   "en_hash": "1a2097c9b739ebf0",
+   "fr_hash": "4ef1a5edf627d952"
+  },
+  {
+   "id": "worksheet-4-1-equipment-selection-bill-of-materials/part-b-bill-of-materials-bom",
+   "en_hash": "6a38ba09ed3d56a5",
+   "fr_hash": "700483504e32c107"
+  },
+  {
+   "id": "worksheet-4-1-equipment-selection-bill-of-materials/part-c-budget-tracking",
+   "en_hash": "ed526977c17d6d7e",
+   "fr_hash": "ece25fd199ebf0aa"
+  },
+  {
+   "id": "worksheet-4-1-equipment-selection-bill-of-materials/part-d-export-control-assessment",
+   "en_hash": "5c60bf734a201ce2",
+   "fr_hash": "6710d0d9e61b1879"
+  },
+  {
+   "id": "worksheet-4-1-equipment-selection-bill-of-materials/part-e-interface-compatibility-check",
+   "en_hash": "72743a23a305f26e",
+   "fr_hash": "cf4ee680889d6614"
+  },
+  {
+   "id": "worksheet-4-1-equipment-selection-bill-of-materials/part-f-interface-incompatibility-resolution",
+   "en_hash": "9984b50ae327e710",
+   "fr_hash": "5fe136ed7a12a299"
+  },
+  {
+   "id": "worksheet-4-1-equipment-selection-bill-of-materials/notes-reflections",
+   "en_hash": "1b1beae4407624c4",
+   "fr_hash": "7ba5dd9e038129b7"
+  },
+  {
+   "id": "worksheet-4-2-verification-validation-planning",
+   "en_hash": "6d892b3b0690c3d1",
+   "fr_hash": "5840b7a95dd3fdc4"
+  },
+  {
+   "id": "worksheet-4-2-verification-validation-planning/part-a-iadt-method-assignment",
+   "en_hash": "421924b56329ac96",
+   "fr_hash": "ec3195c0ccfa57b3"
+  },
+  {
+   "id": "worksheet-4-2-verification-validation-planning/part-b-dual-method-requirements",
+   "en_hash": "251f2f19c9a9bc86",
+   "fr_hash": "10b13578797c7674"
+  },
+  {
+   "id": "worksheet-4-2-verification-validation-planning/part-c-environmental-test-sequence",
+   "en_hash": "cad532c3fc41ea2b",
+   "fr_hash": "0f7a5a85a0070642"
+  },
+  {
+   "id": "worksheet-4-2-verification-validation-planning/part-d-vibration-test-profile",
+   "en_hash": "86e331071cc7c0e5",
+   "fr_hash": "0ceacf815b85748d"
+  },
+  {
+   "id": "worksheet-4-2-verification-validation-planning/part-e-tvac-cycle-profile",
+   "en_hash": "87872b51b74102ff",
+   "fr_hash": "8d1ce13c8ec8db1a"
+  },
+  {
+   "id": "worksheet-4-2-verification-validation-planning/part-f-waiver-identification",
+   "en_hash": "02d31f4c71b082ff",
+   "fr_hash": "653b74d43f66fb41"
+  },
+  {
+   "id": "worksheet-4-2-verification-validation-planning/notes-reflections",
+   "en_hash": "fa7e594fdd8b8d81",
+   "fr_hash": "a24961bbbda13d42"
+  },
+  {
+   "id": "worksheet-4-3-risk-interfaces-fmeca",
+   "en_hash": "fc66a821f62c760f",
+   "fr_hash": "acdc6931bacf81a0"
+  },
+  {
+   "id": "worksheet-4-3-risk-interfaces-fmeca/part-a-risk-register",
+   "en_hash": "998f52d4479f2d41",
+   "fr_hash": "0db6a6f2aa787142"
+  },
+  {
+   "id": "worksheet-4-3-risk-interfaces-fmeca/part-b-5x5-risk-matrix-plot",
+   "en_hash": "2fca1d13f59fc145",
+   "fr_hash": "d5b333b959f46222"
+  },
+  {
+   "id": "worksheet-4-3-risk-interfaces-fmeca/part-c-n-squared-n-2-interface-matrix",
+   "en_hash": "cc6f1509d6a3f415",
+   "fr_hash": "a73fb8900dd102f7"
+  },
+  {
+   "id": "worksheet-4-3-risk-interfaces-fmeca/part-d-fmeca-table",
+   "en_hash": "c81cb0c37bb4f66b",
+   "fr_hash": "5ae3056b5f1d8df8"
+  },
+  {
+   "id": "worksheet-4-3-risk-interfaces-fmeca/part-e-single-point-failure-analysis",
+   "en_hash": "9133fccc07697863",
+   "fr_hash": "efda310d6ad1645d"
+  },
+  {
+   "id": "worksheet-4-3-risk-interfaces-fmeca/part-f-reliability-calculation",
+   "en_hash": "4682011610684269",
+   "fr_hash": "001a03a7ebf19734"
+  },
+  {
+   "id": "worksheet-4-3-risk-interfaces-fmeca/part-g-risk-discussion",
+   "en_hash": "0d9f6cbc203479b5",
+   "fr_hash": "a89da2c96f2b4dac"
+  },
+  {
+   "id": "worksheet-4-3-risk-interfaces-fmeca/notes-reflections",
+   "en_hash": "b10720f569ceab5f",
+   "fr_hash": "eae233eeee607c1a"
+  },
+  {
+   "id": "worksheet-4-4-cost-estimation-design-review",
+   "en_hash": "9e461ff2cdd5952f",
+   "fr_hash": "600ed770ecfda7b9"
+  },
+  {
+   "id": "worksheet-4-4-cost-estimation-design-review/part-a-mission-cost-estimate-wbs",
+   "en_hash": "0ce7e5b4d8920578",
+   "fr_hash": "5ad50e69da8006a6"
+  },
+  {
+   "id": "worksheet-4-4-cost-estimation-design-review/part-b-confidence-levels",
+   "en_hash": "9853557b35cab368",
+   "fr_hash": "22829761ae236be8"
+  },
+  {
+   "id": "worksheet-4-4-cost-estimation-design-review/part-c-constellation-cost-if-applicable",
+   "en_hash": "5704bce80256c209",
+   "fr_hash": "2d35e8895e7b5de8"
+  },
+  {
+   "id": "worksheet-4-4-cost-estimation-design-review/part-d-cost-drivers",
+   "en_hash": "6f5750ce9257a2ca",
+   "fr_hash": "0a346ca640fcbdca"
+  },
+  {
+   "id": "worksheet-4-4-cost-estimation-design-review/part-e-design-review-readiness",
+   "en_hash": "3104defca126bf10",
+   "fr_hash": "21b7d09e51ded5fa"
+  },
+  {
+   "id": "worksheet-4-4-cost-estimation-design-review/part-f-presentation-preparation",
+   "en_hash": "b71c7db6b3f75689",
+   "fr_hash": "551557a57a099c9d"
+  },
+  {
+   "id": "worksheet-4-4-cost-estimation-design-review/notes-reflections",
+   "en_hash": "8d9accfa04fa055c",
+   "fr_hash": "006c3f1d4e432111"
+  },
+  {
+   "id": "worksheet-5-1-ground-segment-operations-architecture",
+   "en_hash": "cd5671a1f7499cc1",
+   "fr_hash": "e321e5211a351b94"
+  },
+  {
+   "id": "worksheet-5-1-ground-segment-operations-architecture/part-a-ground-station-contact-analysis",
+   "en_hash": "390703ed2471ee73",
+   "fr_hash": "ebff720d800829c2"
+  },
+  {
+   "id": "worksheet-5-1-ground-segment-operations-architecture/part-a-ground-station-contact-analysis/input-parameters",
+   "en_hash": "119d8b5bcc47dc24",
+   "fr_hash": "8a2871cda47f6c05"
+  },
+  {
+   "id": "worksheet-5-1-ground-segment-operations-architecture/part-a-ground-station-contact-analysis/calculations",
+   "en_hash": "ae1d8f8bfc54f7ec",
+   "fr_hash": "ac0a2e5d3f7a543f"
+  },
+  {
+   "id": "worksheet-5-1-ground-segment-operations-architecture/part-b-data-budget-closure",
+   "en_hash": "0ad04b6478e87039",
+   "fr_hash": "b42be49baa48ec7f"
+  },
+  {
+   "id": "worksheet-5-1-ground-segment-operations-architecture/part-c-ground-station-network-design",
+   "en_hash": "c2176c98eb07989b",
+   "fr_hash": "a0d6da23ea6b31c8"
+  },
+  {
+   "id": "worksheet-5-1-ground-segment-operations-architecture/part-d-leop-timeline",
+   "en_hash": "b10f9567da3270c1",
+   "fr_hash": "876015c97b8924fb"
+  },
+  {
+   "id": "worksheet-5-1-ground-segment-operations-architecture/part-e-mission-operations-timeline-gantt-chart",
+   "en_hash": "4b4bc45279880309",
+   "fr_hash": "8fb53de1d865d127"
+  },
+  {
+   "id": "worksheet-5-1-ground-segment-operations-architecture/notes-reflections",
+   "en_hash": "3bbce09d59cef86f",
+   "fr_hash": "d405a7546d1bc253"
+  },
+  {
+   "id": "worksheet-5-2-mission-operations-concepts",
+   "en_hash": "b7d2fd71c51e2307",
+   "fr_hash": "01005c3bf80de050"
+  },
+  {
+   "id": "worksheet-5-2-mission-operations-concepts/part-a-operational-modes",
+   "en_hash": "3cf8534c8115869b",
+   "fr_hash": "aca75570867099f1"
+  },
+  {
+   "id": "worksheet-5-2-mission-operations-concepts/part-b-fdir-rules",
+   "en_hash": "3238b58954b94108",
+   "fr_hash": "415f15ce68455d70"
+  },
+  {
+   "id": "worksheet-5-2-mission-operations-concepts/part-c-nominal-procedure",
+   "en_hash": "12d0c5d1c612f956",
+   "fr_hash": "c652aeb3cdf339fd"
+  },
+  {
+   "id": "worksheet-5-2-mission-operations-concepts/part-d-contingency-procedure",
+   "en_hash": "3020d72a56b0fd87",
+   "fr_hash": "37ede5ee6fd003f2"
+  },
+  {
+   "id": "worksheet-5-2-mission-operations-concepts/part-e-operations-staffing",
+   "en_hash": "ace173d96415f1b1",
+   "fr_hash": "f5219b07ad6decb5"
+  },
+  {
+   "id": "worksheet-5-2-mission-operations-concepts/part-f-anomaly-scenario",
+   "en_hash": "9b87cd60e4f311d3",
+   "fr_hash": "34d4d53f34d44608"
+  },
+  {
+   "id": "worksheet-5-2-mission-operations-concepts/notes-reflections",
+   "en_hash": "426d084edab9784b",
+   "fr_hash": "1f383f597783b61d"
+  },
+  {
+   "id": "worksheet-5-3-mission-simulation-day",
+   "en_hash": "a34dc8af3ce9b799",
+   "fr_hash": "8a2db7c87d9f7f09"
+  },
+  {
+   "id": "worksheet-5-3-mission-simulation-day/simulation-event-log",
+   "en_hash": "d70b4127318e3284",
+   "fr_hash": "a14c80c378d474da"
+  },
+  {
+   "id": "worksheet-5-3-mission-simulation-day/leop-checklist",
+   "en_hash": "0cc64143bbab19cf",
+   "fr_hash": "5ef810bf2e57c282"
+  },
+  {
+   "id": "worksheet-5-3-mission-simulation-day/anomaly-response-form-1",
+   "en_hash": "29dc50dcf4b8bb14",
+   "fr_hash": "8da70025d79e8561"
+  },
+  {
+   "id": "worksheet-5-3-mission-simulation-day/anomaly-response-form-2",
+   "en_hash": "0e538557ce5d6e0b",
+   "fr_hash": "e186fb166320d1a9"
+  },
+  {
+   "id": "worksheet-5-3-mission-simulation-day/anomaly-response-form-3",
+   "en_hash": "cc16d0b7c83b293a",
+   "fr_hash": "d2808121e13a084c"
+  },
+  {
+   "id": "worksheet-5-3-mission-simulation-day/commissioning-status",
+   "en_hash": "fee8ab91a27d0336",
+   "fr_hash": "e01c0f4426a3ab99"
+  },
+  {
+   "id": "worksheet-5-3-mission-simulation-day/nominal-operations-summary",
+   "en_hash": "6bf692df80bf22e2",
+   "fr_hash": "bf9dabc8825acf71"
+  },
+  {
+   "id": "worksheet-5-3-mission-simulation-day/simulation-debrief",
+   "en_hash": "8e80c68f3d01a8f1",
+   "fr_hash": "d33ad94946077162"
+  },
+  {
+   "id": "worksheet-5-3-mission-simulation-day/simulation-debrief/what-went-well",
+   "en_hash": "31e2d8bc86a13823",
+   "fr_hash": "279c312616ea9082"
+  },
+  {
+   "id": "worksheet-5-3-mission-simulation-day/simulation-debrief/what-could-be-improved",
+   "en_hash": "cc441408a15e383e",
+   "fr_hash": "a8b3579514c7accc"
+  },
+  {
+   "id": "worksheet-5-3-mission-simulation-day/simulation-debrief/design-weaknesses-revealed-by-simulation",
+   "en_hash": "dcfb846a70b9d4c4",
+   "fr_hash": "7af6ec7e15884830"
+  },
+  {
+   "id": "worksheet-5-3-mission-simulation-day/simulation-debrief/procedure-changes-needed",
+   "en_hash": "6073aaf92314d79f",
+   "fr_hash": "5e1717f95dbcf15e"
+  },
+  {
+   "id": "worksheet-5-3-mission-simulation-day/simulation-debrief/fdir-gaps-identified",
+   "en_hash": "1a695404ede8e0c0",
+   "fr_hash": "9b9bca8b15956d9b"
+  },
+  {
+   "id": "worksheet-5-3-mission-simulation-day/notes-reflections",
+   "en_hash": "6683b82118734260",
+   "fr_hash": "41791972cf834bde"
+  },
+  {
+   "id": "worksheet-5-4-final-review-presentations",
+   "en_hash": "047df7e34dad7508",
+   "fr_hash": "25ddd579f389bf2c"
+  },
+  {
+   "id": "worksheet-5-4-final-review-presentations/part-a-final-design-summary",
+   "en_hash": "7bfb54320100e5da",
+   "fr_hash": "62dd1da5bbbffe33"
+  },
+  {
+   "id": "worksheet-5-4-final-review-presentations/part-b-documentation-checklist",
+   "en_hash": "b1ad4f0119a59b9d",
+   "fr_hash": "dac44d557c75be6b"
+  },
+  {
+   "id": "worksheet-5-4-final-review-presentations/part-c-presentation-outline",
+   "en_hash": "49f33ba02216e444",
+   "fr_hash": "ddf584372138deb2"
+  },
+  {
+   "id": "worksheet-5-4-final-review-presentations/part-d-peer-review-evaluation",
+   "en_hash": "e5794c2775b57d15",
+   "fr_hash": "c0a33ffce57361b0"
+  },
+  {
+   "id": "worksheet-5-4-final-review-presentations/part-e-lessons-learned",
+   "en_hash": "97efd027fb0c657a",
+   "fr_hash": "989f91281af23fc5"
+  },
+  {
+   "id": "worksheet-5-4-final-review-presentations/part-f-self-assessment-rubric",
+   "en_hash": "58f1ce78747006e1",
+   "fr_hash": "f0e1fa2467f4bbb7"
+  },
+  {
+   "id": "worksheet-5-4-final-review-presentations/notes-reflections",
+   "en_hash": "f14c83c45540db4a",
+   "fr_hash": "90eb2a0bb7b0160e"
+  },
+  {
+   "id": "final-review-and-presentations",
+   "en_hash": "af38c3f5a7304462",
+   "fr_hash": "aa285ff50d2c8457"
+  },
+  {
+   "id": "final-review-and-presentations/learning-objectives",
+   "en_hash": "2ffe89b71bc1bb65",
+   "fr_hash": "cbb882d0191d5706"
+  },
+  {
+   "id": "final-review-and-presentations/1-design-documentation-review",
+   "en_hash": "07913e0904d4682d",
+   "fr_hash": "aeaca9de37d440ec"
+  },
+  {
+   "id": "final-review-and-presentations/1-design-documentation-review/documentation-checklist",
+   "en_hash": "80fe811871af24fd",
+   "fr_hash": "f5ed812a97f6cdd7"
+  },
+  {
+   "id": "final-review-and-presentations/1-design-documentation-review/internal-consistency-checks",
+   "en_hash": "5488b63a50c42262",
+   "fr_hash": "009353cb5ed63d53"
+  },
+  {
+   "id": "final-review-and-presentations/1-design-documentation-review/spacecdf-document-generation",
+   "en_hash": "55132da77d2025df",
+   "fr_hash": "9a702e7ac50dbfeb"
+  },
+  {
+   "id": "final-review-and-presentations/2-presentation-structure",
+   "en_hash": "c0551f3a17d85c83",
+   "fr_hash": "e0178f16b9598e82"
+  },
+  {
+   "id": "final-review-and-presentations/2-presentation-structure/presentation-outline",
+   "en_hash": "40b61d5cf8a68bcf",
+   "fr_hash": "166bab733962290f"
+  },
+  {
+   "id": "final-review-and-presentations/2-presentation-structure/presentation-best-practices",
+   "en_hash": "afb5fdd6035df0b8",
+   "fr_hash": "8f382b35837f9f66"
+  },
+  {
+   "id": "final-review-and-presentations/3-peer-review-process",
+   "en_hash": "e0a425ab6b079b31",
+   "fr_hash": "69aeb10393656d23"
+  },
+  {
+   "id": "final-review-and-presentations/3-peer-review-process/review-board-roles",
+   "en_hash": "34467a11c50e14f6",
+   "fr_hash": "b73ade2ac70c0c83"
+  },
+  {
+   "id": "final-review-and-presentations/3-peer-review-process/gate-criteria-evaluation",
+   "en_hash": "0e3248dfc32cc6a4",
+   "fr_hash": "f406ec8932991ce0"
+  },
+  {
+   "id": "final-review-and-presentations/3-peer-review-process/review-board-questions-bank",
+   "en_hash": "f9ebb4444bae4618",
+   "fr_hash": "bc06cb8818040b82"
+  },
+  {
+   "id": "final-review-and-presentations/4-team-presentations",
+   "en_hash": "48a422ef5e81d264",
+   "fr_hash": "80c86938ccbac182"
+  },
+  {
+   "id": "final-review-and-presentations/4-team-presentations/instructions",
+   "en_hash": "2b4cd23478c10ad9",
+   "fr_hash": "478aafa0e884895c"
+  },
+  {
+   "id": "final-review-and-presentations/5-course-wrap-up-lessons-learned",
+   "en_hash": "f3a69b5afc9c9d01",
+   "fr_hash": "9460cc9988829e0a"
+  },
+  {
+   "id": "final-review-and-presentations/5-course-wrap-up-lessons-learned/individual-reflection",
+   "en_hash": "9fa4cd4bfe61dce7",
+   "fr_hash": "9a20587f4e92d4bb"
+  },
+  {
+   "id": "final-review-and-presentations/5-course-wrap-up-lessons-learned/team-lessons-learned",
+   "en_hash": "25b0afa4b9ff293e",
+   "fr_hash": "bb74b402a768b873"
+  },
+  {
+   "id": "final-review-and-presentations/5-course-wrap-up-lessons-learned/key-takeaways-from-the-course",
+   "en_hash": "862718e520d9cf17",
+   "fr_hash": "7882f3eed0655ed7"
+  },
+  {
+   "id": "final-review-and-presentations/5-course-wrap-up-lessons-learned/the-systems-engineering-v-model-completed",
+   "en_hash": "7c1daab302d1a82b",
+   "fr_hash": "c94a9e25b057e50e"
+  },
+  {
+   "id": "final-review-and-presentations/5-course-wrap-up-lessons-learned/next-steps-for-participants",
+   "en_hash": "56f42b5aa66c7f07",
+   "fr_hash": "09f988c4e0324ebf"
+  },
+  {
+   "id": "final-review-and-presentations/5-course-wrap-up-lessons-learned/course-evaluation",
+   "en_hash": "bcc101ac985e0417",
+   "fr_hash": "085b7f7d4f4c6fc0"
+  },
+  {
+   "id": "final-review-and-presentations/cited-references",
+   "en_hash": "25f8bf444c8c0a55",
+   "fr_hash": "0b8564bf46c9df30"
+  },
+  {
+   "id": "final-review-and-presentations/session-summary",
+   "en_hash": "8310cb2aecf31dd3",
+   "fr_hash": "f7b450ce6701c7a1"
+  }
+ ],
+ "waivers": [
+  "worksheet-4-3-risk-interfaces-fmeca/part-a-risk-register: numbers: missing in FR []  extra in FR ['5']",
+  "worksheet-4-3-risk-interfaces-fmeca/part-b-5x5-risk-matrix-plot: numbers: missing in FR []  extra in FR ['5']",
+  "worksheet-5-4-final-review-presentations/part-f-self-assessment-rubric: numbers: missing in FR []  extra in FR ['5']"
+ ],
+ "en_commit": "c175838"
+}

@@ -1,0 +1,277 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "${DRIVE_COURSE}/instructor_book.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "spacecdf-instructor-book",
+   "en_hash": "b2e38de16c203a9f",
+   "fr_hash": "e283742728eed109"
+  },
+  {
+   "id": "chapter-5-10-scenario-catalogue",
+   "en_hash": "678e098b5da9abde",
+   "fr_hash": "6d287048e8ae6ca7"
+  },
+  {
+   "id": "chapter-5-10-scenario-catalogue/5-10-0-starting-the-simulator",
+   "en_hash": "bd0093927c4d014e",
+   "fr_hash": "4ca857c23f144fd8"
+  },
+  {
+   "id": "chapter-5-10-scenario-catalogue/5-10-1-breakpoints-4",
+   "en_hash": "c220960ce28db8dc",
+   "fr_hash": "d8121a9bbdecf271"
+  },
+  {
+   "id": "chapter-5-10-scenario-catalogue/5-10-1-breakpoints-4/bp-3-scenario-yaml-to-add-to-the-simulator",
+   "en_hash": "67507dde11a07d1a",
+   "fr_hash": "59a1fe130ffc312d"
+  },
+  {
+   "id": "chapter-5-10-scenario-catalogue/5-10-2-anomaly-scenario-catalogue-36",
+   "en_hash": "47c317e1fbddb37d",
+   "fr_hash": "72ac45873b6f1dee"
+  },
+  {
+   "id": "chapter-5-10-scenario-catalogue/5-10-2-anomaly-scenario-catalogue-36/failure-injections-without-a-scenario-file",
+   "en_hash": "644460c80d73b4b4",
+   "fr_hash": "a6e75052115329c6"
+  },
+  {
+   "id": "chapter-5-10-scenario-catalogue/5-10-3-multi-anomaly-composition-rules",
+   "en_hash": "6fa7989d35fae69a",
+   "fr_hash": "3716cea607d4a9f8"
+  },
+  {
+   "id": "chapter-2-mission-simulation-day-instructor-walkthrough",
+   "en_hash": "e4089342e7edd522",
+   "fr_hash": "4769f569a4276640"
+  },
+  {
+   "id": "chapter-2-mission-simulation-day-instructor-walkthrough/learning-objectives",
+   "en_hash": "810cf91b71835e4c",
+   "fr_hash": "c1bb20d1dd86352a"
+  },
+  {
+   "id": "chapter-2-mission-simulation-day-instructor-walkthrough/1-simulation-overview-roles",
+   "en_hash": "387922c4a2fa3193",
+   "fr_hash": "e1e1ce649fecd828"
+  },
+  {
+   "id": "chapter-2-mission-simulation-day-instructor-walkthrough/1-simulation-overview-roles/role-assignments",
+   "en_hash": "ed852c7177b05d65",
+   "fr_hash": "68e77bb9256baed8"
+  },
+  {
+   "id": "chapter-2-mission-simulation-day-instructor-walkthrough/1-simulation-overview-roles/simulation-timeline",
+   "en_hash": "b10eb0929553f56e",
+   "fr_hash": "9c2584ef06f4b761"
+  },
+  {
+   "id": "chapter-2-mission-simulation-day-instructor-walkthrough/2-leop-simulation",
+   "en_hash": "c0873bca373d4efb",
+   "fr_hash": "4ae63978f9b624c5"
+  },
+  {
+   "id": "chapter-2-mission-simulation-day-instructor-walkthrough/2-leop-simulation/facilitator-script-leop",
+   "en_hash": "92d44b4d91c53ba9",
+   "fr_hash": "81386d61ee880c1d"
+  },
+  {
+   "id": "chapter-2-mission-simulation-day-instructor-walkthrough/3-commissioning-simulation",
+   "en_hash": "66a47254993ef434",
+   "fr_hash": "7725db678f3b1c02"
+  },
+  {
+   "id": "chapter-2-mission-simulation-day-instructor-walkthrough/3-commissioning-simulation/facilitator-script-commissioning",
+   "en_hash": "b56bbeb9e551cac9",
+   "fr_hash": "4194331ed4d18f35"
+  },
+  {
+   "id": "chapter-2-mission-simulation-day-instructor-walkthrough/4-anomaly-injection-scenarios",
+   "en_hash": "a8060170c5765d36",
+   "fr_hash": "f1b8bfee5e133e42"
+  },
+  {
+   "id": "chapter-2-mission-simulation-day-instructor-walkthrough/4-anomaly-injection-scenarios/anomaly-menu-facilitator-selects-2-3",
+   "en_hash": "3123f801de86d6cc",
+   "fr_hash": "e6ad782225ef28f5"
+  },
+  {
+   "id": "chapter-2-mission-simulation-day-instructor-walkthrough/4-anomaly-injection-scenarios/anomaly-menu-facilitator-selects-2-3/anomaly-a-battery-under-voltage",
+   "en_hash": "4134a2e8d2e2a620",
+   "fr_hash": "f55b5329145c0bde"
+  },
+  {
+   "id": "chapter-2-mission-simulation-day-instructor-walkthrough/4-anomaly-injection-scenarios/anomaly-menu-facilitator-selects-2-3/anomaly-b-communication-loss",
+   "en_hash": "7f2c770603e51552",
+   "fr_hash": "4c6115f3f724789c"
+  },
+  {
+   "id": "chapter-2-mission-simulation-day-instructor-walkthrough/4-anomaly-injection-scenarios/anomaly-menu-facilitator-selects-2-3/anomaly-c-adcs-anomaly-loss-of-fine-pointing",
+   "en_hash": "7faec0eaf14648d5",
+   "fr_hash": "d89638bbf0f0241c"
+  },
+  {
+   "id": "chapter-2-mission-simulation-day-instructor-walkthrough/4-anomaly-injection-scenarios/anomaly-menu-facilitator-selects-2-3/anomaly-d-unexpected-safe-mode-entry",
+   "en_hash": "451da9e43cc59eab",
+   "fr_hash": "c33a3f2d1c3fd404"
+  },
+  {
+   "id": "chapter-2-mission-simulation-day-instructor-walkthrough/4-anomaly-injection-scenarios/anomaly-menu-facilitator-selects-2-3/anomaly-e-thermal-exceedance",
+   "en_hash": "15c86292c9cf7573",
+   "fr_hash": "875762047b65e232"
+  },
+  {
+   "id": "chapter-2-mission-simulation-day-instructor-walkthrough/4-anomaly-injection-scenarios/anomaly-documentation",
+   "en_hash": "9784993d4d776c4b",
+   "fr_hash": "85c6d015d1728c3d"
+  },
+  {
+   "id": "chapter-2-mission-simulation-day-instructor-walkthrough/5-nominal-operations-debrief",
+   "en_hash": "1a77912c5f8bc404",
+   "fr_hash": "ab21be5a5a8e3637"
+  },
+  {
+   "id": "chapter-2-mission-simulation-day-instructor-walkthrough/5-nominal-operations-debrief/nominal-operations",
+   "en_hash": "0593391e67df35a5",
+   "fr_hash": "58e21d58bb258a77"
+  },
+  {
+   "id": "chapter-2-mission-simulation-day-instructor-walkthrough/5-nominal-operations-debrief/debrief",
+   "en_hash": "0e175054137a8d37",
+   "fr_hash": "f3eed1ba2ce0ba48"
+  },
+  {
+   "id": "chapter-2-mission-simulation-day-instructor-walkthrough/facilitator-notes",
+   "en_hash": "00f1b4c94cae9d89",
+   "fr_hash": "aa0dfcdb7fe9399a"
+  },
+  {
+   "id": "chapter-2-mission-simulation-day-instructor-walkthrough/facilitator-notes/preparation",
+   "en_hash": "61b6303456151054",
+   "fr_hash": "137249f68652c623"
+  },
+  {
+   "id": "chapter-2-mission-simulation-day-instructor-walkthrough/facilitator-notes/pacing",
+   "en_hash": "22436ac4691a829c",
+   "fr_hash": "c7c8380e833f77c9"
+  },
+  {
+   "id": "chapter-2-mission-simulation-day-instructor-walkthrough/facilitator-notes/assessment-criteria",
+   "en_hash": "719e08c0a6a1146e",
+   "fr_hash": "ade51bbab1adc5b1"
+  },
+  {
+   "id": "chapter-2-mission-simulation-day-instructor-walkthrough/session-summary",
+   "en_hash": "3b5316118db157bb",
+   "fr_hash": "0a2342bb1697b1b7"
+  },
+  {
+   "id": "anomaly-injection-menus-moved-from-textbook-chapters-10-and-11",
+   "en_hash": "fa73b02d0cc3e6b8",
+   "fr_hash": "f3af1431d2117283"
+  },
+  {
+   "id": "anomaly-injection-menus-moved-from-textbook-chapters-10-and-11/leop-anomaly-injection-menu",
+   "en_hash": "d53719dc997477b7",
+   "fr_hash": "30d2cbd870aca311"
+  },
+  {
+   "id": "anomaly-injection-menus-moved-from-textbook-chapters-10-and-11/10-6-anomaly-injection-menu-instructor",
+   "en_hash": "a380a6b8f0f484fc",
+   "fr_hash": "d7518e2d3a89715f"
+  },
+  {
+   "id": "anomaly-injection-menus-moved-from-textbook-chapters-10-and-11/leop-shift-coaching",
+   "en_hash": "f2350006fa3d5d08",
+   "fr_hash": "fd3305dcd0332d14"
+  },
+  {
+   "id": "anomaly-injection-menus-moved-from-textbook-chapters-10-and-11/10-8-coaching-during-the-shift",
+   "en_hash": "d7080e7737da8501",
+   "fr_hash": "296272f7e4e4ca1d"
+  },
+  {
+   "id": "anomaly-injection-menus-moved-from-textbook-chapters-10-and-11/commissioning-anomaly-injection-menu",
+   "en_hash": "2af8cafcaa5da782",
+   "fr_hash": "883506a8ff0476c1"
+  },
+  {
+   "id": "anomaly-injection-menus-moved-from-textbook-chapters-10-and-11/11-6-anomaly-injection-menu",
+   "en_hash": "bb76f6ab572ef80e",
+   "fr_hash": "df864eb03373b165"
+  },
+  {
+   "id": "chapter-18-anomaly-cue-cards",
+   "en_hash": "64366e14f36a7613",
+   "fr_hash": "2424d9465a361c5a"
+  },
+  {
+   "id": "chapter-18-anomaly-cue-cards/18-1-no-tm-at-pass-start-easy",
+   "en_hash": "2aab108041f93597",
+   "fr_hash": "6991a09f125008da"
+  },
+  {
+   "id": "chapter-18-anomaly-cue-cards/18-2-power-line-overcurrent-easy-day-3-or-4",
+   "en_hash": "3b0c9db3d4a27214",
+   "fr_hash": "28affa3aa024b1ba"
+  },
+  {
+   "id": "chapter-18-anomaly-cue-cards/18-3-reaction-wheel-stuck-medium",
+   "en_hash": "76172c20c3bb33d8",
+   "fr_hash": "80a95e6cc146f06a"
+  },
+  {
+   "id": "chapter-18-anomaly-cue-cards/18-4-star-tracker-failure-medium-day-3-or-4",
+   "en_hash": "ddc9b9f9203e4c3d",
+   "fr_hash": "8fec7a9fc2b264f6"
+  },
+  {
+   "id": "chapter-18-anomaly-cue-cards/18-5-obc-watchdog-reset-hard",
+   "en_hash": "196c013f1201deca",
+   "fr_hash": "4614246ce2b1418b"
+  },
+  {
+   "id": "chapter-18-anomaly-cue-cards/18-6-obc-bus-failure-hard",
+   "en_hash": "57e69eca7fd3714c",
+   "fr_hash": "badd2ea0f7de959e"
+  },
+  {
+   "id": "chapter-18-anomaly-cue-cards/18-7-ground-station-antenna-failure-very-hard-day-4",
+   "en_hash": "b4aa64dc064bc0df",
+   "fr_hash": "3d8e883c089f2f4e"
+  },
+  {
+   "id": "chapter-18-anomaly-cue-cards/18-8-fpa-cooler-under-spec-medium",
+   "en_hash": "d0da34dc41d8e096",
+   "fr_hash": "37b2ed0b925e8107"
+  },
+  {
+   "id": "chapter-18-anomaly-cue-cards/18-9-corrupt-image-acquired-medium",
+   "en_hash": "b090edc7a12541c1",
+   "fr_hash": "424b81c644a14c04"
+  },
+  {
+   "id": "chapter-18-anomaly-cue-cards/18-10-aocs-sensor-cascade-hard",
+   "en_hash": "7890c64a9dc65f59",
+   "fr_hash": "5aacd0a1c084e3fa"
+  },
+  {
+   "id": "chapter-18-anomaly-cue-cards/18-11-progressive-battery-load-shed-hard",
+   "en_hash": "d0e4bbcce26cbd5b",
+   "fr_hash": "9148a53731440108"
+  },
+  {
+   "id": "chapter-18-anomaly-cue-cards/18-12-aocswheelfailure-yaml-transponderfailure-yaml-very-hard-day-4",
+   "en_hash": "25a17a152c35332e",
+   "fr_hash": "8f5c6c08b2ba5111"
+  }
+ ],
+ "en_commit": "c175838"
+}
