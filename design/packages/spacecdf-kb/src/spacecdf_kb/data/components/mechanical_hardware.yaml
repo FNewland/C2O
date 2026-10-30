@@ -1,0 +1,83 @@
+components:
+  - id: mech-fastener-m3-kit
+    name: M3 Fastener Kit (stainless, 50pc)
+    manufacturer: Bossard
+    category: mechanical_hardware
+    mass_kg: 0.030
+    power_w: 0.0
+    cost_keur: 0.1
+    trl: 9
+    type: fasteners
+    description: M3×6 socket head cap screws, stainless steel A2-70, space-grade
+
+  - id: mech-fastener-m2-kit
+    name: M2.5 Fastener Kit (50pc)
+    manufacturer: Bossard
+    category: mechanical_hardware
+    mass_kg: 0.015
+    power_w: 0.0
+    cost_keur: 0.1
+    trl: 9
+    type: fasteners
+    description: M2.5×5 socket head cap screws for PCB mounting
+
+  - id: mech-standoff-kit
+    name: PCB Standoff Kit (aluminum, 20pc)
+    manufacturer: RAF Electronic
+    category: mechanical_hardware
+    mass_kg: 0.020
+    power_w: 0.0
+    cost_keur: 0.2
+    trl: 9
+    type: standoffs
+    description: Aluminum hex standoffs for PC/104 board spacing (10mm)
+
+  - id: mech-rw-isolator-01
+    name: Reaction Wheel Vibration Isolator Set
+    manufacturer: Moog CSA
+    category: mechanical_hardware
+    mass_kg: 0.040
+    power_w: 0.0
+    cost_keur: 5
+    trl: 8
+    type: isolator
+    description: SMA-based vibration isolator mounts for reaction wheel assembly (set of 4)
+    performance:
+      isolation_frequency_hz: 50
+      attenuation_db: 20
+
+  - id: mech-antenna-hinge-01
+    name: Antenna Deployment Hinge
+    manufacturer: Haigh-Farr
+    category: mechanical_hardware
+    mass_kg: 0.015
+    power_w: 0.0
+    cost_keur: 2
+    trl: 9
+    type: mechanism
+    description: Spring-loaded hinge for tape-spring antenna deployment
+
+  - id: mech-solar-hinge-01
+    name: Solar Panel Deployment Hinge
+    manufacturer: Glenair
+    category: mechanical_hardware
+    mass_kg: 0.030
+    power_w: 0.0
+    cost_keur: 4
+    trl: 8
+    type: mechanism
+    description: Torsion spring hinge for deployable solar panel (pair)
+
+  - id: mech-burn-wire-01
+    name: Burn Wire Release Mechanism
+    manufacturer: TiNi Aerospace
+    category: mechanical_hardware
+    mass_kg: 0.005
+    power_w: 0.0
+    cost_keur: 1.5
+    trl: 9
+    type: actuator
+    description: Nichrome burn wire hold-down release for deployables
+    performance:
+      activation_time_s: 0.5
+      holding_force_n: 10

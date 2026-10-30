@@ -1,0 +1,497 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "docs/oer/chapters/21_position_reference.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "part-iv-engineering-position-reference",
+   "en_hash": "467ca40bc6fb0873",
+   "fr_hash": "dc2f4965fa55046a"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/systems-engineer",
+   "en_hash": "7a795fb9d305ab11",
+   "fr_hash": "92c6f7101bb88b9e"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/systems-engineer/decisions-you-own",
+   "en_hash": "9e8e97713ba21675",
+   "fr_hash": "85311a2073607338"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/systems-engineer/what-you-need-to-know-first",
+   "en_hash": "60ca30f6e3c9a32b",
+   "fr_hash": "4abf13e104e474e8"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/systems-engineer/formulas-charts-rules-of-thumb",
+   "en_hash": "45074619caca0b9a",
+   "fr_hash": "9c27091b795f4b62"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/systems-engineer/common-pitfalls",
+   "en_hash": "db1276f0173ade12",
+   "fr_hash": "748bfdf70237fc7b"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/systems-engineer/references",
+   "en_hash": "8c5602016ed47e89",
+   "fr_hash": "d3d54430e78c91f8"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/project-manager",
+   "en_hash": "1b83e496db318ff1",
+   "fr_hash": "53500499f6cacce0"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/project-manager/decisions-you-own",
+   "en_hash": "bff156c87ac9fc31",
+   "fr_hash": "5862dc73451f5616"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/project-manager/what-you-need-to-know-first",
+   "en_hash": "4268cf827d1e137f",
+   "fr_hash": "5351a17b7e7577dd"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/project-manager/formulas-charts-rules-of-thumb",
+   "en_hash": "4e85d2ca8d2c2dbe",
+   "fr_hash": "724a0b2defde527d"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/project-manager/common-pitfalls",
+   "en_hash": "4a06af4dad18ea31",
+   "fr_hash": "b55ca8de63753e01"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/project-manager/references",
+   "en_hash": "bfe20cba1470b913",
+   "fr_hash": "d87775e2c0f91263"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/mission-analyst",
+   "en_hash": "82788677457d1943",
+   "fr_hash": "25c567fecd1ff017"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/mission-analyst/decisions-you-own",
+   "en_hash": "417909409f3c0ffa",
+   "fr_hash": "bbab44715d269bec"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/mission-analyst/what-you-need-to-know-first",
+   "en_hash": "db129388afe63ea0",
+   "fr_hash": "618ce8ebecb7c599"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/mission-analyst/formulas-charts-rules-of-thumb",
+   "en_hash": "dc24fa46c88c2151",
+   "fr_hash": "c9812e4805b1036e"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/mission-analyst/common-pitfalls",
+   "en_hash": "084aae9494873ce7",
+   "fr_hash": "925c7ee2adbf3ff4"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/mission-analyst/references",
+   "en_hash": "62d0b50f830d7ee5",
+   "fr_hash": "b029ca00f3b1c6b1"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/payload-lead",
+   "en_hash": "3cadcab6967455a9",
+   "fr_hash": "3004832c1ff99e22"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/payload-lead/decisions-you-own",
+   "en_hash": "4ed689b49c1aab17",
+   "fr_hash": "2882e5110a47b287"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/payload-lead/what-you-need-to-know-first",
+   "en_hash": "f8196b68de24b219",
+   "fr_hash": "f26264e0aa889fa1"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/payload-lead/formulas-charts-rules-of-thumb",
+   "en_hash": "ae79813c2bfcef8e",
+   "fr_hash": "3c9300f0970c60af"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/payload-lead/common-pitfalls",
+   "en_hash": "6bb983b50b193d49",
+   "fr_hash": "a48c699d1efce4c0"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/payload-lead/references",
+   "en_hash": "67364c07935358ae",
+   "fr_hash": "a595ddc52f496e36"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/power-engineer",
+   "en_hash": "2ae97ea730dbc32d",
+   "fr_hash": "fbdb245d66eb68fe"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/power-engineer/decisions-you-own",
+   "en_hash": "365845ff71cf6df3",
+   "fr_hash": "be0883f9f4e364da"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/power-engineer/what-you-need-to-know-first",
+   "en_hash": "8ec7ddeb3072dee5",
+   "fr_hash": "fdf942290af513f7"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/power-engineer/formulas-charts-rules-of-thumb",
+   "en_hash": "715f38fd2ab43062",
+   "fr_hash": "2708db8b21bd377f"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/power-engineer/common-pitfalls",
+   "en_hash": "0d13b14cac363422",
+   "fr_hash": "d7605dad359e9ec8"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/power-engineer/references",
+   "en_hash": "5d6bfa0b3b171d1c",
+   "fr_hash": "d1b9d5d81ca0d9a4"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/aocs-engineer",
+   "en_hash": "9d533800eed4d063",
+   "fr_hash": "100f439e7e997bfb"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/aocs-engineer/decisions-you-own",
+   "en_hash": "0a6e8255e30a6b8a",
+   "fr_hash": "e8ff17a42b4fc5ef"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/aocs-engineer/what-you-need-to-know-first",
+   "en_hash": "35f35e1b23672dfb",
+   "fr_hash": "1243b835d3dde596"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/aocs-engineer/formulas-charts-rules-of-thumb",
+   "en_hash": "90717fa4c30ff056",
+   "fr_hash": "9be6b0f48a6cf003"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/aocs-engineer/common-pitfalls",
+   "en_hash": "51d9fb3151626338",
+   "fr_hash": "befcf6ee7c959aa3"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/aocs-engineer/references",
+   "en_hash": "be7b9f524e6bcee0",
+   "fr_hash": "9d0168c0216c613c"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/thermal-engineer",
+   "en_hash": "f1bebb27e67b44cb",
+   "fr_hash": "57afc69cdad54e26"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/thermal-engineer/decisions-you-own",
+   "en_hash": "15f91bd3c240571c",
+   "fr_hash": "a6ed82052263787c"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/thermal-engineer/what-you-need-to-know-first",
+   "en_hash": "f59df0c86f4761d4",
+   "fr_hash": "927e3cfdec20a1f2"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/thermal-engineer/formulas-charts-rules-of-thumb",
+   "en_hash": "5715dfe521915323",
+   "fr_hash": "95eeab824e05f5c4"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/thermal-engineer/common-pitfalls",
+   "en_hash": "7897170a7ab65b1d",
+   "fr_hash": "3ece58c1c0f7c380"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/thermal-engineer/references",
+   "en_hash": "b5963e7749fc57c3",
+   "fr_hash": "f93c03553781d90b"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/communications-engineer",
+   "en_hash": "e8cde7a697e8546f",
+   "fr_hash": "3cd8a2e77cb07ca0"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/communications-engineer/decisions-you-own",
+   "en_hash": "f66688b5a6da0b25",
+   "fr_hash": "a388aae66b5d93e5"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/communications-engineer/what-you-need-to-know-first",
+   "en_hash": "f5a9ef530c2bfba7",
+   "fr_hash": "90b40b43747383ea"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/communications-engineer/formulas-charts-rules-of-thumb",
+   "en_hash": "dcf6b5e01bf6c4df",
+   "fr_hash": "5c7d32f20167fca1"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/communications-engineer/common-pitfalls",
+   "en_hash": "d3c028cdc656fda2",
+   "fr_hash": "758fd6ba2e86173a"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/communications-engineer/references",
+   "en_hash": "a3ad80dbdda2fe0c",
+   "fr_hash": "c9a70157a58b19c8"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/propulsion-engineer",
+   "en_hash": "12041a2ef084adb8",
+   "fr_hash": "f2139131bded5978"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/propulsion-engineer/decisions-you-own",
+   "en_hash": "695ff3798776894b",
+   "fr_hash": "b69c9cab06d3ebe3"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/propulsion-engineer/what-you-need-to-know-first",
+   "en_hash": "ecd667fc5d9682eb",
+   "fr_hash": "83339a0b65f0bd12"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/propulsion-engineer/formulas-charts-rules-of-thumb",
+   "en_hash": "df794c4f5bb23b26",
+   "fr_hash": "d219858551d06bfa"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/propulsion-engineer/common-pitfalls",
+   "en_hash": "0f47082c2a1b1c9d",
+   "fr_hash": "9c2ba339afaa30e7"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/propulsion-engineer/references",
+   "en_hash": "d7f8d6749513f974",
+   "fr_hash": "9831466c2be7f224"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/structures-engineer",
+   "en_hash": "f364270d62185a8c",
+   "fr_hash": "2332ce54e1b6d755"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/structures-engineer/decisions-you-own",
+   "en_hash": "9e9d29d7a31ac3d1",
+   "fr_hash": "51ecde8bb684f203"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/structures-engineer/what-you-need-to-know-first",
+   "en_hash": "5487f8fd923f74f7",
+   "fr_hash": "fef7db7f84e08729"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/structures-engineer/formulas-charts-rules-of-thumb",
+   "en_hash": "a043fb5a49183bcb",
+   "fr_hash": "c004caafeebe9ce0"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/structures-engineer/common-pitfalls",
+   "en_hash": "c0d0fb9f782ac73e",
+   "fr_hash": "e26364682d4fabe3"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/structures-engineer/references",
+   "en_hash": "a863da95d82492ae",
+   "fr_hash": "cba6a7f69543edbe"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/cost-engineer",
+   "en_hash": "a953b4a2f53b50e1",
+   "fr_hash": "b3475b9bce226fb1"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/cost-engineer/decisions-you-own",
+   "en_hash": "e95f3b63a2a0447a",
+   "fr_hash": "e3e82b68083c415c"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/cost-engineer/what-you-need-to-know-first",
+   "en_hash": "6739b1df201917ca",
+   "fr_hash": "064e28fb0b180acb"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/cost-engineer/formulas-charts-rules-of-thumb",
+   "en_hash": "35e1b65ecadd2fa6",
+   "fr_hash": "9b2fa43af3860cf5"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/cost-engineer/common-pitfalls",
+   "en_hash": "04a478b4c941e129",
+   "fr_hash": "7541f4016172f6fb"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/cost-engineer/references",
+   "en_hash": "22f5c7bc321267b7",
+   "fr_hash": "540780d199ac3ff8"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/compliance-engineer",
+   "en_hash": "8ade7edc0c10ed75",
+   "fr_hash": "90f39cbddeac3624"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/compliance-engineer/decisions-you-own",
+   "en_hash": "bdcf00f99b450dc0",
+   "fr_hash": "be0fc94c8a5821b3"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/compliance-engineer/what-you-need-to-know-first",
+   "en_hash": "1303795269b9bf03",
+   "fr_hash": "c15d24d7fb0eadd0"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/compliance-engineer/formulas-charts-rules-of-thumb",
+   "en_hash": "dcb7515aa71baca4",
+   "fr_hash": "d131f06ca85a6adf"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/compliance-engineer/common-pitfalls",
+   "en_hash": "238999d6fb116c53",
+   "fr_hash": "d13baecdf4db80e4"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/compliance-engineer/references",
+   "en_hash": "6eb7af032b157d33",
+   "fr_hash": "87f53bd2c0df84ca"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/user-representative",
+   "en_hash": "6e536ca38a211489",
+   "fr_hash": "6913be9e3847fbc3"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/user-representative/decisions-you-own",
+   "en_hash": "889038cd8563bbb3",
+   "fr_hash": "91d8bb006ad0db0c"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/user-representative/what-you-need-to-know-first",
+   "en_hash": "52780f4b7640d8fb",
+   "fr_hash": "4e384d630998ce0b"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/user-representative/formulas-charts-rules-of-thumb",
+   "en_hash": "1419df6d6bc1254a",
+   "fr_hash": "a489e4145c815b0c"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/user-representative/common-pitfalls",
+   "en_hash": "c33bafb2bb34b194",
+   "fr_hash": "e748e0e69f6b6254"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/user-representative/references",
+   "en_hash": "009ebfb9e21a49be",
+   "fr_hash": "a9339f9854452193"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/mission-operations-engineer",
+   "en_hash": "fabe50216149a3e4",
+   "fr_hash": "1211077216f2eecc"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/mission-operations-engineer/decisions-you-own",
+   "en_hash": "aa5eb1f65d8eb676",
+   "fr_hash": "f6f1cd859359d90f"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/mission-operations-engineer/what-you-need-to-know-first",
+   "en_hash": "04b7008274703271",
+   "fr_hash": "0df4996978f6382c"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/mission-operations-engineer/formulas-charts-rules-of-thumb",
+   "en_hash": "ce73b188a93f6aff",
+   "fr_hash": "b6d77b6fb1fe8e9a"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/mission-operations-engineer/common-pitfalls",
+   "en_hash": "cbc3ada7c00802ec",
+   "fr_hash": "3811a176c81049b9"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/mission-operations-engineer/references",
+   "en_hash": "8ecea65ffc4d0e0d",
+   "fr_hash": "f16b528f33d1c493"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/ground-segment-engineer",
+   "en_hash": "36179a08a81359f6",
+   "fr_hash": "e26db5ceeaaf3633"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/ground-segment-engineer/decisions-you-own",
+   "en_hash": "eef553e60ef1af8d",
+   "fr_hash": "948b6e5b0f1c3a26"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/ground-segment-engineer/what-you-need-to-know-first",
+   "en_hash": "b302dbfd5bebdab4",
+   "fr_hash": "608d678d6fe7f9e8"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/ground-segment-engineer/formulas-charts-rules-of-thumb",
+   "en_hash": "d4d078e8d42bde87",
+   "fr_hash": "4bc4894f5e29c3c8"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/ground-segment-engineer/common-pitfalls",
+   "en_hash": "5691b3101f3d5ffb",
+   "fr_hash": "6f770c1198e90523"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/ground-segment-engineer/references",
+   "en_hash": "23fc750fec1584be",
+   "fr_hash": "eb69357044239df7"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/software-engineer-obdh-and-flight-software",
+   "en_hash": "7cde54bc04c03539",
+   "fr_hash": "515d813859ea38d7"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/software-engineer-obdh-and-flight-software/decisions-you-own",
+   "en_hash": "cddddf08b9a7716b",
+   "fr_hash": "68f021dd863ca611"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/software-engineer-obdh-and-flight-software/what-you-need-to-know-first",
+   "en_hash": "3833a13bad30b04b",
+   "fr_hash": "24475886efb6c342"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/software-engineer-obdh-and-flight-software/formulas-charts-rules-of-thumb",
+   "en_hash": "79ea519255cd6e51",
+   "fr_hash": "0b0cc0b914b936f5"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/software-engineer-obdh-and-flight-software/common-pitfalls",
+   "en_hash": "a5f60e0a6aad8ea9",
+   "fr_hash": "187e1df55f851bc6"
+  },
+  {
+   "id": "part-iv-engineering-position-reference/software-engineer-obdh-and-flight-software/references",
+   "en_hash": "0d0b5030e55c67b1",
+   "fr_hash": "d7b7c7cababd61e0"
+  }
+ ],
+ "en_commit": "3ea7113"
+}

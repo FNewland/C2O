@@ -1,0 +1,33 @@
+# 3U Technology Demonstration CubeSat — reference design point
+#
+# Reference values from SMAD4, CubeSat Design Specification (Cal Poly), and
+# typical IOD mission data.
+
+template_id: 3u_tech_demo
+description: "3U Tech Demo CubeSat @ 500 km SSO, 1-year mission"
+
+parameters:
+  mass.dry_mass_kg:
+    reference_value: 4.5
+    tolerance_percent: 100.0
+    citation: "SMAD4: 3U CubeSat dry mass 3-6 kg; with margins may reach 8-10 kg"
+
+  power.total_sunlight_w:
+    reference_value: 20.0
+    tolerance_percent: 80.0
+    citation: "3U bus ~8 W + tech payload 10 W (SMAD4 §11.3)"
+
+  power.sa_power_eol_w:
+    reference_value: 40.0
+    tolerance_percent: 80.0
+    citation: "Body-mounted 3U: 2-4 cells per face, ~20-40 W typical"
+
+  link.downlink_margin_db:
+    reference_value: 10.0
+    tolerance_percent: 100.0
+    citation: "UHF/S-band with generous margin for simple downlink (3-20 dB)"
+
+  cost.total_meur:
+    reference_value: 3.0
+    tolerance_percent: 80.0
+    citation: "CubeSat class: 1-5 MEUR typical for university/industry IOD"

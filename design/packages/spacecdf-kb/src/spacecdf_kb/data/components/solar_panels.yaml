@@ -1,0 +1,127 @@
+# Solar Panel Knowledge Base (body-mounted and deployable)
+# Distinct from solar_cells.yaml which has cell-level data
+# Sources: manufacturer datasheets, cubesatshop.com
+
+components:
+  - id: sp-endurosat-1u-body
+    name: 1U Solar Panel (body-mounted)
+    manufacturer: Endurosat
+    category: solar_panel
+    mass_kg: 0.050
+    dimensions_mm: [98, 82, 2]
+    cost_keur: 3
+    trl: 9
+    heritage_missions: [EnduroSat One]
+    performance:
+      power_bol_w: 2.3
+      power_eol_w: 2.1
+      cell_type: triple_junction_gaas
+      cell_efficiency_percent: 30
+      area_m2: 0.008
+      deployment: body_mounted
+    operating_temp_c: [-40, 85]
+    notes: Single face body-mounted panel. 6x for full cube coverage.
+
+  - id: sp-endurosat-1u-deploy
+    name: 1U Deployable Solar Panel
+    manufacturer: Endurosat
+    category: solar_panel
+    mass_kg: 0.150
+    dimensions_mm: [98, 82, 5]
+    cost_keur: 8
+    trl: 9
+    heritage_missions: [EnduroSat One]
+    performance:
+      power_bol_w: 7.0
+      power_eol_w: 6.4
+      cell_type: triple_junction_gaas
+      cell_efficiency_percent: 30
+      area_m2: 0.024
+      deployment: deployable_single_wing
+
+  - id: sp-gom-nanopow-p110
+    name: NanoPower P110
+    manufacturer: GomSpace
+    category: solar_panel
+    mass_kg: 0.045
+    dimensions_mm: [98, 82, 2]
+    cost_keur: 4
+    trl: 9
+    heritage_missions: [GOMX-1, GOMX-3]
+    performance:
+      power_bol_w: 2.4
+      power_eol_w: 2.2
+      cell_type: triple_junction_gaas
+      cell_efficiency_percent: 30
+      area_m2: 0.008
+      deployment: body_mounted
+
+  - id: sp-dhv-csa-3u-deploy
+    name: CSA 3U Deployable Array
+    manufacturer: DHV Technology
+    category: solar_panel
+    mass_kg: 0.300
+    dimensions_mm: [340, 98, 8]
+    cost_keur: 15
+    trl: 9
+    heritage_missions: [ESEO, various ESA CubeSats]
+    performance:
+      power_bol_w: 30.0
+      power_eol_w: 27.0
+      cell_type: triple_junction_gaas
+      cell_efficiency_percent: 30
+      area_m2: 0.066
+      deployment: deployable_double_wing
+    notes: Dual-wing deployable for 3U/6U. Flight-proven hinge mechanism.
+
+  - id: sp-mma-hawk
+    name: HaWK 6U Solar Array
+    manufacturer: MMA Design
+    category: solar_panel
+    mass_kg: 0.450
+    dimensions_mm: [340, 226, 10]
+    cost_keur: 25
+    trl: 9
+    heritage_missions: [MarCO, LunaH-Map, CAPSTONE]
+    performance:
+      power_bol_w: 80.0
+      power_eol_w: 72.0
+      cell_type: triple_junction_gaas
+      cell_efficiency_percent: 32
+      area_m2: 0.18
+      deployment: deployable_multi_panel
+    notes: High-power array for 6U+. Used on NASA deep-space CubeSats.
+
+  - id: sp-isis-1u-panel
+    name: 1U Solar Panel
+    manufacturer: ISISPACE
+    category: solar_panel
+    mass_kg: 0.050
+    dimensions_mm: [98, 82, 2]
+    cost_keur: 3
+    trl: 9
+    heritage_missions: [Delfi-C3, numerous]
+    performance:
+      power_bol_w: 2.2
+      power_eol_w: 2.0
+      cell_type: triple_junction_gaas
+      cell_efficiency_percent: 29
+      area_m2: 0.008
+      deployment: body_mounted
+
+  - id: sp-clyde-3u-deploy
+    name: 3rd Gen 3U Deployable Array
+    manufacturer: AAC Clyde Space
+    category: solar_panel
+    mass_kg: 0.280
+    dimensions_mm: [340, 98, 6]
+    cost_keur: 12
+    trl: 9
+    heritage_missions: [UKube-1, Carbonite-1]
+    performance:
+      power_bol_w: 28.0
+      power_eol_w: 25.0
+      cell_type: triple_junction_gaas
+      cell_efficiency_percent: 30
+      area_m2: 0.060
+      deployment: deployable_double_wing

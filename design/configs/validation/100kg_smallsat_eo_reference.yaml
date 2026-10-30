@@ -1,0 +1,42 @@
+# 100 kg SmallSat EO — reference design point
+#
+# Reference values from SSTL platforms, SMAD4, and NewSpace EO data.
+
+template_id: 100kg_smallsat_eo
+description: "100 kg SmallSat EO @ 550 km SSO, high-res imager, 5-year mission"
+
+parameters:
+  mass.dry_mass_kg:
+    reference_value: 80.0
+    tolerance_percent: 50.0
+    citation: "SSTL-42 ~42 kg, SSTL-150 ~150 kg; 100 kg class is 50-120 kg (SMAD4)"
+
+  mass.wet_mass_kg:
+    reference_value: 85.0
+    tolerance_percent: 50.0
+    citation: "Small prop load for maintenance + deorbit"
+
+  power.total_sunlight_w:
+    reference_value: 100.0
+    tolerance_percent: 60.0
+    citation: "High-res EO payload 80 W + bus ~40 W (SMAD4 §11.3)"
+
+  power.sa_power_eol_w:
+    reference_value: 180.0
+    tolerance_percent: 60.0
+    citation: "Deployable panels, 150-250 W EOL typical"
+
+  link.downlink_margin_db:
+    reference_value: 6.0
+    tolerance_percent: 80.0
+    citation: "X-band high-rate downlink: 3-10 dB design margin (SMAD4 Table 16-11)"
+
+  cost.total_meur:
+    reference_value: 20.0
+    tolerance_percent: 60.0
+    citation: "100 kg EO platform: 15-40 MEUR (NewSpace commercial range)"
+
+  data.generated_per_day_gb:
+    reference_value: 30.0
+    tolerance_percent: 50.0
+    citation: "High-res multispectral: 10-50 GB/day depending on duty cycle"

@@ -1,0 +1,89 @@
+components:
+  - id: hrn-pc104-stack-01
+    name: PC/104 Stack Connector Set
+    manufacturer: Samtec
+    category: harnesses
+    mass_kg: 0.015
+    power_w: 0.0
+    cost_keur: 0.5
+    trl: 9
+    type: connector
+    description: 104-pin stack-through connector pair for CubeSat avionics
+    interfaces: [PC/104]
+    heritage_missions: [Most CubeSats]
+
+  - id: hrn-power-harness-3u
+    name: Power Harness (3U CubeSat)
+    manufacturer: Custom
+    category: harnesses
+    mass_kg: 0.08
+    power_w: 0.0
+    cost_keur: 2
+    trl: 9
+    type: power_harness
+    description: Main power distribution harness for 3U CubeSat (EPS to all boards)
+    performance:
+      wire_gauge_awg: 24
+      max_current_a: 3.0
+      voltage_drop_mv: 50
+
+  - id: hrn-power-harness-6u
+    name: Power Harness (6U CubeSat)
+    manufacturer: Custom
+    category: harnesses
+    mass_kg: 0.15
+    power_w: 0.0
+    cost_keur: 3
+    trl: 9
+    type: power_harness
+    description: Main power distribution harness for 6U CubeSat
+
+  - id: hrn-rf-cable-sma-01
+    name: RF Cable Assembly (SMA-SMA, 15cm)
+    manufacturer: Huber+Suhner
+    category: harnesses
+    mass_kg: 0.010
+    power_w: 0.0
+    cost_keur: 0.3
+    trl: 9
+    type: rf_cable
+    description: Semi-rigid RF cable with SMA connectors for TTC chain
+    performance:
+      impedance_ohm: 50
+      insertion_loss_db: 0.3
+      max_frequency_ghz: 18
+
+  - id: hrn-data-ribbon-01
+    name: Flex Ribbon Cable (FPC, 20-pin)
+    manufacturer: Molex
+    category: harnesses
+    mass_kg: 0.005
+    power_w: 0.0
+    cost_keur: 0.2
+    trl: 9
+    type: data_cable
+    description: Flexible printed circuit ribbon cable for inter-board data
+    interfaces: [SPI, I2C, UART]
+
+  - id: hrn-deployment-cable-01
+    name: Deployment Switch Harness
+    manufacturer: Custom
+    category: harnesses
+    mass_kg: 0.020
+    power_w: 0.0
+    cost_keur: 0.5
+    trl: 9
+    type: deployment
+    description: Kill switch and deployment detection harness (CDS compliant)
+
+  - id: hrn-separation-connector-01
+    name: Separation Connector (Umbilical)
+    manufacturer: Omnetics
+    category: harnesses
+    mass_kg: 0.025
+    power_w: 0.0
+    cost_keur: 3
+    trl: 9
+    type: umbilical
+    description: Access port connector for pre-launch battery charging and diagnostics
+    interfaces: [USB, UART, Power]

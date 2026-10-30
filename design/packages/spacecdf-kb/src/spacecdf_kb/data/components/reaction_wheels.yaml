@@ -1,0 +1,202 @@
+# Reaction Wheel Knowledge Base
+# Sources: manufacturer datasheets, SMAD, publicly available specifications
+# Costs are estimates where not publicly listed
+
+components:
+  - id: rw-cubew-small
+    name: CubeWheel Small
+    manufacturer: CubeSpace
+    category: reaction_wheel
+    mass_kg: 0.060
+    power_w: 0.75
+    cost_keur: 15
+    trl: 9
+    heritage_missions:
+      - ZACube-2
+      - BIRDS-4
+    performance:
+      momentum_nms: 0.002
+      max_torque_nm: 0.00023
+      max_speed_rpm: 8000
+    notes: Smallest commercially available reaction wheel for 1U CubeSats
+
+  - id: rw-cubew-medium
+    name: CubeWheel Medium
+    manufacturer: CubeSpace
+    category: reaction_wheel
+    mass_kg: 0.130
+    power_w: 1.5
+    cost_keur: 22
+    trl: 9
+    heritage_missions:
+      - NovaSAR-1
+      - ESAIL
+    performance:
+      momentum_nms: 0.011
+      max_torque_nm: 0.001
+      max_speed_rpm: 8000
+    notes: Popular CubeSat reaction wheel for 3U-6U platforms
+
+  - id: rw-cubew-large
+    name: CubeWheel Large
+    manufacturer: CubeSpace
+    category: reaction_wheel
+    mass_kg: 0.225
+    power_w: 2.5
+    cost_keur: 30
+    trl: 9
+    heritage_missions:
+      - ZACUBE-2
+    performance:
+      momentum_nms: 0.030
+      max_torque_nm: 0.002
+      max_speed_rpm: 7000
+    notes: Largest CubeSpace wheel for 6U-12U CubeSats
+
+  - id: rw-blue-canyon-rwp050
+    name: RWP050
+    manufacturer: Blue Canyon Technologies
+    category: reaction_wheel
+    mass_kg: 0.130
+    power_w: 1.0
+    cost_keur: 25
+    trl: 9
+    heritage_missions:
+      - Starlink (early proto)
+      - CYGNSS
+    performance:
+      momentum_nms: 0.050
+      max_torque_nm: 0.004
+      max_speed_rpm: 8000
+    notes: High-heritage CubeSat wheel with excellent momentum-to-mass ratio
+
+  - id: rw-blue-canyon-rwp100
+    name: RWP100
+    manufacturer: Blue Canyon Technologies
+    category: reaction_wheel
+    mass_kg: 0.240
+    power_w: 2.5
+    cost_keur: 35
+    trl: 9
+    heritage_missions:
+      - LunaH-Map
+      - CAPSTONE
+    performance:
+      momentum_nms: 0.100
+      max_torque_nm: 0.007
+      max_speed_rpm: 7500
+    notes: Medium-class CubeSat/SmallSat wheel
+
+  - id: rw-nanoavionics-rwn4
+    name: SatBus 4RW0
+    manufacturer: NanoAvionics
+    category: reaction_wheel
+    mass_kg: 0.155
+    power_w: 1.8
+    cost_keur: 20
+    trl: 9
+    heritage_missions:
+      - M6P
+      - BlueWalker 1
+    performance:
+      momentum_nms: 0.020
+      max_torque_nm: 0.0006
+      max_speed_rpm: 6500
+    notes: Integrated 4-wheel assembly in compact package
+
+  - id: rw-sinclair-rw3-0.060
+    name: RW-0.060
+    manufacturer: Sinclair Interplanetary (Rocket Lab)
+    category: reaction_wheel
+    mass_kg: 0.185
+    power_w: 1.0
+    cost_keur: 28
+    trl: 9
+    heritage_missions:
+      - CanX-4/5
+      - BRITE
+      - GHGSat
+    performance:
+      momentum_nms: 0.060
+      max_torque_nm: 0.002
+      max_speed_rpm: 6700
+    notes: Proven SmallSat wheel acquired by Rocket Lab
+
+  - id: rw-newspace-rw1
+    name: RW1
+    manufacturer: NewSpace Systems
+    category: reaction_wheel
+    mass_kg: 0.350
+    power_w: 3.0
+    cost_keur: 40
+    trl: 9
+    heritage_missions:
+      - Deimos-2
+      - Kondor-E
+    performance:
+      momentum_nms: 0.18
+      max_torque_nm: 0.010
+      max_speed_rpm: 6000
+    notes: South African manufacturer, strong heritage in LEO missions
+
+  - id: rw-cubespace-cubewheel-small
+    name: CubeWheel Small
+    manufacturer: CubeSpace
+    category: reaction_wheel
+    mass_kg: 0.060
+    dimensions_mm: [28, 31, 26]
+    cost_keur: 8
+    trl: 9
+    heritage_missions: [ZACube-2, nSight-1, 80+ in orbit]
+    performance:
+      momentum_nms: 0.00177
+      max_torque_nm: 0.00023
+      max_speed_rpm: 8000
+    power_w: 0.6
+    interfaces: [I2C, UART, CAN]
+
+  - id: rw-cubespace-cubewheel-medium
+    name: CubeWheel Medium
+    manufacturer: CubeSpace
+    category: reaction_wheel
+    mass_kg: 0.120
+    dimensions_mm: [46, 46, 31.5]
+    cost_keur: 12
+    trl: 9
+    performance:
+      momentum_nms: 0.010
+      max_torque_nm: 0.001
+      max_speed_rpm: 8000
+    power_w: 1.0
+    interfaces: [I2C, UART, CAN]
+
+  - id: rw-cubespace-cubewheel-large
+    name: CubeWheel Large
+    manufacturer: CubeSpace
+    category: reaction_wheel
+    mass_kg: 0.200
+    dimensions_mm: [50, 50, 40]
+    cost_keur: 18
+    trl: 9
+    performance:
+      momentum_nms: 0.0162
+      max_torque_nm: 0.007
+      max_speed_rpm: 6000
+    power_w: 2.0
+    interfaces: [I2C, UART, CAN]
+
+  - id: rw-gom-gsw600
+    name: NanoTorque GSW-600
+    manufacturer: GomSpace
+    category: reaction_wheel
+    mass_kg: 0.235
+    dimensions_mm: [95, 95, 62]
+    cost_keur: 20
+    trl: 9
+    performance:
+      momentum_nms: 0.019
+      max_torque_nm: 0.002
+      max_speed_rpm: 6000
+    power_w: 2.5
+    interfaces: [SPI, I2C]
+    notes: 4-wheel pyramid = 940g total

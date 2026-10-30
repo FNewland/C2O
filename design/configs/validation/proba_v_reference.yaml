@@ -1,0 +1,135 @@
+# PROBA-V — detailed validation reference
+#
+# Published data from Dierckx et al. (RSE 2014), ESA fact sheets,
+# Francois et al. (ESA Living Planet 2013), QinetiQ Space documentation.
+#
+# PROBA-V is one of the best-documented small EO missions, making it
+# an excellent validation target for subsystem-level accuracy.
+
+template_id: proba_v
+description: "PROBA-V vegetation satellite — 820 km SSO, 140 kg class, 5-year mission"
+
+parameters:
+  # --- Mass budget ---
+  mass.dry_mass_kg:
+    reference_value: 138.0
+    tolerance_percent: 20.0
+    citation: "ESA PROBA-V fact sheet: ~138 kg total mass (no propulsion, dry ≈ wet)"
+
+  mass.wet_mass_kg:
+    reference_value: 138.0
+    tolerance_percent: 20.0
+    citation: "No propulsion system; wet = dry"
+
+  mass.payload_kg:
+    reference_value: 32.0
+    tolerance_percent: 15.0
+    citation: "VEGETATION instrument: 32 kg (Dierckx et al. RSE 2014)"
+
+  mass.platform_kg:
+    reference_value: 106.0
+    tolerance_percent: 20.0
+    citation: "Platform mass: 138 - 32 = 106 kg"
+
+  # --- Orbit ---
+  orbit.period_s:
+    reference_value: 6096.0
+    tolerance_percent: 2.0
+    citation: "820 km SSO: T = 2π√((7191 km)³/μ) ≈ 6096 s (101.6 min)"
+
+  orbit.eclipse_fraction:
+    reference_value: 0.34
+    tolerance_percent: 15.0
+    citation: "820 km SSO: ~34% eclipse (cylindrical shadow model)"
+
+  orbit.velocity_ms:
+    reference_value: 7450.0
+    tolerance_percent: 2.0
+    citation: "Physics: v = √(μ/a) at 7191 km ≈ 7450 m/s"
+
+  orbit.orbits_per_day:
+    reference_value: 14.2
+    tolerance_percent: 3.0
+    citation: "86400/6096 ≈ 14.2 orbits/day"
+
+  # --- Power ---
+  power.total_sunlight_w:
+    reference_value: 100.0
+    tolerance_percent: 30.0
+    citation: "PROBA-V: ~48W payload + ~50W platform = ~100W total (ESA docs)"
+
+  power.sa_power_eol_w:
+    reference_value: 145.0
+    tolerance_percent: 25.0
+    citation: "~170W BOL, ~145W after 5-year degradation (GaAs triple-junction)"
+
+  power.battery_capacity_wh:
+    reference_value: 480.0
+    tolerance_percent: 30.0
+    citation: "PROBA bus heritage: ~6.5 Ah @ 28V ≈ 182 Wh min; scaled for 5-year life"
+
+  power.eps_mass_kg:
+    reference_value: 12.0
+    tolerance_percent: 30.0
+    citation: "EPS ~8-12% of S/C mass for micro-class: ~12-16 kg (SMAD4 §11.6)"
+
+  power.sa_mass_kg:
+    reference_value: 4.5
+    tolerance_percent: 40.0
+    citation: "Body-mounted + single deployable wing: ~4-5 kg (PROBA bus heritage)"
+
+  # --- Communications ---
+  link.downlink_margin_db:
+    reference_value: 5.0
+    tolerance_percent: 80.0
+    citation: "X-band ~36 Mbps to ESEC 13.5m dish; design margin ~3-6 dB"
+
+  link.ttc_mass_kg:
+    reference_value: 4.0
+    tolerance_percent: 30.0
+    citation: "X-band Tx + S-band TTC + antenna assembly: ~3.5-4.5 kg"
+
+  link.ttc_power_w:
+    reference_value: 35.0
+    tolerance_percent: 40.0
+    citation: "X-band PA + S-band Rx: ~30-40W during downlink"
+
+  # --- AOCS ---
+  aocs.pointing_accuracy_deg:
+    reference_value: 0.05
+    tolerance_percent: 40.0
+    citation: "PROBA-V: <0.065° (3σ) pointing accuracy (Dierckx et al.)"
+
+  aocs.mass_kg:
+    reference_value: 6.0
+    tolerance_percent: 30.0
+    citation: "4x RW + 2x ST + 3x gyro + 3x mag + 3x coil: ~5-7 kg"
+
+  # --- Thermal ---
+  thermal.tcs_mass_kg:
+    reference_value: 4.0
+    tolerance_percent: 40.0
+    citation: "MLI + radiators + heaters for micro-class: ~3-5 kg"
+
+  # --- Structure ---
+  structure.mass_kg:
+    reference_value: 22.0
+    tolerance_percent: 30.0
+    citation: "PROBA bus structure ~16-18% of dry mass: ~22-25 kg"
+
+  # --- Data ---
+  data.generated_per_day_gb:
+    reference_value: 15.0
+    tolerance_percent: 20.0
+    citation: "VEGETATION: ~15 GB/day (global coverage, 4 bands, daily)"
+
+  data.storage_required_gb:
+    reference_value: 32.0
+    tolerance_percent: 50.0
+    citation: "Onboard storage for ~2 orbits of data: ~30-35 GB"
+
+  # --- Cost ---
+  cost.total_meur:
+    reference_value: 55.0
+    tolerance_percent: 40.0
+    citation: "PROBA-V total mission cost ~55 MEUR (ESA programmatic data)"

@@ -1,0 +1,292 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "docs/INSTALLATION_GUIDE.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "spacecdf-installation-guide",
+   "en_hash": "6133501547a33074",
+   "fr_hash": "64fd5bca3594b694"
+  },
+  {
+   "id": "spacecdf-installation-guide/quick-install-automated-scripts",
+   "en_hash": "8daac6ea7e176305",
+   "fr_hash": "0948af8ccef73acf"
+  },
+  {
+   "id": "spacecdf-installation-guide/quick-install-automated-scripts/macos-linux",
+   "en_hash": "3e77ed9bff7cc57a",
+   "fr_hash": "3e77ed9bff7cc57a"
+  },
+  {
+   "id": "spacecdf-installation-guide/quick-install-automated-scripts/windows-11-powershell",
+   "en_hash": "98903d9599ea30b5",
+   "fr_hash": "98903d9599ea30b5"
+  },
+  {
+   "id": "spacecdf-installation-guide/quick-install-automated-scripts/docker-backend-only",
+   "en_hash": "6f46a27809b33ccf",
+   "fr_hash": "c8975d447401febd"
+  },
+  {
+   "id": "spacecdf-installation-guide/quick-install-automated-scripts/script-options",
+   "en_hash": "362caeceb6fc1c00",
+   "fr_hash": "59ec1f09869130ff"
+  },
+  {
+   "id": "spacecdf-installation-guide/1-system-requirements",
+   "en_hash": "b5cd99b156b03080",
+   "fr_hash": "55f0463823a62805"
+  },
+  {
+   "id": "spacecdf-installation-guide/1-system-requirements/1-1-minimum",
+   "en_hash": "3d51d5f4db231535",
+   "fr_hash": "1aeecaa60ae9be53"
+  },
+  {
+   "id": "spacecdf-installation-guide/1-system-requirements/1-2-where-the-disk-space-goes",
+   "en_hash": "3ced554c532e18bf",
+   "fr_hash": "e95f89a7a1823996"
+  },
+  {
+   "id": "spacecdf-installation-guide/1-system-requirements/1-3-performance",
+   "en_hash": "08807d74ae163c9b",
+   "fr_hash": "e0f146a0527c1641"
+  },
+  {
+   "id": "spacecdf-installation-guide/2-install-prerequisites",
+   "en_hash": "ccd70e4eaca4fde9",
+   "fr_hash": "9326af4d099b8826"
+  },
+  {
+   "id": "spacecdf-installation-guide/2-install-prerequisites/2-1-install-python-3-11",
+   "en_hash": "d202c5149f74eb55",
+   "fr_hash": "f4146fcf682e1f22"
+  },
+  {
+   "id": "spacecdf-installation-guide/2-install-prerequisites/2-1-install-python-3-11/macos",
+   "en_hash": "ff419081bb0ff782",
+   "fr_hash": "a1dca4b3ccf80808"
+  },
+  {
+   "id": "spacecdf-installation-guide/2-install-prerequisites/2-1-install-python-3-11/windows-11",
+   "en_hash": "2851420dd7c1093a",
+   "fr_hash": "56234807024f84f2"
+  },
+  {
+   "id": "spacecdf-installation-guide/2-install-prerequisites/2-1-install-python-3-11/ubuntu-linux-22-04",
+   "en_hash": "305f2566613e3a9e",
+   "fr_hash": "305f2566613e3a9e"
+  },
+  {
+   "id": "spacecdf-installation-guide/2-install-prerequisites/2-2-install-node-js-18",
+   "en_hash": "c2927bb8bcaad40b",
+   "fr_hash": "53d6efe250ecfe87"
+  },
+  {
+   "id": "spacecdf-installation-guide/2-install-prerequisites/2-2-install-node-js-18/macos",
+   "en_hash": "0490185d233dd1f1",
+   "fr_hash": "0490185d233dd1f1"
+  },
+  {
+   "id": "spacecdf-installation-guide/2-install-prerequisites/2-2-install-node-js-18/windows-11",
+   "en_hash": "83807d1ce6683aff",
+   "fr_hash": "053b6708646f1eee"
+  },
+  {
+   "id": "spacecdf-installation-guide/2-install-prerequisites/2-2-install-node-js-18/ubuntu-linux",
+   "en_hash": "47af106fe60af345",
+   "fr_hash": "47af106fe60af345"
+  },
+  {
+   "id": "spacecdf-installation-guide/2-install-prerequisites/2-3-install-git",
+   "en_hash": "ae1132dc9f1a2f4e",
+   "fr_hash": "ed2bb620220fcc85"
+  },
+  {
+   "id": "spacecdf-installation-guide/2-install-prerequisites/2-3-install-git/macos",
+   "en_hash": "eb4ecde4c6869a56",
+   "fr_hash": "6fe9a1ff934a9ecd"
+  },
+  {
+   "id": "spacecdf-installation-guide/2-install-prerequisites/2-3-install-git/windows-11",
+   "en_hash": "f34671c9d30f69b9",
+   "fr_hash": "dd16685babf5651a"
+  },
+  {
+   "id": "spacecdf-installation-guide/2-install-prerequisites/2-3-install-git/ubuntu-linux",
+   "en_hash": "25f693891da929de",
+   "fr_hash": "5f1045352a016d9a"
+  },
+  {
+   "id": "spacecdf-installation-guide/3-download-spacecdf",
+   "en_hash": "b5b84ca0db2180d3",
+   "fr_hash": "ad010b288ceb3c35"
+  },
+  {
+   "id": "spacecdf-installation-guide/3-download-spacecdf/macos-linux",
+   "en_hash": "4c6f80b399b40bca",
+   "fr_hash": "4c6f80b399b40bca"
+  },
+  {
+   "id": "spacecdf-installation-guide/3-download-spacecdf/windows-11",
+   "en_hash": "7d9b22f0f95de42c",
+   "fr_hash": "8ab8a12948744537"
+  },
+  {
+   "id": "spacecdf-installation-guide/4-install-the-backend-python",
+   "en_hash": "73abf73cef71f526",
+   "fr_hash": "e558dc96bdb442c3"
+  },
+  {
+   "id": "spacecdf-installation-guide/4-install-the-backend-python/4-1-create-a-python-virtual-environment",
+   "en_hash": "7ec44a2fbbcbf6df",
+   "fr_hash": "5ace5fea079b644e"
+  },
+  {
+   "id": "spacecdf-installation-guide/4-install-the-backend-python/4-1-create-a-python-virtual-environment/macos-linux",
+   "en_hash": "b11b97e0f25c9d42",
+   "fr_hash": "b11b97e0f25c9d42"
+  },
+  {
+   "id": "spacecdf-installation-guide/4-install-the-backend-python/4-1-create-a-python-virtual-environment/windows-11",
+   "en_hash": "669c27546f8d6407",
+   "fr_hash": "98260fb84338c67b"
+  },
+  {
+   "id": "spacecdf-installation-guide/4-install-the-backend-python/4-2-install-the-spacecdf-python-packages",
+   "en_hash": "ba68597ebec11a4c",
+   "fr_hash": "492c84c293a78905"
+  },
+  {
+   "id": "spacecdf-installation-guide/4-install-the-backend-python/4-3-smoke-test-the-backend",
+   "en_hash": "77f34b5d263a41b6",
+   "fr_hash": "1622a8366eb07c3a"
+  },
+  {
+   "id": "spacecdf-installation-guide/5-install-the-frontend-web-interface",
+   "en_hash": "15e4252039d21d20",
+   "fr_hash": "3d092cff4ed4f6e7"
+  },
+  {
+   "id": "spacecdf-installation-guide/6-first-launch",
+   "en_hash": "8b74bbf35023065c",
+   "fr_hash": "4a65a91e771b9eb9"
+  },
+  {
+   "id": "spacecdf-installation-guide/6-first-launch/6-1-start-the-backend-terminal-1",
+   "en_hash": "68895c97b9c9339d",
+   "fr_hash": "c68db67028cfe484"
+  },
+  {
+   "id": "spacecdf-installation-guide/6-first-launch/6-2-start-the-frontend-terminal-2",
+   "en_hash": "6e9b9519f17cb4c6",
+   "fr_hash": "df22e2651a11e668"
+  },
+  {
+   "id": "spacecdf-installation-guide/6-first-launch/6-3-open-spacecdf-in-your-browser",
+   "en_hash": "6b806502ddbd0088",
+   "fr_hash": "46acd89cb2c7bf77"
+  },
+  {
+   "id": "spacecdf-installation-guide/6-first-launch/6-4-run-your-first-design",
+   "en_hash": "5c32523748f5f90f",
+   "fr_hash": "c91957cae817fff5"
+  },
+  {
+   "id": "spacecdf-installation-guide/7-troubleshooting",
+   "en_hash": "dd90450307437720",
+   "fr_hash": "b2a51776704f1125"
+  },
+  {
+   "id": "spacecdf-installation-guide/7-troubleshooting/command-not-found-python3-macos-linux",
+   "en_hash": "245ffec0bf4e7dc9",
+   "fr_hash": "daaecdb6e1411ad6"
+  },
+  {
+   "id": "spacecdf-installation-guide/7-troubleshooting/activate-ps1-cannot-be-loaded-because-running-scripts-is-disabled-windows",
+   "en_hash": "922b668d5175e30b",
+   "fr_hash": "294ca056940eb293"
+  },
+  {
+   "id": "spacecdf-installation-guide/7-troubleshooting/pip-install-errors-mentioning-wheel-or-setuptools",
+   "en_hash": "839586bc68ae56c7",
+   "fr_hash": "520ca8d83a381343"
+  },
+  {
+   "id": "spacecdf-installation-guide/7-troubleshooting/npm-install-errors",
+   "en_hash": "2cc738a22a4bd261",
+   "fr_hash": "4a33fa6bb6058d67"
+  },
+  {
+   "id": "spacecdf-installation-guide/7-troubleshooting/port-8000-already-in-use-or-port-5173-already-in-use",
+   "en_hash": "48b8c0d689b50c63",
+   "fr_hash": "e542193cb4722e6a"
+  },
+  {
+   "id": "spacecdf-installation-guide/7-troubleshooting/the-browser-shows-errconnectionrefused",
+   "en_hash": "98f09111168cf842",
+   "fr_hash": "fa0485a9e0c9fee5"
+  },
+  {
+   "id": "spacecdf-installation-guide/7-troubleshooting/designs-do-not-converge",
+   "en_hash": "964bef29f8ed3fcf",
+   "fr_hash": "c0a68e78cf2b59cd"
+  },
+  {
+   "id": "spacecdf-installation-guide/7-troubleshooting/document-export-fails",
+   "en_hash": "45c3abf5a5d37208",
+   "fr_hash": "1bc10f54a380ec5c"
+  },
+  {
+   "id": "spacecdf-installation-guide/8-optional-add-ons",
+   "en_hash": "c6dcc0f2f3c63c78",
+   "fr_hash": "fd7b17a5bb820357"
+  },
+  {
+   "id": "spacecdf-installation-guide/8-optional-add-ons/8-1-run-with-docker-compose",
+   "en_hash": "ccff25b21300893e",
+   "fr_hash": "a3488f5de6afc802"
+  },
+  {
+   "id": "spacecdf-installation-guide/8-optional-add-ons/8-2-run-with-postgresql-instead-of-sqlite",
+   "en_hash": "d176fd9c555e3ed3",
+   "fr_hash": "c819da3c91b246d6"
+  },
+  {
+   "id": "spacecdf-installation-guide/8-optional-add-ons/8-3-enable-ai-assisted-design-optional",
+   "en_hash": "77dac9dc2928aeed",
+   "fr_hash": "a1383b8422d25273"
+  },
+  {
+   "id": "spacecdf-installation-guide/8-optional-add-ons/8-4-remote-access-via-tailscale",
+   "en_hash": "81bc82b9e4c12c94",
+   "fr_hash": "4968087fb3ba6c74"
+  },
+  {
+   "id": "spacecdf-installation-guide/8-optional-add-ons/8-5-keep-the-ecss-standards-library-offline",
+   "en_hash": "1aeafa4304d88001",
+   "fr_hash": "80b6142e0301f07a"
+  },
+  {
+   "id": "spacecdf-installation-guide/9-updating-spacecdf",
+   "en_hash": "377d20248ec5c188",
+   "fr_hash": "45dbb524cc2bd2ab"
+  },
+  {
+   "id": "spacecdf-installation-guide/10-uninstalling",
+   "en_hash": "117cef5471ae0a74",
+   "fr_hash": "b2d76cdb1e6444d7"
+  },
+  {
+   "id": "spacecdf-installation-guide/acknowledgement-generative-ai-aig",
+   "en_hash": "0159b29e60c0dee1",
+   "fr_hash": "2bf3df511884d618"
+  }
+ ],
+ "en_commit": "3ea7113"
+}

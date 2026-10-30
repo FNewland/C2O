@@ -1,0 +1,97 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "docs/orbit_north/week3/training_day2.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "6eb1f79eba6a56ca",
+   "fr_hash": "60b1af3ab50edbfb"
+  },
+  {
+   "id": "training-day-2-mission-operations-training",
+   "en_hash": "ca215810d90bcfae",
+   "fr_hash": "81b80565fa4ba9ee"
+  },
+  {
+   "id": "training-day-2-mission-operations-training/1-voice-loop-discipline",
+   "en_hash": "2deb32a6e569587b",
+   "fr_hash": "71970ce88e1e87b1"
+  },
+  {
+   "id": "training-day-2-mission-operations-training/1-voice-loop-discipline/1-1-standard-callouts",
+   "en_hash": "01c21ef22d780a14",
+   "fr_hash": "4eed29252cddd9f8"
+  },
+  {
+   "id": "training-day-2-mission-operations-training/1-voice-loop-discipline/1-2-go-no-go-protocol",
+   "en_hash": "150839c1f7152320",
+   "fr_hash": "1a8860a689a4bfe2"
+  },
+  {
+   "id": "training-day-2-mission-operations-training/2-procedure-walk-through",
+   "en_hash": "cb07ccb822db08df",
+   "fr_hash": "1670167f0ad6aa47"
+  },
+  {
+   "id": "training-day-2-mission-operations-training/2-procedure-walk-through/2-1-nom-001-pass-startup",
+   "en_hash": "4f98f99fc1e4c324",
+   "fr_hash": "dabf560c40fe6aa8"
+  },
+  {
+   "id": "training-day-2-mission-operations-training/2-procedure-walk-through/2-2-ctg-003-ttc-link-loss-recovery",
+   "en_hash": "5a6f8099b140e45e",
+   "fr_hash": "cd72789c8fda3509"
+  },
+  {
+   "id": "training-day-2-mission-operations-training/3-shift-handover-practice-nom-012",
+   "en_hash": "95481bc0c0349281",
+   "fr_hash": "71c9669d362a7c52"
+  },
+  {
+   "id": "training-day-2-mission-operations-training/4-flight-dynamics-workshop",
+   "en_hash": "d3333f41889e76cd",
+   "fr_hash": "5c1731ac967f4d89"
+  },
+  {
+   "id": "training-day-2-mission-operations-training/5-dry-runs",
+   "en_hash": "10193c079ce6a861",
+   "fr_hash": "232060a65dd80322"
+  },
+  {
+   "id": "training-day-2-mission-operations-training/5-dry-runs/dry-run-1-nominal-pass",
+   "en_hash": "35e7c21987aa3b24",
+   "fr_hash": "aaff973f37490bdd"
+  },
+  {
+   "id": "training-day-2-mission-operations-training/5-dry-runs/dry-run-2-nominal-pass-with-one-failure",
+   "en_hash": "309e34dbbb187f3f",
+   "fr_hash": "23f01bf06f1ae6fb"
+  },
+  {
+   "id": "training-day-2-mission-operations-training/6-operations-training-quiz",
+   "en_hash": "6418f3ef22eb6e6d",
+   "fr_hash": "19cf860b3536829b"
+  },
+  {
+   "id": "training-day-2-mission-operations-training/7-expected-reading-for-wednesday",
+   "en_hash": "c31c1aad1ea61ae7",
+   "fr_hash": "d7b8430c6adb1667"
+  },
+  {
+   "id": "training-day-2-mission-operations-training/8-tools-files-references",
+   "en_hash": "13e606b23f72011d",
+   "fr_hash": "f2882eb21050d851"
+  },
+  {
+   "id": "training-day-2-mission-operations-training/8-tools-files-references/simulator-files-referenced",
+   "en_hash": "49db75a6e84c42e0",
+   "fr_hash": "f32bcc8ba008689d"
+  },
+  {
+   "id": "training-day-2-mission-operations-training/8-tools-files-references/open-references",
+   "en_hash": "1eb7dd5634ff573c",
+   "fr_hash": "017866d8619fe349"
+  }
+ ],
+ "en_commit": "3ea7113"
+}

@@ -1,0 +1,182 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "docs/oer/chapters/02_canadian_ecosystem.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "chapter-2-the-canadian-space-ecosystem-and-regulatory-environment",
+   "en_hash": "511f7eb0b4325d28",
+   "fr_hash": "a79a7268f295fdff"
+  },
+  {
+   "id": "chapter-2-the-canadian-space-ecosystem-and-regulatory-environment/learning-objectives",
+   "en_hash": "cdce5a42411d8a2c",
+   "fr_hash": "da55970de8a76f83"
+  },
+  {
+   "id": "chapter-2-the-canadian-space-ecosystem-and-regulatory-environment/2-1-the-canadian-space-agency",
+   "en_hash": "4c7ba85393d850b5",
+   "fr_hash": "108a6604ddc2d867"
+  },
+  {
+   "id": "chapter-2-the-canadian-space-ecosystem-and-regulatory-environment/2-1-the-canadian-space-agency/2-1-1-mandate-and-history",
+   "en_hash": "402cf7be03dc29cd",
+   "fr_hash": "321ebb0aa69dac7d"
+  },
+  {
+   "id": "chapter-2-the-canadian-space-ecosystem-and-regulatory-environment/2-1-the-canadian-space-agency/2-1-2-csa-organisational-focus-areas",
+   "en_hash": "bb96065285b552de",
+   "fr_hash": "99614428bf82d871"
+  },
+  {
+   "id": "chapter-2-the-canadian-space-ecosystem-and-regulatory-environment/2-1-the-canadian-space-agency/2-1-3-canadian-space-strategy-2019",
+   "en_hash": "4b74c4cec258e89f",
+   "fr_hash": "6937358cfced94fb"
+  },
+  {
+   "id": "chapter-2-the-canadian-space-ecosystem-and-regulatory-environment/2-2-canadian-space-industry-map",
+   "en_hash": "b101b9c40e56c198",
+   "fr_hash": "564ddc0b640e4d3e"
+  },
+  {
+   "id": "chapter-2-the-canadian-space-ecosystem-and-regulatory-environment/2-2-canadian-space-industry-map/2-2-1-industry-structure",
+   "en_hash": "6b71902a92860f15",
+   "fr_hash": "148bc6b4416b7029"
+  },
+  {
+   "id": "chapter-2-the-canadian-space-ecosystem-and-regulatory-environment/2-2-canadian-space-industry-map/2-2-2-key-canadian-space-capabilities",
+   "en_hash": "6c0ddfeaf515879c",
+   "fr_hash": "af3bdffaf5cbc46b"
+  },
+  {
+   "id": "chapter-2-the-canadian-space-ecosystem-and-regulatory-environment/2-2-canadian-space-industry-map/2-2-3-funding-programmes",
+   "en_hash": "c9891ec7fb574c7a",
+   "fr_hash": "e63e31bff9321751"
+  },
+  {
+   "id": "chapter-2-the-canadian-space-ecosystem-and-regulatory-environment/2-3-comparison-with-other-national-models",
+   "en_hash": "b75ffa94c6766a4e",
+   "fr_hash": "767312c08034eedf"
+  },
+  {
+   "id": "chapter-2-the-canadian-space-ecosystem-and-regulatory-environment/2-4-canadian-space-in-the-international-context",
+   "en_hash": "479b79fb1044851b",
+   "fr_hash": "0843c9aec4ab6264"
+  },
+  {
+   "id": "chapter-2-the-canadian-space-ecosystem-and-regulatory-environment/2-4-canadian-space-in-the-international-context/2-4-1-international-partnerships",
+   "en_hash": "b3dcea2c14552fa1",
+   "fr_hash": "baf08fc5436843ca"
+  },
+  {
+   "id": "chapter-2-the-canadian-space-ecosystem-and-regulatory-environment/2-4-canadian-space-in-the-international-context/2-4-2-the-canadian-niche-strategy",
+   "en_hash": "7a4bb1762e3345b0",
+   "fr_hash": "4fd6b0bb02fde030"
+  },
+  {
+   "id": "chapter-2-the-canadian-space-ecosystem-and-regulatory-environment/2-5-regulatory-framework-overview",
+   "en_hash": "b51ef2a8afea8104",
+   "fr_hash": "2bec8fca0d6a061d"
+  },
+  {
+   "id": "chapter-2-the-canadian-space-ecosystem-and-regulatory-environment/2-6-remote-sensing-space-systems-act-rsssa",
+   "en_hash": "4f52dd18a55ac82b",
+   "fr_hash": "54de5a231f2527a2"
+  },
+  {
+   "id": "chapter-2-the-canadian-space-ecosystem-and-regulatory-environment/2-6-remote-sensing-space-systems-act-rsssa/2-6-1-purpose-and-scope",
+   "en_hash": "dc4bf1f17e229ee0",
+   "fr_hash": "386a64a5e4a71ce2"
+  },
+  {
+   "id": "chapter-2-the-canadian-space-ecosystem-and-regulatory-environment/2-6-remote-sensing-space-systems-act-rsssa/2-6-2-who-needs-a-licence",
+   "en_hash": "43e24c8408173061",
+   "fr_hash": "5e1f3c227a2dc5ae"
+  },
+  {
+   "id": "chapter-2-the-canadian-space-ecosystem-and-regulatory-environment/2-6-remote-sensing-space-systems-act-rsssa/2-6-3-licence-categories-and-conditions",
+   "en_hash": "4c1d50ee8d0840d2",
+   "fr_hash": "84ee88c9d8401ef1"
+  },
+  {
+   "id": "chapter-2-the-canadian-space-ecosystem-and-regulatory-environment/2-6-remote-sensing-space-systems-act-rsssa/2-6-4-implications-for-cubesat-and-university-missions",
+   "en_hash": "539d9dd0e6e60ba4",
+   "fr_hash": "e18268e54f003116"
+  },
+  {
+   "id": "chapter-2-the-canadian-space-ecosystem-and-regulatory-environment/2-7-spectrum-management-and-licensing",
+   "en_hash": "5977c604ba434ef5",
+   "fr_hash": "8cd2151c7d7a120f"
+  },
+  {
+   "id": "chapter-2-the-canadian-space-ecosystem-and-regulatory-environment/2-7-spectrum-management-and-licensing/2-7-1-why-spectrum-licensing-matters",
+   "en_hash": "ef6e260e6e1d6360",
+   "fr_hash": "74f43af35254feba"
+  },
+  {
+   "id": "chapter-2-the-canadian-space-ecosystem-and-regulatory-environment/2-7-spectrum-management-and-licensing/2-7-2-the-itu-framework",
+   "en_hash": "3593cc98ebfd279e",
+   "fr_hash": "934ff8d1cf32cb3a"
+  },
+  {
+   "id": "chapter-2-the-canadian-space-ecosystem-and-regulatory-environment/2-7-spectrum-management-and-licensing/2-7-3-common-satellite-frequency-bands",
+   "en_hash": "45abefeacd69e4ef",
+   "fr_hash": "e6fd3ef2966fca9b"
+  },
+  {
+   "id": "chapter-2-the-canadian-space-ecosystem-and-regulatory-environment/2-7-spectrum-management-and-licensing/2-7-4-the-licensing-process-canada",
+   "en_hash": "00ebd57fc27db4ec",
+   "fr_hash": "c3ac4b41f13d76f3"
+  },
+  {
+   "id": "chapter-2-the-canadian-space-ecosystem-and-regulatory-environment/2-7-spectrum-management-and-licensing/2-7-5-cubesat-specific-considerations",
+   "en_hash": "eacf452a09058438",
+   "fr_hash": "5c88eb5bdcf84fd1"
+  },
+  {
+   "id": "chapter-2-the-canadian-space-ecosystem-and-regulatory-environment/2-8-export-control",
+   "en_hash": "8efc624af28a214e",
+   "fr_hash": "80f301a7f2f92c20"
+  },
+  {
+   "id": "chapter-2-the-canadian-space-ecosystem-and-regulatory-environment/2-8-export-control/2-8-1-the-export-control-landscape",
+   "en_hash": "0503011406708eb7",
+   "fr_hash": "84f9653d982d62a6"
+  },
+  {
+   "id": "chapter-2-the-canadian-space-ecosystem-and-regulatory-environment/2-8-export-control/2-8-2-canadian-export-controls-eipa",
+   "en_hash": "a0343ddbb0bb995a",
+   "fr_hash": "fa9f25c0ed8d8a92"
+  },
+  {
+   "id": "chapter-2-the-canadian-space-ecosystem-and-regulatory-environment/2-8-export-control/2-8-3-us-export-controls-itar-and-ear",
+   "en_hash": "f23a982d869ff963",
+   "fr_hash": "a973727791731ba7"
+  },
+  {
+   "id": "chapter-2-the-canadian-space-ecosystem-and-regulatory-environment/2-8-export-control/2-8-4-practical-implications-for-mission-design",
+   "en_hash": "14f12aa308c03ceb",
+   "fr_hash": "420c03dd63bc959b"
+  },
+  {
+   "id": "chapter-2-the-canadian-space-ecosystem-and-regulatory-environment/summary",
+   "en_hash": "f51890162a226054",
+   "fr_hash": "12fbd2103264a707"
+  },
+  {
+   "id": "chapter-2-the-canadian-space-ecosystem-and-regulatory-environment/problems",
+   "en_hash": "c4f6fbd0d24c633f",
+   "fr_hash": "1c49b7bf38384061"
+  },
+  {
+   "id": "chapter-2-the-canadian-space-ecosystem-and-regulatory-environment/references",
+   "en_hash": "7061f353076d2356",
+   "fr_hash": "034cf6b093421974"
+  }
+ ],
+ "en_commit": "3ea7113"
+}

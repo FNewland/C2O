@@ -1,0 +1,237 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "docs/oer/chapters/22_derivations.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "part-v-first-principles-derivations",
+   "en_hash": "7aacd53e43ef1f91",
+   "fr_hash": "23f347a5a9492652"
+  },
+  {
+   "id": "part-v-first-principles-derivations/v-1-constants-used-earth",
+   "en_hash": "a35a07c3f0af03a4",
+   "fr_hash": "90ba53a4a5fedda2"
+  },
+  {
+   "id": "part-v-first-principles-derivations/v-2-kepler-s-third-law",
+   "en_hash": "955381d10a2b5bee",
+   "fr_hash": "ce3f5538250ed6be"
+  },
+  {
+   "id": "part-v-first-principles-derivations/v-2-kepler-s-third-law/derivation",
+   "en_hash": "1882d7d0126fc741",
+   "fr_hash": "cd58b988dadf16a1"
+  },
+  {
+   "id": "part-v-first-principles-derivations/v-2-kepler-s-third-law/verification",
+   "en_hash": "c73899f5418b74fc",
+   "fr_hash": "b5059e75fb5bdc36"
+  },
+  {
+   "id": "part-v-first-principles-derivations/v-3-tsiolkovsky-rocket-equation",
+   "en_hash": "99c5424b0ac97b3f",
+   "fr_hash": "8ea1e32f9eea64b9"
+  },
+  {
+   "id": "part-v-first-principles-derivations/v-3-tsiolkovsky-rocket-equation/derivation",
+   "en_hash": "240935bf28682167",
+   "fr_hash": "56fbd95b03b8268e"
+  },
+  {
+   "id": "part-v-first-principles-derivations/v-3-tsiolkovsky-rocket-equation/verification",
+   "en_hash": "02279b1c1e9254b5",
+   "fr_hash": "d83b61346c9487d9"
+  },
+  {
+   "id": "part-v-first-principles-derivations/v-4-j2-nodal-regression",
+   "en_hash": "88bda3786cd64d5e",
+   "fr_hash": "ccd7a5b94c43a7e4"
+  },
+  {
+   "id": "part-v-first-principles-derivations/v-4-j2-nodal-regression/derivation",
+   "en_hash": "0754439a54a7bcb4",
+   "fr_hash": "6c6ad86cef009044"
+  },
+  {
+   "id": "part-v-first-principles-derivations/v-4-j2-nodal-regression/sun-synchronous-condition",
+   "en_hash": "c65837da083a0d08",
+   "fr_hash": "8b23054b320534ec"
+  },
+  {
+   "id": "part-v-first-principles-derivations/v-4-j2-nodal-regression/verification",
+   "en_hash": "0ada03ce1b5cc428",
+   "fr_hash": "d9662eaa19279dcf"
+  },
+  {
+   "id": "part-v-first-principles-derivations/v-5-eclipse-fraction-analytical-circular-orbit",
+   "en_hash": "3459d05b7a0f8760",
+   "fr_hash": "5a53e62f48577b8f"
+  },
+  {
+   "id": "part-v-first-principles-derivations/v-5-eclipse-fraction-analytical-circular-orbit/derivation",
+   "en_hash": "5e68ad5847a332e7",
+   "fr_hash": "368b9deceec19176"
+  },
+  {
+   "id": "part-v-first-principles-derivations/v-5-eclipse-fraction-analytical-circular-orbit/verification",
+   "en_hash": "2290659f32053f97",
+   "fr_hash": "647b411fe611b8b5"
+  },
+  {
+   "id": "part-v-first-principles-derivations/v-6-free-space-path-loss",
+   "en_hash": "461a2dffae6245f9",
+   "fr_hash": "02e8c5ac0ff0dc40"
+  },
+  {
+   "id": "part-v-first-principles-derivations/v-6-free-space-path-loss/derivation",
+   "en_hash": "b30e531ad3536910",
+   "fr_hash": "c3107d27a51dc709"
+  },
+  {
+   "id": "part-v-first-principles-derivations/v-6-free-space-path-loss/verification",
+   "en_hash": "c0b760a601b26d5e",
+   "fr_hash": "6841189820ad820d"
+  },
+  {
+   "id": "part-v-first-principles-derivations/v-7-link-budget-algebra",
+   "en_hash": "493c2fb1fadd1ca1",
+   "fr_hash": "673eef231287910b"
+  },
+  {
+   "id": "part-v-first-principles-derivations/v-7-link-budget-algebra/derivation",
+   "en_hash": "cff036b255312dbe",
+   "fr_hash": "467432f38f976416"
+  },
+  {
+   "id": "part-v-first-principles-derivations/v-7-link-budget-algebra/verification",
+   "en_hash": "384280be9cb1bd5f",
+   "fr_hash": "3e116b37f9387329"
+  },
+  {
+   "id": "part-v-first-principles-derivations/v-8-eb-n0-versus-ber",
+   "en_hash": "c41f2604d3727b2d",
+   "fr_hash": "5e16a91aa9247b9a"
+  },
+  {
+   "id": "part-v-first-principles-derivations/v-8-eb-n0-versus-ber/derivation",
+   "en_hash": "24899e85b5074257",
+   "fr_hash": "b591a9ae0f75947e"
+  },
+  {
+   "id": "part-v-first-principles-derivations/v-8-eb-n0-versus-ber/verification",
+   "en_hash": "43e09e5d8985fd78",
+   "fr_hash": "c0ee34ee6c860694"
+  },
+  {
+   "id": "part-v-first-principles-derivations/v-9-ground-sample-distance-geometry",
+   "en_hash": "137a6b74be90cf7d",
+   "fr_hash": "4800a19ba1403805"
+  },
+  {
+   "id": "part-v-first-principles-derivations/v-9-ground-sample-distance-geometry/derivation-diffraction-limit",
+   "en_hash": "f915ad23f8e4a47c",
+   "fr_hash": "844dcd82edaa6cb2"
+  },
+  {
+   "id": "part-v-first-principles-derivations/v-9-ground-sample-distance-geometry/derivation-pixel-limit",
+   "en_hash": "de1e311e349def9d",
+   "fr_hash": "1208f71cac70690c"
+  },
+  {
+   "id": "part-v-first-principles-derivations/v-9-ground-sample-distance-geometry/verification",
+   "en_hash": "b364cc376ade2179",
+   "fr_hash": "c15f8399a7828d02"
+  },
+  {
+   "id": "part-v-first-principles-derivations/v-10-radiative-thermal-equilibrium",
+   "en_hash": "03d688c33eaea1f6",
+   "fr_hash": "df7c2082476a18d7"
+  },
+  {
+   "id": "part-v-first-principles-derivations/v-10-radiative-thermal-equilibrium/derivation",
+   "en_hash": "2805320d0701a1ad",
+   "fr_hash": "7b5013509fe588e7"
+  },
+  {
+   "id": "part-v-first-principles-derivations/v-10-radiative-thermal-equilibrium/verification",
+   "en_hash": "bd2a427d01285d5a",
+   "fr_hash": "3e2cf78384803364"
+  },
+  {
+   "id": "part-v-first-principles-derivations/v-11-solar-array-sizing",
+   "en_hash": "7c410b62ed835309",
+   "fr_hash": "828cbfb863396c5b"
+  },
+  {
+   "id": "part-v-first-principles-derivations/v-11-solar-array-sizing/derivation",
+   "en_hash": "209d9c5be107e645",
+   "fr_hash": "6af87eb19cb962f9"
+  },
+  {
+   "id": "part-v-first-principles-derivations/v-11-solar-array-sizing/equivalence-to-the-eclipse-fraction-form",
+   "en_hash": "add9ea68d6e8b26c",
+   "fr_hash": "b8f35ca60b8854b2"
+  },
+  {
+   "id": "part-v-first-principles-derivations/v-11-solar-array-sizing/verification",
+   "en_hash": "8d4fdc6055b2f04e",
+   "fr_hash": "01dbdc1773d73bba"
+  },
+  {
+   "id": "part-v-first-principles-derivations/v-12-battery-sizing",
+   "en_hash": "9e5da5677427bad1",
+   "fr_hash": "dc85b6a30a774c68"
+  },
+  {
+   "id": "part-v-first-principles-derivations/v-12-battery-sizing/derivation",
+   "en_hash": "6c22ba9b5c0ed6f6",
+   "fr_hash": "e3f7ead930cf2f05"
+  },
+  {
+   "id": "part-v-first-principles-derivations/v-12-battery-sizing/verification",
+   "en_hash": "4e4a4e2a5d89682d",
+   "fr_hash": "00d1301cd1d48ee3"
+  },
+  {
+   "id": "part-v-first-principles-derivations/v-13-margin-of-safety-structures",
+   "en_hash": "4b94edd191ba08dc",
+   "fr_hash": "21dd8b738c5c3001"
+  },
+  {
+   "id": "part-v-first-principles-derivations/v-14-disturbance-torque-order-of-magnitude",
+   "en_hash": "3abefd740061c42b",
+   "fr_hash": "56bac481fd10465f"
+  },
+  {
+   "id": "part-v-first-principles-derivations/v-14-disturbance-torque-order-of-magnitude/derivation-aerodynamic-drag",
+   "en_hash": "0e60828c28db0ec3",
+   "fr_hash": "615c5f9d250e73ee"
+  },
+  {
+   "id": "part-v-first-principles-derivations/v-14-disturbance-torque-order-of-magnitude/verification",
+   "en_hash": "9ba8530bfc509b35",
+   "fr_hash": "c5ee646e1b69f0e6"
+  },
+  {
+   "id": "part-v-first-principles-derivations/v-15-daily-data-volume-closure",
+   "en_hash": "1f6a4ef6c4aed0bf",
+   "fr_hash": "99d614dca0d92781"
+  },
+  {
+   "id": "part-v-first-principles-derivations/v-16-cross-method-verification-matrix",
+   "en_hash": "3b6a9926423ef3e0",
+   "fr_hash": "a6d1dec89c9c625f"
+  },
+  {
+   "id": "part-v-first-principles-derivations/v-17-key-references",
+   "en_hash": "c638fadc48d17332",
+   "fr_hash": "3085012d74a29147"
+  }
+ ],
+ "en_commit": "3ea7113"
+}

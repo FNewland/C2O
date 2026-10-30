@@ -1,0 +1,50 @@
+# SpaceCDF Example Study: Lunar Reconnaissance Orbiter
+
+name: "LunarMap-1 Reconnaissance Orbiter"
+mission_type: lunar
+spacecraft_class: small
+
+orbit:
+  orbit_type: lunar
+  altitude_km: 100.0
+  inclination_deg: 90.0
+  eccentricity: 0.0
+  mission_duration_years: 2.0
+  delta_v_insertion_ms: 800.0
+  delta_v_maintenance_ms: 50.0
+  deorbit_required: false
+
+payloads:
+  - name: "High-Resolution Camera"
+    type: optical_imager
+    mass_kg: 15.0
+    power_w: 50.0
+    power_peak_w: 80.0
+    data_rate_mbps: 200.0
+    data_volume_per_day_gb: 20.0
+    pointing_accuracy_deg: 0.01
+    pointing_stability_deg_s: 0.001
+    temperature_range_c: [-30.0, 40.0]
+    fov_deg: 2.5
+    duty_cycle_percent: 30.0
+    description: "0.5m resolution panchromatic + 2m multispectral"
+  - name: "Laser Altimeter"
+    type: lidar
+    mass_kg: 8.0
+    power_w: 30.0
+    power_peak_w: 60.0
+    data_rate_mbps: 10.0
+    pointing_accuracy_deg: 0.1
+    temperature_range_c: [-20.0, 50.0]
+    duty_cycle_percent: 50.0
+    description: "Topographic mapping lidar, 10 cm vertical accuracy"
+
+design_lifetime_years: 2.0
+reliability_target: 0.9
+target_mass_kg: 500.0
+target_cost_meur: 80.0
+num_spacecraft: 1
+ground_stations:
+  - "DSN Goldstone"
+  - "DSN Madrid"
+  - "DSN Canberra"

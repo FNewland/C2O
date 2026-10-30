@@ -1,0 +1,207 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "docs/user_guide_expanded.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "aff938ca4fec5311",
+   "fr_hash": "983844fa931ceb91"
+  },
+  {
+   "id": "user-guide",
+   "en_hash": "9ab40b7b550a597d",
+   "fr_hash": "496d711557151a1b"
+  },
+  {
+   "id": "user-guide/what-spacecdf-is",
+   "en_hash": "eb4ada6f6b27d231",
+   "fr_hash": "c61fe68b371273bc"
+  },
+  {
+   "id": "user-guide/getting-started",
+   "en_hash": "79eb659e005ff484",
+   "fr_hash": "84a53e703a1b0c5a"
+  },
+  {
+   "id": "user-guide/getting-started/system-requirements",
+   "en_hash": "78fbc870bf78987a",
+   "fr_hash": "586041d303746ae0"
+  },
+  {
+   "id": "user-guide/getting-started/installation-local",
+   "en_hash": "bcf0891e4a2f08bc",
+   "fr_hash": "d3111daef56f1a14"
+  },
+  {
+   "id": "user-guide/getting-started/connecting-to-a-remote-instance",
+   "en_hash": "cb1ce5907ac6fe02",
+   "fr_hash": "0a98c07aaa34a33b"
+  },
+  {
+   "id": "user-guide/workflow-at-a-glance",
+   "en_hash": "5cf67dd8fa631788",
+   "fr_hash": "007a0f52a80e9b4d"
+  },
+  {
+   "id": "user-guide/workflow-at-a-glance/step-1-mission-need",
+   "en_hash": "457728d018d604cd",
+   "fr_hash": "e91c3ef3ebd9899c"
+  },
+  {
+   "id": "user-guide/workflow-at-a-glance/step-2-concept-exploration",
+   "en_hash": "572433fb5d620645",
+   "fr_hash": "cf061363dad4fa6d"
+  },
+  {
+   "id": "user-guide/workflow-at-a-glance/step-3-requirements",
+   "en_hash": "952eaeadfd3d3458",
+   "fr_hash": "5aab42ed293ad00b"
+  },
+  {
+   "id": "user-guide/workflow-at-a-glance/step-4-design-phase",
+   "en_hash": "48fd11c17cd9bbb7",
+   "fr_hash": "25f7aac3130d6745"
+  },
+  {
+   "id": "user-guide/workflow-at-a-glance/step-5-review",
+   "en_hash": "98d32cef3bd9b7df",
+   "fr_hash": "63c50e0104a08e61"
+  },
+  {
+   "id": "user-guide/key-features",
+   "en_hash": "6e3fbe37261a77fb",
+   "fr_hash": "bc5c906e6259de40"
+  },
+  {
+   "id": "user-guide/key-features/dashboard",
+   "en_hash": "aa4dbfa3c7502232",
+   "fr_hash": "8bc5499cc3476215"
+  },
+  {
+   "id": "user-guide/key-features/equipment-browser",
+   "en_hash": "363c1d1bc9a2fafc",
+   "fr_hash": "7ce03b03947329ea"
+  },
+  {
+   "id": "user-guide/key-features/trade-studies",
+   "en_hash": "e19e7cdb95182f8e",
+   "fr_hash": "72f8b238be572aa3"
+  },
+  {
+   "id": "user-guide/key-features/link-budget-tool",
+   "en_hash": "b689a678cfad48ff",
+   "fr_hash": "609d7d60ae69ed48"
+  },
+  {
+   "id": "user-guide/key-features/optimizer",
+   "en_hash": "f9b226c7f5b82237",
+   "fr_hash": "595b9377e04b0478"
+  },
+  {
+   "id": "user-guide/key-features/exports",
+   "en_hash": "74571535461447c1",
+   "fr_hash": "4b31b2c7e0865f32"
+  },
+  {
+   "id": "user-guide/key-features/cross-tool-reactivity",
+   "en_hash": "0cf65ea190b50258",
+   "fr_hash": "ea6a8ce0ce5bcf84"
+  },
+  {
+   "id": "user-guide/key-features/progressive-level-unlocking",
+   "en_hash": "0433e1292ccb484b",
+   "fr_hash": "1d30f6d1e11f1f07"
+  },
+  {
+   "id": "user-guide/key-features/interactive-mission-architecture-editor",
+   "en_hash": "70c66a975bbe4912",
+   "fr_hash": "4a8d78769814c3e0"
+  },
+  {
+   "id": "user-guide/key-features/system-architecture-selection",
+   "en_hash": "c33507769da021ba",
+   "fr_hash": "558d119a6bd5714c"
+  },
+  {
+   "id": "user-guide/key-features/engineering-budgets-unified-view",
+   "en_hash": "d0f2fdd51b76415b",
+   "fr_hash": "670506cdca29b5c2"
+  },
+  {
+   "id": "user-guide/key-features/constraint-propagation-engine",
+   "en_hash": "22f742c59f5bcbd3",
+   "fr_hash": "3f5317eab1d9937e"
+  },
+  {
+   "id": "user-guide/key-features/project-management",
+   "en_hash": "9bd1130d0664b0a7",
+   "fr_hash": "1a53997e6a50f803"
+  },
+  {
+   "id": "user-guide/key-features/word-document-export",
+   "en_hash": "f47233cdfe681cb5",
+   "fr_hash": "908509461ad29b7f"
+  },
+  {
+   "id": "user-guide/key-features/session-persistence",
+   "en_hash": "f409b26692f37940",
+   "fr_hash": "7391a6888c629ed5"
+  },
+  {
+   "id": "user-guide/concurrent-design-sessions",
+   "en_hash": "167ef5afccf3ed2a",
+   "fr_hash": "bab28707f0a17260"
+  },
+  {
+   "id": "user-guide/editing-parametric-data",
+   "en_hash": "de15efd65c401aa5",
+   "fr_hash": "24da71e6c2b06dcd"
+  },
+  {
+   "id": "user-guide/updating-equipment-database",
+   "en_hash": "a6fe23aca2ed8708",
+   "fr_hash": "1894dda4fc8d0959"
+  },
+  {
+   "id": "user-guide/tab-by-tab-feature-inventory",
+   "en_hash": "9263a3b4281f63a6",
+   "fr_hash": "205f5a6a10dd8c51"
+  },
+  {
+   "id": "user-guide/status-bar-legend",
+   "en_hash": "b94e5c8fc57f7fbe",
+   "fr_hash": "fdf9c06f78da5b8c"
+  },
+  {
+   "id": "user-guide/file-format-support-matrix",
+   "en_hash": "4e687a889fc5aedf",
+   "fr_hash": "1885438be0842c8a"
+  },
+  {
+   "id": "user-guide/keyboard-shortcuts",
+   "en_hash": "832efb689f048781",
+   "fr_hash": "400f0e8c696751dd"
+  },
+  {
+   "id": "user-guide/troubleshooting",
+   "en_hash": "19fc5c22dec0d84e",
+   "fr_hash": "0ce736b07c763053"
+  },
+  {
+   "id": "user-guide/error-message-reference",
+   "en_hash": "491ee0d7f673c043",
+   "fr_hash": "0c01c94bb2acffbc"
+  },
+  {
+   "id": "user-guide/glossary",
+   "en_hash": "e26913885d11f9b8",
+   "fr_hash": "52ac7a016dec38ba"
+  },
+  {
+   "id": "user-guide/reference-list",
+   "en_hash": "10090d8dddfcfbed",
+   "fr_hash": "575b521bff527606"
+  }
+ ],
+ "en_commit": "3ea7113"
+}

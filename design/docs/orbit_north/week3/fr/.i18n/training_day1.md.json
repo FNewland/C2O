@@ -1,0 +1,92 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "docs/orbit_north/week3/training_day1.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "04b793b3d9119b3f",
+   "fr_hash": "b992c36ba240a79f"
+  },
+  {
+   "id": "training-day-1-operations-concept-development",
+   "en_hash": "ddf0f9115670caba",
+   "fr_hash": "7e8538bf277bf256"
+  },
+  {
+   "id": "training-day-1-operations-concept-development/1-brief-what-we-re-flying",
+   "en_hash": "78cf7c71f1e3cb11",
+   "fr_hash": "7e497671bab465fe"
+  },
+  {
+   "id": "training-day-1-operations-concept-development/1-brief-what-we-re-flying/1-1-the-four-ground-segment-elements",
+   "en_hash": "65d96d0ebe341a4d",
+   "fr_hash": "d2dbea561e3561e4"
+  },
+  {
+   "id": "training-day-1-operations-concept-development/1-brief-what-we-re-flying/1-2-pass-geometry-the-polar-s-band-picture",
+   "en_hash": "ac5de64af4ebe03d",
+   "fr_hash": "073bc6043c0cb544"
+  },
+  {
+   "id": "training-day-1-operations-concept-development/1-brief-what-we-re-flying/1-3-procedure-structure",
+   "en_hash": "d965dd097289e5e1",
+   "fr_hash": "1172beabbc421f60"
+  },
+  {
+   "id": "training-day-1-operations-concept-development/1-brief-what-we-re-flying/1-4-pus-service-primer-light",
+   "en_hash": "589f2d1bc7cc6d95",
+   "fr_hash": "7a6cc7941007eb7c"
+  },
+  {
+   "id": "training-day-1-operations-concept-development/2-eosat-1-mission-summary-expected-reading-before-day-1",
+   "en_hash": "8b3894301c94b947",
+   "fr_hash": "fb03a8a3d3db7055"
+  },
+  {
+   "id": "training-day-1-operations-concept-development/2-eosat-1-mission-summary-expected-reading-before-day-1/key-references",
+   "en_hash": "2fb1e08ad294a52d",
+   "fr_hash": "ece600e2ecf78aef"
+  },
+  {
+   "id": "training-day-1-operations-concept-development/3-mission-planning-system-hands-on",
+   "en_hash": "562e6907f9e174bf",
+   "fr_hash": "2eb638cf4aafcae9"
+  },
+  {
+   "id": "training-day-1-operations-concept-development/4-mcs-round-robin",
+   "en_hash": "b8a2d8a71b093ed6",
+   "fr_hash": "6705301ccd6a396a"
+  },
+  {
+   "id": "training-day-1-operations-concept-development/5-pass-plan-team-exercise",
+   "en_hash": "130bedaa538826c6",
+   "fr_hash": "324d8618ef14bd2e"
+  },
+  {
+   "id": "training-day-1-operations-concept-development/6-debrief-expected-reading-for-day-2",
+   "en_hash": "877100a3658abecd",
+   "fr_hash": "93963e9b5f6a19d0"
+  },
+  {
+   "id": "training-day-1-operations-concept-development/7-tools-files-references",
+   "en_hash": "2e832ee8e5393e07",
+   "fr_hash": "75e586cd09d6af67"
+  },
+  {
+   "id": "training-day-1-operations-concept-development/7-tools-files-references/tools-used",
+   "en_hash": "b2d90f3e35afd141",
+   "fr_hash": "496506eaaa7434ad"
+  },
+  {
+   "id": "training-day-1-operations-concept-development/7-tools-files-references/simulator-files-referenced",
+   "en_hash": "4791940e9e0ab482",
+   "fr_hash": "96d992be9c6660e7"
+  },
+  {
+   "id": "training-day-1-operations-concept-development/7-tools-files-references/open-references",
+   "en_hash": "5f997bc9481c87fb",
+   "fr_hash": "1e7632c9448c0122"
+  }
+ ],
+ "en_commit": "3ea7113"
+}

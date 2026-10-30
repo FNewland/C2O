@@ -1,0 +1,174 @@
+# SCDF-170 — Closing the loop: engineering analyses driven by, and written back to, the model
+
+**Status:** accepted for build (Sept 2026), follows SCDF-160 (branch `arcadia-spine` @ 4e2f432)
+**Binding for:** agents building SCDF-170..178. Deviations → ADR in `docs/_review/adr/`.
+
+## 0. The problem this range solves
+
+After SCDF-160, SpaceCDF has an Arcadia/10-25-shaped model (elements, functions, interfaces, exchange items, requirements with relations, typed parameters with formulas) and five engineering services from the H3 backlog: `conops_executor.simulate_orbit`, `ground_scheduler.predict_contacts/schedule_downlinks`, `vv_planner.generate_vv_plan`, `thermal_network.analyze_thermal_network` / `thermal_transient`, `mass_properties.compute_mass_properties`, plus `fmeca.run_fmeca`. **Every one of them is a standalone calculator**: it takes hand-typed dataclass inputs with built-in defaults (`DEFAULT_MODES`, `OrbitParams()`), is exposed as a bare `POST /…/simulate|schedule|analyze`, and neither reads the study (elements, modes, parameters, requirements, KB stations) nor writes anything back. Likewise the design loop (`routers/design.py`) runs the agents from `study.requirements` only — a manual override or formula on an element parameter never reaches the power/mass/link agents.
+
+This range makes the model the single input and output of every analysis:
+
+```
+study ──► AnalysisContext ──► {agents | simulation | ground | thermal | mass/AOCS | V&V | FMECA}
+  ▲                                                     │
+  └────────── ResultsSink (parameters + conflicts + compliance recheck + change events) ◄──┘
+```
+
+## 1. Shared primitives (built first, SCDF-170)
+
+### 1.1 `services/analysis_context.py`
+`async def build_context(study_id, *, option_id=None) -> AnalysisContext` assembling, read-only:
+- `study` (mission need, `MissionRequirements`, conops), `latest_design` (last `DesignLoopResult` params if any — find where design results are cached; else empty).
+- `elements` (tree, dicts as served by `routers/elements`), `interfaces`, `exchange_items`, `functions`, `allocations`.
+- `params`: `{element_id: {name: EffectiveParam(value, unit, switch, provenance, formula)}}` from `parameter_repo` + `services/equations.evaluate_study` — **effective values** (manual/reference override, `ref` formula, else computed/column).
+- `flat`: the flat `parameter_path → value` dict the agents consume, produced by `element_projection.project_elements_to_params` **but overlaid with effective parameter values** (so an override of `EPS.mass_kg` changes `power.eps_mass_kg`). This is the SCDF-171 coupling.
+- `orbit`: altitude, inclination, period, eclipse fraction, RAAN/LTAN if SSO — from `flat` (`orbit.*`) falling back to `study.requirements`.
+- `modes`: from elements of `element_type='mode'` + `ModeElementRow` (which elements active, power in mode, duty cycle) → list of `ConOpsMode` with per-mode power computed as the sum of active elements' `power_w_in_mode` (fallback `power_avg_w` × duty); guards from mode element notes if parseable, else `DEFAULT_GUARDS`.
+- `power`: battery capacity/DoD/efficiency, SA power BOL/EOL — from `flat` (`power.*`) / KB component of the selected battery/solar array (`kb_component_id`).
+- `thermal`: per-subsystem dissipation = `power_avg_w`, optical properties/area from KB or class defaults.
+- `ground_stations`: KB `ground_stations/` entries selected for the study (elements with `segment='ground'` and `kb_component_id`, or all KB stations flagged default) + user-defined.
+- `requirements`: rows (persisted) + relations.
+- `options`: the active `Option` (SCDF-172) — parameter overrides are option-scoped.
+
+### 1.2 `services/analysis_results.py`
+`class ResultsSink` with `async def publish(study_id, analysis: str, *, parameters: list[ParamWrite], conflicts: list[Conflict], notes: list[str], option_id=None)`:
+- `ParamWrite(element_id | None, name, value, unit, quantity_kind)` → `parameter_repo.upsert_element_parameter(... computed_value=value, owner_domain=analysis)`; study-level results attach to the mission root element. Never overrides a `manual`/`reference` switch.
+- `Conflict(severity, code, title, detail, element_ids, requirement_ids, suggested_fix)` → new table `analysis_conflicts` (id, study_id, option_id, analysis, severity, code, title, detail, element_ids_json, requirement_ids_json, suggested_fix, created_at, resolved_at). `GET /studies/{id}/conflicts` merges these with the existing design-loop conflicts (find where `ConflictsPanel` reads from and add this source).
+- After writing: `compliance_tracker.recheck` with the written parameter paths (map `element.name` → threshold paths like `power.battery_dod_percent` via the projection registry; also allow requirements whose `threshold_param_path` is `el:<element_id>.<name>` — add that resolution to `evaluate_single`), then `broadcast_mutation('analysis_completed', ...)`.
+- New table `analysis_runs` (id, study_id, option_id, analysis, started_at, finished_at, status, inputs_hash, summary_json, series_ref) so results are reproducible and the UI can show "last run / stale" — `stale` when `inputs_hash` (hash of the context subset the analysis declares it reads) differs from the current context hash.
+
+### 1.3 Agent coupling (SCDF-171)
+- `routers/design.py::run_design_loop` seeds the orchestrator's initial `DesignState` from `context.flat` (with effective overrides marked `POSITION_OVERRIDE` so they stay sticky per SPINE §1.3), and after the run writes agent outputs back via `ResultsSink` (analysis=`agent:<domain>`) and `element_projection.merge_agent_params_to_elements` (already exists — reuse).
+- Acceptance: set `manual_value` for a component's `mass_kg` → run design → subsystem mass parameter, `mass.dry_mass_kg` and the margin tower change accordingly; a `ref` formula on a subsystem parameter that feeds a `power.*` input changes the power agent output.
+
+### 1.4 Options (SCDF-172)
+- Table `options` (id, study_id, name, description, is_baseline, created_at). `ElementParameterRow.option_id` already exists: an override with `option_id` shadows the baseline row for that option. `analysis_runs`/`analysis_conflicts` are option-scoped.
+- API: `GET/POST /studies/{id}/options`, `POST /options/{id}/branch` (copy current overrides into a new option), `GET /studies/{id}/options/compare?a=&b=` → table of parameters and analysis summaries that differ, with deltas. Design runs and analyses accept `?option_id=`.
+- UI: option switcher in the workbench status bar; `OptionCompare.tsx` table.
+- Elements/tree are NOT cloned per option in this range (documented limit); `in_scope` per option is deferred.
+- **As built (SCDF-172, 2026-09-09) — semantics.** The *baseline* is the set of `element_parameters` rows with
+  `option_id IS NULL`; it is not an `OptionRow` (one `is_baseline` row named "Baseline" is created lazily by
+  `option_repo.ensure_baseline` so the UI can select/compare it; its id resolves to `option_id=None`).
+  A row `(element, definition, option_id=X)` **shadows** the baseline row of the same (element, definition) when
+  reading X: *reads for X = baseline ∪ X-overrides*; *writing with `option_id=X` creates/updates the X row and
+  never the baseline*. `parameter_repo.list_element_parameters_by_{study,element}(…, option_id)`,
+  `load_all_element_parameters(study, option_id)`, `equations.evaluate_study/evaluate_element/recompute_study(…, option_id)`
+  and `analysis_context.build_context(option_id=)` all apply this rule; formulas in either set are evaluated
+  against the option's effective values (a baseline `children("mass_kg")` sees the option's override).
+  `recompute_study(option_id=X)` persists `ref` results only into X rows and never writes element columns
+  (columns are baseline state); `ResultsSink.publish(option_id=X)` writes X rows and skips the column write;
+  `run_design_loop(?option_id=)` does not merge agent outputs into elements. Branching (`branch_option`) copies
+  the source option's override rows; branching from the baseline copies nothing. Deleting an option
+  soft-deletes its rows; the baseline cannot be deleted.
+  *Schema:* `db/models.py` still declares the pre-172 unique constraint `(element_id, definition_id, iteration)`;
+  `db/migrate.ensure_option_scoped_parameters` (run by `ensure_schema_upgrades` at start-up and in the test
+  `db_factory`) rebuilds the live table so uniqueness is `(element_id, definition_id, iteration, option_id)` —
+  update the ORM constraint to match when `models.py` is next touched.
+  *Routes:* `GET/POST /api/studies/{id}/options`, `GET/PATCH/DELETE /api/options/{id}`,
+  `POST /api/options/{id}/branch {name}`, `GET /api/studies/{id}/options/compare?a=&b=`,
+  `GET /api/studies/{id}/options/{option_id}/overrides`; `?option_id=` on parameters GET/PUT/DELETE/list/recompute.
+  *Frontend:* `stores/optionStore.ts` (active option per study, localStorage), `components/OptionSwitcher.tsx`,
+  `components/OptionCompare.tsx`, `types/options.ts`; `ParameterPanel` sends the active option and shows an
+  "override in <option>" chip. Neither component is mounted — SCDF-178 puts the switcher in `PresenceBar` and
+  the compare table in the Analyses tab.
+
+### 1.5 As built (SCDF-170 Phase A, 2026-09-09) — binding interfaces for the closures
+
+* `services/analysis_context.py`: `AnalysisContext` (fields as in §1.1 plus `overridden_paths`,
+  `latest_design`, `all_kb_stations`, `relations`, `warnings`; helpers `element()`, `subsystem()`,
+  `param()`, `resolve(path)`, `canonical_path(path)`, `get(path)`, `mission_root`),
+  `async build_context(study_id, *, option_id=None)`, `context_hash(ctx, keys)` over
+  `HASH_KEYS = elements|params|modes|orbit|power|thermal|stations|requirements`,
+  `seed_design_state(ctx, *, requirements, conops, knowledge_base)`. Overrides (manual /
+  reference / formula) on the well-known columns overlay the projection; an overridden roll-up on a
+  non-leaf element **replaces** its subtree in `sum` aggregates (`element_projection` now sums
+  leaves only, so N1's rolled-up subsystem columns are not double counted).
+* `services/analysis_results.py`: `ParamWrite`, `Conflict`, `PublishResult`,
+  `ResultsSink().publish(study_id, analysis, *, parameters, conflicts, notes, option_id, run_id, ctx)`,
+  `start_run` / `finish_run(run_id, status, summary, series, inputs_hash)` /
+  `refresh_inputs_hash(run_id)` (write-back analyses call it after `finish_run`, else their own
+  outputs flag them stale) / `get_last_run` / `list_analyses` / `resolve_conflict`,
+  `ANALYSIS_INPUT_KEYS` (declare yours), series under `$SPACECDF_DATA_DIR/analysis/<run_id>.json`.
+  Parameter rows are not yet option-scoped (unique per element/definition) — SCDF-172.
+* Compliance: `threshold_param_path = "el:<element id|name>.<param>"` resolved via
+  `ctx.resolve`; `ResultsSink` re-checks through a per-study `ComplianceTracker` (`get_tracker`).
+* Routes: `GET /api/studies/{id}/conflicts` → `{design, analysis}` (design = `analysis='design_loop'`
+  rows), `POST /api/conflicts/{id}/resolve`, `GET /api/studies/{id}/analyses[/{analysis}]`.
+* Design loop (`routers/design.py`) is coupled per §1.3; `?option_id=` accepted.
+* N4 ruling: the Capella Requirements VP has **no** containment on `Requirement` (capellambse 0.8:
+  only `Folder.requirements` / `Folder.folders`), so parent requirements stay `Requirements:Folder`
+  with the full payload plus `long_name = "<code>: <text>"`. Do not "fix" the
+  `search("Requirement")` count — use `oa.all_requirements` or `search("Requirement", "Requirements:Folder")`.
+* N1–N3: `populate-subsystems` rolls up `mass_kg`/`power_avg_w` (children, else class heritage
+  table) and creates the default power/data/RF interfaces with exchange items; ReqIF carries the
+  three threshold attributes.
+
+## 2. Engineering closures (parallel, each owns its service + router + component)
+
+Each closure implements `async def run_<name>(ctx: AnalysisContext) -> AnalysisOutput(parameters, conflicts, series, summary)` and a thin router `POST /studies/{id}/analyses/<name>/run?option_id=` + `GET /studies/{id}/analyses/<name>` (last run + stale flag) that goes through `ResultsSink`. No calculator keeps its own defaults path as the primary entry; the old bare endpoints stay for ad-hoc use.
+
+### 2.1 Mission simulation (SCDF-173) — `services/mission_simulation.py`, `routers/analyses_simulation.py`, `components/MissionSimulationPanel.tsx`
+Wraps `conops_executor.simulate_orbit` with context-built modes/orbit/power/thermal/contacts (contacts from the ground closure's predictor when available, else `orbit.contact_time_per_day_s` spread uniformly). Runs N orbits (default 15 ≈ one day). Writes parameters on the mission root: `sim_min_soc_pct`, `sim_max_dod_pct`, `sim_energy_balance_wh_per_orbit`, `sim_data_buffer_max_gb`, `sim_data_backlog_end_gb`, `sim_heater_energy_wh_per_orbit`, `sim_time_in_safe_pct`. Conflicts: SoC below battery `min_soc_pct` (from KB/params, default 20 %) → critical with the mode and time; negative energy balance → major; data buffer overflow → major; >10 % time in safe → warning. Series stored as compact JSON (downsampled to ≤2000 points) in `analysis_runs.series_ref` (file under `data/analysis/<run_id>.json`). UI: SVG line chart (add `charts/SVGLineChart.tsx`, shared) for SoC / power in-out / data buffer / mode band; summary cards; "what limited me" list from conflicts; run + stale indicator.
+
+### 2.2 Ground segment closure (SCDF-174) — `services/ground_closure.py`, `routers/analyses_ground.py`, `components/GroundSegmentPanel.tsx`
+Stations from context (KB catalogue selection persisted as ground elements with `kb_component_id`; endpoint to add/remove stations to the study). `predict_contacts` + `schedule_downlinks` from context orbit + data generation (`data.generated_per_day_gb` from flat or sim). Per-station link margin via `spacecdf_common.physics.link_budget` using the study's TT&C parameters (frequency, EIRP/G/T from selected transponder/antenna KB components or `link.*` flat params) — a station with negative margin is excluded and flagged. Parameters on mission root: `gs_contact_min_per_day`, `gs_data_return_gb_per_day`, `gs_backlog_end_gb`, `gs_min_link_margin_db`, `gs_station_count`. Conflicts: data return < generation → major (suggest station or rate); min margin < 3 dB → warning. UI: station picker (KB list with lat/lon, band), contact table, closure gauge (return vs generated), per-station margin.
+
+### 2.3 V&V closure (SCDF-175) — `services/vv_closure.py`, `routers/analyses_vv.py`, `components/VVPlanPanel.tsx`
+New table `verification_items` (id, study_id, requirement_id, method A/T/I/R/D, level unit/subsystem/system/segment, phase, facility, procedure_ref, acceptance_criterion, status planned/in_progress/passed/failed/waived, evidence_ref, updated_at). `run_vv` = `generate_vv_plan` over persisted requirements + relations, producing/refreshing items (never overwrite human-edited fields: track `edited_by_user` flag). Acceptance criterion auto-derived from `threshold_param_path/op/value` (e.g. "battery DoD ≤ 30 % by analysis (power budget), phase PDR"). **Verification by analysis auto-closure**: when a requirement's compliance is PASS from a completed analysis run (design loop or a closure) and the item's method is A, set status `passed` with `evidence_ref = analysis_runs.id`; FAIL → `failed`. RTM/VCD export: `GET /studies/{id}/export/rtm.csv` and `vcd.docx` (reuse `docx_generator`). UI: editable table per requirement (method/level/phase/facility/status/evidence), roll-up bars per level, filter by status.
+
+### 2.4 Physics closure: mass properties → AOCS, thermal network from elements (SCDF-176) — `services/physics_closure.py`, `routers/analyses_physics.py`, `components/PhysicsClosurePanel.tsx`
+- Add column `DesignElementRow.position_json` (list [x,y,z] m in body frame, nullable; additive upgrader). Auto-place components without a position on a simple stack from `dimensions_json`/class (U-stack for CubeSats) with a warning.
+- Mass properties from the element tree (masses = effective `mass_kg`) → CoM, inertia tensor (box approximation from dimensions), principal axes; parameters `mp_com_x/y/z_m`, `mp_ixx/iyy/izz_kgm2`, `mp_cp_cg_offset_m` (CP at geometric centre of the external envelope).
+- AOCS: `spacecdf_common.physics.aocs` disturbance torques with real inertia + offset → momentum per orbit vs selected reaction wheel capacity (KB) and pointing budget vs the tightest pointing requirement (threshold path or `payload.pointing_deg`); parameters `aocs_disturbance_torque_nm`, `aocs_momentum_per_orbit_nms`, `aocs_wheel_margin_pct`, `aocs_pointing_margin_deg`; conflicts on negative margins.
+- Thermal: build `ThermalNode`s per subsystem/component (dissipation = effective `power_avg_w`, capacitance from mass × class Cp, area from dimensions) + conductances between parent/child and along `thermal`-type interfaces; `solve_steady_state` hot/cold + `solve_transient` one orbit; compare to allowable ranges (`performance_json.op_temp_min/max_c` from KB or class defaults); parameters per element `thermal_t_hot_c`, `thermal_t_cold_c`, `thermal_margin_c`; conflicts when out of range. Feed the existing `DisturbanceTorqueBudget`, `MassPropertiesPanel`, `ThermalAnalysis` components from these results (extend, don't duplicate).
+
+- **As built (SCDF-176, 2026-09-09).** `services/physics_closure.py`: `place_elements` (explicit `position_json`, else a +z
+  stack in the envelope = system `dimensions_mm` or class default; origin at the envelope corner), `run_mass_properties`
+  (`compute_mass_properties(..., body_inertia=False)` with per-component box inertia + Jacobi principal axes; CP = envelope
+  centre), `run_aocs_closure` (`compute_disturbance_torques` fed the real principal ΔI via `inertia_ratio`, largest face,
+  CP-CG offset floored at 1 % of the max dimension, class dipole; momentum = RSS × period with one desaturation per
+  orbit vs the wheel from `performance.momentum_nms` / KB / manual `aocs_wheel_capacity_nms` on the root / class default;
+  pointing = RSS(knowledge from the best sensor in the tree, T/(I·ω²) control error, ripple) vs the tightest requirement
+  whose threshold path contains `pointing`), `run_thermal_closure` (nodes: bus structure = system element, subsystems,
+  components > 0.5 W; empty subsystem shells dropped; 0.5 W/K joints + `thermal` interfaces; **hot** = sunlit steady
+  state at peak power, **cold** = minimum over a periodic orbit at safe-mode power with eclipse — an eclipse steady state
+  is meaningless for a 90-min orbit). Parameters per element `thermal_t_hot_c/t_cold_c/margin_hot_c/margin_cold_c`
+  (`thermal_margin_c` of the draft split in two). Routes in `routers/analyses_physics.py` incl. `PATCH /elements/{id}/position`
+  and `GET .../physics/placement`; `analysis_context` hashes `position_json`, `dimensions_mm`, `redundancy_type` so a move
+  flags the run stale. `PhysicsClosurePanel` is self-contained (the legacy Mass/Torque/Thermal panels still read the
+  agent parameters); not mounted.
+
+### 2.5 FMECA closure (SCDF-177, small) — extend `routers/fmeca.py` so `run_fmeca` takes the element tree + `redundancy_type` + relations and writes `fmeca_max_rpn`, `fmeca_single_point_failures` and a conflict per single-point failure on a `critical` element; link failure modes to functions via allocations (`function_id` on the failure mode).
+
+- **As built (SCDF-177, 2026-09-09).** `services/fmeca_closure.py::run_fmeca_closure(ctx, critical=)` — subsystem
+  catalogue entries + one keyword-specialised mode per component, TRL / telemetry derating, `redundancy_type` or
+  `quantity > 1` = redundant (severity −1, never single-point), functions from allocations, propagation over the
+  interface graph; `FMECA_SINGLE_POINT` (major) when severity ≥ 4, no redundancy, and the element is in a critical domain
+  (power/obc/ttc) or owns a critical function. Routes `POST/GET /studies/{id}/analyses/fmeca[/run]` live in
+  `routers/fmeca.py::study_router`, mounted through `analyses_physics` (the bare `/api/fmeca/analyze` stays). The plain GET
+  is served by the generic `analyses_common` route, so the panel reads the modes from the run series. `FMECAPanel`
+  gained a "Run from study" block (takes an optional `studyId`).
+
+## 3. Cross-cutting UI (SCDF-178)
+- **Analyses tab** in the Level Workbench (`ActivityPanel` 'analyses'): cards for Design loop, Mission simulation, Ground segment, Physics (mass/AOCS/thermal), V&V, FMECA — each with last-run time, stale badge, run button, summary metrics, and its panel below.
+- `ConflictsPanel` shows analysis conflicts (source badge, element chips, "go to" links).
+- Margin tower gets `sim_min_soc_pct` and `gs_data_return` as two extra bars when available.
+- WS invalidation on `analysis_completed`, `analysis_started`, `option_*`, `verification_item_*`.
+
+**As built (SCDF-178):** `frontend/src/workbench/AnalysesPanel.tsx` (tab `analyses`, colour #ec4899) — cards from `GET /studies/{id}/analyses?option_id=`; Run posts `POST /design/{id}/run` (design loop) or `POST /studies/{id}/analyses/{a}/run`; panels mounted below: `MissionSimulationPanel`, `GroundSegmentPanel`, `PhysicsClosurePanel`, `VVPlanPanel`, `FMECAPanel` (now takes `optionId`), `BudgetPanel` + design-loop conflicts for the design loop, `OptionCompare` behind the "Options" toggle. `OptionSwitcher` sits in `PresenceBar` before `AIStatusIndicator`. `ConflictsPanel` takes `studyId`/`optionId`/`analysisFilter` and appends the persisted `{design, analysis}` rows (source badge, severity, element chips → Blocks focus, suggested fix, Resolve) after the unchanged designStore rendering. `MarginTower` is mounted under the StatusBar and adds SoC / Data bars from `GET /elements/{root}/parameters?option_id=` (`effective_value`). WS: `ANALYSIS_WS_PREFIXES` in `types/arcadia.ts` (`analysis_started`, `analysis_completed`, `conflict_resolved`, `option_`, `verification_item_`, `ground_station_`, `element_position_`) invalidate `ANALYSIS_QUERY_KEYS` in both `useCollaboration` and `useSessionSocket`. Note: the physics position PATCH broadcasts `element_updated`, not `element_position_*`; that is covered by the existing element handler.
+
+## 4. Non-goals
+Multi-body/attitude dynamics integration; radiation transport; full station scheduling optimisation (greedy is fine); options cloning the element tree; cost model 2.0; SysML v2 import.
+
+## 5. Tests (binding)
+- Context: effective override reaches `flat`; modes built from ModeElementRow; stations from KB.
+- Sink: parameters written with provenance; manual switch not overridden; conflicts persisted; compliance rechecked (a requirement with `el:` path flips to violated).
+- Coupling: override mass → design → subsystem/dry mass and margin change; formula feeding power input changes SA area.
+- Options: branch, override in option shadows baseline, compare shows delta, analyses are option-scoped.
+- Each closure: runs on a populated template study end-to-end via HTTP; parameters exist; at least one conflict scenario (e.g. shrink battery to force SoC conflict; remove stations to force data deficit; tighten pointing requirement; set component allowable range narrow); stale flag flips after an input change.
+- V&V: items generated, human edit preserved on re-run, auto-closure by analysis, RTM CSV.
+- Existing 231 stay green; `vite build` green; `tsc -b` ≤ 105.
+
+## 6. Dependencies
+No new runtime deps (scipy already used by thermal_transient — verify it is in a pyproject; add if missing). All code MIT-compatible.

@@ -1,0 +1,167 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "docs/oer/chapters/13_equipment_and_bom.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "part-iii-integration-verification-and-operations",
+   "en_hash": "02c77a37fa244cfd",
+   "fr_hash": "513268203c642e76"
+  },
+  {
+   "id": "chapter-13-equipment-selection-and-bill-of-materials",
+   "en_hash": "b90a3fa9bd267969",
+   "fr_hash": "7bf1dff0461ca099"
+  },
+  {
+   "id": "chapter-13-equipment-selection-and-bill-of-materials/learning-objectives",
+   "en_hash": "2e4eaf72ff6f6498",
+   "fr_hash": "f0b35691481a1826"
+  },
+  {
+   "id": "chapter-13-equipment-selection-and-bill-of-materials/13-1-the-make-buy-reuse-decision",
+   "en_hash": "821fe0f08784cc74",
+   "fr_hash": "df6d40818e614aa8"
+  },
+  {
+   "id": "chapter-13-equipment-selection-and-bill-of-materials/13-1-the-make-buy-reuse-decision/13-1-1-decision-framework",
+   "en_hash": "645d9ca9aa3499ec",
+   "fr_hash": "9c23f044fc196caa"
+  },
+  {
+   "id": "chapter-13-equipment-selection-and-bill-of-materials/13-1-the-make-buy-reuse-decision/13-1-2-make-buy-reuse-trade-matrix",
+   "en_hash": "a4ee658741a84dde",
+   "fr_hash": "1ee4241fa32042f1"
+  },
+  {
+   "id": "chapter-13-equipment-selection-and-bill-of-materials/13-1-the-make-buy-reuse-decision/13-1-3-non-recurring-engineering-cost",
+   "en_hash": "ef07b5b3e0beab22",
+   "fr_hash": "d6c5b193eb4ee9ca"
+  },
+  {
+   "id": "chapter-13-equipment-selection-and-bill-of-materials/13-1-the-make-buy-reuse-decision/13-1-4-worked-example",
+   "en_hash": "3f9d98889b861361",
+   "fr_hash": "d09f13e646a954fe"
+  },
+  {
+   "id": "chapter-13-equipment-selection-and-bill-of-materials/13-2-technology-readiness-level-trl-assessment",
+   "en_hash": "f7b302f4a41e036f",
+   "fr_hash": "8fa0e7d1e4ab3141"
+  },
+  {
+   "id": "chapter-13-equipment-selection-and-bill-of-materials/13-2-technology-readiness-level-trl-assessment/13-2-1-trl-scale-with-decision-criteria",
+   "en_hash": "ea0894eedf3b7dbe",
+   "fr_hash": "7577d224a4afb228"
+  },
+  {
+   "id": "chapter-13-equipment-selection-and-bill-of-materials/13-2-technology-readiness-level-trl-assessment/13-2-2-trl-and-risk-relationship",
+   "en_hash": "a5d3ae28d6a57da4",
+   "fr_hash": "2e8cd737b4a28379"
+  },
+  {
+   "id": "chapter-13-equipment-selection-and-bill-of-materials/13-2-technology-readiness-level-trl-assessment/13-2-3-real-mission-example-marco-mars-cube-one",
+   "en_hash": "3667b7c04920cea6",
+   "fr_hash": "f480cc2009292866"
+  },
+  {
+   "id": "chapter-13-equipment-selection-and-bill-of-materials/13-3-bill-of-materials-bom-construction",
+   "en_hash": "eea4fb1892fad401",
+   "fr_hash": "ae2f41cc800a0337"
+  },
+  {
+   "id": "chapter-13-equipment-selection-and-bill-of-materials/13-3-bill-of-materials-bom-construction/13-3-1-bom-structure",
+   "en_hash": "608d6b3ca4018b30",
+   "fr_hash": "dc8c174c8270a1aa"
+  },
+  {
+   "id": "chapter-13-equipment-selection-and-bill-of-materials/13-3-bill-of-materials-bom-construction/13-3-2-bom-fields",
+   "en_hash": "e2ee55941264054c",
+   "fr_hash": "0d4671e070ed729a"
+  },
+  {
+   "id": "chapter-13-equipment-selection-and-bill-of-materials/13-3-bill-of-materials-bom-construction/13-3-3-bom-mass-total",
+   "en_hash": "b14d31df81cf6cdf",
+   "fr_hash": "279d74fb2ba58ad2"
+  },
+  {
+   "id": "chapter-13-equipment-selection-and-bill-of-materials/13-3-bill-of-materials-bom-construction/13-3-4-worked-example-6u-cubesat-bom-summary",
+   "en_hash": "dd6edc8b8ea25555",
+   "fr_hash": "a6fbd434daf260aa"
+  },
+  {
+   "id": "chapter-13-equipment-selection-and-bill-of-materials/13-4-export-control-and-procurement",
+   "en_hash": "b362091c8157528b",
+   "fr_hash": "d933b1e4b0c4953c"
+  },
+  {
+   "id": "chapter-13-equipment-selection-and-bill-of-materials/13-4-export-control-and-procurement/13-4-1-export-control-regimes",
+   "en_hash": "27ff7d0ae2eb4c78",
+   "fr_hash": "c1399513d7cf5478"
+  },
+  {
+   "id": "chapter-13-equipment-selection-and-bill-of-materials/13-4-export-control-and-procurement/13-4-2-component-classification-decision",
+   "en_hash": "6dd714e67b387036",
+   "fr_hash": "3676de2fe48865f1"
+  },
+  {
+   "id": "chapter-13-equipment-selection-and-bill-of-materials/13-4-export-control-and-procurement/13-4-3-common-itar-controlled-cubesat-components",
+   "en_hash": "c223adc567c1449e",
+   "fr_hash": "7e61144c677f7641"
+  },
+  {
+   "id": "chapter-13-equipment-selection-and-bill-of-materials/13-4-export-control-and-procurement/13-4-4-procurement-workflow",
+   "en_hash": "c7995ba930b434a6",
+   "fr_hash": "da81229e45941f2b"
+  },
+  {
+   "id": "chapter-13-equipment-selection-and-bill-of-materials/13-4-export-control-and-procurement/13-4-5-real-mission-example-export-control-impact",
+   "en_hash": "050649ab0455b37d",
+   "fr_hash": "b566f258d8c71cb1"
+  },
+  {
+   "id": "chapter-13-equipment-selection-and-bill-of-materials/13-5-interface-compatibility-verification",
+   "en_hash": "58556941ac82b235",
+   "fr_hash": "54adc7d517eb50cb"
+  },
+  {
+   "id": "chapter-13-equipment-selection-and-bill-of-materials/13-5-interface-compatibility-verification/13-5-1-rf-chain-compatibility",
+   "en_hash": "a99b1f559c51e91a",
+   "fr_hash": "d198b8a798e416ad"
+  },
+  {
+   "id": "chapter-13-equipment-selection-and-bill-of-materials/13-5-interface-compatibility-verification/13-5-2-electrical-interface-verification",
+   "en_hash": "4a29aa6532959d0d",
+   "fr_hash": "a02bd6614c8eb843"
+  },
+  {
+   "id": "chapter-13-equipment-selection-and-bill-of-materials/13-5-interface-compatibility-verification/13-5-3-mechanical-interface-verification",
+   "en_hash": "24b025b6addb09c0",
+   "fr_hash": "d57cb14cbdfe4b9d"
+  },
+  {
+   "id": "chapter-13-equipment-selection-and-bill-of-materials/13-6-returning-to-unisat-1-bill-of-materials-and-cost",
+   "en_hash": "6b2b580f08642b2e",
+   "fr_hash": "2ba0b855ef961fdb"
+  },
+  {
+   "id": "chapter-13-equipment-selection-and-bill-of-materials/summary",
+   "en_hash": "5606db0abfbc51ea",
+   "fr_hash": "5c329033168bae4e"
+  },
+  {
+   "id": "chapter-13-equipment-selection-and-bill-of-materials/problems",
+   "en_hash": "6adb78f5ac7c5224",
+   "fr_hash": "ebe7c30ae51b6ab2"
+  },
+  {
+   "id": "chapter-13-equipment-selection-and-bill-of-materials/references",
+   "en_hash": "e794848fb95e11cd",
+   "fr_hash": "be9a41806d9b19d7"
+  }
+ ],
+ "en_commit": "3ea7113"
+}

@@ -1,0 +1,57 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "docs/course/3_WEEK_SYLLABUS.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "space-mission-design-operations-programme",
+   "en_hash": "f0c56016ce39358d",
+   "fr_hash": "9023cd9791e3a35a"
+  },
+  {
+   "id": "space-mission-design-operations-programme/3-week-intensive-monday-friday-9-00-16-00",
+   "en_hash": "31860477c7debc42",
+   "fr_hash": "b41e0509b63188a2"
+  },
+  {
+   "id": "space-mission-design-operations-programme/3-week-intensive-monday-friday-9-00-16-00/week-1-canadian-space-landscape-regulatory-environment",
+   "en_hash": "b13c3b9ff1c06a69",
+   "fr_hash": "e691705ab385c5e8"
+  },
+  {
+   "id": "space-mission-design-operations-programme/3-week-intensive-monday-friday-9-00-16-00/week-2-concurrent-design-facility-designing-a-mission",
+   "en_hash": "31a8acbe29f22fb8",
+   "fr_hash": "e3fe935e8673fa20"
+  },
+  {
+   "id": "space-mission-design-operations-programme/3-week-intensive-monday-friday-9-00-16-00/week-3-mission-operations-simulation",
+   "en_hash": "fe57c97cac491cb8",
+   "fr_hash": "22335e99cfdbda87"
+  },
+  {
+   "id": "space-mission-design-operations-programme/3-week-intensive-monday-friday-9-00-16-00/assessment",
+   "en_hash": "1453ec72c2ca3c31",
+   "fr_hash": "1cd28ff8ff749544"
+  },
+  {
+   "id": "space-mission-design-operations-programme/3-week-intensive-monday-friday-9-00-16-00/prerequisites",
+   "en_hash": "31fb5a9e8834fec3",
+   "fr_hash": "fcb10c9a50f720f3"
+  },
+  {
+   "id": "space-mission-design-operations-programme/3-week-intensive-monday-friday-9-00-16-00/materials-provided",
+   "en_hash": "d8efa729bc4fb0c4",
+   "fr_hash": "1a8f3c8df7389153"
+  },
+  {
+   "id": "space-mission-design-operations-programme/3-week-intensive-monday-friday-9-00-16-00/outcomes",
+   "en_hash": "97545703d8fd45b9",
+   "fr_hash": "4febe0ac68a241a8"
+  }
+ ],
+ "en_commit": "be16bc3"
+}

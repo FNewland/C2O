@@ -1,0 +1,85 @@
+# CubeSat Deployer Knowledge Base
+# Deployment mechanisms (launch interfaces between CubeSat and launch vehicle)
+# Sources: manufacturer datasheets, launch provider user guides
+
+components:
+  - id: dep-isis-isipod
+    name: ISIPOD
+    manufacturer: ISISPACE
+    category: deployer
+    mass_kg: 1.200
+    dimensions_mm: [116, 116, 135]
+    form_factor: 1U_deployer
+    cost_keur: 20
+    trl: 9
+    heritage_missions: [QB50, Delfi-PQ, hundreds of CubeSats]
+    performance:
+      cubesat_capacity: "1U to 3U"
+      deployment_velocity_ms: 1.5
+      angular_rate_deg_s: 5.0
+      interface: CDS_P-POD_compatible
+    notes: Industry-standard deployer, most launched CubeSat deployer worldwide
+
+  - id: dep-isis-quadpack
+    name: QuadPack
+    manufacturer: ISISPACE
+    category: deployer
+    mass_kg: 4.000
+    dimensions_mm: [240, 240, 140]
+    form_factor: multi_deployer
+    cost_keur: 35
+    trl: 9
+    heritage_missions: [Vega SSMS, many rideshares]
+    performance:
+      cubesat_capacity: "4x 3U or 2x 6U or 1x 12U"
+      deployment_velocity_ms: 1.5
+      angular_rate_deg_s: 5.0
+      interface: CDS_compliant
+
+  - id: dep-exolaunch-exa
+    name: EXApod
+    manufacturer: Exolaunch
+    category: deployer
+    mass_kg: 1.500
+    dimensions_mm: [120, 120, 140]
+    form_factor: 3U_deployer
+    cost_keur: 25
+    trl: 9
+    heritage_missions: [SpaceX Transporter missions, Soyuz rideshares]
+    performance:
+      cubesat_capacity: "1U to 3U"
+      deployment_velocity_ms: 2.0
+      angular_rate_deg_s: 3.0
+      interface: CDS_compatible
+
+  - id: dep-nanoracks-nrcsd
+    name: NRCSD
+    manufacturer: NanoRacks
+    category: deployer
+    mass_kg: 0.0
+    form_factor: ISS_deployer
+    cost_keur: 40
+    trl: 9
+    heritage_missions: [ISS deployments, 300+ CubeSats]
+    performance:
+      cubesat_capacity: "1U to 6U"
+      deployment_from: ISS
+      orbit: "~400 km, 51.6° incl"
+      interface: CDS_compatible
+    notes: Deployed from ISS via airlock. Orbit is fixed. Altitude decays quickly.
+
+  - id: dep-dorbital-iod
+    name: ION Deployer
+    manufacturer: D-Orbit
+    category: deployer
+    mass_kg: 0.0
+    form_factor: orbital_transfer
+    cost_keur: 50
+    trl: 9
+    heritage_missions: [ION SCV missions]
+    performance:
+      cubesat_capacity: "1U to 12U"
+      custom_orbit: true
+      deployment_accuracy_km: 1
+      interface: CDS_compatible
+    notes: Last-mile delivery — ION carrier takes CubeSats to custom orbits

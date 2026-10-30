@@ -1,0 +1,136 @@
+# EPS (Electrical Power System) Board Knowledge Base
+# Power conditioning, distribution, and management units for CubeSats
+# Sources: manufacturer datasheets, cubesatshop.com, satsearch.co
+
+components:
+  - id: eps-gom-nanopow-p31us
+    name: NanoPower P31us
+    manufacturer: GomSpace
+    category: eps_board
+    mass_kg: 0.095
+    dimensions_mm: [96, 90, 12]
+    form_factor: PC/104
+    cost_keur: 15
+    trl: 9
+    heritage_missions: [GOMX-1, GOMX-3, GOMX-4B, OPS-SAT]
+    performance:
+      bus_voltage_v: 3.3
+      max_battery_strings: 2
+      max_solar_input_w: 40
+      mppt_channels: 6
+      output_channels: 12
+      latchup_protection: true
+      efficiency_percent: 95
+    interfaces: [I2C, PC/104]
+    operating_temp_c: [-40, 85]
+    notes: Standard CubeSat EPS, flight proven on 100+ missions
+
+  - id: eps-gom-nanopow-p60
+    name: NanoPower P60
+    manufacturer: GomSpace
+    category: eps_board
+    mass_kg: 0.250
+    dimensions_mm: [96, 90, 25]
+    form_factor: PC/104
+    cost_keur: 25
+    trl: 9
+    heritage_missions: [GOMX-4, Arctic Weather Satellite]
+    performance:
+      bus_voltage_v: [3.3, 5.0, 12.0]
+      max_battery_strings: 4
+      max_solar_input_w: 120
+      mppt_channels: 10
+      output_channels: 24
+      latchup_protection: true
+      efficiency_percent: 96
+    interfaces: [I2C, CAN, PC/104]
+    operating_temp_c: [-40, 85]
+    notes: Modular EPS for 6U-12U. Handles higher power missions.
+
+  - id: eps-endurosat-eps-i-plus
+    name: EPS I Plus
+    manufacturer: Endurosat
+    category: eps_board
+    mass_kg: 0.100
+    dimensions_mm: [96, 90, 10]
+    form_factor: PC/104
+    cost_keur: 12
+    trl: 9
+    heritage_missions: [EnduroSat One]
+    performance:
+      bus_voltage_v: [3.3, 5.0]
+      max_battery_strings: 2
+      max_solar_input_w: 30
+      mppt_channels: 6
+      output_channels: 8
+      latchup_protection: true
+      efficiency_percent: 94
+    interfaces: [I2C, UART, PC/104]
+    operating_temp_c: [-40, 85]
+    notes: Low-cost CubeSat EPS with integrated battery charger
+
+  - id: eps-clyde-3g-eps
+    name: 3rd Gen EPS
+    manufacturer: AAC Clyde Space
+    category: eps_board
+    mass_kg: 0.120
+    dimensions_mm: [96, 90, 15]
+    form_factor: PC/104
+    cost_keur: 18
+    trl: 9
+    heritage_missions: [UKube-1, Carbonite-1, Lacuna Space]
+    performance:
+      bus_voltage_v: [3.3, 5.0, 12.0]
+      max_battery_strings: 2
+      max_solar_input_w: 50
+      mppt_channels: 7
+      output_channels: 15
+      latchup_protection: true
+      efficiency_percent: 95
+    interfaces: [I2C, SPI, PC/104]
+    operating_temp_c: [-40, 85]
+    notes: Established UK space heritage EPS
+
+  - id: eps-nanoavionics-eps
+    name: EPSS
+    manufacturer: NanoAvionics
+    category: eps_board
+    mass_kg: 0.110
+    dimensions_mm: [96, 90, 12]
+    form_factor: PC/104
+    cost_keur: 14
+    trl: 8
+    heritage_missions: [LituanicaSAT-2, M6P bus missions]
+    performance:
+      bus_voltage_v: [3.3, 5.0]
+      max_battery_strings: 2
+      max_solar_input_w: 40
+      mppt_channels: 8
+      output_channels: 12
+      latchup_protection: true
+      efficiency_percent: 95
+    interfaces: [I2C, CAN, PC/104]
+    operating_temp_c: [-40, 85]
+    notes: Part of the M6P multi-mission bus
+
+  - id: eps-stras-eps-nxt
+    name: iEPS NXT
+    manufacturer: Stratos (formerly ISIS)
+    category: eps_board
+    mass_kg: 0.130
+    dimensions_mm: [96, 90, 14]
+    form_factor: PC/104
+    cost_keur: 16
+    trl: 9
+    heritage_missions: [BRIK-II, Delfi-C3]
+    performance:
+      bus_voltage_v: [3.3, 5.0]
+      max_battery_strings: 2
+      max_solar_input_w: 45
+      mppt_channels: 6
+      output_channels: 10
+      latchup_protection: true
+      efficiency_percent: 94
+    interfaces: [I2C, PC/104]
+    operating_temp_c: [-40, 85]
+    notes: Heritage from TU Delft CubeSat programme

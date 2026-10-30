@@ -1,0 +1,192 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "docs/oer/chapters/03_international_standards.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "chapter-3-international-standards-for-space-systems",
+   "en_hash": "0bb58e48b27d1af6",
+   "fr_hash": "77fadd536788b5bf"
+  },
+  {
+   "id": "chapter-3-international-standards-for-space-systems/learning-objectives",
+   "en_hash": "8e3522e1b45c9beb",
+   "fr_hash": "b687b4e662b019ae"
+  },
+  {
+   "id": "chapter-3-international-standards-for-space-systems/3-1-why-standards-matter-in-space-engineering",
+   "en_hash": "107368052548c24e",
+   "fr_hash": "cef7b1e892c8a4c0"
+  },
+  {
+   "id": "chapter-3-international-standards-for-space-systems/3-1-why-standards-matter-in-space-engineering/3-1-1-the-cost-of-non-compliance",
+   "en_hash": "515a03b5a2473a53",
+   "fr_hash": "afcdadb3efbcbd87"
+  },
+  {
+   "id": "chapter-3-international-standards-for-space-systems/3-1-why-standards-matter-in-space-engineering/3-1-2-the-major-standard-frameworks",
+   "en_hash": "075a9f65aa0ce45b",
+   "fr_hash": "7342565aae3679dd"
+  },
+  {
+   "id": "chapter-3-international-standards-for-space-systems/3-2-ecss-standard-hierarchy",
+   "en_hash": "e17e367ca4377692",
+   "fr_hash": "75843e3085932246"
+  },
+  {
+   "id": "chapter-3-international-standards-for-space-systems/3-2-ecss-standard-hierarchy/3-2-1-structure",
+   "en_hash": "baa4db4096f7f968",
+   "fr_hash": "e1184fc9e51f02ed"
+  },
+  {
+   "id": "chapter-3-international-standards-for-space-systems/3-2-ecss-standard-hierarchy/3-2-2-the-four-branches",
+   "en_hash": "26e1cfb7532cce88",
+   "fr_hash": "4c1040a65f2c315c"
+  },
+  {
+   "id": "chapter-3-international-standards-for-space-systems/3-2-ecss-standard-hierarchy/3-2-3-document-types",
+   "en_hash": "fd7e5426a435f99b",
+   "fr_hash": "01906f4788b1c48b"
+  },
+  {
+   "id": "chapter-3-international-standards-for-space-systems/3-2-ecss-standard-hierarchy/3-2-4-tailoring",
+   "en_hash": "0f3bb12231f46c64",
+   "fr_hash": "0d6348bf5d7736fd"
+  },
+  {
+   "id": "chapter-3-international-standards-for-space-systems/3-3-key-ecss-engineering-standards",
+   "en_hash": "6d7b3fed8139d439",
+   "fr_hash": "cf00a3dc5a6a6235"
+  },
+  {
+   "id": "chapter-3-international-standards-for-space-systems/3-3-key-ecss-engineering-standards/3-3-1-systems-engineering-ecss-e-st-10c",
+   "en_hash": "f4503f55ec3d8ab7",
+   "fr_hash": "8482f71503e77f30"
+  },
+  {
+   "id": "chapter-3-international-standards-for-space-systems/3-3-key-ecss-engineering-standards/3-3-2-key-subsystem-standards",
+   "en_hash": "90858ef742664052",
+   "fr_hash": "dd9468c41c0aa3ad"
+  },
+  {
+   "id": "chapter-3-international-standards-for-space-systems/3-3-key-ecss-engineering-standards/3-3-3-structural-design-requirements-example",
+   "en_hash": "11f2b228d75818da",
+   "fr_hash": "81f83998cd2142ba"
+  },
+  {
+   "id": "chapter-3-international-standards-for-space-systems/3-4-nasa-standards-comparison",
+   "en_hash": "17bb357d6cd44dc1",
+   "fr_hash": "65ac6f5da422f64b"
+  },
+  {
+   "id": "chapter-3-international-standards-for-space-systems/3-4-nasa-standards-comparison/3-4-1-nasa-technical-standards-architecture",
+   "en_hash": "09cc6551abff2a52",
+   "fr_hash": "41b9fadc23bd6f3e"
+  },
+  {
+   "id": "chapter-3-international-standards-for-space-systems/3-4-nasa-standards-comparison/3-4-2-cross-reference-table",
+   "en_hash": "b8b60ca5769fa8f9",
+   "fr_hash": "d752436e8e8cc284"
+  },
+  {
+   "id": "chapter-3-international-standards-for-space-systems/3-5-cds-rev-14-launch-vehicle-interface-standard",
+   "en_hash": "fff6e216c332fc12",
+   "fr_hash": "fe7d51b3d931d5b4"
+  },
+  {
+   "id": "chapter-3-international-standards-for-space-systems/3-5-cds-rev-14-launch-vehicle-interface-standard/3-5-1-what-is-the-cds",
+   "en_hash": "6826c43b3ca2f477",
+   "fr_hash": "dd3afe6011fe70cc"
+  },
+  {
+   "id": "chapter-3-international-standards-for-space-systems/3-5-cds-rev-14-launch-vehicle-interface-standard/3-5-2-key-cds-requirements",
+   "en_hash": "37fa80434f1ea745",
+   "fr_hash": "336d879e6c7dce80"
+  },
+  {
+   "id": "chapter-3-international-standards-for-space-systems/3-5-cds-rev-14-launch-vehicle-interface-standard/3-5-3-form-factors",
+   "en_hash": "f0da6887634e401f",
+   "fr_hash": "2bba3362c2080ffe"
+  },
+  {
+   "id": "chapter-3-international-standards-for-space-systems/3-5-cds-rev-14-launch-vehicle-interface-standard/3-5-4-rideshare-launch-interfaces",
+   "en_hash": "a0c70251dbad3a75",
+   "fr_hash": "23cffa1c4be85c84"
+  },
+  {
+   "id": "chapter-3-international-standards-for-space-systems/3-6-space-debris-mitigation",
+   "en_hash": "a4ed7eb63c7f48c1",
+   "fr_hash": "7268d8e03176fc67"
+  },
+  {
+   "id": "chapter-3-international-standards-for-space-systems/3-6-space-debris-mitigation/3-6-1-the-debris-problem",
+   "en_hash": "6cef44f61fffa1a7",
+   "fr_hash": "54ad3600819b5e1e"
+  },
+  {
+   "id": "chapter-3-international-standards-for-space-systems/3-6-space-debris-mitigation/3-6-2-debris-mitigation-guidelines-hierarchy",
+   "en_hash": "46bb936eb197e27d",
+   "fr_hash": "b0a1e1917ed4daa2"
+  },
+  {
+   "id": "chapter-3-international-standards-for-space-systems/3-6-space-debris-mitigation/3-6-3-key-debris-mitigation-requirements",
+   "en_hash": "539aff5887ddd733",
+   "fr_hash": "9d1fd4f106eb912e"
+  },
+  {
+   "id": "chapter-3-international-standards-for-space-systems/3-6-space-debris-mitigation/3-6-4-post-mission-disposal-options",
+   "en_hash": "627b6e95ea111e7e",
+   "fr_hash": "b96f4581f17da1c4"
+  },
+  {
+   "id": "chapter-3-international-standards-for-space-systems/3-6-space-debris-mitigation/3-6-5-practical-implications-for-mission-design",
+   "en_hash": "0e19441476c1711c",
+   "fr_hash": "68f85383a4538df5"
+  },
+  {
+   "id": "chapter-3-international-standards-for-space-systems/3-7-international-space-law-and-copuos",
+   "en_hash": "f3190125e59cc59e",
+   "fr_hash": "6c32992b9814a5e7"
+  },
+  {
+   "id": "chapter-3-international-standards-for-space-systems/3-7-international-space-law-and-copuos/3-7-1-the-un-space-treaties",
+   "en_hash": "c55257a65d680405",
+   "fr_hash": "081bea0e7af2de23"
+  },
+  {
+   "id": "chapter-3-international-standards-for-space-systems/3-7-international-space-law-and-copuos/3-7-2-key-legal-principles-for-mission-design",
+   "en_hash": "c87b2a90b2da6d08",
+   "fr_hash": "aa107b687880b8e8"
+  },
+  {
+   "id": "chapter-3-international-standards-for-space-systems/3-7-international-space-law-and-copuos/3-7-3-copuos-long-term-sustainability-guidelines-2019",
+   "en_hash": "589dc8fbadab25ab",
+   "fr_hash": "5aa458aaae1b100a"
+  },
+  {
+   "id": "chapter-3-international-standards-for-space-systems/3-8-compliance-tracking-in-a-concurrent-design-study",
+   "en_hash": "7a1cc35660822f72",
+   "fr_hash": "a100fb1b94619b8b"
+  },
+  {
+   "id": "chapter-3-international-standards-for-space-systems/summary",
+   "en_hash": "6e63fddc7577582e",
+   "fr_hash": "0f054d5f76815d6d"
+  },
+  {
+   "id": "chapter-3-international-standards-for-space-systems/problems",
+   "en_hash": "de3ba8b03a9900b2",
+   "fr_hash": "49ce3cd4bea67c49"
+  },
+  {
+   "id": "chapter-3-international-standards-for-space-systems/references",
+   "en_hash": "238dcfe779421b0a",
+   "fr_hash": "fca90f1fe566ca73"
+  }
+ ],
+ "en_commit": "3ea7113"
+}

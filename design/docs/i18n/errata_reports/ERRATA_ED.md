@@ -1,0 +1,38 @@
+# Errata packet ED: OER *Concurrent Spacecraft Design* (EN and FR)
+
+Paths are relative to `/home/claude/work/cdf/docs/oer/`. Every fix is mirrored in `fr/chapters/`. mdparity passes on all 24 chapter pairs. `tools.i18n` status for [oer] shows 24 of 24 in sync, and `check` reports 0 errors (no OER warnings). The facilitator book was not touched.
+
+E1-3.08 | FIXED (external fact researched: NASA paused Gateway "in its current form" on 2026-03-24, widely reported as a cancellation; the CSA announced in Aug 2026 that Canadarm3 is repurposed for lunar-surface operations under Artemis; see /home/claude/work/xlate/GATEWAY_STATUS.md). Milestones, focus areas and partnerships tables updated with dated wording, plus Problem 6, the source line and new refs 12–13. The facilitator book patch is under Needs Franz | chapters/02_canadian_ecosystem.md
+E1-2.09 | FIXED (OER part). Recomputed with R_E = 6378.137 km (r1 = 6778.137 km) and mu = 398600.44: v_p 10.066, dV1 2.397, v_a 1.618, dV2 1.456, total 3.854 km/s (the rounded parts sum to 3.853). The deorbit check gives 112.3 m/s, OK | chapters/22_derivations.md
+E1-3.87 | FIXED. ch22 worked check now uses ch11 §11.9's own case: 5 passes of 6 min at eta 0.85 = 956 MB/day (it was 4 × 8 min × 0.8 = 960, "exact durations"). ch17 is consistent at 5 passes/day. The ch17 volunteer UHF row is recomputed at 9.6 kbit/s: 3.2–4.9 MB (it was 675–1013 MB at 2 Mbit/s) | chapters/22_derivations.md, chapters/17_ground_segment.md
+E1-3.88 | FIXED. The text now matches the Fig 10.4 caption (EOSat-3U case is magnetically dominated, not drag dominated). Also "two wheel sizes" changed to three (the caption lists 1, 10 and 40 mN m s) | chapters/10_aocs.md
+E1-2.21 | FIXED. Confirmed: under the 5 kg wet convention the butane and green values imply 111 s and 278 s, outside the table's Isp ranges. Moved to the worked example's dry-mass convention with the Isp shown: cold 0.93 kg (60 s), butane 0.60 kg (90 s), green 0.22 kg (235 s). FEEP and Hall are unchanged (inside their ranges). Totals are now 1.23 / 1.10 / 3.22 kg | chapters/12_structures_propulsion_obdh.md
+E1-2.31 | FIXED. UniSat-1 lifetime changed from "6–14 months" to "6–18 months" (to match the stated 6- and 18-month extremes) | chapters/12_structures_propulsion_obdh.md
+E1-2.06 | NEEDS-FRANZ (OER §16.2.1 WBS sums to 103 %. I&T 12 %, SW 8 %, PM/SE/MA 13 % and Ground 5 % feed the §16.1.6 worked example (490 kEUR), and docs/assets/figures/fig_wbs_tree.py prints the same percentages with "100 %". So the cut has to come from Payload, Bus, Launch or Ops, and the figure needs regenerating, which is outside this packet) | none
+E1-2.07 | FIXED (OER part). §16.4.3 table: 5.0 changed to 39 / 38 (the sum of rows 5.1–5.5). Totals are now ≈ 91 / ≈ 91 and P80 ≈ 118 / ≈ 118 (they were 90 / 85 and 117 / 111, while the printed rows summed to 90 / 89). The lead-in now explains why ch13's BOM-based figure is ≈ 85 kEUR (no operations, one management line) | chapters/16_cost_and_reviews.md
+E1-2.32 | FIXED. Problem 3 changed from "30-month schedule" to "26-month development schedule" (4+6+8+8 = 26) | chapters/16_cost_and_reviews.md
+E1-3.83 | FIXED (OER part). §13.6 "5–7 line items plus harness" changed to "nine line items (eight components plus the harness)", to match the 9-row BOM. The OER's §13.3.4 roll-up is already a 6U with a 12 000 g allocation, which is correct | chapters/13_equipment_and_bom.md
+E1-3.89 | FIXED. Green et al. version 62 is dated 2023, not 2024 (the source line now matches Ref 9). The summary row now includes 12U (2–20 / 4–55 / 25–100 W, 1U–12U, §9.2.1) | chapters/09_power_and_thermal.md
+E1-3.39 / E1-3.99 | FIXED (OER part). ECSS-E-ST-60-20C Rev.2's official title is "Star sensor terminology and performance specification" (ecss.nl). Corrected in ch21, and ch10 Ref 7, which had an invented title and URL ("Star Tracker Performance Testing"), is fixed too | chapters/21_position_reference.md, chapters/10_aocs.md
+E1-3.90 | FIXED. The Fig 6.1 SVG universal functions are renumbered from F-010..F-014 to F-010/F-020/F-030/F-040/F-050, matching §6.5 and the learner workbook | chapters/06_functional_decomposition.md
+E1-3.36 | FIXED. 6U and 12U length changed from 340.5 to 366.0 mm in §3.5.3 and §12.1.1. CDS Rev 14.1 (the cited source) gives 226.3 × 100 × 366.0 and 226.3 × 226.3 × 366.0, and the simulator's eps.yaml uses 366 | chapters/03_international_standards.md, chapters/12_structures_propulsion_obdh.md
+E1-3.78 | FIXED (OER part). ch1 "plus demonstration where ECSS lists it" changed to "plus the demonstration that NASA practice adds", consistent with ch5/ch14 (ECSS-E-ST-10-02C lists only A, T, I and R). The OER already uses ATIR(D) throughout | chapters/01_concurrent_design.md
+E1-4.44 | FIXED in part. Repository URL inserted (https://github.com/FNewland/SpaceCDF, from the cdf README). The ch16 header "CER (FY2010 $K)" is escaped to \$K: verified that _render_math's inline regex otherwise paired it with "$b$" and rendered "K) \| Parameter \| Typical " as maths. ch18 Problem 2 changed from "source material of §18.2.2" to "Figure 18.1 (§18.2.2)". LEFT: ch11 Figure 17.2 is correct (the pass profile is Fig 17.2; XREF_NOTES is stale), and ch11 "\$500" renders correctly | chapters/23_appendix_tool.md, chapters/16_cost_and_reviews.md, chapters/18_operations_and_fdir.md
+E1-3.17 | LEFT. The OER §18.3.4 table is a generic "common CubeSat FDIR rules" table, and its 6000 rpm matches the OER's own representative wheel (ch10 L324, omega_max ≈ 6000 rpm). The brief says not to homogenise to EO-Sat-1 (5000/5500) | none
+E1-3.85 | NEEDS-FRANZ (OER part). The ch14 sine table says 5–8 Hz at 12.5 mm, then 1.25 g. The 12.5 mm/1.25 g crossover is at 4.98 Hz, so the table and its own note disagree about where displacement control applies. Choosing the profile is an authoring decision | none
+E1-2.01 | LEFT. The OER ch4 §4.9 already prints the correct 0.91 / 0.67 / 0.50; this entry is about the facilitator book only | none
+E1-3.40 | LEFT. OER ch9 already uses hot = EOL, cold = BOL; this entry is about the facilitator book only | none
+
+## Needs Franz
+
+1. **WBS 103 % (E1-2.06).** Which Level-1 share should be cut? I recommend Bus 30 → 27 %, which leaves the §16.1.6 example intact. fig_wbs_tree.py line 30 would then need the matching change and a re-render.
+2. **Sine profile (E1-3.85).** Should the ch14 table become 5–8 Hz at 12.5 mm and 8–100 Hz at 3.2 g, or should the displacement band end at 5 Hz?
+3. **Repo URL.** I inserted https://github.com/FNewland/SpaceCDF. Is it public for OER readers?
+4. **Facilitator book Gateway patch (E1-3.08).** For the other agent or Franz, in facilitator_book_expanded.md:
+   * L775: `Table 1.2.1 — Major Canadian space milestones from Alouette 1 to the 2026 pause of the Lunar Gateway and the repurposing of Canadarm3.`
+   * L787: `| Canadarm3 | 2019– | Begun for the Lunar Gateway; as of late 2026 the CSA is repurposing Canadarm3 technologies for lunar-surface operations under Artemis (announced August 2026) |`
+   * L788: `| Lunar Gateway participation | 2019–2026 | Canada committed as partner; in March 2026 NASA paused Gateway "in its current form" (widely reported as a cancellation) in favour of a lunar surface base |`
+   * L800: `| **Space Exploration** | ISS operations, Artemis lunar exploration (Canadarm3 technologies repurposed for lunar-surface operations), astronaut programme | Lunar Exploration Accelerator Program (LEAP) |`
+   * L896: `| **Artemis** (Lunar Gateway until its March 2026 pause) | Canadarm3, repurposed for lunar-surface operations (2026) | Astronaut flights, lunar science access |`
+
+   The key correction is that "Canadarm3's role is under review" is out of date.

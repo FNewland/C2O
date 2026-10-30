@@ -1,0 +1,167 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "docs/oer/chapters/16_cost_and_reviews.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "chapter-16-cost-estimation-and-design-reviews",
+   "en_hash": "d82887e7d274977e",
+   "fr_hash": "1f60ba5441a863ed"
+  },
+  {
+   "id": "chapter-16-cost-estimation-and-design-reviews/learning-objectives",
+   "en_hash": "7927af6ea89cb01a",
+   "fr_hash": "d36294221c793d18"
+  },
+  {
+   "id": "chapter-16-cost-estimation-and-design-reviews/16-1-cost-estimation-methodologies",
+   "en_hash": "cd25bba0c6bc54b5",
+   "fr_hash": "460e897554004c73"
+  },
+  {
+   "id": "chapter-16-cost-estimation-and-design-reviews/16-1-cost-estimation-methodologies/16-1-1-three-primary-methods",
+   "en_hash": "e3cf87844d28b2b0",
+   "fr_hash": "fbe2a5bf956028f8"
+  },
+  {
+   "id": "chapter-16-cost-estimation-and-design-reviews/16-1-cost-estimation-methodologies/16-1-2-parametric-cost-estimating-relationships-cers",
+   "en_hash": "2ed3fbdc20eff4b8",
+   "fr_hash": "67c7883ca755d533"
+  },
+  {
+   "id": "chapter-16-cost-estimation-and-design-reviews/16-1-cost-estimation-methodologies/16-1-3-uscm-unmanned-space-vehicle-cost-model-cers",
+   "en_hash": "6d4ac4bbe93a122b",
+   "fr_hash": "ec98f84837520321"
+  },
+  {
+   "id": "chapter-16-cost-estimation-and-design-reviews/16-1-cost-estimation-methodologies/16-1-4-sscm-small-satellite-cost-model",
+   "en_hash": "8f50c77a972ee0f4",
+   "fr_hash": "a7828853fa39d0a8"
+  },
+  {
+   "id": "chapter-16-cost-estimation-and-design-reviews/16-1-cost-estimation-methodologies/16-1-5-cubesat-calibrated-pricing-cots-flat-prices-versus-cers",
+   "en_hash": "20d3bbd836c79d74",
+   "fr_hash": "96aff7a8a553ef19"
+  },
+  {
+   "id": "chapter-16-cost-estimation-and-design-reviews/16-1-cost-estimation-methodologies/16-1-6-worked-example-parametric-versus-bottom-up-for-the-3u-eo-cubesat",
+   "en_hash": "a500ba950564000b",
+   "fr_hash": "a213cd5744c65d2a"
+  },
+  {
+   "id": "chapter-16-cost-estimation-and-design-reviews/16-2-cost-breakdown-structure-wbs",
+   "en_hash": "d67bcb0a4b8d2c92",
+   "fr_hash": "72fd101302305ba7"
+  },
+  {
+   "id": "chapter-16-cost-estimation-and-design-reviews/16-2-cost-breakdown-structure-wbs/16-2-1-standard-cubesat-wbs",
+   "en_hash": "80d57dc8f27c3d8e",
+   "fr_hash": "032c2a3daee1d0c2"
+  },
+  {
+   "id": "chapter-16-cost-estimation-and-design-reviews/16-2-cost-breakdown-structure-wbs/16-2-2-cost-by-phase",
+   "en_hash": "803774f794d87306",
+   "fr_hash": "6b73baf47a790a63"
+  },
+  {
+   "id": "chapter-16-cost-estimation-and-design-reviews/16-3-learning-curve-for-constellations",
+   "en_hash": "01d00c1151e532d5",
+   "fr_hash": "14f6957c485b6d68"
+  },
+  {
+   "id": "chapter-16-cost-estimation-and-design-reviews/16-3-learning-curve-for-constellations/16-3-1-wright-s-learning-curve",
+   "en_hash": "fce8a77639008400",
+   "fr_hash": "8d75321ed6931916"
+  },
+  {
+   "id": "chapter-16-cost-estimation-and-design-reviews/16-3-learning-curve-for-constellations/16-3-2-simplified-rule-of-thumb",
+   "en_hash": "4e61c142e12b408f",
+   "fr_hash": "2ff1837e1d289c78"
+  },
+  {
+   "id": "chapter-16-cost-estimation-and-design-reviews/16-3-learning-curve-for-constellations/16-3-3-worked-example-20-satellite-constellation",
+   "en_hash": "4561200ba79720e5",
+   "fr_hash": "c7baed66aa31555b"
+  },
+  {
+   "id": "chapter-16-cost-estimation-and-design-reviews/16-4-cost-risk-and-confidence-levels",
+   "en_hash": "16bcc58b28dc9b1a",
+   "fr_hash": "3bab0ea26b3d62ee"
+  },
+  {
+   "id": "chapter-16-cost-estimation-and-design-reviews/16-4-cost-risk-and-confidence-levels/16-4-1-uncertainty-by-cost-element",
+   "en_hash": "799299d9c7617de4",
+   "fr_hash": "6b47fb48ec9ff528"
+  },
+  {
+   "id": "chapter-16-cost-estimation-and-design-reviews/16-4-cost-risk-and-confidence-levels/16-4-2-confidence-levels",
+   "en_hash": "3b553a3e13e92f0c",
+   "fr_hash": "b0cd0b307c19d416"
+  },
+  {
+   "id": "chapter-16-cost-estimation-and-design-reviews/16-4-cost-risk-and-confidence-levels/16-4-3-returning-to-unisat-1-cost-structure",
+   "en_hash": "11382cc5ff53df97",
+   "fr_hash": "abbdb39d7d3339b7"
+  },
+  {
+   "id": "chapter-16-cost-estimation-and-design-reviews/16-5-design-reviews-gate-criteria-and-presentation",
+   "en_hash": "a45392446f66794f",
+   "fr_hash": "395b5c09d10a116d"
+  },
+  {
+   "id": "chapter-16-cost-estimation-and-design-reviews/16-5-design-reviews-gate-criteria-and-presentation/16-5-1-gate-criteria-for-srr-phase-a-b",
+   "en_hash": "1a676e165f764972",
+   "fr_hash": "c29c9ab56bd34676"
+  },
+  {
+   "id": "chapter-16-cost-estimation-and-design-reviews/16-5-design-reviews-gate-criteria-and-presentation/16-5-2-gate-criteria-for-pdr-phase-b-c",
+   "en_hash": "0c93f19a28e2cd5a",
+   "fr_hash": "503e621966b22ad0"
+  },
+  {
+   "id": "chapter-16-cost-estimation-and-design-reviews/16-5-design-reviews-gate-criteria-and-presentation/16-5-3-presenting-at-a-review",
+   "en_hash": "ed46e0c38f0d25bc",
+   "fr_hash": "6090f321101d9415"
+  },
+  {
+   "id": "chapter-16-cost-estimation-and-design-reviews/16-6-conducting-a-review-board",
+   "en_hash": "2d4c71a99f91e7e6",
+   "fr_hash": "f74864af400fcce5"
+  },
+  {
+   "id": "chapter-16-cost-estimation-and-design-reviews/16-6-conducting-a-review-board/16-6-1-review-board-roles",
+   "en_hash": "ce755f981d453592",
+   "fr_hash": "f83e9998023035ef"
+  },
+  {
+   "id": "chapter-16-cost-estimation-and-design-reviews/16-6-conducting-a-review-board/16-6-2-reviewer-question-bank",
+   "en_hash": "dea5460bb90a635a",
+   "fr_hash": "90a8c0a1242f4274"
+  },
+  {
+   "id": "chapter-16-cost-estimation-and-design-reviews/16-6-conducting-a-review-board/16-6-3-outcome",
+   "en_hash": "f4b8f96059d2b8a7",
+   "fr_hash": "369fc3fe39c6ca7e"
+  },
+  {
+   "id": "chapter-16-cost-estimation-and-design-reviews/summary",
+   "en_hash": "acc95747061888dd",
+   "fr_hash": "2bfb8d944a7dbf59"
+  },
+  {
+   "id": "chapter-16-cost-estimation-and-design-reviews/problems",
+   "en_hash": "c29ebc43e3251232",
+   "fr_hash": "e04b847ad763ddfe"
+  },
+  {
+   "id": "chapter-16-cost-estimation-and-design-reviews/references",
+   "en_hash": "7fcd15b562f5d90b",
+   "fr_hash": "0768a2cc84325b68"
+  }
+ ],
+ "en_commit": "3ea7113"
+}

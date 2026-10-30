@@ -1,0 +1,62 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "docs/orbit_north/week3/student_procedure_quickref.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "fee5f910f81cfd8b",
+   "fr_hash": "61778479144d48ec"
+  },
+  {
+   "id": "procedure-quick-reference",
+   "en_hash": "c5ce34146de05ea5",
+   "fr_hash": "9f5a2de8c18aa2e9"
+  },
+  {
+   "id": "procedure-quick-reference/leop-procedures",
+   "en_hash": "757f1c152e9ac20b",
+   "fr_hash": "99b3b32183a8641b"
+  },
+  {
+   "id": "procedure-quick-reference/commissioning-procedures",
+   "en_hash": "a7295890b7d847de",
+   "fr_hash": "fca6b442d25594e2"
+  },
+  {
+   "id": "procedure-quick-reference/nominal-procedures",
+   "en_hash": "008a253824074f9f",
+   "fr_hash": "7227c527a92f9fc9"
+  },
+  {
+   "id": "procedure-quick-reference/contingency-procedures-the-most-likely-ones-for-week-3",
+   "en_hash": "16edb341bbdaeeda",
+   "fr_hash": "6b7e463803e0a87d"
+  },
+  {
+   "id": "procedure-quick-reference/emergency-procedures-read-once-never-expected-to-invoke",
+   "en_hash": "ffa05ed58e8d974f",
+   "fr_hash": "9cb0ee4cfe9972bb"
+  },
+  {
+   "id": "procedure-quick-reference/how-to-read-a-procedure-file",
+   "en_hash": "18d4242e38a978c6",
+   "fr_hash": "c26f1a7d5246e557"
+  },
+  {
+   "id": "procedure-quick-reference/how-procedures-map-to-mcs-commands",
+   "en_hash": "3f7b73d1c351c024",
+   "fr_hash": "60489b8851a5f4c3"
+  },
+  {
+   "id": "procedure-quick-reference/when-you-are-stuck",
+   "en_hash": "ef36fd6509b73183",
+   "fr_hash": "53a55e3fc5bcf335"
+  },
+  {
+   "id": "procedure-quick-reference/references",
+   "en_hash": "a1129af4f7fcf2d9",
+   "fr_hash": "e37ad540045fa076"
+  }
+ ],
+ "en_commit": "3ea7113"
+}

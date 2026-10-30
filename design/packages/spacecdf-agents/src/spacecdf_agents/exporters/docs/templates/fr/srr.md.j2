@@ -1,0 +1,122 @@
+# {{ ctx.mission_name }} — Revue des exigences système (SRR)
+
+**Date du document :** {{ ctx.date }}
+**Étude :** {{ ctx.study_name }}
+**Généré par :** SpaceCDF, centre de conception concourante assisté par IA
+
+---
+
+## 1. Synthèse
+
+[À COMPLÉTER : texte de synthèse]
+
+{% if ctx.convergence %}
+Convergence : {{ 'Yes' if ctx.convergence.converged else 'No' }} en {{ ctx.convergence.iterations }} itérations ({{ '%.3f' | format(ctx.convergence.time_s) }} s).
+{% endif %}
+
+## 2. Présentation du système
+
+### 2.1 Orbite
+
+| Paramètre | Valeur |
+|-----------|-------|
+| Type d'orbite | {{ ctx.orbit.orbit_type | upper }} |
+| Altitude | {{ ctx.orbit.altitude_km }} km |
+| Inclinaison | {{ ctx.orbit.inclination_deg }} deg |
+| Période orbitale | {{ '%.1f' | format(ctx.orbit.period_min or 0) }} min |
+| Fraction d'éclipse | {{ '%.2f' | format(ctx.orbit.eclipse_fraction or 0) }} |
+| Durée de la mission | {{ ctx.orbit.mission_duration_years }} ans |
+
+### 2.2 Satellite
+
+- Type de mission : {{ ctx.mission_type }}
+- Classe de satellite : {{ ctx.spacecraft_class }}
+- Nombre de satellites : {{ ctx.num_spacecraft }}
+
+## 3. Bilan de masse
+
+{% set mass = ctx.budgets.get('mass', {}) %}
+| Sous-système | Équipement | Nominal (kg) | Marge % | Avec marge (kg) |
+|-----------|-----------|-------------:|---------:|-----------------:|
+{% for line in mass.get('lines', []) -%}
+| {{ line.subsystem }} | {{ line.equipment }} | {{ '%.2f' | format(line.nominal_value) }} | {{ '%.0f' | format(line.margin_percent) }} | {{ '%.2f' | format(line.nominal_value * (1 + line.margin_percent / 100)) }} |
+{% endfor -%}
+| **TOTAL** | | **{{ '%.2f' | format(mass.get('total_nominal', 0)) }}** | | **{{ '%.2f' | format(mass.get('total_with_margin', 0)) }}** |
+
+Allocation : {{ '%.2f' | format(mass.get('allocation', 0)) }} kg — Marge : {{ '%.1f' | format(mass.get('margin_percent', 0)) }} % ({{ mass.get('status', 'unknown') | upper }})
+
+## 4. Bilan de puissance
+
+{% set power = ctx.budgets.get('power', {}) %}
+| Sous-système | Équipement | Nominal (W) | Marge % | Avec marge (W) |
+|-----------|-----------|------------:|---------:|----------------:|
+{% for line in power.get('lines', []) -%}
+| {{ line.subsystem }} | {{ line.equipment }} | {{ '%.2f' | format(line.nominal_value) }} | {{ '%.0f' | format(line.margin_percent) }} | {{ '%.2f' | format(line.nominal_value * (1 + line.margin_percent / 100)) }} |
+{% endfor -%}
+| **TOTAL** | | **{{ '%.2f' | format(power.get('total_nominal', 0)) }}** | | **{{ '%.2f' | format(power.get('total_with_margin', 0)) }}** |
+
+Allocation : {{ '%.2f' | format(power.get('allocation', 0)) }} W — Marge : {{ '%.1f' | format(power.get('margin_percent', 0)) }} % ({{ power.get('status', 'unknown') | upper }})
+
+## 5. Bilan de données
+
+{% set data = ctx.budgets.get('data', {}) %}
+| Sous-système | Source | Valeur | Unité |
+|-----------|--------|------:|------|
+{% for line in data.get('lines', []) -%}
+| {{ line.subsystem }} | {{ line.equipment }} | {{ '%.2f' | format(line.nominal_value) }} | {{ line.get('unit', '') }} |
+{% endfor %}
+
+## 6. Ventilation des coûts
+
+{% if ctx.cost %}
+| Niveau de confiance | Coût (MEUR) |
+|------------------|------------:|
+| P50 | {{ '%.1f' | format(ctx.cost.p50_meur) }} |
+| P70 | {{ '%.1f' | format(ctx.cost.p70_meur) }} |
+| P80 | {{ '%.1f' | format(ctx.cost.p80_meur) }} |
+| P90 | {{ '%.1f' | format(ctx.cost.p90_meur) }} |
+
+Modèle utilisé : {{ ctx.cost.model_used }}
+Coût total sur le cycle de vie : {{ '%.1f' | format(ctx.cost.total_lcc_meur) }} MEUR
+{% else %}
+Estimation des coûts non disponible.
+{% endif %}
+
+## 7. Matrice de conformité
+
+{% if ctx.compliance %}
+| ID exigence | Description | Valeur obtenue | Marge % | État |
+|----------------|-------------|---------:|---------:|--------|
+{% for v in ctx.compliance.verifications -%}
+| {{ v.requirement_id }} | {{ v.requirement_text }} | {{ v.achieved_value if v.achieved_value is not none else '—' }} | {{ '%.1f' | format(v.margin_percent) if v.margin_percent is not none else '—' }} | {{ v.status | upper }} |
+{% endfor %}
+
+Total : {{ ctx.compliance.total_requirements }} — Conformes : {{ ctx.compliance.compliant }} — Marginales : {{ ctx.compliance.marginal }} — Non conformes : {{ ctx.compliance.non_compliant }}
+{% endif %}
+
+## 8. Liste des équipements
+
+{% if ctx.equipment %}
+| Sous-système | Paramètre | Composant | Fabricant | TRL |
+|-----------|-----------|-----------|--------------|----:|
+{% for eq in ctx.equipment -%}
+| {{ eq.domain }} | {{ eq.parameter_id }} | {{ eq.equipment_name }} | {{ eq.get('manufacturer', '') }} | {{ eq.get('trl', '—') }} |
+{% endfor %}
+{% else %}
+Aucun équipement sélectionné pour l'instant.
+{% endif %}
+
+## 9. Évaluation du TRL
+
+{% if ctx.trl_assessments %}
+| Sous-système | Référence (TRL) | Innovation (TRL) | Recommandation |
+|-----------|----------------|------------------|----------------|
+{% for trl in ctx.trl_assessments -%}
+| {{ trl.subsystem }} | {{ trl.baseline_component }} ({{ trl.baseline_trl }}) | {{ trl.innovation_component or '—' }} ({{ trl.innovation_trl or '—' }}) | {{ trl.recommendation }} |
+{% endfor %}
+{% else %}
+[À COMPLÉTER : évaluation du TRL]
+{% endif %}
+
+---
+*Généré par SpaceCDF, centre de conception concourante assisté par IA*

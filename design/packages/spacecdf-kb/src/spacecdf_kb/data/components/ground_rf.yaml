@@ -1,0 +1,163 @@
+---
+# Ground Station RF Equipment — LNAs, SSPAs, diplexers
+# Focused on CubeSat / SmallSat ground station operators
+
+components:
+
+  - id: gs-rf-lna-uhf
+    name: UHF Low Noise Amplifier
+    manufacturer: Minicircuits / Kuhne Electronic
+    category: ground_rf
+    mass_kg: 0.3
+    power_w: 2
+    cost_keur: 0.3
+    trl: 9
+    performance:
+      band: UHF
+      frequency_mhz: 430-440
+      noise_figure_db: 0.4
+      gain_db: 20
+      ip3_dbm: 15
+    heritage_missions: [SatNOGS stations, AMSAT ground stations]
+    notes: >
+      Mast-mounted LNA placed directly at the antenna feed to minimise
+      cable loss. Critical for UHF CubeSat links where received signal
+      is very weak. Kuhne MKU LNA 432 is a popular choice among amateurs.
+
+  - id: gs-rf-lna-sband-room
+    name: S-band Room-Temperature LNA
+    manufacturer: Miteq / L3Harris Narda
+    category: ground_rf
+    mass_kg: 1
+    power_w: 10
+    cost_keur: 5
+    trl: 9
+    performance:
+      band: S
+      frequency_mhz: 2200-2300
+      noise_figure_db: 0.6
+      noise_temp_k: 45
+      gain_db: 35
+    heritage_missions: [Leaf Space, ISIS ground stations, many university stations]
+    notes: >
+      Room-temperature GaAs or InP LNA. Lower cost and complexity than
+      cryogenic option. Adequate for most CubeSat S-band links. Typical
+      system noise temperature ~80-120 K including antenna contribution.
+
+  - id: gs-rf-lna-sband-cryo
+    name: S-band Cryogenic LNA
+    manufacturer: Miteq / Low Noise Factory
+    category: ground_rf
+    mass_kg: 5
+    power_w: 50
+    cost_keur: 15
+    trl: 9
+    performance:
+      band: S
+      frequency_mhz: 2200-2300
+      noise_temp_k: 15
+      gain_db: 35
+      cooling: closed-cycle cryocooler (15-20 K)
+    heritage_missions: [ESTRACK stations, DSN, KSAT]
+    notes: >
+      Cryogenically cooled for minimum system noise temperature (~25-40 K
+      total). Justified when link margins are tight or when operating
+      small antennas. Adds operational complexity (cryocooler maintenance).
+
+  - id: gs-rf-lna-xband
+    name: X-band Low Noise Amplifier
+    manufacturer: Miteq / Narda-MITEQ
+    category: ground_rf
+    mass_kg: 1
+    power_w: 10
+    cost_keur: 8
+    trl: 9
+    performance:
+      band: X
+      frequency_mhz: 8025-8400
+      noise_figure_db: 0.8
+      noise_temp_k: 60
+      gain_db: 30
+    heritage_missions: [Planet Labs, Spire, KSAT X-band stations]
+    notes: >
+      Standard room-temperature X-band LNA. InP HEMT technology. Mount
+      at the antenna feed to minimise waveguide losses. For high-rate
+      CubeSat X-band downlinks the LNA is a critical component.
+
+  - id: gs-rf-sspa-uhf
+    name: UHF Solid-State Power Amplifier (25W)
+    manufacturer: Microset / RM Italy
+    category: ground_rf
+    mass_kg: 2
+    power_w: 100
+    cost_keur: 0.5
+    trl: 9
+    performance:
+      band: UHF
+      frequency_mhz: 430-440
+      output_power_w: 25
+      efficiency_pct: 40
+    heritage_missions: [University CubeSat ground stations, AMSAT]
+    notes: >
+      Low-power UHF amplifier for CubeSat uplink commanding. 25W is
+      sufficient for most UHF CubeSat uplinks with a Yagi antenna.
+      Often an amateur radio amplifier (e.g., Microset SR-70) is used.
+
+  - id: gs-rf-sspa-sband-200w
+    name: 200W S-band SSPA
+    manufacturer: CPI / Paradise Datacom
+    category: ground_rf
+    mass_kg: 20
+    power_w: 800
+    cost_keur: 25
+    trl: 9
+    performance:
+      band: S
+      frequency_mhz: 2025-2110
+      output_power_w: 200
+      efficiency_pct: 25
+      linearity_c_im3_dbc: -25
+    heritage_missions: [Leaf Space, ISIS, university S-band stations]
+    notes: >
+      Standard S-band uplink amplifier for CubeSat commanding. 200W
+      provides comfortable margin for 2 Mbps uplink to a 3U-6U CubeSat.
+      GaN technology is making these smaller and more efficient.
+
+  - id: gs-rf-sspa-sband-1kw
+    name: 1 kW S-band SSPA
+    manufacturer: Advantech Wireless / CPI
+    category: ground_rf
+    mass_kg: 50
+    power_w: 4000
+    cost_keur: 60
+    trl: 9
+    performance:
+      band: S
+      frequency_mhz: 2025-2110
+      output_power_w: 1000
+      efficiency_pct: 25
+    heritage_missions: [ESTRACK, KSAT, SSC Esrange]
+    notes: >
+      High-power S-band uplink amplifier. Used when commanding at longer
+      ranges or when higher uplink data rates are needed. Typically for
+      professional-grade stations supporting multiple missions.
+
+  - id: gs-rf-diplexer-sband
+    name: S-band Diplexer / Filter Assembly
+    manufacturer: Reactel / K&L Microwave
+    category: ground_rf
+    mass_kg: 3
+    power_w: 0
+    cost_keur: 4
+    trl: 9
+    performance:
+      band: S
+      tx_frequency_mhz: 2025-2110
+      rx_frequency_mhz: 2200-2290
+      isolation_db: 80
+      insertion_loss_db: 0.3
+    heritage_missions: [Standard in all S-band stations]
+    notes: >
+      Enables simultaneous transmit and receive on a single antenna feed.
+      High isolation protects the LNA from transmitter power. Essential
+      for any S-band station doing both uplink and downlink.
