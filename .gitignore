@@ -1,0 +1,18 @@
+# Repository-wide; each project keeps its own .gitignore too.
+.DS_Store
+Thumbs.db
+.claude/
+*.pyc
+__pycache__/
+node_modules/
+.venv/
+.venv-rfsim/
+venv-rfsim.tar.gz
+# SQLite databases and journals (runtime state, never committed)
+*.db
+*.db-shm
+*.db-wal
+# Recorded RF captures are published as a GitHub Release, not in git
+sim/sim_captures/*.cf32
+# Link credentials
+**/workspace/link/
