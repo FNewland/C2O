@@ -46,7 +46,7 @@ Rules:
 - Be specific. "Team didn't communicate" fails. "At T+34 the AOCS
   position commanded a wheel spin without an FD GO" passes.
 - Use timestamps. The simulator clock is on every screen.
-- Read the worksheet **after** the shift. Do not show your draft
+- Complete the worksheet **after** the shift. Do not show your draft
   to the operator team during the shift.
 - The instructor reads worksheets at the debrief. Be direct. The
   goal is to make the operator team better, not to be polite.

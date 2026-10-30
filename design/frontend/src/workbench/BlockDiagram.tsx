@@ -21,7 +21,9 @@ import {
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { useUIStore } from '../stores/uiStore'
+import { displayElementName } from './BlocksPanel'
 
 const API = '/api'
 
@@ -39,6 +41,7 @@ const TYPE_COLORS: Record<string, string> = {
 // ─── Custom Node ───
 
 function ElementNode({ data }: NodeProps) {
+  const { t } = useTranslation()
   const { label, elementType, domain, mass_kg, power_w, in_scope, frozen, childCount, externalInterfaces, quantity, location } = data as any
 
   const borderColor = domain ? (DOMAIN_COLORS[domain] || '#6b7280') : (TYPE_COLORS[elementType] || '#6b7280')
@@ -74,8 +77,8 @@ function ElementNode({ data }: NodeProps) {
       {/* Type badge */}
       <div style={{ fontSize: '0.55rem', color: borderColor, fontWeight: 700, textTransform: 'uppercase', marginBottom: '0.15rem' }}>
         {domain || elementType}
-        {frozen && <span style={{ marginLeft: '0.3rem', color: '#f59e0b' }}>FROZEN</span>}
-        {in_scope === false && <span style={{ marginLeft: '0.3rem', color: '#6b7280' }}>EXT</span>}
+        {frozen && <span style={{ marginLeft: '0.3rem', color: '#f59e0b' }}>{t('FROZEN')}</span>}
+        {in_scope === false && <span style={{ marginLeft: '0.3rem', color: '#6b7280' }}>{t('EXT')}</span>}
       </div>
 
       {/* Name */}
@@ -85,9 +88,9 @@ function ElementNode({ data }: NodeProps) {
 
       {/* Properties */}
       <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-        {mass_kg != null && <span>{mass_kg.toFixed(1)} kg{isMulti ? ` ea (${(mass_kg * quantity).toFixed(1)} total)` : ''}</span>}
+        {mass_kg != null && <span>{isMulti ? t('{{mass}} kg ea ({{total}} total)', { mass: mass_kg.toFixed(1), total: (mass_kg * quantity).toFixed(1) }) : `${mass_kg.toFixed(1)} kg`}</span>}
         {power_w != null && <span>{power_w.toFixed(0)} W</span>}
-        {childCount > 0 && <span style={{ color: borderColor }}>{childCount} children</span>}
+        {childCount > 0 && <span style={{ color: borderColor }}>{t('{{count}} children', { count: childCount })}</span>}
       </div>
 
       {/* Location (for ground stations) */}
@@ -104,7 +107,7 @@ function ElementNode({ data }: NodeProps) {
           display: 'flex', alignItems: 'center', gap: '0.2rem',
         }}>
           <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#ec4899', display: 'inline-block' }} />
-          {externalInterfaces} ext iface{externalInterfaces > 1 ? 's' : ''}
+          {t('{{count}} ext ifaces', { count: externalInterfaces, defaultValue_one: '{{count}} ext iface' })}
         </div>
       )}
 
@@ -170,6 +173,7 @@ export function BlockDiagram() {
   const focusElementId = useUIStore(s => s.focusElementId)
   const drillInto = useUIStore(s => s.drillInto)
   const qc = useQueryClient()
+  const { t, i18n } = useTranslation()
 
   // Fetch all elements for this study
   const { data: allElements = [] } = useQuery({
@@ -237,7 +241,7 @@ export function BlockDiagram() {
           y: el.diagram_y ?? (40 + row * 140),
         },
         data: {
-          label: el.name,
+          label: displayElementName(el.name, t),
           elementType: el.element_type,
           domain: el.subsystem_domain,
           mass_kg: el.mass_kg,
@@ -259,7 +263,7 @@ export function BlockDiagram() {
         (iface.from_element_id === focusElementId || iface.to_element_id === focusElementId) &&
         !visibleIds.has(iface.from_element_id === focusElementId ? iface.to_element_id : iface.from_element_id)
       )
-      const nameOfEl = (id: string) => allElements.find((e: any) => e.id === id)?.name || 'External'
+      const nameOfEl = (id: string) => { const n = allElements.find((e: any) => e.id === id)?.name; return n ? displayElementName(n, t) : t('External') }
 
       parentInterfaces.forEach((iface: any, i: number) => {
         const isIncoming = iface.to_element_id === focusElementId
@@ -291,7 +295,7 @@ export function BlockDiagram() {
       }))
 
     return { nodes, edges }
-  }, [allElements, allInterfaces, focusElementId])
+  }, [allElements, allInterfaces, focusElementId, t])
 
   // Use ReactFlow in uncontrolled mode — pass initialNodes/initialEdges via key reset
   // This avoids the infinite loop from useNodesState + useEffect sync
@@ -299,8 +303,8 @@ export function BlockDiagram() {
     // Generate a stable key from element IDs + interface IDs so ReactFlow remounts on data change
     const elIds = initialNodes.map(n => n.id).sort().join(',')
     const ifIds = initialEdges.map(e => e.id).sort().join(',')
-    return `${elIds}|${ifIds}`
-  }, [initialNodes, initialEdges])
+    return `${elIds}|${ifIds}|${i18n.language}`
+  }, [initialNodes, initialEdges, i18n.language])
 
   // Double-click to drill into element
   const onNodeDoubleClick = useCallback((_event: any, node: Node) => {
@@ -379,11 +383,11 @@ export function BlockDiagram() {
       }).catch(() => {})
     } else {
       // Element-to-element connection — ask for interface type
-      const ifaceType = prompt('Interface type?\n\n1. electrical\n2. data\n3. rf\n4. mechanical\n5. thermal\n\nEnter type or number:', 'data')
+      const ifaceType = prompt(t('Interface type?\n\n1. electrical\n2. data\n3. rf\n4. mechanical\n5. thermal\n\nEnter type or number:'), 'data')
       if (!ifaceType) return
       const typeMap: Record<string, string> = { '1': 'electrical', '2': 'data', '3': 'rf', '4': 'mechanical', '5': 'thermal' }
       const resolvedType = typeMap[ifaceType] || ifaceType
-      const label = prompt('Interface label (optional):', '') || ''
+      const label = prompt(t('Interface label (optional):'), '') || ''
 
       fetch(`${API}/interfaces/?study_id=${studyId}`, {
         method: 'POST',
@@ -402,7 +406,7 @@ export function BlockDiagram() {
         }
       }).catch(() => {})
     }
-  }, [studyId, allInterfaces, focusElementId, qc])
+  }, [studyId, allInterfaces, focusElementId, qc, t])
 
   if (!studyId) return null
 
@@ -414,8 +418,8 @@ export function BlockDiagram() {
         color: 'var(--text-secondary)', fontSize: '0.85rem', gap: '0.5rem',
       }}>
         <span style={{ fontSize: '1.5rem' }}>+</span>
-        <span>No elements at this level yet.</span>
-        <span style={{ fontSize: '0.72rem' }}>Use the Blocks panel below to add elements.</span>
+        <span>{t('No elements at this level yet.')}</span>
+        <span style={{ fontSize: '0.72rem' }}>{t('Use the Blocks panel below to add elements.')}</span>
       </div>
     )
   }

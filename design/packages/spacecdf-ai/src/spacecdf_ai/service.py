@@ -77,6 +77,7 @@ class AIService:
         *,
         api_key: str | None = None,
         session_id: str = "default",
+        ui_language: str | None = None,
         **kwargs: Any,
     ) -> dict[str, Any]:
         """Execute a capability.
@@ -85,6 +86,8 @@ class AIService:
             capability: Capability name (must match genai.yaml keys)
             api_key: Per-request API key override
             session_id: For usage tracking
+            ui_language: User's UI language ('en'/'fr'); None → genai.yaml
+                output.language → 'en'. French makes the model answer in French.
             **kwargs: Capability-specific arguments
 
         Returns:
@@ -111,6 +114,7 @@ class AIService:
         result = await cap.execute(
             api_key=api_key,
             session_id=session_id,
+            ui_language=ui_language,
             **kwargs,
         )
 

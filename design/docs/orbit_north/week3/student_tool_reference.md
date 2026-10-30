@@ -115,8 +115,8 @@ loaded in the panel.]
 - Active-anomaly list: severity colour coding, time of trigger,
   affected subsystem
 - Acknowledging an anomaly vs clearing it
-- The escalation ladder: level 0 (informational) → level 4 (safe-mode
-  candidate)
+- The escalation ladder: `fdir.level` 0 (nominal) → 3 (critical); event
+  severity is a separate scale
 - Manual override — when and why
 - Anomaly-ticket creation: required fields, where the ticket lives
 

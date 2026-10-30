@@ -22,6 +22,8 @@ import time
 from dataclasses import dataclass, field
 from typing import Any
 
+from spacecdf_common.language import apply_language, normalize_language
+
 logger = logging.getLogger(__name__)
 
 # Token usage tracking
@@ -120,6 +122,7 @@ async def ask_ai(
     session_id: str = "default",
     model: str | None = None,
     max_tokens: int = 1500,
+    language: str | None = None,
 ) -> AIResponse:
     """Ask the AI advisor a question with design context.
 
@@ -131,6 +134,8 @@ async def ask_ai(
         session_id: For token budget tracking
         model: Override model (default from env)
         max_tokens: Max response tokens
+        language: UI language ('en'/'fr'); 'fr' asks the model to answer in
+            French. None/unknown → English (system prompt unchanged).
 
     Returns:
         AIResponse with content and usage stats
@@ -168,7 +173,7 @@ async def ask_ai(
         response = client.messages.create(
             model=resolved_model,
             max_tokens=max_tokens,
-            system=SYSTEM_PROMPT,
+            system=build_system_prompt(language),
             messages=[{"role": "user", "content": user_message}],
         )
 
@@ -196,6 +201,11 @@ async def ask_ai(
             error=str(e),
             elapsed_ms=(time.monotonic() - start) * 1000,
         )
+
+
+def build_system_prompt(language: str | None = None) -> str:
+    """SYSTEM_PROMPT plus the output-language instruction ('en' → unchanged)."""
+    return apply_language(SYSTEM_PROMPT, normalize_language(language))
 
 
 def get_token_budget(session_id: str = "default") -> TokenBudget:

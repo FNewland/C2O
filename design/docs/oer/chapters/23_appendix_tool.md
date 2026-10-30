@@ -1,6 +1,6 @@
 # Appendix A — About the SpaceCDF Tool
 
-The numerical examples in this book were computed with SpaceCDF, an open-source concurrent-design tool for small spacecraft. This appendix describes it briefly and neutrally so that a reader can understand what produced the numbers, and reproduce or extend them. It is released under the MIT licence; the source code, the mission descriptors used for the examples in this book and the figure-generation scripts are available at `<repository URL>`. Nothing in Parts I–III depends on the tool: every method in the book can be applied with a spreadsheet, and the problems never require it.
+The numerical examples in this book were computed with SpaceCDF, an open-source concurrent-design tool for small spacecraft. This appendix describes it briefly and neutrally so that a reader can understand what produced the numbers, and reproduce or extend them. It is released under the MIT licence; the source code, the mission descriptors used for the examples in this book and the figure-generation scripts are available at <https://github.com/FNewland/SpaceCDF>. Nothing in Parts I–III depends on the tool: every method in the book can be applied with a spreadsheet, and the problems never require it.
 
 ## A.1 Positions and design agents
 

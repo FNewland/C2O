@@ -70,7 +70,7 @@ Pass 1 typical end-state: phase 4, antennas deployed, app SW running,
 htr_bat ON, aocs_wheels ON, body rates < 0.05 °/s.
 
 Pass 2 typical end-state: same, plus payload-bus on standby, FDIR
-nominal table loaded, ready for commissioning Thursday.
+rule sets verified, ready for commissioning Thursday.
 
 ---
 
@@ -92,7 +92,7 @@ through the scenario operator UI mid-run.
 | Hard | `obc_bus_failure.yaml` | CAN bus A drops mid-sequential-power-on | CTG-017 Bus Failure Switchover |
 | Very hard | `gs_antenna_failure.yaml` | Iqaluit antenna degraded mid-pass; team must defer rest of pass to Troll | CTG-020 Ground Station Antenna Failure |
 
-[Claude Code: cross-check filenames against simulator. The five
+[Claude Code: cross-check filenames against simulator. The four
 *medium* and *hard* scenarios are listed in
 `scenarios/aocs_*.yaml`, `obc_*.yaml`, etc.]
 
@@ -124,7 +124,7 @@ End-of-pass GO/NO-GO criteria (instructor uses for assessment):
 | Reaction wheels ON, AOCS in DETUMBLE | ✓ | ✓ |
 | Body rates < 0.05 °/s | optional | ✓ |
 | Anomaly ticket filed for any injection | ✓ | ✓ |
-| FDIR nominal table loaded | — | ✓ |
+| FDIR rule sets enabled and verified | — | ✓ |
 
 Each criterion contributes to the team's **simulation performance**
 mark (Week 3 assessment row).

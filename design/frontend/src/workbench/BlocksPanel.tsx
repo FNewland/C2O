@@ -6,6 +6,8 @@
  */
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
+import type { TFunction } from 'i18next'
 import { useUIStore, type Level } from '../stores/uiStore'
 import { EquipmentBrowser } from './EquipmentBrowser'
 import { DesignTools } from './DesignTools'
@@ -15,42 +17,67 @@ import { ParameterSection } from '../components/ParameterPanel'
 
 const API = '/api'
 
-const ELEMENT_TYPES_BY_LEVEL: Record<Level, Array<{ value: string; label: string }>> = {
+// Option values are stored enums; only the labels are translated (display time).
+const elementTypesByLevel = (t: TFunction): Record<Level, Array<{ value: string; label: string }>> => ({
   0: [
-    { value: 'segment', label: 'Segment' },
+    { value: 'segment', label: t('Segment') },
   ],
   1: [
-    { value: 'system', label: 'System' },
+    { value: 'system', label: t('System') },
   ],
   2: [
-    { value: 'subsystem', label: 'Subsystem' },
+    { value: 'subsystem', label: t('Subsystem') },
   ],
   3: [
-    { value: 'component', label: 'Component' },
+    { value: 'component', label: t('Component') },
   ],
   4: [],
+})
+
+const domainOptions = (t: TFunction) => [
+  { value: '', label: t('(none)') },
+  { value: 'payload', label: t('Payload') },
+  { value: 'power', label: t('Power (EPS)') },
+  { value: 'aocs', label: t('AOCS') },
+  { value: 'ttc', label: t('Comms (TTC)') },
+  { value: 'thermal', label: t('Thermal') },
+  { value: 'structure', label: t('Structure') },
+  { value: 'propulsion', label: t('Propulsion') },
+  { value: 'obc', label: t('OBC / C&DH') },
+  { value: 'ground', label: t('Ground') },
+]
+
+const segmentOptions = (t: TFunction) => [
+  { value: 'space', label: t('Space') },
+  { value: 'ground', label: t('Ground') },
+  { value: 'launch', label: t('Launch') },
+  { value: 'operations', label: t('Operations') },
+  { value: 'user', label: t('User') },
+]
+
+/**
+ * Element names created by the presets (PRESETS_BY_LEVEL children, the root 'Mission').
+ * They are stored in English; while an element still carries one of these exact names it is
+ * shown translated. A renamed element is user data and is shown as typed.
+ */
+// English text is the i18n key
+export const SEED_ELEMENT_NAMES = [
+  'Mission', 'Space Segment', 'Ground Segment', 'Launch Segment', 'User Segment', 'Operations',
+  'Air Segment', 'Ground Control', 'Communications', 'Balloon Platform', 'Ground Station', 'Launch & Recovery',
+  'Sensor Network', 'Data Centre', 'Ground Sensors', 'Data Fusion Centre',
+  'Spacecraft', 'Primary GS', 'Backup GS', 'Arctic GS', 'Mid-Lat GS', 'Equatorial GS',
+  'Mission Control Centre', 'Payload Data Centre', 'Flight Dynamics',
+  'Payload', 'Thermal', 'Structure', 'Propulsion',
+  'Solar Array', 'Battery Pack', 'Power Distribution', 'Power Regulation',
+  'Attitude Sensors', 'Reaction Wheels', 'Magnetorquers', 'ADCS Computer',
+  'Transponder', 'Antenna', 'Diplexer/Filter',
+  'GS Antenna', 'RF Front End', 'Baseband Modem', 'Network Interface',
+]
+
+/** Display name of an element: seed names translated, anything else unchanged. */
+export function displayElementName(name: string, t: TFunction): string {
+  return SEED_ELEMENT_NAMES.includes(name) ? t(name) : name
 }
-
-const DOMAIN_OPTIONS = [
-  { value: '', label: '(none)' },
-  { value: 'payload', label: 'Payload' },
-  { value: 'power', label: 'Power (EPS)' },
-  { value: 'aocs', label: 'AOCS' },
-  { value: 'ttc', label: 'Comms (TTC)' },
-  { value: 'thermal', label: 'Thermal' },
-  { value: 'structure', label: 'Structure' },
-  { value: 'propulsion', label: 'Propulsion' },
-  { value: 'obc', label: 'OBC / C&DH' },
-  { value: 'ground', label: 'Ground' },
-]
-
-const SEGMENT_OPTIONS = [
-  { value: 'space', label: 'Space' },
-  { value: 'ground', label: 'Ground' },
-  { value: 'launch', label: 'Launch' },
-  { value: 'operations', label: 'Operations' },
-  { value: 'user', label: 'User' },
-]
 
 // ─── Inline Edit Component ───
 
@@ -60,6 +87,7 @@ function InlineEdit({ value, onCommit, style, inputStyle }: {
   style?: React.CSSProperties
   inputStyle?: React.CSSProperties
 }) {
+  const { t } = useTranslation()
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(value)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -76,7 +104,7 @@ function InlineEdit({ value, onCommit, style, inputStyle }: {
       <span
         onClick={() => { setDraft(value); setEditing(true) }}
         style={{ cursor: 'pointer', ...style }}
-        title="Click to edit"
+        title={t('Click to edit')}
       >
         {value}
       </span>
@@ -111,6 +139,7 @@ function InlineEdit({ value, onCommit, style, inputStyle }: {
 }
 
 export function BlocksPanel() {
+  const { t } = useTranslation()
   const studyId = useUIStore(s => s.studyId)
   const focusElementId = useUIStore(s => s.focusElementId)
   const currentLevel = useUIStore(s => s.currentLevel)
@@ -206,7 +235,8 @@ export function BlocksPanel() {
     qc.invalidateQueries({ queryKey: ['elements', studyId] })
   }, [studyId, qc, allElements])
 
-  const typeOptions = ELEMENT_TYPES_BY_LEVEL[currentLevel] || []
+  const typeOptions = elementTypesByLevel(t)[currentLevel] || []
+  const focusName = allElements.find((e: any) => e.id === focusElementId)?.name
 
   return (
     <div style={{ padding: '0.5rem 1rem', fontSize: '0.75rem' }}>
@@ -214,7 +244,7 @@ export function BlocksPanel() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', marginBottom: '0.5rem' }}>
         {children.length === 0 && !showAdd && (
           <div style={{ color: 'var(--text-secondary)', padding: '0.5rem 0' }}>
-            No elements at this level. Click "Add Element" to start.
+            {t('No elements at this level. Click "Add Element" to start.')}
           </div>
         )}
         {children.map((el: any) => (
@@ -233,15 +263,15 @@ export function BlocksPanel() {
             {/* Lock indicator */}
             {isLockedByOther(el.id) && (
               <span style={{ fontSize: '0.5rem', padding: '0.05rem 0.2rem', borderRadius: '2px', background: 'rgba(239,68,68,0.15)', color: 'var(--danger)', fontWeight: 600, flexShrink: 0 }}
-                title={`Locked by ${lockHolder(el.id)}`}>
+                title={t('Locked by {{name}}', { name: lockHolder(el.id) })}>
                 🔒 {lockHolder(el.id)}
               </span>
             )}
             {isLockedByOther(el.id) ? (
-              <span style={{ fontWeight: 500, flex: 1, color: 'var(--text-secondary)' }}>{el.name}</span>
+              <span style={{ fontWeight: 500, flex: 1, color: 'var(--text-secondary)' }}>{displayElementName(el.name, t)}</span>
             ) : (
               <InlineEdit
-                value={el.name}
+                value={displayElementName(el.name, t)}
                 onCommit={(v) => { requestLock(el.id); patchElement(el.id, { name: v }); releaseLock(el.id) }}
                 style={{ fontWeight: 500, flex: 1 }}
                 inputStyle={{ width: 120, fontWeight: 500 }}
@@ -280,7 +310,7 @@ export function BlocksPanel() {
                 cursor: 'pointer',
               }}
               onClick={() => {
-                const q = prompt(`Quantity for "${el.name}":`, String(el.quantity || 1))
+                const q = prompt(t('Quantity for "{{name}}":', { name: displayElementName(el.name, t) }), String(el.quantity || 1))
                 if (q && !isNaN(Number(q))) {
                   fetch(`${API}/elements/${el.id}`, {
                     method: 'PATCH', headers: { 'Content-Type': 'application/json' },
@@ -288,13 +318,13 @@ export function BlocksPanel() {
                   }).then(() => qc.invalidateQueries({ queryKey: ['elements', studyId] }))
                 }
               }}
-              title="Click to change quantity">
+              title={t('Click to change quantity')}>
                 ×{el.quantity}
               </span>
             ) : (
               <button
                 onClick={() => {
-                  const q = prompt(`Quantity for "${el.name}":`, '1')
+                  const q = prompt(t('Quantity for "{{name}}":', { name: displayElementName(el.name, t) }), '1')
                   if (q && Number(q) > 1) {
                     fetch(`${API}/elements/${el.id}`, {
                       method: 'PATCH', headers: { 'Content-Type': 'application/json' },
@@ -303,41 +333,41 @@ export function BlocksPanel() {
                   }
                 }}
                 style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.55rem', color: 'var(--text-secondary)' }}
-                title="Set quantity (for duplicates/constellation)"
+                title={t('Set quantity (for duplicates/constellation)')}
               >
-                qty
+                {t('qty')}
               </button>
             )}
 
             {/* Scope toggle */}
             <button
               onClick={() => toggleScope(el.id, el.in_scope !== false)}
-              title={el.in_scope === false ? 'Mark in-scope' : 'Mark out-of-scope'}
+              title={el.in_scope === false ? t('Mark in-scope') : t('Mark out-of-scope')}
               style={{
                 background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.65rem',
                 color: el.in_scope === false ? '#6b7280' : 'var(--success)',
               }}
             >
-              {el.in_scope === false ? 'EXT' : 'IN'}
+              {el.in_scope === false ? t('EXT') : t('IN')}
             </button>
 
             {/* Freeze toggle */}
             <button
               onClick={() => toggleFreeze(el.id, !!el.frozen)}
-              title={el.frozen ? 'Unfreeze' : 'Freeze'}
+              title={el.frozen ? t('Unfreeze') : t('Freeze')}
               style={{
                 background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.65rem',
                 color: el.frozen ? 'var(--warning)' : 'var(--text-secondary)',
               }}
             >
-              {el.frozen ? 'FROZEN' : 'freeze'}
+              {el.frozen ? t('FROZEN') : t('freeze')}
             </button>
 
             {/* Delete */}
             {!el.frozen && (
               <button
                 onClick={() => {
-                  if (confirm(`Delete "${el.name}" and all its children?`)) {
+                  if (confirm(t('Delete "{{name}}" and all its children?', { name: displayElementName(el.name, t) }))) {
                     deleteMutation.mutate(el.id)
                   }
                 }}
@@ -362,7 +392,7 @@ export function BlocksPanel() {
           <input
             value={newName}
             onChange={e => setNewName(e.target.value)}
-            placeholder="Element name"
+            placeholder={t('Element name')}
             autoFocus
             style={{
               padding: '0.3rem 0.5rem', fontSize: '0.72rem', borderRadius: '3px',
@@ -382,7 +412,7 @@ export function BlocksPanel() {
                 color: 'var(--text-primary)',
               }}
             >
-              {typeOptions.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+              {typeOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
           )}
 
@@ -396,7 +426,7 @@ export function BlocksPanel() {
                 color: 'var(--text-primary)',
               }}
             >
-              {SEGMENT_OPTIONS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+              {segmentOptions(t).map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
             </select>
           )}
 
@@ -410,7 +440,7 @@ export function BlocksPanel() {
                 color: 'var(--text-primary)',
               }}
             >
-              {DOMAIN_OPTIONS.map(d => <option key={d.value} value={d.value}>{d.label}</option>)}
+              {domainOptions(t).map(d => <option key={d.value} value={d.value}>{d.label}</option>)}
             </select>
           )}
 
@@ -423,7 +453,7 @@ export function BlocksPanel() {
               border: 'none', cursor: 'pointer',
             }}
           >
-            Add
+            {t('Add')}
           </button>
           <button
             onClick={() => setShowAdd(false)}
@@ -433,7 +463,7 @@ export function BlocksPanel() {
               border: 'none', cursor: 'pointer',
             }}
           >
-            Cancel
+            {t('Cancel')}
           </button>
         </div>
       ) : (
@@ -448,7 +478,7 @@ export function BlocksPanel() {
             border: 'none', cursor: 'pointer',
           }}
         >
-          + Add Element
+          {t('+ Add Element')}
         </button>
       )}
 
@@ -460,7 +490,7 @@ export function BlocksPanel() {
 
       {/* Parameters & equations (SCDF-160) for the focused element */}
       <ParameterSection studyId={studyId} elementId={focusElementId}
-        elementName={allElements.find((e: any) => e.id === focusElementId)?.name} />
+        elementName={focusName && displayElementName(focusName, t)} />
 
       {/* Design Tools (constellation orbit, ground station config) */}
       <DesignTools />
@@ -481,11 +511,12 @@ export function BlocksPanel() {
 // ─── Design Assist: presets + suggested requirements ───
 
 interface PresetChild { name: string; type: string; domain?: string; segment?: string; quantity?: number; performance?: Record<string, any> }
-const PRESETS_BY_LEVEL: Record<number, Array<{ id: string; name: string; description: string; children: PresetChild[] }>> = {
+// Preset name/description are display-only (translated); children names are stored as element names (English).
+const presetsByLevel = (t: TFunction): Record<number, Array<{ id: string; name: string; description: string; children: PresetChild[] }>> => ({
   0: [
     {
-      id: 'cubesat-mission', name: 'CubeSat LEO Mission',
-      description: 'Space, Ground, Launch, and Operations segments for a CubeSat',
+      id: 'cubesat-mission', name: t('CubeSat LEO Mission'),
+      description: t('Space, Ground, Launch, and Operations segments for a CubeSat'),
       children: [
         { name: 'Space Segment', type: 'segment', segment: 'space' },
         { name: 'Ground Segment', type: 'segment', segment: 'ground' },
@@ -494,8 +525,8 @@ const PRESETS_BY_LEVEL: Record<number, Array<{ id: string; name: string; descrip
       ],
     },
     {
-      id: 'constellation-mission', name: 'CubeSat Constellation',
-      description: 'Space (multi-sat), Ground, Launch, User, and Operations segments',
+      id: 'constellation-mission', name: t('CubeSat Constellation'),
+      description: t('Space (multi-sat), Ground, Launch, User, and Operations segments'),
       children: [
         { name: 'Space Segment', type: 'segment', segment: 'space' },
         { name: 'Ground Segment', type: 'segment', segment: 'ground' },
@@ -505,8 +536,8 @@ const PRESETS_BY_LEVEL: Record<number, Array<{ id: string; name: string; descrip
       ],
     },
     {
-      id: 'drone-mission', name: 'Drone / UAV Network',
-      description: 'Non-space alternative: drone fleet, ground control, operations',
+      id: 'drone-mission', name: t('Drone / UAV Network'),
+      description: t('Non-space alternative: drone fleet, ground control, operations'),
       children: [
         { name: 'Air Segment', type: 'segment', segment: 'space' },
         { name: 'Ground Control', type: 'segment', segment: 'ground' },
@@ -515,8 +546,8 @@ const PRESETS_BY_LEVEL: Record<number, Array<{ id: string; name: string; descrip
       ],
     },
     {
-      id: 'balloon-mission', name: 'Stratospheric Balloon',
-      description: 'Non-space alternative: balloon platform with ground station',
+      id: 'balloon-mission', name: t('Stratospheric Balloon'),
+      description: t('Non-space alternative: balloon platform with ground station'),
       children: [
         { name: 'Balloon Platform', type: 'segment', segment: 'space' },
         { name: 'Ground Station', type: 'segment', segment: 'ground' },
@@ -525,8 +556,8 @@ const PRESETS_BY_LEVEL: Record<number, Array<{ id: string; name: string; descrip
       ],
     },
     {
-      id: 'ground-sensor-network', name: 'Ground Sensor Network',
-      description: 'Non-space alternative: distributed ground sensors with data center',
+      id: 'ground-sensor-network', name: t('Ground Sensor Network'),
+      description: t('Non-space alternative: distributed ground sensors with data center'),
       children: [
         { name: 'Sensor Network', type: 'segment', segment: 'ground' },
         { name: 'Communications', type: 'segment', segment: 'ground' },
@@ -535,8 +566,8 @@ const PRESETS_BY_LEVEL: Record<number, Array<{ id: string; name: string; descrip
       ],
     },
     {
-      id: 'hybrid-mission', name: 'Hybrid Space + Ground',
-      description: 'CubeSat with ground sensor network for gap-filling',
+      id: 'hybrid-mission', name: t('Hybrid Space + Ground'),
+      description: t('CubeSat with ground sensor network for gap-filling'),
       children: [
         { name: 'Space Segment', type: 'segment', segment: 'space' },
         { name: 'Ground Sensors', type: 'segment', segment: 'ground' },
@@ -548,37 +579,37 @@ const PRESETS_BY_LEVEL: Record<number, Array<{ id: string; name: string; descrip
   ],
   1: [
     {
-      id: 'single-spacecraft', name: 'Single Spacecraft',
-      description: '1 spacecraft for the space segment',
+      id: 'single-spacecraft', name: t('Single Spacecraft'),
+      description: t('1 spacecraft for the space segment'),
       children: [
         { name: 'Spacecraft', type: 'system', domain: 'payload', quantity: 1 },
       ],
     },
     {
-      id: 'constellation-4', name: 'Constellation (4 spacecraft)',
-      description: '4 identical spacecraft in one orbital plane',
+      id: 'constellation-4', name: t('Constellation (4 spacecraft)'),
+      description: t('4 identical spacecraft in one orbital plane'),
       children: [
         { name: 'Spacecraft', type: 'system', domain: 'payload', quantity: 4, performance: { constellation: true, orbital_planes: 1, sats_per_plane: 4 } },
       ],
     },
     {
-      id: 'constellation-12', name: 'Constellation (3×4 = 12 spacecraft)',
-      description: '12 spacecraft across 3 orbital planes',
+      id: 'constellation-12', name: t('Constellation (3×4 = 12 spacecraft)'),
+      description: t('12 spacecraft across 3 orbital planes'),
       children: [
         { name: 'Spacecraft', type: 'system', domain: 'payload', quantity: 12, performance: { constellation: true, orbital_planes: 3, sats_per_plane: 4 } },
       ],
     },
     {
-      id: 'ground-network-2', name: '2 Ground Stations',
-      description: 'Primary + backup ground stations',
+      id: 'ground-network-2', name: t('2 Ground Stations'),
+      description: t('Primary + backup ground stations'),
       children: [
         { name: 'Primary GS', type: 'system', domain: 'ground', quantity: 1, performance: { latitude: 78.2, longitude: 15.4, location: 'Svalbard' } },
         { name: 'Backup GS', type: 'system', domain: 'ground', quantity: 1, performance: { latitude: 67.9, longitude: 20.2, location: 'Kiruna' } },
       ],
     },
     {
-      id: 'ground-network-3', name: '3 Ground Stations',
-      description: 'Arctic + mid-lat + equatorial coverage',
+      id: 'ground-network-3', name: t('3 Ground Stations'),
+      description: t('Arctic + mid-lat + equatorial coverage'),
       children: [
         { name: 'Arctic GS', type: 'system', domain: 'ground', quantity: 1, performance: { latitude: 78.2, longitude: 15.4, location: 'Svalbard' } },
         { name: 'Mid-Lat GS', type: 'system', domain: 'ground', quantity: 1, performance: { latitude: 47.9, longitude: 11.1, location: 'Weilheim' } },
@@ -586,8 +617,8 @@ const PRESETS_BY_LEVEL: Record<number, Array<{ id: string; name: string; descrip
       ],
     },
     {
-      id: 'ops-centre', name: 'Operations Centre',
-      description: 'Mission control + payload processing',
+      id: 'ops-centre', name: t('Operations Centre'),
+      description: t('Mission control + payload processing'),
       children: [
         { name: 'Mission Control Centre', type: 'system', domain: 'ground', quantity: 1 },
         { name: 'Payload Data Centre', type: 'system', domain: 'ground', quantity: 1 },
@@ -597,8 +628,8 @@ const PRESETS_BY_LEVEL: Record<number, Array<{ id: string; name: string; descrip
   ],
   2: [
     {
-      id: 'standard-spacecraft-bus', name: 'Standard Spacecraft Bus',
-      description: 'All subsystems for a spacecraft: Payload, EPS, AOCS, TTC, OBC, Thermal, Structure, Propulsion',
+      id: 'standard-spacecraft-bus', name: t('Standard Spacecraft Bus'),
+      description: t('All subsystems for a spacecraft: Payload, EPS, AOCS, TTC, OBC, Thermal, Structure, Propulsion'),
       children: [
         { name: 'Payload', type: 'subsystem', domain: 'payload' },
         { name: 'EPS', type: 'subsystem', domain: 'power' },
@@ -611,8 +642,8 @@ const PRESETS_BY_LEVEL: Record<number, Array<{ id: string; name: string; descrip
       ],
     },
     {
-      id: 'eps-subsystems', name: 'EPS Subsystems',
-      description: 'Solar Array, Battery, Power Distribution, Regulation',
+      id: 'eps-subsystems', name: t('EPS Subsystems'),
+      description: t('Solar Array, Battery, Power Distribution, Regulation'),
       children: [
         { name: 'Solar Array', type: 'subsystem', domain: 'power' },
         { name: 'Battery Pack', type: 'subsystem', domain: 'power' },
@@ -621,8 +652,8 @@ const PRESETS_BY_LEVEL: Record<number, Array<{ id: string; name: string; descrip
       ],
     },
     {
-      id: 'aocs-subsystems', name: 'AOCS Subsystems',
-      description: 'Sensors, Actuators, ADCS Computer',
+      id: 'aocs-subsystems', name: t('AOCS Subsystems'),
+      description: t('Sensors, Actuators, ADCS Computer'),
       children: [
         { name: 'Attitude Sensors', type: 'subsystem', domain: 'aocs' },
         { name: 'Reaction Wheels', type: 'subsystem', domain: 'aocs' },
@@ -631,8 +662,8 @@ const PRESETS_BY_LEVEL: Record<number, Array<{ id: string; name: string; descrip
       ],
     },
     {
-      id: 'ttc-subsystems', name: 'TTC Subsystems',
-      description: 'Transponder, Antenna, Diplexer',
+      id: 'ttc-subsystems', name: t('TTC Subsystems'),
+      description: t('Transponder, Antenna, Diplexer'),
       children: [
         { name: 'Transponder', type: 'subsystem', domain: 'ttc' },
         { name: 'Antenna', type: 'subsystem', domain: 'ttc' },
@@ -640,8 +671,8 @@ const PRESETS_BY_LEVEL: Record<number, Array<{ id: string; name: string; descrip
       ],
     },
     {
-      id: 'ground-station-subsystems', name: 'Ground Station Subsystems',
-      description: 'Antenna, RF chain, Modem, Network',
+      id: 'ground-station-subsystems', name: t('Ground Station Subsystems'),
+      description: t('Antenna, RF chain, Modem, Network'),
       children: [
         { name: 'GS Antenna', type: 'subsystem', domain: 'ground' },
         { name: 'RF Front End', type: 'subsystem', domain: 'ground' },
@@ -652,71 +683,81 @@ const PRESETS_BY_LEVEL: Record<number, Array<{ id: string; name: string; descrip
   ],
   3: [],
   4: [],
-}
+})
 
 // ─── Element Properties Editor (Tier C data capture) ───
 
-const PROPERTY_FIELDS: Record<string, Array<{ key: string; label: string; type: 'text' | 'number' | 'select'; options?: string[] }>> = {
+// Labels are display-only; keys and option values are stored in element.performance.
+const propertyFields = (t: TFunction): Record<string, Array<{ key: string; label: string; type: 'text' | 'number' | 'select'; options?: string[] }>> => ({
   payload: [
-    { key: 'gsd_m', label: 'GSD (m)', type: 'number' },
-    { key: 'fov_deg', label: 'FOV (deg)', type: 'number' },
-    { key: 'spectral_bands', label: 'Spectral bands', type: 'text' },
-    { key: 'shutter_control', label: 'Shutter control', type: 'select', options: ['yes', 'no', 'N/A'] },
-    { key: 'data_format', label: 'Data format', type: 'text' },
-    { key: 'data_rate_mbps', label: 'Data rate (Mbps)', type: 'number' },
-    { key: 'data_volume_gb_per_day', label: 'Data vol (GB/day)', type: 'number' },
-    { key: 'duty_cycle', label: 'Duty cycle (0-1)', type: 'number' },
+    { key: 'gsd_m', label: t('GSD (m)'), type: 'number' },
+    { key: 'fov_deg', label: t('FOV (deg)'), type: 'number' },
+    { key: 'spectral_bands', label: t('Spectral bands'), type: 'text' },
+    { key: 'shutter_control', label: t('Shutter control'), type: 'select', options: ['yes', 'no', 'N/A'] },
+    { key: 'data_format', label: t('Data format'), type: 'text' },
+    { key: 'data_rate_mbps', label: t('Data rate (Mbps)'), type: 'number' },
+    { key: 'data_volume_gb_per_day', label: t('Data vol (GB/day)'), type: 'number' },
+    { key: 'duty_cycle', label: t('Duty cycle (0-1)'), type: 'number' },
   ],
   ttc: [
-    { key: 'rf_band', label: 'RF band', type: 'select', options: ['UHF', 'S-band', 'X-band', 'Ka-band', 'L-band'] },
-    { key: 'tx_power_w', label: 'TX power (W)', type: 'number' },
-    { key: 'data_rate_kbps', label: 'Data rate (kbps)', type: 'number' },
-    { key: 'data_rate_mbps', label: 'Downlink rate (Mbps)', type: 'number' },
-    { key: 'encryption', label: 'Encryption', type: 'select', options: ['none', 'AES-128', 'AES-256', 'custom'] },
-    { key: 'modulation', label: 'Modulation', type: 'text' },
-    { key: 'duty_cycle', label: 'Duty cycle (0-1)', type: 'number' },
+    { key: 'rf_band', label: t('RF band'), type: 'select', options: ['UHF', 'S-band', 'X-band', 'Ka-band', 'L-band'] },
+    { key: 'tx_power_w', label: t('TX power (W)'), type: 'number' },
+    { key: 'data_rate_kbps', label: t('Data rate (kbps)'), type: 'number' },
+    { key: 'data_rate_mbps', label: t('Downlink rate (Mbps)'), type: 'number' },
+    { key: 'encryption', label: t('Encryption'), type: 'select', options: ['none', 'AES-128', 'AES-256', 'custom'] },
+    { key: 'modulation', label: t('Modulation'), type: 'text' },
+    { key: 'duty_cycle', label: t('Duty cycle (0-1)'), type: 'number' },
   ],
   power: [
-    { key: 'bus_voltage_v', label: 'Bus voltage (V)', type: 'number' },
-    { key: 'sa_type', label: 'Solar array type', type: 'select', options: ['body-mounted', 'single-deploy', 'dual-deploy', 'tracking'] },
-    { key: 'battery_chemistry', label: 'Battery chemistry', type: 'select', options: ['Li-ion', 'LiPo', 'LiFePO4', 'NiMH'] },
-    { key: 'duty_cycle', label: 'Duty cycle (0-1)', type: 'number' },
+    { key: 'bus_voltage_v', label: t('Bus voltage (V)'), type: 'number' },
+    { key: 'sa_type', label: t('Solar array type'), type: 'select', options: ['body-mounted', 'single-deploy', 'dual-deploy', 'tracking'] },
+    { key: 'battery_chemistry', label: t('Battery chemistry'), type: 'select', options: ['Li-ion', 'LiPo', 'LiFePO4', 'NiMH'] },
+    { key: 'duty_cycle', label: t('Duty cycle (0-1)'), type: 'number' },
   ],
   thermal: [
-    { key: 'temp_min_c', label: 'Min temp (°C)', type: 'number' },
-    { key: 'temp_max_c', label: 'Max temp (°C)', type: 'number' },
-    { key: 'coating', label: 'Surface coating', type: 'select', options: ['white paint', 'black anodize', 'gold', 'MLI', 'OSR'] },
-    { key: 'duty_cycle', label: 'Duty cycle (0-1)', type: 'number' },
+    { key: 'temp_min_c', label: t('Min temp (°C)'), type: 'number' },
+    { key: 'temp_max_c', label: t('Max temp (°C)'), type: 'number' },
+    { key: 'coating', label: t('Surface coating'), type: 'select', options: ['white paint', 'black anodize', 'gold', 'MLI', 'OSR'] },
+    { key: 'duty_cycle', label: t('Duty cycle (0-1)'), type: 'number' },
   ],
   aocs: [
-    { key: 'pointing_accuracy_deg', label: 'Pointing accuracy (deg)', type: 'number' },
-    { key: 'pointing_knowledge_deg', label: 'Pointing knowledge (deg)', type: 'number' },
-    { key: 'slew_rate_deg_s', label: 'Slew rate (deg/s)', type: 'number' },
-    { key: 'duty_cycle', label: 'Duty cycle (0-1)', type: 'number' },
+    { key: 'pointing_accuracy_deg', label: t('Pointing accuracy (deg)'), type: 'number' },
+    { key: 'pointing_knowledge_deg', label: t('Pointing knowledge (deg)'), type: 'number' },
+    { key: 'slew_rate_deg_s', label: t('Slew rate (deg/s)'), type: 'number' },
+    { key: 'duty_cycle', label: t('Duty cycle (0-1)'), type: 'number' },
   ],
   propulsion: [
-    { key: 'isp_s', label: 'Isp (s)', type: 'number' },
-    { key: 'thrust_n', label: 'Thrust (N)', type: 'number' },
-    { key: 'propellant_type', label: 'Propellant', type: 'select', options: ['cold gas (N2)', 'cold gas (R236fa)', 'green monoprop', 'hydrazine', 'electric (Xe)', 'none'] },
-    { key: 'total_impulse_ns', label: 'Total impulse (Ns)', type: 'number' },
-    { key: 'duty_cycle', label: 'Duty cycle (0-1)', type: 'number' },
+    { key: 'isp_s', label: t('Isp (s)'), type: 'number' },
+    { key: 'thrust_n', label: t('Thrust (N)'), type: 'number' },
+    { key: 'propellant_type', label: t('Propellant'), type: 'select', options: ['cold gas (N2)', 'cold gas (R236fa)', 'green monoprop', 'hydrazine', 'electric (Xe)', 'none'] },
+    { key: 'total_impulse_ns', label: t('Total impulse (Ns)'), type: 'number' },
+    { key: 'duty_cycle', label: t('Duty cycle (0-1)'), type: 'number' },
   ],
   structure: [
-    { key: 'form_factor', label: 'Form factor', type: 'select', options: ['1U', '1.5U', '2U', '3U', '6U', '12U', '16U', '27U', 'custom'] },
-    { key: 'material', label: 'Primary material', type: 'select', options: ['Al 6061-T6', 'Al 7075', 'CFRP', 'Ti-6Al-4V'] },
-    { key: 'deployables', label: 'Deployables', type: 'text' },
-    { key: 'duty_cycle', label: 'Duty cycle (0-1)', type: 'number' },
+    { key: 'form_factor', label: t('Form factor'), type: 'select', options: ['1U', '1.5U', '2U', '3U', '6U', '12U', '16U', '27U', 'custom'] },
+    { key: 'material', label: t('Primary material'), type: 'select', options: ['Al 6061-T6', 'Al 7075', 'CFRP', 'Ti-6Al-4V'] },
+    { key: 'deployables', label: t('Deployables'), type: 'text' },
+    { key: 'duty_cycle', label: t('Duty cycle (0-1)'), type: 'number' },
   ],
   ground: [
-    { key: 'latitude', label: 'Latitude (deg)', type: 'number' },
-    { key: 'longitude', label: 'Longitude (deg)', type: 'number' },
-    { key: 'antenna_diameter_m', label: 'Antenna diameter (m)', type: 'number' },
-    { key: 'min_elevation_deg', label: 'Min elevation (deg)', type: 'number' },
-    { key: 'bands', label: 'Bands', type: 'text' },
+    { key: 'latitude', label: t('Latitude (deg)'), type: 'number' },
+    { key: 'longitude', label: t('Longitude (deg)'), type: 'number' },
+    { key: 'antenna_diameter_m', label: t('Antenna diameter (m)'), type: 'number' },
+    { key: 'min_elevation_deg', label: t('Min elevation (deg)'), type: 'number' },
+    { key: 'bands', label: t('Bands'), type: 'text' },
   ],
-}
+})
+
+/** Option values that are words (not part numbers, standards or materials): shown translated. */
+// English text is the i18n key
+const OPTION_WORDS = [
+  'yes', 'no', 'none', 'custom', 'body-mounted', 'single-deploy', 'dual-deploy', 'tracking',
+  'white paint', 'black anodize', 'gold', 'cold gas (N2)', 'cold gas (R236fa)', 'green monoprop',
+  'hydrazine', 'electric (Xe)',
+]
 
 function ElementProperties({ studyId, focusElementId, allElements }: { studyId: string | null; focusElementId: string | null; allElements: any[] }) {
+  const { t } = useTranslation()
   const [expanded, setExpanded] = useState(false)
   const qc = useQueryClient()
 
@@ -724,7 +765,7 @@ function ElementProperties({ studyId, focusElementId, allElements }: { studyId: 
   if (!focusElement) return null
 
   const domain = focusElement.subsystem_domain || focusElement.element_type
-  const fields = PROPERTY_FIELDS[domain]
+  const fields = propertyFields(t)[domain]
   if (!fields || fields.length === 0) return null
 
   const perf = focusElement.performance || {}
@@ -745,18 +786,18 @@ function ElementProperties({ studyId, focusElementId, allElements }: { studyId: 
         background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.68rem',
         color: '#06b6d4', fontWeight: 600, padding: 0,
       }}>
-        {expanded ? '▾' : '▸'} Properties: {focusElement.name}
+        {expanded ? '▾' : '▸'} {t('Properties: {{name}}', { name: displayElementName(focusElement.name, t) })}
       </button>
       {expanded && (
         <div style={{ marginTop: '0.3rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.25rem' }}>
           {fields.map(f => (
             <div key={f.key} style={{ fontSize: '0.63rem' }}>
-              <label style={{ color: 'var(--text-secondary)', display: 'block', marginBottom: '0.1rem' }}>{f.label}:</label>
+              <label style={{ color: 'var(--text-secondary)', display: 'block', marginBottom: '0.1rem' }}>{t('{{label}}:', { label: f.label })}</label>
               {f.type === 'select' ? (
                 <select value={perf[f.key] || ''} onChange={e => updateProp(f.key, e.target.value)}
                   style={{ width: '100%', padding: '0.15rem 0.3rem', fontSize: '0.63rem', borderRadius: '3px', background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}>
                   <option value="">—</option>
-                  {f.options?.map(o => <option key={o} value={o}>{o}</option>)}
+                  {f.options?.map(o => <option key={o} value={o}>{OPTION_WORDS.includes(o) ? t(o) : o}</option>)}
                 </select>
               ) : (
                 <input type={f.type} value={perf[f.key] ?? ''} onChange={e => updateProp(f.key, f.type === 'number' ? parseFloat(e.target.value) || null : e.target.value)}
@@ -774,11 +815,12 @@ function ElementProperties({ studyId, focusElementId, allElements }: { studyId: 
 // Suggested requirements moved to RequirementsPanel (suggestedReqs.ts)
 
 function DesignAssist({ studyId, focusElementId, currentLevel }: { studyId: string | null; focusElementId: string | null; currentLevel: Level }) {
+  const { t } = useTranslation()
   const [expanded, setExpanded] = useState(false)
   const [applying, setApplying] = useState(false)
   const qc = useQueryClient()
 
-  const presets = PRESETS_BY_LEVEL[currentLevel] || []
+  const presets = presetsByLevel(t)[currentLevel] || []
 
   if (presets.length === 0) return null
 
@@ -836,7 +878,7 @@ function DesignAssist({ studyId, focusElementId, currentLevel }: { studyId: stri
           color: 'var(--info)', fontWeight: 600, padding: 0,
         }}
       >
-        {expanded ? '▾' : '▸'} Architecture Presets
+        {expanded ? '▾' : '▸'} {t('Architecture Presets')}
       </button>
 
       {expanded && (
@@ -855,7 +897,7 @@ function DesignAssist({ studyId, focusElementId, currentLevel }: { studyId: stri
             >
               {p.name}
               <span style={{ fontSize: '0.55rem', color: 'var(--text-secondary)', marginLeft: '0.3rem' }}>
-                ({p.children.length} blocks)
+                {t('({{count}} blocks)', { count: p.children.length })}
               </span>
             </button>
           ))}
@@ -871,6 +913,7 @@ function DesignAssist({ studyId, focusElementId, currentLevel }: { studyId: stri
 function PopulateButton({ studyId, focusElementId, currentLevel, childElements }: {
   studyId: string | null; focusElementId: string | null; currentLevel: number; childElements: any[]
 }) {
+  const { t } = useTranslation()
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<string | null>(null)
   const qc = useQueryClient()
@@ -897,7 +940,7 @@ function PopulateButton({ studyId, focusElementId, currentLevel, childElements }
       setResult(data.message)
       qc.invalidateQueries({ queryKey: ['elements', studyId] })
     } catch (e) {
-      setResult(`Error: ${e}`)
+      setResult(t('Error: {{msg}}', { msg: String(e) }))
     } finally {
       setLoading(false)
     }
@@ -909,10 +952,10 @@ function PopulateButton({ studyId, focusElementId, currentLevel, childElements }
       background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)',
     }}>
       <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--accent)', marginBottom: '0.3rem' }}>
-        Quick Start
+        {t('Quick Start')}
       </div>
       <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
-        Auto-create standard subsystems (EPS, AOCS, Comms, OBC, Thermal, Structure, Propulsion) with recommended CubeSat equipment from the component catalogue.
+        {t('Auto-create standard subsystems (EPS, AOCS, Comms, OBC, Thermal, Structure, Propulsion) with recommended CubeSat equipment from the component catalogue.')}
       </div>
       <button
         onClick={populate}
@@ -923,11 +966,11 @@ function PopulateButton({ studyId, focusElementId, currentLevel, childElements }
           color: 'white', border: 'none', cursor: loading ? 'wait' : 'pointer',
         }}
       >
-        {loading ? 'Populating...' : 'Populate Subsystems + Equipment'}
+        {loading ? t('Populating...') : t('Populate Subsystems + Equipment')}
       </button>
       {result && (
         <div style={{ marginTop: '0.3rem', fontSize: '0.65rem', color: result.startsWith('Error') ? 'var(--danger)' : 'var(--success)' }}>
-          {result}
+          {result.startsWith('Error: ') ? t('Error: {{message}}', { message: result.slice('Error: '.length) }) : result}
         </div>
       )}
     </div>

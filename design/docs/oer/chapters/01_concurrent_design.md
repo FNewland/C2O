@@ -123,7 +123,7 @@ The right side answers "how do we verify that what we built satisfies the origin
 
 The horizontal links in Figure 1.1 represent **horizontal traceability** — the principle that every element on the left must have a corresponding verification or validation activity on the right:
 
-- Each **requirement** (left) has a **verification method** (right): analysis, test, inspection or review of design, plus demonstration where ECSS lists it — abbreviated ATIR(D) throughout this book (Chapter 14 treats the methods in detail)
+- Each **requirement** (left) has a **verification method** (right): analysis, test, inspection or review of design, plus the demonstration that NASA practice adds — abbreviated ATIR(D) throughout this book (Chapter 14 treats the methods in detail)
 - Each **design decision** (left) has a **test or analysis** (right) to confirm it works
 - This traceability is captured in the **Requirements Verification Matrix (RVM)**
 

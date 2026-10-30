@@ -19,6 +19,9 @@ import { GuidancePanel } from './workbench/GuidancePanel'
 import { PresenceBar } from './workbench/PresenceBar'
 import { MarginTower } from './components/MarginTower'
 import { AIProvider, AIStatusIndicator } from './ai'
+import { useTranslation } from 'react-i18next'
+import i18n from './i18n'
+import { LanguageToggle } from './i18n/LanguageToggle'
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 2_000 } },
@@ -26,6 +29,7 @@ const queryClient = new QueryClient({
 
 const API = '/api'
 
+// English text is the i18n key; translate at render time with t(LEVEL_LABELS[level]).
 const LEVEL_LABELS: Record<Level, string> = {
   0: 'Mission',
   1: 'Systems',
@@ -45,6 +49,7 @@ const LEVEL_COLORS: Record<Level, string> = {
 // ─── Study Creation Gate ───
 
 function CreateStudyGate() {
+  const { t } = useTranslation()
   const setStudyId = useUIStore(s => s.setStudyId)
   const [name, setName] = useState('New Mission')
   const [creating, setCreating] = useState(false)
@@ -70,14 +75,13 @@ function CreateStudyGate() {
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', gap: '1.5rem', background: 'var(--bg-primary)' }}>
       <h1 style={{ fontSize: '1.8rem', color: 'var(--accent)', fontWeight: 700 }}>SpaceCDF</h1>
       <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', maxWidth: 420, textAlign: 'center', lineHeight: 1.6 }}>
-        Concurrent Design Facility for CubeSat missions.
-        Create a study to start building your mission architecture.
+        {t('Concurrent Design Facility for CubeSat missions. Create a study to start building your mission architecture.')}
       </p>
       <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
         <input
           value={name}
           onChange={e => setName(e.target.value)}
-          placeholder="Mission name"
+          placeholder={t('Mission name')}
           style={{
             padding: '0.5rem 0.75rem', fontSize: '0.85rem', borderRadius: '4px',
             background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text-primary)',
@@ -89,7 +93,7 @@ function CreateStudyGate() {
           background: 'var(--accent)', color: 'white', border: 'none',
           cursor: creating ? 'wait' : 'pointer', opacity: creating ? 0.7 : 1,
         }}>
-          {creating ? 'Creating...' : 'Create Study'}
+          {creating ? t('Creating...') : t('Create Study')}
         </button>
       </div>
     </div>
@@ -99,6 +103,7 @@ function CreateStudyGate() {
 // ─── Level Bar ───
 
 function LevelBar() {
+  const { t } = useTranslation()
   const currentLevel = useUIStore(s => s.currentLevel)
   const breadcrumb = useUIStore(s => s.breadcrumb)
   const goToLevel = useUIStore(s => s.goToLevel)
@@ -131,7 +136,7 @@ function LevelBar() {
               transition: 'all 0.15s',
             }}
           >
-            {level}: {LEVEL_LABELS[level]}
+            {level}: {t(LEVEL_LABELS[level])}
             {contextName && <span style={{ fontWeight: 400, fontSize: '0.6rem', marginLeft: '0.2rem' }}>{contextName}</span>}
           </button>
         )
@@ -143,6 +148,7 @@ function LevelBar() {
 // ─── Status Bar ───
 
 function StatusBar() {
+  const { t } = useTranslation()
   const studyId = useUIStore(s => s.studyId)
   const breadcrumb = useUIStore(s => s.breadcrumb)
   const drillUp = useUIStore(s => s.drillUp)
@@ -264,7 +270,7 @@ function StatusBar() {
         onClick={() => drillUp(-1)}
         style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 600 }}
       >
-        Mission
+        {t('Mission')}
       </button>
       {breadcrumb.map((crumb, i) => (
         <span key={crumb.id} style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
@@ -295,7 +301,7 @@ function StatusBar() {
           cursor: analysisRunning ? 'wait' : 'pointer',
         }}
       >
-        {analysisRunning ? 'Analysing...' : 'Run Analysis'}
+        {analysisRunning ? t('Analysing...') : t('Run Analysis')}
       </button>
 
       {/* Save */}
@@ -324,7 +330,7 @@ function StatusBar() {
             a.download = `spacecdf_${new Date().toISOString().slice(0, 10)}.json`
             a.click()
             URL.revokeObjectURL(a.href)
-          } catch { alert('Save failed') }
+          } catch { alert(i18n.t('Save failed')) }
         }}
         style={{
           padding: '0.25rem 0.75rem', borderRadius: '4px', fontSize: '0.72rem', fontWeight: 600,
@@ -332,7 +338,7 @@ function StatusBar() {
           cursor: 'pointer',
         }}
       >
-        Save
+        {t('Save')}
       </button>
 
       {/* Load */}
@@ -348,7 +354,7 @@ function StatusBar() {
               const text = await file.text()
               const data = JSON.parse(text)
               if (!data.elements || !Array.isArray(data.elements)) {
-                alert('Invalid save file — no elements found')
+                alert(i18n.t('Invalid save file — no elements found'))
                 return
               }
               // Create a new study
@@ -357,7 +363,7 @@ function StatusBar() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ requirements: { name: 'Loaded Mission' }, mission_need: {} }),
               })
-              if (!studyRes.ok) { alert('Failed to create study'); return }
+              if (!studyRes.ok) { alert(i18n.t('Failed to create study')); return }
               const newStudy = await studyRes.json()
               const newStudyId = newStudy.id
 
@@ -474,7 +480,7 @@ function StatusBar() {
 
               qc.invalidateQueries()
             } catch (err) {
-              alert('Load failed: ' + (err as Error).message)
+              alert(i18n.t('Load failed: {{message}}', { message: (err as Error).message }))
             }
           }
           input.click()
@@ -485,7 +491,7 @@ function StatusBar() {
           cursor: 'pointer',
         }}
       >
-        Load
+        {t('Load')}
       </button>
 
       {/* Export */}
@@ -497,7 +503,7 @@ function StatusBar() {
           cursor: 'pointer',
         }}
       >
-        Export
+        {t('Export')}
       </button>
 
       {/* Guide */}
@@ -509,8 +515,11 @@ function StatusBar() {
           cursor: 'pointer',
         }}
       >
-        Guide
+        {t('Guide')}
       </button>
+
+      {/* Language */}
+      <LanguageToggle />
     </div>
   )
 }
@@ -518,19 +527,21 @@ function StatusBar() {
 // ─── App Shell ───
 
 function NamePrompt() {
+  const { t } = useTranslation()
   const [name, setName] = useState('')
   const setUserName = useUIStore(s => s.setUserName)
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', background: 'var(--bg-primary)', gap: '1rem' }}>
+      <LanguageToggle style={{ position: 'fixed', top: '0.75rem', right: '1rem' }} />
       <h1 style={{ fontSize: '1.5rem', color: '#8B0000', margin: 0 }}>SpaceCDF</h1>
-      <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Enter your name to join the design session</p>
+      <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{t('Enter your name to join the design session')}</p>
       <div style={{ display: 'flex', gap: '0.5rem' }}>
-        <input value={name} onChange={e => setName(e.target.value)} placeholder="Your name"
+        <input value={name} onChange={e => setName(e.target.value)} placeholder={t('Your name')}
           autoFocus onKeyDown={e => e.key === 'Enter' && name && setUserName(name)}
           style={{ padding: '0.5rem 0.75rem', fontSize: '0.85rem', borderRadius: '4px', background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text-primary)', width: 200 }} />
         <button onClick={() => name && setUserName(name)} disabled={!name}
           style={{ padding: '0.5rem 1.5rem', fontSize: '0.85rem', fontWeight: 600, borderRadius: '4px', background: 'var(--accent)', color: 'white', border: 'none', cursor: 'pointer' }}>
-          Join
+          {t('Join')}
         </button>
       </div>
     </div>
@@ -544,7 +555,12 @@ function AppShell() {
   const showGuide = useUIStore(s => s.showGuide)
 
   if (!userName) return <NamePrompt />
-  if (!studyId) return <MissionWizard />
+  if (!studyId) return (
+    <>
+      <LanguageToggle style={{ position: 'fixed', top: '0.75rem', right: '1rem', zIndex: 1000 }} />
+      <MissionWizard />
+    </>
+  )
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'var(--bg-primary)', color: 'var(--text-primary)' }}>

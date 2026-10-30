@@ -263,7 +263,7 @@ You own the spacecraft's pointing.
 
 ### References
 
-- ECSS-E-ST-60-20C — Stars sensors; ECSS-E-ST-60-10C — Control performance — [https://ecss.nl/](https://ecss.nl/).
+- ECSS-E-ST-60-20C — Star sensor terminology and performance specification; ECSS-E-ST-60-10C — Control performance — [https://ecss.nl/](https://ecss.nl/).
 - Markley and Crassidis, *Fundamentals of Spacecraft Attitude Determination and Control*.
 - Sidi, *Spacecraft Dynamics and Control*.
 - SMAD4 Ch. 10.

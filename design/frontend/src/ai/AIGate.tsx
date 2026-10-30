@@ -12,6 +12,7 @@
  *   - Otherwise renders nothing
  */
 import { type ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useAI } from './AIContext'
 
 interface AIGateProps {
@@ -34,6 +35,7 @@ export function AIGate({
   showDisabled = false,
   disabledTooltip,
 }: AIGateProps) {
+  const { t } = useTranslation()
   const { enabled, capabilities, loading } = useAI()
 
   // While loading, show nothing (avoids flash)
@@ -53,7 +55,7 @@ export function AIGate({
     return (
       <div
         style={{ opacity: 0.4, pointerEvents: 'none', cursor: 'not-allowed' }}
-        title={disabledTooltip || `Requires GenAI capability: ${capability}`}
+        title={disabledTooltip || t('Requires GenAI capability: {{capability}}', { capability })}
       >
         {children}
       </div>

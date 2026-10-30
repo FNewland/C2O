@@ -9,6 +9,7 @@
  *   4+ crumbs            → Level 4 (V&V)
  */
 import { create } from 'zustand'
+import i18n, { getLang, normalizeLang, setLang as setI18nLang, type Lang } from '../i18n'
 
 export type Level = 0 | 1 | 2 | 3 | 4
 export type ActivityPanel = 'blocks' | 'budget' | 'requirements' | 'functions' | 'interfaces' | 'icd' | 'trace' | 'decide' | 'analyses'
@@ -39,6 +40,12 @@ interface UIStore {
   // User identity
   userName: string
   setUserName: (name: string) => void
+
+  // UI language (i18n packet C0). Source of truth is i18next; this mirrors it
+  // so components can subscribe. setLang persists to localStorage 'scdf.lang'
+  // and updates <html lang>. Stored design data is never translated.
+  lang: Lang
+  setLang: (lang: Lang) => void
 
   // Modals
   showExport: boolean
@@ -110,9 +117,18 @@ export const useUIStore = create<UIStore>((set, get) => ({
   userName: localStorage.getItem('spacecdf-username') || '',
   setUserName: (name) => { localStorage.setItem('spacecdf-username', name); set({ userName: name }) },
 
+  lang: getLang(),
+  setLang: (lang) => { void setI18nLang(lang); set({ lang }) },
+
   showExport: false,
   setShowExport: (show) => set({ showExport: show }),
 
   showGuide: false,
   setShowGuide: (show) => set({ showGuide: show }),
 }))
+
+// Keep the store in step if anything else calls i18n.changeLanguage().
+i18n.on('languageChanged', (lng) => {
+  const lang = normalizeLang(lng) ?? 'en'
+  if (useUIStore.getState().lang !== lang) useUIStore.setState({ lang })
+})

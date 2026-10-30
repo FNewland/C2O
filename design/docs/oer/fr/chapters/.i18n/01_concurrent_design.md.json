@@ -1,0 +1,187 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "docs/oer/chapters/01_concurrent_design.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "part-i-foundations-and-design",
+   "en_hash": "80b05855f3050ea4",
+   "fr_hash": "26dccb845f8017ad"
+  },
+  {
+   "id": "chapter-1-concurrent-design-and-the-systems-engineering-framework",
+   "en_hash": "cd4840dae229f848",
+   "fr_hash": "f6209e568863d1a6"
+  },
+  {
+   "id": "chapter-1-concurrent-design-and-the-systems-engineering-framework/learning-objectives",
+   "en_hash": "e1a27e835deb7f4f",
+   "fr_hash": "ab1db27ff4b29317"
+  },
+  {
+   "id": "chapter-1-concurrent-design-and-the-systems-engineering-framework/1-1-what-is-a-concurrent-design-facility",
+   "en_hash": "7d4d4be612686cc2",
+   "fr_hash": "78e34222746d422c"
+  },
+  {
+   "id": "chapter-1-concurrent-design-and-the-systems-engineering-framework/1-1-what-is-a-concurrent-design-facility/1-1-1-the-problem-with-sequential-design",
+   "en_hash": "703c1fa5f3731b1d",
+   "fr_hash": "feb466d8cee5677c"
+  },
+  {
+   "id": "chapter-1-concurrent-design-and-the-systems-engineering-framework/1-1-what-is-a-concurrent-design-facility/1-1-2-esa-s-cdf-the-reference-model",
+   "en_hash": "db8f69c26016917c",
+   "fr_hash": "fed82e34110329d5"
+  },
+  {
+   "id": "chapter-1-concurrent-design-and-the-systems-engineering-framework/1-1-what-is-a-concurrent-design-facility/1-1-3-key-principles-of-concurrent-design",
+   "en_hash": "a48caa788ac0a0b5",
+   "fr_hash": "d67a27e107fe7c97"
+  },
+  {
+   "id": "chapter-1-concurrent-design-and-the-systems-engineering-framework/1-1-what-is-a-concurrent-design-facility/1-1-4-concurrent-design-in-software",
+   "en_hash": "c2178cc57b33bf20",
+   "fr_hash": "75f3f4b4da00fb97"
+  },
+  {
+   "id": "chapter-1-concurrent-design-and-the-systems-engineering-framework/1-2-the-system-v-model",
+   "en_hash": "b035a6388813016b",
+   "fr_hash": "a86f39cfb5eb78c3"
+  },
+  {
+   "id": "chapter-1-concurrent-design-and-the-systems-engineering-framework/1-2-the-system-v-model/1-2-1-origin-and-purpose",
+   "en_hash": "77a86057fb3f468b",
+   "fr_hash": "aff13e02a92d1d38"
+  },
+  {
+   "id": "chapter-1-concurrent-design-and-the-systems-engineering-framework/1-2-the-system-v-model/1-2-2-left-side-top-down-decomposition",
+   "en_hash": "3644758ca4d0000b",
+   "fr_hash": "671e6367622f2f26"
+  },
+  {
+   "id": "chapter-1-concurrent-design-and-the-systems-engineering-framework/1-2-the-system-v-model/1-2-3-right-side-bottom-up-integration",
+   "en_hash": "53e3ecdce08a0f31",
+   "fr_hash": "d0fc45f24c861900"
+  },
+  {
+   "id": "chapter-1-concurrent-design-and-the-systems-engineering-framework/1-2-the-system-v-model/1-2-4-horizontal-traceability",
+   "en_hash": "726ecf1e4cbc2159",
+   "fr_hash": "bd495a9dac765054"
+  },
+  {
+   "id": "chapter-1-concurrent-design-and-the-systems-engineering-framework/1-2-the-system-v-model/1-2-5-phase-mapping-to-the-v",
+   "en_hash": "81d45fde2e7c0ecc",
+   "fr_hash": "aa346da766c909e3"
+  },
+  {
+   "id": "chapter-1-concurrent-design-and-the-systems-engineering-framework/1-2-the-system-v-model/1-2-6-real-mission-example-planet-superdove",
+   "en_hash": "f35414b9c264ed32",
+   "fr_hash": "80eef0c0b2465c87"
+  },
+  {
+   "id": "chapter-1-concurrent-design-and-the-systems-engineering-framework/1-2-the-system-v-model/1-2-7-iteration-and-the-se-engine",
+   "en_hash": "596a0e4a7d4dddd1",
+   "fr_hash": "59281cd1c323c4e9"
+  },
+  {
+   "id": "chapter-1-concurrent-design-and-the-systems-engineering-framework/1-3-the-17-common-technical-processes",
+   "en_hash": "af25977decc4f0b9",
+   "fr_hash": "07768737ac634243"
+  },
+  {
+   "id": "chapter-1-concurrent-design-and-the-systems-engineering-framework/1-3-the-17-common-technical-processes/1-3-1-overview",
+   "en_hash": "5de1377d93da67d7",
+   "fr_hash": "28d2eb7cb878f542"
+  },
+  {
+   "id": "chapter-1-concurrent-design-and-the-systems-engineering-framework/1-3-the-17-common-technical-processes/1-3-2-system-design-processes-1-4",
+   "en_hash": "799cea9becc49f42",
+   "fr_hash": "3a2166b626769a7f"
+  },
+  {
+   "id": "chapter-1-concurrent-design-and-the-systems-engineering-framework/1-3-the-17-common-technical-processes/1-3-3-product-realisation-processes-5-9",
+   "en_hash": "6b0ac3c16fa540ec",
+   "fr_hash": "fd15f254fae8df13"
+  },
+  {
+   "id": "chapter-1-concurrent-design-and-the-systems-engineering-framework/1-3-the-17-common-technical-processes/1-3-4-technical-management-processes-10-17",
+   "en_hash": "f0a239dbccd35b05",
+   "fr_hash": "96a35c8cf6519abd"
+  },
+  {
+   "id": "chapter-1-concurrent-design-and-the-systems-engineering-framework/1-3-the-17-common-technical-processes/1-3-5-recursion-across-the-system-hierarchy",
+   "en_hash": "91bbe7dd13a748fa",
+   "fr_hash": "16909d3e61631910"
+  },
+  {
+   "id": "chapter-1-concurrent-design-and-the-systems-engineering-framework/1-4-lifecycle-phases-and-review-gates",
+   "en_hash": "619ae0017e379245",
+   "fr_hash": "552eedbb04e7e177"
+  },
+  {
+   "id": "chapter-1-concurrent-design-and-the-systems-engineering-framework/1-4-lifecycle-phases-and-review-gates/1-4-1-nasa-lifecycle-phases",
+   "en_hash": "57e04a4db65d2623",
+   "fr_hash": "40e67ab907793e1f"
+  },
+  {
+   "id": "chapter-1-concurrent-design-and-the-systems-engineering-framework/1-4-lifecycle-phases-and-review-gates/1-4-2-phase-details",
+   "en_hash": "1612eb1e1534ac2f",
+   "fr_hash": "e0a7a21d57106cb0"
+  },
+  {
+   "id": "chapter-1-concurrent-design-and-the-systems-engineering-framework/1-4-lifecycle-phases-and-review-gates/1-4-3-ecss-lifecycle-phases",
+   "en_hash": "7f9d244a9c61b2ab",
+   "fr_hash": "3af24a526b5f1d50"
+  },
+  {
+   "id": "chapter-1-concurrent-design-and-the-systems-engineering-framework/1-4-lifecycle-phases-and-review-gates/1-4-4-review-gates-what-each-checks",
+   "en_hash": "22e101b3b4c42414",
+   "fr_hash": "83bb80e485a81084"
+  },
+  {
+   "id": "chapter-1-concurrent-design-and-the-systems-engineering-framework/1-5-cdf-engineering-positions",
+   "en_hash": "81fd5af1a2e809ea",
+   "fr_hash": "f3ee62444fa188a0"
+  },
+  {
+   "id": "chapter-1-concurrent-design-and-the-systems-engineering-framework/1-5-cdf-engineering-positions/1-5-1-position-overview",
+   "en_hash": "acd2b7617e5c5265",
+   "fr_hash": "a56af18fe51e9769"
+  },
+  {
+   "id": "chapter-1-concurrent-design-and-the-systems-engineering-framework/1-5-cdf-engineering-positions/1-5-2-interface-conflicts",
+   "en_hash": "161256a0a4caac6f",
+   "fr_hash": "c9b0774083863bd8"
+  },
+  {
+   "id": "chapter-1-concurrent-design-and-the-systems-engineering-framework/1-6-working-the-lifecycle-in-a-concurrent-design-study",
+   "en_hash": "6199d9ede9b5f858",
+   "fr_hash": "363c2fa60d5b9ae8"
+  },
+  {
+   "id": "chapter-1-concurrent-design-and-the-systems-engineering-framework/1-7-the-running-examples",
+   "en_hash": "7c9f30f8186ddf56",
+   "fr_hash": "7c0ddb5bb66edbb6"
+  },
+  {
+   "id": "chapter-1-concurrent-design-and-the-systems-engineering-framework/summary",
+   "en_hash": "953929d2c0827e4f",
+   "fr_hash": "c8b38477da29fef7"
+  },
+  {
+   "id": "chapter-1-concurrent-design-and-the-systems-engineering-framework/problems",
+   "en_hash": "aeee74947b54ba63",
+   "fr_hash": "f794b54b196ff2c0"
+  },
+  {
+   "id": "chapter-1-concurrent-design-and-the-systems-engineering-framework/references",
+   "en_hash": "09462abde49d6bae",
+   "fr_hash": "1e5a333623ade9a1"
+  }
+ ],
+ "en_commit": "3ea7113"
+}

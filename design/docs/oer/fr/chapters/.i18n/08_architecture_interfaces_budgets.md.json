@@ -1,0 +1,122 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "docs/oer/chapters/08_architecture_interfaces_budgets.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "chapter-8-mission-architecture-segments-interfaces-and-engineering-budgets",
+   "en_hash": "cc75d6b10e343bdc",
+   "fr_hash": "a76c4bbd03e1a840"
+  },
+  {
+   "id": "chapter-8-mission-architecture-segments-interfaces-and-engineering-budgets/learning-objectives",
+   "en_hash": "3eced7e95dcb7789",
+   "fr_hash": "240df88d36f05fa2"
+  },
+  {
+   "id": "chapter-8-mission-architecture-segments-interfaces-and-engineering-budgets/8-1-mission-segment-decomposition",
+   "en_hash": "b445b0929052897c",
+   "fr_hash": "fcea7e7eb1689fe3"
+  },
+  {
+   "id": "chapter-8-mission-architecture-segments-interfaces-and-engineering-budgets/8-2-system-architecture-block-diagram",
+   "en_hash": "27a5d7a2efdc7349",
+   "fr_hash": "fb4adb4e436a863f"
+  },
+  {
+   "id": "chapter-8-mission-architecture-segments-interfaces-and-engineering-budgets/8-2-system-architecture-block-diagram/8-2-1-subsystem-roles-cubesat-reference",
+   "en_hash": "1c92e05d9bf007cd",
+   "fr_hash": "cfca5885af1d657e"
+  },
+  {
+   "id": "chapter-8-mission-architecture-segments-interfaces-and-engineering-budgets/8-3-the-n2-interface-matrix",
+   "en_hash": "5a1fb41ee9bb0c80",
+   "fr_hash": "87a8c60d755cc875"
+  },
+  {
+   "id": "chapter-8-mission-architecture-segments-interfaces-and-engineering-budgets/8-3-the-n2-interface-matrix/8-3-1-n2-matrix-structure",
+   "en_hash": "67060ff2d409f800",
+   "fr_hash": "a24392513d294b1b"
+  },
+  {
+   "id": "chapter-8-mission-architecture-segments-interfaces-and-engineering-budgets/8-3-the-n2-interface-matrix/8-3-2-a-six-subsystem-example",
+   "en_hash": "4f1402f6001da4c3",
+   "fr_hash": "3f024132bfca70bb"
+  },
+  {
+   "id": "chapter-8-mission-architecture-segments-interfaces-and-engineering-budgets/8-3-the-n2-interface-matrix/8-3-3-interface-types",
+   "en_hash": "40175a291ce52374",
+   "fr_hash": "58c18050cdf3a921"
+  },
+  {
+   "id": "chapter-8-mission-architecture-segments-interfaces-and-engineering-budgets/8-3-the-n2-interface-matrix/8-3-4-common-cubesat-interface-concerns",
+   "en_hash": "ab406852161f9551",
+   "fr_hash": "0b970d0caede8912"
+  },
+  {
+   "id": "chapter-8-mission-architecture-segments-interfaces-and-engineering-budgets/8-3-the-n2-interface-matrix/8-3-5-conflict-detection-and-resolution",
+   "en_hash": "53c22326c7348d5b",
+   "fr_hash": "4c1596ff4d281f02"
+  },
+  {
+   "id": "chapter-8-mission-architecture-segments-interfaces-and-engineering-budgets/8-3-the-n2-interface-matrix/8-3-6-writing-interface-requirements",
+   "en_hash": "f4f6e54b58123215",
+   "fr_hash": "bf227fae9ae881a8"
+  },
+  {
+   "id": "chapter-8-mission-architecture-segments-interfaces-and-engineering-budgets/8-4-engineering-budgets-mass-and-power",
+   "en_hash": "55ef160a02a50401",
+   "fr_hash": "29dbf167f646247d"
+  },
+  {
+   "id": "chapter-8-mission-architecture-segments-interfaces-and-engineering-budgets/8-4-engineering-budgets-mass-and-power/8-4-1-mass-budget",
+   "en_hash": "fc60b9a691d2f1ef",
+   "fr_hash": "cf676eb85ea5ab09"
+  },
+  {
+   "id": "chapter-8-mission-architecture-segments-interfaces-and-engineering-budgets/8-4-engineering-budgets-mass-and-power/8-4-2-the-ecss-margin-policy-two-levels",
+   "en_hash": "6b1ed8ccefb7f337",
+   "fr_hash": "6b6f3ac20e161b4a"
+  },
+  {
+   "id": "chapter-8-mission-architecture-segments-interfaces-and-engineering-budgets/8-4-engineering-budgets-mass-and-power/8-4-3-mode-based-power-budget",
+   "en_hash": "dc2143bddf755e80",
+   "fr_hash": "2ed69fd57dcf179e"
+  },
+  {
+   "id": "chapter-8-mission-architecture-segments-interfaces-and-engineering-budgets/8-4-engineering-budgets-mass-and-power/8-4-4-orbit-average-power",
+   "en_hash": "7f1baa463c60421d",
+   "fr_hash": "74b8cbdaba66a0e1"
+  },
+  {
+   "id": "chapter-8-mission-architecture-segments-interfaces-and-engineering-budgets/8-4-engineering-budgets-mass-and-power/8-4-5-other-budget-types-preview",
+   "en_hash": "8af019c56ed3ab73",
+   "fr_hash": "d3655b003b2da8fa"
+  },
+  {
+   "id": "chapter-8-mission-architecture-segments-interfaces-and-engineering-budgets/8-5-worked-example-unisat-1-architecture",
+   "en_hash": "399df41c2cb7619a",
+   "fr_hash": "aacf21a951fe492e"
+  },
+  {
+   "id": "chapter-8-mission-architecture-segments-interfaces-and-engineering-budgets/summary",
+   "en_hash": "c867ccbd3867cd9a",
+   "fr_hash": "90f1f71c5b6a1750"
+  },
+  {
+   "id": "chapter-8-mission-architecture-segments-interfaces-and-engineering-budgets/problems",
+   "en_hash": "761afdffddf626b0",
+   "fr_hash": "736b496f11398e31"
+  },
+  {
+   "id": "chapter-8-mission-architecture-segments-interfaces-and-engineering-budgets/references",
+   "en_hash": "6881de99fc02634c",
+   "fr_hash": "a816d3852ada3312"
+  }
+ ],
+ "en_commit": "be16bc3"
+}

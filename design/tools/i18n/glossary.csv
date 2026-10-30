@@ -1,0 +1,1581 @@
+en,fr,pos,domain,note,source
+spacecraft,engin spatial,n.m.,general,JO 2020 term. Use « satellite » when the object is clearly EOSAT-1/a CubeSat; never « vaisseau » or « astronef » in engineering text.,JO2020
+space segment,segment spatial,n.m.,general,,CNES
+ground segment,segment sol,n.m.,ground,FranceTerme recommends « composante au sol »; CNES/ESA engineering usage is « segment sol ». Use segment sol; mention composante au sol nowhere.,CNES;JO
+platform,plateforme,n.f.,general,The service module carrying the payload. Prefer over « bus » in prose.,N7;CNES
+bus (spacecraft),plateforme,n.f.,general,« Bus » as spacecraft platform → plateforme. Do NOT confuse with electrical bus (bus d'alimentation).,USAGE
+payload,charge utile,n.f.,payload,,JO
+launch vehicle,lanceur,n.m.,general,,JO
+launcher,lanceur,n.m.,general,,JO
+separation timer,minuterie de séparation,n.f.,ops,Human label only; phase identifier SEPARATION_TIMER is DNT.,USAGE
+rideshare,lancement partagé,n.m.,general,Also « lancement en passager secondaire » for a CubeSat riding with a main payload.,USAGE
+deployer,déployeur,n.m.,structure,CubeSat dispenser (e.g. ISIPOD). Also « distributeur » (dispenser).,USAGE
+CubeSat,CubeSat,n.m.,general,DNT; invariable proper noun; « un CubeSat 3U ».,OWNER
+nanosatellite,nanosatellite,n.m.,general,,CNES
+constellation,constellation,n.f.,general,,JO2020
+megaconstellation,mégaconstellation de satellites,n.f.,general,,JO2020
+space object,objet spatial,n.m.,general,,JO2020
+resident space object (RSO),objet orbital,n.m.,general,,JO2020
+space debris,débris spatial,n.m.,reg,,JO
+debris mitigation,atténuation des débris,n.f.,reg,Standard in French versions of IADC/UN guidelines.,USAGE
+post-mission disposal (PMD),retrait de service,n.m.,reg,JO 2020. Keep (PMD) on first use only if the English acronym is quoted from a standard.,JO2020
+active debris removal (ADR),retrait sélectif de débris (RSD),n.m.,reg,,JO2020
+end of life (EOL),fin de vie (EOL),n.f.,general,EOL kept as subscript in formulas (P_EOL).,USAGE
+beginning of life (BOL),début de vie (BOL),n.m.,general,BOL kept as subscript in formulas.,USAGE
+mission phase,phase de mission,n.f.,ops,"Human label; phase enum names (LEOP, COMMISSIONING, NOMINAL…) are DNT.",USAGE
+Earth observation (EO),observation de la Terre (OT),n.f.,payload,"In running text write « observation de la Terre » in full; keep EO only in proper names (EOSat-3U, EOSAT-1).",USAGE
+European Space Agency (ESA),Agence spatiale européenne (ESA),n.f.,reg,French acronym is also ESA.,ESA
+Canadian Space Agency (CSA),Agence spatiale canadienne (ASC),n.f.,reg,Official Canadian French name; keep.,HOUSE
+NASA,NASA,n.f.,reg,DNT; « la NASA ».,OWNER
+CNES,CNES,n.m.,reg,Centre national d'études spatiales; « le CNES ».,CNES
+new space,NewSpace,n.m.,general,Keep « NewSpace » (italic not needed); syllabus wrote *new-space*.,USAGE
+heritage (flight heritage),héritage en vol,n.m.,se,Also « expérience en vol ». « Flight-heritage processor » → processeur ayant volé / qualifié en vol.,USAGE
+COTS (commercial off-the-shelf),composant sur étagère (COTS),n.m.,se,Keep COTS acronym.,USAGE
+orbital mechanics,mécanique spatiale,n.f.,orbit,CNES title usage (« mécanique spatiale »); not « mécanique orbitale » in headings.,CNES
+low Earth orbit (LEO),orbite basse (LEO),n.f.,orbit,Keep LEO acronym (operational).,USAGE
+geostationary orbit (GEO),orbite géostationnaire (GEO),n.f.,orbit,,CNES
+sun-synchronous orbit (SSO),orbite héliosynchrone (SSO),n.f.,orbit,,USAGE
+orbital elements,éléments orbitaux,n.m.pl.,orbit,« paramètres orbitaux » also fine.,USAGE
+semi-major axis,demi-grand axe,n.m.,orbit,,USAGE
+inclination,inclinaison,n.f.,orbit,Never « inclination » (false friend).,USAGE
+right ascension of the ascending node (RAAN),ascension droite du nœud ascendant (RAAN),n.f.,orbit,Keep RAAN; symbol Ω unchanged.,USAGE
+local time of ascending node (LTAN),heure locale du nœud ascendant (LTAN),n.f.,orbit,CNES also writes HLNA; use LTAN to match tools.,USAGE
+perigee,périgée,n.m.,orbit,,JO
+apogee,apogée,n.m.,orbit,,JO
+periapsis,périapside,n.f.,orbit,,JO
+apoapsis,apoapside,n.f.,orbit,,JO
+gravitational parameter,paramètre gravitationnel,n.m.,orbit,Symbol μ unchanged.,USAGE
+J2 perturbation,perturbation due au J2,n.f.,orbit,« effet du J2 ».,USAGE
+atmospheric drag,traînée atmosphérique,n.f.,orbit,,USAGE
+solar radiation pressure (SRP),pression de radiation solaire,n.f.,orbit,« pression de rayonnement solaire » equally correct; pick « radiation » for consistency.,USAGE
+orbital decay,déclin d'orbite,n.m.,orbit,JO term. « décroissance orbitale » acceptable in prose.,JO
+orbital lifetime,durée de vie orbitale,n.f.,orbit,,USAGE
+deorbit (to),désorbiter,v.,orbit,,JO2020
+deorbiting,désorbitation,n.f.,orbit,,JO2020
+reorbiting,réorbitation,n.f.,orbit,,JO2020
+station keeping,maintien à poste,n.m.,orbit,,CNES
+orbit raising,relèvement d'orbite,n.m.,orbit,,USAGE
+orbit determination (OD),restitution d'orbite,n.f.,orbit,CNES flight-dynamics term (« restitution »); « détermination d'orbite » acceptable for GPS-based onboard OD.,CNES
+orbit propagation,propagation d'orbite,n.f.,orbit,Also « extrapolation d'orbite » (CNES).,USAGE
+TLE (two-line element set),TLE,n.m.,orbit,DNT format name; gloss « jeu d'éléments à deux lignes » on first use.,OWNER
+epoch,époque,n.f.,orbit,Astronomical epoch (J2000). Not « date ».,USAGE
+Hohmann transfer,transfert de Hohmann,n.m.,orbit,,JO
+delta-v,delta-V (Δv),n.m.,orbit,Write Δv in formulas.,USAGE
+manoeuvre,manœuvre,n.f.,orbit,Always with œ.,USAGE
+burn,poussée,n.f.,propulsion,« burn » (thruster firing) → poussée / allumage. GO/NO-GO poll label « BURN GO/NO-GO » → « POUSSÉE GO/NO-GO ».,USAGE
+sunlit,éclairé,adj.,orbit,« sunlit arc » → arc éclairé ; « sunlit track » → trace éclairée ; UI chip SUNLIT → ÉCLAIRÉ.,USAGE
+sunlit phase,phase éclairée,n.f.,orbit,« période de jour ».,USAGE
+beta angle,angle bêta,n.m.,orbit,Symbol β unchanged.,USAGE
+ground track,trace au sol,n.f.,orbit,,CNES
+sub-satellite point,point subsatellite,n.m.,orbit,,USAGE
+revisit time,temps de revisite,n.m.,orbit,« revisite » accepted in CNES EO vocabulary.,USAGE
+swath,fauchée,n.f.,payload,,CNES
+ground sample distance (GSD),distance d'échantillonnage au sol (GSD),n.f.,payload,"Full term at first use per chapter, then « GSD » (la GSD). Never « résolution au sol » (a different quantity); keep « résolution » only where the EN says resolution. QA M5.",USAGE;QA
+elevation (angle),élévation,n.f.,ground,Station vocabulary also uses « site » ; choose élévation for learners. UI « MAX EL » → « ÉL. MAX ».,USAGE
+azimuth,azimut,n.m.,ground,No final h in French.,USAGE
+elevation mask,masque d'élévation,n.m.,ground,Minimum elevation angle → « élévation minimale ».,USAGE
+slant range,distance oblique,n.f.,ttc,,USAGE
+range (distance),distance,n.f.,ttc,UI « RANGE » → « DISTANCE ».,USAGE
+range rate,vitesse radiale,n.f.,ttc,,USAGE
+one-way light time (OWLT),temps de propagation aller (OWLT),n.m.,ttc,Keep OWLT symbol in formulas.,USAGE
+propagation delay,temps de propagation,n.m.,ttc,UI « Prop delay » → « Tps propag. ».,USAGE
+Doppler shift,décalage Doppler,n.m.,ttc,,USAGE
+South Atlantic Anomaly (SAA),anomalie de l'Atlantique Sud (SAA),n.f.,orbit,,USAGE
+total ionising dose (TID),dose ionisante totale (TID),n.f.,orbit,Keep TID.,USAGE
+single-event upset (SEU),aléa logique (SEU),n.m.,obdh,French radiation-effects term; « événement singulier » for single-event effect (SEE).,USAGE
+single-event effect (SEE),effet d'événement singulier (SEE),n.m.,obdh,,USAGE
+single-event latch-up (SEL),verrouillage par ion lourd (SEL),n.m.,obdh,« latch-up » tolerated in parentheses.,USAGE
+Earth infrared (Earth IR),rayonnement infrarouge terrestre,n.m.,thermal,,USAGE
+attitude and orbit control system (AOCS),système de contrôle d'attitude et d'orbite (SCAO),n.m.,aocs,CONTESTED. In prose: SCAO (CNES usage; FranceTerme's « centrale d'orientation » is not used by the industry). The position/console call-sign and subsystem ID stay AOCS (DNT). First use: « système de contrôle d'attitude et d'orbite (SCAO ; AOCS sur la console) ».,CNES;N7
+AOCS (call-sign / subsystem ID),AOCS,n.m.,aocs,"DNT when it names the console position, the subsystem tab or a parameter prefix (aocs.*).",OWNER
+attitude determination and control system (ADCS),système de détermination et de contrôle d'attitude (SCAO),n.m.,aocs,"Render as SCAO too; keep ADCS only in identifiers (procedure titles, file names).",USAGE
+attitude,attitude,n.f.,aocs,FranceTerme recommends « orientation » and marks « attitude » deprecated; CNES/ESA French engineering usage is « attitude ». Use attitude.,CNES;JO
+attitude control,contrôle d'attitude,n.m.,aocs,See attitude. FranceTerme: commande d'orientation.,CNES;JO
+attitude determination,détermination d'attitude,n.f.,aocs,CNES flight dynamics also says « restitution d'attitude » for ground reconstruction.,USAGE
+attitude sensor,capteur d'attitude,n.m.,aocs,FranceTerme: capteur d'orientation.,JO;USAGE
+star tracker,senseur stellaire,n.m.,aocs,CNES usage (« senseur stellaire »). Avoid « traqueur d'étoiles ». UI short form « STR ».,CNES
+sun sensor,senseur solaire,n.m.,aocs,CNES usage (« senseurs solaires »). Coarse sun sensor → senseur solaire grossier.,CNES
+magnetometer,magnétomètre,n.m.,aocs,,CNES
+gyroscope,gyroscope,n.m.,aocs,Short form « gyro » acceptable in ops speech and UI (GYRO).,USAGE
+rate sensor,gyromètre,n.m.,aocs,A rate gyro is a gyromètre in French.,USAGE
+reaction wheel,roue de réaction,n.f.,aocs,Also « roue à réaction » (N7). Pick « roue de réaction ». Abbrev. RW kept in IDs (RW1).,N7;USAGE
+momentum wheel,roue d'inertie,n.f.,aocs,Distinct from reaction wheel (biased momentum).,USAGE
+wheel speed,vitesse de roue,n.f.,aocs,Unit tr/min in prose (rpm in UI kept as « tr/min »).,USAGE
+magnetorquer,magnétocoupleur,n.m.,aocs,CNES usage. Abbrev. MTQ kept.,CNES;N7
+control moment gyroscope (CMG),actionneur gyroscopique (CMG),n.m.,aocs,,USAGE
+thruster,propulseur,n.m.,propulsion,Small attitude thruster also « tuyère » in some CNES texts; use propulseur.,USAGE
+disturbance torque,couple perturbateur,n.m.,aocs,,USAGE
+gravity-gradient torque,couple de gradient de gravité,n.m.,aocs,,USAGE
+residual magnetic dipole,dipôle magnétique résiduel,n.m.,aocs,,USAGE
+angular momentum,moment cinétique,n.m.,aocs,Not « moment angulaire ».,USAGE
+momentum management,gestion du moment cinétique,n.f.,aocs,,USAGE
+wheel desaturation,désaturation des roues,n.f.,aocs,Mode name DESAT is DNT.,USAGE
+momentum dump,déchargement du moment cinétique,n.m.,aocs,Synonym of desaturation.,USAGE
+detumbling,amortissement des vitesses angulaires,n.m.,aocs,"CONTESTED. CNES documents often leave « detumbling » untranslated (N7). Use « amortissement (detumbling) » on first use, then « amortissement ». Mode name DETUMBLE is DNT. FranceTerme « culbutage » = tumbling (the motion), not the manoeuvre.",N7;JO;USAGE
+tumbling,culbutage,n.m.,aocs,,JO
+B-dot control law,loi de commande B-dot,n.f.,aocs,B-dot kept.,USAGE
+pointing accuracy,précision de pointage,n.f.,aocs,,USAGE
+pointing knowledge,connaissance du pointage,n.f.,aocs,« précision de restitution d'attitude ».,USAGE
+pointing error budget,bilan d'erreurs de pointage,n.m.,aocs,See « budget (engineering) » → bilan.,USAGE
+fine pointing,pointage fin,n.m.,aocs,Mode name FINE_POINT is DNT.,USAGE
+coarse sun pointing,pointage solaire grossier,n.m.,aocs,Mode name COARSE_SUN is DNT.,USAGE
+inertial pointing,pointage inertiel,n.m.,aocs,Mode name INERTIAL DNT.,USAGE
+slew,basculement,n.m.,aocs,CONTESTED. CNES says « basculement » or « manœuvre d'attitude »; ESA French « réorientation ». Use basculement. Mode name SLEW DNT. Note FranceTerme « basculement » = turnover — acceptable here.,USAGE
+safe mode,mode survie,n.m.,fdir,"CONTESTED. French space-press usage « mode survie » (e.g. probes « passées en mode survie »); not « mode sécurité », not « mode sans échec » (PC vocabulary). Confirm in IATE. Mode/tier enum SAFE is DNT; the human label is « mode survie ».",USAGE
+safe-mode entry,passage en mode survie,n.m.,fdir,,USAGE
+nominal mode,mode nominal,n.m.,ops,Enum NOMINAL DNT.,USAGE
+fallback mode,mode de repli,n.m.,fdir,,USAGE
+deadband,bande morte,n.f.,aocs,,USAGE
+control loop,boucle de commande,n.f.,aocs,Use « boucle d'asservissement » for closed-loop control theory contexts.,USAGE
+body frame,repère satellite,n.m.,aocs,« repère lié au satellite ».,USAGE
+roll / pitch / yaw,roulis / tangage / lacet,n.m.,aocs,UI « Rate roll » → « Vitesse roulis ».,USAGE
+attitude error,erreur d'attitude,n.f.,aocs,UI « Att error » → « Err. attitude ».,USAGE
+body rate,vitesse angulaire,n.f.,aocs,,USAGE
+gravity-gradient boom,mât de gradient de gravité,n.m.,aocs,,USAGE
+sensor calibration,étalonnage des capteurs,n.m.,aocs,« étalonnage » (European) rather than « calibration » (Canadian/anglicism) in prose.,USAGE
+checkout,vérification,n.f.,ops,« actuator checkout » → vérification des actionneurs ; « EPS checkout » → vérification de l'EPS. Procedure IDs unchanged.,USAGE
+electrical power system (EPS),sous-système d'alimentation électrique (EPS),n.m.,eps,"CONTESTED. French CNES acronym is « SAE » / « S/S puissance », but EPS is the console call-sign and param prefix (eps.*). Prose: « sous-système électrique (EPS) » first use, then « l'EPS ».",USAGE
+power subsystem,sous-système de puissance,n.m.,eps,"CNES « bilan de puissance », « S/S puissance ».",CNES
+power budget,bilan de puissance,n.m.,eps,CNES (« Bilan de puissance »).,CNES
+orbit-average power,puissance moyenne sur l'orbite,n.f.,eps,,USAGE
+power generation,production de puissance,n.f.,eps,UI « Power gen » → « Puiss. produite ».,USAGE
+power consumption,consommation,n.f.,eps,UI « Power cons » → « Puiss. consommée ».,USAGE
+solar array,générateur solaire,n.m.,eps,CNES/ESA French « générateur solaire » for the array; « panneau solaire » for one panel/wing. UI identifiers SA-A / SA-B stay unchanged.,USAGE
+solar panel,panneau solaire,n.m.,eps,,USAGE
+body-mounted solar array,générateur solaire fixé sur la structure,n.m.,eps,« panneaux montés sur les faces ».,USAGE
+solar array drive (SADA),mécanisme d'entraînement du générateur solaire (SADM),n.m.,eps,Keep SADA if in identifiers.,USAGE
+solar cell,cellule solaire,n.f.,eps,« photopile » is dated.,USAGE
+Li-ion cell,élément Li-ion,n.m.,eps,Battery cell → élément (not « cellule ») in battery engineering.,USAGE
+battery cell failure,défaillance d'un élément de batterie,n.f.,eps,,USAGE
+state of charge (SoC),état de charge (SoC),n.m.,eps,"Keep SoC (operational, appears on console). UI « SoC @ ECLIPSE EXIT » → « SoC EN SORTIE D'ÉCLIPSE ».",USAGE
+depth of discharge (DoD),profondeur de décharge (DoD),n.f.,eps,Keep DoD.,USAGE
+cycle life,durée de vie en cycles,n.f.,eps,,USAGE
+battery capacity,capacité de la batterie,n.f.,eps,"W·h and A·h written « Wh », « Ah ».",USAGE
+undervoltage,sous-tension,n.f.,eps,« Battery under-voltage » → sous-tension batterie.,USAGE
+bus voltage,tension du bus,n.f.,eps,UI « Bus voltage » → « Tension bus ».,USAGE
+power distribution unit (PDU),unité de distribution de puissance (PDU),n.f.,eps,Keep PDU.,USAGE
+power conditioning,conditionnement de puissance,n.m.,eps,,USAGE
+maximum power point tracking (MPPT),recherche du point de puissance maximale (MPPT),n.f.,eps,Keep MPPT.,USAGE
+power line (switchable),ligne d'alimentation commutable,n.f.,eps,,USAGE
+load,charge,n.f.,eps,Electrical load. Beware ambiguity with « charge » (battery charging) — add « électrique » where needed.,USAGE
+load shedding,délestage,n.m.,eps,French power-engineering term; UI LOAD SHED → DÉLESTAGE ; « load shed ladder » → échelle de délestage ; « load shed level » → niveau de délestage.,USAGE
+duty cycle,rapport cyclique,n.m.,eps,For operational duty cycling also « cycle d'utilisation ». « thermal duty-cycle check » → contrôle du rapport cyclique thermique.,USAGE
+duty cycling,fonctionnement par intermittence,n.m.,eps,« duty cycling » as a strategy.,USAGE
+power-on,mise sous tension,n.f.,eps,« sequential power-on » → mise sous tension séquentielle.,USAGE
+switch on / switch off,allumer / éteindre,v.,eps,Procedures: « mettre sous tension / hors tension » for units.,USAGE
+energise,alimenter,v.,eps,« énergiser » is an anglicism.,USAGE
+thermal control system (TCS),sous-système de contrôle thermique (TCS),n.m.,thermal,TCS stays as call-sign/param prefix (tcs.*). French acronym SCT exists but not used here.,USAGE
+thermal balance,bilan thermique,n.m.,thermal,« thermal balance equation » → équation du bilan thermique.,USAGE
+view factor,facteur de forme,n.m.,thermal,Not « facteur de vue ».,USAGE
+absorptivity,absorptivité,n.f.,thermal,Symbol α unchanged.,USAGE
+emissivity,émissivité,n.f.,thermal,Symbol ε unchanged.,USAGE
+multi-layer insulation (MLI),isolant multicouche (MLI),n.m.,thermal,Keep MLI.,USAGE
+heater,réchauffeur,n.m.,thermal,CNES usage. UI « Htr bat » → « Réch. bat. » ; « Battery heater » → réchauffeur batterie.,USAGE
+heater duty,rapport cyclique du réchauffeur,n.m.,thermal,UI DUTY BAT → CYCLE BAT.,USAGE
+heat pipe,caloduc,n.m.,thermal,,USAGE
+thermal strap,tresse thermique,n.f.,thermal,,USAGE
+thermal exceedance,dépassement thermique,n.m.,thermal,i.e. dépassement de limite de température.,USAGE
+thermal runaway,emballement thermique,n.m.,thermal,,USAGE
+thermal vacuum test (TVAC),essai de vide thermique (TVAC),n.m.,vv,,USAGE
+non-operating (survival) temperature,température de non-fonctionnement,n.f.,thermal,« température de survie ».,USAGE
+cryocooler,cryoréfrigérateur,n.m.,payload,« Miniature Stirling-class cryocooler » → cryoréfrigérateur Stirling miniature.,USAGE
+cooldown,mise en froid,n.f.,payload,« FPA cooldown » → mise en froid du plan focal.,USAGE
+propulsion system,système propulsif,n.m.,propulsion,« sous-système de propulsion ».,USAGE
+warm gas / resistojet,propulsion à gaz chaud / résistojet,n.f.,propulsion,,USAGE
+green monopropellant,monergol vert,n.m.,propulsion,"French « monergol », « ergol ». Avoid « monopropulseur ».",USAGE
+propellant,ergol,n.m.,propulsion,« propergol » for solids; generic « ergols ».,USAGE
+rocket equation,équation de Tsiolkovski,n.f.,propulsion,French spelling Tsiolkovski.,USAGE
+catalyst bed (catbed),lit catalytique,n.m.,propulsion,UI CATBED → LIT CATA. ; « catbed heater » → réchauffeur du lit catalytique.,USAGE
+wet mass,masse humide,n.f.,structure,« masse avec ergols ».,USAGE
+form factor,format,n.m.,structure,CubeSat 1U/3U/6U « format ».,USAGE
+unit (U),unité (U),n.f.,structure,« un CubeSat 3U ».,USAGE
+fundamental frequency,fréquence propre fondamentale,n.f.,structure,,USAGE
+margin of safety (MoS),marge de sécurité (MoS),n.f.,structure,"Keep MoS (formula symbol). Distinguish from facteur de sécurité (factor of safety, FoS).",USAGE
+deployment,déploiement,n.m.,structure,,JO
+hold-down and release mechanism,mécanisme de gerbage et de libération,n.m.,structure,« gerbage » JO.,JO
+payload operations,opérations charge utile,n.f.pl.,payload,Position label « Payload Operations » → « Opérations charge utile ».,USAGE
+focal plane array (FPA),plan focal (FPA),n.m.,payload,Keep FPA in UI.,USAGE
+image acquisition,acquisition d'image,n.f.,payload,« imaging » → prise de vue / imagerie ; « imaging session » → séance de prise de vue.,USAGE
+imaging opportunity,opportunité de prise de vue,n.f.,payload,UI OPPORTUNITIES → OPPORTUNITÉS.,USAGE
+first light,première lumière,n.f.,payload,Astronomy term; procedure name only label.,USAGE
+synthetic aperture radar (SAR),radar à synthèse d'ouverture (RSO),n.m.,payload,CONTESTED. French acronym RSO exists but clashes with resident space object; write « radar à synthèse d'ouverture (SAR) ».,USAGE
+bent-pipe,transparent (répéteur transparent),adj.,payload,,USAGE
+"telemetry, tracking and command (TT&C)","télémesure, poursuite et télécommande (TT&C)",n.f.,ttc,"Keep TT&C (also call-sign, ttc.* prefix). CNES writes « TTC » / « TM/TC » in French.",USAGE
+telemetry (TM),télémesure (TM),n.f.,ttc,JO/CNES. Never « télémétrie » (that is ranging).,CNES
+telecommand (TC),télécommande (TC),n.f.,ttc,« une TC » (feminine).,CNES
+command (verb),commander,v.,ttc,« commanding » → envoi de télécommandes / commande ; UI « Commanding » → « Commande ».,USAGE
+ranging,mesure de distance (ranging),n.f.,ttc,"Never « télémétrie »: Canadian readers take it as *telemetry*, and the corpus uses « télémesure » for TM. « ranging session » → séance de mesure de distance; « ground range/Doppler » → mesures de distance et Doppler sol. QA M3/M4.",USAGE;QA
+tracking,poursuite,n.f.,ttc,Antenna tracking; UI « tracking » → « en poursuite ».,USAGE
+uplink,liaison montante,n.f.,ttc,"UI abbreviations: « UL » → « LM », « DL » → « LD » only where space forces it; prefer « montante » / « descendante ». « DL Mode OFF » → « Mode LD arrêt ».",JO;USAGE
+downlink,liaison descendante,n.f.,ttc,,JO;USAGE
+uplink (to) (verb),envoyer (vers le bord),v.,ttc,« uplinking before the GO » → envoyer la TC avant le GO.,USAGE
+downlink (to) (verb),transmettre au sol,v.,ttc,"Noun « downlink » of data → « transmission au sol » (file de transmission au sol, passages de transmission au sol). « télécharger » only for EN *download*. QA m13.",USAGE;QA
+link budget,bilan de liaison,n.m.,ttc,CNES (« Bilan de liaison »).,CNES
+link margin,marge de liaison,n.f.,ttc,,USAGE
+data budget,bilan de données,n.m.,ttc,« bilan de volume de données ».,USAGE
+budget (engineering),bilan,n.m.,se,"CONTESTED. ESA/CNES French uses « bilan » (bilan de masse, bilan de puissance, bilan de liaison), not « budget ». Exception: financial budget → budget.",CNES
+mass budget,bilan de masse,n.m.,se,,CNES
+budget closure,bouclage du bilan,n.m.,se,« Does the budget close? » → « le bilan est-il bouclé ? ».,USAGE
+effective isotropic radiated power (EIRP),puissance isotrope rayonnée équivalente (PIRE),n.f.,ttc,French acronym PIRE (ITU-R French). UI label EIRP → PIRE.,UIT
+G/T (figure of merit),facteur de qualité G/T,n.m.,ttc,,UIT
+free-space path loss (FSPL),affaiblissement en espace libre,n.m.,ttc,ITU-R term « affaiblissement en espace libre ». Keep FSPL as formula subscript; UI FSPL → « Affaibl. esp. libre ».,UIT
+path loss,affaiblissement de propagation,n.m.,ttc,,UIT
+atmospheric loss,affaiblissement atmosphérique,n.m.,ttc,,UIT
+pointing loss,perte de dépointage,n.f.,ttc,,USAGE
+implementation loss,perte d'implémentation,n.f.,ttc,,USAGE
+antenna pattern,diagramme de rayonnement,n.m.,ttc,,USAGE
+beamwidth,ouverture du faisceau,n.f.,ttc,Half-power beamwidth → ouverture à mi-puissance (−3 dB).,USAGE
+patch antenna,antenne patch,n.f.,ttc,« antenne imprimée ».,USAGE
+phased array,antenne réseau à commande de phase,n.f.,ttc,,USAGE
+transmitter,émetteur,n.m.,ttc,UI « SC transmitter » → « Émetteur bord ».,USAGE
+transponder,transpondeur,n.m.,ttc,UI XPDR kept as abbreviation.,USAGE
+carrier,porteuse,n.f.,ttc,« carrier lock » → accrochage de la porteuse / verrouillage porteuse.,USAGE
+carrier lock,verrouillage de la porteuse,n.m.,ttc,« accrochage » used in CNES stations too.,USAGE
+modulation,modulation,n.f.,ttc,"Scheme names (BPSK, QPSK, GMSK, 8PSK, 16-APSK, OQPSK) are DNT.",USAGE
+coding gain,gain de codage,n.m.,ttc,,USAGE
+forward error correction (FEC),correction d'erreurs directe (FEC),n.f.,ttc,"Keep FEC; code names (LDPC, turbo, Reed-Solomon, convolutional) → LDPC, turbocode, Reed-Solomon, convolutif.",USAGE
+code rate,rendement de code,n.m.,ttc,« taux de codage » also seen; pick rendement.,USAGE
+bit error rate (BER),taux d'erreur binaire (TEB),n.m.,ttc,CONTESTED. French acronym TEB is standard (UIT); UI label BER → TEB. Plot axes too.,UIT
+frame error rate (FER),taux d'erreur trame (TET),n.m.,ttc,Write « taux d'erreur trame » in full in UI where space allows.,USAGE
+signal-to-noise ratio (SNR),rapport signal sur bruit (RSB),n.m.,ttc,French acronym RSB (UIT).,UIT
+Eb/N0,Eb/N0,n.m.,ttc,DNT symbol; read « rapport énergie par bit sur densité spectrale de bruit ».,USAGE
+C/N0,C/N0,n.m.,ttc,DNT symbol.,USAGE
+RSSI,RSSI,n.m.,ttc,DNT; « indicateur de puissance du signal reçu ».,USAGE
+data rate,débit,n.m.,ttc,"Not « taux de données ». Units bit/s, kbit/s, Mbit/s.",USAGE
+symbol rate,débit symbole,n.m.,ttc,Unit Bd (baud).,USAGE
+bandwidth,largeur de bande,n.f.,ttc,« bande passante » for a filter/channel passband.,USAGE
+frequency band,bande de fréquences,n.f.,ttc,"« la bande S », « la bande X », « la bande UHF ».",USAGE
+S-band,bande S,n.f.,ttc,,CNES
+X-band,bande X,n.f.,ttc,,CNES
+UHF / VHF,UHF / VHF,n.f.,ttc,DNT.,USAGE
+eye diagram,diagramme de l'œil,n.m.,ttc,,USAGE
+fading,évanouissement,n.m.,ttc,« Rician fading » → évanouissement de Rice ; « fade rate » → rythme d'évanouissement.,UIT
+interferer,brouilleur,n.m.,ttc,« interference » → brouillage / interférence.,UIT
+link impairment,dégradation de liaison,n.f.,ttc,« impairment injection » → injection de dégradations.,USAGE
+link loss,perte de liaison,n.f.,ttc,« TTC link loss recovery » → rétablissement après perte de liaison TTC.,USAGE
+beacon,balise,n.f.,ttc,« beacon mode » → mode balise ; UI chip BEACON → BALISE ; rate tier name BEACON in identifiers DNT.,USAGE
+rate ladder,échelle de débits,n.f.,ttc,EOSAT-1 BEACON/LOW/HIGH ladder; rung names DNT.,USAGE
+rate tier,palier de débit,n.m.,ttc,UI TIER → PALIER.,USAGE
+blind commanding,commande en aveugle,n.f.,ttc,« blind TC » → TC en aveugle ; UI ENABLE BLIND-TC → ACTIVER TC AVEUGLE.,USAGE
+spectrum licensing,attribution de licences de spectre,n.f.,reg,Canadian context: ISDE « licence de spectre ».,USAGE
+frequency coordination,coordination des fréquences,n.f.,reg,,UIT
+ITU,UIT (Union internationale des télécommunications),n.f.,reg,,UIT
+filing (ITU),notification (UIT),n.f.,reg,« dépôt de fiche de notification ».,UIT
+CCSDS,CCSDS,n.m.,pus,DNT.,OWNER
+space packet,paquet spatial,n.m.,pus,CCSDS Space Packet Protocol → protocole de paquets spatiaux.,USAGE
+packet,paquet,n.m.,pus,UI « TM PACKETS » → « PAQUETS TM ».,USAGE
+transfer frame,trame de transfert,n.f.,pus,,USAGE
+frame,trame,n.f.,pus,UI « Frame counters » → « Compteurs de trames » ; « Good frames/Bad frames » → « Trames valides / invalides ».,USAGE
+virtual channel (VC),canal virtuel (VC),n.m.,pus,,USAGE
+CLTU,CLTU,n.f.,pus,DNT; « unité de transfert de liaison de commande ».,OWNER
+APID,APID,n.m.,pus,DNT.,OWNER
+Packet Utilisation Standard (PUS),norme d'utilisation des paquets (PUS),n.f.,pus,Always say « PUS » (PUS-C); gloss once. Service numbers S1…S20 and service names used as identifiers are DNT.,OWNER
+PUS service,service PUS,n.m.,pus,"« Service 3 » → « service 3 » in prose; « S3 » DNT. In procedure annotations the literal « Service 3, Subtype 27 » is DNT (parsed).",CODE
+subtype,sous-type,n.m.,pus,In prose only; DNT inside **TC:** annotations.,CODE
+request verification (S1),vérification des requêtes (S1),n.f.,pus,Human label of S1.,USAGE
+device access (S2),accès aux équipements (S2),n.m.,pus,,USAGE
+housekeeping (S3),données de servitude (S3),n.f.pl.,pus,"CONTESTED. FranceTerme « servitude » (capteur de servitude = housekeeping sensor). Use « télémesure de servitude » / « données de servitude » in prose; keep « HK » in UI and IDs (HK_REQUEST, HKTM). First use: « télémesure de servitude (HK) ».",JO;USAGE
+housekeeping telemetry (HKTM),télémesure de servitude (HK),n.f.,pus,See housekeeping. UI HKTM BUF → TM HK (tampon).,JO;USAGE
+housekeeping report,rapport de servitude (rapport HK),n.m.,pus,« rapport HK » acceptable in ops text.,USAGE
+structure ID (SID),identifiant de structure (SID),n.m.,pus,SID DNT.,OWNER
+collection interval,période d'échantillonnage,n.f.,pus,i.e. intervalle de collecte.,USAGE
+event reporting (S5),signalement d'événements (S5),n.m.,pus,,USAGE
+event,événement,n.m.,ui,UI EVENTS → ÉVÉNEMENTS. Spelling « événement » (not évènement) for consistency.,USAGE
+memory management (S6),gestion de la mémoire (S6),n.f.,pus,,USAGE
+function management (S8),gestion des fonctions (S8),n.f.,pus,func_id DNT.,USAGE
+time management (S9),gestion du temps (S9),n.f.,pus,,USAGE
+time report,rapport de temps,n.m.,pus,"TM(9,2) DNT.",USAGE
+time-based scheduling (S11),programmation temporelle (S11),n.f.,pus,,USAGE
+time-tagged command,télécommande datée,n.f.,pus,CNES « TC datée ». « time tag » → étiquette temporelle / date d'exécution.,USAGE
+time tag,étiquette temporelle,n.f.,pus,,USAGE
+onboard schedule,plan bord,n.m.,pus,i.e. planning bord / file des TC datées.,USAGE
+onboard monitoring (S12),surveillance bord (S12),n.f.,pus,,USAGE
+large data transfer (S13),transfert de gros volumes de données (S13),n.m.,pus,,USAGE
+storage and retrieval (S15),stockage et restitution (S15),n.m.,pus,,USAGE
+packet store,mémoire de paquets,n.f.,pus,« zone de stockage de paquets ».,USAGE
+test (S17),test de connexion (S17),n.m.,pus,S17 « are-you-alive » → test de connexion.,USAGE
+"on-board control procedure (OBCP, S18)",procédure de contrôle bord (OBCP),n.f.,pus,Keep OBCP.,USAGE
+event-action (S19),événement-action (S19),n.m.,pus,,USAGE
+parameter management (S20),gestion des paramètres (S20),n.f.,pus,,USAGE
+acceptance report,rapport d'acceptation,n.m.,pus,"TM(1,1) DNT.",USAGE
+command rejected,commande rejetée,n.f.,pus,UI REJECT → REJET ; « rejected » → rejetée.,USAGE
+parameter,paramètre,n.m.,pus,UI PARAMETER → PARAMÈTRE ; PARAMS → PARAM.,USAGE
+parameter ID,identifiant de paramètre,n.m.,pus,"The IDs themselves (eps.battery_soc_pct, 0x0143) DNT.",OWNER
+raw value,valeur brute,n.f.,pus,,USAGE
+engineering value,valeur physique,n.f.,pus,« valeur convertie » ; avoid « valeur d'ingénierie ».,USAGE
+mnemonic,mnémonique,n.m.,pus,The mnemonics themselves (AOCS_SET_MODE) DNT.,OWNER
+argument (command),argument,n.m.,pus,Argument names (sid=4) DNT.,OWNER
+XTCE,XTCE,n.m.,pus,DNT.,OWNER
+coarse time / fine time (CUC),temps grossier / temps fin (CUC),n.m.,obdh,CUC DNT.,USAGE
+on-board data handling (OBDH),gestion bord des données (OBDH),n.f.,obdh,CNES « gestion bord ». OBDH call-sign/prefix DNT. UI « On-board data handling » → « Gestion bord ».,CNES;USAGE
+on-board computer (OBC),calculateur de bord (OBC),n.m.,obdh,Keep OBC in UI (OBC-A/OBC-B).,USAGE
+on-board / onboard,bord (à bord),adj.,obdh,« onboard time » → temps bord ; « onboard software » → logiciel de bord.,CNES
+flight software (FSW),logiciel de vol,n.m.,obdh,« logiciel bord ».,USAGE
+application software,logiciel applicatif,n.m.,obdh,« APPLICATION image » → image applicative (enum DNT).,USAGE
+bootloader,chargeur d'amorçage,n.m.,obdh,« logiciel d'amorçage ». Phase ID BOOTLOADER_OPS DNT.,USAGE
+boot,amorçage,n.m.,obdh,« OBC boot » → amorçage de l'OBC.,USAGE
+watchdog,chien de garde,n.m.,obdh,,USAGE
+switchover,basculement,n.m.,obdh,« OBC switchover » → basculement d'OBC. Note: also slew → basculement; disambiguate by context (« basculement OBC » vs « basculement d'attitude »).,USAGE
+nominal / redundant,nominal / redondant,adj.,fdir,A/B sides: « voie A / voie B » in prose.,USAGE
+mass memory,mémoire de masse,n.f.,obdh,« Mass memory full » → mémoire de masse saturée.,USAGE
+memory dump,vidage mémoire,n.m.,obdh,CNES « dump » in jargon; written « vidage ».,USAGE
+dump (TM playback),vidage,n.m.,obdh,« stored TM dump » → vidage de la TM enregistrée.,USAGE
+memory patch,correctif mémoire (patch),n.m.,obdh,UI « Patch file » → « Fichier de correctif ».,USAGE
+buffer,tampon,n.m.,obdh,UI « Time to buffer full » → « Temps avant tampon plein » ; EVT BUF → TAMPON ÉVT.,USAGE
+delayed telemetry,télémesure différée,n.f.,obdh,UI DELAYED TM → TM DIFFÉRÉE.,USAGE
+playback,relecture,n.f.,obdh,« Playback position » → « Position de relecture ».,USAGE
+uptime,temps de fonctionnement,n.m.,obdh,i.e. depuis le dernier amorçage.,USAGE
+bare-metal,sans système d'exploitation,adj.,obdh,« bare-metal » in parentheses.,USAGE
+FPGA,FPGA,n.m.,obdh,DNT.,USAGE
+data bus,bus de données,n.m.,obdh,"I2C, CAN, SpaceWire DNT.",USAGE
+onboard time,temps bord,n.m.,obdh,ONBOARD TIME label → TEMPS BORD.,CNES
+simulation time (SIM time),temps simulé (temps SIM),n.m.,ui,UI « Sim time » → « Temps SIM » ; « TRAINING — SIM TIME » → « FORMATION — TEMPS SIM ».,USAGE
+mission elapsed time (MET),temps écoulé depuis le lancement (MET),n.m.,ops,Keep MET label.,USAGE
+clock drift,dérive d'horloge,n.f.,obdh,,USAGE
+clock offset,décalage d'horloge,n.m.,obdh,,USAGE
+time synchronisation,synchronisation temporelle,n.f.,obdh,« time sync » → synchro. horaire (UI).,USAGE
+GPS-disciplined,asservi au GPS,adj.,obdh,,USAGE
+holdover,maintien (holdover),n.m.,obdh,Enum HOLDOVER DNT.,USAGE
+free-running oscillator,oscillateur libre,n.m.,obdh,,USAGE
+never synced,jamais synchronisé,adj.,ui,UI NEVER SYNCED → JAMAIS SYNCHRO.,USAGE
+allowlist,liste d'autorisation,n.f.,obdh,« bootloader allowlist » → liste des TC autorisées en mode amorçage.,USAGE
+"fault detection, isolation and recovery (FDIR)","détection, isolation et reprise des défaillances (FDIR)",n.f.,fdir,Keep FDIR (CNES and ESA French docs do). Call-sign FDIR DNT. UI « FDIR / Systems » → « FDIR / Systèmes ».,CNES;USAGE
+fault,défaut,n.m.,fdir,ECSS distinguishes fault (défaut/panne) and failure (défaillance). « STR at FAULT » enum FAULT DNT.,USAGE
+failure,défaillance,n.f.,fdir,,USAGE
+failure injection,injection de pannes,n.f.,fdir,UI INJECT FAILURE → INJECTER UNE PANNE ; « Failure type » → « Type de panne ».,USAGE
+fault propagation,propagation de défaillance,n.f.,fdir,,USAGE
+recovery,reprise,n.f.,fdir,« recovery action » → action de reprise ; contingency procedure titles « … Recovery » → « Reprise après … » / « Rétablissement de … ».,USAGE
+isolation,isolation,n.f.,fdir,« bus failure isolation » → isolation de la panne de bus.,USAGE
+redundancy,redondance,n.f.,fdir,cold/hot → froide/chaude.,USAGE
+single-point failure (SPF),point de défaillance unique (SPF),n.m.,risk,Keep SPF.,USAGE
+anomaly ticket,fiche d'anomalie,n.f.,fdir,Syllabus « ticket d'anomalie » acceptable; prefer « fiche ».,HOUSE;USAGE
+anomaly response,traitement des anomalies,n.m.,fdir,Syllabus « réponse aux anomalies » is a calque; use traitement.,USAGE
+escalation,escalade,n.f.,fdir,« niveaux d'escalade ».,USAGE
+severity,gravité,n.f.,fdir,UI « All severities » → « Toutes gravités » ; « Filter severity » → « Filtrer par gravité ».,USAGE
+inhibit,inhibition,n.f.,fdir,UI INHIBIT → INHIBER (button) / INHIBÉ (state).,USAGE
+enable / disable,activer / désactiver,v.,ui,States ENABLED/DISABLED → ACTIVÉ/DÉSACTIVÉ.,USAGE
+latched,verrouillé,adj.,fdir,UI LATCHED → VERROUILLÉ ; LATCH A → VERROU A.,USAGE
+manual override,forçage manuel,n.m.,fdir,UI « Manual overrides » → « Forçages manuels ».,USAGE
+override,forçage,n.m.,ui,UI OVERRIDE PASSES → FORCER LES PASSAGES.,USAGE
+emergency,urgence,n.f.,ops,Procedure family EMG unchanged; UI EMERGENCY → URGENCE.,USAGE
+contingency,contingence,n.f.,ops,CONTESTED. CNES/ESA French ops do say « procédure de contingence » ; « opérations de contingence ». Use it; avoid « contingency » untranslated.,USAGE
+contingency procedure,procédure de contingence,n.f.,ops,Family CTG unchanged.,USAGE
+off-nominal,hors nominal,adj.,ops,« Off-Nominal Handling » → « Conduite hors nominal » (prose sections only).,USAGE
+off-nominal handling,conduite à tenir hors nominal,n.f.,ops,,USAGE
+ground fault,panne sol,n.f.,ground,« Ground fault masquerading as a spacecraft fault » → panne sol se faisant passer pour une panne bord.,USAGE
+Launch and Early Orbit Phase (LEOP),phase de lancement et de début d'orbite (LEOP),n.f.,ops,CONTESTED. Keep the acronym LEOP (CNES and ESA French use it as-is). « mise à poste » is GEO-specific (station acquisition) — do not use for a LEO CubeSat. Phase enum LEOP DNT.,USAGE
+commissioning,recette en orbite,n.f.,ops,"CONTESTED. CNES « recette en vol » / « recette en orbite » (IOT, in-orbit testing); « mise en service » (syllabus) is acceptable in general prose but « recette en orbite » is the European ops term. Phase enum COMMISSIONING DNT.",USAGE
+in-orbit test (IOT),essais en orbite (IOT),n.m.pl.,ops,,USAGE
+routine operations,opérations de routine,n.f.pl.,ops,« exploitation » for the operational phase E2.,USAGE
+exploitation phase,phase d'exploitation,n.f.,ops,,ISAE
+pass,passage,n.m.,ops,Station visibility pass. « pass plan » → plan de passage ; « pass report » → rapport de passage ; « Pass closed » callout stays DNT (see callouts).,USAGE
+contact,contact,n.m.,ops,UI « IN CONTACT » → « EN CONTACT » ; « NO CONTACT » → « HORS CONTACT ».,USAGE
+contact window,fenêtre de visibilité,n.f.,ops,« fenêtre de contact » acceptable; UI « CONTACT WINDOWS — NEXT 24 H » → « FENÊTRES DE VISIBILITÉ — 24 H À VENIR ».,USAGE
+visibility,visibilité,n.f.,ops,,CNES
+acquisition of signal (AOS),acquisition du signal (AOS),n.f.,ops,AOS/LOS kept (CNES « début/fin de visibilité » in planning). UI « NEXT AOS » → « PROCHAIN AOS ».,USAGE
+loss of signal (LOS),perte du signal (LOS),n.f.,ops,,USAGE
+first acquisition,première acquisition,n.f.,ops,,USAGE
+pass fit,adéquation au passage,n.f.,ops,« Pass fit ratio » → « taux d'occupation du passage ».,USAGE
+pass startup,ouverture de passage,n.f.,ops,NOM-001 title « Pass Startup » → « Ouverture de passage ».,USAGE
+shift,quart,n.m.,ops,"« vacation » also used in French control rooms; pick « quart » (nuclear/maritime ops usage, also in syllabus).",HOUSE;USAGE
+shift handover,passation de consignes,n.f.,ops,UI HANDOVER → PASSATION ; « handover note » → consigne de relève.,USAGE
+shift log,main courante,n.f.,ops,French control-room term for the running log. « mission log » → journal de mission.,USAGE
+log,journal,n.m.,ui,UI LOG → JOURNAL ; « Console log » → « Journal de console ».,USAGE
+mark (timestamped),repère horodaté,n.m.,ops,Callout « Mark » DNT; UI MARK button → REPÈRE.,USAGE
+flight director (FD),directeur ou directrice de vol (FD),n.m./f.,ops,"Call-sign FD DNT. Person: « directeur de vol ». Console/desk label (UI FLIGHT DIRECTOR, positions.yaml display name) → « DIRECTION DE VOL » / « Direction de vol ». not: Direction du vol",USAGE
+flight operations director,directeur des opérations de vol,n.m.,ops,Procedure « Approved: » value.,USAGE
+spacecraft controller (SPACON),contrôleur satellite (SPACON),n.m.,ops,Call-sign SPACON DNT.,USAGE
+mission manager,responsable de mission,n.m./f.,ops,Epicene.,USAGE
+customer liaison,interface client,n.f.,ops,« Mission Manager / Customer Liaison » → « Responsable de mission / interface client ».,USAGE
+flight dynamics,dynamique du vol,n.f.,ops,CNES service name « dynamique du vol » (sing.). Syllabus « dynamique de vol » acceptable; prefer « du vol ».,CNES
+flight dynamics system (FDS),système de dynamique du vol (FDS),n.m.,ground,FDS call-sign DNT.,USAGE
+orbit analyst,analyste orbite,n.m./f.,ops,,USAGE
+position (console),poste,n.m.,ops,« the nine control-room positions » → les neuf postes de la salle de contrôle. UI « Console position » → « Poste de console ».,USAGE
+desk,poste,n.m.,ops,Same as position.,USAGE
+call-sign,indicatif,n.m.,ops,Call-signs themselves DNT when acronyms.,USAGE
+console,console,n.f.,ops,« pupitre » is dated.,USAGE
+mission control centre (MCC),centre de contrôle de mission (CCM),n.m.,ground,JO term & acronym CCM; in this corpus the MCC is rarely abbreviated.,JO
+mission control system (MCS),système de contrôle de mission (MCS),n.m.,ground,Keep MCS (product name in UI).,HOUSE
+mission planner,planificateur de mission,n.m.,ground,UI « MISSION PLANNER » → « PLANIFICATEUR DE MISSION ».,USAGE
+voice loop,boucle vocale,n.f.,ops,CONTESTED. ESA/CNES ops also say « boucle de conférence » / « réseau voix ». Use « boucle vocale » ; « on the loop » → « sur la boucle ».,USAGE
+loop discipline,discipline de boucle,n.f.,ops,The spoken callout « Loop discipline » stays DNT.,USAGE
+callout,annonce,n.f.,ops,« anomaly callout » → annonce d'anomalie.,USAGE
+read-back,collationnement,n.m.,ops,Aviation radiotelephony term (France). « read back » (v.) → collationner.,USAGE
+cross-talk,interférence de parole,n.f.,ops,i.e. people talking over each other; « chevauchement de communications ».,USAGE
+hot mike,micro ouvert,n.m.,ops,Spoken « hot mike on/off » DNT.,USAGE
+push-to-talk,alternat,n.m.,ops,French radio term; « PTT ».,USAGE
+GO / NO-GO,GO / NO-GO,n.m.,ops,DNT (used as-is in French CNES/ESA ops: « décision GO/NO-GO »). « poll » → « tour de table GO/NO-GO » ; UI START POLL → LANCER LE TOUR.,OWNER;USAGE
+GO/NO-GO poll,tour de table GO/NO-GO,n.m.,ops,,USAGE
+hold,attente (HOLD),n.f.,ops,Spoken « Hold » DNT; procedure panel « Skip and Hold » → « Sauter et suspendre ».,USAGE
+standby,attente,n.f.,ops,Spoken « Standby » DNT; UI STANDBY state → ATTENTE.,USAGE
+procedure,procédure,n.f.,ops,"Procedure IDs (LEOP-001, NOM-007, CTG-003, EMG-004, COM-005) DNT.",OWNER
+procedure card,fiche de procédure,n.f.,ops,« machine-runnable card » → fiche exécutable par la machine ; « advisory card » → fiche consultative.,USAGE
+checklist,liste de vérification,n.f.,ops,« check-list » tolerated in speech. « read-and-do » → lire-et-exécuter.,USAGE
+prerequisite,prérequis,n.m.,ops,Procedure section « Prerequisites » → « Prérequis ».,USAGE
+post-condition,postcondition,n.f.,ops,,USAGE
+purpose,objet,n.m.,ops,Procedure section « Purpose » → « Objet ».,USAGE
+dry run,répétition à blanc,n.f.,ops,HOUSE term kept (also European).,HOUSE
+rehearsal,répétition,n.f.,ops,« simulation opérationnelle ».,USAGE
+training,formation,n.f.,ops,UI TRAINING → FORMATION.,USAGE
+instructor console,console instructeur,n.f.,ops,UI « Instructor console — simulation ground truth » → « Console instructeur — vérité terrain de la simulation ».,USAGE
+freeze (simulation),figer,v.,ui,UI FREEZE → FIGER.,USAGE
+red line (mission rule),ligne rouge,n.f.,ops,,USAGE
+mission rule,règle de vol,n.f.,ops,ESA « flight rule » → règle de vol.,USAGE
+timeline,chronologie,n.f.,ui,Planning timeline view → « frise chronologique ».,USAGE
+pass plan,plan de passage,n.m.,ops,,USAGE
+activity,activité,n.f.,ops,UI « ADD ACTIVITY » → « AJOUTER UNE ACTIVITÉ ».,USAGE
+activity schedule,planning des activités,n.m.,ops,« planning » is standard European French for schedule.,ISAE
+schedule (n.),planning,n.m.,ops,Project schedule → calendrier / planning.,ISAE
+constraint check,vérification des contraintes,n.f.,ops,UI VALIDATE CONSTRAINTS → VALIDER LES CONTRAINTES.,USAGE
+standard plan,plan type,n.m.,ops,UI « Standard activities… » → « Activités types… ».,USAGE
+debrief,débriefing,n.m.,ops,CONTESTED. European usage « débriefing » ; syllabus « débreffage » is Québec (OQLF). Formal alternative « réunion-bilan ».,USAGE
+lessons learned,retour d'expérience (REX),n.m.,ops,European term; syllabus « leçons apprises » is a Canadian calque.,USAGE
+workaround,solution de contournement,n.f.,ops,,USAGE
+concept of operations (ConOps),concept d'opérations (ConOps),n.m.,se,Keep ConOps (HOUSE).,HOUSE
+operations manual,manuel d'opérations,n.m.,ops,« Flight Operations Manual (FOM) » → manuel des opérations de vol.,USAGE
+command history,historique des commandes,n.m.,ui,UI CMD HISTORY → HISTO. CMD.,USAGE
+arm (command),armer,v.,ui,UI ARMED → ARMÉ ; « ARM PERMITTED » → « ARMEMENT AUTORISÉ ».,USAGE
+send,envoyer,v.,ui,UI SENT → ENVOYÉE.,USAGE
+critical command,commande critique,n.f.,ops,« hazardous command » → commande dangereuse.,USAGE
+dashboard,tableau de bord,n.m.,ui,,USAGE
+overview,vue d'ensemble,n.f.,ui,UI « Overview » → « Vue d'ensemble ».,USAGE
+display,vue,n.f.,ui,An MCS display page → « vue » / « synoptique » (for schematics).,USAGE
+synoptic / schematic,synoptique,n.m.,ui,,USAGE
+wall display,écran mural,n.m.,ui,« SMO Planner — Wall Display » → « SMO Planner — écran mural ».,USAGE
+drawer,tiroir,n.m.,ui,« alarm drawer » → tiroir des alarmes.,USAGE
+alarm,alarme,n.f.,ui,UI ALARMS → ALARMES ; « ACTIVE ALARMS » → « ALARMES ACTIVES ».,USAGE
+acknowledge,acquitter,v.,ui,UI ACK ALL → TOUT ACQUITTER ; « 0 UNACK » → « 0 NON ACQ. » ; « Alarm ack » → « Acquittement ».,USAGE
+unacknowledged,non acquitté,adj.,ui,,USAGE
+clear (alarm),effacer,v.,ui,« Acknowledging vs clearing » → acquitter ou effacer.,USAGE
+shelve (alarm),mettre en attente,v.,ui,UI « Shelve » → « Mettre en attente ».,USAGE
+warning,avertissement,n.m.,ui,Severity levels: Info → Info ; Warning → Avertissement ; Alarm → Alarme ; Critical → Critique.,USAGE
+caution,attention,n.f.,ui,Caution/warning hierarchy (yellow).,USAGE
+information,information,n.f.,ui,UI « Info » kept « Info ».,USAGE
+out-of-limits (OOL),hors limites (OOL),adj.,ui,UI « MONITORS OOL » → « SURVEILLANCES HORS LIMITES ».,USAGE
+yellow limit,limite jaune,n.f.,ui,soft limit → limite d'alerte.,USAGE
+red limit,limite rouge,n.f.,ui,hard limit → limite d'alarme.,USAGE
+limit check,contrôle de limites,n.m.,ui,,USAGE
+stale (data),périmé,adj.,ui,UI « DISPLAY STALE — NO DATA FOR » → « AFFICHAGE PÉRIMÉ — AUCUNE DONNÉE DEPUIS ».,USAGE
+staleness,péremption,n.f.,ui,,USAGE
+no data,aucune donnée,phr.,ui,« no telemetry yet » → « pas encore de télémesure ».,USAGE
+trend,tendance,n.f.,ui,UI « Trends » → « Tendances » ; « Parameters to trend » → « Paramètres à tracer ».,USAGE
+search,rechercher,v.,ui,« Search parameters (name or hex ID 0x0143)… » → « Rechercher un paramètre (nom ou ID hexa 0x0143)… ».,USAGE
+skip to main content,aller au contenu principal,phr.,ui,Accessibility link.,USAGE
+loading…,chargement…,n.m.,ui,Ellipsis character … kept.,USAGE
+submit,soumettre,v.,ui,UI SUBMIT → SOUMETTRE.,USAGE
+remove,supprimer,v.,ui,« Remove every activity » → « Supprimer toutes les activités ».,USAGE
+upload (to),envoyer,v.,ui,« UPLOAD TO MCS » → « ENVOYER AU MCS ». « téléverser » avoided (Québec-flavoured).,USAGE
+status,état,n.m.,ui,« statut » for administrative status only.,USAGE
+failed,échoué,adj.,ui,UI FAIL → ÉCHEC.,USAGE
+all clear,RAS,phr.,ui,French ops shorthand « rien à signaler ». UI ALL CLEAR → RAS.,USAGE
+priority,priorité,n.f.,ui,High/Medium/Low → Haute/Moyenne/Basse.,USAGE
+note (console),note,n.f.,ui,« Console note… (Enter logs it as your position) » → « Note de console… (Entrée l'enregistre au nom de votre poste) ».,USAGE
+Enter / Esc keys,Entrée / Échap,n.f.,ui,"Key names localised in prose; code identifiers (ArrowUp, Escape) DNT.",USAGE
+ground station,station sol,n.f.,ground,CNES/N7 « station sol ». ITU regulatory « station terrienne » only in regulatory text.,CNES;N7
+earth station (ITU),station terrienne,n.f.,reg,,UIT
+ground-station network,réseau de stations sol,n.m.,ground,CNES « Réseau de stations ».,CNES
+low-noise amplifier (LNA),amplificateur faible bruit (LNA),n.m.,ground,,USAGE
+high-power amplifier (HPA),amplificateur de puissance (HPA),n.m.,ground,,USAGE
+front end,frontal,n.m.,ground,« front-end processor » → frontal.,USAGE
+mission control centre,centre de contrôle,n.m.,ground,CNES « Centre de contrôle satellite ».,CNES
+mission centre,centre de mission,n.m.,ground,,CNES
+data archive,archive des données,n.f.,ground,UI ARCHIVE → ARCHIVE.,USAGE
+cyber range,Cyber Range,n.m.,pedagogy,Proper name of the uOttawa facility (syllabus « Cyberrange » ; keep official spelling).,HOUSE
+systems engineering (SE),ingénierie système,n.f.,se,CNES/ISAE usage singular « ingénierie système » (syllabus also « ingénierie des systèmes »). Choose singular.,HOUSE;USAGE
+project manager,chef de projet,n.m.,se,Epicene « cheffe de projet » optional.,USAGE
+AOCS engineer,ingénieur SCAO,n.m.,se,CNES « Ingé SCAO ». On console the position is AOCS.,CNES
+project phase,phase de projet,n.f.,se,"Phases 0, A, B, C, D, E, F keep letters.",ISAE
+Phase 0 (mission analysis),phase 0 (analyse de mission),n.f.,se,,ISAE
+Phase A (feasibility),phase A (faisabilité),n.f.,se,,ISAE
+Phase B (preliminary definition),phase B (définition préliminaire),n.f.,se,,ISAE
+Phase C (detailed definition),phase C (définition détaillée),n.f.,se,,ISAE
+Phase D (qualification and production),phase D (qualification et production),n.f.,se,,ISAE
+Phase E (utilisation),phase E (exploitation),n.f.,se,,ISAE
+Phase F (disposal),phase F (retrait de service),n.f.,se,ISAE « fin de vie » ; JO 2020 « retrait de service ».,ISAE;JO2020
+Pre-Phase A (NASA),pré-phase A,n.f.,se,,HOUSE
+review,revue,n.f.,se,Never « examen » for a project review.,ISAE
+review gate,jalon,n.m.,se,« key decision point » → point de décision clé. Syllabus « portail de revue » is a calque — avoid.,USAGE
+review board,comité de revue,n.m.,se,« review-board roles » → rôles au sein du comité de revue.,USAGE
+review item discrepancy (RID),fiche de remarque de revue (RID),n.f.,se,ESA French practice keeps RID. UI RID DNT.,USAGE
+action item,action,n.f.,se,« capture of actions » → relevé des actions.,USAGE
+mission concept review (MCR),revue du concept de mission (MCR),n.f.,se,NASA gate. Syllabus « examen du concept de mission » → replace « examen » by « revue ». Keep MCR (ECSS clash noted in syllabus).,HOUSE
+mission definition review (MDR),revue de définition de la mission (MDR),n.f.,se,ISAE/CNES. CNES acronym RDM mentioned in note only.,ISAE
+preliminary requirements review (PRR),revue préliminaire des exigences (PRR),n.f.,se,,ISAE
+system requirements review (SRR),revue des exigences système (SRR),n.f.,se,,USAGE
+preliminary design review (PDR),revue de définition préliminaire (PDR),n.f.,se,CONTESTED. CNES name (French acronym RDP) aligned with phase B « définition préliminaire ». Keep English acronym PDR (ECSS is English-only; partners/ESA use PDR). Syllabus « revue de conception préliminaire » is a calque.,ISAE
+critical design review (CDR),revue de définition critique (CDR),n.f.,se,CNES acronym RDC (ISAE writes RCD). Keep CDR.,ISAE
+qualification review (QR),revue de qualification (QR),n.f.,se,,ISAE
+acceptance review (AR),revue de recette (AR),n.f.,se,« recette » = acceptance in French space practice.,USAGE
+flight readiness review (FRR),revue d'aptitude au vol (FRR),n.f.,se,,USAGE
+launch readiness review (LRR),revue d'aptitude au lancement (LRR),n.f.,se,,USAGE
+operational readiness review (ORR),revue d'aptitude opérationnelle (ORR),n.f.,se,,USAGE
+end-of-life review (ELR),revue de fin de vie (ELR),n.f.,se,,USAGE
+"mission close-out review (MCR, ECSS)",revue de clôture de mission (MCR),n.f.,se,,USAGE
+requirement,exigence,n.f.,se,,ISAE
+shall (requirement verb),doit,v.,se,« The system shall… » → « Le système doit… ». « should » → « devrait » (recommendation); « will » (statement of fact) → indicatif futur.,USAGE
+requirements engineering,ingénierie des exigences,n.f.,se,,HOUSE
+requirements baseline,référentiel d'exigences,n.m.,se,Syllabus « base de référence des exigences » is Canadian; European « référentiel ».,USAGE
+baseline,référentiel,n.m.,se,« configuration baseline » → configuration de référence. Syllabus « base de planification » → « référentiel de planification ».,USAGE
+specification,spécification,n.f.,se,Technical Specification (TS) → spécification technique (TS).,ISAE
+traceability,traçabilité,n.f.,se,« horizontal traceability » → traçabilité horizontale.,USAGE
+SMART (requirements),SMART,adj.,se,"DNT acronym; expand once as the course defines it: spécifique, mesurable, atteignable, pertinente (Relevant), traçable (Traceable). not: réaliste, temporellement défini (former note; F1, W1, D2 follow the course)",USAGE
+need,besoin,n.m.,se,,ISAE
+measure of effectiveness (MoE),mesure d'efficacité (MoE),n.f.,se,Keep MoE/MoP/TPM acronyms (NASA SEH).,USAGE
+measure of performance (MoP),mesure de performance (MoP),n.f.,se,,USAGE
+technical performance measure (TPM),indicateur de performance technique (TPM),n.m.,se,,USAGE
+functional decomposition,décomposition fonctionnelle,n.f.,se,,HOUSE
+function tree,arbre fonctionnel,n.m.,se,,USAGE
+functional architecture,architecture fonctionnelle,n.f.,se,,HOUSE
+allocation,allocation,n.f.,se,« répartition » for budget apportionment.,USAGE
+block diagram,schéma fonctionnel,n.m.,se,« schéma-bloc » acceptable.,USAGE
+system hierarchy,arborescence produit,n.f.,se,« product tree » → arbre produit.,USAGE
+product tree,arbre produit,n.m.,se,,USAGE
+N² matrix,matrice N²,n.f.,se,,USAGE
+interface control document (ICD),document de contrôle d'interface (ICD),n.m.,se,,USAGE
+interface matrix,matrice d'interfaces,n.f.,se,,HOUSE
+System-V model / V-model,cycle en V,n.m.,se,European French term « cycle en V ». Syllabus « modèle en V » acceptable but prefer « cycle en V ».,USAGE
+tailoring,adaptation,n.f.,se,ECSS French practice: « adaptation » (tailoring matrix → matrice d'adaptation). Syllabus « personnalisation » — replace.,USAGE
+margin,marge,n.f.,se,,ISAE
+margin policy,politique de marges,n.f.,se,,HOUSE
+technology readiness level (TRL),niveau de maturité technologique (TRL),n.m.,se,Keep TRL (ISO 16290; French docs use TRL).,USAGE
+make/buy/reuse,"faire, acheter ou réutiliser",phr.,se,« décision faire ou acheter ».,USAGE
+non-recurring engineering (NRE),coûts non récurrents (NRE),n.m.pl.,cost,,USAGE
+trade study / trade-off,étude de compromis,n.f.,se,HOUSE term. « trade » (n.) alone → compromis ; « trade matrix » → matrice de compromis.,HOUSE
+weighting,pondération,n.f.,se,,HOUSE
+design driver,facteur dimensionnant,n.m.,se,,USAGE
+sizing,dimensionnement,n.m.,se,,HOUSE
+rule of thumb,règle empirique,n.f.,se,,USAGE
+first principles,premiers principes,n.m.pl.,se,« from first principles » → à partir des premiers principes.,USAGE
+configuration management,gestion de configuration,n.f.,se,,ISAE
+product assurance (PA),assurance produit (AP),n.f.,se,,ISAE
+non-conformance,non-conformité,n.f.,se,,ISAE
+waiver,dérogation,n.f.,se,« deviation » → écart (before the fact) ; « waiver » → dérogation (after the fact).,USAGE
+deviation,écart,n.m.,se,,USAGE
+standard (norm),norme,n.f.,se,ECSS standards → normes ECSS. Standard numbers (ECSS-E-ST-10C) DNT.,USAGE
+ECSS,ECSS,n.f.,se,DNT; « les normes ECSS » ; document titles stay in English in italics with optional French gloss.,OWNER
+handbook,manuel,n.m.,se,NASA *Systems Engineering Handbook* title stays English.,USAGE
+work breakdown structure (WBS),organigramme des tâches (WBS),n.m.,cost,ISAE « découpage en lots de travaux ». Keep WBS.,ISAE
+work package,lot de travaux,n.m.,cost,,ISAE
+bill of materials (BOM),nomenclature (BOM),n.f.,cost,HOUSE « nomenclature ».,HOUSE
+procurement,approvisionnement,n.m.,cost,« achats ».,USAGE
+verification and validation (V&V),vérification et validation (V&V),n.f.,vv,,HOUSE
+verification,vérification,n.f.,vv,,ISAE
+verification method,méthode de vérification,n.f.,vv,"ATIR(D) acronym DNT; in prose « analyse, essai, inspection, revue de conception (démonstration) ».",USAGE
+analysis (A),analyse (A),n.f.,vv,,USAGE
+test (T),essai (T),n.m.,vv,Hardware test → « essai » (European) ; software test → « test ».,USAGE
+inspection (I),inspection (I),n.f.,vv,,USAGE
+review of design (R),revue de conception (R),n.f.,vv,,USAGE
+demonstration (D),démonstration (D),n.f.,vv,,USAGE
+verification plan (VP),plan de vérification (VP),n.m.,vv,,USAGE
+qualification,qualification,n.f.,vv,,ISAE
+acceptance,recette,n.f.,vv,CONTESTED. French space practice: « recette » (acceptance test → essai de recette). ISAE leaves « acceptance » untranslated; avoid that.,USAGE
+protoflight,protovol,n.m.,vv,« modèle protovol (PFM) ».,USAGE
+electromagnetic compatibility (EMC),compatibilité électromagnétique (CEM),n.f.,vv,French acronym CEM is standard.,USAGE
+integration,intégration,n.f.,vv,"AIT → AIT (assemblage, intégration et essais).",USAGE
+"assembly, integration and test (AIT)","assemblage, intégration et essais (AIT)",n.m.,vv,,USAGE
+sanity check,contrôle de vraisemblance,n.m.,vv,,USAGE
+risk,risque,n.m.,risk,,ISAE
+risk management,gestion des risques,n.f.,risk,,ISAE
+risk register,registre des risques,n.m.,risk,,HOUSE
+risk matrix,matrice des risques,n.f.,risk,5×5 → 5 × 5 with spaces.,USAGE
+likelihood,vraisemblance,n.f.,risk,« probabilité » also fine in matrix axes.,USAGE
+consequence,conséquence,n.f.,risk,« gravité » for the axis.,USAGE
+risk mitigation,réduction du risque,n.f.,risk,« atténuation » for debris; for risk « réduction / maîtrise ».,USAGE
+FMEA,AMDE (FMEA),n.f.,risk,Analyse des modes de défaillance et de leurs effets.,USAGE
+"failure modes, effects and criticality analysis (FMECA)","analyse des modes de défaillance, de leurs effets et de leur criticité (AMDEC)",n.f.,risk,"French acronym AMDEC (universal in French industry, NF EN 60812). On first use: « AMDEC (FMECA) ».",USAGE
+safety,sécurité,n.f.,risk,« sûreté » for nuclear/dependability contexts only.,USAGE
+dependability,sûreté de fonctionnement (SdF),n.f.,risk,,USAGE
+cost estimation,estimation des coûts,n.f.,cost,,HOUSE
+cost estimating relationship (CER),relation d'estimation de coût (CER),n.f.,cost,,USAGE
+bottom-up estimate,estimation ascendante,n.f.,cost,« analytique ».,USAGE
+contingency (cost),provision pour aléas,n.f.,cost,Not « contingence » in a cost context.,USAGE
+concurrent design,conception concourante,n.f.,cdf,HOUSE; CNES uses « ingénierie concourante ».,HOUSE;CNES
+concurrent engineering,ingénierie concourante,n.f.,cdf,,CNES
+Concurrent Design Facility (CDF),centre de conception concourante (CDF),n.m.,cdf,HOUSE. ESA's facility name stays « Concurrent Design Facility (CDF) » ; CNES equivalent « Centre d'ingénierie concourante (CIC) ».,HOUSE;CNES
+discipline / position (CDF),discipline / poste,n.m.,cdf,HOUSE « rôle disciplinaire ».,HOUSE
+optimiser,optimiseur,n.m.,cdf,,HOUSE
+regulatory check module,module de vérification réglementaire,n.m.,cdf,,HOUSE
+mission file,fichier de mission,n.m.,cdf,,HOUSE
+SpaceCDF,SpaceCDF,n.m.,cdf,Product name DNT.,OWNER
+SMO / EOSAT-1,SMO / EOSAT-1,n.m.,cdf,Product and spacecraft names DNT.,OWNER
+running example,exemple fil rouge,n.m.,pedagogy,« the two running examples » → les deux exemples fil rouge.,USAGE
+Remote Sensing Space Systems Act (RSSSA),Loi sur les systèmes de télédétection spatiale (LSTS),n.f.,reg,Official Canadian French title; official French acronym LSTS. Syllabus used « RSSSA » — on first use write « LSTS (RSSSA en anglais) ».,USAGE
+"Innovation, Science and Economic Development Canada (ISED)","Innovation, Sciences et Développement économique Canada (ISDE)",n.m.,reg,Official Canadian name; keep.,HOUSE
+export control,contrôle des exportations,n.m.,reg,,HOUSE
+Export and Import Permits Act (EIPA),Loi sur les licences d'exportation et d'importation (LLEI),n.f.,reg,Official Canadian French title.,USAGE
+ITAR / EAR,ITAR / EAR,n.f.,reg,DNT (US regulations).,OWNER
+Controlled Goods Program,Programme des marchandises contrôlées,n.m.,reg,Official Canadian name (HOUSE).,HOUSE
+COPUOS,Comité des utilisations pacifiques de l'espace extra-atmosphérique (CUPEEA),n.m.,reg,UN official French name and acronym.,USAGE
+Registration Convention,Convention sur l'immatriculation des objets lancés dans l'espace extra-atmosphérique,n.f.,reg,UN official French title.,USAGE
+licence,licence,n.f.,reg,Also in France: « licence » (same spelling).,USAGE
+long-term sustainability guidelines,lignes directrices aux fins de la viabilité à long terme des activités spatiales,n.f.pl.,reg,UN official French.,USAGE
+learning objective,objectif d'apprentissage,n.m.,pedagogy,Book chapter header « Learning objectives » → « Objectifs d'apprentissage ».,USAGE
+learning outcome,acquis d'apprentissage,n.m.,pedagogy,CONTESTED. European (Bologna/EHEA) « acquis d'apprentissage » ; syllabus « résultats d'apprentissage » is Canadian usage — keep it only inside official uOttawa course documents.,USAGE
+learner,apprenant,n.m.,pedagogy,Epicene plural « les apprenants et apprenantes » only on the cover/front matter; elsewhere « vous ».,USAGE
+student,étudiant,n.m.,pedagogy,See gender-neutral policy (STYLE_FR §6).,HOUSE
+facilitator,animateur,n.m.,pedagogy,"« Facilitator book » → « Guide de l'animateur ». The SpaceCDF course textbook is « Manuel du cours » (footer-fr « Manuel du cours SpaceCDF · 2026 », not « Manuel de l'animateur »).",HOUSE
+instructor,enseignant,n.m.,pedagogy,« Instructor book » → « Guide de l'enseignant » ; simulator « instructor » role → « instructeur » (training-sim usage).,HOUSE
+session,séance,n.f.,pedagogy,« Session 1.1 » → « Séance 1.1 ». « Session summary » → « Synthèse de la séance ».,HOUSE
+course outline / syllabus,plan de cours,n.m.,pedagogy,uOttawa document name — keep « plan de cours » for that document only; generic « programme du cours ».,HOUSE
+textbook,manuel,n.m.,pedagogy,« Course textbook » → « Manuel du cours ».,USAGE
+open textbook,manuel en libre accès,n.m.,pedagogy,OER → ressource éducative libre (REL).,USAGE
+open educational resource (OER),ressource éducative libre (REL),n.f.,pedagogy,UNESCO French term.,USAGE
+workbook,cahier d'exercices,n.m.,pedagogy,,HOUSE
+worksheet,fiche d'exercices,n.f.,pedagogy,« Worksheet 5.2 » → « Fiche 5.2 ».,USAGE
+problem (end-of-chapter),exercice,n.m.,pedagogy,Chapter section « Problems » → « Exercices ».,USAGE
+worked example,exemple résolu,n.m.,pedagogy,« exemple traité » also correct; choose « exemple résolu ».,USAGE
+derivation,démonstration,n.f.,pedagogy,Maths derivation → « démonstration » / « établissement de la formule ». Section header « Derivation » → « Démonstration ».,USAGE
+summary,synthèse,n.f.,pedagogy,Chapter « Summary » → « Synthèse ».,USAGE
+references,références,n.f.pl.,pedagogy,« Cited references » → « Références citées ».,USAGE
+recommended background,lectures préalables conseillées,n.f.pl.,pedagogy,Callout « Recommended background. » → « **Lectures préalables conseillées.** » (STYLE §12). not: prérequis conseillés (former row),USAGE
+discussion prompts,pistes de discussion,n.f.pl.,pedagogy,,USAGE
+notes & reflections,notes et réflexions,n.f.pl.,pedagogy,,USAGE
+reflection,réflexion,n.f.,pedagogy,,HOUSE
+reflective portfolio,portfolio réflexif,n.m.,pedagogy,,HOUSE
+rubric,grille d'évaluation,n.f.,pedagogy,Never « rubrique » (Canadian calque). Syllabus « barème » is fine for a marking scheme.,USAGE
+marking scheme,barème,n.m.,pedagogy,,HOUSE
+assessment,évaluation,n.f.,pedagogy,,HOUSE
+formative / summative assessment,évaluation formative / sommative,n.f.,pedagogy,,USAGE
+peer review,évaluation par les pairs,n.f.,pedagogy,« peer critique » → critique entre pairs.,USAGE
+feedback,retour,n.m.,pedagogy,"« retours », « commentaires ». Syllabus « rétroaction » is Canadian.",USAGE
+grade,note,n.f.,pedagogy,,HOUSE
+quiz,quiz,n.m.,pedagogy,,HOUSE
+deliverable,livrable,n.m.,pedagogy,,HOUSE
+assignment,travail à rendre,n.m.,pedagogy,« devoir ».,USAGE
+observer,observateur,n.m.,pedagogy,,HOUSE
+drill,exercice d'entraînement,n.m.,pedagogy,« pair drill » → exercice en binôme.,USAGE
+wallet card,carte aide-mémoire,n.f.,pedagogy,,USAGE
+cheat sheet,aide-mémoire,n.m.,pedagogy,,USAGE
+hands-on,pratique,adj.,pedagogy,« hands-on session » → séance pratique / travaux pratiques (TP).,USAGE
+lecture,cours magistral,n.m.,pedagogy,,HOUSE
+guest speaker,intervenant extérieur,n.m.,pedagogy,Syllabus « conférencier invité ».,USAGE
+office hours,permanence,n.f.,pedagogy,Canadian « heures de bureau » avoided.,USAGE
+undergraduate,premier cycle,n.m.,pedagogy,Keep uOttawa wording for course codes.,HOUSE
+graduate (studies),cycles supérieurs,n.m.pl.,pedagogy,European reader: gloss « (master/doctorat) » once.,HOUSE
+cohort,promotion,n.f.,pedagogy,« cohorte » acceptable; « promotion » more European.,USAGE
+intensive (course),stage intensif,n.m.,pedagogy,Syllabus « programme intensif » fine.,HOUSE
+weekend,week-end,n.m.,pedagogy,Canadian « fin de semaine » avoided.,USAGE
+morning (session),matin / matinée,n.m.,pedagogy,Canadian « avant-midi » avoided.,USAGE
+email,courriel,n.m.,pedagogy,"Decision: « courriel » (FranceTerme-recommended, understood everywhere); « e-mail » not used; « mél. » only as address prefix — not used.",JO
+generative AI,IA générative,n.f.,pedagogy,,HOUSE
+academic integrity,intégrité académique,n.f.,pedagogy,France « intégrité scientifique / fraude académique » ; keep for uOttawa context.,HOUSE
+learning management system,plateforme d'apprentissage en ligne,n.f.,pedagogy,Brightspace DNT.,USAGE
+pitfall,écueil,n.m.,pedagogy,« Common pitfalls » → « Écueils fréquents ».,USAGE
+decisions you own,décisions qui vous reviennent,phr.,pedagogy,Position-reference header.,USAGE
+nomograph,abaque,n.m.,pedagogy,,USAGE
+part (of a book),partie,n.f.,pedagogy,« Part II » → « Partie II ».,USAGE
+table,tableau,n.m.,pedagogy,Never « table » for a data table.,USAGE
+acknowledgement,remerciements,n.m.pl.,pedagogy,« Acknowledgement — Generative AI (AIG) » → « Déclaration — IA générative (AIG) ». AIG is a proper name (QA m16); the house « GIA » is not followed.,HOUSE;QA
+sensor,capteur,n.m.,general,"Exception: AOCS optical sensors → « senseur » (senseur stellaire, senseur solaire).",CNES
+performance,performances,n.f.pl.,general,Usually plural in French engineering.,USAGE
+data volume,volume de données,n.m.,ttc,"Units: octet (o, ko, Mo, Go), bit (bit, kbit, Mbit). « MB/day » → « Mo/jour ».",USAGE
+byte,octet,n.m.,obdh,"Symbol o (Mo, Go). In UI byte counts « octets ».",USAGE
+peak fill,remplissage maximal,n.m.,ui,UI « DATA — PEAK FILL » → « DONNÉES — REMPLISSAGE MAX ».,USAGE
+overhead,surdébit,n.m.,ttc,Protocol overhead → surdébit protocolaire.,USAGE
+timeout,délai d'attente,n.m.,ops,« timeout 10 s » inside **Verify:** annotations stays DNT (parsed).,CODE
+calibration,étalonnage,n.m.,general,« calibrage » for adjustments; avoid « calibration » in prose.,USAGE
+check (verify),vérifier,v.,ops,« Verify » outside parsed annotations → « Vérifier ».,USAGE
+record (v.),consigner,v.,ops,« Record the onboard time » → « Consigner le temps bord ».,USAGE
+step (procedure),étape,n.f.,ops,Heading « Step 1 --- Read… » → « Étape 1 --- Lire… ». Never translate the LABEL value (STEP-1).,CODE
+AOCS_SET_MODE,AOCS_SET_MODE,ident,pus,"DNT — telecommand mnemonic; all mnemonics (HK_REQUEST, TTC_DEPLOY_ANTENNA, REQUEST_TIME, ST1_POWER…) stay English.",OWNER
+eps.battery_soc_pct,eps.battery_soc_pct,ident,pus,"DNT — parameter ID; all param IDs (obdh.time_ref, ttc.link_status…) and hex IDs (0x0A13) unchanged.",OWNER
+NOMINAL / SAFE / DETUMBLE / COARSE_SUN / FINE_POINT / SLEW / DESAT / ECLIPSE / INERTIAL / SAFE_BOOT / OFF,NOMINAL / SAFE / DETUMBLE / COARSE_SUN / FINE_POINT / SLEW / DESAT / ECLIPSE / INERTIAL / SAFE_BOOT / OFF,ident,aocs,DNT — AOCS mode enum names. Human label may follow in parentheses: DETUMBLE (amortissement).,OWNER
+PRE_SEPARATION / SEPARATION_TIMER / INITIAL_POWER_ON / BOOTLOADER_OPS / LEOP / COMMISSIONING / NOMINAL,PRE_SEPARATION / SEPARATION_TIMER / INITIAL_POWER_ON / BOOTLOADER_OPS / LEOP / COMMISSIONING / NOMINAL,ident,ops,DNT — spacecraft phase enum names (instructor console shows « 4 — LEOP »).,OWNER
+LOCKED / NONE / GROUND / GPS / HOLDOVER / FAULT / APPLICATION,LOCKED / NONE / GROUND / GPS / HOLDOVER / FAULT / APPLICATION,ident,ops,"DNT — telemetry enumeration states as they appear in TM/backticks. Prose may gloss: « 2 (LOCKED, verrouillé) ».",OWNER
+BEACON / LOW / HIGH (rate tiers),BEACON / LOW / HIGH (rate tiers),ident,ttc,DNT — rate-ladder rung names.,OWNER
+S1 S2 S3 S5 S6 S8 S9 S11 S12 S13 S15 S17 S18 S19 S20,S1 S2 S3 S5 S6 S8 S9 S11 S12 S13 S15 S17 S18 S19 S20,ident,pus,"DNT — PUS service identifiers; TM(9,2), TC(8,1) notation unchanged.",OWNER
+func_id,func_id,ident,pus,DNT.,OWNER
+SID,SID,ident,pus,DNT.,OWNER
+LEOP-001 / NOM-008 / CTG-003 / EMG-004 / COM-005,LEOP-001 / NOM-008 / CTG-003 / EMG-004 / COM-005,ident,ops,DNT — procedure IDs; titles after the colon ARE translated: « NOM-008 : Synchronisation de l'horloge ».,OWNER
+FD / SPACON / AOCS / EPS / TCS / TT&C / TTC / OBDH / FDS / FDIR / PAYLOAD / PROP,FD / SPACON / AOCS / EPS / TCS / TT&C / TTC / OBDH / FDS / FDIR / PAYLOAD / PROP,ident,ops,DNT — position call-signs and subsystem tags in UI tabs/voice loop.,OWNER
+**TC:** / **Verify:** / **LABEL:** / **BRANCH:** / **GO/NO-GO:** / **Action:** / **Note:**,**TC:** / **Verify:** / **LABEL:** / **BRANCH:** / **GO/NO-GO:** / **Action:** / **Note:**,ident,ops,"DNT — procedure annotation keys parsed by smo_common/procedures/schema.py; also « Service N, Subtype N », « func_id N », « timeout N s », « max N » inside them, and STEP-n labels.",CODE
+"""Comm check"" / ""Standby"" / ""Go for X"" / ""Hold"" / ""Resume"" / ""No-go"" / ""AOS"" / ""LOS"" / ""Pass closed"" / ""Anomaly…"" / ""Mark"" / ""Loop discipline"" / ""Copy""","""Comm check"" / ""Standby"" / ""Go for X"" / ""Hold"" / ""Resume"" / ""No-go"" / ""AOS"" / ""LOS"" / ""Pass closed"" / ""Anomaly…"" / ""Mark"" / ""Loop discipline"" / ""Copy""",ident,ops,"DNT — spoken voice-loop phraseology (like aviation radiotelephony, kept in English for mixed CA/DK/FR crews). Explain the meaning in French in the table's other columns.",OWNER;USAGE
+file names / paths / URLs / API routes (/api/budget/power),file names / paths / URLs / API routes (/api/budget/power),ident,ui,DNT.,OWNER
+ECSS-E-ST-70-32C (and all standard numbers),ECSS-E-ST-70-32C (and all standard numbers),ident,se,DNT; titles may be glossed in French in parentheses.,OWNER
+UTC / GPS / J2000 / CUC / TAI,UTC / GPS / J2000 / CUC / TAI,ident,obdh,DNT. UTC in French also « UTC » (temps universel coordonné).,OWNER
+ConOps,ConOps,abbr,se,DNT; Keep (HOUSE).,HOUSE
+(mission log) / (FD call) / (formal call),(journal de mission) / (annonce du FD) / (annonce formelle),,ops,,O4a
+1-sigma / 3-sigma,1σ / 3σ,,general,,F3
+1U Worked Example: UniSat-1,Exemple résolu 1U : UniSat-1,,general,,F1
+3-Week Syllabus / intensive,Programme sur 3 semaines* / « Programme intensif de 3 semaines » (matches existing footer-fr),,general,plan de cours » reserved for uOttawa official doc,D2
+3D fix / PDOP,point GPS 3D / PDOP,,general,,O4b
+the 3U EO CubeSat,le CubeSat 3U d'OT (first use: CubeSat 3U d'observation de la Terre (OT)),,general,as in the facilitator FR,OER1
+absorptance / emittance,absorptivité / émissivité,,thermal,glossary rows absorptivity/emissivity,OER2
+abuse case,cas abusif,,general,,F2
+Acknowledgement of generative AI (heading),Déclaration — IA générative,,general,glossary note,OER5
+Acknowledgement section / AIG badge,section *Déclaration* / badge AIG,,ui,glossary row « acknowledgement » (HOUSE uses GIA),F5
+acronym storm,avalanche d'acronymes,,general,,O2
+Advanced / Intermediate,Avancé / Intermédiaire,,general,,P2a
+AGC (automatic gain control),commande automatique de gain (CAG),,general,"Rule B: CAG in prose after first use. not: CAG (commande automatique de gain) (D1b,M1,O5)",D1b;M1;O5;Y1
+Agulhas / Kuroshio / East Australian Current,courant des Aiguilles / de Kuroshio / est-australien,,payload,,Y1
+AIG — Artificial Intelligence Generated Content,AIG --- contenu généré par l'intelligence artificielle,,general,Footer of 3 cards; URL unchanged,P3
+AIG badge (Peters),AIG,,ui,"Proper name of the Peters (2023) framework/logo: keep « AIG », never « GIA ». QA m16.",W1;QA
+AIG logo / framework,logo AIG / cadre AIG (assisté par l'IA générative),,general,Proper name: « AIG » unchanged (not « GIA »). QA m16.,OER5;QA
+air-gapped,isolé du réseau (*air-gapped*),,general,,M2
+alternate ground station,station sol de secours,,general,,P2a
+analogy (cost method),méthode analogique,,cost,,F4
+anchor (time),ancrage / réancrer,,general,,M2
+and contributors,et collaborateurs,,general,,OER1
+Announce on ops loop,Annoncer sur la boucle opérations,,ops,"glossary voice loop = boucle vocale; ""ops loop"" is the named loop",M2
+Anomaly Logger,secrétaire des anomalies,,general,,W2
+anomaly logger / logger,responsable du journal,,general,,OER5
+Anomaly Response Form,fiche de traitement d'anomalie,,general,glossary anomaly response → traitement,W1
+Anomaly Review Board,commission d'examen des anomalies,,general,,P3
+antenna feed,source (feed) d'antenne,,ttc,RF « source,P3
+AOCS KPI,indicateurs AOCS,,aocs,KPI not used in French prose,F3
+AOCS Lead,Responsable SCAO,,aocs,,F1
+APE / RPE / MPE,"kept, expanded in French",,general,ECSS acronyms,F3
+aperture efficiency,rendement d'ouverture,,general,,F3
+API (ITU advance publication),publication anticipée (API),,reg,,W1
+app SW / application image,logiciel applicatif / image applicative,,general,Glossary,W2
+application boot,amorçage applicatif,,obdh,,W2
+Approved: Flight Operations Director,Approuvé par : Directeur des opérations de vol,,general,Function label (STYLE §6),P1
+archive minus live,archive moins direct,,general,,D1a
+arcsec,″,,general,,W1
+arcsec / arcmin,seconde(s) d'arc in prose; ″ in tables; « minute d'arc,,ui,French usage,F3
+areal density,masse surfacique,,general,,F2
+arm code / arm interlock,code d'armement / verrouillage d'armement,,general,,Y1
+arm interlock,verrouillage d'armement,,general,,P3
+arm interlock mask,masque de verrouillages d'armement,,general,,O2
+arm-through (ground HIGH-tier policy),confirmation explicite (en passant outre l'avertissement),,ops,Descriptive not: autorisation forcée / politique d'autorisation sol (P1),P1;P3
+arm-through hold (MCS),retenue d'armement,,general,not: mise en attente à lever par armement explicite (M1),D1b;M1
+arming interlocks,verrouillages d'armement,,general,,F3
+ATID / IADT,"Analyse, Test (essai), Inspection, Démonstration",,vv,Letters kept,W1
+audit trailers,métadonnées d'audit,,general,,D1a
+auditable decision record,dossier de décision auditable,,general,,F1;OER1
+"authority (cooler, % of Carnot)",efficacité,,thermal,« autorité » kept only for actuator control authority. not: autorité (F2),F2;O1;O5
+auto-promote / demote,se promouvoir automatiquement / rétrograder,,general,,P1
+auto-TX hold-down,maintien automatique de l'émetteur (auto-TX hold-down),,general,Short form after first use: « maintien auto-TX ». not: maintien automatique de l'émission (W2); temporisation de maintien de l'émission automatique (auto-TX) (O2),M2;O4a;P1;W2;O2
+axial ratio,rapport axial,,general,,F3
+B-dot control,loi B-dot,,general,,P3
+B-dot detumble,amortissement B-dot,,aocs,Glossary detumbling → amortissement,P1
+back matter,pages de fin d'ouvrage,,general,,OER1
+backend / frontend,backend / frontend,,general,developer audience; matches code comments,D2
+(per-role) background briefing,dossier (de préparation),,general,briefing » avoided in prose,F5
+backhaul,acheminement,,general,,F2
+backlog,arriéré,,general,,D1b;F3
+backup slides,diapositives de réserve,,general,,F4
+badge (SpaceCDF UI),pastille,,ui,"Green/Amber/Red → verte/orange/rouge (SpaceCDF status, not MCS alarm colours)",F2
+bake-out,étuvage (de décontamination),,general,,M1
+ballistic coefficient,coefficient balistique,,general,standard,OER2
+bang-bang law,loi en tout-ou-rien,,reg,,O3
+bare-metal firmware,micrologiciel sans système d'exploitation,,obdh,"glossary ""bare-metal"" → sans système d'exploitation",F4
+beacon lifeline rate,débit de survie,,ttc,,Y1
+beacon mode,mode balise,,ttc,glossary beacon,P2a
+bear traps,pièges à loup,,general,Idiom kept,O1
+bearing seizure / seized,grippage du roulement / grippé,,general,,Y1
+"bias (wheel speed bias, v./n.)",polariser / polarisation,v.,ttc,,O3
+bias momentum,moment cinétique de biais,,aocs,,F3;OER3
+big-endian,gros-boutiste,,obdh,,Y1
+blind command,commande en aveugle,,general,,P2a
+Bloom levels Remember/Understand/Apply/Analyse/Evaluate/Create,Mémoriser/Comprendre/Appliquer/Analyser/Évaluer/Créer,,general,standard FR Bloom taxonomy,D2
+blowdown (propulsion),mode blowdown (pression décroissante),,propulsion,"Gloss on first use per chapter. not: blowdown (pressurisation non régulée) (D1a,F3); détente (mode blowdown) (F5); régime de détente (blowdown) (P3)",D1a;F3;F4;F5;P3;Y1
+body momentum,moment cinétique corps,,aocs,,P3
+body rates,vitesses angulaires,,general,,P2a
+BOL,début de vie,,general,,P3
+BOL / EOL,en début de vie / fin de vie,,general,acronyms dropped in FR prose,OER3
+book-kept load,masse tenue à jour au sol,,structure,,P3
+boot inhibit,inhibition d'amorçage,,obdh,boot → amorçage (cf. chargeur d'amorçage). not: inhibition de démarrage (P2a),P2a;P2b
+boot loop,boucle d'amorçage,,obdh,"boot → amorçage. not: boucle de démarrage (O4b,P3)",O4b;P2b;P3
+bootloader allowlist,liste d'autorisation du chargeur d'amorçage,,obdh,allowlist → liste d'autorisation. not: liste des commandes autorisées du chargeur d'amorçage (P3),P3;W2
+bootloader gate / allowlist,condition du chargeur d'amorçage / liste d'autorisation,,obdh,glossary allowlist,M2
+boresight,axe de visée,,general,,F3
+bps in console-read Verify lines,"kept bps where it follows a typed/compared value (e.g. = 16000 bps); prose uses bit/s, kbit/s",,ops,STYLE §4.2 vs §5,P1
+"bps, kbps, Mbps, bps/Hz, dBbps","bit/s, kbit/s, Mbit/s, bit/s/Hz, dB(bit/s)",,general,STYLE §5,W1
+breadboard (BB),maquette (BB),,general,,F4
+breakpoint (simulator state),point de reprise,,general,Instructor-console catalog « Points de reprise ». « point d'arrêt » is reserved for a QRH pause point. not: point d'arrêt (W2),D1a;W2
+brief Mission Manager,informer le responsable de mission,v.,general,,O4b
+(position) briefing,fiche (de préparation),,ops,OER1 front matter uses « fiche »; F5 used « dossier,OER5
+broadside (wings commanded),"ailes orientées face à la vitesse, traînée maximale",,general,Explicit meaning,D1a
+brown-out,baisse de tension,,general,,P2b
+brown-out resets,réinitialisations par baisse de tension,,general,,P3
+brownout,baisse de tension,,general,,M2
+bulk downlink,transmission en masse,,ttc,,D1b
+bulletin (customer),bulletin (client),,general,,O5
+burn wire / burn-wire,fil thermofusible,,propulsion,"not: fil à brûler (D1b); fil fusible (F4); fil à couper (O1,W2,Y1); fil à chaud (M2,O5); fil thermique (P2a)",D1b;F4;O1;O5;P2a;W2;M1;M2;Y1
+burst disc,disque de rupture,,general,,Y1
+bus stub,dérivation de bus,,obdh,,O4b
+"C"" for °C in limits (< 50 C)",< 50 °C,,general,Same as W2. Digits kept,P2b
+cadence (HK),cadence,,general,same in FR,O5
+CAM (collision-avoidance manoeuvre),manœuvre d'évitement de collision (CAM),,general,Acronym kept (rule A) not: CAM (kept) (Y1),D1a;Y1
+"cannot isolate"" (branch of the code-block chart)",*cannot isolate* » (isolation impossible),,general,code block stays English,OER5
+cant angle,angle d'inclinaison,,general,disambiguated from orbit β-angle as in EN,OER3
+capacity fade (calendar / cycling),perte de capacité (calendaire / par cyclage),,general,,F2
+card (procedure card),fiche,,ops,Same as the ops book (orbit_north_week3 FR),P1
+carded (recovery),prévu dans une fiche,,ops,,O3
+casualty-risk assessment,évaluation du risque de victimes,,risk,,F5
+catalogue (on-board image),catalogue (de bord),,general,,P3
+catalyst bed preheat,préchauffage du lit catalytique,,general,,Y1
+catbed heater,réchauffeur du lit catalytique,,thermal,,O4b
+catbed preheat,préchauffage du lit catalytique,,propulsion,glossary catbed,P3
+Category / Position Lead / Cross-Position / Difficulty (card header),Catégorie / Poste responsable / Postes associés / Difficulté,,ui,"header labels, not parsed not: Catégorie / Poste responsable / Postes associés / Niveau (P2a)",P2a;P2b
+CBE / MEV,CBE / MEV (meilleure estimation actuelle / valeur maximale attendue),,reg,"Acronyms kept; French gloss once per chapter. not: kept (CBE, MEV) (W1)",OER3;W1
+cell (battery),élément,,eps,French battery usage,P2a
+cell balancing,équilibrage des éléments,,eps,Glossary: Li-ion cell = élément,F2
+centi-kelvin,centikelvin,,thermal,,F5;M2;O1;W2
+centroid / centroiding,barycentre / calcul du barycentre,,general,,F3
+Certificate ceremony,Remise des certificats,,general,,D2
+CFRP,PRFC (polymère renforcé de fibres de carbone),,structure,Standard French acronym,F4;OER3
+Chair / Systems reviewer…,"Président / relecteur système, technique, risques, opérations",,general,,OER4
+change log,journal des modifications,,general,,F5
+Check: / Rationale: / Monitor: / Wait: / Condition: / CAUTION,Contrôle : / Justification : / Surveillance : / Attente : / Condition : / ATTENTION,,general,not parsed keys,P2a
+check transition (S12),transition de contrôle,,general,,D1b
+checksum,somme de contrôle,,general,,P2a
+clamp (a value),écrêter,v.,general,,O1;O5
+clear beacon mode,sortir du mode balise / désactiver le mode balise,,ttc,,P2b
+closed-loop sync,synchronisation en boucle fermée,,ops,,M2
+Closeout,Clôture,,general,,F1
+coarse sun sensor (CSS) head,tête CSS / senseur solaire grossier,,aocs,,Y1
+cogging torque,couple de crantage,,general,,F3
+cold finger,doigt froid,,thermal,,M1
+cold gas,gaz froid,,thermal,,OER3
+cold gas / warm gas,gaz froid / gaz chaud,,thermal,glossary « propulsion à gaz chaud,F3
+cold welding,soudage à froid,,thermal,,W1
+common-cause failure,défaillance de cause commune,,risk,,F4
+Common mistake,Erreur fréquente,,general,parallels « Écueils fréquents,F5
+Comms (subsystem label),télécom (sous-système télécom) ; Communications → télécommunications,,ui,Short label used in tables/allocations; TTC kept as acronym,F2
+Comms Engineer,Ingénieur télécommunications,,general,,F1
+compensating provision,disposition compensatoire,,general,,F4
+Compliance / Regulatory Engineer,Ingénieur conformité / réglementation,,reg,,F5
+Compliance Engineer,Ingénieur conformité,,general,,F1
+Compliance Engineer / Cost Engineer / Project Manager …,ingénieur conformité / ingénieur coûts / chef de projet …,,cost,"position names as in the facilitator FR Table 1.1.11 (Project Manager → chef de projet, glossary)",OER1
+compliance register,registre de conformité,,general,,OER1
+compressed time / time jump,temps compressé / saut temporel,,general,,OER5
+Concept & Technology Development,Développement du concept et des technologies,,general,,F1
+Concurrent Spacecraft Design (title),"kept English (proper title), gloss *Conception concourante d'engins spatiaux* once in ch24",,general,OER1 front-matter title,OER5
+confirm each step (worksheet),confirmer chaque étape / à confirmer étape par étape,,cost,,W2
+conformal coating / staking,vernis de tropicalisation / collage,,general,,OER3
+conjunction screening,criblage des conjonctions,,general,,F3;F5;O1
+constellation diagram,diagramme de constellation,,general,,M2
+constraint engine,moteur de contraintes,,general,,F4;OER2
+Contingency (category value) / Advanced / Intermediate,Contingence / Avancé / Intermédiaire,,general,,P2b
+contingency-active banner,bandeau « contingence active,,ttc,,O4a
+control margin factor,facteur de marge de commande,,general,,F3
+cool-down,mise en froid,,general,glossary cooldown,O4a;W2
+cooldown ramp / settling,rampe / stabilisation,,general,,O3
+cooler (FPA),refroidisseur ; cryocooler → cryoréfrigérateur,,thermal,,O5
+core set (of SIDs),socle,,general,,P3
+corporate feed network,réseau d'alimentation arborescent,,ttc,,F3
+Cost & Schedule (position),Coûts et planning,,cost,,F5
+Cost Engineer,Ingénieur coûts,,cost,,F1
+cost reserve,réserve pour coûts,,cost,,OER4
+Course Plan (doc title),Plan du cours,,general,as in FR facilitator book (l. 9245),D2
+Course Plan* / *Course Textbook* / *Course Workbook,Plan du cours* / *Manuel du cours* / *Cahier d'exercices du cours,,general,align with F1–F4 front matter if they chose otherwise,F5
+courseware image product,produit image du support de cours,,general,,F3
+cover glass,verre de protection,,general,CNES usage,F2
+Coverage (in \text{}),\text{Couverture},,general,"ch. 5 display maths, a word label (STYLE §9); subscripts untouched",OER1
+coverage gap,lacune de couverture,,general,course FR TM,OER2
+coverage gap / coverage analysis,lacune de couverture / analyse de couverture,,general,Requirement-to-function trace sense,F2
+crimson (header rule),grenat,,ui,,F5
+cross-strap (to the other magnetometer),basculer en croisé,,aocs,,O2
+crossed Yagi,Yagi croisées,,ttc,,D1b
+CTE,CTE,,general,Used as-is in French engineering tables,F4
+cue card,"fiche aide-mémoire (opérateur) ; carte d'aide (anomalie, enseignant)",,ops,Two objects: operator cue card vs instructor anomaly cue card. not: carte d'injection (LEOP pack) / carte d'aide (instructor book ch. X) (W2),O2;W2
+Cue cards,fiches aide-mémoire,,ops,,O3
+cue moment,moment de déclenchement,,general,,W2
+Currency,"k$ / M$ / G$ (CA, US), k€ / M€ / G€",,cost,kEUR → k€,OER1
+currency $50K / kEUR,50 k$ US / k€,,cost,,F3
+custom (make),spécifique,,general,TM usage,OER4
+customer bulletin,bulletin client,,general,not: bulletin au client (W2),O2;O3;W2
+cut-off (dv),coupure dv,,general,,Y1
+daily ops review / pass report / anomaly investigation,revue quotidienne des opérations / rapport de passage / enquête sur anomalie,,ops,Report template names. These are descriptive only; no catalog keys found,D1a
+"DARK (unpowered, emphasis)",ÉTEINT(S) / éteint,,general,"Not an enum here (unlike mode=0 DARK calibration, kept)",P1
+dark / flat calibration set,série d'obscurité / série de champ plat,,general,,W2
+dark current,courant d'obscurité,,eps,,O1
+dark frame,image d'obscurité,,general,,M1;O3
+dark frame / flat field,image d'obscurité / champ plat,,general,not: image noire / champ uniforme (O5),O4a;O5;P1
+dark set / flat set,série d'obscurité / série de champ plat,,general,,O3
+Data Handling,gestion des données,,general,,F2
+data item description (DID),description d'éléments de données (DID),,general,,F1
+Data rates and storage units. « kbps / bps,"kbit/s and bit/s, and « MB » → Mo. Inside code spans and fenced YAML they are unchanged",,general,,W2
+dawn–dusk orbit,orbite aube-crépuscule,,general,new,OER2
+dBbps (unit),dB(bit/s),,general,STYLE §5: no « bps,F3
+DC-DC converter,convertisseur continu-continu,,eps,,F2
+de-rating,déclassement,,general,,F5
+deadband / null space,bande morte / espace nul,,ttc,,O3
+debris avoidance / drag make-up,évitement de débris / compensation de la traînée,,general,,P3
+Decision Justification,Justification des décisions,,general,Recurring section,W1
+decision points,points de décision,,general,,O3
+Decision tree (card field),Arbre de décision,,ops,card field label,O4a;O4b
+Decision trees: IF/AND,"SI/ET (these are book cards, not parsed procedure files; no French step-jump verbs were introduced)",,pedagogy,,O4a
+decontamination bake,étuver,,general,,D1a
+decontamination heating,chauffage de décontamination,,general,,O1
+deep walkthrough / detailed walkthroughs,déroulement approfondi / déroulement détaillé,,general,déroulement » matches STYLE §13 (Procedure Steps → Déroulement),O3
+Defence Production Act,Loi sur la production de défense,,reg,Official Canadian French title,F4
+deg (unit),°,,general,No space before ° for plane angles (STYLE §4.3); deg/hr → °/h. Console strings keep « deg ».,F3;W1
+"deg, deg/s, deg-C, RPM, bps/kbps, MB","°, °/s, °C, tr/min, bit/s / kbit/s, Mo",,general,STYLE §5,P2a
+degC / C,°C,,general,,W1
+delete-all,suppression totale,,general,,D1b
+delta check / rate-of-change,contrôle de variation / taux de variation,,general,avoids calque « contrôle delta,O5
+delta-qualification,delta-qualification,,vv,,F4
+delta-V budget,bilan de delta-V,,general,§0 rule 3,O4a
+delta/rate monitor,moniteur de variation et de taux,,general,,D1a
+demotion (tier),rétrogradation,,ops,,O1;Y1
+demotion flag,indicateur de rétrogradation,,general,,F5
+derived requirement,exigence dérivée,,general,Usual SE term,F2
+descope,réduction du périmètre,,general,,F4
+design agent,agent de conception,,general,,F1
+design-for-demise,conception pour la désintégration,,general,,F1
+design load,charge de dimensionnement,,structure,,F4
+Design-Review Pack,dossier de revue,,general,,F1
+design-review pack / data item descriptions,dossier de revue de conception / descriptions d'éléments de données,,general,,OER5
+DET (Direct Energy Transfer),DET (transfert direct d'énergie),,general,,F2
+detumble (prose),amortissement (des vitesses angulaires),,aocs,Glossary « detumbling,O4b;P3
+disciplined (clock) / re-discipline,asservi / rétablir l'asservissement,,general,,O4b
+Discussion point,Point de discussion,,general,,F1;F2
+dispatcher (ServiceDispatcher),répartiteur,,general,,D1b
+dispenser (deployer),distributeur,,general,"used for ""dispenser""; glossary ""deployer → déployeur"" is kept for ""deployer",OER2
+distribution matrix,matrice de répartition,,general,,F3;OER3
+DJF,dossier de justification de la conception,,general,,F1
+docs/course/3_week_syllabus_expanded.md,docs/course/fr/3_week_syllabus_expanded.md,,general,2304 / 2823,D2
+docs/course/3_WEEK_SYLLABUS.md,docs/course/fr/3_WEEK_SYLLABUS.md,,general,812 / 1081,D2
+docs/course/course_plan_expanded.md,docs/course/fr/course_plan_expanded.md,,general,3392 / 4073,D2
+docs/course/COURSE_PLAN.md,docs/course/fr/COURSE_PLAN.md,,general,1787 / 2247,D2
+docs/INSTALLATION_GUIDE.md,docs/fr/INSTALLATION_GUIDE.md,,general,2442 / 2585,D2
+docs/user_guide_expanded.md,docs/fr/user_guide_expanded.md,,general,3044 / 3618,D2
+docs/USER_GUIDE.md,docs/fr/USER_GUIDE.md,,general,1785 / 2262,D2
+Document ID / Issue,Référence du document / Édition,,general,Document control block,M1
+donut chart,graphique en anneau,,general,,F5
+drag make-up burn,poussée de compensation de traînée,,propulsion,,Y1
+drag sail,voile de traînée,,propulsion,,F1;F3;OER2
+drag sail / electrodynamic tether,voile de traînée / câble électrodynamique,,propulsion,,OER3
+DRD,définition des exigences documentaires,,general,,F1
+Dry Total / Dry MEV / Wet Mass / Launcher Allocation,total à sec / MEV à sec / masse humide / allocation lanceur,,general,,F2
+dual-keyed / FD second-key,double validation / deuxième validation par le FD,,pedagogy,,O4b
+dual-keyed / FD second-key confirmation,double validation / confirmation par seconde clé du FD,,pedagogy,,O4a
+duty (HK clear at 9.7 % duty),rapport cyclique,,general,,F3
+dV budget log,journal du bilan de dV,,general,§0 rule 3,P3
+dwell time,durée de palier,,general,,W1
+dynamic amplification factor,facteur d'amplification dynamique,,general,,F4;OER3
+EAC / ETC,estimation à l'achèvement (EAC) / reste à faire (ETC),,cost,,F5
+earned value / estimate at completion / float,valeur acquise / estimation à l'achèvement / marge libre,,general,,OER5
+Earth Exploration Satellite service / FSS,SETS (EES) / SFS (FSS),,general,ITU-R French,OER3
+Earth sensor,senseur terrestre,,aocs,Consistent with senseur stellaire/solaire (CNES),F3;W1
+"ECSS branch U ""Sustainability",durabilité,,general,,F1
+edge-triggered,déclenché sur front,,general,,D1b
+editable install,installation modifiable,,general,,M2
+Editor's note,Note de la rédaction,,general,not: Note de l'éditeur (O4a),O4a;O4b
+EES / FSS (ITU services),SETS / SFS (expanded),,reg,ITU-R French names,F3
+electrodynamic tether,câble électrodynamique,,propulsion,,F3
+electrospray,électronébulisation,,general,,F3;OER3;W1
+emergency response team,équipe d'intervention d'urgence,,general,,P3
+Engineering-/Operations-Position Reference,Référentiel des postes d'ingénierie / d'opérations,,ops,référentiel » = reference compendium,F5
+Entry point (card field),Point d'entrée,,ops,card field label,O4a;O4b
+Entry state / Exit state (heading + label),État d'entrée / État de sortie,,ui,Not parsed,P1
+Equipment / System margin; Compound,marge équipement / marge système ; cumulée,,general,,F2
+escalation ladder,échelle d'escalade,,ops,glossary escalation → escalade,O5
+EUR 800 k / EUR 11.7 M (ch. 16),"800 kEUR / 11,7 MEUR",,cost,French order; currency EUR kept as in source,OER4
+EVA intervention,intervention extravéhiculaire (EVA),,general,see §3 — kept although nonsensical,M2
+"Evaluate: (label, LEOP-006)",Évaluer :,,ui,Not a parser key,P1
+event-action set,jeu événement-action,,reg,,O4a
+evidence (V&V),éléments probants,,vv,,F4;OER4;W2
+execution policy (PowerShell),stratégie d'exécution,,eps,Microsoft FR terminology,D2
+Executive Summary,Synthèse,,general,STYLE §8 fixed name,M2;Y1
+executor / runner (MCS),exécuteur,,general,,O2
+Exercise,Exercice,,pedagogy,,F1
+Exercise Tasks / Worksheet 3.1 Tasks,Travaux de l'exercice / Travaux de la fiche 3.1,,pedagogy,,F2
+"Exercises. (scenario field ""what it exercises"")",Ce qui est éprouvé,,pedagogy,avoids clash with « Exercices » (problems),OER5
+Exit gate,Critère de sortie,,ops,,O4b
+Expected reading (callout),Lectures attendues,,pedagogy,« Expected reading before … » → « Lectures attendues avant … ». not: Lecture attendue (F5),F1;F5
+Expected reading before this session. (callout),Lectures attendues avant cette séance.,,pedagogy,"Parallel to the fixed rendering of ""Recommended background"" (« Lectures préalables conseillées ») not: Lectures préalables attendues avant cette séance (F2)",F2;F3;F4;O1
+Expected Value,Valeur attendue,,general,,P2a
+export bundle,lot d'exports,,reg,,F1
+facilitator book,guide de l'animateur,,pedagogy,glossary,P3
+facilitator script,script de l'animateur,,general,Glossary: facilitator → animateur,W2
+Facilitator's Book,Guide de l'animateur,,pedagogy,glossary « facilitator » note; used as document title,D2
+factor of safety (FoS),facteur de sécurité (FoS),,structure,Per glossary note on MoS,F4
+factor of safety / design load,facteur de sécurité (FoS) / charge de dimensionnement,,structure,,OER3
+fail closed (executor),échouer en position sûre,,ops,,O1;O2;O4b
+Fail-safe,sécurité intrinsèque,,general,,M1
+failure notice (S1 data field),notice d'échec (*failure notice*),,risk,Literal field name kept recognisable; the English is glossed once,D1b
+FDIR decision flow,logigramme de décision FDIR,,ops,,OER5
+feed,source,,ttc,antenna feed,F3
+feed horn / waveguide insertion loss,cornet d'alimentation / pertes d'insertion du guide d'ondes,,ttc,,M2
+figure of merit,facteur de mérite ; G/T : facteur de qualité,,general,G/T is « facteur de qualité » in ITU-R French. not: facteur de qualité (OER3),F2;OER3
+file (a) ticket,ouvrir une fiche (d'anomalie),v.,general,Glossary has anomaly ticket → fiche d'anomalie. Short form « ouvrir une fiche » in cells,O4b
+Final Design & Fabrication,Conception finale et fabrication,,general,,F1
+finding (rehearsal),constat,,general,,OER5
+fine/coarse sun sensor,senseur solaire fin / grossier,,aocs,,W1
+firmware,micrologiciel,,obdh,,W2
+first indicator,premier indice,,general,,W2
+first-key / second-key,première clé / seconde clé,,pedagogy,"Kept the English button labels *Send*, *Second-Key",O1
+first-key / second-key / dual-key,première clé / seconde clé / double clé,,pedagogy,used consistently in ch. 9 and 10,O2
+first-key … FD second-keys,(callout kept) « Le FD valide en second,,pedagogy,Two-person command rule,O3
+Five Eyes,Groupe des cinq (Five Eyes),,general,,F1
+fixed-pattern noise,bruit spatial fixe,,general,Standard,P1
+floor (achievable cooler temperature),plancher,,thermal,,F2;O5
+fluxgate magnetometer,magnétomètre à vanne de flux (*fluxgate*),,aocs,,F3
+flywheel (frame sync),volant d'inertie (flywheel),,general,,M1
+FOV,champ de vue (FOV),,general,,F2;F3
+FPA cooler,refroidisseur du FPA,,thermal,cryocooler → cryoréfrigérateur. not: refroidisseur FPA (O4b),O3;O4a;O4b;W2
+frame (VR data frame) / frame (reference),trame / repère,,general,Kept distinct,D1a
+Franz Newland et al,Franz Newland et collaborateurs,,general,OER1 front matter,OER5
+free-running (TCXO),libre,,general,,P3
+fresh / degraded / stale (data),à jour / dégradé / périmé,,general,glossary has stale → périmé,O5
+frozen orbit,orbite gelée,,general,course FR TM,OER2
+FTE,équivalent temps plein (ETP),,cost,"ETP after first use. not: ETP (F4,W1)",F4;F5;W1
+FTE / FTE-year,ETP / ETP-année,,cost,,OER5
+function tree / leaf function,arbre fonctionnel / fonction terminale,,general,course FR TM,OER2
+G / A / R (green/amber/red),V / O / R (vert/orange/rouge),,general,Amber → « orange » (also « badge orange »),W1
+gap (TM sequence),lacune,,general,,O3
+gate (ops: tier/elevation/interlock),seuil (numérique) ; condition (permissive) ; verrou (interlock),,ops,"Review gate stays « jalon ». not: verrou (D1b,F5,O2,P1); condition (d'autorisation) (M1,O4a,P3); verrou / condition (O1); seuil / condition (O3); condition ; « libérer la porte » for DOWNLINK gate (P2a)",D1b;F5;M1;O1;O2;O3;O4a;P1;P2a;P3
+Gate Review (tab),revue de jalon,,ui,gloss; catalog has « Jalons de revue » for Review Gates,D2
+gateway (station),station passerelle,,ops,,F2
+geo-registration error,erreur de géoréférencement,,general,,O5
+GHG,GES,,general,,D2
+gimbal / gimbal lock,cardan / blocage de cardan,,ops,,F3
+gimballed (array),orientable,,eps,,F5
+Global Affairs Canada,Affaires mondiales Canada,,reg,official name,D2
+GO / NO GO / GO WITH ACTIONS,kept English (gloss once: accord sous réserve d'actions),,reg,TM keeps GO/NO-GO English; review verdict phraseology,OER4
+"Go fix"" (button)",Corriger,,ui,Same UI-alignment caveat,F4
+GO WITH ACTIONS,GO AVEC ACTIONS,,reg,GO / NO GO kept (DNT),W1
+GO/NO-GO Checkpoint N,Point de contrôle GO/NO-GO N,,general,,M2
+GO/NO-GO gate / Flight Director poll,jalon GO/NO-GO / tour de table du directeur de vol,,ui,glossary poll = tour de table,P3
+Goal (card field),Objectif,,ops,card field label,O4a;O4b
+god-mode (instructor visibility),visibilité omnisciente / mode omniscient,,general,Descriptive; no catalog entry,D1a
+Gold Rules (GSFC-STD-1000),les « Gold Rules,,general,,OER5
+GPS 3D fix,point GPS 3D ; GPS lock → accrochage,,general,,P2a
+GPS discipline,asservissement GPS,,general,glossary GPS-disciplined,O4a
+GPS fix,point GPS,,general,= O4a,M2;O4a
+graveyard orbit,orbite cimetière,,general,,F1
+green / amber / red (budget status),vert / orange / rouge,,general,,OER3
+ground-driven / on-board autonomy,pilotage par le sol / autonomie bord,,general,,OER5
+Ground Seg (position label),Segment sol,,ui,,O4a;O4b
+Ground Seg / Ground Segment (position),segment sol ; « Ingénieur segment sol,,ops,"position labels translated, call-signs inside callouts kept",O2
+Ground Segment engineer,ingénieur segment sol,,general,,O5
+ground-station operator (GSO) / payload operator (PO),opérateur station sol (GSO) / opérateur charge utile (PO),,ops,,OER5
+ground-track spacing,écart entre traces au sol,,general,course FR TM,OER2
+gyro bias,biais gyrométrique,,aocs,,W2
+H/M/L (influence),É/M/F,,general,Localised legend,W1
+half-power beamwidth (HPBW),ouverture du faisceau à mi-puissance (HPBW),,eps,per glossary note,F3
+Hall-effect thruster,propulseur à effet Hall,,propulsion,not: effet Hall (W1),F3;W1;OER3
+hard anodisation (Type III),anodisation dure (type III),,general,,F4
+headroom,réserve / latitude,,general,,F5
+health check / health round,bilan de santé / tour de santé,,general,,O4a
+heap,tas,,obdh,,P3
+heartbeat,signal de vie,,general,not: battement de cœur (P3),M2;P3
+heat lift (cooler),puissance frigorifique,,thermal,,O1
+heat sink (thermal),puits thermique,,thermal,,W2
+high-crit,criticité élevée,,general,,O3
+Hint,Indice,,pedagogy,,W1
+Hohmann two-impulse transfer,transfert biimpulsionnel,,propulsion,new,OER2
+hold » as a decision-tree action,attente (HOLD) » (glossary); « HOLD » kept where the source capitalises it,,reg,,O4a
+Honours threshold,seuil de mention,,general,,W2
+horn,cornet,,ttc,,F3
+hosted payload,charge utile hébergée,,general,,F1
+hot case / cold case,cas chaud / cas froid,,thermal,Standard CNES thermal usage,F2
+hot-reload,rechargement à chaud,,general,,D2
+hot spare,secours actif,,reg,,M2
+hot-wash (debrief),débriefing à chaud,,general,Consistent with glossary « débriefing not: retour à chaud (W2),O1;O2;O5;W2
+housekeeping structure,structure de servitude,,general,consistent with glossary « données de servitude,O5
+hysteresis rod,barreau à hystérésis,,general,,F3;OER3
+hysteresis rods,barreaux d'hystérésis,,general,,W1
+I&T,intégration et essais (I&T),,general,,F3
+IARU,IARU (Union internationale des radioamateurs),,ttc,,F3
+Idle,Veille,,general,,F1
+IF / ELSE / AND / NOT (decision-tree keywords),SI / SINON / ET / NON,,pedagogy,"Kept in capitals, as in the source. These are not parsed",O4b
+image product / catalogue,produit image / catalogue,,general,,Y1
+Image Set 047,lot d'images 047,,general,,O2
+imbalance (wheel),balourd,,aocs,,F3
+IMU,centrale inertielle,,aocs,,F3;F5
+(eds.) in references,(dir.),,general,French bibliographic usage,OER4
+in-rush (current),courant d'appel,,eps,standard French electrical term,O2
+(complex integral) in \text{},\text{(intégrale complexe)},,general,"ch. 3, running language",OER1
+Industry Practice,Pratique industrielle,,general,,F1;OER1
+innovation-rejection counter,compteur de rejets d'innovation,,general,,W2
+inrush,courant d'appel,,general,,O4b
+instructor: course staff / simulator console role,enseignant / instructeur,,ops,Glossary note on « instructor ». « instructor console / UI / HTTP channel » → console / interface / canal instructeur,W2
+integration time,temps d'intégration,,general,,Y1
+inter-satellite link (ISL),liaison intersatellite (ISL),,ttc,,F2
+interface register,registre des interfaces,,general,new,OER2
+interlock (arming),verrouillage,,general,Usual French term,D1a;M1
+IRD,document des exigences d'interface,,general,,F1
+ISED RSS-SAT,ISDE CNR-SAT (RSS-SAT),,general,Official Canadian French document series,F3
+Issue (document),Édition,,general,,D1b
+item 8 of 2026-08c,élément 8 de 2026-08c,,general,,M1
+Item ID,identifiant d'article,,general,,F4
+ITU RR Article 9,article 9 du Règlement des radiocommunications (RR),,ttc,official UIT French title,F5
+JCL,niveau de confiance conjoint (JCL),,general,,F1
+jitter,"microvibrations (pointage) ; gigue (temps, horloge, signal)",,general,"Pointing jitter → microvibrations (jitter on first use); timing jitter → gigue. not: gigue (F2,Y1)",F2;F3;OER3;Y1
+k-of-n,k parmi n,,general,standard FR,OER4
+Kapton foil heater,réchauffeur souple en Kapton,,thermal,,F2
+kbps,kbit/s; rpm → tr/min,,general,,O5
+kbps / bps,kbit/s / bit/s,,general,STYLE_FR §5,P2b
+kbps/bps,kbit/s/bit/s in prose (kept in callouts); Whr → Wh; MB → Mo,,pedagogy,,O2
+KDP,point de décision clé (KDP),,general,,F1
+keepalive,maintien de connexion,,general,,D1a
+kEUR / MEUR / EUR (amounts),k€ / M€ / €,,cost,"Every book: 800 k€, 1,0 M€, 50 €/h. not: kEUR (kept) (OER5)",OER3;OER5
+kEUR / MEUR,k€ / M€,,general,,W1
+Key coordination pattern,Schéma de coordination clé,,pedagogy,,M2
+Key Equation(s),Équation(s) clé(s),,pedagogy,,F1
+Key equation. / Key insight: / Key principle: / Key lesson:,Équation clé. / Idée essentielle : / Principe clé : / Leçon clé :,,pedagogy,Same as the facilitator FR,OER1
+Key Equations Reference (section),Rappel des équations clés,,pedagogy,Callout « Key equations — X » stays « Équations clés — x ». not: Équations clés (F1),F1;W1
+Key Takeaway (summary-table header),Point clé,,pedagogy,not: Point essentiel (F1),F1;F2
+Key telemetry,Télémesure clé,,pedagogy,,M2
+knowledge error / control error,erreur de connaissance / erreur de commande,,general,,Y1
+KPI cards,cartes d'indicateurs clés (KPI),,ops,,D2
+L/M/H/C band letters (Low…Critical),"letters kept, glossed « L = faible (Low, 1–4)",,ttc,letters appear in tables and figure,OER4
+latch / latched,"verrou / verrouillé, mémoriser (commanded_mode)",,general,,P1
+latch valve,vanne à verrouillage,,propulsion,Usual,D1a;O1;O4a;O4b
+latch valve / flow-control valve,vanne à verrouillage / vanne de régulation de débit,,propulsion,not: vanne d'isolement / vanne de régulation (Y1),O5;Y1
+Lead / Support (desk table columns),Pilote / Appui,,ui,"Short, matches O3 « Pilote au passage N / En appui",M2
+lead time,délai d'approvisionnement,,general,,F4;OER4;W1
+leaf function,fonction terminale,,general,Standard French functional-analysis usage; « fonction feuille » is a calque,F2
+Learner's Workbook,Cahier d'exercices de l'apprenant,,general,glossary « workbook »; consistent with FR workbook title,D2
+left rail / right rail,colonne gauche / colonne droite,,structure,Web-UI usage,O1
+Level Workbench,atelier par niveau,,general,,D2
+lifeline (SAFE tier),lien de survie,,ops,,M1
+lift (cryocooler ΔT),écart de température,,general,not: élévation (de température) (F2),F2;O3;W2
+"link ""closes"" / budget closure",la liaison « boucle » / bouclage du bilan,,ttc,,OER3
+listen-only,écoute seule,,general,,P3
+lithium plating,dépôt de lithium métallique,,general,,F2;OER2
+LIVE / STALE (header indicator),EN DIRECT / PÉRIMÉ,,ui,STALE → PÉRIMÉ per MCS catalog. LIVE is not a catalog key; translated,D1a
+live budget bar,barre des bilans en temps réel,,general,UI; same caveat,F4
+liveness,vivacité,,general,"Used once, about the watchdog",O1
+load shed stage,niveau de délestage,,structure,The glossary's « échelle de délestage » is kept for the ladder,M1
+load sheet,feuille de charges,,structure,,F2
+Logger (role),kept « Logger » in role list,,general,role tags (FD / SC / GSO / PO / FD-nav / Logger) left as tags,W1
+lost in space (algorithm),algorithme dit « lost in space,,general,"Name kept, standard in French AOCS literature",F3
+lost-in-space acquisition,acquisition « lost-in-space,,general,kept as term of art,M2
+louvers,persiennes,,thermal,,F2
+louvres,persiennes,,general,course FR TM,OER2
+Low/Medium/High/Critical risk category (L/M/H/C),F/M/É/C,,risk,Localised legend; L x C (likelihood × consequence) letters kept because the fenced 5×5 matrix (DNT) shows English axis labels — explained in the legend,W1
+machine-runnable card / advisory card,fiche exécutable par la machine / fiche consultative,,ops,From the glossary note on « procedure card,O4b
+make / buy / reuse / modify (options),"faire / acheter / réutiliser / modifier ; ""custom"" → spécifique",,general,,F4
+"Manual-Scope header text ""training-system documentation",documentation du système de formation,,ui,,M2
+mark bad segment,déclarer (un segment) défectueux,v.,general,,P2a
+Mass waterfall,cascade de masse,,general,,D2
+master class (index),classe de maître,,general,FranceTerme,F5;O2
+maximum predicted environment (MPE),environnement maximal prévu (MPE),,general,,OER4
+"MB, GB, kB (data)","Mo, Go, ko",,general,STYLE §5,W1
+MCS round-robin,rotation sur les postes MCS,,general,,O2
+memory items,actions mémorisées,,obdh,aviation French (« actions de mémoire » also seen),O2
+memory reload,rechargement mémoire,,obdh,,P2b
+memory scrub,nettoyage mémoire (scrubbing),,obdh,not: nettoyage (*scrubbing*) de la mémoire (D1b),D1b;O5;Y1
+MEMS gyroscope,gyroscope MEMS,,aocs,,W1
+MiB / MB,Mio / Mo,,general,STYLE §5 extended to binary prefixes,D1b
+microstrip,microruban,,general,,F3
+Mission Director,directeur de mission,,ops,distinct from Mission Manager (responsable de mission) — source uses both,O2;W2;O3
+Mission Operations,Opérations de mission,,general,,F1
+Mission Operations Engineer,Ingénieur opérations de mission,,general,,OER5
+mitigate (risk strategy),réduire ; mitigation → réduction du risque / mesure de réduction,v.,risk,"Per glossary ""risk mitigation"". Strategy set: accepter / réduire / transférer / éviter",F4
+mode-based power budget,bilan de puissance par mode,,eps,course FR TM,OER2
+mode-gate exemption,exemption de la condition de mode,,ops,gate » → « condition » (O3/O4a),M2
+mode machine promotes itself,l'automate de modes effectue lui-même la transition,,general,,O2
+model-predictive control,commande prédictive,,general,,F3
+momentum dump / data dump,déchargement / vidage,,aocs,glossary,O4a
+"monitor (S12, n.)",moniteur (S12),,general,ESA/CNES usage for PUS S12 monitoring definitions,O5
+MPE,MPE,,general,maximum predicted environment; no French acronym in use,F4
+MRD,document des exigences de mission,,general,,F1
+MTBF / MTTR,temps moyen entre défaillances (MTBF) / temps moyen de réparation (MTTR),,risk,,F4
+MTF,FTM,,general,French acronym (fonction de transfert de modulation),M1
+multipath,trajets multiples,,general,,O5
+Must pass / Should pass,Obligatoire / Souhaitable,,ops,,F4;OER4
+n-fold coverage,couverture multiple d'ordre n,,general,,F2
+N-version (programming),programmation N-versions,,general,,D2
+N/A (table cell),sans objet (S. O. in narrow cells),,eps,sans objet not: S. O (F4),F4;O1
+Name / Team / Role / Position (header),Nom / Équipe / Rôle / poste,,ui,,W1
+NCR,fiche de non-conformité (NCR),,general,,F4
+NEA (noise-equivalent angle),NEA,,general,,F4
+NEXT: (label),PROCÉDURE SUIVANTE :,,ui,Not parsed; « étape » avoided,P1
+noise floor,plancher de bruit,,general,,M2
+null space,espace nul,,general,O3,P3
+Objective (section),Objectif,,general,,P2a;P2b
+Observer worksheets « Team » / « Space usage,fiches d'observation « Équipe » / « Utilisation de l'espace,,pedagogy,Must match W-packet worksheet titles — please align,O3
+OC trip / trip current,disjonction / courant de disjonction,,eps,,M1
+OER edition 1.0,Édition REL 1.0,,general,glossary OER = REL,OER1
+"on-the-wire bytes (« Wire: », « wire 2B 01 »)",octets transmis,,general,,M2
+one-shot HK report,rapport HK ponctuel,,general,,D1b;P2a
+one-shot HK request,demande (HK) ponctuelle,,general,,P3
+Onset (Immediate/Gradual),Apparition (Immédiate/Progressive),,general,,D1a
+operational readiness test (ORT),essai d'aptitude opérationnelle (ORT),,vv,parallels glossary ORR,OER5
+Operations & Sustainment,Exploitation et maintien,,general,,F1
+operator-of-record,opérateur responsable (de l'étape),,ops,,O1
+Orbit Advisor / Class Advisor,assistant orbite / assistant de classe,,general,gloss only,D2
+Orbit Maintenance,Maintien d'orbite,,general,,F1
+out of family,atypique,,general,,O4a
+over-driving FD,FD trop directif,,ops,,O2
+overcurrent trip (flag),disjonction sur surintensité (indicateur de),,general,,Y1
+overvoltage / overtemp / undertemp,surtension / surchauffe / sous-température,,general,,Y1
+OWLT (one-way light time),temps de propagation aller (OWLT),,general,OWLT kept,P1
+owner (procedure step),responsable,,ops,,O1
+owner / contributor (allocation),responsable / contributeur,,general,course FR TM,OER2
+PA (power amplifier),amplificateur de puissance (PA),,eps,glossary has HPA only,F3
+packing factor,taux de remplissage,,general,not: facteur de remplissage (W1),F2;M1;OER2;W1
+PAE,rendement en puissance ajoutée (PAE),,general,,D1b
+pairwise comparison,comparaison par paires,,general,,F1
+Part A/B…,Partie A/B…,,general,Book usage,W1
+Part I — Foundations and Design,Partie I — Fondements et conception,,general,The other OER packets should use these Part titles,OER1
+Part II — Subsystem Design,Partie II — Conception des sous-systèmes,,general,same,OER1
+"Part III — Integration, Verification and Operations","Partie III — Intégration, vérification et opérations",,vv,same,OER1
+Part IV — Engineering Position Reference,Partie IV — Guide de référence des postes d'ingénierie,,ops,référentiel » avoided (glossary: baseline),OER1;OER5
+part number,référence,,general,,F4;W1
+Part V — First-Principles Derivations,Partie V — Démonstrations à partir des premiers principes,,general,glossary derivation = démonstration,OER1
+PASP,plan d'assurance produit et de sécurité,,general,,F1
+Pass / Fail (checklist),Conforme / Non conforme; « réussi/échoué » in gate-status columns,,ui,Context-dependent,W1
+pass criterion,critère de réussite du passage,,ops,Disambiguates « pass » (= succeed) from « passage » (orbital pass),W2
+pass log,journal de passage,,ops,(shift log = main courante per glossary),O2
+Pass N lead / supporting / critical,Pilote au passage N / En appui au passage N / Critique au passage N,,ops,,O3
+pass override (param),forçage de passage,,ops,glossary override = forçage,M2;O4a
+pass override / Pass Override,forçage de passage (*Pass Override*),,ops,glossary « override » → forçage; UI label in backticks unchanged,O2
+pass-set,série de passages,,ops,,O3;W2
+pause point,point d'arrêt,,general,,O2
+Payload Lead,Responsable charge utile,,general,,F1
+Payload Lead / Cost / Compliance Engineer,Responsable charge utile / Ingénieur coûts / Ingénieur conformité,,cost,OER ch1 table 1.4,OER5
+payload-safe,mise en sécurité de la charge utile,,general,,W2
+per-position playbook,conduite à tenir par poste,,ops,Ops-manual idiom; « playbook » has no clean European equivalent,O3
+per-step playbook,conduite étape par étape,,general,Same family,O3
+performance criteria,critères de performance,,general,,F2
+permanent magnet,aimant permanent,,aocs,,W1
+permission gate,autorisation,,ops,,Y1
+person-months,personnes-mois,,general,,OER4
+Phase B+,à partir de la phase B,,general,,F3
+Pitfalls (bullet label),Écueils,,ui,Glossary « pitfall → écueil,O3
+placeholder (procedure),procédure provisoire,,ops,,O4b
+plane-of-array constant,constante dans le plan du générateur,,eps,,F2
+playbook (index),guide,,general,,F5
+plume impingement,impact du jet,,general,,F5
+PM/SE/MA,gestion de projet / IS / AM,,general,"IS = ingénierie système, AM = assurance mission",F4
+polarisation loss,perte de polarisation,,ttc,,F3
+policy gate (10° HIGH gate),condition de politique d'exploitation,,ops,,O3
+position-score card,fiche d'évaluation par poste,,ops,,O2
+"Position ""Systems Engineer"", etc","Ingénieur système, Analyste de mission, Ingénieur charge utile…",,cost,same as FR facilitator book Annexe A,D2
+Possible negative outcomes / deviations (card field),Issues défavorables possibles / écarts,,ops,card field label not: Issues défavorables / écarts possibles : (O4a),O4a;O4b
+pouch cell,élément souple (pouch),,eps,,F2
+power-cycle,effectuer un cycle d'alimentation,v.,eps,,M2
+Power Distribution Module (PDM),module de distribution de puissance (PDM),,ttc,Parallels the glossary PDU entry,M1
+Power/Thermal/Propulsion/Structures/Software Engineer,Ingénieur puissance/thermique/propulsion/structures/logiciel,,eps,,F1
+PPE,EPI,,general,French equivalent,F3
+PPS boundary,front PPS,,general,,P3
+PPS edge,front PPS,,general,,P1
+Practical:,Travaux pratiques :,,general,,D2
+pre-commanding,précommander,,general,,O1
+Pre-A Concept Studies,Études de concept,,general,,F1
+pre-pass briefing,briefing avant passage,,ops,,O3
+pre-pass briefing / post-pass debrief,briefing avant passage / débriefing après passage,,ops,glossary has débriefing; briefing is European usage,O2
+Pre-shift / Across passes,Avant le quart / Au fil des passages,,ops,,O3
+pre-staging a command,préparer la commande à l'avance,,general,,O2
+pre-step setup,préparation préalable,,general,,O3
+Preliminary Design & Tech Completion,Conception préliminaire et achèvement des technologies,,general,,F1
+Prerequisites,Prérequis,,general,,F1
+Prerequisites: / SpaceCDF Tab(s):,Prérequis : / Onglet(s) SpaceCDF :,,ui,Header labels,F2
+presence bar,barre de présence,,general,,D2
+preservation move,geste de préservation,,general,,O3
+procedure panel / FDIR panel / commanding panel,panneau des procédures / panneau FDIR / panneau de commande,,ui,,O1
+Procedure Steps,Déroulement,,ops,STYLE_FR §13,P2b
+"proceed to Step N"" / ""go to Step N"" (prose branching)",Étape suivante : étape N (…) » ; in GO/NO-GO lines « … — étape N,,general,"BRIEF_MULTIFILE: no French jump verb. The step is named as a noun, never with passer/aller/reprendre. See §3",P2b
+prograde / retrograde,dans le sens de la vitesse / rétrograde,,general,,F3
+program-track / autotrack,poursuite programmée / poursuite automatique,,general,,O1
+Programme Director,directeur de programme,,general,,P3
+propagate-only,propagation seule,,general,,W2
+proto-flight test sequence,séquence d'essais protovol,,vv,glossary protovol,W1
+PSD (random vibration),DSP ; ASD kept in the table header,,structure,TM usage,OER3
+PSD / ASD,"DSP (prose), ASD kept in table header",,ui,DSP is standard French; ASD left as source label,F4
+PUG (launcher user's guide),manuel utilisateur du lanceur (PUG),,general,,W1
+pumped fluid loop,boucle fluide pompée,,ops,,F2
+pushbroom,imageur à barrette (*pushbroom*),,general,,F4
+pushbroom / whiskbroom / framing,push-broom / whisk-broom / matriciel,,general,usual French EO usage,F5
+pushbroom imager,imageur à balayage par barrette (pushbroom),,general,,M1
+Q&A,questions-réponses,,general,,W1
+QRH challenge-response format,format question-réponse des QRH aéronautiques,,general,,W2
+QRH challenge–response format,format question-réponse (*challenge–response*) des QRH de l'aviation,,general,challenge » column → « Question,O2
+QRH problem-first format,format « problème d'abord » des QRH,,general,,O2
+quasi-static,quasi statique,,general,,F4
+"quaternion, MEKF, innovation gate","quaternion, MEKF, seuil d'innovation",,ops,,Y1
+Quick Reference (section),Aide-mémoire,,general,glossary cheat sheet,M2;W1;W2
+quick-reference card(s),fiche(s) aide-mémoire,,ops,glossary « fiche de procédure » + « aide-mémoire,O4a
+quiescent (power profile),repos,,eps,not: au repos (P1),F2;M1;P1
+RACI,"R = réalise, A = approuve, C = consulté, I = informé",,general,,D2
+Radio Front-End,frontal radio,,ttc,glossary front end = frontal,M2
+rail (CubeSat) / guide channel,rail / glissière,,structure,,F4
+rain fade,évanouissement dû à la pluie,,general,,OER3
+random vibration PSD,DSP des vibrations aléatoires,,structure,,W1
+rate ladder / rung,échelle des débits / palier,,ops,glossary rate tier → palier,P2a
+rate ladder / TM ladder,échelle des débits / échelle TM,,ops,,O4b
+rate magnitude,norme de la vitesse angulaire,,general,,O2
+rationale,justification,,general,,F1
+RBF pin,goupille RBF (*Remove Before Flight*),,general,,W1
+re-baseline,recaler le référentiel,v.,general,,O4b
+re-baselining,mise à jour du référentiel,,general,,F5
+re-commissioning,remise en service,,general,,P2a
+re-discipline / disciplined,rétablir l'asservissement / asservi,v.,general,= O4a,M2
+re-promote / demotion,se repromouvoir / rétrogradation,,general,,P3
+reaction-wheel line,ligne des roues de réaction,,aocs,,O4b
+read-aloud notes,notes de la lecture à voix haute,,general,,W2
+read-and-do checklist,liste de vérification « lire et faire,,general,,O4a
+readiness flag / imaging gate,indicateur de disponibilité / condition de prise de vue,,ops,,D1a
+readout,lecture,,general,,P3
+recovery escalation level,niveau d'escalade de la reprise,,general,glossary recovery → reprise,O5
+reflectarray,"reflectarray* (italic, kept)",,general,,F4
+reliability block diagram,diagramme de fiabilité,,general,,OER4
+Remote (likelihood 1),Très faible,,general,TM,OER4
+remove-before-flight pin,goupille *remove-before-flight* (RBF),,general,,OER3
+reprocessing campaign,campagne de retraitement,,general,,P3
+request housekeeping,demander les données de servitude,,general,glossary housekeeping,P2a
+Required Telemetry / Required Commands,Télémesure requise / Télécommandes requises,,general,,P2a;P2b
+resistojet / warm gas,résistojet / gaz chaud,,general,,OER3
+response record,fiche de réponse,,general,,OER5
+retargeting,redépointage,,general,,F3
+return loss / mismatch loss,affaiblissement de réflexion / pertes par désadaptation,,ttc,ITU-style. \text{Return Loss} translated in maths (running words) not: affaiblissement de réflexion / perte de désadaptation (OER4),F4;OER4
+review board Chair / X reviewer,"Président / Évaluateur système, technique, risques, opérations",,general,function labels (STYLE §6.2),W1
+review-of-design record,procès-verbal de revue de conception,,general,,OER4
+RF Bridge,passerelle RF (RF Bridge),,ttc,product name glossed,M2
+right-/left-handed,direct / indirect,,general,French math convention,D1a
+risk priority number (RPN),indice de priorité de risque (RPN),,risk,AMDEC practice (IPR) — kept RPN acronym as in formula,OER4
+risk register P / I columns,"P (probabilité) / I (impact), letters kept",,risk,,D2
+risk score,indice de risque,,risk,,F4;OER4
+RMP,plan de gestion des risques,,general,,F1
+(magnetorquer) rod,barreau,,aocs,,O2
+roll-off,facteur de retombée,,general,,F3
+roll-up vs allocation,consolidation ascendante / allocation descendante,,general,,F2
+round-robin (console rotation),tour de rôle,,ops,Natural French. Each « station » of the rotation is an « atelier,W2
+round-robin exercise (index),exercice de rotation,,pedagogy,,F5
+round-trip test,essai aller-retour,,vv,,O4a
+RPM,tr/min,,general,STYLE §5; values unchanged,P1
+RSD,document de spécification des exigences,,general,,F1
+RTM,matrice de traçabilité des exigences (RTM),,general,,F1
+rule out the ground first,éliminer d'abord l'hypothèse du sol,,general,,OER5
+"ruling (R1, 2026-08 ruling)",décision,,general,,M1
+run flat (card without branches),exécutée sans ses branchements,,ops,not: exécutée à plat (P3),O4b;P3
+runbook,manuel d'exploitation,,general,,O3
+rung (of the rate or load-shed ladder),échelon,,ttc,"tier → palier (glossary « rate tier »). not: palier (F3,O4a,P1,P2b); barreau (M1,W2)",D1b;F3;P1;P2b;W2;Y1;F5;M1;O2;O3;O4a;M2;O4b;P3
+Runnability note,Remarque sur l'exécutabilité,,general,,P3
+RVM,matrice de vérification des exigences (RVM),,general,,F1
+S-band PA,PA bande S,,ttc,"PA kept, as in identifiers",O4b
+S-curve,courbe en S,,general,,OER4
+S1.x acceptance / execution,acceptation S1.1 / exécution S1.7,,general,Service IDs unchanged,P2b
+Safe,Survie,,general,,F1
+"Safe / Nominal (mode columns, Table 8.4)",Survie / Nominal,,ui,"glossary ""safe mode → mode survie",OER2
+safe hold / sun-safe hold,attente sûre / attente sûre au Soleil,,aocs,COARSE_SUN kept,O4b
+safe the link / safed,mettre la liaison en configuration sûre,v.,ttc,,O4a
+safe-mode candidate,candidat au mode survie,,general,,O3
+SAFE_POINT « safe point » (prose),pointage de survie,,general,Consistent with « mode survie,M1
+safe (v.) a subsystem,mettre en sécurité,v.,general,mode survie » reserved for safe mode per glossary,O3
+SAFE tier,palier SAFE,,ops,glossary,M2
+sanity threshold,seuil de vraisemblance,,general,Consistent with glossary « sanity check → contrôle de vraisemblance,O3
+scale height,hauteur d'échelle,,general,standard,OER2
+scan loss,perte de balayage,,ttc,,F3
+scheduler (S11),programmateur (de bord) ; schedule → plan bord,,general,Follows the glossary entry for « plan bord,D1b
+scope creep,dérive du périmètre,,general,,F4;F5
+scope creep / scope changes,dérive du périmètre / modifications du périmètre,,general,,OER5
+score card (position),carte de score,,ops,,W2
+"scorecard (GO/NO-GO, pass-set)",grille,,ops,grille GO/NO-GO de fin de passage,W2
+screening authority,autorité de surveillance,,general,,P3
+screening tool,outil de tri,,general,course FR TM,OER2
+script (rehearsal),scénario ; to script → scénariser,,general,,OER5
+scrubbing,nettoyage mémoire,,obdh,,F4
+SE engine,moteur d'ingénierie système (SE engine),,general,,F1;OER1
+SEB (single-event burnout),claquage par ion lourd (SEB),,propulsion,,F4
+seizure / seized (wheel),grippage / grippée,,aocs,bearing lock,P2a
+self-assessment,autoévaluation,,general,,W2
+SEMP,plan de management de l'ingénierie système,,general,,F1
+Senior Lecturer,maître de conférences,,general,"Nearest European rank (see §2, back_cover)",W2
+separation switch,contact de séparation,,general,,M2
+setpoint,consigne,,general,standard FR control vocabulary,O5;W2
+setpoint / sink / lift (cooler),consigne / puits / relèvement,,thermal,,P1
+SEU,événement singulier (SEU),,general,,P3
+severity levels Informational/Caution/Warning/Severe/Critical,Information / Attention / Avertissement / Grave / Critique,,general,glossary caution/warning; STYLE §14 ladder,O5
+shadow git repository,dépôt git fantôme,,general,,D1a
+shadow half-angle β,demi-angle de l'ombre,,general,new,OER2
+Shall/should/will,doit » / « devrait » / futur de l'indicatif,,general,,F1
+shimming,calage,,general,,F3
+shipped (card / index / thresholds),livré(e),,ops,la fiche livrée » = the file shipped in the simulator,O4b
+shorthand library,répertoire d'abréviations,,general,,O2
+shunt regulator,régulateur shunt,,eps,,F2
+shutter,obturateur,,general,,P1
+shutter / cal lamp,obturateur / lampe d'étalonnage (lampe interne),,general,,O4a
+shutter / filter wheel,obturateur / roue à filtres,,aocs,,O5
+shutter / filter wheel / dark frame / flat field,obturateur / roue à filtres / trame d'obscurité / champ plat,,aocs,,Y1
+shutter control (RSSSA),interruption de service (shutter control),,general,not: contrôle d'obturation (*shutter control*) (W1),F1;OER1;W1
+simulation campaign,campagne de simulations,,general,,OER5
+"simulation controller (""the Universe"")",contrôleur de simulation (« l'Univers »),,general,,OER5
+simulations officer / test conductor,officier de simulation / directeur d'essai,,vv,,OER5
+sine / random vibration,vibrations sinusoïdales / aléatoires,,structure,,F4
+single-page application,application monopage,,general,,M2
+single-string,non redondé / chaîne non redondée,,general,,O4b
+sink (thermal),puits (thermique),,thermal,,O5
+situational-awareness header,bandeau de connaissance de la situation,,ttc,,D1a
+skew wheel,roue inclinée,,aocs,3 + 1 inclinée,OER3
+skew wheel / cant angle,roue inclinée / angle d'inclinaison,,aocs,,F3
+slew rate / slew time,vitesse de basculement / durée de basculement,,aocs,follows glossary slew → basculement,F3
+slosh / CG migration,ballottement des ergols / migration du centre de gravité,,general,,F3
+SMART letters,"Spécifique, Mesurable, Atteignable, Rattachée au besoin (pertinente), Traçable",,general,Keeps the S-M-A-R-T column letters,W1
+smeared (image),filée,,general,,O4a
+smearing,filé,,general,,M1
+smoke test,test de fumée,,vv,,D2
+snapshot (simulator state),instantané,,general,Usual French term,W2
+softphone headset,casque téléphonique logiciel,,general,,O2
+Software Engineer (OBDH and flight software),Ingénieur logiciel (OBDH et logiciel de vol),,obdh,,OER5
+Software Upload,chargement de logiciel,,obdh,glossary upload = envoyer; « téléversement » avoided (Canadian),O4a
+solar absorptance / IR emittance,absorptivité solaire / émissivité infrarouge,,eps,Aligned with glossary absorptivity/emissivity,F2
+solar-array wing,aile (du générateur solaire),,eps,,O4a
+solar wings,ailes solaires,,eps,,O2
+solder joint / conformal coating / staking,joint de brasure / vernis de tropicalisation / collage,,structure,,F4
+SpaceCDF Textbook* / *SpaceCDF Installation Guide,Manuel SpaceCDF* / *Guide d'installation de SpaceCDF,,general,Align with whatever title the textbook agents use,W1
+sparkline,mini-courbe de tendance,,general,,O1
+specific energy,énergie massique,,general,,W1
+specific impulse,impulsion spécifique (feminine: « l'$I_{sp}$ … élevée »),,propulsion,,F3
+spillover / blockage,débordement / masquage,,general,,F3
+SSPA back-off,recul de puissance du SSPA,,general,,D2
+SSPA operating point / VSWR,point de fonctionnement du SSPA / TOS,,general,,Y1
+stack / heap,pile / tas,,obdh,,Y1
+stage directions,indications de mise en scène,,general,,F5
+stale HK,HK périmée (« péremption »),,general,,Y1
+staleness / stale,péremption / périmé,,general,glossary,M2
+stand-up (morning),point du matin,,general,,W2
+standing abort authority,autorité permanente d'interruption,,general,,O4a
+standoff / spacer,entretoise / colonnette,,structure,,F4
+star camera,senseur stellaire,,general,Same device as the glossary « star tracker ». The manual uses both names,M1
+STDP (CSA programme),PDTS,,general,as in FR facilitator book (l. 866); FAST and CSEP kept,D2
+Step / Action / TC / Code / Confirm / Notes (table header),Étape / Action / TC / code / Confirmation / Remarques,,reg,,O4a
+Step N: Title,"Étape N : Titre (capital after the colon, heading style)",,general,,P2b
+stepper,barre d'étapes,,general,,D2
+sticky (parameter),verrouillé,,general,,F1;OER5
+store (S15 packet store),mémoire de paquets,,general,Named stores: mémoire HK / événements / science / alarmes. not: mémoire HK / événements / science / alarmes (Y1),D1b;Y1
+store-and-flag,enregistrer et signaler,,general,,O4a
+store-and-forward,stockage et retransmission,,general,not: relais en mode différé (F1),D2;F1;F2
+stowed (antenna),repliée ; « antenne en position de repos » for GS stow,,ttc,,P2a
+stowed configuration,configuration repliée,,structure,,F4
+straw-man alternative,solution alternative de façade,,general,,F1
+strip (imaging),bande,,ttc,,O3;P3
+structure report,rapport de structure,,general,,P3
+stub (vr_stub),bouchon,,general,Standard French software term,D1a;P1
+stuck wheel,roue bloquée,,aocs,,P2a
+sun glint,reflet solaire,,aocs,not: reflet spéculaire du Soleil / reflet solaire (F5),F5;M2
+Sun-incidence angle on the array,angle d'incidence solaire sur le générateur,,eps,new,OER2
+sun-safe hold,attente sûre au Soleil,,aocs,COARSE_SUN kept. not: maintien sûr pointé Soleil (W2); maintien solaire sûr (Y1),P3;W2;Y1
+survival-only power distribution,distribution de puissance de survie seule,,eps,,P3
+"SVG label ""17 SE processes",17 processus d'IS,,ui,fits the 80 px circle,OER1
+swimlane view,couloirs d'activité,,reg,standard French process-diagram term,O2
+swing criterion,critère pivot,,general,,OER1
+swing weighting,pondération par amplitude (*swing weighting*),,general,,F1
+Systems Engineer,Ingénieur système,,general,,F1
+systems engineering management plan,plan de management de l'ingénierie système,,general,,OER5
+Table header Step / Action / TC / Code / Confirm / Notes,Étape / Action / TC / code / Confirmé / Remarques,,reg,,O4b
+Tailoring matrix / requirements baseline / functional baseline,matrice d'adaptation / référentiel d'exigences / référentiel fonctionnel,,general,glossary / STYLE §17,D2
+tape-spring dipole,dipôle à ruban-ressort,,general,,D1b
+target-cued,déclenché sur cible,,general,,F5
+TCA,"TCA (instant de plus courte distance), gloss once",,general,,O5
+"TCXO, RNG, seed","TCXO, générateur aléatoire (RNG), graine",,general,,M2
+Technical Assistance Agreement (TAA),accord d'assistance technique (TAA),,general,,F4
+telemetry mosaic,mosaïque de télémesure,,general,Literal; UI concept,O1
+temperature derating,déclassement en température,,general,,F2;OER2
+Thermal / Payload (position labels outside callouts),Thermique / Charge utile,,thermal,,O2
+Thermal: / Payload: / Propulsion: (row prefix),Thermique : / Charge utile : / Propulsion :,,thermal,,O4a
+Thermal engineer,thermicien,,thermal,,O5
+Think about it. (callout),Matière à réflexion.,,pedagogy,new OER callout not: Question de réflexion (OER4),OER1;OER4;OER2
+threadlocker,frein-filet,,general,,F4
+three-wheel mode,mode trois roues,,aocs,,P2a
+tick (simulation step),pas de simulation,,general,Instructor catalog « pas {{n}} ». not: top (P3); pas de calcul (W2),D1a;P3;W2
+tick / ticking (simulator),cycle / cadencement (des sous-systèmes),,general,,M1
+ticket,fiche (d'anomalie),,general,glossary,O4a
+tier (supplier),niveau (Niveau 1 maître d'œuvre/intégration…),,ops,,W1
+Tier 1 agent,agent de niveau 1,,ops,,F5
+Tier 1/2,niveau 1/2,,ops,,F1
+Time-Critical (column),Critique en temps,,ui,Not « Contrainte de temps ». QA m14.,M2;QA
+time jump,saut de temps,,general,,P2a
+time-tagged schedule / tags,commandes datées / programmes de commandes datées,,general,CNES « TC datées,O4b
+Times of day. « 09:00,"09 h 00 », with the digits kept. « < 6:00 » (a duration target) is unchanged",,general,,W2
+tip-off,vitesses résiduelles de séparation (tip-off),,general,,O1
+tip-off rate,vitesse de basculement à la séparation (*tip-off*),,general,,F4
+tip-off rates,vitesses de séparation,,general,,P1
+TMR,redondance modulaire triple (TMR),,ttc,,F4
+top header / status bar,en-tête / barre d'état,,ui,,O1
+"train like you fly, fly like you train","kept English, italic, French gloss in parentheses",,general,,OER5
+trainee,stagiaire,,general,Epicene (STYLE_FR §6),W2
+trim burn,poussée de correction,,propulsion,glossary burn = poussée not: poussée d'appoint (Y1),P3;Y1
+tripwire (test),fil-piège,,vv,,D1b
+TRR (test readiness review),revue d'aptitude aux essais (TRR),,vv,"not: TRR, ""avant essais (F4)",F1;F4
+tumbling / tumble,culbutage,,aocs,glossary « tumbling ». not: rotation incontrôlée (O4b),O4b;P3
+tumbling-average area,surface moyenne en culbutage,,aocs,"glossary ""tumbling → culbutage",OER2
+turnover form (handover),fiche de passation,,ops,Glossary « passation de consignes,W2
+turnstile antenna,antenne tourniquet,,ttc,,F3
+UNCLASSIFIED — Mission Operations,NON CLASSIFIÉ — Opérations de mission,,general,,M1
+uncooled equilibrium,équilibre non refroidi,,general,,O3;W2
+under-voltage lockout,coupure sur sous-tension,,eps,not: verrouillage de sous-tension (P3),F2;P3
+UNDRIP,DNUDPA (UNDRIP),,general,official UN French acronym,D2
+unswitchable / switchable (PDM line),non commutable / commutable,,general,,M2
+unswitchable / switchable line,ligne non commutable / commutable,,general,Glossary has « ligne d'alimentation commutable,M1
+UPS backup,alimentation de secours (UPS),,general,,M2
+upwelling,remontées d'eau froide (upwelling),,payload,,M1
+User Representative,Représentant des utilisateurs,,general,,F1;F5
+VCRM,matrice de références croisées de vérification (VCRM),,vv,,F4
+Verification Control Document,document de contrôle de la vérification (VCD),,vv,,F4
+Verification Criteria,Critères de vérification,,vv,,P2a;P2b
+verification cross-reference matrix (VCRM),matrice de références croisées de vérification (VCRM),,vv,,OER4
+virtual environment,environnement virtuel,,general,,D2
+vis-viva,équation de la force vive,,general,,OER5
+voice-loop chat,messagerie de la boucle vocale,,ops,,O1
+Walker constellation,constellation de Walker,,general,,F2
+walkthrough (Commissioning Sequence Walkthrough),déroulé (Déroulé de la séquence de recette en orbite),,general,Consistent with « Déroulement » for Procedure Steps,M2
+wall clock,horloge murale,,general,,M2
+warm-up cycle,cycle de réchauffage,,general,,M2
+watch-item,point de surveillance,,general,,O4a
+watch-list,liste de surveillance,,general,plain usage,O5
+Watch out,Attention,,general,STYLE §12 (Warning → Attention),F5
+Watch out. / Common mistake,Attention. / Erreur fréquente,,general,as F5,OER5
+watchdog kick,rafraîchissement du chien de garde,,obdh,,W2
+watchdog timeout,expiration du chien de garde,,obdh,,Y1
+Watches and owns,Surveille et détient,,general,"Appendix B label, terse",F5
+water-leaving radiance,luminance émergente de l'eau,,payload,Ocean-colour term,M1
+waterfall (budget plot),(bilan) en cascade,,general,per STYLE example 7,OER3
+western boundary current / gyre,courant de bord ouest / gyre,,payload,,Y1
+What-If branch,branche « Et si ?,,general,,W2
+wheel (Python package),wheel,,aocs,"kept, technical term",M2
+whip (antenna) beacon,balise à antenne fouet,,ttc,,F5;O1
+whitelist (allowed_func_ids),liste d'autorisation,,general,Matches glossary « allowlist,O1
+wing (solar),panneau (solaire),,eps,Glossary: « panneau solaire » for one panel/wing; array = générateur solaire,P1
+"Wire: (encoding label, procedures)",Octets émis :,,ui,Not a parser key. not: Codage binaire : (P2a),P1;P2a
+wire format,format sur la liaison,,general,,D1b
+within N s (Verify prose),sous N s,,general,Terse procedural French,P3
+Wk 0 / Wk 3,Sem. 0 / Sem. 3,,general,,D2
+Worked sanity check / Sanity check / Worked check,Contrôle de vraisemblance détaillé / Contrôle de vraisemblance / Contrôle détaillé,,general,glossary « sanity check,F5
+Worked sanity check / Sanity check / Worked check / Worked estimate,Contrôle de vraisemblance détaillé / Contrôle de vraisemblance / Contrôle détaillé / Estimation détaillée,,general,as F5,OER5
+workmanship,qualité de fabrication,,vv,,F4
+Worksheet N.N (title),Fiche N.N,,pedagogy,Glossary gives « Fiche 5.2 »; used in headings and cross-refs,W1
+wrap (counter),retour à zéro,,general,,O3
+wrap factor,coefficient d'enveloppe,,general,,F4
+write-protected,protégé en écriture,,general,,P3
+Y / N,O / N,,general,Students tick letters; localised,W1
+Yagi / crossed Yagi,Yagi / Yagi croisée,,ttc,,F3
+yield strength / ultimate strength,limite d'élasticité / résistance à la rupture,,structure,Standard French mechanics. FoS columns: « FoS élasticité / FoS rupture,F4
+zero-crossing,passage par zéro,,ops,,OER3
+Flight Director (console position label),Direction de vol,n.f.,ops,"Person: directeur de vol (FD). UI FLIGHT DIRECTOR → DIRECTION DE VOL. not: Direction du vol (UI catalog, Y1); Directeur de vol (desk table, M2)",G1
+Power & Thermal (console position),Puissance et thermique,n.f.,ops,"UI POWER & THERMAL → PUISSANCE ET THERMIQUE. not: Énergie et thermique (UI catalog, Y1)",G1
+Flight Dynamics (console position),Dynamique du vol,n.f.,ops,Books cite « Dynamique du vol » [Flight Dynamics] at first mention.,G1
+Payload Operations (console position),Opérations charge utile,n.f.pl.,ops,,G1
+FDIR / Systems (console position),FDIR / Systèmes,n.m.,ops,,G1
+Mission Analyst (CDF position),Analyste de mission,n.m.,cdf,"not: Analyste mission (F1, OER1)",G1
+Communications / Comms Engineer (CDF position),Ingénieur télécommunications,n.m.,cdf,"not: Ingénieur communications (F5, OER5, D2)",G1
+Engineering-Position Reference / Operations-Position Reference,Guide de référence des postes d'ingénierie / d'opérations,n.m.,pedagogy,not: Référentiel des postes … (F5) — « référentiel » is reserved for baseline,G1
+per-role background briefing,fiche de rôle / fiche de préparation,n.f.,pedagogy,STYLE §18 ex. 11. not: dossier (de préparation) (F5),STYLE
+Key insight: (callout),Idée essentielle :,n.f.,pedagogy,"not: Point clé (F3, OER3), Point essentiel (W1), Enseignement clé (OER2)",F1
+Key lesson: (callout),Leçon clé :,n.f.,pedagogy,not: Enseignement clé (O5),F1
+Standard reference. (callout),Référence normative.,n.f.,pedagogy,"not: Norme de référence (D2), Accès aux normes (D2)",F5
+Sensitivity check: (callout),Contrôle de sensibilité :,n.m.,pedagogy,"not: Vérification de sensibilité (OER1), Analyse de sensibilité (W1)",G1
+Pass. (verdict in worked checks),Conforme.,adj.,pedagogy,not: Validé (OER3),G1
+Systems / Technical / Risk / Operations reviewer,Évaluateur système / technique / risques / opérations,n.m.,se,not: Relecteur … (OER4),W1
+"Monitor: / Check: (procedure labels, not parsed)",Surveiller : / Contrôler :,v.,ops,"Infinitive (STYLE §2). not: Surveillance : (P2a), Contrôle : (P2a)",P3
+Document ID (document control block),Référence du document,n.f.,general,"not: Identifiant du document (M2, D1b)",M1
+health check (procedure title / routine check),bilan de santé,n.m.,ops,LEOP-002 Bilan de santé initial; NOM-009 Bilan de santé de routine. not: contrôle de santé (W2),O4a
+upload (software image),charger / chargement,v.,obdh,"NOM-006 « Chargement de logiciel ». not: téléverser / téléversement (P2b, F4) — Québec-flavoured",O4a
+amber (status colour),orange,adj.,ui,"SpaceCDF/ops status colours vert / orange / rouge; MCS alarm colours stay vert / jaune / rouge (STYLE §14). not: ambre (F1, O1)",D2
+Speed multiplier (simulator),facteur d'accélération,n.m.,ops,not: multiplicateur de vitesse (W2),O1
+Space usage (observer worksheet),Occupation de l'espace,n.f.,pedagogy,Worksheet title in peer_review_worksheets. not: Utilisation de l'espace (O3),W2
+SDR (system design review),revue de définition du système (SDR),n.f.,se,not: revue de définition système (F1),OER1
+shock response spectrum (SRS),spectre de réponse au choc (SRS),n.m.,structure,English acronym kept (ECSS usage). not: SRC (F4),OER3
+Course Textbook (facilitator book) — title / running head / footer-fr,Manuel du cours (SpaceCDF — Manuel du cours),n.m.,pedagogy,not: Manuel de cours (F1 running head); footer « Manuel de l'animateur » (source footer-fr),G1
+Course Workbook / Learner workbook,Cahier d'exercices du cours,n.m.,pedagogy,D2 « Cahier d'exercices de l'apprenant » for the Learner's Workbook document name,F5
+$ amounts (currency),k$ / M$ / G$ ; « $ CA » / « $ US » only when the source states CAD/USD,n.m.,cost,not: « k$ US » added where the source gave no currency (F3),G1
+re-command (verb),commander de nouveau / renvoyer la commande,v.,ops,Never « recommander » (reads as *recommend*). « re-command the setpoint » → commander de nouveau la consigne; « re-commanding the mode » → renvoyer la commande de mode; « command back to LOW » → commander le retour à LOW. QA M1/M2.,QA
+escalate (verb),faire remonter (l'anomalie) / remonter / transmettre à,v.,ops,"Never « escalader ». To a person or team: « faire remonter au directeur de vol / à l'équipe d'ingénierie »; to a procedure: « passer à CTG-0xx / EMG-0xx »; bare: « faire remonter l'anomalie ». Noun « escalade » (niveaux d'escalade, échelle d'escalade) stays. QA m1.",QA
+investigate (verb),examiner / analyser / instruire,v.,ops,Never « investiguer ». « investigate before retrying » → analyser la cause avant toute nouvelle tentative; « investigate from the bootloader » → poursuivre l'analyse depuis le chargeur d'amorçage. QA m2.,QA
+solid-state storage,mémoire de masse à l'état solide / mémoire de masse,n.f.,obdh,Never « mémoire statique » (that is SRAM). QA M6.,QA
+School of Engineering Design and Teaching Innovation (SEDTI),École de conception et d'innovation pédagogique en génie (ECIPG),n.f.,general,Official uOttawa name and acronym (STYLE §17: official names as published). Not « École d'innovation en conception et en enseignement du génie (SEDTI) ». QA M7.,OWNER;QA
+pass the margin gate,la marge satisfait au critère (gate),,ttc,Not « le seuil de marge est franchi » (reads as *limit violated*). QA M8.,QA
+forward power (TX),puissance (d'émission) incidente,n.f.,ttc,`tx_fwd_power`. Not « puissance directe ». QA m11.,QA
+FEED FRESH (RF sim status),FLUX À JOUR,,ui,Pairs with FLUX DÉGRADÉ / FLUX PÉRIMÉ. Not « FLUX FRAIS ». QA m9.,QA
+Sponsor / Funder,Commanditaire / financeur,,ui,Keeps both roles. QA m10.,QA
+end-of-week (course week),de clôture de la semaine / à la fin de la semaine,,pedagogy,« fin de semaine » means *weekend* in Canada and is avoided (STYLE §17). QA m17.,QA
+background briefing (per role),fiche de préparation (par rôle),n.f.,pedagogy,« Per-role background briefings » → Fiches de préparation par rôle (HARMONISATION §4). QA m19.,QA
+cross-strap (switch to the other unit),basculer (couplage croisé) sur l'autre …,v.,aocs,Not « basculer en croisé ». QA m20.,QA

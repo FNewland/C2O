@@ -20,7 +20,7 @@ created.
 For each breakpoint we list:
 - **Purpose** — which Week 3 session it serves
 - **Mission phase** — EOSAT-1 phase number (0=PRE_SEPARATION,
-  3=BOOTLOADER_OPS, 4=LEOP, 5+=COMMISSIONING/NOMINAL)
+  3=BOOTLOADER_OPS, 4=LEOP, 5=COMMISSIONING, 6=NOMINAL)
 - **Spacecraft state** — power lines, AOCS mode, antennas, payload, battery
 - **Pass geometry** — which ground station, AOS minus how many minutes
 - **Existing scenario** — YAML file path to use, or **NEW**
@@ -32,13 +32,13 @@ For each breakpoint we list:
 **Purpose.** Training Day 1 round-robin, Training Day 2 dry-runs, and
 the *nominal-shift* example used for procedure familiarisation.
 
-**Mission phase.** 5 (NOMINAL).
+**Mission phase.** 6 (NOMINAL).
 
 **Spacecraft state.**
 
 - All antennas deployed; TT&C TX in low-rate beacon between passes,
   high-rate during a contact.
-- AOCS mode: NADIR pointing, body rates < 0.01 °/s, reaction wheels
+- AOCS mode: NOMINAL (4, nadir pointing), body rates < 0.01 °/s, reaction wheels
   spun up.
 - EPS: battery 90% SoC, solar arrays nominal, all main power lines ON.
 - TCS: heaters cycling on thermostat, all zones in green band.
@@ -135,41 +135,36 @@ briefing: |
 initial_conditions:
   spacecraft_phase: 4
   override_passes: true
-  override_state:
-    aocs.mode: NADIR_PREP
-    aocs.body_rates_deg_s: 0.04
-    eps.battery_soc_pct: 90
-    eps.power_lines:
-      htr_bat: ON
-      htr_obc: ON
-      aocs_wheels: ON
-      ttc_tx: ON
-      payload: OFF
-      fpa_cooler: OFF
-      htr_payload: OFF
-    payload.mode: OFF
-    obdh.fdir_table: leop_only
-    tcs.payload_zone_c: 5.0
+  soc_pct: 90.0
+  power_lines:
+    ttc_tx: true
+    htr_bat: true
+    htr_obc: true
+    aocs_wheels: true
+    payload: false
+    fpa_cooler: false
+    prop: false
+  params:
+    0x020F: 3        # aocs.mode = COARSE_SUN (COM-005 takes it to NOMINAL 4)
+    0x0600: 0        # payload.mode = OFF
 
 events:
-  - time_s: 600
-    type: instructor
-    action: trigger_optional
-    value: eps_overcurrent_payload
-    description: "Optional: easy anomaly during COM-009 payload power-on"
+  - time_offset_s: 600
+    action: message
+    params:
+      text: "Optional: easy anomaly - inject eps overcurrent on line 3 during COM-009 payload power-on"
 
-  - time_s: 5400
-    type: instructor
-    action: trigger_optional
-    value: fpa_overtemp
-    description: "Optional: medium anomaly during FPA cool-down"
+  - time_offset_s: 5400
+    action: message
+    params:
+      text: "Optional: medium anomaly - inject tcs cooler_failure during COM-010 FPA cool-down"
 
 expected_responses:
-  - { category: command, description: "Transition to COMMISSIONING phase (S8 func_id 80)" }
+  - { category: command, description: "Declare COMMISSIONING: SYS_SET_MISSION_PHASE(phase=5) (S8 func_id 120)" }
   - { category: command, description: "Run COM-001 EPS Checkout" }
   - { category: command, description: "Run COM-005 AOCS Mode Transitions" }
   - { category: command, description: "Run COM-006 TTC Link Verification" }
-  - { category: command, description: "Run COM-008 FDIR Configuration (nominal table)" }
+  - { category: command, description: "Run COM-008 FDIR Configuration — enable S12 monitoring (MON_ENABLE) and verify the S12/S19 rule sets; there is no table to load" }
   - { category: command, description: "Run COM-009 Payload Power On" }
   - { category: command, description: "Run COM-010 FPA Cooler Activation" }
   - { category: command, description: "Run COM-012 First Light — capture and assess one image" }

@@ -11,9 +11,9 @@ browser localStorage only).
 """
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Literal
 
-from fastapi import APIRouter, Header, HTTPException, Request
+from fastapi import APIRouter, Header, HTTPException, Query, Request
 from pydantic import BaseModel, Field
 
 from ..services.ai_advisor import (
@@ -44,6 +44,11 @@ class AIRequest(BaseModel):
     question: str = Field(default="", description="Optional specific question")
     max_tokens: int = Field(default=1500, le=4000)
     session_id: str = Field(default="default")
+    language: Literal["en", "fr"] | None = Field(
+        default=None,
+        description="UI language of the requesting browser. 'fr' makes the model answer in French; "
+                    "omitted → genai.yaml output.language → 'en'. Error strings stay English.",
+    )
 
 
 @router.get("/status")
@@ -111,6 +116,7 @@ async def ai_ask(
             mapped,
             api_key=x_api_key,
             session_id=req.session_id,
+            ui_language=req.language,
             **kwargs,
         )
         return {
@@ -130,6 +136,7 @@ async def ai_ask(
         api_key=x_api_key,
         session_id=req.session_id,
         max_tokens=req.max_tokens,
+        language=req.language,
     )
 
     if response.error:
@@ -177,9 +184,10 @@ async def ai_budget_reset(session_id: str = "default") -> dict:
 async def critique_need(
     context: dict[str, Any],
     x_api_key: str | None = Header(default=None, alias="X-API-Key"),
+    language: Literal["en", "fr"] | None = Query(default=None, description="UI language; 'fr' → French answer"),
 ) -> dict:
     """Critique the mission need statement — is the problem well-defined?"""
-    response = await ask_ai("critique_need", context, api_key=x_api_key)
+    response = await ask_ai("critique_need", context, api_key=x_api_key, language=language)
     return {"content": response.content, "error": response.error, "tokens_used": response.tokens_used}
 
 
@@ -187,9 +195,10 @@ async def critique_need(
 async def write_requirements(
     context: dict[str, Any],
     x_api_key: str | None = Header(default=None, alias="X-API-Key"),
+    language: Literal["en", "fr"] | None = Query(default=None, description="UI language; 'fr' → French answer"),
 ) -> dict:
     """Generate formal requirements from objectives."""
-    response = await ask_ai("write_requirements", context, api_key=x_api_key)
+    response = await ask_ai("write_requirements", context, api_key=x_api_key, language=language)
     return {"content": response.content, "error": response.error, "tokens_used": response.tokens_used}
 
 
@@ -197,7 +206,8 @@ async def write_requirements(
 async def review_design(
     context: dict[str, Any],
     x_api_key: str | None = Header(default=None, alias="X-API-Key"),
+    language: Literal["en", "fr"] | None = Query(default=None, description="UI language; 'fr' → French answer"),
 ) -> dict:
     """Review current design from a systems engineering perspective."""
-    response = await ask_ai("review_design", context, api_key=x_api_key, max_tokens=2000)
+    response = await ask_ai("review_design", context, api_key=x_api_key, max_tokens=2000, language=language)
     return {"content": response.content, "error": response.error, "tokens_used": response.tokens_used}

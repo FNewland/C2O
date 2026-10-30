@@ -292,7 +292,8 @@ drive PCDU peak rating.*
 ![Mass budget — distribution and ECSS margin policy](../assets/figures/fig_mass_budget.png)
 
 *Figure 2.7 — Mass distribution and the ECSS margin schedule.
-Margin starts at +44 % at Phase A and tightens to +5 % at Phase D.*
+The compound margin (equipment maturity × the 20 % system margin)
+starts at +44 % at Phase A and tightens to +5 % at Phase D.*
 
 - **Exercise:** size structure in SpaceCDF.
 - **Worksheet:** mass budget with margin column.

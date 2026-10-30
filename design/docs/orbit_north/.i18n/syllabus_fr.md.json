@@ -1,0 +1,147 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "docs/orbit_north/syllabus_en.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "32bbb6019a94f863",
+   "fr_hash": "aef2cd01ac5f06e7"
+  },
+  {
+   "id": "orbit-north",
+   "en_hash": "0e93ff16012d677e",
+   "fr_hash": "a28bb8277c8ab7ec"
+  },
+  {
+   "id": "orbit-north/course-information",
+   "en_hash": "e208e414c949bbd1",
+   "fr_hash": "31ed38c634f46512"
+  },
+  {
+   "id": "orbit-north/instructor-information",
+   "en_hash": "057e4e02783ec2c0",
+   "fr_hash": "fe860f6d06d031be"
+  },
+  {
+   "id": "orbit-north/intended-audience",
+   "en_hash": "dd0eaeda3eb44327",
+   "fr_hash": "bb8b332d89492f33"
+  },
+  {
+   "id": "orbit-north/official-course-description",
+   "en_hash": "e717f81ed1436511",
+   "fr_hash": "b03262772f6d6b08"
+  },
+  {
+   "id": "orbit-north/additional-course-description",
+   "en_hash": "1d64b838d920ae1b",
+   "fr_hash": "ccffc4255ce1fc26"
+  },
+  {
+   "id": "orbit-north/indigenous-affirmation",
+   "en_hash": "9bf48ebbe75b16d6",
+   "fr_hash": "5cc27a4b612d5fb9"
+  },
+  {
+   "id": "orbit-north/inclusion",
+   "en_hash": "f99f2ea9eacc9219",
+   "fr_hash": "44c2d5819d11a092"
+  },
+  {
+   "id": "orbit-north/course-learning-outcomes",
+   "en_hash": "a29b47404985fa73",
+   "fr_hash": "be9c16d086ecb2a3"
+  },
+  {
+   "id": "orbit-north/course-learning-outcomes/shared-outcomes-both-codes",
+   "en_hash": "c8590dd49ba36d58",
+   "fr_hash": "a9b9264778de2173"
+  },
+  {
+   "id": "orbit-north/course-learning-outcomes/additional-graduate-outcomes-sys-5186-only",
+   "en_hash": "c1d30634b4668592",
+   "fr_hash": "4a3066dd6bfb084f"
+  },
+  {
+   "id": "orbit-north/teaching-philosophy",
+   "en_hash": "cdeefa3361ef0c30",
+   "fr_hash": "65e94c4cd4df862f"
+  },
+  {
+   "id": "orbit-north/teaching-strategies-and-approaches",
+   "en_hash": "527fc8ae3a6509dd",
+   "fr_hash": "b4728a6a95b610f5"
+  },
+  {
+   "id": "orbit-north/a-note-on-review-gate-terminology",
+   "en_hash": "5869c2f6ec9e1644",
+   "fr_hash": "741f6d0821dea74e"
+  },
+  {
+   "id": "orbit-north/required-materials",
+   "en_hash": "862ff87057cd9ea2",
+   "fr_hash": "76c1dccbd87d700e"
+  },
+  {
+   "id": "orbit-north/assessment-strategy",
+   "en_hash": "bd2c3667249819cc",
+   "fr_hash": "86590e75d0f3eaf1"
+  },
+  {
+   "id": "orbit-north/time-commitment",
+   "en_hash": "940e14fdaee26a09",
+   "fr_hash": "c10eb264885c23d4"
+  },
+  {
+   "id": "orbit-north/language-expectations",
+   "en_hash": "00e0c22aad8e41e9",
+   "fr_hash": "b1ae84c32c7093e9"
+  },
+  {
+   "id": "orbit-north/late-assignments-and-grade-revision",
+   "en_hash": "900faebfa06f171f",
+   "fr_hash": "69d03b3374d05186"
+  },
+  {
+   "id": "orbit-north/participation-guidelines",
+   "en_hash": "7a74f36c100afaea",
+   "fr_hash": "d0067f9158d38b4e"
+  },
+  {
+   "id": "orbit-north/course-calendar",
+   "en_hash": "d2f30540630b20b4",
+   "fr_hash": "52526e415eae11c8"
+  },
+  {
+   "id": "orbit-north/course-calendar/week-1-canadian-context-cdf-intro-concept-development-ottawa-6-7-august-2026",
+   "en_hash": "b7c5daf5810b7d50",
+   "fr_hash": "4b75945380c6937e"
+  },
+  {
+   "id": "orbit-north/course-calendar/week-2-mcr-regulatory-cdf-intensive-ottawa-10-14-august-2026",
+   "en_hash": "ba94675c40ccc48d",
+   "fr_hash": "ebdb442ebe30fb1a"
+  },
+  {
+   "id": "orbit-north/course-calendar/week-3-operations-mission-simulation-uottawa-cyberrange-17-21-august-2026",
+   "en_hash": "1981913f4968fab2",
+   "fr_hash": "3e2637410d94ce6b"
+  },
+  {
+   "id": "orbit-north/regulation-on-bilingualism-at-the-university-of-ottawa",
+   "en_hash": "e3d5539af6ba36d7",
+   "fr_hash": "b833032791e83790"
+  },
+  {
+   "id": "orbit-north/notice-of-collection-of-personal-information-for-recording-of-lesson-capture",
+   "en_hash": "4d734b3aee5e5ac9",
+   "fr_hash": "2353e6ebcb6763c1"
+  },
+  {
+   "id": "orbit-north/generative-ai-and-attribution",
+   "en_hash": "b479e131eae3e625",
+   "fr_hash": "00ee79a5984c97ec"
+  }
+ ],
+ "en_commit": "be16bc3"
+}

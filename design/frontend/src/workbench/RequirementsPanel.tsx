@@ -8,17 +8,23 @@
  */
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { useUIStore } from '../stores/uiStore'
 import { SUGGESTED_REQS } from './suggestedReqs'
 
 const API = '/api'
 
+// English text is the i18n key
+const REQ_TYPE_LABELS: Record<string, string> = {
+  functional: 'Functional', performance: 'Performance', interface: 'Interface', regulatory: 'Regulatory', process: 'Process',
+}
+
 const REQ_TYPES = [
-  { value: 'functional', label: 'Functional', color: '#3b82f6' },
-  { value: 'performance', label: 'Performance', color: '#10b981' },
-  { value: 'interface', label: 'Interface', color: '#f59e0b' },
-  { value: 'regulatory', label: 'Regulatory', color: '#ef4444' },
-  { value: 'process', label: 'Process', color: '#8b5cf6' },
+  { value: 'functional', label: REQ_TYPE_LABELS.functional, color: '#3b82f6' },
+  { value: 'performance', label: REQ_TYPE_LABELS.performance, color: '#10b981' },
+  { value: 'interface', label: REQ_TYPE_LABELS.interface, color: '#f59e0b' },
+  { value: 'regulatory', label: REQ_TYPE_LABELS.regulatory, color: '#ef4444' },
+  { value: 'process', label: REQ_TYPE_LABELS.process, color: '#8b5cf6' },
 ]
 
 const VERIFICATION_METHODS: Record<string, string> = {
@@ -33,6 +39,7 @@ const STATUS_COLORS: Record<string, string> = {
 }
 
 export function RequirementsPanel() {
+  const { t } = useTranslation()
   const studyId = useUIStore(s => s.studyId)
   const focusElementId = useUIStore(s => s.focusElementId)
   const currentLevel = useUIStore(s => s.currentLevel)
@@ -70,8 +77,8 @@ export function RequirementsPanel() {
 
   // Name lookup
   const nameOf = (elementId: string | null) => {
-    if (!elementId) return 'Mission'
-    return allElements.find((e: any) => e.id === elementId)?.name || 'Unknown'
+    if (!elementId) return t('Mission')
+    return allElements.find((e: any) => e.id === elementId)?.name || t('Unknown')
   }
 
   // Add form state
@@ -149,7 +156,7 @@ export function RequirementsPanel() {
 
   // "Derive" pre-fills the add form with parent context — user edits before submitting
   const startDerive = (parentReq: any) => {
-    setNewText(`[Derived from ${parentReq.code || 'parent'}] `)
+    setNewText(t('[Derived from {{code}}] ', { code: parentReq.code || t('parent') }))
     setNewReqType(parentReq.rationale || 'performance')
     setNewMethod(parentReq.verification_method || 'A')
     setNewElementId(focusElementId || '')
@@ -172,7 +179,7 @@ export function RequirementsPanel() {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.5rem' }}>
         <span style={{ fontWeight: 600, fontSize: '0.78rem' }}>
-          Requirements ({requirements.length})
+          {t('Requirements ({{n}})', { n: requirements.length })}
         </span>
         <span style={{ flex: 1 }} />
 
@@ -181,12 +188,12 @@ export function RequirementsPanel() {
 
         {/* Type legend */}
         <div style={{ display: 'flex', gap: '0.3rem', marginLeft: '0.5rem' }}>
-          {REQ_TYPES.map(t => (
-            <span key={t.value} style={{
+          {REQ_TYPES.map(rt => (
+            <span key={rt.value} style={{
               fontSize: '0.55rem', padding: '0.1rem 0.3rem', borderRadius: '2px',
-              background: `${t.color}15`, color: t.color, fontWeight: 600,
+              background: `${rt.color}15`, color: rt.color, fontWeight: 600,
             }}>
-              {t.label[0]}
+              {t(rt.label)[0]}
             </span>
           ))}
         </div>
@@ -196,7 +203,7 @@ export function RequirementsPanel() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '0.5rem', maxHeight: 300, overflow: 'auto' }}>
         {requirements.length === 0 && !showAdd && (
           <div style={{ color: 'var(--text-secondary)', padding: '0.5rem 0' }}>
-            No requirements at this level.
+            {t('No requirements at this level.')}
           </div>
         )}
 
@@ -208,11 +215,11 @@ export function RequirementsPanel() {
               padding: '0.15rem 0.4rem', background: 'var(--bg-secondary)', borderRadius: '3px 3px 0 0',
               textTransform: 'uppercase',
             }}>
-              {elementKey === '_mission' ? (focusElement?.name || 'Mission Level') : nameOf(elementKey)}
+              {elementKey === '_mission' ? (focusElement?.name || t('Mission Level')) : nameOf(elementKey)}
             </div>
 
             {reqs.map((req: any) => {
-              const reqType = REQ_TYPES.find(t => t.value === req.rationale) || REQ_TYPES[0]
+              const reqType = REQ_TYPES.find(rt => rt.value === req.rationale) || REQ_TYPES[0]
               return (
                 <div key={req.id} style={{
                   display: 'flex', alignItems: 'center', gap: '0.3rem',
@@ -230,7 +237,7 @@ export function RequirementsPanel() {
                     background: `${reqType.color}20`, color: reqType.color,
                     fontWeight: 600, flexShrink: 0,
                   }}>
-                    {reqType.label[0]}
+                    {t(reqType.label)[0]}
                   </span>
 
                   {/* Text */}
@@ -257,18 +264,18 @@ export function RequirementsPanel() {
                       color: STATUS_COLORS[req.status] || 'var(--text-secondary)', flexShrink: 0,
                     }}
                   >
-                    <option value="draft">Draft</option>
-                    <option value="approved">Approved</option>
-                    <option value="verified">Verified</option>
-                    <option value="violated">Violated</option>
+                    <option value="draft">{t('Draft', { context: 'requirement' })}</option>
+                    <option value="approved">{t('Approved', { context: 'requirement' })}</option>
+                    <option value="verified">{t('Verified', { context: 'requirement' })}</option>
+                    <option value="violated">{t('Violated', { context: 'requirement' })}</option>
                   </select>
 
                   {/* Traceability badge — click to link/unlink */}
                   {req.derived_from_requirement_id ? (
                     <button style={{ fontSize: '0.5rem', padding: '0.05rem 0.2rem', borderRadius: '2px', background: 'rgba(16,185,129,0.15)', color: 'var(--success)', fontWeight: 600, flexShrink: 0, border: 'none', cursor: 'pointer' }}
-                      title={`Derived from ${req.derived_from_requirement_id} — click to change`}
+                      title={t('Derived from {{id}} — click to change', { id: req.derived_from_requirement_id })}
                       onClick={() => {
-                        const parentCode = prompt('Enter parent requirement code to link to (or leave empty to unlink):')
+                        const parentCode = prompt(t('Enter parent requirement code to link to (or leave empty to unlink):'))
                         if (parentCode === null) return
                         const parentReq = parentCode ? allRequirements.find((r: any) => r.code === parentCode) : null
                         fetch(`${API}/requirements/${req.id}`, {
@@ -276,28 +283,28 @@ export function RequirementsPanel() {
                           body: JSON.stringify({ derived_from_requirement_id: parentReq?.id || null }),
                         }).then(() => qc.invalidateQueries({ queryKey: ['requirements', studyId] }))
                       }}>
-                      ↑ {allRequirements.find((r: any) => r.id === req.derived_from_requirement_id)?.code || 'traced'}
+                      ↑ {allRequirements.find((r: any) => r.id === req.derived_from_requirement_id)?.code || t('traced')}
                     </button>
                   ) : (
                     <button style={{ fontSize: '0.5rem', padding: '0.05rem 0.2rem', borderRadius: '2px', background: req.level !== 'mission' ? 'rgba(245,158,11,0.15)' : 'rgba(59,130,246,0.1)', color: req.level !== 'mission' ? 'var(--warning)' : 'var(--accent)', fontWeight: 600, flexShrink: 0, border: 'none', cursor: 'pointer' }}
-                      title="Click to link to a parent requirement"
+                      title={t('Click to link to a parent requirement')}
                       onClick={() => {
-                        const parentCode = prompt('Enter parent requirement code to derive from:')
+                        const parentCode = prompt(t('Enter parent requirement code to derive from:'))
                         if (!parentCode) return
                         const parentReq = allRequirements.find((r: any) => r.code === parentCode)
-                        if (!parentReq) { alert(`Requirement "${parentCode}" not found`); return }
+                        if (!parentReq) { alert(t('Requirement "{{code}}" not found', { code: parentCode })); return }
                         fetch(`${API}/requirements/${req.id}`, {
                           method: 'PATCH', headers: { 'Content-Type': 'application/json' },
                           body: JSON.stringify({ derived_from_requirement_id: parentReq.id }),
                         }).then(() => qc.invalidateQueries({ queryKey: ['requirements', studyId] }))
                       }}>
-                      {req.level !== 'mission' ? 'orphan — link ↑' : 'link ↑'}
+                      {req.level !== 'mission' ? t('orphan — link ↑') : t('link ↑')}
                     </button>
                   )}
 
-                  <button onClick={() => startDerive(req)} title="Flow down — derive a child requirement"
+                  <button onClick={() => startDerive(req)} title={t('Flow down — derive a child requirement')}
                     style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--info)', fontSize: '0.6rem', flexShrink: 0 }}>
-                    flow ↓
+                    {t('flow ↓')}
                   </button>
 
                   <button onClick={() => deleteMutation.mutate(req.id)}
@@ -326,7 +333,7 @@ export function RequirementsPanel() {
               background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)',
             }}
           >
-            <option value={focusElementId || ''}>{focusElement?.name || 'Mission Level'}</option>
+            <option value={focusElementId || ''}>{focusElement?.name || t('Mission Level')}</option>
             {children.map((el: any) => (
               <option key={el.id} value={el.id}>{el.name}</option>
             ))}
@@ -341,16 +348,16 @@ export function RequirementsPanel() {
               background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)',
             }}
           >
-            {REQ_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+            {REQ_TYPES.map(rt => <option key={rt.value} value={rt.value}>{t(rt.label)}</option>)}
           </select>
 
           {/* Code */}
-          <input value={newCode} onChange={e => setNewCode(e.target.value)} placeholder="Code"
+          <input value={newCode} onChange={e => setNewCode(e.target.value)} placeholder={t('Code')}
             style={{ width: 75, padding: '0.25rem 0.3rem', fontSize: '0.7rem', borderRadius: '3px', background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)', fontFamily: 'monospace' }}
           />
 
           {/* Text */}
-          <input value={newText} onChange={e => setNewText(e.target.value)} placeholder="Requirement text" autoFocus
+          <input value={newText} onChange={e => setNewText(e.target.value)} placeholder={t('Requirement text')} autoFocus
             style={{ flex: 1, minWidth: 180, padding: '0.25rem 0.3rem', fontSize: '0.7rem', borderRadius: '3px', background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
             onKeyDown={e => e.key === 'Enter' && newText && addMutation.mutate()}
           />
@@ -363,17 +370,17 @@ export function RequirementsPanel() {
 
           <button onClick={() => newText && addMutation.mutate()} disabled={!newText}
             style={{ padding: '0.25rem 0.5rem', fontSize: '0.7rem', fontWeight: 600, borderRadius: '3px', background: 'var(--accent)', color: 'white', border: 'none', cursor: 'pointer' }}>
-            Add
+            {t('Add')}
           </button>
           <button onClick={() => setShowAdd(false)}
             style={{ padding: '0.25rem 0.5rem', fontSize: '0.7rem', borderRadius: '3px', background: 'var(--bg-secondary)', color: 'var(--text-secondary)', border: 'none', cursor: 'pointer' }}>
-            Cancel
+            {t('Cancel')}
           </button>
         </div>
       ) : (
         <button onClick={() => { setNewElementId(focusElementId || ''); setShowAdd(true) }}
           style={{ padding: '0.35rem 0.75rem', fontSize: '0.72rem', fontWeight: 600, borderRadius: '4px', background: 'var(--accent)', color: 'white', border: 'none', cursor: 'pointer' }}>
-          + Add Requirement
+          {t('+ Add Requirement')}
         </button>
       )}
 
@@ -393,6 +400,7 @@ export function RequirementsPanel() {
 }
 
 function SmartVerifyButton({ studyId }: { studyId: string | null }) {
+  const { t } = useTranslation()
   const [result, setResult] = useState<any>(null)
   const [loading, setLoading] = useState(false)
 
@@ -413,19 +421,19 @@ function SmartVerifyButton({ studyId }: { studyId: string | null }) {
         color: result ? (result.smart_fail > 0 || result.orphans > 0 ? 'var(--warning)' : 'var(--success)') : 'var(--text-secondary)',
         border: 'none', cursor: 'pointer',
       }}>
-        {loading ? '...' : 'SMART Check'}
+        {loading ? '...' : t('SMART Check')}
       </button>
       {result && (
         <>
-          <span style={{ fontSize: '0.55rem', color: 'var(--success)' }}>{result.smart_pass} ok</span>
-          {result.smart_fail > 0 && <span style={{ fontSize: '0.55rem', color: 'var(--warning)' }}>{result.smart_fail} issues</span>}
-          {result.orphans > 0 && <span style={{ fontSize: '0.55rem', color: 'var(--danger)' }}>{result.orphans} orphans</span>}
+          <span style={{ fontSize: '0.55rem', color: 'var(--success)' }}>{t('{{count}} ok', { count: result.smart_pass })}</span>
+          {result.smart_fail > 0 && <span style={{ fontSize: '0.55rem', color: 'var(--warning)' }}>{t('{{count}} issues', { count: result.smart_fail })}</span>}
+          {result.orphans > 0 && <span style={{ fontSize: '0.55rem', color: 'var(--danger)' }}>{t('{{count}} orphans', { count: result.orphans })}</span>}
         </>
       )}
       {result?.issues?.length > 0 && (
         <span title={result.issues.map((i: any) => `${i.code}: ${i.issues.join('; ')}`).join('\n')}
           style={{ fontSize: '0.55rem', color: 'var(--warning)', cursor: 'help', textDecoration: 'underline dotted' }}>
-          details
+          {t('details')}
         </span>
       )}
     </div>
@@ -441,6 +449,7 @@ function SuggestedTemplates({ currentLevel, onUseTemplate }: {
   currentLevel: number
   onUseTemplate: (t: { type: string; text: string; method: string }) => void
 }) {
+  const { t } = useTranslation()
   const [expanded, setExpanded] = useState(false)
   const templates = SUGGESTED_REQS[currentLevel] || []
   if (templates.length === 0) return null
@@ -449,17 +458,18 @@ function SuggestedTemplates({ currentLevel, onUseTemplate }: {
     <div style={{ marginTop: '0.5rem', borderTop: '1px solid var(--border)', paddingTop: '0.4rem' }}>
       <button onClick={() => setExpanded(!expanded)}
         style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.68rem', color: '#8b5cf6', fontWeight: 600, padding: 0 }}>
-        {expanded ? '▾' : '▸'} Suggested Templates ({templates.length})
+        {expanded ? '▾' : '▸'} {t('Suggested Templates ({{n}})', { n: templates.length })}
       </button>
       {expanded && (
         <div style={{ marginTop: '0.3rem', display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
           <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', marginBottom: '0.1rem' }}>
-            Click a template to pre-fill the add form — edit the [placeholders] before adding.
+            {t('Click a template to pre-fill the add form — edit the [placeholders] before adding.')}
           </div>
-          {templates.map((t, i) => {
-            const color = REQ_TYPE_COLORS[t.type] || '#6b7280'
+          {templates.map((tpl, i) => {
+            const color = REQ_TYPE_COLORS[tpl.type] || '#6b7280'
             return (
-              <button key={i} onClick={() => onUseTemplate(t)}
+              // The stored template stays English (it becomes requirement text); only the list shows t(text).
+              <button key={i} onClick={() => onUseTemplate(tpl)}
                 style={{
                   display: 'flex', alignItems: 'center', gap: '0.3rem',
                   padding: '0.2rem 0.4rem', borderRadius: '3px', textAlign: 'left',
@@ -470,10 +480,10 @@ function SuggestedTemplates({ currentLevel, onUseTemplate }: {
                   fontSize: '0.5rem', padding: '0.05rem 0.2rem', borderRadius: '2px',
                   background: `${color}20`, color, fontWeight: 600, flexShrink: 0,
                 }}>
-                  {t.type.slice(0, 4).toUpperCase()}
+                  {t(REQ_TYPE_LABELS[tpl.type] ?? tpl.type).slice(0, 4).toUpperCase()}
                 </span>
-                <span style={{ flex: 1 }}>{t.text}</span>
-                <span style={{ fontSize: '0.55rem', color: 'var(--success)', flexShrink: 0 }}>{t.method}</span>
+                <span style={{ flex: 1 }}>{t(tpl.text)}</span>
+                <span style={{ fontSize: '0.55rem', color: 'var(--success)', flexShrink: 0 }}>{tpl.method}</span>
               </button>
             )
           })}

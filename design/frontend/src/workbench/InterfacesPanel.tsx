@@ -6,19 +6,27 @@
  */
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
+import type { TFunction } from 'i18next'
 import { useUIStore } from '../stores/uiStore'
 
 const API = '/api'
 
+// English text is the i18n key
+const INTERFACE_TYPE_LABELS: Record<string, string> = {
+  electrical: 'Electrical', data: 'Data', rf: 'RF', mechanical: 'Mechanical', thermal: 'Thermal',
+}
+
 const INTERFACE_TYPES = [
-  { value: 'electrical', label: 'Electrical', color: '#f59e0b' },
-  { value: 'data', label: 'Data', color: '#8b5cf6' },
-  { value: 'rf', label: 'RF', color: '#ec4899' },
-  { value: 'mechanical', label: 'Mechanical', color: '#84cc16' },
-  { value: 'thermal', label: 'Thermal', color: '#ef4444' },
+  { value: 'electrical', label: INTERFACE_TYPE_LABELS.electrical, color: '#f59e0b' },
+  { value: 'data', label: INTERFACE_TYPE_LABELS.data, color: '#8b5cf6' },
+  { value: 'rf', label: INTERFACE_TYPE_LABELS.rf, color: '#ec4899' },
+  { value: 'mechanical', label: INTERFACE_TYPE_LABELS.mechanical, color: '#84cc16' },
+  { value: 'thermal', label: INTERFACE_TYPE_LABELS.thermal, color: '#ef4444' },
 ]
 
 export function InterfacesPanel() {
+  const { t } = useTranslation()
   const studyId = useUIStore(s => s.studyId)
   const focusElementId = useUIStore(s => s.focusElementId)
   const qc = useQueryClient()
@@ -90,7 +98,7 @@ export function InterfacesPanel() {
   if (siblings.length < 2) {
     return (
       <div style={{ padding: '1rem', color: 'var(--text-secondary)', fontSize: '0.8rem' }}>
-        Need at least 2 elements at this level to define interfaces.
+        {t('Need at least 2 elements at this level to define interfaces.')}
       </div>
     )
   }
@@ -98,14 +106,14 @@ export function InterfacesPanel() {
   return (
     <div style={{ padding: '0.5rem 1rem', fontSize: '0.75rem' }}>
       <div style={{ fontWeight: 600, fontSize: '0.78rem', marginBottom: '0.5rem' }}>
-        Interfaces ({interfaces.length})
+        {t('Interfaces ({{n}})', { n: interfaces.length })}
       </div>
 
       {/* Interface list */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', marginBottom: '0.5rem' }}>
         {interfaces.length === 0 && !showAdd && (
           <div style={{ color: 'var(--text-secondary)', padding: '0.5rem 0' }}>
-            No interfaces defined. Click "Add Interface" to connect elements.
+            {t('No interfaces defined. Click "Add Interface" to connect elements.')}
           </div>
         )}
         {interfaces.map((iface: any) => (
@@ -128,7 +136,7 @@ export function InterfacesPanel() {
               background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)',
             }}
           >
-            <option value="">From...</option>
+            <option value="">{t('From...')}</option>
             {siblings.map((el: any) => <option key={el.id} value={el.id}>{el.name}</option>)}
           </select>
 
@@ -142,7 +150,7 @@ export function InterfacesPanel() {
               background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)',
             }}
           >
-            <option value="">To...</option>
+            <option value="">{t('To...')}</option>
             {siblings.filter((el: any) => el.id !== fromId).map((el: any) => (
               <option key={el.id} value={el.id}>{el.name}</option>
             ))}
@@ -156,13 +164,13 @@ export function InterfacesPanel() {
               background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)',
             }}
           >
-            {INTERFACE_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+            {INTERFACE_TYPES.map(it => <option key={it.value} value={it.value}>{t(it.label)}</option>)}
           </select>
 
           <input
             value={ifaceName}
             onChange={e => setIfaceName(e.target.value)}
-            placeholder="Label (optional)"
+            placeholder={t('Label (optional)')}
             style={{
               width: 120, padding: '0.3rem 0.4rem', fontSize: '0.72rem', borderRadius: '3px',
               background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)',
@@ -177,7 +185,7 @@ export function InterfacesPanel() {
               background: 'var(--success)', color: 'white', border: 'none', cursor: 'pointer',
             }}
           >
-            Add
+            {t('Add')}
           </button>
           <button
             onClick={() => setShowAdd(false)}
@@ -186,7 +194,7 @@ export function InterfacesPanel() {
               background: 'var(--bg-secondary)', color: 'var(--text-secondary)', border: 'none', cursor: 'pointer',
             }}
           >
-            Cancel
+            {t('Cancel')}
           </button>
         </div>
       ) : (
@@ -197,7 +205,7 @@ export function InterfacesPanel() {
             background: 'var(--success)', color: 'white', border: 'none', cursor: 'pointer',
           }}
         >
-          + Add Interface
+          {t('+ Add Interface')}
         </button>
       )}
     </div>
@@ -206,50 +214,55 @@ export function InterfacesPanel() {
 
 // ─── Interface Row with expandable properties ───
 
-const IFACE_PROPERTY_FIELDS: Record<string, Array<{ key: string; label: string; placeholder: string }>> = {
-  electrical: [
-    { key: 'voltage_v', label: 'Voltage (V)', placeholder: '3.3 / 5 / 28' },
-    { key: 'current_a', label: 'Current (A)', placeholder: '0.5' },
-    { key: 'connector', label: 'Connector', placeholder: 'Micro-D 9pin' },
-    { key: 'wire_gauge', label: 'Wire gauge', placeholder: 'AWG 26' },
-    { key: 'power_w', label: 'Power (W)', placeholder: '2.5' },
-  ],
-  data: [
-    { key: 'protocol', label: 'Protocol', placeholder: 'SPI / I2C / UART / CAN / SpaceWire' },
-    { key: 'baud_rate', label: 'Baud rate', placeholder: '115200 / 1 Mbps' },
-    { key: 'data_format', label: 'Data format', placeholder: 'CCSDS / raw bytes' },
-    { key: 'bus_width', label: 'Bus width', placeholder: '8 / 16 / 32 bit' },
-    { key: 'connector', label: 'Connector', placeholder: 'Micro-D / Harwin' },
-  ],
-  rf: [
-    { key: 'frequency_ghz', label: 'Frequency (GHz)', placeholder: '0.435 / 2.2 / 8.2' },
-    { key: 'bandwidth_mhz', label: 'Bandwidth (MHz)', placeholder: '20' },
-    { key: 'polarization', label: 'Polarization', placeholder: 'RHCP / linear / dual' },
-    { key: 'power_dbm', label: 'TX power (dBm)', placeholder: '30' },
-    { key: 'connector', label: 'RF connector', placeholder: 'SMA / N-type' },
-  ],
-  mechanical: [
-    { key: 'mount_type', label: 'Mount type', placeholder: 'bolted / bonded / rail' },
-    { key: 'fastener', label: 'Fasteners', placeholder: 'M3×8 SS / M2.5' },
-    { key: 'torque_nm', label: 'Torque (Nm)', placeholder: '0.5' },
-    { key: 'material', label: 'Material', placeholder: 'Al 6061-T6' },
-  ],
-  thermal: [
-    { key: 'heat_flow_w', label: 'Heat flow (W)', placeholder: '2.0' },
-    { key: 'conductance_w_k', label: 'Conductance (W/K)', placeholder: '0.5' },
-    { key: 'strap_type', label: 'Thermal strap', placeholder: 'Cu braid / Al plate' },
-    { key: 'interface_temp_c', label: 'Interface temp (°C)', placeholder: '20' },
-  ],
+// Labels and placeholders are display-only (the property keys are stored), so the table is built
+// per render with the active t(); technical example values (part names, numbers) are not translated.
+function ifacePropertyFields(t: TFunction): Record<string, Array<{ key: string; label: string; placeholder: string }>> {
+  return {
+    electrical: [
+      { key: 'voltage_v', label: t('Voltage (V)'), placeholder: '3.3 / 5 / 28' },
+      { key: 'current_a', label: t('Current (A)'), placeholder: '0.5' },
+      { key: 'connector', label: t('Connector'), placeholder: t('Micro-D 9pin') },
+      { key: 'wire_gauge', label: t('Wire gauge'), placeholder: 'AWG 26' },
+      { key: 'power_w', label: t('Power (W)'), placeholder: '2.5' },
+    ],
+    data: [
+      { key: 'protocol', label: t('Protocol'), placeholder: 'SPI / I2C / UART / CAN / SpaceWire' },
+      { key: 'baud_rate', label: t('Baud rate'), placeholder: '115200 / 1 Mbps' },
+      { key: 'data_format', label: t('Data format'), placeholder: t('CCSDS / raw bytes') },
+      { key: 'bus_width', label: t('Bus width'), placeholder: t('8 / 16 / 32 bit') },
+      { key: 'connector', label: t('Connector'), placeholder: 'Micro-D / Harwin' },
+    ],
+    rf: [
+      { key: 'frequency_ghz', label: t('Frequency (GHz)'), placeholder: '0.435 / 2.2 / 8.2' },
+      { key: 'bandwidth_mhz', label: t('Bandwidth (MHz)'), placeholder: '20' },
+      { key: 'polarization', label: t('Polarization'), placeholder: t('RHCP / linear / dual') },
+      { key: 'power_dbm', label: t('TX power (dBm)'), placeholder: '30' },
+      { key: 'connector', label: t('RF connector'), placeholder: t('SMA / N-type') },
+    ],
+    mechanical: [
+      { key: 'mount_type', label: t('Mount type'), placeholder: t('bolted / bonded / rail') },
+      { key: 'fastener', label: t('Fasteners'), placeholder: 'M3×8 SS / M2.5' },
+      { key: 'torque_nm', label: t('Torque (Nm)'), placeholder: '0.5' },
+      { key: 'material', label: t('Material'), placeholder: 'Al 6061-T6' },
+    ],
+    thermal: [
+      { key: 'heat_flow_w', label: t('Heat flow (W)'), placeholder: '2.0' },
+      { key: 'conductance_w_k', label: t('Conductance (W/K)'), placeholder: '0.5' },
+      { key: 'strap_type', label: t('Thermal strap'), placeholder: t('Cu braid / Al plate') },
+      { key: 'interface_temp_c', label: t('Interface temp (°C)'), placeholder: '20' },
+    ],
+  }
 }
 
 function InterfaceRow({ iface, nameOf, studyId, onDelete }: {
   iface: any; nameOf: (id: string) => string; studyId: string | null; onDelete: () => void
 }) {
+  const { t } = useTranslation()
   const [expanded, setExpanded] = useState(false)
   const qc = useQueryClient()
   const typeInfo = INTERFACE_TYPES.find(t => t.value === iface.interface_type)
   const props = iface.properties || {}
-  const fields = IFACE_PROPERTY_FIELDS[iface.interface_type] || []
+  const fields = ifacePropertyFields(t)[iface.interface_type] || []
 
   const updateProp = async (key: string, value: string) => {
     const newProps = { ...props, [key]: value }
@@ -269,7 +282,7 @@ function InterfaceRow({ iface, nameOf, studyId, onDelete }: {
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', padding: '0.3rem 0.5rem', cursor: 'pointer' }}
         onClick={() => setExpanded(!expanded)}>
         <span style={{ fontSize: '0.55rem', padding: '0.1rem 0.25rem', borderRadius: '2px', background: `${typeInfo?.color || '#6b7280'}20`, color: typeInfo?.color || '#6b7280', fontWeight: 600, textTransform: 'uppercase', flexShrink: 0 }}>
-          {iface.interface_type}
+          {INTERFACE_TYPE_LABELS[iface.interface_type] ? t(INTERFACE_TYPE_LABELS[iface.interface_type]) : iface.interface_type}
         </span>
         <span style={{ fontWeight: 500, fontSize: '0.72rem' }}>{nameOf(iface.from_element_id)}</span>
         <span style={{ color: 'var(--text-secondary)', fontSize: '0.65rem' }}>→</span>
@@ -277,7 +290,7 @@ function InterfaceRow({ iface, nameOf, studyId, onDelete }: {
         {iface.name && <span style={{ color: 'var(--text-secondary)', fontSize: '0.63rem' }}>({iface.name})</span>}
         <span style={{ flex: 1 }} />
         {Object.keys(props).length > 0 && (
-          <span style={{ fontSize: '0.5rem', color: 'var(--success)' }}>{Object.keys(props).length} props</span>
+          <span style={{ fontSize: '0.5rem', color: 'var(--success)' }}>{t('{{n}} props', { n: Object.keys(props).length })}</span>
         )}
         <span style={{ fontSize: '0.6rem', color: 'var(--text-secondary)' }}>{expanded ? '▾' : '▸'}</span>
         <button onClick={e => { e.stopPropagation(); onDelete() }}
@@ -289,7 +302,7 @@ function InterfaceRow({ iface, nameOf, studyId, onDelete }: {
         <div style={{ padding: '0.3rem 0.5rem', borderTop: '1px solid var(--border)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.2rem' }}>
           {fields.map(f => (
             <div key={f.key} style={{ fontSize: '0.6rem' }}>
-              <label style={{ color: 'var(--text-secondary)', display: 'block', marginBottom: '0.05rem' }}>{f.label}:</label>
+              <label style={{ color: 'var(--text-secondary)', display: 'block', marginBottom: '0.05rem' }}>{t('{{label}}:', { label: f.label })}</label>
               <input value={props[f.key] || ''} onChange={e => updateProp(f.key, e.target.value)}
                 placeholder={f.placeholder}
                 style={{ width: '100%', padding: '0.15rem 0.25rem', fontSize: '0.6rem', borderRadius: '2px', background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)' }} />

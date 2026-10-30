@@ -1,0 +1,62 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "docs/orbit_north/recruitment_en.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "abd770f890e6bf72",
+   "fr_hash": "bbfded4dfd113cae"
+  },
+  {
+   "id": "orbit-north",
+   "en_hash": "6f8275148c9e9943",
+   "fr_hash": "56e2af24440f4f42"
+  },
+  {
+   "id": "orbit-north/at-a-glance",
+   "en_hash": "6ef5f80407195762",
+   "fr_hash": "e24c38de9483653e"
+  },
+  {
+   "id": "orbit-north/what-you-ll-do",
+   "en_hash": "1fb5b235e67289c7",
+   "fr_hash": "c5646eada5ed8e43"
+  },
+  {
+   "id": "orbit-north/what-you-ll-do/week-1-canadian-context-cdf-intro-concept-development-6-7-august-2026",
+   "en_hash": "99f836da50bbc353",
+   "fr_hash": "31644a1b02c556d5"
+  },
+  {
+   "id": "orbit-north/what-you-ll-do/week-2-mcr-regulatory-cdf-intensive-10-14-august-2026",
+   "en_hash": "91c1da4e38f6c10b",
+   "fr_hash": "267ce20473a96fde"
+  },
+  {
+   "id": "orbit-north/what-you-ll-do/week-3-operations-mission-simulation-17-21-august-2026",
+   "en_hash": "ae49d04dbd213355",
+   "fr_hash": "02f672f4a8bcf882"
+  },
+  {
+   "id": "orbit-north/what-you-ll-be-able-to-do",
+   "en_hash": "84c4189c31401459",
+   "fr_hash": "0ddc6a0e685783d3"
+  },
+  {
+   "id": "orbit-north/two-codes-differentiated-outcomes",
+   "en_hash": "15e08fb322c2796b",
+   "fr_hash": "15d58f2645f06eba"
+  },
+  {
+   "id": "orbit-north/who-s-involved",
+   "en_hash": "e3ed83f3028950b3",
+   "fr_hash": "bf4f74ca88d32ade"
+  },
+  {
+   "id": "orbit-north/interested-get-in-touch",
+   "en_hash": "a10e4e3492a00c86",
+   "fr_hash": "7c5658f267333c22"
+  }
+ ],
+ "en_commit": "be16bc3"
+}

@@ -32,8 +32,8 @@ Vendor products named in this chapter are representative examples, not endorseme
 | 1.5U | 100 × 100 × 170.2 | 3.0 | ~1500 | ISIPOD |
 | 2U | 100 × 100 × 227.0 | 4.0 | ~2000 | ISIPOD, P-POD |
 | 3U | 100 × 100 × 340.5 | 6.0 | ~3000 | P-POD, ISIPOD, NanoRacks NRCSD |
-| 6U | 100 × 226.3 × 340.5 | 12.0 | ~6000 | 6U deployer (Exolaunch, D-Orbit) |
-| 12U | 226.3 × 226.3 × 340.5 | 24.0 | ~12000 | 12U deployer (Exolaunch) |
+| 6U | 100 × 226.3 × 366.0 | 12.0 | ~6000 | 6U deployer (Exolaunch, D-Orbit) |
+| 12U | 226.3 × 226.3 × 366.0 | 24.0 | ~12000 | 12U deployer (Exolaunch) |
 
 Figure 12.1 draws the 3U envelope to scale with the features the deployer interface depends on: the rails, their contact pads, the deployment switches, the remove-before-flight pin access, the protrusion allowance between the rails and the centre-of-gravity limit.
 
@@ -373,9 +373,9 @@ For missions below ~500 km where propulsion is not needed for operations, passiv
 |-----------|-----------------|------------------|--------------------------|--------------------|--------------------|
 | $I_{sp}$ (s) | 40–75 | 80–100 | 230–250 | 500–5000 | 800–3000 |
 | Thrust | 10–100 mN | 5–50 mN | 0.1–1 N | 0.01–1 mN | 1–50 mN |
-| Propellant mass (100 m/s, 5 kg spacecraft) | 0.87 kg | 0.44 kg | 0.18 kg | 0.042 kg | 0.055 kg |
+| Propellant mass (100 m/s, 5 kg dry spacecraft, at the $I_{sp}$ shown) | 0.93 kg (60 s) | 0.60 kg (90 s) | 0.22 kg (235 s) | 0.042 kg | 0.055 kg |
 | System dry mass | 0.3 kg | 0.5 kg | 3.0 kg | 0.9 kg | 1.5 kg |
-| **Total system mass** | **1.17 kg** | **0.94 kg** | **3.18 kg** | **0.94 kg** | **1.55 kg** |
+| **Total system mass** | **1.23 kg** | **1.10 kg** | **3.22 kg** | **0.94 kg** | **1.55 kg** |
 | Burn time (100 m/s) | Minutes | Minutes | Seconds | **Months** | Days–weeks |
 | Power during firing | < 1 W (valve) | 5–15 W | 2–10 W (preheat) | 20–60 W | 50–300 W |
 | Complexity | Low | Low–medium | High | Medium | High |
@@ -617,7 +617,7 @@ Two red entries are instructive. The cost line shows the custom telescope consum
 
 $$B = \frac{m}{C_D \times A} = \frac{1.0}{2.2 \times 0.01} = 45.5 \text{ kg/m}^2$$
 
-Using the method of Chapter 7 §7.3.3 this gives an orbital lifetime of roughly 6–14 months depending on solar activity (F10.7 index). At solar maximum (F10.7 > 200) the denser atmosphere deorbits the satellite in about 6 months; at solar minimum (F10.7 ~ 70) the lifetime extends towards 18 months. Both are within the FCC 5-year rule and the IADC 25-year guideline without any propulsion system.
+Using the method of Chapter 7 §7.3.3 this gives an orbital lifetime of roughly 6–18 months depending on solar activity (F10.7 index). At solar maximum (F10.7 > 200) the denser atmosphere deorbits the satellite in about 6 months; at solar minimum (F10.7 ~ 70) the lifetime extends towards 18 months. Both are within the FCC 5-year rule and the IADC 25-year guideline without any propulsion system.
 
 **OBC selection rationale:** UniSat-1 uses a custom board based on the TI MSP430 (safe mode / housekeeping) + STM32F4 Cortex-M4 (main OBC). The MSP430 runs bare-metal firmware handling the watchdog, power monitoring and safe-mode recovery. The STM32F4 runs FreeRTOS handling TM/TC, magnetometer data acquisition and scheduling. The dual-processor architecture provides redundancy: if the STM32F4 fails (SEU, latch-up), the MSP430 can maintain safe-mode operations and respond to ground commands.
 

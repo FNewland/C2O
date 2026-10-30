@@ -15,6 +15,7 @@
  */
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import {
   VALUE_SWITCHES, type ParameterUpsert, type ParameterView, type Provenance, type ValueSwitch,
 } from '../types/arcadia'
@@ -33,6 +34,11 @@ const smallBtn = (color = 'var(--text-secondary)'): React.CSSProperties => ({
   fontSize: '0.6rem', padding: '0.08rem 0.3rem', color,
 })
 const PROV_COLORS: Record<Provenance, string> = { manual: '#f59e0b', formula: '#8b5cf6', column: '#3b82f6', agent: '#10b981' }
+// English text is the i18n key
+const PROV_LABELS: Record<string, string> = { manual: 'manual', formula: 'formula', column: 'column', agent: 'agent' }
+// English text is the i18n key
+const SWITCH_LABELS: Record<string, string> = { manual: 'manual', computed: 'computed', reference: 'reference' }
+// English text is the i18n key
 const PROV_TITLES: Record<Provenance, string> = {
   manual: 'Entered by hand (value switch = manual)',
   formula: 'Computed from the formula',
@@ -61,25 +67,28 @@ function fmt(v: number | null | undefined): string {
 }
 
 export function ProvenanceChip({ p }: { p: Provenance }) {
+  const { t } = useTranslation()
   const c = PROV_COLORS[p] || '#6b7280'
-  return <span title={PROV_TITLES[p] || p} style={{ fontSize: '0.56rem', padding: '0 0.3rem', borderRadius: '3px', background: `${c}22`, color: c, border: `1px solid ${c}55` }}>{p}</span>
+  return <span title={PROV_TITLES[p] ? t(PROV_TITLES[p]) : p} style={{ fontSize: '0.56rem', padding: '0 0.3rem', borderRadius: '3px', background: `${c}22`, color: c, border: `1px solid ${c}55` }}>{PROV_LABELS[p] ? t(PROV_LABELS[p]) : p}</span>
 }
 
 export function OptionOverrideChip({ optionName }: { optionName: string }) {
+  const { t } = useTranslation()
   const c = '#f59e0b'
-  return <span title={`This value is an override that exists only in option "${optionName}"; the baseline row is shadowed`}
+  return <span title={t('This value is an override that exists only in option "{{name}}"; the baseline row is shadowed', { name: optionName })}
     style={{ fontSize: '0.56rem', padding: '0 0.3rem', borderRadius: '3px', background: `${c}22`, color: c, border: `1px solid ${c}55`, marginLeft: '0.2rem', whiteSpace: 'nowrap' }}>
-    override in {optionName}
+    {t('override in {{name}}', { name: optionName })}
   </span>
 }
 
 export function ParameterPanel({ elementId, studyId, compact }: { elementId: string | null; studyId: string | null; compact?: boolean }) {
+  const { t } = useTranslation()
   const qc = useQueryClient()
   const optionId = useActiveOptionId(studyId)
   const oq = optionQuery(optionId)
   const { data: options = [] } = useOptions(studyId)
   const activeOption = options.find(o => o.id === optionId)
-  const optionName = activeOption?.name ?? 'option'
+  const optionName = activeOption?.name ?? t('option')
   const [error, setError] = useState<string | null>(null)
   const [editing, setEditing] = useState<string | null>(null)   // parameter name being edited
   const [manual, setManual] = useState('')
@@ -120,7 +129,7 @@ export function ParameterPanel({ elementId, studyId, compact }: { elementId: str
     onSuccess: (res: any) => {
       invalidate()
       const n = (res?.errors || []).length; const c = (res?.cycles || []).length
-      setError(n || c ? `Recomputed with ${n} error(s), ${c} cycle(s)` : null)
+      setError(n || c ? t('Recomputed with {{n}} error(s), {{c}} cycle(s)', { n, c }) : null)
     },
     onError: onErr,
   })
@@ -135,7 +144,7 @@ export function ParameterPanel({ elementId, studyId, compact }: { elementId: str
   const commitEdit = (p: ParameterView) => {
     const body: ParameterUpsert = {}
     const mv = manual.trim() === '' ? null : Number(manual)
-    if (mv !== null && Number.isNaN(mv)) { setError('Manual value must be a number'); return }
+    if (mv !== null && Number.isNaN(mv)) { setError(t('Manual value must be a number')); return }
     if (mv !== (p.manual_value ?? null)) body.manual_value = mv
     const f = formula.trim() || null
     if (f !== (p.formula || null)) { body.formula = f; body.formula_kind = p.formula_kind || 'ref' }
@@ -147,7 +156,7 @@ export function ParameterPanel({ elementId, studyId, compact }: { elementId: str
     const name = newName.trim()
     if (!name) return
     const v = newValue.trim() === '' ? null : Number(newValue)
-    if (v !== null && Number.isNaN(v)) { setError('Value must be a number'); return }
+    if (v !== null && Number.isNaN(v)) { setError(t('Value must be a number')); return }
     upsert.mutate({ name, body: { unit: newUnit.trim() || null, manual_value: v, value_switch: v === null ? 'computed' : 'manual' } })
     setAdding(false); setNewName(''); setNewUnit(''); setNewValue('')
   }
@@ -159,46 +168,46 @@ export function ParameterPanel({ elementId, studyId, compact }: { elementId: str
     <div style={{ fontSize: '0.7rem' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.3rem', flexWrap: 'wrap' }}>
         <span style={{ color: 'var(--text-secondary)', fontSize: '0.62rem' }}>
-          {params.length} parameter{params.length === 1 ? '' : 's'} · formulas use names on this element, <code>el("Name").x</code>, <code>children("mass_kg")</code>, <code>budget("power")</code>
+          {t('{{count}} parameters', { count: params.length, defaultValue_one: '{{count}} parameter' })} · {t('formulas use names on this element,')} <code>el("Name").x</code>, <code>children("mass_kg")</code>, <code>budget("power")</code>
         </span>
         {optionId && (
-          <span title="Edits are written into this option only; the baseline is untouched"
+          <span title={t('Edits are written into this option only; the baseline is untouched')}
             style={{ fontSize: '0.58rem', color: '#f59e0b', border: '1px solid #f59e0b55', borderRadius: '3px', padding: '0 0.3rem' }}>
-            editing option: {optionName}
+            {t('editing option: {{name}}', { name: optionName })}
           </span>
         )}
         <span style={{ flex: 1 }} />
-        <button style={smallBtn('#3b82f6')} onClick={() => setAdding(v => !v)}>+ parameter</button>
+        <button style={smallBtn('#3b82f6')} onClick={() => setAdding(v => !v)}>{t('+ parameter')}</button>
         <button style={smallBtn('#8b5cf6')} disabled={!studyId || recompute.isPending} onClick={() => recompute.mutate()}>
-          {recompute.isPending ? 'Recomputing…' : 'Recompute'}
+          {recompute.isPending ? t('Recomputing…') : t('Recompute')}
         </button>
       </div>
       {error && (
         <div style={{ color: '#ef4444', fontSize: '0.64rem', marginBottom: '0.3rem' }}>
-          {error} <button style={smallBtn('#ef4444')} onClick={() => setError(null)}>dismiss</button>
+          {error} <button style={smallBtn('#ef4444')} onClick={() => setError(null)}>{t('dismiss')}</button>
         </div>
       )}
       {adding && (
         <div style={{ display: 'flex', gap: '0.3rem', alignItems: 'center', marginBottom: '0.3rem', flexWrap: 'wrap' }}>
-          <input value={newName} onChange={e => setNewName(e.target.value)} placeholder="name (e.g. peak_power_w)" style={{ ...inputStyle, minWidth: 160 }}
+          <input value={newName} onChange={e => setNewName(e.target.value)} placeholder={t('name (e.g. peak_power_w)')} style={{ ...inputStyle, minWidth: 160 }}
             onKeyDown={e => e.key === 'Enter' && addParam()} />
-          <input value={newUnit} onChange={e => setNewUnit(e.target.value)} placeholder="unit" style={{ ...inputStyle, width: 60 }} />
-          <input value={newValue} onChange={e => setNewValue(e.target.value)} placeholder="value (optional)" style={{ ...inputStyle, width: 110 }}
+          <input value={newUnit} onChange={e => setNewUnit(e.target.value)} placeholder={t('unit')} style={{ ...inputStyle, width: 60 }} />
+          <input value={newValue} onChange={e => setNewValue(e.target.value)} placeholder={t('value (optional)')} style={{ ...inputStyle, width: 110 }}
             onKeyDown={e => e.key === 'Enter' && addParam()} />
-          <button style={smallBtn('#10b981')} disabled={!newName.trim()} onClick={addParam}>add</button>
-          <button style={smallBtn()} onClick={() => setAdding(false)}>cancel</button>
+          <button style={smallBtn('#10b981')} disabled={!newName.trim()} onClick={addParam}>{t('add')}</button>
+          <button style={smallBtn()} onClick={() => setAdding(false)}>{t('cancel')}</button>
         </div>
       )}
-      {isLoading && <div style={{ color: 'var(--text-secondary)' }}>Loading…</div>}
+      {isLoading && <div style={{ color: 'var(--text-secondary)' }}>{t('Loading…')}</div>}
       {!isLoading && params.length === 0 && (
-        <div style={{ color: 'var(--text-secondary)', fontSize: '0.64rem' }}>No parameters on this element yet.</div>
+        <div style={{ color: 'var(--text-secondary)', fontSize: '0.64rem' }}>{t('No parameters on this element yet.')}</div>
       )}
       {params.length > 0 && (
         <table style={{ borderCollapse: 'collapse', width: '100%' }}>
           <thead>
             <tr>
-              <th style={th}>Name</th><th style={th}>Value</th><th style={th}>Unit</th><th style={th}>Switch</th>
-              <th style={th}>Formula</th><th style={th}>Source</th><th style={th}></th>
+              <th style={th}>{t('Name')}</th><th style={th}>{t('Value')}</th><th style={th}>{t('Unit')}</th><th style={th}>{t('Switch')}</th>
+              <th style={th}>{t('Formula')}</th><th style={th}>{t('Source')}</th><th style={th}></th>
             </tr>
           </thead>
           <tbody>
@@ -210,10 +219,10 @@ export function ParameterPanel({ elementId, studyId, compact }: { elementId: str
                   <td style={{ ...td, fontWeight: 600, whiteSpace: 'nowrap' }} title={p.quantity_kind || undefined}>{p.name}</td>
                   <td style={{ ...td, whiteSpace: 'nowrap' }}>
                     {isEd ? (
-                      <input value={manual} onChange={e => setManual(e.target.value)} placeholder="manual value" style={{ ...inputStyle, width: 90 }}
+                      <input value={manual} onChange={e => setManual(e.target.value)} placeholder={t('manual value')} style={{ ...inputStyle, width: 90 }}
                         onKeyDown={e => { if (e.key === 'Enter') commitEdit(p); if (e.key === 'Escape') setEditing(null) }} />
                     ) : (
-                      <span onDoubleClick={() => startEdit(p)} title={`manual ${fmt(p.manual_value)} · computed ${fmt(p.computed_value)} · reference ${fmt(p.reference_value)}`}
+                      <span onDoubleClick={() => startEdit(p)} title={t('manual {{manual}} · computed {{computed}} · reference {{reference}}', { manual: fmt(p.manual_value), computed: fmt(p.computed_value), reference: fmt(p.reference_value) })}
                         style={{ color: hasErr ? '#ef4444' : 'var(--text-primary)', cursor: 'text', fontVariantNumeric: 'tabular-nums' }}>
                         {fmt(p.effective_value)}
                       </span>
@@ -222,12 +231,12 @@ export function ParameterPanel({ elementId, studyId, compact }: { elementId: str
                   <td style={{ ...td, color: 'var(--text-secondary)' }}>{p.unit || ''}</td>
                   <td style={td}>
                     <select value={p.value_switch} onChange={e => setSwitch(p, e.target.value as ValueSwitch)} style={{ ...inputStyle, fontSize: '0.58rem', padding: '0 0.15rem' }}>
-                      {VALUE_SWITCHES.map(s => <option key={s} value={s}>{s}</option>)}
+                      {VALUE_SWITCHES.map(s => <option key={s} value={s}>{SWITCH_LABELS[s] ? t(SWITCH_LABELS[s]) : s}</option>)}
                     </select>
                   </td>
                   <td style={{ ...td, minWidth: 140 }}>
                     {isEd ? (
-                      <input value={formula} onChange={e => setFormula(e.target.value)} placeholder='e.g. mass_kg * 1.2 or el("Bus").power_avg_w' style={{ ...monoInput, width: '100%' }}
+                      <input value={formula} onChange={e => setFormula(e.target.value)} placeholder={t('e.g. mass_kg * 1.2 or el("Bus").power_avg_w')} style={{ ...monoInput, width: '100%' }}
                         onKeyDown={e => { if (e.key === 'Enter') commitEdit(p); if (e.key === 'Escape') setEditing(null) }} />
                     ) : (
                       <span onDoubleClick={() => startEdit(p)} style={{ fontFamily: 'ui-monospace, monospace', fontSize: '0.6rem', color: p.formula ? '#c4b5fd' : 'var(--text-secondary)', cursor: 'text' }}>
@@ -243,12 +252,12 @@ export function ParameterPanel({ elementId, studyId, compact }: { elementId: str
                   </td>
                   <td style={{ ...td, whiteSpace: 'nowrap' }}>
                     {isEd ? (<>
-                      <button style={smallBtn('#10b981')} onClick={() => commitEdit(p)}>save</button>{' '}
-                      <button style={smallBtn()} onClick={() => setEditing(null)}>cancel</button>
+                      <button style={smallBtn('#10b981')} onClick={() => commitEdit(p)}>{t('save')}</button>{' '}
+                      <button style={smallBtn()} onClick={() => setEditing(null)}>{t('cancel')}</button>
                     </>) : (<>
-                      <button style={smallBtn()} onClick={() => startEdit(p)}>edit</button>{' '}
+                      <button style={smallBtn()} onClick={() => startEdit(p)}>{t('edit')}</button>{' '}
                       <button style={smallBtn('#ef4444')}
-                        title={p.option_id ? `Remove the override from option "${optionName}" (the baseline value shows through)` : 'Delete (well-known parameters are reset to the column value)'}
+                        title={p.option_id ? t('Remove the override from option "{{name}}" (the baseline value shows through)', { name: optionName }) : t('Delete (well-known parameters are reset to the column value)')}
                         disabled={!!optionId && !p.option_id}
                         onClick={() => remove.mutate(p.name)}>×</button>
                     </>)}
@@ -267,12 +276,13 @@ export function ParameterPanel({ elementId, studyId, compact }: { elementId: str
 export function ParameterSection({ elementId, studyId, elementName, defaultOpen = false }: {
   elementId: string | null; studyId: string | null; elementName?: string; defaultOpen?: boolean
 }) {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(defaultOpen)
   if (!elementId) return null
   return (
     <div style={{ marginTop: '0.5rem', borderTop: '1px solid var(--border)', paddingTop: '0.4rem' }}>
       <button onClick={() => setOpen(v => !v)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.68rem', color: '#8b5cf6', fontWeight: 600, padding: 0 }}>
-        {open ? '▾' : '▸'} Parameters & equations{elementName ? `: ${elementName}` : ''}
+        {open ? '▾' : '▸'} {elementName ? t('Parameters & equations: {{name}}', { name: elementName }) : t('Parameters & equations')}
       </button>
       {open && <div style={{ marginTop: '0.3rem' }}><ParameterPanel elementId={elementId} studyId={studyId} compact /></div>}
     </div>

@@ -50,7 +50,7 @@ where $a$ is the regression coefficient, $M$ is the driving parameter (usually d
 
 *[Source: SMAD4 Table 20-8; US Air Force USCM database]*
 
-| Subsystem | CER (FY2010 $K) | Parameter | Typical $b$ |
+| Subsystem | CER (FY2010 \$K) | Parameter | Typical $b$ |
 |-----------|-----------------|-----------|-------------|
 | Structure | $157\,M_{\text{struct}}^{0.83}$ | Dry mass (kg) | 0.83 |
 | Thermal | $394\,M_{\text{therm}}^{0.635}$ | Dry mass (kg) | 0.635 |
@@ -278,7 +278,7 @@ The difference between P50 and the committed level is the **cost reserve**. It b
 
 ### 16.4.3 Returning to UniSat-1: cost structure
 
-**Simple WBS, mostly COTS.** UniSat-1's cost structure is fundamentally different from that of larger missions because (a) nearly all hardware is COTS, so NRE is near zero, and (b) the team is small and university-based, so labour costs are low. Chapter 13 §13.6 gave the BOM-based cost summary (≈ 85 kEUR); here the same mission is estimated by both methods against the WBS of §16.2.1 and carried to a P80 figure.
+**Simple WBS, mostly COTS.** UniSat-1's cost structure is fundamentally different from that of larger missions because (a) nearly all hardware is COTS, so NRE is near zero, and (b) the team is small and university-based, so labour costs are low. Chapter 13 §13.6 gave the BOM-based cost summary (≈ 85 kEUR, without operations and with a single management line; the WBS estimate below adds both and comes to ≈ 91 kEUR); here the same mission is estimated by both methods against the WBS of §16.2.1 and carried to a P80 figure.
 
 > **UniSat-1 WBS cost estimate (parametric versus bottom-up; indicative 2026):**
 >
@@ -288,7 +288,7 @@ The difference between P50 and the committed level is the **cost reserve**. It b
 > | 2.0 Systems engineering | 3 | 3 | Team lead |
 > | 3.0 Mission assurance | 1 | 1 | Minimal QA for a university mission |
 > | 4.0 Payload | 8 | 8 | MEMS sensor PCB + calibration |
-> | 5.0 Bus hardware | 38 | 36 | BOM in Chapter 13 §13.6 |
+> | 5.0 Bus hardware | 39 | 38 | BOM in Chapter 13 §13.6 |
 > |   5.1 Structure | 4 | 4 | 1U frame |
 > |   5.2 EPS + solar array | 20 | 19.5 | EPS board + body-mounted cells |
 > |   5.3 AOCS (passive) | 1 | 1 | Magnet + hysteresis rods |
@@ -299,8 +299,8 @@ The difference between P50 and the committed level is the **cost reserve**. It b
 > | 8.0 Launch | 15 | 15 | 1U ISS deployment |
 > | 9.0 Ground segment | 5 | 5 | Yagi antenna + volunteer network |
 > | 10.0 Operations (6 months) | 3 | 3 | Student operators, 0.2 FTE |
-> | **TOTAL (P50)** | **≈ 90** | **≈ 85** | |
-> | **P80 (× 1.3)** | **≈ 117** | **≈ 111** | Conservative estimate |
+> | **TOTAL (P50)** | **≈ 91** | **≈ 91** | |
+> | **P80 (× 1.3)** | **≈ 118** | **≈ 118** | Conservative estimate |
 
 **Key cost observations for 1U missions:**
 
@@ -437,7 +437,7 @@ The board closes with one of three recommendations — **GO**, **NO GO**, or **G
 
 2. **WBS allocation.** A 3U Earth-observation CubeSat has a cost ceiling of 320 kEUR. Allocate it across the ten Level-1 WBS elements of §16.2.1 using the default percentages, then re-allocate for a mission whose payload is a custom hyperspectral imager with 60 kEUR of NRE (Chapter 13 §13.1.3). Which elements shrink to absorb the payload growth, and what does that imply for the test campaign?
 
-3. **Cost by phase.** Using the phase percentages of §16.2.2 and a total of 490 kEUR, draw the cumulative spend curve for the 3U mission over a 30-month schedule (Phase 0/A 4 months, B 6, C 8, D 8, E 36 following). In which month does the project need its largest cash injection, and what happens to the curve if the launch (WBS 8.0) is paid 50 % at contract signature in Phase B?
+3. **Cost by phase.** Using the phase percentages of §16.2.2 and a total of 490 kEUR, draw the cumulative spend curve for the 3U mission over a 26-month development schedule (Phase 0/A 4 months, B 6, C 8, D 8, E 36 following). In which month does the project need its largest cash injection, and what happens to the curve if the launch (WBS 8.0) is paid 50 % at contract signature in Phase B?
 
 4. **Learning curve — exact versus approximate.** For first-unit cost $C_1 =$ 800 kEUR and learning rates of 95 %, 90 % and 85 %, compute the total cost of 8, 16 and 32 units using (a) the exact sum $C_1\sum i^{\log_2 L}$ and (b) the continuous approximation of §16.3.1. Tabulate the percentage error of (b) and state the smallest $N$ for which it is below 3 %.
 

@@ -15,6 +15,8 @@
  *   GET  /api/studies/{id}/conflicts?option_id=                 (open conflict counts per card)
  */
 import { useState, type ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
+import type { TFunction } from 'i18next'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useUIStore } from '../stores/uiStore'
 import { useActiveOptionId, optionQuery } from '../stores/optionStore'
@@ -44,7 +46,7 @@ interface CardDef {
   /** POST target for the run button */
   runUrl: (studyId: string, opt: string) => string
   runBody?: unknown
-  metrics: (summary: Record<string, any>) => Metric[]
+  metrics: (summary: Record<string, any>, t: TFunction) => Metric[]
 }
 
 function fmt(v: unknown, digits = 1): string {
@@ -55,67 +57,86 @@ function tone(ok: boolean | null): string | undefined {
   return ok === null ? undefined : ok ? '#10b981' : '#ef4444'
 }
 
+// English text is the i18n key
+const CARD_LABELS: Record<AnalysisId, string> = {
+  design_loop: 'Design loop',
+  mission_simulation: 'Mission simulation',
+  ground_segment: 'Ground segment',
+  physics: 'Physics (mass / AOCS / thermal)',
+  vv: 'V&V',
+  fmeca: 'FMECA',
+}
+// English text is the i18n key
+const CARD_NEEDS: Record<AnalysisId, string> = {
+  design_loop: 'Mission root with requirements (orbit, payload, lifetime); subsystems by domain.',
+  mission_simulation: 'Operational modes (power, data rate, payload on/off), battery capacity_wh, solar array EOL power, orbit.',
+  ground_segment: 'At least one selected ground station (ground segment element), TT&C band / data rate, orbit, payload data rate.',
+  physics: 'Component masses and dimensions, body positions (or auto-placement in a structure envelope), a reaction wheel, pointing requirement, dissipations.',
+  vv: 'Requirements with verification method / threshold parameters; analysis runs close threshold items automatically.',
+  fmeca: 'Component elements with domain, quantity / redundancy, and functions allocated (critical functions drive single-point findings).',
+}
+
 export const ANALYSIS_CARDS: CardDef[] = [
   {
-    id: 'design_loop', label: 'Design loop', color: '#f59e0b',
-    needs: 'Mission root with requirements (orbit, payload, lifetime); subsystems by domain.',
+    id: 'design_loop', label: CARD_LABELS.design_loop, color: '#f59e0b',
+    needs: CARD_NEEDS.design_loop,
     runUrl: (s, opt) => `${API}/design/${s}/run${opt}`,
     runBody: { max_iterations: 50, convergence_threshold: 0.001 },
-    metrics: s => [
-      { label: 'converged', value: s.converged === undefined ? '—' : s.converged ? 'yes' : 'no', tone: tone(s.converged === undefined ? null : !!s.converged) },
-      { label: 'iterations', value: fmt(s.iterations) },
-      { label: 'conflicts', value: fmt(s.conflicts), tone: tone(typeof s.conflicts === 'number' ? s.conflicts === 0 : null) },
+    metrics: (s, t) => [
+      { label: t('converged'), value: s.converged === undefined ? '—' : s.converged ? t('yes') : t('no'), tone: tone(s.converged === undefined ? null : !!s.converged) },
+      { label: t('iterations'), value: fmt(s.iterations) },
+      { label: t('conflicts'), value: fmt(s.conflicts), tone: tone(typeof s.conflicts === 'number' ? s.conflicts === 0 : null) },
     ],
   },
   {
-    id: 'mission_simulation', label: 'Mission simulation', color: '#3b82f6',
-    needs: 'Operational modes (power, data rate, payload on/off), battery capacity_wh, solar array EOL power, orbit.',
+    id: 'mission_simulation', label: CARD_LABELS.mission_simulation, color: '#3b82f6',
+    needs: CARD_NEEDS.mission_simulation,
     runUrl: (s, opt) => `${API}/studies/${s}/analyses/mission_simulation/run${opt}`,
-    metrics: s => [
-      { label: 'min SoC', value: `${fmt(s.min_soc_pct ?? s.sim_min_soc_pct)} %`, tone: tone(typeof (s.min_soc_pct ?? s.sim_min_soc_pct) === 'number' ? (s.min_soc_pct ?? s.sim_min_soc_pct) >= 20 : null) },
-      { label: 'energy/orbit', value: `${fmt(s.energy_balance_wh_per_orbit ?? s.sim_energy_balance_wh_per_orbit)} Wh`, tone: tone(typeof (s.energy_balance_wh_per_orbit ?? s.sim_energy_balance_wh_per_orbit) === 'number' ? (s.energy_balance_wh_per_orbit ?? s.sim_energy_balance_wh_per_orbit) >= 0 : null) },
-      { label: 'backlog', value: `${fmt(s.data_backlog_end_gb ?? s.sim_data_backlog_end_gb, 2)} GB` },
+    metrics: (s, t) => [
+      { label: t('min SoC'), value: `${fmt(s.min_soc_pct ?? s.sim_min_soc_pct)} %`, tone: tone(typeof (s.min_soc_pct ?? s.sim_min_soc_pct) === 'number' ? (s.min_soc_pct ?? s.sim_min_soc_pct) >= 20 : null) },
+      { label: t('energy/orbit'), value: `${fmt(s.energy_balance_wh_per_orbit ?? s.sim_energy_balance_wh_per_orbit)} Wh`, tone: tone(typeof (s.energy_balance_wh_per_orbit ?? s.sim_energy_balance_wh_per_orbit) === 'number' ? (s.energy_balance_wh_per_orbit ?? s.sim_energy_balance_wh_per_orbit) >= 0 : null) },
+      { label: t('backlog'), value: `${fmt(s.data_backlog_end_gb ?? s.sim_data_backlog_end_gb, 2)} GB` },
     ],
   },
   {
-    id: 'ground_segment', label: 'Ground segment', color: '#10b981',
-    needs: 'At least one selected ground station (ground segment element), TT&C band / data rate, orbit, payload data rate.',
+    id: 'ground_segment', label: CARD_LABELS.ground_segment, color: '#10b981',
+    needs: CARD_NEEDS.ground_segment,
     runUrl: (s, opt) => `${API}/studies/${s}/analyses/ground_segment/run${opt}`,
-    metrics: s => [
-      { label: 'contact', value: `${fmt(s.gs_contact_min_per_day)} min/d` },
-      { label: 'returned', value: `${fmt(s.gs_data_return_gb_per_day, 2)} / ${fmt(s.gs_data_generated_gb_per_day, 2)} GB/d`, tone: tone(typeof s.gs_data_return_gb_per_day === 'number' && typeof s.gs_data_generated_gb_per_day === 'number' ? s.gs_data_return_gb_per_day >= s.gs_data_generated_gb_per_day : null) },
-      { label: 'stations', value: fmt(s.gs_station_count) },
+    metrics: (s, t) => [
+      { label: t('contact'), value: t('{{v}} min/d', { v: fmt(s.gs_contact_min_per_day) }) },
+      { label: t('returned'), value: t('{{ret}} / {{gen}} GB/d', { ret: fmt(s.gs_data_return_gb_per_day, 2), gen: fmt(s.gs_data_generated_gb_per_day, 2) }), tone: tone(typeof s.gs_data_return_gb_per_day === 'number' && typeof s.gs_data_generated_gb_per_day === 'number' ? s.gs_data_return_gb_per_day >= s.gs_data_generated_gb_per_day : null) },
+      { label: t('stations'), value: fmt(s.gs_station_count) },
     ],
   },
   {
-    id: 'physics', label: 'Physics (mass / AOCS / thermal)', color: '#8b5cf6',
-    needs: 'Component masses and dimensions, body positions (or auto-placement in a structure envelope), a reaction wheel, pointing requirement, dissipations.',
+    id: 'physics', label: CARD_LABELS.physics, color: '#8b5cf6',
+    needs: CARD_NEEDS.physics,
     runUrl: (s, opt) => `${API}/studies/${s}/analyses/physics/run${opt}`,
-    metrics: s => [
-      { label: 'mass', value: `${fmt(s.mp_total_mass_kg, 2)} kg` },
-      { label: 'wheel margin', value: `${fmt(s.aocs_wheel_margin_pct)} %`, tone: tone(typeof s.aocs_wheel_margin_pct === 'number' ? s.aocs_wheel_margin_pct >= 0 : null) },
-      { label: 'thermal margin', value: `${fmt(s.thermal_worst_margin_c)} °C`, tone: tone(typeof s.thermal_worst_margin_c === 'number' ? s.thermal_worst_margin_c >= 0 : null) },
+    metrics: (s, t) => [
+      { label: t('mass'), value: `${fmt(s.mp_total_mass_kg, 2)} kg` },
+      { label: t('wheel margin'), value: `${fmt(s.aocs_wheel_margin_pct)} %`, tone: tone(typeof s.aocs_wheel_margin_pct === 'number' ? s.aocs_wheel_margin_pct >= 0 : null) },
+      { label: t('thermal margin'), value: `${fmt(s.thermal_worst_margin_c)} °C`, tone: tone(typeof s.thermal_worst_margin_c === 'number' ? s.thermal_worst_margin_c >= 0 : null) },
     ],
   },
   {
-    id: 'vv', label: 'V&V', color: '#14b8a6',
-    needs: 'Requirements with verification method / threshold parameters; analysis runs close threshold items automatically.',
+    id: 'vv', label: CARD_LABELS.vv, color: '#14b8a6',
+    needs: CARD_NEEDS.vv,
     runUrl: (s, opt) => `${API}/studies/${s}/analyses/vv/run${opt}`,
-    metrics: s => [
-      { label: 'closure', value: `${fmt(s.vv_closure_pct)} %` },
-      { label: 'passed', value: `${fmt(s.vv_items_passed)} / ${fmt(s.vv_items_total)}` },
-      { label: 'failed', value: fmt(s.vv_items_failed), tone: tone(typeof s.vv_items_failed === 'number' ? s.vv_items_failed === 0 : null) },
+    metrics: (s, t) => [
+      { label: t('closure'), value: `${fmt(s.vv_closure_pct)} %` },
+      { label: t('passed'), value: `${fmt(s.vv_items_passed)} / ${fmt(s.vv_items_total)}` },
+      { label: t('failed'), value: fmt(s.vv_items_failed), tone: tone(typeof s.vv_items_failed === 'number' ? s.vv_items_failed === 0 : null) },
     ],
   },
   {
-    id: 'fmeca', label: 'FMECA', color: '#ec4899',
-    needs: 'Component elements with domain, quantity / redundancy, and functions allocated (critical functions drive single-point findings).',
+    id: 'fmeca', label: CARD_LABELS.fmeca, color: '#ec4899',
+    needs: CARD_NEEDS.fmeca,
     runUrl: (s, opt) => `${API}/studies/${s}/analyses/fmeca/run${opt}`,
     runBody: { critical: [] },
-    metrics: s => [
-      { label: 'modes', value: fmt(s.fmeca_modes ?? s.modes) },
-      { label: 'max RPN', value: fmt(s.fmeca_max_rpn) },
-      { label: 'single points', value: fmt(s.fmeca_single_point_failures), tone: tone(typeof s.fmeca_single_point_failures === 'number' ? s.fmeca_single_point_failures === 0 : null) },
+    metrics: (s, t) => [
+      { label: t('modes'), value: fmt(s.fmeca_modes ?? s.modes) },
+      { label: t('max RPN'), value: fmt(s.fmeca_max_rpn) },
+      { label: t('single points'), value: fmt(s.fmeca_single_point_failures), tone: tone(typeof s.fmeca_single_point_failures === 'number' ? s.fmeca_single_point_failures === 0 : null) },
     ],
   },
 ]
@@ -129,14 +150,14 @@ async function jsonOrThrow(res: Response) {
   return res.json()
 }
 
-function ago(iso: string | null | undefined): string {
-  if (!iso) return 'never run'
+function ago(iso: string | null | undefined, t: TFunction): string {
+  if (!iso) return t('never run')
   const s = (Date.now() - new Date(iso).getTime()) / 1000
   if (!Number.isFinite(s)) return ''
-  if (s < 60) return 'just now'
-  if (s < 3600) return `${Math.floor(s / 60)} min ago`
-  if (s < 86400) return `${Math.floor(s / 3600)} h ago`
-  return `${Math.floor(s / 86400)} d ago`
+  if (s < 60) return t('just now')
+  if (s < 3600) return t('{{n}} min ago', { n: Math.floor(s / 60) })
+  if (s < 86400) return t('{{n}} h ago', { n: Math.floor(s / 3600) })
+  return t('{{n}} d ago', { n: Math.floor(s / 86400) })
 }
 
 function Badge({ text, color, title }: { text: string; color: string; title?: string }) {
@@ -168,6 +189,7 @@ function AnalysisCard({ def, run, openConflicts, active, onOpen, studyId, option
   def: CardDef; run: AnalysisRun | undefined; openConflicts: number; active: boolean; onOpen: () => void
   studyId: string; optionId: string | null
 }) {
+  const { t } = useTranslation()
   const qc = useQueryClient()
   const setAnalysisRunning = useUIStore(s => s.setAnalysisRunning)
   const [error, setError] = useState<string | null>(null)
@@ -186,7 +208,7 @@ function AnalysisCard({ def, run, openConflicts, active, onOpen, studyId, option
   })
 
   const summary = run?.summary || {}
-  const metrics = run ? def.metrics(summary) : []
+  const metrics = run ? def.metrics(summary, t) : []
   const status = runMut.isPending || run?.status === 'running' ? 'running' : run?.status
   const running = status === 'running'
 
@@ -200,16 +222,16 @@ function AnalysisCard({ def, run, openConflicts, active, onOpen, studyId, option
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.25rem' }}>
-        <span style={{ fontSize: '0.74rem', fontWeight: 600, color: def.color }}>{def.label}</span>
+        <span style={{ fontSize: '0.74rem', fontWeight: 600, color: def.color }}>{t(def.label)}</span>
         <span style={{ flex: 1 }} />
-        {run?.stale && <Badge text="stale" color="#f59e0b" title="Inputs changed since this run" />}
-        {status === 'failed' && <Badge text="failed" color="#ef4444" title={summary.error} />}
-        {running && <Badge text="running" color="#3b82f6" />}
-        {status === 'ok' && !run?.stale && <Badge text="ok" color="#10b981" />}
-        {openConflicts > 0 && <Badge text={`${openConflicts} conflict${openConflicts === 1 ? '' : 's'}`} color="#f97316" />}
+        {run?.stale && <Badge text={t('stale')} color="#f59e0b" title={t('Inputs changed since this run')} />}
+        {status === 'failed' && <Badge text={t('failed')} color="#ef4444" title={summary.error} />}
+        {running && <Badge text={t('running')} color="#3b82f6" />}
+        {status === 'ok' && !run?.stale && <Badge text={t('ok')} color="#10b981" />}
+        {openConflicts > 0 && <Badge text={t('{{count}} conflicts', { count: openConflicts, defaultValue_one: '{{count}} conflict' })} color="#f97316" />}
       </div>
       <div style={{ fontSize: '0.58rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }} title={run?.finished_at || run?.started_at || ''}>
-        {run ? `last run ${ago(run.finished_at || run.started_at)}` : optionId ? 'never run in this option' : 'never run'}
+        {run ? t('last run {{ago}}', { ago: ago(run.finished_at || run.started_at, t) }) : optionId ? t('never run in this option') : t('never run')}
       </div>
       {metrics.length > 0 ? (
         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.3rem' }}>
@@ -221,8 +243,8 @@ function AnalysisCard({ def, run, openConflicts, active, onOpen, studyId, option
           ))}
         </div>
       ) : (
-        <div style={{ fontSize: '0.56rem', color: 'var(--text-secondary)', marginBottom: '0.3rem', fontStyle: 'italic' }} title={def.needs}>
-          needs: {def.needs}
+        <div style={{ fontSize: '0.56rem', color: 'var(--text-secondary)', marginBottom: '0.3rem', fontStyle: 'italic' }} title={t(def.needs)}>
+          {t('needs: {{needs}}', { needs: t(def.needs) })}
         </div>
       )}
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
@@ -234,7 +256,7 @@ function AnalysisCard({ def, run, openConflicts, active, onOpen, studyId, option
             border: `1px solid ${def.color}`, background: `${def.color}22`, color: def.color, fontWeight: 600,
           }}
         >
-          {running ? 'Running…' : run ? 'Re-run' : 'Run'}
+          {running ? t('Running…') : run ? t('Re-run') : t('Run')}
         </button>
         {error && <span style={{ fontSize: '0.58rem', color: '#ef4444' }} title={error}>{error.slice(0, 80)}</span>}
       </div>
@@ -252,6 +274,7 @@ function Section({ title, color, children }: { title: string; color: string; chi
 }
 
 export function AnalysesPanel() {
+  const { t } = useTranslation()
   const studyId = useUIStore(s => s.studyId)
   const optionId = useActiveOptionId(studyId)
   const [open, setOpen] = useState<AnalysisId | null>(null)
@@ -265,7 +288,7 @@ export function AnalysesPanel() {
     enabled: !!studyId, structuralSharing: false,
   })
 
-  if (!studyId) return <div style={{ padding: '0.75rem', fontSize: '0.72rem', color: 'var(--text-secondary)' }}>Select a study.</div>
+  if (!studyId) return <div style={{ padding: '0.75rem', fontSize: '0.72rem', color: 'var(--text-secondary)' }}>{t('Select a study.')}</div>
 
   const byAnalysis = new Map(runs.map(r => [r.analysis, r]))
   const openByAnalysis = new Map<string, number>()
@@ -279,14 +302,16 @@ export function AnalysesPanel() {
     <div style={{ padding: '0.5rem 0.75rem' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.4rem' }}>
         <span style={{ fontSize: '0.66rem', color: 'var(--text-secondary)' }}>
-          Engineering analyses for this study{optionId ? ' (active option)' : ' (baseline)'} — click a card to open it; Run posts to the analysis and refreshes parameters, conflicts and margins.
+          {optionId
+            ? t('Engineering analyses for this study (active option) — click a card to open it; Run posts to the analysis and refreshes parameters, conflicts and margins.')
+            : t('Engineering analyses for this study (baseline) — click a card to open it; Run posts to the analysis and refreshes parameters, conflicts and margins.')}
         </span>
         <span style={{ flex: 1 }} />
         <button onClick={() => setShowCompare(v => !v)} style={{ cursor: 'pointer', fontSize: '0.62rem', padding: '0.15rem 0.55rem', borderRadius: 4, border: '1px solid var(--border)', background: showCompare ? '#f59e0b22' : 'none', color: showCompare ? '#f59e0b' : 'var(--text-secondary)' }}>
-          Options {showCompare ? '▾' : '▸'}
+          {t('Options')} {showCompare ? '▾' : '▸'}
         </button>
       </div>
-      {runsError && <div style={{ fontSize: '0.62rem', color: '#ef4444', marginBottom: '0.3rem' }}>analyses: {(runsError as Error).message}</div>}
+      {runsError && <div style={{ fontSize: '0.62rem', color: '#ef4444', marginBottom: '0.3rem' }}>{t('analyses: {{message}}', { message: (runsError as Error).message })}</div>}
 
       <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
         {ANALYSIS_CARDS.map(def => (
@@ -299,18 +324,18 @@ export function AnalysesPanel() {
       </div>
 
       {showCompare && (
-        <Section title="Options" color="#f59e0b">
+        <Section title={t('Options')} color="#f59e0b">
           <ErrorBoundary phaseName="Option compare"><OptionCompare studyId={studyId} /></ErrorBoundary>
         </Section>
       )}
 
       {openDef && (
-        <Section title={openDef.label} color={openDef.color}>
+        <Section title={t(openDef.label)} color={openDef.color}>
           <ErrorBoundary phaseName={openDef.label}>
             {open === 'design_loop' && (
               <div>
                 <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
-                  Budgets after the last design loop (mission root or the focused element). Cross-domain conflicts from the loop are listed under Conflicts below.
+                  {t('Budgets after the last design loop (mission root or the focused element). Cross-domain conflicts from the loop are listed under Conflicts below.')}
                 </div>
                 <BudgetPanel />
                 <div style={{ marginTop: '0.5rem' }}><ConflictsPanel studyId={studyId} optionId={optionId} analysisFilter="design_loop" /></div>
@@ -325,7 +350,7 @@ export function AnalysesPanel() {
         </Section>
       )}
 
-      <Section title="Conflicts" color="#f97316">
+      <Section title={t('Conflicts')} color="#f97316">
         <ErrorBoundary phaseName="Conflicts"><ConflictsPanel studyId={studyId} optionId={optionId} /></ErrorBoundary>
       </Section>
     </div>

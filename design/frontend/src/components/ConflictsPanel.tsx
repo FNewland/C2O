@@ -9,6 +9,7 @@
  * a Resolve button (`POST /api/conflicts/{id}/resolve`).
  */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { useDesignStore } from '../stores/designStore'
 import { useUIStore } from '../stores/uiStore'
 import { optionQuery } from '../stores/optionStore'
@@ -16,6 +17,7 @@ import type { AnalysisConflict } from '../types/analyses'
 
 const API = '/api'
 
+// English text is the i18n key
 const ANALYSIS_LABELS: Record<string, string> = {
   design_loop: 'design loop', mission_simulation: 'mission sim', ground_segment: 'ground segment',
   physics: 'physics', vv: 'V&V', fmeca: 'FMECA',
@@ -26,6 +28,10 @@ const ANALYSIS_COLORS: Record<string, string> = {
 }
 const SEVERITY_COLORS: Record<string, string> = {
   critical: '#ef4444', major: '#f97316', minor: '#eab308', warning: '#f59e0b', info: '#3b82f6',
+}
+// English text is the i18n key
+const SEVERITY_LABELS: Record<string, string> = {
+  critical: 'critical', major: 'major', minor: 'minor', warning: 'warning', info: 'info',
 }
 
 async function jsonOrThrow(res: Response) {
@@ -54,6 +60,7 @@ function focusElementInBlocks(el: ElementLite, all: ElementLite[]) {
 function AnalysisConflictCard({ c, elements, onResolve, resolving }: {
   c: AnalysisConflict; elements: ElementLite[]; onResolve: (id: string) => void; resolving: boolean
 }) {
+  const { t } = useTranslation()
   const sev = SEVERITY_COLORS[c.severity] || SEVERITY_COLORS.minor
   const src = ANALYSIS_COLORS[c.analysis] || '#6b7280'
   const byId = new Map(elements.map(e => [e.id, e]))
@@ -61,20 +68,20 @@ function AnalysisConflictCard({ c, elements, onResolve, resolving }: {
     <div className="card" style={{ borderLeft: `4px solid ${sev}`, background: `${sev}10`, marginBottom: '0.5rem', padding: '0.5rem 0.65rem', opacity: c.resolved ? 0.55 : 1 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.3rem', flexWrap: 'wrap' }}>
         <span style={{ fontSize: '0.56rem', padding: '0 0.35rem', borderRadius: 3, background: `${src}22`, color: src, border: `1px solid ${src}55`, whiteSpace: 'nowrap' }}>
-          {ANALYSIS_LABELS[c.analysis] || c.analysis}
+          {ANALYSIS_LABELS[c.analysis] ? t(ANALYSIS_LABELS[c.analysis]) : c.analysis}
         </span>
         <span style={{ fontSize: '0.56rem', padding: '0 0.35rem', borderRadius: 3, background: `${sev}22`, color: sev, border: `1px solid ${sev}55`, textTransform: 'uppercase' }}>
-          {c.severity}
+          {SEVERITY_LABELS[c.severity] ? t(SEVERITY_LABELS[c.severity]) : c.severity}
         </span>
         <h3 style={{ fontSize: '0.8rem', margin: 0 }}>{c.title}</h3>
         <span style={{ fontSize: '0.56rem', color: 'var(--text-secondary)', fontFamily: 'ui-monospace, monospace' }}>{c.code}</span>
         <span style={{ flex: 1 }} />
         {c.resolved ? (
-          <span style={{ fontSize: '0.58rem', color: 'var(--success)' }}>resolved</span>
+          <span style={{ fontSize: '0.58rem', color: 'var(--success)' }}>{t('resolved')}</span>
         ) : (
           <button onClick={() => onResolve(c.id)} disabled={resolving}
             style={{ cursor: 'pointer', fontSize: '0.6rem', padding: '0.1rem 0.5rem', borderRadius: 4, border: '1px solid var(--success)', background: 'rgba(16,185,129,0.12)', color: 'var(--success)' }}>
-            Resolve
+            {t('Resolve')}
           </button>
         )}
       </div>
@@ -84,7 +91,7 @@ function AnalysisConflictCard({ c, elements, onResolve, resolving }: {
           {c.element_ids.map(id => {
             const el = byId.get(id)
             return (
-              <button key={id} title={el ? `Focus ${el.name} in Blocks` : id}
+              <button key={id} title={el ? t('Focus {{name}} in Blocks', { name: el.name }) : id}
                 onClick={() => el && focusElementInBlocks(el, elements)}
                 style={{ cursor: el ? 'pointer' : 'default', fontSize: '0.58rem', padding: '0 0.4rem', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg-primary)', color: el ? 'var(--accent)' : 'var(--text-secondary)' }}>
                 {el?.name || id.slice(0, 8)}
@@ -94,11 +101,11 @@ function AnalysisConflictCard({ c, elements, onResolve, resolving }: {
         </div>
       )}
       {c.requirement_ids?.length > 0 && (
-        <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>requirements: {c.requirement_ids.join(', ')}</div>
+        <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>{t('requirements: {{ids}}', { ids: c.requirement_ids.join(', ') })}</div>
       )}
       {c.suggested_fix && (
         <div style={{ fontSize: '0.7rem', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '0.25rem' }}>
-          <span style={{ fontSize: '0.6rem', fontWeight: 600, color: 'var(--text-secondary)' }}>SUGGESTED FIX: </span>{c.suggested_fix}
+          <span style={{ fontSize: '0.6rem', fontWeight: 600, color: 'var(--text-secondary)' }}>{t('SUGGESTED FIX:')} </span>{c.suggested_fix}
         </div>
       )}
     </div>
@@ -106,6 +113,7 @@ function AnalysisConflictCard({ c, elements, onResolve, resolving }: {
 }
 
 function AnalysisConflicts({ studyId, optionId, analysisFilter }: { studyId: string; optionId?: string | null; analysisFilter?: string }) {
+  const { t } = useTranslation()
   const qc = useQueryClient()
   const opt = optionQuery(optionId)
   const { data, error } = useQuery<{ design: AnalysisConflict[]; analysis: AnalysisConflict[] }>({
@@ -123,7 +131,7 @@ function AnalysisConflicts({ studyId, optionId, analysisFilter }: { studyId: str
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['conflicts', studyId] }); qc.invalidateQueries({ queryKey: ['analyses', studyId] }) },
   })
 
-  if (error) return <div style={{ fontSize: '0.66rem', color: 'var(--danger)' }}>conflicts: {(error as Error).message}</div>
+  if (error) return <div style={{ fontSize: '0.66rem', color: 'var(--danger)' }}>{t('conflicts: {{message}}', { message: (error as Error).message })}</div>
   if (!data) return null
   let rows = [...data.design, ...data.analysis]
   if (analysisFilter) rows = rows.filter(c => c.analysis === analysisFilter)
@@ -134,7 +142,11 @@ function AnalysisConflicts({ studyId, optionId, analysisFilter }: { studyId: str
   if (rows.length === 0) {
     return (
       <div style={{ fontSize: '0.68rem', color: 'var(--success)', padding: '0.3rem 0' }}>
-        No {analysisFilter ? `${ANALYSIS_LABELS[analysisFilter] || analysisFilter} ` : 'analysis '}conflicts{optionId ? ' in this option' : ''}.
+        {analysisFilter
+          ? (optionId
+            ? t('No {{analysis}} conflicts in this option.', { analysis: ANALYSIS_LABELS[analysisFilter] ? t(ANALYSIS_LABELS[analysisFilter]) : analysisFilter })
+            : t('No {{analysis}} conflicts.', { analysis: ANALYSIS_LABELS[analysisFilter] ? t(ANALYSIS_LABELS[analysisFilter]) : analysisFilter }))
+          : (optionId ? t('No analysis conflicts in this option.') : t('No analysis conflicts.'))}
       </div>
     )
   }
@@ -143,10 +155,10 @@ function AnalysisConflicts({ studyId, optionId, analysisFilter }: { studyId: str
       <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
         {Object.entries(counts).map(([sev, n]) => (
           <span key={sev} style={{ fontSize: '0.58rem', padding: '0 0.4rem', borderRadius: 3, background: `${SEVERITY_COLORS[sev] || '#6b7280'}22`, color: SEVERITY_COLORS[sev] || '#6b7280', border: `1px solid ${SEVERITY_COLORS[sev] || '#6b7280'}55` }}>
-            {n} {sev}
+            {t('{{n}} {{severity}}', { n, severity: SEVERITY_LABELS[sev] ? t(SEVERITY_LABELS[sev]) : sev })}
           </span>
         ))}
-        {open.length === 0 && <span style={{ fontSize: '0.62rem', color: 'var(--success)' }}>all resolved</span>}
+        {open.length === 0 && <span style={{ fontSize: '0.62rem', color: 'var(--success)' }}>{t('all resolved')}</span>}
         {resolve.error && <span style={{ fontSize: '0.6rem', color: 'var(--danger)' }}>{(resolve.error as Error).message}</span>}
       </div>
       {rows.map(c => <AnalysisConflictCard key={c.id} c={c} elements={elements} onResolve={id => resolve.mutate(id)} resolving={resolve.isPending} />)}
@@ -154,13 +166,16 @@ function AnalysisConflicts({ studyId, optionId, analysisFilter }: { studyId: str
   )
 }
 
+// English text is the i18n key
+const SEVERITY_BADGES: Record<string, string> = { critical: 'CRITICAL', major: 'MAJOR', minor: 'MINOR' }
 const SEVERITY_STYLES: Record<string, { border: string; bg: string; label: string }> = {
-  critical: { border: 'var(--danger)', bg: 'rgba(239,68,68,0.1)', label: 'CRITICAL' },
-  major: { border: 'var(--warning)', bg: 'rgba(245,158,11,0.1)', label: 'MAJOR' },
-  minor: { border: 'var(--info)', bg: 'rgba(6,182,212,0.1)', label: 'MINOR' },
+  critical: { border: 'var(--danger)', bg: 'rgba(239,68,68,0.1)', label: SEVERITY_BADGES.critical },
+  major: { border: 'var(--warning)', bg: 'rgba(245,158,11,0.1)', label: SEVERITY_BADGES.major },
+  minor: { border: 'var(--info)', bg: 'rgba(6,182,212,0.1)', label: SEVERITY_BADGES.minor },
 }
 
 export function ConflictsPanel({ studyId, optionId, analysisFilter }: { studyId?: string | null; optionId?: string | null; analysisFilter?: string } = {}) {
+  const { t } = useTranslation()
   const { result } = useDesignStore()
   const conflicts = result?.conflicts || []
 
@@ -172,9 +187,9 @@ export function ConflictsPanel({ studyId, optionId, analysisFilter }: { studyId?
     if (persisted) return persisted
     return (
       <div className="card" style={{ borderColor: 'var(--success)' }}>
-        <h3 style={{ color: 'var(--success)' }}>No Cross-Domain Conflicts</h3>
+        <h3 style={{ color: 'var(--success)' }}>{t('No Cross-Domain Conflicts')}</h3>
         <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-          All subsystem designs are compatible. No position conflicts detected.
+          {t('All subsystem designs are compatible. No position conflicts detected.')}
         </p>
       </div>
     )
@@ -189,9 +204,9 @@ export function ConflictsPanel({ studyId, optionId, analysisFilter }: { studyId?
       {persisted}
       {/* Summary bar */}
       <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem' }}>
-        {critical > 0 && <span className="badge badge-red">{critical} Critical</span>}
-        {major > 0 && <span className="badge badge-amber">{major} Major</span>}
-        {minor > 0 && <span className="badge" style={{ background: 'rgba(6,182,212,0.2)', color: 'var(--info)' }}>{minor} Minor</span>}
+        {critical > 0 && <span className="badge badge-red">{t('{{count}} Critical', { count: critical })}</span>}
+        {major > 0 && <span className="badge badge-amber">{t('{{count}} Major', { count: major })}</span>}
+        {minor > 0 && <span className="badge" style={{ background: 'rgba(6,182,212,0.2)', color: 'var(--info)' }}>{t('{{count}} Minor', { count: minor })}</span>}
       </div>
 
       {/* Conflict cards */}
@@ -206,7 +221,7 @@ export function ConflictsPanel({ studyId, optionId, analysisFilter }: { studyId?
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
               <h3 style={{ fontSize: '0.85rem' }}>{conflict.title}</h3>
               <span className={`badge badge-${conflict.severity === 'critical' ? 'red' : conflict.severity === 'major' ? 'amber' : 'green'}`}>
-                {style.label}
+                {t(style.label)}
               </span>
             </div>
 
@@ -223,7 +238,7 @@ export function ConflictsPanel({ studyId, optionId, analysisFilter }: { studyId?
             {conflict.resolutions?.length > 0 && (
               <div style={{ marginTop: '0.5rem' }}>
                 <div style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>
-                  SUGGESTED RESOLUTIONS:
+                  {t('SUGGESTED RESOLUTIONS:')}
                 </div>
                 {conflict.resolutions.map((res: any, i: number) => (
                   <div key={i} style={{ fontSize: '0.75rem', padding: '0.25rem 0', borderTop: '1px solid rgba(255,255,255,0.05)' }}>

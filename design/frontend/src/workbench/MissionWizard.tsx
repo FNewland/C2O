@@ -12,6 +12,8 @@
 import { useState, useCallback } from 'react'
 import { useUIStore } from '../stores/uiStore'
 import { useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
+import i18n, { fmtDate } from '../i18n'
 
 const API = '/api'
 
@@ -26,33 +28,57 @@ interface Objective {
 }
 
 const MISSION_TYPES = [
-  { value: 'earth_observation', label: 'Earth Observation', desc: 'Imaging, SAR, multispectral' },
-  { value: 'communications', label: 'Communications', desc: 'Data relay, IoT, broadband' },
-  { value: 'navigation', label: 'Navigation', desc: 'PNT, GNSS augmentation' },
-  { value: 'science_planetary', label: 'Science (Planetary)', desc: 'Lunar, Mars, asteroid' },
-  { value: 'science_heliophysics', label: 'Science (Heliophysics)', desc: 'Solar, magnetosphere' },
-  { value: 'technology_demo', label: 'Technology Demo', desc: 'In-orbit validation' },
-  { value: 'lunar', label: 'Lunar Mission', desc: 'Cislunar, lunar orbit/surface' },
+  { value: 'earth_observation', desc: 'Imaging, SAR, multispectral' },
+  { value: 'communications', desc: 'Data relay, IoT, broadband' },
+  { value: 'navigation', desc: 'PNT, GNSS augmentation' },
+  { value: 'science_planetary', desc: 'Lunar, Mars, asteroid' },
+  { value: 'science_heliophysics', desc: 'Solar, magnetosphere' },
+  { value: 'technology_demo', desc: 'In-orbit validation' },
+  { value: 'lunar', desc: 'Cislunar, lunar orbit/surface' },
 ]
 
-const STAKEHOLDER_ROLES = [
-  { value: 'sponsor', label: 'Sponsor / Funder' },
-  { value: 'user', label: 'End User' },
-  { value: 'operator', label: 'Operator' },
-  { value: 'science_pi', label: 'Science PI' },
-  { value: 'regulator', label: 'Regulator' },
-  { value: 'partner', label: 'Partner Organisation' },
-]
+// English text is the i18n key: mission-type button labels (value → label).
+const MISSION_TYPE_LABELS: Record<string, string> = {
+  earth_observation: 'Earth Observation',
+  communications: 'Communications',
+  navigation: 'Navigation',
+  science_planetary: 'Science (Planetary)',
+  science_heliophysics: 'Science (Heliophysics)',
+  technology_demo: 'Technology Demo',
+  lunar: 'Lunar Mission',
+}
 
+// English text is the i18n key: stakeholder role labels (stored value → label).
+const STAKEHOLDER_ROLES: Record<string, string> = {
+  sponsor: 'Sponsor / Funder',
+  user: 'End User',
+  operator: 'Operator',
+  science_pi: 'Science PI',
+  regulator: 'Regulator',
+  partner: 'Partner Organisation',
+}
+
+// English text is the i18n key for the segments at display time; the segment
+// names themselves are POSTed as element names (stored data) and stay English.
 const ARCH_PRESETS = [
-  { id: 'single-leo', name: 'Single Spacecraft (LEO)', segments: ['Space Segment', 'Ground Segment', 'Launch Segment', 'Operations'] },
-  { id: 'constellation', name: 'Constellation', segments: ['Space Segment', 'Ground Segment', 'Launch Segment', 'User Segment', 'Operations'] },
-  { id: 'lunar', name: 'Lunar / Deep Space', segments: ['Space Segment', 'Ground Segment (DSN)', 'Launch Segment', 'Operations'] },
-  { id: 'hybrid', name: 'Hybrid Space + Ground', segments: ['Space Segment', 'Ground Sensors', 'Ground Station', 'Data Centre', 'Operations'] },
-  { id: 'blank', name: 'Start Blank', segments: [] },
+  { id: 'single-leo', segments: ['Space Segment', 'Ground Segment', 'Launch Segment', 'Operations'] },
+  { id: 'constellation', segments: ['Space Segment', 'Ground Segment', 'Launch Segment', 'User Segment', 'Operations'] },
+  { id: 'lunar', segments: ['Space Segment', 'Ground Segment (DSN)', 'Launch Segment', 'Operations'] },
+  { id: 'hybrid', segments: ['Space Segment', 'Ground Sensors', 'Ground Station', 'Data Centre', 'Operations'] },
+  { id: 'blank', segments: [] },
 ]
+
+// English text is the i18n key: architecture preset names (id → name), display only.
+const ARCH_PRESET_NAMES: Record<string, string> = {
+  'single-leo': 'Single Spacecraft (LEO)',
+  constellation: 'Constellation',
+  lunar: 'Lunar / Deep Space',
+  hybrid: 'Hybrid Space + Ground',
+  blank: 'Start Blank',
+}
 
 export function MissionWizard() {
+  const { t } = useTranslation()
   const setStudyId = useUIStore(s => s.setStudyId)
   const qc = useQueryClient()
 
@@ -153,7 +179,7 @@ export function MissionWizard() {
           },
         }),
       })
-      if (!studyRes.ok) { alert('Failed to create study'); return }
+      if (!studyRes.ok) { alert(i18n.t('Failed to create study')); return }
       const study = await studyRes.json()
       const studyId = study.id
 
@@ -215,7 +241,7 @@ export function MissionWizard() {
       const file = e.target.files?.[0]; if (!file) return
       try {
         const data = JSON.parse(await file.text())
-        if (!data.elements) { alert('Invalid save file'); return }
+        if (!data.elements) { alert(i18n.t('Invalid save file')); return }
         const studyReq = data.studyMetadata?.requirements || { name: data.studyMetadata?.name || 'Loaded Mission' }
         const studyNeed = data.studyMetadata?.mission_need || {}
         const studyRes = await fetch(`${API}/studies/`, {
@@ -286,7 +312,7 @@ export function MissionWizard() {
           for (const crumb of mapped) { useUIStore.getState().drillInto(crumb.id, crumb.name) }
         }
         qc.invalidateQueries()
-      } catch { alert('Load failed') }
+      } catch { alert(i18n.t('Load failed')) }
     }
     input.click()
   }
@@ -297,8 +323,8 @@ export function MissionWizard() {
       const res = await fetch(`${API}/lifecycle/example-missions`)
       const data = await res.json()
       const missions = data.missions || []
-      if (missions.length === 0) { alert('No examples available'); return }
-      const choice = prompt(missions.map((m: any, i: number) => `${i + 1}. ${m.name} — ${m.description}`).join('\n') + '\n\nEnter number:')
+      if (missions.length === 0) { alert(i18n.t('No examples available')); return }
+      const choice = prompt(missions.map((m: any, i: number) => `${i + 1}. ${m.name} — ${m.description}`).join('\n') + '\n\n' + i18n.t('Enter number:'))
       if (!choice) return
       const idx = parseInt(choice) - 1
       if (idx < 0 || idx >= missions.length) return
@@ -308,7 +334,7 @@ export function MissionWizard() {
         body: JSON.stringify({ requirements: full.requirements || { name: missions[idx].name }, mission_need: full.mission_need || {} }),
       })
       if (studyRes.ok) { setStudyId((await studyRes.json()).id); qc.invalidateQueries() }
-    } catch { alert('Failed to load example') }
+    } catch { alert(i18n.t('Failed to load example')) }
   }
 
   // ─── HOME SCREEN ───
@@ -317,23 +343,23 @@ export function MissionWizard() {
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', background: 'var(--bg-primary)', gap: '1rem' }}>
         <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
           <h1 style={{ fontSize: '2rem', color: '#8B0000', fontWeight: 700, margin: 0 }}>SpaceCDF</h1>
-          <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '0.3rem 0' }}>Concurrent Design Facility</p>
-          <p style={{ fontSize: '0.7rem', color: '#8B0000' }}>University of Ottawa — SEDTI</p>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '0.3rem 0' }}>{t('Concurrent Design Facility')}</p>
+          <p style={{ fontSize: '0.7rem', color: '#8B0000' }}>{t('University of Ottawa — SEDTI')}</p>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', width: 400 }}>
           <button onClick={() => setStep('problem')} style={{ ...wizBtn, background: 'var(--accent)', color: 'white', fontSize: '0.9rem', padding: '0.7rem' }}>
-            Create New Mission
+            {t('Create New Mission')}
           </button>
 
           {/* Active studies — join an existing session */}
           <ActiveStudies onJoin={(id) => { setStudyId(id); qc.invalidateQueries() }} />
 
           <button onClick={handleLoad} style={{ ...wizBtn, background: 'var(--bg-card)' }}>
-            Load from File
+            {t('Load from File')}
           </button>
           <button onClick={handleExample} style={{ ...wizBtn, background: 'var(--bg-card)', borderColor: '#8B0000', color: '#8B0000' }}>
-            Load Example Mission
+            {t('Load Example Mission')}
           </button>
         </div>
       </div>
@@ -343,31 +369,31 @@ export function MissionWizard() {
   // ─── STEP 1: THE PROBLEM ───
   if (step === 'problem') {
     return (
-      <WizardFrame step={1} title="What problem does this mission solve?" onBack={() => setStep('home')}
+      <WizardFrame step={1} title={t('What problem does this mission solve?')} onBack={() => setStep('home')}
         onNext={() => setStep('stakeholders')} canNext={!!problemStatement}>
-        <Field label="Mission Name">
-          <input value={missionName} onChange={e => setMissionName(e.target.value)} placeholder="e.g., ArcticWatch-1" style={inputStyle} />
+        <Field label={t('Mission Name')}>
+          <input value={missionName} onChange={e => setMissionName(e.target.value)} placeholder={t('e.g., ArcticWatch-1')} style={inputStyle} />
         </Field>
-        <Field label="Problem Statement *" hint="What gap exists? Who is affected? What happens if we do nothing?">
+        <Field label={t('Problem Statement *')} hint={t('What gap exists? Who is affected? What happens if we do nothing?')}>
           <textarea value={problemStatement} onChange={e => setProblemStatement(e.target.value)}
-            placeholder="e.g., Agricultural monitoring in the Canadian prairies requires frequent multispectral imagery to detect crop stress early, but existing satellite data lacks the spatial resolution and revisit frequency needed for field-level decisions..."
+            placeholder={t('e.g., Agricultural monitoring in the Canadian prairies requires frequent multispectral imagery to detect crop stress early, but existing satellite data lacks the spatial resolution and revisit frequency needed for field-level decisions...')}
             style={{ ...inputStyle, height: 100, resize: 'vertical' }} />
         </Field>
-        <Field label="Operational Context" hint="When, where, and how will the mission products be used?">
+        <Field label={t('Operational Context')} hint={t('When, where, and how will the mission products be used?')}>
           <textarea value={operationalContext} onChange={e => setOperationalContext(e.target.value)}
-            placeholder="e.g., Data products will be delivered to farming cooperatives within 6 hours of acquisition during the growing season (May-September)..."
+            placeholder={t('e.g., Data products will be delivered to farming cooperatives within 6 hours of acquisition during the growing season (May-September)...')}
             style={{ ...inputStyle, height: 60, resize: 'vertical' }} />
         </Field>
-        <Field label="Mission Type">
+        <Field label={t('Mission Type')}>
           <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap' }}>
-            {MISSION_TYPES.map(t => (
-              <button key={t.value} onClick={() => setMissionType(t.value)} style={{
+            {MISSION_TYPES.map(mt => (
+              <button key={mt.value} onClick={() => setMissionType(mt.value)} style={{
                 padding: '0.3rem 0.6rem', fontSize: '0.7rem', borderRadius: '4px', cursor: 'pointer',
-                background: missionType === t.value ? 'var(--accent)' : 'var(--bg-card)',
-                color: missionType === t.value ? 'white' : 'var(--text-secondary)',
-                border: `1px solid ${missionType === t.value ? 'var(--accent)' : 'var(--border)'}`,
+                background: missionType === mt.value ? 'var(--accent)' : 'var(--bg-card)',
+                color: missionType === mt.value ? 'white' : 'var(--text-secondary)',
+                border: `1px solid ${missionType === mt.value ? 'var(--accent)' : 'var(--border)'}`,
               }}>
-                {t.label}
+                {t(MISSION_TYPE_LABELS[mt.value])}
               </button>
             ))}
           </div>
@@ -380,19 +406,19 @@ export function MissionWizard() {
   if (step === 'stakeholders') {
     const hasEnough = stakeholders.some(s => s.name) && objectives.filter(o => o.text).length >= 2
     return (
-      <WizardFrame step={2} title="Who cares, and what do they need?" onBack={() => setStep('problem')}
+      <WizardFrame step={2} title={t('Who cares, and what do they need?')} onBack={() => setStep('problem')}
         onNext={() => { runTradeAnalysis(); setStep('alternatives') }} canNext={hasEnough}>
-        <Field label="Stakeholders" hint="Who benefits from, funds, or operates this mission?">
+        <Field label={t('Stakeholders')} hint={t('Who benefits from, funds, or operates this mission?')}>
           {stakeholders.map((s, i) => (
             <div key={s.id} style={{ display: 'flex', gap: '0.3rem', marginBottom: '0.3rem' }}>
               <input value={s.name} onChange={e => { const n = [...stakeholders]; n[i].name = e.target.value; setStakeholders(n) }}
-                placeholder="Name / organisation" style={{ ...inputStyle, flex: 1 }} />
+                placeholder={t('Name / organisation')} style={{ ...inputStyle, flex: 1 }} />
               <select value={s.role} onChange={e => { const n = [...stakeholders]; n[i].role = e.target.value; setStakeholders(n) }}
                 style={{ ...inputStyle, width: 130 }}>
-                {STAKEHOLDER_ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+                {Object.entries(STAKEHOLDER_ROLES).map(([value, label]) => <option key={value} value={value}>{t(label)}</option>)}
               </select>
               <input value={s.need} onChange={e => { const n = [...stakeholders]; n[i].need = e.target.value; setStakeholders(n) }}
-                placeholder="Key need" style={{ ...inputStyle, flex: 1 }} />
+                placeholder={t('Key need')} style={{ ...inputStyle, flex: 1 }} />
               {stakeholders.length > 1 && (
                 <button onClick={() => setStakeholders(stakeholders.filter((_, j) => j !== i))}
                   style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer' }}>×</button>
@@ -401,23 +427,23 @@ export function MissionWizard() {
           ))}
           <button onClick={() => setStakeholders([...stakeholders, { id: String(Date.now()), name: '', role: 'user', need: '' }])}
             style={{ fontSize: '0.7rem', color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer' }}>
-            + Add stakeholder
+            {t('+ Add stakeholder')}
           </button>
         </Field>
 
-        <Field label="Mission Objectives (minimum 2)" hint="What must the mission achieve? Be specific and measurable.">
+        <Field label={t('Mission Objectives (minimum 2)')} hint={t('What must the mission achieve? Be specific and measurable.')}>
           {objectives.map((o, i) => (
             <div key={o.id} style={{ display: 'flex', gap: '0.3rem', marginBottom: '0.3rem' }}>
               <select value={o.priority} onChange={e => { const n = [...objectives]; n[i].priority = e.target.value; setObjectives(n) }}
                 style={{ ...inputStyle, width: 90 }}>
-                <option value="primary">Primary</option>
-                <option value="secondary">Secondary</option>
-                <option value="constraint">Constraint</option>
+                <option value="primary">{t('Primary')}</option>
+                <option value="secondary">{t('Secondary', { context: 'priority' })}</option>
+                <option value="constraint">{t('Constraint', { context: 'priority' })}</option>
               </select>
               <input value={o.text} onChange={e => { const n = [...objectives]; n[i].text = e.target.value; setObjectives(n) }}
-                placeholder="e.g., Acquire 5m GSD multispectral imagery" style={{ ...inputStyle, flex: 2 }} />
+                placeholder={t('e.g., Acquire 5m GSD multispectral imagery')} style={{ ...inputStyle, flex: 2 }} />
               <input value={o.measurable_criterion} onChange={e => { const n = [...objectives]; n[i].measurable_criterion = e.target.value; setObjectives(n) }}
-                placeholder="How to measure" style={{ ...inputStyle, flex: 1 }} />
+                placeholder={t('How to measure')} style={{ ...inputStyle, flex: 1 }} />
               {objectives.length > 1 && (
                 <button onClick={() => setObjectives(objectives.filter((_, j) => j !== i))}
                   style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer' }}>×</button>
@@ -426,7 +452,7 @@ export function MissionWizard() {
           ))}
           <button onClick={() => setObjectives([...objectives, { id: String(Date.now()), text: '', priority: 'secondary', measurable_criterion: '' }])}
             style={{ fontSize: '0.7rem', color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer' }}>
-            + Add objective
+            {t('+ Add objective')}
           </button>
         </Field>
       </WizardFrame>
@@ -436,20 +462,19 @@ export function MissionWizard() {
   // ─── STEP 3: IS SPACE THE RIGHT ANSWER? ───
   if (step === 'alternatives') {
     return (
-      <WizardFrame step={3} title="Is space the right answer?" onBack={() => setStep('stakeholders')}
+      <WizardFrame step={3} title={t('Is space the right answer?')} onBack={() => setStep('stakeholders')}
         onNext={() => setStep('architecture')} canNext={!!selectedAlt && !!selectionRationale}>
         <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.5rem', lineHeight: 1.5 }}>
-          Before committing to a space mission, consider all alternatives.
-          Could existing satellite data, commercial services, drones, or ground sensors meet your objectives?
+          {t('Before committing to a space mission, consider all alternatives. Could existing satellite data, commercial services, drones, or ground sensors meet your objectives?')}
         </div>
 
-        {tradeLoading && <div style={{ color: 'var(--accent)', padding: '1rem', textAlign: 'center' }}>Analysing alternatives...</div>}
+        {tradeLoading && <div style={{ color: 'var(--accent)', padding: '1rem', textAlign: 'center' }}>{t('Analysing alternatives...')}</div>}
 
         {tradeResult?.alternatives && (
           <>
             {tradeResult.key_question && (
               <div style={{ padding: '0.4rem 0.5rem', background: 'rgba(245,158,11,0.1)', borderRadius: '4px', borderLeft: '3px solid var(--warning)', marginBottom: '0.5rem', fontSize: '0.72rem', color: 'var(--warning)' }}>
-                Key question: {tradeResult.key_question}
+                {t('Key question: {{question}}', { question: tradeResult.key_question })}
               </div>
             )}
 
@@ -469,7 +494,7 @@ export function MissionWizard() {
                   <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)' }}>{alt.description?.slice(0, 120)}</div>
                   {alt.gsd_m != null && (
                     <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', marginTop: '0.1rem' }}>
-                      GSD: {alt.gsd_m}m | Revisit: {alt.revisit_days}d | Cost: {alt.annual_cost_keur || alt.total_3yr_cost_keur} kEUR
+                      {t('GSD: {{gsd}}m | Revisit: {{revisit}}d | Cost: {{cost}} kEUR', { gsd: alt.gsd_m, revisit: alt.revisit_days, cost: alt.annual_cost_keur || alt.total_3yr_cost_keur })}
                     </div>
                   )}
                 </button>
@@ -477,9 +502,9 @@ export function MissionWizard() {
             </div>
 
             {selectedAlt && (
-              <Field label="Why this approach?" hint="Explain why the selected alternative best meets the mission objectives.">
+              <Field label={t('Why this approach?')} hint={t('Explain why the selected alternative best meets the mission objectives.')}>
                 <textarea value={selectionRationale} onChange={e => setSelectionRationale(e.target.value)}
-                  placeholder="e.g., Existing commercial imagery (Sentinel-2, Planet) lacks the spectral bands needed for our specific crop stress detection algorithm. A dedicated instrument with custom band selection is required..."
+                  placeholder={t('e.g., Existing commercial imagery (Sentinel-2, Planet) lacks the spectral bands needed for our specific crop stress detection algorithm. A dedicated instrument with custom band selection is required...')}
                   style={{ ...inputStyle, height: 60, resize: 'vertical' }} />
               </Field>
             )}
@@ -494,7 +519,7 @@ export function MissionWizard() {
 
         {!tradeResult && !tradeLoading && (
           <button onClick={runTradeAnalysis} style={{ ...wizBtn, background: 'var(--accent)', color: 'white' }}>
-            Analyse Alternatives
+            {t('Analyse Alternatives')}
           </button>
         )}
       </WizardFrame>
@@ -504,10 +529,10 @@ export function MissionWizard() {
   // ─── STEP 4: INITIAL ARCHITECTURE ───
   if (step === 'architecture') {
     return (
-      <WizardFrame step={4} title="Select starting architecture" onBack={() => setStep('alternatives')}
-        onNext={createMission} canNext={!creating} nextLabel={creating ? 'Creating...' : 'Create Mission & Start Design'}>
+      <WizardFrame step={4} title={t('Select starting architecture')} onBack={() => setStep('alternatives')}
+        onNext={createMission} canNext={!creating} nextLabel={creating ? t('Creating...') : t('Create Mission & Start Design')}>
         <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
-          Choose an initial architecture to start with. You can modify this later by adding, removing, or renaming segments.
+          {t('Choose an initial architecture to start with. You can modify this later by adding, removing, or renaming segments.')}
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', marginBottom: '0.5rem' }}>
@@ -519,10 +544,10 @@ export function MissionWizard() {
                 border: `2px solid ${selectedArch === arch.id ? 'var(--accent)' : 'var(--border)'}`,
                 color: 'var(--text-primary)',
               }}>
-              <span style={{ fontWeight: 600 }}>{arch.name}</span>
+              <span style={{ fontWeight: 600 }}>{t(ARCH_PRESET_NAMES[arch.id])}</span>
               {arch.segments.length > 0 && (
                 <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', marginTop: '0.1rem' }}>
-                  Segments: {arch.segments.join(' → ')}
+                  {t('Segments: {{list}}', { list: arch.segments.map(sg => t(sg)).join(' → ') })}
                 </div>
               )}
             </button>
@@ -530,10 +555,10 @@ export function MissionWizard() {
         </div>
 
         <div style={{ display: 'flex', gap: '0.5rem' }}>
-          <Field label="Design Lifetime (years)">
+          <Field label={t('Design Lifetime (years)')}>
             <input type="number" value={lifetime} onChange={e => setLifetime(e.target.value)} style={{ ...inputStyle, width: 60 }} />
           </Field>
-          <Field label="Target Mass (kg)">
+          <Field label={t('Target Mass (kg)')}>
             <input type="number" value={massTarget} onChange={e => setMassTarget(e.target.value)} style={{ ...inputStyle, width: 60 }} />
           </Field>
         </div>
@@ -550,13 +575,15 @@ function WizardFrame({ step, title, children, onBack, onNext, canNext, nextLabel
   step: number; title: string; children: React.ReactNode
   onBack: () => void; onNext: () => void; canNext: boolean; nextLabel?: string
 }) {
+  const { t } = useTranslation()
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'var(--bg-primary)' }}>
       {/* Header */}
-      <div style={{ padding: '0.5rem 1rem', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+      {/* right padding keeps the step dots clear of the fixed language toggle (App.tsx) */}
+      <div style={{ padding: '0.5rem 7rem 0.5rem 1rem', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
         <span style={{ fontSize: '0.7rem', color: '#8B0000', fontWeight: 700 }}>SpaceCDF</span>
         <span style={{ color: 'var(--border)' }}>|</span>
-        <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Mission Definition</span>
+        <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>{t('Mission Definition')}</span>
         <span style={{ flex: 1 }} />
         {/* Step indicators */}
         {[1, 2, 3, 4].map(s => (
@@ -573,19 +600,19 @@ function WizardFrame({ step, title, children, onBack, onNext, canNext, nextLabel
       {/* Content */}
       <div style={{ flex: 1, overflow: 'auto', padding: '1.5rem', maxWidth: 700, margin: '0 auto', width: '100%' }}>
         <h2 style={{ fontSize: '1.1rem', margin: '0 0 1rem', color: 'var(--text-primary)' }}>
-          Step {step}: {title}
+          {t('Step {{step}}: {{title}}', { step, title })}
         </h2>
         {children}
       </div>
 
       {/* Footer */}
       <div style={{ padding: '0.5rem 1rem', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between' }}>
-        <button onClick={onBack} style={{ ...wizBtn, background: 'var(--bg-card)', width: 100 }}>← Back</button>
+        <button onClick={onBack} style={{ ...wizBtn, background: 'var(--bg-card)', width: 100 }}>{t('← Back')}</button>
         <button onClick={onNext} disabled={!canNext} style={{
           ...wizBtn, background: canNext ? 'var(--accent)' : 'var(--border)',
           color: 'white', width: 200, opacity: canNext ? 1 : 0.5,
         }}>
-          {nextLabel || 'Next →'}
+          {nextLabel || t('Next →')}
         </button>
       </div>
     </div>
@@ -618,6 +645,7 @@ const wizBtn: React.CSSProperties = {
 // ─── Active Studies List ───
 
 function ActiveStudies({ onJoin }: { onJoin: (studyId: string) => void }) {
+  const { t } = useTranslation()
   const directJoin = useCallback((id: string) => {
     useUIStore.getState().setStudyId(id)
     // Also reset breadcrumb to root
@@ -645,7 +673,7 @@ function ActiveStudies({ onJoin }: { onJoin: (studyId: string) => void }) {
     return (
       <button onClick={() => { setExpanded(true); refresh() }}
         style={{ ...wizBtn, background: 'rgba(16,185,129,0.1)', borderColor: 'var(--success)', color: 'var(--success)' }}>
-        Join Active Study
+        {t('Join Active Study')}
       </button>
     )
   }
@@ -656,11 +684,11 @@ function ActiveStudies({ onJoin }: { onJoin: (studyId: string) => void }) {
       background: 'var(--bg-card)', border: '1px solid var(--success)',
     }}>
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.4rem' }}>
-        <span style={{ fontWeight: 600, fontSize: '0.78rem', color: 'var(--success)' }}>Active Studies</span>
+        <span style={{ fontWeight: 600, fontSize: '0.78rem', color: 'var(--success)' }}>{t('Active Studies')}</span>
         <span style={{ flex: 1 }} />
         <button onClick={refresh} disabled={loading}
           style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '0.65rem' }}>
-          {loading ? '...' : 'Refresh'}
+          {loading ? '...' : t('Refresh')}
         </button>
         <button onClick={() => setExpanded(false)}
           style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '0.9rem', marginLeft: '0.3rem' }}>
@@ -670,12 +698,12 @@ function ActiveStudies({ onJoin }: { onJoin: (studyId: string) => void }) {
 
       {studies.length === 0 ? (
         <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', padding: '0.3rem 0' }}>
-          {loading ? 'Loading...' : 'No active studies found. Create a new mission to start.'}
+          {loading ? t('Loading...') : t('No active studies found. Create a new mission to start.')}
         </div>
       ) : (
         <>
           <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', marginBottom: '0.2rem' }}>
-            {studies.length} studies — most recent first
+            {t('{{count}} studies — most recent first', { count: studies.length, defaultValue_one: '{{count}} studies — most recent first' })}
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', maxHeight: 200, overflow: 'auto' }}>
             {studies.slice().reverse().map((s: any) => (
@@ -695,18 +723,18 @@ function ActiveStudies({ onJoin }: { onJoin: (studyId: string) => void }) {
                 )}
                 {s.created && (
                   <span style={{ fontSize: '0.5rem', color: 'var(--text-secondary)' }}>
-                    {new Date(s.created).toLocaleDateString()}
+                    {fmtDate(s.created, {})}
                   </span>
                 )}
                 <button onClick={async (e) => {
                   e.stopPropagation()
-                  if (!confirm(`Delete study "${s.name || s.id}"? This cannot be undone.`)) return
+                  if (!confirm(t('Delete study "{{name}}"? This cannot be undone.', { name: s.name || s.id }))) return
                   await fetch(`${API}/studies/${s.id}`, { method: 'DELETE' })
                   refresh()
                 }} style={{
                   background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)',
                   fontSize: '0.7rem', padding: '0 0.2rem', flexShrink: 0,
-                }} title="Delete study">
+                }} title={t('Delete study')}>
                   ×
                 </button>
               </div>
@@ -714,11 +742,11 @@ function ActiveStudies({ onJoin }: { onJoin: (studyId: string) => void }) {
           </div>
           {studies.length > 5 && (
             <button onClick={async () => {
-              if (!confirm(`Delete all ${studies.length} studies? This cannot be undone.`)) return
+              if (!confirm(t('Delete all {{count}} studies? This cannot be undone.', { count: studies.length }))) return
               for (const s of studies) { await fetch(`${API}/studies/${s.id}`, { method: 'DELETE' }) }
               refresh()
             }} style={{ fontSize: '0.6rem', color: 'var(--danger)', background: 'none', border: 'none', cursor: 'pointer', marginTop: '0.2rem' }}>
-              Delete all studies
+              {t('Delete all studies')}
             </button>
           )}
         </>

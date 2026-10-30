@@ -5,6 +5,7 @@
 
 export type ArcadiaLayer = 'OA' | 'SA' | 'LA' | 'PA'
 export const ARCADIA_LAYERS: ArcadiaLayer[] = ['OA', 'SA', 'LA', 'PA']
+// English text is the i18n key
 export const LAYER_LABELS: Record<ArcadiaLayer, string> = {
   OA: 'Operational', SA: 'System', LA: 'Logical', PA: 'Physical',
 }

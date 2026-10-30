@@ -8,25 +8,44 @@
  */
 import { useState, useCallback } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { useUIStore } from '../stores/uiStore'
 
 const API = '/api'
 
 const ORBIT_PRESETS = [
-  { name: 'LEO SSO', altitude: 500, inclination: 97.4, desc: 'Sun-synchronous, dawn-dusk LTAN' },
-  { name: 'LEO Equatorial', altitude: 400, inclination: 0, desc: 'Equatorial low Earth orbit' },
-  { name: 'LEO Polar', altitude: 600, inclination: 90, desc: 'Polar orbit, global coverage' },
-  { name: 'MEO', altitude: 2000, inclination: 55, desc: 'Medium Earth orbit (GNSS-like)' },
-  { name: 'ISS', altitude: 410, inclination: 51.6, desc: 'ISS altitude and inclination' },
+  { name: 'LEO SSO', altitude: 500, inclination: 97.4 },
+  { name: 'LEO Equatorial', altitude: 400, inclination: 0 },
+  { name: 'LEO Polar', altitude: 600, inclination: 90 },
+  { name: 'MEO', altitude: 2000, inclination: 55 },
+  { name: 'ISS', altitude: 410, inclination: 51.6 },
 ]
 
+// English text is the i18n key: preset label and tooltip by preset name (display only).
+const ORBIT_PRESET_TEXT: Record<string, { label: string; desc: string }> = {
+  'LEO SSO': { label: 'LEO SSO', desc: 'Sun-synchronous, dawn-dusk LTAN' },
+  'LEO Equatorial': { label: 'LEO Equatorial', desc: 'Equatorial low Earth orbit' },
+  'LEO Polar': { label: 'LEO Polar', desc: 'Polar orbit, global coverage' },
+  'MEO': { label: 'MEO', desc: 'Medium Earth orbit (GNSS-like)' },
+  'ISS': { label: 'ISS', desc: 'ISS altitude and inclination' },
+}
+
 const FREQUENCY_BANDS = [
-  { band: 'UHF', freq: '400 MHz', use: 'CubeSat TT&C, low data rate' },
-  { band: 'S-band', freq: '2.0-2.3 GHz', use: 'Standard TT&C, medium data rate' },
-  { band: 'X-band', freq: '8.0-8.4 GHz', use: 'High data rate downlink, Earth observation' },
-  { band: 'Ka-band', freq: '26-40 GHz', use: 'Very high data rate, weather-sensitive' },
-  { band: 'L-band', freq: '1.2-1.5 GHz', use: 'Navigation, AIS, low-rate data' },
+  { band: 'UHF', freq: '400 MHz' },
+  { band: 'S-band', freq: '2.0-2.3 GHz' },
+  { band: 'X-band', freq: '8.0-8.4 GHz' },
+  { band: 'Ka-band', freq: '26-40 GHz' },
+  { band: 'L-band', freq: '1.2-1.5 GHz' },
 ]
+
+// English text is the i18n key: typical use per band (tooltip).
+const FREQUENCY_BAND_USE: Record<string, string> = {
+  'UHF': 'CubeSat TT&C, low data rate',
+  'S-band': 'Standard TT&C, medium data rate',
+  'X-band': 'High data rate downlink, Earth observation',
+  'Ka-band': 'Very high data rate, weather-sensitive',
+  'L-band': 'Navigation, AIS, low-rate data',
+}
 
 const GS_LOCATIONS = [
   { name: 'Svalbard', lat: 78.2, lon: 15.4, provider: 'KSAT' },
@@ -42,6 +61,7 @@ const GS_LOCATIONS = [
 ]
 
 export function DesignTools() {
+  const { t } = useTranslation()
   const studyId = useUIStore(s => s.studyId)
   const focusElementId = useUIStore(s => s.focusElementId)
   const qc = useQueryClient()
@@ -67,7 +87,7 @@ export function DesignTools() {
     <div style={{ marginTop: '0.5rem', borderTop: '1px solid var(--border)', paddingTop: '0.5rem' }}>
       {/* Show what element we're configuring */}
       <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
-        Configuring: <b style={{ color: 'var(--text-primary)' }}>{focusElement.name}</b>
+        {t('Configuring:')} <b style={{ color: 'var(--text-primary)' }}>{focusElement.name}</b>
         <span style={{ marginLeft: '0.3rem' }}>({focusElement.element_type}, {focusElement.segment})</span>
       </div>
       {(isConstellation || isSpacecraft) && (
@@ -81,6 +101,7 @@ export function DesignTools() {
 }
 
 function OrbitTools({ elementId, element, version }: { elementId: string; element: any; version: number }) {
+  const { t } = useTranslation()
   const qc = useQueryClient()
   const studyId = useUIStore(s => s.studyId)
   const perf = element.performance || {}
@@ -110,27 +131,27 @@ function OrbitTools({ elementId, element, version }: { elementId: string; elemen
   return (
     <div>
       <div style={{ fontSize: '0.65rem', fontWeight: 600, color: 'var(--info)', textTransform: 'uppercase', marginBottom: '0.3rem' }}>
-        Orbit & Constellation
+        {t('Orbit & Constellation')}
       </div>
 
       {/* Current orbit */}
       {perf.orbit_altitude_km && (
         <div style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
-          Current: {perf.orbit_altitude_km} km, {perf.orbit_inclination_deg}° incl
-          {quantity > 1 && ` | ${perf.orbital_planes || '?'} planes × ${perf.sats_per_plane || '?'} sats = ${quantity}`}
+          {t('Current: {{alt}} km, {{incl}}° incl', { alt: perf.orbit_altitude_km, incl: perf.orbit_inclination_deg })}
+          {quantity > 1 && t(' | {{planes}} planes × {{sats}} sats = {{total}}', { planes: perf.orbital_planes || '?', sats: perf.sats_per_plane || '?', total: quantity })}
         </div>
       )}
 
       {/* Orbit presets */}
       <div style={{ display: 'flex', gap: '0.2rem', flexWrap: 'wrap', marginBottom: '0.3rem' }}>
         {ORBIT_PRESETS.map(o => (
-          <button key={o.name} onClick={() => setOrbit(o.altitude, o.inclination)} title={o.desc}
+          <button key={o.name} onClick={() => setOrbit(o.altitude, o.inclination)} title={t(ORBIT_PRESET_TEXT[o.name].desc)}
             style={{
               padding: '0.15rem 0.4rem', fontSize: '0.6rem', borderRadius: '3px',
               background: 'var(--bg-card)', border: '1px solid var(--border)',
               color: 'var(--text-primary)', cursor: 'pointer',
             }}>
-            {o.name} ({o.altitude}km)
+            {t(ORBIT_PRESET_TEXT[o.name].label)} ({o.altitude}km)
           </button>
         ))}
       </div>
@@ -138,7 +159,7 @@ function OrbitTools({ elementId, element, version }: { elementId: string; elemen
       {/* Walker constellation config */}
       {quantity > 1 && (
         <div style={{ display: 'flex', gap: '0.3rem', alignItems: 'center', fontSize: '0.68rem' }}>
-          <span style={{ color: 'var(--text-secondary)' }}>Walker:</span>
+          <span style={{ color: 'var(--text-secondary)' }}>{t('Walker:')}</span>
           {[[1, 4], [2, 4], [3, 4], [4, 6], [6, 6]].map(([p, s]) => (
             <button key={`${p}x${s}`} onClick={() => setWalker(p, s)}
               style={{
@@ -157,6 +178,7 @@ function OrbitTools({ elementId, element, version }: { elementId: string; elemen
 }
 
 function GroundStationTools({ elementId, element, version }: { elementId: string; element: any; version: number }) {
+  const { t } = useTranslation()
   const qc = useQueryClient()
   const studyId = useUIStore(s => s.studyId)
   const perf = element.performance || {}
@@ -197,20 +219,20 @@ function GroundStationTools({ elementId, element, version }: { elementId: string
   return (
     <div>
       <div style={{ fontSize: '0.65rem', fontWeight: 600, color: '#0ea5e9', textTransform: 'uppercase', marginBottom: '0.3rem' }}>
-        Ground Station Configuration
+        {t('Ground Station Configuration')}
       </div>
 
       {/* Current config */}
       {perf.location && (
         <div style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
-          Location: {perf.location} ({perf.latitude?.toFixed(1)}°, {perf.longitude?.toFixed(1)}°)
-          {perf.bands?.length > 0 && ` | Bands: ${perf.bands.join(', ')}`}
+          {t('Location: {{name}} ({{lat}}°, {{lon}}°)', { name: perf.location, lat: perf.latitude?.toFixed(1), lon: perf.longitude?.toFixed(1) })}
+          {perf.bands?.length > 0 && t(' | Bands: {{bands}}', { bands: perf.bands.join(', ') })}
         </div>
       )}
 
       {/* Location picker */}
       <div style={{ marginBottom: '0.3rem' }}>
-        <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', marginBottom: '0.15rem' }}>Location:</div>
+        <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', marginBottom: '0.15rem' }}>{t('Location:')}</div>
         <div style={{ display: 'flex', gap: '0.2rem', flexWrap: 'wrap' }}>
           {GS_LOCATIONS.map(loc => (
             <button key={loc.name} onClick={() => setLocation(loc)}
@@ -229,12 +251,12 @@ function GroundStationTools({ elementId, element, version }: { elementId: string
 
       {/* Frequency bands */}
       <div>
-        <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', marginBottom: '0.15rem' }}>Frequency bands (click to toggle):</div>
+        <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', marginBottom: '0.15rem' }}>{t('Frequency bands (click to toggle):')}</div>
         <div style={{ display: 'flex', gap: '0.2rem', flexWrap: 'wrap' }}>
           {FREQUENCY_BANDS.map(fb => {
             const active = (perf.bands || []).includes(fb.band)
             return (
-              <button key={fb.band} onClick={() => setBand(fb.band)} title={`${fb.freq} — ${fb.use}`}
+              <button key={fb.band} onClick={() => setBand(fb.band)} title={`${fb.freq} — ${t(FREQUENCY_BAND_USE[fb.band])}`}
                 style={{
                   padding: '0.1rem 0.35rem', fontSize: '0.58rem', borderRadius: '3px',
                   background: active ? '#ec4899' : 'var(--bg-card)',

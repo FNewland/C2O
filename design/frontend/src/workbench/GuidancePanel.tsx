@@ -6,115 +6,118 @@
  */
 import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
+import type { TFunction } from 'i18next'
+import i18n from '../i18n'
 import { useUIStore, type Level } from '../stores/uiStore'
 
 const API = '/api'
 
-const LEVEL_GUIDANCE: Record<Level, { title: string; sessions: string[]; objectives: string[]; tips: string[] }> = {
+const levelGuidance = (t: TFunction): Record<Level, { title: string; sessions: string[]; objectives: string[]; tips: string[] }> => ({
   0: {
-    title: 'Mission Level — Define the Problem',
-    sessions: ['1.1 Mission Need & Stakeholders', '1.2 Concept of Operations', '1.3 Trade Studies', '1.4 Architecture Selection'],
+    title: t('Mission Level — Define the Problem'),
+    sessions: [t('1.1 Mission Need & Stakeholders'), t('1.2 Concept of Operations'), t('1.3 Trade Studies'), t('1.4 Architecture Selection')],
     objectives: [
-      'Define the mission problem statement and objectives',
-      'Identify stakeholders and their needs',
-      'Consider space AND non-space alternatives (drones, ground sensors, commercial data)',
-      'Select mission architecture through systematic trade study',
-      'Define segments: Space, Ground, Launch, Operations',
-      'Mark in-scope vs out-of-scope segments',
-      'Set top-level budgets (mass, power, cost)',
-      'Define mission-level requirements (functional, performance, interface, regulatory, process)',
-      'Define segment-to-segment interfaces',
-      'Freeze when all checks pass',
+      t('Define the mission problem statement and objectives'),
+      t('Identify stakeholders and their needs'),
+      t('Consider space AND non-space alternatives (drones, ground sensors, commercial data)'),
+      t('Select mission architecture through systematic trade study'),
+      t('Define segments: Space, Ground, Launch, Operations'),
+      t('Mark in-scope vs out-of-scope segments'),
+      t('Set top-level budgets (mass, power, cost)'),
+      t('Define mission-level requirements (functional, performance, interface, regulatory, process)'),
+      t('Define segment-to-segment interfaces'),
+      t('Freeze when all checks pass'),
     ],
     tips: [
-      'Start with "Design Assist" presets to quickly set up segments',
-      'Use the "Decide" tab for systematic mission trade analysis',
-      'Consider orbit trade early — it drives many downstream decisions',
-      'Mark external segments (Launch) as OUT-OF-SCOPE — define interfaces only',
-      'Set budget allocations before freezing — they become constraints for Level 1',
+      t('Start with "Design Assist" presets to quickly set up segments'),
+      t('Use the "Decide" tab for systematic mission trade analysis'),
+      t('Consider orbit trade early — it drives many downstream decisions'),
+      t('Mark external segments (Launch) as OUT-OF-SCOPE — define interfaces only'),
+      t('Set budget allocations before freezing — they become constraints for Level 1'),
     ],
   },
   1: {
-    title: 'Systems Level — What Systems Compose Each Segment?',
-    sessions: ['2.1 System-V Decomposition', '2.2 Requirements Engineering', '2.3 Functional Decomposition', '2.4 Interface Matrix'],
+    title: t('Systems Level — What Systems Compose Each Segment?'),
+    sessions: [t('2.1 System-V Decomposition'), t('2.2 Requirements Engineering'), t('2.3 Functional Decomposition'), t('2.4 Interface Matrix')],
     objectives: [
-      'For each in-scope segment, define the systems within it',
-      'For Space: how many spacecraft? Constellation or single?',
-      'For Ground: how many ground stations? Where?',
-      'Derive system requirements from mission requirements (use "flow ↓")',
-      'Define system-to-system interfaces (electrical, data, RF)',
-      'Set system-level budget allocations',
-      'Use constellation sizing if multi-satellite',
-      'Use ground station trade if selecting GS network',
-      'Freeze when all systems defined, budgeted, and requirements allocated',
+      t('For each in-scope segment, define the systems within it'),
+      t('For Space: how many spacecraft? Constellation or single?'),
+      t('For Ground: how many ground stations? Where?'),
+      t('Derive system requirements from mission requirements (use "flow ↓")'),
+      t('Define system-to-system interfaces (electrical, data, RF)'),
+      t('Set system-level budget allocations'),
+      t('Use constellation sizing if multi-satellite'),
+      t('Use ground station trade if selecting GS network'),
+      t('Freeze when all systems defined, budgeted, and requirements allocated'),
     ],
     tips: [
-      'Double-click a segment to drill into it and see/add its systems',
-      'Use "Decide" tab for constellation sizing and ground station trade',
-      'Set quantity > 1 for constellation spacecraft — budget multiplies automatically',
-      'Consider cost learning curves for multi-unit production',
-      'External interfaces from Level 0 appear as dashed port nodes — connect them to systems',
+      t('Double-click a segment to drill into it and see/add its systems'),
+      t('Use "Decide" tab for constellation sizing and ground station trade'),
+      t('Set quantity > 1 for constellation spacecraft — budget multiplies automatically'),
+      t('Consider cost learning curves for multi-unit production'),
+      t('External interfaces from Level 0 appear as dashed port nodes — connect them to systems'),
     ],
   },
   2: {
-    title: 'Subsystems Level — Break Systems into Subsystems',
-    sessions: ['3.1 Payload & Power', '3.2 Comms & Thermal', '3.3 AOCS & Structure', '3.4 Equipment Selection Trades'],
+    title: t('Subsystems Level — Break Systems into Subsystems'),
+    sessions: [t('3.1 Payload & Power'), t('3.2 Comms & Thermal'), t('3.3 AOCS & Structure'), t('3.4 Equipment Selection Trades')],
     objectives: [
-      'For each system, define its subsystems (EPS, AOCS, TTC, OBC, Thermal, Structure, Propulsion, Payload)',
-      'Use "Standard Spacecraft Bus" preset to quickly populate subsystems',
-      'For ground stations: Antenna, RF Front End, Modem, Network subsystems',
-      'Derive subsystem requirements from system requirements',
-      'Define subsystem-to-subsystem interfaces',
-      'Allocate budgets from system level to subsystems',
-      'Begin considering equipment options (use "Decide" tab for trade studies)',
+      t('For each system, define its subsystems (EPS, AOCS, TTC, OBC, Thermal, Structure, Propulsion, Payload)'),
+      t('Use "Standard Spacecraft Bus" preset to quickly populate subsystems'),
+      t('For ground stations: Antenna, RF Front End, Modem, Network subsystems'),
+      t('Derive subsystem requirements from system requirements'),
+      t('Define subsystem-to-subsystem interfaces'),
+      t('Allocate budgets from system level to subsystems'),
+      t('Begin considering equipment options (use "Decide" tab for trade studies)'),
     ],
     tips: [
-      'Use the Pugh Matrix in "Decide" tab for subsystem architecture trades',
-      'Use pairwise comparison to derive criteria weights for trade studies',
-      'Each subsystem should have at least one requirement before freezing',
-      'Check SMART compliance using the SMART Check button in Requirements tab',
+      t('Use the Pugh Matrix in "Decide" tab for subsystem architecture trades'),
+      t('Use pairwise comparison to derive criteria weights for trade studies'),
+      t('Each subsystem should have at least one requirement before freezing'),
+      t('Check SMART compliance using the SMART Check button in Requirements tab'),
     ],
   },
   3: {
-    title: 'Equipment Level — Select or Define Components',
-    sessions: ['4.1 Equipment Selection', '4.2 Integration Planning', '4.3 Risk & FMECA', '4.4 Design Review Preparation'],
+    title: t('Equipment Level — Select or Define Components'),
+    sessions: [t('4.1 Equipment Selection'), t('4.2 Integration Planning'), t('4.3 Risk & FMECA'), t('4.4 Design Review Preparation')],
     objectives: [
-      'For each subsystem, select equipment from the KB catalog or define custom components',
-      'Each component has: mass, power, cost, TRL, manufacturer',
-      'Actuals roll up to subsystem budgets — check margins',
-      'Derive equipment-level requirements if needed',
-      'Define equipment interfaces (connectors, protocols)',
-      'Run analysis to compute parametric estimates for missing values',
-      'Check maturity: all components should have real data, not estimates',
+      t('For each subsystem, select equipment from the KB catalog or define custom components'),
+      t('Each component has: mass, power, cost, TRL, manufacturer'),
+      t('Actuals roll up to subsystem budgets — check margins'),
+      t('Derive equipment-level requirements if needed'),
+      t('Define equipment interfaces (connectors, protocols)'),
+      t('Run analysis to compute parametric estimates for missing values'),
+      t('Check maturity: all components should have real data, not estimates'),
     ],
     tips: [
-      'Equipment Browser auto-selects the domain matching the parent subsystem',
-      'Use "Define Custom Equipment" if nothing in the catalog fits',
-      'Set quantity for redundant or multi-unit components',
-      'Run "SMART Check" on all requirements before proceeding to V&V',
-      'The escalation banner warns if equipment choices exceed budget at any level',
+      t('Equipment Browser auto-selects the domain matching the parent subsystem'),
+      t('Use "Define Custom Equipment" if nothing in the catalog fits'),
+      t('Set quantity for redundant or multi-unit components'),
+      t('Run "SMART Check" on all requirements before proceeding to V&V'),
+      t('The escalation banner warns if equipment choices exceed budget at any level'),
     ],
   },
   4: {
-    title: 'V&V Level — Verify the Design Closes',
-    sessions: ['5.1 Verification Planning', '5.2 Compliance Assessment', '5.3 Test Planning', '5.4 Disposal & Closeout'],
+    title: t('V&V Level — Verify the Design Closes'),
+    sessions: [t('5.1 Verification Planning'), t('5.2 Compliance Assessment'), t('5.3 Test Planning'), t('5.4 Disposal & Closeout')],
     objectives: [
-      'Review budget rollups across all levels — do the numbers add up?',
-      'Check requirement traceability — every requirement should trace to an element',
-      'Run FMECA for failure mode analysis',
-      'Evaluate review gate readiness (MCR, SRR, PDR, CDR)',
-      'Trace budgets to stakeholder impact — what happens if we exceed?',
-      'Generate export documents for review',
+      t('Review budget rollups across all levels — do the numbers add up?'),
+      t('Check requirement traceability — every requirement should trace to an element'),
+      t('Run FMECA for failure mode analysis'),
+      t('Evaluate review gate readiness (MCR, SRR, PDR, CDR)'),
+      t('Trace budgets to stakeholder impact — what happens if we exceed?'),
+      t('Generate export documents for review'),
     ],
     tips: [
-      'Use the Budget Rollup tab to see the full element tree with mass/power/cost',
-      'The Requirements tab highlights orphan requirements (no parent derivation)',
-      'Review Gates tab evaluates real MCR/SRR/PDR/CDR criteria',
-      'FMECA identifies critical failure modes by subsystem',
-      'Budget Traceability traces exceedances to stakeholder needs with recovery options',
+      t('Use the Budget Rollup tab to see the full element tree with mass/power/cost'),
+      t('The Requirements tab highlights orphan requirements (no parent derivation)'),
+      t('Review Gates tab evaluates real MCR/SRR/PDR/CDR criteria'),
+      t('FMECA identifies critical failure modes by subsystem'),
+      t('Budget Traceability traces exceedances to stakeholder needs with recovery options'),
     ],
   },
-}
+})
 
 interface Worksheet {
   title: string
@@ -122,53 +125,67 @@ interface Worksheet {
   sections: Array<{ heading: string; content: string }>
 }
 
+// Worksheet text is shown and used for the Markdown fallback download, translated at that time.
+// One object per level keeps each within the key scanner's 2000-character window.
+// English text is the i18n key
+const WORKSHEETS_L0: Record<string, Worksheet> = {
+  missionNeed: { title: 'Mission Need Statement', description: 'Define problem, stakeholders, objectives, success criteria',
+    sections: [
+      { heading: 'Problem Statement', content: 'What problem does this mission solve?\n\n[Write here]' },
+      { heading: 'Stakeholders', content: 'Who benefits? Who funds? Who operates?\n\nStakeholder | Role | Needs | Priority\n---|---|---|---\n | | |' },
+      { heading: 'Mission Objectives', content: 'ID | Objective | Priority | Measurable Criterion\n---|---|---|---\nOBJ-001 | | |' },
+      { heading: 'Alternatives Considered', content: 'Option | Type | Pros | Cons | Feasibility\n---|---|---|---|---\n | | | |' },
+    ]
+  },
+  tradeStudy: { title: 'Architecture Trade Study', description: 'Compare mission architecture options systematically',
+    sections: [
+      { heading: 'Trade Criteria', content: 'Criterion | Weight | Direction | Threshold\n---|---|---|---\nCost | | minimize |\nPerformance | | maximize |' },
+      { heading: 'Options', content: 'Option | Description | Pros | Cons\n---|---|---|---\n | | |' },
+      { heading: 'Scoring Matrix', content: '[Use the Pugh Matrix in the Decide tab]' },
+      { heading: 'Decision & Rationale', content: 'Selected option:\nRationale:\n' },
+    ]
+  },
+}
+
+// English text is the i18n key
+const WORKSHEETS_L1: Record<string, Worksheet> = {
+  systemReqs: { title: 'System Requirements Derivation', description: 'Derive system requirements from mission requirements',
+    sections: [
+      { heading: 'Parent Requirement', content: 'MIS-XXX: [mission requirement text]' },
+      { heading: 'Derived System Requirements', content: 'ID | System | Text | V&V Method\n---|---|---|---\nSYS-001 | | |' },
+      { heading: 'Traceability Check', content: 'Does each system requirement trace to a mission requirement? [Y/N]' },
+    ]
+  },
+}
+
+// English text is the i18n key
+const WORKSHEETS_L2: Record<string, Worksheet> = {
+  subsystemDesign: { title: 'Subsystem Design Worksheet', description: 'Define subsystem architecture and requirements',
+    sections: [
+      { heading: 'Subsystem', content: 'Name:\nDomain:\nDriving requirement:' },
+      { heading: 'Architecture Options', content: 'Option | Description | Mass | Power | Cost | TRL\n---|---|---|---|---|---\n | | | | |' },
+      { heading: 'Selected Architecture', content: 'Selection:\nRationale:' },
+      { heading: 'Interface Requirements', content: 'Interface | Type | To/From | Properties\n---|---|---|---\n | | |' },
+    ]
+  },
+}
+
+// English text is the i18n key
+const WORKSHEETS_L3: Record<string, Worksheet> = {
+  equipmentSelection: { title: 'Equipment Selection Worksheet', description: 'Compare and select equipment from catalog',
+    sections: [
+      { heading: 'Subsystem', content: 'Name:\nBudget allocation: mass=__kg, power=__W, cost=__kEUR' },
+      { heading: 'Candidate Components', content: 'Component | Manufacturer | Mass | Power | Cost | TRL | Notes\n---|---|---|---|---|---|---\n | | | | | |' },
+      { heading: 'Selection', content: 'Selected:\nRationale:\nMargin remaining:' },
+    ]
+  },
+}
+
 const LEVEL_WORKSHEETS: Record<number, Worksheet[]> = {
-  0: [
-    { title: 'Mission Need Statement', description: 'Define problem, stakeholders, objectives, success criteria',
-      sections: [
-        { heading: 'Problem Statement', content: 'What problem does this mission solve?\n\n[Write here]' },
-        { heading: 'Stakeholders', content: 'Who benefits? Who funds? Who operates?\n\nStakeholder | Role | Needs | Priority\n---|---|---|---\n | | |' },
-        { heading: 'Mission Objectives', content: 'ID | Objective | Priority | Measurable Criterion\n---|---|---|---\nOBJ-001 | | |' },
-        { heading: 'Alternatives Considered', content: 'Option | Type | Pros | Cons | Feasibility\n---|---|---|---|---\n | | | |' },
-      ]
-    },
-    { title: 'Architecture Trade Study', description: 'Compare mission architecture options systematically',
-      sections: [
-        { heading: 'Trade Criteria', content: 'Criterion | Weight | Direction | Threshold\n---|---|---|---\nCost | | minimize |\nPerformance | | maximize |' },
-        { heading: 'Options', content: 'Option | Description | Pros | Cons\n---|---|---|---\n | | |' },
-        { heading: 'Scoring Matrix', content: '[Use the Pugh Matrix in the Decide tab]' },
-        { heading: 'Decision & Rationale', content: 'Selected option:\nRationale:\n' },
-      ]
-    },
-  ],
-  1: [
-    { title: 'System Requirements Derivation', description: 'Derive system requirements from mission requirements',
-      sections: [
-        { heading: 'Parent Requirement', content: 'MIS-XXX: [mission requirement text]' },
-        { heading: 'Derived System Requirements', content: 'ID | System | Text | V&V Method\n---|---|---|---\nSYS-001 | | |' },
-        { heading: 'Traceability Check', content: 'Does each system requirement trace to a mission requirement? [Y/N]' },
-      ]
-    },
-  ],
-  2: [
-    { title: 'Subsystem Design Worksheet', description: 'Define subsystem architecture and requirements',
-      sections: [
-        { heading: 'Subsystem', content: 'Name:\nDomain:\nDriving requirement:' },
-        { heading: 'Architecture Options', content: 'Option | Description | Mass | Power | Cost | TRL\n---|---|---|---|---|---\n | | | | |' },
-        { heading: 'Selected Architecture', content: 'Selection:\nRationale:' },
-        { heading: 'Interface Requirements', content: 'Interface | Type | To/From | Properties\n---|---|---|---\n | | |' },
-      ]
-    },
-  ],
-  3: [
-    { title: 'Equipment Selection Worksheet', description: 'Compare and select equipment from catalog',
-      sections: [
-        { heading: 'Subsystem', content: 'Name:\nBudget allocation: mass=__kg, power=__W, cost=__kEUR' },
-        { heading: 'Candidate Components', content: 'Component | Manufacturer | Mass | Power | Cost | TRL | Notes\n---|---|---|---|---|---|---\n | | | | | |' },
-        { heading: 'Selection', content: 'Selected:\nRationale:\nMargin remaining:' },
-      ]
-    },
-  ],
+  0: Object.values(WORKSHEETS_L0),
+  1: Object.values(WORKSHEETS_L1),
+  2: Object.values(WORKSHEETS_L2),
+  3: Object.values(WORKSHEETS_L3),
   4: [],
 }
 
@@ -196,8 +213,9 @@ async function downloadWorksheet(ws: Worksheet) {
     } catch { /* fall back to markdown */ }
   }
 
-  // Fallback: Markdown
-  const md = `# ${ws.title}\n\n${ws.sections.map(s => `## ${s.heading}\n\n${s.content}\n`).join('\n')}`
+  // Fallback: Markdown, in the UI language (the file name stays English)
+  const tr = (k: string) => i18n.t(k)
+  const md = `# ${tr(ws.title)}\n\n${ws.sections.map(s => `## ${tr(s.heading)}\n\n${tr(s.content)}\n`).join('\n')}`
   const blob = new Blob([md], { type: 'text/markdown' })
   const a = document.createElement('a')
   a.href = URL.createObjectURL(blob)
@@ -211,9 +229,10 @@ export function GuidancePanel({ onClose }: { onClose: () => void }) {
   const currentLevel = useUIStore(s => s.currentLevel)
   const setStudyId = useUIStore(s => s.setStudyId)
   const qc = useQueryClient()
+  const { t } = useTranslation()
   const [loadingExample, setLoadingExample] = useState(false)
 
-  const guidance = LEVEL_GUIDANCE[currentLevel]
+  const guidance = levelGuidance(t)[currentLevel]
 
   // Fetch example missions
   const { data: examples } = useQuery({
@@ -250,7 +269,7 @@ export function GuidancePanel({ onClose }: { onClose: () => void }) {
       boxShadow: '-4px 0 20px rgba(0,0,0,0.3)',
     }}>
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.75rem' }}>
-        <h2 style={{ fontSize: '0.9rem', margin: 0, color: 'var(--accent)' }}>Facilitator Guide</h2>
+        <h2 style={{ fontSize: '0.9rem', margin: 0, color: 'var(--accent)' }}>{t('Facilitator Guide')}</h2>
         <span style={{ flex: 1 }} />
         <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '1.2rem' }}>×</button>
       </div>
@@ -260,7 +279,7 @@ export function GuidancePanel({ onClose }: { onClose: () => void }) {
         <h3 style={{ fontSize: '0.8rem', color: '#f59e0b', marginBottom: '0.3rem' }}>{guidance.title}</h3>
 
         <div style={{ fontSize: '0.65rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.15rem', textTransform: 'uppercase' }}>
-          Related Sessions
+          {t('Related Sessions')}
         </div>
         <div style={{ marginBottom: '0.4rem' }}>
           {guidance.sessions.map((s, i) => (
@@ -271,7 +290,7 @@ export function GuidancePanel({ onClose }: { onClose: () => void }) {
         </div>
 
         <div style={{ fontSize: '0.65rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.15rem', textTransform: 'uppercase' }}>
-          Learning Objectives
+          {t('Learning Objectives')}
         </div>
         <div style={{ marginBottom: '0.4rem' }}>
           {guidance.objectives.map((o, i) => (
@@ -283,15 +302,15 @@ export function GuidancePanel({ onClose }: { onClose: () => void }) {
         </div>
 
         <div style={{ fontSize: '0.65rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.15rem', textTransform: 'uppercase' }}>
-          Tips
+          {t('Tips')}
         </div>
         <div>
-          {guidance.tips.map((t, i) => (
+          {guidance.tips.map((tip, i) => (
             <div key={i} style={{
               fontSize: '0.65rem', padding: '0.2rem 0.3rem', marginBottom: '0.15rem',
               background: 'rgba(59,130,246,0.08)', borderRadius: '3px', borderLeft: '2px solid var(--accent)',
             }}>
-              {t}
+              {tip}
             </div>
           ))}
         </div>
@@ -299,9 +318,9 @@ export function GuidancePanel({ onClose }: { onClose: () => void }) {
 
       {/* Downloadable worksheets */}
       <div style={{ borderTop: '1px solid var(--border)', paddingTop: '0.75rem', marginBottom: '0.75rem' }}>
-        <h3 style={{ fontSize: '0.8rem', color: '#ec4899', marginBottom: '0.3rem' }}>Worksheets</h3>
+        <h3 style={{ fontSize: '0.8rem', color: '#ec4899', marginBottom: '0.3rem' }}>{t('Worksheets')}</h3>
         <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
-          Download worksheet templates for this level:
+          {t('Download worksheet templates for this level:')}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
           {(LEVEL_WORKSHEETS[currentLevel] || []).map((ws, i) => (
@@ -310,8 +329,8 @@ export function GuidancePanel({ onClose }: { onClose: () => void }) {
               background: 'var(--bg-card)', border: '1px solid var(--border)',
               color: 'var(--text-primary)', cursor: 'pointer', fontSize: '0.65rem',
             }}>
-              <div style={{ fontWeight: 500 }}>{ws.title}</div>
-              <div style={{ fontSize: '0.55rem', color: 'var(--text-secondary)' }}>{ws.description}</div>
+              <div style={{ fontWeight: 500 }}>{t(ws.title)}</div>
+              <div style={{ fontSize: '0.55rem', color: 'var(--text-secondary)' }}>{t(ws.description)}</div>
             </button>
           ))}
         </div>
@@ -319,9 +338,9 @@ export function GuidancePanel({ onClose }: { onClose: () => void }) {
 
       {/* Example missions */}
       <div style={{ borderTop: '1px solid var(--border)', paddingTop: '0.75rem' }}>
-        <h3 style={{ fontSize: '0.8rem', color: '#10b981', marginBottom: '0.3rem' }}>Worked Examples</h3>
+        <h3 style={{ fontSize: '0.8rem', color: '#10b981', marginBottom: '0.3rem' }}>{t('Worked Examples')}</h3>
         <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
-          Load a pre-built mission to explore or use as a starting point:
+          {t('Load a pre-built mission to explore or use as a starting point:')}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
           {(examples?.missions || []).map((m: any) => (
@@ -337,7 +356,7 @@ export function GuidancePanel({ onClose }: { onClose: () => void }) {
           ))}
           {(!examples?.missions || examples.missions.length === 0) && (
             <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)' }}>
-              No example missions available from server.
+              {t('No example missions available from server.')}
             </div>
           )}
         </div>

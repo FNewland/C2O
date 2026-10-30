@@ -518,7 +518,7 @@ manual mode with no errors.
 
 If you want to share your local instance with colleagues, install
 Tailscale (<https://tailscale.com/download>) on both machines and use
-your tailnet IP.  Detailed steps are in `docs/REMOTE_ACCESS.md`.
+your tailnet IP.
 
 ### 8.5 Keep the ECSS standards library offline
 

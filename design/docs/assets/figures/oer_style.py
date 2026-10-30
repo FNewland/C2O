@@ -21,6 +21,8 @@ from pathlib import Path
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
+import i18n_fig
+
 HERE = Path(__file__).resolve().parent
 
 # Colour-blind-safe, greyscale-distinct palette (Okabe–Ito based)
@@ -81,11 +83,12 @@ def apply_style() -> None:
         "savefig.dpi": 200,
         "lines.linewidth": 2.0,
     })
+    i18n_fig.install()   # French labels when FIG_LANG=fr; no-op in English
 
 
 def save(fig, name: str, *, pad: float = 0.15) -> Path:
-    """Save `fig` as <name>.png beside this module. Returns the path."""
-    out = HERE / f"{name}.png"
+    """Save `fig` as <name>.png beside this module (<name>_fr.png when FIG_LANG=fr)."""
+    out = HERE / f"{name}{i18n_fig.SUFFIX}.png"
     fig.savefig(out, bbox_inches="tight", pad_inches=pad)
     plt.close(fig)
     print(f"OK {name} -> {out.name}")

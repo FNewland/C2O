@@ -13,7 +13,7 @@ expected-reading: "Skim before each simulation day. Read in full any procedure y
 
 # Procedure Quick-Reference
 
-Twenty procedures students will most likely use during Week 3, in
+Twenty-five procedures students will most likely use during Week 3, in
 one-card format. The full procedure files are the authoritative
 source — these cards are pointers, not substitutes.
 
@@ -35,7 +35,7 @@ plus the per-procedure files in subfolders.
 > *Trigger:* First pass over Iqaluit after separation timer expiry.
 > *Top 3 steps:* (1) configure ground station, monitor RF acquisition;
 > (2) verify bootloader beacon (SID 11); (3) issue OBC_BOOT_APP
-> command (S8 func_id 42).
+> command (S8 func_id 55).
 > *Exit:* App SW running, full HK reporting.
 > *File:* `procedures/leop/first_acquisition.md`
 
@@ -161,6 +161,6 @@ yourself.
 - Simulator procedure index:
   `~/SpaceMissionSimulation/configs/eosat1/procedures/procedure_index.yaml`
 - ECSS-E-ST-70-32C — Test and operations procedures
-- CCSDS Mission Operations Procedures —
+- CCSDS Mission Operations Services Concept (CCSDS 520.0-G) —
   https://public.ccsds.org/Pubs/520x0g4.pdf
-- NASA *Mission Operations Handbook* (NPR 7120.5F)
+- NASA *Space Flight Program and Project Management Requirements* (NPR 7120.5F)

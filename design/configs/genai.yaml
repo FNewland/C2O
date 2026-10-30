@@ -47,4 +47,4 @@ genai:
   output:
     include_reasoning: false          # Include AI reasoning chain in responses
     include_references: true          # Cite ECSS/NASA standards in responses
-    language: "en"                    # Response language (future: multi-language)
+    language: "en"                    # Default response language: en | fr. A request's UI language (AIRequest.language / ?language=) overrides it.

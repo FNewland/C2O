@@ -323,7 +323,7 @@ A concurrent-design tool with band data on each component will flag a transponde
 
 ## 13.6 Returning to UniSat-1: bill of materials and cost
 
-UniSat-1's BOM is remarkably short — only 5–7 line items plus harness. This simplicity is a major advantage for small teams with limited procurement experience. The equipment list itself was assembled in Chapter 12 §12.6; here it is restated in BOM form with the procurement fields added.
+UniSat-1's BOM is remarkably short — only nine line items (eight components plus the harness). This simplicity is a major advantage for small teams with limited procurement experience. The equipment list itself was assembled in Chapter 12 §12.6; here it is restated in BOM form with the procurement fields added.
 
 > **UniSat-1 BOM (Phase B — vendor quotes obtained; representative examples, costs indicative 2026):**
 >

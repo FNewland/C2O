@@ -1,0 +1,212 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "docs/course/course_plan_expanded.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "1f2ef458c7d31c36",
+   "fr_hash": "27447f96beae278b"
+  },
+  {
+   "id": "course-plan",
+   "en_hash": "9e7f7e07a48edfce",
+   "fr_hash": "ddf0fa4138fd41ce"
+  },
+  {
+   "id": "course-plan/course-title",
+   "en_hash": "ebeb48d51f5c0250",
+   "fr_hash": "44c169fccc5ddcae"
+  },
+  {
+   "id": "course-plan/audience",
+   "en_hash": "74130831a517274f",
+   "fr_hash": "aea8172039e2e73a"
+  },
+  {
+   "id": "course-plan/structure",
+   "en_hash": "700364816931729c",
+   "fr_hash": "61a1f9cc5aeb34d1"
+  },
+  {
+   "id": "course-plan/what-the-cohort-will-build",
+   "en_hash": "efe070eaed42ce09",
+   "fr_hash": "31e48ed0b08ad9a7"
+  },
+  {
+   "id": "course-plan/reference-standards-register",
+   "en_hash": "c970a72b6f3eb9e7",
+   "fr_hash": "f453fe1514ba4eb1"
+  },
+  {
+   "id": "course-plan/module-map-sessions-nasa-seh-ecss-spacecdf-screens",
+   "en_hash": "93cb636cd781876d",
+   "fr_hash": "351c70e15fb365fd"
+  },
+  {
+   "id": "course-plan/course-gantt-40-hour-and-3-week-intensive-variants",
+   "en_hash": "3d4d4fc34a0f9767",
+   "fr_hash": "d3351aabb7d776e6"
+  },
+  {
+   "id": "course-plan/day-1-mission-definition-concept-8-h",
+   "en_hash": "16777f22109f8244",
+   "fr_hash": "5acdd42b9ace5ffa"
+  },
+  {
+   "id": "course-plan/day-1-mission-definition-concept-8-h/session-1-1-introduction-to-space-mission-design-2-h",
+   "en_hash": "355a5c6136d4167b",
+   "fr_hash": "fb4347faf5d48030"
+  },
+  {
+   "id": "course-plan/day-1-mission-definition-concept-8-h/session-1-2-mission-need-stakeholder-analysis-2-h",
+   "en_hash": "8ae73cde10fc4320",
+   "fr_hash": "c30084b9b123aec7"
+  },
+  {
+   "id": "course-plan/day-1-mission-definition-concept-8-h/session-1-3-mission-trade-analysis-2-h",
+   "en_hash": "708d7a78c3257f7a",
+   "fr_hash": "6eaef3e1d34250dc"
+  },
+  {
+   "id": "course-plan/day-1-mission-definition-concept-8-h/session-1-4-concept-of-operations-2-h",
+   "en_hash": "e5f86ca1a36ea644",
+   "fr_hash": "26b7aff0072526ac"
+  },
+  {
+   "id": "course-plan/day-2-requirements-functions-interfaces-8-h",
+   "en_hash": "f962d656868de006",
+   "fr_hash": "d2e03cf69776688f"
+  },
+  {
+   "id": "course-plan/day-2-requirements-functions-interfaces-8-h/session-2-1-requirements-engineering-2-h",
+   "en_hash": "d95743f03ff7d550",
+   "fr_hash": "e4d0f45bf8f2b7f8"
+  },
+  {
+   "id": "course-plan/day-2-requirements-functions-interfaces-8-h/session-2-2-functions-decomposition-2-h",
+   "en_hash": "980ebcfb56bc995b",
+   "fr_hash": "568ecaf23afdc087"
+  },
+  {
+   "id": "course-plan/day-2-requirements-functions-interfaces-8-h/session-2-3-interface-management-2-h",
+   "en_hash": "cb11a3ab5a521bf7",
+   "fr_hash": "21c34b239b1e46f8"
+  },
+  {
+   "id": "course-plan/day-2-requirements-functions-interfaces-8-h/session-2-4-architecture-block-diagrams-2-h",
+   "en_hash": "d5219cc639e73ed0",
+   "fr_hash": "6fa570d1b40eebba"
+  },
+  {
+   "id": "course-plan/day-3-subsystem-design-loop-8-h",
+   "en_hash": "8de6e5b7bd701aa8",
+   "fr_hash": "f0161c36f926ff3f"
+  },
+  {
+   "id": "course-plan/day-3-subsystem-design-loop-8-h/session-3-1-power-eps-2-h",
+   "en_hash": "6841d3f992708664",
+   "fr_hash": "caa608708a96a47b"
+  },
+  {
+   "id": "course-plan/day-3-subsystem-design-loop-8-h/session-3-2-structure-mechanisms-2-h",
+   "en_hash": "0803ed1f4dd419d3",
+   "fr_hash": "eb7004584978d95a"
+  },
+  {
+   "id": "course-plan/day-3-subsystem-design-loop-8-h/session-3-3-thermal-2-h",
+   "en_hash": "14a5f9a9e7784ee5",
+   "fr_hash": "d29046f9d05dbead"
+  },
+  {
+   "id": "course-plan/day-3-subsystem-design-loop-8-h/session-3-4-communications-2-h",
+   "en_hash": "eaf32cd2997bea40",
+   "fr_hash": "0671a1e6641817cf"
+  },
+  {
+   "id": "course-plan/day-4-equipment-v-v-risk-cost-8-h",
+   "en_hash": "fc04a4a2a29e52d1",
+   "fr_hash": "4425d1841e175638"
+  },
+  {
+   "id": "course-plan/day-4-equipment-v-v-risk-cost-8-h/session-4-1-equipment-selection-2-h",
+   "en_hash": "b7213c8a03d3adca",
+   "fr_hash": "fd2d9740380126a2"
+  },
+  {
+   "id": "course-plan/day-4-equipment-v-v-risk-cost-8-h/session-4-2-verification-validation-planning-2-h",
+   "en_hash": "8b732c90cf3f3af9",
+   "fr_hash": "c084a46345d2c647"
+  },
+  {
+   "id": "course-plan/day-4-equipment-v-v-risk-cost-8-h/session-4-3-risk-management-2-h",
+   "en_hash": "60f76fbd6334b45a",
+   "fr_hash": "8a982061ffe858a6"
+  },
+  {
+   "id": "course-plan/day-4-equipment-v-v-risk-cost-8-h/session-4-4-cost-schedule-2-h",
+   "en_hash": "055dd6660fa9dc11",
+   "fr_hash": "3602a3d956f52635"
+  },
+  {
+   "id": "course-plan/day-5-design-review-regulatory-8-h",
+   "en_hash": "a529c70e0618ecfc",
+   "fr_hash": "bc5cdda63285ea46"
+  },
+  {
+   "id": "course-plan/day-5-design-review-regulatory-8-h/session-5-1-gate-review-preparation-2-h",
+   "en_hash": "a3944811bb4c7410",
+   "fr_hash": "fad6e77694609eaf"
+  },
+  {
+   "id": "course-plan/day-5-design-review-regulatory-8-h/session-5-2-regulatory-licensing-2-h",
+   "en_hash": "1c84f82cc298b9b7",
+   "fr_hash": "d727d1ca34c6500b"
+  },
+  {
+   "id": "course-plan/day-5-design-review-regulatory-8-h/session-5-3-launch-integration-2-h",
+   "en_hash": "2eaafd95a8a037d1",
+   "fr_hash": "d5211a2f62b337a0"
+  },
+  {
+   "id": "course-plan/day-5-design-review-regulatory-8-h/session-5-4-design-optimisation-final-review-2-h",
+   "en_hash": "ea2829dfafae40fb",
+   "fr_hash": "9d810504b3713e40"
+  },
+  {
+   "id": "course-plan/assessment",
+   "en_hash": "12b7696869981c90",
+   "fr_hash": "d6f25749f7acb82f"
+  },
+  {
+   "id": "course-plan/assessment/bloom-level-outcome-matrix",
+   "en_hash": "917089c45c2a6369",
+   "fr_hash": "a869047c5cfdddfa"
+  },
+  {
+   "id": "course-plan/assessment/equipment-software-register",
+   "en_hash": "1bd04aef89f95943",
+   "fr_hash": "70ea158f1a6f406a"
+  },
+  {
+   "id": "course-plan/assessment/pre-requisite-knowledge-audit-self-check",
+   "en_hash": "8a667a97d763afe3",
+   "fr_hash": "069dd6f3c775aeff"
+  },
+  {
+   "id": "course-plan/assessment/raci-for-delivery",
+   "en_hash": "6ff3854c83be0f34",
+   "fr_hash": "5766ee05f3bd20c3"
+  },
+  {
+   "id": "course-plan/per-position-deep-dives-appendices",
+   "en_hash": "466ff2362a1c2061",
+   "fr_hash": "f3baef985a4b6318"
+  },
+  {
+   "id": "course-plan/reference-list-live-links",
+   "en_hash": "9b65e3fe219d92ee",
+   "fr_hash": "78f36101907895e8"
+  }
+ ],
+ "en_commit": "3ea7113"
+}

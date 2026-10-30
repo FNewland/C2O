@@ -43,7 +43,7 @@ Ground stations Iqaluit and Troll, both polar S-band. Reference
 
 [Claude Code: 200 words. Reference NASA Mission Operations
 Handbook structure: ground stations · baseband · MCS · flight
-dynamics. EOSAT-1 specifics: Iqaluit (63.7° N), Troll (-72° S),
+dynamics. EOSAT-1 specifics: Iqaluit (63.7° N), Troll (72° S),
 S-band, 5° minimum elevation.]
 
 ### 1.2 Pass geometry — the polar S-band picture
@@ -88,17 +88,17 @@ six MCS-position colour-coding; pass-cadence chart.]
 - EOSAT-1 mission config: `configs/eosat1/mission.yaml`
 - ECSS-E-ST-70-11C — Space segment operability —
   https://ecss.nl/standards/active-standards/ecss-e-st-70-11c-space-segment-operability/
-- NASA *Mission Operations Handbook* (NPR 7120.5F) —
+- NASA *Space Flight Program and Project Management Requirements* (NPR 7120.5F) —
   https://nodis3.gsfc.nasa.gov/displayDir.cfm?Internal_ID=N_PR_7120_005F_
-- CCSDS Mission Operations Reference Architecture (MOSE-IDP) —
+- CCSDS Mission Operations Services Concept (CCSDS 520.0-G) —
   https://public.ccsds.org/Pubs/520x0g4.pdf
 
 ---
 
 ## 3. Mission Planning System hands-on
 
-**Tool:** the MPS web UI (port 8080 by default — see
-`configs/eosat1/mission.yaml`).
+**Tool:** the MPS web UI (port 9091 by default — the planner's own
+`--port`; the simulator uses 8080 and the MCS 9090).
 
 [Claude Code: produce a 1.5-page exercise. Use planning configs
 (`planning/activity_types.yaml`, `planning/imaging_targets.yaml`,
@@ -169,8 +169,8 @@ Debrief questions:
 
 ### Tools used
 
-- Mission Control System (MCS) — webapp, port 8080
-- Mission Planning System (MPS) — webapp, port 8080 (planning tab)
+- Mission Control System (MCS) — webapp, port 9090
+- Mission Planning System (MPS) — webapp, port 9091 (its own server)
 - Voice loop — Cyberrange softphone
 
 ### Simulator files referenced
@@ -189,5 +189,5 @@ Debrief questions:
 - ECSS-E-ST-70-11C — Space segment operability —
   https://ecss.nl/standards/active-standards/ecss-e-st-70-11c-space-segment-operability/
 - CCSDS standards — https://public.ccsds.org/Publications/default.aspx
-- NASA Mission Operations Handbook (NPR 7120.5F) —
+- NASA Space Flight Program and Project Management Requirements (NPR 7120.5F) —
   https://nodis3.gsfc.nasa.gov/displayDir.cfm?Internal_ID=N_PR_7120_005F_

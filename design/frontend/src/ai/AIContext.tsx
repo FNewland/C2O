@@ -6,6 +6,7 @@
  * to check capability availability without direct API calls.
  */
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import i18n from '../i18n'
 
 export interface AICapabilities {
   design_advisor: boolean
@@ -83,7 +84,7 @@ export function AIProvider({ children }: { children: ReactNode }) {
         setState({
           ...DEFAULT_STATE,
           loading: false,
-          error: `Health check failed: ${err.message}`,
+          error: i18n.t('Health check failed: {{message}}', { message: err.message }),
         })
       })
   }, [])

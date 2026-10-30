@@ -6,15 +6,17 @@
  *   - Grey dot + "AI Off" when installed but disabled
  *   - Nothing when not installed (clean v1.0 experience)
  */
+import { useTranslation } from 'react-i18next'
 import { useAI } from './AIContext'
 
 export function AIStatusIndicator() {
+  const { t } = useTranslation()
   const { installed, enabled, loading } = useAI()
 
   if (loading || !installed) return null
 
   const dotColor = enabled ? '#22c55e' : '#94a3b8'
-  const label = enabled ? 'AI' : 'AI Off'
+  const label = enabled ? t('AI') : t('AI Off')
 
   return (
     <div
@@ -32,8 +34,8 @@ export function AIStatusIndicator() {
       }}
       title={
         enabled
-          ? 'GenAI capabilities are active'
-          : 'GenAI installed but disabled — enable in configs/genai.yaml'
+          ? t('GenAI capabilities are active')
+          : t('GenAI installed but disabled — enable in configs/genai.yaml')
       }
     >
       <span

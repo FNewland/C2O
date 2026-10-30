@@ -295,8 +295,8 @@ The **CubeSat Design Specification (CDS)**, maintained by the California Polytec
 | 1.5U | 100 × 100 × 170.2 | 3.0 kg | Enhanced technology demonstrators |
 | 2U | 100 × 100 × 227.0 | 4.0 kg | Simple instruments, store-and-forward |
 | 3U | 100 × 100 × 340.5 | 6.0 kg | Standard EO/science missions |
-| 6U | 100 × 226.3 × 340.5 | 12.0 kg | Advanced EO, communications |
-| 12U | 226.3 × 226.3 × 340.5 | 24.0 kg | High-performance missions |
+| 6U | 100 × 226.3 × 366.0 | 12.0 kg | Advanced EO, communications |
+| 12U | 226.3 × 226.3 × 366.0 | 24.0 kg | High-performance missions |
 | 16U | 226.3 × 226.3 × 454.0 | 32.0 kg | Near-microsatellite capability |
 
 ### 3.5.4 Rideshare launch interfaces

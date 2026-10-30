@@ -53,15 +53,15 @@ proxy: { '/api': 'http://REMOTE_HOST:8000' }
 1. Click **Step 2 (Concept)**
 2. Enter trade parameters: GSD, revisit, coverage, latency, budget
 3. Click **"Run Analysis"** to evaluate space vs non-space alternatives
-4. Review scored results ? the tool indicates whether space is justified
+4. Review scored results → the tool indicates whether space is justified
 
 ### Step 3: Requirements
 
 1. Click **Step 3 (Requirements)**
-2. **Orbit Advisor:** Enter targets, click "Compute" ? scored orbit candidates. Click "Use" to apply.
-3. **Class Advisor:** Enter known parameters (all optional). Click "Compute" ? spacecraft class recommendation.
+2. **Orbit Advisor:** Enter targets, click "Compute" → scored orbit candidates. Click "Use" to apply.
+3. **Class Advisor:** Enter known parameters (all optional). Click "Compute" → spacecraft class recommendation.
 4. Set orbit, payload, and mission parameters in the form
-5. Click **"Run Design (solo)"** ? 20 agents converge the design
+5. Click **"Run Design (solo)"** → 20 agents converge the design
 
 ### Step 4: Design Phase
 
@@ -106,7 +106,7 @@ Two modes:
 
 ### Link Budget Tool
 
-Full interactive cascade: TX power ? antenna gain ? losses ? FSPL ? atmospheric/pointing/polarisation ? RX gain ? G/T ? C/N? ? Eb/N? ? margin. Each term editable, margin color-coded.
+Full interactive cascade: TX power → antenna gain → losses → FSPL → atmospheric/pointing/polarisation → RX gain → G/T → C/N₀ → Eb/N₀ → margin. Each term editable, margin color-coded.
 
 ### Optimizer
 
@@ -125,7 +125,7 @@ Generates 18+ document types:
 ### Cross-Tool Reactivity
 
 - **Design State Bar:** Shows when design is outdated after any parameter change
-- **Auto-Reconverge:** Optional toggle ? re-runs design automatically after each edit
+- **Auto-Reconverge:** Optional toggle → re-runs design automatically after each edit
 - **Conflict Review:** Modal appears when critical conflicts detected; requires resolution
 - **Impact Preview:** Shows which agents and budgets a change will affect before accepting
 - **Change Audit:** Full history with undo capability
@@ -188,7 +188,7 @@ The API also supports import: `POST /api/lifecycle/equipment/import`
 
 1. Click **"Start Session"** in the header
 2. Select your position(s) and enter a display name
-3. Share the URL with team members ? they join the same session
+3. Share the URL with team members → they join the same session
 4. Edits propagate in real-time via WebSocket
 5. Each position can only edit their owned parameters
 6. Convergence runs automatically after each edit
@@ -210,7 +210,7 @@ The API also supports import: `POST /api/lifecycle/equipment/import`
 |-------|---------|
 | "Socket not connected" | Start or join a session first for equipment selection |
 | Design shows no results | Click "Run Design" in Step 3 |
-| Requirements tab empty | Need a study ID ? run design at least once |
+| Requirements tab empty | Need a study ID → run design at least once |
 | Optimizer won't start | Need a session (or use 'solo' mode) |
 
 ---

@@ -1,0 +1,142 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "docs/oer/chapters/14_verification_validation.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "chapter-14-verification-and-validation",
+   "en_hash": "78bbf72613853fb9",
+   "fr_hash": "c2e57cd19365d4cb"
+  },
+  {
+   "id": "chapter-14-verification-and-validation/learning-objectives",
+   "en_hash": "b4bf0e451004c417",
+   "fr_hash": "1c782eaf6329fd47"
+  },
+  {
+   "id": "chapter-14-verification-and-validation/14-1-verification-versus-validation-precise-definitions",
+   "en_hash": "96f682a33acc4b13",
+   "fr_hash": "64f3f6a03d7f8c58"
+  },
+  {
+   "id": "chapter-14-verification-and-validation/14-1-verification-versus-validation-precise-definitions/14-1-1-the-critical-distinction",
+   "en_hash": "3417823b57da6dfe",
+   "fr_hash": "7f7e2c4603b38c16"
+  },
+  {
+   "id": "chapter-14-verification-and-validation/14-1-verification-versus-validation-precise-definitions/14-1-2-example",
+   "en_hash": "2f36fed42157dd6b",
+   "fr_hash": "d9a5b4c63a9c3e25"
+  },
+  {
+   "id": "chapter-14-verification-and-validation/14-2-the-atird-verification-methods-in-detail",
+   "en_hash": "f102042c7487be33",
+   "fr_hash": "01f0a874579eb13e"
+  },
+  {
+   "id": "chapter-14-verification-and-validation/14-2-the-atird-verification-methods-in-detail/14-2-1-analysis-a",
+   "en_hash": "39be30ae940fc0ab",
+   "fr_hash": "c2de850e842fc645"
+  },
+  {
+   "id": "chapter-14-verification-and-validation/14-2-the-atird-verification-methods-in-detail/14-2-2-test-t",
+   "en_hash": "b84acd3320a2d3ce",
+   "fr_hash": "d2a864362028107a"
+  },
+  {
+   "id": "chapter-14-verification-and-validation/14-2-the-atird-verification-methods-in-detail/14-2-3-inspection-i",
+   "en_hash": "8bb68ddb2b06daed",
+   "fr_hash": "9c21ab018cecae2d"
+  },
+  {
+   "id": "chapter-14-verification-and-validation/14-2-the-atird-verification-methods-in-detail/14-2-4-review-of-design-r",
+   "en_hash": "daf70ff580b151ad",
+   "fr_hash": "aed1a2366161394c"
+  },
+  {
+   "id": "chapter-14-verification-and-validation/14-2-the-atird-verification-methods-in-detail/14-2-5-demonstration-d",
+   "en_hash": "ce14551ffd8c838a",
+   "fr_hash": "1dd0aeb75e4855a9"
+  },
+  {
+   "id": "chapter-14-verification-and-validation/14-3-environmental-test-programme",
+   "en_hash": "471cb7c95f5611dd",
+   "fr_hash": "953b9544262fe35d"
+  },
+  {
+   "id": "chapter-14-verification-and-validation/14-3-environmental-test-programme/14-3-1-standard-environmental-test-sequence",
+   "en_hash": "18c5fba51211e377",
+   "fr_hash": "4ecec37629c82928"
+  },
+  {
+   "id": "chapter-14-verification-and-validation/14-3-environmental-test-programme/14-3-2-sine-vibration-test-levels",
+   "en_hash": "4f64ddea1d88f44e",
+   "fr_hash": "75b8c7c23e66ff32"
+  },
+  {
+   "id": "chapter-14-verification-and-validation/14-3-environmental-test-programme/14-3-3-random-vibration-test-levels",
+   "en_hash": "7f52a23b7b220443",
+   "fr_hash": "977d241baa90b1d6"
+  },
+  {
+   "id": "chapter-14-verification-and-validation/14-3-environmental-test-programme/14-3-4-thermal-vacuum-test-profile",
+   "en_hash": "512dddada662733a",
+   "fr_hash": "a205f8d75d007524"
+  },
+  {
+   "id": "chapter-14-verification-and-validation/14-3-environmental-test-programme/14-3-5-emc-testing",
+   "en_hash": "7081887354d3a66a",
+   "fr_hash": "39a330d05a4853d0"
+  },
+  {
+   "id": "chapter-14-verification-and-validation/14-4-compliance-verification-matrix-construction",
+   "en_hash": "e9299a846856478f",
+   "fr_hash": "59b93cf82c1d66dc"
+  },
+  {
+   "id": "chapter-14-verification-and-validation/14-4-compliance-verification-matrix-construction/14-4-1-matrix-structure",
+   "en_hash": "c1c3d1cf86d355d6",
+   "fr_hash": "bb54d61195e8e0c2"
+  },
+  {
+   "id": "chapter-14-verification-and-validation/14-4-compliance-verification-matrix-construction/14-4-2-atird-assignment-decision-logic",
+   "en_hash": "6c5b19f4d1a30499",
+   "fr_hash": "0ea6b84fbe421930"
+  },
+  {
+   "id": "chapter-14-verification-and-validation/14-4-compliance-verification-matrix-construction/14-4-3-multiple-methods",
+   "en_hash": "84e9d61fe749c15b",
+   "fr_hash": "a4612b5ed4287941"
+  },
+  {
+   "id": "chapter-14-verification-and-validation/14-4-compliance-verification-matrix-construction/14-4-4-waiver-process",
+   "en_hash": "80f201c0aa92b450",
+   "fr_hash": "c55fa6137b29c87f"
+  },
+  {
+   "id": "chapter-14-verification-and-validation/14-5-returning-to-unisat-1-a-verification-matrix",
+   "en_hash": "b4492f895c437994",
+   "fr_hash": "eb91bb943ed13e56"
+  },
+  {
+   "id": "chapter-14-verification-and-validation/summary",
+   "en_hash": "42c011bd9cb354c8",
+   "fr_hash": "139306d14a260484"
+  },
+  {
+   "id": "chapter-14-verification-and-validation/problems",
+   "en_hash": "490096e9b6de6d03",
+   "fr_hash": "a0cea6d5d2f30b3e"
+  },
+  {
+   "id": "chapter-14-verification-and-validation/references",
+   "en_hash": "0a4929ede9576e23",
+   "fr_hash": "6cba8f46eec6e067"
+  }
+ ],
+ "en_commit": "be16bc3"
+}

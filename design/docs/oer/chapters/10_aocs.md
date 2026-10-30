@@ -582,7 +582,7 @@ where $k_d$ is the desaturation gain and $\hat{B}$ is the unit magnetic-field ve
 
 4. **Completion:** Wheel speeds return to near zero (or bias speed). The cycle repeats.
 
-Figure 10.4 shows the accumulation side of this cycle for a drag-dominated small satellite, with the saturation lines of two wheel sizes, together with the order-of-magnitude ranking of disturbance sources.
+Figure 10.4 shows the accumulation side of this cycle for the EOSat-3U case of §10.2, whose disturbance budget is dominated by the residual magnetic dipole rather than by drag, with the saturation lines of three wheel sizes, together with the order-of-magnitude ranking of disturbance sources.
 
 ![Reaction-wheel momentum accumulation and disturbance torque magnitudes.](../assets/figures/fig_rw_momentum.png)
 
@@ -726,7 +726,7 @@ where $V_{\text{rod}}$ is the rod volume and $\oint H \, dB$ is the area of the 
 4. Hughes, P. C., *Spacecraft Attitude Dynamics*, Wiley, 1986 (Dover reprint 2004). https://store.doverpublications.com
 5. Wertz, J. R. & Larson, W. J. (eds.), *Space Mission Analysis and Design*, 3rd ed., 1999, Ch. 11 (ADCS). https://www.springer.com
 6. ECSS, *ECSS-E-ST-60-10C: Control Performance*, 2008. https://ecss.nl/standard/ecss-e-st-60-10c-control-performance/
-7. ECSS, *ECSS-E-ST-60-20C Rev.2: Star Tracker Performance Testing*, 2019. https://ecss.nl/standard/ecss-e-st-60-20c-star-tracker-performance-testing/
+7. ECSS, *ECSS-E-ST-60-20C Rev.2: Star sensor terminology and performance specification*, 15 May 2019. https://ecss.nl/standard/ecss-e-st-60-20c-rev-2-star-sensor-terminology-and-performance-specification-15-may-2019/
 8. Pong, C. M. et al., "ASTERIA: Achieving 10-arcsecond pointing on a 6U CubeSat," Small Satellite Conference, 2018. https://digitalcommons.usu.edu/smallsat/
 9. Blue Canyon Technologies, *XACT ADCS and reaction-wheel datasheets*, 2023 (representative example). https://www.bluecanyontech.com
 10. CubeSpace, *ADCS Product Catalogue*, 2023 (representative example). https://www.cubespace.co.za

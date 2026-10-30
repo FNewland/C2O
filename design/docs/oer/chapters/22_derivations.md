@@ -79,11 +79,11 @@ since $v_e = I_{sp}\, g_0$ by the definition of specific impulse. The propellant
 
 $r_1 = 6778.137$ km, $r_2 = 42\,164$ km, $a_t = (r_1 + r_2)/2 = 24\,471$ km.
 
-At perigee: $v_1 = \sqrt{\mu/r_1} = 7.669$ km/s; $v_p = \sqrt{\mu\,(2/r_1 - 1/a_t)} = 10.061$ km/s; $\Delta V_1 = 2.392$ km/s.
+At perigee: $v_1 = \sqrt{\mu/r_1} = 7.669$ km/s; $v_p = \sqrt{\mu\,(2/r_1 - 1/a_t)} = 10.066$ km/s; $\Delta V_1 = 2.397$ km/s.
 
-At apogee: $v_2 = \sqrt{\mu/r_2} = 3.075$ km/s; $v_a = \sqrt{\mu\,(2/r_2 - 1/a_t)} = 1.610$ km/s; $\Delta V_2 = 1.465$ km/s.
+At apogee: $v_2 = \sqrt{\mu/r_2} = 3.075$ km/s; $v_a = \sqrt{\mu\,(2/r_2 - 1/a_t)} = 1.618$ km/s; $\Delta V_2 = 1.456$ km/s.
 
-Total $\Delta V = 3.857$ km/s — matching Figure 7.4 (3.854 km/s) to within rounding. For the deorbit case of Chapter 12 §12.2.5 (600 km circular to a 200 km perigee) the same vis-viva arithmetic gives 112 m/s.
+Total $\Delta V = 3.854$ km/s — matching Figure 7.4 (≈ 3.85 km/s); the rounded components sum to 3.853 km/s. For the deorbit case of Chapter 12 §12.2.5 (600 km circular to a 200 km perigee) the same vis-viva arithmetic gives 112 m/s.
 
 ---
 
@@ -416,7 +416,7 @@ $$ V_{gen} \le C_{downlink} $$
 
 This is the form of Chapter 11 §11.9. If the inequality fails, the options are a faster downlink (more bandwidth or a higher band), more stations or passes, on-board compression, or fewer images. Chapter 11 Figure 11.6 plots daily capacity by band against representative payload volumes: UHF closes only for housekeeping; S-band suits a multispectral imager; X-band is needed for SAR or hyperspectral data.
 
-**Worked check.** EOSat-3U at 5 Mbit/s with four 8-minute passes per day and $\eta_{protocol} = 0.8$: $C = 5 \times 10^6 \times 4 \times 480 \times 0.8 / 8 = 960$ MB/day against 720 MB/day generated — closes (Chapter 11 §11.8 and §11.9 give 956 MB/day with the exact pass durations). UniSat-1 at 4800 bit/s with five minutes of usable contact per pass to a single station: 0.61 MB/day against 1.13 MB/day generated — does not close (Chapter 11 §11.8.2, Chapter 17 §17.6).
+**Worked check.** EOSat-3U at 5 Mbit/s with five 6-minute passes per day and $\eta_{protocol} = 0.85$: $C = 5 \times 10^6 \times 5 \times 360 \times 0.85 / 8 = 956$ MB/day against 720 MB/day generated — closes (the case of Chapter 11 §11.9 and Chapter 17 §17.2.4). UniSat-1 at 4800 bit/s with five minutes of usable contact per pass to a single station: 0.61 MB/day against 1.13 MB/day generated — does not close (Chapter 11 §11.8.2, Chapter 17 §17.6).
 
 ---
 

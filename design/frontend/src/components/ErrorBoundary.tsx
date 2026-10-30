@@ -1,4 +1,5 @@
 import { Component, type ReactNode } from 'react'
+import i18n from '../i18n'
 
 interface Props {
   children: ReactNode
@@ -33,10 +34,10 @@ export class ErrorBoundary extends Component<Props, State> {
           height: '100%', gap: '1rem',
         }}>
           <div style={{ fontSize: '1.2rem', color: '#ef4444', fontWeight: 600 }}>
-            {this.props.phaseName || 'Component'} encountered an error
+            {i18n.t('{{name}} encountered an error', { name: i18n.t(this.props.phaseName || 'Component') })}
           </div>
           <div style={{ fontSize: '0.78rem', color: '#9ca3af', maxWidth: '500px' }}>
-            {this.state.error?.message || 'An unexpected error occurred.'}
+            {this.state.error?.message || i18n.t('An unexpected error occurred.')}
           </div>
           <button
             onClick={() => this.setState({ hasError: false, error: null })}
@@ -46,7 +47,7 @@ export class ErrorBoundary extends Component<Props, State> {
               fontSize: '0.82rem', fontWeight: 500,
             }}
           >
-            Retry
+            {i18n.t('Retry')}
           </button>
           <div style={{ fontSize: '0.65rem', color: '#6b7280', fontFamily: 'monospace', maxWidth: '600px', overflow: 'auto', maxHeight: '200px', textAlign: 'left', whiteSpace: 'pre-wrap' }}>
             {this.state.error?.stack}

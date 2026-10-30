@@ -8,6 +8,7 @@
  */
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { useDesignStore } from '../stores/designStore'
 import { useUIStore } from '../stores/uiStore'
 import type { TraceabilityTreeResponse, TraceRequirementNode } from '../types/arcadia'
@@ -18,6 +19,10 @@ const STATUS_COLORS: Record<string, string> = {
   accepted: '#10b981', approved: '#10b981', verified: '#10b981', passed: '#10b981', compliant: '#10b981',
   draft: '#6b7280', proposed: '#3b82f6', planned: '#3b82f6', in_progress: '#f59e0b', pending: '#f59e0b',
   partial: '#f59e0b', rejected: '#ef4444', failed: '#ef4444', non_compliant: '#ef4444', retired: '#6b7280',
+}
+// English text is the i18n key
+const LEVEL_LABEL: Record<string, string> = {
+  mission: 'mission', system: 'system', subsystem: 'subsystem', equipment: 'equipment', component: 'component',
 }
 const LEVEL_COLORS: Record<string, string> = {
   mission: '#8b5cf6', system: '#3b82f6', subsystem: '#06b6d4', equipment: '#10b981', component: '#10b981',
@@ -34,6 +39,7 @@ export function StatusPill({ value, prefix }: { value: string | null | undefined
 }
 
 function ReqNode({ node, depth, collapsed, toggle }: { node: TraceRequirementNode; depth: number; collapsed: Set<string>; toggle: (id: string) => void }) {
+  const { t } = useTranslation()
   const lc = LEVEL_COLORS[node.level || ''] || '#3b82f6'
   const isCollapsed = collapsed.has(node.id)
   const kids = node.children || []
@@ -47,7 +53,7 @@ function ReqNode({ node, depth, collapsed, toggle }: { node: TraceRequirementNod
           </button>
         )}
         <span style={{ color: '#93c5fd', fontWeight: 600 }}>{node.code || node.id.slice(0, 8)}</span>
-        {node.level && <span style={{ fontSize: '0.56rem', color: lc }}>{node.level}</span>}
+        {node.level && <span style={{ fontSize: '0.56rem', color: lc }}>{LEVEL_LABEL[node.level] ? t(LEVEL_LABEL[node.level]) : node.level}</span>}
         <StatusPill value={node.status} />
         <span style={{ color: 'var(--text-primary)' }} title={node.text || ''}>
           {(node.text || '').slice(0, 100)}{(node.text || '').length > 100 ? '…' : ''}
@@ -78,6 +84,7 @@ function ReqNode({ node, depth, collapsed, toggle }: { node: TraceRequirementNod
 }
 
 export function TraceabilityTree({ studyId: studyIdProp }: { studyId?: string | null } = {}) {
+  const { t } = useTranslation()
   const uiStudyId = useUIStore(s => s.studyId)
   const designStudyId = useDesignStore(s => s.studyId)
   const studyId = studyIdProp ?? uiStudyId ?? designStudyId
@@ -95,17 +102,19 @@ export function TraceabilityTree({ studyId: studyIdProp }: { studyId?: string | 
     return <LegacyTraceabilityTree />
   }
   if (isLoading || !data) {
-    return <div className="card"><p style={{ fontSize: '0.72rem', color: '#6b7280' }}>Loading traceability…</p></div>
+    return <div className="card"><p style={{ fontSize: '0.72rem', color: '#6b7280' }}>{t('Loading traceability…')}</p></div>
   }
 
   const s = data.summary
-  const levels = Object.entries(s.requirements_by_level || {}).map(([k, v]) => `${v} ${k}`).join(', ')
+  const levels = Object.entries(s.requirements_by_level || {}).map(([k, v]) => `${v} ${LEVEL_LABEL[k] ? t(LEVEL_LABEL[k]) : k}`).join(', ')
   return (
     <div className="card">
-      <h3 style={{ fontSize: '0.85rem', marginBottom: '0.3rem' }}>V-Model Traceability</h3>
+      <h3 style={{ fontSize: '0.85rem', marginBottom: '0.3rem' }}>{t('V-Model Traceability')}</h3>
       <p style={{ fontSize: '0.68rem', color: '#9ca3af', marginBottom: '0.5rem' }}>
-        Objective → Requirement chain → Element / Function → Verification. {s.objectives} objectives, {s.requirements} requirements
-        ({levels || 'none'}), {s.requirements_traced_to_objectives} traced to objectives, {s.relations} relations.
+        {t('Objective → Requirement chain → Element / Function → Verification. {{objectives}} objectives, {{requirements}} requirements ({{levels}}), {{traced}} traced to objectives, {{relations}} relations.', {
+          objectives: s.objectives, requirements: s.requirements, levels: levels || t('none'),
+          traced: s.requirements_traced_to_objectives, relations: s.relations,
+        })}
       </p>
 
       {data.objectives.map((obj, i) => (
@@ -115,11 +124,11 @@ export function TraceabilityTree({ studyId: studyIdProp }: { studyId?: string | 
             {obj.priority && <span style={{ fontSize: '0.58rem', color: '#f59e0b' }}>{obj.priority}</span>}
             <StatusPill value={obj.status} />
           </div>
-          {obj.measurable_criterion && <div style={{ fontSize: '0.62rem', color: '#9ca3af' }}>criterion: {obj.measurable_criterion}</div>}
+          {obj.measurable_criterion && <div style={{ fontSize: '0.62rem', color: '#9ca3af' }}>{t('criterion: {{criterion}}', { criterion: obj.measurable_criterion })}</div>}
           {obj.requirements.length > 0 ? (
             obj.requirements.map(r => <ReqNode key={r.id} node={r} depth={1} collapsed={collapsed} toggle={toggle} />)
           ) : (
-            <div style={{ marginLeft: '0.75rem', fontSize: '0.65rem', color: '#6b7280', fontStyle: 'italic' }}>No requirements linked to this objective</div>
+            <div style={{ marginLeft: '0.75rem', fontSize: '0.65rem', color: '#6b7280', fontStyle: 'italic' }}>{t('No requirements linked to this objective')}</div>
           )}
         </div>
       ))}
@@ -127,7 +136,7 @@ export function TraceabilityTree({ studyId: studyIdProp }: { studyId?: string | 
       {data.unlinked_requirements.length > 0 && (
         <div style={{ marginTop: '0.5rem', borderTop: '1px solid #374151', paddingTop: '0.4rem' }}>
           <div style={{ fontSize: '0.68rem', color: '#f59e0b', marginBottom: '0.2rem' }}>
-            {data.unlinked_requirements.length} top-level requirement{data.unlinked_requirements.length > 1 ? 's' : ''} not linked to an objective
+            {t('{{count}} top-level requirements not linked to an objective', { count: data.unlinked_requirements.length, defaultValue_one: '{{count}} top-level requirement not linked to an objective' })}
           </div>
           {data.unlinked_requirements.map(r => <ReqNode key={r.id} node={r} depth={0} collapsed={collapsed} toggle={toggle} />)}
         </div>
@@ -138,6 +147,7 @@ export function TraceabilityTree({ studyId: studyIdProp }: { studyId?: string | 
 
 /** SCDF-133 store-based view; kept as the fallback when the server tree is empty. */
 export function LegacyTraceabilityTree() {
+  const { t } = useTranslation()
   const missionNeed = useDesignStore(s => s.missionNeed)
   const rawReqs = useDesignStore(s => s.generatedRequirements)
   const reqs = Array.isArray(rawReqs) ? rawReqs : []
@@ -149,17 +159,17 @@ export function LegacyTraceabilityTree() {
   if (objectives.length === 0 && acceptedReqs.length === 0) {
     return (
       <div className="card" style={{ borderLeft: '3px solid #6b7280' }}>
-        <h3 style={{ fontSize: '0.85rem', color: '#6b7280' }}>Traceability</h3>
-        <p style={{ fontSize: '0.72rem', color: '#6b7280' }}>Define objectives and requirements to see traceability.</p>
+        <h3 style={{ fontSize: '0.85rem', color: '#6b7280' }}>{t('Traceability')}</h3>
+        <p style={{ fontSize: '0.72rem', color: '#6b7280' }}>{t('Define objectives and requirements to see traceability.')}</p>
       </div>
     )
   }
 
   return (
     <div className="card">
-      <h3 style={{ fontSize: '0.85rem', marginBottom: '0.3rem' }}>V-Model Traceability</h3>
+      <h3 style={{ fontSize: '0.85rem', marginBottom: '0.3rem' }}>{t('V-Model Traceability')}</h3>
       <p style={{ fontSize: '0.68rem', color: '#9ca3af', marginBottom: '0.5rem' }}>
-        Need → Objective → Requirement → Function → Design. {objectives.length} objectives, {acceptedReqs.length} requirements, {functionsList.length} functions.
+        {t('Need → Objective → Requirement → Function → Design. {{objectives}} objectives, {{requirements}} requirements, {{functions}} functions.', { objectives: objectives.length, requirements: acceptedReqs.length, functions: functionsList.length })}
       </p>
 
       {objectives.map((obj: any, i: number) => {
@@ -187,7 +197,7 @@ export function LegacyTraceabilityTree() {
               })
             ) : (
               <div style={{ marginLeft: '0.75rem', fontSize: '0.65rem', color: '#6b7280', fontStyle: 'italic' }}>
-                No requirements linked to this objective
+                {t('No requirements linked to this objective')}
               </div>
             )}
           </div>
@@ -201,7 +211,7 @@ export function LegacyTraceabilityTree() {
         return (
           <div style={{ marginTop: '0.5rem', borderTop: '1px solid #374151', paddingTop: '0.4rem' }}>
             <div style={{ fontSize: '0.68rem', color: '#f59e0b', marginBottom: '0.2rem' }}>
-              {orphans.length} requirement{orphans.length > 1 ? 's' : ''} not linked to an objective
+              {t('{{count}} requirements not linked to an objective', { count: orphans.length, defaultValue_one: '{{count}} requirement not linked to an objective' })}
             </div>
             {orphans.slice(0, 5).map(r => (
               <div key={r.id} style={{ fontSize: '0.65rem', color: '#6b7280', marginLeft: '0.5rem' }}>

@@ -7,22 +7,30 @@
  */
 import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { useUIStore } from '../stores/uiStore'
 
 const API = '/api'
 
+// English text is the i18n key
+const DOMAIN_LABELS: Record<string, string> = {
+  power: 'Power (EPS)', aocs: 'AOCS', ttc: 'Comms (TTC)', thermal: 'Thermal',
+  structure: 'Structure', propulsion: 'Propulsion', obc: 'OBC / C&DH', ground: 'Ground',
+}
+
 const DOMAINS = [
-  { id: 'power', label: 'Power (EPS)', color: '#f59e0b' },
-  { id: 'aocs', label: 'AOCS', color: '#06b6d4' },
-  { id: 'ttc', label: 'Comms (TTC)', color: '#ec4899' },
-  { id: 'thermal', label: 'Thermal', color: '#ef4444' },
-  { id: 'structure', label: 'Structure', color: '#84cc16' },
-  { id: 'propulsion', label: 'Propulsion', color: '#f97316' },
-  { id: 'obc', label: 'OBC / C&DH', color: '#8b5cf6' },
-  { id: 'ground', label: 'Ground', color: '#0ea5e9' },
+  { id: 'power', label: DOMAIN_LABELS.power, color: '#f59e0b' },
+  { id: 'aocs', label: DOMAIN_LABELS.aocs, color: '#06b6d4' },
+  { id: 'ttc', label: DOMAIN_LABELS.ttc, color: '#ec4899' },
+  { id: 'thermal', label: DOMAIN_LABELS.thermal, color: '#ef4444' },
+  { id: 'structure', label: DOMAIN_LABELS.structure, color: '#84cc16' },
+  { id: 'propulsion', label: DOMAIN_LABELS.propulsion, color: '#f97316' },
+  { id: 'obc', label: DOMAIN_LABELS.obc, color: '#8b5cf6' },
+  { id: 'ground', label: DOMAIN_LABELS.ground, color: '#0ea5e9' },
 ]
 
 export function EquipmentBrowser({ onClose }: { onClose?: () => void }) {
+  const { t } = useTranslation()
   const studyId = useUIStore(s => s.studyId)
   const focusElementId = useUIStore(s => s.focusElementId)
   const [domain, setDomain] = useState('power')
@@ -103,12 +111,12 @@ export function EquipmentBrowser({ onClose }: { onClose?: () => void }) {
   return (
     <div style={{ padding: '0.5rem 1rem', fontSize: '0.72rem' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
-        <span style={{ fontWeight: 600, fontSize: '0.78rem' }}>Equipment Catalog</span>
+        <span style={{ fontWeight: 600, fontSize: '0.78rem' }}>{t('Equipment Catalog')}</span>
         <span style={{ flex: 1 }} />
         <input
           value={search}
           onChange={e => setSearch(e.target.value)}
-          placeholder="Search..."
+          placeholder={t('Search...')}
           style={{
             padding: '0.2rem 0.4rem', fontSize: '0.7rem', borderRadius: '3px', width: 140,
             background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)',
@@ -132,23 +140,23 @@ export function EquipmentBrowser({ onClose }: { onClose?: () => void }) {
               border: 'none', cursor: 'pointer',
             }}
           >
-            {d.label}
+            {t(d.label)}
           </button>
         ))}
       </div>
 
-      {isLoading && <div style={{ color: 'var(--text-secondary)', padding: '0.5rem 0' }}>Loading components...</div>}
+      {isLoading && <div style={{ color: 'var(--text-secondary)', padding: '0.5rem 0' }}>{t('Loading components...')}</div>}
 
       {!focusElementId && (
         <div style={{ color: 'var(--warning)', padding: '0.3rem', background: 'rgba(245,158,11,0.1)', borderRadius: '3px', marginBottom: '0.4rem' }}>
-          Drill into a subsystem first to add equipment to it.
+          {t('Drill into a subsystem first to add equipment to it.')}
         </div>
       )}
 
       {/* Component list */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', maxHeight: 300, overflow: 'auto' }}>
         {filtered.length === 0 && !isLoading && (
-          <div style={{ color: 'var(--text-secondary)', padding: '0.5rem 0' }}>No components found.</div>
+          <div style={{ color: 'var(--text-secondary)', padding: '0.5rem 0' }}>{t('No components found.')}</div>
         )}
         {filtered.map((item, i) => {
           const c = item.component || {}
@@ -204,7 +212,7 @@ export function EquipmentBrowser({ onClose }: { onClose?: () => void }) {
                   flexShrink: 0,
                 }}
               >
-                + Add
+                {t('+ Add')}
               </button>
             </div>
           )
@@ -225,6 +233,7 @@ export function EquipmentBrowser({ onClose }: { onClose?: () => void }) {
 function CustomEquipmentForm({ studyId, focusElementId, domain, onCreated }: {
   studyId: string | null; focusElementId: string | null; domain: string; onCreated: () => void
 }) {
+  const { t } = useTranslation()
   const [expanded, setExpanded] = useState(false)
   const [name, setName] = useState('')
   const [mass, setMass] = useState('')
@@ -265,7 +274,7 @@ function CustomEquipmentForm({ studyId, focusElementId, domain, onCreated }: {
         borderRadius: '4px', background: 'var(--bg-card)', border: '1px solid var(--border)',
         color: 'var(--text-secondary)', cursor: 'pointer', width: '100%', textAlign: 'left',
       }}>
-        + Define Custom Equipment
+        {t('+ Define Custom Equipment')}
       </button>
     )
   }
@@ -281,26 +290,26 @@ function CustomEquipmentForm({ studyId, focusElementId, domain, onCreated }: {
       background: 'var(--bg-card)', border: '1px solid var(--accent)',
     }}>
       <div style={{ fontSize: '0.65rem', fontWeight: 600, color: 'var(--accent)', marginBottom: '0.3rem' }}>
-        Custom Equipment
+        {t('Custom Equipment')}
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.3rem', marginBottom: '0.3rem' }}>
-        <input value={name} onChange={e => setName(e.target.value)} placeholder="Name *" style={{ ...inp, gridColumn: '1 / -1' }} autoFocus />
-        <input value={mass} onChange={e => setMass(e.target.value)} placeholder="Mass (kg)" type="number" step="0.01" style={inp} />
-        <input value={power} onChange={e => setPower(e.target.value)} placeholder="Power (W)" type="number" step="0.1" style={inp} />
-        <input value={cost} onChange={e => setCost(e.target.value)} placeholder="Cost (kEUR)" type="number" step="1" style={inp} />
-        <input value={trl} onChange={e => setTrl(e.target.value)} placeholder="TRL (1-9)" type="number" min="1" max="9" style={inp} />
-        <input value={mfr} onChange={e => setMfr(e.target.value)} placeholder="Manufacturer" style={inp} />
-        <input value={qty} onChange={e => setQty(e.target.value)} placeholder="Qty" type="number" min="1" style={inp} />
+        <input value={name} onChange={e => setName(e.target.value)} placeholder={t('Name *')} style={{ ...inp, gridColumn: '1 / -1' }} autoFocus />
+        <input value={mass} onChange={e => setMass(e.target.value)} placeholder={t('Mass (kg)')} type="number" step="0.01" style={inp} />
+        <input value={power} onChange={e => setPower(e.target.value)} placeholder={t('Power (W)')} type="number" step="0.1" style={inp} />
+        <input value={cost} onChange={e => setCost(e.target.value)} placeholder={t('Cost (kEUR)')} type="number" step="1" style={inp} />
+        <input value={trl} onChange={e => setTrl(e.target.value)} placeholder={t('TRL (1-9)')} type="number" min="1" max="9" style={inp} />
+        <input value={mfr} onChange={e => setMfr(e.target.value)} placeholder={t('Manufacturer')} style={inp} />
+        <input value={qty} onChange={e => setQty(e.target.value)} placeholder={t('Qty')} type="number" min="1" style={inp} />
       </div>
       <div style={{ display: 'flex', gap: '0.3rem' }}>
         <button onClick={create} disabled={!name || !focusElementId} style={{
           padding: '0.25rem 0.5rem', fontSize: '0.68rem', fontWeight: 600, borderRadius: '3px',
           background: 'var(--success)', color: 'white', border: 'none', cursor: 'pointer',
-        }}>Add</button>
+        }}>{t('Add')}</button>
         <button onClick={() => setExpanded(false)} style={{
           padding: '0.25rem 0.5rem', fontSize: '0.68rem', borderRadius: '3px',
           background: 'var(--bg-secondary)', color: 'var(--text-secondary)', border: 'none', cursor: 'pointer',
-        }}>Cancel</button>
+        }}>{t('Cancel')}</button>
       </div>
     </div>
   )

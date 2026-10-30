@@ -535,7 +535,7 @@ Icons:
 | RSSSA | Remote Sensing Space Systems Act (Canada) |
 | RW | Reaction Wheel |
 | SAR | Synthetic-Aperture Radar |
-| SCM | Space Mission Engineering (textbook) |
+| SME | Space Mission Engineering: The New SMAD (textbook) |
 | SMAD | Space Mission Analysis & Design (textbook) |
 | SMART | Specific · Measurable · Achievable · Relevant · Traceable |
 | SSO | Sun-Synchronous Orbit |

@@ -10,6 +10,7 @@
  */
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { useUIStore } from '../stores/uiStore'
 
 const API = '/api'
@@ -21,6 +22,7 @@ interface Check {
 }
 
 export function ReadinessChecklist() {
+  const { t } = useTranslation()
   const studyId = useUIStore(s => s.studyId)
   const focusElementId = useUIStore(s => s.focusElementId)
   const currentLevel = useUIStore(s => s.currentLevel)
@@ -55,9 +57,11 @@ export function ReadinessChecklist() {
     // 1. Has elements
     const hasElements = children.length > 0
     result.push({
-      label: 'Elements defined',
+      label: t('Elements defined'),
       passed: hasElements,
-      detail: hasElements ? `${children.length} elements at this level` : 'Add at least one element',
+      detail: hasElements
+        ? t('{{count}} elements at this level', { count: children.length })
+        : t('Add at least one element'),
     })
 
     // 2. In-scope elements have requirements
@@ -74,11 +78,11 @@ export function ReadinessChecklist() {
       const missingReqs = inScopeChildren.filter((el: any) => !elementsWithReqs.has(el.id))
 
       result.push({
-        label: 'Requirements defined',
+        label: t('Requirements defined'),
         passed: hasParentReqs || elementsWithReqs.size > 0,
         detail: missingReqs.length > 0
-          ? `Missing requirements: ${missingReqs.map((e: any) => e.name).join(', ')}`
-          : `${elementsWithReqs.size} elements have requirements`,
+          ? t('Missing requirements: {{names}}', { names: missingReqs.map((e: any) => e.name).join(', ') })
+          : t('{{count}} elements have requirements', { count: elementsWithReqs.size }),
       })
     }
 
@@ -91,11 +95,11 @@ export function ReadinessChecklist() {
       }
       const unconnected = inScopeChildren.filter((el: any) => !connectedElements.has(el.id))
       result.push({
-        label: 'Interfaces defined',
+        label: t('Interfaces defined'),
         passed: unconnected.length === 0,
         detail: unconnected.length > 0
-          ? `No interfaces: ${unconnected.map((e: any) => e.name).join(', ')}`
-          : `${connectedElements.size} elements connected`,
+          ? t('No interfaces: {{names}}', { names: unconnected.map((e: any) => e.name).join(', ') })
+          : t('{{count}} elements connected', { count: connectedElements.size }),
       })
     }
 
@@ -103,16 +107,16 @@ export function ReadinessChecklist() {
     if (inScopeChildren.length > 0) {
       const unfrozen = inScopeChildren.filter((el: any) => !el.frozen)
       result.push({
-        label: 'All elements frozen',
+        label: t('All elements frozen'),
         passed: unfrozen.length === 0,
         detail: unfrozen.length > 0
-          ? `Unfrozen: ${unfrozen.map((e: any) => e.name).join(', ')}`
-          : 'All elements frozen — ready for next level',
+          ? t('Unfrozen: {{names}}', { names: unfrozen.map((e: any) => e.name).join(', ') })
+          : t('All elements frozen — ready for next level'),
       })
     }
 
     return result
-  }, [allElements, allRequirements, allInterfaces, focusElementId])
+  }, [allElements, allRequirements, allInterfaces, focusElementId, t])
 
   const allPassed = checks.every(c => c.passed)
   const passedCount = checks.filter(c => c.passed).length
@@ -125,7 +129,7 @@ export function ReadinessChecklist() {
       display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap',
     }}>
       <span style={{ fontWeight: 600, color: allPassed ? 'var(--success)' : 'var(--warning)' }}>
-        Level {currentLevel} Readiness: {passedCount}/{checks.length}
+        {t('Level {{level}} Readiness: {{passed}}/{{total}}', { level: currentLevel, passed: passedCount, total: checks.length })}
       </span>
       {checks.map(c => (
         <span key={c.label} style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }} title={c.detail}>

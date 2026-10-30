@@ -1,0 +1,37 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "docs/oer/chapters/23_appendix_tool.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "appendix-a-about-the-spacecdf-tool",
+   "en_hash": "90896a7828027a69",
+   "fr_hash": "db608815e6e2aa37"
+  },
+  {
+   "id": "appendix-a-about-the-spacecdf-tool/a-1-positions-and-design-agents",
+   "en_hash": "acc0caab6805ae8f",
+   "fr_hash": "9b2a8d34cc1132c0"
+  },
+  {
+   "id": "appendix-a-about-the-spacecdf-tool/a-2-the-design-loop-and-the-human-agent-handover",
+   "en_hash": "ff2cfaa460c76ce9",
+   "fr_hash": "82ded096be6cc151"
+  },
+  {
+   "id": "appendix-a-about-the-spacecdf-tool/a-3-reviews-and-exports",
+   "en_hash": "3a1aec69a83b692f",
+   "fr_hash": "37ee66bc708ccb9b"
+  },
+  {
+   "id": "appendix-a-about-the-spacecdf-tool/a-4-reproducing-the-examples-in-this-book",
+   "en_hash": "d5e353e94d4ade30",
+   "fr_hash": "4dee74a62202cc29"
+  }
+ ],
+ "en_commit": "3ea7113"
+}

@@ -12,15 +12,19 @@
  */
 import { useState, useCallback, useMemo } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { useUIStore } from '../stores/uiStore'
 
 const API = '/api'
 
+// English text is the i18n key
+const BUDGET_LABELS: Record<string, string> = { mass: 'Mass', power: 'Power', data: 'Data', cost: 'Cost' }
+
 const BUDGET_TYPES = [
-  { id: 'mass', label: 'Mass', unit: 'kg' },
-  { id: 'power', label: 'Power', unit: 'W' },
-  { id: 'data', label: 'Data', unit: 'Mbps' },
-  { id: 'cost', label: 'Cost', unit: 'kEUR' },
+  { id: 'mass', label: BUDGET_LABELS.mass, unit: 'kg' },
+  { id: 'power', label: BUDGET_LABELS.power, unit: 'W' },
+  { id: 'data', label: BUDGET_LABELS.data, unit: 'Mbps' },
+  { id: 'cost', label: BUDGET_LABELS.cost, unit: 'kEUR' },
 ]
 
 const STATUS_COLORS: Record<string, string> = {
@@ -28,6 +32,7 @@ const STATUS_COLORS: Record<string, string> = {
 }
 
 export function BudgetPanel() {
+  const { t } = useTranslation()
   const studyId = useUIStore(s => s.studyId)
   const focusElementId = useUIStore(s => s.focusElementId)
   const [activeBudget, setActiveBudget] = useState('mass')
@@ -75,7 +80,7 @@ export function BudgetPanel() {
   }, [activeBudget, bt.unit, qc])
 
   if (!targetId) {
-    return <div style={{ padding: '1rem', color: 'var(--text-secondary)', fontSize: '0.8rem' }}>Add a mission element first.</div>
+    return <div style={{ padding: '1rem', color: 'var(--text-secondary)', fontSize: '0.8rem' }}>{t('Add a mission element first.')}</div>
   }
 
   // Compute total allocated to children
@@ -94,7 +99,7 @@ export function BudgetPanel() {
             color: activeBudget === b.id ? 'white' : 'var(--text-secondary)',
             border: 'none', cursor: 'pointer',
           }}>
-            {b.label}
+            {t(b.label)}
           </button>
         ))}
         <span style={{ flex: 1 }} />
@@ -103,7 +108,7 @@ export function BudgetPanel() {
             padding: '0.2rem 0.5rem', borderRadius: '3px', fontWeight: 600, fontSize: '0.68rem',
             background: `${STATUS_COLORS[budget.status]}20`, color: STATUS_COLORS[budget.status],
           }}>
-            {budget.margin_pct != null ? `${budget.margin_pct.toFixed(0)}% margin` : 'No allocation set'}
+            {budget.margin_pct != null ? t('{{pct}}% margin', { pct: budget.margin_pct.toFixed(0) }) : t('No allocation set')}
           </span>
         )}
       </div>
@@ -123,7 +128,7 @@ export function BudgetPanel() {
           borderRadius: '3px', background: 'rgba(59,130,246,0.15)', color: 'var(--accent)',
           border: '1px solid var(--accent)', cursor: 'pointer',
         }}>
-          Auto-allocate from current values (+10% margin)
+          {t('Auto-allocate from current values (+10% margin)')}
         </button>
       )}
 
@@ -133,16 +138,18 @@ export function BudgetPanel() {
         padding: '0.4rem 0.5rem', background: 'var(--bg-card)', borderRadius: '4px', border: '1px solid var(--border)',
       }}>
         <span style={{ fontWeight: 600, fontSize: '0.72rem' }}>
-          {budget?.element_name || 'Parent'} {isConstellation ? `(per spacecraft, ×${constellationQty} in constellation)` : 'Total'}:
+          {isConstellation
+            ? t('{{name}} (per spacecraft, ×{{qty}} in constellation):', { name: budget?.element_name || t('Parent'), qty: constellationQty })
+            : t('{{name}} Total:', { name: budget?.element_name || t('Parent') })}
         </span>
-        <span style={{ color: 'var(--text-secondary)', fontSize: '0.68rem' }}>Allocation:</span>
+        <span style={{ color: 'var(--text-secondary)', fontSize: '0.68rem' }}>{t('Allocation:')}</span>
         <AllocationInput currentValue={parentAlloc} onSet={v => setAllocation(targetId, v)} unit={bt.unit} />
         <span style={{ color: 'var(--text-secondary)', fontSize: '0.68rem' }}>
-          Actual: <b style={{ color: 'var(--text-primary)' }}>{budget?.sum_with_margin?.toFixed(2) || '0'} {bt.unit}</b>
+          {t('Actual:')} <b style={{ color: 'var(--text-primary)' }}>{budget?.sum_with_margin?.toFixed(2) || '0'} {bt.unit}</b>
         </span>
         {budget?.remaining != null && (
           <span style={{ fontSize: '0.68rem', color: STATUS_COLORS[budget.status] }}>
-            Remaining: <b>{budget.remaining.toFixed(2)} {bt.unit}</b>
+            {t('Remaining:')} <b>{budget.remaining.toFixed(2)} {bt.unit}</b>
           </span>
         )}
       </div>
@@ -153,7 +160,7 @@ export function BudgetPanel() {
           fontSize: '0.68rem', color: 'var(--warning)', marginBottom: '0.4rem', padding: '0.2rem 0.5rem',
           background: 'rgba(245,158,11,0.1)', borderRadius: '3px',
         }}>
-          {unallocated.toFixed(2)} {bt.unit} unallocated to children
+          {t('{{value}} {{unit}} unallocated to children', { value: unallocated.toFixed(2), unit: bt.unit })}
         </div>
       )}
 
@@ -163,8 +170,8 @@ export function BudgetPanel() {
           display: 'flex', gap: '1rem', marginBottom: '0.5rem', padding: '0.3rem 0.5rem',
           background: 'rgba(168,85,247,0.08)', borderRadius: '4px', fontSize: '0.68rem',
         }}>
-          <span>Avg Power: <b>{budget.total_avg_power.toFixed(2)} W</b></span>
-          <span>Peak Power: <b>{budget.total_peak_power.toFixed(2)} W</b></span>
+          <span>{t('Avg Power:')} <b>{budget.total_avg_power.toFixed(2)} W</b></span>
+          <span>{t('Peak Power:')} <b>{budget.total_peak_power.toFixed(2)} W</b></span>
         </div>
       )}
 
@@ -174,8 +181,8 @@ export function BudgetPanel() {
           display: 'flex', gap: '1rem', marginBottom: '0.5rem', padding: '0.3rem 0.5rem',
           background: 'rgba(6,182,212,0.08)', borderRadius: '4px', fontSize: '0.68rem',
         }}>
-          <span>Total Data Rate: <b>{budget.total_data_rate_mbps.toFixed(3)} Mbps</b></span>
-          <span>Volume/Day: <b>{budget.total_data_volume_gb_per_day.toFixed(3)} GB</b></span>
+          <span>{t('Total Data Rate:')} <b>{budget.total_data_rate_mbps.toFixed(3)} Mbps</b></span>
+          <span>{t('Volume/Day:')} <b>{budget.total_data_volume_gb_per_day.toFixed(3)} GB</b></span>
         </div>
       )}
 
@@ -184,33 +191,33 @@ export function BudgetPanel() {
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.72rem' }}>
           <thead>
             <tr style={{ borderBottom: '1px solid var(--border)' }}>
-              <th style={thL}>Element</th>
+              <th style={thL}>{t('Element')}</th>
               {activeBudget === 'power' ? (
                 <>
-                  <th style={thR}>Allocation (W)</th>
-                  <th style={thR}>Avg (W)</th>
-                  <th style={thR}>Peak (W)</th>
-                  <th style={thR}>Duty %</th>
-                  <th style={thR}>Margin</th>
-                  <th style={thR}>Qty</th>
-                  <th style={thC}>Status</th>
+                  <th style={thR}>{t('Allocation (W)')}</th>
+                  <th style={thR}>{t('Avg (W)')}</th>
+                  <th style={thR}>{t('Peak (W)')}</th>
+                  <th style={thR}>{t('Duty %')}</th>
+                  <th style={thR}>{t('Margin')}</th>
+                  <th style={thR}>{t('Qty')}</th>
+                  <th style={thC}>{t('Status')}</th>
                 </>
               ) : activeBudget === 'data' ? (
                 <>
-                  <th style={thR}>Data Rate (Mbps)</th>
-                  <th style={thR}>Duty %</th>
-                  <th style={thR}>Vol/Orbit (MB)</th>
-                  <th style={thR}>Vol/Day (GB)</th>
-                  <th style={thR}>Qty</th>
+                  <th style={thR}>{t('Data Rate (Mbps)')}</th>
+                  <th style={thR}>{t('Duty %')}</th>
+                  <th style={thR}>{t('Vol/Orbit (MB)')}</th>
+                  <th style={thR}>{t('Vol/Day (GB)')}</th>
+                  <th style={thR}>{t('Qty')}</th>
                 </>
               ) : (
                 <>
-                  <th style={thR}>Allocation ({bt.unit})</th>
-                  <th style={thR}>Actual ({bt.unit})</th>
-                  <th style={thR}>Margin</th>
-                  <th style={thR}>With Margin</th>
-                  <th style={thR}>Qty</th>
-                  <th style={thC}>Status</th>
+                  <th style={thR}>{t('Allocation ({{unit}})', { unit: bt.unit })}</th>
+                  <th style={thR}>{t('Actual ({{unit}})', { unit: bt.unit })}</th>
+                  <th style={thR}>{t('Margin')}</th>
+                  <th style={thR}>{t('With Margin')}</th>
+                  <th style={thR}>{t('Qty')}</th>
+                  <th style={thC}>{t('Status')}</th>
                 </>
               )}
             </tr>
@@ -247,7 +254,7 @@ export function BudgetPanel() {
                     </td>
                     <td style={{ padding: '0.3rem 0.4rem', textAlign: 'center' }}>
                       {childMargin != null ? (
-                        <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: STATUS_COLORS[childStatus] }} title={`${childMargin.toFixed(0)}% margin`} />
+                        <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: STATUS_COLORS[childStatus] }} title={t('{{pct}}% margin', { pct: childMargin.toFixed(0) })} />
                       ) : <span style={{ color: 'var(--text-secondary)', fontSize: '0.6rem' }}>—</span>}
                     </td>
                   </tr>
@@ -292,7 +299,7 @@ export function BudgetPanel() {
                     {line.nominal > 0 ? line.nominal.toFixed(2) : '—'}
                     {line.quantity > 1 && line.per_unit > 0 && (
                       <div style={{ fontSize: '0.55rem', color: 'var(--text-secondary)' }}>
-                        {line.per_unit.toFixed(2)} ea
+                        {t('{{value}} ea', { value: line.per_unit.toFixed(2) })}
                       </div>
                     )}
                   </td>
@@ -306,7 +313,7 @@ export function BudgetPanel() {
                     {line.quantity > 1 ? `×${line.quantity}` : ''}
                     {line.quantity > 1 && line.allocation_per_unit != null && (
                       <div style={{ fontSize: '0.55rem', color: 'var(--info)' }}>
-                        {line.allocation_per_unit.toFixed(1)}/ea
+                        {t('{{value}}/ea', { value: line.allocation_per_unit.toFixed(1) })}
                       </div>
                     )}
                   </td>
@@ -315,7 +322,7 @@ export function BudgetPanel() {
                       <span style={{
                         display: 'inline-block', width: 8, height: 8, borderRadius: '50%',
                         background: STATUS_COLORS[childStatus],
-                      }} title={`${childMargin.toFixed(0)}% margin`} />
+                      }} title={t('{{pct}}% margin', { pct: childMargin.toFixed(0) })} />
                     ) : (
                       <span style={{ color: 'var(--text-secondary)', fontSize: '0.6rem' }}>—</span>
                     )}
@@ -326,7 +333,7 @@ export function BudgetPanel() {
           </tbody>
           <tfoot>
             <tr style={{ borderTop: '2px solid var(--border)' }}>
-              <td style={{ padding: '0.3rem 0.4rem', fontWeight: 700 }}>Total</td>
+              <td style={{ padding: '0.3rem 0.4rem', fontWeight: 700 }}>{t('Total')}</td>
               {activeBudget === 'power' ? (
                 <>
                   <td style={{ padding: '0.3rem 0.4rem', textAlign: 'right', fontWeight: 600, fontFamily: 'monospace' }}>
@@ -374,7 +381,7 @@ export function BudgetPanel() {
         </table>
       ) : (
         <div style={{ color: 'var(--text-secondary)', padding: '0.5rem 0' }}>
-          No child elements. Add elements in the Blocks panel first.
+          {t('No child elements. Add elements in the Blocks panel first.')}
         </div>
       )}
     </div>
@@ -387,6 +394,7 @@ const thC: React.CSSProperties = { ...thL, textAlign: 'center' }
 
 /** Inline allocation input that shows current value and allows editing */
 function AllocationInput({ currentValue, onSet, unit }: { currentValue: number | null | undefined; onSet: (v: number) => void; unit: string }) {
+  const { t } = useTranslation()
   const [editing, setEditing] = useState(false)
   const [value, setValue] = useState('')
 
@@ -423,9 +431,9 @@ function AllocationInput({ currentValue, onSet, unit }: { currentValue: number |
         color: currentValue != null ? 'var(--text-primary)' : 'var(--text-secondary)',
         textDecoration: currentValue == null ? 'underline dotted' : 'none',
       }}
-      title="Click to set allocation"
+      title={t('Click to set allocation')}
     >
-      {currentValue != null ? `${currentValue.toFixed(1)}` : 'set'}
+      {currentValue != null ? `${currentValue.toFixed(1)}` : t('set')}
     </button>
   )
 }

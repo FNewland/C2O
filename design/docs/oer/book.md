@@ -174,7 +174,7 @@ The right side answers "how do we verify that what we built satisfies the origin
 
 The horizontal links in Figure 1.1 represent **horizontal traceability** — the principle that every element on the left must have a corresponding verification or validation activity on the right:
 
-- Each **requirement** (left) has a **verification method** (right): analysis, test, inspection or review of design, plus demonstration where ECSS lists it — abbreviated ATIR(D) throughout this book (Chapter 14 treats the methods in detail)
+- Each **requirement** (left) has a **verification method** (right): analysis, test, inspection or review of design, plus the demonstration that NASA practice adds — abbreviated ATIR(D) throughout this book (Chapter 14 treats the methods in detail)
 - Each **design decision** (left) has a **test or analysis** (right) to confirm it works
 - This traceability is captured in the **Requirements Verification Matrix (RVM)**
 
@@ -547,10 +547,10 @@ The Canadian Space Agency (CSA) was established by the *Canadian Space Agency Ac
 | Canadarm2 | 2001 | ISS robotic arm; continues robotics legacy |
 | RADARSAT-2 | 2007 | Commercial SAR satellite (MDA); RSSSA applies |
 | RADARSAT Constellation Mission (RCM) | 2019 | Three C-band SAR satellites; maritime surveillance, disaster management |
-| Lunar Gateway participation | 2019+ | Canada committed as partner; astronaut flights planned |
-| Canadarm3 | In development | For the Lunar Gateway; next-generation autonomous robotics |
+| Lunar Gateway participation | 2019–2026 | Canada committed as partner; in March 2026 NASA paused Gateway "in its current form" (widely reported as a cancellation) in favour of a lunar surface base |
+| Canadarm3 | In development | Next-generation autonomous robotics begun for the Lunar Gateway; as of late 2026 being repurposed by the CSA for lunar-surface operations under Artemis |
 
-[Source: CSA, "Canada's Space Milestones", www.asc-csa.gc.ca]
+[Source: CSA, "Canada's Space Milestones", www.asc-csa.gc.ca; Gateway and Canadarm3 status as of late 2026 from References 12–13]
 
 ### 2.1.2 CSA organisational focus areas
 
@@ -558,7 +558,7 @@ The CSA is headquartered in Saint-Hubert, Quebec, and organises its activities a
 
 | Priority | Activities | Key programmes |
 |----------|-----------|-------------|
-| **Space Exploration** | ISS operations, Lunar Gateway, Canadarm3, astronaut programme | Lunar Exploration Accelerator Program (LEAP) |
+| **Space Exploration** | ISS operations, Artemis lunar exploration (Canadarm3 technologies repurposed for lunar-surface operations), astronaut programme | Lunar Exploration Accelerator Program (LEAP) |
 | **Space Utilisation** | Earth observation, satellite communications, GNSS augmentation | RADARSAT, SmartEarth, eHealth |
 | **Space Science and Technology** | Astronomy, planetary science, technology development | CASTOR, JWST/NIRISS, space health |
 
@@ -652,7 +652,7 @@ Canada participates in space through multilateral and bilateral agreements:
 | Partnership | Canadian contribution | Canadian benefit |
 |------------|----------------------|-----------------|
 | **ISS** | Canadarm2, Dextre, SPDM | Astronaut access, research time, technology demonstrations |
-| **Lunar Gateway** | Canadarm3 | Astronaut flights, lunar science access |
+| **Artemis** (Lunar Gateway until its March 2026 pause) | Canadarm3, repurposed for lunar-surface operations (2026) | Astronaut flights, lunar science access |
 | **Copernicus (ESA)** | Data access agreement | Free access to Sentinel data for Canadian users |
 | **COSPAS-SARSAT** | Canadian ground stations, MEOSAR payloads | Search and rescue capability for Canadian territory |
 | **Five Eyes** | Intelligence sharing, dual-use technology | Access to allied space intelligence capabilities |
@@ -890,7 +890,7 @@ Any mission using US-origin components (which includes nearly all commercial spa
 
 5. **Export control scenario.** The 3U EO CubeSat uses a US-origin reaction-wheel assembly and a US-origin GNSS receiver, will be launched on an Indian PSLV, and includes a visiting researcher from a non-Five Eyes country on the design team. Identify every export-control obligation from §2.8 that applies, name the regime and instrument (permit, TAA, ECCN classification, etc.) for each, and propose two design or programmatic changes that would reduce the compliance burden.
 
-6. **Partnership leverage.** Using the leverage ratio of §2.4.2, estimate $L$ for Canada's Canadarm3 contribution to the Lunar Gateway, stating your assumptions for $C_{\text{contribution}}$ and $V_{\text{access}}$. Discuss two limitations of the ratio as a decision metric and propose one refinement.
+6. **Partnership leverage.** Using the leverage ratio of §2.4.2, estimate $L$ for Canada's Canadarm3 contribution to Artemis (committed to the Lunar Gateway in 2019; repurposed for lunar-surface operations after NASA paused Gateway in March 2026), stating your assumptions for $C_{\text{contribution}}$ and $V_{\text{access}}$. Discuss two limitations of the ratio as a decision metric, including what happens to $V_{\text{access}}$ when the partner restructures the programme, and propose one refinement.
 
 7. **Comparing national models.** From the comparison in §2.3, identify two consequences for a Canadian mission design team of (a) the absence of domestic launch capability and (b) the small agency budget relative to NASA or ESA. How does ESA's *juste retour* model change the way a European team would approach supplier selection compared with a Canadian team?
 
@@ -911,6 +911,8 @@ Any mission using US-origin components (which includes nearly all commercial spa
 9. US Department of State, *International Traffic in Arms Regulations* (22 CFR 120–130). [https://www.ecfr.gov/current/title-22/chapter-I/subchapter-M](https://www.ecfr.gov/current/title-22/chapter-I/subchapter-M)
 10. US Department of Commerce, *Export Administration Regulations* (15 CFR 730–774). [https://www.ecfr.gov/current/title-15/subtitle-B/chapter-VII/subchapter-C](https://www.ecfr.gov/current/title-15/subtitle-B/chapter-VII/subchapter-C)
 11. NASA, *Systems Engineering Handbook* (SP-2016-6105 Rev 2), 2016. [https://www.nasa.gov/reference/systems-engineering-handbook/](https://www.nasa.gov/reference/systems-engineering-handbook/)
+12. NASA, "NASA Unveils Initiatives to Achieve America's National Space Policy" (Gateway paused "in its current form"), news release, 24 March 2026. [https://www.nasa.gov/news-release/nasa-unveils-initiatives-to-achieve-americas-national-space-policy/](https://www.nasa.gov/news-release/nasa-unveils-initiatives-to-achieve-americas-national-space-policy/)
+13. MDA Space, "MDA Space responds to Canadian Space Agency announcement on Canadarm3" (CSA repurposing of Canadarm3 for lunar-surface operations), 6 August 2026. [https://mda.space/article/mda-space-responds-to-canadian-space-agency-announcement-on-canadarm3](https://mda.space/article/mda-space-responds-to-canadian-space-agency-announcement-on-canadarm3)
 
 
 # Chapter 3 — International Standards for Space Systems
@@ -1210,8 +1212,8 @@ The **CubeSat Design Specification (CDS)**, maintained by the California Polytec
 | 1.5U | 100 × 100 × 170.2 | 3.0 kg | Enhanced technology demonstrators |
 | 2U | 100 × 100 × 227.0 | 4.0 kg | Simple instruments, store-and-forward |
 | 3U | 100 × 100 × 340.5 | 6.0 kg | Standard EO/science missions |
-| 6U | 100 × 226.3 × 340.5 | 12.0 kg | Advanced EO, communications |
-| 12U | 226.3 × 226.3 × 340.5 | 24.0 kg | High-performance missions |
+| 6U | 100 × 226.3 × 366.0 | 12.0 kg | Advanced EO, communications |
+| 12U | 226.3 × 226.3 × 366.0 | 24.0 kg | High-performance missions |
 | 16U | 226.3 × 226.3 × 454.0 | 32.0 kg | Near-microsatellite capability |
 
 ### 3.5.4 Rideshare launch interfaces
@@ -2352,10 +2354,10 @@ Figure 6.1 shows the three layers and the direction of flow. Objectives and requ
   <rect x="580" y="230" width="180" height="30" rx="4" fill="#e0e7ff" stroke="#4f46e5"/>
   <text x="670" y="250" text-anchor="middle" fill="#3730a3" font-size="11">Universal Functions</text>
   <text x="670" y="280" text-anchor="middle" fill="#3730a3" font-size="10">F-010: Generate power</text>
-  <text x="670" y="296" text-anchor="middle" fill="#3730a3" font-size="10">F-011: Maintain thermal env</text>
-  <text x="670" y="312" text-anchor="middle" fill="#3730a3" font-size="10">F-012: Survive launch</text>
-  <text x="670" y="328" text-anchor="middle" fill="#3730a3" font-size="10">F-013: TTC with ground</text>
-  <text x="670" y="344" text-anchor="middle" fill="#3730a3" font-size="10">F-014: Dispose at EOL</text>
+  <text x="670" y="296" text-anchor="middle" fill="#3730a3" font-size="10">F-020: Maintain thermal env</text>
+  <text x="670" y="312" text-anchor="middle" fill="#3730a3" font-size="10">F-030: Survive launch</text>
+  <text x="670" y="328" text-anchor="middle" fill="#3730a3" font-size="10">F-040: TTC with ground</text>
+  <text x="670" y="344" text-anchor="middle" fill="#3730a3" font-size="10">F-050: Dispose at EOL</text>
   <defs><marker id="arrowhead6" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#64748b"/></marker></defs>
 </svg>
 
@@ -3630,7 +3632,7 @@ Multi-junction (MJ) cells stack two or three p–n junctions of different semico
 | **InGaP/GaAs/Ge triple-junction** | 3-junction (lattice-matched) | 1.86 / 1.42 / 0.67 | 28–30 % | −0.19 %/°C | Extensive (> 90 % of modern S/C) |
 | **InGaP/GaAs/InGaAs IMM** | 3-junction (inverted metamorphic) | 1.86 / 1.42 / 1.0 | 32–33 % | −0.18 %/°C | Growing |
 
-*[Source: vendor triple-junction cell datasheets; Green et al., "Solar Cell Efficiency Tables," Progress in Photovoltaics, v.62, 2024. Vendor products named in this chapter are representative examples, not endorsements.]*
+*[Source: vendor triple-junction cell datasheets; Green et al., "Solar Cell Efficiency Tables," Progress in Photovoltaics, version 62, 2023. Vendor products named in this chapter are representative examples, not endorsements.]*
 
 **Why triple-junction GaAs dominates space:** The AM0 solar spectrum (above the atmosphere) is richer in UV and blue photons than the AM1.5 terrestrial spectrum. Triple-junction cells capture this energy across three bandgaps. The top cell (InGaP, $E_g = 1.86$ eV) absorbs blue/UV, the middle cell (GaAs, $E_g = 1.42$ eV) absorbs visible, and the bottom cell (Ge, $E_g = 0.67$ eV) absorbs near-IR. Each junction contributes voltage in series, while current is limited by the lowest-current junction (current-matching constraint).
 
@@ -4256,7 +4258,7 @@ NASA's CAPSTONE (12U, 25 kg) operates in a near-rectilinear halo orbit (NRHO) ar
 | Battery chemistry | Li-ion (LCO/NMC): 150–200 Wh/kg packaged; 3.0–4.2 V per cell; CC–CV charging |
 | Battery sizing | $E = P_{\text{ecl}} \cdot t_{\text{ecl}} / (\text{DoD} \cdot \eta_{\text{dis}})$; DoD 20–30 % for multi-year LEO |
 | Battery failure modes | Thermal runaway (overcharge), lithium plating (cold charge), capacity imbalance (series cells) |
-| SA power reference | Body-mounted: 2–12 W; single deployable: 4–30 W; dual deployable: 25–48 W |
+| SA power reference | Body-mounted: 2–20 W; single deployable: 4–55 W; dual deployable: 25–100 W (1U–12U, §9.2.1) |
 | Thermal physics | No convection in vacuum; radiation ($\varepsilon \sigma T^4$) is the only mechanism for heat rejection |
 | Thermal balance | $Q_{\text{in}} = Q_{\text{out}}$; solve for $T = (Q/\varepsilon\sigma A)^{1/4}$ (single node); multi-node for real design |
 | $\alpha_s/\varepsilon$ ratio | Low ratio = cold surface (radiator); high ratio = warm surface (insulation) |
@@ -4887,7 +4889,7 @@ where $k_d$ is the desaturation gain and $\hat{B}$ is the unit magnetic-field ve
 
 4. **Completion:** Wheel speeds return to near zero (or bias speed). The cycle repeats.
 
-Figure 10.4 shows the accumulation side of this cycle for a drag-dominated small satellite, with the saturation lines of two wheel sizes, together with the order-of-magnitude ranking of disturbance sources.
+Figure 10.4 shows the accumulation side of this cycle for the EOSat-3U case of §10.2, whose disturbance budget is dominated by the residual magnetic dipole rather than by drag, with the saturation lines of three wheel sizes, together with the order-of-magnitude ranking of disturbance sources.
 
 ![Reaction-wheel momentum accumulation and disturbance torque magnitudes.](../assets/figures/fig_rw_momentum.png)
 
@@ -5031,7 +5033,7 @@ where $V_{\text{rod}}$ is the rod volume and $\oint H \, dB$ is the area of the 
 4. Hughes, P. C., *Spacecraft Attitude Dynamics*, Wiley, 1986 (Dover reprint 2004). https://store.doverpublications.com
 5. Wertz, J. R. & Larson, W. J. (eds.), *Space Mission Analysis and Design*, 3rd ed., 1999, Ch. 11 (ADCS). https://www.springer.com
 6. ECSS, *ECSS-E-ST-60-10C: Control Performance*, 2008. https://ecss.nl/standard/ecss-e-st-60-10c-control-performance/
-7. ECSS, *ECSS-E-ST-60-20C Rev.2: Star Tracker Performance Testing*, 2019. https://ecss.nl/standard/ecss-e-st-60-20c-star-tracker-performance-testing/
+7. ECSS, *ECSS-E-ST-60-20C Rev.2: Star sensor terminology and performance specification*, 15 May 2019. https://ecss.nl/standard/ecss-e-st-60-20c-rev-2-star-sensor-terminology-and-performance-specification-15-may-2019/
 8. Pong, C. M. et al., "ASTERIA: Achieving 10-arcsecond pointing on a 6U CubeSat," Small Satellite Conference, 2018. https://digitalcommons.usu.edu/smallsat/
 9. Blue Canyon Technologies, *XACT ADCS and reaction-wheel datasheets*, 2023 (representative example). https://www.bluecanyontech.com
 10. CubeSpace, *ADCS Product Catalogue*, 2023 (representative example). https://www.cubespace.co.za
@@ -5764,8 +5766,8 @@ Vendor products named in this chapter are representative examples, not endorseme
 | 1.5U | 100 × 100 × 170.2 | 3.0 | ~1500 | ISIPOD |
 | 2U | 100 × 100 × 227.0 | 4.0 | ~2000 | ISIPOD, P-POD |
 | 3U | 100 × 100 × 340.5 | 6.0 | ~3000 | P-POD, ISIPOD, NanoRacks NRCSD |
-| 6U | 100 × 226.3 × 340.5 | 12.0 | ~6000 | 6U deployer (Exolaunch, D-Orbit) |
-| 12U | 226.3 × 226.3 × 340.5 | 24.0 | ~12000 | 12U deployer (Exolaunch) |
+| 6U | 100 × 226.3 × 366.0 | 12.0 | ~6000 | 6U deployer (Exolaunch, D-Orbit) |
+| 12U | 226.3 × 226.3 × 366.0 | 24.0 | ~12000 | 12U deployer (Exolaunch) |
 
 Figure 12.1 draws the 3U envelope to scale with the features the deployer interface depends on: the rails, their contact pads, the deployment switches, the remove-before-flight pin access, the protrusion allowance between the rails and the centre-of-gravity limit.
 
@@ -6117,9 +6119,9 @@ For missions below ~500 km where propulsion is not needed for operations, passiv
 |-----------|-----------------|------------------|--------------------------|--------------------|--------------------|
 | $I_{sp}$ (s) | 40–75 | 80–100 | 230–250 | 500–5000 | 800–3000 |
 | Thrust | 10–100 mN | 5–50 mN | 0.1–1 N | 0.01–1 mN | 1–50 mN |
-| Propellant mass (100 m/s, 5 kg spacecraft) | 0.87 kg | 0.44 kg | 0.18 kg | 0.042 kg | 0.055 kg |
+| Propellant mass (100 m/s, 5 kg dry spacecraft, at the $I_{sp}$ shown) | 0.93 kg (60 s) | 0.60 kg (90 s) | 0.22 kg (235 s) | 0.042 kg | 0.055 kg |
 | System dry mass | 0.3 kg | 0.5 kg | 3.0 kg | 0.9 kg | 1.5 kg |
-| **Total system mass** | **1.17 kg** | **0.94 kg** | **3.18 kg** | **0.94 kg** | **1.55 kg** |
+| **Total system mass** | **1.23 kg** | **1.10 kg** | **3.22 kg** | **0.94 kg** | **1.55 kg** |
 | Burn time (100 m/s) | Minutes | Minutes | Seconds | **Months** | Days–weeks |
 | Power during firing | < 1 W (valve) | 5–15 W | 2–10 W (preheat) | 20–60 W | 50–300 W |
 | Complexity | Low | Low–medium | High | Medium | High |
@@ -6363,7 +6365,7 @@ Two red entries are instructive. The cost line shows the custom telescope consum
 
 $$B = \frac{m}{C_D \times A} = \frac{1.0}{2.2 \times 0.01} = 45.5 \text{ kg/m}^2$$
 
-Using the method of Chapter 7 §7.3.3 this gives an orbital lifetime of roughly 6–14 months depending on solar activity (F10.7 index). At solar maximum (F10.7 > 200) the denser atmosphere deorbits the satellite in about 6 months; at solar minimum (F10.7 ~ 70) the lifetime extends towards 18 months. Both are within the FCC 5-year rule and the IADC 25-year guideline without any propulsion system.
+Using the method of Chapter 7 §7.3.3 this gives an orbital lifetime of roughly 6–18 months depending on solar activity (F10.7 index). At solar maximum (F10.7 > 200) the denser atmosphere deorbits the satellite in about 6 months; at solar minimum (F10.7 ~ 70) the lifetime extends towards 18 months. Both are within the FCC 5-year rule and the IADC 25-year guideline without any propulsion system.
 
 **OBC selection rationale:** UniSat-1 uses a custom board based on the TI MSP430 (safe mode / housekeeping) + STM32F4 Cortex-M4 (main OBC). The MSP430 runs bare-metal firmware handling the watchdog, power monitoring and safe-mode recovery. The STM32F4 runs FreeRTOS handling TM/TC, magnetometer data acquisition and scheduling. The dual-processor architecture provides redundancy: if the STM32F4 fails (SEU, latch-up), the MSP430 can maintain safe-mode operations and respond to ground commands.
 
@@ -6808,7 +6810,7 @@ A concurrent-design tool with band data on each component will flag a transponde
 
 ## 13.6 Returning to UniSat-1: bill of materials and cost
 
-UniSat-1's BOM is remarkably short — only 5–7 line items plus harness. This simplicity is a major advantage for small teams with limited procurement experience. The equipment list itself was assembled in Chapter 12 §12.6; here it is restated in BOM form with the procurement fields added.
+UniSat-1's BOM is remarkably short — only nine line items (eight components plus the harness). This simplicity is a major advantage for small teams with limited procurement experience. The equipment list itself was assembled in Chapter 12 §12.6; here it is restated in BOM form with the procurement fields added.
 
 > **UniSat-1 BOM (Phase B — vendor quotes obtained; representative examples, costs indicative 2026):**
 >
@@ -7702,7 +7704,7 @@ where $a$ is the regression coefficient, $M$ is the driving parameter (usually d
 
 *[Source: SMAD4 Table 20-8; US Air Force USCM database]*
 
-| Subsystem | CER (FY2010 $K) | Parameter | Typical $b$ |
+| Subsystem | CER (FY2010 \$K) | Parameter | Typical $b$ |
 |-----------|-----------------|-----------|-------------|
 | Structure | $157\,M_{\text{struct}}^{0.83}$ | Dry mass (kg) | 0.83 |
 | Thermal | $394\,M_{\text{therm}}^{0.635}$ | Dry mass (kg) | 0.635 |
@@ -7932,7 +7934,7 @@ The difference between P50 and the committed level is the **cost reserve**. It b
 
 ### 16.4.3 Returning to UniSat-1: cost structure
 
-**Simple WBS, mostly COTS.** UniSat-1's cost structure is fundamentally different from that of larger missions because (a) nearly all hardware is COTS, so NRE is near zero, and (b) the team is small and university-based, so labour costs are low. Chapter 13 §13.6 gave the BOM-based cost summary (≈ 85 kEUR); here the same mission is estimated by both methods against the WBS of §16.2.1 and carried to a P80 figure.
+**Simple WBS, mostly COTS.** UniSat-1's cost structure is fundamentally different from that of larger missions because (a) nearly all hardware is COTS, so NRE is near zero, and (b) the team is small and university-based, so labour costs are low. Chapter 13 §13.6 gave the BOM-based cost summary (≈ 85 kEUR, without operations and with a single management line; the WBS estimate below adds both and comes to ≈ 91 kEUR); here the same mission is estimated by both methods against the WBS of §16.2.1 and carried to a P80 figure.
 
 > **UniSat-1 WBS cost estimate (parametric versus bottom-up; indicative 2026):**
 >
@@ -7942,7 +7944,7 @@ The difference between P50 and the committed level is the **cost reserve**. It b
 > | 2.0 Systems engineering | 3 | 3 | Team lead |
 > | 3.0 Mission assurance | 1 | 1 | Minimal QA for a university mission |
 > | 4.0 Payload | 8 | 8 | MEMS sensor PCB + calibration |
-> | 5.0 Bus hardware | 38 | 36 | BOM in Chapter 13 §13.6 |
+> | 5.0 Bus hardware | 39 | 38 | BOM in Chapter 13 §13.6 |
 > |   5.1 Structure | 4 | 4 | 1U frame |
 > |   5.2 EPS + solar array | 20 | 19.5 | EPS board + body-mounted cells |
 > |   5.3 AOCS (passive) | 1 | 1 | Magnet + hysteresis rods |
@@ -7953,8 +7955,8 @@ The difference between P50 and the committed level is the **cost reserve**. It b
 > | 8.0 Launch | 15 | 15 | 1U ISS deployment |
 > | 9.0 Ground segment | 5 | 5 | Yagi antenna + volunteer network |
 > | 10.0 Operations (6 months) | 3 | 3 | Student operators, 0.2 FTE |
-> | **TOTAL (P50)** | **≈ 90** | **≈ 85** | |
-> | **P80 (× 1.3)** | **≈ 117** | **≈ 111** | Conservative estimate |
+> | **TOTAL (P50)** | **≈ 91** | **≈ 91** | |
+> | **P80 (× 1.3)** | **≈ 118** | **≈ 118** | Conservative estimate |
 
 **Key cost observations for 1U missions:**
 
@@ -8093,7 +8095,7 @@ The board closes with one of three recommendations — **GO**, **NO GO**, or **G
 
 2. **WBS allocation.** A 3U Earth-observation CubeSat has a cost ceiling of 320 kEUR. Allocate it across the ten Level-1 WBS elements of §16.2.1 using the default percentages, then re-allocate for a mission whose payload is a custom hyperspectral imager with 60 kEUR of NRE (Chapter 13 §13.1.3). Which elements shrink to absorb the payload growth, and what does that imply for the test campaign?
 
-3. **Cost by phase.** Using the phase percentages of §16.2.2 and a total of 490 kEUR, draw the cumulative spend curve for the 3U mission over a 30-month schedule (Phase 0/A 4 months, B 6, C 8, D 8, E 36 following). In which month does the project need its largest cash injection, and what happens to the curve if the launch (WBS 8.0) is paid 50 % at contract signature in Phase B?
+3. **Cost by phase.** Using the phase percentages of §16.2.2 and a total of 490 kEUR, draw the cumulative spend curve for the 3U mission over a 26-month development schedule (Phase 0/A 4 months, B 6, C 8, D 8, E 36 following). In which month does the project need its largest cash injection, and what happens to the curve if the launch (WBS 8.0) is paid 50 % at contract signature in Phase B?
 
 4. **Learning curve — exact versus approximate.** For first-unit cost $C_1 =$ 800 kEUR and learning rates of 95 %, 90 % and 85 %, compute the total cost of 8, 16 and 32 units using (a) the exact sum $C_1\sum i^{\log_2 L}$ and (b) the continuous approximation of §16.3.1. Tabulate the percentage error of (b) and state the smallest $N$ for which it is below 3 %.
 
@@ -8252,7 +8254,7 @@ Summed over the usable passes in a day this is the daily downlink capacity $C_{\
 | 500 km SSO | 52° N (e.g. southern Ontario) | 3–5 | 6 min | 243–405 MB |
 | 500 km SSO | 69° N (e.g. Kiruna) | 6–8 | 7 min | 567–756 MB |
 | 500 km, 51.6° (ISS orbit) | 52° N | 2–4 | 5 min | 135–270 MB |
-| 500 km SSO | Volunteer network (global, UHF) | 10–15 | 5 min | 675–1 013 MB |
+| 500 km SSO | Volunteer network (global, UHF) | 10–15 | 5 min | 3.2–4.9 MB (at 9.6 kbit/s UHF) |
 
 *[Source: orbit-propagation simulations; validated against volunteer-network observation logs. Volumes recomputed from §17.2.2 with η = 0.9.]*
 
@@ -8787,7 +8789,7 @@ There is no Detumble (the permanent magnet and hysteresis rods do that passively
 
 1. **Mode table.** Construct the operational-mode table for a 6U CubeSat with a cold-gas propulsion system and an X-band downlink: at least six modes with power, data rate, typical duration and entry condition. Identify which mode has the highest power and check, using the battery-sizing method of Chapter 9 §9.3, whether the spacecraft could survive entering eclipse in that mode.
 
-2. **State machine.** Draw the mode-transition state machine for the spacecraft of Problem 1. Verify the three properties of §18.2.2 — Safe reachable from every state, Safe exited only by ground command, no transition dependent on a resource the destination does not maintain — and identify one transition in the source material of §18.2.2 that would violate the third property if Eclipse were implemented as a full mode with its own attitude control.
+2. **State machine.** Draw the mode-transition state machine for the spacecraft of Problem 1. Verify the three properties of §18.2.2 — Safe reachable from every state, Safe exited only by ground command, no transition dependent on a resource the destination does not maintain — and identify one transition in Figure 18.1 (§18.2.2) that would violate the third property if Eclipse were implemented as a full mode with its own attitude control.
 
 3. **Safe-mode power closure.** EOSat-3U enters Safe in a tumbling attitude. Using the solar-array area of Chapter 9 §9.2 and assuming the orbit-average projected area of a tumbling 3U is 40 % of its maximum, compute the orbit-average generated power at end of life and compare it with the 2.0 W safe-mode load plus the 3.5 W eclipse load for 36 minutes per orbit. Is Safe power-positive? If not, which safe-mode load would you remove first?
 
@@ -9498,7 +9500,7 @@ You own the spacecraft's pointing.
 
 ### References
 
-- ECSS-E-ST-60-20C — Stars sensors; ECSS-E-ST-60-10C — Control performance — [https://ecss.nl/](https://ecss.nl/).
+- ECSS-E-ST-60-20C — Star sensor terminology and performance specification; ECSS-E-ST-60-10C — Control performance — [https://ecss.nl/](https://ecss.nl/).
 - Markley and Crassidis, *Fundamentals of Spacecraft Attitude Determination and Control*.
 - Sidi, *Spacecraft Dynamics and Control*.
 - SMAD4 Ch. 10.
@@ -9993,11 +9995,11 @@ since $v_e = I_{sp}\, g_0$ by the definition of specific impulse. The propellant
 
 $r_1 = 6778.137$ km, $r_2 = 42\,164$ km, $a_t = (r_1 + r_2)/2 = 24\,471$ km.
 
-At perigee: $v_1 = \sqrt{\mu/r_1} = 7.669$ km/s; $v_p = \sqrt{\mu\,(2/r_1 - 1/a_t)} = 10.061$ km/s; $\Delta V_1 = 2.392$ km/s.
+At perigee: $v_1 = \sqrt{\mu/r_1} = 7.669$ km/s; $v_p = \sqrt{\mu\,(2/r_1 - 1/a_t)} = 10.066$ km/s; $\Delta V_1 = 2.397$ km/s.
 
-At apogee: $v_2 = \sqrt{\mu/r_2} = 3.075$ km/s; $v_a = \sqrt{\mu\,(2/r_2 - 1/a_t)} = 1.610$ km/s; $\Delta V_2 = 1.465$ km/s.
+At apogee: $v_2 = \sqrt{\mu/r_2} = 3.075$ km/s; $v_a = \sqrt{\mu\,(2/r_2 - 1/a_t)} = 1.618$ km/s; $\Delta V_2 = 1.456$ km/s.
 
-Total $\Delta V = 3.857$ km/s — matching Figure 7.4 (3.854 km/s) to within rounding. For the deorbit case of Chapter 12 §12.2.5 (600 km circular to a 200 km perigee) the same vis-viva arithmetic gives 112 m/s.
+Total $\Delta V = 3.854$ km/s — matching Figure 7.4 (≈ 3.85 km/s); the rounded components sum to 3.853 km/s. For the deorbit case of Chapter 12 §12.2.5 (600 km circular to a 200 km perigee) the same vis-viva arithmetic gives 112 m/s.
 
 ---
 
@@ -10330,7 +10332,7 @@ $$ V_{gen} \le C_{downlink} $$
 
 This is the form of Chapter 11 §11.9. If the inequality fails, the options are a faster downlink (more bandwidth or a higher band), more stations or passes, on-board compression, or fewer images. Chapter 11 Figure 11.6 plots daily capacity by band against representative payload volumes: UHF closes only for housekeeping; S-band suits a multispectral imager; X-band is needed for SAR or hyperspectral data.
 
-**Worked check.** EOSat-3U at 5 Mbit/s with four 8-minute passes per day and $\eta_{protocol} = 0.8$: $C = 5 \times 10^6 \times 4 \times 480 \times 0.8 / 8 = 960$ MB/day against 720 MB/day generated — closes (Chapter 11 §11.8 and §11.9 give 956 MB/day with the exact pass durations). UniSat-1 at 4800 bit/s with five minutes of usable contact per pass to a single station: 0.61 MB/day against 1.13 MB/day generated — does not close (Chapter 11 §11.8.2, Chapter 17 §17.6).
+**Worked check.** EOSat-3U at 5 Mbit/s with five 6-minute passes per day and $\eta_{protocol} = 0.85$: $C = 5 \times 10^6 \times 5 \times 360 \times 0.85 / 8 = 956$ MB/day against 720 MB/day generated — closes (the case of Chapter 11 §11.9 and Chapter 17 §17.2.4). UniSat-1 at 4800 bit/s with five minutes of usable contact per pass to a single station: 0.61 MB/day against 1.13 MB/day generated — does not close (Chapter 11 §11.8.2, Chapter 17 §17.6).
 
 ---
 
@@ -10380,7 +10382,7 @@ For a design review, every quantitative claim should be verified by at least two
 
 # Appendix A — About the SpaceCDF Tool
 
-The numerical examples in this book were computed with SpaceCDF, an open-source concurrent-design tool for small spacecraft. This appendix describes it briefly and neutrally so that a reader can understand what produced the numbers, and reproduce or extend them. It is released under the MIT licence; the source code, the mission descriptors used for the examples in this book and the figure-generation scripts are available at `<repository URL>`. Nothing in Parts I–III depends on the tool: every method in the book can be applied with a spreadsheet, and the problems never require it.
+The numerical examples in this book were computed with SpaceCDF, an open-source concurrent-design tool for small spacecraft. This appendix describes it briefly and neutrally so that a reader can understand what produced the numbers, and reproduce or extend them. It is released under the MIT licence; the source code, the mission descriptors used for the examples in this book and the figure-generation scripts are available at <https://github.com/FNewland/SpaceCDF>. Nothing in Parts I–III depends on the tool: every method in the book can be applied with a spreadsheet, and the problems never require it.
 
 ## A.1 Positions and design agents
 

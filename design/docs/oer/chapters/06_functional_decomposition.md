@@ -58,10 +58,10 @@ Figure 6.1 shows the three layers and the direction of flow. Objectives and requ
   <rect x="580" y="230" width="180" height="30" rx="4" fill="#e0e7ff" stroke="#4f46e5"/>
   <text x="670" y="250" text-anchor="middle" fill="#3730a3" font-size="11">Universal Functions</text>
   <text x="670" y="280" text-anchor="middle" fill="#3730a3" font-size="10">F-010: Generate power</text>
-  <text x="670" y="296" text-anchor="middle" fill="#3730a3" font-size="10">F-011: Maintain thermal env</text>
-  <text x="670" y="312" text-anchor="middle" fill="#3730a3" font-size="10">F-012: Survive launch</text>
-  <text x="670" y="328" text-anchor="middle" fill="#3730a3" font-size="10">F-013: TTC with ground</text>
-  <text x="670" y="344" text-anchor="middle" fill="#3730a3" font-size="10">F-014: Dispose at EOL</text>
+  <text x="670" y="296" text-anchor="middle" fill="#3730a3" font-size="10">F-020: Maintain thermal env</text>
+  <text x="670" y="312" text-anchor="middle" fill="#3730a3" font-size="10">F-030: Survive launch</text>
+  <text x="670" y="328" text-anchor="middle" fill="#3730a3" font-size="10">F-040: TTC with ground</text>
+  <text x="670" y="344" text-anchor="middle" fill="#3730a3" font-size="10">F-050: Dispose at EOL</text>
   <defs><marker id="arrowhead6" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#64748b"/></marker></defs>
 </svg>
 

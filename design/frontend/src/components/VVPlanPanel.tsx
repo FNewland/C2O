@@ -20,6 +20,8 @@
  */
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
+import i18n from '../i18n'
 import type {
   AnalysisConflict, VerificationItemPatch, VerificationItemView, VerificationItemsResponse, VVLevel, VVLevelRollup,
   VVMethod, VVPhase, VVRun, VVRunResponse, VVStatus,
@@ -29,13 +31,17 @@ const API = '/api'
 const ANALYSIS = 'vv'
 
 const METHODS: VVMethod[] = ['A', 'T', 'I', 'R', 'D']
+// English text is the i18n key
 const METHOD_FULL: Record<VVMethod, string> = { A: 'Analysis', T: 'Test', I: 'Inspection', R: 'Review of design', D: 'Demonstration' }
 const LEVELS: VVLevel[] = ['unit', 'subsystem', 'system', 'segment']
+// English text is the i18n key
+const LEVEL_LABEL: Record<VVLevel, string> = { unit: 'unit', subsystem: 'subsystem', system: 'system', segment: 'segment' }
 const PHASES: VVPhase[] = ['PDR', 'CDR', 'QR', 'AR']
 const STATUSES: VVStatus[] = ['planned', 'in_progress', 'passed', 'failed', 'waived']
 const STATUS_COLORS: Record<VVStatus, string> = {
   planned: '#6b7280', in_progress: '#f59e0b', passed: '#10b981', failed: '#ef4444', waived: '#8b5cf6',
 }
+// English text is the i18n key
 const STATUS_LABEL: Record<VVStatus, string> = {
   planned: 'planned', in_progress: 'in progress', passed: 'passed', failed: 'failed', waived: 'waived',
 }
@@ -61,10 +67,10 @@ function ago(iso: string | null | undefined): string {
   if (!iso) return ''
   const s = (Date.now() - new Date(iso).getTime()) / 1000
   if (!Number.isFinite(s)) return ''
-  if (s < 60) return 'just now'
-  if (s < 3600) return `${Math.floor(s / 60)} min ago`
-  if (s < 86400) return `${Math.floor(s / 3600)} h ago`
-  return `${Math.floor(s / 86400)} d ago`
+  if (s < 60) return i18n.t('just now')
+  if (s < 3600) return i18n.t('{{n}} min ago', { n: Math.floor(s / 60) })
+  if (s < 86400) return i18n.t('{{n}} h ago', { n: Math.floor(s / 3600) })
+  return i18n.t('{{n}} d ago', { n: Math.floor(s / 86400) })
 }
 
 const card: React.CSSProperties = {
@@ -90,7 +96,8 @@ function Badge({ text, color, title }: { text: string; color: string; title?: st
 }
 
 /** Stacked bar: passed / waived / in progress / failed / planned. */
-function LevelBar({ level, r }: { level: string; r: VVLevelRollup }) {
+function LevelBar({ level, r }: { level: VVLevel; r: VVLevelRollup }) {
+  const { t } = useTranslation()
   const total = r.total || 0
   const closed = r.passed + r.waived
   const pct = total > 0 ? (100 * closed) / total : 0
@@ -98,19 +105,19 @@ function LevelBar({ level, r }: { level: string; r: VVLevelRollup }) {
   return (
     <div style={{ ...card, flex: '1 1 160px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.58rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
-        <span>{level}</span>
+        <span>{t(LEVEL_LABEL[level] ?? level)}</span>
         <span style={{ fontFamily: 'ui-monospace, monospace', color: total === 0 ? 'var(--text-secondary)' : pct >= 100 ? '#10b981' : r.failed > 0 ? '#ef4444' : 'var(--text-primary)' }}>
           {total === 0 ? '—' : `${closed}/${total} · ${pct.toFixed(0)} %`}
         </span>
       </div>
       <div style={{ display: 'flex', height: 10, marginTop: 4, borderRadius: 5, overflow: 'hidden', background: 'var(--bg-secondary, #1f2937)', border: '1px solid var(--border)' }}
-           title={segs.map(([s, n]) => `${STATUS_LABEL[s]}: ${n}`).join(' · ')}>
+           title={segs.map(([s, n]) => t('{{label}}: {{value}}', { label: t(STATUS_LABEL[s]), value: n })).join(' · ')}>
         {total > 0 && segs.map(([s, n]) => n > 0 && (
           <div key={s} style={{ width: `${(100 * n) / total}%`, background: STATUS_COLORS[s], transition: 'width 0.3s' }} />
         ))}
       </div>
       <div style={{ display: 'flex', gap: '0.4rem', marginTop: 3, fontSize: '0.55rem', fontFamily: 'ui-monospace, monospace', flexWrap: 'wrap' }}>
-        {segs.filter(([, n]) => n > 0).map(([s, n]) => <span key={s} style={{ color: STATUS_COLORS[s] }}>{n} {STATUS_LABEL[s]}</span>)}
+        {segs.filter(([, n]) => n > 0).map(([s, n]) => <span key={s} style={{ color: STATUS_COLORS[s] }}>{n} {t(STATUS_LABEL[s])}</span>)}
       </div>
     </div>
   )
@@ -134,6 +141,7 @@ interface RowProps {
 }
 
 function ItemRow({ item, onPatch, busy }: RowProps) {
+  const { t } = useTranslation()
   const [facility, setFacility] = useState(item.facility ?? '')
   const [acceptance, setAcceptance] = useState(item.acceptance_criterion ?? '')
   const [evidence, setEvidence] = useState(item.evidence_ref ?? '')
@@ -146,7 +154,7 @@ function ItemRow({ item, onPatch, busy }: RowProps) {
     <tr style={{ opacity: busy ? 0.6 : 1, background: item.status === 'failed' ? 'rgba(239,68,68,0.05)' : undefined }}>
       <td style={{ ...td, whiteSpace: 'nowrap' }}>
         <span style={{ fontFamily: 'ui-monospace, monospace', color: 'var(--accent)', fontSize: '0.62rem' }}>{item.requirement_code}</span>
-        {item.edited_by_user && <span title="Edited by user — the generator only fills empty fields on this row" style={{ marginLeft: 4, fontSize: '0.6rem' }}>🔒</span>}
+        {item.edited_by_user && <span title={t('Edited by user — the generator only fills empty fields on this row')} style={{ marginLeft: 4, fontSize: '0.6rem' }}>🔒</span>}
       </td>
       <td style={{ ...td, maxWidth: 260 }} title={item.requirement_text}>
         <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 260 }}>{item.requirement_text}</div>
@@ -156,7 +164,7 @@ function ItemRow({ item, onPatch, busy }: RowProps) {
       </td>
       <td style={td}>
         <select value={item.method ?? ''} onChange={e => onPatch(item.id, { method: (e.target.value || null) as VVMethod | null })}
-                style={{ ...sel, color: item.method ? METHOD_COLORS[item.method] : 'var(--text-secondary)', fontWeight: 600 }} title={item.method ? METHOD_FULL[item.method] : ''}>
+                style={{ ...sel, color: item.method ? METHOD_COLORS[item.method] : 'var(--text-secondary)', fontWeight: 600 }} title={item.method ? t(METHOD_FULL[item.method]) : ''}>
           <option value="">—</option>
           {METHODS.map(m => <option key={m} value={m}>{m}</option>)}
         </select>
@@ -164,7 +172,7 @@ function ItemRow({ item, onPatch, busy }: RowProps) {
       <td style={td}>
         <select value={item.level ?? ''} onChange={e => onPatch(item.id, { level: (e.target.value || null) as VVLevel | null })} style={sel}>
           <option value="">—</option>
-          {LEVELS.map(l => <option key={l} value={l}>{l}</option>)}
+          {LEVELS.map(l => <option key={l} value={l}>{t(LEVEL_LABEL[l])}</option>)}
         </select>
       </td>
       <td style={td}>
@@ -175,28 +183,29 @@ function ItemRow({ item, onPatch, busy }: RowProps) {
       </td>
       <td style={{ ...td, minWidth: 90 }}>
         <input value={facility} onChange={e => setFacility(e.target.value)} onBlur={() => commit('facility', facility)}
-               onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur() }} style={inp} placeholder="facility" />
+               onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur() }} style={inp} placeholder={t('facility')} />
       </td>
       <td style={{ ...td, minWidth: 180 }}>
         <input value={acceptance} onChange={e => setAcceptance(e.target.value)} onBlur={() => commit('acceptance_criterion', acceptance)}
-               onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur() }} style={inp} placeholder="acceptance criterion" title={acceptance} />
+               onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur() }} style={inp} placeholder={t('acceptance criterion')} title={acceptance} />
       </td>
       <td style={{ ...td, whiteSpace: 'nowrap' }}>
         <select value={item.status} onChange={e => onPatch(item.id, { status: e.target.value as VVStatus })}
                 style={{ ...sel, color: statusColor, fontWeight: 600 }}>
-          {STATUSES.map(s => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
+          {STATUSES.map(s => <option key={s} value={s}>{t(STATUS_LABEL[s])}</option>)}
         </select>
-        {item.auto_closed && <span style={{ marginLeft: 4 }}><Badge text="auto" color="#3b82f6" title={`Closed by analysis run ${item.evidence_ref?.replace('analysis:', '') ?? ''}`} /></span>}
+        {item.auto_closed && <span style={{ marginLeft: 4 }}><Badge text="auto" color="#3b82f6" title={t('Closed by analysis run {{run}}', { run: item.evidence_ref?.replace('analysis:', '') ?? '' })} /></span>}
       </td>
       <td style={{ ...td, minWidth: 110 }}>
         <input value={evidence} onChange={e => setEvidence(e.target.value)} onBlur={() => commit('evidence_ref', evidence)}
-               onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur() }} style={{ ...inp, fontFamily: 'ui-monospace, monospace' }} placeholder="evidence ref" />
+               onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur() }} style={{ ...inp, fontFamily: 'ui-monospace, monospace' }} placeholder={t('evidence ref')} />
       </td>
     </tr>
   )
 }
 
 export function VVPlanPanel({ studyId, optionId }: { studyId: string | null; optionId?: string | null }) {
+  const { t } = useTranslation()
   const qc = useQueryClient()
   const opt = optionId ? `?option_id=${encodeURIComponent(optionId)}` : ''
   const [statusFilter, setStatusFilter] = useState<VVStatus | 'all'>('all')
@@ -270,26 +279,26 @@ export function VVPlanPanel({ studyId, optionId }: { studyId: string | null; opt
     a.click()
   }
 
-  if (!studyId) return <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Select a study.</div>
+  if (!studyId) return <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>{t('Select a study.')}</div>
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
       {/* header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-        <h3 style={{ fontSize: '0.85rem', margin: 0 }}>V&V plan &amp; closure</h3>
+        <h3 style={{ fontSize: '0.85rem', margin: 0 }}>{t('V&V plan & closure')}</h3>
         {lastRun && (
           <span style={{ fontSize: '0.6rem', color: 'var(--text-secondary)' }}>
-            last run {ago(lastRun.finished_at ?? lastRun.started_at)}
-            {lastRun.status === 'failed' && <span style={{ color: '#ef4444', marginLeft: 4 }}>failed</span>}
+            {t('last run {{ago}}', { ago: ago(lastRun.finished_at ?? lastRun.started_at) })}
+            {lastRun.status === 'failed' && <span style={{ color: '#ef4444', marginLeft: 4 }}>{t('failed')}</span>}
           </span>
         )}
-        {lastRun?.stale && <Badge text="stale" color="#f59e0b" title="Requirements or elements changed since this run" />}
-        {!lastRun && !runQ.isLoading && <Badge text="never run" color="#6b7280" />}
+        {lastRun?.stale && <Badge text={t('stale')} color="#f59e0b" title={t('Requirements or elements changed since this run')} />}
+        {!lastRun && !runQ.isLoading && <Badge text={t('never run')} color="#6b7280" />}
         <span style={{ flex: 1 }} />
-        <button onClick={() => download('rtm.csv')} style={btn()} title="Requirement traceability matrix (CSV)">RTM CSV</button>
-        <button onClick={() => download('vcd.docx')} style={btn()} title="Verification Control Document (Word)">VCD docx</button>
+        <button onClick={() => download('rtm.csv')} style={btn()} title={t('Requirement traceability matrix (CSV)')}>RTM CSV</button>
+        <button onClick={() => download('vcd.docx')} style={btn()} title={t('Verification Control Document (Word)')}>VCD docx</button>
         <button onClick={() => run.mutate()} disabled={run.isPending} style={btn(true)}>
-          {run.isPending ? 'Running…' : lastRun ? 'Re-run V&V' : 'Run V&V'}
+          {run.isPending ? t('Running…') : lastRun ? t('Re-run V&V') : t('Run V&V')}
         </button>
       </div>
       {error && <div style={{ fontSize: '0.64rem', color: '#ef4444' }}>{error}</div>}
@@ -297,18 +306,18 @@ export function VVPlanPanel({ studyId, optionId }: { studyId: string | null; opt
       {/* summary */}
       <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
         <div style={card}>
-          <div style={{ fontSize: '0.58rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Closure</div>
+          <div style={{ fontSize: '0.58rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>{t('Closure')}</div>
           <div style={{ fontSize: '1rem', fontWeight: 600, fontFamily: 'ui-monospace, monospace', color: total === 0 ? 'var(--text-secondary)' : closurePct >= 100 ? '#10b981' : failed > 0 ? '#ef4444' : 'var(--text-primary)' }}>
             {closurePct.toFixed(0)}<span style={{ fontSize: '0.6rem', marginLeft: 2, color: 'var(--text-secondary)' }}>%</span>
           </div>
-          <div style={{ fontSize: '0.56rem', color: 'var(--text-secondary)' }}>{passed} passed · {waived} waived · {failed} failed of {total}</div>
+          <div style={{ fontSize: '0.56rem', color: 'var(--text-secondary)' }}>{t('{{passed}} passed · {{waived}} waived · {{failed}} failed of {{total}}', { passed, waived, failed, total })}</div>
         </div>
         <div style={card}>
-          <div style={{ fontSize: '0.58rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>By analysis</div>
+          <div style={{ fontSize: '0.58rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>{t('By analysis')}</div>
           <div style={{ fontSize: '1rem', fontWeight: 600, fontFamily: 'ui-monospace, monospace' }}>
             {byAnalysisPct.toFixed(0)}<span style={{ fontSize: '0.6rem', marginLeft: 2, color: 'var(--text-secondary)' }}>%</span>
           </div>
-          <div style={{ fontSize: '0.56rem', color: 'var(--text-secondary)' }}>{autoClosed} closed automatically</div>
+          <div style={{ fontSize: '0.56rem', color: 'var(--text-secondary)' }}>{t('{{n}} closed automatically', { n: autoClosed })}</div>
         </div>
         {LEVELS.map(l => <LevelBar key={l} level={l} r={byLevel[l]} />)}
       </div>
@@ -329,41 +338,41 @@ export function VVPlanPanel({ studyId, optionId }: { studyId: string | null; opt
 
       {/* filters */}
       <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', fontSize: '0.62rem', flexWrap: 'wrap' }}>
-        <span style={{ color: 'var(--text-secondary)' }}>Filter</span>
+        <span style={{ color: 'var(--text-secondary)' }}>{t('Filter')}</span>
         <select value={statusFilter} onChange={e => setStatusFilter(e.target.value as VVStatus | 'all')} style={sel}>
-          <option value="all">all statuses</option>
-          {STATUSES.map(s => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
+          <option value="all">{t('all statuses')}</option>
+          {STATUSES.map(s => <option key={s} value={s}>{t(STATUS_LABEL[s])}</option>)}
         </select>
         <select value={levelFilter} onChange={e => setLevelFilter(e.target.value as VVLevel | 'all')} style={sel}>
-          <option value="all">all levels</option>
-          {LEVELS.map(l => <option key={l} value={l}>{l}</option>)}
+          <option value="all">{t('all levels')}</option>
+          {LEVELS.map(l => <option key={l} value={l}>{t(LEVEL_LABEL[l])}</option>)}
         </select>
         <select value={methodFilter} onChange={e => setMethodFilter(e.target.value as VVMethod | 'all')} style={sel}>
-          <option value="all">all methods</option>
-          {METHODS.map(m => <option key={m} value={m}>{m} — {METHOD_FULL[m]}</option>)}
+          <option value="all">{t('all methods')}</option>
+          {METHODS.map(m => <option key={m} value={m}>{m} — {t(METHOD_FULL[m])}</option>)}
         </select>
-        <span style={{ color: 'var(--text-secondary)' }}>{filtered.length} of {total} items</span>
+        <span style={{ color: 'var(--text-secondary)' }}>{t('{{shown}} of {{total}} items', { shown: filtered.length, total })}</span>
         <span style={{ flex: 1 }} />
         <span style={{ color: 'var(--text-secondary)', fontSize: '0.56rem' }}>
-          <Badge text="auto" color="#3b82f6" /> closed by analysis · 🔒 user-edited (generator fills empty fields only)
+          <Badge text="auto" color="#3b82f6" /> {t('closed by analysis · 🔒 user-edited (generator fills empty fields only)')}
         </span>
       </div>
 
       {/* table */}
       {itemsQ.isLoading ? (
-        <div style={{ fontSize: '0.66rem', color: 'var(--text-secondary)' }}>Loading…</div>
+        <div style={{ fontSize: '0.66rem', color: 'var(--text-secondary)' }}>{t('Loading…')}</div>
       ) : total === 0 ? (
         <div style={{ fontSize: '0.66rem', color: 'var(--text-secondary)', padding: '0.5rem 0' }}>
-          No verification items yet — run V&V to generate one per requirement (method, level, phase, facility and acceptance criterion are derived from the requirement and its allocation).
+          {t('No verification items yet — run V&V to generate one per requirement (method, level, phase, facility and acceptance criterion are derived from the requirement and its allocation).')}
         </div>
       ) : (
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr>
-                <th style={th}>Req</th><th style={th}>Requirement</th><th style={th} title="A analysis · T test · I inspection · R review · D demonstration">Method</th>
-                <th style={th}>Level</th><th style={th}>Phase</th><th style={th}>Facility</th><th style={th}>Acceptance criterion</th>
-                <th style={th}>Status</th><th style={th}>Evidence</th>
+                <th style={th}>{t('Req')}</th><th style={th}>{t('Requirement')}</th><th style={th} title={t('A analysis · T test · I inspection · R review · D demonstration')}>{t('Method')}</th>
+                <th style={th}>{t('Level')}</th><th style={th}>{t('Phase')}</th><th style={th}>{t('Facility')}</th><th style={th}>{t('Acceptance criterion')}</th>
+                <th style={th}>{t('Status')}</th><th style={th}>{t('Evidence')}</th>
               </tr>
             </thead>
             <tbody>

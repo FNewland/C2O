@@ -31,10 +31,10 @@ The Canadian Space Agency (CSA) was established by the *Canadian Space Agency Ac
 | Canadarm2 | 2001 | ISS robotic arm; continues robotics legacy |
 | RADARSAT-2 | 2007 | Commercial SAR satellite (MDA); RSSSA applies |
 | RADARSAT Constellation Mission (RCM) | 2019 | Three C-band SAR satellites; maritime surveillance, disaster management |
-| Lunar Gateway participation | 2019+ | Canada committed as partner; astronaut flights planned |
-| Canadarm3 | In development | For the Lunar Gateway; next-generation autonomous robotics |
+| Lunar Gateway participation | 2019–2026 | Canada committed as partner; in March 2026 NASA paused Gateway "in its current form" (widely reported as a cancellation) in favour of a lunar surface base |
+| Canadarm3 | In development | Next-generation autonomous robotics begun for the Lunar Gateway; as of late 2026 being repurposed by the CSA for lunar-surface operations under Artemis |
 
-[Source: CSA, "Canada's Space Milestones", www.asc-csa.gc.ca]
+[Source: CSA, "Canada's Space Milestones", www.asc-csa.gc.ca; Gateway and Canadarm3 status as of late 2026 from References 12–13]
 
 ### 2.1.2 CSA organisational focus areas
 
@@ -42,7 +42,7 @@ The CSA is headquartered in Saint-Hubert, Quebec, and organises its activities a
 
 | Priority | Activities | Key programmes |
 |----------|-----------|-------------|
-| **Space Exploration** | ISS operations, Lunar Gateway, Canadarm3, astronaut programme | Lunar Exploration Accelerator Program (LEAP) |
+| **Space Exploration** | ISS operations, Artemis lunar exploration (Canadarm3 technologies repurposed for lunar-surface operations), astronaut programme | Lunar Exploration Accelerator Program (LEAP) |
 | **Space Utilisation** | Earth observation, satellite communications, GNSS augmentation | RADARSAT, SmartEarth, eHealth |
 | **Space Science and Technology** | Astronomy, planetary science, technology development | CASTOR, JWST/NIRISS, space health |
 
@@ -136,7 +136,7 @@ Canada participates in space through multilateral and bilateral agreements:
 | Partnership | Canadian contribution | Canadian benefit |
 |------------|----------------------|-----------------|
 | **ISS** | Canadarm2, Dextre, SPDM | Astronaut access, research time, technology demonstrations |
-| **Lunar Gateway** | Canadarm3 | Astronaut flights, lunar science access |
+| **Artemis** (Lunar Gateway until its March 2026 pause) | Canadarm3, repurposed for lunar-surface operations (2026) | Astronaut flights, lunar science access |
 | **Copernicus (ESA)** | Data access agreement | Free access to Sentinel data for Canadian users |
 | **COSPAS-SARSAT** | Canadian ground stations, MEOSAR payloads | Search and rescue capability for Canadian territory |
 | **Five Eyes** | Intelligence sharing, dual-use technology | Access to allied space intelligence capabilities |
@@ -374,7 +374,7 @@ Any mission using US-origin components (which includes nearly all commercial spa
 
 5. **Export control scenario.** The 3U EO CubeSat uses a US-origin reaction-wheel assembly and a US-origin GNSS receiver, will be launched on an Indian PSLV, and includes a visiting researcher from a non-Five Eyes country on the design team. Identify every export-control obligation from §2.8 that applies, name the regime and instrument (permit, TAA, ECCN classification, etc.) for each, and propose two design or programmatic changes that would reduce the compliance burden.
 
-6. **Partnership leverage.** Using the leverage ratio of §2.4.2, estimate $L$ for Canada's Canadarm3 contribution to the Lunar Gateway, stating your assumptions for $C_{\text{contribution}}$ and $V_{\text{access}}$. Discuss two limitations of the ratio as a decision metric and propose one refinement.
+6. **Partnership leverage.** Using the leverage ratio of §2.4.2, estimate $L$ for Canada's Canadarm3 contribution to Artemis (committed to the Lunar Gateway in 2019; repurposed for lunar-surface operations after NASA paused Gateway in March 2026), stating your assumptions for $C_{\text{contribution}}$ and $V_{\text{access}}$. Discuss two limitations of the ratio as a decision metric, including what happens to $V_{\text{access}}$ when the partner restructures the programme, and propose one refinement.
 
 7. **Comparing national models.** From the comparison in §2.3, identify two consequences for a Canadian mission design team of (a) the absence of domestic launch capability and (b) the small agency budget relative to NASA or ESA. How does ESA's *juste retour* model change the way a European team would approach supplier selection compared with a Canadian team?
 
@@ -395,3 +395,5 @@ Any mission using US-origin components (which includes nearly all commercial spa
 9. US Department of State, *International Traffic in Arms Regulations* (22 CFR 120–130). [https://www.ecfr.gov/current/title-22/chapter-I/subchapter-M](https://www.ecfr.gov/current/title-22/chapter-I/subchapter-M)
 10. US Department of Commerce, *Export Administration Regulations* (15 CFR 730–774). [https://www.ecfr.gov/current/title-15/subtitle-B/chapter-VII/subchapter-C](https://www.ecfr.gov/current/title-15/subtitle-B/chapter-VII/subchapter-C)
 11. NASA, *Systems Engineering Handbook* (SP-2016-6105 Rev 2), 2016. [https://www.nasa.gov/reference/systems-engineering-handbook/](https://www.nasa.gov/reference/systems-engineering-handbook/)
+12. NASA, "NASA Unveils Initiatives to Achieve America's National Space Policy" (Gateway paused "in its current form"), news release, 24 March 2026. [https://www.nasa.gov/news-release/nasa-unveils-initiatives-to-achieve-americas-national-space-policy/](https://www.nasa.gov/news-release/nasa-unveils-initiatives-to-achieve-americas-national-space-policy/)
+13. MDA Space, "MDA Space responds to Canadian Space Agency announcement on Canadarm3" (CSA repurposing of Canadarm3 for lunar-surface operations), 6 August 2026. [https://mda.space/article/mda-space-responds-to-canadian-space-agency-announcement-on-canadarm3](https://mda.space/article/mda-space-responds-to-canadian-space-agency-announcement-on-canadarm3)

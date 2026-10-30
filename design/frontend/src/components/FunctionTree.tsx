@@ -8,6 +8,7 @@
  */
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { useUIStore } from '../stores/uiStore'
 import { useDesignStore } from '../stores/designStore'
 import {
@@ -41,16 +42,18 @@ function flatten(nodes: FunctionNode[], out: FunctionNode[] = []): FunctionNode[
 }
 
 export function LayerBadge({ layer, onChange }: { layer: string; onChange?: (l: ArcadiaLayer) => void }) {
+  const { t } = useTranslation()
   const color = LAYER_COLORS[layer as ArcadiaLayer] || '#6b7280'
+  const layerLabel = LAYER_LABELS[layer as ArcadiaLayer] ? t(LAYER_LABELS[layer as ArcadiaLayer]) : layer
   if (!onChange) {
-    return <span title={LAYER_LABELS[layer as ArcadiaLayer] || layer} style={{
+    return <span title={layerLabel} style={{
       fontSize: '0.58rem', fontWeight: 700, padding: '0 0.3rem', borderRadius: '3px',
       background: `${color}25`, color, border: `1px solid ${color}60`,
     }}>{layer}</span>
   }
   return (
     <select value={layer} onChange={e => onChange(e.target.value as ArcadiaLayer)}
-      title={`Arcadia layer: ${LAYER_LABELS[layer as ArcadiaLayer] || layer}`}
+      title={t('Arcadia layer: {{layer}}', { layer: layerLabel })}
       style={{ ...inputStyle, fontSize: '0.58rem', fontWeight: 700, padding: '0 0.2rem', color, borderColor: `${color}60`, background: `${color}15` }}>
       {ARCADIA_LAYERS.map(l => <option key={l} value={l}>{l}</option>)}
     </select>
@@ -61,6 +64,7 @@ export function FunctionTree({ studyId: studyIdProp }: { studyId?: string | null
   const uiStudyId = useUIStore(s => s.studyId)
   const designStudyId = useDesignStore(s => s.studyId)
   const studyId = studyIdProp ?? uiStudyId ?? designStudyId
+  const { t } = useTranslation()
   const qc = useQueryClient()
   const [error, setError] = useState<string | null>(null)
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
@@ -146,7 +150,7 @@ export function FunctionTree({ studyId: studyIdProp }: { studyId?: string | null
   })
 
   if (!studyId) {
-    return <div style={{ padding: '1rem', color: 'var(--text-secondary)', fontSize: '0.78rem' }}>Create or join a study to edit functions.</div>
+    return <div style={{ padding: '1rem', color: 'var(--text-secondary)', fontSize: '0.78rem' }}>{t('Create or join a study to edit functions.')}</div>
   }
 
   const all = flatten(tree)
@@ -161,39 +165,38 @@ export function FunctionTree({ studyId: studyIdProp }: { studyId?: string | null
   return (
     <div style={{ padding: '0.5rem 1rem', fontSize: '0.75rem', overflow: 'auto', height: '100%' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
-        <span style={{ fontWeight: 600, fontSize: '0.78rem' }}>Functions ({all.length})</span>
+        <span style={{ fontWeight: 600, fontSize: '0.78rem' }}>{t('Functions ({{n}})', { n: all.length })}</span>
         <span style={{ color: 'var(--text-secondary)', fontSize: '0.65rem' }}>
-          {unallocated > 0 ? `${unallocated} unallocated` : 'all allocated'} · {exchanges.length} exchanges
+          {unallocated > 0 ? t('{{n}} unallocated', { n: unallocated }) : t('all allocated')} · {t('{{n}} exchanges', { n: exchanges.length })}
         </span>
         <span style={{ flex: 1 }} />
         {ARCADIA_LAYERS.map(l => <LayerBadge key={l} layer={l} />)}
         <button style={smallBtn('#3b82f6')}
-          onClick={() => createFn.mutate({ name: 'New function', parent_id: null, layer: 'SA', level: 0 })}>
-          + Root function
+          onClick={() => createFn.mutate({ name: t('New function'), parent_id: null, layer: 'SA', level: 0 })}>
+          {t('+ Root function')}
         </button>
         <button style={smallBtn()} onClick={() => setShowExchanges(v => !v)}>
-          {showExchanges ? 'Hide' : 'Show'} exchanges
+          {showExchanges ? t('Hide exchanges') : t('Show exchanges')}
         </button>
       </div>
 
       {error && (
         <div style={{ color: '#ef4444', fontSize: '0.68rem', marginBottom: '0.4rem', display: 'flex', gap: '0.5rem' }}>
           <span>{error}</span>
-          <button style={smallBtn('#ef4444')} onClick={() => setError(null)}>dismiss</button>
+          <button style={smallBtn('#ef4444')} onClick={() => setError(null)}>{t('dismiss')}</button>
         </div>
       )}
 
-      {isLoading && <div style={{ color: 'var(--text-secondary)' }}>Loading…</div>}
+      {isLoading && <div style={{ color: 'var(--text-secondary)' }}>{t('Loading…')}</div>}
 
       {!isLoading && tree.length === 0 && (
         <div className="card" style={{ borderLeft: '3px solid #f59e0b', marginBottom: '0.5rem' }}>
           <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
-            No functions in the model yet. Add a root function, or import the functions stored in the
-            study's legacy functional decomposition.
+            {t("No functions in the model yet. Add a root function, or import the functions stored in the study's legacy functional decomposition.")}
           </div>
           <button style={{ ...smallBtn('#f59e0b'), padding: '0.25rem 0.6rem' }} disabled={migrate.isPending}
             onClick={() => migrate.mutate()}>
-            {migrate.isPending ? 'Migrating…' : 'Migrate legacy functions'}
+            {migrate.isPending ? t('Migrating…') : t('Migrate legacy functions')}
           </button>
           {migrate.data && (
             <div style={{ fontSize: '0.65rem', color: '#6ee7b7', marginTop: '0.3rem' }}>
@@ -207,8 +210,8 @@ export function FunctionTree({ studyId: studyIdProp }: { studyId?: string | null
         <FunctionRowView key={node.id} node={node} depth={0} elements={elements} collapsed={collapsed} toggle={toggle}
           onRename={(id, version, name) => updateFn.mutate({ id, body: { version, name } })}
           onLayer={(id, version, layer) => updateFn.mutate({ id, body: { version, layer } })}
-          onAddChild={(parent) => createFn.mutate({ name: 'New function', parent_id: parent.id, layer: parent.layer, level: (parent.level || 0) + 1 })}
-          onDelete={(id) => { if (confirm('Delete this function and its sub-functions?')) deleteFn.mutate(id) }}
+          onAddChild={(parent) => createFn.mutate({ name: t('New function'), parent_id: parent.id, layer: parent.layer, level: (parent.level || 0) + 1 })}
+          onDelete={(id) => { if (confirm(t('Delete this function and its sub-functions?'))) deleteFn.mutate(id) }}
           onAllocate={(id, element_id, layer) => allocate.mutate({ id, element_id, layer })}
           onUnallocate={(id, layer) => unallocate.mutate({ id, layer })}
           onAddPort={(id, name, direction) => createPort.mutate({ id, name, direction })}
@@ -242,6 +245,7 @@ interface RowProps {
 
 function FunctionRowView(p: RowProps) {
   const { node, depth } = p
+  const { t } = useTranslation()
   const [editing, setEditing] = useState(false)
   const [name, setName] = useState(node.name)
   const [picking, setPicking] = useState(false)
@@ -273,7 +277,7 @@ function FunctionRowView(p: RowProps) {
             onKeyDown={e => { if (e.key === 'Enter') commitName(); if (e.key === 'Escape') { setName(node.name); setEditing(false) } }}
             style={{ ...inputStyle, minWidth: 180 }} />
         ) : (
-          <span onDoubleClick={() => setEditing(true)} title="Double-click to rename"
+          <span onDoubleClick={() => setEditing(true)} title={t('Double-click to rename')}
             style={{ fontWeight: depth === 0 ? 600 : 400, cursor: 'text' }}>
             {node.name}
           </span>
@@ -282,51 +286,51 @@ function FunctionRowView(p: RowProps) {
 
         {/* allocations */}
         {allocs.map(a => (
-          <span key={a.id} title={`Allocated at ${a.layer}`} style={{
+          <span key={a.id} title={t('Allocated at {{layer}}', { layer: a.layer })} style={{
             fontSize: '0.6rem', padding: '0 0.3rem', borderRadius: '3px',
             background: 'rgba(16,185,129,0.15)', color: '#6ee7b7', border: '1px solid rgba(16,185,129,0.4)',
           }}>
             → {a.element?.name || a.element_id.slice(0, 8)} <span style={{ opacity: 0.6 }}>[{a.layer}]</span>
-            <button onClick={() => p.onUnallocate(node.id, a.layer)} title="Remove allocation"
+            <button onClick={() => p.onUnallocate(node.id, a.layer)} title={t('Remove allocation')}
               style={{ background: 'none', border: 'none', color: '#6ee7b7', cursor: 'pointer', padding: '0 0 0 0.2rem', fontSize: '0.6rem' }}>×</button>
           </span>
         ))}
-        {allocs.length === 0 && <span style={{ fontSize: '0.6rem', color: '#f59e0b' }}>unallocated</span>}
+        {allocs.length === 0 && <span style={{ fontSize: '0.6rem', color: '#f59e0b' }}>{t('unallocated')}</span>}
 
         <span style={{ flex: 1 }} />
-        <button style={smallBtn()} onClick={() => setEditing(true)}>rename</button>
-        <button style={smallBtn()} onClick={() => setPicking(v => !v)}>Allocate to…</button>
-        <button style={smallBtn()} onClick={() => setAddingPort(v => !v)}>+ port</button>
-        <button style={smallBtn('#3b82f6')} onClick={() => p.onAddChild(node)}>+ child</button>
-        <button style={smallBtn('#ef4444')} onClick={() => p.onDelete(node.id)}>delete</button>
+        <button style={smallBtn()} onClick={() => setEditing(true)}>{t('rename')}</button>
+        <button style={smallBtn()} onClick={() => setPicking(v => !v)}>{t('Allocate to…')}</button>
+        <button style={smallBtn()} onClick={() => setAddingPort(v => !v)}>{t('+ port')}</button>
+        <button style={smallBtn('#3b82f6')} onClick={() => p.onAddChild(node)}>{t('+ child')}</button>
+        <button style={smallBtn('#ef4444')} onClick={() => p.onDelete(node.id)}>{t('delete')}</button>
       </div>
 
       {picking && (
         <div style={{ display: 'flex', gap: '0.3rem', alignItems: 'center', margin: '0.15rem 0 0.25rem 1.2rem' }}>
           <select value={pickId} onChange={e => setPickId(e.target.value)} style={{ ...inputStyle, minWidth: 220 }}>
-            <option value="">Select element…</option>
+            <option value="">{t('Select element…')}</option>
             {p.elements.map((el: any) => (
               <option key={el.id} value={el.id}>{el.name} ({el.element_type}{el.subsystem_domain ? ` / ${el.subsystem_domain}` : ''})</option>
             ))}
           </select>
           <button style={smallBtn('#10b981')} disabled={!pickId}
             onClick={() => { p.onAllocate(node.id, pickId, node.layer); setPicking(false); setPickId('') }}>
-            Allocate at {node.layer}
+            {t('Allocate at {{layer}}', { layer: node.layer })}
           </button>
-          <button style={smallBtn()} onClick={() => setPicking(false)}>cancel</button>
+          <button style={smallBtn()} onClick={() => setPicking(false)}>{t('cancel')}</button>
         </div>
       )}
 
       {addingPort && (
         <div style={{ display: 'flex', gap: '0.3rem', alignItems: 'center', margin: '0.15rem 0 0.25rem 1.2rem' }}>
-          <input value={portName} placeholder="port name" onChange={e => setPortName(e.target.value)} style={inputStyle}
+          <input value={portName} placeholder={t('port name')} onChange={e => setPortName(e.target.value)} style={inputStyle}
             onKeyDown={e => { if (e.key === 'Enter' && portName.trim()) { p.onAddPort(node.id, portName.trim(), portDir); setPortName(''); setAddingPort(false) } }} />
           <select value={portDir} onChange={e => setPortDir(e.target.value)} style={inputStyle}>
             <option value="in">in</option><option value="out">out</option><option value="inout">inout</option>
           </select>
           <button style={smallBtn('#10b981')} disabled={!portName.trim()}
-            onClick={() => { p.onAddPort(node.id, portName.trim(), portDir); setPortName(''); setAddingPort(false) }}>add</button>
-          <button style={smallBtn()} onClick={() => setAddingPort(false)}>cancel</button>
+            onClick={() => { p.onAddPort(node.id, portName.trim(), portDir); setPortName(''); setAddingPort(false) }}>{t('add')}</button>
+          <button style={smallBtn()} onClick={() => setAddingPort(false)}>{t('cancel')}</button>
         </div>
       )}
 
@@ -335,8 +339,8 @@ function FunctionRowView(p: RowProps) {
           {ports.map(port => (
             <span key={port.id} style={{ fontSize: '0.6rem', padding: '0 0.3rem', borderRadius: '3px', background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text-secondary)' }}>
               {port.direction === 'in' ? '⇥' : port.direction === 'out' ? '⇤' : '⇆'} {port.name}
-              {(port.exchange_item_ids || []).length > 0 && <span style={{ opacity: 0.7 }}> ({port.exchange_item_ids.length} items)</span>}
-              <button onClick={() => p.onDeletePort(port.id)} title="Delete port"
+              {(port.exchange_item_ids || []).length > 0 && <span style={{ opacity: 0.7 }}> {t('({{n}} items)', { n: port.exchange_item_ids.length })}</span>}
+              <button onClick={() => p.onDeletePort(port.id)} title={t('Delete port')}
                 style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: '0 0 0 0.2rem', fontSize: '0.6rem' }}>×</button>
             </span>
           ))}
@@ -354,6 +358,7 @@ function ExchangesSection({ exchanges, portsById, onCreate, onDelete }: {
   onCreate: (b: { name: string; from_port_id: string; to_port_id: string }) => void
   onDelete: (id: string) => void
 }) {
+  const { t } = useTranslation()
   const [from, setFrom] = useState('')
   const [to, setTo] = useState('')
   const [name, setName] = useState('')
@@ -364,32 +369,32 @@ function ExchangesSection({ exchanges, portsById, onCreate, onDelete }: {
   const portOptions = [...portsById.values()]
   return (
     <div style={{ marginTop: '0.75rem', borderTop: '1px solid var(--border)', paddingTop: '0.4rem' }}>
-      <div style={{ fontWeight: 600, fontSize: '0.72rem', marginBottom: '0.3rem' }}>Functional exchanges ({exchanges.length})</div>
-      {exchanges.length === 0 && <div style={{ color: 'var(--text-secondary)', fontSize: '0.68rem' }}>None yet — add ports to functions, then connect them.</div>}
+      <div style={{ fontWeight: 600, fontSize: '0.72rem', marginBottom: '0.3rem' }}>{t('Functional exchanges ({{n}})', { n: exchanges.length })}</div>
+      {exchanges.length === 0 && <div style={{ color: 'var(--text-secondary)', fontSize: '0.68rem' }}>{t('None yet — add ports to functions, then connect them.')}</div>}
       {exchanges.map(x => (
         <div key={x.id} style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', fontSize: '0.68rem', padding: '0.1rem 0' }}>
-          <span style={{ color: '#a78bfa' }}>{x.name || '(unnamed)'}</span>
+          <span style={{ color: '#a78bfa' }}>{x.name || t('(unnamed)')}</span>
           <span style={{ color: 'var(--text-secondary)' }}>{label(x.from_port_id)} → {label(x.to_port_id)}</span>
-          {x.realized_by_interface_id && <span style={{ fontSize: '0.6rem', color: '#6ee7b7' }}>realized</span>}
+          {x.realized_by_interface_id && <span style={{ fontSize: '0.6rem', color: '#6ee7b7' }}>{t('realized')}</span>}
           <span style={{ flex: 1 }} />
           <button style={smallBtn('#ef4444')} onClick={() => onDelete(x.id)}>×</button>
         </div>
       ))}
       {portOptions.length >= 2 && (
         <div style={{ display: 'flex', gap: '0.3rem', alignItems: 'center', marginTop: '0.3rem', flexWrap: 'wrap' }}>
-          <input value={name} onChange={e => setName(e.target.value)} placeholder="exchange name" style={inputStyle} />
+          <input value={name} onChange={e => setName(e.target.value)} placeholder={t('exchange name')} style={inputStyle} />
           <select value={from} onChange={e => setFrom(e.target.value)} style={inputStyle}>
-            <option value="">from port…</option>
+            <option value="">{t('from port…')}</option>
             {portOptions.map(({ port, fn }) => <option key={port.id} value={port.id}>{fn.name}.{port.name} ({port.direction})</option>)}
           </select>
           <span>→</span>
           <select value={to} onChange={e => setTo(e.target.value)} style={inputStyle}>
-            <option value="">to port…</option>
+            <option value="">{t('to port…')}</option>
             {portOptions.map(({ port, fn }) => <option key={port.id} value={port.id}>{fn.name}.{port.name} ({port.direction})</option>)}
           </select>
           <button style={smallBtn('#10b981')} disabled={!from || !to || from === to}
             onClick={() => { onCreate({ name, from_port_id: from, to_port_id: to }); setName(''); setFrom(''); setTo('') }}>
-            + exchange
+            {t('+ exchange')}
           </button>
         </div>
       )}

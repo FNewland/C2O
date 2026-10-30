@@ -10,11 +10,18 @@
  */
 import { useState, useCallback, useMemo } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
+import i18n, { fmtProse } from '../i18n'
 import { useUIStore } from '../stores/uiStore'
 
 const API = '/api'
 
+// English text is the i18n key: default trade criteria, kept in English in state and
+// localStorage; displayed with t(c, { context: 'criterion' }) (user-added names fall through).
+const DEFAULT_CRITERIA = ['Mass', 'Power', 'Cost', 'TRL', 'Risk']
+
 export function DecisionPanel() {
+  const { t } = useTranslation()
   const studyId = useUIStore(s => s.studyId)
   const focusElementId = useUIStore(s => s.focusElementId)
   const currentLevel = useUIStore(s => s.currentLevel)
@@ -26,7 +33,7 @@ export function DecisionPanel() {
   })
 
   const [pairwiseWeights, setPairwiseWeights] = useState<Record<string, number>>({})
-  const [sharedCriteria, setSharedCriteria] = useState<string[]>(['Mass', 'Power', 'Cost', 'TRL', 'Risk'])
+  const [sharedCriteria, setSharedCriteria] = useState<string[]>(DEFAULT_CRITERIA)
 
   const focusElement = allElements.find((e: any) => e.id === focusElementId)
   const isSpaceSegment = focusElement?.segment === 'space'
@@ -35,7 +42,7 @@ export function DecisionPanel() {
   return (
     <div style={{ padding: '0.5rem 1rem', fontSize: '0.75rem', overflow: 'auto', maxHeight: '100%' }}>
       <div style={{ fontWeight: 600, fontSize: '0.78rem', marginBottom: '0.5rem', color: '#f59e0b' }}>
-        Decision Support — Level {currentLevel}
+        {t('Decision Support — Level {{level}}', { level: currentLevel })}
       </div>
 
       {/* Decision categorization — always shown */}
@@ -64,6 +71,7 @@ export function DecisionPanel() {
 // ─── Mission Trade: Space vs Non-Space ───
 
 function MissionTradeWidget({ studyId }: { studyId: string | null }) {
+  const { t } = useTranslation()
   const [result, setResult] = useState<any>(null)
   const [loading, setLoading] = useState(false)
   const [gsd, setGsd] = useState('5')
@@ -92,14 +100,14 @@ function MissionTradeWidget({ studyId }: { studyId: string | null }) {
   }
 
   return (
-    <ToolSection title="Mission Trade: Space vs Alternatives" color="#3b82f6">
+    <ToolSection title={t('Mission Trade: Space vs Alternatives')} color="#3b82f6">
       <div style={{ display: 'flex', gap: '0.3rem', marginBottom: '0.3rem', flexWrap: 'wrap' }}>
-        <label style={labelStyle}>GSD (m): <input type="number" value={gsd} onChange={e => setGsd(e.target.value)} style={inputStyle} /></label>
-        <label style={labelStyle}>Revisit (days): <input type="number" value={revisit} onChange={e => setRevisit(e.target.value)} style={inputStyle} /></label>
-        <label style={labelStyle}>Budget (kEUR/yr): <input type="number" value={budget} onChange={e => setBudget(e.target.value)} style={inputStyle} /></label>
+        <label style={labelStyle}>{t('GSD (m):')} <input type="number" value={gsd} onChange={e => setGsd(e.target.value)} style={inputStyle} /></label>
+        <label style={labelStyle}>{t('Revisit (days):')} <input type="number" value={revisit} onChange={e => setRevisit(e.target.value)} style={inputStyle} /></label>
+        <label style={labelStyle}>{t('Budget (kEUR/yr):')} <input type="number" value={budget} onChange={e => setBudget(e.target.value)} style={inputStyle} /></label>
       </div>
       <button onClick={runTrade} disabled={loading} style={btnStyle}>
-        {loading ? 'Analysing...' : 'Evaluate Alternatives'}
+        {loading ? t('Analysing...') : t('Evaluate Alternatives')}
       </button>
       {result?.alternatives && (
         <div style={{ marginTop: '0.4rem' }}>
@@ -120,7 +128,7 @@ function MissionTradeWidget({ studyId }: { studyId: string | null }) {
                 <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)' }}>{alt.description}</div>
                 {alt.gsd_m && (
                   <div style={{ fontSize: '0.55rem', color: 'var(--text-secondary)', marginTop: '0.1rem' }}>
-                    GSD: {alt.gsd_m}m | Revisit: {alt.revisit_days}d | Cost: {alt.annual_cost_keur} kEUR/yr
+                    {t('GSD: {{gsd}}m | Revisit: {{revisit}}d | Cost: {{cost}} kEUR/yr', { gsd: alt.gsd_m, revisit: alt.revisit_days, cost: alt.annual_cost_keur })}
                   </div>
                 )}
               </div>
@@ -140,6 +148,7 @@ function MissionTradeWidget({ studyId }: { studyId: string | null }) {
 // ─── Orbit Trade ───
 
 function OrbitTradeWidget({ studyId }: { studyId: string | null }) {
+  const { t } = useTranslation()
   const [result, setResult] = useState<any>(null)
   const [loading, setLoading] = useState(false)
   const qc = useQueryClient()
@@ -154,23 +163,23 @@ function OrbitTradeWidget({ studyId }: { studyId: string | null }) {
   }
 
   return (
-    <ToolSection title="Orbit Trade Study" color="#8b5cf6">
+    <ToolSection title={t('Orbit Trade Study')} color="#8b5cf6">
       <button onClick={runTrade} disabled={loading} style={btnStyle}>
-        {loading ? 'Computing...' : 'Evaluate Orbit Options'}
+        {loading ? t('Computing...') : t('Evaluate Orbit Options')}
       </button>
       {result?.candidates && (
         <div style={{ marginTop: '0.4rem' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.65rem' }}>
             <thead>
               <tr style={{ borderBottom: '1px solid var(--border)' }}>
-                <th style={thL}>Orbit</th>
-                <th style={thR}>Alt</th>
-                <th style={thR}>Inc</th>
+                <th style={thL}>{t('Orbit')}</th>
+                <th style={thR}>{t('Alt', { context: 'column' })}</th>
+                <th style={thR}>{t('Inc', { context: 'column' })}</th>
                 <th style={thR}>GSD</th>
-                <th style={thR}>Revisit</th>
-                <th style={thR}>Lifetime</th>
-                <th style={thR}>Score</th>
-                <th style={thC}>Deorbit</th>
+                <th style={thR}>{t('Revisit')}</th>
+                <th style={thR}>{t('Lifetime')}</th>
+                <th style={thR}>{t('Score')}</th>
+                <th style={thC}>{t('Deorbit')}</th>
                 <th style={thC}></th>
               </tr>
             </thead>
@@ -196,7 +205,7 @@ function OrbitTradeWidget({ studyId }: { studyId: string | null }) {
                       // Apply this orbit to the focused spacecraft element
                       const fid = useUIStore.getState().focusElementId
                       const sid = useUIStore.getState().studyId
-                      if (!fid || !sid) { alert('Drill into a spacecraft element first'); return }
+                      if (!fid || !sid) { alert(i18n.t('Drill into a spacecraft element first')); return }
                       const els: any[] = qc.getQueryData(['elements', sid]) || []
                       const el = els.find((e: any) => e.id === fid)
                       if (!el) return
@@ -208,9 +217,9 @@ function OrbitTradeWidget({ studyId }: { studyId: string | null }) {
                         }),
                       })
                       qc.invalidateQueries({ queryKey: ['elements'] })
-                      alert(`Applied: ${c.name} (${c.altitude_km}km, ${c.inclination_deg}°)`)
+                      alert(i18n.t('Applied: {{name}} ({{alt}}km, {{incl}}°)', { name: c.name, alt: c.altitude_km, incl: c.inclination_deg }))
                     }} style={{ ...btnStyle, fontSize: '0.5rem', padding: '0.1rem 0.3rem', background: 'var(--success)' }}>
-                      Apply
+                      {t('Apply')}
                     </button>
                   </td>
                 </tr>
@@ -226,6 +235,7 @@ function OrbitTradeWidget({ studyId }: { studyId: string | null }) {
 // ─── Constellation Sizing ───
 
 function ConstellationWidget({ studyId }: { studyId: string | null }) {
+  const { t } = useTranslation()
   const [result, setResult] = useState<any>(null)
   const [loading, setLoading] = useState(false)
   const qc = useQueryClient()
@@ -250,14 +260,14 @@ function ConstellationWidget({ studyId }: { studyId: string | null }) {
   }
 
   return (
-    <ToolSection title="Constellation Sizing" color="#06b6d4">
+    <ToolSection title={t('Constellation Sizing')} color="#06b6d4">
       <div style={{ display: 'flex', gap: '0.3rem', marginBottom: '0.3rem', flexWrap: 'wrap' }}>
-        <label style={labelStyle}>Alt (km): <input type="number" value={altitude} onChange={e => setAltitude(e.target.value)} style={inputStyle} /></label>
-        <label style={labelStyle}>Inc (°): <input type="number" value={inclination} onChange={e => setInclination(e.target.value)} style={inputStyle} /></label>
-        <label style={labelStyle}>Revisit (h): <input type="number" value={revisitHours} onChange={e => setRevisitHours(e.target.value)} style={inputStyle} /></label>
+        <label style={labelStyle}>{t('Alt (km):')} <input type="number" value={altitude} onChange={e => setAltitude(e.target.value)} style={inputStyle} /></label>
+        <label style={labelStyle}>{t('Inc (°):')} <input type="number" value={inclination} onChange={e => setInclination(e.target.value)} style={inputStyle} /></label>
+        <label style={labelStyle}>{t('Revisit (h):')} <input type="number" value={revisitHours} onChange={e => setRevisitHours(e.target.value)} style={inputStyle} /></label>
       </div>
       <button onClick={runDesign} disabled={loading} style={btnStyle}>
-        {loading ? 'Computing...' : 'Size Constellation'}
+        {loading ? t('Computing...') : t('Size Constellation')}
       </button>
       {result && (
         <div style={{ marginTop: '0.4rem', fontSize: '0.68rem' }}>
@@ -265,22 +275,22 @@ function ConstellationWidget({ studyId }: { studyId: string | null }) {
             <div key={i} style={rowStyle}>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span style={{ fontWeight: 600 }}>
-                  {opt.walker_notation || `${opt.num_planes || opt.planes}P × ${opt.sats_per_plane}S = ${opt.total_satellites || opt.total_sats} sats`}
+                  {opt.walker_notation || t('{{planes}}P × {{sats}}S = {{total}} sats', { planes: opt.num_planes || opt.planes, sats: opt.sats_per_plane, total: opt.total_satellites || opt.total_sats })}
                 </span>
                 <span style={{ color: 'var(--accent)', fontFamily: 'monospace' }}>
                   {opt.total_cost_meur != null ? `${opt.total_cost_meur.toFixed(1)}M€` : ''}
                 </span>
               </div>
               <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)' }}>
-                Revisit: {(opt.max_revisit_hours || opt.revisit_hours)?.toFixed(1)}h max, {(opt.mean_revisit_hours)?.toFixed(1)}h mean
-                {opt.coverage_percent != null && ` | Coverage: ${opt.coverage_percent.toFixed(0)}%`}
-                {opt.total_mass_kg != null && ` | Mass: ${opt.total_mass_kg}kg`}
-                {opt.spares != null && ` | Spares: ${opt.spares}`}
+                {t('Revisit: {{max}}h max, {{mean}}h mean', { max: (opt.max_revisit_hours || opt.revisit_hours)?.toFixed(1), mean: (opt.mean_revisit_hours)?.toFixed(1) })}
+                {opt.coverage_percent != null && t(' | Coverage: {{pct}}%', { pct: opt.coverage_percent.toFixed(0) })}
+                {opt.total_mass_kg != null && t(' | Mass: {{mass}}kg', { mass: opt.total_mass_kg })}
+                {opt.spares != null && t(' | Spares: {{n}}', { n: opt.spares })}
               </div>
               <button onClick={async () => {
                 const fid = useUIStore.getState().focusElementId
                 const sid = useUIStore.getState().studyId
-                if (!fid || !sid) { alert('Drill into a spacecraft element first'); return }
+                if (!fid || !sid) { alert(i18n.t('Drill into a spacecraft element first')); return }
                 const els: any[] = qc.getQueryData(['elements', sid]) || []
                 const el = els.find((e: any) => e.id === fid)
                 if (!el) return
@@ -293,15 +303,15 @@ function ConstellationWidget({ studyId }: { studyId: string | null }) {
                   }),
                 })
                 qc.invalidateQueries({ queryKey: ['elements'] })
-                alert(`Applied: ${opt.walker_notation || `${opt.total_satellites} sats`}`)
+                alert(i18n.t('Applied: {{what}}', { what: opt.walker_notation || i18n.t('{{n}} sats', { n: opt.total_satellites }) }))
               }} style={{ ...btnStyle, fontSize: '0.55rem', padding: '0.1rem 0.3rem', background: 'var(--success)', marginTop: '0.15rem' }}>
-                Apply to Design
+                {t('Apply to Design')}
               </button>
             </div>
           ))}
           {result.count != null && (
             <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
-              {result.count} configurations evaluated
+              {t('{{count}} configurations evaluated', { count: result.count })}
             </div>
           )}
         </div>
@@ -313,6 +323,7 @@ function ConstellationWidget({ studyId }: { studyId: string | null }) {
 // ─── Ground Segment Trade ───
 
 function GroundTradeWidget({ studyId }: { studyId: string | null }) {
+  const { t } = useTranslation()
   const [result, setResult] = useState<any>(null)
   const [loading, setLoading] = useState(false)
 
@@ -326,9 +337,9 @@ function GroundTradeWidget({ studyId }: { studyId: string | null }) {
   }
 
   return (
-    <ToolSection title="Ground Segment Trade" color="#10b981">
+    <ToolSection title={t('Ground Segment Trade')} color="#10b981">
       <button onClick={runTrade} disabled={loading} style={btnStyle}>
-        {loading ? 'Analysing...' : 'Evaluate Ground Architectures'}
+        {loading ? t('Analysing...') : t('Evaluate Ground Architectures')}
       </button>
       {result?.alternatives && (
         <div style={{ marginTop: '0.4rem' }}>
@@ -340,8 +351,8 @@ function GroundTradeWidget({ studyId }: { studyId: string | null }) {
               </div>
               <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)' }}>
                 {alt.stations?.join(', ') || alt.description}
-                {alt.contact_minutes_per_day && ` | ${alt.contact_minutes_per_day.toFixed(0)} min/day contact`}
-                {alt.annual_cost_keur && ` | ${alt.annual_cost_keur} kEUR/yr`}
+                {alt.contact_minutes_per_day && t(' | {{min}} min/day contact', { min: alt.contact_minutes_per_day.toFixed(0) })}
+                {alt.annual_cost_keur && t(' | {{cost}} kEUR/yr', { cost: alt.annual_cost_keur })}
               </div>
             </div>
           ))}
@@ -359,6 +370,7 @@ function GroundTradeWidget({ studyId }: { studyId: string | null }) {
 // ─── Contact Schedule ───
 
 function ContactScheduleWidget({ studyId }: { studyId: string | null }) {
+  const { t } = useTranslation()
   const [result, setResult] = useState<any>(null)
   const [loading, setLoading] = useState(false)
   const qc = useQueryClient()
@@ -410,27 +422,25 @@ function ContactScheduleWidget({ studyId }: { studyId: string | null }) {
   }
 
   return (
-    <ToolSection title="Ground Contact Schedule" color="#0ea5e9">
+    <ToolSection title={t('Ground Contact Schedule')} color="#0ea5e9">
       <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', marginBottom: '0.2rem' }}>
-        Uses your design's orbit parameters and ground stations from the element tree.
+        {t("Uses your design's orbit parameters and ground stations from the element tree.")}
       </div>
       <button onClick={runSchedule} disabled={loading} style={btnStyle}>
-        {loading ? 'Computing...' : 'Predict Contact Windows'}
+        {loading ? t('Computing...') : t('Predict Contact Windows')}
       </button>
       {result?._design_context && (
         <div style={{ fontSize: '0.55rem', color: 'var(--info)', marginTop: '0.2rem' }}>
-          Using: {result._design_context.altitude}km, {result._design_context.inclination}° inc,
-          {result._design_context.ground_stations} ground station{result._design_context.ground_stations !== 1 ? 's' : ''},
-          {result._design_context.spacecraft} spacecraft
+          {t('Using: {{alt}}km, {{incl}}° inc, {{count}} ground stations, {{sc}} spacecraft', { alt: result._design_context.altitude, incl: result._design_context.inclination, count: result._design_context.ground_stations, sc: result._design_context.spacecraft, defaultValue_one: 'Using: {{alt}}km, {{incl}}° inc, {{count}} ground station, {{sc}} spacecraft' })}
         </div>
       )}
       {result && (
         <div style={{ marginTop: '0.4rem', fontSize: '0.68rem' }}>
           {(result.coverage_stats || result.contacts) && (
             <div style={rowStyle}>
-              <span>Contacts: <b>{result.contacts?.length || result.coverage_stats?.total_passes_per_day || '?'}</b></span>
+              <span>{t('Contacts:')} <b>{result.contacts?.length || result.coverage_stats?.total_passes_per_day || '?'}</b></span>
               {result.coverage_stats?.total_contact_minutes_per_day && (
-                <span style={{ marginLeft: '0.5rem' }}>Contact: <b>{result.coverage_stats.total_contact_minutes_per_day.toFixed(1)} min/day</b></span>
+                <span style={{ marginLeft: '0.5rem' }}>{t('Contact:')} <b>{t('{{min}} min/day', { min: result.coverage_stats.total_contact_minutes_per_day.toFixed(1) })}</b></span>
               )}
             </div>
           )}
@@ -439,7 +449,7 @@ function ContactScheduleWidget({ studyId }: { studyId: string | null }) {
             return (
               <div key={i} style={{ padding: '0.15rem 0.3rem', fontSize: '0.6rem', color: 'var(--text-secondary)', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
                 <span style={{ fontWeight: 500, color: 'var(--text-primary)' }}>{w.station || w.station_id}</span>
-                {' '}{dur.toFixed(1)} min | max el: {w.max_elevation_deg?.toFixed(0)}°
+                {' '}{t('{{dur}} min | max el: {{el}}°', { dur: dur.toFixed(1), el: w.max_elevation_deg?.toFixed(0) })}
                 {w.data_volume_mbit && ` | ${(w.data_volume_mbit / 1000).toFixed(1)} Gbit`}
               </div>
             )
@@ -453,9 +463,10 @@ function ContactScheduleWidget({ studyId }: { studyId: string | null }) {
 // ─── Pugh Matrix ───
 
 function PughMatrixWidget({ weights, criteria, onCriteriaChanged }: { weights?: Record<string, number>; criteria: string[]; onCriteriaChanged: (c: string[]) => void }) {
+  const { t } = useTranslation()
   const loadSaved = () => { try { const s = localStorage.getItem('spacecdf-pugh'); return s ? JSON.parse(s) : null } catch { return null } }
   const saved = loadSaved()
-  const [options, setOptions] = useState<string[]>(saved?.options || ['Option A', 'Option B', 'Option C'])
+  const [options, setOptions] = useState<string[]>(saved?.options || [t('Option A'), t('Option B'), t('Option C')])
   const [datum, setDatum] = useState(saved?.datum || 0)
   const [scores, setScores] = useState<Record<string, Record<string, number>>>(saved?.scores || {})
   const [newCriterion, setNewCriterion] = useState('')
@@ -490,20 +501,20 @@ function PughMatrixWidget({ weights, criteria, onCriteriaChanged }: { weights?: 
   const best = totals.reduce((bi, t, i) => (i !== datum && t.weighted > (totals[bi]?.weighted ?? -999) ? i : bi), datum === 0 ? 1 : 0)
 
   return (
-    <ToolSection title={`Pugh Matrix${hasWeights ? ' (Weighted)' : ' (Unweighted)'}`} color="#ec4899">
+    <ToolSection title={hasWeights ? t('Pugh Matrix (Weighted)') : t('Pugh Matrix (Unweighted)')} color="#ec4899">
       <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
-        Score each option vs datum: +2 much better, +1 better, 0 same, −1 worse, −2 much worse.
-        {hasWeights ? ' Weights from pairwise comparison applied.' : ' Define weights above for weighted scoring.'}
+        {t('Score each option vs datum: +2 much better, +1 better, 0 same, −1 worse, −2 much worse.')}
+        {' '}{hasWeights ? t('Weights from pairwise comparison applied.') : t('Define weights above for weighted scoring.')}
       </div>
 
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.65rem', marginBottom: '0.3rem' }}>
         <thead>
           <tr style={{ borderBottom: '1px solid var(--border)' }}>
-            <th style={thL}>Criteria</th>
-            {hasWeights && <th style={thR}>Wt</th>}
+            <th style={thL}>{t('Criteria')}</th>
+            {hasWeights && <th style={thR}>{t('Wt')}</th>}
             {options.map((opt, i) => (
               <th key={opt} style={{ ...thC, background: i === datum ? 'rgba(59,130,246,0.1)' : i === best ? 'rgba(16,185,129,0.1)' : undefined, cursor: 'pointer' }}
-                onClick={() => setDatum(i)} title="Click to set as datum">
+                onClick={() => setDatum(i)} title={t('Click to set as datum')}>
                 {opt} {i === datum ? '(D)' : i === best ? '★' : ''}
               </th>
             ))}
@@ -512,7 +523,7 @@ function PughMatrixWidget({ weights, criteria, onCriteriaChanged }: { weights?: 
         <tbody>
           {criteria.map(crit => (
             <tr key={crit} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-              <td style={{ padding: '0.15rem 0.3rem', fontWeight: 500 }}>{crit}</td>
+              <td style={{ padding: '0.15rem 0.3rem', fontWeight: 500 }}>{t(crit, { context: 'criterion' })}</td>
               {hasWeights && <td style={{ padding: '0.15rem 0.3rem', textAlign: 'right', fontSize: '0.55rem', color: 'var(--accent)' }}>{((weights?.[crit] ?? 0) * 100).toFixed(0)}%</td>}
               {options.map((opt, i) => (
                 <td key={opt} style={{ padding: '0.15rem', textAlign: 'center' }}>
@@ -527,11 +538,11 @@ function PughMatrixWidget({ weights, criteria, onCriteriaChanged }: { weights?: 
             </tr>
           ))}
           <tr style={{ borderTop: '2px solid var(--border)' }}>
-            <td style={{ padding: '0.2rem 0.3rem', fontWeight: 700 }}>{hasWeights ? 'Weighted Total' : 'Total'}</td>
+            <td style={{ padding: '0.2rem 0.3rem', fontWeight: 700 }}>{hasWeights ? t('Weighted Total') : t('Total')}</td>
             {hasWeights && <td />}
-            {totals.map((t, i) => (
-              <td key={i} style={{ padding: '0.2rem', textAlign: 'center', fontWeight: 700, color: i === datum ? 'var(--text-secondary)' : i === best ? 'var(--success)' : t.weighted > 0 ? 'var(--success)' : t.weighted < 0 ? 'var(--danger)' : 'var(--text-primary)' }}>
-                {i === datum ? '—' : hasWeights ? t.weighted.toFixed(2) : t.unweighted}
+            {totals.map((tot, i) => (
+              <td key={i} style={{ padding: '0.2rem', textAlign: 'center', fontWeight: 700, color: i === datum ? 'var(--text-secondary)' : i === best ? 'var(--success)' : tot.weighted > 0 ? 'var(--success)' : tot.weighted < 0 ? 'var(--danger)' : 'var(--text-primary)' }}>
+                {i === datum ? '—' : hasWeights ? tot.weighted.toFixed(2) : tot.unweighted}
               </td>
             ))}
           </tr>
@@ -539,9 +550,9 @@ function PughMatrixWidget({ weights, criteria, onCriteriaChanged }: { weights?: 
       </table>
 
       <div style={{ display: 'flex', gap: '0.2rem', flexWrap: 'wrap' }}>
-        <input value={newCriterion} onChange={e => setNewCriterion(e.target.value)} placeholder="+ criterion" style={{ ...inputStyle, width: 80 }}
+        <input value={newCriterion} onChange={e => setNewCriterion(e.target.value)} placeholder={t('+ criterion')} style={{ ...inputStyle, width: 80 }}
           onKeyDown={e => { if (e.key === 'Enter' && newCriterion) { onCriteriaChanged([...criteria, newCriterion]); setNewCriterion('') } }} />
-        <input value={newOption} onChange={e => setNewOption(e.target.value)} placeholder="+ option" style={{ ...inputStyle, width: 80 }}
+        <input value={newOption} onChange={e => setNewOption(e.target.value)} placeholder={t('+ option')} style={{ ...inputStyle, width: 80 }}
           onKeyDown={e => { if (e.key === 'Enter' && newOption) { setOptions(p => [...p, newOption]); setNewOption('') } }} />
       </div>
     </ToolSection>
@@ -555,6 +566,7 @@ function PairwiseWeightingWidget({ onWeightsChanged, criteria, onCriteriaChanged
   criteria: string[]
   onCriteriaChanged: (c: string[]) => void
 }) {
+  const { t } = useTranslation()
   const [comparisons, setComparisons] = useState<Record<string, number>>({})
   const [newCrit, setNewCrit] = useState('')
 
@@ -595,19 +607,19 @@ function PairwiseWeightingWidget({ onWeightsChanged, criteria, onCriteriaChanged
   }
 
   return (
-    <ToolSection title="Pairwise Comparison Weighting" color="#8b5cf6">
+    <ToolSection title={t('Pairwise Comparison Weighting')} color="#8b5cf6">
       <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
-        For each pair: which criterion is more important? 1 = left wins, 0.5 = equal, 0 = right wins
+        {t('For each pair: which criterion is more important? 1 = left wins, 0.5 = equal, 0 = right wins')}
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', marginBottom: '0.4rem' }}>
         {pairs.map(([a, b]) => (
           <div key={`${a}-${b}`} style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.65rem' }}>
-            <span style={{ width: 60, textAlign: 'right', fontWeight: 500 }}>{a}</span>
+            <span style={{ width: 60, textAlign: 'right', fontWeight: 500 }}>{t(a, { context: 'criterion' })}</span>
             <input type="range" min={0} max={1} step={0.5} value={comparisons[pairKey(a, b)] ?? 0.5}
               onChange={e => setComparison(a, b, parseFloat(e.target.value))}
               style={{ width: 80 }} />
-            <span style={{ width: 60, fontWeight: 500 }}>{b}</span>
+            <span style={{ width: 60, fontWeight: 500 }}>{t(b, { context: 'criterion' })}</span>
             <span style={{ fontSize: '0.55rem', color: 'var(--text-secondary)', width: 20 }}>
               {(comparisons[pairKey(a, b)] ?? 0.5) === 1 ? '←' : (comparisons[pairKey(a, b)] ?? 0.5) === 0 ? '→' : '='}
             </span>
@@ -616,17 +628,17 @@ function PairwiseWeightingWidget({ onWeightsChanged, criteria, onCriteriaChanged
       </div>
 
       {/* Derived weights */}
-      <div style={{ fontSize: '0.65rem', fontWeight: 600, marginBottom: '0.2rem', color: 'var(--text-secondary)' }}>Derived Weights:</div>
+      <div style={{ fontSize: '0.65rem', fontWeight: 600, marginBottom: '0.2rem', color: 'var(--text-secondary)' }}>{t('Derived Weights:')}</div>
       <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap' }}>
         {normalizedWeights.sort((a, b) => b.weight - a.weight).map(w => (
           <div key={w.criterion} style={{ padding: '0.15rem 0.4rem', borderRadius: '3px', background: 'var(--bg-card)', fontSize: '0.65rem' }}>
-            <span style={{ fontWeight: 500 }}>{w.criterion}</span>
+            <span style={{ fontWeight: 500 }}>{t(w.criterion, { context: 'criterion' })}</span>
             <span style={{ marginLeft: '0.3rem', color: 'var(--accent)', fontWeight: 600 }}>{(w.weight * 100).toFixed(0)}%</span>
           </div>
         ))}
       </div>
 
-      <input value={newCrit} onChange={e => setNewCrit(e.target.value)} placeholder="+ criterion"
+      <input value={newCrit} onChange={e => setNewCrit(e.target.value)} placeholder={t('+ criterion')}
         style={{ ...inputStyle, marginTop: '0.3rem', width: 100 }}
         onKeyDown={e => { if (e.key === 'Enter' && newCrit) { onCriteriaChanged([...criteria, newCrit]); setNewCrit('') } }} />
     </ToolSection>
@@ -636,6 +648,7 @@ function PairwiseWeightingWidget({ onWeightsChanged, criteria, onCriteriaChanged
 // ─── Constellation Cost Learning Curve ───
 
 function CostLearningCurveWidget() {
+  const { t } = useTranslation()
   const [unitCost, setUnitCost] = useState('500')
   const [quantity, setQuantity] = useState('12')
   const [learningRate, setLearningRate] = useState('0.90')
@@ -656,17 +669,17 @@ function CostLearningCurveWidget() {
   const avgCost = n > 0 ? Math.round(cumulative / n) : 0
 
   return (
-    <ToolSection title="Constellation Cost Learning Curve" color="#f59e0b">
+    <ToolSection title={t('Constellation Cost Learning Curve')} color="#f59e0b">
       <div style={{ display: 'flex', gap: '0.3rem', marginBottom: '0.3rem', flexWrap: 'wrap' }}>
-        <label style={labelStyle}>First unit (kEUR): <input type="number" value={unitCost} onChange={e => setUnitCost(e.target.value)} style={inputStyle} /></label>
-        <label style={labelStyle}>Quantity: <input type="number" value={quantity} onChange={e => setQuantity(e.target.value)} style={inputStyle} /></label>
-        <label style={labelStyle}>Learning rate: <input type="number" value={learningRate} onChange={e => setLearningRate(e.target.value)} step="0.01" min="0.7" max="1.0" style={inputStyle} /></label>
+        <label style={labelStyle}>{t('First unit (kEUR):')} <input type="number" value={unitCost} onChange={e => setUnitCost(e.target.value)} style={inputStyle} /></label>
+        <label style={labelStyle}>{t('Quantity:')} <input type="number" value={quantity} onChange={e => setQuantity(e.target.value)} style={inputStyle} /></label>
+        <label style={labelStyle}>{t('Learning rate:')} <input type="number" value={learningRate} onChange={e => setLearningRate(e.target.value)} step="0.01" min="0.7" max="1.0" style={inputStyle} /></label>
       </div>
 
       <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '0.3rem', fontSize: '0.68rem' }}>
-        <span>Total: <b>{Math.round(cumulative).toLocaleString()} kEUR</b></span>
-        <span>Average: <b>{avgCost.toLocaleString()} kEUR/unit</b></span>
-        <span>Savings vs flat: <b>{Math.round((1 - cumulative / (c1 * n)) * 100)}%</b></span>
+        <span>{t('Total:')} <b>{fmtProse(Math.round(cumulative))} kEUR</b></span>
+        <span>{t('Average:')} <b>{t('{{cost}} kEUR/unit', { cost: fmtProse(avgCost) })}</b></span>
+        <span>{t('Savings vs flat:')} <b>{Math.round((1 - cumulative / (c1 * n)) * 100)}%</b></span>
       </div>
 
       {/* Mini bar chart */}
@@ -676,11 +689,11 @@ function CostLearningCurveWidget() {
             flex: 1, background: 'var(--accent)',
             height: `${(u.cost / c1) * 100}%`,
             borderRadius: '2px 2px 0 0', minWidth: 3,
-          }} title={`Unit ${u.unit}: ${u.cost} kEUR`} />
+          }} title={t('Unit {{n}}: {{cost}} kEUR', { n: u.unit, cost: u.cost })} />
         ))}
       </div>
       <div style={{ fontSize: '0.55rem', color: 'var(--text-secondary)', textAlign: 'center' }}>
-        Unit cost decreases with production experience (Wright learning curve)
+        {t('Unit cost decreases with production experience (Wright learning curve)')}
       </div>
     </ToolSection>
   )
@@ -690,7 +703,11 @@ function CostLearningCurveWidget() {
 
 // ─── 3-Bin Decision Categorizer ───
 
-const DECISION_ITEMS_BY_LEVEL: Record<number, Array<{ item: string; category: 'obvious' | 'trade' | 'explore'; rationale: string }>> = {
+type DecisionItems = Record<number, Array<{ item: string; category: 'obvious' | 'trade' | 'explore'; rationale: string }>>
+
+// English text is the i18n key: item and rationale are translated at render time
+// (split in two literals so each stays short enough for the i18n key scanner).
+const DECISION_ITEMS_L01: DecisionItems = {
   0: [
     { item: 'Orbit type (SSO for EO)', category: 'obvious', rationale: 'SSO is standard for EO; other types for comms/science' },
     { item: 'Mission vs non-space alternative', category: 'trade', rationale: 'Commercial data may meet needs at lower cost — run mission trade' },
@@ -706,6 +723,10 @@ const DECISION_ITEMS_BY_LEVEL: Record<number, Array<{ item: string; category: 'o
     { item: 'Inter-satellite links', category: 'explore', rationale: 'Reduces ground dependency but adds mass/power/complexity' },
     { item: 'Operations concept (autonomous vs manual)', category: 'explore', rationale: 'Drives staffing, software, ground segment design' },
   ],
+}
+
+// English text is the i18n key (continued).
+const DECISION_ITEMS_L234: DecisionItems = {
   2: [
     { item: 'AOCS architecture', category: 'trade', rationale: 'Pointing requirement drives 3-axis/spin/gravity-gradient — see arch trades' },
     { item: 'EPS topology (MPPT vs DET)', category: 'trade', rationale: 'Power regulation approach trades efficiency vs complexity' },
@@ -722,33 +743,37 @@ const DECISION_ITEMS_BY_LEVEL: Record<number, Array<{ item: string; category: 'o
   4: [],
 }
 
+const DECISION_ITEMS_BY_LEVEL: DecisionItems = { ...DECISION_ITEMS_L01, ...DECISION_ITEMS_L234 }
+
 const BIN_COLORS = { obvious: '#10b981', trade: '#f59e0b', explore: '#8b5cf6' }
+// English text is the i18n key.
 const BIN_LABELS = { obvious: 'Obvious Choice', trade: 'Trade Study', explore: 'Design Space' }
 const BIN_ICONS = { obvious: '✓', trade: '⇄', explore: '?' }
 
 function DecisionCategorizer({ currentLevel, focusElement }: { currentLevel: number; focusElement: any }) {
+  const { t } = useTranslation()
   const items = DECISION_ITEMS_BY_LEVEL[currentLevel] || []
   if (items.length === 0) return null
 
   const bins = { obvious: items.filter(i => i.category === 'obvious'), trade: items.filter(i => i.category === 'trade'), explore: items.filter(i => i.category === 'explore') }
 
   return (
-    <ToolSection title="Decision Categorization" color="#06b6d4">
+    <ToolSection title={t('Decision Categorization')} color="#06b6d4">
       <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
-        Categorize decisions at this level: what's obvious, what needs a trade, what needs exploration.
+        {t("Categorize decisions at this level: what's obvious, what needs a trade, what needs exploration.")}
       </div>
       <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '0.2rem' }}>
         {(['obvious', 'trade', 'explore'] as const).map(bin => (
           <div key={bin} style={{ flex: 1, fontSize: '0.55rem', textAlign: 'center', padding: '0.15rem', borderRadius: '3px', background: `${BIN_COLORS[bin]}15`, color: BIN_COLORS[bin], fontWeight: 700 }}>
-            {BIN_ICONS[bin]} {BIN_LABELS[bin]} ({bins[bin].length})
+            {BIN_ICONS[bin]} {t(BIN_LABELS[bin])} ({bins[bin].length})
           </div>
         ))}
       </div>
       {items.map((item, i) => (
         <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', padding: '0.15rem 0.3rem', fontSize: '0.63rem', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
           <span style={{ width: 6, height: 6, borderRadius: '50%', background: BIN_COLORS[item.category], flexShrink: 0 }} />
-          <span style={{ fontWeight: 500, flex: 1 }}>{item.item}</span>
-          <span style={{ color: 'var(--text-secondary)', fontSize: '0.55rem', maxWidth: 200 }}>{item.rationale}</span>
+          <span style={{ fontWeight: 500, flex: 1 }}>{t(item.item)}</span>
+          <span style={{ color: 'var(--text-secondary)', fontSize: '0.55rem', maxWidth: 200 }}>{t(item.rationale)}</span>
         </div>
       ))}
     </ToolSection>
@@ -757,7 +782,10 @@ function DecisionCategorizer({ currentLevel, focusElement }: { currentLevel: num
 
 // ─── Architecture Trade Templates ───
 
-const ARCH_TRADES: Record<string, Array<{ name: string; driver: string; options: Array<{ name: string; when: string }> }>> = {
+type ArchTrades = Record<string, Array<{ name: string; driver: string; options: Array<{ name: string; when: string }> }>>
+
+// English text is the i18n key: name/driver/option name/when are translated at render time.
+const ARCH_TRADES_AOCS_EPS: ArchTrades = {
   aocs: [
     { name: 'AOCS Architecture', driver: 'Pointing accuracy requirement',
       options: [
@@ -778,6 +806,10 @@ const ARCH_TRADES: Record<string, Array<{ name: string; driver: string; options:
       ],
     },
   ],
+}
+
+// English text is the i18n key: name/driver/option name/when are translated at render time.
+const ARCH_TRADES_TTC_PROP: ArchTrades = {
   ttc: [
     { name: 'TTC Architecture', driver: 'Data rate and ground station infrastructure',
       options: [
@@ -800,6 +832,10 @@ const ARCH_TRADES: Record<string, Array<{ name: string; driver: string; options:
       ],
     },
   ],
+}
+
+// English text is the i18n key: name/driver/option name/when are translated at render time.
+const ARCH_TRADES_THERMAL: ArchTrades = {
   thermal: [
     { name: 'Thermal Architecture', driver: 'Internal dissipation and orbit environment',
       options: [
@@ -812,24 +848,27 @@ const ARCH_TRADES: Record<string, Array<{ name: string; driver: string; options:
   ],
 }
 
+const ARCH_TRADES: ArchTrades = { ...ARCH_TRADES_AOCS_EPS, ...ARCH_TRADES_TTC_PROP, ...ARCH_TRADES_THERMAL }
+
 function ArchitectureTradeWidget({ currentLevel, focusElement }: { currentLevel: number; focusElement: any }) {
+  const { t } = useTranslation()
   const domain = focusElement?.subsystem_domain
   const trades = domain ? (ARCH_TRADES[domain] || []) : (currentLevel === 2 ? Object.values(ARCH_TRADES).flat() : [])
   if (trades.length === 0) return null
 
   return (
-    <ToolSection title="Architecture Trades" color="#ec4899">
+    <ToolSection title={t('Architecture Trades')} color="#ec4899">
       <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
-        Which architecture is right? The driving requirement determines the answer.
+        {t('Which architecture is right? The driving requirement determines the answer.')}
       </div>
       {trades.map((trade, i) => (
         <div key={i} style={{ marginBottom: '0.4rem' }}>
-          <div style={{ fontWeight: 600, fontSize: '0.68rem', marginBottom: '0.1rem' }}>{trade.name}</div>
-          <div style={{ fontSize: '0.6rem', color: 'var(--warning)', marginBottom: '0.2rem' }}>Driver: {trade.driver}</div>
+          <div style={{ fontWeight: 600, fontSize: '0.68rem', marginBottom: '0.1rem' }}>{t(trade.name)}</div>
+          <div style={{ fontSize: '0.6rem', color: 'var(--warning)', marginBottom: '0.2rem' }}>{t('Driver: {{driver}}', { driver: t(trade.driver) })}</div>
           {trade.options.map((opt, j) => (
             <div key={j} style={{ display: 'flex', gap: '0.3rem', padding: '0.1rem 0.3rem', fontSize: '0.6rem', borderLeft: '2px solid var(--border)', marginLeft: '0.3rem', marginBottom: '0.1rem' }}>
-              <span style={{ fontWeight: 500, minWidth: 120 }}>{opt.name}</span>
-              <span style={{ color: 'var(--text-secondary)' }}>→ {opt.when}</span>
+              <span style={{ fontWeight: 500, minWidth: 120 }}>{t(opt.name)}</span>
+              <span style={{ color: 'var(--text-secondary)' }}>→ {t(opt.when)}</span>
             </div>
           ))}
         </div>

@@ -19,6 +19,8 @@
  */
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
+import type { TFunction } from 'i18next'
 import { SVGLineChart, type Band, type LineSeries } from '../charts/SVGLineChart'
 import type {
   AnalysisConflict, GroundSegmentRun, GroundSegmentRunResponse, GroundSegmentSeries, GroundStationRow,
@@ -34,6 +36,11 @@ const SEVERITY_COLORS: Record<string, string> = {
 const STATUS_COLORS: Record<string, string> = {
   ok: '#10b981', low_margin: '#f59e0b', excluded: '#ef4444', no_contact: '#6b7280',
 }
+// English text is the i18n key
+const SEVERITY_LABELS: Record<string, string> = {
+  critical: 'critical', major: 'major', minor: 'minor', warning: 'warning', info: 'info',
+}
+// English text is the i18n key
 const STATUS_LABEL: Record<string, string> = {
   ok: 'ok', low_margin: 'low margin', excluded: 'excluded', no_contact: 'no contact',
 }
@@ -57,14 +64,14 @@ function fmt(v: number | null | undefined, digits = 1): string {
   return Number.isInteger(v) ? String(v) : v.toFixed(digits)
 }
 
-function ago(iso: string | null | undefined): string {
+function ago(iso: string | null | undefined, t: TFunction): string {
   if (!iso) return ''
   const s = (Date.now() - new Date(iso).getTime()) / 1000
   if (!Number.isFinite(s)) return ''
-  if (s < 60) return 'just now'
-  if (s < 3600) return `${Math.floor(s / 60)} min ago`
-  if (s < 86400) return `${Math.floor(s / 3600)} h ago`
-  return `${Math.floor(s / 86400)} d ago`
+  if (s < 60) return t('just now')
+  if (s < 3600) return t('{{n}} min ago', { n: Math.floor(s / 60) })
+  if (s < 86400) return t('{{n}} h ago', { n: Math.floor(s / 3600) })
+  return t('{{n}} d ago', { n: Math.floor(s / 86400) })
 }
 
 const card: React.CSSProperties = {
@@ -102,31 +109,33 @@ function SummaryCard({ label, value, unit, tone, sub }: { label: string; value: 
 
 /** Data returned vs generated as a horizontal bar. */
 function ClosureGauge({ returned, generated }: { returned: number; generated: number }) {
+  const { t } = useTranslation()
   const pct = generated > 0 ? Math.min(100, (100 * returned) / generated) : 100
   const tone = pct >= 95 ? '#10b981' : pct >= 80 ? '#f59e0b' : '#ef4444'
   return (
     <div style={{ ...card, flex: '2 1 240px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.58rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
-        <span>Data closure</span><span style={{ color: tone, fontFamily: 'ui-monospace, monospace' }}>{fmt(pct, 0)} %</span>
+        <span>{t('Data closure')}</span><span style={{ color: tone, fontFamily: 'ui-monospace, monospace' }}>{fmt(pct, 0)} %</span>
       </div>
-      <div title={`${fmt(returned, 2)} GB returned of ${fmt(generated, 2)} GB generated per day`}
+      <div title={t('{{ret}} GB returned of {{gen}} GB generated per day', { ret: fmt(returned, 2), gen: fmt(generated, 2) })}
            style={{ position: 'relative', height: 10, marginTop: 4, borderRadius: 5, background: 'var(--bg-secondary, #1f2937)', border: '1px solid var(--border)', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${pct}%`, background: tone, transition: 'width 0.3s' }} />
       </div>
       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.58rem', marginTop: 3, fontFamily: 'ui-monospace, monospace' }}>
-        <span style={{ color: tone }}>{fmt(returned, 2)} GB/day returned</span>
-        <span style={{ color: 'var(--text-secondary)' }}>{fmt(generated, 2)} GB/day generated</span>
+        <span style={{ color: tone }}>{t('{{value}} GB/day returned', { value: fmt(returned, 2) })}</span>
+        <span style={{ color: 'var(--text-secondary)' }}>{t('{{value}} GB/day generated', { value: fmt(generated, 2) })}</span>
       </div>
     </div>
   )
 }
 
 const bandsOf = (s: KbGroundStation) => (s.bands ?? []).join('/')
-const latLon = (lat: number | null | undefined, lon: number | null | undefined) =>
+const latLon = (lat: number | null | undefined, lon: number | null | undefined, t: TFunction) =>
   lat === null || lat === undefined || lon === null || lon === undefined ? '—'
-    : `${Math.abs(lat).toFixed(1)}°${lat >= 0 ? 'N' : 'S'} ${Math.abs(lon).toFixed(1)}°${lon >= 0 ? 'E' : 'W'}`
+    : `${Math.abs(lat).toFixed(1)}°${lat >= 0 ? 'N' : 'S'} ${Math.abs(lon).toFixed(1)}°${lon >= 0 ? 'E' : t('W', { context: 'west' })}`
 
 export function GroundSegmentPanel({ studyId, optionId }: { studyId: string | null; optionId?: string | null }) {
+  const { t } = useTranslation()
   const qc = useQueryClient()
   const [error, setError] = useState<string | null>(null)
   const [pick, setPick] = useState('')
@@ -221,10 +230,10 @@ export function GroundSegmentPanel({ studyId, optionId }: { studyId: string | nu
     () => (series?.contacts ?? []).map(c => ({ from: toH(c.start_s), to: toH(c.end_s), label: c.station, color: stationColors.get(c.station_id) || '#6b7280' })),
     [series, stationColors],
   )
-  const bufferSeries: LineSeries[] = series ? [{ name: 'on-board data', color: '#8b5cf6', points: series.buffer.t_s.map((t, i) => [toH(t), series.buffer.gb[i]]) }] : []
+  const bufferSeries: LineSeries[] = series ? [{ name: t('on-board data'), color: '#8b5cf6', points: series.buffer.t_s.map((t, i) => [toH(t), series.buffer.gb[i]]) }] : []
   const storage = series?.inputs?.storage_gb as number | null | undefined
 
-  if (!studyId) return <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Select a study.</div>
+  if (!studyId) return <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>{t('Select a study.')}</div>
 
   const s = run?.summary ?? {}
   const rows: GroundStationRow[] = s.stations ?? []
@@ -235,43 +244,43 @@ export function GroundSegmentPanel({ studyId, optionId }: { studyId: string | nu
     <div style={{ fontSize: '0.7rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
       {/* header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-        <strong style={{ fontSize: '0.74rem' }}>Ground segment</strong>
+        <strong style={{ fontSize: '0.74rem' }}>{t('Ground segment')}</strong>
         {run ? (
           <>
-            <Badge text={run.status === 'ok' ? `last run ${ago(run.finished_at)}` : `run ${run.status}`} color={run.status === 'ok' ? '#10b981' : '#ef4444'} title={run.finished_at || undefined} />
-            {run.stale && <Badge text="stale" color="#f59e0b" title="Stations, orbit or link parameters changed since this run — re-run to refresh" />}
-            {s.band && <span style={{ color: 'var(--text-secondary)', fontSize: '0.6rem' }}>{s.band}-band · {fmt(s.downlink_rate_mbps, 2)} Mbps · {s.data_source}</span>}
+            <Badge text={run.status === 'ok' ? t('last run {{ago}}', { ago: ago(run.finished_at, t) }) : t('run {{status}}', { status: run.status })} color={run.status === 'ok' ? '#10b981' : '#ef4444'} title={run.finished_at || undefined} />
+            {run.stale && <Badge text={t('stale')} color="#f59e0b" title={t('Stations, orbit or link parameters changed since this run — re-run to refresh')} />}
+            {s.band && <span style={{ color: 'var(--text-secondary)', fontSize: '0.6rem' }}>{t('{{band}}-band · {{rate}} Mbps · {{source}}', { band: s.band, rate: fmt(s.downlink_rate_mbps, 2), source: s.data_source })}</span>}
           </>
-        ) : runQ.isLoading ? <span style={{ color: 'var(--text-secondary)' }}>loading…</span>
-          : <Badge text="never run" color="#6b7280" />}
+        ) : runQ.isLoading ? <span style={{ color: 'var(--text-secondary)' }}>{t('loading…')}</span>
+          : <Badge text={t('never run')} color="#6b7280" />}
         <span style={{ flex: 1 }} />
         <button style={btn(true)} disabled={runMut.isPending} onClick={() => runMut.mutate()}>
-          {runMut.isPending ? 'Running…' : run ? 'Re-run' : 'Run'}
+          {runMut.isPending ? t('Running…') : run ? t('Re-run') : t('Run')}
         </button>
       </div>
       {error && <div style={{ color: '#ef4444', fontSize: '0.64rem' }}>{error}</div>}
-      {run?.status === 'failed' && s.error && <div style={{ color: '#ef4444', fontSize: '0.64rem' }}>Last run failed: {s.error}</div>}
+      {run?.status === 'failed' && s.error && <div style={{ color: '#ef4444', fontSize: '0.64rem' }}>{t('Last run failed: {{error}}', { error: s.error })}</div>}
 
       {/* station picker */}
       <div style={card}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap', marginBottom: '0.3rem' }}>
           <span style={{ fontSize: '0.58rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
-            Stations ({selected.length})
+            {t('Stations ({{n}})', { n: selected.length })}
           </span>
           <span style={{ flex: 1 }} />
-          <input placeholder="filter catalogue…" value={filter} onChange={e => setFilter(e.target.value)}
+          <input placeholder={t('filter catalogue…')} value={filter} onChange={e => setFilter(e.target.value)}
                  style={{ width: 120, fontSize: '0.62rem', padding: '0.1rem 0.3rem', background: 'var(--bg-primary)', border: '1px solid var(--border)', borderRadius: 3, color: 'var(--text-primary)' }} />
           <select value={pick} onChange={e => setPick(e.target.value)}
                   style={{ fontSize: '0.62rem', padding: '0.1rem 0.3rem', maxWidth: 260, background: 'var(--bg-primary)', border: '1px solid var(--border)', borderRadius: 3, color: 'var(--text-primary)' }}>
-            <option value="">{stationsQ.isLoading ? 'loading catalogue…' : `add from catalogue (${available.length})`}</option>
+            <option value="">{stationsQ.isLoading ? t('loading catalogue…') : t('add from catalogue ({{n}})', { n: available.length })}</option>
             {available.map(st => (
-              <option key={st.id} value={st.id}>{st.name} — {latLon(st.lat, st.lon)} — {bandsOf(st)}{st.operator ? ` (${st.operator})` : ''}</option>
+              <option key={st.id} value={st.id}>{st.name} — {latLon(st.lat, st.lon, t)} — {bandsOf(st)}{st.operator ? ` (${st.operator})` : ''}</option>
             ))}
           </select>
-          <button style={btn(true)} disabled={!pick || addMut.isPending} onClick={() => pick && addMut.mutate(pick)}>Add</button>
+          <button style={btn(true)} disabled={!pick || addMut.isPending} onClick={() => pick && addMut.mutate(pick)}>{t('Add')}</button>
         </div>
         {selected.length === 0 ? (
-          <div style={{ color: '#f59e0b', fontSize: '0.62rem' }}>No station selected — the closure will use the catalogue defaults and warn.</div>
+          <div style={{ color: '#f59e0b', fontSize: '0.62rem' }}>{t('No station selected — the closure will use the catalogue defaults and warn.')}</div>
         ) : (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.3rem' }}>
             {selected.map(st => (
@@ -279,8 +288,8 @@ export function GroundSegmentPanel({ studyId, optionId }: { studyId: string | nu
                     style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '0.1rem 0.4rem', borderRadius: 10, border: '1px solid var(--border)', fontSize: '0.62rem' }}>
                 <span style={{ width: 7, height: 7, borderRadius: 4, background: stationColors.get(st.kb_station_id) || '#6b7280', display: 'inline-block' }} />
                 <strong>{st.name}</strong>
-                <span style={{ color: 'var(--text-secondary)' }}>{latLon(st.lat, st.lon)} · {(st.bands ?? []).join('/')}{st.min_elevation_deg !== null ? ` · ≥${st.min_elevation_deg}°` : ''}</span>
-                <button title="Remove station" disabled={removeMut.isPending} onClick={() => removeMut.mutate(st.element_id)}
+                <span style={{ color: 'var(--text-secondary)' }}>{latLon(st.lat, st.lon, t)} · {(st.bands ?? []).join('/')}{st.min_elevation_deg !== null ? ` · ≥${st.min_elevation_deg}°` : ''}</span>
+                <button title={t('Remove station')} disabled={removeMut.isPending} onClick={() => removeMut.mutate(st.element_id)}
                         style={{ ...btn(false, true), padding: '0 0.3rem', lineHeight: 1.2 }}>×</button>
               </span>
             ))}
@@ -292,11 +301,11 @@ export function GroundSegmentPanel({ studyId, optionId }: { studyId: string | nu
       {run && run.status === 'ok' && (
         <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
           <ClosureGauge returned={s.gs_data_return_gb_per_day ?? 0} generated={s.gs_data_generated_gb_per_day ?? 0} />
-          <SummaryCard label="Contact" value={fmt(s.gs_contact_min_per_day, 0)} unit="min/day"
-                       sub={`${fmt(s.gs_contacts_per_day, 0)} passes · ${fmt(s.gs_station_count, 0)} station${s.gs_station_count === 1 ? '' : 's'}`} />
-          <SummaryCard label="Min link margin" value={fmt(s.gs_min_link_margin_db)} unit="dB" tone={marginTone} sub="limit 3 dB" />
-          <SummaryCard label="Backlog" value={fmt(s.gs_backlog_end_gb, 2)} unit="GB" tone={backlogTone}
-                       sub={s.backlog_growth_gb_per_day !== undefined ? `${s.backlog_growth_gb_per_day >= 0 ? '+' : ''}${fmt(s.backlog_growth_gb_per_day, 2)} GB/day · gap ${fmt(s.max_gap_hours, 1)} h` : undefined} />
+          <SummaryCard label={t('Contact')} value={fmt(s.gs_contact_min_per_day, 0)} unit={t('min/day')}
+                       sub={t('{{passes}} passes · {{n}} stations', { passes: fmt(s.gs_contacts_per_day, 0), n: fmt(s.gs_station_count, 0), count: s.gs_station_count, defaultValue_one: '{{passes}} passes · {{n}} station' })} />
+          <SummaryCard label={t('Min link margin')} value={fmt(s.gs_min_link_margin_db)} unit="dB" tone={marginTone} sub={t('limit 3 dB')} />
+          <SummaryCard label={t('Backlog')} value={fmt(s.gs_backlog_end_gb, 2)} unit="GB" tone={backlogTone}
+                       sub={s.backlog_growth_gb_per_day !== undefined ? t('{{growth}} GB/day · gap {{gap}} h', { growth: `${s.backlog_growth_gb_per_day >= 0 ? '+' : ''}${fmt(s.backlog_growth_gb_per_day, 2)}`, gap: fmt(s.max_gap_hours, 1) }) : undefined} />
         </div>
       )}
 
@@ -313,10 +322,10 @@ export function GroundSegmentPanel({ studyId, optionId }: { studyId: string | nu
           <table style={{ borderCollapse: 'collapse', width: '100%' }}>
             <thead>
               <tr>
-                <th style={th}>Station</th><th style={th}>Position</th><th style={th}>Bands</th>
-                <th style={{ ...th, textAlign: 'right' }}>Passes/day</th><th style={{ ...th, textAlign: 'right' }}>Min/day</th>
-                <th style={{ ...th, textAlign: 'right' }}>GB/day</th><th style={{ ...th, textAlign: 'right' }}>G/T dB/K</th>
-                <th style={{ ...th, textAlign: 'right' }}>Margin dB</th><th style={th}>Status</th>
+                <th style={th}>{t('Station')}</th><th style={th}>{t('Position')}</th><th style={th}>{t('Bands')}</th>
+                <th style={{ ...th, textAlign: 'right' }}>{t('Passes/day')}</th><th style={{ ...th, textAlign: 'right' }}>{t('Min/day')}</th>
+                <th style={{ ...th, textAlign: 'right' }}>{t('GB/day')}</th><th style={{ ...th, textAlign: 'right' }}>G/T dB/K</th>
+                <th style={{ ...th, textAlign: 'right' }}>{t('Margin dB')}</th><th style={th}>{t('Status')}</th>
               </tr>
             </thead>
             <tbody>
@@ -328,14 +337,14 @@ export function GroundSegmentPanel({ studyId, optionId }: { studyId: string | nu
                       <span style={{ width: 7, height: 7, borderRadius: 4, background: stationColors.get(r.station_id) || '#6b7280', display: 'inline-block', marginRight: 4 }} />
                       {r.name}
                     </td>
-                    <td style={{ ...td, color: 'var(--text-secondary)' }}>{latLon(r.lat, r.lon)}</td>
+                    <td style={{ ...td, color: 'var(--text-secondary)' }}>{latLon(r.lat, r.lon, t)}</td>
                     <td style={{ ...td, color: 'var(--text-secondary)' }}>{r.bands.join('/')} · {fmt(r.antenna_m, 1)} m</td>
                     <td style={num}>{r.contacts_per_day}</td>
                     <td style={num}>{fmt(r.contact_min_per_day, 0)}</td>
                     <td style={num}>{fmt(r.data_gb_per_day, 2)}</td>
                     <td style={num}>{fmt(r.g_t_db_k)}</td>
                     <td style={{ ...num, color: r.margin_db === null ? undefined : r.margin_db < 0 ? '#ef4444' : r.margin_db < 3 ? '#f59e0b' : '#10b981' }}>{fmt(r.margin_db)}</td>
-                    <td style={td}><Badge text={STATUS_LABEL[r.status] || r.status} color={color} title={r.reason || undefined} /></td>
+                    <td style={td}><Badge text={STATUS_LABEL[r.status] ? t(STATUS_LABEL[r.status]) : r.status} color={color} title={r.reason || undefined} /></td>
                   </tr>
                 )
               })}
@@ -345,16 +354,16 @@ export function GroundSegmentPanel({ studyId, optionId }: { studyId: string | nu
       )}
 
       {/* buffer plot with contact bands */}
-      {seriesQ.isLoading && run?.status === 'ok' && <div style={{ color: 'var(--text-secondary)' }}>loading series…</div>}
+      {seriesQ.isLoading && run?.status === 'ok' && <div style={{ color: 'var(--text-secondary)' }}>{t('loading series…')}</div>}
       {series && (
         <div style={card}>
-          <SVGLineChart title="On-board data over 24 h (bands = contact windows)" series={bufferSeries} bands={contactBands} xLabel="h" yLabel="GB" yMin={0}
-                        refLines={storage ? [{ y: storage, label: `storage ${fmt(storage, 1)} GB` }] : []} height={200} />
+          <SVGLineChart title={t('On-board data over 24 h (bands = contact windows)')} series={bufferSeries} bands={contactBands} xLabel="h" yLabel="GB" yMin={0}
+                        refLines={storage ? [{ y: storage, label: t('storage {{value}} GB', { value: fmt(storage, 1) }) }] : []} height={200} />
           {series.contacts.length > 0 && (
             <details style={{ marginTop: '0.3rem' }}>
-              <summary style={{ cursor: 'pointer', fontSize: '0.6rem', color: 'var(--text-secondary)' }}>{series.contacts.length} contact windows</summary>
+              <summary style={{ cursor: 'pointer', fontSize: '0.6rem', color: 'var(--text-secondary)' }}>{t('{{count}} contact windows', { count: series.contacts.length, defaultValue_one: '{{count}} contact windows' })}</summary>
               <table style={{ borderCollapse: 'collapse', marginTop: '0.2rem' }}>
-                <thead><tr><th style={th}>Station</th><th style={{ ...th, textAlign: 'right' }}>Start</th><th style={{ ...th, textAlign: 'right' }}>End</th><th style={{ ...th, textAlign: 'right' }}>Max el °</th><th style={{ ...th, textAlign: 'right' }}>GB</th></tr></thead>
+                <thead><tr><th style={th}>{t('Station')}</th><th style={{ ...th, textAlign: 'right' }}>{t('Start')}</th><th style={{ ...th, textAlign: 'right' }}>{t('End')}</th><th style={{ ...th, textAlign: 'right' }}>{t('Max el °')}</th><th style={{ ...th, textAlign: 'right' }}>GB</th></tr></thead>
                 <tbody>
                   {series.contacts.map((c, i) => {
                     const hm = (t: number) => `${String(Math.floor(t / 3600)).padStart(2, '0')}:${String(Math.floor((t % 3600) / 60)).padStart(2, '0')}`
@@ -377,10 +386,10 @@ export function GroundSegmentPanel({ studyId, optionId }: { studyId: string | nu
       {run && run.status === 'ok' && (
         <div>
           <div style={{ fontSize: '0.64rem', color: 'var(--text-secondary)', marginBottom: '0.2rem' }}>
-            What limited me {conflicts.length ? `(${conflicts.length})` : ''}
+            {t('What limited me')} {conflicts.length ? `(${conflicts.length})` : ''}
           </div>
           {conflicts.length === 0 ? (
-            <div style={{ color: '#10b981', fontSize: '0.64rem' }}>Data return closes: every selected station closes the link and the daily volume comes down.</div>
+            <div style={{ color: '#10b981', fontSize: '0.64rem' }}>{t('Data return closes: every selected station closes the link and the daily volume comes down.')}</div>
           ) : (
             <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
               {conflicts.map(c => {
@@ -388,14 +397,14 @@ export function GroundSegmentPanel({ studyId, optionId }: { studyId: string | nu
                 return (
                   <li key={c.id} style={{ ...card, borderLeft: `3px solid ${color}` }}>
                     <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                      <Badge text={c.severity} color={color} />
+                      <Badge text={t(SEVERITY_LABELS[c.severity] ?? c.severity)} color={color} />
                       <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: '0.58rem', color: 'var(--text-secondary)' }}>{c.code}</span>
                       <strong style={{ fontSize: '0.68rem' }}>{c.title}</strong>
                     </div>
                     {c.detail && <div style={{ fontSize: '0.62rem', color: 'var(--text-secondary)', marginTop: 2 }}>{c.detail}</div>}
                     {c.suggested_fix && (
                       <div style={{ fontSize: '0.62rem', marginTop: 2 }}>
-                        <span style={{ color: '#60a5fa' }}>Fix: </span>{c.suggested_fix}
+                        <span style={{ color: '#60a5fa' }}>{t('Fix:')} </span>{c.suggested_fix}
                       </div>
                     )}
                   </li>

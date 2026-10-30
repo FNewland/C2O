@@ -42,8 +42,8 @@ Operations Voice Procedure standard from NASA APPEL —
 https://appel.nasa.gov/
 
 Also provide a short EN/FR glossary of voice-loop callouts. uOttawa
-is bilingual; the team may use either language but must use one
-consistently per shift.]
+is bilingual, but the callouts themselves stay in English for every
+crew; the glossary explains their meaning in French.]
 
 ### 1.1 Standard callouts
 
@@ -176,5 +176,5 @@ Solutions on a separate page for the instructor pack.]
   https://ecss.nl/standards/active-standards/ecss-e-st-70-11c-space-segment-operability/
 - *NASA Systems Engineering Handbook* (SP-2016-6105 Rev 2) §8 —
   https://www.nasa.gov/reference/systems-engineering-handbook/
-- CCSDS Pus standards (background) —
+- CCSDS space packet standards (background; PUS itself is ECSS-E-ST-70-41C) —
   https://public.ccsds.org/Publications/AllPubs.aspx

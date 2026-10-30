@@ -1,0 +1,13 @@
+{
+  "Error: {{msg}}": "Erreur : {{msg}}",
+  "New function": "Nouvelle fonction",
+  "Option A": "Option A",
+  "Option B": "Option B",
+  "Option C": "Option C",
+  "[Derived from {{code}}] ": "[Dérivée de {{code}}] ",
+  "parent": "parent",
+  "{{count}} modes_many": "{{count}} de modes",
+  "{{count}} modes_one": "{{count}} mode",
+  "{{count}} modes_other": "{{count}} modes",
+  "{{n}} comp.": "{{n}} comp."
+}

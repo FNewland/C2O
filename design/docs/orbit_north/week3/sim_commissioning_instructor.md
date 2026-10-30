@@ -62,7 +62,7 @@ COM-005 AOCS Mode Transitions (NADIR) · COM-006 TTC Link
 Verification.
 
 **Pass 2.** COM-007 OBDH Checkout · COM-008 FDIR Configuration
-(load nominal table).
+(enable S12 monitoring, verify the S12/S19 rule sets).
 
 **Pass 3.** COM-009 Payload Power On · COM-010 FPA Cooler Activation
 (this runs through the eclipse and into pass 4 — heat sink during
@@ -86,7 +86,7 @@ files live in `~/SpaceMissionSimulation/configs/eosat1/scenarios/`.
 |----------|--------------|-------------------|----------|
 | Easy | `eps_overcurrent.yaml` (line=`payload`) | Overcurrent on payload power-on | CTG-012 Overcurrent Response |
 | Easy | `gs_rf_degradation.yaml` | BER climbs mid-pass | CTG-014 BER Anomaly |
-| Medium | `fpa_overtemp.yaml` | FPA cooler can't reach −60 °C | CTG-004 Thermal Exceedance + payload safe |
+| Medium | `fpa_overtemp.yaml` | FPA cooler can't hold its −15 °C setpoint | CTG-004 Thermal Exceedance + payload safe |
 | Medium | `payload_corrupt_image.yaml` | First image returns corrupt | CTG-015 Corrupted Image Recovery |
 | Hard | `aocs_sensor_cascade.yaml` | Star tracker degrades; pointing budget broken | CTG-008 Star Tracker Failure → CTG-002 + defer First Light |
 | Hard | `eps_progressive_load_shed.yaml` | Battery degradation forces progressive load-shed during cooler activation | CTG-001 Under-Voltage Load Shed |
@@ -104,9 +104,9 @@ LEOP day §4.]
 | Phase advanced to COMMISSIONING (5) | ✓ | ✓ |
 | EPS checkout complete with no faults | ✓ | ✓ |
 | AOCS NADIR mode achieved, pointing < 0.5° | ✓ | ✓ |
-| FDIR nominal table loaded | ✓ | ✓ |
+| FDIR rule sets enabled and verified (COM-008) | ✓ | ✓ |
 | Payload powered ON | ✓ | ✓ |
-| FPA cooler at temperature ( ≤ −55 °C) | ✓ | ✓ |
+| FPA cooler at its setpoint (−15 °C) | ✓ | ✓ |
 | First Light image acquired (or formally deferred) | ✓ | ✓ |
 | Anomaly tickets filed for all injections | ✓ | ✓ |
 

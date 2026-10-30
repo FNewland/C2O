@@ -126,7 +126,7 @@ Summed over the usable passes in a day this is the daily downlink capacity $C_{\
 | 500 km SSO | 52° N (e.g. southern Ontario) | 3–5 | 6 min | 243–405 MB |
 | 500 km SSO | 69° N (e.g. Kiruna) | 6–8 | 7 min | 567–756 MB |
 | 500 km, 51.6° (ISS orbit) | 52° N | 2–4 | 5 min | 135–270 MB |
-| 500 km SSO | Volunteer network (global, UHF) | 10–15 | 5 min | 675–1 013 MB |
+| 500 km SSO | Volunteer network (global, UHF) | 10–15 | 5 min | 3.2–4.9 MB (at 9.6 kbit/s UHF) |
 
 *[Source: orbit-propagation simulations; validated against volunteer-network observation logs. Volumes recomputed from §17.2.2 with η = 0.9.]*
 

@@ -1,11 +1,13 @@
 /**
  * PresenceBar — Shows connected users and connection status.
  */
+import { useTranslation } from 'react-i18next'
 import { useCollaboration } from './useCollaboration'
 import { AIStatusIndicator } from '../ai'
 import { OptionSwitcher } from '../components/OptionSwitcher'
 
 export function PresenceBar() {
+  const { t } = useTranslation()
   const { connected, users, myName } = useCollaboration()
 
   if (!myName) return null
@@ -22,7 +24,7 @@ export function PresenceBar() {
         background: connected ? 'var(--success)' : 'var(--danger)',
       }} />
       <span style={{ color: connected ? 'var(--success)' : 'var(--danger)', fontWeight: 600 }}>
-        {connected ? 'Connected' : 'Reconnecting...'}
+        {connected ? t('Connected') : t('Reconnecting...')}
       </span>
       <span style={{ color: 'var(--border)' }}>|</span>
       {users.length > 0 ? (
@@ -31,15 +33,15 @@ export function PresenceBar() {
             color: u.name === myName ? 'var(--accent)' : 'var(--text-secondary)',
             fontWeight: u.name === myName ? 600 : 400,
           }}>
-            {u.name === myName ? `${u.name} (you)` : u.name}
+            {u.name === myName ? t('{{name}} (you)', { name: u.name }) : u.name}
             {i < users.length - 1 ? ' · ' : ''}
           </span>
         ))
       ) : (
-        <span style={{ color: 'var(--text-secondary)' }}>{myName} (you)</span>
+        <span style={{ color: 'var(--text-secondary)' }}>{t('{{name}} (you)', { name: myName })}</span>
       )}
       <span style={{ color: 'var(--text-secondary)', marginLeft: '0.3rem' }}>
-        — {users.length || 1} connected
+        {t('— {{count}} connected', { count: users.length || 1 })}
       </span>
       <span style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.6rem' }}>
         <OptionSwitcher />

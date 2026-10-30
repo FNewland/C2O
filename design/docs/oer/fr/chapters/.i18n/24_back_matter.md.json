@@ -1,0 +1,32 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "docs/oer/chapters/24_back_matter.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "about-this-book",
+   "en_hash": "3a46ecbb553728fd",
+   "fr_hash": "8d8555bba8fde0a1"
+  },
+  {
+   "id": "licence",
+   "en_hash": "81e1c3f2cd0c68e2",
+   "fr_hash": "5d460a08d7aaf3f4"
+  },
+  {
+   "id": "acknowledgement-of-generative-ai",
+   "en_hash": "e327045bafb21ce0",
+   "fr_hash": "f85da3ac50d09b2e"
+  },
+  {
+   "id": "colophon",
+   "en_hash": "0763da3d258f20ca",
+   "fr_hash": "c8886fdab3f2ae40"
+  }
+ ],
+ "en_commit": "be16bc3"
+}

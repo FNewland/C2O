@@ -5,6 +5,7 @@
  * Level 4: Full-screen V&V panel
  */
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useUIStore, type ActivityPanel } from '../stores/uiStore'
 import { BlockDiagram } from './BlockDiagram'
 import { BlocksPanel } from './BlocksPanel'
@@ -19,19 +20,34 @@ import { TraceabilityTree } from '../components/TraceabilityTree'
 import { ErrorBoundary } from '../components/ErrorBoundary'
 import { AnalysesPanel } from './AnalysesPanel'
 
-const PANELS: Array<{ id: ActivityPanel; label: string; color: string }> = [
-  { id: 'blocks', label: 'Blocks', color: '#3b82f6' },
-  { id: 'budget', label: 'Budget', color: '#f59e0b' },
-  { id: 'requirements', label: 'Requirements', color: '#8b5cf6' },
-  { id: 'functions', label: 'Functions', color: '#a855f7' },
-  { id: 'interfaces', label: 'Interfaces', color: '#10b981' },
-  { id: 'icd', label: 'ICD', color: '#14b8a6' },
-  { id: 'trace', label: 'Traceability', color: '#06b6d4' },
-  { id: 'decide', label: 'Decide', color: '#f59e0b' },
-  { id: 'analyses', label: 'Analyses', color: '#ec4899' },
+const PANELS: Array<{ id: ActivityPanel; color: string }> = [
+  { id: 'blocks', color: '#3b82f6' },
+  { id: 'budget', color: '#f59e0b' },
+  { id: 'requirements', color: '#8b5cf6' },
+  { id: 'functions', color: '#a855f7' },
+  { id: 'interfaces', color: '#10b981' },
+  { id: 'icd', color: '#14b8a6' },
+  { id: 'trace', color: '#06b6d4' },
+  { id: 'decide', color: '#f59e0b' },
+  { id: 'analyses', color: '#ec4899' },
 ]
 
+// English text is the i18n key: tab labels, translated at render time with t().
+// Also the ErrorBoundary phaseName values below ('Functions', 'ICD', …).
+const PANEL_LABELS: Partial<Record<ActivityPanel, string>> = {
+  blocks: 'Blocks',
+  budget: 'Budget',
+  requirements: 'Requirements',
+  functions: 'Functions',
+  interfaces: 'Interfaces',
+  icd: 'ICD',
+  trace: 'Traceability',
+  decide: 'Decide',
+  analyses: 'Analyses',
+}
+
 export function LevelWorkbench() {
+  const { t } = useTranslation()
   const activePanel = useUIStore(s => s.activePanel)
   const setActivePanel = useUIStore(s => s.setActivePanel)
   const currentLevel = useUIStore(s => s.currentLevel)
@@ -70,7 +86,7 @@ export function LevelWorkbench() {
                   borderBottom: active ? `2px solid ${p.color}` : '2px solid transparent',
                 }}
               >
-                {p.label}
+                {t(PANEL_LABELS[p.id] ?? p.id)}
               </button>
             )
           })}

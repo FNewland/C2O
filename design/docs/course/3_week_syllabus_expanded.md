@@ -73,7 +73,7 @@ see themselves in this picture is the central question of Day 1.*
 |-----|-------|-----------|
 | **Mon** | **The Canadian Space Ecosystem** | Canadian Space Agency mandate & programmes. Industry map: MDA, Telesat, GHGSat, Kepler, NorthStar, university labs. CSA funding (STDP, FAST, CSEP). Canada's role in Artemis, Lunar Gateway, Radarsat. Guest speaker (CSA or industry). |
 | **Tue** | **Regulatory Framework** | ISED spectrum licensing under CPC-2-6-02. RSSSA (Remote Sensing Space Systems Act). Canadian Controlled Goods Programme and export control. ITU filing through ISED. Practical: complete an ISED spectrum-licence application for a sample mission. |
-| **Wed** | **International Standards & Compliance** | ECSS standard framework and tailoring. NASA SEH 17 processes overview (see Figure 2). Cal Poly CDS Rev 14. Space-debris mitigation (IADC 25 yr, FCC 5 yr). UN Registration Convention. Practical: complete a tailoring matrix. |
+| **Wed** | **International Standards & Compliance** | ECSS standard framework and tailoring. NASA SEH 17 processes overview (see Figure 2.3 in the course plan). Cal Poly CDS Rev 14. Space-debris mitigation (IADC 25 yr, FCC 5 yr). UN Registration Convention. Practical: complete a tailoring matrix. |
 | **Thu** | **Mission Needs & Opportunities** | Identifying mission needs in the Canadian context (Arctic monitoring, maritime surveillance, agriculture, resource management, connectivity). Stakeholder analysis. Indigenous community engagement and UNDRIP. Problem-statement workshop. |
 | **Fri** | **Space vs Non-Space Trade & Concept** | Trade-study methodology (criteria, weightings, scoring). Existing services (Radarsat, Sentinel, Planet) vs new missions. Constellation economics and business cases. Teams form, select a mission need, and run an initial trade analysis in SpaceCDF. |
 
@@ -147,9 +147,9 @@ the design that will fly through this timeline.*
 
 ![Mass distribution and ECSS margin policy by phase](../assets/figures/fig_mass_budget.png)
 
-*Figure 1.5 — Mass budget and the ECSS margin schedule. Phase A
-margins start at +44 % above dry mass and tighten phase-by-phase to
-+5 % at Phase D.*
+*Figure 1.5 — Mass budget and the ECSS margin schedule. The compound
+margin (equipment maturity × the 20 % system margin) starts at +44 %
+above dry mass at Phase A and tightens phase-by-phase to +5 % at Phase D.*
 
 ![Power profile across one orbit — generation, eclipse, stacked load](../assets/figures/fig_power_modes.png)
 

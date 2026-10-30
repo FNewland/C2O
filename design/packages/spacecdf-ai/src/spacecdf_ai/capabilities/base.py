@@ -8,6 +8,7 @@ from typing import Any
 
 from spacecdf_ai.client import AIClient
 from spacecdf_ai.config import GenAIConfig
+from spacecdf_common.language import apply_language, normalize_language
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +48,14 @@ class BaseCapability(ABC):
             "Concurrent Design Facility for space missions."
         )
 
+    def resolve_language(self, ui_language: str | None = None) -> str:
+        """Output language: per-request UI language > genai.yaml output.language > 'en'."""
+        return normalize_language(ui_language, default=normalize_language(self.config.output.language))
+
+    def build_system_prompt(self, ui_language: str | None = None) -> str:
+        """System prompt plus the output-language instruction (unchanged for English)."""
+        return apply_language(self.get_system_prompt(), self.resolve_language(ui_language))
+
     def get_model(self) -> str:
         """Resolve model based on tier."""
         if self.model_tier == "heavy":
@@ -72,10 +81,17 @@ class BaseCapability(ABC):
         *,
         api_key: str | None = None,
         session_id: str = "default",
+        ui_language: str | None = None,
         **kwargs: Any,
     ) -> dict[str, Any]:
-        """Execute the capability end-to-end."""
-        system = self.get_system_prompt()
+        """Execute the capability end-to-end.
+
+        ``ui_language`` ('en'/'fr') is the user's UI language; French adds an
+        instruction to answer in French. (Named ui_language, not language,
+        because FSWCapability already takes a ``language`` kwarg meaning the
+        programming language.)
+        """
+        system = self.build_system_prompt(ui_language)
         user_message = self.build_user_message(**kwargs)
         model = self.get_model()
 

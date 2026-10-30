@@ -13,6 +13,7 @@
  */
 import { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { useUIStore } from '../stores/uiStore'
 import { useOptionStore } from '../stores/optionStore'
 import type { DesignOption } from '../types/options'
@@ -42,6 +43,7 @@ export function useOptions(studyId: string | null) {
 }
 
 export function OptionSwitcher({ studyId: studyIdProp }: { studyId?: string | null }) {
+  const { t } = useTranslation()
   const wbStudy = useUIStore(s => s.studyId)
   const studyId = studyIdProp ?? wbStudy
   const qc = useQueryClient()
@@ -94,31 +96,32 @@ export function OptionSwitcher({ studyId: studyIdProp }: { studyId?: string | nu
     invalidate()
   }
   const onBranch = () => {
-    const name = window.prompt(`Branch "${active?.name ?? 'Baseline'}" as:`, `${active?.name ?? 'Baseline'} (copy)`)
+    const from = active?.name ?? t('Baseline')
+    const name = window.prompt(t('Branch "{{name}}" as:', { name: from }), t('{{name}} (copy)', { name: from }))
     if (name && name.trim()) branch.mutate(name.trim())
   }
   const onRename = () => {
     if (!active || active.is_baseline) return
-    const name = window.prompt('Rename option:', active.name)
+    const name = window.prompt(t('Rename option:'), active.name)
     if (name && name.trim() && name.trim() !== active.name) rename.mutate({ id: active.id, name: name.trim() })
   }
   const onDelete = () => {
     if (!active || active.is_baseline) return
-    if (window.confirm(`Delete option "${active.name}" and its overrides?`)) remove.mutate(active.id)
+    if (window.confirm(t('Delete option "{{name}}" and its overrides?', { name: active.name }))) remove.mutate(active.id)
   }
 
   const isBaseline = !active || active.is_baseline
   return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.6rem' }} title="Design option (SCDF-172): parameter overrides and analysis runs are scoped to the active option">
-      <span style={{ color: 'var(--text-secondary)' }}>Option</span>
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.6rem' }} title={t('Design option (SCDF-172): parameter overrides and analysis runs are scoped to the active option')}>
+      <span style={{ color: 'var(--text-secondary)' }}>{t('Option')}</span>
       <select value={active?.id ?? ''} onChange={e => onSelect(e.target.value)}
         style={{ fontSize: '0.6rem', padding: '0 0.2rem', background: 'var(--bg-primary)', color: isBaseline ? 'var(--text-primary)' : '#f59e0b', border: '1px solid var(--border)', borderRadius: '3px', fontWeight: isBaseline ? 400 : 600 }}>
-        {options.map(o => <option key={o.id} value={o.id}>{o.is_baseline ? 'Baseline' : o.name}</option>)}
+        {options.map(o => <option key={o.id} value={o.id}>{o.is_baseline ? t('Baseline') : o.name}</option>)}
       </select>
-      <button style={btn('#3b82f6')} onClick={onBranch} disabled={branch.isPending} title="Copy the active option's overrides into a new option">branch</button>
-      {!isBaseline && <button style={btn()} onClick={onRename} title="Rename">rename</button>}
-      {!isBaseline && <button style={btn('#ef4444')} onClick={onDelete} title="Delete this option and its overrides">×</button>}
-      {error && <span style={{ color: '#ef4444' }} title={error}>error <button style={btn('#ef4444')} onClick={() => setError(null)}>ok</button></span>}
+      <button style={btn('#3b82f6')} onClick={onBranch} disabled={branch.isPending} title={t("Copy the active option's overrides into a new option")}>{t('branch')}</button>
+      {!isBaseline && <button style={btn()} onClick={onRename} title={t('Rename')}>{t('rename')}</button>}
+      {!isBaseline && <button style={btn('#ef4444')} onClick={onDelete} title={t('Delete this option and its overrides')}>×</button>}
+      {error && <span style={{ color: '#ef4444' }} title={error}>{t('error')} <button style={btn('#ef4444')} onClick={() => setError(null)}>{t('ok')}</button></span>}
     </span>
   )
 }

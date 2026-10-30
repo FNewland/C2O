@@ -1,0 +1,132 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "docs/oer/chapters/05_requirements.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "chapter-5-requirements-engineering",
+   "en_hash": "48615d48b452c68e",
+   "fr_hash": "06d4059026422caf"
+  },
+  {
+   "id": "chapter-5-requirements-engineering/learning-objectives",
+   "en_hash": "34d3e7eef2b5c8ce",
+   "fr_hash": "96540316fe3a455e"
+  },
+  {
+   "id": "chapter-5-requirements-engineering/5-1-requirements-on-the-system-v",
+   "en_hash": "3e6812a01230b6a8",
+   "fr_hash": "d059a19037a32c94"
+  },
+  {
+   "id": "chapter-5-requirements-engineering/5-2-what-is-a-requirement",
+   "en_hash": "577ec1b4e016dbd9",
+   "fr_hash": "790593a57fd3f776"
+  },
+  {
+   "id": "chapter-5-requirements-engineering/5-2-what-is-a-requirement/5-2-1-the-shall-convention",
+   "en_hash": "913883da662334e7",
+   "fr_hash": "6b0199c0b09e91ed"
+  },
+  {
+   "id": "chapter-5-requirements-engineering/5-2-what-is-a-requirement/5-2-2-requirement-types",
+   "en_hash": "4d48a447c1856ce7",
+   "fr_hash": "0f408023ea787874"
+  },
+  {
+   "id": "chapter-5-requirements-engineering/5-2-what-is-a-requirement/5-2-3-requirements-versus-design-choices",
+   "en_hash": "0d8c567ef67a2a54",
+   "fr_hash": "aa86b51b130cf032"
+  },
+  {
+   "id": "chapter-5-requirements-engineering/5-3-the-smart-framework",
+   "en_hash": "164ed112759cc12d",
+   "fr_hash": "f8e84db844696107"
+  },
+  {
+   "id": "chapter-5-requirements-engineering/5-3-the-smart-framework/5-3-1-nasa-seh-appendix-c-full-quality-checklist",
+   "en_hash": "023a71aba79145d2",
+   "fr_hash": "315e5c9f2f8b80f8"
+  },
+  {
+   "id": "chapter-5-requirements-engineering/5-3-the-smart-framework/5-3-2-common-anti-patterns",
+   "en_hash": "42323b4cda46151c",
+   "fr_hash": "20336095062c2faa"
+  },
+  {
+   "id": "chapter-5-requirements-engineering/5-4-requirement-hierarchy-and-traceability",
+   "en_hash": "73eabba0df55f1aa",
+   "fr_hash": "f2f4b3a5ae851170"
+  },
+  {
+   "id": "chapter-5-requirements-engineering/5-4-requirement-hierarchy-and-traceability/5-4-1-hierarchy-structure",
+   "en_hash": "4ae307d7ddc1a56d",
+   "fr_hash": "f7bafcea6f802ade"
+  },
+  {
+   "id": "chapter-5-requirements-engineering/5-4-requirement-hierarchy-and-traceability/5-4-2-level-definitions",
+   "en_hash": "ff03f6622b35d363",
+   "fr_hash": "df25a3733e44722b"
+  },
+  {
+   "id": "chapter-5-requirements-engineering/5-4-requirement-hierarchy-and-traceability/5-4-3-traceability-rules",
+   "en_hash": "2e66d5fe72e9056d",
+   "fr_hash": "a32409cd20f783ef"
+  },
+  {
+   "id": "chapter-5-requirements-engineering/5-4-requirement-hierarchy-and-traceability/5-4-4-splitting-compound-requirements",
+   "en_hash": "6274781fe935b177",
+   "fr_hash": "636b42010d96adf6"
+  },
+  {
+   "id": "chapter-5-requirements-engineering/5-5-verification-methods-atird",
+   "en_hash": "8cc58c8125470f72",
+   "fr_hash": "6318d9c773814ec3"
+  },
+  {
+   "id": "chapter-5-requirements-engineering/5-5-verification-methods-atird/5-5-1-verification-method-selection-guide",
+   "en_hash": "5e0a5bf2afc59d3c",
+   "fr_hash": "243aa29b787ba2ef"
+  },
+  {
+   "id": "chapter-5-requirements-engineering/5-5-verification-methods-atird/5-5-2-verification-by-project-phase",
+   "en_hash": "5cebfba1f8d37548",
+   "fr_hash": "eb080ccffc12d158"
+  },
+  {
+   "id": "chapter-5-requirements-engineering/5-6-worked-examples",
+   "en_hash": "ab03f933675bc791",
+   "fr_hash": "bf8c7571dccef9fa"
+  },
+  {
+   "id": "chapter-5-requirements-engineering/5-6-worked-examples/5-6-1-deriving-requirements-for-the-3u-eo-cubesat",
+   "en_hash": "6995fcb0e1d645ef",
+   "fr_hash": "8a26947700c5243a"
+  },
+  {
+   "id": "chapter-5-requirements-engineering/5-6-worked-examples/5-6-2-returning-to-unisat-1",
+   "en_hash": "6724c5d63b1bfc33",
+   "fr_hash": "4e304d202b5c8951"
+  },
+  {
+   "id": "chapter-5-requirements-engineering/summary",
+   "en_hash": "ed35597fb9415e90",
+   "fr_hash": "c32b08290a3a96a1"
+  },
+  {
+   "id": "chapter-5-requirements-engineering/problems",
+   "en_hash": "a717859ee9f2e78c",
+   "fr_hash": "f63390f3ecdd94e1"
+  },
+  {
+   "id": "chapter-5-requirements-engineering/references",
+   "en_hash": "5e12e086ad8bc4ca",
+   "fr_hash": "a21ab9e71b479932"
+  }
+ ],
+ "en_commit": "be16bc3"
+}

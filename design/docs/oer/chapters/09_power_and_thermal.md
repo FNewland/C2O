@@ -88,7 +88,7 @@ Multi-junction (MJ) cells stack two or three p–n junctions of different semico
 | **InGaP/GaAs/Ge triple-junction** | 3-junction (lattice-matched) | 1.86 / 1.42 / 0.67 | 28–30 % | −0.19 %/°C | Extensive (> 90 % of modern S/C) |
 | **InGaP/GaAs/InGaAs IMM** | 3-junction (inverted metamorphic) | 1.86 / 1.42 / 1.0 | 32–33 % | −0.18 %/°C | Growing |
 
-*[Source: vendor triple-junction cell datasheets; Green et al., "Solar Cell Efficiency Tables," Progress in Photovoltaics, v.62, 2024. Vendor products named in this chapter are representative examples, not endorsements.]*
+*[Source: vendor triple-junction cell datasheets; Green et al., "Solar Cell Efficiency Tables," Progress in Photovoltaics, version 62, 2023. Vendor products named in this chapter are representative examples, not endorsements.]*
 
 **Why triple-junction GaAs dominates space:** The AM0 solar spectrum (above the atmosphere) is richer in UV and blue photons than the AM1.5 terrestrial spectrum. Triple-junction cells capture this energy across three bandgaps. The top cell (InGaP, $E_g = 1.86$ eV) absorbs blue/UV, the middle cell (GaAs, $E_g = 1.42$ eV) absorbs visible, and the bottom cell (Ge, $E_g = 0.67$ eV) absorbs near-IR. Each junction contributes voltage in series, while current is limited by the lowest-current junction (current-matching constraint).
 
@@ -707,7 +707,7 @@ NASA's CAPSTONE (12U, 25 kg) operates in a near-rectilinear halo orbit (NRHO) ar
 | Battery chemistry | Li-ion (LCO/NMC): 150–200 Wh/kg packaged; 3.0–4.2 V per cell; CC–CV charging |
 | Battery sizing | $E = P_{\text{ecl}} \cdot t_{\text{ecl}} / (\text{DoD} \cdot \eta_{\text{dis}})$; DoD 20–30 % for multi-year LEO |
 | Battery failure modes | Thermal runaway (overcharge), lithium plating (cold charge), capacity imbalance (series cells) |
-| SA power reference | Body-mounted: 2–12 W; single deployable: 4–30 W; dual deployable: 25–48 W |
+| SA power reference | Body-mounted: 2–20 W; single deployable: 4–55 W; dual deployable: 25–100 W (1U–12U, §9.2.1) |
 | Thermal physics | No convection in vacuum; radiation ($\varepsilon \sigma T^4$) is the only mechanism for heat rejection |
 | Thermal balance | $Q_{\text{in}} = Q_{\text{out}}$; solve for $T = (Q/\varepsilon\sigma A)^{1/4}$ (single node); multi-node for real design |
 | $\alpha_s/\varepsilon$ ratio | Low ratio = cold surface (radiator); high ratio = warm surface (insulation) |

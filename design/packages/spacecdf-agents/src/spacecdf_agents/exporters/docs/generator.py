@@ -389,12 +389,36 @@ DEFAULT_REFERENCE_DOCS = [
 # Public API: DocumentGenerator
 # ---------------------------------------------------------------------------
 
-def render_markdown(context: dict[str, Any], review_type: str) -> str:
+def template_search_path(lang: str | None = None) -> list[str]:
+    """Template directories for ``lang``, most specific first.
+
+    French templates live in ``templates/fr/<review>.md.j2`` and are used
+    when present; any template missing there falls back to the English one
+    in ``templates/``. 'en' (default) searches only ``templates/``, so
+    English output is unchanged.
+
+    TODO(i18n C2/K3): ``templates/fr/`` does not exist yet. Translating the
+    three Jinja templates (srr/pdr/cdr, ~2,200 words) and the headings that
+    docx_generator.py / xlsx_generator.py build in code is the export
+    packet's job. The Word/Excel artefacts ignore ``lang`` for now.
+    """
+    from spacecdf_common.language import normalize_language
+
+    paths = [str(TEMPLATE_DIR)]
+    code = normalize_language(lang)
+    if code != "en":
+        lang_dir = TEMPLATE_DIR / code
+        if lang_dir.is_dir():
+            paths.insert(0, str(lang_dir))
+    return paths
+
+
+def render_markdown(context: dict[str, Any], review_type: str, lang: str | None = None) -> str:
     review_type = review_type.lower()
     if review_type not in ("srr", "pdr", "cdr"):
         review_type = "srr"
     env = Environment(
-        loader=FileSystemLoader(str(TEMPLATE_DIR)),
+        loader=FileSystemLoader(template_search_path(lang)),
         autoescape=select_autoescape(enabled_extensions=(), default=False),
         keep_trailing_newline=True,
     )
@@ -415,10 +439,11 @@ class DocumentGenerator:
         requirements: MissionRequirements,
         result: DesignLoopResult,
         review_type: str = "srr",
+        lang: str | None = None,
     ) -> str:
-        """Return Markdown only (legacy interface)."""
+        """Return Markdown only (legacy interface). ``lang`` selects templates/<lang>/ if present."""
         ctx = build_context(state, requirements, result, review_type=review_type)
-        return render_markdown(ctx, review_type)
+        return render_markdown(ctx, review_type, lang=lang)
 
     def generate_bundle(
         self,
@@ -431,6 +456,7 @@ class DocumentGenerator:
         document_code: str | None = None,
         issue: str = "1.0",
         classification: str = "Internal",
+        lang: str | None = None,
     ) -> bytes:
         review_type = review_type.lower()
         if review_type not in ("srr", "pdr", "cdr"):
@@ -441,7 +467,8 @@ class DocumentGenerator:
             study_name=study_name, review_type=review_type,
             document_code=document_code, issue=issue, classification=classification,
         )
-        markdown = render_markdown(ctx, review_type)
+        markdown = render_markdown(ctx, review_type, lang=lang)
+        # TODO(i18n C2/K3): generate_docx / generate_xlsx are English-only.
 
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)

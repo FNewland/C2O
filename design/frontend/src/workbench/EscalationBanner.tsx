@@ -7,9 +7,11 @@
  */
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { useUIStore } from '../stores/uiStore'
 
 const API = '/api'
+// English text is the i18n key (budget type shown as t(type); the value itself is an API path segment).
 const BUDGET_TYPES = ['mass', 'power', 'cost'] as const
 
 interface Violation {
@@ -23,6 +25,7 @@ interface Violation {
 }
 
 export function EscalationBanner() {
+  const { t } = useTranslation()
   const studyId = useUIStore(s => s.studyId)
   const breadcrumb = useUIStore(s => s.breadcrumb)
   const currentLevel = useUIStore(s => s.currentLevel)
@@ -87,7 +90,7 @@ export function EscalationBanner() {
       background: 'rgba(239,68,68,0.12)', borderBottom: '1px solid var(--danger)',
       display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap',
     }}>
-      <span style={{ fontWeight: 700, color: 'var(--danger)' }}>ESCALATION</span>
+      <span style={{ fontWeight: 700, color: 'var(--danger)' }}>{t('ESCALATION')}</span>
       {violations.map((v, i) => (
         <button
           key={`${v.elementId}-${v.budgetType}`}
@@ -101,9 +104,9 @@ export function EscalationBanner() {
         >
           <span style={{ fontWeight: 600 }}>{v.elementName}</span>
           <span style={{ color: 'var(--danger)' }}>
-            {v.budgetType}: {v.actual.toFixed(1)}/{v.allocation.toFixed(1)} {v.unit}
+            {t(v.budgetType)}: {v.actual.toFixed(1)}/{v.allocation.toFixed(1)} {v.unit}
           </span>
-          <span style={{ color: 'var(--text-secondary)' }}>— click to fix</span>
+          <span style={{ color: 'var(--text-secondary)' }}>{t('— click to fix')}</span>
         </button>
       ))}
     </div>

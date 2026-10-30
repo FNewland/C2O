@@ -1,0 +1,157 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "docs/oer/chapters/11_communications.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "chapter-11-communications-and-link-budgets",
+   "en_hash": "189d8c7ba6f0dbc9",
+   "fr_hash": "78d4c4c58589691b"
+  },
+  {
+   "id": "chapter-11-communications-and-link-budgets/learning-objectives",
+   "en_hash": "e3cde7ca2fb2c351",
+   "fr_hash": "c776238c54ddfb5e"
+  },
+  {
+   "id": "chapter-11-communications-and-link-budgets/11-1-the-link-budget-concept",
+   "en_hash": "b9814adf324062b7",
+   "fr_hash": "2c73bff8b9c1b7e1"
+  },
+  {
+   "id": "chapter-11-communications-and-link-budgets/11-1-the-link-budget-concept/11-1-1-link-budget-flow",
+   "en_hash": "c3e1e21fb26e431a",
+   "fr_hash": "f000d927b0398f9a"
+  },
+  {
+   "id": "chapter-11-communications-and-link-budgets/11-1-the-link-budget-concept/11-1-2-decibel-refresher",
+   "en_hash": "719ce416a5e6545d",
+   "fr_hash": "355b2a1be332ed81"
+  },
+  {
+   "id": "chapter-11-communications-and-link-budgets/11-2-the-complete-link-budget-equation",
+   "en_hash": "9d03aa1fd34c0211",
+   "fr_hash": "0151778e926db7ab"
+  },
+  {
+   "id": "chapter-11-communications-and-link-budgets/11-2-the-complete-link-budget-equation/11-2-1-complete-link-budget-table",
+   "en_hash": "f4a22cd5a06a7f6c",
+   "fr_hash": "190ec5dadff2a41f"
+  },
+  {
+   "id": "chapter-11-communications-and-link-budgets/11-3-antenna-types-physics-and-selection",
+   "en_hash": "be75d09b16e4041f",
+   "fr_hash": "6fa1b6ffe7e1b210"
+  },
+  {
+   "id": "chapter-11-communications-and-link-budgets/11-3-antenna-types-physics-and-selection/11-3-1-antenna-types-for-spacecraft",
+   "en_hash": "0e80b617241dc042",
+   "fr_hash": "aac659f5e5a57c1c"
+  },
+  {
+   "id": "chapter-11-communications-and-link-budgets/11-4-free-space-path-loss-by-band",
+   "en_hash": "fad71e40073ad2ca",
+   "fr_hash": "961c60afc4ea5355"
+  },
+  {
+   "id": "chapter-11-communications-and-link-budgets/11-4-free-space-path-loss-by-band/11-4-1-slant-range-geometry",
+   "en_hash": "429bda3a6dee27fb",
+   "fr_hash": "de906252d593f0fc"
+  },
+  {
+   "id": "chapter-11-communications-and-link-budgets/11-4-free-space-path-loss-by-band/11-4-2-fspl-by-band-and-geometry",
+   "en_hash": "02449c22370470ee",
+   "fr_hash": "a53f25ea5896b0fd"
+  },
+  {
+   "id": "chapter-11-communications-and-link-budgets/11-5-frequency-band-selection-and-licensing",
+   "en_hash": "36537716c30f0d05",
+   "fr_hash": "ab2ad81022b67c4d"
+  },
+  {
+   "id": "chapter-11-communications-and-link-budgets/11-5-frequency-band-selection-and-licensing/11-5-1-band-comparison-table",
+   "en_hash": "10fbbe542254ee53",
+   "fr_hash": "53060616810cc132"
+  },
+  {
+   "id": "chapter-11-communications-and-link-budgets/11-5-frequency-band-selection-and-licensing/11-5-2-band-selection-decision-tree",
+   "en_hash": "f8087656525f750f",
+   "fr_hash": "66361c1933310488"
+  },
+  {
+   "id": "chapter-11-communications-and-link-budgets/11-6-modulation-and-coding-physics-and-selection",
+   "en_hash": "18e5deb1790aad7d",
+   "fr_hash": "56e735e9d992db6b"
+  },
+  {
+   "id": "chapter-11-communications-and-link-budgets/11-6-modulation-and-coding-physics-and-selection/11-6-1-modulation-how-information-becomes-rf",
+   "en_hash": "55ecd087d1b64fe9",
+   "fr_hash": "eb2860fd454a3ec2"
+  },
+  {
+   "id": "chapter-11-communications-and-link-budgets/11-6-modulation-and-coding-physics-and-selection/11-6-2-forward-error-correction-fec-coding-gain",
+   "en_hash": "0e159691c1c4141d",
+   "fr_hash": "2a3a74ecd45564ef"
+  },
+  {
+   "id": "chapter-11-communications-and-link-budgets/11-6-modulation-and-coding-physics-and-selection/11-6-3-complete-modulation-and-coding-table",
+   "en_hash": "5b32619de2b90026",
+   "fr_hash": "5794fcda98539ff3"
+  },
+  {
+   "id": "chapter-11-communications-and-link-budgets/11-7-ground-stations",
+   "en_hash": "22a6333bd7bfea01",
+   "fr_hash": "bcc7469732d66694"
+  },
+  {
+   "id": "chapter-11-communications-and-link-budgets/11-7-ground-stations/11-7-1-ground-station-types",
+   "en_hash": "05644e02c6c83687",
+   "fr_hash": "1e6596d2328f00e2"
+  },
+  {
+   "id": "chapter-11-communications-and-link-budgets/11-7-ground-stations/11-7-2-contact-geometry-and-pass-duration",
+   "en_hash": "5b5e2876c3145fdb",
+   "fr_hash": "a87a47bd02c6e81c"
+  },
+  {
+   "id": "chapter-11-communications-and-link-budgets/11-8-worked-examples-complete-link-budgets",
+   "en_hash": "368d714f184e8554",
+   "fr_hash": "79a5a769cf0bdc32"
+  },
+  {
+   "id": "chapter-11-communications-and-link-budgets/11-8-worked-examples-complete-link-budgets/11-8-1-eosat-3u-s-band-downlink",
+   "en_hash": "a9430ba8e2dbe36a",
+   "fr_hash": "74106ca4934f7824"
+  },
+  {
+   "id": "chapter-11-communications-and-link-budgets/11-8-worked-examples-complete-link-budgets/11-8-2-returning-to-unisat-1-uhf-link-budget-at-437-mhz-and-9600-bit-s",
+   "en_hash": "46daad18252a3f27",
+   "fr_hash": "333db6e7b107331f"
+  },
+  {
+   "id": "chapter-11-communications-and-link-budgets/11-9-data-budget",
+   "en_hash": "a63a2177158ae810",
+   "fr_hash": "b079e8858616c9e0"
+  },
+  {
+   "id": "chapter-11-communications-and-link-budgets/summary",
+   "en_hash": "aaee20bc724f13db",
+   "fr_hash": "10f4c93ef7d20e4a"
+  },
+  {
+   "id": "chapter-11-communications-and-link-budgets/problems",
+   "en_hash": "9d5e2ade4489e909",
+   "fr_hash": "77b3b40c1fd57442"
+  },
+  {
+   "id": "chapter-11-communications-and-link-budgets/references",
+   "en_hash": "76654d9b4f460eb2",
+   "fr_hash": "ec01c986f9585a9b"
+  }
+ ],
+ "en_commit": "be16bc3"
+}
