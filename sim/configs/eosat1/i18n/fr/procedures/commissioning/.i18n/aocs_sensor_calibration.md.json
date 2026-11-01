@@ -69,8 +69,8 @@
   },
   {
    "id": "com-003-aocs-sensor-calibration/procedure-steps/step-9-confirm-the-compensation-took-effect",
-   "en_hash": "6e3b5d3c8af0a07e",
-   "fr_hash": "3c5a4b88133ac87b"
+   "en_hash": "f024a244b36567a6",
+   "fr_hash": "2658defe1f5eb43a"
   },
   {
    "id": "com-003-aocs-sensor-calibration/procedure-steps/step-10-post-calibration-determination-check",
@@ -93,5 +93,5 @@
    "fr_hash": "4eb65d38b44ba9f3"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "8067e5b"
 }

@@ -52,7 +52,7 @@ toutes les opérations datées, tous les journaux d'événements et toutes les d
 **TC:** `HK_REQUEST(sid=6)` (Service 3, Subtype 27) --- demander les données de servitude TT&C
 **Verify:** `obdh.mode <= 1` (0x0300, timeout 5 s) --- 0 = NOMINAL ou 1 = SAFE, tous deux acceptables à ce stade
 **Verify:** `obdh.cpu_load` (0x0302) < 80 %
-**Verify:** `ttc.link_margin` (0x0503) > 3.0 dB
+**Verify:** page TT&C (sol) : `ttc.link_margin` (0x0503) > 3.0 dB
 **Note:** Consigner `obdh.uptime` (0x0308) et `obdh.reboot_count` (0x030A). Un
 temps de fonctionnement court avec un compteur de redémarrages incrémenté signifie que l'OBC a redémarré depuis la
 séparation --- l'horloge est revenue à J2000 et cette fiche est exactement ce qu'il

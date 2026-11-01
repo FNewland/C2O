@@ -1,15 +1,16 @@
 import { useMemo, useState } from 'react'
 import { useEcssCompliance, type DrdEntry } from '../hooks/useTemplates'
+import { fs } from '../theme/tokens'
 
 interface Props {
   studyId: string | null
 }
 
 const STATUS_META: Record<DrdEntry['produced_by'], { label: string; color: string; icon: string }> = {
-  spacecdf: { label: 'Auto-produced', color: '#10b981', icon: '✓' },
-  partial:  { label: 'Partial',       color: '#f59e0b', icon: '◐' },
-  planned:  { label: 'Planned',       color: '#6366f1', icon: '…' },
-  external: { label: 'External',      color: '#6b7280', icon: '↗' },
+  spacecdf: { label: 'Auto-produced', color: 'var(--status-ok)', icon: '✓' },
+  partial:  { label: 'Partial',       color: 'var(--status-caution)', icon: '◐' },
+  planned:  { label: 'Planned',       color: 'var(--interactive)', icon: '…' },
+  external: { label: 'External',      color: 'var(--text-3)', icon: '↗' },
 }
 
 export function EcssCompliancePanel({ studyId }: Props) {
@@ -28,7 +29,7 @@ export function EcssCompliancePanel({ studyId }: Props) {
   if (!studyId) {
     return (
       <div style={{ padding: '1rem' }}>
-        <p style={{ color: 'var(--text-secondary, #9ca3af)' }}>
+        <p style={{ color: 'var(--text-secondary, var(--text-2))' }}>
           Create or load a study to see its ECSS review-gate compliance status.
         </p>
       </div>
@@ -37,7 +38,7 @@ export function EcssCompliancePanel({ studyId }: Props) {
 
   if (isLoading) return <div style={{ padding: '1rem' }}>Loading ECSS compliance…</div>
   if (error) return (
-    <div style={{ padding: '1rem', color: 'var(--danger, #f87171)' }}>
+    <div style={{ padding: '1rem', color: 'var(--danger, var(--status-alarm))' }}>
       Failed to load: {String(error)}
     </div>
   )
@@ -51,41 +52,41 @@ export function EcssCompliancePanel({ studyId }: Props) {
         <h2 style={{ margin: 0 }}>
           ECSS Review Gate — {data.gate}
         </h2>
-        <div style={{ color: 'var(--text-secondary, #9ca3af)', fontSize: '0.85rem' }}>
+        <div style={{ color: 'var(--text-secondary, var(--text-2))', fontSize: fs.body }}>
           {data.gate_name} · {data.phase.toUpperCase().replace('_', ' ')}
         </div>
       </div>
 
-      <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary, #d1d5db)', marginTop: 0 }}>
+      <p style={{ fontSize: fs.body, color: 'var(--text-secondary, var(--text))', marginTop: 0 }}>
         {data.description}
       </p>
 
       {/* Coverage bar */}
       <div style={{ margin: '1rem 0' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: '0.3rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: fs.body, marginBottom: '0.3rem' }}>
           <span>SpaceCDF coverage of expected DRDs</span>
           <strong>{data.coverage_percent}%</strong>
         </div>
         <div style={{
           height: '8px',
           borderRadius: '4px',
-          background: 'var(--bg-secondary, #1f2937)',
+          background: 'var(--bg-secondary, var(--surface-2))',
           overflow: 'hidden',
           position: 'relative',
         }}>
           <div style={{
             height: '100%',
             width: `${data.coverage_percent}%`,
-            background: data.coverage_percent > 60 ? '#10b981' :
-                        data.coverage_percent > 30 ? '#f59e0b' : '#ef4444',
+            background: data.coverage_percent > 60 ? 'var(--status-ok)' :
+                        data.coverage_percent > 30 ? 'var(--status-caution)' : 'var(--status-alarm)',
             transition: 'width 0.3s ease',
           }} />
         </div>
         <div style={{
           display: 'flex',
           gap: '0.75rem',
-          fontSize: '0.72rem',
-          color: 'var(--text-secondary, #9ca3af)',
+          fontSize: fs.label,
+          color: 'var(--text-secondary, var(--text-2))',
           marginTop: '0.4rem',
         }}>
           <span>✓ {data.produced} auto</span>
@@ -111,34 +112,34 @@ export function EcssCompliancePanel({ studyId }: Props) {
                 <div
                   key={d.id}
                   style={{
-                    background: 'var(--bg-secondary, #1f2937)',
-                    border: '1px solid var(--border, #374151)',
+                    background: 'var(--bg-secondary, var(--surface-2))',
+                    border: '1px solid var(--border, var(--line))',
                     borderLeft: `3px solid ${meta.color}`,
                     borderRadius: '4px',
                     padding: '0.5rem 0.7rem',
-                    fontSize: '0.82rem',
+                    fontSize: fs.body,
                   }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem' }}>
                     <strong>{d.name}</strong>
                     <span style={{
                       fontFamily: 'monospace',
-                      fontSize: '0.7rem',
-                      color: 'var(--text-secondary, #9ca3af)',
+                      fontSize: fs.label,
+                      color: 'var(--text-secondary, var(--text-2))',
                     }}>
                       {d.id}
                     </span>
                   </div>
                   <div style={{
-                    fontSize: '0.72rem',
-                    color: 'var(--text-secondary, #9ca3af)',
+                    fontSize: fs.label,
+                    color: 'var(--text-secondary, var(--text-2))',
                     marginTop: '0.2rem',
                     fontFamily: 'monospace',
                   }}>
                     {d.standard} · Annex {d.annex}
                   </div>
                   {d.spacecdf_source && (
-                    <div style={{ fontSize: '0.75rem', marginTop: '0.3rem', color: 'var(--text-secondary, #d1d5db)' }}>
+                    <div style={{ fontSize: fs.label, marginTop: '0.3rem', color: 'var(--text-secondary, var(--text))' }}>
                       <em>Source:</em> {d.spacecdf_source}
                     </div>
                   )}
@@ -155,9 +156,9 @@ export function EcssCompliancePanel({ studyId }: Props) {
       <div style={{
         marginTop: '1.5rem',
         padding: '0.6rem',
-        fontSize: '0.7rem',
-        color: 'var(--text-secondary, #9ca3af)',
-        borderTop: '1px solid var(--border, #374151)',
+        fontSize: fs.label,
+        color: 'var(--text-secondary, var(--text-2))',
+        borderTop: '1px solid var(--border, var(--line))',
       }}>
         Expected DRDs per ECSS-E-ST-10C Rev.1 Annex A (Table A-1, informative) +
         ECSS-M-ST-10C Rev.1 phase/review structure. Tailoring per ECSS-S-ST-00-02
@@ -206,9 +207,9 @@ function DidGenerator({ studyId }: { studyId: string | null }) {
   }
 
   return (
-    <div style={{ marginTop: '1.5rem', borderTop: '1px solid var(--border, #374151)', paddingTop: '1rem' }}>
-      <h3 style={{ fontSize: '0.95rem', marginBottom: '0.4rem' }}>Document Generator (DIDs)</h3>
-      <p style={{ fontSize: '0.72rem', color: '#9ca3af', marginBottom: '0.75rem' }}>
+    <div style={{ marginTop: '1.5rem', borderTop: '1px solid var(--border, var(--line))', paddingTop: '1rem' }}>
+      <h3 style={{ fontSize: fs.value, marginBottom: '0.4rem' }}>Document Generator (DIDs)</h3>
+      <p style={{ fontSize: fs.label, color: 'var(--text-2)', marginBottom: '0.75rem' }}>
         Generate ECSS/NASA document templates populated from the current design state.
       </p>
 
@@ -217,8 +218,8 @@ function DidGenerator({ studyId }: { studyId: string | null }) {
           <button key={d.id} className="btn btn-sm" onClick={() => generateDid(d.id)}
             disabled={generating !== null}
             style={{
-              fontSize: '0.7rem',
-              background: generatedDoc?.document?.toLowerCase().includes(d.name.toLowerCase().split(' ')[0]) ? '#10b981' : undefined,
+              fontSize: fs.label,
+              background: generatedDoc?.document?.toLowerCase().includes(d.name.toLowerCase().split(' ')[0]) ? 'var(--status-ok)' : undefined,
             }}>
             {generating === d.id ? 'Generating...' : d.name}
           </button>
@@ -229,13 +230,13 @@ function DidGenerator({ studyId }: { studyId: string | null }) {
       {generatedDoc && (
         <div style={{
           padding: '0.75rem', borderRadius: '6px',
-          background: 'var(--bg-primary, #0a0e1a)', border: '1px solid var(--border, #374151)',
+          background: 'var(--bg-primary, var(--surface-0))', border: '1px solid var(--border, var(--line))',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-            <span style={{ fontWeight: 700, fontSize: '0.9rem' }}>{generatedDoc.document}</span>
-            <span style={{ fontSize: '0.68rem', color: '#6b7280', fontFamily: 'monospace' }}>{generatedDoc.standard}</span>
+            <span style={{ fontWeight: 700, fontSize: fs.value }}>{generatedDoc.document}</span>
+            <span style={{ fontSize: fs.label, color: 'var(--text-3)', fontFamily: 'monospace' }}>{generatedDoc.standard}</span>
           </div>
-          <div style={{ fontSize: '0.68rem', color: '#6b7280', marginBottom: '0.5rem' }}>
+          <div style={{ fontSize: fs.label, color: 'var(--text-3)', marginBottom: '0.5rem' }}>
             Study: {generatedDoc.study_name} | Phase: {generatedDoc.phase} | Generated: {new Date(generatedDoc.generated).toLocaleString()}
           </div>
 
@@ -245,22 +246,22 @@ function DidGenerator({ studyId }: { studyId: string | null }) {
               <button onClick={() => toggleSection(section.number)} style={{
                 background: 'none', border: 'none', cursor: 'pointer', width: '100%', textAlign: 'left',
                 padding: '0.3rem 0.5rem', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '0.3rem',
-                color: '#d1d5db', fontSize: '0.82rem', fontWeight: 600,
+                color: 'var(--text)', fontSize: fs.body, fontWeight: 600,
               }}>
-                <span style={{ color: '#6b7280', fontSize: '0.7rem', width: 14 }}>
+                <span style={{ color: 'var(--text-3)', fontSize: fs.label, width: 14 }}>
                   {expandedSections.has(section.number) ? '\u25BC' : '\u25B6'}
                 </span>
                 {section.number}. {section.title}
               </button>
               {expandedSections.has(section.number) && section.subsections?.map((sub: any) => (
                 <div key={sub.number} style={{
-                  marginLeft: '1.5rem', padding: '0.3rem 0.5rem', borderLeft: '2px solid #374151',
+                  marginLeft: '1.5rem', padding: '0.3rem 0.5rem', borderLeft: '2px solid var(--line)',
                   marginBottom: '0.2rem',
                 }}>
-                  <div style={{ fontSize: '0.78rem', fontWeight: 500, color: '#9ca3af' }}>
+                  <div style={{ fontSize: fs.label, fontWeight: 500, color: 'var(--text-2)' }}>
                     {sub.number} {sub.title}
                   </div>
-                  <div style={{ fontSize: '0.72rem', color: '#6b7280', whiteSpace: 'pre-wrap', marginTop: '0.1rem' }}>
+                  <div style={{ fontSize: fs.label, color: 'var(--text-3)', whiteSpace: 'pre-wrap', marginTop: '0.1rem' }}>
                     {sub.content}
                   </div>
                 </div>

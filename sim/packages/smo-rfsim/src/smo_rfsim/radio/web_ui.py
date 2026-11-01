@@ -209,7 +209,27 @@ def _add_api_routes(app: web.Application, frontend: RadioFrontend, control):
             "active": active,
         }, dumps=_json)
 
+    async def api_ground_limits(request):
+        """GET /api/ground-limits — ground-receiver limit check (additive).
+
+        BER (0x050C) and AGC (0x051A) are measured by the GROUND receiver,
+        so they are limit-checked here, not in the spacecraft-telemetry
+        limit set. Body: {source:"ground", summary, limits{hex: band+meta},
+        state{hex}, value{hex}, transitions[], seq}. ``?since=<seq>`` returns
+        only newer transitions, so a consumer (the MCS alarm journal) can
+        poll it incrementally.
+        """
+        try:
+            since = int(request.query.get("since", 0))
+        except (TypeError, ValueError):
+            return web.json_response({"error": "since must be an integer"},
+                                     status=400, dumps=_json)
+        frontend.snapshot()          # evaluates the limits on fresh status
+        return web.json_response(frontend.ground_limits.to_api(since),
+                                 dumps=_json)
+
     app.router.add_get("/api/status", api_status)
+    app.router.add_get("/api/ground-limits", api_ground_limits)
     app.router.add_get("/api/config", api_config)
     app.router.add_get("/api/diagnostics", api_diagnostics)
     app.router.add_get("/api/pass-rollups", api_pass_rollups)

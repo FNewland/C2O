@@ -29,8 +29,8 @@
   },
   {
    "id": "eosat-1-link-budget-and-the-tm-data-rate-ladder/2-the-ladder-as-shipped/2-2-low-16-kbps-where-the-spacecraft-actually-lives",
-   "en_hash": "4592e8c7b49d4b15",
-   "fr_hash": "0fbe52d8e5141b5e"
+   "en_hash": "b8da3d297f13306b",
+   "fr_hash": "5f8c9d563fce2b4b"
   },
   {
    "id": "eosat-1-link-budget-and-the-tm-data-rate-ladder/2-the-ladder-as-shipped/2-3-high-128-kbps-earned-per-dump",
@@ -79,8 +79,8 @@
   },
   {
    "id": "eosat-1-link-budget-and-the-tm-data-rate-ladder/5-what-the-ladder-does-to-mission-planning/5-2-housekeeping-alone-is-a-third-of-the-low-rate-network",
-   "en_hash": "817767f056bcdfbe",
-   "fr_hash": "4a6eb59d7c357e26"
+   "en_hash": "054138b0d62fd98f",
+   "fr_hash": "b1d351ee3fa2a501"
   },
   {
    "id": "eosat-1-link-budget-and-the-tm-data-rate-ladder/5-what-the-ladder-does-to-mission-planning/5-3-a-pass-spent-dumping-is-a-pass-not-spent-otherwise",
@@ -148,5 +148,5 @@
    "fr_hash": "a23d6353ec7413ab"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "8067e5b"
 }

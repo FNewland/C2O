@@ -19,6 +19,7 @@ import { MissionBudgetSummary } from '../components/MissionBudgetSummary'
 import { useDesignStore } from '../stores/designStore'
 import { LENS_LABELS, type Segment, type Lens } from '../types/phases'
 import { FMECAPanel } from '../components/FMECAPanel'
+import { fs } from '../theme/tokens'
 
 type SubView = 'designer' | 'presets' | 'interfaces' | 'icd' | 'budgets' | 'fmeca'
 
@@ -41,27 +42,27 @@ export function Phase2SystemArch() {
       {/* Tab bar */}
       <div style={{
         display: 'flex', gap: '0.25rem', padding: '0.4rem 1rem',
-        borderBottom: '1px solid var(--border, #374151)', alignItems: 'center', flexWrap: 'wrap',
+        borderBottom: '1px solid var(--border, var(--line))', alignItems: 'center', flexWrap: 'wrap',
       }}>
         {subViews.map(v => (
           <button key={v.key} onClick={() => { setSubView(v.key); setLens(null) }} style={{
-            padding: '0.25rem 0.65rem', fontSize: '0.72rem', borderRadius: '4px', cursor: 'pointer',
+            padding: '0.25rem 0.65rem', fontSize: fs.label, borderRadius: '4px', cursor: 'pointer',
             background: subView === v.key && !lens ? 'rgba(6,182,212,0.15)' : 'transparent',
-            color: subView === v.key && !lens ? '#67e8f9' : '#9ca3af',
+            color: subView === v.key && !lens ? 'var(--interactive)' : 'var(--text-2)',
             border: `1px solid ${subView === v.key && !lens ? 'rgba(6,182,212,0.3)' : 'transparent'}`,
           }}>
             {v.label}
           </button>
         ))}
-        <span style={{ color: '#374151', margin: '0 0.3rem' }}>|</span>
+        <span style={{ color: 'var(--line)', margin: '0 0.3rem' }}>|</span>
         {/* Lens selector */}
-        <span style={{ fontSize: '0.62rem', color: '#6b7280', marginRight: '0.2rem' }}>Lens:</span>
+        <span style={{ fontSize: fs.label, color: 'var(--text-3)', marginRight: '0.2rem' }}>Lens:</span>
         {(Object.entries(LENS_LABELS) as [Lens, typeof LENS_LABELS[Lens]][]).map(([l, info]) => (
           <button key={l} onClick={() => setLens(lens === l ? null : l)} style={{
-            padding: '0.15rem 0.4rem', fontSize: '0.6rem', borderRadius: '3px', cursor: 'pointer',
-            background: lens === l ? `${info.color}20` : 'transparent',
-            color: lens === l ? info.color : '#6b7280',
-            border: `1px solid ${lens === l ? `${info.color}60` : 'transparent'}`,
+            padding: '0.15rem 0.4rem', fontSize: fs.label, borderRadius: '3px', cursor: 'pointer',
+            background: lens === l ? `color-mix(in srgb, ${info.color} 13%, transparent)` : 'transparent',
+            color: lens === l ? info.color : 'var(--text-3)',
+            border: `1px solid ${lens === l ? `color-mix(in srgb, ${info.color} 38%, transparent)` : 'transparent'}`,
           }}>
             {info.name}
           </button>

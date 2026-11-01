@@ -39,6 +39,8 @@ export function useActiveParameters(): Record<string, DesignParam> {
           unit: existing?.unit || '',
           confidence: 1.0,
           margin_percent: existing?.margin_percent || 0,
+          source: existing?.source || 'override',
+          domain: existing?.domain || '',
         }
       }
       merged = { ...merged, ...overrideParams }

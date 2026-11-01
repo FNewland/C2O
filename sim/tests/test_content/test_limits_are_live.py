@@ -255,6 +255,10 @@ def test_console_requests_the_limit_bands():
     assert "param_limit_state" in html
 
 
+#: Limited by the ground receiver (smo-rfsim ground_limits), not by the MCS.
+GROUND_RECEIVER_LIMITED = {0x050C, 0x051A}
+
+
 def test_limit_element_map_only_names_limited_parameters():
     """Every parameter id bound to a display element must carry a band."""
     html = INDEX.read_text()
@@ -264,6 +268,13 @@ def test_limit_element_map_only_names_limited_parameters():
     import re
     ids = {int(m, 16) for m in re.findall(r"0x([0-9A-Fa-f]{4})", block)}
     limited = {l.param_id for l in _limits()}
+    # 2026-11-01: the BER band left mcs/limits.yaml for the RF bridge
+    # (ground-receiver limits, rfsim.yaml `ground_limits`, served at the
+    # radio's GET /api/ground-limits). The CLASSIC console is byte-frozen
+    # (test_classic_untouched), so its 'ttc-ber' binding stays and is inert:
+    # no MCS band, no colour. The modern TT&C page takes the band from the
+    # RF bridge instead.
+    limited |= GROUND_RECEIVER_LIMITED
     assert ids, "LIMIT_ELEMENTS is empty"
     assert ids <= limited, (
         "display bound to parameters with no limit band: "

@@ -14,6 +14,9 @@ import { DesignTools } from './DesignTools'
 import { useCollaboration } from './useCollaboration'
 
 import { ParameterSection } from '../components/ParameterPanel'
+import { fs } from '../theme/tokens'
+import { subsystemStyle } from '../theme/tokens'
+import { askConfirm, askText } from '../components/ui/Dialog'
 
 const API = '/api'
 
@@ -101,13 +104,14 @@ function InlineEdit({ value, onCommit, style, inputStyle }: {
 
   if (!editing) {
     return (
-      <span
+      <button
+        type="button"
         onClick={() => { setDraft(value); setEditing(true) }}
-        style={{ cursor: 'pointer', ...style }}
+        style={{ cursor: 'text', background: 'none', border: 0, padding: '0 2px', minHeight: 24, textAlign: 'left', font: 'inherit', color: 'inherit', ...style }}
         title={t('Click to edit')}
       >
         {value}
-      </span>
+      </button>
     )
   }
 
@@ -169,7 +173,7 @@ export function BlocksPanel() {
     mutationFn: async () => {
       const body: any = {
         name: newName,
-        element_type: newType || ({ 0: 'segment', 1: 'system', 2: 'subsystem', 3: 'component' }[currentLevel] || 'system'),
+        element_type: newType || (({ 0: 'segment', 1: 'system', 2: 'subsystem', 3: 'component' } as Record<number, string>)[currentLevel] || 'system'),
         parent_id: focusElementId || undefined,
         segment: newSegment,
       }
@@ -239,9 +243,9 @@ export function BlocksPanel() {
   const focusName = allElements.find((e: any) => e.id === focusElementId)?.name
 
   return (
-    <div style={{ padding: '0.5rem 1rem', fontSize: '0.75rem' }}>
+    <div style={{ padding: '0.5rem 1rem', fontSize: fs.label }}>
       {/* Element list */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', marginBottom: '0.5rem' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 0, marginBottom: '0.5rem', borderTop: '1px solid var(--line)' }}>
         {children.length === 0 && !showAdd && (
           <div style={{ color: 'var(--text-secondary)', padding: '0.5rem 0' }}>
             {t('No elements at this level. Click "Add Element" to start.')}
@@ -249,22 +253,23 @@ export function BlocksPanel() {
         )}
         {children.map((el: any) => (
           <div key={el.id} style={{
-            display: 'flex', alignItems: 'center', gap: '0.5rem',
-            padding: '0.3rem 0.5rem', borderRadius: '4px',
-            background: 'var(--bg-card)', border: '1px solid var(--border)',
+            display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', minHeight: 36,
+            padding: '0 var(--sp-2)', borderBottom: '1px solid var(--line)', background: 'var(--surface-1)',
           }}>
-            <span style={{
-              fontSize: '0.55rem', padding: '0.1rem 0.3rem', borderRadius: '3px',
-              background: 'rgba(59,130,246,0.15)', color: 'var(--accent)',
-              fontWeight: 600, textTransform: 'uppercase',
-            }}>
-              {el.subsystem_domain || el.element_type}
-            </span>
+            {(() => {
+              const ss = el.subsystem_domain ? subsystemStyle(el.subsystem_domain) : null
+              return (
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, minWidth: 128, fontSize: fs.label, color: 'var(--text-3)' }}>
+                  <span className="c2o-ss-badge" aria-hidden="true" style={{ background: ss ? ss.color : 'transparent' }}>{ss?.badge ?? ''}</span>
+                  <span style={{ textTransform: 'uppercase' }}>{el.subsystem_domain || el.element_type}</span>
+                </span>
+              )
+            })()}
             {/* Lock indicator */}
             {isLockedByOther(el.id) && (
-              <span style={{ fontSize: '0.5rem', padding: '0.05rem 0.2rem', borderRadius: '2px', background: 'rgba(239,68,68,0.15)', color: 'var(--danger)', fontWeight: 600, flexShrink: 0 }}
+              <span style={{ fontSize: fs.label, padding: '0.05rem 0.2rem', borderRadius: '2px', background: 'rgba(239,68,68,0.15)', color: 'var(--danger)', fontWeight: 600, flexShrink: 0 }}
                 title={t('Locked by {{name}}', { name: lockHolder(el.id) })}>
-                🔒 {lockHolder(el.id)}
+                {t('Locked by {{name}}', { name: lockHolder(el.id) })}
               </span>
             )}
             {isLockedByOther(el.id) ? (
@@ -282,35 +287,36 @@ export function BlocksPanel() {
               <InlineEdit
                 value={el.mass_kg.toFixed(1)}
                 onCommit={(v) => { const n = parseFloat(v); if (!isNaN(n)) patchElement(el.id, { mass_kg: n }) }}
-                style={{ color: 'var(--text-secondary)', fontSize: '0.65rem' }}
-                inputStyle={{ width: 50, fontSize: '0.65rem', textAlign: 'right' }}
+                style={{ color: 'var(--text-value)', fontSize: fs.value, fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}
+                inputStyle={{ width: 64, fontSize: fs.value, textAlign: 'right' }}
               />
             )}
             {el.mass_kg != null && (
-              <span style={{ color: 'var(--text-secondary)', fontSize: '0.65rem' }}>kg</span>
+              <span style={{ color: 'var(--text-secondary)', fontSize: fs.label }}>kg</span>
             )}
 
             {el.power_avg_w != null && (
               <InlineEdit
                 value={el.power_avg_w.toFixed(1)}
                 onCommit={(v) => { const n = parseFloat(v); if (!isNaN(n)) patchElement(el.id, { power_avg_w: n }) }}
-                style={{ color: 'var(--text-secondary)', fontSize: '0.65rem' }}
-                inputStyle={{ width: 50, fontSize: '0.65rem', textAlign: 'right' }}
+                style={{ color: 'var(--text-value)', fontSize: fs.value, fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}
+                inputStyle={{ width: 64, fontSize: fs.value, textAlign: 'right' }}
               />
             )}
             {el.power_avg_w != null && (
-              <span style={{ color: 'var(--text-secondary)', fontSize: '0.65rem' }}>W</span>
+              <span style={{ color: 'var(--text-secondary)', fontSize: fs.label }}>W</span>
             )}
 
             {/* Quantity */}
             {(el.quantity || 1) > 1 ? (
               <span style={{
-                fontSize: '0.6rem', padding: '0.05rem 0.25rem', borderRadius: '3px',
+                fontSize: fs.label, padding: '0.05rem 0.25rem', borderRadius: '3px',
                 background: 'rgba(59,130,246,0.15)', color: 'var(--accent)', fontWeight: 600,
                 cursor: 'pointer',
               }}
-              onClick={() => {
-                const q = prompt(t('Quantity for "{{name}}":', { name: displayElementName(el.name, t) }), String(el.quantity || 1))
+              role="button" tabIndex={0}
+              onClick={async () => {
+                const q = await askText(t('Quantity for "{{name}}":', { name: displayElementName(el.name, t) }), String(el.quantity || 1))
                 if (q && !isNaN(Number(q))) {
                   fetch(`${API}/elements/${el.id}`, {
                     method: 'PATCH', headers: { 'Content-Type': 'application/json' },
@@ -323,8 +329,8 @@ export function BlocksPanel() {
               </span>
             ) : (
               <button
-                onClick={() => {
-                  const q = prompt(t('Quantity for "{{name}}":', { name: displayElementName(el.name, t) }), '1')
+                onClick={async () => {
+                  const q = await askText(t('Quantity for "{{name}}":', { name: displayElementName(el.name, t) }), '1')
                   if (q && Number(q) > 1) {
                     fetch(`${API}/elements/${el.id}`, {
                       method: 'PATCH', headers: { 'Content-Type': 'application/json' },
@@ -332,7 +338,7 @@ export function BlocksPanel() {
                     }).then(() => qc.invalidateQueries({ queryKey: ['elements', studyId] }))
                   }
                 }}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.55rem', color: 'var(--text-secondary)' }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', minWidth: 24, minHeight: 24, fontSize: fs.label, color: 'var(--text-secondary)' }}
                 title={t('Set quantity (for duplicates/constellation)')}
               >
                 {t('qty')}
@@ -344,8 +350,8 @@ export function BlocksPanel() {
               onClick={() => toggleScope(el.id, el.in_scope !== false)}
               title={el.in_scope === false ? t('Mark in-scope') : t('Mark out-of-scope')}
               style={{
-                background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.65rem',
-                color: el.in_scope === false ? '#6b7280' : 'var(--success)',
+                background: 'none', border: 'none', cursor: 'pointer', minWidth: 24, minHeight: 24, fontSize: fs.label,
+                color: el.in_scope === false ? 'var(--text-3)' : 'var(--success)',
               }}
             >
               {el.in_scope === false ? t('EXT') : t('IN')}
@@ -356,7 +362,7 @@ export function BlocksPanel() {
               onClick={() => toggleFreeze(el.id, !!el.frozen)}
               title={el.frozen ? t('Unfreeze') : t('Freeze')}
               style={{
-                background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.65rem',
+                background: 'none', border: 'none', cursor: 'pointer', minWidth: 24, minHeight: 24, fontSize: fs.label,
                 color: el.frozen ? 'var(--warning)' : 'var(--text-secondary)',
               }}
             >
@@ -366,14 +372,15 @@ export function BlocksPanel() {
             {/* Delete */}
             {!el.frozen && (
               <button
-                onClick={() => {
-                  if (confirm(t('Delete "{{name}}" and all its children?', { name: displayElementName(el.name, t) }))) {
+                aria-label={t('Delete "{{name}}"', { name: displayElementName(el.name, t) })}
+                onClick={async () => {
+                  if (await askConfirm(t('Delete "{{name}}" and all its children?', { name: displayElementName(el.name, t) }), { danger: true, confirmLabel: t('Delete') })) {
                     deleteMutation.mutate(el.id)
                   }
                 }}
                 style={{
-                  background: 'none', border: 'none', cursor: 'pointer',
-                  color: 'var(--danger)', fontSize: '0.75rem',
+                  background: 'none', border: 'none', cursor: 'pointer', minWidth: 24, minHeight: 24,
+                  color: 'var(--text-3)', fontSize: fs.value,
                 }}
               >
                 ×
@@ -395,7 +402,7 @@ export function BlocksPanel() {
             placeholder={t('Element name')}
             autoFocus
             style={{
-              padding: '0.3rem 0.5rem', fontSize: '0.72rem', borderRadius: '3px',
+              padding: '0.3rem 0.5rem', fontSize: fs.label, borderRadius: '3px',
               background: 'var(--bg-primary)', border: '1px solid var(--border)',
               color: 'var(--text-primary)', width: 140,
             }}
@@ -407,7 +414,7 @@ export function BlocksPanel() {
               value={newType}
               onChange={e => setNewType(e.target.value)}
               style={{
-                padding: '0.3rem', fontSize: '0.72rem', borderRadius: '3px',
+                padding: '0.3rem', fontSize: fs.label, borderRadius: '3px',
                 background: 'var(--bg-primary)', border: '1px solid var(--border)',
                 color: 'var(--text-primary)',
               }}
@@ -421,7 +428,7 @@ export function BlocksPanel() {
               value={newSegment}
               onChange={e => setNewSegment(e.target.value)}
               style={{
-                padding: '0.3rem', fontSize: '0.72rem', borderRadius: '3px',
+                padding: '0.3rem', fontSize: fs.label, borderRadius: '3px',
                 background: 'var(--bg-primary)', border: '1px solid var(--border)',
                 color: 'var(--text-primary)',
               }}
@@ -435,7 +442,7 @@ export function BlocksPanel() {
               value={newDomain}
               onChange={e => setNewDomain(e.target.value)}
               style={{
-                padding: '0.3rem', fontSize: '0.72rem', borderRadius: '3px',
+                padding: '0.3rem', fontSize: fs.label, borderRadius: '3px',
                 background: 'var(--bg-primary)', border: '1px solid var(--border)',
                 color: 'var(--text-primary)',
               }}
@@ -448,7 +455,7 @@ export function BlocksPanel() {
             onClick={() => newName && addMutation.mutate()}
             disabled={!newName || addMutation.isPending}
             style={{
-              padding: '0.3rem 0.6rem', fontSize: '0.72rem', fontWeight: 600,
+              padding: '0.3rem 0.6rem', fontSize: fs.label, fontWeight: 600,
               borderRadius: '3px', background: 'var(--accent)', color: 'white',
               border: 'none', cursor: 'pointer',
             }}
@@ -458,7 +465,7 @@ export function BlocksPanel() {
           <button
             onClick={() => setShowAdd(false)}
             style={{
-              padding: '0.3rem 0.6rem', fontSize: '0.72rem',
+              padding: '0.3rem 0.6rem', fontSize: fs.label,
               borderRadius: '3px', background: 'var(--bg-secondary)', color: 'var(--text-secondary)',
               border: 'none', cursor: 'pointer',
             }}
@@ -473,7 +480,7 @@ export function BlocksPanel() {
             setShowAdd(true)
           }}
           style={{
-            padding: '0.35rem 0.75rem', fontSize: '0.72rem', fontWeight: 600,
+            padding: '0.35rem 0.75rem', fontSize: fs.label, fontWeight: 600,
             borderRadius: '4px', background: 'var(--accent)', color: 'white',
             border: 'none', cursor: 'pointer',
           }}
@@ -783,26 +790,26 @@ function ElementProperties({ studyId, focusElementId, allElements }: { studyId: 
   return (
     <div style={{ marginTop: '0.5rem', borderTop: '1px solid var(--border)', paddingTop: '0.4rem' }}>
       <button onClick={() => setExpanded(!expanded)} style={{
-        background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.68rem',
-        color: '#06b6d4', fontWeight: 600, padding: 0,
+        background: 'none', border: 'none', cursor: 'pointer', minWidth: 24, minHeight: 24, fontSize: fs.label,
+        color: 'var(--interactive)', fontWeight: 600, padding: 0,
       }}>
         {expanded ? '▾' : '▸'} {t('Properties: {{name}}', { name: displayElementName(focusElement.name, t) })}
       </button>
       {expanded && (
         <div style={{ marginTop: '0.3rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.25rem' }}>
           {fields.map(f => (
-            <div key={f.key} style={{ fontSize: '0.63rem' }}>
+            <div key={f.key} style={{ fontSize: fs.label }}>
               <label style={{ color: 'var(--text-secondary)', display: 'block', marginBottom: '0.1rem' }}>{t('{{label}}:', { label: f.label })}</label>
               {f.type === 'select' ? (
                 <select value={perf[f.key] || ''} onChange={e => updateProp(f.key, e.target.value)}
-                  style={{ width: '100%', padding: '0.15rem 0.3rem', fontSize: '0.63rem', borderRadius: '3px', background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}>
+                  style={{ width: '100%', padding: '0.15rem 0.3rem', fontSize: fs.label, borderRadius: '3px', background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}>
                   <option value="">—</option>
                   {f.options?.map(o => <option key={o} value={o}>{OPTION_WORDS.includes(o) ? t(o) : o}</option>)}
                 </select>
               ) : (
                 <input type={f.type} value={perf[f.key] ?? ''} onChange={e => updateProp(f.key, f.type === 'number' ? parseFloat(e.target.value) || null : e.target.value)}
                   placeholder={f.label}
-                  style={{ width: '100%', padding: '0.15rem 0.3rem', fontSize: '0.63rem', borderRadius: '3px', background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)' }} />
+                  style={{ width: '100%', padding: '0.15rem 0.3rem', fontSize: fs.label, borderRadius: '3px', background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)' }} />
               )}
             </div>
           ))}
@@ -874,7 +881,7 @@ function DesignAssist({ studyId, focusElementId, currentLevel }: { studyId: stri
       <button
         onClick={() => setExpanded(!expanded)}
         style={{
-          background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.72rem',
+          background: 'none', border: 'none', cursor: 'pointer', minWidth: 24, minHeight: 24, fontSize: fs.label,
           color: 'var(--info)', fontWeight: 600, padding: 0,
         }}
       >
@@ -890,13 +897,13 @@ function DesignAssist({ studyId, focusElementId, currentLevel }: { studyId: stri
               disabled={applying}
               title={p.description}
               style={{
-                padding: '0.3rem 0.6rem', fontSize: '0.7rem', borderRadius: '4px',
+                padding: '0.3rem 0.6rem', fontSize: fs.label, borderRadius: '4px',
                 background: 'var(--bg-card)', border: '1px solid var(--info)',
                 color: 'var(--info)', cursor: 'pointer',
               }}
             >
               {p.name}
-              <span style={{ fontSize: '0.55rem', color: 'var(--text-secondary)', marginLeft: '0.3rem' }}>
+              <span style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginLeft: '0.3rem' }}>
                 {t('({{count}} blocks)', { count: p.children.length })}
               </span>
             </button>
@@ -951,17 +958,17 @@ function PopulateButton({ studyId, focusElementId, currentLevel, childElements }
       marginTop: '0.5rem', padding: '0.5rem', borderRadius: '6px',
       background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)',
     }}>
-      <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--accent)', marginBottom: '0.3rem' }}>
+      <div style={{ fontSize: fs.label, fontWeight: 600, color: 'var(--accent)', marginBottom: '0.3rem' }}>
         {t('Quick Start')}
       </div>
-      <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
+      <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
         {t('Auto-create standard subsystems (EPS, AOCS, Comms, OBC, Thermal, Structure, Propulsion) with recommended CubeSat equipment from the component catalogue.')}
       </div>
       <button
         onClick={populate}
         disabled={loading}
         style={{
-          padding: '0.3rem 0.8rem', fontSize: '0.72rem', fontWeight: 600,
+          padding: '0.3rem 0.8rem', fontSize: fs.label, fontWeight: 600,
           borderRadius: '4px', background: loading ? 'var(--border)' : 'var(--accent)',
           color: 'white', border: 'none', cursor: loading ? 'wait' : 'pointer',
         }}
@@ -969,7 +976,7 @@ function PopulateButton({ studyId, focusElementId, currentLevel, childElements }
         {loading ? t('Populating...') : t('Populate Subsystems + Equipment')}
       </button>
       {result && (
-        <div style={{ marginTop: '0.3rem', fontSize: '0.65rem', color: result.startsWith('Error') ? 'var(--danger)' : 'var(--success)' }}>
+        <div style={{ marginTop: '0.3rem', fontSize: fs.label, color: result.startsWith('Error') ? 'var(--danger)' : 'var(--success)' }}>
           {result.startsWith('Error: ') ? t('Error: {{message}}', { message: result.slice('Error: '.length) }) : result}
         </div>
       )}

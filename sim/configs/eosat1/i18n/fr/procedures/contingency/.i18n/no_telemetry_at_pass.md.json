@@ -64,8 +64,8 @@
   },
   {
    "id": "ctg-019-no-telemetry-at-pass-start/procedure-steps/step-6-verify-link-quality-and-subsystem-health",
-   "en_hash": "ee56d21e2a736f6b",
-   "fr_hash": "7a424ce95eca8c40"
+   "en_hash": "78e1038bff4df000",
+   "fr_hash": "3a9f1a7d09e3fd5c"
   },
   {
    "id": "ctg-019-no-telemetry-at-pass-start/procedure-steps/step-7-escalation-no-link-recovery",
@@ -83,5 +83,5 @@
    "fr_hash": "2e10ab8643774508"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "8067e5b"
 }

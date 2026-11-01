@@ -14,6 +14,7 @@ import { useDesignStore } from '../stores/designStore'
 import { useUIStore } from '../stores/uiStore'
 import { optionQuery } from '../stores/optionStore'
 import type { AnalysisConflict } from '../types/analyses'
+import { fs } from '../theme/tokens'
 
 const API = '/api'
 
@@ -23,11 +24,11 @@ const ANALYSIS_LABELS: Record<string, string> = {
   physics: 'physics', vv: 'V&V', fmeca: 'FMECA',
 }
 const ANALYSIS_COLORS: Record<string, string> = {
-  design_loop: '#f59e0b', mission_simulation: '#3b82f6', ground_segment: '#10b981',
-  physics: '#8b5cf6', vv: '#14b8a6', fmeca: '#ec4899',
+  design_loop: 'var(--status-caution)', mission_simulation: 'var(--interactive)', ground_segment: 'var(--status-ok)',
+  physics: 'var(--cat-2)', vv: 'var(--cat-3)', fmeca: 'var(--cat-6)',
 }
 const SEVERITY_COLORS: Record<string, string> = {
-  critical: '#ef4444', major: '#f97316', minor: '#eab308', warning: '#f59e0b', info: '#3b82f6',
+  critical: 'var(--status-alarm)', major: 'var(--status-caution)', minor: 'var(--status-caution)', warning: 'var(--status-caution)', info: 'var(--interactive)',
 }
 // English text is the i18n key
 const SEVERITY_LABELS: Record<string, string> = {
@@ -62,30 +63,30 @@ function AnalysisConflictCard({ c, elements, onResolve, resolving }: {
 }) {
   const { t } = useTranslation()
   const sev = SEVERITY_COLORS[c.severity] || SEVERITY_COLORS.minor
-  const src = ANALYSIS_COLORS[c.analysis] || '#6b7280'
+  const src = ANALYSIS_COLORS[c.analysis] || 'var(--text-3)'
   const byId = new Map(elements.map(e => [e.id, e]))
   return (
-    <div className="card" style={{ borderLeft: `4px solid ${sev}`, background: `${sev}10`, marginBottom: '0.5rem', padding: '0.5rem 0.65rem', opacity: c.resolved ? 0.55 : 1 }}>
+    <div className="card" style={{ borderLeft: `4px solid ${sev}`, background: `color-mix(in srgb, ${sev} 6%, transparent)`, marginBottom: '0.5rem', padding: '0.5rem 0.65rem', opacity: c.resolved ? 0.55 : 1 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.3rem', flexWrap: 'wrap' }}>
-        <span style={{ fontSize: '0.56rem', padding: '0 0.35rem', borderRadius: 3, background: `${src}22`, color: src, border: `1px solid ${src}55`, whiteSpace: 'nowrap' }}>
+        <span style={{ fontSize: fs.label, padding: '0 0.35rem', borderRadius: 3, background: `color-mix(in srgb, ${src} 13%, transparent)`, color: src, border: `1px solid color-mix(in srgb, ${src} 33%, transparent)`, whiteSpace: 'nowrap' }}>
           {ANALYSIS_LABELS[c.analysis] ? t(ANALYSIS_LABELS[c.analysis]) : c.analysis}
         </span>
-        <span style={{ fontSize: '0.56rem', padding: '0 0.35rem', borderRadius: 3, background: `${sev}22`, color: sev, border: `1px solid ${sev}55`, textTransform: 'uppercase' }}>
+        <span style={{ fontSize: fs.label, padding: '0 0.35rem', borderRadius: 3, background: `color-mix(in srgb, ${sev} 13%, transparent)`, color: sev, border: `1px solid color-mix(in srgb, ${sev} 33%, transparent)`, textTransform: 'uppercase' }}>
           {SEVERITY_LABELS[c.severity] ? t(SEVERITY_LABELS[c.severity]) : c.severity}
         </span>
-        <h3 style={{ fontSize: '0.8rem', margin: 0 }}>{c.title}</h3>
-        <span style={{ fontSize: '0.56rem', color: 'var(--text-secondary)', fontFamily: 'ui-monospace, monospace' }}>{c.code}</span>
+        <h3 style={{ fontSize: fs.body, margin: 0 }}>{c.title}</h3>
+        <span style={{ fontSize: fs.label, color: 'var(--text-secondary)', fontFamily: 'ui-monospace, monospace' }}>{c.code}</span>
         <span style={{ flex: 1 }} />
         {c.resolved ? (
-          <span style={{ fontSize: '0.58rem', color: 'var(--success)' }}>{t('resolved')}</span>
+          <span style={{ fontSize: fs.label, color: 'var(--success)' }}>{t('resolved')}</span>
         ) : (
           <button onClick={() => onResolve(c.id)} disabled={resolving}
-            style={{ cursor: 'pointer', fontSize: '0.6rem', padding: '0.1rem 0.5rem', borderRadius: 4, border: '1px solid var(--success)', background: 'rgba(16,185,129,0.12)', color: 'var(--success)' }}>
+            style={{ cursor: 'pointer', fontSize: fs.label, padding: '0.1rem 0.5rem', borderRadius: 4, border: '1px solid var(--success)', background: 'rgba(16,185,129,0.12)', color: 'var(--success)' }}>
             {t('Resolve')}
           </button>
         )}
       </div>
-      {c.detail && <p style={{ fontSize: '0.74rem', marginBottom: '0.3rem' }}>{c.detail}</p>}
+      {c.detail && <p style={{ fontSize: fs.label, marginBottom: '0.3rem' }}>{c.detail}</p>}
       {c.element_ids?.length > 0 && (
         <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap', marginBottom: '0.3rem' }}>
           {c.element_ids.map(id => {
@@ -93,7 +94,7 @@ function AnalysisConflictCard({ c, elements, onResolve, resolving }: {
             return (
               <button key={id} title={el ? t('Focus {{name}} in Blocks', { name: el.name }) : id}
                 onClick={() => el && focusElementInBlocks(el, elements)}
-                style={{ cursor: el ? 'pointer' : 'default', fontSize: '0.58rem', padding: '0 0.4rem', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg-primary)', color: el ? 'var(--accent)' : 'var(--text-secondary)' }}>
+                style={{ cursor: el ? 'pointer' : 'default', fontSize: fs.label, padding: '0 0.4rem', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg-primary)', color: el ? 'var(--accent)' : 'var(--text-secondary)' }}>
                 {el?.name || id.slice(0, 8)}
               </button>
             )
@@ -101,11 +102,11 @@ function AnalysisConflictCard({ c, elements, onResolve, resolving }: {
         </div>
       )}
       {c.requirement_ids?.length > 0 && (
-        <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>{t('requirements: {{ids}}', { ids: c.requirement_ids.join(', ') })}</div>
+        <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>{t('requirements: {{ids}}', { ids: c.requirement_ids.join(', ') })}</div>
       )}
       {c.suggested_fix && (
-        <div style={{ fontSize: '0.7rem', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '0.25rem' }}>
-          <span style={{ fontSize: '0.6rem', fontWeight: 600, color: 'var(--text-secondary)' }}>{t('SUGGESTED FIX:')} </span>{c.suggested_fix}
+        <div style={{ fontSize: fs.label, borderTop: '1px solid color-mix(in srgb, var(--text) 5%, transparent)', paddingTop: '0.25rem' }}>
+          <span style={{ fontSize: fs.label, fontWeight: 600, color: 'var(--text-secondary)' }}>{t('SUGGESTED FIX:')} </span>{c.suggested_fix}
         </div>
       )}
     </div>
@@ -131,7 +132,7 @@ function AnalysisConflicts({ studyId, optionId, analysisFilter }: { studyId: str
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['conflicts', studyId] }); qc.invalidateQueries({ queryKey: ['analyses', studyId] }) },
   })
 
-  if (error) return <div style={{ fontSize: '0.66rem', color: 'var(--danger)' }}>{t('conflicts: {{message}}', { message: (error as Error).message })}</div>
+  if (error) return <div style={{ fontSize: fs.label, color: 'var(--danger)' }}>{t('conflicts: {{message}}', { message: (error as Error).message })}</div>
   if (!data) return null
   let rows = [...data.design, ...data.analysis]
   if (analysisFilter) rows = rows.filter(c => c.analysis === analysisFilter)
@@ -141,7 +142,7 @@ function AnalysisConflicts({ studyId, optionId, analysisFilter }: { studyId: str
 
   if (rows.length === 0) {
     return (
-      <div style={{ fontSize: '0.68rem', color: 'var(--success)', padding: '0.3rem 0' }}>
+      <div style={{ fontSize: fs.label, color: 'var(--success)', padding: '0.3rem 0' }}>
         {analysisFilter
           ? (optionId
             ? t('No {{analysis}} conflicts in this option.', { analysis: ANALYSIS_LABELS[analysisFilter] ? t(ANALYSIS_LABELS[analysisFilter]) : analysisFilter })
@@ -154,12 +155,12 @@ function AnalysisConflicts({ studyId, optionId, analysisFilter }: { studyId: str
     <div>
       <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
         {Object.entries(counts).map(([sev, n]) => (
-          <span key={sev} style={{ fontSize: '0.58rem', padding: '0 0.4rem', borderRadius: 3, background: `${SEVERITY_COLORS[sev] || '#6b7280'}22`, color: SEVERITY_COLORS[sev] || '#6b7280', border: `1px solid ${SEVERITY_COLORS[sev] || '#6b7280'}55` }}>
+          <span key={sev} style={{ fontSize: fs.label, padding: '0 0.4rem', borderRadius: 3, background: `color-mix(in srgb, ${SEVERITY_COLORS[sev] || 'var(--text-3)'} 13%, transparent)`, color: SEVERITY_COLORS[sev] || 'var(--text-3)', border: `1px solid color-mix(in srgb, ${SEVERITY_COLORS[sev] || 'var(--text-3)'} 33%, transparent)` }}>
             {t('{{n}} {{severity}}', { n, severity: SEVERITY_LABELS[sev] ? t(SEVERITY_LABELS[sev]) : sev })}
           </span>
         ))}
-        {open.length === 0 && <span style={{ fontSize: '0.62rem', color: 'var(--success)' }}>{t('all resolved')}</span>}
-        {resolve.error && <span style={{ fontSize: '0.6rem', color: 'var(--danger)' }}>{(resolve.error as Error).message}</span>}
+        {open.length === 0 && <span style={{ fontSize: fs.label, color: 'var(--success)' }}>{t('all resolved')}</span>}
+        {resolve.error && <span style={{ fontSize: fs.label, color: 'var(--danger)' }}>{(resolve.error as Error).message}</span>}
       </div>
       {rows.map(c => <AnalysisConflictCard key={c.id} c={c} elements={elements} onResolve={id => resolve.mutate(id)} resolving={resolve.isPending} />)}
     </div>
@@ -188,7 +189,7 @@ export function ConflictsPanel({ studyId, optionId, analysisFilter }: { studyId?
     return (
       <div className="card" style={{ borderColor: 'var(--success)' }}>
         <h3 style={{ color: 'var(--success)' }}>{t('No Cross-Domain Conflicts')}</h3>
-        <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+        <p style={{ fontSize: fs.body, color: 'var(--text-secondary)' }}>
           {t('All subsystem designs are compatible. No position conflicts detected.')}
         </p>
       </div>
@@ -219,16 +220,16 @@ export function ConflictsPanel({ studyId, optionId, analysisFilter }: { studyId?
             style={{ borderLeft: `4px solid ${style.border}`, background: style.bg, marginBottom: '0.75rem' }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-              <h3 style={{ fontSize: '0.85rem' }}>{conflict.title}</h3>
+              <h3 style={{ fontSize: fs.body }}>{conflict.title}</h3>
               <span className={`badge badge-${conflict.severity === 'critical' ? 'red' : conflict.severity === 'major' ? 'amber' : 'green'}`}>
                 {t(style.label)}
               </span>
             </div>
 
-            <p style={{ fontSize: '0.8rem', marginBottom: '0.5rem' }}>{conflict.description}</p>
+            <p style={{ fontSize: fs.body, marginBottom: '0.5rem' }}>{conflict.description}</p>
 
             {/* Positions involved */}
-            <div style={{ display: 'flex', gap: '1rem', marginBottom: '0.5rem', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+            <div style={{ display: 'flex', gap: '1rem', marginBottom: '0.5rem', fontSize: fs.label, color: 'var(--text-secondary)' }}>
               <span><strong>{conflict.position_a?.replace('_', ' ')}</strong>: {conflict.value_a_str}</span>
               <span>↔</span>
               <span><strong>{conflict.position_b?.replace('_', ' ')}</strong>: {conflict.value_b_str}</span>
@@ -237,11 +238,11 @@ export function ConflictsPanel({ studyId, optionId, analysisFilter }: { studyId?
             {/* Resolutions */}
             {conflict.resolutions?.length > 0 && (
               <div style={{ marginTop: '0.5rem' }}>
-                <div style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>
+                <div style={{ fontSize: fs.label, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>
                   {t('SUGGESTED RESOLUTIONS:')}
                 </div>
                 {conflict.resolutions.map((res: any, i: number) => (
-                  <div key={i} style={{ fontSize: '0.75rem', padding: '0.25rem 0', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                  <div key={i} style={{ fontSize: fs.label, padding: '0.25rem 0', borderTop: '1px solid color-mix(in srgb, var(--text) 5%, transparent)' }}>
                     <strong>{res.position_responsible?.replace('_', ' ')}:</strong> {res.description}
                     {res.estimated_impact && <span style={{ color: 'var(--text-secondary)' }}> — {res.estimated_impact}</span>}
                   </div>

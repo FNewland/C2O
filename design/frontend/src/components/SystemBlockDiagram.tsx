@@ -16,19 +16,21 @@ import {
 import '@xyflow/react/dist/style.css'
 import { useDesignStore } from '../stores/designStore'
 import { useModelStore } from '../stores/modelStore'
+import { fs } from '../theme/tokens'
+import { askText, showAlert } from './ui/Dialog'
 
 // Subsystem node component
 function SubsystemNode({ data }: { data: { label: string; color: string; blocks?: string[] } }) {
   return (
     <div style={{
       padding: '8px 14px', border: `2px solid ${data.color}`, borderRadius: 8,
-      background: `${data.color}15`, textAlign: 'center', minWidth: 120,
+      background: `color-mix(in srgb, ${data.color} 8%, transparent)`, textAlign: 'center', minWidth: 120,
     }}>
       <Handle type="target" position={Position.Top} />
       <Handle type="target" position={Position.Left} id="left" />
-      <div style={{ fontSize: '0.78rem', color: data.color, fontWeight: 700 }}>{data.label}</div>
+      <div style={{ fontSize: fs.label, color: data.color, fontWeight: 700 }}>{data.label}</div>
       {data.blocks && data.blocks.length > 0 && (
-        <div style={{ fontSize: '0.6rem', color: '#9ca3af', marginTop: '0.2rem' }}>
+        <div style={{ fontSize: fs.label, color: 'var(--text-2)', marginTop: '0.2rem' }}>
           {data.blocks.join(' | ')}
         </div>
       )}
@@ -40,13 +42,11 @@ function SubsystemNode({ data }: { data: { label: string; color: string; blocks?
 
 // Container node — resizable boundary box for segments/systems
 function ContainerNode({ data, selected }: { data: { label: string; color: string; childCount?: number }; selected?: boolean }) {
-  const w = data.childCount ? Math.max(400, (Math.min(data.childCount, 4)) * 200 + 60) : 400
-  const h = data.childCount ? Math.max(300, Math.ceil(data.childCount / 4) * 150 + 80) : 300
   return (
     <div style={{
       width: '100%', height: '100%', minWidth: 300, minHeight: 200,
       border: `2px dashed ${data.color}`, borderRadius: 12,
-      background: `${data.color}08`,
+      background: `color-mix(in srgb, ${data.color} 3%, transparent)`,
       position: 'relative',
     }}>
       <NodeResizer
@@ -59,10 +59,10 @@ function ContainerNode({ data, selected }: { data: { label: string; color: strin
       <div style={{
         position: 'absolute', top: 0, left: 0, right: 0,
         padding: '4px 12px',
-        background: `${data.color}20`,
-        borderBottom: `1px solid ${data.color}40`,
+        background: `color-mix(in srgb, ${data.color} 13%, transparent)`,
+        borderBottom: `1px solid color-mix(in srgb, ${data.color} 25%, transparent)`,
         borderRadius: '10px 10px 0 0',
-        fontSize: '0.75rem', fontWeight: 700, color: data.color,
+        fontSize: fs.label, fontWeight: 700, color: data.color,
         textTransform: 'uppercase', letterSpacing: '0.05em',
       }}>
         {data.label}
@@ -78,10 +78,10 @@ function ContainerNode({ data, selected }: { data: { label: string; color: strin
 const nodeTypes: NodeTypes = { subsystem: SubsystemNode, container: ContainerNode }
 
 const SUBSYSTEM_COLORS: Record<string, string> = {
-  payload: '#10b981', eps: '#f59e0b', aocs: '#06b6d4', ttc: '#ec4899',
-  thermal: '#ef4444', structure: '#84cc16', propulsion: '#f97316',
-  obc: '#8b5cf6', ground_ops: '#0ea5e9', data_proc: '#14b8a6',
-  archive: '#6366f1', mcc: '#d946ef',
+  payload: 'var(--status-ok)', eps: 'var(--status-caution)', aocs: 'var(--interactive)', ttc: 'var(--cat-6)',
+  thermal: 'var(--status-alarm)', structure: 'var(--cat-7)', propulsion: 'var(--status-caution)',
+  obc: 'var(--cat-2)', ground_ops: 'var(--interactive)', data_proc: 'var(--cat-3)',
+  archive: 'var(--interactive)', mcc: 'var(--cat-2)',
 }
 
 // Generate space segment diagram from architecture selections
@@ -94,18 +94,18 @@ function generateSpaceSegmentDiagram(archReqs: any[]): { nodes: Node[]; edges: E
     return {
       id: `ss-${ss}`, type: 'subsystem',
       position: { x: 50 + col * 180, y: 30 + row * 130 },
-      data: { label: ss.toUpperCase(), color: SUBSYSTEM_COLORS[ss] || '#6b7280', blocks },
+      data: { label: ss.toUpperCase(), color: SUBSYSTEM_COLORS[ss] || 'var(--text-3)', blocks },
     }
   })
 
   // Standard inter-subsystem connections
   const edges: Edge[] = [
-    { id: 'e-eps-all', source: 'ss-eps', target: 'ss-obc', label: 'Power Bus', style: { stroke: '#f59e0b' } },
-    { id: 'e-obc-aocs', source: 'ss-obc', target: 'ss-aocs', label: 'ADCS cmds', style: { stroke: '#8b5cf6' } },
-    { id: 'e-obc-ttc', source: 'ss-obc', target: 'ss-ttc', label: 'TM/TC', style: { stroke: '#ec4899' } },
-    { id: 'e-obc-payload', source: 'ss-obc', target: 'ss-payload', label: 'Payload data', style: { stroke: '#10b981' } },
-    { id: 'e-aocs-payload', source: 'ss-aocs', target: 'ss-payload', label: 'Pointing', style: { stroke: '#06b6d4' }, animated: true },
-    { id: 'e-eps-thermal', source: 'ss-eps', target: 'ss-thermal', label: 'Heater pwr', style: { stroke: '#ef4444' } },
+    { id: 'e-eps-all', source: 'ss-eps', target: 'ss-obc', label: 'Power Bus', style: { stroke: 'var(--status-caution)' } },
+    { id: 'e-obc-aocs', source: 'ss-obc', target: 'ss-aocs', label: 'ADCS cmds', style: { stroke: 'var(--cat-2)' } },
+    { id: 'e-obc-ttc', source: 'ss-obc', target: 'ss-ttc', label: 'TM/TC', style: { stroke: 'var(--cat-6)' } },
+    { id: 'e-obc-payload', source: 'ss-obc', target: 'ss-payload', label: 'Payload data', style: { stroke: 'var(--status-ok)' } },
+    { id: 'e-aocs-payload', source: 'ss-aocs', target: 'ss-payload', label: 'Pointing', style: { stroke: 'var(--interactive)' }, animated: true },
+    { id: 'e-eps-thermal', source: 'ss-eps', target: 'ss-thermal', label: 'Heater pwr', style: { stroke: 'var(--status-alarm)' } },
   ]
 
   return { nodes, edges }
@@ -115,31 +115,31 @@ function generateSpaceSegmentDiagram(archReqs: any[]): { nodes: Node[]; edges: E
 function generateGroundSegmentDiagram(): { nodes: Node[]; edges: Edge[] } {
   const nodes: Node[] = [
     // Row 1: RF chain
-    { id: 'gs-antenna', type: 'subsystem', position: { x: 50, y: 30 }, data: { label: 'GS Antenna', color: '#10b981', blocks: ['Tracking', 'RF Front-End'] } },
-    { id: 'gs-modem', type: 'subsystem', position: { x: 250, y: 30 }, data: { label: 'Modem/Baseband', color: '#10b981', blocks: ['Demod', 'Decode', 'Frame Sync'] } },
+    { id: 'gs-antenna', type: 'subsystem', position: { x: 50, y: 30 }, data: { label: 'GS Antenna', color: 'var(--status-ok)', blocks: ['Tracking', 'RF Front-End'] } },
+    { id: 'gs-modem', type: 'subsystem', position: { x: 250, y: 30 }, data: { label: 'Modem/Baseband', color: 'var(--status-ok)', blocks: ['Demod', 'Decode', 'Frame Sync'] } },
     // Row 2: Control
-    { id: 'gs-mcc', type: 'subsystem', position: { x: 50, y: 160 }, data: { label: 'Mission Control', color: '#d946ef', blocks: ['Scheduling', 'Commanding', 'FDIR'] } },
-    { id: 'gs-fds', type: 'subsystem', position: { x: 250, y: 160 }, data: { label: 'Flight Dynamics', color: '#8b5cf6', blocks: ['Orbit Det.', 'Manoeuvre Plan'] } },
+    { id: 'gs-mcc', type: 'subsystem', position: { x: 50, y: 160 }, data: { label: 'Mission Control', color: 'var(--cat-2)', blocks: ['Scheduling', 'Commanding', 'FDIR'] } },
+    { id: 'gs-fds', type: 'subsystem', position: { x: 250, y: 160 }, data: { label: 'Flight Dynamics', color: 'var(--cat-2)', blocks: ['Orbit Det.', 'Manoeuvre Plan'] } },
     // Row 3: Data
-    { id: 'gs-proc', type: 'subsystem', position: { x: 450, y: 30 }, data: { label: 'Data Processing', color: '#14b8a6', blocks: ['L0', 'L1', 'L2', 'QC'] } },
-    { id: 'gs-archive', type: 'subsystem', position: { x: 450, y: 160 }, data: { label: 'Archive & Catalogue', color: '#6366f1', blocks: ['Storage', 'Metadata', 'API'] } },
+    { id: 'gs-proc', type: 'subsystem', position: { x: 450, y: 30 }, data: { label: 'Data Processing', color: 'var(--cat-3)', blocks: ['L0', 'L1', 'L2', 'QC'] } },
+    { id: 'gs-archive', type: 'subsystem', position: { x: 450, y: 160 }, data: { label: 'Archive & Catalogue', color: 'var(--interactive)', blocks: ['Storage', 'Metadata', 'API'] } },
     // Row 4: Support
-    { id: 'gs-network', type: 'subsystem', position: { x: 250, y: 290 }, data: { label: 'Ground Network', color: '#6b7280', blocks: ['WAN', 'VPN', 'Internet'] } },
-    { id: 'gs-security', type: 'subsystem', position: { x: 50, y: 290 }, data: { label: 'Security / CyberSec', color: '#ef4444', blocks: ['Auth', 'Encryption', 'Audit'] } },
-    { id: 'gs-distrib', type: 'subsystem', position: { x: 450, y: 290 }, data: { label: 'User Services', color: '#f59e0b', blocks: ['Portal', 'Dissemination', 'SLA'] } },
+    { id: 'gs-network', type: 'subsystem', position: { x: 250, y: 290 }, data: { label: 'Ground Network', color: 'var(--text-3)', blocks: ['WAN', 'VPN', 'Internet'] } },
+    { id: 'gs-security', type: 'subsystem', position: { x: 50, y: 290 }, data: { label: 'Security / CyberSec', color: 'var(--status-alarm)', blocks: ['Auth', 'Encryption', 'Audit'] } },
+    { id: 'gs-distrib', type: 'subsystem', position: { x: 450, y: 290 }, data: { label: 'User Services', color: 'var(--status-caution)', blocks: ['Portal', 'Dissemination', 'SLA'] } },
   ]
 
   const edges: Edge[] = [
-    { id: 'ge-ant-modem', source: 'gs-antenna', target: 'gs-modem', label: 'RF/IF', style: { stroke: '#10b981' } },
-    { id: 'ge-modem-mcc', source: 'gs-modem', target: 'gs-mcc', label: 'TM frames', style: { stroke: '#d946ef' } },
-    { id: 'ge-modem-proc', source: 'gs-modem', target: 'gs-proc', label: 'Payload data', style: { stroke: '#14b8a6' } },
-    { id: 'ge-mcc-fds', source: 'gs-mcc', target: 'gs-fds', label: 'Orbit/Att TM', style: { stroke: '#8b5cf6' } },
-    { id: 'ge-fds-mcc', source: 'gs-fds', target: 'gs-mcc', label: 'Manoeuvre cmds', style: { stroke: '#8b5cf6' }, animated: true },
-    { id: 'ge-proc-arch', source: 'gs-proc', target: 'gs-archive', label: 'Products', style: { stroke: '#6366f1' } },
-    { id: 'ge-arch-distrib', source: 'gs-archive', target: 'gs-distrib', label: 'Data products', style: { stroke: '#f59e0b' } },
-    { id: 'ge-mcc-net', source: 'gs-mcc', target: 'gs-network', label: 'Ops data', style: { stroke: '#6b7280' } },
-    { id: 'ge-sec-mcc', source: 'gs-security', target: 'gs-mcc', label: 'TC auth', style: { stroke: '#ef4444' } },
-    { id: 'ge-sec-net', source: 'gs-security', target: 'gs-network', label: 'VPN/TLS', style: { stroke: '#ef4444' } },
+    { id: 'ge-ant-modem', source: 'gs-antenna', target: 'gs-modem', label: 'RF/IF', style: { stroke: 'var(--status-ok)' } },
+    { id: 'ge-modem-mcc', source: 'gs-modem', target: 'gs-mcc', label: 'TM frames', style: { stroke: 'var(--cat-2)' } },
+    { id: 'ge-modem-proc', source: 'gs-modem', target: 'gs-proc', label: 'Payload data', style: { stroke: 'var(--cat-3)' } },
+    { id: 'ge-mcc-fds', source: 'gs-mcc', target: 'gs-fds', label: 'Orbit/Att TM', style: { stroke: 'var(--cat-2)' } },
+    { id: 'ge-fds-mcc', source: 'gs-fds', target: 'gs-mcc', label: 'Manoeuvre cmds', style: { stroke: 'var(--cat-2)' }, animated: true },
+    { id: 'ge-proc-arch', source: 'gs-proc', target: 'gs-archive', label: 'Products', style: { stroke: 'var(--interactive)' } },
+    { id: 'ge-arch-distrib', source: 'gs-archive', target: 'gs-distrib', label: 'Data products', style: { stroke: 'var(--status-caution)' } },
+    { id: 'ge-mcc-net', source: 'gs-mcc', target: 'gs-network', label: 'Ops data', style: { stroke: 'var(--text-3)' } },
+    { id: 'ge-sec-mcc', source: 'gs-security', target: 'gs-mcc', label: 'TC auth', style: { stroke: 'var(--status-alarm)' } },
+    { id: 'ge-sec-net', source: 'gs-security', target: 'gs-network', label: 'VPN/TLS', style: { stroke: 'var(--status-alarm)' } },
   ]
 
   return { nodes, edges }
@@ -148,21 +148,21 @@ function generateGroundSegmentDiagram(): { nodes: Node[]; edges: Edge[] } {
 // Generate segment-level interface diagram (Space ↔ Ground ↔ User)
 function generateSegmentInterfaceDiagram(): { nodes: Node[]; edges: Edge[] } {
   const nodes: Node[] = [
-    { id: 'seg-space', type: 'subsystem', position: { x: 250, y: 20 }, data: { label: 'SPACE SEGMENT', color: '#3b82f6', blocks: ['Spacecraft', 'Constellation'] } },
-    { id: 'seg-ground', type: 'subsystem', position: { x: 100, y: 180 }, data: { label: 'GROUND SEGMENT', color: '#10b981', blocks: ['GS Network', 'MCC', 'FDS'] } },
-    { id: 'seg-user', type: 'subsystem', position: { x: 400, y: 180 }, data: { label: 'USER SEGMENT', color: '#f59e0b', blocks: ['End Users', 'Applications'] } },
-    { id: 'seg-launch', type: 'subsystem', position: { x: 50, y: 20 }, data: { label: 'LAUNCH SEGMENT', color: '#f43f5e', blocks: ['LV', 'Integration'] } },
-    { id: 'seg-external', type: 'subsystem', position: { x: 450, y: 20 }, data: { label: 'EXTERNAL SERVICES', color: '#8b5cf6', blocks: ['GNSS', 'TDRSS', 'SSA'] } },
+    { id: 'seg-space', type: 'subsystem', position: { x: 250, y: 20 }, data: { label: 'SPACE SEGMENT', color: 'var(--interactive)', blocks: ['Spacecraft', 'Constellation'] } },
+    { id: 'seg-ground', type: 'subsystem', position: { x: 100, y: 180 }, data: { label: 'GROUND SEGMENT', color: 'var(--status-ok)', blocks: ['GS Network', 'MCC', 'FDS'] } },
+    { id: 'seg-user', type: 'subsystem', position: { x: 400, y: 180 }, data: { label: 'USER SEGMENT', color: 'var(--status-caution)', blocks: ['End Users', 'Applications'] } },
+    { id: 'seg-launch', type: 'subsystem', position: { x: 50, y: 20 }, data: { label: 'LAUNCH SEGMENT', color: 'var(--status-alarm)', blocks: ['LV', 'Integration'] } },
+    { id: 'seg-external', type: 'subsystem', position: { x: 450, y: 20 }, data: { label: 'EXTERNAL SERVICES', color: 'var(--cat-2)', blocks: ['GNSS', 'TDRSS', 'SSA'] } },
   ]
 
   const edges: Edge[] = [
-    { id: 'si-space-ground', source: 'seg-space', target: 'seg-ground', label: 'TM/TC (S/X-band)', style: { stroke: '#3b82f6', strokeWidth: 3 }, animated: true },
-    { id: 'si-ground-space', source: 'seg-ground', target: 'seg-space', label: 'TC Uplink', style: { stroke: '#10b981', strokeWidth: 2 } },
-    { id: 'si-ground-user', source: 'seg-ground', target: 'seg-user', label: 'Data Products (API/FTP)', style: { stroke: '#f59e0b', strokeWidth: 2 } },
-    { id: 'si-user-ground', source: 'seg-user', target: 'seg-ground', label: 'Tasking Requests', style: { stroke: '#f59e0b' } },
-    { id: 'si-launch-space', source: 'seg-launch', target: 'seg-space', label: 'Deployment I/F', style: { stroke: '#f43f5e', strokeWidth: 2 } },
-    { id: 'si-ext-space', source: 'seg-external', target: 'seg-space', label: 'Nav/Relay', style: { stroke: '#8b5cf6' } },
-    { id: 'si-ext-ground', source: 'seg-external', target: 'seg-ground', label: 'Ephemeris/SSA', style: { stroke: '#8b5cf6' } },
+    { id: 'si-space-ground', source: 'seg-space', target: 'seg-ground', label: 'TM/TC (S/X-band)', style: { stroke: 'var(--interactive)', strokeWidth: 3 }, animated: true },
+    { id: 'si-ground-space', source: 'seg-ground', target: 'seg-space', label: 'TC Uplink', style: { stroke: 'var(--status-ok)', strokeWidth: 2 } },
+    { id: 'si-ground-user', source: 'seg-ground', target: 'seg-user', label: 'Data Products (API/FTP)', style: { stroke: 'var(--status-caution)', strokeWidth: 2 } },
+    { id: 'si-user-ground', source: 'seg-user', target: 'seg-ground', label: 'Tasking Requests', style: { stroke: 'var(--status-caution)' } },
+    { id: 'si-launch-space', source: 'seg-launch', target: 'seg-space', label: 'Deployment I/F', style: { stroke: 'var(--status-alarm)', strokeWidth: 2 } },
+    { id: 'si-ext-space', source: 'seg-external', target: 'seg-space', label: 'Nav/Relay', style: { stroke: 'var(--cat-2)' } },
+    { id: 'si-ext-ground', source: 'seg-external', target: 'seg-ground', label: 'Ephemeris/SSA', style: { stroke: 'var(--cat-2)' } },
   ]
 
   return { nodes, edges }
@@ -193,7 +193,7 @@ function generateFromElementTree(
 
   // Container color map for segments/systems
   const CONTAINER_COLORS: Record<string, string> = {
-    space: '#3b82f6', ground: '#10b981', launch: '#f43f5e',
+    space: 'var(--interactive)', ground: 'var(--status-ok)', launch: 'var(--status-alarm)',
   }
 
   // Build container nodes for segment and system elements
@@ -202,7 +202,7 @@ function generateFromElementTree(
     const childCount = allEls.filter(c => c.parent_id === el.id).length
     const col = i % 2
     const row = Math.floor(i / 2)
-    const color = CONTAINER_COLORS[el.segment] || '#6b7280'
+    const color = CONTAINER_COLORS[el.segment] || 'var(--text-3)'
     nodes.push({
       id: `el-${el.id}`,
       type: 'container',
@@ -243,7 +243,7 @@ function generateFromElementTree(
       position: { x: posX, y: posY },
       data: {
         label: el.name,
-        color: SUBSYSTEM_COLORS[domain] || '#6b7280',
+        color: SUBSYSTEM_COLORS[domain] || 'var(--text-3)',
         blocks,
       },
     }
@@ -259,7 +259,7 @@ function generateFromElementTree(
   const components = allEls.filter(
     el => el.element_type === 'component' && el.parent_id && subsystemIds.has(el.parent_id)
   )
-  components.forEach((el, i) => {
+  components.forEach((el) => {
     const parentNodeId = `el-${el.parent_id}`
     // Count siblings for grid layout
     const siblings = components.filter(c => c.parent_id === el.parent_id)
@@ -268,7 +268,7 @@ function generateFromElementTree(
     const cRow = Math.floor(sibIdx / 3)
     const massStr = el.mass_kg != null ? ` (${el.mass_kg} kg)` : ''
     const parentDomain = subsystems.find(s => s.id === el.parent_id)?.subsystem_domain || ''
-    const color = SUBSYSTEM_COLORS[parentDomain] || '#6b7280'
+    const color = SUBSYSTEM_COLORS[parentDomain] || 'var(--text-3)'
 
     nodes.push({
       id: `el-${el.id}`,
@@ -281,7 +281,7 @@ function generateFromElementTree(
         color,
         blocks: [],
       },
-      style: { fontSize: '0.6rem' },
+      style: { fontSize: fs.label },
     } as Node)
   })
 
@@ -314,7 +314,7 @@ function generateFromElementTree(
         source: fromNode.id,
         target: toNode.id,
         label: iface.diagram_label || iface.name || '',
-        style: { stroke: '#6b7280' },
+        style: { stroke: 'var(--text-3)' },
       })
     }
   }
@@ -350,8 +350,8 @@ export function SystemBlockDiagram() {
   const studyId = useDesignStore(s => s.studyId)
 
   const onConnect = useCallback(
-    (connection: Connection) => {
-      const label = prompt('Interface label:') || ''
+    async (connection: Connection) => {
+      const label = (await askText('Interface label:')) || ''
       setEdges(eds => addEdge({ ...connection, label }, eds))
 
       // SYSTEM-V: Also create interface in modelStore if nodes are from element tree
@@ -389,12 +389,12 @@ export function SystemBlockDiagram() {
   // Add Subsystem handler
   const handleAddSubsystem = async () => {
     if (!studyId || segment === 'segments') return
-    const name = prompt('Subsystem name:')
+    const name = (await askText('Subsystem name:'))
     if (!name) return
     const DOMAINS = ['power', 'aocs', 'ttc', 'thermal', 'structure', 'propulsion', 'obc', 'payload']
-    const domain = prompt(`Domain (${DOMAINS.join('/')}):`)?.toLowerCase()
+    const domain = (await askText(`Domain (${DOMAINS.join('/')}):`))?.toLowerCase()
     if (!domain || !DOMAINS.includes(domain)) {
-      alert('Invalid domain. Choose from: ' + DOMAINS.join(', '))
+      void showAlert('Invalid domain. Choose from: ' + DOMAINS.join(', '))
       return
     }
     // Find system-level parent for this segment
@@ -431,34 +431,34 @@ export function SystemBlockDiagram() {
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* Segment selector */}
-      <div style={{ padding: '0.4rem 0.75rem', borderBottom: '1px solid var(--border, #374151)', display: 'flex', gap: '0.3rem', alignItems: 'center' }}>
-        <span style={{ fontSize: '0.75rem', color: '#9ca3af', marginRight: '0.3rem' }}>Segment:</span>
+      <div style={{ padding: '0.4rem 0.75rem', borderBottom: '1px solid var(--border, var(--line))', display: 'flex', gap: '0.3rem', alignItems: 'center' }}>
+        <span style={{ fontSize: fs.label, color: 'var(--text-2)', marginRight: '0.3rem' }}>Segment:</span>
         {(['space', 'ground', 'segments'] as Segment[]).map(s => (
           <button key={s} onClick={() => switchSegment(s)} style={{
-            padding: '0.25rem 0.6rem', fontSize: '0.72rem', borderRadius: '4px', cursor: 'pointer',
-            background: segment === s ? '#3b82f6' : 'transparent',
-            color: segment === s ? 'white' : '#9ca3af',
-            border: `1px solid ${segment === s ? '#3b82f6' : '#374151'}`,
+            padding: '0.25rem 0.6rem', fontSize: fs.label, borderRadius: '4px', cursor: 'pointer',
+            background: segment === s ? 'var(--interactive)' : 'transparent',
+            color: segment === s ? 'white' : 'var(--text-2)',
+            border: `1px solid ${segment === s ? 'var(--interactive)' : 'var(--line)'}`,
             textTransform: 'capitalize',
           }}>{s} Segment</button>
         ))}
         {segment !== 'segments' && (
           <button onClick={handleAddSubsystem} style={{
-            padding: '0.25rem 0.6rem', fontSize: '0.72rem', borderRadius: '4px', cursor: 'pointer',
-            background: '#10b981', color: 'white', border: 'none', marginLeft: '0.5rem',
+            padding: '0.25rem 0.6rem', fontSize: fs.label, borderRadius: '4px', cursor: 'pointer',
+            background: 'var(--status-ok)', color: 'white', border: 'none', marginLeft: '0.5rem',
           }}>+ Add Subsystem</button>
         )}
         <span style={{ flex: 1 }} />
-        <span style={{ fontSize: '0.65rem', color: '#6b7280' }}>
+        <span style={{ fontSize: fs.label, color: 'var(--text-3)' }}>
           {segment === 'space' ? 'Platform subsystems + interfaces' :
            segment === 'ground' ? 'Ground station + MCC + data processing pipeline' :
            'Mission segment interfaces (Space ↔ Ground ↔ User)'}
         </span>
         {segment !== 'segments' && (
           <span style={{
-            fontSize: '0.58rem', padding: '0.1rem 0.35rem', borderRadius: '3px',
+            fontSize: fs.label, padding: '0.1rem 0.35rem', borderRadius: '3px',
             background: nodes.some(n => n.id.startsWith('el-')) ? 'rgba(16,185,129,0.15)' : 'rgba(245,158,11,0.15)',
-            color: nodes.some(n => n.id.startsWith('el-')) ? '#10b981' : '#f59e0b',
+            color: nodes.some(n => n.id.startsWith('el-')) ? 'var(--status-ok)' : 'var(--status-caution)',
           }}>
             {nodes.some(n => n.id.startsWith('el-')) ? 'From element tree' : 'Template — run design to populate'}
           </span>
@@ -476,11 +476,11 @@ export function SystemBlockDiagram() {
           onNodeDragStop={onNodeDragStop}
           nodeTypes={nodeTypes}
           fitView
-          style={{ background: '#0a0e1a' }}
-          defaultEdgeOptions={{ style: { strokeWidth: 1.5, stroke: '#6b7280' } }}
+          style={{ background: 'var(--surface-0)' }}
+          defaultEdgeOptions={{ style: { strokeWidth: 1.5, stroke: 'var(--text-3)' } }}
         >
           <Controls />
-          <Background color="#374151" gap={20} />
+          <Background color="var(--line)" gap={20} />
         </ReactFlow>
       </div>
     </div>

@@ -83,9 +83,10 @@ only PROP_INHIBIT_CLR (func 117) clears it after investigation.
 ### Step 6 --- Post-Burn Orbit Determination
 **Verify:** event PROP_BURN_COMPLETE (0x0804); `prop.burn_dv_achieved`
 (0x0B0F) vs `prop.burn_dv_cmd` (0x0B0E) — within 2 % nominally
-**Verify:** `prop.sma_km` (0x0B1A) moved by the predicted da (1.79 km per
-m/s prograde); `prop.orbit_epoch_version` (0x0B19) incremented — planner and
-MCS contact predictions now follow the new orbit
+**Verify:** the ground orbit determination after the burn: `prop.sma_km`
+(0x0B1A, ground OD product) moved by the predicted da (1.79 km per m/s
+prograde). Once flight dynamics has published the new element set, the
+planner and MCS contact predictions follow the new orbit
 **Evaluate:** At the next pass, compare observed AOS against the pre-burn
 prediction: a 1.0 m/s burn shifts pass times ~34 s/day. Achieved-under-plan
 by > 5 % = underperforming thruster: re-plan a trim burn under NOM-004 and

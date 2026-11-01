@@ -85,7 +85,7 @@ when EMG-005 has left the AOCS in COARSE_SUN.
 
 ### Step 5 --- Establish Stable Communication
 **Verify:** `ttc.link_status` (0x0501) = 2 (LOCKED).
-**Verify:** `ttc.rssi` (0x0502) > -120 dBm.
+**Verify:** TT&C page (ground): `ttc.rssi` (0x0502) > -128 dBm.
 **Verify:** `ttc.mode` (0x0500) = NOMINAL or SAFE.
 **Action:** If link marginal, schedule subsequent passes at high-elevation (> 20 deg) ground stations only.
 **TC:** `HK_REQUEST(sid=6)` (Service 3, Subtype 27) --- TT&C subsystem housekeeping.

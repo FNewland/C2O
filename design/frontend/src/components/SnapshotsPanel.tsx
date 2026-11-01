@@ -5,6 +5,8 @@ import {
   useDiffSnapshots,
   type ParamDelta,
 } from '../hooks/useSnapshots'
+import { fs } from '../theme/tokens'
+import { showAlert } from './ui/Dialog'
 
 interface Props {
   sessionId: string | null
@@ -21,7 +23,7 @@ export function SnapshotsPanel({ sessionId }: Props) {
   if (!sessionId) {
     return (
       <div style={{ padding: '1rem' }}>
-        <p style={{ color: 'var(--text-secondary, #9ca3af)' }}>
+        <p style={{ color: 'var(--text-secondary, var(--text-2))' }}>
           Join a session to create and compare named design snapshots.
         </p>
       </div>
@@ -40,7 +42,7 @@ export function SnapshotsPanel({ sessionId }: Props) {
       setName('')
       setTags('')
     } catch (e) {
-      alert(`Snapshot failed: ${e}`)
+      void showAlert(`Snapshot failed: ${e}`)
     }
   }
 
@@ -59,13 +61,13 @@ export function SnapshotsPanel({ sessionId }: Props) {
       <h2 style={{ margin: '0 0 0.75rem 0' }}>Snapshots</h2>
 
       <div style={{
-        background: 'var(--bg-secondary, #1f2937)',
+        background: 'var(--bg-secondary, var(--surface-2))',
         padding: '0.75rem',
         borderRadius: '6px',
         marginBottom: '1rem',
-        border: '1px solid var(--border, #374151)',
+        border: '1px solid var(--border, var(--line))',
       }}>
-        <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary, #9ca3af)' }}>Name</label>
+        <label style={{ fontSize: fs.body, color: 'var(--text-secondary, var(--text-2))' }}>Name</label>
         <input
           className="input"
           placeholder="e.g. baseline, heavy-payload"
@@ -73,7 +75,7 @@ export function SnapshotsPanel({ sessionId }: Props) {
           onChange={e => setName(e.target.value)}
           style={{ width: '100%', marginBottom: '0.5rem' }}
         />
-        <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary, #9ca3af)' }}>
+        <label style={{ fontSize: fs.body, color: 'var(--text-secondary, var(--text-2))' }}>
           Tags (comma-separated)
         </label>
         <input
@@ -98,8 +100,8 @@ export function SnapshotsPanel({ sessionId }: Props) {
 
       {selA !== null && selB === null && (
         <div style={{
-          fontSize: '0.8rem',
-          color: 'var(--text-secondary, #9ca3af)',
+          fontSize: fs.body,
+          color: 'var(--text-secondary, var(--text-2))',
           marginBottom: '0.5rem',
           padding: '0.5rem',
           background: 'rgba(59,130,246,0.08)',
@@ -112,13 +114,13 @@ export function SnapshotsPanel({ sessionId }: Props) {
         </div>
       )}
 
-      <h3 style={{ fontSize: '0.9rem', margin: '1rem 0 0.5rem 0' }}>
+      <h3 style={{ fontSize: fs.value, margin: '1rem 0 0.5rem 0' }}>
         History {snapshots && `(${snapshots.length})`}
       </h3>
 
       {isLoading && <div>Loading…</div>}
       {snapshots && snapshots.length === 0 && (
-        <div style={{ color: 'var(--text-secondary, #9ca3af)', fontSize: '0.85rem' }}>
+        <div style={{ color: 'var(--text-secondary, var(--text-2))', fontSize: fs.body }}>
           No snapshots yet. Save a baseline before making trade-space changes.
         </div>
       )}
@@ -136,8 +138,8 @@ export function SnapshotsPanel({ sessionId }: Props) {
                 cursor: 'pointer',
                 padding: '0.5rem 0.7rem',
                 borderRadius: '4px',
-                border: `1px solid ${selected ? 'var(--accent, #3b82f6)' : 'var(--border, #374151)'}`,
-                background: selected ? 'rgba(59,130,246,0.08)' : 'var(--bg-secondary, #1f2937)',
+                border: `1px solid ${selected ? 'var(--accent, var(--interactive))' : 'var(--border, var(--line))'}`,
+                background: selected ? 'rgba(59,130,246,0.08)' : 'var(--bg-secondary, var(--surface-2))',
                 display: 'flex',
                 gap: '0.5rem',
                 alignItems: 'center',
@@ -145,24 +147,24 @@ export function SnapshotsPanel({ sessionId }: Props) {
             >
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'baseline' }}>
-                  <strong style={{ fontSize: '0.88rem' }}>{s.name || `Snapshot #${s.id}`}</strong>
+                  <strong style={{ fontSize: fs.value }}>{s.name || `Snapshot #${s.id}`}</strong>
                   <span style={{
-                    fontSize: '0.65rem',
+                    fontSize: fs.label,
                     padding: '0.1rem 0.3rem',
-                    background: 'var(--bg-primary, #111827)',
+                    background: 'var(--bg-primary, var(--surface-1))',
                     borderRadius: '3px',
-                    color: 'var(--text-secondary, #9ca3af)',
+                    color: 'var(--text-secondary, var(--text-2))',
                   }}>
                     {s.label}
                   </span>
                 </div>
-                <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary, #9ca3af)' }}>
+                <div style={{ fontSize: fs.label, color: 'var(--text-secondary, var(--text-2))' }}>
                   v{s.version} · {new Date(s.created_at).toLocaleString()}
                   {s.tags.length > 0 && ' · ' + s.tags.join(', ')}
                 </div>
               </div>
-              {isA && <span style={{ fontSize: '0.7rem', color: 'var(--accent, #3b82f6)' }}>A</span>}
-              {isB && <span style={{ fontSize: '0.7rem', color: 'var(--accent, #3b82f6)' }}>B</span>}
+              {isA && <span style={{ fontSize: fs.label, color: 'var(--accent, var(--interactive))' }}>A</span>}
+              {isB && <span style={{ fontSize: fs.label, color: 'var(--accent, var(--interactive))' }}>B</span>}
             </div>
           )
         })}
@@ -175,34 +177,34 @@ function DiffView({ a, b, onClear }: { a: number; b: number; onClear: () => void
   const { data, isLoading, error } = useDiffSnapshots(a, b)
 
   if (isLoading) return <div style={{ padding: '0.5rem' }}>Computing diff…</div>
-  if (error) return <div style={{ color: 'var(--danger, #f87171)' }}>Diff failed: {String(error)}</div>
+  if (error) return <div style={{ color: 'var(--danger, var(--status-alarm))' }}>Diff failed: {String(error)}</div>
   if (!data) return null
 
   return (
     <div style={{
-      background: 'var(--bg-secondary, #1f2937)',
-      border: '1px solid var(--border, #374151)',
+      background: 'var(--bg-secondary, var(--surface-2))',
+      border: '1px solid var(--border, var(--line))',
       borderRadius: '6px',
       padding: '0.75rem',
       marginBottom: '1rem',
     }}>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem', marginBottom: '0.5rem' }}>
-        <h3 style={{ margin: 0, fontSize: '0.95rem' }}>Diff</h3>
-        <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary, #9ca3af)' }}>
+        <h3 style={{ margin: 0, fontSize: fs.value }}>Diff</h3>
+        <span style={{ fontSize: fs.label, color: 'var(--text-secondary, var(--text-2))' }}>
           A: <strong>{data.a.name || `#${data.a.id}`}</strong> → B: <strong>{data.b.name || `#${data.b.id}`}</strong>
         </span>
         <button className="btn btn-sm" onClick={onClear} style={{ marginLeft: 'auto' }}>Close</button>
       </div>
-      <div style={{ display: 'flex', gap: '0.5rem', fontSize: '0.72rem', color: 'var(--text-secondary, #9ca3af)', marginBottom: '0.5rem' }}>
-        <span>Changed: <strong style={{ color: '#f59e0b' }}>{data.summary.changed}</strong></span>
-        <span>Added: <strong style={{ color: '#10b981' }}>{data.summary.added}</strong></span>
-        <span>Removed: <strong style={{ color: '#ef4444' }}>{data.summary.removed}</strong></span>
+      <div style={{ display: 'flex', gap: '0.5rem', fontSize: fs.label, color: 'var(--text-secondary, var(--text-2))', marginBottom: '0.5rem' }}>
+        <span>Changed: <strong style={{ color: 'var(--status-caution)' }}>{data.summary.changed}</strong></span>
+        <span>Added: <strong style={{ color: 'var(--status-ok)' }}>{data.summary.added}</strong></span>
+        <span>Removed: <strong style={{ color: 'var(--status-alarm)' }}>{data.summary.removed}</strong></span>
         <span>Total: {data.summary.total_diffs}</span>
       </div>
       <div style={{ maxHeight: '320px', overflowY: 'auto' }}>
-        <table style={{ width: '100%', fontSize: '0.78rem', borderCollapse: 'collapse' }}>
+        <table style={{ width: '100%', fontSize: fs.label, borderCollapse: 'collapse' }}>
           <thead>
-            <tr style={{ color: 'var(--text-secondary, #9ca3af)', textAlign: 'left' }}>
+            <tr style={{ color: 'var(--text-secondary, var(--text-2))', textAlign: 'left' }}>
               <th style={{ padding: '0.25rem 0.4rem' }}>Parameter</th>
               <th style={{ padding: '0.25rem 0.4rem' }}>A</th>
               <th style={{ padding: '0.25rem 0.4rem' }}>B</th>
@@ -216,7 +218,7 @@ function DiffView({ a, b, onClear }: { a: number; b: number; onClear: () => void
           </tbody>
         </table>
         {data.deltas.length > 200 && (
-          <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary, #9ca3af)', marginTop: '0.3rem' }}>
+          <div style={{ fontSize: fs.label, color: 'var(--text-secondary, var(--text-2))', marginTop: '0.3rem' }}>
             … {data.deltas.length - 200} more diffs truncated.
           </div>
         )}
@@ -227,12 +229,12 @@ function DiffView({ a, b, onClear }: { a: number; b: number; onClear: () => void
 
 function DeltaRow({ d }: { d: ParamDelta }) {
   const color =
-    d.change_type === 'added'   ? '#10b981' :
-    d.change_type === 'removed' ? '#ef4444' :
-    d.change_type === 'changed' ? '#f59e0b' : 'transparent'
+    d.change_type === 'added'   ? 'var(--status-ok)' :
+    d.change_type === 'removed' ? 'var(--status-alarm)' :
+    d.change_type === 'changed' ? 'var(--status-caution)' : 'transparent'
   return (
     <tr style={{ borderTop: '1px solid rgba(55,65,81,0.5)' }}>
-      <td style={{ padding: '0.2rem 0.4rem', fontFamily: 'monospace', fontSize: '0.72rem', borderLeft: `3px solid ${color}` }}>
+      <td style={{ padding: '0.2rem 0.4rem', fontFamily: 'monospace', fontSize: fs.value, borderLeft: `3px solid ${color}` }}>
         {d.param_id}
       </td>
       <td style={{ padding: '0.2rem 0.4rem' }}>{fmt(d.value_a)} {d.unit}</td>
@@ -240,11 +242,11 @@ function DeltaRow({ d }: { d: ParamDelta }) {
       <td style={{ padding: '0.2rem 0.4rem' }}>
         {d.delta !== null && (
           <>
-            <span style={{ color: (d.delta ?? 0) > 0 ? '#10b981' : '#ef4444' }}>
+            <span style={{ color: (d.delta ?? 0) > 0 ? 'var(--status-ok)' : 'var(--status-alarm)' }}>
               {(d.delta ?? 0) > 0 ? '+' : ''}{(d.delta ?? 0).toFixed(3)}
             </span>
             {d.delta_percent !== null && (
-              <span style={{ color: 'var(--text-secondary, #9ca3af)', marginLeft: '0.25rem' }}>
+              <span style={{ color: 'var(--text-secondary, var(--text-2))', marginLeft: '0.25rem' }}>
                 ({(d.delta_percent ?? 0).toFixed(1)}%)
               </span>
             )}

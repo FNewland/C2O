@@ -200,11 +200,13 @@ failure.
 deliberately different quantities. 0x02CE is the magnitude of the compensation
 now applied on board; 0x02D2 is what is LEFT at the gyro output. A successful
 calibration moves the bias from 0x02D2 into 0x02CE.
-**Note:** `aocs.gyro_bias_injected` (0x0296) is instructor visibility of an
-injected `gyro_bias` hardware fault and is **deliberately unchanged** by a
-calibration. Compensating a bias is not repairing the unit: 0x0296 keeps
-reporting the fault while 0x02D2 shows the vehicle is no longer suffering from
-it. If 0x0296 is non-zero, that is a training scenario, not an anomaly.
+**Note:** The gyro's own hardware bias is not telemetered: the spacecraft
+only knows it through the star trackers. Cross-check it yourself by comparing
+the raw gyro rates (0x0204-0x0206, SID 2) with the star-tracker-aided,
+bias-corrected rate estimate (0x02A4-0x02A6, SID 7) over the same interval.
+Before calibration they differ by the bias; afterwards they agree to within
+the 0.005 deg/s of 0x02D2. Compensating a bias is not repairing the unit:
+if the bias grows again, the hardware is drifting.
 **GO/NO-GO:** Residual bias compensated
 
 ### Step 10 — Post-Calibration Determination Check

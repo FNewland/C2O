@@ -99,6 +99,7 @@ réduction commandée.
 **GO/NO-GO:** Cas chaud et température encore en hausse — passer en COARSE_SUN -> GO `STEP-4HS` | NO-GO `STEP-4E`
 **LABEL:** `STEP-4HS`
 **TC:** `AOCS_SET_MODE(mode=3)` (Service 8, Subtype 1, func_id 0) — COARSE_SUN, pour optimiser l'attitude du satellite pour la dissipation thermique
+**TC:** `HK_REQUEST(sid=2)` (Service 3, Subtype 27) — données de servitude SCAO (aocs.mode est dans le SID 2, pas dans le SID 3 thermique)
 **Verify:** `aocs.mode` (0x020F) = 3 en 15 s
 **LABEL:** `STEP-4E`
 **GO/NO-GO:** Si la température se stabilise dans un délai supplémentaire de 15 min, l'étape 5 s'applique. À l'approche d'une limite rouge, faire remonter l'anomalie. -> GO `STEP-5` | NO-GO `STEP-4X`

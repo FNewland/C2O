@@ -29,7 +29,7 @@ with decision gates at 6h, 12h, 24h, and 48h elapsed time since last contact.
 **TC:** `HK_REQUEST(sid=6)` (Service 3, Subtype 27) --- transmitted blind on each pass.
 **Sequence:** Schedule uplink attempts on every visible pass (min elevation 5 deg) across
 Iqaluit and Troll in priority order based on maximum elevation.
-**Verify:** `ttc.rssi` (0x0502) > -125 dBm and `ttc.link_status` (0x0501) = 2 (LOCKED) within 30s of AOS.
+**Verify:** `ttc.link_status` (0x0501) = 2 (LOCKED) within 30s of AOS, and on the TT&C page (ground) `ttc.rssi` (0x0502) > -128 dBm.
 **GO/NO-GO:** If telemetry received on any station, exit emergency and transition to EMG-001 assessment. If no response after full ground station rotation, proceed to Step 3. -> GO `STEP-END` | NO-GO `STEP-3`
 
 ### Step 3 --- Blind Command on Primary Transponder
@@ -57,7 +57,7 @@ spacing. (Was annotated Subtype 2; every S8 function-perform is Subtype 1.)
 of no ground contact. The spacecraft will cycle through transponder configurations and
 increase beacon power.
 **Monitor:** All ground stations in listen-only mode on both primary and redundant frequencies.
-**Verify:** Beacon detection on any station --- `ttc.rssi` (0x0502) readings logged continuously.
+**Verify:** Beacon detection on any station --- `ttc.rssi` (0x0502) readings on the TT&C page (ground) logged continuously.
 **Duration:** Wait through at least 4 orbit periods (~6.3 hours) after onboard timer expected activation.
 
 ### Step 6 --- Polar Pass Focused Campaign (12h Threshold)

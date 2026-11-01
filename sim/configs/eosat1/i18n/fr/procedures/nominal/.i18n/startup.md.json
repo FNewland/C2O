@@ -44,8 +44,8 @@
   },
   {
    "id": "nom-001-pass-startup/procedure-steps/step-4-establish-ttc-link",
-   "en_hash": "7f6f6fc9dc3b2934",
-   "fr_hash": "566aee32a856752c"
+   "en_hash": "0b44b09ea85870bb",
+   "fr_hash": "6b1c00c6d6c1fea2"
   },
   {
    "id": "nom-001-pass-startup/procedure-steps/step-5-full-housekeeping-collection",
@@ -73,5 +73,5 @@
    "fr_hash": "4d6271f1c5d7d847"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "8067e5b"
 }

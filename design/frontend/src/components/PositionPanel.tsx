@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useDesignStore } from '../stores/designStore'
 import { useSessionStore } from '../stores/sessionStore'
+import { fs } from '../theme/tokens'
 
 interface PositionSummary {
   id: string
@@ -114,7 +115,7 @@ export function PositionPanel() {
   return (
     <div style={{ padding: '1rem' }}>
       <h2>Engineering Positions</h2>
-      <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
+      <p style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginBottom: '1rem' }}>
         Select a position to see what questions need answering and which parameters you own.
       </p>
 
@@ -141,9 +142,9 @@ export function PositionPanel() {
                 transition: 'all 0.15s',
               }}
             >
-              <div style={{ fontSize: '1.4rem', marginBottom: '0.2rem' }}>{pos.icon}</div>
-              <div style={{ fontSize: '0.7rem', fontWeight: 600 }}>{pos.name}</div>
-              <div style={{ fontSize: '0.6rem', color: isSelected ? 'rgba(255,255,255,0.7)' : 'var(--text-secondary)' }}>
+              <div style={{ fontSize: fs.title, marginBottom: '0.2rem' }}>{pos.icon}</div>
+              <div style={{ fontSize: fs.label, fontWeight: 600 }}>{pos.name}</div>
+              <div style={{ fontSize: fs.label, color: isSelected ? 'color-mix(in srgb, var(--text) 70%, transparent)' : 'var(--text-secondary)' }}>
                 {pos.question_count} questions
                 {isMe && <span style={{ marginLeft: '0.25rem', color: 'var(--accent)', fontWeight: 700 }}>· YOU</span>}
               </div>
@@ -151,9 +152,9 @@ export function PositionPanel() {
               {isOnline && !isMe && (
                 <span title="Someone is editing" style={{
                   position: 'absolute', top: '-4px', left: '-4px',
-                  background: 'var(--success, #10b981)', color: 'white',
+                  background: 'var(--success, var(--status-ok))', color: 'white',
                   borderRadius: '50%', width: '14px', height: '14px',
-                  fontSize: '0.55rem', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: fs.label, display: 'flex', alignItems: 'center', justifyContent: 'center',
                   boxShadow: '0 0 6px rgba(16,185,129,0.6)',
                 }}>●</span>
               )}
@@ -162,7 +163,7 @@ export function PositionPanel() {
                   position: 'absolute', top: '-4px', right: '-4px',
                   background: 'var(--danger)', color: 'white',
                   borderRadius: '50%', width: '16px', height: '16px',
-                  fontSize: '0.6rem', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: fs.label, display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}>
                   {conflicts}
                 </span>
@@ -175,7 +176,7 @@ export function PositionPanel() {
       {/* Selected position detail */}
       {selectedId && !result && (
         <div className="card">
-          <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+          <p style={{ fontSize: fs.body, color: 'var(--text-secondary)' }}>
             Run a design first to see guidance for this position.
           </p>
         </div>
@@ -197,7 +198,7 @@ export function PositionPanel() {
               <span style={{
                 color: guidance.completion_percent >= 80 ? 'var(--success)' : guidance.completion_percent >= 50 ? 'var(--warning)' : 'var(--danger)',
                 fontWeight: 600,
-                fontSize: '0.85rem',
+                fontSize: fs.body,
               }}>
                 {guidance.completion_percent.toFixed(0)}% complete
               </span>
@@ -225,21 +226,21 @@ export function PositionPanel() {
               return (
                 <div key={q.question_id} style={{
                   display: 'flex', alignItems: 'flex-start', gap: '0.5rem',
-                  padding: '0.4rem 0', borderBottom: '1px solid rgba(255,255,255,0.05)',
+                  padding: '0.4rem 0', borderBottom: '1px solid color-mix(in srgb, var(--text) 5%, transparent)',
                 }}>
-                  <span style={{ color: STATUS_COLOR[q.status], fontSize: '0.85rem', flexShrink: 0, marginTop: '0.1rem' }}>
+                  <span style={{ color: STATUS_COLOR[q.status], fontSize: fs.body, flexShrink: 0, marginTop: '0.1rem' }}>
                     {STATUS_ICON[q.status]}
                   </span>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: '0.8rem' }}>{q.question}</div>
+                    <div style={{ fontSize: fs.body }}>{q.question}</div>
                     {q.current_value && (
-                      <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', marginTop: '0.15rem' }}>
+                      <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginTop: '0.15rem' }}>
                         {q.current_value}
                       </div>
                     )}
                   </div>
                   <span style={{
-                    fontSize: '0.55rem', fontWeight: 600, padding: '0.1rem 0.3rem',
+                    fontSize: fs.label, fontWeight: 600, padding: '0.1rem 0.3rem',
                     borderRadius: '3px', background: pb.bg, color: pb.color,
                     textTransform: 'uppercase', flexShrink: 0,
                   }}>
@@ -256,7 +257,7 @@ export function PositionPanel() {
               <h3 style={{ marginBottom: '0.5rem' }}>
                 Your Parameters
                 {canEdit && (
-                  <span style={{ marginLeft: '0.5rem', fontSize: '0.65rem', color: 'var(--accent, #3b82f6)', fontWeight: 400 }}>
+                  <span style={{ marginLeft: '0.5rem', fontSize: fs.label, color: 'var(--accent, var(--interactive))', fontWeight: 400 }}>
                     · Click a value to override
                   </span>
                 )}
@@ -300,8 +301,8 @@ export function PositionPanel() {
             (c: any) => c.position_a === selectedId || c.position_b === selectedId
           ).map((c: any) => (
             <div key={c.id} className="card" style={{ borderLeft: '4px solid var(--warning)', background: 'rgba(245,158,11,0.05)' }}>
-              <h3 style={{ fontSize: '0.8rem' }}>{c.title}</h3>
-              <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{c.description}</p>
+              <h3 style={{ fontSize: fs.body }}>{c.title}</h3>
+              <p style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>{c.description}</p>
             </div>
           ))}
         </>
@@ -362,7 +363,7 @@ function ParamRow({
               if (e.key === 'Enter') commit()
               else if (e.key === 'Escape') cancel()
             }}
-            style={{ width: '110px', padding: '0.15rem 0.35rem', fontSize: '0.8rem', textAlign: 'right', fontFamily: 'monospace' }}
+            style={{ width: '110px', padding: '0.15rem 0.35rem', fontSize: fs.value, textAlign: 'right', fontFamily: 'monospace' }}
           />
         </span>
       ) : (
@@ -372,14 +373,14 @@ function ParamRow({
           title={canEdit ? 'Click to override' : 'Join a session in this position to edit'}
           style={{
             cursor: canEdit ? 'pointer' : 'default',
-            borderBottom: canEdit ? '1px dashed var(--accent, #3b82f6)' : 'none',
+            borderBottom: canEdit ? '1px dashed var(--accent, var(--interactive))' : 'none',
             padding: '0 0.25rem',
-            color: status === 'sent' ? 'var(--success, #10b981)' : status === 'error' ? 'var(--danger, #ef4444)' : undefined,
+            color: status === 'sent' ? 'var(--success, var(--status-ok))' : status === 'error' ? 'var(--danger, var(--status-alarm))' : undefined,
           }}
         >
           {formatValue(value)}
-          {status === 'sent' && <span style={{ marginLeft: '0.25rem', fontSize: '0.65rem' }}>✓</span>}
-          {status === 'error' && <span style={{ marginLeft: '0.25rem', fontSize: '0.65rem' }}>✗</span>}
+          {status === 'sent' && <span style={{ marginLeft: '0.25rem', fontSize: fs.label }}>✓</span>}
+          {status === 'error' && <span style={{ marginLeft: '0.25rem', fontSize: fs.label }}>✗</span>}
         </span>
       )}
     </div>

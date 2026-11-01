@@ -25,6 +25,7 @@ The tests are written to pass both BEFORE the modern pages exist (the
 servers then serve an explicit "modern UI assets not installed" page, still
 200 + no-cache) and AFTER Agents 2-4 land them (the real file is served).
 """
+import re
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 
@@ -60,6 +61,13 @@ def _expected_body(static_dir: Path, mode: str, rel_modern="modern/index.html"):
     return "modern UI assets not installed", False
 
 
+_V_QUERY = re.compile(r"([?&])v=[0-9A-Za-z]+")
+
+
+def _unstamp(html: str) -> str:
+    return _V_QUERY.sub(r"\1v=", html)
+
+
 async def _assert_index(client, url, static_dir, mode, rel_modern="modern/index.html"):
     resp = await client.get(url, allow_redirects=False)
     assert resp.status == 200
@@ -68,7 +76,9 @@ async def _assert_index(client, url, static_dir, mode, rel_modern="modern/index.
     text = await resp.text()
     expected, exact = _expected_body(static_dir, mode, rel_modern)
     if exact:
-        assert text == expected, f"{url}: expected the {mode} page"
+        # Servers stamp /static/ asset URLs with their content hash
+        # (smo_common.web.http, R3 audit A8); compare modulo that query.
+        assert _unstamp(text) == _unstamp(expected), f"{url}: expected the {mode} page"
     else:
         assert expected in text, f"{url}: expected the {mode} placeholder"
 

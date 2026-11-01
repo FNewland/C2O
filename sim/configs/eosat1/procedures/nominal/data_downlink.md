@@ -34,8 +34,8 @@ LOW before LOS.
 ### Step 1 --- Confirm Link Quality
 **TC:** `HK_REQUEST(sid=6)` (Service 3, Subtype 27) --- request TT&C housekeeping
 **Verify:** `ttc.link_status` (0x0501) = 2 (LOCKED) within 5 s
-**Verify:** `ttc.rssi` (0x0502) > -100 dBm within 5 s
-**Verify:** `ttc.link_margin` (0x0503) > 3.0 dB within 5 s
+**Verify:** TT&C page (ground): `ttc.rssi` (0x0502) > -126 dBm within 5 s
+**Verify:** TT&C page (ground): `ttc.link_margin` (0x0503) > 3.0 dB within 5 s
 **GO/NO-GO:** If link margin <= 3.0 dB, HOLD. If margin does not improve within
 30 s, attempt `TTC_SWITCH_REDUNDANT`. If still insufficient, defer downlink.
 
@@ -94,8 +94,8 @@ the next block; repeat for K = 0 .. total_blocks-1
 **TC:** `HK_REQUEST(sid=6)` (Service 3, Subtype 27) --- poll every 60 s
 **Verify:** `payload.transfer_progress` (0x062E) increasing over successive polls
 **Verify:** `ttc.link_status == 2` (0x0501, timeout 60 s) --- LOCKED maintained
-**Verify:** `ttc.link_margin` (0x0503) > 2.0 dB throughout the session
-**Verify:** `ttc.rssi` (0x0502) > -105 dBm throughout the session
+**Verify:** TT&C page (ground): `ttc.link_margin` (0x0503) > 2.0 dB throughout the session
+**Verify:** TT&C page (ground): `ttc.rssi` (0x0502) > -126 dBm throughout the session
 **Note:** Since Phase 4 the on-board transfer engine drains at the ACTIVE
 information rate `ttc.tm_data_rate` (0x0506) and STALLS when `ttc.link_status`
 (0x0501) leaves LOCKED, resuming when it returns. A frozen

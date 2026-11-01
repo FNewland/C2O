@@ -29,8 +29,8 @@
   },
   {
    "id": "nom-003-data-downlink/procedure-steps/step-1-confirm-link-quality",
-   "en_hash": "14f6197a96b7c184",
-   "fr_hash": "724a480045d1758e"
+   "en_hash": "f68f1054751fe690",
+   "fr_hash": "e83dcba60cd74dcf"
   },
   {
    "id": "nom-003-data-downlink/procedure-steps/step-2-record-baseline-storage-state",
@@ -49,8 +49,8 @@
   },
   {
    "id": "nom-003-data-downlink/procedure-steps/step-4-walk-the-segments-and-monitor-progress",
-   "en_hash": "735ffbadacb7f825",
-   "fr_hash": "b54c3204f7bf4a15"
+   "en_hash": "86d9475234d2bcf6",
+   "fr_hash": "cb8beb85607cc0eb"
   },
   {
    "id": "nom-003-data-downlink/procedure-steps/step-5a-verify-the-product-checksum",
@@ -83,5 +83,5 @@
    "fr_hash": "25f2150e274fb71b"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "8067e5b"
 }

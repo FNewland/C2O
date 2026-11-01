@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useTemplates, useCreateStudyFromTemplate, type MissionTemplate } from '../hooks/useTemplates'
+import { fs } from '../theme/tokens'
+import { showAlert } from './ui/Dialog'
 
 interface Props {
   onClose: () => void
@@ -44,7 +46,7 @@ export function TemplateGallery({ onClose, onInstantiated }: Props) {
       const study = await instantiate.mutateAsync(tmpl.id)
       onInstantiated(study.id)
     } catch (err) {
-      alert(`Failed to create study: ${err}`)
+      void showAlert(`Failed to create study: ${err}`)
     }
   }
 
@@ -58,8 +60,8 @@ export function TemplateGallery({ onClose, onInstantiated }: Props) {
     >
       <div
         style={{
-          background: 'var(--bg-primary, #111827)',
-          border: '1px solid var(--border, #374151)',
+          background: 'var(--bg-primary, var(--surface-1))',
+          border: '1px solid var(--border, var(--line))',
           borderRadius: '8px',
           padding: '1.5rem',
           width: '90%',
@@ -72,7 +74,7 @@ export function TemplateGallery({ onClose, onInstantiated }: Props) {
       >
         <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.75rem', marginBottom: '0.75rem' }}>
           <h2 style={{ margin: 0 }}>Mission Templates</h2>
-          <span style={{ color: 'var(--text-secondary, #9ca3af)', fontSize: '0.85rem' }}>
+          <span style={{ color: 'var(--text-secondary, var(--text-2))', fontSize: fs.body }}>
             Start a new study from a canonical archetype
           </span>
           <button className="btn btn-sm" onClick={onClose} style={{ marginLeft: 'auto' }}>Close</button>
@@ -92,7 +94,7 @@ export function TemplateGallery({ onClose, onInstantiated }: Props) {
           {/* Grid */}
           <div style={{ overflowY: 'auto', paddingRight: '0.5rem' }}>
             {isLoading && <div>Loading templates…</div>}
-            {error && <div style={{ color: 'var(--danger, #f87171)' }}>Failed to load templates: {String(error)}</div>}
+            {error && <div style={{ color: 'var(--danger, var(--status-alarm))' }}>Failed to load templates: {String(error)}</div>}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '0.75rem' }}>
               {filtered.map(t => (
                 <TemplateCard
@@ -110,12 +112,12 @@ export function TemplateGallery({ onClose, onInstantiated }: Props) {
             <div
               style={{
                 overflowY: 'auto',
-                borderLeft: '1px solid var(--border, #374151)',
+                borderLeft: '1px solid var(--border, var(--line))',
                 paddingLeft: '1rem',
               }}
             >
               <h3 style={{ marginTop: 0 }}>{selected.name}</h3>
-              <p style={{ color: 'var(--text-secondary, #9ca3af)' }}>{selected.description}</p>
+              <p style={{ color: 'var(--text-secondary, var(--text-2))' }}>{selected.description}</p>
 
               <Row label="Archetype" value={ARCHETYPE_LABELS[selected.archetype] || selected.archetype} />
               <Row label="Target phase" value={selected.target_phase.toUpperCase()} />
@@ -128,7 +130,7 @@ export function TemplateGallery({ onClose, onInstantiated }: Props) {
               {selected.typical_use_cases.length > 0 && (
                 <>
                   <h4 style={{ marginBottom: '0.3rem' }}>Typical use cases</h4>
-                  <ul style={{ marginTop: 0, paddingLeft: '1.2rem', fontSize: '0.85rem' }}>
+                  <ul style={{ marginTop: 0, paddingLeft: '1.2rem', fontSize: fs.body }}>
                     {selected.typical_use_cases.map((uc, i) => <li key={i}>{uc}</li>)}
                   </ul>
                 </>
@@ -143,10 +145,10 @@ export function TemplateGallery({ onClose, onInstantiated }: Props) {
                         key={s}
                         title={s}
                         style={{
-                          fontSize: '0.7rem',
+                          fontSize: fs.label,
                           padding: '0.15rem 0.4rem',
-                          background: 'var(--bg-secondary, #1f2937)',
-                          border: '1px solid var(--border, #374151)',
+                          background: 'var(--bg-secondary, var(--surface-2))',
+                          border: '1px solid var(--border, var(--line))',
                           borderRadius: '3px',
                           fontFamily: 'monospace',
                         }}
@@ -161,7 +163,7 @@ export function TemplateGallery({ onClose, onInstantiated }: Props) {
               {selected.equipment_hints.length > 0 && (
                 <>
                   <h4 style={{ marginBottom: '0.3rem', marginTop: '0.75rem' }}>Equipment hints</h4>
-                  <ul style={{ marginTop: 0, paddingLeft: '1.2rem', fontSize: '0.8rem' }}>
+                  <ul style={{ marginTop: 0, paddingLeft: '1.2rem', fontSize: fs.body }}>
                     {selected.equipment_hints.map((h, i) => (
                       <li key={i}><strong>{h.category}</strong>: {h.rationale}</li>
                     ))}
@@ -174,9 +176,9 @@ export function TemplateGallery({ onClose, onInstantiated }: Props) {
                   <h4 style={{ marginBottom: '0.3rem' }}>Notes</h4>
                   <pre style={{
                     whiteSpace: 'pre-wrap',
-                    fontSize: '0.8rem',
+                    fontSize: fs.body,
                     fontFamily: 'inherit',
-                    color: 'var(--text-secondary, #9ca3af)',
+                    color: 'var(--text-secondary, var(--text-2))',
                     margin: 0,
                   }}>{selected.notes}</pre>
                 </>
@@ -212,15 +214,15 @@ function TemplateCard({
         cursor: 'pointer',
         padding: '0.75rem',
         borderRadius: '6px',
-        border: `1px solid ${selected ? 'var(--accent, #3b82f6)' : 'var(--border, #374151)'}`,
-        background: selected ? 'rgba(59,130,246,0.08)' : 'var(--bg-secondary, #1f2937)',
+        border: `1px solid ${selected ? 'var(--accent, var(--interactive))' : 'var(--border, var(--line))'}`,
+        background: selected ? 'rgba(59,130,246,0.08)' : 'var(--bg-secondary, var(--surface-2))',
       }}
     >
-      <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{tmpl.name}</div>
-      <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary, #9ca3af)', marginTop: '0.15rem' }}>
+      <div style={{ fontWeight: 600, fontSize: fs.value }}>{tmpl.name}</div>
+      <div style={{ fontSize: fs.label, color: 'var(--text-secondary, var(--text-2))', marginTop: '0.15rem' }}>
         {ARCHETYPE_LABELS[tmpl.archetype] || tmpl.archetype} · {tmpl.target_phase.toUpperCase()}
       </div>
-      <div style={{ fontSize: '0.78rem', marginTop: '0.4rem', lineHeight: 1.4, color: 'var(--text-secondary, #d1d5db)' }}>
+      <div style={{ fontSize: fs.label, marginTop: '0.4rem', lineHeight: 1.4, color: 'var(--text-secondary, var(--text))' }}>
         {tmpl.description.length > 140 ? tmpl.description.slice(0, 140) + '…' : tmpl.description}
       </div>
       <div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'wrap', marginTop: '0.5rem' }}>
@@ -228,12 +230,12 @@ function TemplateCard({
           <span
             key={tag}
             style={{
-              fontSize: '0.65rem',
+              fontSize: fs.label,
               padding: '0.1rem 0.3rem',
-              background: 'var(--bg-primary, #111827)',
-              border: '1px solid var(--border, #374151)',
+              background: 'var(--bg-primary, var(--surface-1))',
+              border: '1px solid var(--border, var(--line))',
               borderRadius: '3px',
-              color: 'var(--text-secondary, #9ca3af)',
+              color: 'var(--text-secondary, var(--text-2))',
             }}
           >
             {tag}
@@ -251,13 +253,13 @@ function Chip({
     <button
       onClick={onClick}
       style={{
-        background: active ? 'var(--accent, #3b82f6)' : 'transparent',
-        color: active ? 'white' : 'var(--text-secondary, #9ca3af)',
-        border: `1px solid ${active ? 'var(--accent, #3b82f6)' : 'var(--border, #374151)'}`,
+        background: active ? 'var(--accent, var(--interactive))' : 'transparent',
+        color: active ? 'white' : 'var(--text-secondary, var(--text-2))',
+        border: `1px solid ${active ? 'var(--accent, var(--interactive))' : 'var(--border, var(--line))'}`,
         padding: '0.25rem 0.6rem',
         borderRadius: '4px',
         cursor: 'pointer',
-        fontSize: '0.75rem',
+        fontSize: fs.label,
       }}
     >
       {children}
@@ -267,8 +269,8 @@ function Chip({
 
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div style={{ display: 'flex', fontSize: '0.82rem', padding: '0.15rem 0' }}>
-      <span style={{ color: 'var(--text-secondary, #9ca3af)', minWidth: '120px' }}>{label}</span>
+    <div style={{ display: 'flex', fontSize: fs.body, padding: '0.15rem 0' }}>
+      <span style={{ color: 'var(--text-secondary, var(--text-2))', minWidth: '120px' }}>{label}</span>
       <span>{value}</span>
     </div>
   )

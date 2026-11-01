@@ -16,6 +16,7 @@ import { useUIStore } from '../stores/uiStore'
 import { useOptionStore } from '../stores/optionStore'
 import { useOptions } from './OptionSwitcher'
 import type { OptionCompareResult } from '../types/options'
+import { fs } from '../theme/tokens'
 
 const API = '/api'
 
@@ -40,16 +41,16 @@ function fmtDelta(d: number | null, a: number | null): string {
   const pct = a && a !== 0 ? ` (${sign}${(100 * d / a).toFixed(1)}%)` : ''
   return `${sign}${fmt(d)}${pct}`
 }
-const deltaColor = (d: number | null) => d === null ? 'var(--text-secondary)' : d > 0 ? '#f59e0b' : d < 0 ? '#3b82f6' : 'var(--text-primary)'
+const deltaColor = (d: number | null) => d === null ? 'var(--text-secondary)' : d > 0 ? 'var(--status-caution)' : d < 0 ? 'var(--interactive)' : 'var(--text-primary)'
 
-const th: React.CSSProperties = { textAlign: 'left', padding: '0.15rem 0.35rem', fontSize: '0.58rem', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap' }
-const td: React.CSSProperties = { padding: '0.15rem 0.35rem', fontSize: '0.64rem', borderBottom: '1px solid var(--border)', verticalAlign: 'top', fontVariantNumeric: 'tabular-nums' }
-const sel: React.CSSProperties = { fontSize: '0.62rem', padding: '0.1rem 0.2rem', background: 'var(--bg-primary)', color: 'var(--text-primary)', border: '1px solid var(--border)', borderRadius: '3px' }
+const th: React.CSSProperties = { textAlign: 'left', padding: '0.15rem 0.35rem', fontSize: fs.label, color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap' }
+const td: React.CSSProperties = { padding: '0.15rem 0.35rem', fontSize: fs.label, borderBottom: '1px solid var(--border)', verticalAlign: 'top', fontVariantNumeric: 'tabular-nums' }
+const sel: React.CSSProperties = { fontSize: fs.label, padding: '0.1rem 0.2rem', background: 'var(--bg-primary)', color: 'var(--text-primary)', border: '1px solid var(--border)', borderRadius: '3px' }
 
 function OverrideDot({ on, side }: { on: boolean; side: 'A' | 'B' }) {
   const { t } = useTranslation()
   if (!on) return null
-  return <span title={t('override row in option {{side}}', { side })} style={{ marginLeft: '0.25rem', fontSize: '0.52rem', padding: '0 0.25rem', borderRadius: '3px', background: '#f59e0b22', color: '#f59e0b', border: '1px solid #f59e0b55' }}>{t('override')}</span>
+  return <span title={t('override row in option {{side}}', { side })} style={{ marginLeft: '0.25rem', fontSize: fs.label, padding: '0 0.25rem', borderRadius: '3px', background: 'color-mix(in srgb, var(--status-caution) 13%, transparent)', color: 'var(--status-caution)', border: '1px solid color-mix(in srgb, var(--status-caution) 33%, transparent)' }}>{t('override')}</span>
 }
 
 export function OptionCompare({ studyId: studyIdProp, initialA, initialB }: {
@@ -84,9 +85,9 @@ export function OptionCompare({ studyId: studyIdProp, initialA, initialB }: {
   const nameOf = (id: string) => { const o = options.find(x => x.id === id); return o ? (o.is_baseline ? t('Baseline') : o.name) : id }
 
   return (
-    <div style={{ fontSize: '0.7rem' }}>
+    <div style={{ fontSize: fs.label }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.4rem', flexWrap: 'wrap' }}>
-        <span style={{ color: 'var(--text-secondary)', fontSize: '0.62rem' }}>{t('Compare')}</span>
+        <span style={{ color: 'var(--text-secondary)', fontSize: fs.label }}>{t('Compare')}</span>
         <select value={a} onChange={e => setA(e.target.value)} style={sel}>
           {options.map(o => <option key={o.id} value={o.id}>A: {o.is_baseline ? t('Baseline') : o.name}</option>)}
         </select>
@@ -95,17 +96,17 @@ export function OptionCompare({ studyId: studyIdProp, initialA, initialB }: {
           {options.map(o => <option key={o.id} value={o.id}>B: {o.is_baseline ? t('Baseline') : o.name}</option>)}
         </select>
         <button onClick={() => { setA(b); setB(a) }} title={t('Swap A and B')}
-          style={{ background: 'none', border: '1px solid var(--border)', borderRadius: '3px', cursor: 'pointer', fontSize: '0.6rem', color: 'var(--text-secondary)', padding: '0 0.3rem' }}>⇄</button>
-        {isFetching && <span style={{ color: 'var(--text-secondary)', fontSize: '0.6rem' }}>{t('loading…')}</span>}
+          style={{ background: 'none', border: '1px solid var(--border)', borderRadius: '3px', cursor: 'pointer', fontSize: fs.label, color: 'var(--text-secondary)', padding: '0 0.3rem' }}>⇄</button>
+        {isFetching && <span style={{ color: 'var(--text-secondary)', fontSize: fs.label }}>{t('loading…')}</span>}
         {data && (
-          <span style={{ marginLeft: 'auto', color: 'var(--text-secondary)', fontSize: '0.6rem' }}>
+          <span style={{ marginLeft: 'auto', color: 'var(--text-secondary)', fontSize: fs.label }}>
             {t('{{count}} parameters differ · conflicts A {{a}} / B {{b}}', { count: data.parameters.length, a: data.conflicts.a, b: data.conflicts.b, defaultValue_one: '{{count}} parameter differ · conflicts A {{a}} / B {{b}}' })}
           </span>
         )}
       </div>
-      {error && <div style={{ color: '#ef4444', fontSize: '0.64rem' }}>{(error as Error).message}</div>}
-      {options.length < 2 && <div style={{ color: 'var(--text-secondary)', fontSize: '0.64rem' }}>{t('Create or branch an option to compare it with the baseline.')}</div>}
-      {data && a === b && <div style={{ color: 'var(--text-secondary)', fontSize: '0.64rem' }}>{t('Pick two different options.')}</div>}
+      {error && <div style={{ color: 'var(--status-alarm)', fontSize: fs.label }}>{(error as Error).message}</div>}
+      {options.length < 2 && <div style={{ color: 'var(--text-secondary)', fontSize: fs.label }}>{t('Create or branch an option to compare it with the baseline.')}</div>}
+      {data && a === b && <div style={{ color: 'var(--text-secondary)', fontSize: fs.label }}>{t('Pick two different options.')}</div>}
 
       {data && data.parameters.length > 0 && (
         <table style={{ borderCollapse: 'collapse', width: '100%', marginBottom: '0.6rem' }}>
@@ -132,12 +133,12 @@ export function OptionCompare({ studyId: studyIdProp, initialA, initialB }: {
         </table>
       )}
       {data && a !== b && data.parameters.length === 0 && (
-        <div style={{ color: 'var(--text-secondary)', fontSize: '0.64rem', marginBottom: '0.5rem' }}>{t('No parameter differs between the two options.')}</div>
+        <div style={{ color: 'var(--text-secondary)', fontSize: fs.label, marginBottom: '0.5rem' }}>{t('No parameter differs between the two options.')}</div>
       )}
 
       {data && data.analyses.length > 0 && (
         <div>
-          <div style={{ fontSize: '0.62rem', color: 'var(--text-secondary)', marginBottom: '0.2rem' }}>{t('Analyses (last run per option)')}</div>
+          <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginBottom: '0.2rem' }}>{t('Analyses (last run per option)')}</div>
           <table style={{ borderCollapse: 'collapse', width: '100%' }}>
             <thead>
               <tr>
@@ -166,7 +167,7 @@ export function OptionCompare({ studyId: studyIdProp, initialA, initialB }: {
           </table>
         </div>
       )}
-      {data && data.warnings.length > 0 && <div style={{ color: '#f59e0b', fontSize: '0.6rem', marginTop: '0.3rem' }}>{data.warnings.join('; ')}</div>}
+      {data && data.warnings.length > 0 && <div style={{ color: 'var(--status-caution)', fontSize: fs.label, marginTop: '0.3rem' }}>{data.warnings.join('; ')}</div>}
     </div>
   )
 }

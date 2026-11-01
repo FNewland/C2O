@@ -66,10 +66,10 @@ confirme que le nouveau taux d'erreur binaire (TEB) reste acceptable après la t
 **Verify:** `ttc.bit_sync` (0x0511) = 1
 **Verify:** `ttc.tm_tier` (0x0539) --- consigner le palier ACTIF
 **Verify:** `ttc.tm_tier_cmd` (0x053A) --- consigner le palier COMMANDÉ
-**Verify:** `ttc.link_margin` (0x0503) --- consigner la valeur actuelle
-**Verify:** `ttc.ber` (0x050C) --- consigner la valeur actuelle (attendue < -5)
-**Verify:** `ttc.eb_n0` (0x0519) --- consigner la valeur actuelle
-**Verify:** `ttc.contact_elevation` (0x050A) --- consigner l'élévation actuelle
+**Verify:** page TT&C (sol) : `ttc.link_margin` (0x0503) --- consigner la valeur actuelle
+**Verify:** page radio (sol) : `ttc.ber` (0x050C) --- consigner la valeur actuelle (attendue < -5)
+**Verify:** page radio (sol) : `ttc.eb_n0` (0x0519) --- consigner la valeur actuelle
+**Verify:** page TT&C (sol) : `ttc.contact_elevation` (0x050A) --- consigner l'élévation actuelle
 **Note:** Si 0x0539 et 0x053A divergent déjà, une condition refuse le palier commandé.
 Régler ce point avant de commander quoi que ce soit d'autre — l'échelle n'est pas « bloquée », elle obéit à
 une règle, et 0x0521 / 0x0520 / 0x053C indiquent laquelle.
@@ -128,9 +128,9 @@ par le contrôle du TEB.
 ### Étape 5 --- Vérifier que le nouveau TEB est acceptable
 **TC:** `HK_REQUEST(sid=6)` (Service 3, Subtype 27) --- demander les données de servitude TT&C après
 avoir laissé 30 s au TEB pour se stabiliser
-**Verify:** `ttc.ber` (0x050C) < -5 (TEB meilleur que 1e-5)
-**Verify:** `ttc.link_margin` (0x0503) > 1.0 dB au nouveau palier
-**Verify:** `ttc.eb_n0` (0x0519) > 8.0 dB
+**Verify:** page radio (sol) : `ttc.ber` (0x050C) < -5 (TEB meilleur que 1e-5)
+**Verify:** page TT&C (sol) : `ttc.link_margin` (0x0503) > 1.0 dB au nouveau palier
+**Verify:** page radio (sol) : `ttc.eb_n0` (0x0519) > 8.0 dB
 **Action:** Si TEB >= -5, revenir immédiatement à LOW (voir Contingence).
 **GO/NO-GO:** TEB acceptable au nouveau palier --- changement de débit terminé.
 **BRANCH:** `ttc.downlink_mode == 1` -> GO `STEP-6` | NO-GO `STEP-END` (timeout 5 s)

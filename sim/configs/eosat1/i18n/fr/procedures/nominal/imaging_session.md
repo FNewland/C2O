@@ -94,7 +94,7 @@ avec TM(1,8) si l'AOCS ne tient pas FINE_POINT avec une erreur totale < 0.05 de
 le FPA n'est pas prêt, ou si la mémoire ne peut pas contenir l'image --- l'avis d'échec
 nomme la condition qui a refusé.
 **Verify:** `payload.last_scene_id` (0x060C) = le `scene_id` commandé sous 10 s
-**Verify:** `payload.last_scene_quality` (0x060D) --- consigner pour chaque produit
+**Note:** La qualité de l'image n'est pas télémesurée : elle est contrôlée au sol sur l'aperçu de chaque produit après transmission. Consigner dès maintenant les identifiants de scène pour pouvoir contrôler chaque produit à ce moment-là.
 
 ### Étape 5a --- Surveiller l'acquisition des images
 **TC:** `HK_REQUEST(sid=5)` (Service 3, Subtype 27) --- HK charge utile, interroger toutes les 30 s

@@ -70,8 +70,8 @@ EMERGENCY, et `obdh.mode` (0x0300) relit le même codage.
 ### Étape 5 --- Demander les données de servitude TT&C
 **TC:** `HK_REQUEST(sid=6)` (Service 3, Subtype 27)
 **Verify:** `ttc.link_status` (0x0501) = 2 (LOCKED) sous 10s
-**Verify:** `ttc.rssi` (0x0502) > -110 dBm sous 10s
-**Verify:** `ttc.link_margin` (0x0503) > 3.0 dB sous 10s
+**Verify:** page TT&C (sol) : `ttc.rssi` (0x0502) > -126 dBm sous 10s
+**Verify:** page TT&C (sol) : `ttc.link_margin` (0x0503) > 3.0 dB sous 10s
 **GO/NO-GO:** Liaison TT&C nominale avec une marge suffisante
 
 ### Étape 6 --- Établir le rapport d'évaluation de santé

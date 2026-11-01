@@ -1,0 +1,108 @@
+/*
+ * C2O design tokens for SpaceCDF (docs/ui/C2O_UI_BRIEF.md §2–3, R3 §4.2).
+ *
+ * One token set, two themes. SpaceCDF is design work, so it defaults to the
+ * light theme; [data-theme="dark"] gives the control-room ramp used by the
+ * SMO consoles. Components use the semantic names only (no hex in TSX).
+ * src/theme/tokens.ts mirrors the names for inline styles.
+ */
+@import '@fontsource/ibm-plex-sans/400.css';
+@import '@fontsource/ibm-plex-sans/400-italic.css';
+@import '@fontsource/ibm-plex-sans/500.css';
+@import '@fontsource/ibm-plex-sans/600.css';
+@import '@fontsource/ibm-plex-mono/400.css';
+@import '@fontsource/ibm-plex-mono/500.css';
+
+:root {
+  /* Type: 12 / 13 / 15 / 20 px, 12 px floor; values ≥ 14 px (brief §3). */
+  --font-sans: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace;
+  --fs-label: 12px;
+  --fs-body: 13px;
+  --fs-value: 15px;
+  --fs-title: 20px;
+  --lh-text: 1.4;
+  --lh-value: 1.2;
+
+  /* Spacing: 4 px base. Radius 2–4 px. */
+  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 24px; --sp-6: 32px;
+  --radius: 3px;
+  --radius-sm: 2px;
+  --motion: 140ms;
+
+  /* ── Light theme (default for SpaceCDF) ── */
+  color-scheme: light;
+  --surface-0: #F4F5F7;   /* page */
+  --surface-1: #FFFFFF;   /* panels */
+  --surface-2: #EEF0F3;   /* raised rows, inputs */
+  --surface-3: #E3E6EA;   /* hover / pressed */
+  --line: #D5D9DE;
+  --line-strong: #B8BEC6;
+  --text-value: #0B0D10;
+  --text: #141619;
+  --text-2: #383C42;
+  --text-3: #4A4F56;
+  --text-disabled: #8A9099; /* 40 % treatment; never for information */
+  --interactive: #15477C;
+  --interactive-wash: #E3ECF6;
+  --on-fill: #FFFFFF;
+  --status-caution: #6E4300;
+  --status-caution-wash: #FBF1DE;
+  --status-alarm: #8F1D12;
+  --status-alarm-wash: #FBE7E4;
+  --status-ok: #0B5A42;
+  --status-ok-wash: #E0F1EA;
+  --status-shelved: #453A96;
+  --status-stale: #53575D;
+  --brand: #8F001A;        /* uOttawa garnet: wordmark only */
+  /* Subsystem identity: low chroma, never red or amber, always with a letter badge. */
+  --cat-1: #3F6A8F; --cat-2: #5E5596; --cat-3: #2F6E64; --cat-4: #6A5F45;
+  --cat-5: #4F6276; --cat-6: #85506A; --cat-7: #4A6B57; --cat-8: #5B5F66;
+  --focus-ring: 0 0 0 2px var(--surface-1), 0 0 0 4px var(--interactive);
+  --overlay: rgba(11, 13, 16, 0.45);
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --surface-0: #0B0D10;
+  --surface-1: #14171C;
+  --surface-2: #1C2129;
+  --surface-3: #262C36;
+  --line: #2B313A;
+  --line-strong: #3B4450;
+  --text-value: #F5F7FA;
+  --text: #E9EDF2;
+  --text-2: #C0C9D4;
+  --text-3: #9BA7B4;
+  --text-disabled: #5D6672;
+  --interactive: #6BB3FF;
+  --interactive-wash: #16283D;
+  --on-fill: #0B0D10;
+  --status-caution: #F0B429;
+  --status-caution-wash: #2E2410;
+  --status-alarm: #FF7B72;
+  --status-alarm-wash: #33191A;
+  --status-ok: #00C896;
+  --status-ok-wash: #0E2A23;
+  --status-shelved: #A79BF8;
+  --status-stale: #7E8697;
+  --brand: #E0707F;
+  --cat-1: #7FA7C9; --cat-2: #9C8FD1; --cat-3: #6FB7A8; --cat-4: #B7A07A;
+  --cat-5: #8FA3B8; --cat-6: #C2879E; --cat-7: #7FB38A; --cat-8: #A7A7A7;
+  --overlay: rgba(0, 0, 0, 0.6);
+}
+
+/* Legacy names (index.css v1) kept as aliases so existing var() uses follow the theme. */
+:root {
+  --bg-primary: var(--surface-0);
+  --bg-secondary: var(--surface-1);
+  --bg-card: var(--surface-2);
+  --border: var(--line);
+  --text-primary: var(--text);
+  --text-secondary: var(--text-2);
+  --accent: var(--interactive);
+  --success: var(--status-ok);
+  --warning: var(--status-caution);
+  --danger: var(--status-alarm);
+  --info: var(--interactive);
+}

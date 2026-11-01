@@ -137,7 +137,6 @@ async def test_sid7_aocs_determination_round_trip():
         0x02AA: 0.065,    # total pointing 3sig deg
         0x02BA: 42.3,     # h_env_frac % (scale 10, H)
         0x02C5: 0.0,      # fine_ready mask
-        0x02C6: 1.0,      # fidelity_mode (secular)
         0x02C8: 15.0,     # aocs power W (scale 10, H)
     }
     full = {pid: inputs.get(pid, 0.0) for pid, _, _ in structure}
@@ -152,5 +151,8 @@ async def test_sid7_aocs_determination_round_trip():
     assert cache[0x02A7]["value"] == pytest.approx(51.7, abs=0.1)
     assert cache[0x02A8]["value"] == pytest.approx(0.062, abs=0.001)
     assert cache[0x02BA]["value"] == pytest.approx(42.3, abs=0.1)
-    assert cache[0x02C6]["value"] == pytest.approx(1.0)
+    # 0x02C6 aocs.fidelity_mode is `visibility: instructor` and left SID 7
+    # in the 2026-08-20 telemetry-realism clean-up (d99c9e2).
+    assert 0x02C6 not in {pid for pid, _, _ in structure}
+    assert 0x02C6 not in cache
     assert cache[0x02C8]["value"] == pytest.approx(15.0, abs=0.1)

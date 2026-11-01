@@ -8,6 +8,8 @@ import struct
 import pytest
 from unittest.mock import MagicMock
 
+from tests.engine_doubles import wire_mock_engine
+
 from smo_simulator.service_dispatch import ServiceDispatcher
 
 
@@ -40,7 +42,7 @@ def make_mock_engine():
     engine._tc_scheduler = MagicMock()
     engine._tm_storage = MagicMock()
     engine.event_types_enabled = set(range(256))
-    return engine
+    return wire_mock_engine(engine)
 
 
 # ===================================================================

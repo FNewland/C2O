@@ -85,7 +85,7 @@ l'étape 4, que lorsque EMG-005 a laissé l'AOCS en COARSE_SUN.
 
 ### Étape 5 --- Établir une communication stable
 **Verify:** `ttc.link_status` (0x0501) = 2 (LOCKED).
-**Verify:** `ttc.rssi` (0x0502) > -120 dBm.
+**Verify:** page TT&C (sol) : `ttc.rssi` (0x0502) > -128 dBm.
 **Verify:** `ttc.mode` (0x0500) = NOMINAL ou SAFE.
 **Action:** Si la liaison est limite, ne programmer les passages suivants qu'avec des stations sol à forte élévation (> 20 deg).
 **TC:** `HK_REQUEST(sid=6)` (Service 3, Subtype 27) --- données de servitude du sous-système TT&C.

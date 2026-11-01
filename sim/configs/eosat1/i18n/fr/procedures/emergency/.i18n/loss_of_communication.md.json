@@ -34,8 +34,8 @@
   },
   {
    "id": "emg-004-loss-of-communication/procedure-steps/step-2-attempt-contact-on-all-available-ground-stations",
-   "en_hash": "0e399bde6f28d20c",
-   "fr_hash": "9008361a93ca3a32"
+   "en_hash": "d1f4c9f8661332cb",
+   "fr_hash": "90c3dd58dfbb7fc1"
   },
   {
    "id": "emg-004-loss-of-communication/procedure-steps/step-3-blind-command-on-primary-transponder",
@@ -49,8 +49,8 @@
   },
   {
    "id": "emg-004-loss-of-communication/procedure-steps/step-5-wait-for-autonomous-recovery-timer",
-   "en_hash": "1711379702041496",
-   "fr_hash": "02c0188f4c1eb87c"
+   "en_hash": "95d28838209d7e00",
+   "fr_hash": "55649de91f12931a"
   },
   {
    "id": "emg-004-loss-of-communication/procedure-steps/step-6-polar-pass-focused-campaign-12h-threshold",
@@ -83,5 +83,5 @@
    "fr_hash": "bf561b76262141ea"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "8067e5b"
 }

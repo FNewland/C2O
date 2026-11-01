@@ -95,16 +95,16 @@ modulation, its own coding and its own permission gates.
 
 **LOW (16 kbps) is where the spacecraft normally sits.** This is the single most
 important thing to understand about the ladder. The periodic housekeeping set (SIDs 1-6)
-generates 1351.5 bps of PUS packets, which is 1557 bps of channel after RS(255,223) and
+generates 1378.5 bps of PUS packets, which is 1588 bps of channel after RS(255,223) and
 TM transfer framing. LOW carries that at under 10 % duty *and* plays back roughly
-0.85 orbits of stored housekeeping in a single good pass, so a spacecraft at LOW never
+0.82 orbits of stored housekeeping in a single good pass, so a spacecraft at LOW never
 falls behind. Nothing is degraded about routine operations at LOW; the antenna may even
 be stowed.
 
 **SAFE (1 kbps) is a lifeline, not an operations rate.** (This rung was renamed from
 BEACON in 2026-08c: "beacon" now always means the UHF whip transmitter, the second
 radio.) 1000 bps is *below* the
-1557 bps housekeeping generation rate, so a spacecraft held at SAFE accumulates a
+1588 bps housekeeping generation rate, so a spacecraft held at SAFE accumulates a
 real-time backlog that can never drain. It exists to carry SID 11 (28 bytes every 30 s =
 7.5 bps) out of the bootloader with over 100x headroom and the narrowest possible
 occupied bandwidth. It is entered by `TTC_SET_BEACON_MODE` (func 70) or by the

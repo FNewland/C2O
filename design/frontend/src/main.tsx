@@ -1,6 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './i18n'  // initialise i18next before the first render
+import './theme/useTheme'  // sets <html data-theme> (light by default)
 import App from './App'
 import './index.css'
 

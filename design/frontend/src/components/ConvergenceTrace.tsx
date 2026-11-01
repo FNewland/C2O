@@ -6,6 +6,7 @@
  */
 import { useState, useEffect } from 'react'
 import { useSessionStore } from '../stores/sessionStore'
+import { fs } from '../theme/tokens'
 
 interface TracePoint {
   iteration: number
@@ -36,9 +37,9 @@ export function ConvergenceTrace() {
 
   if (!convergence) {
     return (
-      <div className="card" style={{ borderLeft: '3px solid #6b7280' }}>
-        <h3 style={{ fontSize: '0.85rem', color: '#6b7280' }}>Convergence Trace</h3>
-        <p style={{ fontSize: '0.72rem', color: '#6b7280' }}>Run a design to see convergence history.</p>
+      <div className="card" style={{ borderLeft: '3px solid var(--text-3)' }}>
+        <h3 style={{ fontSize: fs.body, color: 'var(--text-3)' }}>Convergence Trace</h3>
+        <p style={{ fontSize: fs.label, color: 'var(--text-3)' }}>Run a design to see convergence history.</p>
       </div>
     )
   }
@@ -47,8 +48,8 @@ export function ConvergenceTrace() {
 
   return (
     <div className="card">
-      <h3 style={{ fontSize: '0.85rem', marginBottom: '0.3rem' }}>Convergence Trace</h3>
-      <p style={{ fontSize: '0.68rem', color: '#9ca3af', marginBottom: '0.4rem' }}>
+      <h3 style={{ fontSize: fs.body, marginBottom: '0.3rem' }}>Convergence Trace</h3>
+      <p style={{ fontSize: fs.label, color: 'var(--text-2)', marginBottom: '0.4rem' }}>
         Last: {convergence.cascadeRounds} rounds, {convergence.changedParams?.length || 0} params changed, {convergence.timeMs}ms
       </p>
 
@@ -57,7 +58,7 @@ export function ConvergenceTrace() {
         {history.map((h, i) => (
           <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <div style={{
-              width: '100%', background: h.changedParams > 10 ? '#f59e0b' : '#10b981',
+              width: '100%', background: h.changedParams > 10 ? 'var(--status-caution)' : 'var(--status-ok)',
               borderRadius: '2px 2px 0 0',
               height: `${(h.changedParams / maxVal) * 50}px`,
               minHeight: 2,
@@ -65,15 +66,15 @@ export function ConvergenceTrace() {
           </div>
         ))}
       </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.58rem', color: '#6b7280', marginTop: '0.1rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: fs.label, color: 'var(--text-3)', marginTop: '0.1rem' }}>
         <span>Oldest</span>
         <span>Latest</span>
       </div>
 
       {/* Triggered by */}
       {convergence.triggeredBy && (
-        <div style={{ fontSize: '0.65rem', color: '#6b7280', marginTop: '0.3rem' }}>
-          Triggered by: <span style={{ color: '#d1d5db' }}>{convergence.triggeredBy}</span>
+        <div style={{ fontSize: fs.label, color: 'var(--text-3)', marginTop: '0.3rem' }}>
+          Triggered by: <span style={{ color: 'var(--text)' }}>{convergence.triggeredBy}</span>
         </div>
       )}
     </div>

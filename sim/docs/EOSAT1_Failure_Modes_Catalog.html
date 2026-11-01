@@ -160,7 +160,7 @@ svg text { font-family: 'Segoe UI', system-ui, sans-serif; }
 <tr><th>Failure</th><th>Parameters</th><th>Immediate Effect</th><th>Cascading</th></tr>
 <tr><td><strong>primary_failure</strong></td><td>magnitude</td><td>Primary transponder dead</td><td class="severity-high">Link lost until redundant switchover</td></tr>
 <tr><td><strong>redundant_failure</strong></td><td>magnitude</td><td>Redundant transponder dead</td><td class="severity-high">Combined → total comms loss</td></tr>
-<tr><td><strong>high_ber</strong></td><td>magnitude (dB offset)</td><td>Eb/N0 reduced</td><td class="severity-med">Frame sync loss risk; S19 rule 4003 TX power increase</td></tr>
+<tr><td><strong>high_ber</strong></td><td>magnitude (dB offset)</td><td>Eb/N0 reduced</td><td class="severity-med">Frame sync loss risk; BER/AGC alarm on the ground (radio page). No on-board rule: the spacecraft cannot measure BER</td></tr>
 <tr><td><strong>pa_overheat</strong></td><td>magnitude (heat watts)</td><td>PA temperature rising</td><td class="severity-high">Auto-shutdown at 70°C → downlink lost</td></tr>
 <tr><td><strong>uplink_loss</strong></td><td>—</td><td>carrier_lock = False</td><td class="severity-high">No command acceptance; spacecraft autonomous only</td></tr>
 <tr><td><strong>receiver_degrade</strong></td><td>magnitude (dB NF)</td><td>Noise figure increase</td><td class="severity-med">Lock acquisition delays; eventual uplink loss</td></tr>

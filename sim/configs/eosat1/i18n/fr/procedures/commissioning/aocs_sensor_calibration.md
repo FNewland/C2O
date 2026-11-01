@@ -199,11 +199,13 @@ présent et qu'il est désormais compensé, ce qui est un étalonnage réussi, e
 délibérément des grandeurs différentes. 0x02CE est la norme de la compensation
 désormais appliquée à bord ; 0x02D2 est ce qui RESTE en sortie du gyromètre. Un étalonnage
 réussi fait passer le biais de 0x02D2 dans 0x02CE.
-**Note:** `aocs.gyro_bias_injected` (0x0296) donne à l'instructeur la visibilité d'une
-panne matérielle `gyro_bias` injectée et n'est **délibérément pas modifié** par un
-étalonnage. Compenser un biais ne répare pas l'unité : 0x0296 continue de
-signaler la panne tandis que 0x02D2 montre que le véhicule n'en souffre plus.
-Si 0x0296 est non nul, il s'agit d'un scénario de formation, et non d'une anomalie.
+**Note:** Le biais matériel du gyromètre n'est pas télémesuré : le satellite
+ne le connaît qu'à travers les senseurs stellaires. Le vérifier soi-même en comparant
+les vitesses angulaires brutes du gyromètre (0x0204-0x0206, SID 2) à l'estimation de vitesse
+corrigée du biais et aidée par les senseurs stellaires (0x02A4-0x02A6, SID 7) sur le même intervalle.
+Avant l'étalonnage, elles diffèrent du biais ; après, elles concordent à 0.005 deg/s près,
+la valeur de 0x02D2. Compenser un biais ne répare pas l'unité :
+si le biais augmente de nouveau, le matériel dérive.
 **GO/NO-GO:** Biais résiduel compensé
 
 ### Étape 10 — Contrôle de la détermination après étalonnage

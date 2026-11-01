@@ -922,13 +922,24 @@ class TestEngineIntegrity:
             "_enter_bootloader_mode method is missing — OBC reboot will crash"
 
     def test_link_margin_in_sid6(self):
-        """link_margin (0x0503) must be in SID 6 TTC HK structure."""
+        """link_margin (0x0503) must NOT be in any HK structure.
+
+        Inverted on 2026-11-01. Link margin is measured against a GROUND
+        link budget (`visibility: ground_derived`): the spacecraft cannot
+        know it, so d99c9e2 removed it from SID 6. Operators read it on the
+        TT&C / radio page, labelled "ground"."""
+        import yaml
         eng = _make_engine(phase=3)
-        # Check HK structure has 0x0503
-        sid6_struct = eng._hk_structures.get(6, [])
-        param_ids = [entry[0] if isinstance(entry, tuple) else entry.get('param_id', 0)
-                     for entry in sid6_struct]
-        assert 0x0503 in param_ids, f"0x0503 (link_margin) not in SID 6 HK structure: {param_ids}"
+        for sid, struct in eng._hk_structures.items():
+            param_ids = [entry[0] if isinstance(entry, tuple)
+                         else entry.get('param_id', 0) for entry in struct]
+            assert 0x0503 not in param_ids, \
+                f"0x0503 (link_margin, ground-derived) is in SID {sid}"
+        params = yaml.safe_load((Path(__file__).resolve().parent.parent
+                                 / "configs/eosat1/telemetry/parameters.yaml"
+                                 ).read_text())["parameters"]
+        lm = next(p for p in params if p["name"] == "ttc.link_margin")
+        assert lm.get("visibility") == "ground_derived"
 
     def test_antenna_deployed_in_sid6(self):
         """antenna_deployed (0x0520) must be in SID 6 TTC HK structure."""

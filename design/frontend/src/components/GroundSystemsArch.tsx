@@ -18,6 +18,8 @@ import {
 import '@xyflow/react/dist/style.css'
 import { useDesignStore } from '../stores/designStore'
 import { useModelStore } from '../stores/modelStore'
+import { fs } from '../theme/tokens'
+import { askText } from './ui/Dialog'
 
 interface GroundSystem {
   id: string
@@ -62,8 +64,8 @@ const GROUND_SYSTEMS: GroundSystem[] = [
 ]
 
 const GROUND_SYSTEM_COLORS = [
-  '#10b981', '#d946ef', '#14b8a6', '#6b7280', '#f59e0b',
-  '#06b6d4', '#8b5cf6', '#ef4444', '#84cc16', '#ec4899',
+  'var(--status-ok)', 'var(--cat-2)', 'var(--cat-3)', 'var(--text-3)', 'var(--status-caution)',
+  'var(--interactive)', 'var(--cat-2)', 'var(--status-alarm)', 'var(--cat-7)', 'var(--cat-6)',
 ]
 
 // Ground system block node
@@ -71,13 +73,13 @@ function GroundBlockNode({ data }: { data: { label: string; color: string; subsy
   return (
     <div style={{
       padding: '8px 14px', border: `2px solid ${data.color}`, borderRadius: 8,
-      background: `${data.color}15`, textAlign: 'center', minWidth: 130,
+      background: `color-mix(in srgb, ${data.color} 8%, transparent)`, textAlign: 'center', minWidth: 130,
     }}>
       <Handle type="target" position={Position.Top} />
       <Handle type="target" position={Position.Left} id="left" />
-      <div style={{ fontSize: '0.78rem', color: data.color, fontWeight: 700 }}>{data.label}</div>
+      <div style={{ fontSize: fs.label, color: data.color, fontWeight: 700 }}>{data.label}</div>
       {data.subsystems && data.subsystems.length > 0 && (
-        <div style={{ fontSize: '0.58rem', color: '#9ca3af', marginTop: '0.2rem', maxWidth: 160 }}>
+        <div style={{ fontSize: fs.label, color: 'var(--text-2)', marginTop: '0.2rem', maxWidth: 160 }}>
           {data.subsystems.slice(0, 4).join(' | ')}
           {data.subsystems.length > 4 && ` +${data.subsystems.length - 4}`}
         </div>
@@ -155,7 +157,7 @@ export function GroundSystemsArch() {
 
   // Add custom ground system
   const addCustomSystem = async () => {
-    const name = prompt('Enter new ground system name:')
+    const name = (await askText('Enter new ground system name:'))
     if (!name || !name.trim() || !studyId) return
 
     // Find ground segment parent
@@ -219,8 +221,8 @@ export function GroundSystemsArch() {
   const createInterface = useModelStore(s => s.createInterface)
 
   const onConnect = useCallback(
-    (connection: Connection) => {
-      const label = prompt('Interface label:') || ''
+    async (connection: Connection) => {
+      const label = (await askText('Interface label:')) || ''
       setEdges(eds => addEdge({ ...connection, label }, eds))
       // Persist the interface in the model store
       if (studyId && connection.source && connection.target) {
@@ -256,8 +258,8 @@ export function GroundSystemsArch() {
 
   return (
     <div style={{ padding: '1rem', overflowY: 'auto', height: '100%' }}>
-      <h2 style={{ fontSize: '1rem', marginBottom: '0.25rem' }}>Ground Segment — System Architecture</h2>
-      <p style={{ fontSize: '0.72rem', color: '#9ca3af', marginBottom: '0.75rem' }}>
+      <h2 style={{ fontSize: fs.value, marginBottom: '0.25rem' }}>Ground Segment — System Architecture</h2>
+      <p style={{ fontSize: fs.label, color: 'var(--text-2)', marginBottom: '0.75rem' }}>
         Define which ground systems are needed. Each system will be decomposed into subsystems at Phase 3.
       </p>
 
@@ -266,21 +268,21 @@ export function GroundSystemsArch() {
         {systems.map(sys => (
           <div key={sys.id} onClick={() => toggleSystem(sys.id)} style={{
             padding: '0.6rem 0.75rem', borderRadius: '6px', cursor: 'pointer',
-            background: sys.selected ? 'rgba(16,185,129,0.08)' : 'var(--bg-secondary, #1f2937)',
-            border: `2px solid ${sys.selected ? '#10b981' : '#374151'}`,
+            background: sys.selected ? 'rgba(16,185,129,0.08)' : 'var(--bg-secondary, var(--surface-2))',
+            border: `2px solid ${sys.selected ? 'var(--status-ok)' : 'var(--line)'}`,
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.2rem' }}>
-              <span style={{ width: 16, height: 16, borderRadius: 3, border: `2px solid ${sys.selected ? '#10b981' : '#6b7280'}`, background: sys.selected ? '#10b981' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6rem', color: 'white' }}>
+              <span style={{ width: 16, height: 16, borderRadius: 3, border: `2px solid ${sys.selected ? 'var(--status-ok)' : 'var(--text-3)'}`, background: sys.selected ? 'var(--status-ok)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: fs.label, color: 'white' }}>
                 {sys.selected ? '✓' : ''}
               </span>
-              <span style={{ fontWeight: 600, fontSize: '0.85rem' }}>{sys.name}</span>
+              <span style={{ fontWeight: 600, fontSize: fs.body }}>{sys.name}</span>
               <span style={{ flex: 1 }} />
-              <span style={{ fontSize: '0.65rem', color: '#6b7280' }}>{sys.estimatedCost}</span>
+              <span style={{ fontSize: fs.label, color: 'var(--text-3)' }}>{sys.estimatedCost}</span>
             </div>
-            <div style={{ fontSize: '0.72rem', color: '#9ca3af', marginBottom: '0.2rem', marginLeft: '1.5rem' }}>
+            <div style={{ fontSize: fs.label, color: 'var(--text-2)', marginBottom: '0.2rem', marginLeft: '1.5rem' }}>
               {sys.description}
             </div>
-            <div style={{ fontSize: '0.65rem', color: '#6b7280', marginLeft: '1.5rem' }}>
+            <div style={{ fontSize: fs.label, color: 'var(--text-3)', marginLeft: '1.5rem' }}>
               Subsystems: {sys.subsystems.join(' · ')}
             </div>
           </div>
@@ -291,8 +293,8 @@ export function GroundSystemsArch() {
       <button
         onClick={addCustomSystem}
         style={{
-          padding: '0.4rem 0.8rem', fontSize: '0.75rem', borderRadius: '5px',
-          background: '#1e3a5f', color: '#60a5fa', border: '1px solid #3b82f6',
+          padding: '0.4rem 0.8rem', fontSize: fs.label, borderRadius: '5px',
+          background: 'var(--surface-2)', color: 'var(--interactive)', border: '1px solid var(--interactive)',
           cursor: 'pointer', marginBottom: '0.75rem',
         }}
       >
@@ -301,7 +303,7 @@ export function GroundSystemsArch() {
 
       {/* ReactFlow block diagram of all ground systems from modelStore */}
       <div className="card" style={{ height: '350px' }}>
-        <h3 style={{ fontSize: '0.85rem', marginBottom: '0.3rem' }}>Ground Segment Block Diagram</h3>
+        <h3 style={{ fontSize: fs.body, marginBottom: '0.3rem' }}>Ground Segment Block Diagram</h3>
         <div style={{ height: '300px' }}>
           {groundSystems.length > 0 ? (
             <ReactFlow
@@ -313,14 +315,14 @@ export function GroundSystemsArch() {
               onNodeDragStop={onNodeDragStop}
               nodeTypes={nodeTypes}
               fitView
-              style={{ background: '#0a0e1a' }}
-              defaultEdgeOptions={{ style: { strokeWidth: 1.5, stroke: '#6b7280' } }}
+              style={{ background: 'var(--surface-0)' }}
+              defaultEdgeOptions={{ style: { strokeWidth: 1.5, stroke: 'var(--text-3)' } }}
             >
               <Controls />
-              <Background color="#374151" gap={20} />
+              <Background color="var(--line)" gap={20} />
             </ReactFlow>
           ) : (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#6b7280', fontSize: '0.8rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-3)', fontSize: fs.body }}>
               Select or add ground systems above to populate the diagram
             </div>
           )}

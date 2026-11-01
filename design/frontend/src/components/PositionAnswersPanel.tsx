@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useSessionStore } from '../stores/sessionStore'
-import { useActiveParameters } from '../hooks/useActiveParameters'
 import { POSITION_COLOR } from '../constants'
+import { fs } from '../theme/tokens'
 
 // Key questions from positions.yaml — hardcoded subset for the UI.
 // In production these would be loaded from the /api/positions endpoint.
@@ -53,13 +53,12 @@ export function PositionAnswersPanel() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [draftText, setDraftText] = useState('')
   const [draftConf, setDraftConf] = useState<'high' | 'medium' | 'low'>('medium')
-  const [soloPositions, setSoloPositions] = useState<string[]>(['systems_engineer'])
+  const [soloPositions] = useState<string[]>(['systems_engineer'])
 
   // In solo mode, user can answer ALL questions; use soloPositions for "my" questions
   const isSoloMode = !sessionId
   const positionIds = isSoloMode ? soloPositions : storePositionIds
 
-  const allPositions = [...new Set(KEY_QUESTIONS.map(q => q.position))]
   const myQuestions = isSoloMode ? KEY_QUESTIONS : KEY_QUESTIONS.filter(q => positionIds.includes(q.position))
   const otherQuestions = isSoloMode ? [] : KEY_QUESTIONS.filter(q => !positionIds.includes(q.position))
 
@@ -176,18 +175,18 @@ export function PositionAnswersPanel() {
   return (
     <div style={{ padding: '1rem', overflowY: 'auto', height: '100%' }}>
       <h2 style={{ marginBottom: '0.25rem' }}>Position Questions & Answers</h2>
-      <p style={{ fontSize: '0.78rem', color: '#9ca3af', marginBottom: '1rem' }}>
+      <p style={{ fontSize: fs.label, color: 'var(--text-2)', marginBottom: '1rem' }}>
         Each engineering position has key questions to answer. Answers are visible to the whole team.
         Conflicting answers surface design tensions that need resolution.
       </p>
 
       {/* Summary */}
-      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', fontSize: '0.78rem' }}>
-        <span style={{ color: '#10b981' }}>{answers.size} answered</span>
-        <span style={{ color: '#6b7280' }}>/</span>
-        <span style={{ color: '#9ca3af' }}>{KEY_QUESTIONS.length} total</span>
+      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', fontSize: fs.label }}>
+        <span style={{ color: 'var(--status-ok)' }}>{answers.size} answered</span>
+        <span style={{ color: 'var(--text-3)' }}>/</span>
+        <span style={{ color: 'var(--text-2)' }}>{KEY_QUESTIONS.length} total</span>
         {conflicts.length > 0 && (
-          <span style={{ color: '#f59e0b', marginLeft: '0.5rem' }}>{conflicts.length} tension(s) detected</span>
+          <span style={{ color: 'var(--status-caution)', marginLeft: '0.5rem' }}>{conflicts.length} tension(s) detected</span>
         )}
       </div>
 
@@ -197,7 +196,7 @@ export function PositionAnswersPanel() {
           padding: '0.5rem 0.75rem', borderRadius: '6px', marginBottom: '1rem',
           background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)',
         }}>
-          <div style={{ fontSize: '0.78rem', fontWeight: 600, color: '#f59e0b', marginBottom: '0.3rem' }}>
+          <div style={{ fontSize: fs.label, fontWeight: 600, color: 'var(--status-caution)', marginBottom: '0.3rem' }}>
             Design Tensions ({conflicts.length})
           </div>
           {conflicts.map((t, i) => (
@@ -207,10 +206,10 @@ export function PositionAnswersPanel() {
             }}>
               <span style={{
                 width: 6, height: 6, borderRadius: '50%', flexShrink: 0,
-                background: t.severity === 'high' ? '#ef4444' : t.severity === 'medium' ? '#f59e0b' : '#3b82f6',
+                background: t.severity === 'high' ? 'var(--status-alarm)' : t.severity === 'medium' ? 'var(--status-caution)' : 'var(--interactive)',
               }} />
-              <span style={{ fontSize: '0.72rem', color: '#d1d5db', flex: 1 }}>{t.description}</span>
-              <span style={{ fontSize: '0.65rem', color: '#6b7280', whiteSpace: 'nowrap' }}>{t.action}</span>
+              <span style={{ fontSize: fs.label, color: 'var(--text)', flex: 1 }}>{t.description}</span>
+              <span style={{ fontSize: fs.label, color: 'var(--text-3)', whiteSpace: 'nowrap' }}>{t.action}</span>
             </div>
           ))}
         </div>
@@ -219,7 +218,7 @@ export function PositionAnswersPanel() {
       {/* My questions */}
       {myQuestions.length > 0 && (
         <>
-          <h3 style={{ fontSize: '0.9rem', margin: '0.5rem 0' }}>Your Questions ({positionIds.map(p => p.replace(/_/g, ' ')).join(', ')})</h3>
+          <h3 style={{ fontSize: fs.value, margin: '0.5rem 0' }}>Your Questions ({positionIds.map(p => p.replace(/_/g, ' ')).join(', ')})</h3>
           {myQuestions.map(q => (
             <QuestionCard key={q.id} q={q} answer={answers.get(q.id)} isMine
               isEditing={editingId === q.id} draftText={draftText} draftConf={draftConf}
@@ -230,7 +229,7 @@ export function PositionAnswersPanel() {
       )}
 
       {/* Other positions' questions */}
-      <h3 style={{ fontSize: '0.9rem', margin: '0.75rem 0 0.5rem 0' }}>Other Positions</h3>
+      <h3 style={{ fontSize: fs.value, margin: '0.75rem 0 0.5rem 0' }}>Other Positions</h3>
       {otherQuestions.map(q => (
         <QuestionCard key={q.id} q={q} answer={answers.get(q.id)} isMine={false}
           isEditing={false} draftText="" draftConf="medium"
@@ -253,60 +252,60 @@ function QuestionCard({ q, answer, isMine, isEditing, draftText, draftConf, onSt
   onChangeConf: (c: 'high' | 'medium' | 'low') => void
   onCancel: () => void
 }) {
-  const color = POSITION_COLOR[q.position] || '#6b7280'
-  const confColor = { high: '#10b981', medium: '#f59e0b', low: '#ef4444' }
+  const color = POSITION_COLOR[q.position] || 'var(--text-3)'
+  const confColor = { high: 'var(--status-ok)', medium: 'var(--status-caution)', low: 'var(--status-alarm)' }
 
   return (
     <div style={{
       padding: '0.5rem 0.75rem', borderRadius: '6px', marginBottom: '0.4rem',
-      background: 'var(--bg-secondary, #1f2937)', border: '1px solid var(--border, #374151)',
+      background: 'var(--bg-secondary, var(--surface-2))', border: '1px solid var(--border, var(--line))',
       borderLeft: `3px solid ${color}`,
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.2rem' }}>
-        <span style={{ fontSize: '0.65rem', color, fontWeight: 600, textTransform: 'uppercase' }}>{q.position.replace(/_/g, ' ')}</span>
-        <span style={{ fontSize: '0.6rem', color: '#6b7280', background: '#374151', padding: '0 0.3rem', borderRadius: '3px' }}>{q.category}</span>
+        <span style={{ fontSize: fs.label, color, fontWeight: 600, textTransform: 'uppercase' }}>{q.position.replace(/_/g, ' ')}</span>
+        <span style={{ fontSize: fs.label, color: 'var(--text-3)', background: 'var(--line)', padding: '0 0.3rem', borderRadius: '3px' }}>{q.category}</span>
       </div>
-      <div style={{ fontSize: '0.8rem', marginBottom: '0.3rem' }}>{q.question}</div>
+      <div style={{ fontSize: fs.body, marginBottom: '0.3rem' }}>{q.question}</div>
 
       {isEditing ? (
         <div style={{ marginTop: '0.3rem' }}>
           <textarea className="input" rows={2} value={draftText} onChange={e => onChangeText(e.target.value)}
             placeholder="Your answer..." autoFocus
-            style={{ width: '100%', resize: 'vertical', fontSize: '0.78rem', marginBottom: '0.3rem' }} />
+            style={{ width: '100%', resize: 'vertical', fontSize: fs.label, marginBottom: '0.3rem' }} />
           <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.7rem', color: '#9ca3af' }}>Confidence:</span>
+            <span style={{ fontSize: fs.label, color: 'var(--text-2)' }}>Confidence:</span>
             {(['high', 'medium', 'low'] as const).map(c => (
               <button key={c} onClick={() => onChangeConf(c)} style={{
-                fontSize: '0.68rem', padding: '0.1rem 0.4rem', borderRadius: '3px', cursor: 'pointer',
-                background: draftConf === c ? `${confColor[c]}22` : 'transparent',
-                border: `1px solid ${draftConf === c ? confColor[c] : '#374151'}`,
-                color: draftConf === c ? confColor[c] : '#6b7280',
+                fontSize: fs.label, padding: '0.1rem 0.4rem', borderRadius: '3px', cursor: 'pointer',
+                background: draftConf === c ? `color-mix(in srgb, ${confColor[c]} 13%, transparent)` : 'transparent',
+                border: `1px solid ${draftConf === c ? confColor[c] : 'var(--line)'}`,
+                color: draftConf === c ? confColor[c] : 'var(--text-3)',
               }}>{c}</button>
             ))}
             <div style={{ flex: 1 }} />
-            <button className="btn btn-sm" onClick={onSubmit} style={{ fontSize: '0.7rem' }}>Submit</button>
-            <button onClick={onCancel} style={{ background: 'none', border: 'none', color: '#6b7280', cursor: 'pointer', fontSize: '0.7rem' }}>Cancel</button>
+            <button className="btn btn-sm" onClick={onSubmit} style={{ fontSize: fs.label }}>Submit</button>
+            <button onClick={onCancel} style={{ background: 'none', border: 'none', color: 'var(--text-3)', cursor: 'pointer', fontSize: fs.label }}>Cancel</button>
           </div>
         </div>
       ) : answer ? (
-        <div style={{ marginTop: '0.2rem', padding: '0.3rem 0.5rem', background: 'var(--bg-primary, #111827)', borderRadius: '4px' }}>
-          <div style={{ fontSize: '0.78rem' }}>{answer.text}</div>
-          <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.2rem', fontSize: '0.65rem', color: '#6b7280' }}>
+        <div style={{ marginTop: '0.2rem', padding: '0.3rem 0.5rem', background: 'var(--bg-primary, var(--surface-1))', borderRadius: '4px' }}>
+          <div style={{ fontSize: fs.label }}>{answer.text}</div>
+          <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.2rem', fontSize: fs.label, color: 'var(--text-3)' }}>
             <span style={{ color: confColor[answer.confidence] }}>Confidence: {answer.confidence}</span>
             <span>{new Date(answer.timestamp).toLocaleTimeString()}</span>
-            {isMine && <button onClick={onStartEdit} style={{ background: 'none', border: 'none', color: '#3b82f6', cursor: 'pointer', fontSize: '0.65rem' }}>Edit</button>}
+            {isMine && <button onClick={onStartEdit} style={{ background: 'none', border: 'none', color: 'var(--interactive)', cursor: 'pointer', fontSize: fs.label }}>Edit</button>}
           </div>
         </div>
       ) : isMine ? (
         <button onClick={onStartEdit} style={{
-          background: 'none', border: '1px dashed #374151', borderRadius: '4px',
-          padding: '0.3rem 0.5rem', color: '#3b82f6', cursor: 'pointer', fontSize: '0.72rem',
+          background: 'none', border: '1px dashed var(--line)', borderRadius: '4px',
+          padding: '0.3rem 0.5rem', color: 'var(--interactive)', cursor: 'pointer', fontSize: fs.label,
           width: '100%', textAlign: 'left', marginTop: '0.2rem',
         }}>
           Click to answer this question...
         </button>
       ) : (
-        <div style={{ fontSize: '0.72rem', color: '#6b7280', fontStyle: 'italic', marginTop: '0.2rem' }}>
+        <div style={{ fontSize: fs.label, color: 'var(--text-3)', fontStyle: 'italic', marginTop: '0.2rem' }}>
           Not yet answered
         </div>
       )}

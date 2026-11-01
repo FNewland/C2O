@@ -24,8 +24,8 @@
   },
   {
    "id": "ctg-015-corrupted-image-recovery/required-telemetry",
-   "en_hash": "a987afd01208daad",
-   "fr_hash": "345be7d44f74b7a6"
+   "en_hash": "f43bd2f87feb5b4a",
+   "fr_hash": "0515472a5eb4d141"
   },
   {
    "id": "ctg-015-corrupted-image-recovery/required-commands",
@@ -39,8 +39,8 @@
   },
   {
    "id": "ctg-015-corrupted-image-recovery/procedure-steps/step-1-detect-and-quantify-checksum-errors",
-   "en_hash": "15a76f23c02949ea",
-   "fr_hash": "fa37af4516d75fff"
+   "en_hash": "eed925091cca5433",
+   "fr_hash": "efcb71c4c97922e0"
   },
   {
    "id": "ctg-015-corrupted-image-recovery/procedure-steps/step-2-check-fpa-temperature",
@@ -59,13 +59,13 @@
   },
   {
    "id": "ctg-015-corrupted-image-recovery/procedure-steps/step-5-delete-corrupted-image-and-re-capture",
-   "en_hash": "7cfd670eb612b4fe",
-   "fr_hash": "f0dcf8e0c9ab03ae"
+   "en_hash": "603f53ed563ce4f5",
+   "fr_hash": "e042e102892c3bdc"
   },
   {
    "id": "ctg-015-corrupted-image-recovery/procedure-steps/step-6-post-capture-verification",
-   "en_hash": "fbcb4b2fe194db53",
-   "fr_hash": "653d3d9b71159f53"
+   "en_hash": "798c6725e1d161cb",
+   "fr_hash": "13e04fabc43092ba"
   },
   {
    "id": "ctg-015-corrupted-image-recovery/verification-criteria",
@@ -78,5 +78,5 @@
    "fr_hash": "56793b7d7757ebde"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "8067e5b"
 }

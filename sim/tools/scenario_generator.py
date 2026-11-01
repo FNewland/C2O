@@ -355,48 +355,48 @@ HTML = r"""<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>SMO Scenario Generator</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title data-i18n>SMO scenario generator</title>
+__TOOL_HEAD__
 <style>
+  /* Light-touch restyle: page-local names mapped onto the shared
+     design-system tokens. Full restyle is a later phase. */
   :root {
-    --bg: #0d1117; --surface: #161b22; --border: #30363d;
-    --text: #e6edf3; --muted: #8b949e; --accent: #58a6ff;
-    --green: #3fb950; --yellow: #d29922; --red: #f85149;
-    --input-bg: #21262d;
+    --surface: var(--s1); --border: var(--line-2);
+    --text: var(--tx); --muted: var(--tx3); --accent: var(--info);
+    --green: var(--ok); --yellow: var(--warn); --red: var(--alarm);
+    --input-bg: var(--s2);
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); color: var(--text); font: 14px/1.6 'Segoe UI', system-ui, sans-serif; padding: 24px; }
-  h1 { font-size: 20px; font-weight: 600; color: var(--accent); margin-bottom: 4px; }
+  body { background: var(--bg); color: var(--text); font: 14px/1.6 var(--sans); padding: 24px; max-width: 1280px; }
+  h1 { font-size: 20px; font-weight: 600; color: var(--tx); margin-bottom: 4px; }
   .subtitle { color: var(--muted); font-size: 13px; margin-bottom: 24px; }
-  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px; margin-bottom: 20px; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 20px; margin-bottom: 20px; }
   .card h2 { font-size: 15px; font-weight: 600; margin-bottom: 14px; color: var(--text); }
   .row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
   .field { display: flex; flex-direction: column; gap: 4px; }
-  .field label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+  .field label { font-size: 12px; color: var(--tx2); }
   input, select, textarea {
     background: var(--input-bg); border: 1px solid var(--border); color: var(--text);
-    border-radius: 6px; padding: 7px 10px; font-size: 13px; font-family: inherit;
-    transition: border-color .15s;
+    border-radius: 3px; padding: 7px 10px; font-size: 13px; font-family: inherit;
   }
-  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
+  input:focus-visible, select:focus-visible, textarea:focus-visible { border-color: var(--accent); }
   textarea { resize: vertical; min-height: 72px; }
   .f-grow { flex: 1 1 200px; }
   .f-sm { flex: 0 0 120px; }
   .f-xs { flex: 0 0 90px; }
   .btn {
     display: inline-flex; align-items: center; gap: 6px;
-    background: var(--accent); color: #0d1117; font-weight: 600; font-size: 13px;
-    border: none; border-radius: 6px; padding: 8px 16px; cursor: pointer;
-    transition: opacity .15s;
+    background: var(--s2); color: var(--tx); font-weight: 600; font-size: 13px;
+    border: 1px solid var(--info); border-radius: 3px; padding: 8px 16px; cursor: pointer;
   }
-  .btn:hover { opacity: .88; }
+  .btn:hover { background: var(--s3); }
   .btn-ghost {
     background: transparent; border: 1px solid var(--border); color: var(--text);
-    border-radius: 6px; padding: 6px 12px; font-size: 13px; cursor: pointer;
-    transition: border-color .15s;
+    border-radius: 3px; padding: 6px 12px; font-size: 13px; cursor: pointer;
   }
   .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
   .btn-danger { background: transparent; border: 1px solid var(--red); color: var(--red); }
-  .btn-danger:hover { background: var(--red); color: #fff; }
+  .btn-danger:hover { background: var(--alarm-wash); }
   #events-list { display: flex; flex-direction: column; gap: 10px; }
   .event-card {
     background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
@@ -419,52 +419,46 @@ HTML = r"""<!DOCTYPE html>
   .resp-row button { flex: none; margin-top: 2px; }
   #output-area { display: none; }
   #yaml-out {
-    background: #010409; border: 1px solid var(--border); border-radius: 6px;
-    padding: 14px; font: 13px/1.7 'JetBrains Mono', 'Fira Code', monospace;
-    white-space: pre; overflow-x: auto; color: #aff5b4;
+    background: var(--bg); border: 1px solid var(--line); border-radius: 3px;
+    padding: 14px; font: 13px/1.7 var(--mono);
+    white-space: pre; overflow-x: auto; color: var(--val);
   }
   .success-banner {
-    background: #0d2a18; border: 1px solid var(--green); border-radius: 6px;
-    padding: 10px 14px; color: var(--green); font-size: 13px; margin-bottom: 12px;
+    background: var(--s1); border-left: 3px solid var(--ok); border-radius: 3px;
+    padding: 10px 14px; color: var(--tx); font-size: 13px; margin-bottom: 12px;
     display: none;
   }
   .error-banner {
-    background: #2d1118; border: 1px solid var(--red); border-radius: 6px;
-    padding: 10px 14px; color: var(--red); font-size: 13px; margin-bottom: 12px;
+    background: var(--alarm-wash); border-left: 3px solid var(--alarm); border-radius: 3px;
+    padding: 10px 14px; color: var(--alarm); font-size: 13px; margin-bottom: 12px;
     display: none;
   }
   /* Success modal */
   #success-modal {
     display: none; position: fixed; inset: 0; z-index: 999;
-    background: rgba(0,0,0,.6); backdrop-filter: blur(3px);
+    background: rgba(0,0,0,.6);
     align-items: center; justify-content: center;
   }
   #success-modal.show { display: flex; }
   .modal-box {
-    background: #0d2a18; border: 1px solid var(--green); border-radius: 12px;
-    padding: 32px 40px; text-align: center; max-width: 420px; width: 90%;
-    animation: popIn .25s cubic-bezier(.34,1.56,.64,1);
+    background: var(--s1); border: 1px solid var(--line-2); border-left: 3px solid var(--ok);
+    border-radius: 4px; padding: 24px 28px; max-width: 460px; width: 90%;
   }
-  @keyframes popIn {
-    from { transform: scale(.8); opacity: 0; }
-    to   { transform: scale(1);  opacity: 1; }
-  }
-  .modal-icon { font-size: 48px; margin-bottom: 12px; }
-  .modal-title { font-size: 20px; font-weight: 700; color: var(--green); margin-bottom: 8px; }
+  .modal-title { font-size: 17px; font-weight: 700; color: var(--tx); margin-bottom: 8px; }
   .modal-sub { font-size: 13px; color: var(--muted); word-break: break-all; margin-bottom: 24px; }
   .modal-path { color: var(--text); font-family: monospace; }
   .modal-close {
-    background: var(--green); color: #0d1117; font-weight: 700;
-    border: none; border-radius: 6px; padding: 10px 28px;
-    font-size: 14px; cursor: pointer; transition: opacity .15s;
+    background: var(--s2); color: var(--tx); font-weight: 600;
+    border: 1px solid var(--info); border-radius: 3px; padding: 8px 24px;
+    font-size: 14px; cursor: pointer;
   }
-  .modal-close:hover { opacity: .85; }
-  .hint { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .modal-close:hover { background: var(--s3); }
+  .hint { font-size: 12px; color: var(--muted); margin-top: 2px; }
 
   /* Cascade timeline */
   .cascade-row { display: flex; gap: 0; margin-bottom: 6px; align-items: stretch; }
   .cascade-time {
-    flex: 0 0 72px; font-size: 11px; color: var(--muted); font-family: monospace;
+    flex: 0 0 72px; font-size: 12px; color: var(--muted); font-family: monospace;
     padding-top: 10px; text-align: right; padding-right: 10px;
   }
   .cascade-spine { flex: 0 0 24px; display: flex; flex-direction: column; align-items: center; }
@@ -485,7 +479,7 @@ HTML = r"""<!DOCTYPE html>
   .cascade-body.critical { border-left: 3px solid #f85149; }
   .cascade-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; }
   .cascade-subsys {
-    font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+    font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
     padding: 1px 6px; border-radius: 3px;
   }
   .subsys-eps     { background:#1a2a1a; color:#3fb950; }
@@ -494,106 +488,134 @@ HTML = r"""<!DOCTYPE html>
   .subsys-ttc     { background:#2a002a; color:#d2a8ff; }
   .subsys-obdh    { background:#2a1500; color:#ffa657; }
   .subsys-payload { background:#1a2a2a; color:#56d364; }
-  .cascade-sev { font-size: 10px; color: var(--muted); }
+  .cascade-sev { font-size: 12px; color: var(--muted); }
   .cascade-sev.critical { color: #f85149; }
   .cascade-sev.warning  { color: #d29922; }
   .cascade-effect { font-size: 12px; color: var(--text); }
-  .cascade-source { font-size: 10px; color: var(--muted); margin-top: 2px; }
+  .cascade-source { font-size: 12px; color: var(--muted); margin-top: 2px; }
   .cascade-group-label {
-    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
-    color: var(--accent); margin: 14px 0 6px 96px; padding-bottom: 4px;
+    font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
+    color: var(--tx2); margin: 14px 0 6px 96px; padding-bottom: 4px;
     border-bottom: 1px solid var(--border);
   }
   .cascade-empty { color: var(--muted); font-size: 13px; padding: 12px 0; }
   .extras { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
-  .tag { background: #1f2937; border: 1px solid var(--border); border-radius: 4px;
-         padding: 2px 7px; font-size: 11px; color: var(--muted); }
+  .tag { background: var(--s2); border: 1px solid var(--border); border-radius: 4px;
+         padding: 2px 7px; font-size: 12px; color: var(--muted); }
 </style>
 </head>
 <body>
 
-<h1>SMO Scenario Generator</h1>
-<p class="subtitle">Describe your failures — the tool writes the YAML to configs/eosat1/scenarios/</p>
+<h1 data-i18n>SMO scenario generator</h1>
+<p class="subtitle"><span data-i18n>Describe the failures and their timing; the tool writes the scenario YAML to</span> <code>configs/eosat1/scenarios/</code></p>
 
 <!-- METADATA -->
 <div class="card">
-  <h2>Scenario Metadata</h2>
+  <h2 data-i18n>Scenario metadata</h2>
   <div class="row">
     <div class="field f-grow">
-      <label>Scenario Name</label>
-      <input id="sc-name" type="text" placeholder="e.g. Battery Thermal Runaway" value="">
+      <label for="sc-name" data-i18n>Scenario name</label>
+      <input id="sc-name" type="text" placeholder="e.g. Battery thermal runaway" data-i18n-placeholder value="">
     </div>
     <div class="field f-sm">
-      <label>Difficulty</label>
+      <label for="sc-diff" data-i18n>Difficulty</label>
       <select id="sc-diff">
         <option>BASIC</option><option>INTERMEDIATE</option>
         <option selected>ADVANCED</option><option>EXPERT</option>
       </select>
     </div>
     <div class="field f-xs">
-      <label>Duration (s)</label>
+      <label for="sc-dur" data-i18n>Duration (s)</label>
       <input id="sc-dur" type="number" value="1800" min="60" step="60">
     </div>
   </div>
   <div class="field">
-    <label>Briefing (shown to operators before start)</label>
-    <textarea id="sc-brief" placeholder="Describe the scenario narrative and what operators must achieve..."></textarea>
+    <label for="sc-brief" data-i18n>Briefing (shown to operators before start)</label>
+    <textarea id="sc-brief" data-i18n-placeholder placeholder="Describe the scenario narrative and what operators must achieve…"></textarea>
   </div>
 </div>
 
 <!-- EVENTS -->
 <div class="card">
-  <h2>Failure Events &amp; Parameter Overrides</h2>
+  <h2 data-i18n>Failure events and parameter overrides</h2>
   <div id="events-list"></div>
   <div class="add-btns">
-    <button class="btn-ghost" onclick="addInject()">+ Inject Failure</button>
-    <button class="btn-ghost" onclick="addSetParam()">+ Set Parameter</button>
+    <button class="btn-ghost" onclick="addInject()" data-i18n>+ Inject failure</button>
+    <button class="btn-ghost" onclick="addSetParam()" data-i18n>+ Set parameter</button>
   </div>
 </div>
 
 <!-- CASCADE PREVIEW -->
 <div class="card" id="cascade-card" style="display:none">
-  <h2>Cascade Effect Preview <span style="color:var(--muted);font-weight:400;font-size:12px">— auto-generated from your failure events</span></h2>
+  <h2><span data-i18n>Cascade effect preview</span> <span style="color:var(--muted);font-weight:400;font-size:12px" data-i18n>(derived from your failure events)</span></h2>
   <div id="cascade-timeline"></div>
 </div>
 
 <!-- EXPECTED RESPONSES -->
 <div class="card">
-  <h2>Expected Operator Responses <span style="color:var(--muted);font-weight:400;font-size:12px">(optional — used for scoring)</span></h2>
+  <h2><span data-i18n>Expected operator responses</span> <span style="color:var(--muted);font-weight:400;font-size:12px" data-i18n>(optional, used for scoring)</span></h2>
   <div id="resp-list"></div>
-  <button class="btn-ghost" style="margin-top:10px" onclick="addResponse()">+ Add Response</button>
+  <button class="btn-ghost" style="margin-top:10px" onclick="addResponse()" data-i18n>+ Add response</button>
 </div>
 
 <!-- GENERATE -->
 <div style="display:flex;gap:12px;align-items:center;margin-bottom:20px">
-  <button class="btn" onclick="generate()">&#9654; Generate &amp; Save YAML</button>
-  <button class="btn-ghost" onclick="preview()">Preview YAML</button>
+  <button class="btn" onclick="generate()" data-i18n>Generate and save YAML</button>
+  <button class="btn-ghost" onclick="preview()" data-i18n>Preview YAML</button>
 </div>
 
 <!-- Success modal -->
-<div id="success-modal">
+<div id="success-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
   <div class="modal-box">
-    <div class="modal-icon">&#x2705;</div>
-    <div class="modal-title">Scenario Created!</div>
-    <div class="modal-sub">Saved to<br><span class="modal-path" id="modal-path"></span></div>
-    <button class="modal-close" onclick="closeModal()">OK</button>
+    <div class="modal-title" id="modal-title" data-i18n>Scenario saved</div>
+    <div class="modal-sub"><span data-i18n>Saved to</span><br><span class="modal-path" id="modal-path"></span></div>
+    <button class="modal-close" onclick="closeModal()" data-i18n>OK</button>
   </div>
 </div>
 
-<div class="success-banner" id="success-banner"></div>
-<div class="error-banner" id="error-banner"></div>
+<div class="success-banner" id="success-banner" role="status"></div>
+<div class="error-banner" id="error-banner" role="alert"></div>
 
 <div id="output-area">
   <div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-      <h2 style="margin:0">Generated YAML</h2>
-      <button class="btn-ghost" onclick="copyYaml()">Copy</button>
+      <h2 style="margin:0" data-i18n>Generated YAML</h2>
+      <button class="btn-ghost" onclick="copyYaml()" data-i18n>Copy</button>
     </div>
     <div id="yaml-out"></div>
   </div>
 </div>
 
 <script>
+// UI language (tool-page.js / i18n.js): T() = translated text.
+const T = (s, v) => window.SMO_I18N ? window.SMO_I18N.tText(s, v)
+  : String(s).replace(/\{\{\s*(\w+)\s*\}\}/g, (m, k) => (v && k in v ? v[k] : m));
+// Controls in generated event cards sit in a .field next to a bare <label>;
+// tie each label to its control so it has an accessible name (R3 audit §8).
+let _lblSeq = 0;
+function linkLabels(root) {
+  for (const f of root.querySelectorAll('.field')) {
+    const lab = f.querySelector(':scope > label');
+    const ctl = f.querySelector(':scope > input, :scope > select, :scope > textarea');
+    if (!lab || !ctl || lab.htmlFor) continue;
+    if (!ctl.id) ctl.id = 'fld-' + (++_lblSeq);
+    lab.htmlFor = ctl.id;
+  }
+  for (const c of root.querySelectorAll('input, select, textarea')) {
+    if (c.id && root.querySelector(`label[for="${c.id}"]`)) continue;
+    if (!c.getAttribute('aria-label') && c.placeholder) c.setAttribute('aria-label', c.placeholder);
+  }
+}
+let _inObs = false;
+const _obs = () => {
+  if (_inObs) return;
+  _inObs = true;
+  try {
+    linkLabels(document.body);
+    if (window.SMO_I18N) window.SMO_I18N.applyDom(document.body);   // generated cards
+  } finally { _inObs = false; }
+};
+new MutationObserver(_obs).observe(document.body, { childList: true, subtree: true });
 const SUBSYSTEMS = """ + json.dumps(SUBSYSTEMS) + r""";
 const PARAMS = """ + json.dumps(PARAMS) + r""";
 const FACES = """ + json.dumps(FACES) + r""";
@@ -610,41 +632,41 @@ function addInject() {
   div.id = `ev-${id}`;
   div.dataset.type = 'inject';
   div.innerHTML = `
-    <div class="ev-title">&#9889; Failure Injection</div>
-    <button class="remove-btn" onclick="removeEv(${id})">&#x2715;</button>
+    <div class="ev-title">${T('Failure injection')}</div>
+    <button class="remove-btn" onclick="removeEv(${id})" aria-label="${T('Remove event')}">&#x2715;</button>
     <div class="row">
       <div class="field f-xs">
-        <label>Timing</label>
+        <label>${T('Timing')}</label>
         <select onchange="toggleTiming(${id}, this.value)">
-          <option value="time">At time (s)</option>
-          <option value="condition">Condition</option>
+          <option value="time">${T('At time (s)')}</option>
+          <option value="condition">${T('Condition')}</option>
         </select>
       </div>
       <div class="field f-xs" id="ev-${id}-time-field">
-        <label>Time offset (s)</label>
+        <label>${T('Time offset (s)')}</label>
         <input type="number" id="ev-${id}-time" value="0" min="0">
       </div>
       <div class="field f-grow" id="ev-${id}-cond-field" style="display:none">
-        <label>Condition (e.g. 257 &lt; 60)</label>
+        <label>${T('Condition (e.g. 257 < 60)')}</label>
         <input type="text" id="ev-${id}-cond" placeholder="param_id_decimal op value">
-        <span class="hint">Use decimal param ID. e.g. 257 &lt; 60 means bat_soc(0x0101=257) &lt; 60</span>
+        <span class="hint">${T('Use decimal param ID. e.g. 257 < 60 means bat_soc(0x0101=257) < 60')}</span>
       </div>
     </div>
     <div class="row">
       <div class="field f-sm">
-        <label>Subsystem</label>
+        <label>${T('Subsystem')}</label>
         <select id="ev-${id}-sub" onchange="updateFailures(${id})">${subsysOpts}</select>
       </div>
       <div class="field f-grow">
-        <label>Failure</label>
+        <label>${T('Failure')}</label>
         <select id="ev-${id}-fail" onchange="updateExtras(${id})"></select>
       </div>
       <div class="field f-xs">
-        <label>Magnitude (0–1)</label>
+        <label>${T('Magnitude (0–1)')}</label>
         <input type="number" id="ev-${id}-mag" value="1.0" min="0" max="1" step="0.05">
       </div>
       <div class="field f-sm">
-        <label>Onset</label>
+        <label>${T('Onset')}</label>
         <select id="ev-${id}-onset" onchange="updateExtras(${id})">
           <option>step</option><option>gradual</option><option>intermittent</option>
         </select>
@@ -652,8 +674,8 @@ function addInject() {
     </div>
     <div id="ev-${id}-extras" class="extras"></div>
     <div class="field" style="margin-top:8px">
-      <label>Label / comment (optional)</label>
-      <input type="text" id="ev-${id}-label" placeholder="e.g. SA-2B impact at T+0">
+      <label>${T('Label / comment (optional)')}</label>
+      <input type="text" id="ev-${id}-label" placeholder="${T('e.g. SA-2B impact at T+0')}">
     </div>
   `;
   document.getElementById('events-list').appendChild(div);
@@ -671,25 +693,25 @@ function addSetParam() {
   div.id = `ev-${id}`;
   div.dataset.type = 'set_parameter';
   div.innerHTML = `
-    <div class="ev-title">&#128200; Set Parameter</div>
-    <button class="remove-btn" onclick="removeEv(${id})">&#x2715;</button>
+    <div class="ev-title">${T('Set parameter')}</div>
+    <button class="remove-btn" onclick="removeEv(${id})" aria-label="${T('Remove event')}">&#x2715;</button>
     <div class="row">
       <div class="field f-xs">
-        <label>Time offset (s)</label>
+        <label>${T('Time offset (s)')}</label>
         <input type="number" id="ev-${id}-time" value="0" min="0">
       </div>
       <div class="field f-grow">
-        <label>Parameter</label>
+        <label>${T('Parameter')}</label>
         <select id="ev-${id}-param">${paramOpts}</select>
       </div>
       <div class="field f-xs">
-        <label>Value</label>
+        <label>${T('Value')}</label>
         <input type="number" id="ev-${id}-value" value="0" step="any">
       </div>
     </div>
     <div class="field" style="margin-top:4px">
-      <label>Label / comment (optional)</label>
-      <input type="text" id="ev-${id}-label" placeholder="e.g. Force bus voltage low">
+      <label>${T('Label / comment (optional)')}</label>
+      <input type="text" id="ev-${id}-label" placeholder="${T('e.g. Force bus voltage low')}">
     </div>
   `;
   document.getElementById('events-list').appendChild(div);
@@ -732,8 +754,8 @@ function updateExtras(id) {
     if (p.type === 'bool') {
       html += `<div class="field f-xs">${label}
         <select id="${cid}" data-param="${p.name}">
-          <option value="true"${p.default ? ' selected' : ''}>Yes</option>
-          <option value="false"${p.default ? '' : ' selected'}>No</option>
+          <option value="true"${p.default ? ' selected' : ''}>${T('Yes')}</option>
+          <option value="false"${p.default ? '' : ' selected'}>${T('No')}</option>
         </select></div>`;
     } else if (p.type === 'enum') {
       const values = p.values || [];
@@ -755,7 +777,7 @@ function updateExtras(id) {
     }
   }
   if (onset === 'gradual') {
-    html += `<div class="field f-xs"><label>Onset duration (s)</label>
+    html += `<div class="field f-xs"><label>${T('Onset duration (s)')}</label>
       <input type="number" id="ev-${id}-onset-dur" value="60" min="1"></div>`;
   }
   container.innerHTML = html;
@@ -792,9 +814,9 @@ function addResponse() {
   div.className = 'resp-row';
   div.id = `resp-${id}`;
   div.innerHTML = `
-    <select>${cats}</select>
-    <textarea placeholder="Describe what the operator should do..."></textarea>
-    <button class="btn-ghost btn-danger" onclick="document.getElementById('resp-${id}').remove()">&#x2715;</button>
+    <select aria-label="${T('Response category')}">${cats}</select>
+    <textarea aria-label="${T('Expected response')}" placeholder="${T('Describe what the operator should do…')}"></textarea>
+    <button class="btn-ghost btn-danger" aria-label="${T('Remove response')}" onclick="document.getElementById('resp-${id}').remove()">&#x2715;</button>
   `;
   document.getElementById('resp-list').appendChild(div);
 }
@@ -864,7 +886,7 @@ async function generate() {
       showModal(j.path);
       showYaml(j.yaml);
     } else {
-      showError(j.error || 'Unknown error');
+      showError(j.error || T('Unknown error'));
     }
   } catch(e) { showError(String(e)); }
 }
@@ -880,7 +902,7 @@ async function preview() {
     });
     const j = await res.json();
     if (j.ok) showYaml(j.yaml);
-    else showError(j.error || 'Unknown error');
+    else showError(j.error || T('Unknown error'));
   } catch(e) { showError(String(e)); }
 }
 
@@ -1017,9 +1039,10 @@ function hideBanners() {
 # ── aiohttp handlers ──────────────────────────────────────────────────────────
 
 async def handle_index(request):
+    from smo_common.web.http import TOOL_HEAD, tool_html_response
     cascade_json = json.dumps({f"{k[0]}::{k[1]}": v for k, v in CASCADE_MAP.items()})
-    page = HTML.replace("__CASCADE_JSON__", cascade_json)
-    return web.Response(text=page, content_type="text/html")
+    page = HTML.replace("__CASCADE_JSON__", cascade_json).replace("__TOOL_HEAD__", TOOL_HEAD)
+    return tool_html_response(page, request.app)
 
 
 async def handle_generate(request):
@@ -1042,7 +1065,9 @@ async def handle_generate(request):
             out_path.write_text(yaml_text)
             saved_path = str(out_path.relative_to(REPO_ROOT))
         except Exception as e:
-            return web.json_response({"ok": False, "error": f"Could not write file: {e}"})
+            # Never send the absolute server path to the page (R3 audit A9).
+            msg = str(e).replace(str(REPO_ROOT) + os.sep, "").replace(str(REPO_ROOT), ".")
+            return web.json_response({"ok": False, "error": f"Could not write file: {msg}"})
 
     return web.json_response({"ok": True, "yaml": yaml_text, "path": saved_path, "filename": filename})
 
@@ -1053,7 +1078,9 @@ def main():
     parser.add_argument("--host", default="localhost")
     args = parser.parse_args()
 
-    app = web.Application()
+    # Shared HTTP policy + design system / language runtime (R3 A8, §8).
+    from smo_common.web.http import setup_tool_app
+    app = setup_tool_app(web.Application())
     app.router.add_get("/", handle_index)
     app.router.add_post("/generate", handle_generate)
 

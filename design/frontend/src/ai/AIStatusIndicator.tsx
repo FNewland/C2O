@@ -8,6 +8,7 @@
  */
 import { useTranslation } from 'react-i18next'
 import { useAI } from './AIContext'
+import { fs } from '../theme/tokens'
 
 export function AIStatusIndicator() {
   const { t } = useTranslation()
@@ -15,7 +16,7 @@ export function AIStatusIndicator() {
 
   if (loading || !installed) return null
 
-  const dotColor = enabled ? '#22c55e' : '#94a3b8'
+  const dotColor = enabled ? 'var(--status-ok)' : 'var(--text-3)'
   const label = enabled ? t('AI') : t('AI Off')
 
   return (
@@ -26,11 +27,11 @@ export function AIStatusIndicator() {
         gap: 6,
         padding: '2px 8px',
         borderRadius: 12,
-        fontSize: 12,
+        fontSize: fs.label,
         fontWeight: 500,
-        color: enabled ? '#166534' : '#64748b',
-        backgroundColor: enabled ? '#dcfce7' : '#f1f5f9',
-        border: `1px solid ${enabled ? '#bbf7d0' : '#e2e8f0'}`,
+        color: enabled ? 'var(--status-ok)' : 'var(--text-3)',
+        backgroundColor: enabled ? 'var(--status-ok-wash)' : 'var(--text)',
+        border: `1px solid ${enabled ? 'var(--status-ok-wash)' : 'var(--text)'}`,
       }}
       title={
         enabled

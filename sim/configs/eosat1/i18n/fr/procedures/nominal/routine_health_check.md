@@ -74,8 +74,8 @@ et constitue le principal outil de détection précoce des anomalies et d'analys
 
 ### Étape 6 --- Évaluation de la santé du TTC
 **Verify:** `ttc.link_status` (0x0501) = 2 (LOCKED)
-**Verify:** `ttc.rssi` (0x0502) > -105 dBm
-**Verify:** `ttc.link_margin` (0x0503) > 2.0 dB
+**Verify:** page TT&C (sol) : `ttc.rssi` (0x0502) > -126 dBm
+**Verify:** page TT&C (sol) : `ttc.link_margin` (0x0503) > 2.0 dB
 **Tendance :** Le RSSI doit suivre le profil de passage attendu (hausse jusqu'au TCA, baisse
   ensuite). Un RSSI durablement faible peut indiquer une dégradation de l'antenne.
 **Signaler :** Si la marge de liaison < 2.0 dB à haute élévation, analyser la chaîne RF.

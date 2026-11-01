@@ -17,6 +17,8 @@ import { useTranslation } from 'react-i18next'
 import { useUIStore } from '../stores/uiStore'
 import { useOptionStore } from '../stores/optionStore'
 import type { DesignOption } from '../types/options'
+import { fs } from '../theme/tokens'
+import { askConfirm, askText } from './ui/Dialog'
 
 const API = '/api'
 
@@ -31,7 +33,7 @@ async function jsonOrThrow(res: Response) {
 
 const btn = (color = 'var(--text-secondary)'): React.CSSProperties => ({
   background: 'none', border: '1px solid var(--border)', borderRadius: '3px', cursor: 'pointer',
-  fontSize: '0.58rem', padding: '0 0.3rem', color, lineHeight: '1.1rem',
+  fontSize: fs.label, padding: '0 0.3rem', color, lineHeight: '1.1rem',
 })
 
 export function useOptions(studyId: string | null) {
@@ -95,33 +97,33 @@ export function OptionSwitcher({ studyId: studyIdProp }: { studyId?: string | nu
     setActive(studyId, !opt || opt.is_baseline ? null : opt.id)
     invalidate()
   }
-  const onBranch = () => {
+  const onBranch = async () => {
     const from = active?.name ?? t('Baseline')
-    const name = window.prompt(t('Branch "{{name}}" as:', { name: from }), t('{{name}} (copy)', { name: from }))
+    const name = (await askText(t('Branch "{{name}}" as:', { name: from }), t('{{name}} (copy)', { name: from })))
     if (name && name.trim()) branch.mutate(name.trim())
   }
-  const onRename = () => {
+  const onRename = async () => {
     if (!active || active.is_baseline) return
-    const name = window.prompt(t('Rename option:'), active.name)
+    const name = (await askText(t('Rename option:'), active.name))
     if (name && name.trim() && name.trim() !== active.name) rename.mutate({ id: active.id, name: name.trim() })
   }
-  const onDelete = () => {
+  const onDelete = async () => {
     if (!active || active.is_baseline) return
-    if (window.confirm(t('Delete option "{{name}}" and its overrides?', { name: active.name }))) remove.mutate(active.id)
+    if (await askConfirm(t('Delete option "{{name}}" and its overrides?', { name: active.name }), { danger: true, confirmLabel: t('Delete') })) remove.mutate(active.id)
   }
 
   const isBaseline = !active || active.is_baseline
   return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.6rem' }} title={t('Design option (SCDF-172): parameter overrides and analysis runs are scoped to the active option')}>
-      <span style={{ color: 'var(--text-secondary)' }}>{t('Option')}</span>
-      <select value={active?.id ?? ''} onChange={e => onSelect(e.target.value)}
-        style={{ fontSize: '0.6rem', padding: '0 0.2rem', background: 'var(--bg-primary)', color: isBaseline ? 'var(--text-primary)' : '#f59e0b', border: '1px solid var(--border)', borderRadius: '3px', fontWeight: isBaseline ? 400 : 600 }}>
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', fontSize: fs.label }} title={t('Design option (SCDF-172): parameter overrides and analysis runs are scoped to the active option')}>
+      <label htmlFor="scdf-option-select" style={{ color: 'var(--text-secondary)' }}>{t('Option')}</label>
+      <select id="scdf-option-select" value={active?.id ?? ''} onChange={e => onSelect(e.target.value)}
+        style={{ fontSize: fs.label, padding: '0 0.2rem', background: 'var(--bg-primary)', color: isBaseline ? 'var(--text-primary)' : 'var(--status-caution)', border: '1px solid var(--border)', borderRadius: '3px', fontWeight: isBaseline ? 400 : 600 }}>
         {options.map(o => <option key={o.id} value={o.id}>{o.is_baseline ? t('Baseline') : o.name}</option>)}
       </select>
-      <button style={btn('#3b82f6')} onClick={onBranch} disabled={branch.isPending} title={t("Copy the active option's overrides into a new option")}>{t('branch')}</button>
+      <button style={btn('var(--interactive)')} onClick={onBranch} disabled={branch.isPending} title={t("Copy the active option's overrides into a new option")}>{t('branch')}</button>
       {!isBaseline && <button style={btn()} onClick={onRename} title={t('Rename')}>{t('rename')}</button>}
-      {!isBaseline && <button style={btn('#ef4444')} onClick={onDelete} title={t('Delete this option and its overrides')}>×</button>}
-      {error && <span style={{ color: '#ef4444' }} title={error}>{t('error')} <button style={btn('#ef4444')} onClick={() => setError(null)}>{t('ok')}</button></span>}
+      {!isBaseline && <button style={btn('var(--status-alarm)')} onClick={onDelete} title={t('Delete this option and its overrides')}>×</button>}
+      {error && <span style={{ color: 'var(--status-alarm)' }} title={error}>{t('error')} <button style={btn('var(--status-alarm)')} onClick={() => setError(null)}>{t('ok')}</button></span>}
     </span>
   )
 }

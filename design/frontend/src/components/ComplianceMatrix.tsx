@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useCompliance } from '../hooks/useSession'
+import { fs } from '../theme/tokens'
 
 const WORST_CASES = [
   { id: 'nominal', name: 'Nominal' },
@@ -9,10 +10,10 @@ const WORST_CASES = [
 ]
 
 const STATUS_COLORS: Record<string, { bg: string; fg: string; label: string }> = {
-  compliant: { bg: 'rgba(16,185,129,0.2)', fg: 'var(--success, #10b981)', label: '✓ OK' },
-  marginal: { bg: 'rgba(245,158,11,0.2)', fg: 'var(--warning, #f59e0b)', label: '⚠ MARGINAL' },
-  non_compliant: { bg: 'rgba(239,68,68,0.2)', fg: 'var(--danger, #ef4444)', label: '✗ FAIL' },
-  not_verified: { bg: 'rgba(107,114,128,0.15)', fg: 'var(--text-secondary, #9ca3af)', label: '— N/V' },
+  compliant: { bg: 'rgba(16,185,129,0.2)', fg: 'var(--success, var(--status-ok))', label: '✓ OK' },
+  marginal: { bg: 'rgba(245,158,11,0.2)', fg: 'var(--warning, var(--status-caution))', label: '⚠ MARGINAL' },
+  non_compliant: { bg: 'rgba(239,68,68,0.2)', fg: 'var(--danger, var(--status-alarm))', label: '✗ FAIL' },
+  not_verified: { bg: 'rgba(107,114,128,0.15)', fg: 'var(--text-secondary, var(--text-2))', label: '— N/V' },
 }
 
 export function ComplianceMatrix({ studyId }: { studyId: string | null }) {
@@ -20,7 +21,7 @@ export function ComplianceMatrix({ studyId }: { studyId: string | null }) {
   const { data, isLoading, error } = useCompliance(studyId, worstCase)
 
   if (!studyId) {
-    return <div style={{ padding: '1rem', color: 'var(--text-secondary, #9ca3af)' }}>Run a design first to see compliance.</div>
+    return <div style={{ padding: '1rem', color: 'var(--text-secondary, var(--text-2))' }}>Run a design first to see compliance.</div>
   }
   if (isLoading) return <div className="loading"><div className="spinner" /> Verifying...</div>
   if (error) return <div className="warning-item">Failed: {String(error)}</div>
@@ -35,7 +36,7 @@ export function ComplianceMatrix({ studyId }: { studyId: string | null }) {
   return (
     <div style={{ padding: '1rem' }}>
       <h2>Requirement Compliance</h2>
-      <p style={{ fontSize: '0.75rem', color: '#9ca3af', marginBottom: '0.5rem' }}>
+      <p style={{ fontSize: fs.label, color: 'var(--text-2)', marginBottom: '0.5rem' }}>
         Requirements are auto-derived from your mission parameters for verification.
         Edit requirements in the Requirements tab — changes will flow here automatically.
       </p>
@@ -48,28 +49,28 @@ export function ComplianceMatrix({ studyId }: { studyId: string | null }) {
               key={wc.id}
               onClick={() => setWorstCase(wc.id)}
               style={{
-                background: worstCase === wc.id ? 'var(--accent, #3b82f6)' : 'transparent',
-                color: worstCase === wc.id ? 'white' : 'var(--text-secondary, #9ca3af)',
-                border: '1px solid var(--border, #374151)', borderRadius: '4px',
-                padding: '0.3rem 0.7rem', fontSize: '0.75rem', cursor: 'pointer',
+                background: worstCase === wc.id ? 'var(--accent, var(--interactive))' : 'transparent',
+                color: worstCase === wc.id ? 'white' : 'var(--text-secondary, var(--text-2))',
+                border: '1px solid var(--border, var(--line))', borderRadius: '4px',
+                padding: '0.3rem 0.7rem', fontSize: fs.label, cursor: 'pointer',
               }}
             >{wc.name}</button>
           ))}
         </div>
         <div style={{ flex: 1 }} />
-        <div style={{ display: 'flex', gap: '1rem', fontSize: '0.85rem' }}>
-          <span><strong style={{ color: 'var(--success, #10b981)' }}>{d.compliant}</strong> compliant</span>
-          <span><strong style={{ color: 'var(--warning, #f59e0b)' }}>{d.marginal}</strong> marginal</span>
-          <span><strong style={{ color: 'var(--danger, #ef4444)' }}>{d.non_compliant}</strong> non-compliant</span>
+        <div style={{ display: 'flex', gap: '1rem', fontSize: fs.body }}>
+          <span><strong style={{ color: 'var(--success, var(--status-ok))' }}>{d.compliant}</strong> compliant</span>
+          <span><strong style={{ color: 'var(--warning, var(--status-caution))' }}>{d.marginal}</strong> marginal</span>
+          <span><strong style={{ color: 'var(--danger, var(--status-alarm))' }}>{d.non_compliant}</strong> non-compliant</span>
           <span>of <strong>{d.total_requirements}</strong> ({d.compliance_percent?.toFixed(0)}%)</span>
         </div>
       </div>
 
       {/* Matrix table */}
       <div style={{ overflow: 'auto', marginTop: '1rem' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs.body }}>
           <thead>
-            <tr style={{ background: 'var(--bg-secondary, #1f2937)' }}>
+            <tr style={{ background: 'var(--bg-secondary, var(--surface-2))' }}>
               <th style={th}>ID</th>
               <th style={th}>Requirement</th>
               <th style={th}>Position</th>
@@ -84,10 +85,10 @@ export function ComplianceMatrix({ studyId }: { studyId: string | null }) {
               const req = reqMap[v.requirement_id] || {}
               const s = STATUS_COLORS[v.status] || STATUS_COLORS.not_verified
               return (
-                <tr key={v.requirement_id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                  <td style={{ ...td, fontFamily: 'monospace', fontSize: '0.75rem' }}>{v.requirement_id}</td>
+                <tr key={v.requirement_id} style={{ borderBottom: '1px solid color-mix(in srgb, var(--text) 5%, transparent)' }}>
+                  <td style={{ ...td, fontFamily: 'monospace', fontSize: fs.value }}>{v.requirement_id}</td>
                   <td style={{ ...td, maxWidth: '500px' }}>{v.requirement_text || req.text || ''}</td>
-                  <td style={{ ...td, fontSize: '0.75rem', color: 'var(--text-secondary, #9ca3af)' }}>
+                  <td style={{ ...td, fontSize: fs.label, color: 'var(--text-secondary, var(--text-2))' }}>
                     {(req.position || '').replace(/_/g, ' ')}
                   </td>
                   <td style={tdNum}>
@@ -104,7 +105,7 @@ export function ComplianceMatrix({ studyId }: { studyId: string | null }) {
                   <td style={td}>
                     <span style={{
                       display: 'inline-block', padding: '0.15rem 0.5rem',
-                      borderRadius: '4px', fontSize: '0.7rem', fontWeight: 700,
+                      borderRadius: '4px', fontSize: fs.label, fontWeight: 700,
                       background: s.bg, color: s.fg,
                     }}>{s.label}</span>
                   </td>
@@ -118,7 +119,7 @@ export function ComplianceMatrix({ studyId }: { studyId: string | null }) {
   )
 }
 
-const th: React.CSSProperties = { padding: '0.5rem', textAlign: 'left', fontSize: '0.7rem', textTransform: 'uppercase', color: 'var(--text-secondary, #9ca3af)', letterSpacing: '0.03em' }
+const th: React.CSSProperties = { padding: '0.5rem', textAlign: 'left', fontSize: fs.label, textTransform: 'uppercase', color: 'var(--text-secondary, var(--text-2))', letterSpacing: '0.03em' }
 const thNum: React.CSSProperties = { ...th, textAlign: 'right' }
 const td: React.CSSProperties = { padding: '0.4rem 0.5rem', verticalAlign: 'top' }
 const tdNum: React.CSSProperties = { ...td, textAlign: 'right', fontFamily: 'monospace', fontVariantNumeric: 'tabular-nums' }

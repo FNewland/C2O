@@ -96,6 +96,13 @@ main{ flex:1; display:grid; gap:12px; padding:12px; min-height:0;
   grid-template-rows:minmax(0,54fr) minmax(0,26fr) minmax(0,20fr);
   grid-template-areas:"track" "plan" "bud"; }
 
+/* Short screens (a 900 px laptop or projector): the plan block needs ~210 px
+   of canvas for two labelled detail rows plus the three-band overview, so
+   the ground track gives up a little height. Tier 1 only. */
+@media (max-height: 1000px) and (max-aspect-ratio: 16/5){
+  .stage{ grid-template-rows:minmax(0,48fr) minmax(0,32fr) minmax(0,20fr); }
+}
+
 /* Mid tier (2:1 .. 16:5, e.g. 2560x1080): still stacked, but the map is
    height-limited here, so every extra pixel of stage width is wasted inside
    the track block. Hand it to the rail instead — bigger clock, more passes,
@@ -198,14 +205,25 @@ section.blk.stale>h2[data-stale-label]::after{ content:attr(data-stale-label); }
 .api-dot.error{ background:var(--alarm); }
 
 /* ── 4 + 5. Canvas blocks (stage) ──────────────────────────────────── */
+/* The canvases are taken OUT of the flow (A10, R3 audit). wide.js sizes each
+   canvas from its parent's box; an in-flow canvas with an explicit pixel
+   height props that box open, so once a heading grew (French wraps) the
+   canvas kept its old height, overflowed the block and was clipped at the
+   bottom -- and every later render re-measured the inflated box. */
+#block-timeline .bd, #block-track .cv{ position:relative; }
 #block-timeline canvas, #block-track canvas{
-  width:100%; height:100%; display:block; }
-#block-track .cv{ position:relative; flex:1; min-height:0; }
+  position:absolute; left:0; top:0; display:block; }
+#block-timeline canvas{ left:8px; top:8px; }
+#block-track .cv{ flex:1; min-height:0; }
+/* Block titles never wrap mid-title; long keys and headings get two lines
+   instead of an ellipsis (French runs 20-30 % longer; designed against FR). */
+section.blk>h2{ white-space:nowrap; }
 /* Map key, in the GROUND TRACK header row. Normal weight + tx2 so it reads
    as a key and never competes with the block title. */
 #block-track .legend{ font-size:18px; font-weight:400; letter-spacing:1px;
-  color:var(--tx2); font-family:var(--mono); white-space:nowrap;
-  overflow:hidden; text-overflow:ellipsis; }
+  color:var(--tx2); font-family:var(--mono); white-space:normal;
+  flex:1; min-width:0; line-height:1.25; text-wrap:balance; overflow:hidden;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
 /* Basemap provenance, top-right of the map. */
 #wTrackSource{ position:absolute; right:10px; top:8px;
   font-size:18px; color:var(--tx3); font-family:var(--mono);
@@ -218,8 +236,16 @@ section.blk.stale>h2[data-stale-label]::after{ content:attr(data-stale-label); }
   grid-template-columns:minmax(0,1.15fr) minmax(0,1.15fr) minmax(0,1.4fr);
   align-items:start; align-content:start; }
 .bud{ display:flex; flex-direction:column; gap:5px; min-width:0; }
-.bud .k, .bud .k2{ font-size:18px; letter-spacing:2px; color:var(--tx3);
-  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.bud .k, .bud .k2{ font-size:18px; letter-spacing:1.5px; color:var(--tx3);
+  line-height:1.2; text-wrap:balance; overflow:hidden;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+/* Where the strip is narrow enough for the French keys to wrap, reserve the
+   second line in every column so the three numerals stay on one baseline.
+   On a full 1920 px wall they fit on one line and the height goes to the
+   sub-lines instead. */
+@container (max-width: 1300px){
+  :root[lang="fr"] .bud .k, :root[lang="fr"] .bud .k2{ min-height:2.4em; }
+}
 .bud .v, .bud .v2{ font-family:var(--mono); font-size:34px; font-weight:700;
   line-height:1.05; }
 .bud .v.warn, .bud .v2.warn{ color:var(--warn); }

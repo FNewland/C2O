@@ -4312,7 +4312,7 @@ Tableau 10.8a — Détail de l'étape 5a de LEOP-001 : désactivation du mode b
 | Annonce attendue du responsable | « FD, TT&C — going for TTC_SET_BEACON_MODE off. » → exécution → « FD, TT&C — beacon_mode 0. Going for data rate LOW. » → exécution → « FD, TT&C — tm_tier 1, 16 000 bps, 16 kBd. Ground Seg, demod to 16 kBd. » |
 | Action | `TTC_SET_BEACON_MODE(on=0)` (S8.1, **func 70**), puis `TTC_SET_DATA_RATE(rate=0)` (S8.1, **func 65**) pour LOW. Le segment sol reconfigure le démodulateur de 1 kBd à 16 kBd *avant* l'arrivée attendue des SID des sous-systèmes. |
 | Vérification | `ttc.beacon_mode` (0x0521) = 0 dans les 10 s ; `ttc.tm_data_rate` (0x0506) = 16000 ; `ttc.tm_tier` (0x0539) = 1 (LOW) ; `ttc.tm_symbol_rate` (0x053B) = 16000 Bd. S1.7, et **non** S1.8. |
-| Raison d'être de l'étape | Le mode balise conditionne toute l'échelle de débits : tant qu'il est verrouillé, BEACON est le seul palier autorisé et LOW comme HIGH sont refusés. Il s'agit d'une étape distincte et délibérée, car l'échelon balise est la bouée de sauvetage : le satellite ne le quitte jamais par accident. LOW transporte l'ensemble complet de la télémesure de servitude périodique en occupant moins de 10 % du canal ; l'échelon BEACON à 1 kbit/s n'y parvient pas (l'ensemble HK livré représente ~1557 bit/s de canal, soit 156 % de l'échelon balise, et l'arriéré ne fait que croître). |
+| Raison d'être de l'étape | Le mode balise conditionne toute l'échelle de débits : tant qu'il est verrouillé, BEACON est le seul palier autorisé et LOW comme HIGH sont refusés. Il s'agit d'une étape distincte et délibérée, car l'échelon balise est la bouée de sauvetage : le satellite ne le quitte jamais par accident. LOW transporte l'ensemble complet de la télémesure de servitude périodique en occupant moins de 10 % du canal ; l'échelon BEACON à 1 kbit/s n'y parvient pas (l'ensemble HK livré représente ~1588 bit/s de canal, soit 159 % de l'échelon balise, et l'arriéré ne fait que croître). |
 | Écart fréquent | S1.8 `0x0007` sur la commande de débit. Lire l'avis d'échec, qui nomme le verrou en toutes lettres : « TM rate is forced to the beacon tier in beacon mode (LOW refused) ». Le même texte apparaît dans l'événement S5 `0x030B COMMAND_REJECTED`. Renvoyer la désactivation du mode balise. |
 
 **Étape 6 — Synchroniser le temps bord**
@@ -5434,9 +5434,9 @@ affirmait un état final qu'elle n'avait jamais commandé.
 L'ancien codage binaire est conservé : 0 signifie toujours « le débit
 bas » et 1 toujours « le débit haut » — ce sont les débits eux-mêmes
 qui ont changé. 1 kbit/s n'a jamais été un débit d'exploitation :
-l'ensemble de servitude fourni génère 1351,5 bit/s de paquets PUS, soit
-1557 bit/s sur le canal après RS(255,223) et la mise en trames TM ; une
-liaison à 1 kbit/s est donc saturée à 156 % avant même d'envoyer quoi
+l'ensemble de servitude fourni génère 1378,5 bit/s de paquets PUS, soit
+1588 bit/s sur le canal après RS(255,223) et la mise en trames TM ; une
+liaison à 1 kbit/s est donc saturée à 159 % avant même d'envoyer quoi
 que ce soit d'autre.
 
 #### Conduite étape par étape
@@ -6846,7 +6846,7 @@ plus d'un passage entier : la prise de vue n'est pas simplement plus
 lente en LOW, elle est impossible.**
 
 **La télémesure de servitude n'est pas gratuite.** L'ensemble HK fourni
-génère 1351,5 bit/s de paquets PUS, soit **1557 bit/s sur le canal**
+génère 1378,5 bit/s de paquets PUS, soit **1588 bit/s sur le canal**
 après RS(255,223) et la mise en trames TM — 134,5 Mbit, ou
 **16,0 Mio, par jour**. Pour environ 23 300 s de contact quotidien :
 

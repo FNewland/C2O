@@ -39,18 +39,18 @@
   },
   {
    "id": "com-006-ttc-link-verification/procedure-steps/step-1-baseline-primary-transponder-performance",
-   "en_hash": "0390f58793176367",
-   "fr_hash": "be4480ff66bd67a7"
+   "en_hash": "775da0b686f18d6a",
+   "fr_hash": "40bdab42cc5c46d1"
   },
   {
    "id": "com-006-ttc-link-verification/procedure-steps/step-2-measure-rssi-vs-elevation-profile",
-   "en_hash": "61288bb447420224",
-   "fr_hash": "478fadf579653dba"
+   "en_hash": "00545f8a41b14fc8",
+   "fr_hash": "659d70f3dbe5fe24"
   },
   {
    "id": "com-006-ttc-link-verification/procedure-steps/step-2a-baseline-each-rung-of-the-tm-rate-ladder",
-   "en_hash": "4209d93d41b2618f",
-   "fr_hash": "8a2227cde35fb1c6"
+   "en_hash": "6678e034990c3a52",
+   "fr_hash": "fe415d974243c999"
   },
   {
    "id": "com-006-ttc-link-verification/procedure-steps/step-2b-exercise-the-ground-arm-through-policy-on-high-no-on-board-gate",
@@ -59,18 +59,18 @@
   },
   {
    "id": "com-006-ttc-link-verification/procedure-steps/step-3-switch-to-redundant-transponder",
-   "en_hash": "df6eabb7e9582ae9",
-   "fr_hash": "264956b5faae6596"
+   "en_hash": "123cd941b5175d24",
+   "fr_hash": "682644aa995bf30d"
   },
   {
    "id": "com-006-ttc-link-verification/procedure-steps/step-4-redundant-transponder-performance-check",
-   "en_hash": "b3a080cdf3945d68",
-   "fr_hash": "65c1ccb09a01e425"
+   "en_hash": "f7587e69684d3f0c",
+   "fr_hash": "e5e34116fdfee15b"
   },
   {
    "id": "com-006-ttc-link-verification/procedure-steps/step-5-restore-primary-transponder",
-   "en_hash": "e93de1d38d6c1fe7",
-   "fr_hash": "d0c9134889c1e53b"
+   "en_hash": "d2beb1103b0b0a73",
+   "fr_hash": "f51736610c99ac4f"
   },
   {
    "id": "com-006-ttc-link-verification/procedure-steps/step-6-command-throughput-test",
@@ -108,5 +108,5 @@
    "fr_hash": "bad3dde81e56a8d0"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "8067e5b"
 }

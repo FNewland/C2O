@@ -83,9 +83,10 @@ seul PROP_INHIBIT_CLR (func 117) l'efface, après analyse.
 ### Étape 6 --- Restitution d'orbite après poussée
 **Verify:** événement PROP_BURN_COMPLETE (0x0804) ; `prop.burn_dv_achieved`
 (0x0B0F) par rapport à `prop.burn_dv_cmd` (0x0B0E) — à 2 % près en nominal
-**Verify:** `prop.sma_km` (0x0B1A) déplacé du da prévu (1.79 km par
-m/s prograde) ; `prop.orbit_epoch_version` (0x0B19) incrémenté — le planificateur et
-les prévisions de contact du MCS suivent désormais la nouvelle orbite
+**Verify:** la détermination d'orbite sol après la poussée : `prop.sma_km`
+(0x0B1A, produit de détermination d'orbite sol) déplacé du da prévu (1.79 km par m/s
+prograde). Une fois le nouveau jeu d'éléments publié par la dynamique du vol, le
+planificateur et les prévisions de contact du MCS suivent la nouvelle orbite
 **Évaluer :** Au passage suivant, comparer l'AOS observée à la prévision
 d'avant poussée : une poussée de 1,0 m/s décale les heures de passage d'environ 34 s/jour. Un résultat inférieur au plan
 de plus de 5 % signale un propulseur sous-performant : replanifier une poussée de correction selon NOM-004 et

@@ -57,7 +57,6 @@ const useCollabStore = create<CollabStore>((set) => ({
 
 let _ws: WebSocket | null = null
 let _heartbeatTimer: number | null = null
-let _reconnectTimer: number | null = null
 let _backoff = 1000
 let _connectedStudyId: string | null = null
 let _connectedName: string | null = null
@@ -143,20 +142,11 @@ function _connect(studyId: string, userName: string) {
       if (_heartbeatTimer) { clearInterval(_heartbeatTimer); _heartbeatTimer = null }
       const delay = Math.min(_backoff, 30000)
       _backoff *= 1.5
-      _reconnectTimer = window.setTimeout(() => _connect(studyId, userName), delay)
+      window.setTimeout(() => _connect(studyId, userName), delay)
     }
   } catch { /* onclose handles reconnect */ }
 }
 
-function _disconnect() {
-  if (_ws) { _ws.close(); _ws = null }
-  if (_heartbeatTimer) { clearInterval(_heartbeatTimer); _heartbeatTimer = null }
-  if (_reconnectTimer) { clearTimeout(_reconnectTimer); _reconnectTimer = null }
-  _connectedStudyId = null
-  _connectedName = null
-  useCollabStore.getState().setConnected(false)
-  useCollabStore.getState().setUsers([])
-}
 
 // ─── Hook (connects on mount, all callers share one connection) ───
 

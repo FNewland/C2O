@@ -1799,8 +1799,8 @@
   },
   {
    "id": "chapter-3-3-communications-and-link-budget-design/8-worked-examples-complete-link-budgets/6u-reference-design-eosat-1-rf-as-flown",
-   "en_hash": "76d0fe8272a0a73c",
-   "fr_hash": "36858614c0097cdb"
+   "en_hash": "3032772ca76ff743",
+   "fr_hash": "046c64b0f916b25d"
   },
   {
    "id": "chapter-3-3-communications-and-link-budget-design/9-data-budget",
@@ -3353,5 +3353,5 @@
   "chapter-1-4-mission-needs-stakeholder-analysis-trade-studies/part-3-concept-of-operations/1u-worked-example-unisat-1: numbers: missing in FR ['3', '3', '3']  extra in FR []",
   "chapter-2-1-the-system-v-and-requirements-engineering/3-the-smart-framework/common-anti-patterns: numbers: missing in FR ['2']  extra in FR []"
  ],
- "en_commit": "c4a140a"
+ "en_commit": "8067e5b"
 }

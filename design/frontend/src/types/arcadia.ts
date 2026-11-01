@@ -10,7 +10,7 @@ export const LAYER_LABELS: Record<ArcadiaLayer, string> = {
   OA: 'Operational', SA: 'System', LA: 'Logical', PA: 'Physical',
 }
 export const LAYER_COLORS: Record<ArcadiaLayer, string> = {
-  OA: '#f59e0b', SA: '#3b82f6', LA: '#8b5cf6', PA: '#10b981',
+  OA: 'var(--status-caution)', SA: 'var(--interactive)', LA: 'var(--cat-2)', PA: 'var(--status-ok)',
 }
 
 export interface ElementSummary {

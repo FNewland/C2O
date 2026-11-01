@@ -54,8 +54,8 @@
   },
   {
    "id": "nom-009-routine-health-check/procedure-steps/step-6-ttc-health-assessment",
-   "en_hash": "6c8684ba0f145c1c",
-   "fr_hash": "bcf5f4d1a1466eba"
+   "en_hash": "fe6c7af986020465",
+   "fr_hash": "9d0ba392ff848646"
   },
   {
    "id": "nom-009-routine-health-check/procedure-steps/step-7-payload-health-assessment",
@@ -78,5 +78,5 @@
    "fr_hash": "ac0b6a8f7fd3ad68"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "8067e5b"
 }

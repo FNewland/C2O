@@ -6,6 +6,7 @@
  */
 import { useDesignStore } from '../stores/designStore'
 import { useModelStore } from '../stores/modelStore'
+import { fs } from '../theme/tokens'
 
 const PHASES = [
   { id: 'phase_a', label: 'A', name: 'Feasibility' },
@@ -37,24 +38,24 @@ export function PhaseAndGateStrip() {
   if (!result) return null
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.2rem 0.5rem', background: 'var(--bg-primary, #0a0e1a)', borderBottom: '1px solid var(--border, #374151)', fontSize: '0.65rem' }}>
-      <span style={{ color: '#6b7280', marginRight: '0.2rem' }}>Phase:</span>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.2rem 0.5rem', background: 'var(--bg-primary, var(--surface-0))', borderBottom: '1px solid var(--border, var(--line))', fontSize: fs.label }}>
+      <span style={{ color: 'var(--text-3)', marginRight: '0.2rem' }}>Phase:</span>
       {PHASES.map(p => (
         <span key={p.id} style={{
           padding: '0.1rem 0.35rem', borderRadius: '3px', fontWeight: 600,
-          background: p.id === 'phase_a' ? '#3b82f620' : '#11182720',
-          color: p.id === 'phase_a' ? '#3b82f6' : '#6b7280',
-          border: `1px solid ${p.id === 'phase_a' ? '#3b82f640' : '#37415140'}`,
+          background: p.id === 'phase_a' ? 'color-mix(in srgb, var(--interactive) 13%, transparent)' : 'color-mix(in srgb, var(--surface-1) 13%, transparent)',
+          color: p.id === 'phase_a' ? 'var(--interactive)' : 'var(--text-3)',
+          border: `1px solid ${p.id === 'phase_a' ? 'color-mix(in srgb, var(--interactive) 25%, transparent)' : 'color-mix(in srgb, var(--line) 25%, transparent)'}`,
         }} title={p.name}>
           {p.label}
         </span>
       ))}
-      <span style={{ color: '#374151', margin: '0 0.2rem' }}>|</span>
-      <span style={{ color: '#6b7280' }}>Gate:</span>
+      <span style={{ color: 'var(--line)', margin: '0 0.2rem' }}>|</span>
+      <span style={{ color: 'var(--text-3)' }}>Gate:</span>
       {GATE_CRITERIA.map(g => {
         const pass = g.check(store, elements)
         return (
-          <span key={g.id} style={{ color: pass ? '#10b981' : '#6b7280', fontWeight: pass ? 600 : 400 }}>
+          <span key={g.id} style={{ color: pass ? 'var(--status-ok)' : 'var(--text-3)', fontWeight: pass ? 600 : 400 }}>
             {pass ? '\u2713' : '\u25cb'} {g.label}
           </span>
         )

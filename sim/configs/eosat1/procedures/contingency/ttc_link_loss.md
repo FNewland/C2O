@@ -30,7 +30,7 @@ and link restoration before escalating to emergency autonomous operations.
 **TC:** `HK_REQUEST(sid=6)` (Service 3, Subtype 27) — blind command, no telemetry expected
 **Action:** Wait 30s for transponder to process and attempt downlink re-acquisition
 **Verify:** `ttc.link_status` (0x0501) = 2 (LOCKED) within 30s
-**Verify:** `ttc.rssi` (0x0502) > -95 dBm if link restores
+**Verify:** TT&C page (ground): `ttc.rssi` (0x0502) > -126 dBm if link restores
 **GO/NO-GO:** If link restores, proceed to Step 5 for health check. If no response, proceed to Step 3.
 **BRANCH:** `ttc.link_status == 2` -> GO `STEP-5` | NO-GO `STEP-3` (timeout 30 s)
 
@@ -55,8 +55,8 @@ and link restoration before escalating to emergency autonomous operations.
 **LABEL:** `STEP-5`
 **TC:** `HK_REQUEST(sid=6)` (Service 3, Subtype 27)
 **Verify:** `ttc.link_status` (0x0501) = 2 (LOCKED)
-**Verify:** `ttc.rssi` (0x0502) > -90 dBm (nominal signal strength)
-**Verify:** `ttc.link_margin` (0x0503) > 3.0 dB
+**Verify:** TT&C page (ground): `ttc.rssi` (0x0502) > -126 dBm (nominal signal strength)
+**Verify:** TT&C page (ground): `ttc.link_margin` (0x0503) > 3.0 dB
 **Verify:** `ttc.mode` (0x0500) — record which transponder is active
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27)
 **TC:** `HK_REQUEST(sid=4)` (Service 3, Subtype 27) — Platform/OBDH housekeeping

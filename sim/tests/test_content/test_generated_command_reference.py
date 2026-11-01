@@ -105,20 +105,31 @@ class TestPayloadManualSettingsTable:
 
 class TestGeneratedExportsAreCurrent:
 
-    @pytest.mark.parametrize("tool,target", [
-        ("tools/generate_xtce.py", "configs/eosat1/xtce/eosat1.xml"),
-        ("tools/generate_smdl.py", "configs/eosat1/smdl/payload.xml"),
+    # (tool, committed target, output flag, what to pass to the flag).
+    # The generator writes into tmp_path, never over the committed file: the
+    # old version regenerated IN the repo, so a stale artefact was silently
+    # "fixed" by the first run and passed on the second, and parallel runs
+    # (xdist, other checkouts' workers) raced on the same file.
+    @pytest.mark.parametrize("tool,target,flag,out_kind", [
+        ("tools/generate_xtce.py", "configs/eosat1/xtce/eosat1.xml",
+         "--output", "file"),
+        ("tools/generate_smdl.py", "configs/eosat1/smdl/payload.xml",
+         "--output-dir", "dir"),
         # brief 08 documentation gap: the parameter/SID/limit/S12 map is
         # generated from config in CI, so it cannot describe a configuration
         # that no longer exists. Findings 12 and 13 are one glance at it.
-        ("tools/gen_parameter_map.py", "docs/PARAMETER_MAP.md"),
+        ("tools/gen_parameter_map.py", "docs/PARAMETER_MAP.md",
+         "--output", "file"),
     ])
-    def test_regeneration_is_byte_stable(self, tool, target, tmp_path):
-        before = (REPO / target).read_bytes()
-        proc = _run(str(REPO / tool))
+    def test_regeneration_is_byte_stable(self, tool, target, flag, out_kind,
+                                         tmp_path):
+        committed = (REPO / target).read_bytes()
+        name = Path(target).name
+        out = tmp_path / name if out_kind == "file" else tmp_path
+        proc = _run(str(REPO / tool), flag, str(out))
         assert proc.returncode == 0, proc.stderr
-        after = (REPO / target).read_bytes()
-        assert before == after, (
+        fresh = (tmp_path / name).read_bytes()
+        assert fresh == committed, (
             f"{target} is stale — re-run {tool} and commit the result")
 
     GENERATORS = [

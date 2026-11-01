@@ -29,8 +29,8 @@
   },
   {
    "id": "leop-006-time-synchronisation/procedure-steps/step-1-verify-obc-status-and-communication",
-   "en_hash": "0bff86e74f5b6715",
-   "fr_hash": "802bf2a2008057b9"
+   "en_hash": "ebdf8cca0d58419a",
+   "fr_hash": "05b1965b76fd3c2e"
   },
   {
    "id": "leop-006-time-synchronisation/procedure-steps/step-2-read-the-clock-its-reference-and-the-slant-range",
@@ -83,5 +83,5 @@
    "fr_hash": "1926580074b69d8a"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "8067e5b"
 }

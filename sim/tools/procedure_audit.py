@@ -15,9 +15,17 @@ Each reference is then cross-checked:
    (matched either by ``name`` or by a ``short_name``/``alias`` field).
 2. Parameter hex ID or dotted name must resolve to an entry in
    ``telemetry/parameters.yaml``.
-3. Parameter must be reachable by the ground segment:
-   * included in at least one HK structure (``hk_structures.yaml``), OR
-   * marked as ``on_demand: true`` in ``parameters.yaml`` (served via S2/S8).
+3. Parameter must be reachable by the ground segment, according to its
+   ``visibility:`` class in ``parameters.yaml`` (2026-11-01):
+   * ``real`` (the default): included in at least one HK structure
+     (``hk_structures.yaml``) OR marked ``on_demand: true`` (served via
+     S20/S8); otherwise PARAM_NOT_REACHABLE;
+   * ``ground_derived``: measured or computed by the GROUND segment (RF
+     receiver, orbit determination, station geometry) — reachable by
+     definition, on the TT&C / radio pages, never via HK;
+   * ``instructor``: simulator truth no operator can observe. A procedure
+     that tells an operator to read one is a content defect:
+     PARAM_INSTRUCTOR_ONLY.
 
 The result is an HTML + JSON findings report written to the workspace folder
 (``workspace/audit/procedure_audit.html`` and ``.json``) summarising:
@@ -93,6 +101,9 @@ RE_NAME_WITH_ID = re.compile(
 RE_HK_REQUEST = re.compile(r"HK_REQUEST\(sid=(\d+)\)")
 RE_VERIFY_PARAM = re.compile(r"`([a-z]{2,8}\.[a-z][a-z0-9_]*)`")
 RE_STEP_BREAK = re.compile(r"(?m)^#{2,}\s")
+#: A Verify line that names the ground as the source of its reading.
+RE_GROUND_SOURCE = re.compile(r"\(ground\)|\bground\b|TT&C page|radio page",
+                              re.IGNORECASE)
 
 # Generic service-family labels that aren't specific TCs and should not be
 # flagged as unknown commands.
@@ -162,6 +173,9 @@ class Catalog:
     #: `ttc.link_status` is asking for a reading the packet does not contain.
     hk_params_by_sid: dict[int, set[int]] = field(default_factory=dict)
     on_demand_ids: set[int] = field(default_factory=set)
+    #: parameters.yaml `visibility:` classes (default "real").
+    ground_derived_ids: set[int] = field(default_factory=set)
+    instructor_ids: set[int] = field(default_factory=set)
     #: mnemonic -> the full tc_catalog entry, for the extractor.
     tc_entries: dict[str, dict] = field(default_factory=dict)
     #: procedure id -> index entry, for the advisory / command_services checks.
@@ -213,6 +227,12 @@ class Catalog:
                 self.param_by_name[nm] = p
             if bool(p.get("on_demand", False)):
                 self.on_demand_ids.add(pid)
+            vis = str(p.get("visibility", "real")).strip().lower()
+            if vis == "ground_derived":
+                self.ground_derived_ids.add(pid)
+            elif vis == "instructor":
+                self.instructor_ids.add(pid)
+
 
         if EVENTS.exists():
             with EVENTS.open() as f:
@@ -249,6 +269,15 @@ class Catalog:
                 if entry.get("file"):
                     self.index_by_file[str(entry["file"])] = entry
 
+    def reachability(self, pid: int) -> str:
+        """'ok', 'instructor' or 'unreachable' for an operator reading pid."""
+        if pid in self.instructor_ids:
+            return "instructor"
+        if pid in self.ground_derived_ids:
+            return "ok"           # read on the ground (TT&C / radio pages)
+        if pid in self.hk_param_ids or pid in self.on_demand_ids:
+            return "ok"
+        return "unreachable"
 
 # ---------- audit ----------
 @dataclass
@@ -257,7 +286,7 @@ class Finding:
     #: TC_UNKNOWN, FUNC_ID_MISMATCH, PARAM_UNKNOWN, PARAM_NOT_REACHABLE,
     #: EVENT_NAME_MISMATCH, SUBTYPE_INVERTED, ACTION_COMMAND,
     #: TC_NOT_EXTRACTED, PARAM_NAME_ID_MISMATCH, HK_SID_MISMATCH,
-    #: ZERO_COMMAND_PROCEDURE
+    #: ZERO_COMMAND_PROCEDURE, PARAM_INSTRUCTOR_ONLY
     category: str
     detail: str
     context: str = ""
@@ -273,6 +302,7 @@ class ProcedureReport:
     func_id_mismatch: list[str] = field(default_factory=list)
     param_unknown: list[str] = field(default_factory=list)
     param_not_reachable: list[str] = field(default_factory=list)
+    param_instructor_only: list[str] = field(default_factory=list)
     event_refs: list[str] = field(default_factory=list)
     event_mismatch: list[str] = field(default_factory=list)
     subtype_inverted: list[str] = field(default_factory=list)
@@ -416,10 +446,23 @@ def audit_procedures(cat: Catalog) -> tuple[list[ProcedureReport], list[Finding]
                            else int(str(entry_p["id"]), 0))
                     if pid in available or pid in cat.on_demand_ids:
                         continue
-                    homes = sorted(cat.hk_sids_for_param.get(pid, []))
-                    detail = (f"step requests HK SID {sorted(requested)} but "
-                              f"verifies {name} (0x{pid:04X}), which is in "
-                              f"SID {homes or 'no structure'}")
+                    if pid in cat.ground_derived_ids:
+                        # A GROUND value (RSSI, link margin, BER, Eb/N0,
+                        # elevation…) is in no HK SID by construction. The
+                        # step is fine when the line says it is read on the
+                        # ground (TT&C / radio page); it is the defect when it
+                        # reads as if the HK request delivered it.
+                        if RE_GROUND_SOURCE.search(line):
+                            continue
+                        detail = (f"step requests HK SID {sorted(requested)} "
+                                  f"but verifies {name} (0x{pid:04X}), a "
+                                  f"ground-derived value no HK SID carries — "
+                                  f"read it on the TT&C/radio page (ground)")
+                    else:
+                        homes = sorted(cat.hk_sids_for_param.get(pid, []))
+                        detail = (f"step requests HK SID {sorted(requested)} but "
+                                  f"verifies {name} (0x{pid:04X}), which is in "
+                                  f"SID {homes or 'no structure'}")
                     if detail not in rep.hk_sid_mismatch:
                         rep.hk_sid_mismatch.append(detail)
                         findings.append(Finding(rel, "HK_SID_MISMATCH", detail))
@@ -521,7 +564,14 @@ def audit_procedures(cat: Catalog) -> tuple[list[ProcedureReport], list[Finding]
                 rep.param_unknown.append(hx)
                 findings.append(Finding(rel, "PARAM_UNKNOWN", hx))
                 continue
-            if pid not in cat.hk_param_ids and pid not in cat.on_demand_ids:
+            reach = cat.reachability(pid)
+            if reach == "instructor":
+                rep.param_instructor_only.append(hx)
+                findings.append(Finding(
+                    rel, "PARAM_INSTRUCTOR_ONLY",
+                    f"{hx} ({cat.param_by_id[pid].get('name','?')}) is "
+                    f"visibility: instructor — no operator can read it"))
+            elif reach == "unreachable":
                 rep.param_not_reachable.append(hx)
                 findings.append(Finding(
                     rel, "PARAM_NOT_REACHABLE",
@@ -536,7 +586,16 @@ def audit_procedures(cat: Catalog) -> tuple[list[ProcedureReport], list[Finding]
                 pid = int(cat.param_by_name[nm].get("id", 0)) if isinstance(
                     cat.param_by_name[nm].get("id"), int) else int(
                     str(cat.param_by_name[nm]["id"]), 0)
-                if pid and pid not in cat.hk_param_ids and pid not in cat.on_demand_ids:
+                reach = cat.reachability(pid) if pid else "ok"
+                if reach == "instructor":
+                    hx = f"0x{pid:04X}"
+                    if not any(x.startswith(hx) for x in rep.param_instructor_only):
+                        rep.param_instructor_only.append(hx + f" ({nm})")
+                        findings.append(Finding(
+                            rel, "PARAM_INSTRUCTOR_ONLY",
+                            f"{nm} ({hx}) is visibility: instructor — "
+                            f"no operator can read it"))
+                elif reach == "unreachable":
                     hx = f"0x{pid:04X}"
                     if hx not in rep.param_not_reachable:
                         rep.param_not_reachable.append(hx + f" ({nm})")
@@ -690,7 +749,7 @@ def main() -> int:
                      "PARAM_NOT_REACHABLE", "EVENT_NAME_MISMATCH",
                      "SUBTYPE_INVERTED", "ACTION_COMMAND", "TC_NOT_EXTRACTED",
                      "PARAM_NAME_ID_MISMATCH", "HK_SID_MISMATCH",
-                     "ZERO_COMMAND_PROCEDURE"):
+                     "ZERO_COMMAND_PROCEDURE", "PARAM_INSTRUCTOR_ONLY"):
         n = sum(1 for f in findings if f.category == cat_name)
         print(f"  {cat_name}: {n}")
     inert = [r.rel_path for r in reports

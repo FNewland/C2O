@@ -949,8 +949,8 @@
   },
   {
    "id": "chapter-10-leop-operations/10-11-detailed-leop-procedure-walkthroughs/leop-001-first-acquisition-of-signal-obc-boot-deep-walkthrough/per-step-playbook",
-   "en_hash": "17d4fc3805ead9aa",
-   "fr_hash": "c4a11c40339a2d47"
+   "en_hash": "b91ace3f9c6381d9",
+   "fr_hash": "4a4f42f059936789"
   },
   {
    "id": "chapter-10-leop-operations/10-11-detailed-leop-procedure-walkthroughs/leop-001-first-acquisition-of-signal-obc-boot-deep-walkthrough/common-deviations-and-fd-playbook",
@@ -1179,8 +1179,8 @@
   },
   {
    "id": "chapter-11-commissioning-operations/11-9-detailed-commissioning-procedure-walkthroughs/com-006-ttc-link-verification",
-   "en_hash": "278fac5a131e52c2",
-   "fr_hash": "c1f4f64f6c37de64"
+   "en_hash": "e8c2c51b7e369d34",
+   "fr_hash": "80e76150d53b2db2"
   },
   {
    "id": "chapter-11-commissioning-operations/11-9-detailed-commissioning-procedure-walkthroughs/com-006-ttc-link-verification/per-step-playbook",
@@ -1339,8 +1339,8 @@
   },
   {
    "id": "chapter-13-operator-calculations-and-checks/13-6-link-margin-sanity-check/13-6-1-data-volume-arithmetic",
-   "en_hash": "ee5407d5f78c3c06",
-   "fr_hash": "c36566eb3c798b65"
+   "en_hash": "d8180dc0a70dc890",
+   "fr_hash": "3bc4d413be70fa31"
   },
   {
    "id": "chapter-13-operator-calculations-and-checks/13-7-wheel-saturation-desat-scheduling",
@@ -1492,5 +1492,5 @@
   "chapter-10-leop-operations: numbers: missing in FR []  extra in FR ['24', '7']",
   "chapter-10-leop-operations: numbers: missing in FR []  extra in FR ['7', '24']"
  ],
- "en_commit": "c4a140a"
+ "en_commit": "8067e5b"
 }

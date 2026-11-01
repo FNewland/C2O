@@ -39,8 +39,8 @@
   },
   {
    "id": "ctg-014-ber-anomaly/procedure-steps/step-1-characterize-ber-anomaly",
-   "en_hash": "ba0c84250e16af94",
-   "fr_hash": "c0ae08c50c459d89"
+   "en_hash": "9196e73819fcf78d",
+   "fr_hash": "7513813c3058316c"
   },
   {
    "id": "ctg-014-ber-anomaly/procedure-steps/step-2-check-power-amplifier-temperature",
@@ -49,18 +49,18 @@
   },
   {
    "id": "ctg-014-ber-anomaly/procedure-steps/step-3-pa-overheating-thermal-mitigation",
-   "en_hash": "a51bc9130a13ca6e",
-   "fr_hash": "25f14413e4485168"
+   "en_hash": "b4bacf067767eb90",
+   "fr_hash": "71d99b97e2ff1b41"
   },
   {
    "id": "ctg-014-ber-anomaly/procedure-steps/step-4-step-down-the-rate-ladder",
-   "en_hash": "c09410ee867d56d7",
-   "fr_hash": "0e215942948e239c"
+   "en_hash": "516ae6bf40c03094",
+   "fr_hash": "c85dadadf1e08451"
   },
   {
    "id": "ctg-014-ber-anomaly/procedure-steps/step-5-try-transponder-switchover",
-   "en_hash": "5f356bf7dfb5e14f",
-   "fr_hash": "a8d6c349f18e4809"
+   "en_hash": "d1baa8f4577e1f4d",
+   "fr_hash": "b3a85df2f0fc4582"
   },
   {
    "id": "ctg-014-ber-anomaly/verification-criteria",
@@ -73,5 +73,5 @@
    "fr_hash": "e589ae792eca427e"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "8067e5b"
 }

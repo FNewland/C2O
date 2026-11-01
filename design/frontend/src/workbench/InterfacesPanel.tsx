@@ -9,6 +9,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 import { useUIStore } from '../stores/uiStore'
+import { fs } from '../theme/tokens'
 
 const API = '/api'
 
@@ -18,11 +19,11 @@ const INTERFACE_TYPE_LABELS: Record<string, string> = {
 }
 
 const INTERFACE_TYPES = [
-  { value: 'electrical', label: INTERFACE_TYPE_LABELS.electrical, color: '#f59e0b' },
-  { value: 'data', label: INTERFACE_TYPE_LABELS.data, color: '#8b5cf6' },
-  { value: 'rf', label: INTERFACE_TYPE_LABELS.rf, color: '#ec4899' },
-  { value: 'mechanical', label: INTERFACE_TYPE_LABELS.mechanical, color: '#84cc16' },
-  { value: 'thermal', label: INTERFACE_TYPE_LABELS.thermal, color: '#ef4444' },
+  { value: 'electrical', label: INTERFACE_TYPE_LABELS.electrical, color: 'var(--cat-4)' },
+  { value: 'data', label: INTERFACE_TYPE_LABELS.data, color: 'var(--cat-2)' },
+  { value: 'rf', label: INTERFACE_TYPE_LABELS.rf, color: 'var(--cat-6)' },
+  { value: 'mechanical', label: INTERFACE_TYPE_LABELS.mechanical, color: 'var(--cat-8)' },
+  { value: 'thermal', label: INTERFACE_TYPE_LABELS.thermal, color: 'var(--cat-5)' },
 ]
 
 export function InterfacesPanel() {
@@ -97,15 +98,15 @@ export function InterfacesPanel() {
 
   if (siblings.length < 2) {
     return (
-      <div style={{ padding: '1rem', color: 'var(--text-secondary)', fontSize: '0.8rem' }}>
+      <div style={{ padding: '1rem', color: 'var(--text-secondary)', fontSize: fs.body }}>
         {t('Need at least 2 elements at this level to define interfaces.')}
       </div>
     )
   }
 
   return (
-    <div style={{ padding: '0.5rem 1rem', fontSize: '0.75rem' }}>
-      <div style={{ fontWeight: 600, fontSize: '0.78rem', marginBottom: '0.5rem' }}>
+    <div style={{ padding: '0.5rem 1rem', fontSize: fs.label }}>
+      <div style={{ fontWeight: 600, fontSize: fs.label, marginBottom: '0.5rem' }}>
         {t('Interfaces ({{n}})', { n: interfaces.length })}
       </div>
 
@@ -132,7 +133,7 @@ export function InterfacesPanel() {
             value={fromId}
             onChange={e => setFromId(e.target.value)}
             style={{
-              padding: '0.3rem', fontSize: '0.72rem', borderRadius: '3px',
+              padding: '0.3rem', fontSize: fs.label, borderRadius: '3px',
               background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)',
             }}
           >
@@ -146,7 +147,7 @@ export function InterfacesPanel() {
             value={toId}
             onChange={e => setToId(e.target.value)}
             style={{
-              padding: '0.3rem', fontSize: '0.72rem', borderRadius: '3px',
+              padding: '0.3rem', fontSize: fs.label, borderRadius: '3px',
               background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)',
             }}
           >
@@ -160,7 +161,7 @@ export function InterfacesPanel() {
             value={ifaceType}
             onChange={e => setIfaceType(e.target.value)}
             style={{
-              padding: '0.3rem', fontSize: '0.72rem', borderRadius: '3px',
+              padding: '0.3rem', fontSize: fs.label, borderRadius: '3px',
               background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)',
             }}
           >
@@ -172,7 +173,7 @@ export function InterfacesPanel() {
             onChange={e => setIfaceName(e.target.value)}
             placeholder={t('Label (optional)')}
             style={{
-              width: 120, padding: '0.3rem 0.4rem', fontSize: '0.72rem', borderRadius: '3px',
+              width: 120, padding: '0.3rem 0.4rem', fontSize: fs.label, borderRadius: '3px',
               background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)',
             }}
           />
@@ -181,7 +182,7 @@ export function InterfacesPanel() {
             onClick={() => fromId && toId && addMutation.mutate()}
             disabled={!fromId || !toId}
             style={{
-              padding: '0.3rem 0.6rem', fontSize: '0.72rem', fontWeight: 600, borderRadius: '3px',
+              padding: '0.3rem 0.6rem', fontSize: fs.label, fontWeight: 600, borderRadius: '3px',
               background: 'var(--success)', color: 'white', border: 'none', cursor: 'pointer',
             }}
           >
@@ -190,7 +191,7 @@ export function InterfacesPanel() {
           <button
             onClick={() => setShowAdd(false)}
             style={{
-              padding: '0.3rem 0.6rem', fontSize: '0.72rem', borderRadius: '3px',
+              padding: '0.3rem 0.6rem', fontSize: fs.label, borderRadius: '3px',
               background: 'var(--bg-secondary)', color: 'var(--text-secondary)', border: 'none', cursor: 'pointer',
             }}
           >
@@ -201,7 +202,7 @@ export function InterfacesPanel() {
         <button
           onClick={() => setShowAdd(true)}
           style={{
-            padding: '0.35rem 0.75rem', fontSize: '0.72rem', fontWeight: 600, borderRadius: '4px',
+            padding: '0.35rem 0.75rem', fontSize: fs.label, fontWeight: 600, borderRadius: '4px',
             background: 'var(--success)', color: 'white', border: 'none', cursor: 'pointer',
           }}
         >
@@ -281,31 +282,31 @@ function InterfaceRow({ iface, nameOf, studyId, onDelete }: {
       {/* Header row */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', padding: '0.3rem 0.5rem', cursor: 'pointer' }}
         onClick={() => setExpanded(!expanded)}>
-        <span style={{ fontSize: '0.55rem', padding: '0.1rem 0.25rem', borderRadius: '2px', background: `${typeInfo?.color || '#6b7280'}20`, color: typeInfo?.color || '#6b7280', fontWeight: 600, textTransform: 'uppercase', flexShrink: 0 }}>
+        <span style={{ fontSize: fs.label, padding: '0.1rem 0.25rem', borderRadius: '2px', background: `color-mix(in srgb, ${typeInfo?.color || 'var(--text-3)'} 13%, transparent)`, color: typeInfo?.color || 'var(--text-3)', fontWeight: 600, textTransform: 'uppercase', flexShrink: 0 }}>
           {INTERFACE_TYPE_LABELS[iface.interface_type] ? t(INTERFACE_TYPE_LABELS[iface.interface_type]) : iface.interface_type}
         </span>
-        <span style={{ fontWeight: 500, fontSize: '0.72rem' }}>{nameOf(iface.from_element_id)}</span>
-        <span style={{ color: 'var(--text-secondary)', fontSize: '0.65rem' }}>→</span>
-        <span style={{ fontWeight: 500, fontSize: '0.72rem' }}>{nameOf(iface.to_element_id)}</span>
-        {iface.name && <span style={{ color: 'var(--text-secondary)', fontSize: '0.63rem' }}>({iface.name})</span>}
+        <span style={{ fontWeight: 500, fontSize: fs.label }}>{nameOf(iface.from_element_id)}</span>
+        <span style={{ color: 'var(--text-secondary)', fontSize: fs.label }}>→</span>
+        <span style={{ fontWeight: 500, fontSize: fs.label }}>{nameOf(iface.to_element_id)}</span>
+        {iface.name && <span style={{ color: 'var(--text-secondary)', fontSize: fs.label }}>({iface.name})</span>}
         <span style={{ flex: 1 }} />
         {Object.keys(props).length > 0 && (
-          <span style={{ fontSize: '0.5rem', color: 'var(--success)' }}>{t('{{n}} props', { n: Object.keys(props).length })}</span>
+          <span style={{ fontSize: fs.label, color: 'var(--success)' }}>{t('{{n}} props', { n: Object.keys(props).length })}</span>
         )}
-        <span style={{ fontSize: '0.6rem', color: 'var(--text-secondary)' }}>{expanded ? '▾' : '▸'}</span>
+        <span style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>{expanded ? '▾' : '▸'}</span>
         <button onClick={e => { e.stopPropagation(); onDelete() }}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)', fontSize: '0.72rem' }}>×</button>
+          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)', fontSize: fs.label }}>×</button>
       </div>
 
       {/* Expandable properties */}
       {expanded && fields.length > 0 && (
         <div style={{ padding: '0.3rem 0.5rem', borderTop: '1px solid var(--border)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.2rem' }}>
           {fields.map(f => (
-            <div key={f.key} style={{ fontSize: '0.6rem' }}>
+            <div key={f.key} style={{ fontSize: fs.label }}>
               <label style={{ color: 'var(--text-secondary)', display: 'block', marginBottom: '0.05rem' }}>{t('{{label}}:', { label: f.label })}</label>
               <input value={props[f.key] || ''} onChange={e => updateProp(f.key, e.target.value)}
                 placeholder={f.placeholder}
-                style={{ width: '100%', padding: '0.15rem 0.25rem', fontSize: '0.6rem', borderRadius: '2px', background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)' }} />
+                style={{ width: '100%', padding: '0.15rem 0.25rem', fontSize: fs.label, borderRadius: '2px', background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)' }} />
             </div>
           ))}
         </div>

@@ -336,6 +336,38 @@ class NetworkConfig:
 
 
 @dataclass
+class GroundLimitsConfig:
+    """Ground-receiver limit bands (plan decision 2026-11-01).
+
+    BER and AGC are measured by the GROUND receiver, so their limits live
+    here and are checked by the bridge (smo_rfsim.ground_limits), not in the
+    spacecraft-telemetry set mcs/limits.yaml. Same yellow/red conventions as
+    the MCS. None = no bound on that side.
+    """
+    # BER, log10. Yellow above 1e-5 (Eb/N0 below the 9.6 dB design point,
+    # i.e. negative link margin); red above 1e-4.
+    ber_yellow_high: Optional[float] = -5.0
+    ber_red_high: Optional[float] = -4.0
+    # AGC = RSSI + agc_offset_db (the same definition as 0x051A). Nominal
+    # passes span about -50 dB (zenith) to -64 dB (5 deg, NOMINAL power);
+    # LOW power at the horizon reaches about -67 dB.
+    agc_offset_db: float = 60.0
+    agc_yellow_low: Optional[float] = -66.0
+    agc_yellow_high: Optional[float] = -30.0
+    agc_red_low: Optional[float] = -70.0
+    agc_red_high: Optional[float] = -20.0
+
+    def validate(self) -> None:
+        for lo, hi in (("ber_yellow_high", "ber_red_high"),
+                       ("agc_red_low", "agc_yellow_low"),
+                       ("agc_yellow_low", "agc_yellow_high"),
+                       ("agc_yellow_high", "agc_red_high")):
+            a, b = getattr(self, lo), getattr(self, hi)
+            if a is not None and b is not None:
+                _require(a <= b, f"ground_limits.{lo} must be <= {hi}")
+
+
+@dataclass
 class RFSimConfig:
     """Top-level RF simulation configuration."""
     mode: RFSimMode = RFSimMode.PACKET
@@ -344,8 +376,11 @@ class RFSimConfig:
     channel: ChannelConfig = field(default_factory=ChannelConfig)
     link_budget: LinkBudgetConfig = field(default_factory=LinkBudgetConfig)
     network: NetworkConfig = field(default_factory=NetworkConfig)
+    ground_limits: GroundLimitsConfig = field(
+        default_factory=GroundLimitsConfig)
 
-    _SECTIONS = ("ccsds", "pipeline", "channel", "link_budget", "network")
+    _SECTIONS = ("ccsds", "pipeline", "channel", "link_budget", "network",
+                 "ground_limits")
 
     def validate(self) -> None:
         """Validate every section; raises ConfigError on the first problem."""

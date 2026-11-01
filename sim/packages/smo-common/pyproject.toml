@@ -30,4 +30,5 @@ packages = ["src/smo_common"]
 # drop them from the wheel and break a split deployment.
 # ui/i18n/ (EN->FR catalogs, served at /static/shared/i18n/<lang>.json and
 # <lang>.db.json) is a SUBDIRECTORY, so it is pinned with its own pattern.
-artifacts = ["src/smo_common/ui/*", "src/smo_common/ui/i18n/*.json"]
+artifacts = ["src/smo_common/ui/*", "src/smo_common/ui/i18n/*.json",
+             "src/smo_common/ui/i18n/tools/*.json"]

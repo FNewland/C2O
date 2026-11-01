@@ -21,19 +21,20 @@ import {
 } from '../types/arcadia'
 import { optionQuery, useActiveOptionId } from '../stores/optionStore'
 import { useOptions } from './OptionSwitcher'
+import { fs } from '../theme/tokens'
 
 const API = '/api'
 
 const inputStyle: React.CSSProperties = {
-  padding: '0.12rem 0.3rem', fontSize: '0.64rem', borderRadius: '3px',
+  padding: '0.12rem 0.3rem', fontSize: fs.label, borderRadius: '3px',
   background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)',
 }
 const monoInput: React.CSSProperties = { ...inputStyle, fontFamily: 'ui-monospace, monospace' }
 const smallBtn = (color = 'var(--text-secondary)'): React.CSSProperties => ({
   background: 'none', border: '1px solid var(--border)', borderRadius: '3px', cursor: 'pointer',
-  fontSize: '0.6rem', padding: '0.08rem 0.3rem', color,
+  fontSize: fs.label, padding: '0.08rem 0.3rem', color,
 })
-const PROV_COLORS: Record<Provenance, string> = { manual: '#f59e0b', formula: '#8b5cf6', column: '#3b82f6', agent: '#10b981' }
+const PROV_COLORS: Record<Provenance, string> = { manual: 'var(--status-caution)', formula: 'var(--cat-2)', column: 'var(--interactive)', agent: 'var(--status-ok)' }
 // English text is the i18n key
 const PROV_LABELS: Record<string, string> = { manual: 'manual', formula: 'formula', column: 'column', agent: 'agent' }
 // English text is the i18n key
@@ -68,15 +69,15 @@ function fmt(v: number | null | undefined): string {
 
 export function ProvenanceChip({ p }: { p: Provenance }) {
   const { t } = useTranslation()
-  const c = PROV_COLORS[p] || '#6b7280'
-  return <span title={PROV_TITLES[p] ? t(PROV_TITLES[p]) : p} style={{ fontSize: '0.56rem', padding: '0 0.3rem', borderRadius: '3px', background: `${c}22`, color: c, border: `1px solid ${c}55` }}>{PROV_LABELS[p] ? t(PROV_LABELS[p]) : p}</span>
+  const c = PROV_COLORS[p] || 'var(--text-3)'
+  return <span title={PROV_TITLES[p] ? t(PROV_TITLES[p]) : p} style={{ fontSize: fs.label, padding: '0 0.3rem', borderRadius: '3px', background: `color-mix(in srgb, ${c} 13%, transparent)`, color: c, border: `1px solid color-mix(in srgb, ${c} 33%, transparent)` }}>{PROV_LABELS[p] ? t(PROV_LABELS[p]) : p}</span>
 }
 
 export function OptionOverrideChip({ optionName }: { optionName: string }) {
   const { t } = useTranslation()
-  const c = '#f59e0b'
+  const c = 'var(--status-caution)'
   return <span title={t('This value is an override that exists only in option "{{name}}"; the baseline row is shadowed', { name: optionName })}
-    style={{ fontSize: '0.56rem', padding: '0 0.3rem', borderRadius: '3px', background: `${c}22`, color: c, border: `1px solid ${c}55`, marginLeft: '0.2rem', whiteSpace: 'nowrap' }}>
+    style={{ fontSize: fs.label, padding: '0 0.3rem', borderRadius: '3px', background: `color-mix(in srgb, ${c} 13%, transparent)`, color: c, border: `1px solid color-mix(in srgb, ${c} 33%, transparent)`, marginLeft: '0.2rem', whiteSpace: 'nowrap' }}>
     {t('override in {{name}}', { name: optionName })}
   </span>
 }
@@ -161,30 +162,30 @@ export function ParameterPanel({ elementId, studyId, compact }: { elementId: str
     setAdding(false); setNewName(''); setNewUnit(''); setNewValue('')
   }
 
-  const th: React.CSSProperties = { textAlign: 'left', padding: '0.15rem 0.3rem', fontSize: '0.58rem', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap' }
-  const td: React.CSSProperties = { padding: '0.15rem 0.3rem', fontSize: compact ? '0.62rem' : '0.66rem', borderBottom: '1px solid var(--border)', verticalAlign: 'top' }
+  const th: React.CSSProperties = { textAlign: 'left', padding: '0.15rem 0.3rem', fontSize: fs.label, color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap' }
+  const td: React.CSSProperties = { padding: compact ? '0.15rem 0.3rem' : '0.25rem 0.4rem', fontSize: fs.label, borderBottom: '1px solid var(--border)', verticalAlign: 'top' }
 
   return (
-    <div style={{ fontSize: '0.7rem' }}>
+    <div style={{ fontSize: fs.label }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.3rem', flexWrap: 'wrap' }}>
-        <span style={{ color: 'var(--text-secondary)', fontSize: '0.62rem' }}>
+        <span style={{ color: 'var(--text-secondary)', fontSize: fs.label }}>
           {t('{{count}} parameters', { count: params.length, defaultValue_one: '{{count}} parameter' })} · {t('formulas use names on this element,')} <code>el("Name").x</code>, <code>children("mass_kg")</code>, <code>budget("power")</code>
         </span>
         {optionId && (
           <span title={t('Edits are written into this option only; the baseline is untouched')}
-            style={{ fontSize: '0.58rem', color: '#f59e0b', border: '1px solid #f59e0b55', borderRadius: '3px', padding: '0 0.3rem' }}>
+            style={{ fontSize: fs.label, color: 'var(--status-caution)', border: '1px solid color-mix(in srgb, var(--status-caution) 33%, transparent)', borderRadius: '3px', padding: '0 0.3rem' }}>
             {t('editing option: {{name}}', { name: optionName })}
           </span>
         )}
         <span style={{ flex: 1 }} />
-        <button style={smallBtn('#3b82f6')} onClick={() => setAdding(v => !v)}>{t('+ parameter')}</button>
-        <button style={smallBtn('#8b5cf6')} disabled={!studyId || recompute.isPending} onClick={() => recompute.mutate()}>
+        <button style={smallBtn('var(--interactive)')} onClick={() => setAdding(v => !v)}>{t('+ parameter')}</button>
+        <button style={smallBtn('var(--cat-2)')} disabled={!studyId || recompute.isPending} onClick={() => recompute.mutate()}>
           {recompute.isPending ? t('Recomputing…') : t('Recompute')}
         </button>
       </div>
       {error && (
-        <div style={{ color: '#ef4444', fontSize: '0.64rem', marginBottom: '0.3rem' }}>
-          {error} <button style={smallBtn('#ef4444')} onClick={() => setError(null)}>{t('dismiss')}</button>
+        <div style={{ color: 'var(--status-alarm)', fontSize: fs.label, marginBottom: '0.3rem' }}>
+          {error} <button style={smallBtn('var(--status-alarm)')} onClick={() => setError(null)}>{t('dismiss')}</button>
         </div>
       )}
       {adding && (
@@ -194,13 +195,13 @@ export function ParameterPanel({ elementId, studyId, compact }: { elementId: str
           <input value={newUnit} onChange={e => setNewUnit(e.target.value)} placeholder={t('unit')} style={{ ...inputStyle, width: 60 }} />
           <input value={newValue} onChange={e => setNewValue(e.target.value)} placeholder={t('value (optional)')} style={{ ...inputStyle, width: 110 }}
             onKeyDown={e => e.key === 'Enter' && addParam()} />
-          <button style={smallBtn('#10b981')} disabled={!newName.trim()} onClick={addParam}>{t('add')}</button>
+          <button style={smallBtn('var(--status-ok)')} disabled={!newName.trim()} onClick={addParam}>{t('add')}</button>
           <button style={smallBtn()} onClick={() => setAdding(false)}>{t('cancel')}</button>
         </div>
       )}
       {isLoading && <div style={{ color: 'var(--text-secondary)' }}>{t('Loading…')}</div>}
       {!isLoading && params.length === 0 && (
-        <div style={{ color: 'var(--text-secondary)', fontSize: '0.64rem' }}>{t('No parameters on this element yet.')}</div>
+        <div style={{ color: 'var(--text-secondary)', fontSize: fs.label }}>{t('No parameters on this element yet.')}</div>
       )}
       {params.length > 0 && (
         <table style={{ borderCollapse: 'collapse', width: '100%' }}>
@@ -223,14 +224,14 @@ export function ParameterPanel({ elementId, studyId, compact }: { elementId: str
                         onKeyDown={e => { if (e.key === 'Enter') commitEdit(p); if (e.key === 'Escape') setEditing(null) }} />
                     ) : (
                       <span onDoubleClick={() => startEdit(p)} title={t('manual {{manual}} · computed {{computed}} · reference {{reference}}', { manual: fmt(p.manual_value), computed: fmt(p.computed_value), reference: fmt(p.reference_value) })}
-                        style={{ color: hasErr ? '#ef4444' : 'var(--text-primary)', cursor: 'text', fontVariantNumeric: 'tabular-nums' }}>
+                        style={{ color: hasErr ? 'var(--status-alarm)' : 'var(--text-primary)', cursor: 'text', fontVariantNumeric: 'tabular-nums' }}>
                         {fmt(p.effective_value)}
                       </span>
                     )}
                   </td>
                   <td style={{ ...td, color: 'var(--text-secondary)' }}>{p.unit || ''}</td>
                   <td style={td}>
-                    <select value={p.value_switch} onChange={e => setSwitch(p, e.target.value as ValueSwitch)} style={{ ...inputStyle, fontSize: '0.58rem', padding: '0 0.15rem' }}>
+                    <select value={p.value_switch} onChange={e => setSwitch(p, e.target.value as ValueSwitch)} style={{ ...inputStyle, fontSize: fs.label, padding: '0 0.15rem' }}>
                       {VALUE_SWITCHES.map(s => <option key={s} value={s}>{SWITCH_LABELS[s] ? t(SWITCH_LABELS[s]) : s}</option>)}
                     </select>
                   </td>
@@ -239,12 +240,12 @@ export function ParameterPanel({ elementId, studyId, compact }: { elementId: str
                       <input value={formula} onChange={e => setFormula(e.target.value)} placeholder={t('e.g. mass_kg * 1.2 or el("Bus").power_avg_w')} style={{ ...monoInput, width: '100%' }}
                         onKeyDown={e => { if (e.key === 'Enter') commitEdit(p); if (e.key === 'Escape') setEditing(null) }} />
                     ) : (
-                      <span onDoubleClick={() => startEdit(p)} style={{ fontFamily: 'ui-monospace, monospace', fontSize: '0.6rem', color: p.formula ? '#c4b5fd' : 'var(--text-secondary)', cursor: 'text' }}>
+                      <span onDoubleClick={() => startEdit(p)} style={{ fontFamily: 'ui-monospace, monospace', fontSize: fs.label, color: p.formula ? 'var(--cat-2)' : 'var(--text-secondary)', cursor: 'text' }}>
                         {p.formula ? `= ${p.formula}` : '—'}
                         {p.formula && p.formula_kind && <span style={{ opacity: 0.6 }}> [{p.formula_kind}]</span>}
                       </span>
                     )}
-                    {hasErr && <div style={{ color: '#ef4444', fontSize: '0.58rem', marginTop: '0.1rem' }}>{p.errors.join('; ')}</div>}
+                    {hasErr && <div style={{ color: 'var(--status-alarm)', fontSize: fs.label, marginTop: '0.1rem' }}>{p.errors.join('; ')}</div>}
                   </td>
                   <td style={{ ...td, whiteSpace: 'nowrap' }}>
                     <ProvenanceChip p={p.provenance} />
@@ -252,11 +253,11 @@ export function ParameterPanel({ elementId, studyId, compact }: { elementId: str
                   </td>
                   <td style={{ ...td, whiteSpace: 'nowrap' }}>
                     {isEd ? (<>
-                      <button style={smallBtn('#10b981')} onClick={() => commitEdit(p)}>{t('save')}</button>{' '}
+                      <button style={smallBtn('var(--status-ok)')} onClick={() => commitEdit(p)}>{t('save')}</button>{' '}
                       <button style={smallBtn()} onClick={() => setEditing(null)}>{t('cancel')}</button>
                     </>) : (<>
                       <button style={smallBtn()} onClick={() => startEdit(p)}>{t('edit')}</button>{' '}
-                      <button style={smallBtn('#ef4444')}
+                      <button style={smallBtn('var(--status-alarm)')}
                         title={p.option_id ? t('Remove the override from option "{{name}}" (the baseline value shows through)', { name: optionName }) : t('Delete (well-known parameters are reset to the column value)')}
                         disabled={!!optionId && !p.option_id}
                         onClick={() => remove.mutate(p.name)}>×</button>
@@ -281,7 +282,7 @@ export function ParameterSection({ elementId, studyId, elementName, defaultOpen 
   if (!elementId) return null
   return (
     <div style={{ marginTop: '0.5rem', borderTop: '1px solid var(--border)', paddingTop: '0.4rem' }}>
-      <button onClick={() => setOpen(v => !v)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.68rem', color: '#8b5cf6', fontWeight: 600, padding: 0 }}>
+      <button onClick={() => setOpen(v => !v)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: fs.label, color: 'var(--cat-2)', fontWeight: 600, padding: 0 }}>
         {open ? '▾' : '▸'} {elementName ? t('Parameters & equations: {{name}}', { name: elementName }) : t('Parameters & equations')}
       </button>
       {open && <div style={{ marginTop: '0.3rem' }}><ParameterPanel elementId={elementId} studyId={studyId} compact /></div>}

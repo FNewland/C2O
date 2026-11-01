@@ -7,6 +7,7 @@
 import { useState, useMemo, useRef, useCallback } from 'react'
 import { useDesignStore } from '../stores/designStore'
 import { useApplyToDesign } from '../hooks/useApplyToDesign'
+import { fs } from '../theme/tokens'
 
 interface LinkBudgetLine {
   label: string
@@ -58,8 +59,6 @@ export function LinkBudgetTool() {
 
     const eirp = 10 * Math.log10(txPower) + txGain - txLosses
     const fspl = 20 * Math.log10(4 * Math.PI * slantRange * 1000 / wavelength)
-    const totalPathLoss = fspl + atmosphericLoss + pointingLoss + polLoss
-    const receivedPower = eirp - totalPathLoss + rxGain
     const gt = rxGain - 10 * Math.log10(rxTemp)
     const cn0 = eirp - fspl - atmosphericLoss - pointingLoss - polLoss + gt - k
     const ebN0 = cn0 - 10 * Math.log10(dataRate)
@@ -104,23 +103,23 @@ export function LinkBudgetTool() {
   return (
     <div style={{ padding: '1rem', overflowY: 'auto', height: '100%' }}>
       <h2 style={{ marginBottom: '0.25rem' }}>Link Budget Calculator</h2>
-      <p style={{ fontSize: '0.75rem', color: '#9ca3af', marginBottom: '0.75rem' }}>
+      <p style={{ fontSize: fs.label, color: 'var(--text-2)', marginBottom: '0.75rem' }}>
         Per ECSS-E-ST-50-05C. Edit any parameter to see the impact on link margin.
       </p>
 
       {/* Uplink / Downlink toggle */}
       <div style={{ display: 'flex', gap: '0.3rem', marginBottom: '0.75rem' }}>
         <button onClick={() => setLinkDirection('downlink')} style={{
-          padding: '0.25rem 0.75rem', fontSize: '0.78rem', borderRadius: '4px', cursor: 'pointer',
-          background: linkDirection === 'downlink' ? '#3b82f6' : 'var(--bg-secondary, #1f2937)',
-          color: linkDirection === 'downlink' ? 'white' : '#9ca3af',
-          border: `1px solid ${linkDirection === 'downlink' ? '#3b82f6' : '#374151'}`,
+          padding: '0.25rem 0.75rem', fontSize: fs.label, borderRadius: '4px', cursor: 'pointer',
+          background: linkDirection === 'downlink' ? 'var(--interactive)' : 'var(--bg-secondary, var(--surface-2))',
+          color: linkDirection === 'downlink' ? 'white' : 'var(--text-2)',
+          border: `1px solid ${linkDirection === 'downlink' ? 'var(--interactive)' : 'var(--line)'}`,
         }}>Downlink (Space→Ground)</button>
         <button onClick={() => setLinkDirection('uplink')} style={{
-          padding: '0.25rem 0.75rem', fontSize: '0.78rem', borderRadius: '4px', cursor: 'pointer',
-          background: linkDirection === 'uplink' ? '#8b5cf6' : 'var(--bg-secondary, #1f2937)',
-          color: linkDirection === 'uplink' ? 'white' : '#9ca3af',
-          border: `1px solid ${linkDirection === 'uplink' ? '#8b5cf6' : '#374151'}`,
+          padding: '0.25rem 0.75rem', fontSize: fs.label, borderRadius: '4px', cursor: 'pointer',
+          background: linkDirection === 'uplink' ? 'var(--cat-2)' : 'var(--bg-secondary, var(--surface-2))',
+          color: linkDirection === 'uplink' ? 'white' : 'var(--text-2)',
+          border: `1px solid ${linkDirection === 'uplink' ? 'var(--cat-2)' : 'var(--line)'}`,
         }}>Uplink (Ground→Space)</button>
       </div>
 
@@ -128,7 +127,7 @@ export function LinkBudgetTool() {
         {/* Input column */}
         <div>
           <div className="card">
-            <h3 style={{ fontSize: '0.85rem', marginBottom: '0.4rem' }}>
+            <h3 style={{ fontSize: fs.body, marginBottom: '0.4rem' }}>
               Transmitter ({linkDirection === 'downlink' ? 'Spacecraft' : 'Ground Station'})
             </h3>
             <InputRow label="TX Power (W)" value={txPower} onChange={setTxPower} step={0.5} />
@@ -137,14 +136,14 @@ export function LinkBudgetTool() {
             <InputRow label="Frequency (MHz)" value={frequency} onChange={setFrequency} step={100} />
           </div>
           <div className="card">
-            <h3 style={{ fontSize: '0.85rem', marginBottom: '0.4rem' }}>Path</h3>
+            <h3 style={{ fontSize: fs.body, marginBottom: '0.4rem' }}>Path</h3>
             <InputRow label="Slant Range (km)" value={slantRange} onChange={setSlantRange} step={50} />
             <InputRow label="Atmospheric Loss (dB)" value={atmosphericLoss} onChange={setAtmosphericLoss} step={0.1} />
             <InputRow label="Pointing Loss (dB)" value={pointingLoss} onChange={setPointingLoss} step={0.1} />
             <InputRow label="Polarisation Loss (dB)" value={polLoss} onChange={setPolLoss} step={0.1} />
           </div>
           <div className="card">
-            <h3 style={{ fontSize: '0.85rem', marginBottom: '0.4rem' }}>Receiver (Ground)</h3>
+            <h3 style={{ fontSize: fs.body, marginBottom: '0.4rem' }}>Receiver (Ground)</h3>
             <InputRow label="RX Antenna Gain (dBi)" value={rxGain} onChange={setRxGain} step={1} />
             <InputRow label="System Temp (K)" value={rxTemp} onChange={setRxTemp} step={10} />
             <InputRow label="Data Rate (bps)" value={dataRate} onChange={setDataRate} step={100000} />
@@ -155,10 +154,10 @@ export function LinkBudgetTool() {
 
         {/* Budget cascade column */}
         <div className="card">
-          <h3 style={{ fontSize: '0.85rem', marginBottom: '0.4rem' }}>Link Budget Cascade</h3>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.75rem' }}>
+          <h3 style={{ fontSize: fs.body, marginBottom: '0.4rem' }}>Link Budget Cascade</h3>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs.label }}>
             <thead>
-              <tr style={{ background: 'var(--bg-primary, #0a0e1a)' }}>
+              <tr style={{ background: 'var(--bg-primary, var(--surface-0))' }}>
                 <th style={th}>Parameter</th>
                 <th style={thR}>Value</th>
                 <th style={th}>Notes</th>
@@ -167,17 +166,17 @@ export function LinkBudgetTool() {
             <tbody>
               {budget.map((line, i) => (
                 <tr key={i} style={{
-                  borderBottom: line.type === 'result' ? '2px solid #374151' : '1px solid rgba(255,255,255,0.05)',
+                  borderBottom: line.type === 'result' ? '2px solid var(--line)' : '1px solid color-mix(in srgb, var(--text) 5%, transparent)',
                   background: line.label === 'LINK MARGIN' ? (margin >= 3 ? 'rgba(16,185,129,0.1)' : margin >= 0 ? 'rgba(245,158,11,0.1)' : 'rgba(239,68,68,0.1)') : 'transparent',
                 }}>
                   <td style={{ ...td, fontWeight: line.type === 'result' ? 700 : 400 }}>{line.label}</td>
                   <td style={{
                     ...tdR, fontWeight: line.type === 'result' ? 700 : 400,
-                    color: line.type === 'gain' ? '#10b981' : line.type === 'loss' ? '#ef4444' : line.label === 'LINK MARGIN' ? (margin >= 3 ? '#10b981' : margin >= 0 ? '#f59e0b' : '#ef4444') : '#d1d5db',
+                    color: line.type === 'gain' ? 'var(--status-ok)' : line.type === 'loss' ? 'var(--status-alarm)' : line.label === 'LINK MARGIN' ? (margin >= 3 ? 'var(--status-ok)' : margin >= 0 ? 'var(--status-caution)' : 'var(--status-alarm)') : 'var(--text)',
                   }}>
                     {line.value >= 0 ? '+' : ''}{line.value.toFixed(1)} {line.unit}
                   </td>
-                  <td style={{ ...td, fontSize: '0.68rem', color: '#6b7280' }}>{line.notes}</td>
+                  <td style={{ ...td, fontSize: fs.label, color: 'var(--text-3)' }}>{line.notes}</td>
                 </tr>
               ))}
             </tbody>
@@ -187,7 +186,7 @@ export function LinkBudgetTool() {
 
       {/* Apply to design */}
       <button className="btn" onClick={async () => { await apply(); setApplied(true); setTimeout(() => setApplied(false), 2000) }}
-        style={{ marginTop: '0.75rem', width: '100%', background: applied ? '#10b981' : '#3b82f6', fontSize: '0.82rem' }}>
+        style={{ marginTop: '0.75rem', width: '100%', background: applied ? 'var(--status-ok)' : 'var(--interactive)', fontSize: fs.body }}>
         {applied ? 'Applied — reconverging...' : 'Apply to Design'}
       </button>
     </div>
@@ -197,17 +196,17 @@ export function LinkBudgetTool() {
 function InputRow({ label, value, onChange, step }: { label: string; value: number; onChange: (v: number) => void; step: number }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.3rem' }}>
-      <span style={{ flex: 1, fontSize: '0.72rem', color: '#9ca3af' }}>{label}</span>
+      <span style={{ flex: 1, fontSize: fs.label, color: 'var(--text-2)' }}>{label}</span>
       <input className="input" type="number" value={value} step={step}
         onChange={e => onChange(Number(e.target.value))}
-        style={{ width: '80px', fontSize: '0.72rem', textAlign: 'right' }} />
+        style={{ width: '80px', fontSize: fs.label, textAlign: 'right' }} />
     </div>
   )
 }
 
 function round(v: number): number { return Math.round(v * 10) / 10 }
 
-const th: React.CSSProperties = { padding: '0.3rem 0.5rem', textAlign: 'left', fontSize: '0.65rem', color: '#9ca3af', textTransform: 'uppercase' }
+const th: React.CSSProperties = { padding: '0.3rem 0.5rem', textAlign: 'left', fontSize: fs.label, color: 'var(--text-2)', textTransform: 'uppercase' }
 const thR: React.CSSProperties = { ...th, textAlign: 'right' }
 const td: React.CSSProperties = { padding: '0.25rem 0.5rem' }
 const tdR: React.CSSProperties = { ...td, textAlign: 'right', fontFamily: 'monospace' }

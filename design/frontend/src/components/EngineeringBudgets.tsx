@@ -15,6 +15,7 @@ import { useDesignStore } from '../stores/designStore'
 import { useActiveParameters } from '../hooks/useActiveParameters'
 import { useSessionStore } from '../stores/sessionStore'
 import { useEquipmentView } from '../hooks/useEquipmentView'
+import { fs } from '../theme/tokens'
 
 type BudgetType = 'mass' | 'power' | 'link' | 'pointing' | 'deltav' | 'volume' | 'data' | 'cost'
 
@@ -48,14 +49,14 @@ const MARGIN_POLICY = {
 }
 
 const BUDGET_CONFIGS: { type: BudgetType; label: string; unit: string; color: string }[] = [
-  { type: 'mass', label: 'Mass Budget', unit: 'kg', color: '#3b82f6' },
-  { type: 'power', label: 'Power Budget', unit: 'W', color: '#f59e0b' },
-  { type: 'link', label: 'Link Budget (Down)', unit: 'dB', color: '#ec4899' },
-  { type: 'pointing', label: 'Pointing Budget', unit: 'deg', color: '#06b6d4' },
-  { type: 'deltav', label: 'Delta-V Budget', unit: 'm/s', color: '#f97316' },
-  { type: 'volume', label: 'Volume Budget', unit: 'cm3', color: '#84cc16' },
-  { type: 'data', label: 'Data Budget', unit: 'GB/day', color: '#8b5cf6' },
-  { type: 'cost', label: 'Cost Budget', unit: 'kEUR', color: '#14b8a6' },
+  { type: 'mass', label: 'Mass Budget', unit: 'kg', color: 'var(--interactive)' },
+  { type: 'power', label: 'Power Budget', unit: 'W', color: 'var(--status-caution)' },
+  { type: 'link', label: 'Link Budget (Down)', unit: 'dB', color: 'var(--cat-6)' },
+  { type: 'pointing', label: 'Pointing Budget', unit: 'deg', color: 'var(--interactive)' },
+  { type: 'deltav', label: 'Delta-V Budget', unit: 'm/s', color: 'var(--status-caution)' },
+  { type: 'volume', label: 'Volume Budget', unit: 'cm3', color: 'var(--cat-7)' },
+  { type: 'data', label: 'Data Budget', unit: 'GB/day', color: 'var(--cat-2)' },
+  { type: 'cost', label: 'Cost Budget', unit: 'kEUR', color: 'var(--cat-3)' },
 ]
 
 export function EngineeringBudgets() {
@@ -81,7 +82,6 @@ export function EngineeringBudgets() {
   // Compute all budgets
   const budgets = useMemo<Record<BudgetType, BudgetSummary>>(() => {
     const equipMass = selectedEquipment.reduce((s, e) => s + e.mass_kg * e.quantity, 0)
-    const equipPower = selectedEquipment.reduce((s, e) => s + e.power_w * e.quantity, 0)
     const equipCost = selectedEquipment.reduce((s, e) => s + e.cost_keur * e.quantity, 0)
 
     // Mass budget
@@ -157,14 +157,14 @@ export function EngineeringBudgets() {
   }, [params, requirements, selectedEquipment, margins])
 
   const active = budgets[activeBudget]
-  const statusColors = { green: '#10b981', amber: '#f59e0b', red: '#ef4444' }
+  const statusColors = { green: 'var(--status-ok)', amber: 'var(--status-caution)', red: 'var(--status-alarm)' }
 
   return (
     <div style={{ padding: '1rem', overflowY: 'auto', height: '100%' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
         <h2 style={{ margin: 0 }}>Engineering Budgets</h2>
         <select className="select" value={designPhase} onChange={e => setDesignPhase(e.target.value as any)}
-          style={{ fontSize: '0.72rem', width: 'auto' }}>
+          style={{ fontSize: fs.label, width: 'auto' }}>
           <option value="phase_a">Phase A (20% margins)</option>
           <option value="phase_b">Phase B (15% margins)</option>
           <option value="phase_c">Phase C (10% margins)</option>
@@ -172,12 +172,12 @@ export function EngineeringBudgets() {
         {Object.keys(parameterOverrides).length > 0 && (
           <button className="btn btn-sm" onClick={() => {
             useDesignStore.setState({ parameterOverrides: {}, designStale: true })
-          }} style={{ fontSize: '0.65rem', background: '#374151', color: '#9ca3af' }}>
+          }} style={{ fontSize: fs.label, background: 'var(--line)', color: 'var(--text-2)' }}>
             Clear {Object.keys(parameterOverrides).length} override{Object.keys(parameterOverrides).length !== 1 ? 's' : ''}
           </button>
         )}
       </div>
-      <p style={{ fontSize: '0.72rem', color: '#9ca3af', marginBottom: '0.75rem' }}>
+      <p style={{ fontSize: fs.label, color: 'var(--text-2)', marginBottom: '0.75rem' }}>
         Per ECSS-E-HB-10-02A. Margins decrease with design maturity. Equipment margins: COTS {margins.off_the_shelf}%, modified {margins.modified}%, new {margins.new_design}%. System margin: {margins.system}%.
       </p>
 
@@ -188,32 +188,32 @@ export function EngineeringBudgets() {
           return (
             <button key={bc.type} onClick={() => setActiveBudget(bc.type)} style={{
               padding: '0.4rem', borderRadius: '6px', cursor: 'pointer', textAlign: 'center',
-              background: activeBudget === bc.type ? `${bc.color}22` : 'var(--bg-secondary, #1f2937)',
-              border: `1.5px solid ${activeBudget === bc.type ? bc.color : statusColors[b.status] + '60'}`,
+              background: activeBudget === bc.type ? `color-mix(in srgb, ${bc.color} 13%, transparent)` : 'var(--bg-secondary, var(--surface-2))',
+              border: `1.5px solid ${activeBudget === bc.type ? bc.color : `color-mix(in srgb, ${statusColors[b.status]} 38%, transparent)`}`,
               borderTop: `3px solid ${statusColors[b.status]}`,
             }}>
-              <div style={{ fontSize: '0.65rem', color: '#9ca3af' }}>{bc.label}</div>
-              <div style={{ fontSize: '0.9rem', fontWeight: 700, color: statusColors[b.status], fontFamily: 'monospace' }}>
+              <div style={{ fontSize: fs.label, color: 'var(--text-2)' }}>{bc.label}</div>
+              <div style={{ fontSize: fs.value, fontWeight: 700, color: statusColors[b.status], fontFamily: 'monospace' }}>
                 {b.margin_pct.toFixed(0)}%
               </div>
-              <div style={{ fontSize: '0.6rem', color: '#6b7280' }}>{bc.unit}</div>
+              <div style={{ fontSize: fs.label, color: 'var(--text-3)' }}>{bc.unit}</div>
             </button>
           )
         })}
       </div>
 
       {/* Active budget detail */}
-      <div className="card" style={{ borderLeft: `3px solid ${BUDGET_CONFIGS.find(c => c.type === activeBudget)?.color || '#6b7280'}` }}>
+      <div className="card" style={{ borderLeft: `3px solid ${BUDGET_CONFIGS.find(c => c.type === activeBudget)?.color || 'var(--text-3)'}` }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.4rem' }}>
-          <h3 style={{ fontSize: '0.9rem', margin: 0 }}>{active.label} Budget</h3>
+          <h3 style={{ fontSize: fs.value, margin: 0 }}>{active.label} Budget</h3>
           <span style={{
-            fontSize: '0.65rem', padding: '0.1rem 0.4rem', borderRadius: '3px',
-            background: `${statusColors[active.status]}22`, color: statusColors[active.status], fontWeight: 700,
+            fontSize: fs.label, padding: '0.1rem 0.4rem', borderRadius: '3px',
+            background: `color-mix(in srgb, ${statusColors[active.status]} 13%, transparent)`, color: statusColors[active.status], fontWeight: 700,
           }}>{active.status === 'green' ? 'HEALTHY' : active.status === 'amber' ? 'TIGHT' : 'EXCEEDED'}</span>
         </div>
 
         {/* Summary bar */}
-        <div style={{ display: 'flex', gap: '1rem', fontSize: '0.75rem', marginBottom: '0.5rem' }}>
+        <div style={{ display: 'flex', gap: '1rem', fontSize: fs.label, marginBottom: '0.5rem' }}>
           <span>Nominal: <strong>{active.total_nominal.toFixed(2)} {active.unit}</strong></span>
           <span>With margin: <strong>{active.total_with_margin.toFixed(2)} {active.unit}</strong></span>
           <span>Allocation: <strong>{active.allocation.toFixed(2)} {active.unit}</strong></span>
@@ -223,23 +223,23 @@ export function EngineeringBudgets() {
         </div>
 
         {/* Progress bar */}
-        <div style={{ height: 16, background: '#1f2937', borderRadius: '4px', overflow: 'hidden', marginBottom: '0.5rem', position: 'relative' }}>
+        <div style={{ height: 16, background: 'var(--surface-2)', borderRadius: '4px', overflow: 'hidden', marginBottom: '0.5rem', position: 'relative' }}>
           <div style={{ height: '100%', width: `${Math.min(100, (active.total_with_margin / Math.max(active.allocation, 0.01)) * 100)}%`, background: statusColors[active.status], borderRadius: '4px' }} />
-          <span style={{ position: 'absolute', right: 4, top: 0, bottom: 0, display: 'flex', alignItems: 'center', fontSize: '0.6rem', color: 'white', fontWeight: 600 }}>
+          <span style={{ position: 'absolute', right: 4, top: 0, bottom: 0, display: 'flex', alignItems: 'center', fontSize: fs.label, color: 'white', fontWeight: 600 }}>
             {((active.total_with_margin / Math.max(active.allocation, 0.01)) * 100).toFixed(0)}% used
           </span>
         </div>
 
         {/* Per-subsystem breakdown (for mass and power) — EDITABLE */}
         {active.lines.length > 0 && (
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.72rem' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs.label }}>
             <thead>
-              <tr style={{ background: 'var(--bg-primary, #0a0e1a)' }}>
-                <th style={{ padding: '0.25rem 0.5rem', textAlign: 'left', fontSize: '0.65rem', color: '#9ca3af' }}>Subsystem</th>
-                <th style={{ padding: '0.25rem 0.5rem', textAlign: 'right', fontSize: '0.65rem', color: '#9ca3af' }}>Nominal (edit)</th>
-                <th style={{ padding: '0.25rem 0.5rem', textAlign: 'right', fontSize: '0.65rem', color: '#9ca3af' }}>Margin %</th>
-                <th style={{ padding: '0.25rem 0.5rem', textAlign: 'right', fontSize: '0.65rem', color: '#9ca3af' }}>With Margin</th>
-                <th style={{ padding: '0.25rem 0.5rem', textAlign: 'left', fontSize: '0.65rem', color: '#9ca3af' }}>Source</th>
+              <tr style={{ background: 'var(--bg-primary, var(--surface-0))' }}>
+                <th style={{ padding: '0.25rem 0.5rem', textAlign: 'left', fontSize: fs.label, color: 'var(--text-2)' }}>Subsystem</th>
+                <th style={{ padding: '0.25rem 0.5rem', textAlign: 'right', fontSize: fs.label, color: 'var(--text-2)' }}>Nominal (edit)</th>
+                <th style={{ padding: '0.25rem 0.5rem', textAlign: 'right', fontSize: fs.label, color: 'var(--text-2)' }}>Margin %</th>
+                <th style={{ padding: '0.25rem 0.5rem', textAlign: 'right', fontSize: fs.label, color: 'var(--text-2)' }}>With Margin</th>
+                <th style={{ padding: '0.25rem 0.5rem', textAlign: 'left', fontSize: fs.label, color: 'var(--text-2)' }}>Source</th>
               </tr>
             </thead>
             <tbody>
@@ -259,7 +259,7 @@ export function EngineeringBudgets() {
                 const paramId = paramMap[l.subsystem]
                 const isOverridden = paramId && paramId in parameterOverrides
                 return (
-                <tr key={l.subsystem} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', background: isOverridden ? 'rgba(59,130,246,0.05)' : 'transparent' }}>
+                <tr key={l.subsystem} style={{ borderBottom: '1px solid color-mix(in srgb, var(--text) 5%, transparent)', background: isOverridden ? 'rgba(59,130,246,0.05)' : 'transparent' }}>
                   <td style={{ padding: '0.2rem 0.5rem' }}>{l.subsystem}</td>
                   <td style={{ padding: '0.2rem 0.5rem', textAlign: 'right' }}>
                     <input className="input" type="number" step={0.1} value={l.value.toFixed(2)}
@@ -270,30 +270,30 @@ export function EngineeringBudgets() {
                           if (sendEdit) sendEdit(paramId, newVal, { rationale: `Manual budget edit: ${l.subsystem}` })
                         }
                       }}
-                      style={{ width: '65px', fontSize: '0.72rem', textAlign: 'right', fontFamily: 'monospace' }} />
+                      style={{ width: '65px', fontSize: fs.value, textAlign: 'right', fontFamily: 'monospace' }} />
                   </td>
-                  <td style={{ padding: '0.2rem 0.5rem', textAlign: 'right', color: '#6b7280' }}>+{l.margin_pct}%</td>
+                  <td style={{ padding: '0.2rem 0.5rem', textAlign: 'right', color: 'var(--text-3)' }}>+{l.margin_pct}%</td>
                   <td style={{ padding: '0.2rem 0.5rem', textAlign: 'right', fontFamily: 'monospace', fontWeight: 600 }}>{l.value_with_margin.toFixed(3)}</td>
-                  <td style={{ padding: '0.2rem 0.5rem', fontSize: '0.6rem' }}>
+                  <td style={{ padding: '0.2rem 0.5rem', fontSize: fs.label }}>
                     {(() => {
                       if (isOverridden) {
                         return (
                           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.2rem' }}>
-                            <span style={{ color: '#3b82f6', fontWeight: 600 }}>override</span>
+                            <span style={{ color: 'var(--interactive)', fontWeight: 600 }}>override</span>
                             <button onClick={() => {
                               const next = { ...parameterOverrides }
                               delete next[paramId]
                               useDesignStore.setState({ parameterOverrides: next, designStale: true })
-                            }} style={{ background: 'none', border: 'none', color: '#6b7280', cursor: 'pointer', fontSize: '0.6rem' }} title="Reset to computed value">↺</button>
+                            }} style={{ background: 'none', border: 'none', color: 'var(--text-3)', cursor: 'pointer', fontSize: fs.label }} title="Reset to computed value">↺</button>
                           </span>
                         )
                       }
-                      return <span style={{ color: l.source === 'equipment' ? '#10b981' : '#6b7280' }}>{l.source}</span>
+                      return <span style={{ color: l.source === 'equipment' ? 'var(--status-ok)' : 'var(--text-3)' }}>{l.source}</span>
                     })()}
                   </td>
                 </tr>
               )})}
-              <tr style={{ borderTop: '2px solid #374151', fontWeight: 700 }}>
+              <tr style={{ borderTop: '2px solid var(--line)', fontWeight: 700 }}>
                 <td style={{ padding: '0.2rem 0.5rem' }}>Total + System ({margins.system}%)</td>
                 <td style={{ padding: '0.2rem 0.5rem', textAlign: 'right', fontFamily: 'monospace' }}>{active.total_nominal.toFixed(3)}</td>
                 <td style={{ padding: '0.2rem 0.5rem', textAlign: 'right' }}></td>

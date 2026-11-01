@@ -109,14 +109,43 @@ payload that was correctly switched off already, on every orbit.
 
 | Rule ID | Condition                      | Detection       | Response                    |
 |---------|--------------------------------|----------------|-----------------------------|
-| TTC-01  | No valid telecommand for > 24 hours | link_status | Switch to redundant XPDR    |
+| TTC-01  | No valid telecommand for > 24 hours | 0x053D ≥ 86400 s → event 0x0514 | Switch to redundant XPDR (S19 ea 4003) |
 | TTC-02  | XPDR temp out of range         | 0x0507         | Switch transponder          |
+| TTC-03  | Uplink lock dropout (lock lost and regained within 60 s) | event 0x0513 | TX power HIGH, 5 W (S19 ea 4001) |
 
-TTC-01 is a command-loss timer: 24 h without a valid telecommand. The value lives in
-`subsystems/ttc.yaml` as `cmd_loss_switch_timeout_s` (86400 s), next to the RSSI degradation
-threshold `cmd_loss_rssi_threshold_dbm` (-105 dBm). Event 0x0511 UPLINK_TIMEOUT reports
-an uplink timeout to the ground; a switchover can always be commanded from the ground
-(`TTC_SWITCH_REDUNDANT`, see `05_ttc.md` §6.1).
+**What the spacecraft can and cannot see.** Link margin (0x0503), BER (0x050C),
+Eb/N0 (0x0519), AGC (0x051A) and downlink RSSI (0x0502) are measured by the
+**ground** receiver (`visibility: ground_derived`). The spacecraft cannot
+measure them, so no on-board rule can use them. Until November 2026, rules 4001 and
+4003 triggered on link margin and BER, and so could never fire. The two TTC
+autonomy rules now trigger on what the on-board receiver and OBC really
+observe:
+
+- **TTC-01: command-loss timer (ea 4003).** 0x053D `ttc.time_since_last_tc`
+  counts the seconds since the OBC last accepted a telecommand, and every S1.1
+  acceptance restarts it. When it reaches `cmd_loss_switch_timeout_s` in
+  `subsystems/ttc.yaml` (86400 s), event 0x0514 CMD_LOSS_TIMEOUT fires once,
+  and S19 ea 4003 dispatches `TTC_SWITCH_REDUNDANT` (S8 func 64). If the prime
+  receiver chain has gone deaf, the other one may still hear the ground. The
+  24 h value is long on purpose: a quiet weekend must not swap transponders.
+  The ground can always command the switch (`TTC_SWITCH_REDUNDANT`, see
+  `05_ttc.md` §6.1). Event 0x0511 UPLINK_TIMEOUT is a different signal (no
+  uplink lock for 300 s) and fires after every LOS.
+- **TTC-03: uplink lock dropout (ea 4001).** On board, a normal LOS and a
+  fade look identical at the moment the carrier lock drops. They differ only
+  in what happens next: after a fade, lock comes back within seconds; after
+  a LOS, it is gone for tens of minutes. Event 0x0513 UPLINK_LOCK_DROPOUT is
+  therefore raised when the lock is *regained* within 60 s of being lost.
+  S19 ea 4001 then commands `TTC_SET_TX_POWER` level 2 (HIGH, 5 W), which
+  gives the ground station about 4 dB more downlink while the pass is
+  marginal. The boost **latches**: once the pass is understood, the ground
+  restores NOMINAL (`TTC_SET_TX_POWER` level 1). Leaving the PA at 5 W costs
+  about 17 W DC on every pass and heats the PA towards the TTC-02/ea 4002
+  limit.
+
+The ground side of the same story is on the radio page and the TT&C page:
+the RF bridge computes BER and AGC at the ground receiver and alarms them
+with limits labelled **ground** (see `05_ttc.md`).
 
 ### 4.6 Payload Rules {#46-payload-rules}
 

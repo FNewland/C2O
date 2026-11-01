@@ -54,8 +54,8 @@
   },
   {
    "id": "ctg-004-thermal-exceedance/procedure-steps/step-4-adjust-heater-setpoints-or-escalate",
-   "en_hash": "7218db179d300b83",
-   "fr_hash": "03d77f2de3b4907d"
+   "en_hash": "dfac834d236c48ce",
+   "fr_hash": "c12432f4969956d8"
   },
   {
    "id": "ctg-004-thermal-exceedance/procedure-steps/step-5-confirm-recovery-and-restore-operations",
@@ -78,5 +78,5 @@
    "fr_hash": "7425a0351c1744bc"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "8067e5b"
 }

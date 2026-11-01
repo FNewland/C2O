@@ -34,8 +34,8 @@
   },
   {
    "id": "ctg-003-ttc-link-loss-recovery/procedure-steps/step-2-attempt-re-acquisition-on-primary-transponder",
-   "en_hash": "00ca26732efe9f0a",
-   "fr_hash": "f21c67fab686a593"
+   "en_hash": "abc28325b827e55b",
+   "fr_hash": "ec0c3c0bd7e5b1da"
   },
   {
    "id": "ctg-003-ttc-link-loss-recovery/procedure-steps/step-3-switch-to-redundant-transponder",
@@ -49,8 +49,8 @@
   },
   {
    "id": "ctg-003-ttc-link-loss-recovery/procedure-steps/step-5-verify-link-quality-and-subsystem-health",
-   "en_hash": "4bb6fad6a724a621",
-   "fr_hash": "d6c02453a6f982ad"
+   "en_hash": "48920f36a28ad0c8",
+   "fr_hash": "57a2ecdc78f9b5c6"
   },
   {
    "id": "ctg-003-ttc-link-loss-recovery/procedure-steps/step-6-escalation-no-link-recovery",
@@ -68,5 +68,5 @@
    "fr_hash": "d1aaa876820b5a1b"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "8067e5b"
 }

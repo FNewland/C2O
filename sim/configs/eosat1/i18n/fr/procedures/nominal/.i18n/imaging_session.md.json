@@ -49,8 +49,8 @@
   },
   {
    "id": "nom-002-imaging-session/procedure-steps/step-5-trigger-the-acquisitions",
-   "en_hash": "55c4748789f5a73d",
-   "fr_hash": "e4eb7db402b7f462"
+   "en_hash": "47fa7d16becfa0fa",
+   "fr_hash": "f5408490b961bf3d"
   },
   {
    "id": "nom-002-imaging-session/procedure-steps/step-5a-monitor-image-acquisition",
@@ -78,5 +78,5 @@
    "fr_hash": "18b2e92a54e17bee"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "8067e5b"
 }

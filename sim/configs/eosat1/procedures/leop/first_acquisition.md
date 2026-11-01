@@ -58,8 +58,8 @@ application-running platform.
 ### Step 3 — Verify Carrier Lock and Link Quality
 **Action:** Confirm ground station receiver has achieved carrier lock. Record measured Doppler offset for Flight Dynamics.
 **Verify:** `ttc.link_status` (0x0501) = 2 (LOCKED) within 30s
-**Verify:** `ttc.rssi` (0x0502) > -110 dBm within 30s
-**Verify:** `ttc.link_margin` (0x0503) > 3.0 dB
+**Verify:** TT&C page (ground): `ttc.rssi` (0x0502) > -126 dBm within 30s
+**Verify:** TT&C page (ground): `ttc.link_margin` (0x0503) > 3.0 dB
 **GO/NO-GO:** Stable carrier lock with positive link margin
 
 ### Step 4 — Confirm OBC is in Bootloader
@@ -96,7 +96,7 @@ application-running platform.
 **Verify:** `ttc.tm_data_rate` (0x0506) = 16000 bps and `ttc.tm_tier` (0x0539) = 1 (LOW)
 **Verify:** `ttc.tm_symbol_rate` (0x053B) = 16000 Bd
 **Note:** The full order of ON-BOARD gates on the ladder is: **beacon mode off** → LOW selectable; **antenna deployed** (func 69, COM-006) **+ DOWNLINK mode on** (func 79) → HIGH selectable. There is NO on-board elevation gate (2026-08c): the 10-deg rule on HIGH is GROUND arm-through policy — the MCS warns from its own contact geometry and the planner schedules HIGH dumps above it. Each unmet on-board gate is reported as its own S1.8 failure notice naming that gate; read the notice, not the code (they all report `0x0007`). See `docs/LINK_BUDGET_AND_RATES.md` §6.3.
-**Note:** LOW carries the full periodic HK set (1 557 bps of channel after RS and TM framing) at under 10 % duty, so the spacecraft never falls behind on housekeeping at the routine rate. The HIGH tier (128 kbps) is NOT entered here — it is only used for dumps (see NOM-011).
+**Note:** LOW carries the full periodic HK set (1 588 bps of channel after RS and TM framing) at under 10 % duty, so the spacecraft never falls behind on housekeeping at the routine rate. The HIGH tier (128 kbps) is NOT entered here — it is only used for dumps (see NOM-011).
 **GO/NO-GO:** Beacon mode cleared, downlink at LOW, ground demodulator reconfigured to 16 kBd
 
 ### Step 6 — Note the Unset Clock (do NOT sync here)

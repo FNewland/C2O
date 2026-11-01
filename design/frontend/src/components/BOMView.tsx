@@ -5,22 +5,23 @@
  * and SVG summary table. Reads from both element tree and backend endpoint.
  */
 import { useState, useMemo } from 'react'
-import { useModelStore, type MaturityLevel } from '../stores/modelStore'
+import { useModelStore } from '../stores/modelStore'
 import { useDesignStore } from '../stores/designStore'
+import { fs } from '../theme/tokens'
 
 const MATURITY_COLORS: Record<string, string> = {
-  specified: '#10b981',
-  selected: '#3b82f6',
-  estimated: '#f59e0b',
-  parametric: '#f97316',
-  undefined: '#6b7280',
+  specified: 'var(--status-ok)',
+  selected: 'var(--interactive)',
+  estimated: 'var(--status-caution)',
+  parametric: 'var(--status-caution)',
+  undefined: 'var(--text-3)',
 }
 
 const PROCUREMENT_LABELS: Record<string, { label: string; color: string }> = {
-  catalogue: { label: 'Catalogue', color: '#10b981' },
-  identified: { label: 'Identified', color: '#3b82f6' },
-  tbd: { label: 'TBD', color: '#f59e0b' },
-  available: { label: 'Available', color: '#10b981' },
+  catalogue: { label: 'Catalogue', color: 'var(--status-ok)' },
+  identified: { label: 'Identified', color: 'var(--interactive)' },
+  tbd: { label: 'TBD', color: 'var(--status-caution)' },
+  available: { label: 'Available', color: 'var(--status-ok)' },
 }
 
 interface BOMLine {
@@ -53,8 +54,6 @@ export function BOMView() {
   const studyId = useDesignStore(s => s.studyId)
   const missionName = useDesignStore(s => s.requirements?.name) || 'Mission'
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
-  const [loading, setLoading] = useState(false)
-  const [bomData, setBomData] = useState<any>(null)
 
   // Build BOM from element tree (client-side for instant rendering)
   const clientBom = useMemo(() => {
@@ -154,12 +153,12 @@ export function BOMView() {
 
   if (clientBom.components.length === 0) {
     return (
-      <div style={{ padding: '2rem', color: '#6b7280' }}>
-        <h3 style={{ fontSize: '1rem', marginBottom: '0.5rem', color: '#9ca3af' }}>Bill of Materials</h3>
-        <p style={{ fontSize: '0.78rem', marginBottom: '1rem' }}>
+      <div style={{ padding: '2rem', color: 'var(--text-3)' }}>
+        <h3 style={{ fontSize: fs.value, marginBottom: '0.5rem', color: 'var(--text-2)' }}>Bill of Materials</h3>
+        <p style={{ fontSize: fs.label, marginBottom: '1rem' }}>
           The BOM is generated from the element tree. To populate it:
         </p>
-        <ol style={{ fontSize: '0.72rem', paddingLeft: '1.2rem', lineHeight: 1.6 }}>
+        <ol style={{ fontSize: fs.label, paddingLeft: '1.2rem', lineHeight: 1.6 }}>
           <li>Run a design (Phase 0) to seed the element tree</li>
           <li>Select architecture options (Phase 2) to create subsystems</li>
           <li>Select equipment (Phase 3) to add components</li>
@@ -172,7 +171,7 @@ export function BOMView() {
     <div style={{ padding: '1rem', overflowY: 'auto', height: '100%' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.25rem' }}>
         <h2 style={{ margin: 0 }}>Bill of Materials</h2>
-        <span style={{ fontSize: '0.72rem', color: '#6b7280' }}>
+        <span style={{ fontSize: fs.label, color: 'var(--text-3)' }}>
           {clientBom.components.length} components across {Object.keys(clientBom.groups).length} subsystems
         </span>
       </div>
@@ -181,21 +180,21 @@ export function BOMView() {
       <div style={{
         display: 'flex', gap: '1rem', padding: '0.5rem 0.75rem', marginBottom: '0.75rem',
         background: 'rgba(16,185,129,0.06)', borderRadius: '6px', border: '1px solid rgba(16,185,129,0.15)',
-        fontSize: '0.75rem', flexWrap: 'wrap',
+        fontSize: fs.label, flexWrap: 'wrap',
       }}>
-        <span>Mass: <strong style={{ color: '#d1d5db', fontFamily: 'monospace' }}>{clientBom.totalMass.toFixed(2)} kg</strong></span>
-        <span>Power: <strong style={{ color: '#d1d5db', fontFamily: 'monospace' }}>{clientBom.totalPower.toFixed(1)} W</strong></span>
-        <span>Cost: <strong style={{ color: '#d1d5db', fontFamily: 'monospace' }}>{clientBom.totalCost.toFixed(0)} kEUR</strong></span>
-        <span>Mean TRL: <strong style={{ color: '#d1d5db', fontFamily: 'monospace' }}>{clientBom.meanTrl.toFixed(1)}</strong></span>
+        <span>Mass: <strong style={{ color: 'var(--text)', fontFamily: 'monospace' }}>{clientBom.totalMass.toFixed(2)} kg</strong></span>
+        <span>Power: <strong style={{ color: 'var(--text)', fontFamily: 'monospace' }}>{clientBom.totalPower.toFixed(1)} W</strong></span>
+        <span>Cost: <strong style={{ color: 'var(--text)', fontFamily: 'monospace' }}>{clientBom.totalCost.toFixed(0)} kEUR</strong></span>
+        <span>Mean TRL: <strong style={{ color: 'var(--text)', fontFamily: 'monospace' }}>{clientBom.meanTrl.toFixed(1)}</strong></span>
         <span style={{ flex: 1 }} />
-        <button className="btn btn-sm" onClick={expandAll} style={{ fontSize: '0.65rem' }}>Expand All</button>
-        <button className="btn btn-sm" onClick={collapseAll} style={{ fontSize: '0.65rem' }}>Collapse</button>
-        <button className="btn btn-sm" onClick={exportCSV} style={{ fontSize: '0.65rem', background: '#10b981' }}>CSV</button>
-        <button className="btn btn-sm" onClick={exportJSON} style={{ fontSize: '0.65rem', background: '#3b82f6' }}>JSON</button>
+        <button className="btn btn-sm" onClick={expandAll} style={{ fontSize: fs.label }}>Expand All</button>
+        <button className="btn btn-sm" onClick={collapseAll} style={{ fontSize: fs.label }}>Collapse</button>
+        <button className="btn btn-sm" onClick={exportCSV} style={{ fontSize: fs.label, background: 'var(--status-ok)' }}>CSV</button>
+        <button className="btn btn-sm" onClick={exportJSON} style={{ fontSize: fs.label, background: 'var(--interactive)' }}>JSON</button>
         {studyId && (
           <button className="btn btn-sm" onClick={() => {
             window.open(`/api/lifecycle/bom/${studyId}?fmt=csv`, '_blank')
-          }} style={{ fontSize: '0.65rem', background: '#8b5cf6' }}>.docx</button>
+          }} style={{ fontSize: fs.label, background: 'var(--cat-2)' }}>.docx</button>
         )}
       </div>
 
@@ -211,24 +210,24 @@ export function BOMView() {
             {/* Group header */}
             <button onClick={() => toggleGroup(subsysName)} style={{
               width: '100%', display: 'flex', alignItems: 'center', gap: '0.5rem',
-              padding: '0.35rem 0.75rem', background: 'var(--bg-secondary, #1f2937)',
-              border: '1px solid var(--border, #374151)', borderRadius: '4px',
-              cursor: 'pointer', color: '#d1d5db', fontSize: '0.78rem',
+              padding: '0.35rem 0.75rem', background: 'var(--bg-secondary, var(--surface-2))',
+              border: '1px solid var(--border, var(--line))', borderRadius: '4px',
+              cursor: 'pointer', color: 'var(--text)', fontSize: fs.label,
             }}>
-              <span style={{ fontSize: '0.7rem', color: '#6b7280' }}>{expanded ? '▼' : '▶'}</span>
+              <span style={{ fontSize: fs.label, color: 'var(--text-3)' }}>{expanded ? '▼' : '▶'}</span>
               <span style={{ fontWeight: 600 }}>{subsysName}</span>
-              <span style={{ color: '#6b7280', fontSize: '0.68rem' }}>{lines.length} items</span>
+              <span style={{ color: 'var(--text-3)', fontSize: fs.label }}>{lines.length} items</span>
               <span style={{ flex: 1 }} />
-              <span style={{ fontFamily: 'monospace', fontSize: '0.68rem', color: '#9ca3af' }}>
+              <span style={{ fontFamily: 'monospace', fontSize: fs.label, color: 'var(--text-2)' }}>
                 {groupMass.toFixed(2)} kg | {groupPower.toFixed(1)} W | {groupCost.toFixed(0)} kEUR
               </span>
             </button>
 
             {/* Component rows */}
             {expanded && (
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.7rem', marginTop: '0.1rem' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs.label, marginTop: '0.1rem' }}>
                 <thead>
-                  <tr style={{ background: 'var(--bg-primary, #0a0e1a)' }}>
+                  <tr style={{ background: 'var(--bg-primary, var(--surface-0))' }}>
                     <th style={th}>Item ID</th>
                     <th style={th}>Name</th>
                     <th style={thR}>Qty</th>
@@ -244,15 +243,15 @@ export function BOMView() {
                 </thead>
                 <tbody>
                   {lines.map(line => {
-                    const matColor = MATURITY_COLORS[line.maturity] || '#6b7280'
-                    const procInfo = PROCUREMENT_LABELS[line.procurement_status] || { label: line.procurement_status, color: '#6b7280' }
+                    const matColor = MATURITY_COLORS[line.maturity] || 'var(--text-3)'
+                    const procInfo = PROCUREMENT_LABELS[line.procurement_status] || { label: line.procurement_status, color: 'var(--text-3)' }
                     return (
-                      <tr key={line.line} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                        <td style={{ ...td, fontFamily: 'monospace', fontSize: '0.62rem', color: '#6b7280' }}>{line.item_id}</td>
+                      <tr key={line.line} style={{ borderBottom: '1px solid color-mix(in srgb, var(--text) 3%, transparent)' }}>
+                        <td style={{ ...td, fontFamily: 'monospace', fontSize: fs.label, color: 'var(--text-3)' }}>{line.item_id}</td>
                         <td style={td}>
                           {line.name}
                           {line.criticality === 'single-point' && (
-                            <span style={{ fontSize: '0.55rem', color: '#ef4444', marginLeft: '0.3rem' }} title="Single-point failure">SPF</span>
+                            <span style={{ fontSize: fs.label, color: 'var(--status-alarm)', marginLeft: '0.3rem' }} title="Single-point failure">SPF</span>
                           )}
                         </td>
                         <td style={tdR}>{line.quantity}</td>
@@ -261,16 +260,16 @@ export function BOMView() {
                         <td style={tdR}>{line.total_cost_keur.toFixed(1)}</td>
                         <td style={tdC}>
                           <span style={{
-                            color: line.trl >= 7 ? '#10b981' : line.trl >= 5 ? '#f59e0b' : '#ef4444',
+                            color: line.trl >= 7 ? 'var(--status-ok)' : line.trl >= 5 ? 'var(--status-caution)' : 'var(--status-alarm)',
                             fontWeight: 600,
                           }}>{line.trl || '?'}</span>
                         </td>
-                        <td style={{ ...td, fontSize: '0.65rem', color: '#9ca3af' }}>{line.manufacturer || '—'}</td>
-                        <td style={{ ...tdC, fontSize: '0.6rem' }}>{line.model_level}</td>
+                        <td style={{ ...td, fontSize: fs.label, color: 'var(--text-2)' }}>{line.manufacturer || '—'}</td>
+                        <td style={{ ...tdC, fontSize: fs.label }}>{line.model_level}</td>
                         <td style={tdC}>
                           <span style={{
-                            fontSize: '0.58rem', padding: '0.05rem 0.3rem', borderRadius: '3px',
-                            background: `${procInfo.color}15`, color: procInfo.color,
+                            fontSize: fs.label, padding: '0.05rem 0.3rem', borderRadius: '3px',
+                            background: `color-mix(in srgb, ${procInfo.color} 8%, transparent)`, color: procInfo.color,
                           }}>{procInfo.label}</span>
                         </td>
                         <td style={tdC}>
@@ -290,7 +289,7 @@ export function BOMView() {
       })}
 
       {/* Maturity legend */}
-      <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.75rem', fontSize: '0.62rem', color: '#6b7280', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.75rem', fontSize: fs.label, color: 'var(--text-3)', flexWrap: 'wrap' }}>
         {Object.entries(MATURITY_COLORS).map(([level, color]) => (
           <span key={level} style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
             <span style={{ width: 8, height: 8, borderRadius: '50%', background: color }} />
@@ -302,7 +301,7 @@ export function BOMView() {
   )
 }
 
-const th: React.CSSProperties = { padding: '0.25rem 0.5rem', textAlign: 'left', fontSize: '0.6rem', color: '#6b7280', textTransform: 'uppercase' }
+const th: React.CSSProperties = { padding: '0.25rem 0.5rem', textAlign: 'left', fontSize: fs.label, color: 'var(--text-3)', textTransform: 'uppercase' }
 const thR: React.CSSProperties = { ...th, textAlign: 'right' }
 const thC: React.CSSProperties = { ...th, textAlign: 'center' }
 const td: React.CSSProperties = { padding: '0.2rem 0.5rem' }

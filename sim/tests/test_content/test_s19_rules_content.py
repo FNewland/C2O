@@ -67,9 +67,9 @@ RULE_INTENT = {
     3001: "eps",      # -> Payload Off (via power line)
     3002: "ttc",      # -> Transponder TX Off
     3003: "obdh",     # -> OBC Safe Mode
-    4001: "ttc",      # -> Increase TX Power
+    4001: "ttc",      # uplink lock dropout -> Increase TX Power
     4002: "ttc",      # -> PA Off
-    4003: "ttc",      # -> Increase TX Power
+    4003: "ttc",      # 24 h command-loss timer -> Switch to Redundant XPDR
     5001: "obdh",     # -> OBC reboot acknowledge
     5002: "obdh",     # -> Switch CAN Bus
     5003: "obdh",     # -> Memory Scrub

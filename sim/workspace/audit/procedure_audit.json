@@ -1,11 +1,11 @@
 {
   "summary": {
     "n_procedures": 70,
-    "n_findings": 115,
+    "n_findings": 0,
     "tc_catalog_entries": 232,
-    "param_catalog_entries": 452,
+    "param_catalog_entries": 453,
     "hk_params": 319,
-    "on_demand_params": 125
+    "on_demand_params": 126
   },
   "reports": [
     {
@@ -51,6 +51,7 @@
       "func_id_mismatch": [],
       "param_unknown": [],
       "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [
         "MISSION_PHASE_CHANGED (0x0055)"
       ],
@@ -134,9 +135,8 @@
       "tc_unknown": [],
       "func_id_mismatch": [],
       "param_unknown": [],
-      "param_not_reachable": [
-        "0x028A (aocs.css_head_health_py)"
-      ],
+      "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
@@ -195,6 +195,7 @@
       "func_id_mismatch": [],
       "param_unknown": [],
       "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
@@ -263,7 +264,6 @@
         "0x02CD",
         "0x02D2",
         "0x02CE",
-        "0x0296",
         "0x02A7",
         "0x02A8",
         "0x02C1",
@@ -281,9 +281,8 @@
       "tc_unknown": [],
       "func_id_mismatch": [],
       "param_unknown": [],
-      "param_not_reachable": [
-        "0x0296"
-      ],
+      "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
@@ -331,6 +330,7 @@
       "func_id_mismatch": [],
       "param_unknown": [],
       "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
@@ -377,6 +377,7 @@
       "func_id_mismatch": [],
       "param_unknown": [],
       "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
@@ -453,9 +454,8 @@
       "tc_unknown": [],
       "func_id_mismatch": [],
       "param_unknown": [],
-      "param_not_reachable": [
-        "0x0616 (payload.snr)"
-      ],
+      "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
@@ -522,6 +522,7 @@
       "func_id_mismatch": [],
       "param_unknown": [],
       "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
@@ -570,6 +571,7 @@
       "func_id_mismatch": [],
       "param_unknown": [],
       "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
@@ -602,7 +604,6 @@
         "PAYLOAD_START_CALIBRATION",
         "HK_REQUEST",
         "PAYLOAD_CAL_LAMP",
-        "GET_PARAM",
         "GET_PARAM",
         "PAYLOAD_SET_MODE",
         "PAYLOAD_SET_SHUTTER",
@@ -646,11 +647,8 @@
       "tc_unknown": [],
       "func_id_mismatch": [],
       "param_unknown": [],
-      "param_not_reachable": [
-        "0x0616 (payload.snr)",
-        "0x0616 (payload.snr)",
-        "0x0616 (payload.snr)"
-      ],
+      "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
@@ -659,7 +657,7 @@
       "param_name_id_mismatch": [],
       "hk_sid_mismatch": [],
       "zero_command": [],
-      "command_steps": 34,
+      "command_steps": 33,
       "advisory": false,
       "indexed": true
     },
@@ -715,6 +713,7 @@
       "func_id_mismatch": [],
       "param_unknown": [],
       "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
@@ -776,6 +775,7 @@
       "func_id_mismatch": [],
       "param_unknown": [],
       "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
@@ -796,9 +796,6 @@
         "TTC_PA_ON",
         "TTC_SET_BEACON_MODE",
         "TTC_DEPLOY_ANTENNA",
-        "HK_REQUEST",
-        "HK_REQUEST",
-        "HK_REQUEST",
         "HK_REQUEST",
         "HK_REQUEST",
         "TTC_SET_DATA_RATE",
@@ -854,31 +851,17 @@
       "tc_unknown": [],
       "func_id_mismatch": [],
       "param_unknown": [],
-      "param_not_reachable": [
-        "0x0502",
-        "0x0503",
-        "0x0502",
-        "0x0503",
-        "0x0502",
-        "0x0502",
-        "0x0503",
-        "0x0503",
-        "0x0502",
-        "0x0503",
-        "0x0502"
-      ],
+      "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
       "action_command": [],
       "tc_not_extracted": [],
       "param_name_id_mismatch": [],
-      "hk_sid_mismatch": [
-        "step requests HK SID [6] but verifies ttc.rssi (0x0502), which is in SID no structure",
-        "step requests HK SID [6] but verifies ttc.link_margin (0x0503), which is in SID no structure"
-      ],
+      "hk_sid_mismatch": [],
       "zero_command": [],
-      "command_steps": 24,
+      "command_steps": 21,
       "advisory": false,
       "indexed": true
     },
@@ -933,6 +916,7 @@
       "func_id_mismatch": [],
       "param_unknown": [],
       "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
@@ -988,6 +972,7 @@
       "func_id_mismatch": [],
       "param_unknown": [],
       "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
@@ -1071,6 +1056,7 @@
       "func_id_mismatch": [],
       "param_unknown": [],
       "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
@@ -1127,6 +1113,7 @@
       "func_id_mismatch": [],
       "param_unknown": [],
       "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
@@ -1199,32 +1186,15 @@
       "tc_unknown": [],
       "func_id_mismatch": [],
       "param_unknown": [],
-      "param_not_reachable": [
-        "0x050C",
-        "0x050C",
-        "0x0519",
-        "0x0503",
-        "0x0502",
-        "0x050A",
-        "0x050C",
-        "0x050C",
-        "0x0519",
-        "0x050C",
-        "0x050C"
-      ],
+      "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
       "action_command": [],
       "tc_not_extracted": [],
       "param_name_id_mismatch": [],
-      "hk_sid_mismatch": [
-        "step requests HK SID [6] but verifies ttc.ber (0x050C), which is in SID no structure",
-        "step requests HK SID [6] but verifies ttc.eb_n0 (0x0519), which is in SID no structure",
-        "step requests HK SID [6] but verifies ttc.link_margin (0x0503), which is in SID no structure",
-        "step requests HK SID [6] but verifies ttc.rssi (0x0502), which is in SID no structure",
-        "step requests HK SID [6] but verifies ttc.contact_elevation (0x050A), which is in SID no structure"
-      ],
+      "hk_sid_mismatch": [],
       "zero_command": [],
       "command_steps": 12,
       "advisory": false,
@@ -1241,6 +1211,7 @@
       "func_id_mismatch": [],
       "param_unknown": [],
       "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
@@ -1302,6 +1273,7 @@
       "func_id_mismatch": [],
       "param_unknown": [],
       "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
@@ -1356,6 +1328,7 @@
       "func_id_mismatch": [],
       "param_unknown": [],
       "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
@@ -1390,7 +1363,6 @@
         "0x0600",
         "0x0609",
         "0x060C",
-        "0x060D",
         "0x0605",
         "0x0601",
         "0x0408",
@@ -1411,9 +1383,7 @@
         "0x0217",
         "0x0605",
         "0x0609",
-        "0x060D",
         "0x0609",
-        "0x060D",
         "0x0604",
         "0x0601",
         "0x0610",
@@ -1423,20 +1393,15 @@
       "tc_unknown": [],
       "func_id_mismatch": [],
       "param_unknown": [],
-      "param_not_reachable": [
-        "0x060D",
-        "0x060D",
-        "0x060D"
-      ],
+      "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
       "action_command": [],
       "tc_not_extracted": [],
       "param_name_id_mismatch": [],
-      "hk_sid_mismatch": [
-        "step requests HK SID [5] but verifies payload.last_scene_quality (0x060D), which is in SID no structure"
-      ],
+      "hk_sid_mismatch": [],
       "zero_command": [],
       "command_steps": 11,
       "advisory": false,
@@ -1488,6 +1453,7 @@
       "func_id_mismatch": [],
       "param_unknown": [],
       "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
@@ -1551,6 +1517,7 @@
       "func_id_mismatch": [],
       "param_unknown": [],
       "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
@@ -1576,11 +1543,8 @@
       "tc_unknown": [],
       "func_id_mismatch": [],
       "param_unknown": [],
-      "param_not_reachable": [
-        "0x0502",
-        "0x0503",
-        "0x050A (ttc.contact_elevation)"
-      ],
+      "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
@@ -1659,6 +1623,7 @@
       "func_id_mismatch": [],
       "param_unknown": [],
       "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
@@ -1701,6 +1666,7 @@
       "func_id_mismatch": [],
       "param_unknown": [],
       "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
@@ -1760,25 +1726,15 @@
       "tc_unknown": [],
       "func_id_mismatch": [],
       "param_unknown": [],
-      "param_not_reachable": [
-        "0x0502",
-        "0x0503",
-        "0x0519",
-        "0x0502",
-        "0x0503",
-        "0x050C (ttc.ber)"
-      ],
+      "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
       "action_command": [],
       "tc_not_extracted": [],
       "param_name_id_mismatch": [],
-      "hk_sid_mismatch": [
-        "step requests HK SID [1, 4, 6] but verifies ttc.rssi (0x0502), which is in SID no structure",
-        "step requests HK SID [1, 4, 6] but verifies ttc.link_margin (0x0503), which is in SID no structure",
-        "step requests HK SID [1, 4, 6] but verifies ttc.eb_n0 (0x0519), which is in SID no structure"
-      ],
+      "hk_sid_mismatch": [],
       "zero_command": [],
       "command_steps": 12,
       "advisory": false,
@@ -1854,6 +1810,7 @@
       "func_id_mismatch": [],
       "param_unknown": [],
       "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
@@ -1921,6 +1878,7 @@
       "func_id_mismatch": [],
       "param_unknown": [],
       "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
@@ -1982,6 +1940,7 @@
       "func_id_mismatch": [],
       "param_unknown": [],
       "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
@@ -2026,6 +1985,7 @@
       "func_id_mismatch": [],
       "param_unknown": [],
       "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
@@ -2080,6 +2040,7 @@
       "func_id_mismatch": [],
       "param_unknown": [],
       "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
@@ -2180,6 +2141,7 @@
       "func_id_mismatch": [],
       "param_unknown": [],
       "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
@@ -2207,21 +2169,18 @@
         "0x0B02",
         "0x0B04",
         "0x0B05",
-        "0x0B16",
         "0x0B14",
         "0x0B06",
         "0x0B07",
-        "0x0B16",
+        "0x0B04",
         "0x0B0C",
         "0x0B15"
       ],
       "tc_unknown": [],
       "func_id_mismatch": [],
       "param_unknown": [],
-      "param_not_reachable": [
-        "0x0B16",
-        "0x0B16"
-      ],
+      "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [
         "PROP_LEAK_DETECTED (0x080B)",
         "PROP_VALVE_FAULT (0x080A)",
@@ -2279,6 +2238,7 @@
       "func_id_mismatch": [],
       "param_unknown": [],
       "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
@@ -2330,6 +2290,7 @@
       "func_id_mismatch": [],
       "param_unknown": [],
       "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
@@ -2392,6 +2353,7 @@
       "func_id_mismatch": [],
       "param_unknown": [],
       "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
@@ -2456,6 +2418,7 @@
       "func_id_mismatch": [],
       "param_unknown": [],
       "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
@@ -2506,6 +2469,7 @@
       "func_id_mismatch": [],
       "param_unknown": [],
       "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
@@ -2535,6 +2499,7 @@
         "AOCS_SET_MODE",
         "HK_REQUEST",
         "HK_REQUEST",
+        "HK_REQUEST",
         "HEATER_AUTO_MODE"
       ],
       "param_refs": [
@@ -2559,17 +2524,16 @@
       "func_id_mismatch": [],
       "param_unknown": [],
       "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
       "action_command": [],
       "tc_not_extracted": [],
       "param_name_id_mismatch": [],
-      "hk_sid_mismatch": [
-        "step requests HK SID [3] but verifies aocs.mode (0x020F), which is in SID [2]"
-      ],
+      "hk_sid_mismatch": [],
       "zero_command": [],
-      "command_steps": 14,
+      "command_steps": 15,
       "advisory": false,
       "indexed": true
     },
@@ -2604,23 +2568,15 @@
       "tc_unknown": [],
       "func_id_mismatch": [],
       "param_unknown": [],
-      "param_not_reachable": [
-        "0x0502",
-        "0x0502",
-        "0x0503",
-        "0x0503"
-      ],
+      "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
       "action_command": [],
       "tc_not_extracted": [],
       "param_name_id_mismatch": [],
-      "hk_sid_mismatch": [
-        "step requests HK SID [6] but verifies ttc.rssi (0x0502), which is in SID no structure",
-        "step requests HK SID [1, 4, 6] but verifies ttc.rssi (0x0502), which is in SID no structure",
-        "step requests HK SID [1, 4, 6] but verifies ttc.link_margin (0x0503), which is in SID no structure"
-      ],
+      "hk_sid_mismatch": [],
       "zero_command": [],
       "command_steps": 7,
       "advisory": false,
@@ -2690,6 +2646,7 @@
       "func_id_mismatch": [],
       "param_unknown": [],
       "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
@@ -2781,18 +2738,15 @@
       "tc_unknown": [],
       "func_id_mismatch": [],
       "param_unknown": [],
-      "param_not_reachable": [
-        "0x0502"
-      ],
+      "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
       "action_command": [],
       "tc_not_extracted": [],
       "param_name_id_mismatch": [],
-      "hk_sid_mismatch": [
-        "step requests HK SID [6] but verifies ttc.rssi (0x0502), which is in SID no structure"
-      ],
+      "hk_sid_mismatch": [],
       "zero_command": [],
       "command_steps": 22,
       "advisory": false,
@@ -2852,6 +2806,7 @@
       "func_id_mismatch": [],
       "param_unknown": [],
       "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
@@ -2878,8 +2833,8 @@
         "OBC_SET_MODE"
       ],
       "param_refs": [
-        "0x0502",
         "0x0501",
+        "0x0502",
         "0x0501",
         "0x0501",
         "0x0502",
@@ -2890,20 +2845,15 @@
       "tc_unknown": [],
       "func_id_mismatch": [],
       "param_unknown": [],
-      "param_not_reachable": [
-        "0x0502",
-        "0x0502",
-        "0x0502"
-      ],
+      "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
       "action_command": [],
       "tc_not_extracted": [],
       "param_name_id_mismatch": [],
-      "hk_sid_mismatch": [
-        "step requests HK SID [6] but verifies ttc.rssi (0x0502), which is in SID no structure"
-      ],
+      "hk_sid_mismatch": [],
       "zero_command": [],
       "command_steps": 8,
       "advisory": false,
@@ -2992,6 +2942,7 @@
       "func_id_mismatch": [],
       "param_unknown": [],
       "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
@@ -3036,6 +2987,7 @@
       "func_id_mismatch": [],
       "param_unknown": [],
       "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
@@ -3106,6 +3058,7 @@
       "func_id_mismatch": [],
       "param_unknown": [],
       "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
@@ -3155,10 +3108,8 @@
       "tc_unknown": [],
       "func_id_mismatch": [],
       "param_unknown": [],
-      "param_not_reachable": [
-        "0x0502",
-        "0x0503"
-      ],
+      "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
@@ -3202,20 +3153,15 @@
       "tc_unknown": [],
       "func_id_mismatch": [],
       "param_unknown": [],
-      "param_not_reachable": [
-        "0x0502",
-        "0x0503"
-      ],
+      "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
       "action_command": [],
       "tc_not_extracted": [],
       "param_name_id_mismatch": [],
-      "hk_sid_mismatch": [
-        "step requests HK SID [6] but verifies ttc.rssi (0x0502), which is in SID no structure",
-        "step requests HK SID [6] but verifies ttc.link_margin (0x0503), which is in SID no structure"
-      ],
+      "hk_sid_mismatch": [],
       "zero_command": [],
       "command_steps": 4,
       "advisory": false,
@@ -3257,6 +3203,7 @@
       "func_id_mismatch": [],
       "param_unknown": [],
       "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [
         "MISSION_PHASE_CHANGED (0x0055)"
       ],
@@ -3314,6 +3261,7 @@
       "func_id_mismatch": [],
       "param_unknown": [],
       "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
@@ -3365,6 +3313,7 @@
       "func_id_mismatch": [],
       "param_unknown": [],
       "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
@@ -3415,6 +3364,7 @@
       "func_id_mismatch": [],
       "param_unknown": [],
       "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
@@ -3486,20 +3436,15 @@
       "tc_unknown": [],
       "func_id_mismatch": [],
       "param_unknown": [],
-      "param_not_reachable": [
-        "0x0503",
-        "0x0509",
-        "0x0509"
-      ],
+      "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
       "action_command": [],
       "tc_not_extracted": [],
       "param_name_id_mismatch": [],
-      "hk_sid_mismatch": [
-        "step requests HK SID [4, 6] but verifies ttc.link_margin (0x0503), which is in SID no structure"
-      ],
+      "hk_sid_mismatch": [],
       "zero_command": [],
       "command_steps": 13,
       "advisory": false,
@@ -3548,9 +3493,8 @@
       "tc_unknown": [],
       "func_id_mismatch": [],
       "param_unknown": [],
-      "param_not_reachable": [
-        "0x0509"
-      ],
+      "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
@@ -3622,25 +3566,15 @@
       "tc_unknown": [],
       "func_id_mismatch": [],
       "param_unknown": [],
-      "param_not_reachable": [
-        "0x0503",
-        "0x0502",
-        "0x0503",
-        "0x0503",
-        "0x0502"
-      ],
+      "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
       "action_command": [],
       "tc_not_extracted": [],
       "param_name_id_mismatch": [],
-      "hk_sid_mismatch": [
-        "step requests HK SID [6] but verifies ttc.rssi (0x0502), which is in SID no structure",
-        "step requests HK SID [6] but verifies ttc.link_margin (0x0503), which is in SID no structure",
-        "step requests HK SID [5, 6] but verifies ttc.link_margin (0x0503), which is in SID no structure",
-        "step requests HK SID [5, 6] but verifies ttc.rssi (0x0502), which is in SID no structure"
-      ],
+      "hk_sid_mismatch": [],
       "zero_command": [],
       "command_steps": 19,
       "advisory": false,
@@ -3701,33 +3635,15 @@
       "tc_unknown": [],
       "func_id_mismatch": [],
       "param_unknown": [],
-      "param_not_reachable": [
-        "0x0503",
-        "0x050C",
-        "0x0519",
-        "0x050A",
-        "0x050A",
-        "0x0503",
-        "0x0519",
-        "0x050C",
-        "0x0503",
-        "0x0519",
-        "0x050C",
-        "0x0503",
-        "0x0502 (ttc.rssi)"
-      ],
+      "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
       "action_command": [],
       "tc_not_extracted": [],
       "param_name_id_mismatch": [],
-      "hk_sid_mismatch": [
-        "step requests HK SID [6] but verifies ttc.link_margin (0x0503), which is in SID no structure",
-        "step requests HK SID [6] but verifies ttc.ber (0x050C), which is in SID no structure",
-        "step requests HK SID [6] but verifies ttc.eb_n0 (0x0519), which is in SID no structure",
-        "step requests HK SID [6] but verifies ttc.contact_elevation (0x050A), which is in SID no structure"
-      ],
+      "hk_sid_mismatch": [],
       "zero_command": [],
       "command_steps": 7,
       "advisory": false,
@@ -3792,6 +3708,7 @@
       "func_id_mismatch": [],
       "param_unknown": [],
       "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
@@ -3873,6 +3790,7 @@
       "func_id_mismatch": [],
       "param_unknown": [],
       "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [
         "PROP_BURN_COMPLETE (0x0804)"
       ],
@@ -3929,9 +3847,8 @@
       "tc_unknown": [],
       "func_id_mismatch": [],
       "param_unknown": [],
-      "param_not_reachable": [
-        "0x0503"
-      ],
+      "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
@@ -3983,7 +3900,6 @@
         "0x0649",
         "0x060B",
         "0x060C",
-        "0x060D",
         "0x0605",
         "0x0604",
         "0x0217",
@@ -3997,9 +3913,8 @@
       "tc_unknown": [],
       "func_id_mismatch": [],
       "param_unknown": [],
-      "param_not_reachable": [
-        "0x060D"
-      ],
+      "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
@@ -4071,6 +3986,7 @@
       "func_id_mismatch": [],
       "param_unknown": [],
       "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
@@ -4121,8 +4037,6 @@
         "0x0810",
         "0x0B0F",
         "0x0B0E",
-        "0x0B1A",
-        "0x0B19",
         "0x0B00",
         "0x014A",
         "0x025B",
@@ -4133,10 +4047,8 @@
       "tc_unknown": [],
       "func_id_mismatch": [],
       "param_unknown": [],
-      "param_not_reachable": [
-        "0x0B1A",
-        "0x0B19"
-      ],
+      "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [
         "PROP_ARMED (0x0800)",
         "PROP_BURN_START (0x0803)",
@@ -4165,6 +4077,7 @@
         "LIST_SCHEDULE"
       ],
       "param_refs": [
+        "0x0B0C",
         "0x0B00",
         "0x0B15",
         "0x0B01",
@@ -4179,9 +4092,8 @@
       "tc_unknown": [],
       "func_id_mismatch": [],
       "param_unknown": [],
-      "param_not_reachable": [
-        "0x0B1A (prop.sma_km)"
-      ],
+      "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
@@ -4239,10 +4151,8 @@
       "tc_unknown": [],
       "func_id_mismatch": [],
       "param_unknown": [],
-      "param_not_reachable": [
-        "0x0502",
-        "0x0503"
-      ],
+      "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
@@ -4293,6 +4203,7 @@
       "func_id_mismatch": [],
       "param_unknown": [],
       "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
@@ -4365,10 +4276,8 @@
       "tc_unknown": [],
       "func_id_mismatch": [],
       "param_unknown": [],
-      "param_not_reachable": [
-        "0x0503",
-        "0x0503"
-      ],
+      "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
@@ -4420,10 +4329,8 @@
       "tc_unknown": [],
       "func_id_mismatch": [],
       "param_unknown": [],
-      "param_not_reachable": [
-        "0x0502",
-        "0x0503"
-      ],
+      "param_not_reachable": [],
+      "param_instructor_only": [],
       "event_refs": [],
       "event_mismatch": [],
       "subtype_inverted": [],
@@ -4437,696 +4344,5 @@
       "indexed": true
     }
   ],
-  "findings": [
-    {
-      "procedure": "commissioning/aocs_actuator_checkout.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "aocs.css_head_health_py (0x028A) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "commissioning/aocs_sensor_calibration.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x0296 (aocs.gyro_bias_injected) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "commissioning/first_light.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "payload.snr (0x0616) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "commissioning/payload_calibration.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "payload.snr (0x0616) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "commissioning/payload_calibration.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "payload.snr (0x0616) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "commissioning/payload_calibration.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "payload.snr (0x0616) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "commissioning/ttc_link_verification.md",
-      "category": "HK_SID_MISMATCH",
-      "detail": "step requests HK SID [6] but verifies ttc.rssi (0x0502), which is in SID no structure",
-      "context": ""
-    },
-    {
-      "procedure": "commissioning/ttc_link_verification.md",
-      "category": "HK_SID_MISMATCH",
-      "detail": "step requests HK SID [6] but verifies ttc.link_margin (0x0503), which is in SID no structure",
-      "context": ""
-    },
-    {
-      "procedure": "commissioning/ttc_link_verification.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x0502 (ttc.rssi) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "commissioning/ttc_link_verification.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x0503 (ttc.link_margin) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "commissioning/ttc_link_verification.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x0502 (ttc.rssi) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "commissioning/ttc_link_verification.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x0503 (ttc.link_margin) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "commissioning/ttc_link_verification.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x0502 (ttc.rssi) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "commissioning/ttc_link_verification.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x0502 (ttc.rssi) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "commissioning/ttc_link_verification.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x0503 (ttc.link_margin) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "commissioning/ttc_link_verification.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x0503 (ttc.link_margin) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "commissioning/ttc_link_verification.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x0502 (ttc.rssi) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "commissioning/ttc_link_verification.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x0503 (ttc.link_margin) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "commissioning/ttc_link_verification.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x0502 (ttc.rssi) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "contingency/ber_anomaly.md",
-      "category": "HK_SID_MISMATCH",
-      "detail": "step requests HK SID [6] but verifies ttc.ber (0x050C), which is in SID no structure",
-      "context": ""
-    },
-    {
-      "procedure": "contingency/ber_anomaly.md",
-      "category": "HK_SID_MISMATCH",
-      "detail": "step requests HK SID [6] but verifies ttc.eb_n0 (0x0519), which is in SID no structure",
-      "context": ""
-    },
-    {
-      "procedure": "contingency/ber_anomaly.md",
-      "category": "HK_SID_MISMATCH",
-      "detail": "step requests HK SID [6] but verifies ttc.link_margin (0x0503), which is in SID no structure",
-      "context": ""
-    },
-    {
-      "procedure": "contingency/ber_anomaly.md",
-      "category": "HK_SID_MISMATCH",
-      "detail": "step requests HK SID [6] but verifies ttc.rssi (0x0502), which is in SID no structure",
-      "context": ""
-    },
-    {
-      "procedure": "contingency/ber_anomaly.md",
-      "category": "HK_SID_MISMATCH",
-      "detail": "step requests HK SID [6] but verifies ttc.contact_elevation (0x050A), which is in SID no structure",
-      "context": ""
-    },
-    {
-      "procedure": "contingency/ber_anomaly.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x050C (ttc.ber) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "contingency/ber_anomaly.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x050C (ttc.ber) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "contingency/ber_anomaly.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x0519 (ttc.eb_n0) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "contingency/ber_anomaly.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x0503 (ttc.link_margin) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "contingency/ber_anomaly.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x0502 (ttc.rssi) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "contingency/ber_anomaly.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x050A (ttc.contact_elevation) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "contingency/ber_anomaly.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x050C (ttc.ber) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "contingency/ber_anomaly.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x050C (ttc.ber) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "contingency/ber_anomaly.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x0519 (ttc.eb_n0) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "contingency/ber_anomaly.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x050C (ttc.ber) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "contingency/ber_anomaly.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x050C (ttc.ber) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "contingency/corrupted_image.md",
-      "category": "HK_SID_MISMATCH",
-      "detail": "step requests HK SID [5] but verifies payload.last_scene_quality (0x060D), which is in SID no structure",
-      "context": ""
-    },
-    {
-      "procedure": "contingency/corrupted_image.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x060D (payload.last_scene_quality) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "contingency/corrupted_image.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x060D (payload.last_scene_quality) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "contingency/corrupted_image.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x060D (payload.last_scene_quality) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "contingency/gs_antenna_failure.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x0502 (ttc.rssi) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "contingency/gs_antenna_failure.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x0503 (ttc.link_margin) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "contingency/gs_antenna_failure.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "ttc.contact_elevation (0x050A) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "contingency/no_telemetry_at_pass.md",
-      "category": "HK_SID_MISMATCH",
-      "detail": "step requests HK SID [1, 4, 6] but verifies ttc.rssi (0x0502), which is in SID no structure",
-      "context": ""
-    },
-    {
-      "procedure": "contingency/no_telemetry_at_pass.md",
-      "category": "HK_SID_MISMATCH",
-      "detail": "step requests HK SID [1, 4, 6] but verifies ttc.link_margin (0x0503), which is in SID no structure",
-      "context": ""
-    },
-    {
-      "procedure": "contingency/no_telemetry_at_pass.md",
-      "category": "HK_SID_MISMATCH",
-      "detail": "step requests HK SID [1, 4, 6] but verifies ttc.eb_n0 (0x0519), which is in SID no structure",
-      "context": ""
-    },
-    {
-      "procedure": "contingency/no_telemetry_at_pass.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x0502 (ttc.rssi) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "contingency/no_telemetry_at_pass.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x0503 (ttc.link_margin) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "contingency/no_telemetry_at_pass.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x0519 (ttc.eb_n0) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "contingency/no_telemetry_at_pass.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x0502 (ttc.rssi) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "contingency/no_telemetry_at_pass.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x0503 (ttc.link_margin) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "contingency/no_telemetry_at_pass.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "ttc.ber (0x050C) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "contingency/propulsion_anomaly.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x0B16 (prop.leak_rate) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "contingency/propulsion_anomaly.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x0B16 (prop.leak_rate) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "contingency/thermal_exceedance.md",
-      "category": "HK_SID_MISMATCH",
-      "detail": "step requests HK SID [3] but verifies aocs.mode (0x020F), which is in SID [2]",
-      "context": ""
-    },
-    {
-      "procedure": "contingency/ttc_link_loss.md",
-      "category": "HK_SID_MISMATCH",
-      "detail": "step requests HK SID [6] but verifies ttc.rssi (0x0502), which is in SID no structure",
-      "context": ""
-    },
-    {
-      "procedure": "contingency/ttc_link_loss.md",
-      "category": "HK_SID_MISMATCH",
-      "detail": "step requests HK SID [1, 4, 6] but verifies ttc.rssi (0x0502), which is in SID no structure",
-      "context": ""
-    },
-    {
-      "procedure": "contingency/ttc_link_loss.md",
-      "category": "HK_SID_MISMATCH",
-      "detail": "step requests HK SID [1, 4, 6] but verifies ttc.link_margin (0x0503), which is in SID no structure",
-      "context": ""
-    },
-    {
-      "procedure": "contingency/ttc_link_loss.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x0502 (ttc.rssi) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "contingency/ttc_link_loss.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x0502 (ttc.rssi) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "contingency/ttc_link_loss.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x0503 (ttc.link_margin) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "contingency/ttc_link_loss.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x0503 (ttc.link_margin) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "emergency/emergency_safe_mode.md",
-      "category": "HK_SID_MISMATCH",
-      "detail": "step requests HK SID [6] but verifies ttc.rssi (0x0502), which is in SID no structure",
-      "context": ""
-    },
-    {
-      "procedure": "emergency/emergency_safe_mode.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x0502 (ttc.rssi) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "emergency/loss_of_communication.md",
-      "category": "HK_SID_MISMATCH",
-      "detail": "step requests HK SID [6] but verifies ttc.rssi (0x0502), which is in SID no structure",
-      "context": ""
-    },
-    {
-      "procedure": "emergency/loss_of_communication.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x0502 (ttc.rssi) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "emergency/loss_of_communication.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x0502 (ttc.rssi) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "emergency/loss_of_communication.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x0502 (ttc.rssi) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "leop/first_acquisition.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x0502 (ttc.rssi) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "leop/first_acquisition.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x0503 (ttc.link_margin) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "leop/initial_health_check.md",
-      "category": "HK_SID_MISMATCH",
-      "detail": "step requests HK SID [6] but verifies ttc.rssi (0x0502), which is in SID no structure",
-      "context": ""
-    },
-    {
-      "procedure": "leop/initial_health_check.md",
-      "category": "HK_SID_MISMATCH",
-      "detail": "step requests HK SID [6] but verifies ttc.link_margin (0x0503), which is in SID no structure",
-      "context": ""
-    },
-    {
-      "procedure": "leop/initial_health_check.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x0502 (ttc.rssi) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "leop/initial_health_check.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x0503 (ttc.link_margin) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "leop/time_sync.md",
-      "category": "HK_SID_MISMATCH",
-      "detail": "step requests HK SID [4, 6] but verifies ttc.link_margin (0x0503), which is in SID no structure",
-      "context": ""
-    },
-    {
-      "procedure": "leop/time_sync.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x0503 (ttc.link_margin) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "leop/time_sync.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x0509 (ttc.range_km) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "leop/time_sync.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x0509 (ttc.range_km) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "nominal/clock_sync.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x0509 (ttc.range_km) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "nominal/data_downlink.md",
-      "category": "HK_SID_MISMATCH",
-      "detail": "step requests HK SID [6] but verifies ttc.rssi (0x0502), which is in SID no structure",
-      "context": ""
-    },
-    {
-      "procedure": "nominal/data_downlink.md",
-      "category": "HK_SID_MISMATCH",
-      "detail": "step requests HK SID [6] but verifies ttc.link_margin (0x0503), which is in SID no structure",
-      "context": ""
-    },
-    {
-      "procedure": "nominal/data_downlink.md",
-      "category": "HK_SID_MISMATCH",
-      "detail": "step requests HK SID [5, 6] but verifies ttc.link_margin (0x0503), which is in SID no structure",
-      "context": ""
-    },
-    {
-      "procedure": "nominal/data_downlink.md",
-      "category": "HK_SID_MISMATCH",
-      "detail": "step requests HK SID [5, 6] but verifies ttc.rssi (0x0502), which is in SID no structure",
-      "context": ""
-    },
-    {
-      "procedure": "nominal/data_downlink.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x0503 (ttc.link_margin) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "nominal/data_downlink.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x0502 (ttc.rssi) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "nominal/data_downlink.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x0503 (ttc.link_margin) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "nominal/data_downlink.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x0503 (ttc.link_margin) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "nominal/data_downlink.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x0502 (ttc.rssi) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "nominal/data_rate_change.md",
-      "category": "HK_SID_MISMATCH",
-      "detail": "step requests HK SID [6] but verifies ttc.link_margin (0x0503), which is in SID no structure",
-      "context": ""
-    },
-    {
-      "procedure": "nominal/data_rate_change.md",
-      "category": "HK_SID_MISMATCH",
-      "detail": "step requests HK SID [6] but verifies ttc.ber (0x050C), which is in SID no structure",
-      "context": ""
-    },
-    {
-      "procedure": "nominal/data_rate_change.md",
-      "category": "HK_SID_MISMATCH",
-      "detail": "step requests HK SID [6] but verifies ttc.eb_n0 (0x0519), which is in SID no structure",
-      "context": ""
-    },
-    {
-      "procedure": "nominal/data_rate_change.md",
-      "category": "HK_SID_MISMATCH",
-      "detail": "step requests HK SID [6] but verifies ttc.contact_elevation (0x050A), which is in SID no structure",
-      "context": ""
-    },
-    {
-      "procedure": "nominal/data_rate_change.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x0503 (ttc.link_margin) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "nominal/data_rate_change.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x050C (ttc.ber) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "nominal/data_rate_change.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x0519 (ttc.eb_n0) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "nominal/data_rate_change.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x050A (ttc.contact_elevation) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "nominal/data_rate_change.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x050A (ttc.contact_elevation) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "nominal/data_rate_change.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x0503 (ttc.link_margin) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "nominal/data_rate_change.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x0519 (ttc.eb_n0) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "nominal/data_rate_change.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x050C (ttc.ber) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "nominal/data_rate_change.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x0503 (ttc.link_margin) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "nominal/data_rate_change.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x0519 (ttc.eb_n0) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "nominal/data_rate_change.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x050C (ttc.ber) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "nominal/data_rate_change.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x0503 (ttc.link_margin) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "nominal/data_rate_change.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "ttc.rssi (0x0502) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "nominal/hk_configuration.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x0503 (ttc.link_margin) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "nominal/imaging_session.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x060D (payload.last_scene_quality) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "nominal/orbit_manoeuvre_execution.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x0B1A (prop.sma_km) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "nominal/orbit_manoeuvre_execution.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x0B19 (prop.orbit_epoch_version) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "nominal/orbit_manoeuvre_planning.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "prop.sma_km (0x0B1A) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "nominal/routine_health_check.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x0502 (ttc.rssi) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "nominal/routine_health_check.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x0503 (ttc.link_margin) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "nominal/software_upload.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x0503 (ttc.link_margin) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "nominal/software_upload.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x0503 (ttc.link_margin) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "nominal/startup.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x0502 (ttc.rssi) not in any HK SID and not marked on_demand",
-      "context": ""
-    },
-    {
-      "procedure": "nominal/startup.md",
-      "category": "PARAM_NOT_REACHABLE",
-      "detail": "0x0503 (ttc.link_margin) not in any HK SID and not marked on_demand",
-      "context": ""
-    }
-  ]
+  "findings": []
 }

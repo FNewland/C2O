@@ -11,41 +11,42 @@ import {
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import { useModelStore, type DesignElement } from '../stores/modelStore'
-import { useDesignStore } from '../stores/designStore'
+import { fs } from '../theme/tokens'
+import { askText } from './ui/Dialog'
 
 // Color by element type
 const TYPE_COLORS: Record<string, string> = {
-  mission: '#8b5cf6', segment: '#3b82f6', system: '#06b6d4',
-  subsystem: '#10b981', component: '#f59e0b', software: '#ec4899',
-  mode: '#f97316', logical: '#6b7280',
+  mission: 'var(--cat-2)', segment: 'var(--interactive)', system: 'var(--interactive)',
+  subsystem: 'var(--status-ok)', component: 'var(--status-caution)', software: 'var(--cat-6)',
+  mode: 'var(--status-caution)', logical: 'var(--text-3)',
 }
 
 // Color by subsystem domain
 const DOMAIN_COLORS: Record<string, string> = {
-  power: '#f59e0b', aocs: '#06b6d4', ttc: '#ec4899', thermal: '#ef4444',
-  structure: '#84cc16', propulsion: '#f97316', obc: '#8b5cf6', payload: '#10b981',
-  ground: '#0ea5e9',
+  power: 'var(--status-caution)', aocs: 'var(--interactive)', ttc: 'var(--cat-6)', thermal: 'var(--status-alarm)',
+  structure: 'var(--cat-7)', propulsion: 'var(--status-caution)', obc: 'var(--cat-2)', payload: 'var(--status-ok)',
+  ground: 'var(--interactive)',
 }
 
 function ElementNode({ data }: { data: { element: DesignElement } }) {
   const el = data.element
-  const color = DOMAIN_COLORS[el.subsystem_domain || ''] || TYPE_COLORS[el.element_type] || '#6b7280'
+  const color = DOMAIN_COLORS[el.subsystem_domain || ''] || TYPE_COLORS[el.element_type] || 'var(--text-3)'
 
   return (
     <div style={{
       padding: '6px 10px', border: `2px solid ${color}`, borderRadius: 6,
-      background: `${color}10`, textAlign: 'center', minWidth: 100, maxWidth: 160,
+      background: `color-mix(in srgb, ${color} 6%, transparent)`, textAlign: 'center', minWidth: 100, maxWidth: 160,
     }}>
       <Handle type="target" position={Position.Top} />
-      <div style={{ fontSize: '0.72rem', color, fontWeight: 700 }}>{el.name}</div>
+      <div style={{ fontSize: fs.label, color, fontWeight: 700 }}>{el.name}</div>
       {el.mass_kg !== null && (
-        <div style={{ fontSize: '0.58rem', color: '#9ca3af' }}>
+        <div style={{ fontSize: fs.label, color: 'var(--text-2)' }}>
           {(el.mass_kg * el.quantity).toFixed(2)} kg
           {el.quantity > 1 && ` (×${el.quantity})`}
         </div>
       )}
       {el.power_avg_w !== null && (
-        <div style={{ fontSize: '0.58rem', color: '#9ca3af' }}>{el.power_avg_w} W</div>
+        <div style={{ fontSize: fs.label, color: 'var(--text-2)' }}>{el.power_avg_w} W</div>
       )}
       <Handle type="source" position={Position.Bottom} />
     </div>
@@ -54,17 +55,17 @@ function ElementNode({ data }: { data: { element: DesignElement } }) {
 
 function ContainerNode({ data }: { data: { element: DesignElement } }) {
   const el = data.element
-  const color = TYPE_COLORS[el.element_type] || '#374151'
+  const color = TYPE_COLORS[el.element_type] || 'var(--line)'
   return (
     <div style={{
       padding: '8px', border: `2px dashed ${color}`, borderRadius: 8,
-      background: `${color}08`, minWidth: 400, minHeight: 200,
+      background: `color-mix(in srgb, ${color} 3%, transparent)`, minWidth: 400, minHeight: 200,
     }}>
       <Handle type="target" position={Position.Top} />
-      <div style={{ fontSize: '0.8rem', color, fontWeight: 700, marginBottom: '0.3rem' }}>
+      <div style={{ fontSize: fs.body, color, fontWeight: 700, marginBottom: '0.3rem' }}>
         {el.name}
       </div>
-      <div style={{ fontSize: '0.6rem', color: '#6b7280' }}>{el.description || el.element_type}</div>
+      <div style={{ fontSize: fs.label, color: 'var(--text-3)' }}>{el.description || el.element_type}</div>
       <Handle type="source" position={Position.Bottom} />
     </div>
   )
@@ -105,7 +106,6 @@ export function ModelBlockDiagram({ studyId, segment, level }: Props) {
       if (segment && el.segment !== segment) continue
       if (level && el.element_type !== level) continue
 
-      const color = DOMAIN_COLORS[el.subsystem_domain || ''] || TYPE_COLORS[el.element_type] || '#6b7280'
 
       const isContainer = el.element_type === 'segment' || el.element_type === 'system'
       nodes.push({
@@ -128,7 +128,7 @@ export function ModelBlockDiagram({ studyId, segment, level }: Props) {
             id: `h-${el.parent_id}-${el.id}`,
             source: el.parent_id,
             target: el.id,
-            style: { stroke: '#374151', strokeDasharray: '4 2' },
+            style: { stroke: 'var(--line)', strokeDasharray: '4 2' },
             animated: false,
           })
         }
@@ -142,10 +142,10 @@ export function ModelBlockDiagram({ studyId, segment, level }: Props) {
       if (!from || !to) continue
       if (segment && (from.segment !== segment || to.segment !== segment)) continue
 
-      const ifaceColor = iface.interface_type === 'electrical' ? '#f59e0b' :
-                         iface.interface_type === 'data' ? '#3b82f6' :
-                         iface.interface_type === 'rf' ? '#ec4899' :
-                         iface.interface_type === 'thermal' ? '#ef4444' : '#6b7280'
+      const ifaceColor = iface.interface_type === 'electrical' ? 'var(--status-caution)' :
+                         iface.interface_type === 'data' ? 'var(--interactive)' :
+                         iface.interface_type === 'rf' ? 'var(--cat-6)' :
+                         iface.interface_type === 'thermal' ? 'var(--status-alarm)' : 'var(--text-3)'
 
       edges.push({
         id: `i-${iface.id}`,
@@ -178,10 +178,10 @@ export function ModelBlockDiagram({ studyId, segment, level }: Props) {
   }, [updateElement])
 
   // Create interface when connecting two nodes
-  const onConnect = useCallback((connection: Connection) => {
+  const onConnect = useCallback(async (connection: Connection) => {
     if (!studyId || !connection.source || !connection.target) return
-    const label = prompt('Interface label (e.g., "Power Bus", "SpaceWire"):') || ''
-    const ifType = prompt('Type (electrical/data/rf/mechanical/thermal):') || 'data'
+    const label = (await askText('Interface label (e.g., "Power Bus", "SpaceWire"):')) || ''
+    const ifType = (await askText('Type (electrical/data/rf/mechanical/thermal):')) || 'data'
     createInterface(studyId, {
       name: label,
       interface_type: ifType,
@@ -194,10 +194,10 @@ export function ModelBlockDiagram({ studyId, segment, level }: Props) {
 
   if (elements.size === 0) {
     return (
-      <div style={{ padding: '2rem', textAlign: 'center', color: '#6b7280' }}>
+      <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-3)' }}>
         <h3>System Block Diagram</h3>
-        <p style={{ fontSize: '0.82rem' }}>Run a design first to generate the element tree.</p>
-        <p style={{ fontSize: '0.72rem', color: '#374151' }}>
+        <p style={{ fontSize: fs.body }}>Run a design first to generate the element tree.</p>
+        <p style={{ fontSize: fs.label, color: 'var(--line)' }}>
           The block diagram will auto-populate from the design result.
           You can then edit, add, and connect elements.
         </p>
@@ -216,12 +216,12 @@ export function ModelBlockDiagram({ studyId, segment, level }: Props) {
         onConnect={onConnect}
         nodeTypes={nodeTypes}
         fitView
-        style={{ background: '#0a0e1a' }}
-        defaultEdgeOptions={{ style: { strokeWidth: 1.5, stroke: '#6b7280' } }}
+        style={{ background: 'var(--surface-0)' }}
+        defaultEdgeOptions={{ style: { strokeWidth: 1.5, stroke: 'var(--text-3)' } }}
       >
-        <Controls style={{ button: { background: '#1f2937', color: '#d1d5db', border: '1px solid #374151' } } as any} />
-        <Background color="#374151" gap={20} />
-        <MiniMap nodeStrokeWidth={3} style={{ background: '#111827', border: '1px solid #374151' }} />
+        <Controls style={{ button: { background: 'var(--surface-2)', color: 'var(--text)', border: '1px solid var(--line)' } } as any} />
+        <Background color="var(--line)" gap={20} />
+        <MiniMap nodeStrokeWidth={3} style={{ background: 'var(--surface-1)', border: '1px solid var(--line)' }} />
       </ReactFlow>
     </div>
   )

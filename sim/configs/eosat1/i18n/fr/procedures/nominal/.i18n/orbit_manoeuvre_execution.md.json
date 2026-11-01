@@ -54,8 +54,8 @@
   },
   {
    "id": "nom-013-orbit-maintenance-manoeuvre-execution/procedure-steps/step-6-post-burn-orbit-determination",
-   "en_hash": "2abaae7192fb54d4",
-   "fr_hash": "f7d294f640540a0b"
+   "en_hash": "dc2eb0d52c28c8fb",
+   "fr_hash": "36e73e61e42cad9f"
   },
   {
    "id": "nom-013-orbit-maintenance-manoeuvre-execution/procedure-steps/step-7-safing-and-closeout",
@@ -68,5 +68,5 @@
    "fr_hash": "a76f67b05d32de27"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "8067e5b"
 }

@@ -19,11 +19,11 @@ Columns:
 
 | | Count |
 |---|---:|
-| Catalogued parameters | 452 |
+| Catalogued parameters | 453 |
 | In at least one HK SID | 319 |
-| On-demand (S20-readable) | 125 |
+| On-demand (S20-readable) | 126 |
 | Declared stubs (model does not compute) | 14 |
-| Ground limit bands | 52 |
+| Ground limit bands | 49 |
 | S12 on-board monitors | 41 |
 | Ground-derived pseudo-parameters (`derived.yaml`) | 11 |
 
@@ -357,7 +357,7 @@ Columns:
 | `0x0613` | payload.duty_cycle_pct | % |  | yes |  |  |  |
 | `0x0614` | payload.compression_ratio |  | 5 |  |  |  |  |
 | `0x0615` | payload.cal_lamp_on |  | 5 |  |  |  |  |
-| `0x0616` | payload.snr | dB |  |  | 30…55 / 20…60 |  |  |
+| `0x0616` | payload.snr | dB |  |  |  |  |  |
 | `0x0617` | payload.detector_temp | C | 5 |  | -22…14 / -25.5…17.5 |  |  |
 | `0x0618` | payload.integration_time | ms |  | yes |  |  |  |
 | `0x0619` | payload.swath_width_km | km |  | yes |  |  |  |
@@ -509,7 +509,7 @@ Columns:
 | `0x0508` | ttc.ranging_status |  | 6 |  |  |  |  |
 | `0x0509` | ttc.range_km | km |  |  |  |  |  |
 | `0x050A` | ttc.contact_elevation | deg |  |  |  |  |  |
-| `0x050C` | ttc.ber |  |  |  | -7…-5 / -8…-4 |  |  |
+| `0x050C` | ttc.ber |  |  |  |  |  |  |
 | `0x050D` | ttc.tx_fwd_power | dBm | 6 |  |  |  |  |
 | `0x050F` | ttc.pa_temp | C | 6 |  | 0…55 / -10…65 | TTC PA Overtemp (-10.0…60.0, ALARM) |  |
 | `0x0510` | ttc.carrier_lock |  | 6 |  |  |  |  |
@@ -518,7 +518,7 @@ Columns:
 | `0x0513` | ttc.cmd_rx_count |  | 6 |  |  |  |  |
 | `0x0516` | ttc.pa_on |  | 6, 11 |  |  |  |  |
 | `0x0519` | ttc.eb_n0 | dB |  |  |  |  |  |
-| `0x051A` | ttc.agc_level | dB |  |  | -80…-30 / -100…-20 |  |  |
+| `0x051A` | ttc.agc_level | dB |  |  |  |  |  |
 | `0x051B` | ttc.doppler_hz | Hz | 6 |  |  |  |  |
 | `0x051C` | ttc.range_rate | m/s |  |  |  |  |  |
 | `0x051D` | ttc.cmd_auth_status |  | 6 |  |  |  |  |
@@ -544,6 +544,7 @@ Columns:
 | `0x053A` | ttc.tm_tier_cmd |  | 6 | yes | 1…2 / -1…2.5 |  |  |
 | `0x053B` | ttc.tm_symbol_rate | Bd | 6 | yes | 16000…64000 / 900…65000 |  |  |
 | `0x053C` | ttc.downlink_mode |  | 6 | yes | 0…1 / 0…1 |  |  |
+| `0x053D` | ttc.time_since_last_tc | s |  | yes |  |  |  |
 
 ## Ground-derived pseudo-parameters (`telemetry/derived.yaml`)
 

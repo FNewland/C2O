@@ -1,3 +1,4 @@
+import { fs } from '../theme/tokens'
 /**
  * SVGWaterfall — mass/power breakdown waterfall chart. Pure SVG.
  *
@@ -34,13 +35,13 @@ export function SVGWaterfall({ items, allocation, unit = 'kg', height = 200, wid
 
   return (
     <svg width={width} height={height} style={{ display: 'block' }}>
-      {title && <text x={width / 2} y={18} textAnchor="middle" fill="#d1d5db" fontSize={12} fontWeight={600}>{title}</text>}
+      {title && <text x={width / 2} y={18} textAnchor="middle" fill="var(--text)" fontSize={fs.label} fontWeight={600}>{title}</text>}
 
       {/* Grid lines */}
       {[0, 0.25, 0.5, 0.75, 1].map(frac => (
         <g key={frac}>
-          <line x1={padding.left} y1={padding.top + chartH * (1 - frac)} x2={padding.left + chartW} y2={padding.top + chartH * (1 - frac)} stroke="#1f2937" strokeWidth={0.5} />
-          <text x={padding.left - 4} y={padding.top + chartH * (1 - frac) + 3} textAnchor="end" fill="#6b7280" fontSize={7}>{(max * frac).toFixed(1)}</text>
+          <line x1={padding.left} y1={padding.top + chartH * (1 - frac)} x2={padding.left + chartW} y2={padding.top + chartH * (1 - frac)} stroke="var(--surface-2)" strokeWidth={0.5} />
+          <text x={padding.left - 4} y={padding.top + chartH * (1 - frac) + 3} textAnchor="end" fill="var(--text-3)" fontSize={fs.label}>{(max * frac).toFixed(1)}</text>
         </g>
       ))}
 
@@ -50,14 +51,14 @@ export function SVGWaterfall({ items, allocation, unit = 'kg', height = 200, wid
         const barH = (item.value / max) * chartH
         const y = padding.top + chartH - (cumulative / max) * chartH - barH
         cumulative += item.value
-        const color = item.color || ['#3b82f6', '#10b981', '#06b6d4', '#f59e0b', '#8b5cf6', '#ec4899', '#f97316', '#84cc16'][idx % 8]
+        const color = item.color || ['var(--interactive)', 'var(--status-ok)', 'var(--interactive)', 'var(--status-caution)', 'var(--cat-2)', 'var(--cat-6)', 'var(--status-caution)', 'var(--cat-7)'][idx % 8]
         return (
           <g key={idx}>
             <rect x={x} y={y} width={barW} height={barH} rx={2} fill={color} opacity={0.85} />
-            <text x={x + barW / 2} y={y - 3} textAnchor="middle" fill="#9ca3af" fontSize={7} fontFamily="monospace">
+            <text x={x + barW / 2} y={y - 3} textAnchor="middle" fill="var(--text-2)" fontSize={fs.label} fontFamily="monospace">
               {item.value.toFixed(1)}
             </text>
-            <text x={x + barW / 2} y={height - 4} textAnchor="middle" fill="#9ca3af" fontSize={7}>
+            <text x={x + barW / 2} y={height - 4} textAnchor="middle" fill="var(--text-2)" fontSize={fs.label}>
               {item.label.length > 6 ? item.label.slice(0, 5) + '.' : item.label}
             </text>
           </g>
@@ -69,14 +70,14 @@ export function SVGWaterfall({ items, allocation, unit = 'kg', height = 200, wid
         const x = padding.left + items.filter(i => i.value > 0).length * (barW + gap)
         const barH = (total / max) * chartH
         const y = padding.top + chartH - barH
-        const color = allocation && total > allocation ? '#ef4444' : '#10b981'
+        const color = allocation && total > allocation ? 'var(--status-alarm)' : 'var(--status-ok)'
         return (
           <g>
             <rect x={x} y={y} width={barW} height={barH} rx={2} fill={color} opacity={0.9} />
-            <text x={x + barW / 2} y={y - 3} textAnchor="middle" fill={color} fontSize={8} fontWeight={700} fontFamily="monospace">
+            <text x={x + barW / 2} y={y - 3} textAnchor="middle" fill={color} fontSize={fs.label} fontWeight={700} fontFamily="monospace">
               {total.toFixed(1)} {unit}
             </text>
-            <text x={x + barW / 2} y={height - 4} textAnchor="middle" fill="#d1d5db" fontSize={7} fontWeight={600}>Total</text>
+            <text x={x + barW / 2} y={height - 4} textAnchor="middle" fill="var(--text)" fontSize={fs.label} fontWeight={600}>Total</text>
           </g>
         )
       })()}
@@ -84,8 +85,8 @@ export function SVGWaterfall({ items, allocation, unit = 'kg', height = 200, wid
       {/* Allocation line */}
       {allocation && allocation > 0 && (
         <g>
-          <line x1={padding.left} y1={padding.top + chartH - (allocation / max) * chartH} x2={padding.left + chartW} y2={padding.top + chartH - (allocation / max) * chartH} stroke="#ef4444" strokeWidth={1.5} strokeDasharray="4 2" />
-          <text x={padding.left + chartW + 2} y={padding.top + chartH - (allocation / max) * chartH + 3} fill="#ef4444" fontSize={8} fontFamily="monospace">
+          <line x1={padding.left} y1={padding.top + chartH - (allocation / max) * chartH} x2={padding.left + chartW} y2={padding.top + chartH - (allocation / max) * chartH} stroke="var(--status-alarm)" strokeWidth={1.5} strokeDasharray="4 2" />
+          <text x={padding.left + chartW + 2} y={padding.top + chartH - (allocation / max) * chartH + 3} fill="var(--status-alarm)" fontSize={fs.label} fontFamily="monospace">
             {allocation.toFixed(1)} {unit}
           </text>
         </g>

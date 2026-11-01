@@ -29,12 +29,13 @@ import { SVGLineChart, type Band, type LineSeries } from '../charts/SVGLineChart
 import type {
   AnalysisConflict, PhysicsRun, PhysicsRunResponse, PhysicsSeries, PlacementItem, PlacementResponse, RunSeriesResponse,
 } from '../types/analyses'
+import { fs } from '../theme/tokens'
 
 const API = '/api'
 const ANALYSIS = 'physics'
 
 const SEVERITY_COLORS: Record<string, string> = {
-  critical: '#ef4444', major: '#f97316', minor: '#eab308', warning: '#f59e0b', info: '#3b82f6',
+  critical: 'var(--status-alarm)', major: 'var(--status-caution)', minor: 'var(--status-caution)', warning: 'var(--status-caution)', info: 'var(--interactive)',
 }
 // English text is the i18n key
 const SEVERITY_LABELS: Record<string, string> = {
@@ -42,7 +43,7 @@ const SEVERITY_LABELS: Record<string, string> = {
 }
 // English text is the i18n key
 const NODE_KINDS: Record<string, string> = { structure: 'structure', subsystem: 'subsystem', component: 'component' }
-const NODE_PALETTE = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6', '#f43f5e', '#84cc16', '#60a5fa', '#a78bfa']
+const NODE_PALETTE = ['var(--interactive)', 'var(--status-ok)', 'var(--status-caution)', 'var(--cat-2)', 'var(--cat-6)', 'var(--cat-3)', 'var(--status-alarm)', 'var(--cat-7)', 'var(--interactive)', 'var(--cat-2)']
 
 async function jsonOrThrow(res: Response) {
   if (!res.ok) {
@@ -76,7 +77,7 @@ function ago(iso: string | null | undefined, t: TFunction): string {
 }
 function marginTone(m: number | null | undefined, warn = 5): string {
   if (m === null || m === undefined) return 'var(--text-secondary)'
-  return m < 0 ? '#ef4444' : m < warn ? '#f59e0b' : '#10b981'
+  return m < 0 ? 'var(--status-alarm)' : m < warn ? 'var(--status-caution)' : 'var(--status-ok)'
 }
 
 const card: React.CSSProperties = {
@@ -84,22 +85,22 @@ const card: React.CSSProperties = {
   background: 'var(--bg-primary)', border: '1px solid var(--border)',
 }
 const btn = (primary = false): React.CSSProperties => ({
-  cursor: 'pointer', fontSize: '0.66rem', padding: '0.2rem 0.6rem', borderRadius: 4,
-  border: `1px solid ${primary ? '#3b82f6' : 'var(--border)'}`,
-  background: primary ? '#3b82f622' : 'none', color: primary ? '#60a5fa' : 'var(--text-secondary)',
+  cursor: 'pointer', fontSize: fs.label, padding: '0.2rem 0.6rem', borderRadius: 4,
+  border: `1px solid ${primary ? 'var(--interactive)' : 'var(--border)'}`,
+  background: primary ? 'color-mix(in srgb, var(--interactive) 13%, transparent)' : 'none', color: primary ? 'var(--interactive)' : 'var(--text-secondary)',
 })
-const th: React.CSSProperties = { padding: '0.15rem 0.4rem', textAlign: 'left', fontSize: '0.58rem', color: 'var(--text-secondary)', textTransform: 'uppercase', whiteSpace: 'nowrap' }
+const th: React.CSSProperties = { padding: '0.15rem 0.4rem', textAlign: 'left', fontSize: fs.label, color: 'var(--text-secondary)', textTransform: 'uppercase', whiteSpace: 'nowrap' }
 const thR: React.CSSProperties = { ...th, textAlign: 'right' }
-const td: React.CSSProperties = { padding: '0.12rem 0.4rem', fontSize: '0.64rem', borderBottom: '1px solid var(--border)' }
+const td: React.CSSProperties = { padding: '0.12rem 0.4rem', fontSize: fs.label, borderBottom: '1px solid var(--border)' }
 const tdR: React.CSSProperties = { ...td, textAlign: 'right', fontFamily: 'ui-monospace, monospace' }
 const posInput: React.CSSProperties = {
-  width: 52, fontSize: '0.6rem', padding: '0.05rem 0.2rem', background: 'var(--bg-primary)', border: '1px solid var(--border)',
+  width: 52, fontSize: fs.label, padding: '0.05rem 0.2rem', background: 'var(--bg-primary)', border: '1px solid var(--border)',
   borderRadius: 3, color: 'var(--text-primary)', fontFamily: 'ui-monospace, monospace', textAlign: 'right',
 }
 
 function Badge({ text, color, title }: { text: string; color: string; title?: string }) {
   return (
-    <span title={title} style={{ fontSize: '0.58rem', padding: '0 0.35rem', borderRadius: 3, background: `${color}22`, color, border: `1px solid ${color}55`, whiteSpace: 'nowrap' }}>
+    <span title={title} style={{ fontSize: fs.label, padding: '0 0.35rem', borderRadius: 3, background: `color-mix(in srgb, ${color} 13%, transparent)`, color, border: `1px solid color-mix(in srgb, ${color} 33%, transparent)`, whiteSpace: 'nowrap' }}>
       {text}
     </span>
   )
@@ -108,11 +109,11 @@ function Badge({ text, color, title }: { text: string; color: string; title?: st
 function SummaryCard({ label, value, unit, tone, sub }: { label: string; value: string; unit?: string; tone?: string; sub?: string }) {
   return (
     <div style={card}>
-      <div style={{ fontSize: '0.58rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>{label}</div>
-      <div style={{ fontSize: '1rem', fontWeight: 600, color: tone || 'var(--text-primary)', fontFamily: 'ui-monospace, monospace' }}>
-        {value}{unit && <span style={{ fontSize: '0.6rem', marginLeft: 2, color: 'var(--text-secondary)' }}>{unit}</span>}
+      <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>{label}</div>
+      <div style={{ fontSize: fs.value, fontWeight: 600, color: tone || 'var(--text-primary)', fontFamily: 'ui-monospace, monospace' }}>
+        {value}{unit && <span style={{ fontSize: fs.label, marginLeft: 2, color: 'var(--text-secondary)' }}>{unit}</span>}
       </div>
-      {sub && <div style={{ fontSize: '0.56rem', color: 'var(--text-secondary)' }}>{sub}</div>}
+      {sub && <div style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>{sub}</div>}
     </div>
   )
 }
@@ -127,14 +128,14 @@ function MarginGauge({ label, value, limit, unit, marginText, tone, digits = 3 }
   const lw = limit !== null ? Math.min(100, limit / max * 100) : null
   return (
     <div style={card}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.58rem', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: fs.label, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>
         <span>{label}</span><span style={{ color: tone, fontWeight: 600 }}>{marginText}</span>
       </div>
-      <div style={{ position: 'relative', height: 12, background: 'var(--bg-secondary, #1f2937)', borderRadius: 3, marginTop: 4 }}>
+      <div style={{ position: 'relative', height: 12, background: 'var(--bg-secondary, var(--surface-2))', borderRadius: 3, marginTop: 4 }}>
         <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${vw}%`, background: tone, opacity: 0.8, borderRadius: 3 }} />
-        {lw !== null && <div title={t('limit {{value}} {{unit}}', { value: fmt(limit, digits), unit })} style={{ position: 'absolute', left: `${lw}%`, top: -2, bottom: -2, width: 2, background: '#e5e7eb' }} />}
+        {lw !== null && <div title={t('limit {{value}} {{unit}}', { value: fmt(limit, digits), unit })} style={{ position: 'absolute', left: `${lw}%`, top: -2, bottom: -2, width: 2, background: 'var(--text)' }} />}
       </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.58rem', marginTop: 2, fontFamily: 'ui-monospace, monospace' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: fs.label, marginTop: 2, fontFamily: 'ui-monospace, monospace' }}>
         <span>{fmt(value, digits)} {unit}</span>
         <span style={{ color: 'var(--text-secondary)' }}>{limit !== null ? t('limit {{value}} {{unit}}', { value: fmt(limit, digits), unit }) : t('no limit')}</span>
       </div>
@@ -144,20 +145,20 @@ function MarginGauge({ label, value, limit, unit, marginText, tone, digits = 3 }
 
 function ConflictList({ conflicts, empty }: { conflicts: AnalysisConflict[]; empty: string }) {
   const { t } = useTranslation()
-  if (conflicts.length === 0) return <div style={{ color: '#10b981', fontSize: '0.64rem' }}>{empty}</div>
+  if (conflicts.length === 0) return <div style={{ color: 'var(--status-ok)', fontSize: fs.label }}>{empty}</div>
   return (
     <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
       {conflicts.map(c => {
-        const color = SEVERITY_COLORS[c.severity] || '#6b7280'
+        const color = SEVERITY_COLORS[c.severity] || 'var(--text-3)'
         return (
           <li key={c.id} style={{ ...card, borderLeft: `3px solid ${color}` }}>
             <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', flexWrap: 'wrap' }}>
               <Badge text={t(SEVERITY_LABELS[c.severity] ?? c.severity)} color={color} />
-              <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: '0.58rem', color: 'var(--text-secondary)' }}>{c.code}</span>
-              <strong style={{ fontSize: '0.68rem' }}>{c.title}</strong>
+              <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: fs.label, color: 'var(--text-secondary)' }}>{c.code}</span>
+              <strong style={{ fontSize: fs.label }}>{c.title}</strong>
             </div>
-            {c.detail && <div style={{ fontSize: '0.62rem', color: 'var(--text-secondary)', marginTop: 2 }}>{c.detail}</div>}
-            {c.suggested_fix && <div style={{ fontSize: '0.62rem', marginTop: 2 }}><span style={{ color: '#60a5fa' }}>{t('Fix:')} </span>{c.suggested_fix}</div>}
+            {c.detail && <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginTop: 2 }}>{c.detail}</div>}
+            {c.suggested_fix && <div style={{ fontSize: fs.label, marginTop: 2 }}><span style={{ color: 'var(--interactive)' }}>{t('Fix:')} </span>{c.suggested_fix}</div>}
           </li>
         )
       })}
@@ -172,7 +173,7 @@ function PositionRow({ item, onSave, busy }: { item: PlacementItem; onSave: (id:
   const { t } = useTranslation()
   return (
     <tr>
-      <td style={td}>{item.name}<span style={{ color: 'var(--text-secondary)', fontSize: '0.56rem', marginLeft: 4 }}>{item.domain ?? ''}</span></td>
+      <td style={td}>{item.name}<span style={{ color: 'var(--text-secondary)', fontSize: fs.label, marginLeft: 4 }}>{item.domain ?? ''}</span></td>
       <td style={tdR}>{fmt(item.mass_kg, 3)}</td>
       <td style={tdR}>{item.dims_m.map(d => (d * 1000).toFixed(0)).join(' × ')}</td>
       {vals.map((v, i) => (
@@ -182,7 +183,7 @@ function PositionRow({ item, onSave, busy }: { item: PlacementItem; onSave: (id:
       ))}
       <td style={td}>
         <span style={{ display: 'inline-flex', gap: 4, alignItems: 'center' }}>
-          <Badge text={auto ? t('auto') : t('explicit')} color={auto ? '#f59e0b' : '#10b981'} title={item.source} />
+          <Badge text={auto ? t('auto') : t('explicit')} color={auto ? 'var(--status-caution)' : 'var(--status-ok)'} title={item.source} />
           {dirty && <button style={btn(true)} disabled={busy} onClick={() => onSave(item.element_id, [Number(vals[0]), Number(vals[1]), Number(vals[2])])}>{t('save')}</button>}
           {!auto && !dirty && <button style={btn()} disabled={busy} title={t('Clear the position (back to auto-stack)')} onClick={() => onSave(item.element_id, null)}>{t('clear')}</button>}
         </span>
@@ -264,11 +265,11 @@ export function PhysicsClosurePanel({ studyId, optionId }: { studyId: string | n
     if (!tq) return []
     const scale = 1e6   // µN m
     return [
-      { label: 'GG', value: tq.gravity_gradient * scale, color: '#3b82f6' },
-      { label: t('Aero'), value: tq.aerodynamic * scale, color: '#06b6d4' },
-      { label: 'SRP', value: tq.solar_pressure * scale, color: '#f59e0b' },
-      { label: 'Mag', value: tq.magnetic * scale, color: '#8b5cf6' },
-      { label: 'RSS', value: tq.rss * scale, color: '#e5e7eb' },
+      { label: 'GG', value: tq.gravity_gradient * scale, color: 'var(--interactive)' },
+      { label: t('Aero'), value: tq.aerodynamic * scale, color: 'var(--interactive)' },
+      { label: 'SRP', value: tq.solar_pressure * scale, color: 'var(--status-caution)' },
+      { label: 'Mag', value: tq.magnetic * scale, color: 'var(--cat-2)' },
+      { label: 'RSS', value: tq.rss * scale, color: 'var(--text)' },
     ]
   }, [series, t])
 
@@ -281,10 +282,10 @@ export function PhysicsClosurePanel({ studyId, optionId }: { studyId: string | n
     }))
   }, [series])
   const eclipseBand: Band[] = series ? [{
-    from: series.thermal.transient.eclipse_start_s / 60, to: series.thermal.transient.period_s / 60, label: t('eclipse'), color: '#6b7280',
+    from: series.thermal.transient.eclipse_start_s / 60, to: series.thermal.transient.period_s / 60, label: t('eclipse'), color: 'var(--text-3)',
   }] : []
 
-  if (!studyId) return <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>{t('Select a study.')}</div>
+  if (!studyId) return <div style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>{t('Select a study.')}</div>
 
   const s = run?.summary ?? {}
   const mp = series?.mass_properties
@@ -297,42 +298,42 @@ export function PhysicsClosurePanel({ studyId, optionId }: { studyId: string | n
     : marginTone(aocs.pointing_margin_deg, (aocs.pointing_req_deg ?? 1) * 0.2)
 
   return (
-    <div style={{ fontSize: '0.7rem', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+    <div style={{ fontSize: fs.label, display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
       {/* header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-        <strong style={{ fontSize: '0.74rem' }}>{t('Physics closure')}</strong>
-        <span style={{ color: 'var(--text-secondary)', fontSize: '0.6rem' }}>{t('mass properties → AOCS · thermal network')}</span>
+        <strong style={{ fontSize: fs.label }}>{t('Physics closure')}</strong>
+        <span style={{ color: 'var(--text-secondary)', fontSize: fs.label }}>{t('mass properties → AOCS · thermal network')}</span>
         {run ? (
           <>
-            <Badge text={run.status === 'ok' ? t('last run {{ago}}', { ago: ago(run.finished_at, t) }) : t('run {{status}}', { status: run.status })} color={run.status === 'ok' ? '#10b981' : '#ef4444'} title={run.finished_at || undefined} />
-            {run.stale && <Badge text={t('stale')} color="#f59e0b" title={t('The model (masses, positions, dimensions, power, orbit) changed since this run — re-run to refresh')} />}
+            <Badge text={run.status === 'ok' ? t('last run {{ago}}', { ago: ago(run.finished_at, t) }) : t('run {{status}}', { status: run.status })} color={run.status === 'ok' ? 'var(--status-ok)' : 'var(--status-alarm)'} title={run.finished_at || undefined} />
+            {run.stale && <Badge text={t('stale')} color="var(--status-caution)" title={t('The model (masses, positions, dimensions, power, orbit) changed since this run — re-run to refresh')} />}
           </>
         ) : runQ.isLoading ? <span style={{ color: 'var(--text-secondary)' }}>{t('loading…')}</span>
-          : <Badge text={t('never run')} color="#6b7280" />}
+          : <Badge text={t('never run')} color="var(--text-3)" />}
         <span style={{ flex: 1 }} />
         <button style={btn()} onClick={() => setShowPlacement(v => !v)}>{showPlacement ? t('Hide placement') : t('Placement')}</button>
         <button style={btn(true)} disabled={runMut.isPending} onClick={() => runMut.mutate()}>
           {runMut.isPending ? t('Running…') : run ? t('Re-run') : t('Run')}
         </button>
       </div>
-      {error && <div style={{ color: '#ef4444', fontSize: '0.64rem' }}>{error}</div>}
-      {run?.status === 'failed' && s.error && <div style={{ color: '#ef4444', fontSize: '0.64rem' }}>{t('Last run failed: {{error}}', { error: s.error })}</div>}
+      {error && <div style={{ color: 'var(--status-alarm)', fontSize: fs.label }}>{error}</div>}
+      {run?.status === 'failed' && s.error && <div style={{ color: 'var(--status-alarm)', fontSize: fs.label }}>{t('Last run failed: {{error}}', { error: s.error })}</div>}
       {!!s.warnings?.length && (
-        <ul style={{ margin: 0, paddingLeft: '1rem', color: '#f59e0b', fontSize: '0.62rem' }}>
+        <ul style={{ margin: 0, paddingLeft: '1rem', color: 'var(--status-caution)', fontSize: fs.label }}>
           {s.warnings.map((w, i) => <li key={i}>{w}</li>)}
         </ul>
       )}
 
       {/* ── 1. mass properties ─────────────────────────────────────────── */}
       <section>
-        <div style={{ fontSize: '0.66rem', fontWeight: 600, marginBottom: '0.25rem' }}>{t('1 · Mass properties')}</div>
+        <div style={{ fontSize: fs.label, fontWeight: 600, marginBottom: '0.25rem' }}>{t('1 · Mass properties')}</div>
         {run?.status === 'ok' && (
           <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
             <SummaryCard label={t('Total mass')} value={fmt(s.mp_total_mass_kg, 3)} unit="kg" sub={t('{{placed}} placed · {{auto}} auto', { placed: s.placed ?? '?', auto: s.mp_auto_placed_count ?? s.auto_placed ?? 0 })} />
             <SummaryCard label={t('CoM (x, y, z)')} value={mp ? mp.com_m.map(v => (v * 1000).toFixed(1)).join(', ') : '—'} unit="mm"
                          sub={s.envelope_m ? t('envelope {{dims}} mm', { dims: s.envelope_m.map(v => (v * 1000).toFixed(0)).join(' × ') }) : undefined} />
             <SummaryCard label={t('CP–CG offset')} value={fmt((s.mp_cp_cg_offset_m ?? 0) * 1000, 1)} unit="mm"
-                         tone={offsetPct === null ? undefined : offsetPct > 2 ? '#f59e0b' : '#10b981'}
+                         tone={offsetPct === null ? undefined : offsetPct > 2 ? 'var(--status-caution)' : 'var(--status-ok)'}
                          sub={offsetPct !== null ? t('{{pct}} % of max dimension (warn > 2 %)', { pct: offsetPct.toFixed(1) }) : undefined} />
             <SummaryCard label="Ixx / Iyy / Izz" value={mp ? [mp.inertia.ixx, mp.inertia.iyy, mp.inertia.izz].map(v => v.toFixed(4)).join(' / ') : '—'} unit="kg m²"
                          sub={mp ? t('principal {{values}}', { values: mp.principal.map(v => v.toFixed(4)).join(' / ') }) : undefined} />
@@ -353,9 +354,9 @@ export function PhysicsClosurePanel({ studyId, optionId }: { studyId: string | n
             {placementQ.isLoading && <span style={{ color: 'var(--text-secondary)' }}>{t('loading placement…')}</span>}
             {placement && (
               <>
-                <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', marginBottom: 2 }}>
+                <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginBottom: 2 }}>
                   {t('Positions in m, body frame with the origin at the envelope corner, +z along the stack · envelope {{source}}', { source: placement.envelope_source })}
-                  {placement.auto_placed.length > 0 && <> · <span style={{ color: '#f59e0b' }}>{t('{{n}} auto-placed', { n: placement.auto_placed.length })}</span></>}
+                  {placement.auto_placed.length > 0 && <> · <span style={{ color: 'var(--status-caution)' }}>{t('{{n}} auto-placed', { n: placement.auto_placed.length })}</span></>}
                 </div>
                 <table style={{ borderCollapse: 'collapse', width: '100%' }}>
                   <thead>
@@ -368,7 +369,7 @@ export function PhysicsClosurePanel({ studyId, optionId }: { studyId: string | n
                     ))}
                   </tbody>
                 </table>
-                {'warnings' in placement && placement.warnings.map((w, i) => <div key={i} style={{ color: '#f59e0b', fontSize: '0.6rem' }}>{w}</div>)}
+                {'warnings' in placement && placement.warnings.map((w, i) => <div key={i} style={{ color: 'var(--status-caution)', fontSize: fs.label }}>{w}</div>)}
               </>
             )}
           </div>
@@ -381,11 +382,11 @@ export function PhysicsClosurePanel({ studyId, optionId }: { studyId: string | n
       {/* ── 2. AOCS ────────────────────────────────────────────────────── */}
       {aocs && (
         <section>
-          <div style={{ fontSize: '0.66rem', fontWeight: 600, marginBottom: '0.25rem' }}>{t('2 · AOCS — disturbances, momentum, pointing')}</div>
+          <div style={{ fontSize: fs.label, fontWeight: 600, marginBottom: '0.25rem' }}>{t('2 · AOCS — disturbances, momentum, pointing')}</div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '0.5rem' }}>
             <div style={card}>
               <SVGBarChart title={t('Disturbance torques [µN m]')} data={torqueBars} height={170} width={320} unit="" />
-              <div style={{ fontSize: '0.58rem', color: 'var(--text-secondary)' }}>
+              <div style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>
                 {t('{{alt}} km · {{body}} · dipole {{dipole}} A m² · offset {{offset}} mm · RSS {{rss}} N m', {
                   alt: aocs.inputs.altitude_km, body: aocs.inputs.body, dipole: aocs.inputs.residual_dipole_am2,
                   offset: fmt(aocs.inputs.cp_cg_offset_used_m * 1000, 1), rss: sci(aocs.torques_nm.rss),
@@ -395,10 +396,10 @@ export function PhysicsClosurePanel({ studyId, optionId }: { studyId: string | n
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
               <MarginGauge label={t('Wheel momentum per orbit')} value={aocs.momentum_per_orbit_nms} limit={aocs.wheel_capacity_nms} unit="N m s" digits={4}
                            marginText={t('{{value}} % margin', { value: `${aocs.wheel_margin_pct >= 0 ? '+' : ''}${fmt(aocs.wheel_margin_pct, 0)}` })} tone={wheelTone} />
-              <div style={{ fontSize: '0.58rem', color: 'var(--text-secondary)', marginTop: -4 }}>{t('capacity from {{source}} · {{n}} desaturation/orbit', { source: aocs.wheel_source, n: aocs.inputs.desaturations_per_orbit })}</div>
+              <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginTop: -4 }}>{t('capacity from {{source}} · {{n}} desaturation/orbit', { source: aocs.wheel_source, n: aocs.inputs.desaturations_per_orbit })}</div>
               <MarginGauge label={t('Pointing estimate')} value={aocs.pointing_est_deg} limit={aocs.pointing_req_deg} unit="deg" digits={3}
                            marginText={aocs.pointing_margin_deg === null ? t('no requirement') : t('{{value}} deg margin', { value: `${aocs.pointing_margin_deg >= 0 ? '+' : ''}${fmt(aocs.pointing_margin_deg, 3)}` })} tone={pointTone} />
-              <div style={{ fontSize: '0.58rem', color: 'var(--text-secondary)', marginTop: -4 }}>
+              <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginTop: -4 }}>
                 {t('knowledge {{knowledge}} ({{source}}) · control {{control}} · actuator {{actuator}} deg', {
                   knowledge: fmt(aocs.pointing_budget.knowledge_deg, 3), source: aocs.inputs.knowledge_source,
                   control: fmt(aocs.pointing_budget.control_deg, 4), actuator: fmt(aocs.pointing_budget.actuator_deg, 3),
@@ -416,7 +417,7 @@ export function PhysicsClosurePanel({ studyId, optionId }: { studyId: string | n
       {/* ── 3. thermal ─────────────────────────────────────────────────── */}
       {thermal && (
         <section>
-          <div style={{ fontSize: '0.66rem', fontWeight: 600, marginBottom: '0.25rem' }}>
+          <div style={{ fontSize: fs.label, fontWeight: 600, marginBottom: '0.25rem' }}>
             {t('3 · Thermal network — {{nodes}} nodes, {{conductances}} conductances', { nodes: thermal.nodes.length, conductances: thermal.conductances.length })}
             <span style={{ color: marginTone(thermal.worst_margin_c), marginLeft: 8 }}>{t('worst margin {{value}} K', { value: fmt(thermal.worst_margin_c, 1) })}</span>
           </div>
@@ -434,7 +435,7 @@ export function PhysicsClosurePanel({ studyId, optionId }: { studyId: string | n
                     <tr key={n.element_id} style={{ opacity: n.kind === 'structure' ? 0.75 : 1 }}>
                       <td style={td}>
                         <span style={{ paddingLeft: n.kind === 'component' ? 10 : 0 }}>{n.name}</span>
-                        <span style={{ color: 'var(--text-secondary)', fontSize: '0.56rem', marginLeft: 4 }}>{t(NODE_KINDS[n.kind] ?? n.kind)}</span>
+                        <span style={{ color: 'var(--text-secondary)', fontSize: fs.label, marginLeft: 4 }}>{t(NODE_KINDS[n.kind] ?? n.kind)}</span>
                       </td>
                       <td style={tdR}>{fmt(n.dissipation_hot_w, 1)} W</td>
                       <td style={tdR}>{fmt(n.t_hot_c, 1)}</td>
@@ -446,7 +447,7 @@ export function PhysicsClosurePanel({ studyId, optionId }: { studyId: string | n
                   ))}
                 </tbody>
               </table>
-              <div style={{ fontSize: '0.58rem', color: 'var(--text-secondary)', marginTop: 2 }}>
+              <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginTop: 2 }}>
                 {t('hot = sunlit steady state at peak power · cold = minimum over a periodic orbit at safe-mode power ({{pct}} %) · ε {{eps}} · α {{alpha}} · {{area}} cm² external', {
                   pct: fmt(thermal.inputs.safe_power_fraction * 100, 0), eps: thermal.inputs.emissivity, alpha: thermal.inputs.absorptivity,
                   area: fmt(thermal.inputs.external_area_m2 * 1e4, 0),

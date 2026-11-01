@@ -7,6 +7,7 @@
  * bullet lists detected from content strings.
  */
 import { useCallback } from 'react'
+import { fs } from '../theme/tokens'
 
 interface SectionData {
   number?: string
@@ -86,7 +87,7 @@ function renderTable(text: string) {
   return (
     <div style={{ overflowX: 'auto', marginBottom: '0.75rem' }}>
       <table style={{
-        width: '100%', borderCollapse: 'collapse', fontSize: '0.75rem',
+        width: '100%', borderCollapse: 'collapse', fontSize: fs.label,
         border: `1px solid ${C.border}`,
       }}>
         <thead>
@@ -131,7 +132,7 @@ function renderBullets(text: string) {
         const content = line.trim().startsWith('- ') ? line.trim().slice(2) : line.trim()
         return (
           <li key={i} style={{
-            fontSize: '0.78rem', color: C.text, marginBottom: '0.25rem', lineHeight: 1.5,
+            fontSize: fs.label, color: C.text, marginBottom: '0.25rem', lineHeight: 1.5,
           }}>{content}</li>
         )
       })}
@@ -141,7 +142,7 @@ function renderBullets(text: string) {
 
 function renderPlainText(text: string) {
   return (
-    <div style={{ fontSize: '0.78rem', color: C.text, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
+    <div style={{ fontSize: fs.label, color: C.text, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
       {text}
     </div>
   )
@@ -207,7 +208,7 @@ function renderContentBlock(text: string) {
 
 function SectionCard({ section, depth = 0 }: { section: SectionData; depth?: number }) {
   const isSubsection = depth > 0
-  const headingSize = isSubsection ? '0.82rem' : '0.92rem'
+  const headingSize = isSubsection ? fs.body : fs.value
   const marginLeft = depth * 1
 
   return (
@@ -247,10 +248,10 @@ function SectionCard({ section, depth = 0 }: { section: SectionData; depth?: num
                 width: '8px', height: '8px', borderRadius: '50%', marginTop: '4px', flexShrink: 0,
                 background: field.auto_populated ? C.success : C.warning,
               }} title={field.auto_populated ? 'Auto-populated' : 'Manual entry required'} />
-              <span style={{ fontSize: '0.75rem', color: C.textMuted, minWidth: '140px', flexShrink: 0 }}>
+              <span style={{ fontSize: fs.label, color: C.textMuted, minWidth: '140px', flexShrink: 0 }}>
                 {field.name}
               </span>
-              <span style={{ fontSize: '0.75rem', color: C.text, flex: 1 }}>
+              <span style={{ fontSize: fs.label, color: C.text, flex: 1 }}>
                 {typeof field.value === 'object' ? JSON.stringify(field.value) : String(field.value ?? '')}
               </span>
             </div>
@@ -288,12 +289,12 @@ function BOMView({ lines }: { lines: any[] }) {
       {Object.entries(groups).map(([group, items]) => (
         <div key={group} style={{ marginBottom: '0.75rem' }}>
           <div style={{
-            fontSize: '0.78rem', fontWeight: 600, color: C.accent, padding: '0.3rem 0.5rem',
+            fontSize: fs.label, fontWeight: 600, color: C.accent, padding: '0.3rem 0.5rem',
             background: C.bgHeader, borderRadius: '4px 4px 0 0',
             borderBottom: `1px solid ${C.border}`,
           }}>{group}</div>
           <table style={{
-            width: '100%', borderCollapse: 'collapse', fontSize: '0.72rem',
+            width: '100%', borderCollapse: 'collapse', fontSize: fs.label,
             border: `1px solid ${C.border}`,
           }}>
             <thead>
@@ -344,13 +345,13 @@ function SummaryBar({ summary }: { summary: Record<string, any> }) {
       {entries.map(([key, value]) => (
         <div key={key} style={{ textAlign: 'center', minWidth: '80px' }}>
           <div style={{
-            fontSize: '1.1rem', fontWeight: 700, color: C.accent,
+            fontSize: fs.title, fontWeight: 700, color: C.accent,
             fontFamily: 'monospace',
           }}>
             {typeof value === 'number' ? value.toLocaleString() : String(value)}
           </div>
           <div style={{
-            fontSize: '0.65rem', color: C.textDim, textTransform: 'uppercase', letterSpacing: '0.5px',
+            fontSize: fs.label, color: C.textDim, textTransform: 'uppercase', letterSpacing: '0.5px',
           }}>
             {key.replace(/_/g, ' ')}
           </div>
@@ -384,7 +385,7 @@ function MetadataHeader({ content }: { content: any }) {
     <div style={{
       display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '0.75rem',
       padding: '0.5rem 0.75rem', background: C.bgCard, borderRadius: '6px',
-      border: `1px solid ${C.border}`, fontSize: '0.72rem',
+      border: `1px solid ${C.border}`, fontSize: fs.label,
     }}>
       {items.map((item, i) => (
         <span key={i} style={{ color: C.textMuted }}>
@@ -437,21 +438,21 @@ export function DocumentPreview({ title, content, onClose }: Props) {
         borderBottom: `1px solid ${C.border}`,
         flexShrink: 0,
       }}>
-        <span style={{ flex: 1, fontWeight: 700, fontSize: '0.92rem', color: C.white }}>
+        <span style={{ flex: 1, fontWeight: 700, fontSize: fs.value, color: C.white }}>
           {title}
         </span>
         <button onClick={handlePrint} style={{
-          padding: '0.25rem 0.6rem', fontSize: '0.7rem', borderRadius: '4px',
+          padding: '0.25rem 0.6rem', fontSize: fs.label, borderRadius: '4px',
           background: 'transparent', color: C.textMuted, border: `1px solid ${C.border}`,
           cursor: 'pointer',
         }}>Print</button>
         <button onClick={handleDownloadJSON} style={{
-          padding: '0.25rem 0.6rem', fontSize: '0.7rem', borderRadius: '4px',
+          padding: '0.25rem 0.6rem', fontSize: fs.label, borderRadius: '4px',
           background: C.accent, color: C.white, border: 'none', cursor: 'pointer',
         }}>Download JSON</button>
         {onClose && (
           <button onClick={onClose} style={{
-            padding: '0.25rem 0.5rem', fontSize: '0.85rem', borderRadius: '4px',
+            padding: '0.25rem 0.5rem', fontSize: fs.body, borderRadius: '4px',
             background: 'transparent', color: C.textMuted, border: 'none',
             cursor: 'pointer', lineHeight: 1,
           }} title="Close">&times;</button>
@@ -489,7 +490,7 @@ export function DocumentPreview({ title, content, onClose }: Props) {
                 return (
                   <div key={key} style={{ marginBottom: '0.75rem' }}>
                     <div style={{
-                      fontSize: '0.78rem', fontWeight: 600, color: C.textMuted,
+                      fontSize: fs.label, fontWeight: 600, color: C.textMuted,
                       marginBottom: '0.25rem', textTransform: 'capitalize',
                     }}>{key.replace(/_/g, ' ')}</div>
                     {renderContentBlock(value)}
@@ -501,11 +502,11 @@ export function DocumentPreview({ title, content, onClose }: Props) {
                 return (
                   <div key={key} style={{ marginBottom: '0.75rem' }}>
                     <div style={{
-                      fontSize: '0.78rem', fontWeight: 600, color: C.textMuted,
+                      fontSize: fs.label, fontWeight: 600, color: C.textMuted,
                       marginBottom: '0.25rem', textTransform: 'capitalize',
                     }}>{key.replace(/_/g, ' ')}</div>
                     <pre style={{
-                      fontSize: '0.72rem', color: C.text, background: C.bgCard,
+                      fontSize: fs.label, color: C.text, background: C.bgCard,
                       padding: '0.5rem', borderRadius: '4px', overflow: 'auto',
                       maxHeight: '200px', whiteSpace: 'pre-wrap', wordBreak: 'break-word',
                       border: `1px solid ${C.border}`,

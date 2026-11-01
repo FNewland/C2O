@@ -12,27 +12,28 @@ import { useTranslation } from 'react-i18next'
 import { useDesignStore } from '../stores/designStore'
 import { useUIStore } from '../stores/uiStore'
 import type { TraceabilityTreeResponse, TraceRequirementNode } from '../types/arcadia'
+import { fs } from '../theme/tokens'
 
 const API = '/api'
 
 const STATUS_COLORS: Record<string, string> = {
-  accepted: '#10b981', approved: '#10b981', verified: '#10b981', passed: '#10b981', compliant: '#10b981',
-  draft: '#6b7280', proposed: '#3b82f6', planned: '#3b82f6', in_progress: '#f59e0b', pending: '#f59e0b',
-  partial: '#f59e0b', rejected: '#ef4444', failed: '#ef4444', non_compliant: '#ef4444', retired: '#6b7280',
+  accepted: 'var(--status-ok)', approved: 'var(--status-ok)', verified: 'var(--status-ok)', passed: 'var(--status-ok)', compliant: 'var(--status-ok)',
+  draft: 'var(--text-3)', proposed: 'var(--interactive)', planned: 'var(--interactive)', in_progress: 'var(--status-caution)', pending: 'var(--status-caution)',
+  partial: 'var(--status-caution)', rejected: 'var(--status-alarm)', failed: 'var(--status-alarm)', non_compliant: 'var(--status-alarm)', retired: 'var(--text-3)',
 }
 // English text is the i18n key
 const LEVEL_LABEL: Record<string, string> = {
   mission: 'mission', system: 'system', subsystem: 'subsystem', equipment: 'equipment', component: 'component',
 }
 const LEVEL_COLORS: Record<string, string> = {
-  mission: '#8b5cf6', system: '#3b82f6', subsystem: '#06b6d4', equipment: '#10b981', component: '#10b981',
+  mission: 'var(--cat-2)', system: 'var(--interactive)', subsystem: 'var(--interactive)', equipment: 'var(--status-ok)', component: 'var(--status-ok)',
 }
 
 export function StatusPill({ value, prefix }: { value: string | null | undefined; prefix?: string }) {
   if (!value) return null
-  const c = STATUS_COLORS[value] || '#6b7280'
+  const c = STATUS_COLORS[value] || 'var(--text-3)'
   return (
-    <span style={{ fontSize: '0.56rem', padding: '0 0.3rem', borderRadius: '999px', background: `${c}22`, color: c, border: `1px solid ${c}55`, whiteSpace: 'nowrap' }}>
+    <span style={{ fontSize: fs.label, padding: '0 0.3rem', borderRadius: '999px', background: `color-mix(in srgb, ${c} 13%, transparent)`, color: c, border: `1px solid color-mix(in srgb, ${c} 33%, transparent)`, whiteSpace: 'nowrap' }}>
       {prefix ? `${prefix} ` : ''}{value.replace(/_/g, ' ')}
     </span>
   )
@@ -40,34 +41,34 @@ export function StatusPill({ value, prefix }: { value: string | null | undefined
 
 function ReqNode({ node, depth, collapsed, toggle }: { node: TraceRequirementNode; depth: number; collapsed: Set<string>; toggle: (id: string) => void }) {
   const { t } = useTranslation()
-  const lc = LEVEL_COLORS[node.level || ''] || '#3b82f6'
+  const lc = LEVEL_COLORS[node.level || ''] || 'var(--interactive)'
   const isCollapsed = collapsed.has(node.id)
   const kids = node.children || []
   const v = node.verification
   return (
     <div style={{ marginLeft: depth ? '0.75rem' : 0, marginTop: '0.15rem', borderLeft: `2px solid ${lc}`, paddingLeft: '0.4rem' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', flexWrap: 'wrap', fontSize: '0.7rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', flexWrap: 'wrap', fontSize: fs.label }}>
         {kids.length > 0 && (
-          <button onClick={() => toggle(node.id)} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: 0, width: 12, fontSize: '0.65rem' }}>
+          <button onClick={() => toggle(node.id)} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: 0, width: 12, fontSize: fs.label }}>
             {isCollapsed ? '▸' : '▾'}
           </button>
         )}
-        <span style={{ color: '#93c5fd', fontWeight: 600 }}>{node.code || node.id.slice(0, 8)}</span>
-        {node.level && <span style={{ fontSize: '0.56rem', color: lc }}>{LEVEL_LABEL[node.level] ? t(LEVEL_LABEL[node.level]) : node.level}</span>}
+        <span style={{ color: 'var(--interactive)', fontWeight: 600 }}>{node.code || node.id.slice(0, 8)}</span>
+        {node.level && <span style={{ fontSize: fs.label, color: lc }}>{LEVEL_LABEL[node.level] ? t(LEVEL_LABEL[node.level]) : node.level}</span>}
         <StatusPill value={node.status} />
         <span style={{ color: 'var(--text-primary)' }} title={node.text || ''}>
           {(node.text || '').slice(0, 100)}{(node.text || '').length > 100 ? '…' : ''}
         </span>
       </div>
       {(node.elements.length > 0 || node.functions.length > 0 || v?.method || v?.status) && (
-        <div style={{ marginLeft: '0.75rem', display: 'flex', gap: '0.3rem', flexWrap: 'wrap', alignItems: 'center', marginTop: '0.1rem', fontSize: '0.62rem' }}>
+        <div style={{ marginLeft: '0.75rem', display: 'flex', gap: '0.3rem', flexWrap: 'wrap', alignItems: 'center', marginTop: '0.1rem', fontSize: fs.label }}>
           {node.elements.map(e => (
-            <span key={e.id} title={`${e.relation}${e.element_type ? ` · ${e.element_type}` : ''}`} style={{ color: '#6ee7b7', border: '1px solid rgba(16,185,129,0.4)', borderRadius: '3px', padding: '0 0.3rem', background: 'rgba(16,185,129,0.1)' }}>
+            <span key={e.id} title={`${e.relation}${e.element_type ? ` · ${e.element_type}` : ''}`} style={{ color: 'var(--status-ok)', border: '1px solid rgba(16,185,129,0.4)', borderRadius: '3px', padding: '0 0.3rem', background: 'rgba(16,185,129,0.1)' }}>
               E: {e.name || e.id.slice(0, 8)}
             </span>
           ))}
           {node.functions.map(f => (
-            <span key={f.id} title={f.relation} style={{ color: '#fcd34d', border: '1px solid rgba(245,158,11,0.4)', borderRadius: '3px', padding: '0 0.3rem', background: 'rgba(245,158,11,0.1)' }}>
+            <span key={f.id} title={f.relation} style={{ color: 'var(--status-caution)', border: '1px solid rgba(245,158,11,0.4)', borderRadius: '3px', padding: '0 0.3rem', background: 'rgba(245,158,11,0.1)' }}>
               F: {f.name || f.id.slice(0, 8)}{f.layer ? ` [${f.layer}]` : ''}
             </span>
           ))}
@@ -102,15 +103,15 @@ export function TraceabilityTree({ studyId: studyIdProp }: { studyId?: string | 
     return <LegacyTraceabilityTree />
   }
   if (isLoading || !data) {
-    return <div className="card"><p style={{ fontSize: '0.72rem', color: '#6b7280' }}>{t('Loading traceability…')}</p></div>
+    return <div className="card"><p style={{ fontSize: fs.label, color: 'var(--text-3)' }}>{t('Loading traceability…')}</p></div>
   }
 
   const s = data.summary
   const levels = Object.entries(s.requirements_by_level || {}).map(([k, v]) => `${v} ${LEVEL_LABEL[k] ? t(LEVEL_LABEL[k]) : k}`).join(', ')
   return (
     <div className="card">
-      <h3 style={{ fontSize: '0.85rem', marginBottom: '0.3rem' }}>{t('V-Model Traceability')}</h3>
-      <p style={{ fontSize: '0.68rem', color: '#9ca3af', marginBottom: '0.5rem' }}>
+      <h3 style={{ fontSize: fs.body, marginBottom: '0.3rem' }}>{t('V-Model Traceability')}</h3>
+      <p style={{ fontSize: fs.label, color: 'var(--text-2)', marginBottom: '0.5rem' }}>
         {t('Objective → Requirement chain → Element / Function → Verification. {{objectives}} objectives, {{requirements}} requirements ({{levels}}), {{traced}} traced to objectives, {{relations}} relations.', {
           objectives: s.objectives, requirements: s.requirements, levels: levels || t('none'),
           traced: s.requirements_traced_to_objectives, relations: s.relations,
@@ -118,24 +119,24 @@ export function TraceabilityTree({ studyId: studyIdProp }: { studyId?: string | 
       </p>
 
       {data.objectives.map((obj, i) => (
-        <div key={obj.id || i} style={{ marginBottom: '0.5rem', borderLeft: '2px solid #8b5cf6', paddingLeft: '0.5rem' }}>
-          <div style={{ display: 'flex', gap: '0.3rem', alignItems: 'center', flexWrap: 'wrap', fontSize: '0.75rem', fontWeight: 600, color: '#a78bfa' }}>
+        <div key={obj.id || i} style={{ marginBottom: '0.5rem', borderLeft: '2px solid var(--cat-2)', paddingLeft: '0.5rem' }}>
+          <div style={{ display: 'flex', gap: '0.3rem', alignItems: 'center', flexWrap: 'wrap', fontSize: fs.label, fontWeight: 600, color: 'var(--cat-2)' }}>
             <span>OBJ-{i + 1}: {obj.text}</span>
-            {obj.priority && <span style={{ fontSize: '0.58rem', color: '#f59e0b' }}>{obj.priority}</span>}
+            {obj.priority && <span style={{ fontSize: fs.label, color: 'var(--status-caution)' }}>{obj.priority}</span>}
             <StatusPill value={obj.status} />
           </div>
-          {obj.measurable_criterion && <div style={{ fontSize: '0.62rem', color: '#9ca3af' }}>{t('criterion: {{criterion}}', { criterion: obj.measurable_criterion })}</div>}
+          {obj.measurable_criterion && <div style={{ fontSize: fs.label, color: 'var(--text-2)' }}>{t('criterion: {{criterion}}', { criterion: obj.measurable_criterion })}</div>}
           {obj.requirements.length > 0 ? (
             obj.requirements.map(r => <ReqNode key={r.id} node={r} depth={1} collapsed={collapsed} toggle={toggle} />)
           ) : (
-            <div style={{ marginLeft: '0.75rem', fontSize: '0.65rem', color: '#6b7280', fontStyle: 'italic' }}>{t('No requirements linked to this objective')}</div>
+            <div style={{ marginLeft: '0.75rem', fontSize: fs.label, color: 'var(--text-3)', fontStyle: 'italic' }}>{t('No requirements linked to this objective')}</div>
           )}
         </div>
       ))}
 
       {data.unlinked_requirements.length > 0 && (
-        <div style={{ marginTop: '0.5rem', borderTop: '1px solid #374151', paddingTop: '0.4rem' }}>
-          <div style={{ fontSize: '0.68rem', color: '#f59e0b', marginBottom: '0.2rem' }}>
+        <div style={{ marginTop: '0.5rem', borderTop: '1px solid var(--line)', paddingTop: '0.4rem' }}>
+          <div style={{ fontSize: fs.label, color: 'var(--status-caution)', marginBottom: '0.2rem' }}>
             {t('{{count}} top-level requirements not linked to an objective', { count: data.unlinked_requirements.length, defaultValue_one: '{{count}} top-level requirement not linked to an objective' })}
           </div>
           {data.unlinked_requirements.map(r => <ReqNode key={r.id} node={r} depth={0} collapsed={collapsed} toggle={toggle} />)}
@@ -158,37 +159,37 @@ export function LegacyTraceabilityTree() {
 
   if (objectives.length === 0 && acceptedReqs.length === 0) {
     return (
-      <div className="card" style={{ borderLeft: '3px solid #6b7280' }}>
-        <h3 style={{ fontSize: '0.85rem', color: '#6b7280' }}>{t('Traceability')}</h3>
-        <p style={{ fontSize: '0.72rem', color: '#6b7280' }}>{t('Define objectives and requirements to see traceability.')}</p>
+      <div className="card" style={{ borderLeft: '3px solid var(--text-3)' }}>
+        <h3 style={{ fontSize: fs.body, color: 'var(--text-3)' }}>{t('Traceability')}</h3>
+        <p style={{ fontSize: fs.label, color: 'var(--text-3)' }}>{t('Define objectives and requirements to see traceability.')}</p>
       </div>
     )
   }
 
   return (
     <div className="card">
-      <h3 style={{ fontSize: '0.85rem', marginBottom: '0.3rem' }}>{t('V-Model Traceability')}</h3>
-      <p style={{ fontSize: '0.68rem', color: '#9ca3af', marginBottom: '0.5rem' }}>
+      <h3 style={{ fontSize: fs.body, marginBottom: '0.3rem' }}>{t('V-Model Traceability')}</h3>
+      <p style={{ fontSize: fs.label, color: 'var(--text-2)', marginBottom: '0.5rem' }}>
         {t('Need → Objective → Requirement → Function → Design. {{objectives}} objectives, {{requirements}} requirements, {{functions}} functions.', { objectives: objectives.length, requirements: acceptedReqs.length, functions: functionsList.length })}
       </p>
 
       {objectives.map((obj: any, i: number) => {
         const linkedReqs = acceptedReqs.filter(r => r.objective_id === obj.id)
         return (
-          <div key={obj.id || i} style={{ marginBottom: '0.5rem', borderLeft: '2px solid #8b5cf6', paddingLeft: '0.5rem' }}>
-            <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#a78bfa' }}>
+          <div key={obj.id || i} style={{ marginBottom: '0.5rem', borderLeft: '2px solid var(--cat-2)', paddingLeft: '0.5rem' }}>
+            <div style={{ fontSize: fs.label, fontWeight: 600, color: 'var(--cat-2)' }}>
               OBJ-{i + 1}: {obj.text}
             </div>
             {linkedReqs.length > 0 ? (
               linkedReqs.map(req => {
                 const linkedFn = functionsList.find(f => f.id === req.function_id)
                 return (
-                  <div key={req.id} style={{ marginLeft: '0.75rem', marginTop: '0.15rem', borderLeft: '2px solid #3b82f6', paddingLeft: '0.4rem' }}>
-                    <div style={{ fontSize: '0.7rem', color: '#93c5fd' }}>
+                  <div key={req.id} style={{ marginLeft: '0.75rem', marginTop: '0.15rem', borderLeft: '2px solid var(--interactive)', paddingLeft: '0.4rem' }}>
+                    <div style={{ fontSize: fs.label, color: 'var(--interactive)' }}>
                       {req.id}: {req.text?.slice(0, 80)}{req.text?.length > 80 ? '...' : ''}
                     </div>
                     {linkedFn && (
-                      <div style={{ marginLeft: '0.75rem', fontSize: '0.65rem', color: '#6ee7b7', borderLeft: '2px solid #10b981', paddingLeft: '0.3rem', marginTop: '0.1rem' }}>
+                      <div style={{ marginLeft: '0.75rem', fontSize: fs.label, color: 'var(--status-ok)', borderLeft: '2px solid var(--status-ok)', paddingLeft: '0.3rem', marginTop: '0.1rem' }}>
                         F: {linkedFn.name} → [{linkedFn.allocated_to?.join(', ')}]
                       </div>
                     )}
@@ -196,7 +197,7 @@ export function LegacyTraceabilityTree() {
                 )
               })
             ) : (
-              <div style={{ marginLeft: '0.75rem', fontSize: '0.65rem', color: '#6b7280', fontStyle: 'italic' }}>
+              <div style={{ marginLeft: '0.75rem', fontSize: fs.label, color: 'var(--text-3)', fontStyle: 'italic' }}>
                 {t('No requirements linked to this objective')}
               </div>
             )}
@@ -209,12 +210,12 @@ export function LegacyTraceabilityTree() {
         const orphans = acceptedReqs.filter(r => !r.objective_id || !objectives.find((o: any) => o.id === r.objective_id))
         if (orphans.length === 0) return null
         return (
-          <div style={{ marginTop: '0.5rem', borderTop: '1px solid #374151', paddingTop: '0.4rem' }}>
-            <div style={{ fontSize: '0.68rem', color: '#f59e0b', marginBottom: '0.2rem' }}>
+          <div style={{ marginTop: '0.5rem', borderTop: '1px solid var(--line)', paddingTop: '0.4rem' }}>
+            <div style={{ fontSize: fs.label, color: 'var(--status-caution)', marginBottom: '0.2rem' }}>
               {t('{{count}} requirements not linked to an objective', { count: orphans.length, defaultValue_one: '{{count}} requirement not linked to an objective' })}
             </div>
             {orphans.slice(0, 5).map(r => (
-              <div key={r.id} style={{ fontSize: '0.65rem', color: '#6b7280', marginLeft: '0.5rem' }}>
+              <div key={r.id} style={{ fontSize: fs.label, color: 'var(--text-3)', marginLeft: '0.5rem' }}>
                 {r.id}: {r.text?.slice(0, 60)}...
               </div>
             ))}

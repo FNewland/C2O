@@ -326,8 +326,10 @@ def _defaults_payload():
 
 
 async def handle_index(req):
-    html = HTML.replace("__DEFAULTS_JSON__", json.dumps(_defaults_payload()))
-    return web.Response(text=html, content_type="text/html")
+    from smo_common.web.http import TOOL_HEAD, tool_html_response
+    html = (HTML.replace("__DEFAULTS_JSON__", json.dumps(_defaults_payload()))
+            .replace("__TOOL_HEAD__", TOOL_HEAD))
+    return tool_html_response(html, req.app)
 
 
 async def handle_defaults(req):
@@ -389,7 +391,12 @@ async def handle_download(req):
 
 
 def create_app():
-    app = web.Application()
+    # Shared HTTP policy + design system / language runtime (R3 A8, §8).
+    _common = Path(__file__).resolve().parents[1] / "packages" / "smo-common" / "src"
+    if _common.is_dir() and str(_common) not in sys.path:
+        sys.path.insert(0, str(_common))
+    from smo_common.web.http import setup_tool_app
+    app = setup_tool_app(web.Application())
     app.router.add_get("/", handle_index)
     app.router.add_get("/api/defaults", handle_defaults)
     app.router.add_post("/run", handle_run)
@@ -404,103 +411,106 @@ HTML = r"""<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ADCS Failure-Scenario Viewer</title>
+<title data-i18n>ADCS failure-scenario viewer</title>
+__TOOL_HEAD__
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
+/* Light-touch restyle: page-local names mapped onto the shared design-system
+   tokens. Statistic numerals are neutral (P1: colour only for state). */
 :root{
-  --bg:#0d1117;--panel:#161b22;--bdr:#21262d;
-  --cyan:#00c8f0;--amber:#ff8533;--green:#23d18b;--red:#ff3b5c;
-  --text:#e6edf3;--mut:#8b949e;--mono:'Courier New',monospace
+  --panel:var(--s1);--bdr:var(--line);
+  --cyan:var(--info);--amber:var(--warn);--green:var(--ok);--red:var(--alarm);
+  --text:var(--tx);--mut:var(--tx3)
 }
-body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;font-size:14px;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;height:100vh;display:flex;flex-direction:column;overflow:hidden}
 header{background:var(--panel);border-bottom:1px solid var(--bdr);padding:11px 22px;display:flex;align-items:center;gap:14px;flex-shrink:0}
-.hlogo{font-family:var(--mono);font-size:11px;letter-spacing:.25em;color:var(--cyan);text-transform:uppercase}
+.hlogo{font-size:15px;font-weight:700;color:var(--tx)}
 .hsep{width:1px;height:13px;background:var(--bdr)}
-.hsub{font-size:12px;color:var(--mut)}
+.hsub{font-size:13px;color:var(--tx2)}
 .layout{display:grid;grid-template-columns:290px 1fr;flex:1;overflow:hidden}
 .sidebar{background:var(--panel);border-right:1px solid var(--bdr);padding:18px;overflow-y:auto;display:flex;flex-direction:column;gap:12px}
 .main{overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:14px}
-h3{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--cyan);margin-bottom:2px}
+h3{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--tx3);margin-bottom:2px}
 .field{display:flex;flex-direction:column;gap:4px}
-label{font-size:11px;color:var(--mut)}
-input,select{background:#0d1117;border:1px solid var(--bdr);border-radius:5px;color:var(--text);padding:6px 9px;font-size:12px;font-family:var(--mono);width:100%;transition:border-color .15s}
-input:focus,select:focus{outline:none;border-color:var(--cyan)}
-.hint{font-size:10px;color:#555;font-family:var(--mono)}
-.btn{background:var(--cyan);color:#000;font-weight:700;border:none;border-radius:6px;padding:9px;cursor:pointer;font-size:12px;letter-spacing:.05em;transition:opacity .15s;width:100%}
-.btn:hover{opacity:.85}.btn:disabled{opacity:.35;cursor:not-allowed}
-.btn-dl{background:transparent;border:1px solid var(--bdr);color:var(--mut);border-radius:6px;padding:7px;cursor:pointer;font-size:11px;width:100%;transition:all .15s}
+label{font-size:12px;color:var(--tx2)}
+input,select{background:var(--bg);border:1px solid var(--line-2);border-radius:3px;color:var(--text);padding:6px 9px;font-size:13px;font-family:var(--mono);width:100%}
+input:focus-visible,select:focus-visible{border-color:var(--cyan)}
+.hint{font-size:12px;color:var(--tx3)}
+.btn{background:var(--s2);color:var(--tx);font-weight:700;border:1px solid var(--info);border-radius:3px;padding:9px;cursor:pointer;font-size:13px;width:100%}
+.btn:hover{background:var(--s3)}.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn-dl{background:transparent;border:1px solid var(--line-2);color:var(--tx2);border-radius:3px;padding:7px;cursor:pointer;font-size:12px;width:100%}
 .btn-dl:hover:not(:disabled){border-color:var(--cyan);color:var(--cyan)}.btn-dl:disabled{opacity:.35;cursor:not-allowed}
 hr{border:none;border-top:1px solid var(--bdr)}
 .stats-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:9px}
-.stat{background:var(--panel);border:1px solid var(--bdr);border-radius:8px;padding:14px;text-align:center}
-.stat-n{font-size:20px;font-weight:700;font-family:var(--mono);line-height:1;margin-bottom:4px}
-.stat-l{font-size:10px;color:var(--mut)}
+.stat{background:var(--panel);border:1px solid var(--bdr);border-radius:3px;padding:12px 14px}
+.stat-n{font-size:20px;font-weight:700;font-family:var(--mono);line-height:1;margin-bottom:4px;color:var(--val)}
+.stat-l{font-size:12px;color:var(--tx3)}
 .tabs{display:flex;gap:0;border-bottom:1px solid var(--bdr)}
-.tab{padding:7px 16px;font-size:12px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:var(--mut);transition:all .15s}
+.tab{padding:7px 16px;font-size:13px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:var(--tx3)}
 .tab.on{color:var(--cyan);border-color:var(--cyan)}.tab:hover:not(.on){color:var(--text)}
-.plot-wrap{background:var(--panel);border:1px solid var(--bdr);border-radius:8px;overflow:hidden;display:none}
+.plot-wrap{background:var(--panel);border:1px solid var(--bdr);border-radius:3px;overflow:hidden;display:none}
 .plot-wrap.on{display:block}.plot-wrap img{width:100%;display:block}
 .events{display:flex;flex-direction:column;gap:6px}
-.ev{display:flex;gap:10px;align-items:center;background:var(--panel);border:1px solid var(--bdr);border-left:3px solid;border-radius:6px;padding:9px 13px}
+.ev{display:flex;gap:10px;align-items:center;background:var(--panel);border:1px solid var(--bdr);border-left:3px solid var(--line-2);border-radius:3px;padding:9px 13px}
 .ev.impact{border-left-color:var(--amber)}.ev.recovery{border-left-color:var(--green)}.ev.autosafe{border-left-color:var(--red)}
-.ev-t{font-family:var(--mono);font-size:11px;white-space:nowrap}
+.ev-t{font-family:var(--mono);font-size:12px;white-space:nowrap}
 .ev.impact .ev-t{color:var(--amber)}.ev.recovery .ev-t{color:var(--green)}.ev.autosafe .ev-t{color:var(--red)}
-.ev-msg{font-size:12px;color:var(--text)}
+.ev-msg{font-size:13px;color:var(--text)}
 .placeholder{text-align:center;padding:80px 20px;color:var(--mut);font-size:13px;line-height:1.7}
-.loader{display:none;text-align:center;padding:60px 20px;color:var(--cyan);font-family:var(--mono);font-size:12px}
+.loader{display:none;text-align:center;padding:60px 20px;color:var(--tx2);font-size:13px}
 .loader.on{display:block}
 .spinner{display:inline-block;width:22px;height:22px;border:2px solid rgba(0,200,240,.18);border-top-color:var(--cyan);border-radius:50%;animation:spin .7s linear infinite;margin-bottom:12px}
+@media (prefers-reduced-motion: reduce){.spinner{animation:none}}
 @keyframes spin{to{transform:rotate(360deg)}}
 .tab-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-.legend{display:flex;gap:12px;font-size:10px;color:var(--mut);align-items:center}
+.legend{display:flex;gap:12px;font-size:12px;color:var(--tx2);align-items:center}
 .ldot{width:10px;height:10px;border-radius:2px}
 </style>
 </head>
 <body>
 <header>
-  <span class="hlogo">EOSAT-1</span>
+  <h1 class="hlogo"><span>EOSAT-1</span> <span data-i18n>ADCS failure-scenario viewer</span></h1>
   <div class="hsep"></div>
-  <span class="hsub">ADCS Failure-Scenario Viewer &mdash; :8097 &mdash; physics: ADCS_failure_sim/cubesat_adcs_sim.py</span>
+  <span class="hsub"><span data-i18n>Physics:</span> <code>ADCS_failure_sim/cubesat_adcs_sim.py</code></span>
 </header>
 <div class="layout">
 
   <!-- Sidebar -->
-  <div class="sidebar">
-    <h3>Orbit</h3>
+  <form class="sidebar" onsubmit="event.preventDefault(); runSim();" aria-label="Scenario parameters" data-i18n-aria-label>
+    <h3 data-i18n>Orbit</h3>
     <div class="field">
-      <label>Altitude (km)</label>
+      <label for="alt_km" data-i18n>Altitude (km)</label>
       <input id="alt_km" type="number" step="10">
-      <span class="hint">ISS ~ 408 km, Sun-sync ~ 500-600 km</span>
+      <span class="hint" data-i18n>ISS ~ 408 km, Sun-sync ~ 500-600 km</span>
     </div>
     <div class="field">
-      <label>Inclination (deg)</label>
+      <label for="inc_deg" data-i18n>Inclination (deg)</label>
       <input id="inc_deg" type="number" step="0.1">
-      <span class="hint">97.4 deg -> sun-synchronous</span>
+      <span class="hint" data-i18n>97.4 deg -> sun-synchronous</span>
     </div>
-    <div class="field"><label>Eccentricity</label><input id="ecc" type="number" step="0.0001"></div>
-    <div class="field"><label>RAAN (deg)</label><input id="raan_deg" type="number" step="1"></div>
-    <div class="field"><label>Arg. of Perigee (deg)</label><input id="argp_deg" type="number" step="1"></div>
-    <div class="field"><label>True Anomaly (deg)</label><input id="nu_deg" type="number" step="1"></div>
+    <div class="field"><label for="ecc" data-i18n>Eccentricity</label><input id="ecc" type="number" step="0.0001"></div>
+    <div class="field"><label for="raan_deg" data-i18n>RAAN (deg)</label><input id="raan_deg" type="number" step="1"></div>
+    <div class="field"><label for="argp_deg" data-i18n>Arg. of Perigee (deg)</label><input id="argp_deg" type="number" step="1"></div>
+    <div class="field"><label for="nu_deg" data-i18n>True Anomaly (deg)</label><input id="nu_deg" type="number" step="1"></div>
     <div class="field">
-      <label>Epoch (UTC)</label>
+      <label for="epoch" data-i18n>Epoch (UTC)</label>
       <input id="epoch" type="datetime-local" step="60">
-      <span class="hint">Sets Sun position &amp; magnetic field</span>
+      <span class="hint" data-i18n>Sets Sun position &amp; magnetic field</span>
     </div>
     <hr>
-    <h3>Timing</h3>
+    <h3 data-i18n data-i18n-context="sim">Timing</h3>
     <div class="field">
-      <label>Total Duration (s)</label>
+      <label for="t_total" data-i18n>Total Duration (s)</label>
       <input id="t_total" type="number" step="300">
-      <span class="hint">16000 s ~ 4.4 h ~ 2.8 orbits</span>
+      <span class="hint" data-i18n>16000 s ~ 4.4 h ~ 2.8 orbits</span>
     </div>
-    <div class="field"><label>Time Step (s)</label><input id="dt" type="number" step="0.5">
-      <span class="hint">1 s = telemetry rate of the CSV</span></div>
-    <div class="field"><label>Debris Impact Time (s)</label><input id="t_impact" type="number" step="60"></div>
-    <div class="field"><label>Recovery Command Time (s)</label><input id="t_recovery" type="number" step="60"></div>
+    <div class="field"><label for="dt" data-i18n>Time Step (s)</label><input id="dt" type="number" step="0.5">
+      <span class="hint" data-i18n>1 s = telemetry rate of the CSV</span></div>
+    <div class="field"><label for="t_impact" data-i18n>Debris Impact Time (s)</label><input id="t_impact" type="number" step="60"></div>
+    <div class="field"><label for="t_recovery" data-i18n>Recovery Command Time (s)</label><input id="t_recovery" type="number" step="60"></div>
     <hr>
-    <h3>Debris Strike</h3>
+    <h3 data-i18n>Debris Strike</h3>
     <div class="field">
-      <label>Corrupted Axis</label>
+      <label for="corrupted_axis" data-i18n>Corrupted Axis</label>
       <select id="corrupted_axis">
         <option value="0">X  (RW-1)</option>
         <option value="1">Y  (RW-2)</option>
@@ -508,33 +518,32 @@ hr{border:none;border-top:1px solid var(--bdr)}
       </select>
     </div>
     <div class="field">
-      <label>Gain Corruption Factor (x)</label>
+      <label for="corruption_factor" data-i18n>Gain Corruption Factor (x)</label>
       <input id="corruption_factor" type="number" step="1">
-      <span class="hint">10 = corrupted axis commands 10x normal torque</span>
+      <span class="hint" data-i18n>10 = corrupted axis commands 10x normal torque</span>
     </div>
-    <div class="field"><label>d-omega X (rad/s)</label><input id="dw_x" type="number" step="0.001"></div>
-    <div class="field"><label>d-omega Y (rad/s)</label><input id="dw_y" type="number" step="0.001"></div>
-    <div class="field"><label>d-omega Z (rad/s)</label><input id="dw_z" type="number" step="0.001"></div>
-    <div class="field"><label>Noise Seed</label><input id="seed" type="number" step="1">
-      <span class="hint">same seed -> identical telemetry</span></div>
+    <div class="field"><label for="dw_x" data-i18n>d-omega X (rad/s)</label><input id="dw_x" type="number" step="0.001"></div>
+    <div class="field"><label for="dw_y" data-i18n>d-omega Y (rad/s)</label><input id="dw_y" type="number" step="0.001"></div>
+    <div class="field"><label for="dw_z" data-i18n>d-omega Z (rad/s)</label><input id="dw_z" type="number" step="0.001"></div>
+    <div class="field"><label for="seed" data-i18n>Noise Seed</label><input id="seed" type="number" step="1">
+      <span class="hint" data-i18n>same seed -> identical telemetry</span></div>
     <hr>
-    <button class="btn" id="run-btn" onclick="runSim()">Run Simulation</button>
-    <button class="btn-dl" id="reset-btn" onclick="applyDefaults()">Reset to defaults</button>
-    <button class="btn-dl" id="dl-btn" onclick="downloadCSV()" disabled>Download Telemetry CSV</button>
-  </div>
+    <button type="submit" class="btn" id="run-btn" data-i18n>Run simulation</button>
+    <button type="button" class="btn-dl" id="reset-btn" onclick="applyDefaults()" data-i18n>Reset to defaults</button>
+    <button type="button" class="btn-dl" id="dl-btn" onclick="downloadCSV()" disabled data-i18n>Download telemetry CSV</button>
+  </form>
 
   <!-- Main -->
   <div class="main" id="main-area">
     <div class="placeholder" id="placeholder">
-      Configure the scenario on the left and click <strong style="color:var(--cyan)">Run Simulation</strong>.<br>
-      The four diagnostic plots, the statistics row and the event timeline appear here.<br><br>
-      <span style="font-size:11px;color:#555">Typical run time: 4-8 seconds for a 3-hour scenario at 1 s steps.</span>
+      <p data-i18n>Set the scenario on the left, then run the simulation. The four diagnostic plots, the statistics and the event timeline appear here.</p>
+      <p style="font-size:12px;color:var(--tx3);margin-top:12px" data-i18n>Typical run time: 4 to 8 s for a 3-hour scenario at 1 s steps.</p>
     </div>
 
     <div class="loader" id="loader">
       <div class="spinner"></div><br>
-      Running simulation...<br>
-      <span style="color:var(--mut);font-size:11px" id="loader-sub">Integrating the 6-DOF attitude dynamics</span>
+      <span data-i18n>Running simulation…</span><br>
+      <span style="color:var(--mut);font-size:12px" id="loader-sub" data-i18n>Integrating the 6-DOF attitude dynamics</span>
     </div>
 
     <div id="results" style="display:none">
@@ -542,28 +551,31 @@ hr{border:none;border-top:1px solid var(--bdr)}
       <div id="events-wrap"></div>
       <div>
         <div class="tab-row">
-          <div class="tabs">
-            <div class="tab on"  onclick="showTab('sensors',   this)">Sensors</div>
-            <div class="tab"     onclick="showTab('estimator', this)">Estimator</div>
-            <div class="tab"     onclick="showTab('actuators', this)">Actuators</div>
-            <div class="tab"     onclick="showTab('zoom',      this)">Event Zoom</div>
+          <div class="tabs" role="tablist">
+            <button type="button" role="tab" aria-selected="true" class="tab on" onclick="showTab('sensors',   this)" data-i18n>Sensors</button>
+            <button type="button" role="tab" aria-selected="false" class="tab" onclick="showTab('estimator', this)" data-i18n>Estimator</button>
+            <button type="button" role="tab" aria-selected="false" class="tab" onclick="showTab('actuators', this)" data-i18n>Actuators</button>
+            <button type="button" role="tab" aria-selected="false" class="tab" onclick="showTab('zoom',      this)" data-i18n>Event zoom</button>
           </div>
           <div class="legend">
-            <span class="ldot" style="background:rgba(100,200,100,.5)"></span>NORMAL
-            <span class="ldot" style="background:rgba(255,180,60,.5)"></span>SAFE / tumble
-            <span class="ldot" style="background:rgba(255,80,80,.5)"></span>RECOVERY
+            <span class="ldot" style="background:rgba(100,200,100,.5)"></span><span>NORMAL</span>
+            <span class="ldot" style="background:rgba(255,180,60,.5)"></span><span data-i18n>SAFE / tumble</span>
+            <span class="ldot" style="background:rgba(255,80,80,.5)"></span><span>RECOVERY</span>
           </div>
         </div>
-        <div class="plot-wrap on" id="tab-sensors">  <img id="img-sensors"></div>
-        <div class="plot-wrap"    id="tab-estimator"><img id="img-estimator"></div>
-        <div class="plot-wrap"    id="tab-actuators"><img id="img-actuators"></div>
-        <div class="plot-wrap"    id="tab-zoom">     <img id="img-zoom"></div>
+        <div class="plot-wrap on" id="tab-sensors" role="tabpanel">  <img id="img-sensors" alt="Sensor plots"></div>
+        <div class="plot-wrap"    id="tab-estimator" role="tabpanel"><img id="img-estimator" alt="Estimator plots"></div>
+        <div class="plot-wrap"    id="tab-actuators" role="tabpanel"><img id="img-actuators" alt="Actuator plots"></div>
+        <div class="plot-wrap"    id="tab-zoom" role="tabpanel">     <img id="img-zoom" alt="Event zoom plots"></div>
       </div>
     </div><!-- /results -->
   </div><!-- /main -->
 </div><!-- /layout -->
 
 <script>
+// UI language (tool-page.js / i18n.js): T() = translated text.
+const T = (s, v) => window.SMO_I18N ? window.SMO_I18N.tText(s, v)
+  : String(s).replace(/\{\{\s*(\w+)\s*\}\}/g, (m, k) => (v && k in v ? v[k] : m));
 const BOOT = __DEFAULTS_JSON__;
 const FIELDS = ['alt_km','inc_deg','ecc','raan_deg','argp_deg','nu_deg','epoch',
                 't_total','dt','t_impact','t_recovery','corrupted_axis',
@@ -577,9 +589,9 @@ function applyDefaults(){
 }
 
 function showTab(name, el){
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(t => { t.classList.remove('on'); t.setAttribute('aria-selected', 'false'); });
   document.querySelectorAll('.plot-wrap').forEach(p => p.classList.remove('on'));
-  el.classList.add('on');
+  el.classList.add('on'); el.setAttribute('aria-selected', 'true');
   g('tab-' + name).classList.add('on');
 }
 
@@ -595,7 +607,7 @@ function esc(s){
 
 async function runSim(){
   const btn = g('run-btn');
-  btn.disabled = true; btn.textContent = 'Running...';
+  btn.disabled = true; btn.textContent = T('Running…');
   g('placeholder').style.display = 'none';
   g('loader').classList.add('on');
   g('results').style.display = 'none';
@@ -603,7 +615,7 @@ async function runSim(){
   const params = { epoch: g('epoch').value, corrupted_axis: +g('corrupted_axis').value };
   FIELDS.forEach(k => { if (k !== 'epoch' && k !== 'corrupted_axis') params[k] = +g(k).value; });
   g('loader-sub').textContent =
-    'Integrating ' + Math.round(params.t_total / params.dt) + ' time steps';
+    T('Integrating {{n}} time steps', { n: Math.round(params.t_total / params.dt) });
 
   try {
     const res = await fetch('/run', {
@@ -612,7 +624,7 @@ async function runSim(){
       body: JSON.stringify(params),
     });
     const d = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(d.error || ('Server error ' + res.status));
+    if (!res.ok) throw new Error(d.error || T('Server error {{status}}', { status: res.status }));
 
     LAST_RUN_ID = d.run_id;
     ['sensors','estimator','actuators','zoom'].forEach(k => {
@@ -620,27 +632,29 @@ async function runSim(){
     });
 
     const s = d.stats;
-    g('stats-grid').innerHTML = `
-      <div class="stat"><div class="stat-n" style="color:var(--amber)">${s.max_att_err}&deg;</div><div class="stat-l">Max Pointing Error</div></div>
-      <div class="stat"><div class="stat-n" style="color:var(--cyan)">${s.max_est_err}&deg;</div><div class="stat-l">Max Estimator Error</div></div>
-      <div class="stat"><div class="stat-n" style="color:var(--red)">${s.max_tumble}&deg;/s</div><div class="stat-l">Peak Tumble Rate</div></div>
-      <div class="stat"><div class="stat-n" style="color:var(--amber)">${s.max_h_pct}%</div><div class="stat-l">Peak Wheel Momentum (${s.peak_wheel})</div></div>
-      <div class="stat"><div class="stat-n" style="color:var(--mut)">${s.max_rpm}</div><div class="stat-l">Peak Wheel Speed [RPM]</div></div>
-      <div class="stat"><div class="stat-n" style="color:var(--green)">${s.time_normal} min</div><div class="stat-l">Time in NORMAL</div></div>
-      <div class="stat"><div class="stat-n" style="color:var(--mut)">${s.time_safe} min</div><div class="stat-l">Time in SAFE</div></div>
-      <div class="stat"><div class="stat-n" style="color:var(--cyan)">${s.time_recovery} min</div><div class="stat-l">Time in RECOVERY</div></div>
-      <div class="stat"><div class="stat-n" style="color:var(--green)">${s.triad_pct}%</div><div class="stat-l">Samples with TRIAD Fix</div></div>
-      <div class="stat"><div class="stat-n" style="color:var(--mut)">${s.samples}</div><div class="stat-l">Samples &times; ${s.channels} Channels</div></div>`;
+    const stat = (n, l) => `<div class="stat"><div class="stat-n">${n}</div><div class="stat-l">${esc(l)}</div></div>`;
+    g('stats-grid').innerHTML = [
+      stat(`${s.max_att_err}&deg;`, T('Max pointing error')),
+      stat(`${s.max_est_err}&deg;`, T('Max estimator error')),
+      stat(`${s.max_tumble}&deg;/s`, T('Peak tumble rate')),
+      stat(`${s.max_h_pct}%`, T('Peak wheel momentum ({{wheel}})', { wheel: s.peak_wheel })),
+      stat(`${s.max_rpm}`, T('Peak wheel speed [rpm]')),
+      stat(`${s.time_normal} min`, T('Time in NORMAL')),
+      stat(`${s.time_safe} min`, T('Time in SAFE')),
+      stat(`${s.time_recovery} min`, T('Time in RECOVERY')),
+      stat(`${s.triad_pct}%`, T('Samples with TRIAD fix')),
+      stat(`${s.samples}`, T('Samples × {{n}} channels', { n: s.channels })),
+    ].join('');
 
     g('events-wrap').innerHTML =
-      '<h3 style="margin-bottom:8px">Key Events</h3>' +
+      `<h3 style="margin-bottom:8px">${esc(T('Key events'))}</h3>` +
       '<div class="events">' +
       (d.events.length ? d.events.map(e =>
         `<div class="ev ${esc(e.type)}">
            <span class="ev-t">${fmt(e.t)}</span>
            <span class="ev-msg">${esc(e.msg)}</span>
          </div>`).join('')
-       : '<div class="ev"><span class="ev-msg">No events in this run.</span></div>') +
+       : `<div class="ev"><span class="ev-msg">${esc(T('No events in this run.'))}</span></div>`) +
       '</div>';
 
     g('loader').classList.remove('on');
@@ -652,10 +666,10 @@ async function runSim(){
   } catch(err) {
     g('loader').classList.remove('on');
     g('placeholder').style.display = 'block';
-    g('placeholder').innerHTML = '<span style="color:var(--red)">Error: ' + esc(err.message) + '</span>';
+    g('placeholder').innerHTML = '<span style="color:var(--red)">' + esc(T('Error: {{msg}}', { msg: err.message })) + '</span>';
   }
 
-  btn.disabled = false; btn.textContent = 'Run Simulation';
+  btn.disabled = false; btn.textContent = T('Run simulation');
 }
 
 function downloadCSV(){
@@ -673,8 +687,8 @@ function downloadCSV(){
 applyDefaults();
 if (!BOOT.have_matplotlib){
   g('placeholder').innerHTML =
-    '<span style="color:var(--red)">matplotlib is not installed, so plots cannot be rendered.<br>' +
-    'Install it with: pip install matplotlib</span>';
+    '<span style="color:var(--red)">' + esc(T('matplotlib is not installed, so plots cannot be rendered.')) + '<br>' +
+    esc(T('Install it with:')) + ' <code>pip install matplotlib</code></span>';
   g('run-btn').disabled = true;
 }
 </script>

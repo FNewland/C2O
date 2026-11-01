@@ -238,7 +238,7 @@ export const useModelStore = create<ModelStore>((set, get) => ({
           const existing = s.elements.get(msg.element_id)
           if (existing) {
             const updated = { ...existing }
-            for (const [k, [, newVal]] of Object.entries(msg.changes || {})) {
+            for (const [k, [, newVal]] of Object.entries(msg.changes || {}) as [string, [unknown, unknown]][]) {
               (updated as any)[k] = newVal
             }
             s.elements.set(msg.element_id, updated)
@@ -344,7 +344,7 @@ export const useModelStore = create<ModelStore>((set, get) => ({
 
   getElementMaturity: (elementId) => {
     const el = get().elements.get(elementId)
-    if (!el) return { level: 'undefined', label: 'Undefined', color: '#6b7280', description: 'Element not found', completeness: 0, missingFields: [] }
+    if (!el) return { level: 'undefined', label: 'Undefined', color: 'var(--text-3)', description: 'Element not found', completeness: 0, missingFields: [] }
 
     const missing: string[] = []
     if (!el.mass_kg && el.element_type === 'component') missing.push('mass')
@@ -357,26 +357,26 @@ export const useModelStore = create<ModelStore>((set, get) => ({
     // Determine maturity level based on data completeness and source
     let level: MaturityLevel = 'undefined'
     let label = 'Undefined'
-    let color = '#6b7280'
+    let color = 'var(--text-3)'
     let description = 'No data defined'
 
     if (el.element_type === 'mission' || el.element_type === 'segment') {
       // Top-level containers — maturity = children completeness
       const children = get().getChildren(el.id)
       if (children.length === 0) {
-        level = 'parametric'; label = 'Top-level only'; color = '#f59e0b'
+        level = 'parametric'; label = 'Top-level only'; color = 'var(--status-caution)'
         description = 'Container defined but no children decomposed'
       } else {
-        level = 'specified'; label = 'Decomposed'; color = '#3b82f6'
+        level = 'specified'; label = 'Decomposed'; color = 'var(--interactive)'
         description = `${children.length} child elements defined`
       }
     } else if (el.element_type === 'system') {
       const children = get().getChildren(el.id)
       if (children.length === 0) {
-        level = 'parametric'; label = 'Parametric'; color = '#f59e0b'
+        level = 'parametric'; label = 'Parametric'; color = 'var(--status-caution)'
         description = 'System defined from parametric model, no subsystems yet'
       } else {
-        level = 'specified'; label = 'Architecture set'; color = '#3b82f6'
+        level = 'specified'; label = 'Architecture set'; color = 'var(--interactive)'
         description = `${children.length} subsystems defined`
       }
     } else if (el.element_type === 'subsystem') {
@@ -390,30 +390,30 @@ export const useModelStore = create<ModelStore>((set, get) => ({
         }
       }
       if (children.length === 0 && el.mass_kg) {
-        level = 'parametric'; label = 'Parametric'; color = '#f59e0b'
+        level = 'parametric'; label = 'Parametric'; color = 'var(--status-caution)'
         description = 'Mass/power from parametric estimate, no equipment selected'
       } else if (children.length === 0) {
-        level = 'estimated'; label = 'Estimated'; color = '#f97316'
+        level = 'estimated'; label = 'Estimated'; color = 'var(--status-caution)'
         description = 'Architecture option selected, awaiting equipment'
       } else {
-        level = 'selected'; label = 'Equipment selected'; color = '#10b981'
+        level = 'selected'; label = 'Equipment selected'; color = 'var(--status-ok)'
         description = `${children.length} components selected`
       }
     } else if (el.element_type === 'component') {
       if (el.kb_component_id) {
         // From knowledge base — fully specified
         if (missing.length === 0) {
-          level = 'specified'; label = 'Fully specified'; color = '#10b981'
+          level = 'specified'; label = 'Fully specified'; color = 'var(--status-ok)'
           description = `${el.manufacturer || 'COTS'} component, TRL ${el.trl || '?'}`
         } else {
-          level = 'selected'; label = 'KB component'; color = '#3b82f6'
+          level = 'selected'; label = 'KB component'; color = 'var(--interactive)'
           description = `From catalogue, missing: ${missing.join(', ')}`
         }
       } else if (el.mass_kg && el.power_avg_w) {
-        level = 'estimated'; label = 'Custom estimate'; color = '#f59e0b'
+        level = 'estimated'; label = 'Custom estimate'; color = 'var(--status-caution)'
         description = 'User-defined component, not from catalogue'
       } else {
-        level = 'parametric'; label = 'Placeholder'; color = '#f97316'
+        level = 'parametric'; label = 'Placeholder'; color = 'var(--status-caution)'
         description = 'Minimal data — needs specification'
       }
     }

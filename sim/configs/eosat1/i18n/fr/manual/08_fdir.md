@@ -109,14 +109,43 @@ charge utile déjà correctement éteinte, à chaque orbite.
 
 | ID de règle | Condition                  | Détection       | Réaction                    |
 |---------|--------------------------------|----------------|-----------------------------|
-| TTC-01  | Aucune télécommande valide depuis > 24 heures | link_status | Basculer sur le transpondeur redondant |
+| TTC-01  | Aucune télécommande valide depuis > 24 heures | 0x053D ≥ 86400 s → événement 0x0514 | Basculer sur le transpondeur redondant (S19 ea 4003) |
 | TTC-02  | Température du transpondeur hors plage | 0x0507  | Changer de transpondeur     |
+| TTC-03  | Décrochage de la liaison montante (verrouillage perdu puis retrouvé en moins de 60 s) | événement 0x0513 | Puissance TX HIGH, 5 W (S19 ea 4001) |
 
-TTC-01 est une minuterie de perte de commande : 24 h sans télécommande valide. La valeur figure dans
-`subsystems/ttc.yaml` sous la clé `cmd_loss_switch_timeout_s` (86400 s), à côté du seuil de dégradation du RSSI
-`cmd_loss_rssi_threshold_dbm` (-105 dBm). L'événement 0x0511 UPLINK_TIMEOUT signale
-au sol l'expiration du délai de liaison montante ; un basculement peut toujours être commandé depuis le sol
-(`TTC_SWITCH_REDUNDANT`, voir `05_ttc.md` §6.1).
+**Ce que le satellite voit et ne voit pas.** La marge de liaison (0x0503), le TEB (0x050C),
+l'Eb/N0 (0x0519), la CAG (0x051A) et le RSSI descendant (0x0502) sont mesurés par le
+récepteur **sol** (`visibility: ground_derived`). Le satellite ne peut pas les mesurer ;
+aucune règle de bord ne peut donc s'en servir. Jusqu'en novembre 2026, les règles 4001 et
+4003 se déclenchaient sur la marge de liaison et le TEB, et ne pouvaient donc jamais se
+déclencher. Les deux règles d'autonomie TTC se déclenchent désormais sur ce que le
+récepteur et l'OBC de bord observent réellement :
+
+- **TTC-01 : minuterie de perte de commande (ea 4003).** 0x053D `ttc.time_since_last_tc`
+  compte les secondes écoulées depuis la dernière télécommande acceptée par l'OBC ; chaque
+  acceptation S1.1 la remet à zéro. Lorsqu'elle atteint `cmd_loss_switch_timeout_s` dans
+  `subsystems/ttc.yaml` (86400 s), l'événement 0x0514 CMD_LOSS_TIMEOUT est émis une fois,
+  et la règle S19 ea 4003 envoie `TTC_SWITCH_REDUNDANT` (S8 func 64). Si la chaîne de
+  réception principale est devenue sourde, l'autre peut encore entendre le sol. La valeur
+  de 24 h est longue à dessein : un week-end calme ne doit pas faire changer de
+  transpondeur. Le sol peut toujours commander le basculement (`TTC_SWITCH_REDUNDANT`, voir
+  `05_ttc.md` §6.1). L'événement 0x0511 UPLINK_TIMEOUT est un autre signal (pas de
+  verrouillage de la liaison montante pendant 300 s) et il est émis après chaque LOS.
+- **TTC-03 : décrochage de la liaison montante (ea 4001).** À bord, une LOS normale et
+  un évanouissement du signal sont identiques au moment où le verrouillage de la porteuse
+  est perdu. Ils ne diffèrent que par la suite : après un évanouissement, le verrouillage
+  revient en quelques secondes ; après une LOS, il disparaît pendant des dizaines de
+  minutes. L'événement 0x0513 UPLINK_LOCK_DROPOUT est donc émis lorsque le verrouillage est
+  *retrouvé* moins de 60 s après avoir été perdu. La règle S19 ea 4001 commande alors
+  `TTC_SET_TX_POWER` niveau 2 (HIGH, 5 W), ce qui donne à la station sol environ 4 dB de
+  liaison descendante supplémentaires tant que le passage reste marginal. Cette
+  augmentation est **maintenue** : une fois le passage compris, le sol rétablit NOMINAL
+  (`TTC_SET_TX_POWER` niveau 1). Laisser le PA à 5 W coûte environ 17 W continus à chaque
+  passage et échauffe le PA vers la limite TTC-02/ea 4002.
+
+Le côté sol de la même histoire figure sur la page radio et sur la page TT&C : le pont RF
+calcule le TEB et la CAG au récepteur sol et les place en alarme avec des limites
+étiquetées **sol** (voir `05_ttc.md`).
 
 ### 4.6 Règles charge utile {#46-payload-rules}
 

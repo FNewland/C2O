@@ -198,14 +198,23 @@ class TestPerActivityRateSplit:
         # see rides the SAME packet as the power terms — the console can
         # no longer pair a telemetered wattage with a locally re-derived
         # eclipse flag. 2 bytes every 8 s = +3.5 bps of channel.
-        assert hk_bps == pytest.approx(1699.5, abs=2.0)
+        # 2026-08-20 telemetry-realism clean-up (d99c9e2, the `visibility:`
+        # classes): every ground-derived and instructor-only parameter left
+        # the HK SIDs — the spacecraft cannot measure link margin, RSSI,
+        # BER, Eb/N0, AGC, range or elevation (those are the ground
+        # receiver's), and must not downlink simulator truth such as
+        # aocs.fidelity_mode. -112 bps: 1699.5 -> 1587.7. Still ~9.9 % of
+        # the 16 kbps LOW rung, so the rate-ladder argument is unchanged.
+        assert hk_bps == pytest.approx(1587.7, abs=2.0)
+        assert hk_bps / 16000.0 == pytest.approx(0.099, abs=0.002)
         contacts = _contacts([("Svalbard", 20 + 45 * i, 445, 25.0)
                               for i in range(24)])
         b = BudgetTracker.from_config(CONFIG_DIR, contacts=contacts
                                       ).compute_data_budget()
         # 16.7 -> 17.5 MB/day with the mag TM + SID 12 GPS_NAV additions
-        # (see the bps note above; same everything-enabled worst case).
-        assert b["hk_stream_mb_per_day"] == pytest.approx(17.5, abs=0.3)
+        # (see the bps note above; same everything-enabled worst case);
+        # 17.5 -> 16.35 with the 2026-08-20 visibility clean-up (-112 bps).
+        assert b["hk_stream_mb_per_day"] == pytest.approx(16.35, abs=0.3)
         frac = b["hk_contact_fraction_percent"]
         assert frac["LOW"] == pytest.approx(8 * frac["HIGH"], rel=0.02)
         assert frac["LOW"] > 8 * frac["HIGH"] / 1.01     # LOW is the expensive one

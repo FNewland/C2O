@@ -7,6 +7,7 @@
  */
 import { useActiveParameters } from '../hooks/useActiveParameters'
 import { useDesignStore } from '../stores/designStore'
+import { fs } from '../theme/tokens'
 
 interface PowerRail {
   id: string; name: string; voltage_v: number; current_a: number
@@ -37,17 +38,17 @@ export function PowerRailEditor() {
 
   if (!result || totalPower <= 0) {
     return (
-      <div className="card" style={{ borderLeft: '3px solid #6b7280' }}>
-        <h3 style={{ fontSize: '0.85rem', color: '#6b7280' }}>Power Distribution Topology</h3>
-        <p style={{ fontSize: '0.72rem', color: '#6b7280' }}>Run a design to see power rail architecture.</p>
+      <div className="card" style={{ borderLeft: '3px solid var(--text-3)' }}>
+        <h3 style={{ fontSize: fs.body, color: 'var(--text-3)' }}>Power Distribution Topology</h3>
+        <p style={{ fontSize: fs.label, color: 'var(--text-3)' }}>Run a design to see power rail architecture.</p>
       </div>
     )
   }
 
   return (
     <div className="card">
-      <h3 style={{ fontSize: '0.85rem', marginBottom: '0.3rem' }}>Power Distribution Topology</h3>
-      <p style={{ fontSize: '0.68rem', color: '#9ca3af', marginBottom: '0.5rem' }}>
+      <h3 style={{ fontSize: fs.body, marginBottom: '0.3rem' }}>Power Distribution Topology</h3>
+      <p style={{ fontSize: fs.label, color: 'var(--text-2)', marginBottom: '0.5rem' }}>
         Bus architecture: {saPower.toFixed(0)}W EOL generation, {totalPower.toFixed(0)}W demand
       </p>
 
@@ -56,34 +57,34 @@ export function PowerRailEditor() {
         {rails.map((rail, i) => (
           <div key={rail.id} style={{
             display: 'flex', alignItems: 'center', gap: '0.4rem',
-            padding: '0.3rem 0.5rem', background: 'var(--bg-primary, #111827)',
-            borderRadius: '4px', borderLeft: `3px solid ${i === 0 ? '#f59e0b' : i === 1 ? '#10b981' : '#3b82f6'}`,
+            padding: '0.3rem 0.5rem', background: 'var(--bg-primary, var(--surface-1))',
+            borderRadius: '4px', borderLeft: `3px solid ${i === 0 ? 'var(--status-caution)' : i === 1 ? 'var(--status-ok)' : 'var(--interactive)'}`,
           }}>
             {/* Source */}
             <div style={{ minWidth: '80px' }}>
-              <div style={{ fontSize: '0.6rem', color: '#6b7280' }}>Source</div>
-              <div style={{ fontSize: '0.7rem', fontWeight: 600 }}>{rail.source}</div>
+              <div style={{ fontSize: fs.label, color: 'var(--text-3)' }}>Source</div>
+              <div style={{ fontSize: fs.label, fontWeight: 600 }}>{rail.source}</div>
             </div>
 
             {/* Rail line */}
             <div style={{ flex: 1, position: 'relative', height: 20 }}>
-              <div style={{ position: 'absolute', top: 9, left: 0, right: 0, height: 2, background: i === 0 ? '#f59e0b' : i === 1 ? '#10b981' : '#3b82f6' }} />
-              <div style={{ position: 'absolute', top: 2, left: '50%', transform: 'translateX(-50%)', fontSize: '0.6rem', fontFamily: 'monospace', color: '#d1d5db', background: 'var(--bg-primary, #111827)', padding: '0 0.3rem' }}>
+              <div style={{ position: 'absolute', top: 9, left: 0, right: 0, height: 2, background: i === 0 ? 'var(--status-caution)' : i === 1 ? 'var(--status-ok)' : 'var(--interactive)' }} />
+              <div style={{ position: 'absolute', top: 2, left: '50%', transform: 'translateX(-50%)', fontSize: fs.label, fontFamily: 'monospace', color: 'var(--text)', background: 'var(--bg-primary, var(--surface-1))', padding: '0 0.3rem' }}>
                 {rail.voltage_v}V / {rail.current_a.toFixed(1)}A
               </div>
             </div>
 
             {/* Loads */}
             <div style={{ minWidth: '120px' }}>
-              <div style={{ fontSize: '0.6rem', color: '#6b7280' }}>Loads</div>
-              <div style={{ fontSize: '0.62rem', color: '#9ca3af' }}>{rail.loads.join(', ')}</div>
+              <div style={{ fontSize: fs.label, color: 'var(--text-3)' }}>Loads</div>
+              <div style={{ fontSize: fs.label, color: 'var(--text-2)' }}>{rail.loads.join(', ')}</div>
             </div>
           </div>
         ))}
       </div>
 
       {/* Summary */}
-      <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem', fontSize: '0.68rem', color: '#6b7280' }}>
+      <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem', fontSize: fs.label, color: 'var(--text-3)' }}>
         <span>Total rails: {rails.length}</span>
         <span>Peak current: {(totalPower / 7.4).toFixed(1)} A</span>
         <span>Battery: {batteryCapacity.toFixed(0)} Wh</span>

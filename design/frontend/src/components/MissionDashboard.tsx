@@ -11,6 +11,7 @@ import { LaunchSelector } from './LaunchSelector'
 import { PointingBudget } from './PointingBudget'
 import { DataBudget } from './DataBudget'
 import { TimingBudget } from './TimingBudget'
+import { fs } from '../theme/tokens'
 
 // Extended domain order including all 20 agent domains
 const DOMAIN_ORDER = [
@@ -35,17 +36,17 @@ function KpiCard({ label, value, unit, status }: {
   label: string; value: string; unit?: string
   status?: 'green' | 'amber' | 'red' | 'blue'
 }) {
-  const colors = { green: '#10b981', amber: '#f59e0b', red: '#ef4444', blue: '#3b82f6' }
+  const colors = { green: 'var(--status-ok)', amber: 'var(--status-caution)', red: 'var(--status-alarm)', blue: 'var(--interactive)' }
   const c = colors[status || 'blue']
   return (
     <div style={{
-      background: 'var(--bg-secondary, #1f2937)', borderRadius: '6px', padding: '0.6rem 0.75rem',
-      borderTop: `3px solid ${c}`, border: '1px solid var(--border, #374151)',
+      background: 'var(--bg-secondary, var(--surface-2))', borderRadius: '6px', padding: '0.6rem 0.75rem',
+      borderTop: `3px solid ${c}`, border: '1px solid var(--border, var(--line))',
       minWidth: 0,
     }}>
-      <div style={{ fontSize: '0.65rem', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</div>
-      <div style={{ fontSize: '1.3rem', fontWeight: 700, fontFamily: 'monospace', color: c, lineHeight: 1.2 }}>{value}</div>
-      {unit && <div style={{ fontSize: '0.65rem', color: '#6b7280' }}>{unit}</div>}
+      <div style={{ fontSize: fs.label, color: 'var(--text-2)', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</div>
+      <div style={{ fontSize: fs.value, fontWeight: 700, fontFamily: 'monospace', color: c, lineHeight: 1.2 }}>{value}</div>
+      {unit && <div style={{ fontSize: fs.label, color: 'var(--text-3)' }}>{unit}</div>}
     </div>
   )
 }
@@ -61,28 +62,28 @@ function RadiationCard({ parameters: p }: { parameters: Record<string, DesignPar
   if (!p['radiation.tid_mission_krad']) return null
 
   const classColors: Record<string, string> = {
-    commercial: '#10b981', rad_tolerant: '#f59e0b', rad_hard: '#ef4444', rad_hard_plus: '#dc2626',
+    commercial: 'var(--status-ok)', rad_tolerant: 'var(--status-caution)', rad_hard: 'var(--status-alarm)', rad_hard_plus: 'var(--status-alarm)',
   }
 
   return (
     <div style={{
-      background: 'var(--bg-secondary, #1f2937)', borderRadius: '8px', padding: '0.75rem',
-      border: '1px solid var(--border, #374151)',
+      background: 'var(--bg-secondary, var(--surface-2))', borderRadius: '8px', padding: '0.75rem',
+      border: '1px solid var(--border, var(--line))',
     }}>
-      <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '0.9rem' }}>Radiation</h3>
-      <div style={{ fontSize: '1.8rem', fontWeight: 700, fontFamily: 'monospace', color: tid > 30 ? '#ef4444' : tid > 10 ? '#f59e0b' : '#10b981' }}>
-        {tid.toFixed(1)} <span style={{ fontSize: '0.8rem', fontWeight: 400 }}>krad</span>
+      <h3 style={{ margin: '0 0 0.5rem 0', fontSize: fs.value }}>Radiation</h3>
+      <div style={{ fontSize: fs.value, fontWeight: 700, fontFamily: 'monospace', color: tid > 30 ? 'var(--status-alarm)' : tid > 10 ? 'var(--status-caution)' : 'var(--status-ok)' }}>
+        {tid.toFixed(1)} <span style={{ fontSize: fs.body, fontWeight: 400 }}>krad</span>
       </div>
-      <div style={{ fontSize: '0.7rem', color: '#9ca3af', marginBottom: '0.3rem' }}>Total mission dose</div>
+      <div style={{ fontSize: fs.label, color: 'var(--text-2)', marginBottom: '0.3rem' }}>Total mission dose</div>
       <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
         <span style={{
-          fontSize: '0.7rem', padding: '0.15rem 0.5rem', borderRadius: '3px',
-          background: `${classColors[elClass] || '#6b7280'}22`,
-          color: classColors[elClass] || '#6b7280', fontWeight: 600,
+          fontSize: fs.label, padding: '0.15rem 0.5rem', borderRadius: '3px',
+          background: `color-mix(in srgb, ${classColors[elClass] || 'var(--text-3)'} 13%, transparent)`,
+          color: classColors[elClass] || 'var(--text-3)', fontWeight: 600,
         }}>
           {elClass.replace(/_/g, ' ')}
         </span>
-        <span style={{ fontSize: '0.7rem', color: '#6b7280' }}>{env.replace(/_/g, ' ')}</span>
+        <span style={{ fontSize: fs.label, color: 'var(--text-3)' }}>{env.replace(/_/g, ' ')}</span>
       </div>
     </div>
   )
@@ -101,22 +102,22 @@ function VolumeReliabilityCard({ parameters: p }: { parameters: Record<string, D
 
   if (!p['volume.utilisation_percent'] && !p['reliability.mission_reliability']) return null
 
-  const volColor = volUtil > 95 ? '#ef4444' : volUtil > 80 ? '#f59e0b' : '#10b981'
-  const relColor = reliability >= 0.9 ? '#10b981' : reliability >= 0.7 ? '#f59e0b' : '#ef4444'
+  const volColor = volUtil > 95 ? 'var(--status-alarm)' : volUtil > 80 ? 'var(--status-caution)' : 'var(--status-ok)'
+  const relColor = reliability >= 0.9 ? 'var(--status-ok)' : reliability >= 0.7 ? 'var(--status-caution)' : 'var(--status-alarm)'
 
   return (
     <div style={{
-      background: 'var(--bg-secondary, #1f2937)', borderRadius: '8px', padding: '0.75rem',
-      border: '1px solid var(--border, #374151)',
+      background: 'var(--bg-secondary, var(--surface-2))', borderRadius: '8px', padding: '0.75rem',
+      border: '1px solid var(--border, var(--line))',
     }}>
       {/* Volume */}
       {p['volume.utilisation_percent'] && (
         <>
-          <h3 style={{ margin: '0 0 0.4rem 0', fontSize: '0.9rem' }}>Volume</h3>
-          <div style={{ height: 8, borderRadius: 4, background: '#111827', overflow: 'hidden', marginBottom: '0.3rem' }}>
+          <h3 style={{ margin: '0 0 0.4rem 0', fontSize: fs.value }}>Volume</h3>
+          <div style={{ height: 8, borderRadius: 4, background: 'var(--surface-1)', overflow: 'hidden', marginBottom: '0.3rem' }}>
             <div style={{ height: '100%', width: `${Math.min(100, volUtil)}%`, background: volColor, borderRadius: 4, transition: 'width 0.3s' }} />
           </div>
-          <div style={{ fontSize: '0.72rem', color: '#9ca3af', marginBottom: '0.6rem' }}>
+          <div style={{ fontSize: fs.label, color: 'var(--text-2)', marginBottom: '0.6rem' }}>
             {volUtil.toFixed(0)}% used — {volMargin.toFixed(1)} L margin
           </div>
         </>
@@ -125,12 +126,12 @@ function VolumeReliabilityCard({ parameters: p }: { parameters: Record<string, D
       {/* Reliability */}
       {p['reliability.mission_reliability'] && (
         <>
-          <h3 style={{ margin: '0 0 0.4rem 0', fontSize: '0.9rem' }}>Reliability</h3>
-          <div style={{ fontSize: '1.6rem', fontWeight: 700, fontFamily: 'monospace', color: relColor }}>
+          <h3 style={{ margin: '0 0 0.4rem 0', fontSize: fs.value }}>Reliability</h3>
+          <div style={{ fontSize: fs.value, fontWeight: 700, fontFamily: 'monospace', color: relColor }}>
             {(reliability * 100).toFixed(1)}%
           </div>
-          <div style={{ fontSize: '0.72rem', color: '#9ca3af' }}>
-            {spf > 0 ? <span style={{ color: '#f59e0b' }}>{spf} single-point failure{spf !== 1 ? 's' : ''}</span> : 'No single-point failures'}
+          <div style={{ fontSize: fs.label, color: 'var(--text-2)' }}>
+            {spf > 0 ? <span style={{ color: 'var(--status-caution)' }}>{spf} single-point failure{spf !== 1 ? 's' : ''}</span> : 'No single-point failures'}
             {weakest ? <span> — weakest: {weakest}</span> : ''}
           </div>
         </>
@@ -166,14 +167,14 @@ function EditableParamRow({ pid, param }: { pid: string; param: DesignParam }) {
 
   return (
     <div style={{
-      display: 'flex', justifyContent: 'space-between', padding: '0.1rem 0.3rem', fontSize: '0.75rem',
+      display: 'flex', justifyContent: 'space-between', padding: '0.1rem 0.3rem', fontSize: fs.label,
       cursor: canEdit ? 'pointer' : 'default',
       background: editing ? 'rgba(59,130,246,0.1)' : 'transparent',
       borderRadius: '3px',
     }}
       onDoubleClick={startEdit}
     >
-      <span style={{ color: '#9ca3af', flex: 1 }}>{label}</span>
+      <span style={{ color: 'var(--text-2)', flex: 1 }}>{label}</span>
       {editing ? (
         <input
           autoFocus
@@ -182,17 +183,17 @@ function EditableParamRow({ pid, param }: { pid: string; param: DesignParam }) {
           onBlur={commit}
           onKeyDown={e => { if (e.key === 'Enter') commit(); if (e.key === 'Escape') setEditing(false) }}
           style={{
-            width: '100px', fontFamily: 'monospace', fontSize: '0.75rem', fontWeight: 600,
-            background: 'var(--bg-primary, #111827)', color: '#f3f4f6',
-            border: '1px solid var(--accent, #3b82f6)', borderRadius: '3px',
+            width: '100px', fontFamily: 'monospace', fontSize: fs.value, fontWeight: 600,
+            background: 'var(--bg-primary, var(--surface-1))', color: 'var(--text)',
+            border: '1px solid var(--accent, var(--interactive))', borderRadius: '3px',
             padding: '0 0.25rem', textAlign: 'right',
           }}
         />
       ) : (
         <span>
-          <span style={{ fontFamily: 'monospace', fontWeight: 600, color: canEdit ? '#f3f4f6' : undefined }}>{formatValue(param.value)}</span>
-          {param.unit && <span style={{ color: '#6b7280', marginLeft: '0.25rem', fontSize: '0.65rem' }}>{param.unit}</span>}
-          {canEdit && <span style={{ color: '#3b82f6', fontSize: '0.6rem', marginLeft: '0.3rem', opacity: 0.5 }}>edit</span>}
+          <span style={{ fontFamily: 'monospace', fontWeight: 600, color: canEdit ? 'var(--text)' : undefined }}>{formatValue(param.value)}</span>
+          {param.unit && <span style={{ color: 'var(--text-3)', marginLeft: '0.25rem', fontSize: fs.label }}>{param.unit}</span>}
+          {canEdit && <span style={{ color: 'var(--interactive)', fontSize: fs.label, marginLeft: '0.3rem', opacity: 0.5 }}>edit</span>}
         </span>
       )}
     </div>
@@ -209,22 +210,22 @@ function AllParameters({ parameters }: { parameters: Record<string, DesignParam>
       <button
         onClick={() => setOpen(!open)}
         style={{
-          background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer',
-          fontSize: '0.8rem', padding: '0.3rem 0', display: 'flex', alignItems: 'center', gap: '0.3rem',
+          background: 'none', border: 'none', color: 'var(--text-2)', cursor: 'pointer',
+          fontSize: fs.body, padding: '0.3rem 0', display: 'flex', alignItems: 'center', gap: '0.3rem',
         }}
       >
         <span style={{ transform: open ? 'rotate(90deg)' : 'rotate(0)', display: 'inline-block', transition: 'transform 0.15s' }}>&#9654;</span>
         All Parameters ({Object.keys(parameters).length})
-        {hasSession && <span style={{ fontSize: '0.65rem', color: '#3b82f6', marginLeft: '0.5rem' }}>double-click to edit</span>}
+        {hasSession && <span style={{ fontSize: fs.label, color: 'var(--interactive)', marginLeft: '0.5rem' }}>double-click to edit</span>}
       </button>
       {open && (
-        <div style={{ maxHeight: '50vh', overflowY: 'auto', marginTop: '0.5rem', background: 'var(--bg-secondary, #1f2937)', borderRadius: '6px', padding: '0.5rem', border: '1px solid var(--border, #374151)' }}>
+        <div style={{ maxHeight: '50vh', overflowY: 'auto', marginTop: '0.5rem', background: 'var(--bg-secondary, var(--surface-2))', borderRadius: '6px', padding: '0.5rem', border: '1px solid var(--border, var(--line))' }}>
           {DOMAIN_ORDER.map(domain => {
             const domainParams = Object.entries(parameters).filter(([k]) => k.startsWith(domain + '.'))
             if (domainParams.length === 0) return null
             return (
               <div key={domain} style={{ marginBottom: '0.5rem' }}>
-                <div style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', color: '#6b7280', borderBottom: '1px solid #374151', padding: '0.2rem 0', marginBottom: '0.2rem', letterSpacing: '0.05em' }}>
+                <div style={{ fontSize: fs.label, fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-3)', borderBottom: '1px solid var(--line)', padding: '0.2rem 0', marginBottom: '0.2rem', letterSpacing: '0.05em' }}>
                   {domain}
                 </div>
                 {domainParams.map(([pid, p]) => (
@@ -251,26 +252,26 @@ function CommunityCard({ parameters: p }: { parameters: Record<string, DesignPar
 
   return (
     <div style={{
-      background: 'var(--bg-secondary, #1f2937)', borderRadius: '8px', padding: '0.75rem',
-      border: '1px solid var(--border, #374151)', gridColumn: '1 / -1',
+      background: 'var(--bg-secondary, var(--surface-2))', borderRadius: '8px', padding: '0.75rem',
+      border: '1px solid var(--border, var(--line))', gridColumn: '1 / -1',
     }}>
-      <h3 style={{ margin: '0 0 0.4rem 0', fontSize: '0.9rem' }}>Community & Societal Impact</h3>
-      <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', fontSize: '0.8rem' }}>
+      <h3 style={{ margin: '0 0 0.4rem 0', fontSize: fs.value }}>Community & Societal Impact</h3>
+      <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', fontSize: fs.body }}>
         <div>
-          <div style={{ fontSize: '1.2rem', fontWeight: 700, fontFamily: 'monospace', color: '#3b82f6' }}>{impact.toFixed(0)}</div>
-          <div style={{ fontSize: '0.65rem', color: '#9ca3af' }}>Impact Score</div>
+          <div style={{ fontSize: fs.value, fontWeight: 700, fontFamily: 'monospace', color: 'var(--interactive)' }}>{impact.toFixed(0)}</div>
+          <div style={{ fontSize: fs.label, color: 'var(--text-2)' }}>Impact Score</div>
         </div>
         <div>
-          <div style={{ fontSize: '1.2rem', fontWeight: 700, fontFamily: 'monospace', color: '#10b981' }}>{openData.toFixed(0)}</div>
-          <div style={{ fontSize: '0.65rem', color: '#9ca3af' }}>Open Data</div>
+          <div style={{ fontSize: fs.value, fontWeight: 700, fontFamily: 'monospace', color: 'var(--status-ok)' }}>{openData.toFixed(0)}</div>
+          <div style={{ fontSize: fs.label, color: 'var(--text-2)' }}>Open Data</div>
         </div>
         <div>
-          <div style={{ fontSize: '1.2rem', fontWeight: 700, fontFamily: 'monospace', color: '#f59e0b' }}>{educational.toFixed(0)}</div>
-          <div style={{ fontSize: '0.65rem', color: '#9ca3af' }}>Educational</div>
+          <div style={{ fontSize: fs.value, fontWeight: 700, fontFamily: 'monospace', color: 'var(--status-caution)' }}>{educational.toFixed(0)}</div>
+          <div style={{ fontSize: fs.label, color: 'var(--text-2)' }}>Educational</div>
         </div>
         <div>
-          <div style={{ fontSize: '1.2rem', fontWeight: 700, fontFamily: 'monospace' }}>{stakeholders.toFixed(0)}</div>
-          <div style={{ fontSize: '0.65rem', color: '#9ca3af' }}>Stakeholder Groups</div>
+          <div style={{ fontSize: fs.value, fontWeight: 700, fontFamily: 'monospace' }}>{stakeholders.toFixed(0)}</div>
+          <div style={{ fontSize: fs.label, color: 'var(--text-2)' }}>Stakeholder Groups</div>
         </div>
       </div>
     </div>
@@ -279,7 +280,7 @@ function CommunityCard({ parameters: p }: { parameters: Record<string, DesignPar
 
 // === MAIN DASHBOARD ===
 export function MissionDashboard() {
-  const { result, studyId } = useDesignStore()
+  const { result, studyId, requirements } = useDesignStore()
 
   // Use result.parameters directly (stable reference) to avoid recharts infinite loop
   if (!result?.parameters) return null
@@ -320,12 +321,12 @@ export function MissionDashboard() {
           <SVGWaterfall
             title="Mass Breakdown"
             items={[
-              { label: 'Payload', value: get('payload.mass_kg') || (result?.parameters as any)?.['payload.mass_kg']?.value || 0, color: '#10b981' },
-              { label: 'EPS', value: get('power.eps_mass_kg'), color: '#f59e0b' },
-              { label: 'AOCS', value: get('aocs.mass_kg'), color: '#06b6d4' },
-              { label: 'Comms', value: get('link.ttc_mass_kg'), color: '#ec4899' },
-              { label: 'Thermal', value: get('thermal.tcs_mass_kg'), color: '#ef4444' },
-              { label: 'Structure', value: get('structure.mass_kg'), color: '#84cc16' },
+              { label: 'Payload', value: get('payload.mass_kg') || (result?.parameters as any)?.['payload.mass_kg']?.value || 0, color: 'var(--status-ok)' },
+              { label: 'EPS', value: get('power.eps_mass_kg'), color: 'var(--status-caution)' },
+              { label: 'AOCS', value: get('aocs.mass_kg'), color: 'var(--interactive)' },
+              { label: 'Comms', value: get('link.ttc_mass_kg'), color: 'var(--cat-6)' },
+              { label: 'Thermal', value: get('thermal.tcs_mass_kg'), color: 'var(--status-alarm)' },
+              { label: 'Structure', value: get('structure.mass_kg'), color: 'var(--cat-7)' },
             ].filter(i => i.value > 0)}
             allocation={requirements.target_mass_kg || 6}
             unit="kg"
@@ -337,10 +338,10 @@ export function MissionDashboard() {
           <SVGBarChart
             title="Power Profile"
             data={[
-              { label: 'Sun Demand', value: get('power.total_sunlight_w'), color: '#f59e0b' },
-              { label: 'Eclipse', value: get('power.total_eclipse_w'), color: '#6b7280' },
-              { label: 'SA BOL', value: get('power.sa_power_bol_w'), color: '#10b981' },
-              { label: 'SA EOL', value: get('power.sa_power_eol_w'), color: '#3b82f6' },
+              { label: 'Sun Demand', value: get('power.total_sunlight_w'), color: 'var(--status-caution)' },
+              { label: 'Eclipse', value: get('power.total_eclipse_w'), color: 'var(--text-3)' },
+              { label: 'SA BOL', value: get('power.sa_power_bol_w'), color: 'var(--status-ok)' },
+              { label: 'SA EOL', value: get('power.sa_power_eol_w'), color: 'var(--interactive)' },
             ].filter(d => d.value > 0)}
             unit=" W"
             width={380}

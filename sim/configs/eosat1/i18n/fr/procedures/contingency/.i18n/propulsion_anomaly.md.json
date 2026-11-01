@@ -29,13 +29,13 @@
   },
   {
    "id": "ctg-028-propulsion-anomaly/procedure-steps/step-1-read-full-propulsion-telemetry",
-   "en_hash": "bd36ded28926ed28",
-   "fr_hash": "8c8488e0306bac7c"
+   "en_hash": "de4e8e24981b27f5",
+   "fr_hash": "8b027c40361188e1"
   },
   {
    "id": "ctg-028-propulsion-anomaly/procedure-steps/step-2-isolate",
-   "en_hash": "dd0291d9267c82de",
-   "fr_hash": "661838197b60d16b"
+   "en_hash": "e435c67f8dd81ff0",
+   "fr_hash": "a41d80d6e23a8903"
   },
   {
    "id": "ctg-028-propulsion-anomaly/procedure-steps/step-3-bound-the-remaining-usable-delta-v",
@@ -58,5 +58,5 @@
    "fr_hash": "cbc5ad1a93e1c0d7"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "8067e5b"
 }

@@ -14,7 +14,17 @@ Every category is pinned at zero. The categories are:
   the catalogue. Pinned separately since Phase E; kept here for completeness.
 * `PARAM_UNKNOWN` — a `(0xNNNN)` that resolves to no parameter *and* no event.
 * `PARAM_NOT_REACHABLE` — a real parameter in no HK SID and not `on_demand`,
-  so the verification step the card asks for cannot be performed.
+  so the verification step the card asks for cannot be performed. Since
+  2026-11-01 the auditor reads `visibility:` from parameters.yaml: a
+  `ground_derived` parameter (link margin, BER, RSSI, range, elevation…) is
+  measured on the ground and is reachable by definition, on the TT&C and
+  radio pages.
+* `PARAM_INSTRUCTOR_ONLY` — the card tells an operator to read a
+  `visibility: instructor` parameter (simulator truth: leak rate, scene
+  quality, payload SNR, injected gyro bias…). No console shows it, so the
+  step must be rewritten to what an operator really observes.
+* `HK_SID_MISMATCH` — a step requests one HK SID and verifies a parameter
+  that lives in another (or, for a ground-derived value, in none).
 * `EVENT_NAME_MISMATCH` — `PROP_BURN_START (0x0804)` when 0x0804 is
   `PROP_BURN_COMPLETE`. Referentially valid, operationally wrong.
 * `SUBTYPE_INVERTED` — `GET_PARAM … Subtype 1` when this suite's S20 uses
@@ -36,7 +46,8 @@ from procedure_audit import Catalog, audit_procedures  # noqa: E402
 
 CATEGORIES = ("TC_UNKNOWN", "FUNC_ID_MISMATCH", "PARAM_UNKNOWN",
               "PARAM_NOT_REACHABLE", "EVENT_NAME_MISMATCH",
-              "SUBTYPE_INVERTED")
+              "SUBTYPE_INVERTED", "HK_SID_MISMATCH",
+              "PARAM_INSTRUCTOR_ONLY")
 
 #: Findings that are deliberate. Every entry needs a reason; empty is the goal.
 ALLOWLIST: dict[tuple[str, str], str] = {}

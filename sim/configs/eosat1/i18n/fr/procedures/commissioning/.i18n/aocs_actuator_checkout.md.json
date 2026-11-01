@@ -64,8 +64,8 @@
   },
   {
    "id": "com-004-aocs-actuator-checkout/procedure-steps/step-7-check-wheel-temperatures",
-   "en_hash": "5df2db639ed6b919",
-   "fr_hash": "c207e8972e7dae69"
+   "en_hash": "3d56f2fcc64ee763",
+   "fr_hash": "f0e827cca87afedd"
   },
   {
    "id": "com-004-aocs-actuator-checkout/procedure-steps/step-8-momentum-desaturation-test",
@@ -93,5 +93,5 @@
    "fr_hash": "d8d817b8c2456954"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "8067e5b"
 }

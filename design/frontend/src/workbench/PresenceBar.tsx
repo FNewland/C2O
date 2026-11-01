@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { useCollaboration } from './useCollaboration'
 import { AIStatusIndicator } from '../ai'
 import { OptionSwitcher } from '../components/OptionSwitcher'
+import { fs } from '../theme/tokens'
 
 export function PresenceBar() {
   const { t } = useTranslation()
@@ -15,7 +16,7 @@ export function PresenceBar() {
   return (
     <div style={{
       display: 'flex', alignItems: 'center', gap: '0.4rem',
-      padding: '0.15rem 1rem', fontSize: '0.6rem',
+      padding: '0.15rem 1rem', fontSize: fs.label,
       background: connected ? 'rgba(16,185,129,0.08)' : 'rgba(239,68,68,0.08)',
       borderBottom: `1px solid ${connected ? 'var(--success)' : 'var(--danger)'}`,
     }}>

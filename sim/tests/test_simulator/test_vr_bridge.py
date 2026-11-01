@@ -27,15 +27,22 @@ ROOT = Path(__file__).resolve().parents[2]
 STUB_DIR = ROOT / "tools" / "vr_stub"
 
 
-def _load_stub():
-    spec = importlib.util.spec_from_file_location("vr_stub",
-                                                  STUB_DIR / "vr_stub.py")
+@pytest.fixture(scope="module")
+def stub():
+    """tools/vr_stub/vr_stub.py, loaded lazily: if the stub is missing or
+    cannot import, only the stub tests skip; the frame-builder, health,
+    transport and wiring tests still run (it was once never committed and
+    its import at module level hid all 29 tests)."""
+    path = STUB_DIR / "vr_stub.py"
+    if not path.is_file():
+        pytest.skip(f"{path} is missing")
+    spec = importlib.util.spec_from_file_location("vr_stub", path)
     mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
+    try:
+        spec.loader.exec_module(mod)
+    except ImportError as e:            # pragma: no cover - environment
+        pytest.skip(f"vr_stub.py does not import: {e}")
     return mod
-
-
-stub = _load_stub()
 
 
 @pytest.fixture(scope="module")
@@ -116,6 +123,34 @@ class TestFrameBuilder:
         assert np.dot(_rot(q, [1, 0, 0]),
                       np.asarray(o.vel_eci) / np.linalg.norm(o.vel_eci)) > 0.99
         assert np.allclose(b["earth"]["dir_body"], [0, 0, 1], atol=1e-4)
+
+    def test_wire_is_the_pre_q4_frame_for_any_attitude(self, engine):
+        """Before ruling Q4 the simulator body WAS the smo-vr/1 body, and
+        the bridge published q_true and omega_true unchanged. For the same
+        physical attitude and rate the wire must still carry exactly those
+        numbers: q (up to sign), rate_body and sun.dir_body in smo-vr/1
+        axes."""
+        rng = np.random.default_rng(4)
+        q_vr = rng.normal(size=4)
+        q_vr /= np.linalg.norm(q_vr)
+        w_vr = np.array([0.3, -1.2, 0.7])                    # deg/s
+        C_vr = att.quat_to_dcm(q_vr)
+        s = engine.subsystems["aocs"]._state
+        saved = (list(s.q_true), list(s.omega_true))
+        try:
+            # The same physical state expressed in the simulator's axes.
+            s.q_true = [float(x) for x in att.dcm_to_quat(
+                vb.VR_FROM_SIM_BODY @ C_vr)]
+            s.omega_true = [float(x) for x in np.radians(
+                vb.VR_FROM_SIM_BODY @ w_vr)]
+            b = vb.build_vr_state(engine)
+        finally:
+            s.q_true, s.omega_true = saved
+        q = np.asarray(b["attitude"]["q_body_to_eci"])
+        assert min(np.linalg.norm(q - q_vr), np.linalg.norm(q + q_vr)) < 1e-6
+        assert np.allclose(b["attitude"]["rate_body_deg_s"], w_vr, atol=1e-4)
+        sun = np.asarray(b["sun"]["dir_eci"])
+        assert np.allclose(b["sun"]["dir_body"], C_vr @ sun, atol=1e-5)
 
     def test_gmst_matches_propagator_longitude(self, engine):
         """Rotating the ECI position by -gmst must reproduce lon_deg."""
@@ -208,7 +243,7 @@ def test_parse_client_message(text, ok):
 
 
 @pytest.mark.parametrize("text,ok", PARSE_CASES)
-def test_stub_parser_agrees_with_simulator(text, ok):
+def test_stub_parser_agrees_with_simulator(stub, text, ok):
     assert stub.parse_client_message(text) == vb.parse_client_message(text)
 
 
@@ -379,24 +414,24 @@ class TestWiring:
 
 class TestStubParity:
 
-    def test_state_shape_matches_simulator(self, engine):
+    def test_state_shape_matches_simulator(self, stub, engine):
         sim = vb.build_vr_state(engine)
         st = stub.Story("once").body(1000.0, 1000)
         assert _shape(st) == _shape(sim)
 
-    def test_hello_matches_simulator(self):
+    def test_hello_matches_simulator(self, stub):
         a = vb.build_hello("x", 10.0, 8100, 8101)
         b = stub.build_hello("x", 10.0, 8100, 8101)
         assert a == b
 
-    def test_constants_match(self):
+    def test_constants_match(self, stub):
         assert stub.SCHEMA == vb.SCHEMA
         assert stub.STATUS_BITS == vb.STATUS_BITS
         assert stub.HEALTHY_MASK == vb.HEALTHY_MASK
         assert stub.DEFAULT_TCP_PORT == vb.DEFAULT_TCP_PORT
         assert stub.DEFAULT_WS_PORT == vb.DEFAULT_WS_PORT
 
-    def test_stub_enums_are_simulator_enums(self):
+    def test_stub_enums_are_simulator_enums(self, stub):
         story = stub.Story("once")
         for t in range(0, int(stub.PERIOD_S), 50):
             b = story.body(float(t), t)
@@ -407,7 +442,7 @@ class TestStubParity:
             assert b["deploy"]["antenna"]["state"] in (
                 "STOWED", "DEPLOYED", "JAMMED")
 
-    def test_stub_nadir_convention(self):
+    def test_stub_nadir_convention(self, stub):
         b = stub.Story("once").body(2500.0, 2500)
         pos = np.asarray(b["orbit"]["pos_eci_km"])
         z = _rot(b["attitude"]["q_body_to_eci"], [0, 0, 1])
@@ -417,7 +452,7 @@ class TestStubParity:
                                 b["sun"]["dir_body"]), b["sun"]["dir_eci"],
                            atol=1e-5)
 
-    def test_stub_orbit_tracks_simulator(self, engine):
+    def test_stub_orbit_tracks_simulator(self, stub, engine):
         from datetime import timedelta
         from smo_simulator.engine import SimulationEngine
         e = SimulationEngine(str(ROOT / "configs" / "eosat1"))
@@ -431,7 +466,7 @@ class TestStubParity:
             assert b["earth"]["gmst_deg"] == pytest.approx(
                 vb.gmst_deg_at(o.utc), abs=1e-3)
 
-    def test_sample_files_are_current(self, tmp_path):
+    def test_sample_files_are_current(self, stub, tmp_path):
         nd, cs = stub.write_sample(str(tmp_path))
         for name, fresh in (("sample_vr_frames.ndjson", nd),
                             ("sample_vr_frames.csv", cs)):
@@ -440,7 +475,7 @@ class TestStubParity:
                 f"{name} is stale — run: python3 tools/vr_stub/vr_stub.py "
                 f"--write-sample tools/vr_stub")
 
-    def test_sample_story_covers_every_state(self):
+    def test_sample_story_covers_every_state(self, stub):
         lines = (STUB_DIR / "sample_vr_frames.ndjson").read_text(
             "utf-8").splitlines()
         assert json.loads(lines[0])["type"] == "hello"

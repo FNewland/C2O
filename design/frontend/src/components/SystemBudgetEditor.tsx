@@ -8,16 +8,17 @@ import { useState, useMemo } from 'react'
 import { useDesignStore } from '../stores/designStore'
 import { useModelStore } from '../stores/modelStore'
 import { BudgetCascade } from '../charts/BudgetCascade'
+import { fs } from '../theme/tokens'
 
 type BudgetType = 'mass' | 'power' | 'cost' | 'volume' | 'deltav' | 'data'
 
 const BUDGET_CONFIGS: { type: BudgetType; label: string; unit: string; color: string }[] = [
-  { type: 'mass', label: 'Mass', unit: 'kg', color: '#3b82f6' },
-  { type: 'power', label: 'Power', unit: 'W', color: '#f59e0b' },
-  { type: 'cost', label: 'Cost', unit: 'kEUR', color: '#10b981' },
-  { type: 'volume', label: 'Volume', unit: 'cm³', color: '#8b5cf6' },
-  { type: 'deltav', label: 'Delta-V', unit: 'm/s', color: '#f97316' },
-  { type: 'data', label: 'Data', unit: 'GB/day', color: '#06b6d4' },
+  { type: 'mass', label: 'Mass', unit: 'kg', color: 'var(--interactive)' },
+  { type: 'power', label: 'Power', unit: 'W', color: 'var(--status-caution)' },
+  { type: 'cost', label: 'Cost', unit: 'kEUR', color: 'var(--status-ok)' },
+  { type: 'volume', label: 'Volume', unit: 'cm³', color: 'var(--cat-2)' },
+  { type: 'deltav', label: 'Delta-V', unit: 'm/s', color: 'var(--status-caution)' },
+  { type: 'data', label: 'Data', unit: 'GB/day', color: 'var(--interactive)' },
 ]
 
 // Each budget type has its own decomposition logic
@@ -34,7 +35,6 @@ export function SystemBudgetEditor() {
   const [activeBudget, setActiveBudget] = useState<BudgetType>('mass')
   const requirements = useDesignStore(s => s.requirements)
   const result = useDesignStore(s => s.result)
-  const setParam = useDesignStore(s => s.setParameter)
   const storedAllocations = useDesignStore(s => s.budgetAllocations)
   const persistAllocations = useDesignStore(s => s.setBudgetAllocations)
   const studyId = useDesignStore(s => s.studyId)
@@ -125,7 +125,6 @@ export function SystemBudgetEditor() {
       // If no children, use the subsystem's own values (from architecture selection)
       const usedMass = childMass > 0 ? childMass : (el.mass_kg || 0) * (el.quantity || 1)
       const usedPower = childPower > 0 ? childPower : (el.power_avg_w || 0) * (el.quantity || 1)
-      const usedCost = childCost > 0 ? childCost : (el.cost_recurring_keur || 0) * (el.quantity || 1)
 
       if (label in massUsed) massUsed[label] = usedMass
       // Power goes to "Platform Use" for most subsystems
@@ -140,7 +139,6 @@ export function SystemBudgetEditor() {
       if (!label) continue
       const m = (el.mass_kg || 0) * (el.quantity || 1)
       const p = (el.power_avg_w || 0) * (el.quantity || 1)
-      const c = (el.cost_recurring_keur || 0) * (el.quantity || 1)
       massUsed[label] = (massUsed[label] || 0) + m
       if (label !== 'Payload') powerUsed['Platform Use'] = (powerUsed['Platform Use'] || 0) + p
       else powerUsed['Payload Use'] = (powerUsed['Payload Use'] || 0) + p
@@ -158,7 +156,7 @@ export function SystemBudgetEditor() {
       powerUsed['Payload Use'] = requirements.payloads?.[0]?.power_w || 0
     }
 
-    return { mass: massUsed, power: powerUsed, cost: costUsed }
+    return { mass: massUsed, power: powerUsed, cost: costUsed } as Record<string, Record<string, number>>
   }, [elements, requirements, result])
 
   const [volumeOverride, setVolumeOverride] = useState<number | null>(null)
@@ -210,15 +208,15 @@ export function SystemBudgetEditor() {
 
   return (
     <div style={{ padding: '1rem', overflowY: 'auto', height: '100%' }}>
-      <h2 style={{ fontSize: '1rem', marginBottom: '0.25rem' }}>System Budget Allocation</h2>
-      <p style={{ fontSize: '0.72rem', color: '#9ca3af', marginBottom: '0.75rem' }}>
+      <h2 style={{ fontSize: fs.value, marginBottom: '0.25rem' }}>System Budget Allocation</h2>
+      <p style={{ fontSize: fs.label, color: 'var(--text-2)', marginBottom: '0.75rem' }}>
         Assign budget buckets from the mission envelope to each subsystem. Subsystem design fills the buckets.
         {result ? (
-          <span style={{ display: 'block', fontSize: '0.65rem', color: '#f59e0b', marginTop: '0.2rem' }}>
+          <span style={{ display: 'block', fontSize: fs.label, color: 'var(--status-caution)', marginTop: '0.2rem' }}>
             "Used" values are parametric estimates from agents — will update when equipment is selected at subsystem level.
           </span>
         ) : (
-          <span style={{ display: 'block', fontSize: '0.65rem', color: '#6b7280', marginTop: '0.2rem' }}>
+          <span style={{ display: 'block', fontSize: fs.label, color: 'var(--text-3)', marginTop: '0.2rem' }}>
             Run a design to populate budget estimates.
           </span>
         )}
@@ -228,10 +226,10 @@ export function SystemBudgetEditor() {
       <div style={{ display: 'flex', gap: '0.3rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
         {BUDGET_CONFIGS.map(bc => (
           <button key={bc.type} onClick={() => setActiveBudget(bc.type)} style={{
-            padding: '0.3rem 0.75rem', fontSize: '0.75rem', borderRadius: '4px', cursor: 'pointer',
-            background: activeBudget === bc.type ? bc.color : 'var(--bg-secondary, #1f2937)',
-            color: activeBudget === bc.type ? 'white' : '#9ca3af',
-            border: `1px solid ${activeBudget === bc.type ? bc.color : '#374151'}`,
+            padding: '0.3rem 0.75rem', fontSize: fs.label, borderRadius: '4px', cursor: 'pointer',
+            background: activeBudget === bc.type ? bc.color : 'var(--bg-secondary, var(--surface-2))',
+            color: activeBudget === bc.type ? 'white' : 'var(--text-2)',
+            border: `1px solid ${activeBudget === bc.type ? bc.color : 'var(--line)'}`,
           }}>{bc.label} ({bc.unit})</button>
         ))}
       </div>
@@ -239,7 +237,7 @@ export function SystemBudgetEditor() {
       {/* Volume: form factor selector */}
       {activeBudget === 'volume' && (
         <div className="card" style={{ marginBottom: '0.5rem' }}>
-          <h3 style={{ fontSize: '0.82rem', marginBottom: '0.3rem' }}>Spacecraft Form Factor</h3>
+          <h3 style={{ fontSize: fs.body, marginBottom: '0.3rem' }}>Spacecraft Form Factor</h3>
           <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap' }}>
             {[
               { label: '1U', volume: 1000, mass: 1.33 },
@@ -252,9 +250,9 @@ export function SystemBudgetEditor() {
               <button key={ff.label} className="btn btn-sm" onClick={() => {
                 setVolumeOverride(ff.volume)
               }} style={{
-                fontSize: '0.72rem',
-                background: envelope === ff.volume ? '#8b5cf6' : '#374151',
-                color: envelope === ff.volume ? 'white' : '#9ca3af',
+                fontSize: fs.label,
+                background: envelope === ff.volume ? 'var(--cat-2)' : 'var(--line)',
+                color: envelope === ff.volume ? 'white' : 'var(--text-2)',
               }}>{ff.label} ({(ff.volume / 1000).toFixed(0)}L, ≤{ff.mass}kg)</button>
             ))}
           </div>
@@ -263,8 +261,8 @@ export function SystemBudgetEditor() {
 
       {/* Delta-V: estimation helper */}
       {activeBudget === 'deltav' && (
-        <div className="card" style={{ marginBottom: '0.5rem', fontSize: '0.72rem', color: '#9ca3af' }}>
-          <h3 style={{ fontSize: '0.82rem', marginBottom: '0.3rem' }}>Delta-V Estimation Guide</h3>
+        <div className="card" style={{ marginBottom: '0.5rem', fontSize: fs.label, color: 'var(--text-2)' }}>
+          <h3 style={{ fontSize: fs.body, marginBottom: '0.3rem' }}>Delta-V Estimation Guide</h3>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.3rem' }}>
             <span>LEO drag makeup (400-600 km): 1-5 m/s/yr</span>
             <span>SSO maintenance: 2-10 m/s/yr</span>
@@ -278,8 +276,8 @@ export function SystemBudgetEditor() {
 
       {/* Data: estimation helper */}
       {activeBudget === 'data' && (
-        <div className="card" style={{ marginBottom: '0.5rem', fontSize: '0.72rem', color: '#9ca3af' }}>
-          <h3 style={{ fontSize: '0.82rem', marginBottom: '0.3rem' }}>Data Budget Estimation</h3>
+        <div className="card" style={{ marginBottom: '0.5rem', fontSize: fs.label, color: 'var(--text-2)' }}>
+          <h3 style={{ fontSize: fs.body, marginBottom: '0.3rem' }}>Data Budget Estimation</h3>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.3rem' }}>
             <span>Payload data = rate × duty cycle × time</span>
             <span>HK telemetry: ~1-10 kbps continuous</span>
@@ -309,11 +307,11 @@ export function SystemBudgetEditor() {
             padding: '0.5rem 0.75rem', marginBottom: '0.75rem', borderRadius: '6px',
             background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)',
           }}>
-            <div style={{ fontSize: '0.78rem', fontWeight: 600, color: '#ef4444', marginBottom: '0.3rem' }}>
+            <div style={{ fontSize: fs.label, fontWeight: 600, color: 'var(--status-alarm)', marginBottom: '0.3rem' }}>
               Budget Conflicts Detected
             </div>
             {conflicts.map(c => (
-              <div key={c.subsystem} style={{ fontSize: '0.72rem', color: '#fca5a5', marginBottom: '0.15rem' }}>
+              <div key={c.subsystem} style={{ fontSize: fs.label, color: 'var(--status-alarm)', marginBottom: '0.15rem' }}>
                 <strong>{c.subsystem}</strong>: used {c.used.toFixed(1)} {config.unit} exceeds
                 {c.subsystem === 'TOTAL' ? ' envelope' : ' allocation'} of {c.allocated.toFixed(1)} {config.unit}
                 {' '}(+{c.overage.toFixed(1)} {config.unit})
@@ -338,15 +336,15 @@ export function SystemBudgetEditor() {
 
       {/* Editable allocation table */}
       <div className="card" style={{ marginTop: '0.75rem' }}>
-        <h3 style={{ fontSize: '0.85rem', marginBottom: '0.3rem' }}>Allocations (editable)</h3>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.72rem' }}>
+        <h3 style={{ fontSize: fs.body, marginBottom: '0.3rem' }}>Allocations (editable)</h3>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs.label }}>
           <thead>
-            <tr style={{ background: 'var(--bg-primary, #0a0e1a)' }}>
-              <th style={{ padding: '0.25rem 0.5rem', textAlign: 'left', fontSize: '0.65rem', color: '#9ca3af' }}>Subsystem</th>
-              <th style={{ padding: '0.25rem 0.5rem', textAlign: 'right', fontSize: '0.65rem', color: '#9ca3af' }}>Allocation ({config.unit})</th>
-              <th style={{ padding: '0.25rem 0.5rem', textAlign: 'right', fontSize: '0.65rem', color: '#9ca3af' }}>Used</th>
-              <th style={{ padding: '0.25rem 0.5rem', textAlign: 'right', fontSize: '0.65rem', color: '#9ca3af' }}>Margin</th>
-              <th style={{ padding: '0.25rem 0.5rem', textAlign: 'center', fontSize: '0.65rem', color: '#9ca3af' }}>Status</th>
+            <tr style={{ background: 'var(--bg-primary, var(--surface-0))' }}>
+              <th style={{ padding: '0.25rem 0.5rem', textAlign: 'left', fontSize: fs.label, color: 'var(--text-2)' }}>Subsystem</th>
+              <th style={{ padding: '0.25rem 0.5rem', textAlign: 'right', fontSize: fs.label, color: 'var(--text-2)' }}>Allocation ({config.unit})</th>
+              <th style={{ padding: '0.25rem 0.5rem', textAlign: 'right', fontSize: fs.label, color: 'var(--text-2)' }}>Used</th>
+              <th style={{ padding: '0.25rem 0.5rem', textAlign: 'right', fontSize: fs.label, color: 'var(--text-2)' }}>Margin</th>
+              <th style={{ padding: '0.25rem 0.5rem', textAlign: 'center', fontSize: fs.label, color: 'var(--text-2)' }}>Status</th>
             </tr>
           </thead>
           <tbody>
@@ -355,16 +353,16 @@ export function SystemBudgetEditor() {
               const used = currentUsed[ss] || 0
               const margin = alloc > 0 ? ((alloc - used) / alloc * 100) : (used === 0 ? 100 : -100)
               const exceeded = alloc > 0 && used > alloc
-              const color = exceeded ? '#ef4444' : margin > 20 ? '#10b981' : margin > 0 ? '#f59e0b' : '#ef4444'
+              const color = exceeded ? 'var(--status-alarm)' : margin > 20 ? 'var(--status-ok)' : margin > 0 ? 'var(--status-caution)' : 'var(--status-alarm)'
               return (
-                <tr key={ss} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                <tr key={ss} style={{ borderBottom: '1px solid color-mix(in srgb, var(--text) 5%, transparent)' }}>
                   <td style={{ padding: '0.2rem 0.5rem' }}>{ss}</td>
                   <td style={{ padding: '0.2rem 0.5rem', textAlign: 'right' }}>
                     <input type="number" step={0.1} value={alloc}
                       onChange={e => updateAllocation(ss, Number(e.target.value))}
-                      style={{ width: '60px', fontSize: '0.72rem', textAlign: 'right', background: 'var(--bg-primary, #111827)', border: '1px solid #374151', borderRadius: '3px', color: '#d1d5db', padding: '0.1rem 0.3rem' }} />
+                      style={{ width: '60px', fontSize: fs.label, textAlign: 'right', background: 'var(--bg-primary, var(--surface-1))', border: '1px solid var(--line)', borderRadius: '3px', color: 'var(--text)', padding: '0.1rem 0.3rem' }} />
                   </td>
-                  <td style={{ padding: '0.2rem 0.5rem', textAlign: 'right', fontFamily: 'monospace', color: '#9ca3af' }}>
+                  <td style={{ padding: '0.2rem 0.5rem', textAlign: 'right', fontFamily: 'monospace', color: 'var(--text-2)' }}>
                     {used.toFixed(2)}
                   </td>
                   <td style={{ padding: '0.2rem 0.5rem', textAlign: 'right', fontFamily: 'monospace', color }}>
@@ -373,14 +371,14 @@ export function SystemBudgetEditor() {
                   <td style={{ padding: '0.2rem 0.5rem', textAlign: 'center' }}>
                     <span style={{
                       width: exceeded ? 10 : 8, height: exceeded ? 10 : 8, borderRadius: '50%',
-                      background: alloc > 0 ? color : '#374151', display: 'inline-block',
-                      boxShadow: exceeded ? '0 0 6px #ef4444' : 'none',
+                      background: alloc > 0 ? color : 'var(--line)', display: 'inline-block',
+                      boxShadow: exceeded ? '0 0 6px var(--status-alarm)' : 'none',
                     }} title={exceeded ? `EXCEEDED by ${(used - alloc).toFixed(1)} ${config.unit}` : ''} />
                   </td>
                 </tr>
               )
             })}
-            <tr style={{ borderTop: '2px solid #374151', fontWeight: 700 }}>
+            <tr style={{ borderTop: '2px solid var(--line)', fontWeight: 700 }}>
               <td style={{ padding: '0.2rem 0.5rem' }}>Total</td>
               <td style={{ padding: '0.2rem 0.5rem', textAlign: 'right', fontFamily: 'monospace' }}>
                 {Object.values(currentAllocations).reduce((s, v) => s + (v || 0), 0).toFixed(1)}
@@ -388,7 +386,7 @@ export function SystemBudgetEditor() {
               <td style={{ padding: '0.2rem 0.5rem', textAlign: 'right', fontFamily: 'monospace' }}>
                 {Object.values(currentUsed).reduce((s, v) => s + (v || 0), 0).toFixed(2)}
               </td>
-              <td colSpan={2} style={{ padding: '0.2rem 0.5rem', textAlign: 'right', fontSize: '0.65rem', color: '#6b7280' }}>
+              <td colSpan={2} style={{ padding: '0.2rem 0.5rem', textAlign: 'right', fontSize: fs.label, color: 'var(--text-3)' }}>
                 Envelope: {envelope.toFixed(1)} {config.unit}
               </td>
             </tr>
@@ -403,7 +401,7 @@ export function SystemBudgetEditor() {
 
 /** System Rollup: for each system element, recursively sum all descendants */
 function SystemRollupSection({
-  elements, getChildren, envelopes, config, activeBudget,
+  elements, envelopes,
 }: {
   elements: Map<string, any>
   getChildren: (id: string) => any[]
@@ -440,54 +438,54 @@ function SystemRollupSection({
   const costEnv = envelopes.cost || 0
 
   const marginColor = (used: number, env: number) => {
-    if (env <= 0) return '#6b7280'
+    if (env <= 0) return 'var(--text-3)'
     const pct = (env - used) / env * 100
-    return pct < 0 ? '#ef4444' : pct < 20 ? '#f59e0b' : '#10b981'
+    return pct < 0 ? 'var(--status-alarm)' : pct < 20 ? 'var(--status-caution)' : 'var(--status-ok)'
   }
 
   return (
     <div className="card" style={{ marginTop: '0.75rem' }}>
-      <h3 style={{ fontSize: '0.85rem', marginBottom: '0.3rem' }}>System Rollup (hierarchical sum)</h3>
-      <p style={{ fontSize: '0.65rem', color: '#6b7280', marginBottom: '0.4rem' }}>
+      <h3 style={{ fontSize: fs.body, marginBottom: '0.3rem' }}>System Rollup (hierarchical sum)</h3>
+      <p style={{ fontSize: fs.label, color: 'var(--text-3)', marginBottom: '0.4rem' }}>
         Recursive sum of all component descendants per system element. Compares against mission envelope.
       </p>
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.72rem' }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs.label }}>
         <thead>
-          <tr style={{ background: 'var(--bg-primary, #0a0e1a)' }}>
-            <th style={{ padding: '0.25rem 0.5rem', textAlign: 'left', fontSize: '0.65rem', color: '#9ca3af' }}>System</th>
-            <th style={{ padding: '0.25rem 0.5rem', textAlign: 'left', fontSize: '0.65rem', color: '#9ca3af' }}>Segment</th>
-            <th style={{ padding: '0.25rem 0.5rem', textAlign: 'right', fontSize: '0.65rem', color: '#9ca3af' }}>Mass (kg)</th>
-            <th style={{ padding: '0.25rem 0.5rem', textAlign: 'right', fontSize: '0.65rem', color: '#9ca3af' }}>Power (W)</th>
-            <th style={{ padding: '0.25rem 0.5rem', textAlign: 'right', fontSize: '0.65rem', color: '#9ca3af' }}>Cost (kEUR)</th>
+          <tr style={{ background: 'var(--bg-primary, var(--surface-0))' }}>
+            <th style={{ padding: '0.25rem 0.5rem', textAlign: 'left', fontSize: fs.label, color: 'var(--text-2)' }}>System</th>
+            <th style={{ padding: '0.25rem 0.5rem', textAlign: 'left', fontSize: fs.label, color: 'var(--text-2)' }}>Segment</th>
+            <th style={{ padding: '0.25rem 0.5rem', textAlign: 'right', fontSize: fs.label, color: 'var(--text-2)' }}>Mass (kg)</th>
+            <th style={{ padding: '0.25rem 0.5rem', textAlign: 'right', fontSize: fs.label, color: 'var(--text-2)' }}>Power (W)</th>
+            <th style={{ padding: '0.25rem 0.5rem', textAlign: 'right', fontSize: fs.label, color: 'var(--text-2)' }}>Cost (kEUR)</th>
           </tr>
         </thead>
         <tbody>
           {rows.map(r => (
-            <tr key={r.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+            <tr key={r.id} style={{ borderBottom: '1px solid color-mix(in srgb, var(--text) 5%, transparent)' }}>
               <td style={{ padding: '0.2rem 0.5rem', fontWeight: 600 }}>{r.name}</td>
-              <td style={{ padding: '0.2rem 0.5rem', color: '#9ca3af', fontSize: '0.68rem' }}>{r.segment}</td>
+              <td style={{ padding: '0.2rem 0.5rem', color: 'var(--text-2)', fontSize: fs.label }}>{r.segment}</td>
               <td style={{ padding: '0.2rem 0.5rem', textAlign: 'right', fontFamily: 'monospace' }}>{r.mass.toFixed(2)}</td>
               <td style={{ padding: '0.2rem 0.5rem', textAlign: 'right', fontFamily: 'monospace' }}>{r.power.toFixed(2)}</td>
               <td style={{ padding: '0.2rem 0.5rem', textAlign: 'right', fontFamily: 'monospace' }}>{r.cost.toFixed(2)}</td>
             </tr>
           ))}
-          <tr style={{ borderTop: '2px solid #374151', fontWeight: 700 }}>
+          <tr style={{ borderTop: '2px solid var(--line)', fontWeight: 700 }}>
             <td style={{ padding: '0.2rem 0.5rem' }}>Total</td>
             <td />
             <td style={{ padding: '0.2rem 0.5rem', textAlign: 'right', fontFamily: 'monospace', color: marginColor(totalMass, massEnv) }}>
-              {totalMass.toFixed(2)} <span style={{ fontSize: '0.6rem', color: '#6b7280' }}>/ {massEnv.toFixed(1)}</span>
+              {totalMass.toFixed(2)} <span style={{ fontSize: fs.label, color: 'var(--text-3)' }}>/ {massEnv.toFixed(1)}</span>
             </td>
             <td style={{ padding: '0.2rem 0.5rem', textAlign: 'right', fontFamily: 'monospace', color: marginColor(totalPower, powerEnv) }}>
-              {totalPower.toFixed(2)} <span style={{ fontSize: '0.6rem', color: '#6b7280' }}>/ {powerEnv.toFixed(1)}</span>
+              {totalPower.toFixed(2)} <span style={{ fontSize: fs.label, color: 'var(--text-3)' }}>/ {powerEnv.toFixed(1)}</span>
             </td>
             <td style={{ padding: '0.2rem 0.5rem', textAlign: 'right', fontFamily: 'monospace', color: marginColor(totalCost, costEnv) }}>
-              {totalCost.toFixed(2)} <span style={{ fontSize: '0.6rem', color: '#6b7280' }}>/ {costEnv.toFixed(1)}</span>
+              {totalCost.toFixed(2)} <span style={{ fontSize: fs.label, color: 'var(--text-3)' }}>/ {costEnv.toFixed(1)}</span>
             </td>
           </tr>
         </tbody>
       </table>
       {/* Margin status indicators */}
-      <div style={{ display: 'flex', gap: '1rem', marginTop: '0.4rem', fontSize: '0.68rem' }}>
+      <div style={{ display: 'flex', gap: '1rem', marginTop: '0.4rem', fontSize: fs.label }}>
         {[
           { label: 'Mass', used: totalMass, env: massEnv, unit: 'kg' },
           { label: 'Power', used: totalPower, env: powerEnv, unit: 'W' },

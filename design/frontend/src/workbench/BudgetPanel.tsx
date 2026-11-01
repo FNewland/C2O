@@ -14,6 +14,7 @@ import { useState, useCallback, useMemo } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { useUIStore } from '../stores/uiStore'
+import { fs } from '../theme/tokens'
 
 const API = '/api'
 
@@ -59,7 +60,7 @@ export function BudgetPanel() {
   const isConstellation = constellationQty > 1
 
   // Fetch budget
-  const { data: budget, refetch: refetchBudget } = useQuery({
+  const { data: budget } = useQuery({
     queryKey: ['budget', targetId, activeBudget],
     queryFn: () => fetch(`${API}/elements/${targetId}/budget/${activeBudget}`).then(r => r.json()),
     enabled: !!targetId,
@@ -80,7 +81,7 @@ export function BudgetPanel() {
   }, [activeBudget, bt.unit, qc])
 
   if (!targetId) {
-    return <div style={{ padding: '1rem', color: 'var(--text-secondary)', fontSize: '0.8rem' }}>{t('Add a mission element first.')}</div>
+    return <div style={{ padding: '1rem', color: 'var(--text-secondary)', fontSize: fs.body }}>{t('Add a mission element first.')}</div>
   }
 
   // Compute total allocated to children
@@ -89,12 +90,12 @@ export function BudgetPanel() {
   const unallocated = parentAlloc != null ? parentAlloc - totalChildAlloc : null
 
   return (
-    <div style={{ padding: '0.5rem 1rem', fontSize: '0.75rem' }}>
+    <div style={{ padding: '0.5rem 1rem', fontSize: fs.label }}>
       {/* Budget type selector */}
       <div style={{ display: 'flex', gap: '0.3rem', marginBottom: '0.5rem', alignItems: 'center' }}>
         {BUDGET_TYPES.map(b => (
           <button key={b.id} onClick={() => setActiveBudget(b.id)} style={{
-            padding: '0.25rem 0.6rem', fontSize: '0.72rem', borderRadius: '3px',
+            padding: '0.25rem 0.6rem', fontSize: fs.label, borderRadius: '3px',
             background: activeBudget === b.id ? 'var(--accent)' : 'var(--bg-card)',
             color: activeBudget === b.id ? 'white' : 'var(--text-secondary)',
             border: 'none', cursor: 'pointer',
@@ -105,8 +106,8 @@ export function BudgetPanel() {
         <span style={{ flex: 1 }} />
         {budget && (
           <span style={{
-            padding: '0.2rem 0.5rem', borderRadius: '3px', fontWeight: 600, fontSize: '0.68rem',
-            background: `${STATUS_COLORS[budget.status]}20`, color: STATUS_COLORS[budget.status],
+            padding: '0.2rem 0.5rem', borderRadius: '3px', fontWeight: 600, fontSize: fs.label,
+            background: `color-mix(in srgb, ${STATUS_COLORS[budget.status]} 13%, transparent)`, color: STATUS_COLORS[budget.status],
           }}>
             {budget.margin_pct != null ? t('{{pct}}% margin', { pct: budget.margin_pct.toFixed(0) }) : t('No allocation set')}
           </span>
@@ -124,7 +125,7 @@ export function BudgetPanel() {
             }
           }
         }} style={{
-          marginBottom: '0.4rem', padding: '0.2rem 0.5rem', fontSize: '0.65rem', fontWeight: 600,
+          marginBottom: '0.4rem', padding: '0.2rem 0.5rem', fontSize: fs.label, fontWeight: 600,
           borderRadius: '3px', background: 'rgba(59,130,246,0.15)', color: 'var(--accent)',
           border: '1px solid var(--accent)', cursor: 'pointer',
         }}>
@@ -137,18 +138,18 @@ export function BudgetPanel() {
         display: 'flex', gap: '0.75rem', alignItems: 'center', marginBottom: '0.5rem',
         padding: '0.4rem 0.5rem', background: 'var(--bg-card)', borderRadius: '4px', border: '1px solid var(--border)',
       }}>
-        <span style={{ fontWeight: 600, fontSize: '0.72rem' }}>
+        <span style={{ fontWeight: 600, fontSize: fs.label }}>
           {isConstellation
             ? t('{{name}} (per spacecraft, ×{{qty}} in constellation):', { name: budget?.element_name || t('Parent'), qty: constellationQty })
             : t('{{name}} Total:', { name: budget?.element_name || t('Parent') })}
         </span>
-        <span style={{ color: 'var(--text-secondary)', fontSize: '0.68rem' }}>{t('Allocation:')}</span>
+        <span style={{ color: 'var(--text-secondary)', fontSize: fs.label }}>{t('Allocation:')}</span>
         <AllocationInput currentValue={parentAlloc} onSet={v => setAllocation(targetId, v)} unit={bt.unit} />
-        <span style={{ color: 'var(--text-secondary)', fontSize: '0.68rem' }}>
+        <span style={{ color: 'var(--text-secondary)', fontSize: fs.label }}>
           {t('Actual:')} <b style={{ color: 'var(--text-primary)' }}>{budget?.sum_with_margin?.toFixed(2) || '0'} {bt.unit}</b>
         </span>
         {budget?.remaining != null && (
-          <span style={{ fontSize: '0.68rem', color: STATUS_COLORS[budget.status] }}>
+          <span style={{ fontSize: fs.label, color: STATUS_COLORS[budget.status] }}>
             {t('Remaining:')} <b>{budget.remaining.toFixed(2)} {bt.unit}</b>
           </span>
         )}
@@ -157,7 +158,7 @@ export function BudgetPanel() {
       {/* Unallocated warning */}
       {unallocated != null && unallocated > 0 && totalChildAlloc > 0 && (
         <div style={{
-          fontSize: '0.68rem', color: 'var(--warning)', marginBottom: '0.4rem', padding: '0.2rem 0.5rem',
+          fontSize: fs.label, color: 'var(--warning)', marginBottom: '0.4rem', padding: '0.2rem 0.5rem',
           background: 'rgba(245,158,11,0.1)', borderRadius: '3px',
         }}>
           {t('{{value}} {{unit}} unallocated to children', { value: unallocated.toFixed(2), unit: bt.unit })}
@@ -168,7 +169,7 @@ export function BudgetPanel() {
       {activeBudget === 'power' && budget?.total_avg_power != null && (
         <div style={{
           display: 'flex', gap: '1rem', marginBottom: '0.5rem', padding: '0.3rem 0.5rem',
-          background: 'rgba(168,85,247,0.08)', borderRadius: '4px', fontSize: '0.68rem',
+          background: 'rgba(168,85,247,0.08)', borderRadius: '4px', fontSize: fs.label,
         }}>
           <span>{t('Avg Power:')} <b>{budget.total_avg_power.toFixed(2)} W</b></span>
           <span>{t('Peak Power:')} <b>{budget.total_peak_power.toFixed(2)} W</b></span>
@@ -179,7 +180,7 @@ export function BudgetPanel() {
       {activeBudget === 'data' && budget?.total_data_rate_mbps != null && (
         <div style={{
           display: 'flex', gap: '1rem', marginBottom: '0.5rem', padding: '0.3rem 0.5rem',
-          background: 'rgba(6,182,212,0.08)', borderRadius: '4px', fontSize: '0.68rem',
+          background: 'rgba(6,182,212,0.08)', borderRadius: '4px', fontSize: fs.label,
         }}>
           <span>{t('Total Data Rate:')} <b>{budget.total_data_rate_mbps.toFixed(3)} Mbps</b></span>
           <span>{t('Volume/Day:')} <b>{budget.total_data_volume_gb_per_day.toFixed(3)} GB</b></span>
@@ -188,7 +189,7 @@ export function BudgetPanel() {
 
       {/* Per-element table */}
       {budget?.lines?.length > 0 ? (
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.72rem' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs.label }}>
           <thead>
             <tr style={{ borderBottom: '1px solid var(--border)' }}>
               <th style={thL}>{t('Element')}</th>
@@ -232,7 +233,7 @@ export function BudgetPanel() {
 
               if (activeBudget === 'power') {
                 return (
-                  <tr key={line.element_id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                  <tr key={line.element_id} style={{ borderBottom: '1px solid color-mix(in srgb, var(--text) 3%, transparent)' }}>
                     <td style={{ padding: '0.3rem 0.4rem', fontWeight: 500 }}>{line.name}</td>
                     <td style={{ padding: '0.3rem 0.4rem', textAlign: 'right' }}>
                       <AllocationInput currentValue={line.allocation} onSet={v => setAllocation(line.element_id, v)} unit="W" />
@@ -255,7 +256,7 @@ export function BudgetPanel() {
                     <td style={{ padding: '0.3rem 0.4rem', textAlign: 'center' }}>
                       {childMargin != null ? (
                         <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: STATUS_COLORS[childStatus] }} title={t('{{pct}}% margin', { pct: childMargin.toFixed(0) })} />
-                      ) : <span style={{ color: 'var(--text-secondary)', fontSize: '0.6rem' }}>—</span>}
+                      ) : <span style={{ color: 'var(--text-secondary)', fontSize: fs.label }}>—</span>}
                     </td>
                   </tr>
                 )
@@ -263,7 +264,7 @@ export function BudgetPanel() {
 
               if (activeBudget === 'data') {
                 return (
-                  <tr key={line.element_id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                  <tr key={line.element_id} style={{ borderBottom: '1px solid color-mix(in srgb, var(--text) 3%, transparent)' }}>
                     <td style={{ padding: '0.3rem 0.4rem', fontWeight: 500 }}>{line.name}</td>
                     <td style={{ padding: '0.3rem 0.4rem', textAlign: 'right', fontFamily: 'monospace' }}>
                       {(line.data_rate_mbps || 0) > 0 ? line.data_rate_mbps.toFixed(3) : '—'}
@@ -286,7 +287,7 @@ export function BudgetPanel() {
 
               // Default: mass, cost, volume
               return (
-                <tr key={line.element_id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                <tr key={line.element_id} style={{ borderBottom: '1px solid color-mix(in srgb, var(--text) 3%, transparent)' }}>
                   <td style={{ padding: '0.3rem 0.4rem', fontWeight: 500 }}>{line.name}</td>
                   <td style={{ padding: '0.3rem 0.4rem', textAlign: 'right' }}>
                     <AllocationInput
@@ -298,7 +299,7 @@ export function BudgetPanel() {
                   <td style={{ padding: '0.3rem 0.4rem', textAlign: 'right', fontFamily: 'monospace' }}>
                     {line.nominal > 0 ? line.nominal.toFixed(2) : '—'}
                     {line.quantity > 1 && line.per_unit > 0 && (
-                      <div style={{ fontSize: '0.55rem', color: 'var(--text-secondary)' }}>
+                      <div style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>
                         {t('{{value}} ea', { value: line.per_unit.toFixed(2) })}
                       </div>
                     )}
@@ -312,7 +313,7 @@ export function BudgetPanel() {
                   <td style={{ padding: '0.3rem 0.4rem', textAlign: 'right', color: 'var(--text-secondary)' }}>
                     {line.quantity > 1 ? `×${line.quantity}` : ''}
                     {line.quantity > 1 && line.allocation_per_unit != null && (
-                      <div style={{ fontSize: '0.55rem', color: 'var(--info)' }}>
+                      <div style={{ fontSize: fs.label, color: 'var(--info)' }}>
                         {t('{{value}}/ea', { value: line.allocation_per_unit.toFixed(1) })}
                       </div>
                     )}
@@ -324,7 +325,7 @@ export function BudgetPanel() {
                         background: STATUS_COLORS[childStatus],
                       }} title={t('{{pct}}% margin', { pct: childMargin.toFixed(0) })} />
                     ) : (
-                      <span style={{ color: 'var(--text-secondary)', fontSize: '0.6rem' }}>—</span>
+                      <span style={{ color: 'var(--text-secondary)', fontSize: fs.label }}>—</span>
                     )}
                   </td>
                 </tr>
@@ -388,7 +389,7 @@ export function BudgetPanel() {
   )
 }
 
-const thL: React.CSSProperties = { textAlign: 'left', padding: '0.3rem 0.4rem', color: 'var(--text-secondary)', fontWeight: 500, fontSize: '0.65rem', textTransform: 'uppercase' }
+const thL: React.CSSProperties = { textAlign: 'left', padding: '0.3rem 0.4rem', color: 'var(--text-secondary)', fontWeight: 500, fontSize: fs.label, textTransform: 'uppercase' }
 const thR: React.CSSProperties = { ...thL, textAlign: 'right' }
 const thC: React.CSSProperties = { ...thL, textAlign: 'center' }
 
@@ -415,7 +416,7 @@ function AllocationInput({ currentValue, onSet, unit }: { currentValue: number |
         }}
         placeholder={unit}
         style={{
-          width: 65, padding: '0.15rem 0.3rem', fontSize: '0.7rem', borderRadius: '3px', textAlign: 'right',
+          width: 65, padding: '0.15rem 0.3rem', fontSize: fs.label, borderRadius: '3px', textAlign: 'right',
           background: 'var(--bg-primary)', border: '1px solid var(--accent)', color: 'var(--text-primary)',
         }}
       />
@@ -426,7 +427,7 @@ function AllocationInput({ currentValue, onSet, unit }: { currentValue: number |
     <button
       onClick={() => { setValue(currentValue != null ? String(currentValue) : ''); setEditing(true) }}
       style={{
-        background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.72rem',
+        background: 'none', border: 'none', cursor: 'pointer', fontSize: fs.label,
         fontFamily: 'monospace', fontWeight: 600, padding: '0.1rem 0.2rem', borderRadius: '2px',
         color: currentValue != null ? 'var(--text-primary)' : 'var(--text-secondary)',
         textDecoration: currentValue == null ? 'underline dotted' : 'none',

@@ -125,8 +125,7 @@ passage de relais côté ombre du même état commandé
 **TC:** `GET_PARAM(param_id=0x021A)` (Service 20, Subtype 3) — `aocs.rw3_temp`
 **TC:** `GET_PARAM(param_id=0x021B)` (Service 20, Subtype 3) — `aocs.rw4_temp`
 **Verify:** Toutes les températures des roues dans la plage [-10C, +55C] sous 10s
-**Note:** 0x028A-0x028D sont des pourcentages d'état de santé des têtes CSS (`aocs.css_head_health_py/my/pz/mz`),
-et non des températures de roues.
+**Note:** 0x028A-0x028D ne sont pas des températures de roue ; seules 0x0218-0x021B le sont.
 **Action:** Les températures après essai peuvent être légèrement élevées. Les consigner pour le suivi de tendance.
 **GO/NO-GO:** Toutes les températures des roues dans les limites opérationnelles
 

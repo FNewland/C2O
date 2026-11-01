@@ -13,6 +13,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import i18n, { fmtProse } from '../i18n'
 import { useUIStore } from '../stores/uiStore'
+import { fs } from '../theme/tokens'
+import { showAlert } from '../components/ui/Dialog'
 
 const API = '/api'
 
@@ -40,8 +42,8 @@ export function DecisionPanel() {
   const isGroundSegment = focusElement?.segment === 'ground'
 
   return (
-    <div style={{ padding: '0.5rem 1rem', fontSize: '0.75rem', overflow: 'auto', maxHeight: '100%' }}>
-      <div style={{ fontWeight: 600, fontSize: '0.78rem', marginBottom: '0.5rem', color: '#f59e0b' }}>
+    <div style={{ padding: '0.5rem 1rem', fontSize: fs.label, overflow: 'auto', maxHeight: '100%' }}>
+      <div style={{ fontWeight: 600, fontSize: fs.label, marginBottom: '0.5rem', color: 'var(--status-caution)' }}>
         {t('Decision Support — Level {{level}}', { level: currentLevel })}
       </div>
 
@@ -70,7 +72,7 @@ export function DecisionPanel() {
 
 // ─── Mission Trade: Space vs Non-Space ───
 
-function MissionTradeWidget({ studyId }: { studyId: string | null }) {
+function MissionTradeWidget(_props: { studyId: string | null }) {
   const { t } = useTranslation()
   const [result, setResult] = useState<any>(null)
   const [loading, setLoading] = useState(false)
@@ -100,7 +102,7 @@ function MissionTradeWidget({ studyId }: { studyId: string | null }) {
   }
 
   return (
-    <ToolSection title={t('Mission Trade: Space vs Alternatives')} color="#3b82f6">
+    <ToolSection title={t('Mission Trade: Space vs Alternatives')} color="var(--interactive)">
       <div style={{ display: 'flex', gap: '0.3rem', marginBottom: '0.3rem', flexWrap: 'wrap' }}>
         <label style={labelStyle}>{t('GSD (m):')} <input type="number" value={gsd} onChange={e => setGsd(e.target.value)} style={inputStyle} /></label>
         <label style={labelStyle}>{t('Revisit (days):')} <input type="number" value={revisit} onChange={e => setRevisit(e.target.value)} style={inputStyle} /></label>
@@ -112,7 +114,7 @@ function MissionTradeWidget({ studyId }: { studyId: string | null }) {
       {result?.alternatives && (
         <div style={{ marginTop: '0.4rem' }}>
           {result.question && (
-            <div style={{ fontSize: '0.65rem', color: 'var(--accent)', fontWeight: 600, marginBottom: '0.3rem' }}>{result.question}</div>
+            <div style={{ fontSize: fs.label, color: 'var(--accent)', fontWeight: 600, marginBottom: '0.3rem' }}>{result.question}</div>
           )}
           {result.alternatives.map((alt: any, i: number) => {
             const score = alt.score ?? (alt.rank ? (1 - (alt.rank - 1) * 0.15) : 0.5)
@@ -120,14 +122,14 @@ function MissionTradeWidget({ studyId }: { studyId: string | null }) {
               <div key={i} style={{ ...rowStyle, borderLeft: `3px solid ${score > 0.7 ? 'var(--success)' : score > 0.4 ? 'var(--warning)' : 'var(--danger)'}` }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.15rem' }}>
                   <span style={{ fontWeight: 600 }}>{alt.name}</span>
-                  <span style={{ fontSize: '0.6rem', color: 'var(--text-secondary)' }}>
+                  <span style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>
                     {alt.category && <span style={{ marginRight: '0.3rem' }}>{alt.category}</span>}
                     #{alt.rank || i + 1}
                   </span>
                 </div>
-                <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)' }}>{alt.description}</div>
+                <div style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>{alt.description}</div>
                 {alt.gsd_m && (
-                  <div style={{ fontSize: '0.55rem', color: 'var(--text-secondary)', marginTop: '0.1rem' }}>
+                  <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginTop: '0.1rem' }}>
                     {t('GSD: {{gsd}}m | Revisit: {{revisit}}d | Cost: {{cost}} kEUR/yr', { gsd: alt.gsd_m, revisit: alt.revisit_days, cost: alt.annual_cost_keur })}
                   </div>
                 )}
@@ -135,7 +137,7 @@ function MissionTradeWidget({ studyId }: { studyId: string | null }) {
             )
           })}
           {result.recommendation && (
-            <div style={{ marginTop: '0.3rem', padding: '0.3rem', background: 'rgba(16,185,129,0.1)', borderRadius: '3px', fontSize: '0.68rem', color: 'var(--success)' }}>
+            <div style={{ marginTop: '0.3rem', padding: '0.3rem', background: 'rgba(16,185,129,0.1)', borderRadius: '3px', fontSize: fs.label, color: 'var(--success)' }}>
               {result.recommendation}
             </div>
           )}
@@ -163,13 +165,13 @@ function OrbitTradeWidget({ studyId }: { studyId: string | null }) {
   }
 
   return (
-    <ToolSection title={t('Orbit Trade Study')} color="#8b5cf6">
+    <ToolSection title={t('Orbit Trade Study')} color="var(--cat-2)">
       <button onClick={runTrade} disabled={loading} style={btnStyle}>
         {loading ? t('Computing...') : t('Evaluate Orbit Options')}
       </button>
       {result?.candidates && (
         <div style={{ marginTop: '0.4rem' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.65rem' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs.label }}>
             <thead>
               <tr style={{ borderBottom: '1px solid var(--border)' }}>
                 <th style={thL}>{t('Orbit')}</th>
@@ -185,13 +187,13 @@ function OrbitTradeWidget({ studyId }: { studyId: string | null }) {
             </thead>
             <tbody>
               {result.candidates.map((c: any, i: number) => (
-                <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                <tr key={i} style={{ borderBottom: '1px solid color-mix(in srgb, var(--text) 3%, transparent)' }}>
                   <td style={{ padding: '0.2rem 0.3rem', fontWeight: 500 }}>{c.name || c.orbit_type}</td>
                   <td style={{ padding: '0.2rem 0.3rem', textAlign: 'right', fontFamily: 'monospace' }}>{c.altitude_km}</td>
                   <td style={{ padding: '0.2rem 0.3rem', textAlign: 'right', fontFamily: 'monospace' }}>{c.inclination_deg?.toFixed(1)}</td>
                   <td style={{ padding: '0.2rem 0.3rem', textAlign: 'right', fontFamily: 'monospace', color: c.meets_gsd ? 'var(--success)' : 'var(--text-secondary)' }}>{c.achievable_gsd_m?.toFixed(1)}m</td>
                   <td style={{ padding: '0.2rem 0.3rem', textAlign: 'right', fontFamily: 'monospace' }}>{c.revisit_days?.toFixed(0)}d</td>
-                  <td style={{ padding: '0.2rem 0.3rem', textAlign: 'right', fontFamily: 'monospace', fontSize: '0.6rem' }}>{c.natural_lifetime_years?.toFixed(0)}yr</td>
+                  <td style={{ padding: '0.2rem 0.3rem', textAlign: 'right', fontFamily: 'monospace', fontSize: fs.label }}>{c.natural_lifetime_years?.toFixed(0)}yr</td>
                   <td style={{ padding: '0.2rem 0.3rem', textAlign: 'right', fontFamily: 'monospace', color: 'var(--success)' }}>{((c.total_score || c.weighted_score || c.score || 0) * 100).toFixed(0)}%</td>
                   <td style={{ padding: '0.2rem 0.3rem', textAlign: 'center' }}>
                     {c.compliant_25yr != null ? (
@@ -205,7 +207,7 @@ function OrbitTradeWidget({ studyId }: { studyId: string | null }) {
                       // Apply this orbit to the focused spacecraft element
                       const fid = useUIStore.getState().focusElementId
                       const sid = useUIStore.getState().studyId
-                      if (!fid || !sid) { alert(i18n.t('Drill into a spacecraft element first')); return }
+                      if (!fid || !sid) { void showAlert(i18n.t('Drill into a spacecraft element first')); return }
                       const els: any[] = qc.getQueryData(['elements', sid]) || []
                       const el = els.find((e: any) => e.id === fid)
                       if (!el) return
@@ -217,8 +219,8 @@ function OrbitTradeWidget({ studyId }: { studyId: string | null }) {
                         }),
                       })
                       qc.invalidateQueries({ queryKey: ['elements'] })
-                      alert(i18n.t('Applied: {{name}} ({{alt}}km, {{incl}}°)', { name: c.name, alt: c.altitude_km, incl: c.inclination_deg }))
-                    }} style={{ ...btnStyle, fontSize: '0.5rem', padding: '0.1rem 0.3rem', background: 'var(--success)' }}>
+                      void showAlert(i18n.t('Applied: {{name}} ({{alt}}km, {{incl}}°)', { name: c.name, alt: c.altitude_km, incl: c.inclination_deg }))
+                    }} style={{ ...btnStyle, fontSize: fs.label, padding: '0.1rem 0.3rem', background: 'var(--success)' }}>
                       {t('Apply')}
                     </button>
                   </td>
@@ -234,7 +236,7 @@ function OrbitTradeWidget({ studyId }: { studyId: string | null }) {
 
 // ─── Constellation Sizing ───
 
-function ConstellationWidget({ studyId }: { studyId: string | null }) {
+function ConstellationWidget(_props: { studyId: string | null }) {
   const { t } = useTranslation()
   const [result, setResult] = useState<any>(null)
   const [loading, setLoading] = useState(false)
@@ -260,7 +262,7 @@ function ConstellationWidget({ studyId }: { studyId: string | null }) {
   }
 
   return (
-    <ToolSection title={t('Constellation Sizing')} color="#06b6d4">
+    <ToolSection title={t('Constellation Sizing')} color="var(--interactive)">
       <div style={{ display: 'flex', gap: '0.3rem', marginBottom: '0.3rem', flexWrap: 'wrap' }}>
         <label style={labelStyle}>{t('Alt (km):')} <input type="number" value={altitude} onChange={e => setAltitude(e.target.value)} style={inputStyle} /></label>
         <label style={labelStyle}>{t('Inc (°):')} <input type="number" value={inclination} onChange={e => setInclination(e.target.value)} style={inputStyle} /></label>
@@ -270,7 +272,7 @@ function ConstellationWidget({ studyId }: { studyId: string | null }) {
         {loading ? t('Computing...') : t('Size Constellation')}
       </button>
       {result && (
-        <div style={{ marginTop: '0.4rem', fontSize: '0.68rem' }}>
+        <div style={{ marginTop: '0.4rem', fontSize: fs.label }}>
           {(result.candidates || result.options || []).map((opt: any, i: number) => (
             <div key={i} style={rowStyle}>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -281,7 +283,7 @@ function ConstellationWidget({ studyId }: { studyId: string | null }) {
                   {opt.total_cost_meur != null ? `${opt.total_cost_meur.toFixed(1)}M€` : ''}
                 </span>
               </div>
-              <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)' }}>
+              <div style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>
                 {t('Revisit: {{max}}h max, {{mean}}h mean', { max: (opt.max_revisit_hours || opt.revisit_hours)?.toFixed(1), mean: (opt.mean_revisit_hours)?.toFixed(1) })}
                 {opt.coverage_percent != null && t(' | Coverage: {{pct}}%', { pct: opt.coverage_percent.toFixed(0) })}
                 {opt.total_mass_kg != null && t(' | Mass: {{mass}}kg', { mass: opt.total_mass_kg })}
@@ -290,7 +292,7 @@ function ConstellationWidget({ studyId }: { studyId: string | null }) {
               <button onClick={async () => {
                 const fid = useUIStore.getState().focusElementId
                 const sid = useUIStore.getState().studyId
-                if (!fid || !sid) { alert(i18n.t('Drill into a spacecraft element first')); return }
+                if (!fid || !sid) { void showAlert(i18n.t('Drill into a spacecraft element first')); return }
                 const els: any[] = qc.getQueryData(['elements', sid]) || []
                 const el = els.find((e: any) => e.id === fid)
                 if (!el) return
@@ -303,14 +305,14 @@ function ConstellationWidget({ studyId }: { studyId: string | null }) {
                   }),
                 })
                 qc.invalidateQueries({ queryKey: ['elements'] })
-                alert(i18n.t('Applied: {{what}}', { what: opt.walker_notation || i18n.t('{{n}} sats', { n: opt.total_satellites }) }))
-              }} style={{ ...btnStyle, fontSize: '0.55rem', padding: '0.1rem 0.3rem', background: 'var(--success)', marginTop: '0.15rem' }}>
+                void showAlert(i18n.t('Applied: {{what}}', { what: opt.walker_notation || i18n.t('{{n}} sats', { n: opt.total_satellites }) }))
+              }} style={{ ...btnStyle, fontSize: fs.label, padding: '0.1rem 0.3rem', background: 'var(--success)', marginTop: '0.15rem' }}>
                 {t('Apply to Design')}
               </button>
             </div>
           ))}
           {result.count != null && (
-            <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
+            <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
               {t('{{count}} configurations evaluated', { count: result.count })}
             </div>
           )}
@@ -337,7 +339,7 @@ function GroundTradeWidget({ studyId }: { studyId: string | null }) {
   }
 
   return (
-    <ToolSection title={t('Ground Segment Trade')} color="#10b981">
+    <ToolSection title={t('Ground Segment Trade')} color="var(--status-ok)">
       <button onClick={runTrade} disabled={loading} style={btnStyle}>
         {loading ? t('Analysing...') : t('Evaluate Ground Architectures')}
       </button>
@@ -349,7 +351,7 @@ function GroundTradeWidget({ studyId }: { studyId: string | null }) {
                 <span style={{ fontWeight: 600 }}>{alt.name}</span>
                 <span style={{ fontFamily: 'monospace', color: 'var(--success)' }}>{((alt.score || 0) * 100).toFixed(0)}%</span>
               </div>
-              <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)' }}>
+              <div style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>
                 {alt.stations?.join(', ') || alt.description}
                 {alt.contact_minutes_per_day && t(' | {{min}} min/day contact', { min: alt.contact_minutes_per_day.toFixed(0) })}
                 {alt.annual_cost_keur && t(' | {{cost}} kEUR/yr', { cost: alt.annual_cost_keur })}
@@ -357,7 +359,7 @@ function GroundTradeWidget({ studyId }: { studyId: string | null }) {
             </div>
           ))}
           {result.recommendation && (
-            <div style={{ marginTop: '0.3rem', padding: '0.3rem', background: 'rgba(16,185,129,0.1)', borderRadius: '3px', fontSize: '0.68rem', color: 'var(--success)' }}>
+            <div style={{ marginTop: '0.3rem', padding: '0.3rem', background: 'rgba(16,185,129,0.1)', borderRadius: '3px', fontSize: fs.label, color: 'var(--success)' }}>
               {result.recommendation}
             </div>
           )}
@@ -422,20 +424,20 @@ function ContactScheduleWidget({ studyId }: { studyId: string | null }) {
   }
 
   return (
-    <ToolSection title={t('Ground Contact Schedule')} color="#0ea5e9">
-      <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', marginBottom: '0.2rem' }}>
+    <ToolSection title={t('Ground Contact Schedule')} color="var(--interactive)">
+      <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginBottom: '0.2rem' }}>
         {t("Uses your design's orbit parameters and ground stations from the element tree.")}
       </div>
       <button onClick={runSchedule} disabled={loading} style={btnStyle}>
         {loading ? t('Computing...') : t('Predict Contact Windows')}
       </button>
       {result?._design_context && (
-        <div style={{ fontSize: '0.55rem', color: 'var(--info)', marginTop: '0.2rem' }}>
+        <div style={{ fontSize: fs.label, color: 'var(--info)', marginTop: '0.2rem' }}>
           {t('Using: {{alt}}km, {{incl}}° inc, {{count}} ground stations, {{sc}} spacecraft', { alt: result._design_context.altitude, incl: result._design_context.inclination, count: result._design_context.ground_stations, sc: result._design_context.spacecraft, defaultValue_one: 'Using: {{alt}}km, {{incl}}° inc, {{count}} ground station, {{sc}} spacecraft' })}
         </div>
       )}
       {result && (
-        <div style={{ marginTop: '0.4rem', fontSize: '0.68rem' }}>
+        <div style={{ marginTop: '0.4rem', fontSize: fs.label }}>
           {(result.coverage_stats || result.contacts) && (
             <div style={rowStyle}>
               <span>{t('Contacts:')} <b>{result.contacts?.length || result.coverage_stats?.total_passes_per_day || '?'}</b></span>
@@ -447,7 +449,7 @@ function ContactScheduleWidget({ studyId }: { studyId: string | null }) {
           {(result.contacts || result.windows)?.slice(0, 8).map((w: any, i: number) => {
             const dur = w.duration_min ?? ((w.end_s - w.start_s) / 60)
             return (
-              <div key={i} style={{ padding: '0.15rem 0.3rem', fontSize: '0.6rem', color: 'var(--text-secondary)', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+              <div key={i} style={{ padding: '0.15rem 0.3rem', fontSize: fs.label, color: 'var(--text-secondary)', borderBottom: '1px solid color-mix(in srgb, var(--text) 3%, transparent)' }}>
                 <span style={{ fontWeight: 500, color: 'var(--text-primary)' }}>{w.station || w.station_id}</span>
                 {' '}{t('{{dur}} min | max el: {{el}}°', { dur: dur.toFixed(1), el: w.max_elevation_deg?.toFixed(0) })}
                 {w.data_volume_mbit && ` | ${(w.data_volume_mbit / 1000).toFixed(1)} Gbit`}
@@ -472,7 +474,6 @@ function PughMatrixWidget({ weights, criteria, onCriteriaChanged }: { weights?: 
   const [newCriterion, setNewCriterion] = useState('')
   const [newOption, setNewOption] = useState('')
 
-  const sid = useUIStore(s => s.studyId)
   const saveState = useCallback(() => {
     const state = { criteria, options, datum, scores }
     localStorage.setItem('spacecdf-pugh', JSON.stringify(state))
@@ -501,13 +502,13 @@ function PughMatrixWidget({ weights, criteria, onCriteriaChanged }: { weights?: 
   const best = totals.reduce((bi, t, i) => (i !== datum && t.weighted > (totals[bi]?.weighted ?? -999) ? i : bi), datum === 0 ? 1 : 0)
 
   return (
-    <ToolSection title={hasWeights ? t('Pugh Matrix (Weighted)') : t('Pugh Matrix (Unweighted)')} color="#ec4899">
-      <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
+    <ToolSection title={hasWeights ? t('Pugh Matrix (Weighted)') : t('Pugh Matrix (Unweighted)')} color="var(--cat-6)">
+      <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
         {t('Score each option vs datum: +2 much better, +1 better, 0 same, −1 worse, −2 much worse.')}
         {' '}{hasWeights ? t('Weights from pairwise comparison applied.') : t('Define weights above for weighted scoring.')}
       </div>
 
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.65rem', marginBottom: '0.3rem' }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs.label, marginBottom: '0.3rem' }}>
         <thead>
           <tr style={{ borderBottom: '1px solid var(--border)' }}>
             <th style={thL}>{t('Criteria')}</th>
@@ -522,14 +523,14 @@ function PughMatrixWidget({ weights, criteria, onCriteriaChanged }: { weights?: 
         </thead>
         <tbody>
           {criteria.map(crit => (
-            <tr key={crit} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+            <tr key={crit} style={{ borderBottom: '1px solid color-mix(in srgb, var(--text) 3%, transparent)' }}>
               <td style={{ padding: '0.15rem 0.3rem', fontWeight: 500 }}>{t(crit, { context: 'criterion' })}</td>
-              {hasWeights && <td style={{ padding: '0.15rem 0.3rem', textAlign: 'right', fontSize: '0.55rem', color: 'var(--accent)' }}>{((weights?.[crit] ?? 0) * 100).toFixed(0)}%</td>}
+              {hasWeights && <td style={{ padding: '0.15rem 0.3rem', textAlign: 'right', fontSize: fs.label, color: 'var(--accent)' }}>{((weights?.[crit] ?? 0) * 100).toFixed(0)}%</td>}
               {options.map((opt, i) => (
                 <td key={opt} style={{ padding: '0.15rem', textAlign: 'center' }}>
                   {i === datum ? <span style={{ color: 'var(--text-secondary)' }}>D</span> : (
                     <select value={getScore(opt, crit)} onChange={e => setScore(opt, crit, parseInt(e.target.value))}
-                      style={{ width: 40, fontSize: '0.6rem', padding: '0.1rem', borderRadius: '2px', background: 'var(--bg-primary)', border: '1px solid var(--border)', color: getScore(opt, crit) > 0 ? 'var(--success)' : getScore(opt, crit) < 0 ? 'var(--danger)' : 'var(--text-secondary)', textAlign: 'center' }}>
+                      style={{ width: 40, fontSize: fs.label, padding: '0.1rem', borderRadius: '2px', background: 'var(--bg-primary)', border: '1px solid var(--border)', color: getScore(opt, crit) > 0 ? 'var(--success)' : getScore(opt, crit) < 0 ? 'var(--danger)' : 'var(--text-secondary)', textAlign: 'center' }}>
                       <option value={2}>+2</option><option value={1}>+1</option><option value={0}>0</option><option value={-1}>−1</option><option value={-2}>−2</option>
                     </select>
                   )}
@@ -607,20 +608,20 @@ function PairwiseWeightingWidget({ onWeightsChanged, criteria, onCriteriaChanged
   }
 
   return (
-    <ToolSection title={t('Pairwise Comparison Weighting')} color="#8b5cf6">
-      <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
+    <ToolSection title={t('Pairwise Comparison Weighting')} color="var(--cat-2)">
+      <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
         {t('For each pair: which criterion is more important? 1 = left wins, 0.5 = equal, 0 = right wins')}
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', marginBottom: '0.4rem' }}>
         {pairs.map(([a, b]) => (
-          <div key={`${a}-${b}`} style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.65rem' }}>
+          <div key={`${a}-${b}`} style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: fs.label }}>
             <span style={{ width: 60, textAlign: 'right', fontWeight: 500 }}>{t(a, { context: 'criterion' })}</span>
             <input type="range" min={0} max={1} step={0.5} value={comparisons[pairKey(a, b)] ?? 0.5}
               onChange={e => setComparison(a, b, parseFloat(e.target.value))}
               style={{ width: 80 }} />
             <span style={{ width: 60, fontWeight: 500 }}>{t(b, { context: 'criterion' })}</span>
-            <span style={{ fontSize: '0.55rem', color: 'var(--text-secondary)', width: 20 }}>
+            <span style={{ fontSize: fs.label, color: 'var(--text-secondary)', width: 20 }}>
               {(comparisons[pairKey(a, b)] ?? 0.5) === 1 ? '←' : (comparisons[pairKey(a, b)] ?? 0.5) === 0 ? '→' : '='}
             </span>
           </div>
@@ -628,10 +629,10 @@ function PairwiseWeightingWidget({ onWeightsChanged, criteria, onCriteriaChanged
       </div>
 
       {/* Derived weights */}
-      <div style={{ fontSize: '0.65rem', fontWeight: 600, marginBottom: '0.2rem', color: 'var(--text-secondary)' }}>{t('Derived Weights:')}</div>
+      <div style={{ fontSize: fs.label, fontWeight: 600, marginBottom: '0.2rem', color: 'var(--text-secondary)' }}>{t('Derived Weights:')}</div>
       <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap' }}>
         {normalizedWeights.sort((a, b) => b.weight - a.weight).map(w => (
-          <div key={w.criterion} style={{ padding: '0.15rem 0.4rem', borderRadius: '3px', background: 'var(--bg-card)', fontSize: '0.65rem' }}>
+          <div key={w.criterion} style={{ padding: '0.15rem 0.4rem', borderRadius: '3px', background: 'var(--bg-card)', fontSize: fs.label }}>
             <span style={{ fontWeight: 500 }}>{t(w.criterion, { context: 'criterion' })}</span>
             <span style={{ marginLeft: '0.3rem', color: 'var(--accent)', fontWeight: 600 }}>{(w.weight * 100).toFixed(0)}%</span>
           </div>
@@ -669,14 +670,14 @@ function CostLearningCurveWidget() {
   const avgCost = n > 0 ? Math.round(cumulative / n) : 0
 
   return (
-    <ToolSection title={t('Constellation Cost Learning Curve')} color="#f59e0b">
+    <ToolSection title={t('Constellation Cost Learning Curve')} color="var(--status-caution)">
       <div style={{ display: 'flex', gap: '0.3rem', marginBottom: '0.3rem', flexWrap: 'wrap' }}>
         <label style={labelStyle}>{t('First unit (kEUR):')} <input type="number" value={unitCost} onChange={e => setUnitCost(e.target.value)} style={inputStyle} /></label>
         <label style={labelStyle}>{t('Quantity:')} <input type="number" value={quantity} onChange={e => setQuantity(e.target.value)} style={inputStyle} /></label>
         <label style={labelStyle}>{t('Learning rate:')} <input type="number" value={learningRate} onChange={e => setLearningRate(e.target.value)} step="0.01" min="0.7" max="1.0" style={inputStyle} /></label>
       </div>
 
-      <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '0.3rem', fontSize: '0.68rem' }}>
+      <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '0.3rem', fontSize: fs.label }}>
         <span>{t('Total:')} <b>{fmtProse(Math.round(cumulative))} kEUR</b></span>
         <span>{t('Average:')} <b>{t('{{cost}} kEUR/unit', { cost: fmtProse(avgCost) })}</b></span>
         <span>{t('Savings vs flat:')} <b>{Math.round((1 - cumulative / (c1 * n)) * 100)}%</b></span>
@@ -692,7 +693,7 @@ function CostLearningCurveWidget() {
           }} title={t('Unit {{n}}: {{cost}} kEUR', { n: u.unit, cost: u.cost })} />
         ))}
       </div>
-      <div style={{ fontSize: '0.55rem', color: 'var(--text-secondary)', textAlign: 'center' }}>
+      <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', textAlign: 'center' }}>
         {t('Unit cost decreases with production experience (Wright learning curve)')}
       </div>
     </ToolSection>
@@ -745,12 +746,12 @@ const DECISION_ITEMS_L234: DecisionItems = {
 
 const DECISION_ITEMS_BY_LEVEL: DecisionItems = { ...DECISION_ITEMS_L01, ...DECISION_ITEMS_L234 }
 
-const BIN_COLORS = { obvious: '#10b981', trade: '#f59e0b', explore: '#8b5cf6' }
+const BIN_COLORS = { obvious: 'var(--status-ok)', trade: 'var(--status-caution)', explore: 'var(--cat-2)' }
 // English text is the i18n key.
 const BIN_LABELS = { obvious: 'Obvious Choice', trade: 'Trade Study', explore: 'Design Space' }
 const BIN_ICONS = { obvious: '✓', trade: '⇄', explore: '?' }
 
-function DecisionCategorizer({ currentLevel, focusElement }: { currentLevel: number; focusElement: any }) {
+function DecisionCategorizer({ currentLevel }: { currentLevel: number; focusElement: any }) {
   const { t } = useTranslation()
   const items = DECISION_ITEMS_BY_LEVEL[currentLevel] || []
   if (items.length === 0) return null
@@ -758,22 +759,22 @@ function DecisionCategorizer({ currentLevel, focusElement }: { currentLevel: num
   const bins = { obvious: items.filter(i => i.category === 'obvious'), trade: items.filter(i => i.category === 'trade'), explore: items.filter(i => i.category === 'explore') }
 
   return (
-    <ToolSection title={t('Decision Categorization')} color="#06b6d4">
-      <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
+    <ToolSection title={t('Decision Categorization')} color="var(--interactive)">
+      <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
         {t("Categorize decisions at this level: what's obvious, what needs a trade, what needs exploration.")}
       </div>
       <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '0.2rem' }}>
         {(['obvious', 'trade', 'explore'] as const).map(bin => (
-          <div key={bin} style={{ flex: 1, fontSize: '0.55rem', textAlign: 'center', padding: '0.15rem', borderRadius: '3px', background: `${BIN_COLORS[bin]}15`, color: BIN_COLORS[bin], fontWeight: 700 }}>
+          <div key={bin} style={{ flex: 1, fontSize: fs.label, textAlign: 'center', padding: '0.15rem', borderRadius: '3px', background: `color-mix(in srgb, ${BIN_COLORS[bin]} 8%, transparent)`, color: BIN_COLORS[bin], fontWeight: 700 }}>
             {BIN_ICONS[bin]} {t(BIN_LABELS[bin])} ({bins[bin].length})
           </div>
         ))}
       </div>
       {items.map((item, i) => (
-        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', padding: '0.15rem 0.3rem', fontSize: '0.63rem', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', padding: '0.15rem 0.3rem', fontSize: fs.label, borderBottom: '1px solid color-mix(in srgb, var(--text) 3%, transparent)' }}>
           <span style={{ width: 6, height: 6, borderRadius: '50%', background: BIN_COLORS[item.category], flexShrink: 0 }} />
           <span style={{ fontWeight: 500, flex: 1 }}>{t(item.item)}</span>
-          <span style={{ color: 'var(--text-secondary)', fontSize: '0.55rem', maxWidth: 200 }}>{t(item.rationale)}</span>
+          <span style={{ color: 'var(--text-secondary)', fontSize: fs.label, maxWidth: 200 }}>{t(item.rationale)}</span>
         </div>
       ))}
     </ToolSection>
@@ -857,16 +858,16 @@ function ArchitectureTradeWidget({ currentLevel, focusElement }: { currentLevel:
   if (trades.length === 0) return null
 
   return (
-    <ToolSection title={t('Architecture Trades')} color="#ec4899">
-      <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
+    <ToolSection title={t('Architecture Trades')} color="var(--cat-6)">
+      <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
         {t('Which architecture is right? The driving requirement determines the answer.')}
       </div>
       {trades.map((trade, i) => (
         <div key={i} style={{ marginBottom: '0.4rem' }}>
-          <div style={{ fontWeight: 600, fontSize: '0.68rem', marginBottom: '0.1rem' }}>{t(trade.name)}</div>
-          <div style={{ fontSize: '0.6rem', color: 'var(--warning)', marginBottom: '0.2rem' }}>{t('Driver: {{driver}}', { driver: t(trade.driver) })}</div>
+          <div style={{ fontWeight: 600, fontSize: fs.label, marginBottom: '0.1rem' }}>{t(trade.name)}</div>
+          <div style={{ fontSize: fs.label, color: 'var(--warning)', marginBottom: '0.2rem' }}>{t('Driver: {{driver}}', { driver: t(trade.driver) })}</div>
           {trade.options.map((opt, j) => (
-            <div key={j} style={{ display: 'flex', gap: '0.3rem', padding: '0.1rem 0.3rem', fontSize: '0.6rem', borderLeft: '2px solid var(--border)', marginLeft: '0.3rem', marginBottom: '0.1rem' }}>
+            <div key={j} style={{ display: 'flex', gap: '0.3rem', padding: '0.1rem 0.3rem', fontSize: fs.label, borderLeft: '2px solid var(--border)', marginLeft: '0.3rem', marginBottom: '0.1rem' }}>
               <span style={{ fontWeight: 500, minWidth: 120 }}>{t(opt.name)}</span>
               <span style={{ color: 'var(--text-secondary)' }}>→ {t(opt.when)}</span>
             </div>
@@ -884,7 +885,7 @@ function ToolSection({ title, color, children }: { title: string; color: string;
   return (
     <div style={{ marginBottom: '0.5rem', borderLeft: `3px solid ${color}`, paddingLeft: '0.5rem' }}>
       <button onClick={() => setOpen(!open)} style={{
-        background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.72rem',
+        background: 'none', border: 'none', cursor: 'pointer', fontSize: fs.label,
         fontWeight: 600, color, padding: 0, marginBottom: '0.2rem',
       }}>
         {open ? '▾' : '▸'} {title}
@@ -895,19 +896,19 @@ function ToolSection({ title, color, children }: { title: string; color: string;
 }
 
 const btnStyle: React.CSSProperties = {
-  padding: '0.3rem 0.6rem', fontSize: '0.68rem', fontWeight: 600, borderRadius: '4px',
+  padding: '0.3rem 0.6rem', fontSize: fs.label, fontWeight: 600, borderRadius: '4px',
   background: 'var(--accent)', color: 'white', border: 'none', cursor: 'pointer',
 }
 const rowStyle: React.CSSProperties = {
   padding: '0.25rem 0.3rem', borderRadius: '3px', background: 'var(--bg-card)',
-  marginBottom: '0.2rem', fontSize: '0.68rem',
+  marginBottom: '0.2rem', fontSize: fs.label,
 }
 const inputStyle: React.CSSProperties = {
-  width: 60, padding: '0.15rem 0.3rem', fontSize: '0.65rem', borderRadius: '3px',
+  width: 60, padding: '0.15rem 0.3rem', fontSize: fs.label, borderRadius: '3px',
   background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)',
   marginLeft: '0.2rem',
 }
-const labelStyle: React.CSSProperties = { fontSize: '0.63rem', color: 'var(--text-secondary)' }
-const thL: React.CSSProperties = { textAlign: 'left', padding: '0.2rem 0.3rem', color: 'var(--text-secondary)', fontWeight: 500, fontSize: '0.6rem' }
+const labelStyle: React.CSSProperties = { fontSize: fs.label, color: 'var(--text-secondary)' }
+const thL: React.CSSProperties = { textAlign: 'left', padding: '0.2rem 0.3rem', color: 'var(--text-secondary)', fontWeight: 500, fontSize: fs.label }
 const thR: React.CSSProperties = { ...thL, textAlign: 'right' }
 const thC: React.CSSProperties = { ...thL, textAlign: 'center' }

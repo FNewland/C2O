@@ -3,6 +3,8 @@ import queue
 import pytest
 from unittest.mock import MagicMock, patch
 
+from tests.engine_doubles import wire_mock_engine
+
 
 def make_orbit_state(in_contact=False):
     state = MagicMock()
@@ -513,6 +515,9 @@ class TestOnDemandTMLeak:
         mock_pkt = b'\x08\x09' + struct.pack('>H', 0x0100) + struct.pack('>f', 28.5) + b'\x00' * 10
         engine.tm_builder = MagicMock()
         engine.tm_builder.build_param_value_report = MagicMock(return_value=mock_pkt)
+        # R4 G3: S20.3 consults engine.param_visibility; a spec mock returns
+        # a Mock there and every read is refused before the gate is reached.
+        wire_mock_engine(engine)
 
         # Set up CORRECTED downlink_active property
         type(engine).downlink_active = SimulationEngine.downlink_active
@@ -524,6 +529,9 @@ class TestOnDemandTMLeak:
         dispatcher = ServiceDispatcher(engine)
         data = struct.pack('>H', 0x0100)
         responses = dispatcher.dispatch(20, 3, data, None)
+        # Without a response there is nothing for the link gate to block and
+        # the assertion below would pass vacuously (R4 G3).
+        assert responses, "S20.3 produced no TM: nothing reached the downlink gate"
 
         # Enqueue response — _enqueue_tm should check downlink_active
         for resp_pkt in responses:
@@ -553,6 +561,9 @@ class TestOnDemandTMLeak:
         mock_pkt = b'\x08\x09' + struct.pack('>H', 0x0100) + struct.pack('>f', 28.5) + b'\x00' * 10
         engine.tm_builder = MagicMock()
         engine.tm_builder.build_param_value_report = MagicMock(return_value=mock_pkt)
+        # R4 G3: S20.3 consults engine.param_visibility; a spec mock returns
+        # a Mock there and every read is refused before the gate is reached.
+        wire_mock_engine(engine)
 
         type(engine).downlink_active = SimulationEngine.downlink_active
         engine._enqueue_tm = SimulationEngine._enqueue_tm.__get__(engine)
@@ -561,6 +572,9 @@ class TestOnDemandTMLeak:
         dispatcher = ServiceDispatcher(engine)
         data = struct.pack('>H', 0x0100)
         responses = dispatcher.dispatch(20, 3, data, None)
+        # Without a response there is nothing for the link gate to block and
+        # the assertion below would pass vacuously (R4 G3).
+        assert responses, "S20.3 produced no TM: nothing reached the downlink gate"
 
         for resp_pkt in responses:
             engine._enqueue_tm(resp_pkt)
@@ -598,6 +612,9 @@ class TestOnDemandTMLeak:
         mock_pkt = b'\x08\x09' + struct.pack('>H', 0x0100) + struct.pack('>f', 28.5) + b'\x00' * 10
         engine.tm_builder = MagicMock()
         engine.tm_builder.build_param_value_report = MagicMock(return_value=mock_pkt)
+        # R4 G3: S20.3 consults engine.param_visibility; a spec mock returns
+        # a Mock there and every read is refused before the gate is reached.
+        wire_mock_engine(engine)
 
         type(engine).downlink_active = SimulationEngine.downlink_active
         engine._enqueue_tm = SimulationEngine._enqueue_tm.__get__(engine)
@@ -641,6 +658,9 @@ class TestOnDemandTMLeak:
         mock_pkt = b'\x08\x09' + struct.pack('>H', 0x0100) + struct.pack('>f', 28.5) + b'\x00' * 10
         engine.tm_builder = MagicMock()
         engine.tm_builder.build_param_value_report = MagicMock(return_value=mock_pkt)
+        # R4 G3: S20.3 consults engine.param_visibility; a spec mock returns
+        # a Mock there and every read is refused before the gate is reached.
+        wire_mock_engine(engine)
 
         type(engine).downlink_active = SimulationEngine.downlink_active
         engine._enqueue_tm = SimulationEngine._enqueue_tm.__get__(engine)

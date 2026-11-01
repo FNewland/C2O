@@ -95,24 +95,24 @@ six structures de servitude périodiques :
 
 | SID | Nom | Paramètres | Paquet | Période | Débit |
 |-----|------|-----------:|-------:|---------:|-----:|
-| 1 | EPS | 51 | 105 o | 1,0 s | 840,0 bit/s |
-| 2 | AOCS | 71 | 147 o | 4,0 s | 294,0 bit/s |
+| 1 | EPS | 52 | 105 o | 1,0 s | 840,0 bit/s |
+| 2 | AOCS | 75 | 152 o | 4,0 s | 304,0 bit/s |
 | 3 | TCS | 17 | 49 o | 60,0 s | 6,5 bit/s |
-| 4 | Plateforme | 26 | 72 o | 8,0 s | 72,0 bit/s |
-| 5 | Charge utile | 23 | 64 o | 8,0 s | 64,0 bit/s |
-| 6 | TT&C | 27 | 75 o | 8,0 s | 75,0 bit/s |
-| | **Total** | **215** | | | **1351,5 bit/s** |
+| 4 | Plateforme | 36 | 88 o | 8,0 s | 88,0 bit/s |
+| 5 | Charge utile | 29 | 75 o | 8,0 s | 75,0 bit/s |
+| 6 | TT&C | 24 | 65 o | 8,0 s | 65,0 bit/s |
+| | **Total** | **233** | | | **1378,5 bit/s** |
 
 Multipliez par le facteur RS(255,223) (×255/223) et par celui de la trame de transfert TM de 1115/1107 octets, et le
-flux de servitude coûte **1557 bit/s de canal**.
+flux de servitude coûte **1588 bit/s de canal** (1587,7 bit/s ; il valait 1557 bit/s avant les ajouts de la phase G à 2026-08e, et 1699,5 bit/s avant le retrait, le 2026-08-20, de tous les paramètres dérivés au sol et réservés à l'instructeur des SID HK).
 
 Deux conclusions en découlent immédiatement, et elles constituent tout l'argument en faveur de cet échelon.
 
-* **1000 bit/s est inférieur à 1557 bit/s.** L'ancien « débit bas » de la mission n'aurait jamais pu transmettre
+* **1000 bit/s est inférieur à 1588 bit/s.** L'ancien « débit bas » de la mission n'aurait jamais pu transmettre
   la servitude en temps réel. L'arriéré croissait de façon monotone et des paquets étaient perdus. Ce
   n'est ni une préférence ni une affaire de goût ; c'est un défaut quantifié, et c'est pourquoi
   1 kbit/s est désormais qualifié de débit de balise et verrouillé derrière le mode balise.
-* **16 000 bit/s l'absorbe avec un taux d'occupation de 9,7 %** et permet encore de relire environ **0,85 orbite de
+* **16 000 bit/s l'absorbe avec un taux d'occupation de 9,9 %** et permet encore de relire environ **0,82 orbite de
   servitude enregistrée** en un seul passage de 514 secondes. C'est la plus petite valeur ronde
   pour laquelle un satellite en mode survie ne perd pas de données et ne prend pas de retard sur une orbite.
 
@@ -346,16 +346,16 @@ visible : à LOW, l'imagerie n'est pas simplement plus lente, elle est impossib
 
 ### 5.2 La servitude seule occupe un tiers du réseau à bas débit
 
-Le flux de servitude de 1557 bit/s représente 16,0 Mio par jour. Le réseau de cinq stations offre
+Le flux de servitude de 1588 bit/s représente 16,4 Mio par jour. Le réseau de cinq stations offre
 environ 23 300 secondes de contact par jour. Transmettre une journée de servitude
 consomme donc :
 
 | Palier | Temps de contact nécessaire par jour | Part du réseau |
 |------|----------------------------:|---------------------:|
-| LOW (16 kbit/s) | 8410 s | **36 %** |
-| HIGH (128 kbit/s) | 1051 s | **4,5 %** |
+| LOW (16 kbit/s) | 8573 s | **37 %** |
+| HIGH (128 kbit/s) | 1072 s | **4,6 %** |
 
-Trente-six pour cent de l'ensemble du réseau sol, avant même la première image. Le bilan rapporte
+Trente-sept pour cent de l'ensemble du réseau sol, avant même la première image. Le bilan rapporte
 cette valeur sous `hk_contact_fraction_percent`, par palier, calculée à partir de `hk_structures.yaml` plutôt que
 supposée. C'est le chiffre qui justifie que LOW vaille 16 kbit/s et non 8, et
 celui qui empêche un étudiant de considérer la servitude comme gratuite.

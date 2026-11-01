@@ -223,7 +223,7 @@ connection stays up.
 ## 9. Flat files
 
 `tools/vr_stub/sample_vr_frames.ndjson` — the exact wire messages (`hello` then
-1135 `state` lines), one orbit at 5 s steps. `sample_vr_frames.csv` — the same
+1134 `state` lines, 1135 lines in all), one orbit at 5 s steps. `sample_vr_frames.csv` — the same
 frames flattened: nested names joined with `_`, vectors as `_x/_y/_z`, the
 quaternion as `_x/_y/_z/_w`, booleans as 0/1. The story (compressed LEOP):
 
@@ -250,5 +250,6 @@ replay it with `vr_stub.py --replay run.ndjson`.
   not propagate attitude, so the quaternion stays at its initial value until
   the AOCS is running. The stub's story shows a tumble there instead.
 * The stub uses a circular orbit and a cylindrical shadow; the simulator uses
-  SGP4 and a conical shadow with penumbra. Positions agree to a few km and
-  eclipse times to seconds for the reference epoch.
+  SGP4 and a conical shadow with penumbra. Positions agree to within about
+  50 km over the first orbit, and eclipse times to seconds for the
+  reference epoch.

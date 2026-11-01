@@ -6,7 +6,8 @@
  * to edit parameters in the conflicting domains.
  */
 import { useState } from 'react'
-import { useDesignStore, type CrossDomainConflict } from '../stores/designStore'
+import { useDesignStore } from '../stores/designStore'
+import { fs } from '../theme/tokens'
 
 type Resolution = 'resolve' | 'accept_risk' | 'defer' | 'pending'
 
@@ -18,7 +19,7 @@ interface ConflictDecision {
 }
 
 const SEVERITY_COLORS: Record<string, string> = {
-  critical: '#ef4444', major: '#f59e0b', minor: '#3b82f6',
+  critical: 'var(--status-alarm)', major: 'var(--status-caution)', minor: 'var(--interactive)',
 }
 
 export function ConflictReviewModal({ onClose }: { onClose: () => void }) {
@@ -56,25 +57,25 @@ export function ConflictReviewModal({ onClose }: { onClose: () => void }) {
       zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center',
     }}>
       <div style={{
-        background: 'var(--bg-primary, #111827)', border: '1px solid var(--border, #374151)',
+        background: 'var(--bg-primary, var(--surface-1))', border: '1px solid var(--border, var(--line))',
         borderRadius: '8px', width: '90%', maxWidth: '700px', maxHeight: '80vh',
         display: 'flex', flexDirection: 'column', overflow: 'hidden',
       }}>
         {/* Header */}
         <div style={{
-          padding: '0.75rem 1rem', borderBottom: '1px solid var(--border, #374151)',
+          padding: '0.75rem 1rem', borderBottom: '1px solid var(--border, var(--line))',
           display: 'flex', alignItems: 'center', gap: '0.5rem',
         }}>
-          <span style={{ fontSize: '1.1rem', fontWeight: 700, color: '#ef4444' }}>
+          <span style={{ fontSize: fs.title, fontWeight: 700, color: 'var(--status-alarm)' }}>
             {conflicts.length} Conflict{conflicts.length !== 1 ? 's' : ''} Detected
           </span>
           <span style={{ flex: 1 }} />
-          <span style={{ fontSize: '0.75rem', color: '#9ca3af' }}>
+          <span style={{ fontSize: fs.label, color: 'var(--text-2)' }}>
             {decisions.size}/{conflicts.length} resolved
           </span>
           {allResolved && (
             <button className="btn btn-sm" onClick={onClose}
-              style={{ background: '#10b981', fontSize: '0.75rem' }}>
+              style={{ background: 'var(--status-ok)', fontSize: fs.label }}>
               Accept & Continue
             </button>
           )}
@@ -82,7 +83,7 @@ export function ConflictReviewModal({ onClose }: { onClose: () => void }) {
 
         {/* Conflict list */}
         <div style={{ padding: '0.75rem', overflowY: 'auto', flex: 1 }}>
-          <p style={{ fontSize: '0.75rem', color: '#9ca3af', marginBottom: '0.75rem' }}>
+          <p style={{ fontSize: fs.label, color: 'var(--text-2)', marginBottom: '0.75rem' }}>
             These conflicts were detected during design convergence.
             Each must be resolved, accepted as a risk, or deferred before proceeding.
           </p>
@@ -93,35 +94,35 @@ export function ConflictReviewModal({ onClose }: { onClose: () => void }) {
             return (
               <div key={c.id} style={{
                 padding: '0.5rem 0.75rem', borderRadius: '6px', marginBottom: '0.4rem',
-                background: decision ? 'rgba(16,185,129,0.05)' : 'var(--bg-secondary, #1f2937)',
-                border: `1px solid ${decision ? '#10b98140' : SEVERITY_COLORS[c.severity] + '40'}`,
-                borderLeft: `3px solid ${decision ? '#10b981' : SEVERITY_COLORS[c.severity]}`,
+                background: decision ? 'rgba(16,185,129,0.05)' : 'var(--bg-secondary, var(--surface-2))',
+                border: `1px solid ${decision ? 'color-mix(in srgb, var(--status-ok) 25%, transparent)' : `color-mix(in srgb, ${SEVERITY_COLORS[c.severity]} 25%, transparent)`}`,
+                borderLeft: `3px solid ${decision ? 'var(--status-ok)' : SEVERITY_COLORS[c.severity]}`,
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.2rem' }}>
                   <span style={{
-                    fontSize: '0.6rem', fontWeight: 700, padding: '0.1rem 0.35rem', borderRadius: '3px',
+                    fontSize: fs.label, fontWeight: 700, padding: '0.1rem 0.35rem', borderRadius: '3px',
                     textTransform: 'uppercase',
-                    background: `${SEVERITY_COLORS[c.severity]}22`, color: SEVERITY_COLORS[c.severity],
+                    background: `color-mix(in srgb, ${SEVERITY_COLORS[c.severity]} 13%, transparent)`, color: SEVERITY_COLORS[c.severity],
                   }}>{c.severity}</span>
-                  <span style={{ fontSize: '0.82rem', fontWeight: 600 }}>{c.title}</span>
+                  <span style={{ fontSize: fs.body, fontWeight: 600 }}>{c.title}</span>
                   {decision && (
                     <span style={{
-                      fontSize: '0.6rem', padding: '0.1rem 0.35rem', borderRadius: '3px',
-                      background: 'rgba(16,185,129,0.15)', color: '#10b981', fontWeight: 600,
+                      fontSize: fs.label, padding: '0.1rem 0.35rem', borderRadius: '3px',
+                      background: 'rgba(16,185,129,0.15)', color: 'var(--status-ok)', fontWeight: 600,
                     }}>{decision.resolution.replace('_', ' ').toUpperCase()}</span>
                   )}
                 </div>
-                <div style={{ fontSize: '0.72rem', color: '#9ca3af', marginBottom: '0.2rem' }}>
+                <div style={{ fontSize: fs.label, color: 'var(--text-2)', marginBottom: '0.2rem' }}>
                   {c.description}
                 </div>
-                <div style={{ fontSize: '0.68rem', color: '#6b7280' }}>
+                <div style={{ fontSize: fs.label, color: 'var(--text-3)' }}>
                   {c.domain_a} ({c.param_a}: {c.value_a_str}) vs {c.domain_b} ({c.param_b}: {c.value_b_str})
                 </div>
 
                 {!decision && !isActive && (
                   <div style={{ display: 'flex', gap: '0.3rem', marginTop: '0.3rem' }}>
                     <button className="btn btn-sm" onClick={() => setActiveConflict(c.id)}
-                      style={{ fontSize: '0.68rem', background: '#3b82f6' }}>Review</button>
+                      style={{ fontSize: fs.label, background: 'var(--interactive)' }}>Review</button>
                   </div>
                 )}
 
@@ -131,10 +132,10 @@ export function ConflictReviewModal({ onClose }: { onClose: () => void }) {
                     background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)',
                   }}>
                     {c.resolutions.length > 0 && (
-                      <div style={{ fontSize: '0.72rem', color: '#d1d5db', marginBottom: '0.3rem' }}>
+                      <div style={{ fontSize: fs.label, color: 'var(--text)', marginBottom: '0.3rem' }}>
                         Suggested resolutions:
                         {c.resolutions.map((r, i) => (
-                          <div key={i} style={{ fontSize: '0.68rem', color: '#9ca3af', marginLeft: '0.5rem' }}>
+                          <div key={i} style={{ fontSize: fs.label, color: 'var(--text-2)', marginLeft: '0.5rem' }}>
                             - {r.description}: change {r.parameter_to_change} {r.suggested_direction}
                           </div>
                         ))}
@@ -142,26 +143,26 @@ export function ConflictReviewModal({ onClose }: { onClose: () => void }) {
                     )}
                     <textarea className="input" value={rationale} onChange={e => setRationale(e.target.value)}
                       placeholder="Rationale (optional)..." rows={2}
-                      style={{ width: '100%', fontSize: '0.72rem', marginBottom: '0.3rem' }} />
+                      style={{ width: '100%', fontSize: fs.label, marginBottom: '0.3rem' }} />
                     <div style={{ display: 'flex', gap: '0.3rem' }}>
                       <button className="btn btn-sm" onClick={() => handleDecision(c.id, 'resolve')}
-                        style={{ background: '#10b981', fontSize: '0.68rem' }}>Resolve</button>
+                        style={{ background: 'var(--status-ok)', fontSize: fs.label }}>Resolve</button>
                       <button className="btn btn-sm" onClick={() => handleDecision(c.id, 'accept_risk')}
-                        style={{ background: '#8b5cf6', fontSize: '0.68rem' }}>Accept Risk</button>
+                        style={{ background: 'var(--cat-2)', fontSize: fs.label }}>Accept Risk</button>
                       <button className="btn btn-sm" onClick={() => handleDecision(c.id, 'defer')}
-                        style={{ background: '#6b7280', fontSize: '0.68rem' }}>Defer</button>
+                        style={{ background: 'var(--text-3)', fontSize: fs.label }}>Defer</button>
                       <button className="btn btn-sm" onClick={() => setActiveConflict(null)}
-                        style={{ background: '#374151', fontSize: '0.68rem' }}>Cancel</button>
+                        style={{ background: 'var(--line)', fontSize: fs.label }}>Cancel</button>
                     </div>
                   </div>
                 )}
 
                 {decision && (
-                  <div style={{ fontSize: '0.68rem', color: '#6b7280', marginTop: '0.2rem' }}>
+                  <div style={{ fontSize: fs.label, color: 'var(--text-3)', marginTop: '0.2rem' }}>
                     {decision.rationale}
                     <button onClick={() => {
                       setDecisions(prev => { const n = new Map(prev); n.delete(c.id); return n })
-                    }} style={{ background: 'none', border: 'none', color: '#3b82f6', cursor: 'pointer', fontSize: '0.65rem', marginLeft: '0.3rem' }}>
+                    }} style={{ background: 'none', border: 'none', color: 'var(--interactive)', cursor: 'pointer', fontSize: fs.label, marginLeft: '0.3rem' }}>
                       Re-evaluate
                     </button>
                   </div>
@@ -173,18 +174,18 @@ export function ConflictReviewModal({ onClose }: { onClose: () => void }) {
 
         {/* Footer */}
         <div style={{
-          padding: '0.5rem 1rem', borderTop: '1px solid var(--border, #374151)',
+          padding: '0.5rem 1rem', borderTop: '1px solid var(--border, var(--line))',
           display: 'flex', alignItems: 'center', gap: '0.5rem',
         }}>
           {!allResolved && (
-            <span style={{ fontSize: '0.75rem', color: '#f59e0b' }}>
+            <span style={{ fontSize: fs.label, color: 'var(--status-caution)' }}>
               {unresolvedCount} conflict{unresolvedCount !== 1 ? 's' : ''} remaining — resolve all to continue
             </span>
           )}
           <span style={{ flex: 1 }} />
           {allResolved && (
             <button className="btn btn-sm" onClick={onClose}
-              style={{ background: '#10b981', fontSize: '0.75rem' }}>
+              style={{ background: 'var(--status-ok)', fontSize: fs.label }}>
               All Resolved — Continue
             </button>
           )}

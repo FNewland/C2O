@@ -996,7 +996,8 @@ bootloader, so no rule can boot or reboot the OBC behind the operator's back.
 | 2001 | Momentum saturation (0x0205) | Desaturate wheels | AOCS control |
 | 2002 | Star tracker 1 blind (0x0203) | Switch to ST2 | Attitude control |
 | 3001 | FPA overtemp (0x0604) | Payload off | Thermal protection |
-| 4001 | Link margin critical (0x0507) | Increase TX power | Link recovery |
+| 4001 | Uplink lock dropout (event 0x0513) | Increase TX power (HIGH, 5 W) | Link recovery |
+| 4003 | Command-loss timer, 24 h (event 0x0514) | Switch to redundant transponder | Link recovery (FDIR TTC-01) |
 | 5001 | OBC reboot (0x0301) | Acknowledge | System monitoring |
 | 6001 | Storage full (0x0609) | Stop imaging | Data management |
 

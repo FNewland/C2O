@@ -66,10 +66,10 @@ confirms that the new bit error rate remains acceptable after the transition.
 **Verify:** `ttc.bit_sync` (0x0511) = 1
 **Verify:** `ttc.tm_tier` (0x0539) --- record the ACTIVE tier
 **Verify:** `ttc.tm_tier_cmd` (0x053A) --- record the COMMANDED tier
-**Verify:** `ttc.link_margin` (0x0503) --- record current value
-**Verify:** `ttc.ber` (0x050C) --- record current value (expected < -5)
-**Verify:** `ttc.eb_n0` (0x0519) --- record current value
-**Verify:** `ttc.contact_elevation` (0x050A) --- record current elevation
+**Verify:** TT&C page (ground): `ttc.link_margin` (0x0503) --- record current value
+**Verify:** radio page (ground): `ttc.ber` (0x050C) --- record current value (expected < -5)
+**Verify:** radio page (ground): `ttc.eb_n0` (0x0519) --- record current value
+**Verify:** TT&C page (ground): `ttc.contact_elevation` (0x050A) --- record current elevation
 **Note:** If 0x0539 and 0x053A already disagree, a gate is refusing the commanded tier.
 Resolve that before commanding anything else — the ladder is not "stuck", it is obeying
 a rule, and 0x0521 / 0x0520 / 0x053C say which one.
@@ -128,9 +128,9 @@ to the BER check.
 ### Step 5 --- Verify the New BER Is Acceptable
 **TC:** `HK_REQUEST(sid=6)` (Service 3, Subtype 27) --- request TT&C housekeeping after
 allowing 30 s for BER to stabilize
-**Verify:** `ttc.ber` (0x050C) < -5 (BER better than 1e-5)
-**Verify:** `ttc.link_margin` (0x0503) > 1.0 dB at the new tier
-**Verify:** `ttc.eb_n0` (0x0519) > 8.0 dB
+**Verify:** radio page (ground): `ttc.ber` (0x050C) < -5 (BER better than 1e-5)
+**Verify:** TT&C page (ground): `ttc.link_margin` (0x0503) > 1.0 dB at the new tier
+**Verify:** radio page (ground): `ttc.eb_n0` (0x0519) > 8.0 dB
 **Action:** If BER >= -5, immediately revert to LOW (see Contingency).
 **GO/NO-GO:** BER acceptable at the new tier --- rate change complete.
 **BRANCH:** `ttc.downlink_mode == 1` -> GO `STEP-6` | NO-GO `STEP-END` (timeout 5 s)

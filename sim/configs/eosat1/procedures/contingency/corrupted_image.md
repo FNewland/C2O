@@ -28,7 +28,7 @@ action including aborting imaging if necessary and re-capturing the scene.
 | payload.store_used | 0x0604 | Current storage level |
 | payload.image_count | 0x0605 | Current image count |
 | payload.last_scene_id | 0x060C | Last captured scene |
-| payload.last_scene_quality | 0x060D | Quality metric of last image |
+| Downlinked image (ground) | — | Quick-look shows no missing lines, streaks or saturation |
 | payload.mode | 0x0600 | Current payload mode |
 | tcs.temp_fpa | 0x0408 | < -25.0 C (cross-check with payload sensor) |
 | tcs.cooler_fpa | 0x040C | 1 (cooler active) |
@@ -50,7 +50,7 @@ action including aborting imaging if necessary and re-capturing the scene.
 **Verify:** `payload.checksum_errors` (0x0609) — record current value and compare with
 previous baseline. Calculate delta (number of new errors).
 **Verify:** `payload.last_scene_id` (0x060C) — record the scene that may be affected
-**Verify:** `payload.last_scene_quality` (0x060D) — record quality metric
+**Verify:** on the ground, the last downlinked product of that scene — record whether the quick-look shows missing lines, streaks or blocks of corrupt pixels
 **Verify:** `payload.image_count` (0x0605) — record current count
 **Note:** A single checksum error may be a transient event (SEU). Multiple errors on the
 same scene suggest a systematic issue.
@@ -123,13 +123,13 @@ detector lines (2048 = the 4-band 4.0 MB reference frame). Geolocation is NOT an
 it is stamped on board from the propagated sub-satellite point at shutter open.
 **Verify:** `payload.image_count` (0x0605) increments by 1
 **Verify:** `payload.checksum_errors` (0x0609) does NOT increase
-**Verify:** `payload.last_scene_quality` (0x060D) — record quality metric for new image
+**Note:** The spacecraft cannot grade its own image. Image quality is judged on the ground, once the new scene has been downlinked (Step 6).
 **GO/NO-GO:** Re-capture successful with no new errors — procedure complete.
 
 ### Step 6: Post-Capture Verification
 **TC:** `HK_REQUEST(sid=5)` (Service 3, Subtype 27) — Request final payload housekeeping
 **Verify:** `payload.checksum_errors` (0x0609) — no further increase
-**Verify:** `payload.last_scene_quality` (0x060D) — acceptable quality
+**Verify:** on the ground, after downlink of the new scene: the product CRC32 matches the on-board transfer report and the quick-look is clean (no missing lines, streaks or saturation)
 **Verify:** `payload.store_used` (0x0604) — within capacity
 **Action:** Log the incident: original scene ID, error count, root cause assessment
 (thermal / memory / transient), and re-capture result.

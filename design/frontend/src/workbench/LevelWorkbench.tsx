@@ -4,7 +4,7 @@
  * Levels 0-3: BlockDiagram (top) + ActivityPanel tabs (bottom)
  * Level 4: Full-screen V&V panel
  */
-import { useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useUIStore, type ActivityPanel } from '../stores/uiStore'
 import { BlockDiagram } from './BlockDiagram'
@@ -19,18 +19,20 @@ import { ICDTable } from '../components/ICDTable'
 import { TraceabilityTree } from '../components/TraceabilityTree'
 import { ErrorBoundary } from '../components/ErrorBoundary'
 import { AnalysesPanel } from './AnalysesPanel'
+import { fs } from '../theme/tokens'
 
-const PANELS: Array<{ id: ActivityPanel; color: string }> = [
-  { id: 'blocks', color: '#3b82f6' },
-  { id: 'budget', color: '#f59e0b' },
-  { id: 'requirements', color: '#8b5cf6' },
-  { id: 'functions', color: '#a855f7' },
-  { id: 'interfaces', color: '#10b981' },
-  { id: 'icd', color: '#14b8a6' },
-  { id: 'trace', color: '#06b6d4' },
-  { id: 'decide', color: '#f59e0b' },
-  { id: 'analyses', color: '#ec4899' },
-]
+const PANELS: ActivityPanel[] = ['blocks', 'budget', 'requirements', 'functions', 'interfaces', 'icd', 'trace', 'decide', 'analyses']
+
+/** Tabs that are tables or lists: the diagram collapses to a strip so they get the height. */
+const TABLE_PANELS = new Set<ActivityPanel>(['budget', 'requirements', 'functions', 'icd', 'trace', 'decide', 'analyses'])
+
+const MIN_PANEL = 160
+const STRIP = 40
+
+function storageKey(user: string) { return `scdf.panelHeight.${user || 'anon'}` }
+function readHeight(user: string): number {
+  try { const v = Number(localStorage.getItem(storageKey(user))); return Number.isFinite(v) && v >= MIN_PANEL ? v : 320 } catch { return 320 }
+}
 
 // English text is the i18n key: tab labels, translated at render time with t().
 // Also the ErrorBoundary phaseName values below ('Functions', 'ICD', …).
@@ -51,49 +53,135 @@ export function LevelWorkbench() {
   const activePanel = useUIStore(s => s.activePanel)
   const setActivePanel = useUIStore(s => s.setActivePanel)
   const currentLevel = useUIStore(s => s.currentLevel)
-  const [panelHeight] = useState(280)
+  const userName = useUIStore(s => s.userName)
+  const [panelHeight, setPanelHeight] = useState(() => readHeight(userName))
+  const [showDiagram, setShowDiagram] = useState<Partial<Record<ActivityPanel, boolean>>>({})
+  const rootRef = useRef<HTMLDivElement>(null)
+  const tabsRef = useRef<HTMLDivElement>(null)
+
+  // Persist per user (the name entered at sign-in).
+  useEffect(() => { setPanelHeight(readHeight(userName)) }, [userName])
+  const commit = useCallback((h: number) => {
+    try { localStorage.setItem(storageKey(userName), String(Math.round(h))) } catch { /* private mode */ }
+  }, [userName])
+
+  const clamp = useCallback((h: number) => {
+    const total = rootRef.current?.clientHeight ?? 800
+    return Math.max(MIN_PANEL, Math.min(h, total - 120))
+  }, [])
+
+  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    const startY = e.clientY, startH = panelHeight
+    const el = e.currentTarget
+    el.setPointerCapture(e.pointerId)
+    let last = startH
+    const move = (ev: PointerEvent) => { last = clamp(startH - (ev.clientY - startY)); setPanelHeight(last) }
+    const up = () => { el.removeEventListener('pointermove', move); el.removeEventListener('pointerup', up); commit(last) }
+    el.addEventListener('pointermove', move)
+    el.addEventListener('pointerup', up)
+  }
+  const onKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    const step = e.shiftKey ? 64 : 16
+    let h = panelHeight
+    if (e.key === 'ArrowUp') h += step
+    else if (e.key === 'ArrowDown') h -= step
+    else if (e.key === 'Home') h = MIN_PANEL
+    else if (e.key === 'End') h = clamp(10_000)
+    else return
+    e.preventDefault()
+    h = clamp(h); setPanelHeight(h); commit(h)
+  }
+
+  const onTabKey = (e: React.KeyboardEvent) => {
+    const i = PANELS.indexOf(activePanel)
+    let j = i
+    if (e.key === 'ArrowRight') j = (i + 1) % PANELS.length
+    else if (e.key === 'ArrowLeft') j = (i - 1 + PANELS.length) % PANELS.length
+    else if (e.key === 'Home') j = 0
+    else if (e.key === 'End') j = PANELS.length - 1
+    else return
+    e.preventDefault()
+    setActivePanel(PANELS[j])
+    tabsRef.current?.querySelectorAll<HTMLButtonElement>('[role="tab"]')[j]?.focus()
+  }
 
   // Level 4 = V&V — full-screen panel, no diagram
   if (currentLevel === 4) {
     return <VVPanel />
   }
 
+  const collapsed = TABLE_PANELS.has(activePanel) && !showDiagram[activePanel]
+  const tabLabel = t(PANEL_LABELS[activePanel] ?? activePanel)
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      {/* Block diagram — takes remaining space */}
-      <div style={{ flex: 1, minHeight: 200 }}>
-        <BlockDiagram />
-      </div>
+    <div ref={rootRef} style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      {collapsed ? (
+        <div style={{
+          flex: 'none', height: STRIP, display: 'flex', alignItems: 'center', gap: 'var(--sp-3)',
+          padding: '0 var(--sp-3)', background: 'var(--surface-1)', borderBottom: '1px solid var(--line)',
+          fontSize: fs.body, color: 'var(--text-2)',
+        }}>
+          <span>{t('Block diagram collapsed while {{tab}} is open.', { tab: tabLabel })}</span>
+          <button type="button" className="c2o-btn" onClick={() => setShowDiagram(m => ({ ...m, [activePanel]: true }))}>
+            {t('Show diagram')}
+          </button>
+        </div>
+      ) : (
+        <div style={{ flex: 1, minHeight: 120, position: 'relative' }}>
+          <BlockDiagram />
+          {TABLE_PANELS.has(activePanel) && (
+            <button type="button" className="c2o-btn" style={{ position: 'absolute', top: 8, right: 8, zIndex: 5 }}
+              onClick={() => setShowDiagram(m => ({ ...m, [activePanel]: false }))}>
+              {t('Hide diagram')}
+            </button>
+          )}
+        </div>
+      )}
+
+      {!collapsed && (
+        <div
+          role="separator"
+          aria-orientation="horizontal"
+          aria-label={t('Resize activity panel')}
+          aria-valuemin={MIN_PANEL}
+          aria-valuenow={Math.round(panelHeight)}
+          tabIndex={0}
+          className="c2o-splitter"
+          onPointerDown={onPointerDown}
+          onKeyDown={onKeyDown}
+          onDoubleClick={() => { const h = clamp(320); setPanelHeight(h); commit(h) }}
+          title={t('Drag to resize. Double-click to reset.')}
+        />
+      )}
 
       {/* Activity panel tabs + content */}
-      <div style={{ height: panelHeight, borderTop: '2px solid var(--border)', display: 'flex', flexDirection: 'column' }}>
-        {/* Tab bar */}
-        <div style={{
-          display: 'flex', gap: '1px', background: 'var(--bg-secondary)',
-          borderBottom: '1px solid var(--border)',
-        }}>
-          {PANELS.map(p => {
-            const active = activePanel === p.id
+      <div style={{ height: collapsed ? undefined : panelHeight, flex: collapsed ? 1 : 'none', minHeight: 0, display: 'flex', flexDirection: 'column', background: 'var(--surface-0)' }}>
+        <div ref={tabsRef} role="tablist" aria-label={t('Activity panel')} className="c2o-tabs"
+          onKeyDown={onTabKey}
+          style={{ padding: '0 var(--sp-2)', background: 'var(--surface-1)', borderBottom: '1px solid var(--line)' }}>
+          {PANELS.map(id => {
+            const active = activePanel === id
             return (
               <button
-                key={p.id}
-                onClick={() => setActivePanel(p.id)}
-                style={{
-                  padding: '0.35rem 1rem', fontSize: '0.72rem', fontWeight: 600,
-                  background: active ? 'var(--bg-primary)' : 'var(--bg-secondary)',
-                  color: active ? p.color : 'var(--text-secondary)',
-                  border: 'none', cursor: 'pointer',
-                  borderBottom: active ? `2px solid ${p.color}` : '2px solid transparent',
-                }}
+                key={id}
+                type="button"
+                role="tab"
+                id={`act-tab-${id}`}
+                aria-selected={active}
+                aria-controls="act-panel"
+                tabIndex={active ? 0 : -1}
+                className="c2o-tab"
+                onClick={() => setActivePanel(id)}
               >
-                {t(PANEL_LABELS[p.id] ?? p.id)}
+                {t(PANEL_LABELS[id] ?? id)}
               </button>
             )
           })}
         </div>
 
         {/* Panel content */}
-        <div style={{ flex: 1, overflow: 'auto', background: 'var(--bg-primary)' }}>
+        <div id="act-panel" role="tabpanel" aria-labelledby={`act-tab-${activePanel}`} style={{ flex: 1, overflow: 'auto', background: 'var(--surface-0)' }}>
           {activePanel === 'blocks' && <BlocksPanel />}
           {activePanel === 'budget' && <BudgetPanel />}
           {activePanel === 'requirements' && <RequirementsPanel />}

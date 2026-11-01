@@ -189,7 +189,6 @@
   "Importing…": "Importation…",
   "Interface Requirements": "Exigences d'interface",
   "Interface label (optional):": "Libellé de l'interface (facultatif) :",
-  "Interface type?\n\n1. electrical\n2. data\n3. rf\n4. mechanical\n5. thermal\n\nEnter type or number:": "Type d'interface ?\n\n1. electrical (électrique)\n2. data (données)\n3. rf (RF)\n4. mechanical (mécanique)\n5. thermal (thermique)\n\nSaisissez le type (en anglais) ou son numéro :",
   "Interface | Type | To/From | Properties\n---|---|---|---\n | | |": "Interface | Type | Vers/depuis | Propriétés\n---|---|---|---\n | | |",
   "Isp (s)": "Isp (s)",
   "KerML/SysML v2 textual notation: parts, ports, connections, requirements. For SysML v2 pilot tools, Syside, Cameo 2024+.": "Notation textuelle KerML/SysML v2 : parts, ports, connexions, exigences. Pour les outils pilotes SysML v2, Syside, Cameo 2024+.",

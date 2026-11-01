@@ -24,6 +24,7 @@ import { PowerDistribution } from '../components/PowerDistribution'
 import { OBCInterfaceDiagram } from '../components/OBCInterfaceDiagram'
 import { useDesignStore } from '../stores/designStore'
 import { useModelStore } from '../stores/modelStore'
+import { fs } from '../theme/tokens'
 
 type SubView = 'designer' | 'link' | 'pointing' | 'power' | 'data' | 'thermal' | 'propulsion' | 'cost' | 'mass'
 
@@ -67,13 +68,13 @@ export function Phase3SubsystemDesign() {
       {/* Tab bar */}
       <div style={{
         display: 'flex', gap: '0.25rem', padding: '0.4rem 1rem',
-        borderBottom: '1px solid var(--border, #374151)', flexWrap: 'wrap', alignItems: 'center',
+        borderBottom: '1px solid var(--border, var(--line))', flexWrap: 'wrap', alignItems: 'center',
       }}>
         {subViews.map(v => (
           <button key={v.key} onClick={() => setSubView(v.key)} style={{
-            padding: '0.25rem 0.55rem', fontSize: '0.7rem', borderRadius: '4px', cursor: 'pointer',
+            padding: '0.25rem 0.55rem', fontSize: fs.label, borderRadius: '4px', cursor: 'pointer',
             background: subView === v.key ? 'rgba(16,185,129,0.15)' : 'transparent',
-            color: subView === v.key ? '#6ee7b7' : '#6b7280',
+            color: subView === v.key ? 'var(--status-ok)' : 'var(--text-3)',
             border: `1px solid ${subView === v.key ? 'rgba(16,185,129,0.3)' : 'transparent'}`,
             textTransform: 'capitalize',
           }}>

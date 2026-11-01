@@ -141,14 +141,20 @@ s19_rules:
     enabled: true
 
   # ===== TTC Link Management =====
-  - name: ttc_link_margin_critical_boost_tx
+  # 2026-11-01 (author ruling, "Plan decisions"): 4001 and 4003 used to fire
+  # on S12 violations of 0x0503 link margin and 0x050C BER. Both are
+  # GROUND-receiver quantities (visibility: ground_derived): the spacecraft
+  # cannot measure them, has no S12 monitor on them, and so neither rule could
+  # ever fire. They now trigger on what the on-board receiver and OBC really
+  # observe — a dropout of uplink lock, and the 24 h command-loss timer.
+  - name: ttc_uplink_dropout_boost_tx
     ea_id: 4001
     trigger:
-      kind: param          # S12 monitor on 0x0503 TTC link margin
-      id: 0x0503   # was: TTC link_margin critical (from S12)
-    action_func_id: 68   # S8 func 68: TTC set_tx_power (increase). NOTE: func 55 is OBDH obc_boot_app, NOT set-TX — mapping 55 here auto-booted the OBC out of bootloader at startup (bug 3 root cause).
-    action_data: [2]     # level 2 = HIGH (5 W). Without the byte the handler refused the action every firing ("needs a 1-byte level") and the autonomous boost never ran.
-    description: "TTC Link Margin Critical -> Increase TX Power"
+      kind: event          # 0x0513 = UPLINK_LOCK_DROPOUT: carrier lock lost and regained within 60 s (a fade mid-pass; a normal LOS never qualifies)
+      id: 0x0513   # was: param 0x0503 ttc.link_margin (ground_derived, unobservable on board)
+    action_func_id: 68   # S8 func 68: TTC_SET_TX_POWER. NOTE: func 55 is OBDH obc_boot_app, NOT set-TX — mapping 55 here auto-booted the OBC out of bootloader at startup (bug 3 root cause).
+    action_data: [2]     # level 2 = HIGH (5 W). Without the byte the handler refused the action every firing ("needs a 1-byte level") and the autonomous boost never ran. The boost LATCHES: the ground restores NOMINAL (level 1) once the pass is understood.
+    description: "TTC Uplink Lock Dropout -> Increase TX Power"
     enabled: true
 
   - name: ttc_pa_overheat_pa_off
@@ -160,14 +166,13 @@ s19_rules:
     description: "TTC PA Overheat -> PA Off"
     enabled: true
 
-  - name: ttc_high_ber_boost_tx
+  - name: ttc_cmd_loss_switch_redundant
     ea_id: 4003
     trigger:
-      kind: param          # S12 monitor on 0x050C TTC bit error rate
-      id: 0x050C   # was: TTC bit error rate high (from S12)
-    action_func_id: 68   # S8 func 68: TTC set_tx_power (increase). NOTE: func 55 is OBDH obc_boot_app, NOT set-TX — mapping 55 here auto-booted the OBC out of bootloader at startup (bug 3 root cause).
-    action_data: [2]     # level 2 = HIGH (5 W); same missing-argument refusal as ea 4001.
-    description: "TTC High BER -> Increase TX Power"
+      kind: event          # 0x0514 = CMD_LOSS_TIMEOUT: no telecommand accepted for ttc.yaml cmd_loss_switch_timeout_s (24 h), timer published as 0x053D ttc.time_since_last_tc
+      id: 0x0514   # was: param 0x050C ttc.ber (ground_derived, unobservable on board)
+    action_func_id: 64   # S8 func 64: TTC_SWITCH_REDUNDANT (no argument). FDIR TTC-01: if the prime receiver chain has gone deaf, the other one may still hear the ground.
+    description: "TTC Command-Loss Timer (24 h) -> Switch to Redundant Transponder"
     enabled: true
 
   # ===== OBDH System Management =====

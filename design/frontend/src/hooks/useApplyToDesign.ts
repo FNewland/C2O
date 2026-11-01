@@ -35,11 +35,6 @@ interface ApplyOptions {
   rationale?: string
 }
 
-let _counter = 0
-function generateCorrelationId(): string {
-  return `corr-${Date.now()}-${++_counter}`
-}
-
 export function useApplyToDesign(options: ApplyOptions) {
   const sendEdit = useSessionStore(s => s.sendEdit)
 

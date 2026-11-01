@@ -24,19 +24,15 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { useUIStore } from '../stores/uiStore'
 import { displayElementName } from './BlocksPanel'
+import { subsystemStyle } from '../theme/tokens'
+import { useTheme } from '../theme/useTheme'
+import { askChoice, askText } from '../components/ui/Dialog'
+import { fs } from '../theme/tokens'
 
 const API = '/api'
 
-const DOMAIN_COLORS: Record<string, string> = {
-  power: '#f59e0b', aocs: '#06b6d4', ttc: '#ec4899', thermal: '#ef4444',
-  structure: '#84cc16', propulsion: '#f97316', obc: '#8b5cf6', payload: '#10b981',
-  ground: '#0ea5e9',
-}
-
-const TYPE_COLORS: Record<string, string> = {
-  mission: '#3b82f6', segment: '#6366f1', system: '#8b5cf6',
-  subsystem: '#06b6d4', component: '#10b981',
-}
+// Subsystem identity: categorical palette + letter badge (theme/tokens.ts).
+// Non-subsystem blocks (mission, segment, system) stay neutral.
 
 // ─── Custom Node ───
 
@@ -44,92 +40,72 @@ function ElementNode({ data }: NodeProps) {
   const { t } = useTranslation()
   const { label, elementType, domain, mass_kg, power_w, in_scope, frozen, childCount, externalInterfaces, quantity, location } = data as any
 
-  const borderColor = domain ? (DOMAIN_COLORS[domain] || '#6b7280') : (TYPE_COLORS[elementType] || '#6b7280')
-  const bgAlpha = frozen ? '30' : '15'
+  const ss = domain ? subsystemStyle(domain) : null
+  const accent = ss ? ss.color : 'var(--line-strong)'
   const isMulti = quantity > 1
-  const borderStyle = in_scope === false ? 'dashed' : 'solid'
-  const border = `2px ${borderStyle} ${in_scope === false ? '#6b728060' : borderColor}`
+  const outOfScope = in_scope === false
+  const border = `1px ${outOfScope ? 'dashed' : 'solid'} ${outOfScope ? 'var(--line-strong)' : 'var(--line-strong)'}`
+  const typeLabel = domain ? domain.toUpperCase() : t(TYPE_LABEL[elementType] ?? elementType)
 
-  // Stacked-box effect for multi-quantity elements (constellations, ground station networks)
   const box = (
     <div style={{
-      padding: '0.5rem 0.75rem', borderRadius: '6px', minWidth: 130,
-      background: `${borderColor}${bgAlpha}`,
-      border,
-      cursor: 'pointer',
-      position: 'relative',
+      padding: '8px 12px 8px 14px', borderRadius: 'var(--radius)', minWidth: 160,
+      background: frozen ? 'var(--surface-2)' : 'var(--surface-1)',
+      border, borderLeft: `4px solid ${accent}`,
+      cursor: 'pointer', position: 'relative',
     }}>
-      <Handle type="target" position={Position.Top} style={{ background: borderColor, width: 6, height: 6 }} />
+      <Handle type="target" position={Position.Top} style={{ background: 'var(--text-3)', width: 6, height: 6 }} />
 
-      {/* Quantity badge (top-right) */}
       {isMulti && (
         <div style={{
-          position: 'absolute', top: -8, right: -8,
-          background: borderColor, color: 'white', fontWeight: 700,
-          fontSize: '0.6rem', width: 20, height: 20, borderRadius: '50%',
+          position: 'absolute', top: -9, right: -9,
+          background: 'var(--text)', color: 'var(--surface-1)', fontWeight: 600,
+          fontFamily: 'var(--font-mono)', fontSize: fs.label, minWidth: 22, height: 20, padding: '0 4px', borderRadius: 'var(--radius-sm)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          border: '2px solid var(--bg-primary)',
         }}>
           ×{quantity}
         </div>
       )}
 
-      {/* Type badge */}
-      <div style={{ fontSize: '0.55rem', color: borderColor, fontWeight: 700, textTransform: 'uppercase', marginBottom: '0.15rem' }}>
-        {domain || elementType}
-        {frozen && <span style={{ marginLeft: '0.3rem', color: '#f59e0b' }}>{t('FROZEN')}</span>}
-        {in_scope === false && <span style={{ marginLeft: '0.3rem', color: '#6b7280' }}>{t('EXT')}</span>}
+      {/* Identity row: badge + type, then state words (text, not colour) */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4, fontSize: fs.label, color: 'var(--text-3)' }}>
+        {ss?.badge && <span className="c2o-ss-badge" style={{ background: ss.color }} aria-hidden="true">{ss.badge}</span>}
+        <span style={{ fontWeight: 500 }}>{typeLabel}</span>
+        {frozen && <span style={{ fontWeight: 600, color: 'var(--text-2)' }}>{t('FROZEN')}</span>}
+        {outOfScope && <span style={{ fontWeight: 600, color: 'var(--text-2)' }}>{t('EXT')}</span>}
       </div>
 
-      {/* Name */}
-      <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.2rem' }}>
+      <div style={{ fontSize: fs.value, fontWeight: 600, color: 'var(--text)', lineHeight: 'var(--lh-value)', marginBottom: 4 }}>
         {label}
       </div>
 
-      {/* Properties */}
-      <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+      <div style={{ fontSize: fs.label, color: 'var(--text-2)', display: 'flex', gap: 8, flexWrap: 'wrap', fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}>
         {mass_kg != null && <span>{isMulti ? t('{{mass}} kg ea ({{total}} total)', { mass: mass_kg.toFixed(1), total: (mass_kg * quantity).toFixed(1) }) : `${mass_kg.toFixed(1)} kg`}</span>}
         {power_w != null && <span>{power_w.toFixed(0)} W</span>}
-        {childCount > 0 && <span style={{ color: borderColor }}>{t('{{count}} children', { count: childCount })}</span>}
+        {childCount > 0 && <span style={{ fontFamily: 'var(--font-sans)' }}>{t('{{count}} children', { count: childCount })}</span>}
       </div>
 
-      {/* Location (for ground stations) */}
       {location && (
-        <div style={{ fontSize: '0.5rem', color: '#06b6d4', marginTop: '0.1rem' }}>
-          📍 {location}
-        </div>
+        <div style={{ fontSize: fs.label, color: 'var(--text-2)', marginTop: 2 }}>{location}</div>
       )}
 
-      {/* External interfaces indicator */}
       {externalInterfaces > 0 && (
-        <div style={{
-          fontSize: '0.5rem', color: '#ec4899', fontWeight: 600, marginTop: '0.15rem',
-          display: 'flex', alignItems: 'center', gap: '0.2rem',
-        }}>
-          <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#ec4899', display: 'inline-block' }} />
+        <div style={{ fontSize: fs.label, color: 'var(--text-2)', marginTop: 2 }}>
           {t('{{count}} ext ifaces', { count: externalInterfaces, defaultValue_one: '{{count}} ext iface' })}
         </div>
       )}
 
-      <Handle type="source" position={Position.Bottom} style={{ background: borderColor, width: 6, height: 6 }} />
+      <Handle type="source" position={Position.Bottom} style={{ background: 'var(--text-3)', width: 6, height: 6 }} />
     </div>
   )
 
-  // For multi-quantity: render stacked shadow boxes behind the main box
   if (isMulti) {
+    const layer = (o: number) => (
+      <div style={{ position: 'absolute', top: o, left: o, width: '100%', height: '100%', borderRadius: 'var(--radius)', background: 'var(--surface-1)', border }} />
+    )
     return (
       <div style={{ position: 'relative' }}>
-        {/* Shadow layers (back to front) */}
-        <div style={{
-          position: 'absolute', top: 6, left: 6,
-          width: '100%', height: '100%', borderRadius: '6px',
-          background: `${borderColor}08`, border,
-        }} />
-        <div style={{
-          position: 'absolute', top: 3, left: 3,
-          width: '100%', height: '100%', borderRadius: '6px',
-          background: `${borderColor}10`, border,
-        }} />
+        {layer(6)}{layer(3)}
         {box}
       </div>
     )
@@ -138,28 +114,29 @@ function ElementNode({ data }: NodeProps) {
   return box
 }
 
+// English text is the i18n key: element types for non-subsystem blocks (ECSS product tree).
+const TYPE_LABEL: Record<string, string> = {
+  mission: 'Mission', segment: 'Segment', system: 'System / element', subsystem: 'Subsystem', component: 'Equipment',
+}
+
 /** External port node — represents a parent-level interface flowing into this block */
 function ExternalPortNode({ data }: NodeProps) {
-  const { label, interfaceType, peerName, direction } = data as any
-  const IFACE_COLORS: Record<string, string> = {
-    electrical: '#f59e0b', data: '#8b5cf6', rf: '#ec4899',
-    mechanical: '#84cc16', thermal: '#ef4444',
-  }
-  const color = IFACE_COLORS[interfaceType] || '#6b7280'
+  const { label, interfaceType, peerName } = data as any
+  const color = 'var(--text-3)'
 
   return (
     <div style={{
-      padding: '0.3rem 0.6rem', borderRadius: '12px', minWidth: 100,
-      background: `${color}15`, border: `2px dashed ${color}`,
-      fontSize: '0.65rem', textAlign: 'center',
+      padding: '6px 10px', borderRadius: 'var(--radius)', minWidth: 120,
+      background: 'var(--surface-1)', border: '1px dashed var(--line-strong)',
+      fontSize: fs.label, textAlign: 'center',
     }}>
       <Handle type="target" position={Position.Left} style={{ background: color, width: 6, height: 6 }} id="target" />
       <Handle type="source" position={Position.Right} style={{ background: color, width: 6, height: 6 }} id="source" />
-      <div style={{ color, fontWeight: 700, textTransform: 'uppercase', fontSize: '0.5rem' }}>
+      <div style={{ color, fontWeight: 700, textTransform: 'uppercase', fontSize: fs.label }}>
         EXT {interfaceType}
       </div>
       <div style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{label}</div>
-      <div style={{ color: 'var(--text-secondary)', fontSize: '0.55rem' }}>↔ {peerName}</div>
+      <div style={{ color: 'var(--text-secondary)', fontSize: fs.label }}>↔ {peerName}</div>
     </div>
   )
 }
@@ -174,6 +151,7 @@ export function BlockDiagram() {
   const drillInto = useUIStore(s => s.drillInto)
   const qc = useQueryClient()
   const { t, i18n } = useTranslation()
+  const theme = useTheme()
 
   // Fetch all elements for this study
   const { data: allElements = [] } = useQuery({
@@ -291,7 +269,7 @@ export function BlockDiagram() {
         source: iface.from_element_id,
         target: iface.to_element_id,
         label: iface.diagram_label || iface.name,
-        style: { stroke: '#6b7280' },
+        style: { stroke: 'var(--text-3)' },
       }))
 
     return { nodes, edges }
@@ -334,7 +312,7 @@ export function BlockDiagram() {
   }, [allElements, studyId, qc])
 
   // Handle new connections — element-to-element or external-port-to-element
-  const onConnect = useCallback((connection: Connection) => {
+  const onConnect = useCallback(async (connection: Connection) => {
     const { source, target } = connection
     if (!source || !target || !studyId) return
 
@@ -383,11 +361,15 @@ export function BlockDiagram() {
       }).catch(() => {})
     } else {
       // Element-to-element connection — ask for interface type
-      const ifaceType = prompt(t('Interface type?\n\n1. electrical\n2. data\n3. rf\n4. mechanical\n5. thermal\n\nEnter type or number:'), 'data')
-      if (!ifaceType) return
-      const typeMap: Record<string, string> = { '1': 'electrical', '2': 'data', '3': 'rf', '4': 'mechanical', '5': 'thermal' }
-      const resolvedType = typeMap[ifaceType] || ifaceType
-      const label = prompt(t('Interface label (optional):'), '') || ''
+      const resolvedType = await askChoice(t('Interface type'), [
+        { value: 'electrical', label: t('Electrical') },
+        { value: 'data', label: t('Data') },
+        { value: 'rf', label: t('RF') },
+        { value: 'mechanical', label: t('Mechanical') },
+        { value: 'thermal', label: t('Thermal') },
+      ], 'data', { title: t('New interface') })
+      if (!resolvedType) return
+      const label = (await askText(t('Interface label (optional):'), '', { title: t('New interface') })) ?? ''
 
       fetch(`${API}/interfaces/?study_id=${studyId}`, {
         method: 'POST',
@@ -415,11 +397,11 @@ export function BlockDiagram() {
       <div style={{
         height: '100%', display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center',
-        color: 'var(--text-secondary)', fontSize: '0.85rem', gap: '0.5rem',
+        color: 'var(--text-secondary)', fontSize: fs.body, gap: '0.5rem',
       }}>
-        <span style={{ fontSize: '1.5rem' }}>+</span>
+        <span style={{ fontSize: fs.title }}>+</span>
         <span>{t('No elements at this level yet.')}</span>
-        <span style={{ fontSize: '0.72rem' }}>{t('Use the Blocks panel below to add elements.')}</span>
+        <span style={{ fontSize: fs.label }}>{t('Use the Blocks panel below to add elements.')}</span>
       </div>
     )
   }
@@ -435,9 +417,10 @@ export function BlockDiagram() {
       nodeTypes={nodeTypes}
       fitView
       fitViewOptions={{ padding: 0.3 }}
-      style={{ background: 'var(--bg-primary)' }}
+      colorMode={theme}
+      style={{ background: 'var(--surface-0)' }}
     >
-      <Background color="#1f2937" gap={20} />
+      <Background color="var(--line)" gap={20} />
       <Controls showInteractive={false} />
     </ReactFlow>
   )

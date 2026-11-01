@@ -5,10 +5,10 @@
  * If any ancestor has actuals exceeding allocation, shows a red banner
  * with a link to navigate back to the broken level.
  */
-import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { useUIStore } from '../stores/uiStore'
+import { fs } from '../theme/tokens'
 
 const API = '/api'
 // English text is the i18n key (budget type shown as t(type); the value itself is an API path segment).
@@ -86,12 +86,12 @@ export function EscalationBanner() {
 
   return (
     <div style={{
-      padding: '0.4rem 1rem', fontSize: '0.72rem',
+      padding: '0.4rem 1rem', fontSize: fs.label,
       background: 'rgba(239,68,68,0.12)', borderBottom: '1px solid var(--danger)',
       display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap',
     }}>
       <span style={{ fontWeight: 700, color: 'var(--danger)' }}>{t('ESCALATION')}</span>
-      {violations.map((v, i) => (
+      {violations.map((v) => (
         <button
           key={`${v.elementId}-${v.budgetType}`}
           onClick={() => drillUp(v.breadcrumbIndex)}
@@ -99,7 +99,7 @@ export function EscalationBanner() {
             display: 'flex', alignItems: 'center', gap: '0.3rem',
             padding: '0.2rem 0.5rem', borderRadius: '3px',
             background: 'rgba(239,68,68,0.15)', border: '1px solid var(--danger)',
-            color: 'var(--text-primary)', cursor: 'pointer', fontSize: '0.68rem',
+            color: 'var(--text-primary)', cursor: 'pointer', fontSize: fs.label,
           }}
         >
           <span style={{ fontWeight: 600 }}>{v.elementName}</span>

@@ -267,6 +267,13 @@ def scan_file(path: str, functions=DEFAULT_FUNCTIONS) -> dict[str, set]:
         text = f.read()
     if path.endswith((".html", ".htm", ".svg")):
         return scan_html(text, functions)
+    if path.endswith(".py"):
+        # Python servers that inline their HTML (sim/tools/*.py): read both the
+        # markup (data-i18n text nodes) and any t('…') / data-i18n="…" in JS.
+        found = scan_js(text, functions)
+        for k, flags in scan_html(text, functions).items():
+            found.setdefault(k, set()).update(flags)
+        return found
     return scan_js(text, functions)
 
 
