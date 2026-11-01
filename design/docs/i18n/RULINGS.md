@@ -71,3 +71,15 @@ These replace the earlier wording where they differ.
 | 30 | **Proto-flight test levels follow the standards:** TVAC at predicted ±10 °C (ECSS-E-ST-10-03C / GEVS), and the sine sweep at 4 oct/min for proto-flight (2 oct/min is the qualification rate). Random stays GEVS workmanship, 6.78 grms, confirmed against GSFC-STD-7000B Table 2.4-4. | Standards check during application |
 | 22 | **The two ops-book cards with no simulator equivalent** (gyro failure, TC rejection) become real simulator procedure cards (EN+FR) with proper IDs, replacing the temporary CTG-B01/B02. | Author decision |
 | 4 | **VR interface:** the `smo-vr/1` wire axes are unchanged (+Z nadir). The VR bridge converts from the simulator's new +Z-zenith body frame, so student VR teams are unaffected. | Interface stability |
+
+## Plan decisions (2026-11-01)
+| Item | Decision |
+|---|---|
+| S19 rules 4001 / 4003 | **Retrigger on what the spacecraft can observe:** loss of uplink lock, and the 24 h command-loss timer. The teaching story of autonomy reacting to a weak link stays. |
+| Link-quality limits | **Ground-receiver limits.** BER and AGC are computed by the ground receiver (RF bridge) and alarmed on the TT&C and radio pages, labelled "ground". The payload SNR band is removed from the MCS limits. |
+| Instructor-only values in procedures | **Rewrite the 13 steps, EN+FR,** to what an operator really observes (e.g. leak rate → tank-pressure trend; SMA → ground orbit determination; scene quality → downlinked image check). |
+| ΔV budget | **Accept** the 15.1 m/s drag make-up at 513 km and the thin margin (2.6–4.4 %). The books flag it as a teaching point. |
+| MCR weighting | **Keep 15 %** for the informal week-1 MCR. |
+| Old SpaceCDF GateReviewPanel / Phase5Verification | **Retire** (delete). The gate review lives in the V&V tab. |
+| Work order | **Tests and UI quick wins first,** then the cloud pilot. |
+| UI direction | **"Modern flight deck"**: progressive disclosure, visualisations ahead of raw data where unambiguous, and unmistakable enabled/disabled/stale states. The interface must not look AI-generated. See `docs/ui/C2O_UI_BRIEF.md`. |
