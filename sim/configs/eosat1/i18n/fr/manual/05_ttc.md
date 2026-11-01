@@ -95,16 +95,16 @@ modulation, son propre codage et ses propres conditions d'autorisation.
 
 **LOW (16 kbit/s) est le palier où le satellite se trouve normalement.** C'est le point le plus
 important à comprendre au sujet de l'échelle. L'ensemble périodique de données de servitude (SID 1-6)
-génère 1351,5 bit/s de paquets PUS, soit 1557 bit/s sur le canal après RS(255,223) et
+génère 1378,5 bit/s de paquets PUS, soit 1588 bit/s sur le canal après RS(255,223) et
 mise en trames de transfert TM. LOW écoule ce flux avec un taux d'occupation inférieur à 10 % *et* relit environ
-0,85 orbite de données de servitude enregistrées en un seul bon passage : un satellite au palier LOW ne
+0,82 orbite de données de servitude enregistrées en un seul bon passage : un satellite au palier LOW ne
 prend donc jamais de retard. Les opérations de routine ne sont en rien dégradées au palier LOW ; l'antenne peut même
 être repliée.
 
 **SAFE (1 kbit/s) est un lien de survie, et non un débit d'exploitation.** (Ce échelon s'appelait
 BEACON avant 2026-08c : « balise » désigne désormais toujours l'émetteur UHF à antenne fouet, la seconde
 radio.) 1000 bit/s est *inférieur* au
-débit de génération des données de servitude de 1557 bit/s : un satellite maintenu au échelon SAFE accumule donc un
+débit de génération des données de servitude de 1588 bit/s : un satellite maintenu au échelon SAFE accumule donc un
 retard en temps réel qui ne peut jamais se résorber. Ce échelon sert à transmettre le SID 11 (28 octets toutes les 30 s =
 7,5 bit/s) depuis le chargeur d'amorçage, avec une réserve de plus de 100x et la bande occupée
 la plus étroite possible. On y entre par `TTC_SET_BEACON_MODE` (fonction 70) ou par le

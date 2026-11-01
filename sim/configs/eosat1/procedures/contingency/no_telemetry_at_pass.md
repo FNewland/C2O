@@ -142,14 +142,14 @@ produce a dramatic improvement in signal level (15-25 dB gain increase).
 **LABEL:** `STEP-6`
 **TC:** `HK_REQUEST(sid=6)` (Service 3, Subtype 27) — Request TTC housekeeping
 **Verify:** `ttc.link_status` (0x0501) = 2 (LOCKED)
-**Verify:** `ttc.rssi` (0x0502) > -90 dBm (nominal signal strength)
-**Verify:** `ttc.link_margin` (0x0503) > 3.0 dB
+**Verify:** TT&C page (ground): `ttc.rssi` (0x0502) > -126 dBm (nominal signal strength)
+**Verify:** TT&C page (ground): `ttc.link_margin` (0x0503) > 3.0 dB
 **Verify:** `ttc.pa_on` (0x0516) = 1
 **Verify:** `ttc.pa_temp` (0x050F) < 55 C
 **Verify:** `ttc.antenna_deployed` (0x0520) = 1
 **Verify:** `ttc.carrier_lock` (0x0510) = 1
 **Verify:** `ttc.bit_sync` (0x0511) = 1
-**Verify:** `ttc.eb_n0` (0x0519) > 10 dB
+**Verify:** radio page (ground): `ttc.eb_n0` (0x0519) > 10 dB
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — Request EPS housekeeping
 **Verify:** `eps.bus_voltage` (0x0105) > 27.0 V — confirm no EPS anomaly
 **Verify:** `eps.pl_ttc_tx` (0x0112) = 1 — TX power line confirmed ON

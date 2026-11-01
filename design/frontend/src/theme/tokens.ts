@@ -1,0 +1,79 @@
+/**
+ * C2O design tokens for inline styles. Values are CSS custom properties
+ * defined in tokens.css, so both themes follow automatically.
+ *
+ * Rule (eslint `no-restricted-syntax`): `fontSize` takes a token from `fs`,
+ * never a literal. Colours come from `c` (or `var(--…)`), never hex.
+ */
+
+/** Type scale (brief §3): 12 / 13 / 15 / 20 px. 12 px is the floor; values use ≥ 15. */
+export const fs = {
+  /** 12 px: labels, captions, badges */
+  label: 'var(--fs-label)',
+  /** 13 px: body text, buttons, table cells */
+  body: 'var(--fs-body)',
+  /** 15 px: values and readouts (tabular mono) */
+  value: 'var(--fs-value)',
+  /** 20 px: screen and section titles */
+  title: 'var(--fs-title)',
+} as const
+
+export const font = {
+  sans: 'var(--font-sans)',
+  mono: 'var(--font-mono)',
+} as const
+
+export const c = {
+  surface0: 'var(--surface-0)',
+  surface1: 'var(--surface-1)',
+  surface2: 'var(--surface-2)',
+  surface3: 'var(--surface-3)',
+  line: 'var(--line)',
+  lineStrong: 'var(--line-strong)',
+  textValue: 'var(--text-value)',
+  text: 'var(--text)',
+  text2: 'var(--text-2)',
+  text3: 'var(--text-3)',
+  textDisabled: 'var(--text-disabled)',
+  interactive: 'var(--interactive)',
+  interactiveWash: 'var(--interactive-wash)',
+  onFill: 'var(--on-fill)',
+  caution: 'var(--status-caution)',
+  cautionWash: 'var(--status-caution-wash)',
+  alarm: 'var(--status-alarm)',
+  alarmWash: 'var(--status-alarm-wash)',
+  ok: 'var(--status-ok)',
+  okWash: 'var(--status-ok-wash)',
+  brand: 'var(--brand)',
+} as const
+
+/** Translucent version of any colour (token or hex), e.g. tint(c.ok, 12). */
+export function tint(color: string, percent: number): string {
+  return `color-mix(in srgb, ${color} ${percent}%, transparent)`
+}
+
+/**
+ * Subsystem identity (R3 problem 14): low-chroma categorical colour plus a
+ * two-letter badge. Never red or amber, which are reserved for status.
+ */
+export const SUBSYSTEM: Record<string, { color: string; badge: string }> = {
+  payload: { color: 'var(--cat-1)', badge: 'PL' },
+  power: { color: 'var(--cat-4)', badge: 'EP' },
+  eps: { color: 'var(--cat-4)', badge: 'EP' },
+  aocs: { color: 'var(--cat-3)', badge: 'AO' },
+  ttc: { color: 'var(--cat-6)', badge: 'TC' },
+  comms: { color: 'var(--cat-6)', badge: 'TC' },
+  obc: { color: 'var(--cat-2)', badge: 'DH' },
+  obdh: { color: 'var(--cat-2)', badge: 'DH' },
+  thermal: { color: 'var(--cat-5)', badge: 'TH' },
+  structure: { color: 'var(--cat-8)', badge: 'ST' },
+  propulsion: { color: 'var(--cat-7)', badge: 'PR' },
+  ground: { color: 'var(--cat-5)', badge: 'GS' },
+  ground_rf: { color: 'var(--cat-5)', badge: 'GS' },
+  ground_ops: { color: 'var(--cat-5)', badge: 'GO' },
+}
+
+export function subsystemStyle(domain: string | null | undefined): { color: string; badge: string } {
+  if (!domain) return { color: 'var(--cat-8)', badge: '' }
+  return SUBSYSTEM[domain.toLowerCase()] ?? { color: 'var(--cat-8)', badge: domain.slice(0, 2).toUpperCase() }
+}

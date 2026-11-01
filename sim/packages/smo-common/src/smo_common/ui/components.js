@@ -461,9 +461,10 @@ export function renderAlarmRow(alarm) {
  *        "info"|"low"|"medium"|"high"|"critical"), name?, subsystem?,
  *        description?|text?, utc? (pre-formatted by the page — this renderer
  *        reads no clock), instructor? (bool: M9 INSTRUCTOR badge, sim only)}.
+ * @param {object} [opts] — {role?: ARIA role for the row, e.g. "listitem"}.
  * @returns {string} `<div class="ds-event-row ...">...`
  */
-export function renderEventRow(evt) {
+export function renderEventRow(evt, opts) {
   const e = evt || {};
   const sevNum = typeof e.severity === "number" ? e.severity
     : { critical: 4, high: 3, medium: 2, low: 1, info: 1 }[String(e.severity).toLowerCase()] ?? 1;
@@ -471,7 +472,12 @@ export function renderEventRow(evt) {
   const sevTxt = sevNum >= 4 ? "CRIT" : sevNum === 3 ? "HIGH" : sevNum === 2 ? "MED" : "INFO";
   const badge = e.instructor
     ? ` <span class="ds-badge" title="${esc(tText("injected by instructor (training)"))}">${t("INSTRUCTOR")}</span>` : "";
-  return `<div class="ds-event-row ${cls}" role="row">` +
+  // No role="row": a row without cells and outside a table is an axe
+  // critical (R3 audit A6). Event rows sit inside a role="log" live region
+  // (instructor) or a plain list; pass opts.role = "listitem" when the
+  // container is role="list".
+  const role = opts && opts.role ? ` role="${esc(opts.role)}"` : "";
+  return `<div class="ds-event-row ${cls}"${role}>` +
          `<span class="t num">${esc(e.utc || "")}</span>` +
          `<span class="sev">${sevTxt}</span>` +
          `<span class="src">${esc((e.subsystem || e.source || "").toUpperCase())}</span>` +

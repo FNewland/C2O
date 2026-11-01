@@ -50,8 +50,8 @@ evaluate. Consider executing NOM-007 momentum management before continuing.
 ### Step 4 --- Establish TTC Link
 **TC:** `TTC_SWITCH_PRIMARY` (Service 8, Subtype 1) --- activate primary transponder
 **Verify:** `ttc.link_status` (0x0501) = 2 (LOCKED) within 15 s
-**Verify:** `ttc.rssi` (0x0502) > -100 dBm within 15 s
-**Verify:** `ttc.link_margin` (0x0503) > 3.0 dB within 15 s
+**Verify:** TT&C page (ground): `ttc.rssi` (0x0502) > -126 dBm within 15 s
+**Verify:** TT&C page (ground): `ttc.link_margin` (0x0503) > 3.0 dB within 15 s
 **GO/NO-GO:** If link not established within 15 s, command `TTC_SWITCH_REDUNDANT`
 and repeat verification. If redundant also fails, declare TTC anomaly.
 

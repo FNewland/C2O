@@ -6737,8 +6737,8 @@ exactly the $-10\log_{10}(R_b)$ term of the link budget:
 | LOW (routine ops) | 16 kbps | BPSK | conv(7,1/2) + RS(255,223) | 7.5 dB | $-10\log_{10}(16) = -12.04$ dB |
 | HIGH (dumps only) | 128 kbps | QPSK | RS(255,223) only | 6.0 dB | $-10\log_{10}(8) = -9.03$ dB, plus 1.5 dB of lost coding gain $= -10.53$ dB |
 
-LOW is not an arbitrary choice: the shipped housekeeping generates 1351.5 bps of
-PUS packets, which is 1557 bps of channel after RS and frame overhead. A 1 kbps
+LOW is not an arbitrary choice: the shipped housekeeping generates 1378.5 bps of
+PUS packets, which is 1588 bps of channel after RS and frame overhead. A 1 kbps
 "low rate" is *below the generation rate* -- the real-time backlog could never
 drain. 16 kbps clears real-time HK at 9.7 % duty and still plays back 0.85
 orbits of stored HK inside one pass.

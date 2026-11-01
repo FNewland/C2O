@@ -39,8 +39,8 @@
   },
   {
    "id": "leop-001-first-acquisition-of-signal-obc-boot/procedure-steps/step-3-verify-carrier-lock-and-link-quality",
-   "en_hash": "96242f77aacfc730",
-   "fr_hash": "077a537a2360f087"
+   "en_hash": "88d49432e5b24d6d",
+   "fr_hash": "df4f0a7b3bcdc4a4"
   },
   {
    "id": "leop-001-first-acquisition-of-signal-obc-boot/procedure-steps/step-4-confirm-obc-is-in-bootloader",
@@ -54,8 +54,8 @@
   },
   {
    "id": "leop-001-first-acquisition-of-signal-obc-boot/procedure-steps/step-5a-clear-beacon-mode-and-move-to-the-low-rung",
-   "en_hash": "48446393463bbe98",
-   "fr_hash": "c9b45e9139623bf8"
+   "en_hash": "d9a772dc97cc6104",
+   "fr_hash": "2a4f30a3095247a5"
   },
   {
    "id": "leop-001-first-acquisition-of-signal-obc-boot/procedure-steps/step-6-note-the-unset-clock-do-not-sync-here",
@@ -88,5 +88,5 @@
    "fr_hash": "255f3c828e6e48a7"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "8067e5b"
 }

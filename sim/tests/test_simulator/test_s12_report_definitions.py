@@ -27,6 +27,7 @@ import yaml
 from smo_common.protocol.ecss_packet import build_tc_packet, decommutate_packet
 from smo_common.reporting.decode import decode_s12_definitions
 from smo_simulator.engine import SimulationEngine
+from tests.pus_reports import report_body, report_segments
 
 CONFIG_DIR = Path(__file__).resolve().parents[2] / "configs" / "eosat1"
 
@@ -41,13 +42,15 @@ def engine() -> SimulationEngine:
 
 
 def _tm(packets):
-    """Decode the (12,13) reply out of a dispatch result."""
-    for raw in packets:
-        pkt = decommutate_packet(raw)
-        if pkt and pkt.secondary and (pkt.secondary.service,
-                                      pkt.secondary.subtype) == (12, 13):
-            return pkt.data_field
-    return None
+    """The (12,13) reply out of a dispatch result, segments reassembled.
+
+    "Report all" is segmented on the CCSDS grouping flags once it outgrows a
+    256-octet packet (2026-08-21): the 41 shipped monitors come down as three
+    packets. Reading only the first segment saw 16 of 41 records, so the
+    segments are stitched into one ``count + records`` body here, checking
+    the 01/00/10 flag sequence as the MCS does.
+    """
+    return report_body(packets, 12, 13)
 
 
 # ── acceptance ──────────────────────────────────────────────────────
@@ -86,6 +89,16 @@ def test_a_genuinely_unimplemented_s12_subtype_is_still_refused(engine):
 def test_report_returns_a_12_13_packet(engine):
     data = _tm(engine._dispatcher.dispatch(12, 12, b'', None))
     assert data is not None, "TC(12,12) produced no TM(12,13)"
+
+
+def test_report_is_segmented_into_packets_that_fit_the_link(engine):
+    """Every TM(12,13) segment fits the 256-octet packet; flags are 01/00/10."""
+    segs = report_segments(engine._dispatcher.dispatch(12, 12, b'', None), 12, 13)
+    assert len(segs) > 1, "41 monitors no longer need segmenting?"
+    sizes = [6 + s.primary.data_length + 1 for s in segs]
+    assert max(sizes) <= 256, f"segment sizes {sizes} exceed 256 octets"
+    # report_body() asserts the 01 / 00... / 10 grouping-flag sequence.
+    assert report_body(engine._dispatcher.dispatch(12, 12, b'', None), 12, 13)
 
 
 def test_report_carries_every_configured_definition(engine):

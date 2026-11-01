@@ -33,13 +33,20 @@ def _make_server() -> MCSServer:
                          connect_port=9999, http_port=0)
 
 
-def _pkt(service, subtype, data, apid=1, seq=0):
-    """A minimal stand-in for a decommutated packet."""
+def _pkt(service, subtype, data, apid=1, seq=0, flags=0b11):
+    """A minimal stand-in for a decommutated packet.
+
+    ``flags`` is the CCSDS grouping flag (11 standalone, 01 first, 00
+    continuation, 10 last). It must be set explicitly: a MagicMock attribute
+    is neither, so ``_reassemble_report`` took every report for an orphan
+    continuation and discarded it (R4 G4).
+    """
     p = MagicMock()
     p.secondary.service = service
     p.secondary.subtype = subtype
     p.primary.apid = apid
     p.primary.sequence_count = seq
+    p.primary.sequence_flags = flags
     p.data_field = data
     return p
 
@@ -69,7 +76,9 @@ class TestFDIRModelReference:
         """Names are ground knowledge — TM(12,13) carries ids and limits only."""
         srv = _make_server()
         rows = srv._fdir_model.monitor_rows()
-        assert len(rows) == 46, "all 46 s12_definitions.yaml rules must be present"
+        # 41 since d99c9e2 (2026-08-20) removed the five monitors on
+        # ground-only parameters (rssi, link_margin, eb_n0, ber, snr).
+        assert len(rows) == 41, "all 41 s12_definitions.yaml rules must be present"
         assert rows[0]["name"] == "EPS Battery SoC Warning"
         assert all(r["onboard"] is False for r in rows), \
             "nothing reported by the spacecraft yet"
@@ -276,6 +285,31 @@ class TestServerTelemetryPath:
         rows = srv._fdir_model.monitor_rows()
         assert len(rows) == 2
         assert all(r["onboard"] for r in rows)
+
+    async def test_segmented_s12_13_is_reassembled_before_ingest(self):
+        """A 01/00/10 segment triple lands as ONE table, only on the last."""
+        srv = _make_server()
+        await self._drain(srv, _pkt(12, 13, _s12_defs([
+            (0x8000, 0x0101, 0, 1, 20.0, 100.0)]), seq=1, flags=0b01))
+        await self._drain(srv, _pkt(12, 13, _s12_defs([
+            (0x8001, 0x0101, 0, 1, 10.0, 100.0)]), seq=2, flags=0b00))
+        assert not any(r["onboard"] for r in srv._fdir_model.monitor_rows()), \
+            "a partial report was ingested before its last segment"
+        await self._drain(srv, _pkt(12, 13, _s12_defs([
+            (0x8002, 0x0207, 0, 1, -1.0, 1.0)]), seq=3, flags=0b10))
+        rows = srv._fdir_model.monitor_rows()
+        assert [r["mon_id"] for r in rows] == [0x8000, 0x8001, 0x8002]
+        assert all(r["onboard"] for r in rows)
+
+    async def test_orphan_continuation_is_discarded(self):
+        """A last segment with no first must not replace the table."""
+        srv = _make_server()
+        before = len(srv._fdir_model.monitor_rows())
+        await self._drain(srv, _pkt(12, 13, _s12_defs([
+            (0x8002, 0x0207, 0, 1, -1.0, 1.0)]), flags=0b10))
+        rows = srv._fdir_model.monitor_rows()
+        assert len(rows) == before
+        assert not any(r["onboard"] for r in rows)
 
     async def test_s19_128_populates_the_rule_table(self):
         srv = _make_server()

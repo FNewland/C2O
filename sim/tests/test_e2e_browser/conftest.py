@@ -10,11 +10,52 @@ import os
 import signal
 import socket
 import subprocess
+import sys
 import time
 import urllib.request
 from pathlib import Path
 
 import pytest
+
+# Console scripts live next to the interpreter running pytest, so the stack
+# starts from `.venv/bin/python -m pytest` without an activated venv (R4 G1).
+VENV_BIN = Path(sys.executable).parent
+
+
+def _bin(name: str) -> str:
+    """Absolute path of a console script in the running venv (fallback: PATH)."""
+    for cand in (VENV_BIN / name, VENV_BIN / f"{name}.exe"):
+        if cand.exists():
+            return str(cand)
+    return name
+
+
+# The two legacy modules drive the CLASSIC console (#tab-commanding,
+# #cmd-send-btn) through the RF bridge. They are kept, ported to the classic
+# UI (every server below starts with --ui classic), and marked legacy_ui.
+_LEGACY_MODULES = {"test_full_mission_validation.py", "test_leop_commissioning.py"}
+
+
+def pytest_collection_modifyitems(config, items):
+    """Gate every test in this directory behind SMO_E2E=1 (R4 G1).
+
+    All of them boot a live stack on the default ports (8001/8002/8080/
+    9090/9091/8092-8094), which collide with a running suite and with each
+    other under xdist, so none of them may run in the default tier.
+    """
+    here = Path(__file__).parent.resolve()
+    skip = pytest.mark.skip(reason="live-stack browser E2E — set SMO_E2E=1 to run")
+    run = os.environ.get("SMO_E2E") == "1"
+    for item in items:
+        path = Path(str(item.fspath)).resolve()
+        if path.parent != here:
+            continue
+        item.add_marker(pytest.mark.e2e)
+        if path.name in _LEGACY_MODULES:
+            item.add_marker(pytest.mark.legacy_ui)
+        if not run:
+            item.add_marker(skip)
+
 
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 CONFIG_DIR = PROJECT_ROOT / "configs" / "eosat1"
@@ -67,7 +108,7 @@ def system_stack():
     try:
         # 1. Start Simulator
         sim_proc = subprocess.Popen(
-            ["smo-simulator", "--config", str(CONFIG_DIR)],
+            [_bin("smo-simulator"), "--config", str(CONFIG_DIR), "--ui", "classic"],
             env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
             cwd=str(PROJECT_ROOT))
         procs.append(sim_proc)
@@ -89,8 +130,8 @@ def system_stack():
 
         # 3. Start RF Bridge
         bridge_proc = subprocess.Popen(
-            ["smo-rfsim", "--config", str(RFSIM_CONFIG),
-             "--mode", "RF", "--radio-web"],
+            [_bin("smo-rfsim"), "--config", str(RFSIM_CONFIG),
+             "--mode", "RF", "--radio-web", "--ui", "classic"],
             env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
             cwd=str(PROJECT_ROOT))
         procs.append(bridge_proc)
@@ -100,8 +141,8 @@ def system_stack():
 
         # 4. Start MCS (connected through bridge)
         mcs_proc = subprocess.Popen(
-            ["smo-mcs", "--config", str(CONFIG_DIR),
-             "--port", str(MCS_PORT),
+            [_bin("smo-mcs"), "--config", str(CONFIG_DIR),
+             "--port", str(MCS_PORT), "--ui", "classic",
              "--connect", f"localhost:{BRIDGE_TM_PORT}",
              "--tc-port", "8011"],
             env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
@@ -113,14 +154,15 @@ def system_stack():
 
         # 5. Start Planner
         planner_proc = subprocess.Popen(
-            ["smo-planner", "--config", str(CONFIG_DIR), "--port", "9091"],
+            [_bin("smo-planner"), "--config", str(CONFIG_DIR), "--port", "9091",
+             "--ui", "classic"],
             env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
             cwd=str(PROJECT_ROOT))
         procs.append(planner_proc)
 
         # 6. Start Delayed TM Viewer
         dtm_proc = subprocess.Popen(
-            ["python", str(PROJECT_ROOT / "tools" / "delayed_tm_viewer.py"),
+            [sys.executable, str(PROJECT_ROOT / "tools" / "delayed_tm_viewer.py"),
              "--port", "8092",
              "--dumps", str(PROJECT_ROOT / "workspace" / "dumps")],
             env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
@@ -129,7 +171,7 @@ def system_stack():
 
         # 7. Start Orbit Tools
         orb_proc = subprocess.Popen(
-            ["python", str(PROJECT_ROOT / "tools" / "orbit_tools.py"),
+            [sys.executable, str(PROJECT_ROOT / "tools" / "orbit_tools.py"),
              "--serve", "--port", "8093"],
             env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
             cwd=str(PROJECT_ROOT))

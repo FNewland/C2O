@@ -11,22 +11,24 @@ import { useTranslation } from 'react-i18next'
 import { useUIStore } from '../stores/uiStore'
 import { useDesignStore } from '../stores/designStore'
 import { EXCHANGE_ITEM_KINDS, type ExchangeItem, type ICDRow } from '../types/arcadia'
+import { fs } from '../theme/tokens'
+import { askConfirm } from './ui/Dialog'
 
 const API = '/api'
 
 const inputStyle: React.CSSProperties = {
-  padding: '0.15rem 0.35rem', fontSize: '0.66rem', borderRadius: '3px',
+  padding: '0.15rem 0.35rem', fontSize: fs.label, borderRadius: '3px',
   background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)',
 }
 const smallBtn = (color = 'var(--text-secondary)'): React.CSSProperties => ({
   background: 'none', border: '1px solid var(--border)', borderRadius: '3px', cursor: 'pointer',
-  fontSize: '0.62rem', padding: '0.1rem 0.35rem', color,
+  fontSize: fs.label, padding: '0.1rem 0.35rem', color,
 })
-const th: React.CSSProperties = { textAlign: 'left', padding: '0.25rem 0.4rem', fontSize: '0.62rem', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap' }
-const td: React.CSSProperties = { padding: '0.2rem 0.4rem', fontSize: '0.68rem', borderBottom: '1px solid var(--border)', verticalAlign: 'top' }
+const th: React.CSSProperties = { textAlign: 'left', padding: '0.25rem 0.4rem', fontSize: fs.label, color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap' }
+const td: React.CSSProperties = { padding: '0.2rem 0.4rem', fontSize: fs.label, borderBottom: '1px solid var(--border)', verticalAlign: 'top' }
 
 const TYPE_COLORS: Record<string, string> = {
-  electrical: '#f59e0b', data: '#8b5cf6', rf: '#ec4899', mechanical: '#84cc16', thermal: '#ef4444',
+  electrical: 'var(--cat-4)', data: 'var(--cat-2)', rf: 'var(--cat-6)', mechanical: 'var(--cat-8)', thermal: 'var(--cat-5)',
 }
 
 async function jsonOrThrow(res: Response) {
@@ -131,29 +133,29 @@ export function ICDTable({ studyId: studyIdProp }: { studyId?: string | null }) 
   })
 
   if (!studyId) {
-    return <div style={{ padding: '1rem', color: 'var(--text-secondary)', fontSize: '0.78rem' }}>{t('Create or join a study to see the ICD.')}</div>
+    return <div style={{ padding: '1rem', color: 'var(--text-secondary)', fontSize: fs.label }}>{t('Create or join a study to see the ICD.')}</div>
   }
 
   const nInterfaces = new Set(rows.map(r => r.interface_id)).size
   const nItems = rows.filter(r => r.exchange_item).length
 
   return (
-    <div style={{ padding: '0.5rem 1rem', fontSize: '0.75rem', overflow: 'auto', height: '100%' }}>
+    <div style={{ padding: '0.5rem 1rem', fontSize: fs.label, overflow: 'auto', height: '100%' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-        <span style={{ fontWeight: 600, fontSize: '0.78rem' }}>{t('Interface Control Document')}</span>
-        <span style={{ color: 'var(--text-secondary)', fontSize: '0.65rem' }}>{t('{{interfaces}} interfaces · {{items}} exchange items · {{defined}} defined', { interfaces: nInterfaces, items: nItems, defined: items.length })}</span>
+        <span style={{ fontWeight: 600, fontSize: fs.label }}>{t('Interface Control Document')}</span>
+        <span style={{ color: 'var(--text-secondary)', fontSize: fs.label }}>{t('{{interfaces}} interfaces · {{items}} exchange items · {{defined}} defined', { interfaces: nInterfaces, items: nItems, defined: items.length })}</span>
         <span style={{ flex: 1 }} />
         <a href={`${API}/studies/${studyId}/icd.csv`} download={`icd_${studyId}.csv`}
-          style={{ ...smallBtn('#10b981'), textDecoration: 'none' }}>{t('Download CSV')}</a>
+          style={{ ...smallBtn('var(--status-ok)'), textDecoration: 'none' }}>{t('Download CSV')}</a>
       </div>
       {error && (
-        <div style={{ color: '#ef4444', fontSize: '0.68rem', marginBottom: '0.4rem' }}>
-          {error} <button style={smallBtn('#ef4444')} onClick={() => setError(null)}>{t('dismiss')}</button>
+        <div style={{ color: 'var(--status-alarm)', fontSize: fs.label, marginBottom: '0.4rem' }}>
+          {error} <button style={smallBtn('var(--status-alarm)')} onClick={() => setError(null)}>{t('dismiss')}</button>
         </div>
       )}
       {isLoading && <div style={{ color: 'var(--text-secondary)' }}>{t('Loading…')}</div>}
       {!isLoading && rows.length === 0 && (
-        <div style={{ color: 'var(--text-secondary)', fontSize: '0.7rem' }}>{t('No interfaces yet. Define interfaces between elements first; each one then appears here for exchange items.')}</div>
+        <div style={{ color: 'var(--text-secondary)', fontSize: fs.label }}>{t('No interfaces yet. Define interfaces between elements first; each one then appears here for exchange items.')}</div>
       )}
       {rows.length > 0 && (
         <table style={{ borderCollapse: 'collapse', width: '100%' }}>
@@ -167,7 +169,7 @@ export function ICDTable({ studyId: studyIdProp }: { studyId?: string | null }) 
             {rows.map((r, i) => {
               const xi = r.exchange_item
               const firstOfIface = i === 0 || rows[i - 1].interface_id !== r.interface_id
-              const color = TYPE_COLORS[r.interface_type || ''] || '#6b7280'
+              const color = TYPE_COLORS[r.interface_type || ''] || 'var(--text-3)'
               const isEditing = xi && editItem === xi.id
               return (
                 <tr key={`${r.interface_id}-${xi?.id || 'none'}`}>
@@ -176,7 +178,7 @@ export function ICDTable({ studyId: studyIdProp }: { studyId?: string | null }) 
                   </td>
                   <td style={td}>{r.from_element.name || '—'}</td>
                   <td style={td}>{r.to_element.name || '—'}</td>
-                  <td style={td}><span style={{ color, fontSize: '0.62rem' }}>{r.interface_type || '—'}{r.direction ? ` · ${r.direction}` : ''}</span></td>
+                  <td style={td}><span style={{ color, fontSize: fs.label }}>{r.interface_type || '—'}{r.direction ? ` · ${r.direction}` : ''}</span></td>
                   {isEditing ? (
                     <>
                       <td style={td}><input value={editName} onChange={e => setEditName(e.target.value)} style={inputStyle} /></td>
@@ -187,22 +189,22 @@ export function ICDTable({ studyId: studyIdProp }: { studyId?: string | null }) 
                       </td>
                       <td style={td}><input value={editProps} onChange={e => setEditProps(e.target.value)} placeholder="rate_hz=10; bits=16" style={{ ...inputStyle, width: '100%' }} /></td>
                       <td style={{ ...td, whiteSpace: 'nowrap' }}>
-                        <button style={smallBtn('#10b981')} onClick={() => updateItem.mutate({ id: xi!.id, name: editName, kind: editKind, props: editProps })}>{t('save')}</button>{' '}
+                        <button style={smallBtn('var(--status-ok)')} onClick={() => updateItem.mutate({ id: xi!.id, name: editName, kind: editKind, props: editProps })}>{t('save')}</button>{' '}
                         <button style={smallBtn()} onClick={() => setEditItem(null)}>{t('cancel')}</button>
                       </td>
                     </>
                   ) : (
                     <>
-                      <td style={td}>{xi ? xi.name : <span style={{ color: '#f59e0b', fontSize: '0.62rem' }}>{t('no exchange item')}</span>}</td>
+                      <td style={td}>{xi ? xi.name : <span style={{ color: 'var(--status-caution)', fontSize: fs.label }}>{t('no exchange item')}</span>}</td>
                       <td style={td}>{xi?.kind || ''}</td>
-                      <td style={{ ...td, color: 'var(--text-secondary)', fontSize: '0.62rem' }}>{xi ? propsToText(xi.properties) : propsToText(r.interface_properties)}</td>
+                      <td style={{ ...td, color: 'var(--text-secondary)', fontSize: fs.label }}>{xi ? propsToText(xi.properties) : propsToText(r.interface_properties)}</td>
                       <td style={{ ...td, whiteSpace: 'nowrap' }}>
                         {xi && <>
                           <button style={smallBtn()} onClick={() => { setEditItem(xi.id); setEditName(xi.name || ''); setEditKind(xi.kind || 'data'); setEditProps(propsToText(xi.properties)) }}>{t('edit')}</button>{' '}
                           <button style={smallBtn()} title={t('Detach from this interface')} onClick={() => detach.mutate({ ifaceId: r.interface_id, itemId: xi.id })}>{t('detach')}</button>{' '}
-                          <button style={smallBtn('#ef4444')} title={t('Delete exchange item')} onClick={() => { if (confirm(t('Delete exchange item "{{name}}"?', { name: xi.name }))) deleteItem.mutate(xi.id) }}>×</button>{' '}
+                          <button style={smallBtn('var(--status-alarm)')} title={t('Delete exchange item')} onClick={async () => { if ((await askConfirm(t('Delete exchange item "{{name}}"?', { name: xi.name })))) deleteItem.mutate(xi.id) }}>×</button>{' '}
                         </>}
-                        {firstOfIface && <button style={smallBtn('#3b82f6')} onClick={() => setAttachFor(attachFor === r.interface_id ? null : r.interface_id)}>{t('+ item')}</button>}
+                        {firstOfIface && <button style={smallBtn('var(--interactive)')} onClick={() => setAttachFor(attachFor === r.interface_id ? null : r.interface_id)}>{t('+ item')}</button>}
                       </td>
                     </>
                   )}
@@ -218,21 +220,21 @@ export function ICDTable({ studyId: studyIdProp }: { studyId?: string | null }) 
                 <tr key={`attach-${r.interface_id}`}>
                   <td colSpan={8} style={{ ...td, background: 'var(--bg-card)' }}>
                     <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: '0.62rem', color: 'var(--text-secondary)' }}>{t('New item:')}</span>
+                      <span style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>{t('New item:')}</span>
                       <input value={newName} onChange={e => setNewName(e.target.value)} placeholder={t('name')} style={inputStyle} />
                       <select value={newKind} onChange={e => setNewKind(e.target.value)} style={inputStyle}>
                         {EXCHANGE_ITEM_KINDS.map(k => <option key={k} value={k}>{k}</option>)}
                       </select>
                       <input value={newProps} onChange={e => setNewProps(e.target.value)} placeholder={t('props: rate_hz=10; protocol=CAN')} style={{ ...inputStyle, minWidth: 200 }} />
-                      <button style={smallBtn('#10b981')} disabled={!newName.trim() || createAndAttach.isPending}
+                      <button style={smallBtn('var(--status-ok)')} disabled={!newName.trim() || createAndAttach.isPending}
                         onClick={() => createAndAttach.mutate({ ifaceId: r.interface_id, name: newName.trim(), kind: newKind, props: newProps })}>{t('create & attach')}</button>
                       {available.length > 0 && <>
-                        <span style={{ fontSize: '0.62rem', color: 'var(--text-secondary)', marginLeft: '0.5rem' }}>{t('or existing:')}</span>
+                        <span style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginLeft: '0.5rem' }}>{t('or existing:')}</span>
                         <select value={attachExisting} onChange={e => setAttachExisting(e.target.value)} style={inputStyle}>
                           <option value="">{t('select…')}</option>
                           {available.map(it => <option key={it.id} value={it.id}>{it.name} ({it.kind})</option>)}
                         </select>
-                        <button style={smallBtn('#3b82f6')} disabled={!attachExisting}
+                        <button style={smallBtn('var(--interactive)')} disabled={!attachExisting}
                           onClick={() => attach.mutate({ ifaceId: r.interface_id, itemId: attachExisting })}>{t('attach')}</button>
                       </>}
                       <button style={smallBtn()} onClick={() => setAttachFor(null)}>{t('cancel')}</button>

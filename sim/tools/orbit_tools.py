@@ -15,6 +15,8 @@ Spacecraft Parameter IDs (SET_PARAM S20.1):
 """
 
 import argparse
+import sys
+from pathlib import Path
 import asyncio
 import struct
 import math
@@ -29,9 +31,16 @@ except ImportError:
     print("ERROR: sgp4 library required: pip install sgp4", file=sys.stderr)
     sys.exit(1)
 
+# smo_common from the checkout when the suite is not pip-installed.
+_COMMON_SRC = Path(__file__).resolve().parents[1] / "packages" / "smo-common" / "src"
+if _COMMON_SRC.is_dir() and str(_COMMON_SRC) not in sys.path:
+    sys.path.insert(0, str(_COMMON_SRC))
+
 try:
     import aiohttp
     from aiohttp import web
+    # Shared HTTP policy + design-system / language runtime for tool pages.
+    from smo_common.web.http import TOOL_HEAD, setup_tool_app, tool_html_response
     HAS_AIOHTTP = True
 except ImportError:
     HAS_AIOHTTP = False
@@ -430,215 +439,162 @@ def cli_sv_mode(args) -> None:
 if HAS_AIOHTTP:
     HTML_TEMPLATE = """
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Orbit Tools - TC Command Generator</title>
+    <title data-i18n>Orbit tools: TLE and state vector to TC</title>
+    <!--TOOL_HEAD-->
     <style>
-        body {
-            font-family: 'Courier New', monospace;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            background: #f5f5f5;
-            color: #333;
-        }
-        h1 { color: #0066cc; margin-bottom: 30px; }
-        h2 {
-            color: #0066cc;
-            margin-top: 30px;
-            border-bottom: 2px solid #0066cc;
-            padding-bottom: 10px;
-        }
-        .container {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            color: #0066cc;
-        }
-        input, textarea {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-family: 'Courier New', monospace;
-            font-size: 13px;
-            box-sizing: border-box;
-        }
-        button {
-            background: #0066cc;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: bold;
-        }
-        button:hover {
-            background: #0052a3;
-        }
-        .output {
-            background: #f0f0f0;
-            border: 1px solid #ddd;
-            padding: 15px;
-            border-radius: 4px;
-            white-space: pre-wrap;
-            font-size: 12px;
-            max-height: 600px;
-            overflow-y: auto;
-        }
-        .tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #ddd;
-        }
-        .tab-button {
-            padding: 10px 15px;
-            border: none;
-            background: none;
-            cursor: pointer;
-            font-size: 14px;
-            color: #666;
-            border-bottom: 3px solid transparent;
-            margin-bottom: -2px;
-        }
-        .tab-button.active {
-            color: #0066cc;
-            border-bottom-color: #0066cc;
-        }
-        .tab-content {
-            display: none;
-        }
-        .tab-content.active {
-            display: block;
-        }
-        .error {
-            color: #cc0000;
-            background: #ffe0e0;
-            padding: 10px;
-            border-radius: 4px;
-            margin-bottom: 15px;
-        }
-        .success {
-            color: #008000;
-            background: #e0ffe0;
-            padding: 10px;
-            border-radius: 4px;
-            margin-bottom: 15px;
-        }
-        .grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-        @media (max-width: 900px) {
-            .grid { grid-template-columns: 1fr; }
-        }
+        /* Light-touch restyle onto the shared design-system tokens (this page
+           used to be a light theme in Courier New, "from another product",
+           R3 audit). Full restyle is a later phase. */
+        body { max-width: 1200px; margin: 0 auto; padding: 20px 24px 48px; }
+        h1 { font-size: 20px; font-weight: 600; color: var(--tx); margin-bottom: 20px; }
+        h2 { font-size: 15px; font-weight: 600; color: var(--tx); margin: 0 0 14px;
+             padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+        h3 { font-size: 13px; font-weight: 600; color: var(--tx2); margin: 0 0 10px; }
+        .container { background: var(--s1); border: 1px solid var(--line); border-radius: 4px;
+                     padding: 16px 20px; margin-bottom: 20px; }
+        .form-group { margin-bottom: 14px; }
+        label { display: block; margin-bottom: 4px; font-size: 13px; color: var(--tx2); }
+        input, textarea { width: 100%; padding: 8px 10px; background: var(--bg); color: var(--tx);
+            border: 1px solid var(--line-2); border-radius: 3px; font-family: var(--mono);
+            font-size: 13px; }
+        input::placeholder, textarea::placeholder { color: var(--tx3); }
+        button.run { background: var(--s2); color: var(--tx); border: 1px solid var(--info);
+            padding: 8px 16px; border-radius: 3px; font-size: 13px; font-weight: 600; }
+        button.run:hover { background: var(--s3); }
+        .output { background: var(--bg); border: 1px solid var(--line); padding: 12px;
+            border-radius: 3px; white-space: pre-wrap; font-family: var(--mono); font-size: 12px;
+            max-height: 600px; overflow-y: auto; }
+        code { font-family: var(--mono); font-size: 12px; color: var(--val); word-break: break-all; }
+        .tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 1px solid var(--line); }
+        .tab-button { padding: 8px 14px; font-size: 13px; color: var(--tx3);
+            border-bottom: 2px solid transparent; margin-bottom: -1px; }
+        .tab-button[aria-selected="true"] { color: var(--tx); border-bottom-color: var(--info); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .error { color: var(--alarm); border-left: 3px solid var(--alarm); background: var(--alarm-wash);
+            padding: 8px 10px; margin-bottom: 14px; }
+        .success { color: var(--tx2); border-left: 3px solid var(--line-2);
+            padding: 8px 10px; margin-bottom: 14px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
-    <h1>Orbit Tools - Telecommand Command Generator</h1>
+    <h1 data-i18n>Orbit tools: telecommand generator</h1>
 
-    <div class="tabs">
-        <button class="tab-button active" onclick="switchTab('tle')">TLE to TC</button>
-        <button class="tab-button" onclick="switchTab('sv')">State Vector to TC</button>
+    <div class="tabs" role="tablist">
+        <button class="tab-button" role="tab" id="tab-tle" aria-controls="tle" aria-selected="true" onclick="switchTab('tle')" data-i18n>TLE to TC</button>
+        <button class="tab-button" role="tab" id="tab-sv" aria-controls="sv" aria-selected="false" onclick="switchTab('sv')" data-i18n>State vector to TC</button>
     </div>
 
-    <div id="tle" class="tab-content active">
+    <div id="tle" class="tab-content active" role="tabpanel" aria-labelledby="tab-tle">
         <div class="container">
-            <h2>TLE to Telecommand</h2>
+            <h2 data-i18n>TLE to telecommand</h2>
             <div class="form-group">
-                <label>TLE Line 1</label>
+                <label for="tle1" data-i18n>TLE line 1</label>
                 <textarea id="tle1" rows="2" placeholder="1 25544U 98067A   24001.00000000  .00016717  00000-0  29667-3 0  9990"></textarea>
             </div>
             <div class="form-group">
-                <label>TLE Line 2</label>
+                <label for="tle2" data-i18n>TLE line 2</label>
                 <textarea id="tle2" rows="2" placeholder="2 25544  51.6416 124.6269 0001884  25.3126 334.8141 15.54084607435286"></textarea>
             </div>
             <div class="form-group">
-                <label>Epoch (ISO format, UTC)</label>
+                <label for="tle_epoch" data-i18n>Epoch (ISO format, UTC)</label>
                 <input type="text" id="tle_epoch" placeholder="2024-01-15T12:30:00" value="">
             </div>
-            <button onclick="convertTLE()">Convert TLE to Commands</button>
+            <button class="run" onclick="convertTLE()" data-i18n>Convert TLE to commands</button>
             <div id="tle_output" style="margin-top: 20px;"></div>
         </div>
     </div>
 
-    <div id="sv" class="tab-content">
+    <div id="sv" class="tab-content" role="tabpanel" aria-labelledby="tab-sv">
         <div class="container">
-            <h2>State Vector to Telecommand</h2>
+            <h2 data-i18n>State vector to telecommand</h2>
             <div class="grid">
                 <div>
-                    <h3>Position (ECEF, meters)</h3>
+                    <h3 data-i18n>Position (ECEF, m)</h3>
                     <div class="form-group">
-                        <label>X (m)</label>
+                        <label for="sv_x">X (m)</label>
                         <input type="number" id="sv_x" step="any" placeholder="6378000">
                     </div>
                     <div class="form-group">
-                        <label>Y (m)</label>
+                        <label for="sv_y">Y (m)</label>
                         <input type="number" id="sv_y" step="any" placeholder="0">
                     </div>
                     <div class="form-group">
-                        <label>Z (m)</label>
+                        <label for="sv_z">Z (m)</label>
                         <input type="number" id="sv_z" step="any" placeholder="0">
                     </div>
                 </div>
                 <div>
-                    <h3>Velocity (ECEF, m/s)</h3>
+                    <h3 data-i18n>Velocity (ECEF, m/s)</h3>
                     <div class="form-group">
-                        <label>VX (m/s)</label>
+                        <label for="sv_vx">VX (m/s)</label>
                         <input type="number" id="sv_vx" step="any" placeholder="0">
                     </div>
                     <div class="form-group">
-                        <label>VY (m/s)</label>
+                        <label for="sv_vy">VY (m/s)</label>
                         <input type="number" id="sv_vy" step="any" placeholder="7600">
                     </div>
                     <div class="form-group">
-                        <label>VZ (m/s)</label>
+                        <label for="sv_vz">VZ (m/s)</label>
                         <input type="number" id="sv_vz" step="any" placeholder="0">
                     </div>
                 </div>
             </div>
             <div class="form-group">
-                <label>Epoch (ISO format, UTC) - Optional</label>
+                <label for="sv_epoch" data-i18n>Epoch (ISO format, UTC), optional</label>
                 <input type="text" id="sv_epoch" placeholder="2024-01-15T12:30:00" value="">
             </div>
-            <button onclick="convertSV()">Convert State Vector to Commands</button>
+            <button class="run" onclick="convertSV()" data-i18n>Convert state vector to commands</button>
             <div id="sv_output" style="margin-top: 20px;"></div>
         </div>
     </div>
 
     <script>
+        // UI language (tool-page.js / i18n.js): T() = translated text.
+        const T = (s, v) => window.SMO_I18N ? window.SMO_I18N.tText(s, v)
+          : String(s).replace(/\\{\\{\\s*(\\w+)\\s*\\}\\}/g, (m, k) => (v && k in v ? v[k] : m));
         function switchTab(tab) {
             document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
-            document.querySelectorAll('.tab-button').forEach(e => e.classList.remove('active'));
+            document.querySelectorAll('.tab-button').forEach(e => e.setAttribute('aria-selected', 'false'));
             document.getElementById(tab).classList.add('active');
-            document.querySelector(`button[onclick="switchTab('${tab}')"]`).classList.add('active');
+            document.getElementById('tab-' + tab).setAttribute('aria-selected', 'true');
+        }
+        const PARAM_LABELS = {
+            'x_pos': () => T('X position (m)'), 'y_pos': () => T('Y position (m)'),
+            'z_pos': () => T('Z position (m)'), 'x_vel': () => T('X velocity (m/s)'),
+            'y_vel': () => T('Y velocity (m/s)'), 'z_vel': () => T('Z velocity (m/s)'),
+        };
+        function renderResult(output, data) {
+            if (data.error) {
+                output.innerHTML = `<div class="error">${escapeHtml(String(data.error))}</div>`;
+                return;
+            }
+            let html = `<div class="success">${escapeHtml(T('Converted.'))}</div>`;
+            html += `<div class="output">${escapeHtml(data.summary)}</div>`;
+            html += `<h3 style="margin-top: 20px;">${escapeHtml(T('Telecommand sequences'))}</h3>`;
+            for (const [param, cmd] of Object.entries(data.commands)) {
+                const label = PARAM_LABELS[param] ? PARAM_LABELS[param]() : param;
+                html += `<div style="margin-top: 12px;"><strong>${escapeHtml(label)}</strong><br><code>${escapeHtml(String(cmd))}</code></div>`;
+            }
+            output.innerHTML = html;
         }
 
         async function convertTLE() {
             const output = document.getElementById('tle_output');
-            output.innerHTML = '<div class="success">Processing...</div>';
+            output.innerHTML = `<div class="success">${escapeHtml(T('Converting…'))}</div>`;
 
             const tle1 = document.getElementById('tle1').value.trim();
             const tle2 = document.getElementById('tle2').value.trim();
             const epoch = document.getElementById('tle_epoch').value.trim();
 
             if (!tle1 || !tle2) {
-                output.innerHTML = '<div class="error">Please provide both TLE lines</div>';
+                output.innerHTML = `<div class="error">${escapeHtml(T('Enter both TLE lines.'))}</div>`;
                 return;
             }
 
@@ -651,34 +607,15 @@ if HAS_AIOHTTP:
 
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
-                const data = await response.json();
-                if (data.error) {
-                    output.innerHTML = `<div class="error">${data.error}</div>`;
-                } else {
-                    let html = '<div class="success">Success!</div>';
-                    html += `<div class="output">${escapeHtml(data.summary)}</div>`;
-                    html += '<h3 style="margin-top: 20px;">Telecommand Sequences</h3>';
-                    for (const [param, cmd] of Object.entries(data.commands)) {
-                        const label = {
-                            'x_pos': 'X Position (m)',
-                            'y_pos': 'Y Position (m)',
-                            'z_pos': 'Z Position (m)',
-                            'x_vel': 'X Velocity (m/s)',
-                            'y_vel': 'Y Velocity (m/s)',
-                            'z_vel': 'Z Velocity (m/s)',
-                        }[param] || param;
-                        html += `<div style="margin-top: 15px;"><strong>${label}</strong><br><code>${cmd}</code></div>`;
-                    }
-                    output.innerHTML = html;
-                }
+                renderResult(output, await response.json());
             } catch (e) {
-                output.innerHTML = `<div class="error">Error: ${e.message}</div>`;
+                output.innerHTML = `<div class="error">${escapeHtml(T('Error: {{msg}}', { msg: e.message }))}</div>`;
             }
         }
 
         async function convertSV() {
             const output = document.getElementById('sv_output');
-            output.innerHTML = '<div class="success">Processing...</div>';
+            output.innerHTML = `<div class="success">${escapeHtml(T('Converting…'))}</div>`;
 
             const x = parseFloat(document.getElementById('sv_x').value);
             const y = parseFloat(document.getElementById('sv_y').value);
@@ -689,7 +626,7 @@ if HAS_AIOHTTP:
             const epoch = document.getElementById('sv_epoch').value.trim();
 
             if (isNaN(x) || isNaN(y) || isNaN(z) || isNaN(vx) || isNaN(vy) || isNaN(vz)) {
-                output.innerHTML = '<div class="error">Please provide all 6 state vector components</div>';
+                output.innerHTML = `<div class="error">${escapeHtml(T('Enter all six state vector components.'))}</div>`;
                 return;
             }
 
@@ -702,34 +639,15 @@ if HAS_AIOHTTP:
 
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
-                const data = await response.json();
-                if (data.error) {
-                    output.innerHTML = `<div class="error">${data.error}</div>`;
-                } else {
-                    let html = '<div class="success">Success!</div>';
-                    html += `<div class="output">${escapeHtml(data.summary)}</div>`;
-                    html += '<h3 style="margin-top: 20px;">Telecommand Sequences</h3>';
-                    for (const [param, cmd] of Object.entries(data.commands)) {
-                        const label = {
-                            'x_pos': 'X Position (m)',
-                            'y_pos': 'Y Position (m)',
-                            'z_pos': 'Z Position (m)',
-                            'x_vel': 'X Velocity (m/s)',
-                            'y_vel': 'Y Velocity (m/s)',
-                            'z_vel': 'Z Velocity (m/s)',
-                        }[param] || param;
-                        html += `<div style="margin-top: 15px;"><strong>${label}</strong><br><code>${cmd}</code></div>`;
-                    }
-                    output.innerHTML = html;
-                }
+                renderResult(output, await response.json());
             } catch (e) {
-                output.innerHTML = `<div class="error">Error: ${e.message}</div>`;
+                output.innerHTML = `<div class="error">${escapeHtml(T('Error: {{msg}}', { msg: e.message }))}</div>`;
             }
         }
 
         function escapeHtml(text) {
             const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
-            return text.replace(/[&<>"']/g, m => map[m]);
+            return String(text).replace(/[&<>"']/g, m => map[m]);
         }
 
         // Set default epoch to now
@@ -743,7 +661,8 @@ if HAS_AIOHTTP:
 
     async def handle_index(request):
         """Serve the web interface."""
-        return web.Response(text=HTML_TEMPLATE, content_type='text/html')
+        return tool_html_response(
+            HTML_TEMPLATE.replace("<!--TOOL_HEAD-->", TOOL_HEAD), request.app)
 
     async def handle_tle_api(request):
         """API endpoint for TLE conversion."""
@@ -840,7 +759,8 @@ if HAS_AIOHTTP:
 
     async def start_web_server(port: int = 8093) -> None:
         """Start the aiohttp web server."""
-        app = web.Application()
+        # Shared HTTP policy + design system / language runtime (R3 A8, §8).
+        app = setup_tool_app(web.Application())
         app.router.add_get('/', handle_index)
         app.router.add_post('/api/tle', handle_tle_api)
         app.router.add_post('/api/sv', handle_sv_api)

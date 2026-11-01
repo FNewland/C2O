@@ -164,6 +164,10 @@ def test_french_lookup_plurals_context_and_fallback(tmp_path):
     ("", {}, {}, "en"),
     ("?lang=de", {"smo.lang": "xx"}, {"data-default-lang": "fr-CA"}, "fr"),
     ("?lang=FR-fr", {}, {}, "fr"),
+    # c2o.lang is the suite-wide key (R3 audit); smo.lang is still read.
+    ("", {"c2o.lang": "fr"}, {"data-default-lang": "en"}, "fr"),
+    ("", {"c2o.lang": "en", "smo.lang": "fr"}, {}, "en"),
+    ("", {"c2o.lang": "xx", "smo.lang": "fr"}, {}, "fr"),
 ])
 def test_resolution_order(tmp_path, search, ls, attrs, expected):
     assert run_js(tmp_path, "return M.resolveLang();", search=search, ls=ls,

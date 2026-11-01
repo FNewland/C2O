@@ -113,7 +113,8 @@ async def test_http_run_and_download():
     async with TestClient(TestServer(viewer.create_app())) as client:
         resp = await client.get("/")
         assert resp.status == 200
-        assert "ADCS Failure-Scenario Viewer" in await resp.text()
+        # Sentence-case title since the 2026-11 light restyle (R3 audit §8).
+        assert "ADCS failure-scenario viewer" in await resp.text()
 
         resp = await client.post("/run", json=SHORT)
         assert resp.status == 200

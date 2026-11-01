@@ -10,6 +10,7 @@ import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 import i18n from '../i18n'
 import { useUIStore, type Level } from '../stores/uiStore'
+import { fs } from '../theme/tokens'
 
 const API = '/api'
 
@@ -225,7 +226,6 @@ async function downloadWorksheet(ws: Worksheet) {
 }
 
 export function GuidancePanel({ onClose }: { onClose: () => void }) {
-  const studyId = useUIStore(s => s.studyId)
   const currentLevel = useUIStore(s => s.currentLevel)
   const setStudyId = useUIStore(s => s.setStudyId)
   const qc = useQueryClient()
@@ -269,45 +269,45 @@ export function GuidancePanel({ onClose }: { onClose: () => void }) {
       boxShadow: '-4px 0 20px rgba(0,0,0,0.3)',
     }}>
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.75rem' }}>
-        <h2 style={{ fontSize: '0.9rem', margin: 0, color: 'var(--accent)' }}>{t('Facilitator Guide')}</h2>
+        <h2 style={{ fontSize: fs.value, margin: 0, color: 'var(--accent)' }}>{t('Facilitator Guide')}</h2>
         <span style={{ flex: 1 }} />
-        <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '1.2rem' }}>×</button>
+        <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: fs.title }}>×</button>
       </div>
 
       {/* Current level guidance */}
       <div style={{ marginBottom: '1rem' }}>
-        <h3 style={{ fontSize: '0.8rem', color: '#f59e0b', marginBottom: '0.3rem' }}>{guidance.title}</h3>
+        <h3 style={{ fontSize: fs.body, color: 'var(--status-caution)', marginBottom: '0.3rem' }}>{guidance.title}</h3>
 
-        <div style={{ fontSize: '0.65rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.15rem', textTransform: 'uppercase' }}>
+        <div style={{ fontSize: fs.label, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.15rem', textTransform: 'uppercase' }}>
           {t('Related Sessions')}
         </div>
         <div style={{ marginBottom: '0.4rem' }}>
           {guidance.sessions.map((s, i) => (
-            <div key={i} style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', padding: '0.1rem 0' }}>
+            <div key={i} style={{ fontSize: fs.label, color: 'var(--text-secondary)', padding: '0.1rem 0' }}>
               {s}
             </div>
           ))}
         </div>
 
-        <div style={{ fontSize: '0.65rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.15rem', textTransform: 'uppercase' }}>
+        <div style={{ fontSize: fs.label, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.15rem', textTransform: 'uppercase' }}>
           {t('Learning Objectives')}
         </div>
         <div style={{ marginBottom: '0.4rem' }}>
           {guidance.objectives.map((o, i) => (
-            <div key={i} style={{ display: 'flex', gap: '0.3rem', fontSize: '0.68rem', padding: '0.1rem 0' }}>
+            <div key={i} style={{ display: 'flex', gap: '0.3rem', fontSize: fs.label, padding: '0.1rem 0' }}>
               <span style={{ color: 'var(--success)', flexShrink: 0 }}>•</span>
               <span>{o}</span>
             </div>
           ))}
         </div>
 
-        <div style={{ fontSize: '0.65rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.15rem', textTransform: 'uppercase' }}>
+        <div style={{ fontSize: fs.label, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.15rem', textTransform: 'uppercase' }}>
           {t('Tips')}
         </div>
         <div>
           {guidance.tips.map((tip, i) => (
             <div key={i} style={{
-              fontSize: '0.65rem', padding: '0.2rem 0.3rem', marginBottom: '0.15rem',
+              fontSize: fs.label, padding: '0.2rem 0.3rem', marginBottom: '0.15rem',
               background: 'rgba(59,130,246,0.08)', borderRadius: '3px', borderLeft: '2px solid var(--accent)',
             }}>
               {tip}
@@ -318,8 +318,8 @@ export function GuidancePanel({ onClose }: { onClose: () => void }) {
 
       {/* Downloadable worksheets */}
       <div style={{ borderTop: '1px solid var(--border)', paddingTop: '0.75rem', marginBottom: '0.75rem' }}>
-        <h3 style={{ fontSize: '0.8rem', color: '#ec4899', marginBottom: '0.3rem' }}>{t('Worksheets')}</h3>
-        <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
+        <h3 style={{ fontSize: fs.body, color: 'var(--cat-6)', marginBottom: '0.3rem' }}>{t('Worksheets')}</h3>
+        <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
           {t('Download worksheet templates for this level:')}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
@@ -327,10 +327,10 @@ export function GuidancePanel({ onClose }: { onClose: () => void }) {
             <button key={i} onClick={() => downloadWorksheet(ws)} style={{
               padding: '0.25rem 0.4rem', borderRadius: '3px', textAlign: 'left',
               background: 'var(--bg-card)', border: '1px solid var(--border)',
-              color: 'var(--text-primary)', cursor: 'pointer', fontSize: '0.65rem',
+              color: 'var(--text-primary)', cursor: 'pointer', fontSize: fs.label,
             }}>
               <div style={{ fontWeight: 500 }}>{t(ws.title)}</div>
-              <div style={{ fontSize: '0.55rem', color: 'var(--text-secondary)' }}>{t(ws.description)}</div>
+              <div style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>{t(ws.description)}</div>
             </button>
           ))}
         </div>
@@ -338,8 +338,8 @@ export function GuidancePanel({ onClose }: { onClose: () => void }) {
 
       {/* Example missions */}
       <div style={{ borderTop: '1px solid var(--border)', paddingTop: '0.75rem' }}>
-        <h3 style={{ fontSize: '0.8rem', color: '#10b981', marginBottom: '0.3rem' }}>{t('Worked Examples')}</h3>
-        <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
+        <h3 style={{ fontSize: fs.body, color: 'var(--status-ok)', marginBottom: '0.3rem' }}>{t('Worked Examples')}</h3>
+        <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
           {t('Load a pre-built mission to explore or use as a starting point:')}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
@@ -348,14 +348,14 @@ export function GuidancePanel({ onClose }: { onClose: () => void }) {
               style={{
                 padding: '0.3rem 0.5rem', borderRadius: '4px', textAlign: 'left',
                 background: 'var(--bg-card)', border: '1px solid var(--border)',
-                color: 'var(--text-primary)', cursor: 'pointer', fontSize: '0.68rem',
+                color: 'var(--text-primary)', cursor: 'pointer', fontSize: fs.label,
               }}>
               <div style={{ fontWeight: 600 }}>{m.name}</div>
-              <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)' }}>{m.description}</div>
+              <div style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>{m.description}</div>
             </button>
           ))}
           {(!examples?.missions || examples.missions.length === 0) && (
-            <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)' }}>
+            <div style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>
               {t('No example missions available from server.')}
             </div>
           )}

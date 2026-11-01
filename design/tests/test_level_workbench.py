@@ -8,18 +8,60 @@ Tests the full System-V flow:
   Level 3: V&V → budget rollup verification across all levels
 
 Run with: pytest tests/test_level_workbench.py -v
-Requires: server running on localhost:8000 (or set SPACECDF_BASE_URL)
+
+By default the app runs IN-PROCESS (FastAPI ``TestClient``, full lifespan)
+over a throw-away SQLite file, so no server on :8000 is needed and nothing is
+written to a real database. Set ``SPACECDF_BASE_URL`` (e.g.
+``http://localhost:8000/api``) to run the same tests against a live server
+instead; those runs are marked ``live_server``.
 """
 import os
+from unittest.mock import patch
+
 import pytest
 import httpx
 
-BASE = os.environ.get("SPACECDF_BASE_URL", "http://localhost:8000/api")
+BASE = os.environ.get("SPACECDF_BASE_URL")
+
+if BASE:
+    pytestmark = pytest.mark.live_server
 
 
 @pytest.fixture(scope="module")
-def client():
-    return httpx.Client(base_url=BASE, timeout=10)
+def client(tmp_path_factory):
+    if BASE:
+        with httpx.Client(base_url=BASE, timeout=10) as c:
+            yield c
+        return
+
+    from fastapi.testclient import TestClient
+    from spacecdf_server.app import app
+    from spacecdf_server.db import engine as engine_mod
+    from spacecdf_server.routers import elements, requirements, studies
+
+    db = tmp_path_factory.mktemp("workbench") / "workbench.db"
+    # Fresh caches; restore whatever other test modules left behind.
+    saved_studies = dict(studies.get_study_store())
+    saved_elements = dict(elements._elements)
+    saved_interfaces = dict(elements._interfaces)
+    studies.get_study_store().clear()
+    elements._elements.clear()
+    elements._interfaces.clear()
+    requirements.reset_requirement_cache()
+    # The lifespan creates the engine lazily from DATABASE_URL inside the
+    # TestClient's event loop, runs init_db + seeding, and disposes on exit.
+    with patch.object(engine_mod, "DATABASE_URL", f"sqlite+aiosqlite:///{db}"), \
+            patch.object(engine_mod, "_engine", None), \
+            patch.object(engine_mod, "_session_factory", None):
+        with TestClient(app, base_url="http://testserver/api") as c:
+            yield c
+    studies.get_study_store().clear()
+    studies.get_study_store().update(saved_studies)
+    elements._elements.clear()
+    elements._elements.update(saved_elements)
+    elements._interfaces.clear()
+    elements._interfaces.update(saved_interfaces)
+    requirements.reset_requirement_cache()
 
 
 @pytest.fixture(scope="module")

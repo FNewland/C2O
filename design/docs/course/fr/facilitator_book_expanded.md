@@ -6748,8 +6748,8 @@ exactement le terme $-10\log_{10}(R_b)$ du bilan de liaison :
 | LOW (opérations de routine) | 16 kbit/s | BPSK | conv(7,1/2) + RS(255,223) | 7,5 dB | $-10\log_{10}(16) = -12.04$ dB |
 | HIGH (vidages uniquement) | 128 kbit/s | QPSK | RS(255,223) seul | 6,0 dB | $-10\log_{10}(8) = -9.03$ dB, plus 1,5 dB de gain de codage perdu $= -10.53$ dB |
 
-LOW n'est pas un choix arbitraire : la télémesure de servitude livrée génère 1351,5 bit/s de
-paquets PUS, soit 1557 bit/s sur le canal après le surdébit RS et de trame. Un « débit
+LOW n'est pas un choix arbitraire : la télémesure de servitude livrée génère 1378,5 bit/s de
+paquets PUS, soit 1588 bit/s sur le canal après le surdébit RS et de trame. Un « débit
 bas » de 1 kbit/s serait *inférieur au débit de génération* : l'arriéré temps réel ne pourrait jamais
 se résorber. À 16 kbit/s, la HK temps réel est écoulée avec un rapport cyclique de 9,7 % et il reste de quoi relire 0,85
 orbite de HK enregistrée en un seul passage.

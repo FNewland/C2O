@@ -24,7 +24,7 @@
     letter-spacing:.5px; }
   header .grow{ flex:1; }
   .grid{ display:grid; grid-template-columns:repeat(3, minmax(0,1fr));
-    gap:12px; padding:14px 18px; max-width:1400px; margin:0 auto; }
+    grid-auto-flow:row dense; gap:12px; padding:14px 18px; max-width:1400px; margin:0 auto; }
   .two-col{ grid-column:span 2; }
   @media (max-width:1000px){ .grid{ grid-template-columns:1fr; }
     .two-col{ grid-column:auto; } }
@@ -59,6 +59,20 @@
   .diag-grid .k{ color:var(--tx3); }
   .diag-grid .v{ font-family:var(--mono); }
   body.stale-feed .v, body.stale-feed .stat-box .big{ color:var(--tx2); }
+  /* Ground limit check (plan decision 2026-11-01): BER and AGC are measured
+     by this receiver, so their limits are checked here, labelled "ground". */
+  .gl-head{ display:flex; align-items:center; justify-content:space-between;
+    gap:8px; margin-bottom:8px; }
+  .gl-head .why{ font-size:12px; color:var(--tx3); text-align:right; }
+  .gl-params{ display:flex; flex-direction:column; gap:6px; }
+  .gl-params .ds-param .vl.nosig{ font-family:var(--sans, inherit);
+    font-size:12px; font-style:italic; color:var(--tx3); font-weight:400; }
+  .gl-log{ margin-top:10px; border-top:1px solid var(--line); padding-top:6px; }
+  .gl-log .cap{ font-size:12px; color:var(--tx3); cursor:pointer; }
+  .gl-log .cap .num{ font-family:var(--mono); color:var(--tx2); }
+  .gl-log[open] .cap{ margin-bottom:4px; }
+  .gl-log .empty{ font-size:12px; color:var(--tx3); }
+  #ber.w{ color:var(--warn); } #ber.a{ color:var(--alarm); }
 </style>
 </head>
 <body>
@@ -95,6 +109,18 @@
     </div>
   </div>
 
+  <div class="ds-card" id="gl-card">
+    <h2 data-i18n>Ground limits <span class="r" data-i18n data-i18n-title title="Checked by this receiver, not by the spacecraft">ground</span></h2>
+    <div class="bd">
+      <div class="gl-head"><span id="gl-chip"></span><span class="why" id="gl-why"></span></div>
+      <div class="gl-params" id="gl-params"></div>
+      <details class="gl-log">
+        <summary class="cap"><span data-i18n>Limit transitions</span> <span class="num" id="gl-count">0</span></summary>
+        <div id="gl-log"></div>
+      </details>
+    </div>
+  </div>
+
   <div class="ds-card">
     <h2 data-i18n>RF measurements <span class="r" data-i18n data-i18n-title title="As measured at the receiver">measured</span></h2>
     <div class="bd rows">
@@ -110,6 +136,11 @@
     </div>
   </div>
 
+  <div class="ds-card two-col">
+    <h2 data-i18n>Eb/N0 &amp; BER history</h2>
+    <div class="bd"><div class="chart-container"><canvas id="ebn0-chart"></canvas></div></div>
+  </div>
+
   <div class="ds-card">
     <h2 data-i18n>Dynamics <span class="r" data-i18n>tracking</span></h2>
     <div class="bd rows">
@@ -123,8 +154,8 @@
   </div>
 
   <div class="ds-card two-col">
-    <h2 data-i18n>Eb/N0 &amp; BER history</h2>
-    <div class="bd"><div class="chart-container"><canvas id="ebn0-chart"></canvas></div></div>
+    <h2 data-i18n>Frame rate <span class="r" data-i18n>frames/sec</span></h2>
+    <div class="bd"><div class="chart-container"><canvas id="frame-chart"></canvas></div></div>
   </div>
 
   <div class="ds-card">
@@ -143,11 +174,6 @@
         <div class="meter"><div id="fer-bar" class="fill" style="width:0%"></div></div>
       </div>
     </div>
-  </div>
-
-  <div class="ds-card two-col">
-    <h2 data-i18n>Frame rate <span class="r" data-i18n>frames/sec</span></h2>
-    <div class="bd"><div class="chart-container"><canvas id="frame-chart"></canvas></div></div>
   </div>
 
   <div class="ds-card">
@@ -208,7 +234,7 @@
   <a href="/classic" data-i18n>classic page</a></div>
 
 <script type="module">
-import { renderChip, freshness, mountLangToggle } from "/static/shared/components.js";
+import { renderChip, freshness, mountLangToggle, renderParam, renderEventRow, limitClass } from "/static/shared/components.js";
 import { fmtAge } from "/static/shared/format.js";
 // UI language (EN|FR) — docs/i18n/UI_I18N_GUIDE.md. The WS feed below
 // starts at once; only the toggle waits for the catalogs.
@@ -218,7 +244,7 @@ I18n.ready.then(() => {
   renderDiagnostics(lastDiag);   // the "no data" placeholder, translated
 });
 // Regions redrawn on every WS message need nothing; these may sit idle.
-onLangChange(() => { renderDiagnostics(lastDiag); ebn0Chart.draw(); frameChart.draw(); });
+onLangChange(() => { renderDiagnostics(lastDiag); renderGroundLimits(lastFeed); ebn0Chart.draw(); frameChart.draw(); });
 
 /* ── Mini chart (dependency-free canvas line chart, from the classic page,
       restyled to the design-system palette) ──────────────────────────── */
@@ -243,6 +269,7 @@ class MiniChart {
     this.yMin = opts.yMin ?? null;
     this.yMax = opts.yMax ?? null;
     this.labels = opts.labels || {};
+    this.refLines = opts.refLines || [];   // [{y, color}] limit lines
     for (const key of (opts.keys || [])) this.series[key] = [];
   }
   push(values) {
@@ -276,6 +303,15 @@ class MiniChart {
       ctx.fillStyle = C_TX3; ctx.font = "10px monospace";
       ctx.fillText((yMin + (i / 4) * (yMax - yMin)).toFixed(1), 0, y + 3);
     }
+    // Limit reference lines (dashed), drawn under the data.
+    ctx.setLineDash([4, 3]); ctx.lineWidth = 1;
+    for (const r of this.refLines) {
+      if (r.y === null || r.y === undefined || r.y < yMin || r.y > yMax) continue;
+      const y = h - ((r.y - yMin) / (yMax - yMin)) * h;
+      ctx.strokeStyle = r.color;
+      ctx.beginPath(); ctx.moveTo(30, y); ctx.lineTo(w, y); ctx.stroke();
+    }
+    ctx.setLineDash([]);
     for (const [key, arr] of Object.entries(this.series)) {
       if (arr.length < 2) continue;
       ctx.strokeStyle = this.colors[key] || C_INFO;
@@ -305,7 +341,9 @@ const ebn0Chart = new MiniChart("ebn0-chart", {
   keys: ["ebn0", "ber"], maxPoints: 120,
   colors: { ebn0: C_TX2, ber: C_ALRM },
   labels: { ebn0: "Eb/N0 dB", ber: () => tText("BER log10") },
-  yMin: -12, yMax: 20
+  yMin: -12, yMax: 20,
+  // BER ground limits (yellow / red), set from the feed's own bands.
+  refLines: []
 });
 const frameChart = new MiniChart("frame-chart", {
   keys: ["good", "bad"], maxPoints: 120,
@@ -401,6 +439,7 @@ function render(d) {
   $("rssi").textContent = d.rssi_dbm.toFixed(1) + " dBm";
   $("ebn0").textContent = d.eb_n0_db.toFixed(1) + " dB";
   $("ber").textContent = "10^" + d.ber_log10.toFixed(1);
+  $("ber").className = "v " + limitClass((d.ground_limit_state || {})["0x050C"]);
   $("margin").textContent = d.link_margin_db.toFixed(1) + " dB";
   $("pl-evm").textContent = (d.evm_snr_db || 0).toFixed(1) + " dB";
   const mPct = ((d.link_margin_db + 5) / 20) * 100;
@@ -469,6 +508,7 @@ function render(d) {
   }
 
   renderDiagnostics(d.diagnostics || {});
+  renderGroundLimits(d);
   $("last-update").textContent =
       new Date(d.timestamp * 1000).toLocaleTimeString();
 }
@@ -616,6 +656,74 @@ function drawConstellation(samples, modulation) {
   ctx.fillText("-1", cx - scale - 8, cy + 12);
   ctx.fillStyle = C_TX2; ctx.font = "11px monospace";
   ctx.fillText(MOD_NAMES[modulation] || "BPSK", w - 60, h - 6);
+}
+
+/* ── Ground limit check (BER, AGC) ─────────────────────────────────────
+   Same conventions as the MCS (P3 triad + deviation bar, P6 glyph + text).
+   No carrier lock (or PACKET mode) = nothing measured = not checked: that
+   is shown as such, never as a stale number or as an alarm. */
+const GL_ROWS = [
+  { hex: "0x050C", key: "ber_log10", label: () => tText("BER (ground)"), units: "log10" },
+  { hex: "0x051A", key: "agc_db",    label: () => tText("AGC (ground)"), units: "dB" },
+];
+const GL_SUMMARY = {
+  nominal:   () => ({ kind: "ok",    label: tText("WITHIN LIMITS") }),
+  yellow:    () => ({ kind: "warn",  label: tText("WARNING") }),
+  red:       () => ({ kind: "alarm", label: tText("ALARM") }),
+  no_signal: () => ({ kind: "stale", label: tText("NOT CHECKED") }),
+};
+const GL_STATUS = {
+  nominal: () => tText("nominal"), yellow_low: () => tText("yellow low"),
+  yellow_high: () => tText("yellow high"), red_low: () => tText("red low"),
+  red_high: () => tText("red high"), no_signal: () => tText("no signal"),
+};
+const glStatus = (s) => (GL_STATUS[s] ? GL_STATUS[s]() : s);
+let lastFeed = null, refLinesSet = false;
+function renderGroundLimits(d) {
+  if (!d) return;
+  lastFeed = d;
+  const limits = d.ground_limits || {}, state = d.ground_limit_state || {};
+  const sum = d.ground_limit_summary || "no_signal";
+  $("gl-chip").innerHTML = renderChip({ ...(GL_SUMMARY[sum] || GL_SUMMARY.no_signal)(),
+    dir: "down", title: tText("Worst ground limit state") });
+  $("gl-why").textContent = sum !== "no_signal" ? ""
+    : d.mode === "PACKET" ? tText("PACKET mode: no RF receiver")
+    : tText("No carrier lock: nothing to measure");
+  $("gl-params").innerHTML = GL_ROWS.map((r) => {
+    const band = limits[r.hex];
+    const st = state[r.hex] || "no_signal";
+    const def = { name: r.label(), hex: r.hex, units: r.units,
+                  description: band ? band.description : "" };
+    const range = r.hex === "0x050C" ? { lo: -12, hi: -2 } : {};
+    if (st === "no_signal") {
+      return renderParam(def, null, band ? { ...band, ...range } : null).replace(
+        /<span class="vl">—(<u>[^<]*<\/u>)?<\/span>/,
+        `<span class="vl nosig">${tText("no signal")}</span>`)
+        .replace('class="ds-param stale"', 'class="ds-param nosignal"');
+    }
+    const lim = band ? { ...band, ...range, state: st } : null;
+    return renderParam(def, d[r.key], lim);
+  }).join("");
+  if (!refLinesSet && limits["0x050C"]) {
+    ebn0Chart.refLines = [
+      { y: limits["0x050C"].yellow_high, color: C_WARN },
+      { y: limits["0x050C"].red_high, color: C_ALRM },
+    ];
+    refLinesSet = true;
+  }
+  const all = d.ground_limit_transitions || [];
+  $("gl-count").textContent = String(d.ground_limit_seq ?? all.length);
+  const rows = all.slice(-4).reverse();
+  $("gl-log").innerHTML = rows.length === 0
+    ? `<div class="empty">${tText("No transitions since the receiver started")}</div>`
+    : rows.map((x) => renderEventRow({
+        severity: x.status.startsWith("red") ? 3 : x.status.startsWith("yellow") ? 2 : 1,
+        name: x.param_id, subsystem: "ground",
+        description: tText("{{name}} {{from}} → {{to}}", { name: x.name,
+          from: glStatus(x.previous), to: glStatus(x.status) }) +
+          (x.value !== null && x.value !== undefined ? ` (${Number(x.value).toFixed(1)})` : ""),
+        utc: new Date(x.timestamp * 1000).toLocaleTimeString(),
+      })).join("");
 }
 
 let lastDiag = {};

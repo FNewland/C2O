@@ -46,7 +46,7 @@ pass only 45 %, and a 7 deg pass none at all and can never dump at HIGH.
 The budget reports the two consequences a mission planner has to live with:
 
   * ``hk_contact_fraction_percent`` — the continuous housekeeping stream
-    (derived from ``telemetry/hk_structures.yaml``, ~1557 bps of channel after
+    (derived from ``telemetry/hk_structures.yaml``, ~1588 bps of channel after
     RS and TM framing) eats ~36 % of the day's whole contact time at LOW and
     ~4.5 % at HIGH. Housekeeping alone is a third of the low-rate network.
   * ``dump_contact_fraction_percent`` — the share of the day's contact time
@@ -158,8 +158,8 @@ ELEVATION_MASK_DEG = 5.0
 ORBIT_ALTITUDE_KM = 513.0
 EARTH_RADIUS_KM = 6378.137
 #: Channel expansion of the housekeeping stream: RS(255,223) (x255/223) and the
-#: 1115/1107-byte TM transfer frame. Matches the research report's 1351.5 bps
-#: of PUS packets -> 1557 bps of channel.
+#: 1115/1107-byte TM transfer frame. Matches the research report's 1378.5 bps
+#: of PUS packets -> 1588 bps of channel.
 HK_CHANNEL_EXPANSION = (255.0 / 223.0) * (1115.0 / 1107.0)
 PROTOCOL_OVERHEAD = 0.20  # 20% overhead
 MB = 1024.0 * 1024.0      # bytes per MB used throughout the data budget
@@ -258,7 +258,7 @@ def hk_stream_bps_from_config(config_dir: str | Path) -> float:
     model — 6 B CCSDS primary + 10 B PUS-C secondary + 1 B SID + data field +
     2 B CRC — and expands the result for RS(255,223) and TM framing.
 
-    The shipped structures give 1351.5 bps of packets = **1557 bps of channel**.
+    The shipped structures give 1378.5 bps of packets = **1588 bps of channel**.
     That is 9.7 % duty at LOW and the reason the old 1 kbps "low rate" could
     never carry routine operations: it was *below* the generation rate.
     """

@@ -17,25 +17,27 @@ import '@xyflow/react/dist/style.css'
 import { useDesignStore } from '../stores/designStore'
 import { useModelStore, type DesignElement } from '../stores/modelStore'
 import { EquipmentBrowser } from './EquipmentBrowser'
+import { fs } from '../theme/tokens'
+import { askConfirm, askText, showAlert } from './ui/Dialog'
 
 // ─── Colors by element_type ───
 const TYPE_COLORS: Record<string, string> = {
-  mission: '#8b5cf6',
-  segment: '#3b82f6',
-  system: '#06b6d4',
-  subsystem: '#10b981',
-  component: '#f59e0b',
-  logical: '#8b5cf6',
-  software: '#a78bfa',
-  mode: '#6b7280',
+  mission: 'var(--cat-2)',
+  segment: 'var(--interactive)',
+  system: 'var(--interactive)',
+  subsystem: 'var(--status-ok)',
+  component: 'var(--status-caution)',
+  logical: 'var(--cat-2)',
+  software: 'var(--cat-2)',
+  mode: 'var(--text-3)',
 }
 
 // ─── Colors by subsystem_domain ───
 const DOMAIN_COLORS: Record<string, string> = {
-  power: '#f59e0b', aocs: '#06b6d4', ttc: '#ec4899', link: '#ec4899',
-  propulsion: '#f97316', structure: '#84cc16', data: '#8b5cf6', obc: '#8b5cf6',
-  thermal: '#ef4444', integration: '#6b7280', payload: '#3b82f6',
-  ground_rf: '#0ea5e9', ground_ops: '#10b981',
+  power: 'var(--status-caution)', aocs: 'var(--interactive)', ttc: 'var(--cat-6)', link: 'var(--cat-6)',
+  propulsion: 'var(--status-caution)', structure: 'var(--cat-7)', data: 'var(--cat-2)', obc: 'var(--cat-2)',
+  thermal: 'var(--status-alarm)', integration: 'var(--text-3)', payload: 'var(--interactive)',
+  ground_rf: 'var(--interactive)', ground_ops: 'var(--status-ok)',
 }
 
 // ─── Element type options for creation ───
@@ -56,7 +58,7 @@ function HierarchyNode({ data }: { data: {
     <div style={{
       padding: '10px 14px',
       border: `2px ${isOutOfScope ? 'dashed' : 'solid'} ${borderColor}`,
-      borderRadius: 8, background: `${borderColor}12`,
+      borderRadius: 8, background: `color-mix(in srgb, ${borderColor} 7%, transparent)`,
       minWidth: 140, maxWidth: 220,
       opacity: isOutOfScope ? 0.7 : 1,
     }}>
@@ -64,7 +66,7 @@ function HierarchyNode({ data }: { data: {
 
       {/* Type badge + scope/frozen badges */}
       <div style={{
-        fontSize: '0.58rem', textTransform: 'uppercase', letterSpacing: '0.06em',
+        fontSize: fs.label, textTransform: 'uppercase', letterSpacing: '0.06em',
         color: borderColor, fontWeight: 700, marginBottom: '0.2rem',
         display: 'flex', alignItems: 'center', gap: '0.3rem', flexWrap: 'wrap',
       }}>
@@ -74,21 +76,21 @@ function HierarchyNode({ data }: { data: {
         </span>
         {isOutOfScope && (
           <span style={{
-            fontSize: '0.5rem', padding: '0.05rem 0.25rem', borderRadius: '3px',
-            background: 'rgba(107,114,128,0.3)', color: '#9ca3af', fontWeight: 600,
+            fontSize: fs.label, padding: '0.05rem 0.25rem', borderRadius: '3px',
+            background: 'rgba(107,114,128,0.3)', color: 'var(--text-2)', fontWeight: 600,
           }}>External</span>
         )}
         {isFrozen && (
           <span style={{
-            fontSize: '0.5rem', padding: '0.05rem 0.25rem', borderRadius: '3px',
-            background: 'rgba(59,130,246,0.2)', color: '#93c5fd',
+            fontSize: fs.label, padding: '0.05rem 0.25rem', borderRadius: '3px',
+            background: 'rgba(59,130,246,0.2)', color: 'var(--interactive)',
           }} title="Frozen — cannot delete or rename">&#x1f512;</span>
         )}
       </div>
 
       {/* Name */}
       <div style={{
-        fontSize: '0.82rem', fontWeight: 600, color: '#e5e7eb',
+        fontSize: fs.body, fontWeight: 600, color: 'var(--text)',
         marginBottom: '0.3rem', lineHeight: 1.2,
         overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
       }}>
@@ -96,7 +98,7 @@ function HierarchyNode({ data }: { data: {
       </div>
 
       {/* Mass / Power summary */}
-      <div style={{ display: 'flex', gap: '0.5rem', fontSize: '0.65rem', color: '#9ca3af' }}>
+      <div style={{ display: 'flex', gap: '0.5rem', fontSize: fs.label, color: 'var(--text-2)' }}>
         {data.mass !== null && data.mass > 0 && (
           <span style={{ fontFamily: 'monospace' }}>{data.mass.toFixed(2)} kg</span>
         )}
@@ -108,16 +110,16 @@ function HierarchyNode({ data }: { data: {
       {/* Children indicator */}
       {data.childCount > 0 && !isOutOfScope && (
         <div style={{
-          fontSize: '0.6rem', color: '#6b7280', marginTop: '0.25rem',
-          borderTop: `1px solid ${borderColor}30`, paddingTop: '0.2rem',
+          fontSize: fs.label, color: 'var(--text-3)', marginTop: '0.25rem',
+          borderTop: `1px solid color-mix(in srgb, ${borderColor} 19%, transparent)`, paddingTop: '0.2rem',
         }}>
           {data.childCount} item{data.childCount !== 1 ? 's' : ''} — double-click to expand
         </div>
       )}
       {isOutOfScope && (
         <div style={{
-          fontSize: '0.58rem', color: '#6b7280', marginTop: '0.25rem',
-          borderTop: `1px solid ${borderColor}30`, paddingTop: '0.2rem', fontStyle: 'italic',
+          fontSize: fs.label, color: 'var(--text-3)', marginTop: '0.25rem',
+          borderTop: `1px solid color-mix(in srgb, ${borderColor} 19%, transparent)`, paddingTop: '0.2rem', fontStyle: 'italic',
         }}>
           Out of scope — external element
         </div>
@@ -158,7 +160,7 @@ export function HierarchicalDesigner({ studyId, initialElementId }: Props) {
   const loadModel = useModelStore(s => s.loadStudyModel)
   const markStale = useDesignStore(s => s.markStale)
   // Legacy: reads from designStore. Will migrate to backend requirements API with element_id
-  const generatedRequirements = (useDesignStore.getState() as any).generatedRequirements || []
+  const generatedRequirements: any[] = (useDesignStore.getState() as any).generatedRequirements || []
 
   // Load model on mount
   useEffect(() => {
@@ -200,8 +202,8 @@ export function HierarchicalDesigner({ studyId, initialElementId }: Props) {
     const cols = Math.max(3, Math.ceil(Math.sqrt(childElements.length)))
     return childElements.map((el, i): Node => {
       const color = el.subsystem_domain
-        ? (DOMAIN_COLORS[el.subsystem_domain] || TYPE_COLORS[el.element_type] || '#6b7280')
-        : (TYPE_COLORS[el.element_type] || '#6b7280')
+        ? (DOMAIN_COLORS[el.subsystem_domain] || TYPE_COLORS[el.element_type] || 'var(--text-3)')
+        : (TYPE_COLORS[el.element_type] || 'var(--text-3)')
 
       // Count children for indicator
       const kids = getChildren(el.id).filter(c => !(c as any).deleted_at && c.element_type !== 'mode')
@@ -252,7 +254,7 @@ export function HierarchicalDesigner({ studyId, initialElementId }: Props) {
           source: iface.from_element_id,
           target: iface.to_element_id,
           label: iface.diagram_label || iface.name,
-          style: { stroke: '#6b7280', strokeWidth: 2 },
+          style: { stroke: 'var(--text-3)', strokeWidth: 2 },
           animated: iface.interface_type === 'rf',
         })
       }
@@ -284,8 +286,8 @@ export function HierarchicalDesigner({ studyId, initialElementId }: Props) {
 
   // ─── Connect nodes = create interface ───
   const onConnect = useCallback(async (connection: Connection) => {
-    const label = prompt('Connection label (e.g., "Power bus", "Data link"):') || ''
-    const ifType = prompt('Interface type (electrical/data/rf/mechanical/thermal/optical):') || 'data'
+    const label = (await askText('Connection label (e.g., "Power bus", "Data link"):')) || ''
+    const ifType = (await askText('Interface type (electrical/data/rf/mechanical/thermal/optical):')) || 'data'
 
     if (studyId && connection.source && connection.target) {
       await createInterface(studyId, {
@@ -309,7 +311,7 @@ export function HierarchicalDesigner({ studyId, initialElementId }: Props) {
 
   // ─── Add block ───
   const handleAddBlock = async () => {
-    const name = prompt('Block name:')
+    const name = (await askText('Block name:'))
     if (!name) return
 
     // Suggest element type based on current level
@@ -320,17 +322,17 @@ export function HierarchicalDesigner({ studyId, initialElementId }: Props) {
         : 'system')
       : 'segment'
 
-    const typeInput = prompt(
+    const typeInput = (await askText(
       `Element type (${ELEMENT_TYPES.join('/')}):`,
       suggestedType
-    )
+    ))
     if (!typeInput) return
     const elementType = ELEMENT_TYPES.includes(typeInput as any) ? typeInput : suggestedType
 
     // Optional domain for subsystems
     let domain: string | null = null
     if (elementType === 'subsystem') {
-      domain = prompt('Subsystem domain (power/aocs/ttc/thermal/structure/propulsion/obc/payload):') || null
+      domain = (await askText('Subsystem domain (power/aocs/ttc/thermal/structure/propulsion/obc/payload):')) || null
     }
 
     if (studyId) {
@@ -359,13 +361,13 @@ export function HierarchicalDesigner({ studyId, initialElementId }: Props) {
     })
     const frozenCount = selectedNodeIds.length - deletable.length
     if (frozenCount > 0 && deletable.length === 0) {
-      alert(`All ${frozenCount} selected element(s) are frozen and cannot be deleted.`)
+      void showAlert(`All ${frozenCount} selected element(s) are frozen and cannot be deleted.`)
       return
     }
     const msg = frozenCount > 0
       ? `Delete ${deletable.length} element(s)? (${frozenCount} frozen element(s) will be skipped.) This also removes their children.`
       : `Delete ${deletable.length} element(s)? This also removes their children.`
-    if (!confirm(msg)) return
+    if (!(await askConfirm(msg))) return
 
     for (const id of deletable) {
       if (elements.has(id)) {
@@ -379,7 +381,7 @@ export function HierarchicalDesigner({ studyId, initialElementId }: Props) {
   const handleToggleScope = async () => {
     const selectedNodeIds = nodes.filter(n => n.selected).map(n => n.id)
     if (selectedNodeIds.length === 0) {
-      alert('Select one or more elements to toggle in/out of scope.')
+      void showAlert('Select one or more elements to toggle in/out of scope.')
       return
     }
     for (const id of selectedNodeIds) {
@@ -400,12 +402,12 @@ export function HierarchicalDesigner({ studyId, initialElementId }: Props) {
 
     if (unfrozen.length === 0 && frozen.length > 0) {
       // All frozen — offer to unfreeze
-      if (!confirm(`All ${frozen.length} element(s) at this level are already frozen. Unfreeze them?`)) return
+      if (!(await askConfirm(`All ${frozen.length} element(s) at this level are already frozen. Unfreeze them?`))) return
       for (const el of frozen) {
         await updateElement(el.id, { frozen: false } as any)
       }
     } else {
-      if (!confirm(`Freeze ${unfrozen.length} element(s) at this level? Frozen elements cannot be deleted or renamed.`)) return
+      if (!(await askConfirm(`Freeze ${unfrozen.length} element(s) at this level? Frozen elements cannot be deleted or renamed.`))) return
       for (const el of unfrozen) {
         await updateElement(el.id, { frozen: true } as any)
       }
@@ -507,11 +509,11 @@ export function HierarchicalDesigner({ studyId, initialElementId }: Props) {
       {/* ─── Breadcrumb bar ─── */}
       <div style={{
         display: 'flex', gap: '0.15rem', padding: '0.4rem 1rem',
-        borderBottom: '1px solid #374151', alignItems: 'center', flexWrap: 'wrap',
+        borderBottom: '1px solid var(--line)', alignItems: 'center', flexWrap: 'wrap',
       }}>
         {breadcrumbs.map((bc, i) => (
           <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.15rem' }}>
-            {i > 0 && <span style={{ color: '#4b5563', fontSize: '0.7rem', margin: '0 0.1rem' }}>/</span>}
+            {i > 0 && <span style={{ color: 'var(--line-strong)', fontSize: fs.label, margin: '0 0.1rem' }}>/</span>}
             <button
               onClick={() => {
                 setCurrentId(bc.id)
@@ -520,8 +522,8 @@ export function HierarchicalDesigner({ studyId, initialElementId }: Props) {
               style={{
                 background: i === breadcrumbs.length - 1 ? 'rgba(59,130,246,0.15)' : 'transparent',
                 border: i === breadcrumbs.length - 1 ? '1px solid rgba(59,130,246,0.3)' : '1px solid transparent',
-                borderRadius: '4px', padding: '0.2rem 0.5rem', fontSize: '0.72rem',
-                color: i === breadcrumbs.length - 1 ? '#93c5fd' : '#9ca3af',
+                borderRadius: '4px', padding: '0.2rem 0.5rem', fontSize: fs.label,
+                color: i === breadcrumbs.length - 1 ? 'var(--interactive)' : 'var(--text-2)',
                 cursor: 'pointer', fontWeight: i === breadcrumbs.length - 1 ? 600 : 400,
               }}
             >
@@ -531,10 +533,10 @@ export function HierarchicalDesigner({ studyId, initialElementId }: Props) {
         ))}
         {currentElement && (
           <span style={{
-            marginLeft: '0.5rem', fontSize: '0.6rem', padding: '0.1rem 0.4rem',
-            background: `${TYPE_COLORS[currentElement.element_type] || '#6b7280'}20`,
-            border: `1px solid ${TYPE_COLORS[currentElement.element_type] || '#6b7280'}40`,
-            borderRadius: '3px', color: TYPE_COLORS[currentElement.element_type] || '#6b7280',
+            marginLeft: '0.5rem', fontSize: fs.label, padding: '0.1rem 0.4rem',
+            background: `color-mix(in srgb, ${TYPE_COLORS[currentElement.element_type] || 'var(--text-3)'} 13%, transparent)`,
+            border: `1px solid color-mix(in srgb, ${TYPE_COLORS[currentElement.element_type] || 'var(--text-3)'} 25%, transparent)`,
+            borderRadius: '3px', color: TYPE_COLORS[currentElement.element_type] || 'var(--text-3)',
             textTransform: 'uppercase', letterSpacing: '0.04em',
           }}>
             {currentElement.element_type}
@@ -545,50 +547,50 @@ export function HierarchicalDesigner({ studyId, initialElementId }: Props) {
       {/* ─── Toolbar ─── */}
       <div style={{
         display: 'flex', gap: '0.3rem', padding: '0.35rem 1rem',
-        borderBottom: '1px solid #374151', alignItems: 'center',
+        borderBottom: '1px solid var(--line)', alignItems: 'center',
       }}>
         <button onClick={handleAddBlock} style={{
-          padding: '0.22rem 0.6rem', fontSize: '0.7rem', borderRadius: '4px',
+          padding: '0.22rem 0.6rem', fontSize: fs.label, borderRadius: '4px',
           border: '1px solid rgba(59,130,246,0.4)', background: 'rgba(59,130,246,0.1)',
-          color: '#93c5fd', cursor: 'pointer',
+          color: 'var(--interactive)', cursor: 'pointer',
         }}>
           + Add Block
         </button>
         <button onClick={handleDeleteSelected} style={{
-          padding: '0.22rem 0.6rem', fontSize: '0.7rem', borderRadius: '4px',
+          padding: '0.22rem 0.6rem', fontSize: fs.label, borderRadius: '4px',
           border: '1px solid rgba(239,68,68,0.4)', background: 'rgba(239,68,68,0.1)',
-          color: '#ef4444', cursor: 'pointer',
+          color: 'var(--status-alarm)', cursor: 'pointer',
         }}>
           Delete Selected
         </button>
         {isSubsystemLevel && (
           <button onClick={() => setShowEquipment(true)} style={{
-            padding: '0.22rem 0.6rem', fontSize: '0.7rem', borderRadius: '4px',
+            padding: '0.22rem 0.6rem', fontSize: fs.label, borderRadius: '4px',
             border: '1px solid rgba(245,158,11,0.4)', background: 'rgba(245,158,11,0.1)',
-            color: '#f59e0b', cursor: 'pointer',
+            color: 'var(--status-caution)', cursor: 'pointer',
           }}>
             + Add Equipment
           </button>
         )}
         <button onClick={handleToggleScope} style={{
-          padding: '0.22rem 0.6rem', fontSize: '0.7rem', borderRadius: '4px',
+          padding: '0.22rem 0.6rem', fontSize: fs.label, borderRadius: '4px',
           border: '1px solid rgba(107,114,128,0.4)', background: 'rgba(107,114,128,0.1)',
-          color: '#9ca3af', cursor: 'pointer',
+          color: 'var(--text-2)', cursor: 'pointer',
         }} title="Toggle selected elements in/out of scope (external)">
           Toggle Scope
         </button>
         <button onClick={handleFreezeLevel} style={{
-          padding: '0.22rem 0.6rem', fontSize: '0.7rem', borderRadius: '4px',
+          padding: '0.22rem 0.6rem', fontSize: fs.label, borderRadius: '4px',
           border: '1px solid rgba(59,130,246,0.4)', background: 'rgba(59,130,246,0.1)',
-          color: '#93c5fd', cursor: 'pointer',
+          color: 'var(--interactive)', cursor: 'pointer',
         }} title="Freeze all elements at this level (prevent delete/rename)">
           Freeze Level
         </button>
         <span style={{ flex: 1 }} />
-        <span style={{ fontSize: '0.65rem', color: '#6b7280' }}>
+        <span style={{ fontSize: fs.label, color: 'var(--text-3)' }}>
           {childElements.length} block{childElements.length !== 1 ? 's' : ''}
           {nodes.filter(n => n.selected).length > 0 && (
-            <span style={{ color: '#93c5fd', marginLeft: '0.4rem' }}>
+            <span style={{ color: 'var(--interactive)', marginLeft: '0.4rem' }}>
               ({nodes.filter(n => n.selected).length} selected)
             </span>
           )}
@@ -602,19 +604,19 @@ export function HierarchicalDesigner({ studyId, initialElementId }: Props) {
           {childElements.length === 0 ? (
             <div style={{
               height: '100%', display: 'flex', flexDirection: 'column',
-              alignItems: 'center', justifyContent: 'center', color: '#6b7280',
+              alignItems: 'center', justifyContent: 'center', color: 'var(--text-3)',
             }}>
-              <div style={{ fontSize: '1.2rem', marginBottom: '0.5rem' }}>
+              <div style={{ fontSize: fs.title, marginBottom: '0.5rem' }}>
                 {currentId ? 'No children defined' : 'No elements yet'}
               </div>
-              <div style={{ fontSize: '0.75rem', marginBottom: '1rem' }}>
+              <div style={{ fontSize: fs.label, marginBottom: '1rem' }}>
                 Click "+ Add Block" to create {currentId ? 'child elements' : 'mission segments'}
               </div>
               {isSubsystemLevel && (
                 <button onClick={() => setShowEquipment(true)} style={{
-                  padding: '0.4rem 1rem', fontSize: '0.8rem', borderRadius: '6px',
+                  padding: '0.4rem 1rem', fontSize: fs.body, borderRadius: '6px',
                   border: '1px solid rgba(245,158,11,0.4)', background: 'rgba(245,158,11,0.1)',
-                  color: '#f59e0b', cursor: 'pointer',
+                  color: 'var(--status-caution)', cursor: 'pointer',
                 }}>
                   Browse Equipment Catalogue
                 </button>
@@ -631,31 +633,31 @@ export function HierarchicalDesigner({ studyId, initialElementId }: Props) {
               onNodeDoubleClick={onNodeDoubleClick}
               nodeTypes={nodeTypes}
               fitView
-              style={{ background: '#0a0e1a' }}
-              defaultEdgeOptions={{ style: { strokeWidth: 2, stroke: '#6b7280' }, animated: true }}
+              style={{ background: 'var(--surface-0)' }}
+              defaultEdgeOptions={{ style: { strokeWidth: 2, stroke: 'var(--text-3)' }, animated: true }}
             >
-              <Controls style={{ button: { background: '#1f2937', color: '#d1d5db', border: '1px solid #374151' } } as any} />
-              <Background color="#374151" gap={20} />
-              <MiniMap nodeStrokeWidth={3} style={{ background: '#111827', border: '1px solid #374151' }} />
+              <Controls style={{ button: { background: 'var(--surface-2)', color: 'var(--text)', border: '1px solid var(--line)' } } as any} />
+              <Background color="var(--line)" gap={20} />
+              <MiniMap nodeStrokeWidth={3} style={{ background: 'var(--surface-1)', border: '1px solid var(--line)' }} />
             </ReactFlow>
           )}
         </div>
 
         {/* ─── Budget + Requirements Sidebar ─── */}
         <div style={{
-          width: '210px', borderLeft: '1px solid #374151',
+          width: '210px', borderLeft: '1px solid var(--line)',
           overflowY: 'auto', flexShrink: 0, padding: '0.5rem',
           background: 'rgba(0,0,0,0.2)',
         }}>
           {/* Current element header */}
           <div style={{
-            fontSize: '0.82rem', fontWeight: 600, color: '#e5e7eb',
+            fontSize: fs.body, fontWeight: 600, color: 'var(--text)',
             marginBottom: '0.15rem',
           }}>
             {currentElement?.name || 'Mission'}
           </div>
           <div style={{
-            fontSize: '0.6rem', textTransform: 'uppercase', color: '#6b7280',
+            fontSize: fs.label, textTransform: 'uppercase', color: 'var(--text-3)',
             letterSpacing: '0.05em', marginBottom: '0.6rem',
           }}>
             {currentElement?.element_type || 'Root'} Level Budget
@@ -672,46 +674,46 @@ export function HierarchicalDesigner({ studyId, initialElementId }: Props) {
               : margin < 10 ? 'red'
               : margin < 25 ? 'amber'
               : 'green'
-            const statusColor = status === 'green' ? '#10b981'
-              : status === 'amber' ? '#f59e0b'
-              : status === 'red' || status === 'exceeded' ? '#ef4444'
-              : '#6b7280'
+            const statusColor = status === 'green' ? 'var(--status-ok)'
+              : status === 'amber' ? 'var(--status-caution)'
+              : status === 'red' || status === 'exceeded' ? 'var(--status-alarm)'
+              : 'var(--text-3)'
 
             return (
               <div key={row.type} style={{
                 marginBottom: '0.5rem', padding: '0.4rem',
-                background: 'rgba(255,255,255,0.03)', borderRadius: '4px',
-                border: `1px solid ${statusColor}30`,
+                background: 'color-mix(in srgb, var(--text) 3%, transparent)', borderRadius: '4px',
+                border: `1px solid color-mix(in srgb, ${statusColor} 19%, transparent)`,
               }}>
                 <div style={{
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                   marginBottom: '0.2rem',
                 }}>
-                  <span style={{ fontSize: '0.7rem', fontWeight: 600, color: '#d1d5db' }}>
+                  <span style={{ fontSize: fs.label, fontWeight: 600, color: 'var(--text)' }}>
                     {row.label}
                   </span>
                   {margin !== null && (
                     <span style={{
-                      fontSize: '0.58rem', padding: '0.08rem 0.3rem', borderRadius: '3px',
-                      background: `${statusColor}20`, color: statusColor, fontWeight: 600,
+                      fontSize: fs.label, padding: '0.08rem 0.3rem', borderRadius: '3px',
+                      background: `color-mix(in srgb, ${statusColor} 13%, transparent)`, color: statusColor, fontWeight: 600,
                     }}>
                       {margin.toFixed(0)}%
                     </span>
                   )}
                 </div>
                 <div style={{
-                  display: 'flex', justifyContent: 'space-between', fontSize: '0.68rem',
+                  display: 'flex', justifyContent: 'space-between', fontSize: fs.label,
                 }}>
-                  <span style={{ color: '#9ca3af' }}>Used:</span>
-                  <span style={{ fontFamily: 'monospace', color: '#d1d5db' }}>
+                  <span style={{ color: 'var(--text-2)' }}>Used:</span>
+                  <span style={{ fontFamily: 'monospace', color: 'var(--text)' }}>
                     {row.used.toFixed(row.type === 'cost' ? 0 : 2)} {row.unit}
                   </span>
                 </div>
                 <div style={{
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                  fontSize: '0.68rem', marginTop: '0.15rem',
+                  fontSize: fs.label, marginTop: '0.15rem',
                 }}>
-                  <span style={{ color: '#9ca3af' }}>Alloc:</span>
+                  <span style={{ color: 'var(--text-2)' }}>Alloc:</span>
                   <input
                     type="number"
                     step={row.type === 'cost' ? 10 : 0.1}
@@ -719,8 +721,8 @@ export function HierarchicalDesigner({ studyId, initialElementId }: Props) {
                     placeholder="--"
                     onChange={e => setAllocation(row.type, Number(e.target.value))}
                     style={{
-                      width: '70px', background: 'transparent', border: '1px solid #374151',
-                      borderRadius: '3px', color: '#d1d5db', fontSize: '0.65rem',
+                      width: '70px', background: 'transparent', border: '1px solid var(--line)',
+                      borderRadius: '3px', color: 'var(--text)', fontSize: fs.label,
                       textAlign: 'right', padding: '0.1rem 0.25rem', fontFamily: 'monospace',
                     }}
                   />
@@ -728,7 +730,7 @@ export function HierarchicalDesigner({ studyId, initialElementId }: Props) {
                 {/* Progress bar */}
                 {allocation && allocation > 0 && (
                   <div style={{
-                    height: '3px', background: '#1f2937', borderRadius: '2px',
+                    height: '3px', background: 'var(--surface-2)', borderRadius: '2px',
                     marginTop: '0.25rem', overflow: 'hidden',
                   }}>
                     <div style={{
@@ -744,37 +746,37 @@ export function HierarchicalDesigner({ studyId, initialElementId }: Props) {
 
           {/* ─── Requirements section ─── */}
           <div style={{
-            borderTop: '1px solid #374151', paddingTop: '0.5rem', marginTop: '0.3rem',
+            borderTop: '1px solid var(--line)', paddingTop: '0.5rem', marginTop: '0.3rem',
           }}>
             <div style={{
-              fontSize: '0.68rem', fontWeight: 600, color: '#9ca3af',
+              fontSize: fs.label, fontWeight: 600, color: 'var(--text-2)',
               textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '0.3rem',
             }}>
               Requirements ({levelRequirements.length})
             </div>
             {levelRequirements.length === 0 ? (
-              <div style={{ fontSize: '0.65rem', color: '#4b5563' }}>
+              <div style={{ fontSize: fs.label, color: 'var(--line-strong)' }}>
                 No requirements at this level
               </div>
             ) : (
               <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
                 {levelRequirements.slice(0, 20).map(req => {
-                  const dotColor = req.status === 'verified' ? '#10b981'
-                    : req.status === 'compliant' ? '#3b82f6'
-                    : req.status === 'non-compliant' ? '#ef4444'
-                    : req.status === 'partial' ? '#f59e0b'
-                    : '#6b7280'
+                  const dotColor = req.status === 'verified' ? 'var(--status-ok)'
+                    : req.status === 'compliant' ? 'var(--interactive)'
+                    : req.status === 'non-compliant' ? 'var(--status-alarm)'
+                    : req.status === 'partial' ? 'var(--status-caution)'
+                    : 'var(--text-3)'
                   return (
                     <div key={req.id} style={{
                       display: 'flex', gap: '0.3rem', alignItems: 'flex-start',
-                      marginBottom: '0.25rem', fontSize: '0.62rem',
+                      marginBottom: '0.25rem', fontSize: fs.label,
                     }}>
                       <span style={{
                         width: 6, height: 6, borderRadius: '50%', background: dotColor,
                         flexShrink: 0, marginTop: '0.2rem',
                       }} />
                       <span style={{
-                        color: '#9ca3af', lineHeight: 1.3,
+                        color: 'var(--text-2)', lineHeight: 1.3,
                         overflow: 'hidden', textOverflow: 'ellipsis',
                         display: '-webkit-box', WebkitLineClamp: 2,
                         WebkitBoxOrient: 'vertical',
@@ -785,7 +787,7 @@ export function HierarchicalDesigner({ studyId, initialElementId }: Props) {
                   )
                 })}
                 {levelRequirements.length > 20 && (
-                  <div style={{ fontSize: '0.6rem', color: '#4b5563', marginTop: '0.2rem' }}>
+                  <div style={{ fontSize: fs.label, color: 'var(--line-strong)', marginTop: '0.2rem' }}>
                     +{levelRequirements.length - 20} more
                   </div>
                 )}

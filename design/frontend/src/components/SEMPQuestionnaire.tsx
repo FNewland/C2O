@@ -6,6 +6,7 @@
  * Organisation, Sustainability.
  */
 import React, { useState, useEffect, useCallback } from 'react'
+import { fs } from '../theme/tokens'
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -160,10 +161,10 @@ export function SEMPQuestionnaire({
 
   /* ---- shared inline style tokens ---- */
   const labelStyle: React.CSSProperties = {
-    fontSize: '0.75rem', color: '#9ca3af', marginBottom: '0.25rem',
+    fontSize: fs.label, color: 'var(--text-2)', marginBottom: '0.25rem',
   }
   const sectionTitle: React.CSSProperties = {
-    fontSize: '0.85rem', fontWeight: 600, color: '#d1d5db', marginBottom: '0.75rem',
+    fontSize: fs.body, fontWeight: 600, color: 'var(--text)', marginBottom: '0.75rem',
   }
 
   /* ================================================================ */
@@ -173,7 +174,7 @@ export function SEMPQuestionnaire({
   const renderPage1 = () => (
     <div>
       <div style={sectionTitle}>Subsystem Model Philosophy</div>
-      <p style={{ fontSize: '0.72rem', color: '#6b7280', marginBottom: '0.75rem' }}>
+      <p style={{ fontSize: fs.label, color: 'var(--text-3)', marginBottom: '0.75rem' }}>
         Select the build-philosophy for each domain. Defaults are derived from TRL.
       </p>
       <div style={{
@@ -191,11 +192,11 @@ export function SEMPQuestionnaire({
         {DOMAINS.map(domain => {
           const trl = subsystemTRLs[domain] ?? 5
           return [
-            <span key={`${domain}-name`} style={{ fontSize: '0.78rem', color: '#d1d5db' }}>
+            <span key={`${domain}-name`} style={{ fontSize: fs.label, color: 'var(--text)' }}>
               {DOMAIN_LABELS[domain]}
             </span>,
             <span key={`${domain}-trl`} style={{
-              fontSize: '0.78rem', color: '#3b82f6', textAlign: 'center', fontWeight: 600,
+              fontSize: fs.label, color: 'var(--interactive)', textAlign: 'center', fontWeight: 600,
             }}>
               {trl}
             </span>,
@@ -208,7 +209,7 @@ export function SEMPQuestionnaire({
                   name={`model-${domain}`}
                   checked={modelPhilosophy[domain] === opt}
                   onChange={() => setModelPhilosophy(prev => ({ ...prev, [domain]: opt }))}
-                  style={{ accentColor: '#3b82f6' }}
+                  style={{ accentColor: 'var(--interactive)' }}
                 />
               </label>
             )),
@@ -224,9 +225,9 @@ export function SEMPQuestionnaire({
         <div style={sectionTitle}>Risk Matrix Size</div>
         <div style={{ display: 'flex', gap: '1.5rem' }}>
           {['3x3', '5x5'].map(sz => (
-            <label key={sz} style={{ fontSize: '0.78rem', color: '#d1d5db', display: 'flex', alignItems: 'center', gap: '0.35rem', cursor: 'pointer' }}>
+            <label key={sz} style={{ fontSize: fs.label, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: '0.35rem', cursor: 'pointer' }}>
               <input type="radio" name="risk-size" checked={riskMatrixSize === sz}
-                onChange={() => setRiskMatrixSize(sz)} style={{ accentColor: '#3b82f6' }} />
+                onChange={() => setRiskMatrixSize(sz)} style={{ accentColor: 'var(--interactive)' }} />
               {sz}
             </label>
           ))}
@@ -237,9 +238,9 @@ export function SEMPQuestionnaire({
         <div style={sectionTitle}>Risk Tolerance</div>
         <div style={{ display: 'flex', gap: '1.5rem' }}>
           {['Low', 'Medium', 'High'].map(t => (
-            <label key={t} style={{ fontSize: '0.78rem', color: '#d1d5db', display: 'flex', alignItems: 'center', gap: '0.35rem', cursor: 'pointer' }}>
+            <label key={t} style={{ fontSize: fs.label, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: '0.35rem', cursor: 'pointer' }}>
               <input type="radio" name="risk-tol" checked={riskTolerance === t}
-                onChange={() => setRiskTolerance(t)} style={{ accentColor: '#3b82f6' }} />
+                onChange={() => setRiskTolerance(t)} style={{ accentColor: 'var(--interactive)' }} />
               {t}
             </label>
           ))}
@@ -250,7 +251,7 @@ export function SEMPQuestionnaire({
         <div style={sectionTitle}>CCB Membership</div>
         <input className="input" placeholder="e.g. PM, SE, AIT lead, QA"
           value={ccbMembership} onChange={e => setCcbMembership(e.target.value)}
-          style={{ width: '100%', fontSize: '0.78rem' }} />
+          style={{ width: '100%', fontSize: fs.label }} />
       </div>
 
       <div>
@@ -258,11 +259,11 @@ export function SEMPQuestionnaire({
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           {BASELINE_GATES.map(g => (
             <div key={g.key} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <span style={{ fontSize: '0.75rem', color: '#9ca3af', width: '180px' }}>{g.label}</span>
+              <span style={{ fontSize: fs.label, color: 'var(--text-2)', width: '180px' }}>{g.label}</span>
               <input className="input" type="date"
                 value={baselineDates[g.key] || ''}
                 onChange={e => setBaselineDates(prev => ({ ...prev, [g.key]: e.target.value }))}
-                style={{ flex: 1, fontSize: '0.75rem' }} />
+                style={{ flex: 1, fontSize: fs.label }} />
             </div>
           ))}
         </div>
@@ -277,11 +278,11 @@ export function SEMPQuestionnaire({
         <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr', gap: '0.5rem 0.75rem', alignItems: 'center' }}>
           {REVIEW_GATES.map(gate => (
             <React.Fragment key={gate}>
-              <span style={{ fontSize: '0.78rem', color: '#d1d5db', fontWeight: 600 }}>{gate}</span>
+              <span style={{ fontSize: fs.label, color: 'var(--text)', fontWeight: 600 }}>{gate}</span>
               <input className="input" type="date"
                 value={reviewDates[gate] || ''}
                 onChange={e => setReviewDates(prev => ({ ...prev, [gate]: e.target.value }))}
-                style={{ fontSize: '0.75rem' }} />
+                style={{ fontSize: fs.label }} />
             </React.Fragment>
           ))}
         </div>
@@ -293,8 +294,8 @@ export function SEMPQuestionnaire({
           <input className="input" type="number" min={0.5} step={0.5}
             value={missionDuration}
             onChange={e => setMissionDuration(Number(e.target.value))}
-            style={{ width: '100px', fontSize: '0.78rem' }} />
-          <span style={{ fontSize: '0.75rem', color: '#9ca3af' }}>years</span>
+            style={{ width: '100px', fontSize: fs.label }} />
+          <span style={{ fontSize: fs.label, color: 'var(--text-2)' }}>years</span>
         </div>
       </div>
     </div>
@@ -306,21 +307,21 @@ export function SEMPQuestionnaire({
         <div style={sectionTitle}>Team Size</div>
         <input className="input" type="number" min={1}
           value={teamSize} onChange={e => setTeamSize(Number(e.target.value))}
-          style={{ width: '100px', fontSize: '0.78rem' }} />
+          style={{ width: '100px', fontSize: fs.label }} />
       </div>
 
       <div>
         <div style={sectionTitle}>SE Responsible</div>
         <input className="input" placeholder="Name of lead systems engineer"
           value={seResponsible} onChange={e => setSeResponsible(e.target.value)}
-          style={{ width: '100%', fontSize: '0.78rem' }} />
+          style={{ width: '100%', fontSize: fs.label }} />
       </div>
 
       <div>
         <div style={sectionTitle}>Key Subcontractors</div>
         <textarea className="input" rows={4} placeholder="List key subcontractors, one per line"
           value={subcontractors} onChange={e => setSubcontractors(e.target.value)}
-          style={{ width: '100%', fontSize: '0.78rem', resize: 'vertical' }} />
+          style={{ width: '100%', fontSize: fs.label, resize: 'vertical' }} />
       </div>
     </div>
   )
@@ -331,9 +332,9 @@ export function SEMPQuestionnaire({
         <div style={sectionTitle}>Disposal Approach</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
           {['Controlled re-entry', 'Natural decay', 'Graveyard orbit'].map(opt => (
-            <label key={opt} style={{ fontSize: '0.78rem', color: '#d1d5db', display: 'flex', alignItems: 'center', gap: '0.35rem', cursor: 'pointer' }}>
+            <label key={opt} style={{ fontSize: fs.label, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: '0.35rem', cursor: 'pointer' }}>
               <input type="radio" name="disposal" checked={disposalApproach === opt}
-                onChange={() => setDisposalApproach(opt)} style={{ accentColor: '#3b82f6' }} />
+                onChange={() => setDisposalApproach(opt)} style={{ accentColor: 'var(--interactive)' }} />
               {opt}
             </label>
           ))}
@@ -344,18 +345,18 @@ export function SEMPQuestionnaire({
         <div style={sectionTitle}>Passivation Approach</div>
         <input className="input" placeholder="e.g. Battery discharge, propellant venting"
           value={passivationApproach} onChange={e => setPassivationApproach(e.target.value)}
-          style={{ width: '100%', fontSize: '0.78rem' }} />
+          style={{ width: '100%', fontSize: fs.label }} />
       </div>
 
       <div>
         <div style={sectionTitle}>25-Year Compliance</div>
-        <label style={{ fontSize: '0.78rem', color: '#d1d5db', display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+        <label style={{ fontSize: fs.label, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
           <input type="checkbox" checked={compliance25}
             onChange={e => setCompliance25(e.target.checked)}
-            style={{ accentColor: '#3b82f6' }} />
+            style={{ accentColor: 'var(--interactive)' }} />
           Orbit naturally decays within 25 years
         </label>
-        <p style={{ fontSize: '0.72rem', color: '#6b7280', marginTop: '0.25rem' }}>
+        <p style={{ fontSize: fs.label, color: 'var(--text-3)', marginTop: '0.25rem' }}>
           Auto-estimate based on {orbitAltitude} km altitude: {estimateCompliance(orbitAltitude) ? 'Compliant' : 'Non-compliant'}.
           Override manually if needed.
         </p>
@@ -375,41 +376,41 @@ export function SEMPQuestionnaire({
       zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center',
     }}>
       <div style={{
-        background: '#111827', border: '1px solid #374151',
+        background: 'var(--surface-1)', border: '1px solid var(--line)',
         borderRadius: '8px', width: '92%', maxWidth: '720px', maxHeight: '85vh',
         display: 'flex', flexDirection: 'column', overflow: 'hidden',
       }}>
         {/* Header */}
         <div style={{
-          padding: '0.75rem 1rem', borderBottom: '1px solid #374151',
+          padding: '0.75rem 1rem', borderBottom: '1px solid var(--line)',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         }}>
-          <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#d1d5db' }}>
+          <span style={{ fontSize: fs.value, fontWeight: 700, color: 'var(--text)' }}>
             SEMP Questionnaire
           </span>
           <button className="btn btn-sm" onClick={onClose}
-            style={{ fontSize: '0.72rem', background: 'transparent', color: '#9ca3af', border: 'none', cursor: 'pointer' }}>
+            style={{ fontSize: fs.label, background: 'transparent', color: 'var(--text-2)', border: 'none', cursor: 'pointer' }}>
             Close
           </button>
         </div>
 
         {/* Progress bar */}
-        <div style={{ padding: '0.5rem 1rem', borderBottom: '1px solid #1f2937' }}>
+        <div style={{ padding: '0.5rem 1rem', borderBottom: '1px solid var(--surface-2)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.35rem' }}>
-            <span style={{ fontSize: '0.72rem', color: '#9ca3af' }}>
+            <span style={{ fontSize: fs.label, color: 'var(--text-2)' }}>
               Step {page + 1} of {PAGE_TITLES.length}
             </span>
-            <span style={{ fontSize: '0.72rem', color: '#6b7280' }}>&mdash;</span>
-            <span style={{ fontSize: '0.75rem', color: '#3b82f6', fontWeight: 600 }}>
+            <span style={{ fontSize: fs.label, color: 'var(--text-3)' }}>&mdash;</span>
+            <span style={{ fontSize: fs.label, color: 'var(--interactive)', fontWeight: 600 }}>
               {PAGE_TITLES[page]}
             </span>
           </div>
           <div style={{
-            height: '4px', background: '#1f2937', borderRadius: '2px', overflow: 'hidden',
+            height: '4px', background: 'var(--surface-2)', borderRadius: '2px', overflow: 'hidden',
           }}>
             <div style={{
               height: '100%', width: `${((page + 1) / PAGE_TITLES.length) * 100}%`,
-              background: '#3b82f6', borderRadius: '2px',
+              background: 'var(--interactive)', borderRadius: '2px',
               transition: 'width 0.3s ease',
             }} />
           </div>
@@ -422,13 +423,13 @@ export function SEMPQuestionnaire({
 
         {/* Footer — navigation */}
         <div style={{
-          padding: '0.75rem 1rem', borderTop: '1px solid #374151',
+          padding: '0.75rem 1rem', borderTop: '1px solid var(--line)',
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         }}>
           <button className="btn btn-sm" disabled={page === 0}
             onClick={() => setPage(p => p - 1)}
             style={{
-              fontSize: '0.75rem',
+              fontSize: fs.label,
               opacity: page === 0 ? 0.35 : 1,
               cursor: page === 0 ? 'default' : 'pointer',
             }}>
@@ -437,12 +438,12 @@ export function SEMPQuestionnaire({
 
           {page < PAGE_TITLES.length - 1 ? (
             <button className="btn btn-sm" onClick={() => setPage(p => p + 1)}
-              style={{ fontSize: '0.75rem', background: '#3b82f6', color: '#fff' }}>
+              style={{ fontSize: fs.label, background: 'var(--interactive)', color: 'var(--on-fill)' }}>
               Next
             </button>
           ) : (
             <button className="btn btn-sm" onClick={handleSubmit}
-              style={{ fontSize: '0.75rem', background: '#10b981', color: '#fff', fontWeight: 600 }}>
+              style={{ fontSize: fs.label, background: 'var(--status-ok)', color: 'var(--on-fill)', fontWeight: 600 }}>
               Generate SEMP
             </button>
           )}

@@ -53,12 +53,12 @@ rate reduction and transponder switchover if the primary unit is degraded.
 
 ### Step 1: Characterize BER Anomaly
 **TC:** `HK_REQUEST(sid=6)` (Service 3, Subtype 27) — Request TTC housekeeping
-**Verify:** `ttc.ber` (0x050C) — record current value (expected >= -5)
-**Verify:** `ttc.eb_n0` (0x0519) — record Eb/N0 value
-**Verify:** `ttc.link_margin` (0x0503) — record link margin
-**Verify:** `ttc.rssi` (0x0502) — record RSSI
+**Verify:** radio page (ground): `ttc.ber` (0x050C) — record current value (expected >= -5)
+**Verify:** radio page (ground): `ttc.eb_n0` (0x0519) — record Eb/N0 value
+**Verify:** TT&C page (ground): `ttc.link_margin` (0x0503) — record link margin
+**Verify:** TT&C page (ground): `ttc.rssi` (0x0502) — record RSSI
 **Verify:** `ttc.tm_data_rate` (0x0506) — record current data rate
-**Verify:** `ttc.contact_elevation` (0x050A) — record elevation angle
+**Verify:** TT&C page (ground): `ttc.contact_elevation` (0x050A) — record elevation angle
 **Verify:** `ttc.carrier_lock` (0x0510), `ttc.bit_sync` (0x0511), `ttc.frame_sync` (0x0512)
 **Note:** If elevation is low (< 10 deg), the BER degradation may be expected due to
 atmospheric attenuation and low gain. Wait for higher elevation before declaring anomaly.
@@ -93,7 +93,7 @@ atmospheric attenuation and low gain. Wait for higher elevation before declaring
 **TC:** `TTC_SET_TX_POWER(level=0)` (Service 8, Subtype 1, func_id 68) — set to low power (1 W)
 **LABEL:** `STEP-3C`
 **Verify:** `ttc.pa_temp` (0x050F) stabilizing
-**Verify:** `ttc.ber` (0x050C) — check if BER improves with cooler PA
+**Verify:** radio page (ground): `ttc.ber` (0x050C) — check if BER improves with cooler PA
 **Note:** If PA overheating persists, follow EMG-006 for thermal investigation
 of the transponder zone.
 **GO/NO-GO:** If BER improved, continue monitoring. If not, proceed to Step 4.
@@ -122,8 +122,8 @@ it: SAFE (1 kbps, ex-BEACON) is the bootloader lifeline and is not commandable h
 **LABEL:** `STEP-4W`
 **Note:** Wait 30 s for BER to stabilize, then request TTC housekeeping:
 **TC:** `HK_REQUEST(sid=6)` (Service 3, Subtype 27)
-**Verify:** `ttc.ber` (0x050C) < -5 (BER improved at the lower rung)
-**Verify:** `ttc.eb_n0` (0x0519) > 10 dB at the lower rung
+**Verify:** radio page (ground): `ttc.ber` (0x050C) < -5 (BER improved at the lower rung)
+**Verify:** radio page (ground): `ttc.eb_n0` (0x0519) > 10 dB at the lower rung
 **Action:** If BER improved:
 - Root cause is likely insufficient link margin at HIGH for this pass geometry.
 - Continue at LOW for this contact — LOW is the routine operations rate, so nothing is
@@ -142,7 +142,7 @@ Proceed to Step 5 (transponder switchover).
 **Verify:** `ttc.carrier_lock` (0x0510) = 1 (re-acquired on redundant unit)
 **Verify:** `ttc.bit_sync` (0x0511) = 1
 **Verify:** `ttc.frame_sync` (0x0512) = 1
-**Verify:** `ttc.ber` (0x050C) — check if BER improved
+**Verify:** radio page (ground): `ttc.ber` (0x050C) — check if BER improved
 **Verify:** `ttc.xpdr_temp` (0x0507) — record redundant transponder temperature
 **Action:** If BER improved on redundant transponder: The primary transponder is degraded.
 Log as hardware anomaly. Continue operations on redundant unit.

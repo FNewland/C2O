@@ -54,8 +54,8 @@
   },
   {
    "id": "emg-001-emergency-safe-mode/procedure-steps/step-5-establish-stable-communication",
-   "en_hash": "52ffc69b16904add",
-   "fr_hash": "8dfd1c12fd27396a"
+   "en_hash": "10de0af873ddec6d",
+   "fr_hash": "e199fb2be9a72bd0"
   },
   {
    "id": "emg-001-emergency-safe-mode/procedure-steps/step-6-full-housekeeping-assessment",
@@ -118,5 +118,5 @@
    "fr_hash": "3fcce16901d10e1e"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "8067e5b"
 }

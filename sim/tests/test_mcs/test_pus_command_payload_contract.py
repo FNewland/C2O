@@ -28,20 +28,44 @@ MCS_JS = REPO / "packages/smo-mcs/src/smo_mcs/static/modern/mcs.js"
 SERVER = REPO / "packages/smo-mcs/src/smo_mcs/server.py"
 
 
+def _object_at(js: str, start: int) -> str:
+    depth, j = 0, start
+    while j < len(js):
+        if js[j] == "{":
+            depth += 1
+        elif js[j] == "}":
+            depth -= 1
+            if depth == 0:
+                break
+        j += 1
+    return js[start:j + 1]
+
+
 def _pus_payloads(js: str):
-    """Yield (line_no, object-literal) for each postJSON to /api/pus-command."""
-    for m in re.finditer(r'postJSON\("/api/pus-command",\s*\{', js):
-        start = m.end() - 1
-        depth, j = 0, start
-        while j < len(js):
-            if js[j] == "{":
-                depth += 1
-            elif js[j] == "}":
-                depth -= 1
-                if depth == 0:
-                    break
-            j += 1
-        yield js[:start].count("\n") + 1, js[start:j + 1]
+    """Yield (line_no, object-literal) for each PUS send.
+
+    Since ed2d82c every send goes through ONE wrapper, ``sendPus(body)``,
+    which POSTs the body to /api/pus-command (R4 G7). So the call sites are
+    ``sendPus({...})``; a direct ``postJSON("/api/pus-command", {...})``
+    literal is still scanned in case one is ever reintroduced.
+    """
+    for pat in (r'sendPus\(\s*\{', r'postJSON\("/api/pus-command",\s*\{'):
+        for m in re.finditer(pat, js):
+            start = m.end() - 1
+            yield js[:start].count("\n") + 1, _object_at(js, start)
+
+
+def test_the_send_wrapper_forwards_the_body_unchanged():
+    """sendPus must POST the caller's body (with data_hex) to the route the
+    server reads, not rebuild it under another key."""
+    js = MCS_JS.read_text(encoding="utf-8")
+    m = re.search(r"async function sendPus\((\w+)\)\s*\{(.*?)\n\}", js, re.S)
+    assert m, "the sendPus wrapper is gone — rescan the call sites"
+    arg, body = m.group(1), m.group(2)
+    assert re.search(r"Object\.assign\(\{[^}]*\},\s*" + arg + r"\)", body), (
+        "sendPus no longer copies the caller's body verbatim")
+    assert 'postJSON("/api/pus-command"' in body
+    assert "data_hex" in body, "the wrapper's history record must read data_hex"
 
 
 def test_server_still_reads_data_hex():

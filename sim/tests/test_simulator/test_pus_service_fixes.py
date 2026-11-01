@@ -27,6 +27,7 @@ import pytest
 
 from smo_common.protocol.ecss_packet import build_tc_packet, decommutate_packet
 from smo_simulator.engine import SimulationEngine, BOOTLOADER_BEACON_SID
+from tests.pus_reports import report_body
 from smo_simulator.memory_map import (
     MemoryImage, MemoryMap, ERR_ILLEGAL_ADDRESS, ERR_WRITE_PROTECTED,
 )
@@ -84,15 +85,18 @@ def _fail_codes(responses):
 class TestS12Definitions:
 
     def test_every_config_definition_is_registered(self, engine):
-        """All 38 shipped rules survive registration.
+        """Every shipped rule survives registration (41 since 2026-08-20).
 
         register_s12_definitions() used to re-key by param_id, so each
         parameter carrying both a WARNING and an ALARM tier kept only the
         ALARM one — 4 rules lost, and no early-warning tier anywhere.
+
+        History: 46 until d99c9e2 (2026-08-20) removed the five monitors on
+        ground-only parameters (rssi, link_margin, eb_n0, ber, snr): 41.
         """
         loaded = load_s12_definitions(CONFIG_DIR)
         registered = engine._dispatcher._s12_definitions
-        assert len(registered) == len(loaded) == 46, (
+        assert len(registered) == len(loaded) == 41, (
             f"{len(loaded)} rules loaded but {len(registered)} registered")
 
     def test_both_tiers_survive_on_a_shared_parameter(self, engine):
@@ -247,10 +251,12 @@ class TestS12DefinitionReport:
     def test_report_carries_mon_id_param_id_and_enable_state(self, engine):
         d = engine._dispatcher
         responses = d.dispatch(12, 12, b'')
-        assert len(responses) == 1
-        data = decommutate_packet(responses[0]).data_field
+        # "Report all" is segmented on the CCSDS grouping flags (2026-08-21):
+        # 41 monitors come down as several packets. Reassemble them.
+        assert len(responses) >= 1
+        data = report_body(responses, 12, 13)
         count = struct.unpack('>H', data[:2])[0]
-        assert count == len(d._s12_definitions) == 46
+        assert count == len(d._s12_definitions)
         # 14-byte records: mon_id, param_id, check_type, enabled, low, high
         assert len(data) == 2 + 14 * count
         mon_id, param_id, check_type, enabled, low, high = \

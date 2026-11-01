@@ -26,27 +26,17 @@ def create_instructor_app(engine, ui_mode: str | None = None) -> web.Application
     whichever page is served, never consumed here.
     """
     # FIELD DEFECT 2026-08-20 (owner: "you wiped out almost all the quick
-    # commands"). Nothing was wiped -- the browser was running a CACHED
-    # copy of the page's own JS against a freshly-served index.html. The
-    # page carries `Cache-Control: no-cache`, but the module it loads is
-    # referenced with a HARD-CODED `?v=1` and no cache directive, so
-    # Chrome cached it heuristically and never revalidated. Every fix
-    # shipped to these files stayed invisible until a manual hard-reload,
-    # and a half-updated pair renders as MISSING UI.
-    #
-    # `no-cache` does not mean "do not cache" -- it means "revalidate
-    # before use". With the ETag aiohttp already sends, an unchanged file
-    # costs one 304 and no body. Applied to the app's OWN assets only;
-    # /static/vendor/ (third-party, content-stable) keeps normal caching.
-    @web.middleware
-    async def _no_cache_own_assets(request, handler):
-        resp = await handler(request)
-        p = request.path
-        if p.startswith("/static/modern/") or p.startswith("/static/shared/"):
-            resp.headers["Cache-Control"] = "no-cache"
-        return resp
-
-    app = web.Application(middlewares=[_no_cache_own_assets])
+    # commands"): a module referenced with a HARD-CODED `?v=1` was cached
+    # heuristically by Chrome and ran against a fresh index.html. The shared
+    # HTTP policy (smo_common.web.http, R3 audit A8) keeps that fixed while
+    # adding gzip: the modern index's /static/ URLs are stamped with their
+    # real content hash (immutable in the browser, new URL on every change);
+    # any other own asset is `no-cache` (revalidate, a bodiless 304 when
+    # unchanged); a hand-written ?v= is never trusted.
+    app = web.Application()
+    from smo_common.web.http import apply_http_policy
+    apply_http_policy(app, revalidate_prefixes=("/static/",),
+                      max_age_prefixes={"/static/vendor/": 86400})
     app["engine"] = engine
     app["ws_clients"] = []
     # default flipped to modern (Agent-5 gate passed)
@@ -224,15 +214,20 @@ def _resolve_ui(request) -> str:
     return request.app.get("ui_mode", "classic")
 
 
-def _serve_index(mode: str, lang: str = "en"):
+def _serve_index(mode: str, lang: str = "en", app: web.Application | None = None):
     static_dir = Path(__file__).parent / "static"
     index_file = (static_dir / "modern" / "index.html" if mode == "modern"
                   else static_dir / "index.html")
-    if index_file.exists() and mode == "modern" and lang != "en":
+    if index_file.exists() and mode == "modern":
         from smo_common.i18n import inject_default_lang
-        return web.Response(
-            text=inject_default_lang(index_file.read_text(encoding="utf-8"), lang),
-            content_type="text/html", headers={"Cache-Control": "no-cache"})
+        from smo_common.web.http import stamp_asset_versions
+        html = index_file.read_text(encoding="utf-8")
+        if lang != "en":
+            html = inject_default_lang(html, lang)
+        if app is not None:
+            html = stamp_asset_versions(html, app)
+        return web.Response(text=html, content_type="text/html",
+                            headers={"Cache-Control": "no-cache"})
     if index_file.exists():
         # no-cache: a UI-mode flip must never be masked by a cached index (R9)
         return web.FileResponse(
@@ -251,7 +246,8 @@ def _serve_index(mode: str, lang: str = "en"):
 
 
 async def handle_index(request):
-    return _serve_index(_resolve_ui(request), request.app.get("ui_lang", "en"))
+    return _serve_index(_resolve_ui(request), request.app.get("ui_lang", "en"),
+                        request.app)
 
 
 async def handle_index_classic(request):
@@ -261,7 +257,7 @@ async def handle_index_classic(request):
 
 async def handle_index_modern(request):
     """GET /modern — always the modern page (live A/B comparison)."""
-    return _serve_index("modern", request.app.get("ui_lang", "en"))
+    return _serve_index("modern", request.app.get("ui_lang", "en"), request.app)
 
 
 async def handle_ws(request):

@@ -11,6 +11,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useDesignStore } from '../stores/designStore'
 import { useSessionStore } from '../stores/sessionStore'
 import { useModelStore } from '../stores/modelStore'
+import { fs } from '../theme/tokens'
 
 interface ArchOption {
   id: string; name: string; description: string
@@ -29,14 +30,14 @@ interface SelectedArch {
 }
 
 const SUBSYSTEM_LABELS: Record<string, { name: string; color: string }> = {
-  eps: { name: 'Power (EPS)', color: '#f59e0b' },
-  aocs: { name: 'AOCS', color: '#06b6d4' },
-  ttc: { name: 'Comms (TTC)', color: '#ec4899' },
-  thermal: { name: 'Thermal', color: '#ef4444' },
-  structure: { name: 'Structure', color: '#84cc16' },
-  propulsion: { name: 'Propulsion', color: '#f97316' },
-  obc: { name: 'OBC / C&DH', color: '#8b5cf6' },
-  ground: { name: 'Ground Segment', color: '#0ea5e9' },
+  eps: { name: 'Power (EPS)', color: 'var(--status-caution)' },
+  aocs: { name: 'AOCS', color: 'var(--interactive)' },
+  ttc: { name: 'Comms (TTC)', color: 'var(--cat-6)' },
+  thermal: { name: 'Thermal', color: 'var(--status-alarm)' },
+  structure: { name: 'Structure', color: 'var(--cat-7)' },
+  propulsion: { name: 'Propulsion', color: 'var(--status-caution)' },
+  obc: { name: 'OBC / C&DH', color: 'var(--cat-2)' },
+  ground: { name: 'Ground Segment', color: 'var(--interactive)' },
 }
 
 const POSITION_SUBSYSTEM: Record<string, string> = {
@@ -261,24 +262,24 @@ export function SystemArchitectureEditor({ segment = 'space' }: { segment?: stri
   }
 
   const currentSelection = selected[activeSubsystem]
-  const info = SUBSYSTEM_LABELS[activeSubsystem] || { name: activeSubsystem, color: '#6b7280' }
+  const info = SUBSYSTEM_LABELS[activeSubsystem] || { name: activeSubsystem, color: 'var(--text-3)' }
   const selectedCount = configuredSubsystems.size
   const totalCount = subsystems.length
 
   return (
     <div style={{ padding: '1rem', overflowY: 'auto', height: '100%' }}>
       <h2 style={{ marginBottom: '0.25rem' }}>System Architecture</h2>
-      <p style={{ fontSize: '0.78rem', color: '#9ca3af', marginBottom: '0.5rem' }}>
+      <p style={{ fontSize: fs.label, color: 'var(--text-2)', marginBottom: '0.5rem' }}>
         Select architecture options for each subsystem. Each choice creates subsystem elements in the design tree.
       </p>
 
       {/* Progress bar */}
-      <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.75rem', marginBottom: '0.75rem', alignItems: 'center' }}>
-        <span style={{ color: selectedCount === totalCount ? '#10b981' : '#f59e0b', fontWeight: 600 }}>
+      <div style={{ display: 'flex', gap: '0.75rem', fontSize: fs.label, marginBottom: '0.75rem', alignItems: 'center' }}>
+        <span style={{ color: selectedCount === totalCount ? 'var(--status-ok)' : 'var(--status-caution)', fontWeight: 600 }}>
           {selectedCount}/{totalCount} subsystems configured
         </span>
         {primaryPos !== 'systems_engineer' && (
-          <span style={{ fontSize: '0.68rem', color: '#3b82f6' }}>
+          <span style={{ fontSize: fs.label, color: 'var(--interactive)' }}>
             Your subsystem: {SUBSYSTEM_LABELS[POSITION_SUBSYSTEM[primaryPos] || '']?.name || primaryPos}
           </span>
         )}
@@ -287,18 +288,18 @@ export function SystemArchitectureEditor({ segment = 'space' }: { segment?: stri
       {/* Subsystem tabs */}
       <div style={{ display: 'flex', gap: '0.3rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
         {subsystems.filter(ss => segment === 'ground' ? ss === 'ground' : ss !== 'ground').map(ss => {
-          const ssInfo = SUBSYSTEM_LABELS[ss] || { name: ss, color: '#6b7280' }
+          const ssInfo = SUBSYSTEM_LABELS[ss] || { name: ss, color: 'var(--text-3)' }
           const isActive = activeSubsystem === ss
           const isConfigured = configuredSubsystems.has(ss) || !!selected[ss]
           return (
             <button key={ss} onClick={() => setActiveSubsystem(ss)} style={{
-              padding: '0.3rem 0.75rem', fontSize: '0.78rem', borderRadius: '4px', cursor: 'pointer',
-              background: isActive ? ssInfo.color : 'var(--bg-secondary, #1f2937)',
-              color: isActive ? 'white' : '#9ca3af',
-              border: `1px solid ${isActive ? ssInfo.color : isConfigured ? ssInfo.color + '60' : '#374151'}`,
+              padding: '0.3rem 0.75rem', fontSize: fs.label, borderRadius: '4px', cursor: 'pointer',
+              background: isActive ? ssInfo.color : 'var(--bg-secondary, var(--surface-2))',
+              color: isActive ? 'white' : 'var(--text-2)',
+              border: `1px solid ${isActive ? ssInfo.color : isConfigured ? `color-mix(in srgb, ${ssInfo.color} 38%, transparent)` : 'var(--line)'}`,
             }}>
               {ssInfo.name}
-              {isConfigured && <span style={{ marginLeft: '0.3rem', fontSize: '0.6rem' }}>configured</span>}
+              {isConfigured && <span style={{ marginLeft: '0.3rem', fontSize: fs.label }}>configured</span>}
             </button>
           )
         })}
@@ -306,36 +307,36 @@ export function SystemArchitectureEditor({ segment = 'space' }: { segment?: stri
 
       {/* Options for active subsystem */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
-        {loading && <div style={{ color: '#6b7280' }}>Loading options...</div>}
+        {loading && <div style={{ color: 'var(--text-3)' }}>Loading options...</div>}
         {options.map(opt => {
           const isChosen = currentSelection?.option_id === opt.id
           return (
             <div key={opt.id} onClick={() => handleSelect(opt.id)} style={{
               padding: '0.6rem 0.75rem', borderRadius: '6px', cursor: 'pointer',
-              background: isChosen ? `${info.color}15` : 'var(--bg-secondary, #1f2937)',
-              border: `2px solid ${isChosen ? info.color : '#374151'}`,
+              background: isChosen ? `color-mix(in srgb, ${info.color} 8%, transparent)` : 'var(--bg-secondary, var(--surface-2))',
+              border: `2px solid ${isChosen ? info.color : 'var(--line)'}`,
               transition: 'all 0.15s',
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.3rem' }}>
-                <span style={{ fontWeight: 700, fontSize: '0.85rem' }}>{opt.name}</span>
-                {isChosen && <span style={{ fontSize: '0.65rem', color: info.color, fontWeight: 700 }}>SELECTED</span>}
+                <span style={{ fontWeight: 700, fontSize: fs.body }}>{opt.name}</span>
+                {isChosen && <span style={{ fontSize: fs.label, color: info.color, fontWeight: 700 }}>SELECTED</span>}
                 <span style={{ flex: 1 }} />
-                <span style={{ fontSize: '0.68rem', color: '#6b7280', fontFamily: 'monospace' }}>
+                <span style={{ fontSize: fs.label, color: 'var(--text-3)', fontFamily: 'monospace' }}>
                   {opt.mass_kg}kg | {opt.power_w}W | {opt.cost_keur}kEUR | TRL{opt.trl}
                 </span>
               </div>
-              <div style={{ fontSize: '0.72rem', color: '#9ca3af', marginBottom: '0.3rem' }}>{opt.description}</div>
-              <div style={{ display: 'flex', gap: '1rem', fontSize: '0.68rem' }}>
+              <div style={{ fontSize: fs.label, color: 'var(--text-2)', marginBottom: '0.3rem' }}>{opt.description}</div>
+              <div style={{ display: 'flex', gap: '1rem', fontSize: fs.label }}>
                 <div>
-                  <span style={{ color: '#10b981' }}>Pros: </span>
+                  <span style={{ color: 'var(--status-ok)' }}>Pros: </span>
                   {opt.pros.slice(0, 3).join(', ')}
                 </div>
                 <div>
-                  <span style={{ color: '#ef4444' }}>Cons: </span>
+                  <span style={{ color: 'var(--status-alarm)' }}>Cons: </span>
                   {opt.cons.slice(0, 3).join(', ')}
                 </div>
               </div>
-              <div style={{ fontSize: '0.65rem', color: '#6b7280', marginTop: '0.2rem' }}>
+              <div style={{ fontSize: fs.label, color: 'var(--text-3)', marginTop: '0.2rem' }}>
                 Derives {opt.num_derived_requirements} requirements
                 {opt.pointing_deg !== null && ` | Pointing: ${opt.pointing_deg}deg`}
                 {opt.data_rate_mbps !== null && ` | Data rate: ${opt.data_rate_mbps} Mbps`}
@@ -348,41 +349,41 @@ export function SystemArchitectureEditor({ segment = 'space' }: { segment?: stri
       {/* Custom option */}
       {!showCustomForm ? (
         <button onClick={() => setShowCustomForm(true)} className="btn btn-sm"
-          style={{ marginBottom: '0.75rem', fontSize: '0.72rem', background: '#374151' }}>
+          style={{ marginBottom: '0.75rem', fontSize: fs.label, background: 'var(--line)' }}>
           + Define Custom Option
         </button>
       ) : (
         <div className="card" style={{ marginBottom: '0.75rem', borderLeft: `3px solid ${info.color}` }}>
-          <h4 style={{ fontSize: '0.8rem', marginBottom: '0.4rem' }}>Custom {info.name} Option</h4>
+          <h4 style={{ fontSize: fs.body, marginBottom: '0.4rem' }}>Custom {info.name} Option</h4>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.4rem', marginBottom: '0.4rem' }}>
-            <label style={{ fontSize: '0.7rem', color: '#9ca3af' }}>Name:
+            <label style={{ fontSize: fs.label, color: 'var(--text-2)' }}>Name:
               <input className="input" value={customName} onChange={e => setCustomName(e.target.value)}
-                style={{ width: '100%', fontSize: '0.72rem' }} placeholder="e.g., Custom AOCS" />
+                style={{ width: '100%', fontSize: fs.label }} placeholder="e.g., Custom AOCS" />
             </label>
-            <label style={{ fontSize: '0.7rem', color: '#9ca3af' }}>TRL:
+            <label style={{ fontSize: fs.label, color: 'var(--text-2)' }}>TRL:
               <input className="input" type="number" min={1} max={9} value={customTrl} onChange={e => setCustomTrl(Number(e.target.value))}
-                style={{ width: '100%', fontSize: '0.72rem' }} />
+                style={{ width: '100%', fontSize: fs.label }} />
             </label>
-            <label style={{ fontSize: '0.7rem', color: '#9ca3af' }}>Mass (kg):
+            <label style={{ fontSize: fs.label, color: 'var(--text-2)' }}>Mass (kg):
               <input className="input" type="number" step={0.1} value={customMass} onChange={e => setCustomMass(Number(e.target.value))}
-                style={{ width: '100%', fontSize: '0.72rem' }} />
+                style={{ width: '100%', fontSize: fs.label }} />
             </label>
-            <label style={{ fontSize: '0.7rem', color: '#9ca3af' }}>Power (W):
+            <label style={{ fontSize: fs.label, color: 'var(--text-2)' }}>Power (W):
               <input className="input" type="number" step={0.1} value={customPower} onChange={e => setCustomPower(Number(e.target.value))}
-                style={{ width: '100%', fontSize: '0.72rem' }} />
+                style={{ width: '100%', fontSize: fs.label }} />
             </label>
-            <label style={{ fontSize: '0.7rem', color: '#9ca3af' }}>Cost (kEUR):
+            <label style={{ fontSize: fs.label, color: 'var(--text-2)' }}>Cost (kEUR):
               <input className="input" type="number" step={1} value={customCost} onChange={e => setCustomCost(Number(e.target.value))}
-                style={{ width: '100%', fontSize: '0.72rem' }} />
+                style={{ width: '100%', fontSize: fs.label }} />
             </label>
           </div>
-          <label style={{ fontSize: '0.7rem', color: '#9ca3af', display: 'block', marginBottom: '0.4rem' }}>Description:
+          <label style={{ fontSize: fs.label, color: 'var(--text-2)', display: 'block', marginBottom: '0.4rem' }}>Description:
             <input className="input" value={customDesc} onChange={e => setCustomDesc(e.target.value)}
-              style={{ width: '100%', fontSize: '0.72rem' }} placeholder="Brief description of the architecture option" />
+              style={{ width: '100%', fontSize: fs.label }} placeholder="Brief description of the architecture option" />
           </label>
           <div style={{ display: 'flex', gap: '0.3rem' }}>
-            <button onClick={addCustomOption} className="btn btn-sm" style={{ fontSize: '0.7rem', background: '#10b981' }}>Add & Select</button>
-            <button onClick={() => setShowCustomForm(false)} className="btn btn-sm" style={{ fontSize: '0.7rem', background: '#374151' }}>Cancel</button>
+            <button onClick={addCustomOption} className="btn btn-sm" style={{ fontSize: fs.label, background: 'var(--status-ok)' }}>Add & Select</button>
+            <button onClick={() => setShowCustomForm(false)} className="btn btn-sm" style={{ fontSize: fs.label, background: 'var(--line)' }}>Cancel</button>
           </div>
         </div>
       )}
@@ -390,32 +391,32 @@ export function SystemArchitectureEditor({ segment = 'space' }: { segment?: stri
       {/* Selected architecture details */}
       {currentSelection && (
         <div className="card" style={{ borderLeft: `3px solid ${info.color}` }}>
-          <h3 style={{ fontSize: '0.9rem', marginBottom: '0.4rem' }}>
+          <h3 style={{ fontSize: fs.value, marginBottom: '0.4rem' }}>
             {info.name}: {currentSelection.option_name}
           </h3>
 
           {/* Block diagram */}
           {currentSelection.blocks.length > 0 && (
             <div style={{ marginBottom: '0.5rem' }}>
-              <div style={{ fontSize: '0.72rem', fontWeight: 600, color: '#9ca3af', marginBottom: '0.3rem' }}>Block Diagram</div>
+              <div style={{ fontSize: fs.label, fontWeight: 600, color: 'var(--text-2)', marginBottom: '0.3rem' }}>Block Diagram</div>
               <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', alignItems: 'center' }}>
                 {currentSelection.blocks.map((block, i) => (
                   <span key={block.id} style={{ display: 'contents' }}>
                     <span style={{
-                      padding: '0.25rem 0.5rem', borderRadius: '4px', fontSize: '0.72rem', fontWeight: 500,
+                      padding: '0.25rem 0.5rem', borderRadius: '4px', fontSize: fs.label, fontWeight: 500,
                       background: block.type === 'sensor' ? 'rgba(6,182,212,0.15)' :
                         block.type === 'actuator' ? 'rgba(16,185,129,0.15)' :
                         block.type === 'processor' ? 'rgba(59,130,246,0.15)' :
                         block.type === 'source' ? 'rgba(245,158,11,0.15)' :
                         'rgba(107,114,128,0.15)',
-                      border: `1px solid ${block.type === 'sensor' ? '#06b6d440' :
-                        block.type === 'actuator' ? '#10b98140' :
-                        block.type === 'processor' ? '#3b82f640' :
-                        block.type === 'source' ? '#f59e0b40' : '#6b728040'}`,
-                      color: '#d1d5db',
+                      border: `1px solid ${block.type === 'sensor' ? 'color-mix(in srgb, var(--interactive) 25%, transparent)' :
+                        block.type === 'actuator' ? 'color-mix(in srgb, var(--status-ok) 25%, transparent)' :
+                        block.type === 'processor' ? 'color-mix(in srgb, var(--interactive) 25%, transparent)' :
+                        block.type === 'source' ? 'color-mix(in srgb, var(--status-caution) 25%, transparent)' : 'color-mix(in srgb, var(--text-3) 25%, transparent)'}`,
+                      color: 'var(--text)',
                     }}>{block.name}</span>
                     {i < currentSelection.blocks.length - 1 && (
-                      <span style={{ color: '#6b7280', fontSize: '0.8rem' }}>{'->'}</span>
+                      <span style={{ color: 'var(--text-3)', fontSize: fs.body }}>{'->'}</span>
                     )}
                   </span>
                 ))}
@@ -426,33 +427,33 @@ export function SystemArchitectureEditor({ segment = 'space' }: { segment?: stri
           {/* Derived requirements */}
           {currentSelection.derived_requirements.length > 0 && (
             <div>
-              <div style={{ fontSize: '0.72rem', fontWeight: 600, color: '#9ca3af', marginBottom: '0.3rem' }}>
+              <div style={{ fontSize: fs.label, fontWeight: 600, color: 'var(--text-2)', marginBottom: '0.3rem' }}>
                 Derived Requirements ({currentSelection.derived_requirements.length})
               </div>
               {currentSelection.derived_requirements.map((req: any) => {
                 const typeColors: Record<string, string> = {
-                  performance: '#10b981', interface: '#f59e0b', budget: '#3b82f6', functional: '#8b5cf6',
+                  performance: 'var(--status-ok)', interface: 'var(--status-caution)', budget: 'var(--interactive)', functional: 'var(--cat-2)',
                 }
-                const typeColor = typeColors[req.type] || '#6b7280'
+                const typeColor = typeColors[req.type] || 'var(--text-3)'
                 return (
                   <div key={req.id} style={{
                     display: 'flex', alignItems: 'flex-start', gap: '0.3rem',
-                    padding: '0.2rem 0', fontSize: '0.72rem',
+                    padding: '0.2rem 0', fontSize: fs.label,
                   }}>
                     <span style={{
-                      fontSize: '0.55rem', padding: '0.1rem 0.25rem', borderRadius: '3px', flexShrink: 0,
+                      fontSize: fs.label, padding: '0.1rem 0.25rem', borderRadius: '3px', flexShrink: 0,
                       background: req.level === 'system' ? 'rgba(59,130,246,0.15)' : 'rgba(6,182,212,0.15)',
-                      color: req.level === 'system' ? '#3b82f6' : '#06b6d4',
+                      color: req.level === 'system' ? 'var(--interactive)' : 'var(--interactive)',
                       fontWeight: 600, textTransform: 'uppercase',
                     }}>{req.level}</span>
                     {req.type && (
                       <span style={{
-                        fontSize: '0.55rem', padding: '0.1rem 0.25rem', borderRadius: '3px', flexShrink: 0,
-                        background: `${typeColor}22`, color: typeColor, fontWeight: 600,
+                        fontSize: fs.label, padding: '0.1rem 0.25rem', borderRadius: '3px', flexShrink: 0,
+                        background: `color-mix(in srgb, ${typeColor} 13%, transparent)`, color: typeColor, fontWeight: 600,
                       }}>{req.type}</span>
                     )}
-                    <span style={{ fontFamily: 'monospace', color: '#6b7280', fontSize: '0.6rem', flexShrink: 0 }}>{req.id}</span>
-                    <span style={{ color: '#d1d5db', flex: 1 }}>{req.text}</span>
+                    <span style={{ fontFamily: 'monospace', color: 'var(--text-3)', fontSize: fs.label, flexShrink: 0 }}>{req.id}</span>
+                    <span style={{ color: 'var(--text)', flex: 1 }}>{req.text}</span>
                   </div>
                 )
               })}

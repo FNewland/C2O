@@ -16,6 +16,7 @@ import { useModelStore } from '../stores/modelStore'
 import { GroundStationDesigner } from '../components/GroundStationDesigner'
 import { ConstellationDesigner } from '../components/ConstellationDesigner'
 import type { Segment } from '../types/phases'
+import { fs } from '../theme/tokens'
 
 type SubView = 'arch_conops' | 'functions' | 'requirements' | 'fleet'
 
@@ -54,15 +55,15 @@ export function Phase1MissionArch() {
   // Gate: show "Create Study" prompt if no study exists yet
   if (!studyId) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: '1.5rem', color: '#d1d5db' }}>
-        <h2 style={{ margin: 0, fontSize: '1.3rem', color: '#93c5fd' }}>Define Mission Architecture</h2>
-        <p style={{ fontSize: '0.85rem', color: '#9ca3af', maxWidth: 500, textAlign: 'center', lineHeight: 1.6 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: '1.5rem', color: 'var(--text)' }}>
+        <h2 style={{ margin: 0, fontSize: fs.title, color: 'var(--interactive)' }}>Define Mission Architecture</h2>
+        <p style={{ fontSize: fs.body, color: 'var(--text-2)', maxWidth: 500, textAlign: 'center', lineHeight: 1.6 }}>
           Create a study to start building your mission architecture.
           This will set up the element tree where you define segments, systems, and subsystems.
         </p>
         <button onClick={handleCreateStudy} disabled={creating} style={{
-          padding: '0.6rem 2rem', fontSize: '0.9rem', fontWeight: 600, borderRadius: '6px',
-          background: '#3b82f6', color: 'white', border: 'none', cursor: creating ? 'wait' : 'pointer',
+          padding: '0.6rem 2rem', fontSize: fs.value, fontWeight: 600, borderRadius: '6px',
+          background: 'var(--interactive)', color: 'white', border: 'none', cursor: creating ? 'wait' : 'pointer',
         }}>
           {creating ? 'Creating...' : 'Create Study & Start'}
         </button>
@@ -73,17 +74,17 @@ export function Phase1MissionArch() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* Segment + sub-view bar */}
-      <div style={{ display: 'flex', gap: '0.25rem', padding: '0.4rem 1rem', borderBottom: '1px solid var(--border, #374151)', alignItems: 'center', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: '0.25rem', padding: '0.4rem 1rem', borderBottom: '1px solid var(--border, var(--line))', alignItems: 'center', flexWrap: 'wrap' }}>
         {(['space', 'ground', 'operations'] as Segment[]).map(s => (
           <button key={s} onClick={() => setSegment(s)} style={{
-            padding: '0.3rem 0.75rem', fontSize: '0.75rem', borderRadius: '4px', cursor: 'pointer',
-            background: segment === s ? '#3b82f6' : 'transparent',
-            color: segment === s ? 'white' : '#9ca3af',
-            border: `1px solid ${segment === s ? '#3b82f6' : '#374151'}`,
+            padding: '0.3rem 0.75rem', fontSize: fs.label, borderRadius: '4px', cursor: 'pointer',
+            background: segment === s ? 'var(--interactive)' : 'transparent',
+            color: segment === s ? 'white' : 'var(--text-2)',
+            border: `1px solid ${segment === s ? 'var(--interactive)' : 'var(--line)'}`,
             textTransform: 'capitalize',
           }}>{s}</button>
         ))}
-        <span style={{ color: '#374151', margin: '0 0.3rem' }}>|</span>
+        <span style={{ color: 'var(--line)', margin: '0 0.3rem' }}>|</span>
         {([
           { id: 'arch_conops' as SubView, label: 'Architecture & ConOps' },
           { id: 'functions' as SubView, label: 'Functions' },
@@ -91,9 +92,9 @@ export function Phase1MissionArch() {
           ...(showFleet ? [{ id: 'fleet' as SubView, label: 'Fleet' }] : []),
         ]).map(v => (
           <button key={v.id} onClick={() => setSubView(v.id)} style={{
-            padding: '0.25rem 0.6rem', fontSize: '0.7rem', borderRadius: '3px', cursor: 'pointer',
+            padding: '0.25rem 0.6rem', fontSize: fs.label, borderRadius: '3px', cursor: 'pointer',
             background: subView === v.id ? 'rgba(59,130,246,0.15)' : 'transparent',
-            color: subView === v.id ? '#93c5fd' : '#6b7280',
+            color: subView === v.id ? 'var(--interactive)' : 'var(--text-3)',
             border: 'none',
           }}>{v.label}</button>
         ))}
@@ -110,7 +111,7 @@ export function Phase1MissionArch() {
                   <MissionArchitectureEditor />
                 </div>
                 {/* ConOps (phases, modes, data pipeline) — scrollable below */}
-                <div style={{ flex: '0 0 auto', maxHeight: '50%', overflow: 'auto', borderTop: '2px solid var(--border, #374151)' }}>
+                <div style={{ flex: '0 0 auto', maxHeight: '50%', overflow: 'auto', borderTop: '2px solid var(--border, var(--line))' }}>
                   <ConOpsEditor />
                 </div>
               </div>
@@ -125,12 +126,12 @@ export function Phase1MissionArch() {
             {subView === 'arch_conops' && <GroundStationDesigner />}
             {subView === 'functions' && (
               <div style={{ padding: '1.5rem' }}>
-                <h2 style={{ fontSize: '1rem', marginBottom: '0.5rem' }}>Ground Segment Functions</h2>
+                <h2 style={{ fontSize: fs.value, marginBottom: '0.5rem' }}>Ground Segment Functions</h2>
                 <div className="card">
-                  <p style={{ fontSize: '0.78rem', color: '#9ca3af', marginBottom: '0.5rem' }}>
+                  <p style={{ fontSize: fs.label, color: 'var(--text-2)', marginBottom: '0.5rem' }}>
                     Key ground segment functions:
                   </p>
-                  <ul style={{ fontSize: '0.75rem', color: '#d1d5db', paddingLeft: '1.2rem', lineHeight: 1.8 }}>
+                  <ul style={{ fontSize: fs.label, color: 'var(--text)', paddingLeft: '1.2rem', lineHeight: 1.8 }}>
                     <li>Receive spacecraft telemetry and payload data</li>
                     <li>Process and distribute data products to users</li>
                     <li>Generate and uplink telecommands</li>
@@ -144,8 +145,8 @@ export function Phase1MissionArch() {
             )}
             {subView === 'requirements' && (
               <div style={{ padding: '1.5rem' }}>
-                <h2 style={{ fontSize: '1rem', marginBottom: '0.5rem' }}>Ground Segment Requirements</h2>
-                <p style={{ fontSize: '0.72rem', color: '#9ca3af', marginBottom: '0.75rem' }}>
+                <h2 style={{ fontSize: fs.value, marginBottom: '0.5rem' }}>Ground Segment Requirements</h2>
+                <p style={{ fontSize: fs.label, color: 'var(--text-2)', marginBottom: '0.75rem' }}>
                   Ground requirements derived from mission needs: antenna G/T, data processing throughput,
                   contact time per orbit, commanding latency, data product delivery SLA.
                 </p>
@@ -156,20 +157,20 @@ export function Phase1MissionArch() {
         )}
         {segment === 'operations' && (
           <div style={{ padding: '1.5rem' }}>
-            <h2 style={{ fontSize: '1rem', marginBottom: '0.5rem' }}>Operations Concept</h2>
-            <p style={{ fontSize: '0.78rem', color: '#9ca3af', marginBottom: '1rem' }}>
+            <h2 style={{ fontSize: fs.value, marginBottom: '0.5rem' }}>Operations Concept</h2>
+            <p style={{ fontSize: fs.label, color: 'var(--text-2)', marginBottom: '1rem' }}>
               Define operations: control centre, staffing, LEOP, nominal ops, contingency.
             </p>
             <div className="card" style={{ marginBottom: '0.75rem' }}>
-              <h3 style={{ fontSize: '0.85rem', marginBottom: '0.3rem' }}>Mission Control</h3>
+              <h3 style={{ fontSize: fs.body, marginBottom: '0.3rem' }}>Mission Control</h3>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-                <label style={{ fontSize: '0.72rem', color: '#9ca3af' }}>Control Centre Location:
-                  <input className="input" placeholder="e.g., Darmstadt, Germany" style={{ width: '100%', fontSize: '0.72rem' }}
+                <label style={{ fontSize: fs.label, color: 'var(--text-2)' }}>Control Centre Location:
+                  <input className="input" placeholder="e.g., Darmstadt, Germany" style={{ width: '100%', fontSize: fs.label }}
                     value={missionOps.controlCentre}
                     onChange={e => setMissionOps({ ...missionOps, controlCentre: e.target.value })} />
                 </label>
-                <label style={{ fontSize: '0.72rem', color: '#9ca3af' }}>Staffing Model:
-                  <select className="select" style={{ width: '100%', fontSize: '0.72rem' }}
+                <label style={{ fontSize: fs.label, color: 'var(--text-2)' }}>Staffing Model:
+                  <select className="select" style={{ width: '100%', fontSize: fs.label }}
                     value={missionOps.staffingModel}
                     onChange={e => setMissionOps({ ...missionOps, staffingModel: e.target.value })}>
                     <option value="24_7">24/7 (3 shifts)</option>

@@ -34,8 +34,8 @@ LOW avant le LOS.
 ### Étape 1 --- Confirmer la qualité de la liaison
 **TC:** `HK_REQUEST(sid=6)` (Service 3, Subtype 27) --- demander les données de servitude TT&C
 **Verify:** `ttc.link_status` (0x0501) = 2 (LOCKED) sous 5 s
-**Verify:** `ttc.rssi` (0x0502) > -100 dBm sous 5 s
-**Verify:** `ttc.link_margin` (0x0503) > 3.0 dB sous 5 s
+**Verify:** page TT&C (sol) : `ttc.rssi` (0x0502) > -126 dBm sous 5 s
+**Verify:** page TT&C (sol) : `ttc.link_margin` (0x0503) > 3.0 dB sous 5 s
 **GO/NO-GO:** Si la marge de liaison <= 3.0 dB, se mettre en attente (HOLD). Si la marge ne s'améliore pas sous
 30 s, tenter `TTC_SWITCH_REDUNDANT`. Si elle reste insuffisante, reporter le vidage.
 
@@ -94,8 +94,8 @@ le bloc suivant ; répéter pour K = 0 .. total_blocks-1
 **TC:** `HK_REQUEST(sid=6)` (Service 3, Subtype 27) --- interroger toutes les 60 s
 **Verify:** `payload.transfer_progress` (0x062E) croissant d'une interrogation à l'autre
 **Verify:** `ttc.link_status == 2` (0x0501, timeout 60 s) --- LOCKED maintenu
-**Verify:** `ttc.link_margin` (0x0503) > 2.0 dB pendant toute la session
-**Verify:** `ttc.rssi` (0x0502) > -105 dBm pendant toute la session
+**Verify:** page TT&C (sol) : `ttc.link_margin` (0x0503) > 2.0 dB pendant toute la session
+**Verify:** page TT&C (sol) : `ttc.rssi` (0x0502) > -126 dBm pendant toute la session
 **Note:** Depuis la phase 4, le moteur de transfert de bord s'écoule au débit
 d'information ACTIF `ttc.tm_data_rate` (0x0506) et se BLOQUE lorsque `ttc.link_status`
 (0x0501) quitte LOCKED, puis reprend à son retour. Un

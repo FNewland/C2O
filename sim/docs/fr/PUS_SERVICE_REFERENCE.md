@@ -996,7 +996,8 @@ chargeur d'amorçage, de sorte qu'aucune règle ne peut démarrer ou redémarrer
 | 2001 | Saturation du moment cinétique (0x0205) | Désaturer les roues | Contrôle SCAO |
 | 2002 | Senseur stellaire 1 aveuglé (0x0203) | Basculer sur ST2 | Contrôle d'attitude |
 | 3001 | Surchauffe du FPA (0x0604) | Arrêt de la charge utile | Protection thermique |
-| 4001 | Marge de liaison critique (0x0507) | Augmenter la puissance d'émission | Rétablissement de la liaison |
+| 4001 | Décrochage de la liaison montante (événement 0x0513) | Augmenter la puissance d'émission (HIGH, 5 W) | Rétablissement de la liaison |
+| 4003 | Minuterie de perte de commande, 24 h (événement 0x0514) | Basculer sur le transpondeur redondant | Rétablissement de la liaison (FDIR TTC-01) |
 | 5001 | Redémarrage de l'OBC (0x0301) | Acquitter | Surveillance du système |
 | 6001 | Stockage plein (0x0609) | Arrêter la prise de vue | Gestion des données |
 

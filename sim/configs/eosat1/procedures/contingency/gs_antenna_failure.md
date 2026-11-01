@@ -27,7 +27,7 @@ shortened contact window.
 | ttc.link_margin | 0x0503 | Was > 3 dB before failure |
 | ttc.carrier_lock | 0x0510 | 0 (lost) — was 1 before failure |
 | ttc.contact_elevation | 0x050A | Record value at time of loss |
-| ttc.gs_equipment_status | 0x0524 | GS equipment status bitmask |
+| Station monitor & control (ground) | — | Antenna, LNA, HPA and tracking status as the station M&C reports them |
 | ttc.active_gs | 0x0523 | Current ground station index |
 
 ## Required Commands

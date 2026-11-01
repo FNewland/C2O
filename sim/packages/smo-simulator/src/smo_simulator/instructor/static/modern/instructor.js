@@ -25,6 +25,8 @@ import {
   esc, renderChip, renderEventRow, poller, wsClient, mountLangToggle,
 } from "/static/shared/components.js?v=1";
 import { fmtUTC, fmtHex } from "/static/shared/format.js?v=1";
+// One contact verdict for every console (R3 audit problem #10).
+import { linkState } from "/static/shared/state.js";
 // UI language (EN|FR) — see docs/i18n/UI_I18N_GUIDE.md. Import i18n.js
 // WITHOUT a ?v= query (state is shared via globalThis either way).
 import { I18n, t, tText, tdb, onLangChange } from "/static/shared/i18n.js";
@@ -1078,9 +1080,11 @@ function renderDashboard() {
   $("orb-alt").textContent = fmt(state.alt_km, 2) + " km";
   $("orb-eclipse").innerHTML = renderChip(state.in_eclipse
     ? { kind: "off", label: tText("ECLIPSE") } : { kind: "ok", label: tText("SUNLIGHT") });
-  $("orb-contact").innerHTML = renderChip(state.in_contact
-    ? { kind: "ok", label: state.ground_station_name
-        ? tText("CONTACT: {{gs}}", { gs: state.ground_station_name.toUpperCase() }) : tText("CONTACT") }
+  const link = linkState(state);
+  const gsName = link.gs || state.ground_station_name || "";
+  $("orb-contact").innerHTML = renderChip(link.contact
+    ? { kind: "ok", label: gsName
+        ? tText("CONTACT: {{gs}}", { gs: gsName.toUpperCase() }) : tText("CONTACT") }
     : { kind: "off", label: tText("NO CONTACT") });
 
   // OVERRIDE PASSES — the single copy; label reflects engine truth.

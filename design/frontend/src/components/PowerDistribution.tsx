@@ -13,6 +13,7 @@ import { useDesignStore } from '../stores/designStore'
 import { useModelStore } from '../stores/modelStore'
 import { SVGBarChart } from '../charts/SVGBarChart'
 import { BudgetGauge } from '../charts/BudgetGauge'
+import { fs } from '../theme/tokens'
 
 // Default duty cycles per mode for each subsystem domain
 const DEFAULT_DUTY_CYCLES: Record<string, Record<string, number>> = {
@@ -146,16 +147,16 @@ export function PowerDistribution() {
 
   return (
     <div style={{ padding: '1rem', overflowY: 'auto', height: '100%' }}>
-      <h2 style={{ fontSize: '1rem', marginBottom: '0.25rem' }}>Power Budget</h2>
-      <p style={{ fontSize: '0.72rem', color: '#9ca3af', marginBottom: '0.75rem' }}>
+      <h2 style={{ fontSize: fs.value, marginBottom: '0.25rem' }}>Power Budget</h2>
+      <p style={{ fontSize: fs.label, color: 'var(--text-2)', marginBottom: '0.75rem' }}>
         Generation, storage, and distribution with duty cycles and margins per ECSS-E-ST-20C.
       </p>
 
       {/* Generation + Storage summary */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.5rem', marginBottom: '1rem' }}>
         <div className="card">
-          <h3 style={{ fontSize: '0.82rem', color: '#f59e0b', marginBottom: '0.3rem' }}>Generation (Solar Array)</h3>
-          <div style={{ fontSize: '0.72rem', display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
+          <h3 style={{ fontSize: fs.body, color: 'var(--status-caution)', marginBottom: '0.3rem' }}>Generation (Solar Array)</h3>
+          <div style={{ fontSize: fs.label, display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
             <span>BOL: <strong>{saBol.toFixed(1)} W</strong></span>
             <span>EOL: <strong>{saEol.toFixed(1)} W</strong></span>
             <span>Degradation: <strong>{saBol > 0 ? ((1 - saEol / saBol) * 100).toFixed(1) : 0}%</strong> over {requirements.design_lifetime_years || 3} yr</span>
@@ -164,8 +165,8 @@ export function PowerDistribution() {
         </div>
 
         <div className="card">
-          <h3 style={{ fontSize: '0.82rem', color: '#10b981', marginBottom: '0.3rem' }}>Storage (Battery)</h3>
-          <div style={{ fontSize: '0.72rem', display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
+          <h3 style={{ fontSize: fs.body, color: 'var(--status-ok)', marginBottom: '0.3rem' }}>Storage (Battery)</h3>
+          <div style={{ fontSize: fs.label, display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
             <span>Capacity: <strong>{battCap.toFixed(1)} Wh</strong></span>
             <span>Max DOD: <strong>{battDod.toFixed(0)}%</strong></span>
             <span>Usable: <strong>{(battCap * battDod / 100).toFixed(1)} Wh</strong></span>
@@ -174,8 +175,8 @@ export function PowerDistribution() {
         </div>
 
         <div className="card">
-          <h3 style={{ fontSize: '0.82rem', color: '#ef4444', marginBottom: '0.3rem' }}>Demand</h3>
-          <div style={{ fontSize: '0.72rem', display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
+          <h3 style={{ fontSize: fs.body, color: 'var(--status-alarm)', marginBottom: '0.3rem' }}>Demand</h3>
+          <div style={{ fontSize: fs.label, display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
             <span>Sunlight (peak): <strong>{sunlightDemand.toFixed(1)} W</strong></span>
             <span>Eclipse: <strong>{eclipseDemand.toFixed(1)} W</strong></span>
             <span>Heaters: <strong>{heaterPower.toFixed(1)} W</strong></span>
@@ -185,74 +186,74 @@ export function PowerDistribution() {
 
       {/* Distribution diagram */}
       <div className="card" style={{ marginBottom: '0.75rem' }}>
-        <h3 style={{ fontSize: '0.82rem', marginBottom: '0.4rem' }}>Power Distribution</h3>
-        <svg width="100%" height="200" viewBox="0 0 600 200" style={{ background: '#0a0e1a', borderRadius: '4px' }}>
+        <h3 style={{ fontSize: fs.body, marginBottom: '0.4rem' }}>Power Distribution</h3>
+        <svg width="100%" height="200" viewBox="0 0 600 200" style={{ background: 'var(--surface-0)', borderRadius: '4px' }}>
           {/* SA → BCR → Battery → PDM */}
-          <rect x="10" y="20" width="80" height="40" rx="4" fill="#f59e0b20" stroke="#f59e0b" strokeWidth="1.5" />
-          <text x="50" y="37" textAnchor="middle" fill="#f59e0b" fontSize="9" fontWeight="600">Solar Array</text>
-          <text x="50" y="50" textAnchor="middle" fill="#9ca3af" fontSize="7">{saEol.toFixed(0)}W EOL</text>
+          <rect x="10" y="20" width="80" height="40" rx="4" fill="color-mix(in srgb, var(--status-caution) 13%, transparent)" stroke="var(--status-caution)" strokeWidth="1.5" />
+          <text x="50" y="37" textAnchor="middle" fill="var(--status-caution)" fontSize={fs.label} fontWeight="600">Solar Array</text>
+          <text x="50" y="50" textAnchor="middle" fill="var(--text-2)" fontSize={fs.label}>{saEol.toFixed(0)}W EOL</text>
 
-          <line x1="90" y1="40" x2="120" y2="40" stroke="#f59e0b" strokeWidth="2" />
+          <line x1="90" y1="40" x2="120" y2="40" stroke="var(--status-caution)" strokeWidth="2" />
 
-          <rect x="120" y="20" width="60" height="40" rx="4" fill="#06b6d420" stroke="#06b6d4" strokeWidth="1.5" />
-          <text x="150" y="37" textAnchor="middle" fill="#06b6d4" fontSize="9" fontWeight="600">BCR</text>
-          <text x="150" y="50" textAnchor="middle" fill="#9ca3af" fontSize="7">MPPT</text>
+          <rect x="120" y="20" width="60" height="40" rx="4" fill="color-mix(in srgb, var(--interactive) 13%, transparent)" stroke="var(--interactive)" strokeWidth="1.5" />
+          <text x="150" y="37" textAnchor="middle" fill="var(--interactive)" fontSize={fs.label} fontWeight="600">BCR</text>
+          <text x="150" y="50" textAnchor="middle" fill="var(--text-2)" fontSize={fs.label}>MPPT</text>
 
-          <line x1="180" y1="40" x2="210" y2="40" stroke="#06b6d4" strokeWidth="2" />
+          <line x1="180" y1="40" x2="210" y2="40" stroke="var(--interactive)" strokeWidth="2" />
 
-          <rect x="210" y="10" width="80" height="60" rx="4" fill="#10b98120" stroke="#10b981" strokeWidth="1.5" />
-          <text x="250" y="32" textAnchor="middle" fill="#10b981" fontSize="9" fontWeight="600">Battery</text>
-          <text x="250" y="45" textAnchor="middle" fill="#9ca3af" fontSize="7">{battCap.toFixed(0)} Wh</text>
-          <text x="250" y="58" textAnchor="middle" fill="#9ca3af" fontSize="7">DOD {battDod.toFixed(0)}%</text>
+          <rect x="210" y="10" width="80" height="60" rx="4" fill="color-mix(in srgb, var(--status-ok) 13%, transparent)" stroke="var(--status-ok)" strokeWidth="1.5" />
+          <text x="250" y="32" textAnchor="middle" fill="var(--status-ok)" fontSize={fs.label} fontWeight="600">Battery</text>
+          <text x="250" y="45" textAnchor="middle" fill="var(--text-2)" fontSize={fs.label}>{battCap.toFixed(0)} Wh</text>
+          <text x="250" y="58" textAnchor="middle" fill="var(--text-2)" fontSize={fs.label}>DOD {battDod.toFixed(0)}%</text>
 
-          <line x1="290" y1="40" x2="320" y2="40" stroke="#10b981" strokeWidth="2" />
+          <line x1="290" y1="40" x2="320" y2="40" stroke="var(--status-ok)" strokeWidth="2" />
 
-          <rect x="320" y="20" width="60" height="40" rx="4" fill="#3b82f620" stroke="#3b82f6" strokeWidth="1.5" />
-          <text x="350" y="37" textAnchor="middle" fill="#3b82f6" fontSize="9" fontWeight="600">PDM</text>
-          <text x="350" y="50" textAnchor="middle" fill="#9ca3af" fontSize="7">Switch</text>
+          <rect x="320" y="20" width="60" height="40" rx="4" fill="color-mix(in srgb, var(--interactive) 13%, transparent)" stroke="var(--interactive)" strokeWidth="1.5" />
+          <text x="350" y="37" textAnchor="middle" fill="var(--interactive)" fontSize={fs.label} fontWeight="600">PDM</text>
+          <text x="350" y="50" textAnchor="middle" fill="var(--text-2)" fontSize={fs.label}>Switch</text>
 
           {/* Switched rail */}
-          <line x1="380" y1="30" x2="420" y2="30" stroke="#f59e0b" strokeWidth="2" />
-          <text x="400" y="24" textAnchor="middle" fill="#f59e0b" fontSize="7">Switched</text>
+          <line x1="380" y1="30" x2="420" y2="30" stroke="var(--status-caution)" strokeWidth="2" />
+          <text x="400" y="24" textAnchor="middle" fill="var(--status-caution)" fontSize={fs.label}>Switched</text>
 
           {/* Unswitched rail */}
-          <line x1="380" y1="50" x2="420" y2="50" stroke="#ef4444" strokeWidth="2" />
-          <text x="400" y="64" textAnchor="middle" fill="#ef4444" fontSize="7">Unswitched</text>
+          <line x1="380" y1="50" x2="420" y2="50" stroke="var(--status-alarm)" strokeWidth="2" />
+          <text x="400" y="64" textAnchor="middle" fill="var(--status-alarm)" fontSize={fs.label}>Unswitched</text>
 
           {/* Loads on switched rail */}
           {consumers.filter(c => c.rail === 'switched').map((c, i) => (
             <g key={i}>
-              <rect x={430} y={10 + i * 28} width={140} height={22} rx={3} fill="#1f2937" stroke="#f59e0b40" strokeWidth={1} />
-              <text x={435} y={24 + i * 28} fill="#d1d5db" fontSize={8}>{c.name}: {c.power_w.toFixed(1)}W</text>
-              <line x1={420} y1={30} x2={430} y2={21 + i * 28} stroke="#f59e0b40" strokeWidth={0.5} />
+              <rect x={430} y={10 + i * 28} width={140} height={22} rx={3} fill="var(--surface-2)" stroke="color-mix(in srgb, var(--status-caution) 25%, transparent)" strokeWidth={1} />
+              <text x={435} y={24 + i * 28} fill="var(--text)" fontSize={fs.label}>{c.name}: {c.power_w.toFixed(1)}W</text>
+              <line x1={420} y1={30} x2={430} y2={21 + i * 28} stroke="color-mix(in srgb, var(--status-caution) 25%, transparent)" strokeWidth={0.5} />
             </g>
           ))}
 
           {/* Loads on unswitched rail */}
           {consumers.filter(c => c.rail === 'unswitched').map((c, i) => (
             <g key={i}>
-              <rect x={430} y={100 + i * 28} width={140} height={22} rx={3} fill="#1f2937" stroke="#ef444440" strokeWidth={1} />
-              <text x={435} y={114 + i * 28} fill="#d1d5db" fontSize={8}>{c.name}: {c.power_w.toFixed(1)}W</text>
-              <line x1={420} y1={50} x2={430} y2={111 + i * 28} stroke="#ef444440" strokeWidth={0.5} />
+              <rect x={430} y={100 + i * 28} width={140} height={22} rx={3} fill="var(--surface-2)" stroke="color-mix(in srgb, var(--status-alarm) 25%, transparent)" strokeWidth={1} />
+              <text x={435} y={114 + i * 28} fill="var(--text)" fontSize={fs.label}>{c.name}: {c.power_w.toFixed(1)}W</text>
+              <line x1={420} y1={50} x2={430} y2={111 + i * 28} stroke="color-mix(in srgb, var(--status-alarm) 25%, transparent)" strokeWidth={0.5} />
             </g>
           ))}
 
           {/* Totals */}
-          <text x={580} y={30} textAnchor="end" fill="#f59e0b" fontSize={8}>Switched: {switchedTotal.toFixed(1)}W</text>
-          <text x={580} y={110} textAnchor="end" fill="#ef4444" fontSize={8}>Unswitched: {unswitchedTotal.toFixed(1)}W</text>
+          <text x={580} y={30} textAnchor="end" fill="var(--status-caution)" fontSize={fs.label}>Switched: {switchedTotal.toFixed(1)}W</text>
+          <text x={580} y={110} textAnchor="end" fill="var(--status-alarm)" fontSize={fs.label}>Unswitched: {unswitchedTotal.toFixed(1)}W</text>
         </svg>
       </div>
 
       {/* Per-mode duty cycle table */}
       <div className="card" style={{ marginBottom: '0.75rem' }}>
-        <h3 style={{ fontSize: '0.82rem', marginBottom: '0.3rem' }}>Power by Operational Mode (Duty Cycle Table)</h3>
-        <p style={{ fontSize: '0.65rem', color: '#6b7280', marginBottom: '0.4rem' }}>
+        <h3 style={{ fontSize: fs.body, marginBottom: '0.3rem' }}>Power by Operational Mode (Duty Cycle Table)</h3>
+        <p style={{ fontSize: fs.label, color: 'var(--text-3)', marginBottom: '0.4rem' }}>
           Cells show power consumed = component power x duty cycle. Click a duty cycle to edit.
         </p>
         <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.72rem', fontFamily: 'monospace' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs.value, fontFamily: 'monospace' }}>
             <thead>
-              <tr style={{ background: 'var(--bg-primary, #0a0e1a)' }}>
+              <tr style={{ background: 'var(--bg-primary, var(--surface-0))' }}>
                 <th style={thStyle}>Component</th>
                 <th style={thStyle}>Unit Power (W)</th>
                 {modeIds.map(m => (
@@ -262,7 +263,7 @@ export function PowerDistribution() {
             </thead>
             <tbody>
               {consumers.map(c => (
-                <tr key={c.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                <tr key={c.id} style={{ borderBottom: '1px solid color-mix(in srgb, var(--text) 5%, transparent)' }}>
                   <td style={tdStyle}>{c.name}</td>
                   <td style={tdNumStyle}>{c.power_w.toFixed(1)}</td>
                   {modeIds.map(m => {
@@ -271,13 +272,13 @@ export function PowerDistribution() {
                     return (
                       <td key={m.id} style={tdNumStyle}>
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.1rem' }}>
-                          <span style={{ color: power > 0 ? '#d1d5db' : '#4b5563' }}>{power.toFixed(1)}</span>
+                          <span style={{ color: power > 0 ? 'var(--text)' : 'var(--line-strong)' }}>{power.toFixed(1)}</span>
                           <input type="number" min={0} max={1} step={0.1} value={dc}
                             onChange={e => setDutyCycle(c.domain, m.id, Number(e.target.value))}
                             style={{
-                              width: '40px', fontSize: '0.6rem', textAlign: 'right',
-                              background: 'transparent', border: '1px solid #374151',
-                              borderRadius: '2px', color: '#6b7280', padding: '0 2px',
+                              width: '40px', fontSize: fs.label, textAlign: 'right',
+                              background: 'transparent', border: '1px solid var(--line)',
+                              borderRadius: '2px', color: 'var(--text-3)', padding: '0 2px',
                             }}
                             title={`Duty cycle for ${c.domain} in ${m.name}`}
                           />
@@ -288,16 +289,16 @@ export function PowerDistribution() {
                 </tr>
               ))}
               {/* Subtotal row */}
-              <tr style={{ borderTop: '2px solid #374151', fontWeight: 700 }}>
+              <tr style={{ borderTop: '2px solid var(--line)', fontWeight: 700 }}>
                 <td style={tdStyle} colSpan={2}>Subtotal</td>
                 {modeIds.map(m => (
-                  <td key={m.id} style={{ ...tdNumStyle, color: '#d1d5db' }}>
+                  <td key={m.id} style={{ ...tdNumStyle, color: 'var(--text)' }}>
                     {(modeWithMargins[m.id]?.subtotal || 0).toFixed(1)}
                   </td>
                 ))}
               </tr>
               {/* Margin row (20%) */}
-              <tr style={{ color: '#f59e0b' }}>
+              <tr style={{ color: 'var(--status-caution)' }}>
                 <td style={tdStyle} colSpan={2}>System Margin ({MARGIN_PCT}%)</td>
                 {modeIds.map(m => (
                   <td key={m.id} style={tdNumStyle}>
@@ -306,7 +307,7 @@ export function PowerDistribution() {
                 ))}
               </tr>
               {/* Contingency row (5%) */}
-              <tr style={{ color: '#f97316' }}>
+              <tr style={{ color: 'var(--status-caution)' }}>
                 <td style={tdStyle} colSpan={2}>Contingency ({CONTINGENCY_PCT}%)</td>
                 {modeIds.map(m => (
                   <td key={m.id} style={tdNumStyle}>
@@ -315,10 +316,10 @@ export function PowerDistribution() {
                 ))}
               </tr>
               {/* Total demand */}
-              <tr style={{ borderTop: '2px solid #374151', fontWeight: 700 }}>
+              <tr style={{ borderTop: '2px solid var(--line)', fontWeight: 700 }}>
                 <td style={tdStyle} colSpan={2}>Total Demand (W)</td>
                 {modeIds.map(m => (
-                  <td key={m.id} style={{ ...tdNumStyle, color: '#ef4444', fontWeight: 700 }}>
+                  <td key={m.id} style={{ ...tdNumStyle, color: 'var(--status-alarm)', fontWeight: 700 }}>
                     {(modeWithMargins[m.id]?.total || 0).toFixed(1)}
                   </td>
                 ))}
@@ -330,19 +331,19 @@ export function PowerDistribution() {
 
       {/* Power Generation section */}
       <div className="card" style={{ marginBottom: '0.75rem' }}>
-        <h3 style={{ fontSize: '0.82rem', marginBottom: '0.3rem' }}>Power Generation by Mode</h3>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.72rem', fontFamily: 'monospace' }}>
+        <h3 style={{ fontSize: fs.body, marginBottom: '0.3rem' }}>Power Generation by Mode</h3>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs.value, fontFamily: 'monospace' }}>
           <thead>
-            <tr style={{ background: 'var(--bg-primary, #0a0e1a)' }}>
+            <tr style={{ background: 'var(--bg-primary, var(--surface-0))' }}>
               <th style={thStyle}>Source</th>
               {modeIds.map(m => <th key={m.id} style={thStyle}>{m.name}</th>)}
             </tr>
           </thead>
           <tbody>
-            <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+            <tr style={{ borderBottom: '1px solid color-mix(in srgb, var(--text) 5%, transparent)' }}>
               <td style={tdStyle}>Solar Array (EOL)</td>
               {modeIds.map(m => (
-                <td key={m.id} style={{ ...tdNumStyle, color: modeGeneration[m.id] > 0 ? '#10b981' : '#4b5563' }}>
+                <td key={m.id} style={{ ...tdNumStyle, color: modeGeneration[m.id] > 0 ? 'var(--status-ok)' : 'var(--line-strong)' }}>
                   {modeGeneration[m.id].toFixed(1)}
                 </td>
               ))}
@@ -353,7 +354,7 @@ export function PowerDistribution() {
 
       {/* Power Balance Summary */}
       <div className="card" style={{ marginBottom: '0.75rem' }}>
-        <h3 style={{ fontSize: '0.82rem', marginBottom: '0.3rem' }}>Power Balance (Generation - Demand)</h3>
+        <h3 style={{ fontSize: fs.body, marginBottom: '0.3rem' }}>Power Balance (Generation - Demand)</h3>
         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
           {modeIds.map(m => {
             const balance = modeBalance[m.id] || 0
@@ -362,15 +363,15 @@ export function PowerDistribution() {
               <div key={m.id} style={{
                 padding: '0.4rem 0.6rem', borderRadius: '4px', minWidth: '120px', textAlign: 'center',
                 background: positive ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
-                border: `1px solid ${positive ? '#10b981' : '#ef4444'}`,
+                border: `1px solid ${positive ? 'var(--status-ok)' : 'var(--status-alarm)'}`,
               }}>
-                <div style={{ fontSize: '0.65rem', color: '#9ca3af', textTransform: 'uppercase', marginBottom: '0.15rem' }}>
+                <div style={{ fontSize: fs.label, color: 'var(--text-2)', textTransform: 'uppercase', marginBottom: '0.15rem' }}>
                   {m.name}
                 </div>
-                <div style={{ fontSize: '0.9rem', fontWeight: 700, fontFamily: 'monospace', color: positive ? '#10b981' : '#ef4444' }}>
+                <div style={{ fontSize: fs.value, fontWeight: 700, fontFamily: 'monospace', color: positive ? 'var(--status-ok)' : 'var(--status-alarm)' }}>
                   {balance >= 0 ? '+' : ''}{balance.toFixed(1)} W
                 </div>
-                <div style={{ fontSize: '0.6rem', color: '#6b7280' }}>
+                <div style={{ fontSize: fs.label, color: 'var(--text-3)' }}>
                   {positive ? 'Surplus' : m.id === 'eclipse' ? 'Battery required' : 'DEFICIT'}
                 </div>
               </div>
@@ -381,12 +382,12 @@ export function PowerDistribution() {
 
       {/* Legacy bar chart */}
       <div className="card">
-        <h3 style={{ fontSize: '0.82rem', marginBottom: '0.3rem' }}>Power Summary</h3>
+        <h3 style={{ fontSize: fs.body, marginBottom: '0.3rem' }}>Power Summary</h3>
         <SVGBarChart
           data={[
-            { label: 'Sunlight', value: sunlightDemand, color: '#f59e0b' },
-            { label: 'Eclipse', value: eclipseDemand, color: '#6b7280' },
-            { label: 'SA Gen', value: saEol, color: '#10b981' },
+            { label: 'Sunlight', value: sunlightDemand, color: 'var(--status-caution)' },
+            { label: 'Eclipse', value: eclipseDemand, color: 'var(--text-3)' },
+            { label: 'SA Gen', value: saEol, color: 'var(--status-ok)' },
           ].filter(d => d.value > 0)}
           width={350} height={150} unit=" W"
         />
@@ -395,6 +396,6 @@ export function PowerDistribution() {
   )
 }
 
-const thStyle: React.CSSProperties = { padding: '0.3rem 0.5rem', textAlign: 'left', fontSize: '0.65rem', textTransform: 'uppercase', color: '#9ca3af', letterSpacing: '0.03em' }
+const thStyle: React.CSSProperties = { padding: '0.3rem 0.5rem', textAlign: 'left', fontSize: fs.label, textTransform: 'uppercase', color: 'var(--text-2)', letterSpacing: '0.03em' }
 const tdStyle: React.CSSProperties = { padding: '0.25rem 0.5rem' }
 const tdNumStyle: React.CSSProperties = { padding: '0.25rem 0.5rem', textAlign: 'right', fontFamily: 'monospace', fontVariantNumeric: 'tabular-nums' }

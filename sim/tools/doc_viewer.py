@@ -17,12 +17,18 @@ import argparse
 import html
 import logging
 import re
+import sys
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
 REPO = Path(__file__).resolve().parents[0].parent
 DEFAULT_DOCS = REPO / "configs" / "eosat1"
+# smo_common (shared HTTP policy + design system) from the checkout when the
+# suite is not pip-installed.
+_COMMON_SRC = REPO / "packages" / "smo-common" / "src"
+if _COMMON_SRC.is_dir() and str(_COMMON_SRC) not in sys.path:
+    sys.path.insert(0, str(_COMMON_SRC))
 
 try:
     from aiohttp import web
@@ -184,28 +190,66 @@ def _inline(text: str) -> str:
 
 # ── File discovery ────────────────────────────────────────────────────
 
+#: Folders that are not document categories. ``i18n/`` holds the French
+#: mirror of the tree (i18n/fr/<same path>); it is reached through the UI
+#: language, never listed as a category of its own (R3 audit A9).
+HIDDEN_DIRS = {"i18n"}
+LANGS = ("en", "fr")
+
+
 def discover_docs(base: Path) -> dict[str, list[dict]]:
-    """Find all .md files organized by category."""
+    """Find all English .md files organised by category (top-level folder).
+
+    Each entry carries ``fr_title`` when a French translation exists at
+    ``i18n/fr/<path>``.
+    """
     categories: dict[str, list[dict]] = {}
+
+    def entry(f: Path) -> dict:
+        rel = f.relative_to(base).as_posix()
+        fr = base / "i18n" / "fr" / rel
+        return {"name": f.stem, "path": rel, "title": _extract_title(f),
+                "fr_title": _extract_title(fr) if fr.is_file() else None}
+
     for subdir in sorted(base.iterdir()):
-        if subdir.is_dir():
+        if subdir.is_dir() and subdir.name not in HIDDEN_DIRS:
             md_files = sorted(subdir.rglob('*.md'))
             if md_files:
-                cat_name = subdir.name
-                categories[cat_name] = [
-                    {"name": f.stem, "path": str(f.relative_to(base)),
-                     "title": _extract_title(f)}
-                    for f in md_files
-                ]
+                categories[subdir.name] = [entry(f) for f in md_files]
     # Also include top-level .md files
     top_level = sorted(base.glob('*.md'))
     if top_level:
-        categories['_root'] = [
-            {"name": f.stem, "path": str(f.relative_to(base)),
-             "title": _extract_title(f)}
-            for f in top_level
-        ]
+        categories['_root'] = [entry(f) for f in top_level]
     return categories
+
+
+def resolve_doc(docs_root: Path, rel_path: str, lang: str) -> tuple[Path | None, str]:
+    """(file to render, language actually served) for a document request.
+
+    The French file is used when ``lang == "fr"`` and a translation exists;
+    otherwise the English original. Paths outside ``docs_root`` and the
+    ``i18n/`` tree itself are refused (None)."""
+    root = docs_root.resolve()
+    rel = rel_path.strip("/")
+    if not rel.endswith(".md") or rel.split("/", 1)[0] in HIDDEN_DIRS:
+        return None, "en"
+    en = (root / rel).resolve()
+    try:
+        en.relative_to(root)
+    except ValueError:
+        return None, "en"
+    if not en.is_file():
+        return None, "en"
+    if lang == "fr":
+        fr = (root / "i18n" / "fr" / rel).resolve()
+        if fr.is_file():
+            return fr, "fr"
+    return en, "en"
+
+
+def request_lang(request) -> str:
+    lang = (request.query.get("lang") or "").strip().lower()[:2]
+    return lang if lang in LANGS else "en"
 
 
 def _extract_title(path: Path) -> str:
@@ -222,147 +266,192 @@ def _extract_title(path: Path) -> str:
 
 
 # ── HTML templates ────────────────────────────────────────────────────
+# Light-touch restyle (R3 audit A9/§8): the page loads the shared design
+# system and language runtime (TOOL_HEAD) and its own rules are written
+# against the DS tokens, so it reads as part of the suite. Full restyle and
+# portal chrome are a later phase.
 
 PAGE_CSS = """
-:root { --bg:#0d1117; --sidebar:#161b22; --border:#21262d; --text:#c9d1d9;
-  --dim:#8b949e; --accent:#58a6ff; --code-bg:#1c2128; --link:#58a6ff; }
-* { margin:0; padding:0; box-sizing:border-box; }
-body { background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif; font-size:15px; line-height:1.6; display:flex; height:100vh; }
-#sidebar { width:280px; min-width:280px; background:var(--sidebar); border-right:1px solid var(--border); overflow-y:auto; padding:12px; }
-#sidebar h2 { color:var(--accent); font-size:13px; text-transform:uppercase; letter-spacing:1px; margin:12px 0 6px; }
-#sidebar a { display:block; padding:3px 8px; color:var(--dim); text-decoration:none; font-size:13px; border-radius:4px; }
-#sidebar a:hover, #sidebar a.active { background:var(--border); color:var(--text); }
-#sidebar input { width:100%; padding:6px 8px; background:var(--code-bg); border:1px solid var(--border); border-radius:4px; color:var(--text); font-size:13px; margin-bottom:8px; }
-#content { flex:1; overflow-y:auto; padding:24px 40px; max-width:900px; }
-#content h1 { font-size:28px; border-bottom:1px solid var(--border); padding-bottom:8px; margin-bottom:16px; }
-#content h2 { font-size:22px; margin-top:24px; border-bottom:1px solid var(--border); padding-bottom:4px; }
-#content h3 { font-size:18px; margin-top:16px; }
+body { font-size:15px; line-height:1.6; display:flex; height:100vh; }
+#sidebar { width:300px; min-width:300px; background:var(--s1);
+  border-right:1px solid var(--line); overflow-y:auto; padding:12px 12px 24px; }
+#sidebar .home { display:block; color:var(--tx); font-weight:600; font-size:15px;
+  text-decoration:none; padding:4px 8px 10px; }
+#sidebar h2 { color:var(--tx3); font-size:12px; font-weight:600; text-transform:uppercase;
+  letter-spacing:1px; margin:16px 8px 4px; }
+#sidebar a.doc-link { display:block; padding:3px 8px; color:var(--tx2); text-decoration:none;
+  font-size:13px; border-radius:3px; }
+#sidebar a.doc-link:hover, #sidebar a.doc-link[aria-current] { background:var(--s3); color:var(--tx); }
+#sidebar a.doc-link.en-only::after { content:" EN"; font-family:var(--mono); font-size:12px;
+  color:var(--tx3); }
+#sidebar label { display:block; font-size:12px; color:var(--tx3); margin:0 8px 4px; }
+#sidebar input { width:100%; padding:6px 8px; background:var(--s2); border:1px solid var(--line-2);
+  border-radius:3px; color:var(--tx); font:inherit; font-size:13px; margin-bottom:4px; }
+#content { flex:1; overflow-y:auto; padding:24px 40px 64px; }
+#content > * { max-width:820px; }
+#content h1 { font-size:24px; line-height:1.25; border-bottom:1px solid var(--line);
+  padding-bottom:8px; margin-bottom:16px; color:var(--val); }
+#content h2 { font-size:19px; margin-top:28px; border-bottom:1px solid var(--line); padding-bottom:4px; }
+#content h3 { font-size:16px; margin-top:20px; }
 #content p { margin:8px 0; }
-#content a { color:var(--link); }
-#content code { background:var(--code-bg); padding:2px 6px; border-radius:3px; font-size:13px; }
-#content pre { background:var(--code-bg); padding:12px; border-radius:6px; overflow-x:auto; margin:12px 0; }
+#content a { color:var(--info); }
+#content code { font-family:var(--mono); background:var(--s2); padding:1px 5px; border-radius:3px; font-size:13px; }
+#content pre { background:var(--s1); border:1px solid var(--line); padding:12px; border-radius:3px;
+  overflow-x:auto; margin:12px 0; }
 #content pre code { padding:0; background:none; }
-#content table { border-collapse:collapse; margin:12px 0; width:100%; }
-#content th,#content td { border:1px solid var(--border); padding:6px 10px; text-align:left; }
-#content th { background:var(--sidebar); }
-#content blockquote { border-left:3px solid var(--accent); padding-left:12px; color:var(--dim); margin:8px 0; }
-#content hr { border:none; border-top:1px solid var(--border); margin:16px 0; }
+#content table { border-collapse:collapse; margin:12px 0; width:100%; font-size:14px; }
+#content th, #content td { border:1px solid var(--line); padding:6px 10px; text-align:left; vertical-align:top; }
+#content th { background:var(--s1); color:var(--tx2); font-weight:600; }
+#content blockquote { border-left:3px solid var(--line-2); padding-left:12px; color:var(--tx2); margin:8px 0; }
+#content hr { border:none; border-top:1px solid var(--line); margin:16px 0; }
 #content img { max-width:100%; }
-#content ul,#content ol { padding-left:24px; margin:8px 0; }
+#content ul, #content ol { padding-left:24px; margin:8px 0; }
 #content li { margin:2px 0; }
-.breadcrumb { font-size:12px; color:var(--dim); margin-bottom:12px; }
-.breadcrumb a { color:var(--accent); text-decoration:none; }
+.docbar { display:flex; gap:16px; align-items:baseline; justify-content:space-between;
+  font-size:13px; color:var(--tx3); margin-bottom:12px; }
+.docbar a { color:var(--info); text-decoration:none; }
+.note-lang { font-size:13px; color:var(--tx2); border:1px solid var(--line-2); border-radius:3px;
+  padding:6px 10px; margin-bottom:16px; }
+.cats { list-style:none; padding:0 !important; }
+.cats li { display:flex; gap:12px; padding:4px 0; border-bottom:1px solid var(--line); }
+.cats .n { font-family:var(--mono); color:var(--tx3); margin-left:auto; }
+@media (max-width: 760px) {
+  body { flex-direction:column; height:auto; }
+  #sidebar { width:auto; min-width:0; max-height:40vh; border-right:none;
+    border-bottom:1px solid var(--line); }
+  #content { padding:16px; }
+}
 """
 
+#: English category label (data-i18n key) per folder; FR lives in the tools
+#: catalog (smo_common/ui/i18n/tools/fr.json).
+CATEGORY_LABELS = {"_root": "Overview", "manual": "Manual", "mcs": "MCS",
+                   "procedures": "Procedures"}
 
-def build_index_html(categories: dict[str, list[dict]]) -> str:
-    sidebar_html = '<input type="text" id="search" placeholder="Search docs..." oninput="filterDocs()">\n'
+
+#: Attribute for the folder-driven category names. Spelt through a constant
+#: so the catalog scanner does not read the f-string placeholder as a key;
+#: the names themselves are kept by the `keep:` rule of the tools catalog
+#: in i18n.yaml.
+_DYN_I18N = "data-i18n"
+
+
+def _cat_label(cat: str) -> str:
+    return CATEGORY_LABELS.get(cat, cat.replace("_", " ").title())
+
+
+def _q(lang: str) -> str:
+    return "?lang=fr" if lang == "fr" else ""
+
+
+def _sidebar(categories: dict[str, list[dict]], lang: str, current: str | None) -> str:
+    out = ['<a class="home" href="/' + _q(lang) + '" data-i18n>EOSAT-1 documentation</a>',
+           '<label for="search" data-i18n>Filter documents</label>',
+           '<input type="search" id="search" oninput="filterDocs()">']
     cat_order = sorted(categories.keys(), key=lambda c: (c == '_root', c))
     for cat in cat_order:
-        label = 'Overview' if cat == '_root' else cat.replace('_', ' ').title()
-        sidebar_html += f'<h2>{html.escape(label)}</h2>\n'
+        out.append(f'<h2 {_DYN_I18N}>{html.escape(_cat_label(cat))}</h2>')
         for doc in categories[cat]:
-            sidebar_html += (
-                f'<a href="/doc/{html.escape(doc["path"])}" class="doc-link" '
-                f'data-title="{html.escape(doc["title"].lower())}">'
-                f'{html.escape(doc["title"])}</a>\n'
-            )
+            title = doc["fr_title"] if lang == "fr" and doc.get("fr_title") else doc["title"]
+            cls = "doc-link" + (" en-only" if lang == "fr" and not doc.get("fr_title") else "")
+            cur = ' aria-current="page"' if doc["path"] == current else ""
+            out.append(
+                f'<a href="/doc/{html.escape(doc["path"])}{_q(lang)}" class="{cls}"{cur} '
+                f'data-title="{html.escape(title.lower())}">{html.escape(title)}</a>')
+    return "\n".join(out)
 
-    return f"""<!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>EOSAT-1 Documentation</title>
-<style>{PAGE_CSS}</style>
-</head><body>
-<div id="sidebar">
-<h2 style="margin-top:0">EOSAT-1 Docs</h2>
-{sidebar_html}
-</div>
-<div id="content">
-<h1>EOSAT-1 Mission Documentation</h1>
-<p>Select a document from the sidebar to begin reading.</p>
-<p>This viewer renders all Markdown documentation from the mission configuration.</p>
-<h3>Categories</h3>
-<ul>
-{"".join(f'<li><strong>{cat.replace("_"," ").title()}</strong>: {len(docs)} documents</li>' for cat, docs in categories.items())}
-</ul>
-</div>
-<script>
-function filterDocs() {{
+
+_FILTER_JS = """<script>
+function filterDocs() {
   const q = document.getElementById('search').value.toLowerCase();
-  document.querySelectorAll('.doc-link').forEach(a => {{
+  document.querySelectorAll('.doc-link').forEach(a => {
     a.style.display = a.dataset.title.includes(q) ? '' : 'none';
-  }});
-}}
-</script>
+  });
+}
+</script>"""
+
+
+def _page(title: str, lang: str, sidebar: str, content: str) -> str:
+    from smo_common.web.http import TOOL_HEAD
+    return f"""<!DOCTYPE html>
+<html lang="{lang}"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>{html.escape(title)}</title>
+{TOOL_HEAD}<style>{PAGE_CSS}</style>
+</head><body data-server-lang="{lang}">
+<nav id="sidebar" aria-label="Documents" data-i18n-aria-label>
+{sidebar}
+</nav>
+<main id="content">
+{content}
+</main>
+{_FILTER_JS}
 </body></html>"""
+
+
+def build_index_html(categories: dict[str, list[dict]], lang: str = "en") -> str:
+    rows = "".join(
+        f'<li><span {_DYN_I18N}>{html.escape(_cat_label(cat))}</span>'
+        f'<span class="n">{len(docs)}</span></li>'
+        for cat, docs in sorted(categories.items(), key=lambda kv: (kv[0] == '_root', kv[0])))
+    content = ('<h1 data-i18n>EOSAT-1 mission documentation</h1>\n'
+               '<p data-i18n="Choose a document from the list. Documents open in the interface language when a translation exists.">'
+               'Choose a document from the list. Documents open in the interface '
+               'language when a translation exists.</p>\n'
+               f'<ul class="cats">{rows}</ul>')
+    return _page("EOSAT-1 documentation", lang, _sidebar(categories, lang, None), content)
 
 
 def build_doc_html(title: str, body_html: str, breadcrumb: str,
-                   categories: dict[str, list[dict]]) -> str:
-    sidebar_html = '<input type="text" id="search" placeholder="Search docs..." oninput="filterDocs()">\n'
-    cat_order = sorted(categories.keys(), key=lambda c: (c == '_root', c))
-    for cat in cat_order:
-        label = 'Overview' if cat == '_root' else cat.replace('_', ' ').title()
-        sidebar_html += f'<h2>{html.escape(label)}</h2>\n'
-        for doc in categories[cat]:
-            sidebar_html += (
-                f'<a href="/doc/{html.escape(doc["path"])}" class="doc-link" '
-                f'data-title="{html.escape(doc["title"].lower())}">'
-                f'{html.escape(doc["title"])}</a>\n'
-            )
-
-    return f"""<!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>{html.escape(title)} — EOSAT-1 Docs</title>
-<style>{PAGE_CSS}</style>
-</head><body>
-<div id="sidebar">
-<h2 style="margin-top:0"><a href="/" style="color:var(--accent);text-decoration:none">EOSAT-1 Docs</a></h2>
-{sidebar_html}
-</div>
-<div id="content">
-<div class="breadcrumb">{breadcrumb}</div>
-{body_html}
-</div>
-<script>
-function filterDocs() {{
-  const q = document.getElementById('search').value.toLowerCase();
-  document.querySelectorAll('.doc-link').forEach(a => {{
-    a.style.display = a.dataset.title.includes(q) ? '' : 'none';
-  }});
-}}
-</script>
-</body></html>"""
+                   categories: dict[str, list[dict]], lang: str = "en",
+                   rel_path: str | None = None, served_lang: str | None = None) -> str:
+    served_lang = served_lang or lang
+    bar = f'<div class="docbar"><span>{breadcrumb}</span>'
+    if rel_path:
+        other = "en" if served_lang == "fr" else "fr"
+        has_other = other == "en" or any(
+            d["path"] == rel_path and d.get("fr_title")
+            for docs in categories.values() for d in docs)
+        if has_other:
+            label = "English original" if other == "en" else "Version française"
+            bar += (f'<a href="/doc/{html.escape(rel_path)}?lang={other}" '
+                    f'hreflang="{other}" lang="{other}">{label}</a>')
+    bar += '</div>'
+    note = ""
+    if lang == "fr" and served_lang == "en":
+        note = ('<p class="note-lang" data-i18n="No French translation of this document yet; showing the English original.">'
+                'No French translation of this document yet; showing the English original.</p>')
+    content = f'{bar}\n{note}\n<article lang="{served_lang}">\n{body_html}\n</article>'
+    return _page(f"{title} — EOSAT-1", lang, _sidebar(categories, lang, rel_path), content)
 
 
 # ── aiohttp server ────────────────────────────────────────────────────
 
 def create_app(docs_root: Path) -> web.Application:
+    from smo_common.web.http import setup_tool_app, tool_html_response
     categories = discover_docs(docs_root)
-    app = web.Application()
+    app = setup_tool_app(web.Application())
 
     async def index(request):
-        return web.Response(text=build_index_html(categories),
-                            content_type='text/html')
+        return tool_html_response(build_index_html(categories, request_lang(request)), app)
 
     async def doc_handler(request):
         rel_path = request.match_info['path']
-        full_path = docs_root / rel_path
-        if not full_path.exists() or not full_path.suffix == '.md':
+        lang = request_lang(request)
+        full_path, served = resolve_doc(docs_root, rel_path, lang)
+        if full_path is None:
             raise web.HTTPNotFound(text=f"Document not found: {rel_path}")
         md_text = full_path.read_text(encoding='utf-8')
         title = _extract_title(full_path)
         body = md_to_html(md_text)
         parts = rel_path.split('/')
-        breadcrumb = '<a href="/">Home</a>'
+        breadcrumb = f'<a href="/{_q(lang)}" data-i18n>Home</a>'
         if len(parts) > 1:
-            breadcrumb += f' / <a href="/">{html.escape(parts[0])}</a>'
-        breadcrumb += f' / {html.escape(title)}'
-        return web.Response(
-            text=build_doc_html(title, body, breadcrumb, categories),
-            content_type='text/html')
+            breadcrumb += (f' / <a href="/{_q(lang)}" {_DYN_I18N}>'
+                           f'{html.escape(_cat_label(parts[0]))}</a>')
+        return tool_html_response(
+            build_doc_html(title, body, breadcrumb, categories, lang,
+                           rel_path=rel_path, served_lang=served), app)
 
     app.router.add_get('/', index)
     app.router.add_get('/doc/{path:.+}', doc_handler)

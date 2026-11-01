@@ -4294,7 +4294,7 @@ Table 10.8a — LEOP-001 step 5a detail: clearing beacon mode and stepping the T
 | Owner expected callout | "FD, TT&C — going for TTC_SET_BEACON_MODE off." → execute → "FD, TT&C — beacon_mode 0. Going for data rate LOW." → execute → "FD, TT&C — tm_tier 1, 16 000 bps, 16 kBd. Ground Seg, demod to 16 kBd." |
 | Action | `TTC_SET_BEACON_MODE(on=0)` (S8.1, **func 70**), then `TTC_SET_DATA_RATE(rate=0)` (S8.1, **func 65**) for LOW. Ground Segment re-configures the demodulator from 1 kBd to 16 kBd *before* the subsystem SIDs are expected. |
 | Verification | `ttc.beacon_mode` (0x0521) = 0 within 10 s; `ttc.tm_data_rate` (0x0506) = 16000; `ttc.tm_tier` (0x0539) = 1 (LOW); `ttc.tm_symbol_rate` (0x053B) = 16000 Bd. S1.7, **not** S1.8. |
-| Why this step | Beacon mode is the gate on the whole rate ladder: while it is latched, BEACON is the only permitted tier and both LOW and HIGH are refused. It is a separate, deliberate step because the beacon rung is the lifeline — the spacecraft never leaves it by accident. LOW carries the full periodic housekeeping set at under 10 % duty; the BEACON rung at 1 kbps cannot (the shipped HK set is ~1 557 bps of channel, i.e. 156 % of the beacon rung, and the backlog simply grows). |
+| Why this step | Beacon mode is the gate on the whole rate ladder: while it is latched, BEACON is the only permitted tier and both LOW and HIGH are refused. It is a separate, deliberate step because the beacon rung is the lifeline — the spacecraft never leaves it by accident. LOW carries the full periodic housekeeping set at under 10 % duty; the BEACON rung at 1 kbps cannot (the shipped HK set is ~1 588 bps of channel, i.e. 159 % of the beacon rung, and the backlog simply grows). |
 | Common deviation | S1.8 `0x0007` on the rate command. Read the failure notice, which names the gate in words — "TM rate is forced to the beacon tier in beacon mode (LOW refused)". The same text appears as S5 event `0x030B COMMAND_REJECTED`. Re-issue the beacon-mode clear. |
 
 **Step 6 — Synchronise On-Board Time**
@@ -5352,9 +5352,9 @@ commanded.
 The legacy binary encoding is preserved: 0 still means "the low
 rate" and 1 still means "the high rate" — the rates themselves
 moved. 1 kbps was never an operations rate: the shipped
-housekeeping set generates 1351.5 bps of PUS packets, which is
-1557 bps of channel after RS(255,223) and TM framing, so a 1 kbps
-link is 156 % subscribed before anything else is sent.
+housekeeping set generates 1378.5 bps of PUS packets, which is
+1588 bps of channel after RS(255,223) and TM framing, so a 1 kbps
+link is 159 % subscribed before anything else is sent.
 
 #### Per-step playbook
 
@@ -6664,7 +6664,7 @@ a whole pass: imagery is not merely slower at LOW, it is
 impossible.**
 
 **Housekeeping is not free.** The shipped HK set generates
-1351.5 bps of PUS packets, which is **1557 bps of channel** after
+1378.5 bps of PUS packets, which is **1588 bps of channel** after
 RS(255,223) and TM framing — 134.5 Mbit, or **16.0 MiB, per day**.
 Against ~23 300 s of daily contact:
 

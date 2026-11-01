@@ -19,18 +19,19 @@ import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 import { SVGLineChart, type Band, type LineSeries } from '../charts/SVGLineChart'
 import type { AnalysisConflict, MissionSimRun, MissionSimRunResponse, MissionSimSeries, RunSeriesResponse } from '../types/analyses'
+import { fs } from '../theme/tokens'
 
 const API = '/api'
 const ANALYSIS = 'mission_simulation'
 
 const SEVERITY_COLORS: Record<string, string> = {
-  critical: '#ef4444', major: '#f97316', minor: '#eab308', warning: '#f59e0b', info: '#3b82f6',
+  critical: 'var(--status-alarm)', major: 'var(--status-caution)', minor: 'var(--status-caution)', warning: 'var(--status-caution)', info: 'var(--interactive)',
 }
 // English text is the i18n key
 const SEVERITY_LABELS: Record<string, string> = {
   critical: 'critical', major: 'major', minor: 'minor', warning: 'warning', info: 'info',
 }
-const MODE_PALETTE = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6', '#f43f5e', '#84cc16']
+const MODE_PALETTE = ['var(--interactive)', 'var(--status-ok)', 'var(--status-caution)', 'var(--cat-2)', 'var(--cat-6)', 'var(--cat-3)', 'var(--status-alarm)', 'var(--cat-7)']
 
 async function jsonOrThrow(res: Response) {
   if (!res.ok) {
@@ -65,14 +66,14 @@ const card: React.CSSProperties = {
   background: 'var(--bg-primary)', border: '1px solid var(--border)',
 }
 const btn = (primary = false): React.CSSProperties => ({
-  cursor: 'pointer', fontSize: '0.66rem', padding: '0.2rem 0.6rem', borderRadius: 4,
-  border: `1px solid ${primary ? '#3b82f6' : 'var(--border)'}`,
-  background: primary ? '#3b82f622' : 'none', color: primary ? '#60a5fa' : 'var(--text-secondary)',
+  cursor: 'pointer', fontSize: fs.label, padding: '0.2rem 0.6rem', borderRadius: 4,
+  border: `1px solid ${primary ? 'var(--interactive)' : 'var(--border)'}`,
+  background: primary ? 'color-mix(in srgb, var(--interactive) 13%, transparent)' : 'none', color: primary ? 'var(--interactive)' : 'var(--text-secondary)',
 })
 
 function Badge({ text, color, title }: { text: string; color: string; title?: string }) {
   return (
-    <span title={title} style={{ fontSize: '0.58rem', padding: '0 0.35rem', borderRadius: 3, background: `${color}22`, color, border: `1px solid ${color}55`, whiteSpace: 'nowrap' }}>
+    <span title={title} style={{ fontSize: fs.label, padding: '0 0.35rem', borderRadius: 3, background: `color-mix(in srgb, ${color} 13%, transparent)`, color, border: `1px solid color-mix(in srgb, ${color} 33%, transparent)`, whiteSpace: 'nowrap' }}>
       {text}
     </span>
   )
@@ -81,11 +82,11 @@ function Badge({ text, color, title }: { text: string; color: string; title?: st
 function SummaryCard({ label, value, unit, tone, sub }: { label: string; value: string; unit?: string; tone?: string; sub?: string }) {
   return (
     <div style={card}>
-      <div style={{ fontSize: '0.58rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>{label}</div>
-      <div style={{ fontSize: '1rem', fontWeight: 600, color: tone || 'var(--text-primary)', fontFamily: 'ui-monospace, monospace' }}>
-        {value}{unit && <span style={{ fontSize: '0.6rem', marginLeft: 2, color: 'var(--text-secondary)' }}>{unit}</span>}
+      <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>{label}</div>
+      <div style={{ fontSize: fs.value, fontWeight: 600, color: tone || 'var(--text-primary)', fontFamily: 'ui-monospace, monospace' }}>
+        {value}{unit && <span style={{ fontSize: fs.label, marginLeft: 2, color: 'var(--text-secondary)' }}>{unit}</span>}
       </div>
-      {sub && <div style={{ fontSize: '0.56rem', color: 'var(--text-secondary)' }}>{sub}</div>}
+      {sub && <div style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>{sub}</div>}
     </div>
   )
 }
@@ -143,7 +144,7 @@ export function MissionSimulationPanel({ studyId, optionId }: { studyId: string 
     const m = new Map<string, string>()
     const names = series?.modes.map(x => x.name) ?? []
     for (const name of [...names, ...(series?.mode ?? [])]) {
-      if (!m.has(name)) m.set(name, /safe|surviv/i.test(name) ? '#ef4444' : MODE_PALETTE[m.size % MODE_PALETTE.length])
+      if (!m.has(name)) m.set(name, /safe|surviv/i.test(name) ? 'var(--status-alarm)' : MODE_PALETTE[m.size % MODE_PALETTE.length])
     }
     return m
   }, [series])
@@ -155,54 +156,54 @@ export function MissionSimulationPanel({ studyId, optionId }: { studyId: string 
     for (let i = 0; i < series.t_s.length; i++) {
       const from = toH(series.t_s[i])
       const to = toH(i + 1 < series.t_s.length ? series.t_s[i + 1] : series.t_s[i] + series.dt_s)
-      out.push({ from, to, label: series.mode[i], color: modeColors.get(series.mode[i]) || '#6b7280' })
+      out.push({ from, to, label: series.mode[i], color: modeColors.get(series.mode[i]) || 'var(--text-3)' })
     }
     return out
   }, [series, modeColors])
 
-  const socSeries: LineSeries[] = series ? [{ name: 'SoC', color: '#3b82f6', points: series.t_s.map((t, i) => [toH(t), series.soc_pct[i]]) }] : []
+  const socSeries: LineSeries[] = series ? [{ name: 'SoC', color: 'var(--interactive)', points: series.t_s.map((t, i) => [toH(t), series.soc_pct[i]]) }] : []
   const powerSeries: LineSeries[] = series ? [
-    { name: t('generation'), color: '#10b981', points: series.t_s.map((t, i) => [toH(t), series.p_gen_w[i]]) },
-    { name: t('load', { context: 'electrical' }), color: '#f97316', points: series.t_s.map((t, i) => [toH(t), series.p_load_w[i]]) },
+    { name: t('generation'), color: 'var(--status-ok)', points: series.t_s.map((t, i) => [toH(t), series.p_gen_w[i]]) },
+    { name: t('load', { context: 'electrical' }), color: 'var(--status-caution)', points: series.t_s.map((t, i) => [toH(t), series.p_load_w[i]]) },
   ] : []
-  const dataSeries: LineSeries[] = series ? [{ name: t('buffer', { context: 'data' }), color: '#8b5cf6', points: series.t_s.map((t, i) => [toH(t), series.data_buffer_gb[i]]) }] : []
-  const tempSeries: LineSeries[] = series?.temp_c?.length ? [{ name: t('temp'), color: '#eab308', points: series.t_s.map((t, i) => [toH(t), series.temp_c[i]]) }] : []
+  const dataSeries: LineSeries[] = series ? [{ name: t('buffer', { context: 'data' }), color: 'var(--cat-2)', points: series.t_s.map((t, i) => [toH(t), series.data_buffer_gb[i]]) }] : []
+  const tempSeries: LineSeries[] = series?.temp_c?.length ? [{ name: t('temp'), color: 'var(--status-caution)', points: series.t_s.map((t, i) => [toH(t), series.temp_c[i]]) }] : []
   const minSoc = series?.inputs?.min_soc_pct as number | undefined
   const storage = series?.inputs?.storage_gb as number | null | undefined
 
-  if (!studyId) return <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>{t('Select a study.')}</div>
+  if (!studyId) return <div style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>{t('Select a study.')}</div>
 
   const s = run?.summary ?? {}
-  const socTone = s.sim_min_soc_pct === undefined ? undefined : s.sim_min_soc_pct < (minSoc ?? 20) ? '#ef4444' : '#10b981'
-  const ebTone = s.sim_energy_balance_wh_per_orbit === undefined ? undefined : s.sim_energy_balance_wh_per_orbit < 0 ? '#ef4444' : '#10b981'
-  const safeTone = s.sim_time_in_safe_pct === undefined ? undefined : s.sim_time_in_safe_pct > 10 ? '#f59e0b' : '#10b981'
-  const backlogTone = s.sim_data_backlog_end_gb === undefined ? undefined : s.sim_data_backlog_end_gb > 0.05 ? '#f59e0b' : '#10b981'
+  const socTone = s.sim_min_soc_pct === undefined ? undefined : s.sim_min_soc_pct < (minSoc ?? 20) ? 'var(--status-alarm)' : 'var(--status-ok)'
+  const ebTone = s.sim_energy_balance_wh_per_orbit === undefined ? undefined : s.sim_energy_balance_wh_per_orbit < 0 ? 'var(--status-alarm)' : 'var(--status-ok)'
+  const safeTone = s.sim_time_in_safe_pct === undefined ? undefined : s.sim_time_in_safe_pct > 10 ? 'var(--status-caution)' : 'var(--status-ok)'
+  const backlogTone = s.sim_data_backlog_end_gb === undefined ? undefined : s.sim_data_backlog_end_gb > 0.05 ? 'var(--status-caution)' : 'var(--status-ok)'
 
   return (
-    <div style={{ fontSize: '0.7rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+    <div style={{ fontSize: fs.label, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
       {/* header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-        <strong style={{ fontSize: '0.74rem' }}>{t('Mission simulation')}</strong>
+        <strong style={{ fontSize: fs.label }}>{t('Mission simulation')}</strong>
         {run ? (
           <>
-            <Badge text={run.status === 'ok' ? t('last run {{ago}}', { ago: ago(run.finished_at, t) }) : t('run {{status}}', { status: run.status })} color={run.status === 'ok' ? '#10b981' : '#ef4444'} title={run.finished_at || undefined} />
-            {run.stale && <Badge text={t('stale')} color="#f59e0b" title={t('The model changed since this run — re-run to refresh')} />}
-            {s.n_orbits !== undefined && <span style={{ color: 'var(--text-secondary)', fontSize: '0.6rem' }}>{t('{{n}} orbits · {{samples}} samples', { n: s.n_orbits, samples: s.samples ?? '?' })}</span>}
+            <Badge text={run.status === 'ok' ? t('last run {{ago}}', { ago: ago(run.finished_at, t) }) : t('run {{status}}', { status: run.status })} color={run.status === 'ok' ? 'var(--status-ok)' : 'var(--status-alarm)'} title={run.finished_at || undefined} />
+            {run.stale && <Badge text={t('stale')} color="var(--status-caution)" title={t('The model changed since this run — re-run to refresh')} />}
+            {s.n_orbits !== undefined && <span style={{ color: 'var(--text-secondary)', fontSize: fs.label }}>{t('{{n}} orbits · {{samples}} samples', { n: s.n_orbits, samples: s.samples ?? '?' })}</span>}
           </>
         ) : runQ.isLoading ? <span style={{ color: 'var(--text-secondary)' }}>{t('loading…')}</span>
-          : <Badge text={t('never run')} color="#6b7280" />}
+          : <Badge text={t('never run')} color="var(--text-3)" />}
         <span style={{ flex: 1 }} />
-        <label style={{ color: 'var(--text-secondary)', fontSize: '0.62rem' }}>
+        <label style={{ color: 'var(--text-secondary)', fontSize: fs.label }}>
           {t('orbits')}{' '}
           <input type="number" min={1} max={200} value={nOrbits} onChange={e => setNOrbits(Math.max(1, Math.min(200, Number(e.target.value) || 1)))}
-                 style={{ width: 46, fontSize: '0.62rem', padding: '0.1rem 0.25rem', background: 'var(--bg-primary)', border: '1px solid var(--border)', borderRadius: 3, color: 'var(--text-primary)' }} />
+                 style={{ width: 46, fontSize: fs.label, padding: '0.1rem 0.25rem', background: 'var(--bg-primary)', border: '1px solid var(--border)', borderRadius: 3, color: 'var(--text-primary)' }} />
         </label>
         <button style={btn(true)} disabled={runMut.isPending} onClick={() => runMut.mutate()}>
           {runMut.isPending ? t('Running…') : run ? t('Re-run') : t('Run')}
         </button>
       </div>
-      {error && <div style={{ color: '#ef4444', fontSize: '0.64rem' }}>{error}</div>}
-      {run?.status === 'failed' && s.error && <div style={{ color: '#ef4444', fontSize: '0.64rem' }}>{t('Last run failed: {{error}}', { error: s.error })}</div>}
+      {error && <div style={{ color: 'var(--status-alarm)', fontSize: fs.label }}>{error}</div>}
+      {run?.status === 'failed' && s.error && <div style={{ color: 'var(--status-alarm)', fontSize: fs.label }}>{t('Last run failed: {{error}}', { error: s.error })}</div>}
 
       {/* summary cards */}
       {run && run.status === 'ok' && (
@@ -223,7 +224,7 @@ export function MissionSimulationPanel({ studyId, optionId }: { studyId: string 
 
       {/* warnings */}
       {!!s.warnings?.length && (
-        <ul style={{ margin: 0, paddingLeft: '1rem', color: '#f59e0b', fontSize: '0.62rem' }}>
+        <ul style={{ margin: 0, paddingLeft: '1rem', color: 'var(--status-caution)', fontSize: fs.label }}>
           {s.warnings.map((w, i) => <li key={i}>{w}</li>)}
         </ul>
       )}
@@ -245,7 +246,7 @@ export function MissionSimulationPanel({ studyId, optionId }: { studyId: string 
           </div>
           {tempSeries.length > 0 && (
             <div style={card}>
-              <SVGLineChart title={t('Temperature (single node)')} series={tempSeries} xLabel="h" yLabel="°C" refLines={[{ y: 0, label: t('heater on'), color: '#60a5fa' }]} height={190} />
+              <SVGLineChart title={t('Temperature (single node)')} series={tempSeries} xLabel="h" yLabel="°C" refLines={[{ y: 0, label: t('heater on'), color: 'var(--interactive)' }]} height={190} />
             </div>
           )}
         </div>
@@ -254,26 +255,26 @@ export function MissionSimulationPanel({ studyId, optionId }: { studyId: string 
       {/* what limited me */}
       {run && run.status === 'ok' && (
         <div>
-          <div style={{ fontSize: '0.64rem', color: 'var(--text-secondary)', marginBottom: '0.2rem' }}>
+          <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginBottom: '0.2rem' }}>
             {t('What limited me')} {conflicts.length ? `(${conflicts.length})` : ''}
           </div>
           {conflicts.length === 0 ? (
-            <div style={{ color: '#10b981', fontSize: '0.64rem' }}>{t('No limits hit: SoC, energy balance, data and safe-mode time are all within bounds.')}</div>
+            <div style={{ color: 'var(--status-ok)', fontSize: fs.label }}>{t('No limits hit: SoC, energy balance, data and safe-mode time are all within bounds.')}</div>
           ) : (
             <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
               {conflicts.map(c => {
-                const color = SEVERITY_COLORS[c.severity] || '#6b7280'
+                const color = SEVERITY_COLORS[c.severity] || 'var(--text-3)'
                 return (
                   <li key={c.id} style={{ ...card, borderLeft: `3px solid ${color}` }}>
                     <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', flexWrap: 'wrap' }}>
                       <Badge text={t(SEVERITY_LABELS[c.severity] ?? c.severity)} color={color} />
-                      <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: '0.58rem', color: 'var(--text-secondary)' }}>{c.code}</span>
-                      <strong style={{ fontSize: '0.68rem' }}>{c.title}</strong>
+                      <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: fs.label, color: 'var(--text-secondary)' }}>{c.code}</span>
+                      <strong style={{ fontSize: fs.label }}>{c.title}</strong>
                     </div>
-                    {c.detail && <div style={{ fontSize: '0.62rem', color: 'var(--text-secondary)', marginTop: 2 }}>{c.detail}</div>}
+                    {c.detail && <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginTop: 2 }}>{c.detail}</div>}
                     {c.suggested_fix && (
-                      <div style={{ fontSize: '0.62rem', marginTop: 2 }}>
-                        <span style={{ color: '#60a5fa' }}>{t('Fix:')} </span>{c.suggested_fix}
+                      <div style={{ fontSize: fs.label, marginTop: 2 }}>
+                        <span style={{ color: 'var(--interactive)' }}>{t('Fix:')} </span>{c.suggested_fix}
                       </div>
                     )}
                   </li>

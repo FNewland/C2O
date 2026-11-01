@@ -126,6 +126,22 @@ link_budget:
   ground_stations_file: planning/ground_stations.yaml
   default_ground_station: Iqaluit
 
+# ── Ground-receiver limits (plan decision 2026-11-01) ──
+# BER and AGC are measured by the GROUND demodulator (visibility:
+# ground_derived), so they are limit-checked here by the bridge — not in
+# mcs/limits.yaml, which is the spacecraft-telemetry set. Same conventions as
+# the MCS (yellow/red, strict). Shown on the radio page labelled "ground" and
+# served at GET /api/ground-limits. Not evaluated without carrier lock or in
+# PACKET mode (there is nothing to measure).
+ground_limits:
+  ber_yellow_high: -5.0     # log10; 1e-5 = Eb/N0 at the 9.6 dB design point
+  ber_red_high: -4.0        # 1e-4
+  agc_offset_db: 60.0       # AGC = RSSI + 60 dB (the 0x051A definition)
+  agc_yellow_low: -66.0     # weaker than any nominal pass at NOMINAL power
+  agc_yellow_high: -30.0
+  agc_red_low: -70.0
+  agc_red_high: -20.0       # near saturation (event 0x0510 at > 0 dB)
+
 network:
   # Upstream (simulator)
   sim_tm_host: "127.0.0.1"

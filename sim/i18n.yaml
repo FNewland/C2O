@@ -48,6 +48,17 @@ catalogs:
     fr: packages/smo-common/src/smo_common/ui/i18n/fr.json
     sources:
       - packages/smo-common/src/smo_common/ui/*.{js,html,svg}
+  - name: tools
+    fr: packages/smo-common/src/smo_common/ui/i18n/tools/fr.json
+    fallback: [smo-common]
+    functions: [t, T, tText, tHtml]
+    # doc_viewer.CATEGORY_LABELS: category names come from the docs folders
+    # and are rendered as data-i18n="{label}", which no scanner can resolve.
+    keep:
+      - '^(Overview|Manual|MCS|Procedures)$'
+    sources:
+      - tools/*.{py,html,js}
+      - packages/smo-common/src/smo_common/ui/tool-page.js
   - name: mcs
     fr: packages/smo-mcs/src/smo_mcs/static/modern/i18n/fr.json
     fallback: [smo-common]

@@ -29,7 +29,7 @@ avec des jalons de décision à 6 h, 12 h, 24 h et 48 h écoulées depuis le
 **TC:** `HK_REQUEST(sid=6)` (Service 3, Subtype 27) --- émise en aveugle à chaque passage.
 **Séquence :** Programmer des tentatives en liaison montante à chaque passage visible (élévation minimale 5 deg) sur
 Iqaluit et Troll, par ordre de priorité selon l'élévation maximale.
-**Verify:** `ttc.rssi` (0x0502) > -125 dBm et `ttc.link_status` (0x0501) = 2 (LOCKED) dans les 30 s qui suivent l'AOS.
+**Verify:** `ttc.link_status` (0x0501) = 2 (LOCKED) dans les 30 s qui suivent l'AOS, et sur la page TT&C (sol) `ttc.rssi` (0x0502) > -128 dBm.
 **GO/NO-GO:** Si une télémesure est reçue sur une station quelconque, sortir de l'urgence et effectuer l'évaluation selon EMG-001. Sans réponse après une rotation complète des stations sol, la commande en aveugle sur le transpondeur principal (étape 3) s'applique. -> GO `STEP-END` | NO-GO `STEP-3`
 
 ### Étape 3 --- Commande en aveugle sur le transpondeur principal
@@ -57,7 +57,7 @@ d'intervalle. (Était annotée Subtype 2 ; toute exécution de fonction S8 est
 sans contact sol. Le satellite passe successivement par différentes configurations de transpondeur et
 augmente la puissance de la balise.
 **Surveiller :** Toutes les stations sol en écoute seule sur les fréquences principale et redondante.
-**Verify:** Détection de la balise sur une station quelconque --- relevés de `ttc.rssi` (0x0502) consignés en continu.
+**Verify:** Détection de la balise sur une station quelconque --- relevés de `ttc.rssi` (0x0502) sur la page TT&C (sol) consignés en continu.
 **Durée :** Attendre au moins 4 périodes orbitales (~6,3 heures) après l'activation prévue du temporisateur de bord.
 
 ### Étape 6 --- Campagne ciblée sur les passages polaires (seuil de 12 h)

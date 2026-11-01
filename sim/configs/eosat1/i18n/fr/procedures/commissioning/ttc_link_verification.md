@@ -105,20 +105,21 @@ désactivé ci-dessus) avec `ttc.beacon_tx_on` (0x0526, l'émetteur UHF).
 ### Étape 1 — Performances de référence du transpondeur principal
 **TC:** `HK_REQUEST(sid=6)` (Service 3, Subtype 27)
 **Verify:** `ttc.link_status` (0x0501) = 2 (LOCKED) sous 10s
-**Verify:** `ttc.rssi` (0x0502) > -100 dBm sous 10s
-**Verify:** `ttc.link_margin` (0x0503) > 6.0 dB sous 10s
+**Verify:** page TT&C (sol) : `ttc.rssi` (0x0502) > -126 dBm sous 10s
+**Verify:** page TT&C (sol) : `ttc.link_margin` (0x0503) > 6.0 dB sous 10s
 **Action:** Consigner les valeurs à l'angle d'élévation actuel. Noter la station sol et la configuration d'antenne.
 **GO/NO-GO:** Liaison du transpondeur principal nominale
 
 ### Étape 2 — Mesurer le profil RSSI en fonction de l'élévation
-**Action:** Pendant le passage station sol, demander les HK TT&C à faible (10°), moyenne (30°) et forte (60° et plus) élévation afin de caractériser les performances de la liaison.
-**TC:** `HK_REQUEST(sid=6)` (Service 3, Subtype 27) — données de servitude TT&C à ~10° d'élévation
-**Verify:** `ttc.rssi` (0x0502) > -108 dBm (faible élévation) sous 10s
-**Verify:** `ttc.link_margin` (0x0503) > 3.0 dB (minimum à faible élévation) sous 10s
-**TC:** `HK_REQUEST(sid=6)` (Service 3, Subtype 27) — données de servitude TT&C à ~30° d'élévation
-**Verify:** `ttc.rssi` (0x0502) > -100 dBm (élévation moyenne) sous 10s
-**TC:** `HK_REQUEST(sid=6)` (Service 3, Subtype 27) — données de servitude TT&C à ~60° d'élévation
-**Verify:** `ttc.rssi` (0x0502) > -95 dBm (forte élévation) sous 10s
+**Action:** Pendant le passage station sol, relever les valeurs du récepteur sol sur la page TT&C à faible (10°), moyenne (30°) et forte (60° et plus) élévation afin de caractériser les performances de la liaison.
+**Note:** Le RSSI et la marge de liaison sont mesurés par le récepteur de la station sol, pas par le satellite ; aucune demande de HK n'est donc nécessaire : ils figurent sur la page TT&C pendant tout le passage, étiquetés « sol ».
+**Note:** À ~10° d'élévation :
+**Verify:** page TT&C (sol) : `ttc.rssi` (0x0502) > -126 dBm (faible élévation) sous 10s
+**Verify:** page TT&C (sol) : `ttc.link_margin` (0x0503) > 3.0 dB (minimum à faible élévation) sous 10s
+**Note:** À ~30° d'élévation :
+**Verify:** page TT&C (sol) : `ttc.rssi` (0x0502) > -118 dBm (élévation moyenne) sous 10s
+**Note:** À ~60° d'élévation :
+**Verify:** page TT&C (sol) : `ttc.rssi` (0x0502) > -114 dBm (forte élévation) sous 10s
 **GO/NO-GO:** Profil RSSI cohérent avec la prédiction du bilan de liaison (+/- 3 dB)
 
 ### Étape 2a — Mesurer la référence de chaque palier de l'échelle de débits TM
@@ -127,14 +128,14 @@ chaque palier. C'est cette mesure qui établit les références de la mission fi
 ci-dessus.
 **TC:** `TTC_SET_DATA_RATE(rate=0)` (Service 8, Subtype 1, func_id 65) — LOW, 16 kbit/s
 **Verify:** `ttc.tm_data_rate` (0x0506) = 16000 bps et `ttc.tm_tier` (0x0539) = 1
-**Verify:** `ttc.link_margin` (0x0503) — consigner ; 55-59 dB attendus à 30 deg
+**Verify:** page TT&C (sol) : `ttc.link_margin` (0x0503) — consigner ; 55-59 dB attendus à 30 deg
 **TC:** `TTC_SET_DOWNLINK_MODE(on=1)` (Service 8, Subtype 1, func_id 79)
 **Verify:** `ttc.downlink_mode` (0x053C) = 1
 **TC:** `TTC_SET_DATA_RATE(rate=1)` (Service 8, Subtype 1, func_id 65) — HIGH, 128 kbit/s
 **Verify:** `ttc.tm_data_rate` (0x0506) = 128000 bps et `ttc.tm_tier` (0x0539) = 2
 **Verify:** `ttc.tm_symbol_rate` (0x053B) = 64000 Bd (le passage en QPSK est visible sur
 l'analyseur de spectre de la station sol : même débit d'information, moitié de la bande occupée)
-**Verify:** `ttc.link_margin` (0x0503) — consigner ; 45-48 dB attendus à 30 deg
+**Verify:** page TT&C (sol) : `ttc.link_margin` (0x0503) — consigner ; 45-48 dB attendus à 30 deg
 **Action:** Calculer la marche : marge(LOW) - marge(HIGH). Elle doit valoir 10,5 +/- 0,5 dB.
 **TC:** `TTC_SET_DATA_RATE(rate=0)` (Service 8, Subtype 1, func_id 65) — redescendre en LOW
 **TC:** `TTC_SET_DOWNLINK_MODE(on=0)` (Service 8, Subtype 1, func_id 79) — libérer le mode DOWNLINK
@@ -175,12 +176,12 @@ de bilan de liaison.
 la programmation de TC datées ; la sélection de transpondeur est la fonction S8 func 64.
 **Action:** Attendre le verrouillage du transpondeur redondant. La station sol peut nécessiter une brève réacquisition.
 **Verify:** `ttc.link_status` (0x0501) = 2 (LOCKED) sous 60s
-**Verify:** `ttc.rssi` (0x0502) > -100 dBm sous 60s
+**Verify:** page TT&C (sol) : `ttc.rssi` (0x0502) > -126 dBm sous 60s
 **GO/NO-GO:** Transpondeur redondant opérationnel et verrouillé
 
 ### Étape 4 — Contrôle des performances du transpondeur redondant
 **TC:** `HK_REQUEST(sid=6)` (Service 3, Subtype 27)
-**Verify:** `ttc.link_margin` (0x0503) > 6.0 dB sous 10s
+**Verify:** page TT&C (sol) : `ttc.link_margin` (0x0503) > 6.0 dB sous 10s
 **Action:** Comparer le RSSI et la marge de liaison du transpondeur redondant à ceux du principal à élévation similaire. Les valeurs doivent être à 2 dB près de celles du principal.
 **Verify:** |RSSI_redundant - RSSI_primary| < 2.0 dB
 **GO/NO-GO:** Performances du transpondeur redondant comparables à celles du principal
@@ -189,7 +190,7 @@ la programmation de TC datées ; la sélection de transpondeur est la fonction
 **TC:** `TTC_SWITCH_PRIMARY` (Service 8, Subtype 1, func_id 63)
 **Note:** Annoté `Service 11, Subtype 1` jusqu'en 2026-08b — voir l'étape 3.
 **Verify:** `ttc.link_status` (0x0501) = 2 (LOCKED) sous 60s
-**Verify:** `ttc.rssi` (0x0502) > -100 dBm sous 10s
+**Verify:** page TT&C (sol) : `ttc.rssi` (0x0502) > -126 dBm sous 10s
 **GO/NO-GO:** Transpondeur principal rétabli et verrouillé
 
 ### Étape 6 — Essai de débit de commandes

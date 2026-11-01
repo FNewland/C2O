@@ -7,6 +7,8 @@
  */
 import { useState, useEffect } from 'react'
 import { useDesignStore } from '../stores/designStore'
+import { fs } from '../theme/tokens'
+import { askText } from './ui/Dialog'
 
 interface TreeReq {
   id: string; code: string; text: string; level: string
@@ -17,11 +19,11 @@ interface TreeReq {
 }
 
 const LEVEL_COLORS: Record<string, string> = {
-  mission: '#8b5cf6', system: '#3b82f6', subsystem: '#06b6d4',
+  mission: 'var(--cat-2)', system: 'var(--interactive)', subsystem: 'var(--interactive)',
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  draft: '#6b7280', approved: '#10b981', violated: '#ef4444', verified: '#3b82f6', retired: '#374151',
+  draft: 'var(--text-3)', approved: 'var(--status-ok)', violated: 'var(--status-alarm)', verified: 'var(--interactive)', retired: 'var(--line)',
 }
 
 export function RequirementsTree({ studyId }: { studyId: string | null }) {
@@ -82,7 +84,7 @@ export function RequirementsTree({ studyId }: { studyId: string | null }) {
   }
 
   const deriveChild = async (parentId: string) => {
-    const text = prompt('Child requirement text:')
+    const text = (await askText('Child requirement text:'))
     if (!text) return
     try {
       await fetch(`/api/requirements/${parentId}/derive`, {
@@ -99,9 +101,9 @@ export function RequirementsTree({ studyId }: { studyId: string | null }) {
 
   if (allReqs.length === 0 && !loading) {
     return (
-      <div className="card" style={{ borderLeft: '3px solid #6b7280' }}>
-        <h3 style={{ fontSize: '0.85rem', color: '#6b7280' }}>Requirements Tree</h3>
-        <p style={{ fontSize: '0.72rem', color: '#6b7280' }}>
+      <div className="card" style={{ borderLeft: '3px solid var(--text-3)' }}>
+        <h3 style={{ fontSize: fs.body, color: 'var(--text-3)' }}>Requirements Tree</h3>
+        <p style={{ fontSize: fs.label, color: 'var(--text-3)' }}>
           No requirements yet. Generate requirements from the Requirements tab or create them manually.
         </p>
       </div>
@@ -110,8 +112,8 @@ export function RequirementsTree({ studyId }: { studyId: string | null }) {
 
   return (
     <div className="card">
-      <h3 style={{ fontSize: '0.85rem', marginBottom: '0.4rem' }}>Requirements Hierarchy</h3>
-      <p style={{ fontSize: '0.68rem', color: '#9ca3af', marginBottom: '0.5rem' }}>
+      <h3 style={{ fontSize: fs.body, marginBottom: '0.4rem' }}>Requirements Hierarchy</h3>
+      <p style={{ fontSize: fs.label, color: 'var(--text-2)', marginBottom: '0.5rem' }}>
         {allReqs.length} requirements ({tree.length} roots). Click to expand/collapse.
       </p>
       {tree.map(node => <TreeNode key={node.id} node={node} depth={0} expanded={expanded} onToggle={toggleExpand} onDerive={deriveChild} />)}
@@ -125,32 +127,32 @@ function TreeNode({ node, depth, expanded, onToggle, onDerive }: {
 }) {
   const hasChildren = (node.children?.length || 0) > 0
   const isExpanded = expanded.has(node.id)
-  const levelColor = LEVEL_COLORS[node.level] || '#6b7280'
-  const statusColor = STATUS_COLORS[node.status] || '#6b7280'
+  const levelColor = LEVEL_COLORS[node.level] || 'var(--text-3)'
+  const statusColor = STATUS_COLORS[node.status] || 'var(--text-3)'
 
   return (
     <div style={{ marginLeft: depth * 16 }}>
       <div style={{
         display: 'flex', alignItems: 'center', gap: '0.3rem', padding: '0.25rem 0.4rem',
         borderLeft: `2px solid ${levelColor}`, marginBottom: '0.15rem',
-        background: depth === 0 ? 'var(--bg-primary, #111827)' : 'transparent',
+        background: depth === 0 ? 'var(--bg-primary, var(--surface-1))' : 'transparent',
         borderRadius: '2px', cursor: hasChildren ? 'pointer' : 'default',
       }} onClick={() => hasChildren && onToggle(node.id)}>
-        {hasChildren && <span style={{ fontSize: '0.6rem', color: '#6b7280', width: 12 }}>{isExpanded ? '▼' : '▶'}</span>}
+        {hasChildren && <span style={{ fontSize: fs.label, color: 'var(--text-3)', width: 12 }}>{isExpanded ? '▼' : '▶'}</span>}
         {!hasChildren && <span style={{ width: 12 }} />}
-        <span style={{ fontSize: '0.58rem', padding: '0.05rem 0.25rem', borderRadius: '2px', background: `${levelColor}20`, color: levelColor, fontWeight: 600, textTransform: 'uppercase' }}>
+        <span style={{ fontSize: fs.label, padding: '0.05rem 0.25rem', borderRadius: '2px', background: `color-mix(in srgb, ${levelColor} 13%, transparent)`, color: levelColor, fontWeight: 600, textTransform: 'uppercase' }}>
           {node.level.slice(0, 3)}
         </span>
-        <span style={{ fontSize: '0.65rem', fontFamily: 'monospace', color: '#6b7280' }}>{node.code}</span>
-        <span style={{ fontSize: '0.72rem', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        <span style={{ fontSize: fs.label, fontFamily: 'monospace', color: 'var(--text-3)' }}>{node.code}</span>
+        <span style={{ fontSize: fs.label, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {node.text}
         </span>
-        <span style={{ fontSize: '0.55rem', padding: '0.05rem 0.2rem', borderRadius: '2px', background: `${statusColor}20`, color: statusColor, fontWeight: 600 }}>
+        <span style={{ fontSize: fs.label, padding: '0.05rem 0.2rem', borderRadius: '2px', background: `color-mix(in srgb, ${statusColor} 13%, transparent)`, color: statusColor, fontWeight: 600 }}>
           {node.status}
         </span>
         {node.level !== 'subsystem' && (
           <button onClick={e => { e.stopPropagation(); onDerive(node.id) }}
-            style={{ background: 'none', border: 'none', color: '#3b82f6', cursor: 'pointer', fontSize: '0.6rem', padding: '0 0.2rem' }}
+            style={{ background: 'none', border: 'none', color: 'var(--interactive)', cursor: 'pointer', fontSize: fs.label, padding: '0 0.2rem' }}
             title="Derive child requirement">+</button>
         )}
       </div>

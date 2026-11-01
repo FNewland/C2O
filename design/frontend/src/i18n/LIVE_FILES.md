@@ -3,7 +3,7 @@
 *Generated 2026-10-28 by packet C0. Do not hand-edit the file lists without re-running the reachability check.*
 
 **Live** means reachable by static `import` from `src/main.tsx` (relative imports followed through `.ts`/`.tsx`/`index`).
-Result: **144** source files under `src/` (excluding `src/i18n/`), **52 live**, **92 dead**. Only live files are translated.
+Result: **142** source files under `src/` (excluding `src/i18n/`), **52 live**, **90 dead** (GateReviewPanel and Phase5Verification retired 2026-11-01). Only live files are translated.
 The packet split follows UI_STRING_SURVEY §7.2; the 10 live files the survey table omitted (stores, hooks, types, `SVGBarChart`)
 are assigned to the packet whose components use them. **No file is in two packets.** C0 owns `src/i18n/**`; each of C1–C4 writes
 its French **only** to its own catalog `src/i18n/locales/fr.c1.json` … `fr.c4.json` (merged at load time over `fr.json`), so
@@ -133,7 +133,6 @@ Not reachable from `main.tsx`; do not translate. If one is wired back in later, 
 - `src/components/EquipmentBrowser.tsx`
 - `src/components/ExportsPanel.tsx`
 - `src/components/FunctionTreeView.tsx`
-- `src/components/GateReviewPanel.tsx`
 - `src/components/GroundStationDesigner.tsx`
 - `src/components/GroundSystemsArch.tsx`
 - `src/components/HierarchicalDesigner.tsx`
@@ -196,7 +195,6 @@ Not reachable from `main.tsx`; do not translate. If one is wired back in later, 
 - `src/phases/Phase2SystemArch.tsx`
 - `src/phases/Phase3SubsystemDesign.tsx`
 - `src/phases/Phase4Integration.tsx`
-- `src/phases/Phase5Verification.tsx`
 - `src/types/changeEvent.ts`
 - `src/types/mission.ts`
 - `src/types/phases.ts`

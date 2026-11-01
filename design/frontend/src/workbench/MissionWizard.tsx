@@ -14,6 +14,9 @@ import { useUIStore } from '../stores/uiStore'
 import { useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import i18n, { fmtDate } from '../i18n'
+import { fs } from '../theme/tokens'
+import { Dialog, askConfirm, showAlert } from '../components/ui/Dialog'
+import { HomeFrame } from '../components/ui/HomeFrame'
 
 const API = '/api'
 
@@ -139,7 +142,6 @@ export function MissionWizard() {
     setCreating(true)
     try {
       const name = missionName || `Mission-${Date.now().toString(36)}`
-      const selectedAltData = tradeResult?.alternatives?.find((a: any) => a.name === selectedAlt)
 
       // Create study with full mission need
       const studyRes = await fetch(`${API}/studies/`, {
@@ -179,7 +181,7 @@ export function MissionWizard() {
           },
         }),
       })
-      if (!studyRes.ok) { alert(i18n.t('Failed to create study')); return }
+      if (!studyRes.ok) { void showAlert(i18n.t('Failed to create study')); return }
       const study = await studyRes.json()
       const studyId = study.id
 
@@ -241,7 +243,7 @@ export function MissionWizard() {
       const file = e.target.files?.[0]; if (!file) return
       try {
         const data = JSON.parse(await file.text())
-        if (!data.elements) { alert(i18n.t('Invalid save file')); return }
+        if (!data.elements) { void showAlert(i18n.t('Invalid save file')); return }
         const studyReq = data.studyMetadata?.requirements || { name: data.studyMetadata?.name || 'Loaded Mission' }
         const studyNeed = data.studyMetadata?.mission_need || {}
         const studyRes = await fetch(`${API}/studies/`, {
@@ -277,7 +279,6 @@ export function MissionWizard() {
         if (data.requirements) {
           for (const req of data.requirements) {
             const elementId = req.element_id ? oldToNew.get(req.element_id) : undefined
-            const parentId = req.derived_from_requirement_id  // Can't remap req IDs easily, keep as-is
             await fetch(`${API}/requirements/`, {
               method: 'POST', headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ ...req, id: undefined, study_id: newStudy.id, element_id: elementId || undefined, derived_from_requirement_id: undefined }),
@@ -312,57 +313,81 @@ export function MissionWizard() {
           for (const crumb of mapped) { useUIStore.getState().drillInto(crumb.id, crumb.name) }
         }
         qc.invalidateQueries()
-      } catch { alert(i18n.t('Load failed')) }
+      } catch { void showAlert(i18n.t('Load failed')) }
     }
     input.click()
   }
 
-  // Load example
-  const handleExample = async () => {
+  // Load example: pick from a card list (replaces the old numbered window.prompt)
+  const [examples, setExamples] = useState<Array<{ id: string; name: string; description: string }> | null>(null)
+  const [loadingExample, setLoadingExample] = useState<string | null>(null)
+  const openExamples = async () => {
     try {
       const res = await fetch(`${API}/lifecycle/example-missions`)
       const data = await res.json()
       const missions = data.missions || []
-      if (missions.length === 0) { alert(i18n.t('No examples available')); return }
-      const choice = prompt(missions.map((m: any, i: number) => `${i + 1}. ${m.name} — ${m.description}`).join('\n') + '\n\n' + i18n.t('Enter number:'))
-      if (!choice) return
-      const idx = parseInt(choice) - 1
-      if (idx < 0 || idx >= missions.length) return
-      const full = await fetch(`${API}/lifecycle/example-missions/${missions[idx].id}`).then(r => r.json())
+      if (missions.length === 0) { void showAlert(i18n.t('No examples available')); return }
+      setExamples(missions)
+    } catch { void showAlert(i18n.t('Failed to load example')) }
+  }
+  const loadExample = async (m: { id: string; name: string }) => {
+    setLoadingExample(m.id)
+    try {
+      const full = await fetch(`${API}/lifecycle/example-missions/${m.id}`).then(r => r.json())
       const studyRes = await fetch(`${API}/studies/`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ requirements: full.requirements || { name: missions[idx].name }, mission_need: full.mission_need || {} }),
+        body: JSON.stringify({ requirements: full.requirements || { name: m.name }, mission_need: full.mission_need || {} }),
       })
-      if (studyRes.ok) { setStudyId((await studyRes.json()).id); qc.invalidateQueries() }
-    } catch { alert(i18n.t('Failed to load example')) }
+      if (studyRes.ok) { setExamples(null); setStudyId((await studyRes.json()).id); qc.invalidateQueries() }
+      else void showAlert(i18n.t('Failed to load example'))
+    } catch { void showAlert(i18n.t('Failed to load example')) }
+    finally { setLoadingExample(null) }
   }
 
   // ─── HOME SCREEN ───
   if (step === 'home') {
+    const row: React.CSSProperties = {
+      display: 'grid', gridTemplateColumns: 'minmax(180px, 220px) 1fr', alignItems: 'center',
+      columnGap: 'var(--sp-4)', rowGap: 'var(--sp-1)', padding: 'var(--sp-3) 0', borderTop: '1px solid var(--line)',
+    }
+    const note: React.CSSProperties = { fontSize: fs.body, color: 'var(--text-2)', margin: 0, minWidth: 0 }
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', background: 'var(--bg-primary)', gap: '1rem' }}>
-        <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
-          <h1 style={{ fontSize: '2rem', color: '#8B0000', fontWeight: 700, margin: 0 }}>SpaceCDF</h1>
-          <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '0.3rem 0' }}>{t('Concurrent Design Facility')}</p>
-          <p style={{ fontSize: '0.7rem', color: '#8B0000' }}>{t('University of Ottawa — SEDTI')}</p>
+      <HomeFrame title={t('Start a design study')} lead={t('Define a new mission from the problem up, join a study already in progress, or open a saved or example design.')}>
+        <div className="c2o-home" style={{ maxWidth: 760 }}>
+          <div style={row}>
+            <button type="button" className="c2o-btn c2o-btn--primary c2o-btn--lg" onClick={() => setStep('problem')}>
+              {t('Create New Mission')}
+            </button>
+            <p style={note}>{t('Four guided steps: problem, stakeholders, alternatives, initial architecture.')}</p>
+          </div>
+          <div style={{ ...row, alignItems: 'start' }}>
+            <ActiveStudies onJoin={(id) => { setStudyId(id); qc.invalidateQueries() }} />
+          </div>
+          <div style={row}>
+            <button type="button" className="c2o-btn" onClick={handleLoad}>{t('Load from File')}</button>
+            <p style={note}>{t('Open a .json design saved from the workbench.')}</p>
+          </div>
+          <div style={{ ...row, borderBottom: '1px solid var(--line)' }}>
+            <button type="button" className="c2o-btn" onClick={openExamples}>{t('Load Example Mission')}</button>
+            <p style={note}>{t('Start from a worked CubeSat mission.')}</p>
+          </div>
         </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', width: 400 }}>
-          <button onClick={() => setStep('problem')} style={{ ...wizBtn, background: 'var(--accent)', color: 'white', fontSize: '0.9rem', padding: '0.7rem' }}>
-            {t('Create New Mission')}
-          </button>
-
-          {/* Active studies — join an existing session */}
-          <ActiveStudies onJoin={(id) => { setStudyId(id); qc.invalidateQueries() }} />
-
-          <button onClick={handleLoad} style={{ ...wizBtn, background: 'var(--bg-card)' }}>
-            {t('Load from File')}
-          </button>
-          <button onClick={handleExample} style={{ ...wizBtn, background: 'var(--bg-card)', borderColor: '#8B0000', color: '#8B0000' }}>
-            {t('Load Example Mission')}
-          </button>
-        </div>
-      </div>
+        <Dialog open={!!examples} title={t('Example missions')} onClose={() => setExamples(null)} width={560}
+          actions={<button type="button" className="c2o-btn" onClick={() => setExamples(null)}>{t('Cancel')}</button>}>
+          <ul role="list" style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
+            {(examples || []).map(m => (
+              <li key={m.id}>
+                <button type="button" data-example-card={m.id} className="c2o-example-card"
+                  onClick={() => loadExample(m)} disabled={!!loadingExample} aria-busy={loadingExample === m.id}>
+                  <span className="c2o-example-card__name">{m.name}</span>
+                  <span className="c2o-example-card__desc">{m.description}</span>
+                  {loadingExample === m.id && <span className="c2o-example-card__desc">{t('Loading...')}</span>}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </Dialog>
+      </HomeFrame>
     )
   }
 
@@ -388,7 +413,7 @@ export function MissionWizard() {
           <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap' }}>
             {MISSION_TYPES.map(mt => (
               <button key={mt.value} onClick={() => setMissionType(mt.value)} style={{
-                padding: '0.3rem 0.6rem', fontSize: '0.7rem', borderRadius: '4px', cursor: 'pointer',
+                padding: '0.3rem 0.6rem', fontSize: fs.label, borderRadius: '4px', cursor: 'pointer',
                 background: missionType === mt.value ? 'var(--accent)' : 'var(--bg-card)',
                 color: missionType === mt.value ? 'white' : 'var(--text-secondary)',
                 border: `1px solid ${missionType === mt.value ? 'var(--accent)' : 'var(--border)'}`,
@@ -426,7 +451,7 @@ export function MissionWizard() {
             </div>
           ))}
           <button onClick={() => setStakeholders([...stakeholders, { id: String(Date.now()), name: '', role: 'user', need: '' }])}
-            style={{ fontSize: '0.7rem', color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer' }}>
+            style={{ fontSize: fs.label, color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer' }}>
             {t('+ Add stakeholder')}
           </button>
         </Field>
@@ -451,7 +476,7 @@ export function MissionWizard() {
             </div>
           ))}
           <button onClick={() => setObjectives([...objectives, { id: String(Date.now()), text: '', priority: 'secondary', measurable_criterion: '' }])}
-            style={{ fontSize: '0.7rem', color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer' }}>
+            style={{ fontSize: fs.label, color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer' }}>
             {t('+ Add objective')}
           </button>
         </Field>
@@ -464,7 +489,7 @@ export function MissionWizard() {
     return (
       <WizardFrame step={3} title={t('Is space the right answer?')} onBack={() => setStep('stakeholders')}
         onNext={() => setStep('architecture')} canNext={!!selectedAlt && !!selectionRationale}>
-        <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.5rem', lineHeight: 1.5 }}>
+        <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginBottom: '0.5rem', lineHeight: 1.5 }}>
           {t('Before committing to a space mission, consider all alternatives. Could existing satellite data, commercial services, drones, or ground sensors meet your objectives?')}
         </div>
 
@@ -473,7 +498,7 @@ export function MissionWizard() {
         {tradeResult?.alternatives && (
           <>
             {tradeResult.key_question && (
-              <div style={{ padding: '0.4rem 0.5rem', background: 'rgba(245,158,11,0.1)', borderRadius: '4px', borderLeft: '3px solid var(--warning)', marginBottom: '0.5rem', fontSize: '0.72rem', color: 'var(--warning)' }}>
+              <div style={{ padding: '0.4rem 0.5rem', background: 'rgba(245,158,11,0.1)', borderRadius: '4px', borderLeft: '3px solid var(--warning)', marginBottom: '0.5rem', fontSize: fs.label, color: 'var(--warning)' }}>
                 {t('Key question: {{question}}', { question: tradeResult.key_question })}
               </div>
             )}
@@ -488,12 +513,12 @@ export function MissionWizard() {
                     color: 'var(--text-primary)',
                   }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.15rem' }}>
-                    <span style={{ fontWeight: 600, fontSize: '0.78rem' }}>{alt.name}</span>
-                    <span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)' }}>#{alt.rank} — {alt.category}</span>
+                    <span style={{ fontWeight: 600, fontSize: fs.label }}>{alt.name}</span>
+                    <span style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>#{alt.rank} — {alt.category}</span>
                   </div>
-                  <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)' }}>{alt.description?.slice(0, 120)}</div>
+                  <div style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>{alt.description?.slice(0, 120)}</div>
                   {alt.gsd_m != null && (
-                    <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', marginTop: '0.1rem' }}>
+                    <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginTop: '0.1rem' }}>
                       {t('GSD: {{gsd}}m | Revisit: {{revisit}}d | Cost: {{cost}} kEUR', { gsd: alt.gsd_m, revisit: alt.revisit_days, cost: alt.annual_cost_keur || alt.total_3yr_cost_keur })}
                     </div>
                   )}
@@ -510,7 +535,7 @@ export function MissionWizard() {
             )}
 
             {tradeResult.recommendation && (
-              <div style={{ padding: '0.3rem 0.5rem', background: 'rgba(16,185,129,0.1)', borderRadius: '4px', fontSize: '0.68rem', color: 'var(--success)', marginTop: '0.3rem' }}>
+              <div style={{ padding: '0.3rem 0.5rem', background: 'rgba(16,185,129,0.1)', borderRadius: '4px', fontSize: fs.label, color: 'var(--success)', marginTop: '0.3rem' }}>
                 {tradeResult.recommendation}
               </div>
             )}
@@ -531,7 +556,7 @@ export function MissionWizard() {
     return (
       <WizardFrame step={4} title={t('Select starting architecture')} onBack={() => setStep('alternatives')}
         onNext={createMission} canNext={!creating} nextLabel={creating ? t('Creating...') : t('Create Mission & Start Design')}>
-        <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
+        <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
           {t('Choose an initial architecture to start with. You can modify this later by adding, removing, or renaming segments.')}
         </div>
 
@@ -546,7 +571,7 @@ export function MissionWizard() {
               }}>
               <span style={{ fontWeight: 600 }}>{t(ARCH_PRESET_NAMES[arch.id])}</span>
               {arch.segments.length > 0 && (
-                <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', marginTop: '0.1rem' }}>
+                <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginTop: '0.1rem' }}>
                   {t('Segments: {{list}}', { list: arch.segments.map(sg => t(sg)).join(' → ') })}
                 </div>
               )}
@@ -581,15 +606,15 @@ function WizardFrame({ step, title, children, onBack, onNext, canNext, nextLabel
       {/* Header */}
       {/* right padding keeps the step dots clear of the fixed language toggle (App.tsx) */}
       <div style={{ padding: '0.5rem 7rem 0.5rem 1rem', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-        <span style={{ fontSize: '0.7rem', color: '#8B0000', fontWeight: 700 }}>SpaceCDF</span>
+        <span style={{ fontSize: fs.label, color: 'var(--brand)', fontWeight: 700 }}>SpaceCDF</span>
         <span style={{ color: 'var(--border)' }}>|</span>
-        <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>{t('Mission Definition')}</span>
+        <span style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>{t('Mission Definition')}</span>
         <span style={{ flex: 1 }} />
         {/* Step indicators */}
         {[1, 2, 3, 4].map(s => (
           <span key={s} style={{
             width: 20, height: 20, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '0.6rem', fontWeight: 700,
+            fontSize: fs.label, fontWeight: 700,
             background: s === step ? 'var(--accent)' : s < step ? 'var(--success)' : 'var(--bg-card)',
             color: s <= step ? 'white' : 'var(--text-secondary)',
             border: `1px solid ${s === step ? 'var(--accent)' : s < step ? 'var(--success)' : 'var(--border)'}`,
@@ -599,7 +624,7 @@ function WizardFrame({ step, title, children, onBack, onNext, canNext, nextLabel
 
       {/* Content */}
       <div style={{ flex: 1, overflow: 'auto', padding: '1.5rem', maxWidth: 700, margin: '0 auto', width: '100%' }}>
-        <h2 style={{ fontSize: '1.1rem', margin: '0 0 1rem', color: 'var(--text-primary)' }}>
+        <h2 style={{ fontSize: fs.title, margin: '0 0 1rem', color: 'var(--text-primary)' }}>
           {t('Step {{step}}: {{title}}', { step, title })}
         </h2>
         {children}
@@ -622,22 +647,22 @@ function WizardFrame({ step, title, children, onBack, onNext, canNext, nextLabel
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
     <div style={{ marginBottom: '0.75rem' }}>
-      <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-primary)', display: 'block', marginBottom: '0.2rem' }}>
+      <label style={{ fontSize: fs.label, fontWeight: 600, color: 'var(--text-primary)', display: 'block', marginBottom: '0.2rem' }}>
         {label}
       </label>
-      {hint && <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', marginBottom: '0.2rem' }}>{hint}</div>}
+      {hint && <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginBottom: '0.2rem' }}>{hint}</div>}
       {children}
     </div>
   )
 }
 
 const inputStyle: React.CSSProperties = {
-  padding: '0.4rem 0.5rem', fontSize: '0.78rem', borderRadius: '4px', width: '100%',
+  padding: '0.4rem 0.5rem', fontSize: fs.label, borderRadius: '4px', width: '100%',
   background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text-primary)',
 }
 
 const wizBtn: React.CSSProperties = {
-  padding: '0.4rem 0.75rem', fontSize: '0.78rem', fontWeight: 600, borderRadius: '4px',
+  padding: '0.4rem 0.75rem', fontSize: fs.label, fontWeight: 600, borderRadius: '4px',
   border: '1px solid var(--border)', cursor: 'pointer', color: 'var(--text-secondary)',
   background: 'var(--bg-card)',
 }
@@ -671,38 +696,35 @@ function ActiveStudies({ onJoin }: { onJoin: (studyId: string) => void }) {
 
   if (!expanded) {
     return (
-      <button onClick={() => { setExpanded(true); refresh() }}
-        style={{ ...wizBtn, background: 'rgba(16,185,129,0.1)', borderColor: 'var(--success)', color: 'var(--success)' }}>
-        {t('Join Active Study')}
-      </button>
+      <>
+        <button type="button" className="c2o-btn" aria-expanded={false} onClick={() => { setExpanded(true); refresh() }}>
+          {t('Join Active Study')}
+        </button>
+        <p style={{ fontSize: fs.body, color: 'var(--text-2)', margin: 0 }}>{t('Work on a study with your team in real time.')}</p>
+      </>
     )
   }
 
   return (
-    <div style={{
-      padding: '0.5rem', borderRadius: '6px',
-      background: 'var(--bg-card)', border: '1px solid var(--success)',
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.4rem' }}>
-        <span style={{ fontWeight: 600, fontSize: '0.78rem', color: 'var(--success)' }}>{t('Active Studies')}</span>
+    <div style={{ gridColumn: '1 / -1', padding: 'var(--sp-2) var(--sp-3)', borderRadius: 'var(--radius)', background: 'var(--surface-1)', border: '1px solid var(--line-strong)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', marginBottom: 'var(--sp-2)' }}>
+        <h2 style={{ fontWeight: 600, fontSize: fs.body, margin: 0 }}>{t('Active Studies')}</h2>
         <span style={{ flex: 1 }} />
-        <button onClick={refresh} disabled={loading}
-          style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '0.65rem' }}>
-          {loading ? '...' : t('Refresh')}
+        <button type="button" className="c2o-btn c2o-btn--quiet" onClick={refresh} disabled={loading}>
+          {loading ? t('Loading...') : t('Refresh')}
         </button>
-        <button onClick={() => setExpanded(false)}
-          style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '0.9rem', marginLeft: '0.3rem' }}>
-          ×
+        <button type="button" className="c2o-btn" aria-expanded={true} onClick={() => setExpanded(false)}>
+          {t('Close')}
         </button>
       </div>
 
       {studies.length === 0 ? (
-        <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', padding: '0.3rem 0' }}>
+        <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', padding: '0.3rem 0' }}>
           {loading ? t('Loading...') : t('No active studies found. Create a new mission to start.')}
         </div>
       ) : (
         <>
-          <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', marginBottom: '0.2rem' }}>
+          <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginBottom: '0.2rem' }}>
             {t('{{count}} studies — most recent first', { count: studies.length, defaultValue_one: '{{count}} studies — most recent first' })}
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', maxHeight: 200, overflow: 'auto' }}>
@@ -712,29 +734,29 @@ function ActiveStudies({ onJoin }: { onJoin: (studyId: string) => void }) {
                 padding: '0.3rem 0.5rem', borderRadius: '4px',
                 background: 'var(--bg-primary)', border: '1px solid var(--border)',
               }}>
-                <button onClick={() => directJoin(s.id)} style={{
-                  background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-primary)',
-                  fontWeight: 600, fontSize: '0.72rem', flex: 1, textAlign: 'left', padding: 0,
+                <button type="button" onClick={() => directJoin(s.id)} style={{
+                  background: 'none', border: 'none', cursor: 'pointer', color: 'var(--interactive)',
+                  fontWeight: 600, fontSize: fs.body, flex: 1, textAlign: 'left', padding: 0, minHeight: 24,
                 }}>
                   {s.name || s.id}
                 </button>
                 {s.phase && (
-                  <span style={{ fontSize: '0.5rem', color: 'var(--accent)', textTransform: 'uppercase' }}>{s.phase}</span>
+                  <span style={{ fontSize: fs.label, color: 'var(--accent)', textTransform: 'uppercase' }}>{s.phase}</span>
                 )}
                 {s.created && (
-                  <span style={{ fontSize: '0.5rem', color: 'var(--text-secondary)' }}>
+                  <span style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>
                     {fmtDate(s.created, {})}
                   </span>
                 )}
                 <button onClick={async (e) => {
                   e.stopPropagation()
-                  if (!confirm(t('Delete study "{{name}}"? This cannot be undone.', { name: s.name || s.id }))) return
+                  if (!(await askConfirm(t('Delete study "{{name}}"? This cannot be undone.', { name: s.name || s.id }), { danger: true, confirmLabel: t('Delete') }))) return
                   await fetch(`${API}/studies/${s.id}`, { method: 'DELETE' })
                   refresh()
                 }} style={{
                   background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)',
-                  fontSize: '0.7rem', padding: '0 0.2rem', flexShrink: 0,
-                }} title={t('Delete study')}>
+                  fontSize: fs.label, padding: '0 0.2rem', flexShrink: 0,
+                }} title={t('Delete study')} aria-label={t('Delete study')}>
                   ×
                 </button>
               </div>
@@ -742,10 +764,10 @@ function ActiveStudies({ onJoin }: { onJoin: (studyId: string) => void }) {
           </div>
           {studies.length > 5 && (
             <button onClick={async () => {
-              if (!confirm(t('Delete all {{count}} studies? This cannot be undone.', { count: studies.length }))) return
+              if (!(await askConfirm(t('Delete all {{count}} studies? This cannot be undone.', { count: studies.length }), { danger: true, confirmLabel: t('Delete') }))) return
               for (const s of studies) { await fetch(`${API}/studies/${s.id}`, { method: 'DELETE' }) }
               refresh()
-            }} style={{ fontSize: '0.6rem', color: 'var(--danger)', background: 'none', border: 'none', cursor: 'pointer', marginTop: '0.2rem' }}>
+            }} style={{ fontSize: fs.label, color: 'var(--danger)', background: 'none', border: 'none', cursor: 'pointer', marginTop: '0.2rem' }}>
               {t('Delete all studies')}
             </button>
           )}

@@ -151,6 +151,8 @@ events:
   - { id: 0x0510, name: AGC_SATURATION, severity: LOW, subsystem: ttc, description: "Automatic gain control saturation detected" }
   - { id: 0x0511, name: UPLINK_TIMEOUT, severity: HIGH, subsystem: ttc, description: "No valid uplink command received (timeout threshold exceeded)" }
   - { id: 0x0512, name: ANTENNA_DEPLOY_READY_RECOVERED, severity: INFO, subsystem: ttc, description: "Antenna deployment readiness recovered (pyro continuity OK)" }
+  - { id: 0x0513, name: UPLINK_LOCK_DROPOUT, severity: MEDIUM, subsystem: ttc, description: "Uplink carrier lock lost and regained within 60 s (a fade mid-pass, not a LOS): the on-board sign of a marginal link. Triggers S19 ea 4001 (TX power HIGH)" }
+  - { id: 0x0514, name: CMD_LOSS_TIMEOUT, severity: HIGH, subsystem: ttc, description: "Command-loss timer expired: no valid telecommand for cmd_loss_switch_timeout_s (24 h). Triggers S19 ea 4003 (switch to redundant transponder, FDIR TTC-01)" }
 
   # OBCP events (0x0700-0x070F) — S18 on-board control procedures
   - { id: 0x0700, name: OBCP_STARTED, severity: INFO, subsystem: obdh, description: "On-board control procedure started" }

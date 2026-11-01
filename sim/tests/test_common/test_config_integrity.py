@@ -44,7 +44,11 @@ NEW_PROCEDURE_FILES = {
     "emergency/obc_reboot.md",
 }
 
-EXPECTED_MANUAL_FILE_COUNT = 19  # +12_time_and_clocks.md (time-source docs)
+# 19: +12_time_and_clocks.md (time-source docs).
+# 20: +commissioning_walkthrough_changelog.md (d99c9e2, 2026-08-20). It is a
+#     changelog rather than operator-manual content; if it is ever moved out
+#     of manual/ (with its FR mirror), drop this back to 19 (R4 G8).
+EXPECTED_MANUAL_FILE_COUNT = 20
 
 
 def _load_yaml(relative_path):

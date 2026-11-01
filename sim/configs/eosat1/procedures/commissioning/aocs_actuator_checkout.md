@@ -125,8 +125,7 @@ shadow-side handover of the same commanded state
 **TC:** `GET_PARAM(param_id=0x021A)` (Service 20, Subtype 3) — `aocs.rw3_temp`
 **TC:** `GET_PARAM(param_id=0x021B)` (Service 20, Subtype 3) — `aocs.rw4_temp`
 **Verify:** All wheel temperatures in range [-10C, +55C] within 10s
-**Note:** 0x028A-0x028D are CSS head health percentages (`aocs.css_head_health_py/my/pz/mz`),
-not wheel temperatures.
+**Note:** 0x028A-0x028D are not wheel temperatures; only 0x0218-0x021B are.
 **Action:** Post-test temperatures may be slightly elevated. Record for trending.
 **GO/NO-GO:** All wheel temperatures within operational limits
 

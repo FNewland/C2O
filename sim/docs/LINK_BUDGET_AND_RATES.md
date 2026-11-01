@@ -95,24 +95,26 @@ six periodic housekeeping structures:
 
 | SID | Name | Parameters | Packet | Interval | Rate |
 |-----|------|-----------:|-------:|---------:|-----:|
-| 1 | EPS | 51 | 105 B | 1.0 s | 840.0 bps |
-| 2 | AOCS | 71 | 147 B | 4.0 s | 294.0 bps |
+| 1 | EPS | 52 | 105 B | 1.0 s | 840.0 bps |
+| 2 | AOCS | 75 | 152 B | 4.0 s | 304.0 bps |
 | 3 | TCS | 17 | 49 B | 60.0 s | 6.5 bps |
-| 4 | Platform | 26 | 72 B | 8.0 s | 72.0 bps |
-| 5 | Payload | 23 | 64 B | 8.0 s | 64.0 bps |
-| 6 | TT&C | 27 | 75 B | 8.0 s | 75.0 bps |
-| | **Total** | **215** | | | **1 351.5 bps** |
+| 4 | Platform | 36 | 88 B | 8.0 s | 88.0 bps |
+| 5 | Payload | 29 | 75 B | 8.0 s | 75.0 bps |
+| 6 | TT&C | 24 | 65 B | 8.0 s | 65.0 bps |
+| | **Total** | **233** | | | **1 378.5 bps** |
 
 Multiply by RS(255,223) (×255/223) and the 1115/1107-byte TM transfer frame and the
-housekeeping stream costs **1 557 bps of channel**.
+housekeeping stream costs **1 588 bps of channel** (1 587.7 bps; it was 1 557 before the
+Phase G–2026-08e additions and 1 699.5 before the 2026-08-20 removal of every
+ground-derived and instructor-only parameter from the HK SIDs).
 
 Two conclusions follow immediately, and they are the whole argument for this rung.
 
-* **1 000 bps is below 1 557 bps.** The mission's previous "low rate" could never deliver
+* **1 000 bps is below 1 588 bps.** The mission's previous "low rate" could never deliver
   real-time housekeeping. The backlog grew monotonically and packets were dropped. That
   is not a preference or a matter of taste; it is a quantified defect, and it is why
   1 kbps is now labelled as a beacon rate and locked away behind beacon mode.
-* **16 000 bps clears it at 9.7 % duty** and still plays back roughly **0.85 orbits of
+* **16 000 bps clears it at 9.9 % duty** and still plays back roughly **0.82 orbits of
   stored housekeeping** in a single 514-second pass. It is the smallest round number at
   which a spacecraft in safe mode neither loses data nor falls behind across an orbit.
 
@@ -346,16 +348,16 @@ visible: imagery is not merely slower at LOW, it is impossible.**
 
 ### 5.2 Housekeeping alone is a third of the low-rate network
 
-The 1 557 bps housekeeping stream is 16.0 MiB per day. The five-station network provides
+The 1 588 bps housekeeping stream is 16.4 MiB per day. The five-station network provides
 about 23 300 seconds of contact per day. Carrying a day of housekeeping therefore
 consumes:
 
 | Tier | Contact time needed per day | Share of the network |
 |------|----------------------------:|---------------------:|
-| LOW (16 kbps) | 8 410 s | **36 %** |
-| HIGH (128 kbps) | 1 051 s | **4.5 %** |
+| LOW (16 kbps) | 8 573 s | **37 %** |
+| HIGH (128 kbps) | 1 072 s | **4.6 %** |
 
-Thirty-six percent of the entire ground network, before a single image. The budget reports
+Thirty-seven percent of the entire ground network, before a single image. The budget reports
 this as `hk_contact_fraction_percent`, per tier, computed from `hk_structures.yaml` rather
 than assumed. It is the number that makes the case for LOW being 16 kbps and not 8, and
 the number that makes a student stop thinking of housekeeping as free.

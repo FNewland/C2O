@@ -70,13 +70,15 @@ limits:
   - { param_id: 0x031D, yellow_low: 0.0, yellow_high: 80.0, red_low: 0.0, red_high: 95.0, check_interval_s: 8 }
 
   # ===== TTC =====
-  # BER (log10 scale: -6 nominal, -5 yellow, -4 red)
-  - { param_id: 0x050C, yellow_low: -7.0, yellow_high: -5.0, red_low: -8.0, red_high: -4.0, check_interval_s: 8 }
+  # BER (0x050C) and AGC (0x051A) are NOT banded here any more (plan decision
+  # 2026-11-01). Both are measured by the GROUND receiver
+  # (visibility: ground_derived), so the spacecraft never telemeters them and
+  # the MCS limit checker never saw a sample. Their limits now live with the
+  # receiver that measures them: smo-rfsim `ground_limits` (rfsim.yaml),
+  # alarmed on the radio page and exposed at GET /api/ground-limits, all
+  # labelled "ground".
   # PA temperature
   - { param_id: 0x050F, yellow_low: 0.0, yellow_high: 55.0, red_low: -10.0, red_high: 65.0, check_interval_s: 8 }
-
-  # TTC Phase 4: AGC level
-  - { param_id: 0x051A, yellow_low: -80.0, yellow_high: -30.0, red_low: -100.0, red_high: -20.0, check_interval_s: 8 }
 
   # ── TM data-rate ladder (defect #86) ──
   # The ladder is BEACON 1 000 / LOW 16 000 / HIGH 128 000 bps
@@ -110,8 +112,10 @@ limits:
   # shifted by that offset. The old -17.0/-20.0 pair predates the commandable
   # setpoint and turned a legal -20 C command into a red alarm.
   - { param_id: 0x0601, yellow_low: -22.5, yellow_high: 13.5, red_low: -26.0, red_high: 17.0, check_interval_s: 8 }
-  # Payload Phase 4: SNR, detector temp
-  - { param_id: 0x0616, yellow_low: 30.0, yellow_high: 55.0, red_low: 20.0, red_high: 60.0, check_interval_s: 8 }
+  # Payload detector temp. (The 0x0616 payload.snr band was removed on
+  # 2026-11-01: snr is `visibility: instructor`, a simulator truth no
+  # operator can see. Image quality is judged on the ground, from the
+  # downlinked image.)
   # Detector die = cold finger + die_offset_c (+0.5 K), i.e. the bracket node.
   # DERIVED from subsystems/tcs.yaml `fpa_envelope` (G3-d). The old
   # -18/+8, -20/+12 pair was the operations manual's table, and was the fifth

@@ -94,7 +94,7 @@ with TM(1,8) if AOCS is not holding FINE_POINT with total error < 0.05 deg, if
 the FPA is not ready, or if the store cannot hold the frame --- the failure
 notice names which gate refused it.
 **Verify:** `payload.last_scene_id` (0x060C) = the commanded `scene_id` within 10 s
-**Verify:** `payload.last_scene_quality` (0x060D) --- record for each product
+**Note:** Image quality is not telemetered: it is checked on the ground on the quick-look of each product after downlink. Record the scene ids now so each product can be checked then.
 
 ### Step 5a --- Monitor Image Acquisition
 **TC:** `HK_REQUEST(sid=5)` (Service 3, Subtype 27) --- payload HK, poll every 30 s

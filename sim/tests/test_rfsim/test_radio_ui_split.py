@@ -194,6 +194,7 @@ EXPECTED_ROUTES = {
     ("GET", "/api/config"),
     ("GET", "/api/diagnostics"),
     ("GET", "/api/pass-rollups"),   # G14 end-of-pass RF rollups (additive)
+    ("GET", "/api/ground-limits"),  # ground-receiver BER/AGC limits (2026-11-01, additive)
     ("POST", "/api/channel"),
     ("POST", "/api/pipeline"),
     ("POST", "/api/link"),

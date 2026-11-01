@@ -33,8 +33,10 @@ Any of:
 **Verify:** Capture and record ALL of: `prop.state` (0x0B00),
 `prop.tank_pressure` (0x0B01) + trend, `prop.propellant_mass` (0x0B02),
 `prop.tank_temp` (0x0B04), `prop.catbed_temp` (0x0B05), valve states
-(0x0B06/0x0B07/0x0B08), `prop.leak_rate` (0x0B16), `prop.abort_reason`
-(0x0B14).
+(0x0B06/0x0B07/0x0B08), `prop.abort_reason` (0x0B14). There is no leak-rate
+sensor on board: a leak is seen as a tank-pressure trend, so compare 0x0B01
+with the values recorded on the previous passes, temperature-corrected with
+0x0B04.
 **Evaluate:** Pressure falling with propellant mass constant = pressurant
 leak; pressure and mass falling together = propellant leak; pressure rising
 = thermal (check 0x0B04 and heater states).
@@ -45,8 +47,8 @@ leak; pressure and mass falling together = propellant leak; pressure rising
 (0x0B07) = 0. A branch reporting 2 (fault) did NOT close — it is stuck:
 close the other branch, note that isolation is partial, and treat the
 propellant downstream of the stuck valve as lost.
-**Verify:** Leak rate (0x0B16) and the 0x0B01 pressure rate after isolation —
-a continuing fall means the leak is upstream of the latch valves (tank side):
+**Verify:** the 0x0B01 tank-pressure trend over this pass and the next ones
+after isolation, at a comparable tank temperature (0x0B04) — a continuing fall means the leak is upstream of the latch valves (tank side):
 it cannot be isolated, only bounded.
 **Note:** The on-board rule 8004 auto-isolates on a leak event; this step
 verifies and completes what autonomy started.

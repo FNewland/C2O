@@ -112,9 +112,8 @@ changement de phase.
 
 ### Étape 4 — Vérifier la qualité des données d'obscurité
 **TC:** `GET_PARAM(param_id=0x0642)` (Service 20, Subtype 3) — images d'obscurité acquises
-**TC:** `GET_PARAM(param_id=0x0616)` (Service 20, Subtype 3) — `payload.snr` (dB) avec le jeu d'obscurité appliqué
-**Verify:** Signal d'obscurité moyen < 100 DN (échelle 12 bits, 0-4095) sous 10s
-**Verify:** Écart type du signal d'obscurité < 10 DN sous 10s
+**Verify:** au sol, à partir des images d'obscurité transmises : signal d'obscurité moyen < 100 DN (échelle 12 bits, 0-4095)
+**Verify:** au sol, à partir des mêmes images : écart type du signal d'obscurité < 10 DN
 **Action:** Une moyenne faible indique un courant d'obscurité minimal à la consigne de −15 °C. Un écart type faible indique une réponse uniforme du FPA. Consigner les valeurs comme référence.
 **GO/NO-GO:** Statistiques des images d'obscurité conformes à la spécification
 
@@ -151,12 +150,12 @@ changement de phase.
 **Octets émis :** `22 00 64 00 64 00 64 00 64` (0.01 ms/LSB)
 **TC:** `PAYLOAD_CAPTURE(scene_id=0, lines=2048)` (Service 8, Subtype 1, func_id 28) — déclencher l'acquisition  
 **Octets émis :** `1C 00 00 08 00`
-**Verify:** `GET_PARAM(param_id=0x0616)` (Service 20, Subtype 3) — `payload.snr` baisse d'environ 3 dB à chaque division par deux
+**Verify:** au sol, après transmission : le signal moyen de l'image à demi-temps d'intégration vaut environ la moitié de celui de l'image nominale (même site, même échelle en DN)
 **TC:** `PAYLOAD_SET_INTEGRATION_TIME(blue_ms=4.00, green_ms=4.00, red_ms=4.00, nir_ms=4.00)` (Service 8, Subtype 1, func_id 34) — double du nominal  
 **Octets émis :** `22 01 90 01 90 01 90 01 90`
 **TC:** `PAYLOAD_CAPTURE(scene_id=0, lines=2048)` (Service 8, Subtype 1, func_id 28) — déclencher l'acquisition  
 **Octets émis :** `1C 00 00 08 00`
-**Verify:** `GET_PARAM(param_id=0x0616)` (Service 20, Subtype 3) — `payload.snr` augmente d'environ 3 dB à chaque doublement
+**Verify:** au sol, après transmission : le signal moyen de l'image à double temps d'intégration vaut environ le double du nominal (sans écrêtage à 4095 DN)
 **Action:** Trois images à des temps d'intégration différents (nominal, moitié, double) permettent d'évaluer la linéarité du détecteur. Si le signal double lorsque le temps d'intégration double, la réponse du détecteur est linéaire.
 **GO/NO-GO:** Jeu d'images de linéarité acquis
 

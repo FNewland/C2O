@@ -52,7 +52,8 @@ class RFSimBridge:
         self._pipeline = None
 
         # Radio frontend (observational)
-        self.radio = RadioFrontend()
+        self.radio = RadioFrontend(
+            getattr(self.config, "ground_limits", None))
         self.radio.status.mode = self.mode.value
 
         # Connection state

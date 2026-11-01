@@ -70,8 +70,8 @@ EMERGENCY, and `obdh.mode` (0x0300) reads back the same encoding.
 ### Step 5 --- Request TT&C Housekeeping
 **TC:** `HK_REQUEST(sid=6)` (Service 3, Subtype 27)
 **Verify:** `ttc.link_status` (0x0501) = 2 (LOCKED) within 10s
-**Verify:** `ttc.rssi` (0x0502) > -110 dBm within 10s
-**Verify:** `ttc.link_margin` (0x0503) > 3.0 dB within 10s
+**Verify:** TT&C page (ground): `ttc.rssi` (0x0502) > -126 dBm within 10s
+**Verify:** TT&C page (ground): `ttc.link_margin` (0x0503) > 3.0 dB within 10s
 **GO/NO-GO:** TT&C link nominal with adequate margin
 
 ### Step 6 --- Compile Health Assessment Report

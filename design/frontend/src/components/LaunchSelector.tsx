@@ -7,6 +7,7 @@
 import { useState, useEffect } from 'react'
 import { useDesignStore } from '../stores/designStore'
 import { useApplyToDesign } from '../hooks/useApplyToDesign'
+import { fs } from '../theme/tokens'
 
 interface LaunchProvider {
   id: string; name: string; type: string; vehicle: string; orbit: string
@@ -28,7 +29,7 @@ export function LaunchSelector() {
   useEffect(() => {
     fetch('/api/lifecycle/parametric-data')
       .then(r => r.ok ? r.json() : null)
-      .then(data => {
+      .then(_data => {
         // Launch providers are not yet in the parametric data API
         // Load from a direct endpoint or hardcode for now
         setProviders([
@@ -79,14 +80,14 @@ export function LaunchSelector() {
 
   return (
     <div className="card">
-      <h3 style={{ fontSize: '0.9rem', marginBottom: '0.3rem' }}>Launch Provider Selection</h3>
-      <p style={{ fontSize: '0.72rem', color: '#9ca3af', marginBottom: '0.5rem' }}>
+      <h3 style={{ fontSize: fs.value, marginBottom: '0.3rem' }}>Launch Provider Selection</h3>
+      <p style={{ fontSize: fs.label, color: 'var(--text-2)', marginBottom: '0.5rem' }}>
         Select a launch provider. Mass allocation and environmental test levels derive from this choice.
         Estimated spacecraft mass: <strong>{dryMass.toFixed(1)} kg</strong> dry.
       </p>
 
       {loading ? (
-        <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>Loading providers...</div>
+        <div style={{ fontSize: fs.label, color: 'var(--text-3)' }}>Loading providers...</div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
           {providers.map(p => {
@@ -96,30 +97,30 @@ export function LaunchSelector() {
               <div key={p.id} onClick={() => handleSelect(p)} style={{
                 display: 'flex', alignItems: 'center', gap: '0.5rem',
                 padding: '0.4rem 0.6rem', borderRadius: '4px', cursor: 'pointer',
-                background: isSelected ? 'rgba(16,185,129,0.1)' : 'var(--bg-primary, #0a0e1a)',
-                border: `1px solid ${isSelected ? '#10b981' : fits ? '#37415180' : '#ef444440'}`,
+                background: isSelected ? 'rgba(16,185,129,0.1)' : 'var(--bg-primary, var(--surface-0))',
+                border: `1px solid ${isSelected ? 'var(--status-ok)' : fits ? 'color-mix(in srgb, var(--line) 50%, transparent)' : 'color-mix(in srgb, var(--status-alarm) 25%, transparent)'}`,
                 opacity: fits ? 1 : 0.6,
               }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                    <span style={{ fontSize: '0.78rem', fontWeight: 600 }}>{p.name}</span>
-                    <span style={{ fontSize: '0.6rem', color: '#6b7280', padding: '0.05rem 0.3rem', background: '#374151', borderRadius: '3px' }}>{p.type}</span>
-                    {isSelected && <span style={{ fontSize: '0.6rem', color: '#10b981', fontWeight: 700 }}>SELECTED</span>}
+                    <span style={{ fontSize: fs.label, fontWeight: 600 }}>{p.name}</span>
+                    <span style={{ fontSize: fs.label, color: 'var(--text-3)', padding: '0.05rem 0.3rem', background: 'var(--line)', borderRadius: '3px' }}>{p.type}</span>
+                    {isSelected && <span style={{ fontSize: fs.label, color: 'var(--status-ok)', fontWeight: 700 }}>SELECTED</span>}
                   </div>
-                  <div style={{ fontSize: '0.68rem', color: '#6b7280' }}>
+                  <div style={{ fontSize: fs.label, color: 'var(--text-3)' }}>
                     {p.vehicle} · {p.orbit} · {p.capacity_kg} kg cap · {p.lead_time_months} mo lead
                   </div>
                 </div>
                 <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                  <div style={{ fontSize: '0.78rem', fontWeight: 600, fontFamily: 'monospace', color: '#d1d5db' }}>
+                  <div style={{ fontSize: fs.value, fontWeight: 600, fontFamily: 'monospace', color: 'var(--text)' }}>
                     ${(p.price_usd / 1000).toFixed(0)}K
                   </div>
-                  <div style={{ fontSize: '0.6rem', color: '#6b7280' }}>
+                  <div style={{ fontSize: fs.label, color: 'var(--text-3)' }}>
                     {p.deployers.join(', ')}
                   </div>
                 </div>
                 {!fits && (
-                  <span style={{ fontSize: '0.6rem', color: '#ef4444', whiteSpace: 'nowrap' }}>over capacity</span>
+                  <span style={{ fontSize: fs.label, color: 'var(--status-alarm)', whiteSpace: 'nowrap' }}>over capacity</span>
                 )}
               </div>
             )
@@ -128,7 +129,7 @@ export function LaunchSelector() {
       )}
 
       <button className="btn" onClick={async () => { await apply(); setApplied(true); setTimeout(() => setApplied(false), 2000) }}
-        style={{ marginTop: '0.5rem', width: '100%', background: applied ? '#10b981' : '#3b82f6', fontSize: '0.78rem' }}>
+        style={{ marginTop: '0.5rem', width: '100%', background: applied ? 'var(--status-ok)' : 'var(--interactive)', fontSize: fs.label }}>
         {applied ? 'Applied — reconverging...' : 'Apply to Design'}
       </button>
     </div>

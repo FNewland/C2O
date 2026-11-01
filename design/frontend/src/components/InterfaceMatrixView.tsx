@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { useModelStore } from '../stores/modelStore'
 import { useDesignStore } from '../stores/designStore'
+import { fs } from '../theme/tokens'
 
 const DEFAULT_SUBSYSTEMS = ['power', 'aocs', 'link', 'thermal', 'structure', 'propulsion', 'data', 'payload']
 
@@ -106,20 +107,20 @@ const INTERFACE_DATA: Record<string, InterfaceCell> = {
 }
 
 const TYPE_COLORS: Record<string, string> = {
-  mechanical: '#84cc16', electrical: '#f59e0b', thermal: '#ef4444',
-  data: '#3b82f6', rf: '#ec4899', optical: '#8b5cf6', propulsion: '#f97316', software: '#06b6d4',
+  mechanical: 'var(--cat-7)', electrical: 'var(--status-caution)', thermal: 'var(--status-alarm)',
+  data: 'var(--interactive)', rf: 'var(--cat-6)', optical: 'var(--cat-2)', propulsion: 'var(--status-caution)', software: 'var(--interactive)',
 }
 
 const SEVERITY_COLORS: Record<string, string> = {
-  critical: '#ef4444', major: '#f59e0b', minor: '#3b82f6',
+  critical: 'var(--status-alarm)', major: 'var(--status-caution)', minor: 'var(--interactive)',
 }
 
 const STATUS_LABELS: Record<ResolutionStatus, { label: string; color: string }> = {
-  open: { label: 'OPEN', color: '#ef4444' },
-  under_discussion: { label: 'DISCUSSING', color: '#f59e0b' },
-  resolved: { label: 'RESOLVED', color: '#10b981' },
-  accepted_risk: { label: 'RISK ACCEPTED', color: '#8b5cf6' },
-  deferred: { label: 'DEFERRED', color: '#6b7280' },
+  open: { label: 'OPEN', color: 'var(--status-alarm)' },
+  under_discussion: { label: 'DISCUSSING', color: 'var(--status-caution)' },
+  resolved: { label: 'RESOLVED', color: 'var(--status-ok)' },
+  accepted_risk: { label: 'RISK ACCEPTED', color: 'var(--cat-2)' },
+  deferred: { label: 'DEFERRED', color: 'var(--text-3)' },
 }
 
 // getCell is now inside the component to access dynamicInterfaces
@@ -233,18 +234,18 @@ export function InterfaceMatrixView({ onNavigate }: { onNavigate?: (tab: string)
   return (
     <div style={{ padding: '1rem', overflowY: 'auto', height: '100%' }}>
       <h2 style={{ marginBottom: '0.25rem' }}>Interface Matrix</h2>
-      <p style={{ fontSize: '0.78rem', color: '#9ca3af', marginBottom: '0.5rem' }}>
+      <p style={{ fontSize: fs.label, color: 'var(--text-2)', marginBottom: '0.5rem' }}>
         Subsystem-to-subsystem interfaces. Red borders = conflict. Click a cell for details and resolution.
       </p>
 
-      <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.75rem', marginBottom: '0.75rem', alignItems: 'center' }}>
+      <div style={{ display: 'flex', gap: '0.75rem', fontSize: fs.label, marginBottom: '0.75rem', alignItems: 'center' }}>
         <span>{Object.keys(INTERFACE_DATA).length + Object.keys(dynamicInterfaces).filter(k => !INTERFACE_DATA[k]).length} interfaces</span>
         {modelInterfaces.size > 0 && (
-          <span style={{ color: '#10b981', fontSize: '0.65rem' }}>({modelInterfaces.size} from model)</span>
+          <span style={{ color: 'var(--status-ok)', fontSize: fs.label }}>({modelInterfaces.size} from model)</span>
         )}
-        <span style={{ color: '#ef4444' }}>{conflicts.length} conflicts</span>
-        <span style={{ color: '#10b981' }}>{resolvedCount} resolved</span>
-        <span style={{ color: '#f59e0b' }}>{conflicts.length - resolvedCount} open</span>
+        <span style={{ color: 'var(--status-alarm)' }}>{conflicts.length} conflicts</span>
+        <span style={{ color: 'var(--status-ok)' }}>{resolvedCount} resolved</span>
+        <span style={{ color: 'var(--status-caution)' }}>{conflicts.length - resolvedCount} open</span>
         <button onClick={() => {
           // Generate ICD JSON from all interfaces (model + static)
           const icdInterfaces: any[] = []
@@ -314,9 +315,9 @@ export function InterfaceMatrixView({ onNavigate }: { onNavigate?: (tab: string)
           a.click()
           URL.revokeObjectURL(url)
         }} style={{
-          padding: '0.2rem 0.6rem', fontSize: '0.7rem', borderRadius: '4px',
+          padding: '0.2rem 0.6rem', fontSize: fs.label, borderRadius: '4px',
           border: '1px solid rgba(16,185,129,0.4)', background: 'rgba(16,185,129,0.1)',
-          color: '#10b981', cursor: 'pointer', marginLeft: 'auto',
+          color: 'var(--status-ok)', cursor: 'pointer', marginLeft: 'auto',
         }}>
           Generate ICD
         </button>
@@ -331,14 +332,14 @@ export function InterfaceMatrixView({ onNavigate }: { onNavigate?: (tab: string)
             return (
               <button key={key} onClick={() => { setSelectedCell(key); setResolvingCell(null) }}
                 style={{
-                  display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.68rem',
+                  display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: fs.label,
                   padding: '0.2rem 0.5rem', borderRadius: '4px', border: 'none', cursor: 'pointer',
-                  background: selectedCell === key ? 'rgba(59,130,246,0.2)' : 'var(--bg-secondary, #1f2937)',
+                  background: selectedCell === key ? 'rgba(59,130,246,0.2)' : 'var(--bg-secondary, var(--surface-2))',
                   color: statusInfo.color,
                 }}>
                 <span style={{ width: 6, height: 6, borderRadius: '50%', background: SEVERITY_COLORS[cell.conflictSeverity || 'minor'] }} />
                 {key.replace('-', '/')}
-                <span style={{ fontSize: '0.6rem', opacity: 0.8 }}>{statusInfo.label}</span>
+                <span style={{ fontSize: fs.label, opacity: 0.8 }}>{statusInfo.label}</span>
               </button>
             )
           })}
@@ -347,12 +348,12 @@ export function InterfaceMatrixView({ onNavigate }: { onNavigate?: (tab: string)
 
       {/* Matrix grid */}
       <div style={{ overflowX: 'auto' }}>
-        <table style={{ borderCollapse: 'collapse', fontSize: '0.68rem' }}>
+        <table style={{ borderCollapse: 'collapse', fontSize: fs.label }}>
           <thead>
             <tr>
               <th style={{ padding: '0.3rem', width: 70 }}></th>
               {SUBSYSTEMS.map(s => (
-                <th key={s} style={{ padding: '0.3rem', textTransform: 'uppercase', color: '#9ca3af', width: 65, textAlign: 'center', fontSize: '0.6rem' }}>
+                <th key={s} style={{ padding: '0.3rem', textTransform: 'uppercase', color: 'var(--text-2)', width: 65, textAlign: 'center', fontSize: fs.label }}>
                   {s.slice(0, 5)}
                 </th>
               ))}
@@ -361,11 +362,11 @@ export function InterfaceMatrixView({ onNavigate }: { onNavigate?: (tab: string)
           <tbody>
             {SUBSYSTEMS.map(row => (
               <tr key={row}>
-                <td style={{ padding: '0.3rem', textTransform: 'uppercase', color: '#9ca3af', fontWeight: 600, fontSize: '0.6rem' }}>
+                <td style={{ padding: '0.3rem', textTransform: 'uppercase', color: 'var(--text-2)', fontWeight: 600, fontSize: fs.label }}>
                   {row.slice(0, 5)}
                 </td>
                 {SUBSYSTEMS.map(col => {
-                  if (row === col) return <td key={col} style={{ background: '#1a1a2e', width: 65, height: 35 }} />
+                  if (row === col) return <td key={col} style={{ background: 'var(--surface-0)', width: 65, height: 35 }} />
                   const cell = getCell(row, col)
                   const cellKey = `${row}-${col}`
                   const altKey = `${col}-${row}`
@@ -380,15 +381,15 @@ export function InterfaceMatrixView({ onNavigate }: { onNavigate?: (tab: string)
                       onClick={() => cell && setSelectedCell(isSelected ? null : (INTERFACE_DATA[cellKey] ? cellKey : altKey))}
                       style={{
                         width: 65, height: 35, textAlign: 'center', cursor: cell ? 'pointer' : 'default',
-                        background: cell ? (isSelected ? 'rgba(59,130,246,0.2)' : isHovered ? 'rgba(255,255,255,0.05)' : 'var(--bg-secondary, #1f2937)') : 'transparent',
+                        background: cell ? (isSelected ? 'rgba(59,130,246,0.2)' : isHovered ? 'color-mix(in srgb, var(--text) 5%, transparent)' : 'var(--bg-secondary, var(--surface-2))') : 'transparent',
                         border: cell?.hasConflict
-                          ? isResolved ? '2px solid #10b981' : `2px solid ${SEVERITY_COLORS[cell.conflictSeverity || 'minor']}`
-                          : '1px solid var(--border, #374151)',
+                          ? isResolved ? '2px solid var(--status-ok)' : `2px solid ${SEVERITY_COLORS[cell.conflictSeverity || 'minor']}`
+                          : '1px solid var(--border, var(--line))',
                       }}>
                       {cell && (
                         <div style={{ display: 'flex', gap: '1px', justifyContent: 'center', flexWrap: 'wrap' }}>
                           {cell.types.map(t => (
-                            <span key={t} style={{ width: 8, height: 8, borderRadius: '50%', background: TYPE_COLORS[t] || '#6b7280' }} title={t} />
+                            <span key={t} style={{ width: 8, height: 8, borderRadius: '50%', background: TYPE_COLORS[t] || 'var(--text-3)' }} title={t} />
                           ))}
                         </div>
                       )}
@@ -402,20 +403,20 @@ export function InterfaceMatrixView({ onNavigate }: { onNavigate?: (tab: string)
       </div>
 
       {/* Legend */}
-      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.75rem', fontSize: '0.65rem', color: '#9ca3af' }}>
+      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.75rem', fontSize: fs.label, color: 'var(--text-2)' }}>
         {Object.entries(TYPE_COLORS).map(([type, color]) => (
           <span key={type} style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
             <span style={{ width: 8, height: 8, borderRadius: '50%', background: color }} /> {type}
           </span>
         ))}
         <span style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-          <span style={{ width: 10, height: 10, border: '2px solid #ef4444' }} /> critical
+          <span style={{ width: 10, height: 10, border: '2px solid var(--status-alarm)' }} /> critical
         </span>
         <span style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-          <span style={{ width: 10, height: 10, border: '2px solid #f59e0b' }} /> major
+          <span style={{ width: 10, height: 10, border: '2px solid var(--status-caution)' }} /> major
         </span>
         <span style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-          <span style={{ width: 10, height: 10, border: '2px solid #10b981' }} /> resolved
+          <span style={{ width: 10, height: 10, border: '2px solid var(--status-ok)' }} /> resolved
         </span>
       </div>
 
@@ -423,47 +424,47 @@ export function InterfaceMatrixView({ onNavigate }: { onNavigate?: (tab: string)
       {selectedData && selectedCell && (
         <div style={{
           marginTop: '0.75rem', padding: '0.75rem', borderRadius: '6px',
-          background: selectedData.hasConflict ? 'rgba(239,68,68,0.08)' : 'var(--bg-secondary, #1f2937)',
-          border: `1px solid ${selectedData.hasConflict ? SEVERITY_COLORS[selectedData.conflictSeverity || 'minor'] : 'var(--border, #374151)'}`,
+          background: selectedData.hasConflict ? 'rgba(239,68,68,0.08)' : 'var(--bg-secondary, var(--surface-2))',
+          border: `1px solid ${selectedData.hasConflict ? SEVERITY_COLORS[selectedData.conflictSeverity || 'minor'] : 'var(--border, var(--line))'}`,
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.3rem' }}>
-            <span style={{ fontWeight: 600, fontSize: '0.85rem' }}>{selectedCell.replace('-', ' \u2194 ')}</span>
+            <span style={{ fontWeight: 600, fontSize: fs.body }}>{selectedCell.replace('-', ' \u2194 ')}</span>
             {selectedData.conflictSeverity && (
               <span style={{
-                fontSize: '0.6rem', padding: '0.1rem 0.35rem', borderRadius: '3px',
-                background: `${SEVERITY_COLORS[selectedData.conflictSeverity]}22`,
+                fontSize: fs.label, padding: '0.1rem 0.35rem', borderRadius: '3px',
+                background: `color-mix(in srgb, ${SEVERITY_COLORS[selectedData.conflictSeverity]} 13%, transparent)`,
                 color: SEVERITY_COLORS[selectedData.conflictSeverity], fontWeight: 600, textTransform: 'uppercase',
               }}>{selectedData.conflictSeverity}</span>
             )}
             {resolutions.has(selectedCell) && (
               <span style={{
-                fontSize: '0.6rem', padding: '0.1rem 0.35rem', borderRadius: '3px',
-                background: `${STATUS_LABELS[resolutions.get(selectedCell)!.status].color}22`,
+                fontSize: fs.label, padding: '0.1rem 0.35rem', borderRadius: '3px',
+                background: `color-mix(in srgb, ${STATUS_LABELS[resolutions.get(selectedCell)!.status].color} 13%, transparent)`,
                 color: STATUS_LABELS[resolutions.get(selectedCell)!.status].color,
                 fontWeight: 600,
               }}>{STATUS_LABELS[resolutions.get(selectedCell)!.status].label}</span>
             )}
           </div>
-          <div style={{ fontSize: '0.78rem', marginBottom: '0.3rem' }}>{selectedData.description}</div>
-          <div style={{ fontSize: '0.72rem', color: '#9ca3af', marginBottom: '0.3rem' }}>
+          <div style={{ fontSize: fs.label, marginBottom: '0.3rem' }}>{selectedData.description}</div>
+          <div style={{ fontSize: fs.label, color: 'var(--text-2)', marginBottom: '0.3rem' }}>
             Types: {selectedData.types.join(', ')}
           </div>
 
           {selectedData.hasConflict && (
             <>
-              <div style={{ fontSize: '0.78rem', color: '#ef4444', fontWeight: 500, marginBottom: '0.3rem' }}>
+              <div style={{ fontSize: fs.label, color: 'var(--status-alarm)', fontWeight: 500, marginBottom: '0.3rem' }}>
                 Conflict: {selectedData.conflictTitle}
               </div>
 
               {/* Affected parameters with "Go fix" links */}
               {selectedData.affectedParameters && (
-                <div style={{ fontSize: '0.72rem', marginBottom: '0.3rem' }}>
-                  <span style={{ color: '#9ca3af' }}>Affected parameters:</span>
+                <div style={{ fontSize: fs.label, marginBottom: '0.3rem' }}>
+                  <span style={{ color: 'var(--text-2)' }}>Affected parameters:</span>
                   <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap', marginTop: '0.15rem' }}>
                     {selectedData.affectedParameters.map(p => (
                       <span key={p} style={{
-                        fontFamily: 'monospace', fontSize: '0.68rem', padding: '0.1rem 0.35rem',
-                        borderRadius: '3px', background: 'rgba(59,130,246,0.1)', color: '#3b82f6',
+                        fontFamily: 'monospace', fontSize: fs.label, padding: '0.1rem 0.35rem',
+                        borderRadius: '3px', background: 'rgba(59,130,246,0.1)', color: 'var(--interactive)',
                         cursor: onNavigate ? 'pointer' : 'default',
                       }} onClick={() => onNavigate?.('design')} title="Click to navigate to design parameters">
                         {p}
@@ -475,7 +476,7 @@ export function InterfaceMatrixView({ onNavigate }: { onNavigate?: (tab: string)
 
               {/* Responsible positions */}
               {selectedData.responsiblePositions && (
-                <div style={{ fontSize: '0.72rem', color: '#9ca3af', marginBottom: '0.4rem' }}>
+                <div style={{ fontSize: fs.label, color: 'var(--text-2)', marginBottom: '0.4rem' }}>
                   Responsible: {selectedData.responsiblePositions.join(', ')}
                 </div>
               )}
@@ -486,48 +487,48 @@ export function InterfaceMatrixView({ onNavigate }: { onNavigate?: (tab: string)
                   padding: '0.5rem', background: 'rgba(59,130,246,0.08)', borderRadius: '4px',
                   border: '1px solid rgba(59,130,246,0.2)', marginTop: '0.3rem',
                 }}>
-                  <div style={{ fontSize: '0.78rem', fontWeight: 600, color: '#3b82f6', marginBottom: '0.3rem' }}>
+                  <div style={{ fontSize: fs.label, fontWeight: 600, color: 'var(--interactive)', marginBottom: '0.3rem' }}>
                     Select Resolution
                   </div>
                   {selectedData.resolutionOptions?.map(opt => (
-                    <label key={opt} style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.75rem', marginBottom: '0.2rem', cursor: 'pointer' }}>
+                    <label key={opt} style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: fs.label, marginBottom: '0.2rem', cursor: 'pointer' }}>
                       <input type="radio" name="resolution" checked={selectedOption === opt}
-                        onChange={() => setSelectedOption(opt)} style={{ accentColor: '#3b82f6' }} />
+                        onChange={() => setSelectedOption(opt)} style={{ accentColor: 'var(--interactive)' }} />
                       {opt}
                     </label>
                   ))}
                   <textarea className="input" value={rationale} onChange={e => setRationale(e.target.value)}
                     placeholder="Rationale for this resolution..." rows={2}
-                    style={{ width: '100%', fontSize: '0.72rem', marginTop: '0.3rem', resize: 'vertical' }} />
+                    style={{ width: '100%', fontSize: fs.label, marginTop: '0.3rem', resize: 'vertical' }} />
                   <div style={{ display: 'flex', gap: '0.3rem', marginTop: '0.3rem' }}>
                     <button className="btn btn-sm" onClick={() => handleResolve(selectedCell, 'resolved')}
-                      disabled={!selectedOption} style={{ background: '#10b981', fontSize: '0.68rem' }}>Resolve</button>
+                      disabled={!selectedOption} style={{ background: 'var(--status-ok)', fontSize: fs.label }}>Resolve</button>
                     <button className="btn btn-sm" onClick={() => handleResolve(selectedCell, 'accepted_risk')}
-                      style={{ background: '#8b5cf6', fontSize: '0.68rem' }}>Accept Risk</button>
+                      style={{ background: 'var(--cat-2)', fontSize: fs.label }}>Accept Risk</button>
                     <button className="btn btn-sm" onClick={() => handleResolve(selectedCell, 'deferred')}
-                      style={{ background: '#6b7280', fontSize: '0.68rem' }}>Defer</button>
+                      style={{ background: 'var(--text-3)', fontSize: fs.label }}>Defer</button>
                     <button className="btn btn-sm" onClick={() => setResolvingCell(null)}
-                      style={{ background: '#374151', fontSize: '0.68rem' }}>Cancel</button>
+                      style={{ background: 'var(--line)', fontSize: fs.label }}>Cancel</button>
                   </div>
                 </div>
               ) : (
                 <div style={{ display: 'flex', gap: '0.3rem', marginTop: '0.3rem' }}>
                   {!resolutions.has(selectedCell) && (
                     <button className="btn btn-sm" onClick={() => setResolvingCell(selectedCell)}
-                      style={{ fontSize: '0.7rem', background: '#3b82f6' }}>Resolve Conflict</button>
+                      style={{ fontSize: fs.label, background: 'var(--interactive)' }}>Resolve Conflict</button>
                   )}
                   {resolutions.has(selectedCell) && (
                     <>
-                      <div style={{ fontSize: '0.72rem', color: '#9ca3af', flex: 1 }}>
-                        Resolution: <strong style={{ color: '#d1d5db' }}>{resolutions.get(selectedCell)!.selectedOption}</strong>
+                      <div style={{ fontSize: fs.label, color: 'var(--text-2)', flex: 1 }}>
+                        Resolution: <strong style={{ color: 'var(--text)' }}>{resolutions.get(selectedCell)!.selectedOption}</strong>
                         {resolutions.get(selectedCell)!.rationale && (
-                          <div style={{ fontSize: '0.68rem', color: '#6b7280', marginTop: '0.1rem' }}>
+                          <div style={{ fontSize: fs.label, color: 'var(--text-3)', marginTop: '0.1rem' }}>
                             {resolutions.get(selectedCell)!.rationale}
                           </div>
                         )}
                       </div>
                       <button className="btn btn-sm" onClick={() => setResolvingCell(selectedCell)}
-                        style={{ fontSize: '0.68rem' }}>Re-evaluate</button>
+                        style={{ fontSize: fs.label }}>Re-evaluate</button>
                     </>
                   )}
                 </div>

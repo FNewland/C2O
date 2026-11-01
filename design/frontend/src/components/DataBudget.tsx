@@ -12,6 +12,7 @@ import { useMemo, useState } from 'react'
 import { useDesignStore } from '../stores/designStore'
 import { useActiveParameters } from '../hooks/useActiveParameters'
 import { useApplyToDesign } from '../hooks/useApplyToDesign'
+import { fs } from '../theme/tokens'
 
 type DataTab = 'payload' | 'tmtc'
 type MissionProfile = 'leo_imaging' | '24_7_rf' | 'wide_fov'
@@ -154,20 +155,20 @@ export function DataBudget() {
 
   return (
     <div className="card">
-      <h3 style={{ fontSize: '0.9rem', marginBottom: '0.3rem' }}>Data Budget</h3>
-      <p style={{ fontSize: '0.72rem', color: '#9ca3af', marginBottom: '0.5rem' }}>
+      <h3 style={{ fontSize: fs.value, marginBottom: '0.3rem' }}>Data Budget</h3>
+      <p style={{ fontSize: fs.label, color: 'var(--text-2)', marginBottom: '0.5rem' }}>
         Data volume analysis in bits/bytes. Payload data and TMTC overhead.
       </p>
 
       {/* Mission profile selector */}
       <div style={{ display: 'flex', gap: '0.3rem', marginBottom: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
-        <span style={{ fontSize: '0.72rem', color: '#9ca3af', fontWeight: 600 }}>Mission Profile:</span>
+        <span style={{ fontSize: fs.label, color: 'var(--text-2)', fontWeight: 600 }}>Mission Profile:</span>
         {(Object.entries(PROFILE_LABELS) as [MissionProfile, string][]).map(([id, label]) => (
           <button key={id} onClick={() => setProfile(id)} style={{
-            padding: '0.25rem 0.6rem', fontSize: '0.7rem', borderRadius: '4px', cursor: 'pointer',
-            background: profile === id ? '#3b82f6' : 'var(--bg-secondary, #1f2937)',
-            color: profile === id ? 'white' : '#9ca3af',
-            border: `1px solid ${profile === id ? '#3b82f6' : '#374151'}`,
+            padding: '0.25rem 0.6rem', fontSize: fs.label, borderRadius: '4px', cursor: 'pointer',
+            background: profile === id ? 'var(--interactive)' : 'var(--bg-secondary, var(--surface-2))',
+            color: profile === id ? 'white' : 'var(--text-2)',
+            border: `1px solid ${profile === id ? 'var(--interactive)' : 'var(--line)'}`,
           }}>{label}</button>
         ))}
       </div>
@@ -179,10 +180,10 @@ export function DataBudget() {
           { id: 'tmtc' as DataTab, label: 'TM/TC' },
         ]).map(t => (
           <button key={t.id} onClick={() => setActiveTab(t.id)} style={{
-            padding: '0.3rem 0.75rem', fontSize: '0.78rem', borderRadius: '4px', cursor: 'pointer',
-            background: activeTab === t.id ? '#8b5cf6' : 'var(--bg-secondary, #1f2937)',
-            color: activeTab === t.id ? 'white' : '#9ca3af',
-            border: `1px solid ${activeTab === t.id ? '#8b5cf6' : '#374151'}`,
+            padding: '0.3rem 0.75rem', fontSize: fs.label, borderRadius: '4px', cursor: 'pointer',
+            background: activeTab === t.id ? 'var(--cat-2)' : 'var(--bg-secondary, var(--surface-2))',
+            color: activeTab === t.id ? 'white' : 'var(--text-2)',
+            border: `1px solid ${activeTab === t.id ? 'var(--cat-2)' : 'var(--line)'}`,
           }}>{t.label}</button>
         ))}
       </div>
@@ -191,36 +192,36 @@ export function DataBudget() {
       {activeTab === 'payload' && (
         <>
           {/* Flow diagram */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', marginBottom: '0.75rem', fontSize: '0.72rem', flexWrap: 'wrap' }}>
-            <FlowBox label="Generate" value={`${p.generation.daily_mb.toFixed(1)} MB/day`} sub={`${p.generation.rate_mbps} Mbps × ${p.generation.duty_pct}% duty`} color="#8b5cf6" />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', marginBottom: '0.75rem', fontSize: fs.label, flexWrap: 'wrap' }}>
+            <FlowBox label="Generate" value={`${p.generation.daily_mb.toFixed(1)} MB/day`} sub={`${p.generation.rate_mbps} Mbps × ${p.generation.duty_pct}% duty`} color="var(--cat-2)" />
             <Arrow />
-            <FlowBox label="Store" value={`${p.storage.capacity_gb} GB capacity`} sub={`fills in ${p.storage.fill_time_days.toFixed(1)} days`} color="#3b82f6" />
+            <FlowBox label="Store" value={`${p.storage.capacity_gb} GB capacity`} sub={`fills in ${p.storage.fill_time_days.toFixed(1)} days`} color="var(--interactive)" />
             <Arrow />
-            <FlowBox label="Downlink" value={`${p.downlink.daily_mb.toFixed(1)} MB/day`} sub={`${p.downlink.rate_mbps} Mbps × ${p.downlink.contact_min} min/day`} color="#10b981" />
+            <FlowBox label="Downlink" value={`${p.downlink.daily_mb.toFixed(1)} MB/day`} sub={`${p.downlink.rate_mbps} Mbps × ${p.downlink.contact_min} min/day`} color="var(--status-ok)" />
           </div>
 
           {/* Detailed numbers table */}
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.72rem', marginBottom: '0.75rem' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs.label, marginBottom: '0.75rem' }}>
             <thead>
-              <tr style={{ background: 'var(--bg-primary, #0a0e1a)' }}>
+              <tr style={{ background: 'var(--bg-primary, var(--surface-0))' }}>
                 <th style={th}>Parameter</th>
                 <th style={{ ...th, textAlign: 'right' }}>Value</th>
                 <th style={{ ...th, textAlign: 'right' }}>Unit</th>
               </tr>
             </thead>
             <tbody>
-              <tr style={trBorder}><td style={tdL} colSpan={3}><strong style={{ color: '#8b5cf6' }}>Generation</strong></td></tr>
+              <tr style={trBorder}><td style={tdL} colSpan={3}><strong style={{ color: 'var(--cat-2)' }}>Generation</strong></td></tr>
               <tr style={trBorder}><td style={tdL}>Payload data rate</td><td style={tdR}>{p.generation.rate_mbps}</td><td style={tdR}>Mbps</td></tr>
               <tr style={trBorder}><td style={tdL}>Duty cycle</td><td style={tdR}>{p.generation.duty_pct}</td><td style={tdR}>%</td></tr>
               <tr style={trBorder}><td style={tdL}>Daily generation</td><td style={tdR}>{p.generation.daily_mb.toFixed(1)}</td><td style={tdR}>MB/day</td></tr>
               <tr style={trBorder}><td style={tdL}>Daily generation</td><td style={tdR}>{(p.generation.daily_bits / 1e9).toFixed(2)}</td><td style={tdR}>Gbit/day</td></tr>
 
-              <tr style={trBorder}><td style={tdL} colSpan={3}><strong style={{ color: '#3b82f6' }}>Onboard Storage</strong></td></tr>
+              <tr style={trBorder}><td style={tdL} colSpan={3}><strong style={{ color: 'var(--interactive)' }}>Onboard Storage</strong></td></tr>
               <tr style={trBorder}><td style={tdL}>Capacity</td><td style={tdR}>{p.storage.capacity_gb}</td><td style={tdR}>GB</td></tr>
               <tr style={trBorder}><td style={tdL}>Capacity</td><td style={tdR}>{p.storage.capacity_mb.toFixed(0)}</td><td style={tdR}>MB</td></tr>
               <tr style={trBorder}><td style={tdL}>Time to fill</td><td style={tdR}>{p.storage.fill_time_days.toFixed(1)}</td><td style={tdR}>days</td></tr>
 
-              <tr style={trBorder}><td style={tdL} colSpan={3}><strong style={{ color: '#10b981' }}>Downlink</strong></td></tr>
+              <tr style={trBorder}><td style={tdL} colSpan={3}><strong style={{ color: 'var(--status-ok)' }}>Downlink</strong></td></tr>
               <tr style={trBorder}><td style={tdL}>Link data rate</td><td style={tdR}>{p.downlink.rate_mbps}</td><td style={tdR}>Mbps</td></tr>
               <tr style={trBorder}><td style={tdL}>Contact time / day</td><td style={tdR}>{p.downlink.contact_min}</td><td style={tdR}>min</td></tr>
               <tr style={trBorder}><td style={tdL}>Daily downlink capacity</td><td style={tdR}>{p.downlink.daily_mb.toFixed(1)}</td><td style={tdR}>MB/day</td></tr>
@@ -230,19 +231,19 @@ export function DataBudget() {
 
           {/* Balance indicator */}
           <div style={{
-            padding: '0.4rem 0.6rem', borderRadius: '4px', fontSize: '0.78rem',
+            padding: '0.4rem 0.6rem', borderRadius: '4px', fontSize: fs.label,
             background: p.balance.balanced ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
-            border: `1px solid ${p.balance.balanced ? '#10b981' : '#ef4444'}`,
+            border: `1px solid ${p.balance.balanced ? 'var(--status-ok)' : 'var(--status-alarm)'}`,
             display: 'flex', alignItems: 'center', gap: '0.5rem',
           }}>
-            <span style={{ fontWeight: 700, color: p.balance.balanced ? '#10b981' : '#ef4444' }}>
+            <span style={{ fontWeight: 700, color: p.balance.balanced ? 'var(--status-ok)' : 'var(--status-alarm)' }}>
               {p.balance.balanced ? 'BALANCED' : 'OVERFLOW'}
             </span>
-            <span style={{ color: '#9ca3af' }}>
+            <span style={{ color: 'var(--text-2)' }}>
               {p.balance.balanced ? 'Surplus' : 'Deficit'}: {Math.abs(p.balance.surplus_mb).toFixed(1)} MB/day
             </span>
             {!p.balance.balanced && (
-              <span style={{ color: '#ef4444', fontSize: '0.72rem' }}>
+              <span style={{ color: 'var(--status-alarm)', fontSize: fs.label }}>
                 — need higher data rate, more contact time, or reduced duty cycle
               </span>
             )}
@@ -255,46 +256,46 @@ export function DataBudget() {
         <>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '0.75rem' }}>
             {/* HK Telemetry */}
-            <div style={{ background: 'var(--bg-primary, #111827)', padding: '0.6rem', borderRadius: '6px', border: '1px solid #374151' }}>
-              <h4 style={{ fontSize: '0.78rem', color: '#06b6d4', marginBottom: '0.3rem' }}>HK Telemetry (Downlink)</h4>
+            <div style={{ background: 'var(--bg-primary, var(--surface-1))', padding: '0.6rem', borderRadius: '6px', border: '1px solid var(--line)' }}>
+              <h4 style={{ fontSize: fs.label, color: 'var(--interactive)', marginBottom: '0.3rem' }}>HK Telemetry (Downlink)</h4>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', marginBottom: '0.3rem' }}>
-                <label style={{ fontSize: '0.68rem', color: '#9ca3af' }}>Rate:</label>
+                <label style={{ fontSize: fs.label, color: 'var(--text-2)' }}>Rate:</label>
                 <input type="number" min={0.1} max={100} step={0.1} value={hkRate_kbps}
                   onChange={e => setHkRate(Number(e.target.value))}
-                  style={{ width: '50px', fontSize: '0.72rem', textAlign: 'center', background: 'var(--bg-secondary, #1f2937)', border: '1px solid #374151', borderRadius: '3px', color: '#d1d5db' }} />
-                <span style={{ fontSize: '0.68rem', color: '#6b7280' }}>kbps (continuous)</span>
+                  style={{ width: '50px', fontSize: fs.label, textAlign: 'center', background: 'var(--bg-secondary, var(--surface-2))', border: '1px solid var(--line)', borderRadius: '3px', color: 'var(--text)' }} />
+                <span style={{ fontSize: fs.label, color: 'var(--text-3)' }}>kbps (continuous)</span>
               </div>
-              <div style={{ fontSize: '0.72rem', color: '#d1d5db' }}>
+              <div style={{ fontSize: fs.label, color: 'var(--text)' }}>
                 Daily HK volume: <strong>{tmtc.hk_daily_mb.toFixed(2)} MB/day</strong>
               </div>
-              <div style={{ fontSize: '0.65rem', color: '#6b7280' }}>
+              <div style={{ fontSize: fs.label, color: 'var(--text-3)' }}>
                 = {(tmtc.hk_daily_mb * 8).toFixed(1)} Mbit/day
               </div>
             </div>
 
             {/* TC Uplink */}
-            <div style={{ background: 'var(--bg-primary, #111827)', padding: '0.6rem', borderRadius: '6px', border: '1px solid #374151' }}>
-              <h4 style={{ fontSize: '0.78rem', color: '#f59e0b', marginBottom: '0.3rem' }}>TC Uplink</h4>
+            <div style={{ background: 'var(--bg-primary, var(--surface-1))', padding: '0.6rem', borderRadius: '6px', border: '1px solid var(--line)' }}>
+              <h4 style={{ fontSize: fs.label, color: 'var(--status-caution)', marginBottom: '0.3rem' }}>TC Uplink</h4>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', marginBottom: '0.3rem' }}>
-                <label style={{ fontSize: '0.68rem', color: '#9ca3af' }}>Rate:</label>
+                <label style={{ fontSize: fs.label, color: 'var(--text-2)' }}>Rate:</label>
                 <input type="number" min={0.1} max={100} step={0.1} value={tcRate_kbps}
                   onChange={e => setTcRate(Number(e.target.value))}
-                  style={{ width: '50px', fontSize: '0.72rem', textAlign: 'center', background: 'var(--bg-secondary, #1f2937)', border: '1px solid #374151', borderRadius: '3px', color: '#d1d5db' }} />
-                <span style={{ fontSize: '0.68rem', color: '#6b7280' }}>kbps</span>
+                  style={{ width: '50px', fontSize: fs.label, textAlign: 'center', background: 'var(--bg-secondary, var(--surface-2))', border: '1px solid var(--line)', borderRadius: '3px', color: 'var(--text)' }} />
+                <span style={{ fontSize: fs.label, color: 'var(--text-3)' }}>kbps</span>
               </div>
-              <div style={{ fontSize: '0.72rem', color: '#d1d5db' }}>
+              <div style={{ fontSize: fs.label, color: 'var(--text)' }}>
                 Daily TC volume: <strong>{tmtc.tc_daily_mb.toFixed(3)} MB/day</strong>
               </div>
-              <div style={{ fontSize: '0.65rem', color: '#6b7280' }}>
+              <div style={{ fontSize: fs.label, color: 'var(--text-3)' }}>
                 (during {get('link.contact_min_per_day') || 30} min contact)
               </div>
             </div>
           </div>
 
           {/* Packet overhead */}
-          <div style={{ background: 'var(--bg-primary, #111827)', padding: '0.6rem', borderRadius: '6px', border: '1px solid #374151', marginBottom: '0.75rem' }}>
-            <h4 style={{ fontSize: '0.78rem', color: '#8b5cf6', marginBottom: '0.3rem' }}>CCSDS Packet Overhead</h4>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.72rem' }}>
+          <div style={{ background: 'var(--bg-primary, var(--surface-1))', padding: '0.6rem', borderRadius: '6px', border: '1px solid var(--line)', marginBottom: '0.75rem' }}>
+            <h4 style={{ fontSize: fs.label, color: 'var(--cat-2)', marginBottom: '0.3rem' }}>CCSDS Packet Overhead</h4>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs.label }}>
               <tbody>
                 <tr style={trBorder}>
                   <td style={tdL}>Primary header</td>
@@ -309,8 +310,8 @@ export function DataBudget() {
                     Data field
                     <input type="number" min={1} max={65536} step={1} value={packetDataBytes}
                       onChange={e => setPacketDataBytes(Number(e.target.value))}
-                      style={{ width: '60px', fontSize: '0.68rem', textAlign: 'center', marginLeft: '0.3rem', background: 'var(--bg-secondary, #1f2937)', border: '1px solid #374151', borderRadius: '3px', color: '#d1d5db' }} />
-                    <span style={{ fontSize: '0.6rem', color: '#6b7280', marginLeft: '0.2rem' }}>bytes</span>
+                      style={{ width: '60px', fontSize: fs.label, textAlign: 'center', marginLeft: '0.3rem', background: 'var(--bg-secondary, var(--surface-2))', border: '1px solid var(--line)', borderRadius: '3px', color: 'var(--text)' }} />
+                    <span style={{ fontSize: fs.label, color: 'var(--text-3)', marginLeft: '0.2rem' }}>bytes</span>
                   </td>
                   <td style={tdR}>{packetDataBytes} bytes</td>
                 </tr>
@@ -320,23 +321,23 @@ export function DataBudget() {
                 </tr>
                 <tr style={trBorder}>
                   <td style={tdL}>Packet overhead</td>
-                  <td style={{ ...tdR, color: '#f59e0b' }}>{tmtc.packet_overhead_pct.toFixed(1)}%</td>
+                  <td style={{ ...tdR, color: 'var(--status-caution)' }}>{tmtc.packet_overhead_pct.toFixed(1)}%</td>
                 </tr>
               </tbody>
             </table>
           </div>
 
           {/* Frame overhead */}
-          <div style={{ background: 'var(--bg-primary, #111827)', padding: '0.6rem', borderRadius: '6px', border: '1px solid #374151', marginBottom: '0.75rem' }}>
-            <h4 style={{ fontSize: '0.78rem', color: '#10b981', marginBottom: '0.3rem' }}>Frame Coding Overhead</h4>
+          <div style={{ background: 'var(--bg-primary, var(--surface-1))', padding: '0.6rem', borderRadius: '6px', border: '1px solid var(--line)', marginBottom: '0.75rem' }}>
+            <h4 style={{ fontSize: fs.label, color: 'var(--status-ok)', marginBottom: '0.3rem' }}>Frame Coding Overhead</h4>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.3rem' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.72rem', color: '#d1d5db', cursor: 'pointer' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: fs.label, color: 'var(--text)', cursor: 'pointer' }}>
                 <input type="checkbox" checked={useReedSolomon} onChange={e => setUseReedSolomon(e.target.checked)}
-                  style={{ accentColor: '#10b981' }} />
+                  style={{ accentColor: 'var(--status-ok)' }} />
                 Reed-Solomon ({RS_CODED}/{RS_DATA})
               </label>
             </div>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.72rem' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs.label }}>
               <tbody>
                 <tr style={trBorder}>
                   <td style={tdL}>RS overhead</td>
@@ -344,11 +345,11 @@ export function DataBudget() {
                 </tr>
                 <tr style={{ ...trBorder, fontWeight: 700 }}>
                   <td style={tdL}>Total protocol overhead (packet + frame)</td>
-                  <td style={{ ...tdR, color: '#f59e0b' }}>{tmtc.total_overhead_pct.toFixed(1)}%</td>
+                  <td style={{ ...tdR, color: 'var(--status-caution)' }}>{tmtc.total_overhead_pct.toFixed(1)}%</td>
                 </tr>
                 <tr style={trBorder}>
                   <td style={tdL}>Effective user data ratio</td>
-                  <td style={{ ...tdR, color: '#10b981' }}>{(tmtc.effective_ratio * 100).toFixed(1)}%</td>
+                  <td style={{ ...tdR, color: 'var(--status-ok)' }}>{(tmtc.effective_ratio * 100).toFixed(1)}%</td>
                 </tr>
               </tbody>
             </table>
@@ -357,7 +358,7 @@ export function DataBudget() {
       )}
 
       <button className="btn" onClick={async () => { await apply(); setApplied(true); setTimeout(() => setApplied(false), 2000) }}
-        style={{ marginTop: '0.5rem', width: '100%', background: applied ? '#10b981' : '#3b82f6', fontSize: '0.78rem' }}>
+        style={{ marginTop: '0.5rem', width: '100%', background: applied ? 'var(--status-ok)' : 'var(--interactive)', fontSize: fs.label }}>
         {applied ? 'Applied — reconverging...' : 'Apply to Design'}
       </button>
     </div>
@@ -368,20 +369,20 @@ function FlowBox({ label, value, sub, color }: { label: string; value: string; s
   return (
     <div style={{
       padding: '0.3rem 0.5rem', borderRadius: '4px', minWidth: '100px', textAlign: 'center',
-      background: `${color}11`, border: `1px solid ${color}40`,
+      background: `color-mix(in srgb, ${color} 7%, transparent)`, border: `1px solid color-mix(in srgb, ${color} 25%, transparent)`,
     }}>
-      <div style={{ fontSize: '0.65rem', color, fontWeight: 600, textTransform: 'uppercase' }}>{label}</div>
-      <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#d1d5db' }}>{value}</div>
-      <div style={{ fontSize: '0.6rem', color: '#6b7280' }}>{sub}</div>
+      <div style={{ fontSize: fs.label, color, fontWeight: 600, textTransform: 'uppercase' }}>{label}</div>
+      <div style={{ fontSize: fs.label, fontWeight: 700, color: 'var(--text)' }}>{value}</div>
+      <div style={{ fontSize: fs.label, color: 'var(--text-3)' }}>{sub}</div>
     </div>
   )
 }
 
 function Arrow() {
-  return <span style={{ fontSize: '1rem', color: '#6b7280' }}>→</span>
+  return <span style={{ fontSize: fs.value, color: 'var(--text-3)' }}>→</span>
 }
 
-const th: React.CSSProperties = { padding: '0.3rem 0.5rem', textAlign: 'left', fontSize: '0.65rem', textTransform: 'uppercase', color: '#9ca3af' }
-const tdL: React.CSSProperties = { padding: '0.25rem 0.5rem', color: '#d1d5db' }
-const tdR: React.CSSProperties = { padding: '0.25rem 0.5rem', textAlign: 'right', fontFamily: 'monospace', color: '#d1d5db' }
-const trBorder: React.CSSProperties = { borderBottom: '1px solid rgba(255,255,255,0.05)' }
+const th: React.CSSProperties = { padding: '0.3rem 0.5rem', textAlign: 'left', fontSize: fs.label, textTransform: 'uppercase', color: 'var(--text-2)' }
+const tdL: React.CSSProperties = { padding: '0.25rem 0.5rem', color: 'var(--text)' }
+const tdR: React.CSSProperties = { padding: '0.25rem 0.5rem', textAlign: 'right', fontFamily: 'monospace', color: 'var(--text)' }
+const trBorder: React.CSSProperties = { borderBottom: '1px solid color-mix(in srgb, var(--text) 5%, transparent)' }

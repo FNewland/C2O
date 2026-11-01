@@ -1,0 +1,161 @@
+# Individually slow fast-tier tests, tiered `slow` by tests/conftest.py.
+#
+# One pytest node id per line (relative to sim/), "#" starts a comment.
+# Generated 2026-11-01 from a fast-tier run (`-n auto --junitxml=...`): every
+# test that took >= 4 s on a loaded 2-core container. The quick gates in
+# test_content, test_i18n and test_mcs deliberately stay in the fast tier.
+# Most of these boot an engine and tick hours of sim time (AOCS dynamics,
+# payload chain, eclipse, determinism).
+# They still run nightly in the slow tier. To refresh: run the fast tier with
+# --durations=0 (or --junitxml) and list the tests above the same threshold.
+# A node id that no longer exists is ignored.
+tests/test_adcs_sim_viewer.py::test_http_run_and_download  # 7s
+tests/test_commissioning_sequence.py::TestPhase15::test_payload_capture  # 5s
+tests/test_link/test_security.py::test_h1_stop_resets_tc_clients  # 5s
+tests/test_rfsim/test_display_producers.py::TestBridgeWiresTheProducers::test_update_displays_fills_every_dead_panel  # 4s
+tests/test_rfsim/test_display_producers.py::TestLiveSampleTaps::test_channel_stage_retains_impaired_samples  # 4s
+tests/test_rfsim/test_iq_recorder.py::test_impulsive_noise_raises_kurtosis  # 6s
+tests/test_simulator/test_acceleration_consistency.py::test_dt_600_remains_finite_and_bounded  # 16s
+tests/test_simulator/test_acceleration_consistency.py::test_speed_60_matches_realtime_end_state  # 65s
+tests/test_simulator/test_acceleration_consistency.py::test_substep_count_and_cap  # 7s
+tests/test_simulator/test_aocs_dynamics.py::TestAcceleration::test_detumble_stable_at_any_dt[1.0]  # 20s
+tests/test_simulator/test_aocs_dynamics.py::TestAcceleration::test_detumble_stable_at_any_dt[10.0]  # 7s
+tests/test_simulator/test_aocs_dynamics.py::TestAcceleration::test_detumble_stable_at_any_dt[60.0]  # 6s
+tests/test_simulator/test_aocs_dynamics.py::TestAcceleration::test_secular_mode_honest_and_slow_states_advance  # 14s
+tests/test_simulator/test_aocs_dynamics.py::TestAcceleration::test_substep_consistency_dt1_vs_dt60  # 76s
+tests/test_simulator/test_aocs_dynamics.py::TestAttitudeDependentGeneration::test_large_off_nadir_slew_changes_generation  # 5s
+tests/test_simulator/test_aocs_dynamics.py::TestAttitudeDependentGeneration::test_sun_pointing_beats_nadir_at_high_beta  # 27s
+tests/test_simulator/test_aocs_dynamics.py::TestDesat::test_desat_dumps_momentum_and_exits  # 24s
+tests/test_simulator/test_aocs_dynamics.py::TestDisturbances::test_disturbance_magnitudes_sane  # 8s
+tests/test_simulator/test_aocs_dynamics.py::TestDynamics::test_momentum_conservation_free_body  # 25s
+tests/test_simulator/test_aocs_dynamics.py::TestEstimator::test_covariance_consistent_with_actual_error  # 14s
+tests/test_simulator/test_aocs_dynamics.py::TestEstimator::test_innovation_gate_rejects_wild_fix  # 8s
+tests/test_simulator/test_aocs_dynamics.py::TestEstimator::test_knowledge_grows_without_star_tracker  # 10s
+tests/test_simulator/test_aocs_dynamics.py::TestEstimator::test_mekf_converges_from_10deg  # 10s
+tests/test_simulator/test_aocs_dynamics.py::TestFineGating::test_fine_not_degraded_on_four_wheels  # 23s
+tests/test_simulator/test_aocs_dynamics.py::TestFineGating::test_fine_permitted_with_three_wheels  # 118s
+tests/test_simulator/test_aocs_dynamics.py::TestFineGating::test_fine_ready_mask_clears_when_ready  # 12s
+tests/test_simulator/test_aocs_dynamics.py::TestFineGating::test_fine_refused_with_two_wheels  # 21s
+tests/test_simulator/test_aocs_dynamics.py::TestFineGating::test_mode_power_published  # 17s
+tests/test_simulator/test_aocs_dynamics.py::TestPointingPerformance::test_detumble_converges_and_transitions  # 6s
+tests/test_simulator/test_aocs_dynamics.py::TestPointingPerformance::test_fine_point_error_band_and_power  # 20s
+tests/test_simulator/test_aocs_dynamics.py::TestPointingPerformance::test_inertial_mode_accumulates_more_momentum  # 168s
+tests/test_simulator/test_aocs_dynamics.py::TestPointingPerformance::test_nadir_tracking_pitch_rate  # 15s
+tests/test_simulator/test_aocs_dynamics.py::TestPointingPerformance::test_nominal_steady_state_error_band  # 14s
+tests/test_simulator/test_aocs_dynamics.py::TestPointingPerformance::test_slew_30deg_completes_and_resumes_nominal  # 19s
+tests/test_simulator/test_aocs_dynamics.py::TestStateRoundTrip::test_breakpoint_mid_slew_resumes  # 16s
+tests/test_simulator/test_aocs_dynamics.py::TestStateRoundTrip::test_same_seed_identical_attitude_trace  # 9s
+tests/test_simulator/test_aocs_dynamics.py::TestStateRoundTrip::test_state_roundtrip_preserves_new_fields  # 18s
+tests/test_simulator/test_aocs_gyro_calibration.py::test_a_running_calibration_survives_a_breakpoint_round_trip  # 6s
+tests/test_simulator/test_aocs_gyro_calibration.py::test_a_second_calibration_converges_rather_than_double_counting  # 17s
+tests/test_simulator/test_aocs_gyro_calibration.py::test_a_successful_calibration_clears_the_gyro_bias_high_alarm  # 8s
+tests/test_simulator/test_aocs_gyro_calibration.py::test_all_three_gyro_units_start_powered_and_are_visible  # 16s
+tests/test_simulator/test_aocs_gyro_calibration.py::test_an_abort_leaves_an_earlier_good_compensation_in_force  # 12s
+tests/test_simulator/test_aocs_gyro_calibration.py::test_calibration_estimates_the_injected_bias_and_stops_the_drift  # 22s
+tests/test_simulator/test_aocs_gyro_calibration.py::test_powering_one_gyro_unit_off_is_visible_and_costs_that_axis[0-518]  # 13s
+tests/test_simulator/test_aocs_gyro_calibration.py::test_powering_one_gyro_unit_off_is_visible_and_costs_that_axis[1-519]  # 9s
+tests/test_simulator/test_aocs_gyro_calibration.py::test_powering_one_gyro_unit_off_is_visible_and_costs_that_axis[2-520]  # 9s
+tests/test_simulator/test_aocs_gyro_calibration.py::test_the_compensation_survives_a_restore_into_a_fresh_engine  # 7s
+tests/test_simulator/test_aocs_gyro_calibration.py::test_without_the_calibration_the_same_coast_walks_away  # 35s
+tests/test_simulator/test_aocs_mode_event_single_source.py::test_nominal_to_eclipse_emits_exactly_one_correct_event  # 4s
+tests/test_simulator/test_aocs_mode_management.py::TestDesaturation::test_desat_inhibit_operator_and_payload  # 5s
+tests/test_simulator/test_aocs_mode_management.py::TestDesaturation::test_desat_refused_in_fine_and_never_auto_entered  # 10s
+tests/test_simulator/test_aocs_mode_management.py::TestDesaturation::test_desat_returns_to_the_pre_desat_mode  # 10s
+tests/test_simulator/test_aocs_mode_management.py::TestDesaturation::test_desat_times_out_instead_of_parking_for_ever  # 7s
+tests/test_simulator/test_aocs_mode_management.py::TestDesaturation::test_dump_actually_removes_body_momentum  # 19s
+tests/test_simulator/test_aocs_mode_management.py::TestDesaturation::test_mom_mgmt_exit_pct_is_read  # 6s
+tests/test_simulator/test_aocs_mode_management.py::TestDetumbleIsBdot::test_detumble_converges_from_a_separation_tumble  # 32s
+tests/test_simulator/test_aocs_mode_management.py::TestDetumbleIsBdot::test_detumble_fails_without_the_magnetometer  # 16s
+tests/test_simulator/test_aocs_mode_management.py::TestDetumbleIsBdot::test_detumble_works_with_every_gyro_off  # 18s
+tests/test_simulator/test_aocs_mode_management.py::TestEclipsePointing::test_eclipse_pointing_does_not_decay  # 14s
+tests/test_simulator/test_aocs_mode_management.py::TestEclipsePointing::test_gyro_bias_truth_is_bounded_by_its_spec  # 52s
+tests/test_simulator/test_aocs_mode_management.py::TestGyroWiring::test_gyro_enabled_telemetry_follows_the_devices  # 5s
+tests/test_simulator/test_aocs_mode_management.py::TestGyroWiring::test_gyros_off_inflates_the_covariance  # 12s
+tests/test_simulator/test_aocs_mode_management.py::TestGyroWiring::test_injected_gyro_bias_persists_and_is_visible  # 23s
+tests/test_simulator/test_aocs_mode_management.py::TestGyroWiring::test_one_dead_axis_only_costs_that_axis  # 6s
+tests/test_simulator/test_aocs_mode_management.py::TestModeReturnPaths::test_coarse_sun_hands_back_to_commanded_mode  # 16s
+tests/test_simulator/test_aocs_mode_management.py::TestModeReturnPaths::test_commanded_mode_is_not_overwritten_by_transients  # 10s
+tests/test_simulator/test_aocs_mode_management.py::TestModeReturnPaths::test_eclipse_exit_resumes_commanded_mode  # 8s
+tests/test_simulator/test_aocs_mode_management.py::TestModeReturnPaths::test_fine_is_repromoted_after_eclipse  # 12s
+tests/test_simulator/test_aocs_mode_management.py::TestModeReturnPaths::test_inertial_holds_through_eclipse  # 13s
+tests/test_simulator/test_aocs_mode_management.py::TestModeReturnPaths::test_slew_returns_to_pre_slew_mode  # 6s
+tests/test_simulator/test_aocs_state_machine.py::TestAOCSStateMachine::test_desat_mode_reduces_wheel_speeds  # 6s
+tests/test_simulator/test_body_frame_convention.py::TestNominalAttitudeInTheModel::test_published_nadir_vector_is_minus_z  # 5s
+tests/test_simulator/test_body_frame_convention.py::TestNominalAttitudeInTheModel::test_published_sun_vector_y_is_sin_beta  # 5s
+tests/test_simulator/test_breakpoint_round_trip.py::test_fresh_engine_restore_no_spurious_events  # 9s
+tests/test_simulator/test_breakpoint_round_trip.py::test_loaded_snapshot_is_not_mutated_by_later_ticks  # 14s
+tests/test_simulator/test_breakpoint_round_trip.py::test_s11_schedule_survives_load  # 9s
+tests/test_simulator/test_breakpoint_round_trip.py::test_save_perturb_load_deep_equals  # 15s
+tests/test_simulator/test_breakpoint_round_trip.py::test_two_engines_restored_from_one_snapshot_do_not_share_state  # 10s
+tests/test_simulator/test_config_editor_api.py::test_baselines_over_http  # 5s
+tests/test_simulator/test_deferred_completion.py::test_gyro_calibration_defers_its_completion  # 5s
+tests/test_simulator/test_deferred_completion.py::test_wing_deployment_defers_its_completion  # 4s
+tests/test_simulator/test_determinism.py::test_different_seed_differs  # 18s
+tests/test_simulator/test_determinism.py::test_same_seed_identical_trace  # 18s
+tests/test_simulator/test_eclipse_single_authority.py::test_all_eclipse_consumers_agree_at_the_same_instant  # 87s
+tests/test_simulator/test_eclipse_single_authority.py::test_no_generation_in_eclipse_in_the_awkward_states  # 27s
+tests/test_simulator/test_eclipse_single_authority.py::test_true_eclipse_geometry_at_the_current_epoch  # 11s
+tests/test_simulator/test_eps_telemetry_completeness.py::test_every_declared_eps_param_is_written  # 4s
+tests/test_simulator/test_fault_propagation.py::test_every_primary_param_resolves  # 6s
+tests/test_simulator/test_fault_propagation.py::test_fault_and_procedure_state_round_trip  # 6s
+tests/test_simulator/test_fault_propagation.py::test_fdir_components_are_in_the_state_registry  # 5s
+tests/test_simulator/test_fault_propagation.py::test_recovery_completes_when_the_fault_clears  # 6s
+tests/test_simulator/test_fdir_phase_gate.py::test_powering_the_eps_line_does_not_enable_the_wheels  # 5s
+tests/test_simulator/test_field_report_2026_08c.py::TestCommandedLoadShed::test_each_stage_has_observable_effect_and_tm  # 5s
+tests/test_simulator/test_field_report_2026_08c.py::TestCommandedLoadShed::test_shed_never_powers_lines_on  # 5s
+tests/test_simulator/test_field_report_2026_08c.py::TestGyroCalPrecondition::test_cal_starts_in_coarse_sun_with_st_tracking  # 12s
+tests/test_simulator/test_field_report_2026_08c.py::TestGyroCalPrecondition::test_cal_still_refused_without_st  # 4s
+tests/test_simulator/test_field_report_2026_08c.py::TestNewTelemetry::test_gps_pvt_gated_on_fix  # 5s
+tests/test_simulator/test_field_report_2026_08c.py::TestNewTelemetry::test_mag_field_published_in_detumble  # 4s
+tests/test_simulator/test_field_report_2026_08c.py::TestS13Acceptance::test_s13_create_is_not_refused_at_acceptance  # 6s
+tests/test_simulator/test_field_report_2026_08c.py::TestS13Acceptance::test_s13_subtypes_are_known  # 5s
+tests/test_simulator/test_hk_enable_persistence.py::test_disabling_a_sid_stops_its_delayed_tm_and_the_gap_is_visible  # 12s
+tests/test_simulator/test_hk_enable_persistence.py::test_dump_across_a_sid_disable_window_shows_a_gap_not_continuity  # 33s
+tests/test_simulator/test_hk_enable_persistence.py::test_s15_store_keeps_receiving_across_a_phase_declaration  # 26s
+tests/test_simulator/test_instructor_override_toggle.py::TestOverrideToggle::test_alternate_payload_keys_accepted  # 6s
+tests/test_simulator/test_instructor_snapshot.py::TestClockGroundTruth::test_snapshot_carries_the_offset_and_the_drawn_drift  # 6s
+tests/test_simulator/test_instructor_snapshot.py::TestInstructorSnapshot::test_parameter_ids_coverage  # 4s
+tests/test_simulator/test_instructor_snapshot.py::TestInstructorSnapshot::test_snapshot_parameters_present  # 5s
+tests/test_simulator/test_instructor_snapshot.py::TestInstructorSnapshot::test_tcs_subsystem_fields  # 5s
+tests/test_simulator/test_instructor_snapshot.py::TestInstructorSnapshotThreadSafety::test_soak_concurrent_polling_is_fault_free  # 10s
+tests/test_simulator/test_missing_argument_refusal.py::TestMissingArgumentIsRefused::test_empty_data_field_is_refused_by_name[116-PROP_INHIBIT_SET]  # 7s
+tests/test_simulator/test_missing_argument_refusal.py::TestMissingArgumentIsRefused::test_empty_data_field_is_refused_by_name[18-EPS_TRANSPONDER_TX]  # 4s
+tests/test_simulator/test_missing_argument_refusal.py::TestMissingArgumentIsRefused::test_empty_data_field_is_refused_by_name[26-PAYLOAD_SET_MODE]  # 5s
+tests/test_simulator/test_missing_argument_refusal.py::TestMissingArgumentIsRefused::test_empty_data_field_is_refused_by_name[4-ST1_POWER]  # 4s
+tests/test_simulator/test_missing_argument_refusal.py::TestMissingArgumentIsRefused::test_empty_data_field_is_refused_by_name[40-HEATER_BATTERY]  # 5s
+tests/test_simulator/test_missing_argument_refusal.py::TestMissingArgumentIsRefused::test_empty_data_field_is_refused_by_name[41-HEATER_OBC]  # 5s
+tests/test_simulator/test_missing_argument_refusal.py::TestMissingArgumentIsRefused::test_empty_data_field_is_refused_by_name[5-ST2_POWER]  # 4s
+tests/test_simulator/test_missing_argument_refusal.py::TestMissingArgumentIsRefused::test_empty_data_field_is_refused_by_name[54-OBC_SELECT_BUS]  # 4s
+tests/test_simulator/test_missing_argument_refusal.py::TestMissingArgumentIsRefused::test_empty_data_field_is_refused_by_name[56-OBC_BOOT_INHIBIT]  # 7s
+tests/test_simulator/test_missing_argument_refusal.py::TestMissingArgumentIsRefused::test_empty_data_field_is_refused_by_name[78-TTC_SET_COHERENT_MODE]  # 5s
+tests/test_simulator/test_missing_argument_refusal.py::TestMissingArgumentIsRefused::test_empty_data_field_is_refused_by_name[79-TTC_SET_DOWNLINK_MODE]  # 5s
+tests/test_simulator/test_missing_argument_refusal.py::TestMissingArgumentIsRefused::test_empty_data_field_is_refused_by_name[83-EPS_SET_MODE]  # 4s
+tests/test_simulator/test_missing_argument_refusal.py::TestMissingArgumentIsRefused::test_empty_data_field_is_refused_by_name[84-AOCS_GPS_SET_START_MODE]  # 6s
+tests/test_simulator/test_missing_argument_refusal.py::TestMissingArgumentIsRefused::test_empty_data_field_is_refused_by_name[9-MTQ_ENABLE]  # 5s
+tests/test_simulator/test_missing_argument_refusal.py::TestMissingArgumentIsRefused::test_empty_data_field_is_refused_by_name[96-AOCS_SET_DESAT_INHIBIT]  # 4s
+tests/test_simulator/test_payload_chain_e2e.py::TestCalibrationOverTheWire::test_calibration_from_imaging_is_refused_over_the_wire  # 18s
+tests/test_simulator/test_payload_chain_e2e.py::TestCalibrationOverTheWire::test_com011_route_reaches_a_valid_calibration  # 11s
+tests/test_simulator/test_payload_chain_e2e.py::TestEveryCoolerPathCools::test_commanding_off_drops_the_line_too  # 12s
+tests/test_simulator/test_payload_chain_e2e.py::TestEveryCoolerPathCools::test_cooler_authority_is_published_and_positive  # 12s
+tests/test_simulator/test_payload_chain_e2e.py::TestEveryCoolerPathCools::test_path_energises_the_line_and_brings_the_fpa_ready[EPS_FPA_COOLER (func 17)-17-\x01]  # 16s
+tests/test_simulator/test_payload_chain_e2e.py::TestEveryCoolerPathCools::test_path_energises_the_line_and_brings_the_fpa_ready[EPS_PAYLOAD_MODE (func 16)-16-\x01]  # 20s
+tests/test_simulator/test_payload_chain_e2e.py::TestEveryCoolerPathCools::test_path_energises_the_line_and_brings_the_fpa_ready[PAYLOAD_SET_MODE STANDBY (func 26)-26-\x01]  # 17s
+tests/test_simulator/test_payload_chain_e2e.py::TestEveryCoolerPathCools::test_path_energises_the_line_and_brings_the_fpa_ready[TCS FPA_COOLER (func 43) \u2014 COM-009's path-43-\x01]  # 17s
+tests/test_simulator/test_payload_chain_e2e.py::TestEveryCoolerPathCools::test_payload_mode_off_releases_the_cooler  # 5s
+tests/test_simulator/test_payload_chain_e2e.py::TestImageChain::test_a_completed_transfer_frees_the_product  # 15s
+tests/test_simulator/test_payload_chain_e2e.py::TestImageChain::test_a_partial_transfer_leaves_the_product_on_board  # 12s
+tests/test_simulator/test_payload_chain_e2e.py::TestImageChain::test_capture_creates_a_product_and_a_science_record  # 21s
+tests/test_simulator/test_payload_chain_e2e.py::TestImageChain::test_func_32_answers_with_a_catalogue_report  # 12s
+tests/test_simulator/test_payload_chain_e2e.py::TestImageChain::test_func_94_reports_bytes_blocks_and_checksum  # 12s
+tests/test_simulator/test_payload_chain_e2e.py::TestImageChain::test_imaging_stores_nothing_without_a_capture  # 28s
+tests/test_simulator/test_payload_chain_e2e.py::TestImageChain::test_s13_refuses_a_scene_that_was_never_taken  # 17s
+tests/test_simulator/test_payload_chain_e2e.py::TestImageChain::test_s13_sizes_from_the_product_and_the_bytes_checksum  # 25s
+tests/test_simulator/test_payload_chain_e2e.py::TestImageChain::test_the_science_store_holds_only_science  # 21s
+tests/test_simulator/test_payload_enhanced.py::TestDefect5DownlinkIntegration::test_get_transfer_status  # 11s
+tests/test_simulator/test_payload_enhanced.py::TestDefect5DownlinkIntegration::test_initiate_transfer_command  # 20s
+tests/test_simulator/test_payload_enhanced.py::TestDefect5DownlinkIntegration::test_transfer_completes_and_deactivates  # 8s
+tests/test_simulator/test_payload_enhanced.py::TestDefect5DownlinkIntegration::test_transfer_progress_increments  # 15s
+tests/test_simulator/test_power_budget_regression.py::TestStandardOperationsBudgetCloses::test_imaging_closes_by_duty_cycling  # 4s
+tests/test_simulator/test_prop_engine.py::TestBreakpoints::test_burn_survives_save_ticks_load  # 74s
+tests/test_simulator/test_prop_engine.py::TestEPSBilling::test_catbed_preheat_reaches_arm_interlock_in_20_min  # 11s
+tests/test_simulator/test_prop_engine.py::TestSpeedClampAndShed::test_speed_clamped_during_burn_with_event  # 5s

@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useDesignStore } from '../stores/designStore'
-import { POSITION_COLOR } from '../constants'
+import { fs } from '../theme/tokens'
 
 interface FunctionNode {
   id: string; name: string; function_type: string
@@ -58,11 +58,11 @@ function getDemoFunctions(missionType: string): FunctionNode[] {
 }
 
 const SUBSYSTEM_COLORS: Record<string, string> = {
-  payload: '#10b981', power: '#f59e0b', aocs: '#06b6d4',
-  link: '#ec4899', communications: '#ec4899', thermal: '#ef4444', structure: '#84cc16',
-  propulsion: '#f97316', data: '#8b5cf6',
-  ground_station: '#14b8a6', ground_processing: '#a78bfa', ground_sensor: '#fb923c',
-  systems: '#6b7280',
+  payload: 'var(--status-ok)', power: 'var(--status-caution)', aocs: 'var(--interactive)',
+  link: 'var(--cat-6)', communications: 'var(--cat-6)', thermal: 'var(--status-alarm)', structure: 'var(--cat-7)',
+  propulsion: 'var(--status-caution)', data: 'var(--cat-2)',
+  ground_station: 'var(--cat-3)', ground_processing: 'var(--cat-2)', ground_sensor: 'var(--status-caution)',
+  systems: 'var(--text-3)',
 }
 
 const DOMAIN_OPTIONS = [
@@ -139,20 +139,20 @@ export function FunctionTreeView() {
   return (
     <div style={{ padding: '1rem', overflowY: 'auto', height: '100%' }}>
       <h2 style={{ marginBottom: '0.25rem' }}>Functional Decomposition</h2>
-      <p style={{ fontSize: '0.78rem', color: '#9ca3af', marginBottom: '0.75rem' }}>
+      <p style={{ fontSize: fs.label, color: 'var(--text-2)', marginBottom: '0.75rem' }}>
         Objective → Function → Subfunction → Requirement. Each leaf function should trace to at least one requirement.
       </p>
 
       {/* Stats bar */}
-      <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem', fontSize: '0.75rem', alignItems: 'center' }}>
+      <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem', fontSize: fs.label, alignItems: 'center' }}>
         <span>{functions.length} functions</span>
         <span>{leaves.length} leaves</span>
-        <span style={{ color: uncovered.length > 0 ? '#f59e0b' : '#10b981' }}>
+        <span style={{ color: uncovered.length > 0 ? 'var(--status-caution)' : 'var(--status-ok)' }}>
           {uncovered.length} uncovered {uncovered.length > 0 && '(need requirements)'}
         </span>
-        {unallocated.length > 0 && <span style={{ color: '#ef4444' }}>{unallocated.length} unallocated</span>}
+        {unallocated.length > 0 && <span style={{ color: 'var(--status-alarm)' }}>{unallocated.length} unallocated</span>}
         <span style={{ flex: 1 }} />
-        <button className="btn btn-sm" onClick={() => addFunction(null)} style={{ fontSize: '0.7rem' }}>+ Add Function</button>
+        <button className="btn btn-sm" onClick={() => addFunction(null)} style={{ fontSize: fs.label }}>+ Add Function</button>
       </div>
 
       {/* Tree */}
@@ -190,20 +190,20 @@ function FunctionNodeView({ node, depth, getChildren, expanded, toggleExpand, al
   const isLeaf = !hasChildren
   const hasCoverage = node.derived_requirement_ids.length > 0
   const allocList = Array.isArray(node.allocated_to) ? node.allocated_to : [node.allocated_to].filter(Boolean)
-  const color = SUBSYSTEM_COLORS[allocList[0]] || '#6b7280'
+  const color = SUBSYSTEM_COLORS[allocList[0]] || 'var(--text-3)'
 
   return (
     <div style={{ marginLeft: depth * 16 }}>
       <div style={{
         display: 'flex', alignItems: 'flex-start', gap: '0.3rem', padding: '0.3rem 0.4rem',
         borderRadius: '4px', marginBottom: '0.2rem',
-        background: 'var(--bg-secondary, #1f2937)',
+        background: 'var(--bg-secondary, var(--surface-2))',
         borderLeft: `3px solid ${color}`,
       }}>
         {hasChildren ? (
           <button onClick={() => toggleExpand(node.id)} style={{
-            background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer',
-            fontSize: '0.7rem', padding: 0, width: 14, flexShrink: 0, marginTop: '0.15rem',
+            background: 'none', border: 'none', color: 'var(--text-2)', cursor: 'pointer',
+            fontSize: fs.label, padding: 0, width: 14, flexShrink: 0, marginTop: '0.15rem',
           }}>
             {isExpanded ? '▼' : '▶'}
           </button>
@@ -212,44 +212,44 @@ function FunctionNodeView({ node, depth, getChildren, expanded, toggleExpand, al
         )}
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', flexWrap: 'wrap' }}>
-            <span style={{ fontSize: '0.8rem', fontWeight: 500 }}>{node.name}</span>
+            <span style={{ fontSize: fs.body, fontWeight: 500 }}>{node.name}</span>
             {allocList.length > 0 && allocList.map(domain => (
               <span key={domain} style={{
-                fontSize: '0.6rem', padding: '0 0.3rem', borderRadius: '3px',
-                background: `${SUBSYSTEM_COLORS[domain] || '#6b7280'}22`,
-                color: SUBSYSTEM_COLORS[domain] || '#6b7280', fontWeight: 600,
+                fontSize: fs.label, padding: '0 0.3rem', borderRadius: '3px',
+                background: `color-mix(in srgb, ${SUBSYSTEM_COLORS[domain] || 'var(--text-3)'} 13%, transparent)`,
+                color: SUBSYSTEM_COLORS[domain] || 'var(--text-3)', fontWeight: 600,
               }}>{domain}</span>
             ))}
             {isLeaf && !hasCoverage && (
-              <span style={{ fontSize: '0.6rem', padding: '0 0.3rem', borderRadius: '3px', background: 'rgba(245,158,11,0.2)', color: '#f59e0b' }}>
+              <span style={{ fontSize: fs.label, padding: '0 0.3rem', borderRadius: '3px', background: 'rgba(245,158,11,0.2)', color: 'var(--status-caution)' }}>
                 no requirements
               </span>
             )}
             {isLeaf && hasCoverage && (
-              <span style={{ fontSize: '0.6rem', padding: '0 0.3rem', borderRadius: '3px', background: 'rgba(16,185,129,0.2)', color: '#10b981' }}>
+              <span style={{ fontSize: fs.label, padding: '0 0.3rem', borderRadius: '3px', background: 'rgba(16,185,129,0.2)', color: 'var(--status-ok)' }}>
                 {node.derived_requirement_ids.length} req(s)
               </span>
             )}
           </div>
           {node.performance_criteria.length > 0 && (
-            <div style={{ fontSize: '0.68rem', color: '#6b7280', marginTop: '0.1rem' }}>
+            <div style={{ fontSize: fs.label, color: 'var(--text-3)', marginTop: '0.1rem' }}>
               {node.performance_criteria.join(' · ')}
             </div>
           )}
         </div>
-        <span style={{ fontSize: '0.6rem', color: '#6b7280', fontFamily: 'monospace', flexShrink: 0 }}>{node.id}</span>
+        <span style={{ fontSize: fs.label, color: 'var(--text-3)', fontFamily: 'monospace', flexShrink: 0 }}>{node.id}</span>
         {/* Edit/delete buttons */}
         {onStartEdit && editingId !== node.id && (
           <div style={{ display: 'flex', gap: '0.2rem', flexShrink: 0 }}>
             <button onClick={(e) => { e.stopPropagation(); onStartEdit(node) }}
-              style={{ background: 'none', border: 'none', color: '#3b82f6', cursor: 'pointer', fontSize: '0.6rem' }}>edit</button>
+              style={{ background: 'none', border: 'none', color: 'var(--interactive)', cursor: 'pointer', fontSize: fs.label }}>edit</button>
             {onAddChild && (
               <button onClick={(e) => { e.stopPropagation(); onAddChild(node.id) }}
-                style={{ background: 'none', border: 'none', color: '#10b981', cursor: 'pointer', fontSize: '0.6rem' }}>+sub</button>
+                style={{ background: 'none', border: 'none', color: 'var(--status-ok)', cursor: 'pointer', fontSize: fs.label }}>+sub</button>
             )}
             {onRemove && (
               <button onClick={(e) => { e.stopPropagation(); onRemove(node.id) }}
-                style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '0.6rem' }}>x</button>
+                style={{ background: 'none', border: 'none', color: 'var(--status-alarm)', cursor: 'pointer', fontSize: fs.label }}>x</button>
             )}
           </div>
         )}
@@ -259,19 +259,19 @@ function FunctionNodeView({ node, depth, getChildren, expanded, toggleExpand, al
         <div style={{ marginLeft: depth * 16 + 20, padding: '0.4rem', background: 'rgba(59,130,246,0.08)', borderRadius: '4px', marginBottom: '0.2rem', border: '1px solid rgba(59,130,246,0.3)' }}>
           <div style={{ display: 'flex', gap: '0.3rem', marginBottom: '0.3rem' }}>
             <input className="input" value={editName} onChange={e => onEditName(e.target.value)}
-              placeholder="Function name (verb-noun)" style={{ flex: 1, fontSize: '0.78rem' }} />
+              placeholder="Function name (verb-noun)" style={{ flex: 1, fontSize: fs.label }} />
             <select className="select" value={editDomain} onChange={e => onEditDomain(e.target.value)}
-              style={{ width: '120px', fontSize: '0.75rem' }}>
+              style={{ width: '120px', fontSize: fs.label }}>
               <option value="">Unallocated</option>
               {DOMAIN_OPTIONS.filter(Boolean).map(d => <option key={d} value={d}>{d}</option>)}
             </select>
           </div>
           <input className="input" value={editCriteria} onChange={e => onEditCriteria(e.target.value)}
             placeholder="Performance criteria (semicolon-separated, e.g. GSD <= 10m; SNR >= 100)"
-            style={{ width: '100%', fontSize: '0.72rem', marginBottom: '0.3rem' }} />
+            style={{ width: '100%', fontSize: fs.label, marginBottom: '0.3rem' }} />
           <div style={{ display: 'flex', gap: '0.3rem' }}>
-            <button className="btn btn-sm" onClick={onSaveEdit} style={{ fontSize: '0.68rem', background: '#10b981' }}>Save</button>
-            <button className="btn btn-sm" onClick={onCancelEdit} style={{ fontSize: '0.68rem', background: '#374151' }}>Cancel</button>
+            <button className="btn btn-sm" onClick={onSaveEdit} style={{ fontSize: fs.label, background: 'var(--status-ok)' }}>Save</button>
+            <button className="btn btn-sm" onClick={onCancelEdit} style={{ fontSize: fs.label, background: 'var(--line)' }}>Cancel</button>
           </div>
         </div>
       )}

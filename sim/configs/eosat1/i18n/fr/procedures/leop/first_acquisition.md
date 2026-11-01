@@ -58,8 +58,8 @@ exécutant son logiciel applicatif.
 ### Étape 3 — Vérifier le verrouillage de la porteuse et la qualité de la liaison
 **Action:** Confirmer que le récepteur de la station sol a verrouillé la porteuse. Consigner le décalage Doppler mesuré pour la dynamique du vol.
 **Verify:** `ttc.link_status` (0x0501) = 2 (LOCKED) sous 30s
-**Verify:** `ttc.rssi` (0x0502) > -110 dBm sous 30s
-**Verify:** `ttc.link_margin` (0x0503) > 3.0 dB
+**Verify:** page TT&C (sol) : `ttc.rssi` (0x0502) > -126 dBm sous 30s
+**Verify:** page TT&C (sol) : `ttc.link_margin` (0x0503) > 3.0 dB
 **GO/NO-GO:** Verrouillage stable de la porteuse avec une marge de liaison positive
 
 ### Étape 4 — Confirmer que l'OBC est dans le chargeur d'amorçage
@@ -96,7 +96,7 @@ exécutant son logiciel applicatif.
 **Verify:** `ttc.tm_data_rate` (0x0506) = 16000 bps et `ttc.tm_tier` (0x0539) = 1 (LOW)
 **Verify:** `ttc.tm_symbol_rate` (0x053B) = 16000 Bd
 **Note:** L'ordre complet des verrous BORD de l'échelle est : **mode balise désactivé** → LOW sélectionnable ; **antenne déployée** (func 69, COM-006) **+ mode DOWNLINK activé** (func 79) → HIGH sélectionnable. Il n'existe AUCUN verrou bord sur l'élévation (2026-08c) : la règle des 10° pour HIGH relève de la politique d'autorisation SOL — le MCS avertit d'après sa propre géométrie de contact et le planificateur programme les vidages en HIGH au-dessus de ce seuil. Chaque verrou bord non satisfait est signalé par son propre avis d'échec S1.8 qui nomme ce verrou ; lire l'avis, pas le code (ils renvoient tous `0x0007`). Voir `docs/LINK_BUDGET_AND_RATES.md` §6.3.
-**Note:** LOW transporte l'ensemble complet des HK périodiques (1557 bit/s de canal après RS et tramage TM) à moins de 10 % du temps : le satellite ne prend donc jamais de retard sur les données de servitude au débit courant. Le palier HIGH (128 kbit/s) n'est PAS utilisé ici — il ne sert qu'aux vidages (voir NOM-011).
+**Note:** LOW transporte l'ensemble complet des HK périodiques (1588 bit/s de canal après RS et tramage TM) à moins de 10 % du temps : le satellite ne prend donc jamais de retard sur les données de servitude au débit courant. Le palier HIGH (128 kbit/s) n'est PAS utilisé ici — il ne sert qu'aux vidages (voir NOM-011).
 **GO/NO-GO:** Mode balise désactivé, liaison descendante en LOW, démodulateur sol reconfiguré à 16 kBd
 
 ### Étape 6 — Noter que l'horloge n'est pas réglée (NE PAS synchroniser ici)

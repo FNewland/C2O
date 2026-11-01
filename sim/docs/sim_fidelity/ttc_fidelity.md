@@ -459,11 +459,11 @@ tc_uplink_rate_bps: 4000  # explicit: the uplink is NOT on the ladder
 ```
 
 **Why 16 kbps and not 1 kbps for routine operations.** The shipped
-`telemetry/hk_structures.yaml` generates 1351.5 bps of PUS packets across SIDs
-1-6, which is **1557 bps of channel** after RS(255,223) and the 1115/1107 TM
+`telemetry/hk_structures.yaml` generates 1378.5 bps of PUS packets across SIDs
+1-6, which is **1588 bps of channel** after RS(255,223) and the 1115/1107 TM
 transfer frame. 1000 bps is *below* the generation rate: the real-time backlog
 grows without bound and `tm_queue_drops` climbs forever. 1 kbps was never an
-operations rate; it is a beacon rate. 16 kbps clears real-time HK at 9.7 % duty
+operations rate; it is a beacon rate. 16 kbps clears real-time HK at 9.9 % duty
 and still plays back ~0.85 orbits of stored HK in a 514 s pass.
 
 **Why 128 kbps and not 64 kbps for the top rung.** 64 kbps was two-thirds of

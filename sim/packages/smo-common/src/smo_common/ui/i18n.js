@@ -17,7 +17,8 @@
  *                  English other-form comes from vars.plural.
  *   vars.context -> key `<en>_<context>` (one English word, two French ones).
  *
- * Language: ?lang= > localStorage "smo.lang" > <html data-default-lang>
+ * Language: ?lang= > localStorage "c2o.lang" (the suite-wide setting; the
+ * old "smo.lang" key is still read, and both are written) > <html data-default-lang>
  * (injected by the server from SMO_LANG / mission.yaml ui_lang) > "en".
  * Per browser, never per server: two operators may differ.
  *
@@ -31,7 +32,8 @@
  * ============================================================================ */
 
 export const LANGS = ["en", "fr"];
-const LS_KEY = "smo.lang";
+const LS_KEY = "c2o.lang";        // one language setting for every C2O app
+const LS_OLD = ["smo.lang"];      // read for one release (R3 audit §i18n)
 const SHARED = "/static/shared/i18n/";
 const APP_DEFAULT = "/static/modern/i18n/";
 const TIMEOUT_MS = 2500;   // a hung catalog fetch must never block a console
@@ -56,7 +58,11 @@ export function resolveLang(opts = S.opts) {
   let q = null, ls = null, def = null;
   try { q = new URLSearchParams((G.location && G.location.search) || "").get("lang"); } catch (e) { /* no URL */ }
   if (opts.storage !== false) {
-    try { ls = G.localStorage ? G.localStorage.getItem(LS_KEY) : null; } catch (e) { /* private mode */ }
+    try {
+      if (G.localStorage) {
+        for (const k of [LS_KEY, ...LS_OLD]) { ls = normLang(G.localStorage.getItem(k)); if (ls) break; }
+      }
+    } catch (e) { /* private mode */ }
   }
   try {
     const h = G.document && G.document.documentElement;
@@ -79,12 +85,13 @@ function fetchJson(url) {
 
 function load(lang) {
   if (lang === "en") return Promise.resolve({ cat: {}, db: {} });   // identity
-  const key = lang + "|" + S.opts.app;
+  const withDb = S.opts.db !== false;
+  const key = lang + "|" + S.opts.app + "|" + withDb;
   if (!S.cache[key]) {
     S.cache[key] = Promise.all([
       fetchJson(`${SHARED}${lang}.json`),
       S.opts.app ? fetchJson(`${S.opts.app}${lang}.json`) : {},
-      fetchJson(`${SHARED}${lang}.db.json`),
+      withDb ? fetchJson(`${SHARED}${lang}.db.json`) : {},   // db:false = no YAML overlay
     ]).then(([shared, app, db]) => ({ cat: { ...shared, ...app }, db }));
   }
   return S.cache[key];
@@ -99,8 +106,9 @@ function setHtmlLang(l) {
   try { if (G.document && G.document.documentElement) G.document.documentElement.lang = l; } catch (e) { /* stub */ }
 }
 
-/** init({app, storage}) — (re)start loading. app: app catalog base URL
- *  (default "/static/modern/i18n/"); storage:false ignores localStorage
+/** init({app, storage, db}) — (re)start loading. app: app catalog base URL
+ *  (default "/static/modern/i18n/"); db:false skips the 266 KB YAML overlay
+ *  (pages with no spacecraft-database text); storage:false ignores localStorage
  *  (wall display: ?lang= / server default only). Returns I18n.ready. */
 export function init(opts = {}) {
   S.opts = { ...S.opts, ...opts };
@@ -237,7 +245,9 @@ export async function setLang(l) {
   const n = normLang(l);
   if (!n) return getLang();
   if (S.opts.storage !== false) {
-    try { G.localStorage && G.localStorage.setItem(LS_KEY, n); } catch (e) { /* private mode */ }
+    try {
+      if (G.localStorage) for (const k of [LS_KEY, ...LS_OLD]) G.localStorage.setItem(k, n);
+    } catch (e) { /* private mode */ }
   }
   try {   // keep an explicit ?lang= in step, so a reload shows the same thing
     const u = new URL(G.location.href);

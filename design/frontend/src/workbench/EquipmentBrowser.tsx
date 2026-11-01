@@ -9,6 +9,8 @@ import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { useUIStore } from '../stores/uiStore'
+import { fs } from '../theme/tokens'
+import { subsystemStyle } from '../theme/tokens'
 
 const API = '/api'
 
@@ -19,14 +21,14 @@ const DOMAIN_LABELS: Record<string, string> = {
 }
 
 const DOMAINS = [
-  { id: 'power', label: DOMAIN_LABELS.power, color: '#f59e0b' },
-  { id: 'aocs', label: DOMAIN_LABELS.aocs, color: '#06b6d4' },
-  { id: 'ttc', label: DOMAIN_LABELS.ttc, color: '#ec4899' },
-  { id: 'thermal', label: DOMAIN_LABELS.thermal, color: '#ef4444' },
-  { id: 'structure', label: DOMAIN_LABELS.structure, color: '#84cc16' },
-  { id: 'propulsion', label: DOMAIN_LABELS.propulsion, color: '#f97316' },
-  { id: 'obc', label: DOMAIN_LABELS.obc, color: '#8b5cf6' },
-  { id: 'ground', label: DOMAIN_LABELS.ground, color: '#0ea5e9' },
+  { id: 'power', label: DOMAIN_LABELS.power, color: subsystemStyle('power').color },
+  { id: 'aocs', label: DOMAIN_LABELS.aocs, color: subsystemStyle('aocs').color },
+  { id: 'ttc', label: DOMAIN_LABELS.ttc, color: subsystemStyle('ttc').color },
+  { id: 'thermal', label: DOMAIN_LABELS.thermal, color: subsystemStyle('thermal').color },
+  { id: 'structure', label: DOMAIN_LABELS.structure, color: subsystemStyle('structure').color },
+  { id: 'propulsion', label: DOMAIN_LABELS.propulsion, color: subsystemStyle('propulsion').color },
+  { id: 'obc', label: DOMAIN_LABELS.obc, color: subsystemStyle('obc').color },
+  { id: 'ground', label: DOMAIN_LABELS.ground, color: subsystemStyle('ground').color },
 ]
 
 export function EquipmentBrowser({ onClose }: { onClose?: () => void }) {
@@ -109,16 +111,16 @@ export function EquipmentBrowser({ onClose }: { onClose?: () => void }) {
   const domainInfo = DOMAINS.find(d => d.id === domain)!
 
   return (
-    <div style={{ padding: '0.5rem 1rem', fontSize: '0.72rem' }}>
+    <div style={{ padding: '0.5rem 1rem', fontSize: fs.label }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
-        <span style={{ fontWeight: 600, fontSize: '0.78rem' }}>{t('Equipment Catalog')}</span>
+        <span style={{ fontWeight: 600, fontSize: fs.label }}>{t('Equipment Catalog')}</span>
         <span style={{ flex: 1 }} />
         <input
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder={t('Search...')}
           style={{
-            padding: '0.2rem 0.4rem', fontSize: '0.7rem', borderRadius: '3px', width: 140,
+            padding: '0.2rem 0.4rem', fontSize: fs.label, borderRadius: '3px', width: 140,
             background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)',
           }}
         />
@@ -134,7 +136,7 @@ export function EquipmentBrowser({ onClose }: { onClose?: () => void }) {
             key={d.id}
             onClick={() => setDomain(d.id)}
             style={{
-              padding: '0.2rem 0.5rem', fontSize: '0.65rem', borderRadius: '3px',
+              padding: '0.2rem 0.5rem', fontSize: fs.label, borderRadius: '3px',
               background: domain === d.id ? d.color : 'var(--bg-card)',
               color: domain === d.id ? 'white' : 'var(--text-secondary)',
               border: 'none', cursor: 'pointer',
@@ -168,8 +170,8 @@ export function EquipmentBrowser({ onClose }: { onClose?: () => void }) {
             }}>
               {/* Category */}
               <span style={{
-                fontSize: '0.5rem', padding: '0.05rem 0.2rem', borderRadius: '2px',
-                background: `${domainInfo.color}20`, color: domainInfo.color,
+                fontSize: fs.label, padding: '0.05rem 0.2rem', borderRadius: '2px',
+                background: `color-mix(in srgb, ${domainInfo.color} 13%, transparent)`, color: domainInfo.color,
                 fontWeight: 600, flexShrink: 0, textTransform: 'uppercase',
               }}>
                 {item.category.replace(/_/g, ' ')}
@@ -177,12 +179,12 @@ export function EquipmentBrowser({ onClose }: { onClose?: () => void }) {
 
               {/* Name + manufacturer */}
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontWeight: 500, fontSize: '0.72rem' }}>{c.name || c.id}</div>
-                {c.manufacturer && <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)' }}>{c.manufacturer}</div>}
+                <div style={{ fontWeight: 500, fontSize: fs.label }}>{c.name || c.id}</div>
+                {c.manufacturer && <div style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>{c.manufacturer}</div>}
               </div>
 
               {/* Specs */}
-              <div style={{ display: 'flex', gap: '0.4rem', fontSize: '0.6rem', color: 'var(--text-secondary)', flexShrink: 0 }}>
+              <div style={{ display: 'flex', gap: '0.4rem', fontSize: fs.label, color: 'var(--text-secondary)', flexShrink: 0 }}>
                 {c.mass_kg != null && <span>{c.mass_kg} kg</span>}
                 {(c.power_w || c.power_avg_w) != null && <span>{c.power_w || c.power_avg_w} W</span>}
                 {c.cost_keur != null && <span>{c.cost_keur} kEUR</span>}
@@ -192,7 +194,7 @@ export function EquipmentBrowser({ onClose }: { onClose?: () => void }) {
               {/* Fit score */}
               {item.fit_score > 0 && (
                 <span style={{
-                  fontSize: '0.55rem', padding: '0.05rem 0.2rem', borderRadius: '2px', flexShrink: 0,
+                  fontSize: fs.label, padding: '0.05rem 0.2rem', borderRadius: '2px', flexShrink: 0,
                   background: item.fit_score > 0.7 ? 'rgba(16,185,129,0.15)' : item.fit_score > 0.4 ? 'rgba(245,158,11,0.15)' : 'rgba(239,68,68,0.15)',
                   color: item.fit_score > 0.7 ? 'var(--success)' : item.fit_score > 0.4 ? 'var(--warning)' : 'var(--danger)',
                   fontWeight: 600,
@@ -206,7 +208,7 @@ export function EquipmentBrowser({ onClose }: { onClose?: () => void }) {
                 onClick={() => selectMutation.mutate(c)}
                 disabled={!focusElementId || selectMutation.isPending}
                 style={{
-                  padding: '0.15rem 0.4rem', fontSize: '0.6rem', fontWeight: 600, borderRadius: '3px',
+                  padding: '0.15rem 0.4rem', fontSize: fs.label, fontWeight: 600, borderRadius: '3px',
                   background: focusElementId ? 'var(--success)' : 'var(--border)',
                   color: 'white', border: 'none', cursor: focusElementId ? 'pointer' : 'not-allowed',
                   flexShrink: 0,
@@ -270,7 +272,7 @@ function CustomEquipmentForm({ studyId, focusElementId, domain, onCreated }: {
   if (!expanded) {
     return (
       <button onClick={() => setExpanded(true)} style={{
-        marginTop: '0.4rem', padding: '0.3rem 0.6rem', fontSize: '0.68rem', fontWeight: 600,
+        marginTop: '0.4rem', padding: '0.3rem 0.6rem', fontSize: fs.label, fontWeight: 600,
         borderRadius: '4px', background: 'var(--bg-card)', border: '1px solid var(--border)',
         color: 'var(--text-secondary)', cursor: 'pointer', width: '100%', textAlign: 'left',
       }}>
@@ -280,7 +282,7 @@ function CustomEquipmentForm({ studyId, focusElementId, domain, onCreated }: {
   }
 
   const inp: React.CSSProperties = {
-    padding: '0.2rem 0.3rem', fontSize: '0.68rem', borderRadius: '3px',
+    padding: '0.2rem 0.3rem', fontSize: fs.label, borderRadius: '3px',
     background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)',
   }
 
@@ -289,7 +291,7 @@ function CustomEquipmentForm({ studyId, focusElementId, domain, onCreated }: {
       marginTop: '0.4rem', padding: '0.4rem', borderRadius: '4px',
       background: 'var(--bg-card)', border: '1px solid var(--accent)',
     }}>
-      <div style={{ fontSize: '0.65rem', fontWeight: 600, color: 'var(--accent)', marginBottom: '0.3rem' }}>
+      <div style={{ fontSize: fs.label, fontWeight: 600, color: 'var(--accent)', marginBottom: '0.3rem' }}>
         {t('Custom Equipment')}
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.3rem', marginBottom: '0.3rem' }}>
@@ -303,11 +305,11 @@ function CustomEquipmentForm({ studyId, focusElementId, domain, onCreated }: {
       </div>
       <div style={{ display: 'flex', gap: '0.3rem' }}>
         <button onClick={create} disabled={!name || !focusElementId} style={{
-          padding: '0.25rem 0.5rem', fontSize: '0.68rem', fontWeight: 600, borderRadius: '3px',
+          padding: '0.25rem 0.5rem', fontSize: fs.label, fontWeight: 600, borderRadius: '3px',
           background: 'var(--success)', color: 'white', border: 'none', cursor: 'pointer',
         }}>{t('Add')}</button>
         <button onClick={() => setExpanded(false)} style={{
-          padding: '0.25rem 0.5rem', fontSize: '0.68rem', borderRadius: '3px',
+          padding: '0.25rem 0.5rem', fontSize: fs.label, borderRadius: '3px',
           background: 'var(--bg-secondary)', color: 'var(--text-secondary)', border: 'none', cursor: 'pointer',
         }}>{t('Cancel')}</button>
       </div>

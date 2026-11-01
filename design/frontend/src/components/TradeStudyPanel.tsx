@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { SVGBarChart } from '../charts/SVGBarChart'
 import { useSensitivity, useEOLCurves } from '../hooks/useSession'
+import { fs } from '../theme/tokens'
 
 // --- Tabular Trade Study Types ---
 interface TradeCriterion { id: string; name: string; weight: number; direction: string; unit: string; category: string }
@@ -16,12 +17,6 @@ const SWEEP_PARAMS = [
   { id: 'design_lifetime_years', label: 'Mission duration (years)', min: 1, max: 15 },
 ]
 
-const KEY_METRICS = [
-  { id: 'mass.dry_mass_kg', label: 'Dry mass (kg)', color: '#3b82f6' },
-  { id: 'power.sa_power_eol_w', label: 'SA power EOL (W)', color: '#10b981' },
-  { id: 'cost.total_meur', label: 'Cost (MEUR)', color: '#f59e0b' },
-  { id: 'link.downlink_margin_db', label: 'Link margin (dB)', color: '#8b5cf6' },
-]
 
 export function TradeStudyPanel({ studyId }: { studyId: string | null }) {
   const [sweepParam, setSweepParam] = useState(SWEEP_PARAMS[0].id)
@@ -97,14 +92,14 @@ export function TradeStudyPanel({ studyId }: { studyId: string | null }) {
         </div>
 
         {sensitivity.data && (
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary, #9ca3af)', marginBottom: '0.5rem' }}>
+          <div style={{ fontSize: fs.label, color: 'var(--text-secondary, var(--text-2))', marginBottom: '0.5rem' }}>
             Swept {numPoints} points in {(sensitivity.data as any).total_time_ms?.toFixed(0) || '?'}ms
           </div>
         )}
 
         {sweepData.length > 0 && (
           <SVGBarChart
-            data={sweepData.slice(0, 20).map((d: any) => ({ label: String(d.sweep), value: d.mass_kg || 0, color: '#3b82f6' }))}
+            data={sweepData.slice(0, 20).map((d: any) => ({ label: String(d.sweep), value: d.mass_kg || 0, color: 'var(--interactive)' }))}
             width={500} height={240} unit=" kg" title="Parametric Sweep"
           />
         )}
@@ -117,10 +112,10 @@ export function TradeStudyPanel({ studyId }: { studyId: string | null }) {
       <div className="card">
         <h3>End-of-Life Degradation</h3>
         {eolData.length === 0 ? (
-          <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary, #9ca3af)' }}>Select a study to view EOL curves.</div>
+          <div style={{ fontSize: fs.body, color: 'var(--text-secondary, var(--text-2))' }}>Select a study to view EOL curves.</div>
         ) : (
           <SVGBarChart
-            data={eolData.map((d: any) => ({ label: `Yr ${d.year}`, value: d.sa_power_w || 0, color: '#3b82f6' }))}
+            data={eolData.map((d: any) => ({ label: `Yr ${d.year}`, value: d.sa_power_w || 0, color: 'var(--interactive)' }))}
             width={500} height={220} unit=" W" title="SA Power Degradation"
           />
         )}
@@ -210,7 +205,7 @@ function TabularTradeSection() {
   return (
     <div className="card">
       <h3>Tabular Trade Study</h3>
-      <p style={{ fontSize: '0.75rem', color: '#9ca3af', marginBottom: '0.5rem' }}>
+      <p style={{ fontSize: fs.label, color: 'var(--text-2)', marginBottom: '0.5rem' }}>
         Define criteria with weightings, score options quantitatively or qualitatively
         (low/medium/high/excellent), and rank alternatives.
       </p>
@@ -218,16 +213,16 @@ function TabularTradeSection() {
       {/* Template selector */}
       <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
         <select className="select" value={selectedTemplate} onChange={e => loadTemplate(e.target.value)}
-          style={{ fontSize: '0.78rem', maxWidth: '250px' }}>
+          style={{ fontSize: fs.label, maxWidth: '250px' }}>
           <option value="">Load template...</option>
           {templates.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
         </select>
         <input className="input" value={tradeName} onChange={e => setTradeName(e.target.value)}
-          placeholder="Trade study name" style={{ fontSize: '0.78rem', flex: 1, maxWidth: '250px' }} />
-        <button className="btn btn-sm" onClick={addCriterion} style={{ fontSize: '0.7rem' }}>+ Criterion</button>
-        <button className="btn btn-sm" onClick={addOption} style={{ fontSize: '0.7rem' }}>+ Option</button>
+          placeholder="Trade study name" style={{ fontSize: fs.label, flex: 1, maxWidth: '250px' }} />
+        <button className="btn btn-sm" onClick={addCriterion} style={{ fontSize: fs.label }}>+ Criterion</button>
+        <button className="btn btn-sm" onClick={addOption} style={{ fontSize: fs.label }}>+ Option</button>
         <button className="btn btn-sm" onClick={runTrade} disabled={running || criteria.length === 0 || options.length === 0}
-          style={{ fontSize: '0.7rem', background: '#10b981' }}>
+          style={{ fontSize: fs.label, background: 'var(--status-ok)' }}>
           {running ? 'Computing...' : 'Run Trade'}
         </button>
       </div>
@@ -235,35 +230,35 @@ function TabularTradeSection() {
       {/* Criteria + Options matrix */}
       {criteria.length > 0 && options.length > 0 && (
         <div style={{ overflowX: 'auto', marginBottom: '0.75rem' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.75rem' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs.label }}>
             <thead>
-              <tr style={{ background: 'var(--bg-primary, #0a0e1a)' }}>
+              <tr style={{ background: 'var(--bg-primary, var(--surface-0))' }}>
                 <th style={thL}>Criterion</th>
                 <th style={thC}>Weight</th>
                 <th style={thC}>Dir</th>
                 {options.map(o => (
                   <th key={o.id} style={thC}>
                     <input className="input" value={o.name} onChange={e => updateOption(o.id, 'name', e.target.value)}
-                      style={{ fontSize: '0.72rem', width: '100%', textAlign: 'center', fontWeight: 600 }} />
+                      style={{ fontSize: fs.label, width: '100%', textAlign: 'center', fontWeight: 600 }} />
                   </th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {criteria.map(c => (
-                <tr key={c.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                <tr key={c.id} style={{ borderBottom: '1px solid color-mix(in srgb, var(--text) 5%, transparent)' }}>
                   <td style={tdL}>
                     <input className="input" value={c.name} onChange={e => updateCriterion(c.id, 'name', e.target.value)}
-                      style={{ fontSize: '0.72rem', width: '100%' }} />
+                      style={{ fontSize: fs.label, width: '100%' }} />
                   </td>
                   <td style={tdC}>
                     <input className="input" type="number" min={0} max={1} step={0.05} value={c.weight}
                       onChange={e => updateCriterion(c.id, 'weight', Number(e.target.value))}
-                      style={{ fontSize: '0.72rem', width: '50px', textAlign: 'center' }} />
+                      style={{ fontSize: fs.label, width: '50px', textAlign: 'center' }} />
                   </td>
                   <td style={tdC}>
                     <select className="select" value={c.direction} onChange={e => updateCriterion(c.id, 'direction', e.target.value)}
-                      style={{ fontSize: '0.68rem', width: '50px' }}>
+                      style={{ fontSize: fs.label, width: '50px' }}>
                       <option value="max">max</option>
                       <option value="min">min</option>
                     </select>
@@ -272,7 +267,7 @@ function TabularTradeSection() {
                     <td key={o.id} style={tdC}>
                       <input className="input" value={o.scores[c.id] ?? ''} placeholder="value or low/med/high"
                         onChange={e => updateScore(o.id, c.id, e.target.value)}
-                        style={{ fontSize: '0.72rem', width: '100%', textAlign: 'center' }} />
+                        style={{ fontSize: fs.label, width: '100%', textAlign: 'center' }} />
                     </td>
                   ))}
                 </tr>
@@ -285,12 +280,12 @@ function TabularTradeSection() {
       {/* Results */}
       {results && (
         <div style={{ marginTop: '0.5rem' }}>
-          <div style={{ fontSize: '0.82rem', fontWeight: 600, color: '#10b981', marginBottom: '0.4rem' }}>
+          <div style={{ fontSize: fs.body, fontWeight: 600, color: 'var(--status-ok)', marginBottom: '0.4rem' }}>
             {recommendation}
           </div>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.75rem' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs.label }}>
             <thead>
-              <tr style={{ background: 'var(--bg-primary, #0a0e1a)' }}>
+              <tr style={{ background: 'var(--bg-primary, var(--surface-0))' }}>
                 <th style={thC}>Rank</th>
                 <th style={thL}>Option</th>
                 <th style={thC}>Score</th>
@@ -301,14 +296,14 @@ function TabularTradeSection() {
             <tbody>
               {results.map(r => (
                 <tr key={r.option_id} style={{
-                  borderBottom: '1px solid rgba(255,255,255,0.05)',
+                  borderBottom: '1px solid color-mix(in srgb, var(--text) 5%, transparent)',
                   background: r.rank === 1 ? 'rgba(16,185,129,0.08)' : 'transparent',
                 }}>
-                  <td style={{ ...tdC, fontWeight: 700, color: r.rank === 1 ? '#10b981' : '#d1d5db' }}>#{r.rank}</td>
+                  <td style={{ ...tdC, fontWeight: 700, color: r.rank === 1 ? 'var(--status-ok)' : 'var(--text)' }}>#{r.rank}</td>
                   <td style={tdL}>{r.option_name}</td>
                   <td style={{ ...tdC, fontWeight: 700, fontFamily: 'monospace' }}>{(r.total_score * 100).toFixed(0)}%</td>
                   <td style={tdC}>
-                    <span style={{ color: r.all_thresholds_met ? '#10b981' : '#ef4444', fontSize: '0.72rem' }}>
+                    <span style={{ color: r.all_thresholds_met ? 'var(--status-ok)' : 'var(--status-alarm)', fontSize: fs.label }}>
                       {r.all_thresholds_met ? 'PASS' : 'FAIL'}
                     </span>
                   </td>
@@ -325,7 +320,7 @@ function TabularTradeSection() {
       )}
 
       {criteria.length === 0 && (
-        <div style={{ fontSize: '0.78rem', color: '#6b7280', padding: '1rem', textAlign: 'center' }}>
+        <div style={{ fontSize: fs.label, color: 'var(--text-3)', padding: '1rem', textAlign: 'center' }}>
           Select a template above or add criteria and options to build a custom trade study.
         </div>
       )}
@@ -333,7 +328,7 @@ function TabularTradeSection() {
   )
 }
 
-const thL: React.CSSProperties = { padding: '0.3rem 0.5rem', textAlign: 'left', fontSize: '0.68rem', color: '#9ca3af', textTransform: 'uppercase' }
+const thL: React.CSSProperties = { padding: '0.3rem 0.5rem', textAlign: 'left', fontSize: fs.label, color: 'var(--text-2)', textTransform: 'uppercase' }
 const thC: React.CSSProperties = { ...thL, textAlign: 'center' }
 const tdL: React.CSSProperties = { padding: '0.25rem 0.5rem' }
 const tdC: React.CSSProperties = { ...tdL, textAlign: 'center' }

@@ -39,8 +39,8 @@
   },
   {
    "id": "eosat-1-telemetry-tracking-and-command-ttc/2-architecture/24-the-tm-data-rate-ladder",
-   "en_hash": "357efdbc3d60d8ac",
-   "fr_hash": "1edea2c99a403262"
+   "en_hash": "d956474d45192c09",
+   "fr_hash": "354e2c66fc3e356d"
   },
   {
    "id": "eosat-1-telemetry-tracking-and-command-ttc/2-architecture/25-beacon-packet-mode",
@@ -108,5 +108,5 @@
    "fr_hash": "331d028507540102"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "8067e5b"
 }

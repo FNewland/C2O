@@ -7,6 +7,7 @@
 import { useMemo, useState } from 'react'
 import { useDesignStore } from '../stores/designStore'
 import { useApplyToDesign } from '../hooks/useApplyToDesign'
+import { fs } from '../theme/tokens'
 
 interface ModeSegment {
   name: string; duration_min: number; power_w: number; color: string; description: string
@@ -33,12 +34,12 @@ export function TimingBudget() {
     const idleMin = Math.max(0, sunlightMin - imagingMin - contactMin - slewMin * 2)
 
     return [
-      { name: 'Idle / Housekeeping', duration_min: idleMin, power_w: 2, color: '#6b7280', description: 'OBC, ADCS standby, beacon' },
-      { name: 'Slew to Target', duration_min: slewMin, power_w: 5, color: '#06b6d4', description: 'Attitude manoeuvre pre-imaging' },
-      { name: 'Imaging / Science', duration_min: imagingMin, power_w: 6, color: '#8b5cf6', description: 'Payload active, data recording' },
-      { name: 'Slew to GS', duration_min: slewMin, power_w: 5, color: '#06b6d4', description: 'Attitude manoeuvre pre-downlink' },
-      { name: 'Downlink', duration_min: contactMin, power_w: 8, color: '#10b981', description: 'TX active, data download' },
-      { name: 'Eclipse', duration_min: eclipseMin, power_w: 3, color: '#1f2937', description: 'Battery-powered, heaters' },
+      { name: 'Idle / Housekeeping', duration_min: idleMin, power_w: 2, color: 'var(--text-3)', description: 'OBC, ADCS standby, beacon' },
+      { name: 'Slew to Target', duration_min: slewMin, power_w: 5, color: 'var(--interactive)', description: 'Attitude manoeuvre pre-imaging' },
+      { name: 'Imaging / Science', duration_min: imagingMin, power_w: 6, color: 'var(--cat-2)', description: 'Payload active, data recording' },
+      { name: 'Slew to GS', duration_min: slewMin, power_w: 5, color: 'var(--interactive)', description: 'Attitude manoeuvre pre-downlink' },
+      { name: 'Downlink', duration_min: contactMin, power_w: 8, color: 'var(--status-ok)', description: 'TX active, data download' },
+      { name: 'Eclipse', duration_min: eclipseMin, power_w: 3, color: 'var(--surface-2)', description: 'Battery-powered, heaters' },
     ]
   }, [sunlightMin, eclipseMin, imagingMin])
 
@@ -57,8 +58,8 @@ export function TimingBudget() {
 
   return (
     <div className="card">
-      <h3 style={{ fontSize: '0.9rem', marginBottom: '0.3rem' }}>Orbit Timing Budget</h3>
-      <p style={{ fontSize: '0.72rem', color: '#9ca3af', marginBottom: '0.5rem' }}>
+      <h3 style={{ fontSize: fs.value, marginBottom: '0.3rem' }}>Orbit Timing Budget</h3>
+      <p style={{ fontSize: fs.label, color: 'var(--text-2)', marginBottom: '0.5rem' }}>
         One orbit ({orbitPeriod.toFixed(1)} min) broken into operational modes with transitions.
       </p>
 
@@ -70,18 +71,18 @@ export function TimingBudget() {
             <div key={i} title={`${seg.name}: ${seg.duration_min.toFixed(1)} min (${pct.toFixed(0)}%)`}
               style={{
                 width: `${pct}%`, background: seg.color, display: 'flex', alignItems: 'center',
-                justifyContent: 'center', minWidth: pct > 5 ? 0 : 2, borderRight: '1px solid #0a0e1a',
+                justifyContent: 'center', minWidth: pct > 5 ? 0 : 2, borderRight: '1px solid var(--surface-0)',
               }}>
-              {pct > 10 && <span style={{ fontSize: '0.55rem', color: 'white', fontWeight: 600, whiteSpace: 'nowrap' }}>{seg.name.split(' ')[0]}</span>}
+              {pct > 10 && <span style={{ fontSize: fs.label, color: 'white', fontWeight: 600, whiteSpace: 'nowrap' }}>{seg.name.split(' ')[0]}</span>}
             </div>
           )
         })}
       </div>
 
       {/* Mode table */}
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.75rem' }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs.label }}>
         <thead>
-          <tr style={{ background: 'var(--bg-primary, #0a0e1a)' }}>
+          <tr style={{ background: 'var(--bg-primary, var(--surface-0))' }}>
             <th style={th}>Mode</th>
             <th style={thR}>Duration</th>
             <th style={thR}>% Orbit</th>
@@ -92,10 +93,10 @@ export function TimingBudget() {
         </thead>
         <tbody>
           {segments.map((seg, i) => (
-            <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+            <tr key={i} style={{ borderBottom: '1px solid color-mix(in srgb, var(--text) 5%, transparent)' }}>
               <td style={td}>
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
-                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: seg.color, border: seg.color === '#1f2937' ? '1px solid #374151' : 'none' }} />
+                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: seg.color, border: seg.color === 'var(--surface-2)' ? '1px solid var(--line)' : 'none' }} />
                   {seg.name}
                 </span>
               </td>
@@ -103,10 +104,10 @@ export function TimingBudget() {
               <td style={tdR}>{((seg.duration_min / totalMin) * 100).toFixed(0)}%</td>
               <td style={tdR}>{seg.power_w} W</td>
               <td style={tdR}>{(seg.power_w * seg.duration_min / 60).toFixed(2)} Wh</td>
-              <td style={{ ...td, fontSize: '0.68rem', color: '#6b7280' }}>{seg.description}</td>
+              <td style={{ ...td, fontSize: fs.label, color: 'var(--text-3)' }}>{seg.description}</td>
             </tr>
           ))}
-          <tr style={{ borderTop: '2px solid #374151', fontWeight: 700 }}>
+          <tr style={{ borderTop: '2px solid var(--line)', fontWeight: 700 }}>
             <td style={td}>Total</td>
             <td style={tdR}>{totalMin.toFixed(1)} min</td>
             <td style={tdR}>100%</td>
@@ -118,14 +119,14 @@ export function TimingBudget() {
       </table>
 
       <button className="btn" onClick={async () => { await apply(); setApplied(true); setTimeout(() => setApplied(false), 2000) }}
-        style={{ marginTop: '0.5rem', width: '100%', background: applied ? '#10b981' : '#3b82f6', fontSize: '0.78rem' }}>
+        style={{ marginTop: '0.5rem', width: '100%', background: applied ? 'var(--status-ok)' : 'var(--interactive)', fontSize: fs.label }}>
         {applied ? 'Applied — reconverging...' : 'Apply to Design'}
       </button>
     </div>
   )
 }
 
-const th: React.CSSProperties = { padding: '0.3rem 0.5rem', textAlign: 'left', fontSize: '0.65rem', color: '#9ca3af', textTransform: 'uppercase' }
+const th: React.CSSProperties = { padding: '0.3rem 0.5rem', textAlign: 'left', fontSize: fs.label, color: 'var(--text-2)', textTransform: 'uppercase' }
 const thR: React.CSSProperties = { ...th, textAlign: 'right' }
 const td: React.CSSProperties = { padding: '0.25rem 0.5rem' }
 const tdR: React.CSSProperties = { ...td, textAlign: 'right', fontFamily: 'monospace' }

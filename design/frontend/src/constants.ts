@@ -1,21 +1,21 @@
 /** Shared constants for SpaceCDF frontend. */
 
 export const POSITION_COLOR: Record<string, string> = {
-  systems_engineer: '#8b5cf6',
-  mission_analyst: '#3b82f6',
-  payload_lead: '#10b981',
-  power_engineer: '#f59e0b',
-  aocs_engineer: '#06b6d4',
-  thermal_engineer: '#ef4444',
-  comms_engineer: '#ec4899',
-  propulsion_engineer: '#f97316',
-  structures_engineer: '#84cc16',
-  cost_engineer: '#a855f7',
-  compliance_engineer: '#14b8a6',
-  user_representative: '#fb923c',
-  mission_ops: '#64748b',
-  ground_segment: '#0ea5e9',
-  software_engineer: '#d946ef',
+  systems_engineer: 'var(--cat-2)',
+  mission_analyst: 'var(--interactive)',
+  payload_lead: 'var(--status-ok)',
+  power_engineer: 'var(--status-caution)',
+  aocs_engineer: 'var(--interactive)',
+  thermal_engineer: 'var(--status-alarm)',
+  comms_engineer: 'var(--cat-6)',
+  propulsion_engineer: 'var(--status-caution)',
+  structures_engineer: 'var(--cat-7)',
+  cost_engineer: 'var(--cat-2)',
+  compliance_engineer: 'var(--cat-3)',
+  user_representative: 'var(--status-caution)',
+  mission_ops: 'var(--text-3)',
+  ground_segment: 'var(--interactive)',
+  software_engineer: 'var(--cat-2)',
 }
 
 export const POSITION_OPTIONS = [

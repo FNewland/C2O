@@ -105,20 +105,21 @@ cleared above) with `ttc.beacon_tx_on` (0x0526, the UHF transmitter).
 ### Step 1 — Baseline Primary Transponder Performance
 **TC:** `HK_REQUEST(sid=6)` (Service 3, Subtype 27)
 **Verify:** `ttc.link_status` (0x0501) = 2 (LOCKED) within 10s
-**Verify:** `ttc.rssi` (0x0502) > -100 dBm within 10s
-**Verify:** `ttc.link_margin` (0x0503) > 6.0 dB within 10s
+**Verify:** TT&C page (ground): `ttc.rssi` (0x0502) > -126 dBm within 10s
+**Verify:** TT&C page (ground): `ttc.link_margin` (0x0503) > 6.0 dB within 10s
 **Action:** Record values at current elevation angle. Note ground station and antenna configuration.
 **GO/NO-GO:** Primary transponder link nominal
 
 ### Step 2 — Measure RSSI vs Elevation Profile
-**Action:** During the ground station pass, request TT&C HK at low (10 deg), medium (30 deg), and high (60+ deg) elevation angles to characterize link performance.
-**TC:** `HK_REQUEST(sid=6)` (Service 3, Subtype 27) — TT&C housekeeping at ~10 deg elevation
-**Verify:** `ttc.rssi` (0x0502) > -108 dBm (low elevation) within 10s
-**Verify:** `ttc.link_margin` (0x0503) > 3.0 dB (minimum at low elevation) within 10s
-**TC:** `HK_REQUEST(sid=6)` (Service 3, Subtype 27) — TT&C housekeeping at ~30 deg elevation
-**Verify:** `ttc.rssi` (0x0502) > -100 dBm (medium elevation) within 10s
-**TC:** `HK_REQUEST(sid=6)` (Service 3, Subtype 27) — TT&C housekeeping at ~60 deg elevation
-**Verify:** `ttc.rssi` (0x0502) > -95 dBm (high elevation) within 10s
+**Action:** During the ground station pass, read the ground receiver values on the TT&C page at low (10 deg), medium (30 deg) and high (60+ deg) elevation to characterise link performance.
+**Note:** RSSI and link margin are measured by the ground station receiver, not by the spacecraft, so no HK request is needed: they are on the TT&C page throughout the pass, labelled "ground".
+**Note:** At ~10 deg elevation:
+**Verify:** TT&C page (ground): `ttc.rssi` (0x0502) > -126 dBm (low elevation) within 10s
+**Verify:** TT&C page (ground): `ttc.link_margin` (0x0503) > 3.0 dB (minimum at low elevation) within 10s
+**Note:** At ~30 deg elevation:
+**Verify:** TT&C page (ground): `ttc.rssi` (0x0502) > -118 dBm (medium elevation) within 10s
+**Note:** At ~60 deg elevation:
+**Verify:** TT&C page (ground): `ttc.rssi` (0x0502) > -114 dBm (high elevation) within 10s
 **GO/NO-GO:** RSSI profile consistent with link budget prediction (+/- 3 dB)
 
 ### Step 2a — Baseline Each Rung of the TM Rate Ladder
@@ -127,14 +128,14 @@ each rung. This is the measurement that establishes the mission baselines in the
 above.
 **TC:** `TTC_SET_DATA_RATE(rate=0)` (Service 8, Subtype 1, func_id 65) — LOW, 16 kbps
 **Verify:** `ttc.tm_data_rate` (0x0506) = 16000 bps and `ttc.tm_tier` (0x0539) = 1
-**Verify:** `ttc.link_margin` (0x0503) — record; expect 55-59 dB at 30 deg
+**Verify:** TT&C page (ground): `ttc.link_margin` (0x0503) — record; expect 55-59 dB at 30 deg
 **TC:** `TTC_SET_DOWNLINK_MODE(on=1)` (Service 8, Subtype 1, func_id 79)
 **Verify:** `ttc.downlink_mode` (0x053C) = 1
 **TC:** `TTC_SET_DATA_RATE(rate=1)` (Service 8, Subtype 1, func_id 65) — HIGH, 128 kbps
 **Verify:** `ttc.tm_data_rate` (0x0506) = 128000 bps and `ttc.tm_tier` (0x0539) = 2
 **Verify:** `ttc.tm_symbol_rate` (0x053B) = 64000 Bd (the QPSK step is visible on the
 ground station spectrum analyser: same information rate, half the occupied bandwidth)
-**Verify:** `ttc.link_margin` (0x0503) — record; expect 45-48 dB at 30 deg
+**Verify:** TT&C page (ground): `ttc.link_margin` (0x0503) — record; expect 45-48 dB at 30 deg
 **Action:** Compute the step: margin(LOW) - margin(HIGH). It must be 10.5 +/- 0.5 dB.
 **TC:** `TTC_SET_DATA_RATE(rate=0)` (Service 8, Subtype 1, func_id 65) — drop back to LOW
 **TC:** `TTC_SET_DOWNLINK_MODE(on=0)` (Service 8, Subtype 1, func_id 79) — release DOWNLINK mode
@@ -175,12 +176,12 @@ Budget Report.
 time-tagged scheduling; the transponder select is S8 function-perform func 64.
 **Action:** Wait for redundant transponder to lock. Ground station may need brief reacquisition.
 **Verify:** `ttc.link_status` (0x0501) = 2 (LOCKED) within 60s
-**Verify:** `ttc.rssi` (0x0502) > -100 dBm within 60s
+**Verify:** TT&C page (ground): `ttc.rssi` (0x0502) > -126 dBm within 60s
 **GO/NO-GO:** Redundant transponder operational and locked
 
 ### Step 4 — Redundant Transponder Performance Check
 **TC:** `HK_REQUEST(sid=6)` (Service 3, Subtype 27)
-**Verify:** `ttc.link_margin` (0x0503) > 6.0 dB within 10s
+**Verify:** TT&C page (ground): `ttc.link_margin` (0x0503) > 6.0 dB within 10s
 **Action:** Compare redundant transponder RSSI and link margin with primary at similar elevation. Values should be within 2 dB of primary.
 **Verify:** |RSSI_redundant - RSSI_primary| < 2.0 dB
 **GO/NO-GO:** Redundant transponder performance comparable to primary
@@ -189,7 +190,7 @@ time-tagged scheduling; the transponder select is S8 function-perform func 64.
 **TC:** `TTC_SWITCH_PRIMARY` (Service 8, Subtype 1, func_id 63)
 **Note:** Annotated `Service 11, Subtype 1` until 2026-08b — see Step 3.
 **Verify:** `ttc.link_status` (0x0501) = 2 (LOCKED) within 60s
-**Verify:** `ttc.rssi` (0x0502) > -100 dBm within 10s
+**Verify:** TT&C page (ground): `ttc.rssi` (0x0502) > -126 dBm within 10s
 **GO/NO-GO:** Primary transponder restored and locked
 
 ### Step 6 — Command Throughput Test

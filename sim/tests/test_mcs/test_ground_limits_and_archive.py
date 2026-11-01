@@ -154,12 +154,18 @@ def test_limit_state_is_published_for_the_displays():
 
 
 def test_ground_only_parameters_are_the_ones_with_no_s12_definition():
-    """31 of the 52 bands are the ONLY limit check those parameters get.
+    """30 of the 49 bands are the ONLY limit check those parameters get.
 
     Pinned so that deleting an S12 definition (or a band) makes the coverage
     change visible instead of silent.
 
-    The 31st is 0x0A14 obdh.time_since_sync_s (TIME_ARCHITECTURE.md Part B):
+    History: 31 -> 33 when d99c9e2 removed the S12 monitors on the
+    ground-derived TTC link parameters; 33 -> 30 on 2026-11-01 when the
+    plan decision moved the 0x050C BER and 0x051A AGC bands to the RF bridge
+    (ground-receiver limits, smo-rfsim ground_limits) and deleted the
+    instructor-only 0x0616 payload.snr band.
+
+    One of them is 0x0A14 obdh.time_since_sync_s (TIME_ARCHITECTURE.md Part B):
     the onboard clock's age is checked on the ground only, because the OBC
     cannot know that its own clock is wrong — that is the whole teaching
     point of NOM-008 — so there is deliberately no S12 definition for it.
@@ -170,12 +176,16 @@ def test_ground_only_parameters_are_the_ones_with_no_s12_definition():
                else int(str(d["param_id"]), 0)
                for d in s12["s12_definitions"]}
     ground_only = sorted(l.param_id for l in LIMITS if l.param_id not in s12_ids)
-    assert len(ground_only) == 31, (
+    assert len(ground_only) == 30, (
         "ground-only monitoring set changed: "
         f"{[hex(p) for p in ground_only]}")
     # Spot-check the classes brief 08 named explicitly.
     for pid in (0x0118, 0x011F, 0x0273, 0x0275, 0x0539, 0x053A):
         assert pid in ground_only
+    # Ground-receiver and instructor quantities are not spacecraft-telemetry
+    # limits (2026-11-01).
+    for pid in (0x050C, 0x051A, 0x0616):
+        assert pid not in {l.param_id for l in LIMITS}
 
 
 # ── 2. G1-b: acknowledgement persists across a restart ──────────────────
@@ -207,8 +217,8 @@ def test_ack_endpoint_writes_through_to_the_archive(tmp_path):
     srv = _make_server(tmp_path)
     _ws(srv)
     alarm = asyncio.run(srv._raise_alarm({
-        "severity": 3, "subsystem": "ttc", "parameter": "0x050C",
-        "value": "-3.0", "source": "LIMIT",
+        "severity": 3, "subsystem": "ttc", "parameter": "0x050F",
+        "value": "66.0", "source": "LIMIT",
     }))
     req = MagicMock()
     req.match_info = {"alarm_id": str(alarm["id"])}

@@ -19,12 +19,13 @@ import { useDesignStore } from '../stores/designStore'
 import { useActiveParameters } from '../hooks/useActiveParameters'
 import { useGateReview, type GateId } from '../components/useGateReview'
 import { STATUS_LABEL, badgeKind, evidenceText } from '../components/gateReviewText'
+import { fs, subsystemStyle } from '../theme/tokens'
 
 const API = '/api'
 
 const STATUS_COLORS: Record<string, string> = {
-  green: 'var(--success)', amber: 'var(--warning)', red: 'var(--danger)', undefined: 'var(--text-secondary)',
-  pass: 'var(--success)', fail: 'var(--danger)', advisory: 'var(--warning)', manual: 'var(--accent)', not_evaluated: 'var(--text-secondary)',
+  green: 'var(--status-ok)', amber: 'var(--status-caution)', red: 'var(--status-alarm)', undefined: 'var(--text-3)',
+  pass: 'var(--status-ok)', fail: 'var(--status-alarm)', advisory: 'var(--status-caution)', manual: 'var(--text-2)', not_evaluated: 'var(--text-3)',
 }
 
 const REQ_STATUS_COLORS: Record<string, string> = {
@@ -63,28 +64,23 @@ export function VVPanel() {
   })
 
   const sections = [
-    { id: 'budget' as const, label: t('Budget Rollup'), color: '#f59e0b' },
-    { id: 'reqs' as const, label: t('Requirements'), color: '#8b5cf6' },
-    { id: 'gates' as const, label: t('Review Gates'), color: '#3b82f6' },
-    { id: 'fmeca' as const, label: 'FMECA', color: '#ef4444' },
-    { id: 'trace' as const, label: t('Traceability'), color: '#10b981' },
-    { id: 'risks' as const, label: t('Risk Register'), color: '#f43f5e' },
-    { id: 'bom' as const, label: t('BOM'), color: '#06b6d4' },
-    { id: 'maturity' as const, label: t('Maturity'), color: '#a855f7' },
+    { id: 'budget' as const, label: t('Budget Rollup'), color: 'var(--status-caution)' },
+    { id: 'reqs' as const, label: t('Requirements'), color: 'var(--cat-2)' },
+    { id: 'gates' as const, label: t('Review Gates'), color: 'var(--interactive)' },
+    { id: 'fmeca' as const, label: 'FMECA', color: 'var(--status-alarm)' },
+    { id: 'trace' as const, label: t('Traceability'), color: 'var(--status-ok)' },
+    { id: 'risks' as const, label: t('Risk Register'), color: 'var(--status-alarm)' },
+    { id: 'bom' as const, label: t('BOM'), color: 'var(--interactive)' },
+    { id: 'maturity' as const, label: t('Maturity'), color: 'var(--cat-2)' },
   ]
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
       {/* Section tabs */}
-      <div style={{ display: 'flex', gap: '1px', padding: '0.3rem 1rem', background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border)' }}>
+      <div role="tablist" aria-label={t('V&V sections')} className="c2o-tabs" style={{ padding: '0 var(--sp-3)', background: 'var(--surface-1)', borderBottom: '1px solid var(--line)' }}>
         {sections.map(s => (
-          <button key={s.id} onClick={() => setActiveSection(s.id)} style={{
-            padding: '0.3rem 0.8rem', fontSize: '0.72rem', fontWeight: 600, borderRadius: '3px 3px 0 0',
-            background: activeSection === s.id ? 'var(--bg-primary)' : 'transparent',
-            color: activeSection === s.id ? s.color : 'var(--text-secondary)',
-            border: 'none', cursor: 'pointer',
-            borderBottom: activeSection === s.id ? `2px solid ${s.color}` : '2px solid transparent',
-          }}>
+          <button key={s.id} type="button" role="tab" className="c2o-tab" aria-selected={activeSection === s.id}
+            onClick={() => setActiveSection(s.id)}>
             {s.label}
           </button>
         ))}
@@ -110,33 +106,83 @@ export function VVPanel() {
 
 // ─── Budget Rollup ───
 
+type RollRow = { el: any; depth: number; mass: number | null; power: number | null; cost: number | null; derived: { mass: boolean; power: boolean; cost: boolean } }
+
+/**
+ * Depth-first product tree with roll-ups. Rows are ordered parent → children,
+ * so a block is only ever indented under its real parent (R3 problem 14).
+ * A block with no own value shows the sum of its children ("Σ"), so the Space
+ * Segment carries its subsystems' mass instead of "—".
+ */
+function rollupRows(elements: any[]): RollRow[] {
+  const kids = new Map<string | null, any[]>()
+  const ids = new Set(elements.map(e => e.id))
+  for (const el of elements) {
+    const p = el.parent_id && ids.has(el.parent_id) ? el.parent_id : null
+    kids.set(p, [...(kids.get(p) || []), el])
+  }
+  const out: RollRow[] = []
+  const walk = (el: any, depth: number): { mass: number | null; power: number | null; cost: number | null } => {
+    const row: RollRow = { el, depth, mass: null, power: null, cost: null, derived: { mass: false, power: false, cost: false } }
+    out.push(row)
+    const q = el.quantity || 1
+    const sums = { mass: null as number | null, power: null as number | null, cost: null as number | null }
+    for (const c of kids.get(el.id) || []) {
+      const r = walk(c, depth + 1)
+      for (const k of ['mass', 'power', 'cost'] as const) if (r[k] != null) sums[k] = (sums[k] ?? 0) + r[k]!
+    }
+    const own = { mass: el.mass_kg, power: el.power_avg_w, cost: el.cost_recurring_keur }
+    for (const k of ['mass', 'power', 'cost'] as const) {
+      if (own[k] != null) row[k] = own[k] * q
+      else if (sums[k] != null) { row[k] = sums[k]! * q; row.derived[k] = true }
+    }
+    return { mass: row.mass, power: row.power, cost: row.cost }
+  }
+  for (const root of kids.get(null) || []) walk(root, 0)
+  return out
+}
+
 function BudgetRollup({ elements }: { elements: any[] }) {
   const { t } = useTranslation()
+  const rows = useMemo(() => rollupRows(elements), [elements])
+  const cell = (v: number | null, derived: boolean, digits: number) => v == null
+    ? <span style={{ color: 'var(--text-3)', fontFamily: 'var(--font-sans)', fontSize: fs.label }}>{t('no data')}</span>
+    : <span title={derived ? t('Sum of child elements') : undefined}>
+        {derived && <span style={{ color: 'var(--text-3)', marginRight: 4 }} aria-label={t('Sum of child elements')}>Σ</span>}
+        {v.toFixed(digits)}
+      </span>
   return (
     <div>
-      <h3 style={{ fontSize: '0.85rem', marginBottom: '0.5rem' }}>{t('Budget Rollup — All Elements')}</h3>
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.72rem' }}>
+      <h3 style={{ fontSize: fs.body, fontWeight: 600, margin: '0 0 var(--sp-1)' }}>{t('Budget Rollup — All Elements')}</h3>
+      <p style={{ fontSize: fs.label, color: 'var(--text-3)', margin: '0 0 var(--sp-2)' }}>
+        {t('Σ marks a block without its own value: the figure is the sum of its children.')}
+      </p>
+      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs.body }}>
         <thead>
-          <tr style={{ borderBottom: '1px solid var(--border)' }}>
+          <tr style={{ borderBottom: '1px solid var(--line-strong)' }}>
             <th style={thL}>{t('Element')}</th><th style={thL}>{t('Type')}</th>
             <th style={thR}>{t('Mass (kg)')}</th><th style={thR}>{t('Power (W)')}</th><th style={thR}>{t('Cost (kEUR)')}</th><th style={thR}>{t('Qty')}</th>
           </tr>
         </thead>
         <tbody>
-          {elements.map((el: any) => {
-            const depth = getDepth(el, elements)
+          {rows.map(({ el, depth, mass, power, cost, derived }) => {
+            const ss = el.subsystem_domain ? subsystemStyle(el.subsystem_domain) : null
             return (
-              <tr key={el.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                <td style={{ padding: '0.2rem 0.4rem', paddingLeft: `${0.4 + depth * 1}rem`, fontWeight: depth < 2 ? 600 : 400 }}>{el.name}</td>
-                <td style={{ padding: '0.2rem 0.4rem' }}>
-                  <span style={{ fontSize: '0.55rem', padding: '0.05rem 0.2rem', borderRadius: '2px', background: 'rgba(59,130,246,0.1)', color: 'var(--accent)', textTransform: 'uppercase' }}>
+              <tr key={el.id} style={{ borderBottom: '1px solid var(--line)' }}>
+                <td style={{ padding: '6px 8px', paddingLeft: `${8 + depth * 20}px`, fontWeight: depth < 2 ? 600 : 400 }}>
+                  {depth > 0 && <span aria-hidden="true" style={{ color: 'var(--line-strong)', marginRight: 6 }}>└</span>}
+                  {el.name}
+                </td>
+                <td style={{ padding: '6px 8px' }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: fs.label, color: 'var(--text-3)', textTransform: 'uppercase' }}>
+                    {ss && <span className="c2o-ss-badge" aria-hidden="true" style={{ background: ss.color }}>{ss.badge}</span>}
                     {el.subsystem_domain || el.element_type}
                   </span>
                 </td>
-                <td style={{ ...tdR, fontFamily: 'monospace' }}>{el.mass_kg != null ? (el.mass_kg * (el.quantity || 1)).toFixed(2) : '—'}</td>
-                <td style={{ ...tdR, fontFamily: 'monospace' }}>{el.power_avg_w != null ? (el.power_avg_w * (el.quantity || 1)).toFixed(1) : '—'}</td>
-                <td style={{ ...tdR, fontFamily: 'monospace' }}>{el.cost_recurring_keur != null ? (el.cost_recurring_keur * (el.quantity || 1)).toFixed(0) : '—'}</td>
-                <td style={{ ...tdR, color: 'var(--text-secondary)' }}>{(el.quantity || 1) > 1 ? `×${el.quantity}` : ''}</td>
+                <td style={{ ...tdR, ...tdVal }}>{cell(mass, derived.mass, 2)}</td>
+                <td style={{ ...tdR, ...tdVal }}>{cell(power, derived.power, 1)}</td>
+                <td style={{ ...tdR, ...tdVal }}>{cell(cost, derived.cost, 0)}</td>
+                <td style={{ ...tdR, color: 'var(--text-2)' }}>{(el.quantity || 1) > 1 ? `×${el.quantity}` : ''}</td>
               </tr>
             )
           })}
@@ -148,7 +194,7 @@ function BudgetRollup({ elements }: { elements: any[] }) {
 
 // ─── Requirement Traceability ───
 
-function RequirementTraceability({ requirements, elements, studyId }: { requirements: any[]; elements: any[]; studyId: string | null }) {
+function RequirementTraceability({ requirements, elements }: { requirements: any[]; elements: any[]; studyId: string | null }) {
   const { t } = useTranslation()
   const nameOf = (id: string) => elements.find((e: any) => e.id === id)?.name || '—'
 
@@ -170,10 +216,10 @@ function RequirementTraceability({ requirements, elements, studyId }: { requirem
 
   return (
     <div>
-      <h3 style={{ fontSize: '0.85rem', marginBottom: '0.3rem' }}>{t('Requirement Traceability')}</h3>
+      <h3 style={{ fontSize: fs.body, marginBottom: '0.3rem' }}>{t('Requirement Traceability')}</h3>
 
       {/* Stats */}
-      <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '0.5rem', fontSize: '0.68rem', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '0.5rem', fontSize: fs.label, flexWrap: 'wrap' }}>
         <span>{t('Total:')} <b>{stats.total}</b></span>
         {Object.entries(stats.byStatus).map(([s, n]) => (
           <span key={s} style={{ color: REQ_STATUS_COLORS[s] || 'var(--text-secondary)' }}>{t('{{label}}:', { label: t(REQ_STATUS_LABEL[s] ?? s) })} <b>{n}</b></span>
@@ -188,7 +234,7 @@ function RequirementTraceability({ requirements, elements, studyId }: { requirem
       </div>
 
       {/* Table */}
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.72rem' }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs.label }}>
         <thead>
           <tr style={{ borderBottom: '1px solid var(--border)' }}>
             <th style={thL}>{t('Code')}</th><th style={thL}>{t('Level')}</th><th style={thL}>{t('Element')}</th>
@@ -199,18 +245,18 @@ function RequirementTraceability({ requirements, elements, studyId }: { requirem
           {requirements.map((req: any) => {
             const isOrphan = req.level !== 'mission' && !req.derived_from_requirement_id && !req.parent_id
             return (
-              <tr key={req.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', background: isOrphan ? 'rgba(245,158,11,0.05)' : undefined }}>
-                <td style={{ padding: '0.2rem 0.4rem', fontFamily: 'monospace', color: 'var(--accent)', fontSize: '0.65rem' }}>{req.code}</td>
+              <tr key={req.id} style={{ borderBottom: '1px solid color-mix(in srgb, var(--text) 3%, transparent)', background: isOrphan ? 'rgba(245,158,11,0.05)' : undefined }}>
+                <td style={{ padding: '0.2rem 0.4rem', fontFamily: 'monospace', color: 'var(--accent)', fontSize: fs.label }}>{req.code}</td>
                 <td style={{ padding: '0.2rem 0.4rem' }}>
-                  <span style={{ fontSize: '0.5rem', padding: '0.05rem 0.2rem', borderRadius: '2px', background: 'rgba(59,130,246,0.1)', color: 'var(--accent)', textTransform: 'uppercase' }}>{t(REQ_LEVEL_LABEL[req.level] ?? req.level)}</span>
+                  <span style={{ fontSize: fs.label, padding: '0.05rem 0.2rem', borderRadius: '2px', background: 'rgba(59,130,246,0.1)', color: 'var(--accent)', textTransform: 'uppercase' }}>{t(REQ_LEVEL_LABEL[req.level] ?? req.level)}</span>
                 </td>
-                <td style={{ padding: '0.2rem 0.4rem', fontSize: '0.65rem', color: 'var(--text-secondary)' }}>{req.element_id ? nameOf(req.element_id) : '—'}</td>
-                <td style={{ padding: '0.2rem 0.4rem', fontSize: '0.68rem' }}>{req.text}</td>
-                <td style={{ padding: '0.2rem 0.4rem', textAlign: 'center', color: 'var(--success)', fontWeight: 600, fontSize: '0.6rem' }}>{req.verification_method || '—'}</td>
+                <td style={{ padding: '0.2rem 0.4rem', fontSize: fs.label, color: 'var(--text-secondary)' }}>{req.element_id ? nameOf(req.element_id) : '—'}</td>
+                <td style={{ padding: '0.2rem 0.4rem', fontSize: fs.label }}>{req.text}</td>
+                <td style={{ padding: '0.2rem 0.4rem', textAlign: 'center', color: 'var(--success)', fontWeight: 600, fontSize: fs.label }}>{req.verification_method || '—'}</td>
                 <td style={{ padding: '0.2rem 0.4rem', textAlign: 'center' }}>
-                  <span style={{ fontSize: '0.55rem', padding: '0.05rem 0.2rem', borderRadius: '2px', background: `${REQ_STATUS_COLORS[req.status]}20`, color: REQ_STATUS_COLORS[req.status], fontWeight: 600 }}>{t(REQ_STATUS_LABEL[req.status] ?? req.status)}</span>
+                  <span style={{ fontSize: fs.label, padding: '0.05rem 0.2rem', borderRadius: '2px', background: `color-mix(in srgb, ${REQ_STATUS_COLORS[req.status]} 13%, transparent)`, color: REQ_STATUS_COLORS[req.status], fontWeight: 600 }}>{t(REQ_STATUS_LABEL[req.status] ?? req.status)}</span>
                 </td>
-                <td style={{ padding: '0.2rem 0.4rem', textAlign: 'center', fontSize: '0.55rem' }}>
+                <td style={{ padding: '0.2rem 0.4rem', textAlign: 'center', fontSize: fs.label }}>
                   {req.derived_from_requirement_id ? (
                     <span style={{ color: 'var(--success)' }}>✓</span>
                   ) : isOrphan ? (
@@ -240,20 +286,23 @@ function ReviewGates({ studyId }: { studyId: string | null }) {
 
   const { data: gateResult, isLoading, isError } = useGateReview(studyId, activeGate, missionNeed, params)
   const pending = !!gateResult && !gateResult.ready && gateResult.ready_pending_manual
-  const tone = gateResult?.ready ? 'var(--success)' : pending ? 'var(--accent)' : 'var(--danger)'
+  // Verdict (R3 problem 14): green only for READY, red only when a check failed,
+  // otherwise amber "NOT READY (n manual/advisory)".
+  const failCount = gateResult ? gateResult.criteria.filter(c => c.verdict === 'fail').length : 0
+  const openCount = gateResult?.summary ? (gateResult.summary.manual || 0) + (gateResult.summary.advisory || 0) : 0
+  const tone = gateResult?.ready ? 'var(--status-ok)' : failCount > 0 ? 'var(--status-alarm)' : 'var(--status-caution)'
+  const wash = gateResult?.ready ? 'var(--status-ok-wash)' : failCount > 0 ? 'var(--status-alarm-wash)' : 'var(--status-caution-wash)'
+  const glyph = gateResult?.ready ? '✓' : failCount > 0 ? '▲' : '◆'
 
   return (
     <div>
-      <h3 style={{ fontSize: '0.85rem', marginBottom: '0.3rem' }}>{t('Review Gate Evaluation')}</h3>
+      <h3 style={{ fontSize: fs.body, marginBottom: '0.3rem' }}>{t('Review Gate Evaluation')}</h3>
 
       <div role="group" aria-label={t('Review gate')} style={{ display: 'flex', gap: '0.3rem', marginBottom: '0.5rem' }}>
         {gates.map(g => (
-          <button key={g} onClick={() => setActiveGate(g)} aria-pressed={activeGate === g} style={{
-            padding: '0.3rem 0.8rem', fontSize: '0.72rem', fontWeight: 700, borderRadius: '4px',
-            background: activeGate === g ? 'var(--accent)' : 'var(--bg-card)',
-            color: activeGate === g ? 'white' : 'var(--text-secondary)',
-            border: 'none', cursor: 'pointer', textTransform: 'uppercase',
-          }}>
+          <button key={g} type="button" onClick={() => setActiveGate(g)} aria-pressed={activeGate === g}
+            className={activeGate === g ? 'c2o-btn c2o-btn--primary' : 'c2o-btn'}
+            style={{ textTransform: 'uppercase', fontFamily: 'var(--font-mono)' }}>
             {g}
           </button>
         ))}
@@ -261,7 +310,7 @@ function ReviewGates({ studyId }: { studyId: string | null }) {
 
       {isLoading && <div style={{ color: 'var(--text-secondary)' }}>{t('Evaluating...')}</div>}
       {isError && !gateResult && (
-        <div style={{ color: 'var(--warning)', fontSize: '0.72rem' }}>
+        <div style={{ color: 'var(--warning)', fontSize: fs.label }}>
           {t('Gate review service unreachable.')}
         </div>
       )}
@@ -269,23 +318,25 @@ function ReviewGates({ studyId }: { studyId: string | null }) {
       {gateResult && (
         <div>
           {/* Summary */}
-          <div style={{
-            display: 'flex', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '0.5rem', padding: '0.4rem 0.5rem',
-            background: `color-mix(in srgb, ${tone} 10%, transparent)`,
-            borderRadius: '4px', fontSize: '0.72rem',
+          <div role="status" style={{
+            display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', gap: 'var(--sp-4)', marginBottom: 'var(--sp-2)',
+            padding: 'var(--sp-2) var(--sp-3)', background: wash, borderLeft: `3px solid ${tone}`,
+            borderRadius: 'var(--radius)', fontSize: fs.body,
           }}>
-            <span style={{ fontWeight: 700, color: tone }}>
+            <span style={{ fontWeight: 600, fontSize: fs.value, color: tone }}>
+              <span aria-hidden="true" style={{ marginRight: 6 }}>{glyph}</span>
               {gateResult.ready ? t('READY')
-                : pending ? t('Ready for {{gate}}, pending manual sign-off', { gate: activeGate.toUpperCase() })
-                : t('NOT READY')}
+                : failCount > 0 ? t('NOT READY ({{n}} failed)', { n: failCount })
+                : t('NOT READY ({{n}} manual/advisory)', { n: openCount })}
             </span>
+            {pending && <span style={{ color: 'var(--text-2)' }}>{t('Ready for {{gate}}, pending manual sign-off', { gate: activeGate.toUpperCase() })}</span>}
             {gateResult.summary && (
-              <>
-                <span style={{ color: 'var(--success)' }}>{t('Pass: {{n}}', { n: gateResult.summary.pass })}</span>
-                <span style={{ color: 'var(--danger)' }}>{t('Fail: {{n}}', { n: gateResult.criteria.filter(c => c.verdict === 'fail').length })}</span>
-                <span style={{ color: 'var(--warning)' }}>{t('Advisory: {{n}}', { n: gateResult.summary.advisory })}</span>
-                <span style={{ color: 'var(--accent)' }}>{t('Manual: {{n}}', { n: gateResult.summary.manual })}</span>
-              </>
+              <span style={{ display: 'inline-flex', gap: 'var(--sp-3)', fontFamily: 'var(--font-mono)', fontSize: fs.label, color: 'var(--text-2)' }}>
+                <span>{t('Pass: {{n}}', { n: gateResult.summary.pass })}</span>
+                <span style={failCount > 0 ? { color: 'var(--status-alarm)', fontWeight: 600 } : undefined}>{t('Fail: {{n}}', { n: failCount })}</span>
+                <span>{t('Advisory: {{n}}', { n: gateResult.summary.advisory })}</span>
+                <span>{t('Manual: {{n}}', { n: gateResult.summary.manual })}</span>
+              </span>
             )}
           </div>
 
@@ -297,13 +348,13 @@ function ReviewGates({ studyId }: { studyId: string | null }) {
               return (
                 <div key={c.id} style={{
                   display: 'flex', alignItems: 'center', gap: '0.3rem', padding: '0.25rem 0.4rem',
-                  background: 'var(--bg-card)', borderRadius: '3px', fontSize: '0.68rem',
+                  background: 'var(--bg-card)', borderRadius: '3px', fontSize: fs.label,
                   borderLeft: `3px solid ${color}`,
                 }}>
-                  <span style={{ fontSize: '0.55rem', fontWeight: 700, color, whiteSpace: 'nowrap' }}>{t(STATUS_LABEL[kind] || 'N/A')}</span>
+                  <span style={{ fontSize: fs.label, fontWeight: 700, color, whiteSpace: 'nowrap' }}>{t(STATUS_LABEL[kind] || 'N/A')}</span>
                   <span style={{ flex: 1 }}>{t(c.question)}</span>
-                  <span style={{ fontSize: '0.55rem', color: 'var(--text-secondary)' }}>{evidenceText(c, t)}</span>
-                  <span style={{ fontSize: '0.55rem', color: 'var(--text-secondary)', fontFamily: 'monospace' }}>{c.id}</span>
+                  <span style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>{evidenceText(c, t)}</span>
+                  <span style={{ fontSize: fs.label, color: 'var(--text-secondary)', fontFamily: 'monospace' }}>{c.id}</span>
                 </div>
               )
             })}
@@ -335,16 +386,16 @@ function FMECASummary({ studyId }: { studyId: string | null }) {
 
   return (
     <div>
-      <h3 style={{ fontSize: '0.85rem', marginBottom: '0.3rem' }}>{t('Failure Mode Analysis (FMECA)')}</h3>
+      <h3 style={{ fontSize: fs.body, marginBottom: '0.3rem' }}>{t('Failure Mode Analysis (FMECA)')}</h3>
       <button onClick={runFMECA} disabled={loading} style={{
-        padding: '0.3rem 0.6rem', fontSize: '0.68rem', fontWeight: 600, borderRadius: '4px',
+        padding: '0.3rem 0.6rem', fontSize: fs.label, fontWeight: 600, borderRadius: '4px',
         background: 'var(--accent)', color: 'white', border: 'none', cursor: 'pointer', marginBottom: '0.5rem',
       }}>
         {loading ? t('Analysing...') : t('Run FMECA')}
       </button>
 
       {result?.failure_modes && (
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.68rem' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs.label }}>
           <thead>
             <tr style={{ borderBottom: '1px solid var(--border)' }}>
               <th style={thL}>{t('Subsystem')}</th><th style={thL}>{t('Failure Mode')}</th><th style={thC}>{t('Severity')}</th>
@@ -353,13 +404,13 @@ function FMECASummary({ studyId }: { studyId: string | null }) {
           </thead>
           <tbody>
             {result.failure_modes.slice(0, 20).map((fm: any, i: number) => (
-              <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+              <tr key={i} style={{ borderBottom: '1px solid color-mix(in srgb, var(--text) 3%, transparent)' }}>
                 <td style={{ padding: '0.2rem 0.4rem', fontWeight: 500 }}>{fm.subsystem}</td>
                 <td style={{ padding: '0.2rem 0.4rem' }}>{fm.failure_mode || fm.description}</td>
                 <td style={{ padding: '0.2rem 0.4rem', textAlign: 'center', color: (fm.severity || 0) > 7 ? 'var(--danger)' : 'var(--warning)' }}>{fm.severity}</td>
                 <td style={{ padding: '0.2rem 0.4rem', textAlign: 'center' }}>{fm.probability || fm.occurrence}</td>
                 <td style={{ padding: '0.2rem 0.4rem', textAlign: 'center', fontWeight: 600, color: (fm.rpn || 0) > 100 ? 'var(--danger)' : 'var(--text-primary)' }}>{fm.rpn}</td>
-                <td style={{ padding: '0.2rem 0.4rem', fontSize: '0.6rem', color: 'var(--text-secondary)' }}>{fm.mitigation || fm.recommended_action}</td>
+                <td style={{ padding: '0.2rem 0.4rem', fontSize: fs.label, color: 'var(--text-secondary)' }}>{fm.mitigation || fm.recommended_action}</td>
               </tr>
             ))}
           </tbody>
@@ -367,7 +418,7 @@ function FMECASummary({ studyId }: { studyId: string | null }) {
       )}
 
       {result?.summary && (
-        <div style={{ marginTop: '0.4rem', padding: '0.3rem 0.5rem', background: 'var(--bg-card)', borderRadius: '4px', fontSize: '0.68rem' }}>
+        <div style={{ marginTop: '0.4rem', padding: '0.3rem 0.5rem', background: 'var(--bg-card)', borderRadius: '4px', fontSize: fs.label }}>
           {t('Total failure modes:')} <b>{result.summary.total || result.failure_modes?.length}</b>
           {result.summary.critical > 0 && <span style={{ color: 'var(--danger)', marginLeft: '0.5rem' }}>{t('Critical:')} <b>{result.summary.critical}</b></span>}
         </div>
@@ -396,12 +447,12 @@ function BudgetTraceability({ studyId }: { studyId: string | null }) {
 
   return (
     <div>
-      <h3 style={{ fontSize: '0.85rem', marginBottom: '0.3rem' }}>{t('Budget → Stakeholder Traceability')}</h3>
+      <h3 style={{ fontSize: fs.body, marginBottom: '0.3rem' }}>{t('Budget → Stakeholder Traceability')}</h3>
 
       <div style={{ display: 'flex', gap: '0.3rem', marginBottom: '0.4rem' }}>
         {budgets.map(b => (
           <button key={b} onClick={() => setActiveBudget(b)} style={{
-            padding: '0.2rem 0.5rem', fontSize: '0.65rem', borderRadius: '3px',
+            padding: '0.2rem 0.5rem', fontSize: fs.label, borderRadius: '3px',
             background: activeBudget === b ? 'var(--accent)' : 'var(--bg-card)',
             color: activeBudget === b ? 'white' : 'var(--text-secondary)',
             border: 'none', cursor: 'pointer',
@@ -410,7 +461,7 @@ function BudgetTraceability({ studyId }: { studyId: string | null }) {
           </button>
         ))}
         <button onClick={trace} disabled={loading} style={{
-          padding: '0.2rem 0.5rem', fontSize: '0.65rem', fontWeight: 600, borderRadius: '3px',
+          padding: '0.2rem 0.5rem', fontSize: fs.label, fontWeight: 600, borderRadius: '3px',
           background: 'var(--success)', color: 'white', border: 'none', cursor: 'pointer', marginLeft: '0.3rem',
         }}>
           {loading ? '...' : t('Trace')}
@@ -422,10 +473,10 @@ function BudgetTraceability({ studyId }: { studyId: string | null }) {
           {/* Trace chain */}
           {result.chain?.length > 0 && (
             <div style={{ marginBottom: '0.5rem' }}>
-              <div style={{ fontSize: '0.65rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.2rem' }}>{t('Trace Chain:')}</div>
+              <div style={{ fontSize: fs.label, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.2rem' }}>{t('Trace Chain:')}</div>
               {result.chain.map((link: any, i: number) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', padding: '0.2rem 0', fontSize: '0.68rem' }}>
-                  <span style={{ fontSize: '0.5rem', padding: '0.05rem 0.2rem', borderRadius: '2px', background: 'rgba(59,130,246,0.1)', color: 'var(--accent)', textTransform: 'uppercase' }}>{link.level}</span>
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', padding: '0.2rem 0', fontSize: fs.label }}>
+                  <span style={{ fontSize: fs.label, padding: '0.05rem 0.2rem', borderRadius: '2px', background: 'rgba(59,130,246,0.1)', color: 'var(--accent)', textTransform: 'uppercase' }}>{link.level}</span>
                   <span>{link.text}</span>
                   {i < (result.chain?.length || 0) - 1 && <span style={{ color: 'var(--text-secondary)' }}>→</span>}
                 </div>
@@ -436,11 +487,11 @@ function BudgetTraceability({ studyId }: { studyId: string | null }) {
           {/* Recovery options */}
           {result.recovery_options?.length > 0 && (
             <div>
-              <div style={{ fontSize: '0.65rem', fontWeight: 600, color: 'var(--warning)', marginBottom: '0.2rem' }}>{t('Recovery Options:')}</div>
+              <div style={{ fontSize: fs.label, fontWeight: 600, color: 'var(--warning)', marginBottom: '0.2rem' }}>{t('Recovery Options:')}</div>
               {result.recovery_options.map((opt: any, i: number) => (
-                <div key={i} style={{ padding: '0.25rem 0.4rem', background: 'var(--bg-card)', borderRadius: '3px', marginBottom: '0.2rem', fontSize: '0.68rem' }}>
+                <div key={i} style={{ padding: '0.25rem 0.4rem', background: 'var(--bg-card)', borderRadius: '3px', marginBottom: '0.2rem', fontSize: fs.label }}>
                   <div style={{ fontWeight: 500 }}>{opt.description}</div>
-                  <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)' }}>
+                  <div style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>
                     {t('Subsystem: {{subsystem}} | Impact: {{impact}} | Feasibility: {{feasibility}}', { subsystem: opt.subsystem, impact: opt.impact, feasibility: opt.feasibility })}
                   </div>
                 </div>
@@ -449,7 +500,7 @@ function BudgetTraceability({ studyId }: { studyId: string | null }) {
           )}
 
           {result.stakeholder_impact && (
-            <div style={{ marginTop: '0.3rem', padding: '0.3rem', background: 'rgba(245,158,11,0.1)', borderRadius: '3px', fontSize: '0.68rem', color: 'var(--warning)' }}>
+            <div style={{ marginTop: '0.3rem', padding: '0.3rem', background: 'rgba(245,158,11,0.1)', borderRadius: '3px', fontSize: fs.label, color: 'var(--warning)' }}>
               {t('Stakeholder impact: {{impact}}', { impact: result.stakeholder_impact })}
             </div>
           )}
@@ -522,9 +573,9 @@ function RiskRegister({ studyId }: { studyId: string | null }) {
 
   return (
     <div>
-      <h3 style={{ fontSize: '0.85rem', marginBottom: '0.3rem' }}>{t('Risk Register')}</h3>
+      <h3 style={{ fontSize: fs.body, marginBottom: '0.3rem' }}>{t('Risk Register')}</h3>
 
-      <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '0.5rem', fontSize: '0.68rem' }}>
+      <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '0.5rem', fontSize: fs.label }}>
         <span>{t('Total:')} <b>{risks.length}</b></span>
         <span style={{ color: 'var(--danger)' }}>{t('Critical:')} <b>{critical}</b></span>
         <span style={{ color: 'var(--warning)' }}>{t('High:')} <b>{high}</b></span>
@@ -533,8 +584,8 @@ function RiskRegister({ studyId }: { studyId: string | null }) {
 
       {/* Risk matrix heatmap (5×5) */}
       <div style={{ marginBottom: '0.5rem' }}>
-        <div style={{ fontSize: '0.55rem', color: 'var(--text-secondary)', marginBottom: '0.2rem' }}>{t('Likelihood × Consequence Matrix:')}</div>
-        <div style={{ display: 'grid', gridTemplateColumns: '40px repeat(5, 1fr)', gap: 1, fontSize: '0.5rem' }}>
+        <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginBottom: '0.2rem' }}>{t('Likelihood × Consequence Matrix:')}</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '40px repeat(5, 1fr)', gap: 1, fontSize: fs.label }}>
           <div />
           {C_LABELS.slice(1).map(c => <div key={c} style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: '0.1rem' }}>{t(c)}</div>)}
           {[5, 4, 3, 2, 1].map(l => (
@@ -561,7 +612,7 @@ function RiskRegister({ studyId }: { studyId: string | null }) {
 
       {/* Risk table */}
       {risks.length > 0 && (
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.65rem', marginBottom: '0.5rem' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs.label, marginBottom: '0.5rem' }}>
           <thead>
             <tr style={{ borderBottom: '1px solid var(--border)' }}>
               <th style={thL}>ID</th><th style={thL}>{t('Description')}</th><th style={thC}>{t('Cat')}</th>
@@ -572,35 +623,35 @@ function RiskRegister({ studyId }: { studyId: string | null }) {
           </thead>
           <tbody>
             {risks.map((r, i) => (
-              <tr key={r.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+              <tr key={r.id} style={{ borderBottom: '1px solid color-mix(in srgb, var(--text) 3%, transparent)' }}>
                 <td style={{ padding: '0.2rem 0.3rem', fontFamily: 'monospace', color: riskColor(r.rpn) }}>{r.id}</td>
                 <td style={{ padding: '0.2rem 0.3rem', maxWidth: 200 }}>{r.description}</td>
-                <td style={{ padding: '0.2rem 0.3rem', textAlign: 'center', fontSize: '0.55rem' }}>{t(r.category)}</td>
+                <td style={{ padding: '0.2rem 0.3rem', textAlign: 'center', fontSize: fs.label }}>{t(r.category)}</td>
                 <td style={{ padding: '0.2rem 0.3rem', textAlign: 'center' }}>
                   <select value={r.likelihood} onChange={e => updateRisk(i, 'likelihood', parseInt(e.target.value))}
-                    style={{ width: 30, fontSize: '0.6rem', background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}>
+                    style={{ width: 30, fontSize: fs.label, background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}>
                     {[1,2,3,4,5].map(v => <option key={v} value={v}>{v}</option>)}
                   </select>
                 </td>
                 <td style={{ padding: '0.2rem 0.3rem', textAlign: 'center' }}>
                   <select value={r.consequence} onChange={e => updateRisk(i, 'consequence', parseInt(e.target.value))}
-                    style={{ width: 30, fontSize: '0.6rem', background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}>
+                    style={{ width: 30, fontSize: fs.label, background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}>
                     {[1,2,3,4,5].map(v => <option key={v} value={v}>{v}</option>)}
                   </select>
                 </td>
                 <td style={{ padding: '0.2rem 0.3rem', textAlign: 'center', fontWeight: 700, color: riskColor(r.rpn) }}>{r.rpn}</td>
-                <td style={{ padding: '0.2rem 0.3rem', fontSize: '0.6rem' }}>{r.mitigation}</td>
-                <td style={{ padding: '0.2rem 0.3rem', fontSize: '0.6rem' }}>{r.owner}</td>
+                <td style={{ padding: '0.2rem 0.3rem', fontSize: fs.label }}>{r.mitigation}</td>
+                <td style={{ padding: '0.2rem 0.3rem', fontSize: fs.label }}>{r.owner}</td>
                 <td style={{ padding: '0.2rem 0.3rem', textAlign: 'center' }}>
                   <select value={r.status} onChange={e => updateRisk(i, 'status', e.target.value)}
-                    style={{ fontSize: '0.55rem', background: 'var(--bg-primary)', border: '1px solid var(--border)', color: r.status === 'closed' ? 'var(--success)' : 'var(--text-primary)' }}>
+                    style={{ fontSize: fs.label, background: 'var(--bg-primary)', border: '1px solid var(--border)', color: r.status === 'closed' ? 'var(--success)' : 'var(--text-primary)' }}>
                     <option value="open">{t('Open', { context: 'risk' })}</option><option value="mitigating">{t('Mitigating', { context: 'risk' })}</option>
                     <option value="accepted">{t('Accepted', { context: 'risk' })}</option><option value="closed">{t('Closed', { context: 'risk' })}</option>
                   </select>
                 </td>
                 <td style={{ padding: '0.2rem' }}>
                   <button onClick={() => save(risks.filter((_, j) => j !== i))}
-                    style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', fontSize: '0.7rem' }}>×</button>
+                    style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', fontSize: fs.label }}>×</button>
                 </td>
               </tr>
             ))}
@@ -613,38 +664,38 @@ function RiskRegister({ studyId }: { studyId: string | null }) {
         <div style={{ padding: '0.4rem', background: 'var(--bg-card)', borderRadius: '4px', border: '1px solid var(--danger)', display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
           <div style={{ display: 'flex', gap: '0.3rem' }}>
             <select value={newCat} onChange={e => setNewCat(e.target.value)}
-              style={{ padding: '0.2rem', fontSize: '0.65rem', borderRadius: '3px', background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}>
+              style={{ padding: '0.2rem', fontSize: fs.label, borderRadius: '3px', background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}>
               {RISK_CATEGORIES.map(c => <option key={c} value={c}>{t(c)}</option>)}
             </select>
             <input value={newDesc} onChange={e => setNewDesc(e.target.value)} placeholder={t('Risk description')} autoFocus
-              style={{ flex: 1, padding: '0.2rem 0.3rem', fontSize: '0.65rem', borderRadius: '3px', background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)' }} />
+              style={{ flex: 1, padding: '0.2rem 0.3rem', fontSize: fs.label, borderRadius: '3px', background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)' }} />
           </div>
-          <div style={{ display: 'flex', gap: '0.3rem', alignItems: 'center', fontSize: '0.63rem' }}>
+          <div style={{ display: 'flex', gap: '0.3rem', alignItems: 'center', fontSize: fs.label }}>
             <span style={{ color: 'var(--text-secondary)' }}>{t('L:')}</span>
             <select value={newL} onChange={e => setNewL(parseInt(e.target.value))}
-              style={{ width: 40, fontSize: '0.6rem', background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}>
+              style={{ width: 40, fontSize: fs.label, background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}>
               {[1,2,3,4,5].map(v => <option key={v} value={v}>{v} — {t(L_LABELS[v])}</option>)}
             </select>
             <span style={{ color: 'var(--text-secondary)' }}>{t('C:')}</span>
             <select value={newC} onChange={e => setNewC(parseInt(e.target.value))}
-              style={{ width: 40, fontSize: '0.6rem', background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}>
+              style={{ width: 40, fontSize: fs.label, background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}>
               {[1,2,3,4,5].map(v => <option key={v} value={v}>{v} — {t(C_LABELS[v])}</option>)}
             </select>
             <span style={{ fontWeight: 700, color: riskColor(newL * newC) }}>{t('RPN: {{rpn}}', { rpn: newL * newC })}</span>
           </div>
           <div style={{ display: 'flex', gap: '0.3rem' }}>
             <input value={newMit} onChange={e => setNewMit(e.target.value)} placeholder={t('Mitigation action')}
-              style={{ flex: 1, padding: '0.2rem 0.3rem', fontSize: '0.65rem', borderRadius: '3px', background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)' }} />
+              style={{ flex: 1, padding: '0.2rem 0.3rem', fontSize: fs.label, borderRadius: '3px', background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)' }} />
             <input value={newOwner} onChange={e => setNewOwner(e.target.value)} placeholder={t('Owner')}
-              style={{ width: 80, padding: '0.2rem 0.3rem', fontSize: '0.65rem', borderRadius: '3px', background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)' }} />
+              style={{ width: 80, padding: '0.2rem 0.3rem', fontSize: fs.label, borderRadius: '3px', background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)' }} />
           </div>
           <div style={{ display: 'flex', gap: '0.3rem' }}>
-            <button onClick={addRisk} disabled={!newDesc} style={{ padding: '0.2rem 0.5rem', fontSize: '0.65rem', fontWeight: 600, borderRadius: '3px', background: 'var(--danger)', color: 'white', border: 'none', cursor: 'pointer' }}>{t('Add Risk')}</button>
-            <button onClick={() => setShowAdd(false)} style={{ padding: '0.2rem 0.5rem', fontSize: '0.65rem', borderRadius: '3px', background: 'var(--bg-secondary)', color: 'var(--text-secondary)', border: 'none', cursor: 'pointer' }}>{t('Cancel')}</button>
+            <button onClick={addRisk} disabled={!newDesc} style={{ padding: '0.2rem 0.5rem', fontSize: fs.label, fontWeight: 600, borderRadius: '3px', background: 'var(--danger)', color: 'white', border: 'none', cursor: 'pointer' }}>{t('Add Risk')}</button>
+            <button onClick={() => setShowAdd(false)} style={{ padding: '0.2rem 0.5rem', fontSize: fs.label, borderRadius: '3px', background: 'var(--bg-secondary)', color: 'var(--text-secondary)', border: 'none', cursor: 'pointer' }}>{t('Cancel')}</button>
           </div>
         </div>
       ) : (
-        <button onClick={() => setShowAdd(true)} style={{ padding: '0.3rem 0.6rem', fontSize: '0.68rem', fontWeight: 600, borderRadius: '4px', background: 'var(--danger)', color: 'white', border: 'none', cursor: 'pointer' }}>
+        <button onClick={() => setShowAdd(true)} style={{ padding: '0.3rem 0.6rem', fontSize: fs.label, fontWeight: 600, borderRadius: '4px', background: 'var(--danger)', color: 'white', border: 'none', cursor: 'pointer' }}>
           {t('+ Add Risk')}
         </button>
       )}
@@ -694,12 +745,12 @@ function BOMSection({ elements }: { elements: any[] }) {
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.4rem' }}>
-        <h3 style={{ fontSize: '0.85rem', margin: 0 }}>{t('Bill of Materials')}</h3>
-        <span style={{ fontSize: '0.68rem', color: 'var(--text-secondary)' }}>{t('{{count}} components', { count: components.length })}</span>
+        <h3 style={{ fontSize: fs.body, margin: 0 }}>{t('Bill of Materials')}</h3>
+        <span style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>{t('{{count}} components', { count: components.length })}</span>
         <span style={{ flex: 1 }} />
         <button onClick={exportCSV} style={{
-          padding: '0.2rem 0.5rem', fontSize: '0.65rem', fontWeight: 600, borderRadius: '3px',
-          background: '#06b6d4', color: 'white', border: 'none', cursor: 'pointer',
+          padding: '0.2rem 0.5rem', fontSize: fs.label, fontWeight: 600, borderRadius: '3px',
+          background: 'var(--interactive)', color: 'white', border: 'none', cursor: 'pointer',
         }}>{t('Export CSV')}</button>
       </div>
 
@@ -707,7 +758,7 @@ function BOMSection({ elements }: { elements: any[] }) {
       <div style={{
         display: 'flex', gap: '1rem', padding: '0.35rem 0.5rem', marginBottom: '0.5rem',
         background: 'rgba(6,182,212,0.06)', borderRadius: '4px', border: '1px solid rgba(6,182,212,0.15)',
-        fontSize: '0.72rem',
+        fontSize: fs.label,
       }}>
         <span>{t('Mass:')} <b style={{ fontFamily: 'monospace' }}>{totals.mass.toFixed(2)} kg</b></span>
         <span>{t('Power:')} <b style={{ fontFamily: 'monospace' }}>{totals.power.toFixed(1)} W</b></span>
@@ -715,11 +766,11 @@ function BOMSection({ elements }: { elements: any[] }) {
       </div>
 
       {components.length === 0 ? (
-        <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', padding: '1rem 0' }}>
+        <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', padding: '1rem 0' }}>
           {t('No components in the element tree yet. Run a design and select equipment to populate the BOM.')}
         </div>
       ) : (
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.72rem' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs.label }}>
           <thead>
             <tr style={{ borderBottom: '1px solid var(--border)' }}>
               <th style={thL}>{t('Name')}</th><th style={thL}>{t('Subsystem')}</th>
@@ -737,10 +788,10 @@ function BOMSection({ elements }: { elements: any[] }) {
                 payload: 'Payload', ground_rf: 'Ground RF', ground_ops: 'Ground Ops',
               }
               return (
-                <tr key={c.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                <tr key={c.id} style={{ borderBottom: '1px solid color-mix(in srgb, var(--text) 3%, transparent)' }}>
                   <td style={{ padding: '0.2rem 0.4rem', fontWeight: 500 }}>{c.name}</td>
                   <td style={{ padding: '0.2rem 0.4rem' }}>
-                    <span style={{ fontSize: '0.55rem', padding: '0.05rem 0.2rem', borderRadius: '2px', background: 'rgba(6,182,212,0.1)', color: '#06b6d4', textTransform: 'uppercase' }}>
+                    <span style={{ fontSize: fs.label, padding: '0.05rem 0.2rem', borderRadius: '2px', background: 'rgba(6,182,212,0.1)', color: 'var(--interactive)', textTransform: 'uppercase' }}>
                       {DOMAIN_LABELS[c.subsystem_domain] ? t(DOMAIN_LABELS[c.subsystem_domain]) : (c.subsystem_domain || '—')}
                     </span>
                   </td>
@@ -752,11 +803,11 @@ function BOMSection({ elements }: { elements: any[] }) {
                       {c.trl || '?'}
                     </span>
                   </td>
-                  <td style={{ padding: '0.2rem 0.4rem', fontSize: '0.65rem', color: 'var(--text-secondary)' }}>{c.manufacturer || '—'}</td>
+                  <td style={{ padding: '0.2rem 0.4rem', fontSize: fs.label, color: 'var(--text-secondary)' }}>{c.manufacturer || '—'}</td>
                   <td style={{ padding: '0.2rem 0.4rem', textAlign: 'center', color: qty > 1 ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
                     {qty > 1 ? `x${qty}` : qty}
                   </td>
-                  <td style={{ padding: '0.2rem 0.4rem', fontFamily: 'monospace', fontSize: '0.6rem', color: 'var(--text-secondary)' }}>
+                  <td style={{ padding: '0.2rem 0.4rem', fontFamily: 'monospace', fontSize: fs.label, color: 'var(--text-secondary)' }}>
                     {c.kb_component_id ? c.kb_component_id.slice(0, 12) : '—'}
                   </td>
                 </tr>
@@ -785,10 +836,10 @@ const MATURITY_LABEL: Record<string, string> = {
   parametric: 'Parametric', catalogue: 'Catalogue', specified: 'Specified', verified: 'Verified',
 }
 const MATURITY_BADGE: Record<string, { label: string; color: string; bg: string }> = {
-  parametric: { label: MATURITY_LABEL.parametric, color: '#f97316', bg: 'rgba(249,115,22,0.15)' },
-  catalogue:  { label: MATURITY_LABEL.catalogue,  color: '#3b82f6', bg: 'rgba(59,130,246,0.15)' },
-  specified:  { label: MATURITY_LABEL.specified,  color: '#10b981', bg: 'rgba(16,185,129,0.15)' },
-  verified:   { label: MATURITY_LABEL.verified,   color: '#059669', bg: 'rgba(5,150,105,0.15)' },
+  parametric: { label: MATURITY_LABEL.parametric, color: 'var(--status-caution)', bg: 'rgba(249,115,22,0.15)' },
+  catalogue:  { label: MATURITY_LABEL.catalogue,  color: 'var(--interactive)', bg: 'rgba(59,130,246,0.15)' },
+  specified:  { label: MATURITY_LABEL.specified,  color: 'var(--status-ok)', bg: 'rgba(16,185,129,0.15)' },
+  verified:   { label: MATURITY_LABEL.verified,   color: 'var(--status-ok)', bg: 'rgba(5,150,105,0.15)' },
 }
 
 function MaturitySection({ elements }: { elements: any[] }) {
@@ -841,13 +892,13 @@ function MaturitySection({ elements }: { elements: any[] }) {
 
   return (
     <div>
-      <h3 style={{ fontSize: '0.85rem', marginBottom: '0.3rem' }}>{t('Design Maturity by Subsystem')}</h3>
-      <p style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
+      <h3 style={{ fontSize: fs.body, marginBottom: '0.3rem' }}>{t('Design Maturity by Subsystem')}</h3>
+      <p style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
         {t('Maturity is determined from component data completeness within each subsystem domain.')}
       </p>
 
       {subsystems.length === 0 ? (
-        <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', padding: '1rem 0' }}>
+        <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', padding: '1rem 0' }}>
           {t('No components in the element tree yet. Run a design and select equipment to see maturity.')}
         </div>
       ) : (
@@ -859,15 +910,15 @@ function MaturitySection({ elements }: { elements: any[] }) {
               return (
                 <div key={ss.domain} style={{
                   padding: '0.5rem 0.6rem', borderRadius: '6px',
-                  background: 'var(--bg-card)', border: `1px solid ${badge.color}30`,
+                  background: 'var(--bg-card)', border: `1px solid color-mix(in srgb, ${badge.color} 19%, transparent)`,
                   display: 'flex', flexDirection: 'column', gap: '0.25rem',
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span style={{ fontSize: '0.78rem', fontWeight: 600 }}>{t(ss.label)}</span>
-                    <span style={{ fontSize: '0.55rem', color: 'var(--text-secondary)' }}>{t('{{n}} comp.', { n: ss.components })}</span>
+                    <span style={{ fontSize: fs.label, fontWeight: 600 }}>{t(ss.label)}</span>
+                    <span style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>{t('{{n}} comp.', { n: ss.components })}</span>
                   </div>
                   <span style={{
-                    fontSize: '0.62rem', fontWeight: 600, padding: '0.1rem 0.35rem', borderRadius: '3px',
+                    fontSize: fs.label, fontWeight: 600, padding: '0.1rem 0.35rem', borderRadius: '3px',
                     background: badge.bg, color: badge.color, alignSelf: 'flex-start',
                   }}>
                     {t(badge.label)}
@@ -878,7 +929,7 @@ function MaturitySection({ elements }: { elements: any[] }) {
           </div>
 
           {/* Legend */}
-          <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.62rem', color: 'var(--text-secondary)', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '0.75rem', fontSize: fs.label, color: 'var(--text-secondary)', flexWrap: 'wrap' }}>
             {maturityOrder.map(level => {
               const badge = MATURITY_BADGE[level]
               return (
@@ -897,17 +948,9 @@ function MaturitySection({ elements }: { elements: any[] }) {
 
 // ─── Helpers ───
 
-function getDepth(el: any, allElements: any[]): number {
-  let depth = 0, current = el
-  while (current.parent_id) {
-    depth++
-    current = allElements.find((e: any) => e.id === current.parent_id)
-    if (!current) break
-  }
-  return depth
-}
 
-const thL: React.CSSProperties = { textAlign: 'left', padding: '0.2rem 0.4rem', color: 'var(--text-secondary)', fontWeight: 500, fontSize: '0.6rem', textTransform: 'uppercase' }
+const thL: React.CSSProperties = { textAlign: 'left', padding: '6px 8px', color: 'var(--text-2)', fontWeight: 600, fontSize: fs.label }
 const thR: React.CSSProperties = { ...thL, textAlign: 'right' }
 const thC: React.CSSProperties = { ...thL, textAlign: 'center' }
-const tdR: React.CSSProperties = { padding: '0.2rem 0.4rem', textAlign: 'right' }
+const tdR: React.CSSProperties = { padding: '6px 8px', textAlign: 'right' }
+const tdVal: React.CSSProperties = { fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums', fontSize: fs.value, color: 'var(--text-value)' }

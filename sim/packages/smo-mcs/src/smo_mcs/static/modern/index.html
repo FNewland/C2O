@@ -171,6 +171,8 @@ svg.sc{width:100%;display:block;max-height:min(46vh,500px);margin:0 auto}
 #bottom-drawer .bd-tabs button{font-size:12px;letter-spacing:.6px;color:var(--tx3);
   padding:2px 10px;border-radius:4px 4px 0 0}
 #bottom-drawer .bd-tabs button[aria-selected="true"]{color:var(--tx);background:var(--s3)}
+#bottom-drawer .bd-tablist{display:flex;align-items:center;gap:2px}
+.rail-tabs{display:flex;flex-direction:column;align-items:center;gap:4px}
 #bottom-drawer .bd-body{height:168px;overflow:hidden;display:none}
 #bottom-drawer.open .bd-body{display:block}
 .bd-pane{height:100%;overflow-y:auto;padding:4px 10px;font-size:12.5px}
@@ -217,13 +219,6 @@ svg.sc{width:100%;display:block;max-height:min(46vh,500px);margin:0 auto}
   max-width:860px;width:92%;max-height:86vh;overflow-y:auto;padding:18px 22px}
 .dlg h2{font-size:14px;letter-spacing:1px;text-transform:uppercase;color:var(--tx2);margin-bottom:10px}
 
-/* guided-mode annotations */
-.guided-note{display:none;border-left:3px solid var(--info);background:var(--info-wash);
-  padding:7px 10px;font-size:12.5px;color:var(--tx2);margin:6px 0;border-radius:0 6px 6px 0}
-.guided-note b.n{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;
-  border:1px solid var(--info);color:var(--info);font-size:11px;margin-right:7px}
-:root[data-guided="1"] .guided-note{display:block}
-
 @media(max-width:1280px){.sa{grid-template-columns:repeat(2,1fr)}}
 /* Compact header ≤1500px (Agent 5 screenshot fix): keeps the top row on a
    single 58 px line at 1366 px instead of wrapping to two. */
@@ -246,6 +241,70 @@ svg.sc{width:100%;display:block;max-height:min(46vh,500px);margin:0 auto}
 .man-toc-item{ padding:2px 0; }
 .man-toc-item a{ color:var(--info); text-decoration:none; }
 .man-toc-item a:hover{ text-decoration:underline; }
+
+/* ── Value states (UI brief §1.3, R3 A4) ──────────────────────────────────
+   live: plain. stale: the LAST value kept, dimmed + italic, age chip, and
+   the hatch on the value cell only. no data: a distinct label, never an
+   em-dash on a hatch. One treatment for triads, tables and schematics. */
+.vc{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.vc u{text-decoration:none;color:var(--tx3);font-size:12px}
+.vc.stale,.vc.disabled{color:var(--tx3);font-style:italic;background:var(--hatch);padding:0 4px;border-radius:2px}
+.vc.nodata,.ds-param .vc.nodata{font-family:var(--sans);font-style:normal;font-size:12px;font-weight:500;
+  color:var(--tx3);border:1px dashed var(--line-2);border-radius:2px;padding:0 5px;letter-spacing:.2px}
+.ds-param.held,.ds-param.nodata{background:none;box-shadow:none}
+.ds-param.held .vl{color:var(--tx3);font-style:italic;font-weight:500;background:var(--hatch);
+  padding:0 4px;border-radius:2px}
+.ds-param.held .ds-devbar{opacity:.45}
+.ds-param.nodata .vl{font-size:12px}
+.ds-param .vl .ds-age{font-style:normal;margin-left:6px}
+.sc [data-param].held .vl{fill:var(--tx3);font-style:italic}
+.sc [data-param].nodata .vl{fill:var(--tx3);font-family:var(--sans)}
+#linklimit-banner{border-left:3px solid var(--stale)}
+
+/* Small readout tables and notes on L2 cards (Mag/MTQ, GPS, OBDH software) */
+.hexid{color:var(--tx3);font-size:12px}
+td.num{text-align:right}
+.v-warn{color:var(--warn)} .v-alarm{color:var(--alarm);font-weight:700}
+p.note{font-size:12px;color:var(--tx3);margin:0 0 6px;line-height:1.45}
+p.note.warn{color:var(--warn)} p.note.bad{color:var(--alarm)}
+
+/* ── Alarm row (R3 A3): [P#] PARAM value unit ▲ limit ×N / time · age ·
+   procedure, actions on their own grid cell so wrapped text never runs
+   under the ACK button. */
+.ds-alarm-row.mcs-al{display:grid;grid-template-columns:34px minmax(0,1fr) auto;
+  grid-template-areas:"pri fact act" "pri meta act";gap:2px 10px;align-items:start;
+  padding:8px 12px;border-bottom:1px solid var(--line)}
+.mcs-al .pri{grid-area:pri;text-align:center;align-self:start;margin-top:1px}
+.mcs-al .fact{grid-area:fact;font-size:13px;min-width:0;overflow-wrap:anywhere;line-height:1.35}
+.mcs-al .pn{color:var(--tx);font-weight:600}
+.mcs-al .pv{color:var(--val);font-weight:600;margin-left:4px}
+.mcs-al .lim{color:var(--tx2);margin-left:6px;white-space:nowrap}
+.mcs-al .lim small{font-family:var(--sans);font-size:12px;color:var(--tx3)}
+.mcs-al.p1 .lim,.mcs-al.p2 .lim{color:var(--alarm)}
+.mcs-al.p3 .lim{color:var(--warn)}
+.mcs-al .why{display:block;font-size:12px;color:var(--tx3);font-weight:400}
+.mcs-al .rep{margin-left:8px;font-size:12px;font-weight:700;color:var(--tx2);
+  border:1px solid var(--line-2);border-radius:2px;padding:0 4px}
+.mcs-al .meta{grid-area:meta;font-size:12px;color:var(--tx3);min-width:0}
+.mcs-al .meta .proc{color:var(--info);text-decoration:none}
+.mcs-al .meta .proc:hover,.mcs-al .meta .proc:focus-visible{text-decoration:underline}
+.mcs-al .act{grid-area:act;display:flex;gap:6px;align-items:center;align-self:center}
+.mcs-al .ackd{font-size:12px;color:var(--tx3)}
+.mcs-al.acked{opacity:1}
+.mcs-al.acked .fact,.mcs-al.acked .pri{opacity:.7}
+.mcs-al.rtn .pv{color:var(--tx2)}
+
+/* ── Enabled / disabled controls (UI brief §1.3, R3 A5) ── */
+.ds-btn[disabled],.ds-btn[aria-disabled="true"]{opacity:.4;cursor:not-allowed}
+.ds-btn[disabled]:hover,.ds-btn[aria-disabled="true"]:hover{background:none}
+.why-off{font-size:12px;color:var(--tx3);margin-top:6px;min-height:1.4em}
+.ctl-grp{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.ctl-grp .ds-btn.primary:not([disabled]){border-color:var(--info);color:var(--info)}
+/* Links inside running text are underlined, not colour-only (WCAG 1.4.1) */
+p.sub a,p.note a{text-decoration:underline;text-underline-offset:2px}
+/* Checkbox targets >= 24 px (WCAG 2.5.8) */
+label>input[type="checkbox"]{width:16px;height:16px;margin:4px 6px 4px 0;vertical-align:middle}
+label:has(>input[type="checkbox"]){display:inline-flex;align-items:center;min-height:24px}
 </style>
 </head>
 <body>
@@ -265,8 +324,6 @@ svg.sc{width:100%;display:block;max-height:min(46vh,500px);margin:0 auto}
       <span class="n" id="alarm-unack-n">0</span> ALARMS</button>
     <a class="ibtn" href="/dumps" target="_blank" rel="noopener" data-i18n>DELAYED&nbsp;TM</a>
     <a class="ibtn" href="/reports" target="_blank" rel="noopener" data-i18n>REPORTS</a>
-    <button class="ibtn" id="guided-btn" aria-pressed="false" data-i18n data-i18n-title
-      title="Guided teaching mode: numbered annotations explaining each display">GUIDED</button>
     <button class="ibtn" id="grey-btn" aria-pressed="false" data-i18n data-i18n-title
       title="Greyscale check: the console must stay operable without colour (P6)">GREY</button>
     <button class="ibtn" id="theme-btn" aria-pressed="false" data-i18n data-i18n-title title="Light/dark theme">THEME</button>
@@ -275,6 +332,7 @@ svg.sc{width:100%;display:block;max-height:min(46vh,500px);margin:0 auto}
     <span id="ws-dot" role="img" data-i18n-aria-label aria-label="server link"></span>
   </div>
   <div id="contingency-banner" class="ds-banner alarm hide" role="alert"></div>
+  <div id="linklimit-banner" class="ds-banner stale hide" role="status"></div>
   <div class="sa" id="sa-strip">
     <div class="sacard" id="sa-see"><div class="q" data-i18n>Can I see it?</div><span class="sadot" id="sa-see-dot"></span>
       <div class="a"><b id="sa-see-v">—</b><span id="sa-see-s"><span data-i18n>no telemetry yet</span></span></div></div>
@@ -297,13 +355,15 @@ svg.sc{width:100%;display:block;max-height:min(46vh,500px);margin:0 auto}
 
 <!-- collapsible bottom drawer: EVENTS / TM PACKETS / CMD HISTORY / HANDOVER / GO-NOGO -->
 <div id="bottom-drawer" role="region" data-i18n-aria-label aria-label="Console log drawer">
-  <div class="bd-tabs" role="tablist" id="bd-tabs">
+  <div class="bd-tabs" id="bd-tabs">
+    <div class="bd-tablist" role="tablist" aria-label="Log drawer" data-i18n-aria-label>
     <button role="tab" data-bd="events" aria-selected="true" data-i18n>EVENTS</button>
     <button role="tab" data-bd="tm" aria-selected="false" data-i18n>TM PACKETS</button>
     <button role="tab" data-bd="cmdhist" aria-selected="false" data-i18n>CMD HISTORY</button>
     <button role="tab" data-bd="conlog" aria-selected="false" data-i18n>LOG</button>
     <button role="tab" data-bd="handover" aria-selected="false" data-i18n>HANDOVER</button>
     <button role="tab" data-bd="gonogo" aria-selected="false" id="bd-tab-gonogo">GO/NO-GO</button>
+    </div>
     <span class="grow" style="flex:1"></span>
     <select id="evt-sev-filter" class="in" style="padding:0 4px;font-size:12px" data-i18n-aria-label aria-label="Event severity filter">
       <option value="all" data-i18n>All</option><option value="info" data-i18n>Info</option><option value="nom" data-i18n>Nominal</option>
@@ -319,7 +379,6 @@ svg.sc{width:100%;display:block;max-height:min(46vh,500px);margin:0 auto}
     <!-- G8: console/mission log — the merged decision record (server
          auto-entries + operator notes/marks), filterable by kind -->
     <div class="bd-pane hide" id="bdp-conlog" role="tabpanel">
-      <div class="guided-note" data-ann="drawer.conlog"></div>
       <div class="row" style="margin:4px 0">
         <select id="conlog-kind" class="in" data-i18n-aria-label aria-label="Console log kind filter" style="font-size:12px">
           <option value="all" data-i18n>All kinds</option><option value="tc">TC</option>
@@ -342,7 +401,6 @@ svg.sc{width:100%;display:block;max-height:min(46vh,500px);margin:0 auto}
       <div id="handover-list"></div>
     </div>
     <div class="bd-pane hide" id="bdp-gonogo" role="tabpanel">
-      <div class="guided-note" data-ann="gonogo.matrix"></div>
       <div class="row" style="margin:4px 0">
         <input id="gonogo-label" class="in" data-i18n-placeholder placeholder="Poll label (e.g. BURN GO/NO-GO)">
         <button class="ds-btn" id="gonogo-start" data-i18n>START POLL</button>
@@ -374,8 +432,7 @@ svg.sc{width:100%;display:block;max-height:min(46vh,500px);margin:0 auto}
     <a class="ibtn" href="/dumps" target="_blank" rel="noopener" data-i18n>ARCHIVE</a>
     <button class="ds-btn" id="alarm-close" data-i18n-aria-label aria-label="Close alarm drawer">✕</button>
   </div>
-  <div class="guided-note" data-ann="alarms.first-out" style="margin:6px 12px"></div>
-  <div id="alarm-list" role="table" data-i18n-aria-label aria-label="Alarm rows"></div>
+  <div id="alarm-list" role="group" data-i18n-aria-label aria-label="Alarm rows"></div>
   <div class="ft" data-i18n-html>Blink is reserved for unacknowledged P1 and stops on acknowledgement.
     <kbd class="ds-kbd">a</kbd> open · <kbd class="ds-kbd">k</kbd> ack first · click ⛓ for the causal chain.</div>
 </aside>
@@ -402,11 +459,6 @@ svg.sc{width:100%;display:block;max-height:min(46vh,500px);margin:0 auto}
         <tr><td><kbd class="ds-kbd">k</kbd></td><td data-i18n>acknowledge the first unacknowledged alarm</td></tr>
         <tr><td><kbd class="ds-kbd">?</kbd></td><td data-i18n>this dialog</td></tr>
       </table>
-      <p style="margin-top:12px;font-size:13px" data-i18n-html>
-        Why does the console look like this? Read
-        <a href="/static/modern/why-this-design.html" target="_blank" rel="noopener">why-this-design</a>
-        — the teaching notes behind the grey-is-nominal rule, the four-question header,
-        the alarm model and the causal chain.</p>
     </div>
   </div>
 </div>

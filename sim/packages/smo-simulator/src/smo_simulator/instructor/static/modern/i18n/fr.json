@@ -181,5 +181,7 @@
   "BASIC": "BASIQUE",
   "BEGINNER": "DÉBUTANT",
   "INTERMEDIATE": "INTERMÉDIAIRE",
-  "Refused: {{reason}}": "Refusé : {{reason}}"
+  "Refused: {{reason}}": "Refusé : {{reason}}",
+  "Scenario list": "Liste des scénarios",
+  "Saved breakpoints": "Points de reprise enregistrés"
 }

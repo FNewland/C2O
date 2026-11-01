@@ -270,5 +270,7 @@
  "unavailable": "indisponible",
  "connected": "connectée",
  "degraded": "dégradée",
- "STALE": "PÉRIMÉ"
+ "STALE": "PÉRIMÉ",
+ "Schedule {{target}} at {{t}}Z": "Planifier {{target}} à {{t}}Z",
+ "Standard activity template": "Modèle d'activité type"
 }

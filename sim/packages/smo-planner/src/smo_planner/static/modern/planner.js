@@ -1295,6 +1295,11 @@ function renderImagingOpps() {
       + "</div>"
       + "<button class=\"ds-btn\" style=\"margin-top:4px\" data-act=\"schedule-imaging\""
       + " data-target=\"" + esc(opp.target_id) + "\" data-start=\"" + esc(captureUtc)
+      // Seven buttons all named "SCHEDULE" are indistinguishable to a screen
+      // reader (R3 audit A6): the accessible name says which opportunity.
+      + "\" aria-label=\"" + t("Schedule {{target}} at {{t}}Z", {
+        target: opp.target_id ? tdb("target:" + opp.target_id + ":name", opp.target_name)
+          : opp.target_name, t: fmtUTC(captureUtc) })
       + "\">" + t("SCHEDULE") + "</button></div>";
   }).join("");
 }

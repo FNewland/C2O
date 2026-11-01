@@ -183,6 +183,23 @@ class TTCState:
     _uplink_timeout_counter: float = 0.0
     uplink_timeout_threshold: float = 300.0  # 5 minutes default
 
+    # ── On-board command-loss timer (FDIR TTC-01, S19 ea 4003) ──
+    # Seconds since the OBC last ACCEPTED a telecommand (S1.1). The OBC's own
+    # accepted-TC counter (0x0305 obdh.tc_acc_count) is the evidence: every
+    # increment restarts the timer. Published as 0x053D ttc.time_since_last_tc.
+    # When it crosses ttc.yaml `cmd_loss_switch_timeout_s` (24 h) the model
+    # raises event 0x0514 CMD_LOSS_TIMEOUT once per loss episode.
+    time_since_last_tc_s: float = 0.0
+    _last_tc_acc_count: float = -1.0
+    _cmd_loss_fired: bool = False
+
+    # ── Uplink lock dropout (S19 ea 4001) ──
+    # What a receiver can really see of a weak uplink: carrier lock lost and
+    # regained a short time later. A normal LOS is followed by minutes to
+    # hours without lock, so it never qualifies; a fade mid-pass does.
+    # Seconds since carrier lock was last lost (-1 = locked / never lost).
+    _lock_lost_age_s: float = -1.0
+
     # ── Transponder switch tracking ──
     _prev_mode: int = 0
 
@@ -252,6 +269,7 @@ class TTCBasicModel(SubsystemModel):
         self._gt_derate_10 = 1.5
         self._gt_derate_30 = 0.5
         self._required_eb_n0 = 9.6
+        self._cmd_loss_timeout_s = 86400.0
         self._applied_tier: int | None = None
         self._pa_max_power_w = 5.0
         self._pa_low_power_w = 1.0
@@ -294,6 +312,11 @@ class TTCBasicModel(SubsystemModel):
     # 1 kbps uplink triples it, the 64 kbps software-upload rate speeds it up.
     # These used to be written against the TM ladder's lo/hi rates, which is
     # wrong now the uplink no longer inherits from the TM ladder.
+    # A carrier-lock loss followed by re-lock within this many seconds is an
+    # uplink DROPOUT (event 0x0513, S19 ea 4001), not a LOS. Passes are
+    # separated by tens of minutes, so a LOS never qualifies.
+    UPLINK_DROPOUT_WINDOW_S = 60.0
+
     TC_SLOW_LOCK_RATE_BPS = 1000
     TC_FAST_LOCK_RATE_BPS = 64000
 
@@ -751,6 +774,9 @@ class TTCBasicModel(SubsystemModel):
         self._gt_derate_10 = float(config.get("gt_derate_below_10deg_db", 1.5))
         self._gt_derate_30 = float(config.get("gt_derate_below_30deg_db", 0.5))
         self._required_eb_n0 = float(config.get("required_eb_n0_db", 9.6))
+        # FDIR TTC-01 command-loss timer (author ruling Q7: 24 h).
+        self._cmd_loss_timeout_s = float(
+            config.get("cmd_loss_switch_timeout_s", 86400.0) or 86400.0)
         self._pa_max_power_w = config.get("pa_max_power_w", 5.0)
         self._pa_low_power_w = config.get("pa_low_power_w", 1.0)
         self._pa_nominal_power_w = config.get("pa_nominal_power_w", 2.0)
@@ -1038,6 +1064,22 @@ class TTCBasicModel(SubsystemModel):
         else:
             s._uplink_timeout_counter += dt
 
+        # ── Command-loss timer (time since the last ACCEPTED telecommand) ──
+        # The OBC's accepted-TC counter (0x0305) is the on-board evidence. Any
+        # increase restarts the timer; a drop (OBC reboot zeroes the counter)
+        # only resynchronises the reference.
+        tc_acc = shared_params.get(0x0305)
+        if tc_acc is not None:
+            tc_acc = float(tc_acc)
+            if s._last_tc_acc_count >= 0.0 and tc_acc > s._last_tc_acc_count:
+                s.time_since_last_tc_s = 0.0
+                s._cmd_loss_fired = False
+            else:
+                s.time_since_last_tc_s += dt
+            s._last_tc_acc_count = tc_acc
+        else:
+            s.time_since_last_tc_s += dt
+
         # ── Dedicated command channel timer ──
         if s.cmd_channel_active:
             s.cmd_decode_timer -= dt
@@ -1206,6 +1248,9 @@ class TTCBasicModel(SubsystemModel):
             s.bit_sync = False
             s.frame_sync = False
             s._lock_timer = 0.0
+        # Age of the current loss of carrier lock (uplink dropout, 0x0513).
+        if s._lock_lost_age_s >= 0.0:
+            s._lock_lost_age_s += dt
 
         # ── Link budget (downlink: spacecraft → ground station) ──
         # Requires TX PA operational AND uplink locked (frame_sync).
@@ -1468,6 +1513,8 @@ class TTCBasicModel(SubsystemModel):
         shared_params[0x0520] = 1.0 if s.antenna_deployed else 0.0
         shared_params[0x0521] = 1.0 if s.beacon_mode else 0.0
         shared_params[0x0522] = s.cmd_decode_timer
+        # On-board command-loss timer (FDIR TTC-01).
+        shared_params[0x053D] = s.time_since_last_tc_s
         # DEFECT FIX #4 (ttc.md): Antenna deployment sensor telemetry
         shared_params[0x0535] = 1.0 if s.antenna_deployment_ready else 0.0
         shared_params[0x0536] = float(s.antenna_deployment_sensor)
@@ -1556,6 +1603,23 @@ class TTCBasicModel(SubsystemModel):
         # stayed False forever, so every "acquired" event re-fired on EVERY tick
         # while locked (and the matching "lost" events could never fire). This is
         # the only place these flags are written.
+        # ── Uplink lock dropout (0x0513) ──
+        # Carrier lock lost, then regained within UPLINK_DROPOUT_WINDOW_S:
+        # the on-board signature of a marginal uplink. The age is advanced by
+        # tick() (see _advance_lock_lost_age).
+        if not s.carrier_lock and s._prev_carrier_lock:
+            s._lock_lost_age_s = 0.0
+        elif s.carrier_lock and not s._prev_carrier_lock:
+            if 0.0 <= s._lock_lost_age_s <= self.UPLINK_DROPOUT_WINDOW_S:
+                events.append({
+                    'event_id': 0x0513,
+                    'severity': 'MEDIUM',
+                    'description': (
+                        f"Uplink lock dropout: carrier lock regained "
+                        f"{s._lock_lost_age_s:.0f} s after it was lost"),
+                })
+            s._lock_lost_age_s = -1.0
+
         s._prev_carrier_lock = s.carrier_lock
         s._prev_bit_sync = s.bit_sync
         s._prev_frame_sync = s.frame_sync
@@ -1684,6 +1748,18 @@ class TTCBasicModel(SubsystemModel):
                 'description': f"Uplink timeout: no valid TC for {s.uplink_timeout_threshold}s"
             })
         self._prev_uplink_timeout = uplink_timeout
+
+        # ── Command-loss timeout (0x0514, FDIR TTC-01) ──
+        if (s.time_since_last_tc_s >= self._cmd_loss_timeout_s
+                and not s._cmd_loss_fired):
+            events.append({
+                'event_id': 0x0514,
+                'severity': 'HIGH',
+                'description': (
+                    f"Command-loss timer expired: no valid telecommand for "
+                    f"{self._cmd_loss_timeout_s / 3600.0:.0f} h"),
+            })
+            s._cmd_loss_fired = True
 
         # ── Emit events to shared store and engine event queue ──
         for evt in events:

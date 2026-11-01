@@ -7,6 +7,7 @@
 import { useState, useEffect } from 'react'
 import { useDesignStore } from '../stores/designStore'
 import { useApplyToDesign } from '../hooks/useApplyToDesign'
+import { fs } from '../theme/tokens'
 
 interface FreqBand {
   name: string; band: string; freq_min_mhz: number; freq_max_mhz: number
@@ -40,7 +41,6 @@ export function SpectrumSelector() {
   }, [missionType, licenseType, dataRate])
 
   const setParam = useDesignStore(s => s.setParameter)
-  const setRfBand = useDesignStore(s => (s as any).setRfBand)
   const handleSelectBand = (bandName: string) => {
     setSelectedBand(bandName)
     // Store in designStore so EquipmentBrowser can filter
@@ -71,13 +71,13 @@ export function SpectrumSelector() {
   })
 
   const BAND_COLORS: Record<string, string> = {
-    VHF: '#10b981', UHF: '#3b82f6', S: '#f59e0b', X: '#ec4899', Ka: '#8b5cf6', L: '#f97316',
+    VHF: 'var(--status-ok)', UHF: 'var(--interactive)', S: 'var(--status-caution)', X: 'var(--cat-6)', Ka: 'var(--cat-2)', L: 'var(--status-caution)',
   }
 
   return (
     <div className="card">
-      <h3 style={{ fontSize: '0.9rem', marginBottom: '0.3rem' }}>Frequency & Licensing</h3>
-      <p style={{ fontSize: '0.72rem', color: '#9ca3af', marginBottom: '0.5rem' }}>
+      <h3 style={{ fontSize: fs.value, marginBottom: '0.3rem' }}>Frequency & Licensing</h3>
+      <p style={{ fontSize: fs.label, color: 'var(--text-2)', marginBottom: '0.5rem' }}>
         License type constrains which frequency bands and equipment are available.
       </p>
 
@@ -87,17 +87,17 @@ export function SpectrumSelector() {
           <button key={opt.id} onClick={() => { setLicenseType(opt.id); setParam('spectrum.license_type', opt.id, 'spectrum-selector') }}
             title={opt.description}
             style={{
-              padding: '0.25rem 0.6rem', fontSize: '0.72rem', borderRadius: '4px', cursor: 'pointer',
-              background: licenseType === opt.id ? '#3b82f6' : 'var(--bg-primary, #0a0e1a)',
-              color: licenseType === opt.id ? 'white' : '#9ca3af',
-              border: `1px solid ${licenseType === opt.id ? '#3b82f6' : '#374151'}`,
+              padding: '0.25rem 0.6rem', fontSize: fs.label, borderRadius: '4px', cursor: 'pointer',
+              background: licenseType === opt.id ? 'var(--interactive)' : 'var(--bg-primary, var(--surface-0))',
+              color: licenseType === opt.id ? 'white' : 'var(--text-2)',
+              border: `1px solid ${licenseType === opt.id ? 'var(--interactive)' : 'var(--line)'}`,
             }}>{opt.label}</button>
         ))}
       </div>
 
       {/* Available bands */}
       {loading ? (
-        <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>Loading bands...</div>
+        <div style={{ fontSize: fs.label, color: 'var(--text-3)' }}>Loading bands...</div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
           {bands.map(b => (
@@ -105,39 +105,39 @@ export function SpectrumSelector() {
               style={{
                 display: 'flex', alignItems: 'center', gap: '0.5rem',
                 padding: '0.35rem 0.5rem', borderRadius: '4px', cursor: 'pointer',
-                background: selectedBand === b.band ? `${BAND_COLORS[b.band] || '#3b82f6'}15` : 'transparent',
-                border: `1px solid ${selectedBand === b.band ? BAND_COLORS[b.band] || '#3b82f6' : '#37415180'}`,
+                background: selectedBand === b.band ? `color-mix(in srgb, ${BAND_COLORS[b.band] || 'var(--interactive)'} 8%, transparent)` : 'transparent',
+                border: `1px solid ${selectedBand === b.band ? BAND_COLORS[b.band] || 'var(--interactive)' : 'color-mix(in srgb, var(--line) 50%, transparent)'}`,
                 opacity: b.suitable_for_data_rate ? 1 : 0.5,
               }}>
               <span style={{
                 width: 8, height: 8, borderRadius: '50%', flexShrink: 0,
-                background: BAND_COLORS[b.band] || '#6b7280',
+                background: BAND_COLORS[b.band] || 'var(--text-3)',
               }} />
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: '0.78rem', fontWeight: 500 }}>{b.name}</div>
-                <div style={{ fontSize: '0.65rem', color: '#6b7280' }}>
+                <div style={{ fontSize: fs.label, fontWeight: 500 }}>{b.name}</div>
+                <div style={{ fontSize: fs.label, color: 'var(--text-3)' }}>
                   {b.freq_min_mhz}–{b.freq_max_mhz} MHz · {b.direction} · {b.typical_data_rate}
                 </div>
               </div>
               {b.requires_itu_filing && (
-                <span style={{ fontSize: '0.6rem', color: '#f59e0b', whiteSpace: 'nowrap' }}>ITU filing</span>
+                <span style={{ fontSize: fs.label, color: 'var(--status-caution)', whiteSpace: 'nowrap' }}>ITU filing</span>
               )}
               {!b.suitable_for_data_rate && (
-                <span style={{ fontSize: '0.6rem', color: '#ef4444', whiteSpace: 'nowrap' }}>too slow</span>
+                <span style={{ fontSize: fs.label, color: 'var(--status-alarm)', whiteSpace: 'nowrap' }}>too slow</span>
               )}
               {selectedBand === b.band && (
-                <span style={{ fontSize: '0.65rem', color: '#10b981', fontWeight: 600 }}>Selected</span>
+                <span style={{ fontSize: fs.label, color: 'var(--status-ok)', fontWeight: 600 }}>Selected</span>
               )}
             </div>
           ))}
           {bands.length === 0 && (
-            <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>No bands available for this configuration.</div>
+            <div style={{ fontSize: fs.label, color: 'var(--text-3)' }}>No bands available for this configuration.</div>
           )}
         </div>
       )}
 
       <button className="btn" onClick={async () => { await apply(); setApplied(true); setTimeout(() => setApplied(false), 2000) }}
-        style={{ marginTop: '0.5rem', width: '100%', background: applied ? '#10b981' : '#3b82f6', fontSize: '0.78rem' }}>
+        style={{ marginTop: '0.5rem', width: '100%', background: applied ? 'var(--status-ok)' : 'var(--interactive)', fontSize: fs.label }}>
         {applied ? 'Applied — reconverging...' : 'Apply to Design'}
       </button>
     </div>

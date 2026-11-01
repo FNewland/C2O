@@ -33,8 +33,10 @@ L'un quelconque des cas suivants :
 **Verify:** Relever et consigner TOUS les paramètres suivants : `prop.state` (0x0B00),
 `prop.tank_pressure` (0x0B01) + tendance, `prop.propellant_mass` (0x0B02),
 `prop.tank_temp` (0x0B04), `prop.catbed_temp` (0x0B05), états des vannes
-(0x0B06/0x0B07/0x0B08), `prop.leak_rate` (0x0B16), `prop.abort_reason`
-(0x0B14).
+(0x0B06/0x0B07/0x0B08), `prop.abort_reason` (0x0B14). Il n'y a pas de capteur
+de débit de fuite à bord : une fuite se voit comme une tendance de la pression
+réservoir, donc comparer 0x0B01 aux valeurs consignées lors des passages précédents,
+corrigées de la température avec 0x0B04.
 **Évaluer :** Pression en baisse avec masse d'ergols constante = fuite du gaz
 de pressurisation ; pression et masse en baisse ensemble = fuite d'ergols ; pression en hausse
 = cause thermique (contrôler 0x0B04 et l'état des réchauffeurs).
@@ -45,7 +47,8 @@ de pressurisation ; pression et masse en baisse ensemble = fuite d'ergols ; 
 (0x0B07) = 0. Une branche qui indique 2 (défaut) ne s'est PAS fermée — elle est bloquée :
 fermer l'autre branche, noter que l'isolation est partielle et considérer les
 ergols situés en aval de la vanne bloquée comme perdus.
-**Verify:** Taux de fuite (0x0B16) et vitesse de variation de la pression 0x0B01 après isolation —
+**Verify:** la tendance de la pression réservoir 0x0B01 sur ce passage et les suivants
+après isolation, à température réservoir comparable (0x0B04) —
 une baisse qui continue signifie que la fuite se situe en amont des vannes à verrouillage (côté réservoir) :
 elle ne peut pas être isolée, seulement bornée.
 **Note:** La règle bord 8004 isole automatiquement sur un événement de fuite ; cette étape

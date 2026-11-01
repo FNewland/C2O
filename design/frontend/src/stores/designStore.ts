@@ -93,6 +93,7 @@ export interface MissionRequirements {
   design_lifetime_years: number
   target_mass_kg?: number
   target_cost_meur?: number
+  num_spacecraft?: number
   ground_stations: string[]
 }
 

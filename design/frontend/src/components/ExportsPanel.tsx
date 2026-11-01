@@ -17,6 +17,7 @@ import { useEquipmentView } from '../hooks/useEquipmentView'
 import { SEMPQuestionnaire } from './SEMPQuestionnaire'
 import { DocumentPreview } from './DocumentPreview'
 import { ExchangePanel } from './ExchangePanel'
+import { fs } from '../theme/tokens'
 
 type ExportCategory = 'ecss' | 'regulatory' | 'spectrum' | 'launch' | 'data' | 'engineering'
 
@@ -60,12 +61,12 @@ const EXPORT_ITEMS: { category: ExportCategory; id: string; name: string; endpoi
 ]
 
 const CATEGORY_LABELS: Record<ExportCategory, { name: string; color: string }> = {
-  ecss: { name: 'ECSS Documents', color: '#3b82f6' },
-  regulatory: { name: 'Regulatory Filings', color: '#f59e0b' },
-  engineering: { name: 'Engineering Outputs', color: '#8b5cf6' },
-  spectrum: { name: 'Spectrum & Licensing', color: '#ec4899' },
-  launch: { name: 'Launch', color: '#f97316' },
-  data: { name: 'Design Data', color: '#10b981' },
+  ecss: { name: 'ECSS Documents', color: 'var(--interactive)' },
+  regulatory: { name: 'Regulatory Filings', color: 'var(--status-caution)' },
+  engineering: { name: 'Engineering Outputs', color: 'var(--cat-2)' },
+  spectrum: { name: 'Spectrum & Licensing', color: 'var(--cat-6)' },
+  launch: { name: 'Launch', color: 'var(--status-caution)' },
+  data: { name: 'Design Data', color: 'var(--status-ok)' },
 }
 
 export function ExportsPanel({ studyId }: { studyId: string | null }) {
@@ -146,7 +147,7 @@ export function ExportsPanel({ studyId }: { studyId: string | null }) {
         const allElements = useModelStore.getState().elements
         body.ground_stations = Array.from(allElements.values())
           .filter(el => el.segment === 'ground' && el.element_type === 'component' && el.performance?.latitude != null)
-          .map(el => ({ name: el.name, latitude: el.performance.latitude, longitude: el.performance.longitude, bands: el.performance.bands || [] }))
+          .map(el => ({ name: el.name, latitude: el.performance!.latitude, longitude: el.performance!.longitude, bands: el.performance!.bands || [] }))
         // Payload info
         if (requirements.payloads?.[0]) {
           body.payload = {
@@ -196,26 +197,26 @@ export function ExportsPanel({ studyId }: { studyId: string | null }) {
   return (
     <div style={{ padding: '1rem', overflowY: 'auto', height: '100%' }}>
       <h2 style={{ marginBottom: '0.25rem' }}>Exports & Documents</h2>
-      <p style={{ fontSize: '0.78rem', color: '#9ca3af', marginBottom: '0.5rem' }}>
+      <p style={{ fontSize: fs.label, color: 'var(--text-2)', marginBottom: '0.5rem' }}>
         Generate ECSS documents, regulatory filings, spectrum analysis, and design data exports.
       </p>
 
       {/* Quick action buttons */}
       <div style={{ display: 'flex', gap: '0.3rem', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
         <button className="btn btn-sm" onClick={() => setShowSEMP(true)}
-          style={{ fontSize: '0.72rem', background: Object.keys(sempAnswers).length > 0 ? '#10b981' : '#3b82f6' }}>
+          style={{ fontSize: fs.label, background: Object.keys(sempAnswers).length > 0 ? 'var(--status-ok)' : 'var(--interactive)' }}>
           {Object.keys(sempAnswers).length > 0 ? 'Update SEMP Inputs' : 'Configure SEMP'}
         </button>
         {studyId && (
           <button className="btn btn-sm" onClick={() => window.open(`/api/lifecycle/bom/${studyId}?fmt=csv`, '_blank')}
-            style={{ fontSize: '0.72rem', background: '#8b5cf6' }}>
+            style={{ fontSize: fs.label, background: 'var(--cat-2)' }}>
             Export BOM (CSV)
           </button>
         )}
       </div>
 
       {/* Model exchange (SCDF-160): Capella / ECSS-E-TM-10-25 / ReqIF / SysML v2 */}
-      <div className="card" style={{ marginBottom: '0.75rem', borderLeft: '3px solid #3b82f6' }}>
+      <div className="card" style={{ marginBottom: '0.75rem', borderLeft: '3px solid var(--interactive)' }}>
         <ExchangePanel studyId={studyId} />
       </div>
 
@@ -237,7 +238,7 @@ export function ExportsPanel({ studyId }: { studyId: string | null }) {
           const a = document.createElement('a')
           a.href = url; a.download = `spacecdf-full-${new Date().toISOString().slice(0, 10)}.json`
           a.click(); URL.revokeObjectURL(url)
-        }} style={{ fontSize: '0.72rem', marginBottom: '0.75rem', background: '#10b981' }}>
+        }} style={{ fontSize: fs.label, marginBottom: '0.75rem', background: 'var(--status-ok)' }}>
           Export Full Design (Element Tree + BOM + Budgets)
         </button>
       )}
@@ -247,10 +248,10 @@ export function ExportsPanel({ studyId }: { studyId: string | null }) {
         {(Object.entries(CATEGORY_LABELS) as [ExportCategory, { name: string; color: string }][]).map(([cat, info]) => (
           <button key={cat} onClick={() => setActiveCategory(cat)}
             style={{
-              padding: '0.3rem 0.75rem', fontSize: '0.78rem', borderRadius: '4px', cursor: 'pointer',
-              background: activeCategory === cat ? info.color : 'var(--bg-secondary, #1f2937)',
-              color: activeCategory === cat ? 'white' : '#9ca3af',
-              border: `1px solid ${activeCategory === cat ? info.color : '#374151'}`,
+              padding: '0.3rem 0.75rem', fontSize: fs.label, borderRadius: '4px', cursor: 'pointer',
+              background: activeCategory === cat ? info.color : 'var(--bg-secondary, var(--surface-2))',
+              color: activeCategory === cat ? 'white' : 'var(--text-2)',
+              border: `1px solid ${activeCategory === cat ? info.color : 'var(--line)'}`,
             }}>{info.name}</button>
         ))}
       </div>
@@ -260,16 +261,16 @@ export function ExportsPanel({ studyId }: { studyId: string | null }) {
         {filteredItems.map(item => (
           <div key={item.id} style={{
             display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.75rem',
-            background: 'var(--bg-secondary, #1f2937)', borderRadius: '6px',
-            border: '1px solid var(--border, #374151)',
+            background: 'var(--bg-secondary, var(--surface-2))', borderRadius: '6px',
+            border: '1px solid var(--border, var(--line))',
           }}>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: '0.82rem', fontWeight: 500 }}>{item.name}</div>
-              <div style={{ fontSize: '0.68rem', color: '#6b7280' }}>{item.description}</div>
+              <div style={{ fontSize: fs.body, fontWeight: 500 }}>{item.name}</div>
+              <div style={{ fontSize: fs.label, color: 'var(--text-3)' }}>{item.description}</div>
             </div>
             <button className="btn btn-sm" onClick={() => generateExport(item)}
               disabled={generating !== null}
-              style={{ fontSize: '0.7rem', whiteSpace: 'nowrap' }}>
+              style={{ fontSize: fs.label, whiteSpace: 'nowrap' }}>
               {generating === item.id ? 'Generating...' : 'JSON'}
             </button>
             {/* .docx download — available for ECSS, regulatory, and engineering docs */}
@@ -287,7 +288,7 @@ export function ExportsPanel({ studyId }: { studyId: string | null }) {
                 const docType = docxMap[item.id] || item.id
                 const url = `/api/exports/docx/${docType}${studyId ? `?study_id=${studyId}` : ''}`
                 window.open(url, '_blank')
-              }} style={{ fontSize: '0.7rem', whiteSpace: 'nowrap', background: item.category === 'ecss' ? '#3b82f6' : item.category === 'regulatory' ? '#f59e0b' : '#8b5cf6' }}>
+              }} style={{ fontSize: fs.label, whiteSpace: 'nowrap', background: item.category === 'ecss' ? 'var(--interactive)' : item.category === 'regulatory' ? 'var(--status-caution)' : 'var(--cat-2)' }}>
                 .docx
               </button>
             )}

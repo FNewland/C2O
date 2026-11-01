@@ -4,6 +4,7 @@
  * Supports vertical and horizontal orientation, custom colors, labels, tooltips.
  */
 import { useState } from 'react'
+import { fs } from '../theme/tokens'
 
 interface BarData {
   label: string
@@ -43,20 +44,20 @@ export function SVGBarChart({
 
     return (
       <svg width={width} height={height} style={{ display: 'block' }}>
-        {title && <text x={width / 2} y={16} textAnchor="middle" fill="#d1d5db" fontSize={12} fontWeight={600}>{title}</text>}
+        {title && <text x={width / 2} y={16} textAnchor="middle" fill="var(--text)" fontSize={fs.label} fontWeight={600}>{title}</text>}
         {data.map((d, i) => {
           const y = padding.top + i * (barH + gap)
           const barW = (d.value / max) * chartW
           const secW = d.secondary ? (d.secondary / max) * chartW : 0
           return (
             <g key={i} onMouseEnter={() => setHoveredIdx(i)} onMouseLeave={() => setHoveredIdx(null)}>
-              <text x={padding.left - 4} y={y + barH / 2 + 4} textAnchor="end" fill="#9ca3af" fontSize={9}>{d.label}</text>
+              <text x={padding.left - 4} y={y + barH / 2 + 4} textAnchor="end" fill="var(--text-2)" fontSize={fs.label}>{d.label}</text>
               {d.secondary !== undefined && (
-                <rect x={padding.left} y={y} width={Math.max(secW, 1)} height={barH / 2} rx={2} fill={d.secondaryColor || '#374151'} opacity={0.5} />
+                <rect x={padding.left} y={y} width={Math.max(secW, 1)} height={barH / 2} rx={2} fill={d.secondaryColor || 'var(--line)'} opacity={0.5} />
               )}
-              <rect x={padding.left} y={d.secondary !== undefined ? y + barH / 2 : y} width={Math.max(barW, 1)} height={d.secondary !== undefined ? barH / 2 : barH} rx={2} fill={d.color || '#3b82f6'} />
+              <rect x={padding.left} y={d.secondary !== undefined ? y + barH / 2 : y} width={Math.max(barW, 1)} height={d.secondary !== undefined ? barH / 2 : barH} rx={2} fill={d.color || 'var(--interactive)'} />
               {showValues && (
-                <text x={padding.left + barW + 4} y={y + barH / 2 + 4} fill={hoveredIdx === i ? '#d1d5db' : '#6b7280'} fontSize={9} fontFamily="monospace">
+                <text x={padding.left + barW + 4} y={y + barH / 2 + 4} fill={hoveredIdx === i ? 'var(--text)' : 'var(--text-3)'} fontSize={fs.label} fontFamily="monospace">
                   {d.value.toFixed(1)}{unit}
                 </text>
               )}
@@ -73,12 +74,12 @@ export function SVGBarChart({
 
   return (
     <svg width={width} height={height} style={{ display: 'block' }}>
-      {title && <text x={width / 2} y={16} textAnchor="middle" fill="#d1d5db" fontSize={12} fontWeight={600}>{title}</text>}
+      {title && <text x={width / 2} y={16} textAnchor="middle" fill="var(--text)" fontSize={fs.label} fontWeight={600}>{title}</text>}
       {/* Y-axis labels */}
       {[0, 0.5, 1].map(frac => (
         <g key={frac}>
-          <line x1={padding.left} y1={padding.top + chartH * (1 - frac)} x2={padding.left + chartW} y2={padding.top + chartH * (1 - frac)} stroke="#374151" strokeWidth={0.5} />
-          <text x={padding.left - 4} y={padding.top + chartH * (1 - frac) + 3} textAnchor="end" fill="#6b7280" fontSize={8}>{(max * frac).toFixed(0)}</text>
+          <line x1={padding.left} y1={padding.top + chartH * (1 - frac)} x2={padding.left + chartW} y2={padding.top + chartH * (1 - frac)} stroke="var(--line)" strokeWidth={0.5} />
+          <text x={padding.left - 4} y={padding.top + chartH * (1 - frac) + 3} textAnchor="end" fill="var(--text-3)" fontSize={fs.label}>{(max * frac).toFixed(0)}</text>
         </g>
       ))}
       {/* Bars */}
@@ -87,13 +88,13 @@ export function SVGBarChart({
         const barH = (d.value / max) * chartH
         return (
           <g key={i} onMouseEnter={() => setHoveredIdx(i)} onMouseLeave={() => setHoveredIdx(null)}>
-            <rect x={x} y={padding.top + chartH - barH} width={barW} height={barH} rx={2} fill={d.color || '#3b82f6'} opacity={hoveredIdx === i ? 1 : 0.85} />
+            <rect x={x} y={padding.top + chartH - barH} width={barW} height={barH} rx={2} fill={d.color || 'var(--interactive)'} opacity={hoveredIdx === i ? 1 : 0.85} />
             {showValues && hoveredIdx === i && (
-              <text x={x + barW / 2} y={padding.top + chartH - barH - 4} textAnchor="middle" fill="#d1d5db" fontSize={9} fontFamily="monospace">
+              <text x={x + barW / 2} y={padding.top + chartH - barH - 4} textAnchor="middle" fill="var(--text)" fontSize={fs.label} fontFamily="monospace">
                 {d.value.toFixed(1)}{unit}
               </text>
             )}
-            <text x={x + barW / 2} y={height - 4} textAnchor="middle" fill="#9ca3af" fontSize={8}>{d.label}</text>
+            <text x={x + barW / 2} y={height - 4} textAnchor="middle" fill="var(--text-2)" fontSize={fs.label}>{d.label}</text>
           </g>
         )
       })}

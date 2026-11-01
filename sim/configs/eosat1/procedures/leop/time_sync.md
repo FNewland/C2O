@@ -52,7 +52,7 @@ all subsequent time-tagged operations, event logs and science data depend upon.
 **TC:** `HK_REQUEST(sid=6)` (Service 3, Subtype 27) --- request TT&C housekeeping
 **Verify:** `obdh.mode <= 1` (0x0300, timeout 5 s) --- 0 = NOMINAL or 1 = SAFE, both acceptable at this stage
 **Verify:** `obdh.cpu_load` (0x0302) < 80 %
-**Verify:** `ttc.link_margin` (0x0503) > 3.0 dB
+**Verify:** TT&C page (ground): `ttc.link_margin` (0x0503) > 3.0 dB
 **Note:** Record `obdh.uptime` (0x0308) and `obdh.reboot_count` (0x030A). A
 small uptime with a raised reboot count means the OBC has rebooted since
 separation --- the clock is back at J2000 and this card is exactly what is

@@ -66,11 +66,11 @@ dl_freq_mhz: 2200.0
 # how the beacon came to be modelled as rung 0 of the S-band ladder.)
 #
 # Why not the old 1 kbps "low" rate for routine ops: the shipped
-# telemetry/hk_structures.yaml generates 1351.5 bps of PUS packets, which is
-# 1557 bps of channel after RS(255,223) and TM-frame overhead. 1000 bps is
+# telemetry/hk_structures.yaml generates 1378.5 bps of PUS packets, which is
+# 1588 bps of channel after RS(255,223) and TM-frame overhead. 1000 bps is
 # BELOW the generation rate, so the real-time backlog could never drain.
 # 1 kbps is a beacon rate, not an operations rate. 16 kbps clears real-time
-# HK at 9.7 % duty and still plays back 0.85 orbits of stored HK in a 514 s
+# HK at 9.9 % duty and still plays back 0.82 orbits of stored HK in a 514 s
 # pass, so routine operations never fall behind.
 #
 # Steps are 1 kbps x 2^0, 2^4, 2^7 = +12.04 dB then +9.03 dB, which is exactly
@@ -114,8 +114,8 @@ tm_rate_tiers:
     coding: CONV_RS
     coding_gain_db: 7.5
     # THE ROUTINE OPERATIONS RATE, and the safe-mode / FDIR fallback. Derived,
-    # not chosen: real-time HK needs 1557 bps of channel, and in a 514 s
-    # maximum pass 16 kbps clears that at 9.7 % duty PLUS 906 kB = 0.85 orbits
+    # not chosen: real-time HK needs 1588 bps of channel, and in a 514 s
+    # maximum pass 16 kbps clears that at 9.9 % duty PLUS 926 kB = 0.82 orbits
     # of stored HK — the smallest round number at which the spacecraft neither
     # loses data nor falls behind across an orbit. Sentinel-1's low S-band TM
     # rate; sits between the AX2150's 9.6 and 19.2 kbps steps. BPSK keeps the
@@ -262,18 +262,29 @@ gt_derate_below_30deg_db: 0.5
 required_eb_n0_db: 9.6
 
 # ── Transponder auto-switch on command loss (author ruling Q7, 2026-10-30) ──
-# Documented on-board behaviour; NOT SIMULATED YET. If the spacecraft hears
-# no valid telecommand for `cmd_loss_switch_timeout_s`, it switches to the
-# other transponder (manual 08 FDIR rule TTC-01). The ruling fixes the timer
-# at 24 h; the old "120 s" figure in manual 05 is withdrawn. The simulator
-# does not perform the switch today (ttc_basic only raises event 0x0511
-# UPLINK_TIMEOUT after its own internal threshold), so these keys exist so
-# that the manuals and the simulator quote one value and a future model has
-# a single place to read it from.
+# If the spacecraft accepts no valid telecommand for
+# `cmd_loss_switch_timeout_s`, it switches to the redundant transponder
+# (manual 08 FDIR rule TTC-01). The ruling fixes the timer at 24 h; the old
+# "120 s" figure in manual 05 is withdrawn.
+#
+# SIMULATED since 2026-11-01 (plan decision on S19 ea 4001/4003): ttc_basic
+# keeps the on-board timer — seconds since the OBC last accepted a TC, reset
+# by every increment of 0x0305 obdh.tc_acc_count — and publishes it as
+# 0x053D ttc.time_since_last_tc. When it reaches this value the model raises
+# event 0x0514 CMD_LOSS_TIMEOUT once per loss episode, and S19 ea 4003
+# dispatches TTC_SWITCH_REDUNDANT (S8 func 64). Event 0x0511 UPLINK_TIMEOUT
+# is a different, older signal (no uplink LOCK for 300 s) and fires after
+# every LOS.
+#
+# The companion rule ea 4001 reacts to event 0x0513 UPLINK_LOCK_DROPOUT
+# (carrier lock lost and regained within ttc_basic.UPLINK_DROPOUT_WINDOW_S =
+# 60 s) by commanding TX power HIGH.
 #
 # `cmd_loss_rssi_threshold_dbm` is the FDIR "RSSI degradation" level of
 # manual 05 §8 (rssi < -105 dBm). The −100 dBm in manual 05 §7 is an
-# operational guideline for marginal links, not an FDIR threshold.
+# operational guideline for marginal links, not an FDIR threshold. NOTE: the
+# rssi in telemetry (0x0502) is the downlink level at the GROUND antenna, so
+# this threshold is a ground-side guideline; no on-board rule uses it.
 cmd_loss_switch_timeout_s: 86400      # 24 h
 cmd_loss_rssi_threshold_dbm: -105.0
 

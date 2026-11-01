@@ -465,7 +465,15 @@ def make_app(dump_dir: Path | None, api_base: str | None = None) -> web.Applicat
     remote store at ``api_base`` when given.
     """
     params_by_id, hk_by_sid, hk_plist = load_catalogs()
-    app = web.Application()
+    # Shared HTTP policy (gzip, cache headers) and the shared design system /
+    # language runtime at /static/shared/ (R3 audit A8, §8).
+    from smo_common.web.http import (TOOL_HEAD, relative_display_path,
+                                     setup_tool_app, tool_html_response)
+    app = setup_tool_app(web.Application())
+    page_html = INDEX_HTML.replace("<!--TOOL_HEAD-->", TOOL_HEAD)
+    # Never print the absolute server path on a web page (R3 audit A9):
+    # show the store relative to the suite root instead.
+    store_label = relative_display_path(dump_dir, REPO) if dump_dir else ""
     remote = RemoteDumpStore(api_base) if api_base else None
     app["dump_dir"] = dump_dir
     app["remote"] = remote
@@ -477,7 +485,7 @@ def make_app(dump_dir: Path | None, api_base: str | None = None) -> web.Applicat
     app["limits_by_pid"] = load_limits_by_pid(REPO / "configs" / "eosat1")
 
     async def index(_req: web.Request) -> web.Response:
-        return web.Response(text=INDEX_HTML, content_type="text/html")
+        return tool_html_response(page_html, app)
 
     async def api_dumps(_req: web.Request) -> web.Response:
         if remote is not None:
@@ -488,7 +496,7 @@ def make_app(dump_dir: Path | None, api_base: str | None = None) -> web.Applicat
                     {"dump_dir": remote.api_base, "dumps": [],
                      "error": f"cannot reach dump API: {e}"})
             return web.json_response({"dump_dir": remote.api_base, "dumps": dumps})
-        return web.json_response({"dump_dir": str(dump_dir),
+        return web.json_response({"dump_dir": store_label,
                                   "dumps": list_dumps(dump_dir)})
 
     async def api_decode(req: web.Request) -> web.Response:
@@ -556,151 +564,159 @@ def make_app(dump_dir: Path | None, api_base: str | None = None) -> web.Applicat
 
 INDEX_HTML = r"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
-<title>Delayed TM Viewer</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title data-i18n>Delayed TM viewer</title>
+<!--TOOL_HEAD-->
 <!-- Vendored locally (see the /vendor static route) so the tool really is
      offline, as the module docstring promises. -->
 <script src="/vendor/js/chart.umd.min.js"></script>
 <style>
+/* Light-touch restyle: page-local names mapped onto the shared design-system
+   tokens (design-system.css, loaded above). Full restyle is a later phase. */
 :root {
-  --bg: #0a1226; --panel: #0f1d33; --border: #1f3050; --text: #cfe;
-  --dim: #7a90ad; --accent: #5fb7ff; --good: #34d399; --warn: #f59e0b; --bad: #f87171;
+  --panel: var(--s1); --border: var(--line); --text: var(--tx);
+  --dim: var(--tx3); --accent: var(--info); --good: var(--ok); --bad: var(--alarm);
 }
-* { box-sizing: border-box; }
-html, body { background: var(--bg); color: var(--text); font-family: 'JetBrains Mono', Consolas, monospace; font-size: 12px; margin: 0; }
-header { padding: 10px 16px; background: linear-gradient(180deg, #0f1d33, #0b1525); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 16px; }
-header h1 { font-size: 14px; letter-spacing: 2px; color: var(--accent); margin: 0; font-weight: 700; }
-header .status { color: var(--dim); font-size: 11px; }
+html, body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 13px; margin: 0; }
+table, .dump-row, .summary .card .value, input { font-family: var(--mono); }
+header { padding: 10px 16px; background: var(--s1); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 16px; }
+header h1 { font-size: 15px; letter-spacing: 1px; color: var(--tx); margin: 0; font-weight: 700; }
+header .status { color: var(--tx2); font-size: 12px; }
 main { padding: 14px 16px; }
 .controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 10px; background: var(--panel); border: 1px solid var(--border); border-radius: 4px; margin-bottom: 14px; }
-button { background: #1a3a6a; color: var(--text); border: 1px solid #2a5a8a; border-radius: 3px; padding: 6px 12px; cursor: pointer; font-family: inherit; font-size: 11px; }
-button:hover { background: #2a5a8a; }
-button.primary { background: #2a5a8a; }
-button.sm { padding: 3px 6px; font-size: 10px; }
-input[type=text], input[type=datetime-local], select { background: #0a1226; color: var(--text); border: 1px solid var(--border); border-radius: 3px; padding: 5px 8px; font-family: inherit; font-size: 11px; }
-label { color: var(--dim); font-size: 11px; margin-right: 4px; }
+button { background: var(--s2); color: var(--text); border: 1px solid var(--line-2); border-radius: 3px; padding: 6px 12px; cursor: pointer; font-family: inherit; font-size: 12px; }
+button:hover { background: var(--s3); }
+button.primary { border-color: var(--info); color: var(--info); }
+button.sm { padding: 3px 6px; font-size: 12px; }
+input[type=text], input[type=datetime-local], select { background: var(--bg); color: var(--text); border: 1px solid var(--line-2); border-radius: 3px; padding: 5px 8px; font-size: 12px; }
+label { color: var(--dim); font-size: 12px; margin-right: 4px; }
 .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px; margin-bottom: 14px; }
 .summary .card { background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 10px 14px; }
-.summary .card .label { font-size: 10px; color: var(--dim); text-transform: uppercase; letter-spacing: 1px; }
-.summary .card .value { font-size: 18px; color: var(--accent); margin-top: 4px; font-variant-numeric: tabular-nums; }
+.summary .card .label { font-size: 12px; color: var(--dim); text-transform: uppercase; letter-spacing: 1px; }
+.summary .card .value { font-size: 18px; color: var(--val); margin-top: 4px; font-variant-numeric: tabular-nums; }
 .section { background: var(--panel); border: 1px solid var(--border); border-radius: 4px; margin-bottom: 14px; }
-.section h2 { font-size: 11px; letter-spacing: 1.5px; color: var(--dim); text-transform: uppercase; margin: 0; padding: 8px 12px; border-bottom: 1px solid var(--border); }
+.section h2 { font-size: 12px; letter-spacing: 1.5px; color: var(--dim); text-transform: uppercase; margin: 0; padding: 8px 12px; border-bottom: 1px solid var(--border); }
 .section .body { padding: 10px 12px; max-height: 460px; overflow: auto; }
-table { width: 100%; border-collapse: collapse; font-size: 11px; font-variant-numeric: tabular-nums; }
-th, td { border-bottom: 1px solid #16223a; padding: 4px 6px; text-align: left; }
+table { width: 100%; border-collapse: collapse; font-size: 12px; font-variant-numeric: tabular-nums; }
+th, td { border-bottom: 1px solid var(--line); padding: 4px 6px; text-align: left; }
 th { color: var(--dim); font-weight: 500; position: sticky; top: 0; background: var(--panel); }
 td.num { text-align: right; }
-.sev-1 { color: #9bb; } .sev-2 { color: #34d399; } .sev-3 { color: var(--warn); } .sev-4 { color: var(--bad); }
+.sev-1 { color: var(--tx2); } .sev-2 { color: var(--tx); } .sev-3 { color: var(--warn); } .sev-4 { color: var(--bad); }
 .flag { color: var(--warn); }
 /* Gaps in a decoded series — stretches where the SID produced nothing. They
    are shown as an explicit, unmissable absence, never smoothed over. */
-.gap-badge { background: #7a2e12; color: #ffd9c2; border: 1px solid #b45309;
-             border-radius: 3px; padding: 1px 5px; font-size: 9px; font-weight: 700; }
-.gap-note { margin: 4px 0 8px; padding: 6px 8px; font-size: 10px; line-height: 1.5;
-            color: #ffd9c2; background: rgba(245,158,11,0.10);
-            border-left: 3px solid #b45309; }
+.gap-badge { background: var(--warn-wash); color: var(--warn); border: 1px solid var(--warn);
+             border-radius: 3px; padding: 1px 5px; font-size: 12px; font-weight: 700; }
+.gap-note { margin: 4px 0 8px; padding: 6px 8px; font-size: 12px; line-height: 1.5;
+            color: var(--tx); background: var(--warn-wash);
+            border-left: 3px solid var(--warn); }
 .gap-note table { margin-top: 4px; }
 /* G11: per-parameter ground-limit badges */
-.lim-badge { display: inline-block; padding: 1px 5px; border-radius: 3px; font-size: 10px; font-weight: 700; margin-right: 3px; white-space: nowrap; }
+.lim-badge { display: inline-block; padding: 1px 5px; border-radius: 3px; font-size: 12px; font-weight: 700; margin-right: 3px; white-space: nowrap; }
 .lim-badge.yellow { color: var(--warn); border: 1px solid var(--warn); }
 .lim-badge.red { color: var(--bad); border: 1px solid var(--bad); }
-.lim-ok { color: var(--good); font-size: 10px; }
-.lim-none { color: #556b85; font-size: 10px; }
-.dump-row { padding: 4px 6px; cursor: pointer; border-bottom: 1px solid #16223a; display: grid; grid-template-columns: 1fr 80px 110px 90px; gap: 6px; }
-.dump-row:hover { background: #15294a; }
-.dump-row.selected { background: #1a3a6a; }
+.lim-ok { color: var(--tx2); font-size: 12px; }
+.lim-none { color: var(--tx3); font-size: 12px; }
+.dump-row { padding: 4px 6px; cursor: pointer; border-bottom: 1px solid var(--line); display: grid; grid-template-columns: 1fr 80px 110px 90px; gap: 6px; }
+.dump-row:hover { background: var(--s2); }
+.dump-row.selected { background: var(--info-wash); box-shadow: inset 3px 0 0 var(--info); }
 .error { color: var(--bad); padding: 8px; }
-.chart-container { position: relative; height: 300px; margin: 10px 0; background: #0a1226; border: 1px solid var(--border); border-radius: 4px; padding: 10px; }
+.chart-container { position: relative; height: 300px; margin: 10px 0; background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 10px; }
 .chart-wrapper { display: grid; grid-template-columns: 1fr; gap: 10px; }
 .chart-item { background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 10px; }
 .chart-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-.chart-item-header .title { color: var(--accent); font-size: 11px; font-weight: 500; }
+.chart-item-header .title { color: var(--tx); font-size: 12px; font-weight: 500; }
 .chart-item-header .close-btn { background: transparent; border: none; color: var(--dim); cursor: pointer; padding: 2px; }
 .chart-item-header .close-btn:hover { color: var(--warn); }
 .tab-buttons { display: flex; gap: 6px; margin-bottom: 10px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
-.tab-button { background: transparent; border: none; color: var(--dim); padding: 6px 12px; cursor: pointer; font-size: 11px; border-bottom: 2px solid transparent; }
+.tab-button { background: transparent; border: none; color: var(--dim); padding: 6px 12px; cursor: pointer; font-size: 12px; border-bottom: 2px solid transparent; }
 .tab-button:hover { color: var(--accent); }
 .tab-button.active { color: var(--accent); border-bottom-color: var(--accent); }
 </style>
 </head><body>
 <header>
-  <h1>DELAYED TM VIEWER</h1>
-  <span class="status" id="status">idle</span>
+  <h1 data-i18n>DELAYED TM VIEWER</h1>
+  <span class="status" id="status" role="status" data-i18n>idle</span>
 </header>
 <main>
   <div class="controls">
-    <button id="btnRefresh" class="primary">Refresh dumps</button>
-    <button id="btnLatest">Load latest</button>
-    <button id="btnSelected">Load selected</button>
-    <button id="btnAll">Load all</button>
+    <button id="btnRefresh" class="primary" data-i18n>Refresh dumps</button>
+    <button id="btnLatest" data-i18n>Load latest</button>
+    <button id="btnSelected" data-i18n>Load selected</button>
+    <button id="btnAll" data-i18n>Load all</button>
     <span style="border-left:1px solid var(--border);height:18px;"></span>
-    <label>From</label><input type="datetime-local" id="from">
-    <label>To</label><input type="datetime-local" id="to">
-    <button id="btnRange">Load range</button>
+    <label for="from" data-i18n>From</label><input type="datetime-local" id="from">
+    <label for="to" data-i18n>To</label><input type="datetime-local" id="to">
+    <button id="btnRange" data-i18n>Load range</button>
   </div>
 
   <div class="section">
-    <h2>Available dump files</h2>
-    <div class="body" id="dumpsList">No dumps loaded.</div>
+    <h2 data-i18n>Available dump files</h2>
+    <div class="body" id="dumpsList" data-i18n>No dumps loaded.</div>
   </div>
 
   <div class="summary" id="summary"></div>
 
-  <div class="section"><h2>Packet counts by service/subtype</h2>
-    <div class="body" id="pktCounts">No data.</div></div>
+  <div class="section"><h2 data-i18n>Packet counts by service/subtype</h2>
+    <div class="body" id="pktCounts" data-i18n>No data.</div></div>
 
-  <div class="section"><h2>S5 Events</h2>
-    <div class="body" id="events">No data.</div></div>
+  <div class="section"><h2 data-i18n>S5 Events</h2>
+    <div class="body" id="events" data-i18n>No data.</div></div>
 
-  <div class="section"><h2>On-board monitoring (S12)</h2>
-    <div class="body" id="s12">No data.</div></div>
+  <div class="section"><h2 data-i18n>On-board monitoring (S12)</h2>
+    <div class="body" id="s12" data-i18n>No data.</div></div>
 
-  <div class="section"><h2>HK time series by SID</h2>
-    <div class="body" id="hk">No data.</div></div>
+  <div class="section"><h2 data-i18n>HK time series by SID</h2>
+    <div class="body" id="hk" data-i18n>No data.</div></div>
 
-  <div class="section"><h2>Anomalies</h2>
-    <div class="body" id="anomalies">No data.</div></div>
+  <div class="section"><h2 data-i18n>Anomalies</h2>
+    <div class="body" id="anomalies" data-i18n>No data.</div></div>
 
   <div id="chartsTabs" style="display:none;">
     <div class="tab-buttons">
-      <button class="tab-button active" data-tab="hk-charts">HK Charts</button>
+      <button class="tab-button active" data-tab="hk-charts" data-i18n>HK Charts</button>
     </div>
     <div id="chartsSection" class="section">
-      <h2>Charts</h2>
+      <h2 data-i18n>Charts</h2>
       <div class="body" id="chartsBody"></div>
     </div>
   </div>
 </main>
 <script>
 const $ = id => document.getElementById(id);
+// UI language (tool-page.js / i18n.js): T() = translated text, nothing escaped.
+const T = (s, v) => window.SMO_I18N ? window.SMO_I18N.tText(s, v)
+  : String(s).replace(/\{\{\s*(\w+)\s*\}\}/g, (m, k) => (v && k in v ? v[k] : m));
 let availableDumps = [];
 let selectedDumps = new Set();
 let lastStore = "";
 let chartInstances = {};
 let chartsData = [];
 let firstCuc = null;
+let lastDecoded = null;
 
 function setStatus(s) { $("status").textContent = s; }
 
 async function refreshDumps() {
-  setStatus("listing dumps…");
+  setStatus(T("listing dumps…"));
   try {
     const r = await fetch("/api/dumps");
     const j = await r.json();
     availableDumps = j.dumps || [];
     lastStore = j.dump_dir || "";
     renderDumpsList();
-    setStatus(j.error ? ("ERROR: " + j.error)
-                      : `${availableDumps.length} dump file(s) in ${j.dump_dir}`);
+    setStatus(j.error ? T("ERROR: {{msg}}", { msg: j.error })
+                      : T("{{n}} dump file(s) in {{store}}", { n: availableDumps.length, store: j.dump_dir }));
   } catch (e) {
-    setStatus("ERROR: " + e);
+    setStatus(T("ERROR: {{msg}}", { msg: String(e) }));
   }
 }
 
 function renderDumpsList() {
   const root = $("dumpsList");
   if (!availableDumps.length) {
-    root.textContent = "No dumps in " + (lastStore || "the store") +
-      ". Run a pass with an S15 dump in the simulator.";
+    root.textContent = T("No dumps in {{store}}. Run a pass with an S15 dump in the simulator.",
+      { store: lastStore || T("the store") });
     return;
   }
   root.innerHTML = "";
@@ -708,11 +724,18 @@ function renderDumpsList() {
   header.className = "dump-row";
   header.style.color = "var(--dim)";
   header.style.cursor = "default";
-  header.innerHTML = "<span>Filename</span><span>SID</span><span>UTC</span><span class='num'>Bytes</span>";
+  header.innerHTML = `<span>${T("Filename")}</span><span>SID</span><span>UTC</span><span class='num'>${T("Bytes")}</span>`;
   root.appendChild(header);
   for (const d of availableDumps) {
     const row = document.createElement("div");
     row.className = "dump-row" + (selectedDumps.has(d.filename) ? " selected" : "");
+    // Keyboard-operable selection (was click-only).
+    row.tabIndex = 0;
+    row.setAttribute("role", "checkbox");
+    row.setAttribute("aria-checked", selectedDumps.has(d.filename) ? "true" : "false");
+    row.addEventListener("keydown", (ev) => {
+      if (ev.key === " " || ev.key === "Enter") { ev.preventDefault(); row.click(); }
+    });
     row.innerHTML = `<span>${d.filename}</span><span>${d.sid ?? "?"}</span><span>${d.timestamp || d.mtime || ""}</span><span class="num">${d.size_bytes.toLocaleString()}</span>`;
     row.addEventListener("click", () => {
       if (selectedDumps.has(d.filename)) selectedDumps.delete(d.filename);
@@ -724,19 +747,20 @@ function renderDumpsList() {
 }
 
 async function loadDecoded(params) {
-  setStatus("decoding…");
+  setStatus(T("decoding…"));
   try {
     const url = "/api/decode?" + new URLSearchParams(params).toString();
     const r = await fetch(url);
     const j = await r.json();
     if (j.error) {
-      setStatus("ERROR: " + j.error);
+      setStatus(T("ERROR: {{msg}}", { msg: j.error }));
       return;
     }
+    lastDecoded = j;
     render(j);
-    setStatus(`decoded ${j.total_packets} packet(s) from ${j.files.length} file(s)`);
+    setStatus(T("decoded {{n}} packet(s) from {{files}} file(s)", { n: j.total_packets, files: j.files.length }));
   } catch (e) {
-    setStatus("ERROR: " + e);
+    setStatus(T("ERROR: {{msg}}", { msg: String(e) }));
   }
 }
 
@@ -745,14 +769,14 @@ function render(j) {
   const sum = $("summary");
   sum.innerHTML = "";
   const cards = [
-    ["Files", j.files.length],
-    ["Total packets", j.total_packets],
-    ["S5 events", j.events.length],
-    ["HK SIDs", j.hk.length],
-    ["Anomalies", j.anomalies.length],
+    [T("Files"), j.files.length],
+    [T("Total packets"), j.total_packets],
+    [T("S5 events"), j.events.length],
+    [T("HK SIDs"), j.hk.length],
+    [T("Anomalies"), j.anomalies.length],
     // G11: the per-dump ground-limit summary line
-    ["Ground limits", j.limits ? j.limits.summary : "—"],
-    ["On-board time (CUC) range",
+    [T("Ground limits"), j.limits ? j.limits.summary : "—"],
+    [T("On-board time (CUC) range"),
      `${j.first_cuc == null ? "—" : j.first_cuc.toFixed(3) + " (" + formatCucTime(j.first_cuc) + ")"}`
      + " → "
      + `${j.last_cuc == null ? "—" : j.last_cuc.toFixed(3) + " (" + formatCucTime(j.last_cuc) + ")"}`],
@@ -765,17 +789,17 @@ function render(j) {
 
   // Packet counts
   $("pktCounts").innerHTML = j.packet_counts.length
-    ? "<table><thead><tr><th>Service</th><th class='num'>Count</th></tr></thead><tbody>"
+    ? `<table><thead><tr><th>${T("Service")}</th><th class='num'>${T("Count")}</th></tr></thead><tbody>`
       + j.packet_counts.map(c => `<tr><td>S${c.service}.${c.subtype}</td><td class='num'>${c.count}</td></tr>`).join("")
       + "</tbody></table>"
-    : "No packets decoded.";
+    : T("No packets decoded.");
 
   // Events
   $("events").innerHTML = j.events.length
-    ? "<table><thead><tr><th>CUC</th><th>Subtype</th><th>Event ID</th><th>Description</th></tr></thead><tbody>"
+    ? `<table><thead><tr><th>CUC</th><th>${T("Subtype")}</th><th>${T("Event ID")}</th><th>${T("Description")}</th></tr></thead><tbody>`
       + j.events.map(e => `<tr class='sev-${e.severity}'><td>${formatCucTime(e.cuc)}</td><td>S5.${e.subtype}</td><td>0x${e.event_id.toString(16).padStart(4,"0").toUpperCase()}</td><td>${escapeHtml(e.description)}</td></tr>`).join("")
       + "</tbody></table>"
-    : "No events.";
+    : T("No events.");
 
   // S12 on-board monitoring — the decoded contents of an alarm dump.
   // Before this the viewer had no `svc == 12` branch at all, so four limit
@@ -817,16 +841,16 @@ function render(j) {
           <td class='num'>${fmtNum(d.high_limit)}</td></tr>`).join("")
       + "</tbody></table>";
   }
-  $("s12").innerHTML = s12html || "No S12 monitoring packets in this dump.";
+  $("s12").innerHTML = s12html || T("No S12 monitoring packets in this dump.");
 
   // HK
   $("hk").innerHTML = j.hk.length
     ? j.hk.map(sid => `
-        <h3 style="font-size:11px;color:var(--accent);margin:8px 0 4px;">SID ${sid.sid} — ${sid.packet_count} pkts, ${sid.sample_count} samples${(sid.gaps && sid.gaps.length) ? ` <span class="gap-badge">${sid.gaps.length} GAP(S)</span>` : ""}
-        <button class="sm" onclick="plotAllForSid(${sid.sid}, ${JSON.stringify(sid.params).replace(/"/g, '&quot;')})">Plot All</button>
+        <h3 style="font-size:13px;color:var(--tx);margin:8px 0 4px;">SID ${sid.sid} — ${T("{{p}} pkts, {{s}} samples", { p: sid.packet_count, s: sid.sample_count })}${(sid.gaps && sid.gaps.length) ? ` <span class="gap-badge">${T("{{n}} GAP(S)", { n: sid.gaps.length })}</span>` : ""}
+        <button class="sm" aria-label="${escapeHtml(T("Plot all parameters of SID {{sid}}", { sid: sid.sid }))}" onclick="plotAllForSid(${sid.sid}, ${JSON.stringify(sid.params).replace(/"/g, '&quot;')})">${T("Plot all")}</button>
         </h3>
         ${gapListHtml(sid)}
-        <table><thead><tr><th>ID</th><th>Name</th><th>Units</th><th class='num'>Min</th><th class='num'>Max</th><th class='num'>Mean</th><th class='num'>N</th><th>Limits</th><th>Trend</th><th></th></tr></thead><tbody>
+        <table><thead><tr><th>ID</th><th>${T("Name")}</th><th>${T("Units")}</th><th class='num'>Min</th><th class='num'>Max</th><th class='num'>${T("Mean")}</th><th class='num'>N</th><th>${T("Limits")}</th><th>${T("Trend")}</th><th></th></tr></thead><tbody>
         ${sid.params.map(p => `<tr>
           <td>0x${p.pid.toString(16).padStart(4,"0").toUpperCase()}</td>
           <td>${escapeHtml(p.name)}</td>
@@ -837,10 +861,10 @@ function render(j) {
           <td class='num'>${p.n}</td>
           <td>${limitCell(p)}</td>
           <td>${spark(p.series, p.gaps)}</td>
-          <td><button class="sm" onclick="addChart(${sid.sid}, ${p.pid}, ${JSON.stringify(p.name).replace(/"/g, '&quot;')}, ${JSON.stringify(p.series)}, ${JSON.stringify(p.units).replace(/"/g, '&quot;')}, ${JSON.stringify(p.limit).replace(/"/g, '&quot;')}, ${JSON.stringify(p.gaps || []).replace(/"/g, '&quot;')})">Plot</button> ${p.flag ? "<span class='flag'>Δ</span>" : ""}</td>
+          <td><button class="sm" onclick="addChart(${sid.sid}, ${p.pid}, ${JSON.stringify(p.name).replace(/"/g, '&quot;')}, ${JSON.stringify(p.series)}, ${JSON.stringify(p.units).replace(/"/g, '&quot;')}, ${JSON.stringify(p.limit).replace(/"/g, '&quot;')}, ${JSON.stringify(p.gaps || []).replace(/"/g, '&quot;')})" aria-label="${escapeHtml(T("Plot {{name}}", { name: p.name }))}">${T("Plot")}</button> ${p.flag ? "<span class='flag'>Δ</span>" : ""}</td>
         </tr>`).join("")}
         </tbody></table>`).join("")
-    : "No HK packets decoded.";
+    : T("No HK packets decoded.");
 
   chartsData = j.hk;
   firstCuc = j.first_cuc;
@@ -848,7 +872,7 @@ function render(j) {
   // Anomalies
   $("anomalies").innerHTML = j.anomalies.length
     ? "<ul>" + j.anomalies.map(a => `<li>SID ${a.sid} ${escapeHtml(a.name)}: peak Δ=${fmtNum(a.peak_delta)} (mean ${fmtNum(a.mean_delta)})</li>`).join("") + "</ul>"
-    : "None.";
+    : T("None.");
 }
 
 /* G11: per-parameter time-in-yellow / time-in-red badges */
@@ -858,12 +882,12 @@ function fmtDurS(s) {
 }
 function limitCell(p) {
   const l = p.limit;
-  if (!l) return "<span class='lim-none'>no limit</span>";
-  if (l.state === "ok") return "<span class='lim-ok'>in band</span>";
+  if (!l) return `<span class='lim-none'>${T("no limit")}</span>`;
+  if (l.state === "ok") return `<span class='lim-ok'>${T("in band")}</span>`;
   let out = "";
   if (l.time_in_red_s > 0) out += `<span class='lim-badge red'>RED ${fmtDurS(l.time_in_red_s)}</span>`;
   if (l.time_in_yellow_s > 0) out += `<span class='lim-badge yellow'>YEL ${fmtDurS(l.time_in_yellow_s)}</span>`;
-  return out || "<span class='lim-ok'>in band</span>";
+  return out || `<span class='lim-ok'>${T("in band")}</span>`;
 }
 
 /* G11: limit-band shading on plotted series (yellow wash outside the yellow
@@ -947,11 +971,11 @@ function gapListHtml(sid) {
     `<tr><td>${formatCucTime(g.start_cuc)}</td><td>${formatCucTime(g.end_cuc)}</td>`
     + `<td class='num'>${Math.round(g.duration_s)}</td>`
     + `<td class='num'>~${g.missing}</td></tr>`).join("");
-  return `<div class="gap-note">&#9888; SID ${sid.sid} stopped producing `
-    + `housekeeping ${gaps.length} time(s) in this dump (cadence `
-    + `${sid.cadence_s}s). These are REAL holes — no value is interpolated `
-    + `across them.<table><thead><tr><th>Gap start</th><th>Gap end</th>`
-    + `<th class='num'>Seconds</th><th class='num'>Pkts missing</th></tr>`
+  return `<div class="gap-note">&#9888; `
+    + escapeHtml(T("SID {{sid}} stopped producing housekeeping {{n}} time(s) in this dump (cadence {{cad}} s). These are REAL holes: no value is interpolated across them.",
+      { sid: sid.sid, n: gaps.length, cad: sid.cadence_s }))
+    + `<table><thead><tr><th>${T("Gap start")}</th><th>${T("Gap end")}</th>`
+    + `<th class='num'>${T("Seconds")}</th><th class='num'>${T("Pkts missing")}</th></tr>`
     + `</thead><tbody>${rows}</tbody></table></div>`;
 }
 
@@ -1049,7 +1073,7 @@ function addChart(sid, pid, name, series, units, limit, gaps) {
   chartItem.innerHTML = `
     <div class="chart-item-header">
       <div class="title">SID ${sid} • 0x${pid.toString(16).padStart(4,"0").toUpperCase()} • ${escapeHtml(name)} (${escapeHtml(units)})</div>
-      <button class="close-btn" onclick="removeChart('${chartId}')">✕</button>
+      <button class="close-btn" aria-label="${escapeHtml(T("Close chart"))}" onclick="removeChart('${chartId}')">✕</button>
     </div>
     ${gapNoteHtml(gaps)}
     <div class="chart-container">
@@ -1175,8 +1199,8 @@ function plotAllForSid(sid, params) {
   chartItem.className = "chart-item";
   chartItem.innerHTML = `
     <div class="chart-item-header">
-      <div class="title">SID ${sid} • All Parameters</div>
-      <button class="close-btn" onclick="removeChart('${chartId}')">✕</button>
+      <div class="title">SID ${sid} • ${T("All parameters")}</div>
+      <button class="close-btn" aria-label="${escapeHtml(T("Close chart"))}" onclick="removeChart('${chartId}')">✕</button>
     </div>
     ${gapNoteHtml(sidGaps)}
     <div class="chart-container" style="height: 400px;">
@@ -1256,7 +1280,7 @@ $("btnRefresh").addEventListener("click", refreshDumps);
 $("btnLatest").addEventListener("click", () => loadDecoded({ latest: 1 }));
 $("btnAll").addEventListener("click", () => loadDecoded({ all: 1 }));
 $("btnSelected").addEventListener("click", () => {
-  if (!selectedDumps.size) { setStatus("no files selected — click rows in the list above"); return; }
+  if (!selectedDumps.size) { setStatus(T("no files selected: click rows in the list above")); return; }
   loadDecoded({ files: Array.from(selectedDumps).join(",") });
 });
 $("btnRange").addEventListener("click", () => {
@@ -1270,6 +1294,11 @@ $("btnRange").addEventListener("click", () => {
 
 refreshDumps();
 setInterval(refreshDumps, 30000);  // poll dump dir for new files every 30 s
+// Re-render dynamic text once the language catalog has loaded.
+window.addEventListener("smo:i18nready", () => {
+  refreshDumps();                 // status line + list, in the loaded language
+  if (lastDecoded) render(lastDecoded);
+});
 </script>
 </body></html>
 """

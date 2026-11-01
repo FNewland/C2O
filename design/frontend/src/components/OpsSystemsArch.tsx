@@ -6,7 +6,7 @@
  */
 import { useState } from 'react'
 import { useDesignStore } from '../stores/designStore'
-import { useModelStore } from '../stores/modelStore'
+import { fs } from '../theme/tokens'
 
 interface OpsActivity {
   id: string
@@ -50,13 +50,13 @@ export function OpsSystemsArch() {
   const [expandedId, setExpandedId] = useState<string | null>(null)
 
   const phaseColors: Record<string, string> = {
-    LEOP: '#ef4444', Commissioning: '#f59e0b', Nominal: '#10b981', Extended: '#3b82f6', Disposal: '#6b7280',
+    LEOP: 'var(--status-alarm)', Commissioning: 'var(--status-caution)', Nominal: 'var(--status-ok)', Extended: 'var(--interactive)', Disposal: 'var(--text-3)',
   }
 
   return (
     <div style={{ padding: '1rem', overflowY: 'auto', height: '100%' }}>
-      <h2 style={{ fontSize: '1rem', marginBottom: '0.25rem' }}>Operations — System Architecture</h2>
-      <p style={{ fontSize: '0.72rem', color: '#9ca3af', marginBottom: '0.75rem' }}>
+      <h2 style={{ fontSize: fs.value, marginBottom: '0.25rem' }}>Operations — System Architecture</h2>
+      <p style={{ fontSize: fs.label, color: 'var(--text-2)', marginBottom: '0.75rem' }}>
         Define types of operations activities and which systems are involved in each.
         This drives staffing, procedures, and operations cost estimation.
       </p>
@@ -66,7 +66,7 @@ export function OpsSystemsArch() {
         {['LEOP', 'Commissioning', 'Nominal', 'Disposal'].map(phase => {
           const count = activities.filter(a => a.phase === phase).length
           return (
-            <span key={phase} style={{ padding: '0.2rem 0.5rem', borderRadius: '3px', fontSize: '0.68rem', background: `${phaseColors[phase]}20`, color: phaseColors[phase], border: `1px solid ${phaseColors[phase]}40` }}>
+            <span key={phase} style={{ padding: '0.2rem 0.5rem', borderRadius: '3px', fontSize: fs.label, background: `color-mix(in srgb, ${phaseColors[phase]} 13%, transparent)`, color: phaseColors[phase], border: `1px solid color-mix(in srgb, ${phaseColors[phase]} 25%, transparent)` }}>
               {phase}: {count} activities
             </span>
           )
@@ -74,9 +74,9 @@ export function OpsSystemsArch() {
       </div>
 
       {/* Activity table */}
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.72rem' }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs.label }}>
         <thead>
-          <tr style={{ background: 'var(--bg-primary, #0a0e1a)' }}>
+          <tr style={{ background: 'var(--bg-primary, var(--surface-0))' }}>
             <th style={th}>Activity</th>
             <th style={th}>Phase</th>
             <th style={th}>Systems Involved</th>
@@ -87,26 +87,26 @@ export function OpsSystemsArch() {
         </thead>
         <tbody>
           {activities.map(a => (
-            <tr key={a.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer' }}
+            <tr key={a.id} style={{ borderBottom: '1px solid color-mix(in srgb, var(--text) 5%, transparent)', cursor: 'pointer' }}
                 onClick={() => setExpandedId(expandedId === a.id ? null : a.id)}>
               <td style={td}>
                 <div style={{ fontWeight: 500 }}>{a.name}</div>
                 {expandedId === a.id && (
-                  <div style={{ fontSize: '0.65rem', color: '#9ca3af', marginTop: '0.2rem' }}>{a.description}</div>
+                  <div style={{ fontSize: fs.label, color: 'var(--text-2)', marginTop: '0.2rem' }}>{a.description}</div>
                 )}
               </td>
               <td style={td}>
-                <span style={{ padding: '0.1rem 0.3rem', borderRadius: '3px', fontSize: '0.6rem', background: `${phaseColors[a.phase] || '#6b7280'}20`, color: phaseColors[a.phase] || '#6b7280' }}>{a.phase}</span>
+                <span style={{ padding: '0.1rem 0.3rem', borderRadius: '3px', fontSize: fs.label, background: `color-mix(in srgb, ${phaseColors[a.phase] || 'var(--text-3)'} 13%, transparent)`, color: phaseColors[a.phase] || 'var(--text-3)' }}>{a.phase}</span>
               </td>
-              <td style={{ ...td, fontSize: '0.65rem', color: '#9ca3af' }}>{a.systems_involved.join(', ')}</td>
-              <td style={{ ...td, fontSize: '0.65rem' }}>
+              <td style={{ ...td, fontSize: fs.label, color: 'var(--text-2)' }}>{a.systems_involved.join(', ')}</td>
+              <td style={{ ...td, fontSize: fs.label }}>
                 <input value={a.staffing} onChange={e => { e.stopPropagation(); setActivities(prev => prev.map(aa => aa.id === a.id ? { ...aa, staffing: e.target.value } : aa)) }}
                   onClick={e => e.stopPropagation()}
-                  style={{ background: 'transparent', border: 'none', color: '#d1d5db', fontSize: '0.65rem', width: '100%' }} />
+                  style={{ background: 'transparent', border: 'none', color: 'var(--text)', fontSize: fs.label, width: '100%' }} />
               </td>
-              <td style={{ ...td, fontSize: '0.65rem', color: '#6b7280' }}>{a.frequency}</td>
+              <td style={{ ...td, fontSize: fs.label, color: 'var(--text-3)' }}>{a.frequency}</td>
               <td style={tdC}>
-                <span style={{ color: a.automated ? '#10b981' : '#f59e0b', fontSize: '0.7rem' }}>{a.automated ? '✓' : '—'}</span>
+                <span style={{ color: a.automated ? 'var(--status-ok)' : 'var(--status-caution)', fontSize: fs.label }}>{a.automated ? '✓' : '—'}</span>
               </td>
             </tr>
           ))}
@@ -116,14 +116,14 @@ export function OpsSystemsArch() {
       <button onClick={() => setActivities(prev => [...prev, {
         id: `ops-${Date.now()}`, name: 'New Activity', description: '', phase: 'Nominal',
         systems_involved: [], staffing: 'TBD', frequency: 'TBD', duration: 'TBD', automated: false,
-      }])} className="btn btn-sm" style={{ marginTop: '0.5rem', fontSize: '0.7rem', background: '#374151' }}>
+      }])} className="btn btn-sm" style={{ marginTop: '0.5rem', fontSize: fs.label, background: 'var(--line)' }}>
         + Add Activity
       </button>
     </div>
   )
 }
 
-const th: React.CSSProperties = { padding: '0.25rem 0.5rem', textAlign: 'left', fontSize: '0.65rem', color: '#9ca3af', textTransform: 'uppercase' }
+const th: React.CSSProperties = { padding: '0.25rem 0.5rem', textAlign: 'left', fontSize: fs.label, color: 'var(--text-2)', textTransform: 'uppercase' }
 const thC: React.CSSProperties = { ...th, textAlign: 'center' }
 const td: React.CSSProperties = { padding: '0.2rem 0.5rem' }
 const tdC: React.CSSProperties = { ...td, textAlign: 'center' }

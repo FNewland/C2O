@@ -74,8 +74,8 @@ and serves as the primary tool for early anomaly detection and trend analysis.
 
 ### Step 6 --- TTC Health Assessment
 **Verify:** `ttc.link_status` (0x0501) = 2 (LOCKED)
-**Verify:** `ttc.rssi` (0x0502) > -105 dBm
-**Verify:** `ttc.link_margin` (0x0503) > 2.0 dB
+**Verify:** TT&C page (ground): `ttc.rssi` (0x0502) > -126 dBm
+**Verify:** TT&C page (ground): `ttc.link_margin` (0x0503) > 2.0 dB
 **Trend:** RSSI should follow expected pass profile (increase to TCA, decrease
   after). Consistent low RSSI may indicate antenna degradation.
 **Flag:** If link margin < 2.0 dB at high elevation, investigate RF chain.

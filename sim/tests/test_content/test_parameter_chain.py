@@ -9,6 +9,13 @@ to be reachable, otherwise the limit or the monitor can never fire.
 
 This replaces a class of one-off tests and would have caught defects #5, #36
 and brief 08 findings 12 and 13.
+
+Visibility (2026-11-01): `parameters.yaml` classes each parameter as `real`
+(the default: the spacecraft measures it and downlinks it), `ground_derived`
+(measured or computed by the GROUND: link margin, BER, RSSI, range, orbit
+determination) or `instructor` (simulator truth no operator can see). Only
+`real` parameters must be downlinkable; the other two are legitimately absent
+from every HK SID — and must STAY absent, which is asserted separately.
 """
 from __future__ import annotations
 
@@ -32,6 +39,10 @@ def _load(rel: str) -> dict:
 PARAMS = _load("telemetry/parameters.yaml")["parameters"]
 HK = _load("telemetry/hk_structures.yaml")["structures"]
 PARAM_BY_ID = {_pid(p["id"]): p for p in PARAMS}
+
+
+def _visibility(p: dict) -> str:
+    return str(p.get("visibility", "real")).strip().lower()
 HK_IDS = {_pid(m["param_id"]) for s in HK for m in (s.get("parameters") or [])}
 
 
@@ -48,10 +59,35 @@ def test_every_parameter_is_reachable():
         pid = _pid(p["id"])
         if pid in HK_IDS or p.get("on_demand") or pid in DERIVED_ONLY:
             continue
+        if _visibility(p) != "real":
+            continue      # ground_derived / instructor: never downlinked
         unreachable.append(f"0x{pid:04X} {p.get('name')}")
     assert not unreachable, (
         f"{len(unreachable)} parameters are in no HK SID, are not on_demand "
         f"and are not allowlisted: {unreachable}")
+
+
+def test_visibility_classes_are_known():
+    bad = [f"0x{_pid(p['id']):04X} {p.get('name')}: {_visibility(p)!r}"
+           for p in PARAMS
+           if _visibility(p) not in ("real", "ground_derived", "instructor")]
+    assert not bad, f"unknown visibility classes: {bad}"
+
+
+def test_no_non_real_parameter_sits_in_an_hk_sid():
+    """A ground-derived or instructor-only value in an HK SID is a lie on the
+    wire: the spacecraft would be downlinking a number it cannot know
+    (d99c9e2 removed link margin from SID 6 and fidelity_mode from SID 7
+    for exactly this reason)."""
+    bad = []
+    for s in HK:
+        for m in s.get("parameters") or []:
+            pid = _pid(m["param_id"])
+            p = PARAM_BY_ID.get(pid)
+            if p is not None and _visibility(p) != "real":
+                bad.append(f"SID {s['sid']} -> 0x{pid:04X} {p.get('name')} "
+                           f"({_visibility(p)})")
+    assert not bad, f"non-real parameters in HK SIDs: {bad}"
 
 
 def test_derived_only_allowlist_entries_still_exist():
@@ -179,6 +215,11 @@ def test_every_limited_parameter_is_reachable():
         p = PARAM_BY_ID.get(pid)
         if p is None:
             bad.append(f"0x{pid:04X} (not in the catalogue)")
+        elif _visibility(p) != "real":
+            # Spacecraft-telemetry limits only. Ground-receiver values (BER,
+            # AGC) are limit-checked by the RF bridge (rfsim.yaml
+            # ground_limits); instructor values by nobody.
+            bad.append(f"0x{pid:04X} {p.get('name')} ({_visibility(p)})")
         elif not (pid in HK_IDS or p.get("on_demand")):
             bad.append(f"0x{pid:04X} {p.get('name')} (unreachable)")
     assert not bad, f"limits.yaml bands unreachable parameters: {bad}"

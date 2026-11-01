@@ -18,6 +18,7 @@ import { useDesignStore } from '../stores/designStore'
 import { useActiveParameters } from '../hooks/useActiveParameters'
 import { useUIStore } from '../stores/uiStore'
 import { useActiveOptionId, optionQuery } from '../stores/optionStore'
+import { fs } from '../theme/tokens'
 
 const API = '/api'
 
@@ -47,7 +48,7 @@ function useAnalysisBars(): AnalysisBar[] {
   const soc = get('sim_min_soc_pct')
   if (soc !== null) {
     const min = 20
-    const color = soc >= min + 10 ? '#10b981' : soc >= min ? '#f59e0b' : '#ef4444'
+    const color = soc >= min + 10 ? 'var(--status-ok)' : soc >= min ? 'var(--status-caution)' : 'var(--status-alarm)'
     bars.push({ id: 'soc', label: 'SoC', value: soc, display: `${soc.toFixed(0)}%`, color,
       barPct: Math.min(100, Math.max(0, soc)), title: t('Battery SoC (sim): min {{soc}} % vs {{min}} % floor (mission simulation)', { soc: soc.toFixed(1), min }) })
   }
@@ -56,7 +57,7 @@ function useAnalysisBars(): AnalysisBar[] {
   if (ret !== null && gen !== null) {
     const ratio = gen > 0 ? ret / gen : ret > 0 ? 1 : 0
     const pct = 100 * ratio
-    const color = ratio >= 1 ? '#10b981' : ratio >= 0.8 ? '#f59e0b' : '#ef4444'
+    const color = ratio >= 1 ? 'var(--status-ok)' : ratio >= 0.8 ? 'var(--status-caution)' : 'var(--status-alarm)'
     bars.push({ id: 'data', label: t('Data', { context: 'short' }), value: pct, display: `${pct.toFixed(0)}%`, color,
       barPct: Math.min(100, Math.max(0, pct)), title: t('Data return: {{ret}} of {{gen}} GB/day returned (ground segment)', { ret: ret.toFixed(2), gen: gen.toFixed(2) }) })
   }
@@ -96,18 +97,18 @@ export function MarginTower() {
   }
 
   return (
-    <div style={{ display: 'flex', gap: '0.4rem', padding: '0.25rem 0.5rem', background: 'var(--bg-secondary, #1f2937)', borderBottom: '1px solid var(--border, #374151)', fontSize: '0.7rem' }}>
+    <div style={{ display: 'flex', gap: '0.4rem', padding: '0.25rem 0.5rem', background: 'var(--bg-secondary, var(--surface-2))', borderBottom: '1px solid var(--border, var(--line))', fontSize: fs.label }}>
       {result && MARGINS.map(m => {
         const val = get(m.paramId)
-        const color = val === null ? '#6b7280' : val >= m.goodAbove ? '#10b981' : val >= m.warnAbove ? '#f59e0b' : '#ef4444'
+        const color = val === null ? 'var(--text-3)' : val >= m.goodAbove ? 'var(--status-ok)' : val >= m.warnAbove ? 'var(--status-caution)' : 'var(--status-alarm)'
         const barPct = val !== null ? Math.min(100, Math.max(0, (val / m.goodAbove) * 50 + 50)) : 0
         return (
           <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', minWidth: '80px' }}>
-            <span style={{ color: '#9ca3af', width: '30px', textAlign: 'right', fontSize: '0.62rem' }}>{t(MARGIN_LABELS[m.id] ?? m.label, { context: 'short' })}</span>
-            <div style={{ flex: 1, height: 6, background: '#111827', borderRadius: 3, minWidth: 30, position: 'relative' }}>
+            <span style={{ color: 'var(--text-2)', width: '30px', textAlign: 'right', fontSize: fs.label }}>{t(MARGIN_LABELS[m.id] ?? m.label, { context: 'short' })}</span>
+            <div style={{ flex: 1, height: 6, background: 'var(--surface-1)', borderRadius: 3, minWidth: 30, position: 'relative' }}>
               <div style={{ height: '100%', width: `${barPct}%`, background: color, borderRadius: 3, transition: 'width 0.3s' }} />
             </div>
-            <span style={{ color, fontFamily: 'monospace', fontWeight: 600, minWidth: '35px', textAlign: 'right', fontSize: '0.65rem' }}>
+            <span style={{ color, fontFamily: 'monospace', fontWeight: 600, minWidth: '35px', textAlign: 'right', fontSize: fs.label }}>
               {val !== null ? `${val.toFixed(0)}${m.unit}` : '—'}
             </span>
           </div>
@@ -115,11 +116,11 @@ export function MarginTower() {
       })}
       {analysisBars.map(b => (
         <div key={b.id} title={b.title} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', minWidth: '80px' }}>
-          <span style={{ color: '#9ca3af', width: '30px', textAlign: 'right', fontSize: '0.62rem' }}>{b.label}</span>
-          <div style={{ flex: 1, height: 6, background: '#111827', borderRadius: 3, minWidth: 30, position: 'relative' }}>
+          <span style={{ color: 'var(--text-2)', width: '30px', textAlign: 'right', fontSize: fs.label }}>{b.label}</span>
+          <div style={{ flex: 1, height: 6, background: 'var(--surface-1)', borderRadius: 3, minWidth: 30, position: 'relative' }}>
             <div style={{ height: '100%', width: `${b.barPct}%`, background: b.color, borderRadius: 3, transition: 'width 0.3s' }} />
           </div>
-          <span style={{ color: b.color, fontFamily: 'monospace', fontWeight: 600, minWidth: '35px', textAlign: 'right', fontSize: '0.65rem' }}>
+          <span style={{ color: b.color, fontFamily: 'monospace', fontWeight: 600, minWidth: '35px', textAlign: 'right', fontSize: fs.label }}>
             {b.display}
           </span>
         </div>

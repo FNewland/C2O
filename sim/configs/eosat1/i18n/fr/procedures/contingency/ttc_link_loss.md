@@ -30,7 +30,7 @@ et le rétablissement de la liaison avant de passer aux opérations autonomes d'
 **TC:** `HK_REQUEST(sid=6)` (Service 3, Subtype 27) — commande en aveugle, aucune télémesure attendue
 **Action:** Attendre 30 s que le transpondeur traite la commande et tente la réacquisition de la liaison descendante
 **Verify:** `ttc.link_status` (0x0501) = 2 (LOCKED) en 30 s
-**Verify:** `ttc.rssi` (0x0502) > -95 dBm si la liaison se rétablit
+**Verify:** page TT&C (sol) : `ttc.rssi` (0x0502) > -126 dBm si la liaison se rétablit
 **GO/NO-GO:** Si la liaison se rétablit, l'étape 5 (contrôle de santé) s'applique. Sans réponse, l'étape 3 s'applique.
 **BRANCH:** `ttc.link_status == 2` -> GO `STEP-5` | NO-GO `STEP-3` (timeout 30 s)
 
@@ -55,8 +55,8 @@ et le rétablissement de la liaison avant de passer aux opérations autonomes d'
 **LABEL:** `STEP-5`
 **TC:** `HK_REQUEST(sid=6)` (Service 3, Subtype 27)
 **Verify:** `ttc.link_status` (0x0501) = 2 (LOCKED)
-**Verify:** `ttc.rssi` (0x0502) > -90 dBm (niveau de signal nominal)
-**Verify:** `ttc.link_margin` (0x0503) > 3.0 dB
+**Verify:** page TT&C (sol) : `ttc.rssi` (0x0502) > -126 dBm (niveau de signal nominal)
+**Verify:** page TT&C (sol) : `ttc.link_margin` (0x0503) > 3.0 dB
 **Verify:** `ttc.mode` (0x0500) — consigner le transpondeur actif
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27)
 **TC:** `HK_REQUEST(sid=4)` (Service 3, Subtype 27) — Télémesure de servitude plateforme/OBDH

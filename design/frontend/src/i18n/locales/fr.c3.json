@@ -156,7 +156,6 @@
   "Mitigation: {{mitigation}}": "Réduction du risque : {{mitigation}}",
   "Moderate": "Modérée",
   "Mount type": "Type de fixation",
-  "NOT READY": "NON PRÊT",
   "Name": "Nom",
   "Need at least 2 elements at this level to define interfaces.": "Il faut au moins 2 éléments à ce niveau pour définir des interfaces.",
   "Need → Objective → Requirement → Function → Design. {{objectives}} objectives, {{requirements}} requirements, {{functions}} functions.": "Besoin → Objectif → Exigence → Fonction → Conception. {{objectives}} objectifs, {{requirements}} exigences, {{functions}} fonctions.",

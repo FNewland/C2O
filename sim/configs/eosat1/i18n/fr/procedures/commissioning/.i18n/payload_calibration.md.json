@@ -49,8 +49,8 @@
   },
   {
    "id": "com-011-payload-calibration/procedure-steps/step-4-verify-dark-frame-data-quality",
-   "en_hash": "30c77a4b39518778",
-   "fr_hash": "14145108fb13fef1"
+   "en_hash": "1e373cdb41d13b51",
+   "fr_hash": "cbd623f7b689fbdf"
   },
   {
    "id": "com-011-payload-calibration/procedure-steps/step-5-open-the-shutter-and-return-to-standby",
@@ -69,8 +69,8 @@
   },
   {
    "id": "com-011-payload-calibration/procedure-steps/step-8-capture-second-calibration-image-different-integration-time",
-   "en_hash": "1957761604f560a4",
-   "fr_hash": "2b31d79dd9faa1a2"
+   "en_hash": "c3c2985aaccaad64",
+   "fr_hash": "38bcd6b18a414789"
   },
   {
    "id": "com-011-payload-calibration/procedure-steps/step-9-return-payload-to-standby",
@@ -98,5 +98,5 @@
    "fr_hash": "7f8c5f710caa7ba1"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "8067e5b"
 }

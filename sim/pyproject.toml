@@ -9,14 +9,43 @@ description = "Space Mission Operations Suite"
 requires-python = ">=3.11"
 dependencies = []
 
+# Test tooling (docs/TESTING.md). Install into .venv with
+#   pip install --group dev        (pip >= 25.1)
+# CI does exactly that.
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "pytest-timeout>=2.3",
+    "pytest-xdist>=3.5",
+    "playwright>=1.40",
+    "PyYAML>=6.0",
+    "scipy>=1.10",          # tests/test_rfsim/test_iq_recorder.py (importorskip)
+    "matplotlib>=3.7",      # smo-common[reports] plot sections
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "pytest-timeout>=2.3",
+    "pytest-xdist>=3.5",
+    "playwright>=1.40",
+    "PyYAML>=6.0",
+    "scipy>=1.10",          # tests/test_rfsim/test_iq_recorder.py (importorskip)
+    "matplotlib>=3.7",      # smo-common[reports] plot sections
+]
+
 [tool.hatch.envs.default]
 dependencies = [
-    "pytest>=7.0",
-    "pytest-asyncio>=0.21",
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "pytest-timeout>=2.3",
+    "pytest-xdist>=3.5",
 ]
 
 [tool.hatch.envs.default.scripts]
-test = "pytest tests/ -v"
+test = "pytest tests/ -n auto -m \"not slow and not e2e\""
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
@@ -32,4 +61,10 @@ markers = [
     # fault proxy, GSG, MCS and planner in one process, ~30-60 s.
     # Deselect with `-m "not link_e2e"`.
     "link_e2e: smo-link end-to-end stack (sim, agent, fault proxy, GSG, MCS, planner)",
+    # RF DSP runs (blind receiver, impairments): heavy numpy, always also
+    # marked slow by tests/conftest.py.
+    "rf_dsp: RF DSP signal-processing runs (also slow)",
+    # The two legacy E2E modules that drive the CLASSIC console through the
+    # RF bridge (tests/test_e2e_browser); a subset of e2e.
+    "legacy_ui: legacy classic-console browser E2E (subset of e2e)",
 ]

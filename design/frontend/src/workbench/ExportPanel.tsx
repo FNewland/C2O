@@ -7,6 +7,7 @@ import type { TFunction } from 'i18next'
 import { useUIStore } from '../stores/uiStore'
 import { ExchangePanel } from '../components/ExchangePanel'
 import { getLang } from '../i18n'
+import { fs } from '../theme/tokens'
 
 const API = '/api'
 
@@ -43,7 +44,7 @@ function buildExports(sid: string, t: TFunction): DocCategory[] {
   // ECSS review packs: French Markdown templates (templates/fr/) when the UI is in French.
   const docLang = getLang() === 'fr' ? '&lang=fr' : ''
   return [
-    { name: t('Design Reviews'), color: '#3b82f6', docs: [
+    { name: t('Design Reviews'), color: 'var(--interactive)', docs: [
       { id: 'srr', label: t('SRR Document Pack'), description: t('System Requirements Review'), formats: [
         { fmt: 'ZIP', label: 'ZIP', action: () => dl(`${API}/exports/docs/${sid}?review=srr&fmt=zip${docLang}`, `SRR_${sid}.zip`) },
       ]},
@@ -54,7 +55,7 @@ function buildExports(sid: string, t: TFunction): DocCategory[] {
         { fmt: 'ZIP', label: 'ZIP', action: () => dl(`${API}/exports/docs/${sid}?review=cdr&fmt=zip${docLang}`, `CDR_${sid}.zip`) },
       ]},
     ]},
-    { name: t('Systems Engineering'), color: '#8b5cf6', docs: [
+    { name: t('Systems Engineering'), color: 'var(--cat-2)', docs: [
       { id: 'semp', label: 'SEMP', description: t('Systems Engineering Management Plan'), formats: [
         { fmt: 'DOCX', label: 'DOCX', action: () => dl(`${API}/exports/docx/semp?study_id=${sid}`, `SEMP_${sid}.docx`) },
         { fmt: 'JSON', label: 'JSON', action: () => dlJson(`${API}/ecss/dids/semp/generate?study_id=${sid}`, `SEMP_${sid}.json`) },
@@ -80,7 +81,7 @@ function buildExports(sid: string, t: TFunction): DocCategory[] {
         }},
       ]},
     ]},
-    { name: t('Verification & Compliance'), color: '#10b981', docs: [
+    { name: t('Verification & Compliance'), color: 'var(--status-ok)', docs: [
       { id: 'vv', label: t('V&V Matrix'), description: t('Requirements verification matrix'), formats: [
         { fmt: 'XLSX', label: 'XLSX', action: async () => {
           const reqs = await fetch(`${API}/requirements/tree?study_id=${sid}`).then(r => r.json())
@@ -108,7 +109,7 @@ function buildExports(sid: string, t: TFunction): DocCategory[] {
         { fmt: 'JSON', label: 'JSON', action: () => dlJson(`${API}/exports/deorbit/${sid}`, `Deorbit_${sid}.json`) },
       ]},
     ]},
-    { name: t('Technical Models'), color: '#f59e0b', docs: [
+    { name: t('Technical Models'), color: 'var(--status-caution)', docs: [
       { id: 'thermal', label: t('Thermal Design Report'), description: t('Thermal balance, radiator sizing, component temps'), formats: [
         { fmt: 'DOCX', label: 'DOCX', action: () => dl(`${API}/exports/thermal-report/${sid}?fmt=docx`, `Thermal_${sid}.docx`) },
         { fmt: 'XLSX', label: 'XLSX', action: async () => {
@@ -147,7 +148,7 @@ function buildExports(sid: string, t: TFunction): DocCategory[] {
         { fmt: 'JSON', label: 'JSON', action: () => dlJson(`${API}/exports/smo/${sid}`, `Simulator_${sid}.json`) },
       ]},
     ]},
-    { name: t('Operations & Test'), color: '#06b6d4', docs: [
+    { name: t('Operations & Test'), color: 'var(--interactive)', docs: [
       { id: 'test-plan', label: t('Test Plan'), description: t('AIT/AIV test cases, environmental profile, integration matrix'), formats: [
         { fmt: 'DOCX', label: 'DOCX', action: () => dl(`${API}/exports/test-plan/${sid}?fmt=docx`, `Test_Plan_${sid}.docx`) },
         { fmt: 'XLSX', label: 'XLSX', action: () => dl(`${API}/exports/test-plan/${sid}?fmt=xlsx`, `Test_Plan_${sid}.xlsx`) },
@@ -162,7 +163,7 @@ function buildExports(sid: string, t: TFunction): DocCategory[] {
         }},
       ]},
     ]},
-    { name: t('Data Export'), color: '#6b7280', docs: [
+    { name: t('Data Export'), color: 'var(--text-3)', docs: [
       { id: 'full', label: t('Full Study Export'), description: t('Elements, interfaces, requirements — complete backup'), formats: [
         { fmt: 'JSON', label: 'JSON', action: async () => {
           const [elements, interfaces, requirements] = await Promise.all([fetch(`${API}/studies/${sid}/elements`).then(r=>r.json()), fetch(`${API}/studies/${sid}/interfaces`).then(r=>r.json()), fetch(`${API}/requirements/tree?study_id=${sid}`).then(r=>r.json())])
@@ -195,17 +196,17 @@ export function ExportPanel({ onClose }: { onClose: () => void }) {
     <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
       <div style={{ background: 'var(--bg-secondary)', borderRadius: '8px', border: '1px solid var(--border)', padding: '1.5rem', width: 650, maxHeight: '85vh', overflow: 'auto' }}>
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.5rem' }}>
-          <h2 style={{ fontSize: '1rem', margin: 0 }}>{t('Export Documents & Data')}</h2>
+          <h2 style={{ fontSize: fs.value, margin: 0 }}>{t('Export Documents & Data')}</h2>
           <span style={{ flex: 1 }} />
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '1.2rem' }}>×</button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: fs.title }}>×</button>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem', padding: '0.3rem 0.5rem', borderRadius: '4px', background: 'linear-gradient(90deg, #8B000015, transparent)', borderLeft: '3px solid #8B0000' }}>
-          <span style={{ fontSize: '0.68rem', fontWeight: 600, color: '#8B0000' }}>{t('University of Ottawa')}</span>
-          <span style={{ fontSize: '0.6rem', color: 'var(--text-secondary)' }}>{t('| SEDTI — All documents branded')}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem', padding: '0.3rem 0.5rem', borderRadius: '4px', background: 'linear-gradient(90deg, color-mix(in srgb, var(--brand) 8%, transparent), transparent)', borderLeft: '3px solid var(--brand)' }}>
+          <span style={{ fontSize: fs.label, fontWeight: 600, color: 'var(--brand)' }}>{t('University of Ottawa')}</span>
+          <span style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>{t('| SEDTI — All documents branded')}</span>
         </div>
 
-        {error && <div style={{ padding: '0.3rem 0.5rem', background: 'rgba(239,68,68,0.15)', borderRadius: '4px', color: 'var(--danger)', fontSize: '0.72rem', marginBottom: '0.5rem' }}>{error}</div>}
-        {success && <div style={{ padding: '0.3rem 0.5rem', background: 'rgba(16,185,129,0.15)', borderRadius: '4px', color: 'var(--success)', fontSize: '0.72rem', marginBottom: '0.5rem' }}>{success}</div>}
+        {error && <div style={{ padding: '0.3rem 0.5rem', background: 'rgba(239,68,68,0.15)', borderRadius: '4px', color: 'var(--danger)', fontSize: fs.label, marginBottom: '0.5rem' }}>{error}</div>}
+        {success && <div style={{ padding: '0.3rem 0.5rem', background: 'rgba(16,185,129,0.15)', borderRadius: '4px', color: 'var(--success)', fontSize: fs.label, marginBottom: '0.5rem' }}>{success}</div>}
 
         <div style={{ marginBottom: '0.75rem', padding: '0.5rem 0.6rem', borderRadius: '4px', background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
           <ExchangePanel studyId={studyId} title={t('Model exchange (Capella / ECSS-E-TM-10-25 / ReqIF / SysML v2)')} />
@@ -214,20 +215,20 @@ export function ExportPanel({ onClose }: { onClose: () => void }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           {categories.map(cat => (
             <div key={cat.name}>
-              <div style={{ fontSize: '0.7rem', fontWeight: 700, color: cat.color, marginBottom: '0.25rem', textTransform: 'uppercase' }}>{cat.name}</div>
+              <div style={{ fontSize: fs.label, fontWeight: 700, color: cat.color, marginBottom: '0.25rem', textTransform: 'uppercase' }}>{cat.name}</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
                 {cat.docs.map(doc => (
                   <div key={doc.id} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.35rem 0.5rem', borderRadius: '4px', background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontWeight: 600, fontSize: '0.72rem' }}>{doc.label}</div>
-                      <div style={{ fontSize: '0.58rem', color: 'var(--text-secondary)' }}>{doc.description}</div>
+                      <div style={{ fontWeight: 600, fontSize: fs.label }}>{doc.label}</div>
+                      <div style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>{doc.description}</div>
                     </div>
                     <div style={{ display: 'flex', gap: '0.2rem', flexShrink: 0 }}>
                       {doc.formats.map(f => (
                         <button key={f.fmt} onClick={() => run(doc.id + f.fmt, doc.label, f.action)}
                           disabled={running !== null}
                           style={{
-                            padding: '0.2rem 0.4rem', fontSize: '0.55rem', fontWeight: 700, borderRadius: '3px',
+                            padding: '0.2rem 0.4rem', fontSize: fs.label, fontWeight: 700, borderRadius: '3px',
                             background: f.fmt === 'DOCX' ? 'rgba(59,130,246,0.15)' : f.fmt === 'XLSX' ? 'rgba(16,185,129,0.15)' : f.fmt === 'ZIP' ? 'rgba(245,158,11,0.15)' : 'var(--bg-secondary)',
                             color: f.fmt === 'DOCX' ? 'var(--accent)' : f.fmt === 'XLSX' ? 'var(--success)' : f.fmt === 'ZIP' ? 'var(--warning)' : 'var(--text-secondary)',
                             border: 'none', cursor: running ? 'wait' : 'pointer',

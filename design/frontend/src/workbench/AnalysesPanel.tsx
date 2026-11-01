@@ -30,6 +30,7 @@ import { OptionCompare } from '../components/OptionCompare'
 import { ConflictsPanel } from '../components/ConflictsPanel'
 import { BudgetPanel } from './BudgetPanel'
 import type { AnalysisRun, AnalysisConflict } from '../types/analyses'
+import { fs } from '../theme/tokens'
 
 const API = '/api'
 
@@ -54,7 +55,7 @@ function fmt(v: unknown, digits = 1): string {
   return Number.isInteger(v) ? String(v) : v.toFixed(digits)
 }
 function tone(ok: boolean | null): string | undefined {
-  return ok === null ? undefined : ok ? '#10b981' : '#ef4444'
+  return ok === null ? undefined : ok ? 'var(--status-ok)' : 'var(--status-alarm)'
 }
 
 // English text is the i18n key
@@ -78,7 +79,7 @@ const CARD_NEEDS: Record<AnalysisId, string> = {
 
 export const ANALYSIS_CARDS: CardDef[] = [
   {
-    id: 'design_loop', label: CARD_LABELS.design_loop, color: '#f59e0b',
+    id: 'design_loop', label: CARD_LABELS.design_loop, color: 'var(--text)',
     needs: CARD_NEEDS.design_loop,
     runUrl: (s, opt) => `${API}/design/${s}/run${opt}`,
     runBody: { max_iterations: 50, convergence_threshold: 0.001 },
@@ -89,7 +90,7 @@ export const ANALYSIS_CARDS: CardDef[] = [
     ],
   },
   {
-    id: 'mission_simulation', label: CARD_LABELS.mission_simulation, color: '#3b82f6',
+    id: 'mission_simulation', label: CARD_LABELS.mission_simulation, color: 'var(--text)',
     needs: CARD_NEEDS.mission_simulation,
     runUrl: (s, opt) => `${API}/studies/${s}/analyses/mission_simulation/run${opt}`,
     metrics: (s, t) => [
@@ -99,7 +100,7 @@ export const ANALYSIS_CARDS: CardDef[] = [
     ],
   },
   {
-    id: 'ground_segment', label: CARD_LABELS.ground_segment, color: '#10b981',
+    id: 'ground_segment', label: CARD_LABELS.ground_segment, color: 'var(--text)',
     needs: CARD_NEEDS.ground_segment,
     runUrl: (s, opt) => `${API}/studies/${s}/analyses/ground_segment/run${opt}`,
     metrics: (s, t) => [
@@ -109,7 +110,7 @@ export const ANALYSIS_CARDS: CardDef[] = [
     ],
   },
   {
-    id: 'physics', label: CARD_LABELS.physics, color: '#8b5cf6',
+    id: 'physics', label: CARD_LABELS.physics, color: 'var(--text)',
     needs: CARD_NEEDS.physics,
     runUrl: (s, opt) => `${API}/studies/${s}/analyses/physics/run${opt}`,
     metrics: (s, t) => [
@@ -119,7 +120,7 @@ export const ANALYSIS_CARDS: CardDef[] = [
     ],
   },
   {
-    id: 'vv', label: CARD_LABELS.vv, color: '#14b8a6',
+    id: 'vv', label: CARD_LABELS.vv, color: 'var(--text)',
     needs: CARD_NEEDS.vv,
     runUrl: (s, opt) => `${API}/studies/${s}/analyses/vv/run${opt}`,
     metrics: (s, t) => [
@@ -129,7 +130,7 @@ export const ANALYSIS_CARDS: CardDef[] = [
     ],
   },
   {
-    id: 'fmeca', label: CARD_LABELS.fmeca, color: '#ec4899',
+    id: 'fmeca', label: CARD_LABELS.fmeca, color: 'var(--text)',
     needs: CARD_NEEDS.fmeca,
     runUrl: (s, opt) => `${API}/studies/${s}/analyses/fmeca/run${opt}`,
     runBody: { critical: [] },
@@ -162,7 +163,7 @@ function ago(iso: string | null | undefined, t: TFunction): string {
 
 function Badge({ text, color, title }: { text: string; color: string; title?: string }) {
   return (
-    <span title={title} style={{ fontSize: '0.56rem', padding: '0 0.35rem', borderRadius: 3, background: `${color}22`, color, border: `1px solid ${color}55`, whiteSpace: 'nowrap' }}>
+    <span title={title} style={{ fontSize: fs.label, padding: '0 0.35rem', borderRadius: 3, background: `color-mix(in srgb, ${color} 13%, transparent)`, color, border: `1px solid color-mix(in srgb, ${color} 33%, transparent)`, whiteSpace: 'nowrap' }}>
       {text}
     </span>
   )
@@ -217,33 +218,33 @@ function AnalysisCard({ def, run, openConflicts, active, onOpen, studyId, option
       onClick={onOpen}
       style={{
         cursor: 'pointer', borderRadius: 6, padding: '0.45rem 0.6rem', minWidth: 190, flex: '1 1 210px',
-        background: active ? `${def.color}14` : 'var(--bg-card)',
-        border: `1px solid ${active ? def.color : 'var(--border)'}`, borderLeft: `4px solid ${def.color}`,
+        background: active ? 'var(--interactive-wash)' : 'var(--surface-1)',
+        border: `1px solid ${active ? 'var(--interactive)' : 'var(--line)'}`, borderLeft: `3px solid ${active ? 'var(--interactive)' : 'var(--line-strong)'}`,
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.25rem' }}>
-        <span style={{ fontSize: '0.74rem', fontWeight: 600, color: def.color }}>{t(def.label)}</span>
+        <span style={{ fontSize: fs.label, fontWeight: 600, color: def.color }}>{t(def.label)}</span>
         <span style={{ flex: 1 }} />
-        {run?.stale && <Badge text={t('stale')} color="#f59e0b" title={t('Inputs changed since this run')} />}
-        {status === 'failed' && <Badge text={t('failed')} color="#ef4444" title={summary.error} />}
-        {running && <Badge text={t('running')} color="#3b82f6" />}
-        {status === 'ok' && !run?.stale && <Badge text={t('ok')} color="#10b981" />}
-        {openConflicts > 0 && <Badge text={t('{{count}} conflicts', { count: openConflicts, defaultValue_one: '{{count}} conflict' })} color="#f97316" />}
+        {run?.stale && <Badge text={t('stale')} color="var(--status-caution)" title={t('Inputs changed since this run')} />}
+        {status === 'failed' && <Badge text={t('failed')} color="var(--status-alarm)" title={summary.error} />}
+        {running && <Badge text={t('running')} color="var(--interactive)" />}
+        {status === 'ok' && !run?.stale && <Badge text={t('ok')} color="var(--status-ok)" />}
+        {openConflicts > 0 && <Badge text={t('{{count}} conflicts', { count: openConflicts, defaultValue_one: '{{count}} conflict' })} color="var(--status-caution)" />}
       </div>
-      <div style={{ fontSize: '0.58rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }} title={run?.finished_at || run?.started_at || ''}>
+      <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginBottom: '0.3rem' }} title={run?.finished_at || run?.started_at || ''}>
         {run ? t('last run {{ago}}', { ago: ago(run.finished_at || run.started_at, t) }) : optionId ? t('never run in this option') : t('never run')}
       </div>
       {metrics.length > 0 ? (
         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.3rem' }}>
           {metrics.map(m => (
             <div key={m.label} style={{ minWidth: 50 }}>
-              <div style={{ fontSize: '0.52rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>{m.label}</div>
-              <div style={{ fontSize: '0.74rem', fontWeight: 600, fontFamily: 'ui-monospace, monospace', color: m.tone || 'var(--text-primary)' }}>{m.value}</div>
+              <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>{m.label}</div>
+              <div style={{ fontSize: fs.value, fontWeight: 600, fontFamily: 'var(--font-mono)', color: m.tone || 'var(--text-primary)' }}>{m.value}</div>
             </div>
           ))}
         </div>
       ) : (
-        <div style={{ fontSize: '0.56rem', color: 'var(--text-secondary)', marginBottom: '0.3rem', fontStyle: 'italic' }} title={t(def.needs)}>
+        <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginBottom: '0.3rem', fontStyle: 'italic' }} title={t(def.needs)}>
           {t('needs: {{needs}}', { needs: t(def.needs) })}
         </div>
       )}
@@ -251,14 +252,13 @@ function AnalysisCard({ def, run, openConflicts, active, onOpen, studyId, option
         <button
           onClick={e => { e.stopPropagation(); if (!running) runMut.mutate() }}
           disabled={running}
-          style={{
-            cursor: running ? 'wait' : 'pointer', fontSize: '0.62rem', padding: '0.15rem 0.55rem', borderRadius: 4,
-            border: `1px solid ${def.color}`, background: `${def.color}22`, color: def.color, fontWeight: 600,
-          }}
+          type="button"
+          className="c2o-btn"
+          aria-busy={running}
         >
           {running ? t('Running…') : run ? t('Re-run') : t('Run')}
         </button>
-        {error && <span style={{ fontSize: '0.58rem', color: '#ef4444' }} title={error}>{error.slice(0, 80)}</span>}
+        {error && <span style={{ fontSize: fs.label, color: 'var(--status-alarm)' }} title={error}>{error.slice(0, 80)}</span>}
       </div>
     </div>
   )
@@ -267,7 +267,7 @@ function AnalysisCard({ def, run, openConflicts, active, onOpen, studyId, option
 function Section({ title, color, children }: { title: string; color: string; children: ReactNode }) {
   return (
     <div style={{ marginTop: '0.6rem', borderTop: '1px solid var(--border)', paddingTop: '0.4rem' }}>
-      <div style={{ fontSize: '0.66rem', fontWeight: 600, color, marginBottom: '0.35rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{title}</div>
+      <div style={{ fontSize: fs.label, fontWeight: 600, color, marginBottom: '0.35rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{title}</div>
       {children}
     </div>
   )
@@ -288,7 +288,7 @@ export function AnalysesPanel() {
     enabled: !!studyId, structuralSharing: false,
   })
 
-  if (!studyId) return <div style={{ padding: '0.75rem', fontSize: '0.72rem', color: 'var(--text-secondary)' }}>{t('Select a study.')}</div>
+  if (!studyId) return <div style={{ padding: '0.75rem', fontSize: fs.label, color: 'var(--text-secondary)' }}>{t('Select a study.')}</div>
 
   const byAnalysis = new Map(runs.map(r => [r.analysis, r]))
   const openByAnalysis = new Map<string, number>()
@@ -301,17 +301,17 @@ export function AnalysesPanel() {
   return (
     <div style={{ padding: '0.5rem 0.75rem' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.4rem' }}>
-        <span style={{ fontSize: '0.66rem', color: 'var(--text-secondary)' }}>
+        <span style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>
           {optionId
             ? t('Engineering analyses for this study (active option) — click a card to open it; Run posts to the analysis and refreshes parameters, conflicts and margins.')
             : t('Engineering analyses for this study (baseline) — click a card to open it; Run posts to the analysis and refreshes parameters, conflicts and margins.')}
         </span>
         <span style={{ flex: 1 }} />
-        <button onClick={() => setShowCompare(v => !v)} style={{ cursor: 'pointer', fontSize: '0.62rem', padding: '0.15rem 0.55rem', borderRadius: 4, border: '1px solid var(--border)', background: showCompare ? '#f59e0b22' : 'none', color: showCompare ? '#f59e0b' : 'var(--text-secondary)' }}>
+        <button onClick={() => setShowCompare(v => !v)} style={{ cursor: 'pointer', fontSize: fs.label, padding: '0.15rem 0.55rem', borderRadius: 4, border: '1px solid var(--border)', background: showCompare ? 'color-mix(in srgb, var(--status-caution) 13%, transparent)' : 'none', color: showCompare ? 'var(--status-caution)' : 'var(--text-secondary)' }}>
           {t('Options')} {showCompare ? '▾' : '▸'}
         </button>
       </div>
-      {runsError && <div style={{ fontSize: '0.62rem', color: '#ef4444', marginBottom: '0.3rem' }}>{t('analyses: {{message}}', { message: (runsError as Error).message })}</div>}
+      {runsError && <div style={{ fontSize: fs.label, color: 'var(--status-alarm)', marginBottom: '0.3rem' }}>{t('analyses: {{message}}', { message: (runsError as Error).message })}</div>}
 
       <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
         {ANALYSIS_CARDS.map(def => (
@@ -324,7 +324,7 @@ export function AnalysesPanel() {
       </div>
 
       {showCompare && (
-        <Section title={t('Options')} color="#f59e0b">
+        <Section title={t('Options')} color="var(--text-2)">
           <ErrorBoundary phaseName="Option compare"><OptionCompare studyId={studyId} /></ErrorBoundary>
         </Section>
       )}
@@ -334,7 +334,7 @@ export function AnalysesPanel() {
           <ErrorBoundary phaseName={openDef.label}>
             {open === 'design_loop' && (
               <div>
-                <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
+                <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
                   {t('Budgets after the last design loop (mission root or the focused element). Cross-domain conflicts from the loop are listed under Conflicts below.')}
                 </div>
                 <BudgetPanel />
@@ -350,7 +350,7 @@ export function AnalysesPanel() {
         </Section>
       )}
 
-      <Section title={t('Conflicts')} color="#f97316">
+      <Section title={t('Conflicts')} color="var(--text-2)">
         <ErrorBoundary phaseName="Conflicts"><ConflictsPanel studyId={studyId} optionId={optionId} /></ErrorBoundary>
       </Section>
     </div>

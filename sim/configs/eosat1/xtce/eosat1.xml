@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <SpaceSystem xmlns="http://www.omg.org/spec/XTCE/20180204" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="EOSAT-1">
-  <Header version="1.0+4a992dbe3156" classification="Unclassified — Simulation"/>
+  <Header version="1.0+fb2c0d99b60e" classification="Unclassified — Simulation"/>
   <SpaceSystem name="CCSDS">
     <LongDescription>CCSDS Space Packet Protocol header definitions</LongDescription>
     <TelemetryMetaData>
@@ -4944,6 +4944,12 @@
         <IntegerParameterType name="ttc_downlink_mode_Type" signed="false">
           <IntegerDataEncoding sizeInBits="8" encoding="unsigned"/>
         </IntegerParameterType>
+        <FloatParameterType name="ttc_time_since_last_tc_Type">
+          <FloatDataEncoding sizeInBits="32"/>
+          <UnitSet>
+            <Unit>s</Unit>
+          </UnitSet>
+        </FloatParameterType>
         <FloatParameterType name="ttc_active_gs_Type">
           <FloatDataEncoding sizeInBits="32"/>
         </FloatParameterType>
@@ -5081,6 +5087,9 @@
         </Parameter>
         <Parameter name="ttc_downlink_mode" parameterTypeRef="ttc_downlink_mode_Type">
           <LongDescription>DOWNLINK / payload-dump mode (TTC_SET_DOWNLINK_MODE, S8 func 79). 0=off, 1=on. This is the mode gate on the HIGH tier</LongDescription>
+        </Parameter>
+        <Parameter name="ttc_time_since_last_tc" parameterTypeRef="ttc_time_since_last_tc_Type">
+          <LongDescription>On-board command-loss timer: seconds since the OBC last accepted a telecommand (restarts on every S1.1). At ttc.yaml cmd_loss_switch_timeout_s (24 h) event 0x0514 CMD_LOSS_TIMEOUT fires and S19 ea 4003 switches to the redundant transponder (FDIR TTC-01)</LongDescription>
         </Parameter>
         <Parameter name="ttc_active_gs" parameterTypeRef="ttc_active_gs_Type">
           <LongDescription>Active ground station: 1-based index into orbit.yaml ground_stations, 0 = out of contact</LongDescription>

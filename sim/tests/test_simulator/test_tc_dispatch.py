@@ -3,6 +3,8 @@ import struct
 import pytest
 from unittest.mock import MagicMock, patch
 
+from tests.engine_doubles import wire_mock_engine
+
 
 def make_mock_engine():
     """Create a minimal mock engine for testing dispatch."""
@@ -28,7 +30,7 @@ def make_mock_engine():
     }
     engine._tc_scheduler = MagicMock()
     engine._tm_storage = MagicMock()
-    return engine
+    return wire_mock_engine(engine)
 
 
 class TestCheckTcAcceptance:

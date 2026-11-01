@@ -1,0 +1,94 @@
+# C2O nightly: the sim slow tier and the browser E2E tier.
+# Tiers and how to run them locally: docs/TESTING.md.
+name: nightly
+
+on:
+  schedule:
+    - cron: "17 6 * * *"                  # 06:17 UTC daily
+  workflow_dispatch:
+
+concurrency:
+  group: nightly-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  sim-slow:
+    name: sim · slow tier
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: sim
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: |
+            sim/pyproject.toml
+            sim/packages/*/pyproject.toml
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install SMO packages (as sim/start.sh) and test tooling
+        run: |
+          python -m pip install --upgrade "pip>=25.1"
+          pip install -e packages/smo-common
+          pip install -e packages/smo-simulator -e packages/smo-mcs \
+                      -e packages/smo-planner -e packages/smo-rfsim \
+                      -e packages/smo-link -e packages/smo-gateway
+          pip install --group dev
+      - name: Playwright Chromium (smo-link CSP browser check)
+        run: python -m playwright install --with-deps chromium
+      - name: Slow tier (RF DSP, flythroughs, engine-heavy, smo-link e2e)
+        run: >
+          python -m pytest -n auto -m "slow and not e2e"
+          --timeout=900 --durations=40 -q -p no:cacheprovider
+
+  sim-e2e:
+    name: sim · browser E2E
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: sim
+    env:
+      SMO_E2E: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: |
+            sim/pyproject.toml
+            sim/packages/*/pyproject.toml
+      - name: Install SMO packages (as sim/start.sh) and test tooling
+        run: |
+          python -m pip install --upgrade "pip>=25.1"
+          pip install -e packages/smo-common
+          pip install -e packages/smo-simulator -e packages/smo-mcs \
+                      -e packages/smo-planner -e packages/smo-rfsim \
+                      -e packages/smo-link -e packages/smo-gateway
+          pip install --group dev
+      - name: Playwright Chromium
+        run: python -m playwright install --with-deps chromium
+      # Serial on purpose: every module binds the default stack ports
+      # (8001/8002/8080/9090/9091/8092-8094).
+      - name: Modern-UI E2E
+        run: python -m pytest tests/test_e2e_browser -m "e2e and not legacy_ui" -q -p no:cacheprovider
+      - name: Legacy classic-console E2E (through the RF bridge)
+        if: always()
+        continue-on-error: true           # ~30-45 min; informative until ported to the modern UI
+        run: python -m pytest tests/test_e2e_browser -m "legacy_ui" -q -p no:cacheprovider
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-screenshots
+          path: sim/tests/test_e2e_browser/screenshots/
+          if-no-files-found: ignore

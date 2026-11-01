@@ -6,6 +6,7 @@
  * No longer contains step content — just the navigation.
  */
 import { useDesignStore } from '../stores/designStore'
+import { fs } from '../theme/tokens'
 
 type Step = 'need' | 'concept' | 'requirements' | 'design'
 
@@ -37,8 +38,8 @@ export function StudyStepper({ activeStep, onStepClick }: Props) {
 
   return (
     <div style={{
-      width: '60px', background: 'var(--bg-secondary, #111827)',
-      borderRight: '1px solid var(--border, #374151)',
+      width: '60px', background: 'var(--bg-secondary, var(--surface-1))',
+      borderRight: '1px solid var(--border, var(--line))',
       display: 'flex', flexDirection: 'column', alignItems: 'center',
       paddingTop: '1rem', gap: '0.25rem',
     }}>
@@ -55,22 +56,22 @@ export function StudyStepper({ activeStep, onStepClick }: Props) {
               style={{
                 width: 34, height: 34, borderRadius: '50%', border: 'none',
                 cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '0.72rem', fontWeight: 700,
-                background: isComplete ? '#10b981' : isActive ? '#3b82f6' : (isPast ? '#374151' : '#1f2937'),
-                color: (isComplete || isActive) ? 'white' : '#6b7280',
+                fontSize: fs.label, fontWeight: 700,
+                background: isComplete ? 'var(--status-ok)' : isActive ? 'var(--interactive)' : (isPast ? 'var(--line)' : 'var(--surface-2)'),
+                color: (isComplete || isActive) ? 'white' : 'var(--text-3)',
                 transition: 'all 0.15s',
               }}
             >
               {isComplete ? '\u2713' : i + 1}
             </button>
             <span style={{
-              fontSize: '0.55rem', color: isActive ? '#3b82f6' : '#4b5563',
+              fontSize: fs.label, color: isActive ? 'var(--interactive)' : 'var(--line-strong)',
               fontWeight: isActive ? 600 : 400, textAlign: 'center',
             }}>
               {step.label}
             </span>
             {i < STEPS.length - 1 && (
-              <div style={{ width: 2, height: 12, background: isPast || isComplete ? '#374151' : '#1f2937', margin: '0.1rem 0' }} />
+              <div style={{ width: 2, height: 12, background: isPast || isComplete ? 'var(--line)' : 'var(--surface-2)', margin: '0.1rem 0' }} />
             )}
           </div>
         )

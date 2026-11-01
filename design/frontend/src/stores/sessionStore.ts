@@ -63,7 +63,7 @@ function toDesignParam(raw: any): DesignParam {
   }
 }
 
-export const useSessionStore = create<SessionState>((set, get) => ({
+export const useSessionStore = create<SessionState>((set) => ({
   sessionId: null,
   positionId: null,
   positionIds: [],

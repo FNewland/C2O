@@ -27,12 +27,12 @@ export const PHASE_SHORT: Record<Phase, string> = {
 }
 
 export const PHASE_COLORS: Record<Phase, string> = {
-  0: '#8b5cf6',
-  1: '#3b82f6',
-  2: '#06b6d4',
-  3: '#10b981',
-  4: '#f59e0b',
-  5: '#ef4444',
+  0: 'var(--cat-2)',
+  1: 'var(--interactive)',
+  2: 'var(--interactive)',
+  3: 'var(--status-ok)',
+  4: 'var(--status-caution)',
+  5: 'var(--status-alarm)',
 }
 
 export const SEGMENT_LABELS: Record<Segment, string> = {
@@ -43,11 +43,11 @@ export const SEGMENT_LABELS: Record<Segment, string> = {
 }
 
 export const LENS_LABELS: Record<Lens, { name: string; icon: string; color: string }> = {
-  mechanical: { name: 'Mechanical', icon: '⚙', color: '#6b7280' },
-  electrical: { name: 'Electrical', icon: '⚡', color: '#f59e0b' },
-  rf_comms: { name: 'RF / Comms', icon: '📡', color: '#3b82f6' },
-  thermal: { name: 'Thermal', icon: '🌡', color: '#ef4444' },
-  data: { name: 'Data', icon: '💾', color: '#06b6d4' },
-  mission: { name: 'Mission', icon: '🎯', color: '#8b5cf6' },
-  software: { name: 'Software / Ops', icon: '💻', color: '#10b981' },
+  mechanical: { name: 'Mechanical', icon: '⚙', color: 'var(--text-3)' },
+  electrical: { name: 'Electrical', icon: '⚡', color: 'var(--status-caution)' },
+  rf_comms: { name: 'RF / Comms', icon: '📡', color: 'var(--interactive)' },
+  thermal: { name: 'Thermal', icon: '🌡', color: 'var(--status-alarm)' },
+  data: { name: 'Data', icon: '💾', color: 'var(--interactive)' },
+  mission: { name: 'Mission', icon: '🎯', color: 'var(--cat-2)' },
+  software: { name: 'Software / Ops', icon: '💻', color: 'var(--status-ok)' },
 }

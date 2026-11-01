@@ -27,7 +27,7 @@ sur une station sol de secours et gérer l'impact opérationnel d'une fenêtre d
 | ttc.link_margin | 0x0503 | Était > 3 dB avant la panne |
 | ttc.carrier_lock | 0x0510 | 0 (perdue) — était à 1 avant la panne |
 | ttc.contact_elevation | 0x050A | Consigner la valeur au moment de la perte |
-| ttc.gs_equipment_status | 0x0524 | Masque binaire de l'état des équipements de la station sol |
+| Surveillance et contrôle de la station (sol) | — | État de l'antenne, du LNA, du HPA et de la poursuite tel que le signale le système de surveillance et contrôle de la station |
 | ttc.active_gs | 0x0523 | Indice de la station sol courante |
 
 ## Télécommandes requises

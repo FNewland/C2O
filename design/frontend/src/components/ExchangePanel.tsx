@@ -10,27 +10,28 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 import type { ImportResult } from '../types/arcadia'
+import { fs } from '../theme/tokens'
 
 const API = '/api'
 
 const btn = (color: string): React.CSSProperties => ({
-  padding: '0.25rem 0.6rem', fontSize: '0.68rem', fontWeight: 600, borderRadius: '4px', cursor: 'pointer',
-  background: `${color}20`, color, border: `1px solid ${color}60`, whiteSpace: 'nowrap',
+  padding: '0.25rem 0.6rem', fontSize: fs.label, fontWeight: 600, borderRadius: '4px', cursor: 'pointer',
+  background: `color-mix(in srgb, ${color} 13%, transparent)`, color, border: `1px solid color-mix(in srgb, ${color} 38%, transparent)`, whiteSpace: 'nowrap',
 })
 
 interface Fmt { id: string; label: string; ext: string; path: string; color: string; blurb: string }
 
 // Labels and blurbs are display-only; ids, paths and file names are not translated.
 const buildExports = (t: TFunction): Fmt[] => [
-  { id: 'capella', label: 'Capella', ext: 'zip', path: 'export/capella.zip', color: '#3b82f6',
+  { id: 'capella', label: 'Capella', ext: 'zip', path: 'export/capella.zip', color: 'var(--interactive)',
     blurb: t('Arcadia model (.aird/.capella + property values). Open in Capella 7.x; round-trips through the Capella import below.') },
-  { id: 'ecss', label: 'ECSS-E-TM-10-25', ext: 'zip', path: 'export/ecss-10-25.zip', color: '#8b5cf6',
+  { id: 'ecss', label: 'ECSS-E-TM-10-25', ext: 'zip', path: 'export/ecss-10-25.zip', color: 'var(--cat-2)',
     blurb: t('Annex A JSON (engineering model, iterations, parameters). Consumed by ESA CDF tools, COMET / CDP4 and other Annex A readers.') },
-  { id: 'reqif', label: 'ReqIF', ext: 'reqif', path: 'export/requirements.reqif', color: '#10b981',
+  { id: 'reqif', label: 'ReqIF', ext: 'reqif', path: 'export/requirements.reqif', color: 'var(--status-ok)',
     blurb: t('Requirements Interchange Format (OMG). Import into IBM DOORS / DOORS Next, Polarion, Jama, Codebeamer.') },
-  { id: 'sysml', label: 'SysML v2', ext: 'sysml', path: 'export/model.sysml', color: '#f59e0b',
+  { id: 'sysml', label: 'SysML v2', ext: 'sysml', path: 'export/model.sysml', color: 'var(--status-caution)',
     blurb: t('KerML/SysML v2 textual notation: parts, ports, connections, requirements. For SysML v2 pilot tools, Syside, Cameo 2024+.') },
-  { id: 'mbse', label: t('Legacy MBSE JSON'), ext: 'json', path: 'export/mbse-legacy.json', color: '#6b7280',
+  { id: 'mbse', label: t('Legacy MBSE JSON'), ext: 'json', path: 'export/mbse-legacy.json', color: 'var(--text-3)',
     blurb: t('The pre-SCDF-160 SysML-style JSON. Kept for scripts and notebooks that already read it.') },
 ]
 
@@ -78,11 +79,11 @@ function ImportZone({ label, accept, endpoint, color, blurb, onDone }: {
       onClick={() => inputRef.current?.click()}
       style={{
         flex: 1, minWidth: 220, padding: '0.6rem', borderRadius: '6px', cursor: busy ? 'wait' : 'pointer',
-        border: `1px dashed ${over ? color : 'var(--border)'}`, background: over ? `${color}10` : 'var(--bg-primary)',
+        border: `1px dashed ${over ? color : 'var(--border)'}`, background: over ? `color-mix(in srgb, ${color} 6%, transparent)` : 'var(--bg-primary)',
       }}>
-      <div style={{ fontSize: '0.72rem', fontWeight: 600, color }}>{busy ? t('Importing…') : t('Import {{label}}', { label })}</div>
-      <div style={{ fontSize: '0.62rem', color: 'var(--text-secondary)', marginTop: '0.15rem' }}>{blurb}</div>
-      <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>{t('Drop a file here or click to choose ({{accept}}).', { accept })}</div>
+      <div style={{ fontSize: fs.label, fontWeight: 600, color }}>{busy ? t('Importing…') : t('Import {{label}}', { label })}</div>
+      <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginTop: '0.15rem' }}>{blurb}</div>
+      <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginTop: '0.25rem' }}>{t('Drop a file here or click to choose ({{accept}}).', { accept })}</div>
       <input ref={inputRef} type="file" accept={accept} style={{ display: 'none' }}
         onChange={e => { const f = e.target.files?.[0]; if (f) upload(f) }} />
     </div>
@@ -94,12 +95,12 @@ function ImportSummary({ r }: { r: ImportResult }) {
   const counts = (o: Record<string, number> | number) =>
     typeof o === 'number' ? String(o) : Object.entries(o).filter(([, v]) => v).map(([k, v]) => `${k} ${v}`).join(', ') || '0'
   return (
-    <div style={{ fontSize: '0.66rem', marginTop: '0.4rem', padding: '0.4rem 0.6rem', borderRadius: '4px', background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.3)' }}>
-      <div style={{ color: '#6ee7b7', fontWeight: 600 }}>{t('Imported {{format}}', { format: r.format })}{r.filename ? ` — ${r.filename}` : ''}</div>
+    <div style={{ fontSize: fs.label, marginTop: '0.4rem', padding: '0.4rem 0.6rem', borderRadius: '4px', background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.3)' }}>
+      <div style={{ color: 'var(--status-ok)', fontWeight: 600 }}>{t('Imported {{format}}', { format: r.format })}{r.filename ? ` — ${r.filename}` : ''}</div>
       <div>{t('created: {{created}} · updated: {{updated}}', { created: counts(r.created), updated: counts(r.updated) })}{r.format === 'reqif' ? ` · ${t('relations: {{n}}', { n: r.relations_created })}` : ''}</div>
       {r.warnings?.length > 0 && (
         <details style={{ marginTop: '0.2rem' }}>
-          <summary style={{ color: '#f59e0b', cursor: 'pointer' }}>{t('{{count}} warnings', { count: r.warnings.length, defaultValue_one: '{{count}} warning' })}</summary>
+          <summary style={{ color: 'var(--status-caution)', cursor: 'pointer' }}>{t('{{count}} warnings', { count: r.warnings.length, defaultValue_one: '{{count}} warning' })}</summary>
           <ul style={{ margin: '0.2rem 0 0 1rem', color: 'var(--text-secondary)' }}>{r.warnings.map((w, i) => <li key={i}>{w}</li>)}</ul>
         </details>
       )}
@@ -117,7 +118,7 @@ export function ExchangePanel({ studyId, title }: { studyId: string | null; titl
   const [pushing, setPushing] = useState(false)
 
   if (!studyId) {
-    return <div style={{ padding: '0.5rem 0', color: 'var(--text-secondary)', fontSize: '0.72rem' }}>{t('Create or join a study to exchange models.')}</div>
+    return <div style={{ padding: '0.5rem 0', color: 'var(--text-secondary)', fontSize: fs.label }}>{t('Create or join a study to exchange models.')}</div>
   }
   const base = `${API}/studies/${studyId}`
   const slug = studyId.slice(0, 8)
@@ -141,9 +142,9 @@ export function ExchangePanel({ studyId, title }: { studyId: string | null; titl
   }
 
   return (
-    <div style={{ fontSize: '0.74rem' }}>
-      <div style={{ fontWeight: 600, fontSize: '0.78rem', marginBottom: '0.15rem' }}>{title ?? t('Model exchange')}</div>
-      <div style={{ fontSize: '0.64rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
+    <div style={{ fontSize: fs.label }}>
+      <div style={{ fontWeight: 600, fontSize: fs.label, marginBottom: '0.15rem' }}>{title ?? t('Model exchange')}</div>
+      <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
         {t("Export the study's Arcadia spine (elements, functions, interfaces, exchange items, requirements, parameters) to standard formats, or import from them.")}
       </div>
 
@@ -153,28 +154,28 @@ export function ExchangePanel({ studyId, title }: { studyId: string | null; titl
             <button style={{ ...btn(f.color), minWidth: 150 }} onClick={() => download(`${base}/${f.path}`, `${f.id}_${slug}.${f.ext}`, setErr)}>
               ↓ {f.label}
             </button>
-            <div style={{ fontSize: '0.64rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>{f.blurb}</div>
+            <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', lineHeight: 1.4 }}>{f.blurb}</div>
           </div>
         ))}
         <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'flex-start', padding: '0.35rem 0.5rem', borderRadius: '4px', background: 'var(--bg-primary)', border: '1px solid var(--border)' }}>
-          <button style={{ ...btn('#ec4899'), minWidth: 150 }} disabled={pushing} onClick={pushComet}>
+          <button style={{ ...btn('var(--cat-6)'), minWidth: 150 }} disabled={pushing} onClick={pushComet}>
             {pushing ? t('Pushing…') : t('⇧ Push to COMET')}
           </button>
-          <div style={{ fontSize: '0.64rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
+          <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', lineHeight: 1.4 }}>
             {t('ECSS-E-TM-10-25 Annex C.2 REST push to a COMET / CDP4 server (ESA CDF). Requires COMET_URL on the server.')}
-            {cometMsg && <div style={{ color: cometOk ? '#6ee7b7' : '#f59e0b', marginTop: '0.2rem' }}>{cometMsg}</div>}
+            {cometMsg && <div style={{ color: cometOk ? 'var(--status-ok)' : 'var(--status-caution)', marginTop: '0.2rem' }}>{cometMsg}</div>}
           </div>
         </div>
       </div>
 
       <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-        <ImportZone label="Capella" accept=".zip" endpoint={`${base}/import/capella`} color="#3b82f6"
+        <ImportZone label="Capella" accept=".zip" endpoint={`${base}/import/capella`} color="var(--interactive)"
           blurb={t('Capella project zip (.aird + .capella). Elements, functions, interfaces and exchange items are merged by external id.')} onDone={onImportDone} />
-        <ImportZone label="ReqIF" accept=".reqif,.reqifz,.xml" endpoint={`${base}/import/reqif`} color="#10b981"
+        <ImportZone label="ReqIF" accept=".reqif,.reqifz,.xml" endpoint={`${base}/import/reqif`} color="var(--status-ok)"
           blurb={t('ReqIF from DOORS / Polarion / Jama. Requirements and their parent/child relations are created or updated.')} onDone={onImportDone} />
       </div>
       {result && <ImportSummary r={result} />}
-      {err && <div style={{ color: '#ef4444', fontSize: '0.66rem', marginTop: '0.4rem' }}>{err}</div>}
+      {err && <div style={{ color: 'var(--status-alarm)', fontSize: fs.label, marginTop: '0.4rem' }}>{err}</div>}
     </div>
   )
 }

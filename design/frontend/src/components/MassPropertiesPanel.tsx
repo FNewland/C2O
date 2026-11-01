@@ -12,6 +12,7 @@ import { useActiveParameters } from '../hooks/useActiveParameters'
 import { useDesignStore } from '../stores/designStore'
 import { useModelStore } from '../stores/modelStore'
 import { useEquipmentView } from '../hooks/useEquipmentView'
+import { fs } from '../theme/tokens'
 
 // Domain display names and colors
 const DOMAIN_LABELS: Record<string, string> = {
@@ -22,10 +23,10 @@ const DOMAIN_LABELS: Record<string, string> = {
 }
 
 const DOMAIN_COLORS: Record<string, string> = {
-  power: '#f59e0b', aocs: '#06b6d4', ttc: '#ec4899', link: '#ec4899',
-  obc: '#8b5cf6', data: '#8b5cf6', propulsion: '#f97316',
-  structure: '#84cc16', thermal: '#ef4444', integration: '#6b7280',
-  payload: '#3b82f6',
+  power: 'var(--status-caution)', aocs: 'var(--interactive)', ttc: 'var(--cat-6)', link: 'var(--cat-6)',
+  obc: 'var(--cat-2)', data: 'var(--cat-2)', propulsion: 'var(--status-caution)',
+  structure: 'var(--cat-7)', thermal: 'var(--status-alarm)', integration: 'var(--text-3)',
+  payload: 'var(--interactive)',
 }
 
 // Default margin percentages per subsystem domain (ECSS heritage)
@@ -149,9 +150,9 @@ export function MassPropertiesPanel() {
 
   if (!hasData && budgetItems.length === 0) {
     return (
-      <div className="card" style={{ borderLeft: '3px solid #6b7280' }}>
-        <h3 style={{ fontSize: '0.85rem', color: '#6b7280' }}>Mass Properties</h3>
-        <p style={{ fontSize: '0.72rem', color: '#6b7280' }}>
+      <div className="card" style={{ borderLeft: '3px solid var(--text-3)' }}>
+        <h3 style={{ fontSize: fs.body, color: 'var(--text-3)' }}>Mass Properties</h3>
+        <p style={{ fontSize: fs.label, color: 'var(--text-3)' }}>
           {result ? 'No mass data in design result. Select equipment in Phase 3 to populate.' : 'Run a design to see mass properties.'}
         </p>
       </div>
@@ -173,17 +174,17 @@ export function MassPropertiesPanel() {
 
   return (
     <div className="card">
-      <h3 style={{ fontSize: '0.85rem', marginBottom: '0.3rem' }}>Mass Budget</h3>
-      <p style={{ fontSize: '0.68rem', color: '#9ca3af', marginBottom: '0.4rem' }}>
+      <h3 style={{ fontSize: fs.body, marginBottom: '0.3rem' }}>Mass Budget</h3>
+      <p style={{ fontSize: fs.label, color: 'var(--text-2)', marginBottom: '0.4rem' }}>
         Per ECSS-E-ST-10-02C. CBE = Current Best Estimate, MEV = Max Expected Value (CBE + margin).
       </p>
 
       {/* Mass Budget Table */}
       {budgetItems.length > 0 && (
         <div style={{ overflowX: 'auto', marginBottom: '0.75rem' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.72rem', fontFamily: 'monospace' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs.value, fontFamily: 'monospace' }}>
             <thead>
-              <tr style={{ background: 'var(--bg-primary, #0a0e1a)' }}>
+              <tr style={{ background: 'var(--bg-primary, var(--surface-0))' }}>
                 <th style={thBudget}>Item</th>
                 <th style={thBudgetR}>Unit Mass (kg)</th>
                 <th style={thBudgetR}>Qty</th>
@@ -196,24 +197,24 @@ export function MassPropertiesPanel() {
               {Object.entries(groupedItems).map(([domain, items]) => (
                 <React.Fragment key={domain}>
                   {/* Domain header */}
-                  <tr style={{ background: `${DOMAIN_COLORS[domain] || '#6b7280'}11` }}>
-                    <td colSpan={6} style={{ padding: '0.3rem 0.5rem', fontWeight: 700, color: DOMAIN_COLORS[domain] || '#6b7280', fontSize: '0.72rem' }}>
+                  <tr style={{ background: `color-mix(in srgb, ${DOMAIN_COLORS[domain] || 'var(--text-3)'} 7%, transparent)` }}>
+                    <td colSpan={6} style={{ padding: '0.3rem 0.5rem', fontWeight: 700, color: DOMAIN_COLORS[domain] || 'var(--text-3)', fontSize: fs.label }}>
                       {DOMAIN_LABELS[domain] || domain}
                     </td>
                   </tr>
                   {/* Items in this domain */}
                   {items.map(item => (
-                    <tr key={item.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                    <tr key={item.id} style={{ borderBottom: '1px solid color-mix(in srgb, var(--text) 5%, transparent)' }}>
                       <td style={{ ...tdBudget, paddingLeft: '1.2rem' }}>{item.name}</td>
                       <td style={tdBudgetR}>{item.unit_mass_kg.toFixed(3)}</td>
                       <td style={tdBudgetR}>{item.quantity}</td>
                       <td style={tdBudgetR}>{item.cbe_mass_kg.toFixed(3)}</td>
-                      <td style={{ ...tdBudgetR, color: '#f59e0b' }}>{item.margin_pct}%</td>
+                      <td style={{ ...tdBudgetR, color: 'var(--status-caution)' }}>{item.margin_pct}%</td>
                       <td style={tdBudgetR}>{item.mev_mass_kg.toFixed(3)}</td>
                     </tr>
                   ))}
                   {/* Subtotal */}
-                  <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', fontWeight: 600 }}>
+                  <tr style={{ borderBottom: '1px solid color-mix(in srgb, var(--text) 10%, transparent)', fontWeight: 600 }}>
                     <td style={tdBudget} colSpan={3}>Subtotal: {DOMAIN_LABELS[domain] || domain}</td>
                     <td style={tdBudgetR}>{domainSubtotals[domain]?.cbe.toFixed(3)}</td>
                     <td style={tdBudgetR}></td>
@@ -223,37 +224,37 @@ export function MassPropertiesPanel() {
               ))}
 
               {/* System total */}
-              <tr style={{ borderTop: '2px solid #374151', fontWeight: 700 }}>
+              <tr style={{ borderTop: '2px solid var(--line)', fontWeight: 700 }}>
                 <td style={tdBudget} colSpan={3}>System Total (CBE)</td>
                 <td style={{ ...tdBudgetR, fontWeight: 700 }}>{systemTotals.cbe.toFixed(3)}</td>
                 <td style={tdBudgetR}></td>
                 <td style={{ ...tdBudgetR, fontWeight: 700 }}>{systemTotals.mev.toFixed(3)}</td>
               </tr>
-              <tr style={{ color: '#f97316' }}>
+              <tr style={{ color: 'var(--status-caution)' }}>
                 <td style={tdBudget} colSpan={3}>System Contingency ({SYSTEM_CONTINGENCY_PCT}%)</td>
                 <td style={tdBudgetR}></td>
                 <td style={tdBudgetR}>{SYSTEM_CONTINGENCY_PCT}%</td>
                 <td style={tdBudgetR}>{systemTotals.contingency.toFixed(3)}</td>
               </tr>
-              <tr style={{ borderTop: '2px solid #374151', fontWeight: 700, color: '#10b981' }}>
+              <tr style={{ borderTop: '2px solid var(--line)', fontWeight: 700, color: 'var(--status-ok)' }}>
                 <td style={tdBudget} colSpan={3}>Dry Mass</td>
                 <td style={tdBudgetR}></td>
                 <td style={tdBudgetR}></td>
-                <td style={{ ...tdBudgetR, fontWeight: 700, color: '#10b981' }}>{systemTotals.dryMass.toFixed(3)}</td>
+                <td style={{ ...tdBudgetR, fontWeight: 700, color: 'var(--status-ok)' }}>{systemTotals.dryMass.toFixed(3)}</td>
               </tr>
               {systemTotals.propMass > 0 && (
-                <tr style={{ color: '#3b82f6' }}>
+                <tr style={{ color: 'var(--interactive)' }}>
                   <td style={tdBudget} colSpan={3}>Propellant Mass</td>
                   <td style={tdBudgetR}></td>
                   <td style={tdBudgetR}></td>
                   <td style={tdBudgetR}>{systemTotals.propMass.toFixed(3)}</td>
                 </tr>
               )}
-              <tr style={{ borderTop: '2px solid #374151', fontWeight: 700, fontSize: '0.82rem' }}>
+              <tr style={{ borderTop: '2px solid var(--line)', fontWeight: 700, fontSize: fs.body }}>
                 <td style={tdBudget} colSpan={3}>Wet Mass</td>
                 <td style={tdBudgetR}></td>
                 <td style={tdBudgetR}></td>
-                <td style={{ ...tdBudgetR, fontWeight: 700, color: '#f59e0b', fontSize: '0.82rem' }}>{systemTotals.wetMass.toFixed(3)} kg</td>
+                <td style={{ ...tdBudgetR, fontWeight: 700, color: 'var(--status-caution)', fontSize: fs.body }}>{systemTotals.wetMass.toFixed(3)} kg</td>
               </tr>
             </tbody>
           </table>
@@ -263,29 +264,29 @@ export function MassPropertiesPanel() {
       {/* Simple mass summary (always shown) */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginBottom: '0.5rem' }}>
         {/* Mass summary */}
-        <div style={{ background: 'var(--bg-primary, #111827)', padding: '0.4rem', borderRadius: '4px' }}>
-          <div style={{ fontSize: '0.65rem', color: '#9ca3af', textTransform: 'uppercase' }}>Total Mass</div>
-          <div style={{ fontSize: '1.1rem', fontWeight: 700, fontFamily: 'monospace', color: '#d1d5db' }}>
+        <div style={{ background: 'var(--bg-primary, var(--surface-1))', padding: '0.4rem', borderRadius: '4px' }}>
+          <div style={{ fontSize: fs.label, color: 'var(--text-2)', textTransform: 'uppercase' }}>Total Mass</div>
+          <div style={{ fontSize: fs.value, fontWeight: 700, fontFamily: 'monospace', color: 'var(--text)' }}>
             {(totalMass > 0 ? totalMass : systemTotals.wetMass).toFixed(1)} kg
           </div>
           {eqMass > 0 && (
-            <div style={{ fontSize: '0.62rem', color: '#6b7280' }}>Equipment: {eqMass.toFixed(1)} kg</div>
+            <div style={{ fontSize: fs.label, color: 'var(--text-3)' }}>Equipment: {eqMass.toFixed(1)} kg</div>
           )}
         </div>
 
         {/* Dimensions */}
-        <div style={{ background: 'var(--bg-primary, #111827)', padding: '0.4rem', borderRadius: '4px' }}>
-          <div style={{ fontSize: '0.65rem', color: '#9ca3af', textTransform: 'uppercase' }}>Dimensions</div>
-          <div style={{ fontSize: '0.82rem', fontFamily: 'monospace', color: '#d1d5db' }}>
+        <div style={{ background: 'var(--bg-primary, var(--surface-1))', padding: '0.4rem', borderRadius: '4px' }}>
+          <div style={{ fontSize: fs.label, color: 'var(--text-2)', textTransform: 'uppercase' }}>Dimensions</div>
+          <div style={{ fontSize: fs.value, fontFamily: 'monospace', color: 'var(--text)' }}>
             {dims[0]}×{dims[1]}×{dims[2]} m
           </div>
-          <div style={{ fontSize: '0.62rem', color: '#6b7280' }}>Class: {scClass}</div>
+          <div style={{ fontSize: fs.label, color: 'var(--text-3)' }}>Class: {scClass}</div>
         </div>
       </div>
 
       {/* Inertia tensor */}
-      <div style={{ fontSize: '0.7rem', fontWeight: 600, color: '#9ca3af', marginBottom: '0.2rem' }}>INERTIA TENSOR (kg·m²)</div>
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.72rem', fontFamily: 'monospace', marginBottom: '0.5rem' }}>
+      <div style={{ fontSize: fs.label, fontWeight: 600, color: 'var(--text-2)', marginBottom: '0.2rem' }}>INERTIA TENSOR (kg·m²)</div>
+      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs.value, fontFamily: 'monospace', marginBottom: '0.5rem' }}>
         <tbody>
           <tr>
             <td style={tdM}>{ixx.toFixed(4)}</td>
@@ -309,20 +310,20 @@ export function MassPropertiesPanel() {
       </table>
 
       {/* Principal moments bar */}
-      <div style={{ fontSize: '0.65rem', color: '#9ca3af', marginBottom: '0.2rem' }}>PRINCIPAL MOMENTS</div>
+      <div style={{ fontSize: fs.label, color: 'var(--text-2)', marginBottom: '0.2rem' }}>PRINCIPAL MOMENTS</div>
       {[
-        { label: 'Ixx (roll)', value: ixx, color: '#3b82f6' },
-        { label: 'Iyy (pitch)', value: iyy, color: '#10b981' },
-        { label: 'Izz (yaw)', value: izz, color: '#f59e0b' },
+        { label: 'Ixx (roll)', value: ixx, color: 'var(--interactive)' },
+        { label: 'Iyy (pitch)', value: iyy, color: 'var(--status-ok)' },
+        { label: 'Izz (yaw)', value: izz, color: 'var(--status-caution)' },
       ].map(m => {
         const maxI = Math.max(ixx, iyy, izz)
         return (
           <div key={m.label} style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', marginBottom: '0.15rem' }}>
-            <span style={{ width: '65px', fontSize: '0.65rem', color: '#9ca3af' }}>{m.label}</span>
-            <div style={{ flex: 1, height: 6, background: '#1f2937', borderRadius: 3 }}>
+            <span style={{ width: '65px', fontSize: fs.label, color: 'var(--text-2)' }}>{m.label}</span>
+            <div style={{ flex: 1, height: 6, background: 'var(--surface-2)', borderRadius: 3 }}>
               <div style={{ height: '100%', width: `${(m.value / maxI) * 100}%`, background: m.color, borderRadius: 3 }} />
             </div>
-            <span style={{ fontSize: '0.65rem', fontFamily: 'monospace', color: m.color, minWidth: '55px', textAlign: 'right' }}>
+            <span style={{ fontSize: fs.label, fontFamily: 'monospace', color: m.color, minWidth: '55px', textAlign: 'right' }}>
               {m.value.toFixed(3)}
             </span>
           </div>
@@ -332,9 +333,9 @@ export function MassPropertiesPanel() {
   )
 }
 
-const tdM: React.CSSProperties = { padding: '0.15rem 0.4rem', textAlign: 'right', color: '#d1d5db', borderBottom: '1px solid rgba(255,255,255,0.05)' }
-const tdLabel: React.CSSProperties = { padding: '0.15rem 0.4rem', color: '#6b7280', fontSize: '0.65rem' }
-const thBudget: React.CSSProperties = { padding: '0.3rem 0.5rem', textAlign: 'left', fontSize: '0.65rem', textTransform: 'uppercase', color: '#9ca3af', letterSpacing: '0.03em' }
+const tdM: React.CSSProperties = { padding: '0.15rem 0.4rem', textAlign: 'right', color: 'var(--text)', borderBottom: '1px solid color-mix(in srgb, var(--text) 5%, transparent)' }
+const tdLabel: React.CSSProperties = { padding: '0.15rem 0.4rem', color: 'var(--text-3)', fontSize: fs.label }
+const thBudget: React.CSSProperties = { padding: '0.3rem 0.5rem', textAlign: 'left', fontSize: fs.label, textTransform: 'uppercase', color: 'var(--text-2)', letterSpacing: '0.03em' }
 const thBudgetR: React.CSSProperties = { ...thBudget, textAlign: 'right' }
-const tdBudget: React.CSSProperties = { padding: '0.25rem 0.5rem', color: '#d1d5db' }
-const tdBudgetR: React.CSSProperties = { padding: '0.25rem 0.5rem', textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: '#d1d5db' }
+const tdBudget: React.CSSProperties = { padding: '0.25rem 0.5rem', color: 'var(--text)' }
+const tdBudgetR: React.CSSProperties = { padding: '0.25rem 0.5rem', textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: 'var(--text)' }

@@ -10,6 +10,7 @@ import { SVGBarChart } from '../charts/SVGBarChart'
 import { BudgetGauge } from '../charts/BudgetGauge'
 import type { Lens } from '../types/phases'
 import { LENS_LABELS } from '../types/phases'
+import { fs } from '../theme/tokens'
 
 interface Props {
   lens: Lens
@@ -78,15 +79,15 @@ export function LensView({ lens, segment }: Props) {
   return (
     <div style={{ padding: '1rem', overflowY: 'auto', height: '100%' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-        <span style={{ fontSize: '1.2rem' }}>{lensInfo.icon}</span>
-        <h2 style={{ fontSize: '1rem', margin: 0 }}>{lensInfo.name} View</h2>
-        <span style={{ fontSize: '0.72rem', color: '#6b7280' }}>
+        <span style={{ fontSize: fs.title }}>{lensInfo.icon}</span>
+        <h2 style={{ fontSize: fs.value, margin: 0 }}>{lensInfo.name} View</h2>
+        <span style={{ fontSize: fs.label, color: 'var(--text-3)' }}>
           {visibleElements.length} elements, {visibleInterfaces.length} interfaces
         </span>
       </div>
 
       {visibleElements.length === 0 ? (
-        <div style={{ padding: '2rem', textAlign: 'center', color: '#6b7280' }}>
+        <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-3)' }}>
           <p>No elements visible through this lens. Run a design to populate the element tree.</p>
         </div>
       ) : (
@@ -108,10 +109,10 @@ export function LensView({ lens, segment }: Props) {
           {/* Mission lens: show requirements compliance + KPIs instead of mass chart */}
           {lens === 'mission' && (
             <div className="card" style={{ marginBottom: '1rem' }}>
-              <h3 style={{ fontSize: '0.85rem', marginBottom: '0.5rem' }}>Mission Capability Assessment</h3>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.75rem' }}>
+              <h3 style={{ fontSize: fs.body, marginBottom: '0.5rem' }}>Mission Capability Assessment</h3>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs.label }}>
                 <thead>
-                  <tr style={{ background: 'var(--bg-primary, #0a0e1a)' }}>
+                  <tr style={{ background: 'var(--bg-primary, var(--surface-0))' }}>
                     <th style={th}>KPI</th>
                     <th style={thR}>Design Value</th>
                     <th style={thR}>Requirement</th>
@@ -131,20 +132,20 @@ export function LensView({ lens, segment }: Props) {
                     const margin = row.req > 0 ? ((row.req - row.value) / row.req * 100) : 0
                     const ok = row.kpi === 'Pointing Accuracy' ? row.value <= row.req : row.value <= row.req * 1.2
                     return (
-                      <tr key={row.kpi} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                      <tr key={row.kpi} style={{ borderBottom: '1px solid color-mix(in srgb, var(--text) 5%, transparent)' }}>
                         <td style={td}>{row.kpi}</td>
                         <td style={{ ...tdR, fontFamily: 'monospace' }}>{row.value > 0 ? row.value.toFixed(2) : '—'} {row.unit}</td>
-                        <td style={{ ...tdR, fontFamily: 'monospace', color: '#6b7280' }}>{row.req.toFixed(2)} {row.unit}</td>
-                        <td style={{ ...tdR, fontFamily: 'monospace', color: ok ? '#10b981' : '#ef4444' }}>{row.value > 0 ? `${margin.toFixed(0)}%` : '—'}</td>
+                        <td style={{ ...tdR, fontFamily: 'monospace', color: 'var(--text-3)' }}>{row.req.toFixed(2)} {row.unit}</td>
+                        <td style={{ ...tdR, fontFamily: 'monospace', color: ok ? 'var(--status-ok)' : 'var(--status-alarm)' }}>{row.value > 0 ? `${margin.toFixed(0)}%` : '—'}</td>
                         <td style={td}>
-                          <span style={{ width: 8, height: 8, borderRadius: '50%', background: row.value > 0 ? (ok ? '#10b981' : '#ef4444') : '#6b7280', display: 'inline-block' }} />
+                          <span style={{ width: 8, height: 8, borderRadius: '50%', background: row.value > 0 ? (ok ? 'var(--status-ok)' : 'var(--status-alarm)') : 'var(--text-3)', display: 'inline-block' }} />
                         </td>
                       </tr>
                     )
                   })}
                 </tbody>
               </table>
-              <p style={{ fontSize: '0.65rem', color: '#6b7280', marginTop: '0.3rem' }}>
+              <p style={{ fontSize: fs.label, color: 'var(--text-3)', marginTop: '0.3rem' }}>
                 Green = meets requirement with margin. Red = exceeds allocation or fails requirement.
               </p>
             </div>
@@ -165,10 +166,10 @@ export function LensView({ lens, segment }: Props) {
 
           {/* Element table */}
           <div className="card">
-            <h3 style={{ fontSize: '0.85rem', marginBottom: '0.3rem' }}>Elements</h3>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.72rem' }}>
+            <h3 style={{ fontSize: fs.body, marginBottom: '0.3rem' }}>Elements</h3>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs.label }}>
               <thead>
-                <tr style={{ background: 'var(--bg-primary, #0a0e1a)' }}>
+                <tr style={{ background: 'var(--bg-primary, var(--surface-0))' }}>
                   <th style={th}>Name</th>
                   <th style={th}>Type</th>
                   <th style={thR}>Qty</th>
@@ -179,13 +180,13 @@ export function LensView({ lens, segment }: Props) {
               </thead>
               <tbody>
                 {visibleElements.map(el => (
-                  <tr key={el.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                  <tr key={el.id} style={{ borderBottom: '1px solid color-mix(in srgb, var(--text) 5%, transparent)' }}>
                     <td style={td}>{el.name}</td>
-                    <td style={{ ...td, color: '#6b7280', fontSize: '0.65rem' }}>{el.element_type}</td>
+                    <td style={{ ...td, color: 'var(--text-3)', fontSize: fs.label }}>{el.element_type}</td>
                     <td style={tdR}>{el.quantity}</td>
                     <td style={{ ...tdR, fontFamily: 'monospace' }}>{((el[lensConfig.primary as keyof DesignElement] as number) || 0).toFixed(2)}</td>
-                    <td style={{ ...tdR, fontFamily: 'monospace', color: '#6b7280' }}>{((el[lensConfig.secondary as keyof DesignElement] as number) || 0).toFixed(2)}</td>
-                    <td style={{ ...td, color: '#6b7280' }}>{el.subsystem_domain || '—'}</td>
+                    <td style={{ ...tdR, fontFamily: 'monospace', color: 'var(--text-3)' }}>{((el[lensConfig.secondary as keyof DesignElement] as number) || 0).toFixed(2)}</td>
+                    <td style={{ ...td, color: 'var(--text-3)' }}>{el.subsystem_domain || '—'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -195,16 +196,16 @@ export function LensView({ lens, segment }: Props) {
           {/* Interfaces for this lens */}
           {visibleInterfaces.length > 0 && (
             <div className="card" style={{ marginTop: '0.75rem' }}>
-              <h3 style={{ fontSize: '0.85rem', marginBottom: '0.3rem' }}>
+              <h3 style={{ fontSize: fs.body, marginBottom: '0.3rem' }}>
                 {lens === 'electrical' ? 'Electrical Interfaces' :
                  lens === 'rf_comms' ? 'RF Interfaces' :
                  lens === 'data' ? 'Data Interfaces' :
                  lens === 'thermal' ? 'Thermal Interfaces' :
                  `Interfaces (${visibleInterfaces.length})`}
               </h3>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.72rem' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs.label }}>
                 <thead>
-                  <tr style={{ background: 'var(--bg-primary, #0a0e1a)' }}>
+                  <tr style={{ background: 'var(--bg-primary, var(--surface-0))' }}>
                     <th style={th}>From</th>
                     <th style={th}>To</th>
                     <th style={th}>Type</th>
@@ -213,11 +214,11 @@ export function LensView({ lens, segment }: Props) {
                 </thead>
                 <tbody>
                   {visibleInterfaces.map(iface => (
-                    <tr key={iface.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                    <tr key={iface.id} style={{ borderBottom: '1px solid color-mix(in srgb, var(--text) 5%, transparent)' }}>
                       <td style={td}>{elements.get(iface.from_element_id)?.name || iface.from_element_id}</td>
                       <td style={td}>{elements.get(iface.to_element_id)?.name || iface.to_element_id}</td>
-                      <td style={{ ...td, color: '#6b7280' }}>{iface.interface_type}</td>
-                      <td style={{ ...td, color: '#9ca3af' }}>{iface.diagram_label || iface.name}</td>
+                      <td style={{ ...td, color: 'var(--text-3)' }}>{iface.interface_type}</td>
+                      <td style={{ ...td, color: 'var(--text-2)' }}>{iface.diagram_label || iface.name}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -230,7 +231,7 @@ export function LensView({ lens, segment }: Props) {
   )
 }
 
-const th: React.CSSProperties = { padding: '0.25rem 0.5rem', textAlign: 'left', fontSize: '0.65rem', color: '#9ca3af', textTransform: 'uppercase' }
+const th: React.CSSProperties = { padding: '0.25rem 0.5rem', textAlign: 'left', fontSize: fs.label, color: 'var(--text-2)', textTransform: 'uppercase' }
 const thR: React.CSSProperties = { ...th, textAlign: 'right' }
 const td: React.CSSProperties = { padding: '0.2rem 0.5rem' }
 const tdR: React.CSSProperties = { ...td, textAlign: 'right' }

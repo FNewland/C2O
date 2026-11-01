@@ -319,7 +319,7 @@ body.subpage #full-snapshot-container{ display:block; }
       <h2 data-i18n>Scenarios <span class="r"><button class="ds-btn" id="refresh-scenarios"
         data-i18n data-i18n-title title="Refresh scenario list">REFRESH</button></span></h2>
       <div class="bd">
-        <div id="scenario-list"><div class="no-data" data-i18n>Loading scenarios…</div></div>
+        <div id="scenario-list" tabindex="0" aria-label="Scenario list" data-i18n-aria-label><div class="no-data" data-i18n>Loading scenarios…</div></div>
         <div id="scenario-detail" hidden>
           <div class="note" id="scenario-briefing"></div>
           <div class="hgroup" style="margin-top:8px;">
@@ -358,7 +358,7 @@ body.subpage #full-snapshot-container{ display:block; }
                  data-i18n-placeholder placeholder="Breakpoint name…" data-i18n-aria-label aria-label="Breakpoint name">
           <button class="ds-btn primary" id="btn-save-bp" data-i18n>SAVE</button>
         </div>
-        <div id="breakpoints-list"><div class="no-data" data-i18n>No breakpoints saved</div></div>
+        <div id="breakpoints-list" tabindex="0" aria-label="Saved breakpoints" data-i18n-aria-label><div class="no-data" data-i18n>No breakpoints saved</div></div>
       </div>
     </section>
   </div>
@@ -524,7 +524,7 @@ body.subpage #full-snapshot-container{ display:block; }
     <section class="ds-card">
       <h2 data-i18n>Active failures</h2>
       <div class="bd">
-        <div id="failures-list"><div class="no-data" data-i18n>No active failures</div></div>
+        <div id="failures-list" tabindex="0" aria-label="Active failures" data-i18n-aria-label><div class="no-data" data-i18n>No active failures</div></div>
         <button class="ds-btn wfull" id="btn-clear-all" style="margin-top:6px;" data-i18n>CLEAR ALL FAILURES</button>
       </div>
     </section>

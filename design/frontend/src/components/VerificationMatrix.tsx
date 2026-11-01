@@ -7,6 +7,8 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { useDesignStore } from '../stores/designStore'
 import { useModelStore } from '../stores/modelStore'
+import { fs } from '../theme/tokens'
+import { showAlert } from './ui/Dialog'
 
 interface VVEntry {
   req_id: string
@@ -20,14 +22,14 @@ interface VVEntry {
 }
 
 const METHOD_LABELS: Record<string, { label: string; color: string; full: string }> = {
-  A: { label: 'A', color: '#3b82f6', full: 'Analysis' },
-  T: { label: 'T', color: '#10b981', full: 'Test' },
-  R: { label: 'R', color: '#f59e0b', full: 'Review' },
-  I: { label: 'I', color: '#8b5cf6', full: 'Inspection' },
+  A: { label: 'A', color: 'var(--interactive)', full: 'Analysis' },
+  T: { label: 'T', color: 'var(--status-ok)', full: 'Test' },
+  R: { label: 'R', color: 'var(--status-caution)', full: 'Review' },
+  I: { label: 'I', color: 'var(--cat-2)', full: 'Inspection' },
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  planned: '#6b7280', in_progress: '#f59e0b', complete: '#10b981', waived: '#9ca3af',
+  planned: 'var(--text-3)', in_progress: 'var(--status-caution)', complete: 'var(--status-ok)', waived: 'var(--text-2)',
 }
 
 // Default V&V assignments by domain
@@ -171,7 +173,7 @@ export function VerificationMatrix({ studyId }: { studyId: string | null }) {
           if (data.entries && Array.isArray(data.entries)) {
             setEntries(data.entries)
           }
-        } catch { alert('Invalid V&V file') }
+        } catch { void showAlert('Invalid V&V file') }
       }
       reader.readAsText(file)
     }
@@ -202,14 +204,6 @@ export function VerificationMatrix({ studyId }: { studyId: string | null }) {
   }, [rawGenReqs2])
 
   // Build requirement level map
-  const reqLevelMap = useMemo(() => {
-    const map: Record<string, string> = {}
-    const reqs = Array.isArray(rawGenReqs2) ? rawGenReqs2 : []
-    for (const r of reqs as any[]) {
-      if (r.id) map[r.id] = r.level || r.req_type || 'system'
-    }
-    return map
-  }, [rawGenReqs2])
 
   // Build child-to-parent relationships for verification closure
   const verificationClosure = useMemo(() => {
@@ -268,17 +262,17 @@ export function VerificationMatrix({ studyId }: { studyId: string | null }) {
 
   if (!studyId && !result) {
     return (
-      <div style={{ padding: '2rem', color: '#6b7280' }}>
-        <h3 style={{ fontSize: '1rem', marginBottom: '0.5rem', color: '#9ca3af' }}>Verification & Validation Matrix</h3>
-        <p style={{ fontSize: '0.78rem', marginBottom: '0.75rem' }}>
+      <div style={{ padding: '2rem', color: 'var(--text-3)' }}>
+        <h3 style={{ fontSize: fs.value, marginBottom: '0.5rem', color: 'var(--text-2)' }}>Verification & Validation Matrix</h3>
+        <p style={{ fontSize: fs.label, marginBottom: '0.75rem' }}>
           The V&V matrix is populated from three sources:
         </p>
-        <ol style={{ fontSize: '0.72rem', paddingLeft: '1.2rem', lineHeight: 1.6 }}>
+        <ol style={{ fontSize: fs.label, paddingLeft: '1.2rem', lineHeight: 1.6 }}>
           <li><strong>Generated requirements</strong> — accept requirements in the Requirements Editor (Phase 0/1)</li>
           <li><strong>Architecture-derived requirements</strong> — select architecture options in Phase 2</li>
           <li><strong>Component verification</strong> — select equipment in Phase 3</li>
         </ol>
-        <p style={{ fontSize: '0.72rem', marginTop: '0.5rem' }}>
+        <p style={{ fontSize: fs.label, marginTop: '0.5rem' }}>
           Run a design first, then accept requirements to start building the matrix.
         </p>
       </div>
@@ -288,68 +282,68 @@ export function VerificationMatrix({ studyId }: { studyId: string | null }) {
   return (
     <div style={{ padding: '1rem', overflowY: 'auto', height: '100%' }}>
       <h2 style={{ marginBottom: '0.25rem' }}>Verification & Validation Matrix</h2>
-      <p style={{ fontSize: '0.75rem', color: '#9ca3af', marginBottom: '0.5rem' }}>
+      <p style={{ fontSize: fs.label, color: 'var(--text-2)', marginBottom: '0.5rem' }}>
         Per ECSS-E-ST-10-02C. Assign method (ATRI), phase, level, and responsible position per requirement.
       </p>
 
       {/* Stats */}
-      <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '0.75rem', fontSize: '0.75rem', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '0.75rem', fontSize: fs.label, flexWrap: 'wrap' }}>
         <span>{stats.total} requirements</span>
         {Object.entries(METHOD_LABELS).map(([m, info]) => (
           <button key={m} onClick={() => setFilter(filter === m ? 'all' : m)}
             style={{
-              background: filter === m ? `${info.color}22` : 'transparent',
-              border: `1px solid ${filter === m ? info.color : '#374151'}`,
+              background: filter === m ? `color-mix(in srgb, ${info.color} 13%, transparent)` : 'transparent',
+              border: `1px solid ${filter === m ? info.color : 'var(--line)'}`,
               color: info.color, borderRadius: '3px', padding: '0.1rem 0.4rem',
-              fontSize: '0.72rem', cursor: 'pointer',
+              fontSize: fs.label, cursor: 'pointer',
             }}>
             {info.full}: {entries.filter(e => e.method === m).length}
           </button>
         ))}
-        <span style={{ color: '#10b981' }}>{stats.complete} complete</span>
+        <span style={{ color: 'var(--status-ok)' }}>{stats.complete} complete</span>
         <span style={{ flex: 1 }} />
-        <button className="btn btn-sm" onClick={saveVV} style={{ fontSize: '0.65rem' }}>Save V&V</button>
-        <button className="btn btn-sm" onClick={loadVV} style={{ fontSize: '0.65rem' }}>Load V&V</button>
-        <button className="btn btn-sm" onClick={exportCSV} style={{ fontSize: '0.65rem', background: '#10b981' }}>CSV</button>
+        <button className="btn btn-sm" onClick={saveVV} style={{ fontSize: fs.label }}>Save V&V</button>
+        <button className="btn btn-sm" onClick={loadVV} style={{ fontSize: fs.label }}>Load V&V</button>
+        <button className="btn btn-sm" onClick={exportCSV} style={{ fontSize: fs.label, background: 'var(--status-ok)' }}>CSV</button>
       </div>
 
       {/* SYSTEM-V Break 5: Verification Closure Summary */}
       {(verificationClosure.missionTotal > 0 || verificationClosure.systemTotal > 0) && (
         <div style={{
           padding: '0.5rem 0.75rem', marginBottom: '0.75rem', borderRadius: '6px',
-          background: 'var(--bg-secondary, #1f2937)', border: '1px solid #374151',
+          background: 'var(--bg-secondary, var(--surface-2))', border: '1px solid var(--line)',
         }}>
-          <div style={{ fontSize: '0.78rem', fontWeight: 600, marginBottom: '0.4rem' }}>Requirements Verification Closure</div>
+          <div style={{ fontSize: fs.label, fontWeight: 600, marginBottom: '0.4rem' }}>Requirements Verification Closure</div>
           {verificationClosure.missionTotal > 0 && (
             <div style={{ marginBottom: '0.3rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', marginBottom: '0.15rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: fs.label, marginBottom: '0.15rem' }}>
                 <span>Mission Requirements: {verificationClosure.missionVerified} of {verificationClosure.missionTotal} have verified system-level children</span>
-                <span style={{ color: verificationClosure.missionVerified === verificationClosure.missionTotal ? '#10b981' : '#f59e0b' }}>
+                <span style={{ color: verificationClosure.missionVerified === verificationClosure.missionTotal ? 'var(--status-ok)' : 'var(--status-caution)' }}>
                   {verificationClosure.missionTotal > 0 ? Math.round((verificationClosure.missionVerified / verificationClosure.missionTotal) * 100) : 0}%
                 </span>
               </div>
-              <div style={{ height: '4px', borderRadius: '2px', background: '#374151', overflow: 'hidden' }}>
+              <div style={{ height: '4px', borderRadius: '2px', background: 'var(--line)', overflow: 'hidden' }}>
                 <div style={{
                   height: '100%', borderRadius: '2px', transition: 'width 0.3s',
                   width: `${verificationClosure.missionTotal > 0 ? (verificationClosure.missionVerified / verificationClosure.missionTotal) * 100 : 0}%`,
-                  background: verificationClosure.missionVerified === verificationClosure.missionTotal ? '#10b981' : '#f59e0b',
+                  background: verificationClosure.missionVerified === verificationClosure.missionTotal ? 'var(--status-ok)' : 'var(--status-caution)',
                 }} />
               </div>
             </div>
           )}
           {verificationClosure.systemTotal > 0 && (
             <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', marginBottom: '0.15rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: fs.label, marginBottom: '0.15rem' }}>
                 <span>System Requirements: {verificationClosure.systemVerified} of {verificationClosure.systemTotal} have verified subsystem-level children</span>
-                <span style={{ color: verificationClosure.systemVerified === verificationClosure.systemTotal ? '#10b981' : '#f59e0b' }}>
+                <span style={{ color: verificationClosure.systemVerified === verificationClosure.systemTotal ? 'var(--status-ok)' : 'var(--status-caution)' }}>
                   {verificationClosure.systemTotal > 0 ? Math.round((verificationClosure.systemVerified / verificationClosure.systemTotal) * 100) : 0}%
                 </span>
               </div>
-              <div style={{ height: '4px', borderRadius: '2px', background: '#374151', overflow: 'hidden' }}>
+              <div style={{ height: '4px', borderRadius: '2px', background: 'var(--line)', overflow: 'hidden' }}>
                 <div style={{
                   height: '100%', borderRadius: '2px', transition: 'width 0.3s',
                   width: `${verificationClosure.systemTotal > 0 ? (verificationClosure.systemVerified / verificationClosure.systemTotal) * 100 : 0}%`,
-                  background: verificationClosure.systemVerified === verificationClosure.systemTotal ? '#10b981' : '#f59e0b',
+                  background: verificationClosure.systemVerified === verificationClosure.systemTotal ? 'var(--status-ok)' : 'var(--status-caution)',
                 }} />
               </div>
             </div>
@@ -358,9 +352,9 @@ export function VerificationMatrix({ studyId }: { studyId: string | null }) {
       )}
 
       {/* Matrix table */}
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.72rem' }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs.label }}>
         <thead>
-          <tr style={{ background: 'var(--bg-primary, #0a0e1a)' }}>
+          <tr style={{ background: 'var(--bg-primary, var(--surface-0))' }}>
             <th style={th}>ID</th>
             <th style={th}>Parent</th>
             <th style={{ ...th, maxWidth: '300px' }}>Requirement</th>
@@ -375,23 +369,23 @@ export function VerificationMatrix({ studyId }: { studyId: string | null }) {
         <tbody>
           {filtered.map(e => (
             <React.Fragment key={e.req_id}>
-            <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-              <td style={{ ...td, fontFamily: 'monospace', fontSize: '0.68rem', color: '#6b7280' }}>
+            <tr style={{ borderBottom: '1px solid color-mix(in srgb, var(--text) 5%, transparent)' }}>
+              <td style={{ ...td, fontFamily: 'monospace', fontSize: fs.label, color: 'var(--text-3)' }}>
                 {e.req_id}
                 {childVerificationCounts[e.req_id] && (
                   <span style={{
-                    display: 'inline-block', marginLeft: '0.3rem', fontSize: '0.55rem', padding: '0 0.2rem',
+                    display: 'inline-block', marginLeft: '0.3rem', fontSize: fs.label, padding: '0 0.2rem',
                     borderRadius: '3px',
                     background: childVerificationCounts[e.req_id].verified === childVerificationCounts[e.req_id].total
                       ? 'rgba(16,185,129,0.15)' : 'rgba(245,158,11,0.15)',
                     color: childVerificationCounts[e.req_id].verified === childVerificationCounts[e.req_id].total
-                      ? '#10b981' : '#f59e0b',
+                      ? 'var(--status-ok)' : 'var(--status-caution)',
                   }} title={`${childVerificationCounts[e.req_id].verified}/${childVerificationCounts[e.req_id].total} children verified`}>
                     {childVerificationCounts[e.req_id].verified}/{childVerificationCounts[e.req_id].total}
                   </span>
                 )}
               </td>
-              <td style={{ ...td, fontFamily: 'monospace', fontSize: '0.6rem', color: '#4b5563' }}>
+              <td style={{ ...td, fontFamily: 'monospace', fontSize: fs.label, color: 'var(--line-strong)' }}>
                 {reqParentMap[e.req_id] || '—'}
               </td>
               <td style={{ ...td, maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={e.req_text}>
@@ -399,7 +393,7 @@ export function VerificationMatrix({ studyId }: { studyId: string | null }) {
               </td>
               <td style={tdC}>
                 <select className="select" value={e.method} onChange={ev => updateEntry(e.req_id, 'method', ev.target.value)}
-                  style={{ fontSize: '0.68rem', width: '45px', textAlign: 'center', color: METHOD_LABELS[e.method]?.color }}>
+                  style={{ fontSize: fs.label, width: '45px', textAlign: 'center', color: METHOD_LABELS[e.method]?.color }}>
                   {Object.entries(METHOD_LABELS).map(([m, info]) => (
                     <option key={m} value={m}>{info.label}</option>
                   ))}
@@ -407,7 +401,7 @@ export function VerificationMatrix({ studyId }: { studyId: string | null }) {
               </td>
               <td style={tdC}>
                 <select className="select" value={e.phase} onChange={ev => updateEntry(e.req_id, 'phase', ev.target.value)}
-                  style={{ fontSize: '0.68rem', width: '70px' }}>
+                  style={{ fontSize: fs.label, width: '70px' }}>
                   <option value="phase_a">Phase A</option>
                   <option value="phase_b">Phase B</option>
                   <option value="phase_c">Phase C</option>
@@ -416,7 +410,7 @@ export function VerificationMatrix({ studyId }: { studyId: string | null }) {
               </td>
               <td style={tdC}>
                 <select className="select" value={e.level} onChange={ev => updateEntry(e.req_id, 'level', ev.target.value)}
-                  style={{ fontSize: '0.68rem', width: '75px' }}>
+                  style={{ fontSize: fs.label, width: '75px' }}>
                   <option value="unit">Unit</option>
                   <option value="subsystem">Subsystem</option>
                   <option value="system">System</option>
@@ -424,21 +418,21 @@ export function VerificationMatrix({ studyId }: { studyId: string | null }) {
               </td>
               <td style={tdC}>
                 <select className="select" value={e.status} onChange={ev => updateEntry(e.req_id, 'status', ev.target.value)}
-                  style={{ fontSize: '0.68rem', width: '80px', color: STATUS_COLORS[e.status] }}>
+                  style={{ fontSize: fs.label, width: '80px', color: STATUS_COLORS[e.status] }}>
                   <option value="planned">Planned</option>
                   <option value="in_progress">In Progress</option>
                   <option value="complete">Complete</option>
                   <option value="waived">Waived</option>
                 </select>
               </td>
-              <td style={{ ...td, fontSize: '0.68rem', color: '#9ca3af' }}>{e.responsible.replace(/_/g, ' ')}</td>
+              <td style={{ ...td, fontSize: fs.label, color: 'var(--text-2)' }}>{e.responsible.replace(/_/g, ' ')}</td>
               <td style={tdC}>
                 {(() => {
                   const changes = vvChangeLog.filter(c => c.req_id === e.req_id)
-                  if (changes.length === 0) return <span style={{ color: '#374151' }}>—</span>
+                  if (changes.length === 0) return <span style={{ color: 'var(--line)' }}>—</span>
                   return (
                     <button onClick={() => setShowHistory(showHistory === e.req_id ? null : e.req_id)}
-                      style={{ background: 'none', border: 'none', color: '#3b82f6', cursor: 'pointer', fontSize: '0.65rem' }}>
+                      style={{ background: 'none', border: 'none', color: 'var(--interactive)', cursor: 'pointer', fontSize: fs.label }}>
                       {changes.length} change{changes.length !== 1 ? 's' : ''}
                     </button>
                   )
@@ -448,11 +442,11 @@ export function VerificationMatrix({ studyId }: { studyId: string | null }) {
             {showHistory === e.req_id && (
               <tr>
                 <td colSpan={9} style={{ padding: '0.3rem 0.5rem', background: 'rgba(59,130,246,0.05)' }}>
-                  <div style={{ fontSize: '0.65rem', color: '#9ca3af' }}>
+                  <div style={{ fontSize: fs.label, color: 'var(--text-2)' }}>
                     {vvChangeLog.filter(c => c.req_id === e.req_id).map((c, i) => (
                       <div key={i} style={{ marginBottom: '0.15rem' }}>
-                        <span style={{ color: '#6b7280' }}>{new Date(c.timestamp).toLocaleString()}</span>
-                        {' '}<strong>{c.field}</strong>: <span style={{ color: '#ef4444' }}>{c.old_value}</span> → <span style={{ color: '#10b981' }}>{c.new_value}</span>
+                        <span style={{ color: 'var(--text-3)' }}>{new Date(c.timestamp).toLocaleString()}</span>
+                        {' '}<strong>{c.field}</strong>: <span style={{ color: 'var(--status-alarm)' }}>{c.old_value}</span> → <span style={{ color: 'var(--status-ok)' }}>{c.new_value}</span>
                       </div>
                     ))}
                   </div>
@@ -467,7 +461,7 @@ export function VerificationMatrix({ studyId }: { studyId: string | null }) {
   )
 }
 
-const th: React.CSSProperties = { padding: '0.3rem 0.5rem', textAlign: 'left', fontSize: '0.62rem', color: '#9ca3af', textTransform: 'uppercase' }
+const th: React.CSSProperties = { padding: '0.3rem 0.5rem', textAlign: 'left', fontSize: fs.label, color: 'var(--text-2)', textTransform: 'uppercase' }
 const thC: React.CSSProperties = { ...th, textAlign: 'center' }
 const td: React.CSSProperties = { padding: '0.2rem 0.5rem' }
 const tdC: React.CSSProperties = { ...td, textAlign: 'center' }

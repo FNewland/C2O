@@ -1,4 +1,5 @@
 import { useDesignStore } from '../stores/designStore'
+import { fs } from '../theme/tokens'
 
 export function InsightsPanel() {
   const { result } = useDesignStore()
@@ -7,7 +8,7 @@ export function InsightsPanel() {
     return (
       <div>
         <h2>Insights</h2>
-        <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+        <p style={{ fontSize: fs.body, color: 'var(--text-secondary)' }}>
           Run a design to see warnings, recommendations, and TRL innovation opportunities.
         </p>
       </div>

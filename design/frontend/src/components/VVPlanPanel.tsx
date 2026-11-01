@@ -26,6 +26,7 @@ import type {
   AnalysisConflict, VerificationItemPatch, VerificationItemView, VerificationItemsResponse, VVLevel, VVLevelRollup,
   VVMethod, VVPhase, VVRun, VVRunResponse, VVStatus,
 } from '../types/analyses'
+import { fs } from '../theme/tokens'
 
 const API = '/api'
 const ANALYSIS = 'vv'
@@ -39,15 +40,15 @@ const LEVEL_LABEL: Record<VVLevel, string> = { unit: 'unit', subsystem: 'subsyst
 const PHASES: VVPhase[] = ['PDR', 'CDR', 'QR', 'AR']
 const STATUSES: VVStatus[] = ['planned', 'in_progress', 'passed', 'failed', 'waived']
 const STATUS_COLORS: Record<VVStatus, string> = {
-  planned: '#6b7280', in_progress: '#f59e0b', passed: '#10b981', failed: '#ef4444', waived: '#8b5cf6',
+  planned: 'var(--text-3)', in_progress: 'var(--status-caution)', passed: 'var(--status-ok)', failed: 'var(--status-alarm)', waived: 'var(--cat-2)',
 }
 // English text is the i18n key
 const STATUS_LABEL: Record<VVStatus, string> = {
   planned: 'planned', in_progress: 'in progress', passed: 'passed', failed: 'failed', waived: 'waived',
 }
-const METHOD_COLORS: Record<VVMethod, string> = { A: '#3b82f6', T: '#10b981', I: '#8b5cf6', R: '#f59e0b', D: '#14b8a6' }
+const METHOD_COLORS: Record<VVMethod, string> = { A: 'var(--interactive)', T: 'var(--status-ok)', I: 'var(--cat-2)', R: 'var(--status-caution)', D: 'var(--cat-3)' }
 const SEVERITY_COLORS: Record<string, string> = {
-  critical: '#ef4444', major: '#f97316', minor: '#eab308', warning: '#f59e0b', info: '#3b82f6',
+  critical: 'var(--status-alarm)', major: 'var(--status-caution)', minor: 'var(--status-caution)', warning: 'var(--status-caution)', info: 'var(--interactive)',
 }
 
 async function jsonOrThrow(res: Response) {
@@ -78,18 +79,18 @@ const card: React.CSSProperties = {
   background: 'var(--bg-primary)', border: '1px solid var(--border)',
 }
 const btn = (primary = false): React.CSSProperties => ({
-  cursor: 'pointer', fontSize: '0.66rem', padding: '0.2rem 0.6rem', borderRadius: 4,
-  border: `1px solid ${primary ? '#3b82f6' : 'var(--border)'}`,
-  background: primary ? '#3b82f622' : 'none', color: primary ? '#60a5fa' : 'var(--text-secondary)',
+  cursor: 'pointer', fontSize: fs.label, padding: '0.2rem 0.6rem', borderRadius: 4,
+  border: `1px solid ${primary ? 'var(--interactive)' : 'var(--border)'}`,
+  background: primary ? 'color-mix(in srgb, var(--interactive) 13%, transparent)' : 'none', color: primary ? 'var(--interactive)' : 'var(--text-secondary)',
 })
-const th: React.CSSProperties = { textAlign: 'left', fontWeight: 500, color: 'var(--text-secondary)', padding: '0.15rem 0.35rem', fontSize: '0.58rem', textTransform: 'uppercase', letterSpacing: '0.03em', borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap' }
-const td: React.CSSProperties = { padding: '0.15rem 0.35rem', fontSize: '0.64rem', borderBottom: '1px solid var(--border)', verticalAlign: 'top' }
-const sel: React.CSSProperties = { fontSize: '0.62rem', background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)', borderRadius: 3, padding: '0.05rem 0.15rem' }
+const th: React.CSSProperties = { textAlign: 'left', fontWeight: 500, color: 'var(--text-secondary)', padding: '0.15rem 0.35rem', fontSize: fs.label, textTransform: 'uppercase', letterSpacing: '0.03em', borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap' }
+const td: React.CSSProperties = { padding: '0.15rem 0.35rem', fontSize: fs.label, borderBottom: '1px solid var(--border)', verticalAlign: 'top' }
+const sel: React.CSSProperties = { fontSize: fs.label, background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)', borderRadius: 3, padding: '0.05rem 0.15rem' }
 const inp: React.CSSProperties = { ...sel, width: '100%', minWidth: 60, boxSizing: 'border-box' }
 
 function Badge({ text, color, title }: { text: string; color: string; title?: string }) {
   return (
-    <span title={title} style={{ fontSize: '0.56rem', padding: '0 0.35rem', borderRadius: 3, background: `${color}22`, color, border: `1px solid ${color}55`, whiteSpace: 'nowrap' }}>
+    <span title={title} style={{ fontSize: fs.label, padding: '0 0.35rem', borderRadius: 3, background: `color-mix(in srgb, ${color} 13%, transparent)`, color, border: `1px solid color-mix(in srgb, ${color} 33%, transparent)`, whiteSpace: 'nowrap' }}>
       {text}
     </span>
   )
@@ -104,19 +105,19 @@ function LevelBar({ level, r }: { level: VVLevel; r: VVLevelRollup }) {
   const segs: [VVStatus, number][] = [['passed', r.passed], ['waived', r.waived], ['in_progress', r.in_progress], ['failed', r.failed], ['planned', r.planned]]
   return (
     <div style={{ ...card, flex: '1 1 160px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.58rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: fs.label, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
         <span>{t(LEVEL_LABEL[level] ?? level)}</span>
-        <span style={{ fontFamily: 'ui-monospace, monospace', color: total === 0 ? 'var(--text-secondary)' : pct >= 100 ? '#10b981' : r.failed > 0 ? '#ef4444' : 'var(--text-primary)' }}>
+        <span style={{ fontFamily: 'ui-monospace, monospace', color: total === 0 ? 'var(--text-secondary)' : pct >= 100 ? 'var(--status-ok)' : r.failed > 0 ? 'var(--status-alarm)' : 'var(--text-primary)' }}>
           {total === 0 ? '—' : `${closed}/${total} · ${pct.toFixed(0)} %`}
         </span>
       </div>
-      <div style={{ display: 'flex', height: 10, marginTop: 4, borderRadius: 5, overflow: 'hidden', background: 'var(--bg-secondary, #1f2937)', border: '1px solid var(--border)' }}
+      <div style={{ display: 'flex', height: 10, marginTop: 4, borderRadius: 5, overflow: 'hidden', background: 'var(--bg-secondary, var(--surface-2))', border: '1px solid var(--border)' }}
            title={segs.map(([s, n]) => t('{{label}}: {{value}}', { label: t(STATUS_LABEL[s]), value: n })).join(' · ')}>
         {total > 0 && segs.map(([s, n]) => n > 0 && (
           <div key={s} style={{ width: `${(100 * n) / total}%`, background: STATUS_COLORS[s], transition: 'width 0.3s' }} />
         ))}
       </div>
-      <div style={{ display: 'flex', gap: '0.4rem', marginTop: 3, fontSize: '0.55rem', fontFamily: 'ui-monospace, monospace', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: '0.4rem', marginTop: 3, fontSize: fs.label, fontFamily: 'ui-monospace, monospace', flexWrap: 'wrap' }}>
         {segs.filter(([, n]) => n > 0).map(([s, n]) => <span key={s} style={{ color: STATUS_COLORS[s] }}>{n} {t(STATUS_LABEL[s])}</span>)}
       </div>
     </div>
@@ -149,17 +150,17 @@ function ItemRow({ item, onPatch, busy }: RowProps) {
     const current = item[field] ?? ''
     if (value !== current) onPatch(item.id, { [field]: value || null } as VerificationItemPatch)
   }
-  const statusColor = STATUS_COLORS[item.status] || '#6b7280'
+  const statusColor = STATUS_COLORS[item.status] || 'var(--text-3)'
   return (
     <tr style={{ opacity: busy ? 0.6 : 1, background: item.status === 'failed' ? 'rgba(239,68,68,0.05)' : undefined }}>
       <td style={{ ...td, whiteSpace: 'nowrap' }}>
-        <span style={{ fontFamily: 'ui-monospace, monospace', color: 'var(--accent)', fontSize: '0.62rem' }}>{item.requirement_code}</span>
-        {item.edited_by_user && <span title={t('Edited by user — the generator only fills empty fields on this row')} style={{ marginLeft: 4, fontSize: '0.6rem' }}>🔒</span>}
+        <span style={{ fontFamily: 'ui-monospace, monospace', color: 'var(--accent)', fontSize: fs.label }}>{item.requirement_code}</span>
+        {item.edited_by_user && <span title={t('Edited by user — the generator only fills empty fields on this row')} style={{ marginLeft: 4, fontSize: fs.label }}>🔒</span>}
       </td>
       <td style={{ ...td, maxWidth: 260 }} title={item.requirement_text}>
         <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 260 }}>{item.requirement_text}</div>
         {item.linked_element_names.length > 0 && (
-          <div style={{ fontSize: '0.55rem', color: 'var(--text-secondary)' }}>→ {item.linked_element_names.join(', ')}</div>
+          <div style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>→ {item.linked_element_names.join(', ')}</div>
         )}
       </td>
       <td style={td}>
@@ -194,7 +195,7 @@ function ItemRow({ item, onPatch, busy }: RowProps) {
                 style={{ ...sel, color: statusColor, fontWeight: 600 }}>
           {STATUSES.map(s => <option key={s} value={s}>{t(STATUS_LABEL[s])}</option>)}
         </select>
-        {item.auto_closed && <span style={{ marginLeft: 4 }}><Badge text="auto" color="#3b82f6" title={t('Closed by analysis run {{run}}', { run: item.evidence_ref?.replace('analysis:', '') ?? '' })} /></span>}
+        {item.auto_closed && <span style={{ marginLeft: 4 }}><Badge text="auto" color="var(--interactive)" title={t('Closed by analysis run {{run}}', { run: item.evidence_ref?.replace('analysis:', '') ?? '' })} /></span>}
       </td>
       <td style={{ ...td, minWidth: 110 }}>
         <input value={evidence} onChange={e => setEvidence(e.target.value)} onBlur={() => commit('evidence_ref', evidence)}
@@ -279,21 +280,21 @@ export function VVPlanPanel({ studyId, optionId }: { studyId: string | null; opt
     a.click()
   }
 
-  if (!studyId) return <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>{t('Select a study.')}</div>
+  if (!studyId) return <div style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>{t('Select a study.')}</div>
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
       {/* header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-        <h3 style={{ fontSize: '0.85rem', margin: 0 }}>{t('V&V plan & closure')}</h3>
+        <h3 style={{ fontSize: fs.body, margin: 0 }}>{t('V&V plan & closure')}</h3>
         {lastRun && (
-          <span style={{ fontSize: '0.6rem', color: 'var(--text-secondary)' }}>
+          <span style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>
             {t('last run {{ago}}', { ago: ago(lastRun.finished_at ?? lastRun.started_at) })}
-            {lastRun.status === 'failed' && <span style={{ color: '#ef4444', marginLeft: 4 }}>{t('failed')}</span>}
+            {lastRun.status === 'failed' && <span style={{ color: 'var(--status-alarm)', marginLeft: 4 }}>{t('failed')}</span>}
           </span>
         )}
-        {lastRun?.stale && <Badge text={t('stale')} color="#f59e0b" title={t('Requirements or elements changed since this run')} />}
-        {!lastRun && !runQ.isLoading && <Badge text={t('never run')} color="#6b7280" />}
+        {lastRun?.stale && <Badge text={t('stale')} color="var(--status-caution)" title={t('Requirements or elements changed since this run')} />}
+        {!lastRun && !runQ.isLoading && <Badge text={t('never run')} color="var(--text-3)" />}
         <span style={{ flex: 1 }} />
         <button onClick={() => download('rtm.csv')} style={btn()} title={t('Requirement traceability matrix (CSV)')}>RTM CSV</button>
         <button onClick={() => download('vcd.docx')} style={btn()} title={t('Verification Control Document (Word)')}>VCD docx</button>
@@ -301,23 +302,23 @@ export function VVPlanPanel({ studyId, optionId }: { studyId: string | null; opt
           {run.isPending ? t('Running…') : lastRun ? t('Re-run V&V') : t('Run V&V')}
         </button>
       </div>
-      {error && <div style={{ fontSize: '0.64rem', color: '#ef4444' }}>{error}</div>}
+      {error && <div style={{ fontSize: fs.label, color: 'var(--status-alarm)' }}>{error}</div>}
 
       {/* summary */}
       <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
         <div style={card}>
-          <div style={{ fontSize: '0.58rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>{t('Closure')}</div>
-          <div style={{ fontSize: '1rem', fontWeight: 600, fontFamily: 'ui-monospace, monospace', color: total === 0 ? 'var(--text-secondary)' : closurePct >= 100 ? '#10b981' : failed > 0 ? '#ef4444' : 'var(--text-primary)' }}>
-            {closurePct.toFixed(0)}<span style={{ fontSize: '0.6rem', marginLeft: 2, color: 'var(--text-secondary)' }}>%</span>
+          <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>{t('Closure')}</div>
+          <div style={{ fontSize: fs.value, fontWeight: 600, fontFamily: 'ui-monospace, monospace', color: total === 0 ? 'var(--text-secondary)' : closurePct >= 100 ? 'var(--status-ok)' : failed > 0 ? 'var(--status-alarm)' : 'var(--text-primary)' }}>
+            {closurePct.toFixed(0)}<span style={{ fontSize: fs.label, marginLeft: 2, color: 'var(--text-secondary)' }}>%</span>
           </div>
-          <div style={{ fontSize: '0.56rem', color: 'var(--text-secondary)' }}>{t('{{passed}} passed · {{waived}} waived · {{failed}} failed of {{total}}', { passed, waived, failed, total })}</div>
+          <div style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>{t('{{passed}} passed · {{waived}} waived · {{failed}} failed of {{total}}', { passed, waived, failed, total })}</div>
         </div>
         <div style={card}>
-          <div style={{ fontSize: '0.58rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>{t('By analysis')}</div>
-          <div style={{ fontSize: '1rem', fontWeight: 600, fontFamily: 'ui-monospace, monospace' }}>
-            {byAnalysisPct.toFixed(0)}<span style={{ fontSize: '0.6rem', marginLeft: 2, color: 'var(--text-secondary)' }}>%</span>
+          <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>{t('By analysis')}</div>
+          <div style={{ fontSize: fs.value, fontWeight: 600, fontFamily: 'ui-monospace, monospace' }}>
+            {byAnalysisPct.toFixed(0)}<span style={{ fontSize: fs.label, marginLeft: 2, color: 'var(--text-secondary)' }}>%</span>
           </div>
-          <div style={{ fontSize: '0.56rem', color: 'var(--text-secondary)' }}>{t('{{n}} closed automatically', { n: autoClosed })}</div>
+          <div style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>{t('{{n}} closed automatically', { n: autoClosed })}</div>
         </div>
         {LEVELS.map(l => <LevelBar key={l} level={l} r={byLevel[l]} />)}
       </div>
@@ -326,8 +327,8 @@ export function VVPlanPanel({ studyId, optionId }: { studyId: string | null; opt
       {vvConflicts.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           {vvConflicts.map(c => (
-            <div key={c.id} style={{ display: 'flex', gap: '0.4rem', alignItems: 'baseline', fontSize: '0.62rem', padding: '0.2rem 0.4rem', borderLeft: `3px solid ${SEVERITY_COLORS[c.severity] || '#6b7280'}`, background: 'var(--bg-card)', borderRadius: 3 }}>
-              <Badge text={c.severity} color={SEVERITY_COLORS[c.severity] || '#6b7280'} />
+            <div key={c.id} style={{ display: 'flex', gap: '0.4rem', alignItems: 'baseline', fontSize: fs.label, padding: '0.2rem 0.4rem', borderLeft: `3px solid ${SEVERITY_COLORS[c.severity] || 'var(--text-3)'}`, background: 'var(--bg-card)', borderRadius: 3 }}>
+              <Badge text={c.severity} color={SEVERITY_COLORS[c.severity] || 'var(--text-3)'} />
               <span style={{ fontFamily: 'ui-monospace, monospace', color: 'var(--text-secondary)' }}>{c.code}</span>
               <span style={{ fontWeight: 500 }}>{c.title}</span>
               {c.suggested_fix && <span style={{ color: 'var(--text-secondary)' }}>— {c.suggested_fix}</span>}
@@ -337,7 +338,7 @@ export function VVPlanPanel({ studyId, optionId }: { studyId: string | null; opt
       )}
 
       {/* filters */}
-      <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', fontSize: '0.62rem', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', fontSize: fs.label, flexWrap: 'wrap' }}>
         <span style={{ color: 'var(--text-secondary)' }}>{t('Filter')}</span>
         <select value={statusFilter} onChange={e => setStatusFilter(e.target.value as VVStatus | 'all')} style={sel}>
           <option value="all">{t('all statuses')}</option>
@@ -353,16 +354,16 @@ export function VVPlanPanel({ studyId, optionId }: { studyId: string | null; opt
         </select>
         <span style={{ color: 'var(--text-secondary)' }}>{t('{{shown}} of {{total}} items', { shown: filtered.length, total })}</span>
         <span style={{ flex: 1 }} />
-        <span style={{ color: 'var(--text-secondary)', fontSize: '0.56rem' }}>
-          <Badge text="auto" color="#3b82f6" /> {t('closed by analysis · 🔒 user-edited (generator fills empty fields only)')}
+        <span style={{ color: 'var(--text-secondary)', fontSize: fs.label }}>
+          <Badge text="auto" color="var(--interactive)" /> {t('closed by analysis · 🔒 user-edited (generator fills empty fields only)')}
         </span>
       </div>
 
       {/* table */}
       {itemsQ.isLoading ? (
-        <div style={{ fontSize: '0.66rem', color: 'var(--text-secondary)' }}>{t('Loading…')}</div>
+        <div style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>{t('Loading…')}</div>
       ) : total === 0 ? (
-        <div style={{ fontSize: '0.66rem', color: 'var(--text-secondary)', padding: '0.5rem 0' }}>
+        <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', padding: '0.5rem 0' }}>
           {t('No verification items yet — run V&V to generate one per requirement (method, level, phase, facility and acceptance criterion are derived from the requirement and its allocation).')}
         </div>
       ) : (

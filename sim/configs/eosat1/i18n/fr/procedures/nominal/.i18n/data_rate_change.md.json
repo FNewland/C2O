@@ -39,8 +39,8 @@
   },
   {
    "id": "nom-011-data-rate-change/procedure-steps/step-1-assess-current-link-conditions",
-   "en_hash": "89d027dcbc1dc3c7",
-   "fr_hash": "a63f9dd96bb9c03d"
+   "en_hash": "185a79773f7fe106",
+   "fr_hash": "85f98146c1339222"
   },
   {
    "id": "nom-011-data-rate-change/procedure-steps/step-2-verify-the-gates-and-the-margin-for-the-target-tier",
@@ -59,8 +59,8 @@
   },
   {
    "id": "nom-011-data-rate-change/procedure-steps/step-5-verify-the-new-ber-is-acceptable",
-   "en_hash": "0f5cc40abdfdf438",
-   "fr_hash": "2c8ed8d6238f5b88"
+   "en_hash": "e89fc8c998f34fd4",
+   "fr_hash": "84e697d804789664"
   },
   {
    "id": "nom-011-data-rate-change/procedure-steps/step-6-release-high-after-the-dump-high-only",
@@ -78,5 +78,5 @@
    "fr_hash": "36d56d3ce28a0b3f"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "8067e5b"
 }

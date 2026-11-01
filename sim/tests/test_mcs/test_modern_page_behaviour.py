@@ -85,7 +85,19 @@ const state = {
 @requires_node
 class TestSaHeader:
     def test_populates_from_state_fixture(self, tmp_path):
+        # Every alarm count comes from ONE store, the client journal
+        # (P7.5, R3 A3) -- not from the server's separate unacked_alarms
+        # number, which is how header and FDIR page came to disagree.
+        # Two repeats of one condition are ONE alarm (x2), so 3 rows -> 2.
         out = run_js(STATE_FIXTURE + """
+            T.S.alarms = [
+              { id: 1, timestamp: 100, subsystem: "eps", severity: 3,
+                parameter: "0x0101", limit_status: "yellow_low", acknowledged: false },
+              { id: 2, timestamp: 160, subsystem: "eps", severity: 3,
+                parameter: "0x0101", limit_status: "yellow_low", acknowledged: false },
+              { id: 3, timestamp: 170, subsystem: "ttc", severity: 4,
+                parameter: "0x0502", limit_status: "red_low", acknowledged: false },
+            ];
             T.handleState(state);
             return {
               see: __registry["sa-see-v"].textContent,
@@ -98,7 +110,7 @@ class TestSaHeader:
         assert out["see"].startswith("LIVE")
         assert "tier LOW" in out["seeSub"] and "store 42" in out["seeSub"]
         assert out["talk"].startswith("LINK")
-        # sc mode is TM-derived (0x0700 = 0 -> NOMINAL), with provenance
+        # sc mode is TM-derived (obdh.mode, never 0x0700), with provenance
         assert out["well"].startswith("NOMINAL")
         assert out["unack"] == "2"
 

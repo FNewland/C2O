@@ -5,14 +5,15 @@
  * current session, with who/what changed, old/new values, and undo.
  */
 import { useDesignStore } from '../stores/designStore'
+import { fs } from '../theme/tokens'
 
 const SOURCE_LABELS: Record<string, { label: string; color: string }> = {
-  mission_need: { label: 'Mission Need', color: '#8b5cf6' },
-  requirements: { label: 'Requirements', color: '#3b82f6' },
-  orbit: { label: 'Orbit', color: '#06b6d4' },
-  equipment: { label: 'Equipment', color: '#10b981' },
-  conops: { label: 'ConOps', color: '#f59e0b' },
-  functions: { label: 'Functions', color: '#ec4899' },
+  mission_need: { label: 'Mission Need', color: 'var(--cat-2)' },
+  requirements: { label: 'Requirements', color: 'var(--interactive)' },
+  orbit: { label: 'Orbit', color: 'var(--interactive)' },
+  equipment: { label: 'Equipment', color: 'var(--status-ok)' },
+  conops: { label: 'ConOps', color: 'var(--status-caution)' },
+  functions: { label: 'Functions', color: 'var(--cat-6)' },
 }
 
 export function ChangeAuditPanel() {
@@ -21,7 +22,7 @@ export function ChangeAuditPanel() {
 
   if (changeHistory.length === 0) {
     return (
-      <div style={{ padding: '1rem', color: '#6b7280', fontSize: '0.78rem' }}>
+      <div style={{ padding: '1rem', color: 'var(--text-3)', fontSize: fs.label }}>
         No changes recorded yet. Edit mission parameters to see the audit trail.
       </div>
     )
@@ -31,11 +32,11 @@ export function ChangeAuditPanel() {
     <div style={{ padding: '1rem', overflowY: 'auto', height: '100%' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
         <h2 style={{ margin: 0 }}>Change History</h2>
-        <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>{changeHistory.length} changes</span>
+        <span style={{ fontSize: fs.label, color: 'var(--text-3)' }}>{changeHistory.length} changes</span>
         <span style={{ flex: 1 }} />
         {changeHistory.length > 0 && (
           <button className="btn btn-sm" onClick={undoLastChange}
-            style={{ fontSize: '0.7rem', background: '#f59e0b', color: '#000' }}>
+            style={{ fontSize: fs.label, background: 'var(--status-caution)', color: 'var(--on-fill)' }}>
             Undo Last Change
           </button>
         )}
@@ -43,7 +44,7 @@ export function ChangeAuditPanel() {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
         {[...changeHistory].reverse().map((change, i) => {
-          const info = SOURCE_LABELS[change.source] || { label: change.source, color: '#6b7280' }
+          const info = SOURCE_LABELS[change.source] || { label: change.source, color: 'var(--text-3)' }
           const time = new Date(change.timestamp).toLocaleTimeString()
           const isLatest = i === 0
 
@@ -53,20 +54,20 @@ export function ChangeAuditPanel() {
               padding: '0.35rem 0.5rem', borderRadius: '4px',
               background: isLatest ? 'rgba(59,130,246,0.05)' : 'transparent',
               borderLeft: `3px solid ${info.color}`,
-              fontSize: '0.75rem',
+              fontSize: fs.label,
             }}>
-              <span style={{ fontSize: '0.65rem', color: '#6b7280', whiteSpace: 'nowrap', marginTop: '0.1rem' }}>
+              <span style={{ fontSize: fs.label, color: 'var(--text-3)', whiteSpace: 'nowrap', marginTop: '0.1rem' }}>
                 {time}
               </span>
               <span style={{
-                fontSize: '0.6rem', padding: '0.1rem 0.3rem', borderRadius: '3px',
-                background: `${info.color}22`, color: info.color, fontWeight: 600,
+                fontSize: fs.label, padding: '0.1rem 0.3rem', borderRadius: '3px',
+                background: `color-mix(in srgb, ${info.color} 13%, transparent)`, color: info.color, fontWeight: 600,
                 whiteSpace: 'nowrap',
               }}>{info.label}</span>
-              <span style={{ color: '#d1d5db', flex: 1 }}>
-                <span style={{ fontFamily: 'monospace', fontSize: '0.7rem' }}>{change.paramId}</span>
+              <span style={{ color: 'var(--text)', flex: 1 }}>
+                <span style={{ fontFamily: 'monospace', fontSize: fs.value }}>{change.paramId}</span>
               </span>
-              <span style={{ color: '#6b7280', fontSize: '0.68rem', whiteSpace: 'nowrap' }}>
+              <span style={{ color: 'var(--text-3)', fontSize: fs.label, whiteSpace: 'nowrap' }}>
                 {formatValue(change.oldValue)} → {formatValue(change.newValue)}
               </span>
             </div>

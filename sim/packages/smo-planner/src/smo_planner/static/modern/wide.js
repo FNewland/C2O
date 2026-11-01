@@ -23,6 +23,8 @@ import { fmtUTC, fmtMET } from "/static/shared/format.js";
 // UI language. Wall display: NO toggle and no localStorage — ?lang= (or the
 // server default) only, so a shared browser cannot flip the wall by accident.
 import { I18n, t, tText } from "/static/shared/i18n.js";
+// One contact verdict for every console (R3 audit problem #10).
+import { linkState } from "/static/shared/state.js";
 
 import { LAND } from "./wide-basemap.js";
 
@@ -517,7 +519,8 @@ function renderTimeline() {
   const canvas = $("wTimeline");
   const box = canvas.parentElement.getBoundingClientRect();
   const dpr = window.devicePixelRatio || 1;
-  const w = Math.max(80, box.width - 4), h = Math.max(60, box.height - 4);
+  // The canvas sits inside the .bd's 8 px padding (absolute, see wide.html).
+  const w = Math.max(80, box.width - 16), h = Math.max(60, box.height - 16);
   canvas.style.width = w + "px"; canvas.style.height = h + "px";
   canvas.width = w * dpr; canvas.height = h * dpr;
   const ctx = canvas.getContext("2d");
@@ -551,28 +554,59 @@ function renderTimeline() {
      block uses for its solid/dotted split, so the two blocks cannot
      disagree about where "the next orbit" ends. */
   const per = derivedOrbitPeriod();
-  const detailH = Math.max(56, pH * 0.66);
   const gap = 10;
-  const ovY = mT + detailH + gap, ovH = Math.max(30, pH - detailH - gap);
-
   // ── Lane 1: NEXT ORBIT, labelled ──────────────────────────────────
-  const hdrH = 22;
+  /* Header: "NEXT ORBIT" + "<period> MIN — DERIVED FROM …" on one line when it
+     fits, otherwise the derivation drops to a second line. It used to run
+     on regardless, and in French ran under the first contact label. */
   ctx.textAlign = "left"; ctx.textBaseline = "top";
   ctx.font = "700 18px " + C("--sans");
   ctx.fillStyle = C("--tx3");
   const nextOrbit = tText("NEXT ORBIT");
   ctx.fillText(nextOrbit, mL, mT);
   const hdrW = ctx.measureText(nextOrbit).width;
+  let hdrH = 24;
   if (per) {
     ctx.font = "18px " + C("--mono");
     ctx.fillStyle = C("--tx2");
-    ctx.fillText(tText("{{min}} MIN — DERIVED FROM {{source}}", {
-      min: (per.ms / 60000).toFixed(1), source: per.label().toUpperCase() }),
-    mL + hdrW + 18, mT);
+    const derived = tText("{{min}} MIN — DERIVED FROM {{source}}", {
+      min: (per.ms / 60000).toFixed(1), source: per.label().toUpperCase() });
+    if (mL + hdrW + 18 + ctx.measureText(derived).width <= w - mR) {
+      ctx.fillText(derived, mL + hdrW + 18, mT);
+    } else {
+      ctx.fillText(derived, mL, mT + 22);
+      hdrH = 48;
+    }
   }
+  /* Lane sizing (A10, R3 audit, designed against the French strings).
+     The 24 h overview stacks three bands, each with a row label; it used to
+     get whatever the detail lane left over (~45 px on a 900 px screen), so
+     ÉCLIPSE / CONTACTS / ACTIVITÉS printed on top of each other, while the
+     detail rows' 21 px label floor pushed contact labels up into this
+     header. Now each lane has a minimum that keeps its labels inside it,
+     at this page's 18 px type floor:
+       overview: band pitch >= 18 px label + 3 px;
+       detail:   two rows of (21 px label + bar + padding).
+     The overview gets ~34 % when there is room. On a block too short for
+     both, the overview keeps its minimum and the detail rows drop their
+     labels (bars only) rather than shrink the type below the wall floor. */
+  const OV_LABEL_MAX = 18, OV_LABEL_MIN = 18;
+  const ROW_MIN = 21 + 6 + 6;                    // label + bar + padding
+  const ovMin = 3 * (OV_LABEL_MIN + 3) / 1.05;
+  const ovWant = Math.max(pH * 0.34, 3 * (OV_LABEL_MAX + 6) / 1.05);
+  const ovH = Math.max(ovMin, Math.min(ovWant, pH - gap - hdrH - 2 * ROW_MIN));
+  const detailH = pH - ovH - gap;
+  const ovY = mT + detailH + gap;
+  const ovLabelPx = Math.round(Math.max(OV_LABEL_MIN,
+    Math.min(OV_LABEL_MAX, ovH * 0.35 - 3)));
   // Row names live in a left gutter, not on top of the bars: on the old
   // single-lane layout "CONTACTS" sat over the first hour of data.
-  const gut = pW >= 700 ? 104 : 0;
+  // Gutter sized to the longest row name in the CURRENT language (the fixed
+  // 104 px was English-sized; FR "ACTIVITÉS" filled it edge to edge).
+  ctx.font = "18px " + C("--sans");
+  const gutNeed = Math.ceil(Math.max(...["CONTACTS", "ACTIVITIES", "ECLIPSE"]
+    .map((k) => ctx.measureText(tText(k)).width))) + 14;
+  const gut = pW >= 700 ? Math.max(104, gutNeed) : 0;
   const plotL = mL + gut, plotW = pW - gut;
   const orbMs = per ? per.ms : null;
   const dEnd = orbMs ? now + orbMs : now + windowMs / 15;
@@ -591,7 +625,8 @@ function renderTimeline() {
   ctx.fillRect(plotL, dTop, plotW, 1);
   ctx.fillRect(plotL, dTop + rowH, plotW, 1);
   if (gut) {
-    ctx.font = "18px " + C("--sans");
+    ctx.font = Math.round(Math.max(OV_LABEL_MIN, Math.min(18, rowH - 4)))
+      + "px " + C("--sans");
     ctx.fillStyle = C("--tx3");
     ctx.textAlign = "left"; ctx.textBaseline = "middle";
     ctx.fillText(tText("CONTACTS"), mL, dTop + rowH / 2);
@@ -605,13 +640,21 @@ function renderTimeline() {
   // Type and bars scale with the lane: the ultrawide tier gives this block
   // three times the height of the 16:9 tier, and 21 px labels floating in it
   // read as a whisper from the back of the room.
-  const barH = Math.max(14, Math.min(48, rowH * 0.38));
-  // The label sits ABOVE the bar, so its size is bounded by what is left of
-  // the row — never below the 21 px this block needs at wall distance.
-  const labelPx = Math.round(Math.max(21,
-    Math.min(36, rowH - barH - 8)));
+  // The label sits ABOVE the bar and must stay inside its own row: it used
+  // to climb out of a short row into the lane header (the French "DÉDUITE
+  // DE" line). Now the bar gives way first (down to 6 px); if the row still
+  // cannot hold a 21 px label, the row shows bars only.
+  const LABEL_MAX = 36;
+  const ROW_PAD = rowH >= 44 ? 10 : 6;
+  let barH = Math.max(14, Math.min(48, rowH * 0.38));
+  if (rowH - barH - ROW_PAD < 21) barH = Math.max(6, rowH - ROW_PAD - 21);
+  const room = rowH - barH - ROW_PAD;
+  // Wall rule: next-orbit labels never fall below 21 px. A row too short for
+  // that shows its bars only (the 24 h lane below still carries them).
+  const labelPx = Math.floor(Math.max(21, Math.min(LABEL_MAX, room)));
+  const rowLabels = room >= 21;
   function detailRow(items, rowTop, fill, edge, textColor) {
-    const barY = rowTop + rowH - barH - 6;
+    const barY = rowTop + rowH - barH - 2;
     // Bars first, then the labels ABOVE them: a label sitting on top of a
     // bar (or painted over by the next item's bar) is exactly the mush the
     // owner could not read from across the room.
@@ -626,15 +669,22 @@ function renderTimeline() {
     }
     ctx.font = "700 " + labelPx + "px " + C("--sans");
     ctx.textBaseline = "bottom"; ctx.textAlign = "left";
+    // Collision avoidance: a label never overwrites the previous one. It is
+    // pushed right; if the full label no longer fits before the lane end it
+    // falls back to its short form (station + time); only when even that
+    // has no room is it dropped.
     let cursor = -1e9;
     for (const it of items) {
       const x1 = Math.max(plotL, dX(it.start));
-      const tw = ctx.measureText(it.label).width;
-      let tx = x1;
-      if (tx < cursor) tx = cursor;               // never overwrite a label
-      if (tx + tw > plotL + plotW) tx = plotL + plotW - tw;
-      if (tx < cursor || tx < plotL) continue;    // no room left: drop it
-      haloText(ctx, it.label, tx, barY - 4, textColor, C("--bg"));
+      let text = null, tx = 0, tw = 0;
+      for (const cand of [it.label, it.short].filter(Boolean)) {
+        const cw = ctx.measureText(cand).width;
+        let cx = Math.max(x1, cursor);
+        if (cx + cw > plotL + plotW) cx = plotL + plotW - cw;
+        if (cx >= cursor && cx >= plotL) { text = cand; tx = cx; tw = cw; break; }
+      }
+      if (text === null || !rowLabels) continue;  // no room: drop it
+      haloText(ctx, text, tx, barY - 3, textColor, C("--bg"));
       // A leader tick ties the label back to the bar it names.
       ctx.strokeStyle = edge; ctx.lineWidth = 2;
       ctx.beginPath();
@@ -650,20 +700,23 @@ function renderTimeline() {
     .map((c) => ({ start: c.aos, end: c.los,
       label: (c.aos <= now && c.los >= now ? tText("IN CONTACT") + " " : "")
         + c.station.toUpperCase() + "  " + hhmm(c.aos)
-        + (typeof c.maxEl === "number" ? "  " + c.maxEl.toFixed(0) + "°" : "") }));
+        + (typeof c.maxEl === "number" ? "  " + c.maxEl.toFixed(0) + "°" : ""),
+      short: c.station.toUpperCase() + " " + hhmm(c.aos) }));
   const nearActs = schedule
     .filter((a) => a.stateName !== "CANCELLED"
       && a.startMs + a.durMs > now && a.startMs < dEnd)
     .sort((a, b) => a.startMs - b.startMs)
     .map((a) => ({ start: a.startMs, end: a.startMs + a.durMs,
-      label: activityLabel(a.name) + "  " + hhmm(a.startMs) }));
+      label: activityLabel(a.name) + "  " + hhmm(a.startMs),
+      short: hhmm(a.startMs) }));
 
   detailRow(nearContacts, dTop, "rgba(107,179,255,0.30)", C("--info"),
     C("--tx"));
   detailRow(nearActs, dTop + rowH, "rgba(240,180,41,0.28)", C("--warn"),
     C("--tx"));
 
-  ctx.font = "18px " + C("--sans"); ctx.fillStyle = C("--tx3");
+  ctx.font = Math.round(Math.max(OV_LABEL_MIN, Math.min(18, rowH - 4)))
+    + "px " + C("--sans"); ctx.fillStyle = C("--tx3");
   ctx.textAlign = "right"; ctx.textBaseline = "middle";
   if (!nearContacts.length) {
     haloText(ctx, tText("NO CONTACTS THIS ORBIT"), plotL + plotW - 4,
@@ -724,7 +777,7 @@ function renderTimeline() {
     ctx.fillRect(x1, bandA.y, Math.max(x2 - x1, 3), bandA.h);
   }
 
-  ctx.font = "18px " + C("--sans"); ctx.fillStyle = C("--tx3");
+  ctx.font = ovLabelPx + "px " + C("--sans"); ctx.fillStyle = C("--tx3");
   ctx.textAlign = "left"; ctx.textBaseline = "middle";
   const ovLabelX = gut ? mL : plotL + 4;
   haloText(ctx, tText("ECLIPSE"), ovLabelX, bandEcl.y + bandEcl.h / 2,
@@ -976,8 +1029,21 @@ function renderTrackCanvas() {
     return false;
   }
   // Chrome the labels must not collide with: the basemap-provenance chip
-  // sitting in the DOM at the map's top right.
-  placed.push({ x: w - 460, y: 0, w: 460, h: 34 });
+  // sitting in the DOM at the map's top right. Measured, not assumed: the
+  // French chip is wider than the old fixed 460 px.
+  const chip = $("wTrackSource");
+  if (chip) {
+    const cr = chip.getBoundingClientRect(), kr = canvas.getBoundingClientRect();
+    placed.push({ x: cr.left - kr.left - 6, y: cr.top - kr.top - 4,
+      w: cr.width + 12, h: cr.height + 8 });
+  } else {
+    placed.push({ x: w - 460, y: 0, w: 460, h: 34 });
+  }
+  // Markers are obstacles too (A10): a label used to be placed clear of
+  // other LABELS only, so an AOS tag could sit on a neighbouring station's
+  // triangle.
+  const marker = (x, y, r) => placed.push({ x: x - r - 2, y: y - r - 2,
+    w: 2 * r + 4, h: 2 * r + 4 });
 
   /* ── Upcoming passes on the map (owner request 3) ─────────────────────
      Driven by the SAME `contacts` array, filtered the SAME way, as the NEXT
@@ -1038,6 +1104,7 @@ function renderTrackCanvas() {
       ctx.beginPath(); ctx.arc(bx, by, passR, 0, Math.PI * 2); ctx.fill();
       ctx.strokeStyle = C("--ok"); ctx.lineWidth = 4;
       ctx.beginPath(); ctx.arc(bx, by, passR - 1, 0, Math.PI * 2); ctx.stroke();
+      marker(ax, ay, passR); marker(bx, by, passR);
 
       // Labels are queued, not drawn here: they are placed after the
       // stations, once every arc and marker is on the canvas.
@@ -1068,6 +1135,7 @@ function renderTrackCanvas() {
     ctx.fillStyle = inContact ? C("--ok") : C("--tx");
     ctx.strokeStyle = C("--bg"); ctx.lineWidth = 3;
     ctx.stroke(); ctx.fill();
+    marker(x, y, gsR);
     gsLabels.push({ text: s.name.toUpperCase(), x, y,
       fill: inContact ? C("--ok") : C("--tx") });
   }
@@ -1170,7 +1238,7 @@ function renderLink() {
     $("wLinkElev").textContent = "—";
     $("wLinkRange").textContent = "—";
   } else {
-    const inC = !!scState.in_contact;
+    const inC = linkState(scState).contact;
     st.textContent = inC ? tText("IN CONTACT") : tText("NO CONTACT");
     st.className = "state" + (inC ? " yes" : "");
     $("wLinkStation").textContent = scState.active_gs || "—";
@@ -1220,6 +1288,23 @@ async function init() {
     renderTrackCanvas();
   }, 120000);
   setInterval(renderTrackCanvas, 10000);  // marker follows the spacecraft
+
+  // Redraw a canvas when its box changes (window resize, or a heading that
+  // wraps once the translated legend is filled in). Without this the map kept
+  // the size it was first drawn at until the next 10 s tick (A10).
+  if (typeof ResizeObserver === "function") {
+    const watch = (el, fn) => {
+      let pending = false, last = "";
+      new ResizeObserver(() => {
+        const r = el.getBoundingClientRect(), key = r.width + "x" + r.height;
+        if (pending || key === last) return;
+        pending = true;
+        requestAnimationFrame(() => { pending = false; last = key; fn(); });
+      }).observe(el);
+    };
+    watch($("wTrackCanvas").parentElement, renderTrackCanvas);
+    watch($("wTimeline").parentElement, renderTimeline);
+  }
 }
 
 document.addEventListener("DOMContentLoaded", init);

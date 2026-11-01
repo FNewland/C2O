@@ -53,12 +53,12 @@ débit et le basculement sur le transpondeur redondant si l'unité principale es
 
 ### Étape 1 : Caractériser l'anomalie de TEB
 **TC:** `HK_REQUEST(sid=6)` (Service 3, Subtype 27) — Demander les données de servitude TTC
-**Verify:** `ttc.ber` (0x050C) — consigner la valeur courante (attendue >= -5)
-**Verify:** `ttc.eb_n0` (0x0519) — consigner la valeur d'Eb/N0
-**Verify:** `ttc.link_margin` (0x0503) — consigner la marge de liaison
-**Verify:** `ttc.rssi` (0x0502) — consigner le RSSI
+**Verify:** page radio (sol) : `ttc.ber` (0x050C) — consigner la valeur courante (attendue >= -5)
+**Verify:** page radio (sol) : `ttc.eb_n0` (0x0519) — consigner la valeur d'Eb/N0
+**Verify:** page TT&C (sol) : `ttc.link_margin` (0x0503) — consigner la marge de liaison
+**Verify:** page TT&C (sol) : `ttc.rssi` (0x0502) — consigner le RSSI
 **Verify:** `ttc.tm_data_rate` (0x0506) — consigner le débit courant
-**Verify:** `ttc.contact_elevation` (0x050A) — consigner l'angle d'élévation
+**Verify:** page TT&C (sol) : `ttc.contact_elevation` (0x050A) — consigner l'angle d'élévation
 **Verify:** `ttc.carrier_lock` (0x0510), `ttc.bit_sync` (0x0511), `ttc.frame_sync` (0x0512)
 **Note:** Si l'élévation est faible (< 10°), la dégradation du TEB peut être normale, du fait de
 l'atténuation atmosphérique et d'un gain faible. Attendre une élévation plus haute avant de déclarer l'anomalie.
@@ -93,7 +93,7 @@ l'atténuation atmosphérique et d'un gain faible. Attendre une élévation plus
 **TC:** `TTC_SET_TX_POWER(level=0)` (Service 8, Subtype 1, func_id 68) — régler sur la puissance basse (1 W)
 **LABEL:** `STEP-3C`
 **Verify:** `ttc.pa_temp` (0x050F) en cours de stabilisation
-**Verify:** `ttc.ber` (0x050C) — vérifier si le TEB s'améliore avec un PA plus froid
+**Verify:** page radio (sol) : `ttc.ber` (0x050C) — vérifier si le TEB s'améliore avec un PA plus froid
 **Note:** Si la surchauffe du PA persiste, appliquer EMG-006 pour l'analyse thermique
 de la zone du transpondeur.
 **GO/NO-GO:** Si le TEB s'est amélioré, poursuivre la surveillance. Sinon, l'étape 4 s'applique.
@@ -122,8 +122,8 @@ SAFE (1 kbit/s, ex-BEACON) est la liaison de secours du chargeur d'amorçage et
 **LABEL:** `STEP-4W`
 **Note:** Attendre 30 s que le TEB se stabilise, puis demander les données de servitude TTC :
 **TC:** `HK_REQUEST(sid=6)` (Service 3, Subtype 27)
-**Verify:** `ttc.ber` (0x050C) < -5 (TEB amélioré au palier inférieur)
-**Verify:** `ttc.eb_n0` (0x0519) > 10 dB au palier inférieur
+**Verify:** page radio (sol) : `ttc.ber` (0x050C) < -5 (TEB amélioré au palier inférieur)
+**Verify:** page radio (sol) : `ttc.eb_n0` (0x0519) > 10 dB au palier inférieur
 **Action:** Si le TEB s'est amélioré :
 - la cause racine est probablement une marge de liaison insuffisante en HIGH pour la géométrie de ce passage ;
 - rester en LOW pour ce contact — LOW est le débit des opérations courantes, seul le vidage est donc
@@ -142,7 +142,7 @@ L'étape 5 (basculement de transpondeur) s'applique.
 **Verify:** `ttc.carrier_lock` (0x0510) = 1 (réacquisition sur l'unité redondante)
 **Verify:** `ttc.bit_sync` (0x0511) = 1
 **Verify:** `ttc.frame_sync` (0x0512) = 1
-**Verify:** `ttc.ber` (0x050C) — vérifier si le TEB s'est amélioré
+**Verify:** page radio (sol) : `ttc.ber` (0x050C) — vérifier si le TEB s'est amélioré
 **Verify:** `ttc.xpdr_temp` (0x0507) — consigner la température du transpondeur redondant
 **Action:** Si le TEB s'est amélioré sur le transpondeur redondant : le transpondeur principal est dégradé.
 Consigner une anomalie matérielle. Poursuivre les opérations sur l'unité redondante.

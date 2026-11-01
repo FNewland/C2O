@@ -92,6 +92,10 @@ MCS_ROUTES = [
     # (capture gates + health baselines, moved out of the retired
     # annotations.yaml). /api/annotations stays (serves {}, URL stability).
     "/api/display-config",
+    # Procedure cards by position (ed2d82c, 2026-08-20).
+    "/api/procedure/cards",
+    # Same-origin read-only planner proxy (R3 A2, 2026-11-01).
+    "/planner/{path:api/.+}",
 ]
 
 PLANNER_ROUTES = [

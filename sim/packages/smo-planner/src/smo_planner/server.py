@@ -431,47 +431,18 @@ class PlannerServer:
         self._compute_ground_track()
 
         # FIELD DEFECT 2026-08-20 (owner: "you wiped out almost all the quick
-
-        # commands"). Nothing was wiped -- the browser was running a CACHED
-
-        # copy of the page's own JS against a freshly-served index.html. The
-
-        # page carries `Cache-Control: no-cache`, but the module it loads is
-
-        # referenced with a HARD-CODED `?v=1` and no cache directive, so
-
-        # Chrome cached it heuristically and never revalidated. Every fix
-
-        # shipped to these files stayed invisible until a manual hard-reload,
-
-        # and a half-updated pair renders as MISSING UI.
-
-        #
-
-        # `no-cache` does not mean "do not cache" -- it means "revalidate
-
-        # before use". With the ETag aiohttp already sends, an unchanged file
-
-        # costs one 304 and no body. Applied to the app's OWN assets only;
-
-        # /static/vendor/ (third-party, content-stable) keeps normal caching.
-
-        @web.middleware
-
-        async def _no_cache_own_assets(request, handler):
-
-            resp = await handler(request)
-
-            p = request.path
-
-            if p.startswith("/static/modern/") or p.startswith("/static/shared/"):
-
-                resp.headers["Cache-Control"] = "no-cache"
-
-            return resp
-
-
-        app = web.Application(middlewares=[_no_cache_own_assets])
+        # commands"): a module referenced with a HARD-CODED `?v=1` was cached
+        # heuristically by Chrome and ran against a fresh index.html.
+        # Shared HTTP policy (smo_common.web.http, R3 audit A8): gzip for
+        # text >= 1 KB; the modern pages' /static/ URLs are stamped with
+        # their content hash and served immutable; every other own asset is
+        # `no-cache` (revalidate, a bodiless 304 when unchanged); a
+        # hand-written ?v= is never trusted.
+        from smo_common.web.http import apply_http_policy
+        app = web.Application()
+        apply_http_policy(app, revalidate_prefixes=("/static/",),
+                          max_age_prefixes={"/static/vendor/": 86400})
+        self._http_app = app
         app.router.add_get("/", self._handle_index)
         # Explicit generation routes (plan §1.2): compare classic and modern
         # live in two tabs regardless of the resolved default.
@@ -927,12 +898,17 @@ class PlannerServer:
     def _serve_page(self, rel: str, missing_note: str):
         page = Path(__file__).parent / "static" / rel
         lang = getattr(self, "_ui_lang", "en")
-        if page.exists() and rel.startswith("modern/") and lang != "en":
+        app = getattr(self, "_http_app", None)
+        if page.exists() and rel.startswith("modern/") and (lang != "en" or app):
             from smo_common.i18n import inject_default_lang
-            return web.Response(
-                text=inject_default_lang(page.read_text(encoding="utf-8"), lang),
-                content_type="text/html",
-                headers={"Cache-Control": "no-cache"})
+            from smo_common.web.http import stamp_asset_versions
+            html = page.read_text(encoding="utf-8")
+            if lang != "en":
+                html = inject_default_lang(html, lang)
+            if app is not None:
+                html = stamp_asset_versions(html, app)
+            return web.Response(text=html, content_type="text/html",
+                                headers={"Cache-Control": "no-cache"})
         if page.exists():
             return web.FileResponse(
                 page, headers={"Cache-Control": "no-cache"})

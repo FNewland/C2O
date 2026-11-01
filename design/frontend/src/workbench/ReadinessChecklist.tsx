@@ -12,6 +12,7 @@ import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { useUIStore } from '../stores/uiStore'
+import { fs } from '../theme/tokens'
 
 const API = '/api'
 
@@ -121,28 +122,28 @@ export function ReadinessChecklist() {
   const allPassed = checks.every(c => c.passed)
   const passedCount = checks.filter(c => c.passed).length
 
+  // Unmet readiness is "not yet", not an alarm: caution glyph + text; ✓ for met (P6, brief §1.3).
   return (
-    <div style={{
-      padding: '0.4rem 1rem', fontSize: '0.72rem',
-      background: allPassed ? 'rgba(16,185,129,0.08)' : 'rgba(245,158,11,0.08)',
-      borderBottom: `1px solid ${allPassed ? 'var(--success)' : 'var(--warning)'}`,
-      display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap',
+    <div role="status" style={{
+      padding: 'var(--sp-1) var(--sp-3)', fontSize: fs.label, minHeight: 28,
+      background: 'var(--surface-1)', borderBottom: '1px solid var(--line)',
+      boxShadow: `inset 3px 0 0 ${allPassed ? 'var(--status-ok)' : 'var(--status-caution)'}`,
+      display: 'flex', gap: 'var(--sp-4)', alignItems: 'center', flexWrap: 'wrap',
     }}>
-      <span style={{ fontWeight: 600, color: allPassed ? 'var(--success)' : 'var(--warning)' }}>
+      <span style={{ fontWeight: 600, color: 'var(--text)' }}>
         {t('Level {{level}} Readiness: {{passed}}/{{total}}', { level: currentLevel, passed: passedCount, total: checks.length })}
       </span>
       {checks.map(c => (
-        <span key={c.label} style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }} title={c.detail}>
-          <span style={{
-            display: 'inline-block', width: 7, height: 7, borderRadius: '50%',
-            background: c.passed ? 'var(--success)' : 'var(--danger)',
-          }} />
-          <span style={{ color: c.passed ? 'var(--text-secondary)' : 'var(--text-primary)' }}>
-            {c.label}
+        <span key={c.label} style={{ display: 'flex', alignItems: 'baseline', gap: 6, minWidth: 0 }} title={c.detail}>
+          <span aria-hidden="true" style={{ color: c.passed ? 'var(--status-ok)' : 'var(--status-caution)', fontWeight: 700 }}>
+            {c.passed ? '✓' : '◆'}
+          </span>
+          <span style={{ color: c.passed ? 'var(--text-2)' : 'var(--text)' }}>
+            <span className="sr-only">{c.passed ? t('Met:') : t('Not met:')} </span>{c.label}
           </span>
           {!c.passed && (
-            <span style={{ color: 'var(--danger)', fontSize: '0.6rem', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              — {c.detail}
+            <span style={{ color: 'var(--text-2)', fontSize: fs.label, maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {c.detail}
             </span>
           )}
         </span>

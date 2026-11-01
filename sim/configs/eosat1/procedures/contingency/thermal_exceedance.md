@@ -98,6 +98,7 @@ no task-shedding parameter on board; OBC SAFE is the commanded reduction.
 **GO/NO-GO:** Hot case and temperature still rising — go to COARSE_SUN -> GO `STEP-4HS` | NO-GO `STEP-4E`
 **LABEL:** `STEP-4HS`
 **TC:** `AOCS_SET_MODE(mode=3)` (Service 8, Subtype 1, func_id 0) — COARSE_SUN, to optimise spacecraft attitude for thermal dissipation
+**TC:** `HK_REQUEST(sid=2)` (Service 3, Subtype 27) — AOCS housekeeping (aocs.mode is in SID 2, not in the thermal SID 3)
 **Verify:** `aocs.mode` (0x020F) = 3 within 15s
 **LABEL:** `STEP-4E`
 **GO/NO-GO:** If temperature stabilises within additional 15 min, proceed to Step 5. If red limit approached, escalate. -> GO `STEP-5` | NO-GO `STEP-4X`

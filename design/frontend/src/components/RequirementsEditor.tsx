@@ -8,6 +8,7 @@
  */
 import { useState } from 'react'
 import { useDesignStore } from '../stores/designStore'
+import { fs } from '../theme/tokens'
 
 interface SuggestedReq {
   id: string; text: string; req_type: string; domain: string
@@ -16,6 +17,7 @@ interface SuggestedReq {
   rationale: string; status: string
   level: string  // "mission" | "system" | "subsystem"
   parent_id: string | null
+  _originalId?: string
 }
 
 interface SMARTResult {
@@ -25,9 +27,9 @@ interface SMARTResult {
 }
 
 const TYPE_COLORS: Record<string, string> = {
-  mission: '#8b5cf6', system: '#3b82f6', subsystem: '#06b6d4', interface: '#10b981',
-  performance: '#10b981', functional: '#8b5cf6', regulatory: '#f97316', constraint: '#ef4444', process: '#ef4444',
-  budget: '#3b82f6',
+  mission: 'var(--cat-2)', system: 'var(--interactive)', subsystem: 'var(--interactive)', interface: 'var(--status-ok)',
+  performance: 'var(--status-ok)', functional: 'var(--cat-2)', regulatory: 'var(--status-caution)', constraint: 'var(--status-alarm)', process: 'var(--status-alarm)',
+  budget: 'var(--interactive)',
 }
 
 const METHOD_OPTIONS = ['analysis', 'test', 'inspection', 'demonstration']
@@ -227,7 +229,7 @@ export function RequirementsEditor({ studyId, defaultLevel = 'all' }: { studyId:
         <h2 style={{ margin: 0 }}>Requirements</h2>
         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
           {requirements.length > 0 && (
-            <span style={{ fontSize: '0.75rem', color: '#9ca3af' }}>
+            <span style={{ fontSize: fs.label, color: 'var(--text-2)' }}>
               {accepted.length} accepted · {suggested.length} pending · {rejected.length} rejected
             </span>
           )}
@@ -242,10 +244,10 @@ export function RequirementsEditor({ studyId, defaultLevel = 'all' }: { studyId:
         <div style={{ display: 'flex', gap: '0.3rem', marginBottom: '0.75rem' }}>
           {LEVELS.map(l => (
             <button key={l} onClick={() => setLevelFilter(l)} style={{
-              padding: '0.2rem 0.5rem', fontSize: '0.72rem', borderRadius: '3px', cursor: 'pointer',
-              background: levelFilter === l ? (TYPE_COLORS[l] || '#3b82f6') + '22' : 'transparent',
-              border: `1px solid ${levelFilter === l ? TYPE_COLORS[l] || '#3b82f6' : '#374151'}`,
-              color: levelFilter === l ? TYPE_COLORS[l] || '#3b82f6' : '#6b7280',
+              padding: '0.2rem 0.5rem', fontSize: fs.label, borderRadius: '3px', cursor: 'pointer',
+              background: levelFilter === l ? `color-mix(in srgb, ${(TYPE_COLORS[l] || 'var(--interactive)')} 13%, transparent)` : 'transparent',
+              border: `1px solid ${levelFilter === l ? TYPE_COLORS[l] || 'var(--interactive)' : 'var(--line)'}`,
+              color: levelFilter === l ? TYPE_COLORS[l] || 'var(--interactive)' : 'var(--text-3)',
               textTransform: 'capitalize',
             }}>{l === 'all' ? 'All Levels' : l}</button>
           ))}
@@ -256,13 +258,13 @@ export function RequirementsEditor({ studyId, defaultLevel = 'all' }: { studyId:
       <ArchDerivedRequirements levelFilter={levelFilter} />
 
       {!studyId && (
-        <div style={{ color: '#6b7280', fontSize: '0.85rem', padding: '2rem', textAlign: 'center' }}>
+        <div style={{ color: 'var(--text-3)', fontSize: fs.body, padding: '2rem', textAlign: 'center' }}>
           Create a study first (complete Steps 1-3 and run the design) to generate requirements.
         </div>
       )}
 
       {requirements.length === 0 && studyId && !loading && (
-        <div style={{ color: '#9ca3af', fontSize: '0.85rem', padding: '2rem', textAlign: 'center' }}>
+        <div style={{ color: 'var(--text-2)', fontSize: fs.body, padding: '2rem', textAlign: 'center' }}>
           Click "Generate from Objectives" to create SMART requirements from your mission objectives.
           Each requirement will be suggested for your approval — you can accept, edit, or reject each one.
         </div>
@@ -271,7 +273,7 @@ export function RequirementsEditor({ studyId, defaultLevel = 'all' }: { studyId:
       {/* Pending approval */}
       {suggested.length > 0 && (
         <>
-          <h3 style={{ fontSize: '0.85rem', color: '#f59e0b', marginBottom: '0.5rem' }}>
+          <h3 style={{ fontSize: fs.body, color: 'var(--status-caution)', marginBottom: '0.5rem' }}>
             Pending Approval ({suggested.length})
           </h3>
           {suggested.map(req => (
@@ -295,7 +297,7 @@ export function RequirementsEditor({ studyId, defaultLevel = 'all' }: { studyId:
       {/* Accepted */}
       {accepted.length > 0 && (
         <>
-          <h3 style={{ fontSize: '0.85rem', color: '#10b981', margin: '1rem 0 0.5rem' }}>
+          <h3 style={{ fontSize: fs.body, color: 'var(--status-ok)', margin: '1rem 0 0.5rem' }}>
             Accepted ({accepted.length})
           </h3>
           {accepted.map(req => (
@@ -315,7 +317,7 @@ export function RequirementsEditor({ studyId, defaultLevel = 'all' }: { studyId:
       {/* Rejected (collapsed) */}
       {rejected.length > 0 && (
         <details style={{ marginTop: '1rem' }}>
-          <summary style={{ fontSize: '0.78rem', color: '#6b7280', cursor: 'pointer' }}>
+          <summary style={{ fontSize: fs.label, color: 'var(--text-3)', cursor: 'pointer' }}>
             Rejected ({rejected.length})
           </summary>
           {rejected.map(req => (
@@ -344,7 +346,7 @@ function RequirementCard({ req, smart, editing, editText, editThreshold, editMet
   onEditFunctionId?: (id: string) => void; onEditReqType?: (t: string) => void
   onSplit?: () => void
 }) {
-  const typeColor = TYPE_COLORS[req.req_type] || '#6b7280'
+  const typeColor = TYPE_COLORS[req.req_type] || 'var(--text-3)'
   const isHowNotWhat = smart?.is_how_not_what
   const isSmart = smart?.is_smart
   const isCompound = /\bshall\b.*\b(and shall|; shall)\b/i.test(req.text) || (req.text.length > 200 && (req.text.match(/\bshall\b/gi) || []).length > 1)
@@ -356,34 +358,34 @@ function RequirementCard({ req, smart, editing, editText, editThreshold, editMet
     <div style={{
       padding: '0.6rem 0.75rem', borderRadius: '6px', marginBottom: '0.4rem',
       marginLeft: `${levelIndent}px`,
-      background: 'var(--bg-secondary, #1f2937)',
-      border: `1px solid ${isHowNotWhat ? '#ef4444' : isSmart ? '#10b981' : 'var(--border, #374151)'}`,
+      background: 'var(--bg-secondary, var(--surface-2))',
+      border: `1px solid ${isHowNotWhat ? 'var(--status-alarm)' : isSmart ? 'var(--status-ok)' : 'var(--border, var(--line))'}`,
       borderLeft: `3px solid ${typeColor}`,
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.25rem', flexWrap: 'wrap' }}>
-        <span style={{ fontSize: '0.65rem', fontFamily: 'monospace', color: '#6b7280' }}>{req.id}</span>
-        <span style={{ fontSize: '0.6rem', padding: '0.05rem 0.3rem', borderRadius: '3px', background: `${typeColor}22`, color: typeColor, fontWeight: 600 }}>
+        <span style={{ fontSize: fs.label, fontFamily: 'monospace', color: 'var(--text-3)' }}>{req.id}</span>
+        <span style={{ fontSize: fs.label, padding: '0.05rem 0.3rem', borderRadius: '3px', background: `color-mix(in srgb, ${typeColor} 13%, transparent)`, color: typeColor, fontWeight: 600 }}>
           {req.req_type}
         </span>
-        {req.domain && <span style={{ fontSize: '0.6rem', color: '#6b7280' }}>{req.domain}</span>}
+        {req.domain && <span style={{ fontSize: fs.label, color: 'var(--text-3)' }}>{req.domain}</span>}
 
         {/* SMART badge */}
         {smart && (
           <span style={{
-            fontSize: '0.58rem', padding: '0.05rem 0.3rem', borderRadius: '3px', fontWeight: 600,
+            fontSize: fs.label, padding: '0.05rem 0.3rem', borderRadius: '3px', fontWeight: 600,
             background: isHowNotWhat ? 'rgba(239,68,68,0.2)' : isSmart ? 'rgba(16,185,129,0.2)' : 'rgba(245,158,11,0.2)',
-            color: isHowNotWhat ? '#ef4444' : isSmart ? '#10b981' : '#f59e0b',
+            color: isHowNotWhat ? 'var(--status-alarm)' : isSmart ? 'var(--status-ok)' : 'var(--status-caution)',
           }}>
             {isHowNotWhat ? 'HOW not WHAT' : isSmart ? 'SMART' : 'Issues'}
           </span>
         )}
 
-        {req.status === 'accepted' && <span style={{ fontSize: '0.58rem', color: '#10b981' }}>Accepted</span>}
-        {req.status === 'rejected' && <span style={{ fontSize: '0.58rem', color: '#ef4444' }}>Rejected</span>}
+        {req.status === 'accepted' && <span style={{ fontSize: fs.label, color: 'var(--status-ok)' }}>Accepted</span>}
+        {req.status === 'rejected' && <span style={{ fontSize: fs.label, color: 'var(--status-alarm)' }}>Rejected</span>}
 
         <span style={{ flex: 1 }} />
         {req.verification_method && (
-          <span style={{ fontSize: '0.6rem', color: '#6b7280' }}>V: {req.verification_method}</span>
+          <span style={{ fontSize: fs.label, color: 'var(--text-3)' }}>V: {req.verification_method}</span>
         )}
       </div>
 
@@ -391,52 +393,52 @@ function RequirementCard({ req, smart, editing, editText, editThreshold, editMet
       {editing ? (
         <div style={{ marginBottom: '0.3rem' }}>
           <textarea className="input" rows={2} value={editText} onChange={e => onEditText(e.target.value)}
-            style={{ width: '100%', fontSize: '0.82rem', resize: 'vertical', marginBottom: '0.3rem' }} />
+            style={{ width: '100%', fontSize: fs.body, resize: 'vertical', marginBottom: '0.3rem' }} />
           <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', flexWrap: 'wrap' }}>
             {onEditReqType && (
-              <label style={{ fontSize: '0.7rem', color: '#9ca3af' }}>Type:
+              <label style={{ fontSize: fs.label, color: 'var(--text-2)' }}>Type:
                 <select className="select" value={editReqType || 'system'} onChange={e => onEditReqType(e.target.value)}
-                  style={{ width: '100px', marginLeft: '0.3rem', fontSize: '0.75rem' }}>
+                  style={{ width: '100px', marginLeft: '0.3rem', fontSize: fs.label }}>
                   {REQ_TYPE_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
                 </select>
               </label>
             )}
-            <label style={{ fontSize: '0.7rem', color: '#9ca3af' }}>Threshold:
+            <label style={{ fontSize: fs.label, color: 'var(--text-2)' }}>Threshold:
               <input className="input" type="number" step="any" value={editThreshold}
                 onChange={e => onEditThreshold(Number(e.target.value))}
-                style={{ width: '80px', marginLeft: '0.3rem', fontSize: '0.75rem' }} />
+                style={{ width: '80px', marginLeft: '0.3rem', fontSize: fs.label }} />
             </label>
-            <label style={{ fontSize: '0.7rem', color: '#9ca3af' }}>Method:
+            <label style={{ fontSize: fs.label, color: 'var(--text-2)' }}>Method:
               <select className="select" value={editMethod} onChange={e => onEditMethod(e.target.value)}
-                style={{ width: '120px', marginLeft: '0.3rem', fontSize: '0.75rem' }}>
+                style={{ width: '120px', marginLeft: '0.3rem', fontSize: fs.label }}>
                 {METHOD_OPTIONS.map(m => <option key={m} value={m}>{m}</option>)}
               </select>
             </label>
             {functionsList && functionsList.length > 0 && onEditFunctionId && (
-              <label style={{ fontSize: '0.7rem', color: '#9ca3af' }}>Function:
+              <label style={{ fontSize: fs.label, color: 'var(--text-2)' }}>Function:
                 <select className="select" value={editFunctionId || ''} onChange={e => onEditFunctionId(e.target.value)}
-                  style={{ width: '150px', marginLeft: '0.3rem', fontSize: '0.75rem' }}>
+                  style={{ width: '150px', marginLeft: '0.3rem', fontSize: fs.label }}>
                   <option value="">— None —</option>
                   {functionsList.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
                 </select>
               </label>
             )}
             <span style={{ flex: 1 }} />
-            <button className="btn btn-sm" onClick={onSaveEdit} style={{ fontSize: '0.7rem', background: '#10b981' }}>Save</button>
-            <button className="btn btn-sm" onClick={onCancelEdit} style={{ fontSize: '0.7rem', background: '#374151' }}>Cancel</button>
+            <button className="btn btn-sm" onClick={onSaveEdit} style={{ fontSize: fs.label, background: 'var(--status-ok)' }}>Save</button>
+            <button className="btn btn-sm" onClick={onCancelEdit} style={{ fontSize: fs.label, background: 'var(--line)' }}>Cancel</button>
           </div>
         </div>
       ) : (
-        <div style={{ fontSize: '0.82rem', marginBottom: '0.2rem' }}>{req.text}</div>
+        <div style={{ fontSize: fs.body, marginBottom: '0.2rem' }}>{req.text}</div>
       )}
 
       {/* Threshold + rationale + linked function */}
       {!editing && (
-        <div style={{ fontSize: '0.7rem', color: '#6b7280', display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+        <div style={{ fontSize: fs.label, color: 'var(--text-3)', display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
           {req.threshold !== 0 && <span>{req.operator} {req.threshold} {req.unit}</span>}
           {req.function_id && functionsList && (() => {
             const fn = functionsList.find(f => f.id === req.function_id)
-            return fn ? <span style={{ color: '#8b5cf6' }}>⤷ {fn.name}</span> : null
+            return fn ? <span style={{ color: 'var(--cat-2)' }}>⤷ {fn.name}</span> : null
           })()}
           {req.rationale && <span style={{ fontStyle: 'italic' }}>{req.rationale}</span>}
         </div>
@@ -446,7 +448,7 @@ function RequirementCard({ req, smart, editing, editText, editThreshold, editMet
       {smart && smart.issues.length > 0 && !editing && (
         <div style={{ marginTop: '0.3rem' }}>
           {smart.issues.map((issue, i) => (
-            <div key={i} style={{ fontSize: '0.7rem', color: smart.is_how_not_what ? '#ef4444' : '#f59e0b', marginBottom: '0.1rem' }}>
+            <div key={i} style={{ fontSize: fs.label, color: smart.is_how_not_what ? 'var(--status-alarm)' : 'var(--status-caution)', marginBottom: '0.1rem' }}>
               {issue}
             </div>
           ))}
@@ -456,19 +458,19 @@ function RequirementCard({ req, smart, editing, editText, editThreshold, editMet
       {/* Action buttons */}
       {req.status === 'suggested' && !editing && (
         <div style={{ display: 'flex', gap: '0.3rem', marginTop: '0.4rem' }}>
-          <button className="btn btn-sm" onClick={onAccept} style={{ fontSize: '0.68rem', background: '#10b981' }}>Accept</button>
-          <button className="btn btn-sm" onClick={onStartEdit} style={{ fontSize: '0.68rem', background: '#3b82f6' }}>Edit</button>
+          <button className="btn btn-sm" onClick={onAccept} style={{ fontSize: fs.label, background: 'var(--status-ok)' }}>Accept</button>
+          <button className="btn btn-sm" onClick={onStartEdit} style={{ fontSize: fs.label, background: 'var(--interactive)' }}>Edit</button>
           {isCompound && onSplit && (
-            <button className="btn btn-sm" onClick={onSplit} style={{ fontSize: '0.68rem', background: '#8b5cf6' }}>Split</button>
+            <button className="btn btn-sm" onClick={onSplit} style={{ fontSize: fs.label, background: 'var(--cat-2)' }}>Split</button>
           )}
-          <button className="btn btn-sm" onClick={onReject} style={{ fontSize: '0.68rem', background: '#ef4444' }}>Reject</button>
+          <button className="btn btn-sm" onClick={onReject} style={{ fontSize: fs.label, background: 'var(--status-alarm)' }}>Reject</button>
         </div>
       )}
 
       {/* Edit button for accepted reqs */}
       {req.status === 'accepted' && !editing && onStartEdit && (
         <button onClick={onStartEdit}
-          style={{ background: 'none', border: 'none', color: '#3b82f6', cursor: 'pointer', fontSize: '0.68rem', marginTop: '0.2rem' }}>
+          style={{ background: 'none', border: 'none', color: 'var(--interactive)', cursor: 'pointer', fontSize: fs.label, marginTop: '0.2rem' }}>
           Edit
         </button>
       )}
@@ -486,34 +488,34 @@ function ArchDerivedRequirements({ levelFilter }: { levelFilter: string }) {
 
   return (
     <div style={{ marginBottom: '1rem' }}>
-      <div style={{ fontSize: '0.78rem', fontWeight: 600, color: '#8b5cf6', marginBottom: '0.4rem' }}>
+      <div style={{ fontSize: fs.label, fontWeight: 600, color: 'var(--cat-2)', marginBottom: '0.4rem' }}>
         Architecture-Derived Requirements ({filtered.length})
       </div>
-      <p style={{ fontSize: '0.68rem', color: '#6b7280', marginBottom: '0.4rem' }}>
+      <p style={{ fontSize: fs.label, color: 'var(--text-3)', marginBottom: '0.4rem' }}>
         These requirements were automatically derived from your architecture selections in the Architecture tab.
       </p>
       {filtered.map(req => (
         <div key={req.id} style={{
           display: 'flex', alignItems: 'flex-start', gap: '0.4rem',
           padding: '0.3rem 0.5rem', marginBottom: '0.2rem', borderRadius: '4px',
-          background: 'rgba(139,92,246,0.05)', borderLeft: '3px solid #8b5cf6',
+          background: 'rgba(139,92,246,0.05)', borderLeft: '3px solid var(--cat-2)',
         }}>
           <span style={{
-            fontSize: '0.6rem', padding: '0.1rem 0.3rem', borderRadius: '3px',
+            fontSize: fs.label, padding: '0.1rem 0.3rem', borderRadius: '3px',
             background: req.level === 'system' ? 'rgba(59,130,246,0.15)' : 'rgba(6,182,212,0.15)',
-            color: req.level === 'system' ? '#3b82f6' : '#06b6d4',
+            color: req.level === 'system' ? 'var(--interactive)' : 'var(--interactive)',
             fontWeight: 600, textTransform: 'uppercase', flexShrink: 0,
           }}>{req.level}</span>
-          <span style={{ fontFamily: 'monospace', fontSize: '0.65rem', color: '#6b7280', flexShrink: 0 }}>{req.id}</span>
+          <span style={{ fontFamily: 'monospace', fontSize: fs.label, color: 'var(--text-3)', flexShrink: 0 }}>{req.id}</span>
           {(req as any).type && (
             <span style={{
-              fontSize: '0.55rem', padding: '0.1rem 0.2rem', borderRadius: '2px', flexShrink: 0,
-              background: (req as any).type === 'interface' ? '#f59e0b22' : (req as any).type === 'budget' ? '#3b82f622' : (req as any).type === 'functional' ? '#8b5cf622' : '#10b98122',
-              color: (req as any).type === 'interface' ? '#f59e0b' : (req as any).type === 'budget' ? '#3b82f6' : (req as any).type === 'functional' ? '#8b5cf6' : '#10b981',
+              fontSize: fs.label, padding: '0.1rem 0.2rem', borderRadius: '2px', flexShrink: 0,
+              background: (req as any).type === 'interface' ? 'color-mix(in srgb, var(--status-caution) 13%, transparent)' : (req as any).type === 'budget' ? 'color-mix(in srgb, var(--interactive) 13%, transparent)' : (req as any).type === 'functional' ? 'color-mix(in srgb, var(--cat-2) 13%, transparent)' : 'color-mix(in srgb, var(--status-ok) 13%, transparent)',
+              color: (req as any).type === 'interface' ? 'var(--status-caution)' : (req as any).type === 'budget' ? 'var(--interactive)' : (req as any).type === 'functional' ? 'var(--cat-2)' : 'var(--status-ok)',
             }}>{(req as any).type}</span>
           )}
-          <span style={{ fontSize: '0.75rem', color: '#d1d5db', flex: 1 }}>{req.text}</span>
-          <span style={{ fontSize: '0.6rem', color: '#6b7280', flexShrink: 0 }}>{req.subsystem}</span>
+          <span style={{ fontSize: fs.label, color: 'var(--text)', flex: 1 }}>{req.text}</span>
+          <span style={{ fontSize: fs.label, color: 'var(--text-3)', flexShrink: 0 }}>{req.subsystem}</span>
         </div>
       ))}
     </div>

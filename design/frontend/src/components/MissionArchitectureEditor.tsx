@@ -13,14 +13,16 @@
  *   user → logical
  *   etc.
  */
-import { useMemo, useCallback, useEffect, useState } from 'react'
+import { useMemo, useCallback, useEffect } from 'react'
 import {
   ReactFlow, useNodesState, useEdgesState, Handle, Position, Controls, Background, MiniMap,
   type Node, type Edge, type NodeTypes, type Connection, addEdge,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import { useDesignStore } from '../stores/designStore'
-import { useModelStore, type DesignElement } from '../stores/modelStore'
+import { useModelStore } from '../stores/modelStore'
+import { fs } from '../theme/tokens'
+import { askText } from './ui/Dialog'
 
 // ─── Node type → element mapping ───
 const NODE_TYPE_TO_ELEMENT: Record<string, { element_type: string; segment: string; subsystem_domain?: string }> = {
@@ -40,9 +42,9 @@ const NODE_TYPE_TO_ELEMENT: Record<string, { element_type: string; segment: stri
 // ─── Simple node components ───
 function GenericNode({ data }: { data: { label: string; color: string } }) {
   return (
-    <div style={{ padding: '8px 12px', border: `2px solid ${data.color}`, borderRadius: 8, background: `${data.color}15`, textAlign: 'center', minWidth: 100 }}>
+    <div style={{ padding: '8px 12px', border: `2px solid ${data.color}`, borderRadius: 8, background: `color-mix(in srgb, ${data.color} 8%, transparent)`, textAlign: 'center', minWidth: 100 }}>
       <Handle type="target" position={Position.Top} />
-      <div style={{ fontSize: '0.75rem', color: data.color, fontWeight: 600 }}>{data.label}</div>
+      <div style={{ fontSize: fs.label, color: data.color, fontWeight: 600 }}>{data.label}</div>
       <Handle type="source" position={Position.Bottom} />
     </div>
   )
@@ -57,17 +59,17 @@ const nodeTypes: NodeTypes = {
 
 // ─── Palette ───
 const NODE_PALETTE = [
-  { type: 'satellite', label: 'Satellite', color: '#3b82f6' },
-  { type: 'relaySat', label: 'Relay Sat', color: '#14b8a6' },
-  { type: 'groundStation', label: 'Ground Station', color: '#10b981' },
-  { type: 'processing', label: 'Processing', color: '#06b6d4' },
-  { type: 'user', label: 'User', color: '#f59e0b' },
-  { type: 'sensor', label: 'Sensor', color: '#f97316' },
-  { type: 'gnss', label: 'GNSS/External', color: '#8b5cf6' },
-  { type: 'aircraft', label: 'Aircraft', color: '#ec4899' },
-  { type: 'groundVehicle', label: 'Vehicle', color: '#84cc16' },
-  { type: 'ship', label: 'Ship/Maritime', color: '#0ea5e9' },
-  { type: 'launcher', label: 'Launcher', color: '#f43f5e' },
+  { type: 'satellite', label: 'Satellite', color: 'var(--interactive)' },
+  { type: 'relaySat', label: 'Relay Sat', color: 'var(--cat-3)' },
+  { type: 'groundStation', label: 'Ground Station', color: 'var(--status-ok)' },
+  { type: 'processing', label: 'Processing', color: 'var(--interactive)' },
+  { type: 'user', label: 'User', color: 'var(--status-caution)' },
+  { type: 'sensor', label: 'Sensor', color: 'var(--status-caution)' },
+  { type: 'gnss', label: 'GNSS/External', color: 'var(--cat-2)' },
+  { type: 'aircraft', label: 'Aircraft', color: 'var(--cat-6)' },
+  { type: 'groundVehicle', label: 'Vehicle', color: 'var(--cat-7)' },
+  { type: 'ship', label: 'Ship/Maritime', color: 'var(--interactive)' },
+  { type: 'launcher', label: 'Launcher', color: 'var(--status-alarm)' },
 ]
 
 const PALETTE_COLORS: Record<string, string> = Object.fromEntries(NODE_PALETTE.map(n => [n.type, n.color]))
@@ -104,7 +106,7 @@ export function MissionArchitectureEditor() {
                           el.segment === 'ground' && el.element_type === 'system' ? 'groundStation' :
                           el.segment === 'ground' && el.element_type === 'segment' ? 'groundStation' :
                           el.element_type === 'logical' ? 'user' : 'processing'
-      const color = PALETTE_COLORS[paletteType] || '#6b7280'
+      const color = PALETTE_COLORS[paletteType] || 'var(--text-3)'
 
       nodes.push({
         id: el.id,
@@ -131,7 +133,7 @@ export function MissionArchitectureEditor() {
         source: iface.from_element_id,
         target: iface.to_element_id,
         label: iface.diagram_label || iface.name,
-        style: { stroke: '#6b7280', strokeWidth: 2 },
+        style: { stroke: 'var(--text-3)', strokeWidth: 2 },
         animated: iface.interface_type === 'rf',
       })
     }
@@ -140,11 +142,11 @@ export function MissionArchitectureEditor() {
 
   // Merge model nodes with default nodes (when no model yet)
   const defaultNodes: Node[] = modelNodes.length > 0 ? [] : [
-    { id: 'sat1', type: 'satellite', position: { x: 300, y: 20 }, data: { label: 'Spacecraft', color: '#3b82f6' } },
-    { id: 'gs1', type: 'groundStation', position: { x: 100, y: 200 }, data: { label: 'Ground Station', color: '#10b981' } },
-    { id: 'mcc', type: 'processing', position: { x: 300, y: 200 }, data: { label: 'Mission Control', color: '#06b6d4' } },
-    { id: 'proc', type: 'processing', position: { x: 500, y: 200 }, data: { label: 'Data Processing', color: '#06b6d4' } },
-    { id: 'user1', type: 'user', position: { x: 500, y: 380 }, data: { label: 'End Users', color: '#f59e0b' } },
+    { id: 'sat1', type: 'satellite', position: { x: 300, y: 20 }, data: { label: 'Spacecraft', color: 'var(--interactive)' } },
+    { id: 'gs1', type: 'groundStation', position: { x: 100, y: 200 }, data: { label: 'Ground Station', color: 'var(--status-ok)' } },
+    { id: 'mcc', type: 'processing', position: { x: 300, y: 200 }, data: { label: 'Mission Control', color: 'var(--interactive)' } },
+    { id: 'proc', type: 'processing', position: { x: 500, y: 200 }, data: { label: 'Data Processing', color: 'var(--interactive)' } },
+    { id: 'user1', type: 'user', position: { x: 500, y: 380 }, data: { label: 'End Users', color: 'var(--status-caution)' } },
   ]
 
   const [nodes, setNodes, onNodesChange] = useNodesState([...modelNodes, ...defaultNodes])
@@ -160,9 +162,9 @@ export function MissionArchitectureEditor() {
 
   // ─── SYSTEM-V: Add node = create element ───
   const addNode = async (type: string, label: string) => {
-    const customLabel = prompt(`Label for new ${label}:`, label) || label
+    const customLabel = (await askText(`Label for new ${label}:`, label)) || label
     const mapping = NODE_TYPE_TO_ELEMENT[type] || { element_type: 'system', segment: 'space' }
-    const color = PALETTE_COLORS[type] || '#6b7280'
+    const color = PALETTE_COLORS[type] || 'var(--text-3)'
 
     if (studyId) {
       // Create in backend element tree
@@ -191,8 +193,8 @@ export function MissionArchitectureEditor() {
 
   // ─── SYSTEM-V: Connect nodes = create interface ───
   const onConnect = useCallback(async (connection: Connection) => {
-    const label = prompt('Connection label (e.g., "S-band TM/TC", "Data Products"):') || ''
-    const ifType = prompt('Interface type (rf/data/electrical/mechanical):') || 'data'
+    const label = (await askText('Connection label (e.g., "S-band TM/TC", "Data Products"):')) || ''
+    const ifType = (await askText('Interface type (rf/data/electrical/mechanical):')) || 'data'
 
     if (studyId && connection.source && connection.target) {
       await createInterface(studyId, {
@@ -255,19 +257,19 @@ export function MissionArchitectureEditor() {
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* Toolbar */}
-      <div style={{ padding: '0.4rem 0.75rem', borderBottom: '1px solid var(--border, #374151)', display: 'flex', gap: '0.3rem', flexWrap: 'wrap', alignItems: 'center' }}>
-        <span style={{ fontSize: '0.72rem', color: '#9ca3af', marginRight: '0.3rem' }}>Add:</span>
+      <div style={{ padding: '0.4rem 0.75rem', borderBottom: '1px solid var(--border, var(--line))', display: 'flex', gap: '0.3rem', flexWrap: 'wrap', alignItems: 'center' }}>
+        <span style={{ fontSize: fs.label, color: 'var(--text-2)', marginRight: '0.3rem' }}>Add:</span>
         {NODE_PALETTE.map(n => (
           <button key={n.type} onClick={() => addNode(n.type, n.label)}
-            style={{ padding: '0.2rem 0.5rem', fontSize: '0.68rem', borderRadius: '3px', border: `1px solid ${n.color}40`, background: `${n.color}15`, color: n.color, cursor: 'pointer' }}>
+            style={{ padding: '0.2rem 0.5rem', fontSize: fs.label, borderRadius: '3px', border: `1px solid color-mix(in srgb, ${n.color} 25%, transparent)`, background: `color-mix(in srgb, ${n.color} 8%, transparent)`, color: n.color, cursor: 'pointer' }}>
             + {n.label}
           </button>
         ))}
         <span style={{ flex: 1 }} />
-        <button onClick={deleteSelected} style={{ padding: '0.2rem 0.5rem', fontSize: '0.68rem', borderRadius: '3px', border: '1px solid #ef444440', background: '#ef444415', color: '#ef4444', cursor: 'pointer' }}>
+        <button onClick={deleteSelected} style={{ padding: '0.2rem 0.5rem', fontSize: fs.label, borderRadius: '3px', border: '1px solid color-mix(in srgb, var(--status-alarm) 25%, transparent)', background: 'color-mix(in srgb, var(--status-alarm) 8%, transparent)', color: 'var(--status-alarm)', cursor: 'pointer' }}>
           Delete Selected
         </button>
-        <span style={{ fontSize: '0.65rem', color: '#6b7280' }}>
+        <span style={{ fontSize: fs.label, color: 'var(--text-3)' }}>
           {nodes.length} nodes, {edges.length} connections
         </span>
       </div>
@@ -279,21 +281,21 @@ export function MissionArchitectureEditor() {
           onNodesChange={onNodesChange} onEdgesChange={onEdgesChange}
           onConnect={onConnect} onNodeDragStop={onNodeDragStop}
           nodeTypes={nodeTypes} fitView
-          style={{ background: '#0a0e1a' }}
-          defaultEdgeOptions={{ style: { strokeWidth: 2, stroke: '#6b7280' }, animated: true }}
+          style={{ background: 'var(--surface-0)' }}
+          defaultEdgeOptions={{ style: { strokeWidth: 2, stroke: 'var(--text-3)' }, animated: true }}
         >
-          <Controls style={{ button: { background: '#1f2937', color: '#d1d5db', border: '1px solid #374151' } } as any} />
-          <Background color="#374151" gap={20} />
-          <MiniMap nodeStrokeWidth={3} style={{ background: '#111827', border: '1px solid #374151' }} />
+          <Controls style={{ button: { background: 'var(--surface-2)', color: 'var(--text)', border: '1px solid var(--line)' } } as any} />
+          <Background color="var(--line)" gap={20} />
+          <MiniMap nodeStrokeWidth={3} style={{ background: 'var(--surface-1)', border: '1px solid var(--line)' }} />
         </ReactFlow>
       </div>
 
       {/* Systems to define */}
       {systemsToDefine.length > 0 && (
-        <div style={{ padding: '0.4rem 0.75rem', borderTop: '1px solid var(--border, #374151)', fontSize: '0.7rem' }}>
-          <span style={{ color: '#9ca3af', fontWeight: 600, marginRight: '0.5rem' }}>Systems to define at Phase 2:</span>
+        <div style={{ padding: '0.4rem 0.75rem', borderTop: '1px solid var(--border, var(--line))', fontSize: fs.label }}>
+          <span style={{ color: 'var(--text-2)', fontWeight: 600, marginRight: '0.5rem' }}>Systems to define at Phase 2:</span>
           {systemsToDefine.map((sys, i) => (
-            <span key={i} style={{ display: 'inline-block', padding: '0.1rem 0.4rem', margin: '0.1rem', borderRadius: '3px', background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.3)', color: '#93c5fd', fontSize: '0.65rem' }}>
+            <span key={i} style={{ display: 'inline-block', padding: '0.1rem 0.4rem', margin: '0.1rem', borderRadius: '3px', background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.3)', color: 'var(--interactive)', fontSize: fs.label }}>
               {sys}
             </span>
           ))}

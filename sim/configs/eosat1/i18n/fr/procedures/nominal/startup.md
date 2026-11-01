@@ -50,8 +50,8 @@ le satellite NE suit PAS le nadir)
 ### Étape 4 --- Établir la liaison TTC
 **TC:** `TTC_SWITCH_PRIMARY` (Service 8, Subtype 1) --- activer le transpondeur principal
 **Verify:** `ttc.link_status` (0x0501) = 2 (LOCKED) sous 15 s
-**Verify:** `ttc.rssi` (0x0502) > -100 dBm sous 15 s
-**Verify:** `ttc.link_margin` (0x0503) > 3.0 dB sous 15 s
+**Verify:** page TT&C (sol) : `ttc.rssi` (0x0502) > -126 dBm sous 15 s
+**Verify:** page TT&C (sol) : `ttc.link_margin` (0x0503) > 3.0 dB sous 15 s
 **GO/NO-GO:** Si la liaison n'est pas établie sous 15 s, commander `TTC_SWITCH_REDUNDANT`
 et répéter la vérification. Si le transpondeur redondant échoue aussi, déclarer une anomalie TTC.
 

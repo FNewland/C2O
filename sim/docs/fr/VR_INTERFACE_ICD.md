@@ -223,7 +223,7 @@ connexion est maintenue.
 ## 9. Fichiers à plat
 
 `tools/vr_stub/sample_vr_frames.ndjson` — les messages exacts tels qu'ils circulent (`hello` puis
-1135 lignes `state`), une orbite par pas de 5 s. `sample_vr_frames.csv` — les mêmes
+1134 lignes `state`, soit 1135 lignes au total), une orbite par pas de 5 s. `sample_vr_frames.csv` — les mêmes
 trames mises à plat : noms imbriqués joints par `_`, vecteurs sous la forme `_x/_y/_z`, le
 quaternion sous la forme `_x/_y/_z/_w`, booléens en 0/1. Le scénario (LEOP compressée) :
 
@@ -250,5 +250,5 @@ la rejouer avec `vr_stub.py --replay run.ndjson`.
   propage pas l'attitude : le quaternion reste donc à sa valeur initiale jusqu'à ce que
   l'AOCS fonctionne. Le scénario du bouchon montre à la place un culbutage.
 * Le bouchon utilise une orbite circulaire et une ombre cylindrique ; le simulateur utilise
-  le SGP4 et une ombre conique avec pénombre. Les positions concordent à quelques km près et
-  les heures d'éclipse à quelques secondes près pour l'époque de référence.
+  le SGP4 et une ombre conique avec pénombre. Les positions concordent à environ 50 km
+  près sur la première orbite, et les heures d'éclipse à quelques secondes près pour l'époque de référence.

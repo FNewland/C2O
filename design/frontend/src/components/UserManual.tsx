@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { fs } from '../theme/tokens'
 
 type Section =
   | 'getting-started'
@@ -39,13 +40,13 @@ export function UserManual() {
       {/* Sidebar */}
       <div style={{
         minWidth: '200px',
-        background: 'var(--bg-secondary, #1f2937)',
-        border: '1px solid var(--border, #374151)',
+        background: 'var(--bg-secondary, var(--surface-2))',
+        border: '1px solid var(--border, var(--line))',
         borderRadius: '6px',
         padding: '0.5rem',
         overflowY: 'auto',
       }}>
-        <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary, #9ca3af)', padding: '0.4rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+        <div style={{ fontSize: fs.label, color: 'var(--text-secondary, var(--text-2))', padding: '0.4rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
           User manual
         </div>
         {SECTIONS.map(s => (
@@ -57,12 +58,12 @@ export function UserManual() {
               width: '100%',
               textAlign: 'left',
               padding: '0.4rem 0.6rem',
-              background: current === s.id ? 'var(--accent, #3b82f6)' : 'transparent',
-              color: current === s.id ? 'white' : 'var(--text-secondary, #d1d5db)',
+              background: current === s.id ? 'var(--accent, var(--interactive))' : 'transparent',
+              color: current === s.id ? 'white' : 'var(--text-secondary, var(--text))',
               border: 'none',
               borderRadius: '4px',
               cursor: 'pointer',
-              fontSize: '0.82rem',
+              fontSize: fs.body,
               marginBottom: '0.15rem',
             }}
           >
@@ -75,12 +76,12 @@ export function UserManual() {
       <div style={{
         flex: 1,
         overflowY: 'auto',
-        background: 'var(--bg-secondary, #1f2937)',
-        border: '1px solid var(--border, #374151)',
+        background: 'var(--bg-secondary, var(--surface-2))',
+        border: '1px solid var(--border, var(--line))',
         borderRadius: '6px',
         padding: '1.25rem 1.5rem',
         lineHeight: 1.55,
-        fontSize: '0.88rem',
+        fontSize: fs.value,
       }}>
         {current === 'getting-started' && <GettingStarted />}
         {current === 'templates'       && <Templates />}
@@ -103,25 +104,25 @@ export function UserManual() {
 // --- Re-usable helpers -----------------------------------------------------
 
 const H1 = ({ children }: any) => <h2 style={{ marginTop: 0 }}>{children}</h2>
-const H2 = ({ children }: any) => <h3 style={{ marginTop: '1.25rem', borderBottom: '1px solid var(--border, #374151)', paddingBottom: '0.3rem' }}>{children}</h3>
+const H2 = ({ children }: any) => <h3 style={{ marginTop: '1.25rem', borderBottom: '1px solid var(--border, var(--line))', paddingBottom: '0.3rem' }}>{children}</h3>
 const P  = ({ children }: any) => <p>{children}</p>
 const UL = ({ children }: any) => <ul style={{ paddingLeft: '1.3rem' }}>{children}</ul>
 const OL = ({ children }: any) => <ol style={{ paddingLeft: '1.3rem' }}>{children}</ol>
 const C  = ({ children }: any) => <code style={{
-  background: 'var(--bg-primary, #111827)',
-  border: '1px solid var(--border, #374151)',
+  background: 'var(--bg-primary, var(--surface-1))',
+  border: '1px solid var(--border, var(--line))',
   padding: '0.05rem 0.25rem',
   borderRadius: '3px',
-  fontSize: '0.82em',
+  fontSize: fs.body,
 }}>{children}</code>
 const Box = ({ tone = 'info', children }: any) => (
   <div style={{
-    borderLeft: `3px solid ${tone === 'warn' ? '#f59e0b' : tone === 'tip' ? '#10b981' : '#3b82f6'}`,
-    background: 'var(--bg-primary, #111827)',
+    borderLeft: `3px solid ${tone === 'warn' ? 'var(--status-caution)' : tone === 'tip' ? 'var(--status-ok)' : 'var(--interactive)'}`,
+    background: 'var(--bg-primary, var(--surface-1))',
     padding: '0.5rem 0.8rem',
     margin: '0.75rem 0',
     borderRadius: '4px',
-    fontSize: '0.82em',
+    fontSize: fs.body,
   }}>{children}</div>
 )
 

@@ -112,9 +112,8 @@ the phase boundary.
 
 ### Step 4 — Verify Dark Frame Data Quality
 **TC:** `GET_PARAM(param_id=0x0642)` (Service 20, Subtype 3) — dark frames acquired
-**TC:** `GET_PARAM(param_id=0x0616)` (Service 20, Subtype 3) — `payload.snr` (dB) with the dark set applied
-**Verify:** Mean dark signal < 100 DN (12-bit scale, 0-4095) within 10s
-**Verify:** Dark signal std dev < 10 DN within 10s
+**Verify:** on the ground, from the downlinked dark frames: mean dark signal < 100 DN (12-bit scale, 0-4095)
+**Verify:** on the ground, from the same frames: dark signal std dev < 10 DN
 **Action:** Low mean indicates minimal dark current at the -15C setpoint. Low std dev indicates uniform FPA response. Record values as baseline.
 **GO/NO-GO:** Dark frame statistics within specification
 
@@ -151,12 +150,12 @@ the phase boundary.
 **Wire:** `22 00 64 00 64 00 64 00 64` (0.01 ms/LSB)
 **TC:** `PAYLOAD_CAPTURE(scene_id=0, lines=2048)` (Service 8, Subtype 1, func_id 28) — trigger capture  
 **Wire:** `1C 00 00 08 00`
-**Verify:** `GET_PARAM(param_id=0x0616)` (Service 20, Subtype 3) — `payload.snr` drops ~3 dB per halving
+**Verify:** on the ground, after downlink: the mean signal of the half-integration image is about half that of the nominal image (same site, same DN scale)
 **TC:** `PAYLOAD_SET_INTEGRATION_TIME(blue_ms=4.00, green_ms=4.00, red_ms=4.00, nir_ms=4.00)` (Service 8, Subtype 1, func_id 34) — double nominal  
 **Wire:** `22 01 90 01 90 01 90 01 90`
 **TC:** `PAYLOAD_CAPTURE(scene_id=0, lines=2048)` (Service 8, Subtype 1, func_id 28) — trigger capture  
 **Wire:** `1C 00 00 08 00`
-**Verify:** `GET_PARAM(param_id=0x0616)` (Service 20, Subtype 3) — `payload.snr` rises ~3 dB per doubling
+**Verify:** on the ground, after downlink: the mean signal of the double-integration image is about twice the nominal (and not clipped at 4095 DN)
 **Action:** Three images at different integration times (nominal, half, double) allow detector linearity assessment. If signal doubles when integration time doubles, detector response is linear.
 **GO/NO-GO:** Linearity image set captured
 

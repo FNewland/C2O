@@ -39,6 +39,18 @@ class RadioStatus:
     eb_n0_db: float = 0.0
     ber_log10: float = -1.0
     link_margin_db: float = 0.0
+    # Ground receiver AGC level = RSSI + ground_limits.agc_offset_db (the
+    # 0x051A definition). Ground-derived, like BER.
+    agc_db: float = -60.0
+    # Ground-receiver limit check (plan decision 2026-11-01): per-parameter
+    # state keyed "0x050C"/"0x051A" ("nominal", "yellow_*", "red_*",
+    # "no_signal"), the worst-of summary, and the bands themselves so the
+    # page draws P3 deviation bars without a second request.
+    ground_limit_state: dict = field(default_factory=dict)
+    ground_limit_summary: str = "no_signal"
+    ground_limits: dict = field(default_factory=dict)
+    ground_limit_transitions: list = field(default_factory=list)  # last 8
+    ground_limit_seq: int = 0     # total transitions since start
     # Dynamics
     doppler_hz: float = 0.0
     range_km: float = 0.0
@@ -163,9 +175,14 @@ class RadioFrontend:
         4: "16-APSK", 5: "π/4-DQPSK", 6: "GMSK", 7: "GFSK",
     }
 
-    def __init__(self):
+    def __init__(self, ground_limits_cfg=None):
+        from ..config import GroundLimitsConfig
+        from ..ground_limits import GroundLimitChecker, build_limits
         self.status = RadioStatus()
         self._rng = random.Random(42)
+        self.ground_limits_cfg = ground_limits_cfg or GroundLimitsConfig()
+        self.ground_limits = GroundLimitChecker(
+            build_limits(self.ground_limits_cfg))
 
     def update_frame_counts(self, good: int, bad: int):
         self.status.good_frames = good
@@ -183,6 +200,21 @@ class RadioFrontend:
         else:
             self.status.ber_log10 = -1.0  # no meaningful BER
         self.status.link_margin_db = eb_n0_db - 9.6
+        self.status.agc_db = rssi_dbm + float(
+            self.ground_limits_cfg.agc_offset_db)
+
+    def check_ground_limits(self, now: float = None) -> dict:
+        """Run the ground-receiver limit check on the current status and
+        publish the result into the snapshot (and so onto the WS feed)."""
+        gl = self.ground_limits
+        gl.evaluate(self.status, now)
+        api = gl.to_api()
+        self.status.ground_limit_state = api["state"]
+        self.status.ground_limit_summary = api["summary"]
+        self.status.ground_limits = api["limits"]
+        self.status.ground_limit_transitions = api["transitions"][-8:]
+        self.status.ground_limit_seq = api["seq"]
+        return api
 
     def update_sc_tx(self, tx_on: Optional[bool] = None,
                      pa_on: Optional[bool] = None,
@@ -359,4 +391,5 @@ class RadioFrontend:
         """Return current status. I/Q samples are set by the bridge from
         the DSP processor — they are real demodulated samples, not synthetic."""
         self.status.timestamp = time.time()
+        self.check_ground_limits(self.status.timestamp)
         return self.status

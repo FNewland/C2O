@@ -28,7 +28,7 @@ correctives, y compris l'interruption de la prise de vue si nécessaire et une n
 | payload.store_used | 0x0604 | Niveau de stockage courant |
 | payload.image_count | 0x0605 | Nombre d'images courant |
 | payload.last_scene_id | 0x060C | Dernière scène acquise |
-| payload.last_scene_quality | 0x060D | Indicateur de qualité de la dernière image |
+| Image transmise au sol (sol) | — | L'aperçu ne montre ni lignes manquantes, ni stries, ni saturation |
 | payload.mode | 0x0600 | Mode courant de la charge utile |
 | tcs.temp_fpa | 0x0408 | < -25.0 °C (recouper avec le capteur de la charge utile) |
 | tcs.cooler_fpa | 0x040C | 1 (refroidisseur actif) |
@@ -50,7 +50,7 @@ correctives, y compris l'interruption de la prise de vue si nécessaire et une n
 **Verify:** `payload.checksum_errors` (0x0609) — consigner la valeur courante et la comparer à la
 référence précédente. Calculer l'écart (nombre de nouvelles erreurs).
 **Verify:** `payload.last_scene_id` (0x060C) — consigner la scène potentiellement touchée
-**Verify:** `payload.last_scene_quality` (0x060D) — consigner l'indicateur de qualité
+**Verify:** au sol, le dernier produit transmis de cette scène — consigner si l'aperçu montre des lignes manquantes, des stries ou des blocs de pixels corrompus
 **Verify:** `payload.image_count` (0x0605) — consigner le nombre courant
 **Note:** Une erreur de somme de contrôle isolée peut être un événement transitoire (SEU). Plusieurs erreurs sur la
 même scène laissent penser à un problème systématique.
@@ -123,13 +123,13 @@ détecteur le long de la trace, de 256 à 20000 (2048 = l'image de référence 
 elle est horodatée à bord à partir du point sous-satellite propagé à l'ouverture de l'obturateur.
 **Verify:** `payload.image_count` (0x0605) augmente de 1
 **Verify:** `payload.checksum_errors` (0x0609) n'augmente PAS
-**Verify:** `payload.last_scene_quality` (0x060D) — consigner l'indicateur de qualité de la nouvelle image
+**Note:** Le satellite ne peut pas juger sa propre image. La qualité de l'image est évaluée au sol, une fois la nouvelle scène transmise (étape 6).
 **GO/NO-GO:** Nouvelle acquisition réussie sans nouvelle erreur — procédure terminée.
 
 ### Étape 6 : Vérification après acquisition
 **TC:** `HK_REQUEST(sid=5)` (Service 3, Subtype 27) — Demander les dernières données de servitude de la charge utile
 **Verify:** `payload.checksum_errors` (0x0609) — aucune nouvelle hausse
-**Verify:** `payload.last_scene_quality` (0x060D) — qualité acceptable
+**Verify:** au sol, après transmission de la nouvelle scène : le CRC32 du produit correspond au rapport de transfert bord et l'aperçu est propre (ni lignes manquantes, ni stries, ni saturation)
 **Verify:** `payload.store_used` (0x0604) — dans les limites de capacité
 **Action:** Consigner l'incident : identifiant de la scène d'origine, nombre d'erreurs, cause racine retenue
 (thermique / mémoire / transitoire) et résultat de la nouvelle acquisition.

@@ -601,6 +601,14 @@ class MCSServer:
         self._planner_api_base = os.environ.get(
             "SMO_PLANNER_URL", f"http://{connect_host}:9091"
         )
+        # What the BROWSER uses to reach the planner (R3 A2). The internal
+        # address above is unreachable from a browser behind the c2o.live
+        # load balancer (and cross-origin even on a laptop), so by default
+        # the page calls the planner same-origin through this server's
+        # read-only /planner/api/... proxy. SMO_PLANNER_PUBLIC_URL overrides
+        # it for a deployment that exposes the planner on the page's origin.
+        self._planner_public_url = os.environ.get(
+            "SMO_PLANNER_PUBLIC_URL", "/planner").rstrip("/")
 
         # Load procedure index for procedure browser
         self._procedure_index: list[dict] = []
@@ -1381,17 +1389,19 @@ class MCSServer:
         #
         # `no-cache` does not mean "do not cache" -- it means "revalidate
         # before use". With the ETag aiohttp already sends, an unchanged file
-        # costs one 304 and no body. Applied to the app's OWN assets only;
-        # /static/vendor/ (third-party, content-stable) keeps normal caching.
-        @web.middleware
-        async def _no_cache_own_assets(request, handler):
-            resp = await handler(request)
-            p = request.path
-            if p.startswith("/static/modern/") or p.startswith("/static/shared/"):
-                resp.headers["Cache-Control"] = "no-cache"
-            return resp
-
-        app = web.Application(middlewares=[_no_cache_own_assets])
+        # costs one 304 and no body.
+        #
+        # 2026-11-01 (R3 audit A8): the MCS now uses the suite's shared HTTP
+        # policy (smo_common.web.http, as the planner and instructor do):
+        # gzip for text >= 1 KB; the modern page's /static/ URLs are stamped
+        # with their content hash and served immutable; every other own asset
+        # stays `no-cache` (the rule above); a hand-written ?v= is never
+        # trusted; /static/vendor/ (third-party) gets a day of max-age.
+        from smo_common.web.http import apply_http_policy
+        app = web.Application()
+        apply_http_policy(app, revalidate_prefixes=("/static/",),
+                          max_age_prefixes={"/static/vendor/": 86400})
+        self._http_app = app
         app.router.add_get("/", self._handle_index)
         # Explicit generation routes: /classic and /modern always serve their
         # page regardless of the resolved mode, so the two consoles can be
@@ -1474,6 +1484,8 @@ class MCSServer:
         app.router.add_get("/api/archive/param-names", self._handle_archive_param_names)
         # New display panels (Feature 1-6)
         app.router.add_get("/api/displays/contact-schedule", self._handle_contact_schedule)
+        # Same-origin, read-only planner proxy (R3 A2): GET /planner/api/...
+        app.router.add_get("/planner/{path:api/.+}", self._handle_planner_proxy)
         app.router.add_get("/api/displays/power-budget", self._handle_power_budget)
         app.router.add_get("/api/displays/fdir-alarms", self._handle_fdir_alarms)
         app.router.add_get("/api/displays/system-overview", self._handle_system_overview)
@@ -3122,13 +3134,18 @@ class MCSServer:
     def _serve_index(self, mode: str):
         index_file = self._index_file_for(mode)
         lang = getattr(self, "_ui_lang", "en")
-        if index_file.exists() and mode == "modern" and lang != "en":
+        app = getattr(self, "_http_app", None)
+        if index_file.exists() and mode == "modern" and (lang != "en" or app):
             from smo_common.i18n import inject_default_lang
-            return web.Response(
-                text=inject_default_lang(
-                    index_file.read_text(encoding="utf-8"), lang),
-                content_type="text/html",
-                headers={"Cache-Control": "no-cache"})
+            from smo_common.web.http import stamp_asset_versions
+            html = index_file.read_text(encoding="utf-8")
+            if lang != "en":
+                html = inject_default_lang(html, lang)
+            if app is not None:
+                # content-hash ?v= on /static/ URLs -> immutable (R3 A8)
+                html = stamp_asset_versions(html, app)
+            return web.Response(text=html, content_type="text/html",
+                                headers={"Cache-Control": "no-cache"})
         if index_file.exists():
             return web.FileResponse(
                 index_file, headers={"Cache-Control": "no-cache"})
@@ -4907,6 +4924,39 @@ class MCSServer:
                            "using built-in display staleness policy", e)
         return policy
 
+    # Response headers the planner proxy passes through unchanged.
+    _PROXY_HEADERS = ("Content-Type", "Cache-Control", "Last-Modified", "ETag")
+
+    async def _handle_planner_proxy(self, request):
+        """GET /planner/api/<path> -> <planner>/api/<path> (R3 A2).
+
+        Read-only and API-only by construction: the route accepts GET (and
+        HEAD) on paths under ``api/`` and nothing else, so it cannot be used
+        to reach any other host or to change the plan. A planner that is down
+        or slow answers 502 with a JSON reason, which the pages already treat
+        as the designed "planner unreachable" state.
+        """
+        path = request.match_info.get("path", "")
+        if ".." in path.split("/"):
+            return web.json_response({"error": "bad path"}, status=400)
+        url = f"{self._planner_api_base.rstrip('/')}/{path}"
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(
+                    url, params=request.rel_url.query,
+                    timeout=aiohttp.ClientTimeout(total=5),
+                ) as resp:
+                    body = await resp.read()
+                    headers = {h: resp.headers[h] for h in self._PROXY_HEADERS
+                               if h in resp.headers}
+                    return web.Response(body=body, status=resp.status,
+                                        headers=headers)
+        except Exception as e:  # noqa: BLE001 — offline planner is a state
+            logger.debug("planner proxy %s failed: %s", url, e)
+            return web.json_response(
+                {"error": "planner unreachable", "detail": type(e).__name__},
+                status=502)
+
     async def _handle_client_config(self, request):
         """Return runtime config for the browser client.
 
@@ -4921,7 +4971,10 @@ class MCSServer:
         — because it covers every HK parameter on the spacecraft.
         """
         return web.json_response({
-            "planner_url": self._planner_api_base,
+            # Browser-facing planner base: same-origin proxy by default
+            # (R3 A2). Never the internal address — a browser behind the
+            # load balancer cannot reach it.
+            "planner_url": self._planner_public_url,
             # Resolved time source ("sim" | "real") so the modern page can
             # decide TRAINING-chip visibility locally (additive; Agent 5).
             "time_source": self._time_source,

@@ -6,6 +6,7 @@
  */
 import { useState } from 'react'
 import { useSessionStore } from '../stores/sessionStore'
+import { fs } from '../theme/tokens'
 
 export function PersistenceWarningBanner() {
   const persistenceOk = useSessionStore(s => s.persistenceOk)
@@ -16,14 +17,14 @@ export function PersistenceWarningBanner() {
   return (
     <div style={{
       padding: '0.4rem 1rem', background: 'rgba(245,158,11,0.15)',
-      borderBottom: '2px solid #f59e0b', display: 'flex',
-      alignItems: 'center', gap: '0.5rem', fontSize: '0.78rem', color: '#f59e0b',
+      borderBottom: '2px solid var(--status-caution)', display: 'flex',
+      alignItems: 'center', gap: '0.5rem', fontSize: fs.label, color: 'var(--status-caution)',
     }}>
       <span style={{ fontWeight: 600 }}>Warning:</span>
       <span>Edits queued — retrying database writes. Your changes are safe in memory.</span>
       <span style={{ flex: 1 }} />
       <button onClick={() => setDismissed(true)}
-        style={{ background: 'none', border: 'none', color: '#f59e0b', cursor: 'pointer', fontSize: '0.75rem' }}>
+        style={{ background: 'none', border: 'none', color: 'var(--status-caution)', cursor: 'pointer', fontSize: fs.label }}>
         Dismiss
       </button>
     </div>

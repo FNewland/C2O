@@ -8,8 +8,8 @@
  * State: uiStore holds navigation only. All design content from server API.
  */
 import { useState, useCallback } from 'react'
-import { QueryClient, QueryClientProvider, useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useUIStore, type Level, type ActivityPanel } from './stores/uiStore'
+import { QueryClient, QueryClientProvider, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useUIStore, type Level } from './stores/uiStore'
 import { LevelWorkbench } from './workbench/LevelWorkbench'
 import { MissionWizard } from './workbench/MissionWizard'
 import { ReadinessChecklist } from './workbench/ReadinessChecklist'
@@ -18,10 +18,13 @@ import { ExportPanel } from './workbench/ExportPanel'
 import { GuidancePanel } from './workbench/GuidancePanel'
 import { PresenceBar } from './workbench/PresenceBar'
 import { MarginTower } from './components/MarginTower'
-import { AIProvider, AIStatusIndicator } from './ai'
+import { AIProvider } from './ai'
 import { useTranslation } from 'react-i18next'
 import i18n from './i18n'
 import { LanguageToggle } from './i18n/LanguageToggle'
+import { DialogHost, showAlert } from './components/ui/Dialog'
+import { HomeFrame } from './components/ui/HomeFrame'
+import { fs } from './theme/tokens'
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 2_000 } },
@@ -29,75 +32,40 @@ const queryClient = new QueryClient({
 
 const API = '/api'
 
-// English text is the i18n key; translate at render time with t(LEVEL_LABELS[level]).
-const LEVEL_LABELS: Record<Level, string> = {
-  0: 'Mission',
-  1: 'Systems',
-  2: 'Subsystems',
-  3: 'Equipment',
-  4: 'V&V',
-}
+// ECSS product-tree names (ECSS-M-ST-10C): Mission → Segment → System/Element →
+// Subsystem → Equipment. A tab is named after what it shows: the element type
+// of the blocks at that level, falling back to the next name down the tree.
+// English text is the i18n key; translate at render time with t().
+const PRODUCT_TREE = ['Mission', 'Segment', 'System / element', 'Subsystem', 'Equipment'] as const
+const TYPE_TO_TREE: Record<string, number> = { mission: 0, segment: 1, system: 2, subsystem: 3, component: 4, equipment: 4 }
 
-const LEVEL_COLORS: Record<Level, string> = {
-  0: '#3b82f6',
-  1: '#8b5cf6',
-  2: '#06b6d4',
-  3: '#10b981',
-  4: '#f59e0b',
-}
-
-// ─── Study Creation Gate ───
-
-function CreateStudyGate() {
-  const { t } = useTranslation()
-  const setStudyId = useUIStore(s => s.setStudyId)
-  const [name, setName] = useState('New Mission')
-  const [creating, setCreating] = useState(false)
-
-  const handleCreate = async () => {
-    setCreating(true)
-    try {
-      const res = await fetch(`${API}/studies/`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ requirements: { name }, mission_need: {} }),
-      })
-      if (res.ok) {
-        const data = await res.json()
-        setStudyId(data.id)
+function useLevelNames(): string[] {
+  const studyId = useUIStore(s => s.studyId)
+  const breadcrumb = useUIStore(s => s.breadcrumb)
+  const { data: elements = [] } = useQuery<any[]>({
+    queryKey: ['elements', studyId],
+    queryFn: () => fetch(`${API}/studies/${studyId}/elements`).then(r => r.json()),
+    enabled: !!studyId,
+  })
+  const names: string[] = []
+  let prev = -1
+  for (let level = 0; level < 4; level++) {
+    let idx = -1
+    if (level <= breadcrumb.length) {
+      const parent = level === 0 ? null : breadcrumb[level - 1].id
+      const shown = Array.isArray(elements) ? elements.filter((el: any) => (parent ? el.parent_id === parent : !el.parent_id)) : []
+      const counts = new Map<number, number>()
+      for (const el of shown) {
+        const k = TYPE_TO_TREE[el.element_type]
+        if (k != null) counts.set(k, (counts.get(k) || 0) + 1)
       }
-    } finally {
-      setCreating(false)
+      if (counts.size) idx = [...counts.entries()].sort((a, b) => b[1] - a[1])[0][0]
     }
+    if (idx < 0) idx = Math.min(Math.max(prev + 1, level), PRODUCT_TREE.length - 1)
+    names.push(PRODUCT_TREE[idx])
+    prev = idx
   }
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', gap: '1.5rem', background: 'var(--bg-primary)' }}>
-      <h1 style={{ fontSize: '1.8rem', color: 'var(--accent)', fontWeight: 700 }}>SpaceCDF</h1>
-      <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', maxWidth: 420, textAlign: 'center', lineHeight: 1.6 }}>
-        {t('Concurrent Design Facility for CubeSat missions. Create a study to start building your mission architecture.')}
-      </p>
-      <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-        <input
-          value={name}
-          onChange={e => setName(e.target.value)}
-          placeholder={t('Mission name')}
-          style={{
-            padding: '0.5rem 0.75rem', fontSize: '0.85rem', borderRadius: '4px',
-            background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text-primary)',
-            width: 220,
-          }}
-        />
-        <button onClick={handleCreate} disabled={creating} style={{
-          padding: '0.5rem 1.5rem', fontSize: '0.85rem', fontWeight: 600, borderRadius: '4px',
-          background: 'var(--accent)', color: 'white', border: 'none',
-          cursor: creating ? 'wait' : 'pointer', opacity: creating ? 0.7 : 1,
-        }}>
-          {creating ? t('Creating...') : t('Create Study')}
-        </button>
-      </div>
-    </div>
-  )
+  return names
 }
 
 // ─── Level Bar ───
@@ -107,37 +75,34 @@ function LevelBar() {
   const currentLevel = useUIStore(s => s.currentLevel)
   const breadcrumb = useUIStore(s => s.breadcrumb)
   const goToLevel = useUIStore(s => s.goToLevel)
+  const names = useLevelNames()
 
   return (
-    <div style={{
-      display: 'flex', gap: '2px', padding: '0.4rem 1rem',
-      background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border)',
+    <div role="tablist" aria-label={t('Product tree level')} className="c2o-tabs" style={{
+      padding: '0 var(--sp-3)', background: 'var(--surface-1)', borderBottom: '1px solid var(--line)',
     }}>
       {([0, 1, 2, 3, 4] as Level[]).map(level => {
         const active = currentLevel === level
-        const visited = level <= breadcrumb.length || level === 4  // V&V always accessible
-        const color = LEVEL_COLORS[level]
-        // Show breadcrumb context in the tab label
-        const contextName = level > 0 && level <= breadcrumb.length
-          ? ` (${breadcrumb[level - 1].name})`
-          : ''
+        const reachable = level <= breadcrumb.length || level === 4  // V&V always accessible
+        const label = level === 4 ? t('V&V') : t(names[level])
+        const context = level > 0 && level < 4 && level <= breadcrumb.length ? breadcrumb[level - 1].name : ''
+        const reason = reachable ? undefined
+          : t('Double-click a block at level {{n}} to open this level', { n: level - 1 })
         return (
           <button
             key={level}
-            onClick={() => visited && goToLevel(level)}
-            style={{
-              padding: '0.4rem 0.8rem', fontSize: '0.72rem', fontWeight: 600,
-              borderRadius: '4px 4px 0 0', cursor: visited ? 'pointer' : 'default',
-              background: active ? `${color}20` : 'transparent',
-              color: active ? color : visited ? 'var(--text-secondary)' : '#374151',
-              border: 'none',
-              borderBottom: active ? `2px solid ${color}` : '2px solid transparent',
-              opacity: visited ? 1 : 0.3,
-              transition: 'all 0.15s',
-            }}
+            type="button"
+            role="tab"
+            className="c2o-tab"
+            aria-selected={active}
+            aria-disabled={!reachable || undefined}
+            data-reason={reason}
+            onClick={() => reachable && goToLevel(level)}
           >
-            {level}: {t(LEVEL_LABELS[level])}
-            {contextName && <span style={{ fontWeight: 400, fontSize: '0.6rem', marginLeft: '0.2rem' }}>{contextName}</span>}
+            {level < 4 && <span className="c2o-tab__num">{level}</span>}
+            <span>{label}</span>
+            {context && <span className="c2o-tab__ctx">{t('in {{name}}', { name: context })}</span>}
+            {reason && <span className="sr-only">{reason}</span>}
           </button>
         )
       })}
@@ -260,46 +225,42 @@ function StatusBar() {
 
   return (
     <div style={{
-      display: 'flex', alignItems: 'center', gap: '0.5rem',
-      padding: '0.3rem 1rem',
-      background: 'var(--bg-primary)', borderBottom: '1px solid var(--border)',
-      fontSize: '0.75rem',
+      display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', flexWrap: 'wrap',
+      padding: 'var(--sp-2) var(--sp-3)',
+      background: 'var(--surface-0)', borderBottom: '1px solid var(--line)',
+      fontSize: fs.body,
     }}>
       {/* Breadcrumb */}
-      <button
-        onClick={() => drillUp(-1)}
-        style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 600 }}
-      >
-        {t('Mission')}
-      </button>
-      {breadcrumb.map((crumb, i) => (
-        <span key={crumb.id} style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-          <span style={{ color: 'var(--border)' }}>›</span>
-          <button
-            onClick={() => drillUp(i)}
-            style={{
-              background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.75rem',
-              color: i === breadcrumb.length - 1 ? 'var(--text-primary)' : 'var(--accent)',
-              fontWeight: i === breadcrumb.length - 1 ? 600 : 400,
-            }}
-          >
-            {crumb.name}
-          </button>
-        </span>
-      ))}
+      <nav aria-label={t('Breadcrumb')} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-1)', minWidth: 0 }}>
+        <button type="button" className="c2o-btn c2o-btn--quiet" onClick={() => drillUp(-1)}
+          aria-current={breadcrumb.length === 0 ? 'page' : undefined} style={{ padding: '0 var(--sp-1)' }}>
+          {t('Top level')}
+        </button>
+        {breadcrumb.map((crumb, i) => {
+          const last = i === breadcrumb.length - 1
+          return (
+            <span key={crumb.id} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-1)' }}>
+              <span aria-hidden="true" style={{ color: 'var(--text-3)' }}>/</span>
+              <button type="button" className="c2o-btn c2o-btn--quiet" onClick={() => drillUp(i)}
+                aria-current={last ? 'page' : undefined}
+                style={{ padding: '0 var(--sp-1)', color: last ? 'var(--text)' : undefined, fontWeight: last ? 600 : 500 }}>
+                {crumb.name}
+              </button>
+            </span>
+          )
+        })}
+      </nav>
 
       <span style={{ flex: 1 }} />
 
       {/* Run Analysis */}
       <button
+        type="button"
+        className="c2o-btn c2o-btn--primary"
         onClick={runAnalysis}
         disabled={analysisRunning}
-        style={{
-          padding: '0.25rem 0.75rem', borderRadius: '4px', fontSize: '0.72rem', fontWeight: 600,
-          background: analysisRunning ? 'var(--border)' : 'var(--success)',
-          color: 'white', border: 'none',
-          cursor: analysisRunning ? 'wait' : 'pointer',
-        }}
+        aria-busy={analysisRunning}
+        title={analysisRunning ? t('Analysis is running') : undefined}
       >
         {analysisRunning ? t('Analysing...') : t('Run Analysis')}
       </button>
@@ -330,13 +291,10 @@ function StatusBar() {
             a.download = `spacecdf_${new Date().toISOString().slice(0, 10)}.json`
             a.click()
             URL.revokeObjectURL(a.href)
-          } catch { alert(i18n.t('Save failed')) }
+          } catch { void showAlert(i18n.t('Save failed')) }
         }}
-        style={{
-          padding: '0.25rem 0.75rem', borderRadius: '4px', fontSize: '0.72rem', fontWeight: 600,
-          background: 'var(--bg-card)', color: 'var(--text-secondary)', border: '1px solid var(--border)',
-          cursor: 'pointer',
-        }}
+        type="button"
+        className="c2o-btn"
       >
         {t('Save')}
       </button>
@@ -354,7 +312,7 @@ function StatusBar() {
               const text = await file.text()
               const data = JSON.parse(text)
               if (!data.elements || !Array.isArray(data.elements)) {
-                alert(i18n.t('Invalid save file — no elements found'))
+                void showAlert(i18n.t('Invalid save file — no elements found'))
                 return
               }
               // Create a new study
@@ -363,7 +321,7 @@ function StatusBar() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ requirements: { name: 'Loaded Mission' }, mission_need: {} }),
               })
-              if (!studyRes.ok) { alert(i18n.t('Failed to create study')); return }
+              if (!studyRes.ok) { void showAlert(i18n.t('Failed to create study')); return }
               const newStudy = await studyRes.json()
               const newStudyId = newStudy.id
 
@@ -480,16 +438,13 @@ function StatusBar() {
 
               qc.invalidateQueries()
             } catch (err) {
-              alert(i18n.t('Load failed: {{message}}', { message: (err as Error).message }))
+              void showAlert(i18n.t('Load failed: {{message}}', { message: (err as Error).message }))
             }
           }
           input.click()
         }}
-        style={{
-          padding: '0.25rem 0.75rem', borderRadius: '4px', fontSize: '0.72rem', fontWeight: 600,
-          background: 'var(--bg-card)', color: 'var(--text-secondary)', border: '1px solid var(--border)',
-          cursor: 'pointer',
-        }}
+        type="button"
+        className="c2o-btn"
       >
         {t('Load')}
       </button>
@@ -497,11 +452,8 @@ function StatusBar() {
       {/* Export */}
       <button
         onClick={() => useUIStore.getState().setShowExport(true)}
-        style={{
-          padding: '0.25rem 0.75rem', borderRadius: '4px', fontSize: '0.72rem', fontWeight: 600,
-          background: 'var(--bg-card)', color: 'var(--text-secondary)', border: '1px solid var(--border)',
-          cursor: 'pointer',
-        }}
+        type="button"
+        className="c2o-btn"
       >
         {t('Export')}
       </button>
@@ -509,11 +461,8 @@ function StatusBar() {
       {/* Guide */}
       <button
         onClick={() => useUIStore.getState().setShowGuide(true)}
-        style={{
-          padding: '0.25rem 0.75rem', borderRadius: '4px', fontSize: '0.72rem', fontWeight: 600,
-          background: 'var(--bg-card)', color: '#f59e0b', border: '1px solid #f59e0b40',
-          cursor: 'pointer',
-        }}
+        type="button"
+        className="c2o-btn"
       >
         {t('Guide')}
       </button>
@@ -530,21 +479,26 @@ function NamePrompt() {
   const { t } = useTranslation()
   const [name, setName] = useState('')
   const setUserName = useUIStore(s => s.setUserName)
+  const trimmed = name.trim()
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', background: 'var(--bg-primary)', gap: '1rem' }}>
-      <LanguageToggle style={{ position: 'fixed', top: '0.75rem', right: '1rem' }} />
-      <h1 style={{ fontSize: '1.5rem', color: '#8B0000', margin: 0 }}>SpaceCDF</h1>
-      <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{t('Enter your name to join the design session')}</p>
-      <div style={{ display: 'flex', gap: '0.5rem' }}>
-        <input value={name} onChange={e => setName(e.target.value)} placeholder={t('Your name')}
-          autoFocus onKeyDown={e => e.key === 'Enter' && name && setUserName(name)}
-          style={{ padding: '0.5rem 0.75rem', fontSize: '0.85rem', borderRadius: '4px', background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text-primary)', width: 200 }} />
-        <button onClick={() => name && setUserName(name)} disabled={!name}
-          style={{ padding: '0.5rem 1.5rem', fontSize: '0.85rem', fontWeight: 600, borderRadius: '4px', background: 'var(--accent)', color: 'white', border: 'none', cursor: 'pointer' }}>
-          {t('Join')}
-        </button>
-      </div>
-    </div>
+    <>
+      <LanguageToggle style={{ position: 'fixed', top: 10, right: 16, zIndex: 1000 }} />
+      <HomeFrame title={t('Join the design session')} lead={t('Your name is shown to everyone working in the same study.')}>
+        <form
+          onSubmit={e => { e.preventDefault(); if (trimmed) setUserName(trimmed) }}
+          style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 'var(--sp-2)', maxWidth: 480 }}
+        >
+          <label style={{ flex: '1 1 240px', display: 'flex', flexDirection: 'column', gap: 'var(--sp-1)', fontSize: fs.label, color: 'var(--text-2)' }}>
+            {t('Your name')}
+            <input className="c2o-input" value={name} onChange={e => setName(e.target.value)} autoFocus autoComplete="name" />
+          </label>
+          <button type="submit" className="c2o-btn c2o-btn--primary" style={{ minHeight: 32 }}
+            aria-disabled={!trimmed || undefined} data-reason={!trimmed ? t('Enter a name first') : undefined}>
+            {t('Join')}
+          </button>
+        </form>
+      </HomeFrame>
+    </>
   )
 }
 
@@ -554,16 +508,17 @@ function AppShell() {
   const showExport = useUIStore(s => s.showExport)
   const showGuide = useUIStore(s => s.showGuide)
 
-  if (!userName) return <NamePrompt />
+  if (!userName) return <><NamePrompt /><DialogHost /></>
   if (!studyId) return (
     <>
-      <LanguageToggle style={{ position: 'fixed', top: '0.75rem', right: '1rem', zIndex: 1000 }} />
+      <LanguageToggle style={{ position: 'fixed', top: 10, right: 16, zIndex: 1000 }} />
       <MissionWizard />
+      <DialogHost />
     </>
   )
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'var(--surface-0)', color: 'var(--text)' }}>
       <PresenceBar />
       <LevelBar />
       <StatusBar />
@@ -575,6 +530,7 @@ function AppShell() {
       </main>
       {showExport && <ExportPanel onClose={() => useUIStore.getState().setShowExport(false)} />}
       {showGuide && <GuidancePanel onClose={() => useUIStore.getState().setShowGuide(false)} />}
+      <DialogHost />
     </div>
   )
 }

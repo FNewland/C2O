@@ -2,6 +2,8 @@ import { useState, useMemo, useEffect } from 'react'
 import { useEquipmentSearch } from '../hooks/useSession'
 import { useDesignStore } from '../stores/designStore'
 import { useModelStore } from '../stores/modelStore'
+import { fs } from '../theme/tokens'
+import { askConfirm } from './ui/Dialog'
 
 // All KB component categories, grouped by domain
 const CATEGORIES = [
@@ -45,8 +47,8 @@ const DOMAIN_LABELS: Record<string, string> = {
 }
 
 const DOMAIN_COLORS: Record<string, string> = {
-  power: '#f59e0b', aocs: '#06b6d4', link: '#ec4899', propulsion: '#f97316',
-  structure: '#84cc16', data: '#8b5cf6', thermal: '#ef4444', integration: '#6b7280',
+  power: 'var(--status-caution)', aocs: 'var(--interactive)', link: 'var(--cat-6)', propulsion: 'var(--status-caution)',
+  structure: 'var(--cat-7)', data: 'var(--cat-2)', thermal: 'var(--status-alarm)', integration: 'var(--text-3)',
 }
 
 // Map each KB category to the parameter edits that selecting a component produces.
@@ -142,25 +144,8 @@ export function EquipmentBrowser({ studyId, onClose, onSelect, mode = 'modal', s
 
   // SYSTEM-V: Filter categories based on subsystems defined in the element tree
   const modelElements = useModelStore(s => s.elements)
-  const definedDomains = useMemo(() => {
-    const domains = new Set<string>()
-    for (const el of modelElements.values()) {
-      if (el.element_type === 'subsystem' && el.subsystem_domain) {
-        domains.add(el.subsystem_domain)
-      }
-    }
-    return domains
-  }, [modelElements])
 
   // Map equipment categories to subsystem domains
-  const categoryToDomain: Record<string, string> = {
-    batteries: 'power', solar_cells: 'power', solar_panels: 'power', eps_boards: 'power',
-    reaction_wheels: 'aocs', star_trackers: 'aocs', sun_sensors: 'aocs', magnetorquers: 'aocs',
-    transponders: 'ttc', antennas: 'ttc', gps_receivers: 'obc',
-    thrusters: 'propulsion', cubesat_structures: 'structure', deployers: 'structure', mechanical_hardware: 'structure',
-    obcs: 'obc', thermal_hardware: 'thermal', harnesses: 'structure',
-    ground_antennas: 'ground_rf', ground_rf: 'ground_rf', ground_baseband: 'ground_rf', ground_software: 'ground_ops', ground_timing: 'ground_ops',
-  }
 
   // Show all categories for the segment — segment filter (space/ground) is sufficient.
   // Previously filtered by definedDomains which was too aggressive (hid categories
@@ -271,11 +256,11 @@ export function EquipmentBrowser({ studyId, onClose, onSelect, mode = 'modal', s
     return null
   }
 
-  const handleSelectComponent = (category: string, component: any, qty: number = 1) => {
+  const handleSelectComponent = async (category: string, component: any, qty: number = 1) => {
     // Check RF compatibility before allowing selection
     const warning = checkRfCompatibility(category, component)
     if (warning) {
-      if (!confirm(`⚠ ${warning}\n\nSelect anyway?`)) return
+      if (!(await askConfirm(`⚠ ${warning}\n\nSelect anyway?`))) return
     }
 
     const key = `${category}:${component.id || component.name}`
@@ -325,15 +310,6 @@ export function EquipmentBrowser({ studyId, onClose, onSelect, mode = 'modal', s
   }, [selections])
 
   // Legacy: remove all selections for a category
-  const handleDeselectCategory = (category: string) => {
-    setSelections(prev => {
-      const next = new Map(prev)
-      for (const [key, sel] of next) {
-        if (sel.category === category) next.delete(key)
-      }
-      return next
-    })
-  }
 
   // SYSTEM-V: Currently installed components from element tree (removable)
   const deleteElement = useModelStore(s => s.deleteElement)
@@ -353,7 +329,7 @@ export function EquipmentBrowser({ studyId, onClose, onSelect, mode = 'modal', s
   }, [modelElements])
 
   const handleRemoveInstalled = async (elementId: string, name: string) => {
-    if (!confirm(`Remove ${name} from the design?`)) return
+    if (!(await askConfirm(`Remove ${name} from the design?`))) return
     await deleteElement(elementId)
     useDesignStore.getState().markStale('equipment')
   }
@@ -399,7 +375,6 @@ export function EquipmentBrowser({ studyId, onClose, onSelect, mode = 'modal', s
       .filter(s => s.category === activeCategory)
       .map(s => s.component.id || s.component.name)
   )
-  const categorySelectionCount = Array.from(selections.values()).filter(s => s.category === activeCategory).length
 
   // Items for comparison
   const compareItems = useMemo(() => {
@@ -422,7 +397,7 @@ export function EquipmentBrowser({ studyId, onClose, onSelect, mode = 'modal', s
 
   const innerContent = (
       <div style={{
-        background: 'var(--bg-primary, #111827)', border: mode === 'modal' ? '1px solid var(--border, #374151)' : 'none',
+        background: 'var(--bg-primary, var(--surface-1))', border: mode === 'modal' ? '1px solid var(--border, var(--line))' : 'none',
         borderRadius: mode === 'modal' ? '8px' : '0', width: '100%', maxWidth: mode === 'modal' ? '1200px' : 'none',
         maxHeight: mode === 'modal' ? '90vh' : '100%', height: mode === 'inline' ? '100%' : 'auto',
         display: 'flex', flexDirection: 'column', overflow: 'hidden',
@@ -430,36 +405,36 @@ export function EquipmentBrowser({ studyId, onClose, onSelect, mode = 'modal', s
 
         {/* Header */}
         <div style={{
-          padding: '0.6rem 1rem', borderBottom: '1px solid var(--border, #374151)',
+          padding: '0.6rem 1rem', borderBottom: '1px solid var(--border, var(--line))',
           display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap',
         }}>
-          <h2 style={{ fontSize: '1rem', margin: 0 }}>Equipment Browser</h2>
-          <span style={{ fontSize: '0.68rem', color: '#6b7280' }}>
+          <h2 style={{ fontSize: fs.value, margin: 0 }}>Equipment Browser</h2>
+          <span style={{ fontSize: fs.label, color: 'var(--text-3)' }}>
             {filteredCategories.length} categories · {activeRows.length} components
           </span>
-          <span style={{ fontSize: '0.6rem', padding: '0.1rem 0.4rem', background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.3)', borderRadius: '3px', color: '#93c5fd' }}>
+          <span style={{ fontSize: fs.label, padding: '0.1rem 0.4rem', background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.3)', borderRadius: '3px', color: 'var(--interactive)' }}>
             Filtered by architecture selections
           </span>
           <div style={{ flex: 1 }} />
           <button className="btn btn-sm" onClick={() => { setCompareMode(!compareMode); setCompareIds(new Set()) }}
-            style={{ fontSize: '0.7rem', background: compareMode ? '#8b5cf6' : undefined }}>
+            style={{ fontSize: fs.label, background: compareMode ? 'var(--cat-2)' : undefined }}>
             {compareMode ? 'Exit Compare' : 'Compare'}
           </button>
           <button className="btn btn-sm" onClick={() => setShowCustomForm(!showCustomForm)}
-            style={{ fontSize: '0.7rem', background: showCustomForm ? '#f59e0b' : undefined }}>
+            style={{ fontSize: fs.label, background: showCustomForm ? 'var(--status-caution)' : undefined }}>
             {showCustomForm ? 'Cancel Custom' : 'Design Custom'}
           </button>
-          <span style={{ fontSize: '0.75rem', color: '#9ca3af' }}>
+          <span style={{ fontSize: fs.label, color: 'var(--text-2)' }}>
             {selections.size} of {filteredCategories.length} selected
           </span>
           {selections.size > 0 && (
             <>
               <button className="btn btn-sm" onClick={handleApplyAll}
-                style={{ background: '#10b981', fontSize: '0.75rem' }}>
+                style={{ background: 'var(--status-ok)', fontSize: fs.label }}>
                 Apply {selections.size} Selection{selections.size !== 1 ? 's' : ''}
               </button>
               <button className="btn btn-sm" onClick={handleApplyAndClose}
-                style={{ background: '#3b82f6', fontSize: '0.75rem' }}>
+                style={{ background: 'var(--interactive)', fontSize: fs.label }}>
                 Apply & Close
               </button>
             </>
@@ -471,37 +446,37 @@ export function EquipmentBrowser({ studyId, onClose, onSelect, mode = 'modal', s
         {selections.size > 0 && (
           <div style={{
             padding: '0.5rem 1rem', background: 'rgba(16,185,129,0.08)',
-            borderBottom: '1px solid var(--border, #374151)',
+            borderBottom: '1px solid var(--border, var(--line))',
           }}>
             <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center', marginBottom: '0.3rem' }}>
-              <span style={{ fontSize: '0.72rem', color: '#10b981', fontWeight: 600 }}>Selected:</span>
+              <span style={{ fontSize: fs.label, color: 'var(--status-ok)', fontWeight: 600 }}>Selected:</span>
               {Array.from(selections.entries()).map(([key, sel]) => (
                 <span key={key} style={{
                   display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
                   background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.3)',
-                  borderRadius: '4px', padding: '0.15rem 0.5rem', fontSize: '0.72rem',
+                  borderRadius: '4px', padding: '0.15rem 0.5rem', fontSize: fs.label,
                 }}>
-                  <span style={{ color: '#9ca3af', fontSize: '0.6rem' }}>{sel.category.replace(/_/g, ' ')}</span>
-                  <span style={{ fontWeight: 600, color: '#10b981' }}>{sel.component.name}</span>
+                  <span style={{ color: 'var(--text-2)', fontSize: fs.label }}>{sel.category.replace(/_/g, ' ')}</span>
+                  <span style={{ fontWeight: 600, color: 'var(--status-ok)' }}>{sel.component.name}</span>
                   <input type="number" min={1} max={10} value={sel.quantity}
                     onChange={e => handleQuantityChange(key, Number(e.target.value))}
-                    style={{ width: 30, background: 'transparent', border: '1px solid #374151', borderRadius: '3px', color: '#d1d5db', fontSize: '0.65rem', textAlign: 'center', padding: '0 2px' }}
+                    style={{ width: 30, background: 'transparent', border: '1px solid var(--line)', borderRadius: '3px', color: 'var(--text)', fontSize: fs.label, textAlign: 'center', padding: '0 2px' }}
                     onClick={e => e.stopPropagation()} />
-                  <span style={{ color: '#6b7280', fontSize: '0.65rem' }}>{((sel.component.mass_kg || 0) * sel.quantity).toFixed(2)}kg</span>
-                  {sel.component.custom && <span style={{ fontSize: '0.6rem', color: '#f59e0b' }}>(custom)</span>}
+                  <span style={{ color: 'var(--text-3)', fontSize: fs.label }}>{((sel.component.mass_kg || 0) * sel.quantity).toFixed(2)}kg</span>
+                  {sel.component.custom && <span style={{ fontSize: fs.label, color: 'var(--status-caution)' }}>(custom)</span>}
                   <button onClick={() => handleDeselectItem(key)}
-                    style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '0.8rem', padding: 0, lineHeight: 1 }}>
+                    style={{ background: 'none', border: 'none', color: 'var(--status-alarm)', cursor: 'pointer', fontSize: fs.body, padding: 0, lineHeight: 1 }}>
                     x
                   </button>
                 </span>
               ))}
             </div>
             {/* Live budget totals */}
-            <div style={{ display: 'flex', gap: '1rem', fontSize: '0.7rem' }}>
-              <span style={{ color: '#9ca3af' }}>Budget impact:</span>
-              <span style={{ fontFamily: 'monospace', color: '#d1d5db' }}>{budgetTotals.mass.toFixed(2)} kg</span>
-              <span style={{ fontFamily: 'monospace', color: '#d1d5db' }}>{budgetTotals.power.toFixed(1)} W</span>
-              <span style={{ fontFamily: 'monospace', color: '#d1d5db' }}>{budgetTotals.cost.toFixed(0)} kEUR</span>
+            <div style={{ display: 'flex', gap: '1rem', fontSize: fs.label }}>
+              <span style={{ color: 'var(--text-2)' }}>Budget impact:</span>
+              <span style={{ fontFamily: 'monospace', color: 'var(--text)' }}>{budgetTotals.mass.toFixed(2)} kg</span>
+              <span style={{ fontFamily: 'monospace', color: 'var(--text)' }}>{budgetTotals.power.toFixed(1)} W</span>
+              <span style={{ fontFamily: 'monospace', color: 'var(--text)' }}>{budgetTotals.cost.toFixed(0)} kEUR</span>
             </div>
           </div>
         )}
@@ -509,14 +484,14 @@ export function EquipmentBrowser({ studyId, onClose, onSelect, mode = 'modal', s
         <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
           {/* Category sidebar — grouped by domain */}
           <div style={{
-            width: '180px', borderRight: '1px solid var(--border, #374151)',
+            width: '180px', borderRight: '1px solid var(--border, var(--line))',
             overflowY: 'auto', flexShrink: 0,
           }}>
             {Object.entries(groupedCategories).map(([domain, cats]) => (
               <div key={domain}>
                 <div style={{
-                  fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase',
-                  color: DOMAIN_COLORS[domain] || '#6b7280', padding: '0.5rem 0.75rem 0.15rem',
+                  fontSize: fs.label, fontWeight: 700, textTransform: 'uppercase',
+                  color: DOMAIN_COLORS[domain] || 'var(--text-3)', padding: '0.5rem 0.75rem 0.15rem',
                   letterSpacing: '0.05em',
                 }}>{DOMAIN_LABELS[domain] || domain}</div>
                 {cats.map(cat => {
@@ -532,21 +507,21 @@ export function EquipmentBrowser({ studyId, onClose, onSelect, mode = 'modal', s
                       style={{
                         display: 'flex', alignItems: 'center', gap: '0.4rem', width: '100%',
                         padding: '0.4rem 0.75rem', border: 'none', cursor: 'pointer', textAlign: 'left',
-                        background: isActive ? 'var(--bg-secondary, #1f2937)' : 'transparent',
-                        borderLeft: isActive ? `3px solid ${DOMAIN_COLORS[cat.domain] || '#3b82f6'}` : '3px solid transparent',
-                        fontSize: '0.78rem',
-                        color: notNeeded ? '#4b5563' : isActive ? '#f3f4f6' : '#9ca3af',
+                        background: isActive ? 'var(--bg-secondary, var(--surface-2))' : 'transparent',
+                        borderLeft: isActive ? `3px solid ${DOMAIN_COLORS[cat.domain] || 'var(--interactive)'}` : '3px solid transparent',
+                        fontSize: fs.label,
+                        color: notNeeded ? 'var(--line-strong)' : isActive ? 'var(--text)' : 'var(--text-2)',
                         opacity: notNeeded ? 0.5 : 1,
                       }}>
                       {hasSelection ? (
-                        <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981', flexShrink: 0 }} />
+                        <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--status-ok)', flexShrink: 0 }} />
                       ) : isNeeded ? (
-                        <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#3b82f6', flexShrink: 0 }} title="Required" />
+                        <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--interactive)', flexShrink: 0 }} title="Required" />
                       ) : isOptional ? (
-                        <span style={{ width: 8, height: 8, borderRadius: '50%', border: '1.5px solid #6b7280', flexShrink: 0 }} title="Optional" />
+                        <span style={{ width: 8, height: 8, borderRadius: '50%', border: '1.5px solid var(--text-3)', flexShrink: 0 }} title="Optional" />
                       ) : null}
                       <span style={{ flex: 1 }}>{cat.name}</span>
-                      {need && <span style={{ fontSize: '0.6rem', color: '#6b7280' }}>×{need.quantity}</span>}
+                      {need && <span style={{ fontSize: fs.label, color: 'var(--text-3)' }}>×{need.quantity}</span>}
                     </button>
                   )
                 })}
@@ -562,39 +537,39 @@ export function EquipmentBrowser({ studyId, onClose, onSelect, mode = 'modal', s
                 padding: '0.75rem', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.3)',
                 borderRadius: '6px', marginBottom: '0.75rem',
               }}>
-                <div style={{ fontSize: '0.82rem', fontWeight: 600, color: '#f59e0b', marginBottom: '0.4rem' }}>
+                <div style={{ fontSize: fs.body, fontWeight: 600, color: 'var(--status-caution)', marginBottom: '0.4rem' }}>
                   Design Custom Component — {CATEGORIES.find(c => c.id === activeCategory)?.name}
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.4rem', marginBottom: '0.4rem' }}>
                   <div>
                     <label style={formLabel}>Name</label>
-                    <input className="input" value={customComp.name} onChange={e => setCustomComp(p => ({ ...p, name: e.target.value }))} placeholder="Custom component name" style={{ fontSize: '0.75rem', width: '100%' }} />
+                    <input className="input" value={customComp.name} onChange={e => setCustomComp(p => ({ ...p, name: e.target.value }))} placeholder="Custom component name" style={{ fontSize: fs.label, width: '100%' }} />
                   </div>
                   <div>
                     <label style={formLabel}>Manufacturer</label>
-                    <input className="input" value={customComp.manufacturer} onChange={e => setCustomComp(p => ({ ...p, manufacturer: e.target.value }))} placeholder="In-house / vendor" style={{ fontSize: '0.75rem', width: '100%' }} />
+                    <input className="input" value={customComp.manufacturer} onChange={e => setCustomComp(p => ({ ...p, manufacturer: e.target.value }))} placeholder="In-house / vendor" style={{ fontSize: fs.label, width: '100%' }} />
                   </div>
                   <div>
                     <label style={formLabel}>TRL</label>
-                    <input className="input" type="number" min={1} max={9} value={customComp.trl} onChange={e => setCustomComp(p => ({ ...p, trl: Number(e.target.value) }))} style={{ fontSize: '0.75rem', width: '100%' }} />
+                    <input className="input" type="number" min={1} max={9} value={customComp.trl} onChange={e => setCustomComp(p => ({ ...p, trl: Number(e.target.value) }))} style={{ fontSize: fs.label, width: '100%' }} />
                   </div>
                   <div>
                     <label style={formLabel}>Mass (kg)</label>
-                    <input className="input" type="number" step={0.01} value={customComp.mass_kg} onChange={e => setCustomComp(p => ({ ...p, mass_kg: Number(e.target.value) }))} style={{ fontSize: '0.75rem', width: '100%' }} />
+                    <input className="input" type="number" step={0.01} value={customComp.mass_kg} onChange={e => setCustomComp(p => ({ ...p, mass_kg: Number(e.target.value) }))} style={{ fontSize: fs.label, width: '100%' }} />
                   </div>
                   <div>
                     <label style={formLabel}>Power (W)</label>
-                    <input className="input" type="number" step={0.1} value={customComp.power_w} onChange={e => setCustomComp(p => ({ ...p, power_w: Number(e.target.value) }))} style={{ fontSize: '0.75rem', width: '100%' }} />
+                    <input className="input" type="number" step={0.1} value={customComp.power_w} onChange={e => setCustomComp(p => ({ ...p, power_w: Number(e.target.value) }))} style={{ fontSize: fs.label, width: '100%' }} />
                   </div>
                   <div>
                     <label style={formLabel}>Cost (kEUR)</label>
-                    <input className="input" type="number" step={1} value={customComp.cost_keur} onChange={e => setCustomComp(p => ({ ...p, cost_keur: Number(e.target.value) }))} style={{ fontSize: '0.75rem', width: '100%' }} />
+                    <input className="input" type="number" step={1} value={customComp.cost_keur} onChange={e => setCustomComp(p => ({ ...p, cost_keur: Number(e.target.value) }))} style={{ fontSize: fs.label, width: '100%' }} />
                   </div>
                 </div>
                 <input className="input" value={customComp.notes} onChange={e => setCustomComp(p => ({ ...p, notes: e.target.value }))}
-                  placeholder="Notes (interface details, performance specs, rationale...)" style={{ fontSize: '0.72rem', width: '100%', marginBottom: '0.4rem' }} />
+                  placeholder="Notes (interface details, performance specs, rationale...)" style={{ fontSize: fs.label, width: '100%', marginBottom: '0.4rem' }} />
                 <button className="btn btn-sm" onClick={handleCustomSubmit} disabled={!customComp.name}
-                  style={{ background: '#f59e0b', fontSize: '0.72rem' }}>Add Custom to Selection</button>
+                  style={{ background: 'var(--status-caution)', fontSize: fs.label }}>Add Custom to Selection</button>
               </div>
             )}
 
@@ -604,10 +579,10 @@ export function EquipmentBrowser({ studyId, onClose, onSelect, mode = 'modal', s
                 padding: '0.75rem', background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.3)',
                 borderRadius: '6px', marginBottom: '0.75rem',
               }}>
-                <div style={{ fontSize: '0.82rem', fontWeight: 600, color: '#8b5cf6', marginBottom: '0.4rem' }}>
+                <div style={{ fontSize: fs.body, fontWeight: 600, color: 'var(--cat-2)', marginBottom: '0.4rem' }}>
                   Side-by-Side Comparison ({compareIds.size} components)
                 </div>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.75rem' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs.label }}>
                   <thead>
                     <tr style={{ background: 'rgba(139,92,246,0.1)' }}>
                       <th style={th}>Parameter</th>
@@ -625,7 +600,7 @@ export function EquipmentBrowser({ studyId, onClose, onSelect, mode = 'modal', s
                       { label: 'Cost (kEUR)', get: (c: any) => c.cost_keur?.toFixed(0) || '—', best: 'min' },
                       { label: 'TRL', get: (c: any) => String(c.trl || '—'), best: 'max' },
                       { label: 'Heritage', get: (c: any) => (c.heritage_missions || []).join(', ') || 'None' },
-                      { label: 'Fit Score', get: (c: any, r: any) => r.fit_score !== undefined ? `${(r.fit_score * 100).toFixed(0)}%` : '—', best: 'max' },
+                      { label: 'Fit Score', get: (_c: any, r: any) => r.fit_score !== undefined ? `${(r.fit_score * 100).toFixed(0)}%` : '—', best: 'max' },
                     ].map(row => {
                       const values = compareItems.map(r => {
                         const c = r.component || r
@@ -634,12 +609,12 @@ export function EquipmentBrowser({ studyId, onClose, onSelect, mode = 'modal', s
                       const nums = values.map(v => v.num).filter(n => !isNaN(n))
                       const bestVal = row.best === 'min' ? Math.min(...nums) : row.best === 'max' ? Math.max(...nums) : null
                       return (
-                        <tr key={row.label} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                          <td style={{ ...td, fontWeight: 600, color: '#9ca3af' }}>{row.label}</td>
+                        <tr key={row.label} style={{ borderBottom: '1px solid color-mix(in srgb, var(--text) 5%, transparent)' }}>
+                          <td style={{ ...td, fontWeight: 600, color: 'var(--text-2)' }}>{row.label}</td>
                           {values.map((v, i) => (
                             <td key={i} style={{
                               ...td, textAlign: 'center', fontFamily: 'monospace',
-                              color: bestVal !== null && v.num === bestVal ? '#10b981' : '#d1d5db',
+                              color: bestVal !== null && v.num === bestVal ? 'var(--status-ok)' : 'var(--text)',
                               fontWeight: bestVal !== null && v.num === bestVal ? 700 : 400,
                             }}>{v.val}</td>
                           ))}
@@ -657,7 +632,7 @@ export function EquipmentBrowser({ studyId, onClose, onSelect, mode = 'modal', s
                 padding: '0.5rem 0.75rem', marginBottom: '0.75rem', borderRadius: '6px',
                 background: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.2)',
               }}>
-                <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#93c5fd', marginBottom: '0.3rem' }}>
+                <div style={{ fontSize: fs.label, fontWeight: 600, color: 'var(--interactive)', marginBottom: '0.3rem' }}>
                   Installed Components ({installedComponents.length})
                 </div>
                 <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap' }}>
@@ -665,23 +640,23 @@ export function EquipmentBrowser({ studyId, onClose, onSelect, mode = 'modal', s
                     <span key={comp.id} style={{
                       display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
                       background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)',
-                      borderRadius: '4px', padding: '0.15rem 0.5rem', fontSize: '0.68rem',
+                      borderRadius: '4px', padding: '0.15rem 0.5rem', fontSize: fs.label,
                     }}>
-                      <span style={{ color: '#6b7280', fontSize: '0.6rem' }}>{comp.domain}</span>
-                      <span style={{ fontWeight: 500, color: '#93c5fd' }}>{comp.name}</span>
-                      <span style={{ color: '#6b7280', fontSize: '0.6rem' }}>
+                      <span style={{ color: 'var(--text-3)', fontSize: fs.label }}>{comp.domain}</span>
+                      <span style={{ fontWeight: 500, color: 'var(--interactive)' }}>{comp.name}</span>
+                      <span style={{ color: 'var(--text-3)', fontSize: fs.label }}>
                         {comp.mass_kg.toFixed(2)}kg · {comp.power_w.toFixed(1)}W
                         {comp.quantity > 1 && ` ×${comp.quantity}`}
                       </span>
                       <button onClick={() => handleRemoveInstalled(comp.id, comp.name)}
-                        style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '0.8rem', padding: 0, lineHeight: 1 }}
+                        style={{ background: 'none', border: 'none', color: 'var(--status-alarm)', cursor: 'pointer', fontSize: fs.body, padding: 0, lineHeight: 1 }}
                         title="Remove from design">
                         ×
                       </button>
                     </span>
                   ))}
                 </div>
-                <div style={{ fontSize: '0.65rem', color: '#6b7280', marginTop: '0.25rem' }}>
+                <div style={{ fontSize: fs.label, color: 'var(--text-3)', marginTop: '0.25rem' }}>
                   Total: {installedComponents.reduce((s, c) => s + c.mass_kg * c.quantity, 0).toFixed(2)} kg
                   · {installedComponents.reduce((s, c) => s + c.power_w * c.quantity, 0).toFixed(1)} W
                   · {installedComponents.reduce((s, c) => s + c.cost_keur * c.quantity, 0).toFixed(0)} kEUR
@@ -691,27 +666,27 @@ export function EquipmentBrowser({ studyId, onClose, onSelect, mode = 'modal', s
 
             {/* Sort controls */}
             <div style={{ display: 'flex', gap: '0.3rem', marginBottom: '0.5rem', alignItems: 'center' }}>
-              <span style={{ fontSize: '0.7rem', color: '#9ca3af' }}>Sort:</span>
+              <span style={{ fontSize: fs.label, color: 'var(--text-2)' }}>Sort:</span>
               {(['fit', 'mass', 'cost', 'trl'] as const).map(k => (
                 <button key={k} onClick={() => setSortKey(k)}
                   style={{
-                    background: sortKey === k ? 'var(--accent, #3b82f6)' : 'transparent',
-                    color: sortKey === k ? 'white' : '#9ca3af',
-                    border: '1px solid var(--border, #374151)', borderRadius: '4px',
-                    padding: '0.15rem 0.45rem', fontSize: '0.68rem', cursor: 'pointer', textTransform: 'uppercase',
+                    background: sortKey === k ? 'var(--accent, var(--interactive))' : 'transparent',
+                    color: sortKey === k ? 'white' : 'var(--text-2)',
+                    border: '1px solid var(--border, var(--line))', borderRadius: '4px',
+                    padding: '0.15rem 0.45rem', fontSize: fs.label, cursor: 'pointer', textTransform: 'uppercase',
                   }}
                 >{k}</button>
               ))}
-              {compareMode && <span style={{ fontSize: '0.68rem', color: '#8b5cf6', marginLeft: '0.5rem' }}>Click rows to compare (max 3)</span>}
+              {compareMode && <span style={{ fontSize: fs.label, color: 'var(--cat-2)', marginLeft: '0.5rem' }}>Click rows to compare (max 3)</span>}
             </div>
 
             {isLoading && <div className="loading"><div className="spinner" /> Loading...</div>}
             {error && <div className="warning-item">Failed to load: {String(error)}</div>}
 
             {activeRows.length > 0 && (
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.78rem' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs.label }}>
                 <thead>
-                  <tr style={{ background: 'var(--bg-secondary, #1f2937)' }}>
+                  <tr style={{ background: 'var(--bg-secondary, var(--surface-2))' }}>
                     {compareMode && <th style={th}>Cmp</th>}
                     <th style={th}>Name</th>
                     <th style={th}>Manufacturer</th>
@@ -740,31 +715,31 @@ export function EquipmentBrowser({ studyId, onClose, onSelect, mode = 'modal', s
                         onClick={compareMode ? () => toggleCompare(id) : undefined}
                         style={{
                           background: isChosen ? 'rgba(16,185,129,0.12)' : isComparing ? 'rgba(139,92,246,0.1)' : 'transparent',
-                          borderBottom: '1px solid rgba(255,255,255,0.05)',
+                          borderBottom: '1px solid color-mix(in srgb, var(--text) 5%, transparent)',
                           cursor: compareMode ? 'pointer' : 'default',
                         }}>
                         {compareMode && (
                           <td style={td}>
                             <input type="checkbox" checked={isComparing} readOnly
-                              style={{ accentColor: '#8b5cf6' }} />
+                              style={{ accentColor: 'var(--cat-2)' }} />
                           </td>
                         )}
                         <td style={td}>
                           <div style={{ fontWeight: 600 }}>{c.name}</div>
-                          <div style={{ fontSize: '0.65rem', color: '#9ca3af' }}>{id}</div>
+                          <div style={{ fontSize: fs.label, color: 'var(--text-2)' }}>{id}</div>
                         </td>
                         <td style={td}>{c.manufacturer || '—'}</td>
                         <td style={tdNum}>{c.mass_kg?.toFixed(3) || '—'}</td>
                         <td style={tdNum}>{c.power_w?.toFixed(1) || '—'}</td>
                         <td style={tdNum}>{c.cost_keur?.toFixed(0) || '—'}</td>
                         <td style={tdNum}>{c.trl || '—'}</td>
-                        <td style={{ ...td, fontSize: '0.68rem', maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <td style={{ ...td, fontSize: fs.label, maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {heritage || '—'}
                         </td>
                         <td style={tdNum}>
                           {row.fit_score !== undefined && (
                             <span style={{
-                              padding: '0.1rem 0.35rem', borderRadius: '3px', fontSize: '0.68rem', fontWeight: 600,
+                              padding: '0.1rem 0.35rem', borderRadius: '3px', fontSize: fs.label, fontWeight: 600,
                               background: fitColor(row.fit_score, 0.2), color: fitColor(row.fit_score, 1),
                             }}>{(row.fit_score * 100).toFixed(0)}%</span>
                           )}
@@ -772,25 +747,25 @@ export function EquipmentBrowser({ studyId, onClose, onSelect, mode = 'modal', s
                         <td style={td}>
                           {hasGaps ? (
                             <span title={notes.filter((n: string) => n.includes('BELOW')).join('\n')}
-                              style={{ fontSize: '0.68rem', padding: '0.1rem 0.35rem', borderRadius: '3px', background: 'rgba(239,68,68,0.15)', color: '#ef4444', cursor: 'help' }}>
+                              style={{ fontSize: fs.label, padding: '0.1rem 0.35rem', borderRadius: '3px', background: 'rgba(239,68,68,0.15)', color: 'var(--status-alarm)', cursor: 'help' }}>
                               {notes.filter((n: string) => n.includes('BELOW')).length} gap{notes.filter((n: string) => n.includes('BELOW')).length !== 1 ? 's' : ''}
                             </span>
                           ) : meetsAll ? (
-                            <span style={{ fontSize: '0.68rem', padding: '0.1rem 0.35rem', borderRadius: '3px', background: 'rgba(16,185,129,0.15)', color: '#10b981' }}>
+                            <span style={{ fontSize: fs.label, padding: '0.1rem 0.35rem', borderRadius: '3px', background: 'rgba(16,185,129,0.15)', color: 'var(--status-ok)' }}>
                               meets
                             </span>
                           ) : (
-                            <span style={{ fontSize: '0.68rem', color: '#6b7280' }}>—</span>
+                            <span style={{ fontSize: fs.label, color: 'var(--text-3)' }}>—</span>
                           )}
                         </td>
                         <td style={td}>
                           {!compareMode && (
                             isChosen ? (
-                              <span style={{ color: '#10b981', fontWeight: 600, fontSize: '0.72rem' }}>Selected</span>
+                              <span style={{ color: 'var(--status-ok)', fontWeight: 600, fontSize: fs.label }}>Selected</span>
                             ) : (
                               <button className="btn btn-sm"
                                 onClick={() => handleSelectComponent(activeCategory, c)}
-                                style={{ padding: '0.18rem 0.55rem', fontSize: '0.7rem' }}
+                                style={{ padding: '0.18rem 0.55rem', fontSize: fs.label }}
                               >Select</button>
                             )
                           )}
@@ -803,7 +778,7 @@ export function EquipmentBrowser({ studyId, onClose, onSelect, mode = 'modal', s
             )}
 
             {!isLoading && activeRows.length === 0 && (
-              <div style={{ color: '#6b7280', fontSize: '0.8rem', padding: '1rem' }}>
+              <div style={{ color: 'var(--text-3)', fontSize: fs.body, padding: '1rem' }}>
                 No components in this category. Try a different domain search or design a custom component.
               </div>
             )}
@@ -814,15 +789,15 @@ export function EquipmentBrowser({ studyId, onClose, onSelect, mode = 'modal', s
                 marginTop: '0.75rem', padding: '0.5rem 0.75rem', borderRadius: '6px',
                 background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)',
               }}>
-                <div style={{ fontSize: '0.72rem', color: '#10b981', fontWeight: 600, marginBottom: '0.3rem' }}>
+                <div style={{ fontSize: fs.label, color: 'var(--status-ok)', fontWeight: 600, marginBottom: '0.3rem' }}>
                   Parameters affected by {selections.get(activeCategory)!.component.name}:
                 </div>
                 {(SELECTION_EFFECTS[activeCategory] || []).map(eff => {
                   const val = eff.extract(selections.get(activeCategory)!.component)
                   return val !== null ? (
-                    <div key={eff.paramId} style={{ fontSize: '0.72rem', color: '#9ca3af' }}>
-                      <span style={{ fontFamily: 'monospace' }}>{eff.paramId}</span> = <strong style={{ color: '#10b981' }}>{typeof val === 'number' ? val.toFixed(3) : val}</strong>
-                      <span style={{ color: '#6b7280' }}> ({eff.label})</span>
+                    <div key={eff.paramId} style={{ fontSize: fs.label, color: 'var(--text-2)' }}>
+                      <span style={{ fontFamily: 'monospace' }}>{eff.paramId}</span> = <strong style={{ color: 'var(--status-ok)' }}>{typeof val === 'number' ? val.toFixed(3) : val}</strong>
+                      <span style={{ color: 'var(--text-3)' }}> ({eff.label})</span>
                     </div>
                   ) : null
                 })}
@@ -845,8 +820,8 @@ export function EquipmentBrowser({ studyId, onClose, onSelect, mode = 'modal', s
   )
 }
 
-const formLabel: React.CSSProperties = { display: 'block', fontSize: '0.65rem', color: '#9ca3af', marginBottom: '0.15rem', textTransform: 'uppercase', letterSpacing: '0.03em' }
-const th: React.CSSProperties = { padding: '0.35rem 0.5rem', textAlign: 'left', fontSize: '0.68rem', textTransform: 'uppercase', color: '#9ca3af', letterSpacing: '0.03em' }
+const formLabel: React.CSSProperties = { display: 'block', fontSize: fs.label, color: 'var(--text-2)', marginBottom: '0.15rem', textTransform: 'uppercase', letterSpacing: '0.03em' }
+const th: React.CSSProperties = { padding: '0.35rem 0.5rem', textAlign: 'left', fontSize: fs.label, textTransform: 'uppercase', color: 'var(--text-2)', letterSpacing: '0.03em' }
 const td: React.CSSProperties = { padding: '0.35rem 0.5rem', verticalAlign: 'top' }
 const tdNum: React.CSSProperties = { ...td, textAlign: 'right', fontFamily: 'monospace', fontVariantNumeric: 'tabular-nums' }
 

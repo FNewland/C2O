@@ -74,8 +74,8 @@
   },
   {
    "id": "com-012-first-light/off-nominal-handling",
-   "en_hash": "002957964514ae52",
-   "fr_hash": "8b0f4707f392d2c9"
+   "en_hash": "784aab9d7c5fa32d",
+   "fr_hash": "07e7581e3f6da610"
   },
   {
    "id": "com-012-first-light/post-conditions",
@@ -88,5 +88,5 @@
    "fr_hash": "ea1ed5cb17dea23a"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "8067e5b"
 }

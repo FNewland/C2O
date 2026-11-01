@@ -140,7 +140,7 @@ value; payload team assesses geometry, band presence, dead pixels, content.
 - If `payload.last_scene_id` does not advance: check the capture gates — `payload.mode` (0x0600) = 2, `payload.fpa_ready` (0x0610) = 1, `aocs.mode` (0x020F) = 5 FINE_POINT with total error (0x02AA) < 0.05 deg. A refused capture returns TM(1,8) naming the failed gate. If detector integration failed, retry capture. If persistent, check FPA electronics via `HK_REQUEST(sid=5)`. Power cycle payload if needed.
 - If the stored image is empty or very small (0x060B change < 0.5 MB): Data write failure. Check mass memory interface. Retry capture. If storage full, delete test data and retry.
 - If preview shows fully dark image: Check if spacecraft was over nightside. Verify AOCS pointing was nadir. If dayside and dark, investigate FPA detector bias or shutter mechanism.
-- If the product is saturated (`payload.snr` 0x0616 collapses): the integration time is too long for the scene. Command `PAYLOAD_SET_INTEGRATION_TIME(blue_ms=1.00, green_ms=1.00, red_ms=1.00, nir_ms=1.00)` (func_id 34, wire `22 00 64 00 64 00 64 00 64`) or reduce the gain with `PAYLOAD_SET_GAIN(gain=0.500)` (func_id 35, wire `23 01 F4`) and retry on the next opportunity.
+- If the downlinked product is saturated (the quick-look shows clipped, flat-white areas over bright scenes): the integration time is too long for the scene. Command `PAYLOAD_SET_INTEGRATION_TIME(blue_ms=1.00, green_ms=1.00, red_ms=1.00, nir_ms=1.00)` (func_id 34, wire `22 00 64 00 64 00 64 00 64`) or reduce the gain with `PAYLOAD_SET_GAIN(gain=0.500)` (func_id 35, wire `23 01 F4`) and retry on the next opportunity.
 
 ## Post-Conditions
 - [ ] First image captured and stored on mass memory

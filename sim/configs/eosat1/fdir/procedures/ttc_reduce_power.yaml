@@ -17,7 +17,7 @@ steps:
       # Tier code 0 = LOW (16 kbps, BPSK, conv(7,1/2)+RS). Unchanged byte:
       # code 0 kept its "the low rate" meaning when the binary switch became
       # the four-rung ladder (defect #85), so FDIR now drops to a rate that
-      # still carries real-time housekeeping (1557 bps of channel) plus
+      # still carries real-time housekeeping (1588 bps of channel) plus
       # stored-HK playback, instead of the 1 kbps bootloader beacon that
       # could not carry housekeeping at all.
       data: [0x00]

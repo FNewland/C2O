@@ -24,8 +24,8 @@
   },
   {
    "id": "ctg-020-ground-station-antenna-failure/required-telemetry",
-   "en_hash": "9e0dddede7bc4984",
-   "fr_hash": "63c1be8186008ec3"
+   "en_hash": "fb338356017929c1",
+   "fr_hash": "722d54269239ed79"
   },
   {
    "id": "ctg-020-ground-station-antenna-failure/required-commands",
@@ -73,5 +73,5 @@
    "fr_hash": "fe11362a3d81e71e"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "8067e5b"
 }
