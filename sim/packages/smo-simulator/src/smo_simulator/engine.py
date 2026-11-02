@@ -3,6 +3,7 @@
 Config-driven central tick loop. Loads subsystem models from the registry,
 manages shared parameter store, PUS packet queues, and FDIR callbacks.
 """
+import os
 import math
 import threading
 import time
@@ -484,6 +485,11 @@ class SimulationEngine:
         )
         try:
             self._scenario_engine.load_scenarios_from_dir(self.config_dir / "scenarios")
+            # Scenarios authored in the scenario generator on a hosted
+            # deployment live on a persistent volume, not in the image.
+            extra = os.environ.get("SMO_EXTRA_SCENARIO_DIR")
+            if extra:
+                self._scenario_engine.load_scenarios_from_dir(Path(extra))
         except Exception as e:  # noqa: BLE001 — a bad scenario dir must not block startup
             logger.warning("Scenario load failed: %s", e)
 

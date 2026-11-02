@@ -73,6 +73,13 @@ cat <<EOF
     Instructor sim    https://$HOST_SIM       (instructors only)
     Link status       https://$HOST_SIM/link-status    (UP once a simulator is connected)
 EOF
+while read -r key label _port where who title; do
+    [ -n "$key" ] || continue
+    [ "$where" = sim ] && [ "$sim" != cloud ] && continue
+    printf '    %-20s https://%-22s (%s)\n' "$title" "$label.$DOMAIN" \
+        "$([ "$who" = all ] && echo 'students + instructors' || echo 'instructors only')"
+done <<<"$TOOLS"
+[ "$sim" = cloud ] || echo "    (the scenario generator and ADCS viewer run with the simulator: on a laptop, localhost:8096 and :8097)"
 if [ "$sim" = laptop ]; then
     cat <<EOF
 

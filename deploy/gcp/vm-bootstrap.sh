@@ -7,7 +7,7 @@
 #   3. fetch the link credentials from Secret Manager (the ground VM creates
 #      them if the secret has no version yet; the sim VM waits for them)
 #   4. write sim/docker/ground.env or space.env from deploy/gcp/env/*.example
-#   5. docker compose up -d --build with the right profile
+#   5. docker compose up -d --build with the right profiles (ground + rf, or space)
 #
 # Instance metadata it reads (set by setup.sh):
 #   c2o-role       ground | sim
@@ -45,8 +45,8 @@ PROJECT="$(md project/project-id)"
 MY_IP="$(md instance/network-interfaces/0/ip)"
 
 case "$ROLE" in
-    ground) PROFILE=ground; ENV_NAME=ground.env ;;
-    sim)    PROFILE=space;  ENV_NAME=space.env ;;
+    ground) PROFILES=(ground rf); ENV_NAME=ground.env ;;   # rf: the radio view (radio.<domain>)
+    sim)    PROFILES=(space);     ENV_NAME=space.env ;;
     *)      die "instance metadata c2o-role must be 'ground' or 'sim' (got '$ROLE')" ;;
 esac
 ENV_FILE="$SIM_DIR/docker/$ENV_NAME"
@@ -169,11 +169,13 @@ compose() {
     # --env-file: the compose file interpolates SMO_PUBLISH_ADDR (and the
     # image tag) from it; env_file inside compose.yaml only reaches the
     # containers, not the `ports:` lines.
+    local pargs=() p
+    for p in "${PROFILES[@]}"; do pargs+=(--profile "$p"); done
     (cd "$SIM_DIR" && SMO_CONFIG_HASH="$(sh docker/config-hash.sh)" \
-        docker compose --env-file "docker/$ENV_NAME" -f docker/compose.yaml --profile "$PROFILE" "$@")
+        docker compose --env-file "docker/$ENV_NAME" -f docker/compose.yaml "${pargs[@]}" "$@")
 }
 up() {
-    say "docker compose --profile $PROFILE up (first build: several minutes)"
+    say "docker compose --profile ${PROFILES[*]} up (first build: several minutes)"
     compose up -d --build --remove-orphans
     compose ps
 }

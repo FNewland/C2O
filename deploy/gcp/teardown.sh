@@ -32,18 +32,24 @@ del compute target-http-proxies describe "$T_HTTP" --global -- compute target-ht
 del compute url-maps describe "$URLMAP" --global -- compute url-maps delete "$URLMAP" --global
 del compute url-maps describe "$REDIRECT_MAP" --global -- compute url-maps delete "$REDIRECT_MAP" --global
 del compute ssl-certificates describe "$CERT" --global -- compute ssl-certificates delete "$CERT" --global
+del compute ssl-certificates describe "$CERT_TOOLS" --global -- compute ssl-certificates delete "$CERT_TOOLS" --global
 del compute ssl-policies describe "$SSL_POLICY" --global -- compute ssl-policies delete "$SSL_POLICY" --global
 del compute addresses describe "$LB_IP" --global -- compute addresses delete "$LB_IP" --global
 
 log "Load balancer back end"
-for b in "$BE_OPS" "$BE_PLAN" "$BE_SIM" "$BE_LINK"; do
+tool_keys="$(awk 'NF{print $1}' <<<"$TOOLS")"
+# shellcheck disable=SC2086  # tool_keys is a plain word list
+for b in "$BE_OPS" "$BE_PLAN" "$BE_SIM" "$BE_LINK" $(printf "$PREFIX-be-%s " $tool_keys); do
     del compute backend-services describe "$b" --global -- compute backend-services delete "$b" --global
 done
-for h in "$HC_OPS" "$HC_PLAN" "$HC_SIM" "$HC_LINK"; do
+# shellcheck disable=SC2086
+for h in "$HC_OPS" "$HC_PLAN" "$HC_SIM" "$HC_LINK" $(printf "$PREFIX-hc-%s " $tool_keys); do
     del compute health-checks describe "$h" --global -- compute health-checks delete "$h" --global
 done
 del compute security-policies describe "$ARMOR" -- compute security-policies delete "$ARMOR"
-del compute instance-groups unmanaged describe "$IG" --zone="$ZONE" -- compute instance-groups unmanaged delete "$IG" --zone="$ZONE"
+for g in "$IG" "$IG_SIM"; do
+    del compute instance-groups unmanaged describe "$g" --zone="$ZONE" -- compute instance-groups unmanaged delete "$g" --zone="$ZONE"
+done
 
 log "VMs (and their boot disks)"
 for v in "$VM_GROUND" "$VM_SIM"; do
@@ -56,7 +62,7 @@ done
 log "Network"
 del compute routers nats describe "$NAT" --router="$ROUTER" --region="$REGION" -- compute routers nats delete "$NAT" --router="$ROUTER" --region="$REGION"
 del compute routers describe "$ROUTER" --region="$REGION" -- compute routers delete "$ROUTER" --region="$REGION"
-for f in "$FW_LB" "$FW_IAP" "$FW_SIM"; do
+for f in "$FW_LB" "$FW_LB_SIM" "$FW_IAP" "$FW_SIM"; do
     del compute firewall-rules describe "$f" -- compute firewall-rules delete "$f"
 done
 del compute networks subnets describe "$SUBNET" --region="$REGION" -- compute networks subnets delete "$SUBNET" --region="$REGION"

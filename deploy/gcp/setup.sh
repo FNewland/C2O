@@ -20,6 +20,17 @@ retry() {  # retry CMD...: new service accounts take a few seconds to exist ever
     done
 }
 
+# tools_each FUNC: call FUNC key label port where who title, for each tool
+# that will exist (the sim-side tools only when the sim VM is created).
+tools_each() {
+    local key label port where who title
+    while read -r key label port where who title; do
+        [ -n "$key" ] || continue
+        [ "$where" = sim ] && [ "$CREATE_SIM_VM" != yes ] && continue
+        "$1" "$key" "$label" "$port" "$where" "$who" "$title"
+    done <<<"$TOOLS"
+}
+
 require_gcloud_login
 log "Project $PROJECT, region $REGION, zone $ZONE, domain $DOMAIN"
 
@@ -67,9 +78,14 @@ fw() {
     fi
 }
 log "Firewall (nothing else reaches the VMs: the VPC denies all other ingress)"
-# Google front ends and health checkers -> the four published ground ports.
-fw "$FW_LB" tcp:8080,tcp:9090,tcp:9091,tcp:9100 "$TAG_GROUND" \
+# Google front ends and health checkers -> the published ground ports
+# (MCS, planner, instructor proxy, link, and the tool viewers 8092-8095).
+fw "$FW_LB" tcp:8080,tcp:9090,tcp:9091,tcp:9100,tcp:8092-8095 "$TAG_GROUND" \
     --source-ranges=130.211.0.0/22,35.191.0.0/16
+# ... and -> the instructor tools next to the cloud simulator.
+if [ "$CREATE_SIM_VM" = yes ]; then
+    fw "$FW_LB_SIM" tcp:8096-8097 "$TAG_SIM" --source-ranges=130.211.0.0/22,35.191.0.0/16
+fi
 # IAP TCP forwarding -> SSH, both VMs (admin only; needs IAM on top).
 fw "$FW_IAP" tcp:22 "$TAG_GROUND,$TAG_SIM" --source-ranges=35.235.240.0/20
 # Cloud simulator VM -> ground link port, private network only.
@@ -145,8 +161,25 @@ if ! gcloud compute instance-groups unmanaged list-instances "$IG" --zone="$ZONE
         --format='value(instance)' | grep -q "$VM_GROUND"; then
     gcloud compute instance-groups unmanaged add-instances "$IG" --zone="$ZONE" --instances="$VM_GROUND"
 fi
+# Named ports: the four core services, plus one per tool on that VM.
+tool_port() { [ "$4" = "$want" ] && printf ',%s:%s' "$1" "$3"; return 0; }
+want=ground; ground_tool_ports="$(tools_each tool_port)"
 gcloud compute instance-groups unmanaged set-named-ports "$IG" --zone="$ZONE" \
-    --named-ports=mcs:9090,planner:9091,instructor:8080,link:9100
+    --named-ports="mcs:9090,planner:9091,instructor:8080,link:9100$ground_tool_ports"
+if [ "$CREATE_SIM_VM" = yes ]; then
+    # The sim VM gets its own group: a backend service sends traffic to every
+    # VM in a group, and only the sim VM runs the instructor tools.
+    if ! exists compute instance-groups unmanaged describe "$IG_SIM" --zone="$ZONE"; then
+        gcloud compute instance-groups unmanaged create "$IG_SIM" --zone="$ZONE"
+    fi
+    if ! gcloud compute instance-groups unmanaged list-instances "$IG_SIM" --zone="$ZONE" \
+            --format='value(instance)' | grep -q "$VM_SIM"; then
+        gcloud compute instance-groups unmanaged add-instances "$IG_SIM" --zone="$ZONE" --instances="$VM_SIM"
+    fi
+    want=sim; sim_tool_ports="$(tools_each tool_port)"
+    gcloud compute instance-groups unmanaged set-named-ports "$IG_SIM" --zone="$ZONE" \
+        --named-ports="${sim_tool_ports#,}"
+fi
 
 log "Health checks (they bypass IAP; small JSON endpoints, every 10 s)"
 hc() {  # hc NAME PORT PATH
@@ -162,6 +195,8 @@ hc "$HC_OPS"  9090 /api/client-config
 hc "$HC_PLAN" 9091 /api/time-source
 hc "$HC_SIM"  8080 /healthz
 hc "$HC_LINK" 9100 /healthz
+tool_hc() { hc "$PREFIX-hc-$1" "$3" /; }
+tools_each tool_hc
 
 log "Cloud Armor policy $ARMOR"
 if ! exists compute security-policies describe "$ARMOR"; then
@@ -190,7 +225,8 @@ log "Backend services"
 # be NAME PORTNAME HEALTHCHECK
 # timeout 3600 s: for a global external ALB the backend timeout is also the
 # longest a WebSocket may stay open. The consoles and the agent reconnect.
-be() {
+be() {  # be NAME PORTNAME HEALTHCHECK [INSTANCE-GROUP]
+    local group="${4:-$IG}"
     if ! exists compute backend-services describe "$1" --global; then
         gcloud compute backend-services create "$1" --global --load-balancing-scheme=EXTERNAL_MANAGED \
             --protocol=HTTP --port-name="$2" --health-checks="$3" --timeout=3600s
@@ -198,8 +234,8 @@ be() {
     gcloud compute backend-services update "$1" --global --port-name="$2" --health-checks="$3" \
         --timeout=3600s --security-policy="$ARMOR" >/dev/null
     if ! gcloud compute backend-services describe "$1" --global --format='value(backends[].group)' \
-            | grep -q "/instanceGroups/$IG"; then
-        gcloud compute backend-services add-backend "$1" --global --instance-group="$IG" \
+            | grep -q "/instanceGroups/$group\$"; then
+        gcloud compute backend-services add-backend "$1" --global --instance-group="$group" \
             --instance-group-zone="$ZONE" --balancing-mode=UTILIZATION --max-utilization=0.8
     fi
 }
@@ -207,9 +243,15 @@ be "$BE_OPS"  mcs        "$HC_OPS"
 be "$BE_PLAN" planner    "$HC_PLAN"
 be "$BE_SIM"  instructor "$HC_SIM"
 be "$BE_LINK" link       "$HC_LINK"
+tool_be() {
+    local group="$IG"; [ "$4" = sim ] && group="$IG_SIM"
+    be "$PREFIX-be-$1" "$1" "$PREFIX-hc-$1" "$group"
+}
+tools_each tool_be
 
-log "IAP on ops, plan and sim (Google-managed OAuth client: @$DOMAIN accounts only)"
-for b in "$BE_OPS" "$BE_PLAN" "$BE_SIM"; do
+log "IAP on ops, plan, sim and the tool pages (Google-managed OAuth client: @$DOMAIN accounts only)"
+tool_be_name() { printf '%s-be-%s\n' "$PREFIX" "$1"; }
+for b in "$BE_OPS" "$BE_PLAN" "$BE_SIM" $(tools_each tool_be_name); do
     # No oauth2-client-id: IAP uses the Google-managed client.
     gcloud compute backend-services update "$b" --global --iap=enabled >/dev/null
 done
@@ -227,6 +269,11 @@ iap_grant "$BE_OPS"  "$INSTRUCTORS_GROUP"
 iap_grant "$BE_PLAN" "$STUDENTS_GROUP"
 iap_grant "$BE_PLAN" "$INSTRUCTORS_GROUP"
 iap_grant "$BE_SIM"  "$INSTRUCTORS_GROUP"
+tool_iap() {
+    [ "$5" = all ] && iap_grant "$PREFIX-be-$1" "$STUDENTS_GROUP"
+    iap_grant "$PREFIX-be-$1" "$INSTRUCTORS_GROUP"
+}
+tools_each tool_iap
 
 # ── 6. Load balancer front end ──────────────────────────────────────────
 log "URL map (host rules; only link.$DOMAIN/link reaches the IAP-off back end)"
@@ -234,6 +281,8 @@ bs() { printf 'https://www.googleapis.com/compute/v1/projects/%s/global/backendS
 ops_hosts="- $HOST_OPS"
 [ "$INCLUDE_APEX" = "yes" ] && ops_hosts="$ops_hosts
     - $DOMAIN"
+tool_hostrule() { printf '  - hosts:\n    - %s.%s\n    pathMatcher: %s\n' "$2" "$DOMAIN" "$1"; }
+tool_matcher()  { printf '  - name: %s\n    defaultService: %s\n' "$1" "$(bs "$PREFIX-be-$1")"; }
 tmp="$(mktemp -d)"; trap 'rm -rf "$tmp"' EXIT
 cat > "$tmp/urlmap.yaml" <<EOF
 name: $URLMAP
@@ -251,6 +300,7 @@ hostRules:
   - hosts:
     - $HOST_LINK
     pathMatcher: link
+$(tools_each tool_hostrule)
 pathMatchers:
   - name: ops
     defaultService: $(bs "$BE_OPS")
@@ -265,6 +315,7 @@ pathMatchers:
       - paths:
         - /link
         service: $(bs "$BE_LINK")
+$(tools_each tool_matcher)
 EOF
 gcloud compute url-maps import "$URLMAP" --global --source="$tmp/urlmap.yaml" --quiet >/dev/null
 
@@ -289,13 +340,26 @@ if exists compute ssl-certificates describe "$CERT" --global; then
 else
     gcloud compute ssl-certificates create "$CERT" --global --domains="$CERT_DOMAINS"
 fi
+# The tool pages are on a second certificate: managed certificates cannot
+# gain names, and a separate one leaves the main certificate untouched.
+tool_host() { printf '%s.%s\n' "$2" "$DOMAIN"; }
+want_tools="$(tools_each tool_host | paste -sd, -)"
+if exists compute ssl-certificates describe "$CERT_TOOLS" --global; then
+    have="$(gcloud compute ssl-certificates describe "$CERT_TOOLS" --global --format='value(managed.domains)' | tr ';' ',')"
+    if [ "$(tr ',' '\n' <<<"$have" | sort | paste -sd,)" != "$(tr ',' '\n' <<<"$want_tools" | sort | paste -sd,)" ]; then
+        warn "Certificate $CERT_TOOLS covers [$have] but the tool list wants [$want_tools]. Delete it (detach it first: rerun after 'gcloud compute target-https-proxies update $T_HTTPS --global --ssl-certificates=$CERT') and rerun setup.sh."
+    fi
+else
+    log "TLS: second managed certificate for the tool pages ($want_tools)"
+    gcloud compute ssl-certificates create "$CERT_TOOLS" --global --domains="$want_tools"
+fi
 
 if exists compute target-https-proxies describe "$T_HTTPS" --global; then
     gcloud compute target-https-proxies update "$T_HTTPS" --global --url-map="$URLMAP" \
-        --ssl-certificates="$CERT" --ssl-policy="$SSL_POLICY" >/dev/null
+        --ssl-certificates="$CERT,$CERT_TOOLS" --ssl-policy="$SSL_POLICY" >/dev/null
 else
     gcloud compute target-https-proxies create "$T_HTTPS" --global --url-map="$URLMAP" \
-        --ssl-certificates="$CERT" --ssl-policy="$SSL_POLICY"
+        --ssl-certificates="$CERT,$CERT_TOOLS" --ssl-policy="$SSL_POLICY"
 fi
 if ! exists compute target-http-proxies describe "$T_HTTP" --global; then
     gcloud compute target-http-proxies create "$T_HTTP" --global --url-map="$REDIRECT_MAP"
@@ -319,10 +383,13 @@ cat <<EOF
 EOF
 [ "$INCLUDE_APEX" = "yes" ] && printf '        %-13s A      %s\n' "@" "$ip"
 for h in ops plan sim link; do printf '        %-13s A      %s\n' "$h" "$ip"; done
+tool_dns() { printf '        %-13s A      %s\n' "$2" "$ip"; }
+tools_each tool_dns
 cat <<EOF
 
-    Then watch the certificate (README step 7):
+    Then watch the certificates (README step 7):
         gcloud compute ssl-certificates describe $CERT --global --format='yaml(managed)'
+        gcloud compute ssl-certificates describe $CERT_TOOLS --global --format='yaml(managed)'
 
     The VMs are booting and building the image now (10-15 min). Progress:
         gcloud compute instances get-serial-port-output $VM_GROUND --zone=$ZONE | grep c2o-bootstrap
