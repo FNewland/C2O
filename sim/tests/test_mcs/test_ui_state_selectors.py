@@ -158,12 +158,29 @@ class TestValueCell:
                      none: T.valueCell("0x0217", 2, "deg"),
                      triadStale: T.paramTriad("0x0102"), triadNone: T.paramTriad("0x0217") };
         """, tmp_path)
-        assert 'class="vc fresh"' in out["live"] and "82.1" in out["live"]
-        assert 'class="vc stale"' in out["stale"] and "9.1" in out["stale"]
+        # wave 2: the MCS value cell IS the shared renderValue (one look for
+        # every readout); the MCS only supplies its cadence-aware verdict.
+        assert 'class="ds-value"' in out["live"] and "82.1" in out["live"]
+        assert "is-stale" not in out["live"] and "ds-age" not in out["live"]
+        assert "is-stale" in out["stale"] and "9.1" in out["stale"]   # last value kept
         assert "ds-age" in out["stale"]                       # age chip
         assert "no data" in out["none"] and "—" not in out["none"]
-        assert "held" in out["triadStale"] and "9.1" in out["triadStale"]
-        assert "no data" in out["triadNone"]
+        assert "stale" in out["triadStale"] and "9.1" in out["triadStale"]
+        assert "ds-age" in out["triadStale"]
+        assert "no data" in out["triadNone"] and "—" not in out["triadNone"]
+
+    def test_sentinel_reads_as_a_word(self, tmp_path):
+        """obdh.time_since_sync_s holds UINT32_MAX until the first sync: it
+        reads "never synced", not "4294967295 s"."""
+        out = run_js("""
+            T.S.state = { params: { "0x0A14": 4294967295, "0x053D": 12 },
+                          params_age: { "2580": 1, "1341": 1 } };
+            return { cell: T.valueCell("0x0A14", 0, "s"), other: T.valueCell("0x053D", 0, "s"),
+                     lbl: T.sentinelLabel("0x0A14", 4294967295), none: T.sentinelLabel("0x053D", 12) };
+        """, tmp_path)
+        assert "never synced" in out["cell"] and "4294967295" not in out["cell"]
+        assert "12" in out["other"]
+        assert out["lbl"] == "never synced" and out["none"] is None
 
 
 @requires_node
@@ -189,9 +206,11 @@ class TestProcedureButtons:
         out = run_js("""
             const b = byId("proc-btn-start");
             T.setEnabled(b, false, "No procedure loaded");
-            const off = { aria: b.getAttribute("aria-disabled"), dis: b.disabled, title: b.getAttribute("title") };
+            const off = { aria: b.getAttribute("aria-disabled"), dis: b.disabled, why: b.getAttribute("data-reason") };
             T.setEnabled(b, true);
             return { off, on: b.getAttribute("aria-disabled") };
         """, tmp_path)
-        assert out["off"] == {"aria": "true", "dis": False, "title": "No procedure loaded"}
+        # the reason rides in data-reason: the shared tip shows it on hover
+        # AND keyboard focus (a native title shows on hover only)
+        assert out["off"] == {"aria": "true", "dis": False, "why": "No procedure loaded"}
         assert out["on"] is None

@@ -140,6 +140,24 @@ def evaluate_limits(pts: list[tuple[float, float]], lim) -> dict[str, Any]:
 
 # ---------- core analysis ----------
 
+def clean_event_text(desc: str) -> str:
+    """The readable auxiliary text of an S5 event description.
+
+    tm_report decodes the whole event body after the event ID as text, so
+    the severity byte, the 4-byte whole-second time and the length byte
+    arrive as control/replacement characters in front of the real text
+    ("\\x03\\x32y..\\x0fSAFE MODE ENTRY"). The aux text is what follows the
+    last such character. Already-clean text is returned unchanged.
+    """
+    if not desc:
+        return ""
+    cut = -1
+    for i, ch in enumerate(desc):
+        if ord(ch) < 0x20 or 0x7F <= ord(ch) < 0xA0 or ch == "\ufffd":
+            cut = i
+    return desc[cut + 1:].strip()
+
+
 def list_dumps(dump_dir: Path) -> list[dict[str, Any]]:
     """Return metadata about every dump file in ``dump_dir``.
 
@@ -309,21 +327,32 @@ def analyse_dumps(paths: Iterable[Path], params_by_id: dict, hk_plist: dict,
     an = PassAnalysis()
     files_used: list[dict[str, Any]] = []
     for path in paths:
+        # Per-file on-board time span (for the dump timeline): ingest with the
+        # running span cleared, read it, then fold it back into the total.
+        prev = (an.first_time, an.last_time)
+        an.first_time = an.last_time = None
         try:
             count = 0
             for raw in read_dump(path):
                 an.ingest_packet(raw, params_by_id, hk_plist)
                 count += 1
-            files_used.append({"filename": path.name, "packets": count, "size_bytes": path.stat().st_size})
+            files_used.append({"filename": path.name, "packets": count,
+                               "size_bytes": path.stat().st_size,
+                               "first_cuc": an.first_time, "last_cuc": an.last_time})
         except Exception as e:
             files_used.append({"filename": path.name, "error": str(e)})
+        finally:
+            spans = [t for t in (prev[0], an.first_time) if t is not None]
+            an.first_time = min(spans) if spans else None
+            spans = [t for t in (prev[1], an.last_time) if t is not None]
+            an.last_time = max(spans) if spans else None
 
     pkt_counts = [{"service": s, "subtype": st, "count": n}
                   for (s, st), n in sorted(an.pkt_counts.items())]
     events = [
         {"cuc": e["cuc"], "subtype": e["subtype"],
          "event_id": e["event_id"], "severity": e["severity"],
-         "description": e["description"]}
+         "description": clean_event_text(e["description"])}
         for e in an.events
     ]
 
@@ -402,6 +431,7 @@ def analyse_dumps(paths: Iterable[Path], params_by_id: dict, hk_plist: dict,
             params_out.append(entry)
         hk.append({
             "sid": sid,
+            "name": str(struct_def.get("name") or ""),
             "packet_count": an.hk_counts[sid],
             "sample_count": len(samples),
             "cadence_s": cadence,
@@ -467,10 +497,14 @@ def make_app(dump_dir: Path | None, api_base: str | None = None) -> web.Applicat
     params_by_id, hk_by_sid, hk_plist = load_catalogs()
     # Shared HTTP policy (gzip, cache headers) and the shared design system /
     # language runtime at /static/shared/ (R3 audit A8, §8).
-    from smo_common.web.http import (TOOL_HEAD, relative_display_path,
+    from smo_common.web.http import (relative_display_path,
                                      setup_tool_app, tool_html_response)
+    import tool_frame          # shared page frame: TOOL_HEAD + title bar
     app = setup_tool_app(web.Application())
-    page_html = INDEX_HTML.replace("<!--TOOL_HEAD-->", TOOL_HEAD)
+    page_html = (INDEX_HTML
+                 .replace("<!--FRAME_HEAD-->", tool_frame.head())
+                 .replace("<!--FRAME_BAR-->", tool_frame.bar('<span data-i18n>Delayed TM</span>'))
+                 .replace("<!--FRAME_SCRIPT-->", tool_frame.SCRIPT))
     # Never print the absolute server path on a web page (R3 audit A9):
     # show the store relative to the suite root instead.
     store_label = relative_display_path(dump_dir, REPO) if dump_dir else ""
@@ -565,740 +599,633 @@ def make_app(dump_dir: Path | None, api_base: str | None = None) -> web.Applicat
 INDEX_HTML = r"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title data-i18n>Delayed TM viewer</title>
-<!--TOOL_HEAD-->
+<title data-i18n>Delayed TM</title>
+<!--FRAME_HEAD-->
 <!-- Vendored locally (see the /vendor static route) so the tool really is
      offline, as the module docstring promises. -->
 <script src="/vendor/js/chart.umd.min.js"></script>
 <style>
-/* Light-touch restyle: page-local names mapped onto the shared design-system
-   tokens (design-system.css, loaded above). Full restyle is a later phase. */
-:root {
-  --panel: var(--s1); --border: var(--line); --text: var(--tx);
-  --dim: var(--tx3); --accent: var(--info); --good: var(--ok); --bad: var(--alarm);
+/* Delayed TM. Picture first: what the loaded dumps contain, laid out on the
+   on-board time axis (coverage per SID, gaps, events, limit excursions);
+   the packet-level tables are one tab deeper. Tokens only. */
+.dt-wrap{ display:grid; grid-template-columns:320px minmax(0,1fr); gap:var(--sp-4); align-items:start; }
+.dt-rail{ position:sticky; top:64px; max-height:calc(100vh - 80px); display:flex; flex-direction:column; }
+.dt-rail .ds-panel-b{ padding:var(--sp-3) var(--sp-4); }
+.dt-acts{ display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-2); }
+.dt-acts .wide{ grid-column:1 / -1; }
+.dt-files{ overflow:auto; flex:1 1 auto; min-height:80px; border-top:1px solid var(--line); }
+.dt-file{ display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:2px var(--sp-2); align-items:center;
+  padding:6px var(--sp-4); border-bottom:1px solid var(--line); cursor:pointer; }
+.dt-file:hover{ background:var(--s2); }
+.dt-file.is-active{ background:var(--accent-wash); box-shadow:inset 2px 0 0 var(--accent); }
+.dt-file .when{ font-family:var(--mono); font-size:var(--fs-body); color:var(--tx); }
+.dt-file .fn{ grid-column:2 / 4; font-family:var(--mono); font-size:var(--fs-label); color:var(--tx3);
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.dt-file .sz{ font-family:var(--mono); font-size:var(--fs-label); color:var(--tx3); }
+.dt-file.loaded .when::after{ content:""; display:inline-block; width:6px; height:6px; margin-left:6px;
+  background:var(--tx2); border-radius:1px; vertical-align:2px; }
+.dt-range{ display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-2); }
+.dt-range .ds-input{ font-size:var(--fs-label); }
+#limitBanner .ds-banner{ flex-wrap:wrap; }
+#limitBanner .ds-banner .r{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:100%; }
+.dt-main{ display:flex; flex-direction:column; gap:var(--sp-4); min-width:0; }
+.dt-facts{ display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); }
+.dt-facts>div{ padding:var(--sp-2) var(--sp-4) var(--sp-3); border-right:1px solid var(--line);
+  display:flex; flex-direction:column; gap:2px; min-width:0; }
+.dt-facts>div:last-child{ border-right:0; }
+.dt-facts .k{ font-size:var(--fs-label); color:var(--tx3); }
+.dt-facts .v{ font-family:var(--mono); font-size:var(--fs-value); font-weight:500; color:var(--val);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.dt-facts .v small{ font-size:var(--fs-label); color:var(--tx3); font-weight:400; }
+.dt-tl{ padding:var(--sp-2) var(--sp-4) var(--sp-3); }
+.dt-tl .cov{ fill:var(--fill); }
+.dt-tl .gap{ fill:none; stroke:var(--warn); stroke-width:1; stroke-dasharray:3 2; }
+.dt-tl .gapt{ fill:var(--warn) !important; }
+.dt-tl .file{ fill:var(--s3); stroke:var(--line-2); }
+.dt-tl .lane{ stroke:var(--line); }
+.dt-tl .lab{ fill:var(--tx2) !important; font-family:var(--sans) !important; font-size:13px !important; }
+.dt-tl .labs{ fill:var(--tx3) !important; }
+.dt-tl .ev1{ fill:var(--tx2); }
+.dt-tl .ev3{ fill:var(--bg); stroke:var(--warn); stroke-width:1.5; }
+.dt-tl .ev4{ fill:var(--alarm); }
+.dt-tl .exy{ fill:var(--warn); }
+.dt-tl .exr{ fill:var(--alarm); }
+.dt-tl .hl{ stroke:var(--accent); stroke-width:1; }
+.dt-legend{ display:flex; flex-wrap:wrap; gap:var(--sp-1) var(--sp-4); padding:0 var(--sp-4) var(--sp-3);
+  font-size:var(--fs-label); color:var(--tx3); }
+.dt-legend span{ display:inline-flex; align-items:center; gap:6px; }
+.dt-legend svg{ width:16px; height:10px; overflow:visible; }
+.dt-tabpanel{ min-height:120px; }
+.dt-tabpanel>.ds-table, .dt-tabpanel .ds-table{ font-size:var(--fs-body); }
+.dt-sid>summary{ min-height:40px; }
+.dt-sid>summary .ds-chip{ margin-left:var(--sp-2); }
+.dt-sid>.bd{ padding:0 0 var(--sp-3); }
+.dt-par td{ vertical-align:middle; }
+.dt-par td.id{ font-family:var(--mono); font-size:var(--fs-label); color:var(--tx3); white-space:nowrap; }
+.dt-par td.nm{ min-width:12ch; }
+.dt-par td.nm small{ display:block; font-family:var(--mono); color:var(--tx3); }
+.dt-par .ds-spark{ width:180px; height:28px; }
+.dt-plotrow>td{ padding:0 !important; background:var(--bg); }
+.dt-plot{ position:relative; height:260px; padding:var(--sp-3) var(--sp-4); }
+.dt-gaps{ margin:var(--sp-2) var(--sp-4); }
+.dt-cnt .bar{ display:inline-block; height:8px; background:var(--fill); border-radius:1px; vertical-align:middle; }
+.dt-scroll{ overflow:auto; max-height:560px; position:relative; }
+@media (max-width:980px){
+  .dt-wrap{ grid-template-columns:minmax(0,1fr); }
+  .dt-rail{ position:static; max-height:none; }
+  .dt-files{ max-height:240px; }
+  .dt-facts{ grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .dt-facts>div{ border-bottom:1px solid var(--line); }
+  .dt-par .ds-spark{ width:96px; }
+  .dt-par .hide-sm{ display:none; }
 }
-html, body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 13px; margin: 0; }
-table, .dump-row, .summary .card .value, input { font-family: var(--mono); }
-header { padding: 10px 16px; background: var(--s1); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 16px; }
-header h1 { font-size: 15px; letter-spacing: 1px; color: var(--tx); margin: 0; font-weight: 700; }
-header .status { color: var(--tx2); font-size: 12px; }
-main { padding: 14px 16px; }
-.controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 10px; background: var(--panel); border: 1px solid var(--border); border-radius: 4px; margin-bottom: 14px; }
-button { background: var(--s2); color: var(--text); border: 1px solid var(--line-2); border-radius: 3px; padding: 6px 12px; cursor: pointer; font-family: inherit; font-size: 12px; }
-button:hover { background: var(--s3); }
-button.primary { border-color: var(--info); color: var(--info); }
-button.sm { padding: 3px 6px; font-size: 12px; }
-input[type=text], input[type=datetime-local], select { background: var(--bg); color: var(--text); border: 1px solid var(--line-2); border-radius: 3px; padding: 5px 8px; font-size: 12px; }
-label { color: var(--dim); font-size: 12px; margin-right: 4px; }
-.summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px; margin-bottom: 14px; }
-.summary .card { background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 10px 14px; }
-.summary .card .label { font-size: 12px; color: var(--dim); text-transform: uppercase; letter-spacing: 1px; }
-.summary .card .value { font-size: 18px; color: var(--val); margin-top: 4px; font-variant-numeric: tabular-nums; }
-.section { background: var(--panel); border: 1px solid var(--border); border-radius: 4px; margin-bottom: 14px; }
-.section h2 { font-size: 12px; letter-spacing: 1.5px; color: var(--dim); text-transform: uppercase; margin: 0; padding: 8px 12px; border-bottom: 1px solid var(--border); }
-.section .body { padding: 10px 12px; max-height: 460px; overflow: auto; }
-table { width: 100%; border-collapse: collapse; font-size: 12px; font-variant-numeric: tabular-nums; }
-th, td { border-bottom: 1px solid var(--line); padding: 4px 6px; text-align: left; }
-th { color: var(--dim); font-weight: 500; position: sticky; top: 0; background: var(--panel); }
-td.num { text-align: right; }
-.sev-1 { color: var(--tx2); } .sev-2 { color: var(--tx); } .sev-3 { color: var(--warn); } .sev-4 { color: var(--bad); }
-.flag { color: var(--warn); }
-/* Gaps in a decoded series — stretches where the SID produced nothing. They
-   are shown as an explicit, unmissable absence, never smoothed over. */
-.gap-badge { background: var(--warn-wash); color: var(--warn); border: 1px solid var(--warn);
-             border-radius: 3px; padding: 1px 5px; font-size: 12px; font-weight: 700; }
-.gap-note { margin: 4px 0 8px; padding: 6px 8px; font-size: 12px; line-height: 1.5;
-            color: var(--tx); background: var(--warn-wash);
-            border-left: 3px solid var(--warn); }
-.gap-note table { margin-top: 4px; }
-/* G11: per-parameter ground-limit badges */
-.lim-badge { display: inline-block; padding: 1px 5px; border-radius: 3px; font-size: 12px; font-weight: 700; margin-right: 3px; white-space: nowrap; }
-.lim-badge.yellow { color: var(--warn); border: 1px solid var(--warn); }
-.lim-badge.red { color: var(--bad); border: 1px solid var(--bad); }
-.lim-ok { color: var(--tx2); font-size: 12px; }
-.lim-none { color: var(--tx3); font-size: 12px; }
-.dump-row { padding: 4px 6px; cursor: pointer; border-bottom: 1px solid var(--line); display: grid; grid-template-columns: 1fr 80px 110px 90px; gap: 6px; }
-.dump-row:hover { background: var(--s2); }
-.dump-row.selected { background: var(--info-wash); box-shadow: inset 3px 0 0 var(--info); }
-.error { color: var(--bad); padding: 8px; }
-.chart-container { position: relative; height: 300px; margin: 10px 0; background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 10px; }
-.chart-wrapper { display: grid; grid-template-columns: 1fr; gap: 10px; }
-.chart-item { background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 10px; }
-.chart-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-.chart-item-header .title { color: var(--tx); font-size: 12px; font-weight: 500; }
-.chart-item-header .close-btn { background: transparent; border: none; color: var(--dim); cursor: pointer; padding: 2px; }
-.chart-item-header .close-btn:hover { color: var(--warn); }
-.tab-buttons { display: flex; gap: 6px; margin-bottom: 10px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
-.tab-button { background: transparent; border: none; color: var(--dim); padding: 6px 12px; cursor: pointer; font-size: 12px; border-bottom: 2px solid transparent; }
-.tab-button:hover { color: var(--accent); }
-.tab-button.active { color: var(--accent); border-bottom-color: var(--accent); }
 </style>
 </head><body>
-<header>
-  <h1 data-i18n>DELAYED TM VIEWER</h1>
-  <span class="status" id="status" role="status" data-i18n>idle</span>
-</header>
-<main>
-  <div class="controls">
-    <button id="btnRefresh" class="primary" data-i18n>Refresh dumps</button>
-    <button id="btnLatest" data-i18n>Load latest</button>
-    <button id="btnSelected" data-i18n>Load selected</button>
-    <button id="btnAll" data-i18n>Load all</button>
-    <span style="border-left:1px solid var(--border);height:18px;"></span>
-    <label for="from" data-i18n>From</label><input type="datetime-local" id="from">
-    <label for="to" data-i18n>To</label><input type="datetime-local" id="to">
-    <button id="btnRange" data-i18n>Load range</button>
-  </div>
-
-  <div class="section">
-    <h2 data-i18n>Available dump files</h2>
-    <div class="body" id="dumpsList" data-i18n>No dumps loaded.</div>
-  </div>
-
-  <div class="summary" id="summary"></div>
-
-  <div class="section"><h2 data-i18n>Packet counts by service/subtype</h2>
-    <div class="body" id="pktCounts" data-i18n>No data.</div></div>
-
-  <div class="section"><h2 data-i18n>S5 Events</h2>
-    <div class="body" id="events" data-i18n>No data.</div></div>
-
-  <div class="section"><h2 data-i18n>On-board monitoring (S12)</h2>
-    <div class="body" id="s12" data-i18n>No data.</div></div>
-
-  <div class="section"><h2 data-i18n>HK time series by SID</h2>
-    <div class="body" id="hk" data-i18n>No data.</div></div>
-
-  <div class="section"><h2 data-i18n>Anomalies</h2>
-    <div class="body" id="anomalies" data-i18n>No data.</div></div>
-
-  <div id="chartsTabs" style="display:none;">
-    <div class="tab-buttons">
-      <button class="tab-button active" data-tab="hk-charts" data-i18n>HK Charts</button>
+<a class="ds-skip" href="#main" data-i18n>Skip to content</a>
+<!--FRAME_BAR-->
+<main id="main" class="tf-main dt-wrap">
+  <aside class="ds-panel dt-rail" aria-labelledby="files-h">
+    <div class="ds-panel-h"><span id="files-h" data-i18n>Dump files</span><span class="r" id="files-meta"></span></div>
+    <div class="ds-panel-b ds-stack" style="gap:var(--sp-2)">
+      <div class="dt-acts">
+        <button type="button" class="ds-btn primary" id="btnLatest" data-i18n>Load latest</button>
+        <button type="button" class="ds-btn" id="btnAll" data-i18n>Load all</button>
+        <button type="button" class="ds-btn wide" id="btnSelected" data-i18n>Load selected</button>
+      </div>
     </div>
-    <div id="chartsSection" class="section">
-      <h2 data-i18n>Charts</h2>
-      <div class="body" id="chartsBody"></div>
+    <div class="dt-files" id="dumpsList" role="group" aria-labelledby="files-h"></div>
+    <details class="ds-disclosure" id="rangeBox">
+      <summary><span data-i18n>Time window</span><span class="r" data-i18n>file time, UTC</span></summary>
+      <div class="bd" style="padding-left:var(--sp-4)">
+        <div class="dt-range">
+          <div class="ds-field"><label for="from" data-i18n>From</label><input class="ds-input" type="datetime-local" id="from"></div>
+          <div class="ds-field"><label for="to" data-i18n>To</label><input class="ds-input" type="datetime-local" id="to"></div>
+        </div>
+        <div class="ds-row" style="margin-top:var(--sp-2)"><button type="button" class="ds-btn sm" id="btnRange" data-i18n>Load range</button></div>
+      </div>
+    </details>
+    <div class="ds-row" style="padding:var(--sp-2) var(--sp-4); border-top:1px solid var(--line)">
+      <button type="button" class="ds-btn ghost sm" id="btnRefresh" data-i18n>Refresh list</button>
+      <span class="ds-meta" id="pollNote"></span>
     </div>
+  </aside>
+
+  <div class="dt-main">
+    <div id="limitBanner"></div>
+    <section class="ds-panel" aria-labelledby="sum-h">
+      <h2 class="ds-sr" id="sum-h" data-i18n>Summary</h2>
+      <div class="dt-facts" id="summary"></div>
+    </section>
+    <section class="ds-panel" aria-labelledby="tl-h">
+      <div class="ds-panel-h"><span id="tl-h" data-i18n>Dump timeline</span><span class="r" id="tl-meta"></span></div>
+      <div class="dt-tl" id="timeline"></div>
+      <div class="dt-legend" id="tlLegend"></div>
+    </section>
+    <section class="ds-panel" aria-labelledby="det-h">
+      <h2 class="ds-sr" id="det-h" data-i18n>Details</h2>
+      <div id="tabs" style="padding:0 var(--sp-3)"></div>
+      <div class="dt-tabpanel" id="tabpanel" role="tabpanel" tabindex="0"></div>
+    </section>
   </div>
 </main>
-<script>
-const $ = id => document.getElementById(id);
-// UI language (tool-page.js / i18n.js): T() = translated text, nothing escaped.
-const T = (s, v) => window.SMO_I18N ? window.SMO_I18N.tText(s, v)
-  : String(s).replace(/\{\{\s*(\w+)\s*\}\}/g, (m, k) => (v && k in v ? v[k] : m));
-let availableDumps = [];
-let selectedDumps = new Set();
-let lastStore = "";
-let chartInstances = {};
-let chartsData = [];
-let firstCuc = null;
-let lastDecoded = null;
+<!--FRAME_SCRIPT-->
+<script type="module">
+import { renderValue, renderNoData, renderTabs, mountTabs, renderBanner, renderChip, renderFlag,
+         setDisabled, setEnabled, glyph, esc } from "/static/shared/components.js";
+import I18n from "/static/shared/i18n.js";
+const T = (s, v) => I18n.tText(s, v);
+const $ = (id) => document.getElementById(id);
+const tok = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const CUC_EPOCH_UNIX_MS = Date.UTC(2000, 0, 1, 12, 0, 0);   // CUC = s since J2000 (mission.yaml time_epoch)
+const utc = (cuc) => new Date(CUC_EPOCH_UNIX_MS + cuc * 1000);
+const hms = (cuc) => (typeof cuc === "number" && isFinite(cuc)) ? utc(cuc).toISOString().substr(11, 8) : "";
+const hmsms = (cuc) => (typeof cuc === "number" && isFinite(cuc)) ? utc(cuc).toISOString().substr(11, 12) : "";
+const ymd = (cuc) => utc(cuc).toISOString().substr(0, 10);
+const loc = () => (I18n.getLang() === "fr" ? "fr-FR" : "en-GB");
+const n0 = (x) => Number(x).toLocaleString(loc());
 
-function setStatus(s) { $("status").textContent = s; }
+let available = [], selected = new Set(), loadedNames = new Set(), store = "";
+let decoded = null, tab = "hk", plots = {}, loading = null;
 
-async function refreshDumps() {
-  setStatus(T("listing dumps…"));
-  try {
-    const r = await fetch("/api/dumps");
-    const j = await r.json();
-    availableDumps = j.dumps || [];
-    lastStore = j.dump_dir || "";
-    renderDumpsList();
-    setStatus(j.error ? T("ERROR: {{msg}}", { msg: j.error })
-                      : T("{{n}} dump file(s) in {{store}}", { n: availableDumps.length, store: j.dump_dir }));
-  } catch (e) {
-    setStatus(T("ERROR: {{msg}}", { msg: String(e) }));
-  }
-}
-
-function renderDumpsList() {
-  const root = $("dumpsList");
-  if (!availableDumps.length) {
-    root.textContent = T("No dumps in {{store}}. Run a pass with an S15 dump in the simulator.",
-      { store: lastStore || T("the store") });
-    return;
-  }
-  root.innerHTML = "";
-  const header = document.createElement("div");
-  header.className = "dump-row";
-  header.style.color = "var(--dim)";
-  header.style.cursor = "default";
-  header.innerHTML = `<span>${T("Filename")}</span><span>SID</span><span>UTC</span><span class='num'>${T("Bytes")}</span>`;
-  root.appendChild(header);
-  for (const d of availableDumps) {
-    const row = document.createElement("div");
-    row.className = "dump-row" + (selectedDumps.has(d.filename) ? " selected" : "");
-    // Keyboard-operable selection (was click-only).
-    row.tabIndex = 0;
-    row.setAttribute("role", "checkbox");
-    row.setAttribute("aria-checked", selectedDumps.has(d.filename) ? "true" : "false");
-    row.addEventListener("keydown", (ev) => {
-      if (ev.key === " " || ev.key === "Enter") { ev.preventDefault(); row.click(); }
-    });
-    row.innerHTML = `<span>${d.filename}</span><span>${d.sid ?? "?"}</span><span>${d.timestamp || d.mtime || ""}</span><span class="num">${d.size_bytes.toLocaleString()}</span>`;
-    row.addEventListener("click", () => {
-      if (selectedDumps.has(d.filename)) selectedDumps.delete(d.filename);
-      else selectedDumps.add(d.filename);
-      renderDumpsList();
-    });
-    root.appendChild(row);
-  }
-}
-
-async function loadDecoded(params) {
-  setStatus(T("decoding…"));
-  try {
-    const url = "/api/decode?" + new URLSearchParams(params).toString();
-    const r = await fetch(url);
-    const j = await r.json();
-    if (j.error) {
-      setStatus(T("ERROR: {{msg}}", { msg: j.error }));
-      return;
-    }
-    lastDecoded = j;
-    render(j);
-    setStatus(T("decoded {{n}} packet(s) from {{files}} file(s)", { n: j.total_packets, files: j.files.length }));
-  } catch (e) {
-    setStatus(T("ERROR: {{msg}}", { msg: String(e) }));
-  }
-}
-
-function render(j) {
-  // Summary
-  const sum = $("summary");
-  sum.innerHTML = "";
-  const cards = [
-    [T("Files"), j.files.length],
-    [T("Total packets"), j.total_packets],
-    [T("S5 events"), j.events.length],
-    [T("HK SIDs"), j.hk.length],
-    [T("Anomalies"), j.anomalies.length],
-    // G11: the per-dump ground-limit summary line
-    [T("Ground limits"), j.limits ? j.limits.summary : "—"],
-    [T("On-board time (CUC) range"),
-     `${j.first_cuc == null ? "—" : j.first_cuc.toFixed(3) + " (" + formatCucTime(j.first_cuc) + ")"}`
-     + " → "
-     + `${j.last_cuc == null ? "—" : j.last_cuc.toFixed(3) + " (" + formatCucTime(j.last_cuc) + ")"}`],
-  ];
-  for (const [label, value] of cards) {
-    const c = document.createElement("div"); c.className = "card";
-    c.innerHTML = `<div class="label">${label}</div><div class="value">${value}</div>`;
-    sum.appendChild(c);
-  }
-
-  // Packet counts
-  $("pktCounts").innerHTML = j.packet_counts.length
-    ? `<table><thead><tr><th>${T("Service")}</th><th class='num'>${T("Count")}</th></tr></thead><tbody>`
-      + j.packet_counts.map(c => `<tr><td>S${c.service}.${c.subtype}</td><td class='num'>${c.count}</td></tr>`).join("")
-      + "</tbody></table>"
-    : T("No packets decoded.");
-
-  // Events
-  $("events").innerHTML = j.events.length
-    ? `<table><thead><tr><th>CUC</th><th>${T("Subtype")}</th><th>${T("Event ID")}</th><th>${T("Description")}</th></tr></thead><tbody>`
-      + j.events.map(e => `<tr class='sev-${e.severity}'><td>${formatCucTime(e.cuc)}</td><td>S5.${e.subtype}</td><td>0x${e.event_id.toString(16).padStart(4,"0").toUpperCase()}</td><td>${escapeHtml(e.description)}</td></tr>`).join("")
-      + "</tbody></table>"
-    : T("No events.");
-
-  // S12 on-board monitoring — the decoded contents of an alarm dump.
-  // Before this the viewer had no `svc == 12` branch at all, so four limit
-  // violations showed up as one row in the packet-count table and nothing
-  // anywhere said which parameter, which way it went, or against what band.
-  const tr = j.s12_transitions || [];
-  const defs = j.s12_definitions || [];
-  const sevColour = {INFO:"#888", WARNING:"#f59e0b", ALARM:"#ff6b6b", HIGH:"#ff6b6b"};
-  let s12html = "";
-  if (tr.length) {
-    const entered = tr.filter(t => t.entered).length;
-    s12html += `<div style="color:var(--dim);margin-bottom:6px;">${tr.length} check transition(s): `
-      + `${entered} out-of-limits, ${tr.length - entered} return(s) to nominal.</div>`
-      + "<table><thead><tr><th>CUC</th><th>Mon</th><th>Parameter</th><th>Transition</th>"
-      + "<th class='num'>Value</th><th>Check</th><th>Severity</th><th class='num'>Limit band</th>"
-      + "</tr></thead><tbody>"
-      + tr.map(t => `<tr>
-          <td>${t.cuc == null ? "—" : formatCucTime(t.cuc)}</td>
-          <td class='num'>${t.mon_id == null ? "—" : t.mon_id}</td>
-          <td>${escapeHtml(t.param_hex || "")} ${escapeHtml(t.param_name || "")}</td>
-          <td>${t.entered ? "<b style='color:#ff6b6b'>OUT OF LIMITS</b>"
-                          : "<span style='color:#3fca8a'>back to nominal</span>"}</td>
-          <td class='num'>${fmtNum(t.value)} ${escapeHtml(t.units || "")}</td>
-          <td>${escapeHtml(t.check_type_name || "—")}</td>
-          <td style="color:${sevColour[t.severity_name] || "inherit"}">${escapeHtml(t.severity_name || "—")}</td>
-          <td class='num'>${escapeHtml(t.band || "not reported")}</td></tr>`).join("")
-      + "</tbody></table>";
-  }
-  if (defs.length) {
-    s12html += "<h3 style='font-size:11px;color:var(--accent);margin:10px 0 4px;'>"
-      + "Monitoring definitions (TM 12,13)</h3>"
-      + "<table><thead><tr><th>Mon</th><th>Parameter</th><th>Check</th><th>State</th>"
-      + "<th class='num'>Low</th><th class='num'>High</th></tr></thead><tbody>"
-      + defs.map(d => `<tr><td class='num'>${d.mon_id}</td>
-          <td>${escapeHtml(d.param_hex || "")} ${escapeHtml(d.param_name || "")}</td>
-          <td>${escapeHtml(d.check_type_name || "—")}</td>
-          <td>${d.enabled ? "enabled" : "disabled"}</td>
-          <td class='num'>${fmtNum(d.low_limit)}</td>
-          <td class='num'>${fmtNum(d.high_limit)}</td></tr>`).join("")
-      + "</tbody></table>";
-  }
-  $("s12").innerHTML = s12html || T("No S12 monitoring packets in this dump.");
-
-  // HK
-  $("hk").innerHTML = j.hk.length
-    ? j.hk.map(sid => `
-        <h3 style="font-size:13px;color:var(--tx);margin:8px 0 4px;">SID ${sid.sid} — ${T("{{p}} pkts, {{s}} samples", { p: sid.packet_count, s: sid.sample_count })}${(sid.gaps && sid.gaps.length) ? ` <span class="gap-badge">${T("{{n}} GAP(S)", { n: sid.gaps.length })}</span>` : ""}
-        <button class="sm" aria-label="${escapeHtml(T("Plot all parameters of SID {{sid}}", { sid: sid.sid }))}" onclick="plotAllForSid(${sid.sid}, ${JSON.stringify(sid.params).replace(/"/g, '&quot;')})">${T("Plot all")}</button>
-        </h3>
-        ${gapListHtml(sid)}
-        <table><thead><tr><th>ID</th><th>${T("Name")}</th><th>${T("Units")}</th><th class='num'>Min</th><th class='num'>Max</th><th class='num'>${T("Mean")}</th><th class='num'>N</th><th>${T("Limits")}</th><th>${T("Trend")}</th><th></th></tr></thead><tbody>
-        ${sid.params.map(p => `<tr>
-          <td>0x${p.pid.toString(16).padStart(4,"0").toUpperCase()}</td>
-          <td>${escapeHtml(p.name)}</td>
-          <td>${escapeHtml(p.units)}</td>
-          <td class='num'>${fmtNum(p.min)}</td>
-          <td class='num'>${fmtNum(p.max)}</td>
-          <td class='num'>${fmtNum(p.mean)}</td>
-          <td class='num'>${p.n}</td>
-          <td>${limitCell(p)}</td>
-          <td>${spark(p.series, p.gaps)}</td>
-          <td><button class="sm" onclick="addChart(${sid.sid}, ${p.pid}, ${JSON.stringify(p.name).replace(/"/g, '&quot;')}, ${JSON.stringify(p.series)}, ${JSON.stringify(p.units).replace(/"/g, '&quot;')}, ${JSON.stringify(p.limit).replace(/"/g, '&quot;')}, ${JSON.stringify(p.gaps || []).replace(/"/g, '&quot;')})" aria-label="${escapeHtml(T("Plot {{name}}", { name: p.name }))}">${T("Plot")}</button> ${p.flag ? "<span class='flag'>Δ</span>" : ""}</td>
-        </tr>`).join("")}
-        </tbody></table>`).join("")
-    : T("No HK packets decoded.");
-
-  chartsData = j.hk;
-  firstCuc = j.first_cuc;
-
-  // Anomalies
-  $("anomalies").innerHTML = j.anomalies.length
-    ? "<ul>" + j.anomalies.map(a => `<li>SID ${a.sid} ${escapeHtml(a.name)}: peak Δ=${fmtNum(a.peak_delta)} (mean ${fmtNum(a.mean_delta)})</li>`).join("") + "</ul>"
-    : T("None.");
-}
-
-/* G11: per-parameter time-in-yellow / time-in-red badges */
-function fmtDurS(s) {
-  if (s >= 60) return (s / 60).toFixed(1) + " min";
-  return s.toFixed(0) + " s";
-}
-function limitCell(p) {
-  const l = p.limit;
-  if (!l) return `<span class='lim-none'>${T("no limit")}</span>`;
-  if (l.state === "ok") return `<span class='lim-ok'>${T("in band")}</span>`;
-  let out = "";
-  if (l.time_in_red_s > 0) out += `<span class='lim-badge red'>RED ${fmtDurS(l.time_in_red_s)}</span>`;
-  if (l.time_in_yellow_s > 0) out += `<span class='lim-badge yellow'>YEL ${fmtDurS(l.time_in_yellow_s)}</span>`;
-  return out || `<span class='lim-ok'>${T("in band")}</span>`;
-}
-
-/* G11: limit-band shading on plotted series (yellow wash outside the yellow
-   band, red wash outside the red band, dashed threshold lines). */
-const limitBandPlugin = {
-  id: "limitBands",
-  beforeDatasetsDraw(chart, _args, opts) {
-    const b = opts && opts.band;
-    if (!b) return;
-    const area = chart.chartArea, y = chart.scales.y;
-    if (!area || !y) return;
-    const px = v => Math.max(area.top, Math.min(area.bottom, y.getPixelForValue(v)));
-    const ctx = chart.ctx;
-    ctx.save();
-    const zone = (fromPx, toPx, color) => {
-      const top = Math.min(fromPx, toPx), h = Math.abs(toPx - fromPx);
-      if (h > 0.5) { ctx.fillStyle = color; ctx.fillRect(area.left, top, area.right - area.left, h); }
-    };
-    const YEL = "rgba(245,158,11,0.08)", RED = "rgba(248,113,113,0.10)";
-    if (b.yellow_high != null) zone(area.top, px(b.yellow_high), YEL);
-    if (b.yellow_low != null) zone(px(b.yellow_low), area.bottom, YEL);
-    if (b.red_high != null) zone(area.top, px(b.red_high), RED);
-    if (b.red_low != null) zone(px(b.red_low), area.bottom, RED);
-    ctx.setLineDash([4, 3]); ctx.lineWidth = 1;
-    for (const [k, c] of [["yellow_low", "#f59e0b"], ["yellow_high", "#f59e0b"],
-                          ["red_low", "#f87171"], ["red_high", "#f87171"]]) {
-      const v = b[k];
-      if (v == null) continue;
-      const yv = y.getPixelForValue(v);
-      if (yv < area.top || yv > area.bottom) continue;
-      ctx.strokeStyle = c;
-      ctx.beginPath(); ctx.moveTo(area.left, yv); ctx.lineTo(area.right, yv); ctx.stroke();
-    }
-    ctx.restore();
-  }
-};
-
-/* A gap is a stretch where the SID produced NOTHING — it was disabled by
-   TC(3,6), or a boot/bootloader entry reset the HK enable set. Chart.js joins
-   consecutive data points regardless of how far apart they are in time, so
-   plotting the raw series drew a straight line right across the hole and the
-   category x-axis spaced the two runs one tick apart: the operator saw
-   invented continuity where the spacecraft measured nothing.
-
-   splitAcrossGaps() inserts one explicit `null` sample (and a labelled x slot)
-   in the middle of every gap. With `spanGaps: false` Chart.js then BREAKS the
-   line there, so the hole is drawn as a hole. */
-function splitAcrossGaps(series, gaps) {
-  if (!gaps || !gaps.length) {
-    return { labels: series.map(([c]) => formatCucTime(c)),
-             data: series.map(([, v]) => v), cucs: series.map(([c]) => c),
-             breaks: 0 };
-  }
-  const labels = [], data = [], cucs = [];
-  let gi = 0;
-  for (let i = 0; i < series.length; i++) {
-    const [cuc, v] = series[i];
-    while (gi < gaps.length && series[i - 1] !== undefined
-           && gaps[gi].start_cuc >= series[i - 1][0]
-           && gaps[gi].end_cuc <= cuc) {
-      const mid = (gaps[gi].start_cuc + gaps[gi].end_cuc) / 2;
-      labels.push(`— NO DATA (${Math.round(gaps[gi].duration_s)}s) —`);
-      data.push(null);
-      cucs.push(mid);
-      gi++;
-    }
-    labels.push(formatCucTime(cuc));
-    data.push(v);
-    cucs.push(cuc);
-  }
-  return { labels, data, cucs, breaks: gi };
-}
-
-/* Per-SID gap table shown above the parameter list: start, end and duration
-   of every stretch with no data, so the operator can line the hole up against
-   the HK_DISABLE / boot that caused it. */
-function gapListHtml(sid) {
-  const gaps = sid.gaps || [];
-  if (!gaps.length) return "";
-  const rows = gaps.map(g =>
-    `<tr><td>${formatCucTime(g.start_cuc)}</td><td>${formatCucTime(g.end_cuc)}</td>`
-    + `<td class='num'>${Math.round(g.duration_s)}</td>`
-    + `<td class='num'>~${g.missing}</td></tr>`).join("");
-  return `<div class="gap-note">&#9888; `
-    + escapeHtml(T("SID {{sid}} stopped producing housekeeping {{n}} time(s) in this dump (cadence {{cad}} s). These are REAL holes: no value is interpolated across them.",
-      { sid: sid.sid, n: gaps.length, cad: sid.cadence_s }))
-    + `<table><thead><tr><th>${T("Gap start")}</th><th>${T("Gap end")}</th>`
-    + `<th class='num'>${T("Seconds")}</th><th class='num'>${T("Pkts missing")}</th></tr>`
-    + `</thead><tbody>${rows}</tbody></table></div>`;
-}
-
-function gapNoteHtml(gaps) {
-  if (!gaps || !gaps.length) return "";
-  const total = gaps.reduce((a, g) => a + g.duration_s, 0);
-  return `<div class="gap-note">&#9888; ${gaps.length} gap(s), `
-    + `${Math.round(total)}s with no data — the SID was not generating `
-    + `housekeeping. The trace is broken across each gap; it is NOT `
-    + `interpolated.</div>`;
-}
-
+/* ── formatting ── */
 function fmtNum(x) {
-  if (x == null || !isFinite(x)) return "—";
+  if (x == null || !isFinite(x)) return "";
   if (Number.isInteger(x)) return String(x);
   const a = Math.abs(x);
   if (a !== 0 && (a < 1e-3 || a >= 1e6)) return x.toExponential(3);
   return x.toFixed(3);
 }
-function escapeHtml(s) {
-  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const dur = (s) => s >= 3600 ? `${(s / 3600).toFixed(1)} h` : s >= 60 ? `${(s / 60).toFixed(1)} min` : `${Math.round(s)} s`;
+const hex4 = (n) => "0x" + n.toString(16).padStart(4, "0").toUpperCase();
+function fileWhen(d) {
+  const t = d.timestamp || d.mtime || "";
+  const m = /^(\d{4}-\d\d-\d\d)T(\d\d:\d\d)/.exec(t);
+  return m ? `${m[1]} ${m[2]}` : t;
 }
-/* Sparkline. Time-proportional on x (so a hole LOOKS like a hole) and drawn
-   as one polyline per contiguous run, so a gap is empty space rather than a
-   long straight segment implying data that was never measured. */
-function spark(pts, gaps) {
-  if (!pts || pts.length < 2) return "";
-  const w = 200, h = 28;
-  const xs = pts.map(p => p[0]); const ys = pts.map(p => p[1]);
-  const x0 = Math.min(...xs), x1 = Math.max(...xs);
-  const y0 = Math.min(...ys), y1 = Math.max(...ys);
-  const dx = (x1 - x0) || 1, dy = (y1 - y0) || 1;
-  const px = ([x, y]) => `${((x-x0)/dx*(w-2)+1).toFixed(1)},${((h-1)-((y-y0)/dy)*(h-2)).toFixed(1)}`;
-  const runs = [[]];
-  const gl = (gaps || []).slice();
-  let gi = 0;
-  for (let i = 0; i < pts.length; i++) {
-    if (i > 0 && gi < gl.length && pts[i-1][0] <= gl[gi].start_cuc
-        && pts[i][0] >= gl[gi].end_cuc) {
-      runs.push([]);
-      gi++;
-    }
-    runs[runs.length - 1].push(pts[i]);
+const kb = (b) => b >= 1048576 ? `${(b / 1048576).toFixed(1)} MB` : `${Math.round(b / 1024)} kB`;
+
+/* ── status (title bar) ── */
+function status(kind, text) {
+  const el = $("tf-status");
+  el.innerHTML = kind === "busy" ? `<span class="ds-chip is-active"><span class="ds-run" aria-hidden="true"></span>${esc(text)}</span>`
+    : kind === "error" ? `<span class="ds-chip is-alarm">${glyph("alarm-up")}${esc(text)}</span>`
+    : text ? `<span class="ds-meta">${esc(text)}</span>` : "";
+}
+
+/* ── archive list ── */
+async function refreshDumps() {
+  try {
+    const j = await (await fetch("api/dumps")).json();
+    available = j.dumps || []; store = j.dump_dir || "";
+    for (const f of [...selected]) if (!available.some((d) => d.filename === f)) selected.delete(f);
+    renderFiles();
+    if (j.error) status("error", T("ERROR: {{msg}}", { msg: j.error }));
+    return available;
+  } catch (e) { status("error", T("ERROR: {{msg}}", { msg: String(e) })); return []; }
+}
+function renderFiles() {
+  const root = $("dumpsList");
+  $("files-meta").textContent = T("{{n}} in {{store}}", { n: available.length, store: store || T("the store") });
+  document.getElementById("tf-meta").innerHTML = store ? `${esc(T("Store"))} <code>${esc(store)}</code>` : "";
+  if (!available.length) {
+    root.innerHTML = `<p class="tf-empty">${esc(T("No dumps in {{store}}. Run a pass with an S15 dump in the simulator.", { store: store || T("the store") }))}</p>`;
+  } else {
+    root.innerHTML = [...available].reverse().map((d) => {
+      const on = selected.has(d.filename);
+      return `<label class="dt-file${on ? " is-active" : ""}${loadedNames.has(d.filename) ? " loaded" : ""}">` +
+        `<span class="ds-check"><input type="checkbox" data-file="${esc(d.filename)}"${on ? " checked" : ""}></span>` +
+        `<span class="when">${esc(fileWhen(d))}</span><span class="sz">${kb(d.size_bytes || 0)}</span>` +
+        `<span class="fn">SID ${esc(d.sid ?? "?")} · ${esc(d.filename)}</span></label>`;
+    }).join("");
   }
-  const lines = runs.filter(r => r.length > 1)
-    .map(r => `<polyline fill="none" stroke="#5fb7ff" stroke-width="1.2" points="${r.map(px).join(" ")}"/>`)
-    .join("");
-  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">${lines}</svg>`;
+  paintButtons();
 }
-
-function isoOf(localInput) {
-  if (!localInput.value) return null;
-  // Treat the picker as UTC for simplicity (the backend is UTC).
-  return new Date(localInput.value + "Z").toISOString();
+function paintButtons() {
+  const none = T("The store has no dump files yet.");
+  for (const id of ["btnLatest", "btnAll"]) available.length ? setEnabled($(id)) : setDisabled($(id), none);
+  const sb = $("btnSelected");
+  sb.textContent = selected.size ? T("Load selected ({{n}})", { n: selected.size }) : T("Load selected");
+  if (!available.length) setDisabled(sb, none);
+  else if (!selected.size) setDisabled(sb, T("Tick one or more files in the list first."));
+  else setEnabled(sb);
+  const rb = $("btnRange");
+  if (!$("from").value && !$("to").value) setDisabled(rb, T("Set a From or To time first."));
+  else setEnabled(rb);
+  if (loading) for (const id of ["btnLatest", "btnAll", "btnSelected", "btnRange"])
+    if (id !== loading) setDisabled($(id), T("A decode is running."));
 }
-
-// On-board CUC, in SECONDS since the mission epoch J2000 =
-// 2000-01-01T12:00:00Z (smo_common.protocol.ecss_packet, epoch now live from
-// mission.yaml `time_epoch`). Since the CUC migration the 9-octet PUS
-// secondary header carries coarse (uint32 s) + fine (uint16, 1/65536 s), and
-// the backend hands us the COMBINED value as a float — coarse + fine/65536 —
-// so these numbers legitimately have a fractional part. (The old comment
-// "It is NOT coarse/fine packed" described the pre-migration wire and is no
-// longer true; the `cuc / 256` and magic 657720000 offsets were always wrong.)
-const CUC_EPOCH_UNIX_MS = Date.UTC(2000, 0, 1, 12, 0, 0);   // 946728000000
-
-function formatCucTime(cuc) {
-  if (typeof cuc !== 'number' || !isFinite(cuc)) return String(cuc);
-  // hh:mm:ss.mmm — the fine field resolves ~15.26 us, so show sub-seconds
-  // rather than truncating them away.
-  return new Date(CUC_EPOCH_UNIX_MS + cuc * 1000).toISOString().substr(11, 12);
-}
-
-function addChart(sid, pid, name, series, units, limit, gaps) {
-  if (!series || series.length < 1) return;
-  const chartId = `chart-${sid}-${pid}`;
-  const chartsBody = $("chartsBody");
-  $("chartsTabs").style.display = "block";
-
-  let chartItem = document.getElementById(chartId);
-  if (chartItem) {
-    chartItem.scrollIntoView({ behavior: 'smooth' });
-    return;
-  }
-
-  // Break the trace across every gap instead of drawing through it.
-  const split = splitAcrossGaps(series, gaps);
-  const labels = split.labels;
-  const data = split.data;
-  const cucs = split.cucs;
-
-  chartItem = document.createElement("div");
-  chartItem.id = chartId;
-  chartItem.className = "chart-item";
-  chartItem.innerHTML = `
-    <div class="chart-item-header">
-      <div class="title">SID ${sid} • 0x${pid.toString(16).padStart(4,"0").toUpperCase()} • ${escapeHtml(name)} (${escapeHtml(units)})</div>
-      <button class="close-btn" aria-label="${escapeHtml(T("Close chart"))}" onclick="removeChart('${chartId}')">✕</button>
-    </div>
-    ${gapNoteHtml(gaps)}
-    <div class="chart-container">
-      <canvas id="${chartId}-canvas"></canvas>
-    </div>
-  `;
-  chartsBody.appendChild(chartItem);
-
-  const ctx = document.getElementById(`${chartId}-canvas`).getContext('2d');
-  const chart = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: labels,
-      datasets: [{
-        label: `${name} ${units}`.trim(),
-        data: data,
-        borderColor: '#5fb7ff',
-        backgroundColor: 'rgba(95, 183, 255, 0.1)',
-        borderWidth: 2,
-        fill: true,
-        tension: 0.3,
-        // A null sample is a real hole in the data, not something to bridge.
-        spanGaps: false,
-        pointRadius: 0,
-        pointHoverRadius: 5,
-        pointBackgroundColor: '#5fb7ff',
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          display: true,
-          labels: { color: '#cfe', font: { size: 11 } }
-        },
-        tooltip: {
-          backgroundColor: 'rgba(10, 18, 38, 0.9)',
-          titleColor: '#5fb7ff',
-          bodyColor: '#cfe',
-          borderColor: '#1f3050',
-          borderWidth: 1,
-          padding: 8,
-          displayColors: true,
-          callbacks: {
-            title: (ctx) => {
-              const idx = ctx[0].dataIndex;
-              const cuc = cucs[idx];
-              return `CUC: ${cuc} (${formatCucTime(cuc)})`;
-            },
-            label: (ctx) => `${ctx.dataset.label}: ${fmtNum(ctx.parsed.y)}`
-          }
-        },
-        zoom: {
-          pan: { enabled: true, mode: 'xy', modifierKey: 'ctrl' },
-          zoom: { wheel: { enabled: true, speed: 0.1 }, pinch: { enabled: true }, mode: 'xy' }
-        },
-        // G11: limit-band shading from mcs/limits.yaml (null = no band)
-        limitBands: { band: limit && limit.band ? limit.band : null }
-      },
-      scales: {
-        x: {
-          ticks: { color: '#7a90ad', font: { size: 10 } },
-          grid: { color: '#16223a' }
-        },
-        y: {
-          ticks: { color: '#7a90ad', font: { size: 10 } },
-          grid: { color: '#16223a' }
-        }
-      }
-    },
-    // NOTE: chartjs-plugin-datalabels is not loaded by this page and no
-    // datalabels options are configured. Referencing the undeclared global
-    // `ChartDataLabels` threw a ReferenceError while building the options
-    // object, killing every chart before it was constructed.
-    plugins: [limitBandPlugin].concat(
-      (typeof ChartDataLabels !== 'undefined') ? [ChartDataLabels] : [])
-  });
-  chartInstances[chartId] = chart;
-}
-
-function plotAllForSid(sid, params) {
-  if (!params || params.length < 1) return;
-  const chartId = `chart-all-${sid}`;
-  const chartsBody = $("chartsBody");
-  $("chartsTabs").style.display = "block";
-
-  let chartItem = document.getElementById(chartId);
-  if (chartItem) {
-    chartItem.scrollIntoView({ behavior: 'smooth' });
-    return;
-  }
-
-  const colors = ['#5fb7ff', '#34d399', '#f59e0b', '#f87171', '#a78bfa', '#ec4899', '#14b8a6'];
-  const minCuc = Math.min(...params.flatMap(p => p.series.map(s => s[0])));
-  const maxDataPoints = Math.max(...params.map(p => p.series.length));
-
-  // Every parameter in a SID shares the packet's arrival times, so one gap
-  // list splits them all identically — the x axis stays aligned and each
-  // trace breaks in the same place instead of running straight through.
-  const sidGaps = (params.find(p => p.gaps && p.gaps.length) || {}).gaps || [];
-  const labels = splitAcrossGaps(params[0].series, sidGaps).labels;
-  const allCucs = splitAcrossGaps(params[0].series, sidGaps).cucs;
-  const datasets = params.map((p, idx) => {
-    const data = splitAcrossGaps(p.series, sidGaps).data;
-    return {
-      label: `${p.name} (${p.units})`.trim(),
-      data: data,
-      borderColor: colors[idx % colors.length],
-      backgroundColor: colors[idx % colors.length] + '20',
-      borderWidth: 2,
-      fill: false,
-      tension: 0.3,
-      spanGaps: false,
-      pointRadius: 0,
-      pointHoverRadius: 5,
-      pointBackgroundColor: colors[idx % colors.length],
-    };
-  });
-
-  chartItem = document.createElement("div");
-  chartItem.id = chartId;
-  chartItem.className = "chart-item";
-  chartItem.innerHTML = `
-    <div class="chart-item-header">
-      <div class="title">SID ${sid} • ${T("All parameters")}</div>
-      <button class="close-btn" aria-label="${escapeHtml(T("Close chart"))}" onclick="removeChart('${chartId}')">✕</button>
-    </div>
-    ${gapNoteHtml(sidGaps)}
-    <div class="chart-container" style="height: 400px;">
-      <canvas id="${chartId}-canvas"></canvas>
-    </div>
-  `;
-  chartsBody.appendChild(chartItem);
-
-  const ctx = document.getElementById(`${chartId}-canvas`).getContext('2d');
-  const chart = new Chart(ctx, {
-    type: 'line',
-    data: { labels: labels, datasets: datasets },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          display: true,
-          position: 'bottom',
-          labels: { color: '#cfe', font: { size: 10 }, usePointStyle: true, padding: 10 }
-        },
-        tooltip: {
-          backgroundColor: 'rgba(10, 18, 38, 0.9)',
-          titleColor: '#5fb7ff',
-          bodyColor: '#cfe',
-          borderColor: '#1f3050',
-          borderWidth: 1,
-          padding: 8,
-          displayColors: true,
-          callbacks: {
-            title: (ctx) => {
-              const idx = ctx[0].dataIndex;
-              const cuc = allCucs[idx];
-              return `CUC: ${cuc} (${formatCucTime(cuc)})`;
-            },
-            label: (ctx) => `${ctx.dataset.label}: ${fmtNum(ctx.parsed.y)}`
-          }
-        },
-        zoom: {
-          pan: { enabled: true, mode: 'xy', modifierKey: 'ctrl' },
-          zoom: { wheel: { enabled: true, speed: 0.1 }, pinch: { enabled: true }, mode: 'xy' }
-        }
-      },
-      scales: {
-        x: {
-          ticks: { color: '#7a90ad', font: { size: 10 } },
-          grid: { color: '#16223a' }
-        },
-        y: {
-          ticks: { color: '#7a90ad', font: { size: 10 } },
-          grid: { color: '#16223a' }
-        }
-      }
-    },
-    // NOTE: chartjs-plugin-datalabels is not loaded by this page and no
-    // datalabels options are configured. Referencing the undeclared global
-    // `ChartDataLabels` threw a ReferenceError while building the options
-    // object, killing every chart before it was constructed.
-    plugins: (typeof ChartDataLabels !== 'undefined') ? [ChartDataLabels] : []
-  });
-  chartInstances[chartId] = chart;
-}
-
-function removeChart(chartId) {
-  const chartItem = document.getElementById(chartId);
-  if (chartItem) chartItem.remove();
-  if (chartInstances[chartId]) {
-    chartInstances[chartId].destroy();
-    delete chartInstances[chartId];
-  }
-  if (Object.keys(chartInstances).length === 0) {
-    $("chartsTabs").style.display = "none";
-  }
-}
-
-$("btnRefresh").addEventListener("click", refreshDumps);
-$("btnLatest").addEventListener("click", () => loadDecoded({ latest: 1 }));
-$("btnAll").addEventListener("click", () => loadDecoded({ all: 1 }));
-$("btnSelected").addEventListener("click", () => {
-  if (!selectedDumps.size) { setStatus(T("no files selected: click rows in the list above")); return; }
-  loadDecoded({ files: Array.from(selectedDumps).join(",") });
+$("dumpsList").addEventListener("change", (ev) => {
+  const f = ev.target.dataset && ev.target.dataset.file;
+  if (!f) return;
+  ev.target.checked ? selected.add(f) : selected.delete(f);
+  renderFiles();
 });
+
+/* ── decode ── */
+async function loadDecoded(params, btnId) {
+  if (loading) return;
+  const btn = $(btnId);
+  loading = btnId;
+  const label = btn.textContent;
+  btn.classList.add("is-active");
+  btn.innerHTML = `<span class="ds-run" aria-hidden="true"></span>${esc(T("Decoding…"))}`;
+  paintButtons();
+  status("busy", T("decoding…"));
+  try {
+    const j = await (await fetch("api/decode?" + new URLSearchParams(params))).json();
+    if (j.error) { status("error", T("ERROR: {{msg}}", { msg: j.error })); return; }
+    decoded = j;
+    loadedNames = new Set((j.files || []).map((f) => f.filename));
+    for (const k of Object.keys(plots)) closePlot(k);
+    render();
+    status("", T("decoded {{n}} packet(s) from {{files}} file(s)", { n: n0(j.total_packets), files: j.files.length }));
+  } catch (e) {
+    status("error", T("ERROR: {{msg}}", { msg: String(e) }));
+  } finally {
+    loading = null;
+    btn.classList.remove("is-active");
+    btn.textContent = label;
+    renderFiles();
+  }
+}
+$("btnLatest").addEventListener("click", () => loadDecoded({ latest: 1 }, "btnLatest"));
+$("btnAll").addEventListener("click", () => loadDecoded({ all: 1 }, "btnAll"));
+$("btnSelected").addEventListener("click", () => loadDecoded({ files: [...selected].join(",") }, "btnSelected"));
 $("btnRange").addEventListener("click", () => {
-  const s = isoOf($("from")), u = isoOf($("to"));
-  const params = {};
-  if (s) params.since = s;
-  if (u) params.until = u;
-  if (!s && !u) params.all = 1;
-  loadDecoded(params);
+  const iso = (el) => el.value ? new Date(el.value + "Z").toISOString() : null;   // the picker is UTC
+  const p = {}; const s = iso($("from")), u = iso($("to"));
+  if (s) p.since = s; if (u) p.until = u;
+  loadDecoded(p, "btnRange");
+});
+for (const id of ["from", "to"]) $(id).addEventListener("input", paintButtons);
+$("btnRefresh").addEventListener("click", refreshDumps);
+
+/* ── render: banner, facts, timeline, tabs ── */
+function limitParams() {
+  const out = [];
+  for (const sid of decoded.hk) for (const p of sid.params)
+    if (p.limit && p.limit.state !== "ok") out.push({ sid: sid.sid, ...p });
+  out.sort((a, b) => (b.limit.state === "red") - (a.limit.state === "red") || b.limit.time_in_red_s - a.limit.time_in_red_s);
+  return out;
+}
+function render() {
+  if (!decoded) {
+    $("limitBanner").innerHTML = "";
+    $("summary").innerHTML = [T("Files"), T("Packets"), T("S5 events"), T("HK gaps"), T("On-board time")].map((k) =>
+      `<div><span class="k">${esc(k)}</span>${renderNoData()}</div>`).join("");
+    $("timeline").innerHTML = `<p class="tf-empty">${esc(T("Load the latest dump, all dumps, or a selection: what they contain is laid out here on the on-board time axis."))}</p>`;
+    $("tlLegend").innerHTML = ""; $("tl-meta").textContent = "";
+    $("tabs").innerHTML = ""; $("tabpanel").innerHTML = "";
+    return;
+  }
+  const j = decoded, lp = limitParams();
+  const red = lp.filter((p) => p.limit.state === "red"), yel = lp.filter((p) => p.limit.state === "yellow");
+  const gapsN = j.hk.reduce((a, s) => a + (s.gaps || []).length, 0);
+  $("limitBanner").innerHTML = !j.limits || !j.limits.checked
+    ? renderBanner("nodata", T("No ground limits apply to the decoded parameters."))
+    : red.length ? renderBanner("alarm", T("{{n}} parameter(s) went outside the alarm limits", { n: red.length }),
+        { meta: red.slice(0, 3).map((p) => p.name).concat(red.length > 3 ? [T("+{{n}} more", { n: red.length - 3 })] : []) })
+    : yel.length ? renderBanner("caution", T("{{n}} parameter(s) went outside the caution limits", { n: yel.length }),
+        { meta: yel.slice(0, 3).map((p) => p.name) })
+    : renderBanner("ok", T("All {{n}} limit-checked parameters stayed within limits", { n: j.limits.checked }));
+  const span = j.first_cuc != null && j.last_cuc != null ? j.last_cuc - j.first_cuc : null;
+  const fact = (k, v, small) => `<div><span class="k">${esc(k)}</span><span class="v">${v}${small ? ` <small>${esc(small)}</small>` : ""}</span></div>`;
+  $("summary").innerHTML = [
+    fact(T("Files"), n0(j.files.length)),
+    fact(T("Packets"), n0(j.total_packets)),
+    fact(T("S5 events"), n0(j.events.length), j.events.filter((e) => e.severity >= 3).length ? T("{{n}} medium or high", { n: j.events.filter((e) => e.severity >= 3).length }) : ""),
+    fact(T("HK gaps"), n0(gapsN), T("in {{n}} SID(s)", { n: j.hk.length })),
+    fact(T("On-board time"), span == null ? renderNoData() : `${hms(j.first_cuc).slice(0, 5)}–${hms(j.last_cuc).slice(0, 5)}`, span == null ? "" : dur(span)),
+  ].join("");
+  drawTimeline();
+  drawTabs();
+}
+
+/* ── the dump timeline ── */
+function drawTimeline() {
+  const j = decoded, host = $("timeline");
+  if (j.first_cuc == null) { host.innerHTML = `<p class="tf-empty">${esc(T("No time-tagged packets decoded."))}</p>`; return; }
+  const W = Math.max(300, host.clientWidth - 32), narrow = W < 640;
+  const L = narrow ? 92 : 168, R = 8, laneH = 24, t0 = j.first_cuc, t1 = Math.max(j.last_cuc, t0 + 1);
+  const X = (c) => L + ((c - t0) / (t1 - t0)) * (W - L - R);
+  const lp = limitParams().slice(0, 6);
+  const lanes = [{ k: "files", lab: T("Dump files") }, { k: "ev", lab: T("S5 events") },
+    ...j.hk.map((s) => ({ k: "sid", sid: s, lab: `SID ${s.sid}`, sub: s.name })),
+    ...lp.map((p) => ({ k: "lim", p, lab: p.name }))];
+  const H = lanes.length * laneH + 26;
+  let s = `<svg class="tf-plot" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-labelledby="tl-h tl-desc">` +
+    `<desc id="tl-desc">${esc(T("On-board time from {{a}} to {{b}} UTC: one lane per dump file set, events, each housekeeping SID (grey where samples exist, dashed amber where they stop) and each parameter that left its limits.", { a: hms(t0), b: hms(t1) }))}</desc>`;
+  // time axis: ~6–10 ticks on round minutes
+  const spanS = t1 - t0, steps = [60, 300, 600, 900, 1800, 3600, 7200, 10800, 21600, 43200, 86400];
+  const step = steps.find((x) => spanS / x <= (narrow ? 4 : 9)) || 86400;
+  for (let c = Math.ceil(t0 / step) * step; c <= t1; c += step) {
+    const x = X(c);
+    s += `<line class="grid" x1="${x}" y1="0" x2="${x}" y2="${H - 22}"/><text x="${x}" y="${H - 6}" text-anchor="middle">${hms(c).slice(0, 5)}</text>`;
+  }
+  lanes.forEach((ln, i) => {
+    const y = i * laneH, mid = y + laneH / 2;
+    s += `<line class="lane" x1="${L}" y1="${y + laneH}" x2="${W - R}" y2="${y + laneH}"/>`;
+    const room = Math.floor((L - (ln.k === "lim" ? 22 : 6)) / 6.8);
+    const cut = (x) => x.length > room ? x.slice(0, Math.max(1, room - 1)) + "…" : x;
+    const lab = `${esc(cut(ln.lab))}<title>${esc(ln.lab)}</title>` + (ln.sub && !narrow ? ` <tspan class="labs">${esc(ln.sub)}</tspan>` : "");
+    if (ln.k === "lim") {   // shape + colour: filled triangle = alarm, hollow = caution (P6)
+      const red = ln.p.limit.state === "red";
+      s += `<path class="${red ? "ev4" : "ev3"}" d="M5 ${mid - 5}L10 ${mid + 4}L0 ${mid + 4}Z"><title>${esc(red ? T("outside the alarm limits") : T("outside the caution limits"))}</title></path>`;
+      s += `<text class="lab" x="16" y="${mid + 4}">${lab}</text>`;
+    } else s += `<text class="lab" x="0" y="${mid + 4}">${lab}</text>`;
+    if (ln.k === "files") for (const f of j.files) if (f.first_cuc != null) {
+      s += `<rect class="file" x="${X(f.first_cuc).toFixed(1)}" y="${y + 6}" width="${Math.max(2, X(f.last_cuc) - X(f.first_cuc)).toFixed(1)}" height="${laneH - 12}" rx="1"><title>${esc(f.filename)} · ${hms(f.first_cuc)}–${hms(f.last_cuc)} · ${n0(f.packets)} ${esc(T("packets"))}</title></rect>`;
+    }
+    if (ln.k === "ev") for (const e of j.events) {
+      const x = X(e.cuc).toFixed(1), sev = e.severity >= 4 ? 4 : e.severity >= 3 ? 3 : 1;
+      const tip = `<title>${hmsms(e.cuc)} · ${esc(SEV[e.severity] ? SEV[e.severity]() : "S5." + e.subtype)} · ${hex4(e.event_id)} ${esc(e.description)}</title>`;
+      s += sev === 1 ? `<rect class="ev1" x="${x - 1}" y="${mid - 5}" width="2" height="10">${tip}</rect>`
+        : `<path class="ev${sev}" d="M${x} ${mid - 6}L${+x + 6} ${mid + 5}L${x - 6} ${mid + 5}Z">${tip}</path>`;
+    }
+    if (ln.k === "sid") {
+      const ts = ln.sid.params.length ? ln.sid.params[0].series.map((p) => p[0]) : [];
+      const gaps = ln.sid.gaps || [];
+      // coverage = sample span minus gaps (and minus file boundaries further apart than 3 cadences)
+      let a = ts[0], prev = ts[0];
+      const cad = ln.sid.cadence_s || 1;
+      const flush = (b) => { if (a != null) s += `<rect class="cov" x="${X(a).toFixed(1)}" y="${mid - 4}" width="${Math.max(1.5, X(b) - X(a)).toFixed(1)}" height="8"/>`; };
+      for (const t of ts.slice(1)) { if (t - prev > 3 * cad) { flush(prev); a = t; } prev = t; }
+      flush(prev);
+      for (const g of gaps) {
+        const gx = X(g.start_cuc), gw = Math.max(2, X(g.end_cuc) - gx);
+        s += `<rect class="gap" x="${gx.toFixed(1)}" y="${mid - 6}" width="${gw.toFixed(1)}" height="12"><title>${esc(T("No data {{a}}–{{b}} ({{d}})", { a: hms(g.start_cuc), b: hms(g.end_cuc), d: dur(g.duration_s) }))}</title></rect>`;
+        if (gw > 60) s += `<text class="gapt" x="${(gx + gw / 2).toFixed(1)}" y="${mid + 4}" text-anchor="middle">${esc(T("no data"))}</text>`;
+      }
+    }
+    if (ln.k === "lim") {
+      const b = ln.p.limit.band, ser = ln.p.series;
+      const cls = (v) => (b.red_low != null && v < b.red_low) || (b.red_high != null && v > b.red_high) ? "exr"
+        : (b.yellow_low != null && v < b.yellow_low) || (b.yellow_high != null && v > b.yellow_high) ? "exy" : "";
+      let st = null, a = null, prev = null;
+      const flush = () => { if (st) s += `<rect class="${st}" x="${X(a).toFixed(1)}" y="${mid - 4}" width="${Math.max(2, X(prev) - X(a)).toFixed(1)}" height="8"><title>${esc(ln.p.name)} ${hms(a)}–${hms(prev)} ${st === "exr" ? T("outside the alarm limits") : T("outside the caution limits")}</title></rect>`; };
+      for (const [c, v] of ser) { const k = cls(v); if (k !== st || (prev != null && c - prev > 30)) { flush(); st = k; a = c; } prev = c; }
+      flush();
+    }
+  });
+  s += `<line class="ax" x1="${L}" y1="${H - 22}" x2="${W - R}" y2="${H - 22}"/></svg>`;
+  host.innerHTML = s;
+  const more = limitParams().length - lp.length;
+  $("tl-meta").textContent = `${ymd(t0)} · ${T("on-board time, UTC")}` + (more > 0 ? ` · ${T("+{{n}} more limit lanes in Housekeeping", { n: more })}` : "");
+  const sw = (svg) => `<svg viewBox="0 0 16 10" aria-hidden="true">${svg}</svg>`;
+  $("tlLegend").innerHTML = [
+    [sw(`<rect class="cov" x="0" y="2" width="16" height="6"/>`), T("Samples received")],
+    [sw(`<rect class="gap" x="0.5" y="0.5" width="15" height="9"/>`), T("Gap: the SID produced nothing")],
+    [sw(`<rect class="ev1" x="7" y="0" width="2" height="10"/>`), T("Info event")],
+    [sw(`<path class="ev3" d="M8 0L14 10L2 10Z"/>`), T("Medium-severity event")],
+    [sw(`<path class="ev4" d="M8 0L14 10L2 10Z"/>`), T("High-severity event")],
+    [sw(`<rect class="exy" x="0" y="2" width="16" height="6"/>`), T("Outside caution limits")],
+    [sw(`<rect class="exr" x="0" y="2" width="16" height="6"/>`), T("Outside alarm limits")],
+  ].map(([g, t]) => `<span class="dt-tl" style="padding:0">${g}${esc(t)}</span>`).join("");
+}
+const SEV = { 1: () => T("Info"), 2: () => T("Low"), 3: () => T("Medium"), 4: () => T("High") };
+
+/* ── detail tabs ── */
+function drawTabs() {
+  const j = decoded;
+  const s12n = (j.s12_transitions || []).length;
+  const hkN = j.hk.reduce((a, s) => a + s.params.length, 0);
+  $("tabs").innerHTML = renderTabs([
+    { id: "hk", label: T("Housekeeping"), count: hkN },
+    { id: "ev", label: T("Events"), count: j.events.length, countKind: j.events.some((e) => e.severity >= 4) ? "alarm" : j.events.some((e) => e.severity >= 3) ? "warn" : undefined },
+    { id: "s12", label: T("On-board monitoring"), count: s12n },
+    { id: "pk", label: T("Packet counts") },
+    { id: "an", label: T("Step changes"), count: j.anomalies.length },
+  ], tab, { label: T("Details"), panel: "tabpanel" });
+  mountTabs($("tabs"), (id) => { tab = id; for (const k of Object.keys(plots)) closePlot(k); drawTabs(); });
+  $("tabpanel").setAttribute("aria-labelledby", "tab-" + tab);
+  $("tabpanel").innerHTML = { hk: hkPanel, ev: evPanel, s12: s12Panel, pk: pkPanel, an: anPanel }[tab]();
+}
+
+function spark(p) {
+  const pts = p.series;
+  if (!pts || pts.length < 2) return "";
+  const w = 180, h = 28, b = p.limit && p.limit.band;
+  const xs = pts.map((q) => q[0]), ys = pts.map((q) => q[1]);
+  const x0 = xs[0], x1 = xs[xs.length - 1];
+  let y0 = Math.min(...ys), y1 = Math.max(...ys);
+  const lims = b ? [b.yellow_low, b.yellow_high, b.red_low, b.red_high].filter((v) => v != null) : [];
+  for (const v of lims) if (v >= y0 - (y1 - y0) * 0.5 && v <= y1 + (y1 - y0) * 0.5) { y0 = Math.min(y0, v); y1 = Math.max(y1, v); }
+  const dx = (x1 - x0) || 1, dy = (y1 - y0) || 1;
+  const X = (x) => ((x - x0) / dx) * (w - 2) + 1, Y = (y) => (h - 2) - ((y - y0) / dy) * (h - 4);
+  let d = "", pen = false;
+  const gl = p.gaps || []; let gi = 0;
+  for (let i = 0; i < pts.length; i++) {
+    if (i > 0 && gi < gl.length && pts[i - 1][0] <= gl[gi].start_cuc && pts[i][0] >= gl[gi].end_cuc) { pen = false; gi++; }
+    d += `${pen ? "L" : "M"}${X(pts[i][0]).toFixed(1)} ${Y(pts[i][1]).toFixed(1)}`; pen = true;
+  }
+  let lim = "";
+  if (b) for (const [k, c] of [["yellow_low", ""], ["yellow_high", ""], ["red_low", " r"], ["red_high", " r"]]) {
+    const v = b[k]; if (v == null || v < y0 || v > y1) continue;
+    lim += `<line class="lim${c}" x1="0" x2="${w}" y1="${Y(v).toFixed(1)}" y2="${Y(v).toFixed(1)}"/>`;
+  }
+  const st = p.limit ? (p.limit.state === "red" ? " is-alarm" : p.limit.state === "yellow" ? " is-caution" : "") : "";
+  return `<svg class="ds-spark${st}" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true">${lim}<path d="${d}"/></svg>`;
+}
+function limitCell(p) {
+  const l = p.limit;
+  if (!l) return `<span class="ds-meta">${esc(T("no limit"))}</span>`;
+  if (l.state === "ok") return `<span class="ds-chip">${esc(T("in limits"))}</span>`;
+  let out = "";
+  if (l.time_in_red_s > 0) out += `<span class="ds-chip is-alarm">${glyph("alarm-up")}${esc(T("alarm {{d}}", { d: dur(l.time_in_red_s) }))}</span> `;
+  if (l.time_in_yellow_s > 0) out += `<span class="ds-chip is-caution">${glyph("warn-up")}${esc(T("caution {{d}}", { d: dur(l.time_in_yellow_s) }))}</span>`;
+  return out;
+}
+function hkPanel() {
+  const j = decoded;
+  if (!j.hk.length) return `<p class="tf-empty">${esc(T("No HK packets decoded."))}</p>`;
+  return j.hk.map((sid, i) => {
+    const gaps = sid.gaps || [];
+    const worst = sid.params.some((p) => p.limit && p.limit.state === "red") ? "alarm" : sid.params.some((p) => p.limit && p.limit.state === "yellow") ? "warn" : "";
+    const chips = (gaps.length ? renderChip({ kind: "warn", label: T("{{n}} gap(s)", { n: gaps.length }) }) : "") +
+      (worst ? renderChip({ kind: worst, label: worst === "alarm" ? T("alarm limits") : T("caution limits") }) : "");
+    const gapTable = gaps.length ? `<details class="ds-disclosure dt-gaps"><summary>${esc(T("SID {{sid}} stopped producing housekeeping {{n}} time(s) (cadence {{cad}} s); nothing is interpolated across a gap.", { sid: sid.sid, n: gaps.length, cad: sid.cadence_s }))}</summary>` +
+      `<div class="bd"><table class="ds-table"><thead><tr><th>${esc(T("Gap start"))}</th><th>${esc(T("Gap end"))}</th><th class="n">${esc(T("Duration"))}</th><th class="n">${esc(T("Packets missing"))}</th></tr></thead><tbody>` +
+      gaps.map((g) => `<tr><td class="num">${hmsms(g.start_cuc)}</td><td class="num">${hmsms(g.end_cuc)}</td><td class="n">${dur(g.duration_s)}</td><td class="n">~${g.missing}</td></tr>`).join("") +
+      `</tbody></table></div></details>` : "";
+    const rows = sid.params.map((p) => {
+      const key = `${sid.sid}-${p.pid}`;
+      return `<tr id="row-${key}"><td class="id">${hex4(p.pid)}</td><td class="nm">${esc(p.name)}</td>` +
+        `<td>${spark(p)}</td>` +
+        `<td class="n hide-sm">${renderValue(p.min, { units: p.units, digits: undefined })}</td>` +
+        `<td class="n">${renderValue(p.mean, { units: p.units })}</td>` +
+        `<td class="n hide-sm">${renderValue(p.max, { units: p.units })}</td>` +
+        `<td>${limitCell(p)}</td>` +
+        `<td><button type="button" class="ds-btn sm" data-plot="${key}" aria-pressed="false" aria-label="${esc(T("Plot {{name}}", { name: p.name }))}">${esc(T("Plot"))}</button></td></tr>`;
+    }).join("");
+    return `<details class="ds-disclosure dt-sid"${i === 0 ? " open" : ""}><summary>SID ${sid.sid}${sid.name ? ` · ${esc(sid.name)}` : ""}` +
+      `<span class="tf-sub">&nbsp;${esc(T("{{p}} packets, {{n}} parameters", { p: n0(sid.packet_count), n: sid.params.length }))}</span>${chips}` +
+      `</summary>` +
+      `<div class="bd"><div class="ds-row" style="padding:var(--sp-1) var(--sp-4)">${gapTable ? "" : ""}<button type="button" class="ds-btn ghost sm" data-plotall="${sid.sid}" aria-pressed="false">${esc(T("Plot all"))}</button></div>${gapTable}<div class="dt-scroll" tabindex="0" aria-label="${esc(T("Parameters of SID {{sid}}", { sid: sid.sid }))}"><table class="ds-table dt-par"><thead><tr><th>ID</th><th>${esc(T("Name"))}</th><th>${esc(T("Trend"))}</th>` +
+      `<th class="n hide-sm">Min</th><th class="n">${esc(T("Mean"))}</th><th class="n hide-sm">Max</th><th>${esc(T("Limits"))}</th><th><span class="ds-sr">${esc(T("Plot"))}</span></th></tr></thead>` +
+      `<tbody id="sid-${sid.sid}-rows">${rows}</tbody></table></div></div></details>`;
+  }).join("");
+}
+function evPanel() {
+  const ev = decoded.events;
+  if (!ev.length) return `<p class="tf-empty">${esc(T("No events."))}</p>`;
+  return `<div class="dt-scroll" tabindex="0" aria-label="${esc(T("Events"))}"><table class="ds-table"><thead><tr><th>${esc(T("On-board time"))}</th><th>${esc(T("Severity"))}</th><th>${esc(T("Event ID"))}</th><th>${esc(T("Description"))}</th></tr></thead><tbody>` +
+    ev.map((e) => {
+      const sv = e.severity >= 4 ? `<span class="ds-chip is-alarm">${glyph("alarm-up")}${esc(T("High"))}</span>`
+        : e.severity >= 3 ? `<span class="ds-chip is-caution">${glyph("warn-up")}${esc(T("Medium"))}</span>`
+        : `<span class="ds-chip">${esc((SEV[e.severity] || SEV[1])())}</span>`;
+      return `<tr><td class="num">${hmsms(e.cuc)}</td><td>${sv}</td><td class="num">${hex4(e.event_id)}</td><td>${e.description ? esc(e.description) : renderNoData({ label: T("no text") })}</td></tr>`;
+    }).join("") + `</tbody></table></div>`;
+}
+function s12Panel() {
+  const tr = decoded.s12_transitions || [], defs = decoded.s12_definitions || [];
+  if (!tr.length && !defs.length) return `<p class="tf-empty">${esc(T("No S12 monitoring packets in this dump."))}</p>`;
+  let h = "";
+  if (tr.length) {
+    const entered = tr.filter((t) => t.entered).length;
+    h += `<div style="padding:var(--sp-2) var(--sp-4)" class="ds-meta">${esc(T("{{n}} check transition(s): {{a}} out of limits, {{b}} back to nominal.", { n: tr.length, a: entered, b: tr.length - entered }))}</div>` +
+      `<div class="dt-scroll" tabindex="0" aria-label="${esc(T("Check transitions"))}"><table class="ds-table"><thead><tr><th>${esc(T("On-board time"))}</th><th class="n">${esc(T("Monitor"))}</th><th>${esc(T("Parameter"))}</th><th>${esc(T("Transition"))}</th>` +
+      `<th class="n">${esc(T("Value"))}</th><th>${esc(T("Check"))}</th><th>${esc(T("Severity"))}</th><th>${esc(T("Limit band"))}</th></tr></thead><tbody>` +
+      tr.map((t) => `<tr><td class="num">${t.cuc == null ? renderNoData() : hmsms(t.cuc)}</td><td class="n">${t.mon_id ?? ""}</td>` +
+        `<td><span class="ds-id">${esc(t.param_hex || "")}</span> ${esc(t.param_name || "")}</td>` +
+        `<td>${t.entered ? `<span class="ds-chip is-alarm">${glyph("alarm-up")}${esc(T("Out of limits"))}</span>` : `<span class="ds-chip ok">${esc(T("Back to nominal"))}</span>`}</td>` +
+        `<td class="n">${renderValue(t.value, { units: t.units || "" })}</td><td>${esc(t.check_type_name || "")}</td>` +
+        `<td>${esc(t.severity_name || "")}</td><td class="num">${t.band ? esc(t.band) : renderNoData({ label: T("not reported") })}</td></tr>`).join("") +
+      `</tbody></table></div>`;
+  }
+  if (defs.length) h += `<details class="ds-disclosure"><summary>${esc(T("Monitoring definitions (TM 12,13)"))}<span class="r">${defs.length}</span></summary><div class="bd">` +
+    `<table class="ds-table"><thead><tr><th class="n">${esc(T("Monitor"))}</th><th>${esc(T("Parameter"))}</th><th>${esc(T("Check"))}</th><th>${esc(T("State"))}</th><th class="n">${esc(T("Low"))}</th><th class="n">${esc(T("High"))}</th></tr></thead><tbody>` +
+    defs.map((d) => `<tr><td class="n">${d.mon_id}</td><td><span class="ds-id">${esc(d.param_hex || "")}</span> ${esc(d.param_name || "")}</td><td>${esc(d.check_type_name || "")}</td>` +
+      `<td>${d.enabled ? esc(T("enabled")) : `<span class="ds-chip is-disabled">${esc(T("disabled"))}</span>`}</td><td class="n">${fmtNum(d.low_limit)}</td><td class="n">${fmtNum(d.high_limit)}</td></tr>`).join("") +
+    `</tbody></table></div></details>`;
+  return h;
+}
+const SVC = { "1.1": () => T("TC acceptance"), "1.2": () => T("TC acceptance failure"), "1.7": () => T("TC completion"),
+  "1.8": () => T("TC completion failure"), "3.25": () => T("HK report"), "5.1": () => T("Event (info)"),
+  "5.2": () => T("Event (low)"), "5.3": () => T("Event (medium)"), "5.4": () => T("Event (high)"),
+  "12.9": () => T("Check transition"), "12.10": () => T("Check transition"), "12.13": () => T("Monitoring definitions") };
+function pkPanel() {
+  const pc = decoded.packet_counts;
+  if (!pc.length) return `<p class="tf-empty">${esc(T("No packets decoded."))}</p>`;
+  const mx = Math.max(...pc.map((c) => c.count));
+  return `<table class="ds-table dt-cnt"><thead><tr><th>${esc(T("Service"))}</th><th>${esc(T("Meaning"))}</th><th class="n">${esc(T("Count"))}</th><th style="width:40%"><span class="ds-sr">${esc(T("Share"))}</span></th></tr></thead><tbody>` +
+    pc.map((c) => { const k = `${c.service}.${c.subtype}`; return `<tr><td class="num">TM(${c.service},${c.subtype})</td><td>${SVC[k] ? esc(SVC[k]()) : ""}</td><td class="n">${n0(c.count)}</td>` +
+      `<td><span class="bar" style="width:${Math.max(1, c.count / mx * 100).toFixed(1)}%"></span></td></tr>`; }).join("") + `</tbody></table>`;
+}
+function anPanel() {
+  const an = [...decoded.anomalies].sort((a, b) => b.peak_delta / b.mean_delta - a.peak_delta / a.mean_delta);
+  if (!an.length) return `<p class="tf-empty">${esc(T("No step changes: no parameter jumped by more than five times its mean sample-to-sample change."))}</p>`;
+  return `<p class="ds-meta" style="padding:var(--sp-2) var(--sp-4)">${esc(T("Parameters whose largest sample-to-sample change is more than five times their mean change. Often a mode change, sometimes a fault."))}</p>` +
+    `<div class="dt-scroll" tabindex="0" aria-label="${esc(T("Step changes"))}"><table class="ds-table"><thead><tr><th>SID</th><th>${esc(T("Name"))}</th><th class="n">${esc(T("Largest step"))}</th><th class="n">${esc(T("Mean step"))}</th><th class="n">${esc(T("Ratio"))}</th></tr></thead><tbody>` +
+    an.map((a) => `<tr><td class="num">${a.sid}</td><td>${esc(a.name)}</td><td class="n">${fmtNum(a.peak_delta)}</td><td class="n">${fmtNum(a.mean_delta)}</td><td class="n">×${(a.peak_delta / a.mean_delta).toFixed(0)}</td></tr>`).join("") +
+    `</tbody></table></div>`;
+}
+
+/* ── plots: open BELOW the row that asked, so nothing above moves ── */
+function splitAcrossGaps(series, gaps) {
+  const out = [];
+  let gi = 0;
+  for (let i = 0; i < series.length; i++) {
+    while (gaps && gi < gaps.length && i > 0 && gaps[gi].start_cuc >= series[i - 1][0] && gaps[gi].end_cuc <= series[i][0]) {
+      out.push({ x: (gaps[gi].start_cuc + gaps[gi].end_cuc) / 2, y: null }); gi++;
+    }
+    out.push({ x: series[i][0], y: series[i][1] });
+  }
+  return out;
+}
+const bandPlugin = {
+  id: "limitBands",
+  beforeDatasetsDraw(chart, _a, o) {
+    const b = o && o.band; if (!b) return;
+    const area = chart.chartArea, y = chart.scales.y, ctx = chart.ctx;
+    ctx.save(); ctx.setLineDash([4, 3]); ctx.lineWidth = 1;
+    for (const [k, c] of [["yellow_low", "--warn"], ["yellow_high", "--warn"], ["red_low", "--alarm"], ["red_high", "--alarm"]]) {
+      const v = b[k]; if (v == null) continue;
+      const yv = y.getPixelForValue(v); if (yv < area.top || yv > area.bottom) continue;
+      ctx.strokeStyle = tok(c); ctx.beginPath(); ctx.moveTo(area.left, yv); ctx.lineTo(area.right, yv); ctx.stroke();
+    }
+    ctx.restore();
+  },
+};
+function chartFor(canvas, datasets, band) {
+  const grid = tok("--line"), ink = tok("--tx3");
+  const font = { family: tok("--font-mono") || "monospace", size: 12 };
+  return new Chart(canvas.getContext("2d"), {
+    type: "line", data: { datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false, animation: false, parsing: false, normalized: true,
+      interaction: { mode: "nearest", intersect: false, axis: "x" },
+      plugins: {
+        legend: { display: datasets.length > 1, position: "bottom", labels: { color: tok("--tx2"), font, boxWidth: 12, boxHeight: 2 } },
+        tooltip: { backgroundColor: tok("--s3"), titleColor: tok("--val"), bodyColor: tok("--tx"), borderColor: tok("--line-2"), borderWidth: 1,
+          titleFont: font, bodyFont: font,
+          callbacks: { title: (c) => `${hmsms(c[0].parsed.x)} UTC`, label: (c) => `${c.dataset.label}: ${fmtNum(c.parsed.y)}` } },
+        limitBands: { band },
+      },
+      scales: {
+        x: { type: "linear", ticks: { color: ink, font, maxTicksLimit: 8, callback: (v) => hms(v) }, grid: { color: grid } },
+        y: { ticks: { color: ink, font }, grid: { color: grid } },
+      },
+    },
+    plugins: [bandPlugin],
+  });
+}
+const SERIES_TOKENS = ["--tx2", "--cat-1", "--cat-2", "--cat-3", "--cat-4", "--cat-5", "--cat-6", "--cat-7"];
+function openPlot(key, afterRow, title, build) {
+  const tr = document.createElement("tr");
+  tr.className = "dt-plotrow"; tr.id = "plot-" + key;
+  tr.innerHTML = `<td colspan="8"><div class="dt-plot" role="img" aria-label="${esc(title)}"><canvas></canvas></div></td>`;
+  afterRow.after(tr);
+  plots[key] = { tr, build, chart: build(tr.querySelector("canvas")) };
+}
+function closePlot(key) {
+  const p = plots[key]; if (!p) return;
+  try { p.chart.destroy(); } catch (e) { /* gone */ }
+  p.tr.remove(); delete plots[key];
+  const b = document.querySelector(`[data-plot="${key}"],[data-plotall="${key.replace(/^all-/, "")}"]`);
+  if (b) b.setAttribute("aria-pressed", "false");
+}
+document.addEventListener("click", (ev) => {
+  const b = ev.target.closest("[data-plot],[data-plotall]");
+  if (!b || !decoded || typeof Chart === "undefined") return;
+  ev.preventDefault();
+  if (b.dataset.plot) {
+    const key = b.dataset.plot;
+    if (plots[key]) return closePlot(key);
+    const [sid, pid] = key.split("-").map(Number);
+    const p = decoded.hk.find((s) => s.sid === sid).params.find((q) => q.pid === pid);
+    b.setAttribute("aria-pressed", "true");
+    openPlot(key, $("row-" + key), T("Plot {{name}}", { name: p.name }), (cv) => chartFor(cv, [{
+      label: `${p.name}${p.units ? " [" + p.units + "]" : ""}`, data: splitAcrossGaps(p.series, p.gaps),
+      borderColor: tok("--tx2"), borderWidth: 1.5, pointRadius: 0, spanGaps: false, tension: 0 }],
+      p.limit && p.limit.band));
+  } else {
+    const sid = +b.dataset.plotall, key = "all-" + sid;
+    if (plots[key]) return closePlot(key);
+    const s = decoded.hk.find((x) => x.sid === sid);
+    const body = $(`sid-${sid}-rows`);
+    if (!body) return;
+    const det = body.closest("details"); if (det) det.open = true;
+    b.setAttribute("aria-pressed", "true");
+    const head = document.createElement("tr"); body.prepend(head);
+    openPlot(key, head, T("All parameters of SID {{sid}}", { sid }), (cv) => chartFor(cv, s.params.slice(0, 8).map((p, i) => ({
+      label: p.name, data: splitAcrossGaps(p.series, s.gaps), borderColor: tok(SERIES_TOKENS[i % SERIES_TOKENS.length]),
+      borderWidth: 1.25, pointRadius: 0, spanGaps: false, tension: 0 })), null));
+    head.remove();
+  }
+});
+window.addEventListener("c2o:themechange", () => {
+  for (const p of Object.values(plots)) { p.chart.destroy(); p.chart = p.build(p.tr.querySelector("canvas")); }
 });
 
-refreshDumps();
-setInterval(refreshDumps, 30000);  // poll dump dir for new files every 30 s
-// Re-render dynamic text once the language catalog has loaded.
-window.addEventListener("smo:i18nready", () => {
-  refreshDumps();                 // status line + list, in the loaded language
-  if (lastDecoded) render(lastDecoded);
-});
+/* ── boot ── */
+let lastW = 0;
+new ResizeObserver(() => { const w = $("timeline").clientWidth; if (decoded && Math.abs(w - lastW) > 4) { lastW = w; drawTimeline(); } }).observe($("timeline"));
+const rerender = () => { renderFiles(); render(); $("pollNote").textContent = T("checks for new files every 30 s"); };
+window.addEventListener("smo:i18nready", rerender);
+window.addEventListener("smo:langchange", rerender);
+rerender();
+refreshDumps().then((list) => { if (list.length) loadDecoded({ latest: 1 }, "btnLatest"); });
+setInterval(refreshDumps, 30000);
 </script>
 </body></html>
 """

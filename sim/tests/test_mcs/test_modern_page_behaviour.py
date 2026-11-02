@@ -107,9 +107,9 @@ class TestSaHeader:
               unack: __registry["alarm-unack-n"].textContent,
             };
         """, tmp_path)
-        assert out["see"].startswith("LIVE")
+        assert out["see"].startswith("Live")
         assert "tier LOW" in out["seeSub"] and "store 42" in out["seeSub"]
-        assert out["talk"].startswith("LINK")
+        assert out["talk"].startswith("In contact")
         # sc mode is TM-derived (obdh.mode, never 0x0700), with provenance
         assert out["well"].startswith("NOMINAL")
         assert out["unack"] == "2"
@@ -141,7 +141,7 @@ class TestSaHeader:
             return { see: __registry["sa-see-v"].textContent,
                      verdict: T.tmFreshness({}, null) };
         """, tmp_path)
-        assert out["see"] == "NO TM"
+        assert out["see"] == "No telemetry"
         assert out["verdict"] == "stale"
 
 

@@ -1281,16 +1281,18 @@ if (typeof window !== "undefined" && typeof document !== "undefined" &&
  *          the schedule.
  */
 export function poller(fn, ms) {
-  let timer = null, running = false, fails = 0, inFlight = false;
+  let timer = null, running = false, fails = 0, inFlight = false, again = false;
   async function cycle() {
-    if (inFlight) return;
+    // A kick while a cycle is running is remembered, not dropped: the cycle
+    // in flight may have fetched before the change the kick is about.
+    if (inFlight) { again = true; return; }
     inFlight = true;
     try { await fn(); fails = 0; }
     catch (e) { fails = Math.min(fails + 1, 3); }
     finally { inFlight = false; }
-    if (running) {
-      timer = setTimeout(cycle, ms * Math.pow(2, fails));  // 1x,2x,4x,8x
-    }
+    if (!running) return;
+    if (again) { again = false; cycle(); return; }
+    timer = setTimeout(cycle, ms * Math.pow(2, fails));  // 1x,2x,4x,8x
   }
   return {
     start() { if (!running) { running = true; cycle(); } },

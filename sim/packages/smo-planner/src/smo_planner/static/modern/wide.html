@@ -6,9 +6,14 @@
     - ZERO button / form / input / select elements; no hover-dependent
       content; nothing is clickable.
     - Readable from metres: primary numerals >= 28 px, nothing below 18 px.
-    - Freshness is life-or-death on a wall (risk R7): a stale block gets the
-      hatch + em-dash treatment; a full-page STALE banner appears after
-      120 s without a single successful poll (watchdog in wide.js).
+    - Freshness is life-or-death on a wall (risk R7): a stale block keeps
+      its last values, dimmed and italic, with a dashed edge and a
+      "Stale · age" tag (design-system pass 2026-11, brief §1.3); a value
+      never received says "no data" (the old em-dash on a --hatch fill is
+      retired). A full-page banner appears after 120 s without a single
+      successful poll (watchdog in wide.js).
+    - Colour (2026-11): grey is the resting state. The track is ink/grey,
+      the contacts carry the one accent, amber/red only for caution/alarm.
     - JS polling refresh only; no meta-refresh.
 
   LAYOUT (reworked 2026-08-19 on the owner's wall-screen field report:
@@ -75,8 +80,8 @@ body{ font-size:18px; overflow:hidden; height:100vh;
 /* Padding kept tight: the banner steals height from the blocks below it,
    and on a 1080 px wall that is the difference between the budget strip
    fitting and clipping. 28 px is the wall floor for a primary numeral. */
-#staleBanner{ display:none; padding:6px 24px; font-size:28px; font-weight:800;
-  letter-spacing:3px; color:var(--alarm); background:var(--alarm-wash);
+#staleBanner{ display:none; padding:6px 24px; font-size:28px; font-weight:600;
+  color:var(--alarm); background:var(--alarm-wash);
   border-bottom:3px solid var(--alarm); text-align:center; }
 #staleBanner.on{ display:block; }
 #staleBanner .num{ font-size:28px; }
@@ -137,18 +142,21 @@ main{ flex:1; display:grid; gap:12px; padding:12px; min-height:0;
 section.blk{ background:var(--s1); border:1px solid var(--line);
   border-radius:var(--r); display:flex; flex-direction:column;
   min-height:0; min-width:0; overflow:hidden; container-type:inline-size; }
-section.blk>h2{ font-size:19px; font-weight:700; letter-spacing:2.5px;
-  color:var(--tx3); padding:8px 16px; border-bottom:1px solid var(--line);
+section.blk>h2{ font-size:20px; font-weight:600; letter-spacing:0;
+  color:var(--tx2); padding:8px 16px; border-bottom:1px solid var(--line);
   display:flex; align-items:center; gap:12px; flex:none; }
 section.blk .bd{ flex:1; padding:10px 16px; min-height:0; display:flex;
   flex-direction:column; gap:8px; }
 
-/* Per-block stale treatment: hatch fill + the block's numerals are
-   replaced with em-dashes by wide.js at render time. */
-section.blk.stale{ background:var(--hatch), var(--s1); }
-section.blk.stale>h2::after{ content:"STALE"; color:var(--tx2);
-  font-size:18px; letter-spacing:2px; margin-left:auto;
-  border:1px solid var(--line-2); border-radius:var(--r); padding:2px 10px; }
+/* Per-block stale treatment (brief §1.3): the LAST values stay, dimmed and
+   italic; the block edge turns dashed and the header carries "Stale · age". */
+section.blk.stale{ border-style:dashed; border-color:var(--stale); }
+section.blk.stale .bd{ color:var(--tx3); font-style:italic; }
+section.blk.stale .bd *{ color:var(--tx3) !important; }
+section.blk.stale canvas{ opacity:.5; }
+section.blk.stale>h2::after{ content:"Stale"; color:var(--tx2); font-style:italic;
+  font-family:var(--mono); font-size:18px; font-weight:400; margin-left:auto; white-space:nowrap;
+  border:1px dashed var(--stale); border-radius:var(--r); padding:2px 10px; }
 /* i18n: CSS text cannot be translated, so wide.js copies the translated tag
    into data-stale-label on every block heading (English: "STALE"). */
 section.blk.stale>h2[data-stale-label]::after{ content:attr(data-stale-label); }
@@ -159,44 +167,44 @@ section.blk.stale>h2[data-stale-label]::after{ content:attr(data-stale-label); }
    is huge but the rail is narrow, so 9vw clipped the last digits. Size
    against the block's own width instead (>=28 px floor kept). */
 #block-clock .utc{ font-family:var(--mono); font-size:max(28px,min(19cqw,100px));
-  font-weight:700; line-height:1.05; letter-spacing:2px; }
+  font-weight:500; line-height:1.05; color:var(--val); font-variant-numeric:tabular-nums; }
 #block-clock .met{ font-family:var(--mono); font-size:30px; color:var(--tx2); }
 #block-clock .row{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
-.wbadge{ display:inline-block; font-size:20px; font-weight:700;
-  letter-spacing:2px; padding:4px 12px; border:1px solid var(--line-2);
+.wbadge{ display:inline-block; font-size:20px; font-weight:500;
+  padding:4px 12px; border:1px solid var(--line-2);
   border-radius:var(--r); color:var(--tx2); font-family:var(--mono); }
 .wbadge.wall{ color:var(--alarm); border-color:var(--alarm);
   background:var(--alarm-wash); }
-#trainingChip{ display:none; font-size:20px; font-weight:800; letter-spacing:2px;
-  padding:4px 12px; border-radius:var(--r); border:1px solid var(--warn);
-  color:var(--warn); background:var(--warn-wash); font-family:var(--mono); }
+/* Same idiom as the design system's .ds-training chip, at wall size. */
+#trainingChip{ display:none; font-size:20px; font-weight:500;
+  padding:4px 12px; border-radius:var(--r); border:1px dashed var(--accent);
+  color:var(--accent); background:var(--accent-wash); font-family:var(--mono); }
 #trainingChip.on{ display:inline-block; }
 
 /* ── 2. Passes block (rail) ────────────────────────────────────────── */
-#block-passes .next-label{ font-size:20px; letter-spacing:2px; color:var(--tx3); }
-#block-passes .next-station{ font-size:30px; font-weight:700; }
-#block-passes .countdown{ font-family:var(--mono);
-  font-size:max(28px,min(14cqw,58px)); font-weight:700; line-height:1.05; }
-#block-passes .countdown.los{ color:var(--info); }
+#block-passes .next-label{ font-size:20px; color:var(--tx2); }
+#block-passes .next-station{ font-size:30px; font-weight:600; color:var(--val); }
+#block-passes .countdown{ font-family:var(--mono); color:var(--val);
+  font-size:max(28px,min(14cqw,58px)); font-weight:500; line-height:1.05; }
+#block-passes .countdown.los{ color:var(--accent); }
 .passlist{ flex:1; overflow:hidden; }
 .pass{ display:grid; grid-template-columns:1.3fr 1fr 1fr .8fr; gap:8px;
   padding:5px 0; border-bottom:1px solid var(--line);
   font-family:var(--mono); font-size:19px; }
-.pass .st{ font-family:var(--sans); font-weight:600; }
-.pass.head{ font-size:18px; color:var(--tx3); font-family:var(--sans);
-  letter-spacing:0; }
+.pass .st{ font-family:var(--sans); font-weight:500; }
+.pass.head{ font-size:18px; color:var(--tx2); font-family:var(--sans); }
 .pass>span{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
 /* ── 3. Link / contact block (rail) ────────────────────────────────── */
-#block-link .state{ font-size:max(28px,min(11cqw,50px)); font-weight:800;
-  letter-spacing:1px; line-height:1.08; }
-#block-link .state.yes{ color:var(--info); }
+#block-link .state{ font-size:max(28px,min(11cqw,50px)); font-weight:600;
+  line-height:1.08; color:var(--tx2); }
+#block-link .state.yes{ color:var(--accent); }
 /* French "HORS CONTACT" is two characters longer than "NO CONTACT": keep it
    on one line so the LAST PASS row is not pushed out of the block. */
 :root[lang="fr"] #block-link .state{ font-size:max(28px,min(9cqw,50px)); }
 #block-link .kv{ display:grid; grid-template-columns:auto 1fr; gap:5px 16px;
   font-size:20px; align-content:start; }
-#block-link .kv b{ color:var(--tx3); font-weight:400; letter-spacing:1px; }
+#block-link .kv b{ color:var(--tx2); font-weight:400; }
 #block-link .kv span{ font-family:var(--mono); overflow:hidden;
   text-overflow:ellipsis; white-space:nowrap; }
 .api-dot{ display:inline-block; width:14px; height:14px; border-radius:50%;
@@ -220,14 +228,14 @@ section.blk.stale>h2[data-stale-label]::after{ content:attr(data-stale-label); }
 section.blk>h2{ white-space:nowrap; }
 /* Map key, in the GROUND TRACK header row. Normal weight + tx2 so it reads
    as a key and never competes with the block title. */
-#block-track .legend{ font-size:18px; font-weight:400; letter-spacing:1px;
+#block-track .legend{ font-size:18px; font-weight:400;
   color:var(--tx2); font-family:var(--mono); white-space:normal;
   flex:1; min-width:0; line-height:1.25; text-wrap:balance; overflow:hidden;
   display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
 /* Basemap provenance, top-right of the map. */
 #wTrackSource{ position:absolute; right:10px; top:8px;
-  font-size:18px; color:var(--tx3); font-family:var(--mono);
-  letter-spacing:1px; background:var(--s1); border:1px solid var(--line);
+  font-size:18px; color:var(--tx3); font-family:var(--sans);
+  background:var(--s1); border:1px solid var(--line);
   border-radius:var(--r); padding:2px 10px; opacity:.85; }
 
 /* ── 6. Budget strip (stage, slim + full width) ────────────────────── */
@@ -236,7 +244,7 @@ section.blk>h2{ white-space:nowrap; }
   grid-template-columns:minmax(0,1.15fr) minmax(0,1.15fr) minmax(0,1.4fr);
   align-items:start; align-content:start; }
 .bud{ display:flex; flex-direction:column; gap:5px; min-width:0; }
-.bud .k, .bud .k2{ font-size:18px; letter-spacing:1.5px; color:var(--tx3);
+.bud .k, .bud .k2{ font-size:18px; color:var(--tx2);
   line-height:1.2; text-wrap:balance; overflow:hidden;
   display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
 /* Where the strip is narrow enough for the French keys to wrap, reserve the
@@ -246,24 +254,27 @@ section.blk>h2{ white-space:nowrap; }
 @container (max-width: 1300px){
   :root[lang="fr"] .bud .k, :root[lang="fr"] .bud .k2{ min-height:2.4em; }
 }
-.bud .v, .bud .v2{ font-family:var(--mono); font-size:34px; font-weight:700;
-  line-height:1.05; }
+.bud .v, .bud .v2{ font-family:var(--mono); font-size:34px; font-weight:500;
+  line-height:1.05; color:var(--val); }
 .bud .v.warn, .bud .v2.warn{ color:var(--warn); }
 .bud .v.alarm, .bud .v2.alarm{ color:var(--alarm); }
-.bud .v2.absent{ background:var(--hatch); border-radius:var(--r);
-  padding:0 12px; justify-self:start; align-self:start; color:var(--tx3); }
+/* Never received / not valid: the words "no data" in a grey tag, never a
+   number and never a dash (the --hatch fill this replaced is retired). */
+.bud .v.absent, .bud .v2.absent, #block-link .state.absent{ font-family:var(--sans); font-size:22px;
+  font-weight:400; background:var(--s3); color:var(--tx2); border-radius:var(--r);
+  padding:2px 12px; justify-self:start; align-self:start; }
 .bud .sub, .bud .reason{ font-size:18px; color:var(--tx2);
   font-family:var(--mono); line-height:1.2; overflow:hidden;
   display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
 .bud .reason{ color:var(--warn); font-family:var(--sans); }
-.wbar{ position:relative; height:16px; background:var(--s3); border-radius:4px;
+.wbar{ position:relative; height:14px; background:var(--s3); border-radius:2px;
   overflow:hidden; }
-.wbar .fl{ position:absolute; top:0; bottom:0; left:0; background:var(--tx3); }
+.wbar .fl{ position:absolute; top:0; bottom:0; left:0; background:var(--fill); }
 .wbar.w .fl{ background:var(--warn); } .wbar.a .fl{ background:var(--alarm); }
 .wbar .tick{ position:absolute; top:-3px; bottom:-3px; width:3px;
   background:var(--warn); }
 /* Mission-level derived readouts (G1): pass fit + SoC at eclipse exit.
-   Invalid / unreachable renders a hatched em-dash — never a number. */
+   Invalid / unreachable renders "no data" — never a number. */
 .mrow{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.35fr);
   gap:4px 20px; }
 #wMissionSub{ color:var(--tx3); }
@@ -271,8 +282,8 @@ section.blk>h2{ white-space:nowrap; }
 </head>
 <body>
 
-<div id="staleBanner" role="alert" data-i18n>
-  DISPLAY STALE — NO DATA FOR <span class="num" id="staleFor">—</span>
+<div id="staleBanner" role="alert">
+  <span data-i18n>Display stale: no data for</span> <span class="num" id="staleFor"></span>
 </div>
 
 <main>
@@ -282,41 +293,41 @@ section.blk>h2{ white-space:nowrap; }
 
     <!-- 1. Clock -->
     <section class="blk" id="block-clock">
-      <h2 data-i18n>TIME</h2>
+      <h2 data-i18n>Time</h2>
       <div class="bd">
-        <div class="date num" id="wDate">—</div>
+        <div class="date num" id="wDate"></div>
         <div class="utc num" id="wUtc">--:--:--</div>
-        <div class="met num" id="wMet">MET —</div>
+        <div class="met num" id="wMet"></div>
         <div class="row">
-          <span class="wbadge" id="wClockBadge">—</span>
-          <span id="trainingChip">TRAINING — SIM TIME</span>
+          <span class="wbadge" id="wClockBadge"></span>
+          <span id="trainingChip">Training</span>
         </div>
       </div>
     </section>
 
     <!-- 2. Next passes -->
     <section class="blk" id="block-passes">
-      <h2 data-i18n>NEXT PASSES</h2>
+      <h2 data-i18n>Next passes</h2>
       <div class="bd">
-        <div class="next-label" id="wNextLabel">NEXT AOS</div>
-        <div class="next-station" id="wNextStation">—</div>
-        <div class="countdown num" id="wCountdown">—</div>
+        <div class="next-label" id="wNextLabel">Next AOS</div>
+        <div class="next-station" id="wNextStation"></div>
+        <div class="countdown num" id="wCountdown"></div>
         <div class="passlist" id="wPassList"></div>
       </div>
     </section>
 
     <!-- 3. Link status -->
     <section class="blk" id="block-link">
-      <h2 data-i18n>LINK</h2>
+      <h2 data-i18n>Link</h2>
       <div class="bd" style="justify-content:space-between;">
-        <div class="state" id="wLinkState">—</div>
+        <div class="state" id="wLinkState"></div>
         <div class="kv">
-          <b data-i18n>STATION</b><span id="wLinkStation">—</span>
-          <b data-i18n>ELEVATION</b><span id="wLinkElev">—</span>
-          <b data-i18n>RANGE</b><span id="wLinkRange">—</span>
+          <b data-i18n>Station</b><span id="wLinkStation"></span>
+          <b data-i18n>Elevation</b><span id="wLinkElev"></span>
+          <b data-i18n>Range</b><span id="wLinkRange"></span>
           <!-- G14: achieved rollup of the last completed pass (rfsim store at
                the configured services.rfsim_url; unset = absent state). -->
-          <b data-i18n>LAST PASS</b><span id="wLastPass">—</span>
+          <b data-i18n>Last pass</b><span id="wLastPass">no data</span>
           <b>API</b><span><span class="api-dot" id="wApiDot"></span><span id="wApiText">checking</span></span>
         </div>
       </div>
@@ -333,18 +344,18 @@ section.blk>h2{ white-space:nowrap; }
            map needs every pixel, and a legend floated over Antarctica hid
            exactly the polar passes it was explaining. The orbit figure is
            filled in by wide.js from the DERIVED period. -->
-      <h2 data-i18n>GROUND TRACK <span id="wTrackLegend" class="legend">—</span></h2>
+      <h2><span data-i18n>Ground track</span> <span id="wTrackLegend" class="legend"></span></h2>
       <div class="bd" style="padding:0;">
         <div class="cv">
           <canvas id="wTrackCanvas"></canvas>
-          <div id="wTrackSource" data-i18n>OFFLINE BASEMAP — NATURAL EARTH 110 M</div>
+          <div id="wTrackSource" data-i18n>Offline basemap: Natural Earth 1:110m</div>
         </div>
       </div>
     </section>
 
     <!-- 5. 24 h plan timeline -->
     <section class="blk" id="block-timeline">
-      <h2 data-i18n>PLAN — NEXT ORBIT, THEN 24 H</h2>
+      <h2 data-i18n>Plan: next orbit, then 24 h</h2>
       <div class="bd" style="padding:8px;">
         <canvas id="wTimeline"></canvas>
       </div>
@@ -352,33 +363,33 @@ section.blk>h2{ white-space:nowrap; }
 
     <!-- 6. Budget state — slim full-width strip under the plan. -->
     <section class="blk" id="block-budgets">
-      <h2 data-i18n>BUDGETS</h2>
+      <h2 data-i18n>Budgets</h2>
       <div class="bd">
         <div class="budstrip">
           <div class="bud" id="wPower">
-            <div class="k" data-i18n>POWER — FINAL SoC</div>
-            <div class="v num" id="wPowerVal">—</div>
+            <div class="k" data-i18n>Power: final SoC</div>
+            <div class="v num" id="wPowerVal"></div>
             <div class="wbar" id="wPowerBar"><div class="fl" style="width:0%"></div></div>
-            <div class="sub" id="wPowerSub">—</div>
+            <div class="sub" id="wPowerSub"></div>
           </div>
           <div class="bud" id="wData">
-            <div class="k" data-i18n>DATA — PEAK FILL</div>
-            <div class="v num" id="wDataVal">—</div>
+            <div class="k" data-i18n>Data: peak fill</div>
+            <div class="v num" id="wDataVal"></div>
             <div class="wbar" id="wDataBar"><div class="fl" style="width:0%"></div></div>
-            <div class="sub" id="wDataSub">—</div>
+            <div class="sub" id="wDataSub"></div>
           </div>
           <!-- G1: mission-level derived readouts. MCS state when
                services.mcs_url is configured; pass fit falls back to the
-               planner's own budget machinery. Invalid / unreachable = hatched
-               em-dash, never a number. -->
+               planner's own budget machinery. Invalid / unreachable = "no
+               data", never a number. -->
           <div class="bud" id="wMission">
             <div class="mrow">
-              <div class="k2" data-i18n>PASS FIT</div>
-              <div class="k2" data-i18n>SoC @ ECLIPSE EXIT</div>
-              <div class="v2 num absent" id="wPassFit">—</div>
-              <div class="v2 num absent" id="wSocExit">—</div>
+              <div class="k2" data-i18n>Pass fit</div>
+              <div class="k2" data-i18n>SoC at eclipse exit</div>
+              <div class="v2 num absent" id="wPassFit">no data</div>
+              <div class="v2 num absent" id="wSocExit">no data</div>
             </div>
-            <div class="sub" id="wMissionSub">—</div>
+            <div class="sub" id="wMissionSub"></div>
           </div>
         </div>
       </div>

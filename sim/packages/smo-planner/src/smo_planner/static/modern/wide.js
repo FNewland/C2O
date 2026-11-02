@@ -13,7 +13,9 @@
  * FRESHNESS WATCHDOG (risk R7 — "the wall must never lie"):
  *   - per-block: each data family records the wall time of its last
  *     successful fetch; when that age exceeds 3x the family's cadence the
- *     block gets .stale (hatch, STALE tag) and its numerals render as
+ *     block gets .stale (dashed edge, "Stale · age" tag) and its values are
+ *     KEPT, dimmed and italic (brief §1.3: stale = last value + age; a
+ *     never-received value says "no data"). The numerals used to render as
  *     em-dashes instead of the last-known values.
  *   - full page: if NO fetch of any kind has succeeded for 120 s, a page-wide
  *     red "DISPLAY STALE" banner appears with the outage age.
@@ -63,6 +65,13 @@ let lastAnyOk = 0;
  * never a planner route. */
 function serviceUrl(base, path) {
   return String(base).replace(/\/+$/, "") + "/" + path;
+}
+
+/* Token hex (#RRGGBB) with alpha, for canvas fills. */
+function hexA(hex, a) {
+  const m = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(String(hex).trim());
+  if (!m) return hex;
+  return `rgba(${parseInt(m[1], 16)},${parseInt(m[2], 16)},${parseInt(m[3], 16)},${a})`;
 }
 
 function mark(family) { lastOk[family] = Date.now(); lastAnyOk = Date.now(); }
@@ -239,12 +248,15 @@ function plannerPassFit() {
     fits: backlog <= cap + 1e-6 };
 }
 
+const NODATA = () => tText("no data");
+
 function renderMission() {
-  const stale = isStale("mission");
+  const stale = false;   // stale keeps the last value (block dims via CSS)
   const fitEl = $("wPassFit"), socEl = $("wSocExit"), sub = $("wMissionSub");
+  // Colour is never the only cue (P6): caution/alarm carry a triangle.
   const setVal = (el, text, cls) => {
-    el.textContent = text;
-    el.className = "v2 num" + (text === "—" ? " absent" : "") + (cls ? " " + cls : "");
+    el.textContent = (cls === "alarm" ? "▲ " : cls === "warn" ? "△ " : "") + text;
+    el.className = "v2 num" + (text === NODATA() ? " absent" : "") + (cls ? " " + cls : "");
   };
   const notes = [];
 
@@ -263,7 +275,7 @@ function renderMission() {
     const pf = plannerPassFit();
     if (pf && !isStale("budgets") && !isStale("schedule")) {
       if (pf.backlogMb <= 1e-6) {
-        setVal(fitEl, tText("FIT"));
+        setVal(fitEl, tText("Fits"));
         notes.push(tText("no backlog ({{gs}})", { gs: pf.gs }));
       } else if (pf.ratio !== null) {
         setVal(fitEl, pf.ratio.toFixed(2) + "×", pf.fits ? "" : "alarm");
@@ -272,7 +284,7 @@ function renderMission() {
       fitDone = true;
     }
   }
-  if (!fitDone) setVal(fitEl, "—");
+  if (!fitDone) setVal(fitEl, NODATA());
 
   // SoC AT ECLIPSE EXIT: MCS derived only; invalid/unconfigured = em-dash.
   const dSoc = !stale && mcsDerived
@@ -284,28 +296,28 @@ function renderMission() {
       minSoc !== null && dSoc.value < minSoc ? "alarm" : "");
     notes.push(tText("SoC: MCS derived"));
   } else {
-    setVal(socEl, "—");
+    setVal(socEl, NODATA());
     if (dSoc && !dSoc.valid) notes.push(tText("SoC invalid: {{reason}}", { reason: dSoc.reason || "?" }));
     else if (!(services && services.mcs_url)) notes.push(tText("no MCS URL configured"));
   }
-  sub.textContent = notes.join(" · ") || "—";
+  sub.textContent = notes.join(" · ");
 
   // LAST PASS achieved rollup (link block, G14).
   const lp = $("wLastPass");
-  if (stale || !lastRollup) {
+  if (!lastRollup) {
     lp.textContent = (services && services.rfsim_url)
-      ? "—" : tText("not configured");
+      ? NODATA() : tText("not configured");
   } else {
     const r = lastRollup;
     const lock = r.locked
       ? ((r.lock_delay_s === null || r.lock_delay_s === undefined)
         ? tText("locked") : tText("lock +{{s}} s", { s: Number(r.lock_delay_s).toFixed(1) }))
-      : tText("NO LOCK");
+      : tText("no lock");
     const eb = (r.mean_eb_n0_db === null || r.mean_eb_n0_db === undefined)
-      ? "—" : Number(r.mean_eb_n0_db).toFixed(1) + " dB";
+      ? "?" : Number(r.mean_eb_n0_db).toFixed(1) + " dB";
     const vol = (r.data_volume_bytes === null
       || r.data_volume_bytes === undefined)
-      ? "—" : (Number(r.data_volume_bytes) / 1024).toFixed(0) + " kB";
+      ? "?" : (Number(r.data_volume_bytes) / 1024).toFixed(0) + " kB";
     lp.textContent = (r.gs_name || "?") + " · " + lock + " · " + eb
       + " · " + vol;
   }
@@ -388,7 +400,14 @@ const PAGE_STALE_MS = 120000;   // full-page banner after 120 s of silence
 
 function watchdog() {
   for (const [blockId, family] of Object.entries(BLOCK_FAMILY)) {
-    $(blockId).classList.toggle("stale", isStale(family));
+    const st = isStale(family);
+    $(blockId).classList.toggle("stale", st);
+    if (st) {
+      const h2 = $(blockId).querySelector("h2");
+      const age = lastOk[family] ? Math.floor((Date.now() - lastOk[family]) / 1000) : null;
+      h2.setAttribute("data-stale-label", age === null ? NODATA()
+        : tText("Stale · {{age}}", { age: age >= 120 ? Math.floor(age / 60) + " min" : age + " s" }));
+    }
   }
   const banner = $("staleBanner");
   const silent = Date.now() - lastAnyOk;
@@ -407,8 +426,8 @@ function watchdog() {
 function renderClock() {
   const stale = isStale("time");
   if (stale && lastOk.time === 0) {
-    $("wUtc").textContent = "--:--:--"; $("wDate").textContent = "—";
-    $("wMet").textContent = "MET —"; $("wClockBadge").textContent = "—";
+    $("wUtc").textContent = "--:--:--"; $("wDate").textContent = NODATA();
+    $("wMet").textContent = ""; $("wClockBadge").textContent = NODATA();
     return;
   }
   const now = new Date(simNow());
@@ -419,17 +438,17 @@ function renderClock() {
   $("wUtc").textContent = fmtUTC(now);
   const met = (metAnchorS !== null && simAnchorMs !== null)
     ? metAnchorS + (simNow() - simAnchorMs) / 1000 : null;
-  $("wMet").textContent = met === null ? "MET —" : fmtMET(met);
+  $("wMet").textContent = met === null ? "MET " + tText("not served") : fmtMET(met);
   const badge = $("wClockBadge");
   badge.classList.toggle("wall", clockDegraded);
-  badge.textContent = clockDegraded ? tText("WALL CLOCK")
-    : timeSource === "sim" ? tText("SIM TIME")
-    : timeSource === "real" ? tText("UTC (REAL)") : "—";
+  badge.textContent = clockDegraded ? tText("Wall clock")
+    : timeSource === "sim" ? tText("Sim time")
+    : timeSource === "real" ? tText("Real UTC") : NODATA();
   // TRAINING chip: rendered ONLY when the time source is the simulator.
   const chip = $("trainingChip");
   if (timeSource === "sim" && !clockDegraded) {
     chip.classList.add("on");
-    chip.textContent = tText("TRAINING — SIM TIME x{{speed}}", { speed: simSpeed || 1 });
+    chip.textContent = tText("Training ×{{speed}}", { speed: simSpeed || 1 });
   } else {
     chip.classList.remove("on");
   }
@@ -446,9 +465,9 @@ function renderPasses() {
     const s = Math.floor((t % 60000) / 1000);
     return (h ? h + ":" : "") + String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
   };
-  if (stale) {
-    $("wNextStation").textContent = "—"; $("wCountdown").textContent = "—";
-    $("wNextLabel").textContent = tText("NEXT AOS");
+  if (stale && !contacts.length) {
+    $("wNextStation").textContent = NODATA(); $("wCountdown").textContent = "";
+    $("wNextLabel").textContent = tText("Next AOS");
     $("wPassList").innerHTML = "";
     return;
   }
@@ -456,31 +475,31 @@ function renderPasses() {
   const next = contacts.filter((c) => c.aos > now).sort((a, b) => a.aos - b.aos)[0];
   const cd = $("wCountdown");
   if (active) {
-    $("wNextLabel").textContent = tText("IN CONTACT — LOS");
+    $("wNextLabel").textContent = tText("In contact: LOS in");
     $("wNextStation").textContent = active.station;
     cd.textContent = mmss(active.los - now);
     cd.classList.add("los");
   } else if (next) {
-    $("wNextLabel").textContent = tText("NEXT AOS");
+    $("wNextLabel").textContent = tText("Next AOS");
     $("wNextStation").textContent = next.station;
     cd.textContent = mmss(next.aos - now);
     cd.classList.remove("los");
   } else {
-    $("wNextLabel").textContent = tText("NEXT AOS");
-    $("wNextStation").textContent = tText("NO CONTACTS");
-    cd.textContent = "—";
+    $("wNextLabel").textContent = tText("Next AOS");
+    $("wNextStation").textContent = tText("No contacts in the horizon");
+    cd.textContent = "";
     cd.classList.remove("los");
   }
   const upcoming = contacts.filter((c) => c.los > now)
     .sort((a, b) => a.aos - b.aos).slice(0, 5);
   $("wPassList").innerHTML =
-    "<div class=\"pass head\"><span>" + t("STATION") + "</span><span>AOS</span><span>LOS</span><span>"
-    + t("MAX EL", { context: "wall" }) + "</span></div>"
+    "<div class=\"pass head\"><span>" + t("Station") + "</span><span>AOS</span><span>LOS</span><span>"
+    + t("Max el", { context: "wall" }) + "</span></div>"
     + upcoming.map((c) =>
       "<div class=\"pass\"><span class=\"st\">" + c.station + "</span>"
       + "<span>" + fmtUTC(c.aos, { seconds: false }) + "</span>"
       + "<span>" + fmtUTC(c.los, { seconds: false }) + "</span>"
-      + "<span>" + (typeof c.maxEl === "number" ? c.maxEl.toFixed(0) + "°" : "—")
+      + "<span>" + (typeof c.maxEl === "number" ? c.maxEl.toFixed(0) + "°" : "?")
       + "</span></div>").join("");
 }
 
@@ -535,12 +554,9 @@ function renderTimeline() {
   const now = simNow();
   const windowMs = 24 * 3600 * 1000;
 
-  if (stale) {
-    ctx.fillStyle = C("--tx2"); ctx.font = "24px " + C("--mono");
-    ctx.textAlign = "center"; ctx.textBaseline = "middle";
-    ctx.fillText("—", w / 2, h / 2);
-    return;
-  }
+  // Stale: the last plan is kept, drawn at half strength (the block header
+  // carries the "Stale · age" tag).
+  if (stale) ctx.globalAlpha = 0.5;
 
   /* ── Two lanes (owner request 2026-08-19: "label the imminent ones") ──
      The 24 h overview is ~15 revolutions wide: an orbit is 6 % of the
@@ -560,7 +576,7 @@ function renderTimeline() {
      fits, otherwise the derivation drops to a second line. It used to run
      on regardless, and in French ran under the first contact label. */
   ctx.textAlign = "left"; ctx.textBaseline = "top";
-  ctx.font = "700 18px " + C("--sans");
+  ctx.font = "600 18px " + C("--sans");
   ctx.fillStyle = C("--tx3");
   const nextOrbit = tText("NEXT ORBIT");
   ctx.fillText(nextOrbit, mL, mT);
@@ -667,7 +683,7 @@ function renderTimeline() {
       ctx.strokeStyle = edge; ctx.lineWidth = 2;
       ctx.strokeRect(x1 + 1, barY + 1, Math.max(2, bw - 2), barH - 2);
     }
-    ctx.font = "700 " + labelPx + "px " + C("--sans");
+    ctx.font = "600 " + labelPx + "px " + C("--sans");
     ctx.textBaseline = "bottom"; ctx.textAlign = "left";
     // Collision avoidance: a label never overwrites the previous one. It is
     // pushed right; if the full label no longer fits before the lane end it
@@ -710,9 +726,9 @@ function renderTimeline() {
       label: activityLabel(a.name) + "  " + hhmm(a.startMs),
       short: hhmm(a.startMs) }));
 
-  detailRow(nearContacts, dTop, "rgba(107,179,255,0.30)", C("--info"),
+  detailRow(nearContacts, dTop, hexA(C("--accent"), 0.28), C("--accent"),
     C("--tx"));
-  detailRow(nearActs, dTop + rowH, "rgba(240,180,41,0.28)", C("--warn"),
+  detailRow(nearActs, dTop + rowH, hexA(C("--fill"), 0.35), C("--fill"),
     C("--tx"));
 
   ctx.font = Math.round(Math.max(OV_LABEL_MIN, Math.min(18, rowH - 4)))
@@ -732,7 +748,7 @@ function renderTimeline() {
 
   // The one orbit blown up above, shaded here.
   if (orbMs) {
-    ctx.fillStyle = "rgba(255,255,255,0.07)";
+    ctx.fillStyle = hexA(C("--val"), 0.07);
     ctx.fillRect(plotL, ovY, Math.max(2, toX(now + orbMs) - plotL), ovH);
     ctx.strokeStyle = C("--tx3"); ctx.lineWidth = 2;
     ctx.setLineDash([4, 4]);
@@ -753,7 +769,7 @@ function renderTimeline() {
   }
 
   const bandEcl = { y: ovY, h: ovH * 0.26 };
-  ctx.fillStyle = "rgba(90,169,255,0.28)";
+  ctx.fillStyle = hexA(C("--tx3"), 0.45);
   for (const [a, b] of eclipseIntervals()) {
     const x1 = Math.max(plotL, toX(a)), x2 = Math.min(plotL + plotW, toX(b));
     if (x2 > x1) ctx.fillRect(x1, bandEcl.y, x2 - x1, bandEcl.h);
@@ -764,11 +780,11 @@ function renderTimeline() {
     const x1 = Math.max(plotL, toX(c.aos));
     const x2 = Math.min(plotL + plotW, toX(c.los));
     const active = c.aos <= now && c.los >= now;
-    ctx.fillStyle = active ? "rgba(107,179,255,0.75)" : "rgba(107,179,255,0.45)";
+    ctx.fillStyle = active ? C("--accent") : hexA(C("--accent"), 0.55);
     ctx.fillRect(x1, bandC.y, Math.max(x2 - x1, 3), bandC.h);
   }
   const bandA = { y: ovY + ovH * 0.70, h: ovH * 0.28 };
-  ctx.fillStyle = "rgba(240,180,41,0.50)";
+  ctx.fillStyle = hexA(C("--fill"), 0.85);
   for (const a of schedule) {
     const end = a.startMs + a.durMs;
     if (end < now || a.startMs > now + windowMs) continue;
@@ -788,7 +804,7 @@ function renderTimeline() {
     C("--tx3"), C("--bg"));
 
   // Now-markers (redrawn every second with the whole canvas).
-  ctx.strokeStyle = C("--alarm"); ctx.lineWidth = 3;
+  ctx.strokeStyle = C("--accent"); ctx.lineWidth = 3;
   ctx.beginPath(); ctx.moveTo(plotL, dTop); ctx.lineTo(plotL, dTop + dH);
   ctx.stroke();
   ctx.beginPath(); ctx.moveTo(plotL, ovY); ctx.lineTo(plotL, ovY + ovH);
@@ -919,16 +935,8 @@ function renderTrackCanvas() {
   ctx.beginPath(); ctx.moveTo(P.x(0), my); ctx.lineTo(P.x(0), my + mh); ctx.stroke();
 
   const stale = isStale("track");
-  if (stale) {
-    // Stale treatment: the numerals of this block are its plotted track, so
-    // the whole plot is withheld and replaced with the em-dash.
-    ctx.fillStyle = C("--tx2");
-    ctx.font = "700 " + Math.round(Math.min(120, h * 0.28)) + "px " + C("--mono");
-    ctx.textAlign = "center"; ctx.textBaseline = "middle";
-    ctx.fillText("\u2014", w / 2, h / 2);
-    $("wTrackLegend").textContent = "\u2014";
-    return;
-  }
+  // Stale: keep the last track, at half strength (the header says so).
+  if (stale) ctx.globalAlpha = 0.5;
 
   const now = simNow();
   const per = derivedOrbitPeriod();
@@ -952,7 +960,9 @@ function renderTrackCanvas() {
   const flushChunk = () => {
     if (chunk.length > 1 && key !== null) {
       const [ecl, solid] = key.split("|");
-      ctx.strokeStyle = ecl === "1" ? C("--info") : C("--warn");
+      // Calm by default: the track is ink (sunlit) and grey (eclipse); the
+      // accent is kept for the contacts, which are what the room watches.
+      ctx.strokeStyle = ecl === "1" ? C("--tx3") : C("--val");
       if (solid === "1") {
         ctx.setLineDash([]);
         ctx.globalAlpha = 1;
@@ -1065,7 +1075,7 @@ function renderTrackCanvas() {
         const t = new Date(p.utc).getTime();
         return t > c.aos && t < c.los;
       })).concat([b]);
-      ctx.strokeStyle = C("--ok");
+      ctx.strokeStyle = C("--accent");
       ctx.lineWidth = wide * 1.5;
       ctx.globalAlpha = imminent ? 1 : 0.55;
       ctx.beginPath();
@@ -1085,7 +1095,7 @@ function renderTrackCanvas() {
       const gs = stations.find((s) => s.name === c.station);
       if (imminent && gs) {
         ctx.setLineDash([3, 5]); ctx.lineWidth = 2;
-        ctx.strokeStyle = C("--ok"); ctx.globalAlpha = 0.7;
+        ctx.strokeStyle = C("--accent"); ctx.globalAlpha = 0.7;
         ctx.beginPath();
         ctx.moveTo(ax, ay); ctx.lineTo(P.x(gs.lon_deg), P.y(gs.lat_deg));
         ctx.stroke();
@@ -1097,12 +1107,12 @@ function renderTrackCanvas() {
       // read over the track and the coastlines.
       ctx.lineWidth = 3; ctx.strokeStyle = C("--bg");
       ctx.beginPath(); ctx.arc(ax, ay, passR, 0, Math.PI * 2); ctx.stroke();
-      ctx.fillStyle = C("--ok");
+      ctx.fillStyle = C("--accent");
       ctx.beginPath(); ctx.arc(ax, ay, passR, 0, Math.PI * 2); ctx.fill();
       ctx.beginPath(); ctx.arc(bx, by, passR, 0, Math.PI * 2); ctx.stroke();
       ctx.fillStyle = C("--bg");
       ctx.beginPath(); ctx.arc(bx, by, passR, 0, Math.PI * 2); ctx.fill();
-      ctx.strokeStyle = C("--ok"); ctx.lineWidth = 4;
+      ctx.strokeStyle = C("--accent"); ctx.lineWidth = 4;
       ctx.beginPath(); ctx.arc(bx, by, passR - 1, 0, Math.PI * 2); ctx.stroke();
       marker(ax, ay, passR); marker(bx, by, passR);
 
@@ -1132,12 +1142,12 @@ function renderTrackCanvas() {
     ctx.lineTo(x + gsR * 0.92, y + gsR * 0.72);
     ctx.lineTo(x - gsR * 0.92, y + gsR * 0.72);
     ctx.closePath();
-    ctx.fillStyle = inContact ? C("--ok") : C("--tx");
+    ctx.fillStyle = inContact ? C("--accent") : C("--tx");
     ctx.strokeStyle = C("--bg"); ctx.lineWidth = 3;
     ctx.stroke(); ctx.fill();
     marker(x, y, gsR);
     gsLabels.push({ text: s.name.toUpperCase(), x, y,
-      fill: inContact ? C("--ok") : C("--tx") });
+      fill: inContact ? C("--accent") : C("--tx") });
   }
 
   // Label pass, in priority order: stations (fixed geography the room
@@ -1145,15 +1155,15 @@ function renderTrackCanvas() {
   // scales with the map: on a 5760 px wall the map is nearly twice the
   // linear size it has at 1920, and 20 px labels on it read as a whisper.
   const LBL_PX = Math.round(Math.max(20, Math.min(32, P.scale * 4.6)));
-  const LBL_FONT = "700 " + LBL_PX + "px " + C("--sans");
+  const LBL_FONT = "600 " + LBL_PX + "px " + C("--sans");
   for (const g of gsLabels) {
     placeLabel(g.text, g.x, g.y, gsR, g.fill, LBL_FONT, LBL_PX);
   }
   for (const l of passLabels.filter((l) => l.imminent)) {
-    placeLabel(l.text, l.x, l.y, passR, C("--ok"), LBL_FONT, LBL_PX);
+    placeLabel(l.text, l.x, l.y, passR, C("--accent"), LBL_FONT, LBL_PX);
   }
   for (const l of passLabels.filter((l) => !l.imminent)) {
-    placeLabel(l.text.split(" ")[0], l.x, l.y, passR, C("--ok"), LBL_FONT,
+    placeLabel(l.text.split(" ")[0], l.x, l.y, passR, C("--accent"), LBL_FONT,
       LBL_PX);
   }
 
@@ -1181,13 +1191,13 @@ function renderBudgets() {
     && plannerConfig.budget.warn_utilization_percent) ?? 90;
 
   const pv = $("wPowerVal"), pb = $("wPowerBar"), ps = $("wPowerSub");
-  if (stale || !powerBudget) {
-    pv.textContent = "—"; pv.className = "v num";
+  if (!powerBudget) {
+    pv.textContent = NODATA(); pv.className = "v num absent";
     pb.querySelector(".fl").style.width = "0%";
-    ps.textContent = stale ? "—" : tText("waiting for {{route}}", { route: "/api/budget/power" });
+    ps.textContent = tText("waiting for {{route}}", { route: "/api/budget/power" });
   } else if (powerBudget.computable === false || powerBudget.final_soc == null) {
     // The designed cannot-compute state — never a 0 % / 100 % bar.
-    pv.textContent = tText("N/C"); pv.className = "v num warn";
+    pv.textContent = tText("cannot compute"); pv.className = "v num absent";
     pb.querySelector(".fl").style.width = "0%";
     ps.textContent = (powerBudget.reason
       || (powerBudget.warnings || [])[0] || tText("cannot compute")).substring(0, 90);
@@ -1196,7 +1206,7 @@ function renderBudgets() {
     const soc = powerBudget.final_soc;
     const cls = minSoc !== null && soc < minSoc ? "alarm"
       : minSoc !== null && soc < minSoc + 10 ? "warn" : "";
-    pv.textContent = soc.toFixed(1) + "%";
+    pv.textContent = (cls === "alarm" ? "▲ " : cls === "warn" ? "△ " : "") + soc.toFixed(1) + "%";
     pv.className = "v num " + cls;
     pb.className = "wbar " + (cls === "alarm" ? "a" : cls === "warn" ? "w" : "");
     pb.querySelector(".fl").style.width = Math.max(0, Math.min(100, soc)) + "%";
@@ -1206,24 +1216,24 @@ function renderBudgets() {
     ps.className = "sub";
     ps.textContent = tText("initial {{soc}}%", { soc: (powerBudget.initial_soc ?? 0).toFixed(0) })
       + (minSoc !== null ? " · " + tText("min {{soc}}%", { soc: minSoc }) : "")
-      + (powerBudget.soc_saturated ? " · " + tText("SATURATED (limit, not prediction)") : "");
+      + (powerBudget.soc_saturated ? " · " + tText("saturated: a limit, not a prediction") : "");
   }
 
   const dv = $("wDataVal"), db = $("wDataBar"), dsub = $("wDataSub");
-  if (stale || !dataBudget || dataBudget.utilization_percent === undefined) {
-    dv.textContent = "—"; dv.className = "v num";
+  if (!dataBudget || dataBudget.utilization_percent === undefined) {
+    dv.textContent = NODATA(); dv.className = "v num absent";
     db.querySelector(".fl").style.width = "0%";
-    dsub.textContent = stale ? "—" : tText("waiting for {{route}}", { route: "/api/budget/data" });
+    dsub.textContent = tText("waiting for {{route}}", { route: "/api/budget/data" });
   } else {
     const peak = dataBudget.peak_utilization_percent ?? dataBudget.utilization_percent;
     const cls = peak >= 100 ? "alarm" : peak >= warnFill ? "warn" : "";
-    dv.textContent = peak.toFixed(1) + "%";
+    dv.textContent = (cls === "alarm" ? "▲ " : cls === "warn" ? "△ " : "") + peak.toFixed(1) + "%";
     dv.className = "v num " + cls;
     db.className = "wbar " + (cls === "alarm" ? "a" : cls === "warn" ? "w" : "");
     db.querySelector(".fl").style.width = Math.max(0, Math.min(100, peak)) + "%";
     dsub.textContent = (dataBudget.peak_onboard_mb ?? 0).toFixed(0) + " / "
       + (dataBudget.storage_capacity_mb ?? 0).toFixed(0) + " MB · "
-      + (dataBudget.plan_closes === false ? tText("PLAN DOES NOT CLOSE") : tText("plan closes"));
+      + (dataBudget.plan_closes === false ? "▲ " + tText("plan does not close") : tText("plan closes"));
     dsub.style.color = dataBudget.plan_closes === false ? "var(--alarm)" : "";
   }
 }
@@ -1232,20 +1242,20 @@ function renderBudgets() {
 function renderLink() {
   const stale = isStale("link");
   const st = $("wLinkState");
-  if (stale || !scState) {
-    st.textContent = "—"; st.className = "state";
-    $("wLinkStation").textContent = "—";
-    $("wLinkElev").textContent = "—";
-    $("wLinkRange").textContent = "—";
+  if (!scState) {
+    st.textContent = NODATA(); st.className = "state absent";
+    $("wLinkStation").textContent = "";
+    $("wLinkElev").textContent = "";
+    $("wLinkRange").textContent = "";
   } else {
     const inC = linkState(scState).contact;
-    st.textContent = inC ? tText("IN CONTACT") : tText("NO CONTACT");
+    st.textContent = inC ? tText("In contact") : tText("No contact");
     st.className = "state" + (inC ? " yes" : "");
-    $("wLinkStation").textContent = scState.active_gs || "—";
+    $("wLinkStation").textContent = scState.active_gs || tText("none");
     $("wLinkElev").textContent = scState.gs_elevation_deg != null
-      ? scState.gs_elevation_deg.toFixed(1) + "°" : "—";
+      ? scState.gs_elevation_deg.toFixed(1) + "°" : NODATA();
     $("wLinkRange").textContent = scState.gs_range_km != null
-      ? scState.gs_range_km.toFixed(0) + " km" : "—";
+      ? scState.gs_range_km.toFixed(0) + " km" : NODATA();
   }
   const dot = $("wApiDot"), txt = $("wApiText");
   const silent = lastAnyOk === 0 || Date.now() - lastAnyOk > 30000;
@@ -1265,7 +1275,7 @@ async function init() {
   await I18n.init({ storage: false });
   // The per-block STALE tag is CSS ::after text; give it the translated word.
   for (const h2 of document.querySelectorAll("section.blk>h2")) {
-    h2.setAttribute("data-stale-label", tText("STALE"));
+    h2.setAttribute("data-stale-label", tText("Stale"));
   }
   await fetchConfig();
   await Promise.all([fetchTimeSource(), fetchContacts(), fetchLink()]);

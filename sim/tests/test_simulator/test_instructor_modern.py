@@ -197,7 +197,7 @@ class TestRequiredPanels:
         assert 'name="fail-onset"' in html
 
     def test_clock_truth_card(self, html):
-        assert "TRUE OFFSET" in html
+        assert "true offset" in html.lower()
         assert "not downlinked" in html, \
             "the 'Instructor only: not downlinked' label must be kept"
 
@@ -205,7 +205,7 @@ class TestRequiredPanels:
         # classic had two copies (header + orbit bar); modern keeps ONE.
         # (Strip HTML comments — the design rationale mentions the control.)
         markup = re.sub(r"<!--.*?-->", "", html, flags=re.S)
-        assert markup.count("OVERRIDE PASSES") == 1
+        assert markup.lower().count("override passes") == 1
 
     def test_speed_group_and_freeze(self, html):
         for spd in ("0.5", "1", "2", "5", "10"):
