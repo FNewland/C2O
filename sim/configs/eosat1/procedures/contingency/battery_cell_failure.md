@@ -51,6 +51,7 @@ can safely complete an eclipse with the degraded battery.
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — Request EPS housekeeping
 **Verify:** `eps.bat_voltage` (0x0100) — record current value
 **Verify:** `eps.bat_soc` (0x0101) — record current value
+**TC:** `GET_PARAM(param_id=0x010A)` (Service 20, Subtype 3) — `eps.bat_capacity_wh` (on-demand: no HK SID carries it)
 **Verify:** `eps.bat_capacity_wh` (0x010A) — record value (nominal = 120 Wh)
 **Verify:** `eps.bat_current` (0x0109) — record current (positive = charging, negative = discharging)
 **Action:** Calculate expected voltage for current SoC:
@@ -84,6 +85,7 @@ issue first before continuing.
 
 ### Step 3: Assess Remaining Battery Capacity
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — Request EPS housekeeping
+**TC:** `GET_PARAM(param_id=0x010A)` (Service 20, Subtype 3) — `eps.bat_capacity_wh` (on-demand: no HK SID carries it)
 **Verify:** `eps.bat_capacity_wh` (0x010A) — record reported capacity
 **Action:** If capacity reporting is available, use the reported value. Otherwise,
 estimate remaining capacity:
@@ -108,6 +110,7 @@ estimate remaining capacity:
 **TC:** `PAYLOAD_SET_MODE(mode=0)` (Service 8, Subtype 1, func_id 26) — Payload OFF
    **Verify:** `payload.mode` (0x0600) = 0 within 10 s
 2. FPA cooler OFF (saves ~15 W): `FPA_COOLER(on=0)` (func_id 43)
+   **TC:** `GET_PARAM(param_id=0x040C)` (Service 20, Subtype 3) — `tcs.cooler_fpa`: SID 3 is periodic only every 60 s, so fetch the value this check reads
    **Verify:** `tcs.cooler_fpa` (0x040C) = 0 within 5 s
 3. TX OFF (saves ~20 W) — only if eclipse is imminent and load budget is still negative:
    `TTC_PA_OFF` (func_id 67)
@@ -140,6 +143,7 @@ load shedding per CTG-001 (Undervoltage Load Shedding).
 **Action:** Over the next 2-3 orbits, monitor battery charge/discharge behavior:
 **Verify:** `eps.bat_soc` (0x0101) — does SoC fully recover to > 90% during sunlit phase?
 **Verify:** `eps.bat_voltage` (0x0100) — does voltage reach > 28.5 V at full charge?
+**TC:** `GET_PARAM(param_id=0x010A)` (Service 20, Subtype 3) — `eps.bat_capacity_wh` (on-demand: no HK SID carries it)
 **Verify:** `eps.bat_capacity_wh` (0x010A) — has the reported capacity changed?
 **Action:** Assess long-term impact:
 - If capacity is reduced but sufficient for nominal operations with margin: Continue

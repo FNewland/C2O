@@ -31,7 +31,7 @@ for mission operations.
 
 ### Step 1 — Baseline Bus Voltage Measurement
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27)
-**Verify:** `eps.bus_voltage` (0x0105) in range [27.5V, 28.5V] within 10s
+**Verify:** `eps.bus_voltage` (0x0105) in range [27.0V, 29.0V] within 10s (the console's yellow band; the bus follows the battery, so a full battery sits near 29 V)
 **Action:** Record bus voltage. Nominal regulation point is 28.0V +/- 0.5V.
 **GO/NO-GO:** Bus voltage regulated within specification
 
@@ -46,7 +46,7 @@ for mission operations.
 ### Step 3 — Solar Array Sunlit Performance
 **Action:** Perform this step during sunlit orbit phase with stable sun-pointing.
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27)
-**Verify:** `eps.power_gen` (0x0107) in range [40W, 65W] within 10s
+**Verify:** `eps.power_gen` (0x0107) in range [40W, 90W] within 10s (88.6 W is the whole-spacecraft peak in `subsystems/eps.yaml`; ~80 W is normal when sun-pointed)
 **Action:** Record power generation. Expected ~64W peak at optimal sun angle with deployed wings (0.78 m², 29.5% GaAs cells). Actual value depends on current beta angle, wing deployment status, and attitude accuracy.
 **GO/NO-GO:** Solar array power generation within expected range
 
@@ -98,7 +98,7 @@ source, and it is restored to its entry state afterwards.
 ## Post-Conditions
 - [ ] Bus voltage confirmed regulated at 28.0V +/- 0.5V
 - [ ] Battery voltage and SOC nominal (> 70% after full charge)
-- [ ] Solar array generating 40-65W in sunlight (wings deployed, sun-pointed)
+- [ ] Solar array generating 40-90W in sunlight (wings deployed, sun-pointed)
 - [ ] Eclipse discharge rate within prediction
 - [ ] Charge recovery nominal after eclipse exit
 - [ ] Positive orbit-average energy balance confirmed

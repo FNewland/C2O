@@ -49,8 +49,8 @@
   },
   {
    "id": "com-005-aocs-mode-transitions/procedure-steps/step-5-automatic-coarsesun-is-a-hold-not-a-destination",
-   "en_hash": "010b93fbe446b93c",
-   "fr_hash": "498122323f749b75"
+   "en_hash": "ddad0740885414b5",
+   "fr_hash": "fcb6ad0ecd7234c8"
   },
   {
    "id": "com-005-aocs-mode-transitions/procedure-steps/step-6-automatic-eclipse-handover-observed-in-passing",
@@ -83,5 +83,5 @@
    "fr_hash": "613315a58324277e"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "d6b51dd"
 }

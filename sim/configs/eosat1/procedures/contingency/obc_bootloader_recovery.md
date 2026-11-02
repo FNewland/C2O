@@ -60,6 +60,7 @@ before considering a memory reload or OBC unit switchover.
 **Note:** In bootloader mode, only SID 11 (beacon) may respond. If SID 4 does not
 return, request SID 11 instead.
 **Verify:** `obdh.sw_image` (0x0311) = 0 (bootloader, application not running)
+**TC:** `GET_PARAM(param_id=0x0316)` (Service 20, Subtype 3) — `obdh.last_reboot_cause` (on-demand: no HK SID carries it)
 **Verify:** `obdh.last_reboot_cause` (0x0316) — record value:
 - 0 = none (unexpected — should not be in bootloader without cause)
 - 1 = commanded (operator-initiated reboot)
@@ -68,6 +69,7 @@ return, request SID 11 instead.
 - 4 = switchover (OBC unit switchover occurred)
 **Verify:** `obdh.reboot_count` (0x030A) — record and compare with last known value
 **Verify:** `obdh.active_obc` (0x030C) — record which OBC unit is active
+**TC:** `GET_PARAM(param_id=0x0301)` (Service 20, Subtype 3) — `obdh.temp` (on-demand: no HK SID carries it)
 **Verify:** `obdh.temp` (0x0301) — within limits (< 50 C)
 **Verify:** `obdh.cpu_load` (0x0302) — record (should be low in bootloader)
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — Request EPS housekeeping
@@ -96,6 +98,7 @@ Address EPS before attempting application boot.
 
 **Action:** Record assessment rationale in operations log.
 **GO/NO-GO:** Assessment complete — follow appropriate path.
+**TC:** `GET_PARAM(param_id=0x0316)` (Service 20, Subtype 3) — `obdh.last_reboot_cause` (on-demand: no HK SID carries it)
 **BRANCH:** `obdh.last_reboot_cause == 3` -> GO `STEP-4` | NO-GO `STEP-2B` (timeout 10 s)
 **LABEL:** `STEP-2B`
 **BRANCH:** `obdh.last_reboot_cause == 0` -> GO `STEP-4` | NO-GO `STEP-3` (timeout 10 s)
@@ -108,6 +111,7 @@ This takes approximately 10-30 seconds.
 **Verify:** Wait 30 s for application initialization.
 **TC:** `HK_REQUEST(sid=4)` (Service 3, Subtype 27) — Request OBDH housekeeping
 **Verify:** `obdh.sw_image` (0x0311) = 1 (application running)
+**TC:** `GET_PARAM(param_id=0x030B)` (Service 20, Subtype 3) — `obdh.sw_version` (on-demand: no HK SID carries it)
 **Verify:** `obdh.sw_version` (0x030B) — correct application version
 **Verify:** `obdh.mode` (0x0300) — OBC should enter SAFE or NOMINAL mode
 **Verify:** `obdh.cpu_load` (0x0302) < 80% — normal post-boot load
@@ -164,6 +168,7 @@ on the actual memory map.
 **Verify:** Wait 30 s for application initialization.
 **TC:** `HK_REQUEST(sid=4)` (Service 3, Subtype 27) — Request OBDH housekeeping
 **Verify:** `obdh.sw_image` (0x0311) = 1 (application running)
+**TC:** `GET_PARAM(param_id=0x030B)` (Service 20, Subtype 3) — `obdh.sw_version` (on-demand: no HK SID carries it)
 **Verify:** `obdh.sw_version` (0x030B) — correct application version
 **Action:** If boot succeeds: proceed to Step 3a (clear beacon mode), then Step 7 (full system verification).
 **Action:** If boot fails again: proceed to Step 6 (memory reload or OBC switch).

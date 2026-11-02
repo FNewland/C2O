@@ -60,6 +60,7 @@ avant d'envisager un rechargement mémoire ou un basculement d'OBC.
 **Note:** En mode chargeur d'amorçage, seul le SID 11 (balise) peut répondre. Si le SID 4 ne
 revient pas, demander plutôt le SID 11.
 **Verify:** `obdh.sw_image` (0x0311) = 0 (chargeur d'amorçage, logiciel applicatif arrêté)
+**TC:** `GET_PARAM(param_id=0x0316)` (Service 20, Subtype 3) — `obdh.last_reboot_cause` (à la demande : aucun SID HK ne le transporte)
 **Verify:** `obdh.last_reboot_cause` (0x0316) — consigner la valeur :
 - 0 = aucune (inattendu — l'OBC ne devrait pas être en chargeur d'amorçage sans cause)
 - 1 = commandé (redémarrage à l'initiative de l'opérateur)
@@ -68,6 +69,7 @@ revient pas, demander plutôt le SID 11.
 - 4 = basculement (un basculement d'unité OBC a eu lieu)
 **Verify:** `obdh.reboot_count` (0x030A) — consigner et comparer à la dernière valeur connue
 **Verify:** `obdh.active_obc` (0x030C) — consigner l'unité OBC active
+**TC:** `GET_PARAM(param_id=0x0301)` (Service 20, Subtype 3) — `obdh.temp` (à la demande : aucun SID HK ne le transporte)
 **Verify:** `obdh.temp` (0x0301) — dans les limites (< 50 °C)
 **Verify:** `obdh.cpu_load` (0x0302) — consigner (devrait être faible en chargeur d'amorçage)
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — Demander la télémesure de servitude EPS
@@ -96,6 +98,7 @@ Traiter l'EPS avant de tenter l'amorçage applicatif.
 
 **Action:** Consigner la justification de l'évaluation dans le journal des opérations.
 **GO/NO-GO:** Évaluation terminée — suivre le chemin approprié.
+**TC:** `GET_PARAM(param_id=0x0316)` (Service 20, Subtype 3) — `obdh.last_reboot_cause` (à la demande : aucun SID HK ne le transporte)
 **BRANCH:** `obdh.last_reboot_cause == 3` -> GO `STEP-4` | NO-GO `STEP-2B` (timeout 10 s)
 **LABEL:** `STEP-2B`
 **BRANCH:** `obdh.last_reboot_cause == 0` -> GO `STEP-4` | NO-GO `STEP-3` (timeout 10 s)
@@ -108,6 +111,7 @@ Cela prend environ 10 à 30 secondes.
 **Verify:** Attendre 30 s l'initialisation du logiciel applicatif.
 **TC:** `HK_REQUEST(sid=4)` (Service 3, Subtype 27) — Demander la télémesure de servitude OBDH
 **Verify:** `obdh.sw_image` (0x0311) = 1 (logiciel applicatif en cours d'exécution)
+**TC:** `GET_PARAM(param_id=0x030B)` (Service 20, Subtype 3) — `obdh.sw_version` (à la demande : aucun SID HK ne le transporte)
 **Verify:** `obdh.sw_version` (0x030B) — version applicative correcte
 **Verify:** `obdh.mode` (0x0300) — l'OBC devrait entrer en mode SAFE ou NOMINAL
 **Verify:** `obdh.cpu_load` (0x0302) < 80 % — charge normale après amorçage
@@ -164,6 +168,7 @@ selon la cartographie mémoire réelle.
 **Verify:** Attendre 30 s l'initialisation du logiciel applicatif.
 **TC:** `HK_REQUEST(sid=4)` (Service 3, Subtype 27) — Demander la télémesure de servitude OBDH
 **Verify:** `obdh.sw_image` (0x0311) = 1 (logiciel applicatif en cours d'exécution)
+**TC:** `GET_PARAM(param_id=0x030B)` (Service 20, Subtype 3) — `obdh.sw_version` (à la demande : aucun SID HK ne le transporte)
 **Verify:** `obdh.sw_version` (0x030B) — version applicative correcte
 **Action:** Si l'amorçage réussit : étapes suivantes : étape 3a (sortie du mode balise), puis étape 7 (vérification complète du système).
 **Action:** Si l'amorçage échoue de nouveau : l'étape 6 (rechargement mémoire ou basculement d'OBC) s'applique.

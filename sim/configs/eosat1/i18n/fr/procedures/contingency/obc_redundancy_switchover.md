@@ -50,6 +50,7 @@ applicatif et vérifie le retour de tous les sous-systèmes en fonctionnement no
 **TC:** `HK_REQUEST(sid=4)` (Service 3, Subtype 27) — Demander la télémesure de servitude OBDH
 **Verify:** `obdh.mode` (0x0300) — consigner le mode courant
 **Verify:** `obdh.reboot_count` (0x030A) — consigner la valeur (élevée en cas de redémarrages par chien de garde)
+**TC:** `GET_PARAM(param_id=0x0316)` (Service 20, Subtype 3) — `obdh.last_reboot_cause` (à la demande : aucun SID HK ne le transporte)
 **Verify:** `obdh.last_reboot_cause` (0x0316) — consigner la cause :
 - 0 = aucune, 1 = commandé, 2 = chien de garde, 3 = mémoire, 4 = basculement
 **Verify:** `obdh.cpu_load` (0x0302) — consigner la valeur (peut être anormalement élevée)
@@ -78,7 +79,9 @@ Si `obdh.reboot_count` > 4, la FDIR a peut-être déjà déclenché le mode surv
 **Note:** En l'absence de réponse sous 15 s, renouveler la demande. L'OBC-B est peut-être encore en début d'amorçage.
 **Verify:** `obdh.active_obc` (0x030C) = 1 (l'OBC-B est désormais actif)
 **Verify:** `obdh.sw_image` (0x0311) = 0 (chargeur d'amorçage — logiciel applicatif pas encore lancé)
+**TC:** `GET_PARAM(param_id=0x0316)` (Service 20, Subtype 3) — `obdh.last_reboot_cause` (à la demande : aucun SID HK ne le transporte)
 **Verify:** `obdh.last_reboot_cause` (0x0316) = 4 (basculement)
+**TC:** `GET_PARAM(param_id=0x0301)` (Service 20, Subtype 3) — `obdh.temp` (à la demande : aucun SID HK ne le transporte)
 **Verify:** `obdh.temp` (0x0301) — température de l'OBC-B dans les limites
 **Verify:** `ttc.link_status` (0x0501) = 2 (LOCKED) — liaison TTC maintenue
 **GO/NO-GO:** OBC-B en chargeur d'amorçage — procéder à l'amorçage applicatif.
@@ -90,6 +93,7 @@ Si `obdh.reboot_count` > 4, la FDIR a peut-être déjà déclenché le mode surv
 **Verify:** Attendre 30 s l'initialisation du logiciel applicatif.
 **TC:** `HK_REQUEST(sid=4)` (Service 3, Subtype 27) — Demander la télémesure de servitude OBDH
 **Verify:** `obdh.sw_image` (0x0311) = 1 (logiciel applicatif en cours d'exécution)
+**TC:** `GET_PARAM(param_id=0x030B)` (Service 20, Subtype 3) — `obdh.sw_version` (à la demande : aucun SID HK ne le transporte)
 **Verify:** `obdh.sw_version` (0x030B) — version correcte du logiciel applicatif
 **Verify:** `obdh.mode` (0x0300) — l'OBC devrait entrer en mode SAFE ou NOMINAL
 **Verify:** `obdh.cpu_load` (0x0302) < 80 % (aucune charge anormale sur la nouvelle unité)

@@ -34,7 +34,7 @@ selection: the previous image is not retained on board, and reverting means re-u
 **Verify:** `obdh.mode` (0x0300) = 0 (NOMINAL)
 **Verify:** `obdh.cpu_load` (0x0302) < 50 % (margin for upload processing)
 **Verify:** `obdh.mmm_used` (0x0303) < 70 % (sufficient free memory for image)
-**Verify:** `obdh.mem_errors` (0x031E) = 0 (no existing memory faults)
+**Verify:** `obdh.mem_errors` (0x031E) not increasing --- record it as this card's baseline. The count includes EDAC-corrected upsets, which accumulate in orbit (2 after ~3 h on 2026-11-02), so 0 is not the healthy value; an INCREASE during the upload is the fault
 **Verify:** `obdh.heap_usage` (0x031D) < 60 % (sufficient heap for upload task)
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) --- request EPS housekeeping
 **Verify:** `eps.bat_soc` (0x0101) > 60 %
@@ -92,26 +92,31 @@ activation. Execute Recovery Action 1 (re-upload; do not boot the image).
 **GO/NO-GO:** Checksum verified --- uploaded image integrity confirmed.
 
 ### Step 6 --- Activate New Software Image (If Full Image Replacement)
-**TC:** `OBC_BOOT_APP` (Service 8, Subtype 1, func_id 55) --- boot the newly uploaded application image
+**Note:** `OBC_BOOT_APP` (Service 8, Subtype 1, func_id 55) boots the newly uploaded application image, but NOT in this step: while the application is running it is refused with S1.8 "Already in application" (measured 2026-11-02). It is sent in Step 7, after the reboot has dropped the OBC into the bootloader.
 **Note:** Was `FUNC_PERFORM func_id=20`. S8 func 20 is `EPS_POWER_OFF` — that
 step would have SHED A POWER LINE (line index taken from whatever byte
 followed) in the middle of a software upload. There is no separate
 "select boot source" function: `OBC_BOOT_APP` verifies the application CRC
 over 10 s and transitions `obdh.sw_image` (0x0311) to 1.
-**Verify:** Command acceptance within 5 s
 **Note:** There is no boot source register and no second image bank: the uploaded
 image IS the application image, and `OBC_BOOT_APP` boots it after its CRC check.
 **Note:** For patches applied to the running image, this step may be replaced with a
 direct patch-apply command. Consult OBDH engineer for patch-specific activation.
 **Verify:** `obdh.sw_image` (0x0311) still = 1 (application) --- no unintended reboot yet
-**GO/NO-GO:** New image accepted by the CRC check. Ready for controlled reboot.
+**GO/NO-GO:** Uploaded image checksum verified (Step 5). Ready for controlled reboot.
 
 ### Step 7 --- Confirm Boot Into New Software
 **TC:** `OBC_REBOOT` (Service 8, Subtype 1, func_id 52) --- command a controlled OBC restart
 **Note:** Was `FUNC_PERFORM func_id=30`, which is `PAYLOAD_DELETE_IMAGE`.
 **Action:** Wait for boot sequence --- OBC will be unresponsive for approximately 60 s.
 **Verify:** `obdh.mode` (0x0300) responds within 90 s of reboot command
-**Verify:** `obdh.sw_image` (0x0311) = 1 (application, not bootloader)
+**Verify:** `obdh.sw_image` (0x0311) = 0 (BOOTLOADER) on the beacon (SID 11) within 90 s. A commanded `OBC_REBOOT` lands in the bootloader and, in the 2026-11-02 run, STAYED there until `OBC_BOOT_APP` (no automatic boot after 45 s), and the bootloader emits SID 11 only — a 1 read before the next beacon is the pre-reboot value
+**TC:** `OBC_BOOT_APP` (Service 8, Subtype 1, func_id 55) --- boot the new application image (10 s CRC window; wait for its S1.7)
+**Verify:** `obdh.sw_image` (0x0311) = 1 (application, not bootloader) within 45 s
+**TC:** `HK_ENABLE(sid=4)` (Service 3, Subtype 5) --- the application boot re-applies `default_enabled_sids: [1, 11]`; re-enable every other SID the pass uses (2, 3, 5, 6, 7, 12 as in LEOP-001 / LEOP-007 / COM-009)
+**TC:** `OBC_SET_MODE(mode=0)` (Service 8, Subtype 1, func_id 50) --- make NOMINAL explicit: the reboot sets SAFE (`obdh.mode` = 1) in the bootloader and a good application boot normally restores 0; Step 8 checks it
+**Note:** The reboot also resets the OBC clock to J2000 (re-sync with NOM-008) and the spacecraft phase reads 4 after the boot, not 6: the Flight Director re-declares it with `SYS_SET_MISSION_PHASE(phase=6)` (func 120) before handing back to routine operations.
+**TC:** `GET_PARAM(param_id=0x0316)` (Service 20, Subtype 3) — `obdh.last_reboot_cause` (on-demand: no HK SID carries it)
 **Verify:** `obdh.last_reboot_cause` (0x0316) = 1 (commanded)
 **Verify:** `obdh.active_obc` (0x030C) unchanged (same OBC unit as before)
 **Critical:** If OBC does not respond within 120 s, or boots into bootloader (sw_image=0),
@@ -122,7 +127,7 @@ the new image may have failed boot validation. Execute Recovery Action 2.
 **TC:** `HK_REQUEST(sid=4)` (Service 3, Subtype 27) --- full OBDH health check
 **Verify:** `obdh.mode` (0x0300) = 0 (NOMINAL)
 **Verify:** `obdh.cpu_load` (0x0302) < 50 %
-**Verify:** `obdh.mem_errors` (0x031E) = 0
+**Verify:** `obdh.mem_errors` (0x031E) = the Step 1 baseline (no new errors during the upload)
 **Verify:** `obdh.bus_a_status` (0x030F) = 0 (OK) --- CAN bus communication restored
 **TC:** `ENABLE_SCHEDULE` (Service 11, Subtype 13) --- resume on-board scheduling
 **Note:** Was `FUNC_PERFORM func_id=11`, which is `AOCS_CHECK_MOMENTUM`.
@@ -188,7 +193,7 @@ checksum, any anomalies observed.
 - [ ] `obdh.mode` (0x0300) = NOMINAL (0)
 - [ ] All subsystems communicating normally via CAN bus
 - [ ] Onboard scheduling restored and operational
-- [ ] `obdh.mem_errors` (0x031E) = 0
+- [ ] `obdh.mem_errors` (0x031E) no higher than the Step 1 baseline
 - [ ] Checksum of uploaded image verified correct
 - [ ] Upload log completed with version numbers, checksums, and duration
 - [ ] Previous image and its CRC-32 archived on the ground (reverting means re-uploading it)

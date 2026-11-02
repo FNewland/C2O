@@ -49,8 +49,8 @@
   },
   {
    "id": "ctg-015-corrupted-image-recovery/procedure-steps/step-3-fpa-warm-abort-imaging-and-cool-down",
-   "en_hash": "b80ad7dc2929bc2d",
-   "fr_hash": "a5c76150869bca3e"
+   "en_hash": "58e1391f1f223138",
+   "fr_hash": "1c819af54bce8e79"
   },
   {
    "id": "ctg-015-corrupted-image-recovery/procedure-steps/step-4-check-memory-segments",
@@ -78,5 +78,5 @@
    "fr_hash": "56793b7d7757ebde"
   }
  ],
- "en_commit": "8067e5b"
+ "en_commit": "d6b51dd"
 }

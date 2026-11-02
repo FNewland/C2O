@@ -92,6 +92,7 @@ préparer le niveau de délestage suivant.
 **Déclencheur :** Lorsque `eps.bat_soc` (0x0101) < 35 % :
 **Action:** Annoncer « SoC below 35 % — shedding FPA cooler » sur la boucle opérations.
 **TC:** `FPA_COOLER(on=0)` (Service 8, Subtype 1, func_id 43) — Désactiver le refroidisseur du FPA
+**TC:** `GET_PARAM(param_id=0x040C)` (Service 20, Subtype 3) — `tcs.cooler_fpa` : le SID 3 n'est périodique que toutes les 60 s : lire la valeur que ce contrôle utilise
 **Verify:** `tcs.cooler_fpa` (0x040C) = 0 (OFF) en 5 s
 **Verify:** `eps.power_cons` (0x0106) diminue d'environ 15 W
 **Note:** La température du détecteur du FPA va commencer à monter. Consigner la température courante du FPA
@@ -169,6 +170,7 @@ de délestage + 10 % de marge.
 **GO/NO-GO:** Roues AOCS rétablies et attitude en cours de reprise — continuer.
 
 **Étape 7b — Rétablir le TTC TX (si délesté) — lorsque SoC > 35 % :**
+**TC:** `EPS_POWER_ON(line_index=2)` (Service 8, Subtype 1, func_id 19) — d'abord la ligne `ttc_tx`, si `eps.pl_ttc_tx` (0x0112) = 0 (la FDIR de bord l'ouvre lors d'un délestage profond ; `TTC_PA_ON` est alors refusé par un S1.8 « power line 'ttc_tx' is OFF »)
 **TC:** `TTC_PA_ON` (Service 8, Subtype 1, func_id 66)
 **Verify:** `ttc.pa_on` (0x0516) = 1 en 5 s
 **Verify:** `eps.bus_voltage` (0x0105) reste > 26.5 V
@@ -177,6 +179,7 @@ de délestage + 10 % de marge.
 
 **Étape 7c — Rétablir le refroidisseur du FPA — lorsque SoC > 45 % :**
 **TC:** `FPA_COOLER(on=1)` (Service 8, Subtype 1, func_id 43)
+**TC:** `GET_PARAM(param_id=0x040C)` (Service 20, Subtype 3) — `tcs.cooler_fpa` : le SID 3 n'est périodique que toutes les 60 s : lire la valeur que ce contrôle utilise
 **Verify:** `tcs.cooler_fpa` (0x040C) = 1 en 5 s
 **Note:** La mise en froid du FPA de la température ambiante à la température de fonctionnement prend environ
 20 minutes. Les prises de vue ne doivent pas reprendre avant que le FPA ait atteint sa température de fonctionnement.
@@ -185,6 +188,7 @@ de délestage + 10 % de marge.
 **GO/NO-GO:** Refroidisseur du FPA rétabli — continuer.
 
 **Étape 7d — Remettre la charge utile en STANDBY — lorsque SoC > 60 % :**
+**TC:** `EPS_POWER_ON(line_index=3)` (Service 8, Subtype 1, func_id 19) — d'abord la ligne `payload`, si `eps.pl_payload` (0x0113) = 0 (sinon la commande de mode est refusée par un S1.8 « power line 'payload' is OFF »)
 **TC:** `PAYLOAD_SET_MODE(mode=1)` (Service 8, Subtype 1, func_id 26)
 **Verify:** `payload.mode` (0x0600) = 1 (STANDBY) en 10 s
 **Verify:** `eps.bus_voltage` (0x0105) reste > 27.5 V

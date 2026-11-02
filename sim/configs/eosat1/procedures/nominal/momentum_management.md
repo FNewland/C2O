@@ -53,7 +53,7 @@ exceeds 4500 RPM, or by scheduled maintenance.
 ### Step 2 --- Pre-Desaturation Attitude Snapshot
 **Verify:** `aocs.att_error` (0x0217) < 1.0 deg
 **Verify:** `aocs.rate_roll` (0x0204) < 0.05 deg/s
-**Verify:** `aocs.rate_pitch` (0x0205) < 0.05 deg/s
+**Verify:** `aocs.rate_pitch` (0x0205) in range [0.043, 0.083] deg/s (nadir tracking carries the orbit rate, +0.063 deg/s on this console; a zero pitch rate would mean the spacecraft is NOT tracking nadir)
 **Verify:** `aocs.rate_yaw` (0x0206) < 0.05 deg/s
 **Note:** Record attitude error and rates as pre-desat baseline.
 

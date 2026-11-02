@@ -39,8 +39,8 @@
   },
   {
    "id": "ctg-013-battery-cell-failure/procedure-steps/step-1-detect-and-characterize-battery-voltage-anomaly",
-   "en_hash": "c6f408b5821819c5",
-   "fr_hash": "21a9a4d62bc4d2ae"
+   "en_hash": "fbf2b3db6aa0fad3",
+   "fr_hash": "882df9c06fd899e5"
   },
   {
    "id": "ctg-013-battery-cell-failure/procedure-steps/step-2-check-battery-temperature",
@@ -49,13 +49,13 @@
   },
   {
    "id": "ctg-013-battery-cell-failure/procedure-steps/step-3-assess-remaining-battery-capacity",
-   "en_hash": "dcee608723a11c23",
-   "fr_hash": "bb433574b27b8829"
+   "en_hash": "c6eebf739cd9bdf0",
+   "fr_hash": "8ba6b5a46a838f70"
   },
   {
    "id": "ctg-013-battery-cell-failure/procedure-steps/step-4-reduce-loads-if-needed",
-   "en_hash": "3d608feda49f3b66",
-   "fr_hash": "62cbf2d23d267c73"
+   "en_hash": "c7ccba426446e6b1",
+   "fr_hash": "c500063246c62aab"
   },
   {
    "id": "ctg-013-battery-cell-failure/procedure-steps/step-5-monitor-battery-through-eclipse-if-applicable",
@@ -64,8 +64,8 @@
   },
   {
    "id": "ctg-013-battery-cell-failure/procedure-steps/step-6-long-term-capacity-verification",
-   "en_hash": "a42b36b08c5bf583",
-   "fr_hash": "ef956882d9ae3607"
+   "en_hash": "549f2a529ee4501a",
+   "fr_hash": "bbf528e7cb623aa0"
   },
   {
    "id": "ctg-013-battery-cell-failure/verification-criteria",
@@ -78,5 +78,5 @@
    "fr_hash": "7858c6405ff8b7b2"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "d6b51dd"
 }

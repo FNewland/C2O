@@ -86,6 +86,7 @@ au lieu de s'arrêter prématurément
 étalonnage n'a rien produit : 1 détecteur non alimenté, 2 obturateur déplacé, 3 état de la lampe
 modifié, 4 FPA sorti de sa bande de régulation, 5 abandon par l'opérateur. Sans lui, l'opérateur
 voit une barre d'avancement arrêtée, sans aucune explication.
+**TC:** `GET_PARAM(param_id=0x0642)` (Service 20, Subtype 3) — `payload.dark_frame_cnt` (à la demande : aucun SID HK ne le transporte)
 **Verify:** `payload.dark_frame_cnt` (0x0642) — images d'obscurité acquises, valeur non nulle
 **GO/NO-GO:** Jeu d'images d'obscurité acquis avec `cal_abort_reason` = 0
 
@@ -99,6 +100,7 @@ changement de phase.
 **TC:** `PAYLOAD_CAL_LAMP(on=1)` (Service 8, Subtype 1, func_id 95) — lampe interne allumée
 **TC:** `GET_PARAM(param_id=0x0615)` (Service 20, Subtype 3) — `payload.cal_lamp_on`
 **Verify:** `payload.cal_lamp_on == 1` (0x0615, timeout 10 s)
+**TC:** `GET_PARAM(param_id=0x063C)` (Service 20, Subtype 3) — `payload.shutter_pos` (à la demande : aucun SID HK ne le transporte)
 **Verify:** `payload.shutter_pos == 1` (0x063C, timeout 10 s) — OPEN
 **TC:** `PAYLOAD_START_CALIBRATION(mode=1)` (Service 8, Subtype 1, func_id 37) — phase FLAT
 **Octets émis :** `25 01`
@@ -123,6 +125,7 @@ changement de phase.
 **Octets émis :** `77 01`
 **TC:** `HK_REQUEST(sid=5)` (Service 3, Subtype 27) — données de servitude de la charge utile
 **Verify:** `payload.mode == 1` (0x0600, timeout 15 s) — STANDBY
+**TC:** `GET_PARAM(param_id=0x063C)` (Service 20, Subtype 3) — `payload.shutter_pos` (à la demande : aucun SID HK ne le transporte)
 **Verify:** `payload.shutter_pos == 1` (0x063C, timeout 10 s) — OPEN
 **GO/NO-GO:** Obturateur ouvert, charge utile en STANDBY
 

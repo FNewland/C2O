@@ -39,8 +39,8 @@
   },
   {
    "id": "nom-009-routine-health-check/procedure-steps/step-3-aocs-health-assessment",
-   "en_hash": "db134438bbddfe08",
-   "fr_hash": "9ac7ed3b6ab29e24"
+   "en_hash": "db239f2c961789d9",
+   "fr_hash": "ee25388049d55466"
   },
   {
    "id": "nom-009-routine-health-check/procedure-steps/step-4-tcs-health-assessment",
@@ -78,5 +78,5 @@
    "fr_hash": "ac0b6a8f7fd3ad68"
   }
  ],
- "en_commit": "8067e5b"
+ "en_commit": "d6b51dd"
 }

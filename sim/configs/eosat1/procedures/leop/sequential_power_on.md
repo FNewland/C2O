@@ -77,7 +77,7 @@ to tick. Powering the line does NOT enable SID 2: the power-up enable set is
 on explicitly.
 **TC:** `HK_ENABLE(sid=2)` (Service 3, Subtype 5) --- enable periodic AOCS housekeeping
 **Verify:** Periodic SID 2 begins emitting within one 4 s structure interval
-**Verify:** `aocs.wheels_enabled` (0x0260) = 0 --- wheels DISABLED, as designed
+**Note:** `aocs.wheels_enabled` (0x0260) = 0 --- wheels DISABLED, as designed --- cannot be read yet: it is on-demand only, and `GET_PARAM` is refused S1.8 "source subsystem unpowered or in MODE_OFF" while the AOCS is still OFF (measured 2026-11-02). It is verified in Step 6, after DETUMBLE.
 **GO/NO-GO:** AOCS suite powered, SID 2 downlinking, wheels still disabled
 
 ### Step 4 --- Enable the DETUMBLE Sensors and Actuators BEFORE Commanding It
@@ -113,6 +113,7 @@ trending down
 **Verify:** `eps.pl_payload` (0x0113) = 0 --- payload line still OFF (COM-009's)
 **Verify:** `eps.pl_fpa_cooler` (0x0114) = 0 --- cooler line still OFF (COM-010's)
 **Verify:** `eps.pl_prop` (0x014A) = 0 --- prop line still OFF
+**TC:** `GET_PARAM(param_id=0x0260)` (Service 20, Subtype 3) — `aocs.wheels_enabled` (on-demand: no HK SID carries it)
 **Verify:** `aocs.wheels_enabled` (0x0260) = 0 --- wheels still DISABLED (COM-004's)
 **Verify:** Power margin positive: `eps.power_gen` (0x0107) exceeds the load
 implied by `eps.power_cons` (0x0106), or SoC stable/increasing

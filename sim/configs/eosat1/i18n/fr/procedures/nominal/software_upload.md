@@ -34,7 +34,7 @@ de banc d'amorçage : l'image précédente n'est pas conservée à bord, et rev
 **Verify:** `obdh.mode` (0x0300) = 0 (NOMINAL)
 **Verify:** `obdh.cpu_load` (0x0302) < 50 % (marge pour le traitement du chargement)
 **Verify:** `obdh.mmm_used` (0x0303) < 70 % (mémoire libre suffisante pour l'image)
-**Verify:** `obdh.mem_errors` (0x031E) = 0 (aucune panne mémoire existante)
+**Verify:** `obdh.mem_errors` (0x031E) sans augmentation --- la consigner comme référence de cette fiche. Le compteur inclut les perturbations corrigées par l'EDAC, qui s'accumulent en orbite (2 après ~3 h le 2026-11-02), donc 0 n'est pas la valeur saine ; une AUGMENTATION pendant le chargement est la panne
 **Verify:** `obdh.heap_usage` (0x031D) < 60 % (tas suffisant pour la tâche de chargement)
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) --- demander les données de servitude EPS
 **Verify:** `eps.bat_soc` (0x0101) > 60 %
@@ -92,26 +92,31 @@ l'activation. Exécuter l'action de reprise 1 (recharger ; ne pas démarrer l'
 **GO/NO-GO:** Somme de contrôle vérifiée --- intégrité de l'image chargée confirmée.
 
 ### Étape 6 --- Activer la nouvelle image logicielle (en cas de remplacement complet de l'image)
-**TC:** `OBC_BOOT_APP` (Service 8, Subtype 1, func_id 55) --- amorcer l'image applicative nouvellement chargée
+**Note:** `OBC_BOOT_APP` (Service 8, Subtype 1, func_id 55) amorce l'image applicative nouvellement chargée, mais PAS à cette étape : tant que l'application tourne, elle est refusée par un S1.8 « Already in application » (mesuré le 2026-11-02). Elle est envoyée à l'étape 7, une fois que le redémarrage a fait passer l'OBC sur le chargeur d'amorçage.
 **Note:** Était `FUNC_PERFORM func_id=20`. La fonction S8 20 est `EPS_POWER_OFF` — cette
 étape aurait DÉLESTÉ UNE LIGNE D'ALIMENTATION (indice de ligne tiré de l'octet
 suivant, quel qu'il soit) en plein chargement de logiciel. Il n'existe pas de fonction
 distincte de « sélection de la source d'amorçage » : `OBC_BOOT_APP` vérifie le CRC de l'application
 pendant 10 s et fait passer `obdh.sw_image` (0x0311) à 1.
-**Verify:** acceptation de la commande sous 5 s
 **Note:** Il n'existe ni registre de source d'amorçage ni second banc d'image : l'image chargée
 EST l'image applicative, et `OBC_BOOT_APP` l'amorce après le contrôle de son CRC.
 **Note:** Pour les correctifs appliqués à l'image en cours d'exécution, cette étape peut être remplacée par une
 commande d'application directe du correctif. Consulter l'ingénieur OBDH pour l'activation propre au correctif.
 **Verify:** `obdh.sw_image` (0x0311) toujours = 1 (application) --- aucun redémarrage intempestif à ce stade
-**GO/NO-GO:** Nouvelle image acceptée par le contrôle CRC. Prêt pour un redémarrage maîtrisé.
+**GO/NO-GO:** Somme de contrôle de l'image chargée vérifiée (étape 5). Prêt pour un redémarrage maîtrisé.
 
 ### Étape 7 --- Confirmer l'amorçage sur le nouveau logiciel
 **TC:** `OBC_REBOOT` (Service 8, Subtype 1, func_id 52) --- commander un redémarrage maîtrisé de l'OBC
 **Note:** Était `FUNC_PERFORM func_id=30`, qui correspond à `PAYLOAD_DELETE_IMAGE`.
 **Action:** Attendre la séquence d'amorçage --- l'OBC ne répond plus pendant environ 60 s.
 **Verify:** `obdh.mode` (0x0300) répond dans les 90 s qui suivent la commande de redémarrage
-**Verify:** `obdh.sw_image` (0x0311) = 1 (application, et non chargeur d'amorçage)
+**Verify:** `obdh.sw_image` (0x0311) = 0 (BOOTLOADER) sur la balise (SID 11) sous 90 s. Un `OBC_REBOOT` commandé aboutit sur le chargeur d'amorçage et, lors de l'essai du 2026-11-02, y est RESTÉ jusqu'à `OBC_BOOT_APP` (pas d'amorçage automatique après 45 s), et le chargeur d'amorçage n'émet que le SID 11 — un 1 lu avant la balise suivante est la valeur d'avant le redémarrage
+**TC:** `OBC_BOOT_APP` (Service 8, Subtype 1, func_id 55) --- amorcer la nouvelle image applicative (fenêtre de CRC de 10 s ; attendre son S1.7)
+**Verify:** `obdh.sw_image` (0x0311) = 1 (application, et non chargeur d'amorçage) sous 45 s
+**TC:** `HK_ENABLE(sid=4)` (Service 3, Subtype 5) --- l'amorçage de l'application réapplique `default_enabled_sids: [1, 11]` ; réactiver tous les autres SID utilisés pendant le passage (2, 3, 5, 6, 7, 12 comme dans LEOP-001 / LEOP-007 / COM-009)
+**TC:** `OBC_SET_MODE(mode=0)` (Service 8, Subtype 1, func_id 50) --- rendre NOMINAL explicite : le redémarrage met l'OBC en SAFE (`obdh.mode` = 1) dans le chargeur d'amorçage et un amorçage applicatif réussi rétablit normalement 0 ; l'étape 8 le vérifie
+**Note:** Le redémarrage remet aussi l'horloge de l'OBC à J2000 (resynchroniser avec NOM-008) et la phase du satellite vaut 4 après l'amorçage, et non 6 : le directeur de vol la redéclare avec `SYS_SET_MISSION_PHASE(phase=6)` (func 120) avant de rendre la main aux opérations courantes.
+**TC:** `GET_PARAM(param_id=0x0316)` (Service 20, Subtype 3) — `obdh.last_reboot_cause` (à la demande : aucun SID HK ne le transporte)
 **Verify:** `obdh.last_reboot_cause` (0x0316) = 1 (commandé)
 **Verify:** `obdh.active_obc` (0x030C) inchangé (même unité OBC qu'avant)
 **Critique :** Si l'OBC ne répond pas sous 120 s, ou s'il démarre sur le chargeur d'amorçage (sw_image=0),
@@ -122,7 +127,7 @@ la nouvelle image a peut-être échoué à la validation d'amorçage. Exécuter 
 **TC:** `HK_REQUEST(sid=4)` (Service 3, Subtype 27) --- contrôle de santé OBDH complet
 **Verify:** `obdh.mode` (0x0300) = 0 (NOMINAL)
 **Verify:** `obdh.cpu_load` (0x0302) < 50 %
-**Verify:** `obdh.mem_errors` (0x031E) = 0
+**Verify:** `obdh.mem_errors` (0x031E) = la référence de l'étape 1 (aucune nouvelle erreur pendant le chargement)
 **Verify:** `obdh.bus_a_status` (0x030F) = 0 (OK) --- communication par bus CAN rétablie
 **TC:** `ENABLE_SCHEDULE` (Service 11, Subtype 13) --- reprendre l'ordonnancement de bord
 **Note:** Était `FUNC_PERFORM func_id=11`, qui correspond à `AOCS_CHECK_MOMENTUM`.
@@ -188,7 +193,7 @@ somme de contrôle, anomalies éventuellement observées.
 - [ ] `obdh.mode` (0x0300) = NOMINAL (0)
 - [ ] Tous les sous-systèmes communiquant normalement par le bus CAN
 - [ ] Ordonnancement de bord rétabli et opérationnel
-- [ ] `obdh.mem_errors` (0x031E) = 0
+- [ ] `obdh.mem_errors` (0x031E) pas plus élevé que la référence de l'étape 1
 - [ ] Somme de contrôle de l'image chargée vérifiée correcte
 - [ ] Journal de chargement complété avec numéros de version, sommes de contrôle et durée
 - [ ] Image précédente et son CRC-32 archivés au sol (revenir en arrière signifie la recharger)

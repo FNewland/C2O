@@ -89,7 +89,7 @@ it is below its commanded mode
 **Action:** Now WAIT. With CSS valid, attitude error < 15 deg sustained 60 s
 and the star tracker tracking, the AOCS promotes itself back to the COMMANDED
 mode (0x0297 = 4) with no further ground action.
-**Verify:** `aocs.mode` (0x020F) = 4 within 1800s --- the AUTOMATIC promotion
+**Verify:** `aocs.mode` (0x020F) = 4 within 3600s --- the AUTOMATIC promotion (measured ~1850 s in full sunlight on 2026-11-02)
 (allow a full eclipse arc on top if the hold spans the terminator)
 **Verify:** `aocs.mode_demoted` (0x0298) = 0 within 30s of the promotion
 **Note:** Do NOT verify mode = 3 "minutes later" --- a card that parks on

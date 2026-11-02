@@ -77,7 +77,7 @@ de tourner. Alimenter la ligne n'active PAS le SID 2 : l'ensemble activé à la
 explicitement par commande.
 **TC:** `HK_ENABLE(sid=2)` (Service 3, Subtype 5) --- activer les données de servitude AOCS périodiques
 **Verify:** Le SID 2 périodique commence à être émis en l'espace d'une période de structure de 4 s
-**Verify:** `aocs.wheels_enabled` (0x0260) = 0 --- roues DÉSACTIVÉES, comme prévu
+**Note:** `aocs.wheels_enabled` (0x0260) = 0 --- roues DÉSACTIVÉES, comme prévu --- ne peut pas encore être lu : il est uniquement à la demande, et `GET_PARAM` est refusé par un S1.8 « source subsystem unpowered or in MODE_OFF » tant que l'AOCS est encore OFF (mesuré le 2026-11-02). Il est vérifié à l'étape 6, après DETUMBLE.
 **GO/NO-GO:** Ensemble AOCS alimenté, SID 2 transmis, roues toujours désactivées
 
 ### Étape 4 --- Activer les capteurs et actionneurs de DETUMBLE AVANT de commander ce mode
@@ -113,6 +113,7 @@ en décroissance
 **Verify:** `eps.pl_payload` (0x0113) = 0 --- ligne charge utile toujours sur OFF (relève de COM-009)
 **Verify:** `eps.pl_fpa_cooler` (0x0114) = 0 --- ligne du refroidisseur toujours sur OFF (relève de COM-010)
 **Verify:** `eps.pl_prop` (0x014A) = 0 --- ligne de propulsion toujours sur OFF
+**TC:** `GET_PARAM(param_id=0x0260)` (Service 20, Subtype 3) — `aocs.wheels_enabled` (à la demande : aucun SID HK ne le transporte)
 **Verify:** `aocs.wheels_enabled` (0x0260) = 0 --- roues toujours DÉSACTIVÉES (relève de COM-004)
 **Verify:** Marge de puissance positive : `eps.power_gen` (0x0107) supérieure à la charge
 indiquée par `eps.power_cons` (0x0106), ou SoC stable/en hausse

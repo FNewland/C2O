@@ -46,6 +46,7 @@ magnetorquers.
 **TC:** `AOCS_ENABLE_WHEEL(wheel_idx=1)` (Service 8, Subtype 1, func_id 3)
 **TC:** `AOCS_ENABLE_WHEEL(wheel_idx=2)` (Service 8, Subtype 1, func_id 3)
 **TC:** `AOCS_ENABLE_WHEEL(wheel_idx=3)` (Service 8, Subtype 1, func_id 3)
+**TC:** `GET_PARAM(param_id=0x0260)` (Service 20, Subtype 3) — `aocs.wheels_enabled` (on-demand: no HK SID carries it)
 **Verify:** `aocs.wheels_enabled` (0x0260) == 4 within 10s
 **Verify:** `aocs.rw1_enabled` (0x0254) == 1 within 10s
 **Verify:** `aocs.rw2_enabled` (0x0255) == 1 within 10s
@@ -63,6 +64,7 @@ tracker into the estimator. This command also latches `aocs.commanded_mode`
 **Verify:** `aocs.mode` (0x020F) in {4, 8} within 300s --- 8 (ECLIPSE) is the
 shadow-side handover of the same commanded state
 **Verify:** `aocs.commanded_mode` (0x0297) = 4 within 10s
+**Verify:** `aocs.att_error` (0x0217) < 5.0 deg within 900s --- the slew from the sun hold to nadir must finish BEFORE Step 3: the spin-up checks judge a 5 deg disturbance, and the slew itself starts at 40-60 deg
 **GO/NO-GO:** AOCS in NOMINAL on the wheels
 
 ### Step 2 — Record Baseline Wheel Speeds

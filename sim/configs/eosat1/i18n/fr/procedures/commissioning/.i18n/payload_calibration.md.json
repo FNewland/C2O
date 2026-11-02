@@ -39,13 +39,13 @@
   },
   {
    "id": "com-011-payload-calibration/procedure-steps/step-3-capture-the-dark-frame-set",
-   "en_hash": "16753c22539087d5",
-   "fr_hash": "dbf018fd5faeb71d"
+   "en_hash": "b19a9cf3d9669411",
+   "fr_hash": "0c486ce29b9b2e11"
   },
   {
    "id": "com-011-payload-calibration/procedure-steps/step-3a-capture-the-flat-field-set",
-   "en_hash": "dad15d2c929cf2c7",
-   "fr_hash": "f67bb613f82eec70"
+   "en_hash": "12109e0b8bd208e0",
+   "fr_hash": "13a559c488fd4f1f"
   },
   {
    "id": "com-011-payload-calibration/procedure-steps/step-4-verify-dark-frame-data-quality",
@@ -54,8 +54,8 @@
   },
   {
    "id": "com-011-payload-calibration/procedure-steps/step-5-open-the-shutter-and-return-to-standby",
-   "en_hash": "b4e6d275dfd24fd0",
-   "fr_hash": "9620d8e005ac1767"
+   "en_hash": "2944fdc033e0fc2f",
+   "fr_hash": "a96b5a4eda24176f"
   },
   {
    "id": "com-011-payload-calibration/procedure-steps/step-6-prepare-for-calibration-site-overpass",
@@ -98,5 +98,5 @@
    "fr_hash": "7f8c5f710caa7ba1"
   }
  ],
- "en_commit": "8067e5b"
+ "en_commit": "d6b51dd"
 }

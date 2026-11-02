@@ -39,8 +39,8 @@
   },
   {
    "id": "ctg-011-obc-redundancy-switchover/procedure-steps/step-1-verify-obc-a-anomaly",
-   "en_hash": "862c08080bfbfb9f",
-   "fr_hash": "9c9d7bea2e3d7916"
+   "en_hash": "92e92eff841e1396",
+   "fr_hash": "070faf645cdf09e2"
   },
   {
    "id": "ctg-011-obc-redundancy-switchover/procedure-steps/step-2-command-obc-switchover",
@@ -49,13 +49,13 @@
   },
   {
    "id": "ctg-011-obc-redundancy-switchover/procedure-steps/step-3-verify-boot-to-bootloader",
-   "en_hash": "1ca2e79f91193b2c",
-   "fr_hash": "73355b173b269e54"
+   "en_hash": "9205a8de569724dc",
+   "fr_hash": "041cb9a819554de6"
   },
   {
    "id": "ctg-011-obc-redundancy-switchover/procedure-steps/step-4-verify-software-image-and-boot-application",
-   "en_hash": "da0ad1a1491ae907",
-   "fr_hash": "b9ec9b95598b8d7b"
+   "en_hash": "aac712af7370ebdd",
+   "fr_hash": "f1fee3bd3c869564"
   },
   {
    "id": "ctg-011-obc-redundancy-switchover/procedure-steps/step-5-verify-all-subsystems-nominal",
@@ -78,5 +78,5 @@
    "fr_hash": "eb0a8e14818cb9e4"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "d6b51dd"
 }

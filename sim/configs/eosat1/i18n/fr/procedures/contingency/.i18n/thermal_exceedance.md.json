@@ -39,13 +39,13 @@
   },
   {
    "id": "ctg-004-thermal-exceedance/procedure-steps/step-2a-cold-case-enable-heater-for-affected-zone",
-   "en_hash": "cfe8b11cf15f0bbe",
-   "fr_hash": "f19fecf565f18f01"
+   "en_hash": "f6e6b60480c006b3",
+   "fr_hash": "b5cbdd4ed9ab7bcc"
   },
   {
    "id": "ctg-004-thermal-exceedance/procedure-steps/step-2b-hot-case-reduce-thermal-load-in-affected-zone",
-   "en_hash": "186b32bb1a5bdcb8",
-   "fr_hash": "1a7d3d752fe58788"
+   "en_hash": "902c0a2d8f62ab53",
+   "fr_hash": "210fde0c2d56d4bc"
   },
   {
    "id": "ctg-004-thermal-exceedance/procedure-steps/step-3-monitor-temperature-trend",
@@ -78,5 +78,5 @@
    "fr_hash": "7425a0351c1744bc"
   }
  ],
- "en_commit": "8067e5b"
+ "en_commit": "d6b51dd"
 }

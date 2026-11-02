@@ -119,6 +119,7 @@ to match available generation » sur la boucle opérations.
 **Étape 5b — Si la marge reste insuffisante, désactiver le refroidisseur du FPA :**
 **LABEL:** `STEP-5B`
 **TC:** `FPA_COOLER(on=0)` (Service 8, Subtype 1, func_id 43)
+**TC:** `GET_PARAM(param_id=0x040C)` (Service 20, Subtype 3) — `tcs.cooler_fpa` : le SID 3 n'est périodique que toutes les 60 s : lire la valeur que ce contrôle utilise
 **Verify:** `tcs.cooler_fpa` (0x040C) = 0 en 5 s
 **Verify:** `eps.power_cons` (0x0106) diminue d'environ 15 W
 **GO/NO-GO:** Marge toujours insuffisante avec le refroidisseur du FPA arrêté -> GO `STEP-5C` | NO-GO `STEP-5D`

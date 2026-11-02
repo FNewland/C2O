@@ -55,6 +55,7 @@ above 40% SoC.
 **GO/NO-GO:** SoC increasing and battery temp nominal — continue monitoring until SoC > 40%
 
 ### Step 6 — Re-Enable Loads: Payload to Standby
+**TC:** `EPS_POWER_ON(line_index=3)` (Service 8, Subtype 1, func_id 19) — the `payload` line first, if `eps.pl_payload` (0x0113) = 0 (an on-board shed opens it; the mode command is then refused S1.8 "power line 'payload' is OFF")
 **TC:** `PAYLOAD_SET_MODE(mode=1)` (Service 8, Subtype 1, func_id 26)
 **Verify:** `payload.mode` (0x0600) = 1 (STANDBY) within 10s
 **Verify:** `eps.bat_soc` (0x0101) remains > 35% after load addition (allow 60s stabilisation)
@@ -62,6 +63,7 @@ above 40% SoC.
 **GO/NO-GO:** SoC stable above 35% with payload in standby — proceed
 
 ### Step 7 — Restore Nominal AOCS Mode
+**TC:** `EPS_POWER_ON(line_index=7)` (Service 8, Subtype 1, func_id 19) — the `aocs_wheels` line first, if `eps.pl_aocs_wheels` (0x0117) = 0 (a deep shed opens it and drops `aocs.mode` to 0; the mode command is then refused S1.8 "power line 'aocs_wheels' is OFF")
 **TC:** `AOCS_SET_MODE(mode=4)` (Service 8, Subtype 1, func_id 0)
 **Verify:** `aocs.mode` (0x020F) = 4 (NOMINAL) within 30s
 **Verify:** `eps.bat_soc` (0x0101) remains > 30% after AOCS transition

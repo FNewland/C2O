@@ -80,6 +80,7 @@ valeurs par défaut.
 **TC:** `PROP_ISO_OPEN(branch=2)` (Service 8, Subtype 1, func_id 113) --- ouvrir les deux branches de vannes à verrouillage
 **Verify:** `eps.pl_prop` (0x014A) = 1 sous 10s
 **Verify:** `prop.latch_a_state` (0x0B06) = 1 sous 10s
+**TC:** `GET_PARAM(param_id=0x0409)` (Service 20, Subtype 3) — `tcs.temp_thruster` (à la demande : aucun SID HK ne le transporte)
 **Verify:** `tcs.temp_thruster` (0x0409) >= 180 sous 1500s
 **GO/NO-GO:** Lit catalytique chaud et circuit de propergol ouvert
 

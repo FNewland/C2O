@@ -31,7 +31,7 @@ l'état de référence de la charge utile requis pour l'activation ultérieure d
 
 ### Étape 1 — Référence EPS avant mise sous tension
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27)
-**Verify:** `eps.bus_voltage` (0x0105) dans la plage [27.5V, 28.5V] sous 10s
+**Verify:** `eps.bus_voltage` (0x0105) dans la plage [27.0V, 29.0V] sous 10s (la bande jaune de la console)
 **Verify:** `eps.bat_soc` (0x0101) > 75 % sous 10s
 **Verify:** `eps.power_gen` (0x0107) > 40W sous 10s
 **Action:** Consigner comme référence la tension du bus, le SOC de la batterie et la production électrique avant mise sous tension.
@@ -54,6 +54,7 @@ semblait donc pris, puis revenait silencieusement en arrière, et toutes les ét
 **TC:** `PAYLOAD_SET_MODE(mode=1)` (Service 8, Subtype 1, func_id 26) — STANDBY
 **Note:** Alimentation de la charge utile activée ; la séquence de démarrage de l'électronique s'engage.
 Le démarrage dure environ 45 secondes.
+**TC:** `HK_ENABLE(sid=5)` (Service 3, Subtype 5) — données de servitude périodiques de la charge utile activées. Aucune fiche antérieure n'active le SID 5 (LEOP-007 n'active que le SID 2), et COM-010 puis toutes les fiches nominales supposent que le SID 5 est émis
 **TC:** `HK_REQUEST(sid=5)` (Service 3, Subtype 27) — données de servitude de la charge utile
 **Verify:** `payload.mode == 1` (0x0600, timeout 60 s) — STANDBY
 **Verify:** Redemander le SID 5 après 60 s supplémentaires et confirmer que `payload.mode` vaut

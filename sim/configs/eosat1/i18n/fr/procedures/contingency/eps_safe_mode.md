@@ -55,6 +55,7 @@ au-dessus de 40 % de SoC.
 **GO/NO-GO:** SoC en hausse et température batterie nominale — poursuivre la surveillance jusqu'à un SoC > 40 %
 
 ### Étape 6 — Réactiver les charges : charge utile en veille
+**TC:** `EPS_POWER_ON(line_index=3)` (Service 8, Subtype 1, func_id 19) — d'abord la ligne `payload`, si `eps.pl_payload` (0x0113) = 0 (un délestage de bord l'ouvre ; la commande de mode est alors refusée par un S1.8 « power line 'payload' is OFF »)
 **TC:** `PAYLOAD_SET_MODE(mode=1)` (Service 8, Subtype 1, func_id 26)
 **Verify:** `payload.mode` (0x0600) = 1 (STANDBY) en moins de 10 s
 **Verify:** `eps.bat_soc` (0x0101) reste > 35 % après l'ajout de charge (laisser 60 s de stabilisation)
@@ -62,6 +63,7 @@ au-dessus de 40 % de SoC.
 **GO/NO-GO:** SoC stable au-dessus de 35 % avec la charge utile en veille — continuer
 
 ### Étape 7 — Rétablir le mode SCAO nominal
+**TC:** `EPS_POWER_ON(line_index=7)` (Service 8, Subtype 1, func_id 19) — d'abord la ligne `aocs_wheels`, si `eps.pl_aocs_wheels` (0x0117) = 0 (un délestage profond l'ouvre et fait tomber `aocs.mode` à 0 ; la commande de mode est alors refusée par un S1.8 « power line 'aocs_wheels' is OFF »)
 **TC:** `AOCS_SET_MODE(mode=4)` (Service 8, Subtype 1, func_id 0)
 **Verify:** `aocs.mode` (0x020F) = 4 (NOMINAL) en moins de 30 s
 **Verify:** `eps.bat_soc` (0x0101) reste > 30 % après la transition du SCAO

@@ -49,8 +49,8 @@
   },
   {
    "id": "ctg-023-progressive-load-shed/procedure-steps/step-3-soc-35-shed-load-priority-2-fpa-cooler-off",
-   "en_hash": "1a847c8f7fa44679",
-   "fr_hash": "e67430bb46aa7d6e"
+   "en_hash": "bbd84bf17f33139c",
+   "fr_hash": "5cc8a017ce482315"
   },
   {
    "id": "ctg-023-progressive-load-shed/procedure-steps/step-4-soc-25-shed-load-priority-3-ttc-transmitter-off",
@@ -69,8 +69,8 @@
   },
   {
    "id": "ctg-023-progressive-load-shed/procedure-steps/step-7-restore-loads-in-reverse-priority-order",
-   "en_hash": "368df651d8baf309",
-   "fr_hash": "859ec105694dece8"
+   "en_hash": "613197e303728e05",
+   "fr_hash": "c83f4300f3ab0753"
   },
   {
    "id": "ctg-023-progressive-load-shed/procedure-steps/step-8-post-recovery-verification",
@@ -93,5 +93,5 @@
    "fr_hash": "2a26fa93111780b1"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "d6b51dd"
 }

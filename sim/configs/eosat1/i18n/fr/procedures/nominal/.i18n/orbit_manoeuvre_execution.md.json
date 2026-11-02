@@ -29,8 +29,8 @@
   },
   {
    "id": "nom-013-orbit-maintenance-manoeuvre-execution/procedure-steps/step-1-power-and-catbed-preheat-t-25-min",
-   "en_hash": "4a9e521db64f5f06",
-   "fr_hash": "00d7c432f7720d44"
+   "en_hash": "358bcec5eab54d99",
+   "fr_hash": "fb9179c7e25d1dd1"
   },
   {
    "id": "nom-013-orbit-maintenance-manoeuvre-execution/procedure-steps/step-2-attitude-for-burn",
@@ -39,8 +39,8 @@
   },
   {
    "id": "nom-013-orbit-maintenance-manoeuvre-execution/procedure-steps/step-3-load-and-arm",
-   "en_hash": "d01d1ea2d4c62f9c",
-   "fr_hash": "f2e19403614c4575"
+   "en_hash": "a4c4f28f4d1a2363",
+   "fr_hash": "2c38edde4f091a84"
   },
   {
    "id": "nom-013-orbit-maintenance-manoeuvre-execution/procedure-steps/step-4-execute-and-monitor",
@@ -68,5 +68,5 @@
    "fr_hash": "a76f67b05d32de27"
   }
  ],
- "en_commit": "8067e5b"
+ "en_commit": "d6b51dd"
 }

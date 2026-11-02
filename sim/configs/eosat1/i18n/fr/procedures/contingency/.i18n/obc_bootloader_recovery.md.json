@@ -39,18 +39,18 @@
   },
   {
    "id": "ctg-021-obc-bootloader-recovery/procedure-steps/step-1-confirm-bootloader-state-and-record-diagnostics",
-   "en_hash": "cbe021b2203a943f",
-   "fr_hash": "4a3c3e33d10957ac"
+   "en_hash": "1f5fa042f57b5d1f",
+   "fr_hash": "51410125c7ad5965"
   },
   {
    "id": "ctg-021-obc-bootloader-recovery/procedure-steps/step-2-assess-reboot-cause-and-determine-recovery-path",
-   "en_hash": "5332f1383c55dcc3",
-   "fr_hash": "e406c8fa23b19f8c"
+   "en_hash": "2af4781d59fc397e",
+   "fr_hash": "07da9e3a0f915da6"
   },
   {
    "id": "ctg-021-obc-bootloader-recovery/procedure-steps/step-3-attempt-application-boot",
-   "en_hash": "f9c124669434ad7a",
-   "fr_hash": "033a93f501e30967"
+   "en_hash": "c8c1a49c3d1ebf68",
+   "fr_hash": "9f699af864143f29"
   },
   {
    "id": "ctg-021-obc-bootloader-recovery/procedure-steps/step-3a-clear-beacon-mode-and-restore-the-low-rung",
@@ -64,8 +64,8 @@
   },
   {
    "id": "ctg-021-obc-bootloader-recovery/procedure-steps/step-5-retry-application-boot-after-memory-verification",
-   "en_hash": "24ccc9fd3d15b4ec",
-   "fr_hash": "ea1b62426430bdd6"
+   "en_hash": "4589c653490a4cd1",
+   "fr_hash": "e885a41147e14c47"
   },
   {
    "id": "ctg-021-obc-bootloader-recovery/procedure-steps/step-6-escalate-memory-reload-or-obc-switchover",
@@ -88,5 +88,5 @@
    "fr_hash": "c1ecf00778e8d91c"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "d6b51dd"
 }

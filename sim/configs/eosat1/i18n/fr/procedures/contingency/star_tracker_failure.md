@@ -104,7 +104,7 @@ même que traite cette fiche. Le nombre d'étoiles est la confirmation fiable
 que ST1 est sorti de la boucle.
 **Verify:** `aocs.att_error` (0x0217) < 0.1° (pointage fin rétabli)
 **Verify:** `aocs.rate_roll` (0x0204) < 0.01°/s
-**Verify:** `aocs.rate_pitch` (0x0205) < 0.01°/s
+**Verify:** `aocs.rate_pitch` (0x0205) dans la plage [0.053, 0.073] deg/s (le suivi du nadir impose la vitesse orbitale, +0.063 deg/s sur cette console ; une vitesse de tangage nulle signifierait que le satellite NE suit PAS le nadir)
 **Verify:** `aocs.rate_yaw` (0x0206) < 0.01°/s
 **Action:** Consigner la panne de ST1 et l'activation de ST2 dans le rapport d'anomalie.
 **Note:** Le satellite fonctionne désormais sur le seul senseur stellaire restant. Toute

@@ -59,6 +59,10 @@ and reassess after one additional sunlit pass.
 **TC:** `HK_REQUEST(sid=3)` (Service 3, Subtype 27) — Request TCS housekeeping
 **Verify:** `tcs.htr_battery` (0x040A) — record current state
 **Verify:** `tcs.htr_obc` (0x040B) — record current state
+**TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — EPS housekeeping: the line states below are in SID 1
+**Verify:** `eps.pl_htr_bat` (0x0115) = 1 and `eps.pl_htr_obc` (0x0116) = 1 — a setpoint does nothing on an unpowered heater line. Commissioning can leave both lines OFF (COM-002 restores its entry state), and the battery then drifts below the 2 C yellow limit within ~2 h (measured 2026-11-02): if either reads 0, power it first
+**TC:** `EPS_POWER_ON(line_index=5)` (Service 8, Subtype 1, func_id 19) — `htr_bat` line, only if 0x0115 = 0
+**TC:** `EPS_POWER_ON(line_index=6)` (Service 8, Subtype 1, func_id 19) — `htr_obc` line, only if 0x0116 = 0
 **Verify:** `tcs.temp_battery` (0x0407) > 5 C
 **Verify:** `tcs.temp_obc` (0x0406) > 10 C
 **Note:** If battery temperature margin is tight (< 8 C), raise battery heater
@@ -70,6 +74,7 @@ and reassess after one additional sunlit pass.
 ### Step 3: Disable FPA Cooler to Conserve Power
 **Note:** If payload is in STANDBY or OFF, disable FPA cooler to reduce eclipse power draw:
 **TC:** `FPA_COOLER(on=0)` (Service 8, Subtype 1, func_id 43) — FPA cooler OFF
+**TC:** `GET_PARAM(param_id=0x040C)` (Service 20, Subtype 3) — `tcs.cooler_fpa`: SID 3 is periodic only every 60 s, so fetch the value this check reads
 **Verify:** `tcs.cooler_fpa` (0x040C) = 0 (OFF) within 5 s
 **Verify:** `eps.power_cons` (0x0106) decreases by ~15 W
 **Note:** FPA cooler will be re-enabled after eclipse exit when power budget is positive.
@@ -123,6 +128,7 @@ diagnostics.
 **TC:** `FPA_COOLER(on=1)` (Service 8, Subtype 1, func_id 43) — re-enable the FPA cooler.
 Since Phase 4 this path also energises EPS line 4 (`eps.pl_fpa_cooler`, 0x0114);
 it used not to, which is why the FPA never reached its setpoint.
+**TC:** `GET_PARAM(param_id=0x040C)` (Service 20, Subtype 3) — `tcs.cooler_fpa`: SID 3 is periodic only every 60 s, so fetch the value this check reads
 **Verify:** `tcs.cooler_fpa` (0x040C) = 1 (ACTIVE) within 5 s
 **Note:** Restore heater setpoints to nominal if they were modified in Step 2.
 **TC:** `HEATER_AUTO_MODE(circuit=0)` (Service 8, Subtype 1, func_id 45) — battery circuit back to thermostat

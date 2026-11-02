@@ -29,6 +29,10 @@ Every category is pinned at zero. The categories are:
   `PROP_BURN_COMPLETE`. Referentially valid, operationally wrong.
 * `SUBTYPE_INVERTED` — `GET_PARAM … Subtype 1` when this suite's S20 uses
   subtype 1 for SET and subtype 3 for GET.
+* `ON_DEMAND_NOT_FETCHED` — a Verify / BRANCH / GO-NO-GO reads an `on_demand`
+  parameter that no HK SID carries, in a step that sends no `GET_PARAM` for
+  it, so the console cell the operator is told to read is empty (2026-11-02
+  role walkthrough).
 """
 from __future__ import annotations
 
@@ -47,7 +51,7 @@ from procedure_audit import Catalog, audit_procedures  # noqa: E402
 CATEGORIES = ("TC_UNKNOWN", "FUNC_ID_MISMATCH", "PARAM_UNKNOWN",
               "PARAM_NOT_REACHABLE", "EVENT_NAME_MISMATCH",
               "SUBTYPE_INVERTED", "HK_SID_MISMATCH",
-              "PARAM_INSTRUCTOR_ONLY")
+              "PARAM_INSTRUCTOR_ONLY", "ON_DEMAND_NOT_FETCHED")
 
 #: Findings that are deliberate. Every entry needs a reason; empty is the goal.
 ALLOWLIST: dict[tuple[str, str], str] = {}

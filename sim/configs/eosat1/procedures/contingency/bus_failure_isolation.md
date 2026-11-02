@@ -76,6 +76,7 @@ of operating on a single-string bus.
 **Verify:** `obdh.bus_b_status` (0x0310) — record status
 **Verify:** `obdh.mode` (0x0300) — confirm OBC has not entered SAFE mode due to bus error
 **Verify:** `obdh.cpu_load` (0x0302) — elevated load may indicate bus timeout retries
+**TC:** `GET_PARAM(param_id=0x0301)` (Service 20, Subtype 3) — `obdh.temp` (on-demand: no HK SID carries it)
 **Verify:** `obdh.temp` (0x0301) — within limits
 
 **Action:** Assess the fault:

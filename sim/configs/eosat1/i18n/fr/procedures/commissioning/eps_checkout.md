@@ -31,7 +31,7 @@ pour l'exploitation de la mission.
 
 ### Étape 1 — Mesure de référence de la tension du bus
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27)
-**Verify:** `eps.bus_voltage` (0x0105) dans la plage [27.5V, 28.5V] sous 10s
+**Verify:** `eps.bus_voltage` (0x0105) dans la plage [27.0V, 29.0V] sous 10s (la bande jaune de la console ; le bus suit la batterie, donc une batterie pleine se situe vers 29 V)
 **Action:** Consigner la tension du bus. Le point de régulation nominal est 28.0V +/- 0.5V.
 **GO/NO-GO:** Tension du bus régulée conformément à la spécification
 
@@ -46,7 +46,7 @@ pour l'exploitation de la mission.
 ### Étape 3 — Performances du générateur solaire au Soleil
 **Action:** Effectuer cette étape pendant la phase éclairée de l'orbite, avec un pointage solaire stable.
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27)
-**Verify:** `eps.power_gen` (0x0107) dans la plage [40W, 65W] sous 10s
+**Verify:** `eps.power_gen` (0x0107) dans la plage [40W, 90W] sous 10s (88.6 W est le pic de l'ensemble du satellite dans `subsystems/eps.yaml` ; ~80 W est normal en pointage solaire)
 **Action:** Consigner la production électrique. Valeur crête attendue ~64 W à l'angle solaire optimal avec les panneaux déployés (0,78 m², cellules GaAs à 29,5 %). La valeur réelle dépend de l'angle bêta actuel, de l'état de déploiement des panneaux et de la précision d'attitude.
 **GO/NO-GO:** Production électrique du générateur solaire dans la plage attendue
 
@@ -98,7 +98,7 @@ source de transitoire et est ensuite rétablie dans son état d'entrée.
 ## Postconditions
 - [ ] Tension du bus confirmée régulée à 28.0V +/- 0.5V
 - [ ] Tension et SOC de la batterie nominaux (> 70 % après charge complète)
-- [ ] Générateur solaire produisant 40-65W au Soleil (panneaux déployés, pointage solaire)
+- [ ] Générateur solaire produisant 40-90W au Soleil (panneaux déployés, pointage solaire)
 - [ ] Rythme de décharge en éclipse conforme à la prédiction
 - [ ] Reprise de charge nominale après la sortie d'éclipse
 - [ ] Bilan énergétique moyen sur l'orbite positif confirmé

@@ -105,7 +105,9 @@ toute télécommande applicative figurant plus loin dans cette fiche est rejeté
 **Verify:** `obdh.mode` (0x0300) = 1 (SAFE) sous 10 s --- l'OBC démarre en mode SAFE après un redémarrage
 **Verify:** `obdh.sw_image` (0x0311) = 1 (application) --- exécution depuis l'image applicative, et non depuis le chargeur d'amorçage
 **Verify:** `obdh.reboot_count` (0x030A) = previous_count + 1 --- un seul redémarrage a eu lieu
+**TC:** `GET_PARAM(param_id=0x0316)` (Service 20, Subtype 3) — `obdh.last_reboot_cause` (à la demande : aucun SID HK ne le transporte)
 **Verify:** `obdh.last_reboot_cause` (0x0316) = 1 (commandé) --- le redémarrage provient de notre commande
+**TC:** `GET_PARAM(param_id=0x030B)` (Service 20, Subtype 3) — `obdh.sw_version` (à la demande : aucun SID HK ne le transporte)
 **Verify:** `obdh.sw_version` (0x030B) = version attendue --- logiciel correct chargé
 **Verify:** `obdh.cpu_load` (0x0302) < 50 % --- CPU plus surchargé
 **Verify:** `obdh.mem_errors` (0x031E) = 0 --- erreurs mémoire effacées par le redémarrage

@@ -53,7 +53,7 @@ dépasse 4500 tr/min, ou au titre de la maintenance programmée.
 ### Étape 2 --- Instantané d'attitude avant désaturation
 **Verify:** `aocs.att_error` (0x0217) < 1.0 deg
 **Verify:** `aocs.rate_roll` (0x0204) < 0.05 deg/s
-**Verify:** `aocs.rate_pitch` (0x0205) < 0.05 deg/s
+**Verify:** `aocs.rate_pitch` (0x0205) dans la plage [0.043, 0.083] deg/s (le suivi du nadir impose la vitesse orbitale, +0.063 deg/s sur cette console ; une vitesse de tangage nulle signifierait que le satellite NE suit PAS le nadir)
 **Verify:** `aocs.rate_yaw` (0x0206) < 0.05 deg/s
 **Note:** Consigner l'erreur d'attitude et les vitesses comme référence avant désaturation.
 

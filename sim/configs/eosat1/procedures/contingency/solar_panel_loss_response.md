@@ -119,6 +119,7 @@ to match available generation" on the operations loop.
 **Step 5b — If margin still insufficient, disable FPA cooler:**
 **LABEL:** `STEP-5B`
 **TC:** `FPA_COOLER(on=0)` (Service 8, Subtype 1, func_id 43)
+**TC:** `GET_PARAM(param_id=0x040C)` (Service 20, Subtype 3) — `tcs.cooler_fpa`: SID 3 is periodic only every 60 s, so fetch the value this check reads
 **Verify:** `tcs.cooler_fpa` (0x040C) = 0 within 5 s
 **Verify:** `eps.power_cons` (0x0106) decreases by ~15 W
 **GO/NO-GO:** Margin still insufficient with the FPA cooler off -> GO `STEP-5C` | NO-GO `STEP-5D`

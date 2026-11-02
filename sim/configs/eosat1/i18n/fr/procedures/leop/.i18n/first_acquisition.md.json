@@ -34,13 +34,13 @@
   },
   {
    "id": "leop-001-first-acquisition-of-signal-obc-boot/procedure-steps/step-2-send-first-uplink-connection-test",
-   "en_hash": "cf761daa7affb90e",
-   "fr_hash": "3369e0193de728f7"
+   "en_hash": "898a31c06c17709d",
+   "fr_hash": "ed67b6b77f1be585"
   },
   {
    "id": "leop-001-first-acquisition-of-signal-obc-boot/procedure-steps/step-3-verify-carrier-lock-and-link-quality",
-   "en_hash": "88d49432e5b24d6d",
-   "fr_hash": "df4f0a7b3bcdc4a4"
+   "en_hash": "97d292d2a611ab18",
+   "fr_hash": "e2b831a3a22a873b"
   },
   {
    "id": "leop-001-first-acquisition-of-signal-obc-boot/procedure-steps/step-4-confirm-obc-is-in-bootloader",
@@ -49,13 +49,13 @@
   },
   {
    "id": "leop-001-first-acquisition-of-signal-obc-boot/procedure-steps/step-5-boot-obc-into-application-image",
-   "en_hash": "200adea08732511f",
-   "fr_hash": "a5772e0085ae7bac"
+   "en_hash": "d4a521707701d7f4",
+   "fr_hash": "9f9dc962e1143aff"
   },
   {
    "id": "leop-001-first-acquisition-of-signal-obc-boot/procedure-steps/step-5a-clear-beacon-mode-and-move-to-the-low-rung",
-   "en_hash": "d9a772dc97cc6104",
-   "fr_hash": "2a4f30a3095247a5"
+   "en_hash": "9089afb8179d64ea",
+   "fr_hash": "75591d7accfb7622"
   },
   {
    "id": "leop-001-first-acquisition-of-signal-obc-boot/procedure-steps/step-6-note-the-unset-clock-do-not-sync-here",
@@ -64,8 +64,8 @@
   },
   {
    "id": "leop-001-first-acquisition-of-signal-obc-boot/procedure-steps/step-7-request-eps-housekeeping-power-sanity-check",
-   "en_hash": "6f070fba45d1cb67",
-   "fr_hash": "7b0eb673abf72255"
+   "en_hash": "ad8ecb746f219979",
+   "fr_hash": "fa03d99b64bb6854"
   },
   {
    "id": "leop-001-first-acquisition-of-signal-obc-boot/procedure-steps/step-8-log-and-report",
@@ -88,5 +88,5 @@
    "fr_hash": "255f3c828e6e48a7"
   }
  ],
- "en_commit": "8067e5b"
+ "en_commit": "d6b51dd"
 }

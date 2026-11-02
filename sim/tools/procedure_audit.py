@@ -26,6 +26,12 @@ Each reference is then cross-checked:
    * ``instructor``: simulator truth no operator can observe. A procedure
      that tells an operator to read one is a content defect:
      PARAM_INSTRUCTOR_ONLY.
+4. An ``on_demand`` parameter that NO HK structure carries reaches the
+   console only when the operator fetches it with ``GET_PARAM`` (S20.3).
+   A Verify / BRANCH / GO-NO-GO that reads one in a step that does not fetch
+   it is reading a cell that is empty (or minutes stale): ON_DEMAND_NOT_FETCHED
+   (2026-11-02 role walkthrough — LEOP-007 verified ``aocs.wheels_enabled``
+   0x0260 with no fetch, and the console showed "no data" for the whole card).
 
 The result is an HTML + JSON findings report written to the workspace folder
 (``workspace/audit/procedure_audit.html`` and ``.json``) summarising:
@@ -102,6 +108,13 @@ RE_HK_REQUEST = re.compile(r"HK_REQUEST\(sid=(\d+)\)")
 RE_VERIFY_PARAM = re.compile(r"`([a-z]{2,8}\.[a-z][a-z0-9_]*)`")
 RE_STEP_BREAK = re.compile(r"(?m)^#{2,}\s")
 #: A Verify line that names the ground as the source of its reading.
+#: `GET_PARAM(param_id=0x0260)` / `GET_PARAM(0x0260)` — what a step fetches.
+RE_GET_PARAM = re.compile(r"GET_PARAM\(\s*(?:param_id\s*=\s*)?(0x[0-9A-Fa-f]{3,4})")
+#: `payload.shutter_pos == 1` (0x063C, ...) — a predicate span with its id.
+RE_PRED_WITH_ID = re.compile(
+    r"`([a-z]{2,8}\.[a-z][a-z0-9_]*)[^`\n]*`\s*\(\s*(0x[0-9A-Fa-f]{3,4})")
+RE_CHECK_LINE = re.compile(
+    r"(?m)^[ \t]*(?:[-*]\s+)?\*\*(?:Verify|BRANCH|GO/NO-GO)[^*\n]*:\*\*[^\n]*")
 RE_GROUND_SOURCE = re.compile(r"\(ground\)|\bground\b|TT&C page|radio page",
                               re.IGNORECASE)
 
@@ -286,7 +299,7 @@ class Finding:
     #: TC_UNKNOWN, FUNC_ID_MISMATCH, PARAM_UNKNOWN, PARAM_NOT_REACHABLE,
     #: EVENT_NAME_MISMATCH, SUBTYPE_INVERTED, ACTION_COMMAND,
     #: TC_NOT_EXTRACTED, PARAM_NAME_ID_MISMATCH, HK_SID_MISMATCH,
-    #: ZERO_COMMAND_PROCEDURE, PARAM_INSTRUCTOR_ONLY
+    #: ZERO_COMMAND_PROCEDURE, PARAM_INSTRUCTOR_ONLY, ON_DEMAND_NOT_FETCHED
     category: str
     detail: str
     context: str = ""
@@ -311,6 +324,7 @@ class ProcedureReport:
     tc_not_extracted: list[str] = field(default_factory=list)
     param_name_id_mismatch: list[str] = field(default_factory=list)
     hk_sid_mismatch: list[str] = field(default_factory=list)
+    on_demand_not_fetched: list[str] = field(default_factory=list)
     zero_command: list[str] = field(default_factory=list)
     #: How many executable command steps the canonical extractor gets out of
     #: this document. The number the old auditor never asked for.
@@ -466,6 +480,49 @@ def audit_procedures(cat: Catalog) -> tuple[list[ProcedureReport], list[Finding]
                     if detail not in rep.hk_sid_mismatch:
                         rep.hk_sid_mismatch.append(detail)
                         findings.append(Finding(rel, "HK_SID_MISMATCH", detail))
+
+        # A check that reads an on-demand-only parameter the step never
+        # fetches. No HK SID carries it, so the console cell is empty unless
+        # THIS step sends GET_PARAM for it (a fetch in an earlier step is a
+        # stale reading by the time the check is made).
+        for block in RE_STEP_BREAK.split(text):
+            fetched = {int(x, 16) for x in RE_GET_PARAM.findall(block)}
+            for line_m in RE_CHECK_LINE.finditer(block):
+                line = line_m.group(0)
+                ids: set[int] = set()
+                for name in RE_VERIFY_PARAM.findall(line):
+                    entry_p = cat.param_by_name.get(name.lower())
+                    if entry_p is not None:
+                        ids.add(entry_p["id"] if isinstance(entry_p["id"], int)
+                                else int(str(entry_p["id"]), 0))
+                for rx in (RE_NAME_WITH_ID, RE_PRED_WITH_ID):
+                    for m in rx.finditer(line):
+                        try:
+                            ids.add(int(m.group(2), 16))
+                        except ValueError:
+                            pass
+                for name in re.findall(r"`([a-z]{2,8}\.[a-z][a-z0-9_]*)\s*(?:==|!=|>=|<=|=|>|<)",
+                                       line):
+                    entry_p = cat.param_by_name.get(name.lower())
+                    if entry_p is not None:
+                        ids.add(entry_p["id"] if isinstance(entry_p["id"], int)
+                                else int(str(entry_p["id"]), 0))
+                for pid in sorted(ids):
+                    if (pid in cat.hk_param_ids or pid not in cat.on_demand_ids
+                            or pid in fetched or pid in cat.ground_derived_ids
+                            or pid in cat.instructor_ids):
+                        continue
+                    pname = cat.param_by_id.get(pid, {}).get("name", "?")
+                    detail = (f"{pname} (0x{pid:04X}) is on-demand only (no HK "
+                              f"SID carries it) and this step does not fetch "
+                              f"it — add GET_PARAM(param_id=0x{pid:04X}) "
+                              f"before the check")
+                    ctx = line.strip()[:120]
+                    key = f"{detail} [{ctx}]"
+                    if key not in rep.on_demand_not_fetched:
+                        rep.on_demand_not_fetched.append(key)
+                        findings.append(Finding(rel, "ON_DEMAND_NOT_FETCHED",
+                                                detail, context=ctx))
 
         # TCs
         for m in RE_TC_LINE.finditer(text):
@@ -663,7 +720,7 @@ def render(reports: list[ProcedureReport], findings: list[Finding]) -> str:
                + len(r.event_mismatch) + len(r.subtype_inverted)
                + len(r.action_command) + len(r.tc_not_extracted)
                + len(r.param_name_id_mismatch) + len(r.hk_sid_mismatch)
-               + len(r.zero_command))
+               + len(r.on_demand_not_fetched) + len(r.zero_command))
         cls = "err" if bad else "ok"
         per_proc_html.append(
             f"<details><summary class='{cls}'>"
@@ -687,6 +744,9 @@ def render(reports: list[ProcedureReport], findings: list[Finding]) -> str:
             + (f"<li class='err'>HK structure does not carry the verified "
                f"parameter: {'; '.join(r.hk_sid_mismatch)}</li>"
                if r.hk_sid_mismatch else "")
+            + (f"<li class='err'>On-demand parameter checked without a "
+               f"GET_PARAM in the step: {'; '.join(r.on_demand_not_fetched)}</li>"
+               if r.on_demand_not_fetched else "")
             + (f"<li class='err'>Unknown TCs: {', '.join(r.tc_unknown)}</li>"
                if r.tc_unknown else "")
             + (f"<li class='err'>func_id annotations contradicting the catalogue: "
@@ -749,7 +809,8 @@ def main() -> int:
                      "PARAM_NOT_REACHABLE", "EVENT_NAME_MISMATCH",
                      "SUBTYPE_INVERTED", "ACTION_COMMAND", "TC_NOT_EXTRACTED",
                      "PARAM_NAME_ID_MISMATCH", "HK_SID_MISMATCH",
-                     "ZERO_COMMAND_PROCEDURE", "PARAM_INSTRUCTOR_ONLY"):
+                     "ZERO_COMMAND_PROCEDURE", "PARAM_INSTRUCTOR_ONLY",
+                     "ON_DEMAND_NOT_FETCHED"):
         n = sum(1 for f in findings if f.category == cat_name)
         print(f"  {cat_name}: {n}")
     inert = [r.rel_path for r in reports

@@ -59,8 +59,8 @@
   },
   {
    "id": "ctg-024-solar-panel-loss-response/procedure-steps/step-5-shed-loads-to-match-reduced-power-budget",
-   "en_hash": "2c491b0e1589d336",
-   "fr_hash": "fa7e594c954ac1bd"
+   "en_hash": "d9ae989e1a68b7a7",
+   "fr_hash": "ffbe4603a3c27eaa"
   },
   {
    "id": "ctg-024-solar-panel-loss-response/procedure-steps/step-6-consider-attitude-optimisation-for-power-recovery",
@@ -83,5 +83,5 @@
    "fr_hash": "9be991bbd0966a4b"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "d6b51dd"
 }

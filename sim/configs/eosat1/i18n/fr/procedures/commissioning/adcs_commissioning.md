@@ -40,6 +40,7 @@ la télécommande propre à cette fiche et aucune autre fiche ne la contient.
 **TC:** `HK_REQUEST(sid=2)` (Service 3, Subtype 27)
 **Verify:** `aocs.mode` (0x020F) dans {4, 5, 8} --- famille opérationnelle
 **Verify:** `aocs.commanded_mode` (0x0297) = 4 et `aocs.mode_demoted` (0x0298) = 0
+**TC:** `GET_PARAM(param_id=0x0260)` (Service 20, Subtype 3) — `aocs.wheels_enabled` (à la demande : aucun SID HK ne le transporte)
 **Verify:** `aocs.wheels_enabled` (0x0260) = 4 (état de sortie de COM-004)
 **Verify:** `aocs.gyro_units_mask` (0x02D1) = 7 (état de sortie de COM-003)
 **Verify:** `aocs.st1_status` (0x0240) = 2 avec `aocs.st1_num_stars` (0x0241) >= 5
@@ -82,6 +83,7 @@ propagation des pannes et les règles FDIR conditionnées par la phase sont dés
 verrouillage de la propulsion refuse d'armer une poussée (`prop.yaml min_phase: 6`).
 **TC:** `SYS_SET_MISSION_PHASE(phase=6, flags=0)` (Service 8, Subtype 1, func_id 120)
 **Verify:** `eps.spacecraft_phase` (0x0129) = 6 sous 5s
+**TC:** `GET_PARAM(param_id=0x0001)` (Service 20, Subtype 3) — `sat.mode` (à la demande : aucun SID HK ne le transporte)
 **Verify:** `sat.mode` (0x0001) = 1 sous 10s --- NOMINAL dérivé
 **Action:** Confirmer que l'événement `MISSION_PHASE_CHANGED` (0x0055) apparaît dans le
 journal des événements avec `5 (COMMISSIONING) -> 6 (NOMINAL)`, et consigner

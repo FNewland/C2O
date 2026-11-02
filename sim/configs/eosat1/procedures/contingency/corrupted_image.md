@@ -80,6 +80,7 @@ and is aborted by the same command; mode 1 is already STANDBY and needs nothing.
 **Verify:** `payload.mode` (0x0600) = 1 (STANDBY) within 10 s
 **Note:** Verify cooler is active: If `tcs.cooler_fpa` (0x040C) = 0, enable:
 **TC:** `FPA_COOLER(on=1)` (Service 8, Subtype 1, func_id 43)
+**TC:** `GET_PARAM(param_id=0x040C)` (Service 20, Subtype 3) — `tcs.cooler_fpa`: SID 3 is periodic only every 60 s, so fetch the value this check reads
 **Verify:** `tcs.cooler_fpa` (0x040C) = 1 within 5 s
 **TC:** `HK_REQUEST(sid=5)` (Service 3, Subtype 27) — Payload housekeeping; monitor FPA temperature cooldown at 60 s intervals
 **TC:** `HK_REQUEST(sid=3)` (Service 3, Subtype 27) — TCS housekeeping

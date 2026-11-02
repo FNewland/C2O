@@ -45,7 +45,7 @@ campaign can find those strips.
 planning warning BEFORE committing to a long strip.
 **Verify:** `aocs.att_error` (0x0217) < 0.1 deg within 5 s
 **Verify:** `aocs.rate_roll` (0x0204) < 0.01 deg/s
-**Verify:** `aocs.rate_pitch` (0x0205) < 0.01 deg/s
+**Verify:** `aocs.rate_pitch` (0x0205) in range [0.053, 0.073] deg/s (nadir tracking carries the orbit rate, +0.063 deg/s on this console; a zero pitch rate would mean the spacecraft is NOT tracking nadir)
 **Verify:** `aocs.rate_yaw` (0x0206) < 0.01 deg/s
 **GO/NO-GO:** If att_error >= 0.1 deg, HOLD. Wait up to 60 s for convergence.
 If still not met, abort imaging and investigate AOCS performance.

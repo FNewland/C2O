@@ -29,8 +29,8 @@
   },
   {
    "id": "nom-002-imaging-session/procedure-steps/step-1-verify-fine-pointing-performance",
-   "en_hash": "b4c0217fcab938fc",
-   "fr_hash": "59b3e777f37f9ec5"
+   "en_hash": "24d3b09089f33d64",
+   "fr_hash": "92bef09010331511"
   },
   {
    "id": "nom-002-imaging-session/procedure-steps/step-2-verify-focal-plane-thermal-condition",
@@ -78,5 +78,5 @@
    "fr_hash": "18b2e92a54e17bee"
   }
  ],
- "en_commit": "8067e5b"
+ "en_commit": "d6b51dd"
 }

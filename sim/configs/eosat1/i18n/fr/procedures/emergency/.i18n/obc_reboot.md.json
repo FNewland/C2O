@@ -54,8 +54,8 @@
   },
   {
    "id": "emg-003-obc-reboot/procedure-steps/step-5-verify-obc-heartbeat-and-mode",
-   "en_hash": "619ec3905d2889ae",
-   "fr_hash": "e9ea719b5a4e89cb"
+   "en_hash": "ba84a1b4cc92a5f5",
+   "fr_hash": "77cd6574eea78ff4"
   },
   {
    "id": "emg-003-obc-reboot/procedure-steps/step-6-check-boot-source-and-active-obc",
@@ -98,5 +98,5 @@
    "fr_hash": "01018e2c2027bcb3"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "d6b51dd"
 }

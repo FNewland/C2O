@@ -34,8 +34,8 @@
   },
   {
    "id": "nom-007-momentum-management/procedure-steps/step-2-pre-desaturation-attitude-snapshot",
-   "en_hash": "41c7bb73b20a6890",
-   "fr_hash": "1d08170598848abe"
+   "en_hash": "51d3826490047ae8",
+   "fr_hash": "844e79fb2cf8ec37"
   },
   {
    "id": "nom-007-momentum-management/procedure-steps/step-3-command-desaturation",
@@ -68,5 +68,5 @@
    "fr_hash": "3bf5a2ee59e76035"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "d6b51dd"
 }

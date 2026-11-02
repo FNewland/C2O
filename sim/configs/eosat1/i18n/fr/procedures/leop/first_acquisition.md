@@ -52,12 +52,12 @@ exécutant son logiciel applicatif.
 **Action:** Le ping du service 17 figure sur la liste des TC autorisées par le chargeur d'amorçage ; il est donc accepté par l'OBC avant même le chargement de l'image applicative. Dès l'acceptation, le **maintien automatique de l'émetteur (auto-TX)** de la plateforme entre en jeu : toute TC acceptée met de façon autonome `ttc_tx` sur ON pendant 15 minutes, ce qui alimente la liaison descendante sans autre commande.
 **Verify:** Acceptation S1.1 (Service 1, Subtype 1) reçue sous 10s
 **Verify:** Rapport de test de connexion S17.2 reçu sous 10s
-**Verify:** `eps.pl_ttc_tx == 1` (0x0112, timeout 10 s) — armé automatiquement
+**Verify:** Les paquets balise (SID 11) commencent à arriver sous 30 s — la liaison descendante existe. Le chargeur d'amorçage n'émet que le SID 11, et le SID 11 ne transporte pas `eps.pl_ttc_tx` (0x0112) : cette ligne est confirmée à l'étape 7, une fois que l'application émet le SID 1
 **GO/NO-GO:** Liaison bidirectionnelle établie, liaison descendante visible par l'opérateur
 
 ### Étape 3 — Vérifier le verrouillage de la porteuse et la qualité de la liaison
 **Action:** Confirmer que le récepteur de la station sol a verrouillé la porteuse. Consigner le décalage Doppler mesuré pour la dynamique du vol.
-**Verify:** `ttc.link_status` (0x0501) = 2 (LOCKED) sous 30s
+**Verify:** Les trames balise sont décodées en continu (barre supérieure : « Je le vois ? » actif) sous 30s. `ttc.link_status` (0x0501) est dans le SID 6, que le chargeur d'amorçage n'émet pas : il est vérifié = 2 (LOCKED) à l'étape 5a
 **Verify:** page TT&C (sol) : `ttc.rssi` (0x0502) > -126 dBm sous 30s
 **Verify:** page TT&C (sol) : `ttc.link_margin` (0x0503) > 3.0 dB
 **GO/NO-GO:** Verrouillage stable de la porteuse avec une marge de liaison positive
@@ -73,14 +73,15 @@ exécutant son logiciel applicatif.
 **TC:** `OBC_BOOT_APP` (Service 8, Subtype 1, func_id 55)
 **Action:** Envoyer la commande d'amorçage de l'application. Le modèle OBDH vérifie le CRC de l'application sur une fenêtre de 10s, puis fait passer `sw_image` à APPLICATION (1). Tant que cette transition n'est pas terminée, seul le jeu de commandes du chargeur d'amorçage est accepté.
 **Verify:** Acceptation S1.1 + début d'exécution S1.3 reçus sous 5s
-**Verify:** `obdh.boot_state` (0x0A15) = 1 (VERIFYING), `obdh.boot_time_remaining_s` (0x0A16) en décompte — la fenêtre de CRC est ouverte
+**Note:** `obdh.boot_state` (0x0A15) = 1 (VERIFYING) et `obdh.boot_time_remaining_s` (0x0A16) en décompte signalent la fenêtre de CRC ouverte, mais les deux sont dans le SID 4, que le chargeur d'amorçage n'émet pas : pendant la fenêtre, la console ne les montre que dans un avis de refus. `obdh.boot_state` est vérifié après `HK_ENABLE(sid=4)` ci-dessous
 **Verify:** Fin d'exécution S1.7 reçue sous 15s. Elle arrive à la FERMETURE de la fenêtre de CRC, et non à l'acceptation : c'est donc la confirmation que l'amorçage a réellement eu lieu. Un échec du CRC est signalé par un S1.8 indiquant la cause, ainsi que par l'événement 0x0305 BOOT_FAILURE ; un succès est signalé par l'événement 0x0310 BOOT_COMPLETE.
-**Verify:** `obdh.sw_image` (0x0311) = 1 (APPLICATION) et `obdh.boot_state` (0x0A15) = 2 sous 15s
+**Verify:** `obdh.sw_image` (0x0311) = 1 (APPLICATION) sous 15s (le SID 11 de la balise le transporte)
 **Note:** Ne pas envoyer la télécommande suivante avant l'arrivée de ce S1.7. Pendant la fenêtre de CRC, l'OBC est toujours le chargeur d'amorçage, et tout ce qui sort de son sous-ensemble est refusé par un S1.2 — l'avis de refus indique `0x0A15 = 1 VERIFYING` et demande d'attendre.
 **Verify:** Les HK périodiques **SID 1 (EPS) et SID 11 (balise)** — et uniquement ces deux-là — commencent à apparaître sur la liaison descendante. L'amorçage de l'application réapplique `simulation.yaml` `default_enabled_sids: [1, 11]` (`engine.py::_apply_default_hk_enable`, appelé par le gestionnaire d'amorçage) ; tous les autres SID (2 AOCS, 3 TCS, 4 OBDH/plateforme, 5 charge utile, 6 TT&C, 8 EPS étendu, 9 PROP) sont donc DÉSACTIVÉS à l'amorçage et doivent être activés par commande avec `HK_ENABLE(sid=N)` (Service 3, Subtype 5). Alimenter la ligne d'un sous-système n'active pas son SID.
 **TC:** `HK_ENABLE(sid=3)` (Service 3, Subtype 5) — données de servitude périodiques TCS
 **TC:** `HK_ENABLE(sid=4)` (Service 3, Subtype 5) — données de servitude périodiques OBDH / plateforme
 **TC:** `HK_ENABLE(sid=6)` (Service 3, Subtype 5) — données de servitude périodiques TT&C
+**Verify:** `obdh.boot_state` (0x0A15) = 2 sous 15s (SID 4, désormais activé)
 **Verify:** Les SID périodiques 3, 4 et 6 commencent à apparaître en l'espace d'une période de structure (SID 3 = 60 s, SID 4 = 8 s, SID 6 = 8 s). Les SID 2 (AOCS) et 5 (charge utile) sont activés dans LEOP-007, une fois leurs lignes alimentées.
 **Note:** L'amorçage de l'application ne désactive **PAS** le mode balise. `ttc.beacon_mode` (0x0521) reste à 1 et le satellite reste sur le palier BEACON jusqu'à ce que ce mode soit explicitement désactivé à l'étape 5a. D'ici là, tout `TTC_SET_DATA_RATE` est REFUSÉ par un S1.8 avec l'erreur `0x0007` et l'avis d'échec « TM rate is forced to the beacon tier in beacon mode (LOW refused) ».
 **GO/NO-GO:** Image applicative en cours d'exécution, ensemble complet des services PUS disponible — l'étape 5a (sortie du mode balise) précède tout changement de débit
@@ -90,6 +91,7 @@ exécutant son logiciel applicatif.
 **Action:** Désactiver le mode balise. C'est le verrou de toute l'échelle de débits : tant que le mode balise est verrouillé, BEACON est le SEUL palier autorisé et LOW comme HIGH sont refusés. C'est une étape distincte et délibérée, car le palier balise est la ligne de vie — le satellite ne le quitte jamais par accident.
 **Verify:** Acceptation S1.1 + fin d'exécution S1.7 reçues sous 5s
 **Verify:** `ttc.beacon_mode` (0x0521) = 0 sous 10s
+**Verify:** `ttc.link_status` (0x0501) = 2 (LOCKED) sous 15s (SID 6, activé à l'étape 5)
 **TC:** `TTC_SET_DATA_RATE(rate=0)` (Service 8, Subtype 1, func_id 65) (LOW)
 **Action:** Sélectionner le `default_tier` de l'échelle — **LOW, 16 000 bit/s, BPSK conv(7,1/2)+RS, 16 kBd**. Reconfigurer le démodulateur sol à 16 kBd AVANT d'attendre les SID des sous-systèmes : le démodulateur de balise ne se verrouillera pas à 16 kbit/s.
 **Verify:** Acceptation S1.1 + fin d'exécution S1.7 (et NON un S1.8) sous 5s
@@ -112,6 +114,7 @@ la logique « amorcer puis synchroniser » n'est écrite qu'une fois. Cette 
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27)
 **Verify:** `eps.bus_voltage` (0x0105) dans la plage [26.0V, 30.0V] sous 10s
 **Verify:** `eps.bat_soc` (0x0101) > 50 % sous 10s
+**Verify:** `eps.pl_ttc_tx` (0x0112) = 1 — le maintien auto-TX de l'étape 2 (SID 1)
 **Verify:** `eps.power_gen` (0x0107) rapportée (valeur faible tant que le satellite est en rotation libre et pas encore pointé vers le Soleil)
 **GO/NO-GO:** État d'alimentation plausible pour les conditions post-séparation
 

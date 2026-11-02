@@ -31,7 +31,7 @@ the baseline payload state required for subsequent cooler activation and imaging
 
 ### Step 1 — Pre-Power-On EPS Baseline
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27)
-**Verify:** `eps.bus_voltage` (0x0105) in range [27.5V, 28.5V] within 10s
+**Verify:** `eps.bus_voltage` (0x0105) in range [27.0V, 29.0V] within 10s (the console's yellow band)
 **Verify:** `eps.bat_soc` (0x0101) > 75% within 10s
 **Verify:** `eps.power_gen` (0x0107) > 40W within 10s
 **Action:** Record pre-power-on bus voltage, battery SOC, and power generation as baseline.
@@ -54,6 +54,7 @@ run against a payload that was off.
 **TC:** `PAYLOAD_SET_MODE(mode=1)` (Service 8, Subtype 1, func_id 26) — STANDBY
 **Note:** Payload power supply enabled; the electronics boot sequence initiates.
 Boot duration is approximately 45 seconds.
+**TC:** `HK_ENABLE(sid=5)` (Service 3, Subtype 5) — payload periodic housekeeping ON. No earlier card enables SID 5 (LEOP-007 enables SID 2 only), and COM-010 onwards and every nominal card assume SID 5 is emitting
 **TC:** `HK_REQUEST(sid=5)` (Service 3, Subtype 27) — payload housekeeping
 **Verify:** `payload.mode == 1` (0x0600, timeout 60 s) — STANDBY
 **Verify:** Re-request SID 5 after a further 60 s and confirm `payload.mode` is

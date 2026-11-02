@@ -80,6 +80,7 @@ et s'interrompt avec la même commande ; le mode 1 est déjà STANDBY et ne d
 **Verify:** `payload.mode` (0x0600) = 1 (STANDBY) en moins de 10 s
 **Note:** Vérifier que le refroidisseur est actif : si `tcs.cooler_fpa` (0x040C) = 0, l'activer :
 **TC:** `FPA_COOLER(on=1)` (Service 8, Subtype 1, func_id 43)
+**TC:** `GET_PARAM(param_id=0x040C)` (Service 20, Subtype 3) — `tcs.cooler_fpa` : le SID 3 n'est périodique que toutes les 60 s : lire la valeur que ce contrôle utilise
 **Verify:** `tcs.cooler_fpa` (0x040C) = 1 en moins de 5 s
 **TC:** `HK_REQUEST(sid=5)` (Service 3, Subtype 27) — Données de servitude charge utile ; surveiller la mise en froid du FPA toutes les 60 s
 **TC:** `HK_REQUEST(sid=3)` (Service 3, Subtype 27) — Données de servitude TCS

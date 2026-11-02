@@ -76,6 +76,7 @@ d'un fonctionnement sur un bus sans redondance.
 **Verify:** `obdh.bus_b_status` (0x0310) — consigner l'état
 **Verify:** `obdh.mode` (0x0300) — confirmer que l'OBC n'est pas passé en mode SAFE à cause de l'erreur de bus
 **Verify:** `obdh.cpu_load` (0x0302) — une charge élevée peut indiquer des relances sur dépassement de délai du bus
+**TC:** `GET_PARAM(param_id=0x0301)` (Service 20, Subtype 3) — `obdh.temp` (à la demande : aucun SID HK ne le transporte)
 **Verify:** `obdh.temp` (0x0301) — dans les limites
 
 **Action:** Évaluer le défaut :
