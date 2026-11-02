@@ -6,9 +6,12 @@ endpoints for study management, design execution, and real-time updates.
 from __future__ import annotations
 
 import logging
+import os
 from contextlib import asynccontextmanager
+from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
@@ -121,7 +124,8 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS for frontend development
+# CORS for frontend development (the hosted deployment serves the built
+# frontend from this same origin, so it needs no CORS entry).
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173", "http://localhost:3000"],
@@ -184,3 +188,36 @@ async def health_check():
             ),
         },
     }
+
+
+# ── Who is signed in (hosted deployment) ──────────────────────────────────
+# Behind Google IAP every request carries the signed-in account in
+# X-Goog-Authenticated-User-Email ("accounts.google.com:name@c2o.live").
+# Locally the header is absent and the frontend asks for a name as before.
+# Display only: IAP itself is the access control.
+@app.get("/api/whoami")
+async def whoami(request: Request):
+    raw = request.headers.get("x-goog-authenticated-user-email", "")
+    email = raw.split(":", 1)[-1] if raw else ""
+    name = email.split("@", 1)[0].replace(".", " ").title() if email else ""
+    return {"email": email or None, "name": name or None}
+
+
+# ── Built frontend (hosted deployment) ────────────────────────────────────
+# SPACECDF_STATIC_DIR points at frontend/dist (the Docker image sets it).
+# Unknown non-API paths return index.html so the React routes survive a
+# reload. Registered last, after every /api and /ws route.
+_static_dir = os.environ.get("SPACECDF_STATIC_DIR", "")
+if _static_dir and Path(_static_dir, "index.html").is_file():
+    _static_root = Path(_static_dir).resolve()
+    app.mount("/assets", StaticFiles(directory=_static_root / "assets"), name="assets")
+
+    @app.get("/{path:path}", include_in_schema=False)
+    async def spa(path: str):
+        if path.startswith(("api/", "ws")):
+            raise HTTPException(status_code=404)
+        candidate = (_static_root / path).resolve()
+        if path and candidate.is_file() and _static_root in candidate.parents:
+            return FileResponse(candidate)
+        return FileResponse(_static_root / "index.html",
+                            headers={"Cache-Control": "no-cache"})

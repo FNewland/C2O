@@ -194,6 +194,21 @@ c2o-live-prod` once, then `bash deploy/gcp/switch.sh c2o`.
 If anything fails, read the message, fix the cause and **rerun `setup.sh`**. It checks every resource
 first and creates only what is missing.
 
+### 5b. SpaceCDF's AI advisor key (optional, 2 min)
+
+SpaceCDF (https://design.c2o.live) works without it, in manual mode. To turn on its AI advisor, store an
+Anthropic API key in the secret `setup.sh` created, then refresh the ground VM:
+
+```bash
+printf %s 'sk-ant-…' | gcloud secrets versions add c2o-anthropic-key --data-file=-
+gcloud compute ssh c2o-ground-vm --zone=northamerica-northeast2-a --tunnel-through-iap \
+    --command='sudo bash /opt/c2o/deploy/gcp/vm-bootstrap.sh refresh'
+```
+
+Every signed-in user then spends from that key; `design/configs/genai.yaml` sets the per-session token
+limit. To turn the advisor off again, disable the secret's versions
+(`gcloud secrets versions disable latest --secret=c2o-anthropic-key`) and refresh.
+
 ## 6. DNS A records at Squarespace (10 min)
 
 The IP is the one `setup.sh` printed. To show it again:
@@ -206,8 +221,8 @@ At <https://account.squarespace.com/domains> → **c2o.live → DNS**, first **d
 on these names that point elsewhere. Look for the A, AAAA and CNAME records on `@`, `ops`, `plan`, `sim`
 and `link`. A domain moved from Google Domains or set up by Squarespace may carry preset records
 (*Squarespace Defaults*, parked-page A records, a `www` CNAME). `www` itself may stay. Also turn off any
-domain forwarding on the bare domain. Then **Add record** for each name below (eleven in all; the
-last six are the tool pages):
+domain forwarding on the bare domain. Then **Add record** for each name below (twelve in all; the
+last seven are the tool pages and SpaceCDF):
 
 | Name (host) | Type | Data | TTL |
 |---|---|---|---|
@@ -216,7 +231,7 @@ last six are the tool pages):
 | `plan` | A | *LB IP* | same |
 | `sim` | A | *LB IP* | same |
 | `link` | A | *LB IP* | same |
-| `tm`, `orbit`, `radio`, `docs` | A | *LB IP* | same (one record each) |
+| `tm`, `orbit`, `radio`, `docs`, `design` | A | *LB IP* | same (one record each) |
 | `scenarios`, `adcs` | A | *LB IP* | same (one record each) |
 
 Keep the TTL the same on all of them; Squarespace asks for that on its Google-hosted DNS. Do **not** add
@@ -226,7 +241,7 @@ you set `INCLUDE_APEX=no`, skip `@`.
 Check from Cloud Shell; every name must print the LB IP:
 
 ```bash
-for h in c2o.live ops plan sim link tm orbit radio docs scenarios adcs; do
+for h in c2o.live ops plan sim link tm orbit radio docs design scenarios adcs; do
   case $h in *.*) n=$h ;; *) n=$h.c2o.live ;; esac; echo "$n $(dig +short "$n" A)"; done
 ```
 
@@ -234,11 +249,13 @@ for h in c2o.live ops plan sim link tm orbit radio docs scenarios adcs; do
 
 ```bash
 gcloud compute ssl-certificates describe c2o-cert --global --format='yaml(managed)'
-gcloud compute ssl-certificates describe c2o-cert-tools --global --format='yaml(managed)'
+gcloud compute ssl-certificates list --global --filter='name ~ ^c2o-cert-tools' --format='yaml(name,managed)'
 ```
 
-`c2o-cert` covers the five main names; `c2o-cert-tools` covers the six tool pages. They provision
-independently, so the main site can be up while the tool pages are still waiting.
+`c2o-cert` covers the five main names; `c2o-cert-tools-<hash>` covers the tool pages and SpaceCDF. They
+provision independently, so the main site can be up while the tool pages are still waiting. The hash
+follows the list of tool names: if that list changes, `setup.sh` makes a new certificate, swaps it in
+and deletes the old one, and the tool pages are briefly on the old one until the new one is ACTIVE.
 
 Wait until `status: ACTIVE` and every domain shows `ACTIVE`. `PROVISIONING` with `FAILED_NOT_VISIBLE` on
 a domain means Google can't yet see that name pointing at the LB IP: check step 6. Once DNS is right it
@@ -290,6 +307,7 @@ sudo google_metadata_script_runner startup
 | https://orbit.c2o.live | Orbit tools | students + instructors | ground VM :8093 |
 | https://radio.c2o.live | Radio view (RF bridge) | students + instructors | ground VM :8094 |
 | https://docs.c2o.live | Documentation | students + instructors | ground VM :8095 |
+| https://design.c2o.live | SpaceCDF design tool | students + instructors | ground VM :8000 |
 | https://scenarios.c2o.live | Scenario generator | instructors | sim VM :8096 |
 | https://adcs.c2o.live | ADCS failure viewer | instructors | sim VM :8097 |
 
@@ -465,7 +483,7 @@ it is idle or saturated (`gcloud compute instances set-machine-type`, VM stopped
    billing link and Cloud Identity remain.
    *Or*, if the project holds nothing else: `gcloud projects delete c2o-live-prod`. Google keeps it
    recoverable for 30 days, and billing stops at once.
-3. Delete the A records at Squarespace (eleven, including the tool pages).
+3. Delete the A records at Squarespace (twelve, including the tool pages and SpaceCDF).
 4. Cloud Identity Free costs nothing, so keep it for next term. To close it, delete the users, then
    remove the subscription in the Admin console under *Billing*.
 
@@ -518,6 +536,11 @@ ShellCheck 0.11.0, **without any Google Cloud credentials**:
   9091, 8080, 9100 and the tools 8092-8095 on 10.20.0.10, and `SMO_GSG_ALLOWED_ORIGINS=https://sim.c2o.live`.
   `--profile space` gives the agent `SMO_LINK_URL=ws://10.20.0.10:9100/link`. `--profile local-demo`
   also validates.
+- **SpaceCDF online (2026-11-02):** `design/Dockerfile.web` built and run in Docker: the built frontend
+  is served by the backend, unknown paths fall back to the app, `/api/whoami` reads the IAP header
+  and pre-fills the name, a study survived a container restart on the `/data` volume, and the health
+  check passes. The setup dry run creates the `design` backend, IAP grants, the AI-key secret and
+  the seven-name tool certificate.
 - **Tool pages (2026-11-01):** the whole stack (`local-demo` plus `rf`) built and run in Docker. All
   eleven pages answered 200; the MCS kept its telemetry with the RF bridge as a tap (behind the bridge it
   lost the LEOP beacon telemetry, hence the tap); a scenario saved in the generator appeared in the

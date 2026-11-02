@@ -308,7 +308,32 @@ services:
     ports:
       - "${SMO_PUBLISH_ADDR:-127.0.0.1}:8097:8097"
 
+  # SpaceCDF, the design tool (profile "design"; on GCP the ground VM runs it
+  # for https://design.<domain>). Its own image, built from ../../design.
+  # ANTHROPIC_API_KEY (optional, for the AI advisor) comes from design.env,
+  # which vm-bootstrap.sh writes from Secret Manager; without it SpaceCDF
+  # runs in manual mode.
+  spacecdf:
+    image: spacecdf-web:${SMO_CONFIG_HASH:-dev}
+    build:
+      context: ../../design
+      dockerfile: Dockerfile.web
+    profiles: [design]
+    init: true
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+    env_file:
+      - path: ./design.env
+        required: false
+    volumes:
+      - spacecdf-data:/data
+    ports:
+      - "${SMO_PUBLISH_ADDR:-127.0.0.1}:8000:8000"
+
 volumes:
+  spacecdf-data:       # SpaceCDF database and analysis runs
   space-workspace:     # sim breakpoints / config history, agent link state (dumps_acked.json)
   space-dumps:         # S15 dumps written by the simulator, shipped by the agent
   ground-workspace:    # reports, rfsim pass roll-ups

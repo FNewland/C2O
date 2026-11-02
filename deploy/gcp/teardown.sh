@@ -32,7 +32,9 @@ del compute target-http-proxies describe "$T_HTTP" --global -- compute target-ht
 del compute url-maps describe "$URLMAP" --global -- compute url-maps delete "$URLMAP" --global
 del compute url-maps describe "$REDIRECT_MAP" --global -- compute url-maps delete "$REDIRECT_MAP" --global
 del compute ssl-certificates describe "$CERT" --global -- compute ssl-certificates delete "$CERT" --global
-del compute ssl-certificates describe "$CERT_TOOLS" --global -- compute ssl-certificates delete "$CERT_TOOLS" --global
+for c in $(gcloud compute ssl-certificates list --global --filter="name ~ ^$CERT_TOOLS_PREFIX" --format='value(name)' 2>/dev/null); do
+    del compute ssl-certificates describe "$c" --global -- compute ssl-certificates delete "$c" --global
+done
 del compute ssl-policies describe "$SSL_POLICY" --global -- compute ssl-policies delete "$SSL_POLICY" --global
 del compute addresses describe "$LB_IP" --global -- compute addresses delete "$LB_IP" --global
 
@@ -70,6 +72,7 @@ del compute networks describe "$NET" -- compute networks delete "$NET"
 
 log "Secret and service accounts"
 del secrets describe "$SECRET" -- secrets delete "$SECRET"
+del secrets describe "$SECRET_AI" -- secrets delete "$SECRET_AI"
 for sa in "$SA_GROUND_EMAIL" "$SA_SIM_EMAIL"; do
     del iam service-accounts describe "$sa" -- iam service-accounts delete "$sa"
 done

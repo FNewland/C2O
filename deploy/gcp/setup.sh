@@ -79,8 +79,8 @@ fw() {
 }
 log "Firewall (nothing else reaches the VMs: the VPC denies all other ingress)"
 # Google front ends and health checkers -> the published ground ports
-# (MCS, planner, instructor proxy, link, and the tool viewers 8092-8095).
-fw "$FW_LB" tcp:8080,tcp:9090,tcp:9091,tcp:9100,tcp:8092-8095 "$TAG_GROUND" \
+# (MCS, planner, instructor proxy, link, tool viewers 8092-8095, SpaceCDF 8000).
+fw "$FW_LB" tcp:8080,tcp:9090,tcp:9091,tcp:9100,tcp:8092-8095,tcp:8000 "$TAG_GROUND" \
     --source-ranges=130.211.0.0/22,35.191.0.0/16
 # ... and -> the instructor tools next to the cloud simulator.
 if [ "$CREATE_SIM_VM" = yes ]; then
@@ -115,6 +115,14 @@ retry gcloud secrets add-iam-policy-binding "$SECRET" --member="serviceAccount:$
 retry gcloud secrets add-iam-policy-binding "$SECRET" --member="serviceAccount:$SA_SIM_EMAIL" \
     --role=roles/secretmanager.secretAccessor --condition=None >/dev/null
 
+log "Secret $SECRET_AI (Anthropic API key for SpaceCDF's AI advisor; you add the key, README step 5b)"
+if ! exists secrets describe "$SECRET_AI"; then
+    gcloud secrets create "$SECRET_AI" --replication-policy=user-managed --locations="$REGION" \
+        --labels=app=c2o
+fi
+retry gcloud secrets add-iam-policy-binding "$SECRET_AI" --member="serviceAccount:$SA_GROUND_EMAIL" \
+    --role=roles/secretmanager.secretAccessor --condition=None >/dev/null
+
 # ── 4. VMs ──────────────────────────────────────────────────────────────
 log "Fixed internal addresses ($GROUND_IP ground, $SIM_IP simulator)"
 if ! exists compute addresses describe "$ADDR_GROUND_INT" --region="$REGION"; then
@@ -129,7 +137,7 @@ fi
 # vm NAME ROLE MACHINE IP TAG SA
 vm() {
     local name="$1" role="$2" mtype="$3" ip="$4" tag="$5" sa="$6"
-    local md="c2o-role=$role,c2o-repo=$REPO_URL,c2o-ref=$REPO_REF,c2o-domain=$DOMAIN,c2o-ground-ip=$GROUND_IP,c2o-secret=$SECRET,enable-oslogin=TRUE"
+    local md="c2o-role=$role,c2o-repo=$REPO_URL,c2o-ref=$REPO_REF,c2o-domain=$DOMAIN,c2o-ground-ip=$GROUND_IP,c2o-secret=$SECRET,c2o-ai-secret=$SECRET_AI,enable-oslogin=TRUE"
     if [ "$(vm_status "$name")" = "NONE" ]; then
         info "creating $name ($mtype, no external IP); first boot installs Docker and builds the image (10-15 min)"
         gcloud compute instances create "$name" --zone="$ZONE" --machine-type="$mtype" \
@@ -341,16 +349,14 @@ else
     gcloud compute ssl-certificates create "$CERT" --global --domains="$CERT_DOMAINS"
 fi
 # The tool pages are on a second certificate: managed certificates cannot
-# gain names, and a separate one leaves the main certificate untouched.
+# gain names, and a separate one leaves the main certificate untouched. Its
+# name follows its name list (common.sh), so a new list gets a new one.
 tool_host() { printf '%s.%s\n' "$2" "$DOMAIN"; }
 want_tools="$(tools_each tool_host | paste -sd, -)"
-if exists compute ssl-certificates describe "$CERT_TOOLS" --global; then
-    have="$(gcloud compute ssl-certificates describe "$CERT_TOOLS" --global --format='value(managed.domains)' | tr ';' ',')"
-    if [ "$(tr ',' '\n' <<<"$have" | sort | paste -sd,)" != "$(tr ',' '\n' <<<"$want_tools" | sort | paste -sd,)" ]; then
-        warn "Certificate $CERT_TOOLS covers [$have] but the tool list wants [$want_tools]. Delete it (detach it first: rerun after 'gcloud compute target-https-proxies update $T_HTTPS --global --ssl-certificates=$CERT') and rerun setup.sh."
-    fi
-else
-    log "TLS: second managed certificate for the tool pages ($want_tools)"
+sha6() { if command -v sha1sum >/dev/null; then sha1sum; else shasum; fi | cut -c1-6; }  # macOS: shasum
+CERT_TOOLS="$CERT_TOOLS_PREFIX-$(printf '%s' "$want_tools" | sha6)"
+if ! exists compute ssl-certificates describe "$CERT_TOOLS" --global; then
+    log "TLS: managed certificate $CERT_TOOLS for the tool pages ($want_tools)"
     gcloud compute ssl-certificates create "$CERT_TOOLS" --global --domains="$want_tools"
 fi
 
@@ -369,6 +375,14 @@ if ! exists compute addresses describe "$LB_IP" --global; then
     gcloud compute addresses create "$LB_IP" --global --ip-version=IPV4 --network-tier=PREMIUM
 fi
 ensure_forwarding_rules
+
+# Tool certificates from an older name list are detached now: delete them.
+for old in $(gcloud compute ssl-certificates list --global \
+        --filter="name ~ ^$CERT_TOOLS_PREFIX" --format='value(name)' 2>/dev/null); do
+    [ "$old" = "$CERT_TOOLS" ] && continue
+    info "deleting the superseded tool certificate $old"
+    gcloud compute ssl-certificates delete "$old" --global --quiet || warn "could not delete $old; delete it by hand"
+done
 
 # ── Done ────────────────────────────────────────────────────────────────
 ip="$(gcloud compute addresses describe "$LB_IP" --global --format='value(address)')"
@@ -390,6 +404,9 @@ cat <<EOF
     Then watch the certificates (README step 7):
         gcloud compute ssl-certificates describe $CERT --global --format='yaml(managed)'
         gcloud compute ssl-certificates describe $CERT_TOOLS --global --format='yaml(managed)'
+
+    SpaceCDF's AI advisor needs an Anthropic API key (optional; README step 5b):
+        printf %s 'sk-ant-...' | gcloud secrets versions add $SECRET_AI --data-file=-
 
     The VMs are booting and building the image now (10-15 min). Progress:
         gcloud compute instances get-serial-port-output $VM_GROUND --zone=$ZONE | grep c2o-bootstrap
