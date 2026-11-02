@@ -14,6 +14,9 @@
 #   c2o-repo       git URL          c2o-ref     branch or tag
 #   c2o-domain     c2o.live         c2o-ground-ip  ground VM internal IP
 #   c2o-secret     Secret Manager secret holding SMO_LINK_SESSION/SECRET
+#   c2o-ai-secret  Secret Manager secret holding the Anthropic API key for
+#                  SpaceCDF's AI advisor (ground VM; optional: no version =
+#                  SpaceCDF runs in manual mode)
 #
 # By hand on a VM (gcloud compute ssh ... --tunnel-through-iap):
 #   sudo bash /opt/c2o/deploy/gcp/vm-bootstrap.sh            # same as a boot
@@ -41,11 +44,12 @@ REF="$(attr c2o-ref main)"
 DOMAIN="$(attr c2o-domain c2o.live)"
 GROUND_IP="$(attr c2o-ground-ip)"
 SECRET="$(attr c2o-secret c2o-link-session)"
+AI_SECRET="$(attr c2o-ai-secret c2o-anthropic-key)"
 PROJECT="$(md project/project-id)"
 MY_IP="$(md instance/network-interfaces/0/ip)"
 
 case "$ROLE" in
-    ground) PROFILES=(ground rf); ENV_NAME=ground.env ;;   # rf: the radio view (radio.<domain>)
+    ground) PROFILES=(ground rf design); ENV_NAME=ground.env ;;   # rf: radio view; design: SpaceCDF
     sim)    PROFILES=(space);     ENV_NAME=space.env ;;
     *)      die "instance metadata c2o-role must be 'ground' or 'sim' (got '$ROLE')" ;;
 esac
@@ -164,6 +168,31 @@ write_env() {
     say "wrote $ENV_FILE (session $(sed -n 's/^SMO_LINK_SESSION=//p' "$ENV_FILE"))"
 }
 
+# SpaceCDF's AI key (ground VM only). Absent or unreadable = manual mode;
+# never fatal, because SpaceCDF works without it.
+write_design_env() {
+    [ "$ROLE" = ground ] || return 0
+    local file="$SIM_DIR/docker/design.env" body code tmp key=""
+    body="$(mktemp)"
+    code="$(curl -sS -o "$body" -w '%{http_code}' -H "Authorization: Bearer $(token)" \
+        "https://secretmanager.googleapis.com/v1/projects/$PROJECT/secrets/$AI_SECRET/versions/latest:access" \
+        2>/dev/null)" || code=000
+    if [ "$code" = 200 ]; then
+        key="$(python3 -c 'import base64,json,sys; sys.stdout.write(base64.b64decode(json.load(open(sys.argv[1]))["payload"]["data"]).decode().strip())' "$body")"
+    fi
+    rm -f "$body"
+    tmp="$(mktemp "$file.XXXX")"; chmod 600 "$tmp"
+    if [[ "$key" =~ ^sk-ant-[A-Za-z0-9_-]{20,}$ ]]; then
+        printf 'ANTHROPIC_API_KEY=%s\n' "$key" > "$tmp"
+        say "wrote $file (AI advisor on)"
+    else
+        [ -n "$key" ] && say "secret $AI_SECRET does not look like an Anthropic key (sk-ant-...): AI advisor off"
+        [ -z "$key" ] && say "no version in secret $AI_SECRET (HTTP $code): SpaceCDF runs without the AI advisor"
+        : > "$tmp"
+    fi
+    mv -f "$tmp" "$file"
+}
+
 # ── Compose ─────────────────────────────────────────────────────────────
 compose() {
     # --env-file: the compose file interpolates SMO_PUBLISH_ADDR (and the
@@ -182,16 +211,16 @@ up() {
 
 case "$ACTION" in
     boot)
-        install_docker; clone_repo; write_env; up ;;
+        install_docker; clone_repo; write_env; write_design_env; up ;;
     refresh)
-        write_env; up ;;
+        write_env; write_design_env; up ;;
     rotate)
         [ "$ROLE" = ground ] || die "rotate runs on the ground VM only (the sim VM then runs: refresh)"
         say "issuing NEW link credentials"
         new_creds | secret_add
-        write_env; up ;;
+        write_env; write_design_env; up ;;
     update)
-        update_repo; write_env; up ;;
+        update_repo; write_env; write_design_env; up ;;
     down)
         compose down ;;
     *)

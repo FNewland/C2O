@@ -7,7 +7,7 @@
  * Layout: LevelBar (top) → StatusBar → LevelWorkbench (main)
  * State: uiStore holds navigation only. All design content from server API.
  */
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { QueryClient, QueryClientProvider, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useUIStore, type Level } from './stores/uiStore'
 import { LevelWorkbench } from './workbench/LevelWorkbench'
@@ -476,6 +476,14 @@ function NamePrompt() {
   const [name, setName] = useState('')
   const setUserName = useUIStore(s => s.setUserName)
   const trimmed = name.trim()
+  // On c2o.live the sign-in already knows who this is: offer that name.
+  useEffect(() => {
+    let live = true
+    fetch('/api/whoami').then(r => (r.ok ? r.json() : null)).then(d => {
+      if (live && d && d.name) setName(n => n || d.name)
+    }).catch(() => { /* local run: no sign-in, type a name */ })
+    return () => { live = false }
+  }, [])
   return (
     <>
       <HomeFrame title={t('Join the design session')} lead={t('Your name is shown to everyone working in the same study.')}>

@@ -1,0 +1,18 @@
+# Build context for Dockerfile.web is design/.
+**/node_modules
+frontend/dist
+**/.venv
+.venv*
+**/__pycache__
+**/*.pyc
+**/*.egg-info
+**/.pytest_cache
+*.db
+*.db-*
+data/
+exports_demo/
+docs/
+tests/
+**/.DS_Store
+.env
+*.env

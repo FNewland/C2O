@@ -74,7 +74,7 @@ ARMOR="$PREFIX-armor"
 URLMAP="$PREFIX-urlmap"
 REDIRECT_MAP="$PREFIX-http-redirect"
 CERT="$PREFIX-cert"
-CERT_TOOLS="$PREFIX-cert-tools"
+SECRET_AI="$PREFIX-anthropic-key"
 SSL_POLICY="$PREFIX-tls"
 T_HTTPS="$PREFIX-https-proxy"
 T_HTTP="$PREFIX-http-proxy"
@@ -100,11 +100,16 @@ tm        tm         8092 ground all         Delayed-TM viewer
 orbit     orbit      8093 ground all         Orbit tools
 radio     radio      8094 ground all         Radio view (RF bridge)
 docs      docs       8095 ground all         Documentation
+design    design     8000 ground all         SpaceCDF design tool
 scenarios scenarios  8096 sim    instructors Scenario generator
 adcs      adcs       8097 sim    instructors ADCS failure viewer
 "
 # On their own certificate, so adding them never re-provisions the main one.
+# A managed certificate cannot gain names, so its name carries a hash of its
+# name list: changing the list makes setup.sh create a new certificate, swap
+# it in and delete the old one.
 TOOL_HOSTS="$(awk 'NF{printf "%s%s.'"$DOMAIN"'", (n++?",":""), $2}' <<<"$TOOLS")"
+CERT_TOOLS_PREFIX="$PREFIX-cert-tools"
 
 # ── Helpers ─────────────────────────────────────────────────────────────
 # exists <gcloud args...>: true if `gcloud <args> --format=value(name)` succeeds.
