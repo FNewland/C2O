@@ -241,7 +241,11 @@ CASCADE_MAP = {
 
 SCRIPT_DIR = Path(__file__).parent
 REPO_ROOT = SCRIPT_DIR.parent
-SCENARIO_DIR = REPO_ROOT / "configs" / "eosat1" / "scenarios"
+# SMO_SCENARIO_DIR redirects saved scenarios (the cloud deployment points it
+# at a persistent volume that the simulator also loads, via
+# SMO_EXTRA_SCENARIO_DIR); default: the built-in scenario folder.
+SCENARIO_DIR = Path(os.environ.get("SMO_SCENARIO_DIR")
+                    or REPO_ROOT / "configs" / "eosat1" / "scenarios")
 
 
 def _slug(name: str) -> str:
@@ -1063,7 +1067,8 @@ async def handle_generate(request):
             SCENARIO_DIR.mkdir(parents=True, exist_ok=True)
             out_path = SCENARIO_DIR / filename
             out_path.write_text(yaml_text)
-            saved_path = str(out_path.relative_to(REPO_ROOT))
+            from smo_common.web.http import relative_display_path
+            saved_path = relative_display_path(out_path, REPO_ROOT)
         except Exception as e:
             # Never send the absolute server path to the page (R3 audit A9).
             msg = str(e).replace(str(REPO_ROOT) + os.sep, "").replace(str(REPO_ROOT), ".")

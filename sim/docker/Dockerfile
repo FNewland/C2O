@@ -66,6 +66,8 @@ RUN pip install -e "packages/smo-common[reports]" \
  && python -c "import smo_common, smo_simulator, smo_mcs, smo_planner, smo_rfsim, smo_link"
 
 COPY tools/ tools/
+# The ADCS failure viewer (tools/adcs_sim_viewer.py) imports this physics module.
+COPY ADCS_failure_sim/cubesat_adcs_sim.py ADCS_failure_sim/cubesat_adcs_sim.py
 COPY configs/eosat1/ configs/eosat1/
 COPY docker/config-hash.sh docker/config-hash.sh
 

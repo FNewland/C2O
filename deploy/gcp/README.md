@@ -15,14 +15,18 @@ browser ─HTTPS──► │ managed cert · TLS 1.2+ · Cloud Armor rate limit
                   │  plan.c2o.live          ─ IAP (students+instructors) ─► ground VM :9091 planner       │
                   │  sim.c2o.live           ─ IAP (instructors only)     ─► ground VM :8080 GSG proxy     │
 laptop agent ─WSS►│  link.c2o.live/link     ─ IAP OFF (HMAC secret)      ─► ground VM :9100 GSG /link     │
+                  │  tm. orbit. radio. docs ─ IAP (students+instructors) ─► ground VM :8092-8095 tools    │
+                  │  scenarios. adcs.       ─ IAP (instructors only)     ─► sim VM :8096-8097 tools       │
                   └──────────────────────────────────────────────────────────────────────────────────────────┘
 VPC c2o-vpc 10.20.0.0/24 (Toronto) · no external IPs on VMs · outbound via Cloud NAT · admin SSH via IAP
-  c2o-ground-vm 10.20.0.10  docker compose --profile ground   (GSG, MCS, planner, tools)
+  c2o-ground-vm 10.20.0.10  docker compose --profile ground --profile rf  (GSG, MCS, planner, RF bridge, tools)
   c2o-sim-vm    10.20.0.11  docker compose --profile space    → ws://10.20.0.10:9100/link (private, never via the LB)
+                            (+ scenario generator and ADCS failure viewer)
 ```
 
 **Who can reach what.** IAP admits only `@c2o.live` accounts, because the Google-managed OAuth client
-serves internal users only. Students and instructors reach ops and plan; only instructors reach sim. The
+serves internal users only. Students and instructors reach ops, plan and the tool pages (tm, orbit,
+radio, docs); only instructors reach sim, scenarios and adcs. The
 `/link` path is the one way in without IAP: the agent proves the link session secret (HMAC upgrade header,
 then a mutual challenge, then a MAC on every frame). The VPC firewall lets in only Google's load-balancer
 ranges (and the sim VM on port 9100), plus IAP on port 22.
@@ -202,7 +206,8 @@ At <https://account.squarespace.com/domains> → **c2o.live → DNS**, first **d
 on these names that point elsewhere. Look for the A, AAAA and CNAME records on `@`, `ops`, `plan`, `sim`
 and `link`. A domain moved from Google Domains or set up by Squarespace may carry preset records
 (*Squarespace Defaults*, parked-page A records, a `www` CNAME). `www` itself may stay. Also turn off any
-domain forwarding on the bare domain. Then **Add record** five times:
+domain forwarding on the bare domain. Then **Add record** for each name below (eleven in all; the
+last six are the tool pages):
 
 | Name (host) | Type | Data | TTL |
 |---|---|---|---|
@@ -211,6 +216,8 @@ domain forwarding on the bare domain. Then **Add record** five times:
 | `plan` | A | *LB IP* | same |
 | `sim` | A | *LB IP* | same |
 | `link` | A | *LB IP* | same |
+| `tm`, `orbit`, `radio`, `docs` | A | *LB IP* | same (one record each) |
+| `scenarios`, `adcs` | A | *LB IP* | same (one record each) |
 
 Keep the TTL the same on all of them; Squarespace asks for that on its Google-hosted DNS. Do **not** add
 AAAA records: the load balancer has an IPv4 address only, and a stray AAAA blocks the certificate. If
@@ -219,14 +226,19 @@ you set `INCLUDE_APEX=no`, skip `@`.
 Check from Cloud Shell; every name must print the LB IP:
 
 ```bash
-for h in c2o.live ops.c2o.live plan.c2o.live sim.c2o.live link.c2o.live; do echo "$h $(dig +short "$h" A)"; done
+for h in c2o.live ops plan sim link tm orbit radio docs scenarios adcs; do
+  case $h in *.*) n=$h ;; *) n=$h.c2o.live ;; esac; echo "$n $(dig +short "$n" A)"; done
 ```
 
-## 7. Wait for the managed certificate (15-60 min, sometimes longer)
+## 7. Wait for the managed certificates (15-60 min, sometimes longer)
 
 ```bash
 gcloud compute ssl-certificates describe c2o-cert --global --format='yaml(managed)'
+gcloud compute ssl-certificates describe c2o-cert-tools --global --format='yaml(managed)'
 ```
+
+`c2o-cert` covers the five main names; `c2o-cert-tools` covers the six tool pages. They provision
+independently, so the main site can be up while the tool pages are still waiting.
 
 Wait until `status: ACTIVE` and every domain shows `ACTIVE`. `PROVISIONING` with `FAILED_NOT_VISIBLE` on
 a domain means Google can't yet see that name pointing at the LB IP: check step 6. Once DNS is right it
@@ -257,8 +269,8 @@ cd /opt/c2o/sim && sudo docker compose --env-file docker/ground.env -f docker/co
 curl -s 10.20.0.10:8080/link-status; echo                    # "UP" once a simulator is connected
 ```
 
-(The four LB-facing ports listen on the VM's internal IP, not on `localhost`. The tool viewers are on
-`localhost` only.)
+(The LB-facing ports, including the tool pages, listen on the VM's internal IP, not on `localhost`:
+from an SSH session use `curl 10.20.0.10:8092/`.)
 
 **By hand** (to redo a step on a VM, or if the startup script failed):
 
@@ -270,17 +282,25 @@ sudo bash /opt/c2o/deploy/gcp/vm-bootstrap.sh update     # git pull REPO_REF, re
 sudo google_metadata_script_runner startup
 ```
 
-**Ground-only tools** (delayed-TM viewer 8092, orbit tools 8093, documentation 8095) are deliberately
-not on the load balancer. Reach them through an SSH tunnel, then use Cloud Shell's **Web preview**
-(change the port to 8092), or run the same command on a laptop with gcloud:
+**Tool pages.** Each tool has its own address, behind the same sign-in:
 
-```bash
-gcloud compute ssh c2o-ground-vm --zone=northamerica-northeast2-a --tunnel-through-iap \
-    -- -N -L 8092:localhost:8092 -L 8093:localhost:8093 -L 8095:localhost:8095
-```
+| Address | Tool | Who | Runs on |
+|---|---|---|---|
+| https://tm.c2o.live | Delayed-TM viewer | students + instructors | ground VM :8092 |
+| https://orbit.c2o.live | Orbit tools | students + instructors | ground VM :8093 |
+| https://radio.c2o.live | Radio view (RF bridge) | students + instructors | ground VM :8094 |
+| https://docs.c2o.live | Documentation | students + instructors | ground VM :8095 |
+| https://scenarios.c2o.live | Scenario generator | instructors | sim VM :8096 |
+| https://adcs.c2o.live | ADCS failure viewer | instructors | sim VM :8097 |
 
-(The old draft's `gcloud compute start-iap-tunnel … 8092` cannot work: IAP connects to the VM's network
-interface, and these ports are published on its loopback.)
+- The **RF bridge** runs as a tap beside the MCS: it reads the same telemetry and shows the S-band
+  picture, but the MCS does not depend on it. (Putting the MCS behind it would hide the UHF beacon
+  telemetry of LEOP, which the bridge does not model.) Its controls change the radio for everyone.
+- The **scenario generator** saves into the simulator's workspace volume, which the simulator loads at
+  start. To use a new scenario, restart the simulator:
+  `gcloud compute ssh c2o-sim-vm --zone=northamerica-northeast2-a --tunnel-through-iap --command='sudo bash /opt/c2o/deploy/gcp/vm-bootstrap.sh refresh'`.
+- **scenarios** and **adcs** run next to the simulator, so they are down when the sim VM is stopped
+  (`start.sh --sim=laptop`). On the laptop they are at http://localhost:8096 and :8097.
 
 ## 9. The laptop as the simulator (10 min the first time)
 
@@ -445,7 +465,7 @@ it is idle or saturated (`gcloud compute instances set-machine-type`, VM stopped
    billing link and Cloud Identity remain.
    *Or*, if the project holds nothing else: `gcloud projects delete c2o-live-prod`. Google keeps it
    recoverable for 30 days, and billing stops at once.
-3. Delete the five A records at Squarespace.
+3. Delete the A records at Squarespace (eleven, including the tool pages).
 4. Cloud Identity Free costs nothing, so keep it for next term. To close it, delete the users, then
    remove the subscription in the Admin console under *Billing*.
 
@@ -495,9 +515,14 @@ ShellCheck 0.11.0, **without any Google Cloud credentials**:
   version, the sim VM reads the same pair, rotate adds a version, and rotate is refused on the sim VM.
   Env files are written mode 600.
 - **`docker compose config`** with the rendered cloud env files: `--profile ground` publishes 9090,
-  9091, 8080 and 9100 on 10.20.0.10, tools on 127.0.0.1, and `SMO_GSG_ALLOWED_ORIGINS=https://sim.c2o.live`.
+  9091, 8080, 9100 and the tools 8092-8095 on 10.20.0.10, and `SMO_GSG_ALLOWED_ORIGINS=https://sim.c2o.live`.
   `--profile space` gives the agent `SMO_LINK_URL=ws://10.20.0.10:9100/link`. `--profile local-demo`
   also validates.
+- **Tool pages (2026-11-01):** the whole stack (`local-demo` plus `rf`) built and run in Docker. All
+  eleven pages answered 200; the MCS kept its telemetry with the RF bridge as a tap (behind the bridge it
+  lost the LEOP beacon telemetry, hence the tap); a scenario saved in the generator appeared in the
+  simulator after a restart; the ADCS viewer ran a simulation. `setup.sh` was dry-run against a gcloud
+  stub for the new backends, IAP grants, URL map and second certificate.
 - The agent's plaintext rule (`smo_link/channel.py host_is_private`) was exercised directly:
   `ws://10.20.0.10:9100/link` is accepted; `ws://link.c2o.live/link` and `ws://<public IP>` are refused;
   `wss://…` is accepted.

@@ -48,6 +48,7 @@ NAT="$PREFIX-nat"
 FW_LB="$PREFIX-allow-lb"
 FW_IAP="$PREFIX-allow-iap-ssh"
 FW_SIM="$PREFIX-allow-sim-link"
+FW_LB_SIM="$PREFIX-allow-lb-sim"
 TAG_GROUND="$PREFIX-ground"
 TAG_SIM="$PREFIX-sim"
 SA_GROUND="$PREFIX-ground"
@@ -60,6 +61,7 @@ ADDR_SIM_INT="$PREFIX-sim-int"
 VM_GROUND="$PREFIX-ground-vm"
 VM_SIM="$PREFIX-sim-vm"
 IG="$PREFIX-ground-ig"
+IG_SIM="$PREFIX-sim-ig"
 HC_OPS="$PREFIX-hc-ops"
 HC_PLAN="$PREFIX-hc-plan"
 HC_SIM="$PREFIX-hc-sim"
@@ -72,6 +74,7 @@ ARMOR="$PREFIX-armor"
 URLMAP="$PREFIX-urlmap"
 REDIRECT_MAP="$PREFIX-http-redirect"
 CERT="$PREFIX-cert"
+CERT_TOOLS="$PREFIX-cert-tools"
 SSL_POLICY="$PREFIX-tls"
 T_HTTPS="$PREFIX-https-proxy"
 T_HTTP="$PREFIX-http-proxy"
@@ -85,6 +88,23 @@ HOST_SIM="sim.$DOMAIN"
 HOST_LINK="link.$DOMAIN"
 CERT_DOMAINS="$HOST_OPS,$HOST_PLAN,$HOST_SIM,$HOST_LINK"
 [ "$INCLUDE_APEX" = "yes" ] && CERT_DOMAINS="$DOMAIN,$CERT_DOMAINS"
+
+# Tool pages, one host each (the tools use root-relative URLs, so each needs
+# its own host rather than a path prefix). Fields:
+#   key  host-label  port  where(ground|sim)  who(all|instructors)  title
+# "all" = students + instructors. Ground tools run on the ground VM; the
+# instructor tools run next to the simulator on the sim VM (the scenario
+# generator must write where the simulator reads).
+TOOLS="
+tm        tm         8092 ground all         Delayed-TM viewer
+orbit     orbit      8093 ground all         Orbit tools
+radio     radio      8094 ground all         Radio view (RF bridge)
+docs      docs       8095 ground all         Documentation
+scenarios scenarios  8096 sim    instructors Scenario generator
+adcs      adcs       8097 sim    instructors ADCS failure viewer
+"
+# On their own certificate, so adding them never re-provisions the main one.
+TOOL_HOSTS="$(awk 'NF{printf "%s%s.'"$DOMAIN"'", (n++?",":""), $2}' <<<"$TOOLS")"
 
 # ── Helpers ─────────────────────────────────────────────────────────────
 # exists <gcloud args...>: true if `gcloud <args> --format=value(name)` succeeds.

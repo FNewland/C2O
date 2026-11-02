@@ -15,8 +15,10 @@
 #   containers. The `ports:` lines are interpolated from the shell and the
 #   --env-file, so SMO_PUBLISH_ADDR written only in ground.env would be
 #   ignored and every port would stay on 127.0.0.1 (unreachable by the LB).
-#     ... add `--profile rf` for the RF bridge (and set SMO_MCS_TM_PORT=8012,
-#         SMO_MCS_TC_PORT=8011 in ground.env so the MCS goes through it)
+#     ... add `--profile rf` for the RF bridge and its radio view (8094). With
+#         SMO_MCS_TM_PORT/TC_PORT left at 8002/8001 it is a tap beside the
+#         MCS; 8012/8011 puts the MCS behind it (S-band only: the UHF beacon
+#         telemetry of LEOP then never reaches the MCS).
 #
 #   everything on one host (also the cloud-simulator provider):
 #     cp docker/ground.env.example docker/ground.env
@@ -41,8 +43,11 @@
 #   admitting only the Google load-balancer ranges and IAP (C2O
 #   deploy/gcp/README.md); never 0.0.0.0 on a host with a
 #   public or campus address (Docker-published ports bypass ufw).
-#   Tool viewers and the radio UI are published on the host's loopback only
-#   (reach them through an IAP SSH tunnel).
+#   The tool viewers (delayed TM 8092, orbit 8093, radio 8094, docs 8095) and,
+#   on the space side, the scenario generator (8096) and ADCS failure viewer
+#   (8097) publish on SMO_PUBLISH_ADDR too: 127.0.0.1 on a laptop, the VM's
+#   internal IP on GCP, where each sits behind its own IAP-protected host
+#   (tm., orbit., radio., docs.; scenarios., adcs. for instructors only).
 
 name: smo
 
@@ -89,6 +94,9 @@ services:
       SMO_BIND: 0.0.0.0
       SMO_SIM_HTTP_PORT: "8080"
       SMO_VR: "0"
+      # Scenarios saved by the scenario generator (below) are loaded from
+      # here as well as from the built-in folder, at simulator start.
+      SMO_EXTRA_SCENARIO_DIR: /opt/smo/workspace/scenarios
     volumes:
       - space-workspace:/opt/smo/workspace
       - space-dumps:/opt/smo/workspace/dumps
@@ -169,10 +177,10 @@ services:
       - "${SMO_PUBLISH_ADDR:-127.0.0.1}:9091:9091"     # planner
       - "${SMO_PUBLISH_ADDR:-127.0.0.1}:8080:8080"     # GSG HTTP: instructor proxy, /healthz, /link-status
       - "${SMO_PUBLISH_ADDR:-127.0.0.1}:9100:9100"     # GSG link (agent only)
-      - "127.0.0.1:8092:8092"                       # delayed-TM viewer
-      - "127.0.0.1:8093:8093"                       # orbit tools
-      - "127.0.0.1:8094:8094"                       # radio status (rf profile)
-      - "127.0.0.1:8095:8095"                       # documentation viewer
+      - "${SMO_PUBLISH_ADDR:-127.0.0.1}:8092:8092"     # delayed-TM viewer
+      - "${SMO_PUBLISH_ADDR:-127.0.0.1}:8093:8093"     # orbit tools
+      - "${SMO_PUBLISH_ADDR:-127.0.0.1}:8094:8094"     # radio status (rf profile)
+      - "${SMO_PUBLISH_ADDR:-127.0.0.1}:8095:8095"     # documentation viewer
     healthcheck:
       <<: *probe
       # /healthz AND the TM listener: rfsim connects to TM exactly once.
@@ -275,6 +283,30 @@ services:
       gsg:
         condition: service_started
     command: ["python", "tools/doc_viewer.py", "--port", "8095", "--docs", "configs/eosat1"]
+
+  # Instructor tools next to the simulator (space profile). The scenario
+  # generator saves into the space workspace volume, which the simulator
+  # loads at start (SMO_EXTRA_SCENARIO_DIR above): restart the sim to see a
+  # new scenario. Published on SMO_PUBLISH_ADDR (loopback on a laptop).
+  scenario-gen:
+    <<: [*image, *space-env]
+    profiles: [space, local-demo]
+    command: ["python", "tools/scenario_generator.py", "--host", "0.0.0.0", "--port", "8096"]
+    environment:
+      SMO_SCENARIO_DIR: /opt/smo/workspace/scenarios
+    volumes:
+      - space-workspace:/opt/smo/workspace
+    ports:
+      - "${SMO_PUBLISH_ADDR:-127.0.0.1}:8096:8096"
+
+  adcs-viewer:
+    <<: [*image, *space-env]
+    profiles: [space, local-demo]
+    command: ["python", "tools/adcs_sim_viewer.py", "--public", "--port", "8097"]
+    environment:
+      MPLCONFIGDIR: /tmp/matplotlib
+    ports:
+      - "${SMO_PUBLISH_ADDR:-127.0.0.1}:8097:8097"
 
 volumes:
   space-workspace:     # sim breakpoints / config history, agent link state (dumps_acked.json)
