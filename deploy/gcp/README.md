@@ -140,7 +140,7 @@ Your billing account belongs to `franz.newland@gmail.com`. Give the new admin pe
 gcloud organizations list                      # note the ID of c2o.live
 ORG_ID=123456789012                            # ← yours
 PROJECT=c2o-live-prod                          # your choice; global and permanent
-gcloud projects create "$PROJECT" --organization="$ORG_ID" --name="C2O"
+gcloud projects create "$PROJECT" --organization="$ORG_ID" --name="C2O Platform"
 gcloud billing accounts list                   # note the ACCOUNT_ID (XXXXXX-XXXXXX-XXXXXX)
 gcloud billing projects link "$PROJECT" --billing-account=XXXXXX-XXXXXX-XXXXXX
 gcloud config set project "$PROJECT"
