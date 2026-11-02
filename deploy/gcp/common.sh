@@ -42,6 +42,29 @@ PREFIX="${PREFIX:-c2o}"
 # Every gcloud call goes to this project, whatever the Cloud Shell default is.
 export CLOUDSDK_CORE_PROJECT="$PROJECT"
 
+# Every gcloud call in these scripts goes through this wrapper. A dropped
+# connection (timeout, reset, TLS EOF: "gcloud crashed (...Error)") is
+# retried up to 4 times with a growing pause, so a flaky network does not
+# stop setup.sh halfway. Real errors (permissions, bad arguments) are not
+# retried: they fail at once as before.
+gcloud() {
+    local n=0 rc errf
+    errf="$(mktemp)"
+    while :; do
+        rc=0
+        command gcloud "$@" 2>"$errf" || rc=$?
+        if [ "$rc" -ne 0 ] && [ "$n" -lt 4 ] && grep -qE \
+            'gcloud crashed \((ConnectTimeout|ConnectionError|SSLError|ReadTimeout|RemoteDisconnected|ProtocolError)|Connection (aborted|reset)|timed out' "$errf"; then
+            n=$((n + 1))
+            printf '    (network dropped; retrying in %s s, attempt %s of 4)\n' "$((n * 10))" "$n" >&2
+            sleep "$((n * 10))"
+            continue
+        fi
+        cat "$errf" >&2; rm -f "$errf"
+        return "$rc"
+    done
+}
+
 # ── Resource names ──────────────────────────────────────────────────────
 NET="$PREFIX-vpc"
 SUBNET="$PREFIX-subnet"
