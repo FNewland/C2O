@@ -39,36 +39,12 @@ class AIService:
         return cls(config)
 
     def _register_capabilities(self) -> None:
-        """Lazy-import and register all capability modules."""
-        from spacecdf_ai.capabilities import (
-            advisor,
-            consistency,
-            requirements,
-            narrative,
-            trade,
-            cost,
-            fmea,
-            cad,
-            wiring,
-            fsw,
-            aocs,
-            thermal,
-            structural,
-        )
+        """Register the three retained prose capabilities (see config.RETAINED_CAPABILITIES)."""
+        from spacecdf_ai.capabilities import advisor, narrative, requirements
         self._capabilities = {
             "design_advisor": advisor.DesignAdvisorCapability(self.client, self.config),
-            "consistency_checking": consistency.ConsistencyCapability(self.client, self.config),
             "requirements_decomposition": requirements.RequirementsCapability(self.client, self.config),
             "report_narrative": narrative.NarrativeCapability(self.client, self.config),
-            "trade_analysis": trade.TradeCapability(self.client, self.config),
-            "cost_estimation": cost.CostCapability(self.client, self.config),
-            "fmea_generation": fmea.FMEACapability(self.client, self.config),
-            "cad_scripting": cad.CADCapability(self.client, self.config),
-            "wiring_generation": wiring.WiringCapability(self.client, self.config),
-            "fsw_generation": fsw.FSWCapability(self.client, self.config),
-            "aocs_design": aocs.AOCSCapability(self.client, self.config),
-            "thermal_setup": thermal.ThermalCapability(self.client, self.config),
-            "structural_setup": structural.StructuralCapability(self.client, self.config),
         }
 
     async def run(
@@ -110,6 +86,15 @@ class AIService:
                 "content": "",
                 "message": f"Unknown capability: {capability}",
             }
+
+        # The HTTP layer sends one free-form ``context`` dict; spread its known keys
+        # (study, mission_need, elements, budgets, requirements, ...) into the
+        # capability's keyword arguments so nothing is silently dropped.
+        context = kwargs.pop("context", None)
+        if isinstance(context, dict):
+            from spacecdf_ai.context import context_to_kwargs
+            for k, v in context_to_kwargs(context).items():
+                kwargs.setdefault(k, v)
 
         result = await cap.execute(
             api_key=api_key,

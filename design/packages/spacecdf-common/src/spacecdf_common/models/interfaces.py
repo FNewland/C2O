@@ -18,20 +18,17 @@ Aligned with:
 from __future__ import annotations
 
 from enum import Enum
-from typing import Any
+from typing import Annotated, Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, BeforeValidator, Field
+
+from .interface_types import InterfaceType, coerce_interface_type
 
 
-class InterfaceType(str, Enum):
-    MECHANICAL = "mechanical"         # Mounting, alignment, deployment
-    ELECTRICAL = "electrical"         # Power bus, grounding, harness
-    THERMAL = "thermal"               # Heat paths, radiator/heater interfaces
-    DATA = "data"                     # Data bus, telemetry, commands
-    RF = "rf"                         # RF interference, antenna FOV
-    OPTICAL = "optical"               # FOV blockage, stray light, contamination
-    PROPULSION = "propulsion"         # Plume impingement, tank pressurisation
-    SOFTWARE = "software"             # Command/data interfaces, mode transitions
+# The canonical vocabulary lives in interface_types.py (one enum for the whole
+# tool, Nov 2026). Legacy spellings in saved studies (electrical, propulsion,
+# software) are mapped on load by the ``LegacyType`` validator below.
+LegacyType = Annotated[InterfaceType, BeforeValidator(coerce_interface_type)]
 
 
 class InterfaceStatus(str, Enum):
@@ -51,7 +48,7 @@ class InterfaceRequirement(BaseModel):
     """
     id: str = ""
     text: str = ""
-    interface_type: InterfaceType = InterfaceType.ELECTRICAL
+    interface_type: LegacyType = InterfaceType.POWER
     subsystem_a: str = Field(description="Provider / source subsystem")
     subsystem_b: str = Field(description="Consumer / sink subsystem")
     parameter_value: str = Field(default="", description="e.g. '28V ± 2V', '< 5° occultation'")
@@ -67,7 +64,7 @@ class SubsystemInterface(BaseModel):
     """
     subsystem_a: str
     subsystem_b: str
-    interface_types: list[InterfaceType] = Field(default_factory=list)
+    interface_types: list[LegacyType] = Field(default_factory=list)
     requirements: list[InterfaceRequirement] = Field(default_factory=list)
     status: InterfaceStatus = InterfaceStatus.IDENTIFIED
     description: str = ""
@@ -79,7 +76,7 @@ class ExternalInterface(BaseModel):
     other spacecraft, etc.)."""
     id: str = ""
     external_system: str = Field(description="e.g. 'Falcon 9 payload adapter', 'KSAT Svalbard', 'Copernicus data hub'")
-    interface_types: list[InterfaceType] = Field(default_factory=list)
+    interface_types: list[LegacyType] = Field(default_factory=list)
     requirements: list[str] = Field(default_factory=list, description="Key interface requirements (text)")
     icd_reference: str = Field(default="", description="ICD document reference if available")
     status: InterfaceStatus = InterfaceStatus.IDENTIFIED
@@ -95,7 +92,7 @@ class InterfaceConflict(BaseModel):
     id: str = ""
     title: str = ""
     description: str = ""
-    interface_type: InterfaceType = InterfaceType.MECHANICAL
+    interface_type: LegacyType = InterfaceType.MECHANICAL
     subsystem_a: str = ""
     subsystem_b: str = ""
     severity: str = Field(default="major", description="critical / major / minor")
@@ -110,12 +107,12 @@ class InterfaceConflict(BaseModel):
 # Standard subsystem pairs that always have interfaces
 _STANDARD_INTERFACES: list[dict[str, Any]] = [
     # EPS interfaces with everything
-    {"a": "power", "b": "aocs", "types": ["electrical"], "desc": "Power bus to AOCS electronics + reaction wheels"},
-    {"a": "power", "b": "link", "types": ["electrical"], "desc": "Power bus to TTC transponder + PA"},
-    {"a": "power", "b": "thermal", "types": ["electrical", "thermal"], "desc": "Power bus to heaters; SA thermal coupling"},
-    {"a": "power", "b": "data", "types": ["electrical"], "desc": "Power bus to OBC"},
-    {"a": "power", "b": "payload", "types": ["electrical"], "desc": "Power bus to payload; peak power switching"},
-    {"a": "power", "b": "propulsion", "types": ["electrical"], "desc": "Power bus to valve drivers / EP PPU"},
+    {"a": "power", "b": "aocs", "types": ["power"], "desc": "Power bus to AOCS electronics + reaction wheels"},
+    {"a": "power", "b": "link", "types": ["power"], "desc": "Power bus to TTC transponder + PA"},
+    {"a": "power", "b": "thermal", "types": ["power", "thermal"], "desc": "Power bus to heaters; SA thermal coupling"},
+    {"a": "power", "b": "data", "types": ["power"], "desc": "Power bus to OBC"},
+    {"a": "power", "b": "payload", "types": ["power"], "desc": "Power bus to payload; peak power switching"},
+    {"a": "power", "b": "propulsion", "types": ["power"], "desc": "Power bus to valve drivers / EP PPU"},
     # Structure interfaces
     {"a": "structure", "b": "power", "types": ["mechanical", "thermal"], "desc": "SA mounting; panel thermal path"},
     {"a": "structure", "b": "aocs", "types": ["mechanical"], "desc": "RW + ST mounting alignment; vibration isolation"},
@@ -143,7 +140,7 @@ _COMMON_CONFLICTS: list[dict[str, str]] = [
      "a": "power", "b": "aocs", "type": "optical", "severity": "major"},
     {"title": "Thruster plume impingement on solar array",
      "desc": "RCS thruster exhaust may deposit contaminants on SA cells or cause thermal loads",
-     "a": "propulsion", "b": "power", "type": "propulsion", "severity": "major"},
+     "a": "propulsion", "b": "power", "type": "fluid", "severity": "major"},
     {"title": "Antenna deployment vs payload FOV",
      "desc": "High-gain antenna or deployable boom may obstruct payload instrument field of view",
      "a": "link", "b": "payload", "type": "optical", "severity": "major"},
@@ -152,7 +149,7 @@ _COMMON_CONFLICTS: list[dict[str, str]] = [
      "a": "aocs", "b": "payload", "type": "mechanical", "severity": "critical"},
     {"title": "Power bus voltage compatibility",
      "desc": "Subsystem input voltage range must be compatible with EPS regulated bus output",
-     "a": "power", "b": "data", "type": "electrical", "severity": "critical"},
+     "a": "power", "b": "data", "type": "power", "severity": "critical"},
     {"title": "Radiator area vs SA area competition",
      "desc": "Both radiators and solar arrays need external surface area; they compete for panel real estate",
      "a": "thermal", "b": "power", "type": "mechanical", "severity": "major"},
@@ -220,7 +217,7 @@ def generate_standard_interface_matrix() -> InterfaceMatrix:
         matrix.subsystem_interfaces.append(SubsystemInterface(
             subsystem_a=si["a"],
             subsystem_b=si["b"],
-            interface_types=[InterfaceType(t) for t in si["types"]],
+            interface_types=[InterfaceType(coerce_interface_type(t)) for t in si["types"]],
             description=si["desc"],
             status=InterfaceStatus.IDENTIFIED,
         ))
@@ -230,7 +227,7 @@ def generate_standard_interface_matrix() -> InterfaceMatrix:
             id=f"IC-{cc['title'][:20].replace(' ', '-').lower()}",
             title=cc["title"],
             description=cc["desc"],
-            interface_type=InterfaceType(cc["type"]),
+            interface_type=InterfaceType(coerce_interface_type(cc["type"])),
             subsystem_a=cc["a"],
             subsystem_b=cc["b"],
             severity=cc["severity"],
@@ -240,7 +237,7 @@ def generate_standard_interface_matrix() -> InterfaceMatrix:
     matrix.external_interfaces.extend([
         ExternalInterface(
             id="EI-LV", external_system="Launch vehicle",
-            interface_types=[InterfaceType.MECHANICAL, InterfaceType.ELECTRICAL],
+            interface_types=[InterfaceType.MECHANICAL, InterfaceType.ELECTRICAL_SIGNAL],
             requirements=["Payload adapter mechanical interface", "Separation system", "Umbilical connector"],
         ),
         ExternalInterface(

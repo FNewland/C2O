@@ -1,0 +1,241 @@
+# Failure-mode library for the FMECA skeleton (deterministic; services/fmeca_library.py)
+# ======================================================================================
+# The FMECA *method* follows ECSS-Q-ST-30-02C (FMEA/FMECA, 6 March 2009). The scales,
+# the numbers below and the failure modes themselves are C2O defaults compiled from
+# common CubeSat practice: the ECSS text was not available to check the scale
+# definitions, so nothing here is presented as a quotation of the standard.
+#
+# Scales (C2O default, compatible with the existing SpaceCDF FMECA table):
+#   severity S 1..5 (5 = catastrophic: loss of mission or hazard), occurrence O 1..5,
+#   detection D 1..5 (5 = undetectable). RPN = S x O x D.
+# Adjustments applied per element (C2O default, same as services/fmeca_closure.py):
+#   redundancy (redundancy_type set or quantity > 1) -> S - 1
+#   TRL < 6 (from the KB part)                        -> O + 1
+#   a data interface to the element (telemetry)       -> D - 1
+
+sources:
+  ecss_q_30_02:
+    kind: standard
+    short: "ECSS-Q-ST-30-02C (method)"
+    title: "ECSS-Q-ST-30-02C Failure modes, effects (and criticality) analysis (method only)"
+    verified: true
+  c2o_default:
+    kind: c2o_default
+    title: "C2O default failure-mode library and scales (not a standard citation)"
+    verified: false
+
+severity_categories:     # S value -> label, C2O default wording
+  source: c2o_default
+  5: {en: "Catastrophic (loss of mission or safety hazard)", fr: "Catastrophique (perte de mission ou danger)"}
+  4: {en: "Critical (loss of a primary objective)", fr: "Critique (perte d’un objectif principal)"}
+  3: {en: "Major (degraded mission)", fr: "Majeure (mission dégradée)"}
+  2: {en: "Minor (workaround exists)", fr: "Mineure (contournement possible)"}
+  1: {en: "Negligible", fr: "Négligeable"}
+
+critical_rpn: 60          # C2O default: rows at or above this RPN are flagged
+single_point_severity: 4  # C2O default: S >= this without redundancy -> single-point failure
+
+# How an element is matched to a library type: KB category first, then name keywords,
+# then the subsystem domain. First match wins.
+types:
+  battery:
+    kb_categories: [battery]
+    keywords: [batter]
+    modes:
+      - {id: BAT-01, s: 5, o: 2, d: 3,
+         mode: {en: "Cell internal short", fr: "Court-circuit interne d’une cellule"},
+         cause: {en: "Manufacturing defect, dendrite growth", fr: "Défaut de fabrication, croissance de dendrites"},
+         local: {en: "Cell voltage collapse, heating", fr: "Effondrement de la tension, échauffement"},
+         system: {en: "Loss of eclipse power, possible thermal runaway", fr: "Perte de l’alimentation en éclipse, emballement thermique possible"},
+         mitigation: {en: "Cell screening, protection circuit (CDS 2.3.6), temperature telemetry", fr: "Tri des cellules, circuit de protection (CDS 2.3.6), télémesure de température"}}
+      - {id: BAT-02, s: 3, o: 3, d: 2,
+         mode: {en: "Capacity fade", fr: "Perte de capacité"},
+         cause: {en: "Cycling at high depth of discharge, temperature", fr: "Cyclage à forte profondeur de décharge, température"},
+         local: {en: "Less stored energy", fr: "Moins d’énergie stockée"},
+         system: {en: "Reduced eclipse operations late in life", fr: "Opérations en éclipse réduites en fin de vie"},
+         mitigation: {en: "Limit DoD, keep the battery within its temperature range", fr: "Limiter la profondeur de décharge, maintenir la batterie dans sa plage de température"}}
+  eps:
+    kb_categories: [eps_board]
+    keywords: [eps, pcdu, power distribution, regulator, converter]
+    domains: [power]
+    modes:
+      - {id: EPS-01, s: 5, o: 2, d: 2,
+         mode: {en: "Regulator or converter failure", fr: "Défaillance d’un régulateur ou convertisseur"},
+         cause: {en: "Component failure, over-current", fr: "Défaillance de composant, surintensité"},
+         local: {en: "Loss of one output rail", fr: "Perte d’un rail de sortie"},
+         system: {en: "Loss of every load on that rail", fr: "Perte de toutes les charges de ce rail"},
+         mitigation: {en: "Redundant converters, latching current limiters", fr: "Convertisseurs redondants, limiteurs de courant à verrouillage"}}
+      - {id: EPS-02, s: 4, o: 2, d: 3,
+         mode: {en: "Load switch stuck open or closed", fr: "Interrupteur de charge bloqué ouvert ou fermé"},
+         cause: {en: "Switch failure, single-event effect", fr: "Défaillance de l’interrupteur, événement singulier"},
+         local: {en: "Load cannot be powered or cannot be isolated", fr: "Charge impossible à alimenter ou à isoler"},
+         system: {en: "Loss of a unit or of fault isolation", fr: "Perte d’une unité ou de l’isolement des pannes"},
+         mitigation: {en: "Switch status telemetry, series/parallel switches", fr: "Télémesure d’état, interrupteurs en série ou en parallèle"}}
+  solar_array:
+    kb_categories: [solar_panel, solar_cell]
+    keywords: [solar, array, panel]
+    modes:
+      - {id: SA-01, s: 4, o: 2, d: 3,
+         mode: {en: "String open circuit", fr: "Chaîne en circuit ouvert"},
+         cause: {en: "Cell crack, interconnect fatigue", fr: "Cellule fissurée, fatigue des interconnexions"},
+         local: {en: "Reduced generation", fr: "Production réduite"},
+         system: {en: "Negative energy balance", fr: "Bilan énergétique négatif"},
+         mitigation: {en: "String margin, bypass diodes", fr: "Marge de chaînes, diodes de dérivation"}}
+      - {id: SA-02, s: 4, o: 2, d: 4,
+         mode: {en: "Deployable panel fails to deploy", fr: "Panneau déployable non déployé"},
+         cause: {en: "Hold-down release failure, harness snag", fr: "Défaillance du dispositif de retenue, accrochage du harnais"},
+         local: {en: "Panel stowed", fr: "Panneau replié"},
+         system: {en: "Power generation below budget", fr: "Production d’énergie sous le budget"},
+         mitigation: {en: "Redundant release, deployment test, ≥ 3 inhibits (CDS 2.3.8)", fr: "Libération redondante, essai de déploiement, ≥ 3 inhibitions (CDS 2.3.8)"}}
+  obc:
+    kb_categories: [obc]
+    keywords: [obc, computer, processor, data handling]
+    domains: [obc]
+    modes:
+      - {id: OBC-01, s: 4, o: 3, d: 2,
+         mode: {en: "Latch-up or processor hang", fr: "Verrouillage (latch-up) ou blocage du processeur"},
+         cause: {en: "Single-event effect", fr: "Événement singulier"},
+         local: {en: "Processor stops", fr: "Arrêt du processeur"},
+         system: {en: "Loss of control until reset, safe mode", fr: "Perte de contrôle jusqu’à la réinitialisation, mode survie"},
+         mitigation: {en: "Latch-up protection, watchdog, EDAC memory", fr: "Protection contre le latch-up, chien de garde, mémoire EDAC"}}
+      - {id: OBC-02, s: 4, o: 2, d: 3,
+         mode: {en: "Software image corruption", fr: "Corruption de l’image logicielle"},
+         cause: {en: "Bit flips in flash, failed upload", fr: "Inversions de bits en flash, téléversement échoué"},
+         local: {en: "Boot failure", fr: "Échec du démarrage"},
+         system: {en: "Loss of nominal operations", fr: "Perte des opérations nominales"},
+         mitigation: {en: "Dual image, CRC check, safe bootloader", fr: "Double image, contrôle CRC, chargeur d’amorçage sûr"}}
+  transceiver:
+    kb_categories: [transponder]
+    keywords: [transceiver, transponder, transmitter, radio, modem]
+    domains: [ttc]
+    modes:
+      - {id: TTC-01, s: 5, o: 1, d: 4,
+         mode: {en: "Receiver failure", fr: "Défaillance du récepteur"},
+         cause: {en: "Component degradation, single-event effect", fr: "Dégradation de composant, événement singulier"},
+         local: {en: "No telecommand reception", fr: "Plus de réception des télécommandes"},
+         system: {en: "Loss of commanding, mission loss", fr: "Perte de la commande, perte de la mission"},
+         mitigation: {en: "Cold-spare receiver, autonomous reset timer", fr: "Récepteur de secours froid, minuterie de réinitialisation autonome"}}
+      - {id: TTC-02, s: 3, o: 2, d: 2,
+         mode: {en: "Power amplifier degradation", fr: "Dégradation de l’amplificateur de puissance"},
+         cause: {en: "Thermal stress", fr: "Contrainte thermique"},
+         local: {en: "Lower output power", fr: "Puissance de sortie réduite"},
+         system: {en: "Reduced link margin, less data returned", fr: "Marge de liaison réduite, moins de données rapatriées"},
+         mitigation: {en: "Thermal path to structure, duty-cycle limits", fr: "Chemin thermique vers la structure, limites de cycle de service"}}
+  antenna:
+    kb_categories: [antenna]
+    keywords: [antenna]
+    modes:
+      - {id: ANT-01, s: 4, o: 2, d: 3,
+         mode: {en: "Antenna fails to deploy", fr: "Antenne non déployée"},
+         cause: {en: "Burn-wire or release failure", fr: "Défaillance du fil fusible ou du mécanisme de libération"},
+         local: {en: "Low gain, distorted pattern", fr: "Gain faible, diagramme déformé"},
+         system: {en: "Degraded or lost link", fr: "Liaison dégradée ou perdue"},
+         mitigation: {en: "Redundant burn circuits, retry by timer, deployment test", fr: "Circuits de libération redondants, nouvelle tentative par minuterie, essai de déploiement"}}
+  reaction_wheel:
+    kb_categories: [reaction_wheel]
+    keywords: [wheel]
+    modes:
+      - {id: RW-01, s: 4, o: 2, d: 2,
+         mode: {en: "Bearing seizure", fr: "Grippage du roulement"},
+         cause: {en: "Lubricant loss, contamination", fr: "Perte de lubrifiant, contamination"},
+         local: {en: "Wheel stops", fr: "Arrêt de la roue"},
+         system: {en: "Loss of one control axis, degraded pointing", fr: "Perte d’un axe de contrôle, pointage dégradé"},
+         mitigation: {en: "Fourth wheel, speed telemetry", fr: "Quatrième roue, télémesure de vitesse"}}
+      - {id: RW-02, s: 3, o: 2, d: 2,
+         mode: {en: "Motor driver failure", fr: "Défaillance de l’électronique de commande du moteur"},
+         cause: {en: "Electronic part failure", fr: "Défaillance d’un composant électronique"},
+         local: {en: "No torque", fr: "Plus de couple"},
+         system: {en: "Degraded pointing", fr: "Pointage dégradé"},
+         mitigation: {en: "Redundant wheel, magnetorquer back-up", fr: "Roue redondante, secours par magnétocoupleurs"}}
+  star_tracker:
+    kb_categories: [star_tracker]
+    keywords: [star]
+    modes:
+      - {id: STR-01, s: 3, o: 3, d: 1,
+         mode: {en: "Blinding by Sun, Earth or Moon", fr: "Éblouissement par le Soleil, la Terre ou la Lune"},
+         cause: {en: "Bright body in the field of view", fr: "Astre brillant dans le champ de vue"},
+         local: {en: "No attitude solution", fr: "Pas de solution d’attitude"},
+         system: {en: "Temporary loss of fine pointing", fr: "Perte temporaire du pointage fin"},
+         mitigation: {en: "Baffle, exclusion angles, gyro propagation", fr: "Pare-soleil, angles d’exclusion, propagation gyroscopique"}}
+  magnetorquer:
+    kb_categories: [magnetorquer]
+    keywords: [magnetorquer, torquer, mtq]
+    modes:
+      - {id: MTQ-01, s: 3, o: 1, d: 2,
+         mode: {en: "Coil open circuit", fr: "Bobine en circuit ouvert"},
+         cause: {en: "Wire fatigue, driver failure", fr: "Fatigue du fil, défaillance du pilote"},
+         local: {en: "No dipole on one axis", fr: "Pas de dipôle sur un axe"},
+         system: {en: "Slower detumbling, wheel saturation over time", fr: "Dépointage plus lent, saturation des roues à terme"},
+         mitigation: {en: "Three-axis torquers, driver protection", fr: "Magnétocoupleurs trois axes, protection des pilotes"}}
+  sun_sensor:
+    kb_categories: [sun_sensor]
+    keywords: [sun sensor]
+    modes:
+      - {id: SS-01, s: 2, o: 2, d: 2,
+         mode: {en: "Sensor output biased", fr: "Sortie du capteur biaisée"},
+         cause: {en: "Albedo, contamination", fr: "Albédo, contamination"},
+         local: {en: "Wrong Sun vector", fr: "Vecteur Soleil erroné"},
+         system: {en: "Coarse attitude error", fr: "Erreur d’attitude grossière"},
+         mitigation: {en: "Several sensors, albedo filtering", fr: "Plusieurs capteurs, filtrage de l’albédo"}}
+  gnss:
+    kb_categories: [gps_receiver]
+    keywords: [gps, gnss]
+    modes:
+      - {id: GNSS-01, s: 2, o: 2, d: 2,
+         mode: {en: "Loss of fix", fr: "Perte de la solution de position"},
+         cause: {en: "Antenna pointing, receiver reset", fr: "Pointage de l’antenne, réinitialisation du récepteur"},
+         local: {en: "No position or PPS", fr: "Ni position ni PPS"},
+         system: {en: "Clock drift, poorer orbit knowledge", fr: "Dérive de l’horloge, connaissance d’orbite dégradée"},
+         mitigation: {en: "OBC clock holdover, ground orbit determination", fr: "Maintien de l’horloge OBC, restitution d’orbite au sol"}}
+  thruster:
+    kb_categories: [thruster]
+    keywords: [thruster, propulsion, tank, valve]
+    domains: [propulsion]
+    modes:
+      - {id: PRP-01, s: 4, o: 2, d: 3,
+         mode: {en: "Leak or valve stuck", fr: "Fuite ou vanne bloquée"},
+         cause: {en: "Seal degradation, contamination", fr: "Dégradation des joints, contamination"},
+         local: {en: "Propellant loss or no thrust", fr: "Perte d’ergol ou absence de poussée"},
+         system: {en: "Loss of orbit control or disposal", fr: "Perte du contrôle d’orbite ou de la désorbitation"},
+         mitigation: {en: "Latch valves, pressure telemetry, ≥ 3 inhibits (CDS 2.1.4)", fr: "Vannes à verrouillage, télémesure de pression, ≥ 3 inhibitions (CDS 2.1.4)"}}
+  thermal:
+    kb_categories: [thermal_hardware]
+    keywords: [heater, radiator, thermal]
+    domains: [thermal]
+    modes:
+      - {id: THM-01, s: 3, o: 2, d: 2,
+         mode: {en: "Heater stuck on or off", fr: "Réchauffeur bloqué allumé ou éteint"},
+         cause: {en: "Switch failure, command error", fr: "Défaillance de l’interrupteur, erreur de commande"},
+         local: {en: "Unit outside its temperature range", fr: "Unité hors de sa plage de température"},
+         system: {en: "Unit damage or power drain", fr: "Endommagement de l’unité ou surconsommation"},
+         mitigation: {en: "Thermostat back-up, software limits", fr: "Thermostat de secours, limites logicielles"}}
+  structure:
+    kb_categories: [cubesat_structure, mechanical_hardware, deployer]
+    keywords: [structure, frame, chassis, bracket]
+    domains: [structure]
+    modes:
+      - {id: STRC-01, s: 4, o: 1, d: 3,
+         mode: {en: "Deployment switch fails", fr: "Défaillance de l’interrupteur de déploiement"},
+         cause: {en: "Mechanical wear, misalignment", fr: "Usure mécanique, mauvais alignement"},
+         local: {en: "Satellite does not power on, or powers on in the dispenser", fr: "Le satellite ne démarre pas, ou démarre dans le déployeur"},
+         system: {en: "Mission loss or launch-safety violation", fr: "Perte de mission ou non-respect de la sécurité au lancement"},
+         mitigation: {en: "Several switches in series (CDS 2.3.2), acceptance test", fr: "Plusieurs interrupteurs en série (CDS 2.3.2), essai de réception"}}
+  payload:
+    keywords: [camera, imager, instrument, payload, sensor, detector, spectrometer]
+    domains: [payload]
+    modes:
+      - {id: PL-01, s: 4, o: 2, d: 2,
+         mode: {en: "Instrument failure", fr: "Défaillance de l’instrument"},
+         cause: {en: "Detector degradation, electronics failure", fr: "Dégradation du détecteur, défaillance électronique"},
+         local: {en: "No science data", fr: "Pas de données scientifiques"},
+         system: {en: "Mission objective not met", fr: "Objectif de mission non atteint"},
+         mitigation: {en: "Screening, derating, degraded modes", fr: "Tri, déclassement, modes dégradés"}}
+
+generic:
+  modes:
+    - {id: GEN-01, s: 3, o: 2, d: 3,
+       mode: {en: "Loss of function", fr: "Perte de fonction"},
+       cause: {en: "Part failure", fr: "Défaillance d’un composant"},
+       local: {en: "Element function unavailable", fr: "Fonction de l’élément indisponible"},
+       system: {en: "Degraded mission", fr: "Mission dégradée"},
+       mitigation: {en: "Screening, derating, health telemetry", fr: "Tri, déclassement, télémesure d’état"}}

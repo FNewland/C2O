@@ -1,0 +1,252 @@
+# Requirement quality and verification-method rules (deterministic)
+# =================================================================
+# Read by services/requirement_quality.py and services/verification_defaults.py.
+#
+# Sources
+#   ears_2009  Mavin, Wilkinson, Harwood, Novak, "Easy Approach to Requirements Syntax
+#              (EARS)", RE'09, IEEE, pp. 317-322, DOI 10.1109/RE.2009.9. Pattern
+#              keywords are English; the French keywords below are a C2O adaptation.
+#   incose_gtwr INCOSE Guide to Writing Requirements. Rule numbers R2..R33 follow the
+#              community quick-reference card (secondary source); SpaceCDF pins the
+#              SUBSET below, not the full guide. The word lists are C2O defaults.
+#   ecss_10_02 ECSS-E-ST-10-02C Rev.1 Verification: four methods T/A/R/I (4.2.2,
+#              5.2.2.2-5.2.2.5); requirements verified only by A or R need a risk
+#              assessment (5.2.2.1).
+#   c2o_default SpaceCDF choice (not a standard citation).
+
+sources:
+  ears_2009:   {kind: guideline, short: "EARS (Mavin et al. 2009)", title: "EARS, Mavin et al., RE'09 (IEEE) DOI 10.1109/RE.2009.9", verified: true}
+  incose_gtwr: {kind: guideline, short: "INCOSE GtWR", title: "INCOSE Guide to Writing Requirements (rule subset; numbering per quick-reference card)", verified: false}
+  ecss_10_02:  {kind: standard, short: "ECSS-E-ST-10-02C Rev.1", title: "ECSS-E-ST-10-02C Rev.1 Verification", verified: true}
+  c2o_default: {kind: c2o_default, title: "C2O default (not a standard citation)", verified: false}
+
+# ------------------------------------------------------------------ EARS patterns
+# Tried in order; the first match names the pattern. Regexes are case-insensitive and
+# matched against the whole requirement text (leading spaces stripped).
+ears:
+  source: ears_2009
+  patterns:
+    - id: complex
+      label: {en: "Complex (While…, when…)", fr: "Complexe (Tant que…, lorsque…)"}
+      en: '^while\b.+,\s*when\b.+\bshall\b'
+      fr: '^tant que\b.+,\s*(lorsque|quand)\b.+\bdoi(t|vent)\b'
+    - id: unwanted
+      label: {en: "Unwanted behaviour (If…, then…)", fr: "Comportement indésirable (Si…, alors…)"}
+      en: '^if\b.+\bthen\b.+\bshall\b'
+      fr: '^si\b.+\balors\b.+\bdoi(t|vent)\b'
+    - id: state
+      label: {en: "State-driven (While…)", fr: "Piloté par état (Tant que…)"}
+      en: '^while\b.+\bshall\b'
+      fr: '^(tant que|pendant que)\b.+\bdoi(t|vent)\b'
+    - id: event
+      label: {en: "Event-driven (When…)", fr: "Piloté par événement (Lorsque…)"}
+      en: '^when\b.+\bshall\b'
+      fr: '^(lorsque|quand|dès que)\b.+\bdoi(t|vent)\b'
+    - id: optional
+      label: {en: "Optional feature (Where…)", fr: "Option (Là où…)"}
+      en: '^where\b.+\bshall\b'
+      fr: '^(là où|dans les configurations où)\b.+\bdoi(t|vent)\b'
+    - id: ubiquitous
+      label: {en: "Ubiquitous (The … shall …)", fr: "Permanent (Le/La … doit …)"}
+      en: '^(the|each|every|all)\b.+\bshall\b'
+      fr: "^(le|la|les|l'|l’|chaque|tout|toute)\\s*\\S.*\\bdoi(t|vent)\\b"
+
+# ------------------------------------------------------------------ quality checks
+# kind: one of
+#   words      -> any listed word/phrase present (whole-word, case-insensitive)
+#   regex      -> regex search
+#   no_modal   -> requirement lacks "shall" (EN) / "doit|doivent" (FR)
+#   multi_modal-> more than one "shall"/"doit"
+#   number_without_unit -> a number not followed by a known unit
+#   number_without_bound -> a number but no comparator / tolerance phrase
+# severity: error (rewrite before baselining) | warning (review) | info (style)
+checks:
+  - id: R-MODAL
+    rule: "INCOSE R1 / EARS"
+    source: incose_gtwr
+    kind: no_modal
+    severity: error
+    message: {en: "No “shall”: a requirement states an obligation with “shall”.",
+              fr: "Pas de « doit » : une exigence exprime une obligation avec « doit »."}
+  - id: R18-SINGLE
+    rule: "INCOSE R18 (singular)"
+    source: incose_gtwr
+    kind: multi_modal
+    severity: error
+    message: {en: "More than one “shall”: split into one requirement per obligation.",
+              fr: "Plus d’un « doit » : scinder en une exigence par obligation."}
+  - id: C2O-TBD
+    rule: "C2O (open item)"
+    source: c2o_default
+    kind: regex
+    pattern: '\b(TBD|TBC|TBR|TBA|à définir|à confirmer|ADF|AC)\b'
+    case_sensitive: true
+    severity: warning
+    message: {en: "Open item (TBD/TBC): track it and close it before the review.",
+              fr: "Point ouvert (TBD/TBC) : le suivre et le fermer avant la revue."}
+  - id: R7-VAGUE
+    rule: "INCOSE R7 (vague terms)"
+    source: incose_gtwr
+    kind: words
+    severity: error
+    words:
+      en: [adequate, appropriate, sufficient, fast, quick, rapid, efficient, user-friendly, easy, flexible,
+           robust, reliable, high, low, large, small, several, many, few, approximately, about, optimal,
+           optimised, optimized, minimise, minimize, maximise, maximize, state-of-the-art, significant, normal,
+           typical, reasonable, best]
+      fr: [adéquat, adéquate, approprié, appropriée, suffisant, suffisante, rapide, efficace, convivial, facile,
+           flexible, robuste, fiable, élevé, élevée, faible, grand, grande, petit, petite, plusieurs, nombreux,
+           environ, approximativement, optimal, optimale, minimiser, maximiser, significatif, normal, typique,
+           raisonnable, meilleur]
+    message: {en: "Vague term “{term}”: replace it with a measurable value.",
+              fr: "Terme vague « {term} » : le remplacer par une valeur mesurable."}
+  - id: R8-ESCAPE
+    rule: "INCOSE R8 (escape clauses)"
+    source: incose_gtwr
+    kind: words
+    severity: error
+    words:
+      en: [where possible, as far as possible, if possible, as appropriate, as required, if necessary,
+           if practical, to the extent practicable, as needed]
+      fr: [si possible, dans la mesure du possible, le cas échéant, si nécessaire, au besoin, selon les besoins]
+    message: {en: "Escape clause “{term}”: a requirement must hold unconditionally or state its condition (EARS).",
+              fr: "Clause échappatoire « {term} » : l’exigence doit s’appliquer sans réserve ou énoncer sa condition (EARS)."}
+  - id: R9-OPEN
+    rule: "INCOSE R9 (open-ended clauses)"
+    source: incose_gtwr
+    kind: words
+    severity: warning
+    words:
+      en: [including but not limited to, etc., and so on, such as, among others]
+      fr: [notamment, entre autres, etc., y compris mais sans s’y limiter, tel que, tels que]
+    message: {en: "Open-ended clause “{term}”: list every item explicitly.",
+              fr: "Clause ouverte « {term} » : énumérer explicitement chaque élément."}
+  - id: R19-COMBINATOR
+    rule: "INCOSE R19 (combinators)"
+    source: incose_gtwr
+    kind: words
+    severity: warning
+    words:
+      en: [and/or, either, unless, otherwise, but not]
+      fr: [et/ou, soit, à moins que, sinon]
+    message: {en: "Combinator “{term}”: it makes the requirement ambiguous or compound.",
+              fr: "Combinateur « {term} » : il rend l’exigence ambiguë ou composée."}
+  - id: R17-SLASH
+    rule: "INCOSE R17 (oblique /)"
+    source: incose_gtwr
+    kind: regex
+    pattern: '(?<![\d\s])/(?![\d\s])(?<!m/s)'
+    severity: info
+    message: {en: "Oblique “/” between words: say “and” or “or”.",
+              fr: "Barre oblique « / » entre des mots : écrire « et » ou « ou »."}
+  - id: R20-PURPOSE
+    rule: "INCOSE R20 (purpose phrases)"
+    source: incose_gtwr
+    kind: words
+    severity: info
+    words:
+      en: [in order to, so that, so as to]
+      fr: [afin de, afin que, pour que, de manière à]
+    message: {en: "Purpose phrase “{term}”: move the reason to the rationale field.",
+              fr: "Proposition de but « {term} » : déplacer la justification dans le champ « rationale »."}
+  - id: R24-PRONOUN
+    rule: "INCOSE R24 (pronouns)"
+    source: incose_gtwr
+    kind: words
+    severity: warning
+    words:
+      en: [it, they, them, this, these, those, its, their]
+      fr: [il, ils, elle, elles, celui-ci, celle-ci, ceux-ci, ceci, cela]
+    skip_first_words: 0
+    message: {en: "Pronoun “{term}”: name the item explicitly.",
+              fr: "Pronom « {term} » : nommer explicitement l’élément."}
+  - id: R26-ABSOLUTE
+    rule: "INCOSE R26 (absolutes)"
+    source: incose_gtwr
+    kind: words
+    severity: warning
+    words:
+      en: [always, never, 100%, 100 %, all times, zero failures, infinite]
+      fr: [toujours, jamais, 100%, 100 %, en tout temps, aucune défaillance, infini]
+    message: {en: "Absolute “{term}”: it cannot be verified; give a probability or a bound.",
+              fr: "Absolu « {term} » : invérifiable ; donner une probabilité ou une borne."}
+  - id: R2-PASSIVE
+    rule: "INCOSE R2 (active voice)"
+    source: incose_gtwr
+    kind: regex
+    pattern_en: '\bshall be \w+(ed|en)\b[^.]*\bby\b'
+    pattern_fr: '\bdoi(t|vent) être \w+(é|ée|és|ées|i|ie|is|ies|it|ite|its|ites)\b[^.]*\bpar\b'
+    severity: info
+    message: {en: "Passive voice: name the responsible entity as the subject.",
+              fr: "Voix passive : faire de l’entité responsable le sujet."}
+  - id: R6-UNITS
+    rule: "INCOSE R6 (units)"
+    source: incose_gtwr
+    kind: number_without_unit
+    severity: warning
+    message: {en: "Number “{term}” without a unit.",
+              fr: "Nombre « {term} » sans unité."}
+  - id: R33-TOLERANCE
+    rule: "INCOSE R33 (tolerances)"
+    source: incose_gtwr
+    kind: number_without_bound
+    severity: info
+    message: {en: "A value without a bound or tolerance (at least, at most, ±, within…).",
+              fr: "Valeur sans borne ni tolérance (au moins, au plus, ±, à moins de…)."}
+
+# Units recognised after a number (case-sensitive except where noted). Extend freely.
+units: ["%", "kg", "g", "t", "W", "kW", "mW", "Wh", "kWh", "mAh", "Ah", "V", "mV", "kV", "A", "mA", "µA", "Ω", "ohm",
+        "m", "km", "cm", "mm", "µm", "nm", "s", "ms", "µs", "min", "h", "hr", "hours", "hour", "heures", "heure",
+        "day", "days", "jour", "jours", "yr", "yrs", "year", "years", "an", "ans", "année", "années", "orbit", "orbits", "orbites", "dB", "dBW", "dBm", "dBi", "dBic", "dB-Hz", "dBK",
+        "Hz", "kHz", "MHz", "GHz", "bps", "kbps", "Mbps", "Gbps", "bit/s", "kbit/s", "Mbit/s", "b/s", "B", "kB", "MB", "GB", "TB",
+        "Mo", "Go", "To", "Gbit", "Mbit", "°C", "°", "K", "deg", "arcsec", "arcmin", "rad", "mrad", "µrad", "sr", "m/s", "km/s",
+        "m/s²", "m/s2", "g0", "N", "mN", "µN", "Nm", "N·m", "mNm", "mN·m", "Ns", "N·s", "Pa", "kPa", "bar", "krad", "rad(Si)",
+        "U", "lux", "W/m²", "W/m2", "J", "kJ", "Gauss", "G", "nT", "µT", "T", "sigma", "σ", "pixels", "px", "rpm"]
+# Comparator / tolerance phrases that make a numeric value bounded (R33).
+bounds:
+  en: [at least, at most, no more than, no less than, not exceed, not to exceed, greater than, less than, more than,
+       fewer than, within, between, minimum, maximum, up to, ±, "+/-", "≤", "≥", "<", ">", "<=", ">=", or better, or less, or more, exceed, below, above, under, over]
+  fr: [au moins, au plus, au maximum, au minimum, pas plus de, pas moins de, ne pas dépasser, supérieur, supérieure,
+       inférieur, inférieure, entre, à moins de, jusqu’à, jusqu'à, ±, "+/-", "≤", "≥", "<", ">", minimum, maximum, ou mieux, ou moins, ou plus, dépasser, sous, au-dessus, au-dessous, en dessous]
+
+# ------------------------------------------------------------------ verification defaults
+# ECSS-E-ST-10-02C gives the four methods; WHICH method suits WHICH requirement type is a
+# C2O default (classification by threshold parameter and keywords). First match wins.
+verification:
+  source: ecss_10_02
+  methods:
+    T: {en: "Test (incl. demonstration)", fr: "Essai (y compris démonstration)"}
+    A: {en: "Analysis (incl. similarity)", fr: "Analyse (y compris similarité)"}
+    R: {en: "Review of design", fr: "Revue de conception"}
+    I: {en: "Inspection", fr: "Inspection"}
+  risk_assessment_methods: [A, R]       # 5.2.2.1: A-only or R-only need a risk assessment
+  types:
+    - id: documentation
+      method: R
+      source: c2o_default
+      label: {en: "Compliance / documentation", fr: "Conformité / documentation"}
+      keywords: [comply, compliant, conform, in accordance with, licen, standard, ITU, document, CDS, regulation,
+                 conformer, conforme, conformément, licence, norme, règlement, documenter]
+    - id: physical
+      method: I
+      source: c2o_default
+      label: {en: "Physical feature / workmanship", fr: "Caractéristique physique / fabrication"}
+      keywords: [dimension, envelope, protrude, label, marking, connector, colour, color, finish, material, rail,
+                 access port, enveloppe, dépasser du rail, étiquette, marquage, connecteur, couleur, matériau, finition]
+    - id: budget
+      method: A
+      source: c2o_default
+      label: {en: "Budget / margin / lifetime", fr: "Bilan / marge / durée de vie"}
+      param_prefixes: [mass., power., systems., thermal., orbit., propulsion., debris., sustainability., reliability., cost., risk.]
+      keywords: [margin, budget, lifetime, life time, reliability, probability, decay, de-orbit, deorbit, re-entry, orbit average,
+                 marge, durée de vie, fiabilité, probabilité, désorbitation, rentrée]
+    - id: performance
+      method: T
+      source: c2o_default
+      label: {en: "Performance / function", fr: "Performance / fonction"}
+      param_prefixes: [link., data., aocs., payload., ttc., obc., comms.]
+      keywords: [transmit, downlink, uplink, receive, point, pointing, data rate, command, deploy, image, resolution,
+                 operate, detect, measure, store, emit, survive, withstand, vibration, thermal vacuum,
+                 transmettre, recevoir, pointer, pointage, débit, commander, déployer, imager, résolution, fonctionner,
+                 détecter, mesurer, stocker, résister]
+  fallback: {method: A, source: c2o_default, label: {en: "Unclassified (default to analysis)", fr: "Non classée (analyse par défaut)"}}

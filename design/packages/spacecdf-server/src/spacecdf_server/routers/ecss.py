@@ -163,7 +163,8 @@ async def generate_did(did_type: str, study_id: str | None = None) -> dict:
         # Load element tree and interfaces for this study
         from .elements import _elements, _interfaces
         elements = [e for e in _elements.values() if e.get("study_id") == study_id and not e.get("deleted_at")]
-        interfaces = list(_interfaces.values())
+        interfaces = [i for i in _interfaces.values() if i.get("study_id") == study_id
+                      and not i.get("deleted_at") and i.get("status") != "rejected"]
         equipment = [e for e in elements if e.get("element_type") == "component"]
 
     # Generate based on type — pass all available data (generators use **kwargs)
@@ -218,7 +219,7 @@ async def _evaluate_gate_for_study(study_id: str, phase_id: str, body: dict | No
     the stored study, so the gate reflects what the user is looking at.
     """
     from ..services.gate_evaluator import evaluate_gate, resolve_phase
-    from .elements import _elements
+    from .elements import _elements, _interfaces
     from .requirements import _requirements, ensure_requirements_loaded
 
     if resolve_phase(phase_id) is None:
@@ -265,6 +266,7 @@ async def _evaluate_gate_for_study(study_id: str, phase_id: str, body: dict | No
         reliability_target=rel_target,
         requirements=reqs,
         elements=elements,
+        interfaces=[i for i in _interfaces.values() if i.get("study_id") == study_id and not i.get("deleted_at")],
     )
     result["study_id"] = study_id
     result["study_found"] = study is not None

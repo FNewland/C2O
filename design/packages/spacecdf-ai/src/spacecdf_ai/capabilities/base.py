@@ -82,6 +82,7 @@ class BaseCapability(ABC):
         api_key: str | None = None,
         session_id: str = "default",
         ui_language: str | None = None,
+        max_tokens: int | None = None,
         **kwargs: Any,
     ) -> dict[str, Any]:
         """Execute the capability end-to-end.
@@ -102,6 +103,7 @@ class BaseCapability(ABC):
             model=model,
             api_key=api_key,
             session_id=session_id,
+            max_tokens=_cap_tokens(max_tokens, self.config.budget.max_tokens_per_call),
         )
 
         if response.error:
@@ -117,3 +119,10 @@ class BaseCapability(ABC):
         result["model"] = response.model
         result["elapsed_ms"] = response.elapsed_ms
         return result
+
+
+def _cap_tokens(requested: int | None, limit: int) -> int:
+    """The request's max_tokens, never above the genai.yaml per-call limit."""
+    if not requested or requested <= 0:
+        return limit
+    return min(int(requested), limit)

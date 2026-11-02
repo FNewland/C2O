@@ -98,15 +98,43 @@ async def test_config_output_language_is_the_default_and_request_overrides():
     assert not client.calls[-1]["system"].endswith(FRENCH_OUTPUT_INSTRUCTION)
 
 
-async def test_fsw_programming_language_kwarg_is_not_confused_with_ui_language():
+async def test_retired_capability_is_never_capable():
+    """fsw_generation (and every other retired capability) stays off even if genai.yaml enables it."""
     svc, client = _service()
-    await svc.run("fsw_generation", language="c", ui_language="fr")
-    call = client.calls[-1]
-    assert "in C for this spacecraft" in call["user_message"]
-    assert call["system"].endswith(FRENCH_OUTPUT_INSTRUCTION)
+    out = await svc.run("fsw_generation", language="c", ui_language="fr")
+    assert out["ai_available"] is False and not client.calls
+
+
+async def test_router_context_reaches_the_prompt():
+    """Defect (audit §1.4.2): the HTTP ``context`` used to be dropped on the AIService path."""
+    svc, client = _service()
+    await svc.run("design_advisor", context={"mission_need": {"problem_statement": "Wildfire smoke maps",
+                                                              "stakeholders": [{"name": "CIFFC", "role": "user",
+                                                                                "needs": ["daily maps"]}]}},
+                  capability_hint="critique_need")
+    msg = client.calls[-1]["user_message"]
+    assert "Wildfire smoke maps" in msg and "CIFFC" in msg
+
+
+async def test_max_tokens_forwarded_and_capped():
+    svc, client = _service()
+    await svc.run("design_advisor", question="Q?", max_tokens=999)
+    assert client.calls[-1]["max_tokens"] == 999
+    await svc.run("design_advisor", question="Q?", max_tokens=10**6)
+    assert client.calls[-1]["max_tokens"] == svc.config.budget.max_tokens_per_call
 
 
 # --- HTTP layer ---------------------------------------------------------------
+
+def _ai_on(monkeypatch, *caps: str):
+    """Switch AI on for the router/legacy path without touching configs/genai.yaml."""
+    from spacecdf_server.routers import ai as ai_router
+    from spacecdf_server.services import ai_advisor
+
+    settings = {"enabled": True, "capabilities": {c: True for c in caps}, "model": "m", "max_tokens_per_call": 4096}
+    monkeypatch.setattr(ai_advisor, "genai_settings", lambda: settings)
+    monkeypatch.setattr(ai_router, "genai_settings", lambda: settings)
+
 
 async def test_ai_router_forwards_language(monkeypatch):
     from spacecdf_server.app import app
@@ -120,15 +148,86 @@ async def test_ai_router_forwards_language(monkeypatch):
         seen.append(language)
         return AIResponse(content="ok", capability=capability)
 
+    _ai_on(monkeypatch, "design_advisor", "requirements_decomposition")
     monkeypatch.setattr(ai_router, "ask_ai", fake_ask_ai)
     monkeypatch.setattr(app.state, "ai_service", None, raising=False)
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
         assert (await c.post("/api/ai/ask", json={"capability": "general"})).status_code == 200
         assert (await c.post("/api/ai/ask", json={"capability": "general", "language": "fr"})).status_code == 200
         assert (await c.post("/api/ai/ask", json={"capability": "general", "language": "de"})).status_code == 422
-        assert (await c.post("/api/ai/review-design?language=fr", json={})).status_code == 200
+        assert (await c.post("/api/ai/write-requirements?language=fr", json={})).status_code == 200
         assert (await c.post("/api/ai/critique-need", json={})).status_code == 200
     assert seen == [None, "fr", "fr", None]
+
+
+async def test_kill_switch_blocks_every_path_even_with_a_key(monkeypatch):
+    """Defect (audit §1.4.1): genai.enabled: false did not stop the legacy path."""
+    from spacecdf_server.app import app
+    from spacecdf_server.routers import ai as ai_router
+    from spacecdf_server.services import ai_advisor
+
+    called: list[str] = []
+
+    async def fake_ask_ai(capability, *a, **k):
+        called.append(capability)
+        return ai_advisor.AIResponse(content="ok", capability=capability)
+
+    off = {"enabled": False, "capabilities": {"design_advisor": True}, "model": "m", "max_tokens_per_call": 4096}
+    monkeypatch.setattr(ai_advisor, "genai_settings", lambda: off)
+    monkeypatch.setattr(ai_router, "genai_settings", lambda: off)
+    monkeypatch.setattr(ai_router, "ask_ai", fake_ask_ai)
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-test-not-used")
+    monkeypatch.setattr(app.state, "ai_service", None, raising=False)
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
+        r = await c.post("/api/ai/ask", json={"capability": "general"}, headers={"X-API-Key": "sk-x"})
+        assert r.status_code == 503 and r.json()["detail"]["code"] == "genai_disabled"
+        assert r.json()["detail"]["message"]["fr"]
+        assert (await c.post("/api/ai/critique-need", json={})).status_code == 503
+        assert (await c.post("/api/ai/write-requirements", json={})).status_code == 503
+        st = (await c.get("/api/ai/status")).json()
+        assert st["enabled"] is False and st["available"] is False and st["mode"] == "manual"
+    assert called == []
+    # Defence in depth: the legacy function refuses on its own too.
+    res = await ai_advisor.ask_ai("general", {}, api_key="sk-x")
+    assert res.error and "disabled" in res.error
+
+
+def test_shipped_genai_yaml_is_off_and_limited_to_three_capabilities():
+    import yaml
+    from spacecdf_server.services.ai_advisor import _genai_yaml
+
+    data = yaml.safe_load(_genai_yaml().read_text(encoding="utf-8"))["genai"]
+    assert data["enabled"] is False
+    assert set(data["capabilities"]) == {"design_advisor", "requirements_decomposition", "report_narrative"}
+
+
+async def test_retired_capabilities_answer_410(monkeypatch):
+    from spacecdf_server.app import app
+
+    _ai_on(monkeypatch, "design_advisor")
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
+        for cap in ("review_design", "analyze_trade", "recommend_component", "generate_conops"):
+            r = await c.post("/api/ai/ask", json={"capability": cap})
+            assert r.status_code == 410 and r.json()["detail"]["use"], cap
+        assert (await c.post("/api/ai/review-design", json={})).status_code == 410
+
+
+async def test_ai_output_comes_back_rule_checked(monkeypatch):
+    from spacecdf_server.app import app
+    from spacecdf_server.routers import ai as ai_router
+    from spacecdf_server.services.ai_advisor import AIResponse
+
+    async def fake_ask_ai(capability, *a, **k):
+        return AIResponse(content="1. The OBC shall boot within 10 s.\n2. The EPS shall be efficient.",
+                          capability=capability)
+
+    _ai_on(monkeypatch, "requirements_decomposition")
+    monkeypatch.setattr(ai_router, "ask_ai", fake_ask_ai)
+    monkeypatch.setattr(app.state, "ai_service", None, raising=False)
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
+        body = (await c.post("/api/ai/ask", json={"capability": "write_requirements"})).json()
+    assert body["validated"] is True
+    assert body["rule_checks"]["summary"] == {"statements": 2, "needs_revision": 1, "pass": 1, "open_items": 0}
 
 
 # --- export templates ---------------------------------------------------------

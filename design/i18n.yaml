@@ -40,6 +40,7 @@ docs:
   - {group: cdf-docs, en: docs/USER_GUIDE.md, fr: docs/fr/USER_GUIDE.md}
   - {group: cdf-docs, en: docs/user_guide_expanded.md, fr: docs/fr/user_guide_expanded.md}
   - {group: cdf-docs, en: docs/INSTALLATION_GUIDE.md, fr: docs/fr/INSTALLATION_GUIDE.md}
+  - {group: cdf-docs, en: docs/RULES_AND_AI.md, fr: docs/fr/RULES_AND_AI.md}
   - {group: cdf-docs, en: docs/course/COURSE_PLAN.md, fr: docs/course/fr/COURSE_PLAN.md}
   - {group: cdf-docs, en: docs/course/course_plan_expanded.md, fr: docs/course/fr/course_plan_expanded.md}
   - {group: cdf-docs, en: docs/course/3_WEEK_SYLLABUS.md, fr: docs/course/fr/3_WEEK_SYLLABUS.md}

@@ -20,6 +20,7 @@ class DesignAdvisorCapability(BaseCapability):
         budgets: dict | None = None,
         requirements: list[dict] | None = None,
         capability_hint: str = "general",
+        mission_need: dict | None = None,
         **kwargs: Any,
     ) -> str:
         parts: list[str] = []
@@ -27,11 +28,6 @@ class DesignAdvisorCapability(BaseCapability):
         # Capability-specific framing
         hints = {
             "critique_need": "Review this mission need statement. Identify gaps, ambiguities, and missing stakeholders.",
-            "write_requirements": "Generate formal requirements in 'shall' form from the objectives below.",
-            "analyze_trade": "Evaluate these design alternatives and recommend the best option.",
-            "generate_conops": "Generate a Concept of Operations for this mission.",
-            "review_design": "Review this spacecraft design from a systems engineering perspective.",
-            "recommend_component": "Recommend the best COTS component for the specified requirement.",
         }
         if capability_hint in hints:
             parts.append(hints[capability_hint])
@@ -43,6 +39,14 @@ class DesignAdvisorCapability(BaseCapability):
                 max_elements=self.config.budget.max_context_elements,
             )
             parts.append(f"\n--- DESIGN CONTEXT ---\n{ctx}")
+
+        # Stakeholders are what a need critique is mostly about.
+        stakeholders = (mission_need or (study or {}).get("mission_need") or {}).get("stakeholders") or []
+        if stakeholders:
+            parts.append("\n--- STAKEHOLDERS ---")
+            for sh in stakeholders[:20]:
+                needs = "; ".join(str(n) for n in (sh.get("needs") or [])[:5])
+                parts.append(f"- {sh.get('name', '?')} ({sh.get('role', '?')}): {needs}")
 
         # Question
         if question:

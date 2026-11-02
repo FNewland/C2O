@@ -19,11 +19,12 @@ import { ICDTable } from '../components/ICDTable'
 import { TraceabilityTree } from '../components/TraceabilityTree'
 import { ErrorBoundary } from '../components/ErrorBoundary'
 import { AnalysesPanel } from './AnalysesPanel'
+import { SpacecraftView } from '../spacecraft/SpacecraftView'
 
-const PANELS: ActivityPanel[] = ['blocks', 'budget', 'requirements', 'functions', 'interfaces', 'icd', 'trace', 'decide', 'analyses']
+const PANELS: ActivityPanel[] = ['blocks', 'spacecraft', 'budget', 'requirements', 'functions', 'interfaces', 'icd', 'trace', 'decide', 'analyses']
 
 /** Tabs that are tables or lists: the diagram collapses to a strip so they get the height. */
-const TABLE_PANELS = new Set<ActivityPanel>(['budget', 'requirements', 'functions', 'icd', 'trace', 'decide', 'analyses'])
+const TABLE_PANELS = new Set<ActivityPanel>(['spacecraft', 'budget', 'requirements', 'functions', 'icd', 'trace', 'decide', 'analyses'])
 
 const MIN_PANEL = 160
 
@@ -36,6 +37,7 @@ function readHeight(user: string): number {
 // Also the ErrorBoundary phaseName values below ('Functions', 'ICD', …).
 const PANEL_LABELS: Partial<Record<ActivityPanel, string>> = {
   blocks: 'Blocks',
+  spacecraft: 'Spacecraft',
   budget: 'Budget',
   requirements: 'Requirements',
   functions: 'Functions',
@@ -178,6 +180,7 @@ export function LevelWorkbench() {
         {/* Panel content */}
         <div id="act-panel" role="tabpanel" aria-labelledby={`act-tab-${activePanel}`} className="c2o-wb__panel">
           {activePanel === 'blocks' && <BlocksPanel />}
+          {activePanel === 'spacecraft' && <ErrorBoundary phaseName="Spacecraft"><SpacecraftView /></ErrorBoundary>}
           {activePanel === 'budget' && <BudgetPanel />}
           {activePanel === 'requirements' && <RequirementsPanel />}
           {activePanel === 'functions' && <ErrorBoundary phaseName="Functions"><FunctionTree /></ErrorBoundary>}

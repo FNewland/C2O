@@ -287,8 +287,16 @@ class ElementInterfaceRow(Base):
 
     name: Mapped[str] = mapped_column(String(255), default="")
     interface_type: Mapped[str] = mapped_column(String(32))
-    # interface_type values: electrical, data, rf, mechanical, thermal, optical
+    # interface_type: canonical values of spacecdf_common.models.interface_types.InterfaceType
+    # (power, data, rf, mechanical, thermal, timing, optical, fluid, electrical_signal);
+    # old spellings (electrical, propulsion, ...) are migrated at start-up (db/migrate.py).
+    subtype: Mapped[str | None] = mapped_column(String(32), nullable=True)
     direction: Mapped[str] = mapped_column(String(16), default="bidirectional")
+    # Provenance (Nov 2026): "user" | "import" | "rule:<rule_id>" (interface_rules.yaml)
+    origin: Mapped[str] = mapped_column(String(64), default="user")
+    # {"en": ..., "fr": ...} — why the rule proposed this link
+    rationale_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    standard_ref: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
     from_element_id: Mapped[str] = mapped_column(String(64), ForeignKey("design_elements.id"), index=True)
     to_element_id: Mapped[str] = mapped_column(String(64), ForeignKey("design_elements.id"), index=True)
@@ -298,7 +306,9 @@ class ElementInterfaceRow(Base):
     # SCDF-160 §1.2: list of exchange_items.id flowing over this interface
     exchange_item_ids_json: Mapped[list | None] = mapped_column(JSON, nullable=True)
 
-    status: Mapped[str] = mapped_column(String(32), default="defined")
+    # "suggested" (rule baseline, not yet reviewed) | "accepted" | "rejected"
+    # (rejected links are kept so the proposer never re-proposes them).
+    status: Mapped[str] = mapped_column(String(32), default="accepted")
     criticality: Mapped[str] = mapped_column(String(16), default="standard")
     diagram_label: Mapped[str] = mapped_column(String(128), default="")
 

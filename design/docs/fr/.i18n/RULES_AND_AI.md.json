@@ -1,0 +1,87 @@
+{
+ "tool_version": "1.0.0",
+ "en_path": "docs/RULES_AND_AI.md",
+ "sections": [
+  {
+   "id": "_preamble",
+   "en_hash": "e3b0c44298fc1c14",
+   "fr_hash": "e3b0c44298fc1c14"
+  },
+  {
+   "id": "spacecdf-design-rules-instead-of-ai",
+   "en_hash": "5675b10c94132769",
+   "fr_hash": "3cddfd63a46da67f"
+  },
+  {
+   "id": "spacecdf-design-rules-instead-of-ai/1-how-to-read-a-source-label",
+   "en_hash": "3cdbfd0ac26e7c0d",
+   "fr_hash": "eec648c718182164"
+  },
+  {
+   "id": "spacecdf-design-rules-instead-of-ai/2-former-ai-capabilities-and-what-replaced-them",
+   "en_hash": "84bd63c0b47da310",
+   "fr_hash": "71b2193734f3fb84"
+  },
+  {
+   "id": "spacecdf-design-rules-instead-of-ai/3-the-deterministic-engines",
+   "en_hash": "09e6736455e75281",
+   "fr_hash": "7aec8e2e434ab951"
+  },
+  {
+   "id": "spacecdf-design-rules-instead-of-ai/3-the-deterministic-engines/3-1-margin-policy-marginpolicy-py-configs-marginpolicy-yaml",
+   "en_hash": "27fcbdb3396dd928",
+   "fr_hash": "f5dca7e3fa9e8169"
+  },
+  {
+   "id": "spacecdf-design-rules-instead-of-ai/3-the-deterministic-engines/3-2-cubesat-design-specification-checks-cdschecks-py-configs-cdsrules-yaml",
+   "en_hash": "7c22a77467050231",
+   "fr_hash": "5814cf817976f1f8"
+  },
+  {
+   "id": "spacecdf-design-rules-instead-of-ai/3-the-deterministic-engines/3-3-requirement-quality-requirementquality-py-configs-requirementrules-yaml",
+   "en_hash": "7deac95ea5dffecb",
+   "fr_hash": "7af481cf96940c1e"
+  },
+  {
+   "id": "spacecdf-design-rules-instead-of-ai/3-the-deterministic-engines/3-4-verification-method-defaults-verificationdefaults-py",
+   "en_hash": "86e1ecc71ced4ee2",
+   "fr_hash": "d5f590c318148282"
+  },
+  {
+   "id": "spacecdf-design-rules-instead-of-ai/3-the-deterministic-engines/3-5-fmeca-skeleton-fmecalibrary-py-configs-failuremodes-yaml",
+   "en_hash": "c2397fb68edd06a9",
+   "fr_hash": "eb692dc5767e368e"
+  },
+  {
+   "id": "spacecdf-design-rules-instead-of-ai/3-the-deterministic-engines/3-6-review-gate-checks-gatechecks-py",
+   "en_hash": "444127802febc91b",
+   "fr_hash": "7cb6b1f6dcae51a2"
+  },
+  {
+   "id": "spacecdf-design-rules-instead-of-ai/3-the-deterministic-engines/3-7-expected-links-between-elements",
+   "en_hash": "0e4275515b85c048",
+   "fr_hash": "05b1b92aa42ee168"
+  },
+  {
+   "id": "spacecdf-design-rules-instead-of-ai/4-where-ai-remains-and-how-it-is-controlled",
+   "en_hash": "15669eabacc116fe",
+   "fr_hash": "cbc23819da02fd5c"
+  },
+  {
+   "id": "spacecdf-design-rules-instead-of-ai/5-endpoints",
+   "en_hash": "3fe538abf62fc9c7",
+   "fr_hash": "aaf658b0b360958c"
+  },
+  {
+   "id": "spacecdf-design-rules-instead-of-ai/6-changing-a-default",
+   "en_hash": "05cd386f094cf617",
+   "fr_hash": "4688183a7c79d27e"
+  },
+  {
+   "id": "spacecdf-design-rules-instead-of-ai/7-not-verified-to-check-before-quoting-as-a-standard",
+   "en_hash": "f25b45e8c39356e2",
+   "fr_hash": "3c8080ba7a16f8b0"
+  }
+ ],
+ "en_commit": "22fa880"
+}

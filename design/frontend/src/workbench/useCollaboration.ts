@@ -113,6 +113,8 @@ function _connect(studyId: string, userName: string) {
           case 'element_updated':
           case 'element_deleted':
           case 'interface_created':
+          case 'interface_changed':
+          case 'interfaces_proposed':
           case 'interface_deleted':
             // Refetch ALL active queries — ensures budget, requirements,
             // interfaces, escalation, readiness all update immediately

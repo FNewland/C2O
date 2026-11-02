@@ -360,12 +360,21 @@ async def websocket_session(
                     })
 
             elif msg_type == "interface_create":
-                from .elements import _interfaces
-                from uuid import uuid4
-                iface_data = msg.get("interface", {})
-                iface_id = uuid4().hex
-                iface = {"id": iface_id, "study_id": msg.get("study_id", ""), **iface_data, "version": 1, "deleted_at": None, "status": "defined", "criticality": "standard"}
-                _interfaces[iface_id] = iface
+                # Persisted and announced on the study WebSocket like the REST path
+                # (before Nov 2026 this was cache-only and lost on restart).
+                from spacecdf_common.models.interface_types import canonical_interface_type
+                from .elements import _elements, store_interface
+                iface_data = dict(msg.get("interface") or {})
+                itype = canonical_interface_type(iface_data.get("type") or iface_data.get("interface_type"))
+                if not itype or iface_data.get("from_element_id") not in _elements \
+                        or iface_data.get("to_element_id") not in _elements:
+                    await _send(websocket, {"type": "error", "message": "interface_create: unknown type or element"})
+                    continue
+                iface_data.pop("id", None)
+                iface = {**iface_data, "study_id": msg.get("study_id") or iface_data.get("study_id", ""),
+                         "interface_type": itype, "origin": "user", "status": "accepted",
+                         "criticality": iface_data.get("criticality") or "standard"}
+                iface = await store_interface(iface)
                 await _broadcast(session_id, {
                     "type": "interface_created", "interface": iface,
                     "actor": position_id, "timestamp": datetime.now(timezone.utc).isoformat(),

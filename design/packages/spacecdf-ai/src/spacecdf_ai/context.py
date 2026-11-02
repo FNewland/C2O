@@ -164,9 +164,11 @@ def build_review_context(
     if interfaces:
         sections.append(f"\n## Interfaces ({len(interfaces)})")
         for ifc in interfaces[:30]:
-            src = ifc.get("source_name", ifc.get("source_id", "?"))
-            tgt = ifc.get("target_name", ifc.get("target_id", "?"))
-            itype = ifc.get("type", "?")
+            # Real SpaceCDF interfaces use from_/to_element_id and interface_type
+            # (canonical ``type``); the *_name keys are optional display names.
+            src = ifc.get("from_name") or ifc.get("source_name") or ifc.get("from_element_id") or ifc.get("source_id", "?")
+            tgt = ifc.get("to_name") or ifc.get("target_name") or ifc.get("to_element_id") or ifc.get("target_id", "?")
+            itype = ifc.get("type") or ifc.get("interface_type", "?")
             sections.append(f"- {src} -> {tgt} [{itype}]")
 
     # ConOps modes
@@ -189,3 +191,24 @@ def build_review_context(
             sections.append(f"- [{sev}] {desc}")
 
     return "\n".join(sections)
+
+
+#: keys of the HTTP ``context`` dict that capabilities accept as keyword arguments
+_CONTEXT_KEYS = ("study", "mission_need", "elements", "budgets", "requirements", "existing_requirements",
+                 "interfaces", "section", "document_type", "target_level", "question")
+
+
+def context_to_kwargs(context: dict[str, Any]) -> dict[str, Any]:
+    """Map the router's free-form ``context`` onto capability keyword arguments.
+
+    A bare mission need ({problem_statement, objectives, stakeholders}) is
+    accepted too, and a ``study`` is synthesised from ``mission_need`` when absent
+    so every capability sees the design data it was given.
+    """
+    out = {k: context[k] for k in _CONTEXT_KEYS if k in context}
+    if "mission_need" not in out and any(k in context for k in ("problem_statement", "objectives", "stakeholders")):
+        out["mission_need"] = {k: context[k] for k in ("problem_statement", "objectives", "stakeholders")
+                               if k in context}
+    if "study" not in out and "mission_need" in out:
+        out["study"] = {"name": context.get("name", "Study"), "mission_need": out["mission_need"]}
+    return out

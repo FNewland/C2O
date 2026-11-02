@@ -102,8 +102,10 @@ export interface MigrateLegacyResult {
 
 // ─── Exchange items / ICD ───
 
-export type ExchangeItemKind = 'data' | 'command' | 'power' | 'signal' | 'fluid' | 'mechanical' | 'thermal' | string
-export const EXCHANGE_ITEM_KINDS = ['data', 'command', 'power', 'signal', 'fluid', 'mechanical', 'thermal']
+// Must match the backend's db/exchange_item_repo.py EXCHANGE_ITEM_KINDS (codebase audit §2.3:
+// 'command' and 'signal' were rejected with HTTP 400, 'rf' and 'optical' could not be chosen).
+export type ExchangeItemKind = 'data' | 'power' | 'rf' | 'thermal' | 'mechanical' | 'optical' | 'fluid' | string
+export const EXCHANGE_ITEM_KINDS = ['data', 'power', 'rf', 'thermal', 'mechanical', 'optical', 'fluid']
 
 export interface ExchangeItem {
   id: string
@@ -136,6 +138,9 @@ export interface ICDRow {
   interface_id: string
   name: string
   interface_type: string | null
+  /** Canonical type and review status (interface contract, Nov 2026); absent on older servers. */
+  type?: string | null
+  status?: string | null
   direction: string | null
   from_element: { id: string | null; name: string | null }
   to_element: { id: string | null; name: string | null }

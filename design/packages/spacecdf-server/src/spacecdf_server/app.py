@@ -19,6 +19,8 @@ from .routers import studies, design, agents, kb, exports, positions, engineerin
 from .routers import options as options_router, analyses_simulation as analyses_simulation_router, analyses_ground as analyses_ground_router, analyses_vv as analyses_vv_router, analyses_physics as analyses_physics_router
 from .routers import analyses_common as analyses_common_router
 from .routers import functions as functions_router, exchange_items as exchange_items_router, relations as relations_router, parameters as parameters_router, exchange as exchange_router
+from .routers import interfaces as interfaces_router
+from .routers import rules as rules_router
 from .db.engine import DATABASE_URL, dispose_engine, get_engine
 from .db.write_queue import start_worker, stop_worker
 
@@ -87,9 +89,30 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.warning("Study cache init failed (continuing with empty cache): %s", e)
 
+    # Validate the expected-interface rules (configs/interface_rules.yaml) once at start-up
+    try:
+        from .services.interface_proposer import rules_status
+        st = rules_status()
+        if st["ok"]:
+            logger.info("Interface rules OK: %s", st["path"])
+        else:
+            logger.error("Interface rules INVALID (%s) — link proposals disabled until fixed:\n  %s",
+                         st["path"], "\n  ".join(st["errors"]))
+    except Exception as e:
+        logger.error("Interface rules could not be checked: %s", e)
+
     # Start WebSocket edit-lock heartbeat checker
     from .routers.ws import start_heartbeat_checker
     start_heartbeat_checker()
+
+    # Deterministic design rules (configs/*.yaml): validate the schema once at start-up.
+    # Errors are logged and served by /api/rules/catalogue; the rule endpoints refuse
+    # to use a broken file (HTTP 500 with the reasons) rather than guess.
+    try:
+        from .services.rule_config import validate_all
+        validate_all()
+    except Exception as e:
+        logger.error("Rule config validation failed to run: %s", e)
 
     # Optional GenAI integration — graceful degradation when spacecdf-ai not installed
     try:
@@ -159,6 +182,7 @@ app.include_router(elements.router, prefix="/api", tags=["Design Elements"])
 # SCDF-160 Arcadia spine routers
 app.include_router(functions_router.router, prefix="/api", tags=["Functions"])
 app.include_router(exchange_items_router.router, prefix="/api", tags=["Exchange Items / ICD"])
+app.include_router(interfaces_router.router, prefix="/api", tags=["Interfaces: rules & readiness"])
 app.include_router(relations_router.router, prefix="/api", tags=["Traceability"])
 app.include_router(parameters_router.router, prefix="/api", tags=["Parameters"])
 app.include_router(exchange_router.router, prefix="/api", tags=["Model Exchange"])
@@ -169,6 +193,8 @@ app.include_router(analyses_simulation_router.router, prefix="/api", tags=["Anal
 app.include_router(analyses_ground_router.router, prefix="/api", tags=["Analyses: Ground Segment"])
 app.include_router(analyses_vv_router.router, prefix="/api", tags=["Analyses: V&V"])
 app.include_router(analyses_physics_router.router, prefix="/api", tags=["Analyses: Physics"])
+# Deterministic design rules replacing AI (docs/RULES_AND_AI.md)
+app.include_router(rules_router.router, prefix="/api", tags=["Design rules"])
 app.include_router(ws.router, tags=["WebSocket"])
 
 

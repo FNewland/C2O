@@ -1,251 +1,342 @@
 /**
- * InterfacesPanel — Define connections between sibling elements.
+ * InterfacesPanel — the links between the elements at this level.
  *
- * Shows interfaces involving elements at the current level.
- * Create/delete via API. Type, direction, endpoints.
+ * Three groups, in the order a designer works through them:
+ *   1. Suggested: links the rule engine expects (C2O default interface
+ *      matrix + component data). They already count in budgets and analyses;
+ *      the designer accepts, edits or rejects each one, or accepts a whole
+ *      type at once. Each row carries the rule's one-sentence rationale and
+ *      its reference.
+ *   2. Defined: accepted links (rule-made or the designer's own), with the
+ *      reference-data fields one click deeper.
+ *   3. Rejected: excluded from analyses and never re-proposed for that pair
+ *      and type, until restored here.
+ * Unmet needs and conflicts from a dry-run proposal sit above the lists.
  */
-import { useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMemo, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import type { TFunction } from 'i18next'
 import { useUIStore } from '../stores/uiStore'
-import { ArmButton, Button, Chevron, Field, Input, Panel, Select, Tag } from '../components/ui'
+import { ArmButton, Button, Chevron, Disclosure, Field, Input, Note, Panel, Select, StatusBadge } from '../components/ui'
+import {
+  INTERFACE_TYPES, TYPE_META, pickLang,
+  type DesignInterface, type InterfaceType,
+} from '../types/interfaces'
+import { displayElementName } from './BlocksPanel'
+import { InterfaceGlyph } from './InterfaceGlyph'
+import {
+  createInterface, deleteInterface, patchInterface, proposeLinks, useInterfaces, useInvalidateLinks,
+  useProposalCheck, type InterfacePatch, type ProposeResult,
+} from './interfaceApi'
+import { LinkEditor, LinkStatusChip, TypeLabel, originText, propsSummary, type EndpointOption } from './linkParts'
 
 const API = '/api'
 
-// English text is the i18n key
-const INTERFACE_TYPE_LABELS: Record<string, string> = {
-  electrical: 'Electrical', data: 'Data', rf: 'RF', mechanical: 'Mechanical', thermal: 'Thermal',
-}
-
-const INTERFACE_TYPES = [
-  { value: 'electrical', label: INTERFACE_TYPE_LABELS.electrical, color: 'var(--cat-4)' },
-  { value: 'data', label: INTERFACE_TYPE_LABELS.data, color: 'var(--cat-2)' },
-  { value: 'rf', label: INTERFACE_TYPE_LABELS.rf, color: 'var(--cat-6)' },
-  { value: 'mechanical', label: INTERFACE_TYPE_LABELS.mechanical, color: 'var(--cat-8)' },
-  { value: 'thermal', label: INTERFACE_TYPE_LABELS.thermal, color: 'var(--cat-5)' },
-]
-
 export function InterfacesPanel() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const studyId = useUIStore(s => s.studyId)
   const focusElementId = useUIStore(s => s.focusElementId)
-  const qc = useQueryClient()
+  const currentLevel = useUIStore(s => s.currentLevel)
+  const invalidate = useInvalidateLinks(studyId)
 
-  // Get sibling elements at current level
-  const { data: allElements = [] } = useQuery({
+  const { data: allElements = [] } = useQuery<any[]>({
     queryKey: ['elements', studyId],
     queryFn: () => fetch(`${API}/studies/${studyId}/elements`).then(r => r.json()),
     enabled: !!studyId, structuralSharing: false, refetchInterval: 3000,
   })
+  const { interfaces: allInterfaces } = useInterfaces(studyId)
 
-  const siblings = allElements.filter((el: any) =>
-    focusElementId ? el.parent_id === focusElementId : !el.parent_id
-  )
+  const siblings = useMemo(() => allElements.filter((el: any) =>
+    (focusElementId ? el.parent_id === focusElementId : !el.parent_id) && !el.deleted_at), [allElements, focusElementId])
+  const siblingIds = useMemo(() => new Set(siblings.map((s: any) => s.id)), [siblings])
+  const endpoints: EndpointOption[] = useMemo(() => siblings.map((el: any) => ({ id: el.id, name: displayElementName(el.name, t) })), [siblings, t])
+  const nameOf = (id: string) => {
+    const el = allElements.find((e: any) => e.id === id)
+    return el ? displayElementName(el.name, t) : t('(outside this level)')
+  }
 
-  // Get interfaces for study
-  const { data: allInterfaces = [] } = useQuery({
-    queryKey: ['interfaces', studyId],
-    queryFn: () => fetch(`${API}/studies/${studyId}/interfaces`).then(r => r.json()),
-    enabled: !!studyId, structuralSharing: false, refetchInterval: 3000,
+  const here = useMemo(() => allInterfaces.filter(i => siblingIds.has(i.from_element_id) && siblingIds.has(i.to_element_id)), [allInterfaces, siblingIds])
+  const suggested = here.filter(i => i.status === 'suggested')
+  const accepted = here.filter(i => i.status === 'accepted')
+  const rejected = here.filter(i => i.status === 'rejected')
+
+  // Dry-run proposal: unmet needs and conflicts for this level (re-run when the link set changes).
+  const stamp = useMemo(() => here.map(i => `${i.id}:${i.status}:${i.version ?? ''}`).sort().join(',') + `|${siblings.length}`, [here, siblings.length])
+  const check = useProposalCheck(studyId, currentLevel, focusElementId, stamp)
+  const proposerMissing = check.data === null
+  const proposal = check.data as ProposeResult | null | undefined
+  const unmet = (proposal?.unmet ?? []).filter(u => siblingIds.has(u.element_id))
+  const conflicts = (proposal?.conflicts ?? []).filter(c => c.element_ids.some(id => siblingIds.has(id)))
+
+  const [busy, setBusy] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [lastRun, setLastRun] = useState<string | null>(null)
+  const run = async (key: string, fn: () => Promise<unknown>) => {
+    setBusy(key); setError(null)
+    try { await fn(); invalidate() } catch (e) { setError(String((e as Error).message || e)) } finally { setBusy(null) }
+  }
+  const setStatus = (i: DesignInterface, status: DesignInterface['status']) =>
+    run(i.id, () => patchInterface(studyId!, i.id, { status, version: i.version }))
+  const savePatch = (i: DesignInterface, patch: InterfacePatch) => run(i.id, () => patchInterface(studyId!, i.id, patch))
+  const acceptAll = (list: DesignInterface[], type: InterfaceType) =>
+    run(`all:${type}`, () => Promise.all(list.map(i => patchInterface(studyId!, i.id, { status: 'accepted', version: i.version }))))
+  const propose = () => run('propose', async () => {
+    const r = await proposeLinks(studyId!, { level: currentLevel, element_id: focusElementId })
+    if (r) setLastRun(t('{{created}} new, {{updated}} updated, {{unchanged}} unchanged', { created: r.created.length, updated: r.updated.length, unchanged: r.unchanged }))
   })
 
-  // Filter to interfaces between visible siblings
-  const siblingIds = new Set(siblings.map((s: any) => s.id))
-  const interfaces = allInterfaces.filter((iface: any) =>
-    siblingIds.has(iface.from_element_id) && siblingIds.has(iface.to_element_id)
-  )
-
-  // Name lookup
-  const nameOf = (id: string) => allElements.find((e: any) => e.id === id)?.name || id.slice(0, 8)
-
-  // Add form state
+  // Add form
   const [showAdd, setShowAdd] = useState(false)
   const [fromId, setFromId] = useState('')
   const [toId, setToId] = useState('')
-  const [ifaceType, setIfaceType] = useState('data')
-  const [ifaceName, setIfaceName] = useState('')
-
-  const addMutation = useMutation({
-    mutationFn: async () => {
-      const res = await fetch(`${API}/interfaces/?study_id=${studyId}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: ifaceName || `${nameOf(fromId)} → ${nameOf(toId)}`,
-          interface_type: ifaceType,
-          direction: 'bidirectional',
-          from_element_id: fromId,
-          to_element_id: toId,
-          diagram_label: ifaceName || ifaceType,
-        }),
-      })
-      if (!res.ok) throw new Error(await res.text())
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['interfaces', studyId] })
-      setIfaceName('')
-      setShowAdd(false)
-    },
-  })
-
-  const deleteMutation = useMutation({
-    mutationFn: async (ifaceId: string) => {
-      await fetch(`${API}/interfaces/${ifaceId}`, { method: 'DELETE' })
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['interfaces', studyId] }),
+  const [addType, setAddType] = useState<InterfaceType>('data')
+  const [addName, setAddName] = useState('')
+  const add = () => run('add', async () => {
+    await createInterface(studyId!, {
+      type: addType, from_element_id: fromId, to_element_id: toId,
+      name: addName || `${nameOf(fromId)} → ${nameOf(toId)}`, diagram_label: addName || undefined,
+    })
+    setAddName(''); setShowAdd(false)
   })
 
   if (siblings.length < 2) {
-    return (
-      <div className="p-4 c-2 t-13">
-        {t('Need at least 2 elements at this level to define interfaces.')}
-      </div>
-    )
+    return <div className="c2o-pane t-13 c-2">{t('Need at least 2 elements at this level to define interfaces.')}</div>
   }
 
-  return (
-    <div className="c2o-pane">
-      <Panel title={t('Interfaces ({{n}})', { n: interfaces.length })}
-        actions={<Button variant="primary" size="sm" onClick={() => setShowAdd(true)}
-          disabledReason={showAdd ? t('The add form is already open below') : undefined}>{t('+ Add Interface')}</Button>}>
-        {interfaces.length === 0 && !showAdd && (
-          <p className="t-13 c-2 m-0 py-2">{t('No interfaces defined. Click "Add Interface" to connect elements.')}</p>
-        )}
-        <div className="c2o-ifaces">
-          {interfaces.map((iface: any) => (
-            <InterfaceRow key={iface.id} iface={iface} nameOf={nameOf} studyId={studyId}
-              onDelete={() => deleteMutation.mutate(iface.id)} />
-          ))}
-        </div>
-      </Panel>
+  const byType = (list: DesignInterface[]) => INTERFACE_TYPES
+    .map(type => ({ type, items: list.filter(i => i.type === type) }))
+    .filter(g => g.items.length > 0)
 
-      {showAdd && (
-        <form className="c2o-blocks__add" aria-label={t('Add interface')}
-          onSubmit={e => { e.preventDefault(); if (fromId && toId) addMutation.mutate() }}>
-          <Field label={t('From')}>
-            <Select dense value={fromId} onChange={e => setFromId(e.target.value)}>
-              <option value="">{t('From...')}</option>
-              {siblings.map((el: any) => <option key={el.id} value={el.id}>{el.name}</option>)}
-            </Select>
-          </Field>
-          <span className="c-3 pb-1" aria-hidden="true">→</span>
-          <Field label={t('To')}>
-            <Select dense value={toId} onChange={e => setToId(e.target.value)}>
-              <option value="">{t('To...')}</option>
-              {siblings.filter((el: any) => el.id !== fromId).map((el: any) => <option key={el.id} value={el.id}>{el.name}</option>)}
-            </Select>
-          </Field>
-          <Field label={t('Type')}>
-            <Select dense value={ifaceType} onChange={e => setIfaceType(e.target.value)}>
-              {INTERFACE_TYPES.map(it => <option key={it.value} value={it.value}>{t(it.label)}</option>)}
-            </Select>
-          </Field>
-          <Field label={t('Label (optional)')}>
-            <Input dense value={ifaceName} onChange={e => setIfaceName(e.target.value)} />
-          </Field>
-          <span className="row gap-2">
-            <Button type="submit" variant="primary" size="sm"
-              disabledReason={!fromId || !toId ? t('Choose both ends of the interface first') : undefined}>{t('Add')}</Button>
-            <Button size="sm" onClick={() => setShowAdd(false)}>{t('Cancel')}</Button>
-          </span>
-        </form>
-      )}
+  const lang = i18n.language
+
+  return (
+    <div className="c2o-pane c2o-links">
+      <Panel
+        title={t('Interfaces')}
+        meta={t('{{a}} accepted, {{s}} to review, {{r}} rejected', { a: accepted.length, s: suggested.length, r: rejected.length })}
+        actions={<>
+          <Button size="sm" onClick={propose} busy={busy === 'propose'}
+            disabledReason={proposerMissing ? t('This server does not propose links yet') : undefined}
+            title={t('Run the interface rules for this level. Rejected links stay rejected.')}>
+            {t('Propose links')}
+          </Button>
+          <Button variant="primary" size="sm" onClick={() => setShowAdd(true)}
+            disabledReason={showAdd ? t('The add form is already open below') : undefined}>{t('+ Add Interface')}</Button>
+        </>}>
+        {lastRun && <p className="t-12 c-3 m-0 pb-2" role="status">{t('Rules run: {{summary}}', { summary: lastRun })}</p>}
+        {error && <Note tone="alarm" role="alert">{t('The server refused the change: {{message}}', { message: error })}</Note>}
+
+        {showAdd && (
+          <form className="c2o-blocks__add mb-3" aria-label={t('Add interface')}
+            onSubmit={e => { e.preventDefault(); if (fromId && toId && fromId !== toId) add() }}>
+            <Field label={t('From')}>
+              <Select dense value={fromId} onChange={e => setFromId(e.target.value)}>
+                <option value="">{t('From...')}</option>
+                {endpoints.map(el => <option key={el.id} value={el.id}>{el.name}</option>)}
+              </Select>
+            </Field>
+            <Field label={t('To')}>
+              <Select dense value={toId} onChange={e => setToId(e.target.value)}>
+                <option value="">{t('To...')}</option>
+                {endpoints.filter(el => el.id !== fromId).map(el => <option key={el.id} value={el.id}>{el.name}</option>)}
+              </Select>
+            </Field>
+            <Field label={t('Type')}>
+              <Select dense value={addType} onChange={e => setAddType(e.target.value as InterfaceType)}>
+                {INTERFACE_TYPES.map(id => <option key={id} value={id}>{t(TYPE_META[id].label)}</option>)}
+              </Select>
+            </Field>
+            <Field label={t('Label (optional)')}>
+              <Input dense value={addName} onChange={e => setAddName(e.target.value)} />
+            </Field>
+            <span className="row gap-2">
+              <Button type="submit" variant="primary" size="sm" busy={busy === 'add'}
+                disabledReason={!fromId || !toId ? t('Choose both ends of the interface first') : undefined}>{t('Add')}</Button>
+              <Button size="sm" onClick={() => setShowAdd(false)}>{t('Cancel')}</Button>
+            </span>
+          </form>
+        )}
+
+        {(conflicts.length > 0 || unmet.length > 0) && (
+          <div className="c2o-links__issues stack gap-1 mb-3">
+            {conflicts.map((c, k) => (
+              <Note key={`c${k}`} tone={c.severity === 'alarm' ? 'alarm' : 'caution'}>
+                <StatusBadge status={c.severity === 'alarm' ? 'alarm' : 'caution'}>
+                  {c.element_ids.map(nameOf).join(' ↔ ')}
+                </StatusBadge>
+                <span>{pickLang(c.reason, lang)}</span>
+              </Note>
+            ))}
+            {unmet.length > 0 && (
+              <Disclosure summary={t('Unmet needs')} meta={String(unmet.length)}>
+                <ul className="list-reset c2o-links__unmet">
+                  {unmet.map((u, k) => (
+                    <li key={k}><span className="w-500">{nameOf(u.element_id)}</span> <span className="c-3">{u.need}</span> <span className="c-2">{pickLang(u.reason, lang)}</span></li>
+                  ))}
+                </ul>
+              </Disclosure>
+            )}
+          </div>
+        )}
+
+        {/* 1. Suggested */}
+        <section className="c2o-links__sec" aria-labelledby="links-sug">
+          <h4 id="links-sug" className="c2o-links__h">
+            <LinkStatusChip status="suggested" />
+            <span>{t('{{count}} to review', { count: suggested.length })}</span>
+          </h4>
+          {suggested.length === 0 ? (
+            <p className="t-13 c-3 m-0 py-2">{proposerMissing
+              ? t('Expected links appear here once the server can propose them.')
+              : t('Nothing to review. Every expected link at this level is accepted or rejected.')}</p>
+          ) : (
+            <>
+              <p className="t-12 c-3 m-0 pb-2 measure">{t('Proposed from the C2O default interface matrix and the component data. They are defaults, not a standard, and already count in budgets and analyses until you reject them.')}</p>
+              {byType(suggested).map(g => (
+                <div key={g.type} className="c2o-links__group">
+                  <div className="c2o-links__ghead">
+                    <TypeLabel type={g.type} />
+                    <span className="t-12 c-3">{t('{{count}} suggested', { count: g.items.length })}</span>
+                    <span className="c2o-links__gref t-12 c-3">{t('ECSS-E-ST-10-24C nature: {{n}}', { n: TYPE_META[g.type].annexE })}</span>
+                    <Button size="sm" onClick={() => acceptAll(g.items, g.type)} busy={busy === `all:${g.type}`}>
+                      {t('Accept all {{count}}', { count: g.items.length })}
+                    </Button>
+                  </div>
+                  <ul className="list-reset">
+                    {g.items.map(i => (
+                      <SuggestedRow key={i.id} iface={i} nameOf={nameOf} endpoints={endpoints} busy={busy === i.id}
+                        onAccept={() => setStatus(i, 'accepted')} onReject={() => setStatus(i, 'rejected')}
+                        onSave={p => savePatch(i, p)} />
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </>
+          )}
+        </section>
+
+        {/* 2. Accepted */}
+        <section className="c2o-links__sec" aria-labelledby="links-acc">
+          <h4 id="links-acc" className="c2o-links__h">
+            <LinkStatusChip status="accepted" />
+            <span>{t('{{count}} defined', { count: accepted.length })}</span>
+          </h4>
+          {accepted.length === 0
+            ? <p className="t-13 c-3 m-0 py-2">{t('No interfaces defined. Click "Add Interface" to connect elements.')}</p>
+            : (
+              <ul className="list-reset c2o-ifaces">
+                {accepted.map(i => (
+                  <AcceptedRow key={i.id} iface={i} nameOf={nameOf} endpoints={endpoints} busy={busy === i.id}
+                    onSave={p => savePatch(i, p)} onDelete={() => run(i.id, () => deleteInterface(i.id))}
+                    onReject={() => setStatus(i, 'rejected')} />
+                ))}
+              </ul>
+            )}
+        </section>
+
+        {/* 3. Rejected */}
+        {rejected.length > 0 && (
+          <Disclosure ruled summary={<span className="row gap-2"><LinkStatusChip status="rejected" />{t('Restore rejected')}</span>}
+            meta={String(rejected.length)}>
+            <p className="t-12 c-3 m-0 pb-2">{t('Rejected links are left out of budgets and analyses, and the rules do not propose them again.')}</p>
+            <ul className="list-reset c2o-ifaces">
+              {rejected.map(i => (
+                <li key={i.id} className="c2o-links__row is-rejected">
+                  <TypeLabel type={i.type} short />
+                  <Ends iface={i} nameOf={nameOf} />
+                  <span className="c2o-links__why t-12 c-3">{pickLang(i.rationale, lang) || originText(i, t)}</span>
+                  <span className="c2o-links__acts">
+                    <Button size="sm" onClick={() => setStatus(i, 'suggested')} busy={busy === i.id}
+                      aria-label={t('Restore link {{from}} to {{to}}', { from: nameOf(i.from_element_id), to: nameOf(i.to_element_id) })}>{t('Restore')}</Button>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </Disclosure>
+        )}
+      </Panel>
     </div>
   )
 }
 
-// ─── Interface Row with expandable properties ───
-
-// Labels and placeholders are display-only (the property keys are stored), so the table is built
-// per render with the active t(); technical example values (part names, numbers) are not translated.
-function ifacePropertyFields(t: TFunction): Record<string, Array<{ key: string; label: string; placeholder: string }>> {
-  return {
-    electrical: [
-      { key: 'voltage_v', label: t('Voltage (V)'), placeholder: '3.3 / 5 / 28' },
-      { key: 'current_a', label: t('Current (A)'), placeholder: '0.5' },
-      { key: 'connector', label: t('Connector'), placeholder: t('Micro-D 9pin') },
-      { key: 'wire_gauge', label: t('Wire gauge'), placeholder: 'AWG 26' },
-      { key: 'power_w', label: t('Power (W)'), placeholder: '2.5' },
-    ],
-    data: [
-      { key: 'protocol', label: t('Protocol'), placeholder: 'SPI / I2C / UART / CAN / SpaceWire' },
-      { key: 'baud_rate', label: t('Baud rate'), placeholder: '115200 / 1 Mbps' },
-      { key: 'data_format', label: t('Data format'), placeholder: t('CCSDS / raw bytes') },
-      { key: 'bus_width', label: t('Bus width'), placeholder: t('8 / 16 / 32 bit') },
-      { key: 'connector', label: t('Connector'), placeholder: 'Micro-D / Harwin' },
-    ],
-    rf: [
-      { key: 'frequency_ghz', label: t('Frequency (GHz)'), placeholder: '0.435 / 2.2 / 8.2' },
-      { key: 'bandwidth_mhz', label: t('Bandwidth (MHz)'), placeholder: '20' },
-      { key: 'polarization', label: t('Polarization'), placeholder: t('RHCP / linear / dual') },
-      { key: 'power_dbm', label: t('TX power (dBm)'), placeholder: '30' },
-      { key: 'connector', label: t('RF connector'), placeholder: t('SMA / N-type') },
-    ],
-    mechanical: [
-      { key: 'mount_type', label: t('Mount type'), placeholder: t('bolted / bonded / rail') },
-      { key: 'fastener', label: t('Fasteners'), placeholder: 'M3×8 SS / M2.5' },
-      { key: 'torque_nm', label: t('Torque (Nm)'), placeholder: '0.5' },
-      { key: 'material', label: t('Material'), placeholder: 'Al 6061-T6' },
-    ],
-    thermal: [
-      { key: 'heat_flow_w', label: t('Heat flow (W)'), placeholder: '2.0' },
-      { key: 'conductance_w_k', label: t('Conductance (W/K)'), placeholder: '0.5' },
-      { key: 'strap_type', label: t('Thermal strap'), placeholder: t('Cu braid / Al plate') },
-      { key: 'interface_temp_c', label: t('Interface temp (°C)'), placeholder: '20' },
-    ],
-  }
+function Ends({ iface, nameOf }: { iface: DesignInterface; nameOf: (id: string) => string }) {
+  const { t } = useTranslation()
+  const one = iface.direction === 'unidirectional' || iface.direction === 'out'
+  return (
+    <span className="c2o-links__ends">
+      <span className="w-500">{nameOf(iface.from_element_id)}</span>
+      <span className="c-3" aria-hidden="true">{one ? '→' : '↔'}</span>
+      <span className="sr-only">{one ? t('to') : t('and')}</span>
+      <span className="w-500">{nameOf(iface.to_element_id)}</span>
+    </span>
+  )
 }
 
-function InterfaceRow({ iface, nameOf, studyId, onDelete }: {
-  iface: any; nameOf: (id: string) => string; studyId: string | null; onDelete: () => void
+function SuggestedRow({ iface, nameOf, endpoints, busy, onAccept, onReject, onSave }: {
+  iface: DesignInterface; nameOf: (id: string) => string; endpoints: EndpointOption[]; busy: boolean
+  onAccept: () => void; onReject: () => void; onSave: (p: InterfacePatch) => void
 }) {
-  const { t } = useTranslation()
-  const [expanded, setExpanded] = useState(false)
-  const qc = useQueryClient()
-  const props = iface.properties || {}
-  const fields = ifacePropertyFields(t)[iface.interface_type] || []
-
-  const updateProp = async (key: string, value: string) => {
-    const newProps = { ...props, [key]: value }
-    await fetch(`${API}/interfaces/${iface.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ properties: newProps }),
-    }).catch(() => {
-      // If PATCH not supported on interfaces, store in a different way
-    })
-    qc.invalidateQueries({ queryKey: ['interfaces', studyId] })
-  }
-
-  const typeLabel = INTERFACE_TYPE_LABELS[iface.interface_type] ? t(INTERFACE_TYPE_LABELS[iface.interface_type]) : iface.interface_type
-  const nProps = Object.keys(props).length
+  const { t, i18n } = useTranslation()
+  const [editing, setEditing] = useState(false)
+  const summary = propsSummary(iface, t)
+  const why = pickLang(iface.rationale, i18n.language)
+  const pair = { from: nameOf(iface.from_element_id), to: nameOf(iface.to_element_id) }
   return (
-    <div className="c2o-ifaces__item">
-      <div className="c2o-ifaces__row">
-        <button type="button" className="c2o-ifaces__toggle" aria-expanded={expanded} onClick={() => setExpanded(!expanded)}
-          disabled={fields.length === 0}>
-          <Chevron />
-          <Tag>{typeLabel}</Tag>
-          <span className="w-500">{nameOf(iface.from_element_id)}</span>
-          <span className="c-3" aria-hidden="true">→</span>
-          <span className="sr-only">{t('to')}</span>
-          <span className="w-500">{nameOf(iface.to_element_id)}</span>
-          {iface.name && <span className="c-2">{iface.name}</span>}
-        </button>
-        <span className="t-12 c-3">{nProps > 0 ? t('{{n}} props', { n: nProps }) : t('no properties')}</span>
-        <ArmButton variant="icon" label="×" armedLabel={t('Delete')} aria-label={t('Delete interface {{from}} → {{to}}', { from: nameOf(iface.from_element_id), to: nameOf(iface.to_element_id) })}
-          onConfirm={onDelete} />
-      </div>
-      {expanded && fields.length > 0 && (
-        <div className="c2o-form-grid c2o-ifaces__props">
-          {fields.map(f => (
-            <Field key={f.key} label={f.label}>
-              <Input dense value={props[f.key] || ''} onChange={e => updateProp(f.key, e.target.value)} placeholder={f.placeholder} />
-            </Field>
-          ))}
+    <li className={`c2o-links__row is-suggested${editing ? ' is-editing' : ''}`}>
+      <InterfaceGlyph type={iface.type} />
+      <Ends iface={iface} nameOf={nameOf} />
+      {summary && <span className="c2o-links__sum mono t-12 c-2">{summary}</span>}
+      <span className="c2o-links__why">
+        <span className="t-13 c-2">{why || t('No rationale given by the rule.')}</span>
+        <span className="c2o-links__ref t-12 c-3">{[iface.standard_ref, originText(iface, t)].filter(Boolean).join(' · ')}</span>
+      </span>
+      <span className="c2o-links__acts">
+        <Button size="sm" variant="primary" onClick={onAccept} busy={busy}
+          aria-label={t('Accept link {{from}} to {{to}}', pair)}>{t('Accept')}</Button>
+        <Button size="sm" onClick={() => setEditing(e => !e)} aria-expanded={editing}
+          aria-label={t('Edit link {{from}} to {{to}}', pair)}>{t('Edit')}</Button>
+        <ArmButton label={t('Reject')} armedLabel={t('Confirm reject')} size="sm" variant="default"
+          aria-label={t('Reject link {{from}} to {{to}}', pair)} onConfirm={onReject} />
+      </span>
+      {editing && (
+        <div className="c2o-links__edit">
+          <LinkEditor iface={iface} endpoints={endpoints} saving={busy}
+            onCancel={() => setEditing(false)} onSave={p => { onSave(p); setEditing(false) }} />
         </div>
       )}
-    </div>
+    </li>
+  )
+}
+
+function AcceptedRow({ iface, nameOf, endpoints, busy, onSave, onDelete, onReject }: {
+  iface: DesignInterface; nameOf: (id: string) => string; endpoints: EndpointOption[]; busy: boolean
+  onSave: (p: InterfacePatch) => void; onDelete: () => void; onReject: () => void
+}) {
+  const { t } = useTranslation()
+  const [open, setOpen] = useState(false)
+  const summary = propsSummary(iface, t)
+  const fromRule = iface.origin.startsWith('rule:')
+  const pair = { from: nameOf(iface.from_element_id), to: nameOf(iface.to_element_id) }
+  return (
+    <li className="c2o-ifaces__item">
+      <div className="c2o-ifaces__row">
+        <button type="button" className="c2o-ifaces__toggle" aria-expanded={open} onClick={() => setOpen(o => !o)}>
+          <Chevron />
+          <TypeLabel type={iface.type} short className="c2o-links__tcol" />
+          <Ends iface={iface} nameOf={nameOf} />
+          {summary ? <span className="mono t-12 c-2 ellipsis">{summary}</span> : <span className="t-12 c-3">{t('no properties')}</span>}
+        </button>
+        <span className="t-12 c-3 nowrap c2o-links__origin">{originText(iface, t)}</span>
+        {fromRule
+          ? <ArmButton label={t('Reject')} armedLabel={t('Confirm reject')} aria-label={t('Reject link {{from}} to {{to}}', pair)} onConfirm={onReject} />
+          : <ArmButton variant="icon" label="×" armedLabel={t('Delete')} aria-label={t('Delete interface {{from}} → {{to}}', pair)} onConfirm={onDelete} />}
+      </div>
+      {open && (
+        <div className="c2o-ifaces__props">
+          <LinkEditor iface={iface} endpoints={endpoints} saving={busy}
+            onCancel={() => setOpen(false)} onSave={p => { onSave(p); setOpen(false) }} />
+        </div>
+      )}
+    </li>
   )
 }

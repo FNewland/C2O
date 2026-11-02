@@ -86,3 +86,23 @@ def test_load_from_yaml():
     assert config.budget.session_token_limit == 50000
 
     os.unlink(f.name)
+
+
+def test_retired_capabilities_are_never_capable():
+    """Only the three prose capabilities remain (docs/RULES_AND_AI.md)."""
+    from spacecdf_ai.config import RETAINED_CAPABILITIES
+
+    assert set(RETAINED_CAPABILITIES) == {"design_advisor", "requirements_decomposition", "report_narrative"}
+    config = GenAIConfig(enabled=True, capabilities={"fsw_generation": True, "consistency_checking": True,
+                                                     "report_narrative": True})
+    assert config.is_capable("fsw_generation") is False
+    assert config.is_capable("consistency_checking") is False
+    assert config.is_capable("report_narrative") is True
+
+
+def test_shipped_config_is_disabled():
+    from spacecdf_ai.config import _resolve_config_path
+
+    path = _resolve_config_path(None)
+    assert path is not None
+    assert load_genai_config(path).enabled is False

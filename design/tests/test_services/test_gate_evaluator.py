@@ -121,9 +121,12 @@ def test_pdr_should_pass_items_are_advisory_and_do_not_block():
     assert by["PDR-EC-01"]["status"] == "pass"
     assert by["PDR-EC-03"]["status"] == "pass"
     assert by["PDR-EC-05"]["status"] == "pass"
-    assert by["PDR-EC-02"]["verdict"] == "manual"          # must_pass sign-off
-    assert res["ready"] is False                            # manual sign-off still open
-    assert res["ready_pending_manual"] is True              # advisory item does not block
+    # Nov 2026: PDR-EC-02 is computed from the expected-interface coverage; the
+    # lone EPS subsystem has no mount / thermal link → must_pass not met
+    assert by["PDR-EC-02"]["status"] == "fail" and by["PDR-EC-02"]["verdict"] == "fail"
+    assert by["PDR-EC-02"]["evidence_params"]["met"] == 0
+    assert res["ready"] is False
+    assert res["ready_pending_manual"] is False
     assert res["summary"]["advisory"] == 1
     assert res["summary"]["must_pass"] == 4 and res["summary"]["must_pass_met"] == 3
 

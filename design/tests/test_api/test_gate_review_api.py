@@ -43,7 +43,9 @@ async def test_post_uses_client_state(client, study_obj, study):
     assert by["PDR-EC-03"]["status"] == "pass"
     assert by["PDR-EC-04"]["status"] == "pass"
     assert by["PDR-EC-05"]["status"] == "pass"
-    assert r.json()["ready_pending_manual"] is True
+    # Nov 2026: PDR-EC-02 is computed from the study's interfaces (none here → not met)
+    assert by["PDR-EC-02"]["status"] == "fail"
+    assert r.json()["ready_pending_manual"] is False
 
 
 async def test_post_mission_need_overrides_study(client, study_obj, study):

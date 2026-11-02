@@ -173,6 +173,52 @@ async def ensure_option_scoped_parameters(engine: AsyncEngine) -> bool:
         return False
 
 
+# ── Nov 2026: canonical interface vocabulary ───────────────────────────
+
+IFACE_TABLE = "element_interfaces"
+
+
+def _interface_vocabulary_sync(conn: Connection) -> int:
+    """Rewrite old interface-type spellings and statuses in place; returns rows changed."""
+    from spacecdf_common.models.interface_types import (
+        INTERFACE_STATUSES, INTERFACE_TYPE_VALUES, canonical_interface_type,
+    )
+
+    inspector = inspect(conn)
+    if IFACE_TABLE not in set(inspector.get_table_names()):
+        return 0
+    cols = {c["name"] for c in inspector.get_columns(IFACE_TABLE)}
+    changed = 0
+    rows = conn.execute(text(f"SELECT DISTINCT interface_type FROM {IFACE_TABLE}")).fetchall()
+    for (raw,) in rows:
+        if raw in INTERFACE_TYPE_VALUES:
+            continue
+        canon = canonical_interface_type(raw) or "data"
+        res = conn.execute(text(f"UPDATE {IFACE_TABLE} SET interface_type = :c WHERE interface_type IS :r"),
+                           {"c": canon, "r": raw})
+        changed += res.rowcount or 0
+    if "status" in cols:
+        placeholders = ", ".join(f"'{s}'" for s in INTERFACE_STATUSES)
+        res = conn.execute(text(
+            f"UPDATE {IFACE_TABLE} SET status = 'accepted' WHERE status IS NULL OR status NOT IN ({placeholders})"))
+        changed += res.rowcount or 0
+    if "origin" in cols:
+        res = conn.execute(text(f"UPDATE {IFACE_TABLE} SET origin = 'user' WHERE origin IS NULL OR origin = ''"))
+        changed += res.rowcount or 0
+    return changed
+
+
+async def ensure_interface_vocabulary(engine: AsyncEngine) -> int:
+    """Migrate ``element_interfaces`` to the canonical type enum and the
+    suggested/accepted/rejected status set. Idempotent; never raises."""
+    try:
+        async with engine.begin() as conn:
+            return await conn.run_sync(_interface_vocabulary_sync)
+    except Exception:
+        logger.exception("ensure_interface_vocabulary failed")
+        return 0
+
+
 async def ensure_schema_upgrades(engine: AsyncEngine) -> list[str]:
     """Add any ORM-declared columns missing from existing tables.
 
@@ -188,4 +234,7 @@ async def ensure_schema_upgrades(engine: AsyncEngine) -> list[str]:
         logger.exception("ensure_schema_upgrades failed")
     if await ensure_option_scoped_parameters(engine):
         added.append(f"{PARAM_TABLE}.{OPTION_UNIQUE_NAME}")
+    n = await ensure_interface_vocabulary(engine)
+    if n:
+        added.append(f"{IFACE_TABLE}.canonical_vocabulary({n} rows)")
     return added

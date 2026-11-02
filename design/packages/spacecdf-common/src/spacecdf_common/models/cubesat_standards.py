@@ -123,47 +123,120 @@ class InterfaceCompatibility:
     notes: str = ""
 
 
+#: Spelling variants of bus protocols found in the KB (codebase audit §3.2).
+_PROTOCOL_ALIASES: dict[str, str] = {
+    "I2C": "I2C", "I²C": "I2C", "IIC": "I2C",
+    "UART": "UART", "RS232": "UART", "RS-232": "UART", "SERIAL": "UART",
+    "CAN": "CAN", "CAN-BUS": "CAN", "CANBUS": "CAN", "CSP": "CAN",
+    "SPI": "SPI",
+    "RS422": "RS422", "RS-422": "RS422",
+    "RS485": "RS485", "RS-485": "RS485",
+    "SPACEWIRE": "SpaceWire", "SPW": "SpaceWire",
+    "LVDS": "LVDS",
+    "ETHERNET": "Ethernet", "GBE": "Ethernet",
+    "USB": "USB", "USB2": "USB", "USB3": "USB",
+    "PC/104": "PC/104", "PC/104 STACK": "PC/104", "PC104": "PC/104",
+    "ANALOG": "analog", "ANALOGUE": "analog",
+    "H-BRIDGE": "H-bridge", "PWM": "PWM",
+    "MIL-STD-1553": "MIL-STD-1553", "1553": "MIL-STD-1553", "MIL-STD-1553B": "MIL-STD-1553",
+}
+
+#: Entries of a KB ``interfaces`` list that are not data-bus protocols.
+NON_DATA_PROTOCOLS = frozenset({"PC/104", "CDS rail", "Power", "H-bridge", "PWM"})
+
+
+def normalise_protocol(name: Any) -> str | None:
+    """One spelling per bus protocol (``RS-422`` → ``RS422``, ``PC/104 stack`` → ``PC/104``)."""
+    if not isinstance(name, str) or not name.strip():
+        return None
+    key = name.strip().upper()
+    if key in _PROTOCOL_ALIASES:
+        return _PROTOCOL_ALIASES[key]
+    return name.strip()
+
+
+def component_protocols(component: dict[str, Any]) -> list[str]:
+    """Normalised, de-duplicated protocol list of a KB component (order kept)."""
+    raw = component.get("interfaces") or []
+    if not isinstance(raw, list):
+        return []
+    out: list[str] = []
+    for r in raw:
+        n = normalise_protocol(r)
+        if n and n not in out:
+            out.append(n)
+    return out
+
+
+def component_rails_v(component: dict[str, Any]) -> list[float]:
+    """Voltage rails a KB component offers or needs (``performance.bus_voltage_v``
+    scalar or list, or ``performance.voltage_v`` scalar / {nominal})."""
+    perf = component.get("performance") or {}
+    v = perf.get("bus_voltage_v", component.get("bus_voltage_v"))
+    if v is None:
+        v = perf.get("input_voltage_v", component.get("input_voltage_v"))
+    if v is None:
+        v = perf.get("voltage_v")
+        if isinstance(v, dict):
+            v = v.get("nominal")
+    vals = v if isinstance(v, list) else [v]
+    out: list[float] = []
+    for x in vals:
+        try:
+            out.append(float(x))
+        except (TypeError, ValueError):
+            continue
+    return out
+
+
 def check_interface_compatibility(
     component_a: dict[str, Any],
     component_b: dict[str, Any],
 ) -> InterfaceCompatibility:
-    """Check if two CubeSat components can communicate.
+    """Check if two components can communicate and share a voltage rail.
 
-    Checks bus protocol compatibility and physical form factor.
+    The single implementation (Nov 2026): ``services/equipment_logic`` and the
+    interface proposer both call this one. Protocol names are normalised
+    (RS-422 = RS422, PC/104 stack = PC/104) before comparing. Missing data on
+    either side is not an incompatibility: ``compatible`` stays True and
+    ``notes`` says a manual check is needed.
     """
     a_name = component_a.get("name", "A")
     b_name = component_b.get("name", "B")
 
-    a_interfaces = set(component_a.get("interfaces", []))
-    b_interfaces = set(component_b.get("interfaces", []))
+    a_interfaces = set(component_protocols(component_a))
+    b_interfaces = set(component_protocols(component_b))
 
     shared = a_interfaces & b_interfaces
+    a_data = a_interfaces - NON_DATA_PROTOCOLS
+    b_data = b_interfaces - NON_DATA_PROTOCOLS
+    shared_data = a_data & b_data
     result = InterfaceCompatibility(
-        compatible=len(shared) > 0,
+        compatible=True,
         component_a=a_name,
         component_b=b_name,
         shared_protocols=sorted(shared),
     )
 
-    if not shared:
+    if not a_interfaces or not b_interfaces:
+        result.notes = "Interface data missing — manual check needed"
+    elif a_data and b_data and not shared_data:
+        result.compatible = False
         result.incompatibilities.append(
-            f"No shared bus protocol: {a_name} supports {sorted(a_interfaces)}, "
-            f"{b_name} supports {sorted(b_interfaces)}"
+            f"No shared bus protocol: {a_name} supports {sorted(a_data)}, "
+            f"{b_name} supports {sorted(b_data)}"
         )
 
-    # Check voltage compatibility
-    a_voltage = component_a.get("performance", {}).get("bus_voltage_v")
-    b_voltage = component_b.get("performance", {}).get("bus_voltage_v")
-    if a_voltage and b_voltage:
-        a_volts = a_voltage if isinstance(a_voltage, list) else [a_voltage]
-        b_volts = b_voltage if isinstance(b_voltage, list) else [b_voltage]
-        if not set(a_volts) & set(b_volts):
-            result.incompatibilities.append(
-                f"Voltage mismatch: {a_name}={a_volts}V, {b_name}={b_volts}V"
-            )
-            result.compatible = False
+    # Voltage: the rails both sides declare must intersect
+    a_volts = component_rails_v(component_a)
+    b_volts = component_rails_v(component_b)
+    if a_volts and b_volts and not set(a_volts) & set(b_volts):
+        result.incompatibilities.append(
+            f"Voltage mismatch: {a_name}={a_volts}V, {b_name}={b_volts}V"
+        )
+        result.compatible = False
 
-    # Check form factor — both should be PC/104 compatible
+    # Form factor — both PC/104 means stack-compatible
     a_ff = component_a.get("form_factor", "")
     b_ff = component_b.get("form_factor", "")
     if a_ff == "PC/104" and b_ff == "PC/104":

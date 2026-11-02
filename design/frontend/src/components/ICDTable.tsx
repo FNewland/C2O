@@ -11,15 +11,12 @@ import { useTranslation } from 'react-i18next'
 import { useUIStore } from '../stores/uiStore'
 import { useDesignStore } from '../stores/designStore'
 import { EXCHANGE_ITEM_KINDS, type ExchangeItem, type ICDRow } from '../types/arcadia'
-import { fs } from '../theme/tokens'
 import { askConfirm } from './ui/Dialog'
+import { canonicalType } from '../types/interfaces'
+import { LinkStatusChip, TypeLabel } from '../workbench/linkParts'
 
 const API = '/api'
 
-
-const TYPE_COLORS: Record<string, string> = {
-  electrical: 'var(--cat-4)', data: 'var(--cat-2)', rf: 'var(--cat-6)', mechanical: 'var(--cat-8)', thermal: 'var(--cat-5)',
-}
 
 async function jsonOrThrow(res: Response) {
   if (!res.ok) {
@@ -63,9 +60,11 @@ export function ICDTable({ studyId: studyIdProp }: { studyId?: string | null }) 
   const [editKind, setEditKind] = useState('data')
   const [editProps, setEditProps] = useState('')
 
+  // Rejected links are excluded from analyses and from the ICD (interface contract).
   const { data: rows = [], isLoading } = useQuery<ICDRow[]>({
     queryKey: ['icd', studyId],
-    queryFn: () => fetch(`${API}/studies/${studyId}/icd`).then(jsonOrThrow),
+    queryFn: () => fetch(`${API}/studies/${studyId}/icd`).then(jsonOrThrow)
+      .then((rs: ICDRow[]) => (Array.isArray(rs) ? rs.filter(r => r.status !== 'rejected') : [])),
     enabled: !!studyId, structuralSharing: false,
   })
   const { data: items = [] } = useQuery<ExchangeItem[]>({
@@ -159,7 +158,8 @@ export function ICDTable({ studyId: studyIdProp }: { studyId?: string | null }) 
             {rows.map((r, i) => {
               const xi = r.exchange_item
               const firstOfIface = i === 0 || rows[i - 1].interface_id !== r.interface_id
-              const color = TYPE_COLORS[r.interface_type || ''] || 'var(--text-3)'
+              const ctype = canonicalType(r.type ?? r.interface_type)
+              const suggested = r.status === 'suggested'
               const isEditing = xi && editItem === xi.id
               return (
                 <tr key={`${r.interface_id}-${xi?.id || 'none'}`}>
@@ -168,7 +168,10 @@ export function ICDTable({ studyId: studyIdProp }: { studyId?: string | null }) 
                   </td>
                   <td>{r.from_element.name || '—'}</td>
                   <td>{r.to_element.name || '—'}</td>
-                  <td><span style={{ color, fontSize: fs.label }}>{r.interface_type || '—'}{r.direction ? ` · ${r.direction}` : ''}</span></td>
+                  <td><span className="row gap-2 wrap">
+                    <TypeLabel type={ctype} short />
+                    {suggested && firstOfIface && <LinkStatusChip status="suggested" />}
+                  </span></td>
                   {isEditing ? (
                     <>
                       <td><input value={editName} onChange={e => setEditName(e.target.value)} className="c2o-input c2o-input--sm" /></td>

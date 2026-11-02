@@ -70,6 +70,10 @@ EVIDENCE_KEYS: tuple[str, ...] = (
     "No subsystem elements defined",
     "{{ok}}/{{total}} subsystems have at least one component",
     "Reliability {{rel}} vs target {{target}}",
+    # PDR-EC-02 (Nov 2026): expected-interface coverage from configs/interface_rules.yaml
+    "All {{required}} expected subsystem links present and reviewed",
+    "{{met}}/{{required}} expected subsystem links present; {{suggested}} suggested link(s) not reviewed",
+    "Interface rules are invalid",
 )
 
 
@@ -192,6 +196,7 @@ def evaluate_gate(
     reliability_target: float | None = None,
     requirements: list[dict] | None = None,
     elements: list[dict] | None = None,
+    interfaces: list[dict] | None = None,
 ) -> dict[str, Any]:
     """Evaluate all exit criteria for a gate and return structured results.
 
@@ -228,6 +233,8 @@ def evaluate_gate(
         "reqs": [r for r in (requirements or []) if r.get("status") != "retired"],
         "elements": [e for e in (elements or (design_params or {}).get("_elements") or [])
                      if not e.get("deleted_at")],
+        "interfaces": [i for i in (interfaces or (design_params or {}).get("_interfaces") or [])
+                       if not i.get("deleted_at")],
     }
 
     results = [_evaluate_criterion(ec, ctx) for ec in gate.get("exit_criteria", [])]
@@ -492,6 +499,33 @@ def _auto(cid: str, result: dict, ctx: dict) -> None:  # noqa: C901 — one bran
                      n=len(failed), codes=", ".join(failed[:8]) + (" …" if len(failed) > 8 else ""))
             else:
                 _set(result, "pass", "All {{n}} checkable requirements met", n=len(res))
+
+    elif cid == "PDR-EC-02":
+        # Every subsystem has its expected power/data/mechanical/thermal links
+        # (coverage rules of interface_rules.yaml) and no suggestion is left unreviewed.
+        subs = [e for e in elements if e.get("element_type") == "subsystem" and e.get("in_scope") is not False]
+        if not subs:
+            _set(result, "not_evaluated", "No subsystem elements defined")
+        else:
+            from .interface_proposer import Context, RuleConfigError, load_rules
+            from .readiness import interface_coverage
+            try:
+                cctx = Context(elements, load_rules())
+            except RuleConfigError:
+                _set(result, "not_evaluated", "Interface rules are invalid")
+            else:
+                ifaces = ctx["interfaces"]
+                cov = interface_coverage(cctx, ifaces, [e["id"] for e in subs])
+                sub_ids = {e["id"] for e in subs}
+                suggested = sum(1 for i in ifaces if i.get("status") == "suggested"
+                                and (i.get("from_element_id") in sub_ids or i.get("to_element_id") in sub_ids))
+                if not cov["missing"] and not suggested:
+                    _set(result, "pass", "All {{required}} expected subsystem links present and reviewed",
+                         required=cov["required"])
+                else:
+                    _set(result, "fail",
+                         "{{met}}/{{required}} expected subsystem links present; {{suggested}} suggested link(s) not reviewed",
+                         met=cov["met"], required=cov["required"], suggested=suggested)
 
     elif cid == "PDR-EC-03":
         v = _need(result, dp, "systems.mass_margin_percent", "systems.power_margin_percent")

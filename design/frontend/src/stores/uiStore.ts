@@ -12,7 +12,7 @@ import { create } from 'zustand'
 import i18n, { getLang, normalizeLang, setLang as setI18nLang, type Lang } from '../i18n'
 
 export type Level = 0 | 1 | 2 | 3 | 4
-export type ActivityPanel = 'blocks' | 'budget' | 'requirements' | 'functions' | 'interfaces' | 'icd' | 'trace' | 'decide' | 'analyses'
+export type ActivityPanel = 'blocks' | 'spacecraft' | 'budget' | 'requirements' | 'functions' | 'interfaces' | 'icd' | 'trace' | 'decide' | 'analyses'
 
 interface UIStore {
   studyId: string | null
